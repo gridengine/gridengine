@@ -1,3 +1,15 @@
+EB-2009-01-29-0: Bugfix:      read_raw doesn't return 1 on EOF
+                 Bugster:     6788514
+                 Issue:       2849
+                 Bugfix:      qalter -h u <job id> fails if a jsv_url is configured
+                 Bugster:     6788539
+                 Issue:       2850
+                 Bugfix:      insufficient error message from JSV if script fails
+                 Bugster:     6788570
+                 Issue:       2852
+                 Bugfix:      master unresponsive if jsv script gets killed (only in MAINTRUNC)
+                 Review:      MD
+
 CR-2009-01-28-0: Bugfix:      fixed compilation for aimk -no-secure
                  Review:      AA
 

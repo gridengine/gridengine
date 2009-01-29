@@ -218,10 +218,10 @@ jsv_is_send_ready(lListElem *jsv, lList **answer_list) {
    lret = select(fd + 1, NULL, &writefds, NULL, &timeleft);
    if (lret != -1 && FD_ISSET(fd, &writefds)) {
       ret = true;
-      DPRINTF(("ready\n"));
+      DPRINTF(("JSV - fd is ready. Data can be sent\n"));
    } else {
       ret = false; /* either not ready or broken pipe */
-      DPRINTF(("not ready\n"));
+      DPRINTF(("JSV - fd is NOT ready\n"));
    }
    DRETURN(ret);
 }
@@ -232,15 +232,21 @@ jsv_send_data(lListElem *jsv, lList **answer_list, const char *buffer, size_t si
 
    DENTER(TOP_LAYER, "jsv_send_data");
    if (jsv_is_send_ready(jsv, answer_list)) {
-      int lret = fprintf(lGetRef(jsv, JSV_in), buffer);
+      int lret;
 
+      DPRINTF(("JSV - before sending data\n"));
+      lret = fprintf(lGetRef(jsv, JSV_in), buffer);
+      DPRINTF(("JSV - after sending data\n"));
       fflush(lGetRef(jsv, JSV_in));
+      DPRINTF(("JSV - after flushing data\n"));
       if (lret != size) {
+         DPRINTF(("JSV - had sent error\n"));
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
                                  MSG_JSV_SEND_S);
          ret = false;
       }
    } else {
+      DPRINTF(("JSV - no data sent becaus fd was not ready\n"));
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
                               MSG_JSV_SEND_READY_S);
       ret = false;
@@ -306,6 +312,7 @@ jsv_start(lListElem *jsv, lList **answer_list)
 
             /* we need it non blocking */
             fcntl(fileno(fp_out), F_SETFL, O_NONBLOCK);
+            fcntl(fileno(fp_err), F_SETFL, O_NONBLOCK);
 
             INFO((SGE_EVENT, MSG_JSV_STARTED_S, scriptfile));
          } else {
@@ -1000,14 +1007,17 @@ jsv_do_verify(sge_gdi_ctx_class_t* ctx, const char *context, lListElem **job,
        */
       if (strcmp(context, JSV_CONTEXT_CLIENT) == 0) {
          jsv_url = NULL;
+         DPRINTF(("JSV client context\n"));
       } else {
          jsv_url = mconf_get_jsv_url();
+         DPRINTF(("JSV server context\n"));
       }
 
       /*
        * update the list of JSV scripts for the current thread
        */
       jsv_list_update("jsv", context, answer_list, jsv_url);
+      DPRINTF(("JSV list for current thread updated\n"));
 
       sge_mutex_lock("jsv_list", SGE_FUNC, __LINE__, &jsv_mutex);
       holding_mutex = true;
@@ -1020,6 +1030,7 @@ jsv_do_verify(sge_gdi_ctx_class_t* ctx, const char *context, lListElem **job,
          jsv_next = lGetElemStrNext(jsv_list, JSV_context, context, &iterator);
 
          if (jsv_is_started(jsv) == false) {
+            DPRINTF(("JSV is not started\n"));
             ret &= jsv_start(jsv, answer_list);
          }
          if (ret) {
@@ -1033,10 +1044,12 @@ jsv_do_verify(sge_gdi_ctx_class_t* ctx, const char *context, lListElem **job,
             lSetRef(jsv, JSV_old_job, old_job);
             lSetRef(jsv, JSV_new_job, new_job);
 
+            DPRINTF(("JSVs local variables initialized for verification run\n"));
+
             /* 
              * A) If we came here and if the JSV which is currenty handled is a server JSV
              *    then the current state is this:
-             *    
+             *   which was hold before communication with JSV 
              *    - holding_lock is true because this code is then executed within the 
              *      master as part of a GDI JOB ADD request. The lock was accquired outside
              *    - jsv_mutex is currently hold because it was accquired above
@@ -1066,12 +1079,16 @@ jsv_do_verify(sge_gdi_ctx_class_t* ctx, const char *context, lListElem **job,
              *      this function returns.
              */
             if (holding_lock) {
+               DPRINTF(("JSV releases global lock for verification process\n"));
                sge_mutex_unlock("jsv_list", SGE_FUNC, __LINE__, &jsv_mutex);
                holding_mutex = false;
                SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE)
+               DPRINTF(("Client/master will start communication with JSV\n"));
                ret &= jsv_do_communication(ctx, jsv, answer_list);
+               DPRINTF(("JSV acquires global lock which was hold before communication with JSV\n"));
                SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE)
             } else {
+               DPRINTF(("Client/master will start communication with JSV\n"));
                ret &= jsv_do_communication(ctx, jsv, answer_list);
             }
 
@@ -1079,6 +1096,7 @@ jsv_do_verify(sge_gdi_ctx_class_t* ctx, const char *context, lListElem **job,
             lSetRef(jsv, JSV_new_job, NULL); 
 
             if (lGetBool(jsv, JSV_accept)) {
+               DPRINTF(("JSV accepts job"));
                lFreeElem(job);
                *job = new_job;
                new_job = NULL;
@@ -1086,6 +1104,7 @@ jsv_do_verify(sge_gdi_ctx_class_t* ctx, const char *context, lListElem **job,
             } else {
                u_long32 jid = lGetUlong(new_job, JB_job_number);
 
+               DPRINTF(("JSV rejects job"));
                if (jid == 0) {
                   INFO((SGE_EVENT, MSG_JSV_REJECTED_S, context));
                } else {
@@ -1097,7 +1116,9 @@ jsv_do_verify(sge_gdi_ctx_class_t* ctx, const char *context, lListElem **job,
             if (lGetBool(jsv, JSV_restart)) {
                bool soft_shutdown = lGetBool(jsv, JSV_soft_shutdown) ? true : false;
 
+               DPRINTF(("JSV has to be rstarted\n"));
                INFO((SGE_EVENT, MSG_JSV_RESTART_S, context));
+               DPRINTF(("Before termination of JSV\n"));
                ret &= jsv_stop(jsv, answer_list, soft_shutdown);
             }
          }

@@ -2130,6 +2130,7 @@ jsv_do_communication(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answer_li
 
    DENTER(TOP_LAYER, "jsv_do_communication");
    if (ret) {
+      DPRINTF(("JSV - START will be sent\n"));
       ret &= jsv_send_command(jsv, answer_list, "START");
    }
    if (ret) {
@@ -2140,26 +2141,32 @@ jsv_do_communication(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answer_li
       lSetBool(jsv, JSV_soft_shutdown, true);
       while (!lGetBool(jsv, JSV_done)) {
          if (sge_get_gmt() - start_time > JSV_CMD_TIMEOUT) {
+            DPRINTF(("JSV - master waited longer than JSV_CMD_TIMEOUT to get response from JSV\n"));
             /*
              * In case of a timeout we try it a second time. In that case we kill
              * the old instance and start a new one before we continue
              * with the verification. Otherwise we report an error which will
              * automatically reject the job which should be verified.
              */
-            if (do_retry) { 
+            if (do_retry) {
+               DPRINTF(("JSV - will retry verification\n")); 
                lSetBool(jsv, JSV_restart, false);
                lSetBool(jsv, JSV_accept, false);
                lSetBool(jsv, JSV_done, false);
+               DPRINTF(("JSV process will be stopped now\n"));
                ret &= jsv_stop(jsv, answer_list, false);
                if (ret) {
+                  DPRINTF(("JSV process will be started now\n"));
                   ret &= jsv_start(jsv, answer_list);
                }
                if (ret) {
+                  DPRINTF(("JSV process gets START command\n"));
                   ret &= jsv_send_command(jsv, answer_list, "START");
                }
                start_time = sge_get_gmt();
                do_retry = false;
             } else {
+               DPRINTF(("JSV - reject due to timeout in communication process\n")); 
                answer_list_add_sprintf(answer_list, STATUS_DENIED, ANSWER_QUALITY_ERROR,
                                        "got no response from JSV script "SFQ, 
                                        lGetString(jsv, JSV_command));
@@ -2169,60 +2176,85 @@ jsv_do_communication(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answer_li
             }
          } else {
             char input[10000];
-            FILE *file = lGetRef(jsv, JSV_out);
+            FILE *err_stream = lGetRef(jsv, JSV_err);
+            FILE *out_stream = lGetRef(jsv, JSV_out);
 
-            /* read a line from the script or wait some time before you try again */
-            if (fscanf(file, "%[^\n]\n", input) == 1) {
-               dstring sub_command = DSTRING_INIT;
-               dstring command = DSTRING_INIT;
-               dstring args = DSTRING_INIT;
-               jsv_command_t commands[] = {
-                  {"PARAM", jsv_handle_param_command},
-                  {"ENV", jsv_handle_env_command},
-                  {"LOG", jsv_handle_log_command},
-                  {"RESULT", jsv_handle_result_command},
-                  {"SEND", jsv_handle_send_command},
-                  {"STARTED", jsv_handle_started_command},
-                  {NULL, NULL}
-               };
-               bool handled = false;
-               const char *c;
-               int i = -1;
+            /* 
+             * try to read a line from the error stream. If there is something then
+             * restart the script before next check, do not communicate with script 
+             * anymore during shutdown. The last message in the strerr stream will be 
+             * send as answer to the calling function.
+             */
+            while (fscanf(err_stream, "%[^\n]\n", input) == 1) {
+               ret = false;
+            }
+            if (!ret) {
+               answer_list_add_sprintf(answer_list, STATUS_DENIED, ANSWER_QUALITY_ERROR,
+                                       "JSV stderr is - %s", input);
+               lSetBool(jsv, JSV_restart, true);
+               lSetBool(jsv, JSV_soft_shutdown, false);
+               lSetBool(jsv, JSV_done, true);
+            }
 
-               DPRINTF(("JSV << \"%s\"\n", input));
+            /* 
+             * read a line from the script or wait some time before you try again
+             * but do this only if there was no message an the stderr stream.
+             */
+            if (ret) {
+               if (fscanf(out_stream, "%[^\n]\n", input) == 1) {
+                  dstring sub_command = DSTRING_INIT;
+                  dstring command = DSTRING_INIT;
+                  dstring args = DSTRING_INIT;
+                  jsv_command_t commands[] = {
+                     {"PARAM", jsv_handle_param_command},
+                     {"ENV", jsv_handle_env_command},
+                     {"LOG", jsv_handle_log_command},
+                     {"RESULT", jsv_handle_result_command},
+                     {"SEND", jsv_handle_send_command},
+                     {"STARTED", jsv_handle_started_command},
+                     {NULL, NULL}
+                  };
+                  bool handled = false;
+                  const char *c;
+                  int i = -1;
 
-               jsv_split_commandline(input, &command, &sub_command, &args);
-               c = sge_dstring_get_string(&command);
-   
-               while(commands[++i].command != NULL) {
-                  if (strcmp(c, commands[i].command) == 0) {
-                     handled = true;
-                     ret &= commands[i].func(ctx, jsv, answer_list, 
-                                             &command, &sub_command, &args);
+                  DPRINTF(("JSV << \"%s\"\n", input));
 
-                     if (ret == false || 
-                         lGetBool(jsv, JSV_restart) == true || 
-                         lGetBool(jsv, JSV_accept) == true) {
-                        lSetBool(jsv, JSV_done, true);
+                  jsv_split_commandline(input, &command, &sub_command, &args);
+                  c = sge_dstring_get_string(&command);
+      
+                  while(commands[++i].command != NULL) {
+                     if (strcmp(c, commands[i].command) == 0) {
+                        handled = true;
+                        ret &= commands[i].func(ctx, jsv, answer_list, 
+                                                &command, &sub_command, &args);
+
+                        if (ret == false || 
+                            lGetBool(jsv, JSV_restart) == true || 
+                            lGetBool(jsv, JSV_accept) == true) {
+                           lSetBool(jsv, JSV_done, true);
+                        }
+                        break;
                      }
-                     break;
                   }
-               }
 
-               if (!handled) {
-                  answer_list_add_sprintf(answer_list, STATUS_DENIED, ANSWER_QUALITY_ERROR,
-                                          MSG_JSV_JCOMMAND_S, c);
-                  lSetBool(jsv, JSV_accept, false);
-                  lSetBool(jsv, JSV_restart, true);
-                  lSetBool(jsv, JSV_done, true);
+                  if (!handled) {
+                     answer_list_add_sprintf(answer_list, STATUS_DENIED, ANSWER_QUALITY_ERROR,
+                                             MSG_JSV_JCOMMAND_S, c);
+                     lSetBool(jsv, JSV_accept, false);
+                     lSetBool(jsv, JSV_restart, true);
+                     lSetBool(jsv, JSV_done, true);
+                  }
+
+                  /*
+                   * set start time for ne iteration
+                   */
+                  start_time = sge_get_gmt();
+               } else {
+                  sge_usleep(10000);
                }
             }
          }
-   
-         /*
-          * set start time for ne iteration
-          */
-         start_time = sge_get_gmt();
       }
    }
    return ret;

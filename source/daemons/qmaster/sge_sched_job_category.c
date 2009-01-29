@@ -346,15 +346,37 @@ sge_is_job_category_rejected(lListElem *job)
 }
 
 /*-------------------------------------------------------------------------*/
+int 
+sge_is_job_category_reservation_rejected(lListElem *job) 
+{
+   int ret;
+   lListElem *cat = NULL;
+
+   DENTER(TOP_LAYER, "sge_is_job_category_reservation_rejected");
+   cat = lGetRef(job, JB_category); 
+   ret = sge_is_job_category_reservation_rejected_(cat);  
+   DRETURN(ret);
+}
+
+/*-------------------------------------------------------------------------*/
 bool sge_is_job_category_rejected_(lRef cat) 
 {
    return lGetUlong(cat, CT_rejected) ? true : false;
 }
 
 /*-------------------------------------------------------------------------*/
-void sge_reject_category(lRef cat)
+bool sge_is_job_category_reservation_rejected_(lRef cat) 
+{
+   return lGetUlong(cat, CT_reservation_rejected) ? true : false;
+}
+
+/*-------------------------------------------------------------------------*/
+void sge_reject_category(lRef cat, bool with_reservation)
 {
    lSetUlong(cat, CT_rejected, 1);
+   if (with_reservation) {
+      lSetUlong(cat, CT_reservation_rejected, 1);
+   }
 }
 
 bool sge_is_job_category_message_added(lRef cat)

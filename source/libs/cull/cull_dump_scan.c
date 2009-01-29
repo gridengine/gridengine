@@ -609,13 +609,17 @@ lListElem *lUndumpElemFp(FILE *fp, const lDescr *dp)
          break;
       case lStringT:
          ret = fGetString(fp, &str);
-         lSetPosString(ep, i, str);
-         free(str);             /* fGetString strdup's */
+         if (ret == 0) {
+            lSetPosString(ep, i, str);
+            free(str);             /* fGetString strdup's */
+         }
          break;
       case lHostT:
          ret = fGetHost(fp, &str);
-         lSetPosHost(ep, i, str);
-         free(str);             /* fGetHost strdup's */
+         if (ret == 0) {
+            lSetPosHost(ep, i, str);
+            free(str);             /* fGetHost strdup's */
+         }
          break;
       case lFloatT:
          ret = fGetFloat(fp, &(ep->cont[i].fl));

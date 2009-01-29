@@ -1,3 +1,12 @@
+RD-2009-01-29-0: Bugfix:      fixed use of default duration for unbound jobs
+                 Bugster:     6799032
+                 Issue:       2896
+                 Bugfix:      fixed commlib write thread timeout for ssl framework
+                 Belongs To:  RD-2009-01-28-0
+                 Enhancem.:   some smaller scheduler improvements
+                 Bugfix:      fixed buffer overflow in spooledit
+                 Review:      AA
+
 EB-2009-01-29-0: Bugfix:      read_raw doesn't return 1 on EOF
                  Bugster:     6788514
                  Issue:       2849

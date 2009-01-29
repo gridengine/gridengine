@@ -83,9 +83,11 @@ static void set_utilization(lList *uti_list, u_long32 from, u_long32 till, doubl
 
 static lListElem *newResourceElem(u_long32 time, double amount);
 
-/* define DEBUG true */
+#if 0
+define DEBUG_RESOURCE_UTILIZATION true
+#endif
 
-#ifdef DEBUG
+#ifdef DEBUG_RESOURCE_UTILIZATION
 static void utilization_print_all(const lList* pe_list, lList *host_list, const lList *queue_list, const lList *ar_list);
 #endif
 
@@ -120,7 +122,7 @@ bool utilization_print_to_dstring(const lListElem *this_elem, dstring *string)
 }
 
 
-#ifdef DEBUG
+#ifdef DEBUG_RESOURCE_UTILIZATION
 static void utilization_print_all(const lList* pe_list, lList *host_list, const lList *queue_list, const lList *ar_list)
 {
    lListElem *ep, *cr;
@@ -906,10 +908,8 @@ add_job_list_to_schedule(const lList *job_list, bool suspended, lList *pe_list,
 
          a.start = lGetUlong(ja_task, JAT_start_time);
 
-         if (!task_get_duration(&a.duration, ja_task) || a.duration == 0) {
-            ERROR((SGE_EVENT, "got running job with invalid duration\n"));
-            continue; /* may never happen */
-         }
+         task_get_duration(&a.duration, ja_task);
+
          a.duration = duration_add_offset(a.duration, sconf_get_duration_offset());
 
          /* Prevent jobs that exceed their prospective duration are not reflected 
@@ -1008,7 +1008,7 @@ void prepare_resource_schedules(const lList *running_jobs, const lList *suspende
                             ar_list, for_job_scheduling, now);
    add_calendar_to_schedule(queue_list, now); 
 
-#ifdef DEBUG  /* just for information purposes... */
+#ifdef DEBUG_RESOURCE_UTILIZATION  /* just for information purposes... */
    utilization_print_all(pe_list, host_list, queue_list, ar_list); 
 #endif   
 

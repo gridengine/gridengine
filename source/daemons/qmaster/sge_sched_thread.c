@@ -719,10 +719,12 @@ static int dispatch_jobs(sge_evc_class_t *evc, scheduler_all_data_t *lists, orde
           * - maximum number of reservations is exceeded 
           * - it's not desired for the job
           * - the job is an immediate one
+          * - if the job reservation is disabled by category
           */
          if (nreservation < max_reserve &&
              lGetBool(orig_job, JB_reserve) &&
-             !JOB_TYPE_IS_IMMEDIATE(lGetUlong(orig_job, JB_type))) {
+             !JOB_TYPE_IS_IMMEDIATE(lGetUlong(orig_job, JB_type)) &&
+             !sge_is_job_category_reservation_rejected(orig_job)) {
             is_reserve = true;
          } else {
             is_reserve = false;
@@ -739,12 +741,11 @@ static int dispatch_jobs(sge_evc_class_t *evc, scheduler_all_data_t *lists, orde
 
 
             /* sort the hostlist */
-            if(sort_hostlist) {
+            if (sort_hostlist) {
                lPSortList(lists->host_list, "%I+", EH_sort_value);
                sort_hostlist      = 0;
                sconf_set_host_order_changed(true);
-            }
-            else {
+            } else {
                sconf_set_host_order_changed(false);
             } 
 
@@ -863,7 +864,7 @@ static int dispatch_jobs(sge_evc_class_t *evc, scheduler_all_data_t *lists, orde
             if ((cat = lGetRef(orig_job, JB_category))) {
                DPRINTF(("SKIP JOB " sge_u32 " of category '%s' (rc: "sge_u32 ")\n", job_id,
                            lGetString(cat, CT_str), lGetUlong(cat, CT_refcount)));
-               sge_reject_category(cat);
+               sge_reject_category(cat, false);
             }
             /* here no reservation was made for a job that couldn't be started now 
                or the job is not dispatchable at all */
@@ -878,8 +879,7 @@ static int dispatch_jobs(sge_evc_class_t *evc, scheduler_all_data_t *lists, orde
                }
                lAppendElem(*(splitted_job_lists[SPLIT_NOT_STARTED]), orig_job);
                is_pjob_resort = false;
-            }
-            else {
+            } else {
                u_long32 ja_task_number = range_list_get_first_id(lGetList(orig_job, JB_ja_n_h_ids), NULL);
                object_delete_range_id(orig_job, NULL, JB_ja_n_h_ids, ja_task_number);
                is_pjob_resort = true;
@@ -892,7 +892,7 @@ static int dispatch_jobs(sge_evc_class_t *evc, scheduler_all_data_t *lists, orde
             if ((cat = lGetRef(orig_job, JB_category))) {
                DPRINTF(("SKIP JOB " sge_u32 " of category '%s' (rc: "sge_u32 ")\n", job_id,
                         lGetString(cat, CT_str), lGetUlong(cat, CT_refcount)));
-               sge_reject_category(cat);
+               sge_reject_category(cat, is_reserve);
             }
 
          case DISPATCH_NEVER_JOB: /* never this particular job */

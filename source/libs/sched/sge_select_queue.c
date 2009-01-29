@@ -1325,66 +1325,64 @@ rc_time_by_slots(const sge_assignment_t *a, lList *requested, lList *load_attr, 
       if (ret != DISPATCH_OK) {
          DRETURN(ret);
       }
-   }
 
-   /* ensure all default requests are fulfilled */
-   if (slots != -1 && !allow_non_requestable) {
-      lListElem *attr;
-      dispatch_t ff;
-      const char *name;
-      double dval=0.0;
-      u_long32 valtype;
+      /* ensure all default requests are fulfilled */
+      if (!allow_non_requestable) {
+         lListElem *attr;
+         dispatch_t ff;
+         const char *name;
+         double dval=0.0;
+         u_long32 valtype;
 
-      for_each (attr, actual_attr) {
-         name = lGetString(attr, RUE_name);
-         if (!strcmp(name, "slots")) {
-            continue;
-         }
+         for_each (attr, actual_attr) {
+            name = lGetString(attr, RUE_name);
+            if (!strcmp(name, "slots")) {
+               continue;
+            }
 
-         /* consumable && used in this global/host/queue && not requested */
-         if (!is_requested(requested, name)) {
-            lListElem *default_request = lGetElemStr(a->centry_list, CE_name, name);
-            const char *def_req = lGetString(default_request, CE_default);
-            valtype = lGetUlong(default_request, CE_valtype);
-            parse_ulong_val(&dval, NULL, valtype, def_req, NULL, 0);
+            /* consumable && used in this global/host/queue && not requested */
+            if (!is_requested(requested, name)) {
+               lListElem *default_request = lGetElemStr(a->centry_list, CE_name, name);
+               const char *def_req = lGetString(default_request, CE_default);
+               valtype = lGetUlong(default_request, CE_valtype);
+               parse_ulong_val(&dval, NULL, valtype, def_req, NULL, 0);
 
-            /* ignore default request if the value is 0 */
-            if(def_req != NULL && dval != 0.0) {
-               dstring tmp_reason;
-               char tmp_reason_buf[2048];
+               /* ignore default request if the value is 0 */
+               if (def_req != NULL && dval != 0.0) {
+                  dstring tmp_reason;
+                  char tmp_reason_buf[2048];
 
-               sge_dstring_init(&tmp_reason, tmp_reason_buf, sizeof(tmp_reason_buf));
+                  sge_dstring_init(&tmp_reason, tmp_reason_buf, sizeof(tmp_reason_buf));
 
-               /* build the default request */
-               lSetString(default_request, CE_stringval, def_req);
-               lSetDouble(default_request, CE_doubleval, dval);
+                  /* build the default request */
+                  lSetString(default_request, CE_stringval, def_req);
+                  lSetDouble(default_request, CE_doubleval, dval);
 
-               tmp_start = *start_time;
-               ff = ri_time_by_slots(a, default_request, load_attr, config_attr, actual_attr, 
-                     queue, &tmp_reason, true, slots, layer, lc_factor, &tmp_start, object_name);
+                  tmp_start = *start_time;
+                  ff = ri_time_by_slots(a, default_request, load_attr, config_attr, actual_attr, 
+                        queue, &tmp_reason, true, slots, layer, lc_factor, &tmp_start, object_name);
 
-               if (ff != DISPATCH_OK) {
-                  /* useless to continue in these cases */
-                  sge_dstring_append(reason, MSG_SCHEDD_FORDEFAULTREQUEST);
-                  sge_dstring_append_dstring(reason, &tmp_reason);
-                  DRETURN(ff);
-               }
+                  if (ff != DISPATCH_OK) {
+                     /* useless to continue in these cases */
+                     sge_dstring_append(reason, MSG_SCHEDD_FORDEFAULTREQUEST);
+                     sge_dstring_append_dstring(reason, &tmp_reason);
+                     DRETURN(ff);
+                  }
 
-               if (*start_time == DISPATCH_TIME_QUEUE_END) {
-                  DPRINTF(("%s: default request \"%s\" delays start time from "sge_U32CFormat 
-                        " to "sge_U32CFormat"\n", object_name, name, latest_time, MAX(latest_time, tmp_start)));
-                  latest_time = MAX(latest_time, tmp_start);
-               }
+                  if (*start_time == DISPATCH_TIME_QUEUE_END) {
+                     DPRINTF(("%s: default request \"%s\" delays start time from "sge_U32CFormat 
+                           " to "sge_U32CFormat"\n", object_name, name, latest_time, MAX(latest_time, tmp_start)));
+                     latest_time = MAX(latest_time, tmp_start);
+                  }
+               } 
             } 
-         } 
-      }/* end for*/
-   }
- 
-   if (slots == -1) {
+         }/* end for*/
+      }
+   } else {
       slots = 1;
    }   
    /* explicit requests */
-   for_each (attr, requested) {
+   for_each(attr, requested) {
       const char *attr_name = lGetString(attr, CE_name);
 
       tmp_start = *start_time;
@@ -3217,6 +3215,9 @@ sequential_tag_queues_suitable4job(sge_assignment_t *a)
       cqname = lGetString(qep, QU_qname);
       eh_name = lGetHost(qep, QU_qhostname);
 
+      /* untag this queues */
+      lSetUlong(qep, QU_tag, 0);
+
       /* try to foreclose the cluster queue */
       if (lGetElemStr(a->skip_cqueue_list, CTI_name, cqname)) {
          DPRINTF(("skip cluster queue %s\n", cqname));
@@ -4659,9 +4660,6 @@ dispatch_t sge_sequential_assignment(sge_assignment_t *a)
       sconf_set_mes_schedd_info(false);
    } 
 
-   /* untag all queues */
-   qinstance_list_set_tag(a->queue_list, 0);
-
    sequential_update_host_order(a->host_list, a->queue_list);
 
    if (sconf_get_qs_state() != QS_STATE_EMPTY) {
@@ -4688,8 +4686,7 @@ dispatch_t sge_sequential_assignment(sge_assignment_t *a)
       }
       if (a->is_soft) {
          sconf_set_last_dispatch_type(DISPATCH_TYPE_FAST_SOFT_REQ);
-      }
-      else {
+      } else {
          sconf_set_last_dispatch_type(DISPATCH_TYPE_FAST);
       }
    }
@@ -4773,8 +4770,6 @@ dispatch_t sge_sequential_assignment(sge_assignment_t *a)
          if (a->start == DISPATCH_TIME_QUEUE_END) {
             a->start = job_start_time;
          }   
-   
-         result = DISPATCH_OK;
       }
    }
 
@@ -4831,8 +4826,6 @@ static int sequential_update_host_order(lList *host_list, lList *queues)
    if (!sconf_get_host_order_changed()) {
       DRETURN(0);
    }
-
-   sconf_set_host_order_changed(host_order_changed);
 
    for_each (hep, host_list) { /* in share/load order */
 

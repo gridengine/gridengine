@@ -115,19 +115,6 @@ static sge_follow_t Follow_Control = {
    NULL
 };
 
-/* EB: TODO: ST: remove code below ? */
-
-typedef struct {
-   pthread_mutex_t    add_order_mutex;    /* gards the access to the variables 
-                                             in this structure */
-   lList              *orders;            /* orders to process */
-   bool               is_currently_busy;  /* anothe thread is currently processing 
-                                             the orders */
-   bool               is_waiting;         /* is set, when a other thread is waiting */
-   pthread_cond_t     cond_var;           /* used for waiting till all orders 
-                                             are processed    */
-} sge_order_t;
-
 static int ticket_orders_field[] = { OR_job_number,
                                      OR_ja_task_number,
                                      OR_ticket,

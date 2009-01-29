@@ -3951,8 +3951,13 @@ int cl_com_ssl_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
       do_write_select = 1;
    }
 
-   timeout.tv_sec = timeout_val_sec; 
-   timeout.tv_usec = timeout_val_usec;
+   if (select_mode == CL_W_SELECT) {
+      timeout.tv_sec = 0;
+      timeout.tv_usec = 5*1000; /* 5 ms */
+   } else {
+      timeout.tv_sec = timeout_val_sec; 
+      timeout.tv_usec = timeout_val_usec;
+   }
 
    /* lock list */
    if ( cl_raw_list_lock(connection_list) != CL_RETVAL_OK) {
@@ -4408,7 +4413,7 @@ int cl_com_ssl_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
 
       errno = 0;
 #ifdef USE_POLL
-      select_back = poll(ufds, ufds_index, timeout_val_sec*1000 + timeout_val_usec/1000);
+      select_back = poll(ufds, ufds_index, timeout.tv_sec*1000 + timeout.tv_usec/1000);
 #else
       select_back = select(max_fd + 1, &my_read_fds, &my_write_fds, NULL, &timeout);
 #endif

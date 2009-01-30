@@ -73,12 +73,15 @@ public class PreActionPanel extends ActionPanel {
         // Check user
         if (!userName.equals(rootUser)) {
              if (userName.equals(sgeRootDir.getOwner())) {
-                 if (JOptionPane.NO_OPTION == JOptionPane.showConfirmDialog(this, vs.substituteMultiple(idata.langpack.getString(WARNING_USER_NOT_ROOT), null),
-                         idata.langpack.getString("installer.warning"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE)) {
+                 if (JOptionPane.NO_OPTION == JOptionPane.showOptionDialog(this, vs.substituteMultiple(idata.langpack.getString(WARNING_USER_NOT_ROOT), null),
+                         idata.langpack.getString("installer.warning"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null,
+                         new Object[]{idata.langpack.getString("installer.yes"), idata.langpack.getString("installer.no")}, idata.langpack.getString("installer.yes"))) {
                      parent.exit(true);
                  }
              } else {
-                 emitError(idata.langpack.getString("installer.error"), vs.substituteMultiple(idata.langpack.getString(ERROR_USER_INVALID), null));
+                 JOptionPane.showOptionDialog(this, vs.substituteMultiple(idata.langpack.getString(ERROR_USER_INVALID), null),
+                         idata.langpack.getString("installer.error"), JOptionPane.CANCEL_OPTION, JOptionPane.ERROR_MESSAGE, null,
+                         new Object[]{idata.langpack.getString("button.exit.label")}, idata.langpack.getString("button.exit.label"));
 
                  parent.exit(true);
              }

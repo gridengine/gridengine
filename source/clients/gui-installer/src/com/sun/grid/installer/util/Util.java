@@ -50,6 +50,7 @@ import java.net.ServerSocket;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -899,5 +900,20 @@ public class Util implements Config{
 
     public static String generateTimeStamp() {
         return new SimpleDateFormat("yyyy.MM.dd_HH:mm:ss").format(new Date());
+    }
+
+    public static int getExitValue(Collection<String> output) {
+        int exitValue = 0;
+        String tmpNum = "";
+
+        for (String d : output) {
+            if (d.matches("___EXIT_CODE_[1-9]?[0-9]___")) {
+                tmpNum = d.substring("___EXIT_CODE_".length());
+                tmpNum = tmpNum.substring(0, tmpNum.indexOf("_"));
+                exitValue = Integer.valueOf(tmpNum);
+            }
+        }
+
+        return exitValue;
     }
 }

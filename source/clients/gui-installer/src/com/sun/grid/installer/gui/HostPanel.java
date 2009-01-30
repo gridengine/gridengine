@@ -125,20 +125,15 @@ public class HostPanel extends IzPanel implements Config {
                     getLabel("tab.done.label.tooltip"),
                     getLabel("tab.failed.label.tooltip")};
 
-        Properties stateLocalizedTexts = new Properties();
         if (idata.langpack != null) {
             Set<String> keys = idata.langpack.keySet();
             for (Iterator<String> it = keys.iterator(); it.hasNext();) {
                 String key = it.next();
-                if (key.startsWith(LANGID_PREFIX_STATE)) {
-                    stateLocalizedTexts.put(key, idata.langpack.get(key));
-                } else if (key.startsWith("msg.")) {
+                if (key.startsWith("msg.")) {
                     localizedMessages.put(key, idata.langpack.get(key));
                 }
             }
         }
-
-        Host.State.localizedTexts = stateLocalizedTexts;
 
         initComponents();
         defaultSelectionColor = hostTF.getSelectionColor();
@@ -205,7 +200,11 @@ public class HostPanel extends IzPanel implements Config {
             lists.add(list);
             tables.add(table);
 
-            table.setModel(new HostSelectionTableModel(list, getSelectionHeaders(), getSelectionClassTypes()));
+            Properties tableLangProps = new Properties();
+            tableLangProps.put("msg.qmasterhost.already.selected", getLabel("msg.qmasterhost.already.selected"));
+            tableLangProps.put("msg.bdbhost.already.selected", getLabel("msg.bdbhost.already.selected"));
+            tableLangProps.put("title.confirmation", getLabel("title.confirmation"));
+            table.setModel(new HostSelectionTableModel(table, list, getSelectionHeaders(), getSelectionClassTypes(), tableLangProps));
 //            table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 
             table.setTableHeader(new TooltipTableHeader(table.getColumnModel(), headerToltips));
@@ -550,6 +549,38 @@ public class HostPanel extends IzPanel implements Config {
 
         // In some cases the execd spool dir does not get substituted
         idata.setVariable(VAR_EXECD_SPOOL_DIR, vs.substituteMultiple(idata.getVariable(VAR_EXECD_SPOOL_DIR), null));
+
+        // cfg.db.spooling.dir
+        String spoolingDir = "";
+        if (idata.getVariable(VAR_SPOOLING_METHOD).equals("berkeleydb")) {
+            spoolingDir = idata.getVariable(VAR_DB_SPOOLING_DIR_BDB);
+        } else {
+            spoolingDir = idata.getVariable(VAR_DB_SPOOLING_DIR_BDBSERVER);
+        }
+        idata.setVariable(VAR_DB_SPOOLING_DIR, vs.substituteMultiple(spoolingDir, null));
+
+        // Substitute the variables in Host.State tooltips
+        String key = "";
+        String value = "";
+        Host.State.localizedTexts.clear();
+        if (idata.langpack != null) {
+            Set<String> keys = idata.langpack.keySet();
+            for (Iterator<String> it = keys.iterator(); it.hasNext();) {
+                key = it.next();
+                value = vs.substituteMultiple((String)idata.langpack.get(key), null);
+                if (key.startsWith(LANGID_PREFIX_STATE)) {
+                    Host.State.localizedTexts.put(key, value);
+                }
+            }
+
+            // override the tooltip for perm_execd_spool_dir state dependig in the mode
+            if (isExpressInst) {
+                value = vs.substituteMultiple((String)idata.langpack.get("state.perm_execd_spool_dir.tooltip.global"), null);
+            } else {
+                value = vs.substituteMultiple((String)idata.langpack.get("state.perm_execd_spool_dir.tooltip.local"), null);
+            }
+            Host.State.localizedTexts.put("state.perm_execd_spool_dir.tooltip", value);
+        }
 
         // Initialize the table(s) with the qmaster and the Berkeley DB host if it's necessary
         if (true) {
@@ -995,15 +1026,6 @@ public class HostPanel extends IzPanel implements Config {
         VariableSubstitutor vs = new VariableSubstitutor(idata.getVariables());
         String variable = "";
 
-        // cfg.db.spooling.dir
-        String spoolingDir = "";
-        if (idata.getVariable(VAR_SPOOLING_METHOD).equals("berkeleydb")) {
-            spoolingDir = idata.getVariable(VAR_DB_SPOOLING_DIR_BDB);
-        } else {
-            spoolingDir = idata.getVariable(VAR_DB_SPOOLING_DIR_BDBSERVER);
-        }
-        idata.setVariable(VAR_DB_SPOOLING_DIR, vs.substituteMultiple(spoolingDir, null));
-
         // cfg.spooling.method.berkeleydbserver
         variable = idata.getVariable(VAR_SPOOLING_METHOD_BERKELEYDBSERVER);
         if (variable.equals("none")) {
@@ -1126,9 +1148,16 @@ public class HostPanel extends IzPanel implements Config {
         }
         if (numOfQmasterHost == 0 && numOfExecdHost == 0 && numOfShadowHost == 0 && numOfBdbHost == 0) {
             String message = new VariableSubstitutor(idata.getVariables()).substituteMultiple(idata.langpack.getString("warning.no.components.to.install.message"), null);
-            emitWarning(idata.langpack.getString("installer.warning"), message);
+            JOptionPane.showOptionDialog(this, message, getLabel("installer.error"),
+                    JOptionPane.CANCEL_OPTION, JOptionPane.ERROR_MESSAGE, null,
+                    new Object[]{getLabel("installer.cancel")}, getLabel("installer.cancel"));
             //We don't proceed with the installation
             checkMode = false;
+            disableControls(false);
+            if (parent != null) {
+                parent.unlockNextButton();
+                parent.unlockPrevButton();
+            }
             return;
         }
 
@@ -1157,9 +1186,15 @@ public class HostPanel extends IzPanel implements Config {
 
             VariableSubstitutor vs = new VariableSubstitutor(props);
 
-            if (JOptionPane.NO_OPTION == JOptionPane.showConfirmDialog(this, vs.substituteMultiple(getLabel("warning.comp.selected.but.no.host"), null),
-                    getLabel("installer.warning"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE)) {
+            if (JOptionPane.NO_OPTION == JOptionPane.showOptionDialog(this, vs.substituteMultiple(getLabel("warning.comp.selected.but.no.host"), null),
+                    getLabel("installer.warning"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, 
+                    new Object[]{getLabel("installer.yes"), getLabel("installer.no")}, getLabel("installer.no"))) {
                 checkMode = false;
+                disableControls(false);
+                if (parent != null) {
+                    parent.unlockNextButton();
+                    parent.unlockPrevButton();
+                }
                 return;
             }
             vs = null; // Don't use it any more
@@ -1193,7 +1228,7 @@ public class HostPanel extends IzPanel implements Config {
 
             while (threadPool.getCompletedTaskCount() < tmpList.size() && !threadPool.isTerminated()) {
                 try {
-                    Thread.sleep(100);
+                    Thread.sleep(500);
                 } catch (InterruptedException ex) {
                 }
             }
@@ -1205,13 +1240,14 @@ public class HostPanel extends IzPanel implements Config {
                     case USED_EXECD_PORT:
                     case USED_JMX_PORT:
                     case BDB_SPOOL_DIR_EXISTS:
+                    case BDB_SPOOL_DIR_WRONG_FSTYPE:
                     case PERM_QMASTER_SPOOL_DIR:
                     case PERM_EXECD_SPOOL_DIR:
                     case PERM_BDB_SPOOL_DIR:
                     case PERM_JMX_KEYSTORE:
                     case ADMIN_USER_NOT_KNOWN:
-                    case BDB_SPOOL_DIR_WRONG_FSTYPE:
                     case COPY_TIMEOUT_CHECK_HOST:
+                    case COPY_FAILED_CHECK_HOST:
                     case UNKNOWN_ERROR: {
                          invalid++;
                     }
@@ -1219,8 +1255,9 @@ public class HostPanel extends IzPanel implements Config {
             }
 
             String msg = MessageFormat.format(getLabel("warning.invalid.hosts.message"), invalid, hosts.size());
-            if (invalid > 0 && JOptionPane.NO_OPTION == JOptionPane.showConfirmDialog(this, msg,
-                    getLabel("installer.warning"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE)) {
+            if (invalid > 0 && JOptionPane.NO_OPTION == JOptionPane.showOptionDialog(this, msg,
+                    getLabel("installer.warning"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null,
+                    new Object[]{getLabel("installer.yes"), getLabel("installer.no")}, getLabel("installer.no"))) {
 
                 disableControls(false);
                 if (parent != null) {
@@ -1416,8 +1453,15 @@ public class HostPanel extends IzPanel implements Config {
         // Generate the auto_conf file for every different local execd spool dirs
         int index = 0;
         String outputFilePostfix = "";
-        for (Enumeration<String> enumer = hostSelection.keys(); enumer.hasMoreElements();) {
-            localExecdSpoolDir = enumer.nextElement();
+        boolean firstRun = true; // Let a run even if there was no execution host selected
+        for (Enumeration<String> enumer = hostSelection.keys(); firstRun || enumer.hasMoreElements();) {
+            firstRun = false;
+
+            if (enumer.hasMoreElements()) {
+                localExecdSpoolDir = enumer.nextElement();
+                idata.setVariable(VAR_EXEC_HOST_LIST, HostList.getHostNames(hostSelection.get(localExecdSpoolDir), " "));
+                idata.setVariable(VAR_EXEC_HOST_LIST_RM, HostList.getHostNames(hostSelection.get(localExecdSpoolDir), " "));
+            }
 
             // put the 
             if (!enumer.hasMoreElements()) {
@@ -1440,9 +1484,6 @@ public class HostPanel extends IzPanel implements Config {
             } else {
                 idata.setVariable(VAR_EXECD_SPOOL_DIR_LOCAL, localExecdSpoolDir);
             }
-
-            idata.setVariable(VAR_EXEC_HOST_LIST, HostList.getHostNames(hostSelection.get(localExecdSpoolDir), " "));
-            idata.setVariable(VAR_EXEC_HOST_LIST_RM, HostList.getHostNames(hostSelection.get(localExecdSpoolDir), " "));
 
             outputFilePostfix = autoConfFile + outputFilePostfix + ".conf";
             try {
@@ -1529,7 +1570,7 @@ public class HostPanel extends IzPanel implements Config {
         singleThreadPool.setThreadFactory(new InstallerThreadFactory());
 
         progressTimer = new Timer("InstallTimer");
-        progressTimer.schedule(new UpdateInstallProgressTimerTask(this, threadPool, getLabel("column.progress.label"), getLabel("progressbar.installing.label")), 10);
+        progressTimer.schedule(new UpdateInstallProgressTimerTask(this, new ThreadPoolExecutor[]{threadPool, singleThreadPool}, getLabel("column.progress.label"), getLabel("progressbar.installing.label")), 10);
 
         boolean wait = false;
         long completed = 0, started = 0;
@@ -1583,7 +1624,7 @@ public class HostPanel extends IzPanel implements Config {
                             HostInstallTableModel installModel = (HostInstallTableModel) tables.get(0).getModel();
                             for (Host host : installList) {
                                 updateModel = (HostInstallTableModel) tables.get(2).getModel();
-                                installModel.setHostState(host, Host.State.FAILED);
+                                installModel.setHostState(host, Host.State.FAILED_DEPENDENT_ON_PREVIOUS);
                                 installModel.setHostLog(host, MessageFormat.format(localizedMessages.getProperty("msg.previous.dependent.install.failed"), h.getComponentString()));
                                 installModel.removeHost(host);
                                 updateModel.addHost(host);
@@ -2006,8 +2047,8 @@ class CheckHostTask extends TestableTask {
             Debug.trace("Copy auto_conf file to '" + host.getHostname() + ":" + checkHostFile + "'.");
             CommandExecutor cmd = new CommandExecutor(variables, variables.getProperty(VAR_COPY_COMMAND), checkHostFile, 
                                                       host.getHostname() + ":" + checkHostFile + " && if [ ! -s " + checkHostFile + " ]; then echo 'File " + checkHostFile + " does not exist or empty.'; exit 1; fi");
-            cmd.execute();
-            exitValue = cmd.getExitValue();
+                cmd.execute();
+                exitValue = cmd.getExitValue();
             if (exitValue == CommandExecutor.EXITVAL_TERMINATED) {
                 //Set the log content
                 newState = Host.State.COPY_TIMEOUT_CHECK_HOST;
@@ -2025,13 +2066,14 @@ class CheckHostTask extends TestableTask {
                 //TODO: Beta and later should delete the file as part of the command add - , ";", "rm", "-f", localScript);
                 //Debug.trace("Start installation: "+cmd.getCommands());
                 cmd.execute();
-
+                int exitValueFromOutput = Util.getExitValue(cmd.getOutput());
                 exitValue = cmd.getExitValue();
-
+                //We don't trust the exit codes (rsh does not honor them)
+                exitValue = (exitValueFromOutput != 0 && exitValue == 0) ? exitValueFromOutput : exitValue;
 
                 // Set the new state of the host depending on the return value of the script
                 switch (exitValue) {
-                    case EXIT_VAL_SUCCESS: newState = prevState; break;
+                    case EXIT_VAL_SUCCESS: newState = Host.State.REACHABLE; break;
                     case EXIT_VAL_BDB_SERVER_SPOOL_DIR_PERM_DENIED: newState = Host.State.PERM_BDB_SPOOL_DIR; break;
                     case EXIT_VAL_QMASTER_SPOOL_DIR_PERM_DENIED: newState = Host.State.PERM_QMASTER_SPOOL_DIR; break;
                     case EXIT_VAL_EXECD_SPOOL_DIR_PERM_DENIED: newState = Host.State.PERM_EXECD_SPOOL_DIR; break;
@@ -2069,22 +2111,26 @@ class CheckHostTask extends TestableTask {
 class UpdateInstallProgressTimerTask extends TimerTask {
 
     private HostPanel panel;
-    private ThreadPoolExecutor tpe;
+    private ThreadPoolExecutor[] tpes;
     private JProgressBar mainBar;
     private JButton cancelButton;
     private String colName;
 
     public UpdateInstallProgressTimerTask(final HostPanel panel, ThreadPoolExecutor tpe, final String colName, final String prefix) {
+        this(panel, new ThreadPoolExecutor[]{tpe}, colName, prefix);
+    }
+
+    public UpdateInstallProgressTimerTask(final HostPanel panel, ThreadPoolExecutor[] tpes, final String colName, final String prefix) {
         super();
         
         this.panel = panel;
-        this.tpe = tpe;
+        this.tpes = tpes;
         this.colName = colName;
 
         mainBar = panel.getProgressBar();
         mainBar.setMinimum(0);
-        mainBar.setValue((int) tpe.getCompletedTaskCount());
-        mainBar.setMaximum((int) tpe.getTaskCount());
+        mainBar.setValue(getCompletedTaskCount());
+        mainBar.setMaximum(getTaskCount());
         mainBar.setString(prefix);
         //mainBar.setString(prefix + " " + cur + " / " + max);
         mainBar.setStringPainted(true);
@@ -2141,13 +2187,12 @@ class UpdateInstallProgressTimerTask extends TimerTask {
             }
 
             //Update the main ProgressBar
-            mainBar.setValue((int) tpe.getCompletedTaskCount());
-            mainBar.setMaximum((int) tpe.getTaskCount());
+            mainBar.setValue(getCompletedTaskCount());
+            mainBar.setMaximum(getTaskCount());
 
-            //Sleep for some time
             try {
                 Thread.sleep(200);
-            } catch (InterruptedException ex) {
+            } catch (InterruptedException e) {
             }
         }
 
@@ -2161,6 +2206,38 @@ class UpdateInstallProgressTimerTask extends TimerTask {
                 panel.triggerInstallButton(false);
             }
         }
+    }
+
+    /**
+     * Returns the sum of completed tasks
+     * @return the sum of completed tasks
+     */
+    private int getCompletedTaskCount() {
+        int count = 0;
+
+        for (ThreadPoolExecutor tpe : tpes) {
+            if (tpe != null && !tpe.isTerminated()) {
+                count += tpe.getCompletedTaskCount();
+            }
+        }
+
+        return count;
+    }
+
+    /**
+     * Returns the sum of tasks
+     * @return the sum of tasks
+     */
+    private int getTaskCount() {
+        int count = 0;
+
+        for (ThreadPoolExecutor tpe : tpes) {
+            if (tpe != null && !tpe.isTerminated()) {
+                count += tpe.getTaskCount();
+            }
+        }
+
+        return count;
     }
 }
 
@@ -2309,6 +2386,9 @@ class InstallTask extends TestableTask {
                 tabPos = 1;
             } else if (exitValue == CommandExecutor.EXITVAL_INTERRUPTED) {
                 state = Host.State.CANCELED;
+                tabPos = 2;
+            } else if (exitValue == EXIT_VAL_FAILED_ALREADY_INSTALLED_COMPONENT) {
+                state = Host.State.FAILED_ALREADY_INSTALLED_COMPONENT;
                 tabPos = 2;
             } else {
                 state = Host.State.FAILED;

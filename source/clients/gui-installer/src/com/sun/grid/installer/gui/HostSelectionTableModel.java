@@ -30,6 +30,10 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.installer.gui;
 
+import java.text.MessageFormat;
+import java.util.Properties;
+import javax.swing.JOptionPane;
+import javax.swing.JTable;
 import javax.swing.event.TableModelEvent;
 
 public class HostSelectionTableModel extends SortedTableModel {
@@ -38,6 +42,9 @@ public class HostSelectionTableModel extends SortedTableModel {
     final private Class[] types;
 
     private HostList hostList;
+    private JTable table;
+
+    private Properties langProperies;
 
     // To ensure the qmaster host singularity among diff. tables, default: no qmaster
     private static Host qmasterHost = null;
@@ -45,11 +52,13 @@ public class HostSelectionTableModel extends SortedTableModel {
     // To ensure the Berkeley db host singularity among diff. tables, default: no bdb server
     private static Host bdbHost = null;
 
-    public HostSelectionTableModel(HostList hostList, String [] headers, Class[] types) {
+    public HostSelectionTableModel(JTable table, HostList hostList, String [] headers, Class[] types, Properties langProperies) {
         super(new Object[][]{}, headers);
+        this.table = table;
         this.headers = headers;
         this.types = types;
         this.hostList = hostList;
+        this.langProperies = langProperies;
     }
 
     @Override
@@ -169,13 +178,55 @@ public class HostSelectionTableModel extends SortedTableModel {
         Host h = hostList.get(row);
         
         switch (col) {
-            case 3: return (qmasterHost == null || qmasterHost.equals(h));
+            case 3: {
+                // if there is already a qmaster host and it's not the selected host...
+                if (qmasterHost != null && !qmasterHost.equals(h)) {
+                    // ...ask whether the user want to change qmaster host selection
+                    String message = MessageFormat.format(langProperies.getProperty("msg.qmasterhost.already.selected"), qmasterHost.getHostAsString());
+                    if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(table, message, 
+                            langProperies.getProperty("title.confirmation"), JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE)) {
+                        qmasterHost.setQmasterHost(false);
+                        fireTableCellUpdated(getRowIndex(hostList.indexOf(qmasterHost)), col);
+
+                        h.setQmasterHost(true);
+                        fireTableCellUpdated(row, col);
+
+                        qmasterHost = h;
+                        return true;
+                    } else {
+                        return false;
+                    }
+                } else {
+                    return true;
+                }
+            }
             case 4:
             case 5:
             case 6:
             case 7:
             case 8: return true;
-            case 9: return (bdbHost == null || bdbHost.equals(h));
+            case 9: {
+                // if there is already a bdb host and it's not the selected host...
+                if (bdbHost != null && !bdbHost.equals(h)) {
+                    // ...ask whether the user want to change bdb host selection
+                    String message = MessageFormat.format(langProperies.getProperty("msg.bdbhost.already.selected"), bdbHost.getHostAsString());
+                    if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(table, message,
+                            langProperies.getProperty("title.confirmation"), JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE)) {
+                        bdbHost.setBdbHost(false);
+                        fireTableCellUpdated(getRowIndex(hostList.indexOf(bdbHost)), col);
+
+                        h.setBdbHost(true);
+                        fireTableCellUpdated(row, col);
+
+                        bdbHost = h;
+                        return true;
+                    } else {
+                        return false;
+                    }
+                } else {
+                    return true;
+                }
+            }
             default: return false;
         }
     }    

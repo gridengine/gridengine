@@ -266,6 +266,11 @@ ___INFO__MARK_END__-->
                 <param name="default" value="true"/>
             </validator>
         </field>
+        <field type="dir" align="left" variable="add.db.spooling.dir.bdb" conditionid="!(cond.qmaster.on.localhost)+(cond.spooling.bdb|cond.spooling.classic)">
+            <spec id="cfg.db.spooling.dir.label" size="35" />
+            <dependency type="disable" refid="cfg.spooling.method" value="classic"/>
+            <validator id="cfg.db.spooling.dir.notemptyvalidator" class="com.izforge.izpack.util.NotEmptyValidator" />
+        </field>
         <field type="text" align="left" variable="add.db.spooling.dir.bdbserver" conditionid="cond.spooling.bdbserver">
             <spec id="cfg.db.spooling.dir.label" size="35" />
             <dependency type="disable" refid="cfg.spooling.method" value="classic"/>

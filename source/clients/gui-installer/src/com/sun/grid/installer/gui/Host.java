@@ -83,6 +83,8 @@ public class Host implements Config {
         SUCCESS,
         CANCELED,
         FAILED,
+        FAILED_ALREADY_INSTALLED_COMPONENT, // not used
+        FAILED_DEPENDENT_ON_PREVIOUS,
         PERM_QMASTER_SPOOL_DIR,
         PERM_EXECD_SPOOL_DIR,
         PERM_BDB_SPOOL_DIR,
@@ -95,7 +97,7 @@ public class Host implements Config {
         USED_JMX_PORT,
         UNKNOWN_ERROR;
         
-        public static Properties localizedTexts;
+        public static Properties localizedTexts = new Properties();
 
         @Override
         public String toString() {

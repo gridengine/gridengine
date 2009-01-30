@@ -61,17 +61,6 @@ RunAsBoth()
    fi
 }
 
-# if Berkeley db server host
-if [ "$IS_BDB" = true ]; then
-   # if BDB server spooling is enabled check write permission on BDB spool dir
-   if [ "$SPOOLING_METHOD" = "berkeleydb" -a "$DB_SPOOLING_SERVER" != "none"  ]; then
-      IsDirWritable "${cfg.db.spooling.dir}"
-      if [ $EXIT_CODE -ne 0 ]; then
-         exit 10;
-      fi
-   fi
-fi
-
 # returns with the first existing parent directory in the hierarchy
 GetFirstExistingDir()
 {
@@ -84,6 +73,15 @@ GetFirstExistingDir()
      done
   fi
   echo $dir
+}
+
+#Genaretes output from the exit code and terminates the script
+# $1 ... EXIT_CODE
+Exit()
+{
+   EXIT_CODE=$1
+   echo "___EXIT_CODE_${EXIT_CODE}___"
+   exit $EXIT_CODE
 }
 
 # checks whether the executor or the admin user has write permission on
@@ -103,9 +101,20 @@ IsDirWritableByAdminUser()
 }
 
 #Test that admin user is availabe on the remote host. The installation will need it at some point!
-"${cfg.sge.root}"/utilbin/"${host.arch}"/adminrun "${cfg.admin.user}" echo
-if [ $? -ne 0 ]; then
-   exit 50  # admin user not known on this host
+RunAsAdmin echo
+if [ $EXIT_CODE -ne 0 ]; then
+   Exit 50  # admin user not known on this host
+fi
+
+# if Berkeley db server host
+if [ "$IS_BDB" = true ]; then
+   # if BDB server spooling is enabled check write permission on BDB spool dir
+   if [ "$SPOOLING_METHOD" = "berkeleydb" -a "$DB_SPOOLING_SERVER" != "none"  ]; then
+      IsDirWritable "${cfg.db.spooling.dir}"
+      if [ $EXIT_CODE -ne 0 ]; then
+         Exit 10
+      fi
+   fi
 fi
 
 # if qmaster host
@@ -115,13 +124,13 @@ if [ "$IS_QMASTER" = true ]; then
    # check write permission on qmaster spool dir
    IsDirWritable "${cfg.qmaster.spool.dir}"
    if [ $EXIT_CODE -ne 0 ]; then
-      exit 20;
+      Exit 20
    fi
 
    # check write permission on global execd spool dir
    IsDirWritable "${cfg.execd.spool.dir}"
    if [ $EXIT_CODE -ne 0 ]; then
-      exit 21;
+      Exit 21
    fi
 
    # if JMX is enabled check write permission on JMX keystore dir
@@ -130,7 +139,7 @@ if [ "$IS_QMASTER" = true ]; then
       # TODO check JMX port usage
       IsDirWritable "${cfg.sge.jmx.ssl.keystore}"
       if [ $EXIT_CODE -ne 0 ]; then
-         exit 22;
+         Exit 22
       fi
    fi
 
@@ -138,20 +147,20 @@ if [ "$IS_QMASTER" = true ]; then
    if [ "$SPOOLING_METHOD" = "berkeleydb" -a "$DB_SPOOLING_SERVER" = "none"  ]; then
       # ...fail if exists
       if [ -d ${cfg.db.spooling.dir} ]; then
-         exit 24;
+         Exit 24
       fi
 
       # ...fail if FSType equals 'nfs'
       FIRST_EXISTING_DIR=`GetFirstExistingDir "${cfg.db.spooling.dir}"`
       fstype=`"${cfg.sge.root}"/utilbin/"${host.arch}"/fstype $FIRST_EXISTING_DIR`
       if [ "$fstype" = "nfs" ]; then
-         exit 25;
+         Exit 25
       fi
 
       # ...check write permission on BDB spool dir
       IsDirWritable "${cfg.db.spooling.dir}"
       if [ $EXIT_CODE -ne 0 ]; then
-         exit 23;
+         Exit 23
       fi
    fi
 fi
@@ -167,8 +176,8 @@ if [ "$IS_EXECD" = true ]; then
    # check write permission on local execd spool dir
    IsDirWritableByAdminUser "${cfg.exec.spool.dir.local}"
    if [ $EXIT_CODE -ne 0 ]; then
-      exit 40;
+      Exit 40
    fi
 fi
 
-exit 0;
+Exit 0

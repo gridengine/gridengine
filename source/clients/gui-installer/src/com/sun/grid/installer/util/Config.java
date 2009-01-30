@@ -135,4 +135,5 @@ public interface Config {
     public static final int EXIT_VAL_BDB_SPOOL_WRONG_FSTYPE = 25;
     public static final int EXIT_VAL_EXECD_SPOOL_DIR_LOCAL_PERM_DENIED = 40;
     public static final int EXIT_VAL_ADMIN_USER_NOT_KNOWN = 50;
+    public static final int EXIT_VAL_FAILED_ALREADY_INSTALLED_COMPONENT = 10;
 }

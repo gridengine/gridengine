@@ -1,3 +1,28 @@
+ZG-2009-01-30-0: Bugfix:      gui-installer: Missing Bdb spool directory field in
+                              case of root user.
+                 Bugfix:      gui-installer: during installation the qmaster's
+                              installation task is not shown on the progress bar
+                 Bugfix:      gui-installer: on ResultPanel the "Save as..." button
+                              pops-up an open file dialog
+                 Bugfix:      gui-installer: after resolving the problem discovered
+                              by the check_host script the state does not get modified
+                              to "Reachable"
+                 Bugfix:      gui-installer: the scroll bar on log window is positoned
+                              to the bottom of the text area
+                 Bugfix:      gui-installer: check_host script does not return back
+                              with the proper exit value in case of rsh.
+                 Enhancem.:   change "Resolve" button to "Add" for better understanding
+                 Enhancem.:   "No" button is the default in case the check_host fails
+                              on some host and the user is asked whether continue the
+                              installation
+                 Enhancem.:   new host state for installation failure due to dependency
+                              on previously failed component
+                 Enhancem.:   new host state for installation failure due to already
+                              installed component
+                 Enhancem.:   new introduced confirmation dialog to change qmaster
+                              selection on Host Selection panel
+                 Enhancem.:   improved tooltips
+
 LP-2009-01-30-1: Enhacem.:    gui-installer: start_gui_installer.sh renamed to
                                              start_gui_installer in distribution
                  Enhacem.:    gui-installer: start_gui_installer showns no
@@ -72,7 +97,7 @@ RD-2009-01-26-1: CVS:         Created V62u2beta2_TAG
 CR-2009-01-26-0: Bugfix:      Internal event clients, like the scheduler,
                               do not reconnect after timing out
                  Bugster:     6793076
-                 Issue:       2890 
+                 Issue:       2890
                  Cleanup:     o smaller commlib cleanups
                  Enhancem.:   o disabled call of application info callback
                                 function when SIM clients name is not "qping"
@@ -112,7 +137,7 @@ GH-2009-01-26-0: Bugfix:      Subordinate suspension state can not be changed
                  Bugster:     6793687
                  Issue:       2886
                  Review:      DG
- 
+
 LP-2009-01-22-0: Bugfix:      gui-installer: Parallel shadowd installation might
                               fail
                  Bugfix:      gui-installer: Detecting missing arch script and
@@ -129,13 +154,13 @@ GH-2009-01-22-0: Bugfix:      bad logging if "act_qmaster" file does not exist
                  Bugster:     6288964
                  Issue:       2881
                  Review:      CR
- 
+
 DG-2009-01-22-0: Bugfix:      Calling drmaa_exit before any calls to drmaa_init
                               results in segfault
                  Issue:       2882
                  Bugster:     6796175
                  Review:      AA
- 
+
 RD-2009-01-21-0: Bugfix:      - subordinate list generated a critical message entry
                               - subordination was broken when setup was done in wrong
                                 order
@@ -152,9 +177,9 @@ JG-2009-01-19-0: Bugfix:      end of parallel job doesn't kill subsequently
                  Issue:       2329
                  Review:      RD
 
-DG-2009-01-19-0: Bugfix:      execd: "ptf complains: Job does not exist" 
+DG-2009-01-19-0: Bugfix:      execd: "ptf complains: Job does not exist"
                               message in log file
-                 Merged from: V61_BRANCH (DG-2009-01-15-0) 
+                 Merged from: V61_BRANCH (DG-2009-01-15-0)
                  Bugster:     6326191
                  Issue:       1806
                  Review:      JG
@@ -220,28 +245,28 @@ DG-2009-01-12-0: Bugfix:      man queue_conf section on subordinate list is a
                  Issue:       2732
                  Review:      JG
 
-EB-2009-01-09-0: Bugfix:      qalter rejects other modification if -w is 
-                              not explicitly allowed in jsv_allowed_mod 
+EB-2009-01-09-0: Bugfix:      qalter rejects other modification if -w is
+                              not explicitly allowed in jsv_allowed_mod
                               when JSV is used
                  Issue:	      2854
                  Bugster:     6788644
-                 Bugfix:      qalter rejects modification of hold state 
-                              if -t is not also allowed in jsv_allowed_mod 
+                 Bugfix:      qalter rejects modification of hold state
+                              if -t is not also allowed in jsv_allowed_mod
                               when JSV is used
                  Issue:       2855
                  Bugster:     6788646
-                 Bugfix:      qresub does not set a new job id for the 
+                 Bugfix:      qresub does not set a new job id for the
                               new job.
                  Issue:       2839
                  Bugster:     6786343
-                 Bugfix:      Tight pe job might stuck in system although 
+                 Bugfix:      Tight pe job might stuck in system although
                               enforce_limit parameter is set.
                  Issue:	      2856
                  Bugster:     6788647
                  Bugfix:      echo_raw -r without additional arguments
                               produces core dump
                  Issue:       2848
-                 Bugster:     6788512   
+                 Bugster:     6788512
                  Bugfix:      Impossible to change -i -e and -S via JSV
                  Issue:       2857
                  Bugster:     6788649
@@ -249,12 +274,12 @@ EB-2009-01-09-0: Bugfix:      qalter rejects other modification if -w is
                               still set
                  Issue:       2858
                  Bugster:     6788665
-                 Bugfix:      Pe range (pe_min, pe_max) can't be modified 
-                              even if it is specified in jsv_allowed_mod 
+                 Bugfix:      Pe range (pe_min, pe_max) can't be modified
+                              even if it is specified in jsv_allowed_mod
                               list when JSV is used
                  Issue:       2859
                  Bugster:     6788651
-                 Bugfix:      Master rejects job if JSV verification process 
+                 Bugfix:      Master rejects job if JSV verification process
                               takes longer than 10 seconds.
                  Issues:      2860
                  Bugster:     6788652
@@ -277,7 +302,7 @@ JG-2009-01-02-0: Bugfix:      incomplete accounting for the last short tasks of
                  Issue:       2815
                  Bugfix:      aborted slave task on tight integration job
                               generates error log in execd
-                 Bugster:     5082660 
+                 Bugster:     5082660
                  Issue:       1197
                  Bugfix:      qmaster reports commlib read error in message
                               file when qstat -j is executed
@@ -287,7 +312,7 @@ JG-2009-01-02-0: Bugfix:      incomplete accounting for the last short tasks of
 
 DG-2008-12-30-0: Bugfix:      JSV(1) man page issues
                  Issue:       2863
-                 Bugster:     6789620 
+                 Bugster:     6789620
                  Review:      JG
 
 JG-2008-12-29-0: Bugfix:      sge_pe man page should document that
@@ -320,10 +345,10 @@ JG-2008-12-22-0: Bugfix:      sge_resource_quota(5) should warn that resource
 
 RD-2008-12-19-0: Bugfix:      TMPDIR of a tight integration job is sometimes not
                               deleted
-                 Issue:       2846 
+                 Issue:       2846
                  Bugster:     6787485
                  Review:      CR
-                  
+
 CR-2008-12-19-0: Bugfix:      o fixed test_cl_commlib module test binary
                                 which might left deadlocked processes if
                                 used with CL_FORK_SLEEP_CHILD environment
@@ -349,9 +374,9 @@ RD-2008-12-18-0: Bugfix:      - improved reprioritize data structures
 CR-2008-12-18-0: Bugfix:      o execd job start might produce communication
                                 errors because of not posix compliant fork()
                                 system call
-                 Cleanup:     o poll()/select() error handling  
+                 Cleanup:     o poll()/select() error handling
                  Bugster:     6786152
-                 Issue:       2837 
+                 Issue:       2837
                  Review:      RD
 
 ZG-2008-12-18-0: Enhancem.:   new intermediate page for manual version selection
@@ -489,7 +514,7 @@ CR-2008-12-11-0: Cleanup:     final cleanup of poll() enhancements
                                    0(timeout) or -1(error) so that connection
                                    garbage collector can remove them also
                                  o fixed test_virtual_gdi_client
-                                   
+
                  Belongs to:  CR-2008-12-08-0
                  Review:      RD
 
@@ -525,7 +550,7 @@ EB-2008-12-10-0: Enhancemn.:  - Added test functionality to qmaster to slow
                                 environment variabes and not as parameters.
                               - fixed bug is bourne shell JSV which made it
                                 impossible to add JSV parameters if they
-                                where not previously expored by the master. 
+                                where not previously expored by the master.
                               - fixed bug which rejected first submitted job
                                 after JSV process was kill or when a protocoll
                                 error occured.
@@ -580,7 +605,7 @@ CR-2008-12-08-1: Bugfix:      fixed module test binary test_cl_commlib_client
 
 CR-2008-12-08-0: Bugfix:      Commlib: Use poll() instead of select() for
                                        linux and solaris architectures
-                              Commlib: commlib logging output now also 
+                              Commlib: commlib logging output now also
                                        contains os thread id
                  Belongs to:  CR-2008-11-28-0
                  Review:      RD
@@ -599,7 +624,7 @@ AA-2008-12-05-0: Enhancem.:   - JGDI methods getSgeQmasterPort(), getSgeExecdPor
                               - JGDIProxy method getMBeanServerConnection()
                  Review:      EB
 
-MP-2008-12-05-0: Bugfix:      The sge_conf man page does not contain any 
+MP-2008-12-05-0: Bugfix:      The sge_conf man page does not contain any
                               information regarding SCHEDULER_TIMEOUT
                  Bugster:     6288944
                  Issue:       498
@@ -607,7 +632,7 @@ MP-2008-12-05-0: Bugfix:      The sge_conf man page does not contain any
 
 JG-2008-12-04-0: Bugfix:      - qsub(1) explanation of -b n shall mention
                                 performance impact
-                              - load sensor information is incomplete in 
+                              - load sensor information is incomplete in
                                 sge_execd(8)
                  Bugster:     6535332, 6575742
                  Issue:       2208, 2291
@@ -618,21 +643,21 @@ MD-2008-12-04-0: Bugfix:      o qconf -kej should remove jobs and then shutdown 
                  Bugster:     6675023, 6704958
                  Review:      DG
 
-RN-2008-12-03-0: Bugfix:      qmaster exits with lGetString: wrong type for 
+RN-2008-12-03-0: Bugfix:      qmaster exits with lGetString: wrong type for
                               field JG_qhostname (lHostT)
                  Bugster:     6776137
                  Issue:       2816
-                 Review:      JG 
+                 Review:      JG
 
 EB-2008-12-04-0: Enhancemn.:  - additional JSV parameter in global conf which
                                 makes it possible to reject the use of certain
                                 qalter switches if server side JSV is used
                               - corresponding changes in qmon man page
-                              - added missing jsv_url description to sge_conf.	
+                              - added missing jsv_url description to sge_conf.
                               - fixed bug in read_raw implementation which
                                 might cause hanging client JSV scripts on some
                                 architectures.
-	         Review:      MD						  
+	         Review:      MD
 
 JG-2008-12-03-0: Bugfix:      fixed memory leaks
                  Review:      DG
@@ -685,11 +710,11 @@ LP-2008-11-27-0: Enhancem.:   Gridengine GUI Installer - initial version
                  Review       ZG, JO, RD, MD
 
 RD-2008-11-26-0: Enhancem.:   enabled jemalloc as default for linux hosts
-                 Review       JG 
+                 Review       JG
 
 EB-2008-11-25-0: Bugfix:      - removed deadlock situation in qmaster in
 										  combination with server JSV
-							         - fixed bug in Perl JSV	
+							         - fixed bug in Perl JSV
 					  Review:      RD
 
 LP-2008-11-24-0: Enhancem.:   Modifed JMX behavior -jmx and no flag are equal
@@ -746,12 +771,12 @@ LP-2008-11-20-0: Enhancem.:   JMX is installed be default, new flag -no-jmx
                  Issue:       2797, 2798
                  Review:      MD
 
-DG-2008-11-20-0: Bugfix:      - ibm-loadsensor should be automatically copied 
+DG-2008-11-20-0: Bugfix:      - ibm-loadsensor should be automatically copied
                               to correct location during installation.
                               - typo
                  Bugster:     6315286
                  Issue:       2796
-                 Review:      MD 
+                 Review:      MD
 
 EB-2008-11-20-1: Bugfix:      - fixed problem with lost data in bourne
                                 shell JSV scripts on platforms were
@@ -771,7 +796,7 @@ EB-2008-11-20-0: Bugfix:      - trigger soft and then hard shutdown
 EB-2008-11-19-1: Bugfix:      - 2nd job verification is only done if JSV
                                 is executed when jobs are added to master
                               - fixed bug introduced with EB-2008-11-19-0
-                 Rreview:     MD (RD)			
+                 Rreview:     MD (RD)
 
 RD-2008-11-19-0: Bugfix:      - fixed two JSV related memory leaks
                  Review:      EB
@@ -779,8 +804,8 @@ RD-2008-11-19-0: Bugfix:      - fixed two JSV related memory leaks
 EB-2008-11-19-0: Bugfix:      - fixed several minor issues concerning JSV
 					  Review:      MD
 
-DG-2008-11-18-1: Bugfix:      Verification of qlogin and qsh does always 
-                              return error code 0. 
+DG-2008-11-18-1: Bugfix:      Verification of qlogin and qsh does always
+                              return error code 0.
                  Bugster:     6726233
                  Issue:       2731
                  Review:      MP
@@ -810,7 +835,7 @@ EB-2008-11-13-0: Enhancem.:   - added JSV URL to submit dialog of qmon
 										- moved error/info messages to msg files
 										- fixed bug in JSV scripts
 										- disabled logging in JSV scripts
-                 Review:      MD 
+                 Review:      MD
 
 CR-2008-11-12-0: Bugfix:      fixed test_issues module test binary
                  Review:      AA
@@ -838,7 +863,7 @@ EB-2008-11-06-0: Enhancem.:   - added TCL implementation for JSV template
 										- parsing code for JSV output
                               - functionality to test parsing if JSV related
 										  is executed within TS
-                              - added man page jsv.1 
+                              - added man page jsv.1
 										- source code documentation
 										- fixed several adoc headers which broke
 										  generation of pdf files
@@ -849,7 +874,7 @@ JG-2008-11-06-0: Bugfix:      When a shadow master took over, the exec daemons
                               Introduced in 6.2u1 development.
                  Review:      CR
 
-CR-2008-11-06-0: Cleanup:     Fixed compiler warnings on hp11 in 
+CR-2008-11-06-0: Cleanup:     Fixed compiler warnings on hp11 in
                               cl_ssl_framework.c (cl_tcp_framework.c already
                               contains the changes).
                  Belongs to:  CR-2008-10-30-1
@@ -866,10 +891,10 @@ RD-2008-11-03-0: Enhancem.:   added per job consumable functionality to avoid
 
 EB-2008-11-02-0: Enhancem.:   first checkin of JSV
                               - functional specification
-                              - JSV script template 
+                              - JSV script template
                               - prepared master for JSV execution
                               - JSV start/stop in clients and master
-                 Review:      MD 
+                 Review:      MD
                  NOTE:        development is not finished. JSV functionality does
                               not work now. Also documentation is not finished.
                               Final checkin will follow within the next 2 weeks.
@@ -878,7 +903,7 @@ MD-2008-10-30-0: Bugfix:      creation of local config during execd install brok
                  BelongsTo:   MP-2008-10-22-1
                  Review:      JG
 
-CR-2008-10-30-0: Bugfix:      qmaster might be unresponsive for a time because 
+CR-2008-10-30-0: Bugfix:      qmaster might be unresponsive for a time because
                               of commlib timeout
                  Merged from: V62_BRANCH (CR-2008-10-23-1)
                  Bugster:     6754568, 6767234
@@ -888,7 +913,7 @@ CR-2008-10-30-0: Bugfix:      qmaster might be unresponsive for a time because
                                 test_cl_issue_2747_client
                                 test_cl_issue_2747_server
                               o enhanced commlib thread list by thread type
-                                
+
                               o qmaster threads now use commlib log list for
                                 communication logging
                               o cleanup of commlib internal connection state
@@ -899,7 +924,7 @@ CR-2008-10-30-0: Bugfix:      qmaster might be unresponsive for a time because
                               o fixed bug in ssl shutdown behaviour
                               o fixed bug in Makefile of commlib/sheperd
                                 (missing dependency for libcomm_static.a)
-                              o Fixed possible deadlock in IJS 
+                              o Fixed possible deadlock in IJS
                                 (repairs hanging sheduler problem of CR 6751413)
 
 GH-2008-10-29-0: Bugfix:      PVM start/stop scripts should not put queue
@@ -931,20 +956,20 @@ MP-2008-10-22-0: Bugfix:      qconf -Aconf modifies existing configuration
                  Issue:       2752
                  Review:      JG
 
-MD-2008-10-20-0: Bugfix:      o SGE_EXECD_PORT gets accepted even when the 
-                                same as SGE_QMASTER_PORT 
+MD-2008-10-20-0: Bugfix:      o SGE_EXECD_PORT gets accepted even when the
+                                same as SGE_QMASTER_PORT
                  Bugster:     6750688
                  Issue:       2754
                  Review:      HP
 
 LP-2008-10-17-0: Enhancem.:   Introduced -autogui option to inst_sge
-                 Bugfix:      Cannot choose admin user when installing as root 
+                 Bugfix:      Cannot choose admin user when installing as root
                               - installation fails
                  Bugfix:      Installation might fail if SGE_CELL directory exists
                  Bugfix:      Service Tags support displays messages on qmaster startup
-                 Bugfix:      Upgrade in copy mode should suggest spooling method 
+                 Bugfix:      Upgrade in copy mode should suggest spooling method
 		               from the backup first
-                 Bugfix:      Parallel execd autoinstallation might fail when using 
+                 Bugfix:      Parallel execd autoinstallation might fail when using
                               only SMF
                  Bugster:     6739725, 6742941, 6743003, 6743012, 6743001
                  Issue:       2694, 2707, 2710, -, 2709
@@ -1205,14 +1230,14 @@ DG-2008-08-07-0: Bugfix:     Man page qdel is misleading with the -f option.
 MD-2008-07-31-0: CVS:       Created V62_TAG
 -------------------------------------------
 
-JG-2008-07-28-0: Bugfix:    Memory leak in sge_execd with qsub -v SGE_* or 
+JG-2008-07-28-0: Bugfix:    Memory leak in sge_execd with qsub -v SGE_* or
                             qsub -V.
                  Bugster:   6729411
                  Issue:     2672
                  Review:    MD
 
 HP-2008-07-23-0: Bugfix:    On Windows/Interix, the shepherd didn't exit
-                            immediately after the qrsh job finished, 
+                            immediately after the qrsh job finished,
                             it took 60 s to finish
                  Review:    JG
 

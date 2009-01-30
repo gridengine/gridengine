@@ -113,32 +113,43 @@ public class HostList extends ArrayBlockingQueue<Host> {
     /**
      * Returns all of the host from the list in the given type.
      * @param type The type of the hosts should return.
-     * @return All of the hosts with the given type
+     * @return All of the hosts with the given type (list is unique)
      *
      * @see Host
      */
     public ArrayList<Host> getHosts(String type) {
         ArrayList<Host> result = new ArrayList<Host>();
+        ArrayList<String> hostnames = new ArrayList<String>();
 
         for (Host host : this) {
+            //We need a unique list of Hosts of single type
+            if (hostnames.contains(host.getHostAsString())) {
+                continue;
+            }
 
             if (type.equals(Host.HOST_TYPE_QMASTER) && host.isQmasterHost()) {
                 result.add(host);
+                hostnames.add(host.getHostAsString());
             }
             if (type.equals(Host.HOST_TYPE_EXECD) && host.isExecutionHost()) {
                 result.add(host);
+                hostnames.add(host.getHostAsString());
             }
             if (type.equals(Host.HOST_TYPE_SHADOWD) && host.isShadowHost()) {
                 result.add(host);
+                hostnames.add(host.getHostAsString());
             }
             if (type.equals(Host.HOST_TYPE_BDB) && host.isBdbHost()) {
                 result.add(host);
+                hostnames.add(host.getHostAsString());
             }
             if (type.equals(Host.HOST_TYPE_ADMIN) && host.isAdminHost()) {
                 result.add(host);
+                hostnames.add(host.getHostAsString());
             }
             if (type.equals(Host.HOST_TYPE_SUBMIT) && host.isSubmitHost()) {
                 result.add(host);
+                hostnames.add(host.getHostAsString());
             }
         }
 

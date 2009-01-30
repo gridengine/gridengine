@@ -247,8 +247,8 @@ ___INFO__MARK_END__-->
         <str id="cfg.cell.name.notemptyvalidator" txt="Cell name is mandatory!" />
         <str id="cfg.cell.name.exists.fileexistsvalidator"
              txt="<html>A master host with the chosen cell name already exists!<br><br>
-                        If you don't want to install another master host, go <br>
-                        back to the previous screen and uncheck Qmaster component!</html>" />
+                        If you don't want to install another master host, go back<br>
+                        to the previous screen and uncheck Qmaster component!</html>" />
         <str id="cfg.cell.name.notexists.fileexistsvalidator"
              txt="<html>A master host with the chosen cell name does not exist!<br><br>
                         If you want to install another master host, go back to the<br>

@@ -82,7 +82,7 @@ public class Util implements Config{
         String pattern = "";
         while (s.hasNext()) {
             pattern = s.next().toLowerCase().trim();
-            type = getType(pattern);
+            type = isIpPattern(pattern) ? Host.Type.IP : Host.Type.HOSTNAME;
             tempList = parsePattern(pattern, type);
             hostList = joinList(hostList, tempList);
         }
@@ -90,18 +90,31 @@ public class Util implements Config{
         return hostList;
     }
 
-    private static Host.Type getType(String pattern) {
-        char c;
-        for (int i=0; i<pattern.length(); i++) {
-            c = pattern.charAt(i);
-            if (c >= '0' && c <= '9') {
-                return Host.Type.IP;
-            }
-            if (c >= 'a' && c <= 'z') {
-                return Host.Type.HOSTNAME;
+    /* Tests if valid characters for IP */
+    public static boolean isIpPattern(String pattern) {
+        for (int i=0 ; i < pattern.length() ;i++) {
+            char c = pattern.charAt(i);
+            switch (c) {
+                case '0':
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                case '6':
+                case '7':
+                case '8':
+                case '9':
+                case '-':
+                case '[':
+                case ']':
+                case '.':
+                    break;
+                default:
+                    return false;
             }
         }
-        throw new IllegalArgumentException("Can't get hots type for pattern "+pattern);
+        return true;
     }
 
     public static List<String> parseHostPattern(String input) {
@@ -155,14 +168,14 @@ public class Util implements Config{
                     }                  
                 default:
                     s.close();
-                    throw new IllegalArgumentException("Invalid value " + elem + " for type " + type.toString());
+                    throw new IllegalArgumentException("error - invalid value " + elem + " for type " + type.toString());
             }
         }
         s.close();
 
         //Ip must have 4 octects
         if (type == Host.Type.IP && i != 4) {
-            throw new IllegalArgumentException("Ip must have 4 octects. Got "+i);
+            throw new IllegalArgumentException("error - IP must have 4 octects. Got "+i);
         }
 
         //Final reduction to single host list
@@ -193,7 +206,7 @@ public class Util implements Config{
             switch (type) {
                 case HOSTNAME:
                     //We have a string
-                    if (c >= 'a' && c <= 'z' || (c >= '0' && c <='9')) {
+                    if (c >= 'a' && c <= 'z' || (c >= '0' && c <='9') || c == '_') {
                         sb.append(c);
                         continue;
                     }
@@ -206,7 +219,7 @@ public class Util implements Config{
                     }
                     break;
                 default:
-                    throw new IllegalArgumentException("Unknown type " + type.toString());
+                    throw new IllegalArgumentException("error - unknown type " + type.toString());
             }
             //Something else
             switch (c) {
@@ -218,6 +231,10 @@ public class Util implements Config{
                     }
                     sb = new StringBuilder();
                     level++; //increase bracket level
+                    //We support only single level of brackets
+                    if (level > 1) {
+                        throw new IllegalArgumentException("error - invalid character '"+c+"' in "+input);
+                    }
                     
                     //TODO We should reduce here what we can
                     /*if (item.size() == 0) {
@@ -310,8 +327,25 @@ public class Util implements Config{
                 case '-':
                     //Add possible last element
                     if (sb.toString().trim().length() > 0) {
+                       Integer num = null;
+                       try {
+                           num = Integer.parseInt(sb.toString().trim());
+                       } catch (NumberFormatException ex) {
+                           //Element is not a number!
+                           sb.append(c);
+                           continue;
+                       }
+                       if (type == Host.Type.HOSTNAME && level == 0 || num < 0) {
+                           //Missing an opening bracket or do not have a valid number - not a range
+                           sb.append(c);
+                           continue;
+                       }
                        item.add(sb.toString().trim());
                        list.addFirst(item);
+                    } else if (type == Host.Type.HOSTNAME && level == 0 || level == 1) {
+                       //Missing an opening bracket - not a range
+                       sb.append(c);
+                       continue;
                     }
                     sb = new StringBuilder();
                     item = new LinkedList<String>();
@@ -319,6 +353,10 @@ public class Util implements Config{
                     continue;
                 case ']':
                     level--;
+                    //We support only                  //We support only single level of brackets
+                    if (level < 0) {
+                        throw new IllegalArgumentException("error - invalid character '"+c+"' in "+input);
+                    }
                     if (sb.toString().trim().length() > 0) {
                        item.add(sb.toString().trim());
                     }
@@ -326,6 +364,9 @@ public class Util implements Config{
                     if (item.size() == 0) {
                         if (list.peek().getClass() == String.class && ((String) list.peek()).equals(",")) {
                             item.add("");
+                        //We got "[]"
+                        } else if (list.peek().getClass() == String.class && ((String) list.peek()).equals("[")) {
+                            throw new IllegalArgumentException("error - empty '[]' in "+input);
                         } else {
                             item = (LinkedList<String>) list.poll();
                         }
@@ -359,11 +400,11 @@ public class Util implements Config{
                     item = new LinkedList<String>();
                     continue;
                 default:
-                    throw new IllegalArgumentException("parseSinglePattern - invalid character '"+c+"' in "+input);
+                    throw new IllegalArgumentException("error - invalid character '"+c+"' in "+input);
             }
         }
         if (level > 0) {
-            throw new IllegalArgumentException("parseSinglePattern - uneven brackets in "+input);
+            throw new IllegalArgumentException("error - uneven brackets in "+input);
         }
         if (sb.toString().trim().length()>0) {
             if (item.size()>0) {
@@ -426,7 +467,7 @@ public class Util implements Config{
                             //We should just concatenete
                             return concatenateList(start, end, "-");
                         default:
-                            throw new IllegalArgumentException("Invalid num-numeric IP range");
+                            throw new IllegalArgumentException("error - invalid num-numeric IP range");
                     }
                 }
                 //Small fix for invalid in IP ranges

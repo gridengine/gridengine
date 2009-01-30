@@ -189,10 +189,12 @@ public class Host implements Config {
     public boolean equals(Object o) {
         if (o instanceof Host) {
             Host h = (Host) o;
-            if (this.getHostname().length() > 0 && this.getHostname().equalsIgnoreCase(h.getHostname())) {
-                return true;
-            } else if (this.getHostname().length() == 0 && this.getIp().equals(h.getIp())) {
-                return true;
+            //Compare hostnames if either host does not have a hostname
+            if (this.getHostname().length() > 0 && h.getHostname().length() > 0) {
+                return this.getHostname().equalsIgnoreCase(h.getHostname());
+            //Else compare IPs - solves an issue when host is added first by IP, resoves to hostname and is added again by IP
+            } else {
+                return this.getIp().equals(h.getIp());
             }
         /*if (this.getInetAddr() == null ^ h.getInetAddr() == null) {
         return false;

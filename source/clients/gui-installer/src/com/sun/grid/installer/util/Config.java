@@ -45,6 +45,7 @@ public interface Config {
     public static final String VAR_SGE_QMASTER_PORT  = "cfg.sge.qmaster.port";
     public static final String VAR_SGE_EXECD_PORT  = "cfg.sge.execd.port";
     public static final String VAR_EXEC_HOST_LIST = "cfg.exec.host.list";
+    public static final String VAR_EXEC_HOST_LIST_RM = "cfg.exec.host.list.rm";
     public static final String VAR_ADMIN_HOST_LIST = "cfg.admin.host.list";
     public static final String VAR_SUBMIT_HOST_LIST = "cfg.submit.host.list";
     public static final String VAR_SHADOW_HOST_LIST = "cfg.shadow.host";

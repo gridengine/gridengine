@@ -158,7 +158,7 @@ public class HostPanel extends IzPanel implements Config {
             }
         });
 
-        hostTF.addKeyListener(new KeyAdapter() {
+       hostTF.addKeyListener(new KeyAdapter() {
 
             @Override
             public void keyTyped(KeyEvent e) {
@@ -847,7 +847,14 @@ public class HostPanel extends IzPanel implements Config {
                 File f = fc.getSelectedFile();
                 try {
                     List<String> list = Util.parseFileList(f);
-                    resolveHosts(Host.Type.HOSTNAME, list, qmasterCB.isSelected(), bdbCB.isSelected(), shadowCB.isSelected(), execCB.isSelected(), adminCB.isSelected(), submitCB.isSelected(), idata.getVariable(VAR_EXECD_SPOOL_DIR));
+                    List<String> tmp;
+                    Host.Type type;
+                    for (String host : list) {
+                        type = Util.isIpPattern(host) ? Host.Type.IP : Host.Type.HOSTNAME;
+                        tmp = new ArrayList<String>();
+                        tmp.add(host);
+                        resolveHosts(type, list, qmasterCB.isSelected(), bdbCB.isSelected(), shadowCB.isSelected(), execCB.isSelected(), adminCB.isSelected(), submitCB.isSelected(), idata.getVariable(VAR_EXECD_SPOOL_DIR));
+                    }
                 } catch (IllegalArgumentException ex) {
                     statusBar.setVisible(true);
                     statusBar.setText("Error: " + ex.getMessage());
@@ -1095,7 +1102,7 @@ public class HostPanel extends IzPanel implements Config {
             //Set new state
             o.setState(Host.State.READY_TO_INSTALL);
             if (o.getComponentString().length() > 0) {
-                tmpList.add(o);
+                tmpList.addUnchecked(o);
             }
         }
         //And Check we have a components to install
@@ -1204,6 +1211,7 @@ public class HostPanel extends IzPanel implements Config {
                     case PERM_JMX_KEYSTORE:
                     case ADMIN_USER_NOT_KNOWN:
                     case BDB_SPOOL_DIR_WRONG_FSTYPE:
+                    case COPY_TIMEOUT_CHECK_HOST:
                     case UNKNOWN_ERROR: {
                          invalid++;
                     }
@@ -1238,7 +1246,7 @@ public class HostPanel extends IzPanel implements Config {
         switchToInstallModeAndInstall(tmpList);
     }
 
-    private void switchToInstallModeAndInstall(HostList hosts) {
+    private void switchToInstallModeAndInstall(final HostList hosts) {
         Debug.trace("INSTALL");
 
         //set install mode
@@ -1265,16 +1273,24 @@ public class HostPanel extends IzPanel implements Config {
         } catch (InterruptedException e) {
             Debug.error(e);
         }
+
+        //Remove hosts with no components
+        HostList tmpList = new HostList();
+        for (Host h : hosts) {
+            if (h.getComponentString().length() > 0) {
+                tmpList.add(h);
+            }
+        }
+
         //Create install list
-        //installList = new InstallHostList();
         final HostList installList = new HostList();
 
         //Sort the hosts so that BDB is first and qmaster second
         //Find bdb and put it to the beggining
         Host h, o;
         if (isBdbInst) {
-            for (int i = 0; i < hosts.size(); i++) {
-                h = hosts.get(i);
+            for (int i = 0; i < tmpList.size(); i++) {
+                h = tmpList.get(i);
                 if (h.isBdbHost()) {
                     o = new Host(h);
                     boolean hasMore = false;
@@ -1296,7 +1312,7 @@ public class HostPanel extends IzPanel implements Config {
                         o.setAdminHost(false);
                         o.setSubmitHost(false);
                     }
-                    hosts.remove(o);
+                    tmpList.remove(o);
                     break;
                 }
             }
@@ -1304,8 +1320,8 @@ public class HostPanel extends IzPanel implements Config {
         //TODO: Need tmpList?
         if (isQmasterInst) {
             //Find qmaster and put it as next
-            for (int i = 0; i < hosts.size(); i++) {
-                h = hosts.get(i);
+            for (int i = 0; i < tmpList.size(); i++) {
+                h = tmpList.get(i);
                 if (h.isQmasterHost()) {
                     o = new Host(h);
                     boolean hasMore = false;
@@ -1327,16 +1343,18 @@ public class HostPanel extends IzPanel implements Config {
                         o.setAdminHost(false);
                         o.setSubmitHost(false);
                     }
-                    hosts.remove(o);
+                    tmpList.remove(o);
                     break;
                 }
             }
         }
+        //TODO: Sort the rest of the list alphabetically
+
         //We cannot install shadowds in parallel!
         if (isShadowdInst) {
-            //Find shadowd and put it as next
-            for (int i = 0; i < hosts.size(); i++) {
-                h = hosts.get(i);
+            //Find shadowds and put them as next
+            for (int i = 0; i < tmpList.size(); i++) {
+                h = tmpList.get(i);
                 if (h.isShadowHost()) {
                     o = new Host(h);
                     boolean hasMore = false;
@@ -1358,12 +1376,12 @@ public class HostPanel extends IzPanel implements Config {
                        o.setAdminHost(false);
                        o.setSubmitHost(false);
                     }
-                    hosts.remove(o);
+                    tmpList.remove(o);
                 }
             }
         }
         //Copy the rest
-        for (Host host : hosts) {
+        for (Host host : tmpList) {
             installList.addUnchecked(new Host(host));
         }
 
@@ -1424,6 +1442,7 @@ public class HostPanel extends IzPanel implements Config {
             }
 
             idata.setVariable(VAR_EXEC_HOST_LIST, HostList.getHostNames(hostSelection.get(localExecdSpoolDir), " "));
+            idata.setVariable(VAR_EXEC_HOST_LIST_RM, HostList.getHostNames(hostSelection.get(localExecdSpoolDir), " "));
 
             outputFilePostfix = autoConfFile + outputFilePostfix + ".conf";
             try {
@@ -2106,6 +2125,7 @@ class UpdateInstallProgressTimerTask extends TimerTask {
                                 case RESOLVING:
                                 case INSTALLING:
                                 case CONTACTING:
+                                case READY_TO_INSTALL:
                                     hasRunning = true;
                             }
                         }
@@ -2123,6 +2143,12 @@ class UpdateInstallProgressTimerTask extends TimerTask {
             //Update the main ProgressBar
             mainBar.setValue((int) tpe.getCompletedTaskCount());
             mainBar.setMaximum((int) tpe.getTaskCount());
+
+            //Sleep for some time
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException ex) {
+            }
         }
 
         //Last task should cancel the Timer and hide the progressBar
@@ -2219,7 +2245,11 @@ class InstallTask extends TestableTask {
                     installModel.setHostLog(host, log);
                 } else {
                     new CommandExecutor(variables, variables.getProperty(VAR_SHELL_NAME), host.getHostAsString(), "chmod", "755", autoConfFile).execute();
-                    cmd = new CommandExecutor(variables, 60000, //Set install timeout to 60secs
+                    int timeout = 60000; //Set install timeout to 60secs
+                    if (host.isQmasterHost()) { //Qmaster to 2mins
+                        timeout *= 2;
+                    }
+                    cmd = new CommandExecutor(variables, timeout,
                             variables.getProperty(VAR_SHELL_NAME),
                             host.getHostAsString(), autoConfFile, String.valueOf(host.isBdbHost()),
                             String.valueOf(host.isQmasterHost()), String.valueOf(host.isShadowHost()),

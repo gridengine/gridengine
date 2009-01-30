@@ -46,12 +46,8 @@ EXIT_CODE=0
 # run the command as admin user
 RunAsAdmin()
 {
-   #Check the admin user exists on this machine
-   "${cfg.sge.root}"/utilbin/"${host.arch}"/adminrun "${cfg.admin.user}" echo
-   if [ $? -ne 0 ]; then
-      exit 50  # admin user not known on this host
-   fi
    "${cfg.sge.root}"/utilbin/"${host.arch}"/adminrun "${cfg.admin.user}" $@
+   EXIT_CODE=$?
 }
 
 # run the command as executor then if it fails as admin user
@@ -61,8 +57,7 @@ RunAsBoth()
    $ALL
    EXIT_CODE=$?
    if [ $EXIT_CODE -ne 0 -a "${user.name}" != "${cfg.admin.user}" ]; then
-      RunAsAdmin $ALL
-      EXIT_CODE=$?
+      RunAsAdmin $ALL      
    fi
 }
 
@@ -98,6 +93,20 @@ IsDirWritable()
    dir=`GetFirstExistingDir $1`
    RunAsBoth test -w $dir
 }
+
+# checks whether the admin user has write permission on
+# the given directory even if the directory does not exist.
+IsDirWritableByAdminUser()
+{
+   dir=`GetFirstExistingDir $1`
+   RunAsAdmin test -w $dir
+}
+
+#Test that admin user is availabe on the remote host. The installation will need it at some point!
+"${cfg.sge.root}"/utilbin/"${host.arch}"/adminrun "${cfg.admin.user}" echo
+if [ $? -ne 0 ]; then
+   exit 50  # admin user not known on this host
+fi
 
 # if qmaster host
 if [ "$IS_QMASTER" = true ]; then
@@ -156,7 +165,7 @@ if [ "$IS_EXECD" = true ]; then
    # TODO check execd port usage
 
    # check write permission on local execd spool dir
-   IsDirWritable "${cfg.exec.spool.dir.local}"
+   IsDirWritableByAdminUser "${cfg.exec.spool.dir.local}"
    if [ $EXIT_CODE -ne 0 ]; then
       exit 40;
    fi

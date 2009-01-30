@@ -1,3 +1,18 @@
+LP-2009-01-30-0: Bugfix:      gui-installer: grammar improvements + tests
+                                 o IPs added as hostnames
+                                 o hostnames with "_" not recognized
+                                 o "-" in a hostname could be treated as a range
+                 Bugfix:      gui-installer: installation can be started on host
+                                             with no component selected
+                 Bugfix:      gui-installer: host lists could contain same host
+                                             multiple times
+                 Bugfix:      gui-installer: EXEC_HOST_LIST_RM not filled
+                 Bugfix:      gui-installer: qmaster install timeout increased
+                                             to 2 mins
+                 Bugfix:      gui-installer: execd-spool-dir check must be done
+                                             just for admin user
+                 Review:      ZG
+
 RH-2009-01-30-0: Bugfix:      JGDIProxy sets it's own classloader into the JMX enviroment
                  Review:      AA
 

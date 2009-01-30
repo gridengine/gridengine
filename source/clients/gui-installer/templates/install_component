@@ -485,7 +485,7 @@ fi
 #Extra last tasks runs only this part of the script (otherwise ${cfg.allhosts.current.last} is not set)
 if [ -n "${last_install_task}" ]; then
    #Add all submit hosts
-   list=${gui_allsubmithosts}
+   list="${gui_allsubmithosts}"
    for host in $list; do
       sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ; qconf -as '$host >/dev/null 2>&1
    done

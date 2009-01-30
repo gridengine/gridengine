@@ -34,6 +34,7 @@ FLAGS="-DLOG=true"
 
 if [ "$1" = "debug" -o "$1" = "-debug" ]; then
    FLAGS=$FLAGS" -DSTACKTRACE=true"
+   DEBUG_ENABLED=true
 fi
 
 #Detect JAVA
@@ -52,5 +53,9 @@ fi
 #if [ x`./util/arch | grep 64` != x ]; then
 #   FLAGS="-d64 $FLAGS"
 #fi
-
-$JAVA_BIN $FLAGS -jar ./util/gui-installer/installer.jar
+echo "Starting Installer ..."
+if [ "$DEBUG_ENABLED" = "true" ]; then
+   $JAVA_BIN $FLAGS -jar ./util/gui-installer/installer.jar
+else
+   $JAVA_BIN $FLAGS -jar ./util/gui-installer/installer.jar > /dev/null 2>&1
+fi

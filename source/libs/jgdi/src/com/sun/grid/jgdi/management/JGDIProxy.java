@@ -260,6 +260,7 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
     private void connect() throws JGDIException {
         if (connection == null) {
             Map<String, Object> env = new HashMap<String, Object>();
+            env.put("jmx.remote.default.class.loader", JGDIJMXMBean.class.getClassLoader());
             if (credentials != null) {
                 env.put("jmx.remote.credentials", credentials);
             }

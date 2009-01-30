@@ -1,3 +1,6 @@
+RH-2009-01-30-0: Bugfix:      JGDIProxy sets it's own classloader into the JMX enviroment
+                 Review:      AA
+
 RD-2009-01-29-0: Bugfix:      fixed use of default duration for unbound jobs
                  Bugster:     6799032
                  Issue:       2896

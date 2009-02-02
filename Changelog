@@ -1,3 +1,11 @@
+JG-2009-02-02-0: Cleanup:     master installation with JMX support fails on 
+                              DARWIN -  could not reproduce any problem, but
+                              code still could be cleaned up (setting
+                              architecture specific LD_LIBRARY_PATH variable)
+                 Bugster:     6774811
+                 Issue:       2803
+                 Review:      MD
+
 JG-2009-01-29-0: Bugfix:      drmaa: quotes in native specification can result
                               in memory corruption
                  Bugster:     6317028

@@ -1560,12 +1560,14 @@ if [ ! -d "$ROOT_PATH/lib/$ARCH" ]; then
     exit 1
 fi
 
-if [ "$LD_LIBRARY_PATH"  = "" ]; then
-   LD_LIBRARY_PATH=$ROOT_PATH/lib/$ARCH
+shlib_path_name=`$ROOT_PATH/util/arch -lib`
+old_shlib_path_name=`eval echo '$'$shlib_path_name`
+if [ x$old_shlib_path_name  = x ]; then
+   eval $shlib_path_name=$ROOT_PATH/lib/$ARCH
 else
-   LD_LIBRARY_PATH="$ROOT_PATH/lib/${ARCH}:${LD_LIBRARY_PATH}"
+   eval $shlib_path_name="$ROOT_PATH/lib/${ARCH}:${old_shlib_path_name}"
 fi
-export LD_LIBRARY_PATH
+export $shlib_path_name
 
 #---------------------------------------
 # setup INFOTEXT begin

@@ -1,3 +1,9 @@
+CR-2009-02-02-0: Bugfix:      using IP String in first column of host_aliases
+                              file produces dead lock
+                 Issue:       2897 
+                 Bugster:     6799088
+                 Review:      RD
+
 ZG-2009-01-30-0: Bugfix:      gui-installer: Missing Bdb spool directory field in
                               case of root user.
                  Bugfix:      gui-installer: during installation the qmaster's

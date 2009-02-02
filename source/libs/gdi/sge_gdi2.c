@@ -1376,8 +1376,9 @@ gdi2_receive_message(sge_gdi_ctx_class_t *sge_ctx, char *fromcommproc, u_short *
  *   -3   invalid NULL pointer received for local configuration
  *   -4   request to qmaster failed
  *   -5   there is no global configuration
- *   -6   commproc already registered
+ *   -6   endpoint not unique
  *   -7   no permission to get configuration
+ *   -8   access denied error on commlib layer
  * EXTERNAL
  *
  * DESCRIPTION
@@ -1435,8 +1436,11 @@ lListElem **lepp
       }
       DPRINTF(("get_configuration: unique for %s: %s\n", config_name, lGetHost(hep, EH_name)));
 
-      if (sge_get_com_error_flag(me, SGE_COM_ACCESS_DENIED, false)       == true ||
-          sge_get_com_error_flag(me, SGE_COM_ENDPOINT_NOT_UNIQUE, false) == true) {
+      if (sge_get_com_error_flag(me, SGE_COM_ACCESS_DENIED, false) == true) {
+         lFreeElem(&hep);
+         DRETURN(-8);
+      }
+      if (sge_get_com_error_flag(me, SGE_COM_ENDPOINT_NOT_UNIQUE, false) == true) {
          lFreeElem(&hep);
          DRETURN(-6);
       }
@@ -1523,7 +1527,7 @@ int gdi2_wait_for_conf(sge_gdi_ctx_class_t *ctx, lList **conf_list) {
    const char *cell_root = ctx->get_cell_root(ctx);
    u_long32 progid = ctx->get_who(ctx);
    
-
+   /* TODO: move this function to execd */
    DENTER(GDI_LAYER, "gdi2_wait_for_confgdi2_wait_for_conf");
    /*
     * for better performance retrieve 2 configurations
@@ -1533,8 +1537,14 @@ int gdi2_wait_for_conf(sge_gdi_ctx_class_t *ctx, lList **conf_list) {
 
    while ((ret = gdi2_get_configuration(ctx, qualified_hostname, &global, &local))) {
       if (ret==-6 || ret==-7) {
-         /* confict: COMMPROC ALREADY REGISTERED */
+         /* confict: endpoint not unique or no permission to get config */
          DRETURN(-1);
+      }
+      
+      if (ret==-8) {
+         /* access denied */
+         sge_get_com_error_flag(progid, SGE_COM_ACCESS_DENIED, true);
+         sleep(30);
       }
 
       DTRACE;
@@ -2121,6 +2131,9 @@ bool sge_get_com_error_flag(u_long32 progid, sge_gdi_stored_com_error_t error_ty
    switch (error_type) {
       case SGE_COM_ACCESS_DENIED: {
          ret_val = sge_gdi_communication_error.com_access_denied;
+         if (reset_error_flag == true) {
+            sge_gdi_communication_error.com_access_denied = false;
+         }
          break;
       }
       case SGE_COM_ENDPOINT_NOT_UNIQUE: {
@@ -2128,6 +2141,9 @@ bool sge_get_com_error_flag(u_long32 progid, sge_gdi_stored_com_error_t error_ty
             ret_val = false;
          } else { 
             ret_val = sge_gdi_communication_error.com_endpoint_not_unique;
+         }
+         if (reset_error_flag == true) {
+            sge_gdi_communication_error.com_endpoint_not_unique = false;
          }
          break;
       }

@@ -195,6 +195,7 @@ int sge_execd_process_messages(sge_gdi_ctx_class_t *ctx)
                if (sge_execd_register_at_qmaster(ctx, true) == 0) {
                   do_reconnect = false;    /* we are reconnected */
                   sge_get_com_error_flag(EXECD, SGE_COM_WAS_COMMUNICATION_ERROR, true);
+                  sge_get_com_error_flag(EXECD, SGE_COM_ACCESS_DENIED, true);
                   sge_set_flush_lr_flag(true);
                }
             }
@@ -202,8 +203,10 @@ int sge_execd_process_messages(sge_gdi_ctx_class_t *ctx)
       }
 
       if (sge_get_com_error_flag(EXECD, SGE_COM_ACCESS_DENIED, false)) {
-         terminate = true; /* leave sge_execd_process_messages */
-         ret = SGE_COM_ACCESS_DENIED;
+         /* we have to reconnect, when the problem is fixed */
+         do_reconnect = true;
+         /* we do not expect that the problem is fast to fix */
+         sleep(EXECD_MAX_RECONNECT_TIMEOUT);
       } else if (sge_get_com_error_flag(EXECD, SGE_COM_ENDPOINT_NOT_UNIQUE, false)) {
          terminate = true; /* leave sge_execd_process_messages */
          ret = SGE_COM_ENDPOINT_NOT_UNIQUE;

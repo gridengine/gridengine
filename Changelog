@@ -1,3 +1,7 @@
+RD-2009-02-01-0: Enhancem.:   optimized scheduler event subscriptions for lower memory
+                              consumption
+                 Review:      JG
+
 CR-2009-02-02-1: Bugfix:      hostname resolving problem might cause execution
                               daemon shutdown
                  Issue:       2895 

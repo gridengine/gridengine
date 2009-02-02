@@ -629,13 +629,7 @@ sge_select_parallel_environment(sge_assignment_t *best, lList *pe_list)
 static
 void clean_up_parallel_job(sge_assignment_t *a) 
 {
-   lListElem *host = NULL;
    qinstance_list_set_tag(a->queue_list, 0);
-   for_each(host, a->host_list) {
-      lSetUlong(host, EH_tagged, 0);
-      lSetUlong(host, EH_master_host, 0); 
-   }  
-
 }
 
 /****** scheduler/parallel_reservation_max_time_slots() *****************************************
@@ -1528,7 +1522,6 @@ dispatch_t sge_queue_match_static(const sge_assignment_t *a, lListElem *queue)
    u_long32 ar_id;
    lList *projects;
    lListElem *ar_ep;
-   const char *project;
    const lList *hard_queue_list, *master_hard_queue_list;
    const char *qinstance_name = lGetString(queue, QU_full_name);
    bool could_be_master = false;
@@ -1556,7 +1549,7 @@ dispatch_t sge_queue_match_static(const sge_assignment_t *a, lListElem *queue)
    }
 
    /* check if job owner has access rights to the queue */
-   if (!sge_has_access(lGetString(a->job, JB_owner), lGetString(a->job, JB_group), queue, a->acl_list)) {
+   if (!sge_has_access(a->user, a->group, queue, a->acl_list)) {
       DPRINTF(("Job %d has no permission for queue %s\n", (int)a->job_id, qinstance_name));
       schedd_mes_add(a->monitor_alpp, a->monitor_next_run,
                      a->job_id, SCHEDD_INFO_HASNOPERMISSION_SS,
@@ -1566,27 +1559,26 @@ dispatch_t sge_queue_match_static(const sge_assignment_t *a, lListElem *queue)
 
    /* check if job can run in queue based on project */
    if ((projects = lGetList(queue, QU_projects))) {
-      if ((!(project = lGetString(a->job, JB_project)))) {
+      if (!a->project) {
          schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
                         SCHEDD_INFO_HASNOPRJ_S,
                         "queue", qinstance_name);
          DRETURN(DISPATCH_NEVER_CAT);
       }
-      if ((!prj_list_locate(projects, project))) {
+      if ((!prj_list_locate(projects, a->project))) {
          schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
                         SCHEDD_INFO_HASINCORRECTPRJ_SSS,
-                        project, "queue", qinstance_name);
+                        a->project, "queue", qinstance_name);
          DRETURN(DISPATCH_NEVER_CAT);
       }
    }
 
    /* check if job can run in queue based on excluded projects */
    if ((projects = lGetList(queue, QU_xprojects))) {
-      if (((project = lGetString(a->job, JB_project)) &&
-           prj_list_locate(projects, project))) {
+      if (a->project && prj_list_locate(projects, a->project)) {
          schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
                         SCHEDD_INFO_EXCLPRJ_SSS,
-                        project, "queue", qinstance_name);
+                        a->project, "queue", qinstance_name);
          DRETURN(DISPATCH_NEVER_CAT);
       }
    }
@@ -1702,7 +1694,8 @@ dispatch_t sge_queue_match_static(const sge_assignment_t *a, lListElem *queue)
       }
    }
 
-   if (a->ckpt && !a->pe && lGetString(a->job, JB_script_file) &&
+   /* RD: I don't understand this condition */
+   if (a->ckpt && !a->pe && !JOB_TYPE_IS_IMMEDIATE(lGetUlong(a->job, JB_type)) &&
        qinstance_is_parallel_queue(queue) && !qinstance_is_batch_queue(queue)) {
       DPRINTF(("Queue \"%s\" is not a serial queue as "
                "requested by job %d\n", qinstance_name, (int)a->job_id));
@@ -1815,7 +1808,7 @@ compute_soft_violations(const sge_assignment_t *a, lListElem *queue, int violati
 
    /* count number of soft violations for _one_ slot of this job */
 
-   for_each (attr, soft_requests) {
+   for_each(attr, soft_requests) {
       switch (ri_time_by_slots(a, attr, load_attr, config_attr, actual_attr, queue,
                       &reason, false, 1, layer, lc_factor, &start_time, queue_name?queue_name:"no queue")) {
             /* no match */
@@ -1905,8 +1898,7 @@ sge_host_match_static(const sge_assignment_t *a, lListElem *host)
    eh_name = lGetHost(host, EH_name);
 
    /* check if job owner has access rights to the host */
-   if (!sge_has_access_(lGetString(a->job, JB_owner),
-         lGetString(a->job, JB_group), lGetList(host, EH_acl),
+   if (!sge_has_access_(a->user, a->group, lGetList(host, EH_acl),
          lGetList(host, EH_xacl), a->acl_list)) {
       DPRINTF(("Job %d has no permission for host %s\n",
                (int)a->job_id, eh_name));

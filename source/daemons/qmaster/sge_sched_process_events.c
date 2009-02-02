@@ -178,13 +178,13 @@ int subscribe_scheduler(sge_evc_class_t *evc, sge_where_what_t *where_what)
    sge_mirror_subscribe(evc, SGE_TYPE_CKPT,           NULL, NULL, NULL, NULL, NULL);
    sge_mirror_subscribe(evc, SGE_TYPE_CENTRY,         NULL, NULL, NULL, NULL, NULL);
    sge_mirror_subscribe(evc, SGE_TYPE_CQUEUE,         NULL, NULL, NULL, where_what->where_cqueue, where_what->what_cqueue);
-   sge_mirror_subscribe(evc, SGE_TYPE_EXECHOST,       NULL, NULL, NULL, NULL, NULL);
+   sge_mirror_subscribe(evc, SGE_TYPE_EXECHOST,       NULL, NULL, NULL, where_what->where_host, where_what->what_host);
    sge_mirror_subscribe(evc, SGE_TYPE_HGROUP,         NULL, NULL, NULL, NULL, NULL);
    sge_mirror_subscribe(evc, SGE_TYPE_GLOBAL_CONFIG,  NULL, sge_process_global_config_event, NULL, NULL, NULL);
    sge_mirror_subscribe(evc, SGE_TYPE_JOB,            sge_process_job_event_before, sge_process_job_event_after, NULL, where_what->where_job, where_what->what_job);
    sge_mirror_subscribe(evc, SGE_TYPE_JATASK,         NULL, sge_process_ja_task_event_after, NULL, where_what->where_jat, where_what->what_jat);
-   sge_mirror_subscribe(evc, SGE_TYPE_PE,             NULL, NULL, NULL, NULL, NULL);
-   sge_mirror_subscribe(evc, SGE_TYPE_PETASK,         NULL, NULL, NULL, NULL, NULL);
+   sge_mirror_subscribe(evc, SGE_TYPE_PE,             NULL, NULL, NULL, NULL, where_what->what_pe);
+   sge_mirror_subscribe(evc, SGE_TYPE_PETASK,         NULL, NULL, NULL, NULL, where_what->what_pet);
    sge_mirror_subscribe(evc, SGE_TYPE_PROJECT,        sge_process_project_event_before, NULL, NULL, NULL, NULL);
    sge_mirror_subscribe(evc, SGE_TYPE_QINSTANCE,      NULL, NULL, NULL, where_what->where_all_queue, where_what->what_queue);
    sge_mirror_subscribe(evc, SGE_TYPE_RQS,            NULL, NULL, NULL, NULL, NULL);

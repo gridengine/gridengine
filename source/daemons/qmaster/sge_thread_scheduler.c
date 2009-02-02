@@ -725,8 +725,8 @@ sge_scheduler_main(void *arg)
              */
             memset(&copy, 0, sizeof(copy));
 
-            copy.dept_list = lSelect("", master_userset_list, where_what.where_dept, where_what.what_dept);
-            copy.acl_list = lSelect("", master_userset_list, where_what.where_acl, where_what.what_acl);
+            copy.dept_list = lSelect("", master_userset_list, where_what.where_dept, where_what.what_acldept);
+            copy.acl_list = lSelect("", master_userset_list, where_what.where_acl, where_what.what_acldept);
 
             DPRINTF(("RAW CQ:%d, J:%d, H:%d, C:%d, A:%d, D:%d, P:%d, CKPT:%d,"
                      " US:%d, PR:%d, RQS:%d, AR:%d, S:nd:%d/lf:%d\n",
@@ -764,8 +764,8 @@ sge_scheduler_main(void *arg)
 
             sge_before_dispatch(evc);
 
-            /* prepare data the the scheduler itself */
-            copy.host_list = lSelect("", master_exechost_list, where_what.where_host, where_what.what_host);
+            /* prepare data for the scheduler itself */
+            copy.host_list = lCopyList("", master_exechost_list);
 
             /*
              * Within the scheduler we do only need QIs

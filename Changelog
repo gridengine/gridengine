@@ -995,10 +995,11 @@ LP-2008-10-17-0: Enhancem.:   Introduced -autogui option to inst_sge
                  Issue:       2694, 2707, 2710, -, 2709
                  Review:      MD
 
-JF-2008-10-16-0: Bugfix: qmod does not follow admin host rules fixed
-                 Bugtraq: 6707098
-                 Issue: 2582
-                 Review: JG
+JF-2008-10-16-0: Bugfix:      qmod does not follow admin host rules fixed
+                 Bugtraq:     6707098
+                 Belongs to:  JF-2008-10-06-0
+                 Issue:       2582
+                 Review:      JG
 
 MP-2008-10-16-0: Bugfix:      invalid exit code if host is removed from admin
                               host list during installation

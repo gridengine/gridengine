@@ -205,6 +205,7 @@ RD-2008-10-27-0: Bugfix:      fixed scheduler crash with non-consumable RQS
 
 JF-2008-10-22-0: Bugfix:      qmod does not follow admin host rules fixed
                  Bugtraq:     6707098
+                 Belongs to:  JF-2008-10-06-0
                  Issue:       2582
                  Review:      JG
 

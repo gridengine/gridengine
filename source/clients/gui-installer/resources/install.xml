@@ -207,7 +207,6 @@ ___INFO__MARK_END__-->
         <variable name="cfg.sge.execd.port" value="6445"/>
         <variable name="cfg.qmaster.spool.dir" value="${cfg.sge.root}/${cfg.cell.name}/spool/qmaster"/>
         <variable name="cfg.execd.spool.dir" value="${cfg.sge.root}/${cfg.cell.name}/spool"/>
-        <variable name="cfg.sge.enable.smf" value="false"/>
         <variable name="cfg.sge.cluster.name" value="p${cfg.sge.qmaster.port}"/>
         <variable name="add.sge.jmx" value="false"/>
         <variable name="cfg.sge.jmx.port" value="6446"/>
@@ -243,6 +242,8 @@ ___INFO__MARK_END__-->
         <variable name="cfg.schedd.conf" value="1"/> <!-- not used -->
         <variable name="cfg.shadow.host" value=""/>
         <variable name="cfg.exec.host.list.rm" value=""/> <!-- not used -->
+        <variable name="cfg.sge.enable.smf" value="false"/>
+        <variable name="cfg.add.to.rc" value="false"/>
         <variable name="cfg.remove.rc" value="false"/>
         <variable name="cfg.windows.support" value="false"/>
         <variable name="cfg.win.admin.name" value="Administrator"/> <!-- not used -->

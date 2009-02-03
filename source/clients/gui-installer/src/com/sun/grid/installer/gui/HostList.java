@@ -178,6 +178,10 @@ public class HostList extends ArrayBlockingQueue<Host> {
 
     @Override
     public boolean add(Host o) {
+        return addHost(o) != null;
+    }
+    
+    public Host addHost(Host o) {
         //Debug.trace("adding - "+o.toString());
         if (o == null) {
             throw new NullPointerException();
@@ -210,10 +214,10 @@ public class HostList extends ArrayBlockingQueue<Host> {
                 if (o.isBdbHost()) {
                     h.setBdbHost(true);
                 }
-                return true;
+                return h;
             //TODO: Should be added only if we are actually installing that type
             } else { //if (o.isQmasterHost() || o.isAdminHost() || o.isExecutionHost() || o.isShadowHost() || o.isSubmitHost() || o.isBdbHost()) {
-                return super.add(o);
+                return (super.add(o) ? o : null);
             }
             //return false;
         } finally {

@@ -79,5 +79,9 @@ public class IntermediateActionPanel extends ActionPanel {
                 Debug.error("Can not source 'settings.sh' and/or 'bootstrap' and/or 'act_qmaster' files! " + ex);
             }
         }
+
+        // set cfg.sge.enable.smf and cfg.remove.rc
+        idata.setVariable(VAR_SGE_ENABLE_SMF, idata.getVariable(VAR_ADD_TO_RC));
+        idata.setVariable(VAR_REMOVE_RC, idata.getVariable(VAR_ADD_TO_RC));
     }
 }

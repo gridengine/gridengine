@@ -62,6 +62,8 @@ public interface Config {
     public static final String VAR_DB_SPOOLING_DIR= "cfg.db.spooling.dir";
     public static final String VAR_SGE_JMX_PORT= "cfg.sge.jmx.port";
     public static final String VAR_ADD_TO_RC= "cfg.add.to.rc";
+    public static final String VAR_SGE_ENABLE_SMF= "cfg.sge.enable.smf";
+    public static final String VAR_REMOVE_RC= "cfg.remove.rc";
     public static final String VAR_ALL_HOSTS= "gui_allhosts";
     public static final String VAR_ALL_SUBMIT_HOSTS= "gui_allsubmithosts";
     public static final String VAR_REMOVE_ADMINHOSTS= "gui_remove_adminhosts";
@@ -124,6 +126,9 @@ public interface Config {
 
     public static final String WARNING_USER_NOT_ROOT = "warning.user.not.root.message";
     public static final String ERROR_USER_INVALID = "error.user.invalid.message";
+
+    public static final String ARG_RESOLVE_THREAD_POOL_SIZE = "resolvepool";
+    public static final String ARG_INSTALL_THREAD_POOL_SIZE = "installpool";
 
     public static final int EXIT_VAL_SUCCESS = 0;
     public static final int EXIT_VAL_BDB_SERVER_SPOOL_DIR_PERM_DENIED = 10;

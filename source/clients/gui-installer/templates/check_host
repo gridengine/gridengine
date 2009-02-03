@@ -64,12 +64,12 @@ RunAsBoth()
 # returns with the first existing parent directory in the hierarchy
 GetFirstExistingDir()
 {
-  dir=$1
+  dir="$1"
 
-  if [ ! -d $dir ]; then
-     while [ ! -d $dir ]; do
+  if [ ! -d "$dir" ]; then
+     while [ ! -d "$dir" ]; do
         tmp_dir=`dirname $dir`
-        dir=$tmp_dir
+        dir="$tmp_dir"
      done
   fi
   echo $dir
@@ -89,7 +89,7 @@ Exit()
 IsDirWritable()
 {
    dir=`GetFirstExistingDir $1`
-   RunAsBoth test -w $dir
+   RunAsBoth test -w "$dir"
 }
 
 # checks whether the admin user has write permission on
@@ -97,7 +97,7 @@ IsDirWritable()
 IsDirWritableByAdminUser()
 {
    dir=`GetFirstExistingDir $1`
-   RunAsAdmin test -w $dir
+   RunAsAdmin test -w "$dir"
 }
 
 #Test that admin user is availabe on the remote host. The installation will need it at some point!
@@ -174,10 +174,16 @@ if [ "$IS_EXECD" = true ]; then
    # TODO check execd port usage
 
    # check write permission on local execd spool dir
-   IsDirWritableByAdminUser "${cfg.exec.spool.dir.local}"
+   if [ -n "${cfg.exec.spool.dir.local}" ]; then
+      IsDirWritableByAdminUser "${cfg.exec.spool.dir.local}"
+   else
+      IsDirWritableByAdminUser "${cfg.execd.spool.dir}"
+   fi
+
    if [ $EXIT_CODE -ne 0 ]; then
       Exit 40
    fi
+
 fi
 
 Exit 0

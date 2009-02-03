@@ -1,3 +1,20 @@
+ZG-2009-02-03-0: Bugfix:      gui-installer: it's not possible to switch-off
+                              'service automatic startup' feature
+                 Bugster:     6793169
+                 Bugfix:      in case of standalone execd host installation the
+                              install table model fails due to a fireTableRowsUpdated
+                              event on a row with index -1.
+                 Bugfix:      'losing' reference to a host which already exists in
+                              the list
+                 Bugfix:      clear table selections before checking/installing hosts
+                 Bugfix:      disable tables during host checking to avoid
+                              inconsistent modifications
+                 Bugfix:      in check_host script if there is no local execd spool dir
+                              specified check permissions of the global execd  spool dir
+                 Enhancem.:   let the user to set the thread pool sizes in
+                              start_gui_installer script
+                 Review:      LP
+
 EB-2009-02-03-0: Bugfix:      TCL server JSV script does not work on some architectures
                  Bugster:     6785207
                  Issue:       2836
@@ -25,10 +42,12 @@ CR-2009-02-02-0: Bugfix:      using IP String in first column of host_aliases
 
 ZG-2009-01-30-0: Bugfix:      gui-installer: Missing Bdb spool directory field in
                               case of root user.
+                 Bugster:     6799969
                  Bugfix:      gui-installer: during installation the qmaster's
                               installation task is not shown on the progress bar
                  Bugfix:      gui-installer: on ResultPanel the "Save as..." button
                               pops-up an open file dialog
+                 Bugster:     6799964
                  Bugfix:      gui-installer: after resolving the problem discovered
                               by the check_host script the state does not get modified
                               to "Reachable"
@@ -36,6 +55,7 @@ ZG-2009-01-30-0: Bugfix:      gui-installer: Missing Bdb spool directory field i
                               to the bottom of the text area
                  Bugfix:      gui-installer: check_host script does not return back
                               with the proper exit value in case of rsh.
+                 Bugster:     6799971
                  Enhancem.:   change "Resolve" button to "Add" for better understanding
                  Enhancem.:   "No" button is the default in case the check_host fails
                               on some host and the user is asked whether continue the

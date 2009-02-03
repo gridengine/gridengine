@@ -37,6 +37,7 @@ import com.izforge.izpack.util.Debug;
 import com.izforge.izpack.util.VariableSubstitutor;
 import com.sun.grid.installer.util.ExtendedFile;
 
+import com.sun.grid.installer.util.Util;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,6 +58,31 @@ public class PreActionPanel extends ActionPanel {
 
     private void initializeVariables() {
         VariableSubstitutor vs = new VariableSubstitutor(idata.getVariables());
+
+        // set thread spool sizes
+        int size = 0;
+        if (idata.getVariable(ARG_RESOLVE_THREAD_POOL_SIZE) != null) {
+            try {
+                size = Integer.valueOf(idata.getVariable(ARG_RESOLVE_THREAD_POOL_SIZE));
+                if (size < 1) {
+                    throw new NumberFormatException();
+                }
+                Util.RESOLVE_THREAD_POOL_SIZE = size;
+            } catch (NumberFormatException e) {
+                Debug.error("Invalid '" + ARG_RESOLVE_THREAD_POOL_SIZE + "' value: " + idata.getVariable(ARG_RESOLVE_THREAD_POOL_SIZE));
+            }
+        }
+        if (idata.getVariable(ARG_INSTALL_THREAD_POOL_SIZE) != null) {
+            try {
+                size = Integer.valueOf(idata.getVariable(ARG_INSTALL_THREAD_POOL_SIZE));
+                if (size < 1) {
+                    throw new NumberFormatException();
+                }
+                Util.INSTALL_THREAD_POOL_SIZE = size;
+            } catch (NumberFormatException e) {
+                Debug.error("Invalid '" + ARG_INSTALL_THREAD_POOL_SIZE + "' value: " + idata.getVariable(ARG_INSTALL_THREAD_POOL_SIZE));
+            }
+        }
         
         String sgeRootPath = vs.substitute(idata.getVariable(VAR_SGE_ROOT), null);
         String userName = vs.substitute(idata.getVariable(VAR_USER_NAME), null);

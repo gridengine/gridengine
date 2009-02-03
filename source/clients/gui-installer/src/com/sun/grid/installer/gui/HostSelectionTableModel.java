@@ -251,33 +251,37 @@ public class HostSelectionTableModel extends SortedTableModel {
             return;
         }
 
-        fireTableCellUpdated(row, 4);
+        if (row > -1) {
+            fireTableCellUpdated(row, 4);
+        }
     }
 
-    public boolean addHost(Host h) {
+    public Host addHost(Host h) {
         int row = hostList.size();
 
-        if (h.isQmasterHost()) {
-            if (qmasterHost != null && !qmasterHost.equals(h)) {
-                h.setQmasterHost(false);
-            } else {
-                qmasterHost = h;
+        h = hostList.addHost(h);
+
+        if (h != null) {
+            if (h.isQmasterHost()) {
+                if (qmasterHost != null && !qmasterHost.equals(h)) {
+                    h.setQmasterHost(false);
+                } else {
+                    qmasterHost = h;
+                }
             }
+
+            if (h.isBdbHost()) {
+                if (bdbHost != null && !bdbHost.equals(h)) {
+                    h.setBdbHost(false);
+                } else {
+                    bdbHost = h;
+                }
+            }
+
+            fireTableRowsInserted(row, row);
         }
 
-        if (h.isBdbHost()) {
-            if (bdbHost != null && !bdbHost.equals(h)) {
-                h.setBdbHost(false);
-            } else {
-                bdbHost = h;
-            }
-        }
-
-        if (!hostList.add(h)) {
-            return false;
-        }
-        fireTableRowsInserted(row, row);
-        return true;
+        return h;
     }
 
     public void removeHost(Host h) {
@@ -298,9 +302,11 @@ public class HostSelectionTableModel extends SortedTableModel {
             bdbHost = null;
         }
 
-        reSort();
-        
-        fireTableRowsDeleted(row, row);
-        fireTableChanged(new TableModelEvent(this));
+        if (row > -1) {
+            reSort();
+
+            fireTableRowsDeleted(row, row);
+            fireTableChanged(new TableModelEvent(this));
+        }
     }
 }

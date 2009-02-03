@@ -41,7 +41,6 @@
 #
 
 set sge_root $env(SGE_ROOT)
-set sge_arch [exec $sge_root/util/arch]
 
 source "$sge_root/util/resources/jsv/jsv_include.tcl"
 

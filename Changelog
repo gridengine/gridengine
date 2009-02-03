@@ -1,3 +1,8 @@
+EB-2009-02-03-0: Bugfix:      TCL server JSV script does not work on some architectures
+                 Bugster:     6785207
+                 Issue:       2836
+                 Review:      TBD
+
 RD-2009-02-03-0: Enhancem.:  - removed gdi dependency from test_performance
                              - added script to measure spooling performance easily
                  Review:     JG

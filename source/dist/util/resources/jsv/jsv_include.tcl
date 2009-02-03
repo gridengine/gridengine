@@ -31,9 +31,6 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-set sge_root $env(SGE_ROOT)
-set sge_arch [exec $sge_root/util/arch]
-
 set logging_enabled "false"
 set logfile "/tmp/jsv.log"
 

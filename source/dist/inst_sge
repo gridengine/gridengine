@@ -115,11 +115,6 @@ SERVICE_TAGS="enable"
 #Save changed host names during resolving
 RESOLVED_CHANGED_HOSTNAMES=""
 
-#These appear in the inst_template, but don't need to be taken care of
-SGE_ENABLE_SMF="true"
-ADD_TO_RC="false"
-REMOVE_RC="false"
-
 #init global variables, need for port setting
 execd_service="false"
 qmaster_service="false"
@@ -351,6 +346,15 @@ if [ -z "$SHELL_NAME" ]; then
 fi
 if [ -z "$COPY_COMMAND" ]; then
    COPY_COMMAND="scp"
+fi
+if [ -z "$SGE_ENABLE_SMF" ]; then
+   SGE_ENABLE_SMF="true"
+fi
+if [ -z "$ADD_TO_RC" ]; then
+   ADD_TO_RC="false"
+fi
+if [ -z "$REMOVE_RC" ]; then
+   REMOVE_RC="false"
 fi
 
 if [ -z "$WIN_ADMIN_NAME" ]; then
@@ -801,8 +805,10 @@ if [ "$QMASTER" = "install" -a "$UPDATE" != "true" ]; then
  StartQmaster
  AddWindowsAdmin
  AddHosts
- CopyCA execd
- CopyCA submit 
+ if [ "$AUTOGUI" != "true" ]; then
+    CopyCA execd
+    CopyCA submit
+ fi
  SetScheddConfig
  GiveHints
  CheckRunningDaemon sge_qmaster
@@ -1258,7 +1264,7 @@ if [ $SHADOW = "install" ]; then
       done
       ExecuteAsAdmin chmod go-w $SGE_ROOT/$SGE_CELL/common/shadow_masters
       ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL/common/shadow_masters.1
- 
+
       if [ $SHADOW_HOST = `$SGE_UTILBIN/gethostname -aname` ]; then
          . $SGE_ROOT/$SGE_CELL/common/settings.sh
          SGE_ARCH=`$SGE_ROOT/util/arch`

@@ -1,3 +1,6 @@
+LP-2009-02-03-1: Bugfix:      gui-installer: SMF not used at all
+                 Review:      AA
+
 LP-2009-02-03-0: Bugfix:      gui-installer: admin/submit hosts not set properly
                  Bugster:     6800509
                  Bugfix:      gui-installer: CSP installation does not work

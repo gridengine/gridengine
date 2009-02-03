@@ -343,10 +343,15 @@ public class Util implements Config{
                        }
                        item.add(sb.toString().trim());
                        list.addFirst(item);
-                    } else if (type == Host.Type.HOSTNAME && level == 0 || level == 1) {
-                       //Missing an opening bracket - not a range
-                       sb.append(c);
-                       continue;
+                    } else if (type == Host.Type.HOSTNAME) {
+                       if (level == 0) {
+                          //Missing an opening bracket - not a range
+                          sb.append(c);
+                          continue;
+                       } else {
+                          //We have "[-" in hostname
+                          throw new IllegalArgumentException("error - invalid character '"+c+"' in "+input);
+                       }
                     }
                     sb = new StringBuilder();
                     item = new LinkedList<String>();
@@ -804,12 +809,34 @@ public class Util implements Config{
         Properties settings = new Properties();
         String boostrapFile = sgeRoot + "/" + cellName + "/common/bootstrap";
         ArrayList<String> bootstrapLines = FileHandler.readFileContent(boostrapFile, false);
-        
+        String key, value;
+        boolean isClassicSpooling = false;
         for (String line : bootstrapLines) {
             // Process lines like 'spooling_method         berkeleydb'
             if (!line.startsWith("#")) {
                 int spaceIndex = line.indexOf(' ');
-                settings.setProperty(line.substring(0, spaceIndex).trim(), line.substring(spaceIndex).trim());
+                key = line.substring(0, spaceIndex).trim();
+                value = line.substring(spaceIndex).trim();
+                //PRODUCT_MODE
+                if (key.equalsIgnoreCase("security_mode")) {
+                    if (value.equalsIgnoreCase("none")) {
+                        key="add.product.mode";
+                        value = "none";
+                    } else if (value.equalsIgnoreCase("csp")) {
+                        key="add.product.mode";
+                        value = "csp";
+                    } //Don't support afs => 3
+                //HOSTNAME_RESOLVING
+                } else if (key.equalsIgnoreCase("ignore_fqdn")) {
+                    key = "hostname_resolving";
+                } else if (key.equalsIgnoreCase("spooling_method")) {
+                    if (value.trim().equalsIgnoreCase("classic")) {
+                        isClassicSpooling = true;
+                    }
+                }
+                //finally set the key, value pair
+                settings.setProperty(key, value);
+                //TODO: Check we have ignore_fqdn, spool, etc/ properly mapped to GUI cfg.* variables!                
             }
         }
 
@@ -886,7 +913,9 @@ public class Util implements Config{
                 tmp.add(item);
             }
         }
-        tmp.add(local);
+        if (local.length() > 0 ) {
+            tmp.add(local);
+        }
         return tmp;
     }
 

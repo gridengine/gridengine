@@ -59,16 +59,17 @@ public interface Config {
     public static final String VAR_WINDOWS_SUPPORT = "cfg.windows.support";
     public static final String VAR_HOSTNAME_RESOLVING = "cfg.hostname.resolving";
     public static final String VAR_JVM_LIB_PATH = "cfg.sge.jvm.lib.path";
-    public static final String VAR_DB_SPOOLING_DIR= "cfg.db.spooling.dir";
-    public static final String VAR_SGE_JMX_PORT= "cfg.sge.jmx.port";
-    public static final String VAR_ADD_TO_RC= "cfg.add.to.rc";
+    public static final String VAR_DB_SPOOLING_DIR = "cfg.db.spooling.dir";
+    public static final String VAR_SGE_JMX_PORT = "cfg.sge.jmx.port";
+    public static final String VAR_ADD_TO_RC = "cfg.add.to.rc";
     public static final String VAR_SGE_ENABLE_SMF= "cfg.sge.enable.smf";
     public static final String VAR_REMOVE_RC= "cfg.remove.rc";
-    public static final String VAR_ALL_HOSTS= "gui_allhosts";
-    public static final String VAR_ALL_SUBMIT_HOSTS= "gui_allsubmithosts";
-    public static final String VAR_REMOVE_ADMINHOSTS= "gui_remove_adminhosts";
-    public static final String VAR_FIRST_TASK= "first_install_task";
-    public static final String VAR_LAST_TASK= "last_install_task";
+    public static final String VAR_ALL_HOSTS = "gui_allhosts";
+    public static final String VAR_ALL_ADMIN_HOSTS = "gui_alladminhosts";
+    public static final String VAR_ALL_SUBMIT_HOSTS = "gui_allsubmithosts";
+    public static final String VAR_ALL_CSPHOSTS = "gui_csphosts";
+    public static final String VAR_FIRST_TASK = "first_install_task";
+    public static final String VAR_LAST_TASK = "last_install_task";
 
     public static final String VAR_AUTO_CONF_TEMP_FILE = "auto.conf.temp.file";
     public static final String VAR_AUTO_CONF_FILE = "auto.conf.file";

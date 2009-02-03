@@ -69,12 +69,12 @@ public class IntermediateActionPanel extends ActionPanel {
                 for (Enumeration<Object> enumer = settingsProps.keys(); enumer.hasMoreElements();) {
                     origKey = (String)enumer.nextElement();
                     newKey = CONFIG_VAR_PREFIX + "." + origKey.toLowerCase().replace('_', '.');
-
                     idata.setVariable(newKey, settingsProps.getProperty(origKey));
                 }
 
                 idata.setVariable(VAR_QMASTER_HOST, qmasterHost);
                 idata.setVariable(VAR_ADMIN_USER, bootsrapProps.getProperty("admin_user"));
+                idata.setVariable("add.product.mode", bootsrapProps.getProperty("add.product.mode")); //To correctly set CSP mode in execd only installs
             } catch (Exception ex) {
                 Debug.error("Can not source 'settings.sh' and/or 'bootstrap' and/or 'act_qmaster' files! " + ex);
             }

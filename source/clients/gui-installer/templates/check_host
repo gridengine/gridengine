@@ -90,6 +90,7 @@ IsDirWritable()
 {
    dir=`GetFirstExistingDir $1`
    RunAsBoth test -w "$dir"
+   #TODO: Even when rwx, the dir can be mounted as read-only => permission denied during installation
 }
 
 # checks whether the admin user has write permission on

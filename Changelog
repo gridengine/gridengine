@@ -1,3 +1,13 @@
+LP-2009-02-03-0: Bugfix:      gui-installer: admin/submit hosts not set properly
+                 Bugster:     6800509
+                 Bugfix:      gui-installer: CSP installation does not work
+                              properly
+                 Bugster:     6790504
+                 Bugfix:      Autoinstallion on loopback interface ends with
+                              exit 0
+                 Bugster:     6800497
+                 Review:      ZG
+
 ZG-2009-02-03-0: Bugfix:      gui-installer: it's not possible to switch-off
                               'service automatic startup' feature
                  Bugster:     6793169
@@ -78,6 +88,7 @@ LP-2009-01-30-0: Bugfix:      gui-installer: grammar improvements + tests
                                  o IPs added as hostnames
                                  o hostnames with "_" not recognized
                                  o "-" in a hostname could be treated as a range
+                 Bugster:     6786390
                  Bugfix:      gui-installer: installation can be started on host
                                              with no component selected
                  Bugfix:      gui-installer: host lists could contain same host

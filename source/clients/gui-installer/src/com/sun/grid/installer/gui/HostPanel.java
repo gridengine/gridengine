@@ -1612,6 +1612,12 @@ public class HostPanel extends IzPanel implements Config {
         progressTimer = new Timer("InstallTimer");
         progressTimer.schedule(new UpdateInstallProgressTimerTask(this, new ThreadPoolExecutor[]{threadPool, singleThreadPool}, getLabel("column.progress.label"), getLabel("progressbar.installing.label")), 10);
 
+        //Create a copy of the install list for the last_task
+        HostList initialInstallList = new HostList();
+        for (Host h: installList) {
+            initialInstallList.addUnchecked(new Host(h));
+        }
+
         boolean wait = false;
         long completed = 0, started = 0;
         try {
@@ -1636,7 +1642,12 @@ public class HostPanel extends IzPanel implements Config {
                     Host localhost = new Host(Host.Type.HOSTNAME, Host.localHostName, false, false, false, false, "");
                     vars.putAll(idata.getVariables());
                     List<String> allHosts = Util.getAllHosts((HostInstallTableModel) tables.get(0).getModel(), Host.localHostName);
-                    vars.put(VAR_ALL_HOSTS, Util.listToString(allHosts));
+                    vars.put(VAR_ALL_ADMIN_HOSTS, Util.listToString(allHosts));
+                    //TODO: Where do we need to copy the CSP certificates? Safe to do it for all hosts, but qmaster
+                    allHosts.remove(qmasterHost);
+                    if (vars.getProperty("add.product.mode").equals("csp")) {
+                       vars.setProperty(VAR_ALL_CSPHOSTS, Util.listToString(allHosts));
+                    }
                     vars.put(VAR_FIRST_TASK, "true");
                     //And execute the first task in the singleThreadPool
                     singleThreadPool.execute(new InstallTask(tables, localhost, vars, localizedMessages));
@@ -1694,23 +1705,32 @@ public class HostPanel extends IzPanel implements Config {
             Properties vars = new Properties();
             Host localhost = new Host(Host.Type.HOSTNAME, Host.localHostName, false, false, false, false, "");
             vars.putAll(idata.getVariables());
-            List<String> removeAdminHosts = Util.getAllHosts((HostInstallTableModel) tables.get(0).getModel(), Host.localHostName);
+            List<String> adminHosts = new ArrayList<String>(); //Util.getAllHosts((HostInstallTableModel) tables.get(0).getModel(), Host.localHostName);
             List<String> submitHosts = new ArrayList<String>();
-            for (Host h : installList) {
-                if (!h.isAdminHost() && !removeAdminHosts.contains(h.getHostAsString())) {
-                    removeAdminHosts.add(h.getHostAsString());
+            List<String> allHosts = new ArrayList<String>();
+            Host localHost = null;
+            for (Host h: initialInstallList) {
+                if (h.isAdminHost() && !adminHosts.contains(h.getHostAsString())) {
+                    adminHosts.add(h.getHostAsString());
+                    if (h.getHostAsString().equals(Host.localHostName)) {
+                       localHost = h;
+                    }
                 }
                 if (h.isSubmitHost() && !submitHosts.contains(h.getHostAsString())) {
                     submitHosts.add(h.getHostAsString());
                 }
+                //We need to remove all and add only submit hosts, since previous installation could already make some hosts submit hosts. They are now marked as not submit => need to remove
+                if (!allHosts.contains(h.getHostAsString())) {
+                    allHosts.add(h.getHostAsString());
+                }
             }
             //Remove localhost and put as last host
-            if (removeAdminHosts.contains(Host.localHostName)) {
-                removeAdminHosts.remove(Host.localHostName);
+            if (adminHosts.contains(Host.localHostName) && !localHost.isAdminHost()) {
+                adminHosts.remove(Host.localHostName);
             }
-            removeAdminHosts.add(Host.localHostName);
-            vars.put(VAR_REMOVE_ADMINHOSTS, Util.listToString(removeAdminHosts));
-            vars.put(VAR_SUBMIT_HOST_LIST, Util.listToString(submitHosts));
+            vars.put(VAR_ALL_ADMIN_HOSTS, Util.listToString(adminHosts));
+            vars.put(VAR_ALL_HOSTS, Util.listToString(allHosts));
+            vars.put(VAR_ALL_SUBMIT_HOSTS, Util.listToString(submitHosts));
             vars.put(VAR_LAST_TASK, "true");
             //localhost.setComponentVariables(vars);
             //And execute the last task in the singleThreadPool
@@ -2339,7 +2359,17 @@ class InstallTask extends TestableTask {
                     String val = "";
                     if (host.isQmasterHost()) {
                         val = Util.listToString(Util.getAllHosts((HostInstallTableModel) tables.get(0).getModel(), Host.localHostName));
-                        variables.setProperty(VAR_ALL_HOSTS, val);
+                        variables.setProperty(VAR_ALL_ADMIN_HOSTS, val);
+                        //TODO: Where do we need to copy the CSP certificates? Safe to do it for all hosts, but qmaster
+                        if (variables.getProperty("add.product.mode").equals("csp")) {
+                            val = Util.listToString(Util.getAllHosts((HostInstallTableModel) tables.get(0).getModel(), ""));
+                            String[] vals = val.split(host.getHostAsString());
+                            String val2 = "";
+                            for (String s : vals) {
+                                val2 += s.trim() + " ";
+                            }
+                            variables.setProperty(VAR_ALL_CSPHOSTS, val2.trim());
+                        }
                     }
                 }
 
@@ -2347,7 +2377,8 @@ class InstallTask extends TestableTask {
                 autoConfFile = vs.substituteMultiple(variables.getProperty(VAR_AUTO_INSTALL_COMPONENT_FILE), null);
 
                 //Appended CELL_NAME prevents a race in case of parallel multiple cell installations
-                autoConfFile = "/tmp/" + autoConfFile + "." + host.getHostAsString() + "." + variables.getProperty(VAR_SGE_CELL_NAME);
+                String taskName = isSpecialTask == true ? (Boolean.valueOf(variables.getProperty(VAR_FIRST_TASK, "false")).booleanValue() == true ? "first_task" : "last_task") : host.getComponentString();
+                autoConfFile = "/tmp/" + autoConfFile + "." + host.getHostAsString() + "." + taskName + "." + variables.getProperty(VAR_SGE_CELL_NAME);
                 Debug.trace("Generating auto_conf file: '" + autoConfFile + "'.");
                 autoConfFile = Util.fillUpTemplate(autoConfTempFile, autoConfFile, variables);
                 new File(autoConfFile).deleteOnExit();
@@ -2458,9 +2489,9 @@ class InstallTask extends TestableTask {
             //Unset the special variables
             variables.remove(VAR_FIRST_TASK);
             variables.remove(VAR_LAST_TASK);
-            variables.remove(VAR_ALL_HOSTS);
+            variables.remove(VAR_ALL_ADMIN_HOSTS);
             variables.remove(VAR_ALL_SUBMIT_HOSTS);
-            variables.remove(VAR_REMOVE_ADMINHOSTS);
+            variables.remove(VAR_ALL_CSPHOSTS);
         }
 
         if (!isSpecialTask) {

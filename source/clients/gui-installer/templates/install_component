@@ -256,7 +256,6 @@ WIN_ADMIN_NAME="${cfg.win.admin.name}";export WIN_ADMIN_NAME
 # created. Setting this variable to false, the local Adminuser will be
 # used as ADMINUSER. The install script tries to create this user account
 # but we recommend, because it will be saver, to create this user,
-# but we recommend, because it will be saver, to create this user, 
 # before running the installation. 
 # (mandatory for qmaster installation, if windows hosts should be installed)
 WIN_DOMAIN_ACCESS="${cfg.win.domain.access}";export WIN_DOMAIN_ACCESS
@@ -293,7 +292,7 @@ CSP_ORGA_UNIT="${cfg.csp.orga.unit}";export CSP_ORGA_UNIT
 CSP_MAIL_ADDRESS="${cfg.csp.mail.address}";export CSP_MAIL_ADDRESS
 
 # enforced hostname in case of other than primary network interface was selected
-ENFORCED_HOSTNAME="${add.qmaster.host}";export ENFORCED_HOSTNAME;
+ENFORCED_HOSTNAME="${add.qmaster.host}";export ENFORCED_HOSTNAME
 
 #Additional variables from the installer
 #REMOVE_EXISTING_COMPONENT=${add.remove.existing.components}
@@ -302,17 +301,15 @@ REMOVE_EXISTING_COMPONENT=false
 USE_JMX=${add.sge.jmx}
 PRODUCT_MODE=${add.product.mode}                      #1 none, 2 csp, 3 afs
 QMASTER_FLAGS=""
+GUI_CSP_MODE_ENABLED=false
 if [ "$USE_JMX" = true ]; then
    QMASTER_FLAGS="$QMASTER_FLAGS -jmx"
 fi
-case "$PRODUCT_MODE" in
-   2) 
-	   QMASTER_FLAGS="$QMASTER_FLAGS -csp"
-		;;
-   3)
-	   QMASTER_FLAGS="$QMASTER_FLAGS -afs"
-		;;
-esac
+#Set proper product mode flags
+if [ "$PRODUCT_MODE" = "csp" ]; then
+   QMASTER_FLAGS="$QMASTER_FLAGS -csp"
+   GUI_CSP_MODE_ENABLED=true
+fi
 
 #Genaretes output consisting of the exit code and log file
 # $1 ... COMPONENT (bdb, qmaster, shadow,exec)
@@ -412,20 +409,47 @@ if [ -n "${first_install_task}" -o "$qmaster_first_task" = true ]; then
    #Only first installation tasks have $cfg.allhosts set (no action otherwise)
    ARCH=`sh -c ${cfg.sge.root}/util/arch 2>/dev/null`
    QMASTER_HOST=`cat $SGE_ROOT/$CELL_NAME/common/act_qmaster 2>/dev/null`
-   CURRENT_HOST=`sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ;  ${cfg.sge.root}/utilbin/$ARCH/gethostname -aname' 2>/dev/null`
+   CURRENT_HOST=`sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ;  ${cfg.sge.root}/utilbin/'${ARCH}'/gethostname -aname' 2>/dev/null`
    #if [ "$HOSTNAME_RESOLVING" = true ]; then
       QMASTER_HOST=`echo $QMASTER_HOST | cut -f1 -d. | tr "[A-Z]" "[a-z]"`
       CURRENT_HOST=`echo $CURRENT_HOST | cut -f1 -d. | tr "[A-Z]" "[a-z]"`
    #fi
-   if [ -n "${gui_allhosts}" ]; then
-      list="${gui_allhosts}"
+   if [ -n "${gui_alladminhosts}" ]; then
+      list="${gui_alladminhosts}"
       for host in $list ; do
          if [ "$QMASTER_HOST" != "$CURRENT_HOST" ]; then
-            $SHELL_NAME $QMASTER_HOST "sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ; qconf -ah $host'" >/dev/null 2>&1
+            $SHELL_NAME $QMASTER_HOST "sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ; qconf -ah '${host}" >/dev/null 2>&1
          else
-            sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ; qconf -ah $host' >/dev/null 2>&1
+            sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ; qconf -ah '${host} >/dev/null 2>&1
          fi
       done
+   fi
+   #For the CSP mode we have to copy the certificates to each of the execd/submit/admin hosts
+   if [ "$GUI_CSP_MODE_ENABLED" = "true" -a "$CSP_RECREATE" = "true" -a -n "${gui_csphosts}" ]; then
+      list="${gui_csphosts}"
+      CSP_FLAGS=""
+      #-copycerts needs -rsh if rsh is to be used
+      if [ "$SHELL_NAME" != "ssh" ]; then
+         CSP_FLAGS="-rsh"
+      fi
+      total=0
+      failed=0
+      for host in $list ; do
+         RES=`${cfg.sge.root}/inst_sge $CSP_FLAGS -copycerts $host`
+         ret=$?
+         if [ "$ret" -ne 0 ]; then
+            echo "Copying CSP certificates to host $host failed! Further component installation will not work due to missing certificates."
+            failed=`expr $failed + 1`
+         else
+            echo "Copying CSP certificates to host $host succeeded."
+         fi
+         total=`expr $total + 1`
+      done
+      #Exit with failed dependancy only if all copy tasks fail
+      #TODO: Task must be displayed in the dependancy list!
+      if [ $total -eq $failed ]; then
+         GenerateResultOutput "COPY_CSP_CERTIFICATES" "Copying CSP certificates failed for all hosts! Further component installations would fail due to missing certificates. Try inst_sge -copycerts manually for each host" $EXIT_PREVIOUS_COMPONENT_DETECTED
+      fi
    fi
 fi
 
@@ -484,16 +508,44 @@ fi
 #To setup the final submit/admin hosts settings as specifed
 #Extra last tasks runs only this part of the script (otherwise ${cfg.allhosts.current.last} is not set)
 if [ -n "${last_install_task}" ]; then
+   ARCH=`sh -c ${cfg.sge.root}/util/arch 2>/dev/null`
+   CURRENT_HOST=`sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ;  ${cfg.sge.root}/utilbin/'${ARCH}'/gethostname -aname' 2>/dev/null`
+   #if [ "$HOSTNAME_RESOLVING" = true ]; then
+   CURRENT_HOST=`echo $CURRENT_HOST | cut -f1 -d. | tr "[A-Z]" "[a-z]"`
+   SKIPPED_HOST=""
+   #Remove all hosts as submit/admin hosts (marked possibly as submit in previous installation)
+   list="${gui_allhosts}"
+   for host in $list; do
+      #Remove as submit host
+      sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ; qconf -ds '$host >/dev/null 2>&1
+      #Remove admin host except for local host)
+      if [ "$host" = "$CURRENT_HOST" ]; then
+         SKIPPED_HOST="$host"
+         continue
+      fi
+      sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ; qconf -dh '$host >/dev/null 2>&1
+   done
    #Add all submit hosts
    list="${gui_allsubmithosts}"
    for host in $list; do
       sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ; qconf -as '$host >/dev/null 2>&1
    done
-   #Remove hosts that are not supposed to be admin host now
-   list="${gui_remove_adminhosts}"
+   #Same logic for admin hosts
+   #Add all admin hosts
+   SKIPPED_FOUND=false
+   list="${gui_alladminhosts}"
    for host in $list ; do
-      sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ; qconf -dh '$host >/dev/null 2>&1
+      sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ; qconf -ah '$host >/dev/null 2>&1
+      if [ "$host" = "$SKIPPED_HOST" ]; then
+         SKIPPED_FOUND=true
+      fi
    done
+   #Finally remove local host as admin host if not supposed to be an admin host
+   if [ "$SKIPPED_FOUND" = "false" ]; then
+      sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ; qconf -dh '$SKIPPED_HOST >/dev/null 2>&1
+   fi
+   #TODO: could verify that new qconf -ss/sh output contains all new hosts
+   #TODO: Additional final verification can go here
 fi
 
 if [ -z "$EXIT_CODE" ]; then

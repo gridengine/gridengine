@@ -403,7 +403,7 @@ public class Host implements Config {
         }
         return str.length()>1 ? str.substring(0, str.length()-2) : "";
     }
-
+    
     public void setComponentVariables(Properties variables) {
     	variables.put("isQmaster", isQmasterHost());
     	variables.put("isExecd", isExecutionHost());

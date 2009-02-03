@@ -418,12 +418,12 @@ public class UtilTest {
 
     @Test
     public void testParseHostPattern25() {
-        testParseHostPattern("abcde-10-15-21-20 abcd-10-[-15-20]-25 ,  abcde-10-15-20-20",Arrays.asList("abcde-10-15-21-20", "abcd-10--15-20-25", "abcde-10-15-20-20"));
+        testParseHostPattern("abcde-10-15-21-20 abcd-10-[14 15]-25 ,  abcde-10-15-20-20",Arrays.asList("abcde-10-15-21-20", "abcd-10-14-25", "abcd-10-15-25", "abcde-10-15-20-20"));
     }
 
     @Test
     public void testParseHostPattern26() {
-        testParseHostPattern("abcde-10-15-21-20 abcd-10-[- 15-20]-25 ,  abcde-10-15-20-20",Arrays.asList("abcde-10-15-21-20", "abcd-10---25", "abcd-10-15-25", "abcd-10-16-25", "abcd-10-17-25", "abcd-10-18-25", "abcd-10-19-25", "abcd-10-20-25", "abcde-10-15-20-20"));
+        testParseHostPattern("abcde-10-15-21-20 abcd-10-[0 15-20]-25 ,  abcde-10-15-20-20",Arrays.asList("abcde-10-15-21-20", "abcd-10-0-25", "abcd-10-15-25", "abcd-10-16-25", "abcd-10-17-25", "abcd-10-18-25", "abcd-10-19-25", "abcd-10-20-25", "abcde-10-15-20-20"));
     }
 
     @Test (expected=IllegalArgumentException.class)
@@ -456,13 +456,17 @@ public class UtilTest {
         testParseHostPattern("[a_b_ c_d]_aa", Arrays.asList("a_b__aa", "c_d_aa"));
     }
 
-        @Test
+    @Test
     public void testParseHostPattern33() {
         testParseHostPattern("aaa.bbb.ccc", Arrays.asList("aaa.bbb.ccc"));
     }
-
-
     
+    @Test  (expected=IllegalArgumentException.class)
+    public void testParseHostPattern34() {
+        testParseHostPattern("aaa0[-9]", Arrays.asList("aaa0[-9]"));
+    }
+
+
 
     private void testParseHostPattern(String input, List<String> expResult) {
         System.out.println("parseHostPattern: "+input);

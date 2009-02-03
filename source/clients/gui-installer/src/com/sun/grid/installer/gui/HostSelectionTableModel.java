@@ -182,7 +182,7 @@ public class HostSelectionTableModel extends SortedTableModel {
                 // if there is already a qmaster host and it's not the selected host...
                 if (qmasterHost != null && !qmasterHost.equals(h)) {
                     // ...ask whether the user want to change qmaster host selection
-                    String message = MessageFormat.format(langProperies.getProperty("msg.qmasterhost.already.selected"), qmasterHost.getHostAsString());
+                    String message = MessageFormat.format(langProperies.getProperty("msg.qmasterhost.already.selected"), h.getHostAsString(), qmasterHost.getHostAsString());
                     if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(table, message, 
                             langProperies.getProperty("title.confirmation"), JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE)) {
                         qmasterHost.setQmasterHost(false);
@@ -209,7 +209,7 @@ public class HostSelectionTableModel extends SortedTableModel {
                 // if there is already a bdb host and it's not the selected host...
                 if (bdbHost != null && !bdbHost.equals(h)) {
                     // ...ask whether the user want to change bdb host selection
-                    String message = MessageFormat.format(langProperies.getProperty("msg.bdbhost.already.selected"), bdbHost.getHostAsString());
+                    String message = MessageFormat.format(langProperies.getProperty("msg.bdbhost.already.selected"), h.getHostAsString(), bdbHost.getHostAsString());
                     if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(table, message,
                             langProperies.getProperty("title.confirmation"), JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE)) {
                         bdbHost.setBdbHost(false);

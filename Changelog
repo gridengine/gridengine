@@ -1,3 +1,7 @@
+RD-2009-02-03-0: Enhancem.:  - removed gdi dependency from test_performance
+                             - added script to measure spooling performance easily
+                 Review:     JG
+
 RD-2009-02-01-0: Enhancem.:   optimized scheduler event subscriptions for lower memory
                               consumption
                  Review:      JG
@@ -23001,4 +23005,5 @@ CR-2001-07-20-0: Testsuite:
 AH-2001-07-20-0: - increased GRM_GDI_VERSION for GE 5.3
                  - fix qmaster core dump caused by old execd's sending load
                    reports w/o REP_seqno
+
 

@@ -158,10 +158,11 @@ LP-2008-10-17-0: Bugfix:      Cannot choose admin user when installing as root
                  Issue:       2694, 2707, 2710, -, 2709
                  Review:      MD
 
-JF-2008-10-16-0: Bugfix: qmod does not follow admin host rules fixed
-                 Bugtraq: 6707098
-                 Issue: 2582
-                 Review: JG
+JF-2008-10-16-0: Bugfix:      qmod does not follow admin host rules fixed
+                 Bugtraq:     6707098
+                 Belongs to:  JF-2008-10-06-0
+                 Issue:       2582
+                 Review:      JG
 
 MD-2008-10-16-0: Bugfix:      o spooldefaults core dumps when bootstrap file 
                                 does not exists

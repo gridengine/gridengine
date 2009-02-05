@@ -1,3 +1,9 @@
+RD-2009-02-05-0: Bugfix:      - fixed buffer overrun in drmaa
+                              - test_drmaa did not executed drmaa_exit in
+                                case of success
+                 Belongs to:  JG-2009-01-28-0
+                 Review:      DG
+
 RD-2009-02-03-1: CVS:         Created V62u2_RC1_TAG
 ---------------------------------------------------
 

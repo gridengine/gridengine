@@ -2645,7 +2645,7 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
       args = (char **)malloc(sizeof(char *) * (num_args + 1));
       memset(args, 0, sizeof(char *) * (num_args + 1));
 
-      DPRINTF(("processing %s = \"%s\"\n", DRMAA_NATIVE_SPECIFICATION, value));
+      DPRINTF(("processing %s, count %d = \"%s\"\n", DRMAA_NATIVE_SPECIFICATION, num_args, value));
 
       sge_parse_args(value, args);
       opt_list_append_opts_from_qsub_cmdline(prog_number, &opts_native, &alp,

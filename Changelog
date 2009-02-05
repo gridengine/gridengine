@@ -1,3 +1,7 @@
+CR-2009-02-05-0: Bugfix:      module test test_issues (commlib) might fail on
+                              fast hosts
+                 Review:      AH
+
 RD-2009-02-05-1: Bugfix:      fixed critical scheduler message logged wrongly
                  Review:      DG
 

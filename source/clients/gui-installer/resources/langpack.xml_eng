@@ -82,12 +82,14 @@ ___INFO__MARK_END__-->
     <str id="state.resolving" txt="Resolving"/>
     <str id="state.missing_file" txt="Missing remote file"/>
     <str id="state.contacting" txt="Contacting"/>
+    <str id="state.validating" txt="Validating"/>
     <str id="state.copy_timeout_check_host" txt="Timeout occured"/>
     <str id="state.copy_failed_check_host" txt="Copy failed"/>
-    <str id="state.ready_to_install" txt="Ready to install"/>
+    <str id="state.ready_to_install" txt="Waiting"/>
+    <str id="state.operation.timeout.tooltip" txt="Timeout"/>
     <str id="state.copy_timeout_install_component" txt="Timeout occured"/>
     <str id="state.copy_failed_install_component" txt="Copy failed"/>
-    <str id="state.installing" txt="Installing"/>
+    <str id="state.processing" txt="Processing"/>
     <str id="state.canceled" txt="Canceled"/>
     <str id="state.perm_qmaster_spool_dir" txt="Permission denied"/>
     <str id="state.perm_execd_spool_dir" txt="Permission denied"/>
@@ -113,13 +115,15 @@ ___INFO__MARK_END__-->
     <str id="state.resolvable.tooltip" txt="Resolvable"/>
     <str id="state.resolving.tooltip" txt="Resolving"/>
     <str id="state.missing_file.tooltip" txt="Missing file '${cfg.sge.root}/util/arch' on remote host"/>
-    <str id="state.contacting.tooltip" txt="Contacting"/>
+    <str id="state.contacting.tooltip" txt="Contacting remote host"/>
+    <str id="state.validating.tooltip" txt="Validating configuration on remote host"/>
+    <str id="state.operation.timeout.tooltip" txt="Operation took longer that a timeout value."/>
     <str id="state.copy_timeout_check_host.tooltip" txt="Timeout while copying 'check_host' to remote host. Maybe a password requested?"/>
     <str id="state.copy_failed_check_host.tooltip" txt="Copying file 'check_host' to remote host failed."/>
-    <str id="state.ready_to_install.tooltip" txt="Ready to install"/>
+    <str id="state.ready_to_install.tooltip" txt="Waiting for a slot"/>
     <str id="state.copy_timeout_install_component.tooltip" txt="Timeout while copying 'install_component' to remote host. Maybe a password requested?"/>
     <str id="state.copy_failed_install_component.tooltip" txt="Copying file 'install_component' to remote host failed."/>
-    <str id="state.installing.tooltip" txt="Installing"/>
+    <str id="state.processing.tooltip" txt="Processing task"/>
     <str id="state.canceled.tooltip" txt="Canceled"/>
     <str id="state.perm_qmaster_spool_dir.tooltip" txt="<html>No permission to create qmaster spool directory:<br>${cfg.qmaster.spool.dir}</html>"/>
     <str id="state.perm_execd_spool_dir.tooltip.global" txt="<html>No permission to create execd spool directory:<br>${cfg.execd.spool.dir}</html>"/>
@@ -129,7 +133,7 @@ ___INFO__MARK_END__-->
     <str id="state.perm_jmx_keystore.tooltip" txt="<html>No permission to create JMX keystore directory:<br>${cfg.sge.jmx.ssl.keystore}</html>"/>
     <str id="state.bdb_spool_dir_exists.tooltip" txt="<html>Berkeley db spool directory exists:<br>${cfg.db.spooling.dir}</html>"/>
     <str id="state.admin_user_not_known.tooltip" txt="Admin user '${cfg.admin.user}' does not exist on this host!"/>
-    <str id="state.used_qmaster_port.tooltip" txt="Qmaster port '${cfg.sge.qmaster.port}' is in use"/>
+    <str id="state.used_qmaster_port.tooltip" txt="Qmaster port '${cfg.sge.qmaster.port}' could not be bound."/>
     <str id="state.used_execd_port.tooltip" txt="Execd port '${cfg.sge.execd.port}' is in use"/>
     <str id="state.used_jmx_port.tooltip" txt="JMX port '${cfg.sge.jmx.port}' is in use"/>
     <str id="state.unknown_error.tooltip" txt="Unknown error occured while checking the host."/>
@@ -229,8 +233,8 @@ ___INFO__MARK_END__-->
         For example, a range of 20000-20100 allows 100 jobs to run concurrently<br>
         on a single host.<br><br>
         <b>Variable: </b><code>$GID_RANGE</code></html>" />
-        <str id="cfg.shell.name.label.tooltip" txt="Shell used to connect to remote host in order to install component(s)" />
-        <str id="cfg.copy.command.label.tooltip" txt="Copy command used to transfer installation files to remote host" />
+        <str id="cfg.shell.name.label.tooltip" txt="<html>Shell used to connect to remote host in order to install component(s)<br>Default value: <b>ssh</b><br>Other option e.g.: <b>rsh</b></html>" />
+        <str id="cfg.copy.command.label.tooltip" txt="<html>Copy command used to transfer installation files to remote host<br>Default value: <b>scp</b><br>Other option e.g.: <b>rcp</b></html>" />
         <str id="cfg.add.to.rc.label.tooltip" txt="Automatically start service(s) at machine boot" />
         <str id="add.sge.jmx.label.tooltip" txt="<html><b>Use JMX</b><br><br>
         The JMX agent functionality enables access to a subset of <code>sge_qmaster</code> functionality<br>
@@ -429,7 +433,7 @@ ___INFO__MARK_END__-->
         <str id="column.submit.label" txt="Submit" />
         <str id="column.bdb.label" txt="BDB" />
         <str id="column.state.label" txt="State" />
-        <str id="column.component.label" txt="Component" />
+        <str id="column.component.label" txt="Task" />                          <!-- Component, Procedure -->
         <str id="column.progress.label" txt="Progress" />
         <str id="column.log.label" txt="Log" />
         <str id="cell.log.label" txt="Log" />
@@ -437,8 +441,8 @@ ___INFO__MARK_END__-->
         <str id="tab.all.label" txt="All hosts" />
         <str id="tab.reachable.label" txt="Reachable hosts" />
         <str id="tab.unreachable.label" txt="Unreachable hosts" />
-        <str id="tab.installing.label" txt="To Be Installed" />
-        <str id="tab.done.label" txt="Done" />
+        <str id="tab.installing.label" txt="Task List" />
+        <str id="tab.done.label" txt="Succeeded" />
         <str id="tab.failed.label" txt="Failed" />
         <str id="menu.title" txt="Edit actions"/>
         <str id="menu.resolve.selected" txt="Refresh selected"/>
@@ -448,7 +452,7 @@ ___INFO__MARK_END__-->
         <str id="menu.save.selection" txt="Save selection as..."/>
         <str id="menu.save.all" txt="Save all as..."/>
         <str id="progressbar.resolving.label" txt="Resolving"/>
-        <str id="progressbar.installing.label" txt="Installing"/>
+        <str id="progressbar.installing.label" txt="Processing tasks"/>
         <str id="progressbar.checking.label" txt="Validating"/>
         <!-- Tooltips -->
         <str id="hostinput.label.tooltip" txt="<html><b>Hostname</b><br><br>
@@ -482,9 +486,9 @@ ___INFO__MARK_END__-->
         <str id="tab.all.label.tooltip" txt="All hosts" />
         <str id="tab.reachable.label.tooltip" txt="Reachable hosts" />
         <str id="tab.unreachable.label.tooltip" txt="Unreachable hosts" />
-        <str id="tab.installing.label.tooltip" txt="Component(s) to be installed" />
-        <str id="tab.done.label.tooltip" txt="Successfully installed component(s)" />
-        <str id="tab.failed.label.tooltip" txt="Failed installation(s)" />
+        <str id="tab.installing.label.tooltip" txt="Tasks to be processed" />
+        <str id="tab.done.label.tooltip" txt="Successfully performed task(s)" />
+        <str id="tab.failed.label.tooltip" txt="Failed task(s)" />
         <str id="menu.title.tooltip" txt="Edit actions"/>
         <str id="menu.resolve.selected.tooltip" txt="Resolve selected host(s)"/>
         <str id="menu.resolve.all.tooltip" txt="Resolve all hosts"/>
@@ -495,10 +499,11 @@ ___INFO__MARK_END__-->
         <!-- Messages -->
         <str id="warning.qmaster.arch.unsupported.message" txt="Architecture '${param1}' is not supported for qmaster installation!"/>
         <str id="warning.bdbserver.arch.unsupported.message" txt="Architecture '${param1}' is not supported for Berkeley db server installation!"/>
-        <str id="warning.no.components.to.install.message" txt="Cannot start installation. No componets are selected!"/>
+        <str id="warning.no.components.to.install.message" txt="Cannot start installation. No components are selected!"/>
+        <str id="warning.only.admin.submit.to.install.message" txt="<html>No components were selected.<br><br>Do you want to add only the additional admin/submit hosts?</html>"/>
         <str id="warning.comp.selected.but.no.host" txt="<html>${component} component was selected to be installed but none of the hosts is marked as ${host.type} host!<br><br>Do you want to continue the installation?</html>"/>
         <str id="warning.invalid.hosts.message"  txt="<html>{0} out of {1} reachable hosts have configuration errors. These may fail during the installation.<br>Check host and their states for detailed error messages in the tooltips.<br><br>Do you want to continue the installation?</html>" />
-        <str id="msg.previous.dependent.install.failed" txt="This installation depended on {0} installation which failed. Therefore it could not be started."/>
+        <str id="msg.previous.dependent.install.failed" txt="Not started! It depended on {0} task that failed."/>
         <str id="msg.qmasterhost.already.selected" txt="<html>Do you really want to change qmaster host to <b>{0}</b>?<br>Currently selected qmaster host is <b>{1}</b>.<br></html>"/>
         <str id="msg.bdbhost.already.selected" txt="<html>Do you really want to change BDB server to <b>{0}</b>?<br>Currently selected BDB server is <b>{1}</b>.<br></html></html>"/>
     <!-- Result Panel -->
@@ -526,9 +531,11 @@ ___INFO__MARK_END__-->
         <!-- General -->
         <str id="log.message.emptylog" txt="Empty log."/>
 
-   <!-- install_component exit code mapptings -->
+   <!-- General exit code mappings -->
         <str id="msg.exit.fail.general"  txt="Installation failed with exit code {0}"/>
-        <str id="msg.exit.1"  txt="Installation failed."/>
+        <str id="msg.exit.-4"  txt="Timeout ({0} seconds)! Operation did not finish during this time and was killed."/>
+   <!-- Used only in install_component -->
+        <str id="msg.exit.1"  txt="Task failed."/>
         <str id="msg.exit.2" txt="Installation failed with exit code 2"/>
         <str id="msg.exit.10" txt="Detected existing component installation. Can't proceed."/>
         <str id="msg.exit.11" txt="Uninstallation failed."/>

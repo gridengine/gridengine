@@ -278,12 +278,12 @@ ___INFO__MARK_END__-->
         </field>
     </panel>
     <panel id="CSPPanel">
-        <field type="check" variable="cfg.csp.recreate">
+        <!--<field type="check" variable="cfg.csp.recreate">
             <spec align="left" id="cfg.csp.recreate.label" true="true" false="false" />
         </field>
         <field type="check" variable="cfg.csp.copy.certs">
             <spec align="left" id="cfg.csp.copy.certs.label" true="true" false="false" />
-        </field>
+        </field>-->
         <field type="text" variable="cfg.csp.country.code">
             <spec id="cfg.csp.country.code.label" size="25" />
             <validator id="cfg.csp.country.code.notemptyvalidator" class="com.izforge.izpack.util.NotEmptyValidator" />

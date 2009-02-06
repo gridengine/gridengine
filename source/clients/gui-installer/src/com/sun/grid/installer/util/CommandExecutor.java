@@ -34,7 +34,6 @@ package com.sun.grid.installer.util;
 import java.io.IOException;
 import java.util.List;
 import java.io.File;
-import java.io.InputStream;
 import java.util.Map;
 import java.util.Vector;
 
@@ -42,6 +41,7 @@ import com.izforge.izpack.util.Debug;
 import com.sun.grid.installer.gui.Host;
 import java.io.FileReader;
 import java.io.LineNumberReader;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Properties;
@@ -51,21 +51,24 @@ import java.util.Properties;
  */
 public class CommandExecutor implements Config {
     private ProcessBuilder processBuilder = null;
-    
-    private int exitValue                         = -1;
+
+    public static final int EXITVAL_INITIAL       = -1;
     public static final int EXITVAL_OTHER         = -2;
     public static final int EXITVAL_INTERRUPTED   = -3;
     public static final int EXITVAL_TERMINATED    = -4;
     public static final int EXITVAL_MISSING_FILE  = 15;
 
-    private static final String SHELL           = "sh";
-    private static final String SHELL_ARG       = "-c";
+    private static final String SHELL             = "sh";
+    private static final String SHELL_ARG         = "-c";
 
-    private static int WAIT_TIME     = 50;
-    private static int DEFAULT_MAX_WAIT_TIME = 8000;
+    private static int WAIT_TIME                  = 200;
+    private static int DEFAULT_MAX_WAIT_TIME      = 10000; // 10 seconds (mainly for host resolving)
     private int MAX_WAIT_TIME;
 
+    private int exitValue                         = EXITVAL_INITIAL;
+
     private Vector<String> outVector, errVector, additionalErrors;
+    private String firstMessage;
 
     private File outFile, errFile;
     private List<String> cmds = null;
@@ -85,7 +88,7 @@ public class CommandExecutor implements Config {
     public CommandExecutor(Properties variables, int timeout, List<String> commands) {
         MAX_WAIT_TIME = timeout;
 
-        Debug.trace("Initializing command: " + getSingleCommand(commands));
+        Debug.trace("Initializing command: " + getSingleCommand(commands) + " timeout="+timeout);
 
         List<String> tmp = commands;
         commands = new ArrayList<String>();
@@ -216,15 +219,14 @@ public class CommandExecutor implements Config {
                     Thread.sleep(WAIT_TIME);
                     waitTime += WAIT_TIME;
                     if (waitTime > MAX_WAIT_TIME) {
-                        Debug.error("Terminated ("+waitTime/1000.0+" sec): '" + processBuilder.command() + "'!");
+                        Debug.error("Terminated ("+MAX_WAIT_TIME / 1000+" sec): '" + processBuilder.command() + "'!");
                         process.destroy();
                         exitValue = EXITVAL_TERMINATED;
                         break;
                     }
                 }
             }
-            cmdId = (long)(Math.random()*1000000);
-            Debug.trace(cmdId + " Command: " + getSingleCommand(processBuilder.command()) + " exitValue: "+exitValue);
+            cmdId = (long)(Math.random()*1000000);            
         } catch (IOException ex) {
             exitValue = EXITVAL_OTHER;
             additionalErrors.add(ex.getLocalizedMessage());
@@ -237,9 +239,31 @@ public class CommandExecutor implements Config {
             errVector.addAll(additionalErrors);
             Debug.trace(cmdId + " output: "+ outVector);
             Debug.trace(cmdId + " error: "+ errVector);
+            //Parse the output and change the exit code if needed! We can't trust RSH, so we look for __EXIT_CODE_num___
+            int tmpExitValue = 0;
+            String tmpNum = "", d;
+            int exitStringPos=-1;
+            //Our special exit code should be the last line!
+            for (int i = outVector.size() - 1 ; i >= 0 ; i--) {
+                d = outVector.get(i);
+                if (d.matches("___EXIT_CODE_[1-9]?[0-9]___")) {
+                    exitStringPos = i;
+                    tmpNum = d.substring("___EXIT_CODE_".length());
+                    tmpNum = tmpNum.substring(0, tmpNum.indexOf("_"));
+                    tmpExitValue = Integer.valueOf(tmpNum);
+                    break;
+                }
+            }
+            //Remove this exit line!
+            if (exitStringPos >= 0) {
+                outVector.remove(exitStringPos);
+            }
+            //Set the correct exitValue
+            exitValue = (tmpExitValue != 0 && exitValue == 0) ? tmpExitValue : exitValue;
             //Delete on exit to have better debug, until we close the APP
             outFile.deleteOnExit();
             errFile.deleteOnExit();
+            Debug.trace(cmdId + " Command: " + getSingleCommand(processBuilder.command()) + " timeout: "+ MAX_WAIT_TIME/1000 + " exitValue: "+exitValue);
         }
     }
 
@@ -254,13 +278,74 @@ public class CommandExecutor implements Config {
     public Map getEnvironment() {
         return processBuilder.environment();
     }
-
-    public String getLocalizedMessage(int value) {
-        return "";
-    }
     
     public Vector<String> getOutput() {
         return outVector;
+    }
+
+    public void setFirstLogMessage(String message) {
+        firstMessage = message;
+    }
+
+    /* Command must have finished! */
+    public String generateLog(final Properties msgs) {
+        return generateLog(exitValue, msgs);
+    }
+
+    /* Command must have finished! */
+    public String generateLog(int exitValue, final Properties msgs) {
+        String log = "", stdLog = "", errLog = "", message = "";
+
+        if (exitValue == CommandExecutor.EXITVAL_INITIAL) {
+            return "Tried to retrieve exit code before command has finished! We have no log so far.";
+        }
+
+        String SEP = System.getProperty("line.separator");
+        message = (String) msgs.get("msg.exit." + exitValue);
+        if (exitValue == CommandExecutor.EXITVAL_TERMINATED) {
+            //timeout
+            message = MessageFormat.format(message, MAX_WAIT_TIME / 1000);
+            log += "FAILED: " + message + SEP;
+        } else if (exitValue > 0 && message != null && message.length() > 0) {
+            log += "FAILED: " + message + SEP;
+        } else if (exitValue > 0) {
+            message = MessageFormat.format((String) msgs.get("msg.exit.fail.general"), exitValue);
+            log += "FAILED: " + message + SEP;
+        }
+        //Add firstMessage
+        if (firstMessage != null && firstMessage.trim().length() > 0) {
+            log += firstMessage;
+        }
+        //Append both output/error streams, delete all empty lines
+        if (getOutput() != null) {
+            for (String d : getOutput()) {
+                if (d.trim().length() > 0) {
+                    stdLog += d + SEP;
+                }
+            }
+        }
+        if (getError() != null) {
+            for (String d : getError()) {
+                if (d.trim().length() > 0) {
+                    errLog += d + SEP;
+                }
+            }
+        }
+        //Finalize the output
+        if (stdLog.trim().length() > 0) {
+            if (log.length() == 0) {
+               log = "OUTPUT:" + SEP + stdLog;
+            } else {
+               log += SEP + "OUTPUT:" + SEP + stdLog;
+            }
+        }
+        if (errLog.trim().length() > 0) {
+            log += SEP + "ERROR:" + SEP + errLog;
+        }
+        if (log.trim().length() == 0) {
+            log = "No output.";
+        }
+        return log;
     }
     
     public Vector<String> getError() {

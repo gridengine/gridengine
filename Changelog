@@ -1,3 +1,27 @@
+LP-2009-02-06-0: Bugfix:      inst_sge -copycerts in AUTO mode does not work
+                 Bugfix:      gui-installer: IPs treated as hostnames
+                 Bugfix:      gui-installer: prerequisites/final tasks now
+                              displayed in the install list
+                 Bugfix:      gui-installer: Can't add only admin/submit hosts
+                 Bugfix:      gui-installer: admin/submit only hosts should not
+                              skipped by the installer
+                 Bugfix:      gui-installer: Many errors not discovered when rsh
+                              is used (rsh always returns 0)
+                 Bugfix:      gui-installer: Removed unnecessary fields in CSP
+                              certificate screen
+                 Bugfix:      gui-installer: admin/submit host list in the final
+                              readme may be incomplete
+                 Bugfix:      gui-installer: CSP panel shown in incorrect
+                              scenarios
+                 Bugfix:      gui-installer: ProgressBar sometimes not shown
+                 Enhancem:    gui-installer: Improved task timeout times
+                 Enhancem.:   gui-installer: Improved installation log formatting
+                 Enhancem.:   gui-installer: check_host does not need to be done
+                              for admin/submit only hosts
+                 Enhacemm.:   gui-installer: Improved installation panel UE
+                 Cleanup:     gui-installer: Util and CommandExecutor
+                 Review:      ZG
+
 JG-2009-02-06-0: Bugfix:      qrstat -help shows advance reservations
                  Bugster:     6801151
                  Issue:       2903

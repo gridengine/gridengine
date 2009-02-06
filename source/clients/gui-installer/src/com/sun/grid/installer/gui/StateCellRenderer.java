@@ -79,8 +79,9 @@ public class StateCellRenderer implements TableCellRenderer {
             // differenciate between states
             switch (state) {
                 case RESOLVING:
-                case INSTALLING:
-                case CONTACTING: { // running states
+                case PROCESSING:
+                case CONTACTING:
+                case VALIDATING: { // running states
                     if (!progressBars.containsKey(Integer.valueOf(row))) {
                         progressBars.put(Integer.valueOf(row), new HostProgressBar(state.toString()));
                     }

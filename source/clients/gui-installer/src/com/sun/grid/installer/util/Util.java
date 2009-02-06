@@ -50,7 +50,6 @@ import java.net.ServerSocket;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -129,7 +128,7 @@ public class Util implements Config{
     }
 
 
-    private static List<String> parsePattern(String input, Host.Type type) {
+    public static List<String> parsePattern(String input, Host.Type type) {
         long start=System.currentTimeMillis(),endL;
         LinkedList<List<String>> list = new LinkedList<List<String>>();
         int i=0;
@@ -675,7 +674,7 @@ public class Util implements Config{
             int tries = 0;
             while (tries < maxTries) {
                 // TODO does -tcp option is what we need?
-                cmdExec = new CommandExecutor(qping, "-tcp", "-info", host.getHostAsString(), port, component, "1");
+                cmdExec = new CommandExecutor(qping, "-tcp", "-info", host.getHostname(), port, component, "1");
                 Map env = cmdExec.getEnvironment();
                 env.put("SGE_ROOT", variables.getProperty(VAR_SGE_ROOT));
                 env.put("SGE_CELL", variables.getProperty(VAR_SGE_CELL_NAME));
@@ -898,8 +897,8 @@ public class Util implements Config{
             ServerSocket serverSocket = new ServerSocket(port, 0 , InetAddress.getByName(hostName));
             serverSocket.close();
             return true;
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (IOException e) {
+            //e.printStackTrace();
             return false;
         }
     }
@@ -908,8 +907,9 @@ public class Util implements Config{
         String item ="";
         List<String> tmp = new ArrayList<String>();
         for (int i = 0; i< model.getRowCount(); i++) {
-            item = (String) model.getValueAt(i, 0);
-            if (!tmp.contains(item) && !item.equals(local)) {
+            item = (String) model.getValueAt(i, 1);
+            //We don't add duplicate hostnames, local host or special tasks "All hosts"
+            if (!tmp.contains(item) && !item.equals(local) && !item.equals(Host.HOST_TYPE_ALL)) {
                 tmp.add(item);
             }
         }
@@ -931,18 +931,4 @@ public class Util implements Config{
         return new SimpleDateFormat("yyyy.MM.dd_HH:mm:ss").format(new Date());
     }
 
-    public static int getExitValue(Collection<String> output) {
-        int exitValue = 0;
-        String tmpNum = "";
-
-        for (String d : output) {
-            if (d.matches("___EXIT_CODE_[1-9]?[0-9]___")) {
-                tmpNum = d.substring("___EXIT_CODE_".length());
-                tmpNum = tmpNum.substring(0, tmpNum.indexOf("_"));
-                exitValue = Integer.valueOf(tmpNum);
-            }
-        }
-
-        return exitValue;
-    }
 }

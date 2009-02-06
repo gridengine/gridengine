@@ -57,5 +57,5 @@ echo "Starting Installer ..."
 if [ "$DEBUG_ENABLED" = "true" ]; then
    $JAVA_BIN $FLAGS -jar ./util/gui-installer/installer.jar
 else
-   $JAVA_BIN $FLAGS -jar ./util/gui-installer/installer.jar > /dev/null 2>&1
+   $JAVA_BIN $FLAGS -jar ./util/gui-installer/installer.jar
 fi

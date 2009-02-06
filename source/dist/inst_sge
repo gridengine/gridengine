@@ -1409,6 +1409,10 @@ if [ "$SUBMIT" = "install" ]; then
 fi
 
 if [ "$COPY_CA" = "true" ]; then
+   #In standalone -copycert auto mode we don't have SGE_CELL
+   if [ -z "$SGE_CELL" -a "$AUTO" = "true" ]; then
+      SGE_CELL="$CELL_NAME"
+   fi
    if [ "$SGE_ROOT" = "" -o "$SGE_CELL" = "" ]; then
       $INFOTEXT "SGE_ROOT or SGE_CELL is not set!"
       exit 1

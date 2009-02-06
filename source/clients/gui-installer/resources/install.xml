@@ -68,7 +68,7 @@ ___INFO__MARK_END__-->
         <res id="CustomLangpack.xml_eng" src="langpack.xml_eng"/>
         <res id="LicencePanel.licence" src="LICENSE"/>
         <res id="Heading.image" src="logo.png"/>
-        <res id="Welcome.image" src="sun_logo.gif"/>
+        <res id="Welcome.image" src="S-curve-left-splash.png"/>
         <res id="customicons.xml" src="customicons.xml"/>
     </resources>
 
@@ -167,7 +167,7 @@ ___INFO__MARK_END__-->
         <panel classname="IntermediateActionPanel"  id="IntermediateActionPanel" />
         <panel classname="UserInputPanel"  id="JMXPanel" condition="cond.custom.install+cond.sge.jmx+cond.install.qmaster"/>
         <panel classname="UserInputPanel"  id="SpoolingPanel" condition="cond.custom.install+cond.install.qmaster|cond.install.bdb"/>
-        <panel classname="UserInputPanel"  id="CSPPanel" condition="cond.product.mode.csp|cond.custom.install+cond.sge.jmx+cond.sge.jmx.ssl"/>
+        <panel classname="UserInputPanel"  id="CSPPanel" condition="cond.custom.install+cond.install.qmaster+(cond.product.mode.csp|(cond.sge.jmx+cond.sge.jmx.ssl))"/>
         <panel classname="HostPanel"       id="HostPanel" />
         <panel classname="PostActionPanel" id="PostActionPanel"/>
         <panel classname="ResultPanel"     id="ResultPanel"/>

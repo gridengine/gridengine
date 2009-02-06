@@ -111,9 +111,12 @@ fi
 if [ "$IS_BDB" = true ]; then
    # if BDB server spooling is enabled check write permission on BDB spool dir
    if [ "$SPOOLING_METHOD" = "berkeleydb" -a "$DB_SPOOLING_SERVER" != "none"  ]; then
+      if [ -d "${cfg.db.spooling.dir}" ]; then
+         Exit 24
+      fi
       IsDirWritable "${cfg.db.spooling.dir}"
       if [ $EXIT_CODE -ne 0 ]; then
-         Exit 10
+         Exit 23
       fi
    fi
 fi

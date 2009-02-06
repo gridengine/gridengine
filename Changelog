@@ -1,3 +1,8 @@
+JG-2009-02-06-0: Bugfix:      qrstat -help shows advance reservations
+                 Bugster:     6801151
+                 Issue:       2903
+                 Review:      RD
+
 CR-2009-02-05-0: Bugfix:      module test test_issues (commlib) might fail on
                               fast hosts
                  Review:      AH

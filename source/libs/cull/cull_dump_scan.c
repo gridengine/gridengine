@@ -50,7 +50,7 @@
 #include "uti/sge_stdio.h"
 #include "uti/sge_string.h"
 
-#define READ_LINE_LENGHT 255
+#define READ_LINE_LENGHT MAX_STRING_SIZE
 
 #define INDENT_STRING      "   "
 

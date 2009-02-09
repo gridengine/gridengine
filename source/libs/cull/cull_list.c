@@ -2379,9 +2379,7 @@ int lSortList(lList *lp, const lSortOrder *sp)
 
    free(pointer);
 
-   /* Recreate the hash */
-   cull_hash_free_descr(lp->descr);
-   cull_hash_create_hashtables(lp);
+   cull_hash_recreate_after_sort(lp);
 
    DRETURN(0);
 }

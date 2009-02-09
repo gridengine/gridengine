@@ -137,7 +137,7 @@ typedef struct {
    bool       host_order_changed;
    int        last_dispatch_type;
    int        search_alg[SCHEDD_PE_ALG_MAX]; /* stores the weighting for the different algorithms*/
-   int        scheduled_comprehensive_jobs;        /* counts the dispatched pe jobs */
+   int        scheduled_pe_jobs;        /* counts the dispatched pe jobs */
    int        scheduled_fast_jobs;           /* counts the dispatched sequential jobs */
    double     decay_constant;            /* used in the share tree */
    /* temporary data used for scheduling messages */
@@ -178,7 +178,7 @@ static void sc_state_init(sc_state_t* state)
    state->search_alg[SCHEDD_PE_HIGH_FIRST] = 0;
    state->search_alg[SCHEDD_PE_BINARY] = 0;
    state->scheduled_fast_jobs = 0;
-   state->scheduled_comprehensive_jobs = 0;
+   state->scheduled_pe_jobs = 0;
    state->decay_constant = 0.0;
    /* temp data for scheduler messages */
    state->sme = NULL;
@@ -1313,23 +1313,23 @@ int sconf_get_fast_jobs(void)
    return sc_state->scheduled_fast_jobs;
 }
 
-void sconf_inc_comprehensive_jobs(void) 
+void sconf_inc_pe_jobs(void) 
 {
-   GET_SPECIFIC(sc_state_t, sc_state, sc_state_init, sc_state_key, "sconf_inc_fast_jobs");
-   sc_state->scheduled_comprehensive_jobs++;
+   GET_SPECIFIC(sc_state_t, sc_state, sc_state_init, sc_state_key, "sconf_inc_pe_jobs");
+   sc_state->scheduled_pe_jobs++;
 }
 
-int sconf_get_comprehensive_jobs(void) 
+int sconf_get_pe_jobs(void) 
 {
-   GET_SPECIFIC(sc_state_t, sc_state, sc_state_init, sc_state_key, "sconf_get_fast_jobs");
-   return sc_state->scheduled_comprehensive_jobs;
+   GET_SPECIFIC(sc_state_t, sc_state, sc_state_init, sc_state_key, "sconf_get_pe_jobs");
+   return sc_state->scheduled_pe_jobs;
 }
 
 void sconf_reset_jobs(void)
 {
    GET_SPECIFIC(sc_state_t, sc_state, sc_state_init, sc_state_key, "sconf_reset_jobs");
    sc_state->scheduled_fast_jobs = 0;
-   sc_state->scheduled_comprehensive_jobs = 0;
+   sc_state->scheduled_pe_jobs = 0;
 }
 
 /****** sge_schedd_conf/sconf_get_schedd_job_info() ****************************

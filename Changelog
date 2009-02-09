@@ -1,3 +1,9 @@
+RD-2009-02-09-0: Enhancem.:   - reduced queue instance sorting during dispatch runs
+                              - improved hash recreation necessary after
+                                list sorting
+                              - fixed build dependency for test_performance
+                 Review:      JG
+
 LP-2009-02-06-0: Bugfix:      inst_sge -copycerts in AUTO mode does not work
                  Bugfix:      gui-installer: IPs treated as hostnames
                  Bugfix:      gui-installer: prerequisites/final tasks now

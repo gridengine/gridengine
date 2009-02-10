@@ -2148,7 +2148,8 @@ class CheckHostTask extends TestableTask {
         this.host = host;
         this.prevState = host.getState();
         this.panel = panel;
-        this.variables = panel.getInstallData().getVariables();
+        this.variables = new Properties();
+        variables.putAll(panel.getInstallData().getVariables());
     }
 
     public void run() {
@@ -2207,7 +2208,8 @@ class CheckHostTask extends TestableTask {
         checkHostFile = "/tmp/" + checkHostFile + "." + host.getHostname();
         Debug.trace("Generating check_host file: '" + checkHostFile + "'.");
         try {
-            panel.getInstallData().getVariables().put("host.arch", host.getArchitecture());
+            variables.put("host.arch", host.getArchitecture());
+
             checkHostFile = Util.fillUpTemplate(checkHostTempFile, checkHostFile, panel.getInstallData().getVariables());
 
             Debug.trace("Copy auto_conf file to '" + host.getHostname() + ":" + checkHostFile + "'.");
@@ -2224,7 +2226,7 @@ class CheckHostTask extends TestableTask {
                 Debug.error("Error when copying the file.");
             } else {
                 new CommandExecutor(variables, variables.getProperty(VAR_SHELL_NAME), host.getHostname(), "chmod", "755", checkHostFile).execute();
-                cmd = new CommandExecutor(variables, 30000, //Set install timeout to 30secs
+                cmd = new CommandExecutor(variables, 2 * Util.RESOLVE_TIMEOUT, //Set install timeout to 2* RESOLVE_TIMEOUT
                         variables.getProperty(VAR_SHELL_NAME),
                         host.getHostname(), checkHostFile, String.valueOf(host.isBdbHost()),
                         String.valueOf(host.isQmasterHost()), String.valueOf(host.isShadowHost()),
@@ -2429,6 +2431,7 @@ class InstallTask extends TestableTask {
         this.tables = tables;
         host = h;
         this.variables = variables;
+        this.variables.put("host.arch", host.getArchitecture());
         this.msgs = msgs;
         vs = new VariableSubstitutor(variables);
     }

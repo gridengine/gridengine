@@ -128,8 +128,11 @@ public interface Config {
     public static final String WARNING_USER_NOT_ROOT = "warning.user.not.root.message";
     public static final String ERROR_USER_INVALID = "error.user.invalid.message";
 
-    public static final String ARG_RESOLVE_THREAD_POOL_SIZE = "resolvepool";
-    public static final String ARG_INSTALL_THREAD_POOL_SIZE = "installpool";
+    public static final String ARG_RESOLVE_THREAD_POOL_SIZE = "resolve_pool";
+    public static final String ARG_INSTALL_THREAD_POOL_SIZE = "install_pool";
+
+    public static final String ARG_RESOLVE_TIMEOUT = "resolve_timeout";
+    public static final String ARG_INSTALL_TIMEOUT = "install_timeout";
 
     public static final int EXIT_VAL_SUCCESS = 0;
     public static final int EXIT_VAL_BDB_SERVER_SPOOL_DIR_PERM_DENIED = 10;

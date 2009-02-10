@@ -72,7 +72,9 @@ public class Util implements Config{
 
     public static int RESOLVE_THREAD_POOL_SIZE = 12;
     public static int INSTALL_THREAD_POOL_SIZE = 8;
-
+    public static int RESOLVE_TIMEOUT = 15000;
+    public static int INSTALL_TIMEOUT = 60000;
+    
     // Currently we accept pattern in list of hosts in a file
     public static List<String> parseFileList(File f) throws FileNotFoundException {
         List<String> hostList = new LinkedList<String>(), tempList;
@@ -685,7 +687,7 @@ public class Util implements Config{
                 if (cmdExec.getExitValue() == 0) {
                     return true;
                 } else {
-                    Thread.currentThread().sleep(2000);
+                    Thread.sleep(2000);
                 }
 
                 tries++;

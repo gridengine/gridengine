@@ -30,12 +30,38 @@
 #
 ##########################################################################
 #___INFO__MARK_END__
-FLAGS="-DLOG=true"
 
-if [ "$1" = "debug" -o "$1" = "-debug" ]; then
-   FLAGS=$FLAGS" -DSTACKTRACE=true"
-   DEBUG_ENABLED=true
-fi
+ErrUsage() 
+{
+   echo "Usage: `basename $0` [-help] [-resolve_pool=<num>] [-resolve_timeout=<sec>]" \
+        "       [-install_pool=<num>] [-install_timeout=<sec>]" \
+        "" \
+        "   <num> ... decimal number greater than zero" \
+        "   <sec> ... number of seconds, must be greater then zero"
+}
+
+
+
+FLAGS="-DLOG=true"
+ARGUMENTS=""
+
+ARGC=$#
+while [ $ARGC != 0 ]; do
+   case $1 in
+   -debug)
+     FLAGS=$FLAGS" -DSTACKTRACE=true"
+     DEBUG_ENABLED=true
+     ;;
+   -help)
+     ErrUsage
+     ;;
+   *)
+     ARGUMENTS="$ARGUMENTS $1"
+     ;;
+   esac
+   shift
+   ARGC=`expr $ARGC - 1`
+done
 
 #Detect JAVA
 if [ -n "$JAVA_HOME" -a -f "$JAVA_HOME"/bin/java ]; then
@@ -55,7 +81,7 @@ fi
 #fi
 echo "Starting Installer ..."
 if [ "$DEBUG_ENABLED" = "true" ]; then
-   $JAVA_BIN $FLAGS -jar ./util/gui-installer/installer.jar
+   $JAVA_BIN $FLAGS -jar ./util/gui-installer/installer.jar "$ARGUMENTS"
 else
-   $JAVA_BIN $FLAGS -jar ./util/gui-installer/installer.jar
+   $JAVA_BIN $FLAGS -jar ./util/gui-installer/installer.jar "$ARGUMENTS"
 fi

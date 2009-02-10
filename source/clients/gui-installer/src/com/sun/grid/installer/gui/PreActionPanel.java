@@ -35,6 +35,7 @@ import com.izforge.izpack.installer.InstallData;
 import com.izforge.izpack.installer.InstallerFrame;
 import com.izforge.izpack.util.Debug;
 import com.izforge.izpack.util.VariableSubstitutor;
+import com.sun.grid.installer.util.Config;
 import com.sun.grid.installer.util.ExtendedFile;
 
 import com.sun.grid.installer.util.Util;
@@ -70,6 +71,8 @@ public class PreActionPanel extends ActionPanel {
                 Util.RESOLVE_THREAD_POOL_SIZE = size;
             } catch (NumberFormatException e) {
                 Debug.error("Invalid '" + ARG_RESOLVE_THREAD_POOL_SIZE + "' value: " + idata.getVariable(ARG_RESOLVE_THREAD_POOL_SIZE));
+            } finally {
+                Debug.trace(ARG_RESOLVE_THREAD_POOL_SIZE +" is now set to "+Util.RESOLVE_THREAD_POOL_SIZE);
             }
         }
         if (idata.getVariable(ARG_INSTALL_THREAD_POOL_SIZE) != null) {
@@ -81,6 +84,35 @@ public class PreActionPanel extends ActionPanel {
                 Util.INSTALL_THREAD_POOL_SIZE = size;
             } catch (NumberFormatException e) {
                 Debug.error("Invalid '" + ARG_INSTALL_THREAD_POOL_SIZE + "' value: " + idata.getVariable(ARG_INSTALL_THREAD_POOL_SIZE));
+            } finally {
+                Debug.trace(ARG_INSTALL_THREAD_POOL_SIZE +" is now set to "+Util.INSTALL_THREAD_POOL_SIZE);
+            }
+        }
+        //Set the timeout values
+        if (idata.getVariable(ARG_RESOLVE_TIMEOUT) != null) {
+            try {
+                size = Integer.valueOf(idata.getVariable(ARG_RESOLVE_TIMEOUT));
+                if (size < 1) {
+                    throw new NumberFormatException();
+                }
+                Util.RESOLVE_TIMEOUT = size * 1000; //we need ms not seconds
+            } catch (NumberFormatException e) {
+                Debug.error("Invalid '" + ARG_RESOLVE_TIMEOUT + "' value: " + idata.getVariable(ARG_RESOLVE_THREAD_POOL_SIZE));
+            } finally {
+                Debug.trace(ARG_RESOLVE_TIMEOUT +" is now set to "+Util.RESOLVE_TIMEOUT);
+            }
+        }
+        if (idata.getVariable(ARG_INSTALL_TIMEOUT) != null) {
+            try {
+                size = Integer.valueOf(idata.getVariable(ARG_INSTALL_TIMEOUT));
+                if (size < 1) {
+                    throw new NumberFormatException();
+                }
+                Util.INSTALL_TIMEOUT = size * 1000; //we need ms not seconds
+            } catch (NumberFormatException e) {
+                Debug.error("Invalid '" + ARG_INSTALL_TIMEOUT + "' value: " + idata.getVariable(ARG_INSTALL_THREAD_POOL_SIZE));
+            } finally {
+                Debug.trace(ARG_INSTALL_TIMEOUT +" is now set to "+Util.INSTALL_TIMEOUT);
             }
         }
         

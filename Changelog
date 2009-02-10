@@ -1,3 +1,11 @@
+LP-2009-02-10-0: Bugfix:      gui-installer: check_host might always fail due to
+                              invalid architecture
+                 Bugfix:      gui-installer: installation will fail on different
+                              architectures from the current host
+                 Enhacem.:    gui-installer: can change thread pool sizes and
+                              resolve/install timeout values as arguments
+                 Review:      ZG
+
 RD-2009-02-10-0: Bugfix:      fixed memory leaks and access to uninitialized variables
                  Review:      AA
 
@@ -35,7 +43,7 @@ LP-2009-02-06-0: Bugfix:      inst_sge -copycerts in AUTO mode does not work
                  Enhancem.:   gui-installer: Improved installation log formatting
                  Enhancem.:   gui-installer: check_host does not need to be done
                               for admin/submit only hosts
-                 Enhacemm.:   gui-installer: Improved installation panel UE
+                 Enhancem.:   gui-installer: Improved installation panel UE
                  Cleanup:     gui-installer: Util and CommandExecutor
                  Review:      ZG
 

@@ -62,7 +62,7 @@ public class CommandExecutor implements Config {
     private static final String SHELL_ARG         = "-c";
 
     private static int WAIT_TIME                  = 200;
-    private static int DEFAULT_MAX_WAIT_TIME      = 10000; // 10 seconds (mainly for host resolving)
+    private static int DEFAULT_MAX_WAIT_TIME      = Util.RESOLVE_TIMEOUT;
     private int MAX_WAIT_TIME;
 
     private int exitValue                         = EXITVAL_INITIAL;

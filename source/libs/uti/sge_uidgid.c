@@ -1275,11 +1275,6 @@ struct passwd *sge_getpwnam_r(const char *name, struct passwd *pw,
 
    while (i-- && !res) {
       if (getpwnam_r(name, pw, buffer, bufsize, &res) != 0) {
-         FILE *f;
-
-         f = fopen("/tmp/getpwnam_r.log", "a+");
-         fprintf(f, "getpwnam_r: getpwnam_r() returned with %d and message %s\n", errno, strerror(errno));
-         fclose(f);
          res = NULL;
       }
    }

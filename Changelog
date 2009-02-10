@@ -1,3 +1,6 @@
+EB-2009-02-10-0: Cleanup:     Removed debug code and added ADOC comments
+                 Review:      AS, MD
+
 RD-2009-02-09-1: Bugfix:      spooledit can not handle lines greater than 255 chars
                  Bugster:     6802883
                  Issue:       2908

@@ -729,6 +729,31 @@ const char *sge_dstring_ulong_to_binstring(dstring *sb, u_long32 number)
    return sge_dstring_get_string(sb);
 }
 
+/****** uti/dstring/sge_dstring_split() ****************************************
+*  NAME
+*     sge_dstring_split() -- splits a string into two parts 
+*
+*  SYNOPSIS
+*     bool 
+*     sge_dstring_split(dstring *string, char character, 
+*                       dstring *before, dstring *after)
+*
+*  FUNCTION
+*     This functions tires to find the first occurence of "character"
+*     in "string". The characters before will be copied into "before"
+*     and the characters behind into "after" dstring.
+*
+*  INPUTS
+*     dstring *sb     - dstring 
+*     char character  - character
+*     dstring *before - characters before
+*     dstring *after  - characters after
+*
+*  RESULT
+*     error state
+*        true  - success
+*        false - error 
+*******************************************************************************/
 bool
 sge_dstring_split(dstring *string, char character, dstring *before, dstring *after)
 {
@@ -750,6 +775,19 @@ sge_dstring_split(dstring *string, char character, dstring *before, dstring *aft
    DRETURN(ret);
 }
 
+/****** uti/dstring/sge_dstring_strip_white_space_at_eol() *********************
+*  NAME
+*     sge_dstring_strip_white_space_at_eol() -- as it says 
+*
+*  SYNOPSIS
+*     void sge_dstring_strip_white_space_at_eol(dstring *string)
+*
+*  FUNCTION
+*     removes whitespace at the end of the given "string".
+*
+*  INPUTS
+*     dstring *string - dstring 
+*******************************************************************************/
 void sge_dstring_strip_white_space_at_eol(dstring *string)
 {
    DENTER(DSTRING_LAYER, "sge_strip_white_space_at_eol");

@@ -6494,9 +6494,7 @@ int cl_commlib_send_message(cl_com_handle_t*  handle,
    return_value = cl_com_cached_gethostbyname(un_resolved_hostname, &unique_hostname, &in_addr, NULL, NULL);
    if (return_value != CL_RETVAL_OK) {
       CL_LOG(CL_LOG_ERROR,cl_get_error_text(return_value));
-      if (copy_data == CL_TRUE) {
-         free(help_data);
-      }
+      free(help_data);
       return return_value;
    }
 
@@ -6520,9 +6518,7 @@ int cl_commlib_send_message(cl_com_handle_t*  handle,
       free(unique_hostname);
       unique_hostname = NULL;
       if (destination_endpoint == NULL) {
-         if (copy_data == CL_TRUE) {
-            free(help_data);
-         }
+         free(help_data);
          return CL_RETVAL_MALLOC;
       }
       return_value = cl_app_message_queue_append(handle->send_message_queue, NULL,
@@ -6530,9 +6526,7 @@ int cl_commlib_send_message(cl_com_handle_t*  handle,
                                                  help_data, size, response_mid, tag, 1);
       if (return_value != CL_RETVAL_OK) {
          CL_LOG(CL_LOG_ERROR,cl_get_error_text(return_value));
-         if (copy_data == CL_TRUE) {
-            free(help_data);
-         }
+         free(help_data);
          return return_value;
       }
       /* trigger write thread. He can also add the messages to the send lists */
@@ -6548,9 +6542,7 @@ int cl_commlib_send_message(cl_com_handle_t*  handle,
       receiver.hash_id = cl_create_endpoint_string(&receiver);
       if (receiver.hash_id == NULL) {
          free(unique_hostname);
-         if (copy_data == CL_TRUE) {
-            free(help_data);
-         }
+         free(help_data);
          return CL_RETVAL_MALLOC;
       }
    
@@ -6559,9 +6551,7 @@ int cl_commlib_send_message(cl_com_handle_t*  handle,
       if (return_value != CL_RETVAL_OK) {
          free(unique_hostname);
          free(receiver.hash_id);
-         if (copy_data == CL_TRUE) {
-            free(help_data);
-         }
+         free(help_data);
          return return_value;
       }
 

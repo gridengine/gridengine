@@ -651,13 +651,14 @@ static void qping_print_line(char* buffer, int nonewline, int dump_tag, const ch
                   sge_pack_buffer buf;
    
                   if (init_packbuffer_from_buffer(&buf, (char*)binary_buffer, buffer_length) == PACK_SUCCESS) {
-                     lListElem *ack;
+                     lListElem *ack = NULL;
 
                      while (pb_unused(&buf) > 0) {
                         if (cull_unpack_elem(&buf, &ack, NULL)) {
                            printf("TAG_ACK_REQUEST: unpack error\n");
                         } else {
-                           lWriteElemTo(ack ,stdout); /* ack */
+                           lWriteElemTo(ack, stdout); /* ack */
+                           lFreeElem(&ack);
                         }
                      }
 

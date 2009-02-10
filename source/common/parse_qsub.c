@@ -916,6 +916,10 @@ u_long32 flags
 
          sge_dstring_append(&input, *sp);
          success = jsv_url_parse(&input, &answer, &type, &user, &path, true);
+         sge_dstring_free(&input);
+         sge_dstring_free(&type);
+         sge_dstring_free(&user);
+         sge_dstring_free(&path);
          if (success) {
             lListElem *elem = lAddElemStr(&path_list, PN_path, *sp, PN_Type);
 
@@ -923,17 +927,11 @@ u_long32 flags
                ep_opt = sge_add_arg(pcmdline, jsv_OPT, lListT, *(sp - 1), *sp);
                lSetList(ep_opt, SPA_argval_lListT, path_list);
             } else {
-               sge_dstring_free(&type);
-               sge_dstring_free(&user);
-               sge_dstring_free(&path);
                answer_list_add_sprintf(&answer, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
                                        MSG_SGETEXT_NOMEM);
                DRETURN(answer);
             }
          } else {
-            sge_dstring_free(&type);
-            sge_dstring_free(&user);
-            sge_dstring_free(&path);
             /* answer is filled in jsv_url_parse */
             DRETURN(answer);
          }

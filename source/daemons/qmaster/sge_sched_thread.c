@@ -1269,8 +1269,7 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
 
       if (*dis_queue_list == NULL) {
          *dis_queue_list = disabled_queues;
-      }
-      else {
+      } else {
          lAddList(*dis_queue_list, &disabled_queues);
       }
       disabled_queues = NULL;

@@ -1,3 +1,66 @@
+Bugs fixed in SGE 6.1u6 since release 6.1u5
+-------------------------------------------
+
+Issue    Sun BugId Description
+-------- --------- ------------------------------------------------------------------------------------------
+-        6722930   Java DRMAA static constants are accessed via object references and not via class references 
+-        6682558   wrong scheduling decision when job-id's roll over to 1 
+-        6702511   qdel man page: The wording for the -f option is misleading 
+1197     5082660   aborted slave task on tight integration job generates error log in execd 
+1382     6619440   qmod usage has minor error 
+1806     6326191   execd: "ptf complains: Job does not exist" message in log file 
+1809     6792584   mdoc warnings in submit(1), qping(1) and qstat(1) man pages 
+2159     6512655   exit value of startup scripts is 0 even on error 
+2240     6554872   qsub -w e does not acknowlegde dynamic load parameters 
+2253     6558329   DRMAA does not remove -sync option 
+2279     6575735   weight_priority is missing from sched_conf(5) 
+2280     6575737   loglevel default is wrong in sge_conf(5) 
+2329     6579326   end of parallel job doesn't kill subsequently added, longer running tasks 
+2393     6695481   qrsh -inherit should access the 'rsh_command'-cache more persevering 
+2582     6707098   qmod does not follow admin host rules 
+2626     6717825   All foreign and primary keys in dbdefinition.xml should be defined as bigint 
+2669     6722925   qmaster installation displays "No CSP system installed" twice when no CSP 
+2677     6728406   tr command has wrong replace arguments in some places 
+2682     6732134   broken output with qstat -r when a job requests more than a single queue using -q wc_queue_list 
+2684     6734764   qhost -l h=<hostname> does not work in combination with any other resource request 
+2685     6735875   sge_ca script fails for installation as root user 
+2690     6734854   installation script for reporting "assumes" correct permission settings for installation files 
+2694     6739725   Cannot choose admin user when installing as root - installation fails 
+2696     6740388   reporting installation fails with SJWC 3.0.x if $JAVA_HOME is not set to java version at least 1.5 
+2697     6740404   dbwriter installation doesn't exit when an SQL error happens during database install/upgrade 
+2707     6742941   Installation might fail if SGE_CELL directory exists 
+2708     6742976   parameters are not replaced during database connection test 
+2712     6743431   dbwriter installation fails if admin_user in bootstrap file is 'none' 
+2713     6743621   error() appears after 'Dbwriter configuration file' section in installation 
+2715     6740546   ibm-loadsensor script needs to support aix53 
+2722     6745913   dbwriter keeps crashing due to inability to close the open cursors. 
+2723     6567413   Parameter PE_RANGE_ALG is shown as SELECT_PE_RANGE_ALG in the man page of sched_conf 
+2731     6726233   qrsh -w v does not work 
+2732     6344900   man queue_conf section on subordinate list is a little unclear 
+2737     6752921   qalter allows a user to place a job in a project forbidden by ACLs 
+2744     6750325   qresub/qalter/qhold/qrls/qrsub/qconf/qping -help should return exit code 0 (instead of 1) 
+2745     6749921   man page indicates that qresub has the option -V and help output is confusing 
+2747     6754568   qmaster might be unresponsive for a time because of commlib timeout 
+2751     6637152   change SGE_Helper_Service.exe(8) man page 
+2752     6709552   qconf -Aconf modifies existing configuration 
+2753     6710511   spooldefaults dumps core when bootstrap file does not exists 
+2754     6750688   SGE_EXECD_PORT gets accepted even when the same as SGE_QMASTER_PORT 
+2762     6762505   RQS with non-consumable complex crashes scheduler 
+2772     6767198   auto install fails with spooling via BDB server 
+2789     6751310   inst_sge -rst: doesn't restore resource_quotas and advance reservation with classic spooling 
+2791     6751309   inst_sge -rst: can't resolve username "none" 
+2796     6315286   ibm-loadsensor should be automatically copied to correct location during install 
+2806     6774847   on Windows, execd installation fails when hostname command returns full qualified name 
+2807     6617928   inadequate inst_qmaster/inst_execd diagnosis if binary and common packages are not in $SGE_ROOT 
+2815     6728379   incomplete accounting for the last short tasks of tightly integrated parallel job 
+2840     6786406   qmaster reports commlib read error in message file when qstat -j is executed 
+2868     6791931   qping aborts when connected to an execd running a tightly integrated parallel job 
+2889     6797583   Existing model 'Object' is not assignable from type [com.sun.grid.arco.sql.SQLQueryResult] exception 
+
+
+
+
+
 Bugs fixed in SGE 6.1u5 since release 6.1u4
 -------------------------------------------
 

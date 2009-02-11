@@ -1,3 +1,8 @@
+CR-2009-02-11-0: Bugfix:      fixed sge_shadowd core dump when it has to start
+                              a new qmaster daemon
+                 Belongs to:  AA-2009-01-14-0
+                 Review:      MD
+
 LP-2009-02-10-0: Bugfix:      gui-installer: check_host might always fail due to
                               invalid architecture
                  Bugfix:      gui-installer: installation will fail on different

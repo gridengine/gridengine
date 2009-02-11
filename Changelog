@@ -1,3 +1,6 @@
+RD-2009-02-11-3: CVS:         Created V62u2_RC2_TAG
+---------------------------------------------------
+
 EB-2009-02-11-0: Bigfix:      Messages on JSV stderr stream are now logged to message file
                               but next job is not rejected anymore if the message occured 
                               before the START command was sent.
@@ -7,9 +10,6 @@ ZG-2009-02-11-0: Bugfix:      './start_gui_installer -help' does not terminates
                  Bugfix:      fix cancel button behaviour
                  Bugfix:      on NFS the root user does not have permission to
                               write into cell directory
-
-RD-2009-02-11-3: CVS:         Created V62u2_RC2_TAG
----------------------------------------------------
 
 RD-2009-02-11-1: Bugfix:      fixed qmon memory leaks
                  Review:      AA

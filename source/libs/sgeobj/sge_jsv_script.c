@@ -2123,9 +2123,13 @@ bool
 jsv_do_communication(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answer_list)
 {
    bool ret = true;
+   char input[10000];
 
    DENTER(TOP_LAYER, "jsv_do_communication");
    if (ret) {
+      while (fscanf(lGetRef(jsv, JSV_err), "%[^\n]\n", input) == 1) {
+          ERROR((SGE_EVENT, MSG_JSV_LOGMSG_S, input));  
+      }
       DPRINTF(("JSV - START will be sent\n"));
       ret &= jsv_send_command(jsv, answer_list, "START");
    }
@@ -2157,6 +2161,9 @@ jsv_do_communication(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answer_li
                }
                if (ret) {
                   DPRINTF(("JSV process gets START command\n"));
+                  while (fscanf(lGetRef(jsv, JSV_err), "%[^\n]\n", input) == 1) {
+                     ERROR((SGE_EVENT, MSG_JSV_LOGMSG_S, input));  
+                  }
                   ret &= jsv_send_command(jsv, answer_list, "START");
                }
                start_time = sge_get_gmt();
@@ -2171,26 +2178,8 @@ jsv_do_communication(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answer_li
                lSetBool(jsv, JSV_done, true);
             }
          } else {
-            char input[10000];
             FILE *err_stream = lGetRef(jsv, JSV_err);
             FILE *out_stream = lGetRef(jsv, JSV_out);
-
-            /* 
-             * try to read a line from the error stream. If there is something then
-             * restart the script before next check, do not communicate with script 
-             * anymore during shutdown. The last message in the strerr stream will be 
-             * send as answer to the calling function.
-             */
-            while (fscanf(err_stream, "%[^\n]\n", input) == 1) {
-               ret = false;
-            }
-            if (!ret) {
-               answer_list_add_sprintf(answer_list, STATUS_DENIED, ANSWER_QUALITY_ERROR,
-                                       "JSV stderr is - %s", input);
-               lSetBool(jsv, JSV_restart, true);
-               lSetBool(jsv, JSV_soft_shutdown, false);
-               lSetBool(jsv, JSV_done, true);
-            }
 
             /* 
              * read a line from the script or wait some time before you try again
@@ -2252,6 +2241,24 @@ jsv_do_communication(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answer_li
                } else {
                   sge_usleep(10000);
                }
+            }
+
+            /* 
+             * try to read a line from the error stream. If there is something then
+             * restart the script before next check, do not communicate with script 
+             * anymore during shutdown. The last message in the strerr stream will be 
+             * send as answer to the calling function.
+             */
+            while (fscanf(err_stream, "%[^\n]\n", input) == 1) {
+               ERROR((SGE_EVENT, MSG_JSV_LOGMSG_S, input));  
+               ret = false;
+            }
+            if (!ret && lGetBool(jsv, JSV_done) == false) {
+               answer_list_add_sprintf(answer_list, STATUS_DENIED, ANSWER_QUALITY_ERROR,
+                                       "JSV stderr is - %s", input);
+               lSetBool(jsv, JSV_restart, true);
+               lSetBool(jsv, JSV_soft_shutdown, false);
+               lSetBool(jsv, JSV_done, true);
             }
          }
       }

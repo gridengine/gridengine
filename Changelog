@@ -1,3 +1,8 @@
+EB-2009-02-11-0: Bigfix:      Messages on JSV stderr stream are now logged to message file
+                              but next job is not rejected anymore if the message occured 
+                              before the START command was sent.
+                 Review:      MD
+
 ZG-2009-02-11-0: Bugfix:      './start_gui_installer -help' does not terminates
                  Bugfix:      fix cancel button behaviour
                  Bugfix:      on NFS the root user does not have permission to

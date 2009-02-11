@@ -5229,6 +5229,10 @@ malloc_init_hard(void)
 		return (false);
 	}
 
+   if (getenv("JEMALLOC_TEST")) {
+      printf("jemalloc is enabled\n");
+   }
+
 #ifdef MOZ_MEMORY_WINDOWS
 	/* get a thread local storage index */
 	tlsIndex = TlsAlloc();

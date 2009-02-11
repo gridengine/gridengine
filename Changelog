@@ -1,3 +1,7 @@
+RD-2009-02-11-0: Bugfix:      jemalloc was not effective because it was too late in the
+                              linker command line
+                 Review:      JG
+
 CR-2009-02-11-0: Bugfix:      fixed sge_shadowd core dump when it has to start
                               a new qmaster daemon
                  Belongs to:  AA-2009-01-14-0

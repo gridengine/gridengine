@@ -1001,6 +1001,20 @@ int main(int argc, char *argv[]) {
    sigaction(SIGHUP, &sa, NULL);
    sigaction(SIGPIPE, &sa, NULL);
 
+   prof_mt_init();
+   
+   uidgid_mt_init();
+   path_mt_init();
+
+   bootstrap_mt_init(); 
+   feature_mt_init();
+
+   gdi_mt_init();
+
+   sge_getme(QPING);
+
+   lInit(nmv);
+
    for (i=1;i<argc;i++) {
       if (argv[i][0] == '-') {
          if (strcmp( argv[i] , "-i") == 0) {
@@ -1167,20 +1181,6 @@ int main(int argc, char *argv[]) {
       fprintf(stderr,"please enter a component id larger than 0\n");
       exit(1);
    }
-
-   prof_mt_init();
-   
-   uidgid_mt_init();
-   path_mt_init();
-
-   bootstrap_mt_init(); 
-   feature_mt_init();
-
-   gdi_mt_init();
-
-   sge_getme(QPING);
-
-   lInit(nmv);
 
    retval = cl_com_setup_commlib(CL_RW_THREAD ,CL_LOG_OFF, NULL);
    if (retval != CL_RETVAL_OK) {

@@ -290,6 +290,7 @@ set LFLAGS           = "-L."
 set XLFLAGS          = ""
 set XLIBS            = ""
 set LIBS             = "-lm -lpthread"
+set LIBRARY_LIBS     = ""  # used for linking shared objects like drmaa.so or jgdi.so. Overwritten by $LIBS if empty
 set LD_WRAPPER       = ""
 set DLLIB            = "-ldl"
 set LOADAVGLIBS      = ""
@@ -1461,8 +1462,9 @@ case LINUXSPARC64:
    endif
 
    if ( $MAKEJEMALLOCLIB == 1 ) then
+      set LIBRARY_LIBS = "$LIBS"
       set JEMALLOC_CFLAGS  = "-Wno-error -DMOZ_MEMORY_LINUX"
-      set LFLAGS = "$LFLAGS -ljemalloc"
+      set LIBS = "-ljemalloc $LIBS"
    endif
 
    breaksw
@@ -1810,11 +1812,13 @@ case SOLARISAMD64:
 #      set MAKEJEMALLOCLIB = 1
 #   endif
 
+   set LFLAGS   = "$LFLAGS $DEBUG_FLAG"
+   set LIBRARY_LIBS = "$LIBS"
    if ( $MAKEJEMALLOCLIB == 1 ) then
       set JEMALLOC_CFLAGS  = "-DMOZ_MEMORY_SOLARIS -xc99"
-      set LFLAGS   = "$LFLAGS $DEBUG_FLAG -ljemalloc"
+      set LIBS = "-ljemalloc $LIBS"
    else
-      set LFLAGS   = "$LFLAGS $DEBUG_FLAG -lmtmalloc"
+      set LIBS = "-lmtmalloc $LIBS"
    endif
 
    breaksw
@@ -2038,6 +2042,10 @@ set GSHARED_LFLAGS = "$SHARED_LFLAGS"
 if ($USE_INSURE == 1) then
    set CC  = "insure $CC"
    set CXX = "insure $CXX"
+endif
+
+if ("$LIBRARY_LIBS" == "") then
+   set LIBRARY_LIBS = "$LIBS" 
 endif
 
 #---------------------------------------------------------------------------
@@ -2507,7 +2515,7 @@ if ( "$CORE" == 1 && "$JAVA" != 2 ) then
          "AUTHUSER_ALL=$AUTHUSER_ALL" "LOADCHECK_ALL=$LOADCHECK_ALL" \
          "AUTHUSER_OBJ=$AUTHUSER_OBJ" "LOADCHECK_OBJ=$LOADCHECK_OBJ" \
          "JUTI_OBJ=$JUTI_OBJ" \
-         "WINCC=$WINCC" "WINCFLAGS=$WINCFLAGS" "WINLIBS=$WINLIBS" \
+         "WINCC=$WINCC" "WINCFLAGS=$WINCFLAGS" "WINLIBS=$WINLIBS" "LIBRARY_LIBS=$LIBRARY_LIBS" \
          $argv
    if ( $status != 0 ) then
       echo not done

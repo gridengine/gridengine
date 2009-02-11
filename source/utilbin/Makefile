@@ -47,7 +47,7 @@ UTILBIN_SRC =  uidgid.c gethostname.c gethostbyname.c gethostbyaddr.c \
                getservbyname.c filestat.c signals.c now.c \
                checkuser.c adminrun.c range.c  \
                languagetest.c infotext.c \
-               spooldefaults.c spooledit.c spoolinit.c \
+               spooldefaults.c spooledit.c spoolinit.c read_raw.o echo_raw.o \
                tst_pthread_signals.c fstype.c qping.c authuser.c sge_share_mon.c
 
 UTILBIN_OBJS  = $(UTILBIN_SRC:.c=.o) 

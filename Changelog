@@ -1,3 +1,8 @@
+ZG-2009-02-11-0: Bugfix:      './start_gui_installer -help' does not terminates
+                 Bugfix:      fix cancel button behaviour
+                 Bugfix:      on NFS the root user does not have permission to
+                              write into cell directory
+
 RD-2009-02-11-3: CVS:         Created V62u2_RC2_TAG
 ---------------------------------------------------
 

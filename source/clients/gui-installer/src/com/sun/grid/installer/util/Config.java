@@ -82,7 +82,8 @@ public interface Config {
     public static final String VAR_WORK_DIR  = "work.dir";
     public static final String VAR_TEMPLATES_DIR  = "templates.dir";
     public static final String VAR_README_TEMP_FILE  = "readme.temp.file";
-    public static final String VAR_README_FILE  = "readme.file";
+    public static final String VAR_README_FILE_NAME_1  = "readme.file.name.1";
+    public static final String VAR_README_FILE_NAME_2  = "readme.file.name.2";
     public static final String VAR_PROGRESS_TYPE = "mode";
     public static final String VAR_USER_NAME = "user.name";
     //public static final String VAR_USER_GROUP = "user.group";

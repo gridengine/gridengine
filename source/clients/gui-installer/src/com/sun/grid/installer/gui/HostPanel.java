@@ -1313,6 +1313,7 @@ public class HostPanel extends IzPanel implements Config {
             for (int i : indexList) {
                 h = hosts.get(i);
                 switch (h.getState()) {
+                    case CANCELED:
                     case USED_QMASTER_PORT:
                     case USED_EXECD_PORT:
                     case USED_JMX_PORT:
@@ -2164,53 +2165,54 @@ class CheckHostTask extends TestableTask {
             return;
         }
 
-        // Check port usage in java only if the host is the localhost
-        // TODO check port usage in the script in case of remote host
-        if (host.isLocalhost()) {
-            if (host.isExecutionHost()) {
-                // Check execd port usage
-                if (!Util.isPortFree(host.getIp(), panel.getInstallData().getVariable(VAR_SGE_EXECD_PORT))) {
-                    setHostState(Host.State.USED_EXECD_PORT);
-                }
-            }
-
-            if (host.isQmasterHost()) {
-                // Check jmx port usage
-                if (panel.getRuleEngine().isConditionTrue(COND_JMX, variables) &&
-                        !Util.isPortFree(host.getIp(), variables.getProperty(VAR_SGE_JMX_PORT))) {
-                    setHostState(Host.State.USED_JMX_PORT);
-                    return;
-                }
-
-                // Check qmaster port usage
-                if (!Util.isPortFree(host.getIp(), variables.getProperty(VAR_SGE_QMASTER_PORT))) {
-                    setHostState(Host.State.USED_QMASTER_PORT);
-                    return;
-                }
-            }
-
-            if (host.isBdbHost()) {
-            }
-        }
-
-        VariableSubstitutor vs = new VariableSubstitutor(variables);
-
-        // Fill up cfg.exec.spool.dir.local
-        if (host.isExecutionHost() && !host.getSpoolDir().equals(variables.getProperty(VAR_EXECD_SPOOL_DIR))) {
-            variables.setProperty(VAR_EXECD_SPOOL_DIR_LOCAL, host.getSpoolDir());
-        } else {
-            variables.setProperty(VAR_EXECD_SPOOL_DIR_LOCAL, "");
-        }
-
-        String checkHostTempFile = vs.substituteMultiple(variables.getProperty(VAR_CHECK_HOST_TEMP_FILE), null);
-        String checkHostFile = vs.substituteMultiple(variables.getProperty(VAR_CHECK_HOST_FILE), null);
-
-        checkHostFile = "/tmp/" + checkHostFile + "." + host.getHostname();
-        Debug.trace("Generating check_host file: '" + checkHostFile + "'.");
         try {
+            // Check port usage in java only if the host is the localhost
+            // TODO check port usage in the script in case of remote host
+            if (host.isLocalhost()) {
+                if (host.isExecutionHost()) {
+                    // Check execd port usage
+                    if (!Util.isPortFree(host.getIp(), panel.getInstallData().getVariable(VAR_SGE_EXECD_PORT))) {
+                        setHostState(Host.State.USED_EXECD_PORT);
+                    }
+                }
+
+                if (host.isQmasterHost()) {
+                    // Check jmx port usage
+                    if (panel.getRuleEngine().isConditionTrue(COND_JMX, variables) &&
+                            !Util.isPortFree(host.getIp(), variables.getProperty(VAR_SGE_JMX_PORT))) {
+                        setHostState(Host.State.USED_JMX_PORT);
+                        return;
+                    }
+
+                    // Check qmaster port usage
+                    if (!Util.isPortFree(host.getIp(), variables.getProperty(VAR_SGE_QMASTER_PORT))) {
+                        setHostState(Host.State.USED_QMASTER_PORT);
+                        return;
+                    }
+                }
+
+                if (host.isBdbHost()) {
+                }
+            }
+
+            VariableSubstitutor vs = new VariableSubstitutor(variables);
+
+            // Fill up cfg.exec.spool.dir.local
+            if (host.isExecutionHost() && !host.getSpoolDir().equals(variables.getProperty(VAR_EXECD_SPOOL_DIR))) {
+                variables.setProperty(VAR_EXECD_SPOOL_DIR_LOCAL, host.getSpoolDir());
+            } else {
+                variables.setProperty(VAR_EXECD_SPOOL_DIR_LOCAL, "");
+            }
+
+            String checkHostTempFile = vs.substituteMultiple(variables.getProperty(VAR_CHECK_HOST_TEMP_FILE), null);
+            String checkHostFile = vs.substituteMultiple(variables.getProperty(VAR_CHECK_HOST_FILE), null);
+
+            checkHostFile = "/tmp/" + checkHostFile + "." + host.getHostname();
+            Debug.trace("Generating check_host file: '" + checkHostFile + "'.");
+
             variables.put("host.arch", host.getArchitecture());
 
-            checkHostFile = Util.fillUpTemplate(checkHostTempFile, checkHostFile, panel.getInstallData().getVariables());
+            checkHostFile = Util.fillUpTemplate(checkHostTempFile, checkHostFile, variables);
 
             Debug.trace("Copy auto_conf file to '" + host.getHostname() + ":" + checkHostFile + "'.");
             CommandExecutor cmd = new CommandExecutor(variables, variables.getProperty(VAR_COPY_COMMAND), checkHostFile,
@@ -2221,6 +2223,10 @@ class CheckHostTask extends TestableTask {
                 //Set the log content
                 newState = Host.State.COPY_TIMEOUT_CHECK_HOST;
                 Debug.error("Timeout while copying the " + checkHostFile + " script to host " + host.getHostname() + " via " + variables.getProperty(VAR_COPY_COMMAND) + " command!\nMaybe a password is expected. Try the command in the terminal first.");
+            } else if (exitValue == CommandExecutor.EXITVAL_INTERRUPTED) {
+                //Set the log content
+                newState = Host.State.CANCELED;
+                Debug.error("Cancelled copy action!");
             } else if (exitValue != 0) {
                 newState = Host.State.COPY_FAILED_CHECK_HOST;
                 Debug.error("Error when copying the file.");
@@ -2248,11 +2254,13 @@ class CheckHostTask extends TestableTask {
                     case EXIT_VAL_BDB_SPOOL_DIR_EXISTS: newState = Host.State.BDB_SPOOL_DIR_EXISTS; break;
                     case EXIT_VAL_ADMIN_USER_NOT_KNOWN: newState = Host.State.ADMIN_USER_NOT_KNOWN; break;
                     case EXIT_VAL_BDB_SPOOL_WRONG_FSTYPE: newState = Host.State.BDB_SPOOL_DIR_WRONG_FSTYPE; break;
+                    case CommandExecutor.EXITVAL_INTERRUPTED: newState = Host.State.CANCELED; break;
                     default: newState = Host.State.UNKNOWN_ERROR; break;
                 }
             }
         } catch (InterruptedException e) {
             Debug.error(e);
+            newState = Host.State.CANCELED;
         } catch (Exception e) {
             Debug.error("Failed to check host '" + host + "'. " + e);
         } finally {
@@ -2487,6 +2495,12 @@ class InstallTask extends TestableTask {
                 if (exitValue == CommandExecutor.EXITVAL_TERMINATED) {
                     setHostState(Host.State.COPY_TIMEOUT_INSTALL_COMPONENT);
                     cmd.setFirstLogMessage("Timeout while copying the " + autoConfFile + " script to host " + host.getHostname() + " via " + variables.getProperty(VAR_COPY_COMMAND) + " command!\nMaybe a password is expected. Try the command in the terminal first.");
+                    log = cmd.generateLog(msgs);
+                    installModel.setHostLog(host, log);
+                } else if (exitValue == CommandExecutor.EXITVAL_INTERRUPTED) {
+                    //Set the log content
+                    setHostState(Host.State.CANCELED);
+                    cmd.setFirstLogMessage("Cancelled copy action!");
                     log = cmd.generateLog(msgs);
                     installModel.setHostLog(host, log);
                 } else if (exitValue != 0) {

@@ -177,7 +177,8 @@ ___INFO__MARK_END__-->
         <variable name="work.dir" value="${SYSTEM_user_dir}"/> <!-- TODO: Delete the work.dir -->
         <variable name="templates.dir" value="${cfg.sge.root}/util/gui-installer/templates"/>
         <variable name="readme.temp.file" value="${templates.dir}/readme_template.html"/>
-        <variable name="readme.file" value="${cfg.sge.root}/${cfg.cell.name}/readme"/> <!-- gets the '.html' extension later -->
+        <variable name="readme.file.name.1" value="/tmp/readme"/> <!-- gets the '.html' extension later -->
+        <variable name="readme.file.name.2" value="${cfg.sge.root}/${cfg.cell.name}/readme"/>
         <variable name="silent.install.file" value="${cfg.sge.root}/${cfg.cell.name}/gui_auto_install.xml"/>
         <variable name="auto.conf.temp.file" value="${templates.dir}/gui_inst_template.conf"/>
         <variable name="auto.conf.file" value="${cfg.sge.root}/${cfg.cell.name}/gui_autoinst"/> <!-- gets the '.conf' extension later -->

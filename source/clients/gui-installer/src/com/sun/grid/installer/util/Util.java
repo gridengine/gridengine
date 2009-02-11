@@ -602,6 +602,7 @@ public class Util implements Config{
     	BufferedWriter bufferedWriter     = null;
         VariableSubstitutor vs = new VariableSubstitutor(variables);
 
+        Debug.trace("Fill up template from '" + templateFilePath + "' to '" + resultFilePath + "'.");
         File f = new File(resultFilePath);
     	
     	try {
@@ -755,6 +756,7 @@ public class Util implements Config{
         try {
             String command = "groups";
             cmdExec = new CommandExecutor(variables, variables.getProperty(VAR_SHELL_NAME), host, command, user);
+            cmdExec.execute();
 
             if (cmdExec.getExitValue() == 0) {
                 groups = cmdExec.getOutput().firstElement().trim().split(" ");
@@ -933,4 +935,19 @@ public class Util implements Config{
         return new SimpleDateFormat("yyyy.MM.dd_HH:mm:ss").format(new Date());
     }
 
+    public static boolean runAsAdminUser(String host, String arch, String sgeRoot, String adminUser, String command, Properties variables) throws Exception {
+        CommandExecutor cmdExec = null;
+
+        Debug.trace("Run '" + command + "' as '" + adminUser + "' user.");
+
+        String scriptAdminRun = sgeRoot + "/utilbin/" + arch + "/adminrun";
+        cmdExec = new CommandExecutor(variables, variables.getProperty(VAR_SHELL_NAME), host, scriptAdminRun, adminUser, command);
+        cmdExec.execute();
+
+        if (cmdExec.getExitValue() == 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 }

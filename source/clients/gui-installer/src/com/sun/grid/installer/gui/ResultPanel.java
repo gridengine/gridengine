@@ -148,7 +148,8 @@ public class ResultPanel extends IzPanel implements Printable, Config {
         try {
             VariableSubstitutor vs = new VariableSubstitutor(idata.getVariables());
             readmeTemplatePath = vs.substituteMultiple(idata.getVariable(VAR_README_TEMP_FILE), null);
-            readmePath = vs.substituteMultiple(idata.getVariable(VAR_README_FILE), null);
+
+            readmePath = vs.substituteMultiple(idata.getVariable(VAR_README_FILE_NAME_1), null);
             readmePath += "_" + Util.generateTimeStamp() + ".html";
             //TODO: Detect whole cluster settings
             // Features - bootstrap (CSP, AFS, JMX)
@@ -162,6 +163,11 @@ public class ResultPanel extends IzPanel implements Printable, Config {
             Debug.trace("Generating readme.html file: '" + readmePath + "'.");
 
             editorPane.setPage("file://" + readmePath);
+
+            String  readmePath2 = vs.substituteMultiple(idata.getVariable(VAR_README_FILE_NAME_2), null);
+            readmePath2 += "_" + Util.generateTimeStamp() + ".html";
+
+            Util.fillUpTemplate(readmeTemplatePath, readmePath2, idata.getVariables());
         } catch (Exception e) {
             Debug.error("Can not generate readme file! " + e);
         }

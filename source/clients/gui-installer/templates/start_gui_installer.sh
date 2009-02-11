@@ -38,6 +38,7 @@ ErrUsage()
         "" \
         "   <num> ... decimal number greater than zero" \
         "   <sec> ... number of seconds, must be greater then zero"
+   exit 1
 }
 
 

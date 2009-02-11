@@ -1790,10 +1790,12 @@ static void qmonJobScheddInfo(Widget w, XtPointer cld, XtPointer cad)
             (show_info_for_job(NULL, NULL, &sb) == 0) && 
                sge_dstring_get_string(&sb)) {
       qmonBrowserShow(sge_dstring_get_string(&sb));
-      sge_dstring_free(&sb);
    }
    else 
       qmonBrowserShow("---------Could not get scheduling info--------\n");
+
+   lFreeList(&jl);
+   sge_dstring_free(&sb);
 
    DEXIT;
 }

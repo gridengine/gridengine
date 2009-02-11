@@ -413,6 +413,7 @@ void qmonARSubPopup(Widget w, XtPointer cld, XtPointer cad)
 
       if (!sge_parse_qrsub(pcmdline, &alp, &ar_to_set)) {
          qmonMessageBox(w, alp, 0);
+         lFreeElem(&ar_to_set);
          lFreeList(&alp);
          lFreeList(&pcmdline);
          /* set default cursor */
@@ -489,12 +490,11 @@ void qmonARSubPopup(Widget w, XtPointer cld, XtPointer cad)
    */
    qmonARSubChangeResourcesPixmap();
 
-
    if (arsub_mode_data.mode == ARSUB_QALTER_PENDING) {
       setButtonLabel(arsub_arsub, "@{Qalter AR}");
-   }
-   else {
+   } else {
       setButtonLabel(arsub_arsub, "@{Submit AR}");
+      lFreeElem(&ar_to_set);
    }
       
 

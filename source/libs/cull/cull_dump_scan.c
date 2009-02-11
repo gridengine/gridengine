@@ -793,38 +793,33 @@ lList *lUndumpList(FILE *fp, const char *name, const lDescr *dp)
 
    if (!fp) {
       LERROR(LEFILENULL);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    /* read bra */
    if (fGetBra(fp)) {
       printf("bra is missing\n");
       LERROR(LESYNTAX);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
    /* read listname */
    if (fGetString(fp, &oldname)) {
       printf("fGetString failed\n");
       LERROR(LEFIELDREAD);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    /* read number of elems */
    if (fGetInt(fp, &nelem)) {
       printf("fGetInt failed\n");
       LERROR(LEFIELDREAD);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    /* read Descriptor from file */
    if (!(fdp = lUndumpDescr(fp))) {
       LERROR(LEFGETDESCR);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    if (!dp)                     /* dp is NULL, use lDescr from dumpfile */
@@ -833,23 +828,20 @@ lList *lUndumpList(FILE *fp, const char *name, const lDescr *dp)
    /* use old name (from file) if name is NULL */
    if (!(lp = lCreateList((name) ? name : oldname, dp))) {
       LERROR(LECREATELIST);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
    free(oldname);               /* fGetString strdup's */
 
    if ((n = lCountDescr(dp)) <= 0) {
       LERROR(LECOUNTDESCR);
       lFreeList(&lp);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    if (!(found = (int *) malloc(sizeof(int) * n))) {
       LERROR(LEMALLOC);
       lFreeList(&lp);
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
 
    /* Initialize found array */
@@ -881,17 +873,15 @@ lList *lUndumpList(FILE *fp, const char *name, const lDescr *dp)
       if (!(fep = lUndumpElemFp(fp, fdp))) {
          LERROR(LEUNDUMPELEM);
          lFreeList(&lp);
-         free(found);
-         DEXIT;
-         return NULL;
+         FREE(found);
+         DRETURN(NULL);
       }
 
       if (!(ep = lCreateElem(dp))) {
          lFreeList(&lp);
-         free(found);
+         FREE(found);
          LERROR(LECREATEELEM);
-         DEXIT;
-         return NULL;
+         DRETURN(NULL);
       }
 
       for (i = 0; i < n; i++) {
@@ -900,35 +890,31 @@ lList *lUndumpList(FILE *fp, const char *name, const lDescr *dp)
          } else if (lCopySwitchPack(fep, ep, found[i], i, true, NULL, NULL) == -1) {
             lFreeList(&lp);
             lFreeElem(&ep);
-            free(found);
+            FREE(found);
             LERROR(LECOPYSWITCH);
-            DEXIT;
-            return NULL;
+            DRETURN(NULL);
          }
       }
       lFreeElem(&fep);
       if (lAppendElem(lp, ep) == -1) {
          lFreeList(&lp);
          lFreeElem(&ep);
-         free(found);
+         FREE(found);
          LERROR(LEAPPENDELEM);
-         DEXIT;
-         return NULL;
+         DRETURN(NULL);
       }
 
    }
+   FREE(found);
 
    /* read ket */
    if (fGetKet(fp)) {
       lFreeList(&lp);
       printf("ket is missing\n");
       LERROR(LESYNTAX);
-      DEXIT;
-      return NULL;
    }
 
-   DEXIT;
-   return lp;
+   DRETURN(lp);
 }
 
 static int space_comment(char *s) 

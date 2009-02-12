@@ -80,6 +80,7 @@ static Boolean qmonSchedSet(lListElem *sep);
 static Boolean qmonSchedGet(lListElem *sep);
 static void qmonLoadNamesSC(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSchedJobInfo(Widget w, XtPointer cld, XtPointer cad);
+static bool qmonSchedFreeData();
 /*-------------------------------------------------------------------------*/
    
 typedef struct _tSCEntry {
@@ -400,16 +401,13 @@ static void qmonSchedTime(Widget w, XtPointer cld, XtPointer cad)
 
 
 /*-------------------------------------------------------------------------*/
-static Boolean qmonSchedSet(
-lListElem *sep 
-) {
+static Boolean qmonSchedSet(lListElem *sep) {
    static char schedd_job_info[BUFSIZ];
 
    DENTER(GUI_LAYER, "qmonSchedSet");
 
    if (!sep) {
-      DEXIT;
-      return False;
+      DRETURN(False);
    }
 
 /* printf("------> qmonSchedSet\n"); */
@@ -438,8 +436,7 @@ lListElem *sep
    /*
    ** load adjustments need special treatment
    */
-   lFreeList(&(data.job_load_adjustments));
-   data.job_load_adjustments =  lCopyList("copy", lGetList(sep, SC_job_load_adjustments));
+   data.job_load_adjustments = lCopyList("copy", lGetList(sep, SC_job_load_adjustments));
    
    data.load_adjustment_decay_time = sge_strdup(data.load_adjustment_decay_time, 
                (StringConst)lGetString(sep, SC_load_adjustment_decay_time));
@@ -500,16 +497,14 @@ printf("->data.load_formula: '%s'\n", data.load_formula ? data.load_formula : "-
       XmtChooserSetState(sconf_job_info, 2, True);
       XmtInputFieldSetString(sconf_job_range, sji);
    }
+   qmonSchedFreeData();
 
-   DEXIT;
-   return True;
+   DRETURN(True);
 }
 
 
 /*-------------------------------------------------------------------------*/
-static Boolean qmonSchedGet(
-lListElem *sep 
-) {
+static Boolean qmonSchedGet(lListElem *sep) {
    int job_info;
    lList *alp = NULL;
    String str;
@@ -518,8 +513,7 @@ lListElem *sep
    DENTER(GUI_LAYER, "qmonSchedGet");
 
    if (!sep) {
-      DEXIT;
-      return False;
+      goto error_exit;
    }
 
    /*
@@ -542,15 +536,13 @@ printf("<-data.load_formula: '%s'\n", data.load_formula ? data.load_formula : "-
 
    if (!data.algorithm || data.algorithm[0] == '\0') {
       qmonMessageShow(qmon_sconf, True, "@{Algorithm required!}");
-      DEXIT;
-      return False;
+      goto error_exit;
    }
    lSetString(sep, SC_algorithm, data.algorithm);
   
    if (!data.schedule_interval || data.schedule_interval[0] == '\0') {
       qmonMessageShow(qmon_sconf, True, "@{Schedule Interval required!}");
-      DEXIT;
-      return False;
+      goto error_exit;
    }
    lSetString(sep, SC_schedule_interval, data.schedule_interval);
   
@@ -574,32 +566,28 @@ printf("<-data.load_formula: '%s'\n", data.load_formula ? data.load_formula : "-
    if (!data.load_adjustment_decay_time || 
          data.load_adjustment_decay_time[0] == '\0') {
       qmonMessageShow(qmon_sconf, True, "@{Load Adjustment Decay Time required!}");
-      DEXIT;
-      return False;
+      goto error_exit;
    }
    lSetString(sep, SC_load_adjustment_decay_time, 
                   data.load_adjustment_decay_time);
   
    if (!data.load_formula || data.load_formula[0] == '\0') {
       qmonMessageShow(qmon_sconf, True, "@{Load Formula required!}");
-      DEXIT;
-      return False;
+      goto error_exit;
    }
    lSetString(sep, SC_load_formula, data.load_formula);
   
    if (!data.reprioritize_interval|| 
          data.reprioritize_interval[0] == '\0') {
       qmonMessageShow(qmon_sconf, True, "@{Reprioritize Interval required!}");
-      DEXIT;
-      return False;
+      goto error_exit;
    }
    lSetString(sep, SC_reprioritize_interval, data.reprioritize_interval);
 
    if (!data.default_duration|| 
          data.default_duration[0] == '\0') {
       qmonMessageShow(qmon_sconf, True, "@{Default duration required!}");
-      DEXIT;
-      return False;
+      goto error_exit;
    }
    lSetString(sep, SC_default_duration, data.default_duration);
    /*
@@ -626,8 +614,7 @@ printf("<-data.load_formula: '%s'\n", data.load_formula ? data.load_formula : "-
          if (alp) {
             qmonMessageShow(sconf_job_range, True, (StringConst)lGetString(lFirst(alp), AN_text));
             lFreeList(&alp);
-            DEXIT;
-            return False;
+            goto error_exit;
          }
          if (str && str[0] != '\0') {
             strcpy(buf, "job_list ");
@@ -636,16 +623,18 @@ printf("<-data.load_formula: '%s'\n", data.load_formula ? data.load_formula : "-
          }
          else {
             qmonMessageShow(qmon_sconf, True, "@{Job Range required!}");
-            DEXIT;
-            return False;
+            goto error_exit;
          }
    }
 
 /* printf("------> qmonSchedGet\n"); */
 /* lWriteElemTo(sep, stdout);    */
 
-   DEXIT;
-   return True;
+   qmonSchedFreeData();
+   DRETURN(True);
+error_exit:
+   qmonSchedFreeData();
+   DRETURN(False);
 }
 
 
@@ -720,3 +709,13 @@ XtPointer cad
    DEXIT;
 }
 
+static bool qmonSchedFreeData()
+{
+   FREE(data.algorithm);
+   FREE(data.schedule_interval);
+   FREE(data.sc_params);
+   FREE(data.load_adjustment_decay_time);
+   FREE(data.load_formula);
+   FREE(data.reprioritize_interval);
+   FREE(data.default_duration);
+}

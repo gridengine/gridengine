@@ -827,6 +827,7 @@ lList *lUndumpList(FILE *fp, const char *name, const lDescr *dp)
 
    /* use old name (from file) if name is NULL */
    if (!(lp = lCreateList((name) ? name : oldname, dp))) {
+      FREE(fdp);
       LERROR(LECREATELIST);
       DRETURN(NULL);
    }
@@ -834,12 +835,14 @@ lList *lUndumpList(FILE *fp, const char *name, const lDescr *dp)
 
    if ((n = lCountDescr(dp)) <= 0) {
       LERROR(LECOUNTDESCR);
+      FREE(fdp);
       lFreeList(&lp);
       DRETURN(NULL);
    }
 
    if (!(found = (int *) malloc(sizeof(int) * n))) {
       LERROR(LEMALLOC);
+      FREE(fdp);
       lFreeList(&lp);
       DRETURN(NULL);
    }
@@ -874,12 +877,14 @@ lList *lUndumpList(FILE *fp, const char *name, const lDescr *dp)
          LERROR(LEUNDUMPELEM);
          lFreeList(&lp);
          FREE(found);
+         FREE(fdp);
          DRETURN(NULL);
       }
 
       if (!(ep = lCreateElem(dp))) {
          lFreeList(&lp);
          FREE(found);
+         FREE(fdp);
          LERROR(LECREATEELEM);
          DRETURN(NULL);
       }
@@ -891,6 +896,7 @@ lList *lUndumpList(FILE *fp, const char *name, const lDescr *dp)
             lFreeList(&lp);
             lFreeElem(&ep);
             FREE(found);
+            FREE(fdp);
             LERROR(LECOPYSWITCH);
             DRETURN(NULL);
          }
@@ -900,12 +906,12 @@ lList *lUndumpList(FILE *fp, const char *name, const lDescr *dp)
          lFreeList(&lp);
          lFreeElem(&ep);
          FREE(found);
+         FREE(fdp);
          LERROR(LEAPPENDELEM);
          DRETURN(NULL);
       }
 
    }
-   FREE(found);
 
    /* read ket */
    if (fGetKet(fp)) {
@@ -914,6 +920,8 @@ lList *lUndumpList(FILE *fp, const char *name, const lDescr *dp)
       LERROR(LESYNTAX);
    }
 
+   FREE(found);
+   FREE(fdp);
    DRETURN(lp);
 }
 

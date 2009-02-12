@@ -484,6 +484,9 @@ Cardinal size
    else if ( type == QmonQUA_Type )
       lp = qmonGet2xN(w, UA_Type, UA_name, UA_value);
 
+   if (*(lList**)address != NULL) {
+      lFreeList((lList**)address);
+   }   
    *(lList**)address = lp;
 }
 

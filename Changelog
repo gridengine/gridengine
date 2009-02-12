@@ -1,3 +1,7 @@
+RD-2009-02-12-0: Bugfix:      fixed more qmon memory leaks
+                 Belongs to:  RD-2009-02-11-1
+                 Review:      AA
+
 RD-2009-02-11-4: Bugfix:      fixed parsing warning in jsv(1)
                  Review:      JG
 

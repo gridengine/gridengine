@@ -1,3 +1,7 @@
+HP-2009-02-12-0: Bugfix:      fixed wrong description of parameters of -j option in
+                              qacct(1) man page
+                 Review:      JG
+
 JG-2009-02-02-0: Cleanup:     master installation with JMX support fails on 
                               DARWIN -  could not reproduce any problem, but
                               code still could be cleaned up (setting

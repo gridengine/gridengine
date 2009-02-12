@@ -696,12 +696,14 @@ static void qmonARSubToggleDuration(Widget w, XtPointer cld, XtPointer cad)
    DENTER(GUI_LAYER, "qmonARSubToggleDuration");
    
    if (cbs->set) {
+      XmtInputFieldSetString(arsub_end_time, "");
       XtSetSensitive(arsub_end_time, False);
       XtSetSensitive(arsub_end_timePB, False);
       XtSetSensitive(arsub_duration, True);
       XtSetSensitive(arsub_durationPB, True);
    }
    else {
+      XmtInputFieldSetString(arsub_duration, "00:00:00");
       XtSetSensitive(arsub_end_time, True);
       XtSetSensitive(arsub_end_timePB, True);
       XtSetSensitive(arsub_duration, False);
@@ -894,8 +896,7 @@ static void qmonARSubARSub(Widget w, XtPointer cld, XtPointer cad)
                            XmtLocalize(w, "AR %d submitted", "AR %d submitted"), 
                            (int)lGetUlong(lFirst(lp), AR_id));
          XmtMsgLineClear(arsub_message, DISPLAY_MESSAGE_DURATION); 
-      }
-      else if (!just_verify) {
+      } else if (!just_verify) {
          int ar_id;
          if (lFirst(lp) && (ar_id = (int)lGetUlong(lFirst(lp), AR_id))) {
             XmtMsgLinePrintf(arsub_message, 
@@ -911,8 +912,7 @@ static void qmonARSubARSub(Widget w, XtPointer cld, XtPointer cad)
       lFreeWhat(&what);
       lFreeList(&lp);
       lFreeList(&alp);
-   }
-   else {
+   } else {
       Boolean close_dialog = True;
       /* should be the same fields like in tARSMEntry in qmon_arsub.h */
       static int fixed_qalter_fields[] = {

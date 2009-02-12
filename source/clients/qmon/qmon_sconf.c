@@ -80,7 +80,7 @@ static Boolean qmonSchedSet(lListElem *sep);
 static Boolean qmonSchedGet(lListElem *sep);
 static void qmonLoadNamesSC(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSchedJobInfo(Widget w, XtPointer cld, XtPointer cad);
-static bool qmonSchedFreeData();
+static void qmonSchedFreeData();
 /*-------------------------------------------------------------------------*/
    
 typedef struct _tSCEntry {
@@ -709,7 +709,7 @@ XtPointer cad
    DEXIT;
 }
 
-static bool qmonSchedFreeData()
+static void qmonSchedFreeData()
 {
    FREE(data.algorithm);
    FREE(data.schedule_interval);

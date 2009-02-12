@@ -1,3 +1,10 @@
+AA-2009-02-12-0: Bugfix:      qmon: duration and end_time fields in
+                                    Advance Reservation Window are both effective
+                                    Spinbox problems on lx26-amd64
+                                    reverting mem leak fix which leads to crash
+                 Bugster:     6804626
+                 Review:      RD
+
 ZG-2009-02-12-1: Bugfix:      Invalid parsing of installer.jar arguments
                  Bugfix:      Spooling method gets modified after checking hosts
                  Bugfix:      Qmaster is always in the shadow host list

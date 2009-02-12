@@ -1,3 +1,7 @@
+HP-2009-02-12-0: Bugfix:      fixed wrong description of parameters of -j option in
+                              qacct(1) man page
+                 Review:      JG
+
 RD-2009-02-12-0: Bugfix:      fixed more qmon memory leaks
                  Belongs to:  RD-2009-02-11-1
                  Review:      AA

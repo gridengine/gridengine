@@ -1,3 +1,6 @@
+RD-2009-02-12-1: Bugfix:      fixed jemalloc deadlock with old linux pthread implementations
+                 Review:      JG 
+
 HP-2009-02-12-0: Bugfix:      fixed wrong description of parameters of -j option in
                               qacct(1) man page
                  Review:      JG

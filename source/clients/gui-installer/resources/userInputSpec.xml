@@ -142,7 +142,7 @@ ___INFO__MARK_END__-->
         <field type="text" variable="cfg.admin.mail" conditionid="cond.install.qmaster">
             <spec set="none" size="35" id="cfg.admin.mail.label" />
             <validator id="cfg.admin.mail.regularexpressionvalidator" class="com.izforge.izpack.util.RegularExpressionValidator">
-                <param name="pattern" value="[[a-zA-Z0-9._-]{3,}@[a-zA-Z0-9._-]+([.][a-zA-Z0-9_-]+)*[.][a-zA-Z0-9._-]{2,4}]{0,}" />
+                <param name="pattern" value="[a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+([.][a-zA-Z0-9_-]+)*[.][a-zA-Z0-9._-]{2,4}|none|[ ]*" />
             </validator>
             <validator id="cfg.admin.mail.fillifemptyvalidator" class="com.sun.grid.installer.gui.FillIfEmptyValidator">
                 <param name="default" value="none"/>

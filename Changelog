@@ -1,3 +1,11 @@
+ZG-2009-02-12-1: Bugfix:      Invalid parsing of installer.jar arguments
+                 Bugfix:      Spooling method gets modified after checking hosts
+                 Bugfix:      Qmaster is always in the shadow host list
+                 Bugfix:      Time-out state is missing
+                 Enhacem.:    Shadow component is unchecked by default 
+                 Enhacem.:    Admin component is unchecked by default
+                 Review:      LP
+
 RD-2009-02-12-1: Bugfix:      fixed jemalloc deadlock with old linux pthread implementations
                  Review:      JG 
 

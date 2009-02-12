@@ -38,6 +38,9 @@ IS_SHADOW=$3
 IS_EXECD=$4
 
 SPOOLING_METHOD="${cfg.spooling.method}"
+if [ "$SPOOLING_METHOD" = "none" ]; then
+   SPOOLING_METHOD="berkeleydb"
+fi
 DB_SPOOLING_SERVER="${cfg.db.spooling.server}"
 
 # exit code for run fuctions

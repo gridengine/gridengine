@@ -82,7 +82,7 @@ fi
 #fi
 echo "Starting Installer ..."
 if [ "$DEBUG_ENABLED" = "true" ]; then
-   $JAVA_BIN $FLAGS -jar ./util/gui-installer/installer.jar "$ARGUMENTS"
+   $JAVA_BIN $FLAGS -jar ./util/gui-installer/installer.jar $ARGUMENTS
 else
-   $JAVA_BIN $FLAGS -jar ./util/gui-installer/installer.jar "$ARGUMENTS"
+   $JAVA_BIN $FLAGS -jar ./util/gui-installer/installer.jar $ARGUMENTS
 fi

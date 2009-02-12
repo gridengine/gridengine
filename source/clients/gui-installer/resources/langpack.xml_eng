@@ -83,11 +83,11 @@ ___INFO__MARK_END__-->
     <str id="state.missing_file" txt="Missing remote file"/>
     <str id="state.contacting" txt="Contacting"/>
     <str id="state.validating" txt="Validating"/>
-    <str id="state.copy_timeout_check_host" txt="Timeout occured"/>
+    <str id="state.copy_timeout_check_host" txt="Copy timeout"/>
     <str id="state.copy_failed_check_host" txt="Copy failed"/>
     <str id="state.ready_to_install" txt="Waiting"/>
-    <str id="state.operation.timeout.tooltip" txt="Timeout"/>
-    <str id="state.copy_timeout_install_component" txt="Timeout occured"/>
+    <str id="state.operation_timeout" txt="Timeout"/>
+    <str id="state.copy_timeout_install_component" txt="Copy timeout"/>
     <str id="state.copy_failed_install_component" txt="Copy failed"/>
     <str id="state.processing" txt="Processing"/>
     <str id="state.canceled" txt="Canceled"/>
@@ -117,7 +117,7 @@ ___INFO__MARK_END__-->
     <str id="state.missing_file.tooltip" txt="Missing file '${cfg.sge.root}/util/arch' on remote host"/>
     <str id="state.contacting.tooltip" txt="Contacting remote host"/>
     <str id="state.validating.tooltip" txt="Validating configuration on remote host"/>
-    <str id="state.operation.timeout.tooltip" txt="Operation took longer that a timeout value."/>
+    <str id="state.operation_timeout.tooltip" txt="Operation took longer that a timeout value."/>
     <str id="state.copy_timeout_check_host.tooltip" txt="Timeout while copying 'check_host' to remote host. Maybe a password requested?"/>
     <str id="state.copy_failed_check_host.tooltip" txt="Copying file 'check_host' to remote host failed."/>
     <str id="state.ready_to_install.tooltip" txt="Waiting for a slot"/>
@@ -455,10 +455,15 @@ ___INFO__MARK_END__-->
         <str id="progressbar.installing.label" txt="Processing tasks"/>
         <str id="progressbar.checking.label" txt="Validating"/>
         <!-- Tooltips -->
-        <str id="hostinput.label.tooltip" txt="<html><b>Hostname</b><br><br>
-        The host name(s) to be added to the table. The field accepts pattern.<br><br>
-        Example:<br>
-        [foo bar] means add hosts 'foo' 'bar'<br>
+        <str id="hostinput.label.tooltip" txt="<html><b>Hostname or IP</b><br><br>
+        The host(s) to be added to the table. The field accepts pattern.<br><br>
+        Examples:<br>
+        List of host names: grid01 grid02<br>
+        List of IP addresses: 192.168.0.1 192.168.0.2<br>
+        Host ranges: grid[00-10]<br>
+        Range of IP addresses: 192.168-169.0.[50-60]<br>
+        <br><b>Note:</b> The pattern does not support regular expression! Supported are<br>
+        lists and numeric ranges.
         </html>" />
         <str id="fromfile.label.tooltip" txt="Read and resolve host(s) from file" />
         <str id="component.qmaster.host.label.tooltip" txt="Master host" />

@@ -1,3 +1,9 @@
+LP-2009-02-13-1: Bugfix:      gui-installer: Infinite loop when installing
+                              win execd host due to missing LOCAL_EXECD_SPOOL
+                 Bugfix:      gui-installer: Installing windows hosts fail due
+                              to wrong connect user (introduced windows mode)
+                 Review:      ZG
+
 DG-2009-02-13-0: Bugfix:      Fixed Java DRMMA bug when parsing 
                               native specification with empty string. 
                  Belongs to:  RD-2009-02-05-0 

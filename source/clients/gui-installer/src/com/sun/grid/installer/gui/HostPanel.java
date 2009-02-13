@@ -1737,6 +1737,8 @@ public class HostPanel extends IzPanel implements Config {
         ThreadPoolExecutor singleThreadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
         singleThreadPool.setThreadFactory(new InstallerThreadFactory());
 
+        String execdLocalSpoolDir = "";
+
         progressTimer = new Timer("InstallTimer");
 
         //Create a copy of the install list for the last_task
@@ -1807,11 +1809,16 @@ public class HostPanel extends IzPanel implements Config {
                     //And execute the first task in the singleThreadPool
                     singleThreadPool.execute(new InstallTask(tables, h, vars, localizedMessages));
                 } else {
+                    //If windows host, need to set a LOCAL_SPOOL_DIR if empty!
+                    execdLocalSpoolDir = variablesCopy.getProperty(VAR_EXECD_SPOOL_DIR_LOCAL, "");
+                    if (h.getArchitecture().startsWith("win-") && execdLocalSpoolDir.length() == 0) {
+                        h.setSpoolDir(CONST_DEFAULT_WINDOWS_SPOOL_DIR + variablesCopy.getProperty(VAR_SGE_CELL_NAME) + "_execdspool");
+                    }
                     //Only execd get installed in parallel
                     threadPool.execute(new InstallTask(tables, h, variablesCopy, localizedMessages));
                 }
                 if (started == 0) {
-                    progressTimer.schedule(new UpdateInstallProgressTimerTask(this, new ThreadPoolExecutor[]{threadPool, singleThreadPool}, getLabel("column.progress.label"), getLabel("progressbar.installing.label")), 10);
+                    progressTimer.schedule(new UpdateInstallProgressTimerTask(this, new ThreadPoolExecutor[]{threadPool, singleThreadPool}, getLabel("column.progress.label"), getLabel("progressbar.installing.label"), initialInstallList.size()), 10);
                 }
                 started++;
                 //In case the task is a BDB or qmaster host, we have to wait for sucessful finish!
@@ -2348,10 +2355,10 @@ class UpdateInstallProgressTimerTask extends TimerTask {
     private static int instanceCounter = 0;
 
     public UpdateInstallProgressTimerTask(final HostPanel panel, ThreadPoolExecutor tpe, final String colName, final String prefix) {
-        this(panel, new ThreadPoolExecutor[]{tpe}, colName, prefix);
+        this(panel, new ThreadPoolExecutor[]{tpe}, colName, prefix, -1);
     }
 
-    public UpdateInstallProgressTimerTask(final HostPanel panel, ThreadPoolExecutor[] tpes, final String colName, final String prefix) {
+    public UpdateInstallProgressTimerTask(final HostPanel panel, ThreadPoolExecutor[] tpes, final String colName, final String prefix, final int taskCount) {
         super();
 
         instanceCounter++;
@@ -2365,9 +2372,10 @@ class UpdateInstallProgressTimerTask extends TimerTask {
         SwingUtilities.invokeLater(new Runnable() {
 
             public void run() {
+                int initialTaskCount = (taskCount < 0) ? getTaskCount() : taskCount;
                 mainBar.setMinimum(0);
                 mainBar.setValue(getCompletedTaskCount());
-                mainBar.setMaximum(getTaskCount());
+                mainBar.setMaximum(initialTaskCount);
                 mainBar.setString(prefix);
                 //mainBar.setString(prefix + " " + cur + " / " + max);
                 mainBar.setStringPainted(true);

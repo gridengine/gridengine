@@ -950,4 +950,12 @@ public class Util implements Config{
             return false;
         }
     }
+
+    public static boolean isWindowsMode(Properties p) {
+        String mode = p.getProperty(ARG_MODE);
+        if (mode != null && mode.equalsIgnoreCase(CONST_MODE_WINDOWS)) {
+            return true;
+        }
+        return false;
+    }
 }

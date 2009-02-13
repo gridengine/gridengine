@@ -39,6 +39,9 @@ public interface Config {
     public static final String VAR_CONF_FILE_DIR    = "templates/";
     public static final String VAR_CONF_FILE_NAME   = "inst_template.conf";
 
+    public static final String CONST_DEFAULT_WINDOWS_SPOOL_DIR = "/dev/fs/C/";
+    public static final String CONST_MODE_WINDOWS = "windows";
+
     public static final String VAR_SGE_ROOT    = "cfg.sge.root";
     public static final String VAR_SGE_CELL_NAME = "cfg.cell.name";
     public static final String VAR_ADMIN_USER  = "cfg.admin.user";
@@ -135,6 +138,7 @@ public interface Config {
     public static final String ARG_RESOLVE_TIMEOUT = "resolve_timeout";
     public static final String ARG_INSTALL_TIMEOUT = "install_timeout";
     public static final String ARG_CONNECT_USER = "connect_user";
+    public static final String ARG_MODE = "mode";
 
     public static final int EXIT_VAL_SUCCESS = 0;
     public static final int EXIT_VAL_BDB_SERVER_SPOOL_DIR_PERM_DENIED = 10;

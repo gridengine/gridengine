@@ -115,6 +115,9 @@ public class PreActionPanel extends ActionPanel {
                 Debug.trace(ARG_INSTALL_TIMEOUT +" is now set to "+Util.INSTALL_TIMEOUT);
             }
         }
+        if (Util.isWindowsMode(idata.getVariables())) {
+           Debug.trace("Using mode "+CONST_MODE_WINDOWS);
+        }
         
         String sgeRootPath = vs.substitute(idata.getVariable(VAR_SGE_ROOT), null);
         String userName = vs.substitute(idata.getVariable(VAR_USER_NAME), null);

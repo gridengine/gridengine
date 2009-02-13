@@ -29,36 +29,37 @@
  *
  ************************************************************************/
 ___INFO__MARK_END__-->
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=utf-8">
+</HEAD>
 <BODY LANG="en-US" DIR="LTR">
-<H1>JMX Configuration</H1>
+<H1>JMX configuration</H1>
 <UL>
-	<LI><P STYLE="margin-bottom: 0in">JMX port - port number to be used
-	by JVM thread
-	</P>
-	<LI><P STYLE="margin-bottom: 0in">Enable SSL server authentication -
-	once enabled SSL certificate configuration will be presented later,
-	the server certificate will be used for authentication and
-	encryption
-	</P>
-	<LI><P STYLE="margin-bottom: 0in">Enable SSL client authentication -
-	client authentication will be used
-	</P>
-	<LI><P STYLE="margin-bottom: 0in">Path to the keystore - path to
-	Java^TM^ keystore file to be created
-	</P>
-	<LI><P STYLE="margin-bottom: 0in">Keystore password - keystore
-	password, default is <TT>changeit</TT>
-	</P>
-	<LI><P STYLE="margin-bottom: 0in">Retype password - password to
-	retype, default is <TT>changeit</TT>
-	</P>
-	<LI><P STYLE="margin-bottom: 0in">JVM library path - path to the JVM
-	library on the qmaster host
-	</P>
-	<LI><P>Additional JVM args - additional arguments to be used when
-	starting the JVM in qmaster, default <TT>-Xmx256m</TT>
+	<LI><P STYLE="margin-bottom: 0in"><B>JMX port</B> - Port number to
+	be used by JVM thread in qmaster process.</P>
+	<LI><P STYLE="margin-bottom: 0in"><B>Enable SSL server
+	authentication</B> - Once enabled SSL certificate configuration will
+	be presented later, the server certificate will be used for
+	authentication and encryption.</P>
+	<LI><P STYLE="margin-bottom: 0in"><B>Enable SSL client
+	authentication</B> - Client authentication will be used.</P>
+	<LI><P STYLE="margin-bottom: 0in"><B>Path to the keystore</B> - Path
+	to Java<SUP>TM</SUP> keystore file that will be created during the
+	qmaster installation.</P>
+	<LI><P STYLE="margin-bottom: 0in"><B>Keystore password</B> -
+	Keystore password, default is <I>changeit</I>.</P>
+	<LI><P STYLE="margin-bottom: 0in"><B>Retype password</B> - Password
+	to retype, default is <I>changeit.</I></P>
+	<LI><P STYLE="margin-bottom: 0in"><B>JVM library path</B> - Path to
+	the JVM library on the qmaster host. Be sure to enter a correct
+	path! If you are on a 64-bit system you may have executed the GUI
+	installer in default Java<SUP>TM</SUP> 32-bit mode. In that case the
+	detected path to the library will be for a 32-bit Java<SUP>TM</SUP>
+	and thread will fail to start later in 64-bit mode.</P>
+	<LI><P><B>Additional JVM args</B> - Additional arguments to be used
+	when starting the JVM in qmaster. Default is <I>-Xmx256m</I>. 
 	</P>
 </UL>
 <P><BR><BR>

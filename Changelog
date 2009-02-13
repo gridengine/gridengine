@@ -1,3 +1,7 @@
+LP-2009-02-13-2: Bugfix:      gui-installer: Updated help pages to reflect
+                              latest changes
+                 Review:      TBD
+
 ZG-2009-02-13-0: Bugfix:      gui-installer: have to be able to change the user
                               name to adopt to Windows hosts naming convention
                  Bugfix:      gui-installer: have to distinguish between normal

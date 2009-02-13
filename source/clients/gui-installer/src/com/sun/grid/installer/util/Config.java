@@ -90,7 +90,6 @@ public interface Config {
     public static final String VAR_PROGRESS_TYPE = "mode";
     public static final String VAR_USER_NAME = "user.name";
     //public static final String VAR_USER_GROUP = "user.group";
-    public static final String VAR_ROOT_USER = "root.user";
     public static final String VAR_RESULT_INFO = "result.info";
     public static final String VAR_LOCALHOST_ARCH = "localhost.arch";
 
@@ -119,6 +118,7 @@ public interface Config {
     public static final String COND_JMX = "cond.sge.jmx";
     public static final String COND_JMX_SSL = "cond.sge.jmx.ssl";
     public static final String COND_USER_ROOT = "cond.user.root";
+    public static final String COND_NO_CONNECT_USER = "cond.no.connect.user";
     
     public static final String LANGID_HELP_ERROR_PAGE = "installer.help.errorpage";
     public static final String LANGID_HELP_EMPTY_PAGE = "installer.help.emptypage";
@@ -137,8 +137,9 @@ public interface Config {
 
     public static final String ARG_RESOLVE_TIMEOUT = "resolve_timeout";
     public static final String ARG_INSTALL_TIMEOUT = "install_timeout";
+    
     public static final String ARG_CONNECT_USER = "connect_user";
-    public static final String ARG_MODE = "mode";
+    public static final String ARG_MODE = "install_mode";
 
     public static final int EXIT_VAL_SUCCESS = 0;
     public static final int EXIT_VAL_BDB_SERVER_SPOOL_DIR_PERM_DENIED = 10;

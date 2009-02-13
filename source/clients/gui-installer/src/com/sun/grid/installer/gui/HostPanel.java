@@ -1,4 +1,4 @@
-/*___INFO__MARK_BEGIN__*/
+/*___INFO__MARK_BEGIN__*///GEN-LINE:variables
 /*************************************************************************
  *
  *  The Contents of this file are made available subject to the terms of
@@ -880,24 +880,24 @@ public class HostPanel extends IzPanel implements Config {
         }
     }
 
-	private void hostTFActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_hostTFActionPerformed
+	private void hostTFActionPerformed(java.awt.event.ActionEvent evt) {                                       
 
             addHostsFromTF();
-	}//GEN-LAST:event_hostTFActionPerformed
+	}                                      
 
-	private void hostTFFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_hostTFFocusGained
+	private void hostTFFocusGained(java.awt.event.FocusEvent evt) {                                   
             hostRB.setSelected(true);
             hostTF.setEditable(true);
             //addHostFocusGained();
             selectTextField(hostTF);
-	}//GEN-LAST:event_hostTFFocusGained
+	}                                  
 
-	private void fileBFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_fileBFocusGained
+	private void fileBFocusGained(java.awt.event.FocusEvent evt) {                                  
             fileRB.setSelected(true);
             hostTF.setEditable(false);
-	}//GEN-LAST:event_fileBFocusGained
+	}                                 
 
-	private void fileBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_fileBActionPerformed
+	private void fileBActionPerformed(java.awt.event.ActionEvent evt) {                                      
             final JFileChooser fc = new JFileChooser();
             int ret = fc.showOpenDialog(this.getParent());
             if (ret == JFileChooser.APPROVE_OPTION) {
@@ -923,7 +923,7 @@ public class HostPanel extends IzPanel implements Config {
                     errorMessageVisible = true;
                 }
             }
-	}//GEN-LAST:event_fileBActionPerformed
+	}                                     
 
     private void selectTextField(JTextField tf) {
         tf.requestFocus();
@@ -932,15 +932,15 @@ public class HostPanel extends IzPanel implements Config {
         lastSelectedTF = tf;
     }
 
-	private void hostRBFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_hostRBFocusGained
+	private void hostRBFocusGained(java.awt.event.FocusEvent evt) {                                   
             hostTF.setEditable(true);
             selectTextField(hostTF);
-	}//GEN-LAST:event_hostRBFocusGained
+	}                                  
 
-	private void fileRBFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_fileRBFocusGained
+	private void fileRBFocusGained(java.awt.event.FocusEvent evt) {                                   
             hostTF.setEditable(false);
             lastSelectedTF.setSelectionEnd(0);
-	}//GEN-LAST:event_fileRBFocusGained
+	}                                  
 
     private void buttonActionPerformed(java.awt.event.ActionEvent evt) {
         if (hostRB.isSelected()) {
@@ -953,13 +953,13 @@ public class HostPanel extends IzPanel implements Config {
         componentSelectionPanel.setVisible(b);
     }
 
-	private void addBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addBActionPerformed
+	private void addBActionPerformed(java.awt.event.ActionEvent evt) {                                     
             buttonActionPerformed(evt);
-	}//GEN-LAST:event_addBActionPerformed
+	}                                    
 
-    private void cancelBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelBActionPerformed
+    private void cancelBActionPerformed(java.awt.event.ActionEvent evt) {                                        
         cancelActions();
-    }//GEN-LAST:event_cancelBActionPerformed
+    }                                       
 
     private void cancelActions() {
         //Cancel host selection thread pool
@@ -1343,19 +1343,44 @@ public class HostPanel extends IzPanel implements Config {
                 }
             }
 
-            long invalid = 0;
+            int warningState = 0, noLocalSpoolWindows = 0;
             for (int i : indexList) {
                 h = hosts.get(i);
                 switch (h.getState()) {
                     case REACHABLE: break;
                     default: {
-                        invalid++;
+                        warningState++;
                     }
+                }
+
+                //If windows host, need to set a LOCAL_SPOOL_DIR if empty!
+                if (!isExpressInst && h.getArchitecture().startsWith("win") &&
+                        h.getSpoolDir().equals(idata.getVariable(VAR_EXECD_SPOOL_DIR))) {
+                    noLocalSpoolWindows++;
                 }
             }
 
-            String msg = MessageFormat.format(getLabel("warning.invalid.hosts.message"), invalid, hosts.size());
-            if (invalid > 0 && JOptionPane.NO_OPTION == JOptionPane.showOptionDialog(this, msg,
+            String msg = MessageFormat.format(getLabel("warning.invalid.hosts.message"), warningState, hosts.size());
+            if (warningState > 0 && JOptionPane.NO_OPTION == JOptionPane.showOptionDialog(this, msg,
+                    getLabel("installer.warning"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null,
+                    new Object[]{getLabel("installer.yes"), getLabel("installer.no")}, getLabel("installer.no"))) {
+
+                disableControls(false);
+                if (parent != null) {
+                    SwingUtilities.invokeLater(new Runnable() {
+
+                        public void run() {
+                            parent.unlockNextButton();
+                            parent.unlockPrevButton();
+                        }
+                    });
+                }
+                setTablesEnabled(true);
+
+                return;
+            }
+            
+            if (noLocalSpoolWindows > 0 && JOptionPane.NO_OPTION == JOptionPane.showOptionDialog(this, getLabel("warning.windows.needs.local.spooling.message"),
                     getLabel("installer.warning"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null,
                     new Object[]{getLabel("installer.yes"), getLabel("installer.no")}, getLabel("installer.no"))) {
 
@@ -1764,6 +1789,12 @@ public class HostPanel extends IzPanel implements Config {
                     completed = singleThreadPool.getCompletedTaskCount();
                 }
 
+                //If windows host, need to set a LOCAL_SPOOL_DIR if empty!
+                if (isExpressInst && h.getArchitecture().startsWith("win") &&
+                        h.getSpoolDir().equals(variablesCopy.getProperty(VAR_EXECD_SPOOL_DIR))) {
+                    h.setSpoolDir(CONST_DEFAULT_WINDOWS_SPOOL_DIR + variablesCopy.getProperty(VAR_SGE_CELL_NAME) + "_execdspool");
+                }
+
                 //BDB, Qmaster, Shadowd instlalation go to special singlethreadPool
                 if (h.isBdbHost() || h.isQmasterHost() || h.isShadowHost()) {
                     singleThreadPool.execute(new InstallTask(tables, h, variablesCopy, localizedMessages));
@@ -1809,11 +1840,6 @@ public class HostPanel extends IzPanel implements Config {
                     //And execute the first task in the singleThreadPool
                     singleThreadPool.execute(new InstallTask(tables, h, vars, localizedMessages));
                 } else {
-                    //If windows host, need to set a LOCAL_SPOOL_DIR if empty!
-                    execdLocalSpoolDir = variablesCopy.getProperty(VAR_EXECD_SPOOL_DIR_LOCAL, "");
-                    if (h.getArchitecture().startsWith("win-") && execdLocalSpoolDir.length() == 0) {
-                        h.setSpoolDir(CONST_DEFAULT_WINDOWS_SPOOL_DIR + variablesCopy.getProperty(VAR_SGE_CELL_NAME) + "_execdspool");
-                    }
                     //Only execd get installed in parallel
                     threadPool.execute(new InstallTask(tables, h, variablesCopy, localizedMessages));
                 }
@@ -1949,7 +1975,7 @@ public class HostPanel extends IzPanel implements Config {
             }
         });
     }
-    // Variables declaration - do not modify//GEN-BEGIN:variables
+    // Variables declaration - do not modify                     
     private javax.swing.JButton addB;
     private javax.swing.JCheckBox adminCB;
     private javax.swing.JScrollPane allHostsScrollPane;
@@ -1968,7 +1994,7 @@ public class HostPanel extends IzPanel implements Config {
     private javax.swing.JLabel statusBar;
     private javax.swing.JCheckBox submitCB;
     private javax.swing.JTabbedPane tabbedPane;
-    // End of variables declaration//GEN-END:variables
+    // End of variables declaration                   
     private JTextField lastSelectedTF;
     private boolean advancedMode = true;
     private Vector<HostTable> tables;

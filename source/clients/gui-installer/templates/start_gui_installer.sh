@@ -33,11 +33,12 @@
 
 ErrUsage() 
 {
-   echo "Usage: `basename $0` [-help] [-resolve_pool=<num>] [-resolve_timeout=<sec>]" \
-        "       [-install_pool=<num>] [-install_timeout=<sec>]" \
-        "" \
-        "   <num> ... decimal number greater than zero" \
-        "   <sec> ... number of seconds, must be greater then zero"
+   echo "Usage: `basename $0` [-help] [-resolve_pool=<num>] [-resolve_timeout=<sec>]"
+   echo "       [-install_pool=<num>] [-install_timeout=<sec>] [-connect_user=<usr>]"
+   echo ""
+   echo "   <num> ... decimal number greater than zero"
+   echo "   <sec> ... number of seconds, must be greater then zero"
+   echo "   <usr> ... user id"
    exit 1
 }
 

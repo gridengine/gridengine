@@ -149,7 +149,7 @@ ___INFO__MARK_END__-->
             </validator>
         </field>
         <field type="space" />
-        <field type="check" variable="cfg.add.to.rc" conditionid="cond.user.root+cond.install.qmaster|cond.install.execd|cond.install.bdb">
+        <field type="check" variable="cfg.add.to.rc" conditionid="(!(cond.no.connect.user)|cond.user.root)+(cond.install.qmaster|cond.install.execd|cond.install.bdb)">
             <spec align="left" id="cfg.add.to.rc.label" true="true" false="false" />
         </field>
         <field type="check" variable="add.sge.jmx" conditionid="cond.install.qmaster+cond.custom.install">

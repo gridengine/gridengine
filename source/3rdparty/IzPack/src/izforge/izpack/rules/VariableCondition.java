@@ -91,6 +91,10 @@ public class VariableCondition extends Condition
         {
             this.variablename = xmlcondition.getFirstChildNamed("name").getContent();
             this.value = xmlcondition.getFirstChildNamed("value").getContent();
+
+            if (this.value == null) {
+                this.value = "";
+            }
         }
         catch (Exception e)
         {
@@ -111,9 +115,13 @@ public class VariableCondition extends Condition
             }
             else
             {
-                VariableSubstitutor vs = new VariableSubstitutor(installdata.getVariables());
-                value = vs.substituteMultiple(value, null);
-                val = vs.substituteMultiple(val, null);
+                if (value != null) {
+                    VariableSubstitutor vs = new VariableSubstitutor(installdata.getVariables());
+                    value = vs.substituteMultiple(value, null);
+                    val = vs.substituteMultiple(val, null);
+                } else {
+                    value = "";
+                }
                 return val.equals(value);
             }
         }

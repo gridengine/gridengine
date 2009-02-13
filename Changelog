@@ -1,3 +1,13 @@
+ZG-2009-02-13-0: Bugfix:      gui-installer: have to be able to change the user
+                              name to adopt to Windows hosts naming convention
+                 Bugfix:      gui-installer: have to distinguish between normal
+                              and Windows host installation to apply domain name
+                              prefix to user name
+                 Bugfix:      for Windows host the local execd spool dir is necessary
+                 Bugfix:      check admin user's permissions regarding to SGE_ROOT
+                              after Main Configuration panel
+                 Review:      LP
+
 LP-2009-02-13-1: Bugfix:      gui-installer: Infinite loop when installing
                               win execd host due to missing LOCAL_EXECD_SPOOL
                  Bugfix:      gui-installer: Installing windows hosts fail due

@@ -145,8 +145,8 @@ ___INFO__MARK_END__-->
 
     <!-- PreAction Panel -->
         <!-- Messages -->
-        <str id="warning.user.not.root.message"  txt="<html>You are not installing as user '${root.user}'!<br>This will allow you to run Grid Engine only under your user id for testing<br>a limited functionality of Grid Engine!<br><br>Do you want to continue the installation?</html>" />
-        <str id="error.user.invalid.message"  txt="<html>You are not installing as user '${root.user}' or as the owner of the Grid Engine root directory.<br>You don't have enough permission to install ${APP_NAME}.<br><br>The installation terminates!</html>" />
+        <str id="warning.user.not.root.message"  txt="<html>You are not installing as user 'root'!<br>This will allow you to run Grid Engine only under your user id for testing<br>a limited functionality of Grid Engine!<br><br>Do you want to continue the installation?</html>" />
+        <str id="error.user.invalid.message"  txt="<html>You are not installing as user 'root' or as the owner of the Grid Engine root directory.<br>You don't have enough permission to install ${APP_NAME}.<br><br>The installation terminates!</html>" />
 
     <!-- Component Panel -->
         <!-- Labels -->
@@ -508,6 +508,7 @@ ___INFO__MARK_END__-->
         <str id="warning.only.admin.submit.to.install.message" txt="<html>No components were selected.<br><br>Do you want to add only the additional admin/submit hosts?</html>"/>
         <str id="warning.comp.selected.but.no.host" txt="<html>${component} component was selected to be installed but none of the hosts is marked as ${host.type} host!<br><br>Do you want to continue the installation?</html>"/>
         <str id="warning.invalid.hosts.message"  txt="<html>{0} out of {1} reachable hosts have configuration errors. These may fail during the installation.<br>Check host and their states for detailed error messages in the tooltips.<br><br>Do you want to continue the installation?</html>" />
+        <str id="warning.windows.needs.local.spooling.message"  txt="<html>Windows host(s) need local execution spool directory. These may fail during the installation.<br><br>Do you want to continue the installation?</html>" />
         <str id="msg.previous.dependent.install.failed" txt="Not started! It depended on {0} task that failed."/>
         <str id="msg.qmasterhost.already.selected" txt="<html>Do you really want to change qmaster host to <b>{0}</b>?<br>Currently selected qmaster host is <b>{1}</b>.<br></html>"/>
         <str id="msg.bdbhost.already.selected" txt="<html>Do you really want to change BDB server to <b>{0}</b>?<br>Currently selected BDB server is <b>{1}</b>.<br></html></html>"/>

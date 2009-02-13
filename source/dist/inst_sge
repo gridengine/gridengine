@@ -1413,6 +1413,10 @@ if [ "$COPY_CA" = "true" ]; then
    if [ -z "$SGE_CELL" -a "$AUTO" = "true" ]; then
       SGE_CELL="$CELL_NAME"
    fi
+   # GUI mode must set the SGE_CELL to CELL_NAME always!
+   if [ "$AUTOGUI" = "true" ]; then
+      SGE_CELL="$CELL_NAME"
+   fi
    if [ "$SGE_ROOT" = "" -o "$SGE_CELL" = "" ]; then
       $INFOTEXT "SGE_ROOT or SGE_CELL is not set!"
       exit 1

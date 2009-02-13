@@ -85,6 +85,7 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumn;
+import javax.swing.text.Utilities;
 import net.n3.nanoxml.XMLElement;
 
 public class HostPanel extends IzPanel implements Config {
@@ -734,112 +735,122 @@ public class HostPanel extends IzPanel implements Config {
     }
 
     private void setupComponentSelectionPanel() {
-        componentSelectionPanel.setVisible(!isExpressInst);
-        if (!isExecdInst) {
-            execCB.setSelected(false);
-            execCB.setVisible(false);
-        } else {
-            execCB.setSelected(true);
-            execCB.setVisible(true);
-        }
-        // Shadow component is not default on
+        SwingUtilities.invokeLater(new Runnable() {
+
+            public void run() {
+                componentSelectionPanel.setVisible(!isExpressInst);
+                if (!isExecdInst) {
+                    execCB.setSelected(false);
+                    execCB.setVisible(false);
+                } else {
+                    execCB.setSelected(true);
+                    execCB.setVisible(true);
+                }
+                // Shadow component is not default on
 //        if (!isShadowdInst) {
-            shadowCB.setSelected(false);
-            shadowCB.setVisible(false);
+                shadowCB.setSelected(false);
+                shadowCB.setVisible(false);
 //        } else {
 //            shadowCB.setSelected(true);
 //            shadowCB.setVisible(true);
 //        }
-        qmasterCB.setSelected(false);
-        qmasterCB.setVisible(false);
-        bdbCB.setSelected(false);
-        bdbCB.setVisible(false);
+                qmasterCB.setSelected(false);
+                qmasterCB.setVisible(false);
+                bdbCB.setSelected(false);
+                bdbCB.setVisible(false);
 
-        // Admin component is not default on
-        adminCB.setSelected(false);
+                // Admin component is not default on
+                adminCB.setSelected(false);
+            }
+        });
     }
 
     private void setColumnsWidth() {
-        int minWidth;
-        TableColumn column;
+        SwingUtilities.invokeLater(new Runnable() {
 
-        for (HostTable table : tables) {
-            try {
-                for (int col = 0; col < table.getColumnModel().getColumnCount() - 1; col++) {
-                    column = table.getColumnModel().getColumn(col);
-                    String header = (String) column.getIdentifier();
-                    minWidth = getColumnTextWidth(table, header) + 30;
+            public void run() {
+                int minWidth;
+                TableColumn column;
 
-                    if (header.equals(getLabel("column.qmaster.label"))) {
-                        if (!isQmasterInst) {
-                            column.setPreferredWidth(0);
-                            column.setMinWidth(0);
-                            column.setMaxWidth(0);
-                        } else {
-                            column.setMinWidth(minWidth);
-                            column.setPreferredWidth(minWidth);
-                            column.setMaxWidth(minWidth);
+                for (HostTable table : tables) {
+                    try {
+                        for (int col = 0; col < table.getColumnModel().getColumnCount() - 1; col++) {
+                            column = table.getColumnModel().getColumn(col);
+                            String header = (String) column.getIdentifier();
+                            minWidth = getColumnTextWidth(table, header) + 30;
+
+                            if (header.equals(getLabel("column.qmaster.label"))) {
+                                if (!isQmasterInst) {
+                                    column.setPreferredWidth(0);
+                                    column.setMinWidth(0);
+                                    column.setMaxWidth(0);
+                                } else {
+                                    column.setMinWidth(minWidth);
+                                    column.setPreferredWidth(minWidth);
+                                    column.setMaxWidth(minWidth);
+                                }
+                            } else if (header.equals(getLabel("column.shadowd.label"))) {
+                                if (!isShadowdInst) {
+                                    column.setPreferredWidth(0);
+                                    column.setMinWidth(0);
+                                    column.setMaxWidth(0);
+                                } else {
+                                    column.setMinWidth(minWidth);
+                                    column.setPreferredWidth(minWidth);
+                                    column.setMaxWidth(minWidth);
+                                }
+                            } else if (header.equals(getLabel("column.execd.label"))) {
+                                if (!isExecdInst) {
+                                    column.setPreferredWidth(0);
+                                    column.setMinWidth(0);
+                                    column.setMaxWidth(0);
+                                } else {
+                                    column.setMinWidth(minWidth);
+                                    column.setPreferredWidth(minWidth);
+                                    column.setMaxWidth(minWidth);
+                                }
+                            } else if (header.equals(getLabel("column.exec.spool.dir.label"))) {
+                                if (isExecdInst && !isExpressInst) {
+                                    column.setMinWidth(15);
+                                    column.setMaxWidth(Integer.MAX_VALUE);
+                                    column.setPreferredWidth(minWidth);
+                                    column.setWidth(minWidth);
+                                } else {
+                                    column.setPreferredWidth(0);
+                                    column.setMinWidth(0);
+                                    column.setMaxWidth(0);
+                                }
+                            } else if (header.equals(getLabel("column.admin.label"))) {
+                                column.setMinWidth(minWidth);
+                                column.setPreferredWidth(minWidth);
+                                column.setMaxWidth(minWidth);
+                            } else if (header.equals(getLabel("column.submit.label"))) {
+                                column.setMinWidth(minWidth);
+                                column.setPreferredWidth(minWidth);
+                                column.setMaxWidth(minWidth);
+                            } else if (header.equals(getLabel("column.bdb.label"))) {
+                                if (!isBdbInst) {
+                                    column.setPreferredWidth(0);
+                                    column.setMinWidth(0);
+                                    column.setMaxWidth(0);
+                                } else {
+                                    column.setMinWidth(minWidth);
+                                    column.setPreferredWidth(minWidth);
+                                    column.setMaxWidth(minWidth);
+                                }
+                            } else {
+                                column.setMinWidth(minWidth);
+                                column.setPreferredWidth(minWidth);
+                                column.setMaxWidth(Integer.MAX_VALUE);
+                                column.setWidth(minWidth);
+                            }
                         }
-                    } else if (header.equals(getLabel("column.shadowd.label"))) {
-                        if (!isShadowdInst) {
-                            column.setPreferredWidth(0);
-                            column.setMinWidth(0);
-                            column.setMaxWidth(0);
-                        } else {
-                            column.setMinWidth(minWidth);
-                            column.setPreferredWidth(minWidth);
-                            column.setMaxWidth(minWidth);
-                        }
-                    } else if (header.equals(getLabel("column.execd.label"))) {
-                        if (!isExecdInst) {
-                            column.setPreferredWidth(0);
-                            column.setMinWidth(0);
-                            column.setMaxWidth(0);
-                        } else {
-                            column.setMinWidth(minWidth);
-                            column.setPreferredWidth(minWidth);
-                            column.setMaxWidth(minWidth);
-                        }
-                    } else if (header.equals(getLabel("column.exec.spool.dir.label"))) {
-                        if (isExecdInst && !isExpressInst) {
-                            column.setMinWidth(15);
-                            column.setMaxWidth(Integer.MAX_VALUE);
-                            column.setPreferredWidth(minWidth);
-                            column.setWidth(minWidth);
-                        } else {
-                            column.setPreferredWidth(0);
-                            column.setMinWidth(0);
-                            column.setMaxWidth(0);
-                        }
-                    } else if (header.equals(getLabel("column.admin.label"))) {
-                        column.setMinWidth(minWidth);
-                        column.setPreferredWidth(minWidth);
-                        column.setMaxWidth(minWidth);
-                    } else if (header.equals(getLabel("column.submit.label"))) {
-                        column.setMinWidth(minWidth);
-                        column.setPreferredWidth(minWidth);
-                        column.setMaxWidth(minWidth);
-                    } else if (header.equals(getLabel("column.bdb.label"))) {
-                        if (!isBdbInst) {
-                            column.setPreferredWidth(0);
-                            column.setMinWidth(0);
-                            column.setMaxWidth(0);
-                        } else {
-                            column.setMinWidth(minWidth);
-                            column.setPreferredWidth(minWidth);
-                            column.setMaxWidth(minWidth);
-                        }
-                    } else {
-                        column.setMinWidth(minWidth);
-                        column.setPreferredWidth(minWidth);
-                        column.setMaxWidth(Integer.MAX_VALUE);
-                        column.setWidth(minWidth);
+
+                    } catch (IllegalArgumentException e) {
                     }
                 }
-
-            } catch (IllegalArgumentException e) {
             }
-        }
+        });
     }
 
     private int getColumnTextWidth(JTable table, String columnHeader) {
@@ -1101,10 +1112,15 @@ public class HostPanel extends IzPanel implements Config {
         }
     }
 
-    private void setTablesEnabled(boolean enabled) {
-        for (JTable table : tables) {
-            table.setEnabled(enabled);
-        }
+    private void setTablesEnabled(final boolean enabled) {
+        SwingUtilities.invokeLater(new Runnable() {
+
+            public void run() {
+                for (JTable table : tables) {
+                    table.setEnabled(enabled);
+                }
+            }
+        });
     }
 
     private void installButtonActionPerformed() {
@@ -1129,14 +1145,24 @@ public class HostPanel extends IzPanel implements Config {
         //Disable the selecting host controls
         disableControls(true);
         if (parent != null) {
-            parent.lockNextButton();
-            parent.lockPrevButton();
+            SwingUtilities.invokeLater(new Runnable() {
+
+                public void run() {
+                    parent.lockNextButton();
+                    parent.lockPrevButton();
+                }
+            });
         }
 
         setTablesEnabled(false);
 
-        tabbedPane.setSelectedIndex(1);
+        SwingUtilities.invokeLater(new Runnable() {
 
+            public void run() {
+                tabbedPane.setSelectedIndex(1);
+            }
+        });
+        
         //Remove invalid components
         additionalAdminHosts = new ArrayList<String>();
         additionalSubmitHosts = new ArrayList<String>();
@@ -1217,8 +1243,13 @@ public class HostPanel extends IzPanel implements Config {
                 checkMode = false;
                 disableControls(false);
                 if (parent != null) {
-                    parent.unlockNextButton();
-                    parent.unlockPrevButton();
+                    SwingUtilities.invokeLater(new Runnable() {
+
+                        public void run() {
+                            parent.unlockNextButton();
+                            parent.unlockPrevButton();
+                        }
+                    });
                 }
                 setTablesEnabled(true);
                 return;
@@ -1257,8 +1288,13 @@ public class HostPanel extends IzPanel implements Config {
                 checkMode = false;
                 disableControls(false);
                 if (parent != null) {
-                    parent.unlockNextButton();
-                    parent.unlockPrevButton();
+                    SwingUtilities.invokeLater(new Runnable() {
+
+                        public void run() {
+                            parent.unlockNextButton();
+                            parent.unlockPrevButton();
+                        }
+                    });
                 }
                 setTablesEnabled(true);
 
@@ -1325,8 +1361,13 @@ public class HostPanel extends IzPanel implements Config {
 
                 disableControls(false);
                 if (parent != null) {
-                    parent.unlockNextButton();
-                    parent.unlockPrevButton();
+                    SwingUtilities.invokeLater(new Runnable() {
+
+                        public void run() {
+                            parent.unlockNextButton();
+                            parent.unlockPrevButton();
+                        }
+                    });
                 }
                 setTablesEnabled(true);
 
@@ -1366,8 +1407,13 @@ public class HostPanel extends IzPanel implements Config {
         //Disable the selecting host controls
         disableControls(true);
         if (parent != null) {
-            parent.lockNextButton();
-            parent.lockPrevButton();
+            SwingUtilities.invokeLater(new Runnable() {
+
+                public void run() {
+                    parent.lockNextButton();
+                    parent.lockPrevButton();
+                }
+            });
         }
         //Stop updateTab thread
         if (progressTimer != null) {
@@ -1602,14 +1648,19 @@ public class HostPanel extends IzPanel implements Config {
         /**
          * Hide the input panel, there is no way back anyway!
          */
-        hostRB.setVisible(false);
-        hostTF.setVisible(false);
-        addB.setVisible(false);
-        fileB.setVisible(false);
-        fileRB.setVisible(false);
-        componentSelectionPanel.setVisible(false);
-        statusBar.setVisible(false);
+        SwingUtilities.invokeLater(new Runnable() {
 
+            public void run() {
+                hostRB.setVisible(false);
+                hostTF.setVisible(false);
+                addB.setVisible(false);
+                fileB.setVisible(false);
+                fileRB.setVisible(false);
+                componentSelectionPanel.setVisible(false);
+                statusBar.setVisible(false);
+            }
+        });
+        
 
         /**
          * Build install table
@@ -1617,9 +1668,9 @@ public class HostPanel extends IzPanel implements Config {
 
         // Initialize column tooltips
         String[] installHeaders = getInstallLabelVars();
-        String[] headerToltips = new String[installHeaders.length];
+        String[] headerTooltips = new String[installHeaders.length];
         for (int i = 0; i < installHeaders.length; i++) {
-            headerToltips[i] = getTooltip(installHeaders[i]);
+            headerTooltips[i] = getTooltip(installHeaders[i]);
         }
 
         //TODO: Do not overwrite old values tabbedpane, lists, hosts, etc..
@@ -1637,7 +1688,7 @@ public class HostPanel extends IzPanel implements Config {
             tables.add(table);
             table.setModel(new HostInstallTableModel(list, getInstallHeaders(), getInstallClassTypes()));
 
-            table.setTableHeader(new TooltipTableHeader(table.getColumnModel(), headerToltips));
+            table.setTableHeader(new TooltipTableHeader(table.getColumnModel(), headerTooltips));
             JTableHeader header = table.getTableHeader();
             SortedColumnHeaderRenderer headerRenderer = new SortedColumnHeaderRenderer(
                     header,
@@ -1873,18 +1924,23 @@ public class HostPanel extends IzPanel implements Config {
         }
     }
 
-    private void disableControls(boolean b) {
-        hostRB.setEnabled(!b);
-        hostTF.setEnabled(!b);
-        fileRB.setEnabled(!b);
-        fileB.setEnabled(!b);
-        shadowCB.setEnabled(!b);
-        execCB.setEnabled(!b);
-        adminCB.setEnabled(!b);
-        submitCB.setEnabled(!b);
-        addB.setEnabled(!b);
-        qmasterCB.setEnabled(!b);
-        bdbCB.setEnabled(!b);
+    private void disableControls(final boolean b) {
+        SwingUtilities.invokeLater(new Runnable() {
+
+            public void run() {
+                hostRB.setEnabled(!b);
+                hostTF.setEnabled(!b);
+                fileRB.setEnabled(!b);
+                fileB.setEnabled(!b);
+                shadowCB.setEnabled(!b);
+                execCB.setEnabled(!b);
+                adminCB.setEnabled(!b);
+                submitCB.setEnabled(!b);
+                addB.setEnabled(!b);
+                qmasterCB.setEnabled(!b);
+                bdbCB.setEnabled(!b);
+            }
+        });
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton addB;
@@ -1978,9 +2034,17 @@ public class HostPanel extends IzPanel implements Config {
         }
         JButton nextButton = parent.getNextButton();
         if (b && !nextButton.isEnabled()) {
-            parent.unlockNextButton();
+            SwingUtilities.invokeLater(new Runnable(){
+                public void run() {
+                    parent.unlockNextButton();
+                }
+            });
         } else if (!b && nextButton.isEnabled()) {
-            parent.lockNextButton();
+            SwingUtilities.invokeLater(new Runnable(){
+                public void run() {
+                    parent.lockNextButton();
+                }
+            });
         }
     }
 
@@ -2297,16 +2361,20 @@ class UpdateInstallProgressTimerTask extends TimerTask {
         this.colName = colName;
 
         mainBar = panel.getProgressBar();
-        mainBar.setMinimum(0);
-        mainBar.setValue(getCompletedTaskCount());
-        mainBar.setMaximum(getTaskCount());
-        mainBar.setString(prefix);
-        //mainBar.setString(prefix + " " + cur + " / " + max);
-        mainBar.setStringPainted(true);
-        mainBar.setVisible(true);
-
         cancelButton = panel.getCancelButton();
-        cancelButton.setVisible(true);
+        SwingUtilities.invokeLater(new Runnable() {
+
+            public void run() {
+                mainBar.setMinimum(0);
+                mainBar.setValue(getCompletedTaskCount());
+                mainBar.setMaximum(getTaskCount());
+                mainBar.setString(prefix);
+                //mainBar.setString(prefix + " " + cur + " / " + max);
+                mainBar.setStringPainted(true);
+                mainBar.setVisible(true);
+                cancelButton.setVisible(true);
+            }
+        });
     }
 
     @Override
@@ -2364,8 +2432,13 @@ class UpdateInstallProgressTimerTask extends TimerTask {
             }
 
             //Update the main ProgressBar
-            mainBar.setValue(getCompletedTaskCount());
-            mainBar.setMaximum(getTaskCount());
+            SwingUtilities.invokeLater(new Runnable() {
+
+                public void run() {
+                    mainBar.setValue(getCompletedTaskCount());
+                    mainBar.setMaximum(getTaskCount());
+                }
+            });
 
             try {
                 Thread.sleep(200);
@@ -2374,8 +2447,13 @@ class UpdateInstallProgressTimerTask extends TimerTask {
         }
 
         //Last task should cancel the Timer and hide the progressBar
-        mainBar.setVisible(false);
-        cancelButton.setVisible(false);
+        SwingUtilities.invokeLater(new Runnable() {
+
+            public void run() {
+                mainBar.setVisible(false);
+                cancelButton.setVisible(false);
+            }
+        });
 
         if (!HostPanel.checkMode && panel.getHostListAt(1) != null && panel.getHostListAt(1).size() > 0) {
             panel.enableInstallButton(true);

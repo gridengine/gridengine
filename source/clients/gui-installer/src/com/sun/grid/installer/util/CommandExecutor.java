@@ -146,6 +146,7 @@ public class CommandExecutor implements Config {
             } else {
                 commands.add(SHELL);
                 commands.add(SHELL_ARG);
+                String connectUser = variables.getProperty(ARG_CONNECT_USER, ""); 
                 //Make a single line
                 List<String> tmpList = new ArrayList<String>();
                 for (int i = 0; i < tmp.size(); i++) {
@@ -156,8 +157,15 @@ public class CommandExecutor implements Config {
                             //We require a kerberos5 or public key for connecting (without password)!
                             tmpList.add("-o StrictHostKeyChecking=yes -o PreferredAuthentications=gssapi-keyex,publickey");
                         }
+                        if (connectUser.length() > 0) {
+                           tmpList.add("-l " + connectUser);
+                        }
+                        tmpList.add(tmp.get(i));
+                    } else if (i == 2 && tmp.get(i).startsWith("'if") && tmp.get(i).endsWith("'")) {
+                       tmpList.add("\"sh -c "+tmp.get(i)+"\"");
+                    } else {
+                       tmpList.add(tmp.get(i));
                     }
-                    tmpList.add(tmp.get(i));
                 }
                 setupOutputFiles(tmpList); //Redirect command outputs
                 singleCmd = getSingleCommand(tmpList);

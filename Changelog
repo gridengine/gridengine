@@ -1,3 +1,15 @@
+LP-2009-02-13-0: Bugfix:      gui-installer: CSP installation will fail if
+                              SGE_CELL is set before starting gui-installer
+                 Bugfix:      gui-installer: CSP installation possible only with
+                              rsh (ssh should work too)
+                 Bugfix:      gui-installer: Install log might contain only a
+                              message /tmp/install.6554 is missing
+                 Enhancem.:   gui-installer: Support for connect_user
+                 Bugfix:      gui-installer: Works properly only with sh or bash
+                              as default root/connect_user shell
+                 Bugfix:      gui-installer: UI fixes
+                 Review:      ZG
+
 AA-2009-02-12-0: Bugfix:      qmon: duration and end_time fields in
                                     Advance Reservation Window are both effective
                                     Spinbox problems on lx26-amd64

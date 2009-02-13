@@ -71,7 +71,7 @@ ___INFO__MARK_END__-->
 
     <str id="state.new_unknown_host" txt="New unknown host"/>
     <str id="state.unknown_host" txt="Unknown host"/>
-    <str id="state.ok" txt="Ok"/>
+    <str id="state.ok" txt="Ok"/> <!-- TODO: No used? -->
     <str id="state.failed" txt="Failed"/>
     <str id="state.failed_dependent_on_previous" txt="Failed due to dependency"/>
     <str id="state.failed_already_installed_component" txt="Component already exists"/>

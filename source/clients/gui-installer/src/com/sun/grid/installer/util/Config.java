@@ -134,6 +134,7 @@ public interface Config {
 
     public static final String ARG_RESOLVE_TIMEOUT = "resolve_timeout";
     public static final String ARG_INSTALL_TIMEOUT = "install_timeout";
+    public static final String ARG_CONNECT_USER = "connect_user";
 
     public static final int EXIT_VAL_SUCCESS = 0;
     public static final int EXIT_VAL_BDB_SERVER_SPOOL_DIR_PERM_DENIED = 10;

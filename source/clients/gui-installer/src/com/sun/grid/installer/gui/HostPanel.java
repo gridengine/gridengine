@@ -747,13 +747,13 @@ public class HostPanel extends IzPanel implements Config {
                     execCB.setVisible(true);
                 }
                 // Shadow component is not default on
-//        if (!isShadowdInst) {
+        if (!isShadowdInst) {
                 shadowCB.setSelected(false);
                 shadowCB.setVisible(false);
-//        } else {
-//            shadowCB.setSelected(true);
-//            shadowCB.setVisible(true);
-//        }
+        } else {
+            shadowCB.setSelected(true);
+            shadowCB.setVisible(true);
+        }
                 qmasterCB.setSelected(false);
                 qmasterCB.setVisible(false);
                 bdbCB.setSelected(false);

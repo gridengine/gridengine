@@ -8,7 +8,6 @@
  *
  *
  *  Sun Industry Standards Source License Version 1.2
- *  =================================================
  *  The contents of this file are subject to the Sun Industry Standards
  *  Source License Version 1.2 (the "License"); You may not use this file
  *  except in compliance with the License. You may obtain a copy of the
@@ -62,7 +61,6 @@ public class CommandExecutor implements Config {
     private static final String SHELL_ARG         = "-c";
 
     private static int WAIT_TIME                  = 200;
-    private static int DEFAULT_MAX_WAIT_TIME      = Util.RESOLVE_TIMEOUT;
     private int MAX_WAIT_TIME;
 
     private int exitValue                         = EXITVAL_INITIAL;
@@ -74,11 +72,11 @@ public class CommandExecutor implements Config {
     private List<String> cmds = null;
 
     public CommandExecutor(String... command) {
-        this(null, DEFAULT_MAX_WAIT_TIME, Arrays.asList(command));
+        this(null, Util.RESOLVE_TIMEOUT, Arrays.asList(command));
     }
 
     public CommandExecutor(Properties variables, String... command) {
-        this(variables, DEFAULT_MAX_WAIT_TIME, Arrays.asList(command));
+        this(variables, Util.RESOLVE_TIMEOUT, Arrays.asList(command));
     }
 
     public CommandExecutor(Properties variables, int timeout, String... command) {
@@ -150,21 +148,40 @@ public class CommandExecutor implements Config {
                 //Make a single line
                 List<String> tmpList = new ArrayList<String>();
                 for (int i = 0; i < tmp.size(); i++) {
-                    if (i == 1) {                  
+                    if (i == 1) {
                         //If ssh or scp
                         if (isSameCommand(shellName, "ssh") || isSameCommand(shellName, "scp")) {
                             //We don't want to wait on the acception unknown RSA keys
                             //We require a kerberos5 or public key for connecting (without password)!
                             tmpList.add("-o StrictHostKeyChecking=yes -o PreferredAuthentications=gssapi-keyex,publickey");
                         }
-                        if (connectUser.length() > 0) {
-                           tmpList.add("-l " + connectUser);
+
+                        // Change user if it's specified in case of ssh/rsh
+                        if (connectUser.length() > 0 && (isSameCommand(shellName, "ssh") || isSameCommand(shellName, "rsh"))) {
+                            // in case of sssh/rsh apply the connect_user: -l connect_user
+                            if (Util.isWindowsMode(variables)) {  //For windows we need DOMAIN+username
+                                connectUser = tmp.get(i).toUpperCase() + "+" + connectUser;
+                            }
+
+                            tmpList.add("-l " + connectUser);
                         }
+
                         tmpList.add(tmp.get(i));
-                    } else if (i == 2 && tmp.get(i).startsWith("'if") && tmp.get(i).endsWith("'")) {
-                       tmpList.add("\"sh -c "+tmp.get(i)+"\"");
+                    } else if (i == 2) {
+                        if (tmp.get(i).startsWith("'if") && tmp.get(i).endsWith("'")) {
+                            tmpList.add("\"sh -c "+tmp.get(i)+"\"");
+                        } else if (connectUser.length() > 0 && (isSameCommand(shellName, "scp") || isSameCommand(shellName, "rcp"))) {
+                            // in case of scp/rcp append the connect_user before the host name: connect_user@host:file
+                            if (Util.isWindowsMode(variables)) {  //For windows we need DOMAIN+username
+                              connectUser = destHost.toUpperCase()+"+"+connectUser;
+                            }
+
+                            tmpList.add(connectUser + "@" +tmp.get(i));
+                        } else {
+                            tmpList.add(tmp.get(i));
+                        }
                     } else {
-                       tmpList.add(tmp.get(i));
+                        tmpList.add(tmp.get(i));
                     }
                 }
                 setupOutputFiles(tmpList); //Redirect command outputs
@@ -271,7 +288,7 @@ public class CommandExecutor implements Config {
             //Delete on exit to have better debug, until we close the APP
             outFile.deleteOnExit();
             errFile.deleteOnExit();
-            Debug.trace(cmdId + " Command: " + getSingleCommand(processBuilder.command()) + " timeout: "+ MAX_WAIT_TIME/1000 + " exitValue: "+exitValue);
+            Debug.trace(cmdId + " Command: " + getSingleCommand(processBuilder.command()) + " timeout: "+ MAX_WAIT_TIME/1000 + "sec exitValue: "+exitValue);
         }
     }
 
@@ -387,5 +404,5 @@ public class CommandExecutor implements Config {
             } catch (IOException ex) {
             }
         }
-    }    
+    }
 }

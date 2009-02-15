@@ -1,3 +1,7 @@
+ZG-2009-02-15-2: Bugfix:      gui-installer: rcp does not support '-l' switch to
+                              specify user
+                 Review:      LP
+
 LP-2009-02-13-2: Bugfix:      gui-installer: Updated help pages to reflect
                               latest changes
                  Review:      TBD

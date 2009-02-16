@@ -1,3 +1,9 @@
+JG-2009-02-16-0: Bugfix:      qrsh (new interactive job support) does not work
+                              with host aliasing
+                 Bugster:     6805914
+                 Issue:       2915
+                 Review:      RD
+
 LP-2009-02-16-0: Bugfix:      gui-installer: Installation might fail for C shell
                               users
                  Bugfix:      gui-installer: Windows installation via rsh does

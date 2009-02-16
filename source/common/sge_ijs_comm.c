@@ -42,6 +42,10 @@
 #include <sys/ioctl.h>  /* 44BSD requires this too */
 #endif
 
+#include "uti/sge_arch.h"
+#include "uti/config_file.h"
+#include "uti/sge_string.h"
+
 #include "cl_data_types.h"
 #include "cl_commlib.h"
 #include "cl_endpoint_list.h"
@@ -343,13 +347,46 @@ int comm_init_lib(dstring *err_msg)
    ret = cl_com_setup_commlib(CL_RW_THREAD, CL_LOG_OFF, NULL); 
    if (ret != CL_RETVAL_OK) {
       sge_dstring_sprintf(err_msg, cl_get_error_text(ret));
-      DPRINTF(("cl_com_setup_commlib() failed: %s (%d)\n",
-               sge_dstring_get_string(err_msg), ret));
+      DPRINTF(("cl_com_setup_commlib() failed: %s (%d)\n", sge_dstring_get_string(err_msg), ret));
       ret_val = COMM_CANT_SETUP_COMMLIB;
+   } else {
+      const char *alias_path = NULL;
+
+      /* set the alias file */
+      alias_path = sge_get_alias_path();
+      ret = cl_com_set_alias_file(alias_path);
+      if (ret != CL_RETVAL_OK) {
+         sge_dstring_sprintf(err_msg, cl_get_error_text(ret));
+         DPRINTF(("cl_com_set_alias_file() failed: %s (%d)\n", sge_dstring_get_string(err_msg), ret));
+         ret_val = COMM_CANT_SETUP_COMMLIB;
+      }
+      FREE(alias_path);
+
+      if (ret_val == COMM_RETVAL_OK) {
+         cl_host_resolve_method_t resolve_method = CL_SHORT;
+         char *help = NULL;
+         char *default_domain = NULL;
+
+         /* setup the resolve method */
+         if (atoi(get_conf_val("ignore_fqdn")) == 0) {
+            resolve_method = CL_LONG;
+         }
+         if ((help = get_conf_val("default_domain")) != NULL) {
+            if (SGE_STRCASECMP(help, NONE_STR) != 0) {
+               default_domain = help;
+            }
+         }
+
+         ret = cl_com_set_resolve_method(resolve_method, default_domain);
+         if (ret != CL_RETVAL_OK) {
+            sge_dstring_sprintf(err_msg, cl_get_error_text(ret));
+            DPRINTF(("cl_com_set_resolve_method() failed: %s (%d)\n", sge_dstring_get_string(err_msg), ret));
+            ret_val = COMM_CANT_SETUP_COMMLIB;
+         }
+      }
    }
 
-   DEXIT;
-   return ret_val;
+   DRETURN(ret_val);
 }
 
 /****** sge_ijs_comm/comm_cleanup_lib() ***************************************

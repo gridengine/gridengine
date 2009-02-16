@@ -1294,16 +1294,17 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
    notify_susp = mconf_get_notify_susp();
    fprintf(fp, "notify_susp=%s\n", notify_susp?notify_susp:"default");   
    FREE(notify_susp);
-   if (mconf_get_use_qsub_gid())
+   if (mconf_get_use_qsub_gid()) {
       fprintf(fp, "qsub_gid="sge_u32"\n", lGetUlong(jep, JB_gid));
-   else
+   } else {
       fprintf(fp, "qsub_gid=%s\n", "no");
+   }
 
    /* config for interactive jobs */
    {
       u_long32 jb_now;
       int      pty_option;
-      if(petep != NULL) {
+      if (petep != NULL) {
          jb_now = JOB_TYPE_QRSH;
       } else {
          jb_now = lGetUlong(jep, JB_type); 
@@ -1406,19 +1407,21 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
       ulong      ultemp = 0;
       lListElem  *ep    = job_get_request(jep, "display_win_gui");
    
-      if(ep != NULL) {
+      if (ep != NULL) {
          s = lGetString(ep, CE_stringval);
-         if(s == NULL ||
-            !parse_ulong_val(NULL, &ultemp, TYPE_BOO, s, err_str, err_length)) {
+         if (s == NULL || !parse_ulong_val(NULL, &ultemp, TYPE_BOO, s, err_str, err_length)) {
             lFreeList(&environmentList);
             FCLOSE(fp);
-            DEXIT;
-            return -3;
+            DRETURN(-3);
          }
       }
       fprintf(fp, "display_win_gui="sge_u32"\n", ultemp);
    }
 #endif
+
+   /* with new interactive job support, shepherd needs ignore_fqdn and default_domain */
+   fprintf(fp, "ignore_fqdn=%d\n", bootstrap_get_ignore_fqdn());
+   fprintf(fp, "default_domain=%s\n", bootstrap_get_default_domain());
 
    lFreeList(&environmentList);
    FCLOSE(fp);

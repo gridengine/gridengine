@@ -1,3 +1,7 @@
+EB-2009-02-16-0: Doc:		   added new manpage describing the JSV script
+                              interface
+                 Review:      SK
+
 ZG-2009-02-15-2: Bugfix:      gui-installer: rcp does not support '-l' switch to
                               specify user
                  Review:      LP

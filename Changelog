@@ -1,3 +1,8 @@
+DG-2009-02-16-0: Bugfix:      Installation of execd on AIX will fail on filesystems
+                              with root to nobody mapping when trying to copy 
+                              loadsensor script automatically.
+                 Review:      HP 
+
 RD-2009-02-16-0: CVS:         Created V62u2_TAG
 -----------------------------------------------
 

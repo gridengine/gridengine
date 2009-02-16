@@ -34,6 +34,7 @@ package com.sun.grid.installer.util;
 import com.izforge.izpack.installer.InstallerFrame;
 import com.izforge.izpack.util.Debug;
 import com.izforge.izpack.util.VariableSubstitutor;
+import com.sun.grid.installer.util.cmd.RemoteCommand;
 import com.sun.grid.installer.gui.*;
 import java.awt.Component;
 import java.io.BufferedReader;
@@ -68,12 +69,12 @@ public class Util implements Config{
         ADD, REMOVE, DELETE
     }
 
-    public enum SgeComponents { bdb, qmaster, shadowd, execd}
+    public enum SgeComponents { bdb, qmaster, shadow, execd}
 
     public static int RESOLVE_THREAD_POOL_SIZE = 12;
     public static int INSTALL_THREAD_POOL_SIZE = 8;
-    public static int RESOLVE_TIMEOUT = 15000;
-    public static int INSTALL_TIMEOUT = 60000;
+    public static int RESOLVE_TIMEOUT = 20000;
+    public static int INSTALL_TIMEOUT = 120000;
     
     // Currently we accept pattern in list of hosts in a file
     public static List<String> parseFileList(File f) throws FileNotFoundException {
@@ -669,7 +670,7 @@ public class Util implements Config{
      * @param component The type of the component to find on the given port: "qmaster" or "execd"
      * @return True only and only if the host is reachable on the given port
      */
-    public static boolean pingHost(Properties variables, Host host, String component, int maxTries) {
+    /*public static boolean pingHost(Properties variables, Host host, String component, int maxTries) {
         String qping = variables.getProperty(VAR_SGE_ROOT) + "/bin/" + Host.localHostArch + "/qping";
         String port = (component.equalsIgnoreCase("qmaster")) ? variables.getProperty(VAR_SGE_QMASTER_PORT) : (component.equalsIgnoreCase("execd")) ? variables.getProperty(VAR_SGE_EXECD_PORT) : "-1";
         try {
@@ -700,7 +701,7 @@ public class Util implements Config{
         }
 
         return false;
-    }
+    }*/
 
     /**
      * Returns with the file system type of the given directory. If the directory does not exist first creates it
@@ -714,8 +715,7 @@ public class Util implements Config{
     }
 
     public static String getDirFSType(String host, Properties variables, String dir) {
-        VariableSubstitutor vs = new VariableSubstitutor(variables);
-        CommandExecutor cmdExec = null;
+        VariableSubstitutor vs = new VariableSubstitutor(variables);        
         String result = "";
 
         dir = vs.substituteMultiple(dir, null);
@@ -727,14 +727,14 @@ public class Util implements Config{
         try {
             // Call the 'fstype' script of the proper architecture
             String fstypeScript = "${cfg.sge.root}/utilbin/${localhost.arch}/fstype";
-            cmdExec = new CommandExecutor(variables, variables.getProperty(VAR_SHELL_NAME), host, vs.substituteMultiple(fstypeScript, null), dir);
-            cmdExec.execute();
+            RemoteCommand fstypeCmd = new RemoteCommand(variables, host, vs.substituteMultiple(fstypeScript, null), dir);
+            fstypeCmd.execute();
 
-            if (cmdExec.getExitValue() == 0) {
-                result = cmdExec.getOutput().firstElement().trim();
+            if (fstypeCmd.getExitValue() == 0) {
+                result = fstypeCmd.getOutput().firstElement().trim();
                 Debug.trace("FSType of '" + dir + "' is '" + result +"'.");
             } else {
-                Debug.error("Failed to get the FSType of the directory '" + dir + "'! Error: " + cmdExec.getError());
+                Debug.error("Failed to get the FSType of the directory '" + dir + "'! Error: " + fstypeCmd.getError());
             }
         } catch (Exception e) {
             Debug.error(e);
@@ -751,19 +751,18 @@ public class Util implements Config{
     public static String[] getUserGroups(String host, Properties variables, String user) {
         String[] groups = null;
         ExtendedFile tmpFile = null;
-        CommandExecutor cmdExec = null;
 
         try {
             String command = "groups";
-            cmdExec = new CommandExecutor(variables, variables.getProperty(VAR_SHELL_NAME), host, command, user);
-            cmdExec.execute();
+            RemoteCommand groupCmd = new RemoteCommand(variables, host, command, user);
+            groupCmd.execute();
 
-            if (cmdExec.getExitValue() == 0) {
-                groups = cmdExec.getOutput().firstElement().trim().split(" ");
+            if (groupCmd.getExitValue() == 0) {
+                groups = groupCmd.getOutput().firstElement().trim().split(" ");
 
                 Debug.trace("Group of user '" + user + "' are '" + Arrays.toString(groups) + "'.");
             } else {
-                Debug.error("Failed to get the group id's of user '" + user + "'! Error: " + cmdExec.getError());
+                Debug.error("Failed to get the group id's of user '" + user + "'! Error: " + groupCmd.getError());
             }
         } catch (Exception ex) {
             Debug.error("Failed to get the group id's of user '" + user + "'! " + ex);
@@ -935,7 +934,7 @@ public class Util implements Config{
         return new SimpleDateFormat("yyyy.MM.dd_HH:mm:ss").format(new Date());
     }
 
-    public static boolean runAsAdminUser(String host, String arch, String sgeRoot, String adminUser, String command, Properties variables) throws Exception {
+    /*public static boolean runAsAdminUser(String host, String arch, String sgeRoot, String adminUser, String command, Properties variables) throws Exception {
         CommandExecutor cmdExec = null;
 
         Debug.trace("Run '" + command + "' as '" + adminUser + "' user.");
@@ -949,10 +948,10 @@ public class Util implements Config{
         } else {
             return false;
         }
-    }
+    }*/
 
     public static boolean isWindowsMode(Properties p) {
-        String mode = p.getProperty(ARG_MODE);
+        String mode = p.getProperty(ARG_CONNECT_MODE);
         if (mode != null && mode.equalsIgnoreCase(CONST_MODE_WINDOWS)) {
             return true;
         }

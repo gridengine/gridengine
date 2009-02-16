@@ -39,7 +39,7 @@ public interface Config {
     public static final String VAR_CONF_FILE_DIR    = "templates/";
     public static final String VAR_CONF_FILE_NAME   = "inst_template.conf";
 
-    public static final String CONST_DEFAULT_WINDOWS_SPOOL_DIR = "/dev/fs/C/";
+    public static final String CONST_DEFAULT_WINDOWS_SPOOL_DIR = "/var/spool/";
     public static final String CONST_MODE_WINDOWS = "windows";
 
     public static final String VAR_SGE_ROOT    = "cfg.sge.root";
@@ -60,6 +60,8 @@ public interface Config {
     public static final String VAR_DB_SPOOLING_SERVER = "cfg.db.spooling.server";
     public static final String VAR_SPOOLING_METHOD = "cfg.spooling.method";
     public static final String VAR_WINDOWS_SUPPORT = "cfg.windows.support";
+    public static final String VAR_WIN_DOMAIN_ACCESS = "cfg.win.domain.access";
+    public static final String VAR_WIN_ADMIN_NAME = "cfg.win.admin.name";
     public static final String VAR_HOSTNAME_RESOLVING = "cfg.hostname.resolving";
     public static final String VAR_JVM_LIB_PATH = "cfg.sge.jvm.lib.path";
     public static final String VAR_DB_SPOOLING_DIR = "cfg.db.spooling.dir";
@@ -139,7 +141,7 @@ public interface Config {
     public static final String ARG_INSTALL_TIMEOUT = "install_timeout";
     
     public static final String ARG_CONNECT_USER = "connect_user";
-    public static final String ARG_MODE = "install_mode";
+    public static final String ARG_CONNECT_MODE = "connect_mode";
 
     public static final int EXIT_VAL_SUCCESS = 0;
     public static final int EXIT_VAL_BDB_SERVER_SPOOL_DIR_PERM_DENIED = 10;

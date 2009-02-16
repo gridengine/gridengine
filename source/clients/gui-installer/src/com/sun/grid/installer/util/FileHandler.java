@@ -42,6 +42,7 @@ import java.util.ArrayList;
 import java.util.Vector;
 
 import com.izforge.izpack.util.Debug;
+import com.sun.grid.installer.util.cmd.SimpleLocalCommand;
 
 /**
  * General file handling methods
@@ -134,11 +135,11 @@ public class FileHandler {
 
         // call 'ls -la' command
         //TODO: Ensure that /usr/bin has ls !!!
-        CommandExecutor commandExecutor = new CommandExecutor("ls", "-la", filePath);
-        commandExecutor.execute();
+        SimpleLocalCommand cmd = new SimpleLocalCommand("ls -la "+filePath);
+        cmd.execute();
 
         // process output
-        Vector<String> result = commandExecutor.getOutput();       
+        Vector<String> result = cmd.getOutput();
         String line = "";
         if (file.isFile() && result.size() != 0) {
             line = result.firstElement();

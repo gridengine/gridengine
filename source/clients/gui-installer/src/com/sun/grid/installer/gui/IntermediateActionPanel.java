@@ -8,9 +8,9 @@ import com.izforge.izpack.installer.InstallData;
 import com.izforge.izpack.installer.InstallerFrame;
 import com.izforge.izpack.util.Debug;
 import com.izforge.izpack.util.VariableSubstitutor;
-import com.sun.grid.installer.util.CommandExecutor;
 import com.sun.grid.installer.util.ExtendedFile;
 import com.sun.grid.installer.util.Util;
+import com.sun.grid.installer.util.cmd.GetArchCommand;
 import java.util.Enumeration;
 import java.util.Properties;
 import javax.swing.JOptionPane;
@@ -39,10 +39,10 @@ public class IntermediateActionPanel extends ActionPanel {
         // Only once...
         if (getNumOfExecution() == 0) {
             // Localhost arch
-            CommandExecutor cmd = new CommandExecutor(idata.getVariable(VAR_SGE_ROOT) + "/util/arch");
-            cmd.execute();
-            if (cmd.getExitValue() == 0 && cmd.getOutput().size() > 0) {
-                Host.localHostArch = cmd.getOutput().get(0).trim();
+            GetArchCommand archCmd = new GetArchCommand(idata.getVariables(), Host.localHostName);
+            archCmd.execute();
+            if (archCmd.getExitValue() == 0 && archCmd.getOutput().size() > 0) {
+                Host.localHostArch = archCmd.getOutput().get(0).trim();
                 idata.setVariable(VAR_LOCALHOST_ARCH, Host.localHostArch);
                 Debug.trace("localhost.arch='" + idata.getVariable(VAR_LOCALHOST_ARCH) + "'");
             }

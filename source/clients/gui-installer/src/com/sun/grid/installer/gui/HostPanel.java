@@ -36,10 +36,12 @@ import com.izforge.izpack.installer.IzPanel;
 import com.izforge.izpack.rules.RulesEngine;
 import com.izforge.izpack.util.Debug;
 import com.izforge.izpack.util.VariableSubstitutor;
-import com.sun.grid.installer.util.CommandExecutor;
+import com.sun.grid.installer.util.cmd.CmdExec;
+import com.sun.grid.installer.util.cmd.CopyExecutableCommand;
+import com.sun.grid.installer.util.cmd.GetArchCommand;
+import com.sun.grid.installer.util.cmd.RemoteComponentScriptCommand;
 import com.sun.grid.installer.util.Config;
 import com.sun.grid.installer.util.Util;
-import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.event.ActionListener;
@@ -85,7 +87,6 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumn;
-import javax.swing.text.Utilities;
 import net.n3.nanoxml.XMLElement;
 
 public class HostPanel extends IzPanel implements Config {
@@ -538,7 +539,11 @@ public class HostPanel extends IzPanel implements Config {
                 parent.getRules().isConditionTrue(COND_SPOOLING_BDBSERVER, idata.getVariables());
         isExpressInst = parent.getRules().isConditionTrue(COND_EXPRESS_INSTALL, idata.getVariables());
 
-        enableInstallButton(false);
+        //Disable only is we have no reachable host!
+        if (((HostSelectionTableModel)tables.get(1).getModel()).getRowCount() == 0) {
+           enableInstallButton(false);
+        }
+
         triggerInstallButton(true);
         setupComponentSelectionPanel();
         setColumnsWidth();
@@ -577,7 +582,7 @@ public class HostPanel extends IzPanel implements Config {
             }
 
             // override the tooltip for perm_execd_spool_dir state dependig in the mode
-            if (isExpressInst) {
+            if (isIsExpressInst()) {
                 value = vs.substituteMultiple((String) idata.langpack.get("state.perm_execd_spool_dir.tooltip.global"), null);
             } else {
                 value = vs.substituteMultiple((String) idata.langpack.get("state.perm_execd_spool_dir.tooltip.local"), null);
@@ -597,20 +602,23 @@ public class HostPanel extends IzPanel implements Config {
                 String arch = "";
                 String message = "";
                 if (isQmasterInst && !isQmasterExist) {
-                    host.add(idata.getVariable(VAR_QMASTER_HOST));
-                    resolveHosts(Host.Type.HOSTNAME, host, true, false, false, false, true, true, idata.getVariable(VAR_EXECD_SPOOL_DIR));
+                    if (!idata.getVariable(VAR_QMASTER_HOST).equals("")) {
+                        host.add(idata.getVariable(VAR_QMASTER_HOST));
 
-                    if (HostSelectionTableModel.getQmasterHost() == null) {
-                        try {
-                            arch = lists.get(0).get(0).getArchitecture();
-                        } finally {
-                            prop.setProperty(PARAMETER_1, arch);
-                        }
+                        resolveHosts(Host.Type.HOSTNAME, host, true, false, (isShadowdInst == true) ? true : false, false, true, true, idata.getVariable(VAR_EXECD_SPOOL_DIR));
 
-                        if (!arch.equals("")) {
-                            vs = new VariableSubstitutor(prop);
-                            message = vs.substituteMultiple(idata.langpack.getString("warning.qmaster.arch.unsupported.message"), null);
-                            emitWarning(idata.langpack.getString("installer.warning"), message);
+                        if (HostSelectionTableModel.getQmasterHost() == null) {
+                            try {
+                                arch = lists.get(0).get(0).getArchitecture();
+                            } finally {
+                                prop.setProperty(PARAMETER_1, arch);
+                            }
+
+                            if (!arch.equals("")) {
+                                vs = new VariableSubstitutor(prop);
+                                message = vs.substituteMultiple(idata.langpack.getString("warning.qmaster.arch.unsupported.message"), null);
+                                emitWarning(idata.langpack.getString("installer.warning"), message);
+                            }
                         }
                     }
                 }
@@ -738,7 +746,7 @@ public class HostPanel extends IzPanel implements Config {
         SwingUtilities.invokeLater(new Runnable() {
 
             public void run() {
-                componentSelectionPanel.setVisible(!isExpressInst);
+                componentSelectionPanel.setVisible(!isIsExpressInst());
                 if (!isExecdInst) {
                     execCB.setSelected(false);
                     execCB.setVisible(false);
@@ -747,13 +755,13 @@ public class HostPanel extends IzPanel implements Config {
                     execCB.setVisible(true);
                 }
                 // Shadow component is not default on
-        if (!isShadowdInst) {
-                shadowCB.setSelected(false);
-                shadowCB.setVisible(false);
-        } else {
-            shadowCB.setSelected(true);
-            shadowCB.setVisible(true);
-        }
+                if (!isShadowdInst) {
+                   shadowCB.setSelected(false);
+                   shadowCB.setVisible(false);
+                } else {
+                   shadowCB.setSelected(false);
+                   shadowCB.setVisible(true);
+                }
                 qmasterCB.setSelected(false);
                 qmasterCB.setVisible(false);
                 bdbCB.setSelected(false);
@@ -810,7 +818,7 @@ public class HostPanel extends IzPanel implements Config {
                                     column.setMaxWidth(minWidth);
                                 }
                             } else if (header.equals(getLabel("column.exec.spool.dir.label"))) {
-                                if (isExecdInst && !isExpressInst) {
+                                if (isExecdInst && !isIsExpressInst()) {
                                     column.setMinWidth(15);
                                     column.setMaxWidth(Integer.MAX_VALUE);
                                     column.setPreferredWidth(minWidth);
@@ -980,7 +988,7 @@ public class HostPanel extends IzPanel implements Config {
                 for (Iterator<Runnable> it = waitingTasks.iterator(); it.hasNext();) {
                     TestableTask runnable = (TestableTask) it.next();
                     runnable.setTestMode(true);
-                    runnable.setTestExitValue(CommandExecutor.EXITVAL_INTERRUPTED);
+                    runnable.setTestExitValue(CmdExec.EXITVAL_INTERRUPTED);
                     runnable.setTestOutput(new Vector<String>());
                     try {
                         Debug.trace("Cancel task: " + runnable.getTaskName());
@@ -1036,7 +1044,7 @@ public class HostPanel extends IzPanel implements Config {
             threadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(Util.RESOLVE_THREAD_POOL_SIZE);
             threadPool.setThreadFactory(new InstallerThreadFactory());
         }
-
+        
         progressTimer = new Timer("ResolveTimer");
         for (Host host : hosts) {
             host = model.addHost(host);
@@ -1354,7 +1362,7 @@ public class HostPanel extends IzPanel implements Config {
                 }
 
                 //If windows host, need to set a LOCAL_SPOOL_DIR if empty!
-                if (!isExpressInst && h.getArchitecture().startsWith("win") &&
+                if (!isIsExpressInst() && h.getArchitecture().startsWith("win") &&
                         h.getSpoolDir().equals(idata.getVariable(VAR_EXECD_SPOOL_DIR))) {
                     noLocalSpoolWindows++;
                 }
@@ -1789,10 +1797,11 @@ public class HostPanel extends IzPanel implements Config {
                     completed = singleThreadPool.getCompletedTaskCount();
                 }
 
-                //If windows host, need to set a LOCAL_SPOOL_DIR if empty!
-                if (isExpressInst && h.getArchitecture().startsWith("win") &&
-                        h.getSpoolDir().equals(variablesCopy.getProperty(VAR_EXECD_SPOOL_DIR))) {
-                    h.setSpoolDir(CONST_DEFAULT_WINDOWS_SPOOL_DIR + variablesCopy.getProperty(VAR_SGE_CELL_NAME) + "_execdspool");
+                //All windows need windows specified varibles to be set as well
+                if (h.getArchitecture().startsWith("win")) {
+                    variablesCopy.setProperty(VAR_WINDOWS_SUPPORT, "true");
+                    variablesCopy.setProperty(VAR_WIN_DOMAIN_ACCESS, "true");
+                    //TODO: What about WIN_ADMIN_USER?
                 }
 
                 //BDB, Qmaster, Shadowd instlalation go to special singlethreadPool
@@ -1855,7 +1864,6 @@ public class HostPanel extends IzPanel implements Config {
                         if (h.getState() != Host.State.SUCCESS) {
                             HostInstallTableModel updateModel;
                             HostInstallTableModel installModel = (HostInstallTableModel) tables.get(0).getModel();
-                            CommandExecutor cmd;
                             for (Host host : installList) {
                                 updateModel = (HostInstallTableModel) tables.get(2).getModel();
                                 installModel.setHostState(host, Host.State.FAILED_DEPENDENT_ON_PREVIOUS);
@@ -2094,6 +2102,13 @@ public class HostPanel extends IzPanel implements Config {
     public RulesEngine getRuleEngine() {
         return parent.getRules();
     }
+
+    /**
+     * @return the isExpressInst
+     */
+    public boolean isIsExpressInst() {
+        return isExpressInst;
+    }
 }
 
 class ResolveHostTask extends TestableTask {
@@ -2184,11 +2199,10 @@ class GetArchTask extends TestableTask {
         int exitValue = getTestExitValue();
         Vector<String> output = getTestOutput();
         if (!isIsTestMode()) {
-            CommandExecutor archCmd = new CommandExecutor(panel.getInstallData().getVariables(), panel.getInstallData().getVariable(VAR_SHELL_NAME), host.getHostname(),
-                    "'if [ ! -s " + SGE_ROOT + "/util/arch ]; then echo \"File " + SGE_ROOT + "/util/arch does not exist or empty.\" ; echo ___EXIT_CODE_"+ CommandExecutor.EXITVAL_MISSING_FILE +"___ ; exit " + CommandExecutor.EXITVAL_MISSING_FILE + "; else " + SGE_ROOT + "/util/arch ; fi'");
-            archCmd.execute();
-            exitValue = archCmd.getExitValue();
-            output = archCmd.getOutput();
+            GetArchCommand cmd = new GetArchCommand(panel.getInstallData().getVariables(), host.getHostname());
+            cmd.execute();
+            exitValue = cmd.getExitValue();
+            output = cmd.getOutput();
         }
 //        JTabbedPane tab = panel.getTabbedPane();
         int pos;
@@ -2197,11 +2211,15 @@ class GetArchTask extends TestableTask {
         if (exitValue == 0 && output.size() > 0) {
             host.setArchitecture(output.get(0));
             state = Host.State.REACHABLE;
+            //If windows host, need to set a LOCAL_SPOOL_DIR if empty!
+            if (host.getArchitecture().startsWith("win") && host.getSpoolDir().equals(panel.getInstallData().getVariables().getProperty(VAR_EXECD_SPOOL_DIR))) {
+               host.setSpoolDir(CONST_DEFAULT_WINDOWS_SPOOL_DIR + panel.getInstallData().getVariables().getProperty(VAR_SGE_QMASTER_PORT));
+            }
             tabPos = 1;
-        } else if (exitValue == CommandExecutor.EXITVAL_MISSING_FILE) {
+        } else if (exitValue == CmdExec.EXITVAL_MISSING_FILE) {
             state = Host.State.MISSING_FILE;
             tabPos = 2;
-        } else if (exitValue == CommandExecutor.EXITVAL_INTERRUPTED) {
+        } else if (exitValue == CmdExec.EXITVAL_INTERRUPTED) {
             state = Host.State.CANCELED;
             tabPos = 2;
         } else {
@@ -2287,7 +2305,7 @@ class CheckHostTask extends TestableTask {
 
             // Fill up cfg.exec.spool.dir.local
             if (host.isExecutionHost() && !host.getSpoolDir().equals(variables.getProperty(VAR_EXECD_SPOOL_DIR))) {
-                variables.setProperty(VAR_EXECD_SPOOL_DIR_LOCAL, host.getSpoolDir());
+                   variables.setProperty(VAR_EXECD_SPOOL_DIR_LOCAL, host.getSpoolDir());
             } else {
                 variables.setProperty(VAR_EXECD_SPOOL_DIR_LOCAL, "");
             }
@@ -2303,15 +2321,14 @@ class CheckHostTask extends TestableTask {
             checkHostFile = Util.fillUpTemplate(checkHostTempFile, checkHostFile, variables);
 
             Debug.trace("Copy auto_conf file to '" + host.getHostname() + ":" + checkHostFile + "'.");
-            CommandExecutor cmd = new CommandExecutor(variables, variables.getProperty(VAR_COPY_COMMAND), checkHostFile,
-                    host.getHostname() + ":" + checkHostFile + " && if [ ! -s " + checkHostFile + " ]; then echo 'File " + checkHostFile + " does not exist or empty.' ; echo ___EXIT_CODE_1___ ; exit 1; fi");
-            cmd.execute();
-            exitValue = cmd.getExitValue();
-            if (exitValue == CommandExecutor.EXITVAL_TERMINATED) {
+            CopyExecutableCommand copyCmd = new CopyExecutableCommand(variables, host.getHostname(), checkHostFile, checkHostFile);
+            copyCmd.execute();
+            exitValue = copyCmd.getExitValue();
+            if (exitValue == CmdExec.EXITVAL_TERMINATED) {
                 //Set the log content
                 newState = Host.State.COPY_TIMEOUT_CHECK_HOST;
                 Debug.error("Timeout while copying the " + checkHostFile + " script to host " + host.getHostname() + " via " + variables.getProperty(VAR_COPY_COMMAND) + " command!\nMaybe a password is expected. Try the command in the terminal first.");
-            } else if (exitValue == CommandExecutor.EXITVAL_INTERRUPTED) {
+            } else if (exitValue == CmdExec.EXITVAL_INTERRUPTED) {
                 //Set the log content
                 newState = Host.State.CANCELED;
                 Debug.error("Cancelled copy action!");
@@ -2319,16 +2336,11 @@ class CheckHostTask extends TestableTask {
                 newState = Host.State.COPY_FAILED_CHECK_HOST;
                 Debug.error("Error when copying the file.");
             } else {
-                new CommandExecutor(variables, variables.getProperty(VAR_SHELL_NAME), host.getHostname(), "chmod", "755", checkHostFile).execute();
-                cmd = new CommandExecutor(variables, 2 * Util.RESOLVE_TIMEOUT, //Set install timeout to 2* RESOLVE_TIMEOUT
-                        variables.getProperty(VAR_SHELL_NAME),
-                        host.getHostname(), checkHostFile, String.valueOf(host.isBdbHost()),
-                        String.valueOf(host.isQmasterHost()), String.valueOf(host.isShadowHost()),
-                        String.valueOf(host.isExecutionHost()));
+                RemoteComponentScriptCommand checkCmd = new RemoteComponentScriptCommand(variables, 2*Util.RESOLVE_TIMEOUT, host, checkHostFile);
                 //TODO: Beta and later should delete the file as part of the command add - , ";", "rm", "-f", localScript);
                 //Debug.trace("Start installation: "+cmd.getCommands());
-                cmd.execute();                
-                exitValue = cmd.getExitValue();
+                checkCmd.execute();
+                exitValue = checkCmd.getExitValue();
 
                 // Set the new state of the host depending on the return value of the script
                 switch (exitValue) {
@@ -2342,8 +2354,8 @@ class CheckHostTask extends TestableTask {
                     case EXIT_VAL_BDB_SPOOL_DIR_EXISTS: newState = Host.State.BDB_SPOOL_DIR_EXISTS; break;
                     case EXIT_VAL_ADMIN_USER_NOT_KNOWN: newState = Host.State.ADMIN_USER_NOT_KNOWN; break;
                     case EXIT_VAL_BDB_SPOOL_WRONG_FSTYPE: newState = Host.State.BDB_SPOOL_DIR_WRONG_FSTYPE; break;
-                    case CommandExecutor.EXITVAL_INTERRUPTED: newState = Host.State.CANCELED; break;
-                    case CommandExecutor.EXITVAL_TERMINATED: newState = Host.State.OPERATION_TIMEOUT; break;
+                    case CmdExec.EXITVAL_INTERRUPTED: newState = Host.State.CANCELED; break;
+                    case CmdExec.EXITVAL_TERMINATED: newState = Host.State.OPERATION_TIMEOUT; break;
                     default: newState = Host.State.UNKNOWN_ERROR; break;
                 }
             }
@@ -2377,6 +2389,7 @@ class UpdateInstallProgressTimerTask extends TimerTask {
     private JProgressBar mainBar;
     private JButton cancelButton;
     private String colName;
+    boolean dynamicRange = true;
     
     private static int instanceCounter = 0;
 
@@ -2398,10 +2411,16 @@ class UpdateInstallProgressTimerTask extends TimerTask {
         SwingUtilities.invokeLater(new Runnable() {
 
             public void run() {
-                int initialTaskCount = (taskCount < 0) ? getTaskCount() : taskCount;
+                int taskMaxCount;
+                if (taskCount > 0) {
+                    dynamicRange = false;
+                    taskMaxCount = taskCount;
+                } else {
+                    taskMaxCount = getTaskCount();
+                }
                 mainBar.setMinimum(0);
                 mainBar.setValue(getCompletedTaskCount());
-                mainBar.setMaximum(initialTaskCount);
+                mainBar.setMaximum(taskMaxCount);
                 mainBar.setString(prefix);
                 //mainBar.setString(prefix + " " + cur + " / " + max);
                 mainBar.setStringPainted(true);
@@ -2470,7 +2489,9 @@ class UpdateInstallProgressTimerTask extends TimerTask {
 
                 public void run() {
                     mainBar.setValue(getCompletedTaskCount());
-                    mainBar.setMaximum(getTaskCount());
+                    if (dynamicRange == true) {           //Use only when we didn't get taskMaxCoubt in the begining
+                       mainBar.setMaximum(getTaskCount());
+                    }
                 }
             });
 
@@ -2558,7 +2579,7 @@ class InstallTask extends TestableTask {
         installModel.setHostState(host, Host.State.PROCESSING);
         int tabPos = 0;
 
-        CommandExecutor cmd = null;
+        RemoteComponentScriptCommand installCmd = null;
         String log = "";
         String errLog = "";
         boolean prereqFailed = false;
@@ -2599,65 +2620,54 @@ class InstallTask extends TestableTask {
                 //Need to copy the script to the final location first
                 //TODO: Do this only when not on a shared FS (file is not yet accessible)
                 Debug.trace("Copy auto_conf file to '" + host.getHostname() + ":" + autoConfFile + "'.");
-                cmd = new CommandExecutor(variables, variables.getProperty(VAR_COPY_COMMAND), autoConfFile, host.getHostname() + ":" + autoConfFile, " && if [ ! -s " + autoConfFile + " ]; then echo 'File " + autoConfFile + " does not exist or empty.'; echo ___EXIT_CODE_1___  ; exit 1; fi");
-                cmd.execute();
-                exitValue = cmd.getExitValue();
-                if (exitValue == CommandExecutor.EXITVAL_TERMINATED) {
+                CopyExecutableCommand copyCmd = new CopyExecutableCommand(variables, host.getHostname(), autoConfFile, autoConfFile);
+                copyCmd.execute();
+                exitValue = copyCmd.getExitValue();
+                if (exitValue == CmdExec.EXITVAL_TERMINATED) {
                     setHostState(Host.State.COPY_TIMEOUT_INSTALL_COMPONENT);
-                    cmd.setFirstLogMessage("Timeout while copying the " + autoConfFile + " script to host " + host.getHostname() + " via " + variables.getProperty(VAR_COPY_COMMAND) + " command!\nMaybe a password is expected. Try the command in the terminal first.");
-                    log = cmd.generateLog(msgs);
+                    copyCmd.setFirstLogMessage("Timeout while copying the " + autoConfFile + " script to host " + host.getHostname() + " via " + variables.getProperty(VAR_COPY_COMMAND) + " command!\nMaybe a password is expected. Try the command in the terminal first.");
+                    log = copyCmd.generateLog(msgs);
                     installModel.setHostLog(host, log);
-                } else if (exitValue == CommandExecutor.EXITVAL_INTERRUPTED) {
+                } else if (exitValue == CmdExec.EXITVAL_INTERRUPTED) {
                     //Set the log content
                     setHostState(Host.State.CANCELED);
-                    cmd.setFirstLogMessage("Cancelled copy action!");
-                    log = cmd.generateLog(msgs);
+                    copyCmd.setFirstLogMessage("Cancelled copy action!");
+                    log = copyCmd.generateLog(msgs);
                     installModel.setHostLog(host, log);
                 } else if (exitValue != 0) {
                     setHostState(Host.State.COPY_FAILED_INSTALL_COMPONENT);
-                    cmd.setFirstLogMessage("Error when copying the file " + autoConfFile + "to host " + host.getHostname() + " via " + variables.getProperty(VAR_COPY_COMMAND) + " command!\n");
-                    log = cmd.generateLog(msgs);
+                    copyCmd.setFirstLogMessage("Error when copying the file " + autoConfFile + "to host " + host.getHostname() + " via " + variables.getProperty(VAR_COPY_COMMAND) + " command!\n");
+                    log = copyCmd.generateLog(msgs);
                     installModel.setHostLog(host, log);
-                } else {
-                    new CommandExecutor(variables, variables.getProperty(VAR_SHELL_NAME), host.getHostname(), "chmod", "755", autoConfFile).execute();
-                    int timeout = 60000; //Set install timeout to 60secs
-                    if (host.isQmasterHost()) { //Qmaster to 2mins
-                        timeout = timeout * 2;
-                    } else if (host.isFirstTask()) {
+                } else {                    
+                    int timeout = Util.INSTALL_TIMEOUT;
+                    if (host.isFirstTask()) {
                         String cspHosts = variables.getProperty(VAR_ALL_CSPHOSTS);
                         int cspCount = (cspHosts == null) ? 0 : cspHosts.split(" ").length;
                         if (cspCount > 2) {
-                            timeout = (int) (timeout * (cspCount / 2.0)); //We add 30sec to the timeout for every host we need to copy the CSP certificates to
+                            timeout += 30000 * cspCount; //We add 30sec to the timeout for every host we need to copy the CSP certificates to
                         }
                     }
-
-
-                    cmd = new CommandExecutor(variables, timeout,
-                            variables.getProperty(VAR_SHELL_NAME),
-                            host.getHostname(), autoConfFile, String.valueOf(host.isBdbHost()),
-                            String.valueOf(host.isQmasterHost()), String.valueOf(host.isShadowHost()),
-                            String.valueOf(host.isExecutionHost()), String.valueOf(host.isAdminHost()),
-                            String.valueOf(host.isSubmitHost()));
-                    //TODO: Beta and later should delete the file as part of the command add - , ";", "rm", "-f", localScript);
+                    installCmd = new RemoteComponentScriptCommand(variables, timeout, host, autoConfFile);
                     
                     //Debug.trace("Start installation: "+cmd.getCommands());
-                    cmd.execute();
-                    exitValue = cmd.getExitValue();
+                    installCmd.execute();
+                    exitValue = installCmd.getExitValue();
                 }
             }
             if (exitValue == 0) {
                 state = Host.State.SUCCESS;
                 tabPos = 1;
-            } else if (exitValue == CommandExecutor.EXITVAL_INTERRUPTED) {
+            } else if (exitValue == CmdExec.EXITVAL_INTERRUPTED) {
                 state = Host.State.CANCELED;
                 tabPos = 2;
-                if (cmd != null) {
-                    cmd.setFirstLogMessage("Task has been canceled by the user.");
+                if (installCmd != null) {
+                    installCmd.setFirstLogMessage("Task has been canceled by the user.");
                 }
             } else if (exitValue == EXIT_VAL_FAILED_ALREADY_INSTALLED_COMPONENT) {
                 state = Host.State.FAILED_ALREADY_INSTALLED_COMPONENT;
                 tabPos = 2;
-            } else if (exitValue == CommandExecutor.EXITVAL_TERMINATED) {
+            } else if (exitValue == CmdExec.EXITVAL_TERMINATED) {
                 state = Host.State.OPERATION_TIMEOUT;
                 tabPos = 2;
             } else {
@@ -2668,19 +2678,19 @@ class InstallTask extends TestableTask {
             Debug.error(e);
             state = Host.State.CANCELED;
             tabPos = 2;
-            if (cmd != null) {
-                cmd.setFirstLogMessage("Task has been canceled by the user.");
+            if (installCmd != null) {
+                installCmd.setFirstLogMessage("Task has been canceled by the user.");
             }
         } catch (Exception e) {
             Debug.error(e);
             state = Host.State.FAILED;
             tabPos = 2;
-            if (cmd != null) {
-                cmd.setFirstLogMessage("Message was " + e.getMessage());
+            if (installCmd != null) {
+                installCmd.setFirstLogMessage("Message was " + e.getMessage());
             }
         } finally {
-            if (cmd != null) {
-                log = cmd.generateLog(msgs);
+            if (installCmd != null) {
+                log = installCmd.generateLog(msgs);
             }
             //Unset the special variables
             variables.remove(VAR_FIRST_TASK);
@@ -2712,7 +2722,7 @@ class InstallTask extends TestableTask {
 abstract class TestableTask implements Runnable, Config {
 
     private boolean testMode = false;
-    private int testExitValue = CommandExecutor.EXITVAL_INITIAL;
+    private int testExitValue = CmdExec.EXITVAL_INITIAL;
     private Vector<String> testOutput = new Vector<String>();
     private String taskName = "";
 

@@ -318,7 +318,7 @@ fi
 GenerateResultOutput()
 {
 	COMPONENT=$1
-	LOG_FILE=`echo $2 | grep "Install log can be found in:" | awk '{print $NF}' | tail -1`
+	LOG_FILE=`echo "$2" | grep "Install log can be found in:" | awk '{print $NF}' | tail -1`
 	EXIT_CODE=$3
 	
 	if [ -n "$EXIT_CODE" -a "$EXIT_CODE" -ne 0 ]; then

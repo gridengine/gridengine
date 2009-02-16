@@ -1,3 +1,26 @@
+LP-2009-02-16-0: Bugfix:      gui-installer: Installation might fail for C shell
+                              users
+                 Bugfix:      gui-installer: Windows installation via rsh does
+                              not work
+                 Bugfix:      gui-installer: Infinite loop when installing
+                              win execd host due to missing LOCAL_EXECD_SPOOL
+                 Belongs to:  LP-2009-02-13-1
+                 Bugfix:      gui-installer: Install button not enabled when
+                              going back and forth
+                 Bugfix:      gui-installer: ant clean target does not delete
+                              dist and build directories
+                 Bugfix:      gui-installer: When installing qmaster with shadow
+                              daemons, it should be shadowd too
+                 Bugfix:      gui-installer: Windows hosts should have a
+                              suggested default local spool dir
+                 Bugfix:      gui-installer: Install progress bar goes backwards
+                              for a while
+                 Bugfix:      gui-installer: Log might be empty due to '!' in
+                              command output
+                 Enhancem:    gui-installer: Increased default timeout values
+                 Enhancem:    gui-installer: Support for windows connect_mode
+                 Review:      ZG
+
 CR-2009-02-16-0: Bugfix:      o sge_execd may crash at start-up time due to 
                                 fd_set used incorrectly in sge_close_all_fds()
                  Bugster:     6288945

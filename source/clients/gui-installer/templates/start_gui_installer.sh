@@ -35,6 +35,7 @@ ErrUsage()
 {
    echo "Usage: `basename $0` [-help] [-resolve_pool=<num>] [-resolve_timeout=<sec>]"
    echo "       [-install_pool=<num>] [-install_timeout=<sec>] [-connect_user=<usr>]"
+   echo "       [-connect_mode=windows]"
    echo ""
    echo "   <num> ... decimal number greater than zero"
    echo "   <sec> ... number of seconds, must be greater then zero"

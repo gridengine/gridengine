@@ -4,7 +4,7 @@
 .\" Copyright: 2009 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: jsv_script_interface.3,v $     Last Update: $Date: 2009/02/16 07:23:22 $     Revision: $Revision: 1.1 $
+.\" $RCSfile: jsv_script_interface.3,v $     Last Update: $Date: 2009/02/16 09:33:48 $     Revision: $Revision: 1.2 $
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
 .\"
@@ -28,7 +28,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH JSV_SCRIPT_INTERFACE 3 "$Date: 2009/02/16 07:23:22 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH JSV_SCRIPT_INTERFACE 3 "$Date: 2009/02/16 09:33:48 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 jsv_is_param, jsv_get_param, jsv_add_param, jsv_mod_param, jsv_del_param,
@@ -132,7 +132,7 @@ The functions documented here implement the server side of the JSV protocol as i
 described in the man page 
 .M jsv 1 .
 These script functions are available in Bourne shell, TCL or Perl scripts after 
-sourcing/including the files jsv_incude.sh, jsv_include.tcl or JSV.pm.
+sourcing/including the files jsv_inlcude.sh, jsv_include.tcl or JSV.pm.
 The files and corresponding JSV script templates are located in the directory
 $SGE_ROOT/util/resources/jsv.
 .\"
@@ -161,12 +161,12 @@ stream of the client or in the message file of the master process.
 This function returns whether or not a specific job parameters is 
 available for the job which is currently being verified. Either the 
 string \fItrue\fP or \fIfalse\fP will be returned. The availability/absence 
-of a job parameter does not mean that the corresponding commandline 
+of a job parameter does not mean that the corresponding command line 
 switch was used/not used. 
 .PP
 The following values are allowed for \fIparam_name\fP. Corresponding 
 \fIqsub\fP/\fIqrsh\fP/\fIqsh\fP/... switches next to the parameter name 
-are mentioned only if they are different from the commandline switches.
+are mentioned only if they are different from the command line switches.
 .PP
 Find additional information in 
 .M qsub 1
@@ -176,7 +176,7 @@ be found in
 .M jsv 1
 .PP
 .nf
-   \fBparam_name\fP              \fBcommandline switch/description\fP
+   \fBparam_name\fP              \fBcommand line switch/description\fP
    a
    ac                      combination of -ac, -sc, -dc
    ar
@@ -245,7 +245,7 @@ This function changes the job parameter (\fIparam_name\fP) to the value \fIparam
 If \fIparam_value\fP is an empty string then the corresponding
 job parameter will be deleted similar to the function \fBjsv_del_param\fP(). 
 As a result the job parameter is not available as if
-the corresponding commandline switch was not specified during job submission.
+the corresponding command line switch was not specified during job submission.
 .PP
 For boolean parameters that only accept the values \fIyes\fP or \fIno\fP it is not
 allowed to pass an empty string as \fIparam_value\fI.
@@ -303,7 +303,7 @@ variable names (\fIvariable_name\fP) in the section for the
 function \fBjsv_sub_is_param\fP().
 .\"
 .SS "jsv_sub_add_param()"
-Some job parameters are list that can contain muliple variables 
+Some job parameters are list that can contain multiple variables 
 with an optional value. 
 .PP
 This function either adds a new variable with a new value or it
@@ -336,7 +336,7 @@ If the function returns \fIfalse\fP, then the job environment variable (\fIvaria
 This function returns the value of a job environment variable
 (\fIvariable_name\fP). 
 .PP
-This variable has to be passed with the \fIqsub\fP commandline switch 
+This variable has to be passed with the \fIqsub\fP command line switch 
 \fI-v\fP or \fI-V\fP and it has to be enabled that environment variable data is 
 passed to JSV scripts. Environment variable data is passed when the 
 function \fBjsv_send_env\fP() is called in the callback function 
@@ -457,7 +457,7 @@ be also called, but only one of these functions can be used.
 This function sends an info \fImessage\fP to the client or
 master daemon instance that started the JSV script.
 .PP
-For client JSVs, this means that the commandline client will get
+For client JSVs, this means that the command line client will get
 the information and print it to the stdout stream. Server JSVs
 will print that message as an info message to the master daemon
 message file.
@@ -466,7 +466,7 @@ message file.
 This function sends a warning \fImessage\fP to the client or
 master daemon instance that started the JSV script.
 .PP
-For client JSVs, this means that the commandline client will get
+For client JSVs, this means that the command line client will get
 the information and print it to the stdout stream. Server JSVs
 will print that message as an warning message to the master daemon
 message file.
@@ -475,7 +475,7 @@ message file.
 This function sends an error \fImessage\fP to the client or
 master daemon instance that started the JSV script.
 .PP
-For client JSVs, this means that the commandline client will get
+For client JSVs, this means that the command line client will get
 the information and print it to the stdout stream. Server JSVs
 will print that message as an error message to the master daemon
 message file.
@@ -490,7 +490,7 @@ This function must be called for the functions \fBjsv_show_envs()\fP,
 \fBjsv_is_env\fP(), \fBjsv_get_env\fP(), \fBjsv_add_env\fP() and \fBjsv_mod_env\fP() to
 behave correctly. 
 .PP
-Job environmets might become very big (10K and more). This
+Job environments might become very big (10K and more). This
 will slow down the executing component (submit client or
 master daemon thread). For this reason, job environment information 
 is not passed to JSV scripts by default.
@@ -536,7 +536,7 @@ Jobs can be accepted/rejected with the following: \fBjsv_accept\fP, \fBjsv_corre
 .PP
 The following functions send messages to the calling component of a JSV
 that will either appear on the stdout stream of the client or in the
-master message file. This is especially usefull when new JSV scripts 
+master message file. This is especially useful when new JSV scripts 
 should be tested: \fPjsv_show_params\fB, \fPjsv_show_envs\fB, \fPjsv_log_info\fB, 
 \fPjsv_log_warning\fB and \fPjsv_log_error\fB
 .\"
@@ -550,7 +550,7 @@ information for the next job is scheduled to be verified.
 .\"
 .PP
 After this function returns \fBjsv_on_verify\fP() will be called. This function does
-ther verification process itself.
+there verification process itself.
 .SS "jsv_on_verify()"
 This is a callback function that has to be defined by the creator of a JSV script.
 It is called for every job and when it returns a the job will either be accepted

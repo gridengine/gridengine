@@ -172,9 +172,13 @@ ___INFO__MARK_END__-->
         <str id="install.shadowd.label.tooltip" txt="<html><b>Install shadow host</b><br><br>
         These hosts back up the functionality of sge_qmaster in case<br>
         the master host or the master daemon fails.</html>"/>
-        <str id="install.bdb.label.tooltip" txt="Install Berkeley DB"/>
-        <str id="install.mode.express.label.tooltip" txt="Express installation of the selected components"/>
-        <str id="install.mode.custom.label.tooltip" txt="Custom installation of the selected components"/>
+        <str id="install.bdb.label.tooltip" txt="<html><b>Install Berkeley DB</b><br><br>
+        Selecting it implies a Berkeley db host spooling option.<br>
+        The Grid Engine than spools data to a remote server.</html>"/>
+        <str id="install.mode.express.label.tooltip" txt="<html><b>Express installation</b><br><br>
+        Express installation of the selected components</html>"/>
+        <str id="install.mode.custom.label.tooltip" txt="<html><b>Custom installation</b><br><br>
+        Custom installation of the selected components</html>"/>
         <str id="add.remove.existing.components.label.tooltip" txt="Remove existing components" />
 
     <!-- Main Panel -->
@@ -199,7 +203,10 @@ ___INFO__MARK_END__-->
         <str id="add.product.mode.label" txt="Use CSP product mode" />
         <str id="cfg.admin.mail.label" txt="Administrator mail" />
         <!-- Tooltips -->
-        <str id="cfg.admin.user.label.tooltip" txt="<html><b>Admin user</b><br><br></html>" />
+        <str id="cfg.admin.user.label.tooltip" txt="<html><b>Admin user</b><br><br>
+        Processes will be executed under this user name.</html>" />
+        <str id="add.qmaster.host.label.tooltip" txt="<html><b>Qmaster host</b><br><br>
+        Host that will run qmaster daemon (main component).</html>" />
         <str id="cfg.sge.root.label.tooltip" txt="<html><b>The Grid Engine root directory</b><br><br>
         The directory where the the contents of the distribution media can be found.<br>
         This directory is called the root directory, or <code>$SGE_ROOT</code>. When<br>
@@ -233,9 +240,14 @@ ___INFO__MARK_END__-->
         For example, a range of 20000-20100 allows 100 jobs to run concurrently<br>
         on a single host.<br><br>
         <b>Variable: </b><code>$GID_RANGE</code></html>" />
-        <str id="cfg.shell.name.label.tooltip" txt="<html>Shell used to connect to remote host in order to install component(s)<br>Default value: <b>ssh</b><br>Other option e.g.: <b>rsh</b></html>" />
-        <str id="cfg.copy.command.label.tooltip" txt="<html>Copy command used to transfer installation files to remote host<br>Default value: <b>scp</b><br>Other option e.g.: <b>rcp</b></html>" />
-        <str id="cfg.add.to.rc.label.tooltip" txt="Automatically start service(s) at machine boot" />
+        <str id="cfg.shell.name.label.tooltip" txt="<html><b>Shell name</b><br><br>
+        Shell used to connect to remote host in order to install component(s).<br>
+        Default value: <b>ssh</b><br>Other option e.g.: <b>rsh</b></html>" />
+        <str id="cfg.copy.command.label.tooltip" txt="<html><b>Copy command</b><br><br>
+        Copy command used to transfer installation files to remote host.<br>
+        Default value: <b>scp</b><br>Other option e.g.: <b>rcp</b></html>" />
+        <str id="cfg.add.to.rc.label.tooltip" txt="<html><b>Automatically start service(s) at machine boot</b><br><br>
+        Component (service) will be automatically started at machine boot.</html>" />
         <str id="add.sge.jmx.label.tooltip" txt="<html><b>Use JMX</b><br><br>
         The JMX agent functionality enables access to a subset of <code>sge_qmaster</code> functionality<br>
         via the JMX protocol.</html>" />
@@ -246,7 +258,7 @@ ___INFO__MARK_END__-->
         <str id="add.product.mode.csp.label.tooltip" txt="CSP" />
         <str id="add.product.mode.afs.label.tooltip" txt="AFS" />-->
         <str id="add.product.mode.label.tooltip" txt="<html><b>Use CSP product mode</b><br><br>
-        Use CSP product mode.<br><br></html>" />
+        Grid Engine will be installed with certificate security protocol (CSP).<br><br></html>" />
         <str id="cfg.admin.mail.label.tooltip" txt="<html><b>Administrator mail</b><br><br>
         The email address of the administrator to whom problem reports are sent.<br>
         You may use <code>none</code><br>if you do not wish to receive administrator mail.<br>
@@ -293,19 +305,26 @@ ___INFO__MARK_END__-->
         The port used to communicate with <code>sge_qmaster</code> via JMX protocol.<br>
         Range: <code>1-65500</code><br><br>
         <b>Variable: </b><code>$SGE_JMX_PORT</code></html>" />
-        <str id="cfg.sge.jmx.ssl.client.label.tooltip" txt="<html><b>SSL client</b><br><br>
-        JMX ssl client authentication.<br><br>
+        <str id="cfg.sge.jmx.ssl.label.tooltip" txt="<html><b>Enable SSL server authentication</b><br><br>
+        JMX SSL server authentication.<br><br>
+        <b>Variable: </b><code>$SGE_JMX_SSL</code></html>" />
+        <str id="cfg.sge.jmx.ssl.client.label.tooltip" txt="<html><b>Enable SSL client authentication</b><br><br>
+        JMX SSL client authentication.<br><br>
         <b>Variable: </b><code>$SGE_JMX_SSL_CLIENT</code></html>" />
         <str id="cfg.sge.jmx.ssl.keystore.label.tooltip" txt="<html><b>Path to the keystore</b><br><br>
-        JMX ssl server keystore path.<br><br>
+        JMX SSL server keystore path.<br><br>
         <b>Variable: </b><code$>SGE_JMX_SSL_KEYSTORE</code></html>" />
         <str id="cfg.sge.jmx.ssl.keystore.pw.1.tooltip" txt="<html><b>Keystore password</b><br><br>
-        JMX ssl server keystore password.<br><br>
+        JMX SSL server keystore password.<br><br>
         <b>Variable: </b><code>$SGE_JMX_SSL_KEYSTORE_PW</code></html>" />
         <str id="cfg.sge.jmx.ssl.keystore.pw.2.tooltip" txt="<html><b>Retype password</b><br><br>
         Retype the keystore password.</html>" />
-        <str id="cfg.sge.jvm.lib.path.label.tooltip" txt="JVM library path" />
-        <str id="cfg.sge.additional.jvm.args.label.tooltip" txt="Additional JVM arguments" />
+        <str id="cfg.sge.jvm.lib.path.label.tooltip" txt="<html><b>JVM library path</b><br><br>
+        Path to the JVM library on the qmaster host.<br><br>
+        <b>Variable: </b><code>$SGE_JVM_LIB_PATH</code></html>" />
+        <str id="cfg.sge.additional.jvm.args.label.tooltip" txt="<html><b>Additional JVM arguments</b><br><br>
+        Additional arguments to be used when starting the JVM in qmaster.<br><br>
+        <b>Variable: </b><code>$SGE_ADDITIONAL_JVM_ARGS</code></html>" />
         <!-- Validators -->
         <str id="cfg.sge.jmx.port.notemptyvalidator" txt="JMX port is mandatory!" />
         <str id="cfg.sge.jmx.port.rangevalidator" txt="JMX port has invalid range! Valid range is 1-65535." />
@@ -339,7 +358,9 @@ ___INFO__MARK_END__-->
         User '${cfg.admin.user}' must have the right to create this directory and<br>
         to write into it.<br><br>
         <b>Variable: </b><code>$EXECD_SPOOL_DIR</code></html>" />
-        <str id="cfg.spooling.method.classic.label.tooltip" txt="Classic" />
+        <str id="cfg.spooling.method.classic.label.tooltip" txt="<html><b>Classic</b><br><br>
+        Spooling is done in human readable format.<br>
+        <b>Variable: </b><code>$SPOOLING_METHOD</code></html>" />
         <str id="cfg.spooling.method.bdb.label.tooltip" txt="<html><b>Berkeley db spooling</b><br><br>
         The Berkeley DB spools into a local directory on this host (qmaster host).<br>
         This setup is faster, but you can't setup a shadow master host.<br><br>

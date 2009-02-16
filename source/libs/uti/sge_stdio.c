@@ -159,16 +159,14 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
    pid = fork();
 #endif
    if (pid == 0) {  /* child */
-      fd_set keep_open;
-      FD_ZERO(&keep_open);     
-      FD_SET(0, &keep_open);
-      FD_SET(1, &keep_open);
-      FD_SET(2, &keep_open);
-      FD_SET(pipefds[0][0], &keep_open);
-      FD_SET(pipefds[1][1], &keep_open);
-      FD_SET(pipefds[2][1], &keep_open);
-      sge_close_all_fds(&keep_open);
-
+      int keep_open[6];
+      keep_open[0] = 0;
+      keep_open[1] = 1;
+      keep_open[2] = 2;
+      keep_open[3] = pipefds[0][0];
+      keep_open[4] = pipefds[1][1];
+      keep_open[5] = pipefds[2][1];
+      sge_close_all_fds(keep_open, 6);
       /* shall we redirect stderr to /dev/null? */
       if (null_stderr) {
          /* open /dev/null */
@@ -463,18 +461,14 @@ pid_t sge_peopen_r(const char *shell, int login_shell, const char *command,
       /*
        * close all fd's except that ones mentioned in keep_open 
        */
-      {
-         fd_set keep_open;
-
-         FD_ZERO(&keep_open);     
-         FD_SET(0, &keep_open);
-         FD_SET(1, &keep_open);
-         FD_SET(2, &keep_open);
-         FD_SET(pipefds[0][0], &keep_open);
-         FD_SET(pipefds[1][1], &keep_open);
-         FD_SET(pipefds[2][1], &keep_open);
-         sge_close_all_fds(&keep_open);
-      }
+      int keep_open[6];
+      keep_open[0] = 0;
+      keep_open[1] = 1;
+      keep_open[2] = 2;
+      keep_open[3] = pipefds[0][0];
+      keep_open[4] = pipefds[1][1];
+      keep_open[5] = pipefds[2][1];
+      sge_close_all_fds(keep_open, 6);
 
       /* 
        * shall we redirect stderr to /dev/null? Then

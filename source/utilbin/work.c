@@ -280,17 +280,15 @@ int main(int argc, char *argv[])
    }
 
    if (do_daemonize) {
-      fd_set keep_open;
-
-      FD_ZERO(&keep_open);
+      int keep_open[3];
       dup2(0, 3);
       dup2(1, 4);
       dup2(2, 5);
-      FD_SET(3, &keep_open);
-      FD_SET(4, &keep_open);
-      FD_SET(5, &keep_open);
+      keep_open[0] = 3;
+      keep_open[1] = 4;
+      keep_open[2] = 5;
 
-      sge_daemonize(&keep_open, NULL);
+      sge_daemonize(keep_open, 3, NULL);
       dup2(3, 0);
       dup2(4, 1);
       dup2(5, 2);

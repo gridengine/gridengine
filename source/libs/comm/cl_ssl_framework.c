@@ -3605,9 +3605,10 @@ static int cl_com_ssl_connection_request_handler_setup_finalize(cl_com_connectio
 
    CL_LOG(CL_LOG_INFO,"===============================");
    CL_LOG(CL_LOG_INFO,"SSL server setup done:");
-   CL_LOG_STR(CL_LOG_INFO,"host:     ",connection->local->comp_host);
-   CL_LOG_STR(CL_LOG_INFO,"component:",connection->local->comp_name);
-   CL_LOG_INT(CL_LOG_INFO,"id:       ",(int)connection->local->comp_id);
+   CL_LOG_INT(CL_LOG_INFO,"server fd:", private->sockfd);
+   CL_LOG_STR(CL_LOG_INFO,"host:     ", connection->local->comp_host);
+   CL_LOG_STR(CL_LOG_INFO,"component:", connection->local->comp_name);
+   CL_LOG_INT(CL_LOG_INFO,"id:       ", (int) connection->local->comp_id);
    CL_LOG(CL_LOG_INFO,"===============================");
    return CL_RETVAL_OK;
 }

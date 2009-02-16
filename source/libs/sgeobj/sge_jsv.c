@@ -36,6 +36,9 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#ifdef USE_POLL
+ #include <sys/poll.h>
+#endif
 
 #include "sge.h"
 
@@ -201,26 +204,48 @@ jsv_is_started(lListElem *jsv)
 
 static bool
 jsv_is_send_ready(lListElem *jsv, lList **answer_list) {
-   bool ret = true;
+   bool ret = false;
    const int timeout = 5;
-   struct timeval timeleft;
-   fd_set writefds;
    int fd;
    int lret;
 
    DENTER(TOP_LAYER, "jsv_is_send_ready");
-
-   FD_ZERO(&writefds);
+   
    fd = fileno((FILE *) lGetRef(jsv, JSV_in));
-   FD_SET(fd, &writefds);
-   timeleft.tv_sec = timeout;
-   timeleft.tv_usec = 0;
-   lret = select(fd + 1, NULL, &writefds, NULL, &timeleft);
-   if (lret != -1 && FD_ISSET(fd, &writefds)) {
-      ret = true;
+
+#ifdef USE_POLL
+   {
+      struct pollfd pfds;
+      memset(&pfds, 0, sizeof(struct pollfd));
+      pfds.fd = fd;
+      pfds.events |= POLLOUT;
+      lret = poll(&pfds, 1, timeout * 1000);
+      if (lret != -1 && lret != 0) {
+         if (pfds.revents & POLLOUT) {
+            ret = true;
+         }
+      }
+   }
+#else
+   {
+      fd_set writefds;
+      struct timeval timeleft;
+      FD_ZERO(&writefds);
+      FD_SET(fd, &writefds);
+      timeleft.tv_sec = timeout;
+      timeleft.tv_usec = 0;
+      lret = select(fd + 1, NULL, &writefds, NULL, &timeleft);
+      if (lret != -1 && lret != 0) {
+         if (FD_ISSET(fd, &writefds)) {
+            ret = true;
+         }
+      }
+   }
+#endif
+
+   if (ret == true) {
       DPRINTF(("JSV - fd is ready. Data can be sent\n"));
    } else {
-      ret = false; /* either not ready or broken pipe */
       DPRINTF(("JSV - fd is NOT ready\n"));
    }
    DRETURN(ret);

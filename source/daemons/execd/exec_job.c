@@ -1642,12 +1642,12 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
    }
 
    {  /* close all fd's except 0,1,2 */ 
-      fd_set keep_open;
-      FD_ZERO(&keep_open); 
-      FD_SET(0, &keep_open);
-      FD_SET(1, &keep_open);
-      FD_SET(2, &keep_open);
-      sge_close_all_fds(&keep_open);
+      int keep_open[3];
+
+      keep_open[0] = 0;
+      keep_open[1] = 1;
+      keep_open[2] = 2;
+      sge_close_all_fds(keep_open, 3);
    }
    
 #ifdef __sgi

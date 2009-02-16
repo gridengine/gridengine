@@ -1,3 +1,13 @@
+CR-2009-02-16-0: Bugfix:      o sge_execd may crash at start-up time due to 
+                                fd_set used incorrectly in sge_close_all_fds()
+                 Bugster:     6288945
+                 Issue:       505
+                 Bugfix:      o jsv_is_send_ready() now uses poll() system
+                                call when USE_POLL is defined
+                 Cleanup:     o removed not used functions in sge_execd
+                 Enhancem.:   o new utilib function: sge_get_max_fd()
+                 Review:      RD
+
 EB-2009-02-16-0: Doc:		   added new manpage describing the JSV script
                               interface
                  Review:      SK

@@ -576,16 +576,13 @@ int qlogin_starter(const char *cwd, char *daemon, char** env)
    
    /* close all the rest */
 #ifndef WIN32NATIVE
-#ifndef USE_POLL
-   maxfd = sysconf(_SC_OPEN_MAX) > FD_SETSIZE ? FD_SETSIZE : sysconf(_SC_OPEN_MAX);
-#else
    maxfd = sysconf(_SC_OPEN_MAX);
-#endif
 #else /* WIN32NATIVE */
    maxfd = FD_SETSIZE;
    /* detect maximal number of fds under NT/W2000 (env: Files)*/
 #endif /* WIN32NATIVE */
    
+   /* we do not use any FD_SET call it is ok to use _SC_OPEN_MAX */
    for (fd=3; fd<maxfd; fd++) {
       close(fd);
    }

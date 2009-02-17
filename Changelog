@@ -1,5 +1,10 @@
-RD-2009-02-16-0: CVS:         Created V62u2_TAG
+RD-2009-02-17-1: CVS:         Created V62u2_TAG
 -----------------------------------------------
+
+RD-2009-02-17-0: Bugfix:      - disabled jemalloc for lx24-x86 and lx24-ia64
+                              - fixed no newline at end of file in GUI installer
+                                templates
+                 Review:      JG
 
 ZG-2009-02-16-0: Bugfix:      Update docs
 

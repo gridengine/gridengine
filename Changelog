@@ -1,3 +1,7 @@
+LP-2009-02-17-0: Bugfix:      - fixed no newline at end of file in GUI installer
+                                help pages
+                 Review:      TBD
+
 RD-2009-02-17-1: CVS:         Created V62u2_TAG
 -----------------------------------------------
 

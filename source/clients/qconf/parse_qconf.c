@@ -4030,6 +4030,7 @@ char *argv[]
                                              SP_DEST_STDOUT, SP_FORM_ASCII,
                                              NULL, false);
          FREE(filename_stdout);
+         lFreeList(&lp);
          if (answer_list_output(&alp)) {
             sge_error_and_exit(NULL);
          }
@@ -6932,11 +6933,13 @@ static int qconf_modify_attribute(sge_gdi_ctx_class_t *ctx,
       SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_QCONF_CANTCHANGEOBJECTNAME_SS, "qconf", 
          info_entry->attribute_name));
       answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+      lFreeElem(epp);
       DRETURN(1);
    }
 
    if (!(what = lIntVector2What(info_entry->cull_descriptor, fields))) {
       SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_QCONF_INTERNALFAILURE_S, "qconf"));
+      lFreeElem(epp);
       DRETURN(1);
    }     
 
@@ -6982,6 +6985,8 @@ static int qconf_modify_attribute(sge_gdi_ctx_class_t *ctx,
       SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_QCONF_MQATTR_MISSINGOBJECTLIST_S, 
          "qconf"));
       answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+      lFreeElem(epp);
+      lFreeWhat(&what);
       DRETURN(1);
    }
 
@@ -6996,6 +7001,9 @@ static int qconf_modify_attribute(sge_gdi_ctx_class_t *ctx,
       if ((lp == NULL) || (lGetNumberOfElem(lp) == 0)) {
          SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_QCONF_CANT_MODIFY_NONE));
          answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+         lFreeElem(epp);
+         lFreeWhat(&what);
+         lFreeList(&qlp);
          DRETURN(1);
       }
       else if (lGetNumberOfElem(lp) == 1) {
@@ -7011,6 +7019,9 @@ static int qconf_modify_attribute(sge_gdi_ctx_class_t *ctx,
                if (lGetList(ep, nm) == NULL) {
                   SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_QCONF_CANT_MODIFY_NONE));
                   answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+                  lFreeElem(epp);
+                  lFreeWhat(&what);
+                  lFreeList(&qlp);
                   DRETURN(1);
                }
             }
@@ -7023,9 +7034,9 @@ static int qconf_modify_attribute(sge_gdi_ctx_class_t *ctx,
       *alpp = ctx->gdi(ctx, info_entry->target, SGE_GDI_MOD | sub_command, &qlp, 
                       NULL, what);
    }
+   lFreeElem(epp);
    lFreeWhat(&what);
    lFreeList(&qlp);
-   lFreeElem(epp);
    (*spp)++;
 
    DRETURN(0);

@@ -1122,7 +1122,6 @@ static void qmonSubmitSaveDefault(Widget w, XtPointer cld, XtPointer cad)
    static char filename[BUFSIZ];
    static char directory[BUFSIZ];
    Boolean status = False;
-   lListElem *jep = NULL;
    lList *alp = NULL;
 
    DENTER(GUI_LAYER, "qmonSubmitSaveDefault");
@@ -1137,22 +1136,24 @@ static void qmonSubmitSaveDefault(Widget w, XtPointer cld, XtPointer cad)
 
    if (status == True) {
       if (filename[strlen(filename)-1] != '/')  {
+         lListElem *jep = lCreateElem(JB_Type);
+
          /* 
          ** get the values from the dialog fields
          */
-         jep = lCreateElem(JB_Type);
          XmtDialogGetDialogValues(submit_layout, &SMData);
          if (!qmonSMToCull(&SMData, jep, 1)) {
             DPRINTF(("qmonSMToCull failure\n"));
             qmonMessageShow(w, True, "@{Saving of job attributes failed!}");
-            DEXIT;
-            return;
+            lFreeElem(&jep);
+            DRETURN_VOID;
          }
 
          alp = write_job_defaults(ctx, jep, filename, 0);
 
          qmonMessageBox(w, alp, 0);
 
+         lFreeElem(&jep);
          lFreeList(&alp);
       }
       else {
@@ -1160,7 +1161,7 @@ static void qmonSubmitSaveDefault(Widget w, XtPointer cld, XtPointer cad)
       }
    }
 
-   DEXIT;
+   DRETURN_VOID;
 }   
 
 /*-------------------------------------------------------------------------*/
@@ -1489,14 +1490,15 @@ static void qmonSubmitJobSubmit(Widget w, XtPointer cld, XtPointer cad)
       int qalter_fields[100];
       int i;
       lEnumeration *what;
-      lDescr *rdp;
+      lDescr *rdp = NULL;
 
       /* initialize int array */
       qalter_fields[0] = NoName;
 
       /* add all standard qalter fields */
-      for (i=0; fixed_qalter_fields[i]!= NoName; i++)
+      for (i=0; fixed_qalter_fields[i]!= NoName; i++) {
          nm_set((int*)qalter_fields, (int)fixed_qalter_fields[i]);
+      }
 
       /* 
       ** the deadline initiation time 
@@ -1522,7 +1524,6 @@ static void qmonSubmitJobSubmit(Widget w, XtPointer cld, XtPointer cad)
          goto error;
       }
 
-      rdp = NULL;
       lReduceDescr(&rdp, JB_Type, what);
       if (!rdp) {
          DPRINTF(("lReduceDescr failure\n"));
@@ -1532,10 +1533,12 @@ static void qmonSubmitJobSubmit(Widget w, XtPointer cld, XtPointer cad)
       lFreeWhat(&what);
       
       if (!(lp = lCreateElemList("JobSubmitList", rdp, 1))) {
+         FREE(rdp);
          DPRINTF(("lCreateElemList failure\n"));
          sprintf(buf, "Job submission failed\n");
          goto error;
       }
+      FREE(rdp);
 
       lSetUlong(lFirst(lp), JB_job_number, submit_mode_data.job_id);
       
@@ -1708,7 +1711,8 @@ int read_defaults
    ** stage two of script file parsing
    */ 
    alp = cull_parse_job_parameter(myuid, username, cell_root, unqualified_hostname, qualified_hostname, cmdline, &job);
-   
+
+   lFreeList(&cmdline);
    qmonMessageBox(w, alp, 0);
    lFreeList(&alp);
 
@@ -2226,19 +2230,18 @@ int save
       const char *env_value = job_get_env_string(jep, VAR_PREFIX "O_HOME");
       lSetString(jep, JB_cwd, cwd_string(env_value));
       lSetList(jep, JB_path_aliases, lCopyList("PathAliases", path_alias));
-      lFreeList(&path_alias);
    } else {
       if (data->wd_path) {
          char *wdp = qmon_trim(data->wd_path);
          if (wdp[0] != '\0') {
             lSetString(jep, JB_cwd, wdp);
             lSetList(jep, JB_path_aliases, lCopyList("PathAliases", path_alias));
-            lFreeList(&path_alias);
          } else {
             lSetString(jep, JB_cwd, NULL);
          }   
       }
    }   
+   lFreeList(&path_alias);
 
    lSetString(jep, JB_account, data->account_string);
  

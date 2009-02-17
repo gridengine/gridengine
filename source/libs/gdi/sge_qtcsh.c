@@ -370,7 +370,7 @@ const char* args /* The argument string to count by whitespace tokens */
     */
    strcpy(resreq, args);
    for (s = sge_strtok_r(resreq, " \t", &context); s != NULL; s = sge_strtok_r(NULL, " \t", &context)) {
-      num_args++; 
+      num_args++;
    }
    free(resreq);
    sge_free_saved_vars(context);
@@ -408,7 +408,7 @@ char** pargs /* The array to contain the parsed arguments */
             s++;
       }
 
-      if (*s == 0) finished = 1;          /* line end ? */
+      if (*s == '\0') finished = 1;          /* line end ? */
 
       if (finished || isspace(*s)) {      /* found delimiter or line end */
          *d++ = 0;                       /* terminate token */
@@ -416,7 +416,11 @@ char** pargs /* The array to contain the parsed arguments */
          if (!finished) {
             while (isspace(*(++s)));      /* skip any number whitespace */
          }   
-         start = d;                      /* assign start of next token */
+         if (*s == '\0') {
+            finished = 1;
+         } else {
+            start = d;                      /* assign start of next token */
+         }
       } else {
          *d++ = *s++;                    /* copy one character */
       }

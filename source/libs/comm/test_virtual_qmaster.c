@@ -182,6 +182,11 @@ extern int main(int argc, char** argv)
         nr_evc_sec = evc_count    / interval;
         snd_ev_sec = events_sent  / interval;
      }
+     if (interval >= 100.0) {
+        rcv_messages = snd_messages = evc_count = events_sent = 0.0;
+        gettimeofday(&last,NULL);
+        usec_last = (last.tv_sec * 1000000.0) + last.tv_usec;
+     }
 
      cl_com_get_actual_statistic_data(handle, &statistic_data);
      if (statistic_data != NULL) {

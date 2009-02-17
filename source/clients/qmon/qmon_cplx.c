@@ -274,6 +274,8 @@ static void qmonCplxOk(Widget w, XtPointer cld, XtPointer cad)
    old_entries = lCopyList("", qmonMirrorList(SGE_CENTRY_LIST));
    /* centry_list_add_del_mod_via_gdi free entries and old_entries */
    centry_list_add_del_mod_via_gdi(ctx, &entries, &alp, &old_entries);                     
+   lFreeList(&old_entries);
+
    error = qmonMessageBox(w, alp, 0);
    lFreeList(&alp);
 

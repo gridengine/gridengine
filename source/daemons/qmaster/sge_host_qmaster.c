@@ -1015,7 +1015,7 @@ static void sge_change_queue_version_exechost(sge_gdi_ctx_class_t *ctx, const ch
          sge_event_spool(ctx, &answer_list, 0, sgeE_QINSTANCE_MOD, 
                          0, 0, lGetString(qinstance, QU_qname), 
                          lGetHost(qinstance, QU_qhostname), NULL,
-                         qinstance, NULL, NULL, true, false);
+                         qinstance, NULL, NULL, true, true);
          answer_list_output(&answer_list);
       }
    }

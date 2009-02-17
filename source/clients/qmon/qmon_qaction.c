@@ -1585,6 +1585,7 @@ StringConst href
 
    qmonCullToCQ(current_qep, data, href);
 
+   lFreeList(&href_list);
    lFreeList(&alp);
 
    DEXIT;
@@ -2374,13 +2375,12 @@ DTRACE;
    inter_attr_list_find_value_href(lGetList(qep, CQ_notify), &alp, href, &(data->notify), &(data->notify_tw));
    
 
-   DEXIT;
-   return True;
+   lFreeList(&alp);
+   DRETURN(True);
 
    error:
       fprintf(stderr, "qmonCullToCQ failure\n");
-      DEXIT;
-      return False;
+      DRETURN(False);
 }
 
 /*-------------------------------------------------------------------------*/

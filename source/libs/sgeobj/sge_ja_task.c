@@ -308,8 +308,8 @@ bool ja_task_clear_finished_pe_tasks(lListElem *ja_task)
 *     MT-NOTE: sge_parse_jobtasks() is MT safe 
 *
 *******************************************************************************/
-int sge_parse_jobtasks( lList **ipp, lListElem **idp, const char *str_jobtask,   
-                        lList **alpp, bool include_names, lList *arrayDefList) {
+int sge_parse_jobtasks(lList **ipp, lListElem **idp, const char *str_jobtask,   
+                       lList **alpp, bool include_names, lList *arrayDefList) {
    char *token;
    char *job_str;
    lList *task_id_range_list = NULL;
@@ -334,9 +334,9 @@ int sge_parse_jobtasks( lList **ipp, lListElem **idp, const char *str_jobtask,
       if ((token = strchr(job_str, '.')) != NULL){
          token[0] = '\0';
          token++;
-         range_list_parse_from_string(&task_id_range_list, alpp, token,
-                                      false, true, INF_NOT_ALLOWED);
-         if (*alpp || !task_id_range_list) {
+         if (!range_list_parse_from_string(&task_id_range_list, alpp, token,
+                                           false, true, INF_NOT_ALLOWED) ||
+             !task_id_range_list) {
             ret = -1;
          }
       }

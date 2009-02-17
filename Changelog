@@ -1,3 +1,21 @@
+RD-2009-02-17-0: Bugfix:      merged some memory leak fixes and access to
+                              uninitialized data from maintrunk
+                 Merged from: maintrunk: RD-2009-02-12-0
+                 Merged from: maintrunk: RD-2009-02-11-1
+                 Merged from: maintrunk: RD-2009-02-10-0
+                 Review:      AA
+                 Bugfix:      spooledit can not handle lines greater than 255 chars
+                 Merged from: maintrunk: RD-2009-02-09-1
+                 Bugster:     6802883
+                 Issue:       2908
+                 Review:      JG
+                 Bugfix:      fixed buffer overrun in drmaa
+                              test_drmaa did not executed drmaa_exit in
+                              case of success
+                 Merged from: maintrunk: RD-2009-02-05-0
+                 Belongs to:  JG-2009-01-29-0
+                 Review:      DG
+
 HP-2009-02-12-0: Bugfix:      fixed wrong description of parameters of -j option in
                               qacct(1) man page
                  Review:      JG

@@ -1410,9 +1410,9 @@ int local
             incorrect_gid_range = 1;
          } else if (range_list_containes_id_less_than(range_list,
                                                     GID_RANGE_NOT_ALLOWED_ID)) {
-            lFreeList(&range_list);
             incorrect_gid_range = 1;
          }
+         lFreeList(&range_list);
 
          if (incorrect_gid_range) {
             strcpy(errstr, "Cannot parse GID Range !");
@@ -1649,9 +1649,9 @@ int local
             incorrect_gid_range = 1;
          } else if (range_list_containes_id_less_than(range_list,
                                                    GID_RANGE_NOT_ALLOWED_ID)) {
-            lFreeList(&range_list);
             incorrect_gid_range = 1;
          }
+         lFreeList(&range_list);
 
          if (incorrect_gid_range) {
             strcpy(errstr, "Cannot parse GID Range !");

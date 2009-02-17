@@ -218,7 +218,7 @@ extern int main(int argc, char** argv)
   appl_start_time = start_time;
   welcome_text_size = strlen(welcome_text) + 1;
   while(do_shutdown != 1) {
-     unsigned long mid;
+     unsigned long mid = 0;
      int my_sent_error = 0;
      static int runs = 100;
 

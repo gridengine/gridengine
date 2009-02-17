@@ -436,9 +436,9 @@ static void qmonResFilterEditResource(Widget w, XtPointer cld, XtPointer cad)
 
    arl = qmonGetResources(qmonMirrorList(SGE_CENTRY_LIST), ALL_RESOURCES);
 
-   if (!how)
+   if (!how) {
       fill_in_request = lGetElemStr(arl, CE_name, cbs->element->string[0]);
-   else {
+   } else {
       for_each (fill_in_request, queue_filter_resources) {
          name = lGetString(fill_in_request, CE_name);
          value = lGetString(fill_in_request, CE_stringval);
@@ -457,8 +457,8 @@ static void qmonResFilterEditResource(Widget w, XtPointer cld, XtPointer cad)
    }
 
    if (!fill_in_request) {
-      DEXIT;
-      return;
+      lFreeList(&arl);
+      DRETURN_VOID;
    }
 
    type = lGetUlong(fill_in_request, CE_valtype);
@@ -484,7 +484,8 @@ static void qmonResFilterEditResource(Widget w, XtPointer cld, XtPointer cad)
       qmonRequestDraw(r_filter_sr, queue_filter_resources, 1);
    }
 
-   DEXIT;
+   lFreeList(&arl);
+   DRETURN_VOID;
 }
 
 /*-------------------------------------------------------------------------*/

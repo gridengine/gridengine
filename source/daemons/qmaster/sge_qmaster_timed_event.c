@@ -397,10 +397,11 @@ void te_add_event(te_event_t anEvent)
 
    lSetUlong(le, TE_seqno, Event_Control.seq_no++);
 
-   lInsertSorted(Event_Control.sort_order, le, Event_Control.list);
+   if (lInsertSorted(Event_Control.sort_order, le, Event_Control.list) != 0) {
+      lFreeElem(&le);
+   }
 
-   if ((Event_Control.next == 0) || (when < Event_Control.next))
-   {
+   if ((Event_Control.next == 0) || (when < Event_Control.next)) {
       Event_Control.next = when;
 
       pthread_cond_signal(&Event_Control.cond_var);
@@ -410,8 +411,7 @@ void te_add_event(te_event_t anEvent)
 
    sge_mutex_unlock("event_control_mutex", SGE_FUNC, __LINE__, &Event_Control.mutex);
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 } /* te_add_event() */
 
 /****** qmaster/sge_qmaster_timed_event/te_delete_one_time_event() *************

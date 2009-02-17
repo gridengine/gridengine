@@ -1798,7 +1798,6 @@ static void qmonCQChangeState(Widget w, XtPointer cld, XtPointer cad)
          }
       }
       if (ql) {
-         /* EB: TODO: */
          alp = qmonChangeStateList(SGE_CQUEUE_LIST, ql, force, action); 
       
          qmonMessageBox(w, alp, 0);
@@ -2330,6 +2329,7 @@ static void qmonCQUpdateQhostMatrix(void)
    lListElem *lep = NULL;
    int row;
    int num_rows;
+   dstring rs = DSTRING_INIT;
 
    DENTER(GUI_LAYER, "qmonCQUpdateQhostMatrix");
 
@@ -2360,7 +2360,6 @@ static void qmonCQUpdateQhostMatrix(void)
    for_each(eh, ehl) {
      char buffer[80];
      char *s;
-     dstring rs = DSTRING_INIT;
      u_long32 dominant = 0;
      int column =0, i=0;
      char *fields[] = {LOAD_ATTR_MEM_USED, LOAD_ATTR_MEM_TOTAL, 
@@ -2431,17 +2430,19 @@ static void qmonCQUpdateQhostMatrix(void)
      for (i = 0; i < 6 ; i++) {
        lep=get_attribute_by_name(NULL, eh, NULL, fields[i], cl, DISPATCH_TIME_NOW, 0);
        if (lep) {
-	 reformatDoubleValue(buffer, "%.1f%c", sge_get_dominant_stringval(lep, &dominant, &rs));
-	 sge_dstring_clear(&rs);
-	 lFreeElem(&lep);
+          reformatDoubleValue(buffer, "%.1f%c", sge_get_dominant_stringval(lep, &dominant, &rs));
+          sge_dstring_clear(&rs);
+          lFreeElem(&lep);
+       } else {
+	       strcpy(buffer, "-");
        }
-       else
-	 strcpy(buffer, "-");
        
        XbaeMatrixSetCell(qhost_settings, row, column++, buffer);
      }
      row++;
    }
+   sge_dstring_free(&rs);
+
    /* shrink back excess rows */
    num_rows = XbaeMatrixNumRows(qhost_settings);
    row = MAX(row, 30);

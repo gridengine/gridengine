@@ -1,3 +1,10 @@
+CR-2009-02-18-0: Bugfix:      using IP String in first column of host_aliases
+                              file produces dead lock
+                 Merge from:  maintrunk (CR-2009-02-02-0)
+                 Issue:       2897 
+                 Bugster:     6799088
+                 Review:      RD
+
 JG-2009-01-28-0: Bugfix:      drmaa: quotes in native specification can result
                               in memory corruption
                  Bugster:     6317028

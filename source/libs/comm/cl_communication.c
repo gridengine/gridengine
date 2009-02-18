@@ -1939,8 +1939,16 @@ static int cl_com_gethostbyname(char *hostname_unresolved, cl_com_hostent_t **ho
 
    /* check if the incoming hostname is an ip address string */
    if (cl_com_is_ip_address_string(hostname_unresolved, &tmp_addr) == CL_TRUE) {
+      cl_com_hostent_t* tmp_hostent = NULL;
       CL_LOG(CL_LOG_INFO,"got ip address string as host name argument");
-      ret_val = cl_com_cached_gethostbyaddr(&tmp_addr, &hostname, NULL, NULL);
+      ret_val = cl_com_gethostbyaddr(&tmp_addr, &tmp_hostent, NULL);
+      if (ret_val == CL_RETVAL_OK) {
+         hostname = strdup(tmp_hostent->he->h_name);
+         cl_com_free_hostent(&tmp_hostent);
+         if (hostname == NULL) {
+            ret_val = CL_RETVAL_MALLOC;
+         }
+      }
       if (ret_val != CL_RETVAL_OK) {
          if (hostname != NULL) {
             free(hostname);

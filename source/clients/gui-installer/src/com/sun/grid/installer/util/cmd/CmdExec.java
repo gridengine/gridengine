@@ -57,7 +57,7 @@ public abstract class CmdExec implements Config {
     public static final int EXITVAL_TERMINATED    = -4;
     public static final int EXITVAL_MISSING_FILE  = 15;
 
-    private static int WAIT_TIME                  = 200;
+    private static int WAIT_TIME                  = 300;
     int MAX_WAIT_TIME;
 
     private int exitValue                         = EXITVAL_INITIAL;
@@ -120,6 +120,7 @@ public abstract class CmdExec implements Config {
         try {
             process = processBuilder.start();
 
+            long startTime = System.currentTimeMillis();
             long waitTime = 0;
             while (true) {
                 try {
@@ -127,7 +128,7 @@ public abstract class CmdExec implements Config {
                     break;
                 } catch (IllegalThreadStateException ex) {
                     Thread.sleep(WAIT_TIME);
-                    waitTime += WAIT_TIME;
+                    waitTime = System.currentTimeMillis() - startTime;
                     if (waitTime > MAX_WAIT_TIME) {
                         Debug.error("Terminated ("+MAX_WAIT_TIME / 1000+"sec): '" + processBuilder.command() + "'!");
                         process.destroy();

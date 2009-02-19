@@ -106,6 +106,8 @@ public class HostPanel extends IzPanel implements Config {
     private static List<String> additionalAdminHosts, additionalSubmitHosts;
     private Host firstTaskHost, lastTaskHost;
 
+    private ThreadPoolExecutor singleThreadPool = null;
+
     /** Creates new HostPanel */
     public HostPanel(InstallerFrame parent, InstallData idata) {
         super(parent, idata);
@@ -970,37 +972,45 @@ public class HostPanel extends IzPanel implements Config {
     }                                       
 
     private void cancelActions() {
-        //Cancel host selection thread pool
-        List<Runnable> waitingTasks = threadPool.shutdownNow();
+        ThreadPoolExecutor[] tpes = new ThreadPoolExecutor[]{singleThreadPool, threadPool};
 
-        try {
-            threadPool.awaitTermination(200, TimeUnit.MILLISECONDS);
-            threadPool.purge();
-        } catch (InterruptedException e) {
-            Debug.error(e);
-        }
+        for (ThreadPoolExecutor tpe : tpes) {
+            if (tpe == null) {
+                continue;
+            }
 
-        try {
-            if (waitingTasks.size() > 0) {
-                ThreadPoolExecutor tmp = (ThreadPoolExecutor) Executors.newFixedThreadPool(waitingTasks.size() * 2);
-                tmp.setThreadFactory(new InstallerThreadFactory());
+            //Cancel host selection thread pool
+            List<Runnable> waitingTasks = tpe.shutdownNow();
 
-                for (Iterator<Runnable> it = waitingTasks.iterator(); it.hasNext();) {
-                    TestableTask runnable = (TestableTask) it.next();
-                    runnable.setTestMode(true);
-                    runnable.setTestExitValue(CmdExec.EXITVAL_INTERRUPTED);
-                    runnable.setTestOutput(new Vector<String>());
-                    try {
-                        Debug.trace("Cancel task: " + runnable.getTaskName());
-                        tmp.execute(runnable);
-                        tmp.remove(runnable);
-                    } catch (Exception e) {
-                        Debug.error("Failed to cancel task: " + runnable.getTaskName());
+            try {
+                tpe.awaitTermination(200, TimeUnit.MILLISECONDS);
+                tpe.purge();
+            } catch (InterruptedException e) {
+                Debug.error(e);
+            }
+
+            try {
+                if (waitingTasks.size() > 0) {
+                    ThreadPoolExecutor tmp = (ThreadPoolExecutor) Executors.newFixedThreadPool(waitingTasks.size() * 2);
+                    tmp.setThreadFactory(new InstallerThreadFactory());
+
+                    for (Iterator<Runnable> it = waitingTasks.iterator(); it.hasNext();) {
+                        TestableTask runnable = (TestableTask) it.next();
+                        runnable.setTestMode(true);
+                        runnable.setTestExitValue(CmdExec.EXITVAL_INTERRUPTED);
+                        runnable.setTestOutput(new Vector<String>());
+                        try {
+                            Debug.trace("Cancel task: " + runnable.getTaskName());
+                            tmp.execute(runnable);
+                            tmp.remove(runnable);
+                        } catch (Exception e) {
+                            Debug.error("Failed to cancel task: " + runnable.getTaskName());
+                        }
                     }
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
 
         //Stop updateTab thread
@@ -1052,7 +1062,6 @@ public class HostPanel extends IzPanel implements Config {
             try {
                 threadPool.execute(new ResolveHostTask(threadPool, host, this));
             } catch (RejectedExecutionException e) {
-                Debug.error(e);
                 model.setHostState(host, Host.State.CANCELED);
                 ((HostSelectionTableModel) tables.get(2).getModel()).addHost(host);
             }
@@ -1339,8 +1348,12 @@ public class HostPanel extends IzPanel implements Config {
                 h = hosts.get(i);
                 //Check only hosts that have real components
                 if (h.isExecutionHost() || h.isShadowHost() || h.isQmasterHost() || h.isBdbHost()) {
-                   threadPool.execute(new CheckHostTask(h, this));
-                   started++;
+                    try {
+                       threadPool.execute(new CheckHostTask(h, this));
+                       started++;
+                    } catch (RejectedExecutionException e) {
+                        ((HostSelectionTableModel) tables.get(1).getModel()).setHostState(h, Host.State.CANCELED);
+                    }
                 }
             }
 
@@ -1767,10 +1780,8 @@ public class HostPanel extends IzPanel implements Config {
         threadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(Util.INSTALL_THREAD_POOL_SIZE);
         threadPool.setThreadFactory(new InstallerThreadFactory());
         //We need a new executor for shadowdTasks (only 1 task at single moment)
-        ThreadPoolExecutor singleThreadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
+        singleThreadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
         singleThreadPool.setThreadFactory(new InstallerThreadFactory());
-
-        String execdLocalSpoolDir = "";
 
         progressTimer = new Timer("InstallTimer");
 
@@ -1806,7 +1817,11 @@ public class HostPanel extends IzPanel implements Config {
 
                 //BDB, Qmaster, Shadowd instlalation go to special singlethreadPool
                 if (h.isBdbHost() || h.isQmasterHost() || h.isShadowHost()) {
-                    singleThreadPool.execute(new InstallTask(tables, h, variablesCopy, localizedMessages));
+                    try {
+                        singleThreadPool.execute(new InstallTask(tables, h, variablesCopy, localizedMessages));
+                    } catch (RejectedExecutionException e) {
+                        ((HostInstallTableModel) tables.get(0).getModel()).setHostState(h, Host.State.CANCELED);
+                    }
                 } else if (h.isFirstTask()) {
                     //This is a first execd/shadowd task and there were no other BDB or qmaster components
                     //Need to create a first task that will add all hosts as admin hosts
@@ -1846,11 +1861,20 @@ public class HostPanel extends IzPanel implements Config {
                     }
                     vars.put(VAR_FIRST_TASK, "true");
                     wait = true;
-                    //And execute the first task in the singleThreadPool
-                    singleThreadPool.execute(new InstallTask(tables, h, vars, localizedMessages));
+
+                    try {
+                        //And execute the first task in the singleThreadPool
+                        singleThreadPool.execute(new InstallTask(tables, h, vars, localizedMessages));
+                    } catch (RejectedExecutionException e) {
+                        ((HostInstallTableModel) tables.get(0).getModel()).setHostState(h, Host.State.CANCELED);
+                    }
                 } else {
-                    //Only execd get installed in parallel
-                    threadPool.execute(new InstallTask(tables, h, variablesCopy, localizedMessages));
+                    try {
+                        //Only execd get installed in parallel
+                        threadPool.execute(new InstallTask(tables, h, variablesCopy, localizedMessages));
+                    } catch (RejectedExecutionException e) {
+                        ((HostInstallTableModel) tables.get(0).getModel()).setHostState(h, Host.State.CANCELED);
+                    }
                 }
                 if (started == 0) {
                     progressTimer.schedule(new UpdateInstallProgressTimerTask(this, new ThreadPoolExecutor[]{threadPool, singleThreadPool}, getLabel("column.progress.label"), getLabel("progressbar.installing.label"), initialInstallList.size()), 10);
@@ -1874,6 +1898,18 @@ public class HostPanel extends IzPanel implements Config {
                             return;
                         }
                         completed++;
+                    } else if (singleThreadPool.isTerminated()){
+                        //There is not guarantee that the currently executing task wil lbe interrupted. It may also finish as SUCCESS or FAILED!
+                        HostInstallTableModel updateModel;
+                        HostInstallTableModel installModel = (HostInstallTableModel) tables.get(0).getModel();
+                        for (Host host : installList) {
+                            updateModel = (HostInstallTableModel) tables.get(2).getModel();
+                            installModel.setHostState(host, Host.State.CANCELED);
+                            installModel.setHostLog(host, "CANCELED: " + MessageFormat.format(localizedMessages.getProperty("msg.install.canceled"), ""));
+                            installModel.removeHost(host);
+                            updateModel.addHost(host);
+                        }
+                        return;
                     } else {
                         try {
                             Thread.sleep(100);
@@ -1935,7 +1971,13 @@ public class HostPanel extends IzPanel implements Config {
                 vars.put(VAR_ALL_SUBMIT_HOSTS, Util.listToString(submitHosts));
                 vars.put(VAR_LAST_TASK, "true");
                 //And execute the last task in the singleThreadPool
-                singleThreadPool.execute(new InstallTask(tables, lastTaskHost, vars, localizedMessages));
+                try {
+                    singleThreadPool.execute(new InstallTask(tables, lastTaskHost, vars, localizedMessages));
+                } catch (RejectedExecutionException e) {
+                    ((HostInstallTableModel) tables.get(0).getModel()).setHostState(lastTaskHost, Host.State.CANCELED);
+                    ((HostInstallTableModel) tables.get(0).getModel()).removeHost(lastTaskHost);
+                    ((HostInstallTableModel) tables.get(2).getModel()).addHost(lastTaskHost);
+                }
                 started++;
                 //Wait until it's finished
                 while (threadPool.getCompletedTaskCount() + singleThreadPool.getCompletedTaskCount() < started && !singleThreadPool.isTerminated()) {
@@ -2159,7 +2201,6 @@ class ResolveHostTask extends TestableTask {
             model = (HostSelectionTableModel) panel.getHostTableAt(2).getModel();
             model.addHost(host);
         } catch (RejectedExecutionException e) {
-            Debug.error(e);
             end = System.currentTimeMillis();
             host.setState(Host.State.CANCELED);
             //Add host to unreachable hosts tab
@@ -2360,7 +2401,6 @@ class CheckHostTask extends TestableTask {
                 }
             }
         } catch (InterruptedException e) {
-            Debug.error(e);
             newState = Host.State.CANCELED;
         } catch (Exception e) {
             Debug.error("Failed to check host '" + host + "'. " + e);
@@ -2662,7 +2702,7 @@ class InstallTask extends TestableTask {
                 state = Host.State.CANCELED;
                 tabPos = 2;
                 if (installCmd != null) {
-                    installCmd.setFirstLogMessage("Task has been canceled by the user.");
+                    installCmd.setFirstLogMessage("CANCELED: Task has been canceled by the user.");
                 }
             } else if (exitValue == EXIT_VAL_FAILED_ALREADY_INSTALLED_COMPONENT) {
                 state = Host.State.FAILED_ALREADY_INSTALLED_COMPONENT;
@@ -2675,14 +2715,12 @@ class InstallTask extends TestableTask {
                 tabPos = 2;
             }
         } catch (InterruptedException e) {
-            Debug.error(e);
             state = Host.State.CANCELED;
             tabPos = 2;
             if (installCmd != null) {
-                installCmd.setFirstLogMessage("Task has been canceled by the user.");
+                installCmd.setFirstLogMessage("CANCELED: Task has been canceled by the user.");
             }
         } catch (Exception e) {
-            Debug.error(e);
             state = Host.State.FAILED;
             tabPos = 2;
             if (installCmd != null) {

@@ -531,6 +531,7 @@ ___INFO__MARK_END__-->
         <str id="warning.invalid.hosts.message"  txt="<html>{0} out of {1} reachable hosts have configuration errors. These may fail during the installation.<br>Check host and their states for detailed error messages in the tooltips.<br><br>Do you want to continue the installation?</html>" />
         <str id="warning.windows.needs.local.spooling.message"  txt="<html>Windows host(s) need local execution spool directory. These may fail during the installation.<br><br>Do you want to continue the installation?</html>" />
         <str id="msg.previous.dependent.install.failed" txt="Not started! It depended on {0} task that failed."/>
+        <str id="msg.install.canceled" txt="Task has been canceled by the user."/>
         <str id="msg.qmasterhost.already.selected" txt="<html>Do you really want to change qmaster host to <b>{0}</b>?<br>Currently selected qmaster host is <b>{1}</b>.<br></html>"/>
         <str id="msg.bdbhost.already.selected" txt="<html>Do you really want to change BDB server to <b>{0}</b>?<br>Currently selected BDB server is <b>{1}</b>.<br></html></html>"/>
     <!-- Result Panel -->

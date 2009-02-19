@@ -1,11 +1,11 @@
+RD-2009-02-19-0: CVS:         Created V62u2_TAG
+-----------------------------------------------
+
 LP-2009-02-19-0: Bugfix:      gui-installer: cancel button does not work during
                               installation
                               gui-installer: timeout values not correctly
                               enforced when machine is overloaded
                  Review:      ZG
-
-RD-2009-02-17-1: CVS:         Created V62u2_TAG
------------------------------------------------
 
 LP-2009-02-17-1: Bugfix:      - fixed no newline at end of file in GUI installer
                                 help pages

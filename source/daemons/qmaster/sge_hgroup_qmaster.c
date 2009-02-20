@@ -597,23 +597,28 @@ int
 hgroup_success(sge_gdi_ctx_class_t *ctx, lListElem *hgroup, lListElem *old_hgroup, gdi_object_t *object, lList **ppList, monitoring_t *monitor) 
 {
    const char *name = lGetHost(hgroup, HGRP_name);
-
+   lList *cqueue_list = NULL;
+   
    DENTER(TOP_LAYER, "hgroup_success");
-
+   
+   /* we will have the cqueue_list in the final event */
+   lXchgList(hgroup, HGRP_cqueue_list, &cqueue_list);
+   
    /*
     * HGRP modify or add event
     */
-   sge_add_event( 0, old_hgroup?sgeE_HGROUP_MOD:sgeE_HGROUP_ADD, 0, 0, 
+   sge_add_event(0, old_hgroup?sgeE_HGROUP_MOD:sgeE_HGROUP_ADD, 0, 0, 
                  name, NULL, NULL, hgroup);
    lListElem_clear_changed_info(hgroup);
 
+   lXchgList(hgroup, HGRP_cqueue_list, &cqueue_list);
+   
    /*
     * QI add or delete events. Finalize operation.
     */
    hgroup_commit(ctx, hgroup);
-    
-   DEXIT;
-   return 0;
+
+   DRETURN(0);
 }
 
 

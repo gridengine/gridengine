@@ -436,25 +436,17 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
 #endif
 
                   /*
-                   * If this queue instance itself is a subordinated queue
-                   * than it might be necessary to set the sos state.
-                   * We have to check the subordinated list of all
-                   * other queue instances to intitialize the state.
+                   * Find list of subordinates that are suspended currently. 
                    *
-                   * This queue can't be subordinated if the queue was
-                   * freshly added.
+                   * This queue can't have any running jobs and thus can't
+                   * subordinate anything if the queue was freshly added
                    */
                   if (initial_modify == false) {
-                     qinstance_initialize_sos_attr(ctx, this_elem, monitor);
+                     ret &= qinstance_find_suspended_subordinates(this_elem,
+                                                                answer_list,
+                                                                 &unsuspended_so);
                   }
-
-                  /*
-                   * Find list of subordinates that are suspended currently 
-                   */
-                  ret &= qinstance_find_suspended_subordinates(this_elem,
-                                                               answer_list,
-                                                               &unsuspended_so);
-
+                                                                
                   /*
                    * Modify sublist
                    */
@@ -479,13 +471,10 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                    */
                   cqueue_list_x_on_subordinate_so(ctx,
                                                   master_list, answer_list, 
-                                                  false, unsuspended_so, false,
-                                                  monitor);
+                                                  false, unsuspended_so, monitor);
                   cqueue_list_x_on_subordinate_so(ctx,
                                                   master_list, answer_list, 
-                                                  true, suspended_so, false,
-                                                  monitor);
-
+                                                  true, suspended_so, monitor);
                   /*
                    * Cleanup
                    */

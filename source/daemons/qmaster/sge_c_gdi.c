@@ -759,6 +759,7 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao, char *host, sge_gdi_re
    lList *ticket_orders = NULL;
    dstring ds;
    char buffer[256];
+   bool reprioritize_tickets = (mconf_get_reprioritize() == 1) ? true: false;
    object_description *object_base = object_type_get_object_description();
    bool is_restart;
 
@@ -832,7 +833,8 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao, char *host, sge_gdi_re
             switch (request->target) {
 
                case SGE_ORDER_LIST:
-                 switch (sge_follow_order(ctx, ep, &(answer->alp), user, host, &ticket_orders, monitor, object_base)) {
+                 switch (sge_follow_order(ctx, ep, &(answer->alp), user, host, 
+                           reprioritize_tickets? &ticket_orders : NULL, monitor, object_base)) {
                     case STATUS_OK :
                     case  0 : /* everything went fine */
                        break;
@@ -905,21 +907,17 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao, char *host, sge_gdi_re
       }
    }
    
-   if (ticket_orders != NULL) {
-      if (sge_conf_is_reprioritize()) {
-
-         MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
-         distribute_ticket_orders(ctx, ticket_orders, monitor, object_base);
-         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-
-      }
-      else {
-         /* tickets not needed at execd's if no repriorization is done */
-         DPRINTF(("NO TICKET DELIVERY\n"));
-      } 
-
+   if (reprioritize_tickets && ticket_orders != NULL) {
+      MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE), monitor);
+      distribute_ticket_orders(ctx, ticket_orders, monitor, object_base);
       lFreeList(&ticket_orders);
+      DPRINTF(("DISTRIBUTED NEW PRIORITIZE TICKETS\n"));
+      SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
    }
+   else {
+      /* tickets not needed at execd's if no repriorization is done */
+      DPRINTF(("NO TICKET DELIVERY\n"));
+   } 
 
    DRETURN_VOID;
 }

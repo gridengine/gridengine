@@ -1,6 +1,21 @@
+DG-2009-02-20-0: Bugfix:      Merged bugfixes and performance issues from maintrunk.
+                 Merged from: maintrunk: RD-2009-01-26-0
+                 Merged from: maintrunk: RD-2009-01-21-0
+                 Merged from: maintrunk: RD-2009-01-21-0
+                 Merged from: maintrunk: RD-2008-12-18-0
+                 Bugster:     6797579
+                 Bugster:     6795248
+                 Bugster:     6796068
+                 Bugster:     6786957
+                 Issue:       2883
+                 Issue:       2887
+                 Issue:       2884
+                 Issue:       2843
+                 Review:      RD
+
 CR-2009-02-18-0: Bugfix:      using IP String in first column of host_aliases
                               file produces dead lock
-                 Merge from:  maintrunk (CR-2009-02-02-0)
+                 Merged from: maintrunk (CR-2009-02-02-0)
                  Issue:       2897 
                  Bugster:     6799088
                  Review:      RD

@@ -68,6 +68,7 @@
 #include "sge_qinstance_qmaster.h"
 #include "sge_host_qmaster.h"
 #include "sge_qmod_qmaster.h"
+#include "sge_subordinate_qmaster.h"
 #include "sge_select_queue.h"
 #include "sge_queue_event_master.h"
 #include "sge_signal.h"
@@ -235,6 +236,7 @@ qinstance_create(sge_gdi_ctx_class_t *ctx,
    sge_qmaster_qinstance_state_set_unknown(ret, true);
    qinstance_check_unknown_state(ret, *object_type_get_master_list(SGE_TYPE_EXECHOST));
    qinstance_set_initial_state(ret, false);
+   qinstance_initialize_sos_attr(ctx, ret, monitor);
    qinstance_increase_qversion(ret);
 
    DEXIT;

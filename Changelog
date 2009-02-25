@@ -25,7 +25,7 @@ ZG-2009-02-16-0: Bugfix:      Update docs
 DG-2009-02-16-0: Bugfix:      Installation of execd on AIX will fail on filesystems
                               with root to nobody mapping when trying to copy 
                               loadsensor script automatically.
-                 Review:      HP 
+                 Review:      HP
 
 JG-2009-02-16-0: Bugfix:      qrsh (new interactive job support) does not work
                               with host aliasing
@@ -40,6 +40,8 @@ LP-2009-02-16-0: Bugfix:      gui-installer: Installation might fail for C shell
                  Bugfix:      gui-installer: Infinite loop when installing
                               win execd host due to missing LOCAL_EXECD_SPOOL
                  Belongs to:  LP-2009-02-13-1
+                 Bugster:     6808084
+                 Issue:       2927
                  Bugfix:      gui-installer: Install button not enabled when
                               going back and forth
                  Bugfix:      gui-installer: ant clean target does not delete
@@ -193,6 +195,8 @@ RD-2009-02-09-0: Enhancem.:   - reduced queue instance sorting during dispatch r
                  Review:      JG
 
 LP-2009-02-06-0: Bugfix:      inst_sge -copycerts in AUTO mode does not work
+                 Bugster:     6808089
+                 Issue:       2928
                  Bugfix:      gui-installer: IPs treated as hostnames
                  Bugfix:      gui-installer: prerequisites/final tasks now
                               displayed in the install list
@@ -239,6 +243,10 @@ RD-2009-02-03-1: CVS:         Created V62u2_RC1_TAG
 ---------------------------------------------------
 
 LP-2009-02-03-1: Bugfix:      gui-installer: SMF not used at all
+                 Bugfix:      Autoinstallion on loopback interface ends with
+                              exit 0
+                 Bugster:     6800497
+                 Issue:       2929
                  Review:      AA
 
 LP-2009-02-03-0: Bugfix:      gui-installer: admin/submit hosts not set properly
@@ -246,9 +254,6 @@ LP-2009-02-03-0: Bugfix:      gui-installer: admin/submit hosts not set properly
                  Bugfix:      gui-installer: CSP installation does not work
                               properly
                  Bugster:     6790504
-                 Bugfix:      Autoinstallion on loopback interface ends with
-                              exit 0
-                 Bugster:     6800497
                  Review:      ZG
 
 ZG-2009-02-03-0: Bugfix:      gui-installer: it's not possible to switch-off
@@ -751,9 +756,15 @@ RD-2008-12-11-1: CVS:         Created V62u2alpha3_TAG
 -----------------------------------------------------
 
 LP-2008-12-11-0: Bugfix:      ADMIN_USER not used in auto install mode
+                 Bugster:     6808600
+                 Issue:       2930
                  Bugfix:      When all.q or allhosts already exists qmaster
                               installation fails
+                 Bugster:     6673742
+                 Issue:       2594
                  Bugfix:      ShutdownQmaster - can't use SMF when not root
+                 Bugster:     6808604
+                 Issue:       2931
                  Bugfix:      Removed No CSP System installed message in auto
                               installation
                  Bugfix:      Fixed gui-installer, test, javadoc, clean targets
@@ -882,6 +893,8 @@ LP-2008-12-09-0: Enhancem.:   Reverted default to no-jmx (SGE 6.2 behavior)
 
 LP-2008-12-08-0: Bugfix:      qmaster auto installation with jmx will fail if
                               CSP_RECREATE flag is not set
+                 Bugster:     6808597
+                 Issue:       2932
                  Following changes apply to clients/gui-installer
                  Cleanup:     Removed install key shortcut
                  Bugfix:      inst_sge - fixed variable settings for -autogui
@@ -967,6 +980,8 @@ ZG-2008-12-03-0: Enhancem.:   improve mk_ascman script the way to generate html
                  Review:      LP
 
 LP-2008-12-02-0: Enhancem.:   autoconf doesn't need JMX args for execd uninstall
+                 Bugster:     6808594
+                 Issue:       2933
                  Following changes apply to clients/gui-installer
                  Bugfix:      jvm library name now resolved correctly on MacOS
                  Bugfix:      SSL enabled by default for JMX

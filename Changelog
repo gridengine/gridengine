@@ -1,3 +1,10 @@
+MP-2009-02-25-0: Bugfix:      Fixed temp file name in loadsensor has problems on
+                              arch AIX.
+                              Merged from MP-2009-02-23-0
+                 Bugster:     6740546
+                 Issue:       2715
+                 Review:      DG
+
 RD-2009-02-19-0: CVS:         Created V62u2_TAG
 -----------------------------------------------
 

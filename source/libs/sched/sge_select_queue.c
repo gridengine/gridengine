@@ -3888,12 +3888,13 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
                   int rqs_hslots = 0, maxslots, slots, slots_qend;
 
                   /* still broken for cases where round robin requires multiple rounds */
-                  if (ALLOC_RULE_IS_BALANCED(allocation_rule))
+                  if (ALLOC_RULE_IS_BALANCED(allocation_rule)) {
                      maxslots = allocation_rule;
-                  else if (allocation_rule == ALLOC_RULE_FILLUP)
-                     maxslots = a->slots - accu_host_slots; 
-                  else /* ALLOC_RULE_ROUNDROBIN */
+                  } else if (allocation_rule == ALLOC_RULE_FILLUP) {
+                     maxslots = MIN(a->slots - accu_host_slots, hslots); 
+                  } else {/* ALLOC_RULE_ROUNDROBIN */
                      maxslots = 1;
+                  }
 
                   /* debit on RQS limits */
                   for (qep = lGetElemHostFirst(a->queue_list, QU_qhostname, eh_name, &iter); qep;
@@ -4008,13 +4009,14 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
                   int rqs_hslots = 0, maxslots, slots, slots_qend;
 
                   /* still broken for cases where round robin requires multiple rounds */
-                  if (ALLOC_RULE_IS_BALANCED(allocation_rule))
+                  if (ALLOC_RULE_IS_BALANCED(allocation_rule)) {
                      maxslots = allocation_rule;
-                  else if (allocation_rule == ALLOC_RULE_FILLUP)
-                     maxslots = a->slots - accu_host_slots_qend; 
-                  else /* ALLOC_RULE_ROUNDROBIN */
+                  } else if (allocation_rule == ALLOC_RULE_FILLUP) {
+                     maxslots = MIN(a->slots - accu_host_slots_qend, hslots_qend); 
+                  } else { /* ALLOC_RULE_ROUNDROBIN */
                      maxslots = 1; 
-                  
+                  }
+
                   /* debit on RQS limits */
                   for (qep = lGetElemHostFirst(a->queue_list, QU_qhostname, eh_name, &iter); qep;
                        qep = lGetElemHostNext(a->queue_list, QU_qhostname, eh_name, &iter)) {

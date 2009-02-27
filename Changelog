@@ -471,6 +471,13 @@ GH-2009-01-22-0: Bugfix:      bad logging if "act_qmaster" file does not exist
                  Issue:       2881
                  Review:      CR
 
+AH-2009-01-22-0: Bugfix:      Sequence numbers broken for parallel jobs when multpile 
+                              queues are used
+                 Changed:     libs/sched/sge_select_queue.c
+                 Issue:       2864
+                 Bugster:     6791556
+                 Review:      RD
+
 DG-2009-01-22-0: Bugfix:      Calling drmaa_exit before any calls to drmaa_init
                               results in segfault
                  Issue:       2882

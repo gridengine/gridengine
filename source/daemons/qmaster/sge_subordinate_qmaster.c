@@ -53,6 +53,12 @@
 #include "sge_subordinate.h"
 #include "sge_qref.h"
 
+static bool
+qinstance_x_on_subordinate(sge_gdi_ctx_class_t *ctx,
+                           lListElem *this_elem, bool suspend,
+                           bool send_event, monitoring_t *monitor);
+
+
 /*
    (un)suspend on subordinate using granted_destination_identifier_list
 
@@ -91,7 +97,7 @@ cqueue_list_x_on_subordinate_gdil(sge_gdi_ctx_class_t *ctx,
             const char *so_queue_name = lGetString(so, SO_name);
             
             /* We have to check this because so_list_resolve() didn't. */
-            if (strcmp (full_name, so_queue_name) == 0) {
+            if (strcmp(full_name, so_queue_name) == 0) {
                /* Queue can't be subordinate to itself. */
                DPRINTF (("Removing circular reference.\n"));
                continue;
@@ -116,7 +122,7 @@ cqueue_list_x_on_subordinate_gdil(sge_gdi_ctx_class_t *ctx,
                   /*
                    * Suspend/unsuspend the subordinated queue
                    */
-                  ret &= qinstance_x_on_subordinate(ctx, so_queue, suspend, false, monitor);
+                  ret &= qinstance_x_on_subordinate(ctx, so_queue, suspend, true, monitor);
 
                } else {
                   ERROR((SGE_EVENT, MSG_QINSTANCE_NQIFOUND_SS, 
@@ -132,14 +138,13 @@ cqueue_list_x_on_subordinate_gdil(sge_gdi_ctx_class_t *ctx,
          ret = false;
       } 
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
-bool
+static bool
 qinstance_x_on_subordinate(sge_gdi_ctx_class_t *ctx,
                            lListElem *this_elem, bool suspend,
-                           bool rebuild_cache, monitoring_t *monitor)
+                           bool send_event, monitoring_t *monitor)
 {
    bool ret = true;
    u_long32 sos_counter;
@@ -195,25 +200,25 @@ qinstance_x_on_subordinate(sge_gdi_ctx_class_t *ctx,
    if (do_action) {
       DPRINTF(("Due to other suspend states signal will %sbe delivered\n",
                send_qinstance_signal ? "NOT " : "")); 
-      if (send_qinstance_signal && !rebuild_cache) {
+      if (send_qinstance_signal) {
          ret = (sge_signal_queue(ctx, signal, this_elem, NULL, NULL, monitor) == 0) ? true : false;
       }
 
       sge_qmaster_qinstance_state_set_susp_on_sub(this_elem, suspend);
-
-      sge_add_event(0, event, 0, 0, cqueue_name, hostname, NULL, NULL);
+      if (send_event) {
+         sge_add_event(0, event, 0, 0, cqueue_name, hostname, NULL, NULL);
+      }
       lListElem_clear_changed_info(this_elem);
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 bool
 cqueue_list_x_on_subordinate_so(sge_gdi_ctx_class_t *ctx,
                                 lList *this_list, lList **answer_list,
                                 bool suspend, const lList *resolved_so_list,
-                                bool do_recompute_caches, monitoring_t *monitor)
+                                monitoring_t *monitor)
 {
    bool ret = true;
    const lListElem *so = NULL;
@@ -230,14 +235,13 @@ cqueue_list_x_on_subordinate_so(sge_gdi_ctx_class_t *ctx,
 
       if (qinstance != NULL) {
          ret &= qinstance_x_on_subordinate(ctx, qinstance, suspend,
-                                           do_recompute_caches, monitor);
+                                           true, monitor);
          if (!ret) {
             break;
          }
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 bool
@@ -254,19 +258,17 @@ qinstance_find_suspended_subordinates(const lListElem *this_elem,
       /* Temporary storage for subordinates */
       lList *so_list = lGetList(this_elem, QU_subordinate_list);
       lListElem *so = NULL;
-      const char *qinstance_name = lGetString(this_elem, QU_qname);
       const char *hostname = lGetHost(this_elem, QU_qhostname);
       /* Slots calculations */
       u_long32 slots = lGetUlong(this_elem, QU_job_slots);
       u_long32 slots_used = qinstance_slots_used(this_elem);
       bool all_full = (slots_used == slots) ? true : false;
-
+       
       /*
        * Resolve cluster queue names into qinstance names
        */
-      so_list_resolve(so_list, answer_list, resolved_so_list, qinstance_name,
+      so_list_resolve(so_list, answer_list, resolved_so_list, NULL,
                       hostname);
-
       /* 
        * If the number of used slots on this qinstance is greater than a
        * subordinate's threshold (if it has one), or if this qinstance has all
@@ -295,8 +297,7 @@ qinstance_find_suspended_subordinates(const lListElem *this_elem,
       }
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 bool
@@ -318,8 +319,6 @@ qinstance_initialize_sos_attr(sge_gdi_ctx_class_t *ctx, lListElem *this_elem, mo
    full_name = lGetString(this_elem, QU_full_name);
    qinstance_name = lGetString(this_elem, QU_qname);
    hostname = lGetHost(this_elem, QU_qhostname);
-   slots = lGetUlong (this_elem, QU_job_slots);
-   slots_used = qinstance_slots_used(this_elem);
    
    for_each(cqueue, master_list) {
       lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
@@ -330,6 +329,9 @@ qinstance_initialize_sos_attr(sge_gdi_ctx_class_t *ctx, lListElem *this_elem, mo
          lList *so_list = lGetList(qinstance, QU_subordinate_list);
          lListElem *so = NULL;
          lList *resolved_so_list = NULL;
+
+         slots = lGetUlong (qinstance, QU_job_slots);
+         slots_used = qinstance_slots_used(qinstance);
 
          /*
           * Resolve cluster queue names into qinstance names
@@ -350,6 +352,5 @@ qinstance_initialize_sos_attr(sge_gdi_ctx_class_t *ctx, lListElem *this_elem, mo
          lFreeList(&resolved_so_list);
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }

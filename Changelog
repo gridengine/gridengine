@@ -468,7 +468,7 @@ LP-2009-01-22-0: Bugfix:      gui-installer: Parallel shadowd installation might
 
 GH-2009-01-22-0: Bugfix:      bad logging if "act_qmaster" file does not exist
                  Bugster:     6288964
-                 Issue:       2881/860
+                 Issue:       2881, 860
                  Review:      CR
 
 AH-2009-01-22-0: Bugfix:      Sequence numbers broken for parallel jobs when multpile 

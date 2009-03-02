@@ -295,6 +295,9 @@ char **argv
       lFreeList(&report_list);
    }
 
+   
+   /* here we have to wait for qmaster registration */
+
    execd_register(ctx);
 
    sge_write_pid(EXECD_PID_FILE);
@@ -359,12 +362,7 @@ char **argv
           INFO((SGE_EVENT, "SIGPIPE received\n"));
       }
 
-      if (sge_get_com_error_flag(EXECD, SGE_COM_ACCESS_DENIED) == true) {
-         execd_exit_state = SGE_COM_ACCESS_DENIED;
-         break; /* shut down, leave while */
-      }
-
-      if (sge_get_com_error_flag(EXECD, SGE_COM_ENDPOINT_NOT_UNIQUE) == true) {
+      if (sge_get_com_error_flag(EXECD, SGE_COM_ENDPOINT_NOT_UNIQUE, false) == true) {
          execd_exit_state = SGE_COM_ENDPOINT_NOT_UNIQUE;
          break; /* shut down, leave while */
       }
@@ -491,7 +489,9 @@ int sge_execd_register_at_qmaster(sge_gdi_ctx_class_t *ctx, bool is_restart) {
       }
       return_value = 1;
    } else {
-      sge_last_register_error_flag = 0;
+      sge_last_register_error_flag = 0; 
+      sge_get_com_error_flag(EXECD, SGE_COM_WAS_COMMUNICATION_ERROR, true);
+      sge_get_com_error_flag(EXECD, SGE_COM_ACCESS_DENIED, true);
       INFO((SGE_EVENT, MSG_EXECD_REGISTERED_AT_QMASTER_S, master_host));
    }
    lFreeList(&alp);
@@ -523,45 +523,30 @@ int sge_execd_register_at_qmaster(sge_gdi_ctx_class_t *ctx, bool is_restart) {
 *******************************************************************************/
 static void execd_register(sge_gdi_ctx_class_t *ctx)
 {
-   int had_problems = 0;
 
+   cl_com_handle_t* handle = NULL;
    DENTER(TOP_LAYER, "execd_register");
 
    while (!shut_me_down) {
       DPRINTF(("*****Checking In With qmaster*****\n"));
-
-      if (had_problems != 0) {
-         int ret_val;
-         cl_com_handle_t* handle = NULL;
-         
+      handle = cl_com_get_handle(prognames[EXECD],1);
+      if ( handle == NULL) {
+         DPRINTF(("preparing reenroll"));
+         ctx->prepare_enroll(ctx);
          handle = cl_com_get_handle(prognames[EXECD],1);
-         if ( handle == NULL) {
-            DPRINTF(("preparing reenroll"));
-            ctx->prepare_enroll(ctx);
-            handle = cl_com_get_handle(prognames[EXECD],1);
-         }
-
-         ret_val = cl_commlib_trigger(handle, 1); /* this will block on errors for 1 second */
-         switch(ret_val) {
-            case CL_RETVAL_SELECT_TIMEOUT:
-            case CL_RETVAL_OK:
-               break;
-            default:
-               DPRINTF(("got communication problems - sleeping 30 s"));
-               sleep(30); /* For other errors */
-               break;
-         }
-         if (sge_get_com_error_flag(EXECD, SGE_COM_ACCESS_DENIED) == true ||
-             sge_get_com_error_flag(EXECD, SGE_COM_ENDPOINT_NOT_UNIQUE) == true) {
-            break;
-         }
-
       }
 
+      cl_commlib_trigger(handle, 1); /* this will block on errors for 1 second */
+      if (sge_get_com_error_flag(EXECD, SGE_COM_ACCESS_DENIED, false) == true) {
+         /* This is no error */
+         DPRINTF(("*****  got SGE_COM_ACCESS_DENIED from qmaster  *****\n"));
+      }
+      if (sge_get_com_error_flag(EXECD, SGE_COM_ENDPOINT_NOT_UNIQUE, false) == true) {
+         break;
+      }
       if (sge_execd_register_at_qmaster(ctx, false) != 0) {
-         if ( had_problems == 0) {
-            had_problems = 1;
-         }
+         DPRINTF(("got communication problems - sleeping 30 s"));
+         sleep(30); /* For other errors */
          continue;
       }
       break;

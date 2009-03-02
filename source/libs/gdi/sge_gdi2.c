@@ -2052,8 +2052,9 @@ gdi2_receive_message(sge_gdi_ctx_class_t *sge_ctx, char *fromcommproc, u_short *
  *   -3   invalid NULL pointer received for local configuration
  *   -4   request to qmaster failed
  *   -5   there is no global configuration
- *   -6   commproc already registered
+ *   -6   endpoint not unique
  *   -7   no permission to get configuration
+ *   -8   access denied error on commlib layer
  * EXTERNAL
  *
  * DESCRIPTION
@@ -2111,8 +2112,11 @@ lListElem **lepp
       }
       DPRINTF(("get_configuration: unique for %s: %s\n", config_name, lGetHost(hep, EH_name)));
 
-      if (sge_get_com_error_flag(me, SGE_COM_ACCESS_DENIED)       == true ||
-          sge_get_com_error_flag(me, SGE_COM_ENDPOINT_NOT_UNIQUE) == true) {
+      if (sge_get_com_error_flag(me, SGE_COM_ACCESS_DENIED, false) == true) {
+         lFreeElem(&hep);
+         DRETURN(-8);
+      }
+      if (sge_get_com_error_flag(me, SGE_COM_ENDPOINT_NOT_UNIQUE, false) == true) {
          lFreeElem(&hep);
          DRETURN(-6);
       }
@@ -2199,7 +2203,8 @@ volatile int* abort_flag
    cl_com_handle_t* handle = NULL;
    int ret_val;
    int ret;
-   
+   u_long32 now = sge_get_gmt();
+   static u_long32 last_qmaster_file_read = 0;
    const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
    const char *cell_root = ctx->get_cell_root(ctx);
    u_long32 progid = ctx->get_who(ctx);
@@ -2214,9 +2219,16 @@ volatile int* abort_flag
 
    while ((ret = gdi2_get_configuration(ctx, qualified_hostname, &global, &local))) {
       if (ret==-6 || ret==-7) {
-         /* confict: COMMPROC ALREADY REGISTERED */
+         /* confict: endpoint not unique or no permission to get config */
          DRETURN(-1);
       }
+       
+      if (ret==-8) {
+         /* access denied */
+         sge_get_com_error_flag(progid, SGE_COM_ACCESS_DENIED, true);
+         sleep(30);
+      }
+
       if (!ctx->is_daemonized(ctx)) {
          /* do not daemonize the first time to be able
             to report communication errors to stdout/stderr */
@@ -2255,6 +2267,14 @@ volatile int* abort_flag
          if (*abort_flag != 0) {
             DRETURN(-2);
          }
+      }
+
+      now = sge_get_gmt();
+
+      if (now - last_qmaster_file_read >= 30) {
+         ctx->get_master(ctx, true);
+         DPRINTF(("re-read actual qmaster file\n"));
+         last_qmaster_file_read = now;
       }
    }
   
@@ -2809,7 +2829,7 @@ general_communication_error(const cl_application_error_list_elem_t* commlib_erro
 *  SEE ALSO
 *     sge_any_request/general_communication_error()
 *******************************************************************************/
-bool sge_get_com_error_flag(u_long32 progid, sge_gdi_stored_com_error_t error_type) {
+bool sge_get_com_error_flag(u_long32 progid, sge_gdi_stored_com_error_t error_type, bool reset_error_flag) {
    bool ret_val = false;
    DENTER(GDI_LAYER, "sge_get_com_error_flag");
    sge_mutex_lock("general_communication_error_mutex", 
@@ -2820,11 +2840,14 @@ bool sge_get_com_error_flag(u_long32 progid, sge_gdi_stored_com_error_t error_ty
     * for un-"cased" values 
     */
 
-   /* TODO: remove uti_state_get_mewho() cases for QMASTER and EXECD after
+   /* TODO: remove uti_state_get_mewho()/progid cases for QMASTER and EXECD after
             BT: 6350264, IZ: 1893 is fixed */
    switch (error_type) {
       case SGE_COM_ACCESS_DENIED: {
          ret_val = sge_gdi_communication_error.com_access_denied;
+         if (reset_error_flag == true) {
+            sge_gdi_communication_error.com_access_denied = false;
+         }
          break;
       }
       case SGE_COM_ENDPOINT_NOT_UNIQUE: {
@@ -2833,11 +2856,16 @@ bool sge_get_com_error_flag(u_long32 progid, sge_gdi_stored_com_error_t error_ty
          } else { 
             ret_val = sge_gdi_communication_error.com_endpoint_not_unique;
          }
+         if (reset_error_flag == true) {
+            sge_gdi_communication_error.com_endpoint_not_unique = false;
+         }
          break;
       }
       case SGE_COM_WAS_COMMUNICATION_ERROR: {
          ret_val = sge_gdi_communication_error.com_was_error;
-         sge_gdi_communication_error.com_was_error = false;  /* reset error flag */
+         if (reset_error_flag == true) {
+            sge_gdi_communication_error.com_was_error = false;  /* reset error flag */
+         }
       }
    }
    sge_mutex_unlock("general_communication_error_mutex",

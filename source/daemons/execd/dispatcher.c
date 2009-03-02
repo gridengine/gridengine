@@ -191,12 +191,18 @@ int dispatch( sge_gdi_ctx_class_t *ctx,
          }
       }
 
-      if (sge_get_com_error_flag(EXECD, SGE_COM_ACCESS_DENIED) == true ||
-          sge_get_com_error_flag(EXECD, SGE_COM_ENDPOINT_NOT_UNIQUE) == true) {
+      if (sge_get_com_error_flag(EXECD, SGE_COM_ACCESS_DENIED, false) == true) {
+         /* we have to reconnect, when the problem is fixed */
+         do_re_register = true;
+         /* we do not expect that the problem is fast to fix */
+         sleep(30);
+      } 
+
+      if (sge_get_com_error_flag(EXECD, SGE_COM_ENDPOINT_NOT_UNIQUE, false) == true) {
          terminate = 1; /* leave dispatcher */
       }
 
-      if (sge_get_com_error_flag(EXECD, SGE_COM_WAS_COMMUNICATION_ERROR) == true) {
+      if (sge_get_com_error_flag(EXECD, SGE_COM_WAS_COMMUNICATION_ERROR, false) == true) {
          do_re_register = true;
       }
 

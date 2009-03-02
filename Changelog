@@ -1,3 +1,10 @@
+CR-2009-03-02-0: Bugfix:      hostname resolving problem might cause execution
+                              daemon shutdown
+                 Merged from: maintrunk (CR-2009-02-02-1)
+                 Issue:       2895 
+                 Bugster:     6799028
+                 Review:      RD
+
 DG-2009-02-27-0: Cleanup:     Fixed broken build.
                  Belongs to:  DG-2009-02-20-0
                  Review:      RD
@@ -80,7 +87,7 @@ CR-2009-01-28-0: Bugfix:      fixed broken build
 GH-2009-01-23-0: Bugfix:      bad logging if "act_qmaster" file does not exist 
                               (moved V61u6_TAG for this check in)
                  Bugster:     6288964
-                 Issue:       2881
+                 Issue:       2881, 868
                  Review:      CR
 
 MD-2009-01-28-0: CVS:       Created V61u6_TAG.

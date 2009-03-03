@@ -42,7 +42,7 @@
 
 int main(int argc, char** argv)
 {
- 
+   printf("\nFD_SETSIZE on this system: %ld\n", (unsigned long) FD_SETSIZE);
    printf("\ntest issue #1502: ");
 
 #ifdef __GRIDENGINE_FD_SETSIZE

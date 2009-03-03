@@ -425,7 +425,7 @@ static void general_communication_error(const cl_application_error_list_elem_t* 
 *  SEE ALSO
 *     sge_any_request/general_communication_error()
 *******************************************************************************/
-bool sge_get_com_error_flag(sge_gdi_stored_com_error_t error_type) {
+bool sge_get_com_error_flag(sge_gdi_stored_com_error_t error_type, bool reset_error_flag) {
    bool ret_val = false;
    DENTER(TOP_LAYER, "sge_get_com_error_flag");
    sge_mutex_lock("general_communication_error_mutex", 
@@ -441,6 +441,9 @@ bool sge_get_com_error_flag(sge_gdi_stored_com_error_t error_type) {
    switch (error_type) {
       case SGE_COM_ACCESS_DENIED: {
          ret_val = sge_gdi_communication_error.com_access_denied;
+         if (reset_error_flag == true) {
+            sge_gdi_communication_error.com_access_denied = false;
+         }
          break;
       }
       case SGE_COM_ENDPOINT_NOT_UNIQUE: {
@@ -450,11 +453,16 @@ bool sge_get_com_error_flag(sge_gdi_stored_com_error_t error_type) {
          } else { 
             ret_val = sge_gdi_communication_error.com_endpoint_not_unique;
          }
+         if (reset_error_flag == true) {
+            sge_gdi_communication_error.com_endpoint_not_unique = false;
+         }
          break;
       }
       case SGE_COM_WAS_COMMUNICATION_ERROR: {
          ret_val = sge_gdi_communication_error.com_was_error;
-         sge_gdi_communication_error.com_was_error = false;  /* reset error flag */
+         if (reset_error_flag == true) {
+            sge_gdi_communication_error.com_was_error = false;  /* reset error flag */
+         }
       }
    }
    sge_mutex_unlock("general_communication_error_mutex",

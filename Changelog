@@ -1,3 +1,13 @@
+CR-2009-03-03-1: Enhancem.:   test_general binary now prints FD_SETSIZE value
+                 Review:      DG
+
+CR-2009-03-03-0: Bugfix:      hostname resolving problem might cause execution
+                              daemon shutdown
+                 Merged from: V61_BRANCH (CR-2009-03-02-0)
+                 Issue:       2895 
+                 Bugster:     6799028
+                 Review:      RD
+
 CR-2009-02-18-0: Bugfix:      using IP String in first column of host_aliases
                               file produces dead lock
                  Merge from:  maintrunk (CR-2009-02-02-0)

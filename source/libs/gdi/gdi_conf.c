@@ -46,6 +46,7 @@
 #include "sge_unistd.h"
 #include "commlib.h"
 #include "gdi_conf.h"
+#include "qm_name.h"
 #include "sge_any_request.h"
 
 #include "msg_gdilib.h"
@@ -72,8 +73,9 @@
  *   -3   invalid NULL pointer received for local configuration
  *   -4   request to qmaster failed
  *   -5   there is no global configuration
- *   -6   commproc already registered
+ *   -6   endpoint not unique
  *   -7   no permission to get configuration
+ *   -8   access denied error on commlib layer
  * EXTERNAL
  *
  * DESCRIPTION
@@ -131,8 +133,12 @@ lListElem **lepp
       }
       DPRINTF(("get_configuration: unique for %s: %s\n", config_name, lGetHost(hep, EH_name)));
 
-      if (sge_get_com_error_flag(SGE_COM_ACCESS_DENIED)       == true ||
-          sge_get_com_error_flag(SGE_COM_ENDPOINT_NOT_UNIQUE) == true) {
+      if (sge_get_com_error_flag(SGE_COM_ACCESS_DENIED, false)       == true) {
+         lFreeElem(&hep);
+         DEXIT;
+         return -8;
+      }
+      if (sge_get_com_error_flag(SGE_COM_ENDPOINT_NOT_UNIQUE, false) == true) {
          lFreeElem(&hep);
          DEXIT;
          return -6;
@@ -224,6 +230,9 @@ volatile int* abort_flag
    cl_com_handle_t* handle = NULL;
    int ret_val;
    int ret;
+   u_long32 now = sge_get_gmt();
+   static u_long32 last_qmaster_file_read = 0;
+
 
    DENTER(TOP_LAYER, "get_conf_and_daemonize");
    /*
@@ -234,10 +243,18 @@ volatile int* abort_flag
 
    while ((ret = get_configuration(uti_state_get_qualified_hostname(), &global, &local))) {
       if (ret==-6 || ret==-7) {
-         /* confict: COMMPROC ALREADY REGISTERED */
+         /* confict: endpoint not unique or no permission to get config */
          DEXIT;
          return -1;
       }
+
+      if (ret==-8) {
+         /* access denied */
+         sge_get_com_error_flag(SGE_COM_ACCESS_DENIED, true);
+         sleep(30);
+      }
+
+
       if (!uti_state_get_daemonized()) {
          /* do not daemonize the first time to be able
             to report communication errors to stdout/stderr */
@@ -277,6 +294,13 @@ volatile int* abort_flag
             DEXIT;
             return -2;
          }
+      }
+      now = sge_get_gmt();
+
+      if (now - last_qmaster_file_read >= 30) {
+         sge_get_master(true);
+         DPRINTF(("re-read actual qmaster file\n"));
+         last_qmaster_file_read = now;
       }
    }
   

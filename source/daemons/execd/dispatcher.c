@@ -224,12 +224,18 @@ int dispatch( dispatch_entry*   table,
          }
       }
 
-      if (sge_get_com_error_flag(SGE_COM_ACCESS_DENIED) == true ||
-          sge_get_com_error_flag(SGE_COM_ENDPOINT_NOT_UNIQUE) == true) {
+      if (sge_get_com_error_flag(SGE_COM_ACCESS_DENIED, false) == true) {
+         /* we have to reconnect, when the problem is fixed */
+         do_re_register = true;
+         /* we do not expect that the problem is fast to fix */
+         sleep(30);
+      }
+ 
+      if (sge_get_com_error_flag(SGE_COM_ENDPOINT_NOT_UNIQUE, false) == true) {
          terminate = 1; /* leave dispatcher */
       }
 
-      if (sge_get_com_error_flag(SGE_COM_WAS_COMMUNICATION_ERROR) == true) {
+      if (sge_get_com_error_flag(SGE_COM_WAS_COMMUNICATION_ERROR, false) == true) {
          do_re_register = true;
       }
 
@@ -243,20 +249,19 @@ int dispatch( dispatch_entry*   table,
          
          if ( now - last_qmaster_file_read >= 30 ) {
             /* re-read act qmaster file (max. every 30 seconds) */
+            const char *hostname = sge_get_master(true);
             DPRINTF(("re-read actual qmaster file\n"));
-            sge_get_master(true);
             last_qmaster_file_read = now;
             if (i != CL_RETVAL_CONNECTION_NOT_FOUND &&
-                i != CL_RETVAL_CONNECT_ERROR) {
+                i != CL_RETVAL_CONNECT_ERROR &&
+                hostname != NULL) {
                /* re-register at qmaster when connection is up again */
-               if ( sge_execd_register_at_qmaster() == 0) {
+               if (sge_execd_register_at_qmaster() == 0) {
                   do_re_register = false;
                }
             }
          }
       }
-
-
 
       /* look for dispatch entries matching the inbound message or
          entries activated at idle times */

@@ -78,7 +78,7 @@ typedef enum sge_gdi_stored_com_error_type {
    SGE_COM_ENDPOINT_NOT_UNIQUE,
    SGE_COM_WAS_COMMUNICATION_ERROR
 } sge_gdi_stored_com_error_t;
-bool sge_get_com_error_flag(sge_gdi_stored_com_error_t error_type);
+bool sge_get_com_error_flag(sge_gdi_stored_com_error_t error_type, bool reset_error_flag);
 
 enum { COMMD_UNKNOWN = 0, COMMD_UP, COMMD_DOWN};
 

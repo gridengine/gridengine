@@ -4949,6 +4949,7 @@ static int japi_read_dynamic_attributes(dstring *diag)
          case -4:
          case -6:
          case -7:
+         case -8:
             drmaa_errno = DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE;
             break;
          case -1:

@@ -240,12 +240,12 @@ char *argv[]
          done = true;
       }   
 
-      if (sge_get_com_error_flag(SGE_COM_ACCESS_DENIED) == true) {
-         schedd_exit_state = SGE_COM_ACCESS_DENIED;
-         done = true;
+      if (sge_get_com_error_flag(SGE_COM_ACCESS_DENIED, false) == true) {
+         sleep(30);
+         check_qmaster = true;
       }
 
-      if (sge_get_com_error_flag(SGE_COM_ENDPOINT_NOT_UNIQUE) == true) {
+      if (sge_get_com_error_flag(SGE_COM_ENDPOINT_NOT_UNIQUE, false) == true) {
          schedd_exit_state = SGE_COM_ENDPOINT_NOT_UNIQUE;
          done = true;
       }
@@ -263,8 +263,8 @@ char *argv[]
        * in this case do not start a scheduling run
        */
       if (done == false) {
-
          if (check_qmaster) {
+            sge_get_com_error_flag(SGE_COM_ACCESS_DENIED, true);
             if ((ret = sge_ck_qmaster(initial_qmaster_host)) < 0) {
                FREE(initial_qmaster_host);
                CRITICAL((SGE_EVENT, MSG_SCHEDD_CANTGOFURTHER ));

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2008/07/08 09:10:03 $     Revision: $Revision: 1.34 $
+.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2008/12/23 16:56:44 $     Revision: $Revision: 1.37 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QCONF 1 "$Date: 2008/07/08 09:10:03 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QCONF 1 "$Date: 2008/12/23 16:56:44 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qconf \- xxQS_NAMExx Queue Configuration
 .SH SYNTAX
@@ -271,6 +271,12 @@ contain a changed configuration.
 Refer to
 .M queue_conf 5
 for details on the queue configuration format.
+Requires root or manager privilege.
+.\"
+.IP  "\fB\-Msconf fname\fP	\fI<modify scheduler configuration from file>\fP"
+The current scheduler configuration (see
+.M sched_conf 5 )
+is overridden with the configuration specified in the file.
 Requires root or manager privilege.
 .\"
 .IP "\fB\-Mstree fname\fP	\fI<modify share tree>\fP"
@@ -765,7 +771,10 @@ hosts to be addressed by the \fB\-ke\fP and \fB\-kej\fP
 option. If the keyword \fBall\fP is specified instead of a
 host list, all running
 .M xxqs_name_sxx_execd 8
-processes are shutdown.
+processes are shutdown. Job abortion, initiated by the \fB\-kej\fP
+option will result in \fBdr\fP state for all running jobs until  
+.M xxqs_name_sxx_execd 8 
+is running again.
 .br
 Requires root or manager privileges.
 .\"
@@ -929,12 +938,6 @@ or the editor indicated by $EDITOR) and
 the changed configuration is registered with
 .M xxqs_name_sxx_qmaster 8
 upon exit of the editor.
-Requires root or manager privilege.
-.\"
-.IP  "\fB\-Msconf fname\fP	\fI<modify scheduler configuration from file>\fP"
-The current scheduler configuration (see
-.M sched_conf 5 )
-is overridden with the configuration specified in the file. 
 Requires root or manager privilege.
 .\"
 .IP "\fB\-mstnode node_path=shares,...\fP	\fI<modify share tree node>\fP"
@@ -1175,6 +1178,10 @@ specifying the location of a node in the share tree.
 Shows the definition of the share tree (see
 .M share_tree 5 ).
 .\"
+.IP "\fB\-sst\fP	\fI<show formated share tree>\fP"
+Shows the definition of the share tree in a tree view (see
+.M share_tree 5 ).
+.\"
 .IP "\fB\-sss\fP	\fI<show scheduler status>\fP"
 Currently displays the host on which the xxQS_NAMExx scheduler is 
 active or an error message if no scheduler is running.
@@ -1289,6 +1296,7 @@ taking effect on next invocation of the queue (i.e., the next job).
 .M queue_conf 5 ,
 .M xxqs_name_sxx_execd 8 ,
 .M xxqs_name_sxx_qmaster 8 ,
+.M xxqs_name_sxx_resource_quota 5
 .\"
 .\"
 .SH "COPYRIGHT"

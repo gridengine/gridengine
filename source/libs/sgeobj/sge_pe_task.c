@@ -207,6 +207,7 @@ pe_task_sum_past_usage_list(lList *pe_task_list, const lListElem *pe_task)
    if (container == NULL) {
       container = lCreateElem(PET_Type);
       lSetString(container, PET_id, PE_TASK_PAST_USAGE_CONTAINER);
+      lSetBool(container, PET_do_contact, true);
       lInsertElem(pe_task_list, NULL, container);
    }
 
@@ -256,14 +257,6 @@ pe_task_verify_request(const lListElem *petr, lList **answer_list) {
       answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
                               MSG_NULLELEMENTPASSEDTO_S, SGE_FUNC);
       ret = false;
-   }
-
-   if (ret) {
-      if (!object_verify_cull(petr, PETR_Type)) {
-         answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
-                                 MSG_OBJECT_STRUCTURE_ERROR);
-         ret = false;
-      }
    }
 
    /* 

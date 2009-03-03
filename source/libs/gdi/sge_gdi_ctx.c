@@ -738,6 +738,7 @@ sge_gdi_ctx_class_create_from_bootstrap(int prog_number, const char* component_n
    int sge_qmaster_p = 0;
    int sge_execd_p = 0;
    bool is_qmaster_internal_client = false;
+   bool from_services = false;
 
    sge_gdi_ctx_class_t * ret = NULL;
    
@@ -787,21 +788,28 @@ sge_gdi_ctx_class_create_from_bootstrap(int prog_number, const char* component_n
    }
    strcpy(sge_qmaster_port, token);
    
-   sge_qmaster_p = atoi(sge_qmaster_port);
-   
+   if (is_qmaster_internal_client) {
+      sge_qmaster_p = sge_get_qmaster_port(&from_services);
+      sge_execd_p = sge_get_execd_port();
+      DPRINTF(("**** from_services %s ****\n", from_services ? "true" : "false"));
+   } else {
+      sge_qmaster_p = atoi(sge_qmaster_port);
+   } 
    if (sge_qmaster_p <= 0 ) {
       answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, "invalid url, invalid sge_qmaster_port port %s", sge_qmaster_port);
       sge_free_saved_vars(url_ctx);
       DRETURN(NULL);
    }
-
    sge_free_saved_vars(url_ctx);
    
-   /* TODO we need a way to define the execd port, from_services is always false (certs from keystore) */
-   
+   /* 
+    * TODO we need a way to define the execd port, from_services is always false (certs from keystore) for bootstrap:* mode 
+    *      for internal:* mode the master port and the execd port can be fetched from env as for other master threads here also the
+    *      from_services flag can be set
+    */
    ret = sge_gdi_ctx_class_create(prog_number, component_name, thread_number, thread_name,
                                   username, NULL, sge_root, sge_cell, sge_qmaster_p, sge_execd_p, 
-                                  false, is_qmaster_internal_client, alpp);
+                                  from_services, is_qmaster_internal_client, alpp);
    
    DRETURN(ret); 
 }
@@ -876,6 +884,7 @@ static int sge_gdi_ctx_class_prepare_enroll(sge_gdi_ctx_class_t *thiz) {
    */
    
    if (cl_com_setup_commlib_complete() == CL_FALSE) {
+      char* env_sge_commlib_debug = getenv("SGE_DEBUG_LEVEL");
       switch (thiz->get_who(thiz)) {
          case QMASTER:
          case QMON:
@@ -883,17 +892,33 @@ static int sge_gdi_ctx_class_prepare_enroll(sge_gdi_ctx_class_t *thiz) {
          case JGDI:
          case SCHEDD:
          case EXECD:
-            INFO((SGE_EVENT,MSG_GDI_MULTI_THREADED_STARTUP));
-            cl_ret = cl_com_setup_commlib(CL_RW_THREAD, CL_LOG_OFF, sge_gdi_ctx_log_flush_func);
+            {
+               INFO((SGE_EVENT,MSG_GDI_MULTI_THREADED_STARTUP));
+               /* if SGE_DEBUG_LEVEL environment is set we use gdi log flush function */
+               /* you can set commlib debug level with env SGE_COMMLIB_DEBUG */
+               if (env_sge_commlib_debug != NULL) {
+                  cl_ret = cl_com_setup_commlib(CL_RW_THREAD, CL_LOG_OFF, sge_gdi_ctx_log_flush_func);
+               } else {
+                  /* here we use default commlib flush function */
+                  cl_ret = cl_com_setup_commlib(CL_RW_THREAD, CL_LOG_OFF, NULL);
+               }
+            }
             break;
          default:
-            INFO((SGE_EVENT,MSG_GDI_SINGLE_THREADED_STARTUP));
-            cl_ret = cl_com_setup_commlib(CL_NO_THREAD, CL_LOG_OFF, sge_gdi_ctx_log_flush_func);
-            /*
-            ** verbose logging is switched on by default
-            */
-            log_state_set_log_verbose(1);
+            {
+               INFO((SGE_EVENT,MSG_GDI_SINGLE_THREADED_STARTUP));
+               if (env_sge_commlib_debug != NULL) {
+                  cl_ret = cl_com_setup_commlib(CL_NO_THREAD, CL_LOG_OFF, sge_gdi_ctx_log_flush_func);
+               } else {
+                  cl_ret = cl_com_setup_commlib(CL_NO_THREAD, CL_LOG_OFF, NULL);
+               }
+               /*
+               ** verbose logging is switched on by default
+               */
+               log_state_set_log_verbose(1);
+            }
       }
+
       if (cl_ret != CL_RETVAL_OK) {
          sge_gdi_ctx_class_error(thiz, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, 
                             "cl_com_setup_commlib failed: %s", cl_get_error_text(cl_ret));
@@ -1052,9 +1077,9 @@ static int sge_gdi_ctx_class_prepare_enroll(sge_gdi_ctx_class_t *thiz) {
             DPRINTF(("re-read actual qmaster file (prepare_enroll)\n"));
             cl_com_append_known_endpoint_from_name((char*)master, 
                                                    (char*)prognames[QMASTER],
-                                                   1 ,
+                                                   1,
                                                    sge_qmaster_port,
-                                                   CL_CM_AC_DISABLED ,
+                                                   CL_CM_AC_DISABLED,
                                                    CL_TRUE);
             handle = cl_com_create_handle(&cl_ret, 
                                           communication_framework, 
@@ -1247,6 +1272,7 @@ static int sge_gdi_ctx_class_is_alive(sge_gdi_ctx_class_t *thiz)
    const char* comp_name = prognames[QMASTER];
    const char* comp_host = thiz->get_master(thiz, false);
    int         comp_id   = 1;
+   int         comp_port = thiz->get_sge_qmaster_port(thiz);
  
    DENTER(TOP_LAYER, "sge_gdi_ctx_class_is_alive");
    
@@ -1255,6 +1281,13 @@ static int sge_gdi_ctx_class_is_alive(sge_gdi_ctx_class_t *thiz)
                 "handle not found %s:0", thiz->get_component_name(thiz));
       DRETURN(CL_RETVAL_PARAMS);
    }
+
+   /*
+    * update endpoint information of qmaster in commlib
+    * qmaster could have changed due to migration
+    */
+   cl_com_append_known_endpoint_from_name((char*)comp_host, (char*)comp_name, comp_id, 
+                                          comp_port, CL_CM_AC_DISABLED, CL_TRUE);
 
    DPRINTF(("to->comp_host, to->comp_name, to->comp_id: %s/%s/%d\n", comp_host?comp_host:"", comp_name?comp_name:"", comp_id));
    cl_ret = cl_commlib_get_endpoint_status(handle, (char*)comp_host, (char*)comp_name, comp_id, &status);
@@ -1388,6 +1421,7 @@ static const char* get_master(sge_gdi_ctx_class_t *thiz, bool reread) {
    sge_gdi_ctx_t *es = (sge_gdi_ctx_t *) thiz->sge_gdi_ctx_handle;
    sge_path_state_class_t* path_state = thiz->get_sge_path_state(thiz);
    sge_error_class_t *eh = es ? es->eh : NULL;
+   static bool error_already_logged = false;
    
    DENTER(BASIS_LAYER, "sge_gdi_ctx_class->get_master");
    
@@ -1396,11 +1430,13 @@ static const char* get_master(sge_gdi_ctx_class_t *thiz, bool reread) {
       char master_name[CL_MAXHOSTLEN];
 
       if (get_qm_name(master_name, path_state->get_act_qmaster_file(path_state), err_str) == -1) {         
-         if (eh != NULL) {
+         if (eh != NULL && !error_already_logged) {
             eh->error(eh, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, MSG_GDI_READMASTERNAMEFAILED_S, err_str);
+            error_already_logged = true;
          }
          DRETURN(NULL);
       } 
+      error_already_logged = false;
       DPRINTF(("(re-)reading act_qmaster file. Got master host \"%s\"\n", master_name));
       /*
       ** TODO: thread locking needed here ?
@@ -1785,30 +1821,30 @@ static int sge_gdi_ctx_log_flush_func(cl_raw_list_t* list_p)
       switch(elem->log_type) {
          case CL_LOG_ERROR: 
             if (log_state_get_log_level() >= LOG_ERR) {
-               ERROR((SGE_EVENT,  "%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param ));
+               ERROR((SGE_EVENT,  "%-15s=> %s %s (%s)", elem->log_thread_name, elem->log_message, param, elem->log_module_name));
             } else {
-               printf("%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param);
+               printf("%-15s=> %s %s (%s)\n", elem->log_thread_name, elem->log_message, param, elem->log_module_name);
             }
             break;
          case CL_LOG_WARNING:
             if (log_state_get_log_level() >= LOG_WARNING) {
-               WARNING((SGE_EVENT,"%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param ));
+               WARNING((SGE_EVENT,"%-15s=> %s %s (%s)", elem->log_thread_name, elem->log_message, param, elem->log_module_name));
             } else {
-               printf("%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param);
+               printf("%-15s=> %s %s (%s)\n", elem->log_thread_name, elem->log_message, param, elem->log_module_name);
             }
             break;
          case CL_LOG_INFO:
             if (log_state_get_log_level() >= LOG_INFO) {
-               INFO((SGE_EVENT,   "%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param ));
+               INFO((SGE_EVENT,   "%-15s=> %s %s (%s)", elem->log_thread_name, elem->log_message, param, elem->log_module_name));
             } else {
-               printf("%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param);
+               printf("%-15s=> %s %s (%s)\n", elem->log_thread_name, elem->log_message, param, elem->log_module_name);
             }
             break;
          case CL_LOG_DEBUG:
             if (log_state_get_log_level() >= LOG_DEBUG) { 
-               DEBUG((SGE_EVENT,  "%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param ));
+               DEBUG((SGE_EVENT,  "%-15s=> %s %s (%s)", elem->log_thread_name, elem->log_message, param, elem->log_module_name));
             } else {
-               printf("%s %-20s=> %s %s\n", elem->log_module_name, elem->log_thread_name, elem->log_message, param);
+               printf("%-15s=> %s %s (%s)\n", elem->log_thread_name, elem->log_message, param, elem->log_module_name);
             }
             break;
          case CL_LOG_OFF:

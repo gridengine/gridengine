@@ -55,6 +55,7 @@
 
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_multiL.h"
+#include "sgeobj/sge_jsv.h"
 
 #include "msg_common.h"
 #include "msg_gdilib.h"
@@ -429,6 +430,7 @@ sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
 {
    bool ret = true;
    sge_pack_buffer pb;
+   bool pb_initialized = false;
    sge_pack_buffer rpb;
    sge_gdi_packet_class_t *ret_packet = NULL;
    int commlib_error;
@@ -442,11 +444,36 @@ sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
 #ifdef KERBEROS
    /* request that the Kerberos library forward the TGT */
    if (ret && packet->first_task->target == SGE_JOB_LIST && 
-       SGE_GDI_GET_OPERATION(packet->first_task->command) == SGE_GDI_ADD) {
+       SGE_GDI_GET_OPERATION(packet->first_task->command) == SGE_GDI_ADD ) {
       krb_set_client_flags(krb_get_client_flags() | KRB_FORWARD_TGT);
       krb_set_tgt_id(packet->id);
    }
 #endif
+
+    /*
+     * Now we will execute the JSV script if we got a job submission request.
+     * It is necessary to dechain the job which is verified because the
+     * job verification process might destroy the job and create a completely
+     * new one with adjusted job attributes.
+     */
+    if (ret) {
+       sge_gdi_task_class_t *task = packet->first_task;
+
+       if (task->target == SGE_JOB_LIST &&
+           ((SGE_GDI_GET_OPERATION(task->command) == SGE_GDI_ADD) ||
+           (SGE_GDI_GET_OPERATION(task->command) == SGE_GDI_COPY))) {
+          lListElem *job, *next_job;
+
+          next_job = lLast(task->data_list);
+          while (ret && ((job = next_job) != NULL)) {
+             next_job = lNext(job);
+
+             lDechainElem(task->data_list, job);
+             ret &= jsv_do_verify(ctx, JSV_CONTEXT_CLIENT, &job, answer_list, false);
+             lInsertElem(task->data_list, NULL, job);
+          }
+       }
+    }
 
    /* 
     * pack packet into packbuffer
@@ -467,6 +494,8 @@ sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
          if (pack_ret != PACK_SUCCESS) {
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, "unable to prepare packbuffer for sending request"));
             ret = false;
+         } else {
+            pb_initialized = true;
          }
       }
    }
@@ -511,10 +540,13 @@ sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
          answer_list_add(answer_list, SGE_EVENT, STATUS_NOQMASTER, ANSWER_QUALITY_ERROR);
          ret = false;
       }
+
    }
 
    /* after this point we do no longer need pb - free its resources */
-   clear_packbuffer(&pb);
+   if (pb_initialized == true) {
+      clear_packbuffer(&pb);
+   }
 
    /* 
     * wait for response from master; also here keep care that commlib
@@ -529,26 +561,19 @@ sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
       u_short id = 1;
       int gdi_error = CL_RETVAL_OK;
       int runs = 0;
-      int runs_at_start = 0;
+      int retries = 0;
       bool do_ping = false;
-      bool do_permanent = false;
 
       strcpy(rcv_host, host);
       strcpy(rcv_commproc, commproc);
 
-      do_ping = get_cl_ping_value();
-      runs = get_gdi_retries_value();
-      runs_at_start = runs;
-
-      if (runs == -1) {
-         do_permanent = true;
-      }
-
-
       /*running this loop as long as configured in gdi_retries, doing a break after getting a gdi_request*/
       do {
          gdi_error = sge_gdi2_get_any_request(ctx, rcv_host, rcv_commproc, &id, &rpb, &tag, 
-                                                  true, message_id, NULL);
+                                              true, message_id, NULL);
+
+         do_ping = get_cl_ping_value();
+         retries = get_gdi_retries_value();
 
          if (gdi_error == CL_RETVAL_OK) {
             /*no error happened, leaving while*/
@@ -587,16 +612,9 @@ sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
                break;
             }
          }
-         if (get_gdi_retries_value() != runs_at_start) {
-            DPRINTF(("Value changed during request - break\n"));
-            break;
-         }
-         /* 
-          * only decrement runs if do_permanent is true. do_permanent is set to true
-          * if qmaster_params value for gdi_retries is set to -1 (see man page) 
-          */
-      } while (do_permanent == true || runs-- > 0);
-
+         /* only increment runs if retries != -1 (-1 means retry forever) */
+      } while (retries == -1 || runs++ < retries);
+      
       if (ret == false) {
          commlib_error = ctx->is_alive(ctx);
          if (commlib_error != CL_RETVAL_OK) {

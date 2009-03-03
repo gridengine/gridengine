@@ -37,34 +37,34 @@
   final com.sun.grid.cull.JavaHelper jh = (com.sun.grid.cull.JavaHelper)params.get("javaHelper");
   final com.sun.grid.cull.CullDefinition cullDef = (com.sun.grid.cull.CullDefinition)params.get("cullDef");
   
-  
   class JGDIJMXGenerator extends com.sun.grid.cull.AbstractGDIGenerator {
-      
-    public JGDIJMXGenerator(com.sun.grid.cull.CullObject cullObject) {
-        super(cullObject.getIdlName(),  jh.getClassName(cullObject), cullObject);
+
+     private String cullname;
+     public JGDIJMXGenerator(com.sun.grid.cull.CullObject cullObject) {
+        super(cullObject.getIdlName(), jh.getClassName(cullObject), cullObject);
+        this.cullname = cullObject.getName();
         addPrimaryKeys(cullObject, jh);
-    }
-    
-    public void genImport() {
+     }
+
+     public void genImport() {
         if(!(cullObject.getType() == cullObject.TYPE_PRIMITIVE ||
              cullObject.getType() == cullObject.TYPE_MAPPED)) {
-%>import com.sun.grid.jgdi.configuration.<%=classname%>;
+%>// for <%=name%>
+import com.sun.grid.jgdi.configuration.<%=classname%>;
 <%        
         }
-    }
-    
-    public void genGetMethod() {
-       
+     } // end of genImport
+     public void genGetMethod() {
 %> 
    /**
-    *   Get the <code><%=name%></code> object;
+    *   Get the <code><%=name%></code> object
     *   @return the <code><%=name%></code> object
-    *   @throws JGDIException on any error
+    *   @throws JGDIException on any error on the GDI layer
     */
    public <%=classname%> get<%=name%>() throws JGDIException {
         return getJGDI().get<%=name%>();
-   }  
-   
+   }
+
    /**
     *   Get the <code><%=name%></code> object.
     *   @param answers  the <code>answer list</code> object
@@ -74,93 +74,10 @@
    public <%=classname%> get<%=name%>WithAnswer(List<JGDIAnswer> answers) throws JGDIException {
       return getJGDI().get<%=name%>WithAnswer(answers);
    }
-   
-   
 <%
-   } // end of genGetMethod
-    
-   public void genGetByPrimaryKeyMethod() {
-%>       
-   /**
-    *   Get the <code><%=name%></code> object;
-    *   @return the <code><%=name%></code> object
-    *   @throws JGDIException on any error
-    */
-   public <%=classname%> get<%=name%>(<%
-      boolean first = true;
-      for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
-         String pkName = entry.getKey();
-         String pkType = entry.getValue();
-         if(first) {
-            first = false;
-         } else {
-             %>, <% 
-         }
-         %> <%=pkType%> <%=pkName%><%
-      }
-   %>) throws JGDIException {
-        return getJGDI().get<%=name%>(<%
-      first = true;
-      for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
-         String pkName = entry.getKey();
-         if(first) {
-            first = false;
-         } else {
-             %>, <% 
-         }
-         %><%=pkName%><%
-      }
-   %>);
-   }  
-   
-   /**
-    *  Get a <%=name%> by its primary key
-    *
-    *  @return the <%=name%>
-<%
-    for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
-       String pkName = entry.getKey();
-       String pkType = entry.getValue();
-%>    *  @param <%=pkName%>   the <%=pkName%> of the <code><%=name%></code> object
-<%
-    } // end of for
-%>   *  @param answers   the <code>answer list</code> object  
-    *  @return the found <code><%=name%></code> object of <code>null</code>    
-    *  @throws JGDIException on any error on the GDI layer
-    */
-   public <%=classname%> get<%=name%>WithAnswer(<%
-    first = true;  
-    for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
-       String pkName = entry.getKey();
-       String pkType = entry.getValue();
-       if (first) {
-         first = false;
-       } else {
-            %> , <%           
-       } 
-       %> <%=pkType%> <%=pkName%> <%
-    } // end of for
-    %>, List<JGDIAnswer> answers) throws JGDIException {
-        return getJGDI().get<%=name%>WithAnswer(<%
-    first = true;
-    for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
-         String pkName = entry.getKey();
-         if(first) {
-            first = false;
-         } else {
-             %>, <% 
-         }
-         %><%=pkName%><%
-      }
-   
-   %>, answers);
-    }
-   
-<%       
-   } // genGetByPrimaryKeyMethod
-  
-    
-   public void genGetListMethod() {
+     } // end of genGetMethod
+
+     public void genGetListMethod() {
 %>       
    /**
     *  Get all <code><%=name%></code> objects.
@@ -184,7 +101,287 @@
    
 <%   
    } // end of genGetListMethod
+     public void genGetByPrimaryKeyMethod() {
+%>
+   /**
+    *   Get the <code><%=name%></code> object;
+    *   @return the <code><%=name%></code> object
+    *   @throws JGDIException on any error
+    */
+   public <%=classname%> get<%=name%>(<%
+      boolean first = true;
+      for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+         String pkName = entry.getKey();
+         String pkType = entry.getValue();
+         if (first) {
+            first = false;
+         } else {
+             %>, <%
+         }
+         %> <%=pkType%> <%=pkName%> <%
+    }
+   %>) throws JGDIException {
+        return getJGDI().get<%=name%>(<%
+      first = true;
+      for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+         String pkName = entry.getKey();
+         if(first) {
+            first = false;
+         } else {
+             %>, <% 
+         }
+         %><%=pkName%><%
+      }
+   %>);
+   }
    
+   /**
+    *  Get a <%=name%> by its primary key
+    *
+    *  @return the <%=name%>
+<%
+    for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+       String pkName = entry.getKey();
+       String pkType = entry.getValue();
+%>    *  @param <%=pkName%>   the <%=pkName%> of the <code><%=name%></code> object
+<%
+    }
+%>   *  @param  answers the <code>answer list</code> object
+    *  @return the found <code><%=name%></code> object of <code>null</code>    
+    *  @throws JGDIException on any error on the GDI layer
+    */
+   public <%=classname%> get<%=name%>WithAnswer(<%
+    first = true;
+    for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+       String pkName = entry.getKey();
+       String pkType = entry.getValue();
+       if (first) {
+          first = false;
+       } else {
+         %>, <%
+       }
+       %> <%=pkType%> <%=pkName%> <%
+    }
+       %>, List<JGDIAnswer> answers) throws JGDIException {
+        return getJGDI().get<%=name%>WithAnswer(<%
+    first = true;
+    for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+       String pkName = entry.getKey();
+       if(first) {
+            first = false;
+         } else {
+             %>, <% 
+         }
+         %><%=pkName%><%
+      }
+   
+   %>, answers);
+    }
+   
+<%
+    } // genGetByPrimaryKeyMethod
+  
+    public void genAddMethod() {
+%>
+   /**
+    *  Add a new <code><%=name%></code> object.
+    *
+    *  @param obj  the new <code><%=name%></code> object
+    *  @throws JGDIException on any error
+    */
+   public void add<%=name%>(<%=classname%> obj) throws JGDIException {
+        getJGDI().add<%=name%>(obj);
+   }
+   
+   /**
+    *   Add a new <code><%=name%></code> object.
+    *   @param  obj the new <code><%=name%></code> object
+    *   @param  answers the <code>answer list</code> object
+    *   @throws JGDIException on any error on the GDI layer
+    */
+   public void add<%=name%>WithAnswer(<%=classname%> obj, List<JGDIAnswer> answers) throws JGDIException {
+       getJGDI().add<%=name%>WithAnswer(obj, answers);
+   }
+   
+<% if ((name.equals("Manager")) || 
+       (name.equals("Operator")) ||
+       (name.equals("AdminHost")) || 
+       (name.equals("SubmitHost"))) { %>
+   /**
+    *   Add a new <code><%=name%></code> object.
+    *   @param  name the new <code>String</code> object
+    *   @throws JGDIException on any error on the GDI layer
+    */
+   public void add<%=name%>(String name) throws JGDIException {
+       getJGDI().add<%=name%>(name);
+   }
+
+   /**
+    *   Add a new <code><%=name%></code> object.
+    *   @param  name the new <code>String</code> object
+    *   @param  answers the <code>answer list</code> object
+    *   @throws JGDIException on any error on the GDI layer
+    */
+   public void add<%=name%>WithAnswer(String name, List<JGDIAnswer> answers) throws JGDIException {
+       getJGDI().add<%=name%>WithAnswer(name, answers);
+   }
+<%
+     } // end if name.equals()
+   } // end of genAddMethod
+    
+   public void genDeleteMethod() {
+%>
+   /**
+    *   Delete a <code><%=name%></code> object.
+    *   @param obj  <code><%=name%></code> object with the primary key information
+    *   @throws JGDIException on any error on the GDI layer
+    */
+   public void delete<%=name%>(<%=classname%> obj) throws JGDIException {
+        getJGDI().delete<%=name%>(obj);
+   }
+   
+   /**
+    *   Delete a <code><%=name%></code> object.
+    *   @param obj  <code><%=name%></code> object with the primary key information
+    *   @param answers  <code>answer list</code> object
+    *   @throws JGDIException on any error on the GDI layer
+    */
+   public void delete<%=name%>WithAnswer(<%=classname%> obj, List<JGDIAnswer> answers) throws JGDIException {
+       getJGDI().delete<%=name%>WithAnswer(obj, answers);
+   }
+   
+<%
+     } // end of genDeleteMethod
+
+     public void genDeleteByPrimaryKeyMethod() {
+%>
+
+   /**
+    *   Delete the <code><%=name%></code> object by primary key;
+<%
+    for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+       String pkName = entry.getKey();
+       String pkType = entry.getValue();
+%>    *   @param <%=pkName%>   the <%=pkName%> of the <code><%=name%></code> object
+<%
+    }    
+%>    *   @throws JGDIException on any error on the GDI layer
+    */
+   public void delete<%=name%>(<%
+    boolean first = true;
+    for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+       String pkName = entry.getKey();
+       String pkType = entry.getValue();
+       if(first) {
+         first = false;
+       } else {
+            %>, <%
+       }
+       %><%=pkType%> <%=pkName%><%
+    }
+   %>) throws JGDIException {
+        getJGDI().delete<%=name%>(<%
+      first = true;
+      for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+         String pkName = entry.getKey();
+         if(first) {
+            first = false;
+         } else {
+             %>, <% 
+         }
+         %><%=pkName%><%
+      }
+   %>);
+   }
+   
+   /**
+    *   Delete a <code><%=name%></code> object by its primary key
+<%
+    for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+       String pkName = entry.getKey();
+       String pkType = entry.getValue();
+%>    *   @param <%=pkName%>   the <%=pkName%> of the <code><%=name%></code> object
+
+<%
+    }    
+%>       *   @param answers  <code>answer list</code> object
+    *   @throws JGDIException on any error on the GDI layer
+    */
+   public void delete<%=name%>WithAnswer(<%
+    first = true;  
+    for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+       String pkName = entry.getKey();
+       String pkType = entry.getValue();
+       if(first) {
+         first = false;
+       } else {
+            %> , <%           
+       }
+       %><%=pkType%> <%=pkName%><%
+    } // end of for  
+    %>, List<JGDIAnswer> answers) throws JGDIException {
+        getJGDI().delete<%=name%>WithAnswer(<%
+      first = true;
+      for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+         String pkName = entry.getKey();
+         if(first) {
+            first = false;
+         } else {
+             %>, <% 
+         }
+         %><%=pkName%><%
+      }
+   %>, answers);
+    }
+
+   /**
+    *   Delete several <code><%=name%></code> objects by their primary key
+<%
+    for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+       String pkName = entry.getKey();
+       // String pkType = entry.getValue();
+%>    *  @param <%=pkName%>s   array of <%=pkName%> of the <code><%=name%></code> objects
+<%
+    } // end of for
+%>    *  @param answers   the <code>answer list</code> object
+    *  @throws JGDIException on any error on the GDI layer
+    */
+   public void delete<%=name%>sWithAnswer(<%
+    first = true;
+    for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+       String pkName = entry.getKey();
+       // String pkType = entry.getValue();
+       if (first) {
+         first = false;
+       } else {
+            %>, <%           
+       } 
+       %>String[] <%=pkName%>s <%
+    } // end of for
+    %>
+<% if (name.equals("Job") || name.equals("AdvanceReservation")) {%>
+    , boolean forced, UserFilter userFilter
+<% }%>    , List<JGDIAnswer> answers) throws JGDIException {
+        getJGDI().delete<%=name%>sWithAnswer(<%
+      first = true;
+    for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
+       String pkName = entry.getKey();
+         if (first) {
+            first = false;
+         } else {
+             %>, <% 
+         }
+         %><%=pkName%>s<%
+      }
+   %>,
+<% if (name.equals("Job") || name.equals("AdvanceReservation")) {%>
+    forced, userFilter,
+<%}%>
+   answers);
+   }
+<%       
+   } // genDeleteByPrimaryKeyMethod
+  
    public void genUpdateMethod() {
 %>
    /**
@@ -209,170 +406,14 @@
    
 <%
    } // end of genUpdateMethod
-   
-    public void genAddMethod() {
-%>
-   /**
-    *  Add a new <code><%=name%></code> object.
-    *
-    *  @param obj  the new <code><%=name%></code> object
-    *  @throws JGDIException on any error
-    */
-   public void add<%=name%>(<%=classname%> obj) throws JGDIException {
-        getJGDI().add<%=name%>(obj);
-   }
-   
-   /**
-    *   Add a new <code><%=name%></code> object.
-    *   @param obj       the new <code><%=name%></code> object
-    *   @param answers   the <code>answer list</code> object
-    *   @throws JGDIException on any error on the GDI layer
-    */
-   public void add<%=name%>WithAnswer(<%=classname%> obj, List<JGDIAnswer> answers) throws JGDIException {
-       getJGDI().add<%=name%>WithAnswer(obj, answers);
-   }
-   
-<% if ((name.equals("Manager")) || 
-       (name.equals("Operator")) ||
-       (name.equals("AdminHost")) || 
-       (name.equals("SubmitHost"))) { %>
-   /**
-    *   Add a new <code><%=name%></code> object.
-    *   @param  name the new <code>String</code> object
-    *   @throws JGDIException on any error on the GDI layer
-    */
-   public void add<%=name%>(String name) throws JGDIException {
-       getJGDI().add<%=name%>(name);
-   }
-   
-   /**
-    *   Add a new <code><%=name%></code> object.
-    *   @param  name the new <code>String</code> object
-    *   @param  answers the <code>answer list</code> object
-    *   @throws JGDIException on any error on the GDI layer
-    */
-   public void add<%=name%>WithAnswer(String name, List<JGDIAnswer> answers) throws JGDIException {
-       getJGDI().add<%=name%>WithAnswer(name, answers);
-   }
-<%
-     } // end if name.equals()
-   } // end of genAddMethod
-    
-   public void genDeleteMethod() {
-%>
-   /**
-    *   Delete a <%=name%> object.
-    *
-    *   @param obj  the <%=name%> with the primary information
-    *   @throws JGDIException on any error
-    */
-   public void delete<%=name%>(<%=classname%> obj) throws JGDIException {
-        getJGDI().delete<%=name%>(obj);
-   }
-   
-   /**
-    *   Delete a <code><%=name%></code> object.
-    *   @param obj       the <code><%=name%></code> object with the primary key information
-    *   @param answers   the <code>answer list</code> object
-    *   @throws JGDIException on any error on the GDI layer
-    */
-   public void delete<%=name%>WithAnswer(<%=classname%> obj, List<JGDIAnswer> answers) throws JGDIException {
-       getJGDI().delete<%=name%>WithAnswer(obj, answers);
-   }
-   
-<%   
-
-   } // end of genDeleteMethod
-   public void genDeleteByPrimaryKeyMethod() {
-%>       
-   /**
-    *   Delete the <code><%=name%></code> object by primary key;
-    *   @throws JGDIException on any error
-    */
-   public void delete<%=name%>(<%
-      boolean first = true;
-      for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
-         String pkName = entry.getKey();
-         String pkType = entry.getValue();
-         if(first) {
-            first = false;
-         } else {
-             %>, <% 
-         }
-         %> <%=pkType%> <%=pkName%><%
-      }
-   %>) throws JGDIException {
-        getJGDI().delete<%=name%>(<%
-      first = true;
-      for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
-         String pkName = entry.getKey();
-         if(first) {
-            first = false;
-         } else {
-             %>, <% 
-         }
-         %><%=pkName%><%
-      }
-   %>);
-   }
-   
-   /**
-    *   Delete several <code><%=name%></code> objects by their primary key
-<%
-    for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
-       String pkName = entry.getKey();
-       // String pkType = entry.getValue();
-%>    *  @param <%=pkName%>s   array of <%=pkName%> of the <code><%=name%></code> objects
-<%
-    } // end of for
-%>    *  @param answers   the <code>answer list</code> object
-    *  @throws JGDIException on any error on the GDI layer
-    */
-   public void delete<%=name%>sWithAnswer(<%
-    first = true;
-    for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
-       String pkName = entry.getKey();
-       // String pkType = entry.getValue();
-       if (first) {
-         first = false;
-       } else {
-            %> , <%           
-       } 
-       %> String[] <%=pkName%>s <%
-    } // end of for
-    %>
-<% if (name.equals("Job") || name.equals("AdvanceReservation")) {%>
-    , boolean forced, UserFilter userFilter
-<% }%>    , List<JGDIAnswer> answers) throws JGDIException {
-        getJGDI().delete<%=name%>sWithAnswer(<%
-      first = true;
-    for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
-       String pkName = entry.getKey();
-         if(first) {
-            first = false;
-         } else {
-             %>, <% 
-         }
-         %><%=pkName%>s<%
-      }
-   %>,
-<% if (name.equals("Job") || name.equals("AdvanceReservation")) {
-%> forced, userFilter,<% 
-   } %>
-   answers);
-   }
-<%       
-   } // genDeleteByPrimaryKeyMethod
-  
-  } // end of class JGDIJMXGenerator
+} // end of class JGDIJMXGenerator
   
   // ---------------------------------------------------------------------------
   // Build the JGDIJMXGenerator instances
   // ---------------------------------------------------------------------------
   java.util.List<JGDIJMXGenerator> generators = new java.util.ArrayList<JGDIJMXGenerator>();
-  com.sun.grid.cull.CullObject cullObj = null;
   for (String name : cullDef.getObjectNames()) {
-      cullObj = cullDef.getCullObject(name); 
+      com.sun.grid.cull.CullObject cullObj = cullDef.getCullObject(name);
       generators.add(new JGDIJMXGenerator(cullObj));
   } // end of for
 %>
@@ -381,7 +422,7 @@ package com.sun.grid.jgdi.management.mbeans;
 
 import com.sun.grid.jgdi.JGDIException;
 import java.util.List;
-import java.util.ArrayList;
+import java.util.LinkedList;
 import com.sun.grid.jgdi.JGDI;
 import com.sun.grid.jgdi.JGDIFactory;
 import com.sun.grid.jgdi.configuration.JGDIAnswer;
@@ -391,8 +432,8 @@ import com.sun.grid.jgdi.management.JGDISession;
 
 <% // Import all cull object names;
    for (JGDIJMXGenerator gen : generators) {
-        gen.genImport();
-   } // end of for
+      gen.genImport();
+   }
 %>
 /**
  *   <code>JGDIJMX</code> implements a JMX service for

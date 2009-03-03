@@ -186,26 +186,27 @@ int sge_execd_process_messages(sge_gdi_ctx_class_t *ctx)
             u_long32 now = sge_get_gmt();
             static u_long32 last_qmaster_file_read = 0;
             
-            if (now - last_qmaster_file_read >= 30) {
-               /* re-read act qmaster file (max. every 30 seconds) */
+            if (now - last_qmaster_file_read >= EXECD_MAX_RECONNECT_TIMEOUT) {
+               /* re-read act qmaster file (max. every EXECD_MAX_RECONNECT_TIMEOUT seconds) */
                DPRINTF(("re-read actual qmaster file\n"));
                last_qmaster_file_read = now;
-
-               /* This code will re-read act qmaster file! */
-               ctx->get_master(ctx, true);
 
                /* Try to re-register at qmaster */
                if (sge_execd_register_at_qmaster(ctx, true) == 0) {
                   do_reconnect = false;    /* we are reconnected */
                   sge_get_com_error_flag(EXECD, SGE_COM_WAS_COMMUNICATION_ERROR, true);
+                  sge_get_com_error_flag(EXECD, SGE_COM_ACCESS_DENIED, true);
+                  sge_set_flush_lr_flag(true);
                }
             }
          }
       }
 
       if (sge_get_com_error_flag(EXECD, SGE_COM_ACCESS_DENIED, false)) {
-         terminate = true; /* leave sge_execd_process_messages */
-         ret = SGE_COM_ACCESS_DENIED;
+         /* we have to reconnect, when the problem is fixed */
+         do_reconnect = true;
+         /* we do not expect that the problem is fast to fix */
+         sleep(EXECD_MAX_RECONNECT_TIMEOUT);
       } else if (sge_get_com_error_flag(EXECD, SGE_COM_ENDPOINT_NOT_UNIQUE, false)) {
          terminate = true; /* leave sge_execd_process_messages */
          ret = SGE_COM_ENDPOINT_NOT_UNIQUE;

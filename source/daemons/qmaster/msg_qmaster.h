@@ -691,6 +691,7 @@
 #define MSG_LOG_WAIT4SGEDEL           _MESSAGE(33804, _("job waits for schedds deletion"))
 #define MSG_LOG_DELSGE                _MESSAGE(33805, _("job deleted by schedd"))
 #define MSG_LOG_DELIMMEDIATE          _MESSAGE(33806, _("immediate job deleted by schedd"))
+#define MSG_LOG_DELFORCED             _MESSAGE(33807, _("job deleted by forced deletion request"))
 #define MSG_QMASTER_UNEXPECTED_SIGNAL_I    _MESSAGE(33810, _("received unexpected signal %d"))
 #define MSG_JOB_DEADLINETIME               _MESSAGE(33811, _("deadline time"))
 #define MSG_COM_NOSCHEDMONPERMS   _MESSAGE(33815, _("starting scheduler monitoring requires manager privileges"))
@@ -791,5 +792,10 @@
 
 #define MSG_JOB_DISCONTTASKTRANS_SUU  _MESSAGE(33952, _("Discontinued delete transaction of user "SFQ" in job "sge_U32CFormat" at task "sge_U32CFormat))
 #define MSG_JOB_ALREADYDELETED_U      _MESSAGE(33953, _("job "sge_U32CFormat" is already in deletion"))
+#define MSG_JOB_TERMJOBDUETOLIMIT_UU  _MESSAGE(33954, _("terminating job "sge_U32CFormat"."sge_U32CFormat" because runtime limit is reached"))
+#define MSG_JOB_ADDJOBTRIGGER_UUUU    _MESSAGE(33955, _("added trigger to terminate job "sge_U32CFormat"."sge_U32CFormat" when runtime limit is reached ("sge_U32CFormat" + "sge_U32CFormat")"))
+#define MSG_JOB_DELJOBTRIGGER_UU      _MESSAGE(33956, _("removing trigger to terminate job "sge_U32CFormat"."sge_U32CFormat))
+#define MSG_JOB_CHGFORCED_UU          _MESSAGE(33957, _("changed non-forced request to forced request for job "sge_U32CFormat"."sge_U32CFormat"because host can't be contacted"))
+
 
 #endif

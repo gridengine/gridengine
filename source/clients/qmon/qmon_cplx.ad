@@ -198,7 +198,8 @@ Qmon*cplx_layout.attr_aconsumable.ChooserType:        ChooserOption
 Qmon*cplx_layout.attr_aconsumable.alignment:         ALIGNMENT_CENTER
 Qmon*cplx_layout.attr_aconsumable.strings:  \
    "@{NO}", \
-   "@{YES}"
+   "@{YES}", \
+   "@{JOB}"
 
 
 Qmon*cplx_layout.attr_arel.ChooserType:        ChooserOption

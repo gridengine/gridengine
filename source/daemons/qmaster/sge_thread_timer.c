@@ -93,6 +93,7 @@
 #include "sge_qmaster_timed_event.h"
 #include "sge_qmaster_heartbeat.h"
 #include "sge_persistence_qmaster.h"
+#include "sge_job_enforce_limit.h"
 
 static void
 sge_timer_cleanup_monitor(monitoring_t *monitor)
@@ -144,6 +145,8 @@ sge_timer_register_event_handler(void)
     */ 
 
    te_register_event_handler(sge_job_resend_event_handler, TYPE_JOB_RESEND_EVENT);
+
+   te_register_event_handler(sge_job_enfoce_limit_handler, TYPE_ENFORCE_LIMIT_EVENT);
     
    te_register_event_handler(sge_calendar_event_handler, TYPE_CALENDAR_EVENT);
 
@@ -241,14 +244,16 @@ sge_timer_initialize(sge_gdi_ctx_class_t *ctx, monitoring_t *monitor)
    DPRINTF(("persistence timer initialized at timed event module\n"));
    sge_setup_job_resend();
    DPRINTF(("job resend functionality initialized\n"));
+   sge_add_check_limit_trigger();
+   DPRINTF(("added timer event to check load reports and possibly to enforce limits\n"));
 
    DPRINTF((SFN" related initialisation has been done\n", threadnames[TIMER_THREAD]));
 
    sge_dstring_sprintf(&thread_name, "%s%03d", threadnames[TIMER_THREAD], 0);
    cl_thread_list_setup(&(Main_Control.timer_thread_pool), "timer thread pool");
    cl_thread_list_create_thread(Main_Control.timer_thread_pool, &dummy_thread_p,
-                                NULL, sge_dstring_get_string(&thread_name), 0, 
-                                sge_timer_main, NULL, NULL);
+                                cl_com_get_log_list(), sge_dstring_get_string(&thread_name), 0, 
+                                sge_timer_main, NULL, NULL, CL_TT_TIMER);
    sge_dstring_free(&thread_name);
    DRETURN_VOID;
 }

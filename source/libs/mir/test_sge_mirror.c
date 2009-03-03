@@ -50,29 +50,34 @@
 
 #include "gdi/sge_gdiP.h"
 
+int events;
+u_long32 events_size;
 
 static sge_callback_result
 print_event(sge_evc_class_t *evc, object_description *object_base, sge_object_type type, 
             sge_event_action action, lListElem *event, void *clientdata)
 {
    char buffer[1024];
+   sge_pack_buffer pb;
    dstring buffer_wrapper;
 
    DENTER(TOP_LAYER, "print_event");
 
+   events++;
+   init_packbuffer(&pb, 0, 1);
+   cull_pack_elem(&pb, event);
+   events_size += pb.bytes_used;
+
    sge_dstring_init(&buffer_wrapper, buffer, sizeof(buffer));
 
-   DPRINTF(("%s\n", event_text(event, &buffer_wrapper)));
-
+   printf("%s\n", event_text(event, &buffer_wrapper));
 
    /* create a callback error to test error handling */
-   if(type == SGE_TYPE_GLOBAL_CONFIG) {
-      DEXIT;
-      return SGE_EMA_FAILURE;
+   if (type == SGE_TYPE_GLOBAL_CONFIG) {
+      DRETURN(SGE_EMA_FAILURE);
    }
    
-   DEXIT;
-   return SGE_EMA_OK;
+   DRETURN(SGE_EMA_OK);
 }
 
 int main(int argc, char *argv[])
@@ -93,7 +98,7 @@ int main(int argc, char *argv[])
       SGE_EXIT((void**)&ctx, 1);
    }
 
-   if (false == sge_gdi2_evc_setup(&evc, ctx, EV_ID_SCHEDD, &alp, NULL)) {
+   if (false == sge_gdi2_evc_setup(&evc, ctx, EV_ID_ANY, &alp, NULL)) {
       answer_list_output(&alp);
       SGE_EXIT((void**)&ctx, 1);
    }
@@ -103,11 +108,13 @@ int main(int argc, char *argv[])
    sge_mirror_subscribe(evc, SGE_TYPE_ALL, print_event, NULL, NULL, NULL, NULL);
    
    while(!shut_me_down) {
+      events=events_size=0;
+      printf("---------------------\n");
       sge_mirror_process_events(evc);
+      printf("received "sge_u32" kbytes in with %d events\n", events_size/1024, events);
    }
 
    sge_mirror_shutdown(evc);
 
-   DEXIT;
-   return EXIT_SUCCESS;
+   DRETURN(EXIT_SUCCESS);
 }

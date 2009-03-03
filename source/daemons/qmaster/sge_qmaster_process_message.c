@@ -442,6 +442,7 @@ static void do_c_ack(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, monitoring_t 
    while (pb_unused(&(aMsg->buf)) > 0) {
       if (cull_unpack_elem(&(aMsg->buf), &ack, NULL)) {
          ERROR((SGE_EVENT, "failed unpacking ACK"));
+         SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE)
          DRETURN_VOID;
       }
       ack_tag = lGetUlong(ack, ACK_type);

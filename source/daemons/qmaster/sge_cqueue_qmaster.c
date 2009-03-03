@@ -69,6 +69,7 @@
 #include "sge_qinstance_qmaster.h"
 #include "sge_host_qmaster.h"
 #include "sge_qmod_qmaster.h"
+#include "sge_subordinate_qmaster.h"
 #include "sched/sge_select_queue.h"
 #include "sched/valid_queue_user.h"
 #include "sge_queue_event_master.h"
@@ -170,7 +171,7 @@ qinstance_create(sge_gdi_ctx_class_t *ctx,
    }
 
    qinstance_set_conf_slots_used(ret);
-   qinstance_debit_consumable(ret, NULL, centry_list, 0);
+   qinstance_debit_consumable(ret, NULL, centry_list, 0, true);
 
    /*
     * Change qinstance state
@@ -192,7 +193,9 @@ qinstance_create(sge_gdi_ctx_class_t *ctx,
     */
    sge_qmaster_qinstance_state_set_unknown(ret, true);
    qinstance_check_unknown_state(ret, *object_type_get_master_list(SGE_TYPE_EXECHOST));
-   sge_qmaster_qinstance_set_initial_state(ret, false);
+   sge_qmaster_qinstance_set_initial_state(ret);
+   qinstance_initialize_sos_attr(ctx, ret, monitor);
+
    qinstance_increase_qversion(ret);
 
    DRETURN(ret);

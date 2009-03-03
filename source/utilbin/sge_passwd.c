@@ -1253,6 +1253,11 @@ int main(int argc, char *argv[])
 
    DENTER_MAIN(TOP_LAYER, "sgepasswd");
 
+   prof_mt_init();
+   uidgid_mt_init();
+   path_mt_init();
+   bootstrap_mt_init();
+
    /* 
     * Do initalisation and switch to admin_user
     */ 
@@ -1276,10 +1281,6 @@ int main(int argc, char *argv[])
 
    shared_ssl_func__ERR_load_crypto_strings();
    sge_dstring_init(&bw, buffer, sizeof(buffer));
-   prof_mt_init();
-   uidgid_mt_init();
-   path_mt_init();
-   bootstrap_mt_init();
    sge_getme(SGE_PASSWD);
 
    if (sge_setup_paths(SGE_PASSWD, sge_get_default_cell(), &bw) != true) {

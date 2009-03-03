@@ -39,13 +39,12 @@
 #include "sge_eventL.h"
 #include "sge_qmaster_timed_event.h"
 #include "uti/sge_monitor.h"
-
 #include "gdi/sge_gdi_ctx.h"
 
 #include "gdi/sge_gdi_packet.h"
 
 int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
-                    lListElem *jep, lList **alpp, lList **lpp, char *ruser,
+                    lListElem **jep, lList **alpp, lList **lpp, char *ruser,
                     char *rhost, uid_t uid, gid_t gid, char *group,
                     sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task, monitoring_t *monitor);
 
@@ -63,6 +62,8 @@ void sge_add_job_event(ev_event type, lListElem *jep, lListElem *jatep);
 bool job_has_valid_account_string(const char *name, lList **answer_list);
 
 bool is_pe_master_task_send(lListElem *jatep); 
+bool all_slave_jobs_finished(lListElem *jatep);
+void tag_all_host_gdil(lListElem *jatep);
 
 void sge_add_jatask_event(ev_event type, lListElem *jep, lListElem *jatask);
 
@@ -86,5 +87,19 @@ void sge_job_spool(sge_gdi_ctx_class_t *);
 bool spool_write_script(lList **answer_list, u_long32 jobid, lListElem *jep);
 bool spool_delete_script(lList **answer_list, u_long32 jobid, lListElem *jep);
 bool spool_read_script(lList **answer_list, u_long32 jobid, lListElem *jep);
+
+u_long32 sge_get_job_number(sge_gdi_ctx_class_t *ctx, monitoring_t *monitor);
+
+int deny_soft_consumables(lList **alpp, lList *srl, const lList *master_centry_list);
+
+int
+job_verify_project(const lListElem *job, lList **alpp,
+                   const char *user, const char *group);
+
+int job_verify_predecessors(lListElem *job, lList **alpp);
+
+int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bool is_modify);
+
+int job_verify_predecessors_ad(lListElem *job, lList **alpp);
 
 #endif /* __SGE_JOB_QMASTER_H */

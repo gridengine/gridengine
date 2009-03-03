@@ -11,13 +11,13 @@ SYNTAX
      -U user,... ]
 
 DESCRIPTION
-     <I>qselect</I> prints a list of Grid Engine queue names correspond-
-     ing to selection criteria specified in the <I>qselect</I> arguments
-     described below. The output of <I>qselect</I> can be fed into other
-     Grid  Engine commands to apply actions on the selected queue
-     sets. For  example  together  with  the  -<I>mqattr</I>  option  to
-     <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,  <I>qselect</I> can be used to modify queue attributes on
-     a set of queues.
+     <I>qselect</I> prints  a  list  of  Sun  Grid  Engine  queue  names
+     corresponding to selection criteria specified in the <I>qselect</I>
+     arguments described below. The output of <I>qselect</I> can be  fed
+     into  other Sun Grid Engine commands to apply actions on the
+     selected queue sets. For example together with  the  -<I>mqattr</I>
+     option  to  <B><A HREF="../htmlman1/qconf.html?pathrev=V62u2_TAG">qconf(1)</A></B>,  <I>qselect</I>  can  be used to modify queue
+     attributes on a set of queues.
 
 OPTIONS
      -help
@@ -44,7 +44,7 @@ OPTIONS
           only meaningful in  conjunction  with  another  <I>qselect</I>
           option  to  extract a subset of queue names from a list
           given by -q.  Description of <I>wc</I>_<I>queue</I> can be  found  in
-          <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>.
+          <B><A HREF="../htmlman1/sge_types.html?pathrev=V62u2_TAG">sge_types(1)</A></B>.
 
      -qs {a|c|d|o|s|u|A|C|D|E|S}
           This option allows to filter  for  queue  instances  in
@@ -68,17 +68,17 @@ EXAMPLES
      the output to those queues with access  permission  for  the
      users  <I>andreas</I>  and  <I>shannon</I>.  The third command changes the
      queue attribute <I>h</I>_<I>vmem</I> to 1 Gigabyte on queues  residing  on
-     Linux  machines (see the <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B> manual page for details on
-     the -<I>mattr</I> option  and  the  <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>  manual  page  on
+     Linux  machines (see the <B><A HREF="../htmlman1/qconf.html?pathrev=V62u2_TAG">qconf(1)</A></B> manual page for details on
+     the -<I>mattr</I> option  and  the  <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62u2_TAG">queue_conf(5)</A></B>  manual  page  on
      details of queue configuration entries).
 
 ENVIRONMENTAL VARIABLES
-     SGE_ROOT       Specifies the location  of  the  Grid  Engine
+     SGE_ROOT       Specifies the location of the Sun Grid Engine
                     standard configuration files.
 
-     SGE_CELL       If set, specifies  the  default  Grid  Engine
-                    cell.  To  address a Grid Engine cell <I>qselect</I>
-                    uses (in the order of precedence):
+     SGE_CELL       If set, specifies the default Sun Grid Engine
+                    cell.  To  address  a  Sun  Grid  Engine cell
+                    <I>qselect</I> uses (in the order of precedence):
 
                          The name of the cell  specified  in  the
                          environment  variable SGE_CELL, if it is
@@ -96,21 +96,21 @@ ENVIRONMENTAL VARIABLES
 
      SGE_QMASTER_PORT
                     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> is expected to listen for com-
+                    <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u2_TAG">sge_qmaster(8)</A></B> is expected to listen for com-
                     munication requests.  Most installations will
                     use  a  services  map  entry  for the service
                     "sge_qmaster" instead to define that port.
 
 FILES
      &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>act</I>_<I>qmaster</I>
-                     Grid Engine master host file
+                     Sun Grid Engine master host file
 
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>, <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B>, <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B>, <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>,
+     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qconf.html?pathrev=V62u2_TAG">qconf(1)</A></B>, <B><A HREF="../htmlman1/qmod.html?pathrev=V62u2_TAG">qmod(1)</A></B>, <B><A HREF="../htmlman1/qstat.html?pathrev=V62u2_TAG">qstat(1)</A></B>, <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62u2_TAG">queue_conf(5)</A></B>,
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
 
 

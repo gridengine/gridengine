@@ -1,32 +1,32 @@
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
- * 
+ *
  *  The Contents of this file are made available subject to the terms of
  *  the Sun Industry Standards Source License Version 1.2
- * 
+ *
  *  Sun Microsystems Inc., March, 2001
- * 
- * 
+ *
+ *
  *  Sun Industry Standards Source License Version 1.2
  *  =================================================
  *  The contents of this file are subject to the Sun Industry Standards
  *  Source License Version 1.2 (the "License"); You may not use this file
  *  except in compliance with the License. You may obtain a copy of the
  *  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
- * 
+ *
  *  Software provided under this License is provided on an "AS IS" basis,
  *  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
  *  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
  *  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
  *  See the License for the specific provisions governing your rights and
  *  obligations concerning the Software.
- * 
+ *
  *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
- * 
+ *
  *   Copyright: 2001 by Sun Microsystems, Inc.
- * 
+ *
  *   All Rights Reserved.
- * 
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
@@ -66,9 +66,9 @@
 #include "sgermon.h"
 #include "sge_log.h"
 #include "sge_qmaster_threads.h"
-#include "sge_time.h"  
-#include "version.h"  
-#include "sge_security.h"  
+#include "sge_time.h"
+#include "version.h"
+#include "sge_security.h"
 #include "sge_answer.h"
 #include "sge_pe.h"
 #include "sge_ckpt.h"
@@ -105,23 +105,23 @@ sge_c_gdi_get(gdi_object_t *ao, sge_gdi_packet_class_t *packet, sge_gdi_task_cla
 
 static void
 sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task,
-              gdi_object_t *ao, int sub_command, monitoring_t *monitor); 
+              gdi_object_t *ao, int sub_command, monitoring_t *monitor);
 
 static void sge_c_gdi_del(sge_gdi_ctx_class_t *ctx,
                           sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task,
-                          int sub_command, 
+                          int sub_command,
                           monitoring_t *monitor);
 
-static void sge_c_gdi_mod(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao, 
+static void sge_c_gdi_mod(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao,
                           sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task,
-                          int sub_command, 
+                          int sub_command,
                           monitoring_t *monitor);
 
-static void sge_c_gdi_copy(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao,  
-                           sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task, int sub_command, 
+static void sge_c_gdi_copy(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao,
+                           sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task, int sub_command,
                            monitoring_t *monitor);
 
-static void sge_c_gdi_trigger(sge_gdi_ctx_class_t *ctx,  
+static void sge_c_gdi_trigger(sge_gdi_ctx_class_t *ctx,
                               sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task,
                               monitoring_t *monitor);
 
@@ -130,20 +130,20 @@ static void sge_c_gdi_permcheck(sge_gdi_packet_class_t *packet, sge_gdi_task_cla
 
 static void sge_gdi_do_permcheck(sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task);
 
-static void sge_c_gdi_replace(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao, 
+static void sge_c_gdi_replace(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao,
                               sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task,
                               int sub_command, monitoring_t *monitor);
 
 
-static void 
-sge_gdi_shutdown_event_client(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, 
-                              sge_gdi_task_class_t *task, monitoring_t *monitor, 
+static void
+sge_gdi_shutdown_event_client(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet,
+                              sge_gdi_task_class_t *task, monitoring_t *monitor,
                               object_description *object_base);
 
-static void 
-sge_gdi_tigger_thread_state_transition(sge_gdi_ctx_class_t *ctx, 
-                                       sge_gdi_packet_class_t *packet, 
-                                       sge_gdi_task_class_t *task, 
+static void
+sge_gdi_tigger_thread_state_transition(sge_gdi_ctx_class_t *ctx,
+                                       sge_gdi_packet_class_t *packet,
+                                       sge_gdi_task_class_t *task,
                                        monitoring_t *monitor);
 
 static int  get_client_id(lListElem*, int*);
@@ -153,22 +153,19 @@ trigger_scheduler_monitoring(sge_gdi_packet_class_t *packet, sge_gdi_task_class_
                              monitoring_t *monitor);
 
 static int sge_chck_mod_perm_user(lList **alpp, u_long32 target, char *user, monitoring_t *monitor);
-static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host, 
-                                  char *commproc, int mod, lListElem *ep, 
-                                  monitoring_t *monitor, object_description *object_base);
 
 static bool
 sge_task_check_get_perm_host(sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task,
                              monitoring_t *monitor, object_description *object_base);
 
 
-static int schedd_mod(sge_gdi_ctx_class_t *ctx, 
-                      lList **alpp, lListElem *modp, lListElem *ep, int add, 
-                      const char *ruser, const char *rhost, gdi_object_t *object, 
+static int schedd_mod(sge_gdi_ctx_class_t *ctx,
+                      lList **alpp, lListElem *modp, lListElem *ep, int add,
+                      const char *ruser, const char *rhost, gdi_object_t *object,
                       int sub_command, monitoring_t *monitor );
 
 /*
- * Prevent these functions made inline by compiler. This is 
+ * Prevent these functions made inline by compiler. This is
  * necessary for Solaris 10 dtrace pid provider to work.
  */
 #ifdef SOLARIS
@@ -211,21 +208,21 @@ static gdi_object_t gdi_object[] = {
 };
 /* *INDENT-ON* */
 
-void sge_clean_lists(void) 
+void sge_clean_lists(void)
 {
    int i = 0;
 
    for(;gdi_object[i].target != 0 ; i++) {
       if (gdi_object[i].list_type != SGE_TYPE_NONE) {
-         lList **master_list = object_type_get_master_list(gdi_object[i].list_type); 
+         lList **master_list = object_type_get_master_list(gdi_object[i].list_type);
    /*          fprintf(stderr, "---> freeing list %s, it has %d elems\n", gdi_object[i].object_name, lGetNumberOfElem(*master_list)); */
          lFreeList(master_list);
-      }   
+      }
    }
-   
+
 }
 
-#if 1 
+#if 1
 
 /* EB: TODO: CLEANUP: should be replaced with sge_gdi_packet_verify_version() */
 
@@ -268,9 +265,9 @@ int verify_request_version(lList **alpp, u_long32 version, char *host, char *com
 #endif
 
 /* ------------------------------------------------------------ */
-void 
-sge_c_gdi(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, 
-          sge_gdi_task_class_t *task, lList **answer_list, monitoring_t *monitor) 
+void
+sge_c_gdi(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet,
+          sge_gdi_task_class_t *task, lList **answer_list, monitoring_t *monitor)
 {
    const char *target_name = NULL;
    const char *operation_name = NULL;
@@ -292,8 +289,8 @@ sge_c_gdi(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet,
    task->command = SGE_GDI_GET_OPERATION(task->command);
    operation_name = sge_gdi_task_get_operation_name(task);
 
-   DPRINTF(("GDI %s %s (%s/%s/%d) (%s/%d/%s/%d)\n", 
-            operation_name, target_name, packet->host, packet->commproc, 
+   DPRINTF(("GDI %s %s (%s/%s/%d) (%s/%d/%s/%d)\n",
+            operation_name, target_name, packet->host, packet->commproc,
             (int)task->id, packet->user, (int)packet->uid, packet->group, (int)packet->gid));
 
    switch (task->command) {
@@ -339,7 +336,7 @@ sge_c_gdi(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet,
          break;
       default:
          SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_UNKNOWNOP));
-         answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_ENOIMP, 
+         answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_ENOIMP,
                          ANSWER_QUALITY_ERROR);
          sge_gdi_packet_pack_task(packet, task, answer_list, pb);
          break;
@@ -348,7 +345,7 @@ sge_c_gdi(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet,
    DRETURN_VOID;
 }
 
-static void 
+static void
 sge_c_gdi_get(gdi_object_t *ao, sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task, monitoring_t *monitor)
 {
    object_description *object_base = object_type_get_object_description();
@@ -396,7 +393,7 @@ sge_c_gdi_get(gdi_object_t *ao, sge_gdi_packet_class_t *packet, sge_gdi_task_cla
 #endif
          DEXIT;
          return;
-      case SGE_SC_LIST: /* TODO EB: move this into the scheduler configuration, 
+      case SGE_SC_LIST: /* TODO EB: move this into the scheduler configuration,
                                     and pack the list right away */
       {
          lList *conf = NULL;
@@ -412,14 +409,14 @@ sge_c_gdi_get(gdi_object_t *ao, sge_gdi_packet_class_t *packet, sge_gdi_task_cla
          return;
       default:
 
-         /* 
+         /*
           * Issue 1365
           * If the scheduler is not available the information in the job info
           * messages are outdated. In this case we have to reject the request.
           */
          if (task->target == SGE_JOB_SCHEDD_INFO_LIST &&
              !sge_has_event_client(EV_ID_SCHEDD) ) {
-            answer_list_add(&(task->answer_list),MSG_SGETEXT_JOBINFOMESSAGESOUTDATED, 
+            answer_list_add(&(task->answer_list),MSG_SGETEXT_JOBINFOMESSAGESOUTDATED,
                             STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
          } else if (ao == NULL || ao->list_type == SGE_TYPE_NONE) {
             SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
@@ -433,19 +430,19 @@ sge_c_gdi_get(gdi_object_t *ao, sge_gdi_packet_class_t *packet, sge_gdi_task_cla
                                  task->enumeration, false, NULL);
                task->do_select_pack_simultaneous = false;
 
-               /* 
+               /*
                 * DIRTY HACK: The "ok" message should be removed from the answer list
                 * 05/21/2007 qualitiy was ANSWER_QUALITY_INFO but this results in "ok"
-                * messages on qconf side 
+                * messages on qconf side
                 */
                sprintf(SGE_EVENT, MSG_GDI_OKNL);
                answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_END);
 
             } else {
                /* lSelect will be postponed till packing */
-               task->data_list = data_source; 
+               task->data_list = data_source;
                task->do_select_pack_simultaneous = true;
-   
+
                /*
                 * answer list creation is also done during packing!!!!
                 */
@@ -459,12 +456,13 @@ sge_c_gdi_get(gdi_object_t *ao, sge_gdi_packet_class_t *packet, sge_gdi_task_cla
 /*
  * MT-NOTE: sge_c_gdi_add() is MT safe
  */
-static void 
+static void
 sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task,
-              gdi_object_t *ao, int sub_command, monitoring_t *monitor) 
+              gdi_object_t *ao, int sub_command, monitoring_t *monitor)
 {
    lListElem *ep;
    lList *ticket_orders = NULL;
+   bool reprioritize_tickets = (mconf_get_reprioritize() == 1) ? true: false;
    object_description *object_base = object_type_get_object_description();
 
    DENTER(TOP_LAYER, "sge_c_gdi_add");
@@ -478,7 +476,7 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_
 
    /* check permissions of host and user */
    if ((!sge_chck_mod_perm_user(&(task->answer_list), task->target, packet->user, monitor)) &&
-       (!sge_chck_mod_perm_host(&(task->answer_list), task->target, packet->host, 
+       (!sge_chck_mod_perm_host(&(task->answer_list), task->target, packet->host,
                                 packet->commproc, 0, NULL, monitor, object_base))) {
 
       if (task->target == SGE_EVENT_LIST) {
@@ -487,7 +485,7 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_
          next = lFirst(task->data_list);
          while ((ep = next) != NULL) {/* is thread save. the global lock is used, when needed */
             next = lNext(ep);
-   
+
             /* fill address infos from request into event client that must be added */
             lSetHost(ep, EV_host, packet->host);
             lSetString(ep, EV_commproc, packet->commproc);
@@ -500,31 +498,35 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_
                       packet->user, packet->commproc, packet->host));
             } else {
                mconf_set_max_dynamic_event_clients(sge_set_max_dynamic_event_clients(mconf_get_max_dynamic_event_clients()));
-               
-               sge_add_event_client(ep, &(task->answer_list), 
-                                    (sub_command & SGE_GDI_RETURN_NEW_VERSION) ? &(task->data_list) : NULL, 
+
+               sge_add_event_client(ep, &(task->answer_list),
+                                    (sub_command & SGE_GDI_RETURN_NEW_VERSION) ? &(task->data_list) : NULL,
                                     packet->user, packet->host, (event_client_update_func_t)NULL, monitor);
             }
          }
       } else if (task->target == SGE_JOB_LIST) {
          lListElem *next;
-         
+
          next = lFirst(task->data_list);
          while ((ep = next) != NULL) { /* is thread save. the global lock is used, when needed */
             next = lNext(ep);
-                                                   /* fill address infos from request into event client that must be added */
+
+            lDechainElem(task->data_list, ep);
+
+            /* fill address infos from request into event client that must be added */
             if (!job_verify_submitted_job(ep, &(task->answer_list))) {
                ERROR((SGE_EVENT, MSG_QMASTER_INVALIDJOBSUBMISSION_SSS,
                       packet->user, packet->commproc, packet->host));
             } else {
                /* submit needs to know user and group */
                sge_gdi_add_job(ctx, 
-                               ep, &(task->answer_list), 
+                               &ep, &(task->answer_list), 
                                (sub_command & SGE_GDI_RETURN_NEW_VERSION) ? 
                                &(task->data_list) : NULL, 
                                packet->user, packet->host, packet->uid, packet->gid, packet->group, 
                                packet, task, monitor);
             }
+            lInsertElem(task->data_list, NULL, ep);
          }
       } else if (task->target == SGE_SC_LIST ) {
          lListElem *next;
@@ -538,12 +540,12 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_
       } else {
          bool is_scheduler_resync = false;
          lList *tmp_list = NULL;
-         lListElem *next;         
+         lListElem *next;
 
          if (task->target == SGE_ORDER_LIST) {
-             sge_set_commit_required(); 
+             sge_set_commit_required();
          }
-   
+
          next = lFirst(task->data_list);
          while ((ep = next) != NULL) {
             next = lNext(ep);
@@ -552,8 +554,8 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_
             switch (task->target) {
 
                case SGE_ORDER_LIST:
-                 switch (sge_follow_order(ctx, ep, &(task->answer_list), packet->user, packet->host, 
-                                          &ticket_orders, monitor, object_base)) {
+                 switch (sge_follow_order(ctx, ep, &(task->answer_list), packet->user, packet->host,
+                                          reprioritize_tickets? &ticket_orders : NULL, monitor, object_base)) {
                     case STATUS_OK :
                     case  0 : /* everything went fine */
                        break;
@@ -564,9 +566,9 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_
                               WARNING((SGE_EVENT, "Skipping remaining %d orders", lGetNumberOfRemainingElem(ep)));
                               next = NULL;
                        break;
-                       
+
                     default :  DPRINTF(("--> FAILED: unexpected state from in the order processing <--\n"));
-                       break;        
+                       break;
                   }
                   break;
                case SGE_MANAGER_LIST:
@@ -583,22 +585,17 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_
                      SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
                      answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
                      break;
-                  } 
-                  
-                  if (task->target==SGE_EXECHOST_LIST && !strcmp(prognames[EXECD], packet->commproc)) {
-                     bool is_restart;
+                  }
 
-       		         /*
-		                * Evaluate subcommand.
-		                */
+                  if (task->target==SGE_EXECHOST_LIST && !strcmp(prognames[EXECD], packet->commproc)) {
+                     bool is_restart = false;
+
                      if (sub_command == SGE_GDI_EXECD_RESTART) {
                         is_restart = true;
-                     } else {
-        		            is_restart = false;
-		               }
-                     sge_execd_startedup(ctx, ep, &(task->answer_list), packet->user, 
-                                         packet->host, task->target,
-				                             monitor, is_restart);
+                     }
+
+                     sge_execd_startedup(ctx, ep, &(task->answer_list), packet->user,
+                                         packet->host, task->target, monitor, is_restart);
                   } else {
                      sge_gdi_add_mod_generic(ctx, &(task->answer_list), ep, 1, ao, packet->user, packet->host, sub_command, &tmp_list, monitor);
                   }
@@ -628,16 +625,14 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_
          lFreeList(&tmp_list);
       }
    }
-   
-   if (ticket_orders != NULL) {
-      if (mconf_get_reprioritize() == 1) {
-         distribute_ticket_orders(ctx, ticket_orders, monitor, object_base);
-      } else {
-         /* tickets not needed at execd's if no repriorization is done */
-         DPRINTF(("NO TICKET DELIVERY\n"));
-      } 
 
+   if (reprioritize_tickets && ticket_orders != NULL) {
+      distribute_ticket_orders(ctx, ticket_orders, monitor, object_base);
       lFreeList(&ticket_orders);
+      DPRINTF(("DISTRIBUTED NEW PRIORITIZE TICKETS\n"));
+   } else {
+      /* tickets not needed at execd's if no repriorization is done */
+      DPRINTF(("NO TICKET DELIVERY\n"));
    }
 
    DRETURN_VOID;
@@ -646,10 +641,10 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_
 /*
  * MT-NOTE: sge_c_gdi-del() is MT safe
  */
-void 
+void
 sge_c_gdi_del(sge_gdi_ctx_class_t *ctx,
-              sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task, 
-              int sub_command,  
+              sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task,
+              int sub_command,
               monitoring_t *monitor)
 {
    lListElem *ep;
@@ -660,19 +655,19 @@ sge_c_gdi_del(sge_gdi_ctx_class_t *ctx,
    if (sge_chck_mod_perm_user(&(task->answer_list), task->target, packet->user, monitor)) {
       DRETURN_VOID;
    }
-   
-   if (sge_chck_mod_perm_host(&(task->answer_list), task->target, packet->host, 
+
+   if (sge_chck_mod_perm_host(&(task->answer_list), task->target, packet->host,
                               packet->commproc, 0, NULL, monitor, object_base)) {
       DRETURN_VOID;
    }
-   
-   if (task->data_list == NULL) { 
+
+   if (task->data_list == NULL) {
       /* delete whole list */
 
       switch (task->target)
       {
          case SGE_SHARETREE_LIST:
-            sge_del_sharetree(ctx, object_base[SGE_TYPE_SHARETREE].list, &(task->answer_list), 
+            sge_del_sharetree(ctx, object_base[SGE_TYPE_SHARETREE].list, &(task->answer_list),
                               packet->user, packet->host);
             break;
          default:
@@ -706,7 +701,7 @@ sge_c_gdi_del(sge_gdi_ctx_class_t *ctx,
                break;
 
             case SGE_PE_LIST:
-               sge_del_pe(ctx, ep, &(task->answer_list), packet->user, packet->host); 
+               sge_del_pe(ctx, ep, &(task->answer_list), packet->user, packet->host);
                break;
 
             case SGE_MANAGER_LIST:
@@ -735,7 +730,7 @@ sge_c_gdi_del(sge_gdi_ctx_class_t *ctx,
                break;
 
             case SGE_CKPT_LIST:
-               sge_del_ckpt(ctx, ep, &(task->answer_list), packet->user, packet->host); 
+               sge_del_ckpt(ctx, ep, &(task->answer_list), packet->user, packet->host);
                break;
 
             case SGE_CALENDAR_LIST:
@@ -757,7 +752,7 @@ sge_c_gdi_del(sge_gdi_ctx_class_t *ctx,
                answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
                break;
          } /* switch target */
-           
+
       } /* for_each element */
 
       sge_commit();
@@ -767,10 +762,10 @@ sge_c_gdi_del(sge_gdi_ctx_class_t *ctx,
    return;
 }
 
-/* 
+/*
  * MT-NOTE: sge_c_gdi_copy() is MT safe
  */
-static void sge_c_gdi_copy(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao,                                      
+static void sge_c_gdi_copy(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao,
                            sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task, int sub_command,
                            monitoring_t *monitor)
 {
@@ -791,19 +786,19 @@ static void sge_c_gdi_copy(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao,
       return;
    }
 
-   if (sge_chck_mod_perm_host(&(task->answer_list), task->target, packet->host, 
+   if (sge_chck_mod_perm_host(&(task->answer_list), task->target, packet->host,
                               packet->commproc, 0, NULL, monitor, object_base)) {
       DEXIT;
       return;
    }
-   
+
    for_each (ep, task->data_list) {
       switch (task->target)
       {
          case SGE_JOB_LIST:
             /* gdi_copy_job uses the global lock internal */
-            sge_gdi_copy_job(ctx, ep, &(task->answer_list), 
-                             (sub_command & SGE_GDI_RETURN_NEW_VERSION) ? &(task->answer_list) : NULL, 
+            sge_gdi_copy_job(ctx, ep, &(task->answer_list),
+                             (sub_command & SGE_GDI_RETURN_NEW_VERSION) ? &(task->answer_list) : NULL,
                              packet->user, packet->host, packet->uid, packet->gid, packet->group, packet, task, monitor);
             break;
 
@@ -821,7 +816,7 @@ static void sge_c_gdi_copy(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao,
 /* ------------------------------------------------------------ */
 
 static void sge_gdi_do_permcheck(sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task)
-{ 
+{
    lList *lp = NULL;
    lListElem *ep = NULL;
 
@@ -829,8 +824,8 @@ static void sge_gdi_do_permcheck(sge_gdi_packet_class_t *packet, sge_gdi_task_cl
 
 
    DPRINTF(("User: %s\n", packet->user ));
- 
-   if (task->answer_list == NULL) { 
+
+   if (task->answer_list == NULL) {
       const char *mapped_user = NULL;
       const char* requested_host = NULL;
       bool did_mapping = false;
@@ -841,7 +836,7 @@ static void sge_gdi_do_permcheck(sge_gdi_packet_class_t *packet, sge_gdi_task_cl
       ep = lCreateElem(PERM_Type);
       lAppendElem(lp,ep);
 
-      /* set sge username */ 
+      /* set sge username */
       lSetString(ep, PERM_sge_username, packet->user);
 
       /* set requested host name */
@@ -850,54 +845,54 @@ static void sge_gdi_do_permcheck(sge_gdi_packet_class_t *packet, sge_gdi_task_cl
       } else {
          lList*     tmp_lp = NULL;
          lListElem* tmp_ep = NULL;
-     
+
          tmp_lp = task->data_list;
          tmp_ep = tmp_lp->first;
          requested_host = lGetHost(tmp_ep, PERM_req_host);
 #ifndef __SGE_NO_USERMAPPING__
          cuser_list_map_user(*(cuser_list_get_master_list()), NULL,
-                             packet->user, requested_host, &mapped_user); 
+                             packet->user, requested_host, &mapped_user);
          did_mapping = true;
 #endif
       }
 
       if (requested_host != NULL) {
-         lSetHost(ep, PERM_req_host, requested_host);  
-      }   
+         lSetHost(ep, PERM_req_host, requested_host);
+      }
 
       if (did_mapping && strcmp(mapped_user, packet->user)) {
          DPRINTF(("execution mapping: user %s mapped to %s on host %s\n",
                   packet->user, mapped_user, requested_host));
 
          lSetString(ep, PERM_req_username, mapped_user);
-      } else { 
+      } else {
          lSetString(ep, PERM_req_username, "");
       }
-    
+
 
       /* check for manager permission */
       value = 0;
       if (manop_is_manager(packet->user)) {
-         value = 1; 
-      }   
+         value = 1;
+      }
       lSetUlong(ep, PERM_manager, value);
 
       /* check for operator permission */
       value = 0;
       if (manop_is_operator(packet->user)) {
-         value = 1; 
-      }   
+         value = 1;
+      }
       lSetUlong(ep, PERM_operator, value);
       if ((task->condition != NULL) && (task->enumeration != NULL)) {
          task->data_list = lSelect("", lp, task->condition, task->enumeration);
-         lFreeList(&lp); 
+         lFreeList(&lp);
       } else {
          task->data_list = lp;
       }
    }
 
   sprintf(SGE_EVENT, MSG_GDI_OKNL);
-  answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_END); 
+  answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_END);
   DEXIT;
   return;
 }
@@ -905,8 +900,8 @@ static void sge_gdi_do_permcheck(sge_gdi_packet_class_t *packet, sge_gdi_task_cl
 /*
  * MT-NOTE: sge_c_gdi_permcheck() is MT safe
  */
-static void 
-sge_c_gdi_permcheck(sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task, 
+static void
+sge_c_gdi_permcheck(sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task,
                     monitoring_t *monitor)
 {
    DENTER(GDI_LAYER, "sge_c_gdi_permcheck");
@@ -916,12 +911,12 @@ sge_c_gdi_permcheck(sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task,
          break;
       default:
          WARNING((SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
-         answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR); 
+         answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
    }
    DRETURN_VOID;
 }
 
-void sge_c_gdi_replace(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao, 
+void sge_c_gdi_replace(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao,
                        sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task,
                        int sub_command, monitoring_t *monitor)
 {
@@ -935,7 +930,7 @@ void sge_c_gdi_replace(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao,
       DRETURN_VOID;
    }
 
-   if (sge_chck_mod_perm_host(&(task->answer_list), task->target, packet->host, 
+   if (sge_chck_mod_perm_host(&(task->answer_list), task->target, packet->host,
                               packet->commproc, 0, NULL, monitor, object_base)) {
       DRETURN_VOID;
    }
@@ -960,7 +955,7 @@ void sge_c_gdi_replace(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao,
             lFreeList(&tmp_list);
          }
          break;
-      default:      
+      default:
          SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
          answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
          break;
@@ -971,13 +966,13 @@ void sge_c_gdi_replace(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao,
 /*
  * MT-NOTE: sge_c_gdi_trigger() is MT safe
  */
-static void 
-sge_c_gdi_trigger(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, 
+static void
+sge_c_gdi_trigger(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet,
                   sge_gdi_task_class_t *task, monitoring_t *monitor)
 {
    u_long32 target = task->target;
    object_description *object_base = object_type_get_object_description();
-   
+
    DENTER(GDI_LAYER, "sge_c_gdi_trigger");
 
    switch (target) {
@@ -987,15 +982,13 @@ sge_c_gdi_trigger(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet,
             if (!host_list_locate(*object_base[SGE_TYPE_ADMINHOST].list, packet->host)) {
                ERROR((SGE_EVENT, MSG_SGETEXT_NOADMINHOST_S, packet->host));
                answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);
-               SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-               DEXIT;
-               return;
+               DRETURN_VOID;
             }
-      
+
             if (SGE_EXECHOST_LIST == target) {
                sge_gdi_kill_exechost(ctx, packet, task);
             }
-     
+
             if (SGE_SC_LIST == target) {
                trigger_scheduler_monitoring(packet, task, monitor);
             } else if (target == SGE_MASTER_EVENT) {
@@ -1008,7 +1001,7 @@ sge_c_gdi_trigger(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet,
             sge_set_commit_required();
             sge_gdi_qmod(ctx, packet, task, monitor);
             sge_commit();
-         break; 
+         break;
 
        case SGE_EVENT_LIST:
             /* kill scheduler or event client */
@@ -1031,10 +1024,10 @@ sge_c_gdi_trigger(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet,
    return;
 }
 
-static void 
-sge_gdi_tigger_thread_state_transition(sge_gdi_ctx_class_t *ctx, 
-                                       sge_gdi_packet_class_t *packet, 
-                                       sge_gdi_task_class_t *task, 
+static void
+sge_gdi_tigger_thread_state_transition(sge_gdi_ctx_class_t *ctx,
+                                       sge_gdi_packet_class_t *packet,
+                                       sge_gdi_task_class_t *task,
                                        monitoring_t *monitor)
 {
    lListElem *elem = NULL; /* ID_Type */
@@ -1053,7 +1046,7 @@ sge_gdi_tigger_thread_state_transition(sge_gdi_ctx_class_t *ctx,
                sge_scheduler_terminate(ctx, answer_list);
             } else {
                ERROR((SGE_EVENT, MSG_TRIGGER_STATENOTSUPPORTED_DS, action, name));
-               answer_list_add(&(task->answer_list), SGE_EVENT, 
+               answer_list_add(&(task->answer_list), SGE_EVENT,
                                STATUS_EEXIST, ANSWER_QUALITY_WARNING);
             }
 #ifndef NO_JNI
@@ -1064,56 +1057,56 @@ sge_gdi_tigger_thread_state_transition(sge_gdi_ctx_class_t *ctx,
                sge_jvm_terminate(ctx, answer_list);
             } else {
                ERROR((SGE_EVENT, MSG_TRIGGER_STATENOTSUPPORTED_DS, action, name));
-               answer_list_add(&(task->answer_list), SGE_EVENT, 
+               answer_list_add(&(task->answer_list), SGE_EVENT,
                               STATUS_EEXIST, ANSWER_QUALITY_WARNING);
             }
 #endif
          } else {
             ERROR((SGE_EVENT, MSG_TRIGGER_NOTSUPPORTED_S, name));
-            answer_list_add(&(task->answer_list), SGE_EVENT, 
+            answer_list_add(&(task->answer_list), SGE_EVENT,
                             STATUS_EEXIST, ANSWER_QUALITY_WARNING);
          }
       } else {
          ERROR((SGE_EVENT, MSG_TRIGGER_NOTSUPPORTED_S, ""));
-         answer_list_add(&(task->answer_list), SGE_EVENT, 
+         answer_list_add(&(task->answer_list), SGE_EVENT,
                          STATUS_EEXIST, ANSWER_QUALITY_WARNING);
       }
    }
    DRETURN_VOID;
-} 
+}
 
 /****** qmaster/sge_c_gdi/sge_gdi_shutdown_event_client() **********************
 *  NAME
-*     sge_gdi_shutdown_event_client() -- shutdown event client 
+*     sge_gdi_shutdown_event_client() -- shutdown event client
 *
 *  SYNOPSIS
 *     static void
-*     sge_gdi_shutdown_event_client(sge_gdi_ctx_class_t *ctx, 
-*                                   sge_gdi_packet_class_t *packet, 
-*                                   sge_gdi_task_class_t *task, 
-*                                   monitoring_t *monitor, 
+*     sge_gdi_shutdown_event_client(sge_gdi_ctx_class_t *ctx,
+*                                   sge_gdi_packet_class_t *packet,
+*                                   sge_gdi_task_class_t *task,
+*                                   monitoring_t *monitor,
 *                                   object_description *object_base)
 *
 *  FUNCTION
-*     Shutdown event clients by client id. tasks data_list does contain a list of 
+*     Shutdown event clients by client id. tasks data_list does contain a list of
 *     client id's. This is a list of 'ID_Type' elements.
 *
 *  INPUTS
 *     sge_gdi_ctx_class_t *ctx - context
-*     sge_gdi_packet_class_t *packet - request packet 
-*     sge_gdi_task_class_t *task - request task 
-*     monitoring_t *monitor - the monitoring structure 
+*     sge_gdi_packet_class_t *packet - request packet
+*     sge_gdi_task_class_t *task - request task
+*     monitoring_t *monitor - the monitoring structure
 *
 *  RESULT
-*     void - none 
+*     void - none
 *
 *  NOTES
-*     MT-NOTE: sge_gdi_shutdown_event_client() is NOT MT safe. 
+*     MT-NOTE: sge_gdi_shutdown_event_client() is NOT MT safe.
 *
 *******************************************************************************/
-static void 
-sge_gdi_shutdown_event_client(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, 
-                              sge_gdi_task_class_t *task, monitoring_t *monitor, 
+static void
+sge_gdi_shutdown_event_client(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet,
+                              sge_gdi_task_class_t *task, monitoring_t *monitor,
                               object_description *object_base)
 {
    lListElem *elem = NULL; /* ID_Type */
@@ -1130,12 +1123,12 @@ sge_gdi_shutdown_event_client(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *
          continue;
       }
 
-      if (client_id == EV_ID_SCHEDD && 
+      if (client_id == EV_ID_SCHEDD &&
           !host_list_locate(*object_base[SGE_TYPE_ADMINHOST].list, packet->host)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_NOADMINHOST_S, packet->host));
          answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);
          continue;
-      } else if (!host_list_locate(*object_base[SGE_TYPE_SUBMITHOST].list, packet->host) 
+      } else if (!host_list_locate(*object_base[SGE_TYPE_SUBMITHOST].list, packet->host)
               && !host_list_locate(*object_base[SGE_TYPE_ADMINHOST].list, packet->host)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_NOSUBMITORADMINHOST_S, packet->host));
          answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);
@@ -1152,9 +1145,9 @@ sge_gdi_shutdown_event_client(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *
       } else {
          res = sge_shutdown_event_client(client_id, packet->user, packet->uid, &(local_alp), monitor);
       }
-     
+
       if ((res == EINVAL) && (client_id == EV_ID_SCHEDD)) {
-         lFreeList(&local_alp); 
+         lFreeList(&local_alp);
          answer_list_add(&(task->answer_list), MSG_COM_NOSCHEDDREGMASTER, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
       }
       else {
@@ -1168,25 +1161,25 @@ sge_gdi_shutdown_event_client(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *
 
 /****** qmaster/sge_c_gdi/get_client_id() **************************************
 *  NAME
-*     get_client_id() -- get client id from ID_Type element. 
+*     get_client_id() -- get client id from ID_Type element.
 *
 *  SYNOPSIS
-*     static int get_client_id(lListElem *anElem, int *anID) 
+*     static int get_client_id(lListElem *anElem, int *anID)
 *
 *  FUNCTION
 *     Get client id from ID_Type element. The client id is converted to an
 *     integer and stored in 'anID'.
 *
 *  INPUTS
-*     lListElem *anElem - ID_Type element 
+*     lListElem *anElem - ID_Type element
 *     int *anID         - will contain client id on return
 *
 *  RESULT
-*     EINVAL - failed to extract client id. 
+*     EINVAL - failed to extract client id.
 *     0      - otherwise
 *
 *  NOTES
-*     MT-NOTE: get_client_id() is MT safe. 
+*     MT-NOTE: get_client_id() is MT safe.
 *
 *     Using 'errno' to check for 'strtol' error situations is recommended
 *     by POSIX.
@@ -1221,39 +1214,38 @@ static int get_client_id(lListElem *anElem, int *anID)
 
 /****** qmaster/sge_c_gdi/trigger_scheduler_monitoring() ***********************
 *  NAME
-*     trigger_scheduler_monitoring() -- trigger scheduler monitoring 
+*     trigger_scheduler_monitoring() -- trigger scheduler monitoring
 *
 *  SYNOPSIS
-*     static void 
+*     static void
 *     trigger_scheduler_monitoring(sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task,
-*                                  monitoring_t *monitor) 
+*                                  monitoring_t *monitor)
 *
 *  FUNCTION
 *     Trigger scheduler monitoring.
 *
 *  INPUTS
-*     sge_gdi_packet_class_t *packet - request packet 
-*     sge_gdi_task_class_t *task - request task 
+*     sge_gdi_packet_class_t *packet - request packet
+*     sge_gdi_task_class_t *task - request task
 *
 *  RESULT
 *     void - none
 *
 *  NOTES
-*     MT-NOTE: trigger_scheduler_monitoring() is MT safe, using global lock 
+*     MT-NOTE: trigger_scheduler_monitoring() is MT safe, using global lock
 *
 *  SEE ALSO
 *     qconf -tsm
 *
 *******************************************************************************/
-static void 
+static void
 trigger_scheduler_monitoring(sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task,
-                             monitoring_t *monitor) 
+                             monitoring_t *monitor)
 {
 
    DENTER(GDI_LAYER, "trigger_scheduler_monitoring");
 
    if (!manop_is_manager(packet->user)) {
-      SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
       WARNING((SGE_EVENT, MSG_COM_NOSCHEDMONPERMS));
       answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_WARNING);
       DEXIT;
@@ -1276,15 +1268,15 @@ trigger_scheduler_monitoring(sge_gdi_packet_class_t *packet, sge_gdi_task_class_
 /*
  * MT-NOTE: sge_c_gdi_mod() is MT safe
  */
-void sge_c_gdi_mod(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao,  
-                   sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task, int sub_command, 
+void sge_c_gdi_mod(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao,
+                   sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task, int sub_command,
                    monitoring_t *monitor)
 {
    lListElem *ep;
-   lList *tmp_list = NULL; 
+   lList *tmp_list = NULL;
    bool is_locked = false;
    object_description *object_base = object_type_get_object_description();
-      
+
    DENTER(TOP_LAYER, "sge_c_gdi_mod");
 
    if (sge_chck_mod_perm_user(&(task->answer_list), task->target, packet->user, monitor)) {
@@ -1293,19 +1285,19 @@ void sge_c_gdi_mod(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao,
    }
 
    for_each (ep, task->data_list) {
-      if (sge_chck_mod_perm_host(&(task->answer_list), task->target, packet->host, 
+      if (sge_chck_mod_perm_host(&(task->answer_list), task->target, packet->host,
                                  packet->commproc, 1, ep, monitor, object_base)) {
          continue;
       }
 
       if (task->target == SGE_CONFIG_LIST) {
-         sge_mod_configuration(ctx, ep, &(task->answer_list), packet->user, packet->host);      
+         sge_mod_configuration(ctx, ep, &(task->answer_list), packet->user, packet->host);
       } else if (task->target == SGE_EVENT_LIST) {
          /* fill address infos from request into event client that must be added */
          lSetHost(ep, EV_host, packet->host);
          lSetString(ep, EV_commproc, packet->commproc);
          lSetUlong(ep, EV_commid, packet->id);
- 
+
          /* fill in authentication infos from request */
          lSetUlong(ep, EV_uid, packet->uid);
          if (!event_client_verify(ep, &(task->answer_list), false)) {
@@ -1313,15 +1305,15 @@ void sge_c_gdi_mod(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao,
                    packet->user, packet->commproc, packet->host));
          } else {
             sge_mod_event_client(ep, &(task->answer_list), packet->user, packet->host);
-         }   
+         }
       } else if (task->target == SGE_SC_LIST) {
          sge_mod_sched_configuration(ctx, ep, &(task->answer_list), packet->user, packet->host);
       } else {
          if (!is_locked) {
             sge_set_commit_required();
-            is_locked = true; 
+            is_locked = true;
          }
-               
+
          switch (task->target)
          {
             case SGE_JOB_LIST:
@@ -1347,7 +1339,7 @@ void sge_c_gdi_mod(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao,
    if (is_locked) {
       sge_commit();
    }
-   
+
    /* postprocessing for the list of requests */
    if (lGetNumberOfElem(tmp_list) != 0) {
       switch (task->target) {
@@ -1399,9 +1391,7 @@ static int sge_chck_mod_perm_user(lList **alpp, u_long32 target, char *user, mon
       if (!manop_is_manager(user)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_MUSTBEMANAGER_S, user));
          answer_list_add(alpp, SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
-         SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
-         DEXIT;
-         return 1;
+         DRETURN(1);
       }
       break;
 
@@ -1418,7 +1408,7 @@ static int sge_chck_mod_perm_user(lList **alpp, u_long32 target, char *user, mon
    case SGE_JOB_LIST:
 
       /*
-         what checking could we do here ? 
+         what checking could we do here ?
 
          we had to check if there is a queue configured for scheduling
          of jobs of this group/user. If there is no such queue we
@@ -1430,14 +1420,14 @@ static int sge_chck_mod_perm_user(lList **alpp, u_long32 target, char *user, mon
       break;
 
    case SGE_EVENT_LIST:
-      /* 
+      /*
          an event client can be started by any user - it can only
          read objects like SGE_GDI_GET
          delete requires more info - is done in sge_gdi_kill_eventclient
-      */  
+      */
       break;
    case SGE_AR_LIST:
-      /* 
+      /*
          Advance reservation can be submitted by a manager or any user in the aruser access list.
       */
       if (!manop_is_manager(user) && !userset_is_ar_user(*userset_list_get_master_list(), user) ) {
@@ -1459,8 +1449,8 @@ static int sge_chck_mod_perm_user(lList **alpp, u_long32 target, char *user, mon
 /*
  * MT-NOTE: sge_chck_mod_perm_host() is MT safe
  */
-static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host, 
-                                  char *commproc, int mod, lListElem *ep, 
+int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host,
+                                  char *commproc, int mod, lListElem *ep,
                                   monitoring_t *monitor, object_description *object_base)
 {
    DENTER(TOP_LAYER, "sge_chck_mod_perm_host");
@@ -1487,7 +1477,7 @@ static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host,
    case SGE_USER_MAPPING_LIST:
    case SGE_HGROUP_LIST:
    case SGE_RQS_LIST:
-      
+
       /* host must be SGE_ADMINHOST_LIST */
       if (!host_list_locate(*object_base[SGE_TYPE_ADMINHOST].list, host)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_NOADMINHOST_S, host));
@@ -1497,7 +1487,7 @@ static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host,
       break;
 
    case SGE_EXECHOST_LIST:
-      
+
       /* host must be either admin host or exec host and execd */
 
       if (!(host_list_locate(*object_base[SGE_TYPE_ADMINHOST].list, host) ||
@@ -1509,7 +1499,7 @@ static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host,
       break;
 
    case SGE_JOB_LIST:
-      /* 
+      /*
       ** check if override ticket change request, if yes we need
       ** to be on an admin host and must not be on a submit host
       */
@@ -1521,7 +1511,7 @@ static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host,
             DRETURN(1);
          }
          break;
-      }    
+      }
       /* host must be SGE_SUBMITHOST_LIST */
       if (!host_list_locate(*object_base[SGE_TYPE_SUBMITHOST].list, host)) {
          ERROR((SGE_EVENT, MSG_SGETEXT_NOSUBMITHOST_S, host));
@@ -1533,9 +1523,9 @@ static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host,
    case SGE_EVENT_LIST:
       /* to start an event client or if an event client
          performs modify requests on itself
-         it must be on a submit or an admin host 
+         it must be on a submit or an admin host
        */
-      if ( (!host_list_locate(*object_base[SGE_TYPE_SUBMITHOST].list, host)) 
+      if ( (!host_list_locate(*object_base[SGE_TYPE_SUBMITHOST].list, host))
         && (!host_list_locate(*object_base[SGE_TYPE_ADMINHOST].list, host))) {
         ERROR((SGE_EVENT, MSG_SGETEXT_NOSUBMITORADMINHOST_S, host));
         answer_list_add(alpp, SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);
@@ -1555,21 +1545,21 @@ static int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host,
       answer_list_add(alpp, SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
       DRETURN(1);
    }
-  
+
    DRETURN(0);
 }
 
 
 /* EB: TODO: ST: skip execution of this function if it is internal GDI request */
 /* EB: TODO: ST: move usage of this code into listener in future */
-static bool 
-sge_task_check_get_perm_host(sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task, 
+static bool
+sge_task_check_get_perm_host(sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task,
                              monitoring_t *monitor, object_description *object_base)
 {
    bool ret = true;
    u_long32 target;
    char *host = NULL;
-   
+
    DENTER(TOP_LAYER, "sge_task_check_get_perm_host");
 
    target = task->target;
@@ -1647,7 +1637,7 @@ sge_gdi_ctx_class_t *ctx,
 lList **alpp,
 lListElem *instructions, /* our instructions - a reduced object */
 int add,                 /* true in case of add */
-gdi_object_t *object, 
+gdi_object_t *object,
 const char *ruser,
 const char *rhost,
 int sub_command,
@@ -1683,15 +1673,15 @@ monitoring_t *monitor
       DRETURN(STATUS_EUNKNOWN);
    }
 
-   /* 
-    * resolve host name in case of objects with hostnames as key 
-    * before searching for the objects 
+   /*
+    * resolve host name in case of objects with hostnames as key
+    * before searching for the objects
     */
-   if ( object->key_nm == EH_name || 
-        object->key_nm == AH_name || 
+   if ( object->key_nm == EH_name ||
+        object->key_nm == AH_name ||
         object->key_nm == SH_name ) {
       if (sge_resolve_host(instructions, object->key_nm) != CL_RETVAL_OK) {
-         const char *host = lGetHost(instructions, object->key_nm);    
+         const char *host = lGetHost(instructions, object->key_nm);
          ERROR((SGE_EVENT, MSG_SGETEXT_CANTRESOLVEHOST_S, host ? host : "NULL"));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DRETURN(STATUS_EUNKNOWN);
@@ -1708,11 +1698,11 @@ monitoring_t *monitor
 
       old_obj = lGetElemUlong(*object_type_get_master_list(object->list_type), object->key_nm, id);
    } else if (dataType == lHostT) {
-      name = lGetHost(instructions, object->key_nm); 
+      name = lGetHost(instructions, object->key_nm);
       old_obj = lGetElemHost(*object_type_get_master_list(object->list_type), object->key_nm, name);
-      
+
    } else {
-      name = lGetString(instructions, object->key_nm); 
+      name = lGetString(instructions, object->key_nm);
       old_obj = lGetElemStr(*object_type_get_master_list(object->list_type), object->key_nm, name);
    }
 
@@ -1726,15 +1716,15 @@ monitoring_t *monitor
    if ((old_obj && add) ||
       (!old_obj && !add)) {
       ERROR((SGE_EVENT, add?
-            MSG_SGETEXT_ALREADYEXISTS_SS:MSG_SGETEXT_DOESNOTEXIST_SS, 
+            MSG_SGETEXT_ALREADYEXISTS_SS:MSG_SGETEXT_DOESNOTEXIST_SS,
             object->object_name, name));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DRETURN(STATUS_EEXIST);
    }
 
    /* create a new object (add case), or make a copy of the old object (mod case) */
-   if (!(new_obj = (add 
-         ? lCreateElem(object->type) 
+   if (!(new_obj = (add
+         ? lCreateElem(object->type)
          : lCopyElem(old_obj)))) {
       ERROR((SGE_EVENT, MSG_MEM_MALLOC));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
@@ -1742,9 +1732,9 @@ monitoring_t *monitor
    }
 
    /* modify the new object base on information in the request */
-   if (object->modifier(ctx, &tmp_alp, new_obj, instructions, add, ruser, rhost, 
+   if (object->modifier(ctx, &tmp_alp, new_obj, instructions, add, ruser, rhost,
          object, sub_command, monitor) != 0) {
-      
+
       if (alpp) {
          /* ON ERROR: DISPOSE NEW OBJECT */
          /* failure: just append last elem in tmp_alp
@@ -1768,7 +1758,7 @@ monitoring_t *monitor
       }
       lFreeElem(&new_obj);
       DRETURN(STATUS_EUNKNOWN);
-   }  
+   }
 
 
    /* write on file */
@@ -1782,7 +1772,7 @@ monitoring_t *monitor
       if (*alpp == NULL) {
          *alpp = lCreateList("answer", AN_Type);
       }
-   
+
       /* copy tmp_alp to alpp */
       lAppendList(*alpp, tmp_alp);
    }
@@ -1792,13 +1782,13 @@ monitoring_t *monitor
       lList **master_list = NULL;
 
       master_list = object_type_get_master_list(object->list_type);
-         
+
       /* chain out the old object */
       if (old_obj) {
          lDechainElem(*master_list, old_obj);
       }
 
-      /* ensure our global list exists */ 
+      /* ensure our global list exists */
       if (*master_list == NULL ) {
          *master_list = lCreateList(object->object_name, object->type);
       }
@@ -1813,15 +1803,15 @@ monitoring_t *monitor
    }
 
    lFreeElem(&old_obj);
-   
+
    if (!SGE_GDI_IS_SUBCOMMAND_SET(sub_command, SGE_GDI_RETURN_NEW_VERSION)) {
-      INFO((SGE_EVENT, 
+      INFO((SGE_EVENT,
          add?MSG_SGETEXT_ADDEDTOLIST_SSSS:
              MSG_SGETEXT_MODIFIEDINLIST_SSSS, ruser, rhost, name, object->object_name));
 
       answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
    }
-    
+
    DRETURN(STATUS_OK);
 }
 
@@ -1851,7 +1841,7 @@ static int schedd_mod(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *modp,
    DENTER(TOP_LAYER, "schedd_mod");
 
    ret = sconf_validate_config_(alpp) ? 0 : 1;
-   
+
    DEXIT;
    return ret;
 }

@@ -918,11 +918,14 @@ MakeKeystore()
       CA_ARGS="$CA_ARGS $kspwfile"
    fi
 
-   if [ "$JAVA_HOME" = "" ]; then 
+   if [ "$JAVA_HOME" != "" -a -x $JAVA_HOME/bin/java ]; then 
+      JAVA=$JAVA_HOME/bin/java
+   else   
+      JAVA=`which java`
+   fi
+   if [ ! -x $JAVA ]; then
       PrintError "JAVA_HOME not set"
       return 1
-   else   
-      JAVA=$JAVA_HOME/bin/java
    fi
 
    JVM_ARGS="-cp $ROOT_PATH/lib/juti.jar"
@@ -1726,12 +1729,14 @@ if [ ! -d "$ROOT_PATH/lib/$ARCH" ]; then
     exit 1
 fi
 
-if [ "$LD_LIBRARY_PATH"  = "" ]; then
-   LD_LIBRARY_PATH=$ROOT_PATH/lib/$ARCH
+shlib_path_name=`$ROOT_PATH/util/arch -lib`
+old_shlib_path_name=`eval echo '$'$shlib_path_name`
+if [ x$old_shlib_path_name  = x ]; then
+   eval $shlib_path_name=$ROOT_PATH/lib/$ARCH
 else
-   LD_LIBRARY_PATH="$ROOT_PATH/lib/${ARCH}:${LD_LIBRARY_PATH}"
+   eval $shlib_path_name="$ROOT_PATH/lib/${ARCH}:${old_shlib_path_name}"
 fi
-export LD_LIBRARY_PATH
+export $shlib_path_name
 
 #---------------------------------------
 # setup INFOTEXT begin
@@ -1831,7 +1836,9 @@ while [ $ARGC != 0 ]; do
       ;;
    -auto)
       AUTO="true"
-      . $2
+      if [ "$AUTOGUI" != true ]; then
+         . $2
+      fi
       shift
       ARGC=`expr $ARGC - 1`
       ;;

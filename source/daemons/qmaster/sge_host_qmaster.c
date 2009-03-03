@@ -86,6 +86,7 @@
 #include "sge_reporting_qmaster.h"
 #include "sge_advance_reservation_qmaster.h"
 #include "sge_bootstrap.h"
+#include "sge_job_enforce_limit.h"
 
 #include "sgeobj/sge_object.h"
 
@@ -679,15 +680,20 @@ void sge_mark_unheard(lListElem *hep) {
       DEBUG((SGE_EVENT, "set %s/%s/%d to unheard\n", host, prognames[EXECD], 1));
    }
 
-   host_trash_nonstatic_load_values(hep);
-   cqueue_list_set_unknown_state(
-         *(object_type_get_master_list(SGE_TYPE_CQUEUE)),
-         host, true, true);
+   if (lGetUlong(hep, EH_lt_heard_from) != 0) {
+      host_trash_nonstatic_load_values(hep);
+      cqueue_list_set_unknown_state(
+            *(object_type_get_master_list(SGE_TYPE_CQUEUE)),
+            host, true, true);
 
-   lSetUlong(hep, EH_lt_heard_from, 0);
+      lSetUlong(hep, EH_lt_heard_from, 0);
 
-   /* hedeby depends on this event */
-   sge_add_event(0, sgeE_EXECHOST_MOD, 0, 0, host, NULL, NULL, hep);
+      /* add a trigger to enforce limits when they are exceeded */
+      sge_host_add_enforce_limit_trigger(host);
+
+      /* hedeby depends on this event */
+      sge_add_event(0, sgeE_EXECHOST_MOD, 0, 0, host, NULL, NULL, hep);
+   }
 
    DRETURN_VOID;
 }
@@ -726,6 +732,10 @@ void sge_update_load_values(sge_gdi_ctx_class_t *ctx, const char *rhost, lList *
    if (lGetUlong(host_ep, EH_lt_heard_from) == 0) {
       cqueue_list_set_unknown_state(*(object_type_get_master_list(SGE_TYPE_CQUEUE)),
                                     rhost, true, false);
+
+      /* remove a trigger to enforce limits when they are exceeded */
+      sge_host_remove_enforce_limit_trigger(rhost);
+
       lSetUlong(host_ep, EH_lt_heard_from, sge_get_gmt());
    }
 
@@ -890,7 +900,10 @@ void sge_load_value_cleanup_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent
       cqueue_list_set_unknown_state(
             *(object_type_get_master_list(SGE_TYPE_CQUEUE)),
             host, true, true);
-    
+
+      /* add a trigger to enforce limits when they are exceeded */
+      sge_host_add_enforce_limit_trigger(host);
+
       /* hedeby depends on this event */
       sge_add_event(0, sgeE_EXECHOST_MOD, 0, 0, host, NULL, NULL, hep);
 
@@ -1111,8 +1124,7 @@ notify(sge_gdi_ctx_class_t *ctx, lListElem *lel, sge_gdi_packet_class_t *packet,
       WARNING((SGE_EVENT, MSG_OBJ_NOEXECDONHOST_S, hostname));
       answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_ESEMANTIC, 
                      ANSWER_QUALITY_WARNING);
-   }
-   if (execd_alive || force) {
+   } else {
       if (host_notify_about_kill(ctx, lel, kill_jobs)) {
          INFO((SGE_EVENT, MSG_COM_NONOTIFICATION_SSS, action_str, 
                (execd_alive ? "" : MSG_OBJ_UNKNOWN), hostname));
@@ -1242,33 +1254,29 @@ sge_execd_startedup(sge_gdi_ctx_class_t *ctx, lListElem *host, lList **alpp,
    /*
     * reinit state of all qinstances at this host according to initial_state
     */
-   for_each (cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
-      lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
-      lListElem *qinstance = NULL;
+   if (!is_restart) {
+      for_each (cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
+         lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+         lListElem *qinstance = NULL;
 
-      qinstance = lGetElemHost(qinstance_list, QU_qhostname, rhost);
-      if (qinstance != NULL) {
-         bool state_changed = sge_qmaster_qinstance_set_initial_state(qinstance,
-			                                              is_restart);
+         qinstance = lGetElemHost(qinstance_list, QU_qhostname, rhost);
+         if (qinstance != NULL) {
+            if (sge_qmaster_qinstance_set_initial_state(qinstance)) {
+               lList *answer_list = NULL;
 
-         if (state_changed) {
-            lList *answer_list = NULL;
-
-            qinstance_increase_qversion(qinstance);
-            sge_event_spool(ctx, &answer_list, 0, sgeE_QINSTANCE_MOD, 
-                            0, 0, lGetString(qinstance, QU_qname), 
-                            rhost, NULL,
-                            qinstance, NULL, NULL, true, true);
-            answer_list_output(&answer_list); 
+               qinstance_increase_qversion(qinstance);
+               sge_event_spool(ctx, &answer_list, 0, sgeE_QINSTANCE_MOD, 
+                               0, 0, lGetString(qinstance, QU_qname), 
+                               rhost, NULL,
+                               qinstance, NULL, NULL, true, true);
+               answer_list_output(&answer_list); 
+            }
          }
       }
    }
    
    DPRINTF(("=====>STARTING_UP: %s %s on >%s< is starting up\n", 
-   feature_get_product_name(FS_SHORT_VERSION, &ds), "execd", rhost));
-
-   sge_add_event( 0, sgeE_EXECHOST_MOD, 0, 0, rhost, NULL, NULL, hep);
-   lListElem_clear_changed_info(hep);
+            feature_get_product_name(FS_SHORT_VERSION, &ds), "execd", rhost));
 
    INFO((SGE_EVENT, MSG_LOG_REGISTER_SS, "execd", rhost));
    answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
@@ -1523,26 +1531,41 @@ static int attr_mod_threshold(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem 
          lListElem *jep = NULL;
          lListElem *ar_ep = NULL;
          const char *host = lGetHost(tmp_elem, EH_name);
-         int slots;
          int global_host = !strcmp(SGE_GLOBAL_NAME, host);
          lList *master_centry_list = *object_type_get_master_list(SGE_TYPE_CENTRY);
 
          lSetList(tmp_elem, EH_resource_utilization, NULL);
-         debit_host_consumable(NULL, tmp_elem, master_centry_list, 0);
+         debit_host_consumable(NULL, tmp_elem, master_centry_list, 0, true);
          for_each (jep, *(object_type_get_master_list(SGE_TYPE_JOB))) {
             lListElem *jatep = NULL;
 
-            slots = 0;
             for_each (jatep, lGetList(jep, JB_ja_tasks)) {
-               slots += nslots_granted(lGetList(jatep, JAT_granted_destin_identifier_list),
+               lList *gdil = lGetList(jatep, JAT_granted_destin_identifier_list);
+               int slots;
+               bool is_master_task = false;
+               const void *iterator = NULL;
+
+               if (global_host || (lFirst(gdil) == lGetElemHostFirst(gdil, JG_qhostname, host, &iterator))) {
+                  is_master_task = true;
+               }
+
+               slots = nslots_granted(lGetList(jatep, JAT_granted_destin_identifier_list),
                   global_host?NULL:host);
+            
+               if (slots > 0) {
+                  debit_host_consumable(jep, tmp_elem, master_centry_list, slots, is_master_task);
+               }
             }
-            if (slots)
-               debit_host_consumable(jep, tmp_elem, master_centry_list, slots);
          }
 
          for_each(ar_ep, *object_type_get_master_list(SGE_TYPE_AR)) {
-            lListElem *gdil_ep = lGetSubHost(ar_ep, JG_qhostname, host, AR_granted_slots);
+            lList *gdil = lGetList(ar_ep, AR_granted_slots);
+            lListElem *gdil_ep = lGetElemHost(gdil, JG_qhostname, host);
+            bool is_master_task = false;
+
+            if (gdil_ep == lFirst(gdil)) {
+               is_master_task = true;
+            }
 
             if (gdil_ep != NULL) {
                lListElem *dummy_job = lCreateElem(JB_Type);
@@ -1553,7 +1576,7 @@ static int attr_mod_threshold(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem 
                                       tmp_elem, master_centry_list, lGetUlong(gdil_ep, JG_slots),
                                       EH_consumable_config_list, EH_resource_utilization, host,
                                       lGetUlong(ar_ep, AR_start_time), lGetUlong(ar_ep, AR_duration),
-                                      HOST_TAG, false);
+                                      HOST_TAG, false, is_master_task);
                lFreeElem(&dummy_job);
             }
          }

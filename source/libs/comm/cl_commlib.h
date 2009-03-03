@@ -79,7 +79,7 @@ cl_com_handle_t* cl_com_get_handle(const char* component_name,
 /* commlib parameter functions */
 int cl_com_set_synchron_receive_timeout(cl_com_handle_t* handle, int timeout);
 
-int cl_com_set_handle_fds(cl_com_handle_t* handle, fd_set* file_descriptor_set);
+int cl_com_set_handle_fds(cl_com_handle_t* handle, int** fd_array, unsigned long* fd_count_back);
 int cl_com_get_service_port(cl_com_handle_t* handle, int* port);
 int cl_com_get_connect_port(cl_com_handle_t* handle, int* port);
 

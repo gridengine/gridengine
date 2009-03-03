@@ -130,8 +130,7 @@ so_list_append_to_dstring(const lList *this_list, dstring *string)
       }
       ret = sge_dstring_get_string(string);
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /*
@@ -143,9 +142,8 @@ bool
 so_list_add(lList **this_list, lList **answer_list, const char *so_name,
             u_long32 threshold)
 {
-   bool ret = true;
-      
    DENTER(TOP_LAYER, "so_list_add");
+
    if (this_list != NULL && so_name != NULL) {
       lListElem *elem = lGetElemStr(*this_list, SO_name, so_name);
    
@@ -162,12 +160,9 @@ so_list_add(lList **this_list, lList **answer_list, const char *so_name,
          elem = lAddElemStr(this_list, SO_name, so_name, SO_Type);
          lSetUlong(elem, SO_threshold, threshold);
       }
-   } else {
-      DTRACE;
    }
    
-   DEXIT;
-   return ret;
+   DRETURN(true);
 }
 
 /****** sgeobj/subordinate/so_list_resolve() ***********************************
@@ -177,7 +172,7 @@ so_list_add(lList **this_list, lList **answer_list, const char *so_name,
 *
 *  SYNOPSIS
 *     bool so_list_resolve(const lList *so_list, lList **answer_list,
-*                          lList **resolved_so_list, const char *qi_name,
+*                          lList **resolved_so_list, const char *cq_name,
 *                          const char *hostname)
 *
 *  FUNCTION
@@ -191,7 +186,7 @@ so_list_add(lList **this_list, lList **answer_list, const char *so_name,
 *     const lList *so_list     - the list of subordinates to resolve
 *     lList **answer_list      - answer list for errors
 *     lList **resolved_so_list - the destination list for resolved subordinates
-*     const char *qi_name      - the queue name of the qinstance to which the
+*     const char *cq_name      - the queue name of the qinstance to which the
 *                                subordinate list is subordinate
 *     const char *hostname     - the hostname for the queue to which the
 *                                subordinate list is subordinate
@@ -203,7 +198,7 @@ so_list_add(lList **this_list, lList **answer_list, const char *so_name,
 *******************************************************************************/
 bool
 so_list_resolve(const lList *so_list, lList **answer_list,
-                lList **resolved_so_list, const char *qi_name,
+                lList **resolved_so_list, const char *cq_name,
                 const char *hostname)
 {
    bool ret = true;
@@ -212,101 +207,41 @@ so_list_resolve(const lList *so_list, lList **answer_list,
    if ((so_list != NULL) && (hostname != NULL)) {
       lListElem *so;
       lList *cqueue_list = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
-      /* Subordinate name parts */
-      dstring cq_name = DSTRING_INIT;
-      dstring host_name = DSTRING_INIT;
-      bool has_hostname = false;
-      bool has_domain = false;
-      const char *cq_name_str = NULL;
-      /* Temporary storage for cqueues */
-      lList *qref_list = NULL;
-      lListElem *cq_ref = NULL;
 
-      if (qi_name != NULL) {
-         DPRINTF (("Finding subordinates for %s on %s\n", qi_name, hostname));
-      }
-      else {
-         DPRINTF (("Finding subordinates on host %s\n", hostname));
+      if (cq_name != NULL) {
+         DPRINTF(("Finding subordinates for %s on %s\n", cq_name, hostname));
+      } else {
+         DPRINTF(("Finding subordinates on host %s\n", hostname));
       }
       
       /* Get the list of resolved qinstances for each subsordinate. */
       for_each (so, so_list) {
-         const char *sub_name = lGetString (so, SO_name);
-         DPRINTF (("Finding cqueues for subordinate %s\n", sub_name));
+         const char *qinstance_name = NULL;
+         const char *cq_name_str = lGetString (so, SO_name);
 
-         /* Break the subordinate name into cqueue and host parts. */
-         /* Here we use the has_hostname and has_domain variables just because
-          * we need to pass something in.  All we're interested in is the cqueue
-          * name.  Their values will be ignored. */
-         ret = cqueue_name_split(sub_name, &cq_name, &host_name,
-                                  &has_hostname, &has_domain);
+         lListElem *cqueue = cqueue_list_locate(cqueue_list, cq_name_str);
 
-         if (ret) {
-            cq_name_str = sge_dstring_get_string (&cq_name);
+         if (cqueue != NULL) {
+            lListElem *qinstance = cqueue_locate_qinstance(cqueue, hostname);
 
-            ret = cq_name_str != NULL ? true : false;
-         }
+            /* If this cqueue doesn't have a qinstance on this host,
+             * just skip it. */
+            if (qinstance != NULL) {
+               qinstance_name = lGetString(qinstance, QU_full_name);
 
-         /* If no qinstance name is given, the calling routine is responsible
-          * for checking for circular dependencies. */
-         if (qi_name != NULL) {
-            /* Circular dependency -- just ignore it.  This is what the previous
-             * code did.  I would actually count this as an error, but since it
-             * wasn't before, it won't be now. [DT] */
-            if (strcmp (cq_name_str, qi_name) == 0) {
-               DTRACE;
+               so_list_add(resolved_so_list, answer_list, qinstance_name, lGetUlong(so, SO_threshold));
                continue;
             }
          }
-
-         if (ret) {
-            /* Get all the cqueues that match the subordinate's cqueue
-             * part.  This could be a memory pig if the subordinate is a broad
-             * wildcard, and there are a lot of hosts.  However, there's really
-             * nothing we can double about it. */
-            ret = cqueue_list_find_all_matching_references(cqueue_list,
-                                                           answer_list,
-                                                           cq_name_str,
-                                                           &qref_list);
-
-            if (ret) {
-               for_each (cq_ref, qref_list) {
-                  /* Translate the reference into the corresponding cqueue */
-                  const char *cqueue_name = lGetString(cq_ref, QR_name);
-                  lListElem *cqueue = lGetElemStr(cqueue_list, CQ_name,
-                                                  cqueue_name);
-                  lListElem *qinstance = NULL;
-                  
-                  DPRINTF (("Finding qinstances for cqueue %s\n",
-                            cqueue_name));
-
-                  /* Get the qinstance for this cqueue that is on this
-                   * host. */
-                  qinstance = cqueue_locate_qinstance (cqueue, hostname);
-
-                  /* If this cqueue doesn't have a qinstance on this host,
-                   * just skip it. */
-                  if (qinstance != NULL) {
-                     const char *qinstance_name = lGetString(qinstance,
-                                                             QU_full_name);
-                     int threshold = lGetUlong(so, SO_threshold);
-
-                     ret = so_list_add(resolved_so_list, answer_list,
-                                       qinstance_name, threshold);
-                  }
-               }
-            }
-
-            lFreeList(&qref_list);
-         }
-
-         sge_dstring_clear (&cq_name);
-         sge_dstring_clear (&host_name);
-      }
+         if (cq_name && strcmp(cq_name, cq_name_str) == 0){
+            dstring buffer = DSTRING_INIT;
             
-      sge_dstring_free (&cq_name);
-      sge_dstring_free (&host_name);
+            qinstance_name = sge_dstring_sprintf(&buffer, "%s@%s", cq_name, hostname);
+            so_list_add(resolved_so_list, answer_list, qinstance_name, lGetUlong(so, SO_threshold));
+            sge_dstring_free(&buffer);
+         }
+      }
    }
-   DEXIT;
-   return ret;
+
+   DRETURN(ret);
 }

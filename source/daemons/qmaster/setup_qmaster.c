@@ -988,6 +988,7 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
    /*
     * Initialize cached values for each qinstance:
     *    - fullname
+    *    - suspend_on_subordinate
     */
    for_each(tmpqep, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
       lList *qinstance_list = lGetList(tmpqep, CQ_qinstances);
@@ -995,6 +996,7 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
 
       for_each(qinstance, qinstance_list) {
          qinstance_set_full_name(qinstance);
+         sge_qmaster_qinstance_state_set_susp_on_sub(qinstance, false);
       }
    }
    
@@ -1106,17 +1108,10 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
 
    /*
     * Initialize cached values for each qinstance:
-    *    - clear suspend on subordinate flag
     *    - update suspend on subordinate state according to running jobs
     *    - update cached QI values.
     */
    for_each(tmpqep, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
-      lList *qinstance_list = lGetList(tmpqep, CQ_qinstances);
-      lListElem *qinstance;
-
-      for_each(qinstance, qinstance_list) {
-         sge_qmaster_qinstance_state_set_susp_on_sub(qinstance, false);
-      }
       cqueue_mod_qinstances(ctx, tmpqep, NULL, tmpqep, true, false, &monitor);
    }
 
@@ -1250,6 +1245,7 @@ static int debit_all_jobs_from_qs()
       
       next_jatep = lFirst(lGetList(jep, JB_ja_tasks));
       while ((jatep = next_jatep)) {
+         bool master_task = true;
          next_jatep = lNext(jatep);
 
          /* don't look at states - we only trust in 
@@ -1274,25 +1270,26 @@ static int debit_all_jobs_from_qs()
                /* debit in all layers */
                lListElem *rqs = NULL;
                debit_host_consumable(jep, host_list_locate(*object_base[SGE_TYPE_EXECHOST].list,
-                                     "global"), master_centry_list, slots);
+                                     "global"), master_centry_list, slots, master_task);
                debit_host_consumable(jep, host_list_locate(
                         *object_base[SGE_TYPE_EXECHOST].list, lGetHost(qep, QU_qhostname)), 
-                        master_centry_list, slots);
-               qinstance_debit_consumable(qep, jep, master_centry_list, slots);
+                        master_centry_list, slots, master_task);
+               qinstance_debit_consumable(qep, jep, master_centry_list, slots, master_task);
                for_each (rqs, master_rqs_list) {
                   rqs_debit_consumable(rqs, jep, gdi, lGetString(jatep, JAT_granted_pe), master_centry_list, 
-                                        *object_base[SGE_TYPE_USERSET].list, *object_base[SGE_TYPE_HGROUP].list, slots);
+                                        *object_base[SGE_TYPE_USERSET].list, *object_base[SGE_TYPE_HGROUP].list, slots, master_task);
                }
                if (ar != NULL) {
                   lListElem *queue = lGetSubStr(ar, QU_full_name, lGetString(gdi, JG_qname), AR_reserved_queues);
                   if (queue != NULL) {
-                     qinstance_debit_consumable(queue, jep, master_centry_list, slots);
+                     qinstance_debit_consumable(queue, jep, master_centry_list, slots, master_task);
                   } else {
                      ERROR((SGE_EVENT, "job "sge_U32CFormat" runs in queue "SFQ" not reserved by AR "sge_U32CFormat,  
                             sge_u32c(lGetUlong(jep, JB_job_number)), lGetString(gdi, JG_qname), sge_u32c(ar_id)));
                   }
                }
             }
+            master_task = false;
          }
       }
    }

@@ -164,7 +164,6 @@ typedef enum cl_connection_sub_state_type {
    CL_COM_SENDING_CCM,
    CL_COM_WAIT_FOR_CCRM,
    CL_COM_SENDING_CCRM,
-   CL_COM_CCRM_SENT,
    CL_COM_DONE,
 
    /* when CL_CLOSING */
@@ -353,11 +352,15 @@ typedef struct cl_com_handle {
    long shutdown_timeout;                   /* used when shutting down handle */
    cl_com_connection_t* service_handler;    /* service handler of this handle */
    struct timeval start_time;
-
 } cl_com_handle_t;
 
-
-
+#ifdef USE_POLL
+typedef struct cl_com_poll {
+   struct pollfd*        poll_array;     /* array of pollfd structs */
+   cl_com_connection_t** poll_con;       /* array of connection pointers */
+   unsigned long         poll_fd_count;  /* nr of malloced pollfd structs and connection pointers */
+} cl_com_poll_t;
+#endif
 
 typedef struct cl_com_hostent {
    struct hostent *he;              /* pointer of type struct hostent (defined in netdb.h) */
@@ -449,10 +452,6 @@ struct cl_com_connection_type {
 
    cl_com_handle_t*      handler;           /* this points to the handler of the connection */
 
-   int                   ccm_received;
-   int                   ccm_sent;
-   int                   ccrm_sent;
-   int                   ccrm_received;
 
    cl_framework_t        framework_type;          /* CL_CT_TCP, ... */
    cl_tcp_connect_t      tcp_connect_mode;        /* used for reserved port socket creation for TCP connect call */ 
@@ -499,6 +498,8 @@ struct cl_com_connection_type {
    /* connection specific */
    cl_com_con_statistic_t* statistic;
    cl_xml_connection_autoclose_t auto_close_type;       /* CL_CM_AC_ENABLED, CL_CM_AC_DISABLED */  
+   cl_bool_t     is_read_selected;                 /* if set to CL_TRUE this connection is not deleted */
+   cl_bool_t     is_write_selected;                /* if set to CL_TRUE this connection is not deleted */
 
    void*         com_private;
 };

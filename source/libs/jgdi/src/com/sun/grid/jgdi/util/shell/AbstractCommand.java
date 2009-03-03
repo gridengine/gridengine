@@ -46,20 +46,20 @@ public abstract class AbstractCommand  {
     PrintWriter out=null;
     PrintWriter err=null;
     private int exitCode = 0;
-    
+
     /** Gets the command usage */
     public String getUsage() {
         String usageKey = "usage." + this.getClass().getAnnotation(CommandAnnotation.class).value();
         return JGDIFactory.getJGDIVersion() + "\n" + JGDIShell.getResourceString(usageKey);
     }
-    
+
     /**
      * Run the command
      * @param args
      * @throws java.lang.Exception
      */
-    public abstract void run(String [] args) throws Exception;
-    
+    public abstract void run(String[] args) throws Exception;
+
     /**
      * Init command, set all needed arrtibutes from shell
      * @param shell
@@ -71,11 +71,11 @@ public abstract class AbstractCommand  {
         this.out = shell.getOut();
         this.err = shell.getErr();
     }
-    
+
     public Shell getShell() {
         return shell;
     }
-    
+
     /**
      * <p>Prints the JGDI answer list to specified PrintWriter.</p>
      * <p>Helper method for JGDI methods *withAnswer</p>
@@ -84,13 +84,13 @@ public abstract class AbstractCommand  {
     public void printAnswers(java.util.List<JGDIAnswer> answers) {
         int exitCode = 0;
         int status;
-        int i=0;
+        int i = 0;
         if (answers.size() == 0) {
             return;
         }
         JGDIAnswer answer;
         String text;
-        for (i=0; i<answers.size()-1; i++) {
+        for (i = 0; i < answers.size() - 1; i++) {
             answer = answers.get(i);
             status = answer.getQuality();
             if (status == 0 || status == 1) {  //If critical or error
@@ -99,9 +99,11 @@ public abstract class AbstractCommand  {
             text = answer.getText().trim();
             //To be compatible the C clients
             if (text.startsWith("denied:")) {
-                text = "error: "+text;
+                text = "error: " + text;
             }
-            if (text.length()>0 && !text.equals("ok")) out.println(text);
+            if (text.length() > 0 && !text.equals("ok")) {
+                out.println(text);
+            }
         }
         //Get the last
         answer = answers.get(i);
@@ -109,13 +111,15 @@ public abstract class AbstractCommand  {
         text = answer.getText().trim();
         //To be compatible the C clients
         //TODO LP: This is not 100% correct some clients show only denied:
-        
+
         if (status == 0 || status == 1 || exitCode != 0) {
             throw new IllegalArgumentException(text);
         }
-        if (text.length()>0 && !text.equals("ok")) out.println(text);
+        if (text.length() > 0 && !text.equals("ok")) {
+            out.println(text);
+        }
     }
-    
+
     /**
      * <p>Gets the commands exit code</p>
      * @return int exitCode
@@ -123,7 +127,7 @@ public abstract class AbstractCommand  {
     public int getExitCode() {
         return exitCode;
     }
-    
+
     /**
      * <p>Sets the commands exit code to newCode</p>
      * @param newCode new exitCode of this command

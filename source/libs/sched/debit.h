@@ -36,9 +36,6 @@
 int debit_scheduled_job(const sge_assignment_t *a, int *sort_hostlist, order_t *orders, 
     bool now, const char *type, bool for_job_scheduling);
 
-int debit_host_consumable(lListElem *jep, lListElem *hep, lList *complex_list, int slots);
-#if 0
-int debit_ar_consumable(lListElem *jep, lListElem *ar, lList *complex_list, int slots);
-#endif
+int debit_host_consumable(lListElem *jep, lListElem *hep, lList *complex_list, int slots, bool is_master_task);
 
 #endif /* __DEBIT_H */

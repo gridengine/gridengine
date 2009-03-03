@@ -38,6 +38,11 @@
 void job_report_print_usage(const lListElem *jr, FILE *fp);
 void job_report_init_from_job(lListElem *jr, const lListElem *jep, 
                               const lListElem *jatep, const lListElem *petep);
+void job_report_init_from_job_with_usage(lListElem *job_report,
+                                         lListElem *job,
+                                         lListElem *ja_task,
+                                         lListElem *pe_task,
+                                         u_long32 time_stamp);
 
 #endif /* __SGE_REPORT_H */
 

@@ -3,7 +3,7 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     qping - check application status of Grid Engine daemons.
+     qping - check application status of Sun Grid Engine daemons.
 
 SYNTAX
      qping [-help] [-noalias] [-ssl|-tcp] [ [ [-i &lt;interval&gt;]  [-
@@ -11,20 +11,21 @@ SYNTAX
      nonewline] ] ] &lt;host&gt; &lt;port&gt; &lt;name&gt; &lt;id&gt;
 
 DESCRIPTION
-     <I>Qping</I> is used to validate  the  runtime  status  of  a  Grid
-     Engine  service  daemon. The current Grid Engine implementa-
-     tion allows one to query the SGE_QMASTER daemon and any run-
-     ning  SGE_EXECD  daemon. The qping command is used to send a
-     SIM (Status Information Message) to the destination  daemon.
-     The communication layer of the specified daemon will respond
-     with a SIRM (Status Information Response Message) which con-
-     tains status information about the consulted daemon.
+     <I>Qping</I> is used to validate the runtime status of a  Sun  Grid
+     Engine service daemon. The current Sun Grid Engine implemen-
+     tation allows one to query the SGE_QMASTER  daemon  and  any
+     running  SGE_EXECD daemon. The qping command is used to send
+     a SIM (Status Information Message) to the  destination  dae-
+     mon.  The  communication  layer of the specified daemon will
+     respond with a SIRM (Status  Information  Response  Message)
+     which  contains  status information about the consulted dae-
+     mon.
 
      The qping -dump and -dump_tag options allowing  an  adminis-
      trator  to observe the communication protocol data flow of a
-     Grid Engine service daemon. The qping -dump instruction must
-     be  started with root account and on the same host where the
-     observed daemon is running.
+     Sun Grid Engine service daemon. The qping -dump  instruction
+     must be started with root account and on the same host where
+     the observed daemon is running.
 
 OPTIONS
   -f
@@ -65,7 +66,7 @@ OPTIONS
      on the application which reply to the qping request.  If the
      application does not provide any information the  status  is
      99999.   Here are the possible status information values for
-     the Grid Engine daemons:
+     the Sun Grid Engine daemons:
 
         qmaster:
 
@@ -103,8 +104,7 @@ OPTIONS
      the  application  which  reply to the qping request.  If the
      application does not provide any information the  info  mes-
      sage  is  "not  available".   Here  are  the possible status
-     information values for the Grid Engine daemons:
-
+     information values for the Sun Grid Engine daemons:
 
         qmaster:
 
@@ -120,13 +120,16 @@ OPTIONS
               THREAD_NAME: THREAD_STATE (THREAD_TIME)
 
               THREAD_NAME:
-                 EDT:  Event Delivery Thread
-                 TET:  Timed Event Thread
-                 MT:   Message Thread(s)
-                 SIGT: SIGnal Thread
+                 MAIN: Main thread
+                 signaler: Signal thread
+                 event_master: Event master thread
+                 timer: Timer thread
+                 worker: Worker thread
+                 listener: Listener thread
+                 scheduler: Scheduler thread
+                 jvm: Java thread
 
-                 In addition to these thread names, the name can contain a thread number (for example:
-                 <B><A HREF="../htmlman1/MT.html">MT(1)</A></B>), when multiple instances of this thread are running.
+                 The thread names above will be followed by a 3 digit number.
 
               THREAD_STATE:
                  R: Running
@@ -154,8 +157,9 @@ OPTIONS
            TIME:
               Time since last timestamp updating.
 
-        After the thread information follows an additional infor-
-        mation string which describes the application status.
+        After  the  thread  information  follows  an   additional
+        information   string   which  describes  the  application
+        status.
 
   <I>Monitor</I>:  If available, displays statistics on  a  thread.  The
   data  for  each  thread is displayed in one line. The format of
@@ -183,8 +187,8 @@ OPTIONS
   -noalias
      Ignore   host_aliases   file,   which    is    located    at
      &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>host</I>_<I>aliases</I>.   If  this  option is
-     used it is not necessary to set any Grid Engine  environment
-     variable.
+     used it is not necessary to set any Sun Grid Engine environ-
+     ment variable.
 
 
   -ssl
@@ -193,7 +197,7 @@ OPTIONS
      to connect to services running SSL. If the SGE settings file
      is  not  sourced,  you  have  to  use the -noalias option to
      bypass the need for the SGE_ROOT environment variable.   The
-     following  environment  variables  are used to specifiy your
+     following  environment  variables  are  used to specify your
      certificates:
        SSL_CA_CERT_FILE - CA certificate file
        SSL_CERT_FILE    - certificates file
@@ -210,13 +214,14 @@ OPTIONS
      Dump output will not have a linebreak within a  message  and
      binary messages are not unpacked.
 
+
   -dump
      This option allows an administrator to observe the  communi-
-     cation  protocol  data flow of a Grid Engine service daemon.
-     The qping -dump instruction must be started as root  and  on
-     the same host where the observed daemon is running.
+     cation  protocol data flow of a Sun Grid Engine service dae-
+     mon. The qping -dump instruction must be started as root and
+     on the same host where the observed daemon is running.
 
-     The output is written to  stdout.  The  enviroment  variable
+     The output is written to stdout.  The  environment  variable
      "SGE_QPING_OUTPUT_FORMAT"  can be set to hide columns, set a
      default column width or to set a hostname output format. The
      value of the environment variable can be set to any combina-
@@ -249,12 +254,12 @@ OPTIONS
            of  debugging.   This  option  is not currently imple-
            mented.
         -dump_tag MSG
-           This option  has  the  same  behaviour  as  the  -dump
-           option.
+           This option has the same behavior as the -dump option.
 
 
   host
      Host where daemon is running.
+
 
 
   port
@@ -306,24 +311,19 @@ EXAMPLES
 
 
 ENVIRONMENTAL VARIABLES
-     SGE_ROOT       Specifies the location  of  the  Grid  Engine
+     SGE_ROOT       Specifies the location of the Sun Grid Engine
                     standard configuration files.
 
-     SGE_CELL       If set, specifies  the  default  Grid  Engine
+     SGE_CELL       If set, specifies the default Sun Grid Engine
                     cell.
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,       <B><A HREF="../htmlman5/SGE_H_ALIASES.html">SGE_H_ALIASES(5)</A></B>,        <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>,
-     <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>.
+     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B>,       <B><A HREF="../htmlman5/SGE_H_ALIASES.html?pathrev=V62u2_TAG">SGE_H_ALIASES(5)</A></B>,        <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u2_TAG">sge_qmaster(8)</A></B>,
+     <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u2_TAG">sge_execd(8)</A></B>.
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
-
-
 
 
 

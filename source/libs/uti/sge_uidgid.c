@@ -65,7 +65,8 @@
 enum { SGE_MAX_USERGROUP_BUF = 255 };
 
 typedef struct {
-   pthread_mutex_t mutex;  /* TODO: use RW-lock instead */
+   pthread_mutex_t mutex;  
+   const char *user_name;
    uid_t uid;
    gid_t gid;
    bool  initialized;
@@ -78,7 +79,7 @@ struct uidgid_state_t {
    char  last_groupname[SGE_MAX_USERGROUP_BUF]; 
 };
 
-static admin_user_t admin_user = {PTHREAD_MUTEX_INITIALIZER, (uid_t)-1, (gid_t)-1, false};
+static admin_user_t admin_user = {PTHREAD_MUTEX_INITIALIZER, NULL, (uid_t)-1, (gid_t)-1, false};
 
 static pthread_once_t uidgid_once = PTHREAD_ONCE_INIT;
 static pthread_key_t  uidgid_state_key;
@@ -87,7 +88,7 @@ static void uidgid_once_init(void);
 static void uidgid_state_destroy(void* theState);
 static void uidgid_state_init(struct uidgid_state_t* theState);
 
-static void set_admin_user(uid_t, gid_t);
+static void set_admin_user(const char *user_name, uid_t, gid_t);
 static int  get_admin_user(uid_t*, gid_t*);
 
 static uid_t       uidgid_state_get_last_uid(void);
@@ -249,14 +250,15 @@ int sge_set_admin_username(const char *user, char *err_str)
  
    ret = 0;
    if (!strcasecmp(user, "none")) {
-      set_admin_user(getuid(), getgid());
+      set_admin_user("root", getuid(), getgid());
    } else {
       struct passwd pw_struct;
       int size = get_pw_buffer_size();
       char *buffer = sge_malloc(size);
+
       admin = sge_getpwnam_r(user, &pw_struct, buffer, size);
       if (admin) {
-         set_admin_user(admin->pw_uid, admin->pw_gid);
+         set_admin_user(user, admin->pw_uid, admin->pw_gid);
       } else {
          if (err_str)
             sprintf(err_str, MSG_SYSTEM_ADMINUSERNOTEXIST_S, user);
@@ -819,7 +821,7 @@ int _sge_gid2group(gid_t gid, gid_t *last_gid, char **groupnamep, int retries)
    return 0;
 } /* _sge_gid2group() */
 
-/****** sge_uidgid/get_pw_buffer_size() ****************************************
+/****** uti/uidgid/get_pw_buffer_size() ****************************************
 *  NAME
 *     get_pw_buffer_size() -- get the buffer size required for getpw*_r
 *
@@ -838,7 +840,7 @@ int _sge_gid2group(gid_t gid, gid_t *last_gid, char **groupnamep, int retries)
 *     MT-NOTE: get_pw_buffer_size() is MT safe 
 *
 *  SEE ALSO
-*     sge_uidgid/get_group_buffer_size()
+*     uti/uidgid/get_group_buffer_size()
 *******************************************************************************/
 int get_pw_buffer_size(void)
 {
@@ -857,7 +859,7 @@ int get_pw_buffer_size(void)
    return sz;
 }
 
-/****** sge_uidgid/get_group_buffer_size() ****************************************
+/****** uti/uidgid/get_group_buffer_size() ****************************************
 *  NAME
 *     get_group_buffer_size() -- get the buffer size required for getgr*_r
 *
@@ -876,7 +878,7 @@ int get_pw_buffer_size(void)
 *     MT-NOTE: get_group_buffer_size() is MT safe 
 *
 *  SEE ALSO
-*     sge_uidgid/get_pw_buffer_size()
+*     uti/uidgid/get_pw_buffer_size()
 *******************************************************************************/
 int get_group_buffer_size(void)
 {
@@ -1237,7 +1239,7 @@ int sge_add_group(gid_t add_grp_id, char *err_str)
    return 0;
 }  
 
-/****** sge_uidgid/sge_getpwnam_r() ********************************************
+/****** uti/uidgid/sge_getpwnam_r() ********************************************
 *  NAME
 *     sge_getpwnam_r() -- Return password file entry for a given user name. 
 *
@@ -1286,7 +1288,7 @@ struct passwd *sge_getpwnam_r(const char *name, struct passwd *pw,
 } /* sge_getpwnam_r() */
 
 
-/****** sge_uidgid/sge_getgrgid_r() ********************************************
+/****** uti/uidgid/sge_getgrgid_r() ********************************************
 *  NAME
 *     sge_getgrgid_r() -- Return group informations for a given group ID.
 *
@@ -1341,7 +1343,7 @@ struct group *sge_getgrgid_r(gid_t gid, struct group *pg,
    return res;
 } /* sge_getgrgid_r() */
 
-/****** sge_uidgid/sge_is_user_superuser() *************************************
+/****** uti/uidgid/sge_is_user_superuser() *************************************
 *  NAME
 *     sge_is_user_superuser() -- check if provided user is the superuser
 *
@@ -1388,7 +1390,7 @@ bool sge_is_user_superuser(const char *name)
    return ret;
 }
 
-/****** libs/uti/uidgid_state_get_*() ************************************
+/****** uti/uidgid/uidgid_state_get_*() ************************************
 *  NAME
 *     uidgid_state_set_*() - read access to lib/uti/sge_uidgid.c global variables
 *
@@ -1420,7 +1422,7 @@ static const char *uidgid_state_get_last_groupname(void)
    return uidgid_state->last_groupname;
 }
 
-/****** libs/uti/uidgid_state_set_*() ************************************
+/****** uti/uidgid/uidgid_state_set_*() ************************************
 *  NAME
 *     uidgid_state_set_*() - write access to lib/uti/sge_uidgid.c global variables
 *
@@ -1473,7 +1475,7 @@ static void uidgid_state_set_last_groupname(const char *group)
 *     MT-NOTE: set_admin_user() is MT safe. 
 *
 *******************************************************************************/
-static void set_admin_user(uid_t theUID, gid_t theGID)
+static void set_admin_user(const char *user_name, uid_t theUID, gid_t theGID)
 {
    uid_t uid = theUID;
    gid_t gid = theGID;
@@ -1481,6 +1483,7 @@ static void set_admin_user(uid_t theUID, gid_t theGID)
    DENTER(UIDGID_LAYER, "set_admin_user");
 
    sge_mutex_lock("admin_user_mutex", SGE_FUNC, __LINE__, &admin_user.mutex);
+   admin_user.user_name = user_name;
    admin_user.uid = uid;
    admin_user.gid = gid;
    admin_user.initialized = true;
@@ -1529,7 +1532,7 @@ static void set_admin_user(uid_t theUID, gid_t theGID)
 *     MT-NOTE: get_admin_user() is MT safe.
 *
 *******************************************************************************/
-static int  get_admin_user(uid_t* theUID, gid_t* theGID)
+static int get_admin_user(uid_t* theUID, gid_t* theGID)
 {
    uid_t uid;
    gid_t gid;
@@ -1553,6 +1556,60 @@ static int  get_admin_user(uid_t* theUID, gid_t* theGID)
    DEXIT;
    return res;
 } /* get_admin_user() */
+
+/****** uti/uidgid/get_admin_user_name() ***************************************
+*  NAME
+*     get_admin_user_name() -- Returns the admin user name
+*
+*  SYNOPSIS
+*     const char* get_admin_user_name(void) 
+*
+*  FUNCTION
+*     Returns the admin user name. 
+*
+*  INPUTS
+*     void - None 
+*
+*  RESULT
+*     const char* - Admin user name
+*
+*  NOTES
+*     MT-NOTE: get_admin_user_name() is MT safe 
+*******************************************************************************/
+const char *get_admin_user_name(void) {
+   return  admin_user.user_name;
+}
+
+/****** uti/uidgid/sge_has_admin_user() ****************************************
+*  NAME
+*     sge_has_admin_user() -- is there a admin user configured and set
+*
+*  SYNOPSIS
+*     bool sge_has_admin_user(void) 
+*
+*  FUNCTION
+*     Returns if there is a admin user setting configured and set. 
+*
+*  INPUTS
+*     void - None 
+*
+*  RESULT
+*     bool - result
+*        true  - there is a setting
+*
+*  NOTES
+*     MT-NOTE: sge_has_admin_user() is MT safe 
+*******************************************************************************/
+bool 
+sge_has_admin_user(void) {
+   bool ret = true;
+   uid_t uid;
+   gid_t gid;
+
+   DENTER(TOP_LAYER, "sge_has_admin_user");
+   ret = (get_admin_user(&uid, &gid) == ESRCH) ? false : true; 
+   DRETURN(ret);
+}
 
 /****** uti/uidgid/uidgid_once_init() ******************************************
 *  NAME

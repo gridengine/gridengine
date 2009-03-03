@@ -165,11 +165,16 @@ int cl_connection_list_append_connection(cl_raw_list_t* list_p, cl_com_connectio
 
    /* insert into hash */
    if (connection->remote != NULL) {
-      /* only add into hash if the endpoint is already filled. For server
-         connection this is not the case when the endpoint is added to the
-         list. The hash will be added later when the endpoint is known */
+      /*
+       * The endpoint is added to the hash if its endpoint data is already filled.
+       * This is the case for all connections which are opened by the local handle (application).
+       * For remote client connections (which are accepted by local handle) this is not the case.
+       * Client connections are added when the endpoint is resolved (CRM message is generated).
+       */
       if (ldata->r_ht != NULL) {
-         sge_htable_store(ldata->r_ht, connection->remote->hash_id, new_elem);
+         if (connection->remote->hash_id != NULL) {
+            sge_htable_store(ldata->r_ht, connection->remote->hash_id, new_elem);
+         }
       }
    }
 
@@ -205,7 +210,7 @@ int cl_connection_list_remove_connection(cl_raw_list_t* list_p, cl_com_connectio
    }
 
    ldata = list_p->list_data;
-   if (ldata->r_ht != NULL) {
+   if (ldata->r_ht != NULL && connection->remote != NULL && connection->remote->hash_id != NULL) {
       if (sge_htable_lookup(ldata->r_ht, connection->remote->hash_id, (const void **)&elem) == True) {
          /* found matching element */
          cl_raw_list_remove_elem(list_p, elem->raw_elem);
@@ -379,22 +384,33 @@ int cl_connection_list_destroy_connections_to_close(cl_com_handle_t* handle) {
             if (ret_val != CL_RETVAL_OK) {
                if (connection->connection_close_time.tv_sec <= now.tv_sec ||
                    timeout_flag == CL_TRUE) {
-                  CL_LOG(CL_LOG_ERROR,"close connection timeout - skipping another connection shutdown");
+                  CL_LOG(CL_LOG_ERROR, "close connection timeout - skipping another connection shutdown");
                   connection->connection_sub_state = CL_COM_SHUTDOWN_DONE;
                } else {
                   if (ret_val == CL_RETVAL_UNCOMPLETE_READ || ret_val == CL_RETVAL_UNCOMPLETE_WRITE) {
-                     CL_LOG_STR(CL_LOG_WARNING,"cl_com_connection_complete_shutdown() returned:", cl_get_error_text(ret_val));
-                     continue;
+                     CL_LOG_STR(CL_LOG_INFO, "cl_com_connection_complete_shutdown() returned:", cl_get_error_text(ret_val));
+                     continue; /* skip this connection this time */
                   }
-                  CL_LOG_STR(CL_LOG_ERROR,"skipping another connection shutdown, last one returned:", cl_get_error_text(ret_val));
+                  CL_LOG_STR(CL_LOG_ERROR, "skipping another connection shutdown, last one returned:", cl_get_error_text(ret_val));
                }
             }
             connection->connection_sub_state = CL_COM_SHUTDOWN_DONE;
          }
 
+         if (connection->is_read_selected == CL_TRUE || connection->is_write_selected == CL_TRUE) {
+            /* 
+             * If a connection is in selected read/write mode we should not delete the
+             * connection since some functions have a cached connection pointer to this 
+             * connections and release the connection list lock.
+             */
+            CL_LOG(CL_LOG_INFO, "connection is selected, will not remove now!");
+            continue; /* skip this connection this time */
+         }
+
+         /* We can remove and delete this connection */
          if (delete_connections == NULL) {
             if (cl_connection_list_setup(&delete_connections, "delete_connections", 0, CL_FALSE) != CL_RETVAL_OK) {
-               continue;
+               continue; /* skip this connection this time */
             }
          }
 
@@ -407,7 +423,7 @@ int cl_connection_list_destroy_connections_to_close(cl_com_handle_t* handle) {
 
          if (connection->remote != NULL) {
             ldata = handle->connection_list->list_data;
-            if (ldata->r_ht != NULL) {
+            if (ldata->r_ht != NULL && connection->remote != NULL && connection->remote->hash_id != NULL) {
                sge_htable_delete(ldata->r_ht, connection->remote->hash_id);
             }
          }
@@ -561,7 +577,7 @@ cl_connection_list_elem_t* cl_connection_list_get_elem_endpoint(cl_raw_list_t* l
    if (list_p != NULL && endpoint != NULL) {
       cl_connection_list_data_t* ldata = NULL;
       ldata = list_p->list_data;
-      if (ldata->r_ht != NULL) {
+      if (ldata->r_ht != NULL && endpoint->hash_id != NULL) {
          if (sge_htable_lookup(ldata->r_ht, endpoint->hash_id, (const void**)&elem) == True) {
             return elem;
          }

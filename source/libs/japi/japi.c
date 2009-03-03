@@ -882,7 +882,7 @@ int japi_exit(int flag, dstring *diag)
    int *value;
    int cl_errno;
    cl_com_handle_t* handle = NULL;
-   const char *default_cell = ctx->get_default_cell(ctx);
+   const char *default_cell = NULL; 
 
    DENTER(TOP_LAYER, "japi_exit");
 
@@ -896,6 +896,9 @@ int japi_exit(int flag, dstring *diag)
    
    japi_session = JAPI_SESSION_SHUTTING_DOWN;
    JAPI_UNLOCK_SESSION();
+
+   /* be sure that the context exists, therefore after test for active session */
+   default_cell = ctx->get_default_cell(ctx);
 
    /* do not destroy session state until last japi call 
       depending on it is finished */
@@ -4340,18 +4343,28 @@ static void *japi_implementation_thread(void *p)
                DPRINTF (("Received shutdown message\n"));
                stop_ec = true;
                qmaster_bound = false;
-            } /* else if type == sgeE_SHUTDOWN */
-            else if (type == sgeE_QMASTER_GOES_DOWN) {
+            } else if (type == sgeE_ACK_TIMEOUT) {
+               /*
+                * Print a message that we are timed out at qmaster
+                * and we have to reconnect.
+                */
+               DPRINTF(("got sgeE_ACK_TIMEOUT event\n"));
+
+               disconnected = true;
+
+               if (error_handler != NULL) {
+                  error_handler(MSG_JAPI_QMASTER_TIMEDOUT);
+               }
+            } else if (type == sgeE_QMASTER_GOES_DOWN) {
                /* Print a message that qmaster is down and note that we are
                 * disconnected. */
                if (error_handler != NULL) {
-                  error_handler (MSG_JAPI_QMASTER_DOWN);
+                  error_handler(MSG_JAPI_QMASTER_DOWN);
                }
 
-               DPRINTF ((MSG_JAPI_QMASTER_DOWN));
+               DPRINTF((MSG_JAPI_QMASTER_DOWN));
                disconnected = true;
-               
-            } /* else if type == sgeE_QMASTER_GOES_DOWN */
+            }
          } /* for_each */
          lFreeList(&event_list);
 
@@ -4790,6 +4803,7 @@ static int japi_read_dynamic_attributes(dstring *diag)
          case -4:
          case -6:
          case -7:
+         case -8:
             drmaa_errno = DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE;
             break;
          case -1:

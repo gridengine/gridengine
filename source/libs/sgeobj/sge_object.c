@@ -576,6 +576,50 @@ object_get_name_prefix(const lDescr *descr, dstring *buffer)
    return NULL;
 }
 
+/****** sge_object/object_get_name() *******************************************
+*  NAME
+*     object_get_name() -- get the object name by object descriptor
+*
+*  SYNOPSIS
+*     const char *
+*     object_get_name(const lDescr *descr) 
+*
+*  FUNCTION
+*     Returns the object name for a given descriptor.
+*     If the descriptor doesn't match a descriptor in object_base,
+*     return "unknown".
+*
+*  INPUTS
+*     const lDescr *descr - descriptor.
+*
+*  RESULT
+*     const char * - the object name
+*
+*  EXAMPLE
+*     object_get_name(JOB_Type) returns "JOB"
+*
+*  NOTES
+*     MT-NOTE: object_get_name() is MT safe 
+*******************************************************************************/
+const char *
+object_get_name(const lDescr *descr)
+{
+   const char *name = "unknown";
+
+   if (descr != NULL) {
+      int i;
+
+      for (i = SGE_TYPE_ADMINHOST; i < SGE_TYPE_ALL; i++) {
+         if (object_base[i].descr == descr) {
+            name = object_base[i].type_name;
+            break;
+         }
+      }
+   }
+
+   return name;
+}
+
 /****** sgeobj/object/object_append_field_to_dstring() ************************
 *  NAME
 *     object_append_field_to_dstring() -- object field to string
@@ -653,11 +697,7 @@ object_append_field_to_dstring(const lListElem *object, lList **answer_list,
          ret = map_req2str(lGetUlong(object, nm));
          break;
       case CE_consumable:
-         if (lGetBool(object, nm)) {
-            ret = "YES";
-         } else {
-            ret = "NO";
-         }
+         ret = map_consumable2str(lGetUlong(object, nm));
          quote_special_case = true;
          break;
       case QU_qtype:
@@ -943,15 +983,17 @@ object_parse_field_from_string(lListElem *object, lList **answer_list,
          break;
       case CE_consumable:
          {
-            bool cond = false;
+            u_long32 cond = CONSUMABLE_NO;
             if (strcasecmp(value, "y") == 0 || strcasecmp(value, "yes") == 0) {
-               cond = true;
+               cond = CONSUMABLE_YES;
             } else if (strcasecmp(value, "n") == 0 || strcasecmp(value, "no") == 0) {
-               ;
+               cond = CONSUMABLE_NO;
+            } else if (strcasecmp(value, "j") == 0 || strcasecmp(value, "job") == 0) {
+               cond = CONSUMABLE_JOB;
             } else {
                ret = false;
             }
-            lSetBool(object, nm, cond);
+            lSetUlong(object, nm, cond);
          }
          break;
       case QU_qtype:
@@ -1420,7 +1462,7 @@ bool object_type_free_master_list(const sge_object_type type)
           ret = true;
       }
    } else {
-         ERROR((SGE_EVENT, MSG_OBJECT_INVALID_OBJECT_TYPE_SI, SGE_FUNC, type));
+      ERROR((SGE_EVENT, MSG_OBJECT_INVALID_OBJECT_TYPE_SI, SGE_FUNC, type));
    }
 
    DRETURN(ret);
@@ -2792,32 +2834,32 @@ int object_verify_name(const lListElem *object, lList **answer_list, int name,
 
 
 /****** sge_object/object_verify_pe_range() **********************************
- *  NAME
- *     object_verify_pe_range() -- Verify validness of a jobs PE range request
- *
- *  SYNOPSIS
- *     int object_verify_pe_range(lList **alpp, const char *pe_name,
- *     lList *pe_range)
- *
- *  FUNCTION
- *     Verifies a jobs PE range is valid. Currently the following is done
- *     - make PE range list normalized and ascending
- *     - ensure PE range min/max not 0
- *     - in case multiple PEs match the PE request in GEEE ensure
- *       the urgency slots setting is non-ambiguous
- *
- *  INPUTS
- *     lList **alpp        - Returns answer list with error context.
- *     const char *pe_name - PE request
- *     lList *pe_range     - PE range to be verified
- *     const char *object_descr - object description for user messages
- *
- *  RESULT
- *     static int - STATUS_OK on success
- *
- *  NOTES
- *
- *******************************************************************************/
+*  NAME
+*     object_verify_pe_range() -- Verify validness of a jobs PE range request
+*
+*  SYNOPSIS
+*     int object_verify_pe_range(lList **alpp, const char *pe_name,
+*     lList *pe_range)
+*
+*  FUNCTION
+*     Verifies a jobs PE range is valid. Currently the following is done
+*     - make PE range list normalized and ascending
+*     - ensure PE range min/max not 0
+*     - in case multiple PEs match the PE request in GEEE ensure
+*       the urgency slots setting is non-ambiguous
+*
+*  INPUTS
+*     lList **alpp        - Returns answer list with error context.
+*     const char *pe_name - PE request
+*     lList *pe_range     - PE range to be verified
+*     const char *object_descr - object description for user messages
+*
+*  RESULT
+*     static int - STATUS_OK on success
+*
+*  NOTES
+*
+*******************************************************************************/
 int object_verify_pe_range(lList **alpp, const char *pe_name, lList *pe_range,
                                   const char *object_descr)
 {
@@ -2864,28 +2906,28 @@ int object_verify_pe_range(lList **alpp, const char *pe_name, lList *pe_range,
 }
 
 /****** sge_objectcompress_ressources() **********************************
- *  NAME
- *     compress_ressources() --  remove multiple requests for one resource
- *
- *  SYNOPSIS
- *     int compress_ressources(lList **alpp, lList *rl, const char *object_descr )
- *
- *  FUNCTION
- *     remove multiple requests for one resource
- *     this can't be done fully in clients without having complex definitions
- *     -l arch=linux -l a=sun4
- *
- *  INPUTS
- *     lList **alpp        - Returns answer list with error context.
- *     lList *rl           - object description for user messages
- *     const char *object_descr - object description 
- *
- *  RESULT
- *     static int - 0 on success
- *
- *  NOTES
- *
- *******************************************************************************/
+*  NAME
+*     compress_ressources() --  remove multiple requests for one resource
+*
+*  SYNOPSIS
+*     int compress_ressources(lList **alpp, lList *rl, const char *object_descr )
+*
+*  FUNCTION
+*     remove multiple requests for one resource
+*     this can't be done fully in clients without having complex definitions
+*     -l arch=linux -l a=sun4
+*
+*  INPUTS
+*     lList **alpp        - Returns answer list with error context.
+*     lList *rl           - object description for user messages
+*     const char *object_descr - object description 
+*
+*  RESULT
+*     static int - 0 on success
+*
+*  NOTES
+*
+*******************************************************************************/
 int compress_ressources(lList **alpp, lList *rl, const char *object_descr) {
    lListElem *ep, *prev, *rm_ep;
    const char *attr_name;
@@ -2917,3 +2959,65 @@ int compress_ressources(lList **alpp, lList *rl, const char *object_descr) {
 
    DRETURN(0);
 }
+
+/****** sge_object/object_unpack_elem_verify() *********************************
+*  NAME
+*     object_unpack_elem_verify() -- unpack and verify an object
+*
+*  SYNOPSIS
+*     bool 
+*     object_unpack_elem_verify(lList **answer_list, sge_pack_buffer *pb, 
+*                               lListElem **epp, const lDescr *descr) 
+*
+*  FUNCTION
+*     Unpacks the given packbuffer.
+*     If unpacking was successfull, verifies the object
+*     against the given descriptor.
+*
+*  INPUTS
+*     lList **answer_list - answer list to report errors
+*     sge_pack_buffer *pb - the packbuffer containing the object
+*     lListElem **epp     - element pointer to pass back the unpacked object
+*     const lDescr *descr - the expected object type
+*
+*  RESULT
+*     bool - true on success, else false
+*
+*  NOTES
+*     MT-NOTE: object_unpack_elem_verify() is MT safe 
+*
+*  SEE ALSO
+*     sge_object/object_verify_cull()
+*******************************************************************************/
+bool object_unpack_elem_verify(lList **answer_list, sge_pack_buffer *pb, lListElem **epp, const lDescr *descr)
+{
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "object_unpack_elem_verify");
+
+   if (pb == NULL || epp == NULL || descr == NULL) {
+      answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                              MSG_NULLELEMENTPASSEDTO_S, "object_unpack_elem_verify");
+      ret = false;
+   }
+
+   if (ret) {
+      if (cull_unpack_elem(pb, epp, NULL) != 0) {
+         answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                                 MSG_COM_UNPACKOBJ_S, object_get_name(descr));
+         ret = false;
+      }
+   }
+
+   if (ret) {
+      if (!object_verify_cull(*epp, descr)) {
+         lFreeElem(epp);
+         answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                                 MSG_OBJECT_STRUCTURE_ERROR);
+         ret = false;
+      }
+   }
+
+   DRETURN(ret);
+}
+

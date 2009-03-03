@@ -40,7 +40,7 @@ bool rqs_set_dynamical_limit(lListElem *limit, lListElem *global_host, lListElem
 bool sge_user_is_referenced_in_rqs(const lList *rqs, const char *user, const char *group, lList *acl_list);
 
 /* parallel assignments */
-dispatch_t parallel_rqs_slots_by_time(sge_assignment_t *a, int *slots, int *slots_qend, const char *host, const char *queue);
+dispatch_t parallel_rqs_slots_by_time(sge_assignment_t *a, int *slots, int *slots_qend, lListElem *qep);
 void parallel_check_and_debit_rqs_slots(sge_assignment_t *a, const char *host, const char *queue, 
       int *slots, int *slots_qend, dstring *rule_name, dstring *rue_name, dstring *limit_name);
 void parallel_revert_rqs_slot_debitation(sge_assignment_t *a, const char *host, const char *queue, 

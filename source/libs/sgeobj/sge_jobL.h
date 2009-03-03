@@ -105,13 +105,14 @@ enum {
 };
 
 /* values for JB_verify_suitable_queues */
-#define OPTION_VERIFY_STR "nwev"
+#define OPTION_VERIFY_STR "nwevp"
 enum { 
    SKIP_VERIFY = 0,     /* -w n no expendable verifications will be done */
-   WARNING_VERIFY,     /* -w w qmaster will warn about these jobs - but submit will succeed */ 
+   WARNING_VERIFY,      /* -w w qmaster will warn about these jobs - but submit will succeed */ 
    ERROR_VERIFY,        /* -w e qmaster will make expendable verifications to reject 
                             jobs that are not schedulable (default) */ 
-   JUST_VERIFY          /* -w v just verify at qmaster but do not submit */
+   JUST_VERIFY,         /* -w v just verify at qmaster but do not submit */
+   POKE_VERIFY          /* -w p do verification with all resource utilizations in place (poke) */
 };
 
 
@@ -853,9 +854,9 @@ enum {
 LISTDEF(PN_Type)
    JGDI_OBJ(PathName)
    SGE_STRING(PN_path, CULL_PRIMARY_KEY | CULL_DEFAULT | CULL_SUBLIST)
-   SGE_HOST(PN_host, CULL_DEFAULT )                    /* CR - hostname change */
-   SGE_HOST(PN_file_host, CULL_DEFAULT )
-   SGE_BOOL(PN_file_staging, CULL_DEFAULT )
+   SGE_HOST(PN_host, CULL_DEFAULT)                   
+   SGE_HOST(PN_file_host, CULL_DEFAULT)
+   SGE_BOOL(PN_file_staging, CULL_DEFAULT)
 LISTEND
 
 NAMEDEF(PNN)

@@ -68,26 +68,6 @@ static void get_spool_dir_range(u_long32 ja_task_id, u_long32 *start,
 static void get_spool_dir_parts(u_long32 job_id, char *first, char *second, 
                                 char *third);
 
-
-/****** sge_spool/get_spool_dir_range() ****************************************
-*  NAME
-*     get_spool_dir_range() -- ??? 
-*
-*  SYNOPSIS
-*     static void get_spool_dir_range(u_long32 ja_task_id, u_long32 *start, 
-*     u_long32 *end) 
-*
-*  FUNCTION
-*     ??? 
-*
-*  INPUTS
-*     u_long32 ja_task_id - ??? 
-*     u_long32 *start     - ??? 
-*     u_long32 *end       - ??? 
-*
-*  NOTES
-*     MT-NOTE: get_spool_dir_range() is not MT safe
-*******************************************************************************/
 static void get_spool_dir_range(u_long32 ja_task_id, u_long32 *start, 
                                 u_long32 *end)
 {
@@ -97,23 +77,6 @@ static void get_spool_dir_range(u_long32 ja_task_id, u_long32 *start,
    *end = (row + 1) * sge_get_ja_tasks_per_directory();
 }
 
-/****** sge_spool/get_spool_dir_parts() ****************************************
-*  NAME
-*     get_spool_dir_parts() -- ??? 
-*
-*  SYNOPSIS
-*     static void get_spool_dir_parts(u_long32 job_id, char *first, char 
-*     *second, char *third) 
-*
-*  INPUTS
-*     u_long32 job_id - ??? 
-*     char *first     - ??? 
-*     char *second    - ??? 
-*     char *third     - ??? 
-*
-*  NOTES
-*     MT-NOTE: get_spool_dir_parts() is MT safe
-*******************************************************************************/
 static void get_spool_dir_parts(u_long32 job_id, char *first, char *second, 
                                 char *third)
 {
@@ -124,7 +87,7 @@ static void get_spool_dir_parts(u_long32 job_id, char *first, char *second,
    sprintf(first, "%02d", (int)(job_id % 10000l));  
 }
 
-/****** sge_spool/sge_get_ja_tasks_per_directory() *****************************
+/****** uti/spool/sge_get_ja_tasks_per_directory() *****************************
 *  NAME
 *     sge_get_ja_tasks_per_directory() -- Configured number of tasks per dir
 *
@@ -157,7 +120,7 @@ u_long32 sge_get_ja_tasks_per_directory(void) {
    return tasks_per_directory;
 }
  
-/****** sge_spool/sge_get_ja_tasks_per_file() **********************************
+/****** uti/spool/sge_get_ja_tasks_per_file() **********************************
 *  NAME
 *     sge_get_ja_tasks_per_file() -- Configured number of tasks per file
 *
@@ -931,10 +894,14 @@ int sge_get_management_entry(const char *fname, int n, int nmissing, bootstrap_e
       for (i=0; i<n; i++) {
          char *nam = strtok_r(cp, "=", &pos);
          char *val = strtok_r(NULL, "\n", &pos);
-         if (nam != NULL && val != NULL && strcasecmp(name[i].name, nam) == 0) {
+         if (nam != NULL && strcasecmp(name[i].name, nam) == 0) {
                 DPRINTF(("nam = %s\n", nam));
-                DPRINTF(("val = %s\n", val));
-                sge_strlcpy(value[i], val, SGE_PATH_MAX);
+                if (val != NULL) {
+                   DPRINTF(("val = %s\n", val));
+                   sge_strlcpy(value[i], val, SGE_PATH_MAX);
+                } else {
+                   sge_strlcpy(value[i], "", SGE_PATH_MAX);
+                }
                 is_found[i] = true;
                 if (name[i].is_required) {
                   --nmissing; 

@@ -157,6 +157,20 @@ public class Util {
         }
     }
     
+     public static int getYesNoJobAsInt(String str) {
+        str = str.toLowerCase();
+
+        if (str.startsWith("n")) {
+            return 0;
+        } else if (str.startsWith("y")) {
+            return 1;
+        } else if (str.startsWith("j")) {
+            return 2;
+        } else {
+            throw new IllegalArgumentException("YesNoJobAsInt coversion error for input: "+str);
+        }
+    }
+    
     public static boolean isYes(String str) {
         return getYesNoAsInt(str)==1 ? true : false;
     }
@@ -166,6 +180,15 @@ public class Util {
             case 0: return "NO";
             case 1: return "YES";
             default: throw new IllegalArgumentException("Unknown value "+val+" for YesNo type conversion");
+        }
+    }
+    
+    public static String getYesNoJobAsString(int val) {
+        switch (val) {
+            case 0: return "NO";
+            case 1: return "YES";
+            case 2: return "JOB";
+            default: throw new IllegalArgumentException("Unknown value "+val+" for YesNoJob type conversion");
         }
     }
     

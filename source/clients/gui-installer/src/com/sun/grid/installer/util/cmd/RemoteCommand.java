@@ -1,0 +1,81 @@
+/*___INFO__MARK_BEGIN__*/
+/*************************************************************************
+ *
+ *  The Contents of this file are made available subject to the terms of
+ *  the Sun Industry Standards Source License Version 1.2
+ *
+ *  Sun Microsystems Inc., March, 2001
+ *
+ *
+ *  Sun Industry Standards Source License Version 1.2
+ *  =================================================
+ *  The contents of this file are subject to the Sun Industry Standards
+ *  Source License Version 1.2 (the "License"); You may not use this file
+ *  except in compliance with the License. You may obtain a copy of the
+ *  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+ *
+ *  Software provided under this License is provided on an "AS IS" basis,
+ *  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+ *  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+ *  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+ *  See the License for the specific provisions governing your rights and
+ *  obligations concerning the Software.
+ *
+ *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+ *
+ *   Copyright: 2001 by Sun Microsystems, Inc.
+ *
+ *   All Rights Reserved.
+ *
+ ************************************************************************/
+/*___INFO__MARK_END__*/
+
+package com.sun.grid.installer.util.cmd;
+
+import com.izforge.izpack.util.Debug;
+import com.sun.grid.installer.gui.Host;
+import java.text.MessageFormat;
+import java.util.Properties;
+import com.sun.grid.installer.util.Util;
+
+public class RemoteCommand extends com.sun.grid.installer.util.cmd.CmdExec {
+      //E.g.: rsh/ssh [-l <connect_user>] [-o ....] HOSTNAME FSTYPE DIR
+      private static String installCommand = "{0} {1} {2} {3} {4} {5}";
+      private String command;
+
+
+      public RemoteCommand(Properties variables, String host, String fstypePath, String dirPath) {
+          this(variables, Util.RESOLVE_TIMEOUT, host, fstypePath, dirPath);
+      }
+
+      public RemoteCommand(Properties variables, int timeout, String host, String fstypePath, String dirPath) {
+          super(timeout);
+          boolean onLocalHost = host.equalsIgnoreCase(Host.localHostName);
+          String connectUser = variables.getProperty(ARG_CONNECT_USER, "");
+          String SGE_ROOT = variables.getProperty(VAR_SGE_ROOT, "");
+
+          String shell = "";                //0
+          String userArg = "";              //1
+          String sshOptions = "";           //2
+          String hostToReplace = "";        //3
+          if (!onLocalHost) {
+             shell = variables.getProperty(VAR_SHELL_NAME, "");
+             if (connectUser.length() > 0) {
+                 if (Util.isWindowsMode(variables)) {
+                     connectUser = host.toUpperCase().split("\\.")[0] + "+" + connectUser;
+                 }
+                 userArg = "-l "+connectUser;
+             }
+             sshOptions = (isSameCommand(shell, "ssh")) ? "-o StrictHostKeyChecking=yes -o PreferredAuthentications=gssapi-keyex,publickey" : "";
+             hostToReplace = host;
+             fstypePath = "\""+fstypePath;
+             dirPath += "\"";
+          }
+          this.command  = MessageFormat.format(installCommand, shell, userArg, sshOptions, hostToReplace, fstypePath, dirPath).trim();
+      }
+
+      public void execute() {
+          Debug.trace("Initializing GetFsTypeCommand: " + command + " timeout="+(MAX_WAIT_TIME/1000)+"sec");
+          super.execute(command);
+      }
+}

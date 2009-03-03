@@ -44,7 +44,7 @@ SpoolingQueryChange()
    else
       SPOOLING_DIR="$1"
    fi
-	
+
    if [ -f "$SGE_ROOT/$SGE_CELL/common/bootstrap" ]; then
       ignore_fqdn=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "ignore_fqdn" | awk '{ print $2 }'`
       default_domain=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "default_domain" | awk '{ print $2 }'`
@@ -82,25 +82,25 @@ SpoolingQueryChange()
            default_host="$HOST"
            default_spool_dir="$SGE_ROOT/$SGE_CELL/spooldb"
         fi
-        
+
         $INFOTEXT -n "\nEnter the name of your Berkeley DB Spooling Server [%s] >> " "$default_host"
         SPOOLING_SERVER=`Enter $SPOOLING_SERVER`
-        $INFOTEXT -n "Enter the Database Directory [%s] >> " "$default_spool_dir"
+        $INFOTEXT -n "Enter the database directory [%s] >> " "$default_spool_dir"
         SPOOLING_DIR=`Enter $SPOOLING_DIR`
      else
         SPOOLING_SERVER=none
         if [ -z "$1" ]; then
            SPOOLING_DIR="`dirname $QMDIR`/spooldb"
         fi
-        $INFOTEXT -n "\nPlease enter the Database Directory now, even if you want to spool locally,\n" \
-                     "it is necessary to enter this Database Directory. \n\nDefault: [%s] >> " "$SPOOLING_DIR"
+        $INFOTEXT -n "\nPlease enter the database directory now, even if you want to spool locally,\n" \
+                     "it is necessary to enter this database directory. \n\nDefault: [%s] >> " "$SPOOLING_DIR"
         SPOOLING_DIR=`Enter "$SPOOLING_DIR"`
      fi
 
      if [ "$AUTO" = "true" ]; then
         SPOOLING_DIR=$DB_SPOOLING_DIR
      fi
- 
+
    fi
 }
 
@@ -150,7 +150,7 @@ SpoolingCheckParams()
             else
                HOST=$tmp_host
                SPOOLING_SERVER=$tmp_spooling
-            fi 
+            fi
          fi
 
          if [ "$SPOOLING_SERVER" = "$HOST" ]; then
@@ -158,7 +158,7 @@ SpoolingCheckParams()
             # create a script to start the rpc server
             Makedir $SPOOLING_DIR
 
-            # Deactivated the copy of DB_CONFIG file. The DB_CONFIG file is still distributed 
+            # Deactivated the copy of DB_CONFIG file. The DB_CONFIG file is still distributed
             #DB_CONFIG_COPY="cp ./util/install_modules/DB_CONFIG $SPOOLING_DIR/DB_CONFIG"
             #ExecuteAsAdmin $DB_CONFIG_COPY
             CreateRPCServerScript
@@ -167,9 +167,9 @@ SpoolingCheckParams()
             $INFOTEXT "Please start the Berkeley DB RPC Server installation locally on host %s!" $SPOOLING_SERVER
             $INFOTEXT -log "Please start the Berkeley DB RPC Server installation locally on host %s!" $SPOOLING_SERVER
             MoveLog
-            exit 1 
+            exit 1
          fi
-      fi 
+      fi
    return 1
    fi
 }
@@ -203,7 +203,7 @@ CreateRPCServerScript()
                       -e "/#+-#+-#+-#-/,/#-#-#-#-#-#/d" \
                       util/rctemplates/sgebdb_template > ${TMP_RC}
    ExecuteAsAdmin cp $TMP_RC $RPCSCRIPT
-   ExecuteAsAdmin rm -fR $TMP_DIR 
+   ExecuteAsAdmin rm -fR $TMP_DIR
    ExecuteAsAdmin $CHMOD a+x $RPCSCRIPT
 }
 
@@ -213,7 +213,7 @@ CheckLocalFilesystem()
    is_done="false"
    FS=$1
 
-   while [ $is_done = "false" ]; do  
+   while [ $is_done = "false" ]; do
       FS=`dirname $FS`
       if [ -d $FS ]; then
          is_done="true"
@@ -260,10 +260,10 @@ ExecuteRPCServerScript()
 DeleteSpoolingDir()
 {
    QMDIR="$SGE_ROOT/$SGE_CELL/qmaster"
-   SpoolingQueryChange  
+   SpoolingQueryChange
 
    ExecuteAsAdmin rm -fr $SPOOLING_DIR
-   
+
 }
 
 EditStartupScript()

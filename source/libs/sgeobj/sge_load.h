@@ -32,11 +32,9 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-/* this function replaces sge_is_static_load_value() */
-
 bool 
 sge_is_static_load_value(const char *name);
 
-#endif /* __SGE_QREF_H__ */
+#endif /* __SGE_LOAD_H__ */
 
 

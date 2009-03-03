@@ -128,6 +128,7 @@ typedef struct {
    bool       is_job_verify;      /* true, if job verification (-w ev) (in qmaster) */
    bool       is_schedule_based;  /* true, if resource reservation is enabled       */
    bool       is_soft;            /* true, if job has soft requests                 */
+   u_long32   now;                /* now time for immediate jobs                    */
    /* ------ this section is for caching of intermediate results ------------------ */
    lList      *limit_list;        /* the resource quota limit list (RQL_Type)       */ 
    lList      *skip_cqueue_list;  /* cluster queues that need not be checked any more (CTI_Type) */ 
@@ -146,7 +147,7 @@ typedef struct {
 } sge_assignment_t;
 
 #define SGE_ASSIGNMENT_INIT {0, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, \
-   NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, false, false, false, false, false, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, false, NULL}
+   NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, false, false, false, false, false, false, 0, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, false, NULL}
 
 void assignment_init(sge_assignment_t *a, lListElem *job, lListElem *ja_task, bool is_load_adj);
 void assignment_copy(sge_assignment_t *dst, sge_assignment_t *src, bool move_gdil);

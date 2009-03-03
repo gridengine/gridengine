@@ -3,11 +3,11 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     qdel - delete Grid Engine jobs from queues
+     qdel - delete Sun Grid Engine jobs from queues
 
 SYNTAX
      qdel  [  -f  ]  [  -help   ]   [   -u   wc_user_list   ]   [
-     wc_job_range_list ]
+     wc_job_range_list ] [ -t task_id_range ]
 
 DESCRIPTION
      <I>Qdel</I> provides a means for a user/operator/manager to  delete
@@ -20,26 +20,40 @@ DESCRIPTION
      delete  only  the jobs of the calling user by default.  <I>Qdel</I>
      deletes jobs in the order in which their job identifiers are
      presented.    Find    additional    information   concerning
-     <I>wc</I>_<I>user</I>_<I>list</I> and <I>wc</I>_<I>job</I>_<I>list</I> in <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>.
+     <I>wc</I>_<I>user</I>_<I>list</I> and <I>wc</I>_<I>job</I>_<I>list</I> in <B><A HREF="../htmlman1/sge_types.html?pathrev=V62u2_TAG">sge_types(1)</A></B>.
 
 OPTIONS
-     -f   Force action for running jobs. The job(s)  are  deleted
-          from the list of jobs registered at <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> even
-          if the <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> controlling  the  job(s)  does  not
-          respond to the delete request sent by <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>.
+     -f   Force deletion of job(s). The job(s) are  deleted  from
+          the  list  of jobs registered at <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u2_TAG">sge_qmaster(8)</A></B> even if
+          the  <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u2_TAG">sge_execd(8)</A></B>  controlling  the  job(s)  does   not
+          respond to the delete request sent by <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u2_TAG">sge_qmaster(8)</A></B>.
 
-     Users which are neither Grid Engine managers  nor  operators
-     can only use the -f option (for their own jobs) if the clus-
-     ter configuration entry  qmaster_params  contains  the  flag
-     ENABLE_FORCED_QDEL (see <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>).  However, behavior for
-     administrative and non-administrative  users  differs.  Jobs
-     are  deleted  from  the  Grid Engine database immediately in
-     case of administrators. Otherwise,  a  regular  deletion  is
-     attempted  first  and a forced cancellation is only executed
-     if the regular deletion was unsuccessful.
+          Users which are neither Sun Grid  Engine  managers  nor
+          operators  can  only  use  the -f option (for their own
+          jobs) if the cluster configuration entry qmaster_params
+          contains the flag ENABLE_FORCED_QDEL (see <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62u2_TAG">sge_conf(5)</A></B>).
+          However,   behavior   for   administrative   and   non-
+          administrative users differs. Jobs are deleted from the
+          Sun  Grid  Engine  database  immediately  in  case   of
+          administrators.   Otherwise,   a  regular  deletion  is
+          attempted first and a forced cancellation is only  exe-
+          cuted if the regular deletion was unsuccessful.
+
+          Additionally regular qdel  requests  can  result  in  a
+          forced       deletetion      of      a      job      if
+          ENABLE_FORCED_QDEL_IF_UNKNOWN    is    set    in    the
+          qmaster_params (see <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62u2_TAG">sge_conf(5)</A></B>)
 
      -help
           Prints a listing of all options.
+
+     -t   Deletes specified tasks of array job.  It  means  tasks
+          created  by qsub -t command. For example after creating
+          array    job    by    command    "qsub     -t     1-100
+          $SGE_ROOT/examples/sleeper.sh" it is possible to delete
+          tasks 5-10 from job array by command  "qdel  job_id  -t
+          5-10".   All  other tasks (1-4 and 11-100) will be exe-
+          cuted.
 
      -u wc_user_list
           Deletes only those jobs which were submitted  by  users
@@ -53,12 +67,12 @@ OPTIONS
           A list of jobs, which should be deleted
 
 ENVIRONMENTAL VARIABLES
-     SGE_ROOT       Specifies the location  of  the  Grid  Engine
+     SGE_ROOT       Specifies the location of the Sun Grid Engine
                     standard configuration files.
 
-     SGE_CELL       If set, specifies  the  default  Grid  Engine
-                    cell. To address a Grid Engine cell <I>qdel</I> uses
-                    (in the order of precedence):
+     SGE_CELL       If set, specifies the default Sun Grid Engine
+                    cell.  To address a Sun Grid Engine cell <I>qdel</I>
+                    uses (in the order of precedence):
 
                          The name of the cell  specified  in  the
                          environment  variable SGE_CELL, if it is
@@ -76,35 +90,22 @@ ENVIRONMENTAL VARIABLES
 
      SGE_QMASTER_PORT
                     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> is expected to listen for com-
+                    <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u2_TAG">sge_qmaster(8)</A></B> is expected to listen for com-
                     munication requests.  Most installations will
                     use  a  services  map  entry  for the service
                     "sge_qmaster" instead to define that port.
 
 FILES
      &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>act</I>_<I>qmaster</I>
-                     Grid Engine master host file
+                     Sun Grid Engine master host file
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,     <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B>,     <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,     <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>,
-     <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>.
+     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B>,     <B><A HREF="../htmlman1/qstat.html?pathrev=V62u2_TAG">qstat(1)</A></B>,     <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B>,     <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u2_TAG">sge_qmaster(8)</A></B>,
+     <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u2_TAG">sge_execd(8)</A></B>.
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 </PRE>
 <HR>

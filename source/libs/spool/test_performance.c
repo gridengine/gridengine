@@ -183,7 +183,10 @@ int main(int argc, char *argv[])
 #define NM5  "%I%I%I%I%I"
 #define NM2  "%I%I"
 #define NM1  "%I"
+
    prof_mt_init();
+   obj_mt_init();
+   bootstrap_mt_init();
 
    prof_start(SGE_PROF_CUSTOM1, NULL);
    prof_set_level_name(SGE_PROF_CUSTOM1, "performance", NULL);
@@ -196,13 +199,6 @@ int main(int argc, char *argv[])
       ERROR((SGE_EVENT, "usage: test_sge_spooling <method> <shared lib> <arguments>\n"));
       SGE_EXIT((void**)&ctx, 1);
    }
-   
-   if (sge_gdi2_setup(&ctx, QEVENT, MAIN_THREAD, &answer_list) != AE_OK) {
-      answer_list_output(&answer_list);
-      SGE_EXIT((void**)&ctx, 1);
-   }
-   
-   sge_setup_sig_handlers(QEVENT);
 
    object_base = object_type_get_object_description();
    *(object_base[SGE_TYPE_JOB].list) = lCreateList("job list", JB_Type);
@@ -223,7 +219,7 @@ int main(int argc, char *argv[])
       SGE_EXIT((void**)&ctx, EXIT_FAILURE);
    }
    answer_list_output(&answer_list);
-   
+  
 #ifndef TEST_READ_ONLY
    PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
    generate_jobs(30000);

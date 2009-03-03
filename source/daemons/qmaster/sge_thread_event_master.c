@@ -123,8 +123,8 @@ sge_event_master_initialize(sge_gdi_ctx_class_t *ctx)
    sge_dstring_sprintf(&thread_name, "%s%03d", threadnames[DELIVERER_THREAD], 0);
    cl_thread_list_setup(&(Main_Control.event_master_thread_pool), "event master thread pool");
    cl_thread_list_create_thread(Main_Control.event_master_thread_pool, &dummy_thread_p,
-                                NULL, sge_dstring_get_string(&thread_name), 0, 
-                                sge_event_master_main, NULL, NULL);
+                                cl_com_get_log_list(), sge_dstring_get_string(&thread_name), 0, 
+                                sge_event_master_main, NULL, NULL, CL_TT_DELIVERER);
    sge_dstring_free(&thread_name);
    DRETURN_VOID;
 }

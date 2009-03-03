@@ -318,10 +318,10 @@ int wl_getrusage_remote(const char *szjob_id, int *pstatus,
 
    job_usage[usagelen]='\0';
    sscanf(job_usage, "%ld %ld %ld %ld %d", 
-      &(prusage->ru_stime.tv_sec),
-      &(prusage->ru_stime.tv_usec),
-      &(prusage->ru_utime.tv_sec),
-      &(prusage->ru_utime.tv_usec),
+      (long int*)&(prusage->ru_stime.tv_sec),
+      (long int*)&(prusage->ru_stime.tv_usec),
+      (long int*)&(prusage->ru_utime.tv_sec),
+      (long int*)&(prusage->ru_utime.tv_usec),
       pstatus);
 
    return ret;

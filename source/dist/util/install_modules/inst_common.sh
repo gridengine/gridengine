@@ -115,7 +115,7 @@ BasicSettings()
 
   HOST=`$SGE_UTILBIN/gethostname -name`
   if [ "$HOST" = "" ]; then
-     $INFOTEXT -e "can't get hostname of this machine. Installation failed."
+     echo "can't get hostname of this machine. Installation failed."
      exit 2
   fi
 
@@ -174,24 +174,66 @@ Enter()
 
 #-------------------------------------------------------------------------
 # Makedir: make directory, chown/chgrp/chmod it. Exit if failure
-#
+# 
 Makedir()
 {
    dir=$1
+   tmp_dir=$1
 
    if [ ! -d $dir ]; then
-      $INFOTEXT "creating directory: %s" "$dir"
-      ExecuteAsAdmin $MKDIR -p $dir
+      while [ ! -d $tmp_dir ]; do
+         chown_dir=$tmp_dir
+         tmp_dir2=`dirname $tmp_dir`
+         tmp_dir=$tmp_dir2
+      done
+
+       $INFOTEXT "creating directory: %s" "$dir"
+       if [ "`$SGE_UTILBIN/filestat -owner $tmp_dir 2> /dev/null`" != "$ADMINUSER" ]; then
+          Execute $MKDIR -p $dir
+          if [ "$ADMINUSER" = "default" ]; then
+             Execute $CHOWN -R root $chown_dir
+          else
+		       group=`$SGE_UTILBIN/checkuser -gid $ADMINUSER`
+             Execute $CHOWN -R $ADMINUSER:$group $chown_dir
+          fi
+	       Execute $CHMOD -R $DIRPERM $chown_dir
+       else
+          ExecuteAsAdmin $MKDIR -p $dir
+		    ExecuteAsAdmin $CHMOD -R $DIRPERM $chown_dir
+       fi
    fi
 
-   ExecuteAsAdmin $CHMOD $DIRPERM $dir
+	if [ "`$SGE_UTILBIN/filestat -owner $dir`" != "$ADMINUSER" ]; then
+	    Execute $CHMOD $DIRPERM $dir
+	else
+       ExecuteAsAdmin $CHMOD $DIRPERM $dir
+	fi
 }
+
+#-------------------------------------------------------------------------
+# Removedir: remove directory, chown/chgrp/chmod it. Exit if failure
+# 
+Removedir()
+{
+   dir=$1
+   tmp_dir=`dirname $dir`
+
+   if [ -d $dir ]; then
+       #We could be more clever and even check tmp_dir permissions
+       if [ "`$SGE_UTILBIN/filestat -owner $tmp_dir`" != "$ADMINUSER" ]; then
+          Execute $RM -rf $dir
+       else
+          ExecuteAsAdmin $RM -rf $dir
+       fi
+   fi
+}
+
 
 #-------------------------------------------------------------------------
 # Execute command as user $ADMINUSER and exit if exit status != 0
 # if ADMINUSER = default then execute command unchanged
 #
-# uses binary "adminrun" form SGE distribution
+# uses binary "adminrun" from SGE distribution
 #
 # USES: variables "$verbose"    (if set to "true" print arguments)
 #                  $ADMINUSER   (if set to "default" do not use "adminrun)
@@ -226,7 +268,9 @@ ExecuteAsAdmin()
       $INFOTEXT -log "Probably a permission problem. Please check file access permissions."
       $INFOTEXT -log "Check read/write permission. Check if SGE daemons are running."
 
-      MoveLog
+      if [ "$insideMoveLog" != true ]; then #To prevent endless recursion when failure occures in the MoveLog due to perm problems when moving the log file   
+         MoveLog
+      fi
       if [ "$ADMINRUN_NO_EXIT" != "true" ]; then
          exit 1
       fi
@@ -824,7 +868,9 @@ CheckConfigFile()
    fi 
 
    if [ "$QMASTER" = "install" ]; then
-      if [ -d "$SGE_ROOT/$SGE_CELL" -a ! -z "$DB_SPOOLING_SERVER" -a "$DB_SPOOLING_SERVER" != "none" ]; then
+      # if we have a bdb server, the cell directory already exists - this is OK.
+      # if we have no bdb server, and the cell directory exists, stop the installation.
+      if [ -d "$SGE_ROOT/$SGE_CELL" -a \( -z "$DB_SPOOLING_SERVER" -o "$DB_SPOOLING_SERVER" = "none" \) ]; then
          $INFOTEXT -e "Your >CELL_NAME< directory %s already exist!" $SGE_ROOT/$SGE_CELL
          $INFOTEXT -e "The automatic installation stops, if the >SGE_CELL< directory already exists"
          $INFOTEXT -e "to ensure, that existing installations are not overwritten!"
@@ -940,19 +986,19 @@ CheckConfigFile()
          $INFOTEXT -e "Your >SGE_ENABLE_JMX< flag is wrong! Valid values are:0,1,true,false,TRUE,FALSE"
          is_valid="false" 
       fi   
-      `IsNumeric "$SGE_JMX_PORT"`
-      if [ "$?" -eq 1 ]; then
-         $INFOTEXT -e "Your >SGE_JMX_PORT< entry is invalid, please enter a number between 1\n and number of execution host"
-         is_valid="false"
-      elif [ "$SGE_JMX_PORT" -le 1 -a "$SGE_JMX_PORT" -ge 65536 ]; then
-         $INFOTEXT -e "Your >SGE_JMX_PORT< entry is invalid. It must be a number between 1 and 65536!"
-         is_valid="false"
-      fi
       if [ "$SGE_ENABLE_JMX" = "true" -a \( -z "$SGE_JVM_LIB_PATH" -o  "`echo "$SGE_JVM_LIB_PATH" | cut -d"/" -f1`" = "`echo "$SGE_JVM_LIB_PATH" | cut -d"/" -f2`" \) ]; then
          $INFOTEXT -e "Your >SGE_JVM_LIB_PATH< is empty or an invalid path. It must be a full path!"
          is_valid="false"
       fi   
       if [ "$SGE_ENABLE_JMX" = "true" ]; then
+         `IsNumeric "$SGE_JMX_PORT"`
+         if [ "$?" -eq 1 ]; then
+            $INFOTEXT -e "Your >SGE_JMX_PORT< entry is invalid, please enter a number between 1\n and number of execution host"
+            is_valid="false"
+         elif [ "$SGE_JMX_PORT" -le 1 -a "$SGE_JMX_PORT" -ge 65536 ]; then
+            $INFOTEXT -e "Your >SGE_JMX_PORT< entry is invalid. It must be a number between 1 and 65536!"
+            is_valid="false"
+         fi
          if [ -z "$SGE_JMX_SSL" ]; then
             $INFOTEXT -e "Your >SGE_JMX_SSL< flag is not set!"
             is_valid="false" 
@@ -1093,7 +1139,7 @@ CheckConfigFile()
          is_valid="false"
       fi
 
-      if [ "$SGE_ENABLE_JMX" = "true" ]; then
+      if [ "$SGE_ENABLE_JMX" = "true" -a "$QMASTER" = "uninstall" ]; then
          if [ -z "$JMX_PORT" -o -z "$SGE_JVM_LIB_PATH" ]; then
             $INFOTEXT -e "The JMX_PORT or SGE_JVM_LIB_PATH has not been set in config file!\n"
             is_valid="false"
@@ -1430,7 +1476,7 @@ CheckForLocalHostResolving()
                 "physical or logical network interfaces of this machine.\n\n" \
                 "Installation failed.\n\n" \
                 "Press <RETURN> to exit the installation procedure >> "
-      exit
+      exit 2
    fi
 }
                
@@ -1896,9 +1942,7 @@ ProcessSGEClusterName()
       
    #Only BDB or qmaster installation can create cluster_name file
    if [ \( "$1" = "bdb" -o "$1" = "qmaster" -o "$UPDATE" = "true" \) -a ! -f $SGE_ROOT/$SGE_CELL/common/cluster_name ]; then
-      if [ ! -d "$SGE_ROOT/$SGE_CELL/common" ]; then
-         ExecuteAsAdmin $MKDIR -p "$SGE_ROOT/$SGE_CELL/common"
-      fi
+      Makedir "$SGE_ROOT/$SGE_CELL/common"
       SafelyCreateFile $SGE_ROOT/$SGE_CELL/common/cluster_name 644 "$SGE_CLUSTER_NAME"
    fi
 
@@ -1920,7 +1964,10 @@ SafelyCreateFile()
    ExecuteAsAdmin $TOUCH $1
    if [ -n "$3" ]; then
       ExecuteAsAdmin $CHMOD 666 $1
-      $ECHO "$3" > $1
+      tmp_file="/tmp/tmp_safe_create_file_$$"
+      $ECHO "$3" > $tmp_file
+      ExecuteAsAdmin cp $tmp_file $1
+      Execute rm -f $tmp_file
    fi
    ExecuteAsAdmin $CHMOD $2 $1
 }
@@ -2177,9 +2224,9 @@ AddSGEStartUpScript()
    
    $CLEAR
    
-   SetupRcScriptNames $hosttype   
+   SetupRcScriptNames $hosttype
 
-   InstallRcScript 
+   InstallRcScript
 
    $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
    $CLEAR
@@ -2447,6 +2494,8 @@ MoveLog()
    if [ "$AUTO" = "false" ]; then
       return
    fi
+   
+   insideMoveLog=true
 
    GetAdminUser
 
@@ -2473,11 +2522,15 @@ MoveLog()
    if [ "$is_master" = "true" ]; then
       loghosttype="qmaster"
       is_master="false"
+   elif [ "$is_shadow" = "true" ]; then
+      loghosttype="shadowd"
+   elif [ "$is_bdb" = "true" ]; then
+      loghosttype="bdb"
    else
       loghosttype="execd"
    fi
 
-   if [ $EXECD = "uninstall" -o $QMASTER = "uninstall" ]; then
+   if [ $EXECD = "uninstall" -o $QMASTER = "uninstall" -o $SHADOW = "uninstall" -o $BERKELEY = "uninstall" ]; then
       installtype="uninstall"
    else
       installtype="install"
@@ -2494,6 +2547,8 @@ MoveLog()
    else
       $INFOTEXT "Can't find install log file: /tmp/%s" $LOGSNAME
    fi
+   
+   insideMoveLog=""
 }
 
 
@@ -2508,6 +2563,10 @@ if [ -f /tmp/$LOGSNAME ]; then
 else
    touch /tmp/$LOGSNAME
 fi
+
+if [ "$AUTOGUI" = true ]; then
+   $INFOTEXT "Install log can be found in: %s" /tmp/$LOGSNAME
+fi
 }
 
 
@@ -2515,9 +2574,9 @@ Stdout2Log()
 {
    if [ "$STDOUT2LOG" = "0" ]; then
       CLEAR=:
+      CreateLog
       SGE_NOMSG=1
       export SGE_NOMSG
-      CreateLog
       # make Filedescriptor(FD) 4 a copy of stdout (FD 1)
       exec 4>&1
       # open logfile for writing
@@ -2550,7 +2609,7 @@ CheckRunningDaemon()
    case $daemon_name in
 
       sge_qmaster )
-       if [ -f $QMDIR/qmaster.pid ]; then
+       if [ -s $QMDIR/qmaster.pid ]; then
           daemon_pid=`cat $QMDIR/qmaster.pid`
           $SGE_UTILBIN/checkprog $daemon_pid $daemon_name > /dev/null
           return $?      
@@ -2650,7 +2709,7 @@ RestoreConfig()
    BUP_SPOOL_FILE_LIST="jobseqnum"
    BUP_CLASSIC_COMMON_FILE_LIST="configuration sched_configuration accounting bootstrap qtask settings.sh act_qmaster sgemaster host_aliases settings.csh sgeexecd shadow_masters st.enabled cluster_name"
    BUP_CLASSIC_DIR_LIST="sgeCA local_conf" 
-   BUP_CLASSIC_SPOOL_FILE_LIST="jobseqnum admin_hosts calendars centry ckpt cqueues exec_hosts hostgroups managers operators pe projects qinstances schedd submit_hosts usermapping users usersets zombies"
+   BUP_CLASSIC_SPOOL_FILE_LIST="jobseqnum admin_hosts advance_reservations calendars centry ckpt cqueues exec_hosts hostgroups managers operators pe projects qinstances resource_quotas schedd submit_hosts usermapping users usersets zombies"
 
    MKDIR="mkdir -p"
    CP="cp -f"
@@ -3468,11 +3527,14 @@ RestoreCheckBootStrapFile()
       db_home=`cat $BACKUP_DIR/bootstrap | grep "spooling_params" | awk '{ print $2 }'`
       master_spool=`cat $BACKUP_DIR/bootstrap | grep "qmaster_spool_dir" | awk '{ print $2 }'`
       ADMINUSER=`cat $BACKUP_DIR/bootstrap | grep "admin_user" | awk '{ print $2 }'`
+      if [ "$ADMINUSER" = "none" ]; then
+         ADMINUSER="default"
+      fi
 
       MASTER_PORT=`cat $BACKUP_DIR/sgemaster | grep "SGE_QMASTER_PORT=" | head -1 | awk '{ print $1 }' | cut -d"=" -f2 | cut -d";" -f1` 
 
       ACT_QMASTER=`cat $BACKUP_DIR/act_qmaster`
-      
+
       $SGE_BIN/qping -info $ACT_QMASTER $MASTER_PORT qmaster 1 > /dev/null 2>&1
       ret=$?
 
@@ -3557,11 +3619,6 @@ CheckServiceAndPorts()
 
 CopyCA()
 {
-   if [ "$AUTO" = "true" -a "$CSP_COPY_CERTS" = "false" ]; then
-      $INFOTEXT -log "No CSP system installed!"
-      return 1
-   fi
-
    if [ "$CSP" = "false" -a \( "$WINDOWS_SUPPORT" = "false" -o "$WIN_DOMAIN_ACCESS" = "false" \) ]; then
       return 1
    fi
@@ -3596,7 +3653,8 @@ CopyCA()
       "<%s> host? (y/n) [y] >>" $out_text
    fi
 
-   if [ "$?" = 0 ]; then
+   if [ "$AUTOGUI" != "true" ]; then #GUI made has the correct shell already
+    if [ "$?" = 0 ]; then
       $INFOTEXT "You can use a rsh or a ssh copy to transfer the cert files to each\n" \
                 "<%s> host (default: ssh)" $out_text
       $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" -n "Do you want to use rsh/rcp instead of ssh/scp? (y/n) [n] >>"
@@ -3610,8 +3668,9 @@ CopyCA()
          $INFOTEXT -log "The remote copy command <%s> could not be found!" $COPY_COMMAND
          return
       fi
-   else
+    else
       return
+    fi
    fi
 
    if [ "$hosttype" = "execd" ]; then
@@ -3686,12 +3745,29 @@ CopyCaToHostType()
 #
 GetAdminUser()
 {
-   ADMINUSER=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "admin_user" | awk '{ print $2 }'`
+   if [ "$AUTO" = true ]; then
+	   #For auto we use template, since SGE_CELL might not yet exist
+	   TMP_CELL=$CELL_NAME
+   else
+	   TMP_CELL=$SGE_CELL
+   fi
+   #Try to get admin user from a bootstrap file
+   TMP_ADMINUSER=`cat $SGE_ROOT/$TMP_CELL/common/bootstrap 2>/dev/null | grep "admin_user" | awk '{ print $2 }'`
+   if [ -n "$TMP_ADMINUSER" ]; then
+      ADMINUSER=$TMP_ADMINUSER
+   elif [ "$AUTO" = true -o "$AUTOGUI" = true ]; then
+	   #For auto installations, if no bootstrap file use the value from the template
+	   ADMINUSER=$ADMIN_USER
+   fi
    euid=`$SGE_UTILBIN/uidgid -euid`
 
    TMP_USER=`echo "$ADMINUSER" |tr "[A-Z]" "[a-z]"`
-   if [ \( -z "$TMP_USER" -o "$TMP_USER" = "none" \) -a $euid = 0 ]; then
-      ADMINUSER=default
+   if [  -z "$TMP_USER" -o "$TMP_USER" = "none" ]; then
+      if [ $euid = 0 ]; then
+         ADMINUSER=default
+      else
+         ADMINUSER=`whoami`
+      fi
    fi
 
    if [ "$SGE_ARCH" = "win32-x86" ]; then
@@ -3975,14 +4051,14 @@ cd $SGE_ROOT ; BasicSettings ; SetUpInfoText ; CheckForSMF ; "
    fi
 
    if [ "$DEL_EXECD_SPOOL" = true ]; then        #DELETE EXECD SPOOL DIRS
-      cmd=". $SGE_ROOT/$SGE_CELL/common/settings.sh ; . $SGE_ROOT/util/install_modules/inst_common.sh ; \
+      cmd=". $SGE_ROOT/$SGE_CELL/common/settings.sh ; . $SGE_ROOT/util/arch_variables ; . $SGE_ROOT/util/install_modules/inst_common.sh ; \
 cd $SGE_ROOT && RemoteExecSpoolDirDelete"
       $INFOTEXT -u "Initializing all local execd spool directories:"
       DoRemoteActionForHosts "$list" default "$cmd"
    fi
    
    if [ "$UPDATE_WIN" = true ]; then                   #UPDATE WINDOWS HELPER SERVICE ON ALL WINDOWS EXECDs
-      cmd=". $SGE_ROOT/$SGE_CELL/common/settings.sh ; . $SGE_ROOT/util/install_modules/inst_common.sh ; \
+      cmd=". $SGE_ROOT/$SGE_CELL/common/settings.sh ; . $SGE_ROOT/util/arch_variables ; . $SGE_ROOT/util/install_modules/inst_common.sh ; \
 . $SGE_ROOT/util/install_modules/inst_execd.sh ; cd $SGE_ROOT ; AUTO=true ; ECHO=echo ;BasicSettings ; SetUpInfoText ; SAVED_PATH=$PATH ; SetupWinSvc update"
       $INFOTEXT -u "Updating windows helper service on all windows hosts:"
       DoRemoteActionForHosts "$list" $ADMINUSER "$cmd"
@@ -4012,15 +4088,33 @@ RemoteExecSpoolDirDelete()
       local_dir=$global_dir
    fi
    if [ -d "$local_dir/$HOST" ]; then
-      #Try as root
-      rm -rf "$local_dir/$HOST" > /dev/null 2&>1
-      if [ $? -ne 0 ]; then
-         #Try as admin
-	 ExecuteAsAdmin rm -rf "$local_dir/$HOST"
-      fi
+      Removedir "$local_dir/$HOST"
    elif [ ! -d "$local_dir" ]; then
       LOCAL_EXECD_SPOOL=$local_dir
       . $SGE_ROOT/util/install_modules/inst_execd.sh
       MakeLocalSpoolDir
    fi
 }
+
+DeleteQueueNumberAttribute()
+{
+   spooldir="$1"
+   tmpfile="/tmp/clusterqueue_delete$$"
+   Execute rm -f $tmpfile
+
+   # get all queue instance files 
+   queuesdir=`ls $spooldir/qinstances/`
+   
+   # delete the evidence of queue_number for each queue instance file
+   for dir in $queuesdir; do 
+      queueinstancelist=`ls $spooldir/qinstances/$dir` 
+      for file in $queueinstancelist; do 
+         # delete line beginning with "queue_number"
+         ExecuteAsAdmin sed "/^queue_number/d" $spooldir/qinstances/$dir/$file > $tmpfile
+         Execute chown $ADMINUSER $tmpfile
+         ExecuteAsAdmin mv $tmpfile $spooldir/qinstances/$dir/$file
+         ExecuteAsAdmin $CHMOD 644 $spooldir/qinstances/$dir/$file
+      done 
+   done
+}
+

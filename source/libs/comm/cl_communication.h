@@ -110,14 +110,14 @@ int cl_com_create_ssl_setup(cl_ssl_setup_t** new_setup,
 int cl_com_dup_ssl_setup(cl_ssl_setup_t** new_setup, cl_ssl_setup_t* source);
 int cl_com_free_ssl_setup(cl_ssl_setup_t** del_setup);
 
-const char* cl_com_get_framework_type(cl_com_connection_t* connection);       /* CR check */
-const char* cl_com_get_connection_type(cl_com_connection_t* connection);      /* CR check */
-const char* cl_com_get_service_handler_flag(cl_com_connection_t* connection); /* CR check */
-const char* cl_com_get_data_write_flag(cl_com_connection_t* connection);      /* CR check */
-const char* cl_com_get_data_read_flag(cl_com_connection_t* connection);       /* CR check */
-const char* cl_com_get_connection_state(cl_com_connection_t* connection); /* CR check */
+const char* cl_com_get_framework_type(cl_com_connection_t* connection);
+const char* cl_com_get_connection_type(cl_com_connection_t* connection);
+const char* cl_com_get_service_handler_flag(cl_com_connection_t* connection);
+const char* cl_com_get_data_write_flag(cl_com_connection_t* connection);
+const char* cl_com_get_data_read_flag(cl_com_connection_t* connection);
+const char* cl_com_get_connection_state(cl_com_connection_t* connection);
 const char* cl_com_get_connection_sub_state(cl_com_connection_t* connection);
-const char* cl_com_get_data_flow_type(cl_com_connection_t* connection);       /* CR check */
+const char* cl_com_get_data_flow_type(cl_com_connection_t* connection);
 
 /* This can be called by an signal handler to trigger abort of communications */
 void cl_com_ignore_timeouts(cl_bool_t flag); 
@@ -178,12 +178,24 @@ int cl_com_connection_request_handler(cl_com_connection_t* connection,
                                       cl_com_connection_t** new_connection);
 /* cleanup service */
 int cl_com_connection_request_handler_cleanup(cl_com_connection_t* connection);
+#ifdef USE_POLL
+int cl_com_open_connection_request_handler(cl_com_poll_t* poll_handle,
+                                           cl_com_handle_t* handle,
+                                           int timeout_val_sec,
+                                           int timeout_val_usec,
+                                           cl_select_method_t select_mode );
 
+#else
 /* check open connection list for new messages */
 int cl_com_open_connection_request_handler(cl_com_handle_t* handle,
                                            int timeout_val_sec,
                                            int timeout_val_usec,
                                            cl_select_method_t select_mode );
+#endif
+#ifdef USE_POLL
+int cl_com_free_poll_array(cl_com_poll_t* poll_handle);
+int cl_com_malloc_poll_array(cl_com_poll_t* poll_handle, unsigned long nr_of_malloced_connections);
+#endif
 
 int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connection_list_elem_t* elem, long timeout, cl_select_method_t select_mode );
 

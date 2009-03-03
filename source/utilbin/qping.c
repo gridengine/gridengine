@@ -63,6 +63,8 @@
 
 #include "uti/sge_string.h"
 
+#include "msg_clients_common.h"
+
 #define ARGUMENT_COUNT 15
 static char*  cl_values[ARGUMENT_COUNT+2];
 static int    cl_short_host_name_option = 0;                                       
@@ -312,7 +314,7 @@ static void qping_printf_fill_up(FILE* fd, char* name, int length, char c, int b
 
 }
 
-static void qping_print_line(const char* buffer, int nonewline, int dump_tag) {
+static void qping_print_line(char* buffer, int nonewline, int dump_tag, const char *sender_comp_name) {
    int i=0;
    int max_name_length = 0;
    int full_width = 0;
@@ -645,17 +647,18 @@ static void qping_print_line(const char* buffer, int nonewline, int dump_tag) {
    
             if (strstr( cl_values[6] , "TAG_ACK_REQUEST") != NULL ) {
                unsigned long buffer_length = 0;
-               if (cl_util_get_binary_buffer(message_debug_data, &binary_buffer , &buffer_length) == CL_RETVAL_OK) {
+               if (cl_util_get_binary_buffer(message_debug_data, &binary_buffer, &buffer_length) == CL_RETVAL_OK) {
                   sge_pack_buffer buf;
    
                   if (init_packbuffer_from_buffer(&buf, (char*)binary_buffer, buffer_length) == PACK_SUCCESS) {
-                     lListElem *ack;
+                     lListElem *ack = NULL;
 
                      while (pb_unused(&buf) > 0) {
                         if (cull_unpack_elem(&buf, &ack, NULL)) {
                            printf("TAG_ACK_REQUEST: unpack error\n");
                         } else {
-                           lWriteElemTo(ack ,stdout); /* ack */
+                           lWriteElemTo(ack, stdout); /* ack */
+                           lFreeElem(&ack);
                         }
                      }
 
@@ -667,22 +670,37 @@ static void qping_print_line(const char* buffer, int nonewline, int dump_tag) {
             if (strstr(cl_values[6] , "TAG_JOB_EXECUTION") != NULL ||
                 strstr(cl_values[6] , "TAG_SLAVE_ALLOW") != NULL) {
                unsigned long buffer_length = 0;
-               if (cl_util_get_binary_buffer(message_debug_data, &binary_buffer , &buffer_length) == CL_RETVAL_OK) {
+               if (cl_util_get_binary_buffer(message_debug_data, &binary_buffer, &buffer_length) == CL_RETVAL_OK) {
                   sge_pack_buffer buf;
    
                   if (init_packbuffer_from_buffer(&buf, (char*)binary_buffer, buffer_length) == PACK_SUCCESS) {
-                     u_long32 feature_set;
-                     lListElem *job = NULL;
-                     if (unpackint(&buf, &feature_set) == PACK_SUCCESS) {
-                        printf("      unpacked tag job execution (binary buffer length %lu):\n", buffer_length );
-                        printf("feature_set: "sge_U32CFormat"\n", sge_u32c(feature_set));
-                     }
-                     if (cull_unpack_elem(&buf, &job, NULL) == PACK_SUCCESS) {
-                        lWriteElemTo(job,stdout); /* job */
+                     if (strcmp(sender_comp_name, "qmaster") == 0) {
+                        u_long32 feature_set;
+                        lListElem *job = NULL;
+                        if (unpackint(&buf, &feature_set) == PACK_SUCCESS) {
+                           printf("      unpacked %s (binary buffer length %lu):\n", cl_values[6], buffer_length);
+                           printf("feature_set: "sge_U32CFormat"\n", sge_u32c(feature_set));
+                        }
+                        if (cull_unpack_elem(&buf, &job, NULL) == PACK_SUCCESS) {
+                           lWriteElemTo(job, stdout); /* job */
+                        } else {
+                           printf("could not unpack job\n");
+                        }
+                        lFreeElem(&job);
                      } else {
-                        printf("could not unpack job\n");
+                        u_long32 feature_set;
+                        lListElem *petr = NULL;
+                        if (unpackint(&buf, &feature_set) == PACK_SUCCESS) {
+                           printf("      unpacked %s - PE TASK REQUEST (binary buffer length %lu):\n", cl_values[6], buffer_length);
+                           printf("feature_set: "sge_U32CFormat"\n", sge_u32c(feature_set));
+                        }
+                        if (cull_unpack_elem(&buf, &petr, NULL) == PACK_SUCCESS) {
+                           lWriteElemTo(petr, stdout);
+                        } else {
+                           printf("could not unpack pe task request\n");
+                        }
+                        lFreeElem(&petr);
                      }
-                     lFreeElem(&job);
                      clear_packbuffer(&buf);
                   }
                }
@@ -862,44 +880,49 @@ static void qping_print_line(const char* buffer, int nonewline, int dump_tag) {
 }
 
 
-static void usage(void)
+static void usage(int ret)
 {
   int max_name_length = 0;
   int i=0;
-  fprintf(stderr, "%s %s\n", GE_SHORTNAME, GDI_VERSION);
-  fprintf(stderr, "%s qping [-help] [-noalias] [-ssl|-tcp] [ [ [-i <interval>] [-info] [-f] ] | [ [-dump_tag tag [param] ] [-dump] [-nonewline] ] ] <host> <port> <name> <id>\n",MSG_UTILBIN_USAGE);
-  fprintf(stderr, "   -i         : set ping interval time\n");
-  fprintf(stderr, "   -info      : show full status information and exit\n");
-  fprintf(stderr, "   -f         : show full status information on each ping interval\n");
-  fprintf(stderr, "   -noalias   : ignore $SGE_ROOT/SGE_CELL/common/host_aliases file\n");
-  fprintf(stderr, "   -ssl       : use SSL framework\n");
-  fprintf(stderr, "   -tcp       : use TCP framework\n");
-  fprintf(stderr, "   -dump      : dump communication traffic (see \"communication traffic output options\" for additional information)\n");
-  fprintf(stderr, "                   (provides the same output like -dump_tag MSG)\n");
-  fprintf(stderr, "   -dump_tag  : dump communication traffic (see \"communication traffic output options\" for additional information)\n");
-  fprintf(stderr, "                   tag=ALL <debug level> - show all\n");
-  fprintf(stderr, "                   tag=APP <debug level> - show application messages\n");
-  fprintf(stderr, "                   tag=MSG               - show commlib protocol messages\n");
-  fprintf(stderr, "                   <debug level>         - ERROR, WARNING, INFO, DEBUG or DPRINTF\n");
-  fprintf(stderr, "   -nonewline : dump output will not have a linebreak within a message\n");
-  fprintf(stderr, "   -help      : show this info\n");
-  fprintf(stderr, "   host       : host name of running component\n");
-  fprintf(stderr, "   port       : port number of running component\n");
-  fprintf(stderr, "   name       : name of running component (e.g.: \"qmaster\" or \"execd\")\n");
-  fprintf(stderr, "   id         : id of running component (e.g.: 1 for daemons)\n\n");
-  fprintf(stderr, "example:\n");
-  fprintf(stderr, "   qping -info clustermaster 5000 qmaster 1\n\n");
-  fprintf(stderr, "communication traffic output options:\n");
-  fprintf(stderr, "   The environment variable SGE_QPING_OUTPUT_FORMAT can be used to hide columns and\n");
-  fprintf(stderr, "   to set default column width. For hostname output the parameter hn is used.\n");
-  fprintf(stderr, "   SGE_QPING_OUTPUT_FORMAT=\"h:1 h:4 w:1:20\"\n");
-  fprintf(stderr, "   will hide the columns 1 and 4 and set the width of column 1 to 20 characters.\n");
-  fprintf(stderr, "       h:X   -> hide column X\n");
-  fprintf(stderr, "       s:X   -> show column X\n");
-  fprintf(stderr, "       w:X:Y -> set width of column X to Y\n");
-  fprintf(stderr, "       hn:X  -> set hostname output parameter X. X values are \"long\" or \"short\"\n\n");
-  fprintf(stderr, "   available columns are:\n\n");
+  FILE* out = stdout;
 
+  if (ret != 0) {
+     out = stderr;
+  }   
+
+  fprintf(out, "%s %s\n", GE_SHORTNAME, GDI_VERSION);
+  fprintf(out, "%s qping [-help] [-noalias] [-ssl|-tcp] [ [ [-i <interval>] [-info] [-f] ] | [ [-dump_tag tag [param] ] [-dump] [-nonewline] ] ] <host> <port> <name> <id>\n",MSG_UTILBIN_USAGE);
+  fprintf(out, "   -i         : set ping interval time\n");
+  fprintf(out, "   -info      : show full status information and exit\n");
+  fprintf(out, "   -f         : show full status information on each ping interval\n");
+  fprintf(out, "   -noalias   : ignore $SGE_ROOT/SGE_CELL/common/host_aliases file\n");
+  fprintf(out, "   -ssl       : use SSL framework\n");
+  fprintf(out, "   -tcp       : use TCP framework\n");
+  fprintf(out, "   -dump      : dump communication traffic (see \"communication traffic output options\" for additional information)\n");
+  fprintf(out, "                   (provides the same output like -dump_tag MSG)\n");
+  fprintf(out, "   -dump_tag  : dump communication traffic (see \"communication traffic output options\" for additional information)\n");
+  fprintf(out, "                   tag=ALL <debug level> - show all\n");
+  fprintf(out, "                   tag=APP <debug level> - show application messages\n");
+  fprintf(out, "                   tag=MSG               - show commlib protocol messages\n");
+  fprintf(out, "                   <debug level>         - ERROR, WARNING, INFO, DEBUG or DPRINTF\n");
+  fprintf(out, "   -nonewline : dump output will not have a linebreak within a message\n");
+  fprintf(out, "   -help      : show this info\n");
+  fprintf(out, "   host       : host name of running component\n");
+  fprintf(out, "   port       : port number of running component\n");
+  fprintf(out, "   name       : name of running component (e.g.: \"qmaster\" or \"execd\")\n");
+  fprintf(out, "   id         : id of running component (e.g.: 1 for daemons)\n\n");
+  fprintf(out, "example:\n");
+  fprintf(out, "   qping -info clustermaster 5000 qmaster 1\n\n");
+  fprintf(out, "communication traffic output options:\n");
+  fprintf(out, "   The environment variable SGE_QPING_OUTPUT_FORMAT can be used to hide columns and\n");
+  fprintf(out, "   to set default column width. For hostname output the parameter hn is used.\n");
+  fprintf(out, "   SGE_QPING_OUTPUT_FORMAT=\"h:1 h:4 w:1:20\"\n");
+  fprintf(out, "   will hide the columns 1 and 4 and set the width of column 1 to 20 characters.\n");
+  fprintf(out, "       h:X   -> hide column X\n");
+  fprintf(out, "       s:X   -> show column X\n");
+  fprintf(out, "       w:X:Y -> set width of column X to Y\n");
+  fprintf(out, "       hn:X  -> set hostname output parameter X. X values are \"long\" or \"short\"\n\n");
+  fprintf(out, "   available columns are:\n\n");
   
   qping_parse_environment();
 
@@ -915,18 +938,23 @@ static void usage(void)
         visible="no";
      }
      if (i==0) {
-        fprintf(stderr, "   nr active ");
-        qping_printf_fill_up(stderr, "name", max_name_length, ' ', 0);
-        fprintf(stderr, " description\n");
-        fprintf(stderr, "   == ====== ");
-        qping_printf_fill_up(stderr, "====", max_name_length, ' ', 0);
-        fprintf(stderr, " ===========\n");
+        fprintf(out, "   nr active ");
+        qping_printf_fill_up(out, "name", max_name_length, ' ', 0);
+        fprintf(out, " description\n");
+        fprintf(out, "   == ====== ");
+        qping_printf_fill_up(out, "====", max_name_length, ' ', 0);
+        fprintf(out, " ===========\n");
      }
-     fprintf(stderr, "   %02d %3s    ", i + 1, visible);
-     qping_printf_fill_up(stderr, cl_names[i], max_name_length, ' ', 0);
-     fprintf(stderr, " %s\n",cl_description[i] );
+     fprintf(out, "   %02d %3s    ", i + 1, visible);
+     qping_printf_fill_up(out, cl_names[i], max_name_length, ' ', 0);
+     fprintf(out, " %s\n",cl_description[i] );
   }
-  exit(1);
+   
+   if (ret == 1) {
+      fprintf(out, "%s\n", MSG_PARSE_NOOPTIONARGUMENT);
+   } 
+   
+   exit(ret);
 }
 
 
@@ -972,6 +1000,20 @@ int main(int argc, char *argv[]) {
    sigaction(SIGTERM, &sa, NULL);
    sigaction(SIGHUP, &sa, NULL);
    sigaction(SIGPIPE, &sa, NULL);
+
+   prof_mt_init();
+   
+   uidgid_mt_init();
+   path_mt_init();
+
+   bootstrap_mt_init(); 
+   feature_mt_init();
+
+   gdi_mt_init();
+
+   sge_getme(QPING);
+
+   lInit(nmv);
 
    for (i=1;i<argc;i++) {
       if (argv[i][0] == '-') {
@@ -1102,7 +1144,7 @@ int main(int argc, char *argv[]) {
          }
 
          if (strcmp( argv[i] , "-help") == 0) {
-             usage();
+             usage(0);
          }
       } else {
          break;
@@ -1110,7 +1152,7 @@ int main(int argc, char *argv[]) {
    }
 
    if (argc != parameter_count + 1 ) {
-      usage();
+      usage(1);
    }
 
    comp_host = argv[parameter_start];
@@ -1139,20 +1181,6 @@ int main(int argc, char *argv[]) {
       fprintf(stderr,"please enter a component id larger than 0\n");
       exit(1);
    }
-
-   prof_mt_init();
-   
-   uidgid_mt_init();
-   path_mt_init();
-
-   bootstrap_mt_init(); 
-   feature_mt_init();
-
-   gdi_mt_init();
-
-   sge_getme(QPING);
-
-   lInit(nmv);
 
    retval = cl_com_setup_commlib(CL_RW_THREAD ,CL_LOG_OFF, NULL);
    if (retval != CL_RETVAL_OK) {
@@ -1441,7 +1469,7 @@ int main(int argc, char *argv[]) {
             for (i=0; i < message->message_length; i++) {
                sge_dstring_append_char(&line_buffer, message->message[i]);
                if (message->message[i] == '\n') {
-                  qping_print_line((char*)sge_dstring_get_string(&line_buffer), option_nonewline, dump_tag );
+                  qping_print_line((char*)sge_dstring_get_string(&line_buffer), option_nonewline, dump_tag, sender->comp_name);
                   sge_dstring_free(&line_buffer);
                }
             }

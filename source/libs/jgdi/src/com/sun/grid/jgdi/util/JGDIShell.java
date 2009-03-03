@@ -36,6 +36,8 @@ import com.sun.grid.jgdi.JGDIException;
 import com.sun.grid.jgdi.JGDIFactory;
 import com.sun.grid.jgdi.configuration.GEObject;
 import com.sun.grid.jgdi.configuration.xml.XMLUtil;
+import com.sun.grid.jgdi.management.JGDIProxy;
+import com.sun.grid.jgdi.management.mbeans.JGDIJMXMBean;
 import com.sun.grid.jgdi.util.shell.AbortException;
 import com.sun.grid.jgdi.util.shell.AbstractCommand;
 import com.sun.grid.jgdi.util.shell.AnnotatedCommand;
@@ -89,6 +91,8 @@ public class JGDIShell implements Runnable, Shell {
 
     private static Logger logger = Logger.getLogger(JGDIShell.class.getName());
     private static String PROMPT = "jgdi> ";
+    private static String caTopPath;
+    private static String keystorePath;
     private List<HistoryElement> historyList = new LinkedList<HistoryElement>();
     private int historyIndex = 0;
     private int maxHistory = 30;
@@ -101,7 +105,8 @@ public class JGDIShell implements Runnable, Shell {
     private final PrintWriter err;
     private int lastExitCode = 0;
     private static boolean usePW = false;
-    
+    private static boolean useKS = false;
+
     //TODO LP: We should consider having single PrintWriter for all commands
     public JGDIShell() {
         out = new PrintWriter(System.out);
@@ -117,11 +122,11 @@ public class JGDIShell implements Runnable, Shell {
         }
         //TODO LP: we need real qselect command, not just alias to qstat
         cmdMap.put("qselect", QStatCommand.class);
-        
+
         cmdSet = new TreeSet<String>(cmdMap.keySet());
         readlineHandler = createReadlineHandler();
 
-        //Read resource bundles
+    //Read resource bundles
     }
 
     /**
@@ -143,8 +148,7 @@ public class JGDIShell implements Runnable, Shell {
             throw new IllegalStateException("Can not assign " + cls.getName() + " from Command.class");
         }
     }
-    
-    
+
     private AbstractCommand getCommand(String name) throws Exception {
         Class<? extends AbstractCommand> cls = cmdMap.get(name);
         if (cls == null) {
@@ -190,7 +194,7 @@ public class JGDIShell implements Runnable, Shell {
         }
         return out;
     }
-    
+
     /**
      * Getter method
      * @return a standard error print writer
@@ -213,7 +217,7 @@ public class JGDIShell implements Runnable, Shell {
                 lastExitCode = runCommand(line);
             }
         } catch (EOFException eofe) {
-            // Ignore
+        // Ignore
         } catch (IOException ioe) {
             logger.severe(ioe.getMessage());
         }
@@ -251,7 +255,7 @@ public class JGDIShell implements Runnable, Shell {
                 exitCode = runShellCommand(line);
                 return exitCode;
             }
-            
+
             if (historyList.size() > maxHistory) {
                 historyList.remove(0);
             }
@@ -300,7 +304,7 @@ public class JGDIShell implements Runnable, Shell {
     public static void main(String[] args) {
         String url = null;
         boolean useCsp = false;
-        
+
         String cmdParams = "";
 
         for (int i = 0; i < args.length; i++) {
@@ -315,6 +319,22 @@ public class JGDIShell implements Runnable, Shell {
                 useCsp = true;
             } else if (args[i].equals("-pw")) {
                 usePW = true;
+            } else if (args[i].equals("-ks")) {
+                useKS = true;
+            } else if (args[i].equals("-catop")) {
+                i++;
+                if (i >= args.length) {
+                    logger.severe("Missing catop path");
+                    System.exit(1);
+                }
+                caTopPath = args[i];
+            } else if (args[i].equals("-keystore")) {
+                i++;
+                if (i >= args.length) {
+                    logger.severe("Missing keystore path");
+                    System.exit(1);
+                }
+                keystorePath = args[i];
             } else {
                 cmdParams += args[i] + " ";
             }
@@ -448,30 +468,36 @@ public class JGDIShell implements Runnable, Shell {
             args = new String[argList.size()];
             argList.toArray(args);
         }
-    } 
+    }
 
-    @CommandAnnotation(value="exit")
+    @CommandAnnotation(value = "exit")
     class ExitCommand extends AbstractCommand {
+
         public ExitCommand() {
             super();
         }
 
         public void run(String[] args) throws Exception {
             if (jgdi != null) {
-                jgdi.close();
-                logger.info("disconnect from " + jgdi);
+                try {
+                    jgdi.close();
+                    logger.info("disconnect from " + jgdi);
+                } catch (Exception e) {
+                // ignore
+                }
             }
             readlineHandler.cleanup();
             System.exit(lastExitCode);
         }
-        
+
         @Override
         public void init(Shell shell) throws Exception {
         }
     }
-    
-    @CommandAnnotation(value="help")
+
+    @CommandAnnotation(value = "help")
     class HelpCommand extends AbstractCommand {
+
         public HelpCommand() {
             super();
         }
@@ -496,14 +522,15 @@ public class JGDIShell implements Runnable, Shell {
                     out.println(getUsage());
             }
         }
-        
+
         @Override
         public void init(Shell shell) throws Exception {
         }
     }
 
-    @CommandAnnotation(value="connect")
+    @CommandAnnotation(value = "connect")
     class ConnectCommand extends AbstractCommand {
+
         public ConnectCommand() {
             super();
         }
@@ -526,20 +553,118 @@ public class JGDIShell implements Runnable, Shell {
             logger.info("connect to " + args[0]);
             jgdi = JGDIFactory.newInstance(args[0]);
         }
-        
+
         @Override
         public void init(Shell shell) throws Exception {
         }
     }
 
-    @CommandAnnotation(value="debug")
+    @CommandAnnotation(value = "connectjmx")
+    class ConnectJMXCommand extends AbstractCommand {
+
+        public ConnectJMXCommand() {
+            super();
+        }
+
+        public void run(String[] args) throws Exception {
+            if (args.length != 2) {
+                throw new IllegalArgumentException("Invalid argument count");
+            }
+
+            if (jgdi != null) {
+                try {
+                    jgdi.close();
+                } catch (JGDIException ex1) {
+                    final String msg = "close failed: " + ex1.getMessage();
+                    err.println(msg);
+                    logger.warning(msg);
+                }
+            }
+
+            logger.info("connect to host(" + args[0] + ":" + args[1] + ")");
+            NameCallback ncb = new NameCallback("user:");
+            PasswordCallback pwcb = new PasswordCallback("password:", false);
+            Callback[] callbacks = {ncb, pwcb};
+            MyCallbackHandler cb = new MyCallbackHandler();
+            usePW = true;
+            cb.handle(callbacks);
+            String username = ncb.getName();
+            String userpw = pwcb.getPassword().toString();
+            if (useKS) {
+                PasswordCallback kspw = new PasswordCallback("keystore password:", true);
+                Callback[] kcallbacks = {kspw};
+                cb.handle(kcallbacks);
+                File caTop = new File(caTopPath);
+                File keyStore = new File(keystorePath);
+                JGDIProxy.setupSSL(caTop, keyStore, kspw.getPassword());
+                kspw.clearPassword();
+                kspw = null;
+            }
+            String host = args[0];
+            int port = Integer.parseInt(args[1]);
+            Object credentials = new String[]{username, userpw};
+            JGDIProxy jgdiProxy = JGDIFactory.newJMXInstance(host, port, credentials);
+
+            jgdi = JMXJGDIBridge.newInstance(jgdiProxy);
+        }
+
+        @Override
+        public void init(Shell shell) throws Exception {
+        }
+    }
+
+    static class JMXJGDIBridge implements InvocationHandler {
+
+        private final JGDIProxy jgdiJMX;
+        private final JGDI proxy;
+        private static boolean libNotLoaded = true;
+
+        private static synchronized void initLib() throws JGDIException {
+            if (libNotLoaded) {
+                try {
+                    System.loadLibrary("jgdi");
+                    libNotLoaded = false;
+                } catch (Throwable e) {
+                    JGDIException ex = new JGDIException("Can not load native jgdi lib: " + e.getMessage());
+                    // ex.initCause(e);  does not work for whatever reason
+                    throw ex;
+                }
+            }
+        }
+
+        private JMXJGDIBridge(JGDIProxy jgdiJMX) {
+            this.jgdiJMX = jgdiJMX;
+            this.proxy = (JGDI) Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[]{JGDI.class}, this);
+        }
+
+        public static JGDI newInstance(JGDIProxy jgdiJMX) throws JGDIException {
+            initLib();
+            JMXJGDIBridge bridge = new JMXJGDIBridge(jgdiJMX);
+            return bridge.proxy;
+        }
+
+        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+            if (method.getName().equals("equals")) {
+                return this.equals(args[0]);
+            } else if (method.getName().equals("hashcode")) {
+                return this.hashCode();
+            } else if (method.getName().equals("toString")) {
+                return String.format("JMX to JGDI Bridge (%s)", jgdiJMX.toString());
+            } else {
+                Method jmxMethod = JGDIJMXMBean.class.getMethod(method.getName(), method.getParameterTypes());
+                return jmxMethod.invoke(jgdiJMX.getProxy(), args);
+            }
+        }
+    }
+
+    @CommandAnnotation(value = "debug")
     class DebugCommand extends AbstractCommand {
+
         public DebugCommand() {
             super();
         }
 
         // TODO Logger.global is deprecated, clean up this
-
         @SuppressWarnings(value = "deprecation")
         public void run(String[] args) throws Exception {
 
@@ -583,9 +708,10 @@ public class JGDIShell implements Runnable, Shell {
         public void init(Shell shell) throws Exception {
         }
     }
-    
-    @CommandAnnotation(value="history")
+
+    @CommandAnnotation(value = "history")
     class PrintHistoryCommand extends AbstractCommand {
+
         public PrintHistoryCommand() {
             super();
         }
@@ -595,14 +721,15 @@ public class JGDIShell implements Runnable, Shell {
                 out.printf("%5d %s%n", elem.getId(), elem.getLine());
             }
         }
-        
+
         @Override
         public void init(Shell shell) throws Exception {
         }
     }
 
-    @CommandAnnotation(value="xmldump")
+    @CommandAnnotation(value = "xmldump")
     class XMLDumpCommand extends AbstractCommand {
+
         public XMLDumpCommand() {
             super();
         }
@@ -630,22 +757,23 @@ public class JGDIShell implements Runnable, Shell {
                 XMLUtil.write((GEObject) obj, System.out);
             }
         }
-        
+
         @Override
         public void init(Shell shell) throws Exception {
         }
     }
 
-    @CommandAnnotation(value="$?")
+    @CommandAnnotation(value = "$?")
     class GetExitCodeCommand extends AbstractCommand {
+
         public GetExitCodeCommand() {
             super();
         }
-        
+
         public void run(String[] args) throws Exception {
             out.println(lastExitCode);
         }
-        
+
         @Override
         public void init(Shell shell) throws Exception {
         }
@@ -674,7 +802,6 @@ public class JGDIShell implements Runnable, Shell {
         try {
             Class readlineClass = Class.forName("org.gnu.readline.Readline");
             Class readlineLibClass = Class.forName("org.gnu.readline.ReadlineLibrary");
-
             @SuppressWarnings(value = "unchecked")
             Method byNameMethod = readlineLibClass.getMethod("byName", new Class[]{String.class});
             @SuppressWarnings(value = "unchecked")
@@ -691,6 +818,7 @@ public class JGDIShell implements Runnable, Shell {
                         continue;
                     }
 
+
                     loadMethod.invoke(readlineClass, new Object[]{readlineLib});
 
                     @SuppressWarnings(value = "unchecked")
@@ -703,6 +831,7 @@ public class JGDIShell implements Runnable, Shell {
                 } catch (Exception e) {
                     logger.log(Level.FINE, "Readline." + libs[i] + " failed", e);
                 }
+
             }
         } catch (NoSuchMethodException ex) {
             // Ignore
@@ -792,7 +921,7 @@ public class JGDIShell implements Runnable, Shell {
 
         public String readline(String prompt) throws IOException {
             try {
-                return (String) readlineMethod.invoke(readlineClass, new Object[] { prompt });
+                return (String) readlineMethod.invoke(readlineClass, new Object[]{prompt});
             } catch (IllegalAccessException ex) {
                 IllegalStateException ilse = new IllegalStateException("Unknown error");
                 ilse.initCause(ex);
@@ -879,8 +1008,8 @@ public class JGDIShell implements Runnable, Shell {
                 } else if (callbacks[i] instanceof NameCallback) {
                     NameCallback cb = (NameCallback) callbacks[i];
                     // if (cb.getPrompt().indexOf("alias") >= 0) {
-                        logger.fine("user.name: " + System.getProperty("user.name"));
-                        cb.setName(System.getProperty("user.name"));
+                    logger.fine("user.name: " + System.getProperty("user.name"));
+                    cb.setName(System.getProperty("user.name"));
 //                    } else {
 //                        logger.fine("cb.getPrompt(): " + cb.getPrompt());
 //                        throw new UnsupportedCallbackException(callbacks[i]);
@@ -896,7 +1025,7 @@ public class JGDIShell implements Runnable, Shell {
                         pw = null;
                     } else {
                         cb.setPassword(new char[0]);
-                    }    
+                    }
                 } else if (callbacks[i] instanceof ConfirmationCallback) {
                     ConfirmationCallback cb = (ConfirmationCallback) callbacks[i];
                     cb.setSelectedIndex(cb.getDefaultOption());
@@ -907,14 +1036,14 @@ public class JGDIShell implements Runnable, Shell {
         }
     }
 
-/**
+    /**
      * Helper for handlinng shell streams in runShellCommand
      */
     class GetResponse extends Thread {
 
         private InputStream stream;
         private PrintWriter pw;
-        
+
         public GetResponse(InputStream is, PrintWriter pw) {
             stream = is;
             this.pw = pw;

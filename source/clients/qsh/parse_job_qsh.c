@@ -60,6 +60,8 @@
 #include "sge_mailrec.h"
 #include "sge_centry.h"
 
+#include "sgeobj/sge_jsv.h"
+
 /*
 ** NAME
 **   cull_parse_qsh_parameter
@@ -287,6 +289,14 @@ lList *cull_parse_qsh_parameter(u_long32 prog_number, u_long32 uid, const char *
 
    while ((ep = lGetElemStr(cmdline, SPA_switch, "-j"))) {
       lSetBool(*pjob, JB_merge_stderr, lGetInt(ep, SPA_argval_lIntT));
+      lRemoveElem(cmdline, &ep);
+   }
+
+   while ((ep = lGetElemStr(cmdline, SPA_switch, "-jsv"))) {
+      lList *list = lGetList(ep, SPA_argval_lListT);
+      const char *file = lGetString(lFirst(list), PN_path);
+
+      jsv_list_add("jsv_switch", JSV_CONTEXT_CLIENT, NULL, file);
       lRemoveElem(cmdline, &ep);
    }
 

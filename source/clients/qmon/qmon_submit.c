@@ -89,18 +89,17 @@
 #include "sge_path_alias.h"
 #include "qm_name.h"
 #include "sge_security.h" 
-#include "sge_job.h"
-#include "sge_stdlib.h"
-#include "sge_io.h"
-#include "sge_var.h"
-#include "sge_answer.h"
-#include "sge_ulong.h"
-#include "sge_ja_task.h"
-#include "sge_string.h"
-#include "gdi/sge_gdi_ctx.h"
-#include "uti/sge_string.h"
 #include "uti/setup_path.h"
-
+#include "uti/sge_io.h"
+#include "uti/sge_stdlib.h"
+#include "uti/sge_string.h"
+#include "gdi/sge_gdi_ctx.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_jsv.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_ulong.h"
+#include "sgeobj/sge_var.h"
 
 extern sge_gdi_ctx_class_t *ctx;
 
@@ -118,6 +117,7 @@ typedef struct _tSMEntry {
    String   cell;
    String   account_string;
    String   wd_path;
+   String   jsv_url;
    String   pe;
    lList    *task_range;            /* RN_Type */
    lList    *job_args;              /* ST_Type */
@@ -203,6 +203,11 @@ XtResource sm_resources[] = {
    { "wd_path", "wd_path", XtRString,
       sizeof(String),
       XtOffsetOf(tSMEntry, wd_path),
+      XtRImmediate, NULL },
+
+   { "jsv_url", "jsv_url", XtRString,
+      sizeof(String),
+      XtOffsetOf(tSMEntry, jsv_url),
       XtRImmediate, NULL },
 
    { "priority", "priority", XtRInt,
@@ -381,6 +386,7 @@ XtResource ctx_list_resources[] = {
 static Widget qmonSubmitCreate(Widget parent);
 static void qmonSubmitPopdown(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitGetScript(Widget w, XtPointer cld, XtPointer cad);
+static void qmonSubmitGetJSVScript(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitInteractive(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitBinary(Widget w, XtPointer cld, XtPointer cad);
 static void qmonSubmitJobSubmit(Widget w, XtPointer cld, XtPointer cad);
@@ -436,6 +442,8 @@ static Widget submit_detail_layout = 0;
 static Widget submit_prefix = 0;
 static Widget submit_script = 0;
 static Widget submit_scriptPB = 0;
+static Widget submit_jsv_urlPB = 0;
+static Widget submit_jsv_url = 0;
 static Widget submit_name = 0;
 static Widget submit_job_args = 0;
 static Widget submit_execution_time = 0;
@@ -773,6 +781,8 @@ Widget parent
                           "submit_detail_layout", &submit_detail_layout,
                           "submit_scriptPB", &submit_scriptPB,
                           "submit_script", &submit_script,
+                          "submit_jsv_urlPB", &submit_jsv_urlPB,
+                          "submit_jsv_url", &submit_jsv_url,
                           "submit_shellPB", &submit_shellPB,
                           "submit_stdoutputPB", &submit_stdoutputPB,
                           "submit_stdinputPB", &submit_stdinputPB,
@@ -904,6 +914,8 @@ Widget parent
                      qmonSubmitToggleHoldNow, NULL);
    XtAddCallback(submit_cwd, XmNvalueChangedCallback,
                      qmonSubmitGreyOut, NULL);
+   XtAddCallback(submit_jsv_urlPB, XmNactivateCallback, 
+                     qmonSubmitGetJSVScript, NULL);
 
 
    XtAddEventHandler(XtParent(submit_layout), StructureNotifyMask, False, 
@@ -1140,7 +1152,6 @@ static void qmonSubmitSaveDefault(Widget w, XtPointer cld, XtPointer cad)
    static char filename[BUFSIZ];
    static char directory[BUFSIZ];
    Boolean status = False;
-   lListElem *jep = NULL;
    lList *alp = NULL;
 
    DENTER(GUI_LAYER, "qmonSubmitSaveDefault");
@@ -1155,22 +1166,24 @@ static void qmonSubmitSaveDefault(Widget w, XtPointer cld, XtPointer cad)
 
    if (status == True) {
       if (filename[strlen(filename)-1] != '/')  {
+         lListElem *jep = lCreateElem(JB_Type);
+
          /* 
          ** get the values from the dialog fields
          */
-         jep = lCreateElem(JB_Type);
          XmtDialogGetDialogValues(submit_layout, &SMData);
          if (!qmonSMToCull(&SMData, jep, 1)) {
             DPRINTF(("qmonSMToCull failure\n"));
             qmonMessageShow(w, True, "@{Saving of job attributes failed!}");
-            DEXIT;
-            return;
+            lFreeElem(&jep);
+            DRETURN_VOID;
          }
 
          alp = write_job_defaults(ctx, jep, filename, 0);
 
          qmonMessageBox(w, alp, 0);
 
+         lFreeElem(&jep);
          lFreeList(&alp);
       }
       else {
@@ -1178,7 +1191,7 @@ static void qmonSubmitSaveDefault(Widget w, XtPointer cld, XtPointer cad)
       }
    }
 
-   DEXIT;
+   DRETURN_VOID;
 }   
 
 /*-------------------------------------------------------------------------*/
@@ -1416,8 +1429,8 @@ static void qmonSubmitJobSubmit(Widget w, XtPointer cld, XtPointer cad)
          printf("________________________________________\n");
       }
 
-      just_verify = (lGetUlong(lFirst(lp), JB_verify_suitable_queues) ==
-                           JUST_VERIFY);
+      just_verify = (lGetUlong(lFirst(lp), JB_verify_suitable_queues) == JUST_VERIFY || 
+                      lGetUlong(lFirst(lp), JB_verify_suitable_queues) == POKE_VERIFY);
 
       what = lWhat("%T(ALL)", JB_Type);
       alp = qmonAddList(SGE_JOB_LIST, qmonMirrorListRef(SGE_JOB_LIST), 
@@ -1507,14 +1520,15 @@ static void qmonSubmitJobSubmit(Widget w, XtPointer cld, XtPointer cad)
       int qalter_fields[100];
       int i;
       lEnumeration *what;
-      lDescr *rdp;
+      lDescr *rdp = NULL;
 
       /* initialize int array */
       qalter_fields[0] = NoName;
 
       /* add all standard qalter fields */
-      for (i=0; fixed_qalter_fields[i]!= NoName; i++)
+      for (i=0; fixed_qalter_fields[i]!= NoName; i++) {
          nm_set((int*)qalter_fields, (int)fixed_qalter_fields[i]);
+      }
 
       /* 
       ** the deadline initiation time 
@@ -1540,7 +1554,6 @@ static void qmonSubmitJobSubmit(Widget w, XtPointer cld, XtPointer cad)
          goto error;
       }
 
-      rdp = NULL;
       lReduceDescr(&rdp, JB_Type, what);
       if (!rdp) {
          DPRINTF(("lReduceDescr failure\n"));
@@ -1550,10 +1563,12 @@ static void qmonSubmitJobSubmit(Widget w, XtPointer cld, XtPointer cad)
       lFreeWhat(&what);
       
       if (!(lp = lCreateElemList("JobSubmitList", rdp, 1))) {
+         FREE(rdp);
          DPRINTF(("lCreateElemList failure\n"));
          sprintf(buf, "Job submission failed\n");
          goto error;
       }
+      FREE(rdp);
 
       lSetUlong(lFirst(lp), JB_job_number, submit_mode_data.job_id);
       
@@ -1630,6 +1645,38 @@ static void qmonSubmitGetScript(Widget w, XtPointer cld, XtPointer cad)
 
    if (status == True)  {
       qmonSubmitReadScript(w, filename, NULL, 1);
+   }
+
+   DEXIT;
+}
+
+/*-------------------------------------------------------------------------*/
+/* get the Job Script, extract the sge directives and show them in      */
+/* the dialog                                                              */
+/*-------------------------------------------------------------------------*/
+static void qmonSubmitGetJSVScript(Widget w, XtPointer cld, XtPointer cad)
+{
+   static char filename[4*BUFSIZ];
+   static char directory[4*BUFSIZ];
+   static char pattern[BUFSIZ];
+   Boolean status = False;
+ 
+   DENTER(GUI_LAYER, "qmonSubmitGetJSVScript");
+
+   status = XmtAskForFilename(w, NULL,
+                              "@{Please type or select a filename}",
+                              NULL, NULL,
+                              filename, sizeof(filename),
+                              directory, sizeof(directory),
+                              pattern, sizeof(pattern),
+                              NULL);
+
+   if (status == True)  {
+      dstring tmp_url = DSTRING_INIT;
+
+      sge_dstring_sprintf(&tmp_url, "%s:%s", "script", filename);
+      XmtInputFieldSetString(submit_jsv_url, sge_dstring_get_string(&tmp_url));
+      sge_dstring_free(&tmp_url);
    }
 
    DEXIT;
@@ -1726,7 +1773,8 @@ int read_defaults
    ** stage two of script file parsing
    */ 
    alp = cull_parse_job_parameter(myuid, username, cell_root, unqualified_hostname, qualified_hostname, cmdline, &job);
-   
+
+   lFreeList(&cmdline);
    qmonMessageBox(w, alp, 0);
    lFreeList(&alp);
 
@@ -1819,6 +1867,11 @@ tSMEntry *data
    if (data->wd_path) {
       XtFree((char*)data->wd_path);
       data->wd_path = NULL;
+   }   
+
+   if (data->jsv_url) {
+      XtFree((char*)data->jsv_url);
+      data->jsv_url = NULL;
    }   
 
    if (data->pe) {
@@ -1957,6 +2010,8 @@ char *prefix
       data->wd_path = XtNewString(wd_path);
    else
       data->wd_path = NULL;
+
+   data->jsv_url = NULL;
 
    data->shell_list = lCopyUniqNullNone(lGetList(jep, JB_shell_list), PN_host);
    
@@ -2252,19 +2307,28 @@ int save
       const char *env_value = job_get_env_string(jep, VAR_PREFIX "O_HOME");
       lSetString(jep, JB_cwd, cwd_string(env_value));
       lSetList(jep, JB_path_aliases, lCopyList("PathAliases", path_alias));
-      lFreeList(&path_alias);
    } else {
       if (data->wd_path) {
          char *wdp = qmon_trim(data->wd_path);
          if (wdp[0] != '\0') {
             lSetString(jep, JB_cwd, wdp);
             lSetList(jep, JB_path_aliases, lCopyList("PathAliases", path_alias));
-            lFreeList(&path_alias);
          } else {
             lSetString(jep, JB_cwd, NULL);
          }   
       }
    }   
+   lFreeList(&path_alias);
+
+   if (data->jsv_url) {
+      char *jsv_script = qmon_trim(data->jsv_url);
+      if (jsv_script[0] != '\0') {
+         const char *name = "qmon_cmdline";
+
+         jsv_list_remove(name, JSV_CONTEXT_CLIENT);
+         jsv_list_add(name, JSV_CONTEXT_CLIENT, &alp, jsv_script);
+      }   
+   }
 
    lSetString(jep, JB_account, data->account_string);
  

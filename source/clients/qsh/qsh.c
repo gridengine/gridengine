@@ -94,6 +94,8 @@
 #elif defined(INTERIX)
 #  include <termios.h>
 #  include <sys/ioctl.h>
+#elif defined(FREEBSD)
+#  include <termios.h>
 #else
 #  include <termio.h>
 #endif
@@ -103,6 +105,9 @@
 #include "sge_ijs_comm.h"
 #include "sge_ijs_threads.h"
 
+#include "sgeobj/cull_parse_util.h"
+#include "sgeobj/sge_jsv.h"
+
 extern COMMUNICATION_HANDLE *g_comm_handle;
 
 bool g_csp_mode = false;
@@ -110,7 +115,6 @@ bool g_new_interactive_job_support = false;
 
 sge_gdi_ctx_class_t *ctx = NULL;
 
-static void write_client_name_cache(const char *cache_path, const char *client_name);
 static int open_qrsh_socket(int *port);
 static int wait_for_qrsh_socket(int sock, int timeout);
 static char *read_from_qrsh_socket(int msgsock);
@@ -225,7 +229,6 @@ pid_t child_pid = 0;
 *     #define QSH_BATCH_POLLING_MIN 32
 *     #define QSH_POLLING_MAX 256
 *     #define QSH_SOCKET_FINAL_TIMEOUT 60
-*     #define QRSH_CLIENT_CACHE "qrsh_client_cache"
 *
 *  FUNCTION
 *     MAX_JOB_NAME                - maximum length of job names
@@ -248,7 +251,6 @@ pid_t child_pid = 0;
 #define QSH_BATCH_POLLING_MIN 32
 #define QSH_POLLING_MAX 256
 #define QSH_SOCKET_FINAL_TIMEOUT 60
-#define QRSH_CLIENT_CACHE "qrsh_client_cache"
 
 static void forward_signal(int sig)
 {
@@ -936,12 +938,9 @@ static int get_client_server_context(int msgsock, char **port, char **job_dir, c
 *     telnet in qlogin mode (try to find in path) or
 *     $SGE_ROOT/utilbin/$ARCH/[rsh|rlogin] in rsh/rlogin mode.
 *
-*     In case of qrexec (inherit_job), try to read client name from file
-*     ($TMPDIR/qrsh_client_program) to avoid qmaster contact in 
-*     qrexec mode. 
-*     If file is not found, determine info from qmaster
-*     and write it to file.
-*
+*     In case of qrexec (inherit_job), try to read client name
+*     from environment variable SGE_RSH_COMMAND, which is set by
+*     sge_execd in the job environment.
 *  INPUTS
 *     is_rsh      - are we treating a qrsh call
 *     is_rlogin   - are we treating a qrsh call without commands 
@@ -976,10 +975,6 @@ get_client_name(sge_gdi_ctx_class_t *ctx, int is_rsh, int is_rlogin, int inherit
    const char *session_type;
    const char *config_name;
 
-   /* filename of client command cache in case of qrsh -inherit */
-   char cache_name_buffer[SGE_PATH_MAX];
-   dstring cache_name_dstring;
-   const char *cache_name = NULL;
    u_long32 progid = ctx->get_who(ctx);
    const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
    const char *cell_root = ctx->get_cell_root(ctx);
@@ -988,44 +983,20 @@ get_client_name(sge_gdi_ctx_class_t *ctx, int is_rsh, int is_rlogin, int inherit
    DENTER(TOP_LAYER, "get_client_name");
 
    /* 
-    * In case of qrsh -inherit, try to read client_command from a cache file.
-    * The cache file is created in the jobs TMPDIR.
-    */
-   /*
-    * In case of new IJS, the cache file contains "builtin" if the rsh_command
+    * In case of qrsh -inherit, try to read client_command from
+    * an environment variable set by sge_execd
+    *
+    * In case of new IJS, the environment variable contains "builtin" if the rsh_command
     * rlogin_command or qlogin_command is builtin. So we can use it as before.
     */
    if (inherit_job) {
-      char *tmpdir = getenv("TMPDIR");
-      /*
-       * If TMPDIR is not set for some reason (should never occur), 
-       * we cannot read a cache.
-       * cache_name remains NULL, which is checked by the code trying
-       * to write the cache file later on
-       */
-      if (tmpdir != NULL) {
-         FILE *cache;
-
-         /* build filename of cache file */
-         sge_dstring_init(&cache_name_dstring, cache_name_buffer, SGE_PATH_MAX);
-         cache_name = sge_dstring_sprintf(&cache_name_dstring, "%s/%s", 
-                                          tmpdir, QRSH_CLIENT_CACHE);
-         cache = fopen(cache_name, "r");
-         if (cache != NULL) {
-            char cached_command[SGE_PATH_MAX];
-
-            if (fgets(cached_command, SGE_PATH_MAX, cache) != NULL) {
-               if (strcasecmp(cached_command, "builtin") == 0) {
-                  g_new_interactive_job_support = true;
-               }
-
-               FCLOSE(cache);
-               DPRINTF(("found cached client name: %s\n", cached_command));
-               DEXIT;
-               return strdup(cached_command);
-            }
-            FCLOSE(cache);
+      client_name = getenv("SGE_RSH_COMMAND");
+      if (client_name != NULL && strlen(client_name) > 0) {
+         DPRINTF(("rsh client name: %s\n", client_name));
+         if (strcasecmp(client_name, "builtin") == 0) {
+            g_new_interactive_job_support = true;
          }
+         DRETURN(strdup(client_name));
       }
    }
  
@@ -1092,69 +1063,11 @@ get_client_name(sge_gdi_ctx_class_t *ctx, int is_rsh, int is_rlogin, int inherit
       g_new_interactive_job_support = true;
    }
 
-   if (inherit_job) {
-      /* cache client_name for use in further qrsh -inherit calls */
-      write_client_name_cache(cache_name, client_name);
-   }
-
    lFreeList(&conf_list);
    lFreeElem(&global);
    lFreeElem(&local);
 
    return client_name;
-FCLOSE_ERROR:
-   ERROR((SGE_EVENT, MSG_FILE_ERRORCLOSEINGXY_SS, cache_name, strerror(errno)));
-   DEXIT;
-   return NULL;
-}
-
-/****** Interactive/qsh/write_client_name_cache() ******************************
-*  NAME
-*     write_client_name_cache() -- cache name of qrsh client command
-*
-*  SYNOPSIS
-*     void write_client_name_cache(const char *cache_path, 
-*                                  const char *client_name) 
-*
-*  FUNCTION
-*     Name and path of the remote client command started by qrsh is configured
-*     in the cluster configuration, parameter rsh_client/rlogin_client.
-*     This configuration is retrieved from qmaster before qrsh can start the
-*     client command.
-*     In case of multiple calls to qrsh -inherit, e.g. from a qmake application, 
-*     this would meen a lot of communication to qmaster to retrieve the same
-*     parameter over and over again.
-*     To avoid this unneccessary communication overhead, the name of the client
-*     command is cached in a file in the jobs temporary directory (TMPDIR) when
-*     it is retrieved for the first time.
-*     Following calls to qrsh -inherit can then just read the cache file.
-*
-*  INPUTS
-*     const char *cache_path  - name and path of the cache file 
-*     const char *client_name - name of the client command 
-*
-*  RESULT
-*     void - no error handling
-*
-*  SEE ALSO
-*     Interactive/qsh/get_client_name()
-*
-*******************************************************************************/
-static void write_client_name_cache(const char *cache_path, const char *client_name) 
-{
-   if (cache_path != NULL && *cache_path != '\0' && 
-       client_name != NULL && *client_name != '\0') {
-      FILE *cache = NULL;
-   
-      if ((cache = fopen(cache_path, "w")) != NULL) {
-         fprintf(cache, client_name);
-         FCLOSE(cache);
-      }
-   }
-   return;
-FCLOSE_ERROR:
-   /* TODO: error handling, try to delete the file */
-   return;
 }
 
 /****** Interactive/qsh/set_job_info() ****************************************
@@ -1615,7 +1528,6 @@ int main(int argc, char **argv)
    opt_list_merge_command_lines(&opts_all, &opts_defaults, &opts_scriptfile,
                                 &opts_cmdline);
 
-
    alp = cull_parse_qsh_parameter(my_who, myuid, username, cell_root, unqualified_hostname, qualified_hostname, opts_all, &job);
    do_exit = parse_result_list(alp, &alp_error);
    lFreeList(&alp);
@@ -1655,7 +1567,8 @@ int main(int argc, char **argv)
          SGE_EXIT((void**)&ctx, 1);
       }   
 
-      just_verify = (lGetUlong(job, JB_verify_suitable_queues)==JUST_VERIFY);
+      just_verify = (lGetUlong(job, JB_verify_suitable_queues) == JUST_VERIFY ||
+                     lGetUlong(job, JB_verify_suitable_queues) == POKE_VERIFY);
    }
 
    if (g_new_interactive_job_support == false) {
@@ -1859,6 +1772,17 @@ int main(int argc, char **argv)
 
       job_add_parent_id_to_context(job);
 
+      /*
+       * fill in user and group
+       *
+       * following is not used for security. qmaster can not rely
+       * on that information. but it is still necessary to set the
+       * attributes in the job so that the information is available
+       * in the JSV client context
+       */
+      job_set_owner_and_group(job, ctx->get_uid(ctx), ctx->get_gid(ctx),
+                              ctx->get_username(ctx), ctx->get_groupname(ctx));
+
       lp_jobs = lCreateList("submitted jobs", JB_Type);
       lAppendElem(lp_jobs, job);
    
@@ -1866,8 +1790,8 @@ int main(int argc, char **argv)
       DPRINTF(("=====================================================\n"));
 
       /* submit the job to the QMaster */
-      alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_ADD + SGE_GDI_RETURN_NEW_VERSION, 
-         &lp_jobs, NULL, NULL);
+      alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_ADD | SGE_GDI_RETURN_NEW_VERSION, 
+                     &lp_jobs, NULL, NULL);
 
       /* reinitialize 'job' with pointer to new version from qmaster */
       job = lFirst(lp_jobs);
@@ -1878,16 +1802,23 @@ int main(int argc, char **argv)
       }
       DPRINTF(("job id is: %ld\n", job_id));
 
+      status = 0; 
+      
       for_each(aep, alp) {
-         status = lGetUlong(aep, AN_status);
          quality = lGetUlong(aep, AN_quality);
          if (quality == ANSWER_QUALITY_ERROR) {
             fprintf(stderr, "%s\n", lGetString(aep, AN_text));
             do_exit = 1;
+            if (lGetUlong(aep, AN_status)==STATUS_NOTOK_DOAGAIN) {
+               status = STATUS_NOTOK_DOAGAIN;
+            } else {
+               /* set return value to error when doing verification */
+               status = 1;
+            }
          } else if (quality == ANSWER_QUALITY_WARNING) {
             fprintf(stderr, "%s\n", lGetString(aep, AN_text));
          } else {
-            if (log_state_get_log_verbose()) {
+            if (log_state_get_log_verbose() || just_verify) {
                fprintf(stdout, "%s\n", lGetString(aep, AN_text));
             }
          }
@@ -1903,6 +1834,9 @@ int main(int argc, char **argv)
          if (status == STATUS_NOTOK_DOAGAIN) { 
             sge_prof_cleanup();
             SGE_EXIT((void **)&ctx, status);
+         } else if (just_verify) {
+            sge_prof_cleanup();
+            SGE_EXIT((void**)&ctx, status);
          } else {
             sge_prof_cleanup();
             SGE_EXIT((void **)&ctx, 1);
@@ -1939,8 +1873,8 @@ int main(int argc, char **argv)
                msgsock = wait_for_qrsh_socket(sock, random_poll); 
 
                /* qlogin_starter reports "ready to start" */
-               if(msgsock >= 0) {
-                  if(!get_client_server_context(msgsock, &port, &job_dir, 
+               if (msgsock >= 0) {
+                  if (!get_client_server_context(msgsock, &port, &job_dir, 
                      &utilbin_dir, &host)) {
                      cl_com_ignore_timeouts(CL_FALSE);
                      cl_commlib_open_connection(cl_com_get_handle(progname,0),
@@ -1970,7 +1904,7 @@ int main(int argc, char **argv)
 
                   DPRINTF(("exit_status = %d\n", exit_status));
 
-                  if(exit_status < 0) {
+                  if (exit_status < 0) {
                      WARNING((SGE_EVENT, MSG_QSH_CLEANINGUPAFTERABNORMALEXITOF_S, 
                         client_name));
                      cl_com_ignore_timeouts(CL_FALSE);
@@ -2141,12 +2075,14 @@ int main(int argc, char **argv)
          dstring err_msg = DSTRING_INIT;
          int     ret;
 
+         /* This will remove the handle (g_comm_handle) */
          ret = comm_shutdown_connection(g_comm_handle, COMM_CLIENT, &err_msg);
          if (ret != COMM_RETVAL_OK) {
             DPRINTF(("comm_shutdown_connection() failed: %s (%d)",
                      sge_dstring_get_string(&err_msg), ret));
          }
-
+         g_comm_handle = NULL;
+         
          sge_dstring_free(&err_msg);
       }
 
@@ -2164,8 +2100,8 @@ int main(int argc, char **argv)
 static void delete_job(sge_gdi_ctx_class_t *ctx, u_long32 job_id, lList *jlp) 
 {
    lListElem *jep;
-   lList* idlp = NULL;
-   lList* alp;
+   lList *idlp = NULL;
+   lList *alp;
    char job_str[128];
 
    if (jlp == NULL) {
@@ -2237,7 +2173,8 @@ static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrat
             strcmp(cp, "-soft") && strcmp(cp, "-M") && strcmp(cp, "-verbose") &&
             strcmp(cp, "-ac") && strcmp(cp, "-dc") && strcmp(cp, "-sc") &&
             strcmp(cp, "-S") && strcmp(cp, "-w") && strcmp(cp, "-js") && strcmp(cp, "-R") &&
-            strcmp(cp, "-o") && strcmp(cp, "-e") && strcmp(cp, "-j") && strcmp(cp, "-wd")
+            strcmp(cp, "-o") && strcmp(cp, "-e") && strcmp(cp, "-j") && strcmp(cp, "-wd") &&
+            strcmp(cp, "-jsv")
            ) {
             if (error) {
                ERROR((SGE_EVENT, MSG_ANSWER_UNKOWNOPTIONX_S, cp));

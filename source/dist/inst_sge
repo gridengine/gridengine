@@ -38,7 +38,7 @@
 # set -x
 
 SCRIPT_VERSION="6"
-SGE_VERSION="6.2"
+SGE_VERSION="6.2u2"
 
 #Reset PATH to a safe value
 #
@@ -68,6 +68,7 @@ DOWNGRADE=false
 BACKUP=false
 RESTORE=false
 AUTO=false
+AUTOGUI=false
 RESCHEDULE=true
 RESPORT=false
 CSP=false
@@ -75,11 +76,9 @@ SGE_ENABLE_JMX=false
 AFS=false
 NOREMOTE=false
 START_RPC_SERVICE=false
-ADD_TO_RC=false
 SET_FILE_PERMS=false
 MAKE_RC=false
 ADD_RC=false
-REMOVE_RC=false
 UPDATE_RC=false
 UPDATE_WIN=false
 DEL_EXECD_SPOOL=false
@@ -100,9 +99,7 @@ FILE="undef"
 HOST="undef"
 HOSTRANGE="undef"
 LOCAL_EXECD_SPOOL="undef"
-SHELL_NAME="ssh"
-COPY_COMMAND="scp"
-EXEC_HOST_LIST="undef"
+
 CONFIG_FILE="undef"
 STDOUT2LOG="0"
 PAR_EXECD_INST_COUNT="20"
@@ -111,21 +108,9 @@ WIN_SVC="undef"
 
 SGE_NOMSG="undef"
 
-WINDOWS_SUPPORT="false"
-WIN_DOMAIN_ACCESS="false"
-WIN_ADMIN_NAME="Administrator"
 
-CSP_RECREATE="false"
-CSP_COPY_CERTS="false"
-CSP_COUNTRY_CODE="undef"
-CSP_STATE="undef"
-CSP_LOCATION="undef"
-CSP_ORGA="undef"
-CSP_ORGA_UNIT="undef"
-CSP_MAIL_ADDRESS="undef"
 CERT_COPY_HOST_LIST="undef"
 SERVICE_TAGS="enable"
-SGE_ENABLE_SMF="true"
 
 #Save changed host names during resolving
 RESOLVED_CHANGED_HOSTNAMES=""
@@ -160,6 +145,10 @@ while [ $ARGC != 0 ]; do
      #Stdout2Log
      CheckPath
      ;;
+   -autogui)
+      AUTO=true
+      AUTOGUI=true; export AUTOGUI;
+      ;;
    -m)
      QMASTER="install"
      . ./util/install_modules/inst_qmaster.sh
@@ -351,6 +340,41 @@ while [ $ARGC != 0 ]; do
    ARGC=`expr $ARGC - 1`
 done
 
+#Set overlapping variables only
+if [ -z "$SHELL_NAME" ]; then
+   SHELL_NAME="ssh"
+fi
+if [ -z "$COPY_COMMAND" ]; then
+   COPY_COMMAND="scp"
+fi
+if [ -z "$SGE_ENABLE_SMF" ]; then
+   SGE_ENABLE_SMF="true"
+fi
+if [ -z "$ADD_TO_RC" ]; then
+   ADD_TO_RC="false"
+fi
+if [ -z "$REMOVE_RC" ]; then
+   REMOVE_RC="false"
+fi
+
+if [ -z "$WIN_ADMIN_NAME" ]; then
+   WIN_ADMIN_NAME="Administrator"
+fi
+for item in WINDOWS_SUPPORT WIN_DOMAIN_ACCESS CSP_RECREATE CSP_COPY_CERTS; do   
+   if [ x`eval echo '$'$item` = x ]; then
+      eval $item="false"
+   fi
+done
+
+if [ -z "$EXEC_HOST_LIST" ]; then
+   EXEC_HOST_LIST="undef"
+fi
+for item in CSP_COUNTRY_CODE CSP_STATE CSP_LOCATION CSP_ORGA CSP_ORGA_UNIT CSP_MAIL_ADDRESS; do
+   if [ x`eval echo '$'$item` = x ]; then
+      eval $item="undef"
+   fi
+done
+
 CheckForSMF
 
 if [ $AUTO = "false" -a $QMASTER = "undef" -a $EXECD = "install" -a $SHADOW = "install" ]; then
@@ -361,7 +385,7 @@ fi
 #checking the autoinstall configuration file at this point of installation,
 #because the commandline switches are completely parsed and we know the selected options.
 #This will influence the configfile parsing and checking mechanism.
-if [ $AUTO = "true" ]; then
+if [ $AUTO = "true" -a  $AUTOGUI != "true" ]; then
    GetConfigFromFile
    CheckConfigFile $FILE
 fi
@@ -548,7 +572,7 @@ if [ "$UPDATE" = true ]; then
    if [ "$UPGRADE_MODE" = upgrade ]; then
       SelectNewSpooling `BootstrapGetValue "${UPGRADE_BACKUP_DIR}/cell" "spooling_method"`
    else
-      SetSpoolingOptions
+      SetSpoolingOptions `BootstrapGetValue "${UPGRADE_BACKUP_DIR}/cell" "spooling_method"`
       ReplaceLineWithMatch "$SGE_ROOT/$SGE_CELL/common/bootstrap" 644 'spooling_method.*' "spooling_method         $SPOOLING_METHOD"
       ReplaceLineWithMatch "$SGE_ROOT/$SGE_CELL/common/bootstrap" 644 'spooling_lib.*'    "spooling_lib            $SPOOLING_LIB"
       ReplaceLineWithMatch "$SGE_ROOT/$SGE_CELL/common/bootstrap" 644 'spooling_params.*' "spooling_params         $SPOOLING_ARGS"
@@ -574,6 +598,12 @@ if [ "$UPDATE" = true ]; then
    SetupRcScriptNames master #New qmaster RC script/SMF
    InstallRcScript
    #TODO: Need to ensure there is no qmaster on the same port running
+   # When doing an update from <= 6.1 to >= 6.2 AND with classic spooling 
+   # AND we are using the same spool directory: Delete queue_number attribute 
+   # from queue_instance files 
+   if [ "$SPOOLING_METHOD" = classic -a "$UPGRADE_MODE" = upgrade ]; then 
+      DeleteQueueNumberAttribute $QMDIR  
+   fi
    StartQmaster
    CopyCA execd
    CopyCA submit
@@ -699,6 +729,8 @@ fi
 
 if [ "$BERKELEY" = "install" ]; then
 
+   is_bdb="true"
+
    if [ "$AUTO" = "true" ]; then
       Stdout2Log
       $INFOTEXT -log "Starting Berkeley DB installation!"
@@ -722,7 +754,9 @@ if [ "$BERKELEY" = "install" ]; then
       sleep 5
    fi
 
+   MoveLog
    BERKELEY="undef"
+   is_bdb=""
 fi
 
 if [ "$QMASTER" = "install" -a "$UPDATE" != "true" ]; then
@@ -771,8 +805,10 @@ if [ "$QMASTER" = "install" -a "$UPDATE" != "true" ]; then
  StartQmaster
  AddWindowsAdmin
  AddHosts
- CopyCA execd
- CopyCA submit 
+ if [ "$AUTOGUI" != "true" ]; then
+    CopyCA execd
+    CopyCA submit
+ fi
  SetScheddConfig
  GiveHints
  CheckRunningDaemon sge_qmaster
@@ -789,6 +825,7 @@ if [ "$QMASTER" = "install" -a "$UPDATE" != "true" ]; then
     exit 1 
  fi
 
+ is_master=""
 fi
 
 
@@ -800,12 +837,13 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
     Stdout2Log
     LogResolvedHostLists
 
-    . $SGE_ROOT/$SGE_CELL/common/settings.sh
+    . $SGE_ROOT/$CELL_NAME/common/settings.sh
+    GetAdminUser
 
-   if [ -f "$SGE_ROOT/$SGE_CELL/common/bootstrap" ]; then
+    if [ -f "$SGE_ROOT/$SGE_CELL/common/bootstrap" ]; then
       ignore_fqdn=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "ignore_fqdn" | awk '{ print $2 }'`
       default_domain=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "default_domain" | awk '{ print $2 }'`
-   fi
+    fi
 
     EXEC_HOSTS_TO_INSTALL=$EXEC_HOST_LIST
     EXEC_HOSTS_TO_INSTALL_TMP=$EXEC_HOSTS_TO_INSTALL
@@ -939,6 +977,7 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
       AddSubmitHostsExecd
       AddSGEStartUpScript $euid execd
       SetupWinSvc execinst     #service install during execd installation -> param: execinst
+      CopyIBMLoadSensor
       StartExecd
       AddQueue
       GiveHints
@@ -966,6 +1005,7 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
       CheckCellDirectory
       . $SGE_ROOT/$SGE_CELL/common/settings.sh
       SearchForExistingInstallations "execd"
+      GetAdminUser
       CheckWinAdminUser
       CheckCSP
       CheckHostNameResolving install
@@ -973,6 +1013,7 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
       AddLocalConfiguration_With_Qconf
       AddSGEStartUpScript $euid execd
       SetupWinSvc execinst  #service install during execd installation -> param: execinst
+      CopyIBMLoadSensor
       StartExecd
       AddQueue
       GiveHints
@@ -1035,7 +1076,7 @@ if [ "$EXECD" = "uninstall" ]; then
       $INFOTEXT -log "Starting execution host uninstallation!"
       LogResolvedHostLists
    fi
-   
+
    GetAdminUser
 
    if [ "$SGE_REMOTE_FLAG" != "REMOTE_EXECD_UNINSTALL" ]; then 
@@ -1077,6 +1118,7 @@ if [ "$EXECD" = "uninstall" ]; then
 fi
 
 if [ $BERKELEY = "uninstall" ]; then
+   is_bdb="true"
    GetAdminUser
    
    if [ "$AUTO" = "true" ]; then
@@ -1098,12 +1140,14 @@ if [ $BERKELEY = "uninstall" ]; then
       $INFOTEXT -log "remote berkeley rpc server uninstallation on host %s" $DB_SPOOLING_SERVER
       echo "cd $SGE_ROOT && ./inst_sge -udb -auto $FILE -noremote" | $SHELL_NAME $DB_SPOOLING_SERVER /bin/sh
    fi
-
-   BERKELEY="undef"
    
+   MoveLog
+   BERKELEY="undef"
+   is_bdb=""
 fi
 
 if [ $QMASTER = "uninstall" ]; then
+   is_qmaster="true"
    GetAdminUser
    
    if [ "$AUTO" = "true" ]; then
@@ -1128,12 +1172,15 @@ if [ $QMASTER = "uninstall" ]; then
    ServiceTagsSupport
    RemoveQmaster
    MoveLog
+   is_qmaster=""
 fi
 
 
 if [ $SHADOW = "install" ]; then
 
-   if [ $AUTO = "false" ]; then
+   is_shadow="true"
+
+   if [ $AUTO = "false" ]; then   
       $INFOTEXT -u "\nShadow Master Host Setup"   
       $INFOTEXT -wait -n "\nMake sure, that the host, you wish to configure as a " \
                       "shadow host,\n has read/write permissions to the qmaster spool " \
@@ -1217,17 +1264,17 @@ if [ $SHADOW = "install" ]; then
       done
       ExecuteAsAdmin chmod go-w $SGE_ROOT/$SGE_CELL/common/shadow_masters
       ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL/common/shadow_masters.1
- 
+
       if [ $SHADOW_HOST = `$SGE_UTILBIN/gethostname -aname` ]; then
          . $SGE_ROOT/$SGE_CELL/common/settings.sh
          SGE_ARCH=`$SGE_ROOT/util/arch`
          AddSGEStartUpScript $euid shadow
-	 $INFOTEXT "Starting sge_shadowd on host %s\n" $SHADOW_HOST
-	 if [ "$SGE_ENABLE_SMF" = "true" ]; then
-	    $SVCADM enable -s "svc:/application/sge/shadowd:$SGE_CLUSTER_NAME"
-	 else
-	    $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &
-	 fi
+	     $INFOTEXT "Starting sge_shadowd on host %s\n" $SHADOW_HOST
+	     if [ "$SGE_ENABLE_SMF" = "true" ]; then
+	        $SVCADM enable -s "svc:/application/sge/shadowd:$SGE_CLUSTER_NAME"
+	     else
+	        $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &
+	     fi
       else
         for shs in `cat $SGE_ROOT/$SGE_CELL/common/shadow_masters`; do
            echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; SGE_ARCH=`$SGE_ROOT/util/arch`; $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &" | $SHELL_NAME $shs /bin/sh &
@@ -1237,38 +1284,40 @@ if [ $SHADOW = "install" ]; then
 
       $INFOTEXT "Shadowhost installation completed!"
    else
+      GetAdminUser
       euid=`$SGE_UTILBIN/uidgid -euid`
       Stdout2Log
       for SHADOW in $SHADOW_HOST; do
          $INFOTEXT -log "Starting sge_shadowd on host %s" $SHADOW   
-         ExecuteAsAdmin touch $SGE_ROOT/$SGE_CELL/common/shadow_masters
-         ALREADY_SHADOWS=`cat $SGE_ROOT/$SGE_CELL/common/shadow_masters | grep -v "$SHADOW"`
-         ExecuteAsAdmin mv $SGE_ROOT/$SGE_CELL/common/shadow_masters $SGE_ROOT/$SGE_CELL/common/shadow_masters.1
-         ExecuteAsAdmin touch $SGE_ROOT/$SGE_CELL/common/shadow_masters
-         ExecuteAsAdmin chmod a+rw $SGE_ROOT/$SGE_CELL/common/shadow_masters
-         ExecuteAsAdmin cat $SGE_ROOT/$SGE_CELL/common/act_qmaster >> $SGE_ROOT/$SGE_CELL/common/shadow_masters
-         ExecuteAsAdmin echo $SHADOW >> $SGE_ROOT/$SGE_CELL/common/shadow_masters
+         ExecuteAsAdmin touch $SGE_ROOT/$CELL_NAME/common/shadow_masters
+         ALREADY_SHADOWS=`cat $SGE_ROOT/$CELL_NAME/common/shadow_masters | grep -v "$SHADOW"`
+         ExecuteAsAdmin mv $SGE_ROOT/$CELL_NAME/common/shadow_masters $SGE_ROOT/$CELL_NAME/common/shadow_masters.1
+         ExecuteAsAdmin touch $SGE_ROOT/$CELL_NAME/common/shadow_masters
+         ExecuteAsAdmin chmod a+rw $SGE_ROOT/$CELL_NAME/common/shadow_masters
+         ExecuteAsAdmin cat $SGE_ROOT/$CELL_NAME/common/act_qmaster >> $SGE_ROOT/$CELL_NAME/common/shadow_masters
+         ExecuteAsAdmin echo $SHADOW >> $SGE_ROOT/$CELL_NAME/common/shadow_masters
          for s in `echo $ALREADY_SHADOWS`; do
-            ExecuteAsAdmin echo $s >> $SGE_ROOT/$SGE_CELL/common/shadow_masters
+            ExecuteAsAdmin echo $s >> $SGE_ROOT/$CELL_NAME/common/shadow_masters
          done
-         ExecuteAsAdmin chmod go-w $SGE_ROOT/$SGE_CELL/common/shadow_masters
-         ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL/common/shadow_masters.1
+         ExecuteAsAdmin chmod go-w $SGE_ROOT/$CELL_NAME/common/shadow_masters
+         ExecuteAsAdmin rm -f $SGE_ROOT/$CELL_NAME/common/shadow_masters.1
          if [ $SHADOW = `$SGE_UTILBIN/gethostname -aname` ]; then
-            . $SGE_ROOT/$SGE_CELL/common/settings.sh
+            . $SGE_ROOT/$CELL_NAME/common/settings.sh
             SGE_ARCH=`$SGE_ROOT/util/arch`
             $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &
             AddSGEStartUpScript $euid shadow
          else
-              echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; SGE_ARCH=`$SGE_ROOT/util/arch`; $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &" | $SHELL_NAME $SHADOW /bin/sh &
+              echo ". $SGE_ROOT/$CELL_NAME/common/settings.sh; SGE_ARCH=`$SGE_ROOT/util/arch`; $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &" | $SHELL_NAME $SHADOW /bin/sh &
               #TODO: install rc script
          fi
       done
    fi
    MoveLog
+   is_shadow=""
 fi
 
 if [ $SHADOW = "uninstall" ]; then
-
+   is_shadow="true"
    GetAdminUser
 
    if [ "$HOST" = "undef" -o "$HOST" = `$SGE_UTILBIN/gethostname -aname`  ]; then
@@ -1334,7 +1383,7 @@ if [ $SHADOW = "uninstall" ]; then
          echo "cd $SGE_ROOT; . $SGE_ROOT/$SGE_CELL/common/settings.sh; ./inst_sge -usm" | $SHELL_NAME $s_host /bin/sh &   
       fi     
    fi
-
+   is_shadow=""
 fi
 
 if [ "$SUBMIT" = "install" ]; then
@@ -1360,6 +1409,14 @@ if [ "$SUBMIT" = "install" ]; then
 fi
 
 if [ "$COPY_CA" = "true" ]; then
+   #In standalone -copycert auto mode we don't have SGE_CELL
+   if [ -z "$SGE_CELL" -a "$AUTO" = "true" ]; then
+      SGE_CELL="$CELL_NAME"
+   fi
+   # GUI mode must set the SGE_CELL to CELL_NAME always!
+   if [ "$AUTOGUI" = "true" ]; then
+      SGE_CELL="$CELL_NAME"
+   fi
    if [ "$SGE_ROOT" = "" -o "$SGE_CELL" = "" ]; then
       $INFOTEXT "SGE_ROOT or SGE_CELL is not set!"
       exit 1

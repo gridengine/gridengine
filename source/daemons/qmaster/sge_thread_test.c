@@ -117,8 +117,8 @@ sge_test_initialize(sge_gdi_ctx_class_t *ctx)
 
       sge_dstring_sprintf(&thread_name, "%s%03d", threadnames[TESTER_THREAD], i);
       cl_thread_list_create_thread(Main_Control.test_thread_pool, &dummy_thread_p,
-                                   NULL, sge_dstring_get_string(&thread_name), i, 
-                                   sge_test_main, NULL, NULL);
+                                   cl_com_get_log_list(), sge_dstring_get_string(&thread_name), i, 
+                                   sge_test_main, NULL, NULL, CL_TT_TESTER);
       sge_dstring_free(&thread_name);
    }
    DRETURN_VOID;

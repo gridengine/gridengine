@@ -77,11 +77,8 @@ extern char **environ;
 int main(int argc, char *argv[]);
 
 /************************************************************************/
-int main(
-int argc,
-char **argv 
-) {
-   int ret = 0;
+int main(int argc, char **argv) {
+   int ret = STATUS_OK;
    lList *alp = NULL;
    lList *request_list = NULL;
    lList *cmdline = NULL;
@@ -103,16 +100,13 @@ char **argv
    if (!strcmp(sge_basename(argv[0], '/'), "qresub")) {
       DPRINTF(("QRESUB\n"));
       me_who = QRESUB;
-   }   
-   else if (!strcmp(sge_basename(argv[0], '/'), "qhold")) {
+   } else if (!strcmp(sge_basename(argv[0], '/'), "qhold")) {
       DPRINTF(("QHOLD\n"));
       me_who = QHOLD;
-   }   
-   else if (!strcmp(sge_basename(argv[0], '/'), "qrls")) {
+   } else if (!strcmp(sge_basename(argv[0], '/'), "qrls")) {
       DPRINTF(("QRLS\n"));
       me_who = QRLS;
-   } 
-   else {
+   } else {
       DPRINTF(("QALTER\n"));
       me_who = QALTER;
    } 
@@ -130,18 +124,31 @@ char **argv
    */
    opt_list_append_opts_from_qalter_cmdline(me_who, &cmdline, &alp, argv + 1, environ);
    tmp_ret = answer_list_print_err_warn(&alp, MSG_QALTER, MSG_QALTER, MSG_QALTERWARNING);
+   
    if (tmp_ret > 0) {
-      SGE_EXIT(NULL, tmp_ret);
+      SGE_EXIT((void**)&ctx, tmp_ret);
    }
-
-   if ((lGetNumberOfElem(cmdline) == 0) || (opt_list_has_X(cmdline, "-help"))) {
+   
+   /* handling the case that no command line parameter was specified */
+   if ((me_who == QHOLD || me_who == QRLS) && lGetNumberOfElem(cmdline) == 1) {
+      /* -h option is set implicitly for QHOLD and QRLS */
+      sge_usage(me_who, stderr);
+      fprintf(stderr, "%s\n", MSG_PARSE_NOOPTIONARGUMENT);
+      SGE_EXIT((void**)&ctx, 1);
+   } else if ((me_who == QRESUB || me_who == QALTER) && lGetNumberOfElem(cmdline) == 0) {
+      /* qresub and qalter have nothing set */ 
+      sge_usage(me_who, stderr);
+      fprintf(stderr, "%s\n", MSG_PARSE_NOOPTIONARGUMENT);
+      SGE_EXIT((void**)&ctx, 1);
+   } else if (opt_list_has_X(cmdline, "-help")) {
+      /* -help was specified */
       sge_usage(me_who, stdout);
-      SGE_EXIT(NULL, 1);
+      SGE_EXIT((void**)&ctx, 0);
    }
-
+   
    alp = qalter_parse_job_parameter(me_who, cmdline, &request_list, &all_jobs, 
                                     &all_users);
-   
+
    DPRINTF(("all_jobs = %d, all_user = %d\n", all_jobs, all_users));
 
    if (request_list && verify) {
@@ -156,12 +163,12 @@ char **argv
       */
       cull_show_job(lFirst(request_list), FLG_QALTER);
       sge_prof_cleanup();
-      SGE_EXIT(NULL, 0);
+      SGE_EXIT((void**)&ctx, 0);
    }
 
    tmp_ret = answer_list_print_err_warn(&alp, NULL, NULL, MSG_WARNING);
    if (tmp_ret > 0) {
-      SGE_EXIT(NULL, tmp_ret);
+      SGE_EXIT((void**)&ctx, tmp_ret);
    }
 
    if ((me_who == QALTER) ||
@@ -175,7 +182,7 @@ char **argv
       gdi_cmd = SGE_GDI_COPY;
    } else {
       printf("unknown binary name.\n");
-      SGE_EXIT(NULL, 1);
+      SGE_EXIT((void**)&ctx, 1);
    }
 
    if (all_jobs)
@@ -186,7 +193,7 @@ char **argv
    alp = ctx->gdi(ctx, SGE_JOB_LIST, gdi_cmd, &request_list, NULL, NULL); 
    for_each (aep, alp) {
       printf("%s\n", lGetString(aep, AN_text));
-      if (ret==0) {
+      if (ret == STATUS_OK) {
          ret = lGetUlong(aep, AN_status);
       }
    }
@@ -274,7 +281,6 @@ int *all_users
    /* initialize job field set */
    job_field[0] = NoName;
    nm_set(job_field, JB_job_number);
-   nm_set(job_field, JB_job_name);
 
    /* don't do verification of schedulability per default */
    lSetUlong(job, JB_verify_suitable_queues, SKIP_VERIFY);
@@ -501,7 +507,7 @@ int *all_users
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-N"))) {
          lSetString(job, JB_job_name, lGetString(ep, SPA_argval_lStringT));
          lRemoveElem(cmdline, &ep);
-/*         nm_set(job_field, JB_job_name); */
+         nm_set(job_field, JB_job_name); 
       }
 
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-notify"))) {
@@ -759,8 +765,12 @@ int *all_users
          }
       }
       if ((jobid != 0) || ((*all_jobs) == 1)){
+         const char *job_name = lGetString(job, JB_job_name);
+
          rep = lAddElemUlong(prequestlist, JB_job_number, jobid, rdp);
-         lSetString(rep, JB_job_name, lGetString(job, JB_job_name));
+         if (job_name != NULL) {
+            lSetString(rep, JB_job_name, job_name);
+         }
       }   
       else{
          char *name = NULL;
@@ -888,14 +898,6 @@ int *all_users
                lSetList(rep, list_nm[i], lCopyList("", lGetList(job, list_nm[i])));
 
       }
-   }
-   if (!*prequestlist) {
-      /* got no target */
-      answer_list_add(&answer, MSG_JOB_MISSINGJOBID, 
-                      STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-      lFreeElem(&job);
-      FREE(rdp);
-      DRETURN(answer);      
    }
 
    lFreeElem(&job);

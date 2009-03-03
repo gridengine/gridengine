@@ -183,7 +183,8 @@ enum {
    RQL_result,      /* dispatch_t */
    RQL_time,        /* sequential dispatching only */
    RQL_slots,       /* parallel dispatching only */
-   RQL_slots_qend   /* parallel dispatching only */
+   RQL_slots_qend,   /* parallel dispatching only */
+   RQL_tagged4schedule /* parallel dispatching only */
 };
 
 LISTDEF(RQL_Type)
@@ -192,6 +193,7 @@ LISTDEF(RQL_Type)
  SGE_ULONG(RQL_time, CULL_DEFAULT )
  SGE_INT(RQL_slots, CULL_DEFAULT )
  SGE_INT(RQL_slots_qend, CULL_DEFAULT )
+ SGE_ULONG(RQL_tagged4schedule, CULL_DEFAULT)
 LISTEND
  
 NAMEDEF(RQLN)
@@ -200,6 +202,7 @@ NAMEDEF(RQLN)
    NAME("RQL_time")
    NAME("RQL_slots")
    NAME("RQL_slots_qend")
+   NAME("RQL_tagged4schedule")
 NAMEEND
 
 #define RQLS sizeof(RQLN)/sizeof(char*)

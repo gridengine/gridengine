@@ -117,7 +117,8 @@ enum {
 
    AR_acl_list,
    AR_xacl_list,
-   AR_type                      /* -now switch */
+   AR_type,                     /* -now switch */
+   AR_qi_errors                 /* reserved queue instances in error state */
 };
 
 LISTDEF(AR_Type)
@@ -159,6 +160,7 @@ LISTDEF(AR_Type)
    SGE_LIST(AR_acl_list, ARA_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_CONF)
    SGE_LIST(AR_xacl_list, ARA_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_CONF)
    SGE_ULONG(AR_type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_CONF)
+   SGE_ULONG(AR_qi_errors, CULL_DEFAULT | CULL_JGDI_HIDDEN)
 LISTEND
 
 NAMEDEF(ARN)
@@ -197,6 +199,7 @@ NAMEDEF(ARN)
    NAME("AR_acl_list")  /* user + group or userset */
    NAME("AR_xacl_list")
    NAME("AR_type")
+   NAME("AR_qi_errors")
 NAMEEND
 
 #define ARS sizeof(ARN)/sizeof(char*)

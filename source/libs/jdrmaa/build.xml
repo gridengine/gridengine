@@ -39,6 +39,9 @@ ___INFO__MARK_END__-->
       <property file="${sge.srcdir}/build_private.properties"/>    
       <property file="${sge.srcdir}/build.properties"/>
 
+      <property name="javac.source" value="${default.sge.javac.source}"/>
+      <property name="javac.target" value="${default.sge.javac.target}"/>
+
       <exec executable="hostname" outputproperty="hostname"/>
       <condition property="isJavaBuildHost">
          <not>

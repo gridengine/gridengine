@@ -100,7 +100,7 @@
 *        SGE_TYPE_SCHEDD_CONF
 *        SGE_TYPE_SCHEDD_MONITOR
 *        SGE_TYPE_SHUTDOWN
-*        SGE_TYPE_QMASTER_GOES_DOWN
+*        SGE_TYPE_MARK_4_REGISTRATION
 *        SGE_TYPE_SUBMITHOST
 *        SGE_TYPE_USER
 *        SGE_TYPE_USERSET
@@ -138,7 +138,7 @@ typedef enum {
    SGE_TYPE_SCHEDD_CONF,      /*17*/
    SGE_TYPE_SCHEDD_MONITOR,   /*18*/
    SGE_TYPE_SHUTDOWN,         /*19*/
-   SGE_TYPE_QMASTER_GOES_DOWN,/*20*/
+   SGE_TYPE_MARK_4_REGISTRATION,/*20*/
    SGE_TYPE_SUBMITHOST,       /*21*/
    SGE_TYPE_USER,             /*22*/
    SGE_TYPE_USERSET,          /*23*/
@@ -229,6 +229,9 @@ object_get_subtype(int nm);
 
 int 
 object_get_primary_key(const lDescr *descr);
+
+const char *
+object_get_name(const lDescr *descr);
 
 const char *
 object_get_name_prefix(const lDescr *descr, dstring *buffer);
@@ -323,6 +326,7 @@ bool
 object_list_has_differences(const lList *this_elem, lList **answer_list,
                             const lList *old_elem, bool modify_changed_flag);
 
+bool object_unpack_elem_verify(lList **answer_list, sge_pack_buffer *pb, lListElem **epp, const lDescr *descr);
 bool object_list_verify_cull(const lList *lp, const lDescr *descr);
 bool object_verify_cull(const lListElem *ep, const lDescr *descr);
 

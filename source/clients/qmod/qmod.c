@@ -1,32 +1,32 @@
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
- * 
+ *
  *  The Contents of this file are made available subject to the terms of
  *  the Sun Industry Standards Source License Version 1.2
- * 
+ *
  *  Sun Microsystems Inc., March, 2001
- * 
- * 
+ *
+ *
  *  Sun Industry Standards Source License Version 1.2
  *  =================================================
  *  The contents of this file are subject to the Sun Industry Standards
  *  Source License Version 1.2 (the "License"); You may not use this file
  *  except in compliance with the License. You may obtain a copy of the
  *  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
- * 
+ *
  *  Software provided under this License is provided on an "AS IS" basis,
  *  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
  *  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
  *  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
  *  See the License for the specific provisions governing your rights and
  *  obligations concerning the Software.
- * 
+ *
  *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
- * 
+ *
  *   Copyright: 2001 by Sun Microsystems, Inc.
- * 
+ *
  *   All Rights Reserved.
- * 
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 #include <string.h>
@@ -70,14 +70,15 @@ int main(int argc, char *argv[]);
 
 int main(
 int argc,
-char **argv 
+char **argv
 ) {
    u_long32 force = 0;
    lList *ref_list = NULL;
    lList *alp = NULL, *pcmdline = NULL;
    lListElem *aep;
    sge_gdi_ctx_class_t *ctx = NULL;
-   
+   bool answ_list_has_err = false;
+
    DENTER_MAIN(TOP_LAYER, "qmod");
 
    prof_mt_init();
@@ -99,7 +100,7 @@ char **argv
       /*
       ** high level parsing error! show answer list
       */
-      for_each(aep, alp) { 
+      for_each(aep, alp) {
          fprintf(stderr, "%s\n", lGetString(aep, AN_text));
       }
       lFreeList(&alp);
@@ -113,7 +114,7 @@ char **argv
       /*
       ** low level parsing error! show answer list
       */
-      for_each(aep, alp) { 
+      for_each(aep, alp) {
          fprintf(stderr, "%s\n", lGetString(aep, AN_text));
       }
       lFreeList(&alp);
@@ -121,32 +122,39 @@ char **argv
       lFreeList(&ref_list);
       SGE_EXIT((void**)&ctx, 1);
    }
-   
+
    {
       lListElem *idep = NULL;
       for_each(idep, ref_list) {
          lSetUlong(idep, ID_force, force);
-      } 
+      }
    }
 
    if (ref_list) {
       alp = ctx->gdi(ctx, SGE_CQUEUE_LIST, SGE_GDI_TRIGGER, &ref_list, NULL, NULL);
    }
 
+   answ_list_has_err = answer_list_has_error(&alp);
+
    /*
    ** show answer list
    */
-   for_each(aep, alp) { 
+   for_each(aep, alp) {
       fprintf(stdout, "%s\n", lGetString(aep, AN_text));
    }
 
    lFreeList(&alp);
    lFreeList(&ref_list);
-   lFreeList(&pcmdline); 
+   lFreeList(&pcmdline);
 
    sge_prof_cleanup();
 
-   SGE_EXIT((void**)&ctx, 0);
+   if(answ_list_has_err) {
+      SGE_EXIT((void**)&ctx, 1);
+   }
+   else {
+      SGE_EXIT((void**)&ctx, 0);
+   }
    DEXIT;
    return 0;
 }
@@ -158,42 +166,43 @@ char **argv
  ****
  **** 'stage 1' parsing of qmod-options. Parses options
  **** with their arguments and stores them in ppcmdline.
- ****/ 
+ ****/
 static lList *sge_parse_cmdline_qmod(
 char **argv,
 char **envp,
-lList **ppcmdline 
+lList **ppcmdline
 ) {
 char **sp;
 char **rp;
-stringT str;
 lList *alp = NULL;
 
    DENTER(TOP_LAYER, "sge_parse_cmdline_qmod");
-   
+
    rp = argv;
-   
+
    if (*rp == NULL) {
-      sge_add_noarg(ppcmdline, 0, "-help", NULL);
+      /* no command line argument: print help on error */
+      qmod_usage(stderr, NULL);
+      answer_list_add_sprintf(&alp, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR, MSG_PARSE_NOOPTIONARGUMENT);
    }
-   
+
    while(*(sp=rp)) {
       /* -help */
       if ((rp = parse_noopt(sp, "-help", "--help", ppcmdline, &alp)) != sp)
          continue;
-        
+
       /* -f option */
       if ((rp = parse_noopt(sp, "-f", "--force", ppcmdline, &alp)) != sp)
          continue;
-         
+
       /* -c option */
       if ((rp = parse_until_next_opt(sp, "-c", "--clear", ppcmdline, &alp)) != sp)
-         continue;   
-               
+         continue;
+
       /* -cj option */
       if ((rp = parse_until_next_opt(sp, "-cj", "--clearjob", ppcmdline, &alp)) != sp)
          continue;
-      
+
       /* -cq option */
       if ((rp = parse_until_next_opt(sp, "-cq", "--clearqueue", ppcmdline, &alp)) != sp)
          continue;
@@ -201,11 +210,11 @@ lList *alp = NULL;
       /* -s option */
       if ((rp = parse_until_next_opt(sp, "-s", "--suspend", ppcmdline, &alp)) != sp)
          continue;
-      
+
       /* -sj option */
       if ((rp = parse_until_next_opt(sp, "-sj", "--suspendjob", ppcmdline, &alp)) != sp)
          continue;
-      
+
       /* -sq option */
       if ((rp = parse_until_next_opt(sp, "-sq", "--suspendqueue", ppcmdline, &alp)) != sp)
          continue;
@@ -223,7 +232,7 @@ lList *alp = NULL;
          continue;
 
       /* -d option */
-      if ((rp = parse_until_next_opt(sp, "-d", "--disable", ppcmdline, &alp)) != sp)           
+      if ((rp = parse_until_next_opt(sp, "-d", "--disable", ppcmdline, &alp)) != sp)
          continue;
 
       /* -rj option */
@@ -250,8 +259,7 @@ lList *alp = NULL;
          /* next field is path_name */
          sp++;
          if (*sp == NULL) {
-             sprintf(str,MSG_PARSE_TOPTIONMUSTHAVEALISTOFTASKIDRANGES);
-             answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+             answer_list_add(&alp, MSG_PARSE_TOPTIONMUSTHAVEALISTOFTASKIDRANGES, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
              goto error;
          }
 
@@ -295,25 +303,24 @@ lList *alp = NULL;
 #endif
 
       /* oops */
-      sprintf(str, MSG_PARSE_INVALIDOPTIONARGUMENTX_S, *sp);
-      answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+      answer_list_add_sprintf(&alp, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR, MSG_PARSE_INVALIDOPTIONARGUMENTX_S, *sp);
 error:
       qmod_usage(stderr, NULL);
       DEXIT;
       return alp;
    }
    DEXIT;
-   return alp;  
+   return alp;
 }
 
 /****
  **** sge_parse_qmod (static)
  ****
- **** 'stage 2' parsing of qmod-options. Gets the options from 
+ **** 'stage 2' parsing of qmod-options. Gets the options from
  **** ppcmdline, sets the force and action flags and puts the
  **** queue/job-names/numbers in ppreflist.
  ****/
-static lList *sge_parse_qmod(lList **ppcmdline, lList **ppreflist, u_long32 *pforce) 
+static lList *sge_parse_qmod(lList **ppcmdline, lList **ppreflist, u_long32 *pforce)
 {
 stringT str;
 lList *alp = NULL;
@@ -365,7 +372,7 @@ int usageshowed = 0;
          QI_DO_SUSPEND,
          QI_DO_SUSPEND | JOB_DO_ACTION,
          QI_DO_SUSPEND | QUEUE_DO_ACTION,
-         QI_DO_UNSUSPEND, 
+         QI_DO_UNSUSPEND,
          QI_DO_UNSUSPEND | JOB_DO_ACTION,
          QI_DO_UNSUSPEND | QUEUE_DO_ACTION,
 #ifdef __SGE_QINSTANCE_STATE_DEBUG__
@@ -387,7 +394,7 @@ int usageshowed = 0;
       }
 
       if (parse_flag(ppcmdline, "-f", &alp, pforce)) {
-         continue;      
+         continue;
       }
 
       i = 0;
@@ -397,21 +404,21 @@ int usageshowed = 0;
          } else {
             lList *queueList = NULL;
             if (parse_multi_stringlist( ppcmdline, options[i], &alp, &queueList, ST_Type, ST_name)){
-               id_list_build_from_str_list(ppreflist, &alp, queueList, transitions[i], *pforce); 
+               id_list_build_from_str_list(ppreflist, &alp, queueList, transitions[i], *pforce);
             }
             lFreeList(&queueList);
          }
          i++;
       }
-   
+
       /* we get to this point, than there are -t options without job names. We have to write an error message */
       if ((ep = lGetElemStr(*ppcmdline, SPA_switch, "-t")) != NULL) {
          sprintf(str, MSG_JOB_LONELY_TOPTION_S, lGetString(ep, SPA_switch_arg));
          answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
-        
+
          break;
       }
-      
+
    }
 
    if(lGetNumberOfElem(*ppcmdline)) {
@@ -440,7 +447,7 @@ int usageshowed = 0;
  ****/
 static int qmod_usage(
 FILE *fp,
-char *what 
+char *what
 ) {
    dstring ds;
    char buffer[256];
@@ -451,7 +458,7 @@ char *what
 
    if(!what) {
       /* display full usage */
-      fprintf(fp,"%s qmod [options]\n", MSG_SRC_USAGE); 
+      fprintf(fp,"%s qmod [options]\n", MSG_SRC_USAGE);
       fprintf(fp, "   [-c job_wc_queue_list]  %s\n", MSG_QMOD_c_OPT_USAGE);
       fprintf(fp, "   [-cj job_list]          %s\n", MSG_QMOD_c_OPT_USAGE_J);
       fprintf(fp, "   [-cq wc_queue_list]     %s\n", MSG_QMOD_c_OPT_USAGE_Q);
@@ -470,7 +477,7 @@ char *what
       fprintf(fp, "   [-us job_wc_queue_list] %s\n", MSG_QMOD_us_OPT_USAGE);
       fprintf(fp, "   [-usj job_list]         %s\n", MSG_QMOD_us_OPT_USAGE_J);
       fprintf(fp, "   [-usq wc_queue_list]    %s\n", MSG_QMOD_us_OPT_USAGE_Q);
-      
+
 #ifdef __SGE_QINSTANCE_STATE_DEBUG__
       fprintf(fp, "   [-_e queue_list]        %s\n", MSG_QMOD_err_OPT_ISAGE);
       fprintf(fp, "   [-_o queue_list]        %s\n", MSG_QMOD_o_OPT_ISAGE);
@@ -495,7 +502,8 @@ char *what
    } else {
       /* display option usage */
       fprintf(fp, MSG_QDEL_not_available_OPT_USAGE_S,what);
-      fprintf(fp, "\n"); 
+      fprintf(fp, "\n");
    }
    return 1;
 }
+

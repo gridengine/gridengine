@@ -10,45 +10,45 @@ SYNTAX
      qtcsh [ tcsh options | -ABLR ]
 
 DESCRIPTION
-     <I>Qtcsh</I> is an extension to the popular <B><A HREF="../htmlman1/csh.html">csh(1)</A></B> derivative <I>tcsh</I>.
+     <I>Qtcsh</I> is an extension to the popular <B><A HREF="../htmlman1/csh.html?pathrev=V62u2_TAG">csh(1)</A></B> derivative <I>tcsh</I>.
      It  allows the transparent remote execution commands entered
-     in <I>qtcsh</I> controlled via Grid Engine.  <I>Qtcsh</I> can be  used  as
-     interactive  command interpreter as well as for the process-
-     ing of <I>tcsh</I> shell scripts.
+     in <I>qtcsh</I> controlled via Sun Grid Engine.  <I>Qtcsh</I> can be  used
+     as  interactive  command interpreter as well as for the pro-
+     cessing of <I>tcsh</I> shell scripts.
 
      When invoked, <I>qtcsh</I> identifies which commands are to be  run
      remotely  and  which  are  not.  For  this purpose the files
      &lt;sge_root&gt;/&lt;cell&gt;/common/qtask and ~/.qtask  are  processed.
      Each  line in these files defines a command that is intended
-     to be run remotely (see <B><A HREF="../htmlman5/qtask.html">qtask(5)</A></B> for  a  definition  of  the
+     to be run remotely (see <B><A HREF="../htmlman5/qtask.html?pathrev=V62u2_TAG">qtask(5)</A></B> for  a  definition  of  the
      file  format).  The .qtask file in the user's home directory
      contains the user's remote  task  specification,  while  the
      file  in  the common directory is maintained by the adminis-
      trator and defines a  cluster-wide  default  behavior.   The
-     contents  of  the  administrator  supplied <B><A HREF="../htmlman5/qtask.html">qtask(5)</A></B> file are
+     contents  of  the  administrator  supplied <B><A HREF="../htmlman5/qtask.html?pathrev=V62u2_TAG">qtask(5)</A></B> file are
      completely overridden in case there is an appropriate  entry
-     in  the  users  <B><A HREF="../htmlman5/qtask.html">qtask(5)</A></B> file.  This is prevented in case an
+     in  the  users  <B><A HREF="../htmlman5/qtask.html?pathrev=V62u2_TAG">qtask(5)</A></B> file.  This is prevented in case an
      exclamation mark is prefixed to  the  command  name  in  the
      administrators qtask file.
 
      <I>Qtcsh</I> always attempts to start the designated tasks remotely
-     via <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B>.  Exceptions are
+     via <B><A HREF="../htmlman1/qrsh.html?pathrev=V62u2_TAG">qrsh(1)</A></B>.  Exceptions are
 
      <B>o</B>  if the user enters such commands via a relative or  abso-
         lute  pathname  instead  of  the stand-alone command name
-        (see <B><A HREF="../htmlman5/qtask.html">qtask(5)</A></B> for more information).
+        (see <B><A HREF="../htmlman5/qtask.html?pathrev=V62u2_TAG">qtask(5)</A></B> for more information).
 
      <B>o</B>  if the environment variable JOB_ID is set and thus  <I>qtcsh</I>
         assumes  that execution already happens remotely within a
-        Grid Engine job and thus  executes  tasks  locally.  This
+        Sun Grid Engine job and thus executes tasks locally. This
         avoids  unwanted  recursions but can be overridden by the
         command-line option -R and the built-in command  <I>qrshmode</I>
         -<I>R</I> (see corresponding descriptions below).
 
-     <B>o</B>  if <I>qtcsh</I> cannot establish a  connection  of  Grid  Engine
+     <B>o</B>  if <I>qtcsh</I> cannot establish a connection of Sun Grid Engine
         during  start-up. This allows to use <I>qtcsh</I> as login shell
-        without the danger of being blocked when no  Grid  Engine
-        service is available.
+        without the danger of being  blocked  when  no  Sun  Grid
+        Engine service is available.
 
      <I>Qtcsh</I> can  operate  in  three  different  modes  determining
      whether
@@ -65,7 +65,7 @@ DESCRIPTION
 
 OPTIONS
      The options enlisted below are special to <I>qtcsh</I>. The user is
-     referred to the <B><A HREF="../htmlman1/tcsh.html">tcsh(1)</A></B> documentation for the explanation of
+     referred to the <B><A HREF="../htmlman1/tcsh.html?pathrev=V62u2_TAG">tcsh(1)</A></B> documentation for the explanation of
      further options.
 
 
@@ -73,18 +73,18 @@ OPTIONS
           put in case of remote execution.
 
      -B   Switches remote task execution  to  batch  mode.  Tasks
-          submitted  to Grid Engine will be queued if they cannot
-          start immediately.  As a consequence, <I>qtcsh</I>  may  block
-          until  the  queued  task can be started by Grid Engine.
-          While this behavior probably is undesirable  during  an
-          interactive  session,  it may be very useful for execu-
-          tion of  shell  scripts  through  <I>qtcsh</I>  as  it  avoids
-          failure  of  the scripts due to temporarily unavailable
-          resources for particular tasks.
+          submitted  to  Sun  Grid  Engine will be queued if they
+          cannot start immediately.  As a consequence, <I>qtcsh</I>  may
+          block  until the queued task can be started by Sun Grid
+          Engine. While this  behavior  probably  is  undesirable
+          during  an  interactive  session, it may be very useful
+          for execution of shell  scripts  through  <I>qtcsh</I>  as  it
+          avoids  failure  of the scripts due to temporarily una-
+          vailable resources for particular tasks.
 
      -L   Switches off default behavior of  remote  execution  of
           commands.  Causes  all  commands to be executed locally
-          even if they are  contained  in  one  of  the  <B><A HREF="../htmlman5/qtask.html">qtask(5)</A></B>
+          even if they are  contained  in  one  of  the  <B><A HREF="../htmlman5/qtask.html?pathrev=V62u2_TAG">qtask(5)</A></B>
           files.
 
      -R   Enforces remote execution of commands even if JOB_ID is
@@ -92,7 +92,7 @@ OPTIONS
 
 BUILT-IN COMMANDS
      This section only describes additional  shell  builtin  com-
-     mands which are not available in standard <B><A HREF="../htmlman1/tcsh.html">tcsh(1)</A></B>.
+     mands which are not available in standard <B><A HREF="../htmlman1/tcsh.html?pathrev=V62u2_TAG">tcsh(1)</A></B>.
 
 
      qrshmode [-ANBILR]
@@ -107,11 +107,11 @@ BUILT-IN COMMANDS
           -R   execute configured commands remotely
 
 ENVIRONMENTAL VARIABLES
-     SGE_ROOT       Specifies the location  of  the  Grid  Engine
+     SGE_ROOT       Specifies the location of the Sun Grid Engine
                     standard configuration files.
 
-     SGE_CELL       If set, specifies  the  default  Grid  Engine
-                    cell.  To  address  a  Grid Engine cell <I>qtcsh</I>
+     SGE_CELL       If set, specifies the default Sun Grid Engine
+                    cell. To address a Sun Grid Engine cell <I>qtcsh</I>
                     uses (in the order of precedence):
 
                          The name of the cell  specified  in  the
@@ -130,7 +130,7 @@ ENVIRONMENTAL VARIABLES
 
      SGE_QMASTER_PORT
                     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> is expected to listen for com-
+                    <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u2_TAG">sge_qmaster(8)</A></B> is expected to listen for com-
                     munication requests.  Most installations will
                     use  a  services  map  entry  for the service
                     "sge_qmaster" instead to define that port.
@@ -145,7 +145,7 @@ FILES
                     cluster qtask file.
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B>, <B><A HREF="../htmlman5/qtask.html">qtask(5)</A></B> as  well  as  <B><A HREF="../htmlman1/tcsh.html">tcsh(1)</A></B>  under
+     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qrsh.html?pathrev=V62u2_TAG">qrsh(1)</A></B>, <B><A HREF="../htmlman5/qtask.html?pathrev=V62u2_TAG">qtask(5)</A></B> as  well  as  <B><A HREF="../htmlman1/tcsh.html?pathrev=V62u2_TAG">tcsh(1)</A></B>  under
      &lt;sge_root&gt;/3rd_party/qtcsh.
 
 COPYRIGHT
@@ -155,7 +155,7 @@ COPYRIGHT
      developed  by the University of California, Berkeley and its
      contributors.
 
-     See   <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>   and   the   information   provided   in
+     See   <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B>   and   the   information   provided   in
      &lt;sge_root&gt;/3rd_party/qtcsh for a statement of further rights
      and permissions.
 </PRE>

@@ -55,7 +55,7 @@ JUTI_DEPEND_OBJS = $(JUTI_ADD_OBJS)
 juti_all: $(JUTILIB)
 
 juti_clean:
-	$(RM) $(JUTILIB) $(JUTI_ADD_OBJS)
+	$(RM) $(JUTILIB) $(JUTI_ADD_OBJS) libjuti$(JAVA_SHAREDEXT)
 
 juti_depend:
 	$(DEPEND) -f$(JUTILIB_DIR)/juti_dependencies $(JUTILIB_DIR)/*.c
@@ -66,7 +66,7 @@ juti_depend:
 ###############################################################################
 
 $(JUTILIB): $(JUTI_OBJS) $(JUTI_ADD_OBJS)
-	$(SHAREDLD) $(SHARED_LFLAGS) -o libjuti$(SHAREDEXT) $(JUTI_OBJS) $(JUTI_ADD_OBJS) $(SLIBs) $(LIBS)
+	$(SHAREDLD) $(SHARED_LFLAGS) -o libjuti$(SHAREDEXT) $(JUTI_OBJS) $(JUTI_ADD_OBJS) $(SLIBS) $(LIBRARY_LIBS)
 	../scripts/link_jnilib.sh libjuti  $(SHAREDEXT) $(JAVA_SHAREDEXT)
 
 

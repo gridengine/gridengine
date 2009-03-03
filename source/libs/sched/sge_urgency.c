@@ -250,9 +250,8 @@ static void sge_normalize_urgency(lList *job_list, double min_urgency,
    for_each (jep, job_list) {
       double asu = lGetDouble(jep, JB_urg);
       nsu = sge_normalize_value(asu, min_urgency, max_urgency);
-         lSetDouble(jep, JB_nurg, nsu);
-/*         DPRINTF(("NSU(job " sge_u32 ") = %f from %f\n", lGetUlong(jep, JB_job_number), nsu, 
-            asu)); */
+      lSetDouble(jep, JB_nurg, nsu);
+/*    DPRINTF(("NSU(job " sge_u32 ") = %f from %f\n", lGetUlong(jep, JB_job_number), nsu, asu)); */
    }
 
    DEXIT;

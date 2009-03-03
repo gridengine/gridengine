@@ -65,6 +65,8 @@ SGEOBJLIB_SRC = \
          sge_id.c \
          sge_ja_task.c \
          sge_job.c \
+         sge_jsv.c \
+         sge_jsv_script.c \
          sge_resource_quota.c \
          sge_load.c \
          sge_order.c \
@@ -215,6 +217,12 @@ sge_ja_task.o: $(SGEOBJLIB_DIR)/sge_ja_task.c
 
 sge_job.o: $(SGEOBJLIB_DIR)/sge_job.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_job.c
+
+sge_jsv.o: $(SGEOBJLIB_DIR)/sge_jsv.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_jsv.c
+
+sge_jsv_script.o: $(SGEOBJLIB_DIR)/sge_jsv_script.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_jsv_script.c
 
 sge_load.o: $(SGEOBJLIB_DIR)/sge_load.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_load.c

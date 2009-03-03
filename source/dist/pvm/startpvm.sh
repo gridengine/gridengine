@@ -73,7 +73,7 @@ me=`basename $0`
 # test number of args
 if [ $# -lt 3 ]; then
    echo "$me: got wrong number of arguments" >&2
-   exit 1
+   exit 100
 fi
 
 # get arguments
@@ -85,26 +85,26 @@ export PVM_ROOT
 # get PVM_ARCH by starting $PVM_ROOT/lib/pvmgetarch 
 if [ ! -x $PVM_ROOT/lib/pvmgetarch ]; then
    echo "$me: can't execute $PVM_ROOT/lib/pvmgetarch" >&2
-   exit 1
+   exit 100
 fi
 PVM_ARCH=`$PVM_ROOT/lib/pvmgetarch`
 
 # ensure we are able to exec our starter
 if [ ! -x $SGE_ROOT/pvm/bin/$ARC/start_pvm ]; then
    echo "$me: can't execute $SGE_ROOT/pvm/bin/$ARC/start_pvm" >&2
-   exit 1
+   exit 100
 fi
 
 # ensure we are able to start pvmd
 if [ ! -x $PVM_ROOT/lib/pvmd ]; then
    echo "$me: can't execute $PVM_ROOT/lib/pvmd" >&2
-   exit 1
+   exit 100
 fi
 
 # ensure pe_hostfile is readable
 if [ ! -r $pe_hostfile ]; then
    echo "$me: can't read $pe_hostfile" >&2
-   exit 1
+   exit 100
 fi
 
 # create pvm_hostfile
@@ -130,7 +130,7 @@ $SGE_ROOT/pvm/bin/$ARC/start_pvm -h $NHOSTS $PVM_ROOT/lib/pvmd $pvm_hostfile
 if [ $? -ne 0 ]; then
    echo "$me: startup failed - invoking cleanup script"
    $SGE_ROOT/pvm/stoppvm.sh $pe_hostfile $host
-   exit 1
+   exit 100
 fi
 
 # signal success to caller

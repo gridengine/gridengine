@@ -45,7 +45,6 @@
 #define MSG_ANSWER_FAILDTOBUILDREDUCEDDESCRIPTOR        _MESSAGE(3003, _("failed to build reduced descriptor"))
 #define MSG_ANSWER_ALLANDJOBIDSARENOTVALID              _MESSAGE(3004, _("\'all\' AND jobids are not valid"))
 #define MSG_ANSWER_0ISNOTAVALIDJOBID                    _MESSAGE(3005, _("0 is not a valid jobid"))
-#define MSG_JOB_MISSINGJOBID                            _MESSAGE(3007, _("missing jobid"))
 
 #endif /* __MSG_QALTER_H */
 

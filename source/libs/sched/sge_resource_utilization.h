@@ -48,12 +48,13 @@ double utilization_queue_end(const lListElem *cr);
 
 int rc_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type, 
       lListElem *ep, lList *centry_list, int slots, int config_nm, int actual_nm, 
-      const char *obj_name, u_long32 start_time, u_long32 duration, u_long32 tag, bool for_job_scheduling);
+      const char *obj_name, u_long32 start_time, u_long32 duration, u_long32 tag, bool for_job_scheduling,
+      bool is_master_task);
 
 void prepare_resource_schedules(const lList *running_jobs,
       const lList *suspended_jobs, lList *pe_list, lList *host_list,
       lList *queue_list, lList *rqs_list, lList *centry_list, lList *acl_list,
-      lList *hgroup_list, lList *ar_list, bool for_job_scheduling);
+      lList *hgroup_list, lList *ar_list, bool for_job_scheduling, u_long32 now);
 
 #endif /* __SGE_RESOURCE_UTILIZATION_H */
 

@@ -73,6 +73,7 @@
 #define COMM_ENDPOINT_NOT_UNIQUE         23
 #define COMM_ACCESS_DENIED               24
 #define COMM_SYNC_RECEIVE_TIMEOUT        25
+#define COMM_NO_MESSAGE_AVAILABLE        26
 
 typedef struct recv_message_s {
    unsigned char type;

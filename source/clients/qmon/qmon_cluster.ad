@@ -167,6 +167,7 @@ Qmon*cluster_global_layout.xmtChildren: \
                   cluster_max_aj_tasks = max_aj_tasks, \
                   cluster_max_u_jobs = max_u_jobs, \
                   cluster_max_jobs = max_jobs, \
+                  cluster_max_advance_reservations = max_advance_reservations, \
                   cluster_auto_user_oticket = auto_user_oticket, \
                   cluster_auto_user_fshare = auto_user_fshare; \
    XmtChooser     cluster_shell_start_mode = shell_start_mode, \
@@ -221,6 +222,10 @@ Qmon*cluster_global_layout.layout: \
          ## \
          Equal Row { \
             Caption "@{Maximum Jobs\nIn Cluster}" <> cluster_max_jobs \
+         } \
+         ## \
+         Equal Row { \
+            Caption "@{Maximum Advance Reservations}" <> cluster_max_advance_reservations \
          } \
          ### \
          Equal Row { \
@@ -413,6 +418,13 @@ Qmon*cluster_global_layout.cluster_max_jobs.columns: 5
 Qmon*cluster_global_layout.cluster_max_jobs.spinboxUseClosestValue: True
 Qmon*cluster_global_layout.cluster_max_jobs.value: 0
 
+Qmon*cluster_global_layout.cluster_max_advance_reservations.minimum: 0
+Qmon*cluster_global_layout.cluster_max_advance_reservations.spinboxStyle: SPINBOX_STACKED_RIGHT
+Qmon*cluster_global_layout.cluster_max_advance_reservations.buttonSizeFixed: True
+Qmon*cluster_global_layout.cluster_max_advance_reservations.columns: 5
+Qmon*cluster_global_layout.cluster_max_advance_reservations.spinboxUseClosestValue: True
+Qmon*cluster_global_layout.cluster_max_advance_reservations.value: 0
+
 Qmon*cluster_global_layout.cluster_auto_user_oticket.minimum: 0
 Qmon*cluster_global_layout.cluster_auto_user_oticket.spinboxStyle: SPINBOX_STACKED_RIGHT
 Qmon*cluster_global_layout.cluster_auto_user_oticket.buttonSizeFixed: True
@@ -469,6 +481,8 @@ Qmon*cluster_extra_layout.xmtChildren: \
                   cluster_qlogin_command = qlogin_command, \
                   cluster_jmx_libjvm_path = jmx_libjvm_path, \
                   cluster_jmx_additional_jvm_args = jmx_additional_jvm_args, \
+                  cluster_jsv_url = jsv_url, \
+                  cluster_jsv_allowed_mod = jsv_allowed_mod, \
                   cluster_rsh_daemon = rsh_daemon, \
                   cluster_rsh_command = rsh_command, \
                   cluster_rlogin_daemon = rlogin_daemon, \
@@ -503,6 +517,8 @@ Qmon*cluster_extra_layout.layout: \
          Row { "@{Shepherd Command}" <> Fixed 50 em cluster_shepherd_cmd }\
          Row { "@{libjvm path}" <> Fixed 50 em cluster_jmx_libjvm_path }\
          Row { "@{Additional JVM args}" <> Fixed 50 em cluster_jmx_additional_jvm_args }\
+         Row { "@{JSV URL}" <> Fixed 50 em cluster_jsv_url }\
+         Row { "@{JSV allowed modification}" <> Fixed 50 em cluster_jsv_allowed_mod }\
       } \
       ## \
       Etched Through Caption tl "@{@fBInteractive Parameters}" Col { \
@@ -543,3 +559,5 @@ Qmon*cluster_extra_layout.cluster_pag_cmd.verifyCallback: TrimAndTrail(self);
 Qmon*cluster_extra_layout.cluster_token_extend_time.verifyCallback: TrimAndTrail(self);
 Qmon*cluster_extra_layout.cluster_jmx_libjvm_path.verifyCallback: TrimAndTrail(self);
 Qmon*cluster_extra_layout.cluster_jmx_additional_jvm_args.verifyCallback: TrimAndTrail(self);
+Qmon*cluster_extra_layout.cluster_jsv_url.verifyCallback: TrimAndTrail(self);
+Qmon*cluster_extra_layout.cluster_jsv_allowed_mod.verifyCallback: TrimAndTrail(self);

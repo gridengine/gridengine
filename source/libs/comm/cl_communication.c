@@ -44,6 +44,11 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
+#ifdef USE_POLL
+ #include <sys/poll.h>
+#endif
+
+
 #include "uti/sge_hostname.h"
 #include "uti/sge_string.h"
 #include "cl_commlib.h"
@@ -120,7 +125,7 @@ int cl_com_compare_endpoints(cl_com_endpoint_t* endpoint1, cl_com_endpoint_t* en
           if (endpoint1->comp_host && endpoint1->comp_name && 
               endpoint2->comp_host && endpoint2->comp_name) {
              if (strcmp(endpoint1->comp_name,endpoint2->comp_name) == 0) {
-               if (cl_com_compare_hosts(endpoint1->comp_host, endpoint2->comp_host) == CL_RETVAL_OK) {
+                if (cl_com_compare_hosts(endpoint1->comp_host, endpoint2->comp_host) == CL_RETVAL_OK) {
                    return 1;
                 }
              }
@@ -753,16 +758,14 @@ int cl_com_create_connection(cl_com_connection_t** connection) {
   
    /* init connection struct */
    (*connection)->check_endpoint_flag = CL_FALSE;
+   (*connection)->is_read_selected = CL_FALSE;
+   (*connection)->is_write_selected = CL_FALSE;
    (*connection)->check_endpoint_mid  = 0;
    (*connection)->crm_state       = CL_CRM_CS_UNDEFINED;
    (*connection)->crm_state_error = NULL;
    (*connection)->error_func      = NULL;
    (*connection)->tag_name_func   = NULL;
    (*connection)->com_private     = NULL;
-   (*connection)->ccm_received = 0;
-   (*connection)->ccm_sent = 0;
-   (*connection)->ccrm_received = 0;
-   (*connection)->ccrm_sent = 0;
    (*connection)->data_buffer_size  = CL_DEFINE_DATA_BUFFER_SIZE;
    (*connection)->auto_close_type = CL_CM_AC_UNDEFINED;
    (*connection)->read_buffer_timeout_time = 0;
@@ -1077,7 +1080,7 @@ const char* cl_com_get_connection_state(cl_com_connection_t* connection) {   /* 
          return "CL_CONNECTING";
       }
    }
-   CL_LOG(CL_LOG_ERROR,"undefined marked to close flag type");
+   CL_LOG(CL_LOG_ERROR, "undefined marked to close flag type");
    return "unknown";
 }
 
@@ -1140,8 +1143,6 @@ const char* cl_com_get_connection_sub_state(cl_com_connection_t* connection) {
                return "CL_COM_WAIT_FOR_CCRM";
             case CL_COM_SENDING_CCRM:
                return "CL_COM_SENDING_CCRM";
-            case CL_COM_CCRM_SENT:
-               return "CL_COM_CCRM_SENT";
             case CL_COM_DONE:
                return "CL_COM_DONE";
             default:
@@ -1613,21 +1614,33 @@ int cl_com_connection_get_client_socket_in_port(cl_com_connection_t* connection,
 #endif
 #define __CL_FUNCTION__ "cl_com_connection_get_fd()"
 int cl_com_connection_get_fd(cl_com_connection_t* connection, int* fd) {
-   if (connection == NULL) {
-      return CL_RETVAL_PARAMS;
+   int ret_val = CL_RETVAL_PARAMS;
+   if (fd == NULL || connection == NULL) {
+      return ret_val;
    }
    switch(connection->framework_type) {
       case CL_CT_TCP: {
-         return cl_com_tcp_get_fd(connection,fd);
+         ret_val = cl_com_tcp_get_fd(connection,fd);
+         break;
       }
       case CL_CT_SSL: {
-         return cl_com_ssl_get_fd(connection,fd);
+         ret_val = cl_com_ssl_get_fd(connection,fd);
+         break;
       }
       case CL_CT_UNDEFINED: {
+         ret_val = CL_RETVAL_NO_FRAMEWORK_INIT;
          break;
       }
    }
-   return CL_RETVAL_NO_FRAMEWORK_INIT;
+
+   if (ret_val == CL_RETVAL_OK && (*fd < 0)) {
+      CL_LOG_INT(CL_LOG_ERROR, "got no valid port: ", *fd);
+      ret_val = CL_RETVAL_NO_PORT_ERROR;
+   }
+   if (ret_val != CL_RETVAL_OK) {
+      CL_LOG_STR(CL_LOG_WARNING, "Cannot get fd for connection:", cl_get_error_text(ret_val));
+   }
+   return ret_val;
 }
 
 #ifdef __CL_FUNCTION__
@@ -1804,8 +1817,16 @@ static int cl_com_gethostbyname(const char *hostname_unresolved, cl_com_hostent_
 
    /* check if the incoming hostname is an ip address string */
    if (cl_com_is_ip_address_string(hostname_unresolved, &tmp_addr) == CL_TRUE) {
+      cl_com_hostent_t* tmp_hostent = NULL;
       CL_LOG(CL_LOG_INFO,"got ip address string as host name argument");
-      ret_val = cl_com_cached_gethostbyaddr(&tmp_addr, &hostname, NULL, NULL);
+      ret_val = cl_com_gethostbyaddr(&tmp_addr, &tmp_hostent, NULL);
+      if (ret_val == CL_RETVAL_OK) {
+         hostname = strdup(tmp_hostent->he->h_name);
+         cl_com_free_hostent(&tmp_hostent);
+         if (hostname == NULL) {
+            ret_val = CL_RETVAL_MALLOC;
+         }
+      }
       if (ret_val != CL_RETVAL_OK) {
          if (hostname != NULL) {
             free(hostname);
@@ -2815,7 +2836,7 @@ int cl_com_endpoint_list_refresh(cl_raw_list_t* list_p) {
          if (act_elem->last_used + ldata->entry_life_time < now.tv_sec ) {
             CL_LOG_STR(CL_LOG_INFO,"removing non static element (life timeout) with comp host:", act_elem->endpoint->comp_host);
             cl_raw_list_remove_elem(list_p, act_elem->raw_elem);
-            if (ldata->ht != NULL) {
+            if (ldata->ht != NULL && act_elem->endpoint != NULL && act_elem->endpoint->hash_id != NULL) {
                sge_htable_delete(ldata->ht, act_elem->endpoint->hash_id);
             }
             cl_com_free_endpoint(&(act_elem->endpoint));
@@ -3395,8 +3416,12 @@ int cl_com_connection_request_handler_cleanup(cl_com_connection_t* connection) {
 #define __CL_FUNCTION__ "cl_com_open_connection_request_handler()"
 /* WARNING connection list must be locked */
 
-
-int cl_com_open_connection_request_handler(cl_com_handle_t* handle, int timeout_val_sec, int timeout_val_usec, cl_select_method_t select_mode) {
+#ifdef USE_POLL
+int cl_com_open_connection_request_handler(cl_com_poll_t* poll_handle, cl_com_handle_t* handle, int timeout_val_sec, int timeout_val_usec, cl_select_method_t select_mode)
+#else
+int cl_com_open_connection_request_handler(cl_com_handle_t* handle, int timeout_val_sec, int timeout_val_usec, cl_select_method_t select_mode)
+#endif
+{
    cl_com_connection_t* service_connection = NULL;
    int usec_rest = timeout_val_usec;
    int sec_param = timeout_val_sec;
@@ -3420,6 +3445,11 @@ int cl_com_open_connection_request_handler(cl_com_handle_t* handle, int timeout_
       }
    }
 
+   /* service_handler flag must be reseted in any case */
+   if (service_connection == NULL && handle->service_handler != NULL) {
+      handle->service_handler->data_read_flag = CL_COM_DATA_NOT_READY;
+   }
+
    if (timeout_val_usec >= 1000000) {
       int full_usec_seconds = 0;
 
@@ -3431,12 +3461,22 @@ int cl_com_open_connection_request_handler(cl_com_handle_t* handle, int timeout_
    if (handle->connection_list != NULL) {
       switch(handle->framework) {
          case CL_CT_TCP: {
-            return cl_com_tcp_open_connection_request_handler(handle->connection_list, service_connection,
+#ifdef USE_POLL
+            return cl_com_tcp_open_connection_request_handler(poll_handle, handle, handle->connection_list, service_connection,
                                                               sec_param , usec_rest, select_mode);
+#else
+            return cl_com_tcp_open_connection_request_handler(handle, handle->connection_list, service_connection,
+                                                              sec_param , usec_rest, select_mode);
+#endif
          }
          case CL_CT_SSL: {
-            return cl_com_ssl_open_connection_request_handler(handle->connection_list, service_connection,
+#ifdef USE_POLL
+            return cl_com_ssl_open_connection_request_handler(poll_handle, handle, handle->connection_list, service_connection,
                                                               sec_param , usec_rest, select_mode);
+#else
+            return cl_com_ssl_open_connection_request_handler(handle, handle->connection_list, service_connection,
+                                                              sec_param , usec_rest, select_mode);
+#endif
          }
          case CL_CT_UNDEFINED: {
             break;
@@ -3448,6 +3488,66 @@ int cl_com_open_connection_request_handler(cl_com_handle_t* handle, int timeout_
 
    return CL_RETVAL_UNDEFINED_FRAMEWORK;
 }
+
+
+#ifdef USE_POLL
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_free_poll_array()"
+int cl_com_free_poll_array(cl_com_poll_t* poll_handle) {
+   /*
+    * This procedure releases the memory malloc()ed inside
+    * the specified cl_com_poll_t structure. 
+    */
+   if (poll_handle == NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+   if (poll_handle->poll_array != NULL) {
+      free(poll_handle->poll_array);
+   }
+   if (poll_handle->poll_con != NULL) {
+      free(poll_handle->poll_con);
+   }
+   poll_handle->poll_array = NULL;
+   poll_handle->poll_con = NULL;
+   poll_handle->poll_fd_count = 0;
+   CL_LOG(CL_LOG_INFO, "Freed poll_handle");
+   return CL_RETVAL_OK;
+}
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_malloc_poll_array()"
+int cl_com_malloc_poll_array(cl_com_poll_t* poll_handle, unsigned long nr_of_malloced_connections) {
+
+   /* 
+    * Free and re-malloc() the buffers of the specified poll_handle to the
+    * so that nr_of_malloced_connections fit into the buffers.
+    */
+   if (poll_handle == NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+   cl_com_free_poll_array(poll_handle);
+
+   poll_handle->poll_array = (struct pollfd*) malloc(nr_of_malloced_connections * sizeof(struct pollfd));
+   if (poll_handle->poll_array == NULL) {
+      cl_com_free_poll_array(poll_handle);
+      return CL_RETVAL_MALLOC;
+   }
+
+   poll_handle->poll_con = (cl_com_connection_t**) malloc(nr_of_malloced_connections * sizeof(cl_com_connection_t*));
+   if (poll_handle->poll_con == NULL) {
+      cl_com_free_poll_array(poll_handle);
+      return CL_RETVAL_MALLOC;
+   }
+
+   poll_handle->poll_fd_count = nr_of_malloced_connections;
+   CL_LOG_INT(CL_LOG_INFO, "nr of file descriptors fitting into the poll_array: ", (int)poll_handle->poll_fd_count);
+   return CL_RETVAL_OK;
+}
+#endif
 
 
 
@@ -4013,11 +4113,17 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
                /* This is not working for disabled hash */
 
                if ((tmp_elem = cl_connection_list_get_elem_endpoint(connection_list, connection->remote)) != NULL) {
-                  cl_com_connection_t* tmp_con = NULL;
-                  tmp_con = tmp_elem->connection;
                   /* endpoint is not unique, check already connected endpoint */
-                  tmp_con->check_endpoint_flag = CL_TRUE;             
-
+                  cl_com_connection_t* tmp_con = tmp_elem->connection;
+                  tmp_con->check_endpoint_flag = CL_TRUE;
+                  /*
+                   * delete the hash_id of the connection, otherwise the 
+                   * current one would not have a hash key anymore
+                   */
+                  if (connection->remote != NULL && connection->remote->hash_id != NULL) {
+                     free(connection->remote->hash_id);
+                     connection->remote->hash_id = NULL;
+                  }
                   snprintf(tmp_buffer,
                            256, 
                            MSG_CL_TCP_FW_ENDPOINT_X_ALREADY_CONNECTED_SSU,
@@ -4049,8 +4155,14 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
                   
                   CL_LOG(CL_LOG_INFO,"new client is unique, add it to hash");
 
-                  /* insert into hash */
-                  if (ldata->r_ht != NULL) {
+                  /*
+                   * insert into hash
+                   *
+                   * Incoming (accepted) connections are added to the hash when the 
+                   * client endpoint name is resovled. Here the client is unique and
+                   * we can create a hash key for the endpoint.
+                   */
+                  if (ldata->r_ht != NULL && connection->remote != NULL && connection->remote->hash_id != NULL) {
                      sge_htable_store(ldata->r_ht, connection->remote->hash_id, elem);
                   }
                }
@@ -4629,9 +4741,7 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
          {
             char* gdi_timeout = NULL;
             cl_com_get_parameter_list_value("gdi_timeout", &gdi_timeout);
-            if (gdi_timeout == NULL) {
-               cl_com_set_synchron_receive_timeout(connection->handler, CL_DEFINE_SYNCHRON_RECEIVE_TIMEOUT);
-            } else {
+            if (gdi_timeout != NULL) {
                int timeout = atoi(gdi_timeout);
                cl_com_set_synchron_receive_timeout(connection->handler, timeout);
                free(gdi_timeout);

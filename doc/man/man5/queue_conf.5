@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2008/05/21 09:47:35 $     Revision: $Revision: 1.29 $
+.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2009/01/12 13:54:14 $     Revision: $Revision: 1.32 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QUEUE_CONF 5 "$Date: 2008/05/21 09:47:35 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH QUEUE_CONF 5 "$Date: 2009/01/12 13:54:14 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 queue_conf \- xxQS_NAMExx queue configuration file format
@@ -371,8 +371,13 @@ shell. The shell will only forward them to the job if they are not
 recognized as valid shell options.
 .PP
 The default for \fBshell_start_mode\fP is \fIposix_compliant\fP.
-Note, though, that the \fBshell_start_mode\fB can only used for batch jobs submitted by qsub 
-and can not used for interactive jobs submitted by \fBqrsh\fB, \fBqsh\fB, \fBqlogin\fB.
+Note, though, that the \fBshell_start_mode\fP can only be used for batch jobs
+submitted by 
+. M qsub 1
+and can't be used for interactive jobs submitted by
+. M qrsh 1 ,
+. M qsh 1 ,
+. M qlogin 1 .
 .SS "\fBprolog\fP"
 The executable path of a shell script that is started before execution
 of xxQS_NAMExx jobs with the same environment setting as that for the
@@ -564,15 +569,15 @@ access to the queue.
 A list of xxQS_NAMExx queue names as defined for \fIqueue_name\fP in
 .M sge_types 1 . 
 Subordinate relationships are in effect
-only between queue instances residing at the same host. If there is a 
-queue instance (be in the sub- or superordinated one) on only one
-particular host this relationship is ignored.
-queue instances residing on the same host will be suspended when a specified 
+only between queue instances residing at the same host. 
+The relationship does not apply and is ignored when jobs are 
+running in queue instances on other hosts. 
+Queue instances residing on the same host will be suspended when a specified 
 count of jobs is running in this queue instance.
 The list specification is the same as that of the \fBload_thresholds\fP
 parameter above, e.g. low_pri_q=5,small_q. The numbers denote the
-job slots of the queue that have to be filled to trigger the suspension
-of the subordinated queue. If no value is assigned a
+job slots of the queue that have to be filled in the superordinated queue 
+to trigger the suspension of the subordinated queue. If no value is assigned a
 suspension is triggered if all slots of the queue are filled.
 .PP
 On nodes which

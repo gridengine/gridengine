@@ -99,6 +99,7 @@
 #include "sgeobj/sge_advance_reservationL.h"
 #include "sgeobj/sge_ackL.h"
 #include "sgeobj/sge_event_requestL.h"
+#include "sgeobj/sge_jsvL.h"
 
 #ifdef  __cplusplus
 extern "C" {
@@ -281,6 +282,8 @@ extern "C" {
       {ACK_LOWERBOUND, ACKS, ACKN},             /* acknowledge */
 
       {EVR_LOWERBOUND, EVRS, EVRN},             /* event master requests */
+      {JSV_LOWERBOUND, JSVS, JSVN},             /* job submission verifier */
+      {RTIC_LOWERBOUND, RTICS, RTICN},          /* internal list for reprioritzie tickets to distribute */
 
       {0, 0, NULL}
    };

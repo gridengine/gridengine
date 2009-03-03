@@ -96,7 +96,8 @@ enum {
    CT_messages_added,         /* if true, the scheduler info messages have been added for this category */
    CT_resource_contribution,  /* resource request dependent contribution on urgency 
                                  this value is common with all jobs of a category */
-   CT_rc_valid                /* indicates whether cached CT_resource_contribution is valid */
+   CT_rc_valid,               /* indicates whether cached CT_resource_contribution is valid */
+   CT_reservation_rejected    /* has this category been rejected as it can not be reserved */
 };
 
 LISTDEF(CT_Type)
@@ -108,7 +109,7 @@ LISTDEF(CT_Type)
    SGE_BOOL(CT_messages_added, CULL_DEFAULT)
    SGE_DOUBLE(CT_resource_contribution, CULL_DEFAULT)
    SGE_BOOL(CT_rc_valid, CULL_DEFAULT)
-
+   SGE_ULONG(CT_reservation_rejected, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(CTN)
@@ -120,6 +121,7 @@ NAMEDEF(CTN)
    NAME("CT_messages_added")
    NAME("CT_resource_contribution")
    NAME("CT_rc_valid")
+   NAME("CT_reservation_rejected")
 NAMEEND
 
 #define CTS sizeof(CTN)/sizeof(char*)

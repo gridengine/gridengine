@@ -1,32 +1,32 @@
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
- * 
+ *
  *  The Contents of this file are made available subject to the terms of
  *  the Sun Industry Standards Source License Version 1.2
- * 
+ *
  *  Sun Microsystems Inc., March, 2001
- * 
- * 
+ *
+ *
  *  Sun Industry Standards Source License Version 1.2
  *  =================================================
  *  The contents of this file are subject to the Sun Industry Standards
  *  Source License Version 1.2 (the "License"); You may not use this file
  *  except in compliance with the License. You may obtain a copy of the
  *  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
- * 
+ *
  *  Software provided under this License is provided on an "AS IS" basis,
  *  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
  *  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
  *  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
  *  See the License for the specific provisions governing your rights and
  *  obligations concerning the Software.
- * 
+ *
  *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
- * 
+ *
  *   Copyright: 2001 by Sun Microsystems, Inc.
- * 
+ *
  *   All Rights Reserved.
- * 
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 #include <stdlib.h>
@@ -83,49 +83,49 @@
 /*-------------------------------------------------------------------------*/
 static void signal_slave_jobs_in_queue(sge_gdi_ctx_class_t *ctx, int how, lListElem *jep, monitoring_t *monitor);
 
-static void signal_slave_tasks_of_job(sge_gdi_ctx_class_t *ctx, int how, lListElem *jep, lListElem *jatep, 
+static void signal_slave_tasks_of_job(sge_gdi_ctx_class_t *ctx, int how, lListElem *jep, lListElem *jatep,
                                       monitoring_t *monitor);
 
 static int sge_change_queue_state(sge_gdi_ctx_class_t *ctx,
-                                  char *user, char *host, lListElem *qep, 
-                                  u_long32 action, u_long32 force, lList **answer, 
+                                  char *user, char *host, lListElem *qep,
+                                  u_long32 action, u_long32 force, lList **answer,
                                   monitoring_t *monitor);
 
 static int sge_change_job_state(sge_gdi_ctx_class_t *ctx,
-                                char *user, char *host, lListElem *jep, lListElem *jatep, 
-                                u_long32 task_id, u_long32 action, u_long32 force, 
+                                char *user, char *host, lListElem *jep, lListElem *jatep,
+                                u_long32 task_id, u_long32 action, u_long32 force,
                                 lList **answer, monitoring_t *monitor);
 
-static int qmod_queue_weakclean(sge_gdi_ctx_class_t *ctx, 
-                                lListElem *qep, u_long32 force, lList **answer, 
+static int qmod_queue_weakclean(sge_gdi_ctx_class_t *ctx,
+                                lListElem *qep, u_long32 force, lList **answer,
                                 char *user, char *host, int isoperator, int isowner,
-                                monitoring_t *monitor);  
+                                monitoring_t *monitor);
 
 static int qmod_queue_clean(sge_gdi_ctx_class_t *ctx,
-                            lListElem *qep, u_long32 force, lList **answer, 
+                            lListElem *qep, u_long32 force, lList **answer,
                             char *user, char *host, int isoperator, int isowner,
                             monitoring_t *monitor);
 
 static void qmod_job_suspend(sge_gdi_ctx_class_t *ctx,
-                             lListElem *jep, lListElem *jatep, lListElem *queueep, 
+                             lListElem *jep, lListElem *jatep, lListElem *queueep,
                              u_long32 force, lList **answer, char *user, char *host,
                              monitoring_t *monitor);
 
 static void qmod_job_unsuspend(sge_gdi_ctx_class_t *ctx,
-                               lListElem *jep, lListElem *jatep, lListElem *queueep, 
+                               lListElem *jep, lListElem *jatep, lListElem *queueep,
                                u_long32 force, lList **answer, char *user, char *host,
                                monitoring_t *monitor);
 
-static void qmod_job_reschedule(sge_gdi_ctx_class_t *ctx, 
-                                lListElem *jep, lListElem *jatep, lListElem *queueep, 
+static void qmod_job_reschedule(sge_gdi_ctx_class_t *ctx,
+                                lListElem *jep, lListElem *jatep, lListElem *queueep,
                                 u_long32 force, lList **answer, char *user, char *host,
                                 monitoring_t *monitor);
 
 /*-------------------------------------------------------------------------*/
 
-void 
+void
 sge_gdi_qmod(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task,
-             monitoring_t *monitor) 
+             monitoring_t *monitor)
 {
    lList *alp = NULL;
    lListElem *dep;
@@ -138,16 +138,24 @@ sge_gdi_qmod(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_t
    lList *cqueue_list = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
    dstring cqueue_buffer = DSTRING_INIT;
    dstring hostname_buffer = DSTRING_INIT;
-   
+   object_description *object_base = NULL;
+
    DENTER(TOP_LAYER, "sge_gdi_qmod");
 
 
    if (!packet->host || (strlen(packet->user) == 0) || !packet->commproc) {
       CRITICAL((SGE_EVENT, MSG_SGETEXT_NULLPTRPASSED_S, SGE_FUNC));
-      answer_list_add(&(task->answer_list), SGE_EVENT, 
+      answer_list_add(&(task->answer_list), SGE_EVENT,
                       STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       sge_dstring_free(&cqueue_buffer);
       sge_dstring_free(&hostname_buffer);
+      DEXIT;
+      return;
+   }
+
+   object_base = object_type_get_object_description();
+   if (sge_chck_mod_perm_host(&(task->answer_list), task->target, packet->host,
+                              packet->commproc, 0, NULL, monitor, object_base)) {
       DEXIT;
       return;
    }
@@ -163,15 +171,15 @@ sge_gdi_qmod(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_t
       u_long32 id_action = lGetUlong(dep, ID_action);
 
       found = false;
-      
+
       if ((id_action & JOB_DO_ACTION) == 0) {
          qref_list_add(&qref_list, NULL, lGetString(dep, ID_str));
          qref_list_resolve_hostname(qref_list);
-         qref_list_resolve(qref_list, NULL, &tmp_list, 
+         qref_list_resolve(qref_list, NULL, &tmp_list,
                            &found_something, cqueue_list,
                            master_hgroup_list,
                            true, true);
-         if (found_something) { 
+         if (found_something) {
             lListElem *qref = NULL;
 
             id_action = (id_action & (~QUEUE_DO_ACTION));
@@ -205,22 +213,22 @@ sge_gdi_qmod(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_t
       lFreeList(&tmp_list);
       }
       if (!found) {
-         bool is_jobName_suport = false; 
+         bool is_jobName_suport = false;
          u_long action = lGetUlong(dep, ID_action);
-         if ((action & JOB_DO_ACTION) > 0 && 
+         if ((action & JOB_DO_ACTION) > 0 &&
              (action & QUEUE_DO_ACTION) == 0) {
             action = (action & (~JOB_DO_ACTION));
             is_jobName_suport = true;
          }
-         
-         /* 
+
+         /*
          ** We found no queue so look for a job. This only makes sense for
          ** suspend, unsuspend and reschedule
          */
-         if (sge_strisint(lGetString(dep, ID_str)) && 
-               (action == QI_DO_SUSPEND || 
+         if (sge_strisint(lGetString(dep, ID_str)) &&
+               (action == QI_DO_SUSPEND ||
                 action == QI_DO_RESCHEDULE ||
-                action == QI_DO_CLEARERROR || 
+                action == QI_DO_CLEARERROR ||
                 action == QI_DO_UNSUSPEND)) {
             jobid = strtol(lGetString(dep, ID_str), NULL, 10);
 
@@ -263,19 +271,19 @@ sge_gdi_qmod(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_t
                      /* this specifies no queue, so lets probe for a job */
                      /* change state of job: */
                      sge_change_job_state(ctx, packet->user, packet->host, job, tmp_task, 0,
-                         action, lGetUlong(dep, ID_force), &alp, monitor);   
+                         action, lGetUlong(dep, ID_force), &alp, monitor);
                      found = true;
                   }
                }
 
-               /* create more precise GDI answers also for pending jobs/tasks and jobs/tasks in hold state 
-                  When the operation is to be applied on the whole job array but no task is enrolled so far 
-                  (i.e. not found) only one single GDI answer is created. Otherwise one message is created 
+               /* create more precise GDI answers also for pending jobs/tasks and jobs/tasks in hold state
+                  When the operation is to be applied on the whole job array but no task is enrolled so far
+                  (i.e. not found) only one single GDI answer is created. Otherwise one message is created
                   per task */
                if (alltasks && job_is_array(job)) {
                   if (!found) {
                      sge_change_job_state(ctx, packet->user, packet->host, job, NULL, 0,
-                         action, lGetUlong(dep, ID_force), &alp, monitor);   
+                         action, lGetUlong(dep, ID_force), &alp, monitor);
                      found = true;
                   }
                } else {
@@ -292,7 +300,7 @@ sge_gdi_qmod(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_t
                            DPRINTF(("Modify job: "sge_u32"."sge_u32"\n", jobid,
                               taskid));
                            sge_change_job_state(ctx, packet->user, packet->host, job, NULL, taskid,
-                               action, lGetUlong(dep, ID_force), &alp, monitor);   
+                               action, lGetUlong(dep, ID_force), &alp, monitor);
                            found = true;
                         }
                      }
@@ -307,7 +315,7 @@ sge_gdi_qmod(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_t
                            DPRINTF(("Modify job: "sge_u32"."sge_u32"\n", jobid,
                                     taskid));
                            sge_change_job_state(ctx, packet->user, packet->host, job, NULL, taskid,
-                                                action, lGetUlong(dep, ID_force), &alp, monitor);   
+                                                action, lGetUlong(dep, ID_force), &alp, monitor);
                            found = true;
                         }
                      }
@@ -325,7 +333,7 @@ sge_gdi_qmod(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_t
                            DPRINTF(("Modify job: "sge_u32"."sge_u32"\n", jobid,
                                     taskid));
                            sge_change_job_state(ctx, packet->user, packet->host, job, NULL, taskid,
-                                                action, lGetUlong(dep, ID_force), &alp, monitor);   
+                                                action, lGetUlong(dep, ID_force), &alp, monitor);
                            found = true;
                         }
                      }
@@ -344,7 +352,7 @@ sge_gdi_qmod(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_t
                            DPRINTF(("Modify job: "sge_u32"."sge_u32"\n", jobid,
                                     taskid));
                            sge_change_job_state(ctx, packet->user, packet->host, job, NULL, taskid,
-                                                action, lGetUlong(dep, ID_force), &alp, monitor);   
+                                                action, lGetUlong(dep, ID_force), &alp, monitor);
                            found = true;
                         }
                      }
@@ -354,11 +362,11 @@ sge_gdi_qmod(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_t
          }
          /* job name or pattern was submitted */
          else if (is_jobName_suport && (
-                  action == QI_DO_SUSPEND || 
+                  action == QI_DO_SUSPEND ||
                   action == QI_DO_RESCHEDULE ||
-                  action == QI_DO_CLEARERROR || 
+                  action == QI_DO_CLEARERROR ||
                   action == QI_DO_UNSUSPEND)) {
-                
+
             const char *job_name = lGetString(dep, ID_str);
             const lListElem *job;
             lListElem *mod = NULL;
@@ -385,21 +393,21 @@ sge_gdi_qmod(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_t
          if ((action & JOB_DO_ACTION)) {
             action = action - JOB_DO_ACTION;
          }
-*/         
+*/
          /*
-         ** If the action is QI_DO_UNSUSPEND or QI_DO_SUSPEND, 
+         ** If the action is QI_DO_UNSUSPEND or QI_DO_SUSPEND,
          ** 'invalid queue or job' will be printed,
          ** otherwise 'invalid queue' will be printed, because these actions
          ** are not suitable for jobs.
          */
          if ((action & QUEUE_DO_ACTION) == 0 && (
              (action & JOB_DO_ACTION) != 0 ||
-             (action & QI_DO_SUSPEND) != 0 || 
-             (action & QI_DO_UNSUSPEND) != 0|| 
+             (action & QI_DO_SUSPEND) != 0 ||
+             (action & QI_DO_UNSUSPEND) != 0||
              (action & QI_DO_CLEAN) != 0))
             ERROR((SGE_EVENT, MSG_QUEUE_INVALIDQORJOB_S, lGetString(dep, ID_str)));
          else
-            ERROR((SGE_EVENT, MSG_QUEUE_INVALIDQ_S, lGetString(dep, ID_str)));  
+            ERROR((SGE_EVENT, MSG_QUEUE_INVALIDQ_S, lGetString(dep, ID_str)));
          answer_list_add(&alp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       }
    }
@@ -408,20 +416,20 @@ sge_gdi_qmod(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_t
    sge_dstring_free(&hostname_buffer);
 
    task->answer_list = alp;
-   
+
    DEXIT;
 }
 
-static int 
+static int
 sge_change_queue_state(sge_gdi_ctx_class_t *ctx,
-                       char *user, char *host, lListElem *qep, u_long32 action, 
-                       u_long32 force, lList **answer, monitoring_t *monitor) 
+                       char *user, char *host, lListElem *qep, u_long32 action,
+                       u_long32 force, lList **answer, monitoring_t *monitor)
 {
    bool isoperator;
    bool isowner;
    int result = 0;
    const char *ehname = lGetHost(qep, QU_qhostname);
-   
+
    DENTER(TOP_LAYER, "sge_change_queue_state");
 
    isowner = qinstance_check_owner(qep, user);
@@ -457,23 +465,17 @@ sge_change_queue_state(sge_gdi_ctx_class_t *ctx,
 
       case QI_DO_RESCHEDULE:
          result = qmod_queue_weakclean(ctx, qep, force, answer, user, host, isoperator, isowner, monitor);
-	 break;
+         break;
       default:
          INFO((SGE_EVENT, MSG_LOG_QUNKNOWNQMODCMD_U, sge_u32c(action)));
          answer_list_add(answer, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
          break;
    }
 
-   sge_event_spool(ctx,
-                   answer, 0, sgeE_QINSTANCE_MOD,
-                   0, 0, lGetString(qep, QU_qname),
-                   ehname, NULL,
-                   qep, NULL, NULL, true, true);
-
    switch (action) {
       case QI_DO_CLEAN:
       case QI_DO_RESCHEDULE:
-         cqueue_list_del_all_orphaned(ctx, *(object_type_get_master_list(SGE_TYPE_CQUEUE)), answer, 
+         cqueue_list_del_all_orphaned(ctx, *(object_type_get_master_list(SGE_TYPE_CQUEUE)), answer,
                lGetString(qep, QU_qname), ehname);
          break;
       default:
@@ -500,7 +502,7 @@ monitoring_t *monitor
    u_long32 job_id;
 
    DENTER(TOP_LAYER, "sge_change_job_state");
-  
+
    job_id = lGetUlong(jep, JB_job_number);
 
    if (strcmp(user, lGetString(jep, JB_owner)) && !manop_is_operator(user)) {
@@ -512,9 +514,9 @@ monitoring_t *monitor
 
    if (!jatep) {
       /* unenrolled tasks always are not-running pending/hold */
-      if (task_id) 
+      if (task_id)
          WARNING((SGE_EVENT, MSG_QMODJOB_NOTENROLLED_UU, sge_u32c(job_id), sge_u32c(task_id)));
-      else 
+      else
          WARNING((SGE_EVENT, MSG_QMODJOB_NOTENROLLED_U, sge_u32c(job_id)));
       answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
       DEXIT;
@@ -525,7 +527,7 @@ monitoring_t *monitor
 
    if (lGetString(jatep, JAT_master_queue)) {
       queueep = cqueue_list_locate_qinstance(
-                              *(object_type_get_master_list(SGE_TYPE_CQUEUE)), 
+                              *(object_type_get_master_list(SGE_TYPE_CQUEUE)),
                               lGetString(jatep, JAT_master_queue));
    } else {
       queueep = NULL;
@@ -543,11 +545,11 @@ monitoring_t *monitor
       case JRUNNING:
          qmod_job_unsuspend(ctx, jep, jatep, queueep, force, answer, user, host, monitor);
          break;
-         
+
       case QI_DO_CLEARERROR:
          if (VALID(JERROR, lGetUlong(jatep, JAT_state))) {
             lSetUlong(jatep, JAT_state, lGetUlong(jatep, JAT_state) & ~JERROR);
-            ja_task_message_trash_all_of_type_X(jatep, 1); 
+            ja_task_message_trash_all_of_type_X(jatep, 1);
 /* lWriteElemTo(jatep, stderr); */
             sge_event_spool(ctx,
                             answer, 0, sgeE_JATASK_MOD,
@@ -567,7 +569,7 @@ monitoring_t *monitor
          }
          answer_list_add(answer, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
          break;
-         
+
       default:
          INFO((SGE_EVENT, MSG_LOG_JOBUNKNOWNQMODCMD_U, sge_u32c(action)));
          answer_list_add(answer, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
@@ -589,13 +591,13 @@ lList **answer,
 char *user,
 char *host,
 int isoperator,
-int isowner, 
+int isowner,
 monitoring_t *monitor
 ) {
    DENTER(TOP_LAYER, "qmod_queue_weakclean");
 
    if (!isoperator && !isowner) {
-      ERROR((SGE_EVENT, MSG_QUEUE_NORESCHEDULEQPERMS_SS, user, 
+      ERROR((SGE_EVENT, MSG_QUEUE_NORESCHEDULEQPERMS_SS, user,
          lGetString(qep, QU_full_name)));
       answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
@@ -632,9 +634,9 @@ monitoring_t *monitor
    qname = lGetString(qep, QU_full_name);
 
    DPRINTF(("cleaning queue >%s<\n", qname ));
-   
+
    if (!manop_is_manager(user)) {
-      ERROR((SGE_EVENT, MSG_QUEUE_NOCLEANQPERMS)); 
+      ERROR((SGE_EVENT, MSG_QUEUE_NOCLEANQPERMS));
       answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return -1;
@@ -718,7 +720,7 @@ monitoring_t *monitor
    if (VALID(JSUSPENDED, lGetUlong(jatep, JAT_state))) {
       /* this job is already suspended or lives in a suspended queue */
       if (force && queueep) {
-         /* here force means to send the suspend signal again 
+         /* here force means to send the suspend signal again
             this can only be done if we know the queue this job
             runs in */
          if (sge_signal_queue(ctx, SGE_SIGSTOP, queueep, jep, jatep, monitor)) {
@@ -747,8 +749,8 @@ monitoring_t *monitor
          answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
       }
 
-      /* 
-      ** may be the queue is suspended, than the job might not be 
+      /*
+      ** may be the queue is suspended, than the job might not be
       */
       state = lGetUlong(jatep, JAT_state);
       CLEARBIT(JRUNNING, state);
@@ -758,7 +760,7 @@ monitoring_t *monitor
          lSetUlong(jatep, JAT_stop_initiate_time, now);
 
       sge_event_spool(ctx,
-                      answer, 0, sgeE_JATASK_MOD, 
+                      answer, 0, sgeE_JATASK_MOD,
                       jobid, jataskid, NULL, NULL, NULL,
                       jep, jatep, NULL, true, true);
    }
@@ -814,7 +816,7 @@ monitoring_t *monitor
             if (migrate_on_suspend)
                lSetUlong(jatep, JAT_stop_initiate_time, now);
             sge_event_spool(ctx,
-                            answer, 0, sgeE_JATASK_MOD, 
+                            answer, 0, sgeE_JATASK_MOD,
                             jobid, jataskid, NULL, NULL, NULL,
                             jep, jatep, NULL, true, true);
          }
@@ -850,7 +852,7 @@ monitoring_t *monitor
    jobid = lGetUlong(jep, JB_job_number);
    jataskid = lGetUlong(jatep, JAT_task_number);
 
-   /* admin suspend may not override suspend from threshold */ 
+   /* admin suspend may not override suspend from threshold */
    if (VALID(JSUSPENDED_ON_THRESHOLD, lGetUlong(jatep, JAT_state))) {
       if (VALID(JSUSPENDED, lGetUlong(jatep, JAT_state))) {
          if (job_is_array(jep)) {
@@ -870,7 +872,7 @@ monitoring_t *monitor
          reporting_create_job_log(NULL, now, JL_UNSUSPENDED, user, host, NULL, jep, jatep, NULL, NULL);
          DEXIT;
          return;
-      } 
+      }
       else {
          /* guess admin tries to remove threshold suspension by qmon -us <jobid> */
          if (job_is_array(jep)) {
@@ -887,10 +889,10 @@ monitoring_t *monitor
    if (VALID(JRUNNING, lGetUlong(jatep, JAT_state))) {
       /* this job is already running */
       if (force && queueep) {
-         /* 
-         ** here force means to send the cont signal again 
+         /*
+         ** here force means to send the cont signal again
          ** this can only be done if we know the queue this job
-         ** runs in 
+         ** runs in
          */
          if (sge_signal_queue(ctx, SGE_SIGCONT, queueep, jep, jatep, monitor)) {
             if (job_is_array(jep)) {
@@ -913,12 +915,12 @@ monitoring_t *monitor
          if (job_is_array(jep)) {
             WARNING((SGE_EVENT, MSG_JOB_ALREADYUNSUSPENDED_SUU, user, sge_u32c(jobid), sge_u32c(jataskid)));
          } else {
-            WARNING((SGE_EVENT, MSG_JOB_ALREADYUNSUSPENDED_SU, user, sge_u32c(jobid))); 
+            WARNING((SGE_EVENT, MSG_JOB_ALREADYUNSUSPENDED_SU, user, sge_u32c(jobid)));
          }
          answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
       }
-      /* 
-      ** job is already running, so no job information has to be changed 
+      /*
+      ** job is already running, so no job information has to be changed
       */
    }
    else {   /* job wasn't suspended till now */
@@ -964,7 +966,7 @@ monitoring_t *monitor
                INFO((SGE_EVENT, MSG_JOB_UNSUSPENDJOB_SU, user, sge_u32c(jobid)));
             }
             answer_list_add(answer, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
-            
+
             state = lGetUlong(jatep, JAT_state);
             SETBIT(JRUNNING, state);
             CLEARBIT(JSUSPENDED, state);
@@ -991,7 +993,7 @@ void rebuild_signal_events()
    for_each(jep, *(object_type_get_master_list(SGE_TYPE_JOB)))
    {
       for_each (jatep, lGetList(jep, JB_ja_tasks))
-      { 
+      {
          time_t when = (time_t)lGetUlong(jatep, JAT_pending_signal_delivery_time);
 
          if (lGetUlong(jatep, JAT_pending_signal) && (when > 0))
@@ -999,7 +1001,7 @@ void rebuild_signal_events()
             u_long32 key1 = lGetUlong(jep, JB_job_number);
             u_long32 key2 = lGetUlong(jatep, JAT_task_number);
             te_event_t ev = NULL;
-            
+
             ev = te_new_event(when, TYPE_SIGNAL_RESEND_EVENT, ONE_TIME_EVENT, key1, key2, NULL);
             te_add_event(ev);
             te_free_event(&ev);
@@ -1009,7 +1011,7 @@ void rebuild_signal_events()
 
    /* Q U E U E */
    for_each(cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE)))
-   { 
+   {
       lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
       lListElem *qinstance;
 
@@ -1019,7 +1021,7 @@ void rebuild_signal_events()
 
          if (lGetUlong(qinstance, QU_pending_signal) && (when > 0))
          {
-            const char* str_key = lGetString(qinstance, QU_full_name); 
+            const char* str_key = lGetString(qinstance, QU_full_name);
             te_event_t ev = NULL;
 
             ev = te_new_event(when, TYPE_SIGNAL_RESEND_EVENT, ONE_TIME_EVENT, 0, 0, str_key);
@@ -1033,7 +1035,7 @@ void rebuild_signal_events()
    return;
 } /* rebuild_signal_events() */
 
-/* this function is called by our timer mechanism for resending signals */  
+/* this function is called by our timer mechanism for resending signals */
 void resend_signal_event(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitoring_t *monitor)
 {
    lListElem *qep, *jep, *jatep;
@@ -1053,7 +1055,7 @@ void resend_signal_event(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitorin
          DEXIT;
          return;
       }
-      
+
       if ((qep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), lGetString(jatep, JAT_master_queue)))) {
          sge_signal_queue(ctx, lGetUlong(jatep, JAT_pending_signal), qep, jep, jatep, monitor);
       }
@@ -1065,7 +1067,7 @@ void resend_signal_event(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitorin
          DEXIT;
          return;
       }
-      
+
       sge_signal_queue(ctx, lGetUlong(qep, QU_pending_signal), qep, NULL, NULL, monitor);
    }
 
@@ -1125,12 +1127,12 @@ monitoring_t *monitor
 
    now = sge_get_gmt();
 
-   DEBUG((SGE_EVENT, "queue_signal: %d, queue: %s, job: %d, jatask: %d", how, 
+   DEBUG((SGE_EVENT, "queue_signal: %d, queue: %s, job: %d, jatask: %d", how,
             (qep?lGetString(qep, QU_full_name):"none"),
             (int)(jep?lGetUlong(jep,JB_job_number):-1),
             (int)(jatep?lGetUlong(jatep,JAT_task_number):-1)
         ));
- 
+
    if (!jep && (how == SGE_SIGSTOP || how == SGE_SIGCONT))
       sge_propagate_queue_suspension(lGetString(qep, QU_full_name), how);
 
@@ -1138,7 +1140,7 @@ monitoring_t *monitor
    if (!qinstance_state_is_unknown(qep)) {
       const char *hnm, *pnm;
 
-      pnm = prognames[EXECD]; 
+      pnm = prognames[EXECD];
       hnm = lGetHost(qep, QU_qhostname);
 
       if ((i = init_packbuffer(&pb, 256, 0)) == PACK_SUCCESS) {
@@ -1152,17 +1154,17 @@ monitoring_t *monitor
             if (!lGetString(jatep, JAT_master_queue) ||
                 is_pe_master_task_send(jatep)) {
                /* TAG_SIGJOB */
-               packint(&pb, lGetUlong(jep, JB_job_number));   
+               packint(&pb, lGetUlong(jep, JB_job_number));
                packint(&pb, lGetUlong(jatep, JAT_task_number));
                packstr(&pb, NULL);
-               packint(&pb, how); 
-            } 
+               packint(&pb, how);
+            }
          } else {
             /* TAG_SIGQUEUE */
             packint(&pb, 0);
-            packint(&pb, 0); 
+            packint(&pb, 0);
             packstr(&pb, lGetString(qep, QU_full_name));
-            packint(&pb, how); 
+            packint(&pb, how);
          }
 
          if (mconf_get_simulate_execds()) {
@@ -1172,12 +1174,12 @@ monitoring_t *monitor
          } else {
             if (pb_filled(&pb)) {
                u_long32 dummy = 0;
-               i = gdi2_send_message_pb(ctx, 0, pnm, 1, hnm, jep ? TAG_SIGJOB: TAG_SIGQUEUE, 
+               i = gdi2_send_message_pb(ctx, 0, pnm, 1, hnm, jep ? TAG_SIGJOB: TAG_SIGQUEUE,
                              &pb, &dummy);
             }
          }
 
-         MONITOR_MESSAGES_OUT(monitor);                          
+         MONITOR_MESSAGES_OUT(monitor);
          clear_packbuffer(&pb);
       } else {
          i = CL_RETVAL_MALLOC;  /* an error */
@@ -1198,8 +1200,8 @@ monitoring_t *monitor
    if (jep) {
       te_event_t ev = NULL;
 
-      DPRINTF(("JOB "sge_u32": %s signal %s (retry after "sge_u32" seconds) host: %s\n", 
-            lGetUlong(jep, JB_job_number), sent?"sent":"queued", sge_sig2str(how), next_delivery_time - now, 
+      DPRINTF(("JOB "sge_u32": %s signal %s (retry after "sge_u32" seconds) host: %s\n",
+            lGetUlong(jep, JB_job_number), sent?"sent":"queued", sge_sig2str(how), next_delivery_time - now,
             lGetHost(qep, QU_qhostname)));
       te_delete_one_time_event(TYPE_SIGNAL_RESEND_EVENT, lGetUlong(jep, JB_job_number),
          lGetUlong(jatep, JAT_task_number), NULL);
@@ -1210,12 +1212,12 @@ monitoring_t *monitor
             lGetUlong(jep, JB_job_number), lGetUlong(jatep, JAT_task_number), NULL);
          te_add_event(ev);
          te_free_event(&ev);
-         lSetUlong(jatep, JAT_pending_signal_delivery_time, next_delivery_time); 
+         lSetUlong(jatep, JAT_pending_signal_delivery_time, next_delivery_time);
       }
    } else {
       te_event_t ev = NULL;
 
-      DPRINTF(("QUEUE %s: %s signal %s (retry after "sge_u32" seconds) host %s\n", 
+      DPRINTF(("QUEUE %s: %s signal %s (retry after "sge_u32" seconds) host %s\n",
             lGetString(qep, QU_full_name), sent?"sent":"queued", sge_sig2str(how), next_delivery_time - now,
             lGetHost(qep, QU_qhostname)));
       te_delete_one_time_event(TYPE_SIGNAL_RESEND_EVENT, 0, 0, lGetString(qep, QU_full_name));
@@ -1231,25 +1233,25 @@ monitoring_t *monitor
    }
 
    if (!jep) {/* signalling a queue ? - handle slave jobs in this queue */
-      signal_slave_jobs_in_queue(ctx, how, qep, monitor); 
-   }   
-   else {/* is this the master queue of this job to signal ? - then decide whether slave tasks also 
+      signal_slave_jobs_in_queue(ctx, how, qep, monitor);
+   }
+   else {/* is this the master queue of this job to signal ? - then decide whether slave tasks also
            must get signalled */
-      if (!strcmp(lGetString(lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)), 
+      if (!strcmp(lGetString(lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)),
             JG_qname), lGetString(qep, QU_full_name))) {
-         signal_slave_tasks_of_job(ctx, how, jep, jatep, monitor); 
+         signal_slave_tasks_of_job(ctx, how, jep, jatep, monitor);
       }
-   }   
+   }
 
    DEXIT;
    return 0;
 } /* sge_signal_queue() */
 
-/* in case we have to signal a queue 
-   in which slave tasks are running 
-   we have to notify the master execd 
+/* in case we have to signal a queue
+   in which slave tasks are running
+   we have to notify the master execd
    where the master task of this job is running
-*/  
+*/
 static void signal_slave_jobs_in_queue(
 sge_gdi_ctx_class_t *ctx,
 int how, /* signal */
@@ -1263,8 +1265,8 @@ monitoring_t *monitor
    DENTER(TOP_LAYER, "signal_slave_jobs_in_queue");
 
    qname = lGetString(qep, QU_full_name);
-   /* test whether there are parallel jobs 
-      with a slave slot in this queue 
+   /* test whether there are parallel jobs
+      with a slave slot in this queue
       if so then signal this job */
    for_each (jep, *(object_type_get_master_list(SGE_TYPE_JOB))) {
       for_each (jatep, lGetList(jep, JB_ja_tasks)) {
@@ -1273,10 +1275,10 @@ monitoring_t *monitor
          if (lGetNumberOfElem( gdil_lp =
                lGetList(jatep, JAT_granted_destin_identifier_list))<=1)
             continue;
-       
+
          /* signalling of not "slave controlled" parallel jobs will not work
             since they are not known to the apropriate execd - we should
-            omit signalling in this case to prevent waste of communication bandwith */ 
+            omit signalling in this case to prevent waste of communication bandwith */
          if (!(pe_name=lGetString(jatep, JAT_granted_pe)) ||
              !pe_list_locate(*object_type_get_master_list(SGE_TYPE_PE), pe_name))
             continue;
@@ -1286,7 +1288,7 @@ monitoring_t *monitor
             /* search master queue - needed for signalling of a job */
             if ((mq = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), mqname = lGetString(
                   lFirst(gdil_lp), JG_qname)))) {
-               DPRINTF(("found slave job "sge_u32" in queue %s master queue is %s\n", 
+               DPRINTF(("found slave job "sge_u32" in queue %s master queue is %s\n",
                   lGetUlong(jep, JB_job_number), qname, mqname));
                sge_signal_queue(ctx, how, mq, jep, jatep, monitor);
             } else {
@@ -1299,8 +1301,8 @@ monitoring_t *monitor
    DRETURN_VOID;
 }
 
-static void signal_slave_tasks_of_job(sge_gdi_ctx_class_t *ctx, int how, lListElem *jep, lListElem *jatep, 
-                                      monitoring_t *monitor) 
+static void signal_slave_tasks_of_job(sge_gdi_ctx_class_t *ctx, int how, lListElem *jep, lListElem *jatep,
+                                      monitoring_t *monitor)
 {
    lList *gdil_lp;
    lListElem *mq, *pe, *gdil_ep;
@@ -1308,7 +1310,7 @@ static void signal_slave_tasks_of_job(sge_gdi_ctx_class_t *ctx, int how, lListEl
 
    DENTER(TOP_LAYER, "signal_slave_tasks_of_job");
 
-   /* do not signal slave tasks in case of checkpointing jobs with 
+   /* do not signal slave tasks in case of checkpointing jobs with
       STOP/CONT when suspending means migration */
    if ((how==SGE_SIGCONT || how==SGE_SIGSTOP) &&
       (lGetUlong(jep, JB_checkpoint_attr)|CHECKPOINT_SUSPEND)!=0) {
@@ -1316,15 +1318,15 @@ static void signal_slave_tasks_of_job(sge_gdi_ctx_class_t *ctx, int how, lListEl
       return;
    }
 
-   /* forward signal to slave exec hosts 
+   /* forward signal to slave exec hosts
       in case of slave controlled jobs */
-   if ( !((lGetNumberOfElem(gdil_lp=lGetList(jatep, JAT_granted_destin_identifier_list)))<=1 || 
+   if ( !((lGetNumberOfElem(gdil_lp=lGetList(jatep, JAT_granted_destin_identifier_list)))<=1 ||
          !(pe_name=lGetString(jatep, JAT_granted_pe)) ||
          !(pe=pe_list_locate(*object_type_get_master_list(SGE_TYPE_PE), pe_name)) ||
          !lGetBool(pe, PE_control_slaves)))
       for (gdil_ep=lNext(lFirst(gdil_lp)); gdil_ep; gdil_ep=lNext(gdil_ep))
          if ((mq = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), qname = lGetString(gdil_ep, JG_qname)))) {
-            DPRINTF(("found slave job "sge_u32" in queue %s\n", 
+            DPRINTF(("found slave job "sge_u32" in queue %s\n",
                lGetUlong(jep, JB_job_number), qname));
             sge_signal_queue(ctx, how, mq, jep, jatep, monitor);
          }

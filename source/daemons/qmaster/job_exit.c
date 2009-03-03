@@ -76,6 +76,8 @@
 #include "sge_qinstance_qmaster.h"
 
 #include "sge_persistence_qmaster.h"
+#include "sge_job_enforce_limit.h"
+
 #include "spool/sge_spooling.h"
 
 /************************************************************************
@@ -109,16 +111,17 @@ void sge_job_exit(sge_gdi_ctx_class_t *ctx, lListElem *jr, lListElem *jep, lList
    lList *saved_gdil;
 
    DENTER(TOP_LAYER, "sge_job_exit");
-   
+
    /* JG: TODO: we'd prefer some more precise timestamp, e.g. from jr */
    timestamp = sge_get_gmt();
                      
    qname = lGetString(jr, JR_queue_name);
-   if (!qname) {
+   if (qname == NULL) {
       qname = (char *)MSG_OBJ_UNKNOWNQ;
    }
+
    err_str = lGetString(jr, JR_err_str);
-   if (!err_str) {
+   if (err_str == NULL) {
       err_str = MSG_UNKNOWNREASON;
    }
 
@@ -130,16 +133,19 @@ void sge_job_exit(sge_gdi_ctx_class_t *ctx, lListElem *jr, lListElem *jep, lList
    cancel_job_resend(jobid, jataskid);
 
    /* This only has a meaning for Hibernator jobs. The job pid must
-    * be saved accross restarts, since jobs get there old pid
+    * be saved accross restarts, since jobs get their old pid
     */
    lSetUlong(jatep, JAT_pvm_ckpt_pid, lGetUlong(jr, JR_job_pid));
 
    DPRINTF(("reaping job "sge_u32"."sge_u32" in queue >%s< job_pid %d\n", 
       jobid, jataskid, qname, (int) lGetUlong(jatep, JAT_pvm_ckpt_pid)));
 
-   if (!(queueep = cqueue_list_locate_qinstance(*object_base[SGE_TYPE_CQUEUE].list, qname))) {
+   queueep = cqueue_list_locate_qinstance(*object_base[SGE_TYPE_CQUEUE].list, qname);
+   if (queueep == NULL) {
       ERROR((SGE_EVENT, MSG_JOB_WRITEJFINISH_S, qname));
    }
+
+   sge_job_remove_enforce_limit_trigger(jobid, jataskid);
 
    /* retrieve hostname for later use */
    if (queueep != NULL) {
@@ -153,10 +159,8 @@ void sge_job_exit(sge_gdi_ctx_class_t *ctx, lListElem *jr, lListElem *jep, lList
                general_failure ? MSG_GENERAL : "",
                get_sstate_description(failed), err_str));
    } else {
-      INFO((SGE_EVENT, MSG_JOB_JFINISH_UUS,  sge_u32c(jobid), sge_u32c(jataskid), 
-            hostname));
+      INFO((SGE_EVENT, MSG_JOB_JFINISH_UUS,  sge_u32c(jobid), sge_u32c(jataskid), hostname));
    }
-
 
    /*-------------------------------------------------*/
 
@@ -164,7 +168,7 @@ void sge_job_exit(sge_gdi_ctx_class_t *ctx, lListElem *jr, lListElem *jep, lList
    if (lGetUlong(jatep, JAT_status) != JRUNNING && 
        lGetUlong(jatep, JAT_status) != JTRANSFERING) {
       ERROR((SGE_EVENT, MSG_JOB_JEXITNOTRUN_UU, sge_u32c(lGetUlong(jep, JB_job_number)), sge_u32c(jataskid)));
-      return;
+      DRETURN_VOID;
    }
 
    saved_gdil = lCopyList("cpy", lGetList(jatep, JAT_granted_destin_identifier_list));
@@ -314,13 +318,11 @@ void sge_job_exit(sge_gdi_ctx_class_t *ctx, lListElem *jr, lListElem *jep, lList
 
    if (queueep != NULL) {
       bool found_host = false;
-      bool spool_queueep = false;
       lList *answer_list = NULL;
       /*
       ** in this case we have to halt all queues on this host
       */
       if (general_failure && general_failure == GFSTATE_HOST) {
-         spool_queueep = true;
          hep = host_list_locate(*object_base[SGE_TYPE_EXECHOST].list, 
                                 lGetHost(queueep, QU_qhostname));
          if (hep != NULL) {
@@ -342,12 +344,10 @@ void sge_job_exit(sge_gdi_ctx_class_t *ctx, lListElem *jr, lListElem *jep, lList
                   sge_dstring_sprintf(&error, MSG_LOG_QERRORBYJOBHOST_SUS, lGetString(qinstance, QU_qname), sge_u32c(jobid), host);
                   qinstance_message_add(qinstance, QI_ERROR, sge_dstring_get_string(&error)); 
                   ERROR((SGE_EVENT, sge_dstring_get_string(&error)));
-                  if (qinstance != queueep) {
-                     sge_event_spool(ctx, &answer_list, 0, sgeE_QINSTANCE_MOD, 
-                                     0, 0, lGetString(qinstance, QU_qname), 
-                                     lGetHost(qinstance, QU_qhostname), NULL,
-                                     qinstance, NULL, NULL, true, true);
-                  }
+                  sge_event_spool(ctx, &answer_list, 0, sgeE_QINSTANCE_MOD, 
+                                  0, 0, lGetString(qinstance, QU_qname), 
+                                  lGetHost(qinstance, QU_qhostname), NULL,
+                                  qinstance, NULL, NULL, true, true);
                }
             }
             sge_dstring_free(&error);
@@ -367,15 +367,13 @@ void sge_job_exit(sge_gdi_ctx_class_t *ctx, lListElem *jr, lListElem *jep, lList
          /* general error -> this queue cant run any job */
          sge_qmaster_qinstance_state_set_error(queueep, true);
          qinstance_message_add(queueep, QI_ERROR, sge_dstring_get_string(&error));
-         spool_queueep = true;
          ERROR((SGE_EVENT, sge_dstring_get_string(&error)));      
+         sge_event_spool(ctx, &answer_list, 0, sgeE_QINSTANCE_MOD, 
+                         0, 0, lGetString(queueep, QU_qname), 
+                         lGetHost(queueep, QU_qhostname), NULL,
+                         queueep, NULL, NULL, true, true);
          sge_dstring_free(&error);
       }
-
-      sge_event_spool(ctx, &answer_list, 0, sgeE_QINSTANCE_MOD, 
-                      0, 0, lGetString(queueep, QU_qname), 
-                      lGetHost(queueep, QU_qhostname), NULL,
-                      queueep, NULL, NULL, true, spool_queueep);
 
       gdil_del_all_orphaned(ctx, saved_gdil, &answer_list);
       answer_list_output(&answer_list);

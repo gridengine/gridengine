@@ -34,11 +34,11 @@
 # global rules: all, clean, depend, messages
 ###############################################################################
 
-all: qloadsensor sge_helper_service gui_test
+all: qloadsensor sge_helper_service gui_test worker
 
-clean: qloadsensor_clean sge_helper_service_clean gui_test_clean 
+clean: qloadsensor_clean sge_helper_service_clean gui_test_clean worker_clean
 
-depend: qloadsensor_depend sge_helper_service_depend gui_test_depend 
+depend: qloadsensor_depend sge_helper_service_depend gui_test_depend worker_depend
 
 ###############################################################################
 # include sub Makefiles
@@ -46,3 +46,4 @@ depend: qloadsensor_depend sge_helper_service_depend gui_test_depend
 include $(SDIR)/utilbin/windows/qloadsensor/Makefile
 include $(SDIR)/utilbin/windows/SGE_Helper_Service/Makefile
 include $(SDIR)/utilbin/windows/GUI_test/Makefile
+include $(SDIR)/utilbin/windows/worker/Makefile

@@ -107,6 +107,7 @@ typedef struct _tCClEntry {
    int max_aj_tasks;
    int max_u_jobs;
    int max_jobs;
+   int max_advance_reservations;
    lList *cluster_users;
    lList *cluster_xusers;
    lList *cluster_projects;
@@ -125,6 +126,8 @@ typedef struct _tCClEntry {
    String rlogin_command;
    String jmx_libjvm_path;
    String jmx_additional_jvm_args;
+   String jsv_url;
+   String jsv_allowed_mod;
    String set_token_cmd;
    String pag_cmd;
    String token_extend_time;
@@ -247,6 +250,10 @@ XtResource ccl_resources[] = {
       sizeof(int), XtOffsetOf(tCClEntry, max_jobs), 
       XtRImmediate, NULL },
 
+   { "max_advance_reservations", "max_advance_reservations", XtRInt, 
+      sizeof(int), XtOffsetOf(tCClEntry, max_advance_reservations), 
+      XtRImmediate, NULL },
+
    { "cluster_users", "cluster_users", QmonRUS_Type,
       sizeof(lList *), XtOffsetOf(tCClEntry, cluster_users),
       XtRImmediate, NULL },
@@ -315,6 +322,14 @@ XtResource ccl_resources[] = {
       sizeof(String), XtOffsetOf(tCClEntry, jmx_additional_jvm_args), 
       XtRImmediate, NULL },
 
+   { "jsv_url", "jsv_url", XtRString, 
+      sizeof(String), XtOffsetOf(tCClEntry, jsv_url), 
+      XtRImmediate, NULL },
+
+   { "jsv_allowed_mod", "jsv_allowed_mod", XtRString, 
+      sizeof(String), XtOffsetOf(tCClEntry, jsv_allowed_mod), 
+      XtRImmediate, NULL },
+
    { "set_token_cmd", "set_token_cmd", XtRString, 
       sizeof(String), XtOffsetOf(tCClEntry, set_token_cmd), 
       XtRImmediate, NULL },
@@ -372,6 +387,7 @@ static Widget cluster_max_aj_instances = 0;
 static Widget cluster_max_aj_tasks = 0;
 static Widget cluster_max_u_jobs = 0;
 static Widget cluster_max_jobs = 0;
+static Widget cluster_max_advance_reservations = 0;
 static Widget cluster_zombie_jobs = 0;
 static Widget cluster_load_report_time = 0;
 static Widget cluster_load_report_timePB = 0;
@@ -406,6 +422,8 @@ static Widget cluster_rlogin_daemon = 0;
 static Widget cluster_rlogin_command = 0;
 static Widget cluster_jmx_libjvm_path = 0;
 static Widget cluster_jmx_additional_jvm_args = 0;
+static Widget cluster_jsv_url = 0;
+static Widget cluster_jsv_allowed_mod = 0;
 static Widget cluster_set_token_cmd = 0;
 static Widget cluster_pag_cmd = 0;
 static Widget cluster_token_extend_time = 0;
@@ -704,6 +722,7 @@ Widget parent
                            "cluster_max_aj_tasks", &cluster_max_aj_tasks,
                            "cluster_max_u_jobs", &cluster_max_u_jobs,
                            "cluster_max_jobs", &cluster_max_jobs,
+                           "cluster_max_advance_reservations", &cluster_max_advance_reservations,
                            "cluster_zombie_jobs", &cluster_zombie_jobs,
                            "cluster_load_report_time", &cluster_load_report_time,
                            "cluster_load_report_timePB", 
@@ -727,6 +746,8 @@ Widget parent
                            "cluster_rlogin_command", &cluster_rlogin_command,
                            "cluster_jmx_libjvm_path", &cluster_jmx_libjvm_path,
                            "cluster_jmx_additional_jvm_args", &cluster_jmx_additional_jvm_args,
+                           "cluster_jsv_url", &cluster_jsv_url,
+                           "cluster_jsv_allowed_mod", &cluster_jsv_allowed_mod,
                            "cluster_set_token_cmd", &cluster_set_token_cmd,
                            "cluster_set_token_cmd_label", &cluster_set_token_cmd_label,
                            "cluster_pag_cmd_label", &cluster_pag_cmd_label,
@@ -995,6 +1016,7 @@ static void qmonClusterLayoutSetSensitive(Boolean mode)
    XtSetSensitive(cluster_max_aj_tasks, mode);
    XtSetSensitive(cluster_max_u_jobs, mode);
    XtSetSensitive(cluster_max_jobs, mode);
+   XtSetSensitive(cluster_max_advance_reservations, mode);
    XtSetSensitive(cluster_zombie_jobs, mode);
    XtSetSensitive(cluster_max_unheard, mode);
    XtSetSensitive(cluster_max_unheardPB, mode);
@@ -1120,6 +1142,7 @@ int local
    char max_aj_tasks[255];
    char max_u_jobs[255];
    char max_jobs[255];
+   char max_advance_reservations[255];
    char zombie_jobs[20];
    static char buf[4*BUFSIZ];
    Boolean first;
@@ -1375,6 +1398,32 @@ int local
          lAppendElem(lp, new);
       }
 
+      if (clen->jsv_url && clen->jsv_url[0] != '\0'
+           /* && strcmp(lGetString(ep, CF_value), clen->jsv_url)*/) {
+         ep = lGetElemStr(confl, CF_name, "jsv_url");
+         if (!ep) {
+            new = lCreateElem(CF_Type);
+            lSetString(new, CF_name, "jsv_url");
+         }
+         else
+            new = lCopyElem(ep);
+         lSetString(new, CF_value, clen->jsv_url);
+         lAppendElem(lp, new);
+      }
+
+      if (clen->jsv_allowed_mod && clen->jsv_allowed_mod[0] != '\0'
+           /* && strcmp(lGetString(ep, CF_value), clen->jsv_allowed_mod)*/) {
+         ep = lGetElemStr(confl, CF_name, "jsv_allowed_mod");
+         if (!ep) {
+            new = lCreateElem(CF_Type);
+            lSetString(new, CF_name, "jsv_allowed_mod");
+         }
+         else
+            new = lCopyElem(ep);
+         lSetString(new, CF_value, clen->jsv_allowed_mod);
+         lAppendElem(lp, new);
+      }
+
 #if 0
       if (clen->dfs == 0) {
          ep = lGetElemStr(confl, CF_name, "delegated_file_staging");
@@ -1451,9 +1500,9 @@ int local
             incorrect_gid_range = 1;
          } else if (range_list_containes_id_less_than(range_list,
                                                     GID_RANGE_NOT_ALLOWED_ID)) {
-            lFreeList(&range_list);
             incorrect_gid_range = 1;
          }
+         lFreeList(&range_list);
 
          if (incorrect_gid_range) {
             strcpy(errstr, "Cannot parse GID Range !");
@@ -1542,6 +1591,10 @@ int local
       ep = lGetElemStr(confl, CF_name, "max_jobs");
       sprintf(max_jobs, "%d", clen->max_jobs);
       lSetString(ep, CF_value, max_jobs);
+
+      ep = lGetElemStr(confl, CF_name, "max_advance_reservations");
+      sprintf(max_advance_reservations, "%d", clen->max_advance_reservations);
+      lSetString(ep, CF_value, max_advance_reservations);
 
       ep = lGetElemStr(confl, CF_name, "finished_jobs");
       sprintf(zombie_jobs, "%d", clen->zombie_jobs);
@@ -1690,9 +1743,9 @@ int local
             incorrect_gid_range = 1;
          } else if (range_list_containes_id_less_than(range_list,
                                                    GID_RANGE_NOT_ALLOWED_ID)) {
-            lFreeList(&range_list);
             incorrect_gid_range = 1;
          }
+         lFreeList(&range_list);
 
          if (incorrect_gid_range) {
             strcpy(errstr, "Cannot parse GID Range !");
@@ -1895,6 +1948,26 @@ int local
          lDelElemStr(&confl, CF_name, "additional_jvm_args");
       }
 
+      if (clen->jsv_url && clen->jsv_url[0] != '\0') {
+         ep = lGetElemStr(confl, CF_name, "jsv_url");
+         if (!ep)
+            ep = lAddElemStr(&confl, CF_name, "jsv_url", CF_Type);
+         lSetString(ep, CF_value, clen->jsv_url);
+      }
+      else {
+         lDelElemStr(&confl, CF_name, "jsv_url");
+      }
+
+      if (clen->jsv_allowed_mod && clen->jsv_allowed_mod[0] != '\0') {
+         ep = lGetElemStr(confl, CF_name, "jsv_allowed_mod");
+         if (!ep)
+            ep = lAddElemStr(&confl, CF_name, "jsv_allowed_mod", CF_Type);
+         lSetString(ep, CF_value, clen->jsv_allowed_mod);
+      }
+      else {
+         lDelElemStr(&confl, CF_name, "jsv_allowed_mod");
+      }
+
 #if 0
       if (clen->starter_method && clen->starter_method[0] != '\0') {
          ep = lGetElemStr(confl, CF_name, "starter_method");
@@ -1992,6 +2065,7 @@ tCClEntry *clen
    StringConst max_aj_tasks;
    StringConst max_u_jobs;
    StringConst max_jobs;
+   StringConst max_advance_reservations;
    StringConst zombie_jobs;
    StringConst auto_user_fshare;
    StringConst auto_user_oticket;
@@ -2038,6 +2112,10 @@ tCClEntry *clen
    if ((ep = lGetElemStr(confl, CF_name, "max_jobs"))) {
       max_jobs = (StringConst)lGetString(ep, CF_value);
       clen->max_jobs = max_jobs ? atoi(max_jobs) : 0;
+   }
+   if ((ep = lGetElemStr(confl, CF_name, "max_advance_reservations"))) {
+      max_advance_reservations = (StringConst)lGetString(ep, CF_value);
+      clen->max_advance_reservations = max_advance_reservations ? atoi(max_advance_reservations) : 0;
    }
    if ((ep = lGetElemStr(confl, CF_name, "finished_jobs"))) {
       zombie_jobs = (StringConst)lGetString(ep, CF_value);
@@ -2232,6 +2310,12 @@ tCClEntry *clen
    if ((ep = lGetElemStr(confl, CF_name, "additional_jvm_args")))
       clen->jmx_additional_jvm_args = XtNewString(lGetString(ep, CF_value));
 
+   if ((ep = lGetElemStr(confl, CF_name, "jsv_url")))
+      clen->jsv_url = XtNewString(lGetString(ep, CF_value));
+
+   if ((ep = lGetElemStr(confl, CF_name, "jsv_allowed_mod")))
+      clen->jsv_allowed_mod = XtNewString(lGetString(ep, CF_value));
+
    if (feature_is_enabled(FEATURE_AFS_SECURITY)) {
       if ((ep = lGetElemStr(confl, CF_name, "set_token_cmd")))
          clen->set_token_cmd = XtNewString(lGetString(ep, CF_value));
@@ -2332,6 +2416,7 @@ tCClEntry *clen
    clen->max_aj_tasks = 0;
    clen->max_u_jobs = 0;
    clen->max_jobs = 0;
+   clen->max_advance_reservations = 0;
    if (clen->load_report_time) {
       XtFree((char*)clen->load_report_time);
       clen->load_report_time = NULL;
@@ -2394,6 +2479,14 @@ tCClEntry *clen
    if (clen->jmx_additional_jvm_args) {
       XtFree((char*)clen->jmx_additional_jvm_args);
       clen->jmx_additional_jvm_args = NULL;
+   }
+   if (clen->jsv_url) {
+      XtFree((char*)clen->jsv_url);
+      clen->jsv_url = NULL;
+   }
+   if (clen->jsv_allowed_mod) {
+      XtFree((char*)clen->jsv_allowed_mod);
+      clen->jsv_allowed_mod = NULL;
    }
    if (clen->set_token_cmd) {
       XtFree((char*)clen->set_token_cmd);

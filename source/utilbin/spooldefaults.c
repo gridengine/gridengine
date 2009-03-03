@@ -392,7 +392,8 @@ int main(int argc, char *argv[])
    prof_mt_init();
 
    if (sge_setup2(&ctx, SPOOLDEFAULTS, MAIN_THREAD, &answer_list, false) != AE_OK) {
-      answer_list_output(&answer_list);
+      show_answer(answer_list);
+      lFreeList(&answer_list);
       SGE_EXIT((void **)&ctx, EXIT_FAILURE);
    }
 

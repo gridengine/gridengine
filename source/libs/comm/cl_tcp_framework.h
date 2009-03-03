@@ -55,11 +55,23 @@ int cl_com_tcp_setup_connection(cl_com_connection_t** connection,
 
 int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout);
 int cl_com_tcp_close_connection(cl_com_connection_t** connection);
-int cl_com_tcp_open_connection_request_handler(cl_raw_list_t*       connection_list,
+
+#ifdef USE_POLL
+int cl_com_tcp_open_connection_request_handler(cl_com_poll_t*       poll_handle,
+                                               cl_com_handle_t*     handle,
+                                               cl_raw_list_t*       connection_list,
                                                cl_com_connection_t* service_connection,
                                                int                  timeout_val_sec,
                                                int                  timeout_val_usec,
                                                cl_select_method_t   select_mode );
+#else
+int cl_com_tcp_open_connection_request_handler(cl_com_handle_t*     handle,
+                                               cl_raw_list_t*       connection_list,
+                                               cl_com_connection_t* service_connection,
+                                               int                  timeout_val_sec,
+                                               int                  timeout_val_usec,
+                                               cl_select_method_t   select_mode );
+#endif
 
 
 int cl_com_tcp_connection_request_handler_setup(cl_com_connection_t* connection, cl_bool_t only_prepare_service);

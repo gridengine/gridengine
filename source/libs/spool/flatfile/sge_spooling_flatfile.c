@@ -162,7 +162,7 @@ spool_classic_create_context(lList **answer_list, const char *args)
                case SGE_TYPE_JOB_SCHEDD_INFO:
                case SGE_TYPE_SCHEDD_MONITOR:
                case SGE_TYPE_SHUTDOWN:
-               case SGE_TYPE_QMASTER_GOES_DOWN:
+               case SGE_TYPE_MARK_4_REGISTRATION:
                   field_info[i].fields = NULL;
                   field_info[i].instr  = NULL;
                   break;

@@ -48,9 +48,11 @@ int cl_thread_list_create_thread(cl_raw_list_t* list_p,
                                  int id,
                                  void * (*start_routine)(void *),
                                  cl_thread_cleanup_func_t cleanup_func,
-                                 void* user_data );
+                                 void* user_data,
+                                 cl_thread_type_t thread_type);
 int cl_thread_list_delete_thread(cl_raw_list_t* list_p, cl_thread_settings_t* thread_p);
 int cl_thread_list_delete_thread_without_join(cl_raw_list_t* list_p, cl_thread_settings_t* thread);
+int cl_thread_list_delete_thread_from_list(cl_raw_list_t* list_p, cl_thread_settings_t* thread);
 int cl_thread_list_delete_thread_by_id(cl_raw_list_t* list_p, int id);  /* CR check */
 
 

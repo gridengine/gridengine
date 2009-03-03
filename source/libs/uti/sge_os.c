@@ -74,7 +74,10 @@
 /* pipe for sge_daemonize_prepare() and sge_daemonize_finalize() */
 static int fd_pipe[2];
 
-/****** sge_os/sge_get_pids() *************************************************
+static int fd_compare(const void* fd1, const void* fd2);
+static void sge_close_fd(int fd);
+
+/****** uti/os/sge_get_pids() *************************************************
 *  NAME
 *     sge_get_pids() -- Return all "pids" of a running processes 
 *
@@ -159,7 +162,7 @@ int sge_get_pids(pid_t *pids, int max_pids, const char *name,
    DRETURN(num_of_pids);
 }
 
-/****** sge_os/sge_contains_pid() *********************************************
+/****** uti/os/sge_contains_pid() *********************************************
 *  NAME
 *     sge_contains_pid() -- Checks whether pid array contains pid 
 *
@@ -194,7 +197,7 @@ int sge_contains_pid(pid_t pid, pid_t *pids, int npids)
    return 0;
 }
 
-/****** sge_os/sge_checkprog() ************************************************
+/****** uti/os/sge_checkprog() ************************************************
 *  NAME
 *     sge_checkprog() -- Has "pid" of a running process the given "name" 
 *
@@ -282,7 +285,7 @@ int sge_checkprog(pid_t pid, const char *name, const char *pscommand)
    DRETURN(notfound);
 }
 
-/****** sge_os/sge_daemonize_prepare() *****************************************
+/****** uti/os/sge_daemonize_prepare() *****************************************
 *  NAME
 *     sge_daemonize_prepare() -- prepare daemonize of process
 *
@@ -318,11 +321,10 @@ int sge_checkprog(pid_t pid, const char *name, const char *pscommand)
 *     int - true on success, false on error
 *
 *  SEE ALSO
-*     sge_os/sge_daemonize_finalize()
+*     uti/os/sge_daemonize_finalize()
 *******************************************************************************/
 bool sge_daemonize_prepare(sge_gdi_ctx_class_t *ctx) {
    pid_t pid;
-   fd_set keep_open;
 #if !(defined(__hpux) || defined(CRAY) || defined(WIN32) || defined(SINIX) || defined(INTERIX))
    int fd;
 #endif
@@ -360,13 +362,15 @@ bool sge_daemonize_prepare(sge_gdi_ctx_class_t *ctx) {
    }
 
    /* close all fd's except pipe and first 3 */
-   FD_ZERO(&keep_open);
-   FD_SET(0,&keep_open);
-   FD_SET(1,&keep_open);
-   FD_SET(2,&keep_open);
-   FD_SET(fd_pipe[0],&keep_open);
-   FD_SET(fd_pipe[1],&keep_open);
-   sge_close_all_fds(&keep_open);
+   {
+      int keep_open[5];
+      keep_open[0] = 0;
+      keep_open[1] = 1;
+      keep_open[2] = 2;
+      keep_open[3] = fd_pipe[0];
+      keep_open[4] = fd_pipe[1];
+      sge_close_all_fds(keep_open, 5);
+   }
 
    /* first fork */
    pid=fork();
@@ -474,7 +478,7 @@ bool sge_daemonize_prepare(sge_gdi_ctx_class_t *ctx) {
    DRETURN(true);
 }
 
-/****** sge_os/sge_daemonize_finalize() ****************************************
+/****** uti/os/sge_daemonize_finalize() ****************************************
 *  NAME
 *     sge_daemonize_finalize() -- finalize daemonize process
 *
@@ -498,7 +502,7 @@ bool sge_daemonize_prepare(sge_gdi_ctx_class_t *ctx) {
 *     int - true on success
 *
 *  SEE ALSO
-*     sge_os/sge_daemonize_prepare()
+*     uti/os/sge_daemonize_prepare()
 *******************************************************************************/
 bool sge_daemonize_finalize(sge_gdi_ctx_class_t *ctx) 
 {
@@ -548,7 +552,7 @@ bool sge_daemonize_finalize(sge_gdi_ctx_class_t *ctx)
 
 
 
-/****** sge_os/sge_daemonize() ************************************************
+/****** uti/os/sge_daemonize() ************************************************
 *  NAME
 *     sge_daemonize() -- Daemonize the current application
 *
@@ -572,7 +576,7 @@ bool sge_daemonize_finalize(sge_gdi_ctx_class_t *ctx)
 *  NOTES
 *     MT-NOTES: sge_daemonize() is not MT safe
 ******************************************************************************/
-int sge_daemonize(fd_set *keep_open, sge_gdi_ctx_class_t *ctx)
+int sge_daemonize(int *keep_open, unsigned long nr_of_fds, sge_gdi_ctx_class_t *ctx)
 {
 
 #if !(defined(__hpux) || defined(CRAY) || defined(WIN32) || defined(SINIX) || defined(INTERIX))
@@ -635,7 +639,7 @@ int sge_daemonize(fd_set *keep_open, sge_gdi_ctx_class_t *ctx)
 #endif
  
    /* close all file descriptors */
-   sge_close_all_fds(keep_open);
+   sge_close_all_fds(keep_open, nr_of_fds);
  
    /* new descriptors acquired for stdin, stdout, stderr should be 0,1,2 */
    failed_fd = sge_occupy_first_three();
@@ -649,9 +653,9 @@ int sge_daemonize(fd_set *keep_open, sge_gdi_ctx_class_t *ctx)
    ctx->set_daemonized(ctx, true);
  
    DRETURN(1);
-}     
+}
 
-/****** sge_os/redirect_to_dev_null() ******************************************
+/****** uti/os/redirect_to_dev_null() ******************************************
 *  NAME
 *     redirect_to_dev_null() -- redirect a channel to /dev/null
 *
@@ -686,7 +690,7 @@ int redirect_to_dev_null(int target, int mode)
    return -1;
 }
 
-/****** sge_os/sge_occupy_first_three() ***************************************
+/****** uti/os/sge_occupy_first_three() ***************************************
 *  NAME
 *     sge_occupy_first_three() -- Open descriptor 0, 1, 2 to /dev/null
 *
@@ -709,8 +713,8 @@ int redirect_to_dev_null(int target, int mode)
 *     MT-NOTE: sge_occupy_first_three() is MT safe
 *
 *  SEE ALSO
-*     sge_os/redirect_to_dev_null()
-*     sge_os/sge_close_all_fds()
+*     uti/os/redirect_to_dev_null()
+*     uti/os/sge_close_all_fds()
 ******************************************************************************/
 int sge_occupy_first_three(void)
 {
@@ -731,7 +735,7 @@ int sge_occupy_first_three(void)
    DRETURN(ret);
 }  
 
-/****** sge_os/sge_close_all_fds() ********************************************
+/****** uti/os/sge_close_all_fds() ********************************************
 *  NAME
 *     sge_close_all_fds() -- close (all) file descriptors
 *
@@ -749,56 +753,210 @@ int sge_occupy_first_three(void)
 *     MT-NOTE: sge_close_all_fds() is MT safe
 *
 *  SEE ALSO
-*     sge_os/sge_occupy_first_three()
+*     uti/os/sge_occupy_first_three()
 ******************************************************************************/
 #ifdef __INSURE__
 extern int _insure_is_internal_fd(int);
 #endif
 
-void sge_close_all_fds(fd_set *keep_open)
-{
-   int fd;
-   int maxfd;
-   bool ignore = false;
-
-   DENTER(TOP_LAYER, "sge_close_all_fds");
+/****** uti/os/sge_get_max_fd() ************************************************
+*  NAME
+*     sge_get_max_fd() -- get max filedescriptor count
+*
+*  SYNOPSIS
+*     int sge_get_max_fd(void) 
+*
+*  FUNCTION
+*     This function returns the nr of file descriptors which are available 
+*     (Where fd 0 is the first one).
+*     So the highest file descriptor value is: max_fd - 1.
+*
+*  INPUTS
+*     void - no input paramteres
+*
+*  RESULT
+*     int - max. possible open file descriptor count on this system
+*
+*  SEE ALSO
+*     ???/???
+*******************************************************************************/
+int sge_get_max_fd(void) {
 
 #ifndef WIN32NATIVE
-   maxfd = sysconf(_SC_OPEN_MAX) > FD_SETSIZE ? \
-     FD_SETSIZE : sysconf(_SC_OPEN_MAX);
+#ifndef USE_POLL
+   return sysconf(_SC_OPEN_MAX) > FD_SETSIZE ? FD_SETSIZE : sysconf(_SC_OPEN_MAX);
+#else
+   return sysconf(_SC_OPEN_MAX);
+#endif
 #else /* WIN32NATIVE */
-   maxfd = FD_SETSIZE;
+   return FD_SETSIZE;
    /* detect maximal number of fds under NT/W2000 (env: Files)*/
 #endif /* WIN32NATIVE */
- 
-   for (fd = 0; fd < maxfd; fd++) {
-      ignore = false;
+}
 
-      if (keep_open != NULL) {
-         if (FD_ISSET(fd, keep_open)) {
-            ignore = true;
-         }
-      }
-#ifdef __INSURE__
-      if (_insure_is_internal_fd(fd)) {
-         WARNING((SGE_EVENT, "INSURE: fd %d will not be closed", fd));
-         ignore = true;
-      }
-#endif
+/****** uti/os/fd_compare() ****************************************************
+*  NAME
+*     fd_compare() -- file descriptor compare function for qsort()
+*
+*  SYNOPSIS
+*     static int fd_compare(const void* fd1, const void* fd2) 
+*
+*  FUNCTION
+*     qsort() needs a callback function to compare two filedescriptors for
+*     sorting them. This is the implementation to value the difference of two
+*     file descriptors. If one paramter is NULL, only the pointers are
+*     used for the comparsion.
+*     Used by sge_close_all_fds().
+*
+*  INPUTS
+*     const void* fd1 - pointer to an int (file descriptor 1)
+*     const void* fd2 - pointer to an int (file descriptor 2)
+*
+*  RESULT
+*     static int - compare result (1, 0 or -1)
+*                  1  : fd1 > fd2
+*                  0  : fd1 == fd2
+*                  -1 : fd1 < fd2
+*
+*  NOTES
+*     MT-NOTE: fd_compare() is MT safe 
+*
+*  SEE ALSO
+*     uti/os/sge_close_all_fds()
+*******************************************************************************/
+static int fd_compare(const void* fd1, const void* fd2) {
+   int* i1 = (int*) fd1;
+   int* i2 = (int*) fd2;
 
-      if (ignore == false) {
-#ifndef WIN32NATIVE
-         close(fd);
-#else /* WIN32NATIVE */
-         closesocket(fd);
-#endif /* WIN32NATIVE */
+   /* If there are NULL pointer we also try to compare them */
+   if (i1 == NULL || i2 == NULL) {
+      if (i1 > i2) {
+         return 1;
       }
+      if (i1 < i2) {
+         return -1;
+      }
+      return 0;
    }
 
-   DRETURN_VOID;
-}  
+   if (*i1 > *i2) {
+      return 1;
+   }
+   if (*i1 < *i2) {
+      return -1;
+   }
+   return 0;
+}
 
-/****** sge_os/sge_dup_fd_above_stderr() **************************************
+
+/****** uti/os/sge_close_fd() **************************************************
+*  NAME
+*     sge_close_fd() -- close a file descriptor
+*
+*  SYNOPSIS
+*     static void sge_close_fd(int fd) 
+*
+*  FUNCTION
+*     This function closes the specified file descriptor on an architecture
+*     specific way. If __INSURE__ is defined during compile time and it is an
+*     fd used by insure the file descriptor is not closed.
+*
+*  INPUTS
+*     int fd - file descriptor number to close
+*
+*  RESULT
+*     static void - no return value
+*
+*  SEE ALSO
+*     uti/os/sge_close_all_fds()
+*******************************************************************************/
+static void sge_close_fd(int fd) {
+#ifdef __INSURE__
+   if (_insure_is_internal_fd(fd)) {
+      return;
+   }
+#endif
+#ifndef WIN32NATIVE
+   close(fd);
+#else
+   closesocket(fd);
+#endif
+}
+
+/****** uti/os/sge_close_all_fds() *********************************************
+*  NAME
+*     sge_close_all_fds() -- close all open file descriptors
+*
+*  SYNOPSIS
+*     void sge_close_all_fds(int* keep_open, unsigned long nr_of_fds) 
+*
+*  FUNCTION
+*     This function is used to close all possible open file descriptors for
+*     the current process. This is done by getting the max. possible file
+*     descriptor count and looping over all file descriptors and calling
+*     sge_close_fd().
+*
+*     It is possible to specify a file descriptor set which should not be
+*     closed.
+*
+*  INPUTS
+*     int* keep_open          - integer array which contains file descriptor
+*                               ids which should not be closed
+*                             - if this value is set to NULL nr_of_fds is
+*                               ignored
+*     unsigned long nr_of_fds - nr of filedescriptors in the keep_open array
+*
+*  RESULT
+*     void - no result
+*
+*  SEE ALSO
+*     uti/os/sge_close_fd()
+*******************************************************************************/
+void sge_close_all_fds(int* keep_open, unsigned long nr_of_keep_open_entries) {
+   int maxfd = sge_get_max_fd();
+   int fd = 0;
+   if (keep_open == NULL) {
+      /* if we do not have any keep_open we can delete all fds */
+      for (fd = 0; fd < maxfd; fd++) {
+         sge_close_fd(fd);
+      }
+   } else {
+      int           current_fd_keep_open  = 0;
+      unsigned long keep_open_array_index = 0;
+      int           current_fd_to_close   = 0;
+
+      /* First sort the keep open list */
+      qsort((void*) keep_open, nr_of_keep_open_entries, sizeof(int), fd_compare);
+
+      /* Now go over the int array and do a close loop to the current value */
+      for (keep_open_array_index = 0; keep_open_array_index < nr_of_keep_open_entries; keep_open_array_index++) {
+
+         /* test if keep open fd is a valid fd */
+         current_fd_keep_open = keep_open[keep_open_array_index];
+         if (current_fd_keep_open < 0 || current_fd_keep_open >= maxfd) {
+            continue;
+         }
+
+         /* we can close all fds up to current_fd_keep_open */
+         for (fd = current_fd_to_close; fd < current_fd_keep_open; fd++) {
+            sge_close_fd(fd);
+         }
+
+         /*
+          * now we reached current_fd_keep_open, simple set current_fd_to_close to
+          * current_fd_keep_open + 1 for the next run (=skip current_fd_keep_open)
+          */
+         current_fd_to_close = current_fd_keep_open + 1;
+      }
+      
+      /* Now close up to fd nr (max_fd - 1)  */
+      for (fd = current_fd_to_close; fd < maxfd; fd++) {
+         sge_close_fd(fd);
+      }
+   }
+}
+
+/****** uti/os/sge_dup_fd_above_stderr() **************************************
 *  NAME
 *     sge_dup_fd_above_stderr() -- Make sure a fd is >=3
 *

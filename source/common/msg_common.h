@@ -155,6 +155,7 @@
 #define MSG_EXEC_XISNOEXECHOST_S               _MESSAGE(23116, _(SFN" is no exec host"))
 #define MSG_EXEC_ADDEDHOSTXTOEXECHOSTLIST_S    _MESSAGE(23117, _("added host "SFN" to exec host list"))
 #define MSG_ANSWER_INVALIDFORMAT               _MESSAGE(23118, _("invalid format"))
+#define MSG_PARSE_WRONGPATHJSV_S               _MESSAGE(23119, _("ERROR! Wrong path format "SFQ" specified to -jsv option"))
 #define MSG_TREE_CHANGEDSHARETREE              _MESSAGE(23121, _("changed sharetree"))
 #define MSG_TREE_NOSHARETREE                   _MESSAGE(23122, _("No sharetree"))
 #define MSG_TREE_CANTADDNODEXISNONUNIQUE_S     _MESSAGE(23123, _("Could not add node "SFN" to sharetree due to non-unique path"))
@@ -280,7 +281,6 @@
 #define MSG_GDI_ARGUMENTSYNTAX_OA_HOLD_LIST_QHOLD      "hold_list               `u' `s' `o'" 
 #define MSG_GDI_ARGUMENTSYNTAX_OA_HOST_ID_LIST         "host_id_list            host[ host ...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_HOSTNAME_LIST        "hostname_list           hostname[,hostname,...]"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_ID               "job_id_list"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_ID_LIST          "job_id_list             job_id[,job_id,...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_IDENTIFIER_LIST  "job_identifier_list     {job_id|job_name|reg_exp}[,{job_id|job_name|reg_exp},...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_JOB_QUEUE_DEST       "job_queue_list          {job|queue}[{,| }{job|queue}{,| }...]"
@@ -322,6 +322,7 @@
 #define MSG_GDI_ARGUMENTSYNTAX_OA_OBJECT_ID_LIST       "obj_id_list             objectname [ objectname ...]" 
 #define MSG_GDI_ARGUMENTSYNTAX_OA_EVENTCLIENT_LIST     "evid_list               all | evid[,evid,...]" 
 #define MSG_GDI_ARGUMENTSYNTAX_OA_HOST_LIST            "host_list               all | hostname[,hostname,...]" 
+#define MSG_GDI_ARGUMENTSYNTAX_OA_JSV_URL              "jsv_url                 [script:][username@]path" 
 #define MSG_GDI_ARGUMENTSYNTAX_OA_WC_CQUEUE            "wc_cqueue               wildcard expression matching a cluster queue"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_WC_HOST              "wc_host                 wildcard expression matching a host"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_WC_HOSTGROUP         "wc_hostgroup            wildcard expression matching a hostgroup"
@@ -843,8 +844,8 @@
 #define MSG_GDI_USAGE_V_OPT                              "[-V]"
 #define MSG_GDI_UTEXT_V_OPT                              _MESSAGE(23461, _("export all environment variables"))
 
-#define MSG_GDI_USAGE_w_OPT_EWNV                         "[-w e|w|n|v]"
-#define MSG_GDI_UTEXT_w_OPT_EWNV                         _MESSAGE(23462, _("verify mode (error|warning|none|just verify) for jobs"))
+#define MSG_GDI_USAGE_w_OPT_EWNVP                        "[-w e|w|n|v|p]"
+#define MSG_GDI_UTEXT_w_OPT_EWNVP                        _MESSAGE(23462, _("verify mode (error|warning|none|just verify|poke) for jobs"))
 
 #define MSG_GDI_USAGE_AT_OPT_FILE                        "[-@ file]"
 #define MSG_GDI_UTEXT_AT_OPT_FILE                        _MESSAGE(23463, _("read commandline input from file"))
@@ -912,7 +913,7 @@
 
 #define MSG_GDI_USAGE_JQ_DEST_OPR                        "job_queue_list"
 #define MSG_GDI_USAGE_SRVR_NM_OPR                        "server_name"
-#define MSG_GDI_USAGE_JOB_ID_OPR                         "job_task_list"
+#define MSG_GDI_USAGE_JOB_ID_OPR                         "job_id_list"
 #define MSG_GDI_USAGE_TASK_OPR                           "job_task_list"
 #define MSG_GDI_USAGE_SCRIPT_OPR                         "[{command|-} [command_args]]"
 #define MSG_GDI_USAGE_SCRIPT_OPR_ARGS                    "[-- script_args]"
@@ -951,6 +952,7 @@
 
 #define MSG_GDI_USAGE_js_OPT_YN                          "[-js job_share]"
 #define MSG_GDI_UTEXT_js_OPT_YN                          _MESSAGE(23503, _("share tree or functional job share"))
+
 #define MSG_GDI_USAGE_shell_OPT_YN                       "[-shell y[es]|n[o]]"
 #define MSG_GDI_UTEXT_shell_OPT_YN                       _MESSAGE(23504, _("start command with or without wrapping <loginshell> -c"))
 
@@ -974,6 +976,12 @@
 #define MSG_GDI_UTEXT_pty_OPT                            _MESSAGE(23511, _("start job in a pty"))
 
 #define MSG_GDI_UTEXT_now_qrsub_OPT_YN                   _MESSAGE(23512, _("consider only interactive queues"))
+
+#define MSG_GDI_USAGE_jsv_OPT_YN                         "[-jsv jsv_url]"
+#define MSG_GDI_UTEXT_jsv_OPT_YN                         _MESSAGE(23513, _("job submission verification script to be used"))
+
+#define MSG_GDI_USAGE_sst_OPT                         "[-sst]"
+#define MSG_GDI_UTEXT_sst_OPT                         _MESSAGE(23514, _("show a formated sharetree"))
 
 /* =================================================
  * global error messages 
@@ -1020,6 +1028,7 @@
 #define MSG_PE_ALLOCRULE_SS           _MESSAGE(60416, _("parameter allocation_rule of pe "SFQ": "SFN))
 #define MSG_GDI_OUTOFMEMORY           _MESSAGE(60418, _("out of memory"))
 #define MSG_COM_UNPACKINT_I          _MESSAGE(60419, _("unpacking integer %d failed"))
+#define MSG_COM_UNPACKOBJ_S          _MESSAGE(60420, _("unpacking a "SFN" object failed"))
 #define MSG_SGETEXT_ADDEDTOLIST_SSSS       _MESSAGE(60500, _(""SFN"@"SFN" added "SFQ" to "SFN" list"))
 #define MSG_SGETEXT_MODIFIEDINLIST_SSSS    _MESSAGE(60501, _(""SFN"@"SFN" modified "SFQ" in "SFN" list"))
 #define MSG_SGETEXT_KILL_SSS               _MESSAGE(60502, _(""SFN"@"SFN" kills "SFN))

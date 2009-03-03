@@ -709,28 +709,41 @@ int sge_smf_used(void)
 *******************************************************************************/
 static int contracts_pre_fork(void) 
 {
-    int fd;
-    int err = 0;
+   int fd;
+   int err = 0;
     
-    DENTER(TOP_LAYER, "contracts_pre_fork");
-    
-    fd = open64(CTFS_ROOT "/process/template", O_RDWR);
-    if (fd == -1) {
-        DRETURN(-1);
-    }
-    /*
-     * Execd doesn't do anything with the new contract.
-     * Deliver no events, don't inherit, and allow it to be orphaned.
-     */
-    err |= shared_contract_func__ct_tmpl_set_critical(fd, 0);
-    err |= shared_contract_func__ct_tmpl_set_informative(fd, 0);
-    err |= shared_contract_func__ct_pr_tmpl_set_fatal(fd, CT_PR_EV_HWERR);
-    err |= shared_contract_func__ct_pr_tmpl_set_param(fd, CT_PR_PGRPONLY);
-    if (err || shared_contract_func__ct_tmpl_activate(fd)) {
-        close(fd);
-        DRETURN(-1);
-    }
-    DRETURN(fd);
+   /*    
+    * EB: IMPORTANT: Logging in this function is not allowed
+    *    
+    * Reason: This function is used in sge_peopen(). 
+    *
+    *         In multi threaded environments the child might run into a deadlock situation
+    *         if it tries to get a lock which was hold by one of the parent threads
+    *         before the fork() call. 
+    *       
+    *         Therefore between fork() (in this function) and exec() only aync-signal-safe 
+    *         functions are allowed.
+    * 
+    *         File based operations (like done in logging) are therefore not alled here.
+    */   
+
+   fd = open64(CTFS_ROOT "/process/template", O_RDWR);
+   if (fd == -1) {  
+      return -1;
+   }
+   /*
+    * Execd doesn't do anything with the new contract.
+    * Deliver no events, don't inherit, and allow it to be orphaned.
+    */
+   err |= shared_contract_func__ct_tmpl_set_critical(fd, 0);
+   err |= shared_contract_func__ct_tmpl_set_informative(fd, 0);
+   err |= shared_contract_func__ct_pr_tmpl_set_fatal(fd, CT_PR_EV_HWERR);
+   err |= shared_contract_func__ct_pr_tmpl_set_param(fd, CT_PR_PGRPONLY);
+   if (err || shared_contract_func__ct_tmpl_activate(fd)) {
+      close(fd);
+      return -1;
+   }
+   return fd;
 }
 
 
@@ -768,60 +781,83 @@ static int contracts_pre_fork(void)
 *******************************************************************************/
 static int contracts_post_fork(int ctfd, int pid, char *err_str, int err_length) 
 {
-    char path[PATH_MAX]; /* PATH_MAX defined in limits.h */
-    int cfd, n;
-    ct_stathdl_t st;
-    ctid_t latest;
-    DENTER(TOP_LAYER, "contracts_post_fork");
-    /* Clear active template, abandon latest contract. */
-    if (ctfd == -1) {
-        DRETURN(-1);
-    }
-    shared_contract_func__ct_tmpl_clear(ctfd);
-    close(ctfd);
-    if (pid == 0) {
-       /* We modify the child env not to contain SMF vars (not part of the service) */
-       unsetenv("SMF_FMRI");
-       unsetenv("SMF_METHOD");
-       unsetenv("SMF_RESTARTER");
-       DRETURN(pid);
-    } else if (pid < 0) {
-       DRETURN(pid);
-    }
-    /* Parent has to explicitly abandon the new contract */
-    if ((cfd = open64(CTFS_ROOT "/process/latest", O_RDONLY)) == -1) {
-        snprintf(err_str,err_length, MSG_SMF_CONTRACT_CREATE_FAILED_S, 
-                 *strerror(errno));
-        DRETURN(-2);
-    }
-    if ((errno = shared_contract_func__ct_status_read(cfd, CTD_COMMON, &st)) != 0) {
-        snprintf(err_str, err_length, MSG_SMF_CONTRACT_CREATE_FAILED_S, 
-                 *strerror(errno));
-        close(cfd);
-        DRETURN(-2);
-    }
-    latest = shared_contract_func__ct_status_get_id(st);
-    shared_contract_func__ct_status_free(st);
-    close(cfd);
-    n = snprintf(path, PATH_MAX, CTFS_ROOT "/all/%ld/ctl", latest);
-    if (n >= PATH_MAX) {
-        snprintf(err_str, err_length, MSG_SMF_CONTRACT_CONTROL_OPEN_FAILED_S,
-                 *strerror(ENAMETOOLONG));
-        DRETURN(-2);
-    }
-    if ((cfd = open64(path, O_WRONLY)) == -1) {
-        snprintf(err_str, err_length, MSG_SMF_CONTRACT_CONTROL_OPEN_FAILED_S,
-                 *strerror(errno));
-        DRETURN(-2);
-    }
-    if (shared_contract_func__ct_ctl_abandon(cfd)) {
-        snprintf(err_str, err_length, MSG_SMF_CONTRACT_ABANDON_FAILED_US,
-                 cfd, *strerror(errno));
-        (void) close(cfd);
-        DRETURN(-2);
-    }
-    close(cfd);
-    DRETURN(pid);
+   char path[PATH_MAX]; /* PATH_MAX defined in limits.h */
+   int cfd, n;
+   ct_stathdl_t st;
+   ctid_t latest;
+
+   /*    
+    * EB: IMPORTANT: Logging in this function is not allowed
+    *    
+    * Reason: This function is used in sge_peopen(). 
+    *
+    *         In multi threaded environments the child might run into a deadlock situation
+    *         if it tries to get a lock which was hold by one of the parent threads
+    *         before the fork() call. 
+    *       
+    *         Therefore between fork() (in this function) and exec() only aync-signal-safe 
+    *         functions are allowed.
+    * 
+    *         File based operations (like done in logging) are therefore not alled here.
+    */   
+
+   /* Clear active template, abandon latest contract. */
+   if (ctfd == -1) {
+      return -1;
+   }
+   shared_contract_func__ct_tmpl_clear(ctfd);
+   close(ctfd);
+   if (pid == 0) {
+      /* We modify the child env not to contain SMF vars (not part of the service) */
+#if 0 
+      /* 
+       * are the unset functions necessary for smf? touching the environment is a real
+       * problem after the fork because the functions which modify the environment are
+       * not asyn-signal safe. This might cause a deadlock in the child.
+       */
+      unsetenv("SMF_FMRI");
+      unsetenv("SMF_METHOD");
+      unsetenv("SMF_RESTARTER");
+#endif
+      return pid;
+   } else if (pid < 0) {
+      return pid;
+   }
+
+   /* Parent has to explicitly abandon the new contract */
+   if ((cfd = open64(CTFS_ROOT "/process/latest", O_RDONLY)) == -1) {
+       snprintf(err_str,err_length, MSG_SMF_CONTRACT_CREATE_FAILED_S, 
+                *strerror(errno));
+      return -2;
+   }
+   if ((errno = shared_contract_func__ct_status_read(cfd, CTD_COMMON, &st)) != 0) {
+       snprintf(err_str, err_length, MSG_SMF_CONTRACT_CREATE_FAILED_S, 
+                *strerror(errno));
+       close(cfd);
+      return -2;
+   }
+   latest = shared_contract_func__ct_status_get_id(st);
+   shared_contract_func__ct_status_free(st);
+   close(cfd);
+   n = snprintf(path, PATH_MAX, CTFS_ROOT "/all/%ld/ctl", latest);
+   if (n >= PATH_MAX) {
+      snprintf(err_str, err_length, MSG_SMF_CONTRACT_CONTROL_OPEN_FAILED_S,
+               *strerror(ENAMETOOLONG));
+      return -2;
+   }
+   if ((cfd = open64(path, O_WRONLY)) == -1) {
+      snprintf(err_str, err_length, MSG_SMF_CONTRACT_CONTROL_OPEN_FAILED_S,
+               *strerror(errno));
+      return -2;
+   }
+   if (shared_contract_func__ct_ctl_abandon(cfd)) {
+      snprintf(err_str, err_length, MSG_SMF_CONTRACT_ABANDON_FAILED_US,
+               cfd, *strerror(errno));
+      (void) close(cfd);
+      return -2;
+   }
+   close(cfd);
+   return pid;
 }
 
 
@@ -855,39 +891,50 @@ static int contracts_post_fork(int ctfd, int pid, char *err_str, int err_length)
 *******************************************************************************/
 int sge_smf_contract_fork(char *err_str, int err_length)
 {
-    int pid;
-    int ctfd;
-    DENTER(TOP_LAYER, "sge_smf_contract_fork");
-    
-    if (sge_smf_used() == 0) {
-        pid=fork();
-        DPRINTF(("normally forked %d\n", pid));
-        DRETURN(pid);
-    } else {
-        /* Check if shared libs were loaded */
-        if (libsLoaded == 0) {
-            snprintf(err_str, err_length, MSG_SMF_LOAD_LIB_FAILED);
-            DRETURN(-4);
-        }
-        /* Create new contract template */
-        ctfd = contracts_pre_fork();
-        if (ctfd == -1) {
-            /* Could not create new contract template */
-            snprintf(err_str, err_length, MSG_SMF_CONTRACT_CREATE_FAILED);
-            DRETURN(-2);
-        } else {
-        /* fork */
-            pid = fork();
-        /* Dispose of the template and immediatelly abandon the contract */
-            pid = contracts_post_fork(ctfd, pid, err_str, err_length);
-            if (pid == -2) {
-                /* post_fork failed */
-                DRETURN(-3);
-            }
-            DPRINTF(("contract forked %d\n", pid));
-        }
-    }
-    DRETURN(pid);
+   int pid;
+   int ctfd;
+
+   /*    
+    * EB: IMPORTANT: Logging in this function is not allowed
+    *    
+    * Reason: This function is used in sge_peopen(). 
+    *
+    *         In multi threaded environments the child might run into a deadlock situation
+    *         if it tries to get a lock which was hold by one of the parent threads
+    *         before the fork() call. 
+    *       
+    *         Therefore between fork() (in this function) and exec() only aync-signal-safe 
+    *         functions are allowed.
+    * 
+    *         File based operations (like done in logging) are therefore not alled here.
+    */   
+
+   if (sge_smf_used() == 0) {
+      pid=fork();
+      return pid;
+   } else {
+      /* Check if shared libs were loaded */
+      if (libsLoaded == 0) {
+         snprintf(err_str, err_length, MSG_SMF_LOAD_LIB_FAILED);
+         return -4;
+      }
+      /* Create new contract template */
+      ctfd = contracts_pre_fork();
+      if (ctfd == -1) {
+         /* Could not create new contract template */
+         snprintf(err_str, err_length, MSG_SMF_CONTRACT_CREATE_FAILED);
+         return -2;
+      } else {
+         pid = fork();
+         /* Dispose of the template and immediatelly abandon the contract */
+         pid = contracts_post_fork(ctfd, pid, err_str, err_length);
+         if (pid == -2) {
+            /* post_fork failed */
+            return -3;
+         }
+      }
+   }
+   return pid;
 }
 
 

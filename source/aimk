@@ -174,6 +174,7 @@ usage:
    echo "-no-core          -> don't compile the core system"
    echo "-no-dump          -> build binaries without libcore.so (Linux only)"
    echo "-no-java          -> don't compile Java[TM] class files"
+   echo "-no-gui-inst      -> don't compile Java[TM] GUI installer"
    echo "-no-jni           -> don't compile JNI library"
    echo "-no-intl          -> do not compile with internationalization library"
    echo "-no-mk            -> only return the specific architecture string"
@@ -183,10 +184,13 @@ usage:
    echo "-no-qtcsh         -> don't compile qtcsh"
    echo "-no-remote        -> don't compile 3rdparty remote module (rsh, rshd, rlogin)"
    echo "-no-rmon          -> disable rmon debug output"
-   echo "-no-secure        -> diable ssl security (enabled by default)"
+   echo "-no-secure        -> disable ssl security (enabled by default)"
+   echo "-no-jemalloc      -> disable jemalloc (enabled by default on Linux hosts)"
    echo "-only-core        -> build only the core system"
    echo "-only-depend      -> only compile 3rdparty/sge_depend"
    echo "-only-java        -> only compile Java[TM] class files"
+   echo "-only-gui-inst    -> only compile Java[TM] GUI installer"
+   echo "-only-jemalloc    -> build only the jemalloc library"
    echo "-only-qmake       -> build only qmake"
    echo "-only-qmon        -> build only qmon 3rdparty libs and qmon client"
    echo "-only-qtcsh       -> build only qtcsh"
@@ -206,6 +210,7 @@ usage:
    echo "-sunman           -> create man pages for Sun branded man pages (with -man[kv])"
    echo "-tight-ssh        -> compile SSH daemon with tight SGE integration"
    echo "-umap             -> compile with usermapping and hostgroup feature"
+   echo "-with-jemalloc    -> build SGE with the jemalloc library"
   exit
 }
 
@@ -238,6 +243,7 @@ set CORE             = 1
 set REMOTE           = 1
 set QMAKE            = 1
 set QTCSH            = 1
+set MAKEJEMALLOCLIB  = 0
 set MAKESTRPTIME     = 0
 set MAKESNPRINTF     = 0
 set MAKEFNMATCH      = 0
@@ -263,6 +269,7 @@ set CFLAGS           = "-DSGE_ARCH_STRING=$buildarch -D$TARGET_BITS $INP_CFLAGS"
 set CORE_INCLUDE     = "-I../common -I../libs -I../libs/uti -I../libs/juti -I../libs/gdi -I../libs/japi -I../libs/sgeobj -I../libs/cull -I../libs/rmon -I../libs/comm -I../libs/comm/lists -I../libs/sched -I../libs/evc -I../libs/evm -I../libs/mir -I../libs/lck -I../daemons/common -I../daemons/qmaster -I../daemons/execd -I../daemons/schedd -I../clients/common -I."
 set DEBUG_FLAG       = ""
 set INSURE_FLAG      = ""
+set JEMALLOC_CFLAGS  = ""
 set NOERR_CFLAG      = ""
 set NOERR_PROTO      = ""
 set NOERR_SSH        = ""
@@ -273,6 +280,7 @@ set JAVA             = 1
 set JAVA_BINDIR      = "bin"
 set JAVA_INCL        = "include"
 set JAVA_SHAREDEXT   = ""
+set JAVA_GUI_INST    = 1
 set JNI              = 1
 set JNI_TARGET       = "ALL"
 set PROTECTED        = 0
@@ -282,6 +290,7 @@ set LFLAGS           = "-L."
 set XLFLAGS          = ""
 set XLIBS            = ""
 set LIBS             = "-lm -lpthread"
+set LIBRARY_LIBS     = ""  # used for linking shared objects like drmaa.so or jgdi.so. Overwritten by $LIBS if empty
 set LD_WRAPPER       = ""
 set DLLIB            = "-ldl"
 set LOADAVGLIBS      = ""
@@ -392,8 +401,13 @@ set JUTI_OBJ      =
 
 # Compile with gettext and libintl - we have platform dependent defaults
 switch ($BUILDARCH) 
-   case LINUX86:
    case LINUXAMD64:
+     set MAKEJEMALLOCLIB  = 1
+     set WITH_GETTEXT = 1
+     breaksw
+   case LINUX*:
+     set WITH_GETTEXT = 1
+     breaksw
    case SOLARIS:
    case SOLARIS64:
    case SOLARIS86:
@@ -593,6 +607,9 @@ while ($#argv >= 1 && $?found)
    case  "-no-java"
       set JAVA = 0
       breaksw
+   case  "-no-gui-inst"
+      set JAVA_GUI_INST = 0
+      breaksw
    case  "-no-jni"
       set JNI = 0
       breaksw
@@ -627,9 +644,13 @@ while ($#argv >= 1 && $?found)
       set SECLIB      = ""
       set KLFLAGS     = ""
       breaksw
+   case "-no-jemalloc":
+      set MAKEJEMALLOCLIB = 0
+      breaksw
    case "-only-core":
       set CORE   = 1
       set JAVA   = 0
+      set JAVA_GUI_INST = 0
       set QMAKE  = 0
       set QMON   = 0
       set QTCSH  = 0
@@ -641,6 +662,7 @@ while ($#argv >= 1 && $?found)
    case "-only-depend":
       set CORE       = 0
       set JAVA       = 0
+      set JAVA_GUI_INST = 0
       set QMAKE      = 0
       set QMON       = 0
       set QTCSH      = 0
@@ -648,15 +670,34 @@ while ($#argv >= 1 && $?found)
       set SGE_DEPEND = 1
       set MAKEWINGRIDAPP = 0
       set MAKEWINGRIDLIB = 0
+      set MAKEJEMALLOCLIB  = 0
       set ONLY_PARAM_SPEC = 1
       breaksw
    case  "-only-java"
       set JAVA = 2
       set ONLY_PARAM_SPEC = 1
       breaksw
+   case  "-only-gui-inst"
+      set JAVA_GUI_INST = 2
+      set ONLY_PARAM_SPEC = 1
+      breaksw
+   case "-only-jemalloc":
+      set CORE   = 0
+      set JAVA   = 0
+      set JAVA_GUI_INST = 0
+      set QMAKE  = 0
+      set QMON   = 0
+      set QTCSH  = 0
+      set REMOTE = 0
+      set MAKEJEMALLOCLIB  = 1
+      set MAKEWINGRIDAPP = 0
+      set MAKEWINGRIDLIB = 0
+      set ONLY_PARAM_SPEC = 1
+      breaksw
    case "-only-qmake":
       set CORE   = 0
       set JAVA   = 0
+      set JAVA_GUI_INST = 0
       set QMAKE  = 1
       set QMON   = 0
       set QTCSH  = 0
@@ -668,6 +709,7 @@ while ($#argv >= 1 && $?found)
    case "-only-qmon":
       set CORE   = 0
       set JAVA   = 0
+      set JAVA_GUI_INST = 0
       set QMAKE  = 0
       set QMON   = 1
       set QTCSH  = 0
@@ -679,6 +721,7 @@ while ($#argv >= 1 && $?found)
    case "-only-qtcsh":
       set CORE   = 0
       set JAVA   = 0
+      set JAVA_GUI_INST = 0
       set QMAKE  = 0
       set QMON   = 0
       set QTCSH  = 1
@@ -690,6 +733,7 @@ while ($#argv >= 1 && $?found)
    case "-only-wingrid":
       set CORE   = 0
       set JAVA   = 0
+      set JAVA_GUI_INST = 0
       set QMAKE  = 0
       set QMON   = 0
       set QTCSH  = 0
@@ -701,6 +745,7 @@ while ($#argv >= 1 && $?found)
    case "-only-remote":
       set CORE   = 0
       set JAVA   = 0
+      set JAVA_GUI_INST = 0
       set QMAKE  = 0
       set QMON   = 0
       set QTCSH  = 0
@@ -811,6 +856,9 @@ while ($#argv >= 1 && $?found)
       breaksw
    case "-tight-ssh":
       set SGESSH = 1
+      breaksw
+   case  "-with-jemalloc"
+      set MAKEJEMALLOCLIB = 1
       breaksw
    default:
       unset found
@@ -1106,7 +1154,7 @@ case FREEBSD_*:
    set XLFLAGS  = "$XLIBD"
    set XLIBS    = " -Xlinker -lXm -Xlinker -Bdynamic -lXpm -lXt -lXext -lX11 -lSM -lICE -lXp"
    set RM	= "rm -f"
-   set JAVA_ARCH = "freebsd"
+   set JAVA_ARCH = "linux"
    breaksw 
 
 case NETBSD_*:
@@ -1307,8 +1355,12 @@ case LINUXSPARC64:
 
    if ($BUILDARCH == LINUXPPC) then
       set CFLAGS = "-m32 $CFLAGS"
+      set LFLAGS = "-m32 $LFLAGS"
+      set SHARED_LFLAGS = "-m32 $SHARED_LFLAGS"
    else if ($BUILDARCH == LINUXSPARC64 || $BUILDARCH == LINUXPPC64) then
       set CFLAGS = "-m64 $CFLAGS"
+      set LFLAGS = "-m64 $LFLAGS"
+      set SHARED_LFLAGS = "-m64 $SHARED_LFLAGS"
    endif
 
    if ($DEBUGGED == 1) then
@@ -1340,7 +1392,7 @@ case LINUXSPARC64:
       set CFLAGS = "$CFLAGS -Wno-strict-aliasing"
    endif
 
-   set CFLAGS = "$OFLAG -Wall -Werror -Wstrict-prototypes -D__GRIDENGINE_FD_SETSIZE=8192 -DLINUX -D$BUILDARCH -D$COMPILE_ARCH -D_GNU_SOURCE -DGETHOSTBYNAME_R6 -DGETHOSTBYADDR_R8 $DEBUG_FLAG $CFLAGS"
+   set CFLAGS = "$OFLAG -Wall -Werror -Wstrict-prototypes -DUSE_POLL -DLINUX -D$BUILDARCH -D$COMPILE_ARCH -D_GNU_SOURCE -DGETHOSTBYNAME_R6 -DGETHOSTBYADDR_R8 $DEBUG_FLAG $CFLAGS"
 
    if ("$ADOC" == 1) then
       set CFLAGS = "$CFLAGS -Wno-error"
@@ -1406,6 +1458,17 @@ case LINUXSPARC64:
    set RUNPATH       = -Wl,-rpath,'\$$ORIGIN'/../../lib/$buildarch
    set LFLAGS        = "$LFLAGS $RUNPATH"
    set SHARED_LFLAGS = "$SHARED_LFLAGS $RUNPATH"
+
+   if ( $COMPILE_ARCH == "ULINUX86_24" || $COMPILE_ARCH == "ULINUXAMD64_24" ) then
+      echo "Ignore jemalloc for unsupported architectures!"
+      set MAKEJEMALLOCLIB = 0
+   endif
+
+   if ( $MAKEJEMALLOCLIB == 1 ) then
+      set LIBRARY_LIBS = "$LIBS"
+      set JEMALLOC_CFLAGS  = "-Wno-error -DMOZ_MEMORY_LINUX"
+      set LIBS = "-ljemalloc $LIBS"
+   endif
 
    breaksw
    
@@ -1561,7 +1624,7 @@ case SOLARISAMD64:
 
    set ERR_WARN_NONE = "-errwarn=%none" # is set in XCFLAGS and for R_E_M_O_T_E target to switch off -errwarn=%all
    set ERR_WARN_ALL = "-errwarn=%all"  # is set in cc specific section below
-   set CFLAGS = "$CFLAGS -DSOLARIS -D$BUILDARCH -D__EXTENSIONS__ -D_POSIX_C_SOURCE=199506L -DGETHOSTBYNAME_R5 -DGETHOSTBYADDR_R7" 
+   set CFLAGS = "$CFLAGS -DSOLARIS -D$BUILDARCH -D__EXTENSIONS__ -D_POSIX_C_SOURCE=199506L -DGETHOSTBYNAME_R5 -DGETHOSTBYADDR_R7 -DUSE_POLL"
    set SHAREDLD = $CC
 
    if ($OPTIMIZATION == 1) then 
@@ -1632,6 +1695,7 @@ case SOLARISAMD64:
 #      set CFLAGS = "-DFD_SETSIZE=8192 $CFLAGS"
 #   endif
 
+   # INFO: rel is also used later ...
    set rel = `uname -r | cut -f 2 -d .`
    if ( $rel > 6 ) then
       set CFLAGS = "-DHAS_SOCKLEN_T $CFLAGS"
@@ -1700,8 +1764,22 @@ case SOLARISAMD64:
       endif
    endif
 
-   set LFLAGS   = "$LFLAGS $DEBUG_FLAG -lmtmalloc"
-   set LIBS     = "-lsocket -lnsl -lm -lthread"
+   # This is workaround for not POSIX fork() behaviour of -lthread
+   # library. The man page of fork() tells following:
+   # ...
+   # Note that if a program is  linked  with  both  libraries
+   # (-lthread  and  -lpthread),  the POSIX semantic of fork() pre-
+   # vails.
+   # 
+   # TODO: use -lpthread only when jmx thread supports it!
+   #       
+   if ( $rel < 10 ) then
+      # Solaris version < 10 needs -lpthread
+      set LIBS     = "-lsocket -lnsl -lm -lpthread -lthread"
+   else
+      # Solaris versions >= 10 have posix fork()
+      set LIBS     = "-lsocket -lnsl -lm -lthread"
+   endif
    set LOADAVGLIBS = "-lkstat"
    set FSTYPELIBS = "-lkstat"
 
@@ -1732,6 +1810,19 @@ case SOLARISAMD64:
    set RUNPATH       = "-R "'\$$ORIGIN'/../../lib/$buildarch
    set LFLAGS        = "$LFLAGS $RUNPATH"
    set SHARED_LFLAGS = "$SHARED_LFLAGS $RUNPATH"
+
+#   if ( $BUILDARCH == "SOLARISAMD64" ) then
+#      set MAKEJEMALLOCLIB = 1
+#   endif
+
+   set LFLAGS   = "$LFLAGS $DEBUG_FLAG"
+   set LIBRARY_LIBS = "$LIBS"
+   if ( $MAKEJEMALLOCLIB == 1 ) then
+      set JEMALLOC_CFLAGS  = "-DMOZ_MEMORY_SOLARIS -xc99"
+      set LIBS = "-ljemalloc $LIBS"
+   else
+      set LIBS = "-lmtmalloc $LIBS"
+   endif
 
    breaksw
 
@@ -1831,6 +1922,9 @@ if ( $JNI == 1 ) then
              breaksw
          case hp11-64:
              set JAVA_LIB_ARCH = PA_RISC2.0W
+             breaksw
+         case fbsd-i386:
+             set JAVA_LIB_ARCH = linux 
              breaksw
          case irix65:
              set JAVA_LIB_ARCH = "" 
@@ -1953,6 +2047,10 @@ if ($USE_INSURE == 1) then
    set CXX = "insure $CXX"
 endif
 
+if ("$LIBRARY_LIBS" == "") then
+   set LIBRARY_LIBS = "$LIBS" 
+endif
+
 #---------------------------------------------------------------------------
 # Actual make targets begin here
 #
@@ -1961,6 +2059,30 @@ if ("$COMPILE_DIR" == "") then
    echo making in $COMPILE_ARCH/ for $BUILDARCH at host `hostname`
 else
    echo making in $COMPILE_DIR/ for $BUILDARCH at host `hostname`
+endif
+
+# -only-gui-inst option
+if ( "$JAVA_GUI_INST" == 2 ) then
+   echo _____Making JAVA GUI Installer_____
+
+   if ( "$ADD_COPYRIGHT" == 1 ) then
+      setenv AIMK_COPYRIGHT_DIR "$COPYRIGHT_DIR"
+      setenv AIMK_COPYRIGHT "courtesy"
+   else if ( "$ADD_SUN_COPYRIGHT" == 1 ) then
+      setenv AIMK_COPYRIGHT_DIR "$SUN_COPYRIGHT_DIR"
+      setenv AIMK_COPYRIGHT "sun"
+   else
+      setenv AIMK_COPYRIGHT_DIR ""
+      setenv AIMK_COPYRIGHT ""
+   endif
+   ant -f clients/gui-installer/build.xml $argv
+
+   if ( $status != 0 ) then
+      echo not done
+      exit 1
+   endif
+   echo done
+   exit 0
 endif
 
 if ( "$BUILDMAN" == 1 ) then
@@ -2172,6 +2294,49 @@ if ( "$MAKEWINGRIDLIB" == 1 ) then
    cd $SOURCE
 endif
 
+if ( "$MAKEJEMALLOCLIB" == 1 ) then
+   echo _________3_r_d_p_a_r_t_y__J_E_M_A_L_L_O_C_
+
+   cd $COMPILE_ARCH
+
+   switch ( "$argv" )
+      case clean:
+         set param = clean
+      breaksw
+
+      case depend:
+         set param = depend
+      breaksw
+
+      case messages:
+         set param = messages
+      breaksw
+
+      case libjemalloc.so:
+         set param = libjemalloc.so
+      breaksw
+
+      default:
+         set param = ""
+      breaksw
+   endsw
+
+   $MAKE $MAKEOPT -f $SOURCE/3rdparty/jemalloc/Makefile "MAKE=$MAKE" "CC=$CC" \
+      "COMPILE_ARCH=$COMPILE_ARCH" "JEMALLOC_CFLAGS=$JEMALLOC_CFLAGS" \
+      "CC=$CC" "CFLAGS=$CFLAGS" "SOURCE=$SOURCE" "SDIR=$SDIR" \
+      "LFLAGS=$LFLAGS" "STRIP=$STRIP" "RANLIB=$RANLIB" \
+      "AR=$AR" "ARFLAGS=$ARFLAGS" \
+      "SHARED_CFLAGS=$SHARED_CFLAGS" "SHARED_LFLAGS=$SHARED_LFLAGS" \
+      "DEPEND_FLAGS=$DEPEND_FLAGS" \
+      "SHAREDLD=$SHAREDLD" "SHAREDEXT=$SHAREDEXT" "LIBEXT=$LIBEXT" $param
+
+   if ( $status != 0 ) then
+      echo not done
+      exit 1
+   endif
+
+   cd $SOURCE
+endif
 if ( "$MAKESTRPTIME" == 1 ) then
    echo _________3_r_d_p_a_r_t_y__S_T_R_P_T_I_M_E_
 
@@ -2353,7 +2518,7 @@ if ( "$CORE" == 1 && "$JAVA" != 2 ) then
          "AUTHUSER_ALL=$AUTHUSER_ALL" "LOADCHECK_ALL=$LOADCHECK_ALL" \
          "AUTHUSER_OBJ=$AUTHUSER_OBJ" "LOADCHECK_OBJ=$LOADCHECK_OBJ" \
          "JUTI_OBJ=$JUTI_OBJ" \
-         "WINCC=$WINCC" "WINCFLAGS=$WINCFLAGS" "WINLIBS=$WINLIBS" \
+         "WINCC=$WINCC" "WINCFLAGS=$WINCFLAGS" "WINLIBS=$WINLIBS" "LIBRARY_LIBS=$LIBRARY_LIBS" \
          $argv
    if ( $status != 0 ) then
       echo not done
@@ -2391,6 +2556,10 @@ if ( "$JAVA" > 0 ) then
    else
       setenv AIMK_COPYRIGHT_DIR ""
       setenv AIMK_COPYRIGHT ""
+   endif
+   # -no-gui-inst option
+   if ( "$JAVA_GUI_INST" == 0 ) then
+      setenv BUILD_NO_GUI_INSTALLER 1
    endif
    ant -f build.xml $argv
    # how to propagate ant opts to first and then second build.xml
@@ -2490,12 +2659,14 @@ if ( "$REMOTE" == 1) then
       set CFLAGS_REMOTE = "$CFLAGS $ERR_WARN_NONE"
    endif
 
+   set REMOTE_LFLAGS = "$LFLAGS -L$SOURCE/$COMPILE_ARCH"
+
    cd $COMPILE_ARCH
 
    $MAKE $MAKEOPT -f ../Makefile "MAKE=$MAKE" "CC=$CC" \
       "CFLAGS=$CFLAGS_REMOTE" "LIBS=$LIBS" "SOURCE=$SOURCE" \
       "KRBLIBS=$KRBLIBS" "DLLIB=$DLLIB" \
-      "LFLAGS=$LFLAGS $KLFLAGS" "STRIP=$STRIP" "RANLIB=$RANLIB" \
+      "LFLAGS=$REMOTE_LFLAGS $KLFLAGS" "STRIP=$STRIP" "RANLIB=$RANLIB" \
       "AR=$AR" "ARFLAGS=$ARFLAGS" "LIBEXT=$LIBEXT" \
       "WINGRIDLIB=$WINGRIDLIB" "WINGRIDLIB_DEP=$WINGRIDLIB_DEP" \
       "MEMCFLAG=$MEMCFLAG" "COMPILE_ARCH=$COMPILE_ARCH" $argv
@@ -2553,7 +2724,7 @@ if ( "$SGESSH" == 1) then
       ../configure --with-grd=${COMPILE_ARCH} --srcdir=.. \
          --with-cflags="${MEMCFLAG} ${NOERR_SSH} ${NOERR_PROTO} -DSGESSH_INTEGRATION" \
          --with-ldflags="${LFLAGS}" \
-         --with-libs="-L../../../${COMPILE_ARCH} -L../../../3rdparty/remote/${COMPILE_ARCH}/ -lsgeremote -luti -llck -lrmon ${LIBS} ${SLIBS}" \
+         --with-libs="-L../../../${COMPILE_ARCH} -L../../../3rdparty/remote/${COMPILE_ARCH}/ -lsgeremote -luti -lcommlists -llck -lrmon ${LIBS} ${SLIBS}" \
          --with-ssl-dir=${OPENSSL_HOME}
    endif
 
@@ -2684,6 +2855,9 @@ if ( "$ADOC" == 1) then
 
    echo "Creating documentation for libs: libjapi.texi"
    3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine Job API Library" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/japi/japi.h libs/japi/japi.c -o $COMPILE_ARCH/libjapi.texi
+
+   echo "Creating documentation for libs: libuti.texi"
+   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine Utility Library" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/uti/*.h libs/uti/*.c -o $COMPILE_ARCH/libuti.texi
 
    echo "Creating documentation for libs: libdrmaa.texi"
 endif

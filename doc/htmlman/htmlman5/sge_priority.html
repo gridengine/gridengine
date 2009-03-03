@@ -3,15 +3,16 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     sge_priority - Grid Engine job priorities
+     sge_priority - Sun Grid Engine job priorities
 
 DESCRIPTION
-     Grid Engine provide means for controlling job  dispatch  and
-     run-time  priorities.  The  dispatch  priority indicates the
+     Sun Grid Engine provide means for controlling  job  dispatch
+     and run-time priorities. The dispatch priority indicates the
      importance of pending jobs  compared  with  each  other  and
-     determines the order in which Grid Engine dispatches jobs to
-     queue instances. The run-time priority  determines  the  CPU
-     allocation that the operating system assigns to jobs.
+     determines  the  order  in  which Sun Grid Engine dispatches
+     jobs to queue instances. The  run-time  priority  determines
+     the  CPU  allocation  that  the  operating system assigns to
+     jobs.
 
   JOBS DISPATCH PRIORITY
      A job's dispatch priority is affected by a  number  of  fac-
@@ -34,7 +35,7 @@ DESCRIPTION
      The effect of each of these is governed by the overall  pol-
      icy  setup,  which  is  split into three top-level contribu-
      tions.   Each   of   these   is   configured   through   the
-     <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B>  parameters weight_priority, weight_ticket and
+     <B><A HREF="../htmlman5/sched_conf.html?pathrev=V62u2_TAG">sched_conf(5)</A></B>  parameters weight_priority, weight_ticket and
      weight_urgency.  These  three  parameters  control  to  what
      degree POSIX priority, ticket policy, and urgency policy are
      in effect. To facilitate interpretation, the raw  priorities
@@ -53,7 +54,6 @@ DESCRIPTION
 
      The higher a job's  priority  value,  the  earlier  it  gets
      dispatched.
-
      The urgency policy defines an urgency value  for  each  job.
      The urgency value
 
@@ -80,16 +80,16 @@ DESCRIPTION
         hrr      = rurg * assumed_slot_allocation * request
 
      where the resource's urgency value ("rurg") is as  specified
-     under      urgency      in     <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>,     the     job's
+     under      urgency      in     <B><A HREF="../htmlman5/complex.html?pathrev=V62u2_TAG">complex(5)</A></B>,     the     job's
      assumed_slot_allocation represents the number of slots  sup-
      posedly  assigned  to  the  job, and the per-slot request is
-     that which was specified using the -l  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>  option.  For
+     that which was specified using the -l  <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B>  option.  For
      string type requests the formula is simply
 
         hrr      = "rurg"
 
      and directly assigns the resource urgency value as specified
-     under urgency in <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>.
+     under urgency in <B><A HREF="../htmlman5/complex.html?pathrev=V62u2_TAG">complex(5)</A></B>.
 
      The waiting time contribution represents a weighted  weight-
      ing time of the jobs
@@ -97,12 +97,12 @@ DESCRIPTION
         wtcontr = waiting_time * weight_waiting_time
 
      with the waiting time in seconds and the weight_waiting_time
-     value as specified in <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B>.
+     value as specified in <B><A HREF="../htmlman5/sched_conf.html?pathrev=V62u2_TAG">sched_conf(5)</A></B>.
 
      The deadline contribution has an increasing effect  as  jobs
      approach  their deadline initiation time (see the -dl option
-     in  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>).   It  is  defined  as  the  quotient  of   the
-     weight_deadline  value  from <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B> and the (steadily
+     in  <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B>).   It  is  defined  as  the  quotient  of   the
+     weight_deadline  value  from <B><A HREF="../htmlman5/sched_conf.html?pathrev=V62u2_TAG">sched_conf(5)</A></B> and the (steadily
      decreasing) free time in seconds until  deadline  initiation
      time
 
@@ -121,29 +121,29 @@ DESCRIPTION
      The ticket policies provide  a  broad  range  of  means  for
      influencing  both  job  dispatch and runtime priorities on a
      per job, per user, per project, and  per  department  basis.
-     See  the  Grid  Engine Installation and Administration Guide
-     for details.
+     See  the  Sun  Grid  Engine  Installation and Administration
+     Guide for details.
 
   JOB RUN-TIME PRIORITY
      The run-time priority can be dynamically adjusted  in  order
      to  meet  the goals set with the ticket policy. Dynamic run-
      time priority adjustment can be turned  off  (default)  glo-
-     bally  using  reprioritize_interval  in  <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B> If no
+     bally  using  reprioritize_interval  in  <B><A HREF="../htmlman5/sched_conf.html?pathrev=V62u2_TAG">sched_conf(5)</A></B> If no
      dynamic run-time priority  adjustment  is  done  at  a  host
-     level,  the  priority  specification  in <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B> is in
+     level,  the  priority  specification  in <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62u2_TAG">queue_conf(5)</A></B> is in
      effect.
 
      Note that urgency and POSIX priorities do NOT affect runtime
      priority.
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>, <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B>, <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,  <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B>,
-     <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>  <I>Grid</I>  <I>Engine</I>  <I>Installation</I>  <I>and</I>  <I>Administration</I>
-     <I>Guide</I>
+     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B>, <B><A HREF="../htmlman5/complex.html?pathrev=V62u2_TAG">complex(5)</A></B>, <B><A HREF="../htmlman1/qstat.html?pathrev=V62u2_TAG">qstat(1)</A></B>, <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B>,  <B><A HREF="../htmlman5/sched_conf.html?pathrev=V62u2_TAG">sched_conf(5)</A></B>,
+     <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62u2_TAG">sge_conf(5)</A></B> <I>Sun</I> <I>Grid</I> <I>Engine</I> <I>Installation</I> <I>and</I> <I>Administration</I>
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
+
 
 
 

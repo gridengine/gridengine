@@ -437,7 +437,7 @@ void var_list_copy_prefix_vars(lList **varl,
    for_each(var_elem, src_varl) {
       const char *prefix_name = lGetString(var_elem, VA_variable);
 
-      if (!strncmp(prefix_name, prefix, prefix_len)) {
+      if (strncmp(prefix_name, prefix, prefix_len) == 0) {
          char name[MAX_STRING_SIZE];
          const char *name_without_prefix = &prefix_name[prefix_len];
          const char *value = lGetString(var_elem, VA_value);
@@ -449,8 +449,9 @@ void var_list_copy_prefix_vars(lList **varl,
    if (*varl == NULL) {
       *varl = lCreateList("", VA_Type);
    }
-   var_list_add_as_set (*varl, var_list2); 
-   DEXIT;
+   var_list_add_as_set(*varl, var_list2); 
+
+   DRETURN_VOID;
 }
 
 /****** sgeobj/var/var_list_copy_prefix_vars_undef() **************************
@@ -673,43 +674,40 @@ int var_list_add_as_set(lList *lp0, lList *lp1)
 
    DENTER(CULL_LAYER, "var_list_add_as_set");
 
-   if (!lp1 || !lp0) {
-      DEXIT;
-      return -1;
+   if (lp1 == NULL || lp0 == NULL) {
+      DRETURN(-1);
    }
 
    /* Check if the two lists are equal */
    dp0 = lGetListDescr(lp0);
    dp1 = lGetListDescr(lp1);
-   if (lCompListDescr(dp0, dp1)) {
-      DEXIT;
-      return -1;
+   if (lCompListDescr(dp0, dp1) != 0) {
+      DRETURN(-1);
    }
 
-   while (lp1->first) {
+   while (lp1->first != NULL) {
       /* Get the first element from the second list */
-      if (!(ep1 = lDechainElem(lp1, lp1->first))) {
-         DEXIT;
-         return -1;
+      if ((ep1 = lDechainElem(lp1, lp1->first)) == NULL) {
+         DRETURN(-1);
       }
    
       /* Get it's name, and use the name to look for a matching element in the
        * first list. */
-      name = lGetString (ep1, VA_variable);
-      ep0 = lGetElemStr (lp0, VA_variable, name);
+      name = lGetString(ep1, VA_variable);
+      ep0 = lGetElemStr(lp0, VA_variable, name);
 
       /* If there is a matching element in the first list, set it's value to the
        * value of the element from the second list. */
       if (ep0 != NULL) {
-         value = lGetString (ep1, VA_value);         
-         lSetString (ep0, VA_value, value);
+         value = lGetString(ep1, VA_value);         
+         lSetString(ep0, VA_value, value);
+         lFreeElem(&ep1);
       }
       /* If there is no matching element, add the element from the second list
        * to the first list. */
       else {
          if (lAppendElem(lp0, ep1) == -1) {
-            DEXIT;
-            return -1;
+            DRETURN(-1);
          }
       }
    }
@@ -717,8 +715,7 @@ int var_list_add_as_set(lList *lp0, lList *lp1)
    /* The second list is no longer needed. */
    lFreeList(&lp1);
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 /****** sge_var/var_list_verify() **********************************************
@@ -764,4 +761,110 @@ var_list_verify(const lList *lp, lList **answer_list)
 
    return ret;
 }
+
+/****** sge_var/var_list_parse_from_string() *******************************
+*  NAME
+*     var_list_parse_from_string() -- parse vars from string list 
+*
+*  SYNOPSIS
+*     int var_list_parse_from_string(lList **lpp, 
+*                                    const char *variable_str, 
+*                                    int check_environment) 
+*
+*  FUNCTION
+*     Parse a list of variables ("lpp") from a comma separated 
+*     string list ("variable_str"). The boolean "check_environment"
+*     defined wether the current value of a variable is taken from
+*     the environment of the calling process.
+*
+*  INPUTS
+*     lList **lpp              - VA_Type list 
+*     const char *variable_str - source string 
+*     int check_environment    - boolean
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        >0 - Error
+*
+*  NOTES
+*     MT-NOTE: var_list_parse_from_string() is MT safe
+*******************************************************************************/
+int var_list_parse_from_string(lList **lpp, const char *variable_str,
+                               int check_environment)
+{
+   char *variable;
+   char *val_str;
+   int var_len;
+   char **str_str;
+   char **pstr;
+   lListElem *ep;
+   char *va_string;
+
+   DENTER(TOP_LAYER, "var_list_parse_from_string");
+
+   if (!lpp) {
+      DEXIT;
+      return 1;
+   }
+
+   va_string = sge_strdup(NULL, variable_str);
+   if (!va_string) {
+      *lpp = NULL;
+      DEXIT;
+      return 2;
+   }
+   str_str = string_list(va_string, ",", NULL);
+   if (!str_str || !*str_str) {
+      *lpp = NULL;
+      FREE(va_string);
+      DEXIT;
+      return 3;
+   }
+
+   if (!*lpp) {
+      *lpp = lCreateList("variable list", VA_Type);
+      if (!*lpp) {
+         FREE(va_string);
+         FREE(str_str);
+         DEXIT;
+         return 4;
+      }
+   }
+
+   for (pstr = str_str; *pstr; pstr++) {
+      struct saved_vars_s *context;
+      ep = lCreateElem(VA_Type);
+      /* SGE_ASSERT(ep); */
+      lAppendElem(*lpp, ep);
+
+      context = NULL;
+      variable = sge_strtok_r(*pstr, "=", &context);
+      SGE_ASSERT((variable));
+      var_len=strlen(variable);
+      lSetString(ep, VA_variable, variable);
+      val_str=*pstr;
+
+      /* 
+       * The character at the end of the first token must be either '=' or '\0'.
+       * If it's a '=' then we treat the following string as the value 
+       * If it's a '\0' and check_environment is set, then we get the value from
+       * the environment variable value. 
+       * If it's a '\0' and check_environment is not set, then we set the value
+       * to NULL.
+       */
+      if (val_str[var_len] == '=') {
+          lSetString(ep, VA_value, &val_str[var_len+1]);
+      } else if(check_environment) {
+         lSetString(ep, VA_value, sge_getenv(variable));
+      } else {
+         lSetString(ep, VA_value, NULL);
+      }
+      sge_free_saved_vars(context);
+   }
+   FREE(va_string);
+   FREE(str_str);
+   DRETURN(0);
+}
+
 

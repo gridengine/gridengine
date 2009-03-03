@@ -51,6 +51,7 @@ LS=ls
 QCONF=$SGE_ROOT/bin/$ARCH/qconf
 HOST=`$SGE_ROOT/utilbin/$ARCH/gethostname -name`
 
+SUCCEEDED_LOADLOC=""
 
 Usage()
 {
@@ -442,6 +443,32 @@ ResolveResult()
             ;;
          esac
       ;;
+      -Mconf)
+         case "$resMsg" in
+            *'value == NULL for attribute'*)
+               unknown=`echo ${resMsg} | awk -F'"' '{ print $2 }'`
+               ReplaceLineWithMatch ${resFile} "${unknown}*" "#${unknown}"
+               LogIt "I" "$obj commented, trying to again"
+               LoadConfigFile "$resFile" "$resOpt"
+               ret=$?
+               return $ret
+            ;;
+            'denied: the path given for'*)
+               #FlatFile ${resFile}
+               ReplaceLineWithMatch "$resFile" 'qlogin_daemon.*' 'qlogin_daemon   /usr/sbin/in.telnetd'
+               ReplaceLineWithMatch "$resFile" 'rlogin_daemon.*' 'rlogin_daemon   /usr/sbin/in.rlogind'
+               LogIt "I" "wrong path corrected, trying again"
+               LoadConfigFile "$resFile" "$resOpt"
+               ret=$?
+               return $ret
+            ;;   
+            *'will not be effective before sge_execd restart'*)
+               #regular upgrade message 
+               LogIt "I" "message accepted"
+               return 0
+            ;;
+         esac
+      ;;
       -Mc)  
          case "$resMsg" in
             '')
@@ -527,6 +554,15 @@ LoadListFromLocation()
    loadLoc="${1:?Need the location}"
    qconfOpt="${2:?Need an option}"
 
+   failed=0
+
+   case $SUCCEEDED_LOADLOC in
+   *$loadLoc*)
+      LogIt "I" "qconf $qconfOpt $loadLoc skipped because succeeded already in previous run"
+      return 0
+      ;;
+   esac
+
    LogIt "I" "qconf $qconfOpt $loadLoc"
    
    #File list
@@ -538,6 +574,9 @@ LoadListFromLocation()
 
       for item in $list; do
          LoadConfigFile $item $qconfOpt	
+         if [ $? -ne 0 ]; then
+            failed=1
+         fi
       done
    #Directory list is not empty
    elif [ -d "$loadLoc" ]; then
@@ -545,16 +584,23 @@ LoadListFromLocation()
       if [ -z "$llList" ]; then
          return
       fi
-      #we prefer full file names 
-      llList=`ls ${loadLoc}/*`
 
-      for item in $llList; do
-         LoadConfigFile $item $qconfOpt
+      for item in ${loadLoc}/*; do
+         #we prefer full file names 
+         full=`ls $item` 
+         LoadConfigFile $full $qconfOpt
+         if [ $? -ne 0 ]; then
+            failed=1
+         fi
       done
    else
       #Not a file or directory (skip)
       errorMsg = "wrong directory or file: $loadLoc"
       LogIt "W" "$errorMsg"
+   fi
+   
+   if [ $failed -eq  0 ]; then
+      SUCCEEDED_LOADLOC="$SUCCEEDED_LOADLOC $loadLoc" 
    fi
 
    return $ret

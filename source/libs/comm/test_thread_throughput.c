@@ -111,7 +111,9 @@ extern int main(int argc, char** argv)
   int arg_found = 0;
 
   prof_mt_init();
-  
+
+  printf("This module test does not work!\n");  
+  exit(1);
   if (argc != 2) {
      printf("usage: test_thread_throughput <thread mode>\n");
      printf("<thread mode> = none|rw|pool\n");
@@ -174,10 +176,10 @@ extern int main(int argc, char** argv)
 
   for (i=1;i<=TEST_RECEIVER_COUNT;i++) {
      printf("starting receiver thread %i\n", i);
-     cl_thread_list_create_thread(thread_list, &dummy_thread_p,cl_com_get_log_list(), "receiver", i, my_receive_thread, my_cleanup_func, NULL);
+     cl_thread_list_create_thread(thread_list, &dummy_thread_p,cl_com_get_log_list(), "receiver", i, my_receive_thread, my_cleanup_func, NULL, CL_TT_USER1);
   }
-  cl_thread_list_create_thread(thread_list, &sender_thread,cl_com_get_log_list(), "sender1", 1, my_sender_thread, my_cleanup_func, NULL);
-  cl_thread_list_create_thread(thread_list, &sender_thread,cl_com_get_log_list(), "sender2", 2, my_sender_thread, my_cleanup_func, NULL);
+  cl_thread_list_create_thread(thread_list, &sender_thread,cl_com_get_log_list(), "sender1", 1, my_sender_thread, my_cleanup_func, NULL, CL_TT_USER1);
+  cl_thread_list_create_thread(thread_list, &sender_thread,cl_com_get_log_list(), "sender2", 2, my_sender_thread, my_cleanup_func, NULL, CL_TT_USER1);
 
   
 

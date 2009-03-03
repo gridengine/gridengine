@@ -207,6 +207,7 @@ static int set_file_descriptor_limit(void) {
       modified_hard_limit = 1;
    }
 
+#ifndef USE_POLL
    if (qmaster_rlimits.rlim_max > FD_SETSIZE) {
       qmaster_rlimits.rlim_max = FD_SETSIZE;
       if (qmaster_rlimits.rlim_cur > FD_SETSIZE) {
@@ -215,6 +216,7 @@ static int set_file_descriptor_limit(void) {
       modified_hard_limit = 1;
       return_value = 1;
    }
+#endif
 
    if (modified_hard_limit == 1) {
 #if defined(IRIX)
@@ -405,14 +407,14 @@ int main(int argc, char* argv[])
 
    sge_setup_qmaster(ctx, argv);
 
+#ifndef USE_POLL
    if (file_descriptor_settings_result == 1) {
-      WARNING((SGE_EVENT, MSG_QMASTER_FD_SETSIZE_LARGER_THAN_LIMIT_U, 
-               sge_u32c(FD_SETSIZE)));
-      WARNING((SGE_EVENT, MSG_QMASTER_FD_SETSIZE_COMPILE_MESSAGE1_U, 
-               sge_u32c(FD_SETSIZE - 20)));
+      WARNING((SGE_EVENT, MSG_QMASTER_FD_SETSIZE_LARGER_THAN_LIMIT_U, sge_u32c(FD_SETSIZE)));
+      WARNING((SGE_EVENT, MSG_QMASTER_FD_SETSIZE_COMPILE_MESSAGE1_U, sge_u32c(FD_SETSIZE - 20)));
       WARNING((SGE_EVENT, MSG_QMASTER_FD_SETSIZE_COMPILE_MESSAGE2));
       WARNING((SGE_EVENT, MSG_QMASTER_FD_SETSIZE_COMPILE_MESSAGE3));
    }
+#endif
 
    /*
     * Setup all threads and initialize corresponding modules. 

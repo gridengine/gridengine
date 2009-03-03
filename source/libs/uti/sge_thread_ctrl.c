@@ -54,7 +54,7 @@ thread_control_t Thread_Control = {
    false
 };
 
-/****** libs/uti/sge_thread_has_shutdown_started() **********************
+/****** uti/thread_ctrl/sge_thread_has_shutdown_started() **********************
 *  NAME
 *     sge_thread_has_shutdown_started() -- shutdown in progress? 
 *
@@ -89,7 +89,7 @@ sge_thread_has_shutdown_started(void)
    return res;
 }
 
-/****** libs/uti/sge_thread_notify_all_waiting() ************************
+/****** uti/thread_ctrl/sge_thread_notify_all_waiting() ************************
 *  NAME
 *     sge_thread_notify_all_waiting() -- notify waiting thread 
 *
@@ -113,7 +113,7 @@ sge_thread_has_shutdown_started(void)
 *     MT-NOTE: sge_thread_notify_all_waiting() is MT safe 
 *
 *  SEE ALSO
-*     libs/uti/sge_thread_wait_for_signal()
+*     uti/thread_ctrl/sge_thread_wait_for_signal()
 *******************************************************************************/
 void
 sge_thread_notify_all_waiting(void)
@@ -130,7 +130,7 @@ sge_thread_notify_all_waiting(void)
    DRETURN_VOID;
 }
 
-/****** libs/uti/sge_thread_wait_for_signal() ***************************
+/****** uti/thread_ctrl/sge_thread_wait_for_signal() ***************************
 *  NAME
 *     sge_thread_wait_for_signal() -- block current thread till shutdown 
 *
@@ -151,7 +151,7 @@ sge_thread_notify_all_waiting(void)
 *     MT-NOTE: sge_thread_wait_for_signal() is not MT safe 
 *
 *  SEE ALSO
-*     libs/uti/sge_thread_notify_all_waiting()
+*     uti/thread_ctrl/sge_thread_notify_all_waiting()
 *******************************************************************************/
 void 
 sge_thread_wait_for_signal(void)

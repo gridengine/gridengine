@@ -78,7 +78,7 @@
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
 
-#define QINSTANCE_LAYER TOP_LAYER
+#define QINSTANCE_LAYER BASIS_LAYER
 
 /****** sgeobj/qinstance/qinstance_list_locate() ******************************
 *  NAME
@@ -271,7 +271,8 @@ qinstance_increase_qversion(lListElem *this_elem)
 *  RESULT
 *     bool - true, if the user is owner, else false
 ******************************************************************************/
-bool qinstance_check_owner(const lListElem *this_elem, const char *user_name)
+bool 
+qinstance_check_owner(const lListElem *this_elem, const char *user_name)
 {
    bool ret = false;
 
@@ -478,50 +479,6 @@ qinstance_is_a_ckpt_referenced(const lListElem *this_elem)
    DRETURN(ret);
 } 
 
-/****** sgeobj/qinstance/qinstance_is_centry_referenced() *********************
-*  NAME
-*     qinstance_is_centry_referenced() -- Is the given CENTRY object referenced 
-*
-*  SYNOPSIS
-*     bool 
-*     qinstance_is_centry_referenced(const lListElem *this_elem, 
-*                                    const lListElem *centry) 
-*
-*  FUNCTION
-*     Is the given CENTRY object ("centry") referenced by the qinstance
-*     "this_elem". 
-*
-*  INPUTS
-*     const lListElem *this_elem - QU_Type element 
-*     const lListElem *centry    - CE_Type element
-*
-*  RESULT
-*     bool - test result
-*        true  - is referenced
-*        fasle - is not referenced
-*
-*  NOTES
-*     MT-NOTE: qinstance_is_centry_referenced() is MT safe 
-*******************************************************************************/
-bool
-qinstance_is_centry_referenced(const lListElem *this_elem, 
-                               const lListElem *centry)
-{
-   bool ret = false;
-
-   DENTER(TOP_LAYER, "qinstance_is_centry_referenced");
-   if (this_elem != NULL) {
-      const char *name = lGetString(centry, CE_name);
-      lList *centry_list = lGetList(this_elem, QU_consumable_config_list);
-      lListElem *centry_ref = lGetElemStr(centry_list, CE_name, name);
-
-      if (centry_ref != NULL || get_rsrc(name, true, NULL, NULL, NULL, NULL)==0) {
-         ret = true;
-      }
-   }
-   DRETURN(ret);
-}
-
 /****** sgeobj/qinstance/qinstance_is_centry_a_complex_value() ****************
 *  NAME
 *     qinstance_is_centry_a_complex_value() -- Is it a complex_value 
@@ -552,7 +509,15 @@ qinstance_is_centry_a_complex_value(const lListElem *this_elem,
    bool ret = false;
 
    DENTER(TOP_LAYER, "qinstance_is_centry_a_complex_value");
-   ret = qinstance_is_centry_referenced(this_elem, centry);
+   if (this_elem != NULL) {
+      const char *name = lGetString(centry, CE_name);
+      lList *centry_list = lGetList(this_elem, QU_consumable_config_list);
+      lListElem *centry_ref = lGetElemStr(centry_list, CE_name, name);
+
+      if (centry_ref != NULL || get_rsrc(name, true, NULL, NULL, NULL, NULL)==0) {
+         ret = true;
+      }
+   }
    DRETURN(ret);
 }
 
@@ -640,24 +605,27 @@ qinstance_list_find_matching(const lList *this_list, lList **answer_list,
 int
 qinstance_slots_used(const lListElem *this_elem) 
 {
-   int ret = 1000000;
+   int ret = 1000000; /* when slots is unknown */ 
    lListElem *slots;
 
    DENTER(QINSTANCE_LAYER, "qinstance_slots_used");
+   
    slots = lGetSubStr(this_elem, RUE_name, SGE_ATTR_SLOTS, QU_resource_utilization);
    if (slots != NULL) {
       ret = lGetDouble(slots, RUE_utilized_now);
    } else {
-      /* may never happen */
+      /* this happens on qinstance_create when a queue instance is created 
+         before others queue instances in the subordinate lists  
+         are created */
       CRITICAL((SGE_EVENT, MSG_QINSTANCE_MISSLOTS_S, 
                 lGetString(this_elem, QU_full_name)));
    }
    DRETURN(ret);
 }
 
-/****** sge_qinstance/qinstance_slots_reserved() *******************************
+/****** sgeobj/qinstance/qinstance_slots_reserved() ***************************
 *  NAME
-*     qinstance_slots_reserved() -- Returns the number of maximal reserved slots
+*     qinstance_slots_reserved() -- the number of maximal reserved slots
 *
 *  SYNOPSIS
 *     int qinstance_slots_reserved(const lListElem *this_elem) 
@@ -674,7 +642,8 @@ qinstance_slots_used(const lListElem *this_elem)
 *  NOTES
 *     MT-NOTE: qinstance_slots_reserved() is MT safe 
 *******************************************************************************/
-int qinstance_slots_reserved(const lListElem *this_elem)
+int 
+qinstance_slots_reserved(const lListElem *this_elem)
 {
    int ret = 0;
    lListElem *slots;
@@ -723,10 +692,11 @@ qinstance_set_slots_used(lListElem *this_elem, int new_slots)
    if (slots != NULL) {
       lSetDouble(slots, RUE_utilized_now, new_slots);
    } else {
-      /* may never happen */
+      /* because this should never happen and an critical error */
       CRITICAL((SGE_EVENT, MSG_QINSTANCE_MISSLOTS_S, 
                 lGetString(this_elem, QU_full_name)));
    }
+
    DRETURN_VOID;
 }
 
@@ -766,12 +736,12 @@ qinstance_set_slots_used(lListElem *this_elem, int new_slots)
 *******************************************************************************/
 int 
 qinstance_debit_consumable(lListElem *qep, lListElem *jep, lList *centry_list, 
-                           int slots)
+                           int slots, bool is_master_task)
 {
    return rc_debit_consumable(jep, qep, centry_list, slots,
                               QU_consumable_config_list, 
                               QU_resource_utilization,
-                              lGetString(qep, QU_qname));
+                              lGetString(qep, QU_qname), is_master_task);
 }
 
 /****** sgeobj/qinstance/qinstance_message_add() *****************************
@@ -922,7 +892,7 @@ qinstance_validate(lListElem *this_elem, lList **answer_list, lList *master_exec
    qinstance_message_trash_all_of_type_X(this_elem, ~QI_ERROR);   
 
    /* setup actual list of queue */
-   qinstance_debit_consumable(this_elem, NULL, centry_master_list, 0);
+   qinstance_debit_consumable(this_elem, NULL, centry_master_list, 0, true);
 
    /* init double values of consumable configuration */
    if (centry_list_fill_request(lGetList(this_elem, QU_consumable_config_list), 
@@ -1050,7 +1020,7 @@ qinstance_list_validate(lList *this_list, lList **answer_list, lList *master_exe
 int 
 rc_debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list, 
                     int slots, int config_nm, int actual_nm, 
-                    const char *obj_name) 
+                    const char *obj_name, bool is_master_task) 
 {
    lListElem *cr, *cr_config, *dcep;
    double dval;
@@ -1064,6 +1034,8 @@ rc_debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list,
    }
 
    for_each (cr_config, lGetList(ep, config_nm)) {
+      int debit_slots = slots;
+      u_long32 consumable;
       name = lGetString(cr_config, CE_name);
       dval = 0;
 
@@ -1071,11 +1043,23 @@ rc_debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list,
       if (!(dcep = centry_list_locate(centry_list, name))) {
          ERROR((SGE_EVENT, MSG_ATTRIB_MISSINGATTRIBUTEXINCOMPLEXES_S , name));
          DRETURN(-1);
-      } 
+      }
 
-      if (!lGetBool(dcep, CE_consumable)) {
-         /* no error */
+      consumable = lGetUlong(dcep, CE_consumable);
+      if (consumable == CONSUMABLE_NO) {
+         /* no error, nothing to debit */
          continue;
+      } else if (consumable == CONSUMABLE_JOB) {
+         if (!is_master_task) {
+            /* no error, only_master_task is debited */
+            continue;
+         }
+         /* it's a job consumable, we don't multiply with slots */
+         if (slots > 0) {
+            debit_slots = 1;
+         } else if (slots < 0) {
+            debit_slots = -1;
+         }
       }
 
       /* ensure attribute is in actual list */
@@ -1090,17 +1074,16 @@ rc_debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list,
          if (tmp_ret && dval != 0.0) {
             DPRINTF(("debiting %f of %s on %s %s for %d slots\n", dval, name,
                      (config_nm==QU_consumable_config_list)?"queue":"host",
-                     obj_name, slots));
-            lAddDouble(cr, RUE_utilized_now, slots * dval);
+                     obj_name, debit_slots));
+            lAddDouble(cr, RUE_utilized_now, debit_slots * dval);
             mods++;
-         }  
+         }
       }
    }
 
    DRETURN(mods);
 }
 
-/* slots2config_list(lListElem *qep) */
 void 
 qinstance_set_conf_slots_used(lListElem *this_elem)
 {
@@ -1325,7 +1308,8 @@ qinstance_verify_full_name(lList **answer_list, const char *full_name)
 *  NOTES
 *     MT-NOTE: qinstance_set_error() is MT safe 
 *******************************************************************************/
-void qinstance_set_error(lListElem *qinstance, u_long32 type, const char *message, bool set_error)
+void 
+qinstance_set_error(lListElem *qinstance, u_long32 type, const char *message, bool set_error)
 {
    qinstance_set_state(qinstance, set_error, type);
    if (set_error) {

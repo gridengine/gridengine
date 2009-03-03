@@ -118,7 +118,7 @@ int cl_endpoint_list_set_entry_life_time(cl_raw_list_t* list_p, long entry_life_
    ldata = cl_endpoint_list_get_data(list_p);
    if (ldata != NULL) {
       ldata->entry_life_time = entry_life_time;
-      CL_LOG_INT(CL_LOG_ERROR,"setting entry life time to", entry_life_time);
+      CL_LOG_INT(CL_LOG_INFO,"setting entry life time to", entry_life_time);
       return CL_RETVAL_OK;
    } else {
       CL_LOG(CL_LOG_ERROR,"can't set new entry_life_time");

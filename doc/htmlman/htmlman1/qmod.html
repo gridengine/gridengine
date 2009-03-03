@@ -3,24 +3,25 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     qmod - modify a Grid Engine queue
+     qmod - modify a Sun Grid Engine queue
 
 SYNTAX
      qmod [ options ] [ wc_job_range_list | wc_queue_list ]
 
 DESCRIPTION
-     <I>Qmod</I> enables users classified as <I>owners</I>  (see  <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>
-     for  details)  of  a workstation to modify the state of Grid
-     Engine queues for his/her machine as well as  the  state  of
-     his/her  own  jobs.   A manager/operator or root can execute
-     <I>qmod</I> for any queue and job in  a  cluster.  Find  additional
-     information  concerning  <I>wc</I>_<I>queue</I>_<I>list</I>  and  <I>wc</I>_<I>job</I>_<I>list</I>  in
-     <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>.
+     <I>Qmod</I> enables users classified as <I>owners</I>  (see  <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62u2_TAG">queue_conf(5)</A></B>
+     for  details)  of  a  workstation to modify the state of Sun
+     Grid Engine queues for his/her machine as well as the  state
+     of his/her own jobs.  A manager/operator or root can execute
+     <I>qmod</I> for any queue and job in a cluster but only from admin-
+     istrative  hosts.   Find  additional  information concerning
+     <I>wc</I>_<I>queue</I>_<I>list</I> and <I>wc</I>_<I>job</I>_<I>list</I> in <B><A HREF="../htmlman1/sge_types.html?pathrev=V62u2_TAG">sge_types(1)</A></B>.
 
 OPTIONS
-     -c   Clears   the   error    state    of    the    specified
-          jobs(s)/queue(s).   Do not use this switch anymore, use
-          -cj / -cq instead.
+     -c   Note: Deprecated, may be  removed  in  future  release.
+          Please use the -cj or -cq switch instead.
+          Clears   the   error    state    of    the    specified
+          jobs(s)/queue(s).
 
      -cj  Clears the error state of the specified jobs(s).
 
@@ -38,24 +39,25 @@ OPTIONS
           seems to be continuing the manager/operator can force a
           suspend operation which will  send  a  SIGSTOP  to  the
           jobs.  In any case, the queue or job status will be set
-          even if the <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>  controlling  the  queues/jobs
+          even if the <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u2_TAG">sge_execd(8)</A></B>  controlling  the  queues/jobs
           cannot    be    reached.    Requires   manager/operator
           privileges.
 
      -help
           Prints a listing of all options.
 
-     -r   If applied to queues, reschedules  all  jobs  currently
+     -r   Note: Deprecated, may be  removed  in  future  release.
+          Please use the -rj or -rq switch instead.
+          If applied to queues, reschedules  all  jobs  currently
           running  in  this  queue.   If applied to running jobs,
           reschedules  the  jobs.  Requires   root   or   manager
-          privileges.  Do  not  use this switch anymore.  Use -rj
-          /-rq instead.  In order for a job to be rescheduled, it
-          or  the  queue  in  which it is executing must have the
-          rerun flag activated.  (See -r option  in  the  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>
-          man  page and the <I>rerun</I> option in the <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B> man
-          page for more  information.)   Additional  restrictions
-          apply  for  parallel  and checkpointing jobs.  (See the
-          <I>reschedule</I>_<I>unknown</I> description in the  <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>  man
+          privileges.   In  order for a job to be rescheduled, it
+          or the queue in which it is  executing  must  have  the
+          rerun  flag  activated.   (See -r option in the <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B>
+          man page and the <I>rerun</I> option in the <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62u2_TAG">queue_conf(5)</A></B>  man
+          page  for  more  information.)  Additional restrictions
+          apply for parallel and checkpointing  jobs.   (See  the
+          <I>reschedule</I>_<I>unknown</I>  description  in the <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62u2_TAG">sge_conf(5)</A></B> man
           page for details).
 
      -rj  If applied  to  running  jobs,  reschedules  the  jobs.
@@ -65,10 +67,11 @@ OPTIONS
           running  in  this  queue.   Requires  root  or  manager
           privileges.
 
-     -s   If applied to queues, suspends the queues and any  jobs
+     -s   Note: Deprecated, may be  removed  in  future  release.
+          Please use the -sj or -sq switch instead.
+          If applied to queues, suspends the queues and any  jobs
           which  might  be  active.  If  applied to running jobs,
-          suspends the jobs. Use of this  switch  is  now  depre-
-          cated. -sj / -sq should be used instead.
+          suspends the jobs.
 
      -sj  If applied to running jobs, suspends the jobs. If a job
           is  both suspended explicitly and via suspension of its
@@ -78,10 +81,11 @@ OPTIONS
      -sq  If applied to queues, suspends the queues and any  jobs
           which might be active.
 
-     -us  If applied to queues, unsuspends  the  queues  and  any
+     -us  Note: Deprecated, may be  removed  in  future  release.
+          Please use the -usj or -usq switch instead.
+          If applied to queues, unsuspends  the  queues  and  any
           jobs  which  might  be  active.  If  applied  to  jobs,
-          unsuspends the jobs. Do not use  this  switch  anymore,
-          use -usj / -usq instead.
+          unsuspends the jobs.
 
      -usj If applied to jobs, unsuspends the jobs. If  a  job  is
           both  suspended  explicitly  and  via suspension of its
@@ -92,19 +96,19 @@ OPTIONS
           jobs which might be active.
 
 ENVIRONMENTAL VARIABLES
-     SGE_ROOT       Specifies the location  of  the  Grid  Engine
+     SGE_ROOT       Specifies the location of the Sun Grid Engine
                     standard configuration files.
 
-     SGE_CELL       If set, specifies  the  default  Grid  Engine
-                    cell. To address a Grid Engine cell <I>qmod</I> uses
-                    (in the order of precedence):
+     SGE_CELL       If set, specifies the default Sun Grid Engine
+                    cell.  To address a Sun Grid Engine cell <I>qmod</I>
+                    uses (in the order of precedence):
 
                          The name of the cell  specified  in  the
                          environment  variable SGE_CELL, if it is
                          set.
-
                          The  name  of  the  default  cell,  i.e.
                          default.
+
 
      SGE_DEBUG_LEVEL
                     If  set,  specifies  that  debug  information
@@ -114,26 +118,22 @@ ENVIRONMENTAL VARIABLES
 
      SGE_QMASTER_PORT
                     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> is expected to listen for com-
+                    <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u2_TAG">sge_qmaster(8)</A></B> is expected to listen for com-
                     munication requests.  Most installations will
                     use  a  services  map  entry  for the service
                     "sge_qmaster" instead to define that port.
 
 FILES
      &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>act</I>_<I>qmaster</I>
-                     Grid Engine master host file
+                     Sun Grid Engine master host file
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,    <B><A HREF="../htmlman1/sge_ckpt.html">sge_ckpt(1)</A></B>,    <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B>,    <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>,
-     <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>, <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>.
+     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B>,    <B><A HREF="../htmlman1/sge_ckpt.html?pathrev=V62u2_TAG">sge_ckpt(1)</A></B>,    <B><A HREF="../htmlman1/qstat.html?pathrev=V62u2_TAG">qstat(1)</A></B>,    <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62u2_TAG">queue_conf(5)</A></B>,
+     <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u2_TAG">sge_execd(8)</A></B>, <B><A HREF="../htmlman1/sge_types.html?pathrev=V62u2_TAG">sge_types(1)</A></B>.
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
-
 
 
 

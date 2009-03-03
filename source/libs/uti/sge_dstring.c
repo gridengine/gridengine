@@ -62,7 +62,7 @@ sge_dstring_vsprintf_copy_append(dstring *sb,
                                  const char *format,
                                  va_list ap);
 
-static const char*
+static const char* 
 sge_dstring_vsprintf_copy_append(dstring *sb,
                                  sge_dstring_copy_append_f function,
                                  const char *format,
@@ -78,6 +78,7 @@ sge_dstring_vsprintf_copy_append(dstring *sb,
       va_copy(ap_copy, ap);
       vsnprintf_ret = vsnprintf(static_buffer, BUFSIZ, format, ap_copy);
       va_end(ap_copy);
+
       /*
        * We have to handle three cases here:
        *    1) If the function returns -1 then vsprintf does not follow 
@@ -433,7 +434,7 @@ const char* sge_dstring_sprintf_append(dstring *sb, const char *format, ...)
    if (sb != NULL) {
       if (format != NULL) {
          va_list ap;
-   
+
          va_start(ap, format);
          ret = sge_dstring_vsprintf_copy_append(sb, sge_dstring_append,
                                                 format, ap); 
@@ -691,7 +692,7 @@ void sge_dstring_init(dstring *sb, char *s, size_t size)
    }
 }
 
-/****** sge/dstring/sge_dstring_ulong_to_binstring() **************************
+/****** uti/dstring/sge_dstring_ulong_to_binstring() **************************
 *  NAME
 *     sge_dstring_ulong_to_binstring() -- convert ulong into bin-string 
 *
@@ -727,6 +728,78 @@ const char *sge_dstring_ulong_to_binstring(dstring *sb, u_long32 number)
    sge_dstring_sprintf(sb, buffer);
    return sge_dstring_get_string(sb);
 }
+
+/****** uti/dstring/sge_dstring_split() ****************************************
+*  NAME
+*     sge_dstring_split() -- splits a string into two parts 
+*
+*  SYNOPSIS
+*     bool 
+*     sge_dstring_split(dstring *string, char character, 
+*                       dstring *before, dstring *after)
+*
+*  FUNCTION
+*     This functions tires to find the first occurence of "character"
+*     in "string". The characters before will be copied into "before"
+*     and the characters behind into "after" dstring.
+*
+*  INPUTS
+*     dstring *sb     - dstring 
+*     char character  - character
+*     dstring *before - characters before
+*     dstring *after  - characters after
+*
+*  RESULT
+*     error state
+*        true  - success
+*        false - error 
+*******************************************************************************/
+bool
+sge_dstring_split(dstring *string, char character, dstring *before, dstring *after)
+{
+   bool ret = true;
+
+   DENTER(DSTRING_LAYER, "sge_dstring_split");
+   if (string != NULL && before != NULL && after != NULL) {
+      const char *s = sge_dstring_get_string(string);
+      const char *end = strchr(s, character);
+
+      while (end != NULL && s != end) {
+         sge_dstring_append_char(before, *(s++));
+      }
+      if (*s == character) {
+         s++;
+      }
+      sge_dstring_append(after, s);
+   }
+   DRETURN(ret);
+}
+
+/****** uti/dstring/sge_dstring_strip_white_space_at_eol() *********************
+*  NAME
+*     sge_dstring_strip_white_space_at_eol() -- as it says 
+*
+*  SYNOPSIS
+*     void sge_dstring_strip_white_space_at_eol(dstring *string)
+*
+*  FUNCTION
+*     removes whitespace at the end of the given "string".
+*
+*  INPUTS
+*     dstring *string - dstring 
+*******************************************************************************/
+void sge_dstring_strip_white_space_at_eol(dstring *string)
+{
+   DENTER(DSTRING_LAYER, "sge_strip_white_space_at_eol");
+   if (string != NULL) {
+      char *s = (string != NULL) ? string->s : NULL;
+
+      if (s != NULL) {
+         sge_strip_white_space_at_eol(s);
+      }
+   }  
+   DRETURN_VOID;
+}      
 
 #if 0 /* EB: DEBUG: */
 int main(void)

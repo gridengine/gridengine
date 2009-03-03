@@ -115,7 +115,7 @@ static bool sge_bootstrap_state_class_init(sge_bootstrap_state_class_t *st, sge_
 
 /*** AA **/ 
 
-/****** uti/sge_bootstrap/bootstrap_mt_init() **********************************
+/****** uti/bootstrap/bootstrap_mt_init() **********************************
 *  NAME
 *     bootstrap_mt_init() -- Initialize bootstrap code for multi threading use.
 *
@@ -411,7 +411,7 @@ bool bootstrap_get_job_spooling(void)
    return bootstrap->get_job_spooling(bootstrap);
 }
 
-/****** sge_bootstrap/sge_bootstrap() ******************************************
+/****** uti/bootstrap/sge_bootstrap() ******************************************
 *  NAME
 *     sge_bootstrap() -- read and process bootstrap file 
 *
@@ -546,7 +546,7 @@ bool sge_bootstrap(const char *bootstrap_file, dstring *error_dstring)
 }
 
 
-/****** uti/sge_bootstrap/bootstrap_thread_local_once_init() ********************************
+/****** uti/bootstrap/bootstrap_thread_local_once_init() ********************************
 *  NAME
 *     bootstrap_thread_local_once_init() -- One-time bootstrap code initialization.
 *
@@ -573,7 +573,7 @@ static void bootstrap_thread_local_once_init(void)
    pthread_key_create(&sge_bootstrap_thread_local_key, bootstrap_thread_local_destroy);
 }
 
-/****** uti/sge_bootstrap/bootstrap_thread_local_destroy() ****************************
+/****** uti/bootstrap/bootstrap_thread_local_destroy() ****************************
 *  NAME
 *     bootstrap_thread_local_destroy() -- Free thread local storage
 *
@@ -600,7 +600,7 @@ static void bootstrap_thread_local_destroy(void* theState)
    handle->current = NULL;
 }
 
-/****** uti/sge_bootstrap/bootstrap_thread_local_init() *******************************
+/****** uti/bootstrap/bootstrap_thread_local_init() *******************************
 *  NAME
 *     bootstrap_thread_local_init() -- Initialize bootstrap state.
 *
@@ -730,7 +730,7 @@ void sge_bootstrap_state_class_destroy(sge_bootstrap_state_class_t **pst)
    DEXIT;
 }
 
-/****** uti/sge_bootstrap/bootstrap_state_destroy() ****************************
+/****** uti/bootstrap/bootstrap_state_destroy() ****************************
 *  NAME
 *     bootstrap_state_destroy() -- Free thread local storage
 *

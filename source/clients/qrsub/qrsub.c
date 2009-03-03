@@ -103,6 +103,8 @@ int main(int argc, char **argv) {
    }
    
    if (!pcmdline) {
+      /* no command line option is present: print help to stderr */
+      sge_usage(QRSUB, stderr);
       fprintf(stderr, "%s\n", MSG_PARSE_NOOPTIONARGUMENT);
       goto error_exit;
    }

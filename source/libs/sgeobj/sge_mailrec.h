@@ -38,5 +38,11 @@ int mailrec_parse(lList **lpp, const char *mail_str);
 
 int mailrec_unparse(lList *head, char *mail_str, unsigned int mail_str_len);
 
+bool
+sge_mailopt_to_dstring(u_long32 opt, dstring *string);
+
+int 
+sge_parse_mail_options(lList **alpp, const char *mail_str, u_long32 prog_number);
+
 #endif /* __SGE_MAILREC_H */
 

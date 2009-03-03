@@ -96,11 +96,8 @@
 #define FORMAT_I_2 "%I %I "
 #define FORMAT_I_1 "%I "
 
-static lList *sge_parse_qstat(lList **ppcmdline, 
-                              qstat_env_t *qstat_env,  
-                              char **hostname, 
-                              lList **ppljid, 
-                              u_long32 *isXML);
+static lList *sge_parse_qstat(sge_gdi_ctx_class_t *ctx, lList **ppcmdline, qstat_env_t *qstat_env,  
+                              char **hostname, lList **ppljid, u_long32 *isXML);
 static int qstat_show_job(sge_gdi_ctx_class_t *ctx, lList *jid, u_long32 isXML);
 static int qstat_show_job_info(sge_gdi_ctx_class_t *ctx, u_long32 isXML);
 
@@ -334,7 +331,7 @@ char **argv
       SGE_EXIT((void**)&ctx, 1);
    }
 
-   alp = sge_parse_qstat(&pcmdline, &qstat_env, &hostname, &jid_list, &isXML);
+   alp = sge_parse_qstat(ctx, &pcmdline, &qstat_env, &hostname, &jid_list, &isXML);
 
    if (alp) {
       /*
@@ -405,7 +402,6 @@ char **argv
             handler.destroy(&handler);
          }
       } else {
-         
          qstat_handler_t handler;
          
          if(isXML) {
@@ -444,13 +440,10 @@ char **argv
  **** ppcmdline, sets the full and empry_qs flags and puts the
  **** queue/res/user-arguments into the lists.
  ****/
-static lList *sge_parse_qstat(
-lList **ppcmdline,
-qstat_env_t *qstat_env,
-char **hostname,
-lList **ppljid, 
-u_long32 *isXML
-) {
+static lList *
+sge_parse_qstat(sge_gdi_ctx_class_t *ctx, lList **ppcmdline, qstat_env_t *qstat_env,
+                char **hostname, lList **ppljid, u_long32 *isXML)
+{
    stringT str;
    lList *alp = NULL;
    u_long32 helpflag;
@@ -472,7 +465,7 @@ u_long32 *isXML
       if (parse_flag(ppcmdline, "-help",  &alp, &helpflag)) {
          usageshowed = qstat_usage(qstat_env->qselect_mode, stdout, NULL);
          DEXIT;
-         SGE_EXIT(NULL, 0);
+         SGE_EXIT((void**)&ctx, 1);
          break;
       }
 
@@ -1273,6 +1266,7 @@ static int job_stdout_hard_requested_queue(job_handler_t* handler, const char* q
    } else {
       printf("%s", qname);
    }
+   ctx->hard_requested_queue_count++;
    DEXIT;
    return 0;
 }
@@ -1309,6 +1303,7 @@ static int job_stdout_soft_requested_queue(job_handler_t* handler, const char* q
    } else {
       printf("%s", qname);
    }
+   ctx->soft_requested_queue_count++;
 
    DEXIT;
    return 0;
@@ -1346,7 +1341,8 @@ static int job_stdout_master_hard_request_queue(job_handler_t* handler, const ch
    } else {
       printf("%s", qname);
    }
-
+   ctx->master_hard_requested_queue_count++;
+   
    DEXIT;
    return 0;
 }
@@ -1994,6 +1990,7 @@ u_long32 isXML
             lList *jbList = NULL;
             lListElem *jbElem = NULL;
             lListElem *tmp_jbElem = NULL;
+            
             tmp_msgElem = lNext(msgElem);
             jbList = lGetList(msgElem, MES_job_number_list);
             jbElem = lFirst(jbList);
@@ -2017,8 +2014,7 @@ u_long32 isXML
       lFreeList(&jlp);
       lFreeList(&alp);
       lFreeList(&jid_list);
-      DEXIT;
-      return 0;
+      DRETURN(0);
    }
 
    for_each(aep, alp) {
@@ -2029,8 +2025,7 @@ u_long32 isXML
    }
    lFreeList(&alp);
    if (!jobs_exist) {
-      DEXIT;
-      return 1;
+      DRETURN(1);
    }
 
    /* does jlp contain all information we requested? */
@@ -2059,7 +2054,7 @@ u_long32 isXML
       }
       fprintf(stderr, "\n");
       DEXIT;
-      SGE_EXIT(NULL, 1);
+      SGE_EXIT((void**)&ctx, 1);
    }
 
    /* print scheduler job information and global scheduler info */
@@ -2081,9 +2076,9 @@ u_long32 isXML
                if (first_run) {
                   printf("%s:            ",MSG_SCHEDD_SCHEDULINGINFO);
                   first_run = 0;
-               }
-               else
+               } else {
                   printf("%s", "                            ");
+               }
                printf("%s\n", lGetString(mes, MES_message));
             }
 
@@ -2096,8 +2091,9 @@ u_long32 isXML
                      if (first_run) {
                         printf("%s:            ",MSG_SCHEDD_SCHEDULINGINFO);
                         first_run = 0;
-                     } else
+                     } else {
                         printf("%s", "                            ");
+                     }
                      printf("%s\n", lGetString(mes, MES_message));
                   }
                }
@@ -2108,8 +2104,7 @@ u_long32 isXML
 
    lFreeList(&ilp);
    lFreeList(&jlp);
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 static int qstat_show_job_info(sge_gdi_ctx_class_t *ctx, u_long32 isXML)

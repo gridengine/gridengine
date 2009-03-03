@@ -171,6 +171,8 @@ static char* get_argument_syntax(u_long32 prog_number, int nr)
          return MSG_GDI_ARGUMENTSYNTAX_OA_EVENTCLIENT_LIST;
      case OA_HOST_LIST:
          return MSG_GDI_ARGUMENTSYNTAX_OA_HOST_LIST;
+     case OA_JSV_URL:
+         return MSG_GDI_ARGUMENTSYNTAX_OA_JSV_URL;
      case OA_WC_CQUEUE:
          return MSG_GDI_ARGUMENTSYNTAX_OA_WC_CQUEUE;
      case OA_WC_HOST:
@@ -237,9 +239,12 @@ void sge_usage(u_long32 prog_number, FILE *fp) {
       strcpy(namebuf, prog_name);
          
    if (VALID_OPT(JOB_ID_OPR, prog_number)) {
-      fprintf(fp, "%s %s [options] %s\n", MSG_GDI_USAGE_USAGESTRING , namebuf, MSG_GDI_ARGUMENTSYNTAX_OA_JOB_ID);
-   } else if (VALID_OPT(JOB_TASK_OPR, prog_number)) {
       fprintf(fp, "%s %s [options] %s\n", MSG_GDI_USAGE_USAGESTRING , namebuf, MSG_GDI_USAGE_JOB_ID_OPR);
+   } else if (VALID_OPT(JOB_TASK_OPR, prog_number)) {
+      fprintf(fp, "%s %s [options] %s\n", MSG_GDI_USAGE_USAGESTRING , namebuf, MSG_GDI_USAGE_TASK_OPR);
+      MARK(OA_JOB_TASK_LIST);
+      MARK(OA_JOB_TASKS);
+      MARK(OA_TASK_ID_RANGE);
    } else {
       fprintf(fp, "%s %s [options]\n", MSG_GDI_USAGE_USAGESTRING , namebuf);
    }
@@ -363,6 +368,21 @@ void sge_usage(u_long32 prog_number, FILE *fp) {
 
    if (VALID_OPT(Aq_OPT, prog_number)) {
       PRINTITD(MSG_GDI_USAGE_Aq_OPT_FNAME , MSG_GDI_UTEXT_Aq_OPT_FNAME );
+   }
+
+   if (VALID_OPT(ar_OPT, prog_number)) {
+      if (prog_number == QRSTAT) {
+         PRINTITD(MSG_GDI_USAGE_ar_list_OPT, MSG_GDI_UTEXT_ar_QRSTAT_OPT);
+         MARK(OA_AR_ID_LIST);
+         MARK(OA_AR_ID);
+      } else if (prog_number == QRDEL) {
+         PRINTITD(MSG_GDI_USAGE_wc_ar_list_OPT, MSG_GDI_UTEXT_wc_ar_list_OPT);
+         MARK(OA_WC_AR_LIST);
+         MARK(OA_WC_AR);
+      } else {
+         PRINTITD(MSG_GDI_USAGE_ar_OPT, MSG_GDI_UTEXT_ar_OPT);
+         MARK(OA_AR_ID);
+      }
    }
 
    if (VALID_OPT(as_OPT, prog_number)) {
@@ -617,9 +637,6 @@ void sge_usage(u_long32 prog_number, FILE *fp) {
           (prog_number == QHOLD)  || (prog_number == QRLS)) {
          PRINTITD(MSG_GDI_USAGE_h_OPT_HOLD_LIST , MSG_GDI_UTEXT_h_OPT_HOLD_LIST );
          MARK(OA_HOLD_LIST);
-         MARK(OA_JOB_TASK_LIST);
-         MARK(OA_JOB_TASKS);
-         MARK(OA_TASK_ID_RANGE);
       } else { /* QSUB */
          PRINTITD(MSG_GDI_USAGE_h_OPT, MSG_GDI_UTEXT_h_OPT);
       }
@@ -674,6 +691,11 @@ void sge_usage(u_long32 prog_number, FILE *fp) {
 
    if (VALID_OPT(js_OPT, prog_number)) {
       PRINTITD(MSG_GDI_USAGE_js_OPT_YN , MSG_GDI_UTEXT_js_OPT_YN );
+   }
+
+   if (VALID_OPT(jsv_OPT, prog_number)) {
+      PRINTITD(MSG_GDI_USAGE_jsv_OPT_YN , MSG_GDI_UTEXT_jsv_OPT_YN );
+      MARK(OA_JSV_URL);
    }
 
    if (VALID_OPT(ke_OPT, prog_number)) {
@@ -1157,6 +1179,10 @@ void sge_usage(u_long32 prog_number, FILE *fp) {
       MARK(OA_NODE_PATH);
    }
 
+   if (VALID_OPT(sst_OPT, prog_number)) {
+      PRINTITD(MSG_GDI_USAGE_sst_OPT, MSG_GDI_UTEXT_sst_OPT);
+   }
+
    if (VALID_OPT(sstree_OPT, prog_number)) {
       PRINTITD(MSG_GDI_USAGE_sstree_OPT, MSG_GDI_UTEXT_sstree_OPT);
    }
@@ -1250,9 +1276,9 @@ void sge_usage(u_long32 prog_number, FILE *fp) {
 
    if (VALID_OPT(w_OPT, prog_number)) {
       if ( prog_number == QRSUB ) {
-        PRINTITD(MSG_GDI_USAGE_w_OPT_EV, MSG_GDI_UTEXT_w_OPT_EV );
+        PRINTITD(MSG_GDI_USAGE_w_OPT_EV, MSG_GDI_UTEXT_w_OPT_EV);
       } else {
-        PRINTITD(MSG_GDI_USAGE_w_OPT_EWNV, MSG_GDI_UTEXT_w_OPT_EWNV );
+        PRINTITD(MSG_GDI_USAGE_w_OPT_EWNVP, MSG_GDI_UTEXT_w_OPT_EWNVP);
       }
    }
 
@@ -1279,12 +1305,8 @@ void sge_usage(u_long32 prog_number, FILE *fp) {
    }
 
    if (VALID_OPT(JOB_ID_OPR, prog_number)) {
-      PRINTIT(MSG_GDI_USAGE_JOB_ID_OPR );
-      if ((prog_number != QHOLD) &&
-          (prog_number != QRESUB) &&
-          (prog_number != QRLS)) {
-         MARK(OA_JOB_ID_LIST);
-      }
+      PRINTIT(MSG_GDI_USAGE_JOB_ID_OPR);
+      MARK(OA_JOB_ID_LIST);
    }
 
    if (VALID_OPT(JOB_TASK_OPR, prog_number)) {
@@ -1299,32 +1321,11 @@ void sge_usage(u_long32 prog_number, FILE *fp) {
    }
 
    if (VALID_OPT(SCRIPT_OPR, prog_number)) {
-      if (prog_number != QALTER) {
-         PRINTIT(MSG_GDI_USAGE_SCRIPT_OPR );
-      }
-      else {
-         PRINTITD(MSG_GDI_USAGE_JOB_ID_OPR , MSG_GDI_UTEXT_JOB_ID_OPR );
-         PRINTITD(MSG_GDI_USAGE_SCRIPT_OPR_ARGS , MSG_GDI_UTEXT_SCRIPT_OPR_ARGS );
-      }
+      PRINTIT(MSG_GDI_USAGE_SCRIPT_OPR);
    }
 
    if (VALID_OPT(verbose_OPT, prog_number)) {
       PRINTITD(MSG_GDI_USAGE_verbose_OPT, MSG_GDI_UTEXT_verbose_OPT );
-   }
-
-   if (VALID_OPT(ar_OPT, prog_number)) {
-      if (prog_number == QRSTAT) {
-         PRINTITD(MSG_GDI_USAGE_ar_list_OPT, MSG_GDI_UTEXT_ar_QRSTAT_OPT);
-         MARK(OA_AR_ID_LIST);
-         MARK(OA_AR_ID);
-      } else if (prog_number == QRDEL) {
-         PRINTITD(MSG_GDI_USAGE_wc_ar_list_OPT, MSG_GDI_UTEXT_wc_ar_list_OPT);
-         MARK(OA_WC_AR_LIST);
-         MARK(OA_WC_AR);
-      } else {
-         PRINTITD(MSG_GDI_USAGE_ar_OPT, MSG_GDI_UTEXT_ar_OPT);
-         MARK(OA_AR_ID);
-      }
    }
 
    if (VALID_OPT(pty_OPT, prog_number)) {

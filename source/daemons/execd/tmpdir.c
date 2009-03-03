@@ -81,13 +81,8 @@ char *tmpdir
 }
 
 /************************************************************************/
-int sge_remove_tmpdir(
-const char *dir,
-const char *job_owner,
-u_long32 jobid,
-u_long32 jataskid,
-const char *queue_name 
-) {
+int sge_remove_tmpdir(const char *dir, const char *job_owner, u_long32 jobid, u_long32 jataskid, const char *queue_name)
+{
    stringT tmpstr;
    char err_str_buffer[1024];
    dstring err_str;
@@ -97,8 +92,7 @@ const char *queue_name
    sge_dstring_init(&err_str, err_str_buffer, sizeof(err_str_buffer));
 
    if (!dir) {
-      DEXIT;
-      return 0;
+      DRETURN(0);
    }
 
    sprintf(tmpstr, "%s/"sge_u32"."sge_u32".%s", dir, jobid, jataskid, queue_name);
@@ -108,12 +102,11 @@ const char *queue_name
       ERROR((SGE_EVENT, MSG_FILE_RECURSIVERMDIR_SS, 
              tmpstr, err_str_buffer));
       sge_switch2admin_user();
-      return -1;
+      DRETURN(-1);
    }
    sge_switch2admin_user();
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 char *sge_get_tmpdir(lListElem *qep, u_long32 jobid, u_long32 jataskid, char *tmpdir)

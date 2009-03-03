@@ -192,7 +192,7 @@ extern int main(int argc, char** argv)
         retval = cl_commlib_send_message(handle, argv[3], "virtual_master", 1,
                                          ack_type,
                                          (cl_byte_t**)(&snd_data), DATA_SIZE,
-                                         NULL, 0, 0 , CL_FALSE, synchron);
+                                         NULL, 0, 0, CL_FALSE, synchron);
         if (retval == CL_RETVAL_OK) {
            snd_messages++;
            retval = cl_commlib_receive_message(handle, NULL, NULL, 0,  /* handle, comp_host, comp_name , comp_id, */
@@ -206,6 +206,17 @@ extern int main(int argc, char** argv)
                  message->message = NULL;
 
 #ifdef PACKAGE_COUNTER
+                 if (rcv_messages == 0) {
+                    /*
+                     * We don't know which message got through in this scenario because send_message
+                     * might get a cannot connect error and the message is deleted. We have to take
+                     * the id from the first received message and start counting with this id
+                     */
+                    rcv_messages = atoi(snd_data);
+                    if (rcv_messages != 0) {
+                       printf("virtual gdi client lost %d messages, seems to take a long time to connect to virtual qmaster ...\n", rcv_messages);
+                    }
+                 }
                  if (atoi(snd_data) != rcv_messages) {
                     printf("!!!! %d. message was lost, got %s\n", rcv_messages, snd_data);
                     do_shutdown = 1;
@@ -225,10 +236,6 @@ extern int main(int argc, char** argv)
               if (rcv_messages > 0) {
                  printf("cl_commlib_receive_message returned: %s\n", cl_get_error_text(retval));
                  do_shutdown = 1;
-              } else {
-                /* we are not connected, sleep one second */
-                snd_messages = 0;
-                sleep(1);
               }
            }
         } else {
@@ -236,8 +243,11 @@ extern int main(int argc, char** argv)
            if (rcv_messages > 0) {
               printf("cl_commlib_send_message returned: %s\n", cl_get_error_text(retval));
               do_shutdown = 1;
+           } else {
+              printf("Waiting for connection to virtual_qmaster ...\n");
+              cl_commlib_trigger(handle, 1);
            }
-        } 
+        }
         if (reconnect == 1) {
             break;
         }

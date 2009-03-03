@@ -308,7 +308,6 @@ void sge_exit(void **ref_ctx, int i)
 {
    sge_exit_func_t exit_func = NULL;
 
-   DENTER(TOP_LAYER, "sge_exit");
    if (ref_ctx && *ref_ctx) {
       sge_gdi_ctx_class_t *ctx = *ref_ctx;
       exit_func = ctx->get_exit_func(ctx);
@@ -316,7 +315,6 @@ void sge_exit(void **ref_ctx, int i)
    if (exit_func) {
       exit_func(ref_ctx, i);
    }
-   DEXIT;
    exit(i);
 }
  

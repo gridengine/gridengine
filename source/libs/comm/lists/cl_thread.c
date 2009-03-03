@@ -48,6 +48,7 @@ static pthread_mutex_t global_thread_config_key_mutex = PTHREAD_MUTEX_INITIALIZE
 static pthread_key_t global_thread_config_key;
 static int global_thread_config_key_done = 0;
 
+static int cl_thread_set_default_cancel_method(void);
 
 
 #ifdef __CL_FUNCTION__
@@ -188,16 +189,10 @@ int cl_thread_delete_thread_condition(cl_thread_condition_t** condition ) {
 #endif
 #define __CL_FUNCTION__ "cl_thread_wait_for_thread_condition()"
 int cl_thread_wait_for_thread_condition(cl_thread_condition_t* condition, long sec, long micro_sec) {
-   int retcode;
    int ret_val = CL_RETVAL_OK;
-   struct timeval now;
-   struct timespec timeout;
-
-   long sec_now;
-   long micro_sec_now;
-
 
    if (condition == NULL) {
+      CL_LOG(CL_LOG_ERROR, "thread condition is NULL");
       return CL_RETVAL_PARAMS;
    }
 
@@ -234,25 +229,34 @@ int cl_thread_wait_for_thread_condition(cl_thread_condition_t* condition, long s
             pthread_mutex_unlock(condition->trigger_count_mutex);
          }
       } else {
+         int retcode;
+         struct timeval now;
+         struct timespec timeout;
+         long sec_now;
+         long micro_sec_now;
+         
+         /* get current time */
          gettimeofday(&now,NULL);
-         sec_now =  now.tv_sec;
-         micro_sec_now = now.tv_usec;
-   
+     
+         /* normalize timeout parameter */
          sec = sec + (micro_sec / 1000000);
          micro_sec = micro_sec % 1000000;
-   
-         micro_sec_now = micro_sec_now + micro_sec;
-         sec_now = sec_now + sec;
+
+         /* append timeout time to current time */
+         micro_sec_now = now.tv_usec + micro_sec;
+         sec_now       = now.tv_sec  + sec;
          
+         /* handle overrun */
          if (micro_sec_now >= 1000000) {
             micro_sec_now = micro_sec_now - 1000000; 
             sec_now++;
          }
    
+         /* set timeout time */
          timeout.tv_sec = sec_now;
          timeout.tv_nsec = (micro_sec_now * 1000 );
    
-         retcode = pthread_cond_timedwait(condition->thread_cond_var,condition->thread_mutex_lock , &timeout);
+         retcode = pthread_cond_timedwait(condition->thread_cond_var, condition->thread_mutex_lock , &timeout);
    
          if (retcode == ETIMEDOUT) {
             ret_val = CL_RETVAL_CONDITION_WAIT_TIMEOUT;   /* timeout */
@@ -395,7 +399,8 @@ int cl_thread_setup(cl_thread_settings_t* thread_config,
                     int id,
                     void * (*start_routine)(void *), 
                     cl_thread_cleanup_func_t cleanup_func,
-                    void* user_data) {
+                    void* user_data,
+                    cl_thread_type_t thread_type) {
 
    int retry = 0; 
    int ret_val;
@@ -415,6 +420,8 @@ int cl_thread_setup(cl_thread_settings_t* thread_config,
    thread_config->thread_log_list = log_list;
 
    thread_config->thread_id = id;
+
+   thread_config->thread_type = thread_type;
 
    ret_val = cl_thread_create_thread_condition(&(thread_config->thread_event_condition));
    if ( ret_val != CL_RETVAL_OK ) {
@@ -471,7 +478,7 @@ int cl_thread_setup(cl_thread_settings_t* thread_config,
       }
    }
 
-   CL_LOG_STR(CL_LOG_DEBUG, "setup complete for thread ->",thread_config->thread_name); 
+   CL_LOG_STR(CL_LOG_INFO, "setup complete for thread ->",thread_config->thread_name); 
    return CL_RETVAL_OK;
 }
 
@@ -637,19 +644,19 @@ const char* cl_thread_convert_state_id(int thread_state) {
 
    switch (thread_state) {
       case CL_THREAD_RUNNING: 
-         return "running";
+         return "r";
       case CL_THREAD_WAITING:
-         return "waiting";
+         return "w";
       case CL_THREAD_EXIT:
-         return "done";
+         return "d";
       case CL_THREAD_STARTING:
-         return "starting";
+         return "s";
       case CL_THREAD_CANCELED:
-         return "canceled";
+         return "c";
       case CL_THREAD_CREATOR:
-         return "creator";
+         return "m"; /* m for Main thread */
       default:
-         return "undefined";
+         return "?";
    }
 }
 
@@ -740,6 +747,20 @@ int cl_thread_func_testcancel(cl_thread_settings_t* thread_config) {
    return CL_RETVAL_OK;
 }
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_thread_set_default_cancel_method()"
+static int cl_thread_set_default_cancel_method(void) {
+   /*
+    * Setting thread cancel state and type to default values.
+    * Commlib threads have a cancelation point:
+    * The threads * have to call cl_thread_func_testcancel() in their mainloop!
+    */
+   pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+   pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
+   return CL_RETVAL_OK;
+}
 
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
@@ -750,7 +771,8 @@ int cl_thread_func_startup(cl_thread_settings_t* thread_config) {
    if (thread_config == NULL) {
       return CL_RETVAL_PARAMS;
    }
-   pthread_setcancelstate(PTHREAD_CANCEL_DISABLE,NULL);
+
+   cl_thread_set_default_cancel_method();
 
    /* set thread config data */
    if (cl_thread_set_thread_config(thread_config) != CL_RETVAL_OK) {
@@ -771,6 +793,8 @@ int cl_thread_func_startup(cl_thread_settings_t* thread_config) {
 #endif
 #define __CL_FUNCTION__ "cl_thread_set_thread_config()"
 int cl_thread_set_thread_config(cl_thread_settings_t* thread_config) {
+
+   cl_thread_set_default_cancel_method();
 
    pthread_mutex_lock(&global_thread_config_key_mutex);
    if (global_thread_config_key_done != 0) {

@@ -35,5 +35,6 @@
 #include "gdi/sge_gdi_ctx.h"
 
 int sge_execd_register_at_qmaster(sge_gdi_ctx_class_t *ctx, bool is_restart);
+bool execd_get_job_ja_task(u_long32 job_id, u_long32 ja_task_id, lListElem **job, lListElem **ja_task);
 
 #endif /* __EXECD_MAIN_H */

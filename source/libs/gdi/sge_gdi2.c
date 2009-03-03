@@ -560,6 +560,8 @@ sge_gdi2_is_done(sge_gdi_ctx_class_t* ctx, lList **alpp, state_gdi_multi *state)
  *
  *  NOTES
  *     MT-NOTE: sge_send_gdi_request() is MT safe (assumptions)
+ *     
+ *     The function does *not* wait until the message is actually sent!
  *---------------------------------------------------------*/
 int 
 sge_gdi2_send_any_request(sge_gdi_ctx_class_t *ctx, int synchron, u_long32 *mid,
@@ -607,7 +609,7 @@ sge_gdi2_send_any_request(sge_gdi_ctx_class_t *ctx, int synchron, u_long32 *mid,
                                (unsigned long) pb->bytes_used,
                                mid_pointer,  response_id,  tag, CL_FALSE, 
                                (cl_bool_t)synchron);
-   
+
    dump_send_info(rhost, commproc, id, ack_type, tag, mid_pointer);
    
    if (mid) {
@@ -668,9 +670,14 @@ sge_gdi2_get_any_request(sge_gdi_ctx_class_t *ctx, char *rhost,
    
    handle = ctx->get_com_handle(ctx);
 
-   /* trigger communication or wait for a new message (select timeout) */
-   cl_commlib_trigger(handle, synchron); /* RD: is this trigger really necessary? */
-
+   /* TODO: do trigger or not? depends on syncrhron
+    * TODO: Remove synchron flag from this function, it is only used for get_event_list call in event client.
+            event client code should be re-written, not to use this synchron flag set to false
+    */
+   if (synchron == 0) {
+      cl_commlib_trigger(handle, 0);
+   }
+   
    i = cl_commlib_receive_message(handle, rhost, commproc, usid, 
                                   (cl_bool_t) synchron, for_request_mid, 
                                   &message, &sender);
@@ -1369,8 +1376,9 @@ gdi2_receive_message(sge_gdi_ctx_class_t *sge_ctx, char *fromcommproc, u_short *
  *   -3   invalid NULL pointer received for local configuration
  *   -4   request to qmaster failed
  *   -5   there is no global configuration
- *   -6   commproc already registered
+ *   -6   endpoint not unique
  *   -7   no permission to get configuration
+ *   -8   access denied error on commlib layer
  * EXTERNAL
  *
  * DESCRIPTION
@@ -1428,8 +1436,11 @@ lListElem **lepp
       }
       DPRINTF(("get_configuration: unique for %s: %s\n", config_name, lGetHost(hep, EH_name)));
 
-      if (sge_get_com_error_flag(me, SGE_COM_ACCESS_DENIED, false)       == true ||
-          sge_get_com_error_flag(me, SGE_COM_ENDPOINT_NOT_UNIQUE, false) == true) {
+      if (sge_get_com_error_flag(me, SGE_COM_ACCESS_DENIED, false) == true) {
+         lFreeElem(&hep);
+         DRETURN(-8);
+      }
+      if (sge_get_com_error_flag(me, SGE_COM_ENDPOINT_NOT_UNIQUE, false) == true) {
          lFreeElem(&hep);
          DRETURN(-6);
       }
@@ -1516,7 +1527,7 @@ int gdi2_wait_for_conf(sge_gdi_ctx_class_t *ctx, lList **conf_list) {
    const char *cell_root = ctx->get_cell_root(ctx);
    u_long32 progid = ctx->get_who(ctx);
    
-
+   /* TODO: move this function to execd */
    DENTER(GDI_LAYER, "gdi2_wait_for_confgdi2_wait_for_conf");
    /*
     * for better performance retrieve 2 configurations
@@ -1526,8 +1537,14 @@ int gdi2_wait_for_conf(sge_gdi_ctx_class_t *ctx, lList **conf_list) {
 
    while ((ret = gdi2_get_configuration(ctx, qualified_hostname, &global, &local))) {
       if (ret==-6 || ret==-7) {
-         /* confict: COMMPROC ALREADY REGISTERED */
+         /* confict: endpoint not unique or no permission to get config */
          DRETURN(-1);
+      }
+      
+      if (ret==-8) {
+         /* access denied */
+         sge_get_com_error_flag(progid, SGE_COM_ACCESS_DENIED, true);
+         sleep(30);
       }
 
       DTRACE;
@@ -2114,6 +2131,9 @@ bool sge_get_com_error_flag(u_long32 progid, sge_gdi_stored_com_error_t error_ty
    switch (error_type) {
       case SGE_COM_ACCESS_DENIED: {
          ret_val = sge_gdi_communication_error.com_access_denied;
+         if (reset_error_flag == true) {
+            sge_gdi_communication_error.com_access_denied = false;
+         }
          break;
       }
       case SGE_COM_ENDPOINT_NOT_UNIQUE: {
@@ -2121,6 +2141,9 @@ bool sge_get_com_error_flag(u_long32 progid, sge_gdi_stored_com_error_t error_ty
             ret_val = false;
          } else { 
             ret_val = sge_gdi_communication_error.com_endpoint_not_unique;
+         }
+         if (reset_error_flag == true) {
+            sge_gdi_communication_error.com_endpoint_not_unique = false;
          }
          break;
       }

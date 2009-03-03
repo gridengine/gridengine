@@ -31,7 +31,6 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.util.shell;
 
-import com.sun.grid.jgdi.JGDI;
 import com.sun.grid.jgdi.configuration.JGDIAnswer;
 import static com.sun.grid.jgdi.util.JGDIShell.getResourceString;
 import java.util.LinkedList;
@@ -45,7 +44,6 @@ import java.util.logging.Level;
 public class QModCommand extends AbstractCommand {
 
     public void run(String[] args) throws Exception {
-        JGDI jgdi = getShell().getConnection();
 
         if (args.length == 0) {
             out.println(getUsage());
@@ -200,14 +198,14 @@ public class QModCommand extends AbstractCommand {
             }
         }
     }
-    
+
     public String[] parseWCQueueList(String arg) {
-        String [] ret = arg.split(",");
-        if(getShell().getLogger().isLoggable(Level.FINE)) {
+        String[] ret = arg.split(",");
+        if (getShell().getLogger().isLoggable(Level.FINE)) {
             StringBuilder buf = new StringBuilder();
             buf.append("wc_queue_list [");
-            for(int i = 0; i < ret.length; i++) {
-                if(i>0) {
+            for (int i = 0; i < ret.length; i++) {
+                if (i > 0) {
                     buf.append(", ");
                 }
                 buf.append(ret[i]);
@@ -217,9 +215,9 @@ public class QModCommand extends AbstractCommand {
         }
         return ret;
     }
-    
+
     public String[] parseJobWCQueueList(String arg) {
-        String [] ret = arg.split(",");
+        String[] ret = arg.split(",");
         if (getShell().getLogger().isLoggable(Level.FINE)) {
             StringBuilder buf = new StringBuilder();
             buf.append("job_wc_queue_list [");
@@ -234,7 +232,7 @@ public class QModCommand extends AbstractCommand {
         }
         return ret;
     }
-    
+
     public String[] parseJobList(String arg) {
         String[] ret = arg.split(",");
         if (getShell().getLogger().isLoggable(Level.FINE)) {

@@ -202,7 +202,7 @@ SMFCreateAndImportService()
    fi
    template_file="$prefix/util/sgeSMF/$1_template.xml"
    suffix="${SGE_CLUSTER_NAME}"
-   service_file="$SGE_ROOT/$SGE_CELL/tmp_$1_$suffix.xml"
+   service_file="$SGE_ROOT/$SGE_CELL/tmp$$_$1_$suffix.xml"
    if [ ! -f $template_file ]; then
       $INFOTEXT "%s is missing!" $template_file
       return 1

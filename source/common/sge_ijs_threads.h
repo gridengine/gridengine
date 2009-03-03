@@ -48,7 +48,7 @@ int create_thread(THREAD_LIB_HANDLE *thread_lib_handle,
                   int thread_id,
                   void* thread_func(void*));
 
-int register_thread(THREAD_LIB_HANDLE *thread_lib_handle,
+int register_thread(cl_raw_list_t     *log_list,
                     THREAD_HANDLE     *thread,
                     const char *thread_name);
 

@@ -130,7 +130,9 @@ enum {
 
    PET_cwd,
    PET_path_aliases,
-   PET_environment
+   PET_environment,
+
+   PET_do_contact
 };
 
 LISTDEF(PET_Type)
@@ -157,6 +159,7 @@ LISTDEF(PET_Type)
    SGE_STRING(PET_cwd, CULL_DEFAULT | CULL_SUBLIST)
    SGE_LIST(PET_path_aliases, PA_Type, CULL_DEFAULT)
    SGE_MAP(PET_environment, VA_Type, CULL_DEFAULT)
+   SGE_BOOL(PET_do_contact, CULL_DEFAULT | CULL_SUBLIST)
 LISTEND
 
 NAMEDEF(PETN)
@@ -181,6 +184,7 @@ NAMEDEF(PETN)
    NAME("PET_cwd")
    NAME("PET_path_aliases")
    NAME("PET_environment")
+   NAME("PET_do_contact")
 NAMEEND
 
 

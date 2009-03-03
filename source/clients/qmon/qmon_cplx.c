@@ -280,6 +280,8 @@ static void qmonCplxOk(Widget w, XtPointer cld, XtPointer cad)
    old_entries = lCopyList("", qmonMirrorList(SGE_CENTRY_LIST));
    /* centry_list_add_del_mod_via_gdi free entries and old_entries */
    centry_list_add_del_mod_via_gdi(ctx, &entries, &alp, &old_entries);                     
+   lFreeList(&old_entries);
+
    error = qmonMessageBox(w, alp, 0);
    lFreeList(&alp);
 
@@ -379,7 +381,7 @@ static void qmonCplxAddAttr(Widget matrix, Boolean modify_mode)
    }
       
    consumable = XmtChooserGetState(attr_aconsumable);   
-   new_str[0][5] = XtNewString(consumable ? "YES" : "NO");
+   new_str[0][5] = XtNewString(map_consumable2str(consumable));
    new_str[0][6] = XtNewString(XmtInputFieldGetString(attr_adefault));
    new_str[0][7] = XtNewString(XmtInputFieldGetString(attr_aurgency));
          
@@ -392,7 +394,7 @@ static void qmonCplxAddAttr(Widget matrix, Boolean modify_mode)
    lSetString(new_entry, CE_shortcut, new_str[0][1]);
    lSetUlong(new_entry, CE_valtype, valtype);
    lSetUlong(new_entry, CE_relop, relop);
-   lSetBool(new_entry, CE_consumable, consumable);
+   lSetUlong(new_entry, CE_consumable, consumable);
    lSetUlong(new_entry, CE_requestable, requestable);
    if (consumable) {
       lSetString(new_entry, CE_default, new_str[0][6]);
@@ -815,10 +817,13 @@ static void qmonCplxSelectAttr(Widget w, XtPointer cld, XtPointer cad)
          XmtChooserSetState(attr_areq, 0, True);
 
       str = XbaeMatrixGetCell(w, cbs->row, 5);
-      if (str && !strcmp(str, "YES")) 
+      if (str && !strcmp(str, "YES")) {
          XmtChooserSetState(attr_aconsumable, 1, True);
-      else
+      } else if (str && !strcmp(str, "JOB")) {
+         XmtChooserSetState(attr_aconsumable, 2, True);
+      } else {
          XmtChooserSetState(attr_aconsumable, 0, True);
+      }
 
       /* default */
       str = XbaeMatrixGetCell(w, cbs->row, 6);

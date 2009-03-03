@@ -2379,7 +2379,7 @@ int lSortList(lList *lp, const lSortOrder *sp)
 
    free(pointer);
 
-   /* JG: TODO: is sorting changing the list? */
+   cull_hash_recreate_after_sort(lp);
 
    DRETURN(0);
 }

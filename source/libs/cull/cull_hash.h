@@ -56,6 +56,7 @@ void cull_hash_create_hashtables(lList *lp);
 void *cull_hash_key(const lListElem *ep, int pos, char *host_key);
 
 const char *cull_hash_statistics(cull_htable ht, dstring *buffer);
+void cull_hash_recreate_after_sort(lList *lp);
 #ifdef  __cplusplus
 }
 #endif

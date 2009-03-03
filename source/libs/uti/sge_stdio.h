@@ -126,14 +126,18 @@
 ******************************************************************************/
 #if defined(IRIX)
 #define FCLOSE(x) \
-   fsync(fileno(x)); \
-   if(fclose(x) != 0) { \
-      goto FCLOSE_ERROR; \
+   if (x != NULL) { \
+      fsync(fileno(x)); \
+      if (fclose(x) != 0) { \
+         goto FCLOSE_ERROR; \
+      } \
    }
 #else
 #define FCLOSE(x) \
-   if(fclose(x) != 0) { \
-      goto FCLOSE_ERROR; \
+   if (x != NULL) { \
+      if (fclose(x) != 0) { \
+         goto FCLOSE_ERROR; \
+      } \
    }
 #endif
 
@@ -149,6 +153,10 @@ int sge_peclose(pid_t pid, FILE *fp_in, FILE *fp_out, FILE *fp_err,
 void print_option_syntax(FILE *fp, const char *option, const char *meaning);
 
 bool sge_check_stdout_stream(FILE *file, int fd);
+
+pid_t sge_peopen_r(const char *shell, int login_shell, const char *command,
+                 const char *user, char **env,  FILE **fp_in, FILE **fp_out,
+                 FILE **fp_err, bool null_stderr);
 
 #if defined(SOLARIS)
 #define SGE_DEFAULT_PATH "/usr/local/bin:/bin:/usr/bin:/usr/ucb"

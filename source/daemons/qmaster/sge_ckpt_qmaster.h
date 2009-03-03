@@ -50,10 +50,6 @@ int ckpt_success(sge_gdi_ctx_class_t *ctx, lListElem *ep, lListElem *old_ep, gdi
 /* funtions called via gdi and inside the qmaster */
 int sge_del_ckpt(sge_gdi_ctx_class_t *ctx, lListElem *, lList **, char *, char *);
 
-void sge_change_queue_version_qr_list(lList *nq, lList *oq, 
-                                      const char *obj_name, 
-                                      const char *ckpt_name);
-
 const char *get_checkpoint_when(int bitmask);
 
 int is_checkpoint_when_valid(int bitmask);

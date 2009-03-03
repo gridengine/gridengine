@@ -90,6 +90,8 @@
 
 #include "uti/sge_thread_ctrl.h"
 
+#include "sgeobj/sge_jsv.h"
+
 #include "sge_thread_main.h"
 #include "sge_thread_worker.h"
 #include "sge_qmaster_process_message.h"
@@ -126,8 +128,8 @@ sge_worker_initialize(sge_gdi_ctx_class_t *ctx)
 
       sge_dstring_sprintf(&thread_name, "%s%03d", threadnames[WORKER_THREAD], i);
       cl_thread_list_create_thread(Main_Control.worker_thread_pool, &dummy_thread_p,
-                                   NULL, sge_dstring_get_string(&thread_name), i, 
-                                   sge_worker_main, NULL, NULL);
+                                   cl_com_get_log_list(), sge_dstring_get_string(&thread_name), i, 
+                                   sge_worker_main, NULL, NULL, CL_TT_WORKER);
       sge_dstring_free(&thread_name);
    }
    DRETURN_VOID;
@@ -175,6 +177,9 @@ sge_worker_terminate(sge_gdi_ctx_class_t *ctx)
    }
 
    do_final_spooling = sge_qmaster_do_final_spooling();
+
+   /* shutdown and remove JSV instances */
+   jsv_list_remove_all();
 
    reporting_shutdown(ctx, NULL, do_final_spooling);
    DPRINTF(("accounting and reporting module has been shutdown\n"));
@@ -324,6 +329,20 @@ sge_worker_main(void *arg)
 #  else
                sge_gdi_packet_free(&packet);
 #  endif
+               /*
+                * Code only for TS: 
+                *
+                * Following if-block will only be executed in testsuite if the qmaster
+                * parameter __TEST_SLEEP_AFTER_REQUEST is defined. This will block the
+                * worker thread if it handled a request. Only this makes sure that
+                * other worker threads can handle incloming requests. Otherwise
+                * it might be possible that one worker threads handles all requests
+                * on fast qmaster hosts if testsuite is not fast enough to generate
+                * gdi requests.
+                */
+               if (mconf_get_enable_test_sleep_after_request() == true) {
+                  sleep(5);
+               }
             } else {
                sge_gdi_packet_broadcast_that_handled(packet);
             }
@@ -348,6 +367,7 @@ sge_worker_main(void *arg)
          cl_thread_func_testcancel(thread_config);
          pthread_cleanup_pop(execute); 
       }
+
    }
 
    /*

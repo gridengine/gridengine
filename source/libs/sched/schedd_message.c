@@ -46,31 +46,13 @@
 #include "sge_schedd_conf.h"
 #include "sge_ctL.h"
 
-static void schedd_mes_find_others(lList *job_list, int category);
-
 static lList *schedd_mes_get_same_category_jids(lRef category,
                                                 lList *job_list,
                                                 int ignore_category);
 
 static lRef schedd_mes_get_category(u_long32 job_id, lList *job_list);
 
-/* 
- * Message structure where job scheduling informations are stored if not disabled
- */
-static lListElem *sme = NULL;
-static lListElem *tmp_sme = NULL;
-static bool mes_schedd_info = true;
-
-/* 
- * write scheduling information into logfile
- */
-static int log_schedd_info = 1;
-
-void schedd_mes_on(void) { mes_schedd_info = true; }
-void schedd_mes_off(void) { mes_schedd_info = false; }
-
-static void schedd_mes_find_others(lList *job_list,
-                                   int ignore_category)
+static void schedd_mes_find_others(lListElem *tmp_sme, lList *job_list, int ignore_category)
 {
    if (tmp_sme && job_list) {
       lListElem *message_elem = NULL;  /* MES_Type */
@@ -118,8 +100,7 @@ static lRef schedd_mes_get_category(u_long32 job_id, lList *job_list)
    if (job) {
       ret = lGetRef(job, JB_category);
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 static lList *schedd_mes_get_same_category_jids(lRef category,
@@ -137,8 +118,7 @@ static lList *schedd_mes_get_same_category_jids(lRef category,
          }
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** schedd/schedd_mes/schedd_mes_initialize() *****************************
@@ -153,7 +133,11 @@ static lList *schedd_mes_get_same_category_jids(lRef category,
 *******************************************************************************/
 void schedd_mes_initialize(void)
 {
+   lListElem *sme = sconf_get_sme();
+   lListElem *tmp_sme = sconf_get_tmp_sme();
+
    DENTER(TOP_LAYER, "schedd_mes_initialize");
+
    if (!sme) {
       lList *tmp_list;
 
@@ -162,6 +146,7 @@ void schedd_mes_initialize(void)
       lSetList(sme, SME_message_list, tmp_list);
       tmp_list = lCreateList("", MES_Type);
       lSetList(sme, SME_global_message_list, tmp_list);
+      sconf_set_sme(sme);
    }
 
    /* prepare tmp_sme for collecting messages */
@@ -171,26 +156,13 @@ void schedd_mes_initialize(void)
       tmp_sme = lCreateElem(SME_Type);
       tmp_list = lCreateList("", MES_Type);
       lSetList(tmp_sme, SME_message_list, tmp_list);
+      sconf_set_tmp_sme(tmp_sme);
    }
-   DEXIT;
-}
 
-/****** schedd/schedd_mes/schedd_mes_release() ********************************
-*  NAME
-*     schedd_mes_release() -- Free module variables 
-*
-*  SYNOPSIS
-*     void schedd_mes_release(void) 
-*
-*  FUNCTION
-*     Free module variables 
-*******************************************************************************/
-void schedd_mes_release(void)
-{
-   DENTER(TOP_LAYER, "schedd_release_messages");
-   lFreeElem(&sme);
-   lFreeElem(&tmp_sme);
-   DEXIT;
+   sconf_set_mes_schedd_info(true);
+   schedd_mes_set_logging(1);
+
+   DRETURN_VOID;
 }
 
 /****** schedd/schedd_mes/schedd_mes_commit() *********************************
@@ -222,6 +194,8 @@ void schedd_mes_release(void)
 *                           every message is only added per category once.
 *******************************************************************************/
 void schedd_mes_commit(lList *job_list, int ignore_category, lRef jid_category) {
+   lListElem *sme = sconf_get_sme();
+   lListElem *tmp_sme = sconf_get_tmp_sme();
 
    if (sme && tmp_sme) {
       lList *sme_mes_list = NULL;
@@ -238,7 +212,7 @@ void schedd_mes_commit(lList *job_list, int ignore_category, lRef jid_category) 
        * Try to find other jobs which apply also for created message
        */
       if (jid_category != NULL || ignore_category == 1) {
-         schedd_mes_find_others(job_list, ignore_category);
+         schedd_mes_find_others(tmp_sme, job_list, ignore_category);
       }
 
       /*
@@ -264,6 +238,8 @@ void schedd_mes_commit(lList *job_list, int ignore_category, lRef jid_category) 
 ******************************************************************************/
 void schedd_mes_rollback(void)
 {
+   lListElem *tmp_sme = sconf_get_tmp_sme();
+   
    if (tmp_sme) {
       lList *tmp_sme_list = NULL;
 
@@ -297,6 +273,8 @@ lListElem *schedd_mes_obtain_package(int *global_mes_count, int *job_mes_count)
 {
    lListElem *ret;
    u_long32 schedd_job_info = sconf_get_schedd_job_info();
+   lListElem *sme = sconf_get_sme();
+   lListElem *tmp_sme = sconf_get_tmp_sme();
 
    DENTER(TOP_LAYER, "schedd_mes_obtain_package");
 
@@ -324,34 +302,14 @@ lListElem *schedd_mes_obtain_package(int *global_mes_count, int *job_mes_count)
    }
 
    ret = sme; /* calling function is responsible to free messages! */
-   sme = NULL; 
+   sconf_set_sme(NULL);
    lFreeElem(&tmp_sme);
+   sconf_set_tmp_sme(NULL);
 
-   DEXIT;
-   return ret; 
-}
+   sconf_set_mes_schedd_info(false);
+   schedd_mes_set_logging(0);
 
-/****** schedd/schedd_mes/schedd_mes_set_logging() ****************************
-*  NAME
-*     schedd_mes_set_logging() -- Turns schedd logging on and off 
-*
-*  SYNOPSIS
-*     void schedd_mes_set_logging(int bval) 
-*
-*  FUNCTION
-*     Turns schedd logging on and off. 
-*
-*  INPUTS
-*     int bval - on (0) off (1) 
-*******************************************************************************/
-void schedd_mes_set_logging(int bval) {
-   DENTER(TOP_LAYER, "schedd_mes_set_logging");
-   log_schedd_info = bval;
-   DEXIT;
-}
-
-int schedd_mes_get_logging(void) {
-   return log_schedd_info;
+   DRETURN(ret);
 }
 
 /****** schedd/schedd_mes/schedd_mes_add() ************************************
@@ -400,6 +358,7 @@ void schedd_mes_add(lList **monitor_alpp, bool monitor_next_run, u_long32 job_id
 #if defined(LINUX)
    int nchars;
 #endif
+   lListElem *tmp_sme = sconf_get_tmp_sme();
 
    DENTER(TOP_LAYER, "schedd_mes_add");
 
@@ -412,8 +371,7 @@ void schedd_mes_add(lList **monitor_alpp, bool monitor_next_run, u_long32 job_id
    if (nchars == -1) {
       ERROR((SGE_EVENT, MSG_SCHEDDMESSAGE_CREATEJOBINFOFORMESSAGEFAILED_U,
          sge_u32c(message_number)));
-      DEXIT;
-      return;
+      DRETURN_VOID;
    }
 #else
    vsprintf(msg, fmt, args);
@@ -428,18 +386,15 @@ void schedd_mes_add(lList **monitor_alpp, bool monitor_next_run, u_long32 job_id
       schedd_log(msg_log, monitor_alpp, monitor_next_run);
    }
 
-   if (job_id && (schedd_job_info != SCHEDD_JOB_INFO_FALSE)) {
-      if (mes_schedd_info == true) {
+   if (!monitor_alpp && job_id && (schedd_job_info != SCHEDD_JOB_INFO_FALSE)) {
+      if (sconf_get_mes_schedd_info()) {
          if (schedd_job_info == SCHEDD_JOB_INFO_JOB_LIST) {
             if (!range_list_is_id_within(sconf_get_schedd_job_info_range(),
                                          job_id)) {
                DPRINTF(("Job "sge_u32" not in scheddconf.schedd_job_info_list\n", job_id));
-               return;
+               DRETURN_VOID;
             }
          }
-         if (!tmp_sme) {
-            schedd_mes_initialize();
-         }   
 
          mes = lCreateElem(MES_Type);
          jobs_ulng = lCreateList("job ids", ULNG_Type);
@@ -454,7 +409,7 @@ void schedd_mes_add(lList **monitor_alpp, bool monitor_next_run, u_long32 job_id
       }
    }
 
-   DEXIT;
+   DRETURN_VOID;
 #endif
 }
 
@@ -481,7 +436,7 @@ void schedd_mes_add(lList **monitor_alpp, bool monitor_next_run, u_long32 job_id
 *     MT-NOTE: schedd_mes_add_join() is not MT safe 
 *
 *******************************************************************************/
-void schedd_mes_add_join(u_long32 job_number, u_long32 message_number, ...)
+void schedd_mes_add_join(bool monitor_next_run, u_long32 job_number, u_long32 message_number, ...)
 {
 #ifndef WIN32NATIVE
    va_list args;
@@ -495,8 +450,9 @@ void schedd_mes_add_join(u_long32 job_number, u_long32 message_number, ...)
 #if defined(LINUX)
    int nchars;
 #endif
+   lListElem *tmp_sme = sconf_get_tmp_sme();
 
-   DENTER(TOP_LAYER, "schedd_mes_add");
+   DENTER(TOP_LAYER, "schedd_mes_add_join");
 
    fmt = sge_schedd_text(message_number);
    va_start(args,message_number);
@@ -507,8 +463,7 @@ void schedd_mes_add_join(u_long32 job_number, u_long32 message_number, ...)
    if (nchars == -1) {
       ERROR((SGE_EVENT, MSG_SCHEDDMESSAGE_CREATEJOBINFOFORMESSAGEFAILED_U,
          sge_u32c(message_number)));
-      DEXIT;
-      return;
+      DRETURN_VOID;
    }
 #else
    vsprintf(msg, fmt, args);
@@ -516,16 +471,13 @@ void schedd_mes_add_join(u_long32 job_number, u_long32 message_number, ...)
 
    if (job_number && (schedd_job_info != SCHEDD_JOB_INFO_FALSE)) {
 
-      if (mes_schedd_info == true) {
+      if (sconf_get_mes_schedd_info()) {
          if (schedd_job_info == SCHEDD_JOB_INFO_JOB_LIST) {
             if (!sconf_is_id_in_schedd_job_info_range(job_number)) {
                DPRINTF(("Job "sge_u32" not in scheddconf.schedd_job_info_list\n", job_number));
-               return;
+               DRETURN_VOID;
             }
          }
-         if (!tmp_sme) {
-            schedd_mes_initialize();
-         }   
 
          mes = lGetElemUlong(lGetList(tmp_sme, SME_message_list), MES_message_number, message_number);
          if (mes == NULL) {
@@ -536,8 +488,7 @@ void schedd_mes_add_join(u_long32 job_number, u_long32 message_number, ...)
             lSetString(mes, MES_message, msg);
             
             lAppendElem(lGetList(tmp_sme, SME_message_list), mes);
-         } 
-         else {
+         } else {
             jobs_ulng = lGetList(mes, MES_job_number_list);
          }
 
@@ -546,24 +497,22 @@ void schedd_mes_add_join(u_long32 job_number, u_long32 message_number, ...)
          lAppendElem(jobs_ulng, jid_ulng);
       }
 
-      if (log_schedd_info) {
+      if (schedd_mes_get_logging()) {
          sprintf(msg_log, "Job "sge_u32" %s", job_number, msg);
-         schedd_log(msg_log, NULL, false);
+         schedd_log(msg_log, NULL, monitor_next_run);
       }
    } else {
-      if (log_schedd_info) {
+      if (schedd_mes_get_logging()) {
          if (job_number) {
             sprintf(msg_log, "Job "sge_u32" %s", job_number, msg);
-         }   
-         else {
+         } else {
              sprintf(msg_log, "Your job %s", msg);
          }    
-         schedd_log(msg_log, NULL, false);
-
+         schedd_log(msg_log, NULL, monitor_next_run);
       }
    }
 
-   DEXIT;
+   DRETURN_VOID;
 #endif
 }
 
@@ -596,37 +545,31 @@ void schedd_mes_add_global(lList **monitor_alpp, bool monitor_next_run, u_long32
 
    DENTER(TOP_LAYER, "schedd_mes_add_global");
 
-   if (sconf_get_schedd_job_info() != SCHEDD_JOB_INFO_FALSE) {
-      /* Create error message */
-      fmt = sge_schedd_text(message_number);
-      va_start(args,message_number);
+   /* Create error message */
+   fmt = sge_schedd_text(message_number);
+   va_start(args,message_number);
 #if defined(LINUX)
-      nchars = vsnprintf(msg, MAXMSGLEN, fmt, args);
-      if (nchars == -1) {
-         ERROR((SGE_EVENT, MSG_SCHEDDMESSAGE_CREATEJOBINFOFORMESSAGEFAILED_U,
-            sge_u32c(message_number)));
-         DEXIT;
-         return;
-      }
+   nchars = vsnprintf(msg, MAXMSGLEN, fmt, args);
+   if (nchars == -1) {
+      ERROR((SGE_EVENT, MSG_SCHEDDMESSAGE_CREATEJOBINFOFORMESSAGEFAILED_U,
+         sge_u32c(message_number)));
+      DRETURN_VOID;
+   }
 #else
-      vsprintf(msg, fmt, args);
+   vsprintf(msg, fmt, args);
 #endif
-
-      /* Add scheduling info to structure */
-      if (!sme) {
-         schedd_mes_initialize();
-      }   
-
+   if (!monitor_alpp && sconf_get_schedd_job_info() != SCHEDD_JOB_INFO_FALSE) {
+      lListElem *sme = sconf_get_sme();
       mes = lCreateElem(MES_Type);
       lSetUlong(mes, MES_message_number, message_number);
       lSetString(mes, MES_message, msg);
       lAppendElem(lGetList(sme, SME_global_message_list), mes);
-
-      /* Write entry into log file */
-      schedd_log(msg, monitor_alpp, monitor_next_run);
    }
 
-   DEXIT;
+   /* Write entry into log file */
+   schedd_log(msg, monitor_alpp, monitor_next_run);
+
+   DRETURN_VOID;
 }
 
 
@@ -646,14 +589,14 @@ void schedd_mes_add_global(lList **monitor_alpp, bool monitor_next_run, u_long32
 *******************************************************************************/
 lList *schedd_mes_get_tmp_list(){
    lList *ret = NULL;
+   lListElem *tmp_sme = sconf_get_tmp_sme();
    
    DENTER(TOP_LAYER, "schedd_mes_get_tmp_list");
 
    if (tmp_sme) {
      ret =  lGetList(tmp_sme, SME_message_list);  
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /****** schedd_message/schedd_mes_set_tmp_list() *******************************
@@ -675,6 +618,7 @@ lList *schedd_mes_get_tmp_list(){
 *******************************************************************************/
 void schedd_mes_set_tmp_list(lListElem *category, int name, u_long32 job_number)
 {
+   lListElem *tmp_sme = sconf_get_tmp_sme();
    lList *tmp_list = NULL;
    lListElem *tmp_elem;
 
@@ -692,5 +636,5 @@ void schedd_mes_set_tmp_list(lListElem *category, int name, u_long32 job_number)
       lSetList(tmp_sme, SME_message_list, tmp_list);
    }
 
-   DEXIT;
+   DRETURN_VOID;
 }

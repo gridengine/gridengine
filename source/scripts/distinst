@@ -47,7 +47,7 @@ DEFAULTPROG="sge_qmaster sge_execd sge_shadowd \
 
 UTILITYBINARIES="uidgid gethostname gethostbyname gethostbyaddr \
                  getservbyname filestat checkprog loadcheck now checkuser \
-                 adminrun qrsh_starter testsuidroot authuser \
+                 adminrun qrsh_starter testsuidroot authuser read_raw echo_raw \
                  sge_share_mon infotext spooldefaults spooledit spoolinit \
                  fstype SGE_Helper_Service.exe"
 
@@ -420,6 +420,7 @@ instclassictargets=false
 instopenssl=true
 instbdb=true
 instarco=false
+instguiinst=true
 enforce_shlibpath=false
 
 cmdname=`basename $0`
@@ -1137,6 +1138,24 @@ if [ $instarco = true ]; then
       echo
    else
       echo "ARCo dir \"$ARCO_SOURCE_DIR\" does not exist"
+   fi
+fi
+
+if [ $instguiinst = true ]; then
+   GUI_DIR=`pwd`/clients/gui-installer
+   if [ -d "$GUI_DIR" ]; then 
+      rm -rf $DEST_SGE_ROOT/start_gui_installer $DEST_SGE_ROOT/util/gui-installer 
+      echo "Installing \"start_gui_installer\" and \"/util/gui-installer\""
+      Execute mkdir -p $DEST_SGE_ROOT/util/gui-installer/html/en/help
+      Execute mkdir -p $DEST_SGE_ROOT/util/gui-installer/templates
+      Execute cp $GUI_DIR/dist/installer.jar $DEST_SGE_ROOT/util/gui-installer
+      Execute cp $GUI_DIR/templates/start_gui_installer.sh $DEST_SGE_ROOT/start_gui_installer
+      Execute cp -r $GUI_DIR/html $DEST_SGE_ROOT/util/gui-installer
+      Execute cp $GUI_DIR/templates/install_component $GUI_DIR/templates/gui_inst_template.conf $GUI_DIR/templates/readme_template.html $GUI_DIR/templates/check_host $DEST_SGE_ROOT/util/gui-installer/templates
+      Execute chmod 755 $DEST_SGE_ROOT/start_gui_installer
+      Cleanup util/gui-installer
+   else
+      echo "GUI Installer dir \"$GUI_DIR\" does not exist"
    fi
 fi
 

@@ -238,5 +238,6 @@ static void qmonRQSGetText(Widget tw, lList *rqs_list, lList **alpp)
       ret = rqs_add_del_mod_via_gdi(ctx, new_rqs_list, alpp, SGE_GDI_REPLACE);
    }
 
+   lFreeList(&new_rqs_list);
    DEXIT;
 }

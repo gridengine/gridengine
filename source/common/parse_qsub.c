@@ -53,19 +53,19 @@
 #include "sge_range.h"
 #include "sge_ckpt.h"
 #include "sge_ulong.h"
-#include "sge_str.h"
-#include "sge_centry.h"
-#include "sge_job.h"
-#include "sge_var.h"
-#include "sge_answer.h"
+
+#include "uti/sge_dstring.h"
+
+#include "sgeobj/sge_str.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_var.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_jsv.h"
 
 #include "msg_common.h"
 
-static int sge_parse_priority(lList **alpp, int *valp, char *priority_str);
 static int var_list_parse_from_environment(lList **lpp, char **envp);
-static int sge_parse_hold_list(char *hold_str, u_long32 prog_number);
-static int sge_parse_mail_options(lList **alpp, char *mail_str, u_long32 prog_number); 
-static int cull_parse_destination_identifier_list(lList **lpp, char *dest_str);
 static int sge_parse_checkpoint_interval(char *time_str); 
 static int set_yn_option (lList **opts, u_long32 opt, char *arg, char *value,
                           lList **alp);
@@ -893,6 +893,53 @@ u_long32 flags
          continue;
       }
 
+/*----------------------------------------------------------------------------*/
+      /* "-jsv path_name" */
+
+      if (!strcmp("-jsv", *sp)) {
+         dstring input = DSTRING_INIT;
+         dstring type = DSTRING_INIT;
+         dstring user = DSTRING_INIT;
+         dstring path = DSTRING_INIT;
+         lList *path_list = NULL;
+         bool success;
+
+         /* next field is path_name */
+         sp++;
+         if (!*sp) {
+             answer_list_add_sprintf(&answer, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
+                                     MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S, "-jsv" );
+             DRETURN(answer);
+         }
+
+         DPRINTF(("\"-jsv %s\"\n", *sp));
+
+         sge_dstring_append(&input, *sp);
+         success = jsv_url_parse(&input, &answer, &type, &user, &path, true);
+         sge_dstring_free(&input);
+         sge_dstring_free(&type);
+         sge_dstring_free(&user);
+         sge_dstring_free(&path);
+         if (success) {
+            lListElem *elem = lAddElemStr(&path_list, PN_path, *sp, PN_Type);
+
+            if (elem != NULL) {
+               ep_opt = sge_add_arg(pcmdline, jsv_OPT, lListT, *(sp - 1), *sp);
+               lSetList(ep_opt, SPA_argval_lListT, path_list);
+            } else {
+               answer_list_add_sprintf(&answer, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
+                                       MSG_SGETEXT_NOMEM);
+               DRETURN(answer);
+            }
+         } else {
+            /* answer is filled in jsv_url_parse */
+            DRETURN(answer);
+         }
+
+         sp++;
+         continue;
+      }
+
 /*---------------------------------------------------------------------------*/
       /* "-l resource_list" */
 
@@ -1166,7 +1213,7 @@ u_long32 flags
              DRETURN(answer);
          }
 
-         if (sge_parse_priority(&answer, &priority, *sp)) {
+         if (ulong_parse_priority(&answer, &priority, *sp) == false) {
             DRETURN(answer);
          }
 
@@ -1632,7 +1679,8 @@ DTRACE;
       /* "-w e|w|n|v" */
 
       if (!strcmp("-w", *sp)) {
-
+         int level;
+         int lret;
 
          if (lGetElemStr(*pcmdline, SPA_switch, *sp)) {
             answer_list_add_sprintf(&answer,STATUS_EEXIST, ANSWER_QUALITY_WARNING,
@@ -1640,7 +1688,7 @@ DTRACE;
                                     *sp);
          }
 
-         /* next field is "e|w|n|v" */
+         /* next field is "e|w|n|v|p" */
          sp++;
          if (!*sp) {
              answer_list_add_sprintf(&answer, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
@@ -1649,46 +1697,12 @@ DTRACE;
          }
 
          DPRINTF(("\"-w %s\"\n", *sp));
-
-         if (!strcmp("e", *sp)) {
-            ep_opt = sge_add_arg(pcmdline, w_OPT, lIntT, *(sp - 1), *sp);
-            if (prog_number == QRSUB) {
-               lSetInt(ep_opt, SPA_argval_lIntT, AR_ERROR_VERIFY);
-            } else {
-               lSetInt(ep_opt, SPA_argval_lIntT, ERROR_VERIFY);
-            }
-         }
-         else if (!strcmp("w", *sp)) {
-            if (prog_number == QRSUB) {
-               answer_list_add_sprintf(&answer,STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
-                     MSG_PARSE_INVALIDOPTIONARGUMENTWX_S, *sp);
-               DRETURN(answer);
-            } else {
-               ep_opt = sge_add_arg(pcmdline, w_OPT, lIntT, *(sp - 1), *sp);
-            }
-            lSetInt(ep_opt, SPA_argval_lIntT, WARNING_VERIFY);
-         }
-         else if (!strcmp("n", *sp)) {
-            ep_opt = sge_add_arg(pcmdline, w_OPT, lIntT, *(sp - 1), *sp);
-            if (prog_number == QRSUB) {
-               answer_list_add_sprintf(&answer,STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
-                     MSG_PARSE_INVALIDOPTIONARGUMENTWX_S, *sp);
-               DRETURN(answer);
-            } else {
-               lSetInt(ep_opt, SPA_argval_lIntT, SKIP_VERIFY);
-            }
-         }
-         else if (!strcmp("v", *sp)) {
-            ep_opt = sge_add_arg(pcmdline, w_OPT, lIntT, *(sp - 1), *sp);
-            if (prog_number == QRSUB) {
-               lSetInt(ep_opt, SPA_argval_lIntT, AR_JUST_VERIFY);
-            } else {
-               lSetInt(ep_opt, SPA_argval_lIntT, JUST_VERIFY);
-            }
+         lret = job_parse_validation_level(&level, *sp, prog_number, &answer);
+         if (!lret) {
+            DRETURN(answer);
          } else {
-             answer_list_add_sprintf(&answer,STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
-                     MSG_PARSE_INVALIDOPTIONARGUMENTWX_S, *sp);
-             DRETURN(answer);
+            ep_opt = sge_add_arg(pcmdline, w_OPT, lIntT, *(sp - 1), *sp);
+            lSetInt(ep_opt, SPA_argval_lIntT, level);
          }
 
          sp++;
@@ -1930,170 +1944,6 @@ DTRACE;
    return answer;
 }
 
-
-/***********************************************************************/
-/* "-h [hold_list]" */
-/* MT-NOTE: sge_parse_hold_list() is MT safe */
-static int sge_parse_hold_list(
-char *hold_str,
-u_long32 prog_number
-) {
-   int i, j;
-   int target = 0;
-   int op_code = 0;
-
-   DENTER(TOP_LAYER, "sge_parse_hold_list");
-
-   i = strlen(hold_str);
-
-   for (j = 0; j < i; j++) {
-      switch (hold_str[j]) {
-      case 'n':
-         if ((prog_number == QHOLD)  || 
-             (prog_number == QRLS) || 
-             (op_code && op_code != MINUS_H_CMD_SUB)) {
-            target = -1;
-            break;
-         }
-         op_code = MINUS_H_CMD_SUB;
-         target = MINUS_H_TGT_USER|MINUS_H_TGT_OPERATOR|MINUS_H_TGT_SYSTEM;
-         break;
-      case 's':
-         if (prog_number == QRLS) {
-            if (op_code && op_code != MINUS_H_CMD_SUB) {
-               target = -1;
-               break;
-            }
-            op_code = MINUS_H_CMD_SUB;
-            target = target|MINUS_H_TGT_SYSTEM;         
-         }
-         else {
-            if (op_code && op_code != MINUS_H_CMD_ADD) {
-               target = -1;
-               break;
-            }
-            op_code = MINUS_H_CMD_ADD;
-            target = target|MINUS_H_TGT_SYSTEM;
-         }   
-         break;
-      case 'o':
-         if (prog_number == QRLS) {
-            if (op_code && op_code != MINUS_H_CMD_SUB) {
-               target = -1;
-               break;
-            }
-            op_code = MINUS_H_CMD_SUB;
-            target = target|MINUS_H_TGT_OPERATOR;         
-         }
-         else {
-            if (op_code && op_code != MINUS_H_CMD_ADD) {
-               target = -1;
-               break;
-            }
-            op_code = MINUS_H_CMD_ADD;
-            target = target|MINUS_H_TGT_OPERATOR;
-         }
-         break;
-         
-      case 'u':
-         if (prog_number == QRLS) {
-            if (op_code && op_code != MINUS_H_CMD_SUB) {
-               target = -1;
-               break;
-            }
-            op_code = MINUS_H_CMD_SUB;
-            target = target|MINUS_H_TGT_USER;
-         }
-         else {
-            if (op_code && op_code != MINUS_H_CMD_ADD) {
-               target = -1;
-               break;
-            }
-            op_code = MINUS_H_CMD_ADD;
-            target = target|MINUS_H_TGT_USER;
-         }
-         break;
-      case 'S':
-         if ((prog_number == QHOLD)  || 
-             (prog_number == QRLS) || 
-             (op_code && op_code != MINUS_H_CMD_SUB)) {
-            target = -1;
-            break;
-         }
-         op_code = MINUS_H_CMD_SUB;
-         target = target|MINUS_H_TGT_SYSTEM;
-         break;
-      case 'U':
-         if ((prog_number == QHOLD)  || 
-             (prog_number == QRLS) || 
-             (op_code && op_code != MINUS_H_CMD_SUB)) {
-            target = -1;
-            break;
-         }
-         op_code = MINUS_H_CMD_SUB;
-         target = target|MINUS_H_TGT_USER;
-         break;
-      case 'O':
-         if ((prog_number == QHOLD)  || 
-             (prog_number == QRLS) || 
-             (op_code && op_code != MINUS_H_CMD_SUB)) {
-            target = -1;
-            break;
-         }
-         op_code = MINUS_H_CMD_SUB;
-         target = target|MINUS_H_TGT_OPERATOR;
-         break;
-      default:
-         target = -1;
-      }
-
-      if (target == -1)
-         break;
-   }
-
-   if (target != -1)
-      target |= op_code;
-
-   DEXIT;
-   return target;
-}
-
-/***********************************************************************/
-/* MT-NOTE: sge_parse_mail_options() is MT safe */
-static int sge_parse_mail_options(lList **alpp, char *mail_str, u_long32 prog_number) 
-{
-   int i, j;
-   int mail_opt = 0;
-
-   DENTER(TOP_LAYER, "sge_parse_mail_options");
-
-   i = strlen(mail_str);
-
-   for (j = 0; j < i; j++) {
-      if ((char) mail_str[j] == 'a') {
-         mail_opt = mail_opt | MAIL_AT_ABORT;
-      } else if ((char) mail_str[j] == 'b') {
-         mail_opt = mail_opt | MAIL_AT_BEGINNING;
-      } else if ((char) mail_str[j] == 'e') {
-         mail_opt = mail_opt | MAIL_AT_EXIT;
-      } else if ((char) mail_str[j] == 'n') {
-         mail_opt = mail_opt | NO_MAIL;
-      } else if ((char) mail_str[j] == 's') {
-         if (prog_number == QRSUB) {
-            answer_list_add_sprintf(alpp, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
-                   MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S, "-m");
-            DRETURN(0);
-         }
-         mail_opt = mail_opt | MAIL_AT_SUSPENSION;
-      } else {
-         DRETURN(0);
-      }
-   }
-
-   DRETURN(mail_opt);
-
-}
-
 /***************************************************************************/
 static int sge_parse_checkpoint_interval(
 char *time_str 
@@ -2112,159 +1962,6 @@ char *time_str
 }
 
 /***************************************************************************/
-
-
-/****** parse_qsub/cull_parse_path_list() **************************************
-*  NAME
-*     cull_parse_path_list() -- ??? 
-*
-*  SYNOPSIS
-*     int cull_parse_path_list(lList **lpp, char *path_str) 
-*
-*  FUNCTION
-*     ??? 
-*
-*  INPUTS
-*     lList **lpp    - ??? 
-*     char *path_str - ??? 
-*
-*  RESULT
-*     int - error code 
-*        0 = okay
-*        1 = error 
-*
-*  NOTES
-*     MT-NOTE: cull_parse_path_list() is MT safe
-*******************************************************************************/
-int cull_parse_path_list(
-lList **lpp,
-char *path_str 
-
-/*
-   [[host]:]path[,[[host]:]path...]
-
-   str0 - path
-   str1 - host
-   str3 - temporary
-   int  - temporary
- */
-
-) {
-   char *path = NULL;
-   char *cell = NULL;
-   char **str_str = NULL;
-   char **pstr = NULL;
-   lListElem *ep = NULL;
-   char *path_string = NULL;
-   bool ret_error = false;
-
-   DENTER(TOP_LAYER, "cull_parse_path_list");
-
-   ret_error = (lpp == NULL) ? true : false;
-/*
-   if (!lpp) {
-      DEXIT;
-      return 1;
-   }
-*/
-
-   if(!ret_error){
-      path_string = sge_strdup(NULL, path_str);
-      ret_error = (path_string == NULL) ? true : false;
-   }
-/*
-   if (!path_string) {
-      *lpp = NULL;
-      DEXIT;
-      return 2;
-   }
-*/
-   if(!ret_error){
-      str_str = string_list(path_string, ",", NULL);
-      ret_error = (str_str == NULL || *str_str == NULL) ? true : false;
-   }
-/*
-   if (!str_str || !*str_str) {
-      *lpp = NULL;
-      FREE(path_string);
-      DEXIT;
-      return 3;
-   }
-*/
-   if ( (!ret_error) && (!*lpp)) {
-      *lpp = lCreateList("path_list", PN_Type);
-      ret_error = (*lpp == NULL) ? true : false;
-/*
-      if (!*lpp) {
-         FREE(path_string);
-         FREE(str_str);
-         DEXIT;
-         return 4;
-      }
-*/
-   }
-
-   if(!ret_error){
-      for (pstr = str_str; *pstr; pstr++) {
-      /* cell given ? */
-         if (*pstr[0] == ':') {  /* :path */
-            cell = NULL;
-            path = *pstr+1;
-         } else if ((path = strstr(*pstr, ":"))){ /* host:path */
-            path[0] = '\0';
-            cell = strdup(*pstr);
-            path[0] = ':';
-            path += 1;
-         } else { /* path */
-            cell = NULL;
-            path = *pstr;
-         }
-
-         SGE_ASSERT((path));
-         ep = lCreateElem(PN_Type);
-         /* SGE_ASSERT(ep); */
-         lAppendElem(*lpp, ep);
-
-         lSetString(ep, PN_path, path);
-        if (cell) {
-            lSetHost(ep, PN_host, cell);
-            FREE(cell);
-         }
-      }
-   }
-   if(path_string)
-      FREE(path_string);
-   if(str_str)
-      FREE(str_str);
-   DEXIT;
-   if(ret_error)
-      return 1;
-   else
-      return 0;
-}
-
-
-/***************************************************************************/
-/* MT-NOTE: sge_parse_priority() is MT safe */
-static int sge_parse_priority(
-lList **alpp,
-int *valp,
-char *priority_str 
-) {
-   char *s;
-
-   DENTER(TOP_LAYER, "sge_parse_priority");
-
-   *valp = strtol(priority_str, &s, 10);
-   if (priority_str==s || *valp > 1024 || *valp < -1023) {
-       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_PARSE_INVALIDPRIORITYMUSTBEINNEG1023TO1024));
-       answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
-       DEXIT;
-       return -1;
-   }
-   DEXIT;
-   return 0;
-}
 
 /****** client/var/var_list_parse_from_environment() **************************
 *  NAME
@@ -2329,208 +2026,6 @@ static int var_list_parse_from_environment(lList **lpp, char **envp)
       sge_free_saved_vars(context);
    }
 
-   DEXIT;
-   return 0;
-}
-
-/***************************************************************************/
-/* MT-NOTE: cull_parse_destination_identifier_list() is MT safe */
-static int cull_parse_destination_identifier_list(
-lList **lpp, /* QR_Type */
-char *dest_str 
-) {
-   int rule[] = {QR_name, 0};
-   char **str_str = NULL;
-   int i_ret;
-   char *s;
-
-   DENTER(TOP_LAYER, "cull_parse_destination_identifier_list");
-
-   if (lpp == NULL) {
-      DRETURN(1);
-   }
-
-   s = sge_strdup(NULL, dest_str);
-   if (s == NULL) {
-      *lpp = NULL;
-      DRETURN(3);
-   }
-
-   str_str = string_list(s, ",", NULL);
-   if (str_str == NULL || *str_str == NULL) {
-      *lpp = NULL;
-      FREE(s);
-      DRETURN(2);
-   }
-
-   i_ret = cull_parse_string_list(str_str, "destin_ident_list", QR_Type, rule, lpp);
-   if (i_ret) {
-      FREE(s);
-      FREE(str_str);
-      DRETURN(3);
-   }
-
-   FREE(s);
-   FREE(str_str);
-   DRETURN(0);
-}
-
-/***************************************************************************/
-/*   MT-NOTE: cull_parse_jid_hold_list() is MT safe */
-int cull_parse_jid_hold_list(
-lList **lpp,
-char *str 
-
-/*   jid[,jid,...]
-
-   int0 - jid
-
- */
-
-) {
-   int rule[] = {ST_name, 0};
-   char **str_str = NULL;
-   int i_ret;
-   char *s;
-
-   DENTER(TOP_LAYER, "cull_parse_jid_hold_list");
-
-   if (!lpp) {
-      DEXIT;
-      return 1;
-   }
-
-   s = sge_strdup(NULL, str);
-   if (!s) {
-      *lpp = NULL;
-      DEXIT;
-      return 3;
-   }
-   str_str = string_list(s, ",", NULL);
-   if (!str_str || !*str_str) {
-      *lpp = NULL;
-      FREE(s);
-      DEXIT;
-      return 2;
-   }
-   i_ret = cull_parse_string_list(str_str, "jid_hold list", ST_Type, rule, lpp);
-   
-   if (i_ret) {
-      FREE(s);
-      FREE(str_str);
-      DEXIT;
-      return 3;
-   }
-
-   FREE(s);
-   FREE(str_str);
-   DEXIT;
-   return 0;
-}
-
-/****** client/var/var_list_parse_from_string() *******************************
-*  NAME
-*     var_list_parse_from_string() -- parse vars from string list 
-*
-*  SYNOPSIS
-*     int var_list_parse_from_string(lList **lpp, 
-*                                    const char *variable_str, 
-*                                    int check_environment) 
-*
-*  FUNCTION
-*     Parse a list of variables ("lpp") from a comma separated 
-*     string list ("variable_str"). The boolean "check_environment"
-*     defined wether the current value of a variable is taken from
-*     the environment of the calling process.
-*
-*  INPUTS
-*     lList **lpp              - VA_Type list 
-*     const char *variable_str - source string 
-*     int check_environment    - boolean
-*
-*  RESULT
-*     int - error state
-*         0 - OK
-*        >0 - Error
-*
-*  NOTES
-*     MT-NOTE: var_list_parse_from_string() is MT safe
-*******************************************************************************/
-int var_list_parse_from_string(lList **lpp, const char *variable_str,
-                               int check_environment)
-{
-   char *variable;
-   char *val_str;
-   int var_len;
-   char **str_str;
-   char **pstr;
-   lListElem *ep;
-   char *va_string;
-
-   DENTER(TOP_LAYER, "var_list_parse_from_string");
-
-   if (!lpp) {
-      DEXIT;
-      return 1;
-   }
-
-   va_string = sge_strdup(NULL, variable_str);
-   if (!va_string) {
-      *lpp = NULL;
-      DEXIT;
-      return 2;
-   }
-   str_str = string_list(va_string, ",", NULL);
-   if (!str_str || !*str_str) {
-      *lpp = NULL;
-      FREE(va_string);
-      DEXIT;
-      return 3;
-   }
-
-   if (!*lpp) {
-      *lpp = lCreateList("variable list", VA_Type);
-      if (!*lpp) {
-         FREE(va_string);
-         FREE(str_str);
-         DEXIT;
-         return 4;
-      }
-   }
-
-   for (pstr = str_str; *pstr; pstr++) {
-      struct saved_vars_s *context;
-      ep = lCreateElem(VA_Type);
-      /* SGE_ASSERT(ep); */
-      lAppendElem(*lpp, ep);
-      
-      context = NULL;
-      variable = sge_strtok_r(*pstr, "=", &context);
-      SGE_ASSERT((variable));
-      var_len=strlen(variable);
-      lSetString(ep, VA_variable, variable);
-      val_str=*pstr;
-
-      /* The character at the end of the first token must be either '=' or '\0'.
-       * If it's a '=' then we treat the following string as the value */
-      if (val_str[var_len] == '=') {
-          lSetString(ep, VA_value, &val_str[var_len+1]);
-      }
-      /* If it's a '\0' and check_environment is set, then we get the value from
-       * the environment variable value. */
-      else if(check_environment) {
-         lSetString(ep, VA_value, sge_getenv(variable));
-      }
-      /* If it's a '\0' and check_environment is not set, then we set the value
-       * to NULL. */
-      else {
-         lSetString(ep, VA_value, NULL);
-      }
-      sge_free_saved_vars(context);
-   }
-
-   FREE(va_string);
-   FREE(str_str);
    DEXIT;
    return 0;
 }

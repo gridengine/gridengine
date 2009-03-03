@@ -117,6 +117,8 @@ struct rusage {
 #elif defined(INTERIX)
 #  include <termios.h>
 #  include <sys/ioctl.h>
+#elif defined(FREEBSD)
+#  include <termios.h>
 #else
 #  include <termio.h>
 #endif
@@ -129,6 +131,10 @@ struct rusage {
 #if defined(SOLARIS) || defined(ALPHA)
 /* ALPHA4 only has wait3() prototype if _XOPEN_SOURCE_EXTENDED is defined */
 pid_t wait3(int *, int, struct rusage *);
+#endif
+
+#if defined(FREEBSD)
+#   define sigignore(x) signal(x,SIG_IGN)
 #endif
 
 #define NO_CKPT          0x000
@@ -280,6 +286,8 @@ static int map_signal(int sig)
    if (sig != ret) {
       shepherd_trace("mapped signal %s to signal %s", 
                      sge_sys_sig2str(sig), sge_sys_sig2str(ret));
+   } else {
+      shepherd_trace("no need to map signal %s", sge_sys_sig2str(sig));
    }
    return ret;
 FCLOSE_ERROR:
@@ -601,13 +609,14 @@ int main(int argc, char **argv)
    dstring ds;
    char buffer[256];
 
+   sge_mt_init();
+
    if (argc >= 2) {
       if ( strcmp(argv[1],"-help") == 0) {
          show_shepherd_version();
          return 1;
       }
    }
-   sge_mt_init();
 #if defined(INTERIX) && defined(SECURE)
    sge_init_shared_ssl_lib();
 #endif
@@ -1493,7 +1502,8 @@ static void forward_signal_to_job(int pid, int timeout,
 
    /* store signal if we got one */
    if (received_signal) {
-      shepherd_trace("forward_signal_to_job(): mapping signal %d", received_signal);
+      shepherd_trace("forward_signal_to_job(): mapping signal %d %s",
+         received_signal, sge_sys_sig2str(received_signal));
       sig = map_signal(received_signal);
 
       received_signal = 0;
@@ -2503,7 +2513,7 @@ static int start_async_command(const char *descr, char *cmd)
          exit(1);
       }   
 
-      sge_close_all_fds(NULL);
+      sge_close_all_fds(NULL, 0);
 
       /* we have to provide the async command with valid io file handles
        * else it might fail 

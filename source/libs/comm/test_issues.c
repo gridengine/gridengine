@@ -297,10 +297,16 @@ extern int main(int argc, char** argv)
   } else {
      handle=cl_com_create_handle(NULL, framework, CL_CM_CT_MESSAGE, CL_FALSE, com_port, CL_TCP_DEFAULT, "client", 0, 1, 0 );
   }
+
+#define TEST_ISSUES_READ_WRITE_TIMEOUT 3
   if (handle == NULL) {
      printf("could not get handle\n");
      sge_prof_cleanup();
-     exit(-1);
+     exit(101);
+  } else {
+     /* This is a "hack" to set the read/write timeout to only 4 seconds */
+     handle->read_timeout = TEST_ISSUES_READ_WRITE_TIMEOUT;
+     handle->write_timeout = TEST_ISSUES_READ_WRITE_TIMEOUT;
   }
 
   cl_com_get_service_port(handle,&i), 
@@ -381,11 +387,18 @@ extern int main(int argc, char** argv)
      cl_byte_t* iz1400_pointer = (cl_byte_t *)iz1400_data;
      char test_data[5] = "test";
      cl_byte_t* test_pointer = (cl_byte_t *)test_data;
+     int timeout_reached_count = 0;
 
      printf("\ntesting issue #1389 ...\n");
 
-
-     while (runtime < 45 && do_shutdown == 0 && main_return == 0) {
+     
+     while (timeout_reached_count < 5 && do_shutdown == 0 && main_return == 0) {
+        if (data_size > 1024*1024*1024) {
+           printf("skip malloc() more than 1GB\n");
+           printf("issue #1389 failed\n");
+           main_return = 1;
+           break;
+        }
         data = malloc(data_size * sizeof(char));
         memset(data, 0, data_size * sizeof(char));
         if (data == NULL) {
@@ -424,10 +437,16 @@ extern int main(int argc, char** argv)
         gettimeofday(&now,NULL);
         runtime = now.tv_sec - start.tv_sec;
         printf("send/receive took %d seconds\n", runtime );
-        if (data_size < 30*1024*1024) {
-           data_size = data_size * 2;
+        /* adding 2 seconds to be on the save side */
+        if (runtime < TEST_ISSUES_READ_WRITE_TIMEOUT + 2) {
+           if (data_size < 64*1024*1024) {
+              data_size = data_size * 2;
+           } else {
+              data_size = data_size + 128*1024*1024;
+           }
         } else {
-           data_size = data_size + 16*1024*1024;
+           timeout_reached_count++;
+           printf("test timeout reached %d times!\n", timeout_reached_count);
         }
      }
 
@@ -439,6 +458,11 @@ extern int main(int argc, char** argv)
                                 &iz1400_pointer, 7,
                                 NULL, 0,0, CL_TRUE, CL_TRUE);
      }
+
+
+     /* to be sure that server waits */
+     printf("waiting 10 seconds for server to set max. connected client count ...\n");
+     sleep(10);
 
      printf("creating new connections ...\n");
 
@@ -488,4 +512,5 @@ extern int main(int argc, char** argv)
   printf("main done\n");
   return main_return;
 }
+
 

@@ -128,7 +128,7 @@ sge_mirror_process_shutdown(sge_evc_class_t *evc,
                             lListElem *event,
                             void *clientdata);
 static sge_callback_result
-sge_mirror_process_qmaster_goes_down(sge_evc_class_t *evc,
+sge_mirror_process_mark4registration(sge_evc_class_t *evc,
                                      object_description *object_base,
                                      sge_object_type type,
                                      sge_event_action action,
@@ -178,7 +178,7 @@ static const mirror_description dev_mirror_base[SGE_TYPE_ALL] = {
    { NULL, schedd_conf_update_master_list,         NULL, NULL },
    { NULL, NULL,                                   NULL, NULL },
    { NULL, sge_mirror_process_shutdown,            NULL, NULL },
-   { NULL, sge_mirror_process_qmaster_goes_down,   NULL, NULL },
+   { NULL, sge_mirror_process_mark4registration,   NULL, NULL },
    { NULL, host_update_master_list,                NULL, NULL },
    { NULL, generic_update_master_list,             NULL, NULL },
    { NULL, generic_update_master_list,             NULL, NULL },
@@ -313,7 +313,7 @@ sge_mirror_initialize(sge_evc_class_t *evc, ev_registration_id id, const char *n
 
    /* subscribe some events with default handling */
    sge_mirror_subscribe(evc, SGE_TYPE_SHUTDOWN, NULL, NULL, NULL, NULL, NULL);
-   sge_mirror_subscribe(evc, SGE_TYPE_QMASTER_GOES_DOWN, NULL, NULL, NULL, NULL, NULL);
+   sge_mirror_subscribe(evc, SGE_TYPE_MARK_4_REGISTRATION, NULL, NULL, NULL, NULL, NULL);
 
    /* register with qmaster */
    evc->ec_commit(evc, NULL);
@@ -409,11 +409,9 @@ sge_mirror_error sge_mirror_subscribe(sge_evc_class_t *evc,
 
    if (type == SGE_TYPE_ALL) {
       sge_object_type i;
-
+      
       for (i = SGE_TYPE_ADMINHOST; i < SGE_TYPE_ALL; i++) {
-         if ((ret = _sge_mirror_subscribe(evc, i, callback_before, callback_after, clientdata, NULL, NULL)) != SGE_EM_OK) {
-            break;
-         }
+         _sge_mirror_subscribe(evc, i, callback_before, callback_after, clientdata, NULL, NULL);
       }
    } else {
       ret = _sge_mirror_subscribe(evc, type, callback_before, callback_after, clientdata, where, what);
@@ -664,10 +662,12 @@ _sge_mirror_subscribe(sge_evc_class_t *evc,
             evc->ec_mod_subscription_where(evc, sgeE_SHUTDOWN, what_el, where_el);
          }
          break;
-      case SGE_TYPE_QMASTER_GOES_DOWN:
+      case SGE_TYPE_MARK_4_REGISTRATION:
          evc->ec_subscribe_flush(evc, sgeE_QMASTER_GOES_DOWN, 0);
+         evc->ec_subscribe_flush(evc, sgeE_ACK_TIMEOUT, 0);
          if (what_el && where_el) {
             evc->ec_mod_subscription_where(evc, sgeE_QMASTER_GOES_DOWN, what_el, where_el);
+            evc->ec_mod_subscription_where(evc, sgeE_ACK_TIMEOUT, what_el, where_el);
          }
          break;
       case SGE_TYPE_SUBMITHOST:
@@ -807,6 +807,7 @@ _sge_mirror_subscribe(sge_evc_class_t *evc,
 *******************************************************************************/
 sge_mirror_error sge_mirror_unsubscribe(sge_evc_class_t *evc, sge_object_type type)
 {
+   sge_mirror_error ret = SGE_EM_OK;
    DENTER(TOP_LAYER, "sge_mirror_unsubscribe");
 
    if (type < 0 || type > SGE_TYPE_ALL) {
@@ -818,15 +819,15 @@ sge_mirror_error sge_mirror_unsubscribe(sge_evc_class_t *evc, sge_object_type ty
       sge_object_type i;
 
       for (i = SGE_TYPE_ADMINHOST; i < SGE_TYPE_ALL; i++) {
-         if (i != SGE_TYPE_SHUTDOWN && i != SGE_TYPE_QMASTER_GOES_DOWN) {
+         if (i != SGE_TYPE_SHUTDOWN && i != SGE_TYPE_MARK_4_REGISTRATION) {
             _sge_mirror_unsubscribe(evc, i);
          }
       }
    } else {
-      _sge_mirror_unsubscribe(evc, type);
+      ret = _sge_mirror_unsubscribe(evc, type);
    }
 
-   DRETURN(SGE_EM_OK);
+   DRETURN(ret);
 }
 
 static sge_mirror_error _sge_mirror_unsubscribe(sge_evc_class_t *evc, sge_object_type type)
@@ -954,7 +955,7 @@ static sge_mirror_error _sge_mirror_unsubscribe(sge_evc_class_t *evc, sge_object
       case SGE_TYPE_SHUTDOWN:
          ERROR((SGE_EVENT, MSG_EVENT_HAVETOHANDLEEVENTS));
          break;
-      case SGE_TYPE_QMASTER_GOES_DOWN:
+      case SGE_TYPE_MARK_4_REGISTRATION:
          ERROR((SGE_EVENT, MSG_EVENT_HAVETOHANDLEEVENTS));
          break;
       case SGE_TYPE_SUBMITHOST:
@@ -1349,7 +1350,11 @@ sge_mirror_process_event_list_(sge_evc_class_t *evc, lList *event_list)
             break;
 
          case sgeE_QMASTER_GOES_DOWN:
-            ret = sge_mirror_process_event(evc, mirror_base, object_base, SGE_TYPE_QMASTER_GOES_DOWN, SGE_EMA_TRIGGER, event);
+            ret = sge_mirror_process_event(evc, mirror_base, object_base, SGE_TYPE_MARK_4_REGISTRATION, SGE_EMA_TRIGGER, event);
+            break;
+
+         case sgeE_ACK_TIMEOUT:
+            ret = sge_mirror_process_event(evc, mirror_base, object_base, SGE_TYPE_MARK_4_REGISTRATION, SGE_EMA_TRIGGER, event);
             break;
          
          case sgeE_CQUEUE_LIST:
@@ -1597,15 +1602,15 @@ sge_mirror_process_shutdown(sge_evc_class_t *evc, object_description *object_bas
 }
 
 static sge_callback_result
-sge_mirror_process_qmaster_goes_down(sge_evc_class_t *evc, object_description *object_base,
+sge_mirror_process_mark4registration(sge_evc_class_t *evc, object_description *object_base,
                                      sge_object_type type,
                                      sge_event_action action,
                                      lListElem *event,
                                      void *clientdata)
 {
-   DENTER(TOP_LAYER, "sge_mirror_process_qmaster_goes_down");
+   DENTER(TOP_LAYER, "sge_mirror_process_mark4registration");
 
-   DPRINTF(("qmaster goes down\n"));
+   DPRINTF(("mark4registration - this happens for ACK TIMEOUT or QMASTER GOES DOWN event\n"));
 
    evc->ec_mark4registration(evc);
 

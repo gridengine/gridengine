@@ -7,6 +7,14 @@
 
       <property file="build_private.properties"/>
       <property file="build.properties"/>
+
+      <property name="javac.source" value="${default.sge.javac.source}"/>
+      <property name="javac.target" value="${default.sge.javac.target}"/>
+
+      <property environment="env"/>
+      <condition property="skip.gui.inst" value="${env.BUILD_NO_GUI_INSTALLER}">
+            <isset property="env.BUILD_NO_GUI_INSTALLER"/>
+      </condition>
       
       <macrodef name="myant">
          <attribute name="target" default=""/>
@@ -29,16 +37,15 @@
       </macrodef>
    </target>
     
-   <target name="all" depends="drmaa, juti, jgdi"/>
+   <target name="all" depends="drmaa, juti, jgdi, gui_inst"/>
    <target name="depend" depends="init"/>
-   <target name="clean" depends="drmaa.clean, juti.clean, jgdi.clean"/>
-   <target name="javadoc" depends="drmaa.javadoc, juti.javadoc, jgdi.javadoc"/>
-   <target name="test" depends="drmaa.test, juti.test, jgdi.test"/>
+   <target name="clean" depends="drmaa.clean, juti.clean, jgdi.clean, gui_inst.clean"/>
+   <target name="javadoc" depends="drmaa.javadoc, juti.javadoc, jgdi.javadoc, gui_inst.javadoc"/>
+   <target name="test" depends="drmaa.test, juti.test, jgdi.test, gui_inst.test"/>
     
    <!-- DRMAA -->
    <target name="drmaa" depends="init">
       <myant dir="libs/jdrmaa"/>
-      <!-- <myant dir="classes"/> -->
    </target>
     
    <target name="drmaa.clean" depends="init">
@@ -87,4 +94,20 @@
       <myant dir="libs/jgdi" target="test"/>
    </target>
     
+   <!-- GUI installer -->
+   <target name="gui_inst" depends="init" unless="skip.gui.inst" description="Builds GUI Installer">
+      <echo message="Building GUI installer..."/>
+      <ant antfile="build.xml" target="do.jar" dir="clients/gui-installer/" inheritall="false"/>
+   </target>
+   <target name="gui_inst.clean" unless="skip.gui.inst" depends="init">
+      <ant antfile="build.xml" target="clean" dir="clients/gui-installer/" inheritall="false"/>
+   </target>
+
+   <target name="gui_inst.javadoc" unless="skip.gui.inst" depends="init">
+      <ant antfile="build.xml" target="javadoc" dir="clients/gui-installer/" inheritall="false"/>
+   </target>
+
+   <target name="gui_inst.test" unless="skip.gui.inst" depends="init">
+      <ant antfile="build.xml" target="test" dir="clients/gui-installer/" inheritall="false"/>
+   </target>
 </project>

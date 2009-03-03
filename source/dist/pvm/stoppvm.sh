@@ -77,7 +77,7 @@ if [ $use_kill = true ]; then
 else
    if [ ! -x $SGE_ROOT/pvm/bin/$ARC/stop_pvm ]; then
       echo "$me: can't execute $SGE_ROOT/pvm/bin/$ARC/stop_pvm" >&2
-      exit 1
+      exit 100
    fi
    $SGE_ROOT/pvm/bin/$ARC/stop_pvm
 fi

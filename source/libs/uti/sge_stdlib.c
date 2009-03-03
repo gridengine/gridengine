@@ -278,7 +278,7 @@ int sge_setenv(const char *name, const char *value)
 }
 
 
-/****** sge_env/sge_unsetenv() *************************************************
+/****** uti/stdlib/sge_unsetenv() *************************************************
 *  NAME
 *     sge_unsetenv() -- unset environment variable
 *

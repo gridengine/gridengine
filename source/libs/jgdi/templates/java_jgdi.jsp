@@ -42,20 +42,20 @@
   class JGDIGenerator extends com.sun.grid.cull.AbstractGDIGenerator {
      
      public JGDIGenerator(com.sun.grid.cull.CullObject cullObj) {
-        
-        super(cullObj.getIdlName(),  jh.getClassName(cullObj), cullObj);
+        super(cullObj.getIdlName(), jh.getClassName(cullObj), cullObj);
         addPrimaryKeys(cullObj, jh);
      }
      
      public void genImport() {
         if(!(cullObject.getType() == cullObject.TYPE_PRIMITIVE || 
-             cullObject.getType() == cullObject.TYPE_MAPPED ) ) {
-%>        
-import com.sun.grid.jgdi.configuration.<%=classname%>;<%        
+             cullObject.getType() == cullObject.TYPE_MAPPED)) {
+%>import com.sun.grid.jgdi.configuration.<%=classname%>;
+<%        
         }
      }
 
-public void genUpdateMethod() { %>
+public void genUpdateMethod() {
+%>
    /**
     *   Update a <code><%=name%></code> object.
     *   @param obj   the <code><%=name%></code> object with the new values
@@ -71,7 +71,7 @@ public void genUpdateMethod() { %>
     */
    public void update<%=name%>WithAnswer(<%=classname%> obj, List<JGDIAnswer> answers) throws JGDIException;
 <%        
-    } // end of getUpdateMethod
+    } // end of genUpdateMethod
     
     public void genGetMethod() {
 %>
@@ -89,10 +89,10 @@ public void genUpdateMethod() { %>
     *   @throws JGDIException on any error on the GDI layer
     */
    public <%=classname%> get<%=name%>WithAnswer(List<JGDIAnswer> answers) throws JGDIException;
-<%   
-    } // end of genGetMethod
+<%
+} // end of genGetMethod
     
-    public void genGetListMethod() {
+public void genGetListMethod() {
 %>
    /**
     *   Get the list of all defined <code><%=name%></code> objects.
@@ -108,9 +108,9 @@ public void genUpdateMethod() { %>
     */
    public List< <%=classname%> > get<%=name%>ListWithAnswer(List<JGDIAnswer> answers) throws JGDIException;
 <%
-    } // end of genGetListMethod
+} // end of genGetListMethod
     
-    public void genAddMethod() {
+public void genAddMethod() {
 %>    
    
    /**
@@ -147,11 +147,11 @@ public void genUpdateMethod() { %>
     */
    public void add<%=name%>WithAnswer(String name, List<JGDIAnswer> answers) throws JGDIException;
 
-<%    
-       } //end if classname
-    } // end of genAddMethod
-    
-    public void genDeleteMethod() {
+<%
+     } // end if name.equals()
+   } // end of genAddMethod
+
+public void genDeleteMethod() {
 %>
    /**
     *   Delete a <code><%=name%></code> object.
@@ -169,9 +169,9 @@ public void genUpdateMethod() { %>
    public void delete<%=name%>WithAnswer(<%=classname%> obj, List<JGDIAnswer> answers) throws JGDIException;
 
 <%
-    } // end of genDeleteMethod
-    
-    public void genDeleteByPrimaryKeyMethod() {
+} // end of genDeleteMethod
+
+public void genDeleteByPrimaryKeyMethod() {
 %>
    /**
     *   Delete a <code><%=name%></code> object by its primary key
@@ -184,7 +184,7 @@ public void genUpdateMethod() { %>
 %>    *  @throws JGDIException on any error on the GDI layer
     */
    public void delete<%=name%>(<%
-      boolean first = true;  
+      boolean first = true;
       for (java.util.Map.Entry<String, String> entry: primaryKeys.entrySet()) {
           String pkName = entry.getKey();
           String pkType = entry.getValue();
@@ -248,10 +248,10 @@ public void genUpdateMethod() { %>
     , boolean forced, UserFilter userFilter
 <% }%>    , List<JGDIAnswer> answers) throws JGDIException;
 <%
-    } // end of genDeleteByPrimaryKeyMethod
+} // end of genDeleteByPrimaryKeyMethod
 
-    public void genGetByPrimaryKeyMethod() {
-%> 
+public void genGetByPrimaryKeyMethod() {
+%>
    /**
     *  Get a <%=name%> by its primary key
     *
@@ -309,21 +309,19 @@ public void genUpdateMethod() { %>
     } // end of for
     %>, List<JGDIAnswer> answers) throws JGDIException;
 
-<%     
+<%
      } // end of genGetByPrimaryKeyMethod
-  } // end of class JGDIGenerator
-  
+} // end of class JGDIGenerator
   
   // --------------------------------------------------------------------------
   // Build all generator instances
   // --------------------------------------------------------------------------
-  com.sun.grid.cull.CullObject cullObj = null;
   java.util.ArrayList<JGDIGenerator> generators = new java.util.ArrayList<JGDIGenerator>();
   for (String name : cullDef.getObjectNames()) {
-      cullObj = cullDef.getCullObject(name);
-      logger.fine("JGDIGenerator->handle " + cullObj.getName() + "(" + cullObj.getOperationString() +")");
-      generators.add(new JGDIGenerator(cullObj));
-  } // end of for
+    com.sun.grid.cull.CullObject cullObj = cullDef.getCullObject(name);
+    logger.fine("JGDIGenerator->handle " + cullObj.getName() + "(" + cullObj.getOperationString() +")");
+    generators.add(new JGDIGenerator(cullObj));
+  }
 %>
 
 package com.sun.grid.jgdi;
@@ -336,8 +334,9 @@ import com.sun.grid.jgdi.monitoring.filter.UserFilter;
 <% // Import all cull object names;
    for (JGDIGenerator gen : generators) {
      gen.genImport();
-   }  
-%>    
+   }
+%>
+
 /**
  *  <p>The class <code>JGDI</code> is the central interface for communication with
  *  the SGE master.</p>

@@ -59,6 +59,7 @@
 #include "sge_answer.h"
 #include "execd.h"
 #include "sgeobj/sge_object.h"
+#include "sgeobj/sge_job.h"
 
 #include "msg_common.h"
 #include "msg_execd.h"
@@ -257,7 +258,7 @@ int main(int argc, char **argv)
                                                (char *)ctx->get_master(ctx, true),
                                                (char*)prognames[QMASTER], 1, &status);
       if (ret_val != CL_RETVAL_OK) {
-         ERROR((SGE_EVENT, cl_get_error_text(CL_RETVAL_CONNECT_ERROR)));
+         ERROR((SGE_EVENT, cl_get_error_text(ret_val)));
          ERROR((SGE_EVENT, MSG_CONF_NOCONFBG));
       }
       cl_com_free_sirm_message(&status);
@@ -265,7 +266,7 @@ int main(int argc, char **argv)
    
    /* finalize daeamonize */
    if (!getenv("SGE_ND")) {
-      daemonize_execd(ctx);
+      sge_daemonize_finalize(ctx);
    }
 
    /* daemonizes if qmaster is unreachable */   
@@ -284,11 +285,12 @@ int main(int argc, char **argv)
    }
    
    /* here we have to wait for qmaster registration */
-   while (sge_execd_register_at_qmaster(ctx, true) != 0) {
-      if (sge_get_com_error_flag(EXECD, SGE_COM_ACCESS_DENIED, false)) {
-         execd_exit_state = SGE_COM_ACCESS_DENIED;
-         break;
-      } else if (sge_get_com_error_flag(EXECD, SGE_COM_ENDPOINT_NOT_UNIQUE, false)) {
+   while (sge_execd_register_at_qmaster(ctx, false) != 0) {
+      if (sge_get_com_error_flag(EXECD, SGE_COM_ACCESS_DENIED, true)) {
+         /* This is no error */
+         DPRINTF(("*****  got SGE_COM_ACCESS_DENIED from qmaster  *****\n"));
+      }
+      if (sge_get_com_error_flag(EXECD, SGE_COM_ENDPOINT_NOT_UNIQUE, false)) {
          execd_exit_state = SGE_COM_ENDPOINT_NOT_UNIQUE;
          break;
       }
@@ -341,7 +343,7 @@ int main(int argc, char **argv)
                           job_initialize_job);
    
    /* clean up jobs hanging around (look in active_dir) */
-   clean_up_old_jobs(1);
+   clean_up_old_jobs(ctx, 1);
    sge_send_all_reports(ctx, 0, NUM_REP_REPORT_JOB, execd_report_sources);
 
    sge_sig_handler_in_main_loop = 1;
@@ -444,47 +446,68 @@ static void execd_exit_func(void **ctx_ref, int i)
 int sge_execd_register_at_qmaster(sge_gdi_ctx_class_t *ctx, bool is_restart) {
    int return_value = 0;
    static int sge_last_register_error_flag = 0;
-   lList *hlp = NULL, *alp = NULL;
-   lListElem *aep = NULL;
-   lListElem *hep = NULL;
+   lList *alp = NULL;
+
+   /* 
+    * If it is a reconnect (is_restart == true) the act_qmaster file must be
+    * re-read in order to update ctx qmaster cache when master migrates. 
+    */
    const char *master_host = ctx->get_master(ctx, is_restart);
    
    DENTER(TOP_LAYER, "sge_execd_register_at_qmaster");
 
-   hlp = lCreateList("exechost starting", EH_Type);
-   hep = lCreateElem(EH_Type);
-   lSetUlong(hep, EH_featureset_id, feature_get_active_featureset_id());
-   lAppendElem(hlp, hep);
+   /* We will not try to make a gdi request when qmaster is not alive. The
+    * gdi will return with timeout after one minute. If qmaster is not alive
+    * we will not try a gdi request!
+    */
+   if (master_host != NULL && ctx->is_alive(ctx) == CL_RETVAL_OK) {
+      lList *hlp = lCreateList("exechost starting", EH_Type);
+      lListElem *hep = lCreateElem(EH_Type);
+      lSetUlong(hep, EH_featureset_id, feature_get_active_featureset_id());
+      lAppendElem(hlp, hep);
 
-   /* register at qmaster */
-   DPRINTF(("*****  Register at qmaster   *****\n"));
-   if (!is_restart) {
-      /*
-       * This is a regular startup.
-       */
-      alp = ctx->gdi(ctx, SGE_EXECHOST_LIST, SGE_GDI_ADD, &hlp, NULL, NULL);
+      /* register at qmaster */
+      DPRINTF(("*****  Register at qmaster   *****\n"));
+      if (!is_restart) {
+         /*
+          * This is a regular startup.
+          */
+         alp = ctx->gdi(ctx, SGE_EXECHOST_LIST, SGE_GDI_ADD, &hlp, NULL, NULL);
+      } else {
+         /*
+          * Indicate this is a restart to qmaster.
+          * This is used for the initial_state of queue_configuration implementation.
+          */
+         alp = ctx->gdi(ctx, SGE_EXECHOST_LIST, SGE_GDI_ADD | SGE_GDI_EXECD_RESTART,
+                        &hlp, NULL, NULL);
+      }
+      lFreeList(&hlp);
    } else {
-      /*
-       * Indicate this is a restart to qmaster.
-       */
-      alp = ctx->gdi(ctx, SGE_EXECHOST_LIST, SGE_GDI_ADD | SGE_GDI_EXECD_RESTART,
-		               &hlp, NULL, NULL);
+      DPRINTF(("*****  Register at qmaster - qmaster not alive!  *****\n"));
    }
-   aep = lFirst(alp);
-   if (!alp || (lGetUlong(aep, AN_status) != STATUS_OK)) {
+
+   if (alp == NULL) {
       if (sge_last_register_error_flag == 0) {
-         WARNING((SGE_EVENT, MSG_COM_CANTREGISTER_S, 
-                  aep?lGetString(aep, AN_text):MSG_COM_ERROR));
+         WARNING((SGE_EVENT, MSG_COM_CANTREGISTER_SS, master_host?master_host:"", MSG_COM_ERROR));
          sge_last_register_error_flag = 1;
       }
       return_value = 1;
    } else {
-      sge_last_register_error_flag = 0;
-      INFO((SGE_EVENT, MSG_EXECD_REGISTERED_AT_QMASTER_S, master_host));
+      lListElem *aep = lFirst(alp);
+      if (lGetUlong(aep, AN_status) != STATUS_OK) {
+         if (sge_last_register_error_flag == 0) {
+            WARNING((SGE_EVENT, MSG_COM_CANTREGISTER_SS, master_host?master_host:"", lGetString(aep, AN_text)));
+            sge_last_register_error_flag = 1;
+         }
+         return_value = 1;
+      }
    }
-
+ 
+   if (return_value == 0) {
+      sge_last_register_error_flag = 0;
+      INFO((SGE_EVENT, MSG_EXECD_REGISTERED_AT_QMASTER_S, master_host?master_host:""));
+   }
    lFreeList(&alp);
-   lFreeList(&hlp);
    DRETURN(return_value);
 }
 
@@ -619,3 +642,60 @@ static lList *sge_parse_execd(lList **ppcmdline, lList **ppreflist,
    return alp;
 }
 
+/* JG: TODO: we have this searching code in many places!! */
+/****** execd/execd_get_job_ja_task() ******************************************
+*  NAME
+*     execd_get_job_ja_task() -- search job and ja_task by id
+*
+*  SYNOPSIS
+*     bool
+*     execd_get_job_ja_task(u_long32 job_id, u_long32 ja_task_id,
+*                           lListElem **job, lListElem **ja_task) 
+*
+*  FUNCTION
+*     Searches the execd master lists for job and ja_task
+*     defined by job_id and ja_task_id.
+*
+*  INPUTS
+*     u_long32 job_id     - job id
+*     u_long32 ja_task_id - ja_task id
+*     lListElem **job     - returns job or NULL if not found
+*     lListElem **ja_task - returns ja_task or NULL if not found
+*
+*  RESULT
+*     bool - true if both job and ja_task are found, else false
+*
+*  NOTES
+*     MT-NOTE: execd_get_job_ja_task() is MT safe 
+*******************************************************************************/
+bool execd_get_job_ja_task(u_long32 job_id, u_long32 ja_task_id, lListElem **job, lListElem **ja_task)
+{
+   const void *iterator = NULL;
+
+   DENTER(TOP_LAYER, "execd_get_job_ja_task");
+
+   *job = lGetElemUlongFirst(*(object_type_get_master_list(SGE_TYPE_JOB)),
+                            JB_job_number, job_id, &iterator);
+   while (*job != NULL) {
+      *ja_task = job_search_task(*job, NULL, ja_task_id);
+      if (*ja_task != NULL) {
+         DRETURN(true);
+      }
+
+      /* in execd, we have exactly one ja_task per job,
+       * therefore we can have multiple jobs with the same job_id
+       */
+      *job = lGetElemUlongNext(*(object_type_get_master_list(SGE_TYPE_JOB)),
+                               JB_job_number, job_id, &iterator);
+   }
+   
+   if (*job == NULL) {
+      ERROR((SGE_EVENT, MSG_JOB_TASKWITHOUTJOB_U, sge_u32c(job_id))); 
+   } else if (*ja_task == NULL) { 
+      ERROR((SGE_EVENT, MSG_JOB_TASKNOTASKINJOB_UU, sge_u32c(job_id), sge_u32c(ja_task_id)));
+   }
+
+   *job = NULL;
+   *ja_task = NULL;
+   DRETURN(false);
+}

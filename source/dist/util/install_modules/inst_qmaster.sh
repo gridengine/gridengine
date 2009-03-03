@@ -129,7 +129,7 @@ GetCell()
                   ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL_VAL/common/cluster_name                  
                elif [ $sel_ret -ne 0 ]; then
                   $INFOTEXT "Deleting directory \"%s\" now!" $SGE_ROOT/$SGE_CELL_VAL
-                  ExecuteAsAdmin rm -rf $SGE_ROOT/$SGE_CELL_VAL
+                  Removedir $SGE_ROOT/$SGE_CELL_VAL
                fi
                if [ $sel_ret = 0 ]; then
                   Overwrite="true"
@@ -328,7 +328,7 @@ SetPermissions()
 
 
 #SetSpoolingOptionsBerkeleyDB()
-# $1 - new default spool_dir or BDBD server
+# $1 - new default spool_dir or BDB server
 SetSpoolingOptionsBerkeleyDB()
 {
    SPOOLING_METHOD=berkeleydb
@@ -418,8 +418,7 @@ SetSpoolingOptionsBerkeleyDB()
                fi
  
                if [ $ret = 0 ]; then
-                     RM="rm -r"
-                     ExecuteAsAdmin $RM $SPOOLING_DIR
+                     Removedir $SPOOLING_DIR
                      if [ -d $SPOOLING_DIR ]; then
                         $INFOTEXT "You are not the owner of this directory. You can't delete it!"
                      else
@@ -464,7 +463,7 @@ SetSpoolingOptionsBerkeleyDB()
          if [ "$AUTO" = "true" ]; then
                if [ $SPOOLING_SERVER = "none" ]; then
                   $ECHO
-                  ExecuteAsAdmin $MKDIR $SPOOLING_DIR
+                  Makedir $SPOOLING_DIR
                   SPOOLING_ARGS="$SPOOLING_DIR"
                else
                   $INFOTEXT -log "We found a running berkeley db server on this host!"
@@ -521,7 +520,7 @@ SetSpoolingOptionsBerkeleyDB()
 
    if [ "$SPOOLING_SERVER" = "none" ]; then
       $ECHO
-      ExecuteAsAdmin $MKDIR $SPOOLING_DIR
+      Makedir $SPOOLING_DIR
       SPOOLING_ARGS="$SPOOLING_DIR"
    else
       SPOOLING_ARGS="$SPOOLING_SERVER:`basename $SPOOLING_DIR`"
@@ -535,9 +534,14 @@ SetSpoolingOptionsClassic()
    SPOOLING_ARGS="$SGE_ROOT_VAL/$COMMONDIR;$QMDIR"
 }
 
-# $1 - suggested spooling params form the backup
+# $1 - spooling method
+# $2 - suggested spooling params from the backup
 SetSpoolingOptionsDynamic()
 {
+   suggested_method=$1
+   if [ -z "$suggested_method" ]; then
+      suggested_method=berkeleydb
+   fi
    if [ "$AUTO" = "true" ]; then
       if [ "$SPOOLING_METHOD" != "berkeleydb" -a "$SPOOLING_METHOD" != "classic" ]; then
          SPOOLING_METHOD="berkeleydb"
@@ -549,8 +553,8 @@ SetSpoolingOptionsDynamic()
          $INFOTEXT -n "Your SGE binaries are compiled to link the spooling libraries\n" \
                       "during runtime (dynamically). So you can choose between Berkeley DB \n" \
                       "spooling and Classic spooling method."
-         $INFOTEXT -n "\nPlease choose a spooling method (berkeleydb|classic) [berkeleydb] >> "
-         SPOOLING_METHOD=`Enter berkeleydb`
+         $INFOTEXT -n "\nPlease choose a spooling method (berkeleydb|classic) [%s] >> " "$suggested_method"
+         SPOOLING_METHOD=`Enter $suggested_method`
       fi
    fi
 
@@ -561,7 +565,7 @@ SetSpoolingOptionsDynamic()
          SetSpoolingOptionsClassic
          ;;
       berkeleydb)
-         SetSpoolingOptionsBerkeleyDB $1
+         SetSpoolingOptionsBerkeleyDB $2
          ;;
       *)
          $INFOTEXT "\nUnknown spooling method. Exit."
@@ -866,6 +870,7 @@ PrintConf()
    $ECHO "auto_user_delete_time  86400"
    $ECHO "delegated_file_staging false"
    $ECHO "reprioritize           0"
+   $ECHO "jsv_url                none"
    if [ "$SGE_JVM_LIB_PATH" != "" ]; then
       $ECHO "libjvm_path            $SGE_JVM_LIB_PATH"
    fi
@@ -1171,12 +1176,14 @@ CreateSettingsFile()
 InitCA()
 {
 
-   if [ "$CSP" = true -o \( "$WINDOWS_SUPPORT" = "true" -a "$WIN_DOMAIN_ACCESS" = "true" \) -o "$SGE_JMX_SSL" = true ]; then
+   if [ "$CSP" = true -o \( "$WINDOWS_SUPPORT" = "true" -a "$WIN_DOMAIN_ACCESS" = "true" \) -o \( "$SGE_ENABLE_JMX" = true -a "$SGE_JMX_SSL" = true \) ]; then
       # Initialize CA, make directories and get DN info
       #
       SGE_CA_CMD=util/sgeCA/sge_ca
+      CATOP_TMP=`grep "CATOP=" util/sgeCA/sge_ca.cnf | awk -F= '{print $2}' 2>/dev/null`
+      eval CATOP_TMP=$CATOP_TMP
       if [ "$AUTO" = "true" ]; then
-         if [ "$CSP_RECREATE" = "true" ]; then
+         if [ "$CSP_RECREATE" != "false" -o ! -f $CATOP_TMP/certs/cert.pem ]; then
             $SGE_CA_CMD -init -days 365 -auto $FILE
             #if [ -f "$CSP_USERFILE" ]; then
             #   $SGE_CA_CMD -usercert $CSP_USERFILE
@@ -1195,6 +1202,7 @@ InitCA()
          OUTPUT=`$SGE_CA_CMD -sysks -ksout $SGE_JMX_SSL_KEYSTORE -kspwf /tmp/pwfile.$$ 2>&1`
          if [ $? != 0 ]; then
             $INFOTEXT "Error: Cannot create keystore $SGE_JMX_SSL_KEYSTORE\n$OUTPUT"
+	        $INFOTEXT -log "Error: Cannot create keystore $SGE_JMX_SSL_KEYSTORE\n$OUTPUT"
             ret=1
          else
             ret=0
@@ -1235,6 +1243,8 @@ StartQmaster()
    else
       $SGE_STARTUP_FILE -qmaster
    fi
+   # wait till qmaster.pid file is written
+   sleep 1
    CheckRunningDaemon sge_qmaster
    run=$?
    if [ $run -ne 0 ]; then
@@ -1374,13 +1384,25 @@ AddHosts()
       if [ -f $TMPL -o -f $TMPL2 ]; then
          $INFOTEXT "\nCan't delete template files >%s< or >%s<" "$TMPL" "$TMPL2"
       else
-         PrintHostGroup @allhosts > $TMPL
-         Execute $SGE_BIN/qconf -Ahgrp $TMPL
-         Execute $SGE_BIN/qconf -sq > $TMPL
-         Execute sed -e "/qname/s/template/all.q/" \
-                     -e "/hostlist/s/NONE/@allhosts/" \
-                     -e "/pe_list/s/NONE/make/" $TMPL > $TMPL2
-         Execute $SGE_BIN/qconf -Aq $TMPL2
+		   #Issue if old qmaster is running, new installation succeeds, but in fact the old qmaster is still running!
+		   #Reinstall can cause, that these already exist. So we skip them if they already exist.
+		   if [ x`$SGE_BIN/qconf -shgrpl 2>/dev/null | grep '^@allhosts$'` = x ]; then
+            PrintHostGroup @allhosts > $TMPL
+            Execute $SGE_BIN/qconf -Ahgrp $TMPL
+			else
+			   $INFOTEXT "Skipping creation of <allhosts> hostgroup as it already exists"
+				$INFOTEXT -log "Skipping creation of <allhosts> hostgroup as it already exists"
+			fi
+			if [ x`$SGE_BIN/qconf -sql 2>/dev/null | grep '^all.q$'` = x ]; then
+            Execute $SGE_BIN/qconf -sq > $TMPL
+            Execute sed -e "/qname/s/template/all.q/" \
+                        -e "/hostlist/s/NONE/@allhosts/" \
+                        -e "/pe_list/s/NONE/make/" $TMPL > $TMPL2
+            Execute $SGE_BIN/qconf -Aq $TMPL2
+			else
+			   $INFOTEXT "Skipping creation of <all.q> queue as it already exists"
+				$INFOTEXT -log "Skipping creation of <all.q> queue  as it already exists"
+			fi
          rm -f $TMPL $TMPL2        
       fi
 
@@ -1712,24 +1734,30 @@ EnterAndValidatePortNumber()
 {
    $INFOTEXT -u "\nGrid Engine TCP/IP service >%s<\n" $service_name
    $INFOTEXT -n "\n" 
-   $INFOTEXT -n "Please enter an unused port number >> "
+
+   port_ok="false"
 
    if [ "$1" = "sge_qmaster" ]; then
+      $INFOTEXT -n "Please enter an unused port number >> "
       INP=`Enter $SGE_QMASTER_PORT`
    else
-      INP=`Enter $SGE_EXECD_PORT`
-
-      if [ "$INP" = "$SGE_QMASTER_PORT" -a $service_name = "sge_execd" ]; then
-         $INFOTEXT "Please use any other port number!!!"
-         $INFOTEXT "This %s port number is used by sge_qmaster" $SGE_QMASTER_PORT
-         if [ $AUTO = "true" ]; then
-            $INFOTEXT -log "Please use any other port number!!!"
-            $INFOTEXT -log "This %s port number is used by sge_qmaster" $SGE_QMASTER_PORT
-            $INFOTEXT -log "Installation failed!!!"
-            MoveLog
-            exit 1
+      while [ $port_ok = "false" ]; do 
+         $INFOTEXT -n "Please enter an unused port number >> "
+         INP=`Enter $SGE_EXECD_PORT`
+         port_ok="true"
+         if [ "$INP" = "$SGE_QMASTER_PORT" -a $1 = "sge_execd" ]; then
+            $INFOTEXT "\nPlease use any other port number!"
+            $INFOTEXT "Port number %s is already used by sge_qmaster\n" $SGE_QMASTER_PORT
+            port_ok="false"
+            if [ $AUTO = "true" ]; then
+               $INFOTEXT -log "Please use any other port number!"
+               $INFOTEXT -log "Port number %s is already used by sge_qmaster" $SGE_QMASTER_PORT
+               $INFOTEXT -log "Installation failed!!!"
+               MoveLog
+               exit 1
+            fi
          fi
-      fi
+      done
    fi
 
    chars=`echo $INP | wc -c`
@@ -1882,7 +1910,7 @@ SetLibJvmPath() {
    
    if [ ! -f "$jvm_lib_path" ]; then
       jvm_lib_path=""
-      $INFOTEXT "\nWarning: Cannot start jvm thread: jvm library %s not found" "$jvm_lib_path"
+      $INFOTEXT -log "\nWarning: Cannot start jvm thread: jvm library %s not found" "$jvm_lib_path"
       return 1
    fi
    if [ "$JAVA_HOME" = "" ]; then
@@ -2011,13 +2039,20 @@ GetJMXPort() {
                fi   
 
                # set SGE_JMX_SSL_KEYSTORE
-               if [ "$SGE_QMASTER_PORT" != "" ]; then
+               if [ "$SGE_QMASTER_PORT" != "" -a "$qmaster_service" = false ]; then
                   ca_port=port$SGE_QMASTER_PORT
                else
                   ca_port=sge_qmaster
                fi
+               # must be in sync with definitions in sge_ca.cnf
+               euid=`$SGE_UTILBIN/uidgid -euid`
+               if [ $euid = 0 ]; then
+                  CALOCALTOP=/var/sgeCA/$ca_port/$SGE_CELL
+               else
+                  CALOCALTOP=/tmp/sgeCA/$ca_port/$SGE_CELL
+               fi
                if [ "$sge_jmx_ssl_keystore" = "" ]; then 
-                  sge_jmx_ssl_keystore=/var/sgeCA/$ca_port/$SGE_CELL/private/keystore
+                  sge_jmx_ssl_keystore=$CALOCALTOP/private/keystore
                fi
                $INFOTEXT -n "Enter JMX SSL server keystore path [%s] >> " "$sge_jmx_ssl_keystore"
                INP=`Enter "$sge_jmx_ssl_keystore"`

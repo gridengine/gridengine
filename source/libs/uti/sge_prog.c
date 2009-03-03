@@ -168,13 +168,12 @@ static void set_default_cell(sge_prog_state_class_t *thiz, const char* default_c
 static void set_exit_on_error(sge_prog_state_class_t *thiz, bool exit_on_error);
 static void set_exit_func(sge_prog_state_class_t *thiz, sge_exit_func_t exit_func);
 
-/****** libs/uti/uti_state_get_????() ************************************
+/****** uti/prog/uti_state_get_????() ************************************
 *  NAME
 *     uti_state_get_????() - read access to utilib global variables
 *
 *  FUNCTION
 *     Provides access to either global variable or per thread global variable.
-*
 ******************************************************************************/
 const char *uti_state_get_sge_formal_prog_name(void)
 {
@@ -286,13 +285,12 @@ bool uti_state_get_exit_on_error(void)
    return prog_state->exit_on_error;
 }
 
-/****** libs/uti/uti_state_set_????() ************************************
+/****** uti/prog/uti_state_set_????() ************************************
 *  NAME
 *     uti_state_set_????() - write access to utilib global variables
 *
 *  FUNCTION
 *     Provides access to either global variable or per thread global variable.
-*
 ******************************************************************************/
 static void uti_state_set_sge_formal_prog_name(const char *s)
 {
@@ -414,7 +412,7 @@ void uti_state_set_exit_on_error(bool i)
    return;
 }
 
-/****** uti/unistd/uti_state_get_exit_func() ************************************
+/****** uti/prog/uti_state_get_exit_func() ************************************
 *  NAME
 *     uti_state_get_exit_func() -- Return installed exit funciton 
 *
@@ -442,7 +440,7 @@ sge_exit_func_t uti_state_get_exit_func(void)
    return prog_state->exit_func;
 }
 
-/****** uti/unistd/uti_state_set_exit_func() ************************************
+/****** uti/prog/uti_state_set_exit_func() ************************************
 *  NAME
 *     uti_state_set_exit_func() -- Installs a new exit handler 
 *
@@ -713,7 +711,7 @@ static prog_state_t* prog_state_getspecific(pthread_key_t aKey)
    return prog_state;
 } /* prog_state_getspecific() */
 
-/****** sge_prog/prog_state_init() *******************************************
+/****** uti/prog/prog_state_init() *******************************************
 *  NAME
 *     prog_state_init() -- Initialize executable state.
 *

@@ -223,15 +223,12 @@ extern int main(int argc, char** argv)
      runs = -1;  /* disable runs shutdown */
   }
   while(do_shutdown != 1) {
-     unsigned long mid;
+     unsigned long mid = 0;
      int my_sent_error = 0;
 
      CL_LOG(CL_LOG_INFO,"main loop");
      if (runs > 0) {
         runs--;
-     }
-     if (runs == 0) {
-        do_shutdown = 1;
      }
 
      /* printf("sending to \"%s\" ...\n", argv[1]);  */
@@ -264,6 +261,7 @@ extern int main(int argc, char** argv)
 #if CL_DO_SLOW
         sleep(atoi(argv[5]));
 #endif
+        cl_commlib_trigger(handle,1);
         continue;
      }
 #endif
@@ -308,7 +306,7 @@ extern int main(int argc, char** argv)
 /*        printf("retval of cl_commlib_check_for_ack(%ld) is %s\n",mid,cl_get_error_text(retval));  */
      }
      if (retval == CL_RETVAL_CONNECTION_NOT_FOUND) {
-        
+         cl_commlib_trigger(handle, 1);
          continue; 
      }
 #endif
@@ -447,6 +445,9 @@ extern int main(int argc, char** argv)
            printf("could not enable autoclose\n");
            exit(1);
         }  
+     }
+     if (runs == 0) {
+        do_shutdown = 1;
      }
   }
   printf("do_shutdown received\n");

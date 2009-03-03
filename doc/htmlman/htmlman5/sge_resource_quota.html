@@ -3,7 +3,8 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     SGE_resource_quota - Grid Engine resource quota file format
+     SGE_resource_quota - Sun Grid  Engine  resource  quota  file
+     format
 
 DESCRIPTION
      Resource quota sets (rqs) are a flexible way to set  a  max-
@@ -12,18 +13,22 @@ DESCRIPTION
      running.   The  job  request distinction is done by a set of
      user, project, cluster queue, host and pe filter criteria.
 
-     By using the resource quota sets admistrators are allowed to
-     define  a  fine  granular resource quota configuration. This
+     By using the resource quota sets administrators are  allowed
+     to define a fine granular resource quota configuration. This
      helps restricting some job requests  to  a  lesser  resource
      usage  and  granting  other  job  requests a higher resource
      usage.
 
+     Note: Jobs requesting an Advance Reservation  (AR)  are  not
+     honored  by  Resource  Quotas and are neither subject of the
+     resulting limit, nor are debited in the usage consumption.
+
      A list of currently configured rqs can be displayed via  the
-     <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>  -srqsl  option.  The  contents  of each listed rqs
+     <B><A HREF="../htmlman1/qconf.html?pathrev=V62u2_TAG">qconf(1)</A></B>  -srqsl  option.  The  contents  of each listed rqs
      definition can be shown via the  -srqs  switch.  The  output
      follows  the  <I>SGE</I>_<I>resource</I>_<I>quota</I> format description. New rqs
      can be created and existing can be modified via  the  -arqs,
-     -mrqs and -drqs options to <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>.
+     -mrqs and -drqs options to <B><A HREF="../htmlman1/qconf.html?pathrev=V62u2_TAG">qconf(1)</A></B>.
 
      A resource quota set defines a maximum resource quota for  a
      particular  job  request.  All  of  the configured rule sets
@@ -36,12 +41,18 @@ DESCRIPTION
      resource  quota  set always results in at most one effective
      resource quota rule for a specific request.
 
+     Note, Sun Grid Engine allows  backslashes  (\)  be  used  to
+     escape  newline (\newline) characters. The backslash and the
+     newline are replaced with a space (" ") character before any
+     interpretation.
+
 FORMAT
      A resource  quota  set  definition  contains  the  following
      parameters:
 
   name
      The resource quota set name.
+
 
   enabled
      If set to <I>true</I> the resource quota set is active and will  be
@@ -72,7 +83,7 @@ FORMAT
 
      users
           Contains a comma separated list of UNIX users  or  ACLs
-          (see  <B><A HREF="../htmlman5/access_list.html">access_list(5)</A></B>).  This parameter filters for jobs
+          (see  <B><A HREF="../htmlman5/access_list.html?pathrev=V62u2_TAG">access_list(5)</A></B>).  This parameter filters for jobs
           by a user in the list or one of the ACLs in  the  list.
           Any user not in the list will not be considered for the
           resource quota rule. The default value  is  '*',  which
@@ -80,12 +91,12 @@ FORMAT
           user name by prefixing the ACL name with an  '@'  sign.
           To exclude a user or ACL from the rule, the name can be
           prefixed with the '!' sign. Defined UNIX  user  or  ACL
-          names  need  not be known in the Grid Engine configura-
-          tion.
+          names  need  not be known in the Sun Grid Engine confi-
+          guration.
 
      projects
           Contains a comma separated list of projects  (see  <I>pro-</I>
-          <B><A HREF="../htmlman5/ject.html">ject(5)</A></B>).  This parameter filters for jobs requesting a
+          <B><A HREF="../htmlman5/ject.html?pathrev=V62u2_TAG">ject(5)</A></B>).  This parameter filters for jobs requesting a
           project in the list. Any project not in the  list  will
           not  be  considered  for the resource quota rule. If no
           project filter is specified, all projects and jobs with
@@ -95,7 +106,7 @@ FORMAT
           the '!' sign.  The value '!*' means only jobs  with  no
           project requested.
 
-     pes  Contains a comma separated list of PEs (see <B><A HREF="../htmlman5/sge_pe.html">sge_pe(5)</A></B>).
+     pes  Contains a comma separated list of PEs (see <B><A HREF="../htmlman5/sge_pe.html?pathrev=V62u2_TAG">sge_pe(5)</A></B>).
           This  parameter filters for jobs requesting a pe in the
           list. Any PE not in the list will not be considered for
           the  resource quota rule. If no pe filter is specified,
@@ -107,7 +118,7 @@ FORMAT
 
      queues
           Contains a comma separated list of cluster queues  (see
-          <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>).   This  parameter filters for jobs that
+          <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62u2_TAG">queue_conf(5)</A></B>).   This  parameter filters for jobs that
           may be scheduled in a queue in the list.  Any queue not
           in  the  list  will  not be considered for the resource
           quota rule. The default value is '*', which  means  any
@@ -116,7 +127,7 @@ FORMAT
 
      hosts
           Contains a comma separated list of host  or  hostgroups
-          (see <B><A HREF="../htmlman5/host.html">host(5)</A></B> and <B><A HREF="../htmlman5/hostgroup.html">hostgroup(5)</A></B>).  This parameter filters
+          (see <B><A HREF="../htmlman5/host.html?pathrev=V62u2_TAG">host(5)</A></B> and <B><A HREF="../htmlman5/hostgroup.html?pathrev=V62u2_TAG">hostgroup(5)</A></B>).  This parameter filters
           for jobs that may be scheduled in a host in the list or
           a  host  contained in a hostgroup in the list. Any host
           not in the list will not be considered for the resource
@@ -133,7 +144,7 @@ FORMAT
                Static limits sets static values as  quotas.  Each
                limits consists of a complex attribute followed by
                an "=" sign and the value specification  compliant
-               with the complex attribute type (see <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>).
+               with the complex attribute type (see <B><A HREF="../htmlman5/complex.html?pathrev=V62u2_TAG">complex(5)</A></B>).
 
           dynamic limits
                A dynamic limit is a simple  algebraic  expression
@@ -145,13 +156,18 @@ FORMAT
 
                {w1|$complex1[*w1]}[{+|-}{w2|$complex2[*w2]}[{+|-}...]]
 
-          The weighting factors (w1, ...) are  positive  integers
-          or floating point numbers in double precision. The com-
-          plex values (complex1, ...)  are specified by the  name
-          defined  as type INT or DOUBLE in the complex list (see
-          <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>).
-          Note: Dynamic limits can only configured  for  a  host-
-          specific rule.
+               The  weighting  factors  (w1,  ...)  are  positive
+               integers  or  floating  point  numbers  in  double
+               precision. The complex values (complex1, ...)  are
+               specified  by the name defined as type INT or DOU-
+               BLE in the complex list (see <B><A HREF="../htmlman5/complex.html?pathrev=V62u2_TAG">complex(5)</A></B>).
+               Note: Dynamic limits can  only  configured  for  a
+               host-specific rule.
+
+     Please note that resource quotas are  not  enforced  as  job
+     resource  limits.  Limiting for example h_vmem in a resource
+     quota set does not result in a memory limit  being  set  for
+     job execution.
 
 EXAMPLES
      The following is the simplest form of a resource quota  set.
@@ -195,14 +211,51 @@ EXAMPLES
      }
      =======================================================================
 
-
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,  <B><A HREF="../htmlman5/access_list.html">access_list(5)</A></B>,  <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>,  <B><A HREF="../htmlman5/host.html">host(5)</A></B>,  <I>host-</I>
-     <B><A HREF="../htmlman5/group.html">group(5)</A></B>, <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>, <B><A HREF="../htmlman1/qquota.html">qquota(1)</A></B>, <B><A HREF="../htmlman5/project.html">project(5)</A></B>.
+     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B>,  <B><A HREF="../htmlman5/access_list.html?pathrev=V62u2_TAG">access_list(5)</A></B>,  <B><A HREF="../htmlman5/complex.html?pathrev=V62u2_TAG">complex(5)</A></B>,  <B><A HREF="../htmlman5/host.html?pathrev=V62u2_TAG">host(5)</A></B>,  <I>host-</I>
+     <B><A HREF="../htmlman5/group.html?pathrev=V62u2_TAG">group(5)</A></B>, <B><A HREF="../htmlman1/qconf.html?pathrev=V62u2_TAG">qconf(1)</A></B>, <B><A HREF="../htmlman1/qquota.html?pathrev=V62u2_TAG">qquota(1)</A></B>, <B><A HREF="../htmlman5/project.html?pathrev=V62u2_TAG">project(5)</A></B>.
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -65,39 +65,21 @@
  
 static void addenv(char *, char *);
  
-/****** sge_stdio/addenv() *****************************************************
-*  NAME
-*     addenv() -- putenv() wrapper
-*
-*  SYNOPSIS
-*     static void addenv(char *key, char *value) 
-*
-*  INPUTS
-*     char *key   - ??? 
-*     char *value - ??? 
-*
-*  NOTES
-*     MT-NOTE: addenv() is MT safe
-*******************************************************************************/
 static void addenv(char *key, char *value)
 {
    char *str;
  
-   DENTER(TOP_LAYER, "addenv");
    str = malloc(strlen(key) + strlen(value) + 2);
    if (!str) {
-      DEXIT;
       return;
    }
  
    strcpy(str, key);
    strcat(str, "=");
    strcat(str, value);
+
    putenv(str);
- 
    /* there is intentionally no free(str) */
- 
-   DEXIT;
    return;
 }
  
@@ -177,16 +159,14 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
    pid = fork();
 #endif
    if (pid == 0) {  /* child */
-      fd_set keep_open;
-      FD_ZERO(&keep_open);     
-      FD_SET(0, &keep_open);
-      FD_SET(1, &keep_open);
-      FD_SET(2, &keep_open);
-      FD_SET(pipefds[0][0], &keep_open);
-      FD_SET(pipefds[1][1], &keep_open);
-      FD_SET(pipefds[2][1], &keep_open);
-      sge_close_all_fds(&keep_open);
-
+      int keep_open[6];
+      keep_open[0] = 0;
+      keep_open[1] = 1;
+      keep_open[2] = 2;
+      keep_open[3] = pipefds[0][0];
+      keep_open[4] = pipefds[1][1];
+      keep_open[5] = pipefds[2][1];
+      sge_close_all_fds(keep_open, 6);
       /* shall we redirect stderr to /dev/null? */
       if (null_stderr) {
          /* open /dev/null */
@@ -248,7 +228,7 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
 #if !(defined(WIN32) || defined(INTERIX))  /* initgroups not called */
             res = initgroups(pw->pw_name,pw->pw_gid);
 #  if defined(SVR3) || defined(sun)
-            if (res<0)
+            if (res < 0)
 #  else
             if (res)
 #  endif
@@ -333,6 +313,259 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
    DEXIT;
    return pid;
 }
+
+pid_t sge_peopen_r(const char *shell, int login_shell, const char *command,
+                   const char *user, char **env,  FILE **fp_in, FILE **fp_out,
+                   FILE **fp_err, bool null_stderr)
+{
+   static pid_t pid;
+   int pipefds[3][2];
+   int i;
+   char arg0[256];
+#if defined(SOLARIS)
+   char err_str[256];
+#endif
+   struct passwd *pw = NULL;
+   uid_t myuid;
+   uid_t tuid;
+ 
+   DENTER(TOP_LAYER, "sge_peopen_r");
+
+   if (sge_has_admin_user()) {
+      sge_switch2start_user();
+   }
+   myuid = geteuid();
+   tuid = myuid;
+
+   /* 
+    * open pipes - close on failure 
+    */
+   for (i = 0; i < 3; i++) {
+      if (pipe(pipefds[i]) != 0) {
+         while (--i >= 0) {
+            close(pipefds[i][0]);
+            close(pipefds[i][1]);
+         }
+         ERROR((SGE_EVENT, MSG_SYSTEM_FAILOPENPIPES_SS, command, strerror(errno)));
+         if (sge_has_admin_user()) {
+            sge_switch2admin_user();
+         }
+         DRETURN(-1);
+      }
+   }
+
+   /*
+    * set arg0 for exec call correctly to that
+    * either a normal shell or a login shell will be started
+    */
+   if (login_shell) {
+      strcpy(arg0, "-");
+   } else {
+      strcpy(arg0, "");
+   }
+   strcat(arg0, shell);
+   DPRINTF(("arg0 = %s\n", arg0));
+   DPRINTF(("arg1 = -c\n"));
+   DPRINTF(("arg2 = %s\n", command));
+
+
+   /*
+    * prepare the change of the user which might be done after fork()
+    * if a user name is provided.
+    *
+    * this has to be done before the fork() afterwards it might cause
+    * a deadlock of the child because getpwnam() is not async-thread safe.
+    */
+   if (user) {
+      struct passwd pw_struct;
+      int size = get_pw_buffer_size();
+      char *buffer = sge_malloc(size);
+
+      /*
+       * get information about the target user
+       */
+      if (buffer != NULL) {
+         pw = sge_getpwnam_r(user, &pw_struct, buffer, size);
+         if (pw == NULL) {
+            ERROR((SGE_EVENT, MSG_SYSTEM_NOUSERFOUND_SS, user, strerror(errno)));
+            FREE(buffer);
+            if (sge_has_admin_user()) {
+               sge_switch2admin_user();
+            }
+            DRETURN(-1);
+         }
+      } else {
+         ERROR((SGE_EVENT, MSG_UTI_MEMPWNAM));
+         FREE(buffer);
+         if (sge_has_admin_user()) {
+            sge_switch2admin_user();
+         }
+         DRETURN(-1);
+      }
+
+      DPRINTF(("Was able to resolve user\n"));
+
+      /* 
+       * only prepare change of user if target user is different from current one
+       */
+      if (myuid != pw->pw_uid) {
+#if !(defined(WIN32) || defined(INTERIX)) /* var not needed */
+         int res;
+#endif 
+
+         if (myuid != SGE_SUPERUSER_UID) {
+            ERROR((SGE_EVENT, MSG_SYSTEM_NOROOTRIGHTSTOSWITCHUSER));
+            FREE(buffer);
+            SGE_EXIT(NULL, 1);
+         }                             
+
+         DPRINTF(("Before initgroups\n"));
+
+#if !(defined(WIN32) || defined(INTERIX))  /* initgroups not called */
+         res = initgroups(pw->pw_name, pw->pw_gid);
+#  if defined(SVR3) || defined(sun)
+         if (res < 0)
+#  else
+         if (res)
+#  endif
+         {
+            ERROR((SGE_EVENT, MSG_SYSTEM_INITGROUPSFORUSERFAILED_ISS, res, user, strerror(errno)));
+            FREE(buffer);
+            SGE_EXIT(NULL, 1);
+         }
+
+         DPRINTF(("Initgroups was successful\n"));
+
+#endif /* WIN32 */
+      }
+      DPRINTF(("user = %s\n", user));
+      DPRINTF(("myuid = %d\n", (int)myuid));
+      if (pw != NULL) {
+         tuid = pw->pw_uid;
+         DPRINTF(("target uid = %d\n", (int)tuid));
+      }
+   }
+
+   DPRINTF(("Now process will fork\n"));
+
+#if defined(SOLARIS)
+   pid = sge_smf_contract_fork(err_str, 256);
+#else
+   pid = fork();
+#endif
+
+   /* 
+    * in the child pid is 0 
+    */
+   if (pid == 0) {  
+      /*
+       * close all fd's except that ones mentioned in keep_open 
+       */
+      int keep_open[6];
+      keep_open[0] = 0;
+      keep_open[1] = 1;
+      keep_open[2] = 2;
+      keep_open[3] = pipefds[0][0];
+      keep_open[4] = pipefds[1][1];
+      keep_open[5] = pipefds[2][1];
+      sge_close_all_fds(keep_open, 6);
+
+      /* 
+       * shall we redirect stderr to /dev/null? Then
+       *    - open "/dev/null"
+       *    - set stderr to "dev/null"
+       *    - close the stderr-pipe
+       * otherwise
+       *    - redirect stderr to the pipe
+       */
+      if (null_stderr) {
+         int fd = open("/dev/null", O_WRONLY);
+
+         if (fd != -1) {
+            close(2);
+            dup(fd);
+            close(pipefds[2][1]);
+         } else {
+            SGE_EXIT(NULL, 1);
+         }
+      } else {
+         close(2);
+         dup(pipefds[2][1]);
+      }
+
+      /* 
+       * redirect stdin and stdout to the pipes 
+       */
+      close(0);
+      close(1);
+      dup(pipefds[0][0]);
+      dup(pipefds[1][1]);
+
+      if (pw != NULL) {
+         int lret = setuid(tuid);
+         if (lret) {
+            SGE_EXIT(NULL, 1);
+         }
+      }
+
+      /*
+       * set the environment if we got one as argument
+       */
+      if (env != NULL) {
+         if (pw != NULL) {
+            addenv("HOME", pw->pw_dir);
+            addenv("SHELL", pw->pw_shell);
+            addenv("USER", pw->pw_name);
+            addenv("LOGNAME", pw->pw_name);
+         }
+         addenv("PATH", SGE_DEFAULT_PATH);
+         for(; *env; env++) {
+            putenv(*env);
+         }
+      }
+      execlp(shell, arg0, "-c", command, NULL);
+   }
+ 
+   if (pid < 0) {
+      for (i=0; i<3; i++) {
+         close(pipefds[i][0]);
+         close(pipefds[i][1]);
+      }
+#if defined(SOLARIS)
+      if (pid < -1 && err_str) {
+          ERROR((SGE_EVENT, MSG_SMF_FORK_FAILED_SS, "sge_peopen()", err_str));
+      }
+#endif
+      if (sge_has_admin_user()) {
+         sge_switch2admin_user();
+      }
+      DRETURN(-1);
+   }
+ 
+   /* close the childs ends of the pipes */
+   close(pipefds[0][0]);
+   close(pipefds[1][1]);
+   close(pipefds[2][1]);
+  
+   /* return filehandles for stdin and stdout */
+   *fp_in  = fdopen(pipefds[0][1], "a");
+   *fp_out = fdopen(pipefds[1][0], "r");
+
+   /* is stderr redirected to /dev/null? */
+   if (null_stderr) {
+      /* close the pipe and return NULL as filehandle */
+      close(pipefds[2][0]);
+      *fp_err = NULL;
+   } else {
+      /* return filehandle for stderr */
+      *fp_err = fdopen(pipefds[2][0], "r");
+   }
+
+   if (sge_has_admin_user()) {
+      sge_switch2admin_user();
+   }
+   DRETURN(pid);
+}
  
 /****** uti/stdio/sge_peclose() ***********************************************
 *  NAME
@@ -415,51 +648,15 @@ FCLOSE_ERROR:
    return -1;
 }
 
-/****** sge_stdio/print_option_syntax() ****************************************
-*  NAME
-*     print_option_syntax() -- prints syntax of an option
-*
-*  SYNOPSIS
-*     void print_option_syntax(FILE *fp, const char *option, const char 
-*     *meaning) 
-*
-*  INPUTS
-*     FILE *fp            - ??? 
-*     const char *option  - ??? 
-*     const char *meaning - ??? 
-*
-*  NOTES
-*     MT-NOTE: print_option_syntax() is MT safe
-*******************************************************************************/
-void print_option_syntax(
-FILE *fp,
-const char *option,
-const char *meaning 
-) {
+void 
+print_option_syntax(FILE *fp, const char *option, const char *meaning) 
+{
    if (!meaning)
       fprintf(fp,"   %s\n", option);
    else
       fprintf(fp,"   %-40.40s %s\n",  option, meaning);
 }
 
-
-/****** sge_stdio/sge_check_stdout_stream() ************************************
-*  NAME
-*     sge_check_stdout_stream() -- ??? 
-*
-*  SYNOPSIS
-*     bool sge_check_stdout_stream(FILE *file, int fd) 
-*
-*  FUNCTION
-*     ??? 
-*
-*  INPUTS
-*     FILE *file - ??? 
-*     int fd     - ??? 
-*
-*  NOTES
-*     MT-NOTE: sge_check_stdout_stream() is MT safe
-*******************************************************************************/
 bool sge_check_stdout_stream(FILE *file, int fd)
 {
    if (fileno(file) != fd) {

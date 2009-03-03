@@ -52,19 +52,19 @@ libsgeremote$(LIBEXT): $(RSHD_OBJS) $(RSHD_ADD_OBJS) $(RSHD_LIB_DEPENDS) sgessh.
 		$(AR) $(ARFLAGS) libsgeremote$(LIBEXT) $(RSHD_OBJ) $(RSHD_ADD_OBJS) sgessh.o
 
 rlogin:   $(RLOGIN_OBJS)
-		$(CC) -o $@ $(RLOGIN_OBJS) $(LFLAGS) $(LIBS)
+		$(CC) -o $@ $(LFLAGS) $(RLOGIN_OBJS) $(LIBS)
 
 rlogin.o: $(REMOTE_DIR)/rlogin.c
 		$(CC) $(CFLAGS) $(REMOTE_CFLAGS) $(GCC_NODUPLWARN) -c $(REMOTE_DIR)/rlogin.c
 
 rsh:   $(RSH_OBJS)
-		$(CC) -o $@ $(RSH_OBJS) $(LFLAGS) $(LIBS)
+		$(CC) -o $@ $(LFLAGS) $(RSH_OBJS) $(LIBS)
 
 rsh.o: $(REMOTE_DIR)/rsh.c
 		$(CC) $(CFLAGS) $(REMOTE_CFLAGS) -c $(REMOTE_DIR)/rsh.c
 
 rshd:   $(RSHD_OBJS) $(RSHD_ADD_OBJS) $(RSHD_LIB_DEPENDS)
-		$(CC) -o $@ $(RSHD_OBJS) $(RSHD_ADD_OBJS) $(LFLAGS) $(RSHD_ADD_LIBS) $(LIBS) 
+		$(CC) -o $@ $(LFLAGS) $(RSHD_OBJS) $(RSHD_ADD_OBJS) $(RSHD_ADD_LIBS) $(LIBS) 
 
 rshd.o: $(REMOTE_DIR)/rshd.c
 		$(CC) $(CFLAGS) $(REMOTE_CFLAGS) -I$(SGE_DIR)/daemons/common -I$(SGE_DIR)/common -I$(SGE_DIR)/libs/uti -I$(SGE_DIR)/daemons/shepherd -c $(REMOTE_DIR)/rshd.c

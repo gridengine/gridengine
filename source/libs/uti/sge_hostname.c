@@ -115,6 +115,27 @@ static struct servent *sge_getservbyname_r(struct servent *se_result, const char
    return NULL;
 }
 
+/****** sge_hostname/sge_get_qmaster_port() ************************************
+*  NAME
+*     sge_get_qmaster_port() -- get qmaster port
+*
+*  SYNOPSIS
+*     int sge_get_qmaster_port(bool *from_services) 
+*
+*  FUNCTION
+*     This function returns the TCP/IP port of the qmaster daemon. It returns
+*     a cached value from a previous run. The cached value will be refreshed
+*     every 10 Minutes. The port may come from environment variable
+*     SGE_QMASTER_PORT or the services files entry "sge_qmaster".
+*
+*  INPUTS
+*     bool *from_services - Pointer to a boolean which is set to true
+*                           when the port value comes from the services file.
+*
+*  RESULT
+*     int - port of qmaster
+*
+*******************************************************************************/
 #define SGE_PORT_CACHE_TIMEOUT 60*10   /* 10 Min. */
 int sge_get_qmaster_port(bool *from_services) {
    char* port = NULL;
@@ -123,6 +144,8 @@ int sge_get_qmaster_port(bool *from_services) {
    struct timeval now;
    static long next_timeout = 0;
    static int cached_port = -1;
+   static bool is_port_from_services_file = false;
+
    DENTER(GDI_LAYER, "sge_get_qmaster_port");
 
    sge_mutex_lock("get_qmaster_port_mutex", SGE_FUNC, __LINE__, &get_qmaster_port_mutex);
@@ -133,17 +156,24 @@ int sge_get_qmaster_port(bool *from_services) {
    if (next_timeout > 0 ) {
       DPRINTF(("reresolve port timeout in "sge_U32CFormat"\n", sge_u32c( next_timeout - now.tv_sec)));
    }
+
+   /* get port from cache when next_timeout for re-resolving is not reached */
    if (cached_port >= 0 && next_timeout > now.tv_sec) {
       int_port = cached_port;
+      if (from_services != NULL) {
+         *from_services = is_port_from_services_file;
+      }
       DPRINTF(("returning cached port value: "sge_U32CFormat"\n", sge_u32c(int_port)));
       sge_mutex_unlock("get_qmaster_port_mutex", SGE_FUNC, __LINE__, &get_qmaster_port_mutex);
       DEXIT;
       return int_port;
    }
 
+   /* get port from environment variable SGE_QMASTER_PORT */
    port = getenv("SGE_QMASTER_PORT");   
    if (port != NULL) {
       int_port = atoi(port);
+      is_port_from_services_file = false;
    }
 
    /* get port from services file */
@@ -155,8 +185,12 @@ int sge_get_qmaster_port(bool *from_services) {
       se_help = sge_getservbyname_r(&se_result, "sge_qmaster", buffer, sizeof(buffer));
       if (se_help != NULL) {
          int_port = ntohs(se_help->s_port);
-         if (int_port > 0 && from_services) {
-            *from_services = true;
+         if (int_port > 0) {
+            /* we found a port in the services */
+            is_port_from_services_file = true;
+            if (from_services != NULL) {
+               *from_services = is_port_from_services_file;
+            }
          }
       }
    }
@@ -282,7 +316,7 @@ static pthread_mutex_t hostbyaddr_mutex = PTHREAD_MUTEX_INITIALIZER;
 #endif
 
 
-/****** libs/uti/uti_state_get_localhost() *************************************
+/****** uti/hostname/uti_state_get_localhost() *************************************
 *  NAME
 *     uti_state_get_localhost() - read access to uti lib global variables
 *
@@ -298,7 +332,7 @@ host *uti_state_get_localhost(void)
 
 #define MAX_RESOLVER_BLOCKING 15
 
-/****** uti/host/sge_gethostbyname_retry() *************************************
+/****** uti/hostname/sge_gethostbyname_retry() *************************************
 *  NAME
 *     sge_gethostbyname_retry() -- gethostbyname() wrapper
 *
@@ -316,8 +350,6 @@ host *uti_state_get_localhost(void)
 *     cl_com_cached_gethostbyname() or cl_com_gethostname() from commlib.
 *
 *     This will return an sge aliased hostname.
-*
-*
 *
 *  NOTES
 *     MT-NOTE: see sge_gethostbyname()
@@ -830,7 +862,7 @@ struct hostent *sge_gethostbyaddr(const struct in_addr *addr, int* system_error_
 }
 
 
-/****** sge_hostname/sge_host_delete() *****************************************
+/****** uti/hostname/sge_host_delete() *****************************************
 *  NAME
 *     sge_host_delete() -- delete host in host list with all aliases 
 *
@@ -873,9 +905,7 @@ static void sge_host_delete(host *h)
    sge_host_delete(nextalias);
 }
 
-
-
-/****** sge_hostname/sge_host_search_pred_alias() ******************************
+/****** uti/hostname/sge_host_search_pred_alias() ******************************
 *  NAME
 *     sge_host_search_pred_alias() -- search host who's aliasptr points to host 
 *
@@ -909,23 +939,6 @@ static host *sge_host_search_pred_alias(host *h)
 }
 
 
-/****** sge_hostname/matches_name() ********************************************
-*  NAME
-*     matches_name() -- ??? 
-*
-*  SYNOPSIS
-*     static int matches_name(struct hostent *he, const char *name) 
-*
-*  INPUTS
-*     struct hostent *he - ???
-*     const char *name   - ??? 
-*
-*  RESULT
-*     static int - ???
-*
-*  NOTES
-*     MT-NOTE: matches_name() is MT safe
-*******************************************************************************/
 static int matches_name(struct hostent *he, const char *name)    
 {
    if (!name)
@@ -937,20 +950,6 @@ static int matches_name(struct hostent *he, const char *name)
    return 0;
 }
 
-/****** sge_hostname/matches_addr() ********************************************
-*  NAME
-*     matches_addr() -- ??? 
-*
-*  SYNOPSIS
-*     static int matches_addr(hostent *he, char *addr) 
-*
-*  INPUTS
-*     struct hostent *he - ??? 
-*     char *addr  - ??? 
-*
-*  NOTES
-*     MT-NOTE: matches_addr() is MT safe
-*******************************************************************************/
 static int matches_addr(struct hostent *he, char *addr) 
 {
    if (!addr) {

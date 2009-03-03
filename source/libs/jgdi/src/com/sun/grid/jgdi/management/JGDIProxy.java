@@ -86,13 +86,13 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
     private boolean closeEventSent = false;
 
     /**
-     *  Create a new proxy the the jgdi MBean
+     *  Create a new proxy to the jgdi MBean
      *
      *  @param url  jmx connection url to qmaster
      *         allows username/password authentication this parameter must be a
-     *         string array. The for element is the username, the second elements
+     *         string array. The first element is the username, the second element
      *         is the password.
-     * @param credentials the credentials for jmx authentication
+     *  @param credentials the credentials for jmx authentication
      *
      */
     public JGDIProxy(JMXServiceURL url, Object credentials) {
@@ -111,6 +111,16 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
         return proxy;
     }
 
+    /**
+     *   Get the MBeanServerConnection connection
+     *
+     *   @return the MBeanServerConnection connection
+     */
+    public MBeanServerConnection getMBeanServerConnection() {
+        return connection;
+    }
+
+    
     /**
      * Set up the ssl context
      * @param caTop  ca top directory if the Grid Engine CA ($SGE_ROOT/$SGE_CELL/common/sgeCA
@@ -250,6 +260,7 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
     private void connect() throws JGDIException {
         if (connection == null) {
             Map<String, Object> env = new HashMap<String, Object>();
+            env.put("jmx.remote.default.class.loader", JGDIJMXMBean.class.getClassLoader());
             if (credentials != null) {
                 env.put("jmx.remote.credentials", credentials);
             }

@@ -645,47 +645,24 @@ static void sge_show_checkpoint(int how, int op)
 {
    int i = 0;
    int count = 0;
-   stringT tmp_str;
+   dstring string = DSTRING_INIT;
  
    DENTER(TOP_LAYER, "sge_show_checkpoint");
- 
-   memset(tmp_str, 0, sizeof(tmp_str));
- 
-   if (VALID(CHECKPOINT_AT_MINIMUM_INTERVAL, op)) {
-      tmp_str[count] = CHECKPOINT_AT_MINIMUM_INTERVAL_SYM;
-      count++;
-   }
- 
-   if (VALID(CHECKPOINT_AT_SHUTDOWN, op)) {
-      tmp_str[count] = CHECKPOINT_AT_SHUTDOWN_SYM;
-      count++;
-   }
- 
-   if (VALID(CHECKPOINT_SUSPEND, op)) {
-      tmp_str[count] = CHECKPOINT_SUSPEND_SYM;
-      count++;
-   }
- 
-   if (VALID(NO_CHECKPOINT, op)) {
-      tmp_str[count] = NO_CHECKPOINT_SYM;
-      count++;
-   }
- 
+   job_get_ckpt_attr(op, &string); 
    if (VALID(SGE_STDOUT, how)) {
-      printf("%s", tmp_str);
-      for (i = count; i < 4; i++)
+      printf("%s", sge_dstring_get_string(&string));
+      for (i = count; i < 4; i++) {
          printf(" ");
+      }
    }              
-
    if (VALID(SGE_STDERR, how)) {
-      fprintf(stderr, "%s", tmp_str);
-      for (i = count; i < 4; i++)
+      fprintf(stderr, "%s", sge_dstring_get_string(&string));
+      for (i = count; i < 4; i++) {
          fprintf(stderr, " ");
+      }
    }
- 
-   DEXIT;
- 
-   return;
+   sge_dstring_free(&string);
+   DRETURN_VOID; 
 }   
 
 static void sge_show_y_n(int op, int how) 

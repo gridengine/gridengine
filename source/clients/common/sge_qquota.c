@@ -249,7 +249,7 @@ bool qquota_output(sge_gdi_ctx_class_t *ctx, lList *host_list, lList *resource_m
                                     sge_dstring_sprintf(&rule_name, "%s/%d", lGetString(rqs, RQS_name), rule_count);
                                  }
 
-                                 if (lGetBool(raw_centry, CE_consumable)) {
+                                 if (lGetUlong(raw_centry, CE_consumable)) {
                                     /* for consumables we need to walk through the utilization and search for matching values */
                                     DPRINTF(("found centry %s - consumable\n", limit_name));
                                     for_each(rue_elem, rue_list) {

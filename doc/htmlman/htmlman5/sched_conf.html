@@ -3,22 +3,28 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     sched_conf - Grid  Engine  default  scheduler  configuration
+     sched_conf - Sun Grid Engine default scheduler configuration
      file
 
 DESCRIPTION
-     <I>sched</I>_<I>conf</I> defines the configuration file  format  for  Grid
-     Engine's  default  scheduler  provided by <B><A HREF="../htmlman8/sge_schedd.html">sge_schedd(8)</A></B>.  In
-     order to modify the configuration, use the graphical  user's
-     interface <B><A HREF="../htmlman1/qmon.html">qmon(1)</A></B> or the -<I>msconf</I> option of the <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B> com-
-     mand. A default configuration is provided together with  the
-     Grid Engine distribution package.
+     <I>sched</I>_<I>conf</I> defines the configuration  file  format  for  Sun
+     Grid  Engine's  scheduler. In order to modify the configura-
+     tion, use the graphical user's interface <B><A HREF="../htmlman1/qmon.html?pathrev=V62u2_TAG">qmon(1)</A></B>  or  the  -
+     <I>msconf</I>  option of the <B><A HREF="../htmlman1/qconf.html?pathrev=V62u2_TAG">qconf(1)</A></B> command. A default configura-
+     tion is provided together with the Sun Grid Engine distribu-
+     tion package.
+
+     Note, Sun Grid Engine allows  backslashes  (\)  be  used  to
+     escape  newline (\newline) characters. The backslash and the
+     newline are replaced with a space (" ") character before any
+     interpretation.
 
 FORMAT
-     The following parameters are recognized by the  Grid  Engine
-     scheduler if present in <I>sched</I>_<I>conf</I>:
+     The following parameters are  recognized  by  the  Sun  Grid
+     Engine scheduler if present in <I>sched</I>_<I>conf</I>:
 
   algorithm
+     Note: Deprecated, may be removed in future release.
      Allows for the selection  of  alternative  scheduling  algo-
      rithms.
 
@@ -27,8 +33,8 @@ FORMAT
   load_formula
      A simple  algebraic  expression  used  to  derive  a  single
      weighted  load value from all or part of the load parameters
-     reported by <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> for each host and from all or  part
-     of  the  consumable  resources  (see <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>) being main-
+     reported by <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u2_TAG">sge_execd(8)</A></B> for each host and from all or  part
+     of  the  consumable  resources  (see <B><A HREF="../htmlman5/complex.html?pathrev=V62u2_TAG">complex(5)</A></B>) being main-
      tained for each host.  The load formula expression syntax is
      that of a summation weighted load values, that is:
 
@@ -37,11 +43,11 @@ FORMAT
      Note, no blanks are allowed in the load formula.
      The load values and consumable  resources  (load_val1,  ...)
      are  specified  by the name defined in the complex (see <I>com-</I>
-     <B><A HREF="../htmlman5/plex.html">plex(5)</A></B>).
+     <B><A HREF="../htmlman5/plex.html?pathrev=V62u2_TAG">plex(5)</A></B>).
      Note: Administrator defined load values (see the load_sensor
-     parameter   in   <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>  for  details)  and  consumable
-     resources available for all hosts (see  <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>)  may  be
-     used as well as Grid Engine default load parameters.
+     parameter   in   <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62u2_TAG">sge_conf(5)</A></B>  for  details)  and  consumable
+     resources available for all hosts (see  <B><A HREF="../htmlman5/complex.html?pathrev=V62u2_TAG">complex(5)</A></B>)  may  be
+     used as well as Sun Grid Engine default load parameters.
      The weighting factors (w1, ...) are positive integers. After
      the  expression  is  evaluated for each host the results are
      assigned to the  hosts  and  are  used  to  sort  the  hosts
@@ -50,8 +56,8 @@ FORMAT
      The default load formula is "np_load_avg".
 
   job_load_adjustments
-     The load, which is imposed by the Grid Engine  jobs  running
-     on  a  system  varies  in  time, and often, e.g. for the CPU
+     The load, which is imposed by the Sun Grid Engine jobs  run-
+     ning on a system varies in time, and often, e.g. for the CPU
      load, requires some amount of time to  be  reported  in  the
      appropriate  quantity by the operating system. Consequently,
      if a job was started very recently, the  reported  load  may
@@ -59,16 +65,16 @@ FORMAT
      already imposed on that host by the job. The  reported  load
      will  adapt  to  the  real load over time, but the period of
      time, in which the reported load is  too  low,  may  already
-     lead to an oversubscription of that host. Grid Engine allows
-     the administrator to specify job_load_adjustments which  are
-     used  in  the  Grid  Engine scheduler to compensate for this
-     problem.
+     lead  to  an  oversubscription of that host. Sun Grid Engine
+     allows the  administrator  to  specify  job_load_adjustments
+     which  are  used in the Sun Grid Engine scheduler to compen-
+     sate for this problem.
      The job_load_adjustments are specified as a comma  separated
      list  of  arbitrary  load parameters or consumable resources
      and (separated by an equal sign) an associated load  correc-
-     tion  value.  Whenever  a  job  is  dispatched  to a host by
-     <B><A HREF="../htmlman8/sge_schedd.html">sge_schedd(8)</A></B>, the load parameter and consumable  value  set
-     of  that  host  is  increased  by the values provided in the
+     tion  value.  Whenever  a job is dispatched to a host by the
+     scheduler, the load parameter and consumable  value  set  of
+     that  host  is  increased  by  the  values  provided  in the
      job_load_adjustments  list.  These  correction  values   are
      decayed      linearly      over     time     until     after
      load_adjustment_decay_time from the  start  the  corrections
@@ -79,7 +85,7 @@ FORMAT
      the  combined  and  weighted  load  of  the  hosts  with the
      load_formula (see above) and to compare the load and consum-
      able  values against the load threshold lists defined in the
-     queue   configurations   (see   <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>).    If    the
+     queue   configurations   (see   <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62u2_TAG">queue_conf(5)</A></B>).    If    the
      load_formula consists simply of the default CPU load average
      parameter <I>np</I>_<I>load</I>_<I>avg</I>, and if  the  jobs  are  very  compute
      intensive,  one  might  want to set the job_load_adjustments
@@ -103,42 +109,44 @@ FORMAT
 
   maxujobs
      The maximum number of jobs any user may have  running  in  a
-     Grid  Engine cluster at the same time. If set to 0 (default)
-     the users may run an arbitrary number of jobs.
+     Sun  Grid  Engine  cluster  at  the  same  time. If set to 0
+     (default) the users may run an arbitrary number of jobs.
 
   schedule_interval
-     At   the   time   <B><A HREF="../htmlman8/sge_schedd.html">sge_schedd(8)</A></B>   initially   registers   to
-     <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>  schedule_interval  is  used  to set the time
-     interval in  which  <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>  sends  scheduling  event
-     updates  to  <B><A HREF="../htmlman8/sge_schedd.html">sge_schedd(8)</A></B>.   A scheduling event is a status
-     change that has occurred  within  <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>  which  may
-     trigger  or  affect scheduler decisions (e.g. a job has fin-
-     ished and thus the allocated resources are available again).
-     In the Grid  Engine  default  scheduler  the  arrival  of  a
+     At the time the scheduler thread initially registers at  the
+     event     master     thread     in     <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u2_TAG">sge_qmaster(8)</A></B>process
+     schedule_interval is used to set the time interval in  which
+     the  event  master  thread sends scheduling event updates to
+     the scheduler thread.  A scheduling event is a status change
+     that has occurred within <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u2_TAG">sge_qmaster(8)</A></B> which may trigger or
+     affect scheduler decisions (e.g. a job has finished and thus
+     the allocated resources are available again).
+     In the Sun Grid Engine default scheduler the  arrival  of  a
      scheduling  event  report  triggers  a  scheduler  run.  The
      scheduler waits for event reports otherwise.
-     Schedule_interval is a time value (see <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>  for  a
+     Schedule_interval is a time value (see <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62u2_TAG">queue_conf(5)</A></B>  for  a
      definition of the syntax of time values).
 
   queue_sort_method
      This parameter determines in which  order  several  criteria
      are  taken  into  account  to  product  a sorted queue list.
      Currently, two settings are valid:  seqno and load.  However
-     in  both  cases, Grid Engine attempts to maximize the number
-     of soft requests (see <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> -s option) being fulfilled  by
-     the queues for a particular as the primary criterion.
+     in  both  cases,  Sun  Grid  Engine attempts to maximize the
+     number of soft requests (see <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B> -s option)  being  ful-
+     filled  by  the  queues for a particular as the primary cri-
+     terion.
      Then, if the queue_sort_method parameter is  set  to  seqno,
-     Grid  Engine  will use the seq_no parameter as configured in
-     the current queue configurations (see <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>) as  the
-     next criterion to sort the queue list. The load_formula (see
-     above) has only a meaning if two queues have equal  sequence
-     numbers.   If  queue_sort_method  is  set  to  load the load
-     according the load_formula is the criterion after maximizing
-     a  job's  soft requests and the sequence number is only used
-     if two hosts have the same load.  The sequence number  sort-
-     ing  is  most  useful if you want to define a fixed order in
-     which queues are to be filled (e.g.   the cheapest  resource
-     first).
+     Sun  Grid Engine will use the seq_no parameter as configured
+     in the current queue configurations (see  <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62u2_TAG">queue_conf(5)</A></B>)  as
+     the  next criterion to sort the queue list. The load_formula
+     (see above) has only a meaning  if  two  queues  have  equal
+     sequence  numbers.   If queue_sort_method is set to load the
+     load according the load_formula is the criterion after  max-
+     imizing  a  job's  soft  requests and the sequence number is
+     only used if two hosts have the  same  load.   The  sequence
+     number  sorting is most useful if you want to define a fixed
+     order in which queues are to be filled (e.g.   the  cheapest
+     resource first).
 
      The default for this parameter is load.
 
@@ -149,17 +157,17 @@ FORMAT
      tree.  The halftime defines the time interval in which accu-
      mulated usage will have been decayed to  half  its  original
      value.  Valid  values are specified in hours or according to
-     the time format as specified in <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>.
+     the time format as specified in <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62u2_TAG">queue_conf(5)</A></B>.
      If the value is set to 0, the usage is not decayed.
 
   usage_weight_list
-     Grid Engine accounts for the consumption  of  the  resources
-     CPU-time,  memory  and  IO  to  determine the usage which is
-     imposed on a system by a job. A single usage value  is  com-
-     puted  from  these three input parameters by multiplying the
-     individual values by weights and adding them up. The weights
-     are defined in the usage_weight_list. The format of the list
-     is
+     Sun  Grid  Engine  accounts  for  the  consumption  of   the
+     resources  CPU-time,  memory  and  IO to determine the usage
+     which is imposed on a system by a job. A single usage  value
+     is computed from these three input parameters by multiplying
+     the individual values by weights and  adding  them  up.  The
+     weights  are defined in the usage_weight_list. The format of
+     the list is
 
           cpu=wcpu,mem=wmem,io=wio
 
@@ -168,10 +176,10 @@ FORMAT
      be 1.
 
   compensation_factor
-     Determines how fast Grid Engine should compensate  for  past
-     usage  below  of  above the share entitlement defined in the
-     share tree. Recommended values are between 2 and  10,  where
-     10 means faster compensation.
+     Determines how fast Sun Grid Engine  should  compensate  for
+     past  usage  below of above the share entitlement defined in
+     the share tree. Recommended values are  between  2  and  10,
+     where 10 means faster compensation.
 
   weight_user
      The relative importance of the user shares in the functional
@@ -191,44 +199,44 @@ FORMAT
 
   weight_tickets_functional
      The maximum number of functional tickets available for  dis-
-     tribution by Grid Engine. Determines the relative importance
-     of the functional policy. See under <B><A HREF="../htmlman5/sge_priority.html">sge_priority(5)</A></B>  for  an
-     overview on job priorities.
+     tribution by Sun Grid Engine. Determines the relative impor-
+     tance of the functional policy.  See  under  <B><A HREF="../htmlman5/sge_priority.html?pathrev=V62u2_TAG">sge_priority(5)</A></B>
+     for an overview on job priorities.
 
   weight_tickets_share
      The maximum number of share based tickets available for dis-
-     tribution by Grid Engine. Determines the relative importance
-     of the share tree policy. See under <B><A HREF="../htmlman5/sge_priority.html">sge_priority(5)</A></B>  for  an
-     overview on job priorities.
+     tribution by Sun Grid Engine. Determines the relative impor-
+     tance of the share tree policy.  See  under  <B><A HREF="../htmlman5/sge_priority.html?pathrev=V62u2_TAG">sge_priority(5)</A></B>
+     for an overview on job priorities.
 
   weight_deadline
      The weight applied on the remaining time until a jobs latest
-     start  time. Determines the relative importance of the dead-
-     line. See under  <B><A HREF="../htmlman5/sge_priority.html">sge_priority(5)</A></B>  for  an  overview  on  job
+     start  time.  Determines  the  relative  importance  of  the
+     deadline. See under <B><A HREF="../htmlman5/sge_priority.html?pathrev=V62u2_TAG">sge_priority(5)</A></B> for an overview  on  job
      priorities.
 
   weight_waiting_time
      The weight applied on the jobs waiting  time  since  submis-
      sion.  Determines  the  relative  importance  of the waiting
-     time.  See under <B><A HREF="../htmlman5/sge_priority.html">sge_priority(5)</A></B>  for  an  overview  on  job
+     time.  See under <B><A HREF="../htmlman5/sge_priority.html?pathrev=V62u2_TAG">sge_priority(5)</A></B>  for  an  overview  on  job
      priorities.
 
   weight_urgency
      The weight applied on jobs normalized urgency when determin-
      ing  priority  finally used.  Determines the relative impor-
-     tance of urgency.  See under <B><A HREF="../htmlman5/sge_priority.html">sge_priority(5)</A></B> for an overview
+     tance of urgency.  See under <B><A HREF="../htmlman5/sge_priority.html?pathrev=V62u2_TAG">sge_priority(5)</A></B> for an overview
      on job priorities.
 
   weight_priority
-     The weight applied on jobs normalized POSIX priority when 
-     determining priority finally used. Determines the relative 
-     importance of POSIX priority. See under <B><A HREF="../htmlman5/sge_priority.html">sge_priority(5)</A></B> 
-     for an overview on job priorities.
+     The weight applied on jobs normalized  POSIX  priority  when
+     determining  priority  finally used. Determines the relative
+     importance of POSIX priority.  See under <B><A HREF="../htmlman5/sge_priority.html?pathrev=V62u2_TAG">sge_priority(5)</A></B> for
+     an overview on job priorities.
 
   weight_ticket
      The weight applied on normalized ticket amount  when  deter-
      mining  priority  finally  used.   Determines  the  relative
-     importance of the ticket policies. See under <B><A HREF="../htmlman5/sge_priority.html">sge_priority(5)</A></B>
+     importance of the ticket policies. See under <B><A HREF="../htmlman5/sge_priority.html?pathrev=V62u2_TAG">sge_priority(5)</A></B>
      for an overview on job priorities.
 
   flush_finish_sec
@@ -256,17 +264,17 @@ FORMAT
      It is also possible to activate  the  observation  only  for
      certain  jobs.  This will be done if the parameter is set to
      job_list followed by a comma separated list of job ids.
-
      The user can obtain the collected information with the  com-
      mand qstat -j.
 
   params
      This is foreseen for passing additional  parameters  to  the
-     Grid Engine scheduler. The following values are recognized:
+     Sun  Grid  Engine scheduler. The following values are recog-
+     nized:
 
      <I>DURATION</I>_<I>OFFSET</I>
           If set, overrides the  default  of  value  60  seconds.
-          This  parameter  is  used  by the Grid Engine scheduler
+          This parameter is used by the Sun Grid Engine scheduler
           when planning resource utilization as the delta between
           net  job runtimes and total time until resources become
           available again. Net job runtime as specified  with  -l
@@ -275,18 +283,19 @@ FORMAT
           after  actual  job  start  and finish. Among the delays
           before job start  is  the  time  until  the  end  of  a
           schedule_interval,  the  time it takes to deliver a job
-          to <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> and the  delays  caused  by  prolog  in
-          <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>   ,   start_proc_args  in  <B><A HREF="../htmlman5/sge_pe.html">sge_pe(5)</A></B>  and
-          starter_method      in      <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>      (notify,
+          to <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u2_TAG">sge_execd(8)</A></B> and the  delays  caused  by  prolog  in
+          <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62u2_TAG">queue_conf(5)</A></B>   ,   start_proc_args  in  <B><A HREF="../htmlman5/sge_pe.html?pathrev=V62u2_TAG">sge_pe(5)</A></B>  and
+          starter_method      in      <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62u2_TAG">queue_conf(5)</A></B>      (notify,
           terminate_method   or  checkpointing),  procedures  run
-          after acutal job  finish,  such  as  stop_proc_args  in
-          <B><A HREF="../htmlman5/sge_pe.html">sge_pe(5)</A></B>  or  epilog  in <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B> , and the delay
+          after actual job  finish,  such  as  stop_proc_args  in
+          <B><A HREF="../htmlman5/sge_pe.html?pathrev=V62u2_TAG">sge_pe(5)</A></B>  or  epilog  in <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62u2_TAG">queue_conf(5)</A></B> , and the delay
           until a new schedule_interval.
           If the offset is too low,  resource  reservations  (see
           max_reservation)  can  be  delayed repeatedly due to an
-          overly optistic job circulation time.
+          overly optimistic job circulation time.
 
      <I>JC</I>_<I>FILTER</I>
+          Note: Deprecated, may be removed in future release.
           If set to true, the scheduler limits the number of jobs
           it  looks  at during a scheduling run. At the beginning
           of the scheduling run it assigns each  job  a  specific
@@ -318,9 +327,9 @@ FORMAT
           resources      utilization      in       the       file
           &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>schedule</I>.
 
-     <I>SELECT</I>_<I>PE</I>_<I>RANGE</I>_<I>ALG</I>
-          This parameter sets the  algorithm  for  the  pe  range
-          computation. The default is automatic, which means that
+     <I>PE</I>_<I>RANGE</I>_<I>ALG</I>
+          This parameter sets the algorithm for the pe range com-
+          putation.  The  default  is automatic, which means that
           the scheduler will select the best one, and  it  should
           not be necessary to change it to a different setting in
           normal operation. If a custom setting  is  needed,  the
@@ -349,8 +358,8 @@ FORMAT
      tickets  calculation.  The  sort  order of jobs in qstat and
      qmon is only based on the submit time, when the reporting is
      turned off.
-     The reporting should be turned of  in  a  system  with  very
-     large amount of jobs by setting this param to "false".
+     The reporting should be turned off in a system with  a  very
+     large amount of jobs by setting this parameter to "false".
 
   halflife_decay_list
      The halflife_decay_list allows to configure different  decay
@@ -370,7 +379,6 @@ FORMAT
      &lt;TIME&gt; can be -1, 0 or a timespan specified in  minutes.  If
      &lt;TIME&gt;  is  -1,  only the usage of currently running jobs is
      used. 0 means that the usage is not decayed.
-
 
   policy_hierarchy
      This parameter sets up a dependency chain  of  ticket  based
@@ -431,13 +439,13 @@ FORMAT
      scheduled   instead.  A  reservation  can  cover  consumable
      resources with the global host, any execution host  and  any
      queue.  For  parallel  jobs  reservations  are done also for
-     slots resource as specified in <B><A HREF="../htmlman5/sge_pe.html">sge_pe(5)</A></B>.   As  job  runtime
+     slots resource as specified in <B><A HREF="../htmlman5/sge_pe.html?pathrev=V62u2_TAG">sge_pe(5)</A></B>.   As  job  runtime
      the  maximum  of  the  time specified with -l h_rt=... or -l
      s_rt=... is assumed. For jobs that have neither of them  the
      default_duration  is  assumed.  Reservations prevent jobs of
-     lower priority as specified in <B><A HREF="../htmlman5/sge_priority.html">sge_priority(5)</A></B> from  utiliz-
-     ing the reserved resource quota during the while of reserva-
-     tion. Jobs of lower priority are allowed  to  utilize  those
+     lower priority as specified in <B><A HREF="../htmlman5/sge_priority.html?pathrev=V62u2_TAG">sge_priority(5)</A></B> from  utiliz-
+     ing  the reserved resource quota during the time of reserva-
+     tion.  Jobs of lower priority are allowed to  utilize  those
      reserved  resources  only  if  their  prospective job end is
      before the start of the reservation (backfilling).  Reserva-
      tion  is  done  only  for  non-immediate jobs (-now no) that
@@ -447,32 +455,73 @@ FORMAT
      Note, that reservation scheduling can be performance consum-
      ing  and  hence  reservation  scheduling  is switched off by
      default. Since reservation scheduling  performance  consump-
-     tion is known to grow with the number of pending jobs use of
-     -R y option is recommended  only  for  those  jobs  actually
-     queuing   for   bottleneck   resources.  Together  with  the
+     tion  is  known to grow with the number of pending jobs, the
+     use of -R y option is recommended only for those jobs  actu-
+     ally  queuing  for  bottleneck  resources. Together with the
      max_reservation parameter this technique can be used to nar-
      row down performance impacts.
 
   default_duration
      When job  reservation  is  enabled  through  max_reservation
-     <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B>  parameter  the default duration is assumed as
+     <B><A HREF="../htmlman5/sched_conf.html?pathrev=V62u2_TAG">sched_conf(5)</A></B>  parameter  the default duration is assumed as
      runtime for jobs  that  have  neither  -l  h_rt=...  nor  -l
      s_rt=...  specified.  In  contrast to a h_rt/s_rt time limit
      the default_duration is not enforced.
 
 FILES
      &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>sched</I>_<I>configuration</I>
-                sge_schedd configuration
+                scheduler thread configuration
+
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qalter.html">qalter(1)</A></B>, <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>, <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B>,  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,  <I>com-</I>
-     <B><A HREF="../htmlman5/plex.html">plex(5)</A></B>,    <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>,   <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>,   <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>,
-     <B><A HREF="../htmlman8/sge_schedd.html">sge_schedd(8)</A></B>.  <I>Grid</I> <I>Engine</I> <I>Installation</I> <I>and</I>  <I>Administration</I>
-     <I>Guide</I>
+     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qalter.html?pathrev=V62u2_TAG">qalter(1)</A></B>, <B><A HREF="../htmlman1/qconf.html?pathrev=V62u2_TAG">qconf(1)</A></B>, <B><A HREF="../htmlman1/qstat.html?pathrev=V62u2_TAG">qstat(1)</A></B>,  <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B>,  <I>com-</I>
+     <B><A HREF="../htmlman5/plex.html?pathrev=V62u2_TAG">plex(5)</A></B>,  <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62u2_TAG">queue_conf(5)</A></B>,  <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u2_TAG">sge_execd(8)</A></B>,  <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u2_TAG">sge_qmaster(8)</A></B>, <I>Sun</I>
+     <I>Grid</I> <I>Engine</I> <I>Installation</I> <I>and</I> <I>Administration</I>
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

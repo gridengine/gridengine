@@ -35,9 +35,6 @@
 
 void monitor_dominance(char *str, u_long32 mask);
 
-int global_complexes2scheduler(lList **new_complex_list, 
-                               lListElem *global_host, lList *complex_list);
-
 int host_complexes2scheduler(lList **new_complex_list, lListElem *host, 
                              lList *exechost_list, lList *complex_list);  
 

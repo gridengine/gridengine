@@ -11,7 +11,7 @@ DESCRIPTION
      configuration.   The  definition  of complex attributes pro-
      vides all  pertinent  information  concerning  the  resource
      attributes  a user may request for a Sun Grid Engine job via
-     the <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> -l option and for the  interpretation  of  these
+     the <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B> -l option and for the  interpretation  of  these
      parameters within the Sun Grid Engine system.
 
      The Sun Grid Engine complex object defines all entries which
@@ -25,7 +25,7 @@ DESCRIPTION
 
   defining resource attributes
      The complex configuration should not be  accessed  directly.
-     In  order  to  add  or  modify complex entries, the <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>
+     In  order  to  add  or  modify complex entries, the <B><A HREF="../htmlman1/qconf.html?pathrev=V62u2_TAG">qconf(1)</A></B>
      options -Mc and -mc should be used instead.  While  the  -Mc
      option takes a <I>complex</I> configuration file as an argument and
      overrides the current configuration, the -mc option bring up
@@ -58,7 +58,7 @@ DESCRIPTION
 
   Default queue resource attributes
      In its default form it contains a selection of parameters in
-     the  queue  configuration  as defined in <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>.  The
+     the  queue  configuration  as defined in <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62u2_TAG">queue_conf(5)</A></B>.  The
      queue configuration parameters being requestable for  a  job
      by the user in principal are:
 
@@ -93,7 +93,7 @@ DESCRIPTION
           h_vmem
           s_fsize
           h_fsize
-     (please refer to <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B> for details).
+     (please refer to <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62u2_TAG">queue_conf(5)</A></B> for details).
 
      Note: Defining these attributes in the host  complex  is  no
      contradiction  to  having  them also in the queue configura-
@@ -104,12 +104,12 @@ DESCRIPTION
      with a queue on that host.
 
      The second attribute category in the standard  host  complex
-     are  the default load values Every <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> periodically
-     reports load to <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>.  The  reported  load  values
+     are  the default load values Every <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u2_TAG">sge_execd(8)</A></B> periodically
+     reports load to <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u2_TAG">sge_qmaster(8)</A></B>.  The  reported  load  values
      are  either the standard Sun Grid Engine load values such as
-     the CPU load average (see <B><A HREF="../htmlman1/uptime.html">uptime(1)</A></B>) or load values  defined
+     the CPU load average (see <B><A HREF="../htmlman1/uptime.html?pathrev=V62u2_TAG">uptime(1)</A></B>) or load values  defined
      by  the  Sun Grid Engine administration (see the load_sensor
-     parameter in the cluster configuration <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>  and  the
+     parameter in the cluster configuration <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62u2_TAG">sge_conf(5)</A></B>  and  the
      <I>Sun</I>   <I>Grid</I>   <I>Engine</I>   <I>Installation</I>  <I>and</I>  <I>Administration</I>  for
      details).  The characteristics definition for  the  standard
      load  values  is  part  of  the  default host complex, while
@@ -163,14 +163,14 @@ FORMAT
 
   name
      The name of the complex element to be used to  request  this
-     attribute  for  a  job  in  the <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> -l option. A complex
-     attribute name (see <I>complex</I>_<I>name</I> in <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>) may appear
+     attribute  for  a  job  in  the <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B> -l option. A complex
+     attribute name (see <I>complex</I>_<I>name</I> in <B><A HREF="../htmlman1/sge_types.html?pathrev=V62u2_TAG">sge_types(1)</A></B>) may appear
      only  once  across all complexes, i.e. the complex attribute
      definition is unique.
 
   shortcut
      A shortcut for name which may also be used to  request  this
-     attribute  for  a job in the <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> -l option. An attribute
+     attribute  for  a job in the <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B> -l option. An attribute
      shortcut may appear only once across all complexes, so as to
      avoid  the possibility of ambiguous complex attribute refer-
      ences.
@@ -186,18 +186,18 @@ FORMAT
         (decimal and scientific notation) can be specified.
 
      <B>o</B>  With  TIME  time  specifiers  are   allowed.   Refer   to
-        <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B> for a format description.
+        <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62u2_TAG">queue_conf(5)</A></B> for a format description.
 
      <B>o</B>  With MEMORY memory size specifiers are allowed. Refer  to
-        <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B> for a format description.
+        <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62u2_TAG">queue_conf(5)</A></B> for a format description.
 
      <B>o</B>  With BOOL the strings TRUE and FALSE  are  allowed.  When
-        used in a load formula (refer to <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B> ) TRUE and
+        used in a load formula (refer to <B><A HREF="../htmlman5/sched_conf.html?pathrev=V62u2_TAG">sched_conf(5)</A></B> ) TRUE and
         FALSE get mapped into '1' and '0'.
 
      <B>o</B>  With STRING all strings are allowed and is used for wild-
         card  regular  boolean  expression  matching.  Please see
-        <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B> manpage for expression definition.
+        <B><A HREF="../htmlman1/sge_types.html?pathrev=V62u2_TAG">sge_types(1)</A></B> manpage for expression definition.
 
         Examples:
          -l arch="*x24*|sol*"  :
@@ -240,7 +240,7 @@ FORMAT
      operator for string type attributes is "==".
 
   requestable
-     The entry can be used in a <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> resource request if  this
+     The entry can be used in a <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B> resource request if  this
      field  is  set  to 'y' or 'yes'.  If set to 'n' or 'no' this
      entry cannot be used by a user in order to request  a  queue
      or  a  class  of queues.  If the entry is set to 'forced' or
@@ -251,7 +251,7 @@ FORMAT
      resource  has  to  be defined. This can be done on a cluster
      global, per host and per  queue  basis.  The  definition  of
      resource  availability  is performed with the complex_values
-     entry in <B><A HREF="../htmlman5/host_conf.html">host_conf(5)</A></B> and <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>.
+     entry in <B><A HREF="../htmlman5/host_conf.html?pathrev=V62u2_TAG">host_conf(5)</A></B> and <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62u2_TAG">queue_conf(5)</A></B>.
 
   consumable
      The consumable parameter can be set  to  either  'yes'  ('y'
@@ -277,7 +277,7 @@ FORMAT
      slave task queues.
 
      Consumables can be combined with  default  or  user  defined
-     load  parameters  (see  <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>  and <B><A HREF="../htmlman5/host_conf.html">host_conf(5)</A></B>), i.e.
+     load  parameters  (see  <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62u2_TAG">sge_conf(5)</A></B>  and <B><A HREF="../htmlman5/host_conf.html?pathrev=V62u2_TAG">host_conf(5)</A></B>), i.e.
      load values can be reported for consumable attributes or the
      consumable flag can be set for load attributes. The Sun Grid
      Engine consumable resource management takes  both  the  load
@@ -292,7 +292,7 @@ FORMAT
      a host can restrict availability of a cluster resource and a
      queue  can restrict host and cluster resources). The defini-
      tion  of  resource  availability  is  performed   with   the
-     complex_values entry in <B><A HREF="../htmlman5/host_conf.html">host_conf(5)</A></B> and <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>.  The
+     complex_values entry in <B><A HREF="../htmlman5/host_conf.html?pathrev=V62u2_TAG">host_conf(5)</A></B> and <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62u2_TAG">queue_conf(5)</A></B>.  The
      complex_values definition of  the  "global"  host  specifies
      cluster  global consumable settings. To each consumable com-
      plex attribute in a complex_values list a value is  assigned
@@ -320,7 +320,7 @@ FORMAT
      resource amount denoted in the default parameter  implicitly
      to  be  consumed by jobs being dispatched to a host or queue
      managing the consumable attribute. Jobs explicitly  request-
-     ing the attribute via the -<I>l</I> option to <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> override this
+     ing the attribute via the -<I>l</I> option to <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B> override this
      default value.
 
   urgency
@@ -330,18 +330,18 @@ FORMAT
      urgency contribution. For numeric type resource requests the
      addend is the product of the urgency value, the jobs assumed
      slot allocation and the per slot request as specified via -<I>l</I>
-     option to <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>.  For string type requests  the  resources
+     option to <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B>.  For string type requests  the  resources
      urgency value is directly used as addend. Urgency values are
-     of type real. See under <B><A HREF="../htmlman5/sge_priority.html">sge_priority(5)</A></B> for an  overview  on
+     of type real. See under <B><A HREF="../htmlman5/sge_priority.html?pathrev=V62u2_TAG">sge_priority(5)</A></B> for an  overview  on
      job priorities.
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>,  <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,  <B><A HREF="../htmlman1/uptime.html">uptime(1)</A></B>,
-     <B><A HREF="../htmlman5/host_conf.html">host_conf(5)</A></B>, <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>, <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>, <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>
+     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/sge_types.html?pathrev=V62u2_TAG">sge_types(1)</A></B>,  <B><A HREF="../htmlman1/qconf.html?pathrev=V62u2_TAG">qconf(1)</A></B>,  <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B>,  <B><A HREF="../htmlman1/uptime.html?pathrev=V62u2_TAG">uptime(1)</A></B>,
+     <B><A HREF="../htmlman5/host_conf.html?pathrev=V62u2_TAG">host_conf(5)</A></B>, <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62u2_TAG">queue_conf(5)</A></B>, <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u2_TAG">sge_execd(8)</A></B>, <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u2_TAG">sge_qmaster(8)</A></B>
      <I>Sun</I> <I>Grid</I> <I>Engine</I> <I>Installation</I> <I>and</I> <I>Administration</I>
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
 
 

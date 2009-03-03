@@ -39,7 +39,7 @@ DESCRIPTION
           DRMAA_PS_FAILED              job finished, but failed
 
      Jobs' user hold and user suspend states  can  be  controlled
-     via  <B><A HREF="../htmlman3/drmaa_control.html">drmaa_control(3)</A></B>.  For affecting system hold and system
+     via  <B><A HREF="../htmlman3/drmaa_control.html?pathrev=V62u2_TAG">drmaa_control(3)</A></B>.  For affecting system hold and system
      suspend states the appropriate Sun  Grid  Engine  interfaces
      must be used.
 
@@ -48,7 +48,7 @@ DESCRIPTION
      Sun  Grid Engine jobs.  <I>jobid</I> may contain either an Sun Grid
      Engine jobid or `DRMAA_JOB_IDS_SESSION_ALL' to refer to  all
      jobs   submitted  during  the  DRMAA  session  opened  using
-     <B><A HREF="../htmlman3/drmaa_init.html">drmaa_init(3)</A></B>.  Legal values for <I>action</I> and  their  meanings
+     <B><A HREF="../htmlman3/drmaa_init.html?pathrev=V62u2_TAG">drmaa_init(3)</A></B>.  Legal values for <I>action</I> and  their  meanings
      are:
 
           DRMAA_CONTROL_SUSPEND        suspend the job
@@ -59,11 +59,11 @@ DESCRIPTION
 
      The DRMAA suspend/resume operations are  equivalent  to  the
      use  of `-s &lt;jobid&gt;' and `-us &lt;jobid&gt;' options with Sun Grid
-     Engine  <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B>.   The  DRMAA  hold/release  operations  are
-     equivalent  to  the  use  of  Sun  Grid  Engine <B><A HREF="../htmlman1/qhold.html">qhold(1)</A></B> and
-     <B><A HREF="../htmlman1/qrls.html">qrls(1)</A></B>.  The DRMAA terminate operation is equivalent to the
-     use  of  Sun  Grid  Engine <B><A HREF="../htmlman1/qdel.html">qdel(1)</A></B>.  Only user hold and user
-     suspend can be controlled via <B><A HREF="../htmlman3/drmaa_control.html">drmaa_control(3)</A></B>.  For affect-
+     Engine  <B><A HREF="../htmlman1/qmod.html?pathrev=V62u2_TAG">qmod(1)</A></B>.   The  DRMAA  hold/release  operations  are
+     equivalent  to  the  use  of  Sun  Grid  Engine <B><A HREF="../htmlman1/qhold.html?pathrev=V62u2_TAG">qhold(1)</A></B> and
+     <B><A HREF="../htmlman1/qrls.html?pathrev=V62u2_TAG">qrls(1)</A></B>.  The DRMAA terminate operation is equivalent to the
+     use  of  Sun  Grid  Engine <B><A HREF="../htmlman1/qdel.html?pathrev=V62u2_TAG">qdel(1)</A></B>.  Only user hold and user
+     suspend can be controlled via <B><A HREF="../htmlman3/drmaa_control.html?pathrev=V62u2_TAG">drmaa_control(3)</A></B>.  For affect-
      ing  system  hold  and system suspend states the appropriate
      Sun Grid Engine interfaces must be used.
 
@@ -92,7 +92,7 @@ ENVIRONMENTAL VARIABLES
 
      SGE_QMASTER_PORT
                     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> is expected to listen for com-
+                    <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u2_TAG">sge_qmaster(8)</A></B> is expected to listen for com-
                     munication requests.  Most installations will
                     use  a  services  map entry instead to define
                     that port.
@@ -146,7 +146,7 @@ ERRORS
      The job is not in a hold state.
 
 SEE ALSO
-     <B><A HREF="../htmlman3/drmaa_submit.html">drmaa_submit(3)</A></B>and <B><A HREF="../htmlman3/drmaa_wait.html">drmaa_wait(3)</A></B>.
+     <B><A HREF="../htmlman3/drmaa_submit.html?pathrev=V62u2_TAG">drmaa_submit(3)</A></B>and <B><A HREF="../htmlman3/drmaa_wait.html?pathrev=V62u2_TAG">drmaa_wait(3)</A></B>.
 
 
 

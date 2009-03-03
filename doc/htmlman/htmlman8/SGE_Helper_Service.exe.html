@@ -11,19 +11,19 @@ SYNOPSIS
      SGE_Helper_Service.exe [ -help | -install | -uninstall ]
 
 DESCRIPTION
-     <I>SGE</I>_<I>Helper</I>_<I>Service</I>.<I>exe</I> <I>helps</I> <I>the</I> <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> to run Windows
+     <I>SGE</I>_<I>Helper</I>_<I>Service</I>.<I>exe</I> <I>helps</I> <I>the</I> <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u2_TAG">sge_execd(8)</A></B> to run Windows
      jobs  that request to be allowed to display their GUI on the
      visible Desktop. It is a Win32 service that  is  started  at
      boot  time  under  the SYSTEM account, giving it the permis-
      sions to give any process  the  permissions  to  access  the
      visible Desktop.
-     This service runs independently of the <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> (i.e. it
+     This service runs independently of the <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u2_TAG">sge_execd(8)</A></B> (i.e. it
      is  not started and stopped together with the execution dae-
      mon) and there can be only  one  SGE_Helper_Service.exe  per
      host.
      Jobs can request to be allowed to display their GUI  on  the
      visible desktop by requesting the resource "display_win_gui"
-     (qsub -l display_win_gui=1). See <B><A HREF="../htmlman1/submit.html">submit(1)</A></B>  ,  option  "-v",
+     (qsub -l display_win_gui=1). See <B><A HREF="../htmlman1/submit.html?pathrev=V62u2_TAG">submit(1)</A></B>  ,  option  "-v",
      for information on how to set a job environment variable.
      When   running   GUI   jobs,   the   environment    variable
      SGE_BACKGND_MODE  can  be used to direct where the output of
@@ -49,10 +49,10 @@ OPTIONS
      information on how to stop a service.
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>.
+     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B>, <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u2_TAG">sge_execd(8)</A></B>.
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
 
 

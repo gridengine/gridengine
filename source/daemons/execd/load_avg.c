@@ -810,7 +810,7 @@ void update_job_usage(const char* qualified_hostname)
    }
 
 #ifdef COMPILE_DC
-#ifdef DEBUG_DC
+#ifdef DEBUG
    ptf_show_registered_jobs();
 #endif
 #endif
@@ -882,7 +882,7 @@ void update_job_usage(const char* qualified_hostname)
                ERROR((SGE_EVENT, "could not find job report for job "sge_u32"."sge_u32" "
                   "task %s contained in job usage from ptf", job_id, ja_task_id, pe_task_id));
 #ifdef COMPILE_DC
-#ifdef DEBUG_DC
+#ifdef DEBUG
                ptf_show_registered_jobs();
 #endif
 #endif

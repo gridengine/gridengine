@@ -670,7 +670,7 @@ static lCondition *read_val(lDescr *dp, cull_parse_state *state, va_list *app)
       DRETURN(NULL);
    }
 
-   if (!(cp = (lCondition *)calloc(1, sizeof(lCondition)))) {
+   if (!(cp = (lCondition *) calloc(1, sizeof(lCondition)))) {
       LERROR(LEMALLOC);
       DRETURN(NULL);
    }
@@ -678,7 +678,7 @@ static lCondition *read_val(lDescr *dp, cull_parse_state *state, va_list *app)
    if ((token = scan(NULL, state)) != FIELD) {
       lFreeWhere(&cp);
       LERROR(LESYNTAX);
-      DRETURN(NULL);
+      DRETURN(0);
    }
    eat_token(state);
 
@@ -1171,6 +1171,7 @@ void lFreeWhere(lCondition **cp)
 
    default:
       LERROR(LEOPUNKNOWN);
+      DRETURN_VOID;
    }
 
    FREE(*cp);

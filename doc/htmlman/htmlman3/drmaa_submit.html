@@ -44,27 +44,27 @@ SYNOPSIS
      );
 
 DESCRIPTION
-     drmaa_run_job() submits an Sun Grid Engine job  with  attri-
-     butes  defined  in the DRMAA job template, <I>jt</I>. On success up
-     to <I>job</I>_<I>id</I>_<I>len</I> bytes of the job identifier are returned  into
-     the buffer, <I>job</I>_<I>id</I>.
+     drmaa_run_job() submits an Grid Engine job  with  attributes
+     defined  in  the  DRMAA  job  template, <I>jt</I>. On success up to
+     <I>job</I>_<I>id</I>_<I>len</I> bytes of the job identifier are returned into the
+     buffer, <I>job</I>_<I>id</I>.
 
   drmaa_run_bulk_jobs()
-     The drmaa_run_bulk_jobs() submits a Sun  Grid  Engine  array
-     job  very  much as if the <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B> option `-t <I>start</I>-<I>end</I>:<I>incr</I>'
-     had been used along with the additional  attributes  defined
-     in  the  DRMAA  job  template,  <I>jt</I>.   The  same  constraints
-     regarding value ranges are also in effect for the parameters
-     <I>start</I>,  <I>end</I>,  and <I>incr</I> as for <B><A HREF="../htmlman5/qsub.html?pathrev=V62u2_TAG">qsub(5)</A></B> -t. On success a DRMAA
-     job id string vector containing  job  identifiers  for  each
-     array  job task is returned into <I>jobids</I>. The job identifiers
-     in  the  job  id  string  vector  can  be  extracted   using
-     <B><A HREF="../htmlman3/drmaa_get_next_job_id.html?pathrev=V62u2_TAG">drmaa_get_next_job_id(3)</A></B>.   The number of identifiers in the
+     The drmaa_run_bulk_jobs() submits a Grid  Engine  array  job
+     very  much  as if the <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> option `-t <I>start</I>-<I>end</I>:<I>incr</I>' had
+     been used along with the additional  attributes  defined  in
+     the  DRMAA job template, <I>jt</I>.  The same constraints regarding
+     value ranges are also in effect for  the  parameters  <I>start</I>,
+     <I>end</I>,  and  <I>incr</I> as for <B><A HREF="../htmlman5/qsub.html">qsub(5)</A></B> -t. On success a DRMAA job id
+     string vector containing job identifiers for each array  job
+     task is returned into <I>jobids</I>. The job identifiers in the job
+     id    string    vector    can     be     extracted     using
+     <B><A HREF="../htmlman3/drmaa_get_next_job_id.html">drmaa_get_next_job_id(3)</A></B>.   The number of identifiers in the
      job   id   string   vector   can   be    determined    using
-     <B><A HREF="../htmlman3/drmaa_get_num_job_ids.html?pathrev=V62u2_TAG">drmaa_get_num_job_ids(3)</A></B>.   Note  that this function is only
+     <B><A HREF="../htmlman3/drmaa_get_num_job_ids.html">drmaa_get_num_job_ids(3)</A></B>.   Note  that this function is only
      available in the 1.0 implementation.  The caller is  respon-
      sible  for  releasing the job id string vector returned into
-     <I>jobids</I> using <B><A HREF="../htmlman3/drmaa_release_job_ids.html?pathrev=V62u2_TAG">drmaa_release_job_ids(3)</A></B>.
+     <I>jobids</I> using <B><A HREF="../htmlman3/drmaa_release_job_ids.html">drmaa_release_job_ids(3)</A></B>.
 
   drmaa_get_next_job_id()
      Each time drmaa_get_next_job_id() is called it returns  into
@@ -81,35 +81,34 @@ DESCRIPTION
   drmaa_release_job_ids()
      The  drmaa_release_attr_job_id()   function   releases   all
      resources  associated  with  the DRMAA job id string vector,
-     <I>values</I>. This operation has no effect on the actual Sun  Grid
+     <I>values</I>. This operation has no  effect  on  the  actual  Grid
      Engine array job tasks.
 
 ENVIRONMENTAL VARIABLES
-     SGE_ROOT       Specifies the location of the Sun Grid Engine
+     GE_ROOT        Specifies the location  of  the  Grid  Engine
                     standard configuration files.
 
-     SGE_CELL       If set, specifies the default Sun Grid Engine
-                    cell to be used. To address a Sun Grid Engine
-                    cell Sun Grid Engine uses (in  the  order  of
-                    precedence):
+     GE_CELL        If set, specifies  the  default  Grid  Engine
+                    cell  to  be  used.  To address a Grid Engine
+                    cell Grid Engine uses (in the order  of  pre-
+                    cedence):
 
                          The name of the cell  specified  in  the
-                         environment  variable SGE_CELL, if it is
+                         environment  variable  GE_CELL, if it is
                          set.
 
                          The  name  of  the  default  cell,  i.e.
                          default.
 
 
-     SGE_DEBUG_LEVEL
-                    If  set,  specifies  that  debug  information
+     GE_DEBUG_LEVEL If  set,  specifies  that  debug  information
                     should  be written to stderr. In addition the
                     level of detail in which debug information is
                     generated is defined.
 
-     SGE_QMASTER_PORT
+     GE_QMASTER_PORT
                     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u2_TAG">sge_qmaster(8)</A></B> is expected to listen for com-
+                    <B><A HREF="../htmlman8/ge_qmaster.html">ge_qmaster(8)</A></B>  is expected to listen for com-
                     munication requests.  Most installations will
                     use  a  services  map entry instead to define
                     that port.
@@ -163,7 +162,7 @@ ERRORS
      When there are no more entries in the vector.
 
 SEE ALSO
-     <B><A HREF="../htmlman3/drmaa_attributes.html?pathrev=V62u2_TAG">drmaa_attributes(3)</A></B>, <B><A HREF="../htmlman3/drmaa_jobtemplate.html?pathrev=V62u2_TAG">drmaa_jobtemplate(3)</A></B>.
+     <B><A HREF="../htmlman3/drmaa_attributes.html">drmaa_attributes(3)</A></B>, <B><A HREF="../htmlman3/drmaa_jobtemplate.html">drmaa_jobtemplate(3)</A></B>.
 
 
 

@@ -115,10 +115,18 @@ static sge_follow_t Follow_Control = {
    NULL
 };
 
-static int ticket_orders_field[] = { OR_job_number,
-                                     OR_ja_task_number,
-                                     OR_ticket,
-                                     NoName };
+/* EB: TODO: ST: remove code below ? */
+
+typedef struct {
+   pthread_mutex_t    add_order_mutex;    /* gards the access to the variables 
+                                             in this structure */
+   lList              *orders;            /* orders to process */
+   bool               is_currently_busy;  /* anothe thread is currently processing 
+                                             the orders */
+   bool               is_waiting;         /* is set, when a other thread is waiting */
+   pthread_cond_t     cond_var;           /* used for waiting till all orders 
+                                             are processed    */
+} sge_order_t;
 
 /****** sge_follow/sge_set_next_spooling_time() ********************************
 *  NAME
@@ -453,6 +461,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
           *  and gets untagged when ack has arrived 
           */
          if (pe && lGetBool(pe, PE_control_slaves)) {
+      
             lSetDouble(gdil_ep, JG_ticket, lGetDouble(oep, OQ_ticket));
             lSetDouble(gdil_ep, JG_oticket, lGetDouble(oep, OQ_oticket));
             lSetDouble(gdil_ep, JG_fticket, lGetDouble(oep, OQ_fticket));
@@ -765,6 +774,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
 
       DPRINTF(("ORDER ORT_tickets\n"));
       {
+         lList *oeql;
          lListElem *joker;
 
          job_number=lGetUlong(ep, OR_job_number);
@@ -816,7 +826,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
                return 0;
             }
          } else {
-            bool distribute_tickets = false;
+            bool destribute_tickets = false;
             /* modify jobs ticket amount and spool job */
             lSetDouble(jatp, JAT_tix, lGetDouble(ep, OR_ticket));
             DPRINTF(("TICKETS: "sge_u32"."sge_u32" "sge_u32" tickets\n",
@@ -833,7 +843,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
                job_pos_t   *order_job_pos;
          
                joker_task = lFirst(lGetList(joker, JB_ja_tasks));
-               distribute_tickets = (lGetPosViaElem(joker_task, JAT_granted_destin_identifier_list, SGE_NO_ABORT) > -1)? true : false;
+               destribute_tickets = (lGetPosViaElem(joker_task, JAT_granted_destin_identifier_list, SGE_NO_ABORT) > -1)? true : false;
 
                sge_mutex_lock("follow_last_update_mutex", SGE_FUNC, __LINE__, &Follow_Control.last_update_mutex);
          
@@ -867,86 +877,70 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
                sge_mutex_unlock("follow_last_update_mutex", SGE_FUNC, __LINE__, &Follow_Control.last_update_mutex); 
             }
 
-            /* tickets should only be further distributed in the scheduler reprioritize_interval. Only in
+            /* tickets should only be further destributed in the scheduler reprioritize_interval. Only in
                those intervales does the ticket order structure contain a JAT_granted_destin_identifier_list.
                We use that as an identifier to go on, or not. */
-            if (distribute_tickets && topp != NULL) {
-               lDescr *rdp = NULL;
-
-               lEnumeration *what = lIntVector2What(OR_Type, ticket_orders_field);
-               lReduceDescr(&rdp, OR_Type, what);
+            if (destribute_tickets) {
+               /* add a copy of this order to the ticket orders list */
+               if (!*topp) 
+                  *topp = lCreateList("ticket orders", OR_Type);
 
                /* If a ticket order has a queuelist, then this is a parallel job
                   with controlled sub-tasks. We generate a ticket order for
                   each host in the queuelist containing the total tickets for
                   all job slots being used on the host */
-               if (lGetList(ep, OR_queuelist)) {
-                  lList *host_tickets_cache = lCreateList("", UA_Type); /* cashed temporary hash list */
+               if ((oeql=lCopyList(NULL, lGetList(ep, OR_queuelist)))) {
+                  const char *oep_qname=NULL, *oep_hname=NULL;
+                  lListElem *oep_qep=NULL;
                   /* set granted slot tickets */
-                  for_each(oep, lGetList(ep, OR_queuelist)) {
+                  for_each(oep, oeql) {
                      lListElem *gdil_ep;
-                     lListElem *chost_ep;
-
                      if ((gdil_ep=lGetSubStr(jatp, JG_qname, lGetString(oep, OQ_dest_queue),
                           JAT_granted_destin_identifier_list))) {
-                        double tickets = lGetDouble(oep, OQ_ticket);
-                        const char *hostname = lGetHost(gdil_ep, JG_qhostname);
-
-                        lSetDouble(gdil_ep, JG_ticket, tickets);
+                        lSetDouble(gdil_ep, JG_ticket, lGetDouble(oep, OQ_ticket));
                         lSetDouble(gdil_ep, JG_oticket, lGetDouble(oep, OQ_oticket));
                         lSetDouble(gdil_ep, JG_fticket, lGetDouble(oep, OQ_fticket));
                         lSetDouble(gdil_ep, JG_sticket, lGetDouble(oep, OQ_sticket));
+                     }
+                  }
 
-                        chost_ep = lGetElemStr(host_tickets_cache, UA_name, hostname);
-                        if (chost_ep == NULL) {
-                           chost_ep = lAddElemStr(&host_tickets_cache, UA_name, hostname, UA_Type);
+                  while((oep=lFirst(oeql))) {          
+                     if (((oep_qname=lGetString(oep, OQ_dest_queue))) &&
+                         ((oep_qep = cqueue_list_locate_qinstance(*object_base[SGE_TYPE_CQUEUE].list,
+                                                       oep_qname))) &&
+                         ((oep_hname=lGetHost(oep_qep, QU_qhostname)))) {
+
+                        const char *curr_oep_qname=NULL, *curr_oep_hname=NULL;
+                        lListElem *curr_oep, *next_oep, *curr_oep_qep=NULL;
+                        double job_tickets_on_host = lGetDouble(oep, OQ_ticket);
+                        lListElem *newep;
+
+                        for(curr_oep=lNext(oep); curr_oep; curr_oep=next_oep) {
+                           next_oep = lNext(curr_oep);
+                           if (((curr_oep_qname=lGetString(curr_oep, OQ_dest_queue))) &&
+                               ((curr_oep_qep = cqueue_list_locate_qinstance(*object_base[SGE_TYPE_CQUEUE].list, 
+                                                                             curr_oep_qname))) &&
+                               ((curr_oep_hname=lGetHost(curr_oep_qep, QU_qhostname))) &&
+                               !sge_hostcmp(oep_hname, curr_oep_hname)) {     /* CR SPEEDUP CANDIDATE */
+                              job_tickets_on_host += lGetDouble(curr_oep, OQ_ticket);
+                              lRemoveElem(oeql, &curr_oep);
+                           }
                         }
-                        lAddDouble(chost_ep, UA_value, tickets);
-                     }
+                        newep = lCopyElem(ep);
+                        lSetDouble(newep, OR_ticket, job_tickets_on_host);
+                        lAppendElem(*topp, newep);
+
+                     } else
+                        ERROR((SGE_EVENT, MSG_ORD_UNABLE2FINDHOST_S, oep_qname ? oep_qname : MSG_OBJ_UNKNOWN));
+
+                     lRemoveElem(oeql, &oep);
                   }
 
-                  /* map cached tickets back to RTIC_Type list */
-                  for_each(oep, host_tickets_cache) {
-                     const char *hostname = lGetString(oep, UA_name);
-                     lListElem *rtic_ep;
-                     lList* host_tickets;
+                  lFreeList(&oeql);
 
-                     lListElem *newep = lSelectElemDPack(ep, NULL, rdp, what, false, NULL, NULL);
-                     lSetDouble(newep, OR_ticket, lGetDouble(oep, UA_value));
-                    
-                     rtic_ep = lGetElemHost(*topp, RTIC_host, hostname);
-                     if (rtic_ep == NULL) {
-                        rtic_ep = lAddElemHost(topp, RTIC_host, hostname, RTIC_Type);
-                     }
-                     host_tickets = lGetList(rtic_ep, RTIC_tickets);
-                     if (host_tickets == NULL) {
-                        host_tickets = lCreateList("ticket orders", rdp);
-                        lSetList(rtic_ep, RTIC_tickets, host_tickets);
-                     }
-                     lAppendElem(host_tickets, newep);
-                  }
-                  lFreeList(&host_tickets_cache);
-               } else {
-                  lList *gdil = lGetList(jatp, JAT_granted_destin_identifier_list);
-                  if (gdil != NULL) {
-                     lListElem *newep = lSelectElemDPack(ep, NULL, rdp, what, false, NULL, NULL);
-                     lList* host_tickets;
-                     const char *hostname = lGetHost(lFirst(gdil), JG_qhostname);
-                     lListElem *rtic_ep = lGetElemHost(*topp, RTIC_host, hostname);
-                     if (rtic_ep == NULL) {
-                        rtic_ep = lAddElemHost(topp, RTIC_host, hostname, RTIC_Type);
-                     }
-                     host_tickets = lGetList(rtic_ep, RTIC_tickets);
-                     if (host_tickets == NULL) {
-                        host_tickets = lCreateList("ticket orders", rdp);
-                        lSetList(rtic_ep, RTIC_tickets, host_tickets);
-                     }
-                     lAppendElem(host_tickets, newep);
-                  }
-
+               } else if (lGetPosViaElem(jatp, JAT_granted_destin_identifier_list, SGE_NO_ABORT) !=-1) {
+                          lAppendElem(*topp, lCopyElem(ep));
                }
-               lFreeWhat(&what);
-               FREE(rdp);
             }
          }
       }
@@ -1529,47 +1523,116 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
  */
 int distribute_ticket_orders(sge_gdi_ctx_class_t *ctx, lList *ticket_orders, monitoring_t *monitor, object_description *object_base) 
 {
-   u_long32 now = sge_get_gmt();
-   unsigned long last_heard_from = 0;
+   u_long32 jobid, jataskid; 
+   lList *to_send;
+   const char *host_name;
+   const char *master_host_name;
+   lListElem *jep, *other_jep, *ep, *ep2, *next, *other, *jatask = NULL, *other_jatask;
+   sge_pack_buffer pb;
+   int n;
+   u_long32 now;
    int cl_err = CL_RETVAL_OK;
-   lListElem *ep;
+   unsigned long last_heard_from = 0;
 
    DENTER(TOP_LAYER, "distribute_ticket_orders");
-   
-   for_each(ep, ticket_orders) {
-      lList *to_send = lGetList(ep, RTIC_tickets);
-      const char *host_name = lGetHost(ep, RTIC_host);
-      lListElem *hep = host_list_locate(*object_base[SGE_TYPE_EXECHOST].list, host_name);
 
-      int n = lGetNumberOfElem(to_send);
+   now = sge_get_gmt();
+
+   while ((ep=lFirst(ticket_orders))) {     /* CR SPEEDUP CANDIDATE */
+      lListElem *hep;
+      lListElem *destin_elem;
+   
+      jobid = lGetUlong(ep, OR_job_number);
+      jataskid = lGetUlong(ep, OR_ja_task_number);
+
+      DPRINTF(("Job: %ld, Task: %ld", jobid, jataskid));
+
+      /* seek job element */
+      if (!(jep = job_list_locate(*object_base[SGE_TYPE_JOB].list, jobid)) || 
+          !(jatask = job_search_task(jep, NULL, jataskid))) { 
+         ERROR((SGE_EVENT, MSG_JOB_MISSINGJOBTASK_UU, sge_u32c(jobid), sge_u32c(jataskid)));
+         lRemoveElem(ticket_orders, &ep);
+         continue;
+      }
+ 
+      /* seek master queue */
+      destin_elem = lFirst(lGetList(jatask, JAT_granted_destin_identifier_list));
+      
+      if (destin_elem == NULL) { /* the job has finished, while we are processing the events. No need to assign the */
+         lRemoveElem(ticket_orders, &ep);
+         continue;               /* the running tickets, since there is nothing running anymore and we do not have */
+      }                          /* the information, where the job was running */
+
+      master_host_name = lGetHost(destin_elem, JG_qhostname);
+
+      /* put this one in 'to_send' */ 
+      to_send = lCreateList("to send", lGetElemDescr(ep));
+      lDechainElem(ticket_orders, ep);
+      lAppendElem(to_send, ep);
+
+      /* 
+         now seek all other ticket orders 
+         for jobs residing on this host 
+         and add them to 'to_send'
+      */ 
+      next = lFirst(ticket_orders);
+      while ((other=next)) {      /* CR SPEEDUP CANDIDATE */
+         next = lNext(other);
+
+         other_jep = job_list_locate(*object_base[SGE_TYPE_JOB].list, lGetUlong(other, OR_job_number)); 
+         other_jatask = job_search_task(other_jep, NULL, lGetUlong(other, OR_ja_task_number));
+         if (!other_jep || !other_jatask) {
+            ERROR((SGE_EVENT, MSG_JOB_MISSINGJOBTASK_UU, sge_u32c(jobid), sge_u32c(jataskid)));
+            lRemoveElem(ticket_orders, &other);
+         } else { 
+            destin_elem = lFirst(lGetList(jatask, JAT_granted_destin_identifier_list));
+
+            if (destin_elem == NULL) { /* the job has finished, while we are processing the events. No need to assign the */
+               lRemoveElem(ticket_orders, &other);
+               continue;               /* the running tickets, since there is nothing running anymore and we do not have */
+            }                          /* the information, where the job was running */
+      
+            host_name = lGetHost(destin_elem, JG_qhostname);
+
+            if (!sge_hostcmp(host_name, master_host_name)) {
+               /* add it */
+               lDechainElem(ticket_orders, other);
+               lAppendElem(to_send, other);
+            } 
+         }
+      }
+ 
+      hep = host_list_locate(*object_base[SGE_TYPE_EXECHOST].list, master_host_name);
+      n = lGetNumberOfElem(to_send);
 
       if (hep) {
          cl_commlib_get_last_message_time((cl_com_get_handle(prognames[QMASTER], 0)),
-                                        (char*)host_name, (char*)prognames[EXECD],1, &last_heard_from);
+                                        (char*)master_host_name, (char*)prognames[EXECD],1, &last_heard_from);
       }
       if (hep &&  last_heard_from + 10 * mconf_get_load_report_time() > now) {
-         sge_pack_buffer pb;
 
+         /* should have now all ticket orders for 'host' in 'to_send' */ 
          if (init_packbuffer(&pb, sizeof(u_long32)*3*n, 0)==PACK_SUCCESS) {
             u_long32 dummyid = 0;
-            lListElem *ep2;
             for_each (ep2, to_send) {
                packint(&pb, lGetUlong(ep2, OR_job_number));
                packint(&pb, lGetUlong(ep2, OR_ja_task_number));
                packdouble(&pb, lGetDouble(ep2, OR_ticket));
             }
-            cl_err = gdi2_send_message_pb(ctx, 0, prognames[EXECD], 1, host_name, 
+            cl_err = gdi2_send_message_pb(ctx, 0, prognames[EXECD], 1, master_host_name, 
                                          TAG_CHANGE_TICKET, &pb, &dummyid);
             MONITOR_MESSAGES_OUT(monitor);
             clear_packbuffer(&pb);
             DPRINTF(("%s %d ticket changings to execd@%s\n", 
-                     (cl_err==CL_RETVAL_OK)?"failed sending":"sent", n,host_name));
+                     (cl_err==CL_RETVAL_OK)?"failed sending":"sent", n, master_host_name));
          }
       } else {
          DPRINTF(("     skipped sending of %d ticket changings to "
-               "execd@%s because %s\n", n, host_name, 
+               "execd@%s because %s\n", n, master_host_name, 
                !hep?"no such host registered":"suppose host is down"));
       }
+
+      lFreeList(&to_send);
    }
 
    DRETURN(cl_err);

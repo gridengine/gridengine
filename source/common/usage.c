@@ -1179,10 +1179,6 @@ void sge_usage(u_long32 prog_number, FILE *fp) {
       MARK(OA_NODE_PATH);
    }
 
-   if (VALID_OPT(sst_OPT, prog_number)) {
-      PRINTITD(MSG_GDI_USAGE_sst_OPT, MSG_GDI_UTEXT_sst_OPT);
-   }
-
    if (VALID_OPT(sstree_OPT, prog_number)) {
       PRINTITD(MSG_GDI_USAGE_sstree_OPT, MSG_GDI_UTEXT_sstree_OPT);
    }

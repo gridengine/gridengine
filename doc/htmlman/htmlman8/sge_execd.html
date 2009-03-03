@@ -3,32 +3,32 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     sge_execd - Sun Grid Engine job execution agent
+     ge_execd - Grid Engine job execution agent
 
 SYNOPSIS
-     sge_execd [ -help ]
+     ge_execd [ -help ]
 
 DESCRIPTION
-     <I>sge</I>_<I>execd</I> controls the Sun Grid Engine queues local  to  the
-     machine  on which <I>sge</I>_<I>execd</I> is running and executes/controls
-     the jobs sent from <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u2_TAG">sge_qmaster(8)</A></B> to be run on these queues.
+     <I>ge</I>_<I>execd</I> controls  the  Grid  Engine  queues  local  to  the
+     machine  on  which <I>ge</I>_<I>execd</I> is running and executes/controls
+     the jobs sent from <B><A HREF="../htmlman8/ge_qmaster.html">ge_qmaster(8)</A></B> to be run on these queues.
 
 OPTIONS
   -help
      Prints a listing of all options.
 
 LOAD SENSORS
-     If a load sensor is configured for <I>sge</I>_<I>execd</I> via either  the
+     If a load sensor is configured for <I>ge</I>_<I>execd</I> via  either  the
      global  host  configuration  or  the execution-host-specific
-     cluster configuration  (See  <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62u2_TAG">sge_conf(5)</A></B>.),  the  executable
-     path of the load sensor is invoked by <I>sge</I>_<I>execd</I> on a regular
-     basis and delivers one or multiple load figures for the exe-
-     cution  host  (e.g.   users currently logged in) or the com-
-     plete cluster (e.g.  free  disk  space  on  a  network  wide
-     scratch  file  system). The load sensor may be a script or a
-     binary executable. In either case its handling of the  STDIN
-     and  STDOUT  streams and its control flow must comply to the
-     following rules:
+     cluster configuration (See <B><A HREF="../htmlman5/ge_conf.html">ge_conf(5)</A></B>.), the executable path
+     of the load sensor is invoked by <I>ge</I>_<I>execd</I> on a regular basis
+     and delivers one or multiple load figures for the  execution
+     host (e.g.  users currently logged in) or the complete clus-
+     ter (e.g. free disk space on a  network  wide  scratch  file
+     system). The load sensor may be a script or a binary execut-
+     able. In either case its handling of the  STDIN  and  STDOUT
+     streams  and  its  control flow must comply to the following
+     rules:
 
      The load sensor must be written as an infinite loop  waiting
      at  a  certain  point  for  input  from STDIN. If the string
@@ -40,7 +40,7 @@ LOAD SENSORS
      result to stdout. The format is as follows:
 
      <B>o</B>  A load value report starts with a  line  containing  only
-        either the word  "start" or the word "begin".
+        the word  "start".
 
      <B>o</B>  Individual load values are separated by newlines.
 
@@ -53,7 +53,7 @@ LOAD SENSORS
 
      <B>o</B>  The second part is the symbolic name of the load value as
         defined  in  the  host  or  global complex list (see <I>com-</I>
-        <B><A HREF="../htmlman5/plex.html?pathrev=V62u2_TAG">plex(5)</A></B> for details). If a load  value  is  reported  for
+        <B><A HREF="../htmlman5/plex.html">plex(5)</A></B> for details). If a load  value  is  reported  for
         which no entry in the host or global complex list exists,
         the reported load value is not used.
 
@@ -63,68 +63,68 @@ LOAD SENSORS
         "end".
 
 ENVIRONMENTAL VARIABLES
-     SGE_ROOT       Specifies the location of the Sun Grid Engine
+     GE_ROOT        Specifies the location  of  the  Grid  Engine
                     standard configuration files.
 
-     SGE_CELL       If set, specifies the default Sun Grid Engine
-                    cell.  To  address  a  Sun  Grid  Engine cell
-                    <I>sge</I>_<I>execd</I> uses (in the order of precedence):
+     GE_CELL        If set, specifies  the  default  Grid  Engine
+                    cell.  To address a Grid Engine cell <I>ge</I>_<I>execd</I>
+                    uses (in the order of precedence):
 
                          The name of the cell  specified  in  the
-                         environment  variable SGE_CELL, if it is
+                         environment  variable  GE_CELL, if it is
                          set.
 
                          The  name  of  the  default  cell,  i.e.
                          default.
 
 
-     SGE_DEBUG_LEVEL
-                    If  set,  specifies  that  debug  information
+     GE_DEBUG_LEVEL If  set,  specifies  that  debug  information
                     should  be written to stderr. In addition the
                     level of detail in which debug information is
                     generated is defined.
 
-     SGE_QMASTER_PORT
+     GE_QMASTER_PORT
                     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u2_TAG">sge_qmaster(8)</A></B> is expected to listen for com-
+                    <B><A HREF="../htmlman8/ge_qmaster.html">ge_qmaster(8)</A></B>  is expected to listen for com-
                     munication requests.  Most installations will
                     use  a  services  map  entry  for the service
                     "sge_qmaster" instead to define that port.
 
-     SGE_EXECD_PORT If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u2_TAG">sge_execd(8)</A></B>  is  expected to listen for com-
-                    munication requests.  Most installations will
+     GE_EXECD_PORT  If set,  specifies  the  tcp  port  on  which
+                    <B><A HREF="../htmlman8/ge_execd.html">ge_execd(8)</A></B> is expected to listen for commun-
+                    ication requests.   Most  installations  will
                     use  a  services  map  entry  for the service
                     "sge_execd" instead to define that port.
 
 RESTRICTIONS
-     <I>sge</I>_<I>execd</I> usually is started from root on  each  machine  in
-     the  Sun  Grid  Engine pool.  If started by a normal user, a
-     spool  directory  must  be  used  to  which  the  user   has
-     read/write access. In this case only jobs being submitted by
-     that same user are handled correctly by the system.
+     <I>ge</I>_<I>execd</I> usually is started from root on each machine in the
+     Grid  Engine  pool.   If  started  by a normal user, a spool
+     directory must be used to  which  the  user  has  read/write
+     access.  In this case only jobs being submitted by that same
+     user are handled correctly by the system.
 
 FILES
      sgepasswd  contains  a  list  of  user  names   and    their
-     corresponding  encrypted  passwords. If available, the pass-
-     word  file  will  be   used   by  sge_execd. To  change  the
-     contents  of  this file please use the sgepasswd command. It
-     is not advised to  change that file manually.
-     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>configuration</I>
-                     Sun Grid Engine global configuration
-     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>local</I>_<I>conf</I>/&lt;<I>host</I>&gt;
-                     Sun Grid Engine host specific configuration
-     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>spool</I>/&lt;<I>host</I>&gt;
-                     Default execution host spool directory
-     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>act</I>_<I>qmaster</I>
-                     Sun Grid Engine master host file
+     corresponding   encrypted   passwords.   If  available,  the
+     password  file  will  be   used   by  sge_execd.  To  change
+     the  contents of this file please use the sgepasswd command.
+     It is not advised to  change that file manually.
+     &lt;<I>ge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>configuration</I>
+                    Grid Engine global configuration
+     &lt;<I>ge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>local</I>_<I>conf</I>/&lt;<I>host</I>&gt;
+                    Grid Engine host specific configuration
+     &lt;<I>ge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>spool</I>/&lt;<I>host</I>&gt;
+                    Default execution host spool directory
+     &lt;<I>ge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>act</I>_<I>qmaster</I>
+                    Grid Engine master host file
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B>, <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62u2_TAG">sge_conf(5)</A></B>, <B><A HREF="../htmlman5/complex.html?pathrev=V62u2_TAG">complex(5)</A></B>, <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u2_TAG">sge_qmaster(8)</A></B>.
+     <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B>, <B><A HREF="../htmlman5/ge_conf.html">ge_conf(5)</A></B>, <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>, <B><A HREF="../htmlman8/ge_qmaster.html">ge_qmaster(8)</A></B>.
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B> for a full statement of rights  and  permis-
      sions.
+
 
 
 

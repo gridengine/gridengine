@@ -37,7 +37,6 @@ import java.awt.Component;
 import java.util.Hashtable;
 import javax.swing.JLabel;
 import javax.swing.JTable;
-import javax.swing.border.EmptyBorder;
 import javax.swing.table.TableCellRenderer;
 
 /**
@@ -51,7 +50,6 @@ public class StateCellRenderer implements TableCellRenderer {
 
     private static final Color COLOR_GOOD = Color.GREEN;
     private static final Color COLOR_BAD  = Color.RED;
-    private static final Color COLOR_WARNING  = new Color(255, 215, 0); // Yellow
 
     /**
      * Constructor
@@ -63,7 +61,6 @@ public class StateCellRenderer implements TableCellRenderer {
 
         label = new JLabel();
         label.setOpaque(true);
-        label.setBorder(new EmptyBorder(0, 1, 0, 1));
     }
 
     public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
@@ -74,14 +71,12 @@ public class StateCellRenderer implements TableCellRenderer {
 
             Color backColor = table.getBackground();
             label.setText(state.toString());
-            label.setToolTipText(state.getTooltip());
 
             // differenciate between states
             switch (state) {
                 case RESOLVING:
-                case PROCESSING:
-                case CONTACTING:
-                case VALIDATING: { // running states
+                case INSTALLING:
+                case CONTACTING: { // running states
                     if (!progressBars.containsKey(Integer.valueOf(row))) {
                         progressBars.put(Integer.valueOf(row), new HostProgressBar(state.toString()));
                     }
@@ -100,30 +95,12 @@ public class StateCellRenderer implements TableCellRenderer {
                     backColor = COLOR_GOOD;
                     break;
                 }
-                case PERM_QMASTER_SPOOL_DIR:
-                case PERM_EXECD_SPOOL_DIR:
-                case PERM_BDB_SPOOL_DIR:
-                case PERM_JMX_KEYSTORE:
-                case BDB_SPOOL_DIR_EXISTS:
-                case BDB_SPOOL_DIR_WRONG_FSTYPE:
-                case USED_QMASTER_PORT:
-                case USED_EXECD_PORT:
-                case USED_JMX_PORT:
-                case ADMIN_USER_NOT_KNOWN:
-                case UNKNOWN_ERROR: { // warning states
-                    if (progressBars.containsKey(Integer.valueOf(row))) {
-                        progressBars.remove(Integer.valueOf(row));
-                    }
-                    comp = label;
-                    backColor = COLOR_WARNING;
-                    break;
-                }
                 default: { // bad states
                     if (progressBars.containsKey(Integer.valueOf(row))) {
                         progressBars.remove(Integer.valueOf(row));
                     }
                     comp = label;
-                    backColor = COLOR_BAD; // RESOLVABLE, UNREACHABLE, NEW_UNKNOWN_HOST, UNKNOWN_HOST, FAILED, COPY_TIMEOUT, COPY_FAILED, ADMIN_USER_MISSING
+                    backColor = COLOR_BAD; // REACHABLE, NEW_UNKNOWN_HOST, UNKNOWN_HOST, FAILED
                 }
             }
 

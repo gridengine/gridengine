@@ -65,21 +65,6 @@ int main(int argc, char *argv[])
 
    lInit(nmv);
 
-   /* test if unparsable request returns NULL */
-   enp = lWhat("%T(%I%I->%T(%I%T))", TEST_Type, TEST_int, TEST_int, TEST_Type, TEST_int, TEST_host);
-   if (enp != NULL) {
-      lFreeWhat(&enp);
-      printf("lWhat is broken!\n");
-      return EXIT_FAILURE;
-   } else {
-      lCondition *where = lWhere("%T(ALL)", TEST_Type);
-      if (where != NULL) {
-         lFreeWhere(&where);
-         printf("lWhere is broken!\n");
-         return EXIT_FAILURE;
-      }
-   }
-
    /* create an element */
    ep = lCreateElem(TEST_Type);
    obj = lCreateElem(TEST_Type);

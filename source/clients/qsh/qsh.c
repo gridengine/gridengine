@@ -115,6 +115,7 @@ bool g_new_interactive_job_support = false;
 
 sge_gdi_ctx_class_t *ctx = NULL;
 
+static void write_client_name_cache(const char *cache_path, const char *client_name);
 static int open_qrsh_socket(int *port);
 static int wait_for_qrsh_socket(int sock, int timeout);
 static char *read_from_qrsh_socket(int msgsock);
@@ -229,6 +230,7 @@ pid_t child_pid = 0;
 *     #define QSH_BATCH_POLLING_MIN 32
 *     #define QSH_POLLING_MAX 256
 *     #define QSH_SOCKET_FINAL_TIMEOUT 60
+*     #define QRSH_CLIENT_CACHE "qrsh_client_cache"
 *
 *  FUNCTION
 *     MAX_JOB_NAME                - maximum length of job names
@@ -251,6 +253,7 @@ pid_t child_pid = 0;
 #define QSH_BATCH_POLLING_MIN 32
 #define QSH_POLLING_MAX 256
 #define QSH_SOCKET_FINAL_TIMEOUT 60
+#define QRSH_CLIENT_CACHE "qrsh_client_cache"
 
 static void forward_signal(int sig)
 {
@@ -938,9 +941,12 @@ static int get_client_server_context(int msgsock, char **port, char **job_dir, c
 *     telnet in qlogin mode (try to find in path) or
 *     $SGE_ROOT/utilbin/$ARCH/[rsh|rlogin] in rsh/rlogin mode.
 *
-*     In case of qrexec (inherit_job), try to read client name
-*     from environment variable SGE_RSH_COMMAND, which is set by
-*     sge_execd in the job environment.
+*     In case of qrexec (inherit_job), try to read client name from file
+*     ($TMPDIR/qrsh_client_program) to avoid qmaster contact in 
+*     qrexec mode. 
+*     If file is not found, determine info from qmaster
+*     and write it to file.
+*
 *  INPUTS
 *     is_rsh      - are we treating a qrsh call
 *     is_rlogin   - are we treating a qrsh call without commands 
@@ -975,6 +981,10 @@ get_client_name(sge_gdi_ctx_class_t *ctx, int is_rsh, int is_rlogin, int inherit
    const char *session_type;
    const char *config_name;
 
+   /* filename of client command cache in case of qrsh -inherit */
+   char cache_name_buffer[SGE_PATH_MAX];
+   dstring cache_name_dstring;
+   const char *cache_name = NULL;
    u_long32 progid = ctx->get_who(ctx);
    const char *qualified_hostname = ctx->get_qualified_hostname(ctx);
    const char *cell_root = ctx->get_cell_root(ctx);
@@ -983,20 +993,44 @@ get_client_name(sge_gdi_ctx_class_t *ctx, int is_rsh, int is_rlogin, int inherit
    DENTER(TOP_LAYER, "get_client_name");
 
    /* 
-    * In case of qrsh -inherit, try to read client_command from
-    * an environment variable set by sge_execd
-    *
-    * In case of new IJS, the environment variable contains "builtin" if the rsh_command
+    * In case of qrsh -inherit, try to read client_command from a cache file.
+    * The cache file is created in the jobs TMPDIR.
+    */
+   /*
+    * In case of new IJS, the cache file contains "builtin" if the rsh_command
     * rlogin_command or qlogin_command is builtin. So we can use it as before.
     */
    if (inherit_job) {
-      client_name = getenv("SGE_RSH_COMMAND");
-      if (client_name != NULL && strlen(client_name) > 0) {
-         DPRINTF(("rsh client name: %s\n", client_name));
-         if (strcasecmp(client_name, "builtin") == 0) {
-            g_new_interactive_job_support = true;
+      char *tmpdir = getenv("TMPDIR");
+      /*
+       * If TMPDIR is not set for some reason (should never occur), 
+       * we cannot read a cache.
+       * cache_name remains NULL, which is checked by the code trying
+       * to write the cache file later on
+       */
+      if (tmpdir != NULL) {
+         FILE *cache;
+
+         /* build filename of cache file */
+         sge_dstring_init(&cache_name_dstring, cache_name_buffer, SGE_PATH_MAX);
+         cache_name = sge_dstring_sprintf(&cache_name_dstring, "%s/%s", 
+                                          tmpdir, QRSH_CLIENT_CACHE);
+         cache = fopen(cache_name, "r");
+         if (cache != NULL) {
+            char cached_command[SGE_PATH_MAX];
+
+            if (fgets(cached_command, SGE_PATH_MAX, cache) != NULL) {
+               if (strcasecmp(cached_command, "builtin") == 0) {
+                  g_new_interactive_job_support = true;
+               }
+
+               FCLOSE(cache);
+               DPRINTF(("found cached client name: %s\n", cached_command));
+               DEXIT;
+               return strdup(cached_command);
+            }
+            FCLOSE(cache);
          }
-         DRETURN(strdup(client_name));
       }
    }
  
@@ -1063,11 +1097,69 @@ get_client_name(sge_gdi_ctx_class_t *ctx, int is_rsh, int is_rlogin, int inherit
       g_new_interactive_job_support = true;
    }
 
+   if (inherit_job) {
+      /* cache client_name for use in further qrsh -inherit calls */
+      write_client_name_cache(cache_name, client_name);
+   }
+
    lFreeList(&conf_list);
    lFreeElem(&global);
    lFreeElem(&local);
 
    return client_name;
+FCLOSE_ERROR:
+   ERROR((SGE_EVENT, MSG_FILE_ERRORCLOSEINGXY_SS, cache_name, strerror(errno)));
+   DEXIT;
+   return NULL;
+}
+
+/****** Interactive/qsh/write_client_name_cache() ******************************
+*  NAME
+*     write_client_name_cache() -- cache name of qrsh client command
+*
+*  SYNOPSIS
+*     void write_client_name_cache(const char *cache_path, 
+*                                  const char *client_name) 
+*
+*  FUNCTION
+*     Name and path of the remote client command started by qrsh is configured
+*     in the cluster configuration, parameter rsh_client/rlogin_client.
+*     This configuration is retrieved from qmaster before qrsh can start the
+*     client command.
+*     In case of multiple calls to qrsh -inherit, e.g. from a qmake application, 
+*     this would meen a lot of communication to qmaster to retrieve the same
+*     parameter over and over again.
+*     To avoid this unneccessary communication overhead, the name of the client
+*     command is cached in a file in the jobs temporary directory (TMPDIR) when
+*     it is retrieved for the first time.
+*     Following calls to qrsh -inherit can then just read the cache file.
+*
+*  INPUTS
+*     const char *cache_path  - name and path of the cache file 
+*     const char *client_name - name of the client command 
+*
+*  RESULT
+*     void - no error handling
+*
+*  SEE ALSO
+*     Interactive/qsh/get_client_name()
+*
+*******************************************************************************/
+static void write_client_name_cache(const char *cache_path, const char *client_name) 
+{
+   if (cache_path != NULL && *cache_path != '\0' && 
+       client_name != NULL && *client_name != '\0') {
+      FILE *cache = NULL;
+   
+      if ((cache = fopen(cache_path, "w")) != NULL) {
+         fprintf(cache, client_name);
+         FCLOSE(cache);
+      }
+   }
+   return;
+FCLOSE_ERROR:
+   /* TODO: error handling, try to delete the file */
+   return;
 }
 
 /****** Interactive/qsh/set_job_info() ****************************************
@@ -1873,8 +1965,8 @@ int main(int argc, char **argv)
                msgsock = wait_for_qrsh_socket(sock, random_poll); 
 
                /* qlogin_starter reports "ready to start" */
-               if (msgsock >= 0) {
-                  if (!get_client_server_context(msgsock, &port, &job_dir, 
+               if(msgsock >= 0) {
+                  if(!get_client_server_context(msgsock, &port, &job_dir, 
                      &utilbin_dir, &host)) {
                      cl_com_ignore_timeouts(CL_FALSE);
                      cl_commlib_open_connection(cl_com_get_handle(progname,0),
@@ -1904,7 +1996,7 @@ int main(int argc, char **argv)
 
                   DPRINTF(("exit_status = %d\n", exit_status));
 
-                  if (exit_status < 0) {
+                  if(exit_status < 0) {
                      WARNING((SGE_EVENT, MSG_QSH_CLEANINGUPAFTERABNORMALEXITOF_S, 
                         client_name));
                      cl_com_ignore_timeouts(CL_FALSE);
@@ -2100,8 +2192,8 @@ int main(int argc, char **argv)
 static void delete_job(sge_gdi_ctx_class_t *ctx, u_long32 job_id, lList *jlp) 
 {
    lListElem *jep;
-   lList *idlp = NULL;
-   lList *alp;
+   lList* idlp = NULL;
+   lList* alp;
    char job_str[128];
 
    if (jlp == NULL) {

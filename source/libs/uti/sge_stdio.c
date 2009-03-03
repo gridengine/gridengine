@@ -159,14 +159,16 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
    pid = fork();
 #endif
    if (pid == 0) {  /* child */
-      int keep_open[6];
-      keep_open[0] = 0;
-      keep_open[1] = 1;
-      keep_open[2] = 2;
-      keep_open[3] = pipefds[0][0];
-      keep_open[4] = pipefds[1][1];
-      keep_open[5] = pipefds[2][1];
-      sge_close_all_fds(keep_open, 6);
+      fd_set keep_open;
+      FD_ZERO(&keep_open);     
+      FD_SET(0, &keep_open);
+      FD_SET(1, &keep_open);
+      FD_SET(2, &keep_open);
+      FD_SET(pipefds[0][0], &keep_open);
+      FD_SET(pipefds[1][1], &keep_open);
+      FD_SET(pipefds[2][1], &keep_open);
+      sge_close_all_fds(&keep_open);
+
       /* shall we redirect stderr to /dev/null? */
       if (null_stderr) {
          /* open /dev/null */
@@ -314,28 +316,20 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
    return pid;
 }
 
-pid_t sge_peopen_r(const char *shell, int login_shell, const char *command,
-                   const char *user, char **env,  FILE **fp_in, FILE **fp_out,
-                   FILE **fp_err, bool null_stderr)
+pid_t sge_peopen_threadsafe(const char *shell, int login_shell, const char *command,
+                 const char *user, char **env,  FILE **fp_in, FILE **fp_out,
+                 FILE **fp_err, bool null_stderr)
 {
    static pid_t pid;
    int pipefds[3][2];
    int i;
    char arg0[256];
-#if defined(SOLARIS)
-   char err_str[256];
-#endif
    struct passwd *pw = NULL;
-   uid_t myuid;
-   uid_t tuid;
+   uid_t myuid = geteuid();
+   uid_t tuid = myuid;
+   char err_str[256];
  
-   DENTER(TOP_LAYER, "sge_peopen_r");
-
-   if (sge_has_admin_user()) {
-      sge_switch2start_user();
-   }
-   myuid = geteuid();
-   tuid = myuid;
+   DENTER(TOP_LAYER, "sge_peopen_threadsafe");
 
    /* 
     * open pipes - close on failure 
@@ -347,10 +341,8 @@ pid_t sge_peopen_r(const char *shell, int login_shell, const char *command,
             close(pipefds[i][1]);
          }
          ERROR((SGE_EVENT, MSG_SYSTEM_FAILOPENPIPES_SS, command, strerror(errno)));
-         if (sge_has_admin_user()) {
-            sge_switch2admin_user();
-         }
-         DRETURN(-1);
+         DEXIT;
+         return -1;
       }
    }
 
@@ -389,21 +381,15 @@ pid_t sge_peopen_r(const char *shell, int login_shell, const char *command,
          if (pw == NULL) {
             ERROR((SGE_EVENT, MSG_SYSTEM_NOUSERFOUND_SS, user, strerror(errno)));
             FREE(buffer);
-            if (sge_has_admin_user()) {
-               sge_switch2admin_user();
-            }
-            DRETURN(-1);
+            return -1;
          }
       } else {
-         ERROR((SGE_EVENT, MSG_UTI_MEMPWNAM));
+         sprintf(err_str, "no memory in sge_peopen()\n");
+         write(2, err_str, strlen(err_str));
          FREE(buffer);
-         if (sge_has_admin_user()) {
-            sge_switch2admin_user();
-         }
-         DRETURN(-1);
+         return -1; 
       }
 
-      DPRINTF(("Was able to resolve user\n"));
 
       /* 
        * only prepare change of user if target user is different from current one
@@ -414,13 +400,10 @@ pid_t sge_peopen_r(const char *shell, int login_shell, const char *command,
 #endif 
 
          if (myuid != SGE_SUPERUSER_UID) {
-            ERROR((SGE_EVENT, MSG_SYSTEM_NOROOTRIGHTSTOSWITCHUSER));
+            write(2, MSG_SYSTEM_NOROOTRIGHTSTOSWITCHUSER, sizeof(MSG_SYSTEM_NOROOTRIGHTSTOSWITCHUSER));
             FREE(buffer);
             SGE_EXIT(NULL, 1);
          }                             
-
-         DPRINTF(("Before initgroups\n"));
-
 #if !(defined(WIN32) || defined(INTERIX))  /* initgroups not called */
          res = initgroups(pw->pw_name, pw->pw_gid);
 #  if defined(SVR3) || defined(sun)
@@ -429,12 +412,12 @@ pid_t sge_peopen_r(const char *shell, int login_shell, const char *command,
          if (res)
 #  endif
          {
-            ERROR((SGE_EVENT, MSG_SYSTEM_INITGROUPSFORUSERFAILED_ISS, res, user, strerror(errno)));
+            sprintf(err_str, MSG_SYSTEM_INITGROUPSFORUSERFAILED_ISS, res, user, strerror(errno));
+            sprintf(err_str, "\n");
+            write(2, err_str, strlen(err_str));
             FREE(buffer);
             SGE_EXIT(NULL, 1);
          }
-
-         DPRINTF(("Initgroups was successful\n"));
 
 #endif /* WIN32 */
       }
@@ -445,8 +428,6 @@ pid_t sge_peopen_r(const char *shell, int login_shell, const char *command,
          DPRINTF(("target uid = %d\n", (int)tuid));
       }
    }
-
-   DPRINTF(("Now process will fork\n"));
 
 #if defined(SOLARIS)
    pid = sge_smf_contract_fork(err_str, 256);
@@ -461,14 +442,18 @@ pid_t sge_peopen_r(const char *shell, int login_shell, const char *command,
       /*
        * close all fd's except that ones mentioned in keep_open 
        */
-      int keep_open[6];
-      keep_open[0] = 0;
-      keep_open[1] = 1;
-      keep_open[2] = 2;
-      keep_open[3] = pipefds[0][0];
-      keep_open[4] = pipefds[1][1];
-      keep_open[5] = pipefds[2][1];
-      sge_close_all_fds(keep_open, 6);
+      {
+         fd_set keep_open;
+
+         FD_ZERO(&keep_open);     
+         FD_SET(0, &keep_open);
+         FD_SET(1, &keep_open);
+         FD_SET(2, &keep_open);
+         FD_SET(pipefds[0][0], &keep_open);
+         FD_SET(pipefds[1][1], &keep_open);
+         FD_SET(pipefds[2][1], &keep_open);
+         sge_close_all_fds(&keep_open);
+      }
 
       /* 
        * shall we redirect stderr to /dev/null? Then
@@ -501,9 +486,9 @@ pid_t sge_peopen_r(const char *shell, int login_shell, const char *command,
       dup(pipefds[0][0]);
       dup(pipefds[1][1]);
 
-      if (pw != NULL) {
-         int lret = setuid(tuid);
-         if (lret) {
+      /* only switch user if it is different from current one */
+      if (pw != NULL && myuid != tuid) {
+         if (setuid(tuid)) {
             SGE_EXIT(NULL, 1);
          }
       }
@@ -536,10 +521,8 @@ pid_t sge_peopen_r(const char *shell, int login_shell, const char *command,
           ERROR((SGE_EVENT, MSG_SMF_FORK_FAILED_SS, "sge_peopen()", err_str));
       }
 #endif
-      if (sge_has_admin_user()) {
-         sge_switch2admin_user();
-      }
-      DRETURN(-1);
+      DEXIT;
+      return -1;
    }
  
    /* close the childs ends of the pipes */
@@ -561,10 +544,8 @@ pid_t sge_peopen_r(const char *shell, int login_shell, const char *command,
       *fp_err = fdopen(pipefds[2][0], "r");
    }
 
-   if (sge_has_admin_user()) {
-      sge_switch2admin_user();
-   }
-   DRETURN(pid);
+   DEXIT;
+   return pid;
 }
  
 /****** uti/stdio/sge_peclose() ***********************************************

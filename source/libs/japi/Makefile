@@ -64,7 +64,7 @@ JAPI_DEPEND_OBJS = $(JAPI_ADD_OBJS)
 drmaa_all: drmaalib japilib drmaa_extras
 
 drmaa_clean: japi_clean drmaa_extras_clean
-	$(RM) $(DRMAALIB_OBJS) libdrmaa.a $(DRMAALIB) $(DRMAALIB_V) libdrmaa$(JAVA_SHAREDEXT)
+	$(RM) $(DRMAALIB_OBJS) libdrmaa.a $(DRMAALIB) $(DRMAALIB_V)
 
 drmaa_extras_clean: drmaa_howto_clean
 	$(RM) test_drmaa test_drmaa.o example example.o test_drmaa_perf \
@@ -84,7 +84,7 @@ drmaa_extras: drmaa_howto_all test_drmaa example test_drmaa_perf test_drmaa_sync
               test_drmaa_issue1892 compile \
 	
 japi_clean:
-	$(RM) $(JAPILIB_OBJS) libjapi.*.*$(LIBEXT) libjapi$(JAVA_SHAREDEXT)
+	$(RM) $(JAPILIB_OBJS) libjapi.*.*$(LIBEXT)
 
 drmaa_depend:
 	$(DEPEND) -f$(JAPILIB_DIR)/japi_dependencies $(JAPILIB_DIR)/*.c
@@ -100,7 +100,7 @@ drmaa_messages:
 ###############################################################################
 libdrmaa$(SHAREDEXT).1.0:  $(JAPILIB_10) $(JAPI_DEPEND_OBJS) $(DRMAALIB_OBJS) $(DRMAA_OBJS) $(WINGRIDLIB_DEP)
 	$(SHAREDLD) $(SHARED_LFLAGS) $(SONAME_LFLAG_DRMAA10) -o libdrmaa$(SHAREDEXT).1.0 $(DRMAALIB_10_OBJS) $(DRMAA_OBJS) $(JAPILIB_10) $(JAPI_ADD_OBJS) \
-      $(SECLIB) $(WINGRIDLIB) $(LIBRARY_LIBS) $(DLLIB) \
+      $(SECLIB) $(WINGRIDLIB) $(LIBS) $(DLLIB) \
    && ../scripts/nonreentrant.sh -a `../dist/util/arch` -w libdrmaa$(SHAREDEXT).1.0
 
 # Needed to compile howtos, examples, and unit tests

@@ -53,10 +53,11 @@ typedef struct {
    lEnumeration *what_cqueue;
    lEnumeration *what_job;
    lEnumeration *what_host;
-   lEnumeration *what_acldept;
+   lEnumeration *what_acl;
+   lEnumeration *what_centry;
+   lEnumeration *what_dept;
    lEnumeration *what_jat;
    lEnumeration *what_pet;
-   lEnumeration *what_pe;
 } sge_where_what_t;
 
 void

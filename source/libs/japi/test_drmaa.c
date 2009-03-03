@@ -713,6 +713,7 @@ int main(int argc, char *argv[])
                      printf("test \"%s\" with \"%s\" failed\n", 
                            test_map[i].test_name, drmaa_ctrl2str(ctrl_ops[i]));
                      failed = 1;
+                     drmaa_exit(NULL, 0);
                      break;
                   } else
                      printf("successfully finished test \"%s\" with \"%s\"\n", 
@@ -725,6 +726,7 @@ int main(int argc, char *argv[])
                if (test(ctx, &argc, &argv, 0)!=0) {
                   printf("test #%d failed\n", i);
                   failed = 1;
+                  drmaa_exit(NULL, 0);
                   break;
                } else
                   printf("successfully finished test #%d\n", i);
@@ -739,13 +741,12 @@ int main(int argc, char *argv[])
          if (test(ctx, &argc, &argv, 1)!=0) {
             printf("test \"%s\" failed\n", test_map[i].test_name);
             failed = 1;
+            drmaa_exit(NULL, 0);
             break;
-         } else {
-            printf("successfully finished test \"%s\"\n", test_map[i].test_name);
-         }
+         } else
+           printf("successfully finished test \"%s\"\n", test_map[i].test_name);
       }
    } 
-   drmaa_exit(NULL, 0);
    sge_gdi2_shutdown((void**)&ctx);
    sge_gdi_ctx_class_destroy(&ctx);
 

@@ -183,7 +183,6 @@ enum {
    Astree_OPT,   /* SGE add sharetree from file*/
    dstree_OPT,   /* SGE delete sharetree */
    sstree_OPT,   /* SGE show sharetree */
-   sst_OPT,      /* SGE show a formated sharetree */
 
    mu_OPT,       /* edit userset object (not only SGE) */
    Mu_OPT,       /* modify userset from file */

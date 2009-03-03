@@ -141,7 +141,6 @@ int mconf_get_log_consumables(void);
 bool mconf_get_enable_forced_qdel(void);
 bool mconf_get_enable_forced_qdel_if_unknown(void);
 bool mconf_get_enable_enforce_master_limit(void);
-bool mconf_get_enable_test_sleep_after_request(void);
 int mconf_get_max_job_deletion_time(void);
 bool mconf_get_enable_addgrp_kill(void);
 u_long32 mconf_get_pdc_interval(void);

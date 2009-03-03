@@ -182,7 +182,7 @@ const char *buf
    DPRINTF(("CHILD CONTINUES\n"));
    SETPGRP;
 
-   sge_close_all_fds(NULL, 0);
+   sge_close_all_fds(NULL);
 
    /* 
       may never call SGE_EXIT() here because

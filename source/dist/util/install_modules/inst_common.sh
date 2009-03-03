@@ -115,7 +115,7 @@ BasicSettings()
 
   HOST=`$SGE_UTILBIN/gethostname -name`
   if [ "$HOST" = "" ]; then
-     echo "can't get hostname of this machine. Installation failed."
+     $INFOTEXT -e "can't get hostname of this machine. Installation failed."
      exit 2
   fi
 
@@ -188,7 +188,7 @@ Makedir()
       done
 
        $INFOTEXT "creating directory: %s" "$dir"
-       if [ "`$SGE_UTILBIN/filestat -owner $tmp_dir 2> /dev/null`" != "$ADMINUSER" ]; then
+       if [ "`$SGE_UTILBIN/filestat -owner $tmp_dir`" != "$ADMINUSER" ]; then
           Execute $MKDIR -p $dir
           if [ "$ADMINUSER" = "default" ]; then
              Execute $CHOWN -R root $chown_dir
@@ -1476,7 +1476,7 @@ CheckForLocalHostResolving()
                 "physical or logical network interfaces of this machine.\n\n" \
                 "Installation failed.\n\n" \
                 "Press <RETURN> to exit the installation procedure >> "
-      exit 2
+      exit
    fi
 }
                
@@ -1964,10 +1964,7 @@ SafelyCreateFile()
    ExecuteAsAdmin $TOUCH $1
    if [ -n "$3" ]; then
       ExecuteAsAdmin $CHMOD 666 $1
-      tmp_file="/tmp/tmp_safe_create_file_$$"
-      $ECHO "$3" > $tmp_file
-      ExecuteAsAdmin cp $tmp_file $1
-      Execute rm -f $tmp_file
+      $ECHO "$3" > $1
    fi
    ExecuteAsAdmin $CHMOD $2 $1
 }
@@ -3619,6 +3616,11 @@ CheckServiceAndPorts()
 
 CopyCA()
 {
+   if [ "$AUTO" = "true" -a "$CSP_COPY_CERTS" = "false" ]; then
+      $INFOTEXT -log "No CSP system installed!"
+      return 1
+   fi
+
    if [ "$CSP" = "false" -a \( "$WINDOWS_SUPPORT" = "false" -o "$WIN_DOMAIN_ACCESS" = "false" \) ]; then
       return 1
    fi
@@ -3653,8 +3655,7 @@ CopyCA()
       "<%s> host? (y/n) [y] >>" $out_text
    fi
 
-   if [ "$AUTOGUI" != "true" ]; then #GUI made has the correct shell already
-    if [ "$?" = 0 ]; then
+   if [ "$?" = 0 ]; then
       $INFOTEXT "You can use a rsh or a ssh copy to transfer the cert files to each\n" \
                 "<%s> host (default: ssh)" $out_text
       $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" -n "Do you want to use rsh/rcp instead of ssh/scp? (y/n) [n] >>"
@@ -3668,9 +3669,8 @@ CopyCA()
          $INFOTEXT -log "The remote copy command <%s> could not be found!" $COPY_COMMAND
          return
       fi
-    else
+   else
       return
-    fi
    fi
 
    if [ "$hosttype" = "execd" ]; then
@@ -3745,24 +3745,16 @@ CopyCaToHostType()
 #
 GetAdminUser()
 {
-   if [ "$AUTO" = true ]; then
-	   #For auto we use template, since SGE_CELL might not yet exist
-	   TMP_CELL=$CELL_NAME
-   else
-	   TMP_CELL=$SGE_CELL
-   fi
-   #Try to get admin user from a bootstrap file
-   TMP_ADMINUSER=`cat $SGE_ROOT/$TMP_CELL/common/bootstrap 2>/dev/null | grep "admin_user" | awk '{ print $2 }'`
-   if [ -n "$TMP_ADMINUSER" ]; then
-      ADMINUSER=$TMP_ADMINUSER
-   elif [ "$AUTO" = true -o "$AUTOGUI" = true ]; then
-	   #For auto installations, if no bootstrap file use the value from the template
-	   ADMINUSER=$ADMIN_USER
+   if [ "$AUTOGUI" != true ]; then # We have it already
+      TMP_ADMINUSER=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "admin_user" | awk '{ print $2 }'`
+      if [ -n "$TMP_ADMINUSER" ]; then
+         ADMIN_USER=$TMP_ADMINUSER   
+      fi
    fi
    euid=`$SGE_UTILBIN/uidgid -euid`
 
    TMP_USER=`echo "$ADMINUSER" |tr "[A-Z]" "[a-z]"`
-   if [  -z "$TMP_USER" -o "$TMP_USER" = "none" ]; then
+   if [ \( -z "$TMP_USER" -o "$TMP_USER" = "none" \) ]; then
       if [ $euid = 0 ]; then
          ADMINUSER=default
       else

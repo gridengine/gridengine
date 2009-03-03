@@ -1,5 +1,5 @@
 /*
- * $Id: GUIInstaller.java,v 1.2 2008/12/12 15:12:05 zsiga Exp $
+ * $Id: GUIInstaller.java,v 1.1 2008/11/27 12:06:47 petrik Exp $
  * IzPack - Copyright 2001-2008 Julien Ponge, All Rights Reserved.
  * 
  * http://izpack.org/
@@ -559,11 +559,6 @@ public class GUIInstaller extends InstallerBase
             {
                 String className = params.get("class");
                 try {
-                    if (className.equals("javax.swing.plaf.metal.MetalLookAndFeel")) {
-                        // turn off bold fonts
-                        UIManager.put("swing.boldMetal", Boolean.FALSE);
-                    }
-
                     UIManager.setLookAndFeel(className);
                     Debug.trace("Use look and feel '" + className + "'.");
                 } catch(Exception e) {

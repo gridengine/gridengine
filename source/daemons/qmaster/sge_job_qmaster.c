@@ -127,6 +127,7 @@
 #include "msg_daemons_common.h"
 
 
+
 /****** qmaster/job/spooling ***************************************************
 *
 *  NAME
@@ -246,7 +247,7 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
       /*
        * JSV verification
        */
-      lret = jsv_do_verify(ctx, tc->thread_name, jep, alpp, true);
+      lret = jsv_do_verify(ctx, tc->thread_name, jep, alpp, false);
       if (!lret) {
          DRETURN(STATUS_EUNKNOWN);
       }
@@ -262,22 +263,26 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
    }
 
    /* write script to file */
-   spool_transaction(alpp, spool_get_default_context(), STC_begin);
-   if (job_spooling)  {
-      if (lGetString(*jep, JB_script_file) &&
-          !JOB_TYPE_IS_BINARY(lGetUlong(*jep, JB_type))) {
-         if (spool_write_script(alpp, lGetUlong(*jep, JB_job_number), *jep)==false) {
-            spool_transaction(alpp, spool_get_default_context(), STC_rollback);
-            ERROR((SGE_EVENT, MSG_JOB_NOWRITE_US, sge_u32c(lGetUlong(*jep, JB_job_number)),
-                   strerror(errno)));
-            answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
-            DRETURN(STATUS_EDISK);
-         }
-      }
+   {
+      bool job_spooling = ctx->get_job_spooling(ctx);
 
-      /* clean file out of memory */
-      lSetString(*jep, JB_script_ptr, NULL);
-      lSetUlong(*jep, JB_script_size, 0);
+      spool_transaction(alpp, spool_get_default_context(), STC_begin);
+      if (job_spooling)  {
+         if (lGetString(*jep, JB_script_file) &&
+             !JOB_TYPE_IS_BINARY(lGetUlong(*jep, JB_type))) {
+            if (spool_write_script(alpp, lGetUlong(*jep, JB_job_number), *jep)==false) {
+               spool_transaction(alpp, spool_get_default_context(), STC_rollback);
+               ERROR((SGE_EVENT, MSG_JOB_NOWRITE_US, sge_u32c(lGetUlong(*jep, JB_job_number)),
+                      strerror(errno)));
+               answer_list_add(alpp, SGE_EVENT, STATUS_EDISK, ANSWER_QUALITY_ERROR);
+               DRETURN(STATUS_EDISK);
+            }
+         }
+
+         /* clean file out of memory */
+         lSetString(*jep, JB_script_ptr, NULL);
+         lSetUlong(*jep, JB_script_size, 0);
+      }
    }
 
    if (!sge_event_spool(ctx, alpp, 0, sgeE_JOB_ADD, 
@@ -521,21 +526,21 @@ int sge_gdi_del_job(sge_gdi_ctx_class_t *ctx, lListElem *idep, lList **alpp, cha
 
 /****** sge_job_qmaster/is_pe_master_task_send() *******************************
 *  NAME
-*     is_pe_master_task_send() -- figures out, if all slaves have been notified
+*     is_pe_master_task_send() -- figures out, if all salves are send
 *
 *  SYNOPSIS
 *     bool is_pe_master_task_send(lListElem *jatep) 
 *
 *  FUNCTION
-*     In case of tightly integrated pe jobs the slave execds have to be notified first.
-*     Once all execds acknowledged the slave notification, the master can be sent.
-*     This function figures out, if all slaves have acknowledged notification.
+*     In case of tightly integrated pe jobs are the salves send first. Once
+*     all execds acknowledged the slaves, the master can be send. This function
+*     figures out, if all slaves are acknowledged.
 *
 *  INPUTS
 *     lListElem *jatep - ja task in question
 *
 *  RESULT
-*     bool - true, if all slaves have acknowledged slave notification
+*     bool - true, if all slaves are acknowledged
 *
 *  NOTES
 *     MT-NOTE: is_pe_master_task_send() is MT safe 
@@ -544,102 +549,17 @@ int sge_gdi_del_job(sge_gdi_ctx_class_t *ctx, lListElem *idep, lList **alpp, cha
 bool
 is_pe_master_task_send(lListElem *jatep) 
 {
-   bool all_slaves_arrived = true;
+   bool is_all_slaves_arrived = true;
    lListElem *gdil_ep = NULL;
    
    for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
       if (lGetUlong(gdil_ep, JG_tag_slave_job) != 0) {
-         all_slaves_arrived = false;
+         is_all_slaves_arrived= false;
          break;
       }
    }
    
-   return all_slaves_arrived;
-}
-
-/****** sge_job_qmaster/all_slave_jobs_finished() ******************************
-*  NAME
-*     all_slave_jobs_finished() -- have all slave jobs finished?
-*
-*  SYNOPSIS
-*     bool all_slave_jobs_finished(lListElem *jatep)
-*
-*  FUNCTION
-*     Figures out if all slave jobs of a tightly integrated parallel
-*     job have finished.
-*     The first gdil element of a host is tagged as long as the execd
-*     on this host didn't report the slave job finish.
-*
-*  INPUTS
-*     lListElem *jatep - the ja task of the running pe job
-*
-*  RESULT
-*     bool - true if all slave jobs finished, else false
-*
-*  NOTES
-*     MT-NOTE: all_slave_jobs_finished() is MT safe
-*     TODO: can be merged with is_pe_master_task_send
-*
-*  SEE ALSO
-*     sge_job_qmaster/is_pe_master_task_send()
-*******************************************************************************/
-bool all_slave_jobs_finished(lListElem *jatep)
-{
-   bool all_slaves_finished = true;
-   lList *gdil = NULL;
-   lListElem *gdil_ep = NULL;
-
-   /* Search gdil for tagged entries.
-    * Tagged means, the slave execd did not yet report job finish.
-    * The first entry of gdil is the master task - ignore it.
-    * Only the first gdil_ep of a host is tagged.
-    */
-   gdil = lGetList(jatep, JAT_granted_destin_identifier_list);
-   for_each (gdil_ep, gdil) {
-      const char *host = lGetHost(gdil_ep, JG_qhostname);
-      const lListElem *first_at_host = lGetElemHost(gdil, JG_qhostname, host);
-      if (gdil_ep == first_at_host && gdil_ep != lFirst(gdil)) {
-         if (lGetUlong(gdil_ep, JG_tag_slave_job) == 1) {
-            all_slaves_finished = false;
-            break;
-         }
-      }
-   }
-
-   return all_slaves_finished;
-}
-
-/****** sge_job_qmaster/tag_all_host_gdil() ************************************
-*  NAME
-*     tag_all_host_gdil() -- tag all hosts of a parallel job
-*
-*  SYNOPSIS
-*     void tag_all_host_gdil(lListElem *jatep)
-*
-*  FUNCTION
-*     Sets a tag for all hosts of a tightly integrated parallel job.
-*
-*  INPUTS
-*     lListElem *jatep - the ja task of the parallel job
-*
-*  NOTES
-*     MT-NOTE: tag_all_host_gdil() is MT safe 
-*******************************************************************************/
-void tag_all_host_gdil(lListElem *jatep)
-{
-   lList *gdil = lGetList(jatep, JAT_granted_destin_identifier_list);
-   lListElem *gdil_ep;
-
-   for_each (gdil_ep, gdil) {
-      const char *host = lGetHost(gdil_ep, JG_qhostname);
-      /* only the first gdil_ep for a host is tagged
-       * if the pe job spawns multiple queues there might be multiple entries per host
-       */
-      const lListElem *first_at_host = lGetElemHost(gdil, JG_qhostname, host);
-      if (gdil_ep == first_at_host) {
-         lSetUlong(gdil_ep, JG_tag_slave_job, 1);
-      }
-   }
+   return is_all_slaves_arrived;
 }
 
 static void empty_job_list_filter(
@@ -3447,9 +3367,6 @@ int sge_gdi_copy_job(sge_gdi_ctx_class_t *ctx,
       DRETURN(STATUS_EUNKNOWN);
    }
 
-   /* reset the job number. we will get a new one when we add the job */
-   lSetUlong(new_jep, JB_job_number, 0);
-
    /* call add() method */
    ret = sge_gdi_add_job(ctx, &new_jep, alpp, lpp, ruser, rhost, uid, gid, group, packet, task, monitor);
 
@@ -3852,21 +3769,26 @@ static int sge_delete_all_tasks_of_job(sge_gdi_ctx_class_t *ctx, lList **alpp, c
 
          is_defined = job_is_ja_task_defined(job, task_number); 
 
-         if (is_defined && !job_is_enrolled(job, task_number)) {
-            lListElem *tmp_task = job_get_ja_task_template_pending(job, task_number);
+         if (is_defined) {
+            int is_enrolled;
+ 
+            is_enrolled = job_is_enrolled(job, task_number);
+            if (!is_enrolled) {
+               lListElem *tmp_task = job_get_ja_task_template_pending(job, task_number);
 
-            (*deleted_tasks)++;
+               (*deleted_tasks)++;
 
-            reporting_create_job_log(NULL, sge_get_gmt(), JL_DELETED, 
-                                     ruser, rhost, NULL, job, tmp_task, 
-                                     NULL, MSG_LOG_DELETED);
-            sge_commit_job(ctx, job, tmp_task, NULL, COMMIT_ST_FINISHED_FAILED,
-                           COMMIT_NO_SPOOLING | COMMIT_UNENROLLED_TASK | COMMIT_NEVER_RAN, monitor);
-            deleted_unenrolled_tasks = 1;
-            showmessage = 1;
-            if (!*alltasks && showmessage) {
-               range_list_insert_id(&range_list, NULL, task_number);
-            }         
+               reporting_create_job_log(NULL, sge_get_gmt(), JL_DELETED, 
+                                        ruser, rhost, NULL, job, tmp_task, 
+                                        NULL, MSG_LOG_DELETED);
+               sge_commit_job(ctx, job, tmp_task, NULL, COMMIT_ST_FINISHED_FAILED,
+                              COMMIT_NO_SPOOLING | COMMIT_UNENROLLED_TASK | COMMIT_NEVER_RAN, monitor);
+               deleted_unenrolled_tasks = 1;
+               showmessage = 1;
+               if (!*alltasks && showmessage) {
+                  range_list_insert_id(&range_list, NULL, task_number);
+               }         
+            }
          }
       }
       

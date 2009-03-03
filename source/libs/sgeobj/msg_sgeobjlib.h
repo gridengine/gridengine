@@ -341,8 +341,6 @@
 #define MSG_JSV_LOG_SS           _MESSAGE(64548, _("received "SFQ" from JSV with invalid type "SFQ))
 #define MSG_JSV_SWITCH_S         _MESSAGE(64549, _("rejected due to jsv_allowed_mod configuration which does not allow: "SFN))
 #define MSG_JSV_ALLOWED          _MESSAGE(64550, _("No job modification allowed due to jsv_allowed_mod configuration"))
-#define MSG_JSV_JCOMMAND_S       _MESSAGE(64551, _("master got unknown command from JSV: "SFQ))
-#define MSG_JSV_LOGMSG_S         _MESSAGE(64552, _("JSV stderr: %s"))
 
 
 

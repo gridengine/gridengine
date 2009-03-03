@@ -264,25 +264,14 @@ jsv_handle_param_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answe
             int attribute = string_attribute[i];
 
             if (strcmp(param, string_param[i]) == 0) {
-               if (value == NULL) {
-                  /* 
-                   * - jobs without job name are rejected 
-                   * - resetting ckpt name also resets ckpt attribute
-                   */
-                  if (strcmp(param, "N") == 0) {
-                     answer_list_add_sprintf(&local_answer_list, STATUS_DENIED, 
-                                             ANSWER_QUALITY_ERROR, MSG_JSV_PARSE_NAME_S, param);
-                     ret = false;
-                  } else if (strcmp(param, "ckpt") == 0) {
-                     lSetUlong(new_job, JB_checkpoint_attr, NO_CHECKPOINT);
-                     lSetString(new_job, attribute, NULL); 
-                  } else {
-                     lSetString(new_job, attribute, NULL); 
-                  }
-               } else { 
+               /* jobs without job name are rejected */
+               if (value == NULL && strcmp(param, "N") == 0) {
+                  answer_list_add_sprintf(&local_answer_list, STATUS_DENIED, ANSWER_QUALITY_ERROR,
+                                          MSG_JSV_PARSE_NAME_S, param);
+                  ret = false;
+               } else {
                   lSetString(new_job, attribute, value);
                }
-               break;
             }
             i++;
          }
@@ -303,25 +292,21 @@ jsv_handle_param_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answe
             0
          };
 
-         while (path_list_param[i] != NULL) {
-            if (strcmp(path_list_param[i], param) == 0) {
-               lList *path_list = NULL;
-               int attribute = path_list_attribute[i];
+         while (path_list_param[i] != NULL && strcmp(path_list_param[i], param) == 0) {
+            lList *path_list = NULL;
+            int attribute = path_list_attribute[i];
 
-               if (value != NULL) {
-                  int lret = cull_parse_path_list(&path_list, value);
+            if (value != NULL) {
+               int lret = cull_parse_path_list(&path_list, value);
 
-                  if (lret) {
-                     answer_list_add_sprintf(&local_answer_list, STATUS_DENIED, 
-                                             ANSWER_QUALITY_ERROR, MSG_JSV_PARSE_VAL_SS, 
-                                             param, value);
-                     ret = false;
-                  }
+               if (lret) {
+                  answer_list_add_sprintf(&local_answer_list, STATUS_DENIED, ANSWER_QUALITY_ERROR,
+                                          MSG_JSV_PARSE_VAL_SS, param, value);
+                  ret = false;
                }
-               if (ret) {
-                  lSetList(new_job, attribute, path_list); 
-               }
-               break;
+            }
+            if (ret) {
+               lSetList(new_job, attribute, path_list); 
             }
             i++;
          }
@@ -401,10 +386,10 @@ jsv_handle_param_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answe
             }
          }
          if (ret && strcmp("ar", param) == 0) {
+            lList *ar_id_list = NULL;
             u_long32 id = 0;
 
             if (value != NULL) {
-               lList *ar_id_list = NULL;
                ret &= ulong_list_parse_from_string(&ar_id_list, &local_answer_list, value, ",");
                if (ret) {
                   lListElem *first = lFirst(ar_id_list);
@@ -413,28 +398,9 @@ jsv_handle_param_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answe
                      id = lGetUlong(first, ULNG);
                   }
                }
-               lFreeList(&ar_id_list);
             }
             if (ret) {
                lSetUlong(new_job, JB_ar, id);
-            }
-         }
-      }
-
-      /* -c <interval> */
-      {
-         if (ret && strcmp("c_interval", param) == 0) {
-            u_long32 timeval = 0;
-
-            if (value != NULL) {
-               int lret = ulong_parse_date_time_from_string(&timeval, &local_answer_list, value);
-
-               if (!lret) {
-                  ret = false;
-               }
-            }
-            if (ret) {
-               lSetUlong(new_job, JB_checkpoint_interval, timeval);
             }
          }
       }
@@ -545,7 +511,6 @@ jsv_handle_param_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answe
             for_each(jid_str, hold_list) {
                lAddElemStr(&jref_list, JRE_job_name, lGetString(jid_str, ST_name), JRE_Type);
             }
-            lSetList(new_job, JB_ja_ad_request_list, jref_list);
             lFreeList(&hold_list);
          }
       }
@@ -776,62 +741,68 @@ jsv_handle_param_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answe
        */
       {
          if (ret && strcmp("t_min", param) == 0) {
+            u_long32 min;
+
             if (value != NULL) {
-               u_long32 min;
                if (!parse_ulong_val(NULL, &min, TYPE_INT, value, NULL, 0)) {
                   answer_list_add_sprintf(&local_answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
-                                          "invalid t_min "SFQ" was passed by JSV", value);
+                                          "invalid t_max "SFQ" was passed by JSV", value);
                   ret = false;
-               } else {
-                  lList *range_list = lGetList(new_job, JB_ja_structure);
-                  lListElem *range = lFirst(range_list);
+               }
+            }
+            if (ret) {
+               lList *range_list = lGetList(new_job, JB_ja_structure);
+               lListElem *range = lFirst(range_list);
 
-                  if (range == NULL) {
-                     range = lAddSubUlong(new_job, RN_min, min, JB_ja_structure, RN_Type);
-                  }
-                  if (range != NULL) {
-                     lSetUlong(range, RN_min, min);
-                  }
+               if (range == NULL) {
+                  range = lAddSubUlong(new_job, RN_min, min, JB_ja_structure, RN_Type);
+               }
+               if (range != NULL) {
+                  lSetUlong(range, RN_min, min);
                }
             }
          }
          if (ret && strcmp("t_max", param) == 0) {
+            u_long32 max;
+
             if (value != NULL) {
-               u_long32 max;
                if (!parse_ulong_val(NULL, &max, TYPE_INT, value, NULL, 0)) {
                   answer_list_add_sprintf(&local_answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
                                           MSG_JSV_PARSE_VAL_SS, param, value);
                   ret = false;
-               } else {
-                  lList *range_list = lGetList(new_job, JB_ja_structure);
-                  lListElem *range = lFirst(range_list);
+               }
+            }
+            if (ret) {
+               lList *range_list = lGetList(new_job, JB_ja_structure);
+               lListElem *range = lFirst(range_list);
 
-                  if (range == NULL) {
-                     range = lAddSubUlong(new_job, RN_max, max, JB_ja_structure, RN_Type);
-                  }
-                  if (range != NULL) {
-                     lSetUlong(range, RN_max, max);
-                  }
+               if (range == NULL) {
+                  range = lAddSubUlong(new_job, RN_max, max, JB_ja_structure, RN_Type);
+               }
+               if (range != NULL) {
+                  lSetUlong(range, RN_max, max);
                }
             }
          }
          if (ret && strcmp("t_step", param) == 0) {
+            u_long32 step;
+
             if (value != NULL) {
-               u_long32 step;
                if (!parse_ulong_val(NULL, &step, TYPE_INT, value, NULL, 0)) {
                   answer_list_add_sprintf(&local_answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
                                           MSG_JSV_PARSE_VAL_SS, param, value);
                   ret = false;
-               } else {
-                  lList *range_list = lGetList(new_job, JB_ja_structure);
-                  lListElem *range = lFirst(range_list);
+               }
+            }
+            if (ret) {
+               lList *range_list = lGetList(new_job, JB_ja_structure);
+               lListElem *range = lFirst(range_list);
 
-                  if (range == NULL) {
-                     range = lAddSubUlong(new_job, RN_step, step, JB_ja_structure, RN_Type);
-                  }
-                  if (range != NULL) {
-                     lSetUlong(range, RN_step, step);
-                  }
+               if (range == NULL) {
+                  range = lAddSubUlong(new_job, RN_step, step, JB_ja_structure, RN_Type);
+               }
+               if (range != NULL) {
+                  lSetUlong(range, RN_step, step);
                }
             }
          }
@@ -1124,7 +1095,7 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
             bool first = true;
 
             sge_dstring_clear(&buffer);
-            sge_dstring_sprintf(&buffer, "PARAM ac");
+            sge_dstring_sprintf(&buffer, "ENV ADD ac");
             for_each(context, context_list) {
                const char *name = lGetString(context, VA_variable);
                const char *value = lGetString(context, VA_value);
@@ -2123,142 +2094,71 @@ bool
 jsv_do_communication(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answer_list)
 {
    bool ret = true;
-   char input[10000];
 
    DENTER(TOP_LAYER, "jsv_do_communication");
    if (ret) {
-      while (fscanf(lGetRef(jsv, JSV_err), "%[^\n]\n", input) == 1) {
-          ERROR((SGE_EVENT, MSG_JSV_LOGMSG_S, input));  
-      }
-      DPRINTF(("JSV - START will be sent\n"));
       ret &= jsv_send_command(jsv, answer_list, "START");
    }
    if (ret) {
       u_long32 start_time = sge_get_gmt();
-      bool do_retry = true;
 
       lSetBool(jsv, JSV_done, false);
       lSetBool(jsv, JSV_soft_shutdown, true);
       while (!lGetBool(jsv, JSV_done)) {
+         char input[10000];
+         FILE *file = lGetRef(jsv, JSV_out);
+
          if (sge_get_gmt() - start_time > JSV_CMD_TIMEOUT) {
-            DPRINTF(("JSV - master waited longer than JSV_CMD_TIMEOUT to get response from JSV\n"));
-            /*
-             * In case of a timeout we try it a second time. In that case we kill
-             * the old instance and start a new one before we continue
-             * with the verification. Otherwise we report an error which will
-             * automatically reject the job which should be verified.
-             */
-            if (do_retry) {
-               DPRINTF(("JSV - will retry verification\n")); 
-               lSetBool(jsv, JSV_restart, false);
-               lSetBool(jsv, JSV_accept, false);
-               lSetBool(jsv, JSV_done, false);
-               DPRINTF(("JSV process will be stopped now\n"));
-               ret &= jsv_stop(jsv, answer_list, false);
-               if (ret) {
-                  DPRINTF(("JSV process will be started now\n"));
-                  ret &= jsv_start(jsv, answer_list);
-               }
-               if (ret) {
-                  DPRINTF(("JSV process gets START command\n"));
-                  while (fscanf(lGetRef(jsv, JSV_err), "%[^\n]\n", input) == 1) {
-                     ERROR((SGE_EVENT, MSG_JSV_LOGMSG_S, input));  
-                  }
-                  ret &= jsv_send_command(jsv, answer_list, "START");
-               }
-               start_time = sge_get_gmt();
-               do_retry = false;
-            } else {
-               DPRINTF(("JSV - reject due to timeout in communication process\n")); 
-               answer_list_add_sprintf(answer_list, STATUS_DENIED, ANSWER_QUALITY_ERROR,
-                                       "got no response from JSV script "SFQ, 
-                                       lGetString(jsv, JSV_command));
-               lSetBool(jsv, JSV_restart, true);
-               lSetBool(jsv, JSV_soft_shutdown, false);
-               lSetBool(jsv, JSV_done, true);
-            }
+            answer_list_add_sprintf(answer_list, STATUS_DENIED, ANSWER_QUALITY_ERROR,
+                                    "got no response from JSV script "SFQ, lGetString(jsv, JSV_command));
+            lSetBool(jsv, JSV_restart, true);
+            lSetBool(jsv, JSV_soft_shutdown, false);
+            lSetBool(jsv, JSV_done, true);
          } else {
-            FILE *err_stream = lGetRef(jsv, JSV_err);
-            FILE *out_stream = lGetRef(jsv, JSV_out);
+            /* read a line from the script or wait some time before you try again */
+            if (fscanf(file, "%[^\n]\n", input) == 1) {
+               dstring sub_command = DSTRING_INIT;
+               dstring command = DSTRING_INIT;
+               dstring args = DSTRING_INIT;
+               jsv_command_t commands[] = {
+                  {"PARAM", jsv_handle_param_command},
+                  {"ENV", jsv_handle_env_command},
+                  {"LOG", jsv_handle_log_command},
+                  {"RESULT", jsv_handle_result_command},
+                  {"SEND", jsv_handle_send_command},
+                  {"STARTED", jsv_handle_started_command},
+                  {NULL, NULL}
+               };
+               bool handled = false;
+               const char *c;
+               int i = -1;
 
-            /* 
-             * read a line from the script or wait some time before you try again
-             * but do this only if there was no message an the stderr stream.
-             */
-            if (ret) {
-               if (fscanf(out_stream, "%[^\n]\n", input) == 1) {
-                  dstring sub_command = DSTRING_INIT;
-                  dstring command = DSTRING_INIT;
-                  dstring args = DSTRING_INIT;
-                  jsv_command_t commands[] = {
-                     {"PARAM", jsv_handle_param_command},
-                     {"ENV", jsv_handle_env_command},
-                     {"LOG", jsv_handle_log_command},
-                     {"RESULT", jsv_handle_result_command},
-                     {"SEND", jsv_handle_send_command},
-                     {"STARTED", jsv_handle_started_command},
-                     {NULL, NULL}
-                  };
-                  bool handled = false;
-                  const char *c;
-                  int i = -1;
+               DPRINTF(("JSV << \"%s\"\n", input));
 
-                  DPRINTF(("JSV << \"%s\"\n", input));
+               jsv_split_commandline(input, &command, &sub_command, &args);
+               c = sge_dstring_get_string(&command);
+   
+               while(commands[++i].command != NULL) {
+                  if (strcmp(c, commands[i].command) == 0) {
+                     handled = true;
+                     ret &= commands[i].func(ctx, jsv, answer_list, 
+                                             &command, &sub_command, &args);
 
-                  jsv_split_commandline(input, &command, &sub_command, &args);
-                  c = sge_dstring_get_string(&command);
-      
-                  while(commands[++i].command != NULL) {
-                     if (strcmp(c, commands[i].command) == 0) {
-                        handled = true;
-                        ret &= commands[i].func(ctx, jsv, answer_list, 
-                                                &command, &sub_command, &args);
-
-                        if (ret == false || 
-                            lGetBool(jsv, JSV_restart) == true || 
-                            lGetBool(jsv, JSV_accept) == true) {
-                           lSetBool(jsv, JSV_done, true);
-                        }
-                        break;
+                     if (ret == false || 
+                         lGetBool(jsv, JSV_restart) == true || 
+                         lGetBool(jsv, JSV_accept) == true) {
+                        lSetBool(jsv, JSV_done, true);
                      }
+                     break;
                   }
-
-                  if (!handled) {
-                     answer_list_add_sprintf(answer_list, STATUS_DENIED, ANSWER_QUALITY_ERROR,
-                                             MSG_JSV_JCOMMAND_S, c);
-                     lSetBool(jsv, JSV_accept, false);
-                     lSetBool(jsv, JSV_restart, true);
-                     lSetBool(jsv, JSV_done, true);
-                  }
-
-                  /*
-                   * set start time for ne iteration
-                   */
-                  start_time = sge_get_gmt();
-                  sge_dstring_free(&sub_command);
-                  sge_dstring_free(&command);
-                  sge_dstring_free(&args);
-               } else {
-                  sge_usleep(10000);
                }
-            }
 
-            /* 
-             * try to read a line from the error stream. If there is something then
-             * restart the script before next check, do not communicate with script 
-             * anymore during shutdown. The last message in the strerr stream will be 
-             * send as answer to the calling function.
-             */
-            while (fscanf(err_stream, "%[^\n]\n", input) == 1) {
-               ERROR((SGE_EVENT, MSG_JSV_LOGMSG_S, input));  
-               ret = false;
-            }
-            if (!ret && lGetBool(jsv, JSV_done) == false) {
-               answer_list_add_sprintf(answer_list, STATUS_DENIED, ANSWER_QUALITY_ERROR,
-                                       "JSV stderr is - %s", input);
-               lSetBool(jsv, JSV_restart, true);
-               lSetBool(jsv, JSV_soft_shutdown, false);
-               lSetBool(jsv, JSV_done, true);
+               if (!handled) {
+                  answer_list_add_sprintf(answer_list, STATUS_DENIED, ANSWER_QUALITY_ERROR,
+                                          MSG_JSV_COMMAND_S, c);
+                  lSetBool(jsv, JSV_accept, false);
+                  lSetBool(jsv, JSV_done, true);
+               }
             }
          }
       }
@@ -2327,7 +2227,7 @@ jsv_cull_attr2switch_name(int cull_attr, lListElem *job)
    } else if (cull_attr == JB_pe) {
       ret = "pe_name";
    } else if (cull_attr == JB_pe_range) {
-      ret = "pe_min";
+      ret = "pe_range";
    } else if (cull_attr == JB_hard_queue_list) {
       ret = "q_hard";
    } else if (cull_attr == JB_soft_queue_list) {
@@ -2372,40 +2272,12 @@ jsv_is_modify_rejected(sge_gdi_ctx_class_t *context, lList **answer_list, lListE
             lList *got_switches = NULL;
             lListElem *allowed = NULL;
 
-            /*
-             * Transform the cull fields into a list of corresponding 
-             * qalter switch names.
-             */
             str_list_parse_from_string(&allowed_switches, jsv_allowed_mod, ",");
             for (pointer = descr; pointer->nm != NoName; pointer++) {
                const char *swch = jsv_cull_attr2switch_name(pointer->nm, job);
              
                if (swch != NULL) {
                   lAddElemStr(&got_switches, ST_name, swch, ST_Type);
-               }
-            }
-
-            /*
-             * Even if not specified on commandline. The information of the
-             * -w switch is always passed to qalter. We must allow it even if it
-             * was not specified.
-             */
-            allowed = lGetElemStr(allowed_switches, ST_name, "w");
-            if (allowed == NULL) {
-               lAddElemStr(&allowed_switches, ST_name, "w", ST_Type);
-            }
-
-            /*
-             * Allow -t switch automatically if -h is used. The corresponding
-             * information of -t in the CULL data structure is used to
-             * send the information of -h.
-             */
-            allowed = lGetElemStr(allowed_switches, ST_name, "h");
-            if (allowed != NULL) {
-               allowed = lGetElemStr(allowed_switches, ST_name, "t");
-
-               if (allowed == NULL) {
-                  lAddElemStr(&allowed_switches, ST_name, "t", ST_Type);
                }
             }
 
@@ -2427,9 +2299,6 @@ jsv_is_modify_rejected(sge_gdi_ctx_class_t *context, lList **answer_list, lListE
                }
             }
 
-            /*
-             * If there are no remaining switches then the request will not be rejected.
-             */
             if (lGetNumberOfElem(got_switches) == 0) {
                ret = false;
             } else {

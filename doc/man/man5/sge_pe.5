@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_pe.5,v $     Last Update: $Date: 2008/12/29 08:09:36 $     Revision: $Revision: 1.20 $
+.\" $RCSfile: sge_pe.5,v $     Last Update: $Date: 2008/05/05 09:03:34 $     Revision: $Revision: 1.19 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_PE 5 "$Date: 2008/12/29 08:09:36 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_PE 5 "$Date: 2008/05/05 09:03:34 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_pe \- xxQS_NAMExx parallel environment configuration file format
@@ -54,7 +54,7 @@ and linked with one or more queues via \fIpe_list\fP in
 the environment can be requested for a job via the \fB\-pe\fP switch
 to
 .M qsub 1
-together with a request of a range for the number of parallel processes
+together with a request of a range for the number of parallel process
 to be allocated by the job. Additional \fB\-l\fP options may be used
 to specify the job requirement to further detail.
 .PP
@@ -242,28 +242,29 @@ interfaces.
 .\"
 .\"
 .SS "\fBjob_is_first_task\fP"
+This parameter is only checked if
+.B control_slaves
+(see above) is set to TRUE 
+and thus xxQS_NAMExx is the creator of the slave tasks of a parallel 
+application via
+.M xxqs_name_sxx_execd 8
+and
+.M xxqs_name_sxx_shepherd 8 .
+In this case, a 
+sophisticated PE interface is required closely coupling the parallel 
+environment and xxQS_NAMExx. The documentation accompanying such 
+PE interfaces will recommend the setting for \fBjob_is_first_task\fP.
+.PP
 The
 .B job_is_first_task
 parameter can be set to TRUE or FALSE. A value of 
 TRUE indicates that the xxQS_NAMExx job script already contains one of 
-the tasks of the parallel application
-(the number of slots reserved for the job is the number of slots requested with the -pe switch),
-while a value of FALSE indicates that the
-job script (and its child processes) is not part of the parallel program
-(the number of slots reserved for the job is the number of slots requested with the -pe switch + 1).
-.PP
-If wallclock accounting is used 
-(execd_params ACCT_RESERVED_USAGE and/or SHARETREE_RESERVED_USAGE set to TRUE)
-and 
-.B control_slaves
-is set to FALSE, the
-.B job_is_first_task
-parameter influences the accounting for the job:
-A value of TRUE means that accounting for cpu and requested memory gets multiplied by the number of slots requested with the -pe switch, if
-.B job_is_first_task
-is set to FALSE, the accounting information gets multiplied by number of slots + 1.
+the tasks of the parallel application, while a value of FALSE indicates
+that the 
+job script (and its child processes) is not part of the parallel program.
 .\"
 .\"
+
 .SS "\fBurgency_slots\fP"
 For pending jobs with a slot range PE request the number of slots 
 is not determined. This setting specifies the method to be used by 

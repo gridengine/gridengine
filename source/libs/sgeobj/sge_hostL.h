@@ -71,7 +71,8 @@ enum {
    EH_sort_value,            /* combined load value for sorting only
                               * scheduler local not spooled */
    EH_reuse_me,              /* can be rused */
-   EH_tagged,                /* used by qhost only */
+   EH_tagged,                /* used for parallel scheduling only
+                              * scheduler local not spooled */
    EH_load_correction_factor,        /* a value of 100 (stands for 1)
                                       * means the load values of this host 
                                       * * has to be increased fully by all
@@ -103,7 +104,8 @@ enum {
                               * built attributes */
    EH_cache_version,         /* used to decide whether QU_cached_complexes 
                               * needs a refresh */
-   EH_master_host,           /* no longer used */
+   EH_master_host,           /* indicates in scheduler whether a exec host 
+                              * is suitable as a master host */
    EH_reschedule_unknown,    /* used for caching from global/local conf;
                               * timout after which jobs will be
                               * rescheduled automatically */

@@ -32,9 +32,9 @@
 package com.sun.grid.installer.util;
 
 import com.izforge.izpack.installer.InstallerFrame;
+import com.izforge.izpack.panels.ProcessingClient;
 import com.izforge.izpack.util.Debug;
 import com.izforge.izpack.util.VariableSubstitutor;
-import com.sun.grid.installer.util.cmd.RemoteCommand;
 import com.sun.grid.installer.gui.*;
 import java.awt.Component;
 import java.io.BufferedReader;
@@ -46,17 +46,13 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Scanner;
+import java.util.Vector;
 import javax.swing.JFileChooser;
 import javax.swing.SwingUtilities;
 
@@ -69,13 +65,11 @@ public class Util implements Config{
         ADD, REMOVE, DELETE
     }
 
-    public enum SgeComponents { bdb, qmaster, shadow, execd}
+    public enum SgeComponents { bdb, qmaster, shadowd, execd}
 
-    public static int RESOLVE_THREAD_POOL_SIZE = 12;
-    public static int INSTALL_THREAD_POOL_SIZE = 8;
-    public static int RESOLVE_TIMEOUT = 20000;
-    public static int INSTALL_TIMEOUT = 120000;
-    
+    final public static int RESOLVE_THREAD_POOL_SIZE = 8;
+    final public static int INSTALL_THREAD_POOL_SIZE = 2;
+
     // Currently we accept pattern in list of hosts in a file
     public static List<String> parseFileList(File f) throws FileNotFoundException {
         List<String> hostList = new LinkedList<String>(), tempList;
@@ -85,7 +79,7 @@ public class Util implements Config{
         String pattern = "";
         while (s.hasNext()) {
             pattern = s.next().toLowerCase().trim();
-            type = isIpPattern(pattern) ? Host.Type.IP : Host.Type.HOSTNAME;
+            type = getType(pattern);
             tempList = parsePattern(pattern, type);
             hostList = joinList(hostList, tempList);
         }
@@ -93,31 +87,18 @@ public class Util implements Config{
         return hostList;
     }
 
-    /* Tests if valid characters for IP */
-    public static boolean isIpPattern(String pattern) {
-        for (int i=0 ; i < pattern.length() ;i++) {
-            char c = pattern.charAt(i);
-            switch (c) {
-                case '0':
-                case '1':
-                case '2':
-                case '3':
-                case '4':
-                case '5':
-                case '6':
-                case '7':
-                case '8':
-                case '9':
-                case '-':
-                case '[':
-                case ']':
-                case '.':
-                    break;
-                default:
-                    return false;
+    private static Host.Type getType(String pattern) {
+        char c;
+        for (int i=0; i<pattern.length(); i++) {
+            c = pattern.charAt(i);
+            if (c >= '0' && c <= '9') {
+                return Host.Type.IP;
+            }
+            if (c >= 'a' && c <= 'z') {
+                return Host.Type.HOSTNAME;
             }
         }
-        return true;
+        throw new IllegalArgumentException("Can't get hots type for pattern "+pattern);
     }
 
     public static List<String> parseHostPattern(String input) {
@@ -131,7 +112,7 @@ public class Util implements Config{
     }
 
 
-    public static List<String> parsePattern(String input, Host.Type type) {
+    private static List<String> parsePattern(String input, Host.Type type) {
         long start=System.currentTimeMillis(),endL;
         LinkedList<List<String>> list = new LinkedList<List<String>>();
         int i=0;
@@ -171,14 +152,14 @@ public class Util implements Config{
                     }                  
                 default:
                     s.close();
-                    throw new IllegalArgumentException("error - invalid value " + elem + " for type " + type.toString());
+                    throw new IllegalArgumentException("Invalid value " + elem + " for type " + type.toString());
             }
         }
         s.close();
 
         //Ip must have 4 octects
         if (type == Host.Type.IP && i != 4) {
-            throw new IllegalArgumentException("error - IP must have 4 octects. Got "+i);
+            throw new IllegalArgumentException("Ip must have 4 octects. Got "+i);
         }
 
         //Final reduction to single host list
@@ -192,7 +173,7 @@ public class Util implements Config{
             }
         }
         endL = System.currentTimeMillis();
-        Debug.trace("Generating "+hostList.size()+" took "+ (endL-start)+"ms ("+(endL-start)*100/hostList.size()+" per 100 items)");
+        System.out.println("Generating "+hostList.size()+" took "+ (endL-start)+"ms ("+(endL-start)*100/hostList.size()+" per 100 items)");
         return hostList.size() != 0 ? hostList : null;
     }
     
@@ -209,7 +190,7 @@ public class Util implements Config{
             switch (type) {
                 case HOSTNAME:
                     //We have a string
-                    if (c >= 'a' && c <= 'z' || (c >= '0' && c <='9') || c == '_') {
+                    if (c >= 'a' && c <= 'z' || (c >= '0' && c <='9')) {
                         sb.append(c);
                         continue;
                     }
@@ -222,7 +203,7 @@ public class Util implements Config{
                     }
                     break;
                 default:
-                    throw new IllegalArgumentException("error - unknown type " + type.toString());
+                    throw new IllegalArgumentException("Unknown type " + type.toString());
             }
             //Something else
             switch (c) {
@@ -234,10 +215,6 @@ public class Util implements Config{
                     }
                     sb = new StringBuilder();
                     level++; //increase bracket level
-                    //We support only single level of brackets
-                    if (level > 1) {
-                        throw new IllegalArgumentException("error - invalid character '"+c+"' in "+input);
-                    }
                     
                     //TODO We should reduce here what we can
                     /*if (item.size() == 0) {
@@ -330,30 +307,8 @@ public class Util implements Config{
                 case '-':
                     //Add possible last element
                     if (sb.toString().trim().length() > 0) {
-                       Integer num = null;
-                       try {
-                           num = Integer.parseInt(sb.toString().trim());
-                       } catch (NumberFormatException ex) {
-                           //Element is not a number!
-                           sb.append(c);
-                           continue;
-                       }
-                       if (type == Host.Type.HOSTNAME && level == 0 || num < 0) {
-                           //Missing an opening bracket or do not have a valid number - not a range
-                           sb.append(c);
-                           continue;
-                       }
                        item.add(sb.toString().trim());
                        list.addFirst(item);
-                    } else if (type == Host.Type.HOSTNAME) {
-                       if (level == 0) {
-                          //Missing an opening bracket - not a range
-                          sb.append(c);
-                          continue;
-                       } else {
-                          //We have "[-" in hostname
-                          throw new IllegalArgumentException("error - invalid character '"+c+"' in "+input);
-                       }
                     }
                     sb = new StringBuilder();
                     item = new LinkedList<String>();
@@ -361,10 +316,6 @@ public class Util implements Config{
                     continue;
                 case ']':
                     level--;
-                    //We support only                  //We support only single level of brackets
-                    if (level < 0) {
-                        throw new IllegalArgumentException("error - invalid character '"+c+"' in "+input);
-                    }
                     if (sb.toString().trim().length() > 0) {
                        item.add(sb.toString().trim());
                     }
@@ -372,9 +323,6 @@ public class Util implements Config{
                     if (item.size() == 0) {
                         if (list.peek().getClass() == String.class && ((String) list.peek()).equals(",")) {
                             item.add("");
-                        //We got "[]"
-                        } else if (list.peek().getClass() == String.class && ((String) list.peek()).equals("[")) {
-                            throw new IllegalArgumentException("error - empty '[]' in "+input);
                         } else {
                             item = (LinkedList<String>) list.poll();
                         }
@@ -408,11 +356,11 @@ public class Util implements Config{
                     item = new LinkedList<String>();
                     continue;
                 default:
-                    throw new IllegalArgumentException("error - invalid character '"+c+"' in "+input);
+                    throw new IllegalArgumentException("parseSinglePattern - invalid character '"+c+"' in "+input);
             }
         }
         if (level > 0) {
-            throw new IllegalArgumentException("error - uneven brackets in "+input);
+            throw new IllegalArgumentException("parseSinglePattern - uneven brackets in "+input);
         }
         if (sb.toString().trim().length()>0) {
             if (item.size()>0) {
@@ -475,7 +423,7 @@ public class Util implements Config{
                             //We should just concatenete
                             return concatenateList(start, end, "-");
                         default:
-                            throw new IllegalArgumentException("error - invalid num-numeric IP range");
+                            throw new IllegalArgumentException("Invalid num-numeric IP range");
                     }
                 }
                 //Small fix for invalid in IP ranges
@@ -603,8 +551,7 @@ public class Util implements Config{
     	BufferedWriter bufferedWriter     = null;
         VariableSubstitutor vs = new VariableSubstitutor(variables);
 
-        Debug.trace("Fill up template from '" + templateFilePath + "' to '" + resultFilePath + "'.");
-        File f = new File(resultFilePath);
+        File f = File.createTempFile(resultFilePath, null);
     	
     	try {
     		bufferedReader = new BufferedReader(new FileReader(templateFilePath));
@@ -670,7 +617,7 @@ public class Util implements Config{
      * @param component The type of the component to find on the given port: "qmaster" or "execd"
      * @return True only and only if the host is reachable on the given port
      */
-    /*public static boolean pingHost(Properties variables, Host host, String component, int maxTries) {
+    public static boolean pingHost(Properties variables, Host host, String component, int maxTries) {
         String qping = variables.getProperty(VAR_SGE_ROOT) + "/bin/" + Host.localHostArch + "/qping";
         String port = (component.equalsIgnoreCase("qmaster")) ? variables.getProperty(VAR_SGE_QMASTER_PORT) : (component.equalsIgnoreCase("execd")) ? variables.getProperty(VAR_SGE_EXECD_PORT) : "-1";
         try {
@@ -678,7 +625,7 @@ public class Util implements Config{
             int tries = 0;
             while (tries < maxTries) {
                 // TODO does -tcp option is what we need?
-                cmdExec = new CommandExecutor(qping, "-tcp", "-info", host.getHostname(), port, component, "1");
+                cmdExec = new CommandExecutor(qping, "-tcp", "-info", host.getHostAsString(), port, component, "1");
                 Map env = cmdExec.getEnvironment();
                 env.put("SGE_ROOT", variables.getProperty(VAR_SGE_ROOT));
                 env.put("SGE_CELL", variables.getProperty(VAR_SGE_CELL_NAME));
@@ -689,7 +636,7 @@ public class Util implements Config{
                 if (cmdExec.getExitValue() == 0) {
                     return true;
                 } else {
-                    Thread.sleep(2000);
+                    Thread.currentThread().sleep(2000);
                 }
 
                 tries++;
@@ -701,7 +648,7 @@ public class Util implements Config{
         }
 
         return false;
-    }*/
+    }
 
     /**
      * Returns with the file system type of the given directory. If the directory does not exist first creates it
@@ -715,246 +662,48 @@ public class Util implements Config{
     }
 
     public static String getDirFSType(String host, Properties variables, String dir) {
-        VariableSubstitutor vs = new VariableSubstitutor(variables);        
+        VariableSubstitutor vs = new VariableSubstitutor(variables);
+        CommandExecutor cmdExec = null;
         String result = "";
 
         dir = vs.substituteMultiple(dir, null);
+        
+        File file = new File(dir);
 
-        ExtendedFile file = new ExtendedFile(dir).getFirstExistingParent();
-        Debug.trace("First existing parent of '" + dir + "' is '" + file.getAbsolutePath() +"'.");
-        dir = file.getAbsolutePath();
-
+        boolean created = false;
         try {
+            // Creat the directory if does not exist
+            if (!file.exists()) {
+                cmdExec = new CommandExecutor("mkdir", "-p", dir);
+                cmdExec.execute();
+
+                if (cmdExec.getExitValue() == 0) {
+                    created = true;
+                }
+            }
+
             // Call the 'fstype' script of the proper architecture
             String fstypeScript = "${cfg.sge.root}/utilbin/${localhost.arch}/fstype";
-            RemoteCommand fstypeCmd = new RemoteCommand(variables, host, vs.substituteMultiple(fstypeScript, null), dir);
-            fstypeCmd.execute();
+            cmdExec = new CommandExecutor(variables, variables.getProperty(VAR_SHELL_NAME), host, vs.substituteMultiple(fstypeScript, null), dir);
+            cmdExec.execute();
 
-            if (fstypeCmd.getExitValue() == 0) {
-                result = fstypeCmd.getOutput().firstElement().trim();
+            if (cmdExec.getExitValue() == 0) {
+                result = cmdExec.getOutput().firstElement().trim();
                 Debug.trace("FSType of '" + dir + "' is '" + result +"'.");
-            } else {
-                Debug.error("Failed to get the FSType of the directory '" + dir + "'! Error: " + fstypeCmd.getError());
             }
         } catch (Exception e) {
             Debug.error(e);
+        } finally {
+            // Delete the directory if was created only for the check
+            if (created) {
+                try {
+                    file.delete();
+                } catch (Exception e) {
+                    Debug.error(e);
+                }
+            }
         }
 
         return result;
-    }
-
-    /**
-     * Returns the group id of the user.
-     * @param user The user name
-     * @return The group id of the user if the process was successful, otherwise empty string.
-     */
-    public static String[] getUserGroups(String host, Properties variables, String user) {
-        String[] groups = null;
-        ExtendedFile tmpFile = null;
-
-        try {
-            String command = "groups";
-            RemoteCommand groupCmd = new RemoteCommand(variables, host, command, user);
-            groupCmd.execute();
-
-            if (groupCmd.getExitValue() == 0) {
-                groups = groupCmd.getOutput().firstElement().trim().split(" ");
-
-                Debug.trace("Group of user '" + user + "' are '" + Arrays.toString(groups) + "'.");
-            } else {
-                Debug.error("Failed to get the group id's of user '" + user + "'! Error: " + groupCmd.getError());
-            }
-        } catch (Exception ex) {
-            Debug.error("Failed to get the group id's of user '" + user + "'! " + ex);
-        } 
-
-        return groups;
-    }
-
-    /**
-     * Sources the sge <SGE_ROOT>/<CELL_NAME>/common/settings.sh file.
-     * @param sgeRoot The SGE_ROOT directory
-     * @param cellName The CELL_NAME value
-     * @return List of key values pairs sourced from the file.
-     * 
-     * @throws java.io.FileNotFoundException
-     * @throws java.io.IOException
-     */
-    public static Properties sourceSGESettings(String sgeRoot, String cellName) throws FileNotFoundException, IOException {
-        Properties settings = new Properties();
-        String settingsshFile = sgeRoot + "/" + cellName + "/common/settings.sh";
-        ArrayList<String> settingsshLines = FileHandler.readFileContent(settingsshFile, false);
-
-        for (String line : settingsshLines) {
-            // Process lines like 'SGE_CELL=default; export SGE_CELL'
-            if (line.startsWith("SGE_")) {
-                String[] keyValuePair = line.split(";")[0].split("=");
-                settings.setProperty(keyValuePair[0].trim(), keyValuePair[1].trim());
-            }
-        }
-
-        Debug.trace("Sourced settings from '" + settingsshFile + "' are " + settings + ".");
-
-        return settings;
-    }
-
-    /**
-     * Sources the sge <SGE_ROOT>/<CELL_NAME>/common/sboostrap file.
-     * @param sgeRoot The SGE_ROOT directory
-     * @param cellName The CELL_NAME value
-     * @return List of key values pairs sourced from the file.
-     *
-     * @throws java.io.FileNotFoundException
-     * @throws java.io.IOException
-     */
-    public static Properties sourceSGEBootstrap(String sgeRoot, String cellName) throws FileNotFoundException, IOException {
-        Properties settings = new Properties();
-        String boostrapFile = sgeRoot + "/" + cellName + "/common/bootstrap";
-        ArrayList<String> bootstrapLines = FileHandler.readFileContent(boostrapFile, false);
-        String key, value;
-        boolean isClassicSpooling = false;
-        for (String line : bootstrapLines) {
-            // Process lines like 'spooling_method         berkeleydb'
-            if (!line.startsWith("#")) {
-                int spaceIndex = line.indexOf(' ');
-                key = line.substring(0, spaceIndex).trim();
-                value = line.substring(spaceIndex).trim();
-                //PRODUCT_MODE
-                if (key.equalsIgnoreCase("security_mode")) {
-                    if (value.equalsIgnoreCase("none")) {
-                        key="add.product.mode";
-                        value = "none";
-                    } else if (value.equalsIgnoreCase("csp")) {
-                        key="add.product.mode";
-                        value = "csp";
-                    } //Don't support afs => 3
-                //HOSTNAME_RESOLVING
-                } else if (key.equalsIgnoreCase("ignore_fqdn")) {
-                    key = "hostname_resolving";
-                } else if (key.equalsIgnoreCase("spooling_method")) {
-                    if (value.trim().equalsIgnoreCase("classic")) {
-                        isClassicSpooling = true;
-                    }
-                }
-                //finally set the key, value pair
-                settings.setProperty(key, value);
-                //TODO: Check we have ignore_fqdn, spool, etc/ properly mapped to GUI cfg.* variables!                
-            }
-        }
-
-        Debug.trace("Sourced settings from '" + boostrapFile + "' are " + settings + ".");
-
-        return settings;
-    }
-
-    /**
-     * Sources the <SGE_ROOT>/<CELL_NAME>/common/act_qmaster file and return with the name of qmaster host.
-     * @param sgeRoot The SGE_ROOT directory.
-     * @param cellName The CELL_NAME value
-     * @return The name of the qmaster host.
-     * @throws java.io.FileNotFoundException
-     * @throws java.io.IOException
-     */
-    public static String getQmasterHost(String sgeRoot, String cellName) throws FileNotFoundException, IOException {
-        String qmasterHost = "";
-        String actQmasterFile = sgeRoot + "/" + cellName + "/common/act_qmaster";
-        ArrayList<String> settingsshLines = FileHandler.readFileContent(actQmasterFile, false);
-
-        if (settingsshLines.size() > 0) {
-            qmasterHost = settingsshLines.get(0).trim();
-        }
-
-        Debug.trace("Found qmaster host name in '" + actQmasterFile + "' is '" + qmasterHost + "'.");
-
-        return qmasterHost;
-    }
-
-    /**
-     * Checks whether the given port is free on the specified host
-     *
-     * NOTE: works properly only on local host
-     *
-     * @param hostName The host where the port should be checked
-     * @param port The port to be checked
-     * @return True only if the host is reachable and the port is free to bind.
-     */
-    public static boolean isPortFree(String hostName, String port) {
-        try {
-            return isPortFree(hostName, Integer.parseInt(port));
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    /**
-     * Checks whether the given port is free on the specified host
-     *
-     * NOTE: works properly only on local host
-     *
-     * @param hostName The host where the port should be checked
-     * @param port The port to be checked
-     * @return True only if the host is reachable and the port is free to bind.
-     */
-    public static boolean isPortFree(String hostName, int port) {
-        try {
-            ServerSocket serverSocket = new ServerSocket(port, 0 , InetAddress.getByName(hostName));
-            serverSocket.close();
-            return true;
-        } catch (IOException e) {
-            //e.printStackTrace();
-            return false;
-        }
-    }
-
-    public static List<String> getAllHosts(HostInstallTableModel model, String local) {
-        String item ="";
-        List<String> tmp = new ArrayList<String>();
-        for (int i = 0; i< model.getRowCount(); i++) {
-            item = (String) model.getValueAt(i, 1);
-            //We don't add duplicate hostnames, local host or special tasks "All hosts"
-            if (!tmp.contains(item) && !item.equals(local) && !item.equals(Host.HOST_TYPE_ALL)) {
-                tmp.add(item);
-            }
-        }
-        if (local.length() > 0 ) {
-            tmp.add(local);
-        }
-        return tmp;
-    }
-
-    public static String listToString(List<String> list) {
-        String val = "";
-        for (String s: list) {
-            val+= s + " ";
-        }
-        return val.trim();
-    }
-
-    public static String generateTimeStamp() {
-        return new SimpleDateFormat("yyyy.MM.dd_HH:mm:ss").format(new Date());
-    }
-
-    /*public static boolean runAsAdminUser(String host, String arch, String sgeRoot, String adminUser, String command, Properties variables) throws Exception {
-        CommandExecutor cmdExec = null;
-
-        Debug.trace("Run '" + command + "' as '" + adminUser + "' user.");
-
-        String scriptAdminRun = sgeRoot + "/utilbin/" + arch + "/adminrun";
-        cmdExec = new CommandExecutor(variables, variables.getProperty(VAR_SHELL_NAME), host, scriptAdminRun, adminUser, command);
-        cmdExec.execute();
-
-        if (cmdExec.getExitValue() == 0) {
-            return true;
-        } else {
-            return false;
-        }
-    }*/
-
-    public static boolean isWindowsMode(Properties p) {
-        String mode = p.getProperty(ARG_CONNECT_MODE);
-        if (mode != null && mode.equalsIgnoreCase(CONST_MODE_WINDOWS)) {
-            return true;
-        }
-        return false;
-    }
+    }        
 }

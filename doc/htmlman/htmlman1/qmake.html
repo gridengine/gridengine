@@ -3,36 +3,36 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     qmake - distributed parallel make, scheduling  by  Sun  Grid
+     qmake  -  distributed  parallel  make,  scheduling  by  Grid
      Engine.
 
 SYNTAX
      qmake [ options ] -- [ gmake options ]
 
 DESCRIPTION
-     <I>Qmake</I> is a parallel, distributed <B><A HREF="../htmlman1/make.html?pathrev=V62u2_TAG">make(1)</A></B> utility. Scheduling
-     of the parallel <I>make</I> tasks is done by Sun Grid Engine. It is
-     based on <I>gmake</I> (GNU make), version  3.78.1.  Both  Sun  Grid
-     Engine and <I>gmake</I> command line options can be specified. They
-     are separated by "--".
+     <I>Qmake</I> is a parallel, distributed <B><A HREF="../htmlman1/make.html">make(1)</A></B> utility. Scheduling
+     of  the  parallel  <I>make</I>  tasks is done by Grid Engine. It is
+     based on <I>gmake</I> (GNU make), version 3.78.1. Both Grid  Engine
+     and  <I>gmake</I>  command  line options can be specified. They are
+     separated by "--".
 
-     All Sun Grid Engine options valid with  <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B>  or  <B><A HREF="../htmlman1/qrsh.html?pathrev=V62u2_TAG">qrsh(1)</A></B>
-     can  be  specified with <I>qmake</I> - see <B><A HREF="../htmlman1/submit.html?pathrev=V62u2_TAG">submit(1)</A></B> for a descrip-
-     tion of all Sun  Grid  Engine  command  line  options.   The
-     <B><A HREF="../htmlman1/make.html?pathrev=V62u2_TAG">make(1)</A></B> manual page describes the <I>gmake</I> command line syntax.
+     All Grid Engine options valid with <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> or <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B> can be
+     specified  with  <I>qmake</I>  - see <B><A HREF="../htmlman1/submit.html">submit(1)</A></B> for a description of
+     all Grid Engine command line options.   The  <B><A HREF="../htmlman1/make.html">make(1)</A></B>  manual
+     page describes the <I>gmake</I> command line syntax.
 
      The syntax of <I>qmake</I> makefiles corresponds to  <I>gmake</I>  and  is
      described in the "GNU Make Manual".
 
-     A typical qmake call will use the Sun  Grid  Engine  command
-     line  options  -cwd  to have a scheduled make started in the
-     current working directory on the execution host, -v PATH  if
-     the  Sun  Grid  Engine environment is not setup in the users
-     .cshrc or .profile shell resource file and request slots  in
-     a parallel environment (see <B><A HREF="../htmlman5/sge_pe.html?pathrev=V62u2_TAG">sge_pe(5)</A></B> ).
+     A typical qmake call will use the Grid Engine  command  line
+     options -cwd to have a scheduled make started in the current
+     working directory on the execution host, -v PATH if the Grid
+     Engine environment is not setup in the users .cshrc or .pro-
+     file shell resource file and request  slots  in  a  parallel
+     environment (see <B><A HREF="../htmlman5/sge_pe.html">sge_pe(5)</A></B> ).
 
-     If no resource request (Sun Grid Engine command line  option
-     -l)  is  specified,  qmake will use the environment variable
+     If no resource request (Grid Engine command line option  -l)
+     is  specified,  qmake  will  use  the  environment  variable
      SGE_ARCH to request the same architecture for task execution
      as  has  the submit host.  If SGE_ARCH is set, the architec-
      ture specified in SGE_ARCH will be  requested  by  inserting
@@ -41,19 +41,19 @@ DESCRIPTION
      any available architecture.  As this is critical for typical
      make (compile) jobs, a warning will be output.
 
-     <I>qmake</I> has two different modes for allocating Sun Grid Engine
+     <I>qmake</I> has two different modes  for  allocating  Grid  Engine
      resources for the parallel execution of tasks:
 
      1. Allocation of resources using a parallel environment.  If
      the -pe option is used on the qmake command line, a parallel
-     job is scheduled by Sun Grid Engine.   The  make  rules  are
-     executed as tasks within this parallel job.
+     job is scheduled by Grid Engine.  The make  rules  are  exe-
+     cuted as tasks within this parallel job.
 
      2. Dynamic allocation of resources. If no parallel  environ-
      ment  is  requested  when  submitting a qmake job, each make
-     rule will generate an individual Sun Grid Engine  qrsh  job.
-     All  resource  requests  given to qmake will be inherited by
-     the jobs processing the make rules.
+     rule will generate an individual Grid Engine qrsh job.   All
+     resource  requests  given  to qmake will be inherited by the
+     jobs processing the make rules.
      In dynamic allocation mode, additional resource requests for
      individual  rules  can be specified by preceding the rule by
      the definition of an environment variable SGE_RREQ. The rule
@@ -73,7 +73,7 @@ EXAMPLES
      on the same architecture as the submit host. The <I>make</I>  tasks
      will  inherit the complete environment of the calling shell.
      It will execute as many parallel tasks as  slots  have  been
-     granted by Sun Grid Engine.
+     granted by Grid Engine.
 
           qmake -l arch=sol-sparc -cwd -v PATH -- -j 4
 
@@ -120,29 +120,28 @@ EXAMPLES
 
      can be submitted by
 
-          qsub -cwd -v PATH -pe make 1-10 [further sge options] &lt;script&gt;
+          qsub -cwd -v PATH -pe make 1-10 [further ge options] &lt;script&gt;
 
      <I>Qmake</I> will inherit the resources granted for the job submit-
      ted above under parallel environment "make".
 
 ENVIRONMENTAL VARIABLES
-     SGE_ROOT       Specifies the location of the Sun Grid Engine
+     GE_ROOT        Specifies the location  of  the  Grid  Engine
                     standard configuration files.
 
-     SGE_CELL       If set, specifies the default Sun Grid Engine
-                    cell. To address a Sun Grid Engine cell <I>qmake</I>
+     GE_CELL        If set, specifies  the  default  Grid  Engine
+                    cell.  To  address  a  Grid Engine cell <I>qmake</I>
                     uses (in the order of precedence):
 
                          The name of the cell  specified  in  the
-                         environment  variable SGE_CELL, if it is
+                         environment  variable  GE_CELL, if it is
                          set.
 
                          The  name  of  the  default  cell,  i.e.
                          default.
 
 
-     SGE_DEBUG_LEVEL
-                    If  set,  specifies  that  debug  information
+     GE_DEBUG_LEVEL If  set,  specifies  that  debug  information
                     should  be written to stderr. In addition the
                     level of detail in which debug information is
                     generated is defined.
@@ -187,16 +186,17 @@ KNOWN PROBLEMS
                ar ru libx.a x.o
 
 SEE ALSO
-     <B><A HREF="../htmlman1/submit.html?pathrev=V62u2_TAG">submit(1)</A></B> , <B><A HREF="../htmlman5/sge_pe.html?pathrev=V62u2_TAG">sge_pe(5)</A></B> as well as <B><A HREF="../htmlman1/make.html?pathrev=V62u2_TAG">make(1)</A></B> (GNU make  manpage)
-     and <I>The</I> <I>GNU</I> <I>Make</I> <I>Manual</I> in &lt;sge_root&gt;/3rd_party/qmake.
+     <B><A HREF="../htmlman1/submit.html">submit(1)</A></B> , <B><A HREF="../htmlman5/sge_pe.html">sge_pe(5)</A></B> as well as <B><A HREF="../htmlman1/make.html">make(1)</A></B> (GNU make  manpage)
+     and <I>The</I> <I>GNU</I> <I>Make</I> <I>Manual</I> in &lt;ge_root&gt;/3rd_party/qmake.
 
 COPYRIGHT
      <I>Qmake</I> contains portions of Gnu Make (<I>gmake</I>),  which  is  the
      copyright of the Free Software Foundation, Inc., Boston, MA,
      and is protected by the Gnu General Public License.
-     See   <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B>   and   the   information   provided   in
-     &lt;sge_root&gt;/3rd_party/qmake for a statement of further rights
+     See   <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B>   and   the   information   provided    in
+     &lt;ge_root&gt;/3rd_party/qmake  for a statement of further rights
      and permissions.
+
 
 
 

@@ -62,13 +62,11 @@ public class Installer
             String inputFileName = "";
             Properties argValues = new Properties();
             for (int i = 0; i < args.length; i++) {
-                Debug.trace("Found argument: " + args[i]);
                 String[] keyValue = getKeyValuePair(args[i]);
                 if (keyValue[0].equals(ARG_KEY_AUTO_CONF_FILE)) {
-                    inputFileName = keyValue[1].trim();
+                    inputFileName = keyValue[1];
                 } else {
-                    argValues.put(keyValue[0].trim(), keyValue[1].trim());
-
+                    argValues.put(keyValue[0], keyValue[1]);
                 }
             }
 
@@ -77,7 +75,7 @@ public class Installer
                 // can't load the GUIInstaller class on headless machines,
                 // so we use Class.forName to force lazy loading.
                 GUIInstaller guiInstaller = (GUIInstaller)Class.forName("com.izforge.izpack.installer.GUIInstaller").newInstance();
-                guiInstaller.addExtraVariables(argValues);
+                //guiInstaller.addExtraVariables(argValues);
             }
             else
             {

@@ -3,7 +3,6 @@
 #include <string.h>
 #include <sys/time.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <libgen.h>
 
 #include "cl_lists.h"
@@ -506,7 +505,7 @@ int cl_log_list_log(cl_log_t log_type,int line, const char* function_name,const 
          return ret_val;
       }
 
-      snprintf(help, 64, "%s (t@%ld/pid=%ld)", thread_config->thread_name, (unsigned long) pthread_self(), (unsigned long) getpid());
+      snprintf(help, 64, "%s (t@%ld)", thread_config->thread_name, (unsigned long) pthread_self());
       ret_val2 = cl_log_list_add_log( thread_config->thread_log_list,
                                       help,
                                       line, 
@@ -551,7 +550,7 @@ int cl_log_list_log(cl_log_t log_type,int line, const char* function_name,const 
             return ret_val;
          }
 
-         snprintf(help, 64, "unknown (t@%ld/pid=%ld)", (unsigned long) pthread_self(), (unsigned long) getpid());
+         snprintf(help, 64, "unknown (t@%ld)", (unsigned long) pthread_self());
          ret_val2 = cl_log_list_add_log( global_cl_log_list,
                                          help,
                                          line, 
@@ -745,7 +744,7 @@ int cl_log_list_flush_list(cl_raw_list_t* list_p) {        /* CR check */
 
       printf("%-76s|", elem->log_module_name);
       if (elem->log_parameter == NULL) {
-         printf("%10ld.%-6ld|%35s|%s|%s| %s\n",
+         printf("%10ld.%-6ld|%25s|%s|%s| %s\n",
          (long)now.tv_sec,
          (long)now.tv_usec,
          elem->log_thread_name,
@@ -753,7 +752,7 @@ int cl_log_list_flush_list(cl_raw_list_t* list_p) {        /* CR check */
          cl_log_list_convert_type_id(elem->log_type),
          elem->log_message);
       } else {
-         printf("%10ld.%-6ld|%35s|%s|%s| %s %s\n",
+         printf("%10ld.%-6ld|%25s|%s|%s| %s %s\n",
          (long)now.tv_sec,
          (long)now.tv_usec,
          elem->log_thread_name,

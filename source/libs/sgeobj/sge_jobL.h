@@ -105,7 +105,7 @@ enum {
 };
 
 /* values for JB_verify_suitable_queues */
-#define OPTION_VERIFY_STR "nwevp"
+#define OPTION_VERIFY_STR "nwev"
 enum { 
    SKIP_VERIFY = 0,     /* -w n no expendable verifications will be done */
    WARNING_VERIFY,      /* -w w qmaster will warn about these jobs - but submit will succeed */ 

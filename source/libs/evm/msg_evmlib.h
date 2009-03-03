@@ -60,6 +60,5 @@
 #define MSG_TO_MANY_DYNAMIC_EC_U          _MESSAGE(66017, _("cannot register event client. Only "sge_U32CFormat" event clients are allowed in the system"))
 #define MSG_SET_MAXDYNEVENTCLIENT_U       _MESSAGE(66018, _("max dynamic event clients is set to "sge_U32CFormat))
 #define MSG_EVE_INCOMPLETEEVENTCLIENT     _MESSAGE(66020, _("wrong event client version"))
-#define MSG_COM_ACKTIMEOUT4EV_SIS         _MESSAGE(66021, _("removing event client ("SFN":%d) on host "SFQ" after acknowledge timeout from event client list"))
 
 #endif /* __MSG_EVMLIB_H */

@@ -192,7 +192,6 @@ GetPathToUtilbin()
 #
 ExecuteAsAdmin()
 {
-   #TODO: Should not use hardcoded value, but read a bootstrap file!
    ADMINUSER=`GetAdminUser`
    if [ "$verbose" = true ]; then
       echo $*

@@ -388,6 +388,7 @@ bool include_names,
 u_long32 action
 ) {
    lListElem *ep, *sep, *idp;
+   char str[256];
    bool ret = false;
    bool is_run_once = false;
 
@@ -402,18 +403,21 @@ u_long32 action
          arrayDefList = lGetList(arrayDef, SPA_argval_lListT);
       }
       for_each(sep, lGetList(ep, SPA_argval_lListT)) {
+         lList *tmp_alp = NULL;
          lList *tempArrayList = NULL;
      
          if ((arrayDefList != NULL) && (lNext(sep) == NULL)) {
             tempArrayList = arrayDefList;
          }   
-         if (sge_parse_jobtasks(ppdestlist, &idp, lGetString(sep, ST_name), NULL,
-             include_names, tempArrayList) == -1) {
-            answer_list_add_sprintf(alpp, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
-                                    MSG_JOB_XISINVALIDJOBTASKID_S, lGetString(sep, ST_name));
+         if (sge_parse_jobtasks(ppdestlist, &idp, 
+               lGetString(sep, ST_name), &tmp_alp, include_names, tempArrayList) == -1) {
+            sprintf(str,  MSG_JOB_XISINVALIDJOBTASKID_S, 
+               lGetString(sep, ST_name));
+            answer_list_add(alpp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
 
             lRemoveElem(*ppcmdline, &ep);
-            DRETURN(false);
+            DEXIT;
+            return false;
          }
          lSetUlong(idp, ID_action, action);
       }
@@ -426,16 +430,18 @@ u_long32 action
    }
    
    if (is_run_once && (ep = lGetElemUlong(*ppcmdline, SPA_number, t_OPT )) != NULL) {
-      answer_list_add_sprintf(alpp, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
-                              MSG_JOB_LONELY_TOPTION_S, lGetString(ep, SPA_switch_arg));
+      sprintf(str, MSG_JOB_LONELY_TOPTION_S, lGetString(ep, SPA_switch_arg));
+      answer_list_add(alpp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       while ((ep = lGetElemUlong(*ppcmdline, SPA_number, t_OPT )) != NULL) {
          lRemoveElem(*ppcmdline, &ep);
       }  
       
-      DRETURN(false);
+      DEXIT;
+      return false;
    }
    
-   DRETURN(ret);
+   DEXIT;
+   return ret;
 }
 
 int parse_string(

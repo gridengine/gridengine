@@ -6,16 +6,16 @@ NAME
      qtask - file format of the qtask file.
 
 DESCRIPTION
-     A <I>qtask</I> file defines which commands  are  submitted  to  Sun
-     Grid  Engine  for  remote  execution by <B><A HREF="../htmlman1/qtcsh.html?pathrev=V62u2_TAG">qtcsh(1)</A></B>.  The <I>qtask</I>
-     file optionally may contain <B><A HREF="../htmlman1/qrsh.html?pathrev=V62u2_TAG">qrsh(1)</A></B> command-line parameters.
-     These  parameters  are  passed  to the <B><A HREF="../htmlman1/qrsh.html?pathrev=V62u2_TAG">qrsh(1)</A></B> command being
+     A <I>qtask</I> file defines which commands are  submitted  to  Grid
+     Engine  for  remote  execution  by <B><A HREF="../htmlman1/qtcsh.html">qtcsh(1)</A></B>.  The <I>qtask</I> file
+     optionally  may  contain  <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B>  command-line  parameters.
+     These  parameters  are  passed  to the <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B> command being
      used by <I>qtcsh</I> to submit the commands.
 
      A cluster global <I>qtask</I> file defining cluster  wide  defaults
      and  a  user  specific  <I>qtask</I> file eventually overriding and
      enhancing those definitions are supported. The cluster  glo-
-     bal file resides at &lt;sge_root&gt;/&lt;cell/common/qtask, while the
+     bal  file resides at &lt;ge_root&gt;/&lt;cell/common/qtask, while the
      user specific file can be found at ~/.qtask. An  exclamation
      mark preceding command definitions in the cluster global can
      be used by the administrator to deny overriding of such com-
@@ -28,15 +28,15 @@ FORMAT
      mand to be started remotely.
 
      Definition starts with the  command  name  that  must  match
-     exactly  the name as typed in a <B><A HREF="../htmlman1/qtcsh.html?pathrev=V62u2_TAG">qtcsh(1)</A></B> command-line. Path-
+     exactly  the name as typed in a <B><A HREF="../htmlman1/qtcsh.html">qtcsh(1)</A></B> command-line. Path-
      names are not allowed in  <I>qtask</I>  files.  Hence  absolute  or
-     relative  pathnames in <B><A HREF="../htmlman1/qtcsh.html?pathrev=V62u2_TAG">qtcsh(1)</A></B> command-lines always lead to
+     relative  pathnames in <B><A HREF="../htmlman1/qtcsh.html">qtcsh(1)</A></B> command-lines always lead to
      local execution even if the commands itself are the same  as
      defined in the <I>qtask</I> files.
 
      The command name can be followed by an arbitrary  number  of
-     <B><A HREF="../htmlman1/qrsh.html?pathrev=V62u2_TAG">qrsh(1)</A></B>  option  arguments which are passed on to <B><A HREF="../htmlman1/qrsh.html?pathrev=V62u2_TAG">qrsh(1)</A></B> by
-     <B><A HREF="../htmlman1/qtcsh.html?pathrev=V62u2_TAG">qtcsh(1)</A></B>.
+     <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B>  option  arguments which are passed on to <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B> by
+     <B><A HREF="../htmlman1/qtcsh.html">qtcsh(1)</A></B>.
 
      An exclamation mark prefixing the  command  in  the  cluster
      global  <I>qtask</I>  file prevents overriding by the user supplied
@@ -50,18 +50,18 @@ EXAMPLES
           verilog -l veri_lic=1
 
      designates the applications netscape, grep and  verilog  for
-     interactive   remote  execution  through  Sun  Grid  Engine.
-     Netscape is requested to run only on Solaris64 architectures
-     with  the  DISPLAY  environment  variable set to 'myhost:0',
-     grep only runs on the host named  'filesurfer'  and  verilog
-     requests  availability  of a verilog license in order to get
-     executed remotely.
+     interactive  remote  execution through Grid Engine. Netscape
+     is requested to run only on Solaris64 architectures with the
+     DISPLAY  environment  variable  set to 'myhost:0', grep only
+     runs on the host named  'filesurfer'  and  verilog  requests
+     availability  of  a verilog license in order to get executed
+     remotely.
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qtcsh.html?pathrev=V62u2_TAG">qtcsh(1)</A></B>, <B><A HREF="../htmlman1/qrsh.html?pathrev=V62u2_TAG">qrsh(1)</A></B>.
+     <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B>, <B><A HREF="../htmlman1/qtcsh.html">qtcsh(1)</A></B>, <B><A HREF="../htmlman1/qrsh.html">qrsh(1)</A></B>.
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B> for a full statement of rights  and  permis-
      sions.
 
 

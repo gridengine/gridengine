@@ -609,14 +609,13 @@ int main(int argc, char **argv)
    dstring ds;
    char buffer[256];
 
-   sge_mt_init();
-
    if (argc >= 2) {
       if ( strcmp(argv[1],"-help") == 0) {
          show_shepherd_version();
          return 1;
       }
    }
+   sge_mt_init();
 #if defined(INTERIX) && defined(SECURE)
    sge_init_shared_ssl_lib();
 #endif
@@ -2513,7 +2512,7 @@ static int start_async_command(const char *descr, char *cmd)
          exit(1);
       }   
 
-      sge_close_all_fds(NULL, 0);
+      sge_close_all_fds(NULL);
 
       /* we have to provide the async command with valid io file handles
        * else it might fail 

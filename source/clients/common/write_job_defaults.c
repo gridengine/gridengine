@@ -80,6 +80,7 @@ int flags
    lList *alp;
    lListElem *aep;
    lList *cmdline = NULL;
+   int do_exit = 0;
    int status;
    
    DENTER(TOP_LAYER, "write_job_defaults");
@@ -89,22 +90,28 @@ int flags
       answer_exit_if_not_recoverable(aep);
       status = answer_get_status(aep); 
       if ((status != STATUS_OK) && (status != STATUS_EEXIST)) {
-         goto do_exit;
+         do_exit = 1;
       }
    }
+   if (do_exit) {
+      DRETURN(alp);
+   }
+   lFreeList(&alp);
+
    alp = write_defaults_file(cmdline, filename, flags);
    for_each(aep, alp) {
       answer_exit_if_not_recoverable(aep);
       status = answer_get_status(aep);
       if ((status != STATUS_OK) && (status != STATUS_EEXIST)) {
-         goto do_exit;
+         do_exit = 1;
       }
    }
+   if (do_exit) {
+      DRETURN(alp);
+   }
    lFreeList(&alp);
-do_exit:
-   lFreeList(&cmdline);
    
-   DRETURN(alp);
+   DRETURN(NULL);
 }
 
 /*

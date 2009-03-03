@@ -256,6 +256,7 @@ WIN_ADMIN_NAME="${cfg.win.admin.name}";export WIN_ADMIN_NAME
 # created. Setting this variable to false, the local Adminuser will be
 # used as ADMINUSER. The install script tries to create this user account
 # but we recommend, because it will be saver, to create this user,
+# but we recommend, because it will be saver, to create this user, 
 # before running the installation. 
 # (mandatory for qmaster installation, if windows hosts should be installed)
 WIN_DOMAIN_ACCESS="${cfg.win.domain.access}";export WIN_DOMAIN_ACCESS
@@ -291,25 +292,24 @@ CSP_ORGA_UNIT="${cfg.csp.orga.unit}";export CSP_ORGA_UNIT
 # your email (mandatory for csp install)
 CSP_MAIL_ADDRESS="${cfg.csp.mail.address}";export CSP_MAIL_ADDRESS
 
-# enforced hostname in case of other than primary network interface was selected
-ENFORCED_HOSTNAME="${add.qmaster.host}";export ENFORCED_HOSTNAME
 
 #Additional variables from the installer
-#REMOVE_EXISTING_COMPONENT=${add.remove.existing.components}
-REMOVE_EXISTING_COMPONENT=false
+REMOVE_EXISTING_COMPONENT=${add.remove.existing.components}
 #QMASTER Flags
 USE_JMX=${add.sge.jmx}
 PRODUCT_MODE=${add.product.mode}                      #1 none, 2 csp, 3 afs
 QMASTER_FLAGS=""
-GUI_CSP_MODE_ENABLED=false
 if [ "$USE_JMX" = true ]; then
    QMASTER_FLAGS="$QMASTER_FLAGS -jmx"
 fi
-#Set proper product mode flags
-if [ "$PRODUCT_MODE" = "csp" ]; then
-   QMASTER_FLAGS="$QMASTER_FLAGS -csp"
-   GUI_CSP_MODE_ENABLED=true
-fi
+case "$PRODUCT_MODE" in
+   2) 
+	   QMASTER_FLAGS="$QMASTER_FLAGS -csp"
+		;;
+   3)
+	   QMASTER_FLAGS="$QMASTER_FLAGS -afs"
+		;;
+esac
 
 #Genaretes output consisting of the exit code and log file
 # $1 ... COMPONENT (bdb, qmaster, shadow,exec)
@@ -318,35 +318,28 @@ fi
 GenerateResultOutput()
 {
 	COMPONENT=$1
-	LOG_FILE=`echo "$2" | grep "Install log can be found in:" | awk '{print $NF}' | tail -1`
+	LOG_FILE=`echo $2 | grep "Install log can be found in:" | awk '{print $NF}'`
 	EXIT_CODE=$3
 	
-	if [ -n "$EXIT_CODE" -a "$EXIT_CODE" -ne 0 ]; then
+	if [ -n "$EXIT_CODE" -a "$EXIT_CODE" -gt 0 ]; then
+		echo "___EXIT_CODE_${EXIT_CODE}___"
 		if [ -z "$2" ]; then
-           echo "___EXIT_CODE_${EXIT_CODE}___"
 		   exit $EXIT_CODE
 		fi
-    fi
-	
-   cat "$LOG_FILE"
-   if [ "$EXIT_CODE" -ne 0 ]; then
-      echo "___EXIT_CODE_${EXIT_CODE}___"
-      exit $EXIT_CODE
    fi
+	
+   if [ ! -f "$LOG_FILE" ]; then
+	   echo "Log file $LOG_FILE does not exit!"
+   else
+		echo "___LOG_START_${COMPONENT}___"
+      cat "$LOG_FILE"
+      echo "___LOG_END_${COMPONENT}___"
+		if [ "$EXIT_CODE" -ne 0 ]; then
+         exit $EXIT_CODE
+		fi
+	fi
 }
 
-#Genaretes output consisting of the exit code and log file
-# $1 ... output to be in a log
-# $2 ... EXIT_CODE
-ExitAndLog()
-{
-   EXIT_CODE=$2
-   echo "$1"
-   if [ "$EXIT_CODE" -ne 0 ]; then
-         echo "___EXIT_CODE_${EXIT_CODE}___"
-   fi
-   exit $EXIT_CODE
-}
 
 NOEXIT_OK=0
 EXIT_PREVIOUS_COMPONENT_DETECTED=10
@@ -359,11 +352,10 @@ IS_EXECD=$4
 IS_ADMIN=$5
 IS_SUBMIT=$6
 
-
-#//TODO: Check if SGE_ROOT is valid and needed files exist first!
+#//TODO: Add magic exit codes (so we can perform multiple component installation at once)
+#//TODO: Check if SGE_ROOT is valid and needed files exists first!
 cd ${cfg.sge.root}
 if [ "$IS_BDB" = true ]; then
-   ENFORCED_HOSTNAME=""
    #BDB is considered installed if the SPOOL_DIR_EXISTS
    if [ -d "$DB_SPOOLING_DIR" ]; then
       #Uninstall existing installation if chosen
@@ -372,20 +364,15 @@ if [ "$IS_BDB" = true ]; then
          #Uninstallation failed if non-zero or bdb spool dir still exists
          if [ $? -ne 0 -o -d "$DB_SPOOLING_DIR" ]; then            
             #Uninstallation failed
-            GenerateResultOutput "BDB" "$RES" $EXIT_UNINSTALLATION_FAILED
+	    GenerateResultOutput "BDB" "$RES" $EXIT_UNINSTALLATION_FAILED
          fi
       else
-	    #Conflicting installation detected
-        ExitAndLog "BDB spooling directory $DB_SPOOLING_DIR already exists." $EXIT_PREVIOUS_COMPONENT_DETECTED
+	 #Conflicting installation detected 
+         GenerateResultOutput "BDB" "" $EXIT_PREVIOUS_COMPONENT_DETECTED
       fi
    fi
    RES=`${cfg.sge.root}/inst_sge -db -noremote -autogui`
-   ret=$?
-   GenerateResultOutput "BDB" "$RES" $ret
-   #We exit if there is not other installation, can't do qconf just yet
-   if [ "$IS_QMASTER" = false -a "$IS_SHADOW" = false -a "$IS_EXECD" = false ]; then
-      exit $ret
-   fi
+   GenerateResultOutput "BDB" "$RES" $?
 fi
 
 if [ "$IS_QMASTER" = true ]; then
@@ -393,108 +380,48 @@ if [ "$IS_QMASTER" = true ]; then
    if [ -f "${cfg.sge.root}/$CELL_NAME/common/bootstrap" ]; then
       #Uninstall existing installation if chosen
       if [ "$REMOVE_EXISTING_COMPONENT" = true ]; then
-         RES=`${cfg.sge.root}/inst_sge -ux all -um -autogui`
+         RES=`${cfg.sge.root}/inst_sge -um -noremote -autogui`      
          #Uninstallation failed if non-zero or bootstrap still exists
          if [ $? -ne 0 -o -f "${cfg.sge.root}/$CELL_NAME/common/bootstrap" ]; then
             #Uninstallation failed
-            GenerateResultOutput "QMASTER" "$RES" $EXIT_UNINSTALLATION_FAILED
+	    GenerateResultOutput "QMASTER" "$RES" $EXIT_UNINSTALLATION_FAILED
          fi
       else
          #Conflicting installation detected 
-         ExitAndLog "${cfg.sge.root}/$CELL_NAME/common/bootstrap file already exits." $EXIT_PREVIOUS_COMPONENT_DETECTED
+         GenerateResultOutput "QMASTER" "" $EXIT_PREVIOUS_COMPONENT_DETECTED
       fi
    fi
-   RES=`${cfg.sge.root}/inst_sge -m $QMASTER_FLAGS -noremote -autogui`
-   ret=$?
-   #Generate a result based
-   GenerateResultOutput "QMASTER" "$RES" $ret
-fi
-
-if [ -n "${first_install_task}" ]; then
-   echo "Prerequisities"
-   #Add all hosts as admin hosts on qmaster host only if this is a first task or right after the installation
-   #Only first installation tasks have $cfg.allhosts set (no action otherwise)
-   ARCH=`sh -c ${cfg.sge.root}/util/arch 2>/dev/null`
-   QMASTER_HOST=`cat $SGE_ROOT/$CELL_NAME/common/act_qmaster 2>/dev/null`
-   CURRENT_HOST=`sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ;  ${cfg.sge.root}/utilbin/'${ARCH}'/gethostname -aname' 2>/dev/null`
-   #if [ "$HOSTNAME_RESOLVING" = true ]; then
-      QMASTER_HOST=`echo $QMASTER_HOST | cut -f1 -d. | tr "[A-Z]" "[a-z]"`
-      CURRENT_HOST=`echo $CURRENT_HOST | cut -f1 -d. | tr "[A-Z]" "[a-z]"`
-   #fi
-   if [ -n "${gui_alladminhosts}" ]; then
-      list="${gui_alladminhosts}"
-      for host in $list ; do
-         echo "Adding \"$host\" as admin host ..."
-         if [ "$QMASTER_HOST" != "$CURRENT_HOST" ]; then
-            $SHELL_NAME $QMASTER_HOST "sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ; qconf -ah '${host}" 2>&1
-         else
-            sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ; qconf -ah '${host} 2>&1
-         fi
-      done
-   fi
-   #For the CSP mode we have to copy the certificates to each of the execd/submit/admin hosts
-   if [ "$GUI_CSP_MODE_ENABLED" = "true" -a "$CSP_RECREATE" = "true" -a -n "${gui_csphosts}" ]; then
-      list="${gui_csphosts}"
-      CSP_FLAGS=""
-      #-copycerts needs -rsh if rsh is to be used
-      if [ "$SHELL_NAME" != "ssh" ]; then
-         CSP_FLAGS="-rsh"
-      fi
-      total=0
-      failed=0
-      for host in $list ; do
-         RES=`${cfg.sge.root}/inst_sge -autogui $CSP_FLAGS -copycerts $host`
-         ret=$?
-         if [ "$ret" -ne 0 ]; then
-            echo "Copying CSP certificates to host $host failed! Further component installation will not work due to missing certificates."
-            failed=`expr $failed + 1`
-         else
-            echo "Copied CSP certificates to host \"$host\""
-         fi
-         total=`expr $total + 1`
-      done
-      #Exit with failed dependancy only if all copy tasks fail
-      #TODO: Task must be displayed in the dependancy list!
-      if [ $total -eq $failed ]; then
-         ExitAndLog "Copying CSP certificates failed for all hosts! Further component installations will fail due to missing certificates. Try inst_sge -copycerts manually for each host" 1
-      elif [ $failed -gt 0 ]; then
-         ExitAndLog "Copying CSP certificates failed for ${failed}/${total} hosts! Further component installations will fail due to missing certificates on failed hosts. Try inst_sge -copycerts manually for each host where installation failed." 0
-      else
-         ExitAndLog "CSP certificates copied sucessfully to all hosts." 0
-      fi
-   fi
-   ExitAndLog "Prerequisities done." 0
+   RES=`${cfg.sge.root}/inst_sge -m $QMASTER_FLAGS -noremote -autogui`                                                                   
+	GenerateResultOutput "QMASTER" "$RES" $?
 fi
 
 if [ "$IS_SHADOW" = true ]; then
-   ENFORCED_HOSTNAME="$EXEC_HOST_LIST"
    #Shadowd is considered installed if it's listed in the shadow_masters file
    SM_FILE="${cfg.sge.root}/$CELL_NAME/common/shadow_masters"   
    if [ -f "$SM_FILE" ]; then
-      RES=`cat $SM_FILE | grep $EXEC_HOST_LIST 2>/dev/null`
+      RES=`cat $SM_FILE | grep $EXECD_HOST_LIST 2>/dev/null`
       #Uninstall existing installation if chosen      
       if [ "$REMOVE_EXISTING_COMPONENT" = true -a -n "$RES" ]; then
          RES=`${cfg.sge.root}/inst_sge -usm -noremote -autogui`
          ret=$?			
-         RES2=`cat $SM_FILE | grep $EXEC_HOST_LIST 2>/dev/null`
+         RES2=`cat $SM_FILE | grep $EXECD_HOST_LIST 2>/dev/null`
          #Uninstallation failed if non-zero or shadow_masters still references it
          if [ $ret -ne 0 -o -n "$RES2" ]; then            
             #Uninstallation failed
-            GenerateResultOutput "SHADOW" "$RES" $EXIT_UNINSTALLATION_FAILED
+				GenerateResultOutput "SHADOW" "$RES" $EXIT_UNINSTALLATION_FAILED
          fi
       elif [ -n "$RES" ]; then
          #Conflicting installation detected 
-         ExitAndLog "${cfg.sge.root}/$CELL_NAME/common/shadow_masters already contains host \"$EXEC_HOST_LIST\"." $EXIT_PREVIOUS_COMPONENT_DETECTED
+         GenerateResultOutput "SHADOW" "" $EXIT_PREVIOUS_COMPONENT_DETECTED
       fi
    fi
    RES=`${cfg.sge.root}/inst_sge -sm -noremote -autogui`
-   GenerateResultOutput "SHADOW" "$RES" $?
+	GenerateResultOutput "SHADOW" "$RES" $?
 fi
 
 if [ "$IS_EXECD" = true ]; then
-   ENFORCED_HOSTNAME="$EXEC_HOST_LIST"
    host="$EXEC_HOST_LIST"
-   if [ -n "$EXECD_SPOOL_DIR_LOCAL" -a -d "$EXECD_SPOOL_DIR_LOCAL" ]; then
+   if [ -n "$EXECD_SPOOL_DIR_LOCAL" -a -f "$EXECD_SPOOL_DIR_LOCAL" ]; then
       local_exists=true
    fi   
    #Execd is considered installed if EXECD_(LOCAL)SPOOL_DIR/$host exists"   
@@ -507,69 +434,28 @@ if [ "$IS_EXECD" = true ]; then
             -o \( "$local_exists" = true -a -d "$EXECD_SPOOL_DIR_LOCAL/$host" \) \
             -o \( "$local_exists" != true -a -d "$EXECD_SPOOL_DIR/$host" \) ]; then            
             #Uninstallation failed
-            GenerateResultOutput "EXECD" "$RES" $EXIT_UNINSTALLATION_FAILED
+				GenerateResultOutput "EXECD" "$RES" $EXIT_UNINSTALLATION_FAILED
          fi
       else
          #Conflicting installation detected 
-         if [ "$local_exists" ]; then
-            ExitAndLog "Local execution spooling directory \"$EXECD_SPOOL_DIR_LOCAL\" already exists." $EXIT_PREVIOUS_COMPONENT_DETECTED
-         else
-            ExitAndLog "Execution spooling directory \"$EXECD_SPOOL_DIR/$host\" already exists." $EXIT_PREVIOUS_COMPONENT_DETECTED
-         fi
+         GenerateResultOutput "EXECD" "" $EXIT_PREVIOUS_COMPONENT_DETECTED
       fi
    fi
    RES=`${cfg.sge.root}/inst_sge -x -noremote -autogui`
    GenerateResultOutput "EXECD" "$RES" $?
 fi
 
-#To setup the final submit/admin hosts settings as specifed
-#Extra last tasks runs only this part of the script (otherwise ${cfg.allhosts.current.last} is not set)
-if [ -n "${last_install_task}" ]; then
-   ARCH=`sh -c ${cfg.sge.root}/util/arch 2>/dev/null`
-   CURRENT_HOST=`sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ;  ${cfg.sge.root}/utilbin/'${ARCH}'/gethostname -aname' 2>/dev/null`
-   #if [ "$HOSTNAME_RESOLVING" = true ]; then
-   CURRENT_HOST=`echo $CURRENT_HOST | cut -f1 -d. | tr "[A-Z]" "[a-z]"`
-   SKIPPED_HOST=""
-   #Remove all hosts as submit/admin hosts (marked possibly as submit in previous installation)
-   list="${gui_allhosts}"
-   for host in $list; do
-      #Remove as submit host
-      sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ; qconf -ds '$host >/dev/null 2>&1
-      #Remove admin host except for local host)
-      if [ "$host" = "$CURRENT_HOST" ]; then
-         SKIPPED_HOST="$host"
-         continue
-      fi
-      sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ; qconf -dh '$host >/dev/null 2>&1
-   done
-   echo "Setting submit hosts ..."
-   #Add all submit hosts
-   list="${gui_allsubmithosts}"
-   for host in $list; do
-      sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ; qconf -as '$host 2>&1
-   done
-   #Same logic for admin hosts
-   #Add all admin hosts
-   SKIPPED_FOUND=false
-   echo "Setting admin hosts ..."
-   list="${gui_alladminhosts}"
-   for host in $list ; do
-      sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ; qconf -ah '$host 2>&1
-      if [ "$host" = "$SKIPPED_HOST" ]; then
-         SKIPPED_FOUND=true
-      fi
-   done
-   #Finally remove local host as admin host if not supposed to be an admin host
-   if [ "$SKIPPED_FOUND" = "false" ]; then
-      sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ; qconf -dh '$SKIPPED_HOST >/dev/null 2>&1
-   fi
-   #TODO: could verify that new qconf -ss/sh output contains all new hosts
-   #TODO: Additional final verification can go here
-   ExitAndLog "Admin and submit hosts set." 0
+
+ARCH=`${cfg.sge.root}/util/arch`
+if [ "$IS_ADMIN" = true ]; then
+   ${cfg.sge.root}/bin/$ARCH/qconf -ah `hostname`
+else
+   #Installation might need to add admin host before the install starts
+   ${cfg.sge.root}/bin/$ARCH/qconf -dh `hostname`
 fi
 
-if [ -z "$EXIT_CODE" ]; then
-   exit 0
+if [ "$IS_SUBMIT" = true ]; then
+   ${cfg.sge.root}/bin/$ARCH/qconf -as `hostname`
 else
-   exit $EXIT_CODE
+   ${cfg.sge.root}/bin/$ARCH/qconf -ds `hostname`
 fi

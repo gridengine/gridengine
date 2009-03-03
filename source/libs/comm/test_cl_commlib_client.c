@@ -223,7 +223,7 @@ extern int main(int argc, char** argv)
      runs = -1;  /* disable runs shutdown */
   }
   while(do_shutdown != 1) {
-     unsigned long mid = 0;
+     unsigned long mid;
      int my_sent_error = 0;
 
      CL_LOG(CL_LOG_INFO,"main loop");

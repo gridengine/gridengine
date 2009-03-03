@@ -110,8 +110,8 @@ sge_dirent.o   : $(SPOOLLIB_DIR)/sge_dirent.c
 
 #---------------------------------------------------------------------
 # test programs
-test_performance: test_performance.o sig_handlers.o $(SPOOLING_DEPS) $(SPOOLLIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(SCHEDLIB) $(LCKLIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(RMONLIB) $(WINGRIDLIB_DEP)
-	$(CC) -o test_performance $(LFLAGS) test_performance.o sig_handlers.o $(SPOOLING_LIBS) $(SPOOLLIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(SCHEDLIB) $(LCKLIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(RMONLIB) $(WINGRIDLIB) $(DLLIB) $(LIBS)
+test_performance: test_performance.o sig_handlers.o $(SPOOLING_DEPS) $(SPOOLLIB) $(SCHEDLIB) $(MIRLIB) $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(RMONLIB) $(WINGRIDLIB_DEP)
+	$(CC) -o test_performance $(LFLAGS) test_performance.o sig_handlers.o $(SPOOLING_LIBS) $(SPOOLLIB) $(SCHEDLIB) $(MIRLIB) $(EVCLIB) $(GDILIB) $(SECLIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(RMONLIB) $(WINGRIDLIB) $(DLLIB) $(LIBS)
 
 test_performance.o: $(SPOOLLIB_DIR)/test_performance.c
 	$(CC) $(CFLAGS) -c $(SPOOLLIB_DIR)/test_performance.c

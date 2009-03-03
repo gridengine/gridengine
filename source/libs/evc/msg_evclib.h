@@ -48,6 +48,6 @@
 #define MSG_EVENT_ILLEGALEVENTID_I                    _MESSAGE(65007, _("illegal event id %d"))
 #define MSG_EVENT_ILLEGALFLUSHTIME_I                  _MESSAGE(65008, _("illegal flush time %d - must be in the range [0:63]"))
 #define MSG_EVENT_NOTREGISTERED                       _MESSAGE(65009, _("event client not registered"))
-#define MSG_EVENT_HAVETOHANDLEEVENTS                  _MESSAGE(65010, _("you have to handle the events sgeE_QMASTER_GOES_DOWN, sgeE_SHUTDOWN and sgeE_ACK_TIMEOUT"))
+#define MSG_EVENT_HAVETOHANDLEEVENTS                  _MESSAGE(65010, _("you have to handle the events sgeE_QMASTER_GOES_DOWN and sgeE_SHUTDOWN"))
 
 #endif /* __MSG_EVCLIB_H */

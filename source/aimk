@@ -290,7 +290,6 @@ set LFLAGS           = "-L."
 set XLFLAGS          = ""
 set XLIBS            = ""
 set LIBS             = "-lm -lpthread"
-set LIBRARY_LIBS     = ""  # used for linking shared objects like drmaa.so or jgdi.so. Overwritten by $LIBS if empty
 set LD_WRAPPER       = ""
 set DLLIB            = "-ldl"
 set LOADAVGLIBS      = ""
@@ -401,11 +400,8 @@ set JUTI_OBJ      =
 
 # Compile with gettext and libintl - we have platform dependent defaults
 switch ($BUILDARCH) 
-   case LINUXAMD64:
-     set MAKEJEMALLOCLIB  = 1
-     set WITH_GETTEXT = 1
-     breaksw
    case LINUX*:
+     set MAKEJEMALLOCLIB  = 1
      set WITH_GETTEXT = 1
      breaksw
    case SOLARIS:
@@ -670,7 +666,6 @@ while ($#argv >= 1 && $?found)
       set SGE_DEPEND = 1
       set MAKEWINGRIDAPP = 0
       set MAKEWINGRIDLIB = 0
-      set MAKEJEMALLOCLIB  = 0
       set ONLY_PARAM_SPEC = 1
       breaksw
    case  "-only-java"
@@ -1465,9 +1460,8 @@ case LINUXSPARC64:
    endif
 
    if ( $MAKEJEMALLOCLIB == 1 ) then
-      set LIBRARY_LIBS = "$LIBS"
       set JEMALLOC_CFLAGS  = "-Wno-error -DMOZ_MEMORY_LINUX"
-      set LIBS = "-ljemalloc $LIBS"
+      set LFLAGS = "$LFLAGS -ljemalloc"
    endif
 
    breaksw
@@ -1695,7 +1689,6 @@ case SOLARISAMD64:
 #      set CFLAGS = "-DFD_SETSIZE=8192 $CFLAGS"
 #   endif
 
-   # INFO: rel is also used later ...
    set rel = `uname -r | cut -f 2 -d .`
    if ( $rel > 6 ) then
       set CFLAGS = "-DHAS_SOCKLEN_T $CFLAGS"
@@ -1764,22 +1757,7 @@ case SOLARISAMD64:
       endif
    endif
 
-   # This is workaround for not POSIX fork() behaviour of -lthread
-   # library. The man page of fork() tells following:
-   # ...
-   # Note that if a program is  linked  with  both  libraries
-   # (-lthread  and  -lpthread),  the POSIX semantic of fork() pre-
-   # vails.
-   # 
-   # TODO: use -lpthread only when jmx thread supports it!
-   #       
-   if ( $rel < 10 ) then
-      # Solaris version < 10 needs -lpthread
-      set LIBS     = "-lsocket -lnsl -lm -lpthread -lthread"
-   else
-      # Solaris versions >= 10 have posix fork()
-      set LIBS     = "-lsocket -lnsl -lm -lthread"
-   endif
+   set LIBS     = "-lsocket -lnsl -lm -lthread"
    set LOADAVGLIBS = "-lkstat"
    set FSTYPELIBS = "-lkstat"
 
@@ -1814,14 +1792,12 @@ case SOLARISAMD64:
 #   if ( $BUILDARCH == "SOLARISAMD64" ) then
 #      set MAKEJEMALLOCLIB = 1
 #   endif
-
-   set LFLAGS   = "$LFLAGS $DEBUG_FLAG"
-   set LIBRARY_LIBS = "$LIBS"
+   
    if ( $MAKEJEMALLOCLIB == 1 ) then
       set JEMALLOC_CFLAGS  = "-DMOZ_MEMORY_SOLARIS -xc99"
-      set LIBS = "-ljemalloc $LIBS"
+      set LFLAGS   = "$LFLAGS $DEBUG_FLAG -ljemalloc"
    else
-      set LIBS = "-lmtmalloc $LIBS"
+      set LFLAGS   = "$LFLAGS $DEBUG_FLAG -lmtmalloc"
    endif
 
    breaksw
@@ -2045,10 +2021,6 @@ set GSHARED_LFLAGS = "$SHARED_LFLAGS"
 if ($USE_INSURE == 1) then
    set CC  = "insure $CC"
    set CXX = "insure $CXX"
-endif
-
-if ("$LIBRARY_LIBS" == "") then
-   set LIBRARY_LIBS = "$LIBS" 
 endif
 
 #---------------------------------------------------------------------------
@@ -2518,7 +2490,7 @@ if ( "$CORE" == 1 && "$JAVA" != 2 ) then
          "AUTHUSER_ALL=$AUTHUSER_ALL" "LOADCHECK_ALL=$LOADCHECK_ALL" \
          "AUTHUSER_OBJ=$AUTHUSER_OBJ" "LOADCHECK_OBJ=$LOADCHECK_OBJ" \
          "JUTI_OBJ=$JUTI_OBJ" \
-         "WINCC=$WINCC" "WINCFLAGS=$WINCFLAGS" "WINLIBS=$WINLIBS" "LIBRARY_LIBS=$LIBRARY_LIBS" \
+         "WINCC=$WINCC" "WINCFLAGS=$WINCFLAGS" "WINLIBS=$WINLIBS" \
          $argv
    if ( $status != 0 ) then
       echo not done

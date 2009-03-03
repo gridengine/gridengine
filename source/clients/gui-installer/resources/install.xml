@@ -33,20 +33,20 @@ ___INFO__MARK_END__-->
 <installation version="1.0">
     <info>
         <appname>Sun Grid Engine</appname>
-        <appversion>6.2u2</appversion>
+        <appversion>6.2</appversion>
         <authors>
             <author name="Sun Microsystems, Inc." email="www.sun.com"/>
         </authors>
         <url>http://gridengine.sunsource.net/</url>
         <uninstaller write="no" />
     </info>
-    <guiprefs width="940" height="720" resizable="yes">
+    <guiprefs width="880" height="700" resizable="yes">
         <laf name="custom">
             <os family="unix"/>
             <!--<param name="class" value="com.sun.java.swing.plaf.gtk.GTKLookAndFeel"/>-->
             <param name="class" value="javax.swing.plaf.metal.MetalLookAndFeel"/>
         </laf>
-
+        
         <modifier key="useHelpButton" value="yes"/>
         <modifier key="useButtonIcons" value="yes"/>
         <modifier key="useLabelIcons" value="yes"/>
@@ -68,10 +68,10 @@ ___INFO__MARK_END__-->
         <res id="CustomLangpack.xml_eng" src="langpack.xml_eng"/>
         <res id="LicencePanel.licence" src="LICENSE"/>
         <res id="Heading.image" src="logo.png"/>
-        <res id="Welcome.image" src="S-curve-left-splash.png"/>
+        <res id="Welcome.image" src="sun_logo.gif"/>
         <res id="customicons.xml" src="customicons.xml"/>
-    </resources>
-
+    </resources>    
+    
     <conditions>
         <condition type="variable" id="cond.install.qmaster">
             <name>install.qmaster</name>
@@ -103,7 +103,7 @@ ___INFO__MARK_END__-->
         </condition>
         <condition type="variable" id="cond.product.mode.csp">
             <name>add.product.mode</name>
-            <value>csp</value>
+            <value>${add.product.mode.csp}</value>
         </condition>
         <condition type="variable" id="cond.sge.jmx.ssl">
             <name>cfg.sge.jmx.ssl</name>
@@ -117,21 +117,9 @@ ___INFO__MARK_END__-->
             <name>false</name>
             <value>true</value>
         </condition>
-        <condition type="variable" id="T">
-            <name>true</name>
-            <value>true</value>
-        </condition>
-        <condition type="variable" id="F">
-            <name>false</name>
-            <value>true</value>
-        </condition>
         <condition type="variable" id="cond.user.root">
             <name>user.name</name>
             <value>${root.user}</value>
-        </condition>
-        <condition type="variable" id="cond.no.connect.user">
-            <name>connect_user</name>
-            <value></value>
         </condition>
         <condition type="variable" id="cond.mode.install">
             <name>mode</name>
@@ -153,15 +141,8 @@ ___INFO__MARK_END__-->
             <name>cfg.spooling.method</name>
             <value>${add.spooling.method.berkeleydbserver}</value>
         </condition>
-        <condition type="java" id="cond.qmaster.on.localhost">
-            <java>
-                <class>com.sun.grid.installer.gui.Host</class>
-                <field>IS_QMASTER_ON_LOCALHOST</field>
-            </java>
-            <returnvalue type="boolean">true</returnvalue>
-        </condition>
     </conditions>
-
+    
     <panels>
         <panel classname="WelcomePanel"    id="WelcomePanel" />
         <panel classname="LicencePanel"    id="LicensePanel" />
@@ -171,7 +152,7 @@ ___INFO__MARK_END__-->
         <panel classname="IntermediateActionPanel"  id="IntermediateActionPanel" />
         <panel classname="UserInputPanel"  id="JMXPanel" condition="cond.custom.install+cond.sge.jmx+cond.install.qmaster"/>
         <panel classname="UserInputPanel"  id="SpoolingPanel" condition="cond.custom.install+cond.install.qmaster|cond.install.bdb"/>
-        <panel classname="UserInputPanel"  id="CSPPanel" condition="cond.custom.install+cond.install.qmaster+(cond.product.mode.csp|(cond.sge.jmx+cond.sge.jmx.ssl))"/>
+        <panel classname="UserInputPanel"  id="CSPPanel" condition="cond.product.mode.csp|cond.custom.install+cond.sge.jmx+cond.sge.jmx.ssl"/>
         <panel classname="HostPanel"       id="HostPanel" />
         <panel classname="PostActionPanel" id="PostActionPanel"/>
         <panel classname="ResultPanel"     id="ResultPanel"/>
@@ -181,27 +162,24 @@ ___INFO__MARK_END__-->
         <variable name="work.dir" value="${SYSTEM_user_dir}"/> <!-- TODO: Delete the work.dir -->
         <variable name="templates.dir" value="${cfg.sge.root}/util/gui-installer/templates"/>
         <variable name="readme.temp.file" value="${templates.dir}/readme_template.html"/>
-        <variable name="readme.file.name.1" value="/tmp/readme"/> <!-- gets the '.html' extension later -->
-        <variable name="readme.file.name.2" value="${cfg.sge.root}/${cfg.cell.name}/readme"/>
+        <variable name="readme.file" value="${cfg.sge.root}/${cfg.cell.name}/readme.html"/>
         <variable name="silent.install.file" value="${cfg.sge.root}/${cfg.cell.name}/gui_auto_install.xml"/>
         <variable name="auto.conf.temp.file" value="${templates.dir}/gui_inst_template.conf"/>
-        <variable name="auto.conf.file" value="${cfg.sge.root}/${cfg.cell.name}/gui_autoinst"/> <!-- gets the '.conf' extension later -->
+        <variable name="auto.conf.file" value="${cfg.sge.root}/${cfg.cell.name}/autoinst.conf"/>
         <variable name="auto.install.component.temp.file" value="${templates.dir}/install_component"/>
         <variable name="auto.install.component.file" value="install_component"/>
         <variable name="install.script.file.dir" value="${cfg.sge.root}"/>
         <variable name="install.script.file.name" value="inst_sge"/>
-        <variable name="check.host.temp.file" value="${templates.dir}/check_host"/>
-        <variable name="check.host.file" value="check_host"/>
-
+        
         <variable name="false" value="false"/>
         <variable name="true" value="true"/>
         <variable name="app-version" value="version"/>
         <variable name="mode" value="install"/>
         <variable name="user.name" value="${USER_NAME}"/>
-        <!--<variable name="user.group" value=""/>--> <!-- not used -->
+        <variable name="user.group" value=""/>
         <variable name="install.qmaster" value="true"/>
         <variable name="install.execd" value="true"/>
-        <variable name="install.shadowd" value="false"/>
+        <variable name="install.shadowd" value="true"/>
         <variable name="install.bdb" value="false"/>
         <variable name="install.mode.express" value="1"/>
         <variable name="install.mode.custom" value="2"/>
@@ -212,6 +190,7 @@ ___INFO__MARK_END__-->
         <variable name="cfg.sge.execd.port" value="6445"/>
         <variable name="cfg.qmaster.spool.dir" value="${cfg.sge.root}/${cfg.cell.name}/spool/qmaster"/>
         <variable name="cfg.execd.spool.dir" value="${cfg.sge.root}/${cfg.cell.name}/spool"/>
+        <variable name="cfg.sge.enable.smf" value="false"/>
         <variable name="cfg.sge.cluster.name" value="p${cfg.sge.qmaster.port}"/>
         <variable name="add.sge.jmx" value="false"/>
         <variable name="cfg.sge.jmx.port" value="6446"/>
@@ -219,6 +198,7 @@ ___INFO__MARK_END__-->
         <variable name="cfg.sge.jmx.ssl.client" value="true"/>
         <variable name="cfg.sge.jmx.ssl.keystore.pw" value=""/>
         <variable name="cfg.sge.jmx.ssl.keystore" value="/var/sgeCA/port${cfg.sge.qmaster.port}/${cfg.cell.name}/private/keystore"/>
+        <variable name="add.sge.jmx.ssl.keystore.def" value="${cfg.sge.root}/${cfg.cell.name}/private/keystore"/> <!-- TODO find better default ssl keystore dir -->
         <variable name="cfg.sge.jvm.lib.path" value=""/>
         <variable name="cfg.sge.additional.jvm.args" value="-Xmx256m"/>
         <variable name="cfg.cell.name" value="default"/>
@@ -230,6 +210,7 @@ ___INFO__MARK_END__-->
         <variable name="add.spooling.method.berkeleydbserver" value="none"/>
         <variable name="cfg.db.spooling.server" value="none"/>
         <variable name="cfg.db.spooling.dir" value=""/> <!-- init in HostPanel -->
+        <variable name="add.db.spooling.dir.bdb.def" value="/var/spool/bdb"/>
         <variable name="add.db.spooling.dir.bdb" value="${cfg.sge.root}/${cfg.cell.name}/spool/spooldb"/>
         <variable name="add.db.spooling.dir.bdbserver" value="/var/spool/bdb"/>
         <variable name="cfg.par.execd.inst.count" value="20"/> <!-- not used -->
@@ -237,7 +218,7 @@ ___INFO__MARK_END__-->
         <variable name="cfg.submit.host.list" value=""/>
         <variable name="cfg.exec.host.list" value=""/>
         <variable name="cfg.exec.spool.dir.local" value=""/>
-        <variable name="cfg.hostname.resolving" value="true"/>
+        <variable name="cfg.hostname.resolving" value="true"/> 
         <variable name="cfg.shell.name" value="ssh"/>
         <variable name="cfg.copy.command" value="scp"/>
         <variable name="cfg.default.domain" value="none"/>
@@ -247,16 +228,14 @@ ___INFO__MARK_END__-->
         <variable name="cfg.schedd.conf" value="1"/> <!-- not used -->
         <variable name="cfg.shadow.host" value=""/>
         <variable name="cfg.exec.host.list.rm" value=""/> <!-- not used -->
-        <variable name="cfg.sge.enable.smf" value="false"/>
-        <variable name="cfg.add.to.rc" value="false"/>
         <variable name="cfg.remove.rc" value="false"/>
         <variable name="cfg.windows.support" value="false"/>
         <variable name="cfg.win.admin.name" value="Administrator"/> <!-- not used -->
         <variable name="cfg.win.domain.access" value="false"/> <!-- not used -->
-        <!--<variable name="add.product.mode.none" value="1"/>
+        <variable name="add.product.mode.none" value="1"/>
         <variable name="add.product.mode.csp" value="2"/>
-        <variable name="add.product.mode.afs" value="3"/>-->
-        <variable name="add.product.mode" value="none"/>
+        <variable name="add.product.mode.afs" value="3"/>
+        <variable name="add.product.mode" value="${add.product.mode.none}"/>
         <variable name="cfg.csp.recreate" value="true"/>
         <variable name="cfg.csp.copy.certs" value="false"/>
         <variable name="cfg.csp.country.code" value="DE"/>
@@ -266,7 +245,13 @@ ___INFO__MARK_END__-->
         <variable name="cfg.csp.orga.unit" value="Organisation_unit"/>
         <variable name="cfg.csp.mail.address" value="name@yourdomain.com"/>
         <variable name="add.hostinput" value="<Enter a hostname or IP adress here ...>"/>
-        <variable name="root.user" value="root"/>
-        <variable name="connect_user" value=""/>
    </variables>
+
+   <dynamicvariables>
+       <variable name="cfg.add.to.rc" value="true" condition="cond.user.root"/>
+       <variable name="cfg.add.to.rc" value="false" condition="!cond.user.root"/>
+       <variable name="root.user" value="Administrator" condition="izpack.windowsinstall"/>
+       <variable name="root.user" value="root" condition="!izpack.windowsinstall"/>
+   </dynamicvariables>
+
 </installation>

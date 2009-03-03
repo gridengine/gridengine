@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2008/12/23 16:56:46 $     Revision: $Revision: 1.85 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2008/12/09 17:06:08 $     Revision: $Revision: 1.82 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2008/12/23 16:56:46 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2008/12/09 17:06:08 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -788,7 +788,7 @@ default attributes of the new
 object.
 .PP
 Changing \fBenforce_user\fP will take immediate effect.
-The default for \fBenforce_user\fP is \fIauto\fP.
+The default for \fBenforce_user\fP is \fIfalse\fP.
 .PP
 .PP
 This value is a global configuration parameter only. It cannot be
@@ -953,18 +953,6 @@ jobs have finished and the corresponding tokens are no longer required.
 .PP
 Changing \fBtoken_extend_time\fP will take immediate effect.
 The default for \fBtoken_extend_time\fP is 24:0:0, i.e. 24 hours.
-.PP
-The global configuration entry for this value
-may be overwritten by the execution host local configuration.
-.\"
-.\"
-.SS "\fBshepherd_cmd\fP"
-.br
-Alternative path to the \fBshepherd_cmd\fP binary. Typically used to call
-the shepherd binary by a wrapper script or command.
-.PP
-Changing \fBshepherd_cmd\fP will take immediate effect. The default
-for \fBshepherd_cmd\fP is none.
 .PP
 The global configuration entry for this value
 may be overwritten by the execution host local configuration.
@@ -1466,7 +1454,7 @@ eldest finished job will be discarded for every new job added to the
 finished job list.
 .PP
 Changing \fBfinished_jobs\fP will take immediate effect.
-The default for \fBfinished_jobs\fP is 100.
+The default for \fBfinished_jobs\fP is 0.
 .PP
 This value is a global configuration parameter only. It cannot be
 overwritten by the execution host local configuration.

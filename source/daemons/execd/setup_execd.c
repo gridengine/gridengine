@@ -151,6 +151,38 @@ void sge_setup_sge_execd(sge_gdi_ctx_class_t *ctx, const char* tmp_err_file_name
    DRETURN_VOID;
 }
 
+/*-------------------------------------------------------------------------*/
+int daemonize_execd(void *context)
+{
+   fd_set keep_open;
+   int ret, fd;
+   sge_gdi_ctx_class_t *ctx = (sge_gdi_ctx_class_t *)context;
+   int is_daemonized = ctx->is_daemonized(ctx);
+   const char *progname = ctx->get_progname(ctx);
+
+   DENTER(TOP_LAYER, "daemonize_execd");
+
+   if (is_daemonized) {
+      return 1;
+   }
+   FD_ZERO(&keep_open); 
+
+   /* ask load sensor to fill in it's fd's */
+   set_ls_fds(&keep_open);
+
+   /* do not close fd to /dev/kmem (or s.th. else) of loadavg() */
+   if ((fd=get_channel_fd())!=-1) {
+      INFO((SGE_EVENT, MSG_ANSWER_KEEPINGCHANNELFDXOPEN_I, fd));
+      FD_SET(fd, &keep_open);
+   } 
+
+   cl_com_set_handle_fds(cl_com_get_handle(progname,0), &keep_open);
+
+   ret = sge_daemonize_finalize(ctx);
+
+   DRETURN(ret);
+}
+
 int job_initialize_job(lListElem *job)
 {
    u_long32 job_id;

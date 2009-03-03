@@ -32,7 +32,6 @@
 package com.sun.grid.installer.util;
 
 import java.io.File;
-import com.izforge.izpack.util.Debug;
 
 /**
  * Extends the File class to provide attributes as owner, permission and group.
@@ -40,15 +39,15 @@ import com.izforge.izpack.util.Debug;
  * @see FileHandler.getFileProps()
  */
 public class ExtendedFile extends File {
-	public static final String PERM_USER_READ     = "^.r........*";
-	public static final String PERM_USER_WRITE    = "^..w.......*";
-	public static final String PERM_USER_EXECUTE  = "^...x......*";
-	public static final String PERM_GROUP_READ    = "^....r.....*";
-	public static final String PERM_GROUP_WRITE   = "^.....w....*";
-	public static final String PERM_GROUP_EXECUTE = "^......x...*";
-	public static final String PERM_WORLD_READ    = "^.......r..*";
-	public static final String PERM_WORLD_WRITE   = "^........w.*";
-	public static final String PERM_WORLD_EXECUTE = "^.........x*";
+	public static final String PERM_USER_READ     = "^.r........";
+	public static final String PERM_USER_WRITE    = "^..w.......";
+	public static final String PERM_USER_EXECUTE  = "^...x......";
+	public static final String PERM_GROUP_READ    = "^....r.....";
+	public static final String PERM_GROUP_WRITE   = "^.....w....";
+	public static final String PERM_GROUP_EXECUTE = "^......x...";
+	public static final String PERM_WORLD_READ    = "^.......r..";
+	public static final String PERM_WORLD_WRITE   = "^........w.";
+	public static final String PERM_WORLD_EXECUTE = "^.........x";
     
 	private String owner       = null;
     private String permissions = null;
@@ -168,15 +167,12 @@ public class ExtendedFile extends File {
         }
 
         if (permissions == null) {
-Debug.trace("no perms -null");
             return false;
         }
 
         if (owner.equals(user)) {
-Debug.trace("Owner="+owner+" user="+user+" perms="+permissions+" res="+permissions.matches(PERM_USER_WRITE));
             return permissions.matches(PERM_USER_WRITE);
         } else if (group.equals(group)) {
-Debug.trace("Group="+group+" user="+user+" perms="+permissions+" res="+permissions.matches(PERM_GROUP_WRITE));
             return permissions.matches(PERM_GROUP_WRITE);
         } else {
             return permissions.matches(PERM_WORLD_WRITE);

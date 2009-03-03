@@ -285,11 +285,6 @@ const char *event_text(const lListElem *event, dstring *buffer)
       break;
 
    /* -------------------- */
-   case sgeE_ACK_TIMEOUT:
-      sge_dstring_sprintf(buffer, MSG_EVENT_MESSAGE_US, sge_u32c(number), "ACK TIMEOUT");
-      break;
-
-   /* -------------------- */
    case sgeE_CQUEUE_LIST:
       sge_dstring_sprintf(buffer, MSG_EVENT_OBJECTLISTXELEMENTS_USI, sge_u32c(number), "CLUSTER QUEUE", n);
       break;

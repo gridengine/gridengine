@@ -91,17 +91,14 @@ int cl_com_tcp_get_fd(cl_com_connection_t* connection, int* fd) {
       return CL_RETVAL_PARAMS;
    }
 
-   if ((private=cl_com_tcp_get_private(connection)) != NULL) {
+   if ( (private=cl_com_tcp_get_private(connection)) != NULL) {
       if (private->sockfd < 0) {
-         CL_LOG_INT(CL_LOG_INFO, "return pre_sockfd: ", private->pre_sockfd);
          *fd = private->pre_sockfd;
       } else {
-         CL_LOG_INT(CL_LOG_INFO, "return final sockfd: ", private->sockfd);
          *fd = private->sockfd;
       }
       return CL_RETVAL_OK;
    }
-   CL_LOG(CL_LOG_ERROR, "cannot get private connection data object!");
    return CL_RETVAL_UNKNOWN;
 }
 
@@ -287,18 +284,14 @@ int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout) {
          }
       }
 
-      if (private->sockfd < 3) {
-         CL_LOG_INT(CL_LOG_WARNING, "The file descriptor is < 3. Will dup fd to be >= 3! fd value: ", private->sockfd);
-         ret = sge_dup_fd_above_stderr(&(private->sockfd));
-         if (ret != 0) {
-            CL_LOG_INT(CL_LOG_ERROR, "can't dup socket fd to be >=3, errno = %d", ret);
-            shutdown(private->sockfd, 2);
-            close(private->sockfd);
-            private->sockfd = -1;
-            cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_DUP_SOCKET_FD_ERROR, MSG_CL_COMMLIB_CANNOT_DUP_SOCKET_FD);
-            return CL_RETVAL_DUP_SOCKET_FD_ERROR;
-         }
-         CL_LOG_INT(CL_LOG_INFO, "fd value after dup: ", private->sockfd);
+      ret = sge_dup_fd_above_stderr(&private->sockfd);
+      if (ret != 0) {
+         CL_LOG_INT(CL_LOG_ERROR, "can't dup socket fd to be >=3, errno = %d", ret);
+         shutdown(private->sockfd, 2);
+         close(private->sockfd);
+         private->sockfd = -1;
+         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_DUP_SOCKET_FD_ERROR, MSG_CL_COMMLIB_CANNOT_DUP_SOCKET_FD);
+         return CL_RETVAL_DUP_SOCKET_FD_ERROR;
       }
 
 #ifndef USE_POLL
@@ -954,7 +947,6 @@ static int cl_com_tcp_connection_request_handler_setup_finalize(cl_com_connectio
 
    CL_LOG(CL_LOG_INFO,"===============================");
    CL_LOG(CL_LOG_INFO,"TCP server setup done:");
-   CL_LOG_INT(CL_LOG_INFO,"server fd:", private->sockfd);
    CL_LOG_STR(CL_LOG_INFO,"host:     ", connection->local->comp_host);
    CL_LOG_STR(CL_LOG_INFO,"component:", connection->local->comp_name);
    CL_LOG_INT(CL_LOG_INFO,"id:       ",(int) (connection->local->comp_id));
@@ -1021,18 +1013,14 @@ int cl_com_tcp_connection_request_handler_setup(cl_com_connection_t* connection,
       return CL_RETVAL_CREATE_SOCKET;
    }
 
-   if (sockfd < 3) {
-      CL_LOG_INT(CL_LOG_WARNING, "The file descriptor is < 3. Will dup fd to be >= 3! fd value: ", sockfd);
-      ret = sge_dup_fd_above_stderr(&sockfd);
-      if (ret != 0) {
-         CL_LOG_INT(CL_LOG_ERROR, "can't dup socket fd to be >=3, errno = %d", ret);
-         shutdown(sockfd, 2);
-         close(sockfd);
-         sockfd = -1;
-         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_DUP_SOCKET_FD_ERROR, MSG_CL_COMMLIB_CANNOT_DUP_SOCKET_FD);
-         return CL_RETVAL_DUP_SOCKET_FD_ERROR;
-      }
-      CL_LOG_INT(CL_LOG_INFO, "fd value after dup: ", sockfd);
+   ret = sge_dup_fd_above_stderr(&sockfd);
+   if (ret != 0) {
+      CL_LOG_INT(CL_LOG_ERROR, "can't dup socket fd to be >=3, errno = %d", ret);
+      shutdown(sockfd, 2);
+      close(sockfd);
+      sockfd = -1;
+      cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_DUP_SOCKET_FD_ERROR, MSG_CL_COMMLIB_CANNOT_DUP_SOCKET_FD);
+      return CL_RETVAL_DUP_SOCKET_FD_ERROR;
    }
 
 #ifndef USE_POLL
@@ -1196,6 +1184,7 @@ int cl_com_tcp_connection_request_handler(cl_com_connection_t* connection, cl_co
    socklen_t fromlen = 0;
 #endif
    int retval;
+   int server_fd = -1;
    cl_com_tcp_private_t* private = NULL;
    
    if (connection == NULL || new_connection == NULL) {
@@ -1218,27 +1207,24 @@ int cl_com_tcp_connection_request_handler(cl_com_connection_t* connection, cl_co
       CL_LOG(CL_LOG_ERROR,"connection is no service handler");
       return CL_RETVAL_NOT_SERVICE_HANDLER;
    }
+   server_fd = private->sockfd;
 
    /* got new connect */
    fromlen = sizeof(cli_addr);
    memset((char *) &cli_addr, 0, sizeof(cli_addr));
-   new_sfd = accept(private->sockfd, (struct sockaddr *) &cli_addr, &fromlen);
+   new_sfd = accept(server_fd, (struct sockaddr *) &cli_addr, &fromlen);
    if (new_sfd > -1) {
       char* resolved_host_name = NULL;
       cl_com_tcp_private_t* tmp_private = NULL;
 
-      if (new_sfd < 3) {
-         CL_LOG_INT(CL_LOG_WARNING, "The file descriptor is < 3. Will dup fd to be >= 3! fd value: ", new_sfd);
-         retval = sge_dup_fd_above_stderr(&new_sfd);
-         if (retval != 0) {
-            CL_LOG_INT(CL_LOG_ERROR, "can't dup socket fd to be >=3, errno = %d", retval);
-            shutdown(new_sfd, 2);
-            close(new_sfd);
-            new_sfd = -1;
-            cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_DUP_SOCKET_FD_ERROR, MSG_CL_COMMLIB_CANNOT_DUP_SOCKET_FD);
-            return CL_RETVAL_DUP_SOCKET_FD_ERROR;
-         }
-         CL_LOG_INT(CL_LOG_INFO, "fd value after dup: ", new_sfd);
+      retval = sge_dup_fd_above_stderr(&new_sfd);
+      if (retval != 0) {
+         CL_LOG_INT(CL_LOG_ERROR, "can't dup socket fd to be >=3, errno = %d", retval);
+         shutdown(new_sfd, 2);
+         close(new_sfd);
+         new_sfd = -1;
+         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_DUP_SOCKET_FD_ERROR, MSG_CL_COMMLIB_CANNOT_DUP_SOCKET_FD);
+         return CL_RETVAL_DUP_SOCKET_FD_ERROR;
       }
 
 #ifndef USE_POLL
@@ -1447,13 +1433,8 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
       do_write_select = 1;
    }
 
-   if (select_mode == CL_W_SELECT) {
-      timeout.tv_sec = 0;
-      timeout.tv_usec = 5*1000; /* 5 ms */
-   } else {
-      timeout.tv_sec = timeout_val_sec; 
-      timeout.tv_usec = timeout_val_usec;
-   }
+   timeout.tv_sec = timeout_val_sec; 
+   timeout.tv_usec = timeout_val_usec;
 
    /* lock list */
    if ( cl_raw_list_lock(connection_list) != CL_RETVAL_OK) {
@@ -1817,7 +1798,7 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
 
       errno = 0;
 #ifdef USE_POLL
-      select_back = poll(ufds, ufds_index, timeout.tv_sec*1000 + timeout.tv_usec/1000);
+      select_back = poll(ufds, ufds_index, timeout_val_sec*1000 + timeout_val_usec/1000);
 #else
       select_back = select(max_fd + 1, &my_read_fds, &my_write_fds, NULL, &timeout);
 #endif
@@ -1827,9 +1808,6 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
 
       switch(select_back) {
          case -1: {
-            /*
-             * poll() and select() set errno to EINTR if interrupted
-             */
             if (my_errno == EINTR) {
                CL_LOG(CL_LOG_WARNING,"select interrupted (errno=EINTR)");
                retval = CL_RETVAL_SELECT_INTERRUPT;
@@ -1839,18 +1817,9 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
             CL_LOG_STR(CL_LOG_ERROR,"select error", strerror(my_errno));
             retval = CL_RETVAL_SELECT_ERROR;
             
-            /*
-             * 1) select() set errno to EBADF for not valid file descriptors
-             * 2) poll() and select() set errno to EINVAL for file descriptors that are
-             *    > OPEN_MAX or FD_SETSIZE
-             * => In both cases we check the filedescriptors with get_sock_opt()
-             */
-            if (my_errno == EBADF || my_errno == EINVAL) {
-               if (my_errno == EBADF) {
-                  CL_LOG(CL_LOG_WARNING, "errno=EBADF, checking file descriptors");
-               } else {
-                  CL_LOG(CL_LOG_WARNING, "errno=EINVAL, checking file descriptors");
-               }
+            /* check socket errors for EBADF  */
+            if (my_errno == EBADF) {
+               CL_LOG(CL_LOG_WARNING, "errno=EBADF, checking file descriptors");
                /* now check all file descriptors and close those which errors */
                cl_raw_list_lock(connection_list); 
                con_elem = cl_connection_list_get_first_elem(connection_list);
@@ -1866,7 +1835,7 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
                   if (socket_error != 0 || get_sock_opt_error != 0) {
                      connection->connection_state = CL_CLOSING;
                      connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
-                     CL_LOG_STR(CL_LOG_ERROR, "select() or poll() - socket error is: ", strerror(socket_error));
+                     CL_LOG_STR(CL_LOG_ERROR, "select error:", strerror(socket_error));
                      cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SELECT_ERROR, strerror(socket_error));
 
                      if (connection->remote            != NULL && 
@@ -1886,7 +1855,14 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
                cl_raw_list_unlock(connection_list);
                break;
             }
-            CL_LOG_INT(CL_LOG_WARNING, "unexpected errno value: ", (int) my_errno);
+
+            CL_LOG_INT(CL_LOG_WARNING, "errno =", (int) my_errno);
+            if (my_errno == EINVAL) {
+               CL_LOG(CL_LOG_WARNING,"errno=EINVAL");
+            }
+            if (my_errno == ENOMEM) {
+               CL_LOG(CL_LOG_WARNING,"errno=ENOMEM");
+            }
             break;
          }
          case 0:
@@ -1919,16 +1895,8 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
                   }
 
                   /* Do we have poll errors ? */
-                  if ((ufds[fd_index].revents & (POLLERR|POLLHUP|POLLNVAL)) && connection != service_connection) {
-                     if (ufds[fd_index].revents & POLLNVAL) {
-                         CL_LOG_INT(CL_LOG_WARNING, "poll() revents POLLNVAL is set - checking file descriptor: ", (int)ufds[fd_index].fd);
-                     }
-                     if (ufds[fd_index].revents & POLLERR) {
-                         CL_LOG_INT(CL_LOG_WARNING, "poll() revents POLLERR is set - checking file descriptor: ", (int)ufds[fd_index].fd);
-                     }
-                     if (ufds[fd_index].revents & POLLHUP) {
-                         CL_LOG_INT(CL_LOG_WARNING, "poll() revents POLLHUP is set - checking file descriptor: ", (int)ufds[fd_index].fd);
-                     }
+                  if (ufds[fd_index].revents & (POLLERR|POLLHUP|POLLNVAL)) {
+                     CL_LOG(CL_LOG_WARNING, "poll() returned POLLERR, POLHUP or POLLNVAL for a connection, checking socket ...");
                      /* check the connection */
                      con_private = cl_com_tcp_get_private(connection);
                      socket_error = 0;
@@ -1940,7 +1908,7 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
                      if (socket_error != 0 || get_sock_opt_error != 0) {
                         connection->connection_state = CL_CLOSING;
                         connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
-                        CL_LOG_STR(CL_LOG_ERROR, "socket error: ", strerror(socket_error));
+                        CL_LOG_STR(CL_LOG_ERROR, "socket error:", strerror(socket_error));
                         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SELECT_ERROR, strerror(socket_error));
                         if (connection->remote            != NULL && 
                             connection->remote->comp_host != NULL &&

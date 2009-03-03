@@ -283,7 +283,6 @@ extern "C" {
 
       {EVR_LOWERBOUND, EVRS, EVRN},             /* event master requests */
       {JSV_LOWERBOUND, JSVS, JSVN},             /* job submission verifier */
-      {RTIC_LOWERBOUND, RTICS, RTICN},          /* internal list for reprioritzie tickets to distribute */
 
       {0, 0, NULL}
    };

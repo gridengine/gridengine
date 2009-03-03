@@ -68,9 +68,9 @@ public class HostInstallTableModel extends SortedTableModel {
         Host h = hostList.get(row);
 
         switch (col) {
-            case 0: return h.getComponentString();
-            case 1: return h.getDisplayName();
-            case 2: return h.getIp();
+            case 0: return h.getHostname();
+            case 1: return h.getIp();
+            case 2: return h.getComponentString();
             case 3: return h.getArchitecture();
             case 4: return h.getState();
             case 5: return h.getLogContent();
@@ -116,9 +116,7 @@ public class HostInstallTableModel extends SortedTableModel {
         
         int row = getRowIndex(hostList.indexOf(h));
 
-        if (row > -1) {
-            fireTableCellUpdated(row, 4);
-        }
+        fireTableCellUpdated(row, 4);
     }
 
     public boolean addHost(Host h) {
@@ -136,20 +134,15 @@ public class HostInstallTableModel extends SortedTableModel {
 
         hostList.removeUnchecked(h);
 
-        if (row > -1) {
-            reSort();
+        reSort();
 
-            fireTableRowsDeleted(row, row);
-            fireTableChanged(new TableModelEvent(this));
-        }
+        fireTableRowsDeleted(row, row);
+        fireTableChanged(new TableModelEvent(this));
     }
 
     public void setHostLog(Host h, String log) {
         h.setLogContent(log);
         int row = getRowIndex(hostList.indexOf(h));
-        
-        if (row > -1) {
-            fireTableRowsUpdated(row, row);
-        }
+        fireTableRowsUpdated(row, row);
     }
 }

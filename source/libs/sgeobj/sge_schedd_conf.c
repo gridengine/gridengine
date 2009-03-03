@@ -137,14 +137,9 @@ typedef struct {
    bool       host_order_changed;
    int        last_dispatch_type;
    int        search_alg[SCHEDD_PE_ALG_MAX]; /* stores the weighting for the different algorithms*/
-   int        scheduled_pe_jobs;        /* counts the dispatched pe jobs */
+   int        scheduled_comprehensive_jobs;        /* counts the dispatched pe jobs */
    int        scheduled_fast_jobs;           /* counts the dispatched sequential jobs */
    double     decay_constant;            /* used in the share tree */
-   /* temporary data used for scheduling messages */
-   lListElem *sme; /* Job scheduling informations store if not disabled */
-   lListElem *tmp_sme; /* Job scheduling informations store if not disabled */
-   bool mes_schedd_info; /* write scheduling information into logfile */
-   int log_schedd_info; /* write scheduling information into logfile */
 }  sc_state_t; 
 
 /****** sge_schedd_conf/sc_state_init() ****************************************
@@ -178,13 +173,8 @@ static void sc_state_init(sc_state_t* state)
    state->search_alg[SCHEDD_PE_HIGH_FIRST] = 0;
    state->search_alg[SCHEDD_PE_BINARY] = 0;
    state->scheduled_fast_jobs = 0;
-   state->scheduled_pe_jobs = 0;
+   state->scheduled_comprehensive_jobs = 0;
    state->decay_constant = 0.0;
-   /* temp data for scheduler messages */
-   state->sme = NULL;
-   state->tmp_sme = NULL;
-   state->mes_schedd_info = false;
-   state->log_schedd_info = 0;
 }
 
 static void sc_state_destroy(void* state) 
@@ -1313,23 +1303,23 @@ int sconf_get_fast_jobs(void)
    return sc_state->scheduled_fast_jobs;
 }
 
-void sconf_inc_pe_jobs(void) 
+void sconf_inc_comprehensive_jobs(void) 
 {
-   GET_SPECIFIC(sc_state_t, sc_state, sc_state_init, sc_state_key, "sconf_inc_pe_jobs");
-   sc_state->scheduled_pe_jobs++;
+   GET_SPECIFIC(sc_state_t, sc_state, sc_state_init, sc_state_key, "sconf_inc_fast_jobs");
+   sc_state->scheduled_comprehensive_jobs++;
 }
 
-int sconf_get_pe_jobs(void) 
+int sconf_get_comprehensive_jobs(void) 
 {
-   GET_SPECIFIC(sc_state_t, sc_state, sc_state_init, sc_state_key, "sconf_get_pe_jobs");
-   return sc_state->scheduled_pe_jobs;
+   GET_SPECIFIC(sc_state_t, sc_state, sc_state_init, sc_state_key, "sconf_get_fast_jobs");
+   return sc_state->scheduled_comprehensive_jobs;
 }
 
 void sconf_reset_jobs(void)
 {
    GET_SPECIFIC(sc_state_t, sc_state, sc_state_init, sc_state_key, "sconf_reset_jobs");
    sc_state->scheduled_fast_jobs = 0;
-   sc_state->scheduled_pe_jobs = 0;
+   sc_state->scheduled_comprehensive_jobs = 0;
 }
 
 /****** sge_schedd_conf/sconf_get_schedd_job_info() ****************************
@@ -3700,55 +3690,6 @@ double sconf_get_decay_constant(void)
 {
    GET_SPECIFIC(sc_state_t, sc_state, sc_state_init, sc_state_key, "sconf_get_decay_constant");
    return sc_state->decay_constant;
-}
-
-void sconf_set_mes_schedd_info(bool newval)
-{
-   GET_SPECIFIC(sc_state_t, sc_state, sc_state_init, sc_state_key, "sconf_set_mes_schedd_info");
-   if (newval == true) {
-      if (sc_state->sme == NULL || sc_state->tmp_sme == NULL) {
-         /* if one of the values is NULL the messaging framework is initialized
-            in this case just ignore the activate request */
-         return;
-      }
-   }
-   sc_state->mes_schedd_info = newval;
-}
-
-bool sconf_get_mes_schedd_info()
-{
-   GET_SPECIFIC(sc_state_t, sc_state, sc_state_init, sc_state_key, "sconf_get_mes_schedd_info");
-   return sc_state->mes_schedd_info;
-}
-
-void schedd_mes_set_logging(int bval) {
-   GET_SPECIFIC(sc_state_t, sc_state, sc_state_init, sc_state_key, "schedd_mes_set_logging");
-   sc_state->log_schedd_info = bval;
-}
-
-int schedd_mes_get_logging(void) {
-   GET_SPECIFIC(sc_state_t, sc_state, sc_state_init, sc_state_key, "schedd_mes_get_logging");
-   return sc_state->log_schedd_info;
-}
-
-lListElem *sconf_get_sme(void) {
-   GET_SPECIFIC(sc_state_t, sc_state, sc_state_init, sc_state_key, "sconf_get_sme");
-   return sc_state->sme;
-}
-
-void sconf_set_sme(lListElem *sme) {
-   GET_SPECIFIC(sc_state_t, sc_state, sc_state_init, sc_state_key, "sconf_get_sme");
-   sc_state->sme = sme;
-}
-
-lListElem *sconf_get_tmp_sme(void) {
-   GET_SPECIFIC(sc_state_t, sc_state, sc_state_init, sc_state_key, "sconf_get_tmp_sme");
-   return sc_state->tmp_sme;
-}
-
-void sconf_set_tmp_sme(lListElem *sme) {
-   GET_SPECIFIC(sc_state_t, sc_state, sc_state_init, sc_state_key, "sconf_get_tmp_sme");
-   sc_state->tmp_sme = sme;
 }
 
 u_long32 sconf_get_duration_offset(void)

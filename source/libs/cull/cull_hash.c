@@ -443,14 +443,14 @@ void cull_hash_elem(const lListElem *ep) {
    lDescr *descr;
    char host_key[CL_MAXHOSTLEN];
   
-   if (ep == NULL) {
+   if(ep == NULL) {
       return;
    }
 
    descr = ep->descr;
   
-   for (i = 0; descr[i].mt != lEndT; i++) {
-      if (descr[i].ht != NULL) {
+   for(i = 0; descr[i].mt != lEndT; i++) {
+      if(descr[i].ht != NULL) {
          cull_hash_insert(ep, cull_hash_key(ep, i, host_key), descr[i].ht, 
                           mt_is_unique(descr[i].mt));
       }
@@ -848,48 +848,3 @@ cull_hash_statistics(cull_htable ht, dstring *buffer)
    return ret;
 }
 
-void cull_hash_recreate_after_sort(lList *lp)
-{
-   if (lp != NULL) {
-      lDescr *descr = lp->descr;
-      int cleared_hash_index[32];
-      int i, hash_index=0;
-
-      int size = hash_compute_size(lGetNumberOfElem(lp));
-
-      /* at first free and recreated old non unique hashes */
-      for (i = 0; descr[i].mt != lEndT; i++) {
-         cull_htable ht = descr[i].ht;
-         if (ht != NULL) {
-            if (!mt_is_unique(descr[i].mt)) {
-               /* free memory of non unique elements */
-               sge_htable_for_each(ht->ht, cull_hash_delete_non_unique_chain);
-               sge_htable_destroy(ht->nuht);
-               sge_htable_destroy(ht->ht);
-               free(ht);
-
-               /* recreate empty hash */
-               descr[i].ht = cull_hash_create(&descr[i], size);
-               
-               cleared_hash_index[hash_index]=i;
-               hash_index++;
-            }
-         }
-      }
-
-      if (hash_index > 0) {
-         char host_key[CL_MAXHOSTLEN];
-         lListElem *ep;
-
-         /* now insert into the cleared hash list */
-         for_each (ep, lp) {
-            for (i = 0; i < hash_index; i++) {
-               int index = cleared_hash_index[i];
-               cull_hash_insert(ep, cull_hash_key(ep, index, host_key), descr[index].ht, false);
-            }
-         }
-      }
-   }
-
-   DRETURN_VOID;
-}

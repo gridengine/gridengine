@@ -167,7 +167,6 @@ Qmon*cluster_global_layout.xmtChildren: \
                   cluster_max_aj_tasks = max_aj_tasks, \
                   cluster_max_u_jobs = max_u_jobs, \
                   cluster_max_jobs = max_jobs, \
-                  cluster_max_advance_reservations = max_advance_reservations, \
                   cluster_auto_user_oticket = auto_user_oticket, \
                   cluster_auto_user_fshare = auto_user_fshare; \
    XmtChooser     cluster_shell_start_mode = shell_start_mode, \
@@ -222,10 +221,6 @@ Qmon*cluster_global_layout.layout: \
          ## \
          Equal Row { \
             Caption "@{Maximum Jobs\nIn Cluster}" <> cluster_max_jobs \
-         } \
-         ## \
-         Equal Row { \
-            Caption "@{Maximum Advance Reservations}" <> cluster_max_advance_reservations \
          } \
          ### \
          Equal Row { \
@@ -417,13 +412,6 @@ Qmon*cluster_global_layout.cluster_max_jobs.buttonSizeFixed: True
 Qmon*cluster_global_layout.cluster_max_jobs.columns: 5
 Qmon*cluster_global_layout.cluster_max_jobs.spinboxUseClosestValue: True
 Qmon*cluster_global_layout.cluster_max_jobs.value: 0
-
-Qmon*cluster_global_layout.cluster_max_advance_reservations.minimum: 0
-Qmon*cluster_global_layout.cluster_max_advance_reservations.spinboxStyle: SPINBOX_STACKED_RIGHT
-Qmon*cluster_global_layout.cluster_max_advance_reservations.buttonSizeFixed: True
-Qmon*cluster_global_layout.cluster_max_advance_reservations.columns: 5
-Qmon*cluster_global_layout.cluster_max_advance_reservations.spinboxUseClosestValue: True
-Qmon*cluster_global_layout.cluster_max_advance_reservations.value: 0
 
 Qmon*cluster_global_layout.cluster_auto_user_oticket.minimum: 0
 Qmon*cluster_global_layout.cluster_auto_user_oticket.spinboxStyle: SPINBOX_STACKED_RIGHT

@@ -30,10 +30,6 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.installer.gui;
 
-import java.text.MessageFormat;
-import java.util.Properties;
-import javax.swing.JOptionPane;
-import javax.swing.JTable;
 import javax.swing.event.TableModelEvent;
 
 public class HostSelectionTableModel extends SortedTableModel {
@@ -42,9 +38,6 @@ public class HostSelectionTableModel extends SortedTableModel {
     final private Class[] types;
 
     private HostList hostList;
-    private JTable table;
-
-    private Properties langProperies;
 
     // To ensure the qmaster host singularity among diff. tables, default: no qmaster
     private static Host qmasterHost = null;
@@ -52,13 +45,11 @@ public class HostSelectionTableModel extends SortedTableModel {
     // To ensure the Berkeley db host singularity among diff. tables, default: no bdb server
     private static Host bdbHost = null;
 
-    public HostSelectionTableModel(JTable table, HostList hostList, String [] headers, Class[] types, Properties langProperies) {
+    public HostSelectionTableModel(HostList hostList, String [] headers, Class[] types) {
         super(new Object[][]{}, headers);
-        this.table = table;
         this.headers = headers;
         this.types = types;
         this.hostList = hostList;
-        this.langProperies = langProperies;
     }
 
     @Override
@@ -95,13 +86,7 @@ public class HostSelectionTableModel extends SortedTableModel {
             case 3: return h.isQmasterHost();
             case 4: return h.isShadowHost();
             case 5: return h.isExecutionHost();
-            case 6: { // Show only if it is an ececution host
-                if (h.isExecutionHost()) {
-                    return h.getSpoolDir();
-                } else {
-                    return "";
-                }
-            }
+            case 6: return h.getSpoolDir(); // TODO improve to show the spool dir only if the host is execution host
             case 7: return h.isAdminHost();
             case 8: return h.isSubmitHost();
             case 9: return h.isBdbHost();
@@ -159,12 +144,7 @@ public class HostSelectionTableModel extends SortedTableModel {
             default: throw new IndexOutOfBoundsException("Invalid index rowIndex="+row+" columnIndex="+col);
         }
 
-        fireTableCellUpdated(row, col);
-
-        // Update execd spool dir column too regarding to execd component selection
-        if (col == 5) {
-            fireTableCellUpdated(row, 6);
-        }
+        fireTableCellUpdated(row, col);        
     }
 
     @Override
@@ -178,55 +158,13 @@ public class HostSelectionTableModel extends SortedTableModel {
         Host h = hostList.get(row);
         
         switch (col) {
-            case 3: {
-                // if there is already a qmaster host and it's not the selected host...
-                if (qmasterHost != null && !qmasterHost.equals(h)) {
-                    // ...ask whether the user want to change qmaster host selection
-                    String message = MessageFormat.format(langProperies.getProperty("msg.qmasterhost.already.selected"), h.getHostname(), qmasterHost.getHostname());
-                    if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(table, message, 
-                            langProperies.getProperty("title.confirmation"), JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE)) {
-                        qmasterHost.setQmasterHost(false);
-                        fireTableCellUpdated(getRowIndex(hostList.indexOf(qmasterHost)), col);
-
-                        h.setQmasterHost(true);
-                        fireTableCellUpdated(row, col);
-
-                        qmasterHost = h;
-                        return true;
-                    } else {
-                        return false;
-                    }
-                } else {
-                    return true;
-                }
-            }
+            case 3: return (qmasterHost == null || qmasterHost.equals(h));
             case 4:
             case 5:
             case 6:
             case 7:
             case 8: return true;
-            case 9: {
-                // if there is already a bdb host and it's not the selected host...
-                if (bdbHost != null && !bdbHost.equals(h)) {
-                    // ...ask whether the user want to change bdb host selection
-                    String message = MessageFormat.format(langProperies.getProperty("msg.bdbhost.already.selected"), h.getHostname(), bdbHost.getHostname());
-                    if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(table, message,
-                            langProperies.getProperty("title.confirmation"), JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE)) {
-                        bdbHost.setBdbHost(false);
-                        fireTableCellUpdated(getRowIndex(hostList.indexOf(bdbHost)), col);
-
-                        h.setBdbHost(true);
-                        fireTableCellUpdated(row, col);
-
-                        bdbHost = h;
-                        return true;
-                    } else {
-                        return false;
-                    }
-                } else {
-                    return true;
-                }
-            }
+            case 9: return (bdbHost == null || bdbHost.equals(h));
             default: return false;
         }
     }    
@@ -251,37 +189,33 @@ public class HostSelectionTableModel extends SortedTableModel {
             return;
         }
 
-        if (row > -1) {
-            fireTableCellUpdated(row, 4);
-        }
+        fireTableCellUpdated(row, 4);
     }
 
-    public Host addHost(Host h) {
+    public boolean addHost(Host h) {
         int row = hostList.size();
 
-        h = hostList.addHost(h);
-
-        if (h != null) {
-            if (h.isQmasterHost()) {
-                if (qmasterHost != null && !qmasterHost.equals(h)) {
-                    h.setQmasterHost(false);
-                } else {
-                    qmasterHost = h;
-                }
+        if (h.isQmasterHost()) {
+            if (qmasterHost != null && !qmasterHost.equals(h)) {
+                h.setQmasterHost(false);
+            } else {
+                qmasterHost = h;
             }
-
-            if (h.isBdbHost()) {
-                if (bdbHost != null && !bdbHost.equals(h)) {
-                    h.setBdbHost(false);
-                } else {
-                    bdbHost = h;
-                }
-            }
-
-            fireTableRowsInserted(row, row);
         }
 
-        return h;
+        if (h.isBdbHost()) {
+            if (bdbHost != null && !bdbHost.equals(h)) {
+                h.setBdbHost(false);
+            } else {
+                bdbHost = h;
+            }
+        }
+
+        if (!hostList.add(h)) {
+            return false;
+        }
+        fireTableRowsInserted(row, row);
+        return true;
     }
 
     public void removeHost(Host h) {
@@ -290,23 +224,21 @@ public class HostSelectionTableModel extends SortedTableModel {
             return;
         }
         
-        if (!hostList.removeUnchecked(h)) {
+        if (!hostList.remove(h)) {
             return;
         }
 
-        if (h.equals(qmasterHost)) {
+        if (h.isQmasterHost()) {
             qmasterHost = null;
         }
 
-        if (h.equals(bdbHost)) {
+        if (h.isBdbHost()) {
             bdbHost = null;
         }
 
-        if (row > -1) {
-            reSort();
-
-            fireTableRowsDeleted(row, row);
-            fireTableChanged(new TableModelEvent(this));
-        }
+        reSort();
+        
+        fireTableRowsDeleted(row, row);
+        fireTableChanged(new TableModelEvent(this));
     }
 }

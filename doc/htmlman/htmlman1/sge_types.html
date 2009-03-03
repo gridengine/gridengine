@@ -3,33 +3,32 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     sge_types - Sun Grid Engine type descriptions
+     sge_types - Grid Engine type descriptions
 
 DESCRIPTION
-     The Sun Grid Engine user interface consists of several  pro-
-     grams and files. Some command-line switches and several file
+     The Grid Engine user interface consists of several  programs
+     and  files.  Some  command-line  switches  and  several file
      attributes  are  types.  The  syntax  for  these  types   is
      explained in this page.
 
 OBJECT TYPES
-     These types are used for defining Sun Grid Engine configura-
-     tion:
+     These types are used for defining Grid Engine configuration:
 
   calendar_name
-     A calendar name is the name of a Sun  Grid  Engine  calendar
-     described in <B><A HREF="../htmlman5/calendar_conf.html?pathrev=V62u2_TAG">calendar_conf(5)</A></B>.
+     A calendar name is  the  name  of  a  Grid  Engine  calendar
+     described in <B><A HREF="../htmlman5/calendar_conf.html">calendar_conf(5)</A></B>.
 
      <I>calendar</I>_<I>name</I> := <I>object</I>_<I>name</I>
 
   ckpt_name
-     A "ckpt_name" is the name of a Sun Grid Engine checkpointing
-     interface described in <B><A HREF="../htmlman5/checkpoint.html?pathrev=V62u2_TAG">checkpoint(5)</A></B>.
+     A "ckpt_name" is the name of  a  Grid  Engine  checkpointing
+     interface described in <B><A HREF="../htmlman5/checkpoint.html">checkpoint(5)</A></B>.
 
      <I>ckpt</I>_<I>name</I> := <I>object</I>_<I>name</I>
 
   complex_name
-     A complex name is the name of a  Sun  Grid  Engine  resource
-     attribute described in <B><A HREF="../htmlman5/complex.html?pathrev=V62u2_TAG">complex(5)</A></B>.
+     A complex name is the name of a Grid Engine resource  attri-
+     bute described in <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>.
 
      <I>complex</I>_<I>name</I> := <I>object</I>_<I>name</I>
 
@@ -40,10 +39,9 @@ OBJECT TYPES
      <I>host</I>_<I>identifier</I> := <I>host</I>_<I>name</I> | <I>hostgroup</I>_<I>name</I>
 
   hostgroup_name
-     A host group name is the name of  a  Sun  Grid  Engine  host
-     group  described in <B><A HREF="../htmlman5/hostgroup.html?pathrev=V62u2_TAG">hostgroup(5)</A></B>.  Note, to allow host group
-     names easily be differed from host names  a  "@"  prefix  is
-     used.
+     A host group name is the name of a Grid  Engine  host  group
+     described  in <B><A HREF="../htmlman5/hostgroup.html">hostgroup(5)</A></B>.  Note, to allow host group names
+     easily be differed from host names a "@" prefix is used.
 
      <I>hostgroup</I>_<I>name</I> := @<I>object</I>_<I>name</I>
 
@@ -53,8 +51,8 @@ OBJECT TYPES
      called fully-qualified host names, whereas host  names  like
      "gridmaster"  are  called  short host names. Note, there are
      the install time parameters default_domain  and  ignore_fqdn
-     (see  <B><A HREF="../htmlman5/bootstrap.html?pathrev=V62u2_TAG">bootstrap(5)</A></B>)  which  affect how Sun Grid Engine deals
-     with host names in general.
+     (see  <B><A HREF="../htmlman5/bootstrap.html">bootstrap(5)</A></B>)  which affect how Grid Engine deals with
+     host names in general.
 
   jsv_url
      The jsv_url has following format:
@@ -70,8 +68,8 @@ OBJECT TYPES
      In the moment only the <I>type</I> script is  allowed.  This  means
      that  <I>path</I>  is  either  the  path to a script or to a binary
      application which will be used to instanciate a JSV process.
-     The  <I>type</I>  is optional till other <I>types</I> are supported by Sun
-     Grid Engine.
+     The  <I>type</I> is optional till other <I>types</I> are supported by Grid
+     Engine.
 
      Specifying a <I>user</I> is only allowed for server  JSV's.  Client
      JSV's  will  automatically  be  started  as  submit user and
@@ -91,20 +89,20 @@ OBJECT TYPES
      bytes.
 
   pe_name
-     A "pe_name" is the  name  of  a  Sun  Grid  Engine  parallel
-     environment described in <B><A HREF="../htmlman5/sge_pe.html?pathrev=V62u2_TAG">sge_pe(5)</A></B>.
+     A "pe_name" is the name of a Grid Engine  parallel  environ-
+     ment described in <B><A HREF="../htmlman5/sge_pe.html">sge_pe(5)</A></B>.
 
      <I>pe</I>_<I>name</I> := <I>object</I>_<I>name</I>
 
   project_name
-     A project name is the name of  a  Sun  Grid  Engine  project
-     described in <B><A HREF="../htmlman5/project.html?pathrev=V62u2_TAG">project(5)</A></B>.
+     A project  name  is  the  name  of  a  Grid  Engine  project
+     described in <B><A HREF="../htmlman5/project.html">project(5)</A></B>.
 
      <I>project</I>_<I>name</I> := <I>object</I>_<I>name</I>
 
   queue_name
-     A queue name  is  the  name  of  a  Sun  Grid  Engine  queue
-     described in <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62u2_TAG">queue_conf(5)</A></B>.
+     A queue name is the name of a Grid Engine queue described in
+     <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>.
 
      <I>queue</I>_<I>name</I>  := <I>object</I>_<I>name</I>
 
@@ -119,14 +117,14 @@ OBJECT TYPES
      means 1 hours and 1 second).
 
   user_name
-     A user name can be the name of a <B><A HREF="../htmlman1/login.html?pathrev=V62u2_TAG">login(1)</A></B> user or of the Sun
-     Grid Engine user object described in <B><A HREF="../htmlman5/user.html?pathrev=V62u2_TAG">user(5)</A></B>.
+     A user name can be the name of a <B><A HREF="../htmlman1/login.html">login(1)</A></B>  user  or  of  the
+     Grid Engine user object described in <B><A HREF="../htmlman5/user.html">user(5)</A></B>.
 
      <I>user</I>_<I>name</I> := <I>object</I>_<I>name</I>
 
   userset_name
-     A user set name is the name of an  Sun  Grid  Engine  access
-     list or department described in <B><A HREF="../htmlman5/access_list.html?pathrev=V62u2_TAG">access_list(5)</A></B>.
+     A user set name is the name of an Grid Engine access list or
+     department described in <B><A HREF="../htmlman5/access_list.html">access_list(5)</A></B>.
 
      <I>userset</I>_<I>name</I> := <I>object</I>_<I>name</I>
 
@@ -137,8 +135,7 @@ OBJECT TYPES
      character itself.
 
 MATCHING TYPES
-     These types are used for matching Sun Grid Engine configura-
-     tion:
+     These types are used for matching Grid Engine configuration:
 
   expression
      A wildcard expression is a regular boolean  expression  that
@@ -158,9 +155,9 @@ MATCHING TYPES
      "("       open bracket -- begin an inner expression.
      ")"       close bracket -- end an inner expression.
      "pattern" see the <I>pattern</I> definition that's follow
+
      The expression itself should be put inside quotes  ('"')  to
      ensure that clients receive the complete expression.
-
      e.g.
           "(lx*|sol*)&amp;*64*" any string beginning with either "lx" or
                             "sol" and containing "64"
@@ -182,7 +179,7 @@ MATCHING TYPES
              not; it is interpreted literally.
 
      For more details please see
-     <B><A HREF="../htmlman5/fnmatch.html?pathrev=V62u2_TAG">fnmatch(5)</A></B>
+     <B><A HREF="../htmlman5/fnmatch.html">fnmatch(5)</A></B>
 
 
      The pattern itself should be  put  inside  quotes  ('"')  to
@@ -210,6 +207,7 @@ MATCHING TYPES
   wc_ar_list
      The wildcard advance  reservation  (AR)  list  specification
      allows to reference multiple ARs with one command.
+
      wc_ar_list := wc_ar [ , wc_ar , ...]
 
   wc_host
@@ -230,7 +228,7 @@ MATCHING TYPES
      ('@').
 
      More information concerning hostgroups can be found in <I>host-</I>
-     <B><A HREF="../htmlman5/group.html?pathrev=V62u2_TAG">group(5)</A></B>
+     <B><A HREF="../htmlman5/group.html">group(5)</A></B>
 
      e.g.
           @*           all hostgroups in the cluster
@@ -266,7 +264,7 @@ MATCHING TYPES
 
      If present, the <I>task</I>_<I>range</I> restricts the effect of the  <I>qmod</I>
      operation to the array job task range specified as suffix to
-     the job id (see the -t option to <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B> for further details
+     the job id (see the -t option to <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> for further details
      on array jobs).
 
   wc_qdomain
@@ -314,6 +312,8 @@ MATCHING TYPES
      queue  instances whose underlying hostname matches the given
      expression.  Please note that the first character of <I>wc</I>_<I>host</I>
      does never match the at-character '@'.
+
+
      e.g.
           *@*          all queue instances in the cluster
           *@b*         all queue instances whose
@@ -371,10 +371,10 @@ MATCHING TYPES
   parallel_env n[-[m]]|[-]m,...
      Parallel programming environment (PE) to select for  an  AR.
      The range descriptor behind the PE name specifies the number
-     of parallel processes to be run. Sun Grid Engine will  allo-
-     cate  the  appropriate resources as available. The <B><A HREF="../htmlman5/sge_pe.html?pathrev=V62u2_TAG">sge_pe(5)</A></B>
-     manual page contains information about the definition of PEs
-     and about how to obtain a list of currently valid PEs.
+     of parallel processes to be run. Grid Engine  will  allocate
+     the  appropriate resources as available. The <B><A HREF="../htmlman5/ge_pe.html">ge_pe(5)</A></B> manual
+     page contains information about the definition  of  PEs  and
+     about how to obtain a list of currently valid PEs.
 
      You can specify a PE name which uses the wildcard character,
      "*".   Thus  the  request  "pvm*"  will  match  any parallel
@@ -419,12 +419,12 @@ MATCHING TYPES
           corresponding  value of the current date is assumed. If
           CC is not specified, a YY of &lt; 70 means 20YY.
           Use of this option may cause unexpected results if  the
-          clocks of the hosts in the Sun Grid Engine pool are out
-          of sync. Also, the proper behavior of this option  very
+          clocks  of the hosts in the Grid Engine pool are out of
+          sync. Also, the proper behavior  of  this  option  very
           much  depends on the correct setting of the appropriate
           timezone, e.g. in  the  TZ  environment  variable  (see
-          <B><A HREF="../htmlman1/date.html?pathrev=V62u2_TAG">date(1)</A></B>  for details), when the Sun Grid Engine daemons
-          <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u2_TAG">sge_qmaster(8)</A></B> and <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u2_TAG">sge_execd(8)</A></B> are invoked.
+          <B><A HREF="../htmlman1/date.html">date(1)</A></B>  for  details),  when  the  Grid Engine daemons
+          <B><A HREF="../htmlman8/ge_qmaster.html">ge_qmaster(8)</A></B> and <B><A HREF="../htmlman8/ge_execd.html">ge_execd(8)</A></B> are invoked.
 
   name
      The name may be any arbitrary alphanumeric ASCII string, but
@@ -432,7 +432,7 @@ MATCHING TYPES
      or "?".
 
 SEE ALSO
-     <B><A HREF="../htmlman1/qacct.html?pathrev=V62u2_TAG">qacct(1)</A></B>, <B><A HREF="../htmlman1/qconf.html?pathrev=V62u2_TAG">qconf(1)</A></B>, <B><A HREF="../htmlman1/qquota.html?pathrev=V62u2_TAG">qquota(1)</A></B>, <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B>, <B><A HREF="../htmlman1/qrsub.html?pathrev=V62u2_TAG">qrsub(1)</A></B>
+     <B><A HREF="../htmlman1/qacct.html">qacct(1)</A></B>, <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>, <B><A HREF="../htmlman1/qquota.html">qquota(1)</A></B>, <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>, <B><A HREF="../htmlman1/qrsub.html">qrsub(1)</A></B>
 
 COPYRIGHT
      Copyright: 2004-2007 by Sun Microsystems, Inc.

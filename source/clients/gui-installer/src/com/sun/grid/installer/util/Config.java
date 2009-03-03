@@ -39,42 +39,25 @@ public interface Config {
     public static final String VAR_CONF_FILE_DIR    = "templates/";
     public static final String VAR_CONF_FILE_NAME   = "inst_template.conf";
 
-    public static final String CONST_DEFAULT_WINDOWS_SPOOL_DIR = "/var/spool/";
-    public static final String CONST_MODE_WINDOWS = "windows";
-
     public static final String VAR_SGE_ROOT    = "cfg.sge.root";
     public static final String VAR_SGE_CELL_NAME = "cfg.cell.name";
     public static final String VAR_ADMIN_USER  = "cfg.admin.user";
     public static final String VAR_SGE_QMASTER_PORT  = "cfg.sge.qmaster.port";
     public static final String VAR_SGE_EXECD_PORT  = "cfg.sge.execd.port";
     public static final String VAR_EXEC_HOST_LIST = "cfg.exec.host.list";
-    public static final String VAR_EXEC_HOST_LIST_RM = "cfg.exec.host.list.rm";
     public static final String VAR_ADMIN_HOST_LIST = "cfg.admin.host.list";
     public static final String VAR_SUBMIT_HOST_LIST = "cfg.submit.host.list";
     public static final String VAR_SHADOW_HOST_LIST = "cfg.shadow.host";
     public static final String VAR_QMASTER_SPOOL_DIR = "cfg.qmaster.spool.dir";
     public static final String VAR_EXECD_SPOOL_DIR = "cfg.execd.spool.dir";
-    public static final String VAR_EXECD_SPOOL_DIR_LOCAL = "cfg.exec.spool.dir.local";
     public static final String VAR_SHELL_NAME = "cfg.shell.name";
     public static final String VAR_COPY_COMMAND = "cfg.copy.command";
     public static final String VAR_DB_SPOOLING_SERVER = "cfg.db.spooling.server";
     public static final String VAR_SPOOLING_METHOD = "cfg.spooling.method";
     public static final String VAR_WINDOWS_SUPPORT = "cfg.windows.support";
-    public static final String VAR_WIN_DOMAIN_ACCESS = "cfg.win.domain.access";
-    public static final String VAR_WIN_ADMIN_NAME = "cfg.win.admin.name";
     public static final String VAR_HOSTNAME_RESOLVING = "cfg.hostname.resolving";
     public static final String VAR_JVM_LIB_PATH = "cfg.sge.jvm.lib.path";
-    public static final String VAR_DB_SPOOLING_DIR = "cfg.db.spooling.dir";
-    public static final String VAR_SGE_JMX_PORT = "cfg.sge.jmx.port";
-    public static final String VAR_ADD_TO_RC = "cfg.add.to.rc";
-    public static final String VAR_SGE_ENABLE_SMF= "cfg.sge.enable.smf";
-    public static final String VAR_REMOVE_RC= "cfg.remove.rc";
-    public static final String VAR_ALL_HOSTS = "gui_allhosts";
-    public static final String VAR_ALL_ADMIN_HOSTS = "gui_alladminhosts";
-    public static final String VAR_ALL_SUBMIT_HOSTS = "gui_allsubmithosts";
-    public static final String VAR_ALL_CSPHOSTS = "gui_csphosts";
-    public static final String VAR_FIRST_TASK = "first_install_task";
-    public static final String VAR_LAST_TASK = "last_install_task";
+    public static final String VAR_DB_SPOOLING_DIR= "cfg.db.spooling.dir";
 
     public static final String VAR_AUTO_CONF_TEMP_FILE = "auto.conf.temp.file";
     public static final String VAR_AUTO_CONF_FILE = "auto.conf.file";
@@ -82,16 +65,14 @@ public interface Config {
     public static final String VAR_INSTALL_SCRIPT_FILE_DIR  = "install.script.file.dir";
     public static final String VAR_AUTO_INSTALL_COMPONENT_TEMP_FILE = "auto.install.component.temp.file";
     public static final String VAR_AUTO_INSTALL_COMPONENT_FILE  = "auto.install.component.file";
-    public static final String VAR_CHECK_HOST_TEMP_FILE  = "check.host.temp.file";
-    public static final String VAR_CHECK_HOST_FILE  = "check.host.file";
     public static final String VAR_WORK_DIR  = "work.dir";
     public static final String VAR_TEMPLATES_DIR  = "templates.dir";
     public static final String VAR_README_TEMP_FILE  = "readme.temp.file";
-    public static final String VAR_README_FILE_NAME_1  = "readme.file.name.1";
-    public static final String VAR_README_FILE_NAME_2  = "readme.file.name.2";
+    public static final String VAR_README_FILE  = "readme.file";
     public static final String VAR_PROGRESS_TYPE = "mode";
     public static final String VAR_USER_NAME = "user.name";
-    //public static final String VAR_USER_GROUP = "user.group";
+    public static final String VAR_USER_GROUP = "user.group";
+    public static final String VAR_ROOT_USER = "root.user";
     public static final String VAR_RESULT_INFO = "result.info";
     public static final String VAR_LOCALHOST_ARCH = "localhost.arch";
 
@@ -119,8 +100,6 @@ public interface Config {
     public static final String COND_SPOOLING_BDBSERVER = "cond.spooling.bdbserver";
     public static final String COND_JMX = "cond.sge.jmx";
     public static final String COND_JMX_SSL = "cond.sge.jmx.ssl";
-    public static final String COND_USER_ROOT = "cond.user.root";
-    public static final String COND_NO_CONNECT_USER = "cond.no.connect.user";
     
     public static final String LANGID_HELP_ERROR_PAGE = "installer.help.errorpage";
     public static final String LANGID_HELP_EMPTY_PAGE = "installer.help.emptypage";
@@ -133,25 +112,4 @@ public interface Config {
 
     public static final String WARNING_USER_NOT_ROOT = "warning.user.not.root.message";
     public static final String ERROR_USER_INVALID = "error.user.invalid.message";
-
-    public static final String ARG_RESOLVE_THREAD_POOL_SIZE = "resolve_pool";
-    public static final String ARG_INSTALL_THREAD_POOL_SIZE = "install_pool";
-
-    public static final String ARG_RESOLVE_TIMEOUT = "resolve_timeout";
-    public static final String ARG_INSTALL_TIMEOUT = "install_timeout";
-    
-    public static final String ARG_CONNECT_USER = "connect_user";
-    public static final String ARG_CONNECT_MODE = "connect_mode";
-
-    public static final int EXIT_VAL_SUCCESS = 0;
-    public static final int EXIT_VAL_BDB_SERVER_SPOOL_DIR_PERM_DENIED = 10;
-    public static final int EXIT_VAL_QMASTER_SPOOL_DIR_PERM_DENIED = 20;
-    public static final int EXIT_VAL_EXECD_SPOOL_DIR_PERM_DENIED = 21;
-    public static final int EXIT_VAL_JMX_KEYSTORE_PERM_DENIED = 22;
-    public static final int EXIT_VAL_BDB_SPOOL_DIR_PERM_DENIED = 23;
-    public static final int EXIT_VAL_BDB_SPOOL_DIR_EXISTS = 24;
-    public static final int EXIT_VAL_BDB_SPOOL_WRONG_FSTYPE = 25;
-    public static final int EXIT_VAL_EXECD_SPOOL_DIR_LOCAL_PERM_DENIED = 40;
-    public static final int EXIT_VAL_ADMIN_USER_NOT_KNOWN = 50;
-    public static final int EXIT_VAL_FAILED_ALREADY_INSTALLED_COMPONENT = 10;
 }

@@ -460,7 +460,8 @@ extern int main(int argc, char** argv)
 
   printf("commlib cleanup ...\n");
   cl_com_cleanup_commlib();
-  fflush(stdout);
+  fflush(NULL);
+  
 
   printf("main done\n");
   fflush(stdout);

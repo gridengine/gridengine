@@ -38,24 +38,15 @@ IS_SHADOW=$3
 IS_EXECD=$4
 
 SPOOLING_METHOD="${cfg.spooling.method}"
-if [ "$SPOOLING_METHOD" = "none" ]; then
-   SPOOLING_METHOD="berkeleydb"
-fi
 DB_SPOOLING_SERVER="${cfg.db.spooling.server}"
 
 # exit code for run fuctions
 EXIT_CODE=0
 
-ADMINUSER="${cfg.admin.user}"
-if [ "$SGE_ARCH" = "win32-x86" ]; then
-   HOSTNAME=`hostname | tr "[a-z]" "[A-Z]"`
-   ADMINUSER="$HOSTNAME+$ADMINUSER"
-fi
-
 # run the command as admin user
 RunAsAdmin()
 {
-   "${cfg.sge.root}"/utilbin/"${host.arch}"/adminrun $ADMINUSER $@
+   "${cfg.sge.root}"/utilbin/"${host.arch}"/adminrun "${cfg.admin.user}" $@
    EXIT_CODE=$?
 }
 
@@ -120,12 +111,9 @@ fi
 if [ "$IS_BDB" = true ]; then
    # if BDB server spooling is enabled check write permission on BDB spool dir
    if [ "$SPOOLING_METHOD" = "berkeleydb" -a "$DB_SPOOLING_SERVER" != "none"  ]; then
-      if [ -d "${cfg.db.spooling.dir}" ]; then
-         Exit 24
-      fi
       IsDirWritable "${cfg.db.spooling.dir}"
       if [ $EXIT_CODE -ne 0 ]; then
-         Exit 23
+         Exit 10
       fi
    fi
 fi
@@ -188,7 +176,7 @@ if [ "$IS_EXECD" = true ]; then
 
    # check write permission on local execd spool dir
    if [ -n "${cfg.exec.spool.dir.local}" ]; then
-      IsDirWritable "${cfg.exec.spool.dir.local}"
+      IsDirWritableByAdminUser "${cfg.exec.spool.dir.local}"
    else
       IsDirWritableByAdminUser "${cfg.execd.spool.dir}"
    fi

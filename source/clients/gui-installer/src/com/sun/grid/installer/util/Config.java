@@ -39,9 +39,6 @@ public interface Config {
     public static final String VAR_CONF_FILE_DIR    = "templates/";
     public static final String VAR_CONF_FILE_NAME   = "inst_template.conf";
 
-    public static final String CONST_DEFAULT_WINDOWS_SPOOL_DIR = "/var/spool/";
-    public static final String CONST_MODE_WINDOWS = "windows";
-
     public static final String VAR_SGE_ROOT    = "cfg.sge.root";
     public static final String VAR_SGE_CELL_NAME = "cfg.cell.name";
     public static final String VAR_ADMIN_USER  = "cfg.admin.user";
@@ -60,8 +57,6 @@ public interface Config {
     public static final String VAR_DB_SPOOLING_SERVER = "cfg.db.spooling.server";
     public static final String VAR_SPOOLING_METHOD = "cfg.spooling.method";
     public static final String VAR_WINDOWS_SUPPORT = "cfg.windows.support";
-    public static final String VAR_WIN_DOMAIN_ACCESS = "cfg.win.domain.access";
-    public static final String VAR_WIN_ADMIN_NAME = "cfg.win.admin.name";
     public static final String VAR_HOSTNAME_RESOLVING = "cfg.hostname.resolving";
     public static final String VAR_JVM_LIB_PATH = "cfg.sge.jvm.lib.path";
     public static final String VAR_DB_SPOOLING_DIR = "cfg.db.spooling.dir";
@@ -87,11 +82,11 @@ public interface Config {
     public static final String VAR_WORK_DIR  = "work.dir";
     public static final String VAR_TEMPLATES_DIR  = "templates.dir";
     public static final String VAR_README_TEMP_FILE  = "readme.temp.file";
-    public static final String VAR_README_FILE_NAME_1  = "readme.file.name.1";
-    public static final String VAR_README_FILE_NAME_2  = "readme.file.name.2";
+    public static final String VAR_README_FILE  = "readme.file";
     public static final String VAR_PROGRESS_TYPE = "mode";
     public static final String VAR_USER_NAME = "user.name";
     //public static final String VAR_USER_GROUP = "user.group";
+    public static final String VAR_ROOT_USER = "root.user";
     public static final String VAR_RESULT_INFO = "result.info";
     public static final String VAR_LOCALHOST_ARCH = "localhost.arch";
 
@@ -120,7 +115,6 @@ public interface Config {
     public static final String COND_JMX = "cond.sge.jmx";
     public static final String COND_JMX_SSL = "cond.sge.jmx.ssl";
     public static final String COND_USER_ROOT = "cond.user.root";
-    public static final String COND_NO_CONNECT_USER = "cond.no.connect.user";
     
     public static final String LANGID_HELP_ERROR_PAGE = "installer.help.errorpage";
     public static final String LANGID_HELP_EMPTY_PAGE = "installer.help.emptypage";
@@ -134,14 +128,8 @@ public interface Config {
     public static final String WARNING_USER_NOT_ROOT = "warning.user.not.root.message";
     public static final String ERROR_USER_INVALID = "error.user.invalid.message";
 
-    public static final String ARG_RESOLVE_THREAD_POOL_SIZE = "resolve_pool";
-    public static final String ARG_INSTALL_THREAD_POOL_SIZE = "install_pool";
-
-    public static final String ARG_RESOLVE_TIMEOUT = "resolve_timeout";
-    public static final String ARG_INSTALL_TIMEOUT = "install_timeout";
-    
-    public static final String ARG_CONNECT_USER = "connect_user";
-    public static final String ARG_CONNECT_MODE = "connect_mode";
+    public static final String ARG_RESOLVE_THREAD_POOL_SIZE = "resolvepool";
+    public static final String ARG_INSTALL_THREAD_POOL_SIZE = "installpool";
 
     public static final int EXIT_VAL_SUCCESS = 0;
     public static final int EXIT_VAL_BDB_SERVER_SPOOL_DIR_PERM_DENIED = 10;

@@ -68,9 +68,9 @@ public class HostInstallTableModel extends SortedTableModel {
         Host h = hostList.get(row);
 
         switch (col) {
-            case 0: return h.getComponentString();
-            case 1: return h.getDisplayName();
-            case 2: return h.getIp();
+            case 0: return h.getHostname();
+            case 1: return h.getIp();
+            case 2: return h.getComponentString();
             case 3: return h.getArchitecture();
             case 4: return h.getState();
             case 5: return h.getLogContent();

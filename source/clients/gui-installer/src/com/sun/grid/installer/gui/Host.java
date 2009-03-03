@@ -52,7 +52,6 @@ public class Host implements Config {
     public static final String HOST_TYPE_BDB     = "bdb";
     public static final String HOST_TYPE_SUBMIT  = "submit";
     public static final String HOST_TYPE_ADMIN   = "admin";
-    public static final String HOST_TYPE_ALL     = "all hosts";
 
     static {
         try {
@@ -72,17 +71,15 @@ public class Host implements Config {
         MISSING_FILE,
         UNKNOWN_HOST,
         CONTACTING,
-        VALIDATING,
         REACHABLE,
         UNREACHABLE,
         OK,
-        OPERATION_TIMEOUT,
         COPY_TIMEOUT_CHECK_HOST,
         COPY_FAILED_CHECK_HOST,
         READY_TO_INSTALL,
         COPY_TIMEOUT_INSTALL_COMPONENT,
         COPY_FAILED_INSTALL_COMPONENT,
-        PROCESSING,
+        INSTALLING,
         SUCCESS,
         CANCELED,
         FAILED,
@@ -131,14 +128,13 @@ public class Host implements Config {
     public enum Type { HOSTNAME, IP}    
 
     private String hostname = "";
-    private String displayName = "";
     private String ip = "";
     private InetAddress inetAddr = null;
     private String architecture = "";
     private String spoolDir = "";
     private String log = "";
     private State state = State.UNKNOWN_HOST;
-    private boolean bdbHost, qmasterHost, shadowHost, executionHost, adminHost, submitHost, firstTask, lastTask;
+    private boolean bdbHost, qmasterHost, shadowHost, executionHost, adminHost, submitHost;
 
     public Host(Host h) {
         hostname = new String(h.getHostname());
@@ -159,19 +155,10 @@ public class Host implements Config {
 
     //Default constructor for selected hosts
     public Host (Host.Type type, String value, boolean isShadowHost, boolean isExecutionHost, boolean isAdminHost, boolean isSubmitHost, String execdSpoolDir) {
-        this(type, value, false, false, isShadowHost, isExecutionHost, isAdminHost, isSubmitHost, false, false, execdSpoolDir, State.NEW_UNKNOWN_HOST);
-    }
-
-    public Host (Host.Type type, String value, String displayName, boolean isFirstTask, boolean isLastTask) {
-        this(type, value, false, false, false, false, false, false, isFirstTask, isLastTask, "", State.READY_TO_INSTALL);
-        this.displayName = displayName;
+        this(type, value, false, false, isShadowHost, isExecutionHost, isAdminHost, isSubmitHost, execdSpoolDir, State.NEW_UNKNOWN_HOST);
     }
 
     public Host (Host.Type type, String value, boolean isQmasterHost, boolean isBdbHost, boolean isShadowHost, boolean isExecutionHost, boolean isAdminHost, boolean isSubmitHost, String execdSpoolDir, Host.State state) {
-        this(type, value, isQmasterHost, isBdbHost, isShadowHost, isExecutionHost, isAdminHost, isSubmitHost, false, false, execdSpoolDir, state);
-    }
-
-    private Host (Host.Type type, String value, boolean isQmasterHost, boolean isBdbHost, boolean isShadowHost, boolean isExecutionHost, boolean isAdminHost, boolean isSubmitHost, boolean isFirstTask, boolean isLastTask, String execdSpoolDir, Host.State state) {
         switch (type) {
             case HOSTNAME:
                 this.hostname = value;
@@ -190,8 +177,6 @@ public class Host implements Config {
         this.submitHost = isSubmitHost;
         this.shadowHost = isShadowHost;
         this.executionHost = isExecutionHost;
-        this.firstTask = isFirstTask;
-        this.lastTask = isLastTask;
         this.spoolDir = execdSpoolDir;
         this.state = state;
 
@@ -206,13 +191,6 @@ public class Host implements Config {
     public boolean equals(Object o) {
         if (o instanceof Host) {
             Host h = (Host) o;
-            //Special handling for special tasks
-            if ((h.isFirstTask() && !this.isFirstTask()) || (!h.isFirstTask() && this.isFirstTask())) {
-                return false;
-            }
-            if ((h.isLastTask() && !this.isLastTask()) || (!h.isLastTask() && this.isLastTask())) {
-                return false;
-            }
             //Compare hostnames if either host does not have a hostname
             if (this.getHostname().length() > 0 && h.getHostname().length() > 0) {
                 return this.getHostname().equalsIgnoreCase(h.getHostname());
@@ -220,6 +198,12 @@ public class Host implements Config {
             } else {
                 return this.getIp().equals(h.getIp());
             }
+        /*if (this.getInetAddr() == null ^ h.getInetAddr() == null) {
+        return false;
+        }
+        if ((this.getInetAddr() == null && h.getInetAddr() == null || this.getInetAddr().equals(h.getInetAddr())) && this.getHostname().equalsIgnoreCase(h.getHostname()) && this.getIp().equals(h.getIp())) {
+        return true;
+        }*/
         }
         
         return false;
@@ -364,20 +348,6 @@ public class Host implements Config {
         this.submitHost = submitHost;
     }
 
-    /**
-     * @return the firstTask
-     */
-    public boolean isFirstTask() {
-        return firstTask;
-    }
-
-    /**
-     * @return the lastTask
-     */
-    public boolean isLastTask() {
-        return lastTask;
-    }
-
     public State getState() {
         return state;
     }
@@ -410,27 +380,15 @@ public class Host implements Config {
         return log;
     }
 
-    public void setDisplayName(String displayName) {
-        this.displayName = displayName;
-    }
-
-    public String getDisplayName() {
-        if (isFirstTask() || isLastTask()) {
-            if (displayName.trim().length()>0) {
-                return displayName;
-            }
+    public String getHostAsString() {
+        if (getHostname().length() > 0) {
+            return getHostname();
         }
-        return getHostname();
+        return getIp();
     }
 
     public String getComponentString() {
         String str = "";
-        if (isFirstTask()) {
-            return "prerequisites";
-        }
-        if (isLastTask()) {
-            return "admin/submit";
-        }
         if (isBdbHost()) {
             str += Util.SgeComponents.bdb.toString()+", ";
         }
@@ -438,7 +396,7 @@ public class Host implements Config {
             str += Util.SgeComponents.qmaster.toString()+", ";
         }
         if (isShadowHost()) {
-            str += Util.SgeComponents.shadow.toString()+", ";
+            str += Util.SgeComponents.shadowd.toString()+", ";
         }
         if (isExecutionHost()) {
             str += Util.SgeComponents.execd.toString()+", ";
@@ -455,10 +413,10 @@ public class Host implements Config {
     	
     	// Fill out all of the lists. The differentation between component type
         // will happen at the call of the install script
-        variables.put(VAR_EXEC_HOST_LIST, getHostname());
-        variables.put(VAR_SHADOW_HOST_LIST, getHostname());
-        variables.put(VAR_ADMIN_HOST_LIST, getHostname());
-        variables.put(VAR_SUBMIT_HOST_LIST, getHostname());
+        variables.put(VAR_EXEC_HOST_LIST, getHostAsString());
+        variables.put(VAR_SHADOW_HOST_LIST, getHostAsString());
+        variables.put(VAR_ADMIN_HOST_LIST, getHostAsString());
+        variables.put(VAR_SUBMIT_HOST_LIST, getHostAsString());
     }
 
     /**

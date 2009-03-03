@@ -405,14 +405,14 @@ ensure_valid_what_and_where(sge_where_what_t *where_what)
    }
 
    if (tmp_what_descr == NULL ||
-       where_what->where_acl == NULL || where_what->what_acldept == NULL || 
-       where_what->what_cqueue == NULL || where_what->where_dept == NULL || 
-       where_what->where_host == NULL || where_what->what_host == NULL ||
-       where_what->what_job == NULL || where_what->what_jat == NULL ||
-       where_what->what_pet == NULL || where_what->where_queue == NULL ||
-       where_what->what_queue == NULL || where_what->where_queue2 == NULL ||
-       where_what->what_queue2 == NULL || where_what->where_all_queue == NULL ||
-       where_what->what_pe == NULL) {
+         where_what->where_acl == NULL || where_what->what_acldept == NULL || 
+         where_what->what_cqueue == NULL || where_what->where_dept == NULL || 
+         where_what->where_host == NULL || where_what->what_host == NULL ||
+         where_what->what_job == NULL || where_what->what_jat == NULL ||
+         where_what->what_pet == NULL || where_what->where_queue == NULL ||
+         where_what->what_queue == NULL || where_what->where_queue2 == NULL ||
+         where_what->what_queue2 == NULL || where_what->where_all_queue == NULL ||
+         where_what->what_pe) {
       CRITICAL((SGE_EVENT, MSG_SCHEDD_UNABLE_TO_SETUP_FILTER));
    }
    /* cleanup tmp data */

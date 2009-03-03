@@ -232,7 +232,7 @@ bool sge_daemonize_qmaster()
       exit(0); /* child 1 terminates */
    }
 
-   sge_close_all_fds(NULL, 0);
+   sge_close_all_fds(NULL);
 
    failed_fd = sge_occupy_first_three();
    if (failed_fd  != -1) {

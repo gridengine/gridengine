@@ -266,7 +266,7 @@ int main(int argc, char **argv)
    
    /* finalize daeamonize */
    if (!getenv("SGE_ND")) {
-      sge_daemonize_finalize(ctx);
+      daemonize_execd(ctx);
    }
 
    /* daemonizes if qmaster is unreachable */   

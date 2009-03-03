@@ -1621,11 +1621,9 @@ int cl_com_connection_get_fd(cl_com_connection_t* connection, int* fd) {
    switch(connection->framework_type) {
       case CL_CT_TCP: {
          ret_val = cl_com_tcp_get_fd(connection,fd);
-         break;
       }
       case CL_CT_SSL: {
          ret_val = cl_com_ssl_get_fd(connection,fd);
-         break;
       }
       case CL_CT_UNDEFINED: {
          ret_val = CL_RETVAL_NO_FRAMEWORK_INIT;
@@ -1634,12 +1632,9 @@ int cl_com_connection_get_fd(cl_com_connection_t* connection, int* fd) {
    }
 
    if (ret_val == CL_RETVAL_OK && (*fd < 0)) {
-      CL_LOG_INT(CL_LOG_ERROR, "got no valid port: ", *fd);
       ret_val = CL_RETVAL_NO_PORT_ERROR;
    }
-   if (ret_val != CL_RETVAL_OK) {
-      CL_LOG_STR(CL_LOG_WARNING, "Cannot get fd for connection:", cl_get_error_text(ret_val));
-   }
+
    return ret_val;
 }
 

@@ -245,7 +245,7 @@ DOC_PACKAGE=""
 COMMON_DOCS="doc/README* doc/*.asc doc/javadocs"
 COMMON_PACKAGE="3rd_party catman ckpt dtrace examples/jobs \
                 examples/drmaa include inst_sge install_qmaster \
-                install_execd start_gui_installer \
+                install_execd start_sge_installer.sh \
 		        man mpi pvm qmon util lib/drmaa.jar lib/juti.jar lib/jgdi.jar"
 ARCO_PACKAGE="dbwriter reporting"
 

@@ -324,7 +324,7 @@ int scheduler_method(sge_evc_class_t *evc, lList **answer_list, scheduler_all_da
          prof_get_measurement_utime(SGE_PROF_CUSTOM0, true, NULL) +
          prof_get_measurement_stime(SGE_PROF_CUSTOM0, true, NULL),
          sconf_get_fast_jobs(),
-         sconf_get_pe_jobs(),
+         sconf_get_comprehensive_jobs(),
          (int)orders.numberSendOrders,
          lGetNumberOfElem(lists->host_list),
          lGetNumberOfElem(lists->queue_list),
@@ -415,8 +415,7 @@ static int dispatch_jobs(sge_evc_class_t *evc, scheduler_all_data_t *lists, orde
    int nreservation = 0;
    int fast_runs = 0;         /* sequential jobs */
    int fast_soft_runs = 0;    /* sequential jobs with soft requests */
-   int pe_runs = 0;           /* pe jobs */
-   int pe_soft_runs = 0;      /* pe jobs  with soft requests */
+   int comprehensive_runs = 0;      /* all kind of pe jobs */
 
    int global_lc = 0;
    int sort_hostlist = 1;       /* hostlist has to be sorted. Info returned by select_assign_debit */
@@ -800,9 +799,7 @@ static int dispatch_jobs(sge_evc_class_t *evc, scheduler_all_data_t *lists, orde
                break;
             case DISPATCH_TYPE_FAST_SOFT_REQ : fast_soft_runs++;
                break;
-            case DISPATCH_TYPE_PE : pe_runs++;
-               break;
-            case DISPATCH_TYPE_PE_SOFT_REQ: pe_soft_runs++;
+            case DISPATCH_TYPE_COMPREHENSIVE : comprehensive_runs++;
                break;
          }
 
@@ -952,12 +949,11 @@ static int dispatch_jobs(sge_evc_class_t *evc, scheduler_all_data_t *lists, orde
    if (prof_is_active(SGE_PROF_CUSTOM4)) {
       static bool first_time = true;
       prof_stop_measurement(SGE_PROF_CUSTOM4, NULL);
-      PROFILING((SGE_EVENT, "PROF: job dispatching took %.3f s (%d fast, %d fast_soft, %d pe, %d pe_soft, %d res)",
+      PROFILING((SGE_EVENT, "PROF: job dispatching took %.3f s (%d fast, %d comp, %d pe, %d res)",
                  prof_get_measurement_wallclock(SGE_PROF_CUSTOM4, false, NULL),
                  fast_runs,
                  fast_soft_runs,
-                 pe_runs,
-                 pe_soft_runs,
+                 comprehensive_runs,
                  nreservation));
 
       if (first_time) {
@@ -981,9 +977,6 @@ static int dispatch_jobs(sge_evc_class_t *evc, scheduler_all_data_t *lists, orde
    lFreeList(&group_list);
    sge_free_load_list(&consumable_load_list);
    lFreeList(&job_load_adjustments);
-
-   /* reset last dispatch type. Indicator for sorting queues */
-   sconf_set_last_dispatch_type(DISPATCH_TYPE_NONE);
 
    DRETURN(0);
 }
@@ -1269,7 +1262,8 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
 
       if (*dis_queue_list == NULL) {
          *dis_queue_list = disabled_queues;
-      } else {
+      }
+      else {
          lAddList(*dis_queue_list, &disabled_queues);
       }
       disabled_queues = NULL;

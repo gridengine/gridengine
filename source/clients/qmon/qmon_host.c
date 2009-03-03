@@ -994,7 +994,7 @@ StringConst name
    /* 
    ** set now fully configured load scaling list 
    */
-   lFreeList(&host_data.scaling_list);
+   lFreeList(&(host_data.scaling_list));
    host_data.scaling_list = lsl;
 
    /*
@@ -1071,7 +1071,8 @@ StringConst name
    if (ehp) {
       host_data.prj = lGetList(ehp, EH_prj);
       host_data.xprj = lGetList(ehp, EH_xprj);
-   } else {
+   }
+   else {
       host_data.prj = NULL;
       host_data.xprj = NULL;
    }
@@ -1813,12 +1814,11 @@ static void qmonHostgroupOk(Widget w, XtPointer cld, XtPointer cad)
 
    if (lFirst(alp) && lGetUlong(lFirst(alp), AN_status) != STATUS_OK) {
       qmonMessageBox(w, alp, 0);
+      lFreeList(&alp);
    } else {
       XtUnmanageChild(hg_ask_layout);
       updateHostListCB(w, NULL, NULL);
    }
-
-   lFreeList(&alp);
 
    DEXIT;
 }

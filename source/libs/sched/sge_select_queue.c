@@ -1010,7 +1010,7 @@ parallel_maximize_slots_pe(sge_assignment_t *best, int *available_slots)
       case DISPATCH_OK:
 
          if (!best->is_reservation) { 
-            sconf_inc_pe_jobs();
+            sconf_inc_comprehensive_jobs();
          }   
          
          DPRINTF(("MAXIMIZE SLOT(%s, %d) returns <ok>\n", 
@@ -3166,9 +3166,6 @@ sequential_tag_queues_suitable4job(sge_assignment_t *a)
    int global_violations = 0;
    int queue_violations = 0;
    lListElem *qep;
-   lListElem *best_qep = NULL;
-   u_long32 best_qep_violations = U_LONG32_MAX;
-   u_long32 best_qep_tt = U_LONG32_MAX;
 
    DENTER(TOP_LAYER, "sequential_tag_queues_suitable4job");
 
@@ -3418,6 +3415,8 @@ sequential_tag_queues_suitable4job(sge_assignment_t *a)
         
          
          if (a->start == DISPATCH_TIME_QUEUE_END) {
+
+
             DPRINTF(("    global "sge_u32" host "sge_u32" queue "sge_u32" rqs "sge_u32"\n", 
                   tt_global, tt_host, tt_queue, tt_rqs));
             lSetUlong(qep, QU_available_at, this_tt = MAX(tt_queue, MAX(tt_host, MAX(tt_rqs, tt_global))));
@@ -3429,50 +3428,14 @@ sequential_tag_queues_suitable4job(sge_assignment_t *a)
          best_queue_result = DISPATCH_OK;
 
          if (!a->is_reservation) {
-            if (!a->is_soft || this_violations == 0) {
-               /* we found our queue */
-               if (best_qep != NULL) {
-                  lSetUlong(best_qep, QU_tag, 0);
-               }
+            if (!a->is_soft || this_violations == 0)
                break;
-            }
          } else {
             /* further search is pointless, if reservation depends from a global consumble */
             /* earlier start time has higher preference than lower soft violations */
-            if (ar_ep == NULL && (tt_global >= MAX(MAX(tt_queue, tt_host), tt_rqs)) && !a->is_soft) {
-               /* we found our queue */
-               if (best_qep != NULL) {
-                  lSetUlong(best_qep, QU_tag, 0);
-               }
+            if (ar_ep == NULL && tt_global >= MAX(MAX(tt_queue, tt_host), tt_rqs) && (!a->is_soft || this_violations == 0))
                break;
-            }
          }
-
-         if (a->is_soft) {
-            if (!a->is_reservation) {
-               /* check if this queue is better than our last best queue */ 
-               if (this_violations < best_qep_violations) {
-                  lSetUlong(best_qep, QU_tag, 0);
-                  best_qep = qep;
-                  best_qep_violations = this_violations;
-               } else {
-                  /* reset QU_tag because a other queue is better */
-                  lSetUlong(qep, QU_tag, 0);
-               }
-            } else {
-               /* earlier start time has higher preference than lower soft violations */
-               if (this_tt < best_qep_tt ||
-                   (this_tt == best_qep_tt && this_violations < best_qep_violations)) {
-                  lSetUlong(best_qep, QU_tag, 0);
-                  best_qep = qep;
-                  best_qep_tt = this_tt;
-                  best_qep_violations = this_violations;
-               } else {
-                  lSetUlong(qep, QU_tag, 0);
-               }
-            }
-         }
-
          got_solution = true;
          violations_best = this_violations;
          tt_best = this_tt;
@@ -3815,14 +3778,11 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
                lPSortList(a->queue_list, "%I- %I+ %I+ %I+", QU_tag, QU_soft_violation, QU_seq_no, QU_host_seq_no);
             } 
          } else {
-            int last_dispatch_type = sconf_get_last_dispatch_type();
-            if (last_dispatch_type == DISPATCH_TYPE_PE_SOFT_REQ || last_dispatch_type == DISPATCH_TYPE_NONE || sconf_get_host_order_changed()) {
-               if (sconf_get_queue_sort_method() == QSM_LOAD) {
-                  lPSortList(a->queue_list, "%I+ %I+", QU_host_seq_no, QU_seq_no);
-               } else {
-                  lPSortList(a->queue_list, "%I+ %I+", QU_seq_no, QU_host_seq_no);
-               }
-            }
+            if (sconf_get_queue_sort_method() == QSM_LOAD) {
+               lPSortList(a->queue_list, "%I- %I+ %I+", QU_tag, QU_host_seq_no, QU_seq_no);
+            } else {
+               lPSortList(a->queue_list, "%I- %I+ %I+", QU_tag, QU_seq_no, QU_host_seq_no);
+            } 
          }
 
          for_each (hep, a->host_list) {
@@ -3831,9 +3791,6 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
 
          for_each (qep, a->queue_list) {
             DPRINTF(("AFTER SORT: %s soft violations %d\n", lGetString(qep, QU_full_name), lGetUlong(qep, QU_soft_violation)));
-            if (lGetUlong(qep, QU_tag) == 0) {
-               continue;
-            }
             eh_name = lGetHost(qep, QU_qhostname);
             if (!(hep = host_list_locate(a->host_list, eh_name)))
                continue;
@@ -4702,25 +4659,22 @@ dispatch_t sge_sequential_assignment(sge_assignment_t *a)
        *  There is no need to sort the queues after each dispatch in 
        *  case:
        *
-       *    1. The last dispatch run did not resort the queue list
-       *       currently only DISPATCH_TYPE_PE_SOFT_REQ needs to sort
-       *       the list based on the soft violations
+       *    1. The last dispatch was also a sequential job without
+       *       soft requests. If not then the queues are sorted by
+       *       other criterions (soft violations, # of tagged slots, 
+       *       masterq).
        *    2. The hosts sort order has not changed since last dispatch.
        *       Load correction or consumables in the load formula can
        *       change the order of the hosts. We detect changings in the
        *       host order by comparing the host sequence number with the
        *       sequence number from previous run.
        * ------------------------------------------------------------------*/
-      int last_dispatch_type = sconf_get_last_dispatch_type();
-      if (last_dispatch_type == DISPATCH_TYPE_PE_SOFT_REQ ||
-          last_dispatch_type == DISPATCH_TYPE_NONE ||
-          sconf_get_host_order_changed()) {
+      if (sconf_get_last_dispatch_type() != DISPATCH_TYPE_FAST || sconf_get_host_order_changed()) {
          DPRINTF(("SORTING HOSTS!\n"));
-         if (sconf_get_queue_sort_method() == QSM_LOAD) {
+         if (sconf_get_queue_sort_method() == QSM_LOAD)
             lPSortList(a->queue_list, "%I+ %I+", QU_host_seq_no, QU_seq_no);
-         } else {
+         else
             lPSortList(a->queue_list, "%I+ %I+", QU_seq_no, QU_host_seq_no);
-         }
       }
       if (a->is_soft) {
          sconf_set_last_dispatch_type(DISPATCH_TYPE_FAST_SOFT_REQ);
@@ -4764,6 +4718,12 @@ dispatch_t sge_sequential_assignment(sge_assignment_t *a)
             DPRINTF(("no earliest queue found!\n"));
          }
       } else {
+         if (a->is_soft) {
+            if (sconf_get_queue_sort_method() == QSM_LOAD)
+               lPSortList(a->queue_list, "%I+ %I+ %I+", QU_soft_violation, QU_host_seq_no, QU_seq_no);
+            else
+               lPSortList(a->queue_list, "%I+ %I+ %I+", QU_soft_violation, QU_seq_no, QU_host_seq_no);
+         }
 
          for_each (qep, a->queue_list) {
             if (lGetUlong(qep, QU_tag)) {
@@ -4962,11 +4922,7 @@ parallel_assignment(sge_assignment_t *a, category_use_t *use_category, int *avai
 
 
    /* must be understood in the context of changing queue sort orders */
-   if (a->is_soft) {
-      sconf_set_last_dispatch_type(DISPATCH_TYPE_PE_SOFT_REQ);
-   } else {
-      sconf_set_last_dispatch_type(DISPATCH_TYPE_PE);
-   }
+   sconf_set_last_dispatch_type(DISPATCH_TYPE_COMPREHENSIVE);
 
 #ifdef SGE_PQS_API
    /* if dynamic qsort function was supplied, call it */

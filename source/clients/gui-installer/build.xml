@@ -162,7 +162,6 @@ ___INFO__MARK_END__-->
             </fileset>
             <fileset dir="${build.classes.dir}">
                 <include name="com/sun/grid/installer/util/*.class"/>
-                <include name="com/sun/grid/installer/util/cmd/*.class"/>
                 <exclude name="com/sun/grid/installer/util/Util.class"/>
             </fileset>
         </jar>
@@ -174,7 +173,6 @@ ___INFO__MARK_END__-->
             </fileset>
             <fileset dir="${build.classes.dir}">
                 <include name="com/sun/grid/installer/util/*.class"/>
-                <include name="com/sun/grid/installer/util/cmd/*.class"/>
                 <exclude name="com/sun/grid/installer/util/Util.class"/>
             </fileset>
         </jar>
@@ -186,7 +184,6 @@ ___INFO__MARK_END__-->
             </fileset>
             <fileset dir="${build.classes.dir}">
                 <include name="com/sun/grid/installer/util/*.class"/>
-                <include name="com/sun/grid/installer/util/cmd/*.class"/>
                 <exclude name="com/sun/grid/installer/util/Util.class"/>
             </fileset>
         </jar>
@@ -203,7 +200,6 @@ ___INFO__MARK_END__-->
             </fileset>
             <fileset dir="${build.classes.dir}">
                 <include name="com/sun/grid/installer/util/*.class"/>
-                <include name="com/sun/grid/installer/util/cmd/*.class"/>
                 <exclude name="com/sun/grid/installer/util/ExtendedFile.class"/>
             </fileset>
         </jar>
@@ -300,8 +296,8 @@ ___INFO__MARK_END__-->
     </target>
 
     <target name="clean" if="isJavaBuildHost">
-        <delete dir="build"/>
-        <delete dir="dist"/>
+        <delete dir="${build.dir}"/>
+        <delete dir="${dist.dir}"/>
         <delete dir="bin"/>
     </target>
 

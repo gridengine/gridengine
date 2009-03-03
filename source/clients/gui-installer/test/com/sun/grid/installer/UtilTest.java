@@ -29,7 +29,7 @@
  *
  ************************************************************************/
 /*___INFO__MARK_END__*/
-package com.sun.grid.installer.util;
+package com.sun.grid.installer;
 
 import com.sun.grid.installer.gui.Host;
 import com.sun.grid.installer.util.Util;
@@ -286,12 +286,7 @@ public class UtilTest {
         testParseIpPattern("10.11.12.13.14",  Arrays.asList(""));
     }
 
-    @Test
-    public void testParseIpPattern11() {
-        List<String> exp = new ArrayList<String>();
-        testParseIpPattern("10.11.12.13-14",  Arrays.asList("10.11.12.13", "10.11.12.14"));
-    }
-
+    
     private void testParseIpPattern(String input, List<String> expResult) {
         System.out.println("parseIpPattern: "+input);
         assertEquals(expResult, Util.parseIpPattern(input));

@@ -58,6 +58,7 @@ static int ls_send_command(lListElem *elem, const char *command);
 static pid_t sge_ls_get_pid(lListElem *this_ls);
 static void sge_ls_set_pid(lListElem *this_ls, pid_t pid);
 static int sge_ls_status(lListElem *this_ls);
+static void sge_set_ls_fds(lListElem *this_ls, fd_set *fds);
 static lListElem *sge_ls_create_ls(const char* qualified_hostname, char *name, const char *scriptfile);
 static void sge_ls_start_ls(const char *qualified_hostname, lListElem *this_ls);
 static void sge_ls_stop_ls(lListElem *this_ls, int send_no_quit_command);
@@ -395,6 +396,37 @@ static void sge_ls_stop_ls(lListElem *this_ls, int send_no_quit_command)
    sge_ls_set_pid(this_ls, -1);
    DEXIT;
    return;
+}
+
+/****** execd/loadsensor/sge_set_ls_fds() *************************************
+*  NAME
+*     sge_set_ls_fds -- set flags of communication FILE streams
+*
+*  SYNOPSIS
+*     static void sge_set_ls_fds(lListElem *this_ls, fd_set *fds)
+*
+*  FUNCTION
+*     set flags of communication FILE streams
+*
+*  INPUTS
+*     this_ls - pointer to a CULL element of type LS_Type
+*     fds - some flags
+*
+*  RESULT
+*     [this_ls] flags of FILE streams (LS_out, LS_in, LS_err) will be modified 
+******************************************************************************/
+static void sge_set_ls_fds(lListElem *this_ls, fd_set *fds)
+{
+   int name[3] = { LS_out, LS_in, LS_err };
+   FILE *file;
+   int i;
+
+   for (i = 0; i < 3; i++) {
+      file = lGetRef(this_ls, name[i]);
+      if (file) {
+         FD_SET(fileno(file), fds);
+      }
+   }
 }
 
 /****** execd/loadsensor/read_ls() ********************************************
@@ -935,3 +967,28 @@ void sge_ls_stop(int exited)
    DRETURN_VOID;
 }
 
+/****** execd/loadsensor/set_ls_fds() *****************************************
+*  NAME
+*     set_ls_fds -- set flags of all loadsensor streams 
+*
+*  SYNOPSIS
+*     void set_ls_fds(fd_set *fds)
+*  
+*  INPUTS
+*     fds -- attributes which should be set for all ls streams
+*
+*  FUNCTION
+*     set flags of all loadsensor streams
+******************************************************************************/
+void set_ls_fds(fd_set *fds)
+{
+   lListElem *ls_elem;
+
+   DENTER(TOP_LAYER, "set_ls_fds");
+
+   for_each(ls_elem, ls_list) {
+      sge_set_ls_fds(ls_elem, fds);
+   }
+
+   DRETURN_VOID;
+}

@@ -354,8 +354,8 @@ public class HelpFrame extends JFrame implements ActionListener, Config {
     public static HelpFrame getHelpFrame(InstallerFrame parent, InstallData idata) {
         if (helpFrame == null) {
             helpFrame = new HelpFrame(parent, idata);
-            helpFrame.setLocationRelativeTo(parent);
-            helpFrame.setSize(parent.getWidth() - 80, parent.getHeight() - 80);
+            helpFrame.setLocationRelativeTo(null);
+            helpFrame.setSize(DEF_WIDTH, DEF_HEIGH);
 
             // imitate docked window
             Rectangle screenRect = new Rectangle(Toolkit.getDefaultToolkit().getScreenSize());

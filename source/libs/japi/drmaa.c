@@ -2645,33 +2645,30 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
       args = (char **)malloc(sizeof(char *) * (num_args + 1));
       memset(args, 0, sizeof(char *) * (num_args + 1));
 
-      DPRINTF(("processing %s, count %d = \"%s\"\n", DRMAA_NATIVE_SPECIFICATION, num_args, value));
+      DPRINTF(("processing %s = \"%s\"\n", DRMAA_NATIVE_SPECIFICATION, value));
 
-      if (num_args != 0) { 
-         sge_parse_args(value, args);
-         opt_list_append_opts_from_qsub_cmdline(prog_number, &opts_native, &alp,
-                                                 args, environ);
+      sge_parse_args(value, args);
+      opt_list_append_opts_from_qsub_cmdline(prog_number, &opts_native, &alp,
+                                              args, environ);
 
-         if (answer_list_has_error(&alp)) {
-            answer_list_to_dstring(alp, diag);
-            lFreeList(&opts_defaults);
-            lFreeList(&opts_native);
-            lFreeList(&alp);
-            lFreeElem(&jt);
-            DRETURN(DRMAA_ERRNO_DENIED_BY_DRM);
-         }
-      }
- 
-     /* Free the args. */
-     while (num_args >= 0) {
+      /* Free the args. */
+      while (num_args >= 0) {
          FREE(args[num_args]);
          num_args--;
       }
 
       /* Free the args array. */
       FREE(args);
+
+      if (answer_list_has_error(&alp)) {
+         answer_list_to_dstring(alp, diag);
+         lFreeList(&opts_defaults);
+         lFreeList(&opts_native);
+         lFreeList(&alp);
+         lFreeElem(&jt);
+         DRETURN(DRMAA_ERRNO_DENIED_BY_DRM);
+      }
    }
-   
    lFreeList(&alp);
 
    if ((drmaa_errno = opt_list_append_opts_from_drmaa_attr(&opts_drmaa, 

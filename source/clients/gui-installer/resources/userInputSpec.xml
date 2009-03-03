@@ -142,14 +142,14 @@ ___INFO__MARK_END__-->
         <field type="text" variable="cfg.admin.mail" conditionid="cond.install.qmaster">
             <spec set="none" size="35" id="cfg.admin.mail.label" />
             <validator id="cfg.admin.mail.regularexpressionvalidator" class="com.izforge.izpack.util.RegularExpressionValidator">
-                <param name="pattern" value="[a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+([.][a-zA-Z0-9_-]+)*[.][a-zA-Z0-9._-]{2,4}|none|[ ]*" />
+                <param name="pattern" value="[[a-zA-Z0-9._-]{3,}@[a-zA-Z0-9._-]+([.][a-zA-Z0-9_-]+)*[.][a-zA-Z0-9._-]{2,4}]{0,}" />
             </validator>
             <validator id="cfg.admin.mail.fillifemptyvalidator" class="com.sun.grid.installer.gui.FillIfEmptyValidator">
                 <param name="default" value="none"/>
             </validator>
         </field>
         <field type="space" />
-        <field type="check" variable="cfg.add.to.rc" conditionid="(!(cond.no.connect.user)|cond.user.root)+(cond.install.qmaster|cond.install.execd|cond.install.bdb)">
+        <field type="check" variable="cfg.add.to.rc" conditionid="cond.user.root+cond.install.qmaster|cond.install.execd|cond.install.bdb">
             <spec align="left" id="cfg.add.to.rc.label" true="true" false="false" />
         </field>
         <field type="check" variable="add.sge.jmx" conditionid="cond.install.qmaster+cond.custom.install">
@@ -278,12 +278,12 @@ ___INFO__MARK_END__-->
         </field>
     </panel>
     <panel id="CSPPanel">
-        <!--<field type="check" variable="cfg.csp.recreate">
+        <field type="check" variable="cfg.csp.recreate">
             <spec align="left" id="cfg.csp.recreate.label" true="true" false="false" />
         </field>
         <field type="check" variable="cfg.csp.copy.certs">
             <spec align="left" id="cfg.csp.copy.certs.label" true="true" false="false" />
-        </field>-->
+        </field>
         <field type="text" variable="cfg.csp.country.code">
             <spec id="cfg.csp.country.code.label" size="25" />
             <validator id="cfg.csp.country.code.notemptyvalidator" class="com.izforge.izpack.util.NotEmptyValidator" />

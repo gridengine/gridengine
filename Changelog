@@ -1,252 +1,7 @@
-RD-2009-02-19-0: CVS:         Created V62u2_TAG
------------------------------------------------
-
-LP-2009-02-19-0: Bugfix:      gui-installer: cancel button does not work during
-                              installation
-                              gui-installer: timeout values not correctly
-                              enforced when machine is overloaded
-                 Review:      ZG
-
-LP-2009-02-17-1: Bugfix:      - fixed no newline at end of file in GUI installer
-                                help pages
-                 Review:      ZG
-
-LP-2009-02-17-0: Bugfix:      - fixed no newline at end of file in GUI installer
-                                help pages
-                 Review:      TBD
-
-RD-2009-02-17-0: Bugfix:      - disabled jemalloc for lx24-x86 and lx24-ia64
-                              - fixed no newline at end of file in GUI installer
-                                templates
-                 Review:      JG
-
-ZG-2009-02-16-0: Bugfix:      Update docs
-
-DG-2009-02-16-0: Bugfix:      Installation of execd on AIX will fail on filesystems
-                              with root to nobody mapping when trying to copy 
-                              loadsensor script automatically.
-                 Review:      HP
-
-JG-2009-02-16-0: Bugfix:      qrsh (new interactive job support) does not work
-                              with host aliasing
-                 Bugster:     6805914
-                 Issue:       2915
-                 Review:      RD
-
-LP-2009-02-16-0: Bugfix:      gui-installer: Installation might fail for C shell
-                              users
-                 Bugfix:      gui-installer: Windows installation via rsh does
-                              not work
-                 Bugfix:      gui-installer: Infinite loop when installing
-                              win execd host due to missing LOCAL_EXECD_SPOOL
-                 Belongs to:  LP-2009-02-13-1
-                 Bugster:     6808084
-                 Issue:       2927
-                 Bugfix:      gui-installer: Install button not enabled when
-                              going back and forth
-                 Bugfix:      gui-installer: ant clean target does not delete
-                              dist and build directories
-                 Bugfix:      gui-installer: When installing qmaster with shadow
-                              daemons, it should be shadowd too
-                 Bugfix:      gui-installer: Windows hosts should have a
-                              suggested default local spool dir
-                 Bugfix:      gui-installer: Install progress bar goes backwards
-                              for a while
-                 Bugfix:      gui-installer: Log might be empty due to '!' in
-                              command output
-                 Enhancem:    gui-installer: Increased default timeout values
-                 Enhancem:    gui-installer: Support for windows connect_mode
-                 Review:      ZG
-
-CR-2009-02-16-0: Bugfix:      o sge_execd may crash at start-up time due to 
-                                fd_set used incorrectly in sge_close_all_fds()
-                 Bugster:     6288945
-                 Issue:       505
-                 Bugfix:      o jsv_is_send_ready() now uses poll() system
-                                call when USE_POLL is defined
-                 Cleanup:     o removed not used functions in sge_execd
-                 Enhancem.:   o new utilib function: sge_get_max_fd()
-                 Review:      RD
-
-EB-2009-02-16-0: Doc:		   added new manpage describing the JSV script
-                              interface
-                 Review:      SK
-
-ZG-2009-02-15-2: Bugfix:      gui-installer: rcp does not support '-l' switch to
-                              specify user
-                 Review:      LP
-
-LP-2009-02-13-2: Bugfix:      gui-installer: Updated help pages to reflect
-                              latest changes
-                 Review:      ZG
-
-ZG-2009-02-13-0: Bugfix:      gui-installer: have to be able to change the user
-                              name to adopt to Windows hosts naming convention
-                 Bugfix:      gui-installer: have to distinguish between normal
-                              and Windows host installation to apply domain name
-                              prefix to user name
-                 Bugfix:      for Windows host the local execd spool dir is necessary
-                 Bugfix:      check admin user's permissions regarding to SGE_ROOT
-                              after Main Configuration panel
-                 Review:      LP
-
-LP-2009-02-13-1: Bugfix:      gui-installer: Infinite loop when installing
-                              win execd host due to missing LOCAL_EXECD_SPOOL
-                 Bugfix:      gui-installer: Installing windows hosts fail due
-                              to wrong connect user (introduced windows mode)
-                 Review:      ZG
-
-DG-2009-02-13-0: Bugfix:      Fixed Java DRMMA bug when parsing 
-                              native specification with empty string. 
-                 Belongs to:  RD-2009-02-05-0 
-                 Bugster:     6802994
-                 Issue:       2910
-                 Review:      RD
-
-LP-2009-02-13-0: Bugfix:      gui-installer: CSP installation will fail if
-                              SGE_CELL is set before starting gui-installer
-                 Bugfix:      gui-installer: CSP installation possible only with
-                              rsh (ssh should work too)
-                 Bugfix:      gui-installer: Install log might contain only a
-                              message /tmp/install.6554 is missing
-                 Enhancem.:   gui-installer: Support for connect_user
-                 Bugfix:      gui-installer: Works properly only with sh or bash
-                              as default root/connect_user shell
-                 Bugfix:      gui-installer: UI fixes
-                 Review:      ZG
-
-AA-2009-02-12-0: Bugfix:      qmon: duration and end_time fields in
-                                    Advance Reservation Window are both effective
-                                    Spinbox problems on lx26-amd64
-                                    reverting mem leak fix which leads to crash
-                 Bugster:     6804626
-                 Review:      RD
-
-ZG-2009-02-12-1: Bugfix:      Invalid parsing of installer.jar arguments
-                 Bugfix:      Spooling method gets modified after checking hosts
-                 Bugfix:      Qmaster is always in the shadow host list
-                 Bugfix:      Time-out state is missing
-                 Enhacem.:    Shadow component is unchecked by default 
-                 Enhacem.:    Admin component is unchecked by default
-                 Review:      LP
-
-RD-2009-02-12-1: Bugfix:      fixed jemalloc deadlock with old linux pthread implementations
-                 Review:      JG 
-
-HP-2009-02-12-0: Bugfix:      fixed wrong description of parameters of -j option in
-                              qacct(1) man page
-                 Review:      JG
-
-RD-2009-02-12-0: Bugfix:      fixed more qmon memory leaks
-                 Belongs to:  RD-2009-02-11-1
-                 Review:      AA
-
-RD-2009-02-11-4: Bugfix:      fixed parsing warning in jsv(1)
-                 Review:      JG
-
-RD-2009-02-11-3: CVS:         Created V62u2_RC2_TAG
----------------------------------------------------
-
-EB-2009-02-11-0: Bugfix:      Messages on JSV stderr stream are now logged to message file
-                              but next job is not rejected anymore if the message occured 
-                              before the START command was sent.
-                 Review:      MD
-
-ZG-2009-02-11-0: Bugfix:      './start_gui_installer -help' does not terminates
-                 Bugfix:      fix cancel button behaviour
-                 Bugfix:      on NFS the root user does not have permission to
-                              write into cell directory
-
-RD-2009-02-11-1: Bugfix:      fixed qmon memory leaks
-                 Review:      AA
-
-RD-2009-02-11-0: Bugfix:      jemalloc was not effective because it was too late in the
-                              linker command line
-                 Review:      JG
-
-CR-2009-02-11-0: Bugfix:      fixed sge_shadowd core dump when it has to start
-                              a new qmaster daemon
-                 Belongs to:  AA-2009-01-14-0
-                 Review:      MD
-
-LP-2009-02-10-0: Bugfix:      gui-installer: check_host might always fail due to
-                              invalid architecture
-                 Bugfix:      gui-installer: installation will fail on different
-                              architectures from the current host
-                 Enhacem.:    gui-installer: can change thread pool sizes and
-                              resolve/install timeout values as arguments
-                 Review:      ZG
-
-RD-2009-02-10-0: Bugfix:      fixed memory leaks and access to uninitialized variables
-                 Review:      AA
-
-EB-2009-02-10-0: Cleanup:     Removed debug code and added ADOC comments
-                 Review:      AS, MD
-
-RD-2009-02-09-1: Bugfix:      spooledit can not handle lines greater than 255 chars
-                 Bugster:     6802883
-                 Issue:       2908
-                 Review:      JG
-
-RD-2009-02-09-0: Enhancem.:   - reduced queue instance sorting during dispatch runs
-                              - improved hash recreation necessary after
-                                list sorting
-                              - fixed build dependency for test_performance
-                 Review:      JG
-
-LP-2009-02-06-0: Bugfix:      inst_sge -copycerts in AUTO mode does not work
-                 Bugster:     6808089
-                 Issue:       2928
-                 Bugfix:      gui-installer: IPs treated as hostnames
-                 Bugfix:      gui-installer: prerequisites/final tasks now
-                              displayed in the install list
-                 Bugfix:      gui-installer: Can't add only admin/submit hosts
-                 Bugfix:      gui-installer: admin/submit only hosts should not
-                              skipped by the installer
-                 Bugfix:      gui-installer: Many errors not discovered when rsh
-                              is used (rsh always returns 0)
-                 Bugfix:      gui-installer: Removed unnecessary fields in CSP
-                              certificate screen
-                 Bugfix:      gui-installer: admin/submit host list in the final
-                              readme may be incomplete
-                 Bugfix:      gui-installer: CSP panel shown in incorrect
-                              scenarios
-                 Bugfix:      gui-installer: ProgressBar sometimes not shown
-                 Enhancem:    gui-installer: Improved task timeout times
-                 Enhancem.:   gui-installer: Improved installation log formatting
-                 Enhancem.:   gui-installer: check_host does not need to be done
-                              for admin/submit only hosts
-                 Enhancem.:   gui-installer: Improved installation panel UE
-                 Cleanup:     gui-installer: Util and CommandExecutor
-                 Review:      ZG
-
-JG-2009-02-06-0: Bugfix:      qrstat -help shows advance reservations
-                 Bugster:     6801151
-                 Issue:       2903
-                 Review:      RD
-
-CR-2009-02-05-0: Bugfix:      module test test_issues (commlib) might fail on
-                              fast hosts
-                 Review:      AH
-
-RD-2009-02-05-1: Bugfix:      fixed critical scheduler message logged wrongly
-                 Review:      DG
-
-RD-2009-02-05-0: Bugfix:      - fixed buffer overrun in drmaa
-                              - test_drmaa did not executed drmaa_exit in
-                                case of success
-                 Belongs to:  JG-2009-01-28-0
-                 Bugster:     6802994
-                 Review:      DG
-
 RD-2009-02-03-1: CVS:         Created V62u2_RC1_TAG
 ---------------------------------------------------
 
 LP-2009-02-03-1: Bugfix:      gui-installer: SMF not used at all
-                 Bugfix:      Autoinstallion on loopback interface ends with
-                              exit 0
-                 Bugster:     6800497
-                 Issue:       2929
                  Review:      AA
 
 LP-2009-02-03-0: Bugfix:      gui-installer: admin/submit hosts not set properly
@@ -254,6 +9,9 @@ LP-2009-02-03-0: Bugfix:      gui-installer: admin/submit hosts not set properly
                  Bugfix:      gui-installer: CSP installation does not work
                               properly
                  Bugster:     6790504
+                 Bugfix:      Autoinstallion on loopback interface ends with
+                              exit 0
+                 Bugster:     6800497
                  Review:      ZG
 
 ZG-2009-02-03-0: Bugfix:      gui-installer: it's not possible to switch-off
@@ -756,15 +514,9 @@ RD-2008-12-11-1: CVS:         Created V62u2alpha3_TAG
 -----------------------------------------------------
 
 LP-2008-12-11-0: Bugfix:      ADMIN_USER not used in auto install mode
-                 Bugster:     6808600
-                 Issue:       2930
                  Bugfix:      When all.q or allhosts already exists qmaster
                               installation fails
-                 Bugster:     6673742
-                 Issue:       2594
                  Bugfix:      ShutdownQmaster - can't use SMF when not root
-                 Bugster:     6808604
-                 Issue:       2931
                  Bugfix:      Removed No CSP System installed message in auto
                               installation
                  Bugfix:      Fixed gui-installer, test, javadoc, clean targets
@@ -893,8 +645,6 @@ LP-2008-12-09-0: Enhancem.:   Reverted default to no-jmx (SGE 6.2 behavior)
 
 LP-2008-12-08-0: Bugfix:      qmaster auto installation with jmx will fail if
                               CSP_RECREATE flag is not set
-                 Bugster:     6808597
-                 Issue:       2932
                  Following changes apply to clients/gui-installer
                  Cleanup:     Removed install key shortcut
                  Bugfix:      inst_sge - fixed variable settings for -autogui
@@ -980,8 +730,6 @@ ZG-2008-12-03-0: Enhancem.:   improve mk_ascman script the way to generate html
                  Review:      LP
 
 LP-2008-12-02-0: Enhancem.:   autoconf doesn't need JMX args for execd uninstall
-                 Bugster:     6808594
-                 Issue:       2933
                  Following changes apply to clients/gui-installer
                  Bugfix:      jvm library name now resolved correctly on MacOS
                  Bugfix:      SSL enabled by default for JMX

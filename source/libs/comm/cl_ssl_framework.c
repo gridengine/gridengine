@@ -3605,10 +3605,9 @@ static int cl_com_ssl_connection_request_handler_setup_finalize(cl_com_connectio
 
    CL_LOG(CL_LOG_INFO,"===============================");
    CL_LOG(CL_LOG_INFO,"SSL server setup done:");
-   CL_LOG_INT(CL_LOG_INFO,"server fd:", private->sockfd);
-   CL_LOG_STR(CL_LOG_INFO,"host:     ", connection->local->comp_host);
-   CL_LOG_STR(CL_LOG_INFO,"component:", connection->local->comp_name);
-   CL_LOG_INT(CL_LOG_INFO,"id:       ", (int) connection->local->comp_id);
+   CL_LOG_STR(CL_LOG_INFO,"host:     ",connection->local->comp_host);
+   CL_LOG_STR(CL_LOG_INFO,"component:",connection->local->comp_name);
+   CL_LOG_INT(CL_LOG_INFO,"id:       ",(int)connection->local->comp_id);
    CL_LOG(CL_LOG_INFO,"===============================");
    return CL_RETVAL_OK;
 }
@@ -3952,13 +3951,8 @@ int cl_com_ssl_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
       do_write_select = 1;
    }
 
-   if (select_mode == CL_W_SELECT) {
-      timeout.tv_sec = 0;
-      timeout.tv_usec = 5*1000; /* 5 ms */
-   } else {
-      timeout.tv_sec = timeout_val_sec; 
-      timeout.tv_usec = timeout_val_usec;
-   }
+   timeout.tv_sec = timeout_val_sec; 
+   timeout.tv_usec = timeout_val_usec;
 
    /* lock list */
    if ( cl_raw_list_lock(connection_list) != CL_RETVAL_OK) {
@@ -4414,7 +4408,7 @@ int cl_com_ssl_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
 
       errno = 0;
 #ifdef USE_POLL
-      select_back = poll(ufds, ufds_index, timeout.tv_sec*1000 + timeout.tv_usec/1000);
+      select_back = poll(ufds, ufds_index, timeout_val_sec*1000 + timeout_val_usec/1000);
 #else
       select_back = select(max_fd + 1, &my_read_fds, &my_write_fds, NULL, &timeout);
 #endif
@@ -5167,23 +5161,11 @@ int cl_com_ssl_connection_request_handler_cleanup(cl_com_connection_t* connectio
 }
 
 /* select mechanism */
-#ifdef USE_POLL
-int cl_com_ssl_open_connection_request_handler(cl_com_poll_t*        poll_handle,
-                                               cl_com_handle_t*      handle, 
-                                               cl_raw_list_t*        connection_list, 
+int cl_com_ssl_open_connection_request_handler(cl_raw_list_t*        connection_list, 
                                                cl_com_connection_t*  service_connection,
                                                int                   timeout_val_sec,
                                                int                   timeout_val_usec, 
-                                               cl_select_method_t    select_mode)
-#else
-int cl_com_ssl_open_connection_request_handler(cl_com_handle_t*      handle,
-                                               cl_raw_list_t*        connection_list,
-                                               cl_com_connection_t*  service_connection,
-                                               int                   timeout_val_sec,
-                                               int                   timeout_val_usec,
-                                               cl_select_method_t    select_mode)
-#endif
-{
+                                               cl_select_method_t    select_mode) {
    cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_NOT_SUPPORTED, "");
    return CL_RETVAL_SSL_NOT_SUPPORTED;
 }

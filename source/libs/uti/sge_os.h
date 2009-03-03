@@ -82,12 +82,11 @@ int sge_contains_pid(pid_t, pid_t *, int);
 
 int sge_checkprog(pid_t, const char *, const char *);
 
-void sge_close_all_fds(int* keep_open, unsigned long nr_of_fds);
-int sge_get_max_fd(void);
+void sge_close_all_fds(fd_set *keep_open);
 int sge_dup_fd_above_stderr(int *fd);
  
-int sge_daemonize(int *keep_open, unsigned long nr_of_fds, sge_gdi_ctx_class_t *context);
-
+int sge_daemonize(fd_set *keep_open, sge_gdi_ctx_class_t *context);
+ 
 int sge_occupy_first_three(void);
 
 bool sge_daemonize_prepare(sge_gdi_ctx_class_t *context);

@@ -230,7 +230,7 @@ public class HostTable extends JTable {
                 Host h;
                 for (int i = selectedHostIndexes.length - 1 ; i >= 0; i--) {
                     h = hostList.get(selectedHostIndexes[i]);
-                    list.add(h.getHostname());
+                    list.add(h.getHostAsString());
                 }
 
                 Util.saveListToFile(HostTable.this, list);
@@ -248,7 +248,7 @@ public class HostTable extends JTable {
                 HostList hostList = panel.getHostListAt(tabPos);
                 List<String> list = new ArrayList<String>();
                 for (Host h : hostList) {
-                    list.add(h.getHostname());
+                    list.add(h.getHostAsString());
                 }
 
                 Util.saveListToFile(HostTable.this, list);

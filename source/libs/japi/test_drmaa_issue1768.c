@@ -118,8 +118,5 @@ static drmaa_job_template_t *create_job_template(const char *job_path,
    /* job category */
    drmaa_set_attribute(jt, DRMAA_JOB_CATEGORY, job_cat, NULL, 0);
 
-   /* job native specification */
-   drmaa_set_attribute(jt, DRMAA_NATIVE_SPECIFICATION, "-ac test=\"one two three\"", NULL, 0);
-
    return jt;
 }

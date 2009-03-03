@@ -1621,11 +1621,9 @@ int cl_com_connection_get_fd(cl_com_connection_t* connection, int* fd) {
    switch(connection->framework_type) {
       case CL_CT_TCP: {
          ret_val = cl_com_tcp_get_fd(connection,fd);
-         break;
       }
       case CL_CT_SSL: {
          ret_val = cl_com_ssl_get_fd(connection,fd);
-         break;
       }
       case CL_CT_UNDEFINED: {
          ret_val = CL_RETVAL_NO_FRAMEWORK_INIT;
@@ -1634,12 +1632,9 @@ int cl_com_connection_get_fd(cl_com_connection_t* connection, int* fd) {
    }
 
    if (ret_val == CL_RETVAL_OK && (*fd < 0)) {
-      CL_LOG_INT(CL_LOG_ERROR, "got no valid port: ", *fd);
       ret_val = CL_RETVAL_NO_PORT_ERROR;
    }
-   if (ret_val != CL_RETVAL_OK) {
-      CL_LOG_STR(CL_LOG_WARNING, "Cannot get fd for connection:", cl_get_error_text(ret_val));
-   }
+
    return ret_val;
 }
 
@@ -1817,16 +1812,8 @@ static int cl_com_gethostbyname(const char *hostname_unresolved, cl_com_hostent_
 
    /* check if the incoming hostname is an ip address string */
    if (cl_com_is_ip_address_string(hostname_unresolved, &tmp_addr) == CL_TRUE) {
-      cl_com_hostent_t* tmp_hostent = NULL;
       CL_LOG(CL_LOG_INFO,"got ip address string as host name argument");
-      ret_val = cl_com_gethostbyaddr(&tmp_addr, &tmp_hostent, NULL);
-      if (ret_val == CL_RETVAL_OK) {
-         hostname = strdup(tmp_hostent->he->h_name);
-         cl_com_free_hostent(&tmp_hostent);
-         if (hostname == NULL) {
-            ret_val = CL_RETVAL_MALLOC;
-         }
-      }
+      ret_val = cl_com_cached_gethostbyaddr(&tmp_addr, &hostname, NULL, NULL);
       if (ret_val != CL_RETVAL_OK) {
          if (hostname != NULL) {
             free(hostname);

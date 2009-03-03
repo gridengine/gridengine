@@ -51,7 +51,7 @@ public class StateCellRenderer implements TableCellRenderer {
 
     private static final Color COLOR_GOOD = Color.GREEN;
     private static final Color COLOR_BAD  = Color.RED;
-    private static final Color COLOR_WARNING  = new Color(255, 215, 0); // Yellow
+    private static final Color COLOR_WARNING  = new Color(255, 225, 0); // Yellow
 
     /**
      * Constructor
@@ -79,9 +79,8 @@ public class StateCellRenderer implements TableCellRenderer {
             // differenciate between states
             switch (state) {
                 case RESOLVING:
-                case PROCESSING:
-                case CONTACTING:
-                case VALIDATING: { // running states
+                case INSTALLING:
+                case CONTACTING: { // running states
                     if (!progressBars.containsKey(Integer.valueOf(row))) {
                         progressBars.put(Integer.valueOf(row), new HostProgressBar(state.toString()));
                     }
@@ -109,7 +108,6 @@ public class StateCellRenderer implements TableCellRenderer {
                 case USED_QMASTER_PORT:
                 case USED_EXECD_PORT:
                 case USED_JMX_PORT:
-                case ADMIN_USER_NOT_KNOWN:
                 case UNKNOWN_ERROR: { // warning states
                     if (progressBars.containsKey(Integer.valueOf(row))) {
                         progressBars.remove(Integer.valueOf(row));

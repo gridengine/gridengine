@@ -33,9 +33,7 @@ package com.sun.grid.installer.gui;
 
 import com.izforge.izpack.util.Debug;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
-import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -115,48 +113,37 @@ public class HostList extends ArrayBlockingQueue<Host> {
     /**
      * Returns all of the host from the list in the given type.
      * @param type The type of the hosts should return.
-     * @return All of the hosts with the given type (list is unique)
+     * @return All of the hosts with the given type
      *
      * @see Host
      */
     public ArrayList<Host> getHosts(String type) {
         ArrayList<Host> result = new ArrayList<Host>();
-        ArrayList<String> hostnames = new ArrayList<String>();
 
         for (Host host : this) {
-            //We need a unique list of Hosts of single type
-            if (hostnames.contains(host.getHostname())) {
-                continue;
-            }
 
             if (type.equals(Host.HOST_TYPE_QMASTER) && host.isQmasterHost()) {
                 result.add(host);
-                hostnames.add(host.getHostname());
             }
             if (type.equals(Host.HOST_TYPE_EXECD) && host.isExecutionHost()) {
                 result.add(host);
-                hostnames.add(host.getHostname());
             }
             if (type.equals(Host.HOST_TYPE_SHADOWD) && host.isShadowHost()) {
                 result.add(host);
-                hostnames.add(host.getHostname());
             }
             if (type.equals(Host.HOST_TYPE_BDB) && host.isBdbHost()) {
                 result.add(host);
-                hostnames.add(host.getHostname());
             }
             if (type.equals(Host.HOST_TYPE_ADMIN) && host.isAdminHost()) {
                 result.add(host);
-                hostnames.add(host.getHostname());
             }
             if (type.equals(Host.HOST_TYPE_SUBMIT) && host.isSubmitHost()) {
                 result.add(host);
-                hostnames.add(host.getHostname());
             }
         }
 
         return result;
-     }
+    }
 
     /**
      * Creates a string from the host's name
@@ -165,37 +152,10 @@ public class HostList extends ArrayBlockingQueue<Host> {
      * @return The string from the host names
      */
     public static String getHostNames(ArrayList<Host> hosts, String separator) {
-        return getHostNames(hosts, null, separator);
-    }
-
-    /**
-     * Creates a string from the host's name
-     * @param hosts The host which names should be appended
-     * @param additionalHostnames The hostnames to be appendedt
-     * @param separator The separator string between the host names
-     * @return The string from the host names
-     */
-    public static String getHostNames(ArrayList<Host> hosts, List<String> additionalHostnames, String separator) {
         StringBuffer result = new StringBuffer();
-        List<String> finalList = new ArrayList<String>();
 
-        for (Host h : hosts) {
-            finalList.add(h.getHostname());
-        }
-
-        if (additionalHostnames != null) {
-            for (String hostname: additionalHostnames) {
-                if (!finalList.contains(hostname)) {
-                    finalList.add(hostname);
-                }
-            }
-        }
-        //Sort the list
-        Collections.sort(finalList);
-
-        //Create a string out of the list
-        for (int i = 0; i < finalList.size(); i++) {
-            result.append(finalList.get(i));
+        for (int i = 0; i < hosts.size(); i++) {
+            result.append(hosts.get(i).getHostAsString());
             // do not append separator to the end of the elements
             if (i + 1 != hosts.size()) {
                 result.append(separator);
@@ -207,10 +167,6 @@ public class HostList extends ArrayBlockingQueue<Host> {
 
     @Override
     public boolean add(Host o) {
-        return addHost(o) != null;
-    }
-    
-    public Host addHost(Host o) {
         //Debug.trace("adding - "+o.toString());
         if (o == null) {
             throw new NullPointerException();
@@ -243,10 +199,10 @@ public class HostList extends ArrayBlockingQueue<Host> {
                 if (o.isBdbHost()) {
                     h.setBdbHost(true);
                 }
-                return h;
+                return true;
             //TODO: Should be added only if we are actually installing that type
             } else { //if (o.isQmasterHost() || o.isAdminHost() || o.isExecutionHost() || o.isShadowHost() || o.isSubmitHost() || o.isBdbHost()) {
-                return (super.add(o) ? o : null);
+                return super.add(o);
             }
             //return false;
         } finally {

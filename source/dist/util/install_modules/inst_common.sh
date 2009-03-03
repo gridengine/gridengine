@@ -115,7 +115,7 @@ BasicSettings()
 
   HOST=`$SGE_UTILBIN/gethostname -name`
   if [ "$HOST" = "" ]; then
-     echo "can't get hostname of this machine. Installation failed."
+     $INFOTEXT -e "can't get hostname of this machine. Installation failed."
      exit 2
   fi
 
@@ -1476,7 +1476,7 @@ CheckForLocalHostResolving()
                 "physical or logical network interfaces of this machine.\n\n" \
                 "Installation failed.\n\n" \
                 "Press <RETURN> to exit the installation procedure >> "
-      exit 2
+      exit
    fi
 }
                
@@ -3653,8 +3653,7 @@ CopyCA()
       "<%s> host? (y/n) [y] >>" $out_text
    fi
 
-   if [ "$AUTOGUI" != "true" ]; then #GUI made has the correct shell already
-    if [ "$?" = 0 ]; then
+   if [ "$?" = 0 ]; then
       $INFOTEXT "You can use a rsh or a ssh copy to transfer the cert files to each\n" \
                 "<%s> host (default: ssh)" $out_text
       $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" -n "Do you want to use rsh/rcp instead of ssh/scp? (y/n) [n] >>"
@@ -3668,9 +3667,8 @@ CopyCA()
          $INFOTEXT -log "The remote copy command <%s> could not be found!" $COPY_COMMAND
          return
       fi
-    else
+   else
       return
-    fi
    fi
 
    if [ "$hosttype" = "execd" ]; then

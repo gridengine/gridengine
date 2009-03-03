@@ -30,10 +30,6 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.installer.gui;
 
-import java.text.MessageFormat;
-import java.util.Properties;
-import javax.swing.JOptionPane;
-import javax.swing.JTable;
 import javax.swing.event.TableModelEvent;
 
 public class HostSelectionTableModel extends SortedTableModel {
@@ -42,9 +38,6 @@ public class HostSelectionTableModel extends SortedTableModel {
     final private Class[] types;
 
     private HostList hostList;
-    private JTable table;
-
-    private Properties langProperies;
 
     // To ensure the qmaster host singularity among diff. tables, default: no qmaster
     private static Host qmasterHost = null;
@@ -52,13 +45,11 @@ public class HostSelectionTableModel extends SortedTableModel {
     // To ensure the Berkeley db host singularity among diff. tables, default: no bdb server
     private static Host bdbHost = null;
 
-    public HostSelectionTableModel(JTable table, HostList hostList, String [] headers, Class[] types, Properties langProperies) {
+    public HostSelectionTableModel(HostList hostList, String [] headers, Class[] types) {
         super(new Object[][]{}, headers);
-        this.table = table;
         this.headers = headers;
         this.types = types;
         this.hostList = hostList;
-        this.langProperies = langProperies;
     }
 
     @Override
@@ -178,55 +169,13 @@ public class HostSelectionTableModel extends SortedTableModel {
         Host h = hostList.get(row);
         
         switch (col) {
-            case 3: {
-                // if there is already a qmaster host and it's not the selected host...
-                if (qmasterHost != null && !qmasterHost.equals(h)) {
-                    // ...ask whether the user want to change qmaster host selection
-                    String message = MessageFormat.format(langProperies.getProperty("msg.qmasterhost.already.selected"), h.getHostname(), qmasterHost.getHostname());
-                    if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(table, message, 
-                            langProperies.getProperty("title.confirmation"), JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE)) {
-                        qmasterHost.setQmasterHost(false);
-                        fireTableCellUpdated(getRowIndex(hostList.indexOf(qmasterHost)), col);
-
-                        h.setQmasterHost(true);
-                        fireTableCellUpdated(row, col);
-
-                        qmasterHost = h;
-                        return true;
-                    } else {
-                        return false;
-                    }
-                } else {
-                    return true;
-                }
-            }
+            case 3: return (qmasterHost == null || qmasterHost.equals(h));
             case 4:
             case 5:
             case 6:
             case 7:
             case 8: return true;
-            case 9: {
-                // if there is already a bdb host and it's not the selected host...
-                if (bdbHost != null && !bdbHost.equals(h)) {
-                    // ...ask whether the user want to change bdb host selection
-                    String message = MessageFormat.format(langProperies.getProperty("msg.bdbhost.already.selected"), h.getHostname(), bdbHost.getHostname());
-                    if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(table, message,
-                            langProperies.getProperty("title.confirmation"), JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE)) {
-                        bdbHost.setBdbHost(false);
-                        fireTableCellUpdated(getRowIndex(hostList.indexOf(bdbHost)), col);
-
-                        h.setBdbHost(true);
-                        fireTableCellUpdated(row, col);
-
-                        bdbHost = h;
-                        return true;
-                    } else {
-                        return false;
-                    }
-                } else {
-                    return true;
-                }
-            }
+            case 9: return (bdbHost == null || bdbHost.equals(h));
             default: return false;
         }
     }    
@@ -251,37 +200,33 @@ public class HostSelectionTableModel extends SortedTableModel {
             return;
         }
 
-        if (row > -1) {
-            fireTableCellUpdated(row, 4);
-        }
+        fireTableCellUpdated(row, 4);
     }
 
-    public Host addHost(Host h) {
+    public boolean addHost(Host h) {
         int row = hostList.size();
 
-        h = hostList.addHost(h);
-
-        if (h != null) {
-            if (h.isQmasterHost()) {
-                if (qmasterHost != null && !qmasterHost.equals(h)) {
-                    h.setQmasterHost(false);
-                } else {
-                    qmasterHost = h;
-                }
+        if (h.isQmasterHost()) {
+            if (qmasterHost != null && !qmasterHost.equals(h)) {
+                h.setQmasterHost(false);
+            } else {
+                qmasterHost = h;
             }
-
-            if (h.isBdbHost()) {
-                if (bdbHost != null && !bdbHost.equals(h)) {
-                    h.setBdbHost(false);
-                } else {
-                    bdbHost = h;
-                }
-            }
-
-            fireTableRowsInserted(row, row);
         }
 
-        return h;
+        if (h.isBdbHost()) {
+            if (bdbHost != null && !bdbHost.equals(h)) {
+                h.setBdbHost(false);
+            } else {
+                bdbHost = h;
+            }
+        }
+
+        if (!hostList.add(h)) {
+            return false;
+        }
+        fireTableRowsInserted(row, row);
+        return true;
     }
 
     public void removeHost(Host h) {
@@ -302,11 +247,9 @@ public class HostSelectionTableModel extends SortedTableModel {
             bdbHost = null;
         }
 
-        if (row > -1) {
-            reSort();
-
-            fireTableRowsDeleted(row, row);
-            fireTableChanged(new TableModelEvent(this));
-        }
+        reSort();
+        
+        fireTableRowsDeleted(row, row);
+        fireTableChanged(new TableModelEvent(this));
     }
 }

@@ -129,9 +129,6 @@ bool task_get_duration(u_long32 *duration, const lListElem *ja_task) {
 
    if (ja_task != NULL) {
       *duration = lGetUlong(ja_task, JAT_wallclock_limit);
-      if (*duration == U_LONG32_MAX) {
-         *duration = sconf_get_default_duration();
-      }
    } else {
       *duration = sconf_get_default_duration();
    }

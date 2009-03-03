@@ -77,22 +77,20 @@ static bool
 sge_parse_from_file_qrstat(const char *file, lList **ppcmdline, lList **alpp);
 
 static bool 
-sge_parse_qrstat(sge_gdi_ctx_class_t *ctx, lList **answer_list,
-                 qrstat_env_t *qrstat_env, lList **cmdline)
+sge_parse_qrstat(lList **answer_list, qrstat_env_t *qrstat_env, lList **cmdline)
 {
    bool ret = true;
    
    DENTER(TOP_LAYER, "sge_parse_qrstat");
 
    qrstat_env->is_summary = true;
-   while (lGetNumberOfElem(*cmdline)) {
+   while(lGetNumberOfElem(*cmdline)) {
       u_long32 value;
    
       /* -help */
       if (opt_list_has_X(*cmdline, "-help")) {
          sge_usage(QRSTAT, stdout);
-         DEXIT;
-         SGE_EXIT((void**)&ctx, 0);
+         break;
       }
 
       /* -u */
@@ -136,7 +134,7 @@ sge_parse_qrstat(sge_gdi_ctx_class_t *ctx, lList **answer_list,
    } 
 
    if (qrstat_env->is_summary) {
-      char user[128] = "";
+      char  user[128] = "";
       if (sge_uid2user(geteuid(), user, sizeof(user), MAX_NIS_RETRIES)) {
          answer_list_add_sprintf(answer_list, STATUS_ESEMANTIC, ANSWER_QUALITY_CRITICAL, MSG_SYSTEM_RESOLVEUSER);
          ret = false;
@@ -209,7 +207,7 @@ int main(int argc, char **argv) {
    /* 
     * stage 2: evalutate switches and modify qrstat_env
     */
-   if (!sge_parse_qrstat(ctx, &answer_list, &qrstat_env, &pcmdline)) {
+   if (!sge_parse_qrstat(&answer_list, &qrstat_env, &pcmdline)) {
       answer_list_output(&answer_list);
       lFreeList(&pcmdline);
       goto error_exit;

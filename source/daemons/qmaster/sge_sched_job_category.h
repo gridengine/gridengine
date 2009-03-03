@@ -45,11 +45,9 @@ lList *sge_category_job_copy(lList *queue_list, lList **orders, bool monitor_nex
 ** ------------ to be called from within the decision-making layer 
 */
 
-void sge_reject_category(lRef cat, bool with_reservation);
+void sge_reject_category(lRef cat);
 bool sge_is_job_category_rejected_(lRef cat);
-bool sge_is_job_category_reservation_rejected_(lRef cat);
 int sge_is_job_category_rejected(lListElem *job);
-int sge_is_job_category_reservation_rejected(lListElem *job);
 int sge_reset_job_category(void);
 bool sge_is_job_category_message_added(lRef cat);
 void sge_set_job_category_message_added( lRef cat );

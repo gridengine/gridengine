@@ -1990,7 +1990,6 @@ u_long32 isXML
             lList *jbList = NULL;
             lListElem *jbElem = NULL;
             lListElem *tmp_jbElem = NULL;
-            
             tmp_msgElem = lNext(msgElem);
             jbList = lGetList(msgElem, MES_job_number_list);
             jbElem = lFirst(jbList);
@@ -2014,7 +2013,8 @@ u_long32 isXML
       lFreeList(&jlp);
       lFreeList(&alp);
       lFreeList(&jid_list);
-      DRETURN(0);
+      DEXIT;
+      return 0;
    }
 
    for_each(aep, alp) {
@@ -2025,7 +2025,8 @@ u_long32 isXML
    }
    lFreeList(&alp);
    if (!jobs_exist) {
-      DRETURN(1);
+      DEXIT;
+      return 1;
    }
 
    /* does jlp contain all information we requested? */
@@ -2076,9 +2077,9 @@ u_long32 isXML
                if (first_run) {
                   printf("%s:            ",MSG_SCHEDD_SCHEDULINGINFO);
                   first_run = 0;
-               } else {
-                  printf("%s", "                            ");
                }
+               else
+                  printf("%s", "                            ");
                printf("%s\n", lGetString(mes, MES_message));
             }
 
@@ -2091,9 +2092,8 @@ u_long32 isXML
                      if (first_run) {
                         printf("%s:            ",MSG_SCHEDD_SCHEDULINGINFO);
                         first_run = 0;
-                     } else {
+                     } else
                         printf("%s", "                            ");
-                     }
                      printf("%s\n", lGetString(mes, MES_message));
                   }
                }
@@ -2104,7 +2104,8 @@ u_long32 isXML
 
    lFreeList(&ilp);
    lFreeList(&jlp);
-   DRETURN(0);
+   DEXIT;
+   return 0;
 }
 
 static int qstat_show_job_info(sge_gdi_ctx_class_t *ctx, u_long32 isXML)

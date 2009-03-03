@@ -1,3 +1,5 @@
+#ifndef _SGE_DIRECTORY_H_
+#define _SGE_DIRECTORY_H_
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  *
@@ -28,46 +30,39 @@
  *   All Rights Reserved.
  *
  ************************************************************************/
-/*___INFO__MARK_END__*/
+/*___INFO__MARK_END__*/  
 
-package com.sun.grid.installer.util.cmd;
+#include "basis_types.h"
 
-import com.izforge.izpack.util.Debug;
-import com.sun.grid.installer.util.Util;
+typedef enum {
+   JOBS_SPOOL_DIR,
+   JOB_SPOOL_DIR,
+   JOB_SPOOL_DIR_AS_FILE,
+   JOB_SPOOL_FILE,
+   TASK_SPOOL_DIR,
+   TASK_SPOOL_FILE,
+   JOB_SCRIPT_DIR,
+   JOB_SCRIPT_FILE,
+   JOB_ACTIVE_DIR 
+} sge_file_path_id_t;
 
-public class SimpleLocalCommand extends com.sun.grid.installer.util.cmd.CmdExec {
-      private String command;
+typedef enum {
+   SPOOL_DEFAULT             = 0x0000,
+   SPOOL_HANDLE_AS_ZOMBIE    = 0x0001,
+   SPOOL_WITHIN_EXECD        = 0x0002
+} sge_spool_flags_t; 
 
-      public SimpleLocalCommand(String command) {
-          this(Util.RESOLVE_TIMEOUT, command);
-      }
+typedef enum {
+   FORMAT_DEFAULT      = 0x0000,
+   FORMAT_DOT_FILENAME = 0x0001,
+   FORMAT_FIRST_PART   = 0x0002,
+   FORMAT_SECOND_PART  = 0x0004,
+   FORMAT_THIRD_PART   = 0x0008
+} sge_file_path_format_t;
 
-      public SimpleLocalCommand(String... commands) {
-          this(Util.RESOLVE_TIMEOUT, getSingleCommand(commands));
-      }
+char *sge_get_file_path(char *buffer, sge_file_path_id_t,
+                        sge_file_path_format_t format_flags,
+                        sge_spool_flags_t spool_flags,
+                        u_long32 ulong_val1, u_long32 ulong_val2);
 
-      public SimpleLocalCommand(int timeout, String... commands) {
-          this(timeout, getSingleCommand(commands));
-      }
-
-      public SimpleLocalCommand(int timeout, String command) {
-          super(timeout);
-          this.command  = command;
-      }
-
-      public void execute() {
-          Debug.trace("Initializing SimpleLocalCommand: " + command + " timeout="+(MAX_WAIT_TIME/1000)+"sec");
-          super.execute(command);
-      }
-
-      private static String getSingleCommand(String... cmds) {
-        String singleCmd="";
-        for (String cmd : cmds) {
-           singleCmd += cmd + " ";
-        }
-        if (singleCmd.length() > 1) {
-            return singleCmd.substring(0, singleCmd.length() - 1);
-        }
-        return null;
-    }
-}
+#endif /* _SGE_DIRECTORY_H_ */

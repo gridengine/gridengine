@@ -719,7 +719,7 @@ u_long32 flags
    unsigned int dpl; /* directive_prefix length */
    FILE *fp;
    char *filestrptr = NULL;
-   int script_len = 0;
+   int script_len;
    char **str_table = NULL;
    lList *alp, *answer = NULL; 
    lListElem *aep;

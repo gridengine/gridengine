@@ -32,7 +32,11 @@
 package com.sun.grid.installer.gui;
 
 import com.izforge.izpack.installer.InstallerFrame;
-import java.awt.Rectangle;
+import com.izforge.izpack.util.Debug;
+import com.sun.grid.installer.util.FileHandler;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.ArrayList;
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -43,7 +47,6 @@ import javax.swing.JTextArea;
 public class LogFrame extends JFrame {
     private JTextArea textArea = null;
     private InstallerFrame parent = null;
-    private JScrollPane scrollPane = null;
 
     /**
      * Constructor
@@ -70,7 +73,7 @@ public class LogFrame extends JFrame {
         textArea = new JTextArea();
         textArea.setEditable(false);
 
-        scrollPane = new JScrollPane(textArea);
+        JScrollPane scrollPane = new JScrollPane(textArea);
 
         getContentPane().add(scrollPane);
     }
@@ -81,9 +84,5 @@ public class LogFrame extends JFrame {
      */
     public void setLogContent(String log) {
         textArea.setText(log);
-
-        // scroll to the most top-left corner
-        textArea.setSelectionStart(0);
-        textArea.setSelectionEnd(0);
     }
 }

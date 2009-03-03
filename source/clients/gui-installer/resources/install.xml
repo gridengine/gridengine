@@ -33,14 +33,14 @@ ___INFO__MARK_END__-->
 <installation version="1.0">
     <info>
         <appname>Sun Grid Engine</appname>
-        <appversion>6.2u2</appversion>
+        <appversion>6.2</appversion>
         <authors>
             <author name="Sun Microsystems, Inc." email="www.sun.com"/>
         </authors>
         <url>http://gridengine.sunsource.net/</url>
         <uninstaller write="no" />
     </info>
-    <guiprefs width="940" height="720" resizable="yes">
+    <guiprefs width="880" height="700" resizable="yes">
         <laf name="custom">
             <os family="unix"/>
             <!--<param name="class" value="com.sun.java.swing.plaf.gtk.GTKLookAndFeel"/>-->
@@ -68,7 +68,7 @@ ___INFO__MARK_END__-->
         <res id="CustomLangpack.xml_eng" src="langpack.xml_eng"/>
         <res id="LicencePanel.licence" src="LICENSE"/>
         <res id="Heading.image" src="logo.png"/>
-        <res id="Welcome.image" src="S-curve-left-splash.png"/>
+        <res id="Welcome.image" src="sun_logo.gif"/>
         <res id="customicons.xml" src="customicons.xml"/>
     </resources>
 
@@ -129,10 +129,6 @@ ___INFO__MARK_END__-->
             <name>user.name</name>
             <value>${root.user}</value>
         </condition>
-        <condition type="variable" id="cond.no.connect.user">
-            <name>connect_user</name>
-            <value></value>
-        </condition>
         <condition type="variable" id="cond.mode.install">
             <name>mode</name>
             <value>install</value>
@@ -171,7 +167,7 @@ ___INFO__MARK_END__-->
         <panel classname="IntermediateActionPanel"  id="IntermediateActionPanel" />
         <panel classname="UserInputPanel"  id="JMXPanel" condition="cond.custom.install+cond.sge.jmx+cond.install.qmaster"/>
         <panel classname="UserInputPanel"  id="SpoolingPanel" condition="cond.custom.install+cond.install.qmaster|cond.install.bdb"/>
-        <panel classname="UserInputPanel"  id="CSPPanel" condition="cond.custom.install+cond.install.qmaster+(cond.product.mode.csp|(cond.sge.jmx+cond.sge.jmx.ssl))"/>
+        <panel classname="UserInputPanel"  id="CSPPanel" condition="cond.product.mode.csp|cond.custom.install+cond.sge.jmx+cond.sge.jmx.ssl"/>
         <panel classname="HostPanel"       id="HostPanel" />
         <panel classname="PostActionPanel" id="PostActionPanel"/>
         <panel classname="ResultPanel"     id="ResultPanel"/>
@@ -181,8 +177,7 @@ ___INFO__MARK_END__-->
         <variable name="work.dir" value="${SYSTEM_user_dir}"/> <!-- TODO: Delete the work.dir -->
         <variable name="templates.dir" value="${cfg.sge.root}/util/gui-installer/templates"/>
         <variable name="readme.temp.file" value="${templates.dir}/readme_template.html"/>
-        <variable name="readme.file.name.1" value="/tmp/readme"/> <!-- gets the '.html' extension later -->
-        <variable name="readme.file.name.2" value="${cfg.sge.root}/${cfg.cell.name}/readme"/>
+        <variable name="readme.file" value="${cfg.sge.root}/${cfg.cell.name}/readme.html"/>
         <variable name="silent.install.file" value="${cfg.sge.root}/${cfg.cell.name}/gui_auto_install.xml"/>
         <variable name="auto.conf.temp.file" value="${templates.dir}/gui_inst_template.conf"/>
         <variable name="auto.conf.file" value="${cfg.sge.root}/${cfg.cell.name}/gui_autoinst"/> <!-- gets the '.conf' extension later -->
@@ -212,6 +207,7 @@ ___INFO__MARK_END__-->
         <variable name="cfg.sge.execd.port" value="6445"/>
         <variable name="cfg.qmaster.spool.dir" value="${cfg.sge.root}/${cfg.cell.name}/spool/qmaster"/>
         <variable name="cfg.execd.spool.dir" value="${cfg.sge.root}/${cfg.cell.name}/spool"/>
+        <variable name="cfg.sge.enable.smf" value="false"/>
         <variable name="cfg.sge.cluster.name" value="p${cfg.sge.qmaster.port}"/>
         <variable name="add.sge.jmx" value="false"/>
         <variable name="cfg.sge.jmx.port" value="6446"/>
@@ -247,8 +243,6 @@ ___INFO__MARK_END__-->
         <variable name="cfg.schedd.conf" value="1"/> <!-- not used -->
         <variable name="cfg.shadow.host" value=""/>
         <variable name="cfg.exec.host.list.rm" value=""/> <!-- not used -->
-        <variable name="cfg.sge.enable.smf" value="false"/>
-        <variable name="cfg.add.to.rc" value="false"/>
         <variable name="cfg.remove.rc" value="false"/>
         <variable name="cfg.windows.support" value="false"/>
         <variable name="cfg.win.admin.name" value="Administrator"/> <!-- not used -->
@@ -266,7 +260,11 @@ ___INFO__MARK_END__-->
         <variable name="cfg.csp.orga.unit" value="Organisation_unit"/>
         <variable name="cfg.csp.mail.address" value="name@yourdomain.com"/>
         <variable name="add.hostinput" value="<Enter a hostname or IP adress here ...>"/>
-        <variable name="root.user" value="root"/>
-        <variable name="connect_user" value=""/>
    </variables>
+
+   <dynamicvariables>
+       <variable name="root.user" value="Administrator" condition="izpack.windowsinstall"/>
+       <variable name="root.user" value="root" condition="!izpack.windowsinstall"/>
+   </dynamicvariables>
+
 </installation>

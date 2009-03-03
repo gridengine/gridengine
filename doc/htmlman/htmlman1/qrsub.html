@@ -15,7 +15,7 @@ SYNTAX
 
 DESCRIPTION
      <I>Qrsub</I> provides a means  for  operators,  managers  or  users
-     referenced  in  the  ACL  (see  <B><A HREF="../htmlman5/access_list.html?pathrev=V62u2_TAG">access_list(5)</A></B>) "arusers" to
+     referenced  in  the  ACL  (see  <B><A HREF="../htmlman5/access_list.html">access_list(5)</A></B>) "arusers" to
      create a Advance Reservation (AR) in  the  Sun  Grid  Engine
      queuing  system.  ARs allow to reserve particular consumable
      resources for future use. These reserved resources are  only
@@ -69,32 +69,32 @@ OPTIONS
           The  option  is  not mandatory. If omitted, the current
           date_time  is  assumed.  Either  a  duration   or   end
           date_time  must  also  be  specified. For details about
-          date_time please see <B><A HREF="../htmlman1/sge_types.html?pathrev=V62u2_TAG">sge_types(1)</A></B>
+          date_time please see <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>
 
      -A account_string
           Identifies the account to which the  resource  reserva-
           tion  of the AR should be charged. For "account_string"
           value details  please  see  the  "name"  definition  in
-          <B><A HREF="../htmlman1/sge_types.html?pathrev=V62u2_TAG">sge_types(1)</A></B>.   In  the  absence  of this parameter Sun
+          <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>.   In  the  absence  of this parameter Sun
           Grid Engine will place the default account string "sge"
           in the accounting record of the AR.
 
      -ckpt ckpt_name
           Selects  the  checkpointing  environment  (see   <I>check-</I>
-          <B><A HREF="../htmlman5/point.html?pathrev=V62u2_TAG">point(5)</A></B>)  the  AR  jobs may request. Using this option
+          <B><A HREF="../htmlman5/point.html">point(5)</A></B>)  the  AR  jobs may request. Using this option
           guarantees queues that only providing  this  checkpoint
           environment will be reserved.
 
      -d time
           Defines the duration of the AR. The use of "-d time" is
           optional  if  "-e date_time" is requested.  For details
-          about  "time" definition please see <B><A HREF="../htmlman1/sge_types.html?pathrev=V62u2_TAG">sge_types(1)</A></B>.
+          about  "time" definition please see <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>.
 
      -e date_time
           Defines the end date and time of an AR. The use of  "-e
           date_time"  is optional if "-d time" is requested.  For
           details  about  "date_time"   definition   please   see
-          <B><A HREF="../htmlman1/sge_types.html?pathrev=V62u2_TAG">sge_types(1)</A></B>.
+          <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>.
 
      -he y[es]|n[o]
           Specifies the behavior when the AR goes into  an  error
@@ -114,7 +114,7 @@ OPTIONS
 
      -l resource=value,...
           Creates an AR in a Sun Grid Engine queue, providing the
-          given  resource request list.  <B><A HREF="../htmlman5/complex.html?pathrev=V62u2_TAG">complex(5)</A></B> describes how
+          given  resource request list.  <B><A HREF="../htmlman5/complex.html">complex(5)</A></B> describes how
           a list of  available  resources  and  their  associated
           valid value specifiers can be obtained.
           There may be multiple -l switches in a single command.
@@ -141,7 +141,7 @@ OPTIONS
           This option is used to reserve  the  proper  queues  to
           match  this request if it would be requested by a qsub.
           A more detailed description  of  <I>wc</I>_<I>queue</I>_<I>list</I>  can  be
-          found in <B><A HREF="../htmlman1/sge_types.html?pathrev=V62u2_TAG">sge_types(1)</A></B>.
+          found in <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>.
 
      -now y[es]|n[o]
           This options impacts the queues selection for  reserva-
@@ -152,7 +152,7 @@ OPTIONS
 
      -N name
           The name of the AR. The name, if requested,  must  con-
-          form  to  "name"  as  defined in <B><A HREF="../htmlman1/sge_types.html?pathrev=V62u2_TAG">sge_types(1)</A></B>.  Invalid
+          form  to  "name"  as  defined in <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>.  Invalid
           names will be denied at submit time.
 
      -w e|v
@@ -169,27 +169,27 @@ OPTIONS
      -pe parallel_env n[-[m]]|[-]m,...
           Parallel programming environment (PE) to select for the
           AR queue reservation. Please see the details of a PE in
-          <B><A HREF="../htmlman5/sge_pe.html?pathrev=V62u2_TAG">sge_pe(5)</A></B>.
+          <B><A HREF="../htmlman5/sge_pe.html">sge_pe(5)</A></B>.
 
      -q wc_queue_list
           Defines or redefines a list of  cluster  queues,  queue
           domains or queue instances, that may be reserved by the
           AR. Please  find  a  description  of  <I>wc</I>_<I>queue</I>_<I>list</I>  in
-          <B><A HREF="../htmlman1/sge_types.html?pathrev=V62u2_TAG">sge_types(1)</A></B>.  This parameter has all the properties of
+          <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>.  This parameter has all the properties of
           a resource request and will be merged with requirements
           derived from the -l option described above.
 
      -u [username|@access_list],...
           Defines the users allowed to submit jobs requesting the
           AR.  The  access is specified by a comma separated list
-          containing UNIX users  or  ACLs  (see  <B><A HREF="../htmlman5/access_list.html?pathrev=V62u2_TAG">access_list(5)</A></B>).
+          containing UNIX users  or  ACLs  (see  <B><A HREF="../htmlman5/access_list.html">access_list(5)</A></B>).
           prefixing the ACL name with an '@' sign.
           By default only the AR owner is allowed to submit  jobs
           requesting the AR.
 
           Note: Only queues, where all  users  specified  in  the
           list  have  access, are considered for reservation (see
-          <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62u2_TAG">queue_conf(5)</A></B>).
+          <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>).
 
 ENVIRONMENTAL VARIABLES
      SGE_ROOT       Specifies the location of the Sun Grid Engine
@@ -215,7 +215,7 @@ ENVIRONMENTAL VARIABLES
 
      SGE_QMASTER_PORT
                     If set,  specifies  the  TCP  port  on  which
-                    <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u2_TAG">sge_qmaster(8)</A></B> is expected to listen for com-
+                    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> is expected to listen for com-
                     munication requests.  Most installations will
                     use  a  services  map  entry  for the service
                     "sge_qmaster" instead of defining the port.
@@ -227,11 +227,11 @@ FILES
                     user private defaults file
 
 SEE ALSO
-     <B><A HREF="../htmlman1/qrdel.html?pathrev=V62u2_TAG">qrdel(1)</A></B>, <B><A HREF="../htmlman1/qrstat.html?pathrev=V62u2_TAG">qrstat(1)</A></B>, <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B>,  <B><A HREF="../htmlman1/sge_types.html?pathrev=V62u2_TAG">sge_types(1)</A></B>,  <B><A HREF="../htmlman5/checkpoint.html?pathrev=V62u2_TAG">checkpoint(5)</A></B>,
-     <B><A HREF="../htmlman5/complex.html?pathrev=V62u2_TAG">complex(5)</A></B>, <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62u2_TAG">queue_conf(5)</A></B>, <B><A HREF="../htmlman5/sge_pe.html?pathrev=V62u2_TAG">sge_pe(5)</A></B>, <B><A HREF="../htmlman5/sge_resource_quota.html?pathrev=V62u2_TAG">sge_resource_quota(5)</A></B>.
+     <B><A HREF="../htmlman1/qrdel.html">qrdel(1)</A></B>, <B><A HREF="../htmlman1/qrstat.html">qrstat(1)</A></B>, <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,  <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>,  <B><A HREF="../htmlman5/checkpoint.html">checkpoint(5)</A></B>,
+     <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>, <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>, <B><A HREF="../htmlman5/sge_pe.html">sge_pe(5)</A></B>, <B><A HREF="../htmlman5/sge_resource_quota.html">sge_resource_quota(5)</A></B>.
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
 
 

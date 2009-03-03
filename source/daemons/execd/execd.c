@@ -266,7 +266,7 @@ int main(int argc, char **argv)
    
    /* finalize daeamonize */
    if (!getenv("SGE_ND")) {
-      sge_daemonize_finalize(ctx);
+      daemonize_execd(ctx);
    }
 
    /* daemonizes if qmaster is unreachable */   
@@ -286,11 +286,10 @@ int main(int argc, char **argv)
    
    /* here we have to wait for qmaster registration */
    while (sge_execd_register_at_qmaster(ctx, false) != 0) {
-      if (sge_get_com_error_flag(EXECD, SGE_COM_ACCESS_DENIED, true)) {
-         /* This is no error */
-         DPRINTF(("*****  got SGE_COM_ACCESS_DENIED from qmaster  *****\n"));
-      }
-      if (sge_get_com_error_flag(EXECD, SGE_COM_ENDPOINT_NOT_UNIQUE, false)) {
+      if (sge_get_com_error_flag(EXECD, SGE_COM_ACCESS_DENIED, false)) {
+         execd_exit_state = SGE_COM_ACCESS_DENIED;
+         break;
+      } else if (sge_get_com_error_flag(EXECD, SGE_COM_ENDPOINT_NOT_UNIQUE, false)) {
          execd_exit_state = SGE_COM_ENDPOINT_NOT_UNIQUE;
          break;
       }

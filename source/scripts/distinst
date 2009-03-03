@@ -1144,15 +1144,15 @@ fi
 if [ $instguiinst = true ]; then
    GUI_DIR=`pwd`/clients/gui-installer
    if [ -d "$GUI_DIR" ]; then 
-      rm -rf $DEST_SGE_ROOT/start_gui_installer $DEST_SGE_ROOT/util/gui-installer 
-      echo "Installing \"start_gui_installer\" and \"/util/gui-installer\""
+      rm -rf $DEST_SGE_ROOT/start_gui_installer.sh $DEST_SGE_ROOT/util/gui-installer 
+      echo "Installing \"start_gui_installer.sh\" and \"/util/gui-installer\""
       Execute mkdir -p $DEST_SGE_ROOT/util/gui-installer/html/en/help
       Execute mkdir -p $DEST_SGE_ROOT/util/gui-installer/templates
       Execute cp $GUI_DIR/dist/installer.jar $DEST_SGE_ROOT/util/gui-installer
-      Execute cp $GUI_DIR/templates/start_gui_installer.sh $DEST_SGE_ROOT/start_gui_installer
+      Execute cp $GUI_DIR/templates/start_gui_installer.sh $DEST_SGE_ROOT
       Execute cp -r $GUI_DIR/html $DEST_SGE_ROOT/util/gui-installer
       Execute cp $GUI_DIR/templates/install_component $GUI_DIR/templates/gui_inst_template.conf $GUI_DIR/templates/readme_template.html $GUI_DIR/templates/check_host $DEST_SGE_ROOT/util/gui-installer/templates
-      Execute chmod 755 $DEST_SGE_ROOT/start_gui_installer
+      Execute chmod 755 $DEST_SGE_ROOT/start_gui_installer.sh
       Cleanup util/gui-installer
    else
       echo "GUI Installer dir \"$GUI_DIR\" does not exist"

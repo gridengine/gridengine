@@ -438,7 +438,7 @@ public class Host implements Config {
             str += Util.SgeComponents.qmaster.toString()+", ";
         }
         if (isShadowHost()) {
-            str += Util.SgeComponents.shadow.toString()+", ";
+            str += Util.SgeComponents.shadowd.toString()+", ";
         }
         if (isExecutionHost()) {
             str += Util.SgeComponents.execd.toString()+", ";

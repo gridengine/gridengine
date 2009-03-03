@@ -35,6 +35,7 @@ import com.izforge.izpack.installer.InstallData;
 import com.izforge.izpack.installer.InstallerFrame;
 import com.izforge.izpack.util.Debug;
 import com.izforge.izpack.util.VariableSubstitutor;
+import com.sun.grid.installer.util.Config;
 import com.sun.grid.installer.util.ExtendedFile;
 
 import com.sun.grid.installer.util.Util;
@@ -42,6 +43,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import javax.swing.JOptionPane;
 
 public class PreActionPanel extends ActionPanel {
 
@@ -113,12 +115,10 @@ public class PreActionPanel extends ActionPanel {
                 Debug.trace(ARG_INSTALL_TIMEOUT +" is now set to "+Util.INSTALL_TIMEOUT);
             }
         }
-        if (Util.isWindowsMode(idata.getVariables())) {
-           Debug.trace("Using mode "+CONST_MODE_WINDOWS);
-        }
         
         String sgeRootPath = vs.substitute(idata.getVariable(VAR_SGE_ROOT), null);
         String userName = vs.substitute(idata.getVariable(VAR_USER_NAME), null);
+        String rootUser = idata.getVariable(VAR_ROOT_USER);
 
         ExtendedFile sgeRootDir = new ExtendedFile(sgeRootPath);
 
@@ -129,28 +129,24 @@ public class PreActionPanel extends ActionPanel {
         Debug.trace("cfg.admin.user='" + idata.getVariable(VAR_ADMIN_USER) + "'");
 
         // Check user
-//        if (!userName.equals(rootUser)) {
-//             if (userName.equals(sgeRootDir.getOwner())) {
-//                 if (JOptionPane.NO_OPTION == JOptionPane.showOptionDialog(this, vs.substituteMultiple(idata.langpack.getString(WARNING_USER_NOT_ROOT), null),
-//                         idata.langpack.getString("installer.warning"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null,
-//                         new Object[]{idata.langpack.getString("installer.yes"), idata.langpack.getString("installer.no")}, idata.langpack.getString("installer.yes"))) {
-//                     parent.exit(true);
-//                 }
-//             } else {
-//                 JOptionPane.showOptionDialog(this, vs.substituteMultiple(idata.langpack.getString(ERROR_USER_INVALID), null),
-//                         idata.langpack.getString("installer.error"), JOptionPane.CANCEL_OPTION, JOptionPane.ERROR_MESSAGE, null,
-//                         new Object[]{idata.langpack.getString("button.exit.label")}, idata.langpack.getString("button.exit.label"));
-//
-//                 parent.exit(true);
-//             }
-//        }
+        if (!userName.equals(rootUser)) {
+             if (userName.equals(sgeRootDir.getOwner())) {
+                 if (JOptionPane.NO_OPTION == JOptionPane.showOptionDialog(this, vs.substituteMultiple(idata.langpack.getString(WARNING_USER_NOT_ROOT), null),
+                         idata.langpack.getString("installer.warning"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null,
+                         new Object[]{idata.langpack.getString("installer.yes"), idata.langpack.getString("installer.no")}, idata.langpack.getString("installer.yes"))) {
+                     parent.exit(true);
+                 }
+             } else {
+                 JOptionPane.showOptionDialog(this, vs.substituteMultiple(idata.langpack.getString(ERROR_USER_INVALID), null),
+                         idata.langpack.getString("installer.error"), JOptionPane.CANCEL_OPTION, JOptionPane.ERROR_MESSAGE, null,
+                         new Object[]{idata.langpack.getString("button.exit.label")}, idata.langpack.getString("button.exit.label"));
+
+                 parent.exit(true);
+             }
+        }
 
         // set cfg.add.to.rc
-        if (parent.getRules().isConditionTrue(COND_USER_ROOT) || !parent.getRules().isConditionTrue(COND_NO_CONNECT_USER)) {
-            idata.setVariable(VAR_ADD_TO_RC, "true");
-        } else {
-            idata.setVariable(VAR_ADD_TO_RC, "false");
-        }
+        idata.setVariable(VAR_ADD_TO_RC, parent.getRules().isConditionTrue(COND_USER_ROOT) ? "true" : "false");
 
         // set user group
 //        String[] groups = Util.getUserGroups(Host.localHostName, idata.getVariables(), idata.getVariable(VAR_USER_NAME));

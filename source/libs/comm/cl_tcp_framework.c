@@ -91,17 +91,14 @@ int cl_com_tcp_get_fd(cl_com_connection_t* connection, int* fd) {
       return CL_RETVAL_PARAMS;
    }
 
-   if ((private=cl_com_tcp_get_private(connection)) != NULL) {
+   if ( (private=cl_com_tcp_get_private(connection)) != NULL) {
       if (private->sockfd < 0) {
-         CL_LOG_INT(CL_LOG_INFO, "return pre_sockfd: ", private->pre_sockfd);
          *fd = private->pre_sockfd;
       } else {
-         CL_LOG_INT(CL_LOG_INFO, "return final sockfd: ", private->sockfd);
          *fd = private->sockfd;
       }
       return CL_RETVAL_OK;
    }
-   CL_LOG(CL_LOG_ERROR, "cannot get private connection data object!");
    return CL_RETVAL_UNKNOWN;
 }
 
@@ -954,7 +951,6 @@ static int cl_com_tcp_connection_request_handler_setup_finalize(cl_com_connectio
 
    CL_LOG(CL_LOG_INFO,"===============================");
    CL_LOG(CL_LOG_INFO,"TCP server setup done:");
-   CL_LOG_INT(CL_LOG_INFO,"server fd:", private->sockfd);
    CL_LOG_STR(CL_LOG_INFO,"host:     ", connection->local->comp_host);
    CL_LOG_STR(CL_LOG_INFO,"component:", connection->local->comp_name);
    CL_LOG_INT(CL_LOG_INFO,"id:       ",(int) (connection->local->comp_id));

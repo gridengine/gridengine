@@ -2513,7 +2513,7 @@ static int start_async_command(const char *descr, char *cmd)
          exit(1);
       }   
 
-      sge_close_all_fds(NULL, 0);
+      sge_close_all_fds(NULL);
 
       /* we have to provide the async command with valid io file handles
        * else it might fail 

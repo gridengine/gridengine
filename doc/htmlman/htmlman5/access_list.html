@@ -7,13 +7,13 @@ NAME
 
 DESCRIPTION
      Access lists are used in Sun Grid Engine  to  define  access
-     permissions of users to queues (see <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62u2_TAG">queue_conf(5)</A></B>) or paral-
-     lel environments (see <B><A HREF="../htmlman5/sge_pe.html?pathrev=V62u2_TAG">sge_pe(5)</A></B>).  A list of currently  con-
-     figured  access lists can be displayed via the <B><A HREF="../htmlman1/qconf.html?pathrev=V62u2_TAG">qconf(1)</A></B> -sul
+     permissions of users to queues (see <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>) or paral-
+     lel environments (see <B><A HREF="../htmlman5/sge_pe.html">sge_pe(5)</A></B>).  A list of currently  con-
+     figured  access lists can be displayed via the <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B> -sul
      option. The contents of each enlisted access list can  shown
      via  the -su switch. The output follows the <I>access</I>_<I>list</I> for-
      mat description. New access lists can be created and  exist-
-     ing can be modified via the -au and -du options to <B><A HREF="../htmlman1/qconf.html?pathrev=V62u2_TAG">qconf(1)</A></B>.
+     ing can be modified via the -au and -du options to <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>.
 
      Departments are a special form of access list that addition-
      ally  allow  assignment  of  functional  shares and override
@@ -30,7 +30,7 @@ FORMAT
 
   name
      The name of the access list as defined for  <I>userset</I>_<I>name</I>  in
-     <B><A HREF="../htmlman1/sge_types.html?pathrev=V62u2_TAG">sge_types(1)</A></B>.
+     <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>.
 
   type
      The type of the access list, currently  one  of <I>ACL</I>, or <I>DEPT</I>
@@ -47,7 +47,7 @@ FORMAT
 
   entries
      The entries parameter contains the comma separated  list  of
-     those  UNIX  users  (see <I>user</I>_<I>name</I> in <B><A HREF="../htmlman1/sge_types.html?pathrev=V62u2_TAG">sge_types(1)</A></B>) or those
+     those  UNIX  users  (see <I>user</I>_<I>name</I> in <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>) or those
      primary UNIX groups that are assigned to the access list  or
      the  department.  Only  a user's primary UNIX group is used;
      secondary  groups  are  ignored.  Only  symbolic  names  are
@@ -61,11 +61,11 @@ FORMAT
      entries the <I>defaultdepartment</I> is assigned, if existing.
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B>,     <B><A HREF="../htmlman1/sge_types.html?pathrev=V62u2_TAG">sge_types(1)</A></B>,     <B><A HREF="../htmlman1/qconf.html?pathrev=V62u2_TAG">qconf(1)</A></B>,     <B><A HREF="../htmlman5/sge_pe.html?pathrev=V62u2_TAG">sge_pe(5)</A></B>,
-     <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62u2_TAG">queue_conf(5)</A></B>.
+     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,     <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>,     <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,     <B><A HREF="../htmlman5/sge_pe.html">sge_pe(5)</A></B>,
+     <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>.
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
 
 

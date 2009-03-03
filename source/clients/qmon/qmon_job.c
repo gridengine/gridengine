@@ -1261,10 +1261,15 @@ int nm;
 }
 
 /*-------------------------------------------------------------------------*/
-static void qmonJobPriority(Widget w, XtPointer cld, XtPointer cad)
-{
+static void qmonJobPriority(
+Widget w,
+XtPointer cld,
+XtPointer cad 
+) {
    lList *jl = NULL;
    lList *rl = NULL;
+   lListElem *jep = NULL;
+   lList *alp = NULL;
    Boolean status_ask = False;
    int new_priority = 0;
 
@@ -1286,31 +1291,27 @@ static void qmonJobPriority(Widget w, XtPointer cld, XtPointer cad)
    */
    jl = qmonJobBuildSelectedList(job_pending_jobs, prio_descr, JB_job_number);
 
-   if (!jl && rl) {
+   if (!jl && rl)
       jl = rl;
-   } else if (rl) {
+   else if (rl)
       lAddList(jl, &rl);
-   }
    
-   if (jl) {
+   
+   if (jl)
       status_ask = XmtAskForInteger(w, NULL, 
                         "@{Enter a new priority (-1023 to 1024) for the selected jobs}", 
                         &new_priority, -1023, 1024, NULL); 
-   } else {
+   else
       qmonMessageShow(w, True, "@{There are no jobs selected !}");
-   }
 
    if (jl && status_ask) {
-      lList *alp = NULL;
-      lListElem *jep = NULL;
-
-      for_each(jep, jl) {
+      for_each(jep, jl)
          lSetUlong(jep, JB_priority, BASE_PRIORITY + new_priority);
-      }
       alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_MOD, &jl, NULL, NULL); 
    
       qmonMessageBox(w, alp, 0);
 
+      lFreeList(&jl);
       lFreeList(&alp);
 
       /*
@@ -1321,9 +1322,8 @@ static void qmonJobPriority(Widget w, XtPointer cld, XtPointer cad)
       updateJobListCB(w, NULL, NULL);
       XbaeMatrixDeselectAll(job_pending_jobs);
       XbaeMatrixDeselectAll(job_running_jobs);
-   }
 
-   lFreeList(&jl);
+   }
    
    DEXIT;
 }

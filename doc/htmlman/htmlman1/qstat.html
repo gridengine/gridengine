@@ -22,7 +22,7 @@ DESCRIPTION
      mation.
 
      The  administrator  and  the  user  may  define  files  (see
-     <B><A HREF="../htmlman5/sge_qstat.html?pathrev=V62u2_TAG">sge_qstat(5)</A></B>),   which   can  contain  any  of  the  options
+     <B><A HREF="../htmlman5/sge_qstat.html">sge_qstat(5)</A></B>),   which   can  contain  any  of  the  options
      described  below.  A  cluster-wide  sge_qstat  file  may  be
      placed  under  $SGE_ROOT/$SGE_CELL/common/sge_qstat The user
      private  file is searched at the location  $HOME/.sge_qstat.
@@ -91,12 +91,12 @@ OPTIONS
           Prints either for all pending jobs  or  the  jobs  con-
           tained  in  job_list  various information. The job_list
           can contain job_ids, job_names, or wildcard  expression
-          <B><A HREF="../htmlman1/sge_types.html?pathrev=V62u2_TAG">sge_types(1)</A></B>.
+          <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>.
 
           For  jobs  in  E(rror)  state  the  error   reason   is
           displayed. For jobs that could not be dispatched during
           in the  last  scheduling  interval  the  obstacles  are
-          shown, if 'schedd_job_info' in <B><A HREF="../htmlman5/sched_conf.html?pathrev=V62u2_TAG">sched_conf(5)</A></B> is config-
+          shown, if 'schedd_job_info' in <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B> is config-
           ured accordingly.
 
           For running  jobs  available  information  on  resource
@@ -143,7 +143,7 @@ OPTIONS
      -q wc_queue_list
           Specifies a wildcard expression queue list to which job
           information  is to be displayed. Find the definition of
-          wc_queue_list in <B><A HREF="../htmlman1/sge_types.html?pathrev=V62u2_TAG">sge_types(1)</A></B>.
+          wc_queue_list in <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>.
 
      -qs {a|c|d|o|s|u|A|C|D|E|S}
           Allows for the filtering of queue  instances  according
@@ -167,14 +167,14 @@ OPTIONS
           unless the job has entries in the job dependency  list.
           <I>qstat</I> -s h is an abbreviation for <I>qstat</I> -s huhohshdhjha
           and <I>qstat</I> -s a is an abbreviation for <I>qstat</I> -s psr (see
-          -a, -hold_jid and -hold_jid_ad options to <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B>).
+          -a, -hold_jid and -hold_jid_ad options to <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>).
 
      -t   Prints extended information about the  controlled  sub-
           tasks  of  the displayed parallel jobs. Please refer to
           the OUTPUT FORMATS sub-section Reduced Format below for
           detailed information. Sub-tasks of parallel jobs should
           not be confused with array job  tasks  (see  -g  option
-          above and -t option to <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B>).
+          above and -t option to <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>).
 
      -U user,...
           Displays status information with respect to  queues  to
@@ -262,7 +262,7 @@ OUTPUT FORMATS
      <B>o</B>  the priority of the job determining its position  in  the
         pending  jobs  list.   The  priority  value is determined
         dynamically based on ticket  and  urgency  policy  set-up
-        (see also <B><A HREF="../htmlman5/sge_priority.html?pathrev=V62u2_TAG">sge_priority(5)</A></B> ).
+        (see also <B><A HREF="../htmlman5/sge_priority.html">sge_priority(5)</A></B> ).
 
      <B>o</B>  the name of the job.
 
@@ -272,35 +272,35 @@ OUTPUT FORMATS
         h(old), r(unning), R(estarted), s(uspended), S(uspended),
         t(ransfering), T(hreshold) or w(aiting).
 
-        The state d(eletion) indicates that a  <B><A HREF="../htmlman1/qdel.html?pathrev=V62u2_TAG">qdel(1)</A></B>  has  been
+        The state d(eletion) indicates that a  <B><A HREF="../htmlman1/qdel.html">qdel(1)</A></B>  has  been
         used  to  initiate job deletion. The states t(ransfering)
         and r(unning) indicate that a job is about to be executed
         or  is already executing, whereas the states s(uspended),
         S(uspended) and T(hreshold) show that an already  running
         jobs  has been suspended. The s(uspended) state is caused
-        by suspending  the  job  via  the  <B><A HREF="../htmlman1/qmod.html?pathrev=V62u2_TAG">qmod(1)</A></B>  command,  the
+        by suspending  the  job  via  the  <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B>  command,  the
         S(uspended) state indicates that the queue containing the
         job is suspended and therefore the job is also  suspended
         and the T(hreshold) state shows that at least one suspend
         threshold of the corresponding queue  was  exceeded  (see
-        <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62u2_TAG">queue_conf(5)</A></B>)  and  that the job has been suspended as a
+        <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>)  and  that the job has been suspended as a
         consequence. The state R(estarted) indicates that the job
         was  restarted.  This can be caused by a job migration or
         because of one of the reasons described in the -r section
-        of the <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B> command.
+        of the <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> command.
 
         The states w(aiting) and h(old) only appear  for  pending
         jobs.  The h(old) state indicates that a job currently is
         not eligible for execution due to a hold  state  assigned
-        to it via <B><A HREF="../htmlman1/qhold.html?pathrev=V62u2_TAG">qhold(1)</A></B>, <B><A HREF="../htmlman1/qalter.html?pathrev=V62u2_TAG">qalter(1)</A></B> or the <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B> -h option or
+        to it via <B><A HREF="../htmlman1/qhold.html">qhold(1)</A></B>, <B><A HREF="../htmlman1/qalter.html">qalter(1)</A></B> or the <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> -h option or
         that the job is waiting for completion  of  the  jobs  to
         which  job dependencies have been assigned to the job via
-        the -hold_jid  or  -hold_jid-ad  options  of  <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B>  or
-        <B><A HREF="../htmlman1/qalter.html?pathrev=V62u2_TAG">qalter(1)</A></B>.
+        the -hold_jid  or  -hold_jid-ad  options  of  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>  or
+        <B><A HREF="../htmlman1/qalter.html">qalter(1)</A></B>.
 
         The state E(rror) appears for pending jobs that  couldn't
         be  started due to job properties. The reason for the job
-        error is shown by the <B><A HREF="../htmlman1/qstat.html?pathrev=V62u2_TAG">qstat(1)</A></B> -j job_list option.
+        error is shown by the <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B> -j job_list option.
 
      <B>o</B>  the submission or start time and date of the job.
 
@@ -318,7 +318,7 @@ OUTPUT FORMATS
         latter for parallel jobs only) is displayed.
 
      <B>o</B>  the array job task id. Will be empty for non-array  jobs.
-        See  the  -t option to <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B> and the -g above for addi-
+        See  the  -t option to <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> and the -g above for addi-
         tional information.
 
      If the -t option is supplied, each status line  always  con-
@@ -357,50 +357,50 @@ OUTPUT FORMATS
      <B>o</B>  the architecture of the queue host and
 
      <B>o</B>  the state  of  the  queue  -  one  of  u(nknown)  if  the
-        corresponding  <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u2_TAG">sge_execd(8)</A></B> cannot be contacted, a(larm),
+        corresponding  <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> cannot be contacted, a(larm),
         A(larm),     C(alendar      suspended),      s(uspended),
         S(ubordinate),  d(isabled), D(isabled), E(rror) or combi-
         nations thereof.
 
      If the state is a(larm) at least on of the  load  thresholds
      defined  in the <I>load</I>_<I>thresholds</I> list of the queue configura-
-     tion  (see  <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62u2_TAG">queue_conf(5)</A></B>)  is  currently  exceeded,   which
+     tion  (see  <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>)  is  currently  exceeded,   which
      prevents from scheduling further jobs to that queue.
      As opposed to this, the  state  A(larm)  indicates  that  at
      least  one  of  the  suspend  thresholds  of  the queue (see
-     <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62u2_TAG">queue_conf(5)</A></B>) is currently exceeded. This  will  result  in
+     <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>) is currently exceeded. This  will  result  in
      jobs  running  in  that  queue  being successively suspended
      until no threshold is violated.
 
      The states s(uspended) and d(isabled)  can  be  assigned  to
-     queues  and  released  via the <B><A HREF="../htmlman1/qmod.html?pathrev=V62u2_TAG">qmod(1)</A></B> command. Suspending a
+     queues  and  released  via the <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B> command. Suspending a
      queue will cause all jobs executing  in  that  queue  to  be
      suspended.
 
      The states D(isabled) and C(alendar suspended) indicate that
      the  queue  has been disabled or suspended automatically via
      the   calendar   facility   of   Sun   Grid   Engine    (see
-     <B><A HREF="../htmlman5/calendar_conf.html?pathrev=V62u2_TAG">calendar_conf(5)</A></B>),  while the S(ubordinate) state indicates,
+     <B><A HREF="../htmlman5/calendar_conf.html">calendar_conf(5)</A></B>),  while the S(ubordinate) state indicates,
      that the queue has been suspend via subordination to another
-     queue  (see  <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62u2_TAG">queue_conf(5)</A></B>  for  details). When suspending a
+     queue  (see  <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>  for  details). When suspending a
      queue (regardless of the cause) all jobs executing  in  that
      queue are suspended too.
 
-     If an E(rror) state is displayed for a  queue,  <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u2_TAG">sge_execd(8)</A></B>
-     on  that  host was unable to locate the <B><A HREF="../htmlman8/sge_shepherd.html?pathrev=V62u2_TAG">sge_shepherd(8)</A></B> exe-
+     If an E(rror) state is displayed for a  queue,  <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>
+     on  that  host was unable to locate the <B><A HREF="../htmlman8/sge_shepherd.html">sge_shepherd(8)</A></B> exe-
      cutable on that host in order to start a job.  Please  check
-     the  error  logfile of that <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u2_TAG">sge_execd(8)</A></B> for leads on how to
+     the  error  logfile of that <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> for leads on how to
      resolve the problem. Please enable the queue afterwards  via
-     the -c option of the <B><A HREF="../htmlman1/qmod.html?pathrev=V62u2_TAG">qmod(1)</A></B> command manually.
+     the -c option of the <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B> command manually.
 
      If the c(onfiguration ambiguous) state is  displayed  for  a
      queue  instance this indicates that the configuration speci-
-     fied for this queue instance in  <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62u2_TAG">sge_conf(5)</A></B>  is  ambiguous.
+     fied for this queue instance in  <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>  is  ambiguous.
      This state is cleared when the configuration becomes unambi-
      guous again. This state prevents  further  jobs  from  being
      scheduled  to  that  queue  instance. Detailed reasons why a
      queue instance entered the c(onfiguration  ambiguous)  state
-     can  be  found  in  the <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u2_TAG">sge_qmaster(8)</A></B> messages file and are
+     can  be  found  in  the <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> messages file and are
      shown by the qstat -explain switch. For queue  instances  in
      this state the cluster queue's default settings are used for
      the ambiguous attribute.
@@ -412,7 +412,7 @@ OUTPUT FORMATS
      which not yet finished jobs are still  associated  with  it,
      and  it  will  vanish from qstat output when these jobs have
      finished. To quicken vanishing of an orphaned queue instance
-     associated  job(s)  can  be  deleted using <B><A HREF="../htmlman1/qdel.html?pathrev=V62u2_TAG">qdel(1)</A></B>.  A queue
+     associated  job(s)  can  be  deleted using <B><A HREF="../htmlman1/qdel.html">qdel(1)</A></B>.  A queue
      instance in (o)rphaned state can be revived by changing  the
      cluster  queue configuration accordingly to cover that queue
      instance. This state prevents from scheduling  further  jobs
@@ -436,7 +436,7 @@ OUTPUT FORMATS
         `L' - a load value for the resource  after  administrator
         defined load scaling has been applied,
         `c' - availability derived from the consumable  resources
-        facility (see <B><A HREF="../htmlman5/complexes.html?pathrev=V62u2_TAG">complexes(5)</A></B>),
+        facility (see <B><A HREF="../htmlman5/complexes.html">complexes(5)</A></B>),
         `f' - a fixed  availability  definition  derived  from  a
         non-consumable  complex  attribute  or  a  fixed resource
         limit.
@@ -483,7 +483,7 @@ OUTPUT FORMATS
      <B>o</B>  the priority of the job determining its position  in  the
         pending  jobs  list.   The  priority  value is determined
         dynamically based on ticket  and  urgency  policy  set-up
-        (see also <B><A HREF="../htmlman5/sge_priority.html?pathrev=V62u2_TAG">sge_priority(5)</A></B> ).
+        (see also <B><A HREF="../htmlman5/sge_priority.html">sge_priority(5)</A></B> ).
 
      <B>o</B>  the job name,
 
@@ -531,15 +531,15 @@ OUTPUT FORMATS
      the start time and that no function  is  displayed  for  the
      jobs.
 
-     In very rare cases, e.g. if <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u2_TAG">sge_qmaster(8)</A></B> starts up from an
+     In very rare cases, e.g. if <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> starts up from an
      inconsistent state in the job or queue spool files or if the
-     clean queue (-cq) option of <B><A HREF="../htmlman1/qconf.html?pathrev=V62u2_TAG">qconf(1)</A></B> is used,  <I>qstat</I>  cannot
+     clean queue (-cq) option of <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B> is used,  <I>qstat</I>  cannot
      assign jobs to either the running or pending jobs section of
      the output. In this case as job status inconsistency (e.g. a
      job has a running status but is not assigned to a queue) has
      been detected. Such jobs are printed in an <I>ERROR</I>  <I>JOBS</I>  sec-
      tion  at  the very end of the output. The ERROR JOBS section
-     should disappear upon  restart  of  <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u2_TAG">sge_qmaster(8)</A></B>.   Please
+     should disappear upon  restart  of  <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>.   Please
      contact  your  Sun Grid Engine support representative if you
      feel uncertain about the cause or effects of such jobs.
 
@@ -551,15 +551,15 @@ OUTPUT FORMATS
      <B>o</B>  The job and master queue name.
 
      <B>o</B>  The hard and soft resource requirements  of  the  job  as
-        specified  with  the  <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B> -l option. The per resource
+        specified  with  the  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> -l option. The per resource
         addend when determining  the  jobs  urgency  contribution
-        value is printed (see also <B><A HREF="../htmlman5/sge_priority.html?pathrev=V62u2_TAG">sge_priority(5)</A></B>).
+        value is printed (see also <B><A HREF="../htmlman5/sge_priority.html">sge_priority(5)</A></B>).
 
      <B>o</B>  The requested parallel environment including the  desired
-        queue slot range (see -pe option of <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B>).
+        queue slot range (see -pe option of <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>).
 
      <B>o</B>  The requested checkpointing environment of the  job  (see
-        the <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B> -ckpt option).
+        the <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> -ckpt option).
 
      <B>o</B>  In case of running jobs, the granted parallel environment
         with the granted number of queue slots.
@@ -572,11 +572,11 @@ OUTPUT FORMATS
 
      project
           The project to which the job is assigned  as  specified
-          in the <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B> -P option.
+          in the <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> -P option.
 
      department
           The department, to which the user belongs (use the -sul
-          and  -su  options  of  <B><A HREF="../htmlman1/qconf.html?pathrev=V62u2_TAG">qconf(1)</A></B>  to display the current
+          and  -su  options  of  <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>  to display the current
           department definitions).
 
      cpu  The  current  accumulated  CPU  usage  of  the  job  in
@@ -593,7 +593,7 @@ OUTPUT FORMATS
 
      ovrts
           The override tickets as assigned by the -ot  option  of
-          <B><A HREF="../htmlman1/qalter.html?pathrev=V62u2_TAG">qalter(1)</A></B>.
+          <B><A HREF="../htmlman1/qalter.html">qalter(1)</A></B>.
 
      otckt
           The override portion of the  total  number  of  tickets
@@ -613,7 +613,7 @@ OUTPUT FORMATS
 
   Enhanced Output (with -urg)
      For each job the following additional urgency policy related
-     items are displayed (see also <B><A HREF="../htmlman5/sge_priority.html?pathrev=V62u2_TAG">sge_priority(5)</A></B>):
+     items are displayed (see also <B><A HREF="../htmlman5/sge_priority.html">sge_priority(5)</A></B>):
 
      nurg The jobs total urgency value in normalized fashion.
 
@@ -634,11 +634,11 @@ OUTPUT FORMATS
 
      deadline
           The deadline initiation time of the  job  as  specified
-          with the <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B> -dl option.
+          with the <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> -dl option.
 
   Enhanced Output (with -pri)
      For each job, the following additional job priority  related
-     items are displayed (see also <B><A HREF="../htmlman5/sge_priority.html?pathrev=V62u2_TAG">sge_priority(5)</A></B>):
+     items are displayed (see also <B><A HREF="../htmlman5/sge_priority.html">sge_priority(5)</A></B>):
 
      nurg The job's total urgency value in normalized fashion.
 
@@ -674,7 +674,7 @@ ENVIRONMENTAL VARIABLES
 
      SGE_QMASTER_PORT
                     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u2_TAG">sge_qmaster(8)</A></B> is expected to listen for com-
+                    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> is expected to listen for com-
                     munication requests.  Most installations will
                     use  a  services  map  entry  for the service
                     "sge_qmaster" instead to define that port.
@@ -697,12 +697,12 @@ FILES
                      user qstat default options
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B>,  <B><A HREF="../htmlman1/qalter.html?pathrev=V62u2_TAG">qalter(1)</A></B>,  <B><A HREF="../htmlman1/qconf.html?pathrev=V62u2_TAG">qconf(1)</A></B>,   <B><A HREF="../htmlman1/qhold.html?pathrev=V62u2_TAG">qhold(1)</A></B>,   <B><A HREF="../htmlman1/qhost.html?pathrev=V62u2_TAG">qhost(1)</A></B>,
-     <B><A HREF="../htmlman1/qmod.html?pathrev=V62u2_TAG">qmod(1)</A></B>,      <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B>,      <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62u2_TAG">queue_conf(5)</A></B>,     <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u2_TAG">sge_execd(8)</A></B>,
-     <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u2_TAG">sge_qmaster(8)</A></B>, <B><A HREF="../htmlman8/sge_shepherd.html?pathrev=V62u2_TAG">sge_shepherd(8)</A></B>.
+     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,  <B><A HREF="../htmlman1/qalter.html">qalter(1)</A></B>,  <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,   <B><A HREF="../htmlman1/qhold.html">qhold(1)</A></B>,   <B><A HREF="../htmlman1/qhost.html">qhost(1)</A></B>,
+     <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B>,      <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,      <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>,     <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>,
+     <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>, <B><A HREF="../htmlman8/sge_shepherd.html">sge_shepherd(8)</A></B>.
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
 
 

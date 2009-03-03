@@ -5510,6 +5510,11 @@ MALLOC_OUT:
 #endif
 	}
 
+#if (!defined(MOZ_MEMORY_WINDOWS) && !defined(MOZ_MEMORY_DARWIN))
+	/* Prevent potential deadlock on malloc locks after fork. */
+	pthread_atfork(_malloc_prefork, _malloc_postfork, _malloc_postfork);
+#endif
+
 	/* Set variables according to the value of opt_small_max_2pow. */
 	if (opt_small_max_2pow < opt_quantum_2pow)
 		opt_small_max_2pow = opt_quantum_2pow;
@@ -5718,15 +5723,6 @@ MALLOC_OUT:
 #ifndef MOZ_MEMORY_WINDOWS
 	malloc_mutex_unlock(&init_lock);
 #endif
-#if (!defined(MOZ_MEMORY_WINDOWS) && !defined(MOZ_MEMORY_DARWIN))
-	/* Prevent potential deadlock on malloc locks after fork. */
-   /* 
-    * On some older Linux versions pthread_atfork depends on malloc(). Therefor
-    * we need to register the handler after jemalloc is initialized
-    */
-	pthread_atfork(_malloc_prefork, _malloc_postfork, _malloc_postfork);
-#endif
-
 	return (false);
 }
 

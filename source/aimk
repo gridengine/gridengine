@@ -401,11 +401,8 @@ set JUTI_OBJ      =
 
 # Compile with gettext and libintl - we have platform dependent defaults
 switch ($BUILDARCH) 
-   case LINUXAMD64:
-     set MAKEJEMALLOCLIB  = 1
-     set WITH_GETTEXT = 1
-     breaksw
    case LINUX*:
+     set MAKEJEMALLOCLIB  = 1
      set WITH_GETTEXT = 1
      breaksw
    case SOLARIS:

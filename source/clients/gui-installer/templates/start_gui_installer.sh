@@ -33,13 +33,11 @@
 
 ErrUsage() 
 {
-   echo "Usage: `basename $0` [-help] [-resolve_pool=<num>] [-resolve_timeout=<sec>]"
-   echo "       [-install_pool=<num>] [-install_timeout=<sec>] [-connect_user=<usr>]"
-   echo "       [-connect_mode=windows]"
-   echo ""
-   echo "   <num> ... decimal number greater than zero"
-   echo "   <sec> ... number of seconds, must be greater then zero"
-   echo "   <usr> ... user id"
+   echo "Usage: `basename $0` [-help] [-resolve_pool=<num>] [-resolve_timeout=<sec>]" \
+        "       [-install_pool=<num>] [-install_timeout=<sec>]" \
+        "" \
+        "   <num> ... decimal number greater than zero" \
+        "   <sec> ... number of seconds, must be greater then zero"
    exit 1
 }
 
@@ -84,7 +82,7 @@ fi
 #fi
 echo "Starting Installer ..."
 if [ "$DEBUG_ENABLED" = "true" ]; then
-   $JAVA_BIN $FLAGS -jar ./util/gui-installer/installer.jar $ARGUMENTS
+   $JAVA_BIN $FLAGS -jar ./util/gui-installer/installer.jar "$ARGUMENTS"
 else
-   $JAVA_BIN $FLAGS -jar ./util/gui-installer/installer.jar $ARGUMENTS
+   $JAVA_BIN $FLAGS -jar ./util/gui-installer/installer.jar "$ARGUMENTS"
 fi

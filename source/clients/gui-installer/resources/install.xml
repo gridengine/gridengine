@@ -33,7 +33,7 @@ ___INFO__MARK_END__-->
 <installation version="1.0">
     <info>
         <appname>Sun Grid Engine</appname>
-        <appversion>6.2u2</appversion>
+        <appversion>6.2</appversion>
         <authors>
             <author name="Sun Microsystems, Inc." email="www.sun.com"/>
         </authors>
@@ -128,10 +128,6 @@ ___INFO__MARK_END__-->
         <condition type="variable" id="cond.user.root">
             <name>user.name</name>
             <value>${root.user}</value>
-        </condition>
-        <condition type="variable" id="cond.no.connect.user">
-            <name>connect_user</name>
-            <value></value>
         </condition>
         <condition type="variable" id="cond.mode.install">
             <name>mode</name>
@@ -266,7 +262,11 @@ ___INFO__MARK_END__-->
         <variable name="cfg.csp.orga.unit" value="Organisation_unit"/>
         <variable name="cfg.csp.mail.address" value="name@yourdomain.com"/>
         <variable name="add.hostinput" value="<Enter a hostname or IP adress here ...>"/>
-        <variable name="root.user" value="root"/>
-        <variable name="connect_user" value=""/>
    </variables>
+
+   <dynamicvariables>
+       <variable name="root.user" value="Administrator" condition="izpack.windowsinstall"/>
+       <variable name="root.user" value="root" condition="!izpack.windowsinstall"/>
+   </dynamicvariables>
+
 </installation>

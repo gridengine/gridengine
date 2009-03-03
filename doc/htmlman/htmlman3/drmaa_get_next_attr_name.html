@@ -50,13 +50,13 @@ DESCRIPTION
      includes  supported  DRMAA  reserved attribute names and Sun
      Grid Engine native attribute names. The names in  the  names
      string      vector      can      be      extracted     using
-     <B><A HREF="../htmlman3/drmaa_get_next_attr_name.html?pathrev=V62u2_TAG">drmaa_get_next_attr_name(3)</A></B>.  The number  of  names  in  the
+     <B><A HREF="../htmlman3/drmaa_get_next_attr_name.html">drmaa_get_next_attr_name(3)</A></B>.  The number  of  names  in  the
      names    string    vector    can    be    determined   using
-     <B><A HREF="../htmlman3/drmaa_get_num_attr_names.html?pathrev=V62u2_TAG">drmaa_get_num_attr_names(3)</A></B>.  Note  that  this  function  is
+     <B><A HREF="../htmlman3/drmaa_get_num_attr_names.html">drmaa_get_num_attr_names(3)</A></B>.  Note  that  this  function  is
      only  available  in  the  1.0 implementation.  The caller is
      responsible for releasing the names string  vector  returned
-     into    <I>values</I>   using   <B><A HREF="../htmlman3/drmaa_release_attr_names.html?pathrev=V62u2_TAG">drmaa_release_attr_names(3)</A></B>.    Use
-     <B><A HREF="../htmlman3/drmaa_set_attribute.html?pathrev=V62u2_TAG">drmaa_set_attribute(3)</A></B> and <B><A HREF="../htmlman3/drmaa_get_attribute.html?pathrev=V62u2_TAG">drmaa_get_attribute(3)</A></B>  for  set-
+     into    <I>values</I>   using   <B><A HREF="../htmlman3/drmaa_release_attr_names.html">drmaa_release_attr_names(3)</A></B>.    Use
+     <B><A HREF="../htmlman3/drmaa_set_attribute.html">drmaa_set_attribute(3)</A></B> and <B><A HREF="../htmlman3/drmaa_get_attribute.html">drmaa_get_attribute(3)</A></B>  for  set-
      ting and inspecting non-vector attributes.
 
   drmaa_get_vector_attribute_names()
@@ -66,11 +66,11 @@ DESCRIPTION
      includes  supported  DRMAA  reserved attribute names and Sun
      Grid Engine native attribute names. The names in  the  names
      string      vector      can      be      extracted     using
-     <B><A HREF="../htmlman3/drmaa_get_next_attr_name.html?pathrev=V62u2_TAG">drmaa_get_next_attr_name(3)</A></B>.  The caller is responsible  for
+     <B><A HREF="../htmlman3/drmaa_get_next_attr_name.html">drmaa_get_next_attr_name(3)</A></B>.  The caller is responsible  for
      releasing the names string vector returned into <I>values</I> using
-     <B><A HREF="../htmlman3/drmaa_release_attr_names.html?pathrev=V62u2_TAG">drmaa_release_attr_names(3)</A></B>.                             Use
-     <B><A HREF="../htmlman3/drmaa_set_vector_attribute.html?pathrev=V62u2_TAG">drmaa_set_vector_attribute(3)</A></B>                            and
-     <B><A HREF="../htmlman3/drmaa_get_vector_attribute.html?pathrev=V62u2_TAG">drmaa_get_vector_attribute(3)</A></B>  for  setting  and  inspecting
+     <B><A HREF="../htmlman3/drmaa_release_attr_names.html">drmaa_release_attr_names(3)</A></B>.                             Use
+     <B><A HREF="../htmlman3/drmaa_set_vector_attribute.html">drmaa_set_vector_attribute(3)</A></B>                            and
+     <B><A HREF="../htmlman3/drmaa_get_vector_attribute.html">drmaa_get_vector_attribute(3)</A></B>  for  setting  and  inspecting
      vector attributes.
 
   drmaa_get_next_attr_name()
@@ -94,7 +94,7 @@ DESCRIPTION
      DRMAA job template attributes can be set from six  different
      sources.   In  order  of precedence, from lowest to highest,
      these are: options set by DRMAA  automatically  by  default,
-     options  set  in  the <B><A HREF="../htmlman5/sge_request.html?pathrev=V62u2_TAG">sge_request(5)</A></B> file(s), options set in
+     options  set  in  the <B><A HREF="../htmlman5/sge_request.html">sge_request(5)</A></B> file(s), options set in
      the script  file,  options  set  by  the  drmaa_job_category
      attribute,  options  set  by  the drmaa_native_specification
      attribute, and options set through other DRMAA attributes.
@@ -106,23 +106,23 @@ DESCRIPTION
      jobs will be executed without  a  wrapper  shell,  and  jobs
      which are unschedulable will cause a submit error.
 
-     The     <B><A HREF="../htmlman5/sge_request.html?pathrev=V62u2_TAG">sge_request(5)</A></B>     file,      found      in      the
+     The     <B><A HREF="../htmlman5/sge_request.html">sge_request(5)</A></B>     file,      found      in      the
      $SGE_ROOT/$SGE_CELL/common directory, may contain options to
      be applied to all jobs.  The .sge_request file found in  the
      user's  home  directory or the current working directory may
      also contain options to be applied  to  certain  jobs.   See
-     <B><A HREF="../htmlman5/sge_request.html?pathrev=V62u2_TAG">sge_request(5)</A></B> for more information.
+     <B><A HREF="../htmlman5/sge_request.html">sge_request(5)</A></B> for more information.
 
-     If the <B><A HREF="../htmlman5/sge_request.html?pathrev=V62u2_TAG">sge_request(5)</A></B>  file  contains  "-b  no"  or  if  the
+     If the <B><A HREF="../htmlman5/sge_request.html">sge_request(5)</A></B>  file  contains  "-b  no"  or  if  the
      drmaa_native_specification attribute is set and contains "-b
      no", the script file will be parsed for  in-line  arguments.
-     Otherwise, no scripts args will be interpreted.  See <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B>
+     Otherwise, no scripts args will be interpreted.  See <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>
      for more information.
 
      If the drmaa_job_category attribute is set, and the category
-     it  points  to  exists  in  one  of  the <B><A HREF="../htmlman5/qtask.html?pathrev=V62u2_TAG">qtask(5)</A></B> files, the
+     it  points  to  exists  in  one  of  the <B><A HREF="../htmlman5/qtask.html">qtask(5)</A></B> files, the
      options associated with that category will be applied to the
-     job  template.   See  <B><A HREF="../htmlman5/qtask.html?pathrev=V62u2_TAG">qtask(5)</A></B>  and  the  drmaa_job_category
+     job  template.   See  <B><A HREF="../htmlman5/qtask.html">qtask(5)</A></B>  and  the  drmaa_job_category
      attribute below for more information.
 
      If the  drmaa_native_specification  attribute  is  set,  all
@@ -146,7 +146,7 @@ DESCRIPTION
 
   Attribute Correlations
      The following DRMAA attributes correspond to  the  following
-     <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B> options:
+     <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> options:
 
           DRMAA Attribute                  qsub Option
           -------------------------------------------------------
@@ -183,7 +183,7 @@ DRMAA JOB TEMPLATE ATTRIBUTES
      cutable  binary  or  an  executable script.  If a script, it
      must include the path to the shell  in  a  #!  line  at  the
      beginning  of  the  script.   By default, the remote command
-     will be executed directly,  as  by  <B><A HREF="../htmlman2/exec.html?pathrev=V62u2_TAG">exec(2)</A></B>.   To  have  the
+     will be executed directly,  as  by  <B><A HREF="../htmlman2/exec.html">exec(2)</A></B>.   To  have  the
      remote  command  executed  in  a  shell, such as to preserve
      environment  settings,  use  the  drmaa_native_specification
      attribute  to  include  the "-shell yes" option.  Jobs which
@@ -202,7 +202,7 @@ DRMAA JOB TEMPLATE ATTRIBUTES
      state.   When  'drmaa_hold'  is used the job is submitted in
      user   hold   state   (either    DRMAA_PS_USER_ON_HOLD    or
      DRMAA_PS_USER_SYSTEM_ON_HOLD).  This  attribute  is  largely
-     equivalent to  the <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B> submit option '-h'.
+     equivalent to  the <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> submit option '-h'.
 
   drmaa_wd - "&lt;directory_name&gt;"
      Specifies the directory name where the job will be executed.
@@ -211,7 +211,7 @@ DRMAA JOB TEMPLATE ATTRIBUTES
      relative directory name that is resolved relative to the job
      user's home directory at the execution host. When the  DRMAA
      job  template  is  used  for  bulk  job submission (see also
-     <B><A HREF="../htmlman3/drmaa_run_bulk_job.html?pathrev=V62u2_TAG">drmaa_run_bulk_job(3)</A></B>) the '$drmaa_incr_ph$' placeholder can
+     <B><A HREF="../htmlman3/drmaa_run_bulk_job.html">drmaa_run_bulk_job(3)</A></B>) the '$drmaa_incr_ph$' placeholder can
      be  used  at  any  position within <I>directory</I>_<I>name</I> to cause a
      substitution  with   the   parametric   job's   index.   The
      <I>directory</I>_<I>name</I>  must be specified in a syntax that is common
@@ -230,7 +230,7 @@ DRMAA JOB TEMPLATE ATTRIBUTES
 
   drmaa_job_name - "&lt;job_name&gt;"
      Specifies the job's name. Setting the job name is equivalent
-     to use of <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B> submit option '-N' with <I>job</I>_<I>name</I> as option
+     to use of <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> submit option '-N' with <I>job</I>_<I>name</I> as option
      argument.
 
   drmaa_input_path - "[&lt;hostname&gt;]:&lt;file_path&gt;"
@@ -250,7 +250,7 @@ DRMAA JOB TEMPLATE ATTRIBUTES
      cuted regardless of any <I>hostname</I> specified.
 
      If the DRMAA job template will be used for bulk job  submis-
-     sion, (See also <B><A HREF="../htmlman3/drmaa_run_bulk_job.html?pathrev=V62u2_TAG">drmaa_run_bulk_job(3)</A></B>) the '$drmaa_incr_ph$'
+     sion, (See also <B><A HREF="../htmlman3/drmaa_run_bulk_job.html">drmaa_run_bulk_job(3)</A></B>) the '$drmaa_incr_ph$'
      placeholder can be used at any position within <I>file</I>_<I>path</I>  to
      cause  a  substitution  with  the  parametric job's index. A
      '$drmaa_hd_ph$' placeholder at the  beginning  of  <I>file</I>_<I>path</I>
@@ -281,7 +281,7 @@ DRMAA JOB TEMPLATE ATTRIBUTES
      regardless of any <I>hostname</I> specified.
 
      If the DRMAA job template will be used for of bulk job  sub-
-     mission     (see     also     <B><A HREF="../htmlman3/drmaa_run_bulk_job.html?pathrev=V62u2_TAG">drmaa_run_bulk_job(3)</A></B>)     the
+     mission     (see     also     <B><A HREF="../htmlman3/drmaa_run_bulk_job.html">drmaa_run_bulk_job(3)</A></B>)     the
      '$drmaa_incr_ph$' placeholder can be used  at  any  position
      within  the  <I>file</I>_<I>path</I>  to  cause  a  substitution  with the
      parametric job's index. A '$drmaa_hd_ph$' placeholder at the
@@ -313,7 +313,7 @@ DRMAA JOB TEMPLATE ATTRIBUTES
      less of any <I>hostname</I> specified.
 
      If the DRMAA job template will be used for of bulk job  sub-
-     mission     (see     also     <B><A HREF="../htmlman3/drmaa_run_bulk_job.html?pathrev=V62u2_TAG">drmaa_run_bulk_job(3)</A></B>)     the
+     mission     (see     also     <B><A HREF="../htmlman3/drmaa_run_bulk_job.html">drmaa_run_bulk_job(3)</A></B>)     the
      '$drmaa_incr_ph$' placeholder can be used  at  any  position
      within  the  <I>file</I>_<I>path</I>  to  cause  a  substitution  with the
      parametric job's index. A '$drmaa_hd_ph$' placeholder at the
@@ -346,8 +346,8 @@ DRMAA JOB TEMPLATE ATTRIBUTES
 
   drmaa_job_category - "&lt;category&gt;"
      Specifies the DRMAA job category.  The  <I>category</I>  string  is
-     used  by  Sun  Grid  Engine as a reference into the <B><A HREF="../htmlman5/qtask.html?pathrev=V62u2_TAG">qtask(5)</A></B>
-     file. Certain <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B> options used in the  referenced  qtask
+     used  by  Sun  Grid  Engine as a reference into the <B><A HREF="../htmlman5/qtask.html">qtask(5)</A></B>
+     file. Certain <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> options used in the  referenced  qtask
      file  line are applied to the job template before submission
      to allow site-specific resolving of resources  and/or  poli-
      cies.  The cluster qtask file, the local qtask file, and the
@@ -365,16 +365,16 @@ DRMAA JOB TEMPLATE ATTRIBUTES
      $SGE_DRMAA_ALLOW_CWD environment variable is set.
 
   drmaa_native_specification - "&lt;native_specification&gt;"
-     Specifies Sun Grid Engine native <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B> options which  will
+     Specifies Sun Grid Engine native <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> options which  will
      be  interpreted  as  part  of  the  DRMAA job template.  All
-     options available to <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B> command  may  be  used  in  the
+     options available to <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> command  may  be  used  in  the
      <I>native</I>_<I>specification</I>,  except for -help, -sync, -t, -verify,
      and -w w|v.  The  -cwd  option  may  only  be  used  if  the
      SGE_DRMAA_ALLOW_CWD  environment  variable  is set.  This is
      because the  current  parsing  algorithm  for  -cwd  is  not
      thread-safe.   Options  set in the <I>native</I> <I>specification</I> will
      be overridden by the corresponding  DRMAA  attributes.   See
-     <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B> for more information on qsub options.
+     <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B> for more information on qsub options.
 
   drmaa_v_env - "&lt;name1&gt;=&lt;value1&gt; &lt;name2&gt;=&lt;value2&gt; ...
      Specifies  the  job  environment.  Each  environment   <I>value</I>
@@ -423,7 +423,7 @@ DRMAA JOB TEMPLATE ATTRIBUTES
      drmaa_output_path and drmaa_error_path for information about
      how to specify the standard input file, standard output file
      and standard error file.  The file transfer mechanism itself
-     must  be configured by the administrator (see <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62u2_TAG">sge_conf(5)</A></B> ).
+     must  be configured by the administrator (see <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B> ).
      When it is  configured,  the  administrator  has  to  enable
      drmaa_transfer_files.     If    it    is   not   configured,
      "drmaa_transfer_files" is not enabled and can't be used.
@@ -461,7 +461,7 @@ ENVIRONMENTAL VARIABLES
 
      SGE_QMASTER_PORT
                     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u2_TAG">sge_qmaster(8)</A></B> is expected to listen for com-
+                    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> is expected to listen for com-
                     munication requests.  Most installations will
                     use  a  services  map entry instead to define
                     that port.
@@ -505,7 +505,7 @@ ERRORS
      When there are no more entries in the vector.
 
 SEE ALSO
-     <B><A HREF="../htmlman3/drmaa_jobtemplate.html?pathrev=V62u2_TAG">drmaa_jobtemplate(3)</A></B>and <B><A HREF="../htmlman3/drmaa_submit.html?pathrev=V62u2_TAG">drmaa_submit(3)</A></B>.
+     <B><A HREF="../htmlman3/drmaa_jobtemplate.html">drmaa_jobtemplate(3)</A></B>and <B><A HREF="../htmlman3/drmaa_submit.html">drmaa_submit(3)</A></B>.
 
 
 

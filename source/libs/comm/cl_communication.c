@@ -44,11 +44,6 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
-#ifdef USE_POLL
- #include <sys/poll.h>
-#endif
-
-
 #include "uti/sge_hostname.h"
 #include "uti/sge_string.h"
 #include "cl_commlib.h"
@@ -125,7 +120,7 @@ int cl_com_compare_endpoints(cl_com_endpoint_t* endpoint1, cl_com_endpoint_t* en
           if (endpoint1->comp_host && endpoint1->comp_name && 
               endpoint2->comp_host && endpoint2->comp_name) {
              if (strcmp(endpoint1->comp_name,endpoint2->comp_name) == 0) {
-                if (cl_com_compare_hosts(endpoint1->comp_host, endpoint2->comp_host) == CL_RETVAL_OK) {
+               if (cl_com_compare_hosts(endpoint1->comp_host, endpoint2->comp_host) == CL_RETVAL_OK) {
                    return 1;
                 }
              }
@@ -758,8 +753,6 @@ int cl_com_create_connection(cl_com_connection_t** connection) {
   
    /* init connection struct */
    (*connection)->check_endpoint_flag = CL_FALSE;
-   (*connection)->is_read_selected = CL_FALSE;
-   (*connection)->is_write_selected = CL_FALSE;
    (*connection)->check_endpoint_mid  = 0;
    (*connection)->crm_state       = CL_CRM_CS_UNDEFINED;
    (*connection)->crm_state_error = NULL;
@@ -1614,33 +1607,21 @@ int cl_com_connection_get_client_socket_in_port(cl_com_connection_t* connection,
 #endif
 #define __CL_FUNCTION__ "cl_com_connection_get_fd()"
 int cl_com_connection_get_fd(cl_com_connection_t* connection, int* fd) {
-   int ret_val = CL_RETVAL_PARAMS;
-   if (fd == NULL || connection == NULL) {
-      return ret_val;
+   if (connection == NULL) {
+      return CL_RETVAL_PARAMS;
    }
    switch(connection->framework_type) {
       case CL_CT_TCP: {
-         ret_val = cl_com_tcp_get_fd(connection,fd);
-         break;
+         return cl_com_tcp_get_fd(connection,fd);
       }
       case CL_CT_SSL: {
-         ret_val = cl_com_ssl_get_fd(connection,fd);
-         break;
+         return cl_com_ssl_get_fd(connection,fd);
       }
       case CL_CT_UNDEFINED: {
-         ret_val = CL_RETVAL_NO_FRAMEWORK_INIT;
          break;
       }
    }
-
-   if (ret_val == CL_RETVAL_OK && (*fd < 0)) {
-      CL_LOG_INT(CL_LOG_ERROR, "got no valid port: ", *fd);
-      ret_val = CL_RETVAL_NO_PORT_ERROR;
-   }
-   if (ret_val != CL_RETVAL_OK) {
-      CL_LOG_STR(CL_LOG_WARNING, "Cannot get fd for connection:", cl_get_error_text(ret_val));
-   }
-   return ret_val;
+   return CL_RETVAL_NO_FRAMEWORK_INIT;
 }
 
 #ifdef __CL_FUNCTION__
@@ -1817,16 +1798,8 @@ static int cl_com_gethostbyname(const char *hostname_unresolved, cl_com_hostent_
 
    /* check if the incoming hostname is an ip address string */
    if (cl_com_is_ip_address_string(hostname_unresolved, &tmp_addr) == CL_TRUE) {
-      cl_com_hostent_t* tmp_hostent = NULL;
       CL_LOG(CL_LOG_INFO,"got ip address string as host name argument");
-      ret_val = cl_com_gethostbyaddr(&tmp_addr, &tmp_hostent, NULL);
-      if (ret_val == CL_RETVAL_OK) {
-         hostname = strdup(tmp_hostent->he->h_name);
-         cl_com_free_hostent(&tmp_hostent);
-         if (hostname == NULL) {
-            ret_val = CL_RETVAL_MALLOC;
-         }
-      }
+      ret_val = cl_com_cached_gethostbyaddr(&tmp_addr, &hostname, NULL, NULL);
       if (ret_val != CL_RETVAL_OK) {
          if (hostname != NULL) {
             free(hostname);
@@ -3416,12 +3389,8 @@ int cl_com_connection_request_handler_cleanup(cl_com_connection_t* connection) {
 #define __CL_FUNCTION__ "cl_com_open_connection_request_handler()"
 /* WARNING connection list must be locked */
 
-#ifdef USE_POLL
-int cl_com_open_connection_request_handler(cl_com_poll_t* poll_handle, cl_com_handle_t* handle, int timeout_val_sec, int timeout_val_usec, cl_select_method_t select_mode)
-#else
-int cl_com_open_connection_request_handler(cl_com_handle_t* handle, int timeout_val_sec, int timeout_val_usec, cl_select_method_t select_mode)
-#endif
-{
+
+int cl_com_open_connection_request_handler(cl_com_handle_t* handle, int timeout_val_sec, int timeout_val_usec, cl_select_method_t select_mode) {
    cl_com_connection_t* service_connection = NULL;
    int usec_rest = timeout_val_usec;
    int sec_param = timeout_val_sec;
@@ -3461,22 +3430,12 @@ int cl_com_open_connection_request_handler(cl_com_handle_t* handle, int timeout_
    if (handle->connection_list != NULL) {
       switch(handle->framework) {
          case CL_CT_TCP: {
-#ifdef USE_POLL
-            return cl_com_tcp_open_connection_request_handler(poll_handle, handle, handle->connection_list, service_connection,
-                                                              sec_param , usec_rest, select_mode);
-#else
             return cl_com_tcp_open_connection_request_handler(handle, handle->connection_list, service_connection,
                                                               sec_param , usec_rest, select_mode);
-#endif
          }
          case CL_CT_SSL: {
-#ifdef USE_POLL
-            return cl_com_ssl_open_connection_request_handler(poll_handle, handle, handle->connection_list, service_connection,
-                                                              sec_param , usec_rest, select_mode);
-#else
             return cl_com_ssl_open_connection_request_handler(handle, handle->connection_list, service_connection,
                                                               sec_param , usec_rest, select_mode);
-#endif
          }
          case CL_CT_UNDEFINED: {
             break;
@@ -3488,66 +3447,6 @@ int cl_com_open_connection_request_handler(cl_com_handle_t* handle, int timeout_
 
    return CL_RETVAL_UNDEFINED_FRAMEWORK;
 }
-
-
-#ifdef USE_POLL
-#ifdef __CL_FUNCTION__
-#undef __CL_FUNCTION__
-#endif
-#define __CL_FUNCTION__ "cl_com_free_poll_array()"
-int cl_com_free_poll_array(cl_com_poll_t* poll_handle) {
-   /*
-    * This procedure releases the memory malloc()ed inside
-    * the specified cl_com_poll_t structure. 
-    */
-   if (poll_handle == NULL) {
-      return CL_RETVAL_PARAMS;
-   }
-   if (poll_handle->poll_array != NULL) {
-      free(poll_handle->poll_array);
-   }
-   if (poll_handle->poll_con != NULL) {
-      free(poll_handle->poll_con);
-   }
-   poll_handle->poll_array = NULL;
-   poll_handle->poll_con = NULL;
-   poll_handle->poll_fd_count = 0;
-   CL_LOG(CL_LOG_INFO, "Freed poll_handle");
-   return CL_RETVAL_OK;
-}
-
-#ifdef __CL_FUNCTION__
-#undef __CL_FUNCTION__
-#endif
-#define __CL_FUNCTION__ "cl_com_malloc_poll_array()"
-int cl_com_malloc_poll_array(cl_com_poll_t* poll_handle, unsigned long nr_of_malloced_connections) {
-
-   /* 
-    * Free and re-malloc() the buffers of the specified poll_handle to the
-    * so that nr_of_malloced_connections fit into the buffers.
-    */
-   if (poll_handle == NULL) {
-      return CL_RETVAL_PARAMS;
-   }
-   cl_com_free_poll_array(poll_handle);
-
-   poll_handle->poll_array = (struct pollfd*) malloc(nr_of_malloced_connections * sizeof(struct pollfd));
-   if (poll_handle->poll_array == NULL) {
-      cl_com_free_poll_array(poll_handle);
-      return CL_RETVAL_MALLOC;
-   }
-
-   poll_handle->poll_con = (cl_com_connection_t**) malloc(nr_of_malloced_connections * sizeof(cl_com_connection_t*));
-   if (poll_handle->poll_con == NULL) {
-      cl_com_free_poll_array(poll_handle);
-      return CL_RETVAL_MALLOC;
-   }
-
-   poll_handle->poll_fd_count = nr_of_malloced_connections;
-   CL_LOG_INT(CL_LOG_INFO, "nr of file descriptors fitting into the poll_array: ", (int)poll_handle->poll_fd_count);
-   return CL_RETVAL_OK;
-}
-#endif
 
 
 

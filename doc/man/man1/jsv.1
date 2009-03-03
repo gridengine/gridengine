@@ -4,7 +4,7 @@
 .\" Copyright: 2008 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: jsv.1,v $     Last Update: $Date: 2009/02/11 12:33:12 $     Revision: $Revision: 1.5 $
+.\" $RCSfile: jsv.1,v $     Last Update: $Date: 2008/11/24 09:13:03 $     Revision: $Revision: 1.2 $
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
 .\"
@@ -28,7 +28,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH JSV 1 "$Date: 2009/02/11 12:33:12 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH JSV 1 "$Date: 2008/11/24 09:13:03 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 JSV \- xxQS_NAMExx Job Submission Verifier 
@@ -38,7 +38,7 @@ JSV is an abbreviation for Job Submission Verifier. A JSV is a script
 or binary that can be used to verify, modify or reject a job during
 the time of job submission.
 .PP
-JSVs will be triggered by submit clients like \fIqsub\fP, \fIqrsh\fP, 
+JSV's will be triggered by submit clients like \fIqsub\fP, \fIqrsh\fP, 
 \fIqsh\fP and \fIqmon\fP
 .\" TODO: add other clients
 on submit hosts (Client JSV) or they verify incoming jobs on the
@@ -46,9 +46,9 @@ master host (Server JSV) or both.
 .\"
 .\"
 .SH CONFIGURATION
-JSVs can be configured on various locations. Either a \fBjsv_url\fP can be
+JSV's can be configured on various locations. Either a \fBjsv_url\fP can be
 provided with the \fB-jsv\fP submit parameter during job submission, a
-corresponding switch can be added to one of the \fBsge_request\fP files or
+corresponding switch can be added to one of the \fBsge_reqeust\fP files or
 a \fBjsv_url\fP can be configured in the global cluster configuration of the
 xxQS_NAMExx installation. 
 .PP
@@ -60,34 +60,34 @@ All defined JSV instances will be executed in following order:
    4) $SGE_ROOT/$SGE_CELL/common/sge_request
    5) Global configuration 
 .PP
-The Client JSVs (1-3) can be defined by xxQS_NAMExx end users whereas the
+The Client JSV's (1-3) can be defined by xxQS_NAMExx end users whereas the
 client JSV defined in the global sge_request file (4) and the server JSV (5)
 can only be defined by the xxQS_NAMExx administrators.
 .PP
 Due to the fact that (4) and (5) are defined and configured by xxQS_NAMExx 
-administrators and because they are executed as last JSV instances in
-the sequence of JSV scripts, an administrator has an additional way 
-to define certain policies for a cluster.
+administrators and because they are executed as last JSV instances
+an administrator has an additional way to define certain policies
+for a cluster.
 .PP
-As soon as one JSV instance rejects a job the whole process of verification
+As soon a one JSV instance rejects a job the whole process of verification
 is stopped and the end user will get a corresponding error message
 that the submission of the job has failed.
 .PP
 If a JSV accepts a job or accepts a job after it applied serveral 
 modifications then the following JSV instance will get the job parameters 
 including all modifications as input for the verification process. 
-This is done as long as either the job is accepted or rejected.
+This is done as long as either the job is acceped or rejected.
 .PP
-Find more information how to use Client JSVs in 
+Find more information how to use Client JSV's in 
 .M qsub 1 
-and for Server JSVs in 
+and for Server JSV's in 
 .M sge_conf 5
 .\"
 .\"
 .SH LIFETIME
-A Client or Server JSV is started as own UNIX process. This process
+Client and Server JSVs are started as own UNIX process. This process
 communicates either with a xxQS_NAMExx client process or the master daemon by
-exchanging commands, job parameters and other data via
+exchanging commands, job parameters and other data through its
 \fBstdin\fP/\fBstdout\fP channels.
 .PP
 Client JSV instances are started by client applications before a
@@ -99,7 +99,7 @@ Server JSV instances are started for each worker thread part of the
 qmaster process (for version 6.2 of xxQS_NAMExx this means that two
 processes are started). Each of those processes have to verify
 job parameters for multiple jobs as long as the master is running,
-the underlaying JSV configuration is not changed and no error occurs.
+the underlaying JSV configuration is not changed and no error occues.
 .\"
 .\"
 .SH PROTOCOL 
@@ -117,18 +117,18 @@ the EBNF command description below.
       \fBcommand\fP := \fBcommand_name\fP ' ' { \fBargument\fP ' ' } ;
 .PP
 A \fBcommand\fP starts with a \fBcommand_name\fP followed by a space 
-character  and a space separated list of \fBarguments\fP. 
+character  and a space separted list of \fBargument\fP's. 
 .\"
 .SH PROTOCOL (JSV side)
-Following \fBcommands\fP have to be implemented by an JSV script so that
+Following \fBcommand\fP's have to be implemented by an JSV script so that
 it conforms to version 1.0 of the JSV protocol which was first implemented in
 xxQS_NAMExx 6.2u2:
 .\"
 .IP "\fBbegin_command\fP := '\fBBEGIN\fP' ;"
-After a JSV instance has received all \fBenv_commands\fP and \fBparam_commands\fP
+After a JSV instance has received all \fBenv_command\fP's and \fBparam_command\fP's
 of a job which should be verified, the client/qmaster will trigger the
 verification process by sending one \fBbegin_command\fP. After that it will wait
-for \fBparam_commands\fP and \fBenv_commands\fP which are sent back from the
+for \fBparam_command\fP's and \fBenv_command\fP's which are sent back from the
 JSV instance to modify the job specification. As part of the verification process
 a JSV script or binary has to use the \fBresult_command\fP to indicate that
 the verification process is finished for a job.
@@ -138,17 +138,17 @@ the verification process is finished for a job.
 The \fBenv_command\fP is an optional command which has only to be implemented
 by a JSV instance if the \fBsend_data_command\fP is sent by this JSV
 before a the \fBstarted_command\fP was sent. Only in that case the client
-or master will use one or multiple \fBenv_commands\fP to pass
+or master will use one or multiple \fBenv_command\fP's to pass
 the environment variables (\fBname\fP and \fBvalue\fP) to the JSV instance
 which would be exported to the job environment when the job
-would be started. Client and qmaster will only sent \fBenv_commands\fP
-with the modifier '\fBADD\fP'. 
+would be started. Client and qmaster will only sent \fBenv_command\fP's
+with the modefier '\fBADD\fP'. 
 .sp 1
 JSV instances modify the set of environment variables by sending back
-\fBenv_commands\fP and by using the \fBmodifiers\fP \fBADD\fP, \fBMOD\fP
+\fBenv_command\fP's and by using the \fBmodifier\fP's \fBADD\fP, \fBMOD\fP
 and \fBDEL\fP.
 .\"
-.IP "\fBparam_command\fP := '\fBPARAM\fP' ' ' \fBparam_parameter\fP ' ' \fBvalue\fP ;"
+.IP "\fBparam_command\fP := '\fBSTART\fP' ' ' \fBparam_parameter\fP ' ' \fBvalue\fP ;"
 .IP "\fBparam_parameter\fP := \fBsubmit_parameter\fP | \fBpseudo_parameter\fP ;"
 The \fBparam_command\fP has two additional arguments which are separated
 by space characters. The first argument is either a \fBsubmit_parameter\fP
@@ -157,15 +157,15 @@ as it is specified in
 or it is a \fBpseudo_parameters\fP as documented below. 
 The second parameter is the \fBvalue\fP of the corresponding \fBparam_parameter\fP.
 .sp 1
-Multiple \fBparam_commands\fP will be sent to a JSV instance after
-the JSV has sent a \fBstarted_command\fP. The sum of all \fBparam_commands\fP
+Multiple \fBparam_command\fP's will be sent to a JSV instance after
+the JSV has send a \fBstarted_command\fP. The sum of all \fBparam_commands\fP
 which is sent represents a job specification of that job which should be verified. 
 .sp 1
-\fBsubmit_parameters\fP are for example \fBb\fP (similar to the \fBqsub\fP \fB-b\fP switch) or
+\fBsubmit_parameter\fP's are for example \fBb\fP (similar to the \fBqsub\fP \fB-b\fP switch) or
 \fBmasterq\fP (similar to \fBqsub\fP \fB-masterq\fP switch). Find a complete list of
-\fBsubmit_parameters\fP in the 
+\fBsubmit_parameter\fP's in the 
 .M qsub 1 
-man page. Please note that not in all
+man page. Please not that not in all
 cases the \fBparam_parameter\fP name and the corresponding \fBvalue\fP format
 is equivalent with the qsub switch name and its argument format.
 E.g. the \fBqsub\fP \fB-pe\fP parameters will by available as a set of parameters
@@ -178,7 +178,7 @@ man page.
 .IP "\fBstart_command\fP := '\fBSTART\fP' ;"
 The \fBstart_command\fP has no additional arguments. This command indicates
 that a new job verification should be started. It is the first
-command which will be sent to JSV script after it has been started
+command which will be send to JSV script after it has been started.
 and it will initiate each new job verification. A JSV instance might 
 trash cached values which are still stored due to a previous job
 verification. The application which send the \fBstart_command\fP will wait
@@ -190,7 +190,7 @@ is sent to a JSV instance then it should terminate itself immediately.
 .\"
 .SH PROTOCOL (client/qmaster side)
 A JSV script or binary can send a set of commands to a client/qmaster process
-to indicate its state in the communication process, to change the job
+to indicate its state in the communication process to change the job
 specification of a job which should be verified and to report messages or
 errors. Below you can find the commands which are understood by the
 client/qmaster which will implement version 1.0 of the communication
@@ -205,10 +205,10 @@ verification task.
 .\"
 .IP "\fBlog_command\fP := '\fBLOG\fP' \fBlog_level\fP ;"
 .IP "\fBlog_level\fP := '\fBINFO\fP' | '\fBWARNING\fP' | '\fBERROR\fP'"
-\fBlog_commands\fP can be used whenever the client or qmaster expects
+\fBlog_command\fP's can be used whenever the client or qmaster expects
 input from a JSV instance. This command can be used in client
-JSVs to send information to the user submitting the job. In client
-JSVs all messages, independed of the \fBlog_level\fP will be printed
+JSV's to send information to the user submitting the job. In client
+JSV's all messages, independed of the \fBlog_level\fP will be printed
 to the \fBstdout\fP stream of the used submit client. If a server JSV
 receives a \fBlog_command\fP it will add the received message to the
 message file respecting the specified \fBlog_level\fP. Please note that
@@ -219,19 +219,19 @@ By sending \fBparam_commands\fP a JSV script can change the job
 specification of the job which should be verified. If a JSV
 instance later on sends a \fBresult_command\fP which indicates
 that a JSV instance should be accepted with correction then
-the values provided with these \fBparam_commands\fP will be used
+the values provided with these \fBparam_command\fP's will be used
 to modify the job before it is accepted by the xxQS_NAMExx system.
 .\"
 .IP "\fBresult_command\fP := '\fBRESULT\fP' \fBresult_type\fP [ \fBmessage\fP ] ;"
 .IP "\fBresult_type\fP := '\fBACCEPT\fP' | '\fBCORRECT\fP' | '\fBREJECT\fP' | '\fBREJECT_WAIT\fP' ;
 After the verification of a job is done a JSV script or binary has to send
 a \fBresult_command\fP which indicates what should happen with the job.
-If the \fBresult_type\fP is \fBACCEPTED\fP the job will be accepted
-as it was initially submitted by the end user. All \fBparam_commands\fP and 
-\fBenv_commands\fP which might have been sent before the 
+If the \fBresult_type\fP is \fBACCEPTED\fP then the job will be accepted
+as it was initially submitted by the end user. All \fBparam_command\fP's and 
+\fBenv_command\fP's which might have been sent before the 
 \fBresult_command\fP are ignored in this case.
 The \fBresult_type\fP \fBCORRECT\fP indicates that the job should be accepted
-after all modifications sent via \fBparam_commands\fP and \fBenv_commands\fP 
+after all modification sent via \fBparam_command\fP's and \fBenv_command\fP's 
 are applied to the job.
 \fBREJECT\fP and \fBREJECT_WAIT\fP cause the client or qmaster instance to
 reject the job.
@@ -240,21 +240,21 @@ reject the job.
 .IP "\fBdata_name\fP := '\fBENV\fP';"
 If a client/qmaster receives a \fBsend_env_command\fP from a
 JSV instance before a \fBstarted_command\fP is sent, then it will
-not only pass job parameters with \fBparam_commands\fP but also
-\fBenv_commands\fP which provide the JSV with the information which
+not only pass job parameters with \fBparam_command\fP's but also
+\fBenv_command\fP's which provide the JSV with the information which
 environment variables would be exported to the job environment if
 the job is accepted and started later on.
 .\"
 .sp 1
-The job environment is not passed to JSV instances as default because
+Per default the job environment is not passed to JSV instances because
 the job environment of the end user might contain data which
-might be interpreted wrong in the JSV context and might therefore
+might be interpreded wrong in the JSV context and might therefore
 cause errors or security issues.
 .\"
 .IP "\fBstarted_command\fP := '\fBSTARTED\fP' ;"
 By sending the \fBstarted_command\fP a JSV instance indicates that it 
-is ready to receive \fBparam_commands\fP and \fBenv_commands\fP for a new job
-verification. It will only receive \fBenv_commands\fP if it sends
+is ready to receive \fBparam_command\fP's and \fBenv_command\fP's for a new job
+verification. It will only receive \fBenv_command\fP's if it sends
 a \fBsend_data_command\fP before the \fBstarted_command\fP.
 .\"
 .SH PSEUDO PARAMETERS
@@ -271,15 +271,14 @@ Number of arguments which will be passed to the
 job script or command  when the job execution is started.
 It will always be sent as part of a job verification.
 If no arguments should be passed to the job script
-or command it will have the value 0. This parameter can be changed
+or command it will have the value 0. Can be changed
 by JSV instances. If the value of \fBCMDARGS\fP is bigger
 than the number of available \fBCMDARG<id>\fP parameters
 then the missing parameters will be automatically
 passed as empty parameters to the job script.
-.\"
 .IP "\fBCMDNAME\fP"
 Either the path to the script or the command name
-in case of binary submission. 
+in case of binary submission 
 .\" TODO something else?
 It will always be sent as part of a job verification.
 .\"
@@ -293,8 +292,8 @@ Changing the value of this parameters is not possible within
 JSV instances.
 .\"
 .IP "\fBGROUP\fP"
-Defines Primary group of the user which tries to submit the job which 
-should be verifyed. This parameter cannot be changed but is always sent as part 
+Primary group of the user which tries to submit the job which 
+should be verified. Cannot be changed but is always sent as part 
 of the verification process. The user name is passed as parameters
 with the name \fBUSER\fP.
 .\"
@@ -317,14 +316,14 @@ process and it will always be the first parameter
 which is sent. It will contain a version number of
 the format <major>.<minor>. In version 6.2u2 and higher
 the value will be '\fB1.0\fP'. 
-The value of this parameter can't be changed.
+The value of this parameters can't be changed.
 .\"
 .SH "EXAMPLE"
 Here is an example for the communication of a client with a JSV instance
 when following job is submitted:
 .PP
 .nf
-> qsub -pe p 3 -hard -l a=1,b=5 -soft -l q=all.q $SGE_ROOT/examples/jobs/sleeper.sh
+> qsub -pe p 3 -hard -l a=1,b=5 -soft -l q=all.q job.sh
 .fi
 .PP
 Data in the first column is sent from the client/qmaster to the

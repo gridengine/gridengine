@@ -3,21 +3,21 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     bootstrap - Sun Grid Engine bootstrap file
+     sge_conf - Grid Engine bootstrap file
 
 DESCRIPTION
      <I>bootstrap</I>  contains  parameters  that  are  needed  for  the
-     startup of Sun Grid Engine components.  It is created during
-     the sge_qmaster installation.  Modifying <I>bootstrap</I> in a run-
-     ning system is not supported.
+     startup of Grid Engine components.  It is created during the
+     sge_qmaster installation.  Modifying <I>bootstrap</I> in a  running
+     system is not supported.
 
 FORMAT
      The paragraphs that follow provide brief descriptions of the
      individual  parameters that compose the bootstrap configura-
-     tion for a Sun Grid Engine cluster:
+     tion for a Grid Engine cluster:
 
   admin_user
-     Administrative user account used by Sun Grid Engine for  all
+     Administrative user account used  by  Grid  Engine  for  all
      internal  file  handling  (status spooling, message logging,
      etc.). Can be used in cases where the root account does  not
      have  the  corresponding  file access permissions (e.g. on a
@@ -26,17 +26,17 @@ FORMAT
      Being  a  parameter  set  at  installation   time   changing
      admin_user in a running system is not supported. Changing it
      manually on a shut-down cluster is possible, but  if  access
-     to  the  Sun  Grid Engine spooling area is interrupted, this
-     will result in unpredictable behavior.
+     to  the  Grid Engine spooling area is interrupted, this will
+     result in unpredictable behaviour.
 
      The admin_user parameter has no default value,  but  instead
      it is defined during the master installation procedure.
 
   default_domain
-     Only needed if your Sun Grid  Engine  cluster  covers  hosts
-     belonging  to more than a single DNS domain. In this case it
-     can be used if your hostname resolving yields both qualified
-     and  unqualified  hostnames  for the hosts in one of the DNS
+     Only needed if your Grid Engine cluster covers hosts belong-
+     ing to more than a single DNS domain. In this case it can be
+     used if your hostname resolving yields  both  qualified  and
+     unqualified  hostnames  for  the  hosts  in  one  of the DNS
      domains. The value of  default_domain  is  appended  to  the
      unqualified  hostname  to define a fully qualified hostname.
      The  default_domain  parameter  will  have  no   effect   if
@@ -49,24 +49,24 @@ FORMAT
 
   ignore_fqdn
      Ignore fully qualified domain name component  of  hostnames.
-     Should  be  set  if all hosts belonging to a Sun Grid Engine
-     cluster are part of a single DNS domain. It is  switched  on
-     if  set  to  either "true" or "1". Switching it on may solve
-     problems with load reports due to different hostname resolu-
-     tions across the cluster.
+     Should  be set if all hosts belonging to a Grid Engine clus-
+     ter are part of a single DNS domain. It is  switched  on  if
+     set to either "true" or "1". Switching it on may solve prob-
+     lems with load reports due to different hostname resolutions
+     across the cluster.
      Being  a  parameter  set  at  installation   time   changing
      ignore_fqdn  in  a  running  system  is  not  supported. The
      default for ignore_fqdn is "true".
 
   spooling_method
-     Defines how <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u2_TAG">sge_qmaster(8)</A></B> writes its configuration and  the
+     Defines how <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> writes its configuration and  the
      status information of a running cluster.
 
      The available spooling methods are <I>berkeleydb</I> and <I>classic</I>.
 
   spooling_lib
      The name of a shared library containing the  spooling_method
-     to  be  loaded  at  <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u2_TAG">sge_qmaster(8)</A></B> initialization time.  The
+     to  be  loaded  at  <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> initialization time.  The
      extension characterizing a shared library (.so, .sl,  .dylib
      etc.) is not contained in spooling_lib.
 
@@ -97,9 +97,9 @@ FORMAT
      /sge/default/common;/sge/default/spool/qmaster
 
   binary_path
-     The directory  path  where  the  Sun  Grid  Engine  binaries
-     reside.  It  is  used  within  Sun Grid Engine components to
-     locate and startup other Sun Grid Engine programs.
+     The directory path where the Grid Engine binaries reside. It
+     is  used within Grid Engine components to locate and startup
+     other Grid Engine programs.
 
      The path name given here is searched for binaries as well as
      any  directory  below  with  a  directory  name equal to the
@@ -112,12 +112,12 @@ FORMAT
 
   qmaster_spool_dir
      The location where the master spool directory resides.  Only
-     the <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u2_TAG">sge_qmaster(8)</A></B> and <B><A HREF="../htmlman8/sge_shadowd.html?pathrev=V62u2_TAG">sge_shadowd(8)</A></B> need to have access to
+     the <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> and <B><A HREF="../htmlman8/sge_shadowd.html">sge_shadowd(8)</A></B> need to have access to
      this directory. The master spool directory -  in  particular
      the  job_scripts  directory  and the messages log file - may
      become quite large depending on the size of the cluster  and
      the  number  of  jobs. Be sure to allocate enough disk space
-     and regularly clean off the log files, e.g.  via  a  <B><A HREF="../htmlman8/cron.html?pathrev=V62u2_TAG">cron(8)</A></B>
+     and regularly clean off the log files, e.g.  via  a  <B><A HREF="../htmlman8/cron.html">cron(8)</A></B>
      job.
 
      Being  a  parameter  set  at  installation   time   changing
@@ -126,32 +126,32 @@ FORMAT
      The default location  for  the  master  spool  directory  is
      &lt;sge_root&gt;/&lt;cell&gt;/spool/qmaster.
 
-  security_mode
-     The security mode defines the set of security  features  the
-     installed cluster is using.
+  product_mode
+     The product mode defines the set of features  the  installed
+     cluster is using.
 
-     Possible security mode settings are  none,  afs,  dce,  ker-
-     beros,  csp.   (no  additional security, AFS, DCE, KERBEROS,
-     CSP security model).
-
-  listener_threads
-     The number of listener threads (defaults  set  by  installa-
-     tion).
-
-  worker_threads
-     The number of worker threads (defaults set by installation).
-
-  scheduler_threads
-     The number of scheduler threads (allowed: 0-1,  default  set
-     by installation: 1, off: 0).  (see <B><A HREF="../htmlman1/qconf.html?pathrev=V62u2_TAG">qconf(1)</A></B> -kt/-at option)
-
-  jvm_threads
-     The number of jvm threads (allowed: 0-1, default set by ins-
-     tallation, off: 0).
+     Both the basic product modes sge (Grid Engine standard mode)
+     and  sgeee (Grid Engine Enterprise Edition) as well as addi-
+     tional features (AFS, DCE, KERBEROS, RESERVED_PORT  security
+     model, CSP security model) are specified by this parameter.
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

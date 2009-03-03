@@ -478,7 +478,7 @@ int cl_thread_setup(cl_thread_settings_t* thread_config,
       }
    }
 
-   CL_LOG_STR(CL_LOG_INFO, "setup complete for thread ->",thread_config->thread_name); 
+   CL_LOG_STR(CL_LOG_DEBUG, "setup complete for thread ->",thread_config->thread_name); 
    return CL_RETVAL_OK;
 }
 

@@ -223,12 +223,15 @@ extern int main(int argc, char** argv)
      runs = -1;  /* disable runs shutdown */
   }
   while(do_shutdown != 1) {
-     unsigned long mid = 0;
+     unsigned long mid;
      int my_sent_error = 0;
 
      CL_LOG(CL_LOG_INFO,"main loop");
      if (runs > 0) {
         runs--;
+     }
+     if (runs == 0) {
+        do_shutdown = 1;
      }
 
      /* printf("sending to \"%s\" ...\n", argv[1]);  */
@@ -445,9 +448,6 @@ extern int main(int argc, char** argv)
            printf("could not enable autoclose\n");
            exit(1);
         }  
-     }
-     if (runs == 0) {
-        do_shutdown = 1;
      }
   }
   printf("do_shutdown received\n");

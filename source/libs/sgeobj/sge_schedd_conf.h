@@ -39,8 +39,7 @@ enum {
     DISPATCH_TYPE_NONE = 0,      /* did not dispatch a job */
     DISPATCH_TYPE_FAST,          /* dispatched a sequential job */
     DISPATCH_TYPE_FAST_SOFT_REQ, /* dispatch a sequential job with soft requests */
-    DISPATCH_TYPE_PE,            /* dispatched a pe job*/
-    DISPATCH_TYPE_PE_SOFT_REQ    /* dispatched a pe job*/
+    DISPATCH_TYPE_COMPREHENSIVE  /* dispatched a pe job*/
 };
 
 enum schedd_job_info_key {
@@ -214,23 +213,11 @@ int  sconf_get_pe_alg_value(schedd_pe_algorithm alg);
 void sconf_inc_fast_jobs(void); 
 int sconf_get_fast_jobs(void); 
    
-void sconf_inc_pe_jobs(void); 
-int sconf_get_pe_jobs(void);
+void sconf_inc_comprehensive_jobs(void); 
+int sconf_get_comprehensive_jobs(void);
 
 void sconf_set_decay_constant(double decay);
 double sconf_get_decay_constant(void);
-
-void sconf_set_mes_schedd_info(bool newval);
-bool sconf_get_mes_schedd_info(void);
-
-void schedd_mes_set_logging(int bval);
-int schedd_mes_get_logging(void);
-
-lListElem *sconf_get_sme(void);
-void sconf_set_sme(lListElem *sme);
-
-lListElem *sconf_get_tmp_sme(void);
-void sconf_set_tmp_sme(lListElem *sme);
 
 void sconf_reset_jobs(void);
 

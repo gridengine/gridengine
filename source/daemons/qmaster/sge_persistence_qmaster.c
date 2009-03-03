@@ -393,7 +393,6 @@ sge_event_spool(sge_gdi_ctx_class_t *ctx,
          element = object;
          object_type = SGE_TYPE_PROJECT;
          break;
-      case sgeE_ACK_TIMEOUT:
       case sgeE_QMASTER_GOES_DOWN:
          key = strkey;
          element = object;

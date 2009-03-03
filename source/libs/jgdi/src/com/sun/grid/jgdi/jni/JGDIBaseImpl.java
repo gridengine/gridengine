@@ -131,14 +131,6 @@ public abstract class JGDIBaseImpl implements com.sun.grid.jgdi.JGDIBase {
         return nativeGetActQMaster();
     }
 
-    public int getSgeQmasterPort() throws JGDIException {
-        return nativeGetSgeQmasterPort();
-    }
-
-    public int getSgeExecdPort() throws JGDIException {
-        return nativeGetSgeExecdPort();
-    }
-
     public String getSchedulerHost() throws JGDIException {
         return nativeGetSchedulerHost();
     }
@@ -386,10 +378,6 @@ public abstract class JGDIBaseImpl implements com.sun.grid.jgdi.JGDIBase {
     private native String nativeGetAdminUser() throws JGDIException;
 
     private native String nativeGetActQMaster() throws JGDIException;
-
-    private native int nativeGetSgeQmasterPort() throws JGDIException;
-
-    private native int nativeGetSgeExecdPort() throws JGDIException;
 
     private native void nativeExecQHost(QHostOptions options, QHostResultImpl result);
 

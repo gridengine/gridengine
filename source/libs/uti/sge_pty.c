@@ -54,8 +54,6 @@
 #  include <sys/ioctl.h>
 #  include <stropts.h>
 #  include <termio.h>
-#elif defined(FREEBSD)
-#  include <termios.h>
 #else
 #  include <termio.h>
 #endif

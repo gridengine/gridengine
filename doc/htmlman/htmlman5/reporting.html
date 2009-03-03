@@ -3,10 +3,10 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     reporting - Sun Grid Engine reporting file format
+     reporting - Grid Engine reporting file format
 
 DESCRIPTION
-     A  Sun  Grid  Engine  system  writes  a  reporting  file  to
+     A  Grid  Engine  system   writes   a   reporting   file   to
      $SGE_ROOT/default/common/reporting.  The reporting file con-
      tains data that can be used for accounting,  monitoring  and
      analysis  purposes.  It contains information about the clus-
@@ -141,13 +141,9 @@ FORMAT
           A message describing the reported action.
 
   acct
-     Records of type acct are accounting records. Normally,  they
-     are  written  whenever a job, a task of an array job, or the
-     task of a parallel job terminates. However, for long running
-     jobs an intermediate acct record is created once a day after
-     a midnight. This results in multiple accounting records  for
-     a  particular  job  and  allows  for a fine-grained resource
-     usage monitoring over time. Accounting records comprise  the
+     Records of type acct are accounting records. They are  writ-
+     ten  whenever a job, a task of an array job or the task of a
+     parallel job terminates.  Accounting  records  comprise  the
      following fields:
 
      qname
@@ -161,7 +157,7 @@ FORMAT
           the job.
 
      owner
-          Owner of the Sun Grid Engine job.
+          Owner of the Grid Engine job.
 
      job_name
           Job name.
@@ -170,16 +166,18 @@ FORMAT
           Job identifier - job number.
 
      account
-          An account  string  as  specified  by  the  <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B>  or
-          <B><A HREF="../htmlman1/qalter.html?pathrev=V62u2_TAG">qalter(1)</A></B> -A option.
+          An account  string  as  specified  by  the  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>  or
+          <B><A HREF="../htmlman1/qalter.html">qalter(1)</A></B> -A option.
 
      priority
           Priority value assigned to the job corresponding to the
           priority  parameter  in  the  queue  configuration (see
-          <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62u2_TAG">queue_conf(5)</A></B>).
+          <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>).
 
      submission_time
-          Submission time (GMT unix time stamp).
+          Submission time (GMT unix time stamp).  For slave tasks
+          of    tightly    integrated    parallel    jobs,    the
+          submission_time is always set to 0.
 
      start_time
           Start time (GMT unix time stamp).
@@ -191,24 +189,23 @@ FORMAT
           Indicates the problem which  occurred  in  case  a  job
           could  not  be  started  on  the  execution  host (e.g.
           because the owner of the  job  did  not  have  a  valid
-          account  on  that machine). If Sun Grid Engine tries to
-          start a job multiple times, this may lead  to  multiple
-          entries  in  the  accounting  file corresponding to the
-          same job ID.
+          account on that machine). If Grid Engine tries to start
+          a job multiple times, this may lead to multiple entries
+          in  the  accounting  file corresponding to the same job
+          ID.
 
      exit_status
-          Exit status of the  job  script  (or  Sun  Grid  Engine
-          specific status in case of certain error conditions).
+          Exit status of the job script (or Grid Engine  specific
+          status in case of certain error conditions).
 
      ru_wallclock
           Difference between end_time and start_time (see above).
 
      The remainder of the accounting entries follows the contents
      of  the  standard  UNIX  rusage  structure  as  described in
-     <B><A HREF="../htmlman2/getrusage.html?pathrev=V62u2_TAG">getrusage(2)</A></B>.  Depending on the operating system  where  the
+     <B><A HREF="../htmlman2/getrusage.html">getrusage(2)</A></B>.  Depending on the operating system  where  the
      job was executed some of the fields may be 0.  The following
      entries are provided:
-
 
           ru_utime
           ru_stime
@@ -259,16 +256,12 @@ FORMAT
 
      pe_taskid
           If this identifier is set the task was part of a paral-
-          lel  job and was passed to Sun Grid Engine via the qrsh
+          lel  job  and  was  passed  to Grid Engine via the qrsh
           -inherit interface.
 
      maxvmem
           The maximum vmem size in bytes.
 
-     arid Advance  reservation  identifier.  If  the   job   used
-          resources  of  an  advance  reservation then this field
-          contains a positive integer  identifier  otherwise  the
-          value is "0" .
 
   queue
      Records of type queue contain state information  for  queues
@@ -322,7 +315,7 @@ FORMAT
           mation was generated.
 
      state
-          The new host state.  Currently, Sun Grid Engine doesn't
+          The new host state.   Currently,  Grid  Engine  doesn't
           track  a  host  state, the field is reserved for future
           use. Always contains the value X.
 
@@ -344,7 +337,7 @@ FORMAT
           mation was generated.
 
      state
-          The new host state.  Currently, Sun Grid Engine doesn't
+          The new host state.   Currently,  Grid  Engine  doesn't
           track  a  host  state, the field is reserved for future
           use. Always contains the value X.
 
@@ -354,213 +347,12 @@ FORMAT
           able       description       has       the       format
           &lt;name&gt;=&lt;actual_value&gt;=&lt;configured value&gt;.
 
-  sharelog
-     The Sun Grid  Engine  qmaster  can  dump  information  about
-     sharetree  configuration and use to the reporting file.  The
-     parameter <I>sharelog</I>  sets  an  interval  in  which  sharetree
-     information  will  be  dumped.   It  is  set  in  the format
-     HH:MM:SS. A value of 00:00:00 configures qmaster not to dump
-     sharetree  information.  Intervals  of several minutes up to
-     hours are sensible values for this  parameter.   The  record
-     contains the following fields
-
-     current time
-          The present time
-
-     usage time
-          The  time used so far
-
-     node name
-          The node name
-
-     user name
-          The user name
-
-     project name
-          The project name
-
-     shares
-          The total shares
-
-     job count
-          The job  count
-
-     level
-          The percentage of shares used
-
-     total
-          The adjusted percentage of shares used
-
-     long target share
-          The long target percentage of resource shares used
-
-     short target share
-          The short target percentage of resource shares used
-
-     actual share
-          The actual percentage of resource shares used
-
-     usage
-          The combined shares used
-
-     cpu  The cpu used
-
-     mem  The memory used
-
-     io   The IO used
-
-     long target cpu
-          The long target cpu used
-
-     long target mem
-          The long target memory used
-
-     long target io
-          The long target IO used
-
-
-  new_ar
-     A new_ar record contains information about advance  reserva-
-     tion  objects.  Entries  of  this  type  will be added if an
-     advance reservation is created.  It contains  the  following
-     information:
-
-     submission_time
-          The time (GMT unix time stamp) when the advance  reser-
-          vation was created.
-
-     ar_number
-          The advance reservation number identifying the reserva-
-          tion.
-
-     ar_owner
-          The owner of the advance reservation.
-
-  ar_attribute
-     The ar_attribute record is written whenever  a  new  advance
-     reservation  was  added  or  the  attribute  of  an existing
-     advance reservation has changed. It has following fields.
-
-     event_time
-          The time (GMT unix time stamp) when the event was  gen-
-          erated.
-
-     submission_time
-          The time (GMT unix time stamp) when the advance  reser-
-          vation was created.
-
-     ar_number
-          The advance reservation number identifying the reserva-
-          tion.
-
-     ar_name
-          Name of the advance reservation.
-
-     ar_account
-          An account string which was specified during the  crea-
-          tion of the advance reservation.
-
-     ar_start_time
-          Start time.
-
-     ar_end_time
-          End time.
-
-     ar_granted_pe
-          The parallel environment  which  was  selected  for  an
-          advance reservation.
-
-     ar_granted_resources
-          The  granted  resources  which  were  selected  for  an
-          advance reservation.
-
-  ar_log
-     The ar_log record is written whenever a advance  reservation
-     is  changing  status. A status change can be from pending to
-     active, but can also be triggered by system events like host
-     outage. It has following fields.
-
-     ar_state_change_time
-          The time (GMT unix time stamp) when the event  occurred
-          which caused a state change.
-
-     submission_time
-          The time (GMT unix time stamp) when the advance  reser-
-          vation was created.
-
-     ar_number
-          The advance reservation number identifying the reserva-
-          tion.
-
-     ar_state
-          The new state.
-
-     ar_event
-          An event id identifying  the  event  which  caused  the
-          state change.
-
-     ar_message
-          A message describing the event which caused  the  state
-          change.
-
-  ar_acct
-     The ar_acct records are accounting records which are written
-     for every queue instance whenever a advance reservation ter-
-     minates. Advance  reservation  accounting  records  comprise
-     following fields.
-
-     ar_termination_time
-          The time (GMT unix time stamp) when the advance  reser-
-          vation terminated.
-
-     submission_time
-          The time (GMT unix time stamp) when the advance  reser-
-          vation was created.
-
-     ar_number
-          The advance reservation number identifying the reserva-
-          tion.
-
-     ar_qname
-          Cluster  queue  name  which  the  advance   reservation
-          reserved.
-
-     ar_hostname
-          The name of the execution host.
-
-     ar_slots
-          The number of slots which were reserved.
-
 SEE ALSO
-     <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62u2_TAG">sge_conf(5)</A></B>.  <B><A HREF="../htmlman5/host_conf.html?pathrev=V62u2_TAG">host_conf(5)</A></B>.
+     <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>.  <B><A HREF="../htmlman5/host_conf.html">host_conf(5)</A></B>.
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

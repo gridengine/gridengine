@@ -1176,14 +1176,12 @@ CreateSettingsFile()
 InitCA()
 {
 
-   if [ "$CSP" = true -o \( "$WINDOWS_SUPPORT" = "true" -a "$WIN_DOMAIN_ACCESS" = "true" \) -o \( "$SGE_ENABLE_JMX" = true -a "$SGE_JMX_SSL" = true \) ]; then
+   if [ "$CSP" = true -o \( "$WINDOWS_SUPPORT" = "true" -a "$WIN_DOMAIN_ACCESS" = "true" \) -o "$SGE_JMX_SSL" = true ]; then
       # Initialize CA, make directories and get DN info
       #
       SGE_CA_CMD=util/sgeCA/sge_ca
-      CATOP_TMP=`grep "CATOP=" util/sgeCA/sge_ca.cnf | awk -F= '{print $2}' 2>/dev/null`
-      eval CATOP_TMP=$CATOP_TMP
       if [ "$AUTO" = "true" ]; then
-         if [ "$CSP_RECREATE" != "false" -o ! -f $CATOP_TMP/certs/cert.pem ]; then
+         if [ "$CSP_RECREATE" = "true" ]; then
             $SGE_CA_CMD -init -days 365 -auto $FILE
             #if [ -f "$CSP_USERFILE" ]; then
             #   $SGE_CA_CMD -usercert $CSP_USERFILE
@@ -1202,7 +1200,6 @@ InitCA()
          OUTPUT=`$SGE_CA_CMD -sysks -ksout $SGE_JMX_SSL_KEYSTORE -kspwf /tmp/pwfile.$$ 2>&1`
          if [ $? != 0 ]; then
             $INFOTEXT "Error: Cannot create keystore $SGE_JMX_SSL_KEYSTORE\n$OUTPUT"
-	        $INFOTEXT -log "Error: Cannot create keystore $SGE_JMX_SSL_KEYSTORE\n$OUTPUT"
             ret=1
          else
             ret=0
@@ -1384,25 +1381,13 @@ AddHosts()
       if [ -f $TMPL -o -f $TMPL2 ]; then
          $INFOTEXT "\nCan't delete template files >%s< or >%s<" "$TMPL" "$TMPL2"
       else
-		   #Issue if old qmaster is running, new installation succeeds, but in fact the old qmaster is still running!
-		   #Reinstall can cause, that these already exist. So we skip them if they already exist.
-		   if [ x`$SGE_BIN/qconf -shgrpl 2>/dev/null | grep '^@allhosts$'` = x ]; then
-            PrintHostGroup @allhosts > $TMPL
-            Execute $SGE_BIN/qconf -Ahgrp $TMPL
-			else
-			   $INFOTEXT "Skipping creation of <allhosts> hostgroup as it already exists"
-				$INFOTEXT -log "Skipping creation of <allhosts> hostgroup as it already exists"
-			fi
-			if [ x`$SGE_BIN/qconf -sql 2>/dev/null | grep '^all.q$'` = x ]; then
-            Execute $SGE_BIN/qconf -sq > $TMPL
-            Execute sed -e "/qname/s/template/all.q/" \
-                        -e "/hostlist/s/NONE/@allhosts/" \
-                        -e "/pe_list/s/NONE/make/" $TMPL > $TMPL2
-            Execute $SGE_BIN/qconf -Aq $TMPL2
-			else
-			   $INFOTEXT "Skipping creation of <all.q> queue as it already exists"
-				$INFOTEXT -log "Skipping creation of <all.q> queue  as it already exists"
-			fi
+         PrintHostGroup @allhosts > $TMPL
+         Execute $SGE_BIN/qconf -Ahgrp $TMPL
+         Execute $SGE_BIN/qconf -sq > $TMPL
+         Execute sed -e "/qname/s/template/all.q/" \
+                     -e "/hostlist/s/NONE/@allhosts/" \
+                     -e "/pe_list/s/NONE/make/" $TMPL > $TMPL2
+         Execute $SGE_BIN/qconf -Aq $TMPL2
          rm -f $TMPL $TMPL2        
       fi
 
@@ -1910,7 +1895,7 @@ SetLibJvmPath() {
    
    if [ ! -f "$jvm_lib_path" ]; then
       jvm_lib_path=""
-      $INFOTEXT -log "\nWarning: Cannot start jvm thread: jvm library %s not found" "$jvm_lib_path"
+      $INFOTEXT "\nWarning: Cannot start jvm thread: jvm library %s not found" "$jvm_lib_path"
       return 1
    fi
    if [ "$JAVA_HOME" = "" ]; then
@@ -2039,20 +2024,13 @@ GetJMXPort() {
                fi   
 
                # set SGE_JMX_SSL_KEYSTORE
-               if [ "$SGE_QMASTER_PORT" != "" -a "$qmaster_service" = false ]; then
+               if [ "$SGE_QMASTER_PORT" != "" ]; then
                   ca_port=port$SGE_QMASTER_PORT
                else
                   ca_port=sge_qmaster
                fi
-               # must be in sync with definitions in sge_ca.cnf
-               euid=`$SGE_UTILBIN/uidgid -euid`
-               if [ $euid = 0 ]; then
-                  CALOCALTOP=/var/sgeCA/$ca_port/$SGE_CELL
-               else
-                  CALOCALTOP=/tmp/sgeCA/$ca_port/$SGE_CELL
-               fi
                if [ "$sge_jmx_ssl_keystore" = "" ]; then 
-                  sge_jmx_ssl_keystore=$CALOCALTOP/private/keystore
+                  sge_jmx_ssl_keystore=/var/sgeCA/$ca_port/$SGE_CELL/private/keystore
                fi
                $INFOTEXT -n "Enter JMX SSL server keystore path [%s] >> " "$sge_jmx_ssl_keystore"
                INP=`Enter "$sge_jmx_ssl_keystore"`

@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2009/01/12 14:18:39 $     Revision: $Revision: 1.89 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2008/11/17 10:55:37 $     Revision: $Revision: 1.84 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2009/01/12 14:18:39 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2008/11/17 10:55:37 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -456,21 +456,6 @@ when then long form \fByes\fP was specified during submission.
 (see \fB\-jsv\fP option below or find more information concerning JSV in
 .M jsv 1 )
 .
-.sp
-Please note that submission of \fBcommand\fP as script (\fB\-b n\fP) can have a significant 
-performance impact, especially for short running jobs and big job scripts.
-Script submission adds a number of operations to the submission process:
-The job script needs to be
-.nf
-- parsed at client side (for special comments)
-- transferred from submit client to qmaster
-- spooled in qmaster
-- transferred to execd at job execution
-- spooled in execd
-- removed from spooling both in execd and qmaster once the job is done
-.fi
-If job scripts are available on the execution nodes, e.g. via NFS, binary 
-submission can be the better choice.
 .\"
 .IP "\fB\-c occasion_specifier\fP"
 Available for \fIqsub\fP and \fIqalter\fP only.
@@ -565,7 +550,7 @@ behaves as if \fB-cwd\fP was not specified during job submission.
 
 .\"
 .IP "\fB\-C prefix_string\fP"
-Available for \fIqsub\fP and \fIqrsh\fP with script submission (\fB-b n\fP).
+Available for \fIqsub\fP and qrsh with script submission (-b n).
 .sp 1
 .I Prefix_string
 defines the prefix that declares a directive in the
@@ -605,7 +590,7 @@ instances as parameter with the name \fB\aac\fP.
 .
 .\"
 .IP "\fB\-display display_specifier\fP"
-Available for \fIqsh\fP and \fIqrsh\fP.
+Available for \fIqsh\fP only.
 .sp 1
 Directs
 .M xterm 1
@@ -1169,8 +1154,6 @@ to a running job prior to sending the signals themselves. If
 a SIGSTOP is pending, the job will receive a SIGUSR1 several
 seconds before the SIGSTOP. If a SIGKILL is pending, the job
 will receive a SIGUSR2 several seconds before the SIGKILL.
-This option provides the running job, before receiving the SIGSTOP 
-or SIGKILL, a configured time interval to do e.g. cleanup operations.  
 The amount of time delay is controlled by the \fBnotify\fP
 parameter in each queue configuration (see
 .M queue_conf 5 ).
@@ -1795,7 +1778,7 @@ during the job submission verification.
 .M jsv 1 )
 .
 .\"
-.IP "\fB\-w e\fP|\fBw\fP|\fBn\fP|\fBp\fP|\fBv\fP"
+.IP "\fB\-w e\fP|\fBw\fP|\fBn\fP|\fBv\fP"
 Available for \fIqsub\fP, \fIqsh\fP, \fIqrsh\fP, \fIqlogin\fP and \fIqalter\fP.
 .sp 1
 Specifies a validation level applied to the job to be submitted

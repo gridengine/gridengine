@@ -42,5 +42,4 @@ int clean_up_old_jobs(sge_gdi_ctx_class_t *ctx, int startup);
 void remove_acked_job_exit(sge_gdi_ctx_class_t *ctx, u_long32 job_id, u_long32 ja_task_id, const char *pe_task_id, lListElem *jr); 
 void reaper_sendmail(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jr);
 
-void execd_slave_job_exit(u_long32 job_id, u_long32 ja_task_id);
 #endif

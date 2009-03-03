@@ -44,7 +44,12 @@ bool
 cqueue_list_x_on_subordinate_so(sge_gdi_ctx_class_t *ctx, 
                                 lList *this_list, lList **answer_list,
                                 bool suspend, const lList *resolved_so_list,
-                                monitoring_t *monitor);
+                                bool do_recompute_caches, monitoring_t *monitor);
+
+bool
+qinstance_x_on_subordinate(sge_gdi_ctx_class_t *ctx,
+                           lListElem *this_elem, bool suspend,
+                           bool rebuild_cache, monitoring_t *monitor);
 
 bool
 qinstance_find_suspended_subordinates(const lListElem *this_elem,

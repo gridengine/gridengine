@@ -57,8 +57,7 @@
 #define SGE_QMASTER_PORT_ENVIRONMENT_NAME "SGE_QMASTER_PORT"
 #define SGE_COMMD_SERVICE "sge_qmaster"
 #define CA_DIR          "common/sgeCA"
-#define CA_LOCAL_ROOTUSER_DIR    "/var/sgeCA"
-#define CA_LOCAL_NORMALUSER_DIR  "/tmp/sgeCA"
+#define CA_LOCAL_DIR    "/var/sgeCA"
 #define CaKey           "cakey.pem"
 #define CaCert          "cacert.pem"
 #define SGESecPath      ".sge"
@@ -296,7 +295,6 @@ static bool sge_csp_path_setup(sge_csp_path_class_t *thiz, sge_env_state_class_t
    bool is_from_services = false;
    SGE_STRUCT_STAT sbuf;
 /*    bool sge_no_ca_local_root = false;  */
-   char ca_local_dir[SGE_PATH_MAX]; 
 
    DENTER(TOP_LAYER, "sge_csp_path_setup");
  
@@ -321,17 +319,6 @@ static bool sge_csp_path_setup(sge_csp_path_class_t *thiz, sge_env_state_class_t
       sge_no_ca_local_root = true;
    }   
 #endif   
-
-#ifdef NORMALUSER_FIX
-   if (sge_is_start_user_superuser()) {
-      strncpy(ca_local_dir, CA_LOCAL_ROOTUSER_DIR, SGE_PATH_MAX);
-   } else {
-      strncpy(ca_local_dir, CA_LOCAL_NORMALUSER_DIR, SGE_PATH_MAX);
-   }  
-#else
-   strncpy(ca_local_dir, CA_LOCAL_ROOTUSER_DIR, SGE_PATH_MAX);
-#endif
-
    /*
    ** TODO: certificate handling does not work since usually the servlet runs as
    **       a specific user and has no access to the users key
@@ -344,9 +331,9 @@ static bool sge_csp_path_setup(sge_csp_path_class_t *thiz, sge_env_state_class_t
    set_ca_root(thiz, sge_dstring_get_string(&bw));
 
    if (!is_from_services) {
-      sge_dstring_sprintf(&bw, "%s/port%d/%s", ca_local_dir, sge_qmaster_port, sge_cell);   
+      sge_dstring_sprintf(&bw, "%s/port%d/%s", CA_LOCAL_DIR, sge_qmaster_port, sge_cell);   
    } else {
-      sge_dstring_sprintf(&bw, "%s/%s/%s", ca_local_dir, SGE_COMMD_SERVICE, sge_cell);   
+      sge_dstring_sprintf(&bw, "%s/%s/%s", CA_LOCAL_DIR, SGE_COMMD_SERVICE, sge_cell);   
    }
    set_ca_local_root(thiz, sge_dstring_get_string(&bw));
 

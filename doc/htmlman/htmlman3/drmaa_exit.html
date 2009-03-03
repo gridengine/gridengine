@@ -3,8 +3,8 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     drmaa_init, drmaa_exit - Start/finish Sun Grid Engine  DRMAA
-     session
+     drmaa_init, drmaa_exit - Start/finish Grid Engine DRMAA ses-
+     sion
 
 SYNOPSIS
      #include "drmaa.h"
@@ -22,22 +22,22 @@ SYNOPSIS
 
 DESCRIPTION
   drmaa_init()
-     The drmaa_init() function initializes the  Sun  Grid  Engine
-     DRMAA API library for all threads of the process and creates
-     a new DRMAA session. This routine must be called once before
-     any   other   DRMAA   call,   except  for  <B><A HREF="../htmlman3/drmaa_version.html?pathrev=V62u2_TAG">drmaa_version(3)</A></B>,
-     <B><A HREF="../htmlman3/drmaa_get_DRM_system.html?pathrev=V62u2_TAG">drmaa_get_DRM_system(3)</A></B>,                                 and
-     <B><A HREF="../htmlman3/drmaa_get_DRMAA_implementation.html?pathrev=V62u2_TAG">drmaa_get_DRMAA_implementation(3)</A></B>.   Except  for  the  above
+     The drmaa_init() function initializes the Grid Engine  DRMAA
+     API library for all threads of the process and creates a new
+     DRMAA session. This routine must be called once  before  any
+     other    DRMAA    call,    except    for   <B><A HREF="../htmlman3/drmaa_version.html">drmaa_version(3)</A></B>,
+     <B><A HREF="../htmlman3/drmaa_get_DRM_system.html">drmaa_get_DRM_system(3)</A></B>,                                 and
+     <B><A HREF="../htmlman3/drmaa_get_DRMAA_implementation.html">drmaa_get_DRMAA_implementation(3)</A></B>.   Except  for  the  above
      listed functions, no DRMAA functions may  be  called  before
      the  drmaa_init()  function  <I>completes</I>.   Any DRMAA function
      which is called before the drmaa_init()  function  completes
      will  return a DRMAA_ERRNO_NO_ACTIVE_SESSION error.  <I>Contact</I>
      is an implementation dependent string which may be  used  to
-     specify  which  Sun  Grid  Engine cell to use. If <I>contact</I> is
-     NULL, the default Sun Grid Engine cell will be used. In  the
-     1.0  implementation  <I>contact</I>  may  have the following value:
+     specify  which  Grid Engine cell to use. If <I>contact</I> is NULL,
+     the default Grid Engine cell will be used. In the 1.0 imple-
+     mentation    <I>contact</I>   may   have   the   following   value:
      <I>session</I>=&lt;<I>session</I>_<I>id</I>&gt;.   To  determine  the  session_id,  the
-     <B><A HREF="../htmlman3/drmaa_get_contact.html?pathrev=V62u2_TAG">drmaa_get_contact(3)</A></B>  function  should  be  called after the
+     <B><A HREF="../htmlman3/drmaa_get_contact.html">drmaa_get_contact(3)</A></B>  function  should  be  called after the
      session  has  already  been  initialized.   By  passing  the
      <I>session</I>=&lt;<I>session</I>_<I>id</I>&gt;  string  to  the drmaa_init() function,
      instead of creating a new session,  DRMAA  will  attempt  to
@@ -49,19 +49,21 @@ DESCRIPTION
      may not be available or may have no associated exit informa-
      tion or resource usage data.
 
+     In the 0.95 implementation, setting <I>contact</I> has no effect.
+
   drmaa_exit()
      The drmaa_exit() function closes the DRMAA session  for  all
      threads  and must be called before process termination.  The
      drmaa_exit() function may be called only once  by  a  single
      thread  in  the  process  and  may  only be called after the
      drmaa_init() function has completed.   Any  DRMAA  function,
-     other   than   <B><A HREF="../htmlman3/drmaa_init.html?pathrev=V62u2_TAG">drmaa_init(3)</A></B>,  which  is  called  after  the
+     other   than   <B><A HREF="../htmlman3/drmaa_init.html">drmaa_init(3)</A></B>,  which  is  called  after  the
      drmaa_exit()    function    completes    will    return    a
      DRMAA_ERRNO_NO_ACTIVE_SESSION error.
 
      The drmaa_exit() function does necessary  clean  up  of  the
      DRMAA  session state, including unregistering from the <I>qmas-</I>
-     <B><A HREF="../htmlman8/ter.html?pathrev=V62u2_TAG">ter(8)</A></B>.  If the drmaa_exit() function  is  not  called,  the
+     <B><A HREF="../htmlman8/ter.html">ter(8)</A></B>.  If the drmaa_exit() function  is  not  called,  the
      qmaster  will  store  events  for the DRMAA client until the
      connection times out, causing extra work for the qmaster and
      consuming system resources.
@@ -70,13 +72,13 @@ DESCRIPTION
      tion.
 
 ENVIRONMENTAL VARIABLES
-     SGE_ROOT       Specifies the location of the Sun Grid Engine
+     SGE_ROOT       Specifies the location  of  the  Grid  Engine
                     standard configuration files.
 
-     SGE_CELL       If set, specifies the default Sun Grid Engine
-                    cell to be used. To address a Sun Grid Engine
-                    cell Sun Grid Engine uses (in  the  order  of
-                    precedence):
+     SGE_CELL       If set, specifies  the  default  Grid  Engine
+                    cell  to  be  used.  To address a Grid Engine
+                    cell Grid Engine uses (in the order  of  pre-
+                    cedence):
 
                          The name of the cell  specified  in  the
                          environment  variable SGE_CELL, if it is
@@ -104,7 +106,6 @@ RETURN VALUES
      return DRMAA_ERRNO_SUCCESS.  Other values indicate an error.
      Up to <I>error</I>_<I>diag</I>_<I>len</I> characters of error  related  diagnosis
      information is then provided in the buffer <I>error</I>_<I>diagnosis</I>.
-
 
 ERRORS
      The drmaa_init() and drmaa_exit() functions will fail if:
@@ -150,7 +151,7 @@ ERRORS
      DRM system disengagement failed.
 
 SEE ALSO
-     <B><A HREF="../htmlman3/drmaa_submit.html?pathrev=V62u2_TAG">drmaa_submit(3)</A></B>.
+     <B><A HREF="../htmlman3/drmaa_submit.html">drmaa_submit(3)</A></B>.
 
 
 

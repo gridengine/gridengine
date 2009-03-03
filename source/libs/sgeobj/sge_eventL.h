@@ -383,8 +383,6 @@ typedef enum {
    sgeE_AR_DEL,
    sgeE_AR_MOD,
 
-   sgeE_ACK_TIMEOUT,
-
    sgeE_EVENTSIZE 
 } ev_event;
 
@@ -394,7 +392,7 @@ typedef enum {
  * SEE ALSO
  *   EventMaster/sge_handle_event_ack
  */
-typedef bool (*evm_ack_func_t)(
+typedef void (*evm_ack_func_t)(
    u_long32,         /* the event client id */
    u_long32          /* the last event to ack */
 );
@@ -418,8 +416,7 @@ typedef bool (*evm_ack_func_t)(
   ((x)==sgeE_USERSET_LIST) || \
   ((x)==sgeE_HGROUP_LIST) || \
   ((x)==sgeE_SHUTDOWN) || \
-  ((x)==sgeE_QMASTER_GOES_DOWN) || \
-  ((x)==sgeE_ACK_TIMEOUT))
+  ((x)==sgeE_QMASTER_GOES_DOWN))
 
 
 enum {

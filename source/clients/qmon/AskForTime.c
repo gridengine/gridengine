@@ -386,9 +386,9 @@ XmtPerScreenInfo *info
    day = XtVaCreateManagedWidget("Day", 
                            xmpSpinboxWidgetClass, 
                            time,
-                           XmNspinboxType, (XtPointer) XmSPINBOX_NUMBER,
-                           XmNminimum, (XtPointer)0,
-                           XmNmaximum, (XtPointer)365,
+                           XmNspinboxType, XmSPINBOX_NUMBER,
+                           XmNminimum, 0,
+                           XmNmaximum, 365,
                            XmNcolumns, 4,
                            XmNincrementLarge, 5,
                            XmtNlayoutStretchability, 0,
@@ -414,9 +414,9 @@ XmtPerScreenInfo *info
    hour = XtVaCreateManagedWidget("Hour", 
                            xmpSpinboxWidgetClass, 
                            time,
-                           XmNspinboxType, (XtPointer)XmSPINBOX_NUMBER,
-                           XmNminimum, (XtPointer)0,
-                           XmNmaximum, (XtPointer)23,
+                           XmNspinboxType, XmSPINBOX_NUMBER,
+                           XmNminimum, 0,
+                           XmNmaximum, 23,
                            XmNcolumns, 2,
                            XmNincrementLarge, 5,
                            XmtNlayoutStretchability, 0,
@@ -442,9 +442,9 @@ XmtPerScreenInfo *info
    minute = XtVaCreateManagedWidget("Minute", 
                            xmpSpinboxWidgetClass, 
                            time,
-                           XmNspinboxType, (XtPointer)XmSPINBOX_NUMBER,
-                           XmNminimum, (XtPointer)0,
-                           XmNmaximum, (XtPointer)59,
+                           XmNspinboxType, XmSPINBOX_NUMBER,
+                           XmNminimum, 0,
+                           XmNmaximum, 59,
                            XmNcolumns, 2,
                            XmNincrementLarge, 10,
                            XmtNlayoutStretchability, 0,
@@ -470,9 +470,9 @@ XmtPerScreenInfo *info
    second = XtVaCreateManagedWidget("Second", 
                            xmpSpinboxWidgetClass, 
                            time,
-                           XmNspinboxType, (XtPointer)XmSPINBOX_NUMBER,
-                           XmNminimum, (XtPointer)0,
-                           XmNmaximum, (XtPointer)59,
+                           XmNspinboxType, XmSPINBOX_NUMBER,
+                           XmNminimum, 0,
+                           XmNmaximum, 59,
                            XmNcolumns, 2,
                            XmNincrementLarge, 10,
                            XmtNlayoutStretchability, 0,
@@ -793,7 +793,7 @@ static String qmonGetTimeString(Widget timew, Boolean show_infinity)
 static void qmonSetTimeString(Widget timew, String timestr, Boolean show_infinity)
 {
    Widget day, hour, minute, second, infinity = 0;
-   u_long32 time_val = 0;
+   u_long32 time_val;
    int day_val = 0;
    int hour_val = 0;
    int minute_val = 0;

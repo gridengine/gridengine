@@ -112,16 +112,6 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
     }
 
     /**
-     *   Get the MBeanServerConnection connection
-     *
-     *   @return the MBeanServerConnection connection
-     */
-    public MBeanServerConnection getMBeanServerConnection() {
-        return connection;
-    }
-
-    
-    /**
      * Set up the ssl context
      * @param caTop  ca top directory if the Grid Engine CA ($SGE_ROOT/$SGE_CELL/common/sgeCA
      * @param ks     keystore of the user
@@ -260,7 +250,6 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
     private void connect() throws JGDIException {
         if (connection == null) {
             Map<String, Object> env = new HashMap<String, Object>();
-            env.put("jmx.remote.default.class.loader", JGDIJMXMBean.class.getClassLoader());
             if (credentials != null) {
                 env.put("jmx.remote.credentials", credentials);
             }

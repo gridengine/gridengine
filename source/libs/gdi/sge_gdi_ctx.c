@@ -738,7 +738,6 @@ sge_gdi_ctx_class_create_from_bootstrap(int prog_number, const char* component_n
    int sge_qmaster_p = 0;
    int sge_execd_p = 0;
    bool is_qmaster_internal_client = false;
-   bool from_services = false;
 
    sge_gdi_ctx_class_t * ret = NULL;
    
@@ -788,28 +787,21 @@ sge_gdi_ctx_class_create_from_bootstrap(int prog_number, const char* component_n
    }
    strcpy(sge_qmaster_port, token);
    
-   if (is_qmaster_internal_client) {
-      sge_qmaster_p = sge_get_qmaster_port(&from_services);
-      sge_execd_p = sge_get_execd_port();
-      DPRINTF(("**** from_services %s ****\n", from_services ? "true" : "false"));
-   } else {
-      sge_qmaster_p = atoi(sge_qmaster_port);
-   } 
+   sge_qmaster_p = atoi(sge_qmaster_port);
+   
    if (sge_qmaster_p <= 0 ) {
       answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, "invalid url, invalid sge_qmaster_port port %s", sge_qmaster_port);
       sge_free_saved_vars(url_ctx);
       DRETURN(NULL);
    }
+
    sge_free_saved_vars(url_ctx);
    
-   /* 
-    * TODO we need a way to define the execd port, from_services is always false (certs from keystore) for bootstrap:* mode 
-    *      for internal:* mode the master port and the execd port can be fetched from env as for other master threads here also the
-    *      from_services flag can be set
-    */
+   /* TODO we need a way to define the execd port, from_services is always false (certs from keystore) */
+   
    ret = sge_gdi_ctx_class_create(prog_number, component_name, thread_number, thread_name,
                                   username, NULL, sge_root, sge_cell, sge_qmaster_p, sge_execd_p, 
-                                  from_services, is_qmaster_internal_client, alpp);
+                                  false, is_qmaster_internal_client, alpp);
    
    DRETURN(ret); 
 }
@@ -1421,7 +1413,6 @@ static const char* get_master(sge_gdi_ctx_class_t *thiz, bool reread) {
    sge_gdi_ctx_t *es = (sge_gdi_ctx_t *) thiz->sge_gdi_ctx_handle;
    sge_path_state_class_t* path_state = thiz->get_sge_path_state(thiz);
    sge_error_class_t *eh = es ? es->eh : NULL;
-   static bool error_already_logged = false;
    
    DENTER(BASIS_LAYER, "sge_gdi_ctx_class->get_master");
    
@@ -1430,13 +1421,11 @@ static const char* get_master(sge_gdi_ctx_class_t *thiz, bool reread) {
       char master_name[CL_MAXHOSTLEN];
 
       if (get_qm_name(master_name, path_state->get_act_qmaster_file(path_state), err_str) == -1) {         
-         if (eh != NULL && !error_already_logged) {
+         if (eh != NULL) {
             eh->error(eh, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, MSG_GDI_READMASTERNAMEFAILED_S, err_str);
-            error_already_logged = true;
          }
          DRETURN(NULL);
       } 
-      error_already_logged = false;
       DPRINTF(("(re-)reading act_qmaster file. Got master host \"%s\"\n", master_name));
       /*
       ** TODO: thread locking needed here ?

@@ -3,7 +3,6 @@
 #include <string.h>
 #include <sys/time.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <libgen.h>
 
 #include "cl_lists.h"
@@ -65,8 +64,8 @@ static int cl_log_list_add_log(cl_raw_list_t* list_p, const char* thread_name, i
    char* mod_name_start1 = NULL;  
    char* mod_name_start = NULL;  
 
-
  
+
    if (list_p == NULL || thread_name == NULL || function_name == NULL || module_name == NULL || message == NULL) {
       return CL_RETVAL_PARAMS;
    }
@@ -467,7 +466,6 @@ int cl_log_list_log(cl_log_t log_type,int line, const char* function_name,const 
    int ret_val2;
    cl_thread_settings_t* thread_config = NULL;
    cl_log_list_data_t*   ldata = NULL;
-   char help[64];
 
    if (log_text == NULL || module_name == NULL || function_name == NULL) {
       return CL_RETVAL_PARAMS;
@@ -505,10 +503,9 @@ int cl_log_list_log(cl_log_t log_type,int line, const char* function_name,const 
       if (  ( ret_val = cl_raw_list_lock(thread_config->thread_log_list)) != CL_RETVAL_OK) {
          return ret_val;
       }
-
-      snprintf(help, 64, "%s (t@%ld/pid=%ld)", thread_config->thread_name, (unsigned long) pthread_self(), (unsigned long) getpid());
+   
       ret_val2 = cl_log_list_add_log( thread_config->thread_log_list,
-                                      help,
+                                      thread_config->thread_name,
                                       line, 
                                       function_name, 
                                       module_name,
@@ -551,9 +548,8 @@ int cl_log_list_log(cl_log_t log_type,int line, const char* function_name,const 
             return ret_val;
          }
 
-         snprintf(help, 64, "unknown (t@%ld/pid=%ld)", (unsigned long) pthread_self(), (unsigned long) getpid());
          ret_val2 = cl_log_list_add_log( global_cl_log_list,
-                                         help,
+                                         "unknown thread",
                                          line, 
                                          function_name, 
                                          module_name,
@@ -745,7 +741,7 @@ int cl_log_list_flush_list(cl_raw_list_t* list_p) {        /* CR check */
 
       printf("%-76s|", elem->log_module_name);
       if (elem->log_parameter == NULL) {
-         printf("%10ld.%-6ld|%35s|%s|%s| %s\n",
+         printf("%10ld.%-6ld|%18s|%s|%s| %s\n",
          (long)now.tv_sec,
          (long)now.tv_usec,
          elem->log_thread_name,
@@ -753,7 +749,7 @@ int cl_log_list_flush_list(cl_raw_list_t* list_p) {        /* CR check */
          cl_log_list_convert_type_id(elem->log_type),
          elem->log_message);
       } else {
-         printf("%10ld.%-6ld|%35s|%s|%s| %s %s\n",
+         printf("%10ld.%-6ld|%18s|%s|%s| %s %s\n",
          (long)now.tv_sec,
          (long)now.tv_usec,
          elem->log_thread_name,

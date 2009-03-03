@@ -38,7 +38,7 @@
 # set -x
 
 SCRIPT_VERSION="6"
-SGE_VERSION="6.2u2"
+SGE_VERSION="6.2"
 
 #Reset PATH to a safe value
 #
@@ -72,7 +72,7 @@ AUTOGUI=false
 RESCHEDULE=true
 RESPORT=false
 CSP=false
-SGE_ENABLE_JMX=false
+SGE_ENABLE_JMX=undef
 AFS=false
 NOREMOTE=false
 START_RPC_SERVICE=false
@@ -115,6 +115,11 @@ SERVICE_TAGS="enable"
 #Save changed host names during resolving
 RESOLVED_CHANGED_HOSTNAMES=""
 
+#These appear in the inst_template, but don't need to be taken care of
+SGE_ENABLE_SMF="true"
+ADD_TO_RC="false"
+REMOVE_RC="false"
+
 #init global variables, need for port setting
 execd_service="false"
 qmaster_service="false"
@@ -147,7 +152,7 @@ while [ $ARGC != 0 ]; do
      ;;
    -autogui)
       AUTO=true
-      AUTOGUI=true; export AUTOGUI;
+      AUTOGUI=true
       ;;
    -m)
      QMASTER="install"
@@ -304,6 +309,9 @@ while [ $ARGC != 0 ]; do
    -jmx)
      SGE_ENABLE_JMX=true
      ;;
+   -no-jmx)
+     SGE_ENABLE_JMX=false
+     ;;
    -copycerts)
      if [ "$2" = "" ]; then
         ErrUsage
@@ -340,6 +348,11 @@ while [ $ARGC != 0 ]; do
    ARGC=`expr $ARGC - 1`
 done
 
+# New behaviour. If no JMX flag specified (-jmx not -no-jmx), JMX gets installed but the JMX thread is not started
+if [ "$SGE_ENABLE_JMX" = undef ]; then
+   SGE_ENABLE_JMX=true
+fi
+
 #Set overlapping variables only
 if [ -z "$SHELL_NAME" ]; then
    SHELL_NAME="ssh"
@@ -347,32 +360,19 @@ fi
 if [ -z "$COPY_COMMAND" ]; then
    COPY_COMMAND="scp"
 fi
-if [ -z "$SGE_ENABLE_SMF" ]; then
-   SGE_ENABLE_SMF="true"
-fi
-if [ -z "$ADD_TO_RC" ]; then
-   ADD_TO_RC="false"
-fi
-if [ -z "$REMOVE_RC" ]; then
-   REMOVE_RC="false"
-fi
 
 if [ -z "$WIN_ADMIN_NAME" ]; then
    WIN_ADMIN_NAME="Administrator"
 fi
-for item in WINDOWS_SUPPORT WIN_DOMAIN_ACCESS CSP_RECREATE CSP_COPY_CERTS; do   
-   if [ x`eval echo '$'$item` = x ]; then
-      eval $item="false"
-   fi
+for item in WINDOWS_SUPPORT WIN_DOMAIN_ACCESS CSP_RECREATE CSP_COPY_CERTS; do
+   eval $item="false"
 done
 
 if [ -z "$EXEC_HOST_LIST" ]; then
    EXEC_HOST_LIST="undef"
 fi
 for item in CSP_COUNTRY_CODE CSP_STATE CSP_LOCATION CSP_ORGA CSP_ORGA_UNIT CSP_MAIL_ADDRESS; do
-   if [ x`eval echo '$'$item` = x ]; then
-      eval $item="undef"
-   fi
+   eval $item="undef"
 done
 
 CheckForSMF
@@ -805,10 +805,8 @@ if [ "$QMASTER" = "install" -a "$UPDATE" != "true" ]; then
  StartQmaster
  AddWindowsAdmin
  AddHosts
- if [ "$AUTOGUI" != "true" ]; then
-    CopyCA execd
-    CopyCA submit
- fi
+ CopyCA execd
+ CopyCA submit 
  SetScheddConfig
  GiveHints
  CheckRunningDaemon sge_qmaster
@@ -838,12 +836,11 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
     LogResolvedHostLists
 
     . $SGE_ROOT/$CELL_NAME/common/settings.sh
-    GetAdminUser
 
-    if [ -f "$SGE_ROOT/$SGE_CELL/common/bootstrap" ]; then
+   if [ -f "$SGE_ROOT/$SGE_CELL/common/bootstrap" ]; then
       ignore_fqdn=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "ignore_fqdn" | awk '{ print $2 }'`
       default_domain=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "default_domain" | awk '{ print $2 }'`
-    fi
+   fi
 
     EXEC_HOSTS_TO_INSTALL=$EXEC_HOST_LIST
     EXEC_HOSTS_TO_INSTALL_TMP=$EXEC_HOSTS_TO_INSTALL
@@ -1005,7 +1002,6 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
       CheckCellDirectory
       . $SGE_ROOT/$SGE_CELL/common/settings.sh
       SearchForExistingInstallations "execd"
-      GetAdminUser
       CheckWinAdminUser
       CheckCSP
       CheckHostNameResolving install
@@ -1076,7 +1072,7 @@ if [ "$EXECD" = "uninstall" ]; then
       $INFOTEXT -log "Starting execution host uninstallation!"
       LogResolvedHostLists
    fi
-
+   
    GetAdminUser
 
    if [ "$SGE_REMOTE_FLAG" != "REMOTE_EXECD_UNINSTALL" ]; then 
@@ -1264,17 +1260,17 @@ if [ $SHADOW = "install" ]; then
       done
       ExecuteAsAdmin chmod go-w $SGE_ROOT/$SGE_CELL/common/shadow_masters
       ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL/common/shadow_masters.1
-
+ 
       if [ $SHADOW_HOST = `$SGE_UTILBIN/gethostname -aname` ]; then
          . $SGE_ROOT/$SGE_CELL/common/settings.sh
          SGE_ARCH=`$SGE_ROOT/util/arch`
          AddSGEStartUpScript $euid shadow
-	     $INFOTEXT "Starting sge_shadowd on host %s\n" $SHADOW_HOST
-	     if [ "$SGE_ENABLE_SMF" = "true" ]; then
-	        $SVCADM enable -s "svc:/application/sge/shadowd:$SGE_CLUSTER_NAME"
-	     else
-	        $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &
-	     fi
+	 $INFOTEXT "Starting sge_shadowd on host %s\n" $SHADOW_HOST
+	 if [ "$SGE_ENABLE_SMF" = "true" ]; then
+	    $SVCADM enable -s "svc:/application/sge/shadowd:$SGE_CLUSTER_NAME"
+	 else
+	    $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &
+	 fi
       else
         for shs in `cat $SGE_ROOT/$SGE_CELL/common/shadow_masters`; do
            echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; SGE_ARCH=`$SGE_ROOT/util/arch`; $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &" | $SHELL_NAME $shs /bin/sh &
@@ -1284,7 +1280,6 @@ if [ $SHADOW = "install" ]; then
 
       $INFOTEXT "Shadowhost installation completed!"
    else
-      GetAdminUser
       euid=`$SGE_UTILBIN/uidgid -euid`
       Stdout2Log
       for SHADOW in $SHADOW_HOST; do
@@ -1409,14 +1404,6 @@ if [ "$SUBMIT" = "install" ]; then
 fi
 
 if [ "$COPY_CA" = "true" ]; then
-   #In standalone -copycert auto mode we don't have SGE_CELL
-   if [ -z "$SGE_CELL" -a "$AUTO" = "true" ]; then
-      SGE_CELL="$CELL_NAME"
-   fi
-   # GUI mode must set the SGE_CELL to CELL_NAME always!
-   if [ "$AUTOGUI" = "true" ]; then
-      SGE_CELL="$CELL_NAME"
-   fi
    if [ "$SGE_ROOT" = "" -o "$SGE_CELL" = "" ]; then
       $INFOTEXT "SGE_ROOT or SGE_CELL is not set!"
       exit 1

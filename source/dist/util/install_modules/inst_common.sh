@@ -115,7 +115,7 @@ BasicSettings()
 
   HOST=`$SGE_UTILBIN/gethostname -name`
   if [ "$HOST" = "" ]; then
-     echo "can't get hostname of this machine. Installation failed."
+     $INFOTEXT -e "can't get hostname of this machine. Installation failed."
      exit 2
   fi
 
@@ -188,8 +188,8 @@ Makedir()
       done
 
        $INFOTEXT "creating directory: %s" "$dir"
-       if [ "`$SGE_UTILBIN/filestat -owner $tmp_dir 2> /dev/null`" != "$ADMINUSER" ]; then
-          Execute $MKDIR -p $dir
+       if [ "`$SGE_UTILBIN/filestat -owner $tmp_dir`" != "$ADMINUSER" ]; then
+          Execute mkdir -p $dir
           if [ "$ADMINUSER" = "default" ]; then
              Execute $CHOWN -R root $chown_dir
           else
@@ -198,7 +198,7 @@ Makedir()
           fi
 	       Execute $CHMOD -R $DIRPERM $chown_dir
        else
-          ExecuteAsAdmin $MKDIR -p $dir
+          ExecuteAsAdmin mkdir -p $dir
 		    ExecuteAsAdmin $CHMOD -R $DIRPERM $chown_dir
        fi
    fi
@@ -497,7 +497,7 @@ ErrUsage()
              "       -copycerts <host|hostlist>|-v|-upd|-upd-execd|-upd-rc|-upd-win| \n" \
              "       -post_upd|-start-all|-rccreate|[-host <hostname>] [-resport] [-rsh] \n" \
              "       [-auto <filename>] [-nr] [-winupdate] [-winsvc] [-uwinsvc] [-csp] \n" \
-             "       [-jmx] [-oldijs] [-afs] [-noremote] [-nosmf]\n" \
+             "       [-jmx] [-no-jmx] [-oldijs] [-afs] [-noremote] [-nosmf]\n" \
              "   -m         install qmaster host\n" \
              "   -um        uninstall qmaster host\n" \
              "   -x         install execution host\n" \
@@ -531,15 +531,19 @@ ErrUsage()
              "   -uwinsvc   uninstall windows helper service\n" \
              "   -csp       install system with security framework protocol\n" \
              "              functionality\n" \
-             "   -jmx       install qmaster with JMX server thread enabled\n" \
+             "   -jmx       install qmaster with JMX server thread enabled (now implicit)\n" \
+             "   -no-jmx    install qmaster without JMX server thread\n" \
              "   -oldijs    configure old interactive job support\n" \
              "   -afs       install system with AFS functionality\n" \
              "   -noremote  supress remote installation during autoinstall\n" \
              "   -nosmf     disable SMF for Solaris 10+ machines (RC scripts are used)\n" \
              "   -help      show this help text\n\n" \
              "   Examples:\n" \
-             "   inst_sge -m -x\n" \
+             "   inst_sge -m -no-jmx -x\n" \
              "                     Installs qmaster and exechost on localhost\n" \
+             "   inst_sge -m -x   or   inst_sge -m -jmx -x\n" \
+             "                     Installs qmaster with JMX thread enabled\n" \
+             "                     and exechost on localhost\n" \
              "   inst_sge -m -x -auto /path/to/config-file\n" \
              "                     Installs qmaster and exechost using the given\n" \
              "                     configuration file\n" \
@@ -986,19 +990,19 @@ CheckConfigFile()
          $INFOTEXT -e "Your >SGE_ENABLE_JMX< flag is wrong! Valid values are:0,1,true,false,TRUE,FALSE"
          is_valid="false" 
       fi   
+      `IsNumeric "$SGE_JMX_PORT"`
+      if [ "$?" -eq 1 ]; then
+         $INFOTEXT -e "Your >SGE_JMX_PORT< entry is invalid, please enter a number between 1\n and number of execution host"
+         is_valid="false"
+      elif [ "$SGE_JMX_PORT" -le 1 -a "$SGE_JMX_PORT" -ge 65536 ]; then
+         $INFOTEXT -e "Your >SGE_JMX_PORT< entry is invalid. It must be a number between 1 and 65536!"
+         is_valid="false"
+      fi
       if [ "$SGE_ENABLE_JMX" = "true" -a \( -z "$SGE_JVM_LIB_PATH" -o  "`echo "$SGE_JVM_LIB_PATH" | cut -d"/" -f1`" = "`echo "$SGE_JVM_LIB_PATH" | cut -d"/" -f2`" \) ]; then
          $INFOTEXT -e "Your >SGE_JVM_LIB_PATH< is empty or an invalid path. It must be a full path!"
          is_valid="false"
       fi   
       if [ "$SGE_ENABLE_JMX" = "true" ]; then
-         `IsNumeric "$SGE_JMX_PORT"`
-         if [ "$?" -eq 1 ]; then
-            $INFOTEXT -e "Your >SGE_JMX_PORT< entry is invalid, please enter a number between 1\n and number of execution host"
-            is_valid="false"
-         elif [ "$SGE_JMX_PORT" -le 1 -a "$SGE_JMX_PORT" -ge 65536 ]; then
-            $INFOTEXT -e "Your >SGE_JMX_PORT< entry is invalid. It must be a number between 1 and 65536!"
-            is_valid="false"
-         fi
          if [ -z "$SGE_JMX_SSL" ]; then
             $INFOTEXT -e "Your >SGE_JMX_SSL< flag is not set!"
             is_valid="false" 
@@ -1139,7 +1143,7 @@ CheckConfigFile()
          is_valid="false"
       fi
 
-      if [ "$SGE_ENABLE_JMX" = "true" -a "$QMASTER" = "uninstall" ]; then
+      if [ "$SGE_ENABLE_JMX" = "true" ]; then
          if [ -z "$JMX_PORT" -o -z "$SGE_JVM_LIB_PATH" ]; then
             $INFOTEXT -e "The JMX_PORT or SGE_JVM_LIB_PATH has not been set in config file!\n"
             is_valid="false"
@@ -1476,7 +1480,7 @@ CheckForLocalHostResolving()
                 "physical or logical network interfaces of this machine.\n\n" \
                 "Installation failed.\n\n" \
                 "Press <RETURN> to exit the installation procedure >> "
-      exit 2
+      exit
    fi
 }
                
@@ -1964,10 +1968,7 @@ SafelyCreateFile()
    ExecuteAsAdmin $TOUCH $1
    if [ -n "$3" ]; then
       ExecuteAsAdmin $CHMOD 666 $1
-      tmp_file="/tmp/tmp_safe_create_file_$$"
-      $ECHO "$3" > $tmp_file
-      ExecuteAsAdmin cp $tmp_file $1
-      Execute rm -f $tmp_file
+      $ECHO "$3" > $1
    fi
    ExecuteAsAdmin $CHMOD $2 $1
 }
@@ -3619,6 +3620,11 @@ CheckServiceAndPorts()
 
 CopyCA()
 {
+   if [ "$AUTO" = "true" -a "$CSP_COPY_CERTS" = "false" ]; then
+      $INFOTEXT -log "No CSP system installed!"
+      return 1
+   fi
+
    if [ "$CSP" = "false" -a \( "$WINDOWS_SUPPORT" = "false" -o "$WIN_DOMAIN_ACCESS" = "false" \) ]; then
       return 1
    fi
@@ -3653,8 +3659,7 @@ CopyCA()
       "<%s> host? (y/n) [y] >>" $out_text
    fi
 
-   if [ "$AUTOGUI" != "true" ]; then #GUI made has the correct shell already
-    if [ "$?" = 0 ]; then
+   if [ "$?" = 0 ]; then
       $INFOTEXT "You can use a rsh or a ssh copy to transfer the cert files to each\n" \
                 "<%s> host (default: ssh)" $out_text
       $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" -n "Do you want to use rsh/rcp instead of ssh/scp? (y/n) [n] >>"
@@ -3668,9 +3673,8 @@ CopyCA()
          $INFOTEXT -log "The remote copy command <%s> could not be found!" $COPY_COMMAND
          return
       fi
-    else
+   else
       return
-    fi
    fi
 
    if [ "$hosttype" = "execd" ]; then
@@ -3745,24 +3749,16 @@ CopyCaToHostType()
 #
 GetAdminUser()
 {
-   if [ "$AUTO" = true ]; then
-	   #For auto we use template, since SGE_CELL might not yet exist
-	   TMP_CELL=$CELL_NAME
-   else
-	   TMP_CELL=$SGE_CELL
-   fi
-   #Try to get admin user from a bootstrap file
-   TMP_ADMINUSER=`cat $SGE_ROOT/$TMP_CELL/common/bootstrap 2>/dev/null | grep "admin_user" | awk '{ print $2 }'`
-   if [ -n "$TMP_ADMINUSER" ]; then
-      ADMINUSER=$TMP_ADMINUSER
-   elif [ "$AUTO" = true -o "$AUTOGUI" = true ]; then
-	   #For auto installations, if no bootstrap file use the value from the template
-	   ADMINUSER=$ADMIN_USER
+   if [ "$AUTOGUI" != true ]; then # We have it already
+      TMP_ADMINUSER=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "admin_user" | awk '{ print $2 }'`
+      if [ -n "$TMP_ADMINUSER" ]; then
+         ADMIN_USER=$TMP_ADMINUSER   
+      fi
    fi
    euid=`$SGE_UTILBIN/uidgid -euid`
 
    TMP_USER=`echo "$ADMINUSER" |tr "[A-Z]" "[a-z]"`
-   if [  -z "$TMP_USER" -o "$TMP_USER" = "none" ]; then
+   if [ \( -z "$TMP_USER" -o "$TMP_USER" = "none" \) ]; then
       if [ $euid = 0 ]; then
          ADMINUSER=default
       else

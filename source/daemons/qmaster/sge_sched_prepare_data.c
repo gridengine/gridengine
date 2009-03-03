@@ -160,6 +160,7 @@ static const int qinstance_field_ids[] = {
    QU_s_vmem,
    QU_h_vmem,
    QU_min_cpu_interval,
+   QU_notify,
 
    QU_suspended_on_subordinate,
    QU_last_suspend_threshold_ckeck,
@@ -209,6 +210,7 @@ static const int job_nm[] = {
    JB_dlcontr,
    JB_wtcontr,
    JB_rrcontr,
+   JB_script_file,
    JB_soft_wallclock_gmt,
    JB_hard_wallclock_gmt,
    JB_reserve,
@@ -250,39 +252,6 @@ static const int pet_nm[] = {
    NoName
 };
 
-static const int eh_nm[] = {
-   EH_name,
-   EH_scaling_list,
-   EH_consumable_config_list,
-   EH_usage_scaling_list,
-   EH_load_list,
-   EH_acl,
-   EH_xacl,
-   EH_prj,
-   EH_xprj,
-   EH_sort_value,
-   EH_load_correction_factor,
-   EH_seq_no,
-   EH_resource_utilization,
-   EH_reschedule_unknown_list,
-   NoName
-};
-
-static const int pe_nm[] = {
-   PE_name,
-   PE_slots,               
-   PE_user_list,          
-   PE_xuser_list,         
-   PE_allocation_rule,    
-   PE_control_slaves,
-   PE_resource_utilization,
-   PE_urgency_slots,
-#ifdef SGE_PQS_API
-   PE_qsort_args,
-#endif
-   NoName
-};
-
 
 void 
 ensure_valid_what_and_where(sge_where_what_t *where_what) 
@@ -310,8 +279,13 @@ ensure_valid_what_and_where(sge_where_what_t *where_what)
    if (where_what->where_acl == NULL) {
       where_what->where_acl = lWhere("%T(%I m= %u)", US_Type, US_type, US_ACL);
    }
-   if (where_what->what_acldept == NULL) {
-      where_what->what_acldept = lWhat("%T(ALL)", US_Type);
+   if (where_what->what_acl == NULL) {
+      where_what->what_acl = lWhat("%T(ALL)", US_Type);
+   }
+
+   /* centry */
+   if (where_what->what_centry == NULL) {
+      where_what->what_centry = lWhat("%T(ALL)", CE_Type);
    }
 
    /* cqueues */
@@ -323,13 +297,16 @@ ensure_valid_what_and_where(sge_where_what_t *where_what)
    if (where_what->where_dept == NULL) {
       where_what->where_dept = lWhere("%T(%I m= %u)", US_Type, US_type, US_DEPT);
    }
+   if (where_what->what_dept == NULL) {
+      where_what->what_dept = lWhat("%T(ALL)", US_Type);
+   }
 
    /* host */
    if (where_what->where_host == NULL) {
       where_what->where_host = lWhere("%T(!(%Ic=%s))", EH_Type, EH_name, SGE_TEMPLATE_NAME);
    }
    if (where_what->what_host == NULL) {
-      where_what->what_host = lIntVector2What(EH_Type, eh_nm);
+      where_what->what_host = lWhat("%T(ALL)", EH_Type);
    }
 
    /* job */
@@ -345,11 +322,6 @@ ensure_valid_what_and_where(sge_where_what_t *where_what)
    /* pet */
    if (where_what->what_pet == NULL) {
       where_what->what_pet = lIntVector2What(PET_Type, pet_nm);
-   }
-
-   /* pe */
-   if (where_what->what_pe == NULL) {
-      where_what->what_pe = lIntVector2What(PE_Type, pe_nm);
    }
 
    /* qinstances */
@@ -405,14 +377,14 @@ ensure_valid_what_and_where(sge_where_what_t *where_what)
    }
 
    if (tmp_what_descr == NULL ||
-       where_what->where_acl == NULL || where_what->what_acldept == NULL || 
-       where_what->what_cqueue == NULL || where_what->where_dept == NULL || 
-       where_what->where_host == NULL || where_what->what_host == NULL ||
-       where_what->what_job == NULL || where_what->what_jat == NULL ||
-       where_what->what_pet == NULL || where_what->where_queue == NULL ||
-       where_what->what_queue == NULL || where_what->where_queue2 == NULL ||
-       where_what->what_queue2 == NULL || where_what->where_all_queue == NULL ||
-       where_what->what_pe == NULL) {
+         where_what->where_acl == NULL || where_what->what_acl == NULL || 
+         where_what->what_centry == NULL || where_what->what_cqueue == NULL ||
+         where_what->where_dept == NULL || where_what->what_dept == NULL ||
+         where_what->where_host == NULL || where_what->what_host == NULL ||
+         where_what->what_job == NULL || where_what->what_jat == NULL ||
+         where_what->what_pet == NULL || where_what->where_queue == NULL ||
+         where_what->what_queue == NULL || where_what->where_queue2 == NULL ||
+         where_what->what_queue2 == NULL || where_what->where_all_queue == NULL) {
       CRITICAL((SGE_EVENT, MSG_SCHEDD_UNABLE_TO_SETUP_FILTER));
    }
    /* cleanup tmp data */

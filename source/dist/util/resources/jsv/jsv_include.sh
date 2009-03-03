@@ -405,68 +405,68 @@ jsv_sub_add_param()
    command=`eval "echo \$\{$name\:\-$undef\}"`
    list=`eval "echo $command"`
    new_param=""
-   if [ "$list" = "$undef" ]; then
-      list=""
-   fi
-   found="false"
+   if [ "$list" != "$undef" ]; then
+      found="false"
 
-   # split token between ',' character
-   IFS=","
-   for i in $list; do
-      # split the first string before '=' character
-      # This is the variable name and if it is the
-      # one which should be deleted then set "found" 
-      # to "true" 
-      IFS="="
-      for j in $i; do
-         IFS="$saved_ifs"
-         if [ "$j" = "$sub_name" ]; then
-            found="true"
-            if [ "$value" = "" ]; then
-               if [ "$new_param" = "" ]; then
-                  new_param="$j"
+      # split token between ',' character
+      IFS=","
+      for i in $list; do
+         # split the first string before '=' character
+         # This is the variable name and if it is the
+         # one which should be deleted then set "found" 
+         # to "true" 
+         IFS="="
+         for j in $i; do
+            IFS="$saved_ifs"
+            if [ "$j" = "$sub_name" ]; then
+               found="true"
+               if [ "$value" = "" ]; then
+                  if [ "$new_param" = "" ]; then
+                     new_param="$j"
+                  else
+                     new_param="${new_param},$j"
+                  fi
                else
-                  new_param="${new_param},$j"
+                  if [ "$new_param" = "" ]; then  
+                     new_param="${j}=${value}"
+                  else
+                     new_param="${new_param},${j}=${value}"
+                  fi
                fi
             else
                if [ "$new_param" = "" ]; then  
-                  new_param="${j}=${value}"
+                  new_param="$i"
                else
-                  new_param="${new_param},${j}=${value}"
+                  new_param="${new_param},$i"
                fi
             fi
-         else
-            if [ "$new_param" = "" ]; then  
-               new_param="$i"
-            else
-               new_param="${new_param},$i"
+            IFS="="
+            break;
+         done
+         IFS="$saved_ifs"
+         if [ "$found" = "false" ]; then
+            if [ "$value" = "" ]; then
+               if [ "$new_param" = "" ]; then  
+                  new_param="$sub_name"
+               else
+                  new_param="${new_param},$sub_name"
+               fi
+            else 
+               if [ "$new_param" = "" ]; then  
+                  new_param="${sub_name}=$value"
+               else
+                  new_param="${new_param},${sub_name}=$value"
+               fi
             fi
          fi
-         IFS="="
-         break;
+         IFS=","
       done
       IFS="$saved_ifs"
-   done
-   if [ "$found" = "false" ]; then
-      if [ "$value" = "" ]; then
-         if [ "$new_param" = "" ]; then  
-            new_param="$sub_name"
-         else
-            new_param="${new_param},$sub_name"
-         fi
-      else 
-         if [ "$new_param" = "" ]; then  
-            new_param="${sub_name}=$value"
-         else
-            new_param="${new_param},${sub_name}=$value"
-         fi
-      fi
-   fi
-   IFS="$saved_ifs"
 
-   # set local variable and send modification to client/master
-   eval "$name=\"\$new_param\""
-   jsv_send_command PARAM "$param_name" "$new_param"
+      # set local variable and send modification to client/master
+      eval "$name=\"\$new_param\""
+      jsv_send_command PARAM "$param_name" "$new_param"
+   fi
    unset new_param
    unset list
    unset command
@@ -522,6 +522,8 @@ jsv_handle_env_command()
       data="$3"
       if [ "$action" = "ADD" ]; then
          jsv_all_envs="$jsv_all_envs $name"
+# TODO: EB: escape characeters are not handled correctly at least for linux amd64
+#         eval "jsv_env_${name}=\"\`$SGE_ROOT/utilbin/$ARCH/echo_raw -e \${data}\`\""
          eval "jsv_env_${name}=\"\${data}\""
       fi
       unset action

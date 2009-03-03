@@ -431,7 +431,6 @@ int qlogin_starter(const char *cwd, char *daemon, char** env)
    int ret;
    int port;
    int fd;
-   int maxfd;
    int sockfd;
    int on = 1;
    int sso = 1;
@@ -444,7 +443,7 @@ int qlogin_starter(const char *cwd, char *daemon, char** env)
    int argc = 0;
    const char *sge_root = NULL;
    const char *arch = NULL;
-   
+
 #if defined(IRIX65) || defined(INTERIX) || defined(DARWIN6) || defined(ALPHA5) || defined(HP1164)
    int length;
    int len;
@@ -575,17 +574,9 @@ int qlogin_starter(const char *cwd, char *daemon, char** env)
    dup2( newsfd, 2 );
    
    /* close all the rest */
-#ifndef WIN32NATIVE
-   maxfd = sysconf(_SC_OPEN_MAX);
-#else /* WIN32NATIVE */
-   maxfd = FD_SETSIZE;
-   /* detect maximal number of fds under NT/W2000 (env: Files)*/
-#endif /* WIN32NATIVE */
-   
-   /* we do not use any FD_SET call it is ok to use _SC_OPEN_MAX */
-   for (fd=3; fd<maxfd; fd++) {
+   /* TODO: Use util function sge_close_all_fds() for this */
+   for (fd=3; fd<FD_SETSIZE; fd++)
       close(fd);
-   }
 
    shepherd_trace("daemon to start: |%s|", daemon);
 

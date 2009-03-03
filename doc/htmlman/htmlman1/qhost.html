@@ -3,17 +3,16 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     qhost - show the status of Sun Grid  Engine  hosts,  queues,
-     jobs
+     qhost - show the status of Grid Engine hosts, queues, jobs
 
 SYNTAX
      qhost [ -F [resource_name,...]  [ -help ] [ -h host_list ] [
-     -j ] [ -l resource=val,... ] [ -u user,... ] [ -xml ].
+     -j ] [ -l resource=val,... ] [ -u user,... ]
 
 DESCRIPTION
-     <I>qhost</I> shows the current status of  the  available  Sun  Grid
-     Engine  hosts,  queues  and  the  jobs  associated  with the
-     queues. Selection options allow you to get information about
+     <I>qhost</I> shows the current status of the available Grid  Engine
+     hosts,  queues  and  the  jobs  associated  with the queues.
+     Selection  options  allow  you  to  get  information   about
      specific  hosts,  queues, jobs or users.  Without any option
      <I>qhost</I> will display a list of all hosts without queue or  job
      information.
@@ -48,11 +47,6 @@ OPTIONS
      -u user,...
           Display information only on those jobs and queues being
           associated with the users from the given user list.
-
-     -xml This option can be used  with  all  other  options  and
-          changes  the output to XML. The used schemas are refer-
-          enced in the XML  output.  The  output  is  printed  to
-          stdout.
 
 OUTPUT FORMATS
      Depending on the presence or absence of the -q or -F and  -j
@@ -91,41 +85,42 @@ OUTPUT FORMATS
      <B>o</B>  the number of used and available job slots,
 
      <B>o</B>  the state  of  the  queue  -  one  of  u(nknown)  if  the
-        corresponding  <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u2_TAG">sge_execd(8)</A></B> cannot be contacted, a(larm),
+        corresponding  <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> cannot be contacted, a(larm),
         A(larm),     C(alendar      suspended),      s(uspended),
         S(ubordinate),  d(isabled), D(isabled), E(rror) or combi-
         nations thereof.
 
      If the state is a(alarm) at least one of the load thresholds
      defined  in the <I>load</I>_<I>thresholds</I> list of the queue configura-
-     tion  (see  <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62u2_TAG">queue_conf(5)</A></B>)  is  currently  exceeded,   which
+     tion  (see  <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>)  is  currently  exceeded,   which
      prevents from scheduling further jobs to that queue.
 
      As opposed to this, the  state  A(larm)  indicates  that  at
      least  one  of  the  suspend  thresholds  of  the queue (see
-     <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62u2_TAG">queue_conf(5)</A></B>) is currently exceeded. This  will  result  in
+     <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>) is currently exceeded. This  will  result  in
      jobs  running  in  that  queue  being successively suspended
      until no threshold is violated.
+
      The states s(uspended) and d(isabled)  can  be  assigned  to
-     queues  and  released  via the <B><A HREF="../htmlman1/qmod.html?pathrev=V62u2_TAG">qmod(1)</A></B> command. Suspending a
+     queues  and  released  via the <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B> command. Suspending a
      queue will cause all jobs executing  in  that  queue  to  be
      suspended.
 
      The states D(isabled) and C(alendar suspended) indicate that
      the  queue  has been disabled or suspended automatically via
-     the   calendar   facility   of   Sun   Grid   Engine    (see
-     <B><A HREF="../htmlman5/calendar_conf.html?pathrev=V62u2_TAG">calendar_conf(5)</A></B>),  while the S(ubordinate) state indicates,
-     that the queue has been suspend via subordination to another
-     queue  (see  <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62u2_TAG">queue_conf(5)</A></B>  for  details). When suspending a
-     queue (regardless of the cause) all jobs executing  in  that
-     queue are suspended too.
+     the calendar facility of Grid Engine (see <B><A HREF="../htmlman5/calendar_conf.html">calendar_conf(5)</A></B>),
+     while  the S(ubordinate) state indicates, that the queue has
+     been  suspend  via  subordination  to  another  queue   (see
+     <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B> for details). When suspending a queue (regard-
+     less of the cause) all jobs  executing  in  that  queue  are
+     suspended too.
 
-     If an E(rror) state is displayed for a  queue,  <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u2_TAG">sge_execd(8)</A></B>
-     on  that  host was unable to locate the <B><A HREF="../htmlman8/sge_shepherd.html?pathrev=V62u2_TAG">sge_shepherd(8)</A></B> exe-
+     If an E(rror) state is displayed for a  queue,  <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>
+     on  that  host was unable to locate the <B><A HREF="../htmlman8/sge_shepherd.html">sge_shepherd(8)</A></B> exe-
      cutable on that host in order to start a job.  Please  check
-     the  error  logfile of that <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u2_TAG">sge_execd(8)</A></B> for leads on how to
+     the  error  logfile of that <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> for leads on how to
      resolve the problem. Please enable the queue afterwards  via
-     the -c option of the <B><A HREF="../htmlman1/qmod.html?pathrev=V62u2_TAG">qmod(1)</A></B> command manually.
+     the -c option of the <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B> command manually.
 
      If the -F option was used, resource availability information
      is printed following the host status line. For each resource
@@ -144,7 +139,7 @@ OUTPUT FORMATS
         `L' - a load value for the resource  after  administrator
         defined load scaling has been applied,
         `c' - availability derived from the consumable  resources
-        facility (see <B><A HREF="../htmlman5/complexes.html?pathrev=V62u2_TAG">complexes(5)</A></B>),
+        facility (see <B><A HREF="../htmlman5/complexes.html">complexes(5)</A></B>),
         `f' - a fixed  availability  definition  derived  from  a
         non-consumable  complex  attribute  or  a  fixed resource
         limit.
@@ -192,11 +187,11 @@ OUTPUT FORMATS
      <B>o</B>  the priority of the jobs.
 
 ENVIRONMENTAL VARIABLES
-     SGE_ROOT       Specifies the location of the Sun Grid Engine
+     SGE_ROOT       Specifies the location  of  the  Grid  Engine
                     standard configuration files.
 
-     SGE_CELL       If set, specifies the default Sun Grid Engine
-                    cell. To address a Sun Grid Engine cell <I>qhost</I>
+     SGE_CELL       If set, specifies  the  default  Grid  Engine
+                    cell.  To  address  a  Grid Engine cell <I>qhost</I>
                     uses (in the order of precedence):
 
                          The name of the cell  specified  in  the
@@ -215,23 +210,28 @@ ENVIRONMENTAL VARIABLES
 
      SGE_QMASTER_PORT
                     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u2_TAG">sge_qmaster(8)</A></B> is expected to listen for com-
+                    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> is expected to listen for com-
                     munication requests.  Most installations will
                     use  a  services  map  entry  for the service
                     "sge_qmaster" instead to define that port.
 
 FILES
      &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>act</I>_<I>qmaster</I>
-                     Sun Grid Engine master host file
+                     Grid Engine master host file
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B>,  <B><A HREF="../htmlman1/qalter.html?pathrev=V62u2_TAG">qalter(1)</A></B>,   <B><A HREF="../htmlman1/qconf.html?pathrev=V62u2_TAG">qconf(1)</A></B>,   <B><A HREF="../htmlman1/qhold.html?pathrev=V62u2_TAG">qhold(1)</A></B>,   <B><A HREF="../htmlman1/qmod.html?pathrev=V62u2_TAG">qmod(1)</A></B>,
-     <B><A HREF="../htmlman1/qstat.html?pathrev=V62u2_TAG">qstat(1)</A></B>,      <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B>,     <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62u2_TAG">queue_conf(5)</A></B>,     <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u2_TAG">sge_execd(8)</A></B>,
-     <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u2_TAG">sge_qmaster(8)</A></B>, <B><A HREF="../htmlman8/sge_shepherd.html?pathrev=V62u2_TAG">sge_shepherd(8)</A></B>.
+     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>,  <B><A HREF="../htmlman1/qalter.html">qalter(1)</A></B>,   <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>,   <B><A HREF="../htmlman1/qhold.html">qhold(1)</A></B>,   <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B>,
+     <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B>,      <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,     <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>,     <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B>,
+     <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>, <B><A HREF="../htmlman8/sge_shepherd.html">sge_shepherd(8)</A></B>.
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
+
+
+
+
+
 
 
 

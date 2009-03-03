@@ -402,7 +402,6 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
             {
                lList *old_value = lGetList(this_elem, attribute_name);
                lList *new_value = NULL;
-               bool created_new_value = false;
                lList *master_centry_list = *object_type_get_master_list(SGE_TYPE_CENTRY);
 
                celist_attr_list_find_value(attr_list, answer_list,
@@ -426,38 +425,33 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                                                matching_group, is_ambiguous);
                      sge_dstring_sprintf(&buffer, sge_u32, slots_value);
 
-                     if (new_value == NULL) {
-                        created_new_value = true;
-                     }
                      slots_ce = lAddElemStr(&new_value, CE_name, "slots", CE_Type);
                      lSetDouble(slots_ce, CE_doubleval, slots_value);
                      lSetString(slots_ce, CE_stringval, sge_dstring_get_string(&buffer));
                      sge_dstring_free(&buffer);
                   }
                   
-                  if (object_list_has_differences(old_value, answer_list,
-                                                  new_value, false)) {
+                   if (object_list_has_differences(old_value, answer_list,
+                                                   new_value, false)) {
 #ifdef QINSTANCE_MODIFY_DEBUG
-                     DPRINTF(("Changed "SFQ"\n", lNm2Str(attribute_name)));
+                      DPRINTF(("Changed "SFQ"\n", lNm2Str(attribute_name)));
 #endif
-                     if (!initial_modify && ar_list_has_reservation_due_to_qinstance_complex_attr(*object_type_get_master_list(SGE_TYPE_AR), answer_list, 
+                      if (!initial_modify && ar_list_has_reservation_due_to_qinstance_complex_attr(*object_type_get_master_list(SGE_TYPE_AR), answer_list, 
                                                                                 this_elem, *object_type_get_master_list(SGE_TYPE_CENTRY))) {
-                        ret = false;
-                     } else {
-                        if (need_reinitialize != NULL) {
-                           *need_reinitialize = true;
-                        }
+                         ret = false;
+                         break;
+                      }
 
-                        lSetList(this_elem, attribute_name, lCopyList("", new_value));
-                        *has_changed_conf_attr = true;
-                     }
-                  }
-                  lRemoveElem(new_value, &slots_ce);
+                      if (need_reinitialize != NULL) {
+                        *need_reinitialize = true;
+                      }
+
+                      lSetList(this_elem, attribute_name, lCopyList("", new_value));
+                      *has_changed_conf_attr = true;
+                   }
+                   lRemoveElem(new_value, &slots_ce);
                } else {
                    ret &= false;
-               }
-               if (created_new_value) {
-                  lFreeList(&new_value);
                }
             }
             break;
@@ -509,16 +503,24 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
 #endif
 
                   /*
-                   * Find list of subordinates that are suspended currently 
+                   * If this queue instance itself is a subordinated queue
+                   * than it might be necessary to set the sos state.
+                   * We have to check the subordinated list of all
+                   * other queue instances to intitialize the state.
                    *
-                   * This queue can't have any running jobs and thus can't
-                   * subordinate anything if the queue was freshly added
+                   * This queue can't be subordinated if the queue was
+                   * freshly added.
                    */
                   if (initial_modify == false) {
-                     ret &= qinstance_find_suspended_subordinates(this_elem,
-                                                                  answer_list,
-                                                                  &unsuspended_so);
+                     qinstance_initialize_sos_attr(ctx, this_elem, monitor);
                   }
+
+                  /*
+                   * Find list of subordinates that are suspended currently 
+                   */
+                  ret &= qinstance_find_suspended_subordinates(this_elem,
+                                                               answer_list,
+                                                               &unsuspended_so);
 
                   /*
                    * Modify sublist
@@ -545,10 +547,12 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                       */
                      cqueue_list_x_on_subordinate_so(ctx,
                                                      master_list, answer_list, 
-                                                     false, unsuspended_so, monitor);
+                                                     false, unsuspended_so, false,
+                                                     monitor);
                      cqueue_list_x_on_subordinate_so(ctx,
                                                      master_list, answer_list, 
-                                                     true, suspended_so, monitor);
+                                                     true, suspended_so, false,
+                                                     monitor);
                   }
 
                   /*

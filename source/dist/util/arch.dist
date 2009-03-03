@@ -330,7 +330,7 @@ SUPER-UX)
    esac
    ;;
 Interix)
-   ARCH=win32-x86
+   ARCH=win32-$osmachine
    ;;
 *)
    if [ -f /unicos ]; then

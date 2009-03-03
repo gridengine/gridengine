@@ -42,8 +42,7 @@ enum {
    ACK_EVENT_DELIVERY,   /* sent back by schedd, when master sends events     */
    ACK_SIGJOB,           /* send back by execd, when qmaster signals job      */
    ACK_SIGQUEUE,         /* send back by execd, when qmaster signals queue    */
-   ACK_LOAD_REPORT,      /* send back by qmaster, when execd sends a load report */
-   ACK_SIGNAL_SLAVE      /* sent to slave execds when master task finished    */
+   ACK_LOAD_REPORT       /* send back by qmaster, when execd sends a load report */
 };
 
 int pack_ack(sge_pack_buffer *pb, u_long32 type, u_long32 id, u_long32 id2, const char *str);

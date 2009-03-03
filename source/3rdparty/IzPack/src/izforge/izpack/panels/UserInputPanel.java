@@ -725,13 +725,6 @@ public class UserInputPanel extends IzPanel implements ActionListener
     {
         Vector<XMLElement> forPacks = field.getChildrenNamed(SELECTEDPACKS);
         Vector<XMLElement> forOs = field.getChildrenNamed(OS);
-        HashMap<String, String> validateParamMap = null;
-        Vector<XMLElement> validateParams = null;
-        Vector<XMLElement> validatorsElem = null;
-        List<ValidatorContainer> validatorsList = new ArrayList<ValidatorContainer>();
-        String validator = null;
-        String message = null;
-        int vsize = 0;
 
         JLabel label;
         String set;
@@ -799,41 +792,10 @@ public class UserInputPanel extends IzPanel implements ActionListener
             }
             // internationalize it
             filterdesc = idata.langpack.getString(filterdesc);
-
-            // ----------------------------------------------------
-            // get the validator and processor if they are defined
-            // ----------------------------------------------------
-
-            validatorsElem = field.getChildrenNamed(VALIDATOR);
-            if (validatorsElem != null && validatorsElem.size() > 0) {
-                vsize = validatorsElem.size();
-                for (int i = 0; i < vsize; i++) {
-                    element = validatorsElem.get(i);
-                    validator = element.getAttribute(CLASS);
-                    message = getText(element);
-                    validateParamMap = new HashMap<String, String>();
-                    // ----------------------------------------------------------
-                    // check and see if we have any parameters for this validator.
-                    // If so, then add them to validateParamMap.
-                    // ----------------------------------------------------------
-                    validateParams = element.getChildrenNamed(RULE_PARAM);
-                    if (validateParams != null && validateParams.size() > 0) {
-                        Iterator<XMLElement> iter = validateParams.iterator();
-                        while (iter.hasNext()) {
-                            element = iter.next();
-                            String paramName = element.getAttribute(RULE_PARAM_NAME);
-                            String paramValue = element.getAttribute(RULE_PARAM_VALUE);
-                            // System.out.println("Adding parameter: "+paramName+"="+paramValue);
-                            validateParamMap.put(paramName, paramValue);
-                        }
-                    }
-
-                    validatorsList.add(new ValidatorContainer(validator, message, validateParamMap));
-                }
-            }
         }
 
-        final TextInputField filetxt = new TextInputField(set, size, validatorsList, validateParamMap);
+        final JTextField filetxt = new JTextField(set, size);
+        filetxt.setCaretPosition(0);
         
         if (tooltip != null && !tooltip.equals("")) {
             filetxt.setToolTipText(tooltip);
@@ -871,7 +833,7 @@ public class UserInputPanel extends IzPanel implements ActionListener
                 }
             }
         });
-        JPanel panel = new JPanel(new com.izforge.izpack.gui.FlowLayout(FlowLayout.LEFT, 2, 0));
+        JPanel panel = new JPanel();
         panel.add(filetxt);
         panel.add(button);
 
@@ -1335,57 +1297,33 @@ public class UserInputPanel extends IzPanel implements ActionListener
         try
         {
             JPanel panel = (JPanel) field[POS_FIELD];
-            TextInputField textf = (TextInputField) panel.getComponent(0);
+            JTextField textf = (JTextField) panel.getComponent(0);
+            String file = textf.getText();
 
             if (!textf.isEnabled()) {
                 return true;
             }
 
-//            if (file != null)
-//            {
-//                File ffile = new File(file);
-//                if (ffile.isFile())
-//                {
-//                    idata.setVariable((String) field[POS_VARIABLE], file);
-//                    entries.add(new TextValuePair((String) field[POS_VARIABLE], file));
-//                    return true;
-//                }
-//                else
-//                {
-//                    showMessage("file.notfile");
-//                    return false;
-//                }
-//            }
-//            else
-//            {
-//                showMessage("file.nofile");
-//                return false;
-//            }
-
-            // validate the input
-            Debug.trace("Validating file field");
-            boolean success = true;
-            // Use each validator to validate contents
-            if (validating) {
-                int size = textf.validatorSize();
-                for (int i = 0; i < size; i++) {
-                    success = textf.validateContents(i);
-                    if (!success) {
-                        JOptionPane.showMessageDialog(parentFrame, textf.getValidatorMessage(i),
-                                parentFrame.langpack.getString("UserInputPanel.error.caption"),
-                                JOptionPane.WARNING_MESSAGE);
-                        break;
-                    }
+            if (file != null)
+            {
+                File ffile = new File(file);
+                if (ffile.isFile())
+                {
+                    idata.setVariable((String) field[POS_VARIABLE], file);
+                    entries.add(new TextValuePair((String) field[POS_VARIABLE], file));
+                    return true;
+                }
+                else
+                {
+                    showMessage("file.notfile");
+                    return false;
                 }
             }
-
-            if (success) {
-                Debug.trace("Field validated");
-                idata.setVariable((String) field[POS_VARIABLE], textf.getText());
-                entries.add(new TextValuePair((String) field[POS_VARIABLE], textf.getText()));
+            else
+            {
+                showMessage("file.nofile");
+                return false;
             }
-
-            return success;
         }
         catch (Exception e)
         {
@@ -2289,8 +2227,6 @@ public class UserInputPanel extends IzPanel implements ActionListener
                     choice.setToolTipText(tooltip);
                 }
 
-                checkDependency(spec, choice);
-
                 buttonGroups.add(group);
                 uiElements.add(new Object[]{null, RADIO_FIELD, variable, constraints, choice,
                         forPacks, forOs, value, null, null, group});
@@ -2682,8 +2618,6 @@ public class UserInputPanel extends IzPanel implements ActionListener
         if (ident != null && ident.equals("true")) {
             constraints.indent = true;
         }
-
-        checkDependency(spec, checkbox);
 
         uiElements.add(new Object[]{null, CHECK_FIELD, variable, constraints, checkbox, forPacks,
                 forOs, trueValue, falseValue});

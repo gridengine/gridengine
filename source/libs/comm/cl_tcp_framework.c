@@ -72,6 +72,9 @@ typedef struct cl_com_tcp_private_type {
    int           sockfd;              /* socket file descriptor */
    int           pre_sockfd;          /* socket which was prepared for later listen call (only_prepare_service == TRUE */
    struct sockaddr_in client_addr;    /* used in connect for storing client addr of connection partner */ 
+#ifdef USE_POLL
+   struct pollfd *pollfd;              /* used for poll() system call */
+#endif
 } cl_com_tcp_private_t;
 
 
@@ -91,17 +94,14 @@ int cl_com_tcp_get_fd(cl_com_connection_t* connection, int* fd) {
       return CL_RETVAL_PARAMS;
    }
 
-   if ((private=cl_com_tcp_get_private(connection)) != NULL) {
+   if ( (private=cl_com_tcp_get_private(connection)) != NULL) {
       if (private->sockfd < 0) {
-         CL_LOG_INT(CL_LOG_INFO, "return pre_sockfd: ", private->pre_sockfd);
          *fd = private->pre_sockfd;
       } else {
-         CL_LOG_INT(CL_LOG_INFO, "return final sockfd: ", private->sockfd);
          *fd = private->sockfd;
       }
       return CL_RETVAL_OK;
    }
-   CL_LOG(CL_LOG_ERROR, "cannot get private connection data object!");
    return CL_RETVAL_UNKNOWN;
 }
 
@@ -287,22 +287,18 @@ int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout) {
          }
       }
 
-      if (private->sockfd < 3) {
-         CL_LOG_INT(CL_LOG_WARNING, "The file descriptor is < 3. Will dup fd to be >= 3! fd value: ", private->sockfd);
-         ret = sge_dup_fd_above_stderr(&(private->sockfd));
-         if (ret != 0) {
-            CL_LOG_INT(CL_LOG_ERROR, "can't dup socket fd to be >=3, errno = %d", ret);
-            shutdown(private->sockfd, 2);
-            close(private->sockfd);
-            private->sockfd = -1;
-            cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_DUP_SOCKET_FD_ERROR, MSG_CL_COMMLIB_CANNOT_DUP_SOCKET_FD);
-            return CL_RETVAL_DUP_SOCKET_FD_ERROR;
-         }
-         CL_LOG_INT(CL_LOG_INFO, "fd value after dup: ", private->sockfd);
+      ret = sge_dup_fd_above_stderr(&private->sockfd);
+      if (ret != 0) {
+         CL_LOG_INT(CL_LOG_ERROR, "can't dup socket fd to be >=3, errno = %d", ret);
+         shutdown(private->sockfd, 2);
+         close(private->sockfd);
+         private->sockfd = -1;
+         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_DUP_SOCKET_FD_ERROR, MSG_CL_COMMLIB_CANNOT_DUP_SOCKET_FD);
+         return CL_RETVAL_DUP_SOCKET_FD_ERROR;
       }
 
 #ifndef USE_POLL
-      if (private->sockfd >= FD_SETSIZE) {
+      if (private->sockfd >= FD_SETSIZE) /* only if not USE_POLL */ {
           char tmp_buffer[256];
           snprintf(tmp_buffer,256, "filedescriptor(fd=%d) exeeds FD_SETSIZE(=%d) of this system", private->sockfd , FD_SETSIZE );
           CL_LOG(CL_LOG_ERROR,tmp_buffer);
@@ -579,6 +575,9 @@ int cl_com_tcp_setup_connection(cl_com_connection_t**          connection,
    com_private->connect_in_port = 0; 
    com_private->server_port = server_port;
    com_private->connect_port = connect_port;
+#ifdef USE_POLL
+   com_private->pollfd = NULL;
+#endif
    return CL_RETVAL_OK;
 }
 
@@ -802,7 +801,12 @@ int cl_com_tcp_read(cl_com_connection_t* connection, cl_byte_t* message, unsigne
    data_read = read(private->sockfd, message, size);
    my_errno = errno;
    if (data_read <= 0) {
-      if (my_errno != EWOULDBLOCK && my_errno != EAGAIN && my_errno != EINTR && my_errno != 0) {
+      if (data_read == 0) {
+         /* this should only happen if the connection is down */
+         CL_LOG(CL_LOG_WARNING,"client connection disconnected");
+         return CL_RETVAL_READ_ERROR;
+      }
+      if (my_errno != EWOULDBLOCK && my_errno != EAGAIN && my_errno != EINTR) {
          if (my_errno == EPIPE) {
             CL_LOG_INT(CL_LOG_ERROR,"pipe error (only_one_read != NULL) errno:", my_errno );
             return CL_RETVAL_PIPE_ERROR;
@@ -810,15 +814,10 @@ int cl_com_tcp_read(cl_com_connection_t* connection, cl_byte_t* message, unsigne
          CL_LOG_INT(CL_LOG_ERROR,"receive error (only_one_read != NULL) errno:", my_errno);
          return CL_RETVAL_READ_ERROR;
       } else {
-         if (data_read == 0) {
-            /* this should only happen if the connection is down */
-            CL_LOG(CL_LOG_WARNING,"client connection disconnected");
-            return CL_RETVAL_READ_ERROR;
-         }
          CL_LOG_INT(CL_LOG_INFO,"receive error errno:", my_errno);
          data_read = 0;
       }
-   }
+   } 
 
    *only_one_read = data_read;
    if (data_read != size) {
@@ -954,7 +953,6 @@ static int cl_com_tcp_connection_request_handler_setup_finalize(cl_com_connectio
 
    CL_LOG(CL_LOG_INFO,"===============================");
    CL_LOG(CL_LOG_INFO,"TCP server setup done:");
-   CL_LOG_INT(CL_LOG_INFO,"server fd:", private->sockfd);
    CL_LOG_STR(CL_LOG_INFO,"host:     ", connection->local->comp_host);
    CL_LOG_STR(CL_LOG_INFO,"component:", connection->local->comp_name);
    CL_LOG_INT(CL_LOG_INFO,"id:       ",(int) (connection->local->comp_id));
@@ -1021,18 +1019,14 @@ int cl_com_tcp_connection_request_handler_setup(cl_com_connection_t* connection,
       return CL_RETVAL_CREATE_SOCKET;
    }
 
-   if (sockfd < 3) {
-      CL_LOG_INT(CL_LOG_WARNING, "The file descriptor is < 3. Will dup fd to be >= 3! fd value: ", sockfd);
-      ret = sge_dup_fd_above_stderr(&sockfd);
-      if (ret != 0) {
-         CL_LOG_INT(CL_LOG_ERROR, "can't dup socket fd to be >=3, errno = %d", ret);
-         shutdown(sockfd, 2);
-         close(sockfd);
-         sockfd = -1;
-         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_DUP_SOCKET_FD_ERROR, MSG_CL_COMMLIB_CANNOT_DUP_SOCKET_FD);
-         return CL_RETVAL_DUP_SOCKET_FD_ERROR;
-      }
-      CL_LOG_INT(CL_LOG_INFO, "fd value after dup: ", sockfd);
+   ret = sge_dup_fd_above_stderr(&sockfd);
+   if (ret != 0) {
+      CL_LOG_INT(CL_LOG_ERROR, "can't dup socket fd to be >=3, errno = %d", ret);
+      shutdown(sockfd, 2);
+      close(sockfd);
+      sockfd = -1;
+      cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_DUP_SOCKET_FD_ERROR, MSG_CL_COMMLIB_CANNOT_DUP_SOCKET_FD);
+      return CL_RETVAL_DUP_SOCKET_FD_ERROR;
    }
 
 #ifndef USE_POLL
@@ -1196,6 +1190,7 @@ int cl_com_tcp_connection_request_handler(cl_com_connection_t* connection, cl_co
    socklen_t fromlen = 0;
 #endif
    int retval;
+   int server_fd = -1;
    cl_com_tcp_private_t* private = NULL;
    
    if (connection == NULL || new_connection == NULL) {
@@ -1218,27 +1213,24 @@ int cl_com_tcp_connection_request_handler(cl_com_connection_t* connection, cl_co
       CL_LOG(CL_LOG_ERROR,"connection is no service handler");
       return CL_RETVAL_NOT_SERVICE_HANDLER;
    }
+   server_fd = private->sockfd;
 
    /* got new connect */
    fromlen = sizeof(cli_addr);
    memset((char *) &cli_addr, 0, sizeof(cli_addr));
-   new_sfd = accept(private->sockfd, (struct sockaddr *) &cli_addr, &fromlen);
+   new_sfd = accept(server_fd, (struct sockaddr *) &cli_addr, &fromlen);
    if (new_sfd > -1) {
       char* resolved_host_name = NULL;
       cl_com_tcp_private_t* tmp_private = NULL;
 
-      if (new_sfd < 3) {
-         CL_LOG_INT(CL_LOG_WARNING, "The file descriptor is < 3. Will dup fd to be >= 3! fd value: ", new_sfd);
-         retval = sge_dup_fd_above_stderr(&new_sfd);
-         if (retval != 0) {
-            CL_LOG_INT(CL_LOG_ERROR, "can't dup socket fd to be >=3, errno = %d", retval);
-            shutdown(new_sfd, 2);
-            close(new_sfd);
-            new_sfd = -1;
-            cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_DUP_SOCKET_FD_ERROR, MSG_CL_COMMLIB_CANNOT_DUP_SOCKET_FD);
-            return CL_RETVAL_DUP_SOCKET_FD_ERROR;
-         }
-         CL_LOG_INT(CL_LOG_INFO, "fd value after dup: ", new_sfd);
+      retval = sge_dup_fd_above_stderr(&new_sfd);
+      if (retval != 0) {
+         CL_LOG_INT(CL_LOG_ERROR, "can't dup socket fd to be >=3, errno = %d", retval);
+         shutdown(new_sfd, 2);
+         close(new_sfd);
+         new_sfd = -1;
+         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_DUP_SOCKET_FD_ERROR, MSG_CL_COMMLIB_CANNOT_DUP_SOCKET_FD);
+         return CL_RETVAL_DUP_SOCKET_FD_ERROR;
       }
 
 #ifndef USE_POLL
@@ -1384,12 +1376,7 @@ static cl_com_tcp_private_t* cl_com_tcp_get_private(cl_com_connection_t* connect
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_tcp_open_connection_request_handler()"
-#ifdef USE_POLL
-int cl_com_tcp_open_connection_request_handler(cl_com_poll_t* poll_handle, cl_com_handle_t* handle, cl_raw_list_t* connection_list, cl_com_connection_t* service_connection, int timeout_val_sec, int timeout_val_usec, cl_select_method_t select_mode )
-#else
-int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_list_t* connection_list, cl_com_connection_t* service_connection, int timeout_val_sec, int timeout_val_usec, cl_select_method_t select_mode )
-#endif
-{
+int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_list_t* connection_list, cl_com_connection_t* service_connection, int timeout_val_sec, int timeout_val_usec, cl_select_method_t select_mode ) {
    int select_back;
    cl_connection_list_elem_t* con_elem = NULL;
    cl_com_connection_t*  connection = NULL;
@@ -1413,28 +1400,19 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
 #endif
 
 #ifdef USE_POLL
-   struct pollfd* ufds = NULL;
-   cl_com_connection_t** ufds_con = NULL;
-   unsigned long ufds_index = 0;
-   unsigned long fd_index = 0;
+   struct pollfd *ufds = NULL;
+   int ufds_index = 0;
+   cl_com_tcp_private_t* server_private = NULL;
 #else
    fd_set my_read_fds;
    fd_set my_write_fds;
 #endif
    struct timeval timeout;
 
-#ifdef USE_POLL
-   if (poll_handle == NULL) {
-      CL_LOG(CL_LOG_ERROR, "poll_handle == NULL");
-      return CL_RETVAL_PARAMS;
-   }
-#endif
-
    if (handle == NULL) {
       CL_LOG(CL_LOG_ERROR,"handle == NULL");
       return CL_RETVAL_PARAMS;
    }
-
    if (connection_list == NULL) {
       CL_LOG(CL_LOG_ERROR,"no connection list");
       return CL_RETVAL_PARAMS;
@@ -1447,6 +1425,13 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
       do_write_select = 1;
    }
 
+   /* lock list */
+   if ( cl_raw_list_lock(connection_list) != CL_RETVAL_OK) {
+      CL_LOG(CL_LOG_ERROR,"could not lock connection list");
+      return CL_RETVAL_LOCK_ERROR;
+   }
+
+   /* If we do only a write select, don't use select timeout */
    if (select_mode == CL_W_SELECT) {
       timeout.tv_sec = 0;
       timeout.tv_usec = 5*1000; /* 5 ms */
@@ -1454,50 +1439,7 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
       timeout.tv_sec = timeout_val_sec; 
       timeout.tv_usec = timeout_val_usec;
    }
-
-   /* lock list */
-   if ( cl_raw_list_lock(connection_list) != CL_RETVAL_OK) {
-      CL_LOG(CL_LOG_ERROR,"could not lock connection list");
-      return CL_RETVAL_LOCK_ERROR;
-   }
-
-   if ( connection_list->list_data == NULL) {
-      cl_raw_list_unlock(connection_list);
-      return CL_RETVAL_NO_FRAMEWORK_INIT;
-   } else {
-      ldata = (cl_connection_list_data_t*) connection_list->list_data;
-   }
-
-#ifdef USE_POLL
-   /* first check if we have a poll_array of the correct size*/
-   if (poll_handle->poll_fd_count != handle->max_open_connections + 2) {
-      /* max_open_connections might have changed */
-      int poll_return = cl_com_malloc_poll_array(poll_handle, handle->max_open_connections + 2);
-      if (poll_return != CL_RETVAL_OK) {
-         cl_raw_list_unlock(connection_list);
-         return poll_return;
-      }
-   }
-
-   /* check poll_array size */
-   if (poll_handle->poll_fd_count < cl_raw_list_get_elem_count(connection_list) + 2) {
-      /* This should not happen, but we want to be on the save side */
-      int poll_return = cl_com_malloc_poll_array(poll_handle, cl_raw_list_get_elem_count(connection_list) + 2);
-      CL_LOG(CL_LOG_WARNING, "max_open_connection count < current connection size - this must NOT happen!");
-      if (poll_return != CL_RETVAL_OK) {
-         cl_raw_list_unlock(connection_list);
-         return poll_return;
-      }
-   }
-
-   /* init poll_array data */
-   ufds = poll_handle->poll_array;
-   ufds_con = poll_handle->poll_con;
-
-   /* cleanup first arrays */
-   ufds_con[ufds_index] = NULL;
-   memset(&(ufds[ufds_index]), 0, sizeof(struct pollfd));
-#else
+#ifndef USE_POLL
    FD_ZERO(&my_read_fds);
    FD_ZERO(&my_write_fds);
 #endif
@@ -1517,7 +1459,6 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
          cl_raw_list_unlock(connection_list);
          return CL_RETVAL_NOT_SERVICE_HANDLER;
       }
-      service_connection->is_read_selected = CL_FALSE;
       private = cl_com_tcp_get_private(service_connection);
       /* check if service is already in listen mode. This might happen
          when only_prepare_service was set to true at 
@@ -1535,20 +1476,81 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
       server_fd = private->sockfd;
       max_fd = MAX(max_fd,server_fd);
 
-#ifdef USE_POLL
-      ufds_con[ufds_index] = service_connection;
-      ufds[ufds_index].fd = server_fd;
-      ufds[ufds_index].events = POLLIN|POLLPRI;
-      ufds_index++;
-      ufds_con[ufds_index] = NULL;
-      memset(&(ufds[ufds_index]), 0, sizeof(struct pollfd));
+#ifndef USE_POLL
+      FD_SET(server_fd,&my_read_fds);
 #else
-      FD_SET(server_fd, &my_read_fds);
+      if (service_connection != NULL) {
+         server_private = cl_com_tcp_get_private(service_connection);
+      }
 #endif
-      service_connection->is_read_selected = CL_TRUE;
       nr_of_descriptors++;
       service_connection->data_read_flag = CL_COM_DATA_NOT_READY;
    }
+
+   if ( connection_list->list_data == NULL) {
+      cl_raw_list_unlock(connection_list);
+      return CL_RETVAL_NO_FRAMEWORK_INIT;
+   } else {
+      ldata = (cl_connection_list_data_t*) connection_list->list_data;
+   }
+
+#ifdef USE_POLL
+   /* first check if we have a poll_array of the correct size*/
+   if (handle->poll_array_connection_size != handle->max_open_connections + 1) {
+      /* max_open_connections might have changed, free current array */
+      if (handle->poll_array != NULL) {
+         free(handle->poll_array);
+         CL_LOG(CL_LOG_WARNING, "freed poll_array");
+      }
+      handle->poll_array = NULL;
+      handle->poll_array_connection_size = 0;
+   }
+
+   /* if there is no poll_array, malloc() one */
+   if (handle->poll_array == NULL) {
+      /* malloc first time */
+      unsigned long nr_of_malloced_connections = handle->max_open_connections + 1;
+      handle->poll_array = (struct pollfd*) malloc( nr_of_malloced_connections * sizeof(struct pollfd));
+      if (handle->poll_array == NULL) {
+         handle->poll_array_connection_size = 0;
+         cl_raw_list_unlock(connection_list);
+         return CL_RETVAL_MALLOC;
+      }
+      handle->poll_array_connection_size = nr_of_malloced_connections;
+      CL_LOG_INT(CL_LOG_INFO, "poll_array prepared count: ", (int)handle->poll_array_connection_size);
+   }
+
+   /* check poll_array size */
+   if (handle->poll_array_connection_size < cl_raw_list_get_elem_count(connection_list) + 1) {
+      /* This should not happen, but we want to be on the save side */
+      unsigned long nr_of_malloced_connections = cl_raw_list_get_elem_count(connection_list) + 1;
+      CL_LOG(CL_LOG_WARNING, "max_open_connection count < current connection size - this must NOT happen!");
+      if (handle->poll_array != NULL) {
+         free(handle->poll_array);
+         handle->poll_array = NULL;
+      }
+      handle->poll_array = (struct pollfd*) malloc( nr_of_malloced_connections * sizeof(struct pollfd));
+      if (handle->poll_array == NULL) {
+         handle->poll_array_connection_size = 0;
+         cl_raw_list_unlock(connection_list);
+         return CL_RETVAL_MALLOC;
+      }
+      handle->poll_array_connection_size = nr_of_malloced_connections;
+      CL_LOG_INT(CL_LOG_INFO, "poll_array prepared count: ", (int)handle->poll_array_connection_size);
+   }
+
+   ufds = handle->poll_array;
+   if (server_private != NULL) {
+      server_private->pollfd = NULL;
+   }
+   if (server_fd != -1 && server_private != NULL) {
+      memset(&(ufds[ufds_index]), 0, sizeof(struct pollfd));
+      server_private->pollfd = &(ufds[ufds_index]);
+      ufds[ufds_index].fd = server_private->sockfd;
+      ufds[ufds_index].events = POLLIN|POLLPRI;
+      ufds_index++;
+   }
+#endif
 
    /* reset connection data_read flags */
    con_elem = cl_connection_list_get_first_elem(connection_list);
@@ -1560,12 +1562,11 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
          CL_LOG(CL_LOG_ERROR,"no private data pointer");
          return CL_RETVAL_NO_FRAMEWORK_INIT;
       }
-      if (do_read_select != 0) {
-         connection->is_read_selected = CL_FALSE;
-      }
-      if (do_write_select != 0) {
-         connection->is_write_selected = CL_FALSE;
-      }
+
+#ifdef USE_POLL      
+      con_private->pollfd = NULL;
+      memset(&(ufds[ufds_index]), 0, sizeof(struct pollfd));
+#endif
 
       if (con_private->sockfd >= 0) {
          switch(connection->framework_type) {
@@ -1577,11 +1578,10 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
 #ifdef USE_POLL
                            ufds[ufds_index].fd = con_private->sockfd;
                            ufds[ufds_index].events = POLLIN|POLLPRI;
-                           ufds_con[ufds_index] = connection;
+                           con_private->pollfd = &(ufds[ufds_index]);
 #else
                            FD_SET(con_private->sockfd,&my_read_fds);
 #endif
-                           connection->is_read_selected = CL_TRUE;
                            max_fd = MAX(max_fd,con_private->sockfd);
                            nr_of_descriptors++;
                            connection->data_read_flag = CL_COM_DATA_NOT_READY;
@@ -1591,21 +1591,17 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
 #ifdef USE_POLL
                            ufds[ufds_index].fd = con_private->sockfd;
                            ufds[ufds_index].events |= POLLOUT;
-                           ufds_con[ufds_index] = connection;
+                           con_private->pollfd = &(ufds[ufds_index]);
 #else
                            FD_SET(con_private->sockfd,&my_write_fds);
 #endif
-                           connection->is_write_selected = CL_TRUE;
                            max_fd = MAX(max_fd, con_private->sockfd);
                            connection->fd_ready_for_write = CL_COM_DATA_NOT_READY;
                         }
 
 #ifdef USE_POLL
-                        if (ufds[ufds_index].events) {
-                           ufds_index++;
-                           ufds_con[ufds_index] = NULL;
-                           memset(&(ufds[ufds_index]), 0, sizeof(struct pollfd));
-                        }
+                        if (ufds[ufds_index].events)
+                          ufds_index++;
 #endif
                      }
                      break;
@@ -1615,11 +1611,10 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
 #ifdef USE_POLL
                            ufds[ufds_index].fd = con_private->sockfd;
                            ufds[ufds_index].events = POLLIN|POLLPRI;
-                           ufds_con[ufds_index] = connection;
+                           con_private->pollfd = &(ufds[ufds_index]);
 #else
                            FD_SET(con_private->sockfd,&my_read_fds);
 #endif
-                           connection->is_read_selected = CL_TRUE;
                            max_fd = MAX(max_fd,con_private->sockfd);
                            nr_of_descriptors++;
                            connection->data_read_flag = CL_COM_DATA_NOT_READY;
@@ -1629,21 +1624,17 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
 #ifdef USE_POLL
                            ufds[ufds_index].fd = con_private->sockfd;
                            ufds[ufds_index].events |= POLLOUT;
-                           ufds_con[ufds_index] = connection;
+                           con_private->pollfd = &(ufds[ufds_index]);
 #else
                            FD_SET(con_private->sockfd,&my_write_fds);
 #endif
-                           connection->is_write_selected = CL_TRUE;
                            max_fd = MAX(max_fd, con_private->sockfd);
                            connection->fd_ready_for_write = CL_COM_DATA_NOT_READY;
                         }
 
 #ifdef USE_POLL
-                        if (ufds[ufds_index].events) {
-                           ufds_index++;
-                           ufds_con[ufds_index] = NULL;
-                           memset(&(ufds[ufds_index]), 0, sizeof(struct pollfd));
-                        }
+                        if (ufds[ufds_index].events)
+                          ufds_index++;
 #endif
                      }
                      break;
@@ -1652,11 +1643,10 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
 #ifdef USE_POLL
                         ufds[ufds_index].fd = con_private->sockfd;
                         ufds[ufds_index].events = POLLIN|POLLPRI;
-                        ufds_con[ufds_index] = connection;
+                        con_private->pollfd = &(ufds[ufds_index]);
 #else
                         FD_SET(con_private->sockfd,&my_read_fds);
 #endif
-                        connection->is_read_selected = CL_TRUE;
                         max_fd = MAX(max_fd,con_private->sockfd);
                         nr_of_descriptors++;
                         connection->data_read_flag = CL_COM_DATA_NOT_READY;
@@ -1666,21 +1656,17 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
 #ifdef USE_POLL
                         ufds[ufds_index].fd = con_private->sockfd;
                         ufds[ufds_index].events |= POLLOUT;
-                        ufds_con[ufds_index] = connection;
+                        con_private->pollfd = &(ufds[ufds_index]);
 #else
                         FD_SET(con_private->sockfd,&my_write_fds);
 #endif
-                        connection->is_write_selected = CL_TRUE;
                         max_fd = MAX(max_fd, con_private->sockfd);
                         connection->fd_ready_for_write = CL_COM_DATA_NOT_READY;
                      }
 
 #ifdef USE_POLL
-                     if (ufds[ufds_index].events) {
+                     if (ufds[ufds_index].events)
                         ufds_index++;
-                        ufds_con[ufds_index] = NULL;
-                        memset(&(ufds[ufds_index]), 0, sizeof(struct pollfd));
-                     }
 #endif
                      break;
                   case CL_OPENING:
@@ -1699,11 +1685,11 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
 #ifdef USE_POLL
                               ufds[ufds_index].fd = con_private->sockfd;
                               ufds[ufds_index].events = POLLIN|POLLPRI;
-                              ufds_con[ufds_index] = connection;
+                              con_private->pollfd = &(ufds[ufds_index]);
 #else
                               FD_SET(con_private->sockfd,&my_read_fds);
 #endif
-                              connection->is_read_selected = CL_TRUE;
+
                               max_fd = MAX(max_fd,con_private->sockfd);
                               nr_of_descriptors++;
                               connection->data_read_flag = CL_COM_DATA_NOT_READY;
@@ -1712,21 +1698,17 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
 #ifdef USE_POLL
                               ufds[ufds_index].fd = con_private->sockfd;
                               ufds[ufds_index].events |= POLLOUT;
-                              ufds_con[ufds_index] = connection;
+                              con_private->pollfd = &(ufds[ufds_index]);
 #else
                               FD_SET(con_private->sockfd,&my_write_fds);
 #endif
-                              connection->is_write_selected = CL_TRUE;
                               max_fd = MAX(max_fd, con_private->sockfd);
                               connection->fd_ready_for_write = CL_COM_DATA_NOT_READY;
                               connection->data_write_flag = CL_COM_DATA_READY;
                            }
 #ifdef USE_POLL
-                           if (ufds[ufds_index].events) {
+                           if (ufds[ufds_index].events)
                               ufds_index++;
-                              ufds_con[ufds_index] = NULL;
-                              memset(&(ufds[ufds_index]), 0, sizeof(struct pollfd));
-                           }
 #endif
 
                            break;
@@ -1761,34 +1743,42 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
          cl_raw_list_unlock(connection_list); 
          CL_LOG(CL_LOG_INFO,"returning, because of no select descriptors (CL_W_SELECT)");
          return CL_RETVAL_NO_SELECT_DESCRIPTORS;
-      } else {
+      }
+#if 0
+      if ( select_mode == CL_R_SELECT ) {
+         /* return immediate for only read select ( only called by read thread) */
+         cl_raw_list_unlock(connection_list); 
+         CL_LOG(CL_LOG_INFO,"returning, because of no select  (CL_R_SELECT)");
+         return CL_RETVAL_NO_SELECT_DESCRIPTORS; 
+      }
+#endif
 
-         /* (only when not multithreaded): 
-          *    don't return immediately when the last call to this function was also
-          *    with no possible descriptors! ( which may be caused by a not connectable service )
-          *    This must be done to prevent the application to poll endless ( with 100% CPU usage)
-          *
-          *    we have no file descriptors, but we do a select with standard timeout
-          *    because we don't want to overload the cpu by endless trigger() calls 
-          *    from application when there is no connection client 
-          *    (no descriptors part 1)
-          *
-          *    we have a handler of the connection list, try to find out if 
-          *    this is the first call without guilty file descriptors 
-          */
-         if ( ldata->select_not_called_count < 3 ) {
-            CL_LOG_INT(CL_LOG_INFO, "no usable file descriptor for select() call nr.:", ldata->select_not_called_count);
-            ldata->select_not_called_count += 1;
-            cl_raw_list_unlock(connection_list); 
-            return CL_RETVAL_NO_SELECT_DESCRIPTORS;
-         } else {
-            CL_LOG(CL_LOG_WARNING, "no usable file descriptors (repeated!) - select() will be used for wait");
-            ldata->select_not_called_count = 0;
-            CL_LOG(CL_LOG_INFO,"no select descriptors");
-            cl_raw_list_unlock(connection_list);
-            sge_sleep(timeout.tv_sec, timeout.tv_usec);
-            return CL_RETVAL_NO_SELECT_DESCRIPTORS;
-         }
+      /* (only when not multithreaded): 
+       *    don't return immediately when the last call to this function was also
+       *    with no possible descriptors! ( which may be caused by a not connectable service )
+       *    This must be done to prevent the application to poll endless ( with 100% CPU usage)
+       *
+       *    we have no file descriptors, but we do a select with standard timeout
+       *    because we don't want to overload the cpu by endless trigger() calls 
+       *    from application when there is no connection client 
+       *    (no descriptors part 1)
+       *
+       *    we have a handler of the connection list, try to find out if 
+       *    this is the first call without guilty file descriptors 
+       */
+      
+      if ( ldata->select_not_called_count < 3 ) { 
+         CL_LOG_INT(CL_LOG_INFO, "no usable file descriptor for select() call nr.:", ldata->select_not_called_count);
+         ldata->select_not_called_count += 1;
+         cl_raw_list_unlock(connection_list); 
+         return CL_RETVAL_NO_SELECT_DESCRIPTORS; 
+      } else {
+         CL_LOG(CL_LOG_WARNING, "no usable file descriptors (repeated!) - select() will be used for wait");
+         ldata->select_not_called_count = 0;
+         CL_LOG(CL_LOG_INFO,"no select descriptors");
+         cl_raw_list_unlock(connection_list);
+         sge_sleep(timeout.tv_sec, timeout.tv_usec);
+         return CL_RETVAL_NO_SELECT_DESCRIPTORS;
       }
    }
 
@@ -1808,235 +1798,145 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
       ldata->last_nr_of_descriptors = nr_of_descriptors;
       cl_raw_list_unlock(connection_list); 
       CL_LOG(CL_LOG_INFO,"last connection closed");
-      retval = CL_RETVAL_NO_SELECT_DESCRIPTORS;
-   } else {
+      return CL_RETVAL_NO_SELECT_DESCRIPTORS;
+   }
 
-      ldata->last_nr_of_descriptors = nr_of_descriptors;
+   ldata->last_nr_of_descriptors = nr_of_descriptors;
 
-      cl_raw_list_unlock(connection_list); 
+   cl_raw_list_unlock(connection_list); 
 
-      errno = 0;
+   errno = 0;
+
 #ifdef USE_POLL
-      select_back = poll(ufds, ufds_index, timeout.tv_sec*1000 + timeout.tv_usec/1000);
+   if (select_mode == CL_W_SELECT) {
+      select_back = poll(ufds, ufds_index, 5); /* 5 ms */
+   } else {
+      select_back = poll(ufds, ufds_index, timeout_val_sec*1000 + timeout_val_usec/1000);
+   }
 #else
-      select_back = select(max_fd + 1, &my_read_fds, &my_write_fds, NULL, &timeout);
+   select_back = select(max_fd + 1, &my_read_fds, &my_write_fds, NULL, &timeout);
 #endif
 
-      my_errno = errno;
-
-
-      switch(select_back) {
-         case -1: {
-            /*
-             * poll() and select() set errno to EINTR if interrupted
-             */
-            if (my_errno == EINTR) {
-               CL_LOG(CL_LOG_WARNING,"select interrupted (errno=EINTR)");
-               retval = CL_RETVAL_SELECT_INTERRUPT;
-               break;
-            }
-
-            CL_LOG_STR(CL_LOG_ERROR,"select error", strerror(my_errno));
-            retval = CL_RETVAL_SELECT_ERROR;
-            
-            /*
-             * 1) select() set errno to EBADF for not valid file descriptors
-             * 2) poll() and select() set errno to EINVAL for file descriptors that are
-             *    > OPEN_MAX or FD_SETSIZE
-             * => In both cases we check the filedescriptors with get_sock_opt()
-             */
-            if (my_errno == EBADF || my_errno == EINVAL) {
-               if (my_errno == EBADF) {
-                  CL_LOG(CL_LOG_WARNING, "errno=EBADF, checking file descriptors");
-               } else {
-                  CL_LOG(CL_LOG_WARNING, "errno=EINVAL, checking file descriptors");
-               }
-               /* now check all file descriptors and close those which errors */
-               cl_raw_list_lock(connection_list); 
-               con_elem = cl_connection_list_get_first_elem(connection_list);
-               while(con_elem) {
-                  connection  = con_elem->connection;
-                  con_private = cl_com_tcp_get_private(connection);
-                  socket_error = 0;
-#if defined(SOLARIS) && !defined(SOLARIS64) 
-                  get_sock_opt_error = getsockopt(con_private->sockfd,SOL_SOCKET, SO_ERROR, (void*)&socket_error, &socklen);
-#else
-                  get_sock_opt_error = getsockopt(con_private->sockfd,SOL_SOCKET, SO_ERROR, &socket_error, &socklen);
-#endif
-                  if (socket_error != 0 || get_sock_opt_error != 0) {
-                     connection->connection_state = CL_CLOSING;
-                     connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
-                     CL_LOG_STR(CL_LOG_ERROR, "select() or poll() - socket error is: ", strerror(socket_error));
-                     cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SELECT_ERROR, strerror(socket_error));
-
-                     if (connection->remote            != NULL && 
-                         connection->remote->comp_host != NULL &&
-                         connection->remote->comp_name != NULL ) {
-                        char tmp_string[1024];
-                        snprintf(tmp_string, 1024, MSG_CL_COMMLIB_CLOSING_SSU,
-                                 connection->remote->comp_host,
-                                 connection->remote->comp_name,
-                                 sge_u32c(connection->remote->comp_id));
-                        CL_LOG_STR(CL_LOG_ERROR, "select error:", tmp_string);
-                        cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SELECT_ERROR, tmp_string);
-                     }
-                  }
-                  con_elem = cl_connection_list_get_next_elem(con_elem);
-               } /* while */
-               cl_raw_list_unlock(connection_list);
-               break;
-            }
-            CL_LOG_INT(CL_LOG_WARNING, "unexpected errno value: ", (int) my_errno);
+   my_errno = errno;
+   switch(select_back) {
+      case -1: {
+         if (my_errno == EINTR) {
+            CL_LOG(CL_LOG_WARNING,"select interrupted (errno=EINTR)");
+            retval = CL_RETVAL_SELECT_INTERRUPT;
             break;
          }
-         case 0:
-#ifdef USE_POLL
-            CL_LOG(CL_LOG_INFO,"----->>>>>>>>>>> poll() timeout <<<<<<<<<<<<<<<<<---");
-#else
-            CL_LOG_INT(CL_LOG_INFO,"----->>>>>>>>>>> select() timeout <<<<<<<<<<<<<<<--- maxfd=", max_fd);
-#endif
-            retval = CL_RETVAL_SELECT_TIMEOUT;
-            break;
-         default:
-#ifdef USE_POLL
-         {
-            cl_raw_list_lock(connection_list); 
-            /* now set the read flags for connections, where data is available */
-            for (fd_index = 0; fd_index < ufds_index ; fd_index++) {
-               connection = ufds_con[fd_index];
-               if (connection != NULL) {
-                  if (do_read_select != 0) {
-                     if (ufds[fd_index].revents & (POLLIN|POLLPRI)) {
-                        connection->data_read_flag = CL_COM_DATA_READY;
-                     }
-                     connection->is_read_selected = CL_FALSE;
-                  }
-                  if (do_write_select != 0) {
-                     if (ufds[fd_index].revents & POLLOUT) {
-                        connection->fd_ready_for_write = CL_COM_DATA_READY;
-                     }
-                     connection->is_write_selected = CL_FALSE;
-                  }
 
-                  /* Do we have poll errors ? */
-                  if ((ufds[fd_index].revents & (POLLERR|POLLHUP|POLLNVAL)) && connection != service_connection) {
-                     if (ufds[fd_index].revents & POLLNVAL) {
-                         CL_LOG_INT(CL_LOG_WARNING, "poll() revents POLLNVAL is set - checking file descriptor: ", (int)ufds[fd_index].fd);
-                     }
-                     if (ufds[fd_index].revents & POLLERR) {
-                         CL_LOG_INT(CL_LOG_WARNING, "poll() revents POLLERR is set - checking file descriptor: ", (int)ufds[fd_index].fd);
-                     }
-                     if (ufds[fd_index].revents & POLLHUP) {
-                         CL_LOG_INT(CL_LOG_WARNING, "poll() revents POLLHUP is set - checking file descriptor: ", (int)ufds[fd_index].fd);
-                     }
-                     /* check the connection */
-                     con_private = cl_com_tcp_get_private(connection);
-                     socket_error = 0;
-#if defined(SOLARIS) && !defined(SOLARIS64) 
-                     get_sock_opt_error = getsockopt(con_private->sockfd,SOL_SOCKET, SO_ERROR, (void*)&socket_error, &socklen);
-#else
-                     get_sock_opt_error = getsockopt(con_private->sockfd,SOL_SOCKET, SO_ERROR, &socket_error, &socklen);
-#endif
-                     if (socket_error != 0 || get_sock_opt_error != 0) {
-                        connection->connection_state = CL_CLOSING;
-                        connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
-                        CL_LOG_STR(CL_LOG_ERROR, "socket error: ", strerror(socket_error));
-                        cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SELECT_ERROR, strerror(socket_error));
-                        if (connection->remote            != NULL && 
-                            connection->remote->comp_host != NULL &&
-                            connection->remote->comp_name != NULL ) {
-                           char tmp_string[1024];
-                           snprintf(tmp_string, 1024, MSG_CL_COMMLIB_CLOSING_SSU,
-                                    connection->remote->comp_host,
-                                    connection->remote->comp_name,
-                                    sge_u32c(connection->remote->comp_id));
-                           CL_LOG_STR(CL_LOG_ERROR, "poll() revents error:", tmp_string);
-                           cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SELECT_ERROR, tmp_string);
-                        }
-                     }
-                  }
-               }
-            }
-            cl_raw_list_unlock(connection_list);
-            return CL_RETVAL_OK; /* OK - done */
-         } /* default */
-#else
-         {
+         CL_LOG_STR(CL_LOG_ERROR,"select error", strerror(my_errno));
+         retval = CL_RETVAL_SELECT_ERROR;
+         
+         /* check socket errors for EBADF  */
+         if (my_errno == EBADF) {
+            CL_LOG(CL_LOG_WARNING, "errno=EBADF, checking file descriptors");
+            /* now check all file descriptors and close those which errors */
             cl_raw_list_lock(connection_list); 
-            /* now set the read flags for connections, where data is available */
             con_elem = cl_connection_list_get_first_elem(connection_list);
             while(con_elem) {
                connection  = con_elem->connection;
                con_private = cl_com_tcp_get_private(connection);
-               if (do_read_select != 0) {
-                  if (con_private->sockfd >= 0 && con_private->sockfd <= max_fd) {
-                     if (FD_ISSET(con_private->sockfd, &my_read_fds)) {
-                        connection->data_read_flag = CL_COM_DATA_READY;
-                     }
+               socket_error = 0;
+#if defined(SOLARIS) && !defined(SOLARIS64) 
+               get_sock_opt_error = getsockopt(con_private->sockfd,SOL_SOCKET, SO_ERROR, (void*)&socket_error, &socklen);
+#else
+               get_sock_opt_error = getsockopt(con_private->sockfd,SOL_SOCKET, SO_ERROR, &socket_error, &socklen);
+#endif
+               if (socket_error != 0 || get_sock_opt_error != 0) {
+                  connection->connection_state = CL_CLOSING;
+                  connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
+                  CL_LOG_STR(CL_LOG_ERROR, "select error:", strerror(socket_error));
+                  cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SELECT_ERROR, strerror(socket_error));
+
+                  if (connection->remote            != NULL && 
+                      connection->remote->comp_host != NULL &&
+                      connection->remote->comp_name != NULL ) {
+                     char tmp_string[1024];
+                     snprintf(tmp_string, 1024, MSG_CL_COMMLIB_CLOSING_SSU,
+                              connection->remote->comp_host,
+                              connection->remote->comp_name,
+                              sge_u32c(connection->remote->comp_id));
+                     CL_LOG_STR(CL_LOG_ERROR, "select error:", tmp_string);
+                     cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SELECT_ERROR, tmp_string);
                   }
-                  connection->is_read_selected = CL_FALSE;
-               }
-               if (do_write_select != 0) {
-                  if (con_private->sockfd >= 0 && con_private->sockfd <= max_fd) {
-                     if (FD_ISSET(con_private->sockfd, &my_write_fds)) {
-                        connection->fd_ready_for_write = CL_COM_DATA_READY;
-                     }
-                  }
-                  connection->is_write_selected = CL_FALSE;
                }
                con_elem = cl_connection_list_get_next_elem(con_elem);
             } /* while */
             cl_raw_list_unlock(connection_list);
+            break;
+         }
 
+         CL_LOG_INT(CL_LOG_WARNING, "errno =", (int) my_errno);
+         if (my_errno == EINVAL) {
+            CL_LOG(CL_LOG_WARNING,"errno=EINVAL");
+         }
+         if (my_errno == ENOMEM) {
+            CL_LOG(CL_LOG_WARNING,"errno=ENOMEM");
+         }
+         break;
+      }
+      case 0:
+         CL_LOG_INT(CL_LOG_INFO,"----->>>>>>>>>>> select timeout <<<<<<<<<<<<<<<<<<<--- maxfd=",max_fd);
+         retval = CL_RETVAL_SELECT_TIMEOUT;
+         break;
+      default:
+      {
+         cl_raw_list_lock(connection_list); 
+         /* now set the read flags for connections, where data is available */
+         con_elem = cl_connection_list_get_first_elem(connection_list);
+         while(con_elem) {
+            connection  = con_elem->connection;
+            con_private = cl_com_tcp_get_private(connection);
 
-            if (server_fd != -1) {
-               if (FD_ISSET(server_fd, &my_read_fds)) {
-                  service_connection->data_read_flag = CL_COM_DATA_READY;
-               }
-               service_connection->is_read_selected = CL_FALSE;
-            }
-            return CL_RETVAL_OK; /* OK - done */
-         } /* default */
-#endif
-      } /* switch */
-
-   }
-   /* 
-    * reset all is_XXXXX_selected flags for the connection
-    */
+            if (do_read_select != 0) {
+               if (con_private->sockfd >= 0 && con_private->sockfd <= max_fd) {
 #ifdef USE_POLL
-   cl_raw_list_lock(connection_list); 
-   for (fd_index = 0; fd_index < ufds_index ; fd_index++) {
-      connection = ufds_con[fd_index];
-      if (connection != NULL) {
-         if (do_read_select != 0) {
-            connection->is_read_selected = CL_FALSE;
-         }
-         if (do_write_select != 0) {
-            connection->is_write_selected = CL_FALSE;
-         }
-      }
-   }
-   cl_raw_list_unlock(connection_list);
+                  if (con_private->pollfd != NULL && con_private->pollfd->revents & (POLLIN|POLLPRI))
 #else
-   cl_raw_list_lock(connection_list); 
-   con_elem = cl_connection_list_get_first_elem(connection_list);
-   while(con_elem) {
-      connection  = con_elem->connection;
-      if (do_read_select != 0) {
-         connection->is_read_selected = CL_FALSE;
-      }
-      if (do_write_select != 0) {
-         connection->is_write_selected = CL_FALSE;
-      }
-      con_elem = cl_connection_list_get_next_elem(con_elem);
-   }
-   cl_raw_list_unlock(connection_list);
-
-   if (server_fd != -1) {
-      service_connection->is_read_selected = CL_FALSE;
-   }
+                  if (FD_ISSET(con_private->sockfd, &my_read_fds))
 #endif
+                  {
+                     connection->data_read_flag = CL_COM_DATA_READY;
+                  }
+               }
+            }
+            if (do_write_select != 0) {
+               if (con_private->sockfd >= 0 && con_private->sockfd <= max_fd) {
+#ifdef USE_POLL
+                  if (con_private->pollfd != NULL && con_private->pollfd->revents & POLLOUT)
+#else
+                  if (FD_ISSET(con_private->sockfd, &my_write_fds))
+#endif
+                  {
+                     connection->fd_ready_for_write = CL_COM_DATA_READY;
+                  }
+               }
+            }
+            con_elem = cl_connection_list_get_next_elem(con_elem);
+         } /* while */
+         cl_raw_list_unlock(connection_list);
+
+
+         if (server_fd != -1) {
+#ifdef USE_POLL
+            if (server_private != NULL && server_private->pollfd != NULL && server_private->pollfd->revents & (POLLIN|POLLPRI) )
+#else
+            if (FD_ISSET(server_fd, &my_read_fds))
+#endif
+            {
+               CL_LOG(CL_LOG_INFO,"NEW CONNECTION");
+               if (service_connection != NULL) {
+                  service_connection->data_read_flag = CL_COM_DATA_READY;
+               } else {
+                  CL_LOG(CL_LOG_ERROR, "File descriptor for unexpected service connection is set. This should not happen.");
+               }
+            }
+         }
+         return CL_RETVAL_OK; /* OK - done */
+      } /* default */
+   } /* switch */
    return retval;
 }
 

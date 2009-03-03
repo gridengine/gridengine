@@ -459,11 +459,6 @@ extern int main(int argc, char** argv)
                                 NULL, 0,0, CL_TRUE, CL_TRUE);
      }
 
-
-     /* to be sure that server waits */
-     printf("waiting 10 seconds for server to set max. connected client count ...\n");
-     sleep(10);
-
      printf("creating new connections ...\n");
 
      handle1=cl_com_create_handle(NULL, framework, CL_CM_CT_MESSAGE, CL_FALSE, com_port, CL_TCP_DEFAULT, "client1", 0, 1, 0 );

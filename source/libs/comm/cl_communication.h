@@ -178,24 +178,12 @@ int cl_com_connection_request_handler(cl_com_connection_t* connection,
                                       cl_com_connection_t** new_connection);
 /* cleanup service */
 int cl_com_connection_request_handler_cleanup(cl_com_connection_t* connection);
-#ifdef USE_POLL
-int cl_com_open_connection_request_handler(cl_com_poll_t* poll_handle,
-                                           cl_com_handle_t* handle,
-                                           int timeout_val_sec,
-                                           int timeout_val_usec,
-                                           cl_select_method_t select_mode );
 
-#else
 /* check open connection list for new messages */
 int cl_com_open_connection_request_handler(cl_com_handle_t* handle,
                                            int timeout_val_sec,
                                            int timeout_val_usec,
                                            cl_select_method_t select_mode );
-#endif
-#ifdef USE_POLL
-int cl_com_free_poll_array(cl_com_poll_t* poll_handle);
-int cl_com_malloc_poll_array(cl_com_poll_t* poll_handle, unsigned long nr_of_malloced_connections);
-#endif
 
 int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connection_list_elem_t* elem, long timeout, cl_select_method_t select_mode );
 

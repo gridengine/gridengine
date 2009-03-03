@@ -235,8 +235,12 @@ sge_tid_t sge_qexecve(sge_gdi_ctx_class_t *ctx,
  *     MT-NOTE: sge_qwaittid() is not MT safe
  *
  */
-int sge_qwaittid(sge_gdi_ctx_class_t *ctx, sge_tid_t tid, int *status, int options)
-{
+int sge_qwaittid(
+sge_gdi_ctx_class_t *ctx,
+sge_tid_t tid,
+int *status,
+int options 
+) {
    lListElem *rt = NULL;
    int ret, rcv_opt = 0;
 
@@ -281,8 +285,11 @@ int sge_qwaittid(sge_gdi_ctx_class_t *ctx, sge_tid_t tid, int *status, int optio
        MT-NOTE: rcv_from_execd() is not MT safe
 
 */
-static int rcv_from_execd(sge_gdi_ctx_class_t *ctx, int options, int tag)
-{
+static int rcv_from_execd(
+sge_gdi_ctx_class_t *ctx,
+int options,
+int tag 
+) {
    int ret;
    char *msg = NULL;
    u_long32 msg_len = 0;

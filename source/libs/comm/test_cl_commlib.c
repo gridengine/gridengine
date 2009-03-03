@@ -159,6 +159,8 @@ extern int main(int argc, char** argv)
   struct sigaction sa;
   cl_ssl_setup_t ssl_config;
   static int runs = 100;
+
+
   int handle_port = 0;
   cl_com_handle_t* handle = NULL; 
   cl_com_message_t* message = NULL;
@@ -168,7 +170,6 @@ extern int main(int argc, char** argv)
   cl_log_t log_level;
   cl_framework_t framework = CL_CT_TCP;
 
-  memset(&ssl_config, 0, sizeof(ssl_config));
   ssl_config.ssl_method           = CL_SSL_v23;                 /*  v23 method                                  */
   ssl_config.ssl_CA_cert_pem_file = getenv("SSL_CA_CERT_FILE"); /*  CA certificate file                         */
   ssl_config.ssl_CA_key_pem_file  = NULL;                       /*  private certificate file of CA (not used)   */
@@ -272,9 +273,7 @@ extern int main(int argc, char** argv)
  
   cl_com_set_tag_name_func(my_application_tag_name);
 
-  if (framework == CL_CT_SSL) {
-     cl_com_specify_ssl_configuration(&ssl_config);
-  }
+  cl_com_specify_ssl_configuration(&ssl_config);
 
   handle=cl_com_create_handle(NULL, framework, CL_CM_CT_MESSAGE, CL_TRUE, handle_port, CL_TCP_DEFAULT, "server", 1, 1, 0 );
   if (handle == NULL) {
@@ -307,36 +306,6 @@ extern int main(int argc, char** argv)
   }
   while(do_shutdown != 1) {
      int ret_val;
-
-     if (getenv("CL_FORK_SLEEP_CHILD")) {
-        int sleep_child = atoi(getenv("CL_FORK_SLEEP_CHILD"));
-        int sleep_parent = 1;
-        pid_t child_pid = 0;
-        if (getenv("CL_FORK_SLEEP_PARENT")) {
-           sleep_parent = atoi(getenv("CL_FORK_SLEEP_PARENT"));
-        }
-        if ((child_pid = fork()) == 0) {
-           printf("fork() - child - mypid=(%d)!\n", (int) getpid());
-           printf("fork() - child - sleep %d ...\n", (int) sleep_child);
-           fflush(stdout);
-           sleep(sleep_child);
-           printf("fork() - child - sleep %d done\n", (int) sleep_child);
-           fflush(stdout);
-           exit(0);
-        } else {
-           printf("fork() - parent - mypid=(%d)!\n", (int) getpid());
-           printf("fork() - parent - childpid=(%d)!\n", (int) child_pid);
-           printf("fork() - parent - sleep %d ...\n", (int) sleep_parent);
-           fflush(stdout);
-           sleep(sleep_parent);
-           printf("fork() - parent - sleep %d done\n", (int) sleep_parent);
-           printf("fork() - parent - killing child pid %d ...\n", (int) child_pid);
-           fflush(stdout);
-           kill(child_pid, SIGKILL);
-           printf("fork() - parent - killing child pid %d done\n", (int) child_pid);
-           fflush(stdout);
-        }
-     } 
 
      CL_LOG(CL_LOG_INFO,"main()");
      cl_commlib_trigger(handle, 1); 
@@ -460,7 +429,8 @@ extern int main(int argc, char** argv)
 
   printf("commlib cleanup ...\n");
   cl_com_cleanup_commlib();
-  fflush(stdout);
+  fflush(NULL);
+  
 
   printf("main done\n");
   fflush(stdout);

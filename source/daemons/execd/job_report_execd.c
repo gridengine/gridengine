@@ -58,7 +58,7 @@ static bool flush_jr = false;
 static int check_queue_limits = 0;
 
 void sge_set_flush_jr_flag(bool value) {
-   flush_jr = value;
+   flush_jr =value;
 }
 
 bool sge_get_flush_jr_flag(void) {
@@ -163,15 +163,14 @@ void del_job_report(lListElem *jr)
 
 void cleanup_job_report(u_long32 jobid, u_long32 jataskid)
 {
-   lListElem *jr, *jr_next;
+   lListElem *jr;
    const void *iterator = NULL;
 
    DENTER(TOP_LAYER, "cleanup_job_report");
 
    /* get rid of job reports for all slave tasks */
-   jr_next = lGetElemUlongFirst(jr_list, JR_job_number, jobid, &iterator);
-   while ((jr = jr_next)) {
-      jr_next = lGetElemUlongNext(jr_list, JR_job_number, jobid, &iterator);
+   jr = lGetElemUlongFirst(jr_list, JR_job_number, jobid, &iterator);
+   while (jr != NULL) {
       if (lGetUlong(jr, JR_ja_task_number) == jataskid) {
          const char *s = lGetString(jr, JR_pe_task_id_str);
 
@@ -179,6 +178,7 @@ void cleanup_job_report(u_long32 jobid, u_long32 jataskid)
             jobid, jataskid, s?s:"master"));
          lRemoveElem(jr_list, &jr);
       }
+      jr = lGetElemUlongNext(jr_list, JR_job_number, jobid, &iterator);
    }
 
    DRETURN_VOID;
@@ -287,7 +287,7 @@ int do_ack(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg)
          case ACK_JOB_EXIT:
 /*
 **          This is the answer of qmaster if we report a job as exiting
-**          - job gets removed from job report list and from job list
+**          - job gets removed from job  report list and from job list
 **          - job gets cleaned from file system                       
 **          - retry is triggered by next job report sent to qmaster 
 **            containing this job as "exiting"                  
@@ -334,26 +334,10 @@ int do_ack(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg)
                }
             }
             break;
-
          case ACK_LOAD_REPORT:
             execd_merge_load_report(lGetUlong(ack, ACK_id));
             break;
  
-/*
- * This is the answer of qmaster
- * when we report a slave job,
- * and the master task of this slave job has finished.
- * qmaster expects us to send a final slave report
- * (having JR_usage with at least a pseudo exit_status)
- * once all pe_tasks have finished.
- */
-         case ACK_SIGNAL_SLAVE:
-            jobid = lGetUlong(ack, ACK_id);
-            jataskid = lGetUlong(ack, ACK_id2);
-
-            execd_slave_job_exit(jobid, jataskid);
-            break;
-
          default:
             ERROR((SGE_EVENT, MSG_COM_ACK_UNKNOWN1));
             break;
@@ -368,14 +352,15 @@ int do_ack(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg)
        * NOT synchron which means that the commlib will return
        * when there is nothing to do
        */
-      cl_commlib_trigger(cl_com_get_handle("execd", 1) ,0);
+      cl_commlib_trigger(cl_com_get_handle("execd",1) ,0);
    }
 
    DRETURN(0);
 }
 
 int
-execd_get_acct_multiplication_factor(const lListElem *pe, int slots, bool task)
+execd_get_acct_multiplication_factor(const lListElem *pe, 
+                                     int slots, bool task)
 {
    int factor = 1;
 

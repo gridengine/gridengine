@@ -918,14 +918,11 @@ MakeKeystore()
       CA_ARGS="$CA_ARGS $kspwfile"
    fi
 
-   if [ "$JAVA_HOME" != "" -a -x $JAVA_HOME/bin/java ]; then 
-      JAVA=$JAVA_HOME/bin/java
-   else   
-      JAVA=`which java`
-   fi
-   if [ ! -x $JAVA ]; then
+   if [ "$JAVA_HOME" = "" ]; then 
       PrintError "JAVA_HOME not set"
       return 1
+   else   
+      JAVA=$JAVA_HOME/bin/java
    fi
 
    JVM_ARGS="-cp $ROOT_PATH/lib/juti.jar"
@@ -1836,9 +1833,7 @@ while [ $ARGC != 0 ]; do
       ;;
    -auto)
       AUTO="true"
-      if [ "$AUTOGUI" != true ]; then
-         . $2
-      fi
+      . $2
       shift
       ARGC=`expr $ARGC - 1`
       ;;

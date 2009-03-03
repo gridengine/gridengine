@@ -3,20 +3,19 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     qsub   -  submit a batch job to Sun Grid Engine.
+     qsub   -  submit a batch job to Grid Engine.
 
-     qsh    -  submit an interactive  X-windows  session  to  Sun
-               Grid Engine.
-
-     qlogin -  submit an interactive login session  to  Sun  Grid
+     qsh    -  submit an interactive X-windows  session  to  Grid
                Engine.
 
-     qrsh   -  submit an interactive  rsh  session  to  Sun  Grid
+     qlogin -  submit  an  interactive  login  session  to   Grid
                Engine.
 
-     qalter -  modify a pending batch job of Sun Grid Engine.
+     qrsh   -  submit an interactive rsh session to Grid Engine.
 
-     qresub -  submit a copy of an existing Sun Grid Engine job.
+     qalter -  modify a pending batch job of Grid Engine.
+
+     qresub -  submit a copy of an existing Grid Engine job.
 
 SYNTAX
      qsub [ options ] [ command | -- [ command_args ]]
@@ -35,76 +34,75 @@ SYNTAX
      qresub [ options ] job_id_list
 
 DESCRIPTION
-     <I>Qsub</I> submits batch jobs to the Sun Grid Engine queuing  sys-
-     tem.  Sun  Grid  Engine  supports  single- and multiple-node
-     jobs. Command can be a path to a binary or a script (see  -b
-     below)  which  contains  the  commands  to be run by the job
-     using a shell (for example, <B><A HREF="../htmlman1/sh.html?pathrev=V62u2_TAG">sh(1)</A></B> or <B><A HREF="../htmlman1/csh.html?pathrev=V62u2_TAG">csh(1)</A></B>).  Arguments  to
-     the  command  are given as command_args to <I>qsub</I> . If command
-     is handled as a script then it is possible to embed flags in
-     the  script.   If  the first two characters of a script line
-     either match '#$' or are equal to the prefix string  defined
-     with  the  -C option described below, the line is parsed for
-     embedded command flags.
+     <I>Qsub</I> submits batch jobs to the Grid Engine  queuing  system.
+     Grid Engine supports single- and multiple-node jobs. Command
+     can be a path to a binary or a script (see -b  below)  which
+     contains  the  commands  to  be run by the job using a shell
+     (for example, <B><A HREF="../htmlman1/sh.html">sh(1)</A></B> or <B><A HREF="../htmlman1/csh.html">csh(1)</A></B>).  Arguments  to  the  command
+     are given as command_args to <I>qsub</I> . If command is handled as
+     a script then it is possible to embed flags in  the  script.
+     If  the  first  two characters of a script line either match
+     '#$' or are equal to the prefix string defined with  the  -C
+     option described below, the line is parsed for embedded com-
+     mand flags.
 
-     <I>Qsh</I> submits an interactive X-windows  session  to  Sun  Grid
-     Engine. An <B><A HREF="../htmlman1/xterm.html?pathrev=V62u2_TAG">xterm(1)</A></B> is brought up from the executing machine
-     with the display directed either to the  X-server  indicated
-     by the DISPLAY environment variable or as specified with the
+     <I>Qsh</I> submits an interactive X-windows session to Grid Engine.
+     An  <B><A HREF="../htmlman1/xterm.html">xterm(1)</A></B>  is  brought up from the executing machine with
+     the display directed either to the X-server indicated by the
+     DISPLAY  environment  variable  or  as  specified  with  the
      -<I>display</I> <I>qsh</I> option. Interactive jobs are not spooled if  no
      resource  is  available  to  execute  them.  They are either
      dispatched to a suitable machine for  execution  immediately
      or  the  user  submitting  the  job  is notified by <I>qsh</I> that
      appropriate resources to execute the job are not  available.
-     xterm_args  are  passed  to  the <B><A HREF="../htmlman1/xterm.html?pathrev=V62u2_TAG">xterm(1)</A></B> executable.  Note,
+     xterm_args  are  passed  to  the <B><A HREF="../htmlman1/xterm.html">xterm(1)</A></B> executable.  Note,
      however, that the -<I>e</I> and -<I>ls</I> xterm options do not work  with
      <I>qsh</I> .
 
      <I>Qlogin</I> is similar to <I>qsh</I> in that it submits  an  interactive
-     job  to  the  queueing  system. It does not open an <B><A HREF="../htmlman1/xterm.html?pathrev=V62u2_TAG">xterm(1)</A></B>
+     job  to  the  queueing  system. It does not open an <B><A HREF="../htmlman1/xterm.html">xterm(1)</A></B>
      window on the X display, but uses the current  terminal  for
-     user I/O. Usually, <I>qlogin</I> establishes a <B><A HREF="../htmlman1/telnet.html?pathrev=V62u2_TAG">telnet(1)</A></B> connection
+     user I/O. Usually, <I>qlogin</I> establishes a <B><A HREF="../htmlman1/telnet.html">telnet(1)</A></B> connection
      with the remote host, using standard client- and server-side
      commands.   These   commands  can  be  configured  with  the
-     qlogin_daemon (server-side, Sun Grid Engine <I>telnetd</I>  if  not
-     set,  otherwise  something  like  /usr/sbin/in.telnetd)  and
-     qlogin_command (client-side, Sun Grid Engine <I>telnet</I>  if  not
-     set, otherwise something like /usr/bin/telnet) parameters in
-     the global and local configuration settings of  <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62u2_TAG">sge_conf(5)</A></B>.
-     The  client side command is automatically parameterized with
-     the remote host name and port number to  which  to  connect,
+     qlogin_daemon (server-side, Grid Engine <I>telnetd</I> if not  set,
+     otherwise    something    like   /usr/sbin/in.telnetd)   and
+     qlogin_command (client-side, Grid Engine <I>telnet</I> if not  set,
+     otherwise  something like /usr/bin/telnet) parameters in the
+     global and local configuration settings of <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>.  The
+     client  side command is automatically parameterized with the
+     remote host name  and  port  number  to  which  to  connect,
      resulting in an invocation like
 
           /usr/bin/telnet my_exec_host 2442
 
      for example.  <I>Qlogin</I> is invoked exactly  like  <I>qsh</I>  and  its
      jobs  can  only  run on INTERACTIVE queues.  <I>Qlogin</I> jobs can
-     only be used if the <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u2_TAG">sge_execd(8)</A></B> is running under  the  root
+     only be used if the <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> is running under  the  root
      account.
 
      <I>Qrsh</I> is similar to <I>qlogin</I> in that it submits an  interactive
      job  to the queuing system. It uses the current terminal for
-     user I/O. Usually, <I>qrsh</I> establishes a <B><A HREF="../htmlman1/rsh.html?pathrev=V62u2_TAG">rsh(1)</A></B> connection with
+     user I/O. Usually, <I>qrsh</I> establishes a <B><A HREF="../htmlman1/rsh.html">rsh(1)</A></B> connection with
      the  remote  host.  If  no command is given to <I>qrsh</I>, an <I>rlo-</I>
-     <B><A HREF="../htmlman1/gin.html?pathrev=V62u2_TAG">gin(1)</A></B> session is  established.   The  server-side  commands
+     <B><A HREF="../htmlman1/gin.html">gin(1)</A></B> session is  established.   The  server-side  commands
      used can be configured with the rsh_daemon and rlogin_daemon
      parameters in the global and local configuration settings of
-     <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62u2_TAG">sge_conf(5)</A></B>.   An Sun Grid Engine <I>rshd</I> or <I>rlogind</I> is used if
-     the parameters are not set. If the parameters are set,  they
+     <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>.   An Grid Engine <I>rshd</I> or <I>rlogind</I> is used if the
+     parameters are not set. If  the  parameters  are  set,  they
      should   be  set  to  something  like  /usr/sbin/in.rshd  or
      /usr/sbin/in.rlogind.  On the client-side,  the  rsh_command
      and  rlogin_command  parameters can be set in the global and
-     local configuration settings of <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62u2_TAG">sge_conf(5)</A></B>.   If  they  are
-     not  set,  special  Sun  Grid  Engine  <B><A HREF="../htmlman1/rsh.html?pathrev=V62u2_TAG">rsh(1)</A></B>  and <B><A HREF="../htmlman1/rlogin.html?pathrev=V62u2_TAG">rlogin(1)</A></B>
-     binaries delivered with Sun Grid Engine are used.   Use  the
-     cluster  configuration  parameters  to  integrate mechanisms
-     like <I>ssh</I> or the <B><A HREF="../htmlman1/rsh.html?pathrev=V62u2_TAG">rsh(1)</A></B>  and  <B><A HREF="../htmlman1/rlogin.html?pathrev=V62u2_TAG">rlogin(1)</A></B>  facilities  supplied
-     with the operating system.
+     local configuration settings of <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>.   If  they  are
+     not  set,  special Grid Engine <B><A HREF="../htmlman1/rsh.html">rsh(1)</A></B> and <B><A HREF="../htmlman1/rlogin.html">rlogin(1)</A></B> binaries
+     delivered with Grid Engine are used.  Use the cluster confi-
+     guration  parameters to integrate mechanisms like <I>ssh</I> or the
+     <B><A HREF="../htmlman1/rsh.html">rsh(1)</A></B> and <B><A HREF="../htmlman1/rlogin.html">rlogin(1)</A></B> facilities supplied with the  operating
+     system.
 
      <I>Qrsh</I> jobs can only run  in  INTERACTIVE  queues  unless  the
      option  -now  no is used (see below).  They can also only be
-     run, if the <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u2_TAG">sge_execd(8)</A></B> is running under the root account.
-
+     run, if the <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> is running under the root account.
 
      <I>Qrsh</I> provides an additional useful feature  for  integrating
      with  interactive  tools providing a specific command shell.
@@ -112,8 +110,6 @@ DESCRIPTION
      invoked,  the command interpreter pointed to by QRSH_WRAPPER
      will be executed to run <I>qrsh</I> commands instead of  the  users
      login shell or any shell specified in the <I>qrsh</I> command-line.
-     The options -cwd,  -v,  -V,   and  -display  only  apply  to
-     batch jobs.
 
      <I>Qalter</I> can be used to change the attributes of pending jobs.
      For  array jobs with a mix of running and pending tasks (see
@@ -128,17 +124,16 @@ DESCRIPTION
      <I>Qresub</I> allows the user to create jobs as copies of  existing
      pending  or  running jobs. The copied jobs will have exactly
      the same attributes as the ones from which they were copied,
-     except  with a new job ID and with a cleared hold state. The
-     only modification to the copied jobs supported by <I>qresub</I>  is
-     assignment  of  a  new  hold  state with the -h option. This
-     option can be used to first copy a job and then  change  its
-     attributes via <I>qalter</I>.
+     except  with  a  new  job  ID.  The only modification to the
+     copied jobs supported by <I>qresub</I>  is  assignment  of  a  hold
+     state  with  the -h option. This option can be used to first
+     copy a job and then change its attributes via <I>qalter</I>.
 
      Only a manager can use <I>qresub</I> on jobs submitted  by  another
      user.  Regular users can only use <I>qresub</I> on their own jobs.
 
      For <I>qsub</I>, <I>qsh</I>, <I>qrsh</I>, and <I>qlogin</I> the  administrator  and  the
-     user  may  define default request files (see <B><A HREF="../htmlman5/sge_request.html?pathrev=V62u2_TAG">sge_request(5)</A></B>)
+     user  may  define default request files (see <B><A HREF="../htmlman5/sge_request.html">sge_request(5)</A></B>)
      which can contain any of the options described below.  If an
      option  in  a default request file is understood by <I>qsub</I> and
      <I>qlogin</I> but not by <I>qsh</I> the option is silently ignored if  <I>qsh</I>
@@ -162,8 +157,8 @@ DESCRIPTION
           from left to right of the command line.
 
      In other words, the command line can be used to override the
-     embedded flags and the default request settings.  The embed-
-     ded flags, however, will override the default settings.
+     embedded  flags  and  the  default  request  settings.   The
+     embedded flags, however, will override the default settings.
 
      Note, that the -<I>clear</I> option can be used to discard any pre-
      vious settings at any time in a default request file, in the
@@ -190,70 +185,56 @@ OPTIONS
 
           Defines or redefines the time and date at which  a  job
           is   eligible  for  execution.  Date_time  conforms  to
-          [[CC]]YY]MMDDhhmm[.SS], for  the  details,  please  see
-          Date_time in:  <B><A HREF="../htmlman1/sge_types.html?pathrev=V62u2_TAG">sge_types(1)</A></B>.
+          [[CC]]YY]MMDDhhmm.[ss], where:
 
-          If this option is used with <I>qsub</I> or if a  corresponding
-          value is specified in <I>qmon</I> then a parameter named a and
-          the value in the format CCYYMMDDhhmm.SS will be  passed
-          to  the defined JSV instances (see -jsv option below or
-          find more information concerning JSV in <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
+          CC  denotes the century in 2 digits.
+          YY  denotes the year in 2 digits.
+          MM  denotes the month in 2 digits.
+          DD  denotes the day in 2 digits.
+          hh  denotes the hour in 2 digits.
+          mm  denotes the minute in 2 digits.
+          ss  denotes the seconds in 2 digits (default 00).
+
+          If any of the optional  date  fields  is  omitted,  the
+          corresponding  value of the current date is assumed. If
+          CC is not specified, a YY of &lt; 70 means 20YY.
+          Usage of this option may cause  unexpected  results  if
+          the clocks of the hosts in the Grid Engine pool are out
+          of sync. Also, the proper behavior of this option  very
+          much  depends on the correct setting of the appropriate
+          timezone, e.g. in  the  TZ  environment  variable  (see
+          <B><A HREF="../htmlman1/date.html">date(1)</A></B>  for  details),  when  the  Grid Engine daemons
+          <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> and <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> are invoked.
+
+          <I>Qalter</I> allows changing this option even while  the  job
+          executes. The modified parameter will only be in effect
+          after a restart or migration of the job, however.
 
      -ac variable[=value],...
           Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I>, <I>qlogin</I> and <I>qalter</I> only.
 
           Adds the given name/value pair(s) to the job's context.
-          Value may be omitted. Sun Grid Engine appends the given
+          Value  may  be  omitted.  Grid Engine appends the given
           argument to the list of context variables for the  job.
           Multiple  -ac,  -dc, and -sc options may be given.  The
           order is important here.
 
-          The outcome of the evaluation of all -ac, -dc, and  -sc
-          options  or  corresponding  values in <I>qmon</I> is passed to
-          defined JSV instances as parameter with  the  name  ac.
-          (see  -jsv  option  below or find more information con-
-          cerning JSV in  <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)  <I>QALTER</I>  allows  changing  this
-          option even while the job executes.
-
-     -ar ar_id
-          Available for <I>qsub</I>, <I>qalter</I>, <I>qrsh</I>, <I>qsh</I>, or <I>qlogin</I> only.
-
-          Assigns the submitted job to be a part of  an  existing
-          Advance  Reservation.  The  complete  list  of existing
-          Advance  Reservations  can  be   obtained   using   the
-          <B><A HREF="../htmlman1/qrstat.html?pathrev=V62u2_TAG">qrstat(1)</A></B> command.
-
-          Note that the -ar  option  adds  implicitly  the  -w  e
-          option if not otherwise requested.
-
           <I>Qalter</I> allows changing this option even while  the  job
-          executes. The modified parameter will only be in effect
-          after a restart or migration of the job however.
-
-          If this option or a  corresponding  value  in  <I>qmon</I>  is
-          specified then this value will be passed to defined JSV
-          instances as parameter with  the  name  ar.  (see  -jsv
-          option below or find more information concerning JSV in
-          <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
+          executes.
 
      -A account_string
           Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I>, <I>qlogin</I> and <I>qalter</I> only.
 
           Identifies the account to which the  resource  consump-
           tion  of  the job should be charged. The account_string
-          should conform to the name definition in M sge_types  1
-          .   In  the  absence  of this parameter Sun Grid Engine
-          will place the default  account  string  "sge"  in  the
+          may be any arbitrary ASCII alphanumeric string but  may
+          not contain  "\n", "\t", "\r", "/", ":", "@", "\", "*",
+          or "?".  In the absence of this parameter  Grid  Engine
+          will  place  the  default  account  string "sge" in the
           accounting record of the job.
 
           <I>Qalter</I> allows changing this option even while  the  job
           executes.
-
-          If this option or a  corresponding  value  in  <I>qmon</I>  is
-          specified then this value will be passed to defined JSV
-          instances as parameter with  the  name  A.   (see  -jsv
-          option below or find more information concerning JSV in
-          <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
 
      -b y[es]|n[o]
           Available for <I>qsub</I>, <I>qrsh</I> only. <I>Qalter</I>  does  not  allow
@@ -279,37 +260,13 @@ OPTIONS
           <I>qsub</I> will implicitly use -b n whereas <I>qrsh</I>  will  apply
           the -b y option if nothing else is specified.
 
-          The value specified with this option or the correspond-
-          ing  value  specified  in  <I>qmon</I>  will only be passed to
-          defined JSV instances if the value is <I>yes</I>.  The name of
-          the  parameter will be b. The value will be y also when
-          then long form yes  was  specified  during  submission.
-          (see  -jsv  option  below or find more information con-
-          cerning JSV in <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
-
-          Please note that submission of command as script (-b n)
-          can  have  a significant performance impact, especially
-          for short running jobs and  big  job  scripts.   Script
-          submission  adds  a number of operations to the submis-
-          sion process:  The job script needs to be
-          - parsed at client side (for special comments)
-          - transferred from submit client to qmaster
-          - spooled in qmaster
-          - transferred to execd at job execution
-          - spooled in execd
-          - removed from spooling both in execd and qmaster once the job is done
-          If job scripts are available on  the  execution  nodes,
-          e.g.  via  NFS,  binary  submission  can  be the better
-          choice.
-
      -c occasion_specifier
           Available for <I>qsub</I> and <I>qalter</I> only.
-
           Defines or redefines whether the job should  be  check-
           pointed,  and  if  so,  under  what  circumstances. The
           specification of the checkpointing occasions with  this
           option overwrites the definitions of the <I>when</I> parameter
-          in the checkpointing  environment  (see  <B><A HREF="../htmlman5/checkpoint.html?pathrev=V62u2_TAG">checkpoint(5)</A></B>)
+          in the checkpointing  environment  (see  <B><A HREF="../htmlman5/checkpoint.html">checkpoint(5)</A></B>)
           referenced  by  the <I>qsub</I> -<I>ckpt</I> switch.  Possible values
           for occasion_specifier are
 
@@ -320,34 +277,19 @@ OPTIONS
           &lt;interval&gt;  checkpoint in the specified time interval.
 
           The minimum CPU interval is defined in the queue confi-
-          guration  (see  <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62u2_TAG">queue_conf(5)</A></B> for details).  &lt;interval&gt;
+          guration  (see  <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B> for details).  &lt;interval&gt;
           has to be specified in the format hh:mm:ss.   The  max-
           imum of &lt;interval&gt; and the queue's minimum CPU interval
           is used if &lt;interval&gt; is specified.  This  is  done  to
           ensure  that a machine is not overloaded by checkpoints
           being generated too frequently.
 
-          The value specified with this option or the correspond-
-          ing  value  specified in <I>qmon</I> will be passed to defined
-          JSV instances.  The &lt;interval&gt;  will  we  available  as
-          parameter  with  the  name  c_interval,  The  character
-          sequence specified will be available as parameter  with
-          the  name  c_occasion.  (see  -jsv option below or find
-          more information concerning JSV in <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
-
-
      -ckpt ckpt_name
           Available for <I>qsub</I> and <I>qalter</I> only.
 
           Selects  the  checkpointing  environment  (see   <I>check-</I>
-          <B><A HREF="../htmlman5/point.html?pathrev=V62u2_TAG">point(5)</A></B>)  to  be  used for checkpointing the job. Also
+          <B><A HREF="../htmlman5/point.html">point(5)</A></B>)  to  be  used for checkpointing the job. Also
           declares the job to be a checkpointing job.
-
-          If this option or a  corresponding  value  in  <I>qmon</I>  is
-          specified then this value will be passed to defined JSV
-          instances as parameter with the name ckpt.   (see  -jsv
-          option below or find more information concerning JSV in
-          <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
 
      -clear
           Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I>, and <I>qlogin</I> only.
@@ -359,33 +301,21 @@ OPTIONS
      -cwd Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I> and <I>qalter</I> only.
 
           Execute the job from  the  current  working  directory.
-          This switch will activate Sun Grid Engine's path alias-
-          ing facility, if the corresponding configuration  files
-          are present (see <B><A HREF="../htmlman5/sge_aliases.html?pathrev=V62u2_TAG">sge_aliases(5)</A></B>).
+          This  switch  will activate Grid Engine's path aliasing
+          facility, if the corresponding configuration files  are
+          present (see <B><A HREF="../htmlman5/sge_aliases.html">sge_aliases(5)</A></B>).
 
           In the case of <I>qalter</I>, the previous definition  of  the
           current working directory will be overwritten if <I>qalter</I>
-          is  executed  from  a  different  directory  than   the
-          preceding <I>qsub</I> or <I>qalter</I>.
+          is executed from a different directory than the preced-
+          ing <I>qsub</I> or <I>qalter</I>.
 
           <I>Qalter</I> allows changing this option even while  the  job
           executes. The modified parameter will only be in effect
           after a restart or migration of the job, however.
 
-          If this option or a  corresponding  value  in  <I>qmon</I>  is
-          specified then this value will be passed to defined JSV
-          instances as parameter with the name cwd. The value  of
-          this parameter will be the absolute path to the current
-          working directory. JSV scripts can remove the path from
-          jobs  during  the  verification  process by setting the
-          value of this parameter to an empty string. As a result
-          the job behaves as if -cwd was not specified during job
-          submission.  (see -jsv option below or find more infor-
-          mation concerning JSV in <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
-
-
      -C prefix_string
-          Available for <I>qsub</I> and <I>qrsh</I> with script submission  (-b
+          Available for <I>qsub</I> and qrsh with script submission  (-b
           n).
 
           <I>Prefix</I>_<I>string</I> defines the prefix that declares a direc-
@@ -395,7 +325,7 @@ OPTIONS
           scanned for embedded directives.
           The directive prefix consists of two  ASCII  characters
           which,  when  appearing  in  the  first  two bytes of a
-          script line, indicate that what follows is an Sun  Grid
+          script line, indicate that  what  follows  is  an  Grid
           Engine command.  The default is "#$".
           The user should be aware that changing the first delim-
           iting character can produce unforeseen side effects. If
@@ -416,30 +346,16 @@ OPTIONS
           <I>Qalter</I> allows changing this option even while  the  job
           executes.
 
-          The outcome of the evaluation of all -ac, -dc, and  -sc
-          options  or  corresponding  values in <I>qmon</I> is passed to
-          defined JSV instances as parameter with  the  name  ac.
-          (see  -jsv  option  below or find more information con-
-          cerning JSV in <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
-
      -display display_specifier
-          Available for <I>qsh</I> and <I>qrsh</I>.
+          Available for <I>qsh</I> only.
 
-          Directs <B><A HREF="../htmlman1/xterm.html?pathrev=V62u2_TAG">xterm(1)</A></B> to use display_specifier in  order  to
+          Directs <B><A HREF="../htmlman1/xterm.html">xterm(1)</A></B> to use display_specifier in  order  to
           contact  the  X  server.   The display_specifier has to
           contain the hostname part of  the  display  name  (e.g.
           myhost:1). Local display names (e.g. :0) cannot be used
           in grid environments.  Values  set  with  the  -display
           option  overwrite settings from the submission environ-
           ment and from -v command line options.
-
-          If this option or a  corresponding  value  in  <I>qmon</I>  is
-          specified then this value will be passed to defined JSV
-          instances as parameter  with  the  name  display.  This
-          value  will  also  be  available in the job environment
-          which might optionally be passed to  JSV  scripts.  The
-          variable  name will be DISPLAY.  (see -jsv option below
-          or find more information concerning JSV in <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
 
      -dl date_time
           Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I>, <I>qlogin</I> and <I>qalter</I> only.
@@ -451,18 +367,9 @@ OPTIONS
           plete within a given deadline. Before the deadline ini-
           tiation  time  the  priority  of a deadline job will be
           raised steadily until it reaches the maximum as config-
-          ured by the Sun Grid Engine administrator.
-
+          ured by the Grid Engine administrator.
           This option is applicable only  for  users  allowed  to
           submit deadline jobs.
-
-          If this option or a  corresponding  value  in  <I>qmon</I>  is
-          specified then this value will be passed to defined JSV
-          instances as parameter with the name dl. The format for
-          the date_time value is CCYYMMDDhhmm.SS (see -jsv option
-          below  or  find  more  information  concerning  JSV  in
-          <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
-
 
      -e [[hostname]:]path,...
           Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I>, <I>qlogin</I> and <I>qalter</I> only.
@@ -473,14 +380,13 @@ OPTIONS
           redirected.   If  the path constitutes an absolute path
           name, the error-path attribute of the  job  is  set  to
           path, including the hostname. If the path name is rela-
-          tive, Sun Grid Engine  expands  path  either  with  the
-          current working directory path (if the -cwd switch (see
-          above) is also specified) or with  the  home  directory
-          path. If hostname is present, the standard error stream
-          will be placed in the corresponding  location  only  if
-          the  job  runs  on the specified host. If the path con-
-          tains a ":" without a hostname, a leading ":" has to be
-          specified.
+          tive, Grid Engine expands path either with the  current
+          working  directory path (if the -cwd switch (see above)
+          is also specified) or with the home directory path.  If
+          hostname  is present, the standard error stream will be
+          placed in the corresponding location only  if  the  job
+          runs  on the specified host. If the path contains a ":"
+          without a hostname, a leading ":" has to be specified.
 
           By default  the  file  name  for  interactive  jobs  is
           /<I>dev</I>/<I>null</I>. For batch jobs the default file name has the
@@ -503,7 +409,7 @@ OPTIONS
           $TASK_ID    array job task index number
 
           Alternatively to $HOME the tilde sign "~" can  be  used
-          as common in <B><A HREF="../htmlman1/csh.html?pathrev=V62u2_TAG">csh(1)</A></B> or <B><A HREF="../htmlman1/ksh.html?pathrev=V62u2_TAG">ksh(1)</A></B>.  Note, that the "~" sign
+          as common in <B><A HREF="../htmlman1/csh.html">csh(1)</A></B> or <B><A HREF="../htmlman1/ksh.html">ksh(1)</A></B>.  Note, that the "~" sign
           also works in combination  with  user  names,  so  that
           "~&lt;user&gt;"  expands  to  the  home  directory of &lt;user&gt;.
           Using another user  ID  than  that  of  the  job  owner
@@ -513,43 +419,28 @@ OPTIONS
           executes. The modified parameter will only be in effect
           after a restart or migration of the job, however.
 
-          If this option or a  corresponding  value  in  <I>qmon</I>  is
-          specified then this value will be passed to defined JSV
-          instances as parameter with  the  name  e.   (see  -jsv
-          option below or find more information concerning JSV in
-          <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
-
      -hard
           Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I>, <I>qlogin</I> and <I>qalter</I> only.
 
-          Signifies that all -q and -l resource requirements fol-
-          lowing  in  the  command line will be hard requirements
-          and must be satisfied in  full  before  a  job  can  be
-          scheduled.
-          As Sun Grid Engine scans the command  line  and  script
-          file  for  Sun  Grid  Engine  options and parameters it
-          builds a list of resources required by a job. All  such
-          resource  requests  are considered as absolutely essen-
-          tial for the job to commence. If the -soft option  (see
-          below)  is encountered during the scan then all follow-
-          ing resources are designated as "soft requirements" for
+          Signifies that all resource requirements  following  in
+          the  command line will be hard requirements and must be
+          satisfied in full before a job can be scheduled.
+          As Grid Engine scans the command line and  script  file
+          for Grid Engine options and parameters it builds a list
+          of resources required  by  a  job.  All  such  resource
+          requests are considered as absolutely essential for the
+          job to commence. If the -soft  option  (see  below)  is
+          encountered   during   the   scan  then  all  following
+          resources are designated  as  "soft  requirements"  for
           execution, or "nice-to-have, but not essential". If the
           -hard flag is encountered at a later stage of the scan,
           all  resource  requests  following it once again become
           "essential". The -hard and -soft options in effect  act
           as "toggles" during the scan.
 
-          If this option or a  corresponding  value  in  <I>qmon</I>  is
-          specified  then  the  corresponding  -q and -l resource
-          requirements will be passed to defined JSV instances as
-          parameter  with  the  names q_hard and l_hard. Find for
-          information in the sections describing -q and -l.  (see
-          -jsv  option  below or find more information concerning
-          JSV in <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
-
      -h | -h {u|s|o|n|U|O|S}...
-          Available for <I>qsub</I> (only -h), <I>qrsh</I>, <I>qalter</I>  and  <I>qresub</I>
-          (hold state is removed when not set explicitly).
+          Available for  <I>qsub</I>,  <I>qsh</I>,  <I>qrsh</I>,  <I>qlogin</I>,  <I>qalter</I>  and
+          <I>qresub</I>.
 
           List of holds to place on a job, a task or  some  tasks
           of a job.
@@ -557,11 +448,11 @@ OPTIONS
           `u'  denotes a user hold.
           `s'  denotes a system hold.
           `o'  denotes a operator hold.
-          `n'  denotes no hold (requires manager privileges).
+          `n'  denotes no hold.
 
           As long as any hold other than `n' is assigned  to  the
           job the job is not eligible for execution. Holds can be
-          released via <I>qalter</I> and <B><A HREF="../htmlman1/qrls.html?pathrev=V62u2_TAG">qrls(1)</A></B>.   In  case  of  <I>qalter</I>
+          released via <I>qalter</I> and <B><A HREF="../htmlman1/qrls.html">qrls(1)</A></B>.   In  case  of  <I>qalter</I>
           this  is  supported  by the following additional option
           specifiers for the -h switch:
 
@@ -569,10 +460,10 @@ OPTIONS
           `S'  removes a system hold.
           `O'  removes a operator hold.
 
-          Sun Grid Engine managers can assign and remove all hold
-          types,  Sun Grid Engine operators can assign and remove
-          user and operator holds, and users can only  assign  or
-          remove user holds.
+          Grid Engine managers can assign  and  remove  all  hold
+          types, Grid Engine operators can assign and remove user
+          and operator holds, and users can only assign or remove
+          user holds.
 
           In the case of <I>qsub</I> only user holds can be placed on  a
           job and thus only the first form of the option with the
@@ -580,7 +471,7 @@ OPTIONS
           requires the second form described above.
 
           An alternate means to assign hold is  provided  by  the
-          <B><A HREF="../htmlman1/qhold.html?pathrev=V62u2_TAG">qhold(1)</A></B> facility.
+          <B><A HREF="../htmlman1/qhold.html">qhold(1)</A></B> facility.
 
           If the job is a array job (see the  -t  option  below),
           all  tasks  specified  via  -t  are  affected by the -h
@@ -590,29 +481,20 @@ OPTIONS
           executes. The modified parameter will only be in effect
           after a restart or migration of the job, however.
 
-          If this option is specified with  <I>qsub</I>  or  during  the
-          submission  of  a job in <I>qmon</I> then the parameter h with
-          the value u will be passed to the defined JSV instances
-          indicating  that  the job will be in user hold afer the
-          submission finishes. (see -jsv  option  below  or  find
-          more information concerning JSV in <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
-
      -help
           Prints  a listing of all options.
 
      -hold_jid wc_job_list
           Available  for  <I>qsub</I>,  <I>qrsh</I>,  and  <I>qalter</I>   only.   See
-          <B><A HREF="../htmlman1/sge_types.html?pathrev=V62u2_TAG">sge_types(1)</A></B>.  for wc_job_list definition.
-
-          Defines or redefines the job  dependency  list  of  the
-          submitted  job.  A  reference by job name or pattern is
-          only accepted if the referenced job  is  owned  by  the
-          same  user  as  the referring job. The submitted job is
-          not eligible for execution unless all  jobs  referenced
-          in the comma-separated job id and/or job name list have
-          completed.  If any of the referenced  jobs  exits  with
-          exit code 100, the submitted job will remain ineligible
-          for execution.
+          <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>.   for  528.sp  1 Defines or redefines the
+          job dependency list of the submitted job.  A  reference
+          by  job  name or pattern is only accepted if the refer-
+          enced job is owned by the same user  as  the  referring
+          job.  The  submitted  job is not eligible for execution
+          unless all jobs referenced in the  comma-separated  job
+          id  and/or job name list have completed.  If any of the
+          referenced jobs exits with exit code 100, the submitted
+          job will remain ineligible for execution.
 
           With the help of job names or regular pattern  one  can
           specify  a  job  dependency on multiple jobs satisfying
@@ -625,50 +507,6 @@ OPTIONS
           executes. The modified parameter will only be in effect
           after a restart or migration of the job, however.
 
-          If this option or a  corresponding  value  in  <I>qmon</I>  is
-          specified then this value will be passed to defined JSV
-          instances as parameter with the  name  hold_jid.   (see
-          -jsv  option  below or find more information concerning
-          JSV in <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
-
-     -hold_jid_ad wc_job_list
-          Available  for  <I>qsub</I>,  <I>qrsh</I>,  and  <I>qalter</I>   only.   See
-          <B><A HREF="../htmlman1/sge_types.html?pathrev=V62u2_TAG">sge_types(1)</A></B>.  for wc_job_list definition.
-
-          Defines or redefines the job array dependency  list  of
-          the  submitted  job. A reference by job name or pattern
-          is only accepted if the referenced job is owned by  the
-          same  user  as  the referring job. Each sub-task of the
-          submitted job is not eligible for execution unless  the
-          corresponding  sub-tasks  of all jobs referenced in the
-          comma-separated job id and/or job name list  have  com-
-          pleted.  If any array task of the referenced jobs exits
-          with exit code 100, the dependent tasks of the  submit-
-          ted job will remain ineligible for execution.
-
-          With the help of job names or regular pattern  one  can
-          specify  a  job  dependency on multiple jobs satisfying
-          the regular pattern or on all jobs with  the  requested
-          name. The name dependencies are resolved at submit time
-          and can only be changed via qalter. New  jobs  or  name
-          changes of other jobs will not be taken into account.
-
-          If either the submitted job or any job  in  wc_job_list
-          are  not  array  jobs  with the same range of sub-tasks
-          (see  -t  option  below),  the  request  list  will  be
-          rejected  and  the  job create or modify operation will
-          error.
-
-          <I>qalter</I> allows changing this option even while  the  job
-          executes. The modified parameter will only be in effect
-          after a restart or migration of the job, however.
-
-          If this option or a  corresponding  value  in  <I>qmon</I>  is
-          specified then this value will be passed to defined JSV
-          instances as parameter with the name hold_jid_ad.  (see
-          -jsv  option  below or find more information concerning
-          JSV in <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
-
      -i [[hostname]:]file,...
           Available for <I>qsub</I>, and <I>qalter</I> only.
 
@@ -676,14 +514,14 @@ OPTIONS
           input  stream  of  the  job. If the <I>file</I> constitutes an
           absolute filename, the input-path attribute of the  job
           is  set  to  path,  including the hostname. If the path
-          name is relative, Sun Grid Engine expands  path  either
-          with  the  current  working directory path (if the -cwd
-          switch (see above) is also specified) or with the  home
-          directory  path.  If  hostname is present, the standard
-          input stream will be placed in the corresponding  loca-
-          tion only if the job runs on the specified host. If the
-          path contains a ":" without a hostname, a  leading  ":"
-          has to be specified.
+          name is relative, Grid Engine expands path either  with
+          the  current working directory path (if the -cwd switch
+          (see above) is also specified) or with the home  direc-
+          tory  path.  If hostname is present, the standard input
+          stream will be placed  in  the  corresponding  location
+          only if the job runs on the specified host. If the path
+          contains a ":" without a hostname, a leading ":" has to
+          be specified.
 
           By default /dev/null is the input stream for the job.
 
@@ -697,14 +535,8 @@ OPTIONS
           executes. The modified parameter will only be in effect
           after a restart or migration of the job, however.
 
-          If this option or a  corresponding  value  in  <I>qmon</I>  is
-          specified then this value will be passed to defined JSV
-          instances as parameter with  the  name  i.   (see  -jsv
-          option below or find more information concerning JSV in
-          <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
-
      -inherit
-          Available only for <I>qrsh</I> and <B><A HREF="../htmlman1/qmake.html?pathrev=V62u2_TAG">qmake(1)</A></B>.
+          Available only for <I>qrsh</I> and <B><A HREF="../htmlman1/qmake.html">qmake(1)</A></B>.
 
           <I>qrsh</I> allows the user to start  a  task  in  an  already
           scheduled parallel job.  The option -inherit tells <I>qrsh</I>
@@ -737,30 +569,17 @@ OPTIONS
           SGE_QMASTER_PORT"  either  as  a command argument or an
           embedded directive.
 
-          This parameter is not available  in  the  JSV  context.
-          (see  -jsv  option  below or find more information con-
-          cerning JSV in <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
-
-
      -j y[es]|n[o]
           Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I>, <I>qlogin</I> and <I>qalter</I> only.
 
           Specifies whether or not the standard error  stream  of
           the job is merged into the standard output stream.
-          If both the -j y and the -e options  are  present,  Sun
-          Grid Engine sets but ignores the error-path attribute.
+          If both the -j y and the -e options are  present,  Grid
+          Engine sets but ignores the error-path attribute.
 
           <I>Qalter</I> allows changing this option even while  the  job
           executes. The modified parameter will only be in effect
           after a restart or migration of the job, however.
-
-          The value specified with this option or the correspond-
-          ing  value  specified  in  <I>qmon</I>  will only be passed to
-          defined JSV instances if the value is <I>yes</I>.  The name of
-          the  parameter will be j. The value will be y also when
-          then long form yes  was  specified  during  submission.
-          (see  -jsv  option  below or find more information con-
-          cerning JSV in <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
 
      -js job_share
           Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I>, <I>qlogin</I> and <I>qalter</I> only.
@@ -771,10 +590,10 @@ OPTIONS
 
           The job share influences the Share Tree Policy and  the
           Functional  Policy. It has no effect on the Urgency and
-          Override Policies (see <B><A HREF="../htmlman5/share_tree.html?pathrev=V62u2_TAG">share_tree(5)</A></B>, <B><A HREF="../htmlman5/sched_conf.html?pathrev=V62u2_TAG">sched_conf(5)</A></B> and
-          the  <I>Sun</I>  <I>Grid</I>  <I>Engine</I>  <I>Installation</I> <I>and</I> <I>Administration</I>
-          <I>Guide</I> for further information on the  resource  manage-
-          ment policies supported by Sun Grid Engine).
+          Override Policies (see <B><A HREF="../htmlman5/share_tree.html">share_tree(5)</A></B>, <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B> and
+          the  <I>Grid</I>  <I>Engine</I> <I>Installation</I> <I>and</I> <I>Administration</I> <I>Guide</I>
+          for further information on the resource management pol-
+          icies supported by Grid Engine).
 
           In case of the Share Tree Policy, users can  distribute
           the  tickets to which they are currently entitled among
@@ -798,65 +617,24 @@ OPTIONS
           them  are added to the total number of tickets for each
           job.
 
-          If this option or a  corresponding  value  in  <I>qmon</I>  is
-          specified then this value will be passed to defined JSV
-          instances as parameter with the  name  js.   (see  -jsv
-          option below or find more information concerning JSV in
-          <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
-
-     -jsv jsv_url
-          Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I> and <I>qlogin</I> only.
-
-          Defines a client JSV instance which will be executed to
-          verify  the job specification before the job is sent to
-          qmaster.
-
-          In contrast to other options this switch  will  not  be
-          overwritten  if  it  is also used in sge_request files.
-          Instead all specified JSV instances will be executed to
-          verify the job to be submitted.
-
-          The JSV instance which is directly passed with the com-
-          mandline of a client is executed as first to verify the
-          job specification. After that the  JSV  instance  which
-          might  have  been  defined in various sge_request files
-          will be triggered to check the job. Find  more  details
-          in man page <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B> and <B><A HREF="../htmlman5/sge_request.html?pathrev=V62u2_TAG">sge_request(5)</A></B>.
-
-          The   syntax   of   the   jsv_url   is   specified   in
-          <B><A HREF="../htmlman1/sge_types.html?pathrev=V62u2_TAG">sge_types(1)</A></B>.()
-
      -l resource=value,...
           Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I>, <I>qlogin</I> and <I>qalter</I> only.
 
-          Launch the job in a Sun Grid Engine queue  meeting  the
-          given  resource  request  list.   In case of <I>qalter</I> the
-          previous definition is replaced by the specified one.
-
-          <B><A HREF="../htmlman5/complex.html?pathrev=V62u2_TAG">complex(5)</A></B> describes how a list of available  resources
+          Launch the job in a Grid Engine queue meeting the given
+          resource  request list.  In case of <I>qalter</I> the previous
+          definition is replaced by the specified one.
+          <B><A HREF="../htmlman5/complex.html">complex(5)</A></B> describes how a list of available  resources
           and  their  associated  valid  value  specifiers can be
           obtained.
-
           There may be multiple -l switches in a single  command.
           You  may request multiple -l options to be soft or hard
           both in the same command line. In case of a serial  job
           multiple  -l  switches  refine  the  definition for the
           sought queue.
 
-          <I>Qalter</I> allows changing the value of  this  option  even
-          while  the job is running, but only if the initial list
-          of resources does not contain a resource that is marked
-          as  consumable.  However  the modification will only be
-          effective after a restart or migration of the job.
-
-          If this option or a  corresponding  value  in  <I>qmon</I>  is
-          specified the these hard and soft resource requirements
-          will be passed to defined JSV  instances  as  parameter
-          with  the  names  l_hard and l_soft. If regular expres-
-          sions will be used for resource  requests,  then  these
-          expressions  will  be passed as they are. Also shortcut
-          names will not be expanded.  (see -jsv option below  or
-          find more information concerning JSV in <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
+          <I>Qalter</I> allows changing this option even while  the  job
+          executes. The modified parameter will only be in effect
+          after a restart or migration of the job, however.
 
      -m b|e|a|s|n,...
           Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I>, <I>qlogin</I> and <I>qalter</I> only.
@@ -880,11 +658,6 @@ OPTIONS
           option argument will only be in effect after a  restart
           or migration of the job, however.
 
-          If this option or a  corresponding  value  in  <I>qmon</I>  is
-          specified then this value will be passed to defined JSV
-          instances as parameter with  the  name  m.   (see  -jsv
-          option below or find more information concerning JSV in
-
      -M user[@host],...
           Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I>, <I>qlogin</I> and <I>qalter</I> only.
 
@@ -896,12 +669,6 @@ OPTIONS
           <I>Qalter</I> allows changing this option even while  the  job
           executes.
 
-          If this option or a  corresponding  value  in  <I>qmon</I>  is
-          specified then this value will be passed to defined JSV
-          instances as parameter with  the  name  M.   (see  -jsv
-          option below or find more information concerning JSV in
-          <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
-
      -masterq wc_queue_list
           Available for <I>qsub</I>, <I>qrsh</I>, <I>qsh</I>, <I>qlogin</I> and <I>qalter</I>.  Only
           meaningful  for  parallel  jobs, i.e. together with the
@@ -911,7 +678,7 @@ OPTIONS
           domains and queue instances which may be used to become
           the so called <I>master</I> <I>queue</I> of this parallel job. A more
           detailed  description  of <I>wc</I>_<I>queue</I>_<I>list</I> can be found in
-          <B><A HREF="../htmlman1/sge_types.html?pathrev=V62u2_TAG">sge_types(1)</A></B>.  The <I>master</I> <I>queue</I> is defined as the queue
+          <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>.  The <I>master</I> <I>queue</I> is defined as the queue
           where  the parallel job is started. The other queues to
           which the parallel job spawns tasks  are  called  <I>slave</I>
           <I>queues</I>.  A parallel job only has one <I>master</I> <I>queue</I>.
@@ -924,27 +691,18 @@ OPTIONS
           executes. The modified parameter will only be in effect
           after a restart or migration of the job, however.
 
-          If this option or a  corresponding  value  in  <I>qmon</I>  is
-          specified  the  this  hard resource requirement will be
-          passed to defined JSV instances as parameter  with  the
-          name  masterq.  (see  -jsv  option  below  or find more
-          information concerning JSV in <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
-
      -notify
           Available for <I>qsub</I>,  <I>qrsh</I>  (with  command)  and  <I>qalter</I>
           only.
 
-          This flag, when set causes  Sun  Grid  Engine  to  send
-          "warning" signals to a running job prior to sending the
-          signals themselves. If a SIGSTOP is  pending,  the  job
-          will  receive  a  SIGUSR1  several  seconds  before the
-          SIGSTOP. If a SIGKILL is pending, the job will  receive
-          a  SIGUSR2  several  seconds  before the SIGKILL.  This
-          option provides the running job, before  receiving  the
-          SIGSTOP  or  SIGKILL,  a configured time interval to do
-          e.g. cleanup operations. The amount of  time  delay  is
-          controlled by the notify parameter in each queue confi-
-          guration (see <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62u2_TAG">queue_conf(5)</A></B>).
+          This flag, when set causes Grid Engine to  send  "warn-
+          ing" signals to a running job prior to sending the sig-
+          nals themselves. If a SIGSTOP is pending, the job  will
+          receive  a  SIGUSR1 several seconds before the SIGSTOP.
+          If a SIGKILL is pending, the job will receive a SIGUSR2
+          several seconds before the SIGKILL.  The amount of time
+          delay is controlled by the  notify  parameter  in  each
+          queue configuration (see <B><A HREF="../htmlman5/queue_conf.html">queue_conf(5)</A></B>).
 
           Note that the Linux operating system "misused" the user
           signals  SIGUSR1 and SIGUSR2 in some early Posix thread
@@ -956,11 +714,6 @@ OPTIONS
           <I>Qalter</I> allows changing this option even while  the  job
           executes.
 
-          Only if this option is used the parameter named  notify
-          with  the  value  y  will  be  passed  to  defined  JSV
-          instances. (see -jsv option below or find more informa-
-          tion concerning JSV in <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
-
      -now y[es]|n[o]
           Available for <I>qsub</I>, <I>qsh</I>, <I>qlogin</I> and <I>qrsh</I>.
 
@@ -970,35 +723,25 @@ OPTIONS
           For  array  jobs submitted with the -now option, if all
           tasks cannot be immediately  scheduled,  no  tasks  are
           scheduled.  -now y is default for <I>qsh</I>, <I>qlogin</I> and <I>qrsh</I>
-
           With the -now n option, the job will be  put  into  the
           pending  queue  if  it  cannot be executed immediately.
           -now n is default for <I>qsub</I>.
 
-          The value specified with this option or the correspond-
-          ing  value  specified  in  <I>qmon</I>  will only be passed to
-          defined JSV instances if the value is <I>yes</I>.  The name of
-          the  parameter  will  be  now. The value will be y also
-          when then long form yes was  specified  during  submis-
-          sion.   (see -jsv option below or find more information
-          concerning JSV in <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
-
      -N name
           Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I>, <I>qlogin</I> and <I>qalter</I> only.
 
-          The name of the job. The name should follow the  "name"
-          definition  in <B><A HREF="../htmlman1/sge_types.html?pathrev=V62u2_TAG">sge_types(1)</A></B>.  Invalid job names will be
-          denied at submit time.
-
-          If the -N  option  is  not  present,  Sun  Grid  Engine
-          assigns the name of the job script to the job after any
-          directory pathname has been removed  from  the  script-
-          name.  If  the  script is read from standard input, the
-          job name defaults to STDIN.
-
+          The name of the job. The name can be any printable  set
+          of  characters  except "\n", "\t", "\r", "/", ":", "@",
+          "\", "*", and "?", and it has to start with  an  alpha-
+          betic  character.  Invalid  job names will be denied at
+          submit time.
+          If the -N option is not present,  Grid  Engine  assigns
+          the  name of the job script to the job after any direc-
+          tory pathname has been removed from the script-name. If
+          the  script  is  read from standard input, the job name
+          defaults to STDIN.
           In the case of <I>qsh</I> or <I>qlogin</I>  with  the  -N  option  is
           absent, the string `INTERACT' is assigned to the job.
-
           In the case of <I>qrsh</I> if the -N  option  is  absent,  the
           resulting  job name is determined from the qrsh command
           line by using the  argument  string  up  to  the  first
@@ -1007,12 +750,6 @@ OPTIONS
 
           <I>Qalter</I> allows changing this option even while  the  job
           executes.
-
-          The value specified with this option or the correspond-
-          ing  value  specified in <I>qmon</I> will be passed to defined
-          JSV instances as parameter with the name <I>N</I>.  (see  -jsv
-          option below or find more information concerning JSV in
-          <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
 
      -noshell
           Available only for <I>qrsh</I> with a command line.
@@ -1041,9 +778,9 @@ OPTIONS
           Available only for <I>qrsh</I>.
 
           Suppress the input stream STDIN - <I>qrsh</I>  will  pass  the
-          option  -n  to  the  <B><A HREF="../htmlman1/rsh.html?pathrev=V62u2_TAG">rsh(1)</A></B> command. This is especially
+          option  -n  to  the  <B><A HREF="../htmlman1/rsh.html">rsh(1)</A></B> command. This is especially
           useful, if multiple  tasks  are  executed  in  parallel
-          using  <I>qrsh</I>,  e.g.  in  a <B><A HREF="../htmlman1/make.html?pathrev=V62u2_TAG">make(1)</A></B> process - it would be
+          using  <I>qrsh</I>,  e.g.  in  a <B><A HREF="../htmlman1/make.html">make(1)</A></B> process - it would be
           undefined, which process would get the input.
 
      -o [[hostname]:]path,...
@@ -1061,12 +798,6 @@ OPTIONS
           executes. The modified parameter will only be in effect
           after a restart or migration of the job, however.
 
-          If this option or a  corresponding  value  in  <I>qmon</I>  is
-          specified then this value will be passed to defined JSV
-          instances as parameter with  the  name  o.   (see  -jsv
-          option below or find more information concerning JSV in
-          <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
-
      -ot override_tickets
           Available for <I>qalter</I> only.
 
@@ -1079,13 +810,7 @@ OPTIONS
           Specifies the project to which this  job  is  assigned.
           The  administrator  needs to give permission to indivi-
           dual users to submit jobs to a specific  project.  (see
-          -aprj option to <B><A HREF="../htmlman1/qconf.html?pathrev=V62u2_TAG">qconf(1)</A></B>).
-
-          If this option or a  corresponding  value  in  <I>qmon</I>  is
-          specified then this value will be passed to defined JSV
-          instances as parameter with the  name  ot.   (see  -jsv
-          option below or find more information concerning JSV in
-          <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
+          -aprj option to <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>).
 
      -p priority
           Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I>, <I>qlogin</I> and <I>qalter</I> only.
@@ -1094,52 +819,46 @@ OPTIONS
           to  other  jobs.   Priority  is an integer in the range
           -1023 to 1024.  The default priority value for jobs  is
           0.
+
           Users may only decrease the  priority  of  their  jobs.
-          Sun  Grid  Engine  managers and administrators may also
+          Grid   Engine  managers  and  administrators  may  also
           increase the priority associated with jobs. If a  pend-
           ing job has higher priority, it is earlier eligible for
-          being dispatched by the Sun Grid Engine scheduler.
+          being dispatched by the Grid Engine scheduler.
 
-          If this option or a  corresponding  value  in  <I>qmon</I>  is
-          specified  and  the  priority  is not 0 then this value
-          will be passed to defined JSV  instances  as  parameter
-          with  the  name p.  (see -jsv option below or find more
-          information concerning JSV in <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
 
      -pe parallel_environment n[-[m]]|[-]m,...
           Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I>, <I>qlogin</I> and <I>qalter</I> only.
 
           Parallel programming environment (PE)  to  instantiate.
-          For more detail about PEs, please see the <B><A HREF="../htmlman1/sge_types.html?pathrev=V62u2_TAG">sge_types(1)</A></B>.
+          The  range  descriptor behind the PE name specifies the
+          number of parallel processes to  be  run.  Grid  Engine
+          will  allocate  the appropriate resources as available.
+          The <B><A HREF="../htmlman5/sge_pe.html">sge_pe(5)</A></B> manual page  contains  information  about
+          the definition of PEs and about how to obtain a list of
+          currently valid PEs.
+          You can specify a PE name which uses the wildcard char-
+          acter,  "*".   Thus  the  request "pvm*" will match any
+          parallel environment with  a  name  starting  with  the
+          string "pvm". In the case of multiple parallel environ-
+          ments whose names match the name string,  the  parallel
+          environment with the most available slots is chosen.
+          The range specification is a list of range  expressions
+          of the form "n-m", where n and m are positive, non-zero
+          integers.  The form "n" is equivalent  to  "n-n".   The
+          form  "-m"  is  equivalent  to "1-m".  The form "n-" is
+          equivalent to "n-infinity".  The range specification is
+          processed  as  follows:  The  largest  number of queues
+          requested is checked first. If  enough  queues  meeting
+          the  specified  attribute  list  are available, all are
+          allocated. If not, the next smaller number of queues is
+          checked, and so forth.
+          If additional -l options are present, they restrict the
+          set of eligible queues for the parallel job.
 
           <I>Qalter</I> allows changing this option even while  the  job
           executes. The modified parameter will only be in effect
           after a restart or migration of the job, however.
-
-          If this option or a  corresponding  value  in  <I>qmon</I>  is
-          specified  then  the  parameters  pe_name,  pe_min  and
-          pe_max will be passed to configured JSV instances where
-          pe_name  will  be  the name of the parallel environment
-          and the values pe_min and pe_max represent the values n
-          and  m  which have been provided with the -pe option. A
-          missing specification of m will be  expanded  as  value
-          9999999  in  JSV  scripts  and  it represents the value
-          infinity.  (see -jsv option below or find more informa-
-          tion concerning JSV in <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
-
-     -pty y[es]|n[o]
-          Available for <I>qrsh</I> and <I>qlogin</I> only.
-
-          -pty yes enforces the job to be  started  in  a  pseudo
-          terminal  (pty).  If no pty is available, the job start
-          fails.  -pty no enforces the job to be started  without
-          a  pty.   By default, <I>qrsh</I> <I>without</I> <I>a</I> <I>command</I> and <I>qlogin</I>
-          start the job in a pty, <I>qrsh</I> <I>with</I> <I>a</I> <I>command</I> starts  the
-          job without a pty.
-
-          This parameter is not available  in  the  JSV  context.
-          (see  -jsv  option  below or find more information con-
-          cerning JSV in <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
 
      -q wc_queue_list
           Available for <I>qsub</I>, <I>qrsh</I>, <I>qsh</I>, <I>qlogin</I> and <I>qalter</I>.
@@ -1147,22 +866,13 @@ OPTIONS
           Defines or redefines a list of  cluster  queues,  queue
           domains or queue instances which may be used to execute
           this job. Please find a description of <I>wc</I>_<I>queue</I>_<I>list</I> in
-          <B><A HREF="../htmlman1/sge_types.html?pathrev=V62u2_TAG">sge_types(1)</A></B>.  This parameter has all the properties of
+          <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>.  This parameter has all the properties of
           a resource request and will be merged with requirements
           derived from the -l option described above.
 
           <I>Qalter</I> allows changing this option even while  the  job
           executes. The modified parameter will only be in effect
           after a restart or migration of the job, however.
-
-          If this option or a  corresponding  value  in  <I>qmon</I>  is
-          specified the these hard and soft resource requirements
-          will be passed to defined JSV instances  as  parameters
-          with  the  names  q_hard and q_soft. If regular expres-
-          sions will be used for resource  requests,  then  these
-          expressions  will  be passed as they are. Also shortcut
-          names will not be expanded.  (see -jsv option below  or
-          find more information concerning JSV in <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
 
      -R y[es]|n[o]
           Available for <I>qsub</I>, <I>qrsh</I>, <I>qsh</I>, <I>qlogin</I> and <I>qalter</I>.
@@ -1172,18 +882,10 @@ OPTIONS
           i.e. jobs submitted using the -now yes option.   Please
           note  that  regardless  of the reservation request, job
           reservation might be disabled using max_reservation  in
-          <B><A HREF="../htmlman5/sched_conf.html?pathrev=V62u2_TAG">sched_conf(5)</A></B>  and  might  be limited only to a certain
+          <B><A HREF="../htmlman5/sched_conf.html">sched_conf(5)</A></B>  and  might  be limited only to a certain
           number of high priority jobs.
 
           By default jobs are submitted with the -R n option.
-
-          The value specified with this option or the correspond-
-          ing  value  specified  in  <I>qmon</I>  will only be passed to
-          defined JSV instances if the value is <I>yes</I>.  The name of
-          the  parameter will be R. The value will be y also when
-          then long form yes  was  specified  during  submission.
-          (see  -jsv  option  below or find more information con-
-          cerning JSV in <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
 
      -r y[es]|n[o]
           Available for <I>qsub</I> and <I>qalter</I> only.
@@ -1200,23 +902,16 @@ OPTIONS
           <I>Qalter</I> allows changing this option even while  the  job
           executes.
 
-          The value specified with this option or the correspond-
-          ing  value  specified  in  <I>qmon</I>  will only be passed to
-          defined JSV instances if the value is <I>yes</I>.  The name of
-          the  parameter will be r. The value will be y also when
-          then long form yes  was  specified  during  submission.
-          (see  -jsv  option  below or find more information con-
-          cerning JSV in <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
+
 
      -sc variable[=value],...
           Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I>, <I>qlogin</I> and <I>qalter</I> only.
 
           Sets the given name/value pairs as the  job's  context.
-          Value  may  be  omitted.  Sun  Grid Engine replaces the
-          job's previously defined context with the one given  as
-          the  argument.   Multiple -ac, -dc, and -sc options may
-          be given.  The order is important.
-
+          Value  may  be  omitted. Grid Engine replaces the job's
+          previously defined context with the one  given  as  the
+          argument.   Multiple  -ac,  -dc, and -sc options may be
+          given.  The order is important.
           Contexts provide a way to dynamically attach and remove
           meta-information  to  and from a job. The context vari-
           ables are not passed to the job's execution context  in
@@ -1225,17 +920,11 @@ OPTIONS
           <I>Qalter</I> allows changing this option even while  the  job
           executes.
 
-          The outcome of the evaluation of all -ac, -dc, and  -sc
-          options  or  corresponding  values in <I>qmon</I> is passed to
-          defined JSV instances as parameter with  the  name  ac.
-          (see  -jsv  option  below or find more information con-
-          cerning JSV in <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
-
      -shell y[es]|n[o]
           Available only for <I>qsub</I>.
 
           -shell n  causes  qsub  to  execute  the  command  line
-          directly,  as  if by <B><A HREF="../htmlman2/exec.html?pathrev=V62u2_TAG">exec(2)</A></B>.  No command shell will be
+          directly,  as  if by <B><A HREF="../htmlman2/exec.html">exec(2)</A></B>.  No command shell will be
           executed for the job.  This option only applies when -b
           y is also used.  Without -b y, -shell n has no effect.
 
@@ -1259,40 +948,24 @@ OPTIONS
 
           See -b and -noshell for more information.
 
-          The value specified with this option or the correspond-
-          ing  value  specified  in  <I>qmon</I>  will only be passed to
-          defined JSV instances if the value is <I>yes</I>.  The name of
-          the  parameter  will be shell. The value will be y also
-          when then long form yes was  specified  during  submis-
-          sion.   (see -jsv option below or find more information
-          concerning JSV in <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
-
      -soft
           Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I>, <I>qlogin</I> and <I>qalter</I> only.
 
           Signifies that all resource requirements  following  in
           the  command  line will be soft requirements and are to
           be filled on an "as available" basis.
-          As Sun Grid Engine scans the command  line  and  script
-          file  for  Sun  Grid  Engine options and parameters, it
-          builds a list of resources required  by  the  job.  All
-          such  resource  requests  are  considered as absolutely
-          essential for the job to commence. If the -soft  option
-          is  encountered  during  the  scan  then  all following
+          As Grid Engine scans the command line and  script  file
+          for  Grid  Engine  options  and parameters, it builds a
+          list  of  resources  required  by  the  job.  All  such
+          resource  requests  are considered as absolutely essen-
+          tial for the job to commence. If the  -soft  option  is
+          encountered   during   the   scan  then  all  following
           resources are designated  as  "soft  requirements"  for
           execution, or "nice-to-have, but not essential". If the
           -hard flag (see above) is encountered at a later  stage
           of  the  scan,  all resource requests following it once
           again become "essential". The -hard and  -soft  options
           in effect act as "toggles" during the scan.
-
-          If this option or a  corresponding  value  in  <I>qmon</I>  is
-          specified  then  the  corresponding  -q and -l resource
-          requirements will be passed to defined JSV instances as
-          parameter  with  the  names q_soft and l_soft. Find for
-          information in the sections describing -q and -l.  (see
-          -jsv  option  below or find more information concerning
-          JSV in <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
 
      -sync y[es]|n[o]
           Available for <I>qsub</I>.
@@ -1324,11 +997,6 @@ OPTIONS
           <I>qsub</I>  is  interrupted, e.g. with CTRL-C, before the job
           completes, all of the job's tasks will be canceled.
 
-          Information that this switch was specified during  sub-
-          mission is not available in the JSV context.  (see -jsv
-          option below or find more information concerning JSV in
-          <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
-
      -S [[hostname]:]pathname,...
           Available for <I>qsub</I>, <I>qsh</I> and <I>qalter</I>.
 
@@ -1347,30 +1015,25 @@ OPTIONS
 
           In the case of <I>qsh</I> the specified shell path is used  to
           execute  the  corresponding  command interpreter in the
-          <B><A HREF="../htmlman1/xterm.html?pathrev=V62u2_TAG">xterm(1)</A></B> (via its -<I>e</I> option) started on behalf  of  the
-          interactive  job.  <I>Qalter</I>  allows  changing this option
-          even while the job  executes.  The  modified  parameter
-          will  only be in effect after a restart or migration of
-          the job, however.
+          <B><A HREF="../htmlman1/xterm.html">xterm(1)</A></B> (via its -<I>e</I> option) started on behalf  of  the
+          interactive job.
 
-          If this option or a  corresponding  value  in  <I>qmon</I>  is
-          specified then this value will be passed to defined JSV
-          instances as parameter with  the  name  S.   (see  -jsv
-          option below or find more information concerning JSV in
-          <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
+          <I>Qalter</I> allows changing this option even while  the  job
+          executes. The modified parameter will only be in effect
+          after a restart or migration of the job, however.
 
      -t n[-m[:s]]
           Available for <I>qsub</I> and <I>qalter</I> only.
 
           Submits a so called <I>Array</I> <I>Job</I>, i.e. an array of identi-
           cal  tasks being differentiated only by an index number
-          and being treated by Sun  Grid  Engine  almost  like  a
-          series of jobs. The option argument to -t specifies the
-          number of array job tasks and the  index  number  which
-          will  be  associated  with the tasks. The index numbers
-          will be exported to the job tasks via  the  environment
-          variable  SGE_TASK_ID.  The option arguments n, m and s
-          will be available  through  the  environment  variables
+          and being treated by Grid Engine almost like  a  series
+          of jobs. The option argument to -t specifies the number
+          of array job tasks and the index number which  will  be
+          associated  with  the  tasks. The index numbers will be
+          exported to the job tasks via the environment  variable
+          SGE_TASK_ID.  The  option  arguments n, m and s will be
+          available    through    the    environment    variables
           SGE_TASK_FIRST, SGE_TASK_LAST and  SGE_TASK_STEPSIZE.
 
           Following restrictions apply to the values n and m:
@@ -1380,7 +1043,7 @@ OPTIONS
                n &lt;= m
 
           <I>max</I>_<I>aj</I>_<I>tasks</I> is defined in  the  cluster  configuration
-          (see <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62u2_TAG">sge_conf(5)</A></B>)
+          (see <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>)
 
           The task id range specified in the option argument  may
           be a single number, a simple range of the form n-m or a
@@ -1397,7 +1060,7 @@ OPTIONS
           resources exist, concurrently, very much like  separate
           jobs.   However,  an  array job or a sub-array there of
           can be accessed as  a  single  unit  by  commands  like
-          <B><A HREF="../htmlman1/qmod.html?pathrev=V62u2_TAG">qmod(1)</A></B> or <B><A HREF="../htmlman1/qdel.html?pathrev=V62u2_TAG">qdel(1)</A></B>.  See the corresponding manual pages
+          <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B> or <B><A HREF="../htmlman1/qdel.html">qdel(1)</A></B>.  See the corresponding manual pages
           for further detail.
 
           Array jobs are commonly used to execute the  same  type
@@ -1419,27 +1082,6 @@ OPTIONS
           the  output  of  all  tasks into the same file, but the
           result of this is undefined.
 
-          If this option or a  corresponding  value  in  <I>qmon</I>  is
-          specified then this value will be passed to defined JSV
-          instances as parameters with the name t_min, t_max  and
-          t_step  (see -jsv option below or find more information
-          concerning JSV in <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
-
-
-     -terse
-          Available for <I>qsub</I> only.
-
-          -terse causes the <I>qsub</I> to display only  the  job-id  of
-          the  job  being submitted rather than the regular "Your
-          job ..." string.  In case of  an  error  the  error  is
-          reported on stderr as usual.
-          This can be helpful for scripts  which  need  to  parse
-          <I>qsub</I> output to get the job-id.
-
-          Information that this switch was specified during  sub-
-          mission is not available in the JSV context.  (see -jsv
-          option below or find more information concerning JSV in
-          <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
 
      -u username,...
           Available for <I>qalter</I> only. Changes  are  only  made  on
@@ -1452,66 +1094,51 @@ OPTIONS
           an additional <I>wc</I>_<I>job</I>_<I>range</I>_<I>list</I>.
 
      -v variable[=value],...
-          Available for <I>qsub</I>, <I>qrsh</I> (with  command  argument)  and
-          <I>qalter</I>.
-
+          Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I> and <I>qalter</I>.
           Defines or redefines the environment  variables  to  be
           exported  to  the execution context of the job.  If the
-          -v option is present  Sun  Grid  Engine  will  add  the
-          environment  variables  defined  as  arguments  to  the
-          switch and, optionally, values of specified  variables,
-          to the execution context of the job.
+          -v option is present Grid Engine will add the  environ-
+          ment  variables defined as arguments to the switch and,
+          optionally, values of specified variables, to the  exe-
+          cution context of the job.
 
           <I>Qalter</I> allows changing this option even while  the  job
           executes. The modified parameter will only be in effect
           after a restart or migration of the job, however.
 
-          All environment variables specified with -v, -V or  the
-          DISPLAY   variable   provided  with  -display  will  be
-          exported to the defined JSV instances  only  optionally
-          when  this  is requested explicitly during the job sub-
-          mission verification.  (see -jsv option below  or  find
-          more information concerning JSV in <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
-
      -verbose
-          Available only for <I>qrsh</I> and <B><A HREF="../htmlman1/qmake.html?pathrev=V62u2_TAG">qmake(1)</A></B>.
+          Available only for <I>qrsh</I> and <B><A HREF="../htmlman1/qmake.html">qmake(1)</A></B>.
 
           Unlike <I>qsh</I> and <I>qlogin</I>, <I>qrsh</I> does not output any  infor-
           mational  messages while establishing the session, com-
-          pliant with the standard <B><A HREF="../htmlman1/rsh.html?pathrev=V62u2_TAG">rsh(1)</A></B>  and  <B><A HREF="../htmlman1/rlogin.html?pathrev=V62u2_TAG">rlogin(1)</A></B>  system
+          pliant with the standard <B><A HREF="../htmlman1/rsh.html">rsh(1)</A></B>  and  <B><A HREF="../htmlman1/rlogin.html">rlogin(1)</A></B>  system
           calls.   If  the  option  -verbose is set, <I>qrsh</I> behaves
           like the <I>qsh</I> and <I>qlogin</I> commands, printing  information
-          about  the  process  of establishing the <B><A HREF="../htmlman1/rsh.html?pathrev=V62u2_TAG">rsh(1)</A></B> or <I>rlo-</I>
-          <B><A HREF="../htmlman1/gin.html?pathrev=V62u2_TAG">gin(1)</A></B> session.
+          about  the  process  of establishing the <B><A HREF="../htmlman1/rsh.html">rsh(1)</A></B> or <I>rlo-</I>
+          <B><A HREF="../htmlman1/gin.html">gin(1)</A></B> session.
 
      -verify
           Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I>, <I>qlogin</I> and <I>qalter</I>.
 
           Instead of submitting a job, prints  detailed  informa-
-          tion  about the would-be job as though <B><A HREF="../htmlman1/qstat.html?pathrev=V62u2_TAG">qstat(1)</A></B> -j were
+          tion  about the would-be job as though <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B> -j were
           used, including the effects of command-line  parameters
           and the external environment.
 
-     -V   Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I> <I>with</I> <I>command</I> and <I>qalter</I>.
+     -V   Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I> <I>with</I> <I>command</I>, <I>qalter</I>  and
+          <I>qresub</I>.
 
           Specifies that all environment variables active  within
           the <I>qsub</I> utility be exported to the context of the job.
 
-          All environment variables specified with -v, -V or  the
-          DISPLAY   variable   provided  with  -display  will  be
-          exported to the defined JSV instances  only  optionally
-          when  this  is requested explicitly during the job sub-
-          mission verification.  (see -jsv option below  or  find
-          more information concerning JSV in <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
-
-     -w e|w|n|p|v
+     -w e|w|n|v
           Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I>, <I>qlogin</I> and <I>qalter</I>.
 
           Specifies a validation level applied to the job  to  be
           submitted  (<I>qsub</I>,  <I>qlogin</I>,  and  <I>qsh</I>)  or the specified
-          queued  job  (<I>qalter</I>).    The   information   displayed
-          indicates  whether  the  job  can possibly be scheduled
-          assuming an empty system with no other  jobs.  Resource
+          queued job (<I>qalter</I>).  The information  displayed  indi-
+          cates  whether the job can possibly be scheduled assum-
+          ing an  empty  system  with  no  other  jobs.  Resource
           requests exceeding the configured maximal thresholds or
           requesting unavailable resource attributes are possible
           causes for jobs to fail this validation.
@@ -1520,42 +1147,36 @@ OPTIONS
           dation modes:
 
           `e'  error - jobs with invalid requests will be
-               rejected.
+               rejected; the default for <I>qrsh</I>, <I>qsh</I>
+               and <I>qlogin</I>.
           `w'  warning - only a warning will be displayed
                for invalid requests.
           `n'  none - switches off validation; the default for
-               <I>qsub</I>, <I>qalter</I>, <I>qrsh</I>, <I>qsh</I>
-               and <I>qlogin</I>.
-          `p'  poke - does not submit the job but prints a
-               validation report based on a cluster as is with
-               all resource utilizations in place.
-          `v'  verify - does not submit the job but prints a
-               validation report based on an empty cluster.
+               <I>qsub</I> and <I>qalter</I>.
+          `v'  verify - does not submit the job but prints an
+               extensive validation report.
 
           Note, that the necessary checks are performance consum-
-          ing  and hence the checking is switched off by default.
-          It should also be noted that load values are not  taken
-          into  account  with  the  verification  since  they are
-          assumed to be too volatile. To cause -w e  verification
-          to  be  passed  at  submission  time, it is possible to
-          specify non-volatile values (non-consumables)  or  max-
-          imum values (consumables) in complex_values.
+          ing and hence the checking is switched off by default.
+
+          Note also, that the reasons for job requirements  being
+          invalid with respect to resource availability of queues
+          are displayed in the "-w v" case using  the  format  as
+          described  for  the <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B> -F option (see description
+          of  Full  Format  in  section  OUTPUT  FORMATS  of  the
+          <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B> manual page.
 
      -wd working_dir
           Available for <I>qsub</I>, <I>qsh</I>, <I>qrsh</I> and <I>qalter</I> only.
 
           Execute  the  job  from  the  directory  specified   in
-          working_dir.    This  switch  will  activate  Sun  Grid
-          Engine's path aliasing facility, if  the  corresponding
-          configuration files are present (see <B><A HREF="../htmlman5/sge_aliases.html?pathrev=V62u2_TAG">sge_aliases(5)</A></B>).
+          working_dir.   This  switch will activate Grid Engine's
+          path aliasing facility, if the corresponding configura-
+          tion files are present (see <B><A HREF="../htmlman5/sge_aliases.html">sge_aliases(5)</A></B>).
 
           <I>Qalter</I> allows changing this option even while  the  job
           executes. The modified parameter will only be in effect
-          after a restart or migration of the job, however.   The
-          parameter  value  will  be  available  in  defined  JSV
-          instances as parameter with  the  name  cwd  (see  -cwd
-          switch above or find more information concerning JSV in
-          <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
+          after a restart or migration of the job, however.
 
      command
           Available for <I>qsub</I> and <I>qrsh</I> only.
@@ -1563,11 +1184,6 @@ OPTIONS
           The job's scriptfile or binary.  If not present  or  if
           the  operand  is  the single-character string '-', <I>qsub</I>
           reads the script from standard input.
-
-          The command will be available in defined JSV  instances
-          as  parameter  with  the  name CMDNAME (see -jsv option
-          below  or  find  more  information  concerning  JSV  in
-          <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
 
      command_args
           Available for <I>qsub</I>, <I>qrsh</I> and <I>qalter</I> only.
@@ -1579,32 +1195,18 @@ OPTIONS
           executes. The modified parameter will only be in effect
           after a restart or migration of the job, however.
 
-          The number of command arguments is provided to  config-
-          ured  JSV instances as parameter with the name CMDARGS.
-          Also the argument  values  can  by  accessed.  Argument
-          names  have the format CMDARG&lt;number&gt; where &lt;number&gt; is
-          a integer between 0 and CMDARGS - 1.  (see -jsv  option
-          below  or  find  more  information  concerning  JSV  in
-          <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
-
      xterm_args
           Available for <I>qsh</I> only.
 
-          Arguments to the <B><A HREF="../htmlman1/xterm.html?pathrev=V62u2_TAG">xterm(1)</A></B> executable, as defined in the
-          configuration.  For details, refer to <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62u2_TAG">sge_conf(5)</A></B>).
-
-          Information concerning xterm_args will be available  in
-          JSV  context  as  parameters  with the name CMDARGS and
-          CMDARG&lt;number&gt;. Find more information above in  section
-          command_args.  (see  -jsv  option  below  or  find more
-          information concerning JSV in <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>)
+          Arguments to the <B><A HREF="../htmlman1/xterm.html">xterm(1)</A></B> executable, as defined in the
+          configuration.  For details, refer to <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>).
 
 ENVIRONMENTAL VARIABLES
-     SGE_ROOT       Specifies the location of the Sun Grid Engine
+     SGE_ROOT       Specifies the location  of  the  Grid  Engine
                     standard configuration files.
 
-     SGE_CELL       If set, specifies the default Sun Grid Engine
-                    cell. To address a Sun Grid Engine cell <I>qsub</I>,
+     SGE_CELL       If set, specifies  the  default  Grid  Engine
+                    cell.  To  address  a  Grid Engine cell <I>qsub</I>,
                     <I>qsh</I>, <I>qlogin</I> or <I>qalter</I> use (in  the  order  of
                     precedence):
 
@@ -1615,6 +1217,7 @@ ENVIRONMENTAL VARIABLES
                          The  name  of  the  default  cell,  i.e.
                          default.
 
+
      SGE_DEBUG_LEVEL
                     If  set,  specifies  that  debug  information
                     should  be written to stderr. In addition the
@@ -1623,7 +1226,7 @@ ENVIRONMENTAL VARIABLES
 
      SGE_QMASTER_PORT
                     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u2_TAG">sge_qmaster(8)</A></B> is expected to listen for com-
+                    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B> is expected to listen for com-
                     munication requests.  Most installations will
                     use  a  services  map  entry  for the service
                     "sge_qmaster" instead to define that port.
@@ -1660,14 +1263,14 @@ ENVIRONMENTAL VARIABLES
      SGE_O_WORKDIR  the absolute  path  of  the  current  working
                     directory of the submitting client.
 
-     Furthermore, Sun Grid Engine sets additional variables  into
-     the job's environment, as listed below.
+     Furthermore, Grid Engine sets additional variables into  the
+     job's environment, as listed below.
 
      ARC
 
-     SGE_ARCH       The Sun Grid Engine architecture name of  the
-                    node on which the job is running. The name is
-                    compiled-in into the <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u2_TAG">sge_execd(8)</A></B> binary.
+     SGE_ARCH       The Grid Engine architecture name of the node
+                    on  which  the  job  is  running. The name is
+                    compiled-in into the <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> binary.
 
      SGE_CKPT_ENV   Specifies the checkpointing  environment  (as
                     selected with the -ckpt option) under which a
@@ -1675,7 +1278,7 @@ ENVIRONMENTAL VARIABLES
                     checkpointing jobs.
 
      SGE_CKPT_DIR   Only set  for  checkpointing  jobs.  Contains
-                    path  <I>ckpt</I>_<I>dir</I>  (see  <B><A HREF="../htmlman5/checkpoint.html?pathrev=V62u2_TAG">checkpoint(5)</A></B>  ) of the
+                    path  <I>ckpt</I>_<I>dir</I>  (see  <B><A HREF="../htmlman5/checkpoint.html">checkpoint(5)</A></B>  ) of the
                     checkpoint interface.
 
      SGE_STDERR_PATH
@@ -1702,12 +1305,12 @@ ENVIRONMENTAL VARIABLES
                     the execution host.
 
      SGE_JOB_SPOOL_DIR
-                    The  directory  used  by  <B><A HREF="../htmlman8/sge_shepherd.html?pathrev=V62u2_TAG">sge_shepherd(8)</A></B>  to
+                    The  directory  used  by  <B><A HREF="../htmlman8/sge_shepherd.html">sge_shepherd(8)</A></B>  to
                     store  job related data during job execution.
-                    This directory is owned by root or by  a  Sun
-                    Grid  Engine  administrative account and com-
-                    monly is not open for read or write access to
-                    regular users.
+                    This directory is owned by root or by a  Grid
+                    Engine administrative account and commonly is
+                    not open for read or write access to  regular
+                    users.
 
      SGE_TASK_ID    The index number of  the  current  array  job
                     task (see -t option above). This is an unique
@@ -1729,23 +1332,23 @@ ENVIRONMENTAL VARIABLES
                     with -v or -V (see options above).
 
      SGE_TASK_STEPSIZE
-                    The step size of the array job  specification
+                    The step size of the array  job  specification
                     (see  -t  option  above).  It  is possible to
                     change the predefined value of this  variable
                     with -v or -V (see options above).
 
      ENVIRONMENT    The ENVIRONMENT variable is set to  BATCH  to
                     identify that the job is being executed under
-                    Sun Grid Engine control.
+                    Grid Engine control.
 
      HOME           The  user's  home  directory  path  from  the
-                    <B><A HREF="../htmlman5/passwd.html?pathrev=V62u2_TAG">passwd(5)</A></B> file.
+                    <B><A HREF="../htmlman5/passwd.html">passwd(5)</A></B> file.
 
      HOSTNAME       The hostname of the node on which the job  is
                     running.
 
      JOB_ID         A   unique   identifier   assigned   by   the
-                    <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u2_TAG">sge_qmaster(8)</A></B>  when  the  job was submitted.
+                    <B><A HREF="../htmlman8/sge_qmaster.html">sge_qmaster(8)</A></B>  when  the  job was submitted.
                     The job ID is a decimal integer in the  range
                     1 to 99999.
 
@@ -1760,7 +1363,7 @@ ENVIRONMENTAL VARIABLES
                     This default may be overwritten  by  the  -<I>N</I>.
                     option.
 
-     LOGNAME        The user's  login  name  from  the  <B><A HREF="../htmlman5/passwd.html?pathrev=V62u2_TAG">passwd(5)</A></B>
+     LOGNAME        The user's  login  name  from  the  <B><A HREF="../htmlman5/passwd.html">passwd(5)</A></B>
                     file.
 
      NHOSTS         The number of hosts in use by a parallel job.
@@ -1775,20 +1378,20 @@ ENVIRONMENTAL VARIABLES
                     /usr/local/bin:/usr/ucb:/bin:/usr/bin
 
      SGE_BINARY_PATH
-                    The path where the Sun Grid  Engine  binaries
-                    are installed. The value is the concatenation
-                    of   the    cluster    configuration    value
-                    binary_path   and   the   architecture   name
-                    $SGE_ARCH environment variable.
+                    The path where the Grid Engine  binaries  are
+                    installed.  The value is the concatenation of
+                    the cluster configuration  value  binary_path
+                    and  the architecture name $SGE_ARCH environ-
+                    ment variable.
 
      PE             The parallel environment under which the  job
                     executes (for parallel jobs only).
 
      PE_HOSTFILE    The path of a file containing the  definition
                     of the virtual parallel machine assigned to a
-                    parallel job by  Sun  Grid  Engine.  See  the
-                    description  of the $pe_hostfile parameter in
-                    <B><A HREF="../htmlman5/sge_pe.html?pathrev=V62u2_TAG">sge_pe(5)</A></B> for details on the format  of  this
+                    parallel job by Grid Engine. See the descrip-
+                    tion   of   the   $pe_hostfile  parameter  in
+                    <B><A HREF="../htmlman5/sge_pe.html">sge_pe(5)</A></B> for details on the format  of  this
                     file. The environment variable is only avail-
                     able for parallel jobs.
 
@@ -1806,7 +1409,7 @@ ENVIRONMENTAL VARIABLES
                     migration in case of a checkpointing job. The
                     variable has the value 0 otherwise.
 
-     SHELL          The user's login  shell  from  the  <B><A HREF="../htmlman5/passwd.html?pathrev=V62u2_TAG">passwd(5)</A></B>
+     SHELL          The user's login  shell  from  the  <B><A HREF="../htmlman5/passwd.html">passwd(5)</A></B>
                     file. Note: This is not necessarily the shell
                     in use for the job.
 
@@ -1817,23 +1420,22 @@ ENVIRONMENTAL VARIABLES
                     ity with NQS.
 
      TZ             The  time   zone   variable   imported   from
-                    <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u2_TAG">sge_execd(8)</A></B> if set.
+                    <B><A HREF="../htmlman8/sge_execd.html">sge_execd(8)</A></B> if set.
 
-     USER           The user's  login  name  from  the  <B><A HREF="../htmlman5/passwd.html?pathrev=V62u2_TAG">passwd(5)</A></B>
+     USER           The user's  login  name  from  the  <B><A HREF="../htmlman5/passwd.html">passwd(5)</A></B>
                     file.
 
-
 RESTRICTIONS
-     There is no controlling terminal for batch  jobs  under  Sun
-     Grid  Engine, and any tests or actions on a controlling ter-
-     minal will fail. If these operations are in your  .login  or
-     .cshrc file, they may cause your job to abort.
+     There is no controlling terminal for batch jobs  under  Grid
+     Engine,  and  any tests or actions on a controlling terminal
+     will fail. If these operations are in your .login or  .cshrc
+     file, they may cause your job to abort.
 
      Insert the following test before any commands that  are  not
      pertinent to batch jobs in your .login:
 
           if ( $?JOB_NAME) then
-               echo "Sun Grid Engine spooled job"
+               echo "Grid Engine spooled job"
                exit 0
           endif
 
@@ -1847,13 +1449,13 @@ EXIT STATUS
 
      25   It was not possible to register a new job according  to
           the configured <I>max</I>_<I>u</I>_<I>jobs</I> or <I>max</I>_<I>jobs</I> limit. Additional
-          information may be found in <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62u2_TAG">sge_conf(5)</A></B>
+          information may be found in <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>
 
      &gt;0   Error occurred.
 
 EXAMPLES
-     The following is the simplest form  of  a  Sun  Grid  Engine
-     script file.
+     The following is the simplest form of a Grid  Engine  script
+     file.
 
      =====================================================
 
@@ -1864,7 +1466,7 @@ EXAMPLES
 
      =====================================================
 
-     The next example is a more complex Sun Grid Engine script.
+     The next example is a more complex Grid Engine script.
 
      =====================================================
 
@@ -1875,6 +1477,7 @@ EXAMPLES
 
      # date-time to run, format [[CC]yy]MMDDhhmm[.SS]
      #$ -a 12241200
+
      # to run I want 6 or more parallel processes
      # under the PE pvm. the processes require
      # 128M of memory
@@ -1907,6 +1510,8 @@ FILES
      $<I>REQUEST</I>.<I>eJID</I>[.<I>TASKID</I>]      STDERR of job
      $<I>REQUEST</I>.<I>poJID</I>[.<I>TASKID</I>]     STDOUT of par. env. of job
      $<I>REQUEST</I>.<I>peJID</I>[.<I>TASKID</I>]     STDERR of par. env. of job
+     $<I>REQUEST</I>.<I>hostsJID</I>[.<I>TASKID</I>]  hosts file of par. env. of job
+
 
      $<I>cwd</I>/.<I>sge</I>_<I>aliases</I>         cwd path aliases
      $<I>cwd</I>/.<I>sge</I>_<I>request</I>         cwd default request
@@ -1917,12 +1522,12 @@ FILES
      &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>sge</I>_<I>request</I>
                                cluster default request
      &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>act</I>_<I>qmaster</I>
-                               Sun Grid Engine master host file
+                               Grid Engine master host file
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qconf.html?pathrev=V62u2_TAG">qconf(1)</A></B>, <B><A HREF="../htmlman1/qdel.html?pathrev=V62u2_TAG">qdel(1)</A></B>, <B><A HREF="../htmlman1/qhold.html?pathrev=V62u2_TAG">qhold(1)</A></B>, <B><A HREF="../htmlman1/qmod.html?pathrev=V62u2_TAG">qmod(1)</A></B>, <B><A HREF="../htmlman1/qrls.html?pathrev=V62u2_TAG">qrls(1)</A></B>,
-     <B><A HREF="../htmlman1/qstat.html?pathrev=V62u2_TAG">qstat(1)</A></B>,    <B><A HREF="../htmlman5/accounting.html?pathrev=V62u2_TAG">accounting(5)</A></B>,   <B><A HREF="../htmlman5/sge_aliases.html?pathrev=V62u2_TAG">sge_aliases(5)</A></B>,   <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62u2_TAG">sge_conf(5)</A></B>,
-     <B><A HREF="../htmlman5/sge_request.html?pathrev=V62u2_TAG">sge_request(5)</A></B>, <B><A HREF="../htmlman5/sge_pe.html?pathrev=V62u2_TAG">sge_pe(5)</A></B>, <B><A HREF="../htmlman5/complex.html?pathrev=V62u2_TAG">complex(5)</A></B>.
+     <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qconf.html">qconf(1)</A></B>, <B><A HREF="../htmlman1/qdel.html">qdel(1)</A></B>, <B><A HREF="../htmlman1/qhold.html">qhold(1)</A></B>, <B><A HREF="../htmlman1/qmod.html">qmod(1)</A></B>, <B><A HREF="../htmlman1/qrls.html">qrls(1)</A></B>,
+     <B><A HREF="../htmlman1/qstat.html">qstat(1)</A></B>,    <B><A HREF="../htmlman5/accounting.html">accounting(5)</A></B>,   <B><A HREF="../htmlman5/sge_aliases.html">sge_aliases(5)</A></B>,   <B><A HREF="../htmlman5/sge_conf.html">sge_conf(5)</A></B>,
+     <B><A HREF="../htmlman5/sge_request.html">sge_request(5)</A></B>, <B><A HREF="../htmlman5/sge_pe.html">sge_pe(5)</A></B>, <B><A HREF="../htmlman5/complex.html">complex(5)</A></B>.
 
 COPYRIGHT
      If configured correspondingly, <I>qrsh</I> and <I>qlogin</I> contain  por-
@@ -1932,28 +1537,9 @@ COPYRIGHT
      This product includes software developed by  the  University
      of California, Berkeley and its contributors.
 
-     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B> as well  as  the  information  provided  in
+     See <B><A HREF="../htmlman1/sge_intro.html">sge_intro(1)</A></B> as well  as  the  information  provided  in
      &lt;sge_root&gt;/3rd_party/qrsh   and  &lt;sge_root&gt;/3rd_party/qlogin
      for a statement of further rights and permissions.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

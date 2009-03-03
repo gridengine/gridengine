@@ -41,17 +41,23 @@ extern "C" {
 
 #define MAXMSGLEN 256
 
+/* enable/disable message creation into sme/tmp_sme */
+void schedd_mes_on(void);
+void schedd_mes_off(void);
 
 /* Initialize module variables */
 /* prepare tmp_sme for collecting messages */
 void schedd_mes_initialize(void);
+
+/* Free module variables */
+void schedd_mes_release(void);
 
 /* Get message structure */
 lListElem *schedd_mes_obtain_package(int *global_mes_count, int *job_mes_count);
 
 void schedd_mes_add(lList **monitor_alpp, bool monitor_next_run, u_long32 job_id, u_long32 message_number, ...);
 
-void schedd_mes_add_join(bool monitor_next_run, u_long32 job_number, u_long32 message_number, ...);
+void schedd_mes_add_join(u_long32 job_number, u_long32 message_number, ...);
 
 void schedd_mes_add_global(lList **monitor_alpp, bool monitor_next_run, u_long32 message_number, ...);
 

@@ -72,11 +72,7 @@ ___INFO__MARK_END__-->
             <validator id="cfg.sge.root.fileexistsvalidator" class="com.sun.grid.installer.gui.FileExistsValidator">
                 <param name="file" value="/util/arch"/>
             </validator>
-            <validator id="cfg.sge.root.fileexistsvalidator.2" class="com.sun.grid.installer.gui.FileExistsValidator">
-                <param name="file" value="/util/gui-installer/installer.jar"/>
-            </validator>
         </field>
-        <!-- Cell name for qmaster installation -->
         <field type="text" variable="cfg.cell.name" conditionid="cond.install.qmaster">
             <spec id="cfg.cell.name.label" size="35" set="${cfg.cell.name}" />
             <validator id="cfg.cell.name.notemptyvalidator" class="com.izforge.izpack.util.NotEmptyValidator" />
@@ -86,20 +82,13 @@ ___INFO__MARK_END__-->
                 <param name="exists" value="false"/>
             </validator>
         </field>
-        <!-- Cell name for standalone execd/shadow/bdb installation -->
-        <field type="text" variable="cfg.cell.name" conditionid="!(cond.install.qmaster)+(cond.install.execd|cond.install.shadowd)">
+        <field type="text" variable="cfg.cell.name" conditionid="!cond.install.qmaster">
             <spec id="cfg.cell.name.label" size="35" set="${cfg.cell.name}" />
             <validator id="cfg.cell.name.notemptyvalidator" class="com.izforge.izpack.util.NotEmptyValidator" />
             <validator id="cfg.cell.name.notexists.fileexistsvalidator" class="com.sun.grid.installer.gui.FileExistsValidator">
                 <param name="dir" value="${cfg.sge.root}"/>
-                <param name="file" value="/common/bootstrap"/>
                 <param name="exists" value="true"/>
             </validator>
-        </field>
-        <!-- Cell name for standalone bdb installation -->
-        <field type="text" variable="cfg.cell.name" conditionid="!(cond.install.qmaster|cond.install.execd|cond.install.shadowd)">
-            <spec id="cfg.cell.name.label" size="35" set="${cfg.cell.name}" />
-            <validator id="cfg.cell.name.notemptyvalidator" class="com.izforge.izpack.util.NotEmptyValidator" />
         </field>
         <field type="text" variable="cfg.sge.cluster.name" conditionid="cond.install.qmaster+cond.custom.install">
             <spec id="cfg.sge.cluster.name.label" size="35" />
@@ -115,6 +104,7 @@ ___INFO__MARK_END__-->
                 <param name="min" value="1"/>
                 <param name="max" value="65535"/>
             </validator>
+            <validator id="cfg.sge.qmaster.port.portvalidator" class="com.izforge.izpack.util.PortValidator" />
         </field>
         <field type="text" variable="cfg.sge.execd.port" conditionid="cond.install.qmaster">
             <spec id="cfg.sge.execd.port.label" size="35" />
@@ -142,26 +132,20 @@ ___INFO__MARK_END__-->
         <field type="text" variable="cfg.admin.mail" conditionid="cond.install.qmaster">
             <spec set="none" size="35" id="cfg.admin.mail.label" />
             <validator id="cfg.admin.mail.regularexpressionvalidator" class="com.izforge.izpack.util.RegularExpressionValidator">
-                <param name="pattern" value="[a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+([.][a-zA-Z0-9_-]+)*[.][a-zA-Z0-9._-]{2,4}|none|[ ]*" />
+                <param name="pattern" value="[[a-zA-Z0-9._-]{3,}@[a-zA-Z0-9._-]+([.][a-zA-Z0-9_-]+)*[.][a-zA-Z0-9._-]{2,4}]{0,}" />
             </validator>
             <validator id="cfg.admin.mail.fillifemptyvalidator" class="com.sun.grid.installer.gui.FillIfEmptyValidator">
                 <param name="default" value="none"/>
             </validator>
         </field>
         <field type="space" />
-        <field type="check" variable="cfg.add.to.rc" conditionid="(!(cond.no.connect.user)|cond.user.root)+(cond.install.qmaster|cond.install.execd|cond.install.bdb)">
+        <field type="check" variable="cfg.add.to.rc" conditionid="cond.user.root+cond.install.qmaster|cond.install.execd|cond.install.bdb">
             <spec align="left" id="cfg.add.to.rc.label" true="true" false="false" />
         </field>
         <field type="check" variable="add.sge.jmx" conditionid="cond.install.qmaster+cond.custom.install">
             <spec align="left" id="add.sge.jmx.label" true="true" false="false" />
         </field>
-        <field type="check" variable="cfg.hostname.resolving" conditionid="cond.install.qmaster+cond.custom.install">
-            <spec align="left" id="cfg.hostname.resolving.label" true="true" false="false" />
-        </field>
-        <field type="check" variable="add.product.mode" conditionid="cond.install.qmaster+cond.custom.install">
-            <spec align="left" id="add.product.mode.label" true="csp" false="none" />
-        </field>
-        <!--<field type="space" />
+        <field type="space" />
         <field type="staticText" align="left" id="product.mode.statictext" conditionid="cond.install.qmaster+cond.custom.install" />
         <field type="radio" variable="add.product.mode" ident="true" conditionid="cond.install.qmaster+cond.custom.install" >
             <spec>
@@ -169,17 +153,15 @@ ___INFO__MARK_END__-->
                 <choice id="add.product.mode.csp.label" value="2" />
                 <choice id="add.product.mode.afs.label" value="3" />
             </spec>
-        </field>-->
+        </field>
     </panel>
     <panel id="JMXPanel">
         <field type="devider" align="top" />
         <field type="text" variable="cfg.sge.jmx.port">
             <spec id="cfg.sge.jmx.port.label" size="35" />
             <validator id="cfg.sge.jmx.port.notemptyvalidator" class="com.izforge.izpack.util.NotEmptyValidator" />
-            <validator id="cfg.sge.jmx.port.rangevalidator" class="com.sun.grid.installer.gui.RangeValidator">
-                <param name="min" value="1"/>
-                <param name="max" value="65535"/>
-            </validator>
+            <validator id="cfg.sge.jmx.port.isportvalidator" class="com.izforge.izpack.util.IsPortValidator" />
+            <validator id="cfg.sge.jmx.port.portvalidator" class="com.izforge.izpack.util.PortValidator" />
         </field>
         <field type="check" variable="cfg.sge.jmx.ssl">
             <spec align="left" id="cfg.sge.jmx.ssl.label" true="true" false="false" revalidate="yes" />
@@ -188,17 +170,13 @@ ___INFO__MARK_END__-->
             <spec align="left" id="cfg.sge.jmx.ssl.client.label" true="true" false="false"/>
             <dependency type="enable" refid="cfg.sge.jmx.ssl" value="true" />
         </field>
-        <!--JMX keystore dir if qmaster on localhost (with browse button)-->
-        <field type="dir" align="left" variable="cfg.sge.jmx.ssl.keystore" conditionid="cond.qmaster.on.localhost">
+        <field type="dir" align="left" variable="cfg.sge.jmx.ssl.keystore">
             <spec id="cfg.sge.jmx.ssl.keystore.label" size="35" />
             <dependency type="enable" refid="cfg.sge.jmx.ssl" value="true" />
             <validator id="cfg.sge.jmx.ssl.keystore.notemptyvalidator" class="com.izforge.izpack.util.NotEmptyValidator" />
-        </field>
-        <!--JMX keystore dir if qmaster on remote host (without browse button)-->
-        <field type="text" align="left" variable="cfg.sge.jmx.ssl.keystore" conditionid="!cond.qmaster.on.localhost">
-            <spec id="cfg.sge.jmx.ssl.keystore.label" size="35" />
-            <dependency type="enable" refid="cfg.sge.jmx.ssl" value="true" />
-            <validator id="cfg.sge.jmx.ssl.keystore.notemptyvalidator" class="com.izforge.izpack.util.NotEmptyValidator" />
+            <validator id="cfg.sge.jmx.ssl.keystore.permissionvalidator" class="com.sun.grid.installer.gui.PermissionValidator" >
+                <param name="actions" value="write" />
+            </validator>
         </field>
         <field type="password" align="left" variable="cfg.sge.jmx.ssl.keystore.pw">
             <dependency type="enable" refid="cfg.sge.jmx.ssl" value="true"/>
@@ -222,25 +200,19 @@ ___INFO__MARK_END__-->
     </panel>
     <panel id="SpoolingPanel">
         <field type="devider" align="top" />
-        <!--Qmaster spool dir if qmaster on localhost (with browse button)-->
-        <field type="dir" align="left" variable="cfg.qmaster.spool.dir" conditionid="cond.install.qmaster+cond.qmaster.on.localhost">
+        <field type="dir" align="left" variable="cfg.qmaster.spool.dir" conditionid="cond.install.qmaster">
             <spec id="cfg.qmaster.spool.dir.label" size="35" />
             <validator id="cfg.qmaster.spool.dir.notemptyvalidator" class="com.izforge.izpack.util.NotEmptyValidator" />
+            <validator id="cfg.qmaster.spool.dir.permissionvalidator" class="com.sun.grid.installer.gui.PermissionValidator" >
+                <param name="actions" value="write" />
+            </validator>
         </field>
-        <!--Qmaster spool dir if qmaster on remote host (without browse button)-->
-        <field type="text" align="left" variable="cfg.qmaster.spool.dir" conditionid="cond.install.qmaster+!(cond.qmaster.on.localhost)">
-            <spec id="cfg.qmaster.spool.dir.label" size="35" />
-            <validator id="cfg.qmaster.spool.dir.notemptyvalidator" class="com.izforge.izpack.util.NotEmptyValidator" />
-        </field>
-        <!--Global execd spool dir if qmaster on localhost (with browse button)-->
-        <field type="dir" align="left" variable="cfg.execd.spool.dir" conditionid="cond.install.qmaster+cond.qmaster.on.localhost">
+        <field type="dir" align="left" variable="cfg.execd.spool.dir" conditionid="cond.install.qmaster">
             <spec id="cfg.execd.spool.dir.label" size="35" />
             <validator id="cfg.execd.spool.dir.notemptyvalidator" class="com.izforge.izpack.util.NotEmptyValidator" />
-        </field>
-        <!--Global execd spool dir if qmaster on remote host (without browse button)-->
-        <field type="text" align="left" variable="cfg.execd.spool.dir" conditionid="cond.install.qmaster+!(cond.qmaster.on.localhost)">
-            <spec id="cfg.execd.spool.dir.label" size="35" />
-            <validator id="cfg.execd.spool.dir.notemptyvalidator" class="com.izforge.izpack.util.NotEmptyValidator" />
+            <validator id="cfg.execd.spool.dir.permissionvalidator" class="com.sun.grid.installer.gui.PermissionValidator" >
+                <param name="actions" value="write" />
+            </validator>
         </field>
         <field type="space" conditionid="!cond.install.bdb"/>
         <field type="staticText" align="left" id="spooling.method.statictext" conditionid="!cond.install.bdb"/>
@@ -256,7 +228,7 @@ ___INFO__MARK_END__-->
             <dependency type="enable" refid="cfg.spooling.method" value="none"/>
             <validator id="cfg.db.spooling.server.notemptyvalidator" class="com.izforge.izpack.util.NotEmptyValidator" />
         </field>
-        <field type="dir" align="left" variable="add.db.spooling.dir.bdb" conditionid="cond.qmaster.on.localhost+(cond.spooling.bdb|cond.spooling.classic)">
+        <field type="dir" align="left" variable="add.db.spooling.dir.bdb" conditionid="cond.spooling.bdb|cond.spooling.classic">
             <spec id="cfg.db.spooling.dir.label" size="35" />
             <dependency type="disable" refid="cfg.spooling.method" value="classic"/>
             <validator id="cfg.db.spooling.dir.notemptyvalidator" class="com.izforge.izpack.util.NotEmptyValidator" />
@@ -265,25 +237,28 @@ ___INFO__MARK_END__-->
                 <param name="invalidfstypes" value="nfs"/>
                 <param name="default" value="true"/>
             </validator>
+            <validator id="cfg.db.spooling.dir.permissionvalidator" class="com.sun.grid.installer.gui.PermissionValidator" >
+                <param name="actions" value="write" />
+            </validator>
         </field>
-        <field type="dir" align="left" variable="add.db.spooling.dir.bdb" conditionid="!(cond.qmaster.on.localhost)+(cond.spooling.bdb|cond.spooling.classic)">
+        <field type="dir" align="left" variable="add.db.spooling.dir.bdbserver" conditionid="cond.spooling.bdbserver">
             <spec id="cfg.db.spooling.dir.label" size="35" />
             <dependency type="disable" refid="cfg.spooling.method" value="classic"/>
             <validator id="cfg.db.spooling.dir.notemptyvalidator" class="com.izforge.izpack.util.NotEmptyValidator" />
-        </field>
-        <field type="text" align="left" variable="add.db.spooling.dir.bdbserver" conditionid="cond.spooling.bdbserver">
-            <spec id="cfg.db.spooling.dir.label" size="35" />
-            <dependency type="disable" refid="cfg.spooling.method" value="classic"/>
-            <validator id="cfg.db.spooling.dir.notemptyvalidator" class="com.izforge.izpack.util.NotEmptyValidator" />
+            <!--<validator id="add.db.spooling.dir.bdbserver.filesystemtypevalidator" class="com.sun.grid.installer.gui.FileSystemTypeValidator" >
+                <param name="validfstypes" value="nfs4"/>
+                <param name="default" value="false"/>
+            </validator> -->
+            <!-- TODO permission validator?-->
         </field>
     </panel>
     <panel id="CSPPanel">
-        <!--<field type="check" variable="cfg.csp.recreate">
+        <field type="check" variable="cfg.csp.recreate">
             <spec align="left" id="cfg.csp.recreate.label" true="true" false="false" />
         </field>
         <field type="check" variable="cfg.csp.copy.certs">
             <spec align="left" id="cfg.csp.copy.certs.label" true="true" false="false" />
-        </field>-->
+        </field>
         <field type="text" variable="cfg.csp.country.code">
             <spec id="cfg.csp.country.code.label" size="25" />
             <validator id="cfg.csp.country.code.notemptyvalidator" class="com.izforge.izpack.util.NotEmptyValidator" />

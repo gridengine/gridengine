@@ -161,6 +161,7 @@ main(int argc, char **argv)
    int delay            = 0;
    time_t now, last;
 /*    const char *cp; */
+   fd_set fds;
    char err_str[1024];
    char shadowd_pidfile[SGE_PATH_MAX];
    dstring ds;
@@ -300,19 +301,11 @@ char qmaster_out_file[SGE_PATH_MAX];
    log_state_set_log_as_admin_user(1);
    log_state_set_log_file(shadow_err_file);
 
-   {
-      int* tmp_fd_array = NULL;
-      unsigned long tmp_fd_count = 0;
-
-      if (cl_com_set_handle_fds(cl_com_get_handle(prognames[SHADOWD] ,0), &tmp_fd_array, &tmp_fd_count) == CL_RETVAL_OK) {
-         sge_daemonize(tmp_fd_array, tmp_fd_count, ctx);
-         if (tmp_fd_array != NULL) {
-            free(tmp_fd_array);
-            tmp_fd_array = NULL;
-         }
-      } else {
-         sge_daemonize(NULL, 0, ctx);
-      }
+   FD_ZERO(&fds);
+   if (cl_com_set_handle_fds(cl_com_get_handle(prognames[SHADOWD] ,0), &fds) == CL_RETVAL_OK) {
+      sge_daemonize(&fds, ctx);
+   } else {
+      sge_daemonize(NULL, ctx);
    }
 
    /* shadowd pid file will contain aliased name */

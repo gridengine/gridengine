@@ -107,7 +107,6 @@ typedef struct _tCClEntry {
    int max_aj_tasks;
    int max_u_jobs;
    int max_jobs;
-   int max_advance_reservations;
    lList *cluster_users;
    lList *cluster_xusers;
    lList *cluster_projects;
@@ -250,10 +249,6 @@ XtResource ccl_resources[] = {
       sizeof(int), XtOffsetOf(tCClEntry, max_jobs), 
       XtRImmediate, NULL },
 
-   { "max_advance_reservations", "max_advance_reservations", XtRInt, 
-      sizeof(int), XtOffsetOf(tCClEntry, max_advance_reservations), 
-      XtRImmediate, NULL },
-
    { "cluster_users", "cluster_users", QmonRUS_Type,
       sizeof(lList *), XtOffsetOf(tCClEntry, cluster_users),
       XtRImmediate, NULL },
@@ -387,7 +382,6 @@ static Widget cluster_max_aj_instances = 0;
 static Widget cluster_max_aj_tasks = 0;
 static Widget cluster_max_u_jobs = 0;
 static Widget cluster_max_jobs = 0;
-static Widget cluster_max_advance_reservations = 0;
 static Widget cluster_zombie_jobs = 0;
 static Widget cluster_load_report_time = 0;
 static Widget cluster_load_report_timePB = 0;
@@ -722,7 +716,6 @@ Widget parent
                            "cluster_max_aj_tasks", &cluster_max_aj_tasks,
                            "cluster_max_u_jobs", &cluster_max_u_jobs,
                            "cluster_max_jobs", &cluster_max_jobs,
-                           "cluster_max_advance_reservations", &cluster_max_advance_reservations,
                            "cluster_zombie_jobs", &cluster_zombie_jobs,
                            "cluster_load_report_time", &cluster_load_report_time,
                            "cluster_load_report_timePB", 
@@ -1016,7 +1009,6 @@ static void qmonClusterLayoutSetSensitive(Boolean mode)
    XtSetSensitive(cluster_max_aj_tasks, mode);
    XtSetSensitive(cluster_max_u_jobs, mode);
    XtSetSensitive(cluster_max_jobs, mode);
-   XtSetSensitive(cluster_max_advance_reservations, mode);
    XtSetSensitive(cluster_zombie_jobs, mode);
    XtSetSensitive(cluster_max_unheard, mode);
    XtSetSensitive(cluster_max_unheardPB, mode);
@@ -1142,7 +1134,6 @@ int local
    char max_aj_tasks[255];
    char max_u_jobs[255];
    char max_jobs[255];
-   char max_advance_reservations[255];
    char zombie_jobs[20];
    static char buf[4*BUFSIZ];
    Boolean first;
@@ -1500,9 +1491,9 @@ int local
             incorrect_gid_range = 1;
          } else if (range_list_containes_id_less_than(range_list,
                                                     GID_RANGE_NOT_ALLOWED_ID)) {
+            lFreeList(&range_list);
             incorrect_gid_range = 1;
          }
-         lFreeList(&range_list);
 
          if (incorrect_gid_range) {
             strcpy(errstr, "Cannot parse GID Range !");
@@ -1591,10 +1582,6 @@ int local
       ep = lGetElemStr(confl, CF_name, "max_jobs");
       sprintf(max_jobs, "%d", clen->max_jobs);
       lSetString(ep, CF_value, max_jobs);
-
-      ep = lGetElemStr(confl, CF_name, "max_advance_reservations");
-      sprintf(max_advance_reservations, "%d", clen->max_advance_reservations);
-      lSetString(ep, CF_value, max_advance_reservations);
 
       ep = lGetElemStr(confl, CF_name, "finished_jobs");
       sprintf(zombie_jobs, "%d", clen->zombie_jobs);
@@ -1743,9 +1730,9 @@ int local
             incorrect_gid_range = 1;
          } else if (range_list_containes_id_less_than(range_list,
                                                    GID_RANGE_NOT_ALLOWED_ID)) {
+            lFreeList(&range_list);
             incorrect_gid_range = 1;
          }
-         lFreeList(&range_list);
 
          if (incorrect_gid_range) {
             strcpy(errstr, "Cannot parse GID Range !");
@@ -2065,7 +2052,6 @@ tCClEntry *clen
    StringConst max_aj_tasks;
    StringConst max_u_jobs;
    StringConst max_jobs;
-   StringConst max_advance_reservations;
    StringConst zombie_jobs;
    StringConst auto_user_fshare;
    StringConst auto_user_oticket;
@@ -2112,10 +2098,6 @@ tCClEntry *clen
    if ((ep = lGetElemStr(confl, CF_name, "max_jobs"))) {
       max_jobs = (StringConst)lGetString(ep, CF_value);
       clen->max_jobs = max_jobs ? atoi(max_jobs) : 0;
-   }
-   if ((ep = lGetElemStr(confl, CF_name, "max_advance_reservations"))) {
-      max_advance_reservations = (StringConst)lGetString(ep, CF_value);
-      clen->max_advance_reservations = max_advance_reservations ? atoi(max_advance_reservations) : 0;
    }
    if ((ep = lGetElemStr(confl, CF_name, "finished_jobs"))) {
       zombie_jobs = (StringConst)lGetString(ep, CF_value);
@@ -2416,7 +2398,6 @@ tCClEntry *clen
    clen->max_aj_tasks = 0;
    clen->max_u_jobs = 0;
    clen->max_jobs = 0;
-   clen->max_advance_reservations = 0;
    if (clen->load_report_time) {
       XtFree((char*)clen->load_report_time);
       clen->load_report_time = NULL;

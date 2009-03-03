@@ -1,5 +1,5 @@
 /*
- * $Id: InstallerFrame.java,v 1.2 2009/01/26 11:30:58 zsiga Exp $
+ * $Id: InstallerFrame.java,v 1.1 2008/11/27 12:06:48 petrik Exp $
  * IzPack - Copyright 2001-2008 Julien Ponge, All Rights Reserved.
  * 
  * http://izpack.org/
@@ -1411,7 +1411,7 @@ public class InstallerFrame extends JFrame
     /**
      * Makes a clean closing.
      */
-    public void exit(boolean forced)
+    public void exit()
     {
         if (installdata.canClose ||
                 ((!nextButton.isVisible() || !nextButton.isEnabled()) &&
@@ -1430,10 +1430,6 @@ public class InstallerFrame extends JFrame
                 interruptCount++;
                 return;
             }
-
-            // Show the log file
-            //System.out.println("Log file '" + Debug.LOGFILENAME + "' has been created in '" + System.getProperty("java.io.tmpdir") + "'.");
-
             // Use a alternate message and title if defined.
             final String mkey = "installer.quit.reversemessage";
             final String tkey = "installer.quit.reversetitle";
@@ -1453,12 +1449,8 @@ public class InstallerFrame extends JFrame
             VariableSubstitutor vs = new VariableSubstitutor(installdata.getVariables());
             message = vs.substitute(message, null);
             title = vs.substitute(title, null);
-
-            int res = JOptionPane.YES_OPTION;
-            if (!forced) {
-                res = JOptionPane.showConfirmDialog(this, message, title, JOptionPane.YES_NO_OPTION);
-            }
-            
+            int res = JOptionPane
+                    .showConfirmDialog(this, message, title, JOptionPane.YES_NO_OPTION);
             if (res == JOptionPane.YES_OPTION)
             {
                 wipeAborted();
@@ -1895,7 +1887,7 @@ public class InstallerFrame extends JFrame
             }
             else if (source == quitButton)
             {
-                exit(false);
+                exit();
             } else if (helpButton != null && source == helpButton) {
                 showHelp();
             }
@@ -1918,7 +1910,7 @@ public class InstallerFrame extends JFrame
         public void windowClosing(WindowEvent e)
         {
             // We ask for confirmation
-            exit(false);
+            exit();
         }
 
         /**

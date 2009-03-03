@@ -59,7 +59,6 @@
 #include "sge_answer.h"
 #include "execd.h"
 #include "sgeobj/sge_object.h"
-#include "sgeobj/sge_job.h"
 
 #include "msg_common.h"
 #include "msg_execd.h"
@@ -266,7 +265,7 @@ int main(int argc, char **argv)
    
    /* finalize daeamonize */
    if (!getenv("SGE_ND")) {
-      sge_daemonize_finalize(ctx);
+      daemonize_execd(ctx);
    }
 
    /* daemonizes if qmaster is unreachable */   
@@ -286,11 +285,10 @@ int main(int argc, char **argv)
    
    /* here we have to wait for qmaster registration */
    while (sge_execd_register_at_qmaster(ctx, false) != 0) {
-      if (sge_get_com_error_flag(EXECD, SGE_COM_ACCESS_DENIED, true)) {
-         /* This is no error */
-         DPRINTF(("*****  got SGE_COM_ACCESS_DENIED from qmaster  *****\n"));
-      }
-      if (sge_get_com_error_flag(EXECD, SGE_COM_ENDPOINT_NOT_UNIQUE, false)) {
+      if (sge_get_com_error_flag(EXECD, SGE_COM_ACCESS_DENIED, false)) {
+         execd_exit_state = SGE_COM_ACCESS_DENIED;
+         break;
+      } else if (sge_get_com_error_flag(EXECD, SGE_COM_ENDPOINT_NOT_UNIQUE, false)) {
          execd_exit_state = SGE_COM_ENDPOINT_NOT_UNIQUE;
          break;
       }
@@ -460,7 +458,7 @@ int sge_execd_register_at_qmaster(sge_gdi_ctx_class_t *ctx, bool is_restart) {
     * gdi will return with timeout after one minute. If qmaster is not alive
     * we will not try a gdi request!
     */
-   if (master_host != NULL && ctx->is_alive(ctx) == CL_RETVAL_OK) {
+   if (ctx->is_alive(ctx) == CL_RETVAL_OK) {
       lList *hlp = lCreateList("exechost starting", EH_Type);
       lListElem *hep = lCreateElem(EH_Type);
       lSetUlong(hep, EH_featureset_id, feature_get_active_featureset_id());
@@ -642,60 +640,3 @@ static lList *sge_parse_execd(lList **ppcmdline, lList **ppreflist,
    return alp;
 }
 
-/* JG: TODO: we have this searching code in many places!! */
-/****** execd/execd_get_job_ja_task() ******************************************
-*  NAME
-*     execd_get_job_ja_task() -- search job and ja_task by id
-*
-*  SYNOPSIS
-*     bool
-*     execd_get_job_ja_task(u_long32 job_id, u_long32 ja_task_id,
-*                           lListElem **job, lListElem **ja_task) 
-*
-*  FUNCTION
-*     Searches the execd master lists for job and ja_task
-*     defined by job_id and ja_task_id.
-*
-*  INPUTS
-*     u_long32 job_id     - job id
-*     u_long32 ja_task_id - ja_task id
-*     lListElem **job     - returns job or NULL if not found
-*     lListElem **ja_task - returns ja_task or NULL if not found
-*
-*  RESULT
-*     bool - true if both job and ja_task are found, else false
-*
-*  NOTES
-*     MT-NOTE: execd_get_job_ja_task() is MT safe 
-*******************************************************************************/
-bool execd_get_job_ja_task(u_long32 job_id, u_long32 ja_task_id, lListElem **job, lListElem **ja_task)
-{
-   const void *iterator = NULL;
-
-   DENTER(TOP_LAYER, "execd_get_job_ja_task");
-
-   *job = lGetElemUlongFirst(*(object_type_get_master_list(SGE_TYPE_JOB)),
-                            JB_job_number, job_id, &iterator);
-   while (*job != NULL) {
-      *ja_task = job_search_task(*job, NULL, ja_task_id);
-      if (*ja_task != NULL) {
-         DRETURN(true);
-      }
-
-      /* in execd, we have exactly one ja_task per job,
-       * therefore we can have multiple jobs with the same job_id
-       */
-      *job = lGetElemUlongNext(*(object_type_get_master_list(SGE_TYPE_JOB)),
-                               JB_job_number, job_id, &iterator);
-   }
-   
-   if (*job == NULL) {
-      ERROR((SGE_EVENT, MSG_JOB_TASKWITHOUTJOB_U, sge_u32c(job_id))); 
-   } else if (*ja_task == NULL) { 
-      ERROR((SGE_EVENT, MSG_JOB_TASKNOTASKINJOB_UU, sge_u32c(job_id), sge_u32c(ja_task_id)));
-   }
-
-   *job = NULL;
-   *ja_task = NULL;
-   DRETURN(false);
-}

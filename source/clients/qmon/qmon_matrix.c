@@ -484,15 +484,6 @@ Cardinal size
    else if ( type == QmonQUA_Type )
       lp = qmonGet2xN(w, UA_Type, UA_name, UA_value);
 
-#if 0
-   /* 
-    * AA-2009-02-12
-    * leads to crash reverting memory leak fix in qmon_qaction.c
-    */
-   if (*(lList**)address != NULL) {
-      lFreeList((lList**)address);
-   }   
-#endif   
    *(lList**)address = lp;
 }
 

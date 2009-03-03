@@ -49,13 +49,13 @@ DESCRIPTION
   drmaa_get_contact()
      The drmaa_get_contact() returns an opaque string  containing
      contact  information related to the current DRMAA session to
-     be used with the <B><A HREF="../htmlman3/drmaa_init.html?pathrev=V62u2_TAG">drmaa_init(3)</A></B> function. The  opaque  string
+     be used with the <B><A HREF="../htmlman3/drmaa_init.html">drmaa_init(3)</A></B> function. The  opaque  string
      contains  the information required by drmaa_init() to recon-
      nect to the current session instead of creating a  new  ses-
-     sion.  <B><A HREF="../htmlman3/drmaa_init.html?pathrev=V62u2_TAG">drmaa_init(3)</A></B> function.
+     sion.  <B><A HREF="../htmlman3/drmaa_init.html">drmaa_init(3)</A></B> function.
 
      The drmaa_get_contact()  function  returns  the  same  value
-     before and after <B><A HREF="../htmlman3/drmaa_init.html?pathrev=V62u2_TAG">drmaa_init(3)</A></B> is called.
+     before and after <B><A HREF="../htmlman3/drmaa_init.html">drmaa_init(3)</A></B> is called.
 
   drmaa_version()
      The  drmaa_version()  function  returns  into  the  integers
@@ -66,49 +66,48 @@ DESCRIPTION
 
   drmaa_get_DRM_system()
      The drmaa_get_DRM_system() function returns into  <I>drm</I>_<I>system</I>
-     up  to  <I>drm</I>_<I>system</I>_<I>len</I> characters of a string containing Sun
-     Grid Engine product and version information.
+     up  to <I>drm</I>_<I>system</I>_<I>len</I> characters of a string containing Grid
+     Engine product and version information.
 
      The drmaa_get_DRM_system() function returns the  same  value
-     before and after <B><A HREF="../htmlman3/drmaa_init.html?pathrev=V62u2_TAG">drmaa_init(3)</A></B> is called.
+     before and after <B><A HREF="../htmlman3/drmaa_init.html">drmaa_init(3)</A></B> is called.
 
   drmaa_get_DRMAA_implementation()
      The drmaa_get_DRMAA_implementation() function  returns  into
      <I>drm</I>_<I>system</I>  up to <I>drm</I>_<I>system</I>_<I>len</I> characters of a string con-
-     taining the Sun Grid  Engine  DRMAA  implementation  version
-     information.     In    the   current   implementation,   the
+     taining the Grid Engine DRMAA implementation version  infor-
+     mation.      In     the    current    implementation,    the
      drmaa_get_DRMAA_implementation() function returns  the  same
      result as the drmaa_get_DRM_system() function.
 
      The drmaa_get_DRMAA_implementation()  function  returns  the
-     same value before and after <B><A HREF="../htmlman3/drmaa_init.html?pathrev=V62u2_TAG">drmaa_init(3)</A></B> is called.
+     same value before and after <B><A HREF="../htmlman3/drmaa_init.html">drmaa_init(3)</A></B> is called.
 
 ENVIRONMENTAL VARIABLES
-     SGE_ROOT       Specifies the location of the Sun Grid Engine
+     GE_ROOT        Specifies the location  of  the  Grid  Engine
                     standard configuration files.
 
-     SGE_CELL       If set, specifies the default Sun Grid Engine
-                    cell to be used. To address a Sun Grid Engine
-                    cell Sun Grid Engine uses (in  the  order  of
-                    precedence):
+     GE_CELL        If set, specifies  the  default  Grid  Engine
+                    cell  to  be  used.  To address a Grid Engine
+                    cell Grid Engine uses (in the order  of  pre-
+                    cedence):
 
                          The name of the cell  specified  in  the
-                         environment  variable SGE_CELL, if it is
+                         environment  variable  GE_CELL, if it is
                          set.
 
                          The  name  of  the  default  cell,  i.e.
                          default.
 
 
-     SGE_DEBUG_LEVEL
-                    If  set,  specifies  that  debug  information
+     GE_DEBUG_LEVEL If  set,  specifies  that  debug  information
                     should  be written to stderr. In addition the
                     level of detail in which debug information is
                     generated is defined.
 
-     SGE_QMASTER_PORT
+     GE_QMASTER_PORT
                     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u2_TAG">sge_qmaster(8)</A></B> is expected to listen for com-
+                    <B><A HREF="../htmlman8/ge_qmaster.html">ge_qmaster(8)</A></B>  is expected to listen for com-
                     munication requests.  Most installations will
                     use  a  services  map entry instead to define
                     that port.
@@ -149,7 +148,8 @@ ERRORS
      Failed because there is no active session.
 
 SEE ALSO
-     <B><A HREF="../htmlman3/drmaa_session.html?pathrev=V62u2_TAG">drmaa_session(3)</A></B>.
+     <B><A HREF="../htmlman3/drmaa_session.html">drmaa_session(3)</A></B>.
+
 
 
 

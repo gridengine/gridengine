@@ -84,7 +84,6 @@
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
 #include "msg_evmlib.h"
-#include "msg_qmaster.h"
  
 #include "sge_event_master.h"
 
@@ -356,10 +355,9 @@ static void       check_send_new_subscribed_list(const subscription_t*,
                                                  ev_event event, object_description *master_table);
 static int        eventclient_subscribed(const lListElem *, ev_event, const char*);
 static int        purge_event_list(lList* aList, u_long32 event_number); 
-
-static lListElem* sge_create_event(u_long32, u_long32, u_long32, ev_event, u_long32, u_long32, const char*, const char*, const char*, lList*);
-static bool       add_list_event_for_client(u_long32, u_long32, ev_event, u_long32, u_long32, const char*, const char*, const char*, lList*);
-static void       add_list_event_direct(lListElem *event_client, lListElem *event, bool copy_event);
+static bool       add_list_event_for_client(u_long32, u_long32, ev_event, u_long32, u_long32, const char*, const char*, const char*, lList*, bool);
+static void       add_list_event_direct(lListElem *event_client,
+                                        lListElem *event, bool copy_event);
 static void       total_update_event(lListElem*, ev_event, object_description *master_table, bool new_subscription);
 static bool       list_select(subscription_t*, int, lList**, lList*, const lCondition*, const lEnumeration*, const lDescr*, bool);
 static lListElem* elem_select(subscription_t*, lListElem*, const int[], const lCondition*, const lEnumeration*, const lDescr*, int);    
@@ -1134,7 +1132,8 @@ int sge_shutdown_event_client(u_long32 event_client_id, const char* anUser,
          DRETURN(EPERM);
       }
 
-      add_list_event_for_client(event_client_id, 0, sgeE_SHUTDOWN, 0, 0, NULL, NULL, NULL, NULL);
+      add_list_event_for_client(event_client_id, 0, sgeE_SHUTDOWN, 0, 0, NULL, NULL,
+                                NULL, NULL, true);
 
       /* Print out a message about the event. */
       if (event_client_id == EV_ID_SCHEDD) {
@@ -1331,7 +1330,7 @@ bool sge_add_event_for_client(u_long32 event_client_id, u_long32 timestamp, ev_e
    }
 
    ret = add_list_event_for_client(event_client_id, timestamp, type, intkey, intkey2,
-                                   strkey, strkey2, session, lp);
+                                   strkey, strkey2, session, lp, false);
 
    DRETURN(ret);
 }
@@ -1410,79 +1409,8 @@ bool sge_add_list_event(u_long32 timestamp, ev_event type,
    }
 
    ret = add_list_event_for_client(EV_ID_ANY, timestamp, type, intkey, intkey2,
-                                   strkey, strkey2, session, lp);
+                                   strkey, strkey2, session, lp, false);
    return ret;
-}
-
-/****** Eventclient/Server/sge_create_event() ********************************
-*  NAME
-*     sge_add_list_event() -- add a list as event
-*
-*  SYNOPSIS
-*     #include "sge_event_master.h"
-*
-*     static lListElem* sge_create_event(u_long32    event_client_id,
-*                                        u_long32    number,
-*                                        u_long32    timestamp,
-*                                        ev_event    type,
-*                                        u_long32    intkey,
-*                                        u_long32    intkey2,
-*                                        const char *strkey,
-*                                        const char *strkey2,
-*                                        const char *session,
-*                                        lList      *list)
-*
-*  FUNCTION
-*     Create ET_Type element and fill in the specified parameters.
-*     The caller is responsible for freeing the memory again.
-*
-*  INPUTS
-*     u_long32 event_client_id - event client id
-*     u_long32    number       - the event number
-*     u_long32 timestamp       - event creation time, 0 -> use current time
-*     ev_event type            - the event id
-*     u_long32 intkey          - additional data
-*     u_long32 intkey2         - additional data
-*     const char *strkey       - additional data
-*     const char *strkey2      - additional data
-*     const char *session      - events session key
-*     lList *list              - the list to deliver as event
-*
-*  NOTES
-*     MT-NOTE: sge_add_list_event() is MT safe.
-*
-*******************************************************************************/
-static lListElem* sge_create_event(u_long32    event_client_id,
-                                   u_long32    number,
-                                   u_long32    timestamp,
-                                   ev_event    type,
-                                   u_long32    intkey,
-                                   u_long32    intkey2,
-                                   const char *strkey,
-                                   const char *strkey2,
-                                   const char *session,
-                                   lList      *list)
-{
-   lListElem *etp = NULL;        /* event object */
-
-   DENTER(TOP_LAYER, "sge_create_event");
-
-   /* an event needs a timestamp */
-   if (timestamp == 0) {
-      timestamp = sge_get_gmt();
-   }
-
-   etp = lCreateElem(ET_Type);
-   lSetUlong(etp, ET_number, number);
-   lSetUlong(etp, ET_type, type);
-   lSetUlong(etp, ET_timestamp, timestamp);
-   lSetUlong(etp, ET_intkey, intkey);
-   lSetUlong(etp, ET_intkey2, intkey2);
-   lSetString(etp, ET_strkey, strkey);
-   lSetString(etp, ET_strkey2, strkey2);
-   lSetList(etp, ET_new_version, list);
-
-   DRETURN(etp);
 }
 
 /****** Eventclient/Server/add_list_event_for_client() *************************
@@ -1522,22 +1450,18 @@ static lListElem* sge_create_event(u_long32    event_client_id,
 *     MT-NOTE: add_list_event_for_client() is MT safe.
 *
 *******************************************************************************/
-static bool add_list_event_for_client(u_long32    event_client_id,
-                                      u_long32    timestamp,
-                                      ev_event    type,
-                                      u_long32    intkey,
-                                      u_long32    intkey2,
-                                      const char *strkey,
-                                      const char *strkey2,
-                                      const char *session,
-                                      lList      *list)
+static bool add_list_event_for_client(u_long32 event_client_id, u_long32 timestamp,
+                                      ev_event type, u_long32 intkey,
+                                      u_long32 intkey2, const char *strkey,
+                                      const char *strkey2, const char *session,
+                                      lList *list, bool has_lock)
 {
    lListElem *evr = NULL;        /* event request object */
    lList *etlp = NULL;           /* event list */
    lListElem *etp = NULL;        /* event object */
 
    DENTER(TOP_LAYER, "add_list_event_for_client");
- 
+
    /* an event needs a timestamp */
    if (timestamp == 0) {
       timestamp = sge_get_gmt();
@@ -1552,14 +1476,16 @@ static bool add_list_event_for_client(u_long32    event_client_id,
    etlp = lCreateListHash("Event_List", ET_Type, false);
    lSetList(evr, EVR_event_list, etlp);
 
-   /* 
-    * Create a new event elem (The event number is added when
-    * qmaster adds the event to the event client data structure)
-    */
-   etp = sge_create_event(event_client_id, 0, timestamp, type, intkey, intkey2,
-                          strkey, strkey2, session, list);
+   etp = lCreateElem(ET_Type); /* actual event object */
    lAppendElem(etlp, etp);
 
+   lSetUlong(etp, ET_type, type);
+   lSetUlong(etp, ET_timestamp, timestamp);
+   lSetUlong(etp, ET_intkey, intkey);
+   lSetUlong(etp, ET_intkey2, intkey2);
+   lSetString(etp, ET_strkey, strkey);
+   lSetString(etp, ET_strkey2, strkey2);
+   lSetList(etp, ET_new_version, list);
 
    /* 
     * if we have a transaction open, add to the transaction 
@@ -1580,7 +1506,7 @@ static bool add_list_event_for_client(u_long32    event_client_id,
    }
 
    DRETURN(true);
-}
+} /* end add_list_event_for_client */
 
 /* add an event from the request list to the event clients which subscribed it */
 static void sge_event_master_process_send(lListElem *request, monitoring_t *monitor)
@@ -1686,14 +1612,14 @@ static void sge_event_master_process_send(lListElem *request, monitoring_t *moni
 *     ev_event event_number   - serial number of the last event to acknowledge
 *
 *  RESULT
-*     bool - true on success, false on error
+*     void - none
 *
 *  NOTES
 *     MT-NOTE: sge_handle_event_ack() is MT safe.
 *
 *
 *******************************************************************************/
-bool sge_handle_event_ack(u_long32 event_client_id, u_long32 event_number)
+void sge_handle_event_ack(u_long32 event_client_id, u_long32 event_number)
 {
    lListElem *evr = NULL;
 
@@ -1710,7 +1636,8 @@ bool sge_handle_event_ack(u_long32 event_client_id, u_long32 event_number)
    sge_mutex_unlock("event_master_request_mutex", SGE_FUNC, __LINE__, &Event_Master_Control.request_mutex);
 
    set_flush();
-   DRETURN(true);
+  
+   DRETURN_VOID;
 }
 
 static void sge_event_master_process_ack(lListElem *request, monitoring_t *monitor)
@@ -1921,7 +1848,6 @@ static void init_send_events(void)
    SEND_EVENTS[sgeE_PE_LIST] = true;
    SEND_EVENTS[sgeE_PROJECT_LIST] = true;
    SEND_EVENTS[sgeE_QMASTER_GOES_DOWN] = true;
-   SEND_EVENTS[sgeE_ACK_TIMEOUT] = true;
    SEND_EVENTS[sgeE_CQUEUE_LIST] = true;
    SEND_EVENTS[sgeE_SUBMITHOST_LIST] = true;
    SEND_EVENTS[sgeE_USER_LIST] = true;
@@ -2080,20 +2006,17 @@ void sge_event_master_send_events(sge_gdi_ctx_class_t *ctx, lListElem *report, l
    int ret;
    int commid; 
    int deliver_interval;
-   u_long32 now;
+   time_t now = time(NULL);
    u_long32 ec_id = 0;
    event_client_update_func_t update_func = NULL;
 
    DENTER(TOP_LAYER, "sge_event_master_send_events");
 
    sge_mutex_lock("event_master_mutex", SGE_FUNC, __LINE__, &Event_Master_Control.mutex);
-
-   now = sge_get_gmt();
    event_client = lFirst(Event_Master_Control.clients);
    while (event_client != NULL) {
       const char *host = NULL;
       const char *commproc = NULL;
-      bool do_remove = false;
 
       next_event_client = lNext(event_client);
 
@@ -2119,9 +2042,8 @@ void sge_event_master_send_events(sge_gdi_ctx_class_t *ctx, lListElem *report, l
       deliver_interval = lGetUlong(event_client, EV_d_time);
       busy_handling = lGetUlong(event_client, EV_busy_handling);
 
-      /* someone turned the clock back */
+      /* somone turned the clock back */
       if (lGetUlong(event_client, EV_last_heard_from) > now) {
-         WARNING((SGE_EVENT, MSG_SYSTEM_SYSTEMHASBEENMODIFIEDXSECONDS_I, (int)(now - lGetUlong(event_client, EV_last_heard_from))));
          lSetUlong(event_client, EV_last_heard_from, now);
          lSetUlong(event_client, EV_next_send_time, now + deliver_interval);
       } else if (lGetUlong(event_client, EV_last_send_time)  > now) {
@@ -2129,11 +2051,11 @@ void sge_event_master_send_events(sge_gdi_ctx_class_t *ctx, lListElem *report, l
       }
   
       /* if set, use qmaster_params SCHEDULER_TIMEOUT */
-      if (ec_id == EV_ID_SCHEDD && scheduler_timeout > 0) {
+      if (scheduler_timeout > 0) {
          timeout = scheduler_timeout;
       } else {
          /* is the ack timeout expired ? */
-         timeout = 10 * deliver_interval;
+         timeout = 10*deliver_interval;
          
          if (timeout < EVENT_ACK_MIN_TIMEOUT) {
             timeout = EVENT_ACK_MIN_TIMEOUT;
@@ -2142,55 +2064,17 @@ void sge_event_master_send_events(sge_gdi_ctx_class_t *ctx, lListElem *report, l
          }
       }
 
-      /* 
-       * Remove timed-out clients after flushing events for the targeted client. 
-       * Flush event sgeE_ACK_TIMEOUT for out-timed clients. Clients might re-connect
-       * when getting sgeE_ACK_TIMEOUT event. 
-       */
       if (now > (lGetUlong(event_client, EV_last_heard_from) + timeout)) {
-         lListElem *new_event = NULL;
-         lList* tmp_event_list = NULL;
-         lUlong tmp_cur_event_nr = 0;
-         dstring buffer_wrapper;
-         char buffer[256];
-
-         DPRINTF(("EVC timeout (%d s) (part 1/2)\n", timeout));
-         WARNING((SGE_EVENT, MSG_COM_ACKTIMEOUT4EV_ISIS, (int) timeout, commproc, (int) commid, host));
-
-         /* yes, we have to remove this client after sending the sgeE_ACK_TIMEOUT event */
-         do_remove = true;
-
-         /* Create new ACK_TIMEOUT event and add it directly to the client event list */
-         tmp_cur_event_nr = lGetUlong(event_client, EV_next_number);
-         new_event = sge_create_event(ec_id, tmp_cur_event_nr, now, sgeE_ACK_TIMEOUT, 0, 0, NULL, NULL, NULL, NULL);
-         tmp_event_list = lGetList(event_client, EV_events);
-
-         if (tmp_event_list != NULL) {
-            lAppendElem(tmp_event_list, new_event);
-            DPRINTF(("Added sgeE_ACK_TIMEOUT to already existing event report list\n"));
-         } else {
-            tmp_event_list = lCreateListHash("Events", ET_Type, false);
-            lAppendElem(tmp_event_list, new_event);
-            lSetList(event_client, EV_events, tmp_event_list);
-            DPRINTF(("Created new Events list with sgeE_ACK_TIMEOUT event\n"));
-         }
-
-         /* We have to set the correct next event number */
-         lSetUlong(event_client, EV_next_number, tmp_cur_event_nr + 1);
-
-         /* We log the new added sgeE_ACK_TIMEOUT event */
-         sge_dstring_init(&buffer_wrapper, buffer, sizeof(buffer));
-         DPRINTF(("%d %s\n", ec_id, event_text(new_event, &buffer_wrapper)));
-
-         /* Set next send time to now, we want to deliver it */
-         lSetUlong(event_client, EV_next_send_time, (lUlong) now);
+         ERROR((SGE_EVENT, MSG_COM_ACKTIMEOUT4EV_ISIS, (int) timeout, commproc, 
+                  (int) commid, host));
+         remove_event_client(&event_client, ec_id, false);
+         event_client = next_event_client;
+         continue; /* while */
       }
 
       /* do we have to deliver events ? */
       if (now >= lGetUlong(event_client, EV_next_send_time)) {
-         if (( busy_handling == EV_THROTTLE_FLUSH) ||
-              !lGetUlong(event_client, EV_busy)    ||
-               do_remove == true) {
+         if ((busy_handling == EV_THROTTLE_FLUSH) || !lGetUlong(event_client, EV_busy)) {
             lList *lp = NULL;
 
             /* put only pointer in report - dont copy */
@@ -2238,16 +2122,6 @@ void sge_event_master_send_events(sge_gdi_ctx_class_t *ctx, lListElem *report, l
          }
       } /*if */
 
-      /*
-       * if we have to remove the event client because of timeout we do it now, because
-       * sgeE_ACK_TIMEOUT event was delivered.
-       */
-      if (do_remove == true) {
-         DPRINTF(("REMOVE EVC because of timeout (%d s) (part 2/2)\n", timeout));
-         ERROR((SGE_EVENT, MSG_COM_ACKTIMEOUT4EV_SIS, commproc, (int) commid, host));
-         remove_event_client(&event_client, ec_id, false);
-      }
-
       event_client = next_event_client;
    } /* while */
    
@@ -2284,10 +2158,9 @@ static void flush_events(lListElem *event_client, int interval)
             down with the busy counter */
          flush_delay = MAX(flush_delay, ed_time * busy_counter / flush_delay_rate);
       }
-
-      next_send = MAX(next_send, lGetUlong(event_client, EV_last_send_time) + flush_delay);
    }
 
+   next_send = MAX(next_send, lGetUlong(event_client, EV_last_send_time) + flush_delay);
    lSetUlong(event_client, EV_next_send_time, next_send);
 
    if (now >= next_send) {
@@ -2913,7 +2786,8 @@ static void total_update_event(lListElem *event_client, ev_event type, object_de
       }
 
       /* 'send_events()' will free the copy of 'lp' */
-      add_list_event_for_client(id, 0, type, 0, 0, NULL, NULL, NULL, copy_lp);
+      add_list_event_for_client(id, 0, type, 0, 0, NULL, NULL, NULL,
+                                copy_lp, false);
    } /* if */
 
    DRETURN_VOID;

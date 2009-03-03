@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: project.5,v $     Last Update: $Date: 2009/01/13 10:15:29 $     Revision: $Revision: 1.9 $
+.\" $RCSfile: project.5,v $     Last Update: $Date: 2007/02/14 12:58:40 $     Revision: $Revision: 1.8 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH PROJECT 5 "$Date: 2009/01/13 10:15:29 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH PROJECT 5 "$Date: 2007/02/14 12:58:40 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 project \- xxQS_NAMExx project entry file format
@@ -67,9 +67,6 @@ The current functional share of the project.
 A list of user access lists (ACLs - see
 .M access_list 5 )
 referring to those users being allowed to submit jobs to the project.
-.PP
-If the \fBacl\fP parameter is set to NONE, all users are allowed to submit jobs
-to the project except for those listed in \fBxacl\fP parameter described below.
 .SS "\fBxacl\fP"
 A list of user access lists (ACLs - see
 .M access_list 5 )

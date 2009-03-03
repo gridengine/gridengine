@@ -57,46 +57,54 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
+import javax.print.PrintService;
+import javax.print.PrintServiceLookup;
 import javax.swing.*;
 
 public class ResultPanel extends IzPanel implements Printable, Config {
+	/**
+	 * The info string.
+	 */
+	private JEditorPane editorPane =null;
+	
+	private String readmeTemplatePath = "";
+	private String readmePath = "";
 
-    /**
-     * The info string.
-     */
-    private JEditorPane editorPane = null;
-    private String readmeTemplatePath = "";
-    private String readmePath = "";
+	/**
+	 * The constructor.
+	 *
+	 * @param parent The parent window.
+	 * @param idata  The installation data.
+	 */
+	public ResultPanel(InstallerFrame parent, InstallData idata) {
+		super(parent, idata, new IzPanelLayout());
 
-    /**
-     * The constructor.
-     *
-     * @param parent The parent window.
-     * @param idata  The installation data.
-     */
-    public ResultPanel(InstallerFrame parent, InstallData idata) {
-        super(parent, idata, new IzPanelLayout());
+		VariableSubstitutor vs = new VariableSubstitutor(idata.getVariables());
+		
+		readmeTemplatePath = vs.substituteMultiple(idata.getVariable(VAR_README_TEMP_FILE), null);
+		readmePath = vs.substituteMultiple(idata.getVariable(VAR_README_FILE), null);
+        readmePath = insertTimeStampToFileName(readmePath);
 
-        // The info label.
-        add(LabelFactory.create(parent.langpack.getString("result.info.label"),
-                parent.icons.getImageIcon("edit"), LEADING), NEXT_LINE);
-        // The text area which shows the info.
-        editorPane = new JEditorPane();
-        editorPane.setCaretPosition(0);
-        editorPane.setContentType("text/html");
-        editorPane.setEditable(false);
+		// The info label.
+		add(LabelFactory.create(parent.langpack.getString("result.info.label"),
+				parent.icons.getImageIcon("edit"), LEADING), NEXT_LINE);
+		// The text area which shows the info.
+		editorPane = new JEditorPane();
+		editorPane.setCaretPosition(0);
+		editorPane.setContentType("text/html");
+		editorPane.setEditable(false);
         editorPane.setBackground(Color.white);
-        JScrollPane scroller = new JScrollPane(editorPane);
+		JScrollPane scroller = new JScrollPane(editorPane);
 
         JButton saveButton = ButtonFactory.createButton(parent.langpack.getString("button.save.label"), parent.icons.getImageIcon("save"), idata.buttonsHColor);
         saveButton.setToolTipText(parent.langpack.getString("button.save.tooltip"));
         saveButton.addActionListener(new ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 final JFileChooser fc = new JFileChooser();
                 fc.setDialogType(JFileChooser.SAVE_DIALOG);
                 fc.setMultiSelectionEnabled(false);
-                int ret = fc.showSaveDialog(ResultPanel.this.getParent());
+                int ret = fc.showOpenDialog(ResultPanel.this.getParent());
                 if (ret == JFileChooser.APPROVE_OPTION) {
                     try {
                         File f = fc.getSelectedFile();
@@ -108,7 +116,7 @@ public class ResultPanel extends IzPanel implements Printable, Config {
                     } catch (IOException ex) {
                         Debug.error(ex);
                     }
-
+                    
                 }
             }
         });
@@ -116,7 +124,6 @@ public class ResultPanel extends IzPanel implements Printable, Config {
         JButton printButton = ButtonFactory.createButton(parent.langpack.getString("button.print.label"), parent.icons.getImageIcon("print"), idata.buttonsHColor);
         printButton.setToolTipText(parent.langpack.getString("button.print.tooltip"));
         printButton.addActionListener(new ActionListener() {
-
             public void actionPerformed(ActionEvent e) {
                 PrinterJob job = PrinterJob.getPrinterJob();
                 job.setPrintable(ResultPanel.this);
@@ -137,61 +144,41 @@ public class ResultPanel extends IzPanel implements Printable, Config {
         add(scroller, NEXT_LINE);
         add(buttonPanel, NEXT_LINE);
 
-        // At end of layouting we should call the completeLayout method also they do nothing.
-        getLayoutHelper().completeLayout();
-    }
+		// At end of layouting we should call the completeLayout method also they do nothing.
+		getLayoutHelper().completeLayout();
+	}
 
-    /**
-     * Loads the info text.
-     */
-    private void loadResult() {
-        try {
-            VariableSubstitutor vs = new VariableSubstitutor(idata.getVariables());
-            readmeTemplatePath = vs.substituteMultiple(idata.getVariable(VAR_README_TEMP_FILE), null);
-
-            readmePath = vs.substituteMultiple(idata.getVariable(VAR_README_FILE_NAME_1), null);
-            readmePath += "_" + Util.generateTimeStamp() + ".html";
-            //TODO: Detect whole cluster settings
-            // Features - bootstrap (CSP, AFS, JMX)
-            // spooling - bootstrap (BDB server, bdb, classic)
-            // qmaster - act_qmaster
-            // shadowds - shadow_masters
-            // execd - qconf -sel
-            // submit hosts - qconf -ss
-            // admin hosts - qconf -sh
-            Util.fillUpTemplate(readmeTemplatePath, readmePath, idata.getVariables());
-            Debug.trace("Generating readme.html file: '" + readmePath + "'.");
-
-            editorPane.setPage("file://" + readmePath);
-
-            String  readmePath2 = vs.substituteMultiple(idata.getVariable(VAR_README_FILE_NAME_2), null);
-            readmePath2 += "_" + Util.generateTimeStamp() + ".html";
-
-            Util.fillUpTemplate(readmeTemplatePath, readmePath2, idata.getVariables());
-        } catch (Exception e) {
-            Debug.error("Can not generate readme file! " + e);
-        }
-    }
-
-    @Override
-    public void panelActivate() {
-        parent.lockNextButton();
+	/**
+	 * Loads the info text.
+	 */
+	private void loadResult() {
+		try {
+			Util.fillUpTemplate(readmeTemplatePath, readmePath, idata.getVariables());
+			editorPane.setPage("file://" + readmePath);
+		} catch (Exception e) {
+			Debug.error(e);
+		}
+	}
+	
+	@Override
+	public void panelActivate() {
+		parent.lockNextButton();
         parent.lockPrevButton();
         parent.setQuitButtonText(parent.langpack.getString("FinishPanel.done"));
         parent.setQuitButtonIcon("done");
-
+        
         loadResult();
-    }
+	}
 
-    /**
-     * Indicates wether the panel has been validated or not.
-     *
-     * @return Always true.
-     */
+	/**
+	 * Indicates wether the panel has been validated or not.
+	 *
+	 * @return Always true.
+	 */
     @Override
-    public boolean isValidated() {
-        return true;
-    }
+	public boolean isValidated() {
+		return true;
+	}
 
     public int print(Graphics graphics, PageFormat pageFormat, int pageIndex) throws PrinterException {
         if (pageIndex != 0) {
@@ -210,9 +197,27 @@ public class ResultPanel extends IzPanel implements Printable, Config {
                 double scale = scaleX < scaleY ? scaleX : scaleY;
                 g2d.scale(scale, scale);
             }
-
+            
             editorPane.printAll((Graphics) g2d);
             return Printable.PAGE_EXISTS;
         }
+    }
+
+    private String insertTimeStampToFileName(String fileName) {
+        String[] splittedFileName = fileName.split(".");
+
+        for (int i = 0; i < splittedFileName.length; i++) {
+            fileName += splittedFileName[i];
+
+            if (i == splittedFileName.length - 1) {
+                fileName += generateTimeStamp();
+            }
+        }
+
+        return fileName;
+    }
+
+    private String generateTimeStamp() {
+        return new Date().toString();
     }
 }

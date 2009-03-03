@@ -446,13 +446,12 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
       {
          lListElem *user_path;
          dstring buffer = DSTRING_INIT;
-         if ((user_path=lGetElemStr(environmentList, VA_variable, "PATH"))) {
+         if ((user_path=lGetElemStr(environmentList, VA_variable, "PATH")))
             sge_dstring_sprintf(&buffer, "%s:%s", tmpdir, lGetString(user_path, VA_value));
-         } else {
+         else
             sge_dstring_sprintf(&buffer, "%s:%s", tmpdir, SGE_DEFAULT_PATH);
-         }
-         var_list_set_string(&environmentList, "PATH", sge_dstring_get_string(&buffer));
-         sge_dstring_free(&buffer);
+            var_list_set_string(&environmentList, "PATH", sge_dstring_get_string(&buffer));
+            sge_dstring_free(&buffer);
       }
 
       /* 1.) try to read cwd from pe task */
@@ -1294,17 +1293,16 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
    notify_susp = mconf_get_notify_susp();
    fprintf(fp, "notify_susp=%s\n", notify_susp?notify_susp:"default");   
    FREE(notify_susp);
-   if (mconf_get_use_qsub_gid()) {
+   if (mconf_get_use_qsub_gid())
       fprintf(fp, "qsub_gid="sge_u32"\n", lGetUlong(jep, JB_gid));
-   } else {
+   else
       fprintf(fp, "qsub_gid=%s\n", "no");
-   }
 
    /* config for interactive jobs */
    {
       u_long32 jb_now;
       int      pty_option;
-      if (petep != NULL) {
+      if(petep != NULL) {
          jb_now = JOB_TYPE_QRSH;
       } else {
          jb_now = lGetUlong(jep, JB_type); 
@@ -1407,21 +1405,19 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
       ulong      ultemp = 0;
       lListElem  *ep    = job_get_request(jep, "display_win_gui");
    
-      if (ep != NULL) {
+      if(ep != NULL) {
          s = lGetString(ep, CE_stringval);
-         if (s == NULL || !parse_ulong_val(NULL, &ultemp, TYPE_BOO, s, err_str, err_length)) {
+         if(s == NULL ||
+            !parse_ulong_val(NULL, &ultemp, TYPE_BOO, s, err_str, err_length)) {
             lFreeList(&environmentList);
             FCLOSE(fp);
-            DRETURN(-3);
+            DEXIT;
+            return -3;
          }
       }
       fprintf(fp, "display_win_gui="sge_u32"\n", ultemp);
    }
 #endif
-
-   /* with new interactive job support, shepherd needs ignore_fqdn and default_domain */
-   fprintf(fp, "ignore_fqdn=%d\n", bootstrap_get_ignore_fqdn());
-   fprintf(fp, "default_domain=%s\n", bootstrap_get_default_domain());
 
    lFreeList(&environmentList);
    FCLOSE(fp);
@@ -1645,12 +1641,12 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
    }
 
    {  /* close all fd's except 0,1,2 */ 
-      int keep_open[3];
-
-      keep_open[0] = 0;
-      keep_open[1] = 1;
-      keep_open[2] = 2;
-      sge_close_all_fds(keep_open, 3);
+      fd_set keep_open;
+      FD_ZERO(&keep_open); 
+      FD_SET(0, &keep_open);
+      FD_SET(1, &keep_open);
+      FD_SET(2, &keep_open);
+      sge_close_all_fds(&keep_open);
    }
    
 #ifdef __sgi

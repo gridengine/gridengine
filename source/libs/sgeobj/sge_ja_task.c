@@ -50,7 +50,6 @@
 #include "sgeobj/sge_strL.h"
 #include "sgeobj/sge_object.h"
 #include "sgeobj/sge_answer.h"
-#include "sgeobj/sge_pe.h"
 #include "sgeobj/sge_qinstance.h"
 #include "sgeobj/sge_utility.h"
 
@@ -308,8 +307,8 @@ bool ja_task_clear_finished_pe_tasks(lListElem *ja_task)
 *     MT-NOTE: sge_parse_jobtasks() is MT safe 
 *
 *******************************************************************************/
-int sge_parse_jobtasks(lList **ipp, lListElem **idp, const char *str_jobtask,   
-                       lList **alpp, bool include_names, lList *arrayDefList) {
+int sge_parse_jobtasks( lList **ipp, lListElem **idp, const char *str_jobtask,   
+                        lList **alpp, bool include_names, lList *arrayDefList) {
    char *token;
    char *job_str;
    lList *task_id_range_list = NULL;
@@ -334,9 +333,9 @@ int sge_parse_jobtasks(lList **ipp, lListElem **idp, const char *str_jobtask,
       if ((token = strchr(job_str, '.')) != NULL){
          token[0] = '\0';
          token++;
-         if (!range_list_parse_from_string(&task_id_range_list, alpp, token,
-                                           false, true, INF_NOT_ALLOWED) ||
-             !task_id_range_list) {
+         range_list_parse_from_string(&task_id_range_list, alpp, token,
+                                      false, true, INF_NOT_ALLOWED);
+         if (*alpp || !task_id_range_list) {
             ret = -1;
          }
       }
@@ -685,46 +684,5 @@ ja_task_verify_granted_destin_identifier(const lListElem *ep, lList **answer_lis
    }
 
    DRETURN(ret);
-}
-
-/****** sge_ja_task/ja_task_is_tightly_integrated() ****************************
-*  NAME
-*     ja_task_is_tightly_integrated() -- is this a tightly integrated job?
-*
-*  SYNOPSIS
-*     bool ja_task_is_tightly_integrated(const lListElem *ja_task) 
-*
-*  FUNCTION
-*     Figures out, if a running ja task belongs to a tightly integrated
-*     parallel job.
-*
-*  INPUTS
-*     const lListElem *ja_task - the ja task to test
-*
-*  RESULT
-*     bool - true if it is a tightly integrated parallel job, else false
-*
-*  NOTES
-*     MT-NOTE: ja_task_is_tightly_integrated() is MT safe, the caller must
-*              hold a read lock on the SGE_TYPE_PE list.
-*******************************************************************************/
-bool ja_task_is_tightly_integrated(const lListElem *ja_task)
-{
-   bool ret = false;
-   object_description *object_base = object_type_get_object_description();
-
-   if (ja_task != NULL) {
-      const char *pe_name = lGetString(ja_task, JAT_granted_pe);
-      if (pe_name != NULL) {
-         const lListElem *pe = pe_list_locate(*object_base[SGE_TYPE_PE].list, pe_name);
-         if (pe != NULL) {
-            if (lGetBool(pe, PE_control_slaves)) {
-               ret = true;
-            }
-         }
-      }
-   }
-
-   return ret;
 }
 

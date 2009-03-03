@@ -172,11 +172,6 @@ endif
 # build html man pages from sedman with man2html 
 #
 if ( "$MANHTML" == 1 ) then
-   set PATHREV = ""
-   if ( "$CVSBRANCH" != "" ) then
-      set PATHREV = "?pathrev=$CVSBRANCH"
-   endif
-
    echo "Building HTML from sedman pages"
    foreach n ( $SECTION_LIST )
       mkdir -p $MANBUILDDIR/HTMLMAN/htmlman${n}
@@ -188,14 +183,22 @@ if ( "$MANHTML" == 1 ) then
          if ( Linux == `uname` ) then
             set secopt = ""
          endif   
-         man -M$MANBUILDDIR/SEDMAN/man/ $secopt $n $bn | man2html -cgiurl "../htmlman"'$section/$title'".html$PATHREV" -solaris | sed '2s/BODY/BODY BGCOLOR=white/' > $MANBUILDDIR/HTMLMAN/htmlman${n}/${bn}.html
+         man -M$MANBUILDDIR/SEDMAN/man/ $secopt $n $bn | man2html -cgiurl '../htmlman$section/$title.html' -solaris | sed '2s/BODY/BODY BGCOLOR=white/' > $MANBUILDDIR/HTMLMAN/htmlman${n}/${bn}.html
       end
    end   
-
    #
    # generate an index file 
    #
+   set PATHREV = ""
+   if ( "$CVSBRANCH" != "" ) then
+      set PATHREV = "?pathrev=$CVSBRANCH"
+   endif
    cp $1/scripts/template.html $MANBUILDDIR/HTMLMAN/index.html 
+   echo '<CENTER><H2>' >> $MANBUILDDIR/HTMLMAN/index.html
+   echo '6.2' >> $MANBUILDDIR/HTMLMAN/index.html
+   echo '<A HREF=manuals.html?pathrev=V61_BRANCH TARGET="_TOP">6.1</A>' >> $MANBUILDDIR/HTMLMAN/index.html
+   echo '<A HREF=manuals.html?pathrev=V60_BRANCH TARGET="_TOP">6.0</A>' >> $MANBUILDDIR/HTMLMAN/index.html
+   echo '</H2></CENTER>' >> $MANBUILDDIR/HTMLMAN/index.html
    foreach n ( $SECTION_LIST )
       echo "<H3>Section $n</H3>" >> $MANBUILDDIR/HTMLMAN/index.html
       echo '<P><UL>' >> $MANBUILDDIR/HTMLMAN/index.html
@@ -209,7 +212,6 @@ if ( "$MANHTML" == 1 ) then
       echo '</UL></P>' >> $MANBUILDDIR/HTMLMAN/index.html
    end
    echo '</BODY></HTML>' >> $MANBUILDDIR/HTMLMAN/index.html
-
    #
    # generate the manual.html file
    #

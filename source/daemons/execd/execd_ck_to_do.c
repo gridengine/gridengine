@@ -77,7 +77,7 @@
 
 #ifdef COMPILE_DC
 #  include "ptf.h"
-#  ifdef DEBUG_DC
+#  ifdef DEBUG
 #     include "sgedefs.h"
 #     include "exec_ifm.h"
 #  endif
@@ -112,7 +112,7 @@ static void notify_ptf()
 
    DENTER(TOP_LAYER, "notify_ptf");
 
-#ifdef DEBUG_DC
+#ifdef DEBUG
    ptf_show_registered_jobs();
 #endif
 

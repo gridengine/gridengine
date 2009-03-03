@@ -902,10 +902,8 @@ static bool sge_evc_setup(sge_evc_class_t *thiz,
          lSetUlong(sge_evc->ec, EV_commid, 0);
          lSetUlong(sge_evc->ec, EV_d_time, DEFAULT_EVENT_DELIVERY_INTERVAL);
 
-         /* always subscribe this three events */
          ec2_subscribe_flush(thiz, sgeE_QMASTER_GOES_DOWN, 0);
          ec2_subscribe_flush(thiz, sgeE_SHUTDOWN, 0);
-         ec2_subscribe_flush(thiz, sgeE_ACK_TIMEOUT, 0);
 
          ec2_set_busy_handling(thiz, EV_BUSY_UNTIL_ACK);
          lSetUlong(sge_evc->ec, EV_busy, 0);
@@ -1017,7 +1015,6 @@ static void ec2_mark4registration(sge_evc_class_t *thiz)
       DPRINTF(("closed old connection to qmaster\n"));
    }
    sge_evc->need_register = true;
-   DPRINTF(("*** Need new registration at qmaster ***\n"));
    lSetBool(sge_evc->ec, EV_changed, true);
    DRETURN_VOID;
 }
@@ -1587,21 +1584,8 @@ static bool ec2_register(sge_evc_class_t *thiz, bool exit_on_qmaster_down, lList
                      better return values */
             if (exit_on_qmaster_down) {
                DPRINTF(("exiting in ec2_register()\n"));
-               SGE_EXIT((void**)&sge_gdi_ctx, 1);
+               SGE_EXIT(NULL, 1);
             } else {
-               /*
-                * Trigger commlib in case of errors. This is to prevent 100% CPU usage
-                * when client does not handle errors and perform a wait before retry
-                * in an endless while loop.
-                */
-               cl_com_handle_t* com_handle = NULL;
-               com_handle = sge_gdi_ctx->get_com_handle(sge_gdi_ctx);
-               if (com_handle != NULL) {
-                  cl_commlib_trigger(com_handle, 1);
-               } else {
-                  /* We have no commlib handle, do a sleep() */
-                  sleep(1);
-               }
                DRETURN(false);
             }
          }   
@@ -1993,11 +1977,10 @@ static bool ec2_unsubscribe(sge_evc_class_t *thiz, ev_event event)
             ec2_remove_subscriptionElement(thiz, i);
          }
          ec2_add_subscriptionElement(thiz, sgeE_QMASTER_GOES_DOWN, EV_FLUSHED, 0);
-         ec2_add_subscriptionElement(thiz, sgeE_ACK_TIMEOUT, EV_FLUSHED, 0);
          ec2_add_subscriptionElement(thiz, sgeE_SHUTDOWN, EV_FLUSHED, 0);
 
       } else {
-         if (event == sgeE_QMASTER_GOES_DOWN || event == sgeE_SHUTDOWN || event == sgeE_ACK_TIMEOUT) {
+         if (event == sgeE_QMASTER_GOES_DOWN || event == sgeE_SHUTDOWN) {
             ERROR((SGE_EVENT, MSG_EVENT_HAVETOHANDLEEVENTS));
          } else {
             ec2_remove_subscriptionElement(thiz, event);
@@ -2547,7 +2530,7 @@ static bool ec2_commit_local(sge_evc_class_t *thiz, lList **alpp)
 
 static bool ec2_ack(sge_evc_class_t *thiz) 
 {
-   bool ret = false;
+   bool ret = true;
    sge_evc_t *sge_evc = (sge_evc_t *) thiz->sge_evc_handle;
 
    DENTER(EVC_LAYER, "ec2_ack");
@@ -2561,7 +2544,7 @@ static bool ec2_ack(sge_evc_class_t *thiz)
    } else {
       local_t *evc_local = &(thiz->ec_local);
       if (evc_local && evc_local->ack_func) {
-         ret = evc_local->ack_func(sge_evc->ec_reg_id, (ev_event) (sge_evc->next_event-1));
+         evc_local->ack_func(sge_evc->ec_reg_id, (ev_event) (sge_evc->next_event-1));
       }   
    }
    DRETURN(ret);
@@ -2854,11 +2837,7 @@ static bool ec2_get(sge_evc_class_t *thiz, lList **event_list, bool exit_on_qmas
       while (!done) {
          DPRINTF(("doing %s fetch for messages, %d still to do\n", 
                   sync ? "sync" : "async", max_fetch));
-         if (thiz->ec_need_new_registration(thiz)) {
-            ret = false;
-            done = true;
-            continue;
-         }
+
          if ((fetch_ok = get_event_list(thiz, sync, &report_list, &commlib_error))) {
             lList *new_events = NULL;
             lXchgList(lFirst(report_list), REP_list, &new_events);
@@ -2951,17 +2930,14 @@ static bool ec2_get(sge_evc_class_t *thiz, lList **event_list, bool exit_on_qmas
       DPRINTF(("ec2_get - received %d events\n", lGetNumberOfElem(*event_list)));
    }
 
-   /* check if we got a QMASTER_GOES_DOWN or sgeE_ACK_TIMEOUT event. 
+   /* check if we got a QMASTER_GOES_DOWN event. 
     * if yes, reregister with next event fetch
     */
    if (lGetNumberOfElem(*event_list) > 0) {
       const lListElem *event;
-      lUlong tmp_type;
 
       for_each(event, *event_list) {
-         tmp_type = lGetUlong(event, ET_type);
-         if (tmp_type == sgeE_QMASTER_GOES_DOWN || 
-             tmp_type == sgeE_ACK_TIMEOUT) {
+         if (lGetUlong(event, ET_type) == sgeE_QMASTER_GOES_DOWN) {
             ec2_mark4registration(thiz);
             break;
          }
@@ -3225,12 +3201,6 @@ static bool ec2_get_local(sge_evc_class_t *thiz, lList **elist, bool exit_on_qma
       DRETURN(false);
    }
 
-   if (thiz->ec_need_new_registration(thiz)) {
-      sge_evc_t *sge_evc = (sge_evc_t *) thiz->sge_evc_handle;
-      sge_evc->next_event = 1;
-      thiz->ec_register(thiz, exit_on_qmaster_down, NULL, NULL);
-   }
-
    sge_mutex_lock("evco_event_thread_cond_mutex", SGE_FUNC, __LINE__, 
                   &(evco->mutex));
 
@@ -3265,11 +3235,8 @@ printf("EVENT_CLIENT %d ends to wait at %s\n", thiz->ec_get_id(thiz), sge_ctime(
 
    *elist = event_list;
 
-   if (lGetElemUlong(event_list, ET_type, sgeE_ACK_TIMEOUT) != NULL) {
-      ec2_mark4registration(thiz);
-   }
    DRETURN(true);
-}
+}   
 
 static void ec2_wait_local(sge_evc_class_t *thiz) {
 

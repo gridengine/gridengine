@@ -346,37 +346,15 @@ sge_is_job_category_rejected(lListElem *job)
 }
 
 /*-------------------------------------------------------------------------*/
-int 
-sge_is_job_category_reservation_rejected(lListElem *job) 
-{
-   int ret;
-   lListElem *cat = NULL;
-
-   DENTER(TOP_LAYER, "sge_is_job_category_reservation_rejected");
-   cat = lGetRef(job, JB_category); 
-   ret = sge_is_job_category_reservation_rejected_(cat);  
-   DRETURN(ret);
-}
-
-/*-------------------------------------------------------------------------*/
 bool sge_is_job_category_rejected_(lRef cat) 
 {
    return lGetUlong(cat, CT_rejected) ? true : false;
 }
 
 /*-------------------------------------------------------------------------*/
-bool sge_is_job_category_reservation_rejected_(lRef cat) 
-{
-   return lGetUlong(cat, CT_reservation_rejected) ? true : false;
-}
-
-/*-------------------------------------------------------------------------*/
-void sge_reject_category(lRef cat, bool with_reservation)
+void sge_reject_category(lRef cat)
 {
    lSetUlong(cat, CT_rejected, 1);
-   if (with_reservation) {
-      lSetUlong(cat, CT_reservation_rejected, 1);
-   }
 }
 
 bool sge_is_job_category_message_added(lRef cat)
@@ -493,7 +471,7 @@ int sge_reset_job_category()
 *     MT-NOTE: sge_reset_job_category() is not MT safe 
 *
 *******************************************************************************/
-lList *sge_category_job_copy(lList *queue_list, lList **orders, bool monitor_next_run) {
+lList *sge_category_job_copy(lList *queue_list, lList **orders) {
    const int minJobPerCategory = 5;
    const int maxJobPerCategory = 300;
    
@@ -571,7 +549,7 @@ lList *sge_category_job_copy(lList *queue_list, lList **orders, bool monitor_nex
             lAppendElem(jobListCopy, lCopyElem(job));
             copy_counter+=amount;
          } else {
-             schedd_mes_add_join(monitor_next_run, lGetUlong(job, JB_job_number), SCHEDD_INFO_JOB_CATEGORY_FILTER_);
+             schedd_mes_add_join( lGetUlong(job, JB_job_number), SCHEDD_INFO_JOB_CATEGORY_FILTER_);
              *orders = sge_create_orders(*orders, ORT_clear_pri_info, job, NULL, NULL, false);
          }
       }

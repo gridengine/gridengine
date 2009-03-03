@@ -3,7 +3,7 @@
 <PRE>
 <!-- Manpage converted by man2html 3.0.1 -->
 NAME
-     qrdel - delete Sun Grid Engine Advance Reservations (AR)
+     qrdel - delete Grid Engine Advance Reservations (AR)
 
 SYNTAX
      qrdel [-f] [-help [-u wc_user_list] wc_ar_list
@@ -18,22 +18,22 @@ DESCRIPTION
      belonging to that user. A manager is able to delete  another
      user's  AR  via  "-u  wc_user_list". Jobs referring to an AR
      tagged for deletion will also be removed. Only if  all  jobs
-     referring  to  an  AR  are  removed from the Sun Grid Engine
-     database will the AR also be removed.
+     referring to an AR are removed from the Grid Engine database
+     will the AR also be removed.
 
      <I>Qrdel</I> deletes ARs in the order in which the  AR  identifiers
      are   presented.   Find  additional  information  concerning
-     <I>wc</I>_<I>user</I>_<I>list</I> and <I>wc</I>_<I>ar</I>_<I>list</I> in <B><A HREF="../htmlman1/sge_types.html?pathrev=V62u2_TAG">sge_types(1)</A></B>.
+     <I>wc</I>_<I>user</I>_<I>list</I> and <I>wc</I>_<I>ar</I>_<I>list</I> in <B><A HREF="../htmlman1/sge_types.html">sge_types(1)</A></B>.
 
 OPTIONS
      -f   Force action for AR. The AR and the jobs using  the  AR
-          are  deleted  from  the  Sun Grid Engine queuing system
-          even if the <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u2_TAG">sge_execd(8)</A></B> controlling the AR  jobs  does
-          not   respond   to  the  delete  request  sent  by  the
-          <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u2_TAG">sge_qmaster(8)</A></B>.
-          Users which have neither Sun Grid  Engine  manager  nor
-          operator  status  can  only use the -f option for their
-          own ARs.
+          are deleted from the Grid Engine queuing system even if
+          the  <B><A HREF="../htmlman8/ge_execd.html">ge_execd(8)</A></B>  controlling  the  AR  jobs  does  not
+          respond   to   the   delete   request   sent   by   the
+          <B><A HREF="../htmlman8/ge_qmaster.html">ge_qmaster(8)</A></B>.
+          Users which have neither Grid Engine manager nor opera-
+          tor  status  can  only  use the -f option for their own
+          ARs.
 
      -help
           Prints a list of all options.
@@ -51,45 +51,45 @@ OPTIONS
           A list of AR id's that should be deleted
 
 ENVIRONMENTAL VARIABLES
-     SGE_ROOT       Specifies the location of the Sun Grid Engine
+     GE_ROOT        Specifies the location  of  the  Grid  Engine
                     standard configuration files.
 
-     SGE_CELL       If set, specifies the default Sun Grid Engine
-                    cell. To address a Sun Grid Engine cell <I>qrdel</I>
+     GE_CELL        If set, specifies  the  default  Grid  Engine
+                    cell.  To  address  a  Grid Engine cell <I>qrdel</I>
                     uses (in the order of precedence):
 
                          The name of the cell  specified  in  the
-                         environment  variable SGE_CELL, if it is
+                         environment  variable  GE_CELL, if it is
                          set.
 
                          The  name  of  the  default  cell,  i.e.
                          default.
 
 
-     SGE_DEBUG_LEVEL
-                    If  set,  specifies  that  debug  information
+     GE_DEBUG_LEVEL If  set,  specifies  that  debug  information
                     should  be written to stderr. In addition the
                     level of detail in which debug information is
                     generated is defined.
 
-     SGE_QMASTER_PORT
+     GE_QMASTER_PORT
                     If set, specifies the tcp port on  which  the
-                    <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u2_TAG">sge_qmaster(8)</A></B> is expected to listen for com-
+                    <B><A HREF="../htmlman8/ge_qmaster.html">ge_qmaster(8)</A></B>  is expected to listen for com-
                     munication requests.  Most installations will
                     use  a  service  map  entry  for  the service
                     "sge_qmaster" instead of defining the port.
 
 FILES
-     &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>act</I>_<I>qmaster</I>
-                     Sun Grid Engine master host file
+     &lt;<I>ge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>act</I>_<I>qmaster</I>
+                    Grid Engine master host file
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qrstat.html?pathrev=V62u2_TAG">qrstat(1)</A></B>, <B><A HREF="../htmlman1/qrsub.html?pathrev=V62u2_TAG">qrsub(1)</A></B>, <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B>,  <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u2_TAG">sge_qmaster(8)</A></B>,
-     <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u2_TAG">sge_execd(8)</A></B>.
+     <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B>, <B><A HREF="../htmlman1/qrstat.html">qrstat(1)</A></B>,  <B><A HREF="../htmlman1/qrsub.html">qrsub(1)</A></B>,  <B><A HREF="../htmlman1/qsub.html">qsub(1)</A></B>,  <B><A HREF="../htmlman8/ge_qmaster.html">ge_qmaster(8)</A></B>,
+     <B><A HREF="../htmlman8/ge_execd.html">ge_execd(8)</A></B>.
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/ge_intro.html">ge_intro(1)</A></B> for a full statement of rights  and  permis-
      sions.
+
 
 
 

@@ -63,13 +63,13 @@ SGELIBPATH=-L.
 jgdi_all: $(JGDI_LIB) jgdi_test
 
 jgdi_clean:
-	rm -rf $(JGDI_LIB) $(JGDI_OBJS) jgdi_test* libjgdi$(JAVA_SHAREDEXT)
+	rm -rf $(JGDI_LIB) $(JGDI_OBJS) jgdi_test*
 
 #jgdi_depend:
 #	$(DEPEND) -f $(JGDI_DIR)/jgdi_dependencies $(XCFLAGS) $(JGDI_DIR)/*.c $(JGDI_BUILD_DIR)/*.c
 
 $(JGDI_LIB): $(JGDI_OBJS) $(JGDI_ADD_OBJS)
-	$(SHAREDLD) $(SHARED_LFLAGS) $(NOERR_CFLAG) $(SGELIBPATH) -o libjgdi$(SHAREDEXT) $(JGDI_OBJS) $(JGDI_ADD_OBJS) $(SLIBS) $(LIBRARY_LIBS) -lc
+	$(SHAREDLD) $(SHARED_LFLAGS) $(NOERR_CFLAG) $(SGELIBPATH) -o libjgdi$(SHAREDEXT) $(JGDI_OBJS) $(JGDI_ADD_OBJS) $(SLIBs) $(LIBS) -lc
 	../scripts/link_jnilib.sh libjgdi  $(SHAREDEXT) $(JAVA_SHAREDEXT)
 
 

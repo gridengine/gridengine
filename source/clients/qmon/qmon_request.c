@@ -205,7 +205,6 @@ void qmonRequestPopup(Widget w, XtPointer cld, XtPointer cad)
 
    xmui_manage(request_dialog);
 
-   lFreeList(&rll);
    DEXIT;
 }
 
@@ -328,9 +327,13 @@ static void qmonRequestCancel(Widget w, XtPointer cld, XtPointer cad)
 
 
 /*-------------------------------------------------------------------------*/
-lList *qmonGetResources(lList *ce_list, int how) {
+lList *qmonGetResources(
+lList *ce_list,
+int how 
+) {
    lList *lp = NULL;
    lList *entries = NULL;
+   lCondition *where = NULL;
 
    DENTER(GUI_LAYER, "qmonGetResources");
 
@@ -339,7 +342,8 @@ lList *qmonGetResources(lList *ce_list, int how) {
    if (entries) {
       if (!lp) {
          lp = lCopyList("CE_entries", entries);
-      } else {
+      }   
+      else {
          lList *copy = lCopyList("CE_entries", entries);
          lAddList(lp, &copy);
       }
@@ -348,14 +352,13 @@ lList *qmonGetResources(lList *ce_list, int how) {
    lUniqStr(lp, CE_name);
 
    if (how == REQUESTABLE_RESOURCES) { 
-      lCondition *where = lWhere("%T(%I == %u)", CE_Type, CE_requestable, REQU_YES);
-      if (where) {
+      where = lWhere("%T(%I == %u)", CE_Type, CE_requestable, REQU_YES);
+      if (where)
          lp = lSelectDestroy(lp, where); 
-      }
-      lFreeWhere(&where);
    }
 
-   DRETURN(lp);
+   DEXIT;
+   return lp;
 }
 
 
@@ -489,21 +492,21 @@ static void qmonRequestEditResource(Widget w, XtPointer cld, XtPointer cad)
    rll = qmonGetResources(qmonMirrorList(SGE_CENTRY_LIST), 
                                        REQUESTABLE_RESOURCES); 
 
-   if (!how) {
+   if (!how)
       fill_in_request = lGetElemStr(rll, CE_name, cbs->element->string[0]);
-   } else {
-      if (!hard_soft) {
+   else {
+      if (!hard_soft)
          fill_in_request = lGetElemStr(hard_requests, CE_name, 
                                           cbs->element->string[0]);
-      } else {
+      else
          fill_in_request = lGetElemStr(soft_requests, CE_name, 
                                           cbs->element->string[0]);
-      }
    }
 
 
    if (!fill_in_request) {
-      goto error_exit;
+      DEXIT;
+      return;
    }
 
 
@@ -534,7 +537,8 @@ static void qmonRequestEditResource(Widget w, XtPointer cld, XtPointer cad)
                lSetString(ep, CE_default, NULL);
             }   
                
-         } else {
+         }
+         else {
             if (!hard_requests) {
                hard_requests = lCreateList("hard_requests", CE_Type);
             }
@@ -551,8 +555,6 @@ static void qmonRequestEditResource(Widget w, XtPointer cld, XtPointer cad)
       qmonRequestDraw(request_hr, hard_requests, 1);
    }
 
-error_exit:
-   lFreeList(&rll);
    DEXIT;
 }
 
@@ -610,20 +612,18 @@ int maxlen
       case TYPE_HOST:
          status = XmtAskForString(w, NULL, "@{Enter a valid hostname}", stringval, maxlen, NULL);
          if (status && stringval[0] != '\0') {
-            if (!sge_is_pattern(stringval)) {
-               /* try to resolve hostname */
-               ret=sge_resolve_hostname(stringval, unique, EH_name);
-               switch ( ret ) {
-                  case CL_RETVAL_GETHOSTNAME_ERROR:
-                     qmonMessageShow(w, True, "Can't resolve host '%s'", stringval);
-                     status = False;
-                     break;
-                  case CL_RETVAL_OK:
-                     strcpy(stringval, unique);
-                     break; 
-                  default:
-                     DPRINTF(("sge_resolve_hostname() failed resolving: %s\n", cl_get_error_text(ret)));
-               }
+            /* try to resolve hostname */
+            ret=sge_resolve_hostname(stringval, unique, EH_name);
+            switch ( ret ) {
+               case CL_RETVAL_GETHOSTNAME_ERROR:
+                  qmonMessageShow(w, True, "Can't resolve host '%s'", stringval);
+                  status = False;
+                  break;
+               case CL_RETVAL_OK:
+                  strcpy(stringval, unique);
+                  break; 
+               default:
+                  DPRINTF(("sge_resolve_hostname() failed resolving: %s\n", cl_get_error_text(ret)));
             }
          }
          else

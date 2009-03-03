@@ -475,6 +475,7 @@ static void qmonTOVApply(Widget w, XtPointer cld, XtPointer cad)
    lList *scl;
    lList *alp = NULL;
    lListElem *sep;
+   lEnumeration *what;
 
    DENTER(GUI_LAYER, "qmonTOVApply");
    
@@ -492,13 +493,11 @@ static void qmonTOVApply(Widget w, XtPointer cld, XtPointer cad)
    scl = qmonMirrorList(SGE_SC_LIST);
    sep = lFirst(scl);
    if (sep) {
-      lEnumeration *what;
       qmonTOVInput(w, cld, cad);
       qmonTOVEntryToCull(sep, &cdata);
       what = lWhat("%T(ALL)", SC_Type);
       alp = qmonModList(SGE_SC_LIST, qmonMirrorListRef(SGE_SC_LIST),
                   SC_halftime, &scl, NULL, what); 
-      lFreeWhat(&what);
       
       qmonMessageBox(w, alp, 0);
 

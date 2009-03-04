@@ -112,36 +112,40 @@ public class SessionImplTest extends TestCase {
         
         /* structure: "version name (builddate)" */
         String version = getVersionWithoutBuildNumber(Settings.get(Settings.VERSION));
-        String drmVersion = getVersionWithoutBuildNumber(session.getDrmSystem());
+        String drmSystem = getVersionWithoutBuildNumber(session.getDrmSystem());
         
         /**
          * In some rare cases the version strings can differ 
          * if some binaries are recompiled and others not.
          */
-        assertEquals("DRM version does not match Gridengine version", 
-                version, drmVersion);
+        assertEquals("DRM getDrmSystem() does not match Gridengine version:" + drmSystem + " " + version, 
+                version, drmSystem);
                
         this.initSession();
         
         try {
-            drmVersion = getVersionWithoutBuildNumber(session.getDrmSystem());        
+            drmSystem = getVersionWithoutBuildNumber(session.getDrmSystem());        
             assertEquals("Session version does not match Gridengine version", 
-                    version, drmVersion);
+                    version, drmSystem);
         } finally {
             this.exitSession();
         }
     }
 
-    /** Removes the appended build number if necessary */
+    /** Removes the appended build number and leading SGE or GE if necessary */
     private String getVersionWithoutBuildNumber(final String version) {
-        int index = version.lastIndexOf("(");
+        String trimmedversion = version;
+        trimmedversion = trimmedversion.replaceFirst("SGE", "");
+        trimmedversion = trimmedversion.replaceFirst("GE", "");
+
+        int index = trimmedversion.lastIndexOf("(");
         if (index > 0) {
-            return version.substring(0, index - 1);
+            return trimmedversion.substring(0, index - 1).trim();
         } else {
-            return version;
+            return trimmedversion.trim();
         }
-    }
-    
+    }    
+
     /** Test of getDRMAAImplementation method, of class 
      * com.sun.grid.drmaa.SessionImpl. */
     public void testGetDrmaaImplementation() {
@@ -151,28 +155,16 @@ public class SessionImplTest extends TestCase {
          * In some rare cases the version strings can differ 
          * if some binaries are recompiled and others not.
          */
-        String version = Settings.get(Settings.VERSION);
-        int version_brace_pos = version.lastIndexOf("(");
-        if (version_brace_pos != -1 && version_brace_pos > 0) {
-            version = version.substring(0, version_brace_pos - 1);
-        }
+        String version = getVersionWithoutBuildNumber(Settings.get(Settings.VERSION));
         
-        String drmaa_version = session.getDrmaaImplementation();
-        version_brace_pos = drmaa_version.lastIndexOf("(");
-        if (version_brace_pos != -1 && version_brace_pos > 0) {
-            drmaa_version = drmaa_version.substring(0, version_brace_pos - 1);
-        }
+        String drmaa_impl = getVersionWithoutBuildNumber(session.getDrmaaImplementation());
         
-        assertEquals(version, drmaa_version);
+        assertEquals(version, drmaa_impl);
         
         this.initSession();
-        drmaa_version = session.getDrmaaImplementation();
-        version_brace_pos = drmaa_version.lastIndexOf("(");
-        if (version_brace_pos != -1 && version_brace_pos > 0) {
-            drmaa_version = drmaa_version.substring(0, version_brace_pos - 1);
-        }
+        drmaa_impl = getVersionWithoutBuildNumber(session.getDrmaaImplementation());
         try {
-            assertEquals(version, drmaa_version);
+            assertEquals(version, drmaa_impl);
         } finally {
             this.exitSession();
         }

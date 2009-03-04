@@ -1,3 +1,8 @@
+DG-2009-03-04-0: Cleanup:     Added Java DRMAA issue test. 
+                 Bugster:     6796175
+                 Issue:       2882
+                 Review:      CR 
+
 ZG-2009-03-03-0: Enhancem.:   Update man pages for v62u2_tag
 
 CR-2009-03-03-0: Enhancem.:   test_general binary now prints FD_SETSIZE value

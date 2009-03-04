@@ -39,7 +39,8 @@ public class IntermediateActionPanel extends ActionPanel {
         // Only once...
         if (getNumOfExecution() == 0) {
             // Localhost arch
-            GetArchCommand archCmd = new GetArchCommand(idata.getVariables(), Host.localHostName);
+            Properties variables = idata.getVariables();
+            GetArchCommand archCmd = new GetArchCommand(Host.localHostName, Util.CONNECT_USER, variables.getProperty(VAR_SHELL_NAME, ""), Util.IS_MODE_WINDOWS, variables.getProperty(VAR_SGE_ROOT, ""));
             archCmd.execute();
             if (archCmd.getExitValue() == 0 && archCmd.getOutput().size() > 0) {
                 Host.localHostArch = archCmd.getOutput().get(0).trim();

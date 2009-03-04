@@ -36,45 +36,43 @@ import com.izforge.izpack.util.Debug;
 import com.sun.grid.installer.gui.Host;
 import com.sun.grid.installer.util.Util;
 import java.text.MessageFormat;
-import java.util.Properties;
 
-public class RemoteComponentScriptCommand extends com.sun.grid.installer.util.cmd.CmdExec {
+public class RemoteComponentScriptCommand extends CmdExec {
       //E.g.: rsh/ssh [-l <connect_user>] [-o ....] HOSTNAME INSTALL_SCRIPT/CHECK_HOST arg_component
       private static String installCommand = "{0} {1} {2} {3} {4} {5}";
       //private static String installCommand = "{0} {1} {2} {3} {4} {5} ; rm -f {4}";
       private String command;
 
-
-      public RemoteComponentScriptCommand(Properties variables, Host host, String installScript) {
-          this(variables, Util.INSTALL_TIMEOUT, host, installScript);
+      public RemoteComponentScriptCommand(Host host, String user, String shell, boolean isWindowsMode, String installScript) {
+          this(Util.INSTALL_TIMEOUT, host, user, shell, isWindowsMode, installScript);
       }
 
-      public RemoteComponentScriptCommand(Properties variables, int timeout, Host host, String installScript) {
+      public RemoteComponentScriptCommand(int timeout, Host host, String user, String shell, boolean isWindowsMode, String installScript) {
           super(timeout);
           String hostname = host.getHostname();
           boolean onLocalHost = hostname.equalsIgnoreCase(Host.localHostName);
-          String connectUser = variables.getProperty(ARG_CONNECT_USER, "");
 
-          String shell = "";                //0
+          String shellArg = "";             //0
           String userArg = "";              //1
           String sshOptions = "";           //2
           String hostArg = "";              //3
           String scriptArgs = String.valueOf(host.isBdbHost()) + " " + String.valueOf(host.isQmasterHost()) + " " + String.valueOf(host.isShadowHost()) + " " + String.valueOf(host.isExecutionHost());
           if (!onLocalHost) {
-             shell = variables.getProperty(VAR_SHELL_NAME, "");
-             if (connectUser.length() > 0) {
-                 if (Util.isWindowsMode(variables)) {
-                     connectUser = hostname.toUpperCase().split("\\.")[0] + "+" + connectUser;
+             shellArg = shell;
+             if (user.length() > 0) {
+                 if (isWindowsMode) {
+                     user = hostname.toUpperCase().split("\\.")[0] + "+" + user;
                  }
-                 userArg = "-l "+connectUser;
+                 userArg = "-l "+user;
              }
              sshOptions = (isSameCommand(shell, "ssh")) ? "-o StrictHostKeyChecking=yes -o PreferredAuthentications=gssapi-keyex,publickey" : "";
              hostArg = host.getHostname();
              installScript = "\""+installScript;
              scriptArgs += "\"";
           }
+          
           //String extendedTimeout = String.valueOf(timeout/1000 + 10); //We add additinal 10 secs to the timeout after which the installScript kills itself, if Java failed to do so
-          this.command  = MessageFormat.format(installCommand, shell, userArg, sshOptions, hostArg, installScript, scriptArgs).trim();
+          this.command  = MessageFormat.format(installCommand, shellArg, userArg, sshOptions, hostArg, installScript, scriptArgs).trim();
       }
 
       public void execute() {

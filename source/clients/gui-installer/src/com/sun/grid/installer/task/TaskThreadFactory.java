@@ -29,45 +29,36 @@
  *
  ************************************************************************/
 /*___INFO__MARK_END__*/
+package com.sun.grid.installer.task;
 
-package com.sun.grid.installer.util.cmd;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import com.izforge.izpack.util.Debug;
-import com.sun.grid.installer.util.Util;
+public class TaskThreadFactory implements ThreadFactory {
 
-public class SimpleLocalCommand extends CmdExec {
-      private String command;
+    static final AtomicInteger poolNumber = new AtomicInteger(1);
+    final ThreadGroup group;
+    final AtomicInteger threadNumber = new AtomicInteger(1);
+    final String namePrefix;
 
-      public SimpleLocalCommand(String command) {
-          this(Util.RESOLVE_TIMEOUT, command);
-      }
+    public TaskThreadFactory() {
+        SecurityManager s = System.getSecurityManager();
+        group = (s != null) ? s.getThreadGroup() : Thread.currentThread().getThreadGroup();
+        namePrefix = "install_task_pool-" +
+                poolNumber.getAndIncrement() +
+                "-thread-";
+    }
 
-      public SimpleLocalCommand(String... commands) {
-          this(Util.RESOLVE_TIMEOUT, getSingleCommand(commands));
-      }
-
-      public SimpleLocalCommand(int timeout, String... commands) {
-          this(timeout, getSingleCommand(commands));
-      }
-
-      public SimpleLocalCommand(int timeout, String command) {
-          super(timeout);
-          this.command  = command;
-      }
-
-      public void execute() {
-          Debug.trace("Initializing SimpleLocalCommand: " + command + " timeout="+(MAX_WAIT_TIME/1000)+"sec");
-          super.execute(command);
-      }
-
-      private static String getSingleCommand(String... cmds) {
-        String singleCmd="";
-        for (String cmd : cmds) {
-           singleCmd += cmd + " ";
+    public Thread newThread(Runnable r) {
+        Thread t = new Thread(group, r,
+                namePrefix + threadNumber.getAndIncrement(),
+                0);
+        if (t.isDaemon()) {
+            t.setDaemon(false);
         }
-        if (singleCmd.length() > 1) {
-            return singleCmd.substring(0, singleCmd.length() - 1);
+        if (t.getPriority() != Thread.MIN_PRIORITY) {
+            t.setPriority(Thread.MIN_PRIORITY);
         }
-        return null;
+        return t;
     }
 }

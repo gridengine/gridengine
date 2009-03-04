@@ -54,7 +54,6 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.Scanner;
 import javax.swing.JFileChooser;
@@ -75,7 +74,10 @@ public class Util implements Config{
     public static int INSTALL_THREAD_POOL_SIZE = 8;
     public static int RESOLVE_TIMEOUT = 20000;
     public static int INSTALL_TIMEOUT = 120000;
-    
+
+    public static String CONNECT_USER = "";
+    public static boolean IS_MODE_WINDOWS = false;
+
     // Currently we accept pattern in list of hosts in a file
     public static List<String> parseFileList(File f) throws FileNotFoundException {
         List<String> hostList = new LinkedList<String>(), tempList;
@@ -710,15 +712,12 @@ public class Util implements Config{
      * @param dir The directory path to be checked
      * @return The FS type of the given directory if the check was successful, otherwise empty string.
      */
-    public static String getDirFSType(Properties variables, String dir) {
-       return getDirFSType(Host.localHostName, variables, dir);
+    public static String getDirFSType(String shell, String sge_root, String dir) {
+       return getDirFSType(Host.localHostName, Host.localHostArch, shell, sge_root, dir);
     }
 
-    public static String getDirFSType(String host, Properties variables, String dir) {
-        VariableSubstitutor vs = new VariableSubstitutor(variables);        
+    public static String getDirFSType(String host, String arch, String shell, String sge_root, String dir) {    
         String result = "";
-
-        dir = vs.substituteMultiple(dir, null);
 
         ExtendedFile file = new ExtendedFile(dir).getFirstExistingParent();
         Debug.trace("First existing parent of '" + dir + "' is '" + file.getAbsolutePath() +"'.");
@@ -726,8 +725,8 @@ public class Util implements Config{
 
         try {
             // Call the 'fstype' script of the proper architecture
-            String fstypeScript = "${cfg.sge.root}/utilbin/${localhost.arch}/fstype";
-            RemoteCommand fstypeCmd = new RemoteCommand(variables, host, vs.substituteMultiple(fstypeScript, null), dir);
+            String fstypeScript = sge_root + "/utilbin/" + arch + "/fstype";
+            RemoteCommand fstypeCmd = new RemoteCommand(host, CONNECT_USER, shell, IS_MODE_WINDOWS, fstypeScript, dir);
             fstypeCmd.execute();
 
             if (fstypeCmd.getExitValue() == 0) {
@@ -743,29 +742,33 @@ public class Util implements Config{
         return result;
     }
 
+    public static String[] getUserGroups(String shell, String userToCheck) {
+        return getUserGroups(Host.localHostName, shell, userToCheck);
+    }
+
     /**
      * Returns the group id of the user.
      * @param user The user name
      * @return The group id of the user if the process was successful, otherwise empty string.
      */
-    public static String[] getUserGroups(String host, Properties variables, String user) {
+    public static String[] getUserGroups(String host, String shell, String userToCheck) {
         String[] groups = null;
         ExtendedFile tmpFile = null;
 
         try {
             String command = "groups";
-            RemoteCommand groupCmd = new RemoteCommand(variables, host, command, user);
+            RemoteCommand groupCmd = new RemoteCommand(host, CONNECT_USER, shell, IS_MODE_WINDOWS, command,  userToCheck);
             groupCmd.execute();
 
             if (groupCmd.getExitValue() == 0) {
                 groups = groupCmd.getOutput().firstElement().trim().split(" ");
 
-                Debug.trace("Group of user '" + user + "' are '" + Arrays.toString(groups) + "'.");
+                Debug.trace("Group of user '" + userToCheck + "' are '" + Arrays.toString(groups) + "'.");
             } else {
-                Debug.error("Failed to get the group id's of user '" + user + "'! Error: " + groupCmd.getError());
+                Debug.error("Failed to get the group id's of user '" + userToCheck + "'! Error: " + groupCmd.getError());
             }
         } catch (Exception ex) {
-            Debug.error("Failed to get the group id's of user '" + user + "'! " + ex);
+            Debug.error("Failed to get the group id's of user '" + userToCheck + "'! " + ex);
         } 
 
         return groups;
@@ -949,12 +952,4 @@ public class Util implements Config{
             return false;
         }
     }*/
-
-    public static boolean isWindowsMode(Properties p) {
-        String mode = p.getProperty(ARG_CONNECT_MODE);
-        if (mode != null && mode.equalsIgnoreCase(CONST_MODE_WINDOWS)) {
-            return true;
-        }
-        return false;
-    }
 }

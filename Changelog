@@ -1,3 +1,12 @@
+ZG-2009-03-04-0: Enhancem.:   Major cleanup:
+                               -new package hierarchy as 3party/IzPack/src/lib/com/...
+                               -new package .../grid/installer/task
+                               -move nested classes to separate files
+                               -redesign progress bar refreshing
+                               -generalize worker threads
+                               -write comments
+                 Review:      LP
+
 DG-2009-03-04-0: Cleanup:     Added Java DRMAA issue test. 
                  Bugster:     6796175
                  Issue:       2882

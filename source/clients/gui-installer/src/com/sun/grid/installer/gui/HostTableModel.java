@@ -29,45 +29,16 @@
  *
  ************************************************************************/
 /*___INFO__MARK_END__*/
+package com.sun.grid.installer.gui;
 
-package com.sun.grid.installer.util.cmd;
-
-import com.izforge.izpack.util.Debug;
-import com.sun.grid.installer.util.Util;
-
-public class SimpleLocalCommand extends CmdExec {
-      private String command;
-
-      public SimpleLocalCommand(String command) {
-          this(Util.RESOLVE_TIMEOUT, command);
-      }
-
-      public SimpleLocalCommand(String... commands) {
-          this(Util.RESOLVE_TIMEOUT, getSingleCommand(commands));
-      }
-
-      public SimpleLocalCommand(int timeout, String... commands) {
-          this(timeout, getSingleCommand(commands));
-      }
-
-      public SimpleLocalCommand(int timeout, String command) {
-          super(timeout);
-          this.command  = command;
-      }
-
-      public void execute() {
-          Debug.trace("Initializing SimpleLocalCommand: " + command + " timeout="+(MAX_WAIT_TIME/1000)+"sec");
-          super.execute(command);
-      }
-
-      private static String getSingleCommand(String... cmds) {
-        String singleCmd="";
-        for (String cmd : cmds) {
-           singleCmd += cmd + " ";
-        }
-        if (singleCmd.length() > 1) {
-            return singleCmd.substring(0, singleCmd.length() - 1);
-        }
-        return null;
-    }
+/**
+ *
+ */
+public interface HostTableModel {
+    public Host addHost(Host h);
+    public void removeHost(Host h);
+    public void setHostState(Host h, Host.State state);
+    public boolean removeAll();
+    public void setHostLog(Host h, String log);
+    public HostList getHostList();
 }

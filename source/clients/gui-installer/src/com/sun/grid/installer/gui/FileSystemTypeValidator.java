@@ -35,8 +35,11 @@ import com.izforge.izpack.installer.GUIInstaller;
 import com.izforge.izpack.panels.ProcessingClient;
 import com.izforge.izpack.panels.Validator;
 import com.izforge.izpack.util.Debug;
+import com.izforge.izpack.util.VariableSubstitutor;
+import com.sun.grid.installer.util.Config;
 import com.sun.grid.installer.util.Util;
 import java.util.Map;
+import java.util.Properties;
 
 public class FileSystemTypeValidator implements Validator {
     private static String PARAM_DEFAULT = "default";
@@ -82,7 +85,12 @@ public class FileSystemTypeValidator implements Validator {
                 }
 
                 // Get fs type
-                String fsType = Util.getDirFSType(GUIInstaller.getInstallData().getVariables(), dir);
+                Properties variables = GUIInstaller.getInstallData().getVariables();
+                VariableSubstitutor vs = new VariableSubstitutor(variables);
+                String sge_root = vs.substituteMultiple(variables.getProperty(Config.VAR_SGE_ROOT, ""), null);
+                dir = vs.substituteMultiple(dir, null);
+                
+                String fsType = Util.getDirFSType(variables.getProperty(Config.VAR_SHELL_NAME, ""), sge_root, dir);
 
                 /**
                  * Validate

@@ -33,7 +33,7 @@ package com.sun.grid.installer.gui;
 
 import javax.swing.event.TableModelEvent;
 
-public class HostInstallTableModel extends SortedTableModel {
+public class HostInstallTableModel extends SortedTableModel implements HostTableModel {
     private String[] headers = null;
     private Class[] types = null;
 
@@ -113,19 +113,24 @@ public class HostInstallTableModel extends SortedTableModel {
 
     public void setHostState(Host h, Host.State state) {
         h.setState(state);
+
+        int index = hostList.indexOf(h);
+        if (index == -1) {
+            return;
+        }
         
-        int row = getRowIndex(hostList.indexOf(h));
+        int row = getRowIndex(index);
 
         if (row > -1) {
             fireTableCellUpdated(row, 4);
         }
     }
 
-    public boolean addHost(Host h) {
+    public Host addHost(Host h) {
         int row = hostList.size();
         boolean result = hostList.addUnchecked(h);
         fireTableRowsInserted(row, row);
-        return result;
+        return (result ? h : null);
     }
 
     public void removeHost(Host h) {
@@ -151,5 +156,9 @@ public class HostInstallTableModel extends SortedTableModel {
         if (row > -1) {
             fireTableRowsUpdated(row, row);
         }
+    }
+
+    public HostList getHostList() {
+        return hostList;
     }
 }

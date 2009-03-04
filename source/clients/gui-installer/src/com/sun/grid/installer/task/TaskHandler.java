@@ -29,45 +29,53 @@
  *
  ************************************************************************/
 /*___INFO__MARK_END__*/
+package com.sun.grid.installer.task;
 
-package com.sun.grid.installer.util.cmd;
+import com.sun.grid.installer.gui.Host;
+import java.util.List;
 
-import com.izforge.izpack.util.Debug;
-import com.sun.grid.installer.util.Util;
+/**
+ *
+ */
+public interface TaskHandler {
 
-public class SimpleLocalCommand extends CmdExec {
-      private String command;
+    /**
+     * Sets the sate of the given host
+     * @param host The host
+     * @param state The state to set
+     */
+    public void setHostState(Host host, Host.State state);
 
-      public SimpleLocalCommand(String command) {
-          this(Util.RESOLVE_TIMEOUT, command);
-      }
+    /**
+     * Sets the log of the given host
+     * @param host The host
+     * @param log The log to set
+     */
+    public void setHostLog(Host host, String log);
 
-      public SimpleLocalCommand(String... commands) {
-          this(Util.RESOLVE_TIMEOUT, getSingleCommand(commands));
-      }
+    /**
+     * Removes the given host
+     * @param host The host to remove
+     */
+    public void removeHost(Host host);
+    
+    /**
+     * Adds the given hosts
+     * @param hosts Hosts to add to the data
+     */
+    public void addHosts(List<Host> hosts);
 
-      public SimpleLocalCommand(int timeout, String... commands) {
-          this(timeout, getSingleCommand(commands));
-      }
+    /**
+     * Returns with localized text for the given key
+     * @param key The key which identifies the localized text
+     * @return The localized text if there is any. Empty string otherwise.
+     */
+    public String getLabel(String key);
 
-      public SimpleLocalCommand(int timeout, String command) {
-          super(timeout);
-          this.command  = command;
-      }
-
-      public void execute() {
-          Debug.trace("Initializing SimpleLocalCommand: " + command + " timeout="+(MAX_WAIT_TIME/1000)+"sec");
-          super.execute(command);
-      }
-
-      private static String getSingleCommand(String... cmds) {
-        String singleCmd="";
-        for (String cmd : cmds) {
-           singleCmd += cmd + " ";
-        }
-        if (singleCmd.length() > 1) {
-            return singleCmd.substring(0, singleCmd.length() - 1);
-        }
-        return null;
-    }
+    /**
+     * Returns with localized tooltip for the given key
+     * @param key The key which identifies the localized tooltip
+     * @return The localized tooltip if there is any. Empty string otherwise.
+     */
+    public String getTooltip(String key);
 }

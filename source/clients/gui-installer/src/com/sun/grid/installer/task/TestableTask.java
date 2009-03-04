@@ -8,7 +8,6 @@
  *
  *
  *  Sun Industry Standards Source License Version 1.2
- *  =================================================
  *  The contents of this file are subject to the Sun Industry Standards
  *  Source License Version 1.2 (the "License"); You may not use this file
  *  except in compliance with the License. You may obtain a copy of the
@@ -29,45 +28,48 @@
  *
  ************************************************************************/
 /*___INFO__MARK_END__*/
+package com.sun.grid.installer.task;
 
-package com.sun.grid.installer.util.cmd;
+import com.sun.grid.installer.util.Config;
+import com.sun.grid.installer.util.cmd.CmdExec;
+import java.util.Vector;
 
-import com.izforge.izpack.util.Debug;
-import com.sun.grid.installer.util.Util;
+public abstract class TestableTask implements Runnable, Config {
 
-public class SimpleLocalCommand extends CmdExec {
-      private String command;
+    private boolean testMode = false;
+    private int testExitValue = CmdExec.EXITVAL_INITIAL;
+    private Vector<String> testOutput = new Vector<String>();
+    private String taskName = "";
 
-      public SimpleLocalCommand(String command) {
-          this(Util.RESOLVE_TIMEOUT, command);
-      }
+    public String getTaskName() {
+        return taskName;
+    }
 
-      public SimpleLocalCommand(String... commands) {
-          this(Util.RESOLVE_TIMEOUT, getSingleCommand(commands));
-      }
+    public void setTaskName(String taskName) {
+        this.taskName = taskName;
+    }
 
-      public SimpleLocalCommand(int timeout, String... commands) {
-          this(timeout, getSingleCommand(commands));
-      }
+    public boolean isIsTestMode() {
+        return testMode;
+    }
 
-      public SimpleLocalCommand(int timeout, String command) {
-          super(timeout);
-          this.command  = command;
-      }
+    public void setTestMode(boolean isTestMode) {
+        this.testMode = isTestMode;
+    }
 
-      public void execute() {
-          Debug.trace("Initializing SimpleLocalCommand: " + command + " timeout="+(MAX_WAIT_TIME/1000)+"sec");
-          super.execute(command);
-      }
+    public int getTestExitValue() {
+        return testExitValue;
+    }
 
-      private static String getSingleCommand(String... cmds) {
-        String singleCmd="";
-        for (String cmd : cmds) {
-           singleCmd += cmd + " ";
-        }
-        if (singleCmd.length() > 1) {
-            return singleCmd.substring(0, singleCmd.length() - 1);
-        }
-        return null;
+    public void setTestExitValue(int testExitValue) {
+        this.testExitValue = testExitValue;
+    }
+
+    public Vector<String> getTestOutput() {
+        return testOutput;
+    }
+
+    public void setTestOutput(Vector<String> testOutput) {
+        this.testOutput = testOutput;
     }
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: CompilerConfig.java,v 1.1 2008/11/27 12:06:47 petrik Exp $
+ * $Id: CompilerConfig.java,v 1.1 2009/03/04 17:13:51 zsiga Exp $
  * IzPack - Copyright 2001-2008 Julien Ponge, All Rights Reserved.
  * 
  * http://izpack.org/

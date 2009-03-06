@@ -312,7 +312,7 @@ static int japi_close_session(const char*username, const dstring *key, dstring *
 static void *japi_implementation_thread(void *);
 static int japi_parse_jobid(const char *jobid_str, u_long32 *jobid, u_long32 *taskid, 
    bool *is_array, dstring *diag);
-static int japi_send_job(lListElem *job, u_long32 *jobid, dstring *diag);
+static int japi_send_job(lListElem **job, u_long32 *jobid, dstring *diag);
 static int japi_add_job(u_long32 jobid, u_long32 start, u_long32 end, u_long32 incr, 
       bool is_array, dstring *diag);
 static int japi_synchronize_jobids_retry(const char *jobids[], bool dispose);
@@ -1242,7 +1242,7 @@ void japi_delete_string_vector(drmaa_attr_values_t* iter )
 *  NOTES
 *     MT-NOTE: japi_send_job() is MT safe
 *******************************************************************************/
-static int japi_send_job(lListElem *sge_job_template, u_long32 *jobid, dstring *diag)
+static int japi_send_job(lListElem **sge_job_template, u_long32 *jobid, dstring *diag)
 {
    lList *job_lp, *alp;
    lListElem *aep, *job;
@@ -1251,16 +1251,25 @@ static int japi_send_job(lListElem *sge_job_template, u_long32 *jobid, dstring *
    DENTER(TOP_LAYER, "japi_send_job");
 
    job_lp = lCreateList(NULL, JB_Type);
-   lAppendElem(job_lp, lCopyElem(sge_job_template));
+   job = lCopyElem(*sge_job_template);
+   lAppendElem(job_lp, job);
+
+   /* 
+    * Set owner and group so that information will be available in
+    * client JSV scripts
+    */
+   job_set_owner_and_group(job, ctx->get_uid(ctx), ctx->get_gid(ctx),
+                           ctx->get_username(ctx), ctx->get_groupname(ctx));
 
    /* use GDI to submit job for this session */
    alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_ADD|SGE_GDI_RETURN_NEW_VERSION, &job_lp, NULL, NULL);
 
    /* reinitialize 'job' with pointer to new version from qmaster */
-   if ((job = lFirst(job_lp))) {
-      *jobid = lGetUlong(job, JB_job_number);
+   if ((*sge_job_template = lFirst(job_lp))) {
+      *jobid = lGetUlong(*sge_job_template, JB_job_number);
    }
-   
+
+   lDechainElem(job_lp, *sge_job_template);
    lFreeList(&job_lp);
 
    if (!(aep = lFirst(alp))) {
@@ -1371,10 +1380,8 @@ static int japi_add_job(u_long32 jobid, u_long32 start, u_long32 end, u_long32 i
 *     The job described in the SGE job template is submitted. The id 
 *     of the job is returned.
 *
-*  INPUTS
-*     lListElem *sge_job_template - SGE job template
-*
 *  OUTPUTS
+*     lListElem **sge_job_template - SGE job template. Might be modified by JSV
 *     dstring *job_id             - SGE jobid as string - on success.
 *     dstring *diag               - diagnosis information - on error.
 *
@@ -1390,7 +1397,7 @@ static int japi_add_job(u_long32 jobid, u_long32 start, u_long32 end, u_long32 i
 *      MT-NOTE: japi_run_job() is MT safe
 *      Would be better to return job_id as u_long32.
 *******************************************************************************/
-int japi_run_job(dstring *job_id, lListElem *sge_job_template, dstring *diag)
+int japi_run_job(dstring *job_id, lListElem **sge_job_template, dstring *diag)
 {
    u_long32 jobid = 0;
    int drmaa_errno;
@@ -1419,7 +1426,7 @@ int japi_run_job(dstring *job_id, lListElem *sge_job_template, dstring *diag)
    }
 
    /* tag job with JAPI session key */
-   lSetString(sge_job_template, JB_session, japi_session_key);
+   lSetString(*sge_job_template, JB_session, japi_session_key);
 
    JAPI_LOCK_JOB_LIST();    
 
@@ -1487,7 +1494,7 @@ int japi_run_job(dstring *job_id, lListElem *sge_job_template, dstring *diag)
 *      MT-NOTE: japi_run_bulk_jobs() is MT safe
 *      Would be better to return job_id instead of drmaa_attr_values_t.
 *******************************************************************************/
-int japi_run_bulk_jobs(drmaa_attr_values_t **jobidsp, lListElem *sge_job_template, 
+int japi_run_bulk_jobs(drmaa_attr_values_t **jobidsp, lListElem **sge_job_template, 
       int start, int end, int incr, dstring *diag)
 {
    drmaa_attr_values_t *jobids;
@@ -1523,7 +1530,7 @@ int japi_run_bulk_jobs(drmaa_attr_values_t **jobidsp, lListElem *sge_job_templat
    
    /* tag job with JAPI session key */
    if (japi_session_key != NULL) {
-      lSetString(sge_job_template, JB_session, japi_session_key);
+      lSetString(*sge_job_template, JB_session, japi_session_key);
    }
 
    JAPI_LOCK_JOB_LIST();    

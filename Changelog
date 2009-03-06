@@ -1,3 +1,24 @@
+EB-2009-02-27-0: Bugfix:      JSV -w param has wrong value inside script 
+                 Bugster:     6806219 
+                 Issue:       2917
+                 Bugfix:      Changing "w" job parameter to "n" in client 
+                              JSV is not handled correctly
+                 Bugster:     6810493
+                 Issues:      2938   
+                 Bugfix:      DRMAA test_drmaa_perf produces segmentation fault 
+                              when using user .sge_request file
+                 Bugster:     6806363 
+                 Issues:      2923
+                 Bugfix:      qsub man page refers to "see -jsv option below"
+                              but it is above in some cases
+                 Bugster:     6806324
+                 Issue:       2939
+                 Bugfix:      The cluster config paramter jsv_allowed_mod does
+                              not work -w switch
+                 Bugster:     6806209
+                 Issue:       2940
+                 Review:      CR 
+
 ZG-2009-03-04-0: Enhancem.:   Major cleanup:
                                -new package hierarchy as 3party/IzPack/src/lib/com/...
                                -new package .../grid/installer/task

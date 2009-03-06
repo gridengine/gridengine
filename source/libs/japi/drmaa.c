@@ -1142,7 +1142,7 @@ int drmaa_run_job(char *job_id, size_t job_id_len, const drmaa_job_template_t *j
       DRETURN(drmaa_errno);
    }
 
-   drmaa_errno = japi_run_job(&jobid, sge_job_template, diagp); 
+   drmaa_errno = japi_run_job(&jobid, &sge_job_template, diagp); 
    lFreeElem(&sge_job_template);
 
    DRETURN(drmaa_errno);
@@ -1223,8 +1223,8 @@ int drmaa_run_bulk_jobs(drmaa_job_ids_t **jobids, const drmaa_job_template_t *jt
       DRETURN(drmaa_errno);
    }
 
-   drmaa_errno = japi_run_bulk_jobs((drmaa_attr_values_t **)jobids, sge_job_template, 
-         start, end, incr, diagp);
+   drmaa_errno = japi_run_bulk_jobs((drmaa_attr_values_t **)jobids, &sge_job_template, 
+                                    start, end, incr, diagp);
    lFreeElem(&sge_job_template);
 
    DRETURN(drmaa_errno);

@@ -714,7 +714,6 @@ jsv_handle_param_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answe
 
       /*
        * -pe name n-m
-       * TODO: EB: JSV: add consistence check after all parsing is done
        */
       {
          if (ret && strcmp("pe_name", param) == 0) {
@@ -772,7 +771,6 @@ jsv_handle_param_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answe
 
       /*
        *-t n-m:s
-       * TODO: EB: JSV: add consistence check after all parsing is done
        */
       {
          if (ret && strcmp("t_min", param) == 0) {
@@ -844,6 +842,9 @@ jsv_handle_param_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answe
 
             if (value != NULL) {
                ret = job_parse_validation_level(&level, value, QSUB, &local_answer_list);
+
+               DPRINTF(("result of parsing is %d\n", ret));
+   
             }
             if (ret) {
                lSetUlong(new_job, JB_verify_suitable_queues, level);             
@@ -1053,7 +1054,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
     *    -b y ... <command>      => format := <command>
     *    -b n ... <job_script>   => format := <file> 
     *    -b n                    => format := "STDIN"
-    * TODO: EB: JSV: check for modifications in new_job
     */
    {
       const char *script_name = lGetString(old_job, JB_script_file);
@@ -1065,7 +1065,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
 
    /* 
     * JSV SCRIPT_ARGS 
-    * TODO: EB: JSV: check for modifications in new_job
     */
    {
       lList *list = lGetList(old_job, JB_job_args);
@@ -1087,7 +1086,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
    /* 
     * -a 
     * PARAM a <date_time> (optional; <date_time> := CCYYMMDDhhmm.SS)
-    * TODO: EB: JSV: check for modifications in new_job
     */
    {
       time_t clocks = (time_t) lGetUlong(old_job, JB_execution_time);
@@ -1107,7 +1105,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
 
    /* 
     * -ac variable[=value],... (optional; also contains result of -dc and -sc options) 
-    * TODO: EB: JSV: check for modifications in new_job
     */
    {
       lList *context_list = lGetList(old_job, JB_context);
@@ -1148,7 +1145,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
     * -ar 
     * PARAM ar <ar_id> 
     * optional 
-    * TODO: EB: JSV: check for modifications in new_job
     */
    {
       u_long32 ar_id = lGetUlong(old_job, JB_ar);
@@ -1162,7 +1158,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
 
    /* 
     * -A <account_string> (optional) 
-    * TODO: EB: JSV: check for modifications in new_job
     */
    {
       const char *account_string = lGetString(old_job, JB_account);
@@ -1177,7 +1172,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
    /* 
     * -b y|n 
     * PARAM b y|n (optional; only available if -b y was specified)
-    * TODO: EB: JSV: check for modifications in new_job
     */
    if (job_is_binary(old_job)) {
       sge_dstring_clear(&buffer);
@@ -1191,7 +1185,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
     *
     * PARAM c_occasion <occasion_string> (optional; <occasion_string> := ['n']['s']['m']['x']
     * PARAM c_interval <interval> (optional; <interval> := <2_digits>:<2_digits>:<2_digits>)
-    * TODO: EB: JSV: check for modifications in new_job
     */
    {
       u_long32 interval = lGetUlong(old_job, JB_checkpoint_interval);
@@ -1214,7 +1207,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
    /* 
     * -ckpt name
     * PARAM ckpt <name> (optional);
-    * TODO: EB: JSV: check for modifications in new_job
     */
    {
       const char *ckpt = lGetString(old_job, JB_checkpoint_name);
@@ -1234,7 +1226,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
     * pass an empty path.
     *
     * PARAM cwd <working_directory> (optional)
-    * TODO: EB: JSV: check for modifications in new_job
     */
    {
       const char *cwd = lGetString(old_job, JB_cwd);
@@ -1253,7 +1244,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
    /* 
     * -dl <date_time> 
     * optional
-    * TODO: EB: JSV: check for modifications in new_job
     */
    {
       time_t clocks = (time_t) lGetUlong(old_job, JB_deadline);
@@ -1273,7 +1263,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
 
    /* 
     * -e <output_path>
-    * TODO: EB: JSV: check for modifications in new_job
     */
    {
       lList *shell_list = lGetList(old_job, JB_stderr_path_list);
@@ -1308,8 +1297,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
    /* 
     * -hold_jid wc_job_list 
     * optional
-    * TODO: EB: CLEANUP: summarize with hold_jid_ad 
-    * TODO: EB: JSV: check for modifications in new_job
     */
    {
       lList *hold_jid_list = lGetList(old_job, JB_jid_request_list);
@@ -1339,7 +1326,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
    /* 
     * -hold_jid_ad wc_job_list 
     * optional 
-    * TODO: EB: JSV: check for modifications in new_job
     */
    {
       lList *hold_jid_list = lGetList(old_job, JB_ja_ad_request_list);
@@ -1375,8 +1361,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
     *
     * where 'u' means "user hold"
     * and 'n' whould mean "no hold"
-    *
-    * TODO: EB: JSV: check for modifications in new_job
     */
    {
       lList *hold_list = lGetList(old_job, JB_ja_u_h_ids);
@@ -1390,7 +1374,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
 
    /* 
     * -i <input_path> (optional) 
-    * TODO: EB: JSV: check for modifications in new_job
     */
    {
       lList *shell_list = lGetList(old_job, JB_stdin_path_list);
@@ -1426,7 +1409,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
     * -j y | n 
     * PARAM j y | n 
     * optional; only available when -j y was specified
-    * TODO: EB: JSV: check for modifications in new_job
     */
    if (lGetBool(old_job, JB_merge_stderr) == true) {
       sge_dstring_clear(&buffer);
@@ -1436,7 +1418,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
 
    /* 
     * -js job_share (optional) 
-    * TODO: EB: JSV: check for modifications in new_job
     */
    {
       u_long32 job_share = lGetUlong(old_job, JB_jobshare);
@@ -1456,9 +1437,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
     *
     * [-hard] -q =>
     * PARAM l_hard <centry_list>
-    *
-    * TODO: EB: CLEANUP: make a function for the code blocks of -soft -l and -hard -l 
-    * TODO: EB: JSV: check for modifications in new_job
     */
    {
       lList *l_hard_list = lGetList(old_job, JB_hard_resource_list);
@@ -1483,7 +1461,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
 
    /* 
     * -m [b][e][a][s] or n (optional; only provided to JSV script if != 'n'
-    * TODO: EB: JSV: check for modifications in new_job
     */
    {
       u_long32 mail_options = lGetUlong(old_job, JB_mail_options);
@@ -1499,7 +1476,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
    /* 
     * -M <mail_addr>, ... 
     * optional
-    * TODO: EB: JSV: check for modifications in new_job
     */
    {
       lList *mail_list = lGetList(old_job, JB_mail_list);
@@ -1524,7 +1500,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
 
    /* 
     * -masterq wc_queue_list (optional) 
-    * TODO: EB: JSV: check for modifications in new_job
     */
    {
       lList *master_hard_queue_list = lGetList(old_job, JB_master_hard_queue_list);
@@ -1549,7 +1524,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
    /* 
     * -notify y|n 
     * PARAM notify y|n (optional; only available when -notify y was specified)
-    * TODO: EB: JSV: check for modifications in new_job
     */
    if (lGetBool(old_job, JB_notify) == true) {
       sge_dstring_clear(&buffer);
@@ -1562,7 +1536,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
    /* 
     * -N <job_name> 
     * optional; only abaiable if specified during job submission
-    * TODO: EB: JSV: check for modifications in new_job
     */
    {
       const char *name = lGetString(old_job, JB_job_name);
@@ -1580,7 +1553,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
    /* 
     * -o <output_path> (optional) 
     * TODO: EB: summarize with -S -e -i 
-    * TODO: EB: JSV: check for modifications in new_job
     */
    {
       lList *shell_list = lGetList(old_job, JB_stdout_path_list);
@@ -1612,7 +1584,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
 
    /* 
     * -P project_name (optional; only available if specified during submission) 
-    * TODO: EB: JSV: check for modifications in new_job
     */
    {
       const char *project = lGetString(old_job, JB_project);
@@ -1626,7 +1597,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
    
    /* -p priority 
     * optional; only provided if specified during submission and != 0) 
-    * TODO: EB: JSV: check for modifications in new_job
     */
    {
       int priority = (int) lGetUlong(old_job, JB_priority) - 1024; 
@@ -1650,8 +1620,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
     *    -pe pe 4-8  4           8
     *    -pe pe 4-   4           9999999
     *    -pe pe -8   1           8
-    *
-    * TODO: EB: JSV: check for modifications in new_job
     */
    {
       const char *pe_name = lGetString(old_job, JB_pe);
@@ -1688,7 +1656,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
     * PARAM q_hard <wc_queue_list> 
     *
     * TODO: EB: CLEANUP: make a function for the code blocks of -soft -q, -hard -q and -masterq
-    * TODO: EB: JSV: check for modifications in new_job
     */
    {
       lList *hard_queue_list = lGetList(old_job, JB_hard_queue_list);
@@ -1732,7 +1699,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
    /* 
     * -R y|n 
     * optional; only available if specified during submission and value is y
-    * TODO: EB: JSV: check for modifications in new_job
     */
    {
       bool reserve = lGetBool(old_job, JB_reserve) ? true : false;
@@ -1747,7 +1713,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
    /* 
     * -r y|n 
     * optional; only available if specified during submission and value is y 
-    * TODO: EB: JSV: check for modifications in new_job
     */
    {
       u_long32 restart = lGetUlong(old_job, JB_restart);
@@ -1764,7 +1729,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
    /* 
     * -shell y|n 
     * optional; only available if -shell n was specified    
-    * TODO: EB: JSV: check for modifications in new_job
     */
    {
       bool no_shell = job_is_no_shell(old_job);
@@ -1783,7 +1747,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
    /* 
     * -S shell_path_list (optional) 
     * PARAM S [hostname:]path,...
-    * TODO: EB: JSV: check for modifications in new_job
     */
    {
       lList *shell_list = lGetList(old_job, JB_shell_list);
@@ -1819,8 +1782,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
     * PARAM t_min <number>
     * PARAM t_max <number>
     * PARAM t_step <number>
-    *    
-    * TODO: EB: JSV: check for modifications in new_job
     */
    {
       lList *ja_structure_list = lGetList(old_job, JB_ja_structure); 
@@ -1858,7 +1819,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
    /* 
     * -w e|w|n|v|p 
     * optional; only sent to JSV if != 'n') 
-    * TODO: EB: JSV: check for modifications in new_job
     */
    {
       u_long32 verify = lGetUlong(old_job, JB_verify_suitable_queues);
@@ -1878,7 +1838,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
    /* 
     * handle -v -V and -display here 
     * TODO: EB: JSV: PARSING
-    * TODO: EB: JSV: check for modifications in new_job
     */  
    {
       lList *env_list = NULL;
@@ -1896,7 +1855,6 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
        * if there is a DISPLAY variable and if the client is qsh/qrsh
        * then we will send the DISPLAY value as if it originally came 
        * from -display switch.
-       * TODO: EB: JSV: check for modifications in new_job
        */
       display = lGetElemStr(env_list, VA_variable, "DISPLAY"); 
       if (display != NULL) {

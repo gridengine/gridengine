@@ -1,3 +1,5 @@
+MD-2009-03-06-0: Enhancem:    updating webpages for 62u2 courtesy binaries
+          
 EB-2009-03-06-0: Bugfix:      JSV -w param has wrong value inside script 
                  Bugster:     6806219 
                  Issue:       2917

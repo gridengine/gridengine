@@ -1,4 +1,4 @@
-EB-2009-02-27-0: Bugfix:      JSV -w param has wrong value inside script 
+EB-2009-03-06-0: Bugfix:      JSV -w param has wrong value inside script 
                  Bugster:     6806219 
                  Issue:       2917
                  Bugfix:      Changing "w" job parameter to "n" in client 

@@ -179,6 +179,9 @@ typedef struct {
    uint64 rss;             /* resident set size */
    uint64 ru_ioblock;      /* # of block input operations */
    uint64 delta_chars;     /* number of chars to be added to jd_chars this time step */
+#if defined(LINUX)
+   uint64 iochars;         /* number of chars from previous load interval */
+#endif
 } proc_elem_t;
 
 extern long pagesize;

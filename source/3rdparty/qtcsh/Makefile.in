@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 1.4 2005/03/24 12:04:41 ron Exp $
+# $Id: Makefile.in,v 1.5 2009/03/07 01:43:46 ron Exp $
 #	Makefile.in	4.3	6/11/83
 #
 # C Shell with process control; VM/UNIX VAX Makefile
@@ -224,7 +224,7 @@ LIBES= @LIBS@	 			 ## This is set by autoconf.
 #
 
 
-EXTRAFLAGS = @HESDEF@ $(AFSDEF) @GRDDEF@
+EXTRAFLAGS = @HESDEF@ $(AFSDEF) @GRDDEF@ -I../../../libs/gdi
 EXTRALIBS = @HESLIB@ $(AFSLIB) @GRDLIB@
 
 

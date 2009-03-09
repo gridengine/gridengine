@@ -1,8 +1,10 @@
 JF-2009-03-09-1: Cleanup:     Changelog fixed Issue:	2876
+
 JF-2009-03-09-0: Bugfix:      Fix qsub truncation of scripts
                  Issue:       2876
                  Bugster:     6810688
                  Review:      AP
+
 DG-2009-03-04-0: Cleanup:     Added Java DRMAA issue test. Cleanup JUnit test.
                  Bugster:     6796175
                  Issue:       2882

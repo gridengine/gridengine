@@ -1,3 +1,8 @@
+JF-2009-03-09-0: Bugfix:      Fix qsub truncation of scripts
+                 Issue:       2876
+                 Bugster:     6810688
+                 Review:      AP
+
 CR-2009-03-03-1: Enhancem.:   test_general binary now prints FD_SETSIZE value
                  Review:      DG
 

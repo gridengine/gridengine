@@ -647,7 +647,7 @@ char *sge_stream2string(FILE *fp, int *len)
    /* malloced_len-filled-1 cause we reserve space for \0 termination */
    while ((i = fread(&str[filled], 1, malloced_len-filled-1, fp)) > 0) {
       filled += i;
-      if (malloced_len == filled) {
+      if (malloced_len == filled+1) {
          str = sge_realloc(str, malloced_len + FILE_CHUNK, 0);
          if (str == NULL) {
             DEXIT;

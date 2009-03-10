@@ -757,6 +757,15 @@ centry_list_fill_request(lList *this_list, lList **answer_list, lList *master_ce
          lSetUlong(entry, CE_valtype, lGetUlong(cep, CE_valtype));
 
          /* we also know wether it is a consumable attribute */
+         {
+            /* With 6.2u2 the type for CE_consumable changed from bool to ulong
+               for old objects we change the type to the new one */
+            int pos = lGetPosViaElem(entry, CE_consumable, SGE_NO_ABORT);
+            if (mt_get_type(entry->descr[pos].mt) == lBoolT) {
+               DPRINTF(("Upgrading CE_consumable from bool to ulong\n"));
+               entry->descr[pos].mt = cep->descr[pos].mt;
+            }
+         }
          lSetUlong(entry, CE_consumable, lGetUlong(cep, CE_consumable));
 
          if (centry_fill_and_check(entry, answer_list, allow_empty_boolean, allow_neg_consumable)) {

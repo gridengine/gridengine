@@ -1,3 +1,8 @@
+RD-2009-03-10-0: Bugfix:      fixed qmaster abort at update from previous version
+                 Bugster:     6814823
+                 Issue:       2949
+                 Review:      JG
+
 RD-2009-03-09-0: CVS:         Created V62u2_BRANCH
 --------------------------------------------------
 

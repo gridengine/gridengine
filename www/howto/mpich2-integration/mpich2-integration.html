@@ -13,7 +13,9 @@
 Philipps-University of Marburg, Germany</p>
 <p><font size="+1"><b>Version:</b></font></p>
 <p>1.1 -- 2008-11-25 Updated release, comments and corrections are
-welcome</p>
+welcome<br>
+1.1.1 -- 2009-03-10 Updated a wrong spelling of $SGE_TASK_ID in the
+supplied scripts (thx to Kenneth for mentioning this)</p>
 <p><font size="+1"><b>Contents:</b></font></p>
 <ul>
   <li>Prerequisites</li>
@@ -63,6 +65,23 @@ and $SGE_ROOT/mpich2_gforker.</p>
   <p>A short program is provided in [<a
  href="#%5B2%5D%20Archive%20mpi_hello">2</a>], which will allow you to
 observe the correct distribution of the spawned tasks.</p>
+  <p><b>Queue configuration</b></p>
+  <p>The supplied jobscripts are to be executed under the bash shell.
+As the
+default setting in SGE during installation is set to use the csh shell,
+you might
+need to change either two entries in the queue definition to
+read:</p>
+  <blockquote>
+    <pre>$ qconf -sq all.q<br>...<br>shell                 /bin/bash<br>...<br>shell_start_mode      unix_behavior<br>...<br></pre>
+  </blockquote>
+(please see "man queue_conf" for details about this setting), or submit
+the (parallel) jobs with the additional argument:
+  <blockquote>
+    <pre>$ qsub -S /bin/bash ...<br></pre>
+  </blockquote>
+Please note, that under the Linux operating system /bin/sh is often a
+link to /bin/bash and can be abbreviated this way.<br>
 </blockquote>
 <p>
 </p>

@@ -40,6 +40,7 @@ public class QueueInfoImpl implements QueueInfo, Serializable {
     
     private int slotsTotal;
     private int slotsUsed;
+    private int slotsReserved;
     private String state;
     private String qname;
     private String qtype;
@@ -128,5 +129,20 @@ public class QueueInfoImpl implements QueueInfo, Serializable {
     public void setUsedSlots(int slotsUsed) {
         this.slotsUsed = slotsUsed;
     }
-    
+
+    /**
+     *  Get the number of used queue slots
+     *  @return number of used queue slots
+     */
+    public int getReservedSlots() {
+        return slotsReserved;
+    }
+
+    /**
+     *  Set the number of used queue slots
+     *  @param slotsUsed of used queue slots
+     */
+    public void setReservedSlots(int slotsReserved) {
+        this.slotsReserved = slotsReserved;
+    }
 }

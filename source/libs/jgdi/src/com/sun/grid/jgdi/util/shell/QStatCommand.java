@@ -32,7 +32,6 @@
 package com.sun.grid.jgdi.util.shell;
 
 import com.sun.grid.jgdi.JGDIException;
-import com.sun.grid.jgdi.JGDIFactory;
 import com.sun.grid.jgdi.configuration.Job;
 import com.sun.grid.jgdi.configuration.JobImpl;
 import com.sun.grid.jgdi.monitoring.ClusterQueueSummary;
@@ -40,9 +39,9 @@ import com.sun.grid.jgdi.monitoring.ClusterQueueSummaryOptions;
 import com.sun.grid.jgdi.monitoring.QueueInstanceSummaryOptions;
 import com.sun.grid.jgdi.monitoring.QueueInstanceSummaryPrinter;
 import com.sun.grid.jgdi.monitoring.QueueInstanceSummaryResult;
+import com.sun.grid.jgdi.monitoring.filter.JobStateFilter;
 import java.util.List;
 
-import static com.sun.grid.jgdi.util.JGDIShell.getResourceString;
 /**
  *
  */
@@ -220,9 +219,10 @@ public class QStatCommand extends AnnotatedCommand {
                                           a is an abbreviation for prsh*/
     @OptionAnnotation(value = "-s", extra = OptionAnnotation.MAX_ARG_VALUE)
     public void showJobsInState(final OptionInfo oi) throws JGDIException {
-        throw new UnsupportedOperationException("NOT IMPLEMENTED");  //TODO LP: Implement
-        //jobStateFilter = JobStateFilter.parse(oi.getArgsAsString());
-        //oi.optionDone();
+        JobStateFilter jobStateFilter = JobStateFilter.parse(oi.getArgsAsString());
+        System.out.println("JobStateFilter: " + jobStateFilter.getStateString());
+        qiOptions.setJobStateFilter(jobStateFilter);
+        oi.optionDone();
     }
     
     //[-t]                              show task information (implicitly -g t)

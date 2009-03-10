@@ -1,3 +1,8 @@
+RD-2009-03-10-0: Bugfix:      fixed qmaster abort at update from previous version
+                 Bugster:     6814823
+                 Issue:       2949
+                 Review:      JG
+
 GH-2009-03-10-0: Bugfix:      qmod -r does not delete the old instance 
                               of a job before the new one is started
                  Bugster:     6244911

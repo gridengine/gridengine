@@ -42,4 +42,7 @@ BERKELEYDBBASE=/off_home/gridengine/db-4.4.20
 # http://gridengine.sunsource.net/issues/show_bug.cgi?id=2552
 CORE_HOME=/vol2/tools/SW/libcore
 
+# Macc home
+MACC_SRC_DIR="../../../nbgui"
+
 TAR=gtar

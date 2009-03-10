@@ -158,6 +158,7 @@ ErrUsage()
    echo "       \"qmontree\"   = PIXMAPS, resource-, help-, copyright files"
    echo "       \"sec\"        = DCE/Kerberos security modules"
    echo "       \"secbin\"     = DCE/Kerberos security binaries"
+   echo "       \"sgemacc\"    = SGE Monitoring and Configuration Console binaries"
    echo "       \"txtdoc\"     = doc/ directory tree without PS and PDF files"
    echo "       \"utilbin\"    = utilbin/\$ARCH/*"
    echo "       \"utiltree\"   = util/ directory tree"
@@ -421,6 +422,7 @@ instopenssl=true
 instbdb=true
 instarco=false
 instguiinst=true
+instsgemacc=false
 enforce_shlibpath=false
 
 cmdname=`basename $0`
@@ -467,7 +469,7 @@ fi
 while [ $# -ge 1 ]; do
    case "$1" in
    -allall)
-      PROG="$DEFAULTPROG distcommon arco"
+      PROG="$DEFAULTPROG distcommon arco sgemacc"
       instsharedlibs=true
       ;;
    -all)
@@ -691,6 +693,9 @@ for prog in $PROG; do
    case $prog in
       arco)
          instarco=true
+         ;;
+      sgemacc)         
+         instsgemacc=true
          ;;
       common|distcommon) 
          instdrmaa=true
@@ -1154,8 +1159,28 @@ if [ $instguiinst = true ]; then
       Execute cp $GUI_DIR/templates/install_component $GUI_DIR/templates/gui_inst_template.conf $GUI_DIR/templates/readme_template.html $GUI_DIR/templates/check_host $DEST_SGE_ROOT/util/gui-installer/templates
       Execute chmod 755 $DEST_SGE_ROOT/start_gui_installer
       Cleanup util/gui-installer
+      echo GUI installer part done
+      echo
    else
       echo "GUI Installer dir \"$GUI_DIR\" does not exist"
+   fi
+fi
+
+if [ $instsgemacc = true ]; then
+   if [ -d "$MACC_SRC_DIR" ]; then
+      echo Installing \"sgemacc\" directory tree
+      Execute rm -rf $DEST_SGE_ROOT/sgemacc
+      ( cd $DEST_SGE_ROOT; \
+        Execute unzip $MACC_SRC_DIR/EventMonitor/dist/sgemacc.zip; \
+      )
+      Execute cp $MACC_SRC_DIR/scripts/sgemacc.sh $DEST_SGE_ROOT/bin
+      chown root:root $DEST_SGE_ROOT/bin/sgemacc.sh
+      Execute chmod 755 $DEST_SGE_ROOT/bin/sgemacc.sh
+      Cleanup sgemacc
+      echo sgemacc part done
+      echo
+   else
+      echo "sgemacc dir \"$MACC_SRC_DIR\" does not exist"
    fi
 fi
 
@@ -1227,6 +1252,14 @@ for i in $ARCH; do
                   # Currently qloadsensor.exe is needed only for win32-x86
                   InstallProg $prog
                fi
+               ;;
+            sgemacc)
+               ( echo changing to $DEST_SGE_ROOT/bin/$DSTARCH ; \
+                 cd $DEST_SGE_ROOT/bin/$DSTARCH ; \      # For each arch dir
+                 rm sgemacc 2>&1 > /dev/null ; \         # Delete existing link
+                 echo ln -s ../sgemacc.sh sgemacc; \
+                 ln -s ../sgemacc.sh sgemacc; \          # Link the new file
+               )
                ;;
             *)
                InstallProg $prog

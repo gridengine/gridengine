@@ -1,3 +1,8 @@
+JF-2009-03-10-0: Bugfix:      Fix qsub truncation of scripts
+                 Issue:       2876
+                 Bugster:     6810688
+                 Review:      AP
+
 RC-2009-03-07-1: Enhancem:    I/O accounting on Linux
                  Issue:       2429
                  Review:      RC (original patch by johna)

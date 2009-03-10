@@ -173,22 +173,6 @@ void process_job_report(sge_gdi_ctx_class_t *ctx, lListElem *report,
       jataskid = lGetUlong(jr, JR_ja_task_number);
       rstate = lGetUlong(jr, JR_state);
 
-      /* build a job_id_string once - we need it in many places */
-      job_id_string = job_get_id_string(jobid, jataskid, pe_task_id_str, &job_id_dstring);
-
-      /* handle protocol to execd for all jobs which are
-         already finished and maybe rescheduled */
-      /* RU: */
-      fret = skip_restarted_job(hep, jr, jobid, jataskid);
-      if (fret > 0) {
-         if (fret == 2) {
-            pack_ack(pb, ACK_SIGNAL_JOB, jobid, jataskid, NULL);
-         } else if (fret == 3) {
-            pack_ack(pb, ACK_JOB_EXIT, jobid, jataskid, pe_task_id_str);
-         }
-         continue;
-      }
-
       jep = job_list_locate(*object_base[SGE_TYPE_JOB].list, jobid);
       if (jep != NULL) {
          jatep = lGetElemUlong(lGetList(jep, JB_ja_tasks), JAT_task_number, jataskid);
@@ -201,6 +185,42 @@ void process_job_report(sge_gdi_ctx_class_t *ctx, lListElem *report,
             }
          }
       }
+
+      /* build a job_id_string once - we need it in many places */
+      job_id_string = job_get_id_string(jobid, jataskid, pe_task_id_str, &job_id_dstring);
+
+      /* handle protocol to execd for all jobs which are
+         already finished and maybe rescheduled */
+      /* RU: */
+      fret = skip_restarted_job(hep, jr, jobid, jataskid);
+      if (fret > 0) {
+         if (fret == 2) {
+            pack_ack(pb, ACK_SIGNAL_JOB, jobid, jataskid, NULL);
+         } else if (fret == 3) {
+            lList *answer_list = NULL;
+            u_long32 state = 0;
+
+            pack_ack(pb, ACK_JOB_EXIT, jobid, jataskid, pe_task_id_str);
+            /*
+             * Check for deferred startup due to manual rescheduling.
+             * Reset JDEFERRED_REQ to allow rescheduled job to run.
+             * This is now OK since the initial job is going to die.
+             */
+            if (jep && jatep) {
+               state = lGetUlong(jatep, JAT_state);
+               if (state & JDEFERRED_REQ) {
+                  CLEARBIT(JDEFERRED_REQ, state);
+                  lSetUlong(jatep, JAT_state, state);
+                  sge_event_spool(ctx, 
+                        &answer_list, 0, sgeE_JATASK_MOD,
+                        jobid, jataskid, NULL, NULL, NULL,
+                        jep, jatep, NULL, true, true);
+               }
+            }
+         }
+         continue;
+      }
+
 
       if ((queue_name = lGetString(jr, JR_queue_name)) == NULL) {
          queue_name = MSG_OBJ_UNKNOWNQ;

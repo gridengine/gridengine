@@ -185,7 +185,7 @@ void reschedule_unknown_event(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, moni
     * unknown state and append the jobids/taskids into
     * a sublist of the exechost object
     */
-   reschedule_jobs(ctx, hep, 0, &answer_list, monitor);
+   reschedule_jobs(ctx, hep, 0, &answer_list, monitor, false);
    lFreeList(&answer_list);
    
 Error:
@@ -200,7 +200,7 @@ Error:
 *     reschedule_jobs() -- reschedule jobs junning in host/queue 
 *
 *  SYNOPSIS
-*     int reschedule_jobs(lListElem *ep, u_long32 force, lList **answer) 
+*     int reschedule_jobs(lListElem *ep, u_long32 force, lList **answer, bool is_manual) 
 *
 *  FUNCTION
 *     The function is able to reschedule jobs running on a certain host
@@ -212,11 +212,13 @@ Error:
 *     lListElem *ep  - host or queue (EH_Type or QU_Type) 
 *     u_long32 force - force the rescheduling of certain jobs (boolean)
 *     lList **answer - answer list (AN_Type)
+*     bool is_manual - indicator for manual (e.g. 'qmod -rj') or automatic
+*                      (e.g. execd goes down) rescheduling.
 *
 *  RESULT
 *     int - 0 on success; 1 if one of the parameters was invalid 
 *******************************************************************************/
-int reschedule_jobs(sge_gdi_ctx_class_t *ctx, lListElem *ep, u_long32 force, lList **answer, monitoring_t *monitor) 
+int reschedule_jobs(sge_gdi_ctx_class_t *ctx, lListElem *ep, u_long32 force, lList **answer, monitoring_t *monitor, bool is_manual) 
 {
    lListElem *jep;               /* JB_Type */
    int ret = 1;
@@ -235,7 +237,7 @@ int reschedule_jobs(sge_gdi_ctx_class_t *ctx, lListElem *ep, u_long32 force, lLi
        * append the jobids/taskids into a sublist of the exechost object
        */
       for_each(jep, *(object_type_get_master_list(SGE_TYPE_JOB))) {
-         reschedule_job(ctx, jep, NULL, ep, force, answer, monitor);
+         reschedule_job(ctx, jep, NULL, ep, force, answer, monitor, is_manual);
       }      
       ret = 0;
    }
@@ -250,7 +252,7 @@ int reschedule_jobs(sge_gdi_ctx_class_t *ctx, lListElem *ep, u_long32 force, lLi
 *
 *  SYNOPSIS
 *     int reschedule_job(lListElem *jep, lListElem *jatep, lListElem *ep, 
-*                        u_long32 force, lList **answer) 
+*                        u_long32 force, lList **answer, bool is_manual) 
 *
 *  FUNCTION
 *     This function is able to reschedule:
@@ -278,12 +280,14 @@ int reschedule_jobs(sge_gdi_ctx_class_t *ctx, lListElem *ep, u_long32 force, lLi
 *     lListElem *ep    - host or queue (EH_Type or QU_Type or NULL)
 *     u_long32 force   - force rescheduling (boolean) 
 *     lList **answer   - answer list (AN_Type) 
+*     bool is_manual   - indicator for manual (e.g. 'qmod -rj') or automatic
+*                        (e.g. execd goes down) rescheduling
 *
 *  RESULT
 *     int - 0 on success
 *******************************************************************************/
 int reschedule_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep, lListElem *ep,  
-                   u_long32 force, lList **answer, monitoring_t *monitor) 
+                   u_long32 force, lList **answer, monitoring_t *monitor, bool is_manual) 
 {
    lListElem *qep;               /* QU_Type */
    lListElem *hep;               /* EH_Type */
@@ -554,9 +558,23 @@ int reschedule_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep, l
        */
       if (!found) {
          lListElem *pseudo_jr; /* JR_Type */
+         u_long32 state = lGetUlong(this_jatep, JAT_state);
 
          lSetUlong(this_jatep, JAT_job_restarted, 1);
 
+         if (is_manual) {
+            /*
+             * Indicate deferred startup processing required.
+             */
+            SETBIT(JDEFERRED_REQ, state);
+         } else {
+            /*
+             * Paranoia ...
+             */
+            CLEARBIT(JDEFERRED_REQ, state);
+         }
+         lSetUlong(this_jatep, JAT_state, state);
+            
          pseudo_jr = lCreateElem(JR_Type);
          lSetUlong(pseudo_jr, JR_job_number, job_number);
          lSetUlong(pseudo_jr, JR_ja_task_number, task_number);

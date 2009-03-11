@@ -43,6 +43,6 @@ BERKELEYDBBASE=/off_home/gridengine/db-4.4.20
 CORE_HOME=/vol2/tools/SW/libcore
 
 # Macc home
-MACC_SRC_DIR="../../../nbgui"
+MACC_SRC_DIR="../nbgui"
 
 TAR=gtar

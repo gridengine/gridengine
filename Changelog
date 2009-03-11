@@ -1,3 +1,6 @@
+AA-2009-03-11-1: Bugfix:    MACC_SRC_DIR absolute path fix
+                 Review:    MD
+
 HP-2009-03-11-2: Bugfix:    Fixed compile error
 
 HP-2009-03-11-1: Bugfix:    Fixed wrongly merged inst_execd.sh file

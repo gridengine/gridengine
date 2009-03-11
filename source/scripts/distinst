@@ -1168,12 +1168,17 @@ fi
 
 if [ $instsgemacc = true ]; then
    if [ -d "$MACC_SRC_DIR" ]; then
+      if [ `echo $MACC_SRC_DIR | cut -c 1` = "/" ]; then
+         ABSOLUTE_MACC_SRC_DIR=$MACC_SRC_DIR
+      else
+         ABSOLUTE_MACC_SRC_DIR=`pwd`/$MACC_SRC_DIR
+      fi
       echo Installing \"sgemacc\" directory tree
       Execute rm -rf $DEST_SGE_ROOT/sgemacc
       ( cd $DEST_SGE_ROOT; \
-        Execute unzip $MACC_SRC_DIR/EventMonitor/dist/sgemacc.zip; \
+        Execute unzip $ABSOLUTE_MACC_SRC_DIR/EventMonitor/dist/sgemacc.zip; \
       )
-      Execute cp $MACC_SRC_DIR/scripts/sgemacc.sh $DEST_SGE_ROOT/bin
+      Execute cp $ABSOLUTE_MACC_SRC_DIR/scripts/sgemacc.sh $DEST_SGE_ROOT/bin
       chown root:root $DEST_SGE_ROOT/bin/sgemacc.sh
       Execute chmod 755 $DEST_SGE_ROOT/bin/sgemacc.sh
       Cleanup sgemacc

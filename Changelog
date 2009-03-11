@@ -1,3 +1,6 @@
+RD-2009-03-11-0: CVS:         Created V62u2_1_TAG
+-------------------------------------------------
+
 RD-2009-03-10-0: Bugfix:      fixed qmaster abort at update from previous version
                  Bugster:     6814823
                  Issue:       2949

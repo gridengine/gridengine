@@ -261,10 +261,10 @@ void setrlimits(int trace_rlimit) {
    if (s_vmem > h_vmem) {
       s_vmem = h_vmem;
    }    
-   s_data = RL_MIN(s_data, s_vmem);
+   /*s_data = RL_MIN(s_data, s_vmem);
    s_stack = RL_MIN(s_stack, s_vmem);
    h_data = RL_MIN(h_data, h_vmem);
-   h_stack = RL_MIN(h_stack, h_vmem); 
+   h_stack = RL_MIN(h_stack, h_vmem);*/ 
 
    priority = atoi(get_conf_val("priority"));
    /* had problems doing this with admin user priviledges under HPUX */

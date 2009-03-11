@@ -1,3 +1,7 @@
+MD-2009-03-11-0: Enhancem:  problems with gaussian due to memory limitations of SGE
+                 Bugster:   6816037
+                 Review:    AS
+
 AA-2009-03-11-1: Bugfix:    MACC_SRC_DIR absolute path fix
                  Review:    MD
 

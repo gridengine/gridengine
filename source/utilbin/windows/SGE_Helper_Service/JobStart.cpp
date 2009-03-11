@@ -1679,9 +1679,9 @@ static int BuildCommandLineForStarter(const C_Job &Job,
    }
 
    // Estimate size of buffer
-   nBufSize = strlen(szModuleDir) + strlen(szStarter) + strlen(Job.user)
+   nBufSize = (int)(strlen(szModuleDir) + strlen(szStarter) + strlen(Job.user)
             + strlen(Job.domain) + strlen(pszPipeName) + strlen(pszCmdLineArgs)
-            + 50;  //Just add 50 Bytes for all spaces and quotation marks
+            + 50);  //Just add 50 Bytes for all spaces and quotation marks
    *pszStarterCmdLine = (char*)malloc(nBufSize);
    if (*pszStarterCmdLine == NULL) {
       return 2;

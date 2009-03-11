@@ -1,3 +1,7 @@
+HP-2009-03-11-0: Bugfix:    SGE_Helper_Service doesn't work on Windows Vista
+                 Bugster:   TBD
+                 Review:    EB
+
 AA-2009-03-11-0: Bugfix:      sgemacc distinst, comment in continuation lines
                  Review:      MD
 

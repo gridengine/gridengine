@@ -41,6 +41,11 @@
 #include <direct.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <Psapi.h>
+#include <Wtsapi32.h>
+#include <AccCtrl.h>
+#include <Aclapi.h>
+#include <Sddl.h>
 
 
 #include "Job.h"
@@ -69,11 +74,19 @@ static BOOL AddAceToWindowStation(HWINSTA hWinsta, PSID pSid);
 static BOOL AddAceToDesktop(HDESK hDesk, PSID pSid);
 static BOOL RemoveAceFromWindowStation(HWINSTA hWinsta, PSID pSid);
 static BOOL RemoveAceFromDesktop(HDESK hDesk, PSID pSid);
-
 static BOOL GetJobStartModeFromConf(char **conf, int nconf);
 static BOOL GetModeFromEnv(const char *mode, char **env, int nenv);
 static void WriteEnvToFile(char *pszEnv, char *pszFile);
 static DWORD RedirectStdHandles(const C_Job& Job, HANDLE &hStdout, HANDLE &hStderr);
+static HANDLE WINAPI GetInteractiveUserToken();
+static BOOL IsSystemWindowsVista();
+static int  GetModuleDir(char *szDirName, int nSize);
+static void GetDirName(char *szDirName, char delim);
+static int CreatePipeForStarter(char **pszPipeName, HANDLE &hPipe);
+static int BuildCommandLineForStarter(const C_Job &Job, const char *pszPipeName,
+                                      const char *pszCmdLineArgs, char **pszStarterCmdLine);
+static int WritePasswordToPipe(const HANDLE &hPipe, const HANDLE &hProcess,
+                               const char *szPassword);
 
 // external variables
 extern C_JobList       g_JobList;
@@ -160,13 +173,15 @@ DWORD StartJob(C_Job &Job)
    STARTUPINFO         si; 
    PROCESS_INFORMATION pi; 
    DWORD               dwWait;
-   HANDLE              hToken  = INVALID_HANDLE_VALUE;
-   HANDLE              hStdout = INVALID_HANDLE_VALUE;
-   HANDLE              hStderr = INVALID_HANDLE_VALUE;
+   HANDLE              hUserToken    = INVALID_HANDLE_VALUE;
+   HANDLE              hSessionToken = INVALID_HANDLE_VALUE;
+   HANDLE              hStdout       = INVALID_HANDLE_VALUE;
+   HANDLE              hStderr       = INVALID_HANDLE_VALUE;
+   HANDLE              hPipe         = INVALID_HANDLE_VALUE;
    char                *pszEnv = NULL;
    char                *pszCmdLine = NULL;
    char                szError[4096];
-   char                szErrorPart[1024];
+   char                szErrorPart[4096];
    BOOL                bError      = TRUE;
    DWORD               dwError     = ERROR_SUCCESS;
    HWINSTA             hWinstaSave = NULL;
@@ -194,13 +209,25 @@ DWORD StartJob(C_Job &Job)
    ZeroMemory(&pi, sizeof(pi));
    ZeroMemory(szErrorPart, sizeof(szErrorPart));
 
+   WriteToLogFile("Logging on user %s+%s.",
+      Job.domain != NULL ? Job.domain : "<null>",
+      Job.user != NULL ? Job.user : "<null>");
+
+   if (Job.pass == NULL) {
+      WriteToLogFile("users password is NULL!");
+   } else if (strlen(Job.pass) == 0) {
+      WriteToLogFile("users password is empty!");
+   }
+
+   // Log on the job user to get the file handles of the 
+   // stdout and stderr file.
    if(!LogonUser(
          Job.user,
          Job.domain,
          Job.pass,
          LOGON32_LOGON_INTERACTIVE,
          LOGON32_PROVIDER_DEFAULT, 
-         &hToken)) {
+         &hUserToken)) {
       sprintf(szErrorPart, "LogonUser failed:");
       goto Cleanup;
    }
@@ -213,9 +240,10 @@ DWORD StartJob(C_Job &Job)
          goto Cleanup;
       }
 
+      WriteToLogFile("Trying to OpenWindowStation");
       // Get a handle to the interactive window station.
       hWinsta = OpenWindowStation(
-         "winsta0",                   // the interactive window station 
+         "WinSta0",                   // the interactive window station 
          FALSE,                       // handle is not inheritable
          READ_CONTROL | WRITE_DAC);   // rights to read/write the DACL
 
@@ -224,6 +252,7 @@ DWORD StartJob(C_Job &Job)
          goto Cleanup;
       }
 
+      WriteToLogFile("Trying to SetProcessWindowStation");
       // To get the correct default desktop, set the caller's 
       // window station to the interactive window station.
       if(!SetProcessWindowStation(hWinsta)) {
@@ -231,9 +260,10 @@ DWORD StartJob(C_Job &Job)
          goto Cleanup;
       }
 
+      WriteToLogFile("Trying to OpenDesktop");
       // Get a handle to the interactive desktop.
       hDesk = OpenDesktop(
-         "default",     // the interactive window station 
+         "Default",     // the interactive window station 
          0,             // no interaction with other desktop processes
          FALSE,         // handle is not inheritable
          READ_CONTROL | // request the rights to read and write the DACL
@@ -241,6 +271,7 @@ DWORD StartJob(C_Job &Job)
          DESKTOP_WRITEOBJECTS | 
          DESKTOP_READOBJECTS);
 
+      WriteToLogFile("Trying to revert from SetProcessWindowStation");
       // Restore the caller's window station.
       if(!SetProcessWindowStation(hWinstaSave)) {
          sprintf(szErrorPart, "SetProcessWindowStation(hWinstaSave) failed:");
@@ -252,18 +283,21 @@ DWORD StartJob(C_Job &Job)
          goto Cleanup;
       }
 
+      WriteToLogFile("Trying to GetLogonSID");
       // Get the SID for the client's logon session.
-      if(!GetLogonSID(hToken, pSid)) {
+      if(!GetLogonSID(hUserToken, pSid)) {
          sprintf(szErrorPart, "GetLogonSID failed:");
          goto Cleanup;
       }
 
+      WriteToLogFile("Trying to AddAceToWindowStation");
       // Allow logon SID full access to interactive window station.
       if(!AddAceToWindowStation(hWinsta, pSid))  {
          sprintf(szErrorPart, "AddAceToWindowStation failed:");
          goto Cleanup;
       }
 
+      WriteToLogFile("Trying to AddAceToDesktop");
       // Allow logon SID full access to interactive desktop.
       if(!AddAceToDesktop(hDesk, pSid)) {
          sprintf(szErrorPart, "AddAceToDesktop failed:");
@@ -271,29 +305,45 @@ DWORD StartJob(C_Job &Job)
       }
    }
 
-   // Impersonate client to ensure access to executable file.
-   if(!ImpersonateLoggedOnUser(hToken))  {
-      sprintf(szErrorPart, "ImpersonateLoggedOnUser failed:");
+   // Impersonate job user to create the stdout/stderr files as the right user.
+   WriteToLogFile("Trying to ImpersonateLoggedOnUser (JobUser)");
+   if (!ImpersonateLoggedOnUser(hUserToken)) {
+      sprintf(szErrorPart, "ImpersonateLoggedOnUser (JobUser) failed:");
       goto Cleanup;
    }
-
+   WriteToLogFile("Redirecting standard file handles");
    // Redirect stdout and stderr
    if(RedirectStdHandles(Job, hStdout, hStderr)!=0) {
-      sprintf(szErrorPart, "Redirecting File Handles failed:");
+       sprintf(szErrorPart, "Redirecting File Handles failed:");
       goto Cleanup;
    }
 
+   if (IsSystemWindowsVista() == TRUE) {
+      RevertToSelf();
+
+      // Get a token of the user of the currently logged on session to redirect
+      // the GUI of the job to this window station and desktop.
+      hSessionToken = GetInteractiveUserToken();
+      if (hSessionToken == NULL) {
+         sprintf(szErrorPart, "Getting Logged On User Token failed: ");
+         goto Cleanup;
+      }
+
+      WriteToLogFile("Trying to ImpersonateLoggedOnUser (DesktopUser)");
+      // Impersonate client to ensure access to executable file.
+      if(!ImpersonateLoggedOnUser(hSessionToken))  {
+         sprintf(szErrorPart, "ImpersonateLoggedOnUser (DesktopUser) failed:");
+         goto Cleanup;
+      }
+      WriteToLogFile("Setting up data for SGE_Starter.exe");
+   }
+   // Fill STARTUPINFO struct
    si.cb          = sizeof(STARTUPINFO); 
    si.dwFlags     |= STARTF_USESTDHANDLES;
    si.hStdOutput  = hStdout;
    si.hStdError   = hStderr;
-   si.wShowWindow = SW_SHOW; 
-
-   if(bBackgndMode == TRUE) {
-      si.lpDesktop = "";
-   } else {
-      si.lpDesktop   = "WinSta0\\Default"; 
-   }
+   si.lpDesktop   = bBackgndMode==TRUE ? "" : "WinSta0\\Default";
+   si.wShowWindow = IsSystemWindowsVista()==TRUE ? SW_HIDE : SW_SHOW;
 
    // To avoid a race condition with a signal here, lock Job list, check if
    // this job has been killed in the meanwhile. If job is not locked, start
@@ -309,24 +359,56 @@ DWORD StartJob(C_Job &Job)
 
    Job.m_hJobObject = CreateJobObject(NULL, NULL);
 
-   // Launch the process in the client's logon session.
-   bResult = CreateProcessAsUser(hToken,
-      NULL,
-      pszCmdLine,
-      NULL,
-      NULL,
-      TRUE,
-      NORMAL_PRIORITY_CLASS,//|CREATE_NO_WINDOW,//|CREATE_NEW_CONSOLE,
-      pszEnv,
-      pszCurDir,
-      &si,
-      &pi);
+   if (IsSystemWindowsVista() == TRUE) {
+      char *pszStarterCmdLine = NULL;
+      char *pszPipeName = NULL;
+
+      // We have to transfer the job users password to the SGE_Starter.exe,
+      // a pipe seems to be the most secure way.
+      if (CreatePipeForStarter(&pszPipeName, hPipe) != 0) {
+         goto Cleanup;
+      }
+
+      if (BuildCommandLineForStarter(Job, pszPipeName, pszCmdLine, &pszStarterCmdLine) != 0) {
+         goto Cleanup;
+      }
+
+      // Launch the process in the client's logon session.
+      WriteToLogFile("Trying to CreateProcessAsUser");
+      bResult = CreateProcessAsUser(hSessionToken,
+         NULL,
+         pszStarterCmdLine,
+         NULL,
+         NULL,
+         TRUE,
+         NORMAL_PRIORITY_CLASS|CREATE_PRESERVE_CODE_AUTHZ_LEVEL,
+         pszEnv,
+         pszCurDir,
+         &si,
+         &pi);
+
+      free(pszStarterCmdLine); pszStarterCmdLine = NULL;
+      free(pszPipeName); pszPipeName = NULL;
+   } else {
+      // Not on Vista or later
+      bResult = CreateProcessAsUser(hUserToken,
+         NULL,
+         pszCmdLine,
+         NULL,
+         NULL,
+         TRUE,
+         NORMAL_PRIORITY_CLASS,//|CREATE_NO_WINDOW,//|CREATE_NEW_CONSOLE,
+         pszEnv,
+         pszCurDir,
+         &si,
+         &pi);
+   }
 
    if(!bResult) {
       dwError = GetLastError();
 
       RevertToSelf();
-      sprintf(szErrorPart, "CreateProcessAsUser failed:");
+      sprintf(szErrorPart, "CreateProcessAsUser failed, Command is \"%s\":", pszCmdLine);
       singleLock.Unlock();
 
       SetLastError(dwError);
@@ -345,7 +427,15 @@ DWORD StartJob(C_Job &Job)
    singleLock.Unlock();
 
    // Wait blocking for job end
-   if(bResult && pi.hProcess != INVALID_HANDLE_VALUE) {
+   if (bResult && pi.hProcess != INVALID_HANDLE_VALUE) {
+      if (IsSystemWindowsVista() == TRUE) {
+         WritePasswordToPipe(hPipe, pi.hProcess, Job.pass);
+         CloseHandle(hPipe);
+// TODO: Logging for error values of WritePasswordToPipe()
+         hPipe = INVALID_HANDLE_VALUE;
+      }
+
+// TODO: Handle return value of SGE_Starter.exe properly!
       WriteToLogFile("Waiting for job end.");
       dwWait = WaitForSingleObjectEx(pi.hProcess, INFINITE, FALSE);
       if(dwWait==WAIT_OBJECT_0) {
@@ -353,6 +443,7 @@ DWORD StartJob(C_Job &Job)
       }
       WriteToLogFile("Job ended.");
       CloseHandle(pi.hProcess); 
+      pi.hProcess = INVALID_HANDLE_VALUE;
       CloseHandle(Job.m_hJobObject);
       Job.m_hProcess = INVALID_HANDLE_VALUE;
       Job.m_hJobObject = INVALID_HANDLE_VALUE;
@@ -360,6 +451,7 @@ DWORD StartJob(C_Job &Job)
    }
    if(pi.hThread != INVALID_HANDLE_VALUE) {
       CloseHandle(pi.hThread); 
+      pi.hThread = INVALID_HANDLE_VALUE;
    }
 
    if(bBackgndMode == FALSE) {
@@ -402,7 +494,7 @@ Cleanup:
          strcpy(szLastError, "(no error message available from system)");
       }
 
-      sprintf(szError, "%s %s (errno=%d)",
+      sprintf(szError, "%s: %s (errno=%d)",
          szErrorPart,
          szLastError,
          dwError);
@@ -417,6 +509,9 @@ Cleanup:
    }
    if(hStderr != INVALID_HANDLE_VALUE) {
       CloseHandle(hStderr);
+   }
+   if (hPipe != INVALID_HANDLE_VALUE) {
+      CloseHandle(hPipe);
    }
 
    if(hWinstaSave != NULL) {
@@ -436,8 +531,12 @@ Cleanup:
       CloseDesktop(hDesk);
    }
    // Close the handle to the client's access token.
-   if(hToken != INVALID_HANDLE_VALUE) {
-      CloseHandle(hToken);  
+   if(hUserToken != INVALID_HANDLE_VALUE) {
+      CloseHandle(hUserToken);  
+   }
+   // Close the handle to the session token.
+   if(hSessionToken != INVALID_HANDLE_VALUE) {
+      CloseHandle(hSessionToken);  
    }
 
    free(pszEnv);
@@ -633,6 +732,23 @@ static BOOL AddAceToWindowStation(HWINSTA hWinsta, PSID pSid)
                __leave;
             }
          }
+
+         if (bDaclPresent == TRUE) {
+            // Check if object already has this ACL - if yes, don't set it again!
+            if (aclSizeInfo.AceCount != 0) {
+               for (i=0; i<aclSizeInfo.AceCount; i++) {
+                  // Get an ACE
+                  if (GetAce(pAcl, i, &pTempAce) != TRUE) {
+                     __leave;
+                  }
+                  if (EqualSid((PSID)&((ACCESS_ALLOWED_ACE*)pTempAce)->SidStart, pSid) == TRUE) {
+                     bRet = TRUE;
+                     __leave; // this SID already exists
+                  }
+               }
+            }
+         }
+         
 
          // Compute the size of the new ACL.
          dwNewAclSize = aclSizeInfo.AclBytesInUse 
@@ -839,6 +955,23 @@ static BOOL AddAceToDesktop(HDESK hDesk, PSID pSid)
             if (!GetAclInformation(pAcl, (LPVOID)&aclSizeInfo,
                      sizeof(ACL_SIZE_INFORMATION), AclSizeInformation)) {
                __leave;
+            }
+         }
+
+         if (bDaclPresent) {
+            // Checks if object already has this ACL - if yes, don't add it again!
+            if (aclSizeInfo.AceCount) {
+               for (i=0; i<aclSizeInfo.AceCount; i++) {
+                  // Get an ACE.
+                  if (!GetAce(pAcl, i, &pTempAce)) {
+                     __leave;
+                  }
+
+                  if (EqualSid((PSID)&((ACCESS_ALLOWED_ACE*)pTempAce)->SidStart, pSid)) {
+                     bRet = TRUE;
+                     __leave; // this SID already exists
+                  }
+               }
             }
          }
 
@@ -1080,6 +1213,146 @@ static BOOL RemoveAceFromDesktop(HDESK hDesk, PSID pSid)
    return bRet;
 }
 
+static void GetShellProcess(TCHAR shell[_MAX_PATH])
+{
+   HKEY  hKey   = NULL;
+   DWORD dwType = REG_SZ;
+   DWORD dwSize = _MAX_PATH * sizeof(TCHAR);
+   LONG  lRet   = 0;
+
+   // initialize to "explorer.exe"
+   _tcscpy(shell, _T("explorer.exe"));
+
+   // gets the default shell process
+   RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+      _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon"),
+      0, KEY_READ, &hKey);
+
+   if (hKey != NULL) {
+      lRet = RegQueryValueEx(hKey, _T("Shell"), NULL, &dwType, (LPBYTE)shell, &dwSize);
+      if (lRet == ERROR_SUCCESS) {
+         _tcslwr(shell);
+      } 
+      RegCloseKey(hKey);
+   }
+}
+
+typedef struct sEnumData {
+   DWORD dwSessionID;
+   DWORD dwPID;
+   BOOL (WINAPI* ProcessIdToSessionId)(DWORD, DWORD*);
+   TCHAR szShell[_MAX_PATH];
+} tEnumData;
+
+BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam)
+{
+   char       *szBasename;
+   char       szFilename[_MAX_PATH];
+   DWORD      dwSessionID;
+   DWORD      dwPID = 0;
+   DWORD      dwSize = 0;
+   tEnumData  *pEnumData = (tEnumData*)lParam;
+   HANDLE     hProcess;
+   HMODULE    hModule;
+
+   GetWindowThreadProcessId(hWnd, &dwPID);
+   hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, false, dwPID);
+   if (hProcess) {
+      if (EnumProcessModules(hProcess, &hModule, sizeof(hModule), &dwSize)) {
+         GetModuleFileNameEx(hProcess, hModule, szFilename, sizeof(szFilename));
+         // get basename of module path
+         {
+            char *cp;
+            
+            cp = strrchr(szFilename, '\\');
+            if (cp != NULL) {
+               cp++;
+               *cp = '\0';
+               szBasename = cp;
+            } else {
+               szBasename = szFilename;
+            }
+         }
+         
+         if (_stricmp(szBasename, pEnumData->szShell) == 0) {
+            // Found the explorer.exe
+            if (pEnumData->ProcessIdToSessionId != NULL) {
+               pEnumData->ProcessIdToSessionId(dwPID, &dwSessionID);
+               if (dwSessionID == pEnumData->dwSessionID) {
+                  pEnumData->dwPID = dwPID;
+                  return FALSE;
+               }
+            }
+            return FALSE;
+         }
+      }
+      CloseHandle(hProcess);
+   } else {
+      WriteToLogFile("Cant open Process wit PID %ld", dwPID);
+      return FALSE;
+   }
+   return TRUE;
+}
+
+
+static DWORD GetShellProcessPidForSession(DWORD dwSessionID)
+{
+   tEnumData myEnumData;
+
+   // init struct that is to be filled by callback function EnumWindowsProc
+   myEnumData.ProcessIdToSessionId = (BOOL(WINAPI*)(DWORD, DWORD*))
+      GetProcAddress(GetModuleHandle(_T("KERNEL32.DLL")), "ProcessIdToSessionId");
+   myEnumData.dwSessionID = dwSessionID;
+   myEnumData.dwPID = 0;
+   GetShellProcess(myEnumData.szShell);
+
+   if (EnumWindows(EnumWindowsProc, (LPARAM)&myEnumData) != TRUE) {
+      return myEnumData.dwPID;
+   }
+   return 0;
+}
+
+static HANDLE WINAPI GetInteractiveUserToken()
+{
+   DWORD  dwSessionID;
+   DWORD  dwShellInteractivePID;
+   HANDLE hProcess      = NULL;
+   HANDLE hToken        = NULL;
+   HANDLE hPrimaryToken = NULL;
+
+   dwSessionID = WTSGetActiveConsoleSessionId();
+
+   // try to get the token of the user of the interactive console session
+   // from the Windows Terminal Services
+   if (WTSQueryUserToken(dwSessionID, &hToken) == FALSE) {
+      // it didn't work, so try to get the process id of the shell of
+      // the interactively logged on user
+      dwShellInteractivePID = GetShellProcessPidForSession(dwSessionID);
+      if (dwShellInteractivePID == 0) {
+         // no chance to get the right user token
+         return NULL;
+      }
+
+      // open the shell process and get the user token
+      hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, dwShellInteractivePID);
+      if (hProcess == NULL ||
+          OpenProcessToken(hProcess, TOKEN_ALL_ACCESS, &hToken) == FALSE) {
+         return NULL;
+      }
+      CloseHandle(hProcess);
+   }
+   // here we have the impersonation token of the user, create a primary
+   // user token out of it
+   if (DuplicateTokenEx(hToken, TOKEN_ALL_ACCESS, NULL, SecurityImpersonation,
+       TokenPrimary, &hPrimaryToken) == FALSE) {
+      CloseHandle(hToken);
+      return NULL;
+   }
+   CloseHandle(hToken);
+
+   return hPrimaryToken;
+}
+
 /****** GetJobStartModeFromConf() *********************************************
 *  NAME
 *     GetJobStartModeFromConf() -- searches conf for display_win_gui and
@@ -1202,6 +1475,11 @@ static DWORD RedirectStdHandles(const C_Job &Job, HANDLE &hStdout, HANDLE &hStde
    const char *pszStdout, *pszStderr, *pszMerge;
    int        iMerge = 0;
    int        ret = 0;
+   SECURITY_ATTRIBUTES secAttr;
+
+   ZeroMemory(&secAttr, sizeof(secAttr));
+   secAttr.nLength        = sizeof(secAttr);
+   secAttr.bInheritHandle = TRUE;
 
    try {
       pszStdout = Job.GetConfValue("stdout_path");
@@ -1215,7 +1493,7 @@ static DWORD RedirectStdHandles(const C_Job &Job, HANDLE &hStdout, HANDLE &hStde
                   pszStdout,
                   GENERIC_WRITE,
                   FILE_SHARE_READ|FILE_SHARE_WRITE,
-                  NULL,
+                  &secAttr,
                   OPEN_ALWAYS,
                   FILE_ATTRIBUTE_NORMAL|FILE_FLAG_WRITE_THROUGH,
                   NULL);
@@ -1230,7 +1508,7 @@ static DWORD RedirectStdHandles(const C_Job &Job, HANDLE &hStdout, HANDLE &hStde
                      pszStderr,
                      GENERIC_WRITE,
                      FILE_SHARE_READ|FILE_SHARE_WRITE,
-                     NULL,
+                     &secAttr,
                      OPEN_ALWAYS,
                      FILE_ATTRIBUTE_NORMAL|FILE_FLAG_WRITE_THROUGH,
                      NULL);
@@ -1250,6 +1528,329 @@ static DWORD RedirectStdHandles(const C_Job &Job, HANDLE &hStdout, HANDLE &hStde
    }
    return ret;
 }
+
+/****** IsSystemWindowsVista() ************************************************
+*  NAME
+*     IsSystemWindowsVista() -- checks if current OS is Vista or later
+*
+*  SYNOPSIS
+*     static BOOL IsSystemWindowsVista()
+*
+*  FUNCTION
+*     Checks if the OS is Windows Vista or later.
+*
+*  RESULT
+*     BOOL - TRUE if the current OS is Windows Vista or later,
+*            FALSE if it is a earlier Windows version.
+*
+*  NOTES
+*******************************************************************************/
+static BOOL IsSystemWindowsVista()
+{
+   OSVERSIONINFOEX osvi;
+   DWORDLONG       dwlCondMask = 0;
+ 
+   ZeroMemory(&osvi, sizeof(OSVERSIONINFOEX));
+   osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+   osvi.dwMajorVersion = 6;
+
+   VER_SET_CONDITION(dwlCondMask, VER_MAJORVERSION, VER_GREATER_EQUAL);
+
+   return VerifyVersionInfo(&osvi, VER_MAJORVERSION, dwlCondMask);
+}
+
+/****** GetDirName() **********************************************************
+*  NAME
+*     GetDirName() -- gets the directory part of an absolute or relative path
+*
+*  SYNOPSIS
+*     static void GetDirName(char *szDirName, char delim)
+*
+*  FUNCTION
+*     Gets the directory part of a an absolute or relative path
+*
+*  INPUTS
+*     char *szDirName - the absolute or relative path
+*     char delim      - delimiter, must be '\\' on Windows
+*
+*  RESULT
+*     VOID - none
+*
+*  NOTES
+*******************************************************************************/
+static void GetDirName(char *szDirName, char delim)
+{
+   char *cp;
+
+   cp = strrchr(szDirName, delim);
+   if (cp != NULL) {
+      szDirName[cp - szDirName] = '\0';
+   }
+}
+
+
+/****** GetModuleDir() ********************************************************
+*  NAME
+*     GetModuleDir() -- Retrieves the directory where this program module
+*                       (i.e. EXE file) is located
+*
+*  SYNOPSIS
+*     static int GetModuleDir(char *szDirName, int nSize)
+*
+*  FUNCTION
+*     Retrieves the directory where this program module (i.e. EXE file) is
+*     located.
+* 
+*  INPUTS
+*     char *szDirName - A buffer to receive the directory.
+*     int  nSize      - Size of the buffer
+*
+*  RESULT
+*     int - 0: OK
+*           1: The buffer is too small
+*
+*  NOTES
+*******************************************************************************/
+static int GetModuleDir(char *szDirName, int nSize)
+{
+   int  ret;
+
+   // Get full path of this executable
+   ret = GetModuleFileName(NULL, szDirName, nSize);
+   if (ret == nSize) {
+      return 1;
+   }
+
+   // Cut off name of executable
+   GetDirName(szDirName, '\\');
+   return 0;
+}
+
+/****** BuildCommandLineForStarter() ******************************************
+*  NAME
+*     BuildCommandLineForStarter() -- Composes the command line to start
+*                                     SGE_Starter.exe
+*
+*  SYNOPSIS
+*     static int BuildCommandLineForStarter(const C_Job &Job,
+*                                           const char *pszPipeName,
+*                                           const char *pszCmdLineArgs,
+*                                           char *szStarterCmdLine)
+*
+*  FUNCTION
+*     Builds the command line that is provided to our child process
+*     SGE_Starter.exe.
+*     SGE_Starter.exe is needed on Vista and later to get access
+*     to the visible desktop.
+*
+*  INPUTS
+*     const C_Job &Job           - Needed for the job user and the job
+*                                  users domain
+*     const char *pszPipeName    - The name of the named pipe we open to the
+*                                  SGE_Starter.exe in order to transfer the job
+*                                  users password
+*     const char *pszCmdLineArgs - The command line arguments for the job itself
+*     
+*  OUTPUTS
+*     char **szStarterCmdLine    - Receives a buffer with the command line.
+*                                  The user must free this buffer after using it!
+*
+*  RESULT
+*     int - 0: no errors
+*           1: Error in GetModuleDir()
+*           2: Error in malloc()
+*
+*  NOTES
+*******************************************************************************/
+static int BuildCommandLineForStarter(const C_Job &Job,
+                                      const char *pszPipeName,
+                                      const char *pszCmdLineArgs,
+                                      char **pszStarterCmdLine)
+{
+   int        nBufSize;
+   const int  nModuleDirSize = 5000;
+   char       szModuleDir[nModuleDirSize];
+   char       szStarter[] = "\\SGE_Starter.exe";
+
+   // We expect the SGE_Starter.exe to be located in the same directory
+   // as SGE_Helper_Service.exe, so get this directory.
+   if (GetModuleDir(szModuleDir, nModuleDirSize) != 0) {
+      return 1;
+   }
+
+   // Estimate size of buffer
+   nBufSize = strlen(szModuleDir) + strlen(szStarter) + strlen(Job.user)
+            + strlen(Job.domain) + strlen(pszPipeName) + strlen(pszCmdLineArgs)
+            + 50;  //Just add 50 Bytes for all spaces and quotation marks
+   *pszStarterCmdLine = (char*)malloc(nBufSize);
+   if (*pszStarterCmdLine == NULL) {
+      return 2;
+   }
+
+   strcpy(*pszStarterCmdLine, "\"");
+   strcat(*pszStarterCmdLine, szModuleDir);
+   strcat(*pszStarterCmdLine, szStarter);
+   strcat(*pszStarterCmdLine, "\" \"");
+   strcat(*pszStarterCmdLine, Job.user);
+   strcat(*pszStarterCmdLine, "\" \"");
+   strcat(*pszStarterCmdLine, Job.domain);
+   strcat(*pszStarterCmdLine, "\" \"");
+   strcat(*pszStarterCmdLine, pszPipeName);
+   strcat(*pszStarterCmdLine, "\" \"");
+   strcat(*pszStarterCmdLine, pszCmdLineArgs);
+   strcat(*pszStarterCmdLine, "\"");
+
+   return 0;
+}
+
+/****** WritePasswordToPipe() *************************************************
+*  NAME
+*     WritePasswordToPipe() -- Writes the job user's password over the named
+*                              pipe to the SGE_Starter.exe
+*
+*  SYNOPSIS
+*     static int WritePasswordToPipe(const HANDLE &hPipe,
+*                   const HANDLE &hProcess, const char *szPassword)
+*
+*  FUNCTION
+*     Sends the job users password over the named pipe to the SGE_Starter.exe.
+*     The pipe must already be created and the SGE_Starter.exe must be started,
+*     but the pipe must not be connected (i.e. this process must not have
+*     accepted the connection, the other process may already have requested the
+*     connection) and the SGE_Starter.exe may already have exited.
+*
+*     This function waits until the SGE_Starter.exe connects to this pipe and
+*     checks if the SGE_Starter.exe already exited. If the SGE_Starter.exe 
+*     connects, this function writes the password to it and makes sure the
+*     password is written before the function exists.
+*
+*  INPUTS
+*     const HANDLE &hPipe      - Handle of the named pipe. Has to be created,
+*                                but not yet connected.
+*     const HANDLE &hProcess   - Handle of the SGE_Starter.exe process. Has
+*                                to be started, may already have exited.
+*     const char *szPassword   - The password of the job user.
+*
+*  RESULT
+*     int - 0: no errors
+*           1: Child died before connecting to pipe
+*           2: Can't write to pipe
+*           3: Child died before all data was written
+*
+*  NOTES
+*******************************************************************************/
+static int WritePasswordToPipe(const HANDLE &hPipe, const HANDLE &hProcess,
+                               const char *szPassword)
+{
+   BOOL   bPipeIsConnected = FALSE;
+   DWORD  dwWritten;
+   DWORD  dwWait = 1;  // 1 is not a return value of WaitForSingleObjectEx()
+   OVERLAPPED ov;
+
+   ZeroMemory(&ov, sizeof(ov));
+
+   // Wait until our child has connected to our pipe, but make sure
+   // our child didn't die before!
+   while (bPipeIsConnected == FALSE) {
+      // Check if child has connected
+      if (ConnectNamedPipe(hPipe, &ov) == FALSE) {
+         if (GetLastError() == ERROR_IO_PENDING) {
+            // We just have to wait...
+         } else if (GetLastError() == ERROR_PIPE_CONNECTED) {
+            // Our child already is connected!
+            bPipeIsConnected = TRUE;
+            break;
+         } else {
+            // A severe error occured!
+            break;
+         }
+      } else {
+         // Child process has connected to pipe!
+         bPipeIsConnected = TRUE;
+         break;
+      }
+      // Check if child is still alive and sleep for 100 ms
+      dwWait = WaitForSingleObjectEx(hProcess, 100, FALSE);
+      if (dwWait == WAIT_OBJECT_0) {
+         // Child already died!
+         break;
+      }
+   }
+
+   // Pipe is not connected, return error
+   if (bPipeIsConnected == FALSE) {
+      WriteToLogFile("SGE_Starter.exe didn't start the job");
+      return 1;
+   }
+   
+   // Pipe is connected, write to pipe
+   if (WriteFile(hPipe, szPassword, (DWORD)strlen(szPassword), &dwWritten, &ov) == FALSE
+      || dwWritten != strlen(szPassword)) {
+      WriteToLogFile("Couldn't write all data to pipe");
+      return 2;
+   }
+
+   // As the pipe is asynchronous, we will see here if the child process really
+   // read all bytes or if it died before
+   if (FlushFileBuffers(hPipe) == FALSE) {
+      WriteToLogFile("Flushing the pipe failed");
+      return 3;
+   }
+
+   return 0;
+}
+
+/****** CreatePipeForStarter() ************************************************
+*  NAME
+*     CreatePipeForStarter() -- Creates a named pipe between SGE_Helper_Service.exe
+*                               and it's subproces SGE_Starter.exe
+*
+*  SYNOPSIS
+*     static int CreatePipeForStarter(char *szPipeName, HANDLE &hPipe)
+*
+*  FUNCTION
+*     Creates a pipe between this process and the subprocess SGE_Starter.exe.
+*     This pipe is for transfering the job users password.
+*
+*  INPUTS
+*     char **pszPipeName  - Receives a buffer with the pipe name.
+*                           This buffer must be freed after using it!
+*     HANDLE &hPipe       - The handle of the newly created pipe.
+*
+*  RESULT
+*     int - 0: no errors
+*           1: Can't create pipe
+*           2: Error in malloc()
+*
+*  NOTES
+*******************************************************************************/
+static int CreatePipeForStarter(char **pszPipeName, HANDLE &hPipe)
+{
+   char       szFixedPart[] = "\\\\.\\pipe\\SGE_Helper_Service_";
+   SYSTEMTIME sysTime;
+
+   *pszPipeName = (char*)malloc(strlen(szFixedPart)+10);
+   if (*pszPipeName == NULL) {
+      return 2;
+   }
+
+   GetLocalTime(&sysTime);
+   sprintf(*pszPipeName, "%s%02d%02d%02d%02d", szFixedPart,
+      sysTime.wHour, sysTime.wMinute, sysTime.wSecond, sysTime.wMilliseconds);
+
+   hPipe = CreateNamedPipe(
+      *pszPipeName,
+      PIPE_ACCESS_DUPLEX|FILE_FLAG_OVERLAPPED,
+      PIPE_TYPE_BYTE|PIPE_READMODE_BYTE|PIPE_WAIT,
+      PIPE_UNLIMITED_INSTANCES,
+      4096,
+      4096,
+      1000,
+      NULL);
+
+   return (hPipe == INVALID_HANDLE_VALUE) ? 1 : 0;
+}
+
 
 /******************************************************************************
 * Test/Debugging functions
@@ -1271,69 +1872,4 @@ static void WriteEnvToFile(char *pszEnv, char *pszFile)
       }
       fclose(fp);
    }
-}
-
-void OpenPipe()
-{
-/*      
-      // Copy current Job object to pipe
-      HANDLE hReadParent, hWriteChild;
-      HANDLE hWriteParent, hReadChild;
-      HANDLE hDuplReadParent, hDuplWriteParent;
-      SECURITY_ATTRIBUTES secAttr;
-
-      ZeroMemory(&secAttr, sizeof(secAttr));
-      secAttr.nLength        = sizeof(secAttr);
-      secAttr.bInheritHandle = TRUE;
-
-      // Create inheritable pipe
-      if(!CreatePipe(&hReadParent, &hWriteChild, &secAttr, 10000)) {
-         goto Cleanup;
-      }
-      // Create non-inheritable handle of one side of pipe
-      DuplicateHandle(GetCurrentProcess(),
-                        hReadParent,
-                        GetCurrentProcess(),
-                        &hDuplReadParent,
-                        DUPLICATE_SAME_ACCESS,
-                        FALSE,
-                        DUPLICATE_SAME_ACCESS);
-      // Close inheritable duplicate of handle of one side of pipe
-      CloseHandle(hReadParent);
-
-      // Create inheritable pipe
-      if(!CreatePipe(&hReadChild, &hWriteParent, &secAttr, 10000)) {
-         goto Cleanup;
-      }
-      // Create non-inheritable handle of one side of pipe
-      DuplicateHandle(GetCurrentProcess(),
-                        hWriteParent,
-                        GetCurrentProcess(),
-                        &hDuplWriteParent,
-                        DUPLICATE_SAME_ACCESS,
-                        FALSE,
-                        DUPLICATE_SAME_ACCESS);
-      // Close inheritable duplicate of handle of one side of pipe
-      CloseHandle(hWriteParent);
-*/
-}
-
-//ClosePipe();
-void ClosePipe()
-{
-/*
-   BOOL bRet;
-   int iRet;
-         // First wait for data on the pipe
-         WriteToLogFile("Now reading data from the pipe.");
-         iRet = Job.Unserialize(hDuplReadParent);
-         WriteToLogFile("Read data from the pipe: %d.", iRet);
-
-         FlushFileBuffers(hDuplWriteParent);
-         bRet = CloseHandle(hDuplWriteParent);
-         WriteToLogFile("CloseHandle(hDuplWriteParent) returned %d", bRet);
-
-         bRet = CloseHandle(hDuplReadParent);
-         WriteToLogFile("CloseHandle(hDuplReadParent) returned %d.", bRet);
-*/
 }

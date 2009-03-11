@@ -1255,10 +1255,10 @@ for i in $ARCH; do
                ;;
             sgemacc)
                ( echo changing to $DEST_SGE_ROOT/bin/$DSTARCH ; \
-                 cd $DEST_SGE_ROOT/bin/$DSTARCH ; \      # For each arch dir
-                 rm sgemacc 2>&1 > /dev/null ; \         # Delete existing link
+                 cd $DEST_SGE_ROOT/bin/$DSTARCH ; \
+                 rm sgemacc 2>&1 > /dev/null ; \
                  echo ln -s ../sgemacc.sh sgemacc; \
-                 ln -s ../sgemacc.sh sgemacc; \          # Link the new file
+                 ln -s ../sgemacc.sh sgemacc; \
                )
                ;;
             *)

@@ -1,3 +1,6 @@
+AA-2009-03-11-0: Bugfix:      sgemacc distinst, comment in continuation lines
+                 Review:      MD
+
 LP-2009-03-10-1: Enhancem:    JMX used by default, -no-jmx option
                  Review:      AA
 

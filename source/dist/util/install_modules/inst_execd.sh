@@ -4,7 +4,37 @@
 # Scriptname: inst_execd.sh
 # Module: execd installation functions
 #
-# (c) 2009 Sun Microsystems, Inc. All rights reserved. Use is subject to license terms.  
+#___INFO__MARK_BEGIN__
+##########################################################################
+#
+#  The Contents of this file are made available subject to the terms of
+#  the Sun Industry Standards Source License Version 1.2
+#
+#  Sun Microsystems Inc., March, 2001
+#
+#
+#  Sun Industry Standards Source License Version 1.2
+#  =================================================
+#  The contents of this file are subject to the Sun Industry Standards
+#  Source License Version 1.2 (the "License"); You may not use this file
+#  except in compliance with the License. You may obtain a copy of the
+#  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+#
+#  Software provided under this License is provided on an "AS IS" basis,
+#  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+#  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+#  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+#  See the License for the specific provisions governing your rights and
+#  obligations concerning the Software.
+#
+#  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+#
+#  Copyright: 2001 by Sun Microsystems, Inc.
+#
+#  All Rights Reserved.
+#
+##########################################################################
+#___INFO__MARK_END__
 
 #set -x
 
@@ -497,40 +527,28 @@ GetLocalExecdSpoolDir()
       $INFOTEXT -n -auto $AUTO -ask "y" "n" -def "n" "Do you want to configure a different spool directory\n for this host (y/n) [n] >> "
       ret=$?
    else
-      #
-      # Special logic for interix. Bypass forced user input
-      # for automatic installation.
-      #
-      if [ $AUTO = "true" ]; then
+      ret=0 #windows need it, don't need to ask
+      if [ "$AUTO" = "true" ]; then # but we don't want to wait in infinite while loop
          ret=1
-      else
-         ret=0
       fi
    fi
 
    while [ $ret = 0 ]; do 
       $INFOTEXT -n "Enter the spool directory now! >> " 
       LOCAL_EXECD_SPOOL=`Enter`
-      if [ "$LOCAL_EXECD_SPOOL" != "" ]; then
-         #
-         # User input. Validate spool directory. On interix we also want to make sure that spool directory
-         # is local.
-         #
-         is_error=0
+      if [ "$LOCAL_EXECD_SPOOL" = "" ]; then
+         if [ "$SGE_ARCH" != "win32-x86" ]; then
+            $INFOTEXT -n -auto $AUTO -ask "y" "n" -def "n" "Do you want to configure a different spool directory\n for this host (y/n) [n] >> "
+         ret=$?
+         else
+            ret=0 #windows need it, don't need to ask
+         fi
+         LOCAL_EXECD_SPOOL="undef"
+      else
          if [ "`echo $LOCAL_EXECD_SPOOL | tr -d \[:graph:\]`" != "" ]; then
             $INFOTEXT "execd spool directory [%s] is not a valid name, please try again!" $LOCAL_EXECD_SPOOL
             $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-            is_error=1
-         fi
-         if [ "$SGE_ARCH" = "win32-x86" ]; then
-            IsLocalDir
-            if [ $? != 1 ]; then
-               $INFOTEXT "Execd spool directory [%s] is not a valid local directory" $LOCAL_EXECD_SPOOL
-               $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-               is_error=1
-            fi
-         fi 
-         if [ $is_error = 0 ]; then
+         else
             $INFOTEXT "Using execd spool directory [%s]" $LOCAL_EXECD_SPOOL
             $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
             MakeLocalSpoolDir
@@ -539,59 +557,24 @@ GetLocalExecdSpoolDir()
       fi
    done
 
+   #if [ "$ret" = 1 -a "$LOCAL_EXECD_SPOOL" = "undef" ]; then
+   #   MakeHostSpoolDir
+   #   :
+   #fi
+
    if [ $AUTO = "true" -a -n "$EXECD_SPOOL_DIR_LOCAL" ]; then
-      #
-      # Come here for auto instal and spool directory specified.
-      # Do basic consistency checks and check for local directory
-      # on interix.
-      #
-      LOCAL_EXECD_SPOOL=$EXECD_SPOOL_DIR_LOCAL
-      
       execd_spool_dir_local_exists=`echo $EXECD_SPOOL_DIR_LOCAL |  grep "^\/"`
-      if [ "$SGE_ARCH" = "win32-x86" ]; then
-         IsLocalDir
-         if [ $? != 1 ]; then
-            $INFOTEXT -log "Execd spool directory [%s] is not a valid local directory" $LOCAL_EXECD_SPOOL
-            execd_spool_dir_local_exists="" # Flip the switch...
-         fi
-      fi
-      if [ "$execd_spool_dir_local_exists" != "" ]; then
+      if [ "$EXECD_SPOOL_DIR_LOCAL" != "" -a "$execd_spool_dir_local_exists" != "" ]; then
+         LOCAL_EXECD_SPOOL=$EXECD_SPOOL_DIR_LOCAL
          $INFOTEXT -log "Using local execd spool directory [%s]" $LOCAL_EXECD_SPOOL
          MakeLocalSpoolDir
-         ret=0
-      else 
+      fi
+     
+      if [ "$execd_spool_dir_local_exists" = "" ]; then
          $INFOTEXT -log "Local execd spool directory [%s] is not a valid path" $LOCAL_EXECD_SPOOL
          ret=1
       fi
    fi
-}
-
-IsLocalDir()
-{
-   
-   # This is the plan: we first convert interix path name into UNC format path name
-   # and then check for drive ID (first character followed by colon). If that works
-   # out OK, we x-check with data from df output. If that drive appears in here as
-   # well, we are OK.
-   #
-   # Otherwise, we re-iterate with the UNC format path name and extract the host name.
-   # Weiter???
-   #
-   #set -x
-   spool_dir_drive=`unixpath2win $LOCAL_EXECD_SPOOL | cut -f1 -d:`
-   local_drive=`df | awk '{print $7}' | cut -s -d"/" -f4 | egrep -i $spool_dir_drive`
-   if [ "$local_drive" != "" ]; then
-      $INFOTEXT -log "Spool directory %s is mounted on local drive %s" $LOCAL_EXECD_SPOOL $spool_dir_drive
-      return 1
-   fi
-   spool_dir_remote_host=`unixpath2win $LOCAL_EXECD_SPOOL | cut -s -d'\' -f3`
-   if [ $spool_dir_remote_host != "" ]; then
-      $INFOTEXT -log "Spool directory %s is mounted on host %s" $LOCAL_EXECD_SPOOL $spool_dir_remote_host
-      return 0
-   fi 
-
-   return -1
-
 }
 
 MakeHostSpoolDir()

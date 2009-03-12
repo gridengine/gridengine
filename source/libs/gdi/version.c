@@ -34,9 +34,9 @@
 
 #include "gdi/version.h"
 
-const char GDI_VERSION[] = "6.2u2";
+const char GDI_VERSION[] = "6.2u3alpha1";
 
-const gdi_ulong32 GRM_GDI_VERSION = 0x100020F1;
+const gdi_ulong32 GRM_GDI_VERSION = 0x100020F2;
 
 vdict_t GRM_GDI_VERSION_ARRAY[] = 
 {
@@ -55,6 +55,7 @@ vdict_t GRM_GDI_VERSION_ARRAY[] =
       { 0x10001002, "6.0u8_2" },
       { 0x10002000, "6.1" },
       { 0x100020F0, "6.1AR_snapshot1" },
+      { 0x100020F1, "6.2" },
       { 0, NULL}
 };
 

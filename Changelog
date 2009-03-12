@@ -1,17 +1,20 @@
-MD-2009-03-11-0: Enhancem:  problems with gaussian due to memory limitations of SGE
-                 Bugster:   6816037
-                 Review:    AS
+RD-2008-11-28-1: CVS:         Created V62u3alpha1_TAG
+-----------------------------------------------------
 
-AA-2009-03-11-1: Bugfix:    MACC_SRC_DIR absolute path fix
-                 Review:    MD
+MD-2009-03-11-0: Enhancem:    problems with gaussian due to memory limitations of SGE
+                 Bugster:     6816037
+                 Review:      AS
 
-HP-2009-03-11-2: Bugfix:    Fixed compile error
+AA-2009-03-11-1: Bugfix:      MACC_SRC_DIR absolute path fix
+                 Review:      MD
 
-HP-2009-03-11-1: Bugfix:    Fixed wrongly merged inst_execd.sh file
+HP-2009-03-11-2: Bugfix:      Fixed compile error
 
-HP-2009-03-11-0: Bugfix:    SGE_Helper_Service doesn't work on Windows Vista
-                 Bugster:   TBD
-                 Review:    EB
+HP-2009-03-11-1: Bugfix:      Fixed wrongly merged inst_execd.sh file
+
+HP-2009-03-11-0: Bugfix:      SGE_Helper_Service doesn't work on Windows Vista
+                 Bugster:     TBD
+                 Review:      EB
 
 AA-2009-03-11-0: Bugfix:      sgemacc distinst, comment in continuation lines
                  Review:      MD

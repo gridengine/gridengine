@@ -1,3 +1,9 @@
+AH-2009-03-12-0: Bugfix:      SIGUSR1 clash between s_rt and NOTIFY_SUS
+                 Changed:     queue_conf(5)
+                 Bugster:     6816634
+                 Issue:       2103
+                 Review:      RD
+
 RD-2009-03-12-0: CVS:         Created V62u3alpha1_TAG
 -----------------------------------------------------
 

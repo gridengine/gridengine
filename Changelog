@@ -1,3 +1,9 @@
+AH-2009-03-12-1: Bugfix:      Incorrect referrences to "SGE_H_ALIASES" man pages
+                 Changed:     hostnameutils(1), qping(1)
+                 Bugster:     6816705
+                 Issue:       2056
+                 Review:      RD
+
 AH-2009-03-12-0: Bugfix:      SIGUSR1 clash between s_rt and NOTIFY_SUS
                  Changed:     queue_conf(5)
                  Bugster:     6816634

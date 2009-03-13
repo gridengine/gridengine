@@ -47,9 +47,9 @@ void reschedule_unknown_event(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, moni
  
 u_long32 skip_restarted_job(lListElem *host, lListElem *job_report, u_long32 job_number, u_long32 task_number);
  
-int reschedule_jobs(sge_gdi_ctx_class_t *ctx, lListElem *ep, u_long32 force, lList **answer, monitoring_t *monitor);
+int reschedule_jobs(sge_gdi_ctx_class_t *ctx, lListElem *ep, u_long32 force, lList **answer, monitoring_t *monitor, bool is_manual);
  
-int reschedule_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep, lListElem *qep, u_long32 force, lList **answer, monitoring_t *monitor);
+int reschedule_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep, lListElem *qep, u_long32 force, lList **answer, monitoring_t *monitor, bool is_manual);
  
 lListElem* add_to_reschedule_unknown_list(sge_gdi_ctx_class_t *ctx, lListElem *hostr, u_long32 job_number, u_long32 task_number, u_long32 state);
  

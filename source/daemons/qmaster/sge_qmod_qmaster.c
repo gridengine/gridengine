@@ -611,7 +611,7 @@ monitoring_t *monitor
       return -1;
    }
 
-   reschedule_jobs(ctx, qep, force, answer, monitor);
+   reschedule_jobs(ctx, qep, force, answer, monitor, true);
 
    DEXIT;
    return 0;
@@ -692,7 +692,7 @@ monitoring_t *monitor
 ) {
    DENTER(TOP_LAYER, "qmod_job_reschedule");
 
-   reschedule_job(ctx, jep, jatep, queueep, force, answer, monitor);
+   reschedule_job(ctx, jep, jatep, queueep, force, answer, monitor, true);
 
    DEXIT;
 }

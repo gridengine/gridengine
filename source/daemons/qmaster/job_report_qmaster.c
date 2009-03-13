@@ -231,22 +231,6 @@ void process_job_report(sge_gdi_ctx_class_t *ctx, lListElem *report,
       pe_task_id_str = lGetString(jr, JR_pe_task_id_str);
       rstate = lGetUlong(jr, JR_state);
 
-      /* build a job_id_string once - we need it in many places */
-      job_id_string = job_get_id_string(jobid, jataskid, pe_task_id_str, &job_id_dstring);
-
-      /* handle protocol to execd for all jobs which are
-         already finished and maybe rescheduled */
-      /* RU: */
-      fret = skip_restarted_job(hep, jr, jobid, jataskid);
-      if (fret > 0) {
-         if (fret == 2) {
-            pack_job_kill(pb, jobid, jataskid);
-         } else if (fret == 3) {
-            pack_job_exit(pb, jobid, jataskid, pe_task_id_str != NULL ? pe_task_id_str : "");
-         }
-         continue;
-      }
-
       jep = job_list_locate(*object_base[SGE_TYPE_JOB].list, jobid);
       if (jep != NULL) {
          jatep = lGetElemUlong(lGetList(jep, JB_ja_tasks), JAT_task_number, jataskid);
@@ -258,6 +242,41 @@ void process_job_report(sge_gdi_ctx_class_t *ctx, lListElem *report,
                petask = lGetSubStr(jatep, PET_id, pe_task_id_str, JAT_task_list); 
             }
          }
+      }
+
+      /* build a job_id_string once - we need it in many places */
+      job_id_string = job_get_id_string(jobid, jataskid, pe_task_id_str, &job_id_dstring);
+
+      /* handle protocol to execd for all jobs which are
+         already finished and maybe rescheduled */
+      /* RU: */
+      fret = skip_restarted_job(hep, jr, jobid, jataskid);
+      if (fret > 0) {
+         if (fret == 2) {
+            pack_job_kill(pb, jobid, jataskid);
+         } else if (fret == 3) {
+            u_long32 state = 0;
+            lList *answer_list = NULL;
+
+            pack_job_exit(pb, jobid, jataskid, pe_task_id_str != NULL ? pe_task_id_str : "");
+            if (jep && jatep) {
+               state = lGetUlong(jatep, JAT_state);
+               /*
+                * Check for deferred startup due to manual rescheduling.
+                * Reset JDEFERRED_REQ to allow rescheduled job to run.
+                * This is no OK since the initial job is goingto die.
+                */
+               if (state & JDEFERRED_REQ) {
+                  CLEARBIT(JDEFERRED_REQ, state);
+                  lSetUlong(jatep, JAT_state, state);
+                  sge_event_spool(ctx,
+                                 &answer_list, 0, sgeE_JATASK_MOD,
+                                 jobid, jataskid, NULL, NULL, NULL,
+                                 jep, jatep, NULL, true, true);
+               }
+            }
+         }
+         continue;
       }
 
       queue_name = (s=lGetString(jr, JR_queue_name))?s:(char*)MSG_OBJ_UNKNOWNQ;

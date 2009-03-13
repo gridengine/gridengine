@@ -566,6 +566,14 @@ void split_jobs(lList **job_list, lList **answer_list,
           * Check the state of the task
           * (ORDER IS IMPORTANT!)
           */
+         if (target == NULL && result_list[SPLIT_DEFERRED] && 
+             (ja_task_status & JDEFERRED_REQ)) {
+#ifdef JOB_SPLIT_DEBUG
+            DPRINTF(("Task "sge_u32" is in deferred state\n", ja_task_id));
+#endif
+            target = &(target_tasks[SPLIT_DEFERRED]);
+         } 
+
          if (target == NULL && result_list[SPLIT_FINISHED] && 
              (ja_task_status & JFINISHED)) {
 #ifdef JOB_SPLIT_DEBUG

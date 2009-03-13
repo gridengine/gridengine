@@ -161,6 +161,7 @@ int scheduler(sge_evc_class_t *evc, sge_Sdescr_t *lists, lList **order) {
    lList *error_list = NULL;                       /* JB_Type */
    lList *hold_list = NULL;                        /* JB_Type */
    lList *not_started_list = NULL;                 /* JB_Type */
+   lList *deferred_list = NULL;                    /* JB_Type */
    int prof_job_count, global_mes_count, job_mes_count;
 
    int i;
@@ -193,6 +194,7 @@ int scheduler(sge_evc_class_t *evc, sge_Sdescr_t *lists, lList **order) {
    splitted_job_lists[SPLIT_ERROR] = &error_list;
    splitted_job_lists[SPLIT_HOLD] = &hold_list;
    splitted_job_lists[SPLIT_NOT_STARTED] = &not_started_list;
+   splitted_job_lists[SPLIT_DEFERRED] = &deferred_list;
 
    split_jobs(&(lists->job_list), NULL, lists->all_queue_list, 
               mconf_get_max_aj_instances(), splitted_job_lists);

@@ -137,6 +137,7 @@ const char *get_name_of_split_value(int value);
 *        SPLIT_WAITING_DUE_TO_TIME,
 *        SPLIT_RUNNING,
 *        SPLIT_FINISHED,
+*        SPLIT_DEFERRED,
 *        SPLIT_LAST
 *     };             
 *
@@ -182,6 +183,7 @@ enum {
    SPLIT_RUNNING,
    SPLIT_FINISHED,
    SPLIT_NOT_STARTED,
+   SPLIT_DEFERRED,
    SPLIT_LAST
 };
 

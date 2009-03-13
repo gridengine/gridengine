@@ -1,3 +1,9 @@
+GH-2009-03-13-0: Bugfix:      qmod -r does not delete the old instance of a
+                              job before a new one is started
+                 Issue:       2950
+                 Bugster:     6244911
+                 Review:      JG
+
 JF-2009-03-09-0: Bugfix:      Fix qsub truncation of scripts
                  Issue:       2876
                  Bugster:     6810688

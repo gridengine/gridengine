@@ -912,6 +912,7 @@ void sge_commit_job(lListElem *jep, lListElem *jatep, lListElem *jr,
    const char *session;
    lList *answer_list = NULL;
    const char *hostname;
+   u_long32 state = 0;
 
    DENTER(TOP_LAYER, "sge_commit_job");
 
@@ -1068,8 +1069,18 @@ void sge_commit_job(lListElem *jep, lListElem *jatep, lListElem *jr,
       }
 
       lSetUlong(jatep, JAT_status, JIDLE);
-      lSetUlong(jatep, JAT_state, (mode==COMMIT_ST_RESCHEDULED) ?(JQUEUED|JWAITING): (JQUEUED|JWAITING|JERROR));
-
+      /*
+       * Preserve any potential deferred startup request
+       * in JAT_state across re-initialization.
+       */
+      state = lGetUlong(jatep, JAT_state);
+      state &= JDEFERRED_REQ;
+      if (mode == COMMIT_ST_RESCHEDULED) {
+         state |= JQUEUED|JWAITING;
+      } else {
+         state |= JQUEUED|JWAITING|JERROR;
+      }
+      lSetUlong(jatep, JAT_state, state);
       lSetList(jatep, JAT_previous_usage_list, lCopyList("name", lGetList(jatep, JAT_scaled_usage_list)));
       lSetList(jatep, JAT_scaled_usage_list, NULL);
       lSetList(jatep, JAT_reported_usage_list, NULL);

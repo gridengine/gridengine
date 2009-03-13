@@ -193,21 +193,6 @@ monitoring_t *monitor
       jataskid = lGetUlong(jr, JR_ja_task_number);
       rstate = lGetUlong(jr, JR_state);
 
-      /* handle protocol to execd for all jobs which are
-         already finished and maybe rescheduled */
-      /* RU: */
-      fret = skip_restarted_job(hep, jr, jobid, jataskid);
-      if (fret > 0) {
-         if (fret == 2) {
-            pack_job_kill(pb, jobid, jataskid);
-         } else if (fret == 3) {
-            pack_job_exit(pb, jobid, jataskid, 
-               lGetString(jr, JR_pe_task_id_str)?
-               lGetString(jr, JR_pe_task_id_str):"");
-         }
-         continue;
-      }
-
       jep = job_list_locate(Master_Job_List, jobid);
       if(jep != NULL) {
          jatep = lGetElemUlong(lGetList(jep, JB_ja_tasks), JAT_task_number, jataskid);
@@ -216,6 +201,42 @@ monitoring_t *monitor
       if (jep && jatep) {
          status = lGetUlong(jatep, JAT_status);
       }
+
+      /* handle protocol to execd for all jobs which are
+         already finished and maybe rescheduled */
+      /* RU: */
+      fret = skip_restarted_job(hep, jr, jobid, jataskid);
+      if (fret > 0) {
+         if (fret == 2) {
+            pack_job_kill(pb, jobid, jataskid);
+         } else if (fret == 3) {
+            lList *answer_list = NULL;
+            u_long32 state = 0;
+
+            pack_job_exit(pb, jobid, jataskid, 
+               lGetString(jr, JR_pe_task_id_str)?
+               lGetString(jr, JR_pe_task_id_str):"");
+            /*
+             * Check for deferred startup due to manual rescheduling.
+             * Reset JDEFERRED_REQ to allow rescheduled job to run.
+             * This is now OK since the initial job is going to die.
+             */
+            if (jep && jatep) {
+               state = lGetUlong(jatep, JAT_state);
+               if (state & JDEFERRED_REQ) {
+                  CLEARBIT(JDEFERRED_REQ, state);
+                  lSetUlong(jatep, JAT_state, state);
+                  sge_event_spool(&answer_list, 0, sgeE_JATASK_MOD,
+                                  jobid, jataskid, NULL, NULL,
+                                  NULL,
+                                  jep, jatep,
+                                  NULL, true, true);
+               }
+            }
+         }
+         continue;
+      }
+
 
 #if 0
 

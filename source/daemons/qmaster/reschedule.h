@@ -46,9 +46,9 @@ void reschedule_unknown_event(te_event_t anEvent, monitoring_t *monitor);
  
 u_long32 skip_restarted_job(lListElem *host, lListElem *job_report, u_long32 job_number, u_long32 task_number);
  
-int reschedule_jobs(lListElem *ep, u_long32 force, lList **answer, monitoring_t *monitor);
+int reschedule_jobs(lListElem *ep, u_long32 force, lList **answer, monitoring_t *monitor, bool is_manual);
  
-int reschedule_job(lListElem *jep, lListElem *jatep, lListElem *qep, u_long32 force, lList **answer, monitoring_t *monitor);
+int reschedule_job(lListElem *jep, lListElem *jatep, lListElem *qep, u_long32 force, lList **answer, monitoring_t *monitor, bool is_manual);
  
 lListElem* add_to_reschedule_unknown_list(lListElem *hostr, u_long32 job_number, u_long32 task_number, u_long32 state);
  

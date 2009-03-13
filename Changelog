@@ -24,8 +24,10 @@ HP-2009-03-11-2: Bugfix:      Fixed compile error
 
 HP-2009-03-11-1: Bugfix:      Fixed wrongly merged inst_execd.sh file
 
-HP-2009-03-11-0: Bugfix:      SGE_Helper_Service doesn't work on Windows Vista
-                 Bugster:     TBD
+HP-2009-03-11-0: Bugfix:      jobs started with -l dwg=true can't display their
+                              GUI on Windows Vista and Server 2008
+                 Bugster:     6801748
+                 Issue:       2904
                  Review:      EB
 
 AA-2009-03-11-0: Bugfix:      sgemacc distinst, comment in continuation lines

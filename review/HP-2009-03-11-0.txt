@@ -5,9 +5,11 @@ Source Code Review Form
 Date:
 
 1 Identification
-HP-2009-03-11-0: Bugfix:    SGE_Helper_Service doesn't work on Windows Vista
-                 Bugster:   TBD
-                 Review:    EB
+HP-2009-03-11-0: Bugfix:      jobs started with -l dwg=true can't display their
+                              GUI on Windows Vista and Server 2008
+                 Bugster:     6801748
+                 Issue:       2904
+                 Review:      EB
 
 2 Conforms to specification
 

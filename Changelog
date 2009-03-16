@@ -1,3 +1,7 @@
+LP-2009-03-16-0: Enhancem:    gui-installer build process improved
+                 Enhancem:    updated the gui-installer version
+                 Review:      ZG
+
 EB-2009-03-16-0: Bugfix:      c_occasion job parameter can't be changed
                  Bugster:     6814059
                  Issue:       2946

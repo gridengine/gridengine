@@ -59,7 +59,7 @@ ___INFO__MARK_END__-->
 
     <target name="build.izpack" unless="izpack.isbuild" description="Builds IzPack">
            <echo message="IzPack is not yet built. Building now..."/>
-           <ant antfile="${izpack.home}/src/build.xml" target="all" dir="${izpack.home}" inheritall="true"/>
+           <ant antfile="${izpack.home}/src/build.xml" target="all" dir="${izpack.home}" inheritall="false"/>
     </target>
 
     <target name="-pre-compile" description="Compile IzPack if it hasn't been yet">
@@ -69,7 +69,7 @@ ___INFO__MARK_END__-->
             <available file="${izpack.home}/_build"/>
         </condition>
         <antcall target="build.izpack"/>
-            <!-- Check that IzPack was build and we have it on the classpath -->
+        <!-- Check that IzPack was build and we have it on the classpath -->
         <condition property="izpack.complete">
             <available classpath="${javac.classpath}" classname="com.izforge.izpack.installer.IzPanel"/>
         </condition>
@@ -214,7 +214,7 @@ ___INFO__MARK_END__-->
                 <include name="com/sun/grid/installer/util/Util.class"/>
                 <include name="com/sun/grid/installer/util/Config.class"/>
             </fileset>
-        </jar> 
+        </jar>
 
         <!-- Replace compiler classes -->
         <jar compress="${jar.compress}" destfile="${compiler.path}" update="true" description="Replace compiler classes">

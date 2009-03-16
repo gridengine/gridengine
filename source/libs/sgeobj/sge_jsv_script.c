@@ -47,6 +47,7 @@
 #include "sgeobj/cull_parse_util.h"
 #include "sgeobj/sge_advance_reservation.h"
 #include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_ckpt.h"
 #include "sgeobj/sge_centry.h"
 #include "sgeobj/sge_job.h"
 #include "sgeobj/sge_jsv.h"
@@ -422,6 +423,7 @@ jsv_handle_param_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answe
       }
 
       /* -c <interval> */
+      /* -c <occasion> */
       {
          if (ret && strcmp("c_interval", param) == 0) {
             u_long32 timeval = 0;
@@ -435,6 +437,17 @@ jsv_handle_param_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answe
             }
             if (ret) {
                lSetUlong(new_job, JB_checkpoint_interval, timeval);
+            }
+         }
+         if (ret && strcmp("c_occasion", param) == 0) {
+            int lret = sge_parse_checkpoint_attr(value);
+
+            if (lret != 0) {
+               lSetUlong(new_job, JB_checkpoint_interval, lret);
+            } else {
+               answer_list_add_sprintf(&local_answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                                       MSG_JSV_PARSE_VAL_SS, param, value);
+               ret = false;
             }
          }
       }
@@ -1435,7 +1448,7 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
     * -soft -l =>
     * PARAM l_soft <centry_list> 
     *
-    * [-hard] -q =>
+    * -hard -l =>
     * PARAM l_hard <centry_list>
     */
    {
@@ -1652,7 +1665,7 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
     * -soft -q =>
     * PARAM q_soft <wc_queue_list> (see man page sge_types(1) for wc_queue_list specification)
     *
-    * [-hard] -q =>
+    * -hard -q =>
     * PARAM q_hard <wc_queue_list> 
     *
     * TODO: EB: CLEANUP: make a function for the code blocks of -soft -q, -hard -q and -masterq
@@ -1665,7 +1678,7 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
          bool first = true;
 
          sge_dstring_clear(&buffer);
-         sge_dstring_sprintf(&buffer, "%s l_hard", prefix);
+         sge_dstring_sprintf(&buffer, "%s q_hard", prefix);
          for_each(queue, hard_queue_list) {
             const char *queue_pattern = lGetString(queue, QR_name);
 
@@ -1684,7 +1697,7 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
          bool first = true;
 
          sge_dstring_clear(&buffer);
-         sge_dstring_sprintf(&buffer, "%s l_soft", prefix);
+         sge_dstring_sprintf(&buffer, "%s q_soft", prefix);
          for_each(queue, soft_queue_list) {
             const char *queue_pattern = lGetString(queue, QR_name);
 
@@ -2085,9 +2098,16 @@ jsv_do_communication(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answer_li
 
    DENTER(TOP_LAYER, "jsv_do_communication");
    if (ret) {
+      /* 
+       * Try to read some error messages from stderr. There still has no command been send
+       * to JSV but the initialization code might also cause errors....
+       */
       while (fscanf(lGetRef(jsv, JSV_err), "%[^\n]\n", input) == 1) {
-          ERROR((SGE_EVENT, MSG_JSV_LOGMSG_S, input));  
+         ERROR((SGE_EVENT, MSG_JSV_LOGMSG_S, input));  
+         ret = false; 
       }
+   }
+   if (ret) {
       DPRINTF(("JSV - START will be sent\n"));
       ret &= jsv_send_command(jsv, answer_list, "START");
    }

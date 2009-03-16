@@ -1,3 +1,19 @@
+EB-2009-03-16-0: Bugfix:      c_occasion job parameter can't be changed
+                 Bugster:     6814059
+                 Issue:       2946
+                 Bugfix:      JSV: change of requested resources is rejected
+                              if also queues were selected during job submission
+                 Bugster:     6817691
+                 Issue:       2954
+                 Bugfix:      influence of c_occasion on c_interval and vice
+                              versa is not documented explicitly
+                 Bugster:     6814060
+                 Issue:       2947
+                 Enhancemen.: minor change of sge_ca which allowes csp
+                              installaion in environments where root is not
+                              even mapped to nobody on NFS mounted fs.:wq
+                 Review:      MD
+
 AH-2009-03-12-1: Bugfix:      Incorrect referrences to "SGE_H_ALIASES" man pages
                  Changed:     hostnameutils(1), qping(1)
                  Bugster:     6816705

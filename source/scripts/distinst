@@ -1178,7 +1178,7 @@ if [ $instsgemacc = true ]; then
       ( cd $DEST_SGE_ROOT; \
         Execute unzip $ABSOLUTE_MACC_SRC_DIR/EventMonitor/dist/sgemacc.zip; \
       )
-      Execute mkdir $DEST_SGE_ROOT/bin
+      Execute mkdir -p $DEST_SGE_ROOT/bin
       Execute cp $ABSOLUTE_MACC_SRC_DIR/scripts/sgemacc.sh $DEST_SGE_ROOT/bin/
       chown root:root $DEST_SGE_ROOT/bin/sgemacc.sh
       Execute chmod 755 $DEST_SGE_ROOT/bin/sgemacc.sh

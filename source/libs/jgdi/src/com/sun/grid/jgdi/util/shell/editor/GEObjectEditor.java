@@ -244,9 +244,6 @@ public class GEObjectEditor {
                 if (val == null) {
                     continue;
                 }
-                if (obj instanceof TestGEObject) {
-                    val = subElems[0] + "=" + strVal; //TODO LP: Check the tests
-                }
             } else {
                 name = elems[i];
                 val = EditorUtil.getParsedValueAsObject(jgdi, pd.getPropertyName(), type, name);

@@ -38,11 +38,11 @@
     
     <target name="aimk" depends="aimk.init, javah">
         <!-- echo message="aimk.targetbits = ${aimk.targetbits}"/ -->
-        <aimk_call args="${aimk.targetbits} ${aimk.insure} ${aimk.debug} -only-core jgdi_all"/>
+        <aimk_call args="${aimk.targetbits} ${aimk.insure} ${aimk.debug} -only-core -no-jemalloc jgdi_all"/>
     </target>
     
     <target name="aimk.clean" depends="aimk.init">
-        <aimk_call args="${aimk.targetbits} ${aimk.insure} ${aimk.debug} -only-core jgdi_clean"/>
+        <aimk_call args="${aimk.targetbits} ${aimk.insure} ${aimk.debug} -only-core -no-jemalloc jgdi_clean"/>
     </target>
     
     <target name="aimk.template.required" depends="aimk.init, init">
@@ -97,8 +97,7 @@
         <property name="classes.dir"  location="${build.dir}/classes"/>
         <property name="src.dir"      location="src" />
         <property name="gensrc.dir"   location="${build.dir}/gensrc" />
-        <property name="test.src.dir" location="test"/>        
-        <property name="test.classes.dir" location="${build.dir}/testclasses" />
+        <property name="test.src.dir" location="test"/>
         <property name="javadoc.dir" location="${build.dir}/doc/api"/>
         <property name="example.dir" location="examples"/>
         <property name="example.src.dir" location="examples/src"/>
@@ -107,6 +106,7 @@
         <property name="cullconv.jar" location="${cullconv.dir}/build/cullconv.jar"/>
         <property name="project.name" value="${ant.project.name}"/>
         <property name="jar" location="${build.dir}/${project.name}.jar"/>
+        <property name="test.jar" location="${build.dir}/${project.name}-test.jar"/>
         <mkdir dir="${classes.dir}"/>
         <mkdir dir="${test.classes.dir}"/>
         <mkdir dir="${gensrc.dir}"/>
@@ -219,8 +219,21 @@
 
         <fileset id="jar.classes" dir="${classes.dir}">
             <include name="**/*.class"/>
+            <exclude name="**/*Test*.class"/>
+<!--
+            <exclude name="com/sun/grid/jgdi/configuration/*Test*.class"/>
+            <exclude name="com/sun/grid/jgdi/*Test*.class"/>
+            <exclude name="com/sun/grid/jgdi/event/*Test*.class"/>
+            <exclude name="com/sun/grid/jgdi/qmod/*Test*.class"/>
+            <exclude name="com/sun/grid/jgdi/monitoring/*Test*.class"/>
             <exclude name="com/sun/grid/jgdi/examples/**/*"/>
+-->
         </fileset>
+
+        <fileset id="jar.test.classes" dir="${classes.dir}">
+            <include name="**/*Test*.class"/>
+        </fileset>
+
         <fileset id="jar.properties" dir="${src.dir}">
             <include name="com/sun/grid/jgdi/Resources*.properties"/>
             <include name="com/sun/grid/jgdi/util/shell/ErrorMessagesResources.properties"/>
@@ -229,6 +242,7 @@
         </fileset>
         <dependset>
             <srcfileset refid="jar.classes"/>
+            <srcfileset refid="jar.test.classes"/>
             <srcfileset refid="jar.properties"/>
             <targetfileset file="${jar}"/>
         </dependset>
@@ -236,14 +250,22 @@
     
     <target name="jar" depends="jar.build, jar.wait"/>
     
-    <target depends="jar.init, compile, gensrc.native" name="jar.build" if="isJavaBuildHost">
+    <target name="jar.build" depends="jar.init, compile, gensrc.native" if="isJavaBuildHost">
         
-        <jar basedir="${classes.dir}" compress="true" jarfile="${jar}.tmp">
+        <jar compress="true" jarfile="${jar}.tmp">
             <fileset refid="jar.classes"/>
             <fileset refid="jar.properties"/>
             <metainf dir="${legal.dir}" includes="${legal}"/>
         </jar>
+
+        <jar compress="true" jarfile="${test.jar}.tmp">
+            <fileset refid="jar.test.classes"/>
+            <metainf dir="${legal.dir}" includes="${legal}"/>
+        </jar>
+
         <copy file="${jar}.tmp" tofile="${jar}"/>
+        <copy file="${test.jar}.tmp" tofile="${test.jar}"/>
+
     </target>
     
     <target name="jar.wait" depends="jar.init" unless="isJavaBuildHost">
@@ -257,7 +279,7 @@
             Timeout while waiting for jar file build on host ${java.buildhost}
         </fail>
     </target>       
-    
+
     <target depends="jar, aimk" description="Build everything." name="all"/>
     
     
@@ -339,6 +361,7 @@
     <target name="java.clean" depends="init" if="isJavaBuildHost">
         <delete dir="${build.dir}"/>
         <delete file="${jar}"/>
+        <delete file="${test.jar}"/>
         <ant dir="cullconv" antfile="build.xml" target="clean"/>
     </target>
     
@@ -346,6 +369,7 @@
         <echo level="warning">Warning: Do not delete</echo>
         <echo level="warning">         ${build.dir} and</echo>
         <echo level="warning">         ${jar}</echo>
+        <echo level="warning">         ${test.jar}</echo>
         <echo level="warning">         I am not on the java build host (${java.buildhost}).</echo>
     </target>
     
@@ -888,6 +912,7 @@
         
         <path id="test.classpath">
         <path location="${jar}"/>
+        <path location="${test.jar}"/>
         <path location="test"/>
         <path refid="compile.classpath"/>
         </path>
@@ -898,6 +923,7 @@
         <macrodef name="test.selected">
             <attribute name="dir"/>
             <sequential>
+
                 <junit fork="yes" dir="${basedir}" showoutput="true">
                     <jvmarg line="${sge.jvmargs}"/>
                     <env key="LD_LIBRARY_PATH" value="${sge.lib.path}"/>

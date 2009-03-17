@@ -366,6 +366,12 @@ static int jgdi_report_queue_ulong_value(qhost_report_handler_t* handler, const 
       }
    }
 
+   if (!strcmp(name, "slots_resv")) {
+      if (QueueInfoImpl_setReservedSlots(env, ctx->queue_info, (jint)value, alpp) != JGDI_SUCCESS) {
+         goto error; 
+      }
+   }
+
    DRETURN(QHOST_SUCCESS);
 
 error:

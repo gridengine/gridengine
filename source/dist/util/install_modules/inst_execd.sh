@@ -763,6 +763,7 @@ InstWinHelperSvc()
    $INFOTEXT "\n   ... moving new service binary!"
    $INFOTEXT -log "\n   ... moving new service binary!"
    cp -fR $SGE_UTILBIN/SGE_Helper_Service.exe $WIN_DIR
+   cp -fR $SGE_UTILBIN/SGE_Starter.exe $WIN_DIR
 
    $INFOTEXT "   ... installing new service!"
    $INFOTEXT -log "   ... installing new service!"

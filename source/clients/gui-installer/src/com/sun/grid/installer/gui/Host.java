@@ -133,7 +133,6 @@ public class Host implements Config {
     private String hostname = "";
     private String displayName = "";
     private String ip = "";
-    private InetAddress inetAddr = null;
     private String architecture = "";
     private String spoolDir = "";
     private String log = "";
@@ -143,7 +142,6 @@ public class Host implements Config {
     public Host(Host h) {
         hostname = new String(h.getHostname());
         ip = new String(h.getIp());
-        inetAddr = h.getInetAddr();
         architecture = new String(h.getArchitecture());
         spoolDir = new String(h.getSpoolDir());
         state = h.getState();
@@ -243,17 +241,6 @@ public class Host implements Config {
             string += " Log='" + log + "'";
         }
         return string;
-    }
-
-    public InetAddress getInetAddr() {
-        return inetAddr;
-    }
-
-    /**
-     * @param inetAddr the inetAddr to set
-     */
-    public void setInetAddr(InetAddress inetAddr) {
-        this.inetAddr = inetAddr;
     }
 
     public String getSpoolDir() {

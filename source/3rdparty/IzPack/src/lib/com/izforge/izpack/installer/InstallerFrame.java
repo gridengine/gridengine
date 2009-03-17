@@ -1,5 +1,5 @@
 /*
- * $Id: InstallerFrame.java,v 1.2 2009/01/26 11:30:58 zsiga Exp $
+ * $Id: InstallerFrame.java,v 1.1 2009/03/04 17:13:53 zsiga Exp $
  * IzPack - Copyright 2001-2008 Julien Ponge, All Rights Reserved.
  * 
  * http://izpack.org/

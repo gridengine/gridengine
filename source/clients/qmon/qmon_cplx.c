@@ -680,15 +680,17 @@ static void qmonCplxAtypeAttr(Widget w, XtPointer cld, XtPointer cad)
    DENTER(GUI_LAYER, "qmonCplxAtypeAttr");
 
    if (type != TYPE_INT && type != TYPE_DOUBLE &&
-       type != TYPE_MEM && type != TYPE_TIM) {
-      XmtChooserSetSensitive(attr_aconsumable, 1, False); 
+       type != TYPE_MEM && type != TYPE_TIM && type != TYPE_BOO) {
+      XmtChooserSetSensitive(attr_aconsumable, 1, False);
+      XmtChooserSetSensitive(attr_aconsumable, 2, False);
       XmtChooserSetState(attr_aconsumable, 0, True);
    } else {   
       XmtChooserSetSensitive(attr_aconsumable, 1, True); 
+      XmtChooserSetSensitive(attr_aconsumable, 2, True);
    }
 
    /* reset sensitivity to true */
-   for (i=0; i<6; i++)
+   for (i=0; i<7; i++)
       XmtChooserSetSensitive(attr_arel, i, True); 
    
    if (type == TYPE_STR || type == TYPE_CSTR || type == TYPE_HOST || type == TYPE_RESTR) {
@@ -696,14 +698,17 @@ static void qmonCplxAtypeAttr(Widget w, XtPointer cld, XtPointer cad)
       XmtChooserSetState(attr_arel, 0, False);
       for (i=1; i<5; i++)
          XmtChooserSetSensitive(attr_arel, i, False); 
-   }       
+   }
    
    if (type == TYPE_BOO) {
       XmtInputFieldSetString(attr_adefault, "FALSE");
       XmtChooserSetState(attr_arel, 0, False);
-      for (i=1; i<6; i++)
+      for (i=1; i<7; i++) {
          XmtChooserSetSensitive(attr_arel, i, False); 
-   }       
+      }
+   } else {
+      XmtChooserSetSensitive(attr_arel, 6, False); 
+   }
 
    if (type == TYPE_MEM || type == TYPE_INT || type == TYPE_DOUBLE) {
       XmtInputFieldSetString(attr_adefault, "0");
@@ -728,16 +733,23 @@ static void qmonCplxAconsumableAttr(Widget w, XtPointer cld, XtPointer cad)
 
    if (cbs->state != 0) { 
       /* reset sensitivity to false for all apart from <= */
-      for (i=0; i<6; i++)
+      for (i=0; i<7; i++)
          XmtChooserSetSensitive(attr_arel, i, False); 
-      XmtChooserSetSensitive(attr_arel, 4, True); 
-      XmtChooserSetState(attr_arel, 4, False);
+
+      type = XmtChooserGetState(attr_atype) + 1;
+      if (type == TYPE_BOO) {
+         XmtChooserSetSensitive(attr_arel, 6, True); 
+         XmtChooserSetState(attr_arel, 6, False);
+      } else {
+         XmtChooserSetSensitive(attr_arel, 4, True); 
+         XmtChooserSetState(attr_arel, 4, False);
+      }
       XtSetSensitive(attr_adefault, true);
    } else {   
       /* set default value for all non consumables depending on type */
       XtSetSensitive(attr_adefault, false);
       /* reset sensitivity to true */
-      for (i=0; i<6; i++)
+      for (i=0; i<7; i++)
          XmtChooserSetSensitive(attr_arel, i, True); 
       
       type = XmtChooserGetState(attr_atype) + 1;
@@ -751,7 +763,7 @@ static void qmonCplxAconsumableAttr(Widget w, XtPointer cld, XtPointer cad)
       if (type == TYPE_BOO) {
          XmtInputFieldSetString(attr_adefault, "FALSE"); 
          XmtChooserSetState(attr_arel, 0, False);
-         for (i=1; i<6; i++)
+         for (i=1; i<7; i++)
             XmtChooserSetSensitive(attr_arel, i, False); 
       }       
 
@@ -802,9 +814,10 @@ static void qmonCplxSelectAttr(Widget w, XtPointer cld, XtPointer cad)
       /* relop */
       str = XbaeMatrixGetCell(w, cbs->row, 3);
       relop = 0;
-      for (i=CMPLXEQ_OP; !relop && i<=CMPLXNE_OP; i++) {
-         if (!strcasecmp(str, map_op2str(i)))
+      for (i = CMPLXEQ_OP; !relop && i <= CMPLXEXCL_OP; i++) {
+         if (!strcasecmp(str, map_op2str(i))) {
             relop = i-1;
+         }
       }
       XmtChooserSetState(attr_arel, relop, True); 
 

@@ -93,8 +93,6 @@ enum {
    JSV_out,
    JSV_err,
    JSV_has_to_restart,
-   JSV_incomplete,
-   JSV_complete,
    JSV_last_mod,
    JSV_send_env,
    JSV_old_job,
@@ -109,27 +107,30 @@ enum {
 };
 
 LISTDEF(JSV_Type)
-   SGE_STRING(JSV_name, CULL_DEFAULT)       
-   SGE_STRING(JSV_context, CULL_DEFAULT)       
-   SGE_STRING(JSV_url, CULL_DEFAULT)       
-   SGE_STRING(JSV_type, CULL_DEFAULT)       
-   SGE_STRING(JSV_user, CULL_DEFAULT)       
-   SGE_STRING(JSV_command, CULL_DEFAULT)   
-   SGE_STRING(JSV_pid, CULL_DEFAULT)      
-   SGE_REF(JSV_in, SGE_ANY_SUBTYPE, CULL_DEFAULT)         /* type is FILE* */
-   SGE_REF(JSV_out, SGE_ANY_SUBTYPE, CULL_DEFAULT)        /* type is FILE* */
-   SGE_REF(JSV_err, SGE_ANY_SUBTYPE, CULL_DEFAULT)        /* type is FILE* */
-   SGE_BOOL(JSV_has_to_restart, CULL_DEFAULT) 
-   SGE_LIST(JSV_incomplete, LR_Type, CULL_DEFAULT)  
-   SGE_LIST(JSV_complete, LR_Type, CULL_DEFAULT)   
-   SGE_ULONG(JSV_last_mod, CULL_DEFAULT) 
-   SGE_BOOL(JSV_send_env, CULL_DEFAULT) 
-   SGE_REF(JSV_old_job, JB_Type, CULL_DEFAULT)
-   SGE_REF(JSV_new_job, JB_Type, CULL_DEFAULT)
+   SGE_STRING(JSV_name, CULL_DEFAULT)                    /* name of a JSV */
+   SGE_STRING(JSV_context, CULL_DEFAULT)                 /* value of the JSV_CONTEXT_CLIENT define
+                                                          * or name of the worker thread in
+                                                          * case of server JSV 
+                                                          */
+   SGE_STRING(JSV_url, CULL_DEFAULT)                     /* jsv_url as specified in sge_types man page */
+   SGE_STRING(JSV_type, CULL_DEFAULT)                    /* in the moment only "script" is allowed here */
+   SGE_STRING(JSV_user, CULL_DEFAULT)                    /* user name used in jsv_url */
+   SGE_STRING(JSV_command, CULL_DEFAULT)                 /* absolute path of jsv_url */
+   SGE_STRING(JSV_pid, CULL_DEFAULT)                     /* -1 or pid of running jsv instance */ 
+   SGE_REF(JSV_in, SGE_ANY_SUBTYPE, CULL_DEFAULT)        /* type is FILE* */
+   SGE_REF(JSV_out, SGE_ANY_SUBTYPE, CULL_DEFAULT)       /* type is FILE* */
+   SGE_REF(JSV_err, SGE_ANY_SUBTYPE, CULL_DEFAULT)       /* type is FILE* */
+   SGE_BOOL(JSV_has_to_restart, CULL_DEFAULT)            /* JSV has to be restarted as soon as possible */
+   SGE_ULONG(JSV_last_mod, CULL_DEFAULT)                 /* timestamp when the jsv script file
+                                                          * was last modified */ 
+   SGE_BOOL(JSV_send_env, CULL_DEFAULT)                  /* environment information has to be sent
+                                                          * to the JSV */
+   SGE_REF(JSV_old_job, JB_Type, CULL_DEFAULT)           /* job template before verification step */
+   SGE_REF(JSV_new_job, JB_Type, CULL_DEFAULT)           /* job after the verification step */
    SGE_BOOL(JSV_restart, CULL_DEFAULT) 
    SGE_BOOL(JSV_accept, CULL_DEFAULT) 
    SGE_BOOL(JSV_done, CULL_DEFAULT) 
-   SGE_BOOL(JSV_soft_shutdown, CULL_DEFAULT) 
+   SGE_BOOL(JSV_soft_shutdown, CULL_DEFAULT)              
    SGE_BOOL(JSV_test, CULL_DEFAULT)
    SGE_ULONG(JSV_test_pos, CULL_DEFAULT)
    SGE_STRING(JSV_result, CULL_DEFAULT)
@@ -147,8 +148,6 @@ NAMEDEF(JSVN)
    NAME("JSV_out")
    NAME("JSV_err")
    NAME("JSV_has_to_restart")
-   NAME("JSV_incomplete")
-   NAME("JSV_complete")
    NAME("JSV_last_mod")
    NAME("JSV_send_env")
    NAME("JSV_old_job")

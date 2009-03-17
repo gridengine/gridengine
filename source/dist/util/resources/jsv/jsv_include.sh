@@ -87,6 +87,27 @@ undef="variable_is_undefined"
 quit="false"
 saved_ifs="$IFS"
 
+###### jsv/jsv_clear_params() ##################################################
+#  NAME
+#     jsv_clear_params() -- Clears all received job parameters.
+#
+#  SYNOPSIS
+#     jsv_clear_params() 
+#
+#  FUNCTION
+#     This function clears all received job parameters that were stored 
+#     during the last job verification process.
+#
+#  INPUTS
+#     none
+#
+#  RESULT
+#     none
+#
+#  SEE ALSO
+#     jsv/jsv_clear_envs() 
+#     jsv/jsv_show_params()
+################################################################################
 jsv_clear_params()
 {
    for i in $jsv_all_params; do
@@ -102,6 +123,27 @@ jsv_clear_params()
    done
 }
 
+###### jsv/jsv_clear_envs() ##################################################
+#  NAME
+#     jsv_clear_envs() -- Clears all received job environment variables.
+#
+#  SYNOPSIS
+#     jsv_clear_envs() 
+#
+#  FUNCTION
+#     This function clears all received job environment variables that
+#     were stored during the last job verification process.
+#
+#  INPUTS
+#     none
+#
+#  RESULT
+#     none
+#
+#  SEE ALSO
+#     jsv/jsv_clear_params() 
+#     jsv/jsv_show_envs()
+################################################################################
 jsv_clear_envs()
 {
    for i in $jsv_all_envs; do
@@ -118,6 +160,30 @@ jsv_clear_envs()
    jsv_all_envs=""
 }
 
+###### jsv/jsv_show_params() ##################################################
+#  NAME
+#     jsv_show_params() -- Prints all job parameters. 
+#
+#  SYNOPSIS
+#     jsv_show_params() 
+#
+#  FUNCTION
+#     A call of this function reports all known job parameters to the
+#     counterpart of this script (client or master daemon thread). This
+#     parameters will be reported as info messages and appear
+#     either in the stdout stream of the client or in the message file of 
+#     the master process.
+#
+#  INPUTS
+#     none
+#
+#  RESULT
+#     none
+#
+#  SEE ALSO
+#     jsv/jsv_clear_params() 
+#     jsv/jsv_show_envs() 
+################################################################################
 jsv_show_params()
 {
    for i in $jsv_all_params; do
@@ -133,6 +199,29 @@ jsv_show_params()
    done
 }
 
+###### jsv/jsv_show_envs() ##################################################
+#  NAME
+#     jsv_show_envs() -- Prints all job environment variables.
+#
+#  SYNOPSIS
+#     jsv_show_envs() 
+#
+#  FUNCTION
+#     A call of this function reports all known job environment variables
+#     to the counterpart of this script (client or master daemon thread). 
+#     They will be reported as info messages and appear in the stdout 
+#     stream of the client or in the message file of the master process. 
+#
+#  INPUTS
+#     none
+#
+#  RESULT
+#     none
+#
+#  SEE ALSO
+#     jsv/jsv_clear_params() 
+#     jsv/jsv_clear_envs() 
+################################################################################
 jsv_show_envs()
 {
    for i in $jsv_all_envs; do
@@ -148,6 +237,33 @@ jsv_show_envs()
    done
 }
 
+###### jsv/jsv_is_env() ######################################################
+#  NAME
+#     jsv_is_env() -- Returns whether or not a specific job environment 
+#                     variable exists in the job currently beeing verified.
+#
+#  SYNOPSIS
+#     jsv_is_env(variable_name) 
+#
+#  FUNCTION
+#     If the function returns "true", then the job environment variable with 
+#     the name "variable_name" exists in the job currently being verified and
+#     jsv_get_env() can be used to retrieve the value of that variable.
+#
+#     If the function returns "false", then the job environment variable with 
+#     the name "variable_name" does not exist.
+#
+#  INPUTS
+#     varibale_name - e.g "HOME", "LD_LIBRARAY_PATH" ...
+#
+#  RESULT
+#     "true" or "false" as string 
+#
+#  SEE ALSO
+#     jsv/jsv_clear_params() 
+#     jsv/jsv_show_envs() 
+#     jsv/jsv_get_env()
+################################################################################
 jsv_is_env() 
 {
    name="jsv_env_$1"
@@ -163,6 +279,40 @@ jsv_is_env()
    unset isdef
 }
 
+###### jsv/jsv_get_env() #####################################################
+#  NAME
+#     jsv_get_env() -- Returns the value of a job environment variable.
+#
+#  SYNOPSIS
+#     jsv_get_env(variable_name) 
+#
+#  FUNCTION
+#     This function returns the value of a job environment variable
+#     ("variable_name"). 
+#
+#     This variable has to be passed with the commandline switch 
+#     -v or -V and it has to be enabled that environment variable data is 
+#     passed to JSV scripts. Environment variable data is passed when the 
+#     function jsv_send_env() is called in the callback function 
+#     jsv_on_start().
+# 
+#     If the variable does not exist or if environment variable 
+#     information is not available then an empty string will be returned. 
+#    
+#  INPUTS
+#     variable_name - e.g "HOME", "LD_LIBRARAY_PATH" ...
+#
+#  RESULT
+#     value of the variable as string
+#
+#  SEE ALSO
+#     jsv/jsv_show_envs() 
+#     jsv/jsv_is_env()
+#     jsv/jsv_add_env()
+#     jsv/jsv_mod_env()
+#     jsv/jsv_del_env()
+#     jsv/jsv_on_start()
+################################################################################
 jsv_get_env() 
 {
    name="jsv_env_$1"
@@ -176,6 +326,45 @@ jsv_get_env()
    unset isdef
 }
 
+###### jsv/jsv_add_env() #####################################################
+#  NAME
+#     jsv_add_env() -- Adds a job environment variable.
+#
+#  SYNOPSIS
+#     jsv_add_env(variable_name, variable_value) 
+#
+#  FUNCTION
+#     This function adds an additional environment variable to the set 
+#     of variables that will exported to the job, when it is started.
+#     As a result the "variable_name" and "variable_value" become 
+#     available, as if the -v or -V was specified during job submission.
+#
+#     "variable_value" is optional. If there is an empty string passed 
+#     then the variable is defined without value.
+#
+#     If "variable_name" already exists in the set of job environment 
+#     variables, then the corresponding value will be replaced by
+#     "variable_value", as if the function jsv_mod_env() was used. 
+#     If an emty string is passed then the old value will be deleted.
+#
+#     To delete a environment variable the function jsv_del_env()
+#     has to be used.
+#
+#  INPUTS
+#     variable_name  - e.g "HOME", "LD_LIBRARAY_PATH" ...
+#     variable_value - e.g "/home/user", "", ...
+#
+#  RESULT
+#     none
+#
+#  SEE ALSO
+#     jsv/jsv_show_envs() 
+#     jsv/jsv_is_env()
+#     jsv/jsv_get_env()
+#     jsv/jsv_mod_env()
+#     jsv/jsv_del_env()
+#     jsv/jsv_on_start()
+################################################################################
 jsv_add_env() 
 {
    name="jsv_env_$1"
@@ -184,6 +373,45 @@ jsv_add_env()
    unset name
 }
 
+###### jsv/jsv_mod_env() #####################################################
+#  NAME
+#     jsv_mod_env() -- Modifies the value of a environment variable.
+#
+#  SYNOPSIS
+#     jsv_mod_env(variable_name, variable_value) 
+#
+#  FUNCTION
+#     This function modifies an existing environment variable that is 
+#     in the set of variables which will exported to the job, when it 
+#     is started.
+#     As a result, the "variable_name" and "variable_value" will be
+#     available as if the -v or -V was specified during job submission.
+#
+#     "variable_value" is optional. If there is an empty string passed 
+#     then the variable is defined without value.
+#
+#     If "variable_name" does not already exist in the set of job 
+#     environment variables, then the corresponding name and value will 
+#     be added as if the function jsv_add_env() was used. 
+#
+#     To delete a environment variable, use the function jsv_del_env().
+#
+#  INPUTS
+#     varibale_name  - e.g "HOME", "LD_LIBRARAY_PATH" ...
+#     variable_value - e.g. "/home/user", "" ...
+#
+#  RESULT
+#     none 
+#
+#  SEE ALSO
+#     jsv/jsv_show_envs() 
+#     jsv/jsv_is_env()
+#     jsv/jsv_get_env()
+#     jsv/jsv_add_env()
+#     jsv/jsv_get_env()
+#     jsv/jsv_del_env()
+#     jsv/jsv_on_start()
+################################################################################
 jsv_mod_env() 
 {
    name="jsv_env_$1"
@@ -192,6 +420,38 @@ jsv_mod_env()
    unset name
 }
 
+###### jsv/jsv_del_env() #####################################################
+#  NAME
+#     jsv_del_env() -- Deletes a job environment variable.
+#
+#  SYNOPSIS
+#     jsv_del_env(variable_name) 
+#
+#  FUNCTION
+#     This function removes a job environment variable ("variable_name")
+#     from the set of variables that will be exported
+#     to the job, when it is started.
+#
+#     If "variable_name" does not already exists in the set of job 
+#     environment variables then the command is ignored.
+#
+#     To change the value of a variable use the function jsv_mod_env()
+#     to add a new value, call the function jsv_add_env().
+#
+#  INPUTS
+#     variable_name - e.g "HOME", "LD_LIBRARAY_PATH" ...
+#
+#  RESULT
+#     none
+#
+#  SEE ALSO
+#     jsv/jsv_show_envs() 
+#     jsv/jsv_is_env()
+#     jsv/jsv_get_env()
+#     jsv/jsv_add_env()
+#     jsv/jsv_mod_env()
+#     jsv/jsv_on_start()
+################################################################################
 jsv_del_env() 
 {
    name="jsv_env_$1"
@@ -206,6 +466,97 @@ jsv_del_env()
    unset isdef
 }
 
+###### jsv/jsv_is_param() #####################################################
+#  NAME
+#     jsv_is_param() -- Returns whether or not a specific job parameters
+#                       exists in the job currently being verified.
+#
+#  SYNOPSIS
+#     jsv_is_param(param_name) 
+#
+#  FUNCTION
+#     This function returns whether or not a specific job parameters is 
+#     available for the job which is currently being verified. Either the 
+#     string "true" or "false" will be returned. The availability/absence 
+#     of a job parameter does not mean that the corresponding commandline 
+#     switch was used/not used. 
+#
+#  INPUTS
+#     param_name - The following values are allowed. Corresponding
+#                  qsub/qrsh/qsh/... switches are mentioned in parenthesis 
+#                  next to the parameter name if they are different. 
+#                  Find additional information in qsub(1) man page where
+#                  addtional notes can be found describing the availability 
+#                  and value format.
+#                  Job parameters written in capital letters
+#                  are pseudo parameters. These parameters describe
+#                  either the context where this JSV is executed or
+#                  additional values describing the job submission
+#                  context.
+#
+#        name           switch/description
+#        -------------- -------------------------------------------
+#        a              
+#        ac             (combination of -ac, -sc, -dc)
+#        ar             
+#        A             
+#        b
+#        c
+#        ckpt
+#        cwd
+#        display 
+#        dl
+#        e
+#        h
+#        hold_jid
+#        hold_jid_ad
+#        i
+#        l_hard         (-hard followed by -l)   
+#        l_soft         (-soft followed by -l)
+#        j
+#        js
+#        m
+#        M
+#        masterq
+#        N
+#        notify
+#        now
+#        N
+#        o
+#        ot
+#        P
+#        pe
+#        q_hard         (-hard followed by -q)
+#        q_soft         (-soft followed by -q)
+#        R
+#        r
+#        shell
+#        S
+#        t
+#        w
+#        wd
+#        CLIENT         name of the submit client (e.g qsub, qmon, ...)
+#        CONTEXT        "client" or "server"
+#        GROUP          unix group of the job submitter
+#        VERSION        1.0
+#        JOB_ID         0 in client context or job id of the job in 
+#                       server context
+#        SCRIPT         script path
+#        CMDARGS        number of additional job arguments
+#        CMDARG<i>      parameter <i>
+#        USER           unix user of the person which submitted the job
+#
+#  RESULT
+#     "true" or "false"
+#
+#  SEE ALSO
+#     jsv/jsv_show_params() 
+#     jsv/jsv_is_param()
+#     jsv/jsv_get_param()
+#     jsv/jsv_add_param()
+#     jsv/jsv_mod_param()
+#     jsv/jsv_on_start()
+################################################################################
 jsv_is_param() 
 {
    name="jsv_param_$1"
@@ -221,6 +572,33 @@ jsv_is_param()
    unset isdef
 }
 
+###### jsv/jsv_get_param() #####################################################
+#  NAME
+#     jsv_get_param() -- Returns the value of a job parameter.
+#
+#  SYNOPSIS
+#     jsv_get_param(param_name) 
+#
+#  FUNCTION
+#     This function returns the value of a specific job parameter 
+#     ("param_name"). 
+#
+#     This value is only available if the function jsv_is_param()
+#     returns "true". Otherwise an empty string is returned.
+# 
+#  INPUTS
+#     param_name - Find a list of allowed parameter names in the
+#                  documentation section for the function jsv_is_param().
+#
+#  RESULT
+#     value of the variable as string
+#
+#  SEE ALSO
+#     jsv/jsv_show_param() 
+#     jsv/jsv_is_param()
+#     jsv/jsv_set_param()
+#     jsv/jsv_del_param()
+################################################################################
 jsv_get_param() 
 {
    name="jsv_param_$1"
@@ -234,6 +612,33 @@ jsv_get_param()
    unset isdef
 }
 
+###### jsv/jsv_set_param() #####################################################
+#  NAME
+#     jsv_set_param() -- Changes the value of a job environment variable. 
+#
+#  SYNOPSIS
+#     jsv_set_param(param_name, param_value) 
+#
+#  FUNCTION
+#     This function changes the job parameter with the name "param_name"
+#     to the value "param_value".
+#
+#     If "param_name" is an empty string then the corresponding
+#     job parameter will be deleted. 
+# 
+#  INPUTS
+#     param_name - Find a list of allowed parameter names in the
+#                  documentation section for the function jsv_is_param(). 
+#
+#  RESULT
+#     none
+#
+#  SEE ALSO
+#     jsv/jsv_show_param() 
+#     jsv/jsv_is_param()
+#     jsv/jsv_set_param()
+#     jsv/jsv_del_param()
+################################################################################
 jsv_set_param()
 {
    name="jsv_param_$1"
@@ -242,10 +647,32 @@ jsv_set_param()
    unset name
 }
 
+###### jsv/jsv_del_param() #####################################################
+#  NAME
+#     jsv_del_param() -- Deletes a job parameter. 
+#
+#  SYNOPSIS
+#     jsv_del_param(param_name) 
+#
+#  FUNCTION
+#     This function deletes the job parameter with the name "param_name".
+# 
+#  INPUTS
+#     param_name - Find a list of allowed parameter names in the
+#                  documentation section for the function jsv_is_param().
+#
+#  RESULT
+#     none
+#
+#  SEE ALSO
+#     jsv/jsv_show_param() 
+#     jsv/jsv_is_param()
+#     jsv/jsv_set_param()
+#     jsv/jsv_del_param()
+################################################################################
 jsv_del_param() 
 {
    name="jsv_param_$1"
-   value="$2"
    command=`eval "echo \$\{$name\:\-$undef\}"`
    isdef=`eval "echo $command"`
    if [ "$isdef" != "$undef" ]; then
@@ -257,6 +684,73 @@ jsv_del_param()
    unset isdef
 }
 
+###### jsv/jsv_sub_is_param() ##################################################
+#  NAME
+#     jsv_sub_is_param() -- Returns whether or not a job parameter list 
+#                           contains a variable. 
+#
+#  SYNOPSIS
+#     jsv_sub_is_param(param_name, variable_name) 
+#
+#  FUNCTION
+#     Some job parameters are lists that can contain multiple variables with
+#     an optional value.
+#
+#     This function returns "true" if a job parameters list contains a 
+#     variable and "false" otherwise. "false" might also indicate that
+#     the parameter list itself is not available. 
+#
+#  INPUTS
+#     param_name - The following parameters are list parameters
+#
+#        name           switch/description
+#        -------------- -------------------------------------------
+#        ac             (combination of -ac, -sc, -dc)
+#        hold_jid
+#        l_hard         (-hard followed by -l)   
+#        l_soft         (-soft followed by -l)
+#        M
+#        masterq
+#        q_hard         (-hard followed by -q)
+#        q_soft         (-soft followed by -q)
+#
+#     variable_name - String value
+#        
+#        The value depends on the "param_name". For "ac" the 
+#        "variable_name" has to be a variable name. "l_hard", "l_soft" 
+#        require a resource name (e.g "h_vmem"). "masterq", "q_hard",
+#        "q_soft" require a cluster queue name or a queue instance
+#        name.
+#
+#  RESULT
+#     "true" or "false"
+#
+#  EXAMPLE
+#
+#     Assume that the following job is submitted:
+#
+#        qsub -ac a=1,b,d=7 -l h_vmem=5G,lic=1 -M user@domain script.sh 
+#
+#     For this jon, the following function calls will return the 
+#     following values:
+#  
+#        function call                             value
+#        ----------------------------------------- ---------
+#        jsv_sub_is_param("ac", "a")               true
+#        jsv_sub_is_param("ac", "c")               false 
+#        jsv_sub_is_param("l_hard", "h_vmem")      true 
+#        jsv_sub_is_param("l_soft", "h_vmem")      false 
+#        jsv_sub_is_param("M", "user@domain")      true 
+#        jsv_sub_is_param("M", "unknown@domain")   false
+#
+#  SEE ALSO
+#     jsv/jsv_show_params() 
+#     jsv/jsv_is_param()
+#     jsv/jsv_get_param()
+#     jsv/jsv_add_param()
+#     jsv/jsv_mod_param()
+#     jsv/jsv_on_start()
+################################################################################
 jsv_sub_is_param() {
    ret="false"
    name="jsv_param_$1"
@@ -277,7 +771,7 @@ jsv_sub_is_param() {
             fi
             IFS="="
          done
-	 IFS="$saved_ifs"
+         IFS="$saved_ifs"
          if [ "$ret" = "true" ]; then
             break
          fi
@@ -293,6 +787,57 @@ jsv_sub_is_param() {
    return
 }
 
+###### jsv/jsv_sub_del_param() ################################################
+#  NAME
+#     jsv_sub_del_param() -- Deletes a variable from a sublist.
+#
+#  SYNOPSIS
+#     jsv_sub_del_param(param_name, variable_name) 
+#
+#  FUNCTION
+#     Some job parameters are lists which can contain muliple variables with
+#     an optional value. 
+#
+#     This function deletes a variable with the name "variable_name" and 
+#     if available the corresponding value. If "variable_name" is not
+#     available then the command will be ignored.
+#
+#  INPUTS
+#     param_name - Find a list of list parameter names in the
+#                  documentation for the function jsv_sub_is_param().
+#
+#     variable_name - Find more information in the documentation
+#                     section for jsv_sub_is_param().
+#        
+#  RESULT
+#     none
+#
+#  EXAMPLE
+#
+#     Assume that the following job is submitted:
+#
+#        qsub -ac a=1,b,d=7 -l h_vmem=5G,lic=1 -M user@domain script.sh 
+#
+#     Assume the following commands in jsv_on_verify()
+#
+#        jsv_sub_del_parm("ac", "b");
+#        jsv_sub_del_parm("ac", "d");
+#        jsv_sub_del_parm("l_hard", "lic");
+#        jsv_sub_del_parm("M", "lic");
+#        jsv_correct();
+#
+#     In that case the job will be modified as if the following qsub 
+#     command was used:
+#
+#        qsub -ac a=1 -l h_vmem=5G script.sh
+#
+#  SEE ALSO
+#     jsv/jsv_show_params() 
+#     jsv/jsv_sub_is_param()
+#     jsv/jsv_sub_get_param()
+#     jsv/jsv_sub_add_param()
+#     jsv/jsv_on_verify()
+################################################################################
 jsv_sub_del_param() 
 {
    param_name="$1"
@@ -350,6 +895,57 @@ jsv_sub_del_param()
    return
 }
 
+###### jsv/jsv_sub_get_param() ################################################
+#  NAME
+#     jsv_sub_get_param() -- Returns the value of the variable 
+#                            ("variable_name") in a sublist.
+#
+#  SYNOPSIS
+#     jsv_sub_get_param(param_name, variable_name) 
+#
+#  FUNCTION
+#     Some job parameters are lists that can contain multiple variables 
+#     with an optional value. 
+#
+#     This function returns the value of the variable ("variable_name").
+#     For sub list elements that have no value an empty string will be 
+#     returned.
+#
+#  INPUTS
+#     param_name - Find a list of list parameter names in the
+#                  documentation for the function jsv_sub_is_param().
+#
+#     variable_name - Find more information in the documentation
+#                     section for jsv_sub_is_param().
+#        
+#  RESULT
+#     String representation of the value or an empty string if there
+#     is no value available.
+#
+#  EXAMPLE
+#
+#     Assume that the following job is submitted:
+#
+#        qsub -ac a=1,b,d=7 -l h_vmem=5G,lic=1 -M user@domain script.sh 
+#
+#     For the above job, the following function calls will return following values:
+#  
+#        function call                              value
+#        -----------------------------------------  ---------
+#        jsv_sub_get_param("ac", "a")               "1"
+#        jsv_sub_get_param("ac", "b")               "" 
+#        jsv_sub_get_param("l_hard", "h_vmem")      "5G" 
+#        jsv_sub_get_param("l_soft", "h_vmem")      "" 
+#        jsv_sub_get_param("M", "user@domain")      "" 
+#        jsv_sub_get_param("M", "unknown@domain")   ""
+#
+#  SEE ALSO
+#     jsv/jsv_show_params() 
+#     jsv/jsv_sub_is_param()
+#     jsv/jsv_sub_get_param()
+#     jsv/jsv_sub_add_param()
+#     jsv/jsv_on_verify()
+################################################################################
 jsv_sub_get_param() 
 {
    param_name="$1"
@@ -396,6 +992,60 @@ jsv_sub_get_param()
    return
 }
 
+###### jsv/jsv_sub_add_param() ################################################
+#  NAME
+#     jsv_sub_add_param() -- Adds a new variable with a new value or 
+#                            it modifies an existing variable that is 
+#                            already in the sublist.
+#
+#  SYNOPSIS
+#     jsv_sub_add_param(param_name, variable_name, variable_value) 
+#
+#  FUNCTION
+#     Some job parameters are list that can contain muliple variables 
+#     with an optional value. 
+#
+#     This function either adds a new variable with a new value or it
+#     modifies the value if the variable is already in the list parameter.
+#     "variable_value" is optional. In that case, the variable has no value.
+#
+#  INPUTS
+#     param_name - Find a list of list parameter names in the
+#                  documentation for the function jsv_sub_is_param().
+#
+#     variable_name - Find more information in the documentation
+#                     section for jsv_sub_is_param().
+#        
+#  RESULT
+#     none
+#
+#  EXAMPLE
+#
+#     Assume that the following job is submitted:
+#
+#        qsub -ac a=1,d=7 -l h_vmem=5G,lic=1 -M user@domain script.sh 
+#
+#     and the following commands in jsv_on_verify():
+#
+#        jsv_sub_add_parm("ac", "b", "");
+#        jsv_sub_add_parm("ac", "c", "5");
+#        jsv_sub_add_parm("ac", "d", "99");
+#        jsv_sub_add_parm("l_hard", "lic", "2");
+#        jsv_sub_add_parm("M", "user2@domain", "");
+#        jsv_correct();
+#
+#     In the above case, the job will be modified as if the following qsub 
+#     command was used.
+#
+#        qsub -ac a=1,d=99,b,c=5 -l h_vmem=5G,lic=2 -M user@domain,user2@domain script.sh
+#
+#  SEE ALSO
+#     jsv/jsv_show_params() 
+#     jsv/jsv_sub_is_param()
+#     jsv/jsv_sub_get_param()
+#     jsv/jsv_sub_add_param()
+#     jsv/jsv_on_verify()
+################################################################################
 jsv_sub_add_param() 
 {
    param_name="$1"
@@ -476,7 +1126,324 @@ jsv_sub_add_param()
    return
 }
 
-# executed whenever the JSV can be done
+###### jsv/jsv_send_env() #####################################################
+#  NAME
+#     jsv_send_env() -- Requests the job environment for the next job 
+#
+#  SYNOPSIS
+#     jsv_send_env()
+#
+#  FUNCTION
+#     This function can only be used in jsv_on_start(). If it is used
+#     there, then the job environment information will be available 
+#     in jsv_on_verify() for the next job that is scheduled to be 
+#     verified.
+#
+#     This function must be called for the functions jsv_show_envs(), 
+#     jsv_is_env(), jsv_get_env(), jsv_add_env() and jsv_mod_env() to
+#     behave correctly. 
+#
+#     Job environmets might become very big (10K and more). This
+#     will slow down the executing component (submit client or
+#     master daemon thread). For this reason, job environment information 
+#     is not passed to JSV scripts by default.
+#
+#     Please note also that the data in the job environment can't be
+#     verified by Grid Engine and might therefore contain data which
+#     could be misinterpreted in the script environment
+#     and cause security issues. 
+#     
+#  INPUTS
+#     none
+#        
+#  RESULT
+#     none
+#
+#  SEE ALSO
+#     jsv/jsv_on_start()
+#     jsv/jsv_on_verify()
+################################################################################
+jsv_send_env()
+{
+   jsv_send_command "SEND ENV"
+}
+
+###### jsv/jsv_accept() ########################################################
+#  NAME
+#     jsv_accept() -- Accepts a job as it was initially provided.
+#
+#  SYNOPSIS
+#     jsv_accept(message)
+#
+#  FUNCTION
+#     This function can only be used in jsv_on_verify(). After it has been
+#     called, the function jsv_on_verify() has to return immediately. 
+#
+#     A call to this function indicates that the job that is 
+#     currently being verified should be accepted as it was initially 
+#     provided. All job  modifications that might have been applied 
+#     in jsv_on_verify() before this function was called, are then ignored.
+#
+#     Instead of calling jsv_accept() in jsv_on_verify() also the
+#     functions jsv_correct(), jsv_reject() or jsv_reject_wait() can
+#     be called, but only one of these functions can be used at a time.
+#     
+#  INPUTS
+#     message - (optional) if it is provided it will be ignored.
+#        
+#  RESULT
+#     none
+#
+#  SEE ALSO
+#     jsv/jsv_on_verify()
+#     jsv/jsv_correct()
+#     jsv/jsv_reject()
+#     jsv/jsv_reject_wait()
+################################################################################
+jsv_accept()
+{
+   if [ "$state" = "verifying" ]; then
+      jsv_send_command "RESULT STATE ACCEPT $*"
+      state="initialized"
+   else
+      jsv_send_command "ERROR JSV script will send RESULT command but is in state $state"
+   fi
+}
+
+###### jsv/jsv_correct() #######################################################
+#  NAME
+#     jsv_correct() -- Accepts a job after applying all modifications.
+#
+#  SYNOPSIS
+#     jsv_correct(message)
+#
+#  FUNCTION
+#     This function can only be used in jsv_on_verify(). After it has been
+#     called, the function jsv_on_verify() has to return immediately. 
+#
+#     A call to this function indicates that the job that is currently being 
+#     verified has to be modified before it can be accepted. All job parameter 
+#     modifications that were previously applied will be committed
+#     and the job will be accepted. "Accept" in that case means that
+#     the job will either be passed to the next JSV instance for
+#     modification or that it is passed to that component in the master 
+#     daemon that adds it to the master data store when the
+#     last JSV instance has verified the job.
+#     
+#     Instead of calling jsv_correct() in jsv_on_verify(), the
+#     functions jsv_accept(), jsv_reject() or jsv_reject_wait() can
+#     be called, but only one of these functions can be used.
+#     
+#  INPUTS
+#     message - (optional) if it is provided it will be ignored.
+#        
+#  RESULT
+#     none
+#
+#  SEE ALSO
+#     jsv/jsv_on_verify()
+#     jsv/jsv_accept()
+#     jsv/jsv_correct()
+#     jsv/jsv_reject()
+#     jsv/jsv_reject_wait()
+################################################################################
+jsv_correct()
+{
+   if [ "$state" = "verifying" ]; then
+      jsv_send_command "RESULT STATE CORRECT $*"
+      state="initialized"
+   else
+      jsv_send_command "ERROR JSV script will send RESULT command but is in state $state"
+   fi
+}
+
+###### jsv/jsv_reject() #######################################################
+#  NAME
+#     jsv_reject() -- Rejects a job. 
+#
+#  SYNOPSIS
+#     jsv_reject(message)
+#
+#  FUNCTION
+#     This function can only be used in jsv_on_verify(). After it has been
+#     called the function jsv_on_verify() has to return immediately. 
+#
+#     The job that is currently being verified will be rejected. "message"
+#     will be passed to the client application that tried to submit
+#     the job. Commandline clients like qsub will print that message 
+#     to stdout to inform the user that the submission has failed.
+#
+#     jsv_reject_wait() should be called if the user may try to submit
+#     the job again. jsv_reject_wait() indicates ther verification process
+#     might be successful in the future.
+#
+#     Instead of calling jsv_reject() in jsv_on_verify() also the
+#     functions jsv_accept(), jsv_correct() or jsv_reject_wait() can
+#     be also called, but only one of these functions can be used.
+#     
+#  INPUTS
+#     message - error message passed to the submitter of the job.
+#        
+#  RESULT
+#     none
+#
+#  SEE ALSO
+#     jsv/jsv_on_verify()
+#     jsv/jsv_accept()
+#     jsv/jsv_correct()
+#     jsv/jsv_reject_wait()
+################################################################################
+jsv_reject()
+{
+   if [ "$state" = "verifying" ]; then
+      jsv_send_command "RESULT STATE REJECT $*"
+      state="initialized"
+   else
+      jsv_send_command "ERROR JSV script will send RESULT command but is in state $state"
+   fi
+}
+
+###### jsv/jsv_reject_wait() ##################################################
+#  NAME
+#     jsv_reject_wait() -- Reject a job. The job might be submitted later.
+#
+#  SYNOPSIS
+#     jsv_reject_wait(message)
+#
+#  FUNCTION
+#     This function can only be used in jsv_on_verify(). After it has been
+#     called the function jsv_on_verify() has to return immediately. 
+#
+#     The job which is currently verified will be rejected. "message"
+#     will be passed to the client application, that tries to submit
+#     the job. Commandline clients like qsub will print that message 
+#     to stdout to inform the user that the submission has failed.
+#
+#     This function should be called if the user who tries to submit the 
+#     job might have a chance to submit the job later. jsv_reject()
+#     indicates that the verified job will also be rejected in future.
+#
+#     Instead of calling jsv_reject() in jsv_on_verify() the
+#     functions jsv_accept(), jsv_correct() or jsv_reject() can 
+#     be also called, but only one of these functions can be used.
+#     
+#  INPUTS
+#     message - error message passed to the submitter of the job.
+#        
+#  RESULT
+#     none
+#
+#  SEE ALSO
+#     jsv/jsv_on_verify()
+#     jsv/jsv_accept()
+#     jsv/jsv_correct()
+#     jsv/jsv_reject()
+################################################################################
+jsv_reject_wait()
+{
+   if [ "$state" = "verifying" ]; then
+      jsv_send_command "RESULT STATE REJECT_WAIT $*"
+      state="initialized"
+   else
+      jsv_send_command "ERROR JSV script will send RESULT command but is in state $state"
+   fi
+}
+
+###### jsv/jsv_log_info() ####################################################
+#  NAME
+#     jsv_log_info() -- Sends an info message to client.
+#
+#  SYNOPSIS
+#     jsv_log_info(message)
+#
+#  FUNCTION
+#     This function sends an info message to the client or
+#     master daemon instance that started the JSV script.
+#
+#     For client JSVs, this means that the commandline client will get
+#     the information and print it to the stdout stream. Server JSVs
+#     will print that message as an info message to the master daemon
+#     message file.
+#     
+#  INPUTS
+#     message - string message 
+#        
+#  RESULT
+#     none
+#
+#  SEE ALSO
+#     jsv/jsv_log_waring()
+#     jsv/jsv_log_error()
+################################################################################
+jsv_log_info() 
+{
+   jsv_send_command "LOG INFO $*"
+}
+
+###### jsv/jsv_log_warning() ###################################################
+#  NAME
+#     jsv_log_warning() -- Sends a warning message to the client.
+#
+#  SYNOPSIS
+#     jsv_log_warning(message)
+#
+#  FUNCTION
+#     This function sends a warning message to the client or
+#     master daemon instance that started the JSV script.
+#
+#     For client JSVs, this means that the commandline client will get
+#     the information and print it to the stdout stream. Server JSVs
+#     will print that message as a warning message to the master daemon
+#     message file.
+#     
+#  INPUTS
+#     message - string message 
+#        
+#  RESULT
+#     none
+#
+#  SEE ALSO
+#     jsv/jsv_log_info()
+#     jsv/jsv_log_error()
+################################################################################
+jsv_log_warning() 
+{
+   jsv_send_command "LOG WARNING $*"
+}
+
+###### jsv/jsv_log_error() #####################################################
+#  NAME
+#     jsv_log_error() -- Sends error message to the client 
+#
+#  SYNOPSIS
+#     jsv_log_error(message)
+#
+#  FUNCTION
+#     This function sends an error message to the client or
+#     master daemon instance that started the JSV script.
+#
+#     For client JSVs, this means that the commandline client will get
+#     the error message and print it to the stdout stream. Server JSVs
+#     will print that message as an error message to the master daemon
+#     message file.
+#     
+#  INPUTS
+#     message - string message 
+#        
+#  RESULT
+#     none
+#
+#  SEE ALSO
+#     jsv/jsv_log_info()
+#     jsv/jsv_log_waring()
+################################################################################
+jsv_log_error() 
+{
+   jsv_send_command "LOG ERROR $*"
+}
+
+
+# private function 
 jsv_handle_start_command()
 {
    if [ "$state" = "initialized" ]; then
@@ -488,6 +1455,7 @@ jsv_handle_start_command()
    fi
 }
 
+# private function 
 jsv_handle_begin_command()
 {
    if [ "$state" = "started" ]; then
@@ -500,6 +1468,7 @@ jsv_handle_begin_command()
    fi
 }
 
+# private function 
 jsv_handle_param_command()
 {
    if [ "$state" = "started" ]; then
@@ -514,6 +1483,7 @@ jsv_handle_param_command()
    fi
 }
 
+# private function 
 jsv_handle_env_command()
 {
    if [ "$state" = "started" ]; then
@@ -532,6 +1502,7 @@ jsv_handle_env_command()
    fi
 }
 
+# private function 
 jsv_send_command()
 {
    echo "$@"
@@ -539,66 +1510,7 @@ jsv_send_command()
    jsv_script_log "<<< $@"
 }
 
-jsv_send_env()
-{
-   jsv_send_command "SEND ENV"
-}
-
-jsv_accept()
-{
-   if [ "$state" = "verifying" ]; then
-      jsv_send_command "RESULT STATE ACCEPT $*"
-      state="initialized"
-   else
-      jsv_send_command "ERROR JSV script will send RESULT command but is in state $state"
-   fi
-}
-
-jsv_correct()
-{
-   if [ "$state" = "verifying" ]; then
-      jsv_send_command "RESULT STATE CORRECT $*"
-      state="initialized"
-   else
-      jsv_send_command "ERROR JSV script will send RESULT command but is in state $state"
-   fi
-}
-
-jsv_reject()
-{
-   if [ "$state" = "verifying" ]; then
-      jsv_send_command "RESULT STATE REJECT $*"
-      state="initialized"
-   else
-      jsv_send_command "ERROR JSV script will send RESULT command but is in state $state"
-   fi
-}
-
-jsv_reject_wait()
-{
-   if [ "$state" = "verifying" ]; then
-      jsv_send_command "RESULT STATE REJECT_WAIT $*"
-      state="initialized"
-   else
-      jsv_send_command "ERROR JSV script will send RESULT command but is in state $state"
-   fi
-}
-
-jsv_log_info() 
-{
-   jsv_send_command "LOG INFO $*"
-}
-
-jsv_log_warning() 
-{
-   jsv_send_command "LOG WARNING $*"
-}
-
-jsv_log_error() 
-{
-   jsv_send_command "LOG ERROR $*"
-}
-
+# private function
 jsv_script_log()
 {
    if [ $logging_enabled = true ]; then
@@ -606,6 +1518,84 @@ jsv_script_log()
    fi
 }
 
+###### jsv/jsv_main() #########################################################
+#  NAME
+#     jsv_main() -- JSV main function.
+#
+#  SYNOPSIS
+#     jsv_main()
+#
+#  FUNCTION
+#     This function has to be called in JSV scripts. It implements
+#     the JSV protocol and performs the communication with client and server
+#     components which might start JSV scripts.
+#     
+#     This function does not return immediately. It returns only when
+#     the "QUIT" command is send by the client or server component.
+#
+#     During the communication with client and server components, this
+#     function triggers two callback functions for each job that 
+#     should be verified. First jsv_on_start() and later on jsv_on_verify().
+#
+#     jsv_on_start() can be used to initialize certain things that might 
+#     be needed for the verification process. jsv_on_verify() does the
+#     verification process itself.
+#
+#     The function jsv_send_env() can be called in jsv_on_start() so that
+#     the job environment is available in jsv_on_verify(). 
+#
+#     The following function can only be used in jsv_on_verify().
+#     Simple job parameters can be accessed/modified with:
+#
+#        jsv_is_param()
+#        jsv_get_param()
+#        jsv_add_param()
+#        jsv_mod_param()
+#        jsv_del_param()
+#
+#     List based job parameters can be accessed with:
+#
+#        jsv_sub_is_param()
+#        jsv_sub_get_param()
+#        jsv_sub_add_param()
+#        jsv_sub_del_param()
+#
+#     If the environment was requested with jsv_send_env() in jsv_on_start() 
+#     then the environment can be accessed/modified with the following
+#     commands:
+#
+#        jsv_is_env()
+#        jsv_get_env()
+#        jsv_add_env()
+#        jsv_mod_env()
+#        jsv_del_env()
+#
+#     Jobs can be accepted/rejected with the following:
+#
+#        jsv_accept()
+#        jsv_correct()
+#        jsv_reject()
+#        jsv_reject_wait()
+#
+#     The following functions send messages to the calling component of a JSV
+#     that will either appear on the stdout stream of the client or in the
+#     master message file. This is especially usefull when new JSV scripts 
+#     should be tested
+#
+#        jsv_show_params() 
+#        jsv_show_envs() 
+#        jsv_log_info()
+#        jsv_log_warning()
+#        jsv_log_error()
+#     
+#  INPUTS
+#     none
+#        
+#  RESULT
+#     none
+#
+#  SEE ALSO
+################################################################################
 jsv_main()
 {
    jsv_script_log "$0 started on `date`"

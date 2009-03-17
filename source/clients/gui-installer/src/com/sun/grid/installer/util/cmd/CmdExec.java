@@ -57,8 +57,8 @@ public abstract class CmdExec implements Config {
     public static final int EXITVAL_TERMINATED    = -4;
     public static final int EXITVAL_MISSING_FILE  = 15;
 
-    private static int WAIT_TIME                  = 300;
-    int MAX_WAIT_TIME;
+    private static long WAIT_TIME                 = 300;
+    long MAX_WAIT_TIME;
 
     private int exitValue                         = EXITVAL_INITIAL;
 
@@ -67,7 +67,7 @@ public abstract class CmdExec implements Config {
 
     private File outFile, errFile;
 
-    public CmdExec(int timeout) {
+    public CmdExec(long timeout) {
         MAX_WAIT_TIME = timeout;
         additionalErrors = new Vector<String>();
     }

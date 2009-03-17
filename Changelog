@@ -1,3 +1,156 @@
+RD-2009-03-17-0: CVS:         Created V62u3alpha1_TAG
+-----------------------------------------------------
+
+RD-2009-03-17-0: Enhancem.:   - added EXCL relop for boolean consumable
+                 Bugster:     6731441
+                 Issue:       2629
+                 Bugfix:      - libspoolb and libspoolc should not link against
+                                jemalloc/mtmalloc
+                 Bugfix:      - fixed memory leak in shepherd and buildin_starter
+                 Review:      AA
+
+LP-2009-03-16-0: Enhancem:    gui-installer build process improved
+                 Enhancem:    updated the gui-installer version
+                 Review:      ZG
+
+EB-2009-03-16-0: Bugfix:      c_occasion job parameter can't be changed
+                 Bugster:     6814059
+                 Issue:       2946
+                 Bugfix:      JSV: change of requested resources is rejected
+                              if also queues were selected during job submission
+                 Bugster:     6817691
+                 Issue:       2954
+                 Bugfix:      influence of c_occasion on c_interval and vice
+                              versa is not documented explicitly
+                 Bugster:     6814060
+                 Issue:       2947
+                 Enhancemen.: minor change of sge_ca which allowes csp
+                              installaion in environments where root is not
+                              even mapped to nobody on NFS mounted fs.:wq
+                 Review:      MD
+
+AH-2009-03-12-1: Bugfix:      Incorrect referrences to "SGE_H_ALIASES" man pages
+                 Changed:     hostnameutils(1), qping(1)
+                 Bugster:     6816705
+                 Issue:       2056
+                 Review:      RD
+
+AH-2009-03-12-0: Bugfix:      SIGUSR1 clash between s_rt and NOTIFY_SUS
+                 Changed:     queue_conf(5)
+                 Bugster:     6816634
+                 Issue:       2103
+                 Review:      RD
+
+MD-2009-03-11-0: Enhancem:    problems with gaussian due to memory limitations of SGE
+                 Bugster:     6816037
+                 Review:      AS
+
+AA-2009-03-11-1: Bugfix:      MACC_SRC_DIR absolute path fix
+                 Review:      MD
+
+HP-2009-03-11-2: Bugfix:      Fixed compile error
+
+HP-2009-03-11-1: Bugfix:      Fixed wrongly merged inst_execd.sh file
+
+HP-2009-03-11-0: Bugfix:      jobs started with -l dwg=true can't display their
+                              GUI on Windows Vista and Server 2008
+                 Bugster:     6801748
+                 Issue:       2904
+                 Review:      EB
+
+AA-2009-03-11-0: Bugfix:      sgemacc distinst, comment in continuation lines
+                 Review:      MD
+
+LP-2009-03-10-1: Enhancem:    JMX used by default, -no-jmx option
+                 Review:      AA
+
+LP-2009-03-10-0: Enhancem:    Support for sgemacc
+                 Review:      AA
+
+AA-2009-03-10-0: Enhancem:    - qhost slots_resv
+                              - jgdi_qhost slots_resv
+                              - JobStateFilter corrections
+                              - jgdi.jar + jgdi-test.jar
+                 Review:      RD, RH
+
+RD-2009-03-10-0: Bugfix:      fixed qmaster abort at update from previous version
+                 Bugster:     6814823
+                 Issue:       2949
+                 Review:      JG
+
+GH-2009-03-10-0: Bugfix:      qmod -r does not delete the old instance 
+                              of a job before the new one is started
+                 Bugster:     6244911
+                 Issue:       2950
+                 Review:      JG
+
+JF-2009-03-10-0: Bugfix:      Fix qsub truncation of scripts
+                 Issue:       2876
+                 Bugster:     6810688
+                 Review:      AP
+
+RC-2009-03-07-1: Enhancem:    I/O accounting on Linux
+                 Issue:       2429
+                 Review:      RC (original patch by johna)
+
+RC-2009-03-07-0: Cleanup:     - fixed build on lx-ppc
+                              - removed dependency on ssl & crypto libs
+                                when SGE is built with -no-secure
+
+MD-2009-03-06-0: Enhancem:    updating webpages for 62u2 courtesy binaries
+          
+EB-2009-03-06-0: Bugfix:      JSV -w param has wrong value inside script 
+                 Bugster:     6806219 
+                 Issue:       2917
+                 Bugfix:      Changing "w" job parameter to "n" in client 
+                              JSV is not handled correctly
+                 Bugster:     6810493
+                 Issues:      2938   
+                 Bugfix:      DRMAA test_drmaa_perf produces segmentation fault 
+                              when using user .sge_request file
+                 Bugster:     6806363 
+                 Issues:      2923
+                 Bugfix:      qsub man page refers to "see -jsv option below"
+                              but it is above in some cases
+                 Bugster:     6806324
+                 Issue:       2939
+                 Bugfix:      The cluster config paramter jsv_allowed_mod does
+                              not work -w switch
+                 Bugster:     6806209
+                 Issue:       2940
+                 Review:      CR 
+
+ZG-2009-03-04-0: Enhancem.:   Major cleanup:
+                               -new package hierarchy as 3party/IzPack/src/lib/com/...
+                               -new package .../grid/installer/task
+                               -move nested classes to separate files
+                               -redesign progress bar refreshing
+                               -generalize worker threads
+                               -write comments
+                 Review:      LP
+
+DG-2009-03-04-0: Cleanup:     Added Java DRMAA issue test. 
+                 Bugster:     6796175
+                 Issue:       2882
+                 Review:      CR 
+
+ZG-2009-03-03-0: Enhancem.:   Update man pages for v62u2_tag
+
+CR-2009-03-03-0: Enhancem.:   test_general binary now prints FD_SETSIZE value
+                 Review:      DG
+
+RD-2009-02-26-0: Bugfix:      fixed scheduling issue with fill_up allocation rule
+                 Bugster:     6807072
+                 Issue:       2901
+                 Review:      CR
+
+MP-2009-02-25-0: Bugfix:      Fixed temp file name in loadsensor has problems on
+                              arch AIX.
+                              Merged from MP-2009-02-23-0
+                 Bugster:     6740546
+                 Issue:       2715
+                 Review:      DG
+
 RD-2009-02-19-0: CVS:         Created V62u2_TAG
 -----------------------------------------------
 
@@ -456,8 +609,15 @@ LP-2009-01-22-0: Bugfix:      gui-installer: Parallel shadowd installation might
 
 GH-2009-01-22-0: Bugfix:      bad logging if "act_qmaster" file does not exist
                  Bugster:     6288964
-                 Issue:       2881
+                 Issue:       2881, 860
                  Review:      CR
+
+AH-2009-01-22-0: Bugfix:      Sequence numbers broken for parallel jobs when multpile 
+                              queues are used
+                 Changed:     libs/sched/sge_select_queue.c
+                 Issue:       2864
+                 Bugster:     6791556
+                 Review:      RD
 
 DG-2009-01-22-0: Bugfix:      Calling drmaa_exit before any calls to drmaa_init
                               results in segfault

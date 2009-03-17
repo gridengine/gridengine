@@ -1077,6 +1077,13 @@ rc_debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list,
                      obj_name, debit_slots));
             lAddDouble(cr, RUE_utilized_now, debit_slots * dval);
             mods++;
+         } else if (lGetUlong(dcep, CE_relop) == CMPLXEXCL_OP) {
+            dval = 1.0;
+            DPRINTF(("debiting (non-exclusive) %f of %s on %s %s for %d slots\n", dval, name,
+                     (config_nm==QU_consumable_config_list)?"queue":"host",
+                     obj_name, debit_slots));
+            lAddDouble(cr, RUE_utilized_now_nonexclusive, debit_slots * dval);
+            mods++;
          }
       }
    }

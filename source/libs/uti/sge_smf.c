@@ -633,7 +633,7 @@ static void init_use_smf(void)
                 /* File does not exist - no SMF */
                 useSMF = 0;
             } else {
-                ERROR((SGE_EVENT, "Repository stat call failed: %s", *strerror(errno)));
+                ERROR((SGE_EVENT, "Repository stat call failed: %s", strerror(errno)));
                 useSMF = 0;
                 /* What now disable queues or just disable SMF ? */
             }

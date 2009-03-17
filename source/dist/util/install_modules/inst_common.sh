@@ -389,7 +389,7 @@ CheckBinaries()
    WINUTILFILES="SGE_Helper_Service.exe adminrun checkprog checkuser filestat \
                  gethostbyaddr gethostbyname gethostname getservbyname loadcheck.exe \
                  now qrsh_starter rlogin rsh rshd testsuidroot authuser.exe uidgid \
-                 infotext"
+                 infotext SGE_Starter.exe"
 
    #SUIDFILES="rsh rlogin testsuidroot sgepasswd"
 
@@ -444,7 +444,8 @@ CheckBinaries()
          "adminrun        gethostbyaddr  loadcheck.exe  rlogin         uidgid\n" \
          "authuser.exe    checkprog      gethostbyname  now            rsh\n" \
          "infotext        checkuser      gethostname    openssl        rshd\n" \
-         "filestat        getservbyname  qrsh_starter   testsuidroot   SGE_Helper_Service.exe\n\n" \
+         "filestat        getservbyname  qrsh_starter   testsuidroot   SGE_Helper_Service.exe\n" \
+         "SGE_Starter.exe\n\n" \
          "Installation failed. Exit.\n" $SGE_BIN $SGE_UTILBIN
       else
          $INFOTEXT "\nMissing Grid Engine binaries!\n\n" \
@@ -497,7 +498,7 @@ ErrUsage()
              "       -copycerts <host|hostlist>|-v|-upd|-upd-execd|-upd-rc|-upd-win| \n" \
              "       -post_upd|-start-all|-rccreate|[-host <hostname>] [-resport] [-rsh] \n" \
              "       [-auto <filename>] [-nr] [-winupdate] [-winsvc] [-uwinsvc] [-csp] \n" \
-             "       [-jmx] [-oldijs] [-afs] [-noremote] [-nosmf]\n" \
+             "       [-jmx] [-no-jmx] [-oldijs] [-afs] [-noremote] [-nosmf]\n" \
              "   -m         install qmaster host\n" \
              "   -um        uninstall qmaster host\n" \
              "   -x         install execution host\n" \
@@ -531,15 +532,20 @@ ErrUsage()
              "   -uwinsvc   uninstall windows helper service\n" \
              "   -csp       install system with security framework protocol\n" \
              "              functionality\n" \
-             "   -jmx       install qmaster with JMX server thread enabled\n" \
+             "   -jmx       install qmaster with JMX server thread enabled (now implicit)\n" \
+-            "   -no-jmx    install qmaster without JMX server thread\n" \
              "   -oldijs    configure old interactive job support\n" \
              "   -afs       install system with AFS functionality\n" \
              "   -noremote  supress remote installation during autoinstall\n" \
              "   -nosmf     disable SMF for Solaris 10+ machines (RC scripts are used)\n" \
              "   -help      show this help text\n\n" \
              "   Examples:\n" \
-             "   inst_sge -m -x\n" \
-             "                     Installs qmaster and exechost on localhost\n" \
+             "   inst_sge -m -x   or   inst_sge -m -jmx -x\n" \
+             "                     Installs qmaster with JMX thread enabled\n" \
+             "                     and exechost on localhost\n" \
+             "   inst_sge -m -no-jmx -x\n" \
+             "                     Installs qmaster without JMX thread enabled\n" \
+             "                     and exechost on localhost\n" \
              "   inst_sge -m -x -auto /path/to/config-file\n" \
              "                     Installs qmaster and exechost using the given\n" \
              "                     configuration file\n" \

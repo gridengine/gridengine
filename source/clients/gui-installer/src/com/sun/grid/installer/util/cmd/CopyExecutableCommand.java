@@ -36,21 +36,19 @@ import com.izforge.izpack.util.Debug;
 import com.sun.grid.installer.gui.Host;
 import com.sun.grid.installer.util.Util;
 import java.text.MessageFormat;
-import java.util.Properties;
 
 /* Copies executable script to a remote host. If host is localhost command is skipped */
-public class CopyExecutableCommand extends com.sun.grid.installer.util.cmd.CmdExec {
+public class CopyExecutableCommand extends CmdExec {
       //E.g.: rsh/ssh [-l <connect_user>] [-o ....] HOSTNAME < FILE_TO_COPY "cat >DEST_FILE ; chmod 755 DEST_FILE"
       private static String copyCommand = "{0} {1} {2} {3} < {4} \"cat >{5} ; chmod 755 {5}\"";
       private static String localCopyCommand = "cp {0} {1} ; chmod 755 {1}";
       private String command;
 
-
-      public CopyExecutableCommand(Properties variables, String host, String inputPath, String outputPath) {
-          this(variables, Util.RESOLVE_TIMEOUT, host, inputPath, outputPath);
+      public CopyExecutableCommand(String host, String user, String shell, boolean isWindowsMode, String inputPath, String outputPath) {
+          this(Util.RESOLVE_TIMEOUT, host, user, shell, isWindowsMode, inputPath, outputPath);
       }
 
-      public CopyExecutableCommand(Properties variables, int timeout, String host, String inputPath, String outputPath) {
+      public CopyExecutableCommand(long timeout, String host, String user, String shell, boolean isWindowsMode, String inputPath, String outputPath) {
           super(timeout);
           boolean onLocalHost = host.equalsIgnoreCase(Host.localHostName);
 
@@ -59,22 +57,20 @@ public class CopyExecutableCommand extends com.sun.grid.installer.util.cmd.CmdEx
               return;
           }
 
-          String connectUser = variables.getProperty(ARG_CONNECT_USER, "");
-
-          String shell = "";
+          String shellArg = "";
           String userArg = "";
           String sshOptions = "";
           if (!onLocalHost) {
-             shell = variables.getProperty(VAR_SHELL_NAME, "");
-             if (connectUser.length() > 0) {
-                 if (Util.isWindowsMode(variables)) {
-                     connectUser = host.toUpperCase().split("\\.")[0] + "+" + connectUser;
+             shellArg = shell;
+             if (user.length() > 0) {
+                 if (isWindowsMode) {
+                     user = host.toUpperCase().split("\\.")[0] + "+" + user;
                  }
-                 userArg = "-l "+connectUser;
+                 userArg = "-l "+user;
              }
              sshOptions = (isSameCommand(shell, "ssh")) ? "-o StrictHostKeyChecking=yes -o PreferredAuthentications=gssapi-keyex,publickey" : "";
           }
-          this.command  = MessageFormat.format(copyCommand, shell, userArg, sshOptions, host, inputPath, outputPath).trim();
+          this.command  = MessageFormat.format(copyCommand, shellArg, userArg, sshOptions, host, inputPath, outputPath).trim();
       }
 
       public void execute() {

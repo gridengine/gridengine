@@ -35,43 +35,40 @@ package com.sun.grid.installer.util.cmd;
 import com.izforge.izpack.util.Debug;
 import com.sun.grid.installer.gui.Host;
 import java.text.MessageFormat;
-import java.util.Properties;
 import com.sun.grid.installer.util.Util;
 
-public class RemoteCommand extends com.sun.grid.installer.util.cmd.CmdExec {
+public class RemoteCommand extends CmdExec {
       //E.g.: rsh/ssh [-l <connect_user>] [-o ....] HOSTNAME FSTYPE DIR
       private static String installCommand = "{0} {1} {2} {3} {4} {5}";
       private String command;
 
-
-      public RemoteCommand(Properties variables, String host, String fstypePath, String dirPath) {
-          this(variables, Util.RESOLVE_TIMEOUT, host, fstypePath, dirPath);
+      public RemoteCommand(String host, String user, String shell, boolean isWindowsMode, String fstypePath, String dirPath) {
+          this(Util.RESOLVE_TIMEOUT, host, user, shell, isWindowsMode, fstypePath, dirPath);
       }
 
-      public RemoteCommand(Properties variables, int timeout, String host, String fstypePath, String dirPath) {
+      public RemoteCommand(int timeout, String host, String user, String shell, boolean isWindowsMode, String fstypePath, String dirPath) {
           super(timeout);
           boolean onLocalHost = host.equalsIgnoreCase(Host.localHostName);
-          String connectUser = variables.getProperty(ARG_CONNECT_USER, "");
-          String SGE_ROOT = variables.getProperty(VAR_SGE_ROOT, "");
 
-          String shell = "";                //0
+          String shellArg = "";             //0
           String userArg = "";              //1
           String sshOptions = "";           //2
           String hostToReplace = "";        //3
           if (!onLocalHost) {
-             shell = variables.getProperty(VAR_SHELL_NAME, "");
-             if (connectUser.length() > 0) {
-                 if (Util.isWindowsMode(variables)) {
-                     connectUser = host.toUpperCase().split("\\.")[0] + "+" + connectUser;
+             shellArg = shell;
+             if (user.length() > 0) {
+                 if (isWindowsMode) {
+                     user = host.toUpperCase().split("\\.")[0] + "+" + user;
                  }
-                 userArg = "-l "+connectUser;
+                 userArg = "-l "+user;
              }
              sshOptions = (isSameCommand(shell, "ssh")) ? "-o StrictHostKeyChecking=yes -o PreferredAuthentications=gssapi-keyex,publickey" : "";
              hostToReplace = host;
              fstypePath = "\""+fstypePath;
              dirPath += "\"";
           }
-          this.command  = MessageFormat.format(installCommand, shell, userArg, sshOptions, hostToReplace, fstypePath, dirPath).trim();
+          
+          this.command  = MessageFormat.format(installCommand, shellArg, userArg, sshOptions, hostToReplace, fstypePath, dirPath).trim();
       }
 
       public void execute() {

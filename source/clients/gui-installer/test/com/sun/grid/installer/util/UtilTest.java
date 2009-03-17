@@ -471,7 +471,10 @@ public class UtilTest {
         testParseHostPattern("aaa0[-9]", Arrays.asList("aaa0[-9]"));
     }
 
-
+    @Test  (expected=IllegalArgumentException.class)
+    public void testParseHostPattern35() {
+        testParseHostPattern("aaa[1-]9", Arrays.asList("aaa[1-]9"));
+    }
 
     private void testParseHostPattern(String input, List<String> expResult) {
         System.out.println("parseHostPattern: "+input);

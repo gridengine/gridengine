@@ -66,5 +66,11 @@ public interface QueueInfo {
      *  @return number of used queue slots
      */
     public int getUsedSlots();
-    
+
+    /**
+     *  Get the number of reserved queue slots
+     *  @return number of reserved queue slots
+     */
+    public int getReservedSlots();
+
 }

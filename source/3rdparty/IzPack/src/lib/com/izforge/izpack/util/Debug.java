@@ -48,7 +48,7 @@ import java.util.Properties;
  * </dl>
  *
  * @author Julien Ponge, Klaus Bartz, Marc Eppelmann
- * @version $Revision: 1.1 $ ($Id: Debug.java,v 1.1 2009/01/26 11:30:59 zsiga Exp $)
+ * @version $Revision: 1.1 $ ($Id: Debug.java,v 1.1 2009/03/04 17:13:53 zsiga Exp $)
  */
 public class Debug
 {

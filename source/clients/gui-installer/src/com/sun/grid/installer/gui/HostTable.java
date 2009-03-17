@@ -31,13 +31,13 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.installer.gui;
 
+import com.sun.grid.installer.task.TaskHandler;
 import com.sun.grid.installer.util.Util;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
@@ -45,24 +45,33 @@ import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.table.TableModel;
 
+/**
+ * Table provides advanced host managing for models which implements
+ * {@link HostTableModel} interface
+ */
 public class HostTable extends JTable {
-    private HostPanel panel;
-    private int tabPos;
-    //private JTabbedPane tab;
-    private String[] TABS;
+    private TaskHandler handler;
 
-    public HostTable(final HostPanel panel, final int tabPos) {
+    /**
+     * Constructor
+     * @param handler The {@link TaskHandler} which provides access to the global data
+     */
+    public HostTable(TaskHandler handler) {
         super();
-        this.panel = panel;   
-        this.tabPos = tabPos;
-        //tab = panel.getTabbedPane();
+
+        this.handler = handler;
     }
 
-    public HostTable(final HostPanel panel, TableModel model, final int tabPos) {
+    /**
+     * Constructor
+     * @param handler The {@link TaskHandler} which provides access to the global data
+     * @param model The table model
+     */
+    public HostTable(TaskHandler handler, TableModel model) {
         super(model);
-        this.panel = panel;
-        this.tabPos = tabPos;
-        //tab = panel.getTabbedPane();
+
+        this.handler = handler;
+
         initPopupMenu();
     }
 
@@ -72,14 +81,23 @@ public class HostTable extends JTable {
         initPopupMenu();
     }
 
+    /**
+     * Returns with the host list stored in the table model
+     * @return The host list data
+     */
+    public HostList getHostList() {
+        return ((HostTableModel)getModel()).getHostList();
+    }
+
+    /**
+     * Initializes the popup menu for the table
+     */
     private void initPopupMenu() {
         //Add popup menu to offer delete/save operations for items in the SelectionTable
         if (this.getModel() instanceof HostSelectionTableModel) {
-            createSelectionPopupMenu(panel.getLabel("menu.title"));
-            TABS = HostPanel.SELECTION_TABS;
+            createSelectionPopupMenu(handler.getLabel("menu.title"));
         } else if (this.getModel() instanceof HostInstallTableModel) {
             //TODO: createInstallPopupMenu("Edit Actions");
-            TABS = HostPanel.INSTALL_TABS;
         }
     }
 
@@ -100,6 +118,10 @@ public class HostTable extends JTable {
         return selectedRows;
     }
 
+    /**
+     * Delete the given host list
+     * @param hostList The host list to delete
+     */
     private void deleteHostList(HostList hostList) {
         List<Host> list = new ArrayList<Host>();
         for (Host h : hostList) {
@@ -108,52 +130,37 @@ public class HostTable extends JTable {
         deleteHostList(list);
     }
 
+    /**
+     * Delete the given list of hosts
+     * @param list The list of hosts to delete
+     */
     private void deleteHostList(List<Host> list) {
-        HostTable table;
-        HostSelectionTableModel model;
         Host h;
 
-        //tab.invalidate();
         for (int i = list.size() - 1; i >= 0; i--) {
             h = list.get(i);
-            for (Iterator<HostTable> iter = panel.getHostTableIterator(); iter.hasNext();) {
-                model = (HostSelectionTableModel) iter.next().getModel();
-                model.removeHost(h);
-            }
-        }
-        int pos = 0;
-        for (Iterator<HostTable> iter = panel.getHostTableIterator(); iter.hasNext();) {
-            table = iter.next();
-            model = (HostSelectionTableModel) table.getModel();
-            //tab.setTitleAt(pos, TABS[pos] + " (" + model.getRowCount() + ")");
-            //Disable installButton in no valid hosts
-            if (pos == 1 && model.getRowCount() == 0) {
-                panel.enableInstallButton(false);
-            }
-            pos++;
+            handler.removeHost(h);
         }
 
         clearSelection();
-
-        //Disable install button if no hosts left in the valid list
-        if (panel.getHostListAt(1).size() == 0) {
-            panel.enableInstallButton(false);
-        }
-
-        //tab.validate();
     }
 
+    /**
+     * Creates a popup menu for the table
+     * @param label The main label of the popup menu
+     * @return The created menu
+     */
     private JPopupMenu createSelectionPopupMenu(String label) {
         final JPopupMenu tableMenu = new JPopupMenu(label);
-        tableMenu.setToolTipText(panel.getTooltip(label));
+        tableMenu.setToolTipText(handler.getTooltip(label));
 
         // menu item for resolving the selected hosts in the table
-        final JMenuItem resolveSelectionMI = new JMenuItem(panel.getLabel("menu.resolve.selected"));
-        resolveSelectionMI.setToolTipText(panel.getTooltip("menu.resolve.selected"));
+        final JMenuItem resolveSelectionMI = new JMenuItem(handler.getLabel("menu.resolve.selected"));
+        resolveSelectionMI.setToolTipText(handler.getTooltip("menu.resolve.selected"));
         resolveSelectionMI.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 int[] selectedHostIndexes = getSelectedHostIndexes();
-                HostList hostList = panel.getHostListAt(tabPos);
+                HostList hostList = getHostList();
                 List<Host> list = new ArrayList<Host>();
                 Host host;
                 for (int i = selectedHostIndexes.length - 1 ; i >= 0; i--) {
@@ -163,17 +170,17 @@ public class HostTable extends JTable {
                 }
 
                 deleteHostList(list);
-                panel.resolveHosts(list);
+                handler.addHosts(list);
             }
         });
         tableMenu.add(resolveSelectionMI);
 
         // menu item for resolving all hosts in the table
-        final JMenuItem resolveAllMI = new JMenuItem(panel.getLabel("menu.resolve.all"));
-        resolveAllMI.setToolTipText(panel.getTooltip("menu.resolve.all"));
+        final JMenuItem resolveAllMI = new JMenuItem(handler.getLabel("menu.resolve.all"));
+        resolveAllMI.setToolTipText(handler.getTooltip("menu.resolve.all"));
         resolveAllMI.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                HostList hostList = panel.getHostListAt(tabPos);
+                HostList hostList = getHostList();
                 List<Host> list = new ArrayList<Host>();
                 for (Host host : hostList) {
                     host.setState(Host.State.NEW_UNKNOWN_HOST);
@@ -181,7 +188,7 @@ public class HostTable extends JTable {
                 }
 
                 deleteHostList(list);
-                panel.resolveHosts(list);
+                handler.addHosts(list);
             }
         });
         tableMenu.add(resolveAllMI);
@@ -189,12 +196,12 @@ public class HostTable extends JTable {
         tableMenu.addSeparator();
 
         // menu item for deleting selected hosts in the table
-        final JMenuItem deleteSelectionMI = new JMenuItem(panel.getLabel("menu.remove.selected"));
-        deleteSelectionMI.setToolTipText(panel.getTooltip("menu.remove.selected"));
+        final JMenuItem deleteSelectionMI = new JMenuItem(handler.getLabel("menu.remove.selected"));
+        deleteSelectionMI.setToolTipText(handler.getTooltip("menu.remove.selected"));
         deleteSelectionMI.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 int[] selectedHostIndexes = getSelectedHostIndexes();
-                HostList hostList = panel.getHostListAt(tabPos);
+                HostList hostList = getHostList();
                 List<Host> list = new ArrayList<Host>();
                 Host h;
                 for (int i = selectedHostIndexes.length - 1 ; i >= 0; i--) {
@@ -208,11 +215,11 @@ public class HostTable extends JTable {
         tableMenu.add(deleteSelectionMI);
 
         // menu item for deleting all hosts in the table
-        final JMenuItem deleteAllMI = new JMenuItem(panel.getLabel("menu.remove.all"));
-        deleteAllMI.setToolTipText(panel.getTooltip("menu.remove.all"));
+        final JMenuItem deleteAllMI = new JMenuItem(handler.getLabel("menu.remove.all"));
+        deleteAllMI.setToolTipText(handler.getTooltip("menu.remove.all"));
         deleteAllMI.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                deleteHostList(panel.getHostListAt(tabPos));
+                deleteHostList(getHostList());
             }
         });
         tableMenu.add(deleteAllMI);
@@ -220,12 +227,12 @@ public class HostTable extends JTable {
         tableMenu.addSeparator();
 
         // menu item for saving selected hosts in the table
-        final JMenuItem saveSelectionMI = new JMenuItem(panel.getLabel("menu.save.selection"));
-        saveSelectionMI.setToolTipText(panel.getTooltip("menu.save.selection"));
+        final JMenuItem saveSelectionMI = new JMenuItem(handler.getLabel("menu.save.selection"));
+        saveSelectionMI.setToolTipText(handler.getTooltip("menu.save.selection"));
         saveSelectionMI.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 int[] selectedHostIndexes = getSelectedHostIndexes();
-                HostList hostList = panel.getHostListAt(tabPos);
+                HostList hostList = getHostList();
                 List<String> list = new ArrayList<String>();
                 Host h;
                 for (int i = selectedHostIndexes.length - 1 ; i >= 0; i--) {
@@ -241,11 +248,11 @@ public class HostTable extends JTable {
         tableMenu.add(saveSelectionMI);
 
         // menu item for saving all hosts in the table
-        final JMenuItem saveAllMI = new JMenuItem(panel.getLabel("menu.save.all"));
-        saveAllMI.setToolTipText(panel.getTooltip("menu.save.all"));
+        final JMenuItem saveAllMI = new JMenuItem(handler.getLabel("menu.save.all"));
+        saveAllMI.setToolTipText(handler.getTooltip("menu.save.all"));
         saveAllMI.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                HostList hostList = panel.getHostListAt(tabPos);
+                HostList hostList = getHostList();
                 List<String> list = new ArrayList<String>();
                 for (Host h : hostList) {
                     list.add(h.getHostname());

@@ -139,8 +139,6 @@ jsv_create(const char *name, const char *context, lList **answer_list, const cha
             lSetRef(new_jsv, JSV_out, NULL);
             lSetRef(new_jsv, JSV_err, NULL);
             lSetBool(new_jsv, JSV_has_to_restart, false);
-            lSetList(new_jsv, JSV_incomplete, lCreateList("", JSV_Type));
-            lSetList(new_jsv, JSV_complete, lCreateList("", JSV_Type));
             lSetUlong(new_jsv, JSV_last_mod, st.st_mtime);
             lSetBool(new_jsv, JSV_test, false);
 
@@ -259,19 +257,14 @@ jsv_send_data(lListElem *jsv, lList **answer_list, const char *buffer, size_t si
    if (jsv_is_send_ready(jsv, answer_list)) {
       int lret;
 
-      DPRINTF(("JSV - before sending data\n"));
       lret = fprintf(lGetRef(jsv, JSV_in), buffer);
-      DPRINTF(("JSV - after sending data\n"));
       fflush(lGetRef(jsv, JSV_in));
-      DPRINTF(("JSV - after flushing data\n"));
       if (lret != size) {
-         DPRINTF(("JSV - had sent error\n"));
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
                                  MSG_JSV_SEND_S);
          ret = false;
       }
    } else {
-      DPRINTF(("JSV - no data sent becaus fd was not ready\n"));
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
                               MSG_JSV_SEND_READY_S);
       ret = false;
@@ -1144,7 +1137,6 @@ jsv_do_verify(sge_gdi_ctx_class_t* ctx, const char *context, lListElem **job,
 
                DPRINTF(("JSV has to be rstarted\n"));
                INFO((SGE_EVENT, MSG_JSV_RESTART_S, context));
-               DPRINTF(("Before termination of JSV\n"));
                ret &= jsv_stop(jsv, answer_list, soft_shutdown);
             }
          }

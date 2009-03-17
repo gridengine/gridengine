@@ -36,7 +36,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.event.TableModelEvent;
 
-public class HostSelectionTableModel extends SortedTableModel {
+public class HostSelectionTableModel extends SortedTableModel implements HostTableModel {
 
     final private String[] headers;
     final private Class[] types;
@@ -245,8 +245,13 @@ public class HostSelectionTableModel extends SortedTableModel {
 
     public void setHostState(Host h, Host.State state) {
         h.setState(state);
+
+        int index = hostList.indexOf(h);
+        if (index == -1) {
+            return;
+        }
         
-        int row = getRowIndex(hostList.indexOf(h));
+        int row = getRowIndex(index);
         if (row == -1 || row >= hostList.size()) {
             return;
         }
@@ -308,5 +313,13 @@ public class HostSelectionTableModel extends SortedTableModel {
             fireTableRowsDeleted(row, row);
             fireTableChanged(new TableModelEvent(this));
         }
+    }
+
+    public void setHostLog(Host h, String log) {
+        h.setLogContent(log);
+    }
+
+    public HostList getHostList() {
+        return hostList;
     }
 }

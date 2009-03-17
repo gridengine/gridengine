@@ -96,18 +96,36 @@ public class JobStateFilter implements Serializable {
      *  Zombie jobs. (<code>qstat -s z</code>)
      */
     public static final State ZOMBIE = new State(0x0040, "z");
+
     /**
-     * This state includes <code>HOLD_USER</code>, <code>HOLD_OPERATOR</code> and
-     * <code>HOLD_SYSTEM</code>.
+     *  Jobs in the state hold job array job (<code>qstat -s hd</code>)
      */
-    public static final State HOLD = new State(HOLD_USER.getMask() | HOLD_OPERATOR.getMask() | HOLD_SYSTEM.getMask(), "h");
+    public static final State HOLD_JOBARRAYHOLD = new State(0x0080, "hd");
+
+    /**
+     *  Jobs in the state hold job hold (<code>qstat -s hj</code>)
+     */
+    public static final State HOLD_JOBHOLD = new State(0x0100, "hj");
+
+    /**
+     *  Jobs in the state hold job hold (<code>qstat -s hj</code>)
+     */
+    public static final State HOLD_STARTTIMEHOLD = new State(0x0200, "ha");
+
+    /**
+     * This state includes <code>HOLD_USER</code>, <code>HOLD_OPERATOR</code>,
+     * <code>HOLD_SYSTEM</code>, <code>HOLD_JOBARRAYHOLD</code>, <code>HOLD_JOBHOLD</code>
+     * and <code>HOLD_STARTTIMEHOLD</code>
+     */
+    public static final State HOLD = new State(HOLD_USER.getMask() | HOLD_OPERATOR.getMask() | HOLD_SYSTEM.getMask() | HOLD_JOBARRAYHOLD.getMask() | HOLD_JOBHOLD.getMask() | HOLD_STARTTIMEHOLD.getMask(), "h");
+
     /**
      *  This state includes a other states besides <code>ZOMBIE</code>.
      *
      *  Same as <code>qstat -s a</code> or <code>qstat -s prsh</code>
      */
-    public static final State ALL = new State(PENDING.getMask() | RUNNING.getMask() | SUSPENDED.getMask() | HOLD.getMask(), "a");
-    private static final State[] ALL_SIMPLE_STATES = new State[]{HOLD_USER, HOLD_OPERATOR, HOLD_SYSTEM, PENDING, RUNNING, SUSPENDED, ZOMBIE};
+    public static final State ALL = new State(PENDING.getMask() | RUNNING.getMask() | SUSPENDED.getMask() /* | HOLD.getMask() */, "a");
+    private static final State[] ALL_SIMPLE_STATES = new State[]{HOLD_USER, HOLD_OPERATOR, HOLD_SYSTEM, HOLD_JOBARRAYHOLD, HOLD_JOBHOLD, HOLD_STARTTIMEHOLD, PENDING, RUNNING, SUSPENDED, ZOMBIE};
     private int mask;
     private String stateStr;
 
@@ -127,8 +145,7 @@ public class JobStateFilter implements Serializable {
      * @return the job state
      */
     public static JobStateFilter parse(String stateString) {
-        JobStateFilter ret = new JobStateFilter();
-        return ret.fill(stateString);
+        return fill(stateString);
     }
 
     /**
@@ -140,24 +157,25 @@ public class JobStateFilter implements Serializable {
 
         JobStateFilter ret = new JobStateFilter();
         String str = null;
+        int index = 0;
         outer:
-        for (int index = 0; index < stateString.length(); index++) {
+        while (index < stateString.length()) {
             for (int i = 0; i < ALL_SIMPLE_STATES.length; i++) {
                 str = ALL_SIMPLE_STATES[i].getValue();
-                if (stateString.indexOf(str, index) == 0) {
+                if (stateString.indexOf(str, index) == index) {
                     ret.include(ALL_SIMPLE_STATES[i]);
                     index += str.length();
                     continue outer;
                 }
             }
             str = HOLD.getValue();
-            if (stateString.indexOf(str, index) == 0) {
+            if (stateString.indexOf(str, index) == index) {
                 ret.include(HOLD);
                 index += str.length();
                 continue;
             }
             str = ALL.getValue();
-            if (stateString.indexOf(str, index) == 0) {
+            if (stateString.indexOf(str, index) == index) {
                 ret.include(ALL);
                 index += str.length();
                 continue;

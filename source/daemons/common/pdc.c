@@ -2387,7 +2387,7 @@ static int psRetrieveOSJobData(void) {
                job->jd_vmem += proc_elem->vmem;    
                job->jd_rss += proc_elem->rss;    
                job->jd_mem += (proc_elem->mem/1024.0);    
-#if defined(ALPHA)
+#if defined(ALPHA) || defined(LINUX)
                job->jd_chars += proc_elem->delta_chars;     
 #endif
             } else { 

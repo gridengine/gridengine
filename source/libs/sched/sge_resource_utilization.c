@@ -84,7 +84,7 @@ static void set_utilization(lList *uti_list, u_long32 from, u_long32 till, doubl
 static lListElem *newResourceElem(u_long32 time, double amount);
 
 #if 0
-define DEBUG_RESOURCE_UTILIZATION true
+#define DEBUG_RESOURCE_UTILIZATION
 #endif
 
 #ifdef DEBUG_RESOURCE_UTILIZATION
@@ -207,6 +207,12 @@ void utilization_print(const lListElem *cr, const char *object_name)
    for_each (rde, lGetList(cr, RUE_utilized)) {
       DPRINTF(("\t"sge_U32CFormat"  %f\n", lGetUlong(rde, RDE_time), lGetDouble(rde, RDE_amount))); 
    }
+   DPRINTF(("resource utilization: %s \"%s\" %f utilized now non-exclusive\n", 
+         object_name?object_name:"<unknown_object>", lGetString(cr, RUE_name),
+            lGetDouble(cr, RUE_utilized_now_nonexclusive)));
+   for_each (rde, lGetList(cr, RUE_utilized_nonexclusive)) {
+      DPRINTF(("\t"sge_U32CFormat"  %f\n", lGetUlong(rde, RDE_time), lGetDouble(rde, RDE_amount))); 
+   }
 
    DRETURN_VOID;
 }
@@ -250,6 +256,8 @@ static u_long32 utilization_endtime(u_long32 start, u_long32 duration)
 *     const char *object_name - The objects name
 *     const char *type        - String denoting type of utilization entry.
 *     bool is_job             - reserve for job or for advance reservation
+*     bool implicit_non_exclusive - add implicit entry for non-exclusive jobs
+*                                   requesting a exclusive centry
 *
 *  RESULT
 *     int - 0 on success
@@ -259,16 +267,24 @@ static u_long32 utilization_endtime(u_long32 start, u_long32 duration)
 *******************************************************************************/
 int utilization_add(lListElem *cr, u_long32 start_time, u_long32 duration, double utilization, 
                      u_long32 job_id, u_long32 ja_taskid, u_long32 level, const char *object_name,
-                     const char *type, bool for_job) 
+                     const char *type, bool for_job, bool implicit_non_exclusive) 
 {
-   lList *resource_diagram=lGetList(cr, RUE_utilized);
+   lList *resource_diagram;
    lListElem *this, *prev, *start, *end;
    const char *name = lGetString(cr, RUE_name);
    char level_char = CENTRY_LEVEL_TO_CHAR(level);
    u_long32 end_time;
+   int nm;
    double util_prev;
    
    DENTER(TOP_LAYER, "utilization_add");
+
+   if (implicit_non_exclusive) {
+      nm = RUE_utilized_nonexclusive;
+   } else {
+      nm = RUE_utilized;
+   }
+   resource_diagram=lGetList(cr, nm);
 
    /* A reservation is only neccessary in one of the following cases:
       - for_job is true (this means no advance reservation request) 
@@ -291,7 +307,7 @@ int utilization_add(lListElem *cr, u_long32 start_time, u_long32 duration, doubl
    /* ensure resource diagram is initialized */
    if (resource_diagram == NULL) {
       resource_diagram = lCreateList(name, RDE_Type);
-      lSetList(cr, RUE_utilized, resource_diagram);
+      lSetList(cr, nm, resource_diagram);
    }
 
    utilization_find_time_or_prevstart_or_prev(resource_diagram, 
@@ -339,7 +355,7 @@ int utilization_add(lListElem *cr, u_long32 start_time, u_long32 duration, doubl
       lInsertElem(resource_diagram, prev, end);
    }
 
-#if 0
+#if 1
    utilization_print(cr, "pe_slots");
    printf("this was before utilization_normalize()\n");
 #endif
@@ -430,6 +446,7 @@ static void utilization_normalize(lList *diagram)
 *
 *  INPUTS
 *     const lListElem *cr - Resource utilization entry (RUE_utilized)
+*     bool for_excl_request - For exclusive request
 *
 *  RESULT
 *     double - queue end utilization
@@ -437,17 +454,40 @@ static void utilization_normalize(lList *diagram)
 *  NOTES
 *     MT-NOTE: utilization_queue_end() is MT safe 
 *******************************************************************************/
-double utilization_queue_end(const lListElem *cr)
+double utilization_queue_end(const lListElem *cr, bool for_excl_request)
 {
    const lListElem *ep = lLast(lGetList(cr, RUE_utilized));
+   double max = 0.0;
+
+   DENTER(TOP_LAYER, "utilization_queue_end");
+
+#if 1
+   utilization_print(cr, "the object");
+#endif
 
    if (ep) {
-      if (lGetUlong(ep, RDE_time) != U_LONG32_MAX)
-         return lGetDouble(ep, RDE_amount);
-      else 
-         return lGetDouble(lPrev(ep), RDE_amount);
-   } else
-      return 0.0;
+      if (lGetUlong(ep, RDE_time) != U_LONG32_MAX) {
+         max = lGetDouble(ep, RDE_amount);
+      } else {
+         max = lGetDouble(lPrev(ep), RDE_amount);
+      }
+   }
+
+   if (for_excl_request) {
+      double max_nonexclusive;
+      ep = lLast(lGetList(cr, RUE_utilized_nonexclusive));
+      if (ep) {
+         if (lGetUlong(ep, RDE_time) != U_LONG32_MAX) {
+            max_nonexclusive = lGetDouble(ep, RDE_amount);
+         } else {
+            max_nonexclusive = lGetDouble(lPrev(ep), RDE_amount);
+         }
+         max = MAX(max, max_nonexclusive);
+      }
+   }
+
+   DPRINTF(("returning %f\n", max));
+   DRETURN(max);
 }
 
 
@@ -466,6 +506,7 @@ double utilization_queue_end(const lListElem *cr)
 *     const lListElem *cr - Resource utilization entry (RUE_utilized)
 *     u_long32 start_time - Start time of the timeframe
 *     u_long32 duration   - Duration of timeframe
+*     bool for_excl_request - For exclusive request
 *
 *  RESULT
 *     double - Maximum utilization
@@ -473,7 +514,7 @@ double utilization_queue_end(const lListElem *cr)
 *  NOTES
 *     MT-NOTE: utilization_max() is MT safe 
 *******************************************************************************/
-double utilization_max(const lListElem *cr, u_long32 start_time, u_long32 duration)
+double utilization_max(const lListElem *cr, u_long32 start_time, u_long32 duration, bool for_excl_request)
 {
    const lListElem *rde;
    lListElem *start, *prev;
@@ -484,15 +525,22 @@ double utilization_max(const lListElem *cr, u_long32 start_time, u_long32 durati
 
    /* someone is asking for the current utilization */
    if (start_time == DISPATCH_TIME_NOW) {
-      DRETURN(lGetDouble(cr, RUE_utilized_now));
+      max = lGetDouble(cr, RUE_utilized_now);
+
+      if (for_excl_request) {
+         max = MAX(lGetDouble(cr, RUE_utilized_now_nonexclusive), max);
+      }
+
+      DPRINTF(("returning(1) %f\n", max));
+      DRETURN(max);
    }
 
    /* someone is asking for queue end utilization */
    if (start_time == -1) {
-      DRETURN(utilization_queue_end(cr));
+      DRETURN(utilization_queue_end(cr, for_excl_request));
    }
    
-#if 0
+#if 1
    utilization_print(cr, "the object");
 #endif
 
@@ -516,7 +564,33 @@ double utilization_max(const lListElem *cr, u_long32 start_time, u_long32 durati
       max = MAX(max, lGetDouble(rde, RDE_amount));
       rde = lNext(rde);
    }
+   
+   if (for_excl_request) {
+     double max_nonexclusive = 0.0;
+      utilization_find_time_or_prevstart_or_prev(lGetList(cr, RUE_utilized_nonexclusive), start_time, 
+            &start, &prev);
 
+      if (start) {
+         max_nonexclusive = lGetDouble(start, RDE_amount);
+         rde = lNext(start);
+      } else {
+         if (prev) {
+            max_nonexclusive = lGetDouble(prev, RDE_amount);
+            rde = lNext(prev);
+         } else {
+            rde = lFirst(lGetList(cr, RUE_utilized_nonexclusive));
+         }
+      }
+
+      /* now watch out for the maximum before end time */ 
+      while (rde && end_time > lGetUlong(rde, RDE_time)) {
+         max_nonexclusive = MAX(max_nonexclusive, lGetDouble(rde, RDE_amount));
+         rde = lNext(rde);
+      }
+      max = MAX(max, max_nonexclusive);
+   }
+
+   DPRINTF(("returning(2) %f\n", max));
    DRETURN(max); 
 }
 
@@ -536,6 +610,7 @@ double utilization_max(const lListElem *cr, u_long32 start_time, u_long32 durati
 *     double max_util         - The maximum utilization we're asking
 *     const char *object_name - Name of the queue/host/global for monitoring 
 *                               purposes.
+*     bool for_excl_request   - match for exclusive request
 *
 *  RESULT
 *     u_long32 - The earliest time or DISPATCH_TIME_NOW.
@@ -543,7 +618,7 @@ double utilization_max(const lListElem *cr, u_long32 start_time, u_long32 durati
 *  NOTES
 *     MT-NOTE: utilization_below() is MT safe 
 *******************************************************************************/
-u_long32 utilization_below(const lListElem *cr, double max_util, const char *object_name)
+u_long32 utilization_below(const lListElem *cr, double max_util, const char *object_name, bool for_excl_request)
 {
    const lListElem *rde;
    double util = 0;
@@ -565,6 +640,20 @@ u_long32 utilization_below(const lListElem *cr, double max_util, const char *obj
             break;
          }
       }
+   }
+   if (for_excl_request) {
+      u_long32 when_nonexclusive = DISPATCH_TIME_NOW;
+      for_each_rev (rde, lGetList(cr, RUE_utilized_nonexclusive)) {
+         util = lGetDouble(rde, RDE_amount);
+         if (util <= max_util) {
+            lListElem *p = lPrev(rde);
+            if (p && lGetDouble(p, RDE_amount) > max_util) {
+               when_nonexclusive = lGetUlong(rde, RDE_time);
+               break;
+            }
+         }
+      }
+      when = MAX(when, when_nonexclusive);
    }
 
    if (when == DISPATCH_TIME_NOW) {
@@ -618,7 +707,7 @@ int add_job_utilization(const sge_assignment_t *a, const char *type, bool for_jo
       /* parallel environment  */
       if (a->pe) {
          utilization_add(lFirst(lGetList(a->pe, PE_resource_utilization)), a->start, a->duration, a->slots,
-               a->job_id, a->ja_task_id, PE_TAG, lGetString(a->pe, PE_name), type, for_job_scheduling);
+               a->job_id, a->ja_task_id, PE_TAG, lGetString(a->pe, PE_name), type, for_job_scheduling, false);
       }
 
       /* global */
@@ -770,9 +859,16 @@ int rc_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type,
       if (job_get_contribution(jep, NULL, name, &dval, dcep) && dval != 0.0) {
          /* update RUE_utilized resource diagram to reflect jobs utilization */
          utilization_add(cr, start_time, duration, debit_slots * dval,
-            lGetUlong(jep, JB_job_number), task_id, tag, obj_name, type, for_job_scheduling);
+            lGetUlong(jep, JB_job_number), task_id, tag, obj_name, type, for_job_scheduling, false);
          mods++;
-      }  
+      } else if (lGetUlong(dcep, CE_relop) == CMPLXEXCL_OP) {
+         dval = 1.0;
+         /* update RUE_utilized resource diagram to reflect jobs utilization */
+         utilization_add(cr, start_time, duration, debit_slots * dval,
+            lGetUlong(jep, JB_job_number), task_id, tag, obj_name, type, for_job_scheduling, true);
+         mods++;
+      }
+
    }
 
    DRETURN(mods);
@@ -781,7 +877,7 @@ int rc_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type,
 /****** sge_resource_utilization/rqs_add_job_utilization() ********************
 *  NAME
 *     rqs_add_job_utilization() -- Debit assignment's utilization in a limitation
-*                                   rule
+*                                  rule
 *
 *  SYNOPSIS
 *     static int rqs_add_job_utilization(lListElem *jep, u_long32 task_id, 
@@ -871,7 +967,12 @@ rqs_add_job_utilization(lListElem *jep, u_long32 task_id, const char *type,
          if (job_get_contribution(jep, NULL, centry_name, &dval, raw_centry) && dval != 0.0) {
             /* update RUE_utilized resource diagram to reflect jobs utilization */
             utilization_add(rue_elem, start_time, end_time, debit_slots * dval,
-               lGetUlong(jep, JB_job_number), task_id, RQS_TAG, obj_name, type, true);
+               lGetUlong(jep, JB_job_number), task_id, RQS_TAG, obj_name, type, true, false);
+            mods++;
+         } else if (lGetUlong(raw_centry, CE_relop) == CMPLXEXCL_OP) {
+            dval = 1.0;
+            utilization_add(rue_elem, start_time, end_time, debit_slots * dval,
+               lGetUlong(jep, JB_job_number), task_id, RQS_TAG, obj_name, type, true, true);
             mods++;
          }
       }

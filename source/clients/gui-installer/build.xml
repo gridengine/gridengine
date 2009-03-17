@@ -59,7 +59,7 @@ ___INFO__MARK_END__-->
 
     <target name="build.izpack" unless="izpack.isbuild" description="Builds IzPack">
            <echo message="IzPack is not yet built. Building now..."/>
-           <ant antfile="${izpack.home}/src/build.xml" target="all" dir="${izpack.home}" inheritall="true"/>
+           <ant antfile="${izpack.home}/src/build.xml" target="all" dir="${izpack.home}" inheritall="false"/>
     </target>
 
     <target name="-pre-compile" description="Compile IzPack if it hasn't been yet">
@@ -69,7 +69,7 @@ ___INFO__MARK_END__-->
             <available file="${izpack.home}/_build"/>
         </condition>
         <antcall target="build.izpack"/>
-            <!-- Check that IzPack was build and we have it on the classpath -->
+        <!-- Check that IzPack was build and we have it on the classpath -->
         <condition property="izpack.complete">
             <available classpath="${javac.classpath}" classname="com.izforge.izpack.installer.IzPanel"/>
         </condition>
@@ -81,18 +81,10 @@ ___INFO__MARK_END__-->
         <mkdir dir="${build.panels.dir}"/>
         <copyfile src="${izpack.home}/lib/standalone-compiler.jar" dest="${compiler.path}"/>
 
-        <echo message="Building prerequsities from source/3rdparty/IzPack/src ..."/>
-        <javac srcdir="../../3rdparty/IzPack/src" 
-               excludes="izforge/izpack/installer/InstallerFrame.java"
+        <echo message="Building prerequsities from source/3rdparty/IzPack/src/lib ..."/>
+        <javac srcdir="../../3rdparty/IzPack/src/lib"
                classpath="${build.classes.dir}:${javac.classpath}"
-               source="${javac.source}" target="${javac.target}" destdir="${build.classes.dir}"/>
-        <javac srcdir="${src.dir}"
-               includes="com/sun/grid/installer/gui/HelpFrame.java"
-               classpath="${build.classes.dir}:${javac.classpath}"
-               source="${javac.source}" target="${javac.target}" destdir="${build.classes.dir}"/>
-        <javac srcdir="../../3rdparty/IzPack/src"
-               includes="izforge/izpack/installer/InstallerFrame.java"
-               classpath="${build.classes.dir}:${javac.classpath}"
+               sourcepath="${src.dir}"
                source="${javac.source}" target="${javac.target}" destdir="${build.classes.dir}"/>
 
         <!-- Prepare sge.license property -->
@@ -163,6 +155,7 @@ ___INFO__MARK_END__-->
             <fileset dir="${build.classes.dir}">
                 <include name="com/sun/grid/installer/util/*.class"/>
                 <include name="com/sun/grid/installer/util/cmd/*.class"/>
+                <include name="com/sun/grid/installer/task/*.class"/>
                 <exclude name="com/sun/grid/installer/util/Util.class"/>
             </fileset>
         </jar>
@@ -175,6 +168,7 @@ ___INFO__MARK_END__-->
             <fileset dir="${build.classes.dir}">
                 <include name="com/sun/grid/installer/util/*.class"/>
                 <include name="com/sun/grid/installer/util/cmd/*.class"/>
+                <include name="com/sun/grid/installer/task/*.class"/>
                 <exclude name="com/sun/grid/installer/util/Util.class"/>
             </fileset>
         </jar>
@@ -187,6 +181,7 @@ ___INFO__MARK_END__-->
             <fileset dir="${build.classes.dir}">
                 <include name="com/sun/grid/installer/util/*.class"/>
                 <include name="com/sun/grid/installer/util/cmd/*.class"/>
+                <include name="com/sun/grid/installer/task/*.class"/>
                 <exclude name="com/sun/grid/installer/util/Util.class"/>
             </fileset>
         </jar>
@@ -204,6 +199,7 @@ ___INFO__MARK_END__-->
             <fileset dir="${build.classes.dir}">
                 <include name="com/sun/grid/installer/util/*.class"/>
                 <include name="com/sun/grid/installer/util/cmd/*.class"/>
+                <include name="com/sun/grid/installer/task/*.class"/>
                 <exclude name="com/sun/grid/installer/util/ExtendedFile.class"/>
             </fileset>
         </jar>
@@ -218,7 +214,7 @@ ___INFO__MARK_END__-->
                 <include name="com/sun/grid/installer/util/Util.class"/>
                 <include name="com/sun/grid/installer/util/Config.class"/>
             </fileset>
-        </jar> 
+        </jar>
 
         <!-- Replace compiler classes -->
         <jar compress="${jar.compress}" destfile="${compiler.path}" update="true" description="Replace compiler classes">

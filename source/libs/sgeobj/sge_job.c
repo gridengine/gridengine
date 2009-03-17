@@ -3729,13 +3729,13 @@ job_get_verify_attr(u_long32 op, dstring *string)
    bool success = true;
 
    DENTER(TOP_LAYER, "job_get_verify_attr");
-   if (VALID(ERROR_VERIFY, op)) {
+   if (ERROR_VERIFY == op) {
       sge_dstring_append_char(string, 'e');
-   } else if (VALID(WARNING_VERIFY, op)) {
+   } else if (WARNING_VERIFY == op) {
       sge_dstring_append_char(string, 'w');
-   } else if (VALID(JUST_VERIFY, op)) {
+   } else if (JUST_VERIFY == op) {
       sge_dstring_append_char(string, 'v');
-   } else if (VALID(POKE_VERIFY, op)) {
+   } else if (POKE_VERIFY == op) {
       sge_dstring_append_char(string, 'p');
    } else {
       sge_dstring_append_char(string, 'n');

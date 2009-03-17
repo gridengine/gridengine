@@ -1,3 +1,6 @@
+RD-2009-03-17-0: CVS:         Created V62u3alpha1_TAG
+-----------------------------------------------------
+
 RD-2009-03-17-0: Enhancem.:   - added EXCL relop for boolean consumable
                  Bugster:     6731441
                  Issue:       2629
@@ -37,9 +40,6 @@ AH-2009-03-12-0: Bugfix:      SIGUSR1 clash between s_rt and NOTIFY_SUS
                  Bugster:     6816634
                  Issue:       2103
                  Review:      RD
-
-RD-2009-03-12-0: CVS:         Created V62u3alpha1_TAG
------------------------------------------------------
 
 MD-2009-03-11-0: Enhancem:    problems with gaussian due to memory limitations of SGE
                  Bugster:     6816037

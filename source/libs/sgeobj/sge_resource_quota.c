@@ -901,8 +901,15 @@ rqs_debit_rule_usage(lListElem *job, lListElem *rule, dstring *rue_name, int slo
                      obj_name, sge_dstring_get_string(rue_name), debit_slots));
             lAddDouble(rue_elem, RUE_utilized_now, debit_slots * dval);
             mods++;
+         } else if (lGetUlong(raw_centry, CE_relop) == CMPLXEXCL_OP) {
+            dval = 1.0;
+            DPRINTF(("debiting (non-exclusive) %f of %s on rqs %s for %s %d slots\n", dval, centry_name,
+                     obj_name, sge_dstring_get_string(rue_name), debit_slots));
+            lAddDouble(rue_elem, RUE_utilized_now_nonexclusive, debit_slots * dval);
+            mods++;
          }
-         if ((lGetDouble(rue_elem, RUE_utilized_now) == 0) && !lGetList(rue_elem, RUE_utilized)) {
+         if (lGetDouble(rue_elem, RUE_utilized_now) == 0 && lGetDouble(rue_elem, RUE_utilized_now_nonexclusive) == 0
+              && !lGetList(rue_elem, RUE_utilized) && !lGetList(rue_elem, RUE_utilized_nonexclusive)) {
             rue_elem = lDechainElem(lGetList(limit, RQRL_usage), rue_elem);
             lFreeElem(&rue_elem);
          }

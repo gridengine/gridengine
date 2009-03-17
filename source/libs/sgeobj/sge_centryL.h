@@ -53,12 +53,13 @@ extern "C" {
 
 /* relops in CE_relop */
 enum {
-   CMPLXEQ_OP = 1,
-   CMPLXGE_OP,
-   CMPLXGT_OP,
-   CMPLXLT_OP,
-   CMPLXLE_OP,
-   CMPLXNE_OP
+   CMPLXEQ_OP = 1, /* == */
+   CMPLXGE_OP,     /* >= */
+   CMPLXGT_OP,     /* > */
+   CMPLXLT_OP,     /* < */
+   CMPLXLE_OP,     /* <= */
+   CMPLXNE_OP,     /* != */
+   CMPLXEXCL_OP    /* EXCL */
 };
 
 enum {

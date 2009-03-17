@@ -1038,10 +1038,29 @@ parallel_limit_slots_by_time(const sge_assignment_t *a, lList *requests,
    lAppendElem(tmp_centry_list, tmp_centry_elem);
 
    /* create tmp_rue_list */
+   lWriteListTo(rue_list, stdout);
+   fflush(stdout);
    tmp_rue_elem = lCopyElem(lGetElemStr(rue_list, RUE_name, sge_dstring_get_string(rue_name)));
    if (tmp_rue_elem == NULL) {
+      DPRINTF(("RD: 1\n"));
       tmp_rue_elem = lCreateElem(RUE_Type);
    }
+{
+   const char *object_name = "bla";
+   lListElem *rde;
+   DPRINTF(("resource utilization: %s \"%s\" %f utilized now\n", 
+         object_name?object_name:"<unknown_object>", lGetString(tmp_rue_elem, RUE_name),
+            lGetDouble(tmp_rue_elem, RUE_utilized_now)));
+   for_each (rde, lGetList(tmp_rue_elem, RUE_utilized)) {
+      DPRINTF(("\t"sge_U32CFormat"  %f\n", lGetUlong(rde, RDE_time), lGetDouble(rde, RDE_amount))); 
+   }
+   DPRINTF(("resource utilization: %s \"%s\" %f utilized now non-exclusive\n", 
+         object_name?object_name:"<unknown_object>", lGetString(tmp_rue_elem, RUE_name),
+            lGetDouble(tmp_rue_elem, RUE_utilized_now_nonexclusive)));
+   for_each (rde, lGetList(tmp_rue_elem, RUE_utilized_nonexclusive)) {
+      DPRINTF(("\t"sge_U32CFormat"  %f\n", lGetUlong(rde, RDE_time), lGetDouble(rde, RDE_amount))); 
+   }
+}
 
    lSetString(tmp_rue_elem, RUE_name, lGetString(limit, RQRL_name));
    lAppendElem(tmp_rue_list, tmp_rue_elem);
@@ -1305,7 +1324,7 @@ static dispatch_t rqs_limitation_reached(sge_assignment_t *a, const lListElem *r
             parse_ulong_val(&request, NULL, lGetUlong(raw_centry, CE_valtype), lGetString(raw_centry, CE_default), NULL, 0);
 
             /* default requests with zero value are ignored */
-            if (request == 0.0) {
+            if (request == 0.0 && lGetUlong(raw_centry, CE_relop) != CMPLXEXCL_OP) {
                continue;
             }
             lSetString(raw_centry, CE_stringval, lGetString(raw_centry, CE_default));

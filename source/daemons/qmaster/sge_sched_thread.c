@@ -682,7 +682,7 @@ static int dispatch_jobs(sge_evc_class_t *evc, scheduler_all_data_t *lists, orde
       break;
    }
 
-   /* generate a consumable laod list structure. It stores which queues
+   /* generate a consumable load list structure. It stores which queues
       are using consumables in their load threshold. */
    sge_create_load_list(lists->queue_list, lists->host_list, lists->centry_list,
                         &consumable_load_list);

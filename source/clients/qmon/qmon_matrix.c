@@ -951,32 +951,9 @@ StringConst *ce_entry
    ce_entry[CE_NAME] = (StringConst)lGetString(ep, CE_name);
    ce_entry[CE_SHORTCUT] = (StringConst)lGetString(ep, CE_shortcut);
    ce_entry[CE_TYPE] = (StringConst)map_type2str(lGetUlong(ep, CE_valtype));
-
-   switch (lGetUlong(ep, CE_relop)) {
-   case CMPLXLT_OP:
-      ce_entry[CE_RELOP] = "<";
-      break; 
-   case CMPLXGT_OP:
-      ce_entry[CE_RELOP] = ">";
-      break; 
-   case CMPLXLE_OP:
-      ce_entry[CE_RELOP] = "<=";
-      break; 
-   case CMPLXGE_OP:
-      ce_entry[CE_RELOP] = ">=";
-      break; 
-   case CMPLXEQ_OP:
-      ce_entry[CE_RELOP] = "==";
-      break; 
-   case CMPLXNE_OP:
-      ce_entry[CE_RELOP] = "!=";
-      break; 
-   default:
-      ce_entry[CE_RELOP] = "??";
-   }
-   ce_entry[CE_REQUEST] = lGetUlong(ep, CE_requestable) == REQU_FORCED ? "FORCED" : 
-                           (lGetUlong(ep, CE_requestable) == REQU_YES ? "YES" : "NO");
-   ce_entry[CE_CONSUMABLE] = lGetUlong(ep, CE_consumable) ? "YES" : "NO";
+   ce_entry[CE_RELOP] = map_op2str(lGetUlong(ep, CE_relop));
+   ce_entry[CE_REQUEST] = map_req2str(lGetUlong(ep, CE_requestable));
+   ce_entry[CE_CONSUMABLE] = map_consumable2str(lGetUlong(ep, CE_consumable));
    ce_entry[CE_DEFAULT] = (StringConst)lGetString(ep, CE_default);
    ce_entry[CE_URGENCY] = (StringConst)lGetString(ep, CE_urgency_weight);
       
@@ -1016,7 +993,7 @@ String *ce_entry
    lSetUlong(ep, CE_valtype, type);
 
    relop = 0;
-   for (i=CMPLXEQ_OP; !relop && i<=CMPLXNE_OP; i++) {
+   for (i=CMPLXEQ_OP; !relop && i<=CMPLXEXCL_OP; i++) {
       if (!strcmp(ce_entry[CE_RELOP], map_op2str(i)))
          relop = i;
    }

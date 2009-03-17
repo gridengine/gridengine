@@ -38,11 +38,11 @@
     
     <target name="aimk" depends="aimk.init, javah">
         <!-- echo message="aimk.targetbits = ${aimk.targetbits}"/ -->
-        <aimk_call args="${aimk.targetbits} ${aimk.insure} ${aimk.debug} -only-core jgdi_all"/>
+        <aimk_call args="${aimk.targetbits} ${aimk.insure} ${aimk.debug} -only-core -no-jemalloc jgdi_all"/>
     </target>
     
     <target name="aimk.clean" depends="aimk.init">
-        <aimk_call args="${aimk.targetbits} ${aimk.insure} ${aimk.debug} -only-core jgdi_clean"/>
+        <aimk_call args="${aimk.targetbits} ${aimk.insure} ${aimk.debug} -only-core -no-jemalloc jgdi_clean"/>
     </target>
     
     <target name="aimk.template.required" depends="aimk.init, init">

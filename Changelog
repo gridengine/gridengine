@@ -1,3 +1,11 @@
+RD-2009-03-17-0: Enhancem.:   - added EXCL relop for boolean consumable
+                 Bugster:     6731441
+                 Issue:       2629
+                 Bugfix:      - libspoolb and libspoolc should not link against
+                                jemalloc/mtmalloc
+                 Bugfix:      - fixed memory leak in shepherd and buildin_starter
+                 Review:      AA
+
 LP-2009-03-16-0: Enhancem:    gui-installer build process improved
                  Enhancem:    updated the gui-installer version
                  Review:      ZG

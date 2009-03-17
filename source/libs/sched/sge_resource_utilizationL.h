@@ -162,7 +162,9 @@ NAMEEND
 enum {
    RUE_name = RUE_LOWERBOUND,
    RUE_utilized_now,
-   RUE_utilized
+   RUE_utilized,
+   RUE_utilized_now_nonexclusive,
+   RUE_utilized_nonexclusive
 };
 
 LISTDEF(RUE_Type)
@@ -170,12 +172,16 @@ LISTDEF(RUE_Type)
    SGE_STRING(RUE_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL | CULL_SUBLIST | CULL_PRIMARY_KEY)
    SGE_DOUBLE(RUE_utilized_now, CULL_DEFAULT)
    SGE_LIST(RUE_utilized, RDE_Type, CULL_DEFAULT)
+   SGE_DOUBLE(RUE_utilized_now_nonexclusive, CULL_DEFAULT)
+   SGE_LIST(RUE_utilized_nonexclusive, RDE_Type, CULL_DEFAULT)
 LISTEND 
 
 NAMEDEF(RUEN)
    NAME("RUE_name")
    NAME("RUE_utilized_now")
    NAME("RUE_utilized")
+   NAME("RUE_utilized_now_nonexclusive")
+   NAME("RUE_utilized_nonexclusive")
 NAMEEND
 
 #define RUES sizeof(RUEN)/sizeof(char*)

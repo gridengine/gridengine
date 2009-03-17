@@ -124,68 +124,36 @@ extern char **environ;
  * This TODO should not be neccessary any more if the command is
  * transferred in the job object.
  */
-#if 1
-static int split_command(char *command, char ***cmdargs) {
+static int count_command(char *command) {
    /* count number of arguments */
-   int counter = 1;
    char *s = command;
    int argc;
-   char **args;
    int i,end;
    char delimiter[2];
 
    snprintf(delimiter, 2, "%c", 0xff);
 
-   while(*s) {
-      if(*s++ == delimiter[0]) {
-         counter++;
-      }
-   }
-
-   /* copy arguments */
-   argc = 0;
-   args = (char **)malloc((counter) * sizeof(char *));
-   
-   if(args == NULL) {
-      return 0;
-   }
+   /* count arguments */
+   argc = 1;
 
    /* do not use strtok(), strtok() is seeing 2 or more delimiters as one !!! */
-   s=command;
-   args[argc++] = s;
    end =  strlen(command);
    for(i = 0; i < end ; i++) {
       if (s[i] == delimiter[0]) {
-         s[i] = 0;
-         args[argc++] = &s[i+1];
+         argc++;
       }
    } 
 
-#if 0
-   /* debug code */
-   fflush(stderr);
-   fprintf(stdout, "counter = %d\n", counter);
-   for(i = 0; i < argc; i++) {
-      fprintf(stdout, "split_command: args[%d] = %s\n", i, args[i]);
-   }
-   fflush(stdout);
-#endif
-
-   *cmdargs = args;
    return argc;
 }
-#endif
 
 /************************************************************************
  This is the shepherds buitin starter.
 
  It is also used to start the external starter command .. 
  ************************************************************************/
-void son(
-char *childname,
-char *script_file,
-int truncate_stderr_out 
-) {
+void son(char *childname, char *script_file, int truncate_stderr_out)
+{
    int   in, out, err;          /* hold fds */
    int   i;
    int   merge_stderr;
@@ -596,15 +564,13 @@ int truncate_stderr_out
    }
 
    if (fs_stdin) {
-      /* Generate fs_input_tmp_path (etc.) from tmpdir+stdin_path */
       if (stdin_path_for_fs && strlen(stdin_path_for_fs) > 0) {
+         /* Generate fs_input_tmp_path (etc.) from tmpdir+stdin_path */
          fs_stdin_file = strrchr(stdin_path_for_fs, '/') + 1;
          sprintf(fs_stdin_tmp_path, "%s/%s", tmpdir, fs_stdin_file);
-      }
 
-      /* Set fs_input_path to old stdin_path and then
-         stdin_path to just generated fs_input_tmp_path */
-      if (stdin_path_for_fs && strlen(stdin_path_for_fs) > 0) {
+         /* Set fs_input_path to old stdin_path and then
+            stdin_path to just generated fs_input_tmp_path */
          strcpy(fs_stdin_path, stdin_path_for_fs);
       }
 
@@ -1576,7 +1542,6 @@ char *buf = NULL;
             /* TODO: RFE: Make a minimal qrsh_starter for new IJS */
             const char *sge_root = NULL;
             const char *arch = NULL;
-            char **tmp_args = NULL;
             char *command = NULL;
             int  nargs;
             char cwd[SGE_PATH_MAX+1];
@@ -1584,7 +1549,7 @@ char *buf = NULL;
             args[0] = NULL;
 
             command = (char*)sge_get_env_value("QRSH_COMMAND");
-            nargs = split_command(command, &tmp_args);
+            nargs = count_command(command);
 
             if (nargs > 0) {
                buf = (char*)malloc(strlen(command)+2049);

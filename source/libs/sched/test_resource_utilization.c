@@ -79,7 +79,7 @@ static int do_utilization_test(lListElem *cr, test_array_t *ta)
    int i;
 
    for (i = 0; ta[i].start_time != 0; i++) {
-      uti = utilization_max(cr, ta[i].start_time, ta[i].duration);
+      uti = utilization_max(cr, ta[i].start_time, ta[i].duration, false);
       if (uti != ta[i].uti) {
          printf("failed: utilization(cr, "sge_U32CFormat", "sge_U32CFormat") returned %f, expected %f\n",
                 sge_u32c(ta[i].start_time), sge_u32c(ta[i].duration), uti, ta[i].uti);
@@ -160,13 +160,13 @@ static int test_normal_utilization(void)
 
 
    printf("adding a 200s now assignment of 8 starting at 800\n");
-   utilization_add(cr, 800, 200, 8, 100, 1, PE_TAG, "pe_slots", "STARTING", false);
+   utilization_add(cr, 800, 200, 8, 100, 1, PE_TAG, "pe_slots", "STARTING", false, false);
 
    printf("adding a 100s now assignment of 4 starting at 1000\n");
-   utilization_add(cr, 1000, 100, 4, 101, 1, PE_TAG, "pe_slots", "STARTING", false);
+   utilization_add(cr, 1000, 100, 4, 101, 1, PE_TAG, "pe_slots", "STARTING", false, false);
 
    printf("adding a 100s reservation of 8 starting at 1100\n");
-   utilization_add(cr, 1100, 100, 8, 102, 1, PE_TAG, "pe_slots", "RESERVING", false);
+   utilization_add(cr, 1100, 100, 8, 102, 1, PE_TAG, "pe_slots", "RESERVING", false, false);
 
    ret += do_utilization_test(cr, test_array);
    ret += do_qeti_test(cr, qeti_expected_result);
@@ -215,16 +215,16 @@ static int test_extensive_utilization(void) {
       printf("1. reserved and verify result\n\n");
 
       printf("adding a 200s now assignment of 8 starting at 800\n");
-      utilization_add(cr, 800, 200, 8, 100, 1, PE_TAG, "pe_slots", "STARTING", false);
+      utilization_add(cr, 800, 200, 8, 100, 1, PE_TAG, "pe_slots", "STARTING", false, false);
 
       printf("adding a 100s now assignment of 4 starting at 1000\n");
-      utilization_add(cr, 1000, 100, 4, 101, 1, PE_TAG, "pe_slots", "STARTING", false);
+      utilization_add(cr, 1000, 100, 4, 101, 1, PE_TAG, "pe_slots", "STARTING", false, false);
 
       printf("adding a unlimited reservation of 4 starting at 1100\n");
-      utilization_add(cr, 1100, U_LONG32_MAX, 4, 102, 1, PE_TAG, "pe_slots", "RESERVING", false);
+      utilization_add(cr, 1100, U_LONG32_MAX, 4, 102, 1, PE_TAG, "pe_slots", "RESERVING", false, false);
 
       printf("adding a unlimited reservation of 4 starting at 2000\n");
-      utilization_add(cr, 2000, U_LONG32_MAX, 4, 103, 1, PE_TAG, "pe_slots", "RESERVING", false);
+      utilization_add(cr, 2000, U_LONG32_MAX, 4, 103, 1, PE_TAG, "pe_slots", "RESERVING", false, false);
 
       ret += do_utilization_test(cr, test_array);
       ret += do_qeti_test(cr, qeti_expected_result);
@@ -262,10 +262,10 @@ static int test_extensive_utilization(void) {
       printf("2. unreserve some and test result\n\n");
 
       printf("removing a 100s now assignment of 4 starting at 1000\n");
-      utilization_add(cr, 1000, 100, -4, 101, 1, PE_TAG, "pe_slots", "STARTING", false);
+      utilization_add(cr, 1000, 100, -4, 101, 1, PE_TAG, "pe_slots", "STARTING", false, false);
 
       printf("removing a unlimited reservation of 4 starting at 1100\n");
-      utilization_add(cr, 1100, U_LONG32_MAX, -4, 102, 1, PE_TAG, "pe_slots", "RESERVING", false);
+      utilization_add(cr, 1100, U_LONG32_MAX, -4, 102, 1, PE_TAG, "pe_slots", "RESERVING", false, false);
 
       ret += do_utilization_test(cr, test_array);
       ret += do_qeti_test(cr, qeti_expected_result);
@@ -286,10 +286,10 @@ static int test_extensive_utilization(void) {
       printf("3. unreserve all\n\n");
 
       printf("removing a 200s now assignment of 8 starting at 800\n");
-      utilization_add(cr, 800, 200, -8, 100, 1, PE_TAG, "pe_slots", "STARTING", false);
+      utilization_add(cr, 800, 200, -8, 100, 1, PE_TAG, "pe_slots", "STARTING", false, false);
 
       printf("removing a unlimited reservation of 4 starting at 2000\n");
-      utilization_add(cr, 2000, U_LONG32_MAX, -4, 103, 1, PE_TAG, "pe_slots", "RESERVING", false);
+      utilization_add(cr, 2000, U_LONG32_MAX, -4, 103, 1, PE_TAG, "pe_slots", "RESERVING", false, false);
 
       ret += do_utilization_test(cr, test_array);
       ret += do_qeti_test(cr, NULL);

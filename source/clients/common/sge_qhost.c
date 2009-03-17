@@ -128,7 +128,7 @@ int do_qhost(void *ctx, lList *host_list, lList *user_list, lList *resource_matc
    if (have_lists == false) {
       free_all_lists(&ql, &jl, &cl, &ehl, &pel);
       DRETURN(QHOST_ERROR);
-   }   
+   }
 
    /* 
    ** delete ok message 

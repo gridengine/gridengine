@@ -79,6 +79,27 @@ ParseOutput()
    done < ${SPOOLDIR}/tmp_output.txt
 }
 
+ParseOutputExtensive()
+{
+   j=0
+   while read line; do
+      search=`echo $line | grep performance`
+      if [ "$search" != "" ]; then
+         time=`echo $line | awk '{ print $7 }' | tr -s 's' ' ' | tr -s ',' ' '`
+         if [ $j -eq 0 ]; then
+            echo "generating jobs took $time"
+         elif [ $j -eq 1 ]; then
+            echo "spooling jobs took $time"
+         elif [ $j -eq 2 ]; then
+            echo "reading jobs took $time"
+         elif [ $j -eq 3 ]; then
+            echo "deleting jobs took $time"
+         fi
+         j=`expr $j + 1`
+      fi
+   done < ${SPOOLDIR}/tmp_output.txt
+}
+
 Execute()
 {
    $*
@@ -143,7 +164,9 @@ fi
 # command line parsing
 #
 if  [ $# -eq 0 ]; then
-   echo "TODO: show usage"
+   echo "Usage: test_spooling_performance.sh directory_to_spool"
+   echo "       \"directory_to_spool\"           = directory used to perform the tests"
+
    exit 1
 fi
 
@@ -241,6 +264,7 @@ if [ $createdist = true ]; then
                echo "\"$libname\" not found. Assuming binaries are statically linked."
             fi
          done
+         cd ..
       fi
    done
 else
@@ -279,8 +303,9 @@ else
    i=1
    WCSUM=0
    while [ $i -le $runs ]; do
-      OUTPUT=`${ARCHBIN}/test_performance classic libspoolc "${SPOOLDIR}/classic/cell;${SPOOLDIR}/classic/spool" > ${SPOOLDIR}/tmp_output.txt 2>&1`
-      WCTIME=`ParseOutput $OUTPUT`
+      ${ARCHBIN}/test_performance classic libspoolc "${SPOOLDIR}/classic/cell;${SPOOLDIR}/classic/spool" > ${SPOOLDIR}/tmp_output.txt 2>&1
+      ParseOutputExtensive
+      WCTIME=`ParseOutput`
       echo "Wallclock time of run $i is $WCTIME s"
       WCSUM=`echo $WCSUM + $WCTIME | bc`
       i=`expr $i + 1`
@@ -305,8 +330,9 @@ else
    i=1
    WCSUM=0
    while [ $i -le $runs ]; do
-      OUTPUT=`${ARCHBIN}/test_performance berkeleydb libspoolb ${SPOOLDIR}/bdb  > ${SPOOLDIR}/tmp_output.txt 2>&1`
-      WCTIME=`ParseOutput $OUTPUT`
+      ${ARCHBIN}/test_performance berkeleydb libspoolb ${SPOOLDIR}/bdb  > ${SPOOLDIR}/tmp_output.txt 2>&1
+      ParseOutputExtensive
+      WCTIME=`ParseOutput`
       echo "Wallclock time of run $i is $WCTIME s"
       WCSUM=`echo $WCSUM + $WCTIME | bc`
       i=`expr $i + 1`

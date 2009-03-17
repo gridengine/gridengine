@@ -1362,7 +1362,7 @@ int ar_do_reservation(lListElem *ar, bool incslots)
       } else {
          utilization_add(lFirst(lGetList(pe, PE_resource_utilization)), start_time,
                                 duration, pe_slots, 0, 0, PE_TAG, granted_pe,
-                                SCHEDULING_RECORD_ENTRY_TYPE_RESERVING, false);
+                                SCHEDULING_RECORD_ENTRY_TYPE_RESERVING, false, false);
          sge_add_event(0, sgeE_PE_MOD, 0, 0, granted_pe, NULL, NULL, pe);
          lListElem_clear_changed_info(pe);
       }

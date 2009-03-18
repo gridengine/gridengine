@@ -124,13 +124,13 @@ public class InstallTask extends TestableTask {
                 exitValue = getTestExitValue();
             }
 
-            if (exitValue == CmdExec.EXITVAL_TERMINATED) {
+            if (exitValue == EXIT_VAL_CMDEXEC_TERMINATED) {
                 state = Host.State.COPY_TIMEOUT_INSTALL_COMPONENT;
                 if (copyCmd != null) {
                     copyCmd.setFirstLogMessage("Timeout while copying the " + autoConfFile + " script to host " + host.getHostname() + " via " + variables.getProperty(VAR_COPY_COMMAND) + " command!\nMaybe a password is expected. Try the command in the terminal first.");
                     log = copyCmd.generateLog(msgs);
                 }
-            } else if (exitValue == CmdExec.EXITVAL_INTERRUPTED) {
+            } else if (exitValue == EXIT_VAL_CMDEXEC_INTERRUPTED) {
                 state = Host.State.CANCELED;
                 if (copyCmd != null) {
                     copyCmd.setFirstLogMessage("Cancelled copy action!");
@@ -163,14 +163,14 @@ public class InstallTask extends TestableTask {
 
                 if (exitValue == 0) {
                     state = Host.State.SUCCESS;
-                } else if (exitValue == CmdExec.EXITVAL_INTERRUPTED) {
+                } else if (exitValue == EXIT_VAL_CMDEXEC_INTERRUPTED) {
                     state = Host.State.CANCELED;
                     if (installCmd != null) {
                         installCmd.setFirstLogMessage("CANCELED: Task has been canceled by the user.");
                     }
                 } else if (exitValue == EXIT_VAL_FAILED_ALREADY_INSTALLED_COMPONENT) {
                     state = Host.State.FAILED_ALREADY_INSTALLED_COMPONENT;
-                } else if (exitValue == CmdExec.EXITVAL_TERMINATED) {
+                } else if (exitValue == EXIT_VAL_CMDEXEC_TERMINATED) {
                     state = Host.State.OPERATION_TIMEOUT;
                 } else {
                     state = Host.State.FAILED;

@@ -50,7 +50,7 @@ ___INFO__MARK_END__-->
     <echo>isJavaBuildHost=${isJavaBuildHost}</echo>
     <echo>java.buildhost=${java.buildhost}</echo>
     <echo>hostname=${hostname}</echo>
-    
+
     <import file="nbproject/build-impl.xml"/>
 
     <target name="do.jar" if="isJavaBuildHost" description="Builds the final jar if build host">
@@ -277,8 +277,25 @@ ___INFO__MARK_END__-->
             <fileset dir="${build.dir}/jar"/>
             <zipfileset src="${libs.swing-layout.classpath}" includes="**/*.class"/>            
         </zip>
-
+        
         <property name="dist.ready" value="true"/>     
+    </target>
+
+    <target depends="init, do.jar" name="build-demo">
+        <echo message="WARNING! Creating demo version!" />
+        <mkdir dir="${build.test.classes.dir}" description="Create destiantion directory for test classes."/>
+
+        <javac srcdir="test" description="Compile test classes."
+               includes="com/sun/grid/installer/util/cmd/*.java"
+               classpath="${build.classes.dir}:${javac.classpath}"
+               source="${javac.source}" target="${javac.target}" destdir="${build.test.classes.dir}"/>
+
+        <jar compress="${jar.compress}" destfile="${dist.jar}" update="true" description="Replace original classes with their demo version.">
+            <fileset dir="${build.test.classes.dir}">
+                <exclude name="com/izforge/izpack/installer/*.class"/>
+                <include name="com/sun/grid/installer/util/cmd/*.class"/>
+            </fileset>
+        </jar>
     </target>
 
     <target name="javadoc" if="isJavaBuildHost">
@@ -286,12 +303,29 @@ ___INFO__MARK_END__-->
         <antcall target="-javadoc-browse"/>
     </target>
 
-    <target name="test" if="isJavaBuildHost">
+    <target depends="init" name="test" if="isJavaBuildHost">
+       <javac srcdir="../../3rdparty/IzPack/tests"
+               classpath="${build.test.classes.dir}:${javac.test.classpath}"
+               source="${javac.source}" target="${javac.target}" destdir="${build.test.classes.dir}"/>
+
         <antcall target="compile-test"/>
         <antcall target="-pre-test-run"/>
         <antcall target="-do-test-run"/>
         <antcall target="test-report"/>
         <antcall target="-post-test-run"/>
+        <antcall target="-test-browse"/>
+    </target>
+
+    <target depends="init" name="test-single" if="isJavaBuildHost">
+       <javac srcdir="../../3rdparty/IzPack/tests"
+               classpath="${build.test.classes.dir}:${javac.test.classpath}"
+               source="${javac.source}" target="${javac.target}" destdir="${build.test.classes.dir}"/>
+
+        <antcall target="compile-test-single"/>
+        <antcall target="-pre-test-run-single"/>
+        <antcall target="-do-test-run-single"/>
+        <antcall target="test-report"/>
+        <antcall target="-post-test-run-single"/>
         <antcall target="-test-browse"/>
     </target>
 

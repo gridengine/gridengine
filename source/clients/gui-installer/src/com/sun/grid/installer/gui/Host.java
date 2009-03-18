@@ -95,6 +95,8 @@ public class Host implements Config {
         BDB_SPOOL_DIR_WRONG_FSTYPE,
         ADMIN_USER_NOT_KNOWN,
         PERM_JMX_KEYSTORE,
+        JVM_LIB_MISSING,
+        JVM_LIB_INVALID,
         USED_QMASTER_PORT,
         USED_EXECD_PORT,
         USED_JMX_PORT,

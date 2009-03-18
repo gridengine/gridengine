@@ -30,6 +30,7 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.installer.gui;
 
+import com.izforge.izpack.installer.AutomatedInstallData;
 import com.sun.grid.installer.gui.Host.State;
 import com.sun.grid.installer.task.ThreadPoolObserver.ThreadPoolEvent;
 import com.sun.grid.installer.task.TestableTask;
@@ -39,14 +40,16 @@ import com.sun.grid.installer.task.InstallTask;
 import com.izforge.izpack.installer.InstallData;
 import com.izforge.izpack.installer.InstallerFrame;
 import com.izforge.izpack.installer.IzPanel;
+import com.izforge.izpack.installer.PanelAutomation;
 import com.izforge.izpack.util.Debug;
 import com.izforge.izpack.util.VariableSubstitutor;
 import com.sun.grid.installer.task.TaskHandler;
 import com.sun.grid.installer.task.TaskThreadFactory;
 import com.sun.grid.installer.task.ThreadPoolObserver;
-import com.sun.grid.installer.util.cmd.CmdExec;
+import com.sun.grid.installer.task.ThreadPoolObserver.ThreadPoolListener;
 import com.sun.grid.installer.util.Config;
 import com.sun.grid.installer.util.Util;
+
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.event.ActionListener;
@@ -87,7 +90,10 @@ import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumn;
 import net.n3.nanoxml.XMLElement;
 
-public class HostPanel extends IzPanel implements Config, ThreadPoolObserver.ThreadPoolListener, TaskHandler {
+public class HostPanel extends IzPanel implements Config,
+                                                  ThreadPoolListener,
+                                                  TaskHandler,
+                                                  PanelAutomation {
 
     private ActionListener[] nextButtonListeners = null;
 
@@ -121,7 +127,11 @@ public class HostPanel extends IzPanel implements Config, ThreadPoolObserver.Thr
     public HostPanel(InstallerFrame parent, InstallData idata) {
         super(parent, idata);
         //TODO: verify that shell name is OK
+        
+        init();
+    }
 
+    private void init() {
         SELECTION_TABS = new String[]{
                     getLabel("tab.all.label"),
                     getLabel("tab.reachable.label"),
@@ -139,7 +149,7 @@ public class HostPanel extends IzPanel implements Config, ThreadPoolObserver.Thr
                     getLabel("tab.done.label.tooltip"),
                     getLabel("tab.failed.label.tooltip")};
 
-        if (idata.langpack != null) {
+        if (idata != null) {
             Set<String> keys = idata.langpack.keySet();
             for (Iterator<String> it = keys.iterator(); it.hasNext();) {
                 String key = it.next();
@@ -157,6 +167,9 @@ public class HostPanel extends IzPanel implements Config, ThreadPoolObserver.Thr
         progressBar.setStringPainted(true);
         cancelB.setVisible(false);
         statusBar.setVisible(false);
+
+        observer = new ThreadPoolObserver();
+        observer.addThreadPoolListener(this);
 
         hostTF.addMouseListener(new MouseAdapter() {
 
@@ -225,7 +238,7 @@ public class HostPanel extends IzPanel implements Config, ThreadPoolObserver.Thr
 
             table.setTableHeader(new TooltipTableHeader(table.getColumnModel(), headerToltips));
             JTableHeader header = table.getTableHeader();
-            SortedColumnHeaderRenderer headerRenderer = new SortedColumnHeaderRenderer(header, parent.icons.getImageIcon("columns.sorted.asc"), parent.icons.getImageIcon("columns.sorted.desc"));
+            SortedColumnHeaderRenderer headerRenderer = new SortedColumnHeaderRenderer(header, getImageIcon("columns.sorted.asc"), getImageIcon("columns.sorted.desc"));
             for (int col = 0; col < table.getColumnCount(); col++) {
                 table.getColumnModel().getColumn(col).setHeaderRenderer(headerRenderer);
             }
@@ -246,9 +259,9 @@ public class HostPanel extends IzPanel implements Config, ThreadPoolObserver.Thr
                 table.getModel().addTableModelListener(new TableModelListener() {
                     public void tableChanged(TableModelEvent e) {
                         if (((DefaultTableModel)e.getSource()).getRowCount() > 0) {
-                            enableInstallButton(true);
+                            enableNextButton(true);
                         } else {
-                            enableInstallButton(false);
+                            enableNextButton(false);
                         }
                     }
                 });
@@ -411,7 +424,7 @@ public class HostPanel extends IzPanel implements Config, ThreadPoolObserver.Thr
            }
        });
 
-       hostTF.setText(idata.getVariable("add.hostinput"));
+       hostTF.setText(getLabel("hostinput.value"));
        hostTF.setToolTipText(getTooltip("hostinput.label.tooltip"));
        hostTF.addActionListener(new java.awt.event.ActionListener() {
            public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -512,7 +525,7 @@ public class HostPanel extends IzPanel implements Config, ThreadPoolObserver.Thr
        );
 
        statusBar.setForeground(new java.awt.Color(255, 0, 0));
-       statusBar.setIcon(parent.icons.getImageIcon("error.small"));
+       statusBar.setIcon(getImageIcon("error.small"));
 
        cancelB.setText(getLabel("button.cancel.label"));
        cancelB.setToolTipText(getTooltip("button.cancel.label.tooltip"));
@@ -583,16 +596,16 @@ public class HostPanel extends IzPanel implements Config, ThreadPoolObserver.Thr
 
     @Override
     public void panelActivate() {
-        isQmasterInst = parent.getRules().isConditionTrue(COND_INSTALL_QMASTER, idata.getVariables());
-        isShadowdInst = parent.getRules().isConditionTrue(COND_INSTALL_SHADOWD, idata.getVariables());
-        isExecdInst = parent.getRules().isConditionTrue(COND_INSTALL_EXECD, idata.getVariables());
-        isBdbInst = parent.getRules().isConditionTrue(COND_INSTALL_BDB, idata.getVariables()) ||
-                parent.getRules().isConditionTrue(COND_SPOOLING_BDBSERVER, idata.getVariables());
-        isExpressInst = parent.getRules().isConditionTrue(COND_EXPRESS_INSTALL, idata.getVariables());
+        isQmasterInst = isValueEqualsTrue(VAR_INSTALL_QMASTER);
+        isShadowdInst = isValueEqualsTrue(VAR_INSTALL_SHADOW);
+        isExecdInst = isValueEqualsTrue(VAR_INSTALL_EXECD);
+        isBdbInst = isValueEqualsTrue(VAR_INSTALL_BDB) ||
+                idata.getVariable(VAR_SPOOLING_METHOD).equals(idata.getVariable(VAR_SPOOLING_METHOD_BERKELEYDBSERVER));
+        isExpressInst = idata.getVariable(VAR_INSTALL_MODE).equals(idata.getVariable(VAR_INSTALL_MODE_EXPRESS));
 
         //Disable only is we have no reachable host!
         if (((HostSelectionTableModel)tables.get(1).getModel()).getRowCount() == 0) {
-           enableInstallButton(false);
+           enableNextButton(false);
         }
 
         triggerInstallButton(true);
@@ -602,11 +615,7 @@ public class HostPanel extends IzPanel implements Config, ThreadPoolObserver.Thr
         if (threadPool == null) {
             threadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(Util.RESOLVE_THREAD_POOL_SIZE);
             threadPool.setThreadFactory(new TaskThreadFactory());
-        }
-
-        if (observer == null) {
-            observer = new ThreadPoolObserver(threadPool);
-            observer.addThreadPoolListener(this);
+            observer.setThreadPoolExecutors(threadPool);
         }
 
         VariableSubstitutor vs = new VariableSubstitutor(idata.getVariables());
@@ -627,7 +636,14 @@ public class HostPanel extends IzPanel implements Config, ThreadPoolObserver.Thr
         String key = "";
         String value = "";
         Host.State.localizedTexts.clear();
+        
         if (idata.langpack != null) {
+            if (isExpressInst) {
+                idata.setVariable("tooltip.hint", idata.langpack.getString("express.mode.tooltip.hint"));
+            } else {
+                idata.setVariable("tooltip.hint", "");
+            }
+            
             Set<String> keys = idata.langpack.keySet();
             for (Iterator<String> it = keys.iterator(); it.hasNext();) {
                 key = it.next();
@@ -651,7 +667,7 @@ public class HostPanel extends IzPanel implements Config, ThreadPoolObserver.Thr
             try {
                 boolean isQmasterExist = HostSelectionTableModel.getQmasterHost() != null;
                 boolean isBdbExist = HostSelectionTableModel.getBdbHost() != null;
-                parent.lockPrevButton();
+                enablePrevButton(false);
 
                 ArrayList<String> host = new ArrayList<String>();
                 Properties prop = new Properties();
@@ -704,20 +720,20 @@ public class HostPanel extends IzPanel implements Config, ThreadPoolObserver.Thr
                 }
 
                 if (tables.get(1).getRowCount() > 0) {
-                    enableInstallButton(true);
+                    enableNextButton(true);
                 }
             } catch (Exception e) {
                 Debug.error(e);
             } finally {
                 vs = null;
-                parent.unlockPrevButton();
+                enablePrevButton(true);
             }
         }
     }
 
     @Override
     public void panelDeactivate() {
-        enableInstallButton(true);
+        enableNextButton(true);
         triggerInstallButton(false);
 
         //Set the qmaster and bdb host values
@@ -738,11 +754,15 @@ public class HostPanel extends IzPanel implements Config, ThreadPoolObserver.Thr
      * @param show if true the Install button will be shown, otherwise the Next button.
      */
     private synchronized void triggerInstallButton(boolean show) {
+        if (parent == null) {
+            return;
+        }
+        
         JButton nextButton = parent.getNextButton();
 
         if (show) {
             nextButton.setText(getLabel("InstallPanel.install"));
-            nextButton.setIcon(parent.icons.getImageIcon("install"));
+            nextButton.setIcon(getImageIcon("install"));
             nextButtonListeners = removeListeners(nextButton);
 
             nextButton.addActionListener(new java.awt.event.ActionListener() {
@@ -753,13 +773,72 @@ public class HostPanel extends IzPanel implements Config, ThreadPoolObserver.Thr
             });
         } else {
             nextButton.setText(getLabel("installer.next"));
-            nextButton.setIcon(parent.icons.getImageIcon("stepforward"));
+            nextButton.setIcon(getImageIcon("stepforward"));
             removeListeners(nextButton);
 
             for (int i = 0; i < nextButtonListeners.length; i++) {
                 nextButton.addActionListener(nextButtonListeners[i]);
             }
         }
+    }
+
+    /**
+     * Sets the install/next button's enabled property
+     * @param b if true button will be enabled else the button will be disabled
+     */
+    private synchronized void enableNextButton(boolean enabled) {
+        if (parent == null) {
+            return;
+        }
+
+        JButton nextButton = parent.getNextButton();
+
+        if (enabled && !nextButton.isEnabled()) {
+            SwingUtilities.invokeLater(new Runnable(){
+                public void run() {
+                    parent.unlockNextButton();
+                }
+            });
+        } else if (!enabled && nextButton.isEnabled()) {
+            SwingUtilities.invokeLater(new Runnable(){
+                public void run() {
+                    parent.lockNextButton();
+                }
+            });
+        }
+    }
+
+    /**
+     * Sets the previous button's enabled property
+     * @param b if true button will be enabled else the button will be disabled
+     */
+    private synchronized void enablePrevButton(boolean enabled) {
+        if (parent == null) {
+            return;
+        }
+
+        if (enabled) {
+            SwingUtilities.invokeLater(new Runnable(){
+                public void run() {
+                    parent.unlockPrevButton();
+                }
+            });
+        } else {
+            SwingUtilities.invokeLater(new Runnable(){
+                public void run() {
+                    parent.lockPrevButton();
+                }
+            });
+        }
+    }
+
+    /**
+     * Sets both previous and next buttons enabled property
+     * @param b if true buttons will be enabled else the buttons will be disabled
+     */
+    private synchronized void enableBrowseButtons(boolean enabled) {
+        enableNextButton(enabled);
+        enablePrevButton(enabled);
     }
 
     /**
@@ -783,14 +862,15 @@ public class HostPanel extends IzPanel implements Config, ThreadPoolObserver.Thr
      * @return The localized tooltip if there is any. Empty string otherwise.
      */
     public String getTooltip(String key) {
+        if (idata == null) {
+            return null;
+        }
+
         if (!key.endsWith(TOOLTIP)) {
             key = key + "." + TOOLTIP;
         }
 
-        String tooltip = null;
-        if (idata.langpack != null) {
-            tooltip = idata.langpack.getString(key);
-        }
+        String tooltip = getString(key);
 
         VariableSubstitutor vs = new VariableSubstitutor(idata.getVariables());
         tooltip = vs.substituteMultiple(tooltip, null);
@@ -810,11 +890,13 @@ public class HostPanel extends IzPanel implements Config, ThreadPoolObserver.Thr
     public String getLabel(String key) {
         String label = "";
 
-        if (idata.langpack != null) {
-            label = idata.langpack.getString(key);
-        }
+        label = getString(key);
 
         return label;
+    }
+
+    public boolean isValueEqualsTrue(String key) {
+        return idata.getVariable(key).equalsIgnoreCase("true");
     }
 
     /**
@@ -1086,7 +1168,7 @@ public class HostPanel extends IzPanel implements Config, ThreadPoolObserver.Thr
                     for (Iterator<Runnable> it = waitingTasks.iterator(); it.hasNext();) {
                         TestableTask runnable = (TestableTask) it.next();
                         runnable.setTestMode(true);
-                        runnable.setTestExitValue(CmdExec.EXITVAL_INTERRUPTED);
+                        runnable.setTestExitValue(EXIT_VAL_CMDEXEC_INTERRUPTED);
                         runnable.setTestOutput(new Vector<String>());
                         try {
                             Debug.trace("Cancel task: " + runnable.getTaskName());
@@ -1118,6 +1200,14 @@ public class HostPanel extends IzPanel implements Config, ThreadPoolObserver.Thr
                 // TODO find reason
             }
         }
+    }
+
+    public void addThreadPoolListener(ThreadPoolListener threadPoolListener) {
+        observer.addThreadPoolListener(threadPoolListener);
+    }
+
+    public void removeThreadPoolListener(ThreadPoolListener threadPoolListener) {
+        observer.removeThreadPoolListener(threadPoolListener);
     }
 
     /**
@@ -1154,15 +1244,15 @@ public class HostPanel extends IzPanel implements Config, ThreadPoolObserver.Thr
                         cancelB.setVisible(true);
                         break;
                     }
-                    case ThreadPoolEvent.EVENT_THREAD_POOL_FINISHED: {
-                        progressBar.setVisible(false);
-                        cancelB.setVisible(false);
-                        break;
-                    }
                     case ThreadPoolEvent.EVENT_THREAD_POOL_UPDATED: {
                         progressBar.setValue(obs.getLastRunCompletedTaskCount());
                         progressBar.setMaximum(obs.getLastRunTaskCount());
                         progressBar.setString(text + " " + cur + " / " + max);
+                        break;
+                    }
+                    case ThreadPoolEvent.EVENT_THREAD_POOL_FINISHED: {
+                        progressBar.setVisible(false);
+                        cancelB.setVisible(false);
                         break;
                     }
                 }
@@ -1206,8 +1296,7 @@ public class HostPanel extends IzPanel implements Config, ThreadPoolObserver.Thr
             threadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(Util.RESOLVE_THREAD_POOL_SIZE);
             threadPool.setThreadFactory(new TaskThreadFactory());
 
-            observer = new ThreadPoolObserver(threadPool);
-            observer.addThreadPoolListener(this);
+            observer.setThreadPoolExecutors(threadPool);
         }
 
         observer.observe();
@@ -1303,32 +1392,6 @@ public class HostPanel extends IzPanel implements Config, ThreadPoolObserver.Thr
         });
     }
 
-        /**
-     * Sets the install/next button's enabled property
-     * @param b if true button will be enabled else the button will be disabled
-     */
-    private synchronized void enableInstallButton(boolean b) {
-        if (parent == null) {
-            return;
-        }
-        
-        JButton nextButton = parent.getNextButton();
-        
-        if (b && !nextButton.isEnabled()) {
-            SwingUtilities.invokeLater(new Runnable(){
-                public void run() {
-                    parent.unlockNextButton();
-                }
-            });
-        } else if (!b && nextButton.isEnabled()) {
-            SwingUtilities.invokeLater(new Runnable(){
-                public void run() {
-                    parent.lockNextButton();
-                }
-            });
-        }
-    }
-
     /**
      * Sets the sate of the given host
      * @param host The host
@@ -1367,6 +1430,8 @@ public class HostPanel extends IzPanel implements Config, ThreadPoolObserver.Thr
             case USED_JMX_PORT:
             case UNKNOWN_ERROR:
             case READY_TO_INSTALL:
+            case JVM_LIB_MISSING:
+            case JVM_LIB_INVALID:
             case PROCESSING: break;
 
             //Success. Move to the success table
@@ -1397,7 +1462,7 @@ public class HostPanel extends IzPanel implements Config, ThreadPoolObserver.Thr
             case FAILED_DEPENDENT_ON_PREVIOUS: targetTable = 2; break;
 
             //Unknown state
-            default: throw new IllegalArgumentException("Unknown state: "+state);
+            default: throw new IllegalArgumentException("Unknown state: " + state);
         }
 
         /**
@@ -1454,7 +1519,7 @@ public class HostPanel extends IzPanel implements Config, ThreadPoolObserver.Thr
 
             @Override
             public void run() {
-                validateHostsAndInstall(lists.get(1));
+                validateHostsAndInstall(true, false);
             }
         }.start();
     }
@@ -1463,19 +1528,19 @@ public class HostPanel extends IzPanel implements Config, ThreadPoolObserver.Thr
      * Validates the given host list then starts the installation
      * @param hosts The hosts have to be installed
      */
-    private void validateHostsAndInstall(HostList hosts) {
+    private void validateHostsAndInstall(boolean install, boolean forced) {
+        validateHostsAndInstall(lists.get(1), install, forced);
+    }
+
+    /**
+     * Validates the given host list then starts the installation
+     * @param hosts The hosts have to be installed
+     */
+    private void validateHostsAndInstall(HostList hosts, boolean install, boolean forced) {
         checkMode = true;
         //Disable the selecting host controls
         disableControls(true);
-        if (parent != null) {
-            SwingUtilities.invokeLater(new Runnable() {
-
-                public void run() {
-                    parent.lockNextButton();
-                    parent.lockPrevButton();
-                }
-            });
-        }
+        enableBrowseButtons(false);
 
         setTablesEnabled(false);
 
@@ -1546,7 +1611,7 @@ public class HostPanel extends IzPanel implements Config, ThreadPoolObserver.Thr
                 numOfBdbHost++;
             }
         }
-        if (numOfQmasterHost == 0 && numOfExecdHost == 0 && numOfShadowHost == 0 && numOfBdbHost == 0) {
+        if (!forced && numOfQmasterHost == 0 && numOfExecdHost == 0 && numOfShadowHost == 0 && numOfBdbHost == 0) {
             String message;
             int res=JOptionPane.YES_OPTION;
             if (additionalAdminHosts.size() > 0 || additionalSubmitHosts.size() > 0) {
@@ -1565,15 +1630,7 @@ public class HostPanel extends IzPanel implements Config, ThreadPoolObserver.Thr
             if (res == JOptionPane.NO_OPTION) {
                 checkMode = false;
                 disableControls(false);
-                if (parent != null) {
-                    SwingUtilities.invokeLater(new Runnable() {
-
-                        public void run() {
-                            parent.unlockNextButton();
-                            parent.unlockPrevButton();
-                        }
-                    });
-                }
+                enableBrowseButtons(true);
                 setTablesEnabled(true);
                 return;
             }
@@ -1597,7 +1654,7 @@ public class HostPanel extends IzPanel implements Config, ThreadPoolObserver.Thr
             hostTypeString = getLabel("column.bdb.label");
         }
 
-        if (!componentString.equals("")) {
+        if (!forced && !componentString.equals("")) {
             Properties props = new Properties();
             props.put("component", componentString);
             props.put("host.type", hostTypeString);
@@ -1610,15 +1667,7 @@ public class HostPanel extends IzPanel implements Config, ThreadPoolObserver.Thr
                 
                 checkMode = false;
                 disableControls(false);
-                if (parent != null) {
-                    SwingUtilities.invokeLater(new Runnable() {
-
-                        public void run() {
-                            parent.unlockNextButton();
-                            parent.unlockPrevButton();
-                        }
-                    });
-                }
+                enableBrowseButtons(true);
                 setTablesEnabled(true);
 
                 return;
@@ -1638,8 +1687,9 @@ public class HostPanel extends IzPanel implements Config, ThreadPoolObserver.Thr
         threadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(Util.INSTALL_THREAD_POOL_SIZE);
         threadPool.setThreadFactory(new TaskThreadFactory());
 
-        observer = new ThreadPoolObserver(threadPool);
-        observer.addThreadPoolListener(this);
+//        observer = new ThreadPoolObserver(threadPool);
+//        observer.addThreadPoolListener(this);
+        observer.setThreadPoolExecutors(threadPool);
         observer.observe();
 
         try {
@@ -1683,39 +1733,23 @@ public class HostPanel extends IzPanel implements Config, ThreadPoolObserver.Thr
             }
 
             String msg = MessageFormat.format(getLabel("warning.invalid.hosts.message"), warningState, hosts.size());
-            if (warningState > 0 && JOptionPane.NO_OPTION == JOptionPane.showOptionDialog(this, msg,
+            if (!forced && warningState > 0 && JOptionPane.NO_OPTION == JOptionPane.showOptionDialog(this, msg,
                     getLabel("installer.warning"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null,
                     new Object[]{getLabel("installer.yes"), getLabel("installer.no")}, getLabel("installer.no"))) {
 
                 disableControls(false);
-                if (parent != null) {
-                    SwingUtilities.invokeLater(new Runnable() {
-
-                        public void run() {
-                            parent.unlockNextButton();
-                            parent.unlockPrevButton();
-                        }
-                    });
-                }
+                enableBrowseButtons(true);
                 setTablesEnabled(true);
 
                 return;
             }
             
-            if (noLocalSpoolWindows > 0 && JOptionPane.NO_OPTION == JOptionPane.showOptionDialog(this, getLabel("warning.windows.needs.local.spooling.message"),
+            if (!forced && noLocalSpoolWindows > 0 && JOptionPane.NO_OPTION == JOptionPane.showOptionDialog(this, getLabel("warning.windows.needs.local.spooling.message"),
                     getLabel("installer.warning"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null,
                     new Object[]{getLabel("installer.yes"), getLabel("installer.no")}, getLabel("installer.no"))) {
 
                 disableControls(false);
-                if (parent != null) {
-                    SwingUtilities.invokeLater(new Runnable() {
-
-                        public void run() {
-                            parent.unlockNextButton();
-                            parent.unlockPrevButton();
-                        }
-                    });
-                }
+                enableBrowseButtons(true);
                 setTablesEnabled(true);
 
                 return;
@@ -1733,7 +1767,9 @@ public class HostPanel extends IzPanel implements Config, ThreadPoolObserver.Thr
             checkMode = false;
         }
 
-        switchToInstallModeAndInstall(tmpList);
+        if (install) {
+            switchToInstallModeAndInstall(tmpList);
+        }
     }
 
     private void switchToInstallModeAndInstall(final List<Host> hosts) {
@@ -1743,7 +1779,9 @@ public class HostPanel extends IzPanel implements Config, ThreadPoolObserver.Thr
         installMode = true;
 
         // Change panel heading
-        parent.changeActualHeading(getLabel("HostPanel.installing.headline"));
+        if (parent != null) {
+            parent.changeActualHeading(getLabel("HostPanel.installing.headline"));
+        }
 
         // add.spooling.method
         if (idata.getVariable(VAR_SPOOLING_METHOD).equals("none")) {
@@ -1753,15 +1791,7 @@ public class HostPanel extends IzPanel implements Config, ThreadPoolObserver.Thr
 
         //Disable the selecting host controls
         disableControls(true);
-        if (parent != null) {
-            SwingUtilities.invokeLater(new Runnable() {
-
-                public void run() {
-                    parent.lockNextButton();
-                    parent.lockPrevButton();
-                }
-            });
-        }
+        enableBrowseButtons(false);
 
         //Cancel host selection thread pool
         threadPool.shutdownNow();
@@ -2034,8 +2064,8 @@ public class HostPanel extends IzPanel implements Config, ThreadPoolObserver.Thr
             JTableHeader header = table.getTableHeader();
             SortedColumnHeaderRenderer headerRenderer = new SortedColumnHeaderRenderer(
                     header,
-                    parent.icons.getImageIcon("columns.sorted.asc"),
-                    parent.icons.getImageIcon("columns.sorted.desc"));
+                    getImageIcon("columns.sorted.asc"),
+                    getImageIcon("columns.sorted.desc"));
             for (int col = 0; col < table.getColumnCount(); col++) {
                 table.getColumnModel().getColumn(col).setHeaderRenderer(headerRenderer);
             }
@@ -2059,10 +2089,10 @@ public class HostPanel extends IzPanel implements Config, ThreadPoolObserver.Thr
                 table.getModel().addTableModelListener(new TableModelListener() {
                     public void tableChanged(TableModelEvent e) {
                         if (((DefaultTableModel)e.getSource()).getRowCount() > 0) {
-                            enableInstallButton(true);
+                            enableNextButton(true);
                             triggerInstallButton(false);
                         } else {
-                            enableInstallButton(false);
+                            enableNextButton(false);
                         }
                     }
                 });
@@ -2092,8 +2122,9 @@ public class HostPanel extends IzPanel implements Config, ThreadPoolObserver.Thr
         singleThreadPool.setThreadFactory(new TaskThreadFactory());
 
         //progressTimer = new Timer("InstallTimer");
-        observer = new ThreadPoolObserver(new ThreadPoolExecutor[]{threadPool, singleThreadPool});
-        observer.addThreadPoolListener(this);
+//        observer = new ThreadPoolObserver(new ThreadPoolExecutor[]{threadPool, singleThreadPool});
+//        observer.addThreadPoolListener(this);
+        observer.setThreadPoolExecutors(new ThreadPoolExecutor[]{threadPool, singleThreadPool});
         observer.setTaskCount(installList.size());
         observer.observe();
 
@@ -2354,4 +2385,12 @@ public class HostPanel extends IzPanel implements Config, ThreadPoolObserver.Thr
     private javax.swing.JTabbedPane tabbedPane;
     // End of variables declaration                   
     private JTextField lastSelectedTF;
+
+    public void makeXMLData(AutomatedInstallData arg0, XMLElement arg1) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public boolean runAutomated(AutomatedInstallData arg0, XMLElement arg1) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }

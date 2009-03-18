@@ -132,11 +132,11 @@ public class ValidateHostTask extends TestableTask {
             CopyExecutableCommand copyCmd = new CopyExecutableCommand(host.getHostname(), Util.CONNECT_USER, variables.getProperty(VAR_SHELL_NAME, ""), Util.IS_MODE_WINDOWS, checkHostFile, checkHostFile);
             copyCmd.execute();
             exitValue = copyCmd.getExitValue();
-            if (exitValue == CmdExec.EXITVAL_TERMINATED) {
+            if (exitValue == EXIT_VAL_CMDEXEC_TERMINATED) {
                 //Set the log content
                 newState = Host.State.COPY_TIMEOUT_CHECK_HOST;
                 Debug.error("Timeout while copying the " + checkHostFile + " script to host " + host.getHostname() + " via " + variables.getProperty(VAR_COPY_COMMAND) + " command!\nMaybe a password is expected. Try the command in the terminal first.");
-            } else if (exitValue == CmdExec.EXITVAL_INTERRUPTED) {
+            } else if (exitValue == EXIT_VAL_CMDEXEC_INTERRUPTED) {
                 //Set the log content
                 newState = Host.State.CANCELED;
             } else if (exitValue != 0) {
@@ -149,17 +149,23 @@ public class ValidateHostTask extends TestableTask {
                 // Set the new state of the host depending on the return value of the script
                 switch (exitValue) {
                     case EXIT_VAL_SUCCESS: newState = Host.State.REACHABLE; break;
-                    case EXIT_VAL_BDB_SERVER_SPOOL_DIR_PERM_DENIED: newState = Host.State.PERM_BDB_SPOOL_DIR; break;
                     case EXIT_VAL_QMASTER_SPOOL_DIR_PERM_DENIED: newState = Host.State.PERM_QMASTER_SPOOL_DIR; break;
                     case EXIT_VAL_EXECD_SPOOL_DIR_PERM_DENIED: newState = Host.State.PERM_EXECD_SPOOL_DIR; break;
                     case EXIT_VAL_JMX_KEYSTORE_PERM_DENIED: newState = Host.State.PERM_JMX_KEYSTORE; break;
-                    case EXIT_VAL_BDB_SPOOL_DIR_PERM_DENIED: newState = Host.State.PERM_BDB_SPOOL_DIR; break;
-                    case EXIT_VAL_EXECD_SPOOL_DIR_LOCAL_PERM_DENIED: newState = Host.State.PERM_EXECD_SPOOL_DIR; break;
+                    case EXIT_VAL_JVM_LIB_DOES_NOT_EXIST_QMASTER: newState = Host.State.JVM_LIB_MISSING; break;
+                    case EXIT_VAL_JVM_LIB_INVALID_QMASTER: newState = Host.State.JVM_LIB_INVALID; break;
                     case EXIT_VAL_BDB_SPOOL_DIR_EXISTS: newState = Host.State.BDB_SPOOL_DIR_EXISTS; break;
-                    case EXIT_VAL_ADMIN_USER_NOT_KNOWN: newState = Host.State.ADMIN_USER_NOT_KNOWN; break;
                     case EXIT_VAL_BDB_SPOOL_WRONG_FSTYPE: newState = Host.State.BDB_SPOOL_DIR_WRONG_FSTYPE; break;
-                    case CmdExec.EXITVAL_INTERRUPTED: newState = Host.State.CANCELED; break;
-                    case CmdExec.EXITVAL_TERMINATED: newState = Host.State.OPERATION_TIMEOUT; break;
+                    case EXIT_VAL_BDB_SPOOL_DIR_PERM_DENIED: newState = Host.State.PERM_BDB_SPOOL_DIR; break;
+                    case EXIT_VAL_JVM_LIB_DOES_NOT_EXIST_SHADOWD: newState = Host.State.JVM_LIB_MISSING; break;
+                    case EXIT_VAL_JVM_LIB_INVALID_SHADOWD: newState = Host.State.JVM_LIB_INVALID; break;
+                    case EXIT_VAL_EXECD_SPOOL_DIR_LOCAL_PERM_DENIED: newState = Host.State.PERM_EXECD_SPOOL_DIR; break;                    
+                    case EXIT_VAL_BDB_SERVER_SPOOL_DIR_PERM_DENIED: newState = Host.State.PERM_BDB_SPOOL_DIR; break;
+                    case EXIT_VAL_BDB_SERVER_SPOOL_DIR_EXISTS: newState = Host.State.BDB_SPOOL_DIR_EXISTS; break;
+                    case EXIT_VAL_ADMIN_USER_NOT_KNOWN: newState = Host.State.ADMIN_USER_NOT_KNOWN; break;
+                    case EXIT_VAL_CMDEXEC_INTERRUPTED: newState = Host.State.CANCELED; break;
+                    case EXIT_VAL_CMDEXEC_TERMINATED: newState = Host.State.OPERATION_TIMEOUT; break;
+                    case EXIT_VAL_CMDEXEC_MISSING_FILE: newState = Host.State.MISSING_FILE; break;
                     default: {
                         Debug.error("Unknown exit code:" + exitValue);
                         newState = Host.State.UNKNOWN_ERROR;

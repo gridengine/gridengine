@@ -40,7 +40,7 @@ import java.text.MessageFormat;
 public class GetArchCommand extends CmdExec {
       //         0             1              2          3          4    5                      6
       //E.g.: rsh/ssh [-l <connect_user>] [-o ....] HOSTNAME [\"sh -c ']if [ ! -s SGE_ROOT....['\"]
-      private static String installCommand = "{0} {1} {2} {3} {4}if [ ! -s {5}/util/arch ]; then echo File\\ {5}/util/arch\\ does\\ not\\ exist\\ or\\ is\\ empty. ; echo ___EXIT_CODE_"+CmdExec.EXITVAL_MISSING_FILE+"___ ; exit " + CmdExec.EXITVAL_MISSING_FILE + "; else {5}/util/arch ; fi{6}";
+      private static String installCommand = "{0} {1} {2} {3} {4}if [ ! -s {5}/util/arch ]; then echo File\\ {5}/util/arch\\ does\\ not\\ exist\\ or\\ is\\ empty. ; echo ___EXIT_CODE_"+EXIT_VAL_CMDEXEC_MISSING_FILE+"___ ; exit " + EXIT_VAL_CMDEXEC_MISSING_FILE + "; else {5}/util/arch ; fi{6}";
       private String command;
 
       public GetArchCommand(String host, String user, String shell, boolean isWindowsMode, String sge_root) {

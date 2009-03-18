@@ -858,7 +858,6 @@ public class UserInputPanel extends IzPanel implements ActionListener
         {
             public void actionPerformed(ActionEvent e)
             {
-                System.out.println("Show filechooser");
                 JFileChooser filechooser = new JFileChooser(currentDirectoryPath);
                 filechooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
                 filechooser.setFileFilter(uiff);

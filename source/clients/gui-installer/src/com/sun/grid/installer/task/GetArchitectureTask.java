@@ -35,7 +35,7 @@ import com.izforge.izpack.util.Debug;
 import com.sun.grid.installer.util.Util;
 import com.sun.grid.installer.util.cmd.CmdExec;
 import com.sun.grid.installer.util.cmd.GetArchCommand;
-import java.net.InetAddress;
+import com.sun.grid.installer.util.cmd.ResolveHostCommand;
 import java.net.UnknownHostException;
 import java.util.Vector;
 import java.util.concurrent.RejectedExecutionException;
@@ -80,15 +80,25 @@ public class GetArchitectureTask extends TestableTask {
         Host.State state = Host.State.UNKNOWN_ERROR;
         
         try {
-            InetAddress inetAddr = InetAddress.getByName(value);
-            name = inetAddr.getHostName(); //If IP can't be resolved takes took long on windows
-            ip = inetAddr.getHostAddress();
-            if (ip.equals(name)) {
-                throw new UnknownHostException(ip);
+            int exitValue = getTestExitValue();
+            Vector<String> output = getTestOutput();
+
+            if (!isIsTestMode()) {
+                ResolveHostCommand resolveHostCommand = new ResolveHostCommand();
+                resolveHostCommand.execute(value);
+                exitValue = resolveHostCommand.getExitValue();
+
+                name = resolveHostCommand.getHostName(); //If IP can't be resolved takes took long on windows
+                ip = resolveHostCommand.getHostAddress();
+
+                if (exitValue != EXIT_VAL_SUCCESS || ip.equals(name)) {
+                    throw new UnknownHostException(ip);
+                }
+
+                handler.setHostState(host, Host.State.RESOLVABLE);
+                host.setHostname(name);
+                host.setIp(ip);
             }
-            handler.setHostState(host, Host.State.RESOLVABLE);
-            host.setHostname(name);
-            host.setIp(ip);
 
             //Done only for RESOLVABLE hosts
             if (host.getState() != Host.State.RESOLVABLE) {
@@ -98,8 +108,6 @@ public class GetArchitectureTask extends TestableTask {
             handler.setHostState(host, Host.State.CONTACTING);
             //TODO:Need to remove the CONNECTING state in case of failure.
 
-            int exitValue = getTestExitValue();
-            Vector<String> output = getTestOutput();
             if (!isIsTestMode()) {
                 GetArchCommand cmd = new GetArchCommand(host.getHostname(), Util.CONNECT_USER, shell, Util.IS_MODE_WINDOWS, sge_root);
                 cmd.execute();
@@ -114,9 +122,9 @@ public class GetArchitectureTask extends TestableTask {
                 if (host.getArchitecture().startsWith("win") && host.getSpoolDir().equals(execd_spool_dir)) {
                     host.setSpoolDir(CONST_DEFAULT_WINDOWS_SPOOL_DIR + sge_qmaster_port);
                 }
-            } else if (exitValue == CmdExec.EXITVAL_MISSING_FILE) {
+            } else if (exitValue == CmdExec.EXIT_VAL_CMDEXEC_MISSING_FILE) {
                 state = Host.State.MISSING_FILE;
-            } else if (exitValue == CmdExec.EXITVAL_INTERRUPTED) {
+            } else if (exitValue == CmdExec.EXIT_VAL_CMDEXEC_INTERRUPTED) {
                 state = Host.State.CANCELED;
             } else {
                 state = Host.State.UNREACHABLE;

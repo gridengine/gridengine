@@ -56,6 +56,14 @@ public class ThreadPoolObserver {
      * Constructor
      * @param threadPoolExecutor The {@link ThreadPoolExecutor} to be observed
      */
+    public ThreadPoolObserver() {
+        init();
+    }
+
+    /**
+     * Constructor
+     * @param threadPoolExecutor The {@link ThreadPoolExecutor} to be observed
+     */
     public ThreadPoolObserver(ThreadPoolExecutor threadPoolExecutor) {
         this(new ThreadPoolExecutor[]{threadPoolExecutor});
     }
@@ -67,7 +75,25 @@ public class ThreadPoolObserver {
     public ThreadPoolObserver(ThreadPoolExecutor[] threadPoolExecutors) {
         this.threadPoolExecutors = threadPoolExecutors;
 
+        init();
+    }
+
+    private void init() {
         eventListenerList = new EventListenerList();
+    }
+
+    public void setThreadPoolExecutors(ThreadPoolExecutor threadPoolExecutor) {
+        setThreadPoolExecutors(new ThreadPoolExecutor[]{threadPoolExecutor});
+    }
+
+    public void setThreadPoolExecutors(ThreadPoolExecutor[] threadPoolExecutors) {
+        if (thread != null && thread.isAlive()) {
+            shutDown();
+        }
+        
+        this.threadPoolExecutors = threadPoolExecutors;
+        lastRunCompletedTaskCount = 0;
+        taskCount = -1;
     }
 
     /**

@@ -104,8 +104,24 @@ public class IntermediateActionPanel extends ActionPanel {
                 idata.setVariable(VAR_QMASTER_HOST, qmasterHost);
                 idata.setVariable(VAR_ADMIN_USER, bootsrapProps.getProperty("admin_user"));
                 idata.setVariable("add.product.mode", bootsrapProps.getProperty("add.product.mode")); //To correctly set CSP mode in execd only installs
+
+                if (isShadowdInst) {
+                    /**
+                     * Read JMX specific settings
+                     */
+                    boolean jmxEnabled = !bootsrapProps.getProperty("jvm_threads").equals("0");
+                    idata.setVariable(VAR_SGE_JMX, (jmxEnabled ? "true" : "false"));
+                    if (jmxEnabled) {
+                        Properties jmxProps = Util.sourceJMXSettings(idata.getVariable(VAR_SGE_ROOT), idata.getVariable(VAR_SGE_CELL_NAME));
+                        idata.setVariable(VAR_SGE_JMX_PORT, jmxProps.getProperty("com.sun.grid.jgdi.management.jmxremote.port"));
+                        idata.setVariable(VAR_JMX_SSL, jmxProps.getProperty("com.sun.grid.jgdi.management.jmxremote.ssl"));
+                        idata.setVariable(VAR_JMX_SSL_CLIENT, jmxProps.getProperty("com.sun.grid.jgdi.management.jmxremote.ssl.need.client.auth"));
+                        idata.setVariable(VAR_JMX_SSL_KEYSTORE, jmxProps.getProperty("com.sun.grid.jgdi.management.jmxremote.ssl.serverKeystore"));
+                        idata.setVariable(VAR_JMX_SSL_KEYSTORE_PWD, jmxProps.getProperty("com.sun.grid.jgdi.management.jmxremote.ssl.serverKeystorePassword"));
+                    }
+                }
             } catch (Exception ex) {
-                Debug.error("Can not source 'settings.sh' and/or 'bootstrap' and/or 'act_qmaster' files! " + ex);
+                Debug.error("Can not source 'settings.sh' and/or 'bootstrap' and/or 'act_qmaster' and/or 'management.properties' files! " + ex);
             }
         }
 

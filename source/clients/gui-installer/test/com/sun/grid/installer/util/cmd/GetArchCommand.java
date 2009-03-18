@@ -8,6 +8,7 @@
  *
  *
  *  Sun Industry Standards Source License Version 1.2
+ *  =================================================
  *  The contents of this file are subject to the Sun Industry Standards
  *  Source License Version 1.2 (the "License"); You may not use this file
  *  except in compliance with the License. You may obtain a copy of the
@@ -28,47 +29,50 @@
  *
  ************************************************************************/
 /*___INFO__MARK_END__*/
-package com.sun.grid.installer.task;
 
-import com.sun.grid.installer.util.Config;
+package com.sun.grid.installer.util.cmd;
+
+import com.sun.grid.installer.util.Util;
 import java.util.Vector;
 
-public abstract class TestableTask implements Runnable, Config {
+public class GetArchCommand extends CmdExec {
+    private String host;
+    private String user;
+    private String shell;
+    private boolean isWindowsMode;
+    private String sge_root;
 
-    private boolean testMode = false;
-    private int testExitValue = EXIT_VAL_CMDEXEC_INITIAL;
-    private Vector<String> testOutput = new Vector<String>();
-    private String taskName = "";
-
-    public String getTaskName() {
-        return taskName;
+    public GetArchCommand(String host, String user, String shell, boolean isWindowsMode, String sge_root) {
+        this(Util.RESOLVE_TIMEOUT, host, user, shell, isWindowsMode, sge_root);
     }
 
-    public void setTaskName(String taskName) {
-        this.taskName = taskName;
+    public GetArchCommand(long timeout, String host, String user, String shell, boolean isWindowsMode, String sge_root) {
+        super(timeout);
+
+        this.host = host;
+        this.user = user;
+        this.shell = shell;
+        this.isWindowsMode = isWindowsMode;
+        this.sge_root = sge_root;
     }
 
-    public boolean isIsTestMode() {
-        return testMode;
+    public void execute() {
+        try {
+            Thread.sleep(TestBedManager.getGetArchitectureSleepLength());
+        } catch (InterruptedException ex) {
+        }
     }
 
-    public void setTestMode(boolean isTestMode) {
-        this.testMode = isTestMode;
+    @Override
+    public int getExitValue() {
+        return TestBedManager.getInstance().getResolveExitValue(host);
     }
 
-    public int getTestExitValue() {
-        return testExitValue;
-    }
+    @Override
+    public Vector<String> getOutput() {
+        Vector<String> result = new Vector<String>();
+        result.add(TestBedManager.getInstance().getArchitecture(host));
 
-    public void setTestExitValue(int testExitValue) {
-        this.testExitValue = testExitValue;
-    }
-
-    public Vector<String> getTestOutput() {
-        return testOutput;
-    }
-
-    public void setTestOutput(Vector<String> testOutput) {
-        this.testOutput = testOutput;
+        return result;
     }
 }

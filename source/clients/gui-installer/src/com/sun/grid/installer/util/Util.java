@@ -801,6 +801,40 @@ public class Util implements Config{
         return settings;
     }
 
+
+    /**
+     * Sources the sge <SGE_ROOT>/<CELL_NAME>/common/jmx/management.properties file.
+     * @param sgeRoot The SGE_ROOT directory
+     * @param cellName The CELL_NAME value
+     * @return List of key values pairs sourced from the file.
+     *
+     * @throws java.io.FileNotFoundException
+     * @throws java.io.IOException
+     */
+    public static Properties sourceJMXSettings(String sgeRoot, String cellName) throws FileNotFoundException, IOException {
+        Properties settings = new Properties();
+        String settingsJMXFile = sgeRoot + "/" + cellName + "/common/jmx/management.properties";
+        ArrayList<String> settingsJMXLines = FileHandler.readFileContent(settingsJMXFile, false);
+
+        String key, value;
+        for (String line : settingsJMXLines) {
+            // Skip comments
+            if (line.startsWith("#")) {
+                continue;
+            }
+            // Process lines like 'com.sun.grid.jgdi.management.jmxremote.ssl=true'
+            int spaceIndex = line.indexOf('=');
+            key = line.substring(0, spaceIndex).trim();
+            value = line.substring(spaceIndex).trim();
+
+            //finally set the key, value pair
+            settings.setProperty(key, value);
+        }
+
+        Debug.trace("Sourced settings from '" + settingsJMXFile + "' are " + settings + ".");
+        return settings;
+    }
+
     /**
      * Sources the sge <SGE_ROOT>/<CELL_NAME>/common/sboostrap file.
      * @param sgeRoot The SGE_ROOT directory

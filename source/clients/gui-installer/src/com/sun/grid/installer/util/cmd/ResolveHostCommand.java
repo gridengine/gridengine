@@ -8,6 +8,7 @@
  *
  *
  *  Sun Industry Standards Source License Version 1.2
+ *  =================================================
  *  The contents of this file are subject to the Sun Industry Standards
  *  Source License Version 1.2 (the "License"); You may not use this file
  *  except in compliance with the License. You may obtain a copy of the
@@ -28,47 +29,48 @@
  *
  ************************************************************************/
 /*___INFO__MARK_END__*/
-package com.sun.grid.installer.task;
+package com.sun.grid.installer.util.cmd;
 
-import com.sun.grid.installer.util.Config;
-import java.util.Vector;
+import com.sun.grid.installer.util.Util;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
-public abstract class TestableTask implements Runnable, Config {
+public class ResolveHostCommand extends CmdExec {
+    private int exitVal = EXIT_VAL_SUCCESS;
+    
+    private String hostName = "";
+    private String hostAddress = "";
 
-    private boolean testMode = false;
-    private int testExitValue = EXIT_VAL_CMDEXEC_INITIAL;
-    private Vector<String> testOutput = new Vector<String>();
-    private String taskName = "";
-
-    public String getTaskName() {
-        return taskName;
+    public ResolveHostCommand() {
+        super(Util.RESOLVE_TIMEOUT);
+    }
+    
+    private ResolveHostCommand(long timeout) {
+        super(timeout);
     }
 
-    public void setTaskName(String taskName) {
-        this.taskName = taskName;
+    @Override
+    public void execute(String host) {
+        try {
+            InetAddress inetAddr = InetAddress.getByName(host);
+            
+            hostName = inetAddr.getHostName(); //If IP can't be resolved takes took long on windows
+            hostAddress = inetAddr.getHostAddress();
+        } catch (UnknownHostException ex) {
+            exitVal = EXIT_VAL_UNKNOWN_HOST;
+        }
     }
 
-    public boolean isIsTestMode() {
-        return testMode;
+    @Override
+    public int getExitValue() {
+        return exitVal;
     }
 
-    public void setTestMode(boolean isTestMode) {
-        this.testMode = isTestMode;
+    public String getHostName() {
+        return hostName;
     }
 
-    public int getTestExitValue() {
-        return testExitValue;
-    }
-
-    public void setTestExitValue(int testExitValue) {
-        this.testExitValue = testExitValue;
-    }
-
-    public Vector<String> getTestOutput() {
-        return testOutput;
-    }
-
-    public void setTestOutput(Vector<String> testOutput) {
-        this.testOutput = testOutput;
+    public String getHostAddress() {
+        return hostAddress;
     }
 }

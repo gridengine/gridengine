@@ -1,3 +1,8 @@
+ZG-2009-03-18-0: Enhancem.:   Create JUnit test for HostPanel
+                 Enhancem.:   Enable JMX by default
+                 Enhancem.:   Option to build demo version
+                 Review:      LP
+
 RD-2009-03-17-0: CVS:         Created V62u3alpha1_TAG
 -----------------------------------------------------
 

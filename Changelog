@@ -1,3 +1,7 @@
+SH-2009-03-19-0: Bugfix:      qsub exits with a error msg when the event client was killed
+                 Issue:       2934
+                 Bugster:     6808617
+                 Review:      DG
 GH-2009-03-13-0: Bugfix:      jmod -r does not delete the old instance of a
                               job before a new one is started
                  Issue:       2950

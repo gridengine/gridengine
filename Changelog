@@ -1,3 +1,8 @@
+SH-2009-03-19-0: Bugfix:      qsub exits with a error msg when the event client was killed
+                 Bugster:     6808617
+                 Issue:       2934 
+                 Reviewed by: DG 
+
 ZG-2009-03-18-0: Enhancem.:   Create JUnit test for HostPanel
                  Enhancem.:   Enable JMX by default
                  Enhancem.:   Option to build demo version

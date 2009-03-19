@@ -2524,6 +2524,7 @@ int japi_wait(const char *job_id, dstring *waited_job, int *stat,
    bool waited_is_task_array = false;
    u_long32 waited_jobid = 0, waited_taskid = 0;
    bool got_usage_info = false;
+   bool evc_killed = false;
 
    DENTER(TOP_LAYER, "japi_wait");
 
@@ -2592,6 +2593,7 @@ int japi_wait(const char *job_id, dstring *waited_job, int *stat,
                                           &waited_taskid, &waited_is_task_array,
                                           stat, event, &rusagep)) == JAPI_WAIT_UNFINISHED) {
 
+         lListElem *aep = NULL;
          /* has japi_exit() been called meanwhile ? */
          JAPI_LOCK_SESSION();
          if (japi_session != JAPI_SESSION_ACTIVE) {
@@ -2602,6 +2604,15 @@ int japi_wait(const char *job_id, dstring *waited_job, int *stat,
             DRETURN(DRMAA_ERRNO_EXIT_TIMEOUT); /* could also return something else here */
          }
          JAPI_UNLOCK_SESSION();
+         
+         aep = lFirst(japi_ec_alp);
+         /* return error context from event client thread if there is such */
+         if (aep != NULL) {
+            sge_dstring_clear(diag);
+            answer_to_dstring(aep, diag);
+            evc_killed = true;
+            break;
+         }
 
          if (timeout != DRMAA_TIMEOUT_WAIT_FOREVER) {
             if (pthread_cond_timedwait(&Master_japi_job_list_finished_cv, 
@@ -2667,6 +2678,9 @@ int japi_wait(const char *job_id, dstring *waited_job, int *stat,
    }
 
    if (wait_result != JAPI_WAIT_FINISHED) {
+      if (evc_killed) {
+         DRETURN(DRMAA_ERRNO_INVALID_JOB);
+      }
       japi_standard_error(DRMAA_ERRNO_INVALID_JOB, diag);
       DRETURN(DRMAA_ERRNO_INVALID_JOB);
    }
@@ -4347,9 +4361,14 @@ static void *japi_implementation_thread(void *p)
              * SHUTDOWN we exit the event client thread.  On QMASTER_GOES_DOWN
              * we may eventually want to issue a warning message. */
             else if (type == sgeE_SHUTDOWN) {
+               JAPI_LOCK_JOB_LIST();
                DPRINTF (("Received shutdown message\n"));
                stop_ec = true;
                qmaster_bound = false;
+               answer_list_add((lList **)p, MSG_JAPI_KILLED_EVENT_CLIENT, 
+                  STATUS_ERROR1, ANSWER_QUALITY_CRITICAL);
+               pthread_cond_broadcast (&Master_japi_job_list_finished_cv);
+               JAPI_UNLOCK_JOB_LIST();
             } else if (type == sgeE_ACK_TIMEOUT) {
                /*
                 * Print a message that we are timed out at qmaster

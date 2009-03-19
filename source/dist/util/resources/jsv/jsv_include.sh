@@ -43,16 +43,16 @@
 PATH=/bin:/usr/bin
 ARCH=`$SGE_ROOT/util/arch`
 
-logging_enabled="false" # is logging enabled?
-logfile="/tmp/jsv_$$.log"  # logfile
+__jsv_logging_enabled="false" # is logging enabled?
+__jsv_logfile="/tmp/jsv_$$.log"  # logfile
 
 # Current state of the script
 # Might be "initialized", "started" or "verifying"
-state="initialized"       
+__jsv_state="initialized"       
 
 # Following strings are switch names of command line clients (qsub, qrsh, ...) 
 # and these strings will also be used as variable suffixes in this script
-jsv_cli_params="a ar A b ckpt cwd C display dl e hard h hold_jid\
+__jsv_cli_params="a ar A b ckpt cwd C display dl e hard h hold_jid\
                 hold_jid_ad i inherit j js m M masterq notify\
                 now N noshell nostdin o ot P p pe pty R r shell sync S t\
                 terse u w wd"
@@ -64,28 +64,28 @@ jsv_cli_params="a ar A b ckpt cwd C display dl e hard h hold_jid\
 #     l_soft: soft resource requests (-soft -l ...)
 #     q_hard: hard queue resource request (-hard -q ...)
 #     q_soft: soft queue resource request (-soft -q ...)
-jsv_mod_params="ac l_hard l_soft q_hard q_soft"
+__jsv_mod_params="ac l_hard l_soft q_hard q_soft"
 
 # Here are the suffixes of variable names which do not directly appear
 # as named switches in a client.
 #     CLIENT: submit client which was used
 #     CONTEXT: in which context is this script executed
 #     ...
-jsv_add_params="CLIENT CONTEXT GROUP VERSION JOB_ID SCRIPT CMDARGS USER"
+__jsv_add_params="CLIENT CONTEXT GROUP VERSION JOB_ID SCRIPT CMDARGS USER"
 
 # Values specified with the list below will be available in this script 
 # as variables with the name "jsv_param_<name>". If a corresponding value
 # was specified during submission then this variable will have the
 # same value. Find more information in jsv(5) and submit(1) man page.
-jsv_all_params="$jsv_add_params $jsv_cli_params $jsv_mod_params"
+__jsv_all_params="$__jsv_add_params $__jsv_cli_params $__jsv_mod_params"
 
 # This is a space separated list of environment variable names which
 # will built up during runtime, when this script receives the job env.
-jsv_all_envs=""
+__jsv_all_envs=""
 
-undef="variable_is_undefined"
-quit="false"
-saved_ifs="$IFS"
+__jsv_undef="variable_is_undefined"
+__jsv_quit="false"
+__jsv_saved_ifs="$IFS"
 
 ###### jsv/jsv_clear_params() ##################################################
 #  NAME
@@ -110,16 +110,16 @@ saved_ifs="$IFS"
 ################################################################################
 jsv_clear_params()
 {
-   for i in $jsv_all_params; do
-      name="jsv_param_$i"
-      command=`eval "echo \$\{$name\:\-$undef\}"`
-      isdef=`eval "echo $command"`
-      if [ "$isdef" != "$undef" ]; then
-         unset $name
+   for __jsv_i in $__jsv_all_params; do
+      __jsv_name="jsv_param_${__jsv_i}"
+      __jsv_command=`eval "echo \$\{$__jsv_name\:\-$__jsv_undef\}"`
+      __jsv_isdef=`eval "echo $__jsv_command"`
+      if [ "$__jsv_isdef" != "$__jsv_undef" ]; then
+         unset $__jsv_name
       fi
-      unset name
-      unset command
-      unset isdef
+      unset __jsv_name
+      unset __jsv_command
+      unset __jsv_isdef
    done
 }
 
@@ -146,18 +146,18 @@ jsv_clear_params()
 ################################################################################
 jsv_clear_envs()
 {
-   for i in $jsv_all_envs; do
-      name="jsv_env_$i"
-      command=`eval "echo \$\{$name\:\-$undef\}"`
-      isdef=`eval "echo $command"`
-      if [ "$isdef" != "$undef" ]; then
-         unset $name
+   for __jsv_i in $__jsv_all_envs; do
+      __jsv_name="jsv_env_$__jsv_i"
+      __jsv_command=`eval "echo \$\{$__jsv_name\:\-$__jsv_undef\}"`
+      __jsv_isdef=`eval "echo $__jsv_command"`
+      if [ "$__jsv_isdef" != "$__jsv_undef" ]; then
+         unset $__jsv_name
       fi
-      unset name
-      unset command
-      unset isdef
+      unset __jsv_name
+      unset __jsv_command
+      unset __jsv_isdef
    done
-   jsv_all_envs=""
+   __jsv_all_envs=""
 }
 
 ###### jsv/jsv_show_params() ##################################################
@@ -186,16 +186,16 @@ jsv_clear_envs()
 ################################################################################
 jsv_show_params()
 {
-   for i in $jsv_all_params; do
-      name="jsv_param_$i"
-      command=`eval "echo \$\{$name\:\-$undef\}"`
-      isdef=`eval "echo $command"`
-      if [ "$isdef" != "$undef" ]; then
-         eval "echo LOG INFO got param $i=\${$name}"
+   for __jsv_i in $__jsv_all_params; do
+      __jsv_name="jsv_param_$__jsv_i"
+      __jsv_command=`eval "echo \$\{$__jsv_name\:\-$__jsv_undef\}"`
+      __jsv_isdef=`eval "echo $__jsv_command"`
+      if [ "$__jsv_isdef" != "$__jsv_undef" ]; then
+         eval "echo LOG INFO got param $__jsv_i=\${$__jsv_name}"
       fi
-      unset name
-      unset command
-      unset isdef
+      unset __jsv_name
+      unset __jsv_command
+      unset __jsv_isdef
    done
 }
 
@@ -224,16 +224,16 @@ jsv_show_params()
 ################################################################################
 jsv_show_envs()
 {
-   for i in $jsv_all_envs; do
-      name="jsv_env_$i"
-      command=`eval "echo \$\{$name\:\-$undef\}"`
-      isdef=`eval "echo $command"`
-      if [ "$isdef" != "$undef" ]; then
-         eval "echo LOG INFO got env $i=\${$name}"
+   for __jsv_i in $__jsv_all_envs; do
+      __jsv_name="jsv_env_$__jsv_i"
+      __jsv_command=`eval "echo \$\{$__jsv_name\:\-$__jsv_undef\}"`
+      __jsv_isdef=`eval "echo $__jsv_command"`
+      if [ "$__jsv_isdef" != "$__jsv_undef" ]; then
+         eval "echo LOG INFO got env $__jsv_i=\${$__jsv_name}"
       fi
-      unset name
-      unset command
-      unset isdef
+      unset __jsv_name
+      unset __jsv_command
+      unset __jsv_isdef
    done
 }
 
@@ -266,17 +266,17 @@ jsv_show_envs()
 ################################################################################
 jsv_is_env() 
 {
-   name="jsv_env_$1"
-   command=`eval "echo \$\{$name\:\-$undef\}"`
-   isdef=`eval "echo $command"`
-   if [ "$isdef" != "$undef" ]; then
+   __jsv_name="jsv_env_$1"
+   __jsv_command=`eval "echo \$\{$__jsv_name\:\-$__jsv_undef\}"`
+   __jsv_isdef=`eval "echo $__jsv_command"`
+   if [ "$__jsv_isdef" != "$__jsv_undef" ]; then
       echo true 
    else
       echo false
    fi
-   unset name
-   unset command
-   unset isdef
+   unset __jsv_name
+   unset __jsv_command
+   unset __jsv_isdef
 }
 
 ###### jsv/jsv_get_env() #####################################################
@@ -315,15 +315,15 @@ jsv_is_env()
 ################################################################################
 jsv_get_env() 
 {
-   name="jsv_env_$1"
-   command=`eval "echo \$\{$name\:\-$undef\}"`
-   isdef=`eval "echo $command"`
-   if [ "$isdef" != "$undef" ]; then
-      eval "echo \${$name}" 
+   __jsv_name="jsv_env_$1"
+   __jsv_command=`eval "echo \$\{$__jsv_name\:\-$__jsv_undef\}"`
+   __jsv_isdef=`eval "echo $__jsv_command"`
+   if [ "$__jsv_isdef" != "$__jsv_undef" ]; then
+      eval "echo \${$__jsv_name}" 
    fi
-   unset name
-   unset command
-   unset isdef
+   unset __jsv_name
+   unset __jsv_command
+   unset __jsv_isdef
 }
 
 ###### jsv/jsv_add_env() #####################################################
@@ -367,10 +367,10 @@ jsv_get_env()
 ################################################################################
 jsv_add_env() 
 {
-   name="jsv_env_$1"
-   eval "$name=$2"
+   __jsv_name="jsv_env_$1"
+   eval "$__jsv_name=$2"
    jsv_send_command ENV ADD "$1" "$2"
-   unset name
+   unset __jsv_name
 }
 
 ###### jsv/jsv_mod_env() #####################################################
@@ -414,10 +414,10 @@ jsv_add_env()
 ################################################################################
 jsv_mod_env() 
 {
-   name="jsv_env_$1"
-   eval "$name=$2"
+   __jsv_name="jsv_env_$1"
+   eval "$__jsv_name=$2"
    jsv_send_command ENV MOD "$1" "$2"
-   unset name
+   unset __jsv_name
 }
 
 ###### jsv/jsv_del_env() #####################################################
@@ -454,16 +454,16 @@ jsv_mod_env()
 ################################################################################
 jsv_del_env() 
 {
-   name="jsv_env_$1"
-   command=`eval "echo \$\{$name\:\-$undef\}"`
-   isdef=`eval "echo $command"`
-   if [ "$isdef" != "$undef" ]; then
-      eval "unset $name" 
+   __jsv_name="jsv_env_$1"
+   __jsv_command=`eval "echo \$\{$__jsv_name\:\-$__jsv_undef\}"`
+   __jsv_isdef=`eval "echo $__jsv_command"`
+   if [ "$__jsv_isdef" != "$__jsv_undef" ]; then
+      eval "unset $__jsv_name" 
       jsv_send_command ENV DEL "$1" 
    fi
-   unset name
-   unset command
-   unset isdef
+   unset __jsv_name
+   unset __jsv_command
+   unset __jsv_isdef
 }
 
 ###### jsv/jsv_is_param() #####################################################
@@ -559,17 +559,17 @@ jsv_del_env()
 ################################################################################
 jsv_is_param() 
 {
-   name="jsv_param_$1"
-   command=`eval "echo \$\{$name\:\-$undef\}"`
-   isdef=`eval "echo $command"`
-   if [ "$isdef" != "$undef" ]; then
+   __jsv_name="jsv_param_$1"
+   __jsv_command=`eval "echo \$\{$__jsv_name\:\-$__jsv_undef\}"`
+   __jsv_isdef=`eval "echo $__jsv_command"`
+   if [ "$__jsv_isdef" != "$__jsv_undef" ]; then
       echo true 
    else
       echo false
    fi
-   unset name
-   unset command
-   unset isdef
+   unset __jsv_name
+   unset __jsv_command
+   unset __jsv_isdef
 }
 
 ###### jsv/jsv_get_param() #####################################################
@@ -601,15 +601,15 @@ jsv_is_param()
 ################################################################################
 jsv_get_param() 
 {
-   name="jsv_param_$1"
-   command=`eval "echo \$\{$name\:\-$undef\}"`
-   isdef=`eval "echo $command"`
-   if [ "$isdef" != "$undef" ]; then
-      eval "echo \${$name}" 
+   __jsv_name="jsv_param_$1"
+   __jsv_command=`eval "echo \$\{$__jsv_name\:\-$__jsv_undef\}"`
+   __jsv_isdef=`eval "echo $__jsv_command"`
+   if [ "$__jsv_isdef" != "$__jsv_undef" ]; then
+      eval "echo \${$__jsv_name}" 
    fi
-   unset name
-   unset command
-   unset isdef
+   unset __jsv_name
+   unset __jsv_command
+   unset __jsv_isdef
 }
 
 ###### jsv/jsv_set_param() #####################################################
@@ -641,10 +641,10 @@ jsv_get_param()
 ################################################################################
 jsv_set_param()
 {
-   name="jsv_param_$1"
-   eval "$name=$2"
+   __jsv_name="jsv_param_$1"
+   eval "$__jsv_name=$2"
    jsv_send_command PARAM "$1" "$2"
-   unset name
+   unset __jsv_name
 }
 
 ###### jsv/jsv_del_param() #####################################################
@@ -672,16 +672,16 @@ jsv_set_param()
 ################################################################################
 jsv_del_param() 
 {
-   name="jsv_param_$1"
-   command=`eval "echo \$\{$name\:\-$undef\}"`
-   isdef=`eval "echo $command"`
-   if [ "$isdef" != "$undef" ]; then
-      eval "unset \${$name}" 
+   __jsv_name="jsv_param_$1"
+   __jsv_command=`eval "echo \$\{$__jsv_name\:\-$__jsv_undef\}"`
+   __jsv_isdef=`eval "echo $__jsv_command"`
+   if [ "$__jsv_isdef" != "$__jsv_undef" ]; then
+      eval "unset \${$__jsv_name}" 
       jsv_send_command PARAM "$1" ""
    fi
-   unset name
-   unset command
-   unset isdef
+   unset __jsv_name
+   unset __jsv_command
+   unset __jsv_isdef
 }
 
 ###### jsv/jsv_sub_is_param() ##################################################
@@ -752,38 +752,38 @@ jsv_del_param()
 #     jsv/jsv_on_start()
 ################################################################################
 jsv_sub_is_param() {
-   ret="false"
-   name="jsv_param_$1"
-   sub_name="$2" 
-   command=`eval "echo \$\{$name\:\-$undef\}"`
-   list=`eval "echo $command"`
-   if [ "$list" != "$undef" ]; then
+   __jsv_ret="false"
+   __jsv_name="jsv_param_$1"
+   __jsv_sub_name="$2" 
+   __jsv_command=`eval "echo \$\{$__jsv_name\:\-$__jsv_undef\}"`
+   __jsv_list=`eval "echo $__jsv_command"`
+   if [ "$__jsv_list" != "$__jsv_undef" ]; then
       IFS=","
-      for i in $list; do
+      for __jsv_i in $__jsv_list; do
          IFS="="
-         for j in $i; do
-            IFS="$saved_ifs"
-            if [ "$j" = "$sub_name" ]; then
-               ret="true"
+         for __jsv_j in $__jsv_i; do
+            IFS="$__jsv_saved_ifs"
+            if [ "$__jsv_j" = "$__jsv_sub_name" ]; then
+               __jsv_ret="true"
                break
             else
                break
             fi
             IFS="="
          done
-         IFS="$saved_ifs"
-         if [ "$ret" = "true" ]; then
+         IFS="$__jsv_saved_ifs"
+         if [ "$__jsv_ret" = "true" ]; then
             break
          fi
          IFS=","
       done
-      IFS="$saved_ifs"
+      IFS="$__jsv_saved_ifs"
    fi
-   unset name
-   unset sub_name
-   unset command
-   unset list
-   echo $ret
+   unset __jsv_name
+   unset __jsv_sub_name
+   unset __jsv_command
+   unset __jsv_list
+   echo $__jsv_ret
    return
 }
 
@@ -840,58 +840,58 @@ jsv_sub_is_param() {
 ################################################################################
 jsv_sub_del_param() 
 {
-   param_name="$1"
-   name="jsv_param_$param_name"
-   sub_name="$2" 
-   command=`eval "echo \$\{$name\:\-$undef\}"`
-   list=`eval "echo $command"`
-   new_param=""
-   if [ "$list" != "$undef" ]; then
+   __jsv_param_name="$1"
+   __jsv_name="jsv_param_$__jsv_param_name"
+   __jsv_sub_name="$2" 
+   __jsv_command=`eval "echo \$\{$__jsv_name\:\-$__jsv_undef\}"`
+   __jsv_list=`eval "echo $__jsv_command"`
+   __jsv_new_param=""
+   if [ "$__jsv_list" != "$__jsv_undef" ]; then
 
       # split token between ',' character
       IFS=","
-      for i in $list; do
-         found="false"
+      for __jsv_i in $__jsv_list; do
+         __jsv_found="false"
 
          # split the first string before '=' character
          # This is the variable name and if it is the
          # one which should be deleted then set "found" 
          # to "true" 
          IFS="="
-         for j in $i; do
-            IFS="$saved_ifs"
-            if [ "$j" = "$sub_name" ]; then
-               found="true"
+         for __jsv_j in $__jsv_i; do
+            IFS="$__jsv_saved_ifs"
+            if [ "$__jsv_j" = "$__jsv_sub_name" ]; then
+               __jsv_found="true"
                break
             else
                break
             fi
             IFS="="
          done
-         IFS="$saved_ifs"
+         IFS="$__jsv_saved_ifs"
          # append all entries to new_param
          # skip only the entry which should be deleted
-         if [ "$found" != "true" ]; then
-            if [ "$new_param" = "" ]; then  
-               new_param="$i"
+         if [ "$__jsv_found" != "true" ]; then
+            if [ "$__jsv_new_param" = "" ]; then  
+               __jsv_new_param="$__jsv_i"
             else
-               new_param="${new_param},$i"
+               __jsv_new_param="${__jsv_new_param},$__jsv_i"
             fi
          fi
          IFS=","
       done
-      IFS="$saved_ifs"
+      IFS="$__jsv_saved_ifs"
 
       # set local variable and send modification to client/master
-      eval "$name=\"\$new_param\""
-      jsv_send_command PARAM $param_name "$new_param" 
+      eval "$__jsv_name=\"\$__jsv_new_param\""
+      jsv_send_command PARAM $__jsv_param_name "$__jsv_new_param" 
    fi
-   unset new_param
-   unset list
-   unset command
-   unset name
-   unset sub_name
-   unset param_name
+   unset __jsv_new_param
+   unset __jsv_list
+   unset __jsv_command
+   unset __jsv_name
+   unset __jsv_sub_name
+   unset __jsv_param_name
    return
 }
 
@@ -948,47 +948,47 @@ jsv_sub_del_param()
 ################################################################################
 jsv_sub_get_param() 
 {
-   param_name="$1"
-   name="jsv_param_$param_name"
-   sub_name="$2" 
-   command=`eval "echo \$\{$name\:\-$undef\}"`
-   list=`eval "echo $command"`
-   if [ "$list" != "$undef" ]; then
+   __jsv_param_name="$1"
+   __jsv_name="jsv_param_$__jsv_param_name"
+   __jsv_sub_name="$2" 
+   __jsv_command=`eval "echo \$\{$__jsv_name\:\-$__jsv_undef\}"`
+   __jsv_list=`eval "echo $__jsv_command"`
+   if [ "$__jsv_list" != "$__jsv_undef" ]; then
 
       # split token between ',' character
       IFS=","
-      for i in $list; do
-         found="false"
+      for __jsv_i in $__jsv_list; do
+         __jsv_found="false"
 
          # split the first string before '=' character
          # This is the variable name and if it is the
          # one which should be deleted then set "found" 
          # to "true" 
          IFS="="
-         for j in $i; do
-            IFS="$saved_ifs"
-            if [ "$found" = "true" ]; then
-               echo "$j"
+         for __jsv_j in $__jsv_i; do
+            IFS="$__jsv_saved_ifs"
+            if [ "$__jsv_found" = "true" ]; then
+               echo "$__jsv_j"
             else
-               if [ "$j" = "$sub_name" ]; then
-                  found="true"
+               if [ "$__jsv_j" = "$__jsv_sub_name" ]; then
+                  __jsv_found="true"
                fi
             fi
             IFS="="
          done
-         IFS="$saved_ifs"
-         if [ "$found" = "true" ]; then
+         IFS="$__jsv_saved_ifs"
+         if [ "$__jsv_found" = "true" ]; then
             break;
          fi
          IFS=","
       done
-      IFS="$saved_ifs"
+      IFS="$__jsv_saved_ifs"
    fi
-   unset list
-   unset command
-   unset name
-   unset sub_name
-   unset param_name
+   unset __jsv_list
+   unset __jsv_command
+   unset __jsv_name
+   unset __jsv_sub_name
+   unset __jsv_param_name
    return
 }
 
@@ -1048,81 +1048,81 @@ jsv_sub_get_param()
 ################################################################################
 jsv_sub_add_param() 
 {
-   param_name="$1"
-   name="jsv_param_$param_name"
-   sub_name="$2" 
-   value="$3"
-   command=`eval "echo \$\{$name\:\-$undef\}"`
-   list=`eval "echo $command"`
-   new_param=""
-   if [ "$list" = "$undef" ]; then
-      list=""
+   __jsv_param_name="$1"
+   __jsv_name="jsv_param_$__jsv_param_name"
+   __jsv_sub_name="$2" 
+   __jsv_value="$3"
+   __jsv_command=`eval "echo \$\{$__jsv_name\:\-$__jsv_undef\}"`
+   __jsv_list=`eval "echo $__jsv_command"`
+   __jsv_new_param=""
+   if [ "$__jsv_list" = "$__jsv_undef" ]; then
+      __jsv_list=""
    fi
-   found="false"
+   __jsv_found="false"
 
    # split token between ',' character
    IFS=","
-   for i in $list; do
+   for __jsv_i in $__jsv_list; do
       # split the first string before '=' character
       # This is the variable name and if it is the
       # one which should be deleted then set "found" 
       # to "true" 
       IFS="="
-      for j in $i; do
-         IFS="$saved_ifs"
-         if [ "$j" = "$sub_name" ]; then
-            found="true"
-            if [ "$value" = "" ]; then
-               if [ "$new_param" = "" ]; then
-                  new_param="$j"
+      for __jsv_j in $__jsv_i; do
+         IFS="$__jsv_saved_ifs"
+         if [ "$__jsv_j" = "$__jsv_sub_name" ]; then
+            __jsv_found="true"
+            if [ "$__jsv_value" = "" ]; then
+               if [ "$__jsv_new_param" = "" ]; then
+                  __jsv_new_param="$__jsv_j"
                else
-                  new_param="${new_param},$j"
+                  __jsv_new_param="${__jsv_new_param},$__jsv_j"
                fi
             else
-               if [ "$new_param" = "" ]; then  
-                  new_param="${j}=${value}"
+               if [ "$__jsv_new_param" = "" ]; then  
+                  __jsv_new_param="${__jsv_j}=${__jsv_value}"
                else
-                  new_param="${new_param},${j}=${value}"
+                  __jsv_new_param="${__jsv_new_param},${__jsv_j}=${__jsv_value}"
                fi
             fi
          else
-            if [ "$new_param" = "" ]; then  
-               new_param="$i"
+            if [ "$__jsv_new_param" = "" ]; then  
+               __jsv_new_param="$__jsv_i"
             else
-               new_param="${new_param},$i"
+               __jsv_new_param="${__jsv_new_param},$__jsv_i"
             fi
          fi
          IFS="="
          break;
       done
-      IFS="$saved_ifs"
+      IFS="$__jsv_saved_ifs"
    done
-   if [ "$found" = "false" ]; then
-      if [ "$value" = "" ]; then
-         if [ "$new_param" = "" ]; then  
-            new_param="$sub_name"
+   if [ "$__jsv_found" = "false" ]; then
+      if [ "$__jsv_value" = "" ]; then
+         if [ "$__jsv_new_param" = "" ]; then  
+            __jsv_new_param="$__jsv_sub_name"
          else
-            new_param="${new_param},$sub_name"
+            __jsv_new_param="${__jsv_new_param},$__jsv_sub_name"
          fi
       else 
-         if [ "$new_param" = "" ]; then  
-            new_param="${sub_name}=$value"
+         if [ "$__jsv_new_param" = "" ]; then  
+            __jsv_new_param="${__jsv_sub_name}=$__jsv_value"
          else
-            new_param="${new_param},${sub_name}=$value"
+            __jsv_new_param="${__jsv_new_param},${__jsv_sub_name}=$__jsv_value"
          fi
       fi
    fi
-   IFS="$saved_ifs"
+   IFS="$__jsv_saved_ifs"
 
    # set local variable and send modification to client/master
-   eval "$name=\"\$new_param\""
-   jsv_send_command PARAM "$param_name" "$new_param"
-   unset new_param
-   unset list
-   unset command
-   unset name
-   unset sub_name
-   unset param_name
+   eval "$__jsv_name=\"\$__jsv_new_param\""
+   jsv_send_command PARAM "$__jsv_param_name" "$__jsv_new_param"
+   unset __jsv_new_param
+   unset __jsv_list
+   unset __jsv_command
+   unset __jsv_name
+   unset __jsv_sub_name
+   unset __jsv_param_name
    return
 }
 
@@ -1202,11 +1202,11 @@ jsv_send_env()
 ################################################################################
 jsv_accept()
 {
-   if [ "$state" = "verifying" ]; then
+   if [ "$__jsv_state" = "verifying" ]; then
       jsv_send_command "RESULT STATE ACCEPT $*"
-      state="initialized"
+      __jsv_state="initialized"
    else
-      jsv_send_command "ERROR JSV script will send RESULT command but is in state $state"
+      jsv_send_command "ERROR JSV script will send RESULT command but is in state $__jsv_state"
    fi
 }
 
@@ -1249,11 +1249,11 @@ jsv_accept()
 ################################################################################
 jsv_correct()
 {
-   if [ "$state" = "verifying" ]; then
+   if [ "$__jsv_state" = "verifying" ]; then
       jsv_send_command "RESULT STATE CORRECT $*"
-      state="initialized"
+      __jsv_state="initialized"
    else
-      jsv_send_command "ERROR JSV script will send RESULT command but is in state $state"
+      jsv_send_command "ERROR JSV script will send RESULT command but is in state $__jsv_state"
    fi
 }
 
@@ -1295,11 +1295,11 @@ jsv_correct()
 ################################################################################
 jsv_reject()
 {
-   if [ "$state" = "verifying" ]; then
+   if [ "$__jsv_state" = "verifying" ]; then
       jsv_send_command "RESULT STATE REJECT $*"
-      state="initialized"
+      __jsv_state="initialized"
    else
-      jsv_send_command "ERROR JSV script will send RESULT command but is in state $state"
+      jsv_send_command "ERROR JSV script will send RESULT command but is in state $__jsv_state"
    fi
 }
 
@@ -1341,11 +1341,11 @@ jsv_reject()
 ################################################################################
 jsv_reject_wait()
 {
-   if [ "$state" = "verifying" ]; then
+   if [ "$__jsv_state" = "verifying" ]; then
       jsv_send_command "RESULT STATE REJECT_WAIT $*"
-      state="initialized"
+      __jsv_state="initialized"
    else
-      jsv_send_command "ERROR JSV script will send RESULT command but is in state $state"
+      jsv_send_command "ERROR JSV script will send RESULT command but is in state $__jsv_state"
    fi
 }
 
@@ -1446,59 +1446,59 @@ jsv_log_error()
 # private function 
 jsv_handle_start_command()
 {
-   if [ "$state" = "initialized" ]; then
+   if [ "$__jsv_state" = "initialized" ]; then
       jsv_on_start
       jsv_send_command "STARTED"
-      state="started"
+      __jsv_state="started"
    else
-      jsv_send_command "ERROR JSV script got START command but is in state $state"
+      jsv_send_command "ERROR JSV script got START command but is in state $__jsv_state"
    fi
 }
 
 # private function 
 jsv_handle_begin_command()
 {
-   if [ "$state" = "started" ]; then
-      state="verifying"
+   if [ "$__jsv_state" = "started" ]; then
+      __jsv_state="verifying"
       jsv_on_verify
       jsv_clear_params
       jsv_clear_envs
    else
-      jsv_send_command "ERROR JSV script got BEGIN command but is in state $state"
+      jsv_send_command "ERROR JSV script got BEGIN command but is in state $__jsv_state"
    fi
 }
 
 # private function 
 jsv_handle_param_command()
 {
-   if [ "$state" = "started" ]; then
-      param="$1"
-      value="$2"
+   if [ "$__jsv_state" = "started" ]; then
+      __jsv_param="$1"
+      __jsv_value="$2"
 
-      eval "jsv_param_$param=\"\${value}\""
-      unset param
-      unset value
+      eval "jsv_param_$__jsv_param=\"\${__jsv_value}\""
+      unset __jsv_param
+      unset __jsv_value
    else
-      jsv_send_command "ERROR JSV script got PARAM command but is in state $state"
+      jsv_send_command "ERROR JSV script got PARAM command but is in state $__jsv_state"
    fi
 }
 
 # private function 
 jsv_handle_env_command()
 {
-   if [ "$state" = "started" ]; then
-      action="$1"
-      name="$2"
-      data="$3"
-      if [ "$action" = "ADD" ]; then
-         jsv_all_envs="$jsv_all_envs $name"
-         eval "jsv_env_${name}=\"\${data}\""
+   if [ "$__jsv_state" = "started" ]; then
+      __jsv_action="$1"
+      __jsv_name="$2"
+      __jsv_data="$3"
+      if [ "$__jsv_action" = "ADD" ]; then
+         __jsv_all_envs="$__jsv_all_envs $__jsv_name"
+         eval "jsv_env_${__jsv_name}=\"\${__jsv_data}\""
       fi
-      unset action
-      unset name
-      unset data
+      unset __jsv_action
+      unset __jsv_name
+      unset __jsv_data
    else
-      jsv_send_command "ERROR JSV script got ENV command but is in state $state"
+      jsv_send_command "ERROR JSV script got ENV command but is in state $__jsv_state"
    fi
 }
 
@@ -1513,8 +1513,8 @@ jsv_send_command()
 # private function
 jsv_script_log()
 {
-   if [ $logging_enabled = true ]; then
-      echo "$@" >>$logfile
+   if [ $__jsv_logging_enabled = true ]; then
+      echo "$@" >>$__jsv_logfile
    fi
 }
 
@@ -1606,47 +1606,47 @@ jsv_main()
    jsv_script_log "which is send for this JSV script to the client or sge_qmaster"
    jsv_script_log ""
 
-   while [ $quit = false ]; do
+   while [ $__jsv_quit = false ]; do
       # simple read can't be used here because it does backslash escaping
       # read -r (raw mode) is not available on all platforms
       # therefore we have to use our own implementation 
       if [ "$ARCH" = "darwin-x86" ]; then
-         read -r input
+         read -r __jsv_input
       else
-         input=`$SGE_ROOT/utilbin/$ARCH/read_raw`
+         __jsv_input=`$SGE_ROOT/utilbin/$ARCH/read_raw`
       fi 
-      result=$?
+      __jsv_result=$?
 
-      if [ $result != 0 ]; then
-         quit=true
+      if [ $__jsv_result != 0 ]; then
+         __jsv_quit=true
       else
-         if [ "$input" != "" ]; then
-            jsv_script_log ">>> $input"     
-            first=`$SGE_ROOT/utilbin/$ARCH/echo_raw $input | cut -d' ' -f 1`
-            second=`$SGE_ROOT/utilbin/$ARCH/echo_raw $input | cut -d' ' -f 2`
-            remaining=`$SGE_ROOT/utilbin/$ARCH/echo_raw $input | cut -d' ' -f 3-`
-            if [ "$first" = "QUIT" ]; then
-               quit=true
-            elif [ "$first" = "PARAM" ]; then
-               jsv_handle_param_command "$second" "$remaining"
-            elif [ "$first" = "ENV" ]; then
-               third=`$SGE_ROOT/utilbin/$ARCH/echo_raw $input | cut -d' ' -f 3`
-               len=`$SGE_ROOT/utilbin/$ARCH/echo_raw "$first $second $third " | wc -c`
-               data=`$SGE_ROOT/utilbin/$ARCH/echo_raw $input | cut -c ${len}-`
-               jsv_handle_env_command "$second" "$third" "$data"
-            elif [ "$first" = "START" ]; then
+         if [ "$__jsv_input" != "" ]; then
+            jsv_script_log ">>> $__jsv_input"     
+            __jsv_first=`$SGE_ROOT/utilbin/$ARCH/echo_raw $__jsv_input | cut -d' ' -f 1`
+            __jsv_second=`$SGE_ROOT/utilbin/$ARCH/echo_raw $__jsv_input | cut -d' ' -f 2`
+            __jsv_remaining=`$SGE_ROOT/utilbin/$ARCH/echo_raw $__jsv_input | cut -d' ' -f 3-`
+            if [ "$__jsv_first" = "QUIT" ]; then
+               __jsv_quit=true
+            elif [ "$__jsv_first" = "PARAM" ]; then
+               jsv_handle_param_command "$__jsv_second" "$__jsv_remaining"
+            elif [ "$__jsv_first" = "ENV" ]; then
+               __jsv_third=`$SGE_ROOT/utilbin/$ARCH/echo_raw $__jsv_input | cut -d' ' -f 3`
+               __jsv_len=`$SGE_ROOT/utilbin/$ARCH/echo_raw "$__jsv_first $__jsv_second $__jsv_third " | wc -c`
+               __jsv_data=`$SGE_ROOT/utilbin/$ARCH/echo_raw $__jsv_input | cut -c ${__jsv_len}-`
+               jsv_handle_env_command "$__jsv_second" "$__jsv_third" "$__jsv_data"
+            elif [ "$__jsv_first" = "START" ]; then
                jsv_handle_start_command 
-            elif [ "$first" = "BEGIN" ]; then
+            elif [ "$__jsv_first" = "BEGIN" ]; then
                jsv_handle_begin_command 
-            elif [ "$first" = "SHOW" ]; then
+            elif [ "$__jsv_first" = "SHOW" ]; then
                jsv_show_params
                jsv_show_envs
             else
-               jsv_send_command "ERROR JSV script got unknown command \"$first\""
+               jsv_send_command "ERROR JSV script got unknown command \"$__jsv_first\""
             fi
          fi
       fi
-      unset result
+      unset __jsv_result
    done
    jsv_script_log "$0 is terminating on `date`"
 }

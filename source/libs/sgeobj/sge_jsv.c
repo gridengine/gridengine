@@ -322,7 +322,15 @@ jsv_start(lListElem *jsv, lList **answer_list)
          pid = sge_peopen_r("/bin/sh", 0, scriptfile, 
                             (user != NULL ? user : get_admin_user_name()), NULL,
                             &fp_in, &fp_out, &fp_err, false);
-         if (pid != -1) {
+         if (pid == -1) {
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
+                                    MSG_JSV_START_S, scriptfile);
+            ret = false;
+         } else if (pid == -2) {
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
+                                    MSG_JSV_STARTPERMISSION);
+            ret = false;
+         } else {
             jsv_set_pid(jsv, pid);
             lSetRef(jsv, JSV_in, fp_in);
             lSetRef(jsv, JSV_out, fp_out);
@@ -333,10 +341,6 @@ jsv_start(lListElem *jsv, lList **answer_list)
             fcntl(fileno(fp_err), F_SETFL, O_NONBLOCK);
 
             INFO((SGE_EVENT, MSG_JSV_STARTED_S, scriptfile));
-         } else {
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
-                                    MSG_JSV_START_S, scriptfile);
-            ret = false;
          }
       } else {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,

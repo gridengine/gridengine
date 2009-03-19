@@ -345,7 +345,6 @@
 #define MSG_JSV_ALLOWED          _MESSAGE(64550, _("No job modification allowed due to jsv_allowed_mod configuration"))
 #define MSG_JSV_JCOMMAND_S       _MESSAGE(64551, _("master got unknown command from JSV: "SFQ))
 #define MSG_JSV_LOGMSG_S         _MESSAGE(64552, _("JSV stderr: %s"))
-
-
+#define MSG_JSV_STARTPERMISSION  _MESSAGE(64553, _("process has not the necessary permission to start JSV as different user"))
 
 #endif /* __MSG_SGEOBJLIB_H */

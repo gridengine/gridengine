@@ -1,3 +1,12 @@
+EB-2009-03-19-0: Bugfix:      Some variable names can't be used in Bourne shell JSV scripts  
+                 Bugster:     6818825
+                 Issue:       2958
+                 Bugfix:      A qmaster not running a root exits with return code 1 if a 
+                              JSV script to start as user is configured
+                 Bugster:     6810490
+                 Issue:       2957
+                 Review:      JF
+
 SH-2009-03-19-0: Bugfix:      qsub exits with a error msg when the event client was killed
                  Bugster:     6808617
                  Issue:       2934 

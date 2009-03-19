@@ -403,7 +403,7 @@ pid_t sge_peopen_r(const char *shell, int login_shell, const char *command,
          DRETURN(-1);
       }
 
-      DPRINTF(("Was able to resolve user\n"));
+      DPRINTF(("was able to resolve user\n"));
 
       /* 
        * only prepare change of user if target user is different from current one
@@ -414,9 +414,10 @@ pid_t sge_peopen_r(const char *shell, int login_shell, const char *command,
 #endif 
 
          if (myuid != SGE_SUPERUSER_UID) {
+            DPRINTF(("only root is allowed to switch to a different user\n"));
             ERROR((SGE_EVENT, MSG_SYSTEM_NOROOTRIGHTSTOSWITCHUSER));
             FREE(buffer);
-            SGE_EXIT(NULL, 1);
+            DRETURN(-2);
          }                             
 
          DPRINTF(("Before initgroups\n"));

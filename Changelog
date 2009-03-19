@@ -1,3 +1,8 @@
+DG-2009-03-19-0: Bugfix:      stopping an execution daemon does not stop jobs
+                 Bugster:     6761993
+                 Issue:       2759
+                 Review:      JG
+
 EB-2009-03-19-0: Bugfix:      Some variable names can't be used in Bourne shell JSV scripts  
                  Bugster:     6818825
                  Issue:       2958

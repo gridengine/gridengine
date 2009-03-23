@@ -119,9 +119,7 @@ report_source *report_sources
       }
       lFreeList(&report_list);
    }
-
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /* ----------------------------------------
@@ -129,13 +127,9 @@ report_source *report_sources
    add a double value to the load report list lpp 
  
 */
-int sge_add_double2load_report(
-lList **lpp,
-char *name,
-double value,
-const char *host,
-char *units 
-) {
+int sge_add_double2load_report(lList **lpp, char *name, double value,
+                               const char *host, char *units)
+{
    char load_string[255];
  
    DENTER(BASIS_LAYER, "sge_add_double2load_report");
@@ -143,8 +137,7 @@ char *units
    sprintf(load_string, "%f%s", value, units?units:"");
    sge_add_str2load_report(lpp, name, load_string, host);
 
-   DEXIT;
-   return 0; 
+   DRETURN(0); 
 }
 
 /* ----------------------------------------
@@ -152,12 +145,9 @@ char *units
    add an integer value to the load report list lpp
 
 */
-int sge_add_int2load_report(
-lList **lpp,
-const char *name,
-int value,
-const char *host 
-) {
+int sge_add_int2load_report(lList **lpp, const char *name, int value,
+                            const char *host)
+                            {
    char load_string[255];
    int ret;
 
@@ -166,8 +156,7 @@ const char *host
    sprintf(load_string, "%d", value);
    ret = sge_add_str2load_report(lpp, name, load_string, host);
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 /* ----------------------------------------
@@ -175,34 +164,29 @@ const char *host
    add a string value to the load report list lpp
 
 */
-int sge_add_str2load_report(
-lList **lpp,
-const char *name,
-const char *value,
-const char *host
-) {
+int sge_add_str2load_report(lList **lpp, const char *name, const char *value, const char *host)
+{
    lListElem *ep = NULL, *search_ep = NULL;
    const void *iterator = NULL;
 
    DENTER(BASIS_LAYER, "sge_add_str2load_report");
 
-   if ( !lpp || !name || !value ) {
-      DEXIT;
-      return -1;
+   if (lpp == NULL || name == NULL || value == NULL || host == NULL) {
+      DRETURN(-1);
    }
 
-   if(*lpp != NULL) {
+   if (*lpp != NULL) {
       search_ep = lGetElemHostFirst(*lpp, LR_host, host, &iterator);
-      while(search_ep != NULL) {
+      while (search_ep != NULL) {
          DPRINTF(("---> %s\n", lGetString(search_ep, LR_name)));
-         if(strcmp(lGetString(search_ep, LR_name), name) == 0) {
+         if (strcmp(lGetString(search_ep, LR_name), name) == 0) {
             ep = search_ep;
             break;
          }
          search_ep = lGetElemHostNext(*lpp, LR_host, host, &iterator);
       }
    }
-   
+
    if (ep == NULL) {
       DPRINTF(("adding new load variable %s for host %s\n", name, host));
       ep = lAddElemStr(lpp, LR_name, name, LR_Type);
@@ -215,7 +199,6 @@ const char *host
 
    DPRINTF(("load value %s for host %s: %s\n", name, host, value)); 
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 

@@ -299,7 +299,7 @@ lList *sge_build_load_report(const char* qualified_hostname, const char* binary_
    /* make derived load values */
    /* retrieve num procs first - we need it for all other derived load values */
    ep = lGetElemStrFirst(lp, LR_name, LOAD_ATTR_NUM_PROC, &iterator);
-   while(ep != NULL) {
+   while (ep != NULL) {
       if ((sge_hostcmp(lGetHost(ep, LR_host), qualified_hostname) == 0) && (s = lGetString(ep, LR_value))) {
          nprocs = MAX(1, atoi(s));
          break;
@@ -309,7 +309,7 @@ lList *sge_build_load_report(const char* qualified_hostname, const char* binary_
 
    /* now make the derived load values */
    ep = lGetElemHostFirst(lp, LR_host, qualified_hostname, &iterator);
-   while(ep != NULL) {
+   while (ep != NULL) {
       if ((strcmp(lGetString(ep, LR_name), LOAD_ATTR_LOAD_AVG) == 0) && (s = lGetString(ep, LR_value))) {
          load = strtod(s, NULL);
          sge_add_double2load_report(&lp, LOAD_ATTR_NP_LOAD_AVG, (load/nprocs), qualified_hostname, NULL);
@@ -374,8 +374,7 @@ lList *sge_build_load_report(const char* qualified_hostname, const char* binary_
    /* qmaster expects a list sorted by host */
    lPSortList(lp, "%I+", LR_host);
 
-   DEXIT;
-   return lp;
+   DRETURN(lp);
 }
 
 static int sge_get_loadavg(const char* qualified_hostname, lList **lpp) 
@@ -399,29 +398,28 @@ static int sge_get_loadavg(const char* qualified_hostname, lList **lpp)
       static u_long32 next_log = 0;
       u_long32 now;
 
-      avg[0] = avg[1] = avg[2] = 0.0;
-
       now = sge_get_gmt();
       if (now >= next_log) {
          WARNING((SGE_EVENT, MSG_SGETEXT_NO_LOAD));     
          next_log = now + 7200;
       }
+   } else if (loads == -2) {
+      static bool logged_at_startup = false;
+      if (!logged_at_startup) {
+         logged_at_startup = true;
+         WARNING((SGE_EVENT, MSG_LS_USE_EXTERNAL_LS_S, sge_get_arch()));
+      }
    }
 #endif
 
    /* build a list of load values */
-   if (loads != -1) {
-      DPRINTF(("---> %f %f %f - %d\n", avg[0], avg[1], avg[2], 
-         (int) (avg[2] * 100.0)));
+   if (loads >= 0) {
+      DPRINTF(("---> %f %f %f - %d\n", avg[0], avg[1], avg[2], (int) (avg[2] * 100.0)));
 
-      sge_add_double2load_report(lpp, LOAD_ATTR_LOAD_AVG, avg[1], qualified_hostname, 
-         NULL);
-      sge_add_double2load_report(lpp, LOAD_ATTR_LOAD_SHORT, avg[0], qualified_hostname, 
-         NULL);
-      sge_add_double2load_report(lpp, LOAD_ATTR_LOAD_MEDIUM, avg[1], qualified_hostname, 
-         NULL);
-      sge_add_double2load_report(lpp, LOAD_ATTR_LOAD_LONG, avg[2], qualified_hostname, 
-         NULL);
+      sge_add_double2load_report(lpp, LOAD_ATTR_LOAD_AVG, avg[1], qualified_hostname, NULL);
+      sge_add_double2load_report(lpp, LOAD_ATTR_LOAD_SHORT, avg[0], qualified_hostname, NULL);
+      sge_add_double2load_report(lpp, LOAD_ATTR_LOAD_MEDIUM, avg[1], qualified_hostname, NULL);
+      sge_add_double2load_report(lpp, LOAD_ATTR_LOAD_LONG, avg[2], qualified_hostname, NULL);
    }
 
    /* these are some static load values */
@@ -460,8 +458,7 @@ static int sge_get_loadavg(const char* qualified_hostname, lList **lpp)
          ERROR((SGE_EVENT, MSG_LOAD_NOMEMINDICES));
          mem_fail =1;
       }
-      DEXIT;
-      return 1;
+      DRETURN(1);
    }
 
    sge_add_double2load_report(lpp, LOAD_ATTR_MEM_FREE,        mem_info.mem_free, qualified_hostname, "M");
@@ -614,7 +611,7 @@ static int sge_get_loadavg(const char* qualified_hostname, lList **lpp)
 
       /* look if SGE_Helper_Service.exe is running */
       svc_running = sge_get_pids(pids, 1, "SGE_Helper_Service.exe", PSCMD);
-      if(svc_running <= 0) {
+      if (svc_running <= 0) {
          svc_running = 0;
       }
 
@@ -624,8 +621,7 @@ static int sge_get_loadavg(const char* qualified_hostname, lList **lpp)
    }
 #endif
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 void update_job_usage(const char* qualified_hostname)

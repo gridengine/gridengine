@@ -1,10 +1,17 @@
+JG-2009-03-23-0: Bugfix:      misleading execd logging "Can't get load values"
+                              on AIX
+                 Bugster:     6746960
+                 Issue:       2961
+                 Review:      DG
+
 DG-2009-03-20-0: Bugfix:      stopping an execution daemon does not stop jobs
                  Merged from: maintrunk (DG-2009-03-19-0)
                  Bugster:     6761993
                  Issue:       2759
                  Review:      JG
 
-SH-2009-03-19-0: Bugfix:      qsub exits with a error msg when the event client was killed
+SH-2009-03-19-0: Bugfix:      qsub exits with a error msg when the event client
+                              was killed
                  Issue:       2934
                  Bugster:     6808617
                  Review:      DG

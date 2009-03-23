@@ -1,3 +1,9 @@
+JG-2009-03-23-0: Bugfix:      misleading execd logging "Can't get load values"
+                              on AIX
+                 Bugster:     6746960
+                 Issue:       2961
+                 Review:      DG
+
 DG-2009-03-19-0: Bugfix:      stopping an execution daemon does not stop jobs
                  Bugster:     6761993
                  Issue:       2759

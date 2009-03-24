@@ -401,6 +401,10 @@ jsv_handle_param_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answe
                lSetList(new_job, JB_context, context_list);
             }
          }
+      }
+
+      /* -ar */
+      {
          if (ret && strcmp("ar", param) == 0) {
             u_long32 id = 0;
 
@@ -1940,20 +1944,22 @@ jsv_handle_log_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answer_
    const char *args = sge_dstring_get_string(a);
 
    DENTER(TOP_LAYER, "jsv_handle_log_command");
-   if (args != NULL) {
-      if (strcmp(lGetString(jsv, JSV_context), JSV_CONTEXT_CLIENT) != 0) {
-         if (strcmp(sub_command, "INFO") == 0) {
-            INFO((SGE_EVENT, "%s", args));
-         } else if (strcmp(sub_command, "WARNING") == 0) {
-            WARNING((SGE_EVENT, "%s", args));
-         } else if (strcmp(sub_command, "ERROR") == 0) {
-            ERROR((SGE_EVENT, "%s", args));
-         } else {
-            WARNING((SGE_EVENT, MSG_JSV_LOG_SS, command, sub_command));
-         }
+   if (args == NULL) {
+      /* empty message will print a empty line (only newline) */
+      args = "";
+   }
+   if (strcmp(lGetString(jsv, JSV_context), JSV_CONTEXT_CLIENT) != 0) {
+      if (strcmp(sub_command, "INFO") == 0) {
+         INFO((SGE_EVENT, "%s", args));
+      } else if (strcmp(sub_command, "WARNING") == 0) {
+         WARNING((SGE_EVENT, "%s", args));
+      } else if (strcmp(sub_command, "ERROR") == 0) {
+         ERROR((SGE_EVENT, "%s", args));
       } else {
-         printf("%s\n", args);
+         WARNING((SGE_EVENT, MSG_JSV_LOG_SS, command, sub_command));
       }
+   } else {
+      printf("%s\n", args);
    }
    DRETURN(ret);
 }

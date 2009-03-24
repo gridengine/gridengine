@@ -1,3 +1,6 @@
+EB-2009-03-23-0: Enhancemn.:  JSV log command now has possibility to log empty lines
+                 Review:      MD
+
 MD-2009-03-24-0: Enhancem:    updated 62patches.txt file
 
 JG-2009-03-23-0: Bugfix:      misleading execd logging "Can't get load values"

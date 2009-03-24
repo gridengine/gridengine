@@ -54,7 +54,7 @@ __jsv_state="initialized"
 # and these strings will also be used as variable suffixes in this script
 __jsv_cli_params="a ar A b ckpt cwd C display dl e hard h hold_jid\
                 hold_jid_ad i inherit j js m M masterq notify\
-                now N noshell nostdin o ot P p pe pty R r shell sync S t\
+                now N noshell nostdin o ot P p pty R r shell sync S t\
                 terse u w wd"
 
 # These names are the suffixes of variable names which will contain
@@ -64,7 +64,10 @@ __jsv_cli_params="a ar A b ckpt cwd C display dl e hard h hold_jid\
 #     l_soft: soft resource requests (-soft -l ...)
 #     q_hard: hard queue resource request (-hard -q ...)
 #     q_soft: soft queue resource request (-soft -q ...)
-__jsv_mod_params="ac l_hard l_soft q_hard q_soft"
+#     pe_min: minimum of pe range (-pe <pe_name> <pe_min>-<pe_max>)
+#     pe_max: maximum of pe range (-pe <pe_name> <pe_min>-<pe_max>)
+#     pe_name: pe name (-pe <pe_name> <pe_min>-<pe_max>)
+__jsv_mod_params="ac l_hard l_soft q_hard q_soft pe_min pe_max pe_name"
 
 # Here are the suffixes of variable names which do not directly appear
 # as named switches in a client.

@@ -1,3 +1,7 @@
+Bugs fixed in SGE 6.2u2_1 since release 6.2u2
+---------------------------------------------
+2949 6814823 Update to 6.2u2 fails with error "wrong type for field CE_consumable (lBoolT)Abort"
+
 Bugs fixed in SGE 6.2u2 since release 6.2u1
 -------------------------------------------
 -    6285245 New parameter DURATION_OFFSET in sched_conf(5) should be described in admin guide 

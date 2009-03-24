@@ -87,7 +87,7 @@
       {"virtual_free",   0, TYPE_MEM},
       {"virtual_total",  0, TYPE_MEM},
       {"virtual_used",   0, TYPE_MEM},
-      {"display_win_gui",0, 0, 0, TYPE_BOO}
+      {"display_win_gui",0, TYPE_BOO}
    };
 
    const int max_queue_resources=24; /* specifies the number of elements in the queue_resource array */

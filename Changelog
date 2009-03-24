@@ -1,3 +1,11 @@
+RD-2009-03-24-0: Bugfix:      - qconf -Mc did not print any output in case
+                                of success
+                              - build-in complex "display_win_gui" could
+                                be deleted
+                 Bugster:     6821207, 6821237
+                 Issue:       2963, 2964 
+                 Review:      CR
+
 EB-2009-03-23-0: Enhancemn.:  JSV log command now has possibility to log empty lines
                  Review:      MD
 

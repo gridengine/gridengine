@@ -2028,9 +2028,9 @@ char *argv[]
             sge_error_and_exit(MSG_FILE_NOFILEARGUMENTGIVEN);
          }
          if (!centry_list_modify_from_file(ctx, &answer_list, file)) {
-            show_answer_list(answer_list);
             sge_parse_return = 1;
-         }   
+         }
+         show_answer_list(answer_list);
          lFreeList(&answer_list);
          spp++;
          continue;

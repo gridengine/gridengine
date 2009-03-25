@@ -82,50 +82,22 @@ static void addenv(char *key, char *value)
    /* there is intentionally no free(str) */
    return;
 }
- 
-/****** uti/stdio/sge_peopen() ************************************************
-*  NAME
-*     sge_peopen() -- Advanced popen()
-*
-*  SYNOPSIS
-*     pid_t sge_peopen(const char *shell, int login_shell,
-*                      const char *command, const char *user,
-*                      char **env, FILE **fp_in, FILE **fp_out,
-*                      FILE **fp_err)
-*
-*  FUNCTION
-*     Advanced popen() with additional parameters;
-*        - free shell usage
-*        - login shell if wanted
-*        - user under which to start (for root only)
-*        - stdin and stderr file pointers
-*        - wait for exactly the process we started
-*     File descriptors have to be closed with sge_peclose().
-*
-*  INPUTS
-*     const char *shell   - which shell to use
-*     int login_shell     - make it a login shell?
-*     const char *command - name of the program
-*     const char *user    - user under which to start (for root only)
-*     char **env          - env variables to add to child
-*     FILE **fp_in
-*     FILE **fp_out
-*     FILE **fp_err
-*
-*  RESULT
-*     pid_t - process id
-*
-*  NOTES
-*     MT-NOTE: sge_peopen() is not MT safe because static (?) function variable
-*
-*  SEE ALSO
-*     uti/stdio/sge_peclose()
-******************************************************************************/ 
+
+/* 
+ * TODO: CLEANUP
+ *
+ * This function is DEPRECATED and should be removed with the next
+ * major release.
+ *
+ * This function can't be used in multi threaded environments because it
+ * might cause a deadlock in the executing qmaster thread.
+ * Use sge_peopen_r() instead.
+ */
 pid_t sge_peopen(const char *shell, int login_shell, const char *command,
                  const char *user, char **env,  FILE **fp_in, FILE **fp_out,
                  FILE **fp_err, bool null_stderr)
 {
-   static pid_t pid;
+   pid_t pid;
    int pipefds[3][2];
    const char *could_not = MSG_SYSTEM_EXECBINSHFAILED;
    const char *not_root = MSG_SYSTEM_NOROOTRIGHTSTOSWITCHUSER;
@@ -314,11 +286,58 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
    return pid;
 }
 
+/****** uti/stdio/sge_peopen() ************************************************
+*  NAME
+*     sge_peopen_r() -- Advanced popen()
+*
+*  SYNOPSIS
+*     pid_t sge_peopen_r(const char *shell, int login_shell,
+*                        const char *command, const char *user,
+*                        char **env, FILE **fp_in, FILE **fp_out,
+*                        FILE **fp_err)
+*
+*  FUNCTION
+*     Advanced popen() with additional parameters:
+*        - free shell usage
+*        - login shell if wanted
+*        - user under which to start (for root only)
+*        - stdin and stderr file pointers
+*        - wait for exactly the process we started
+*     File descriptors have to be closed with sge_peclose().
+*
+*     This function is reentrant as long as env is not provided to
+*     this function. This means that the function can be used in 
+*     multi thread processed as long as env is not used. 
+*
+*  INPUTS
+*     const char *shell   - which shell to use
+*     int login_shell     - make it a login shell?
+*     const char *command - name of the program
+*     const char *user    - user under which to start (for root only)
+*     char **env          - env variables to add to child
+*     FILE **fp_in        - file input stream
+*     FILE **fp_out       - file output stream
+*     FILE **fp_err       - file error stream
+*
+*  RESULT
+*     pid_t - process id
+*
+*  NOTES
+*     MT-NOTE: sge_peopen() is MT safe 
+*
+*     DO NOT ADD ASYNC SIGNAL UNSAFE FUNCTIONS BETWEEN FORK AND EXEC
+*     DUE TO THE FACT THAT THIS FUNCTION WILL BE USED IN QMASTER
+*     (MULTITHREADED ENVIRONMENT) THIS MIGHT CAUSE A DEADLOCK 
+*     IN A MASTER THREAD. 
+*
+*  SEE ALSO
+*     uti/stdio/sge_peclose()
+******************************************************************************/ 
 pid_t sge_peopen_r(const char *shell, int login_shell, const char *command,
                    const char *user, char **env,  FILE **fp_in, FILE **fp_out,
                    FILE **fp_err, bool null_stderr)
 {
-   static pid_t pid;
+   pid_t pid;
    int pipefds[3][2];
    int i;
    char arg0[256];

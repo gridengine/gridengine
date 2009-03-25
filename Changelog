@@ -1,3 +1,7 @@
+EB-2009-03-25-1: Cleanup.:    made local variable in sge_peopen* non-static
+                              and added code comments
+                 Review:      JG
+
 EB-2009-03-25-0: Enhancemn.:  Added example section to jsv_script_functions
                               man page
                  Review:      CR

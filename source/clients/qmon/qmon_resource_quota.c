@@ -56,7 +56,6 @@
 #include "spool/flatfile/sge_flatfile_obj.h"
 #include "msg_common.h"
 #include "msg_utilib.h"
-
 #include "gdi/sge_gdi_ctx.h"
 
 extern sge_gdi_ctx_class_t *ctx;
@@ -193,15 +192,21 @@ static void qmonRQSGetText(Widget tw, lList *rqs_list, lList **alpp)
    size_t len = 0;
    bool ret = false;
    bool ignore_unchanged_message = false;
+   dstring sge_tmpnam_error = DSTRING_INIT;
 
    DENTER(GUI_LAYER, "qmonRQSGetText");
 
-   if (sge_tmpnam(filename) == NULL) {
-      answer_list_add(alpp, MSG_POINTER_NULLPARAMETER,
-                         STATUS_ERROR1, ANSWER_QUALITY_ERROR);
+   if (sge_tmpnam(filename, &sge_tmpnam_error) == NULL) {
+      if (sge_dstring_get_string(&sge_tmpnam_error) != NULL) {
+         answer_list_add(alpp, sge_dstring_get_string(&sge_tmpnam_error), STATUS_ERROR1, ANSWER_QUALITY_ERROR);
+      } else {
+         answer_list_add(alpp, MSG_POINTER_NULLPARAMETER, STATUS_ERROR1, ANSWER_QUALITY_ERROR);
+      }
+      sge_dstring_free(&sge_tmpnam_error);
       DEXIT;
       return;
    }
+   sge_dstring_free(&sge_tmpnam_error);
 
    /*
    ** allocates a string

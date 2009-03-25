@@ -654,7 +654,7 @@ sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
    /* 
     * consistency check of received data:
     *    - is the packet id the same
-    *    - does it contain the same ammount of tasks
+    *    - does it contain the same amount of tasks
     *    - is the task sequence and the task id of each received task the same
     */
    if (ret) {

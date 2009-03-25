@@ -13,9 +13,6 @@
 #include <sys/time.h>
 
 #include <netinet/in.h>
-#include <arpa/inet.h>
-
-#include <limits.h>
 
 #ifdef USE_POLL
  #include <sys/poll.h>
@@ -24,9 +21,7 @@
 #include "cl_tcp_framework.h"
 #include "cl_communication.h"
 #include "cl_commlib.h"
-#include "cl_message_list.h"
 #include "cl_connection_list.h"
-#include "cl_util.h"
 #include "msg_commlib.h"
 #include "sge_unistd.h"
 #include "sge_os.h"

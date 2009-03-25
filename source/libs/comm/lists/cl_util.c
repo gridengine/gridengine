@@ -33,9 +33,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <limits.h>
 
-#include "basis_types.h"
 #include "cl_util.h"
 #include "cl_errors.h"
 
@@ -132,7 +130,7 @@ int cl_util_get_ascii_hex_buffer(unsigned char* buffer, unsigned long buf_len, c
       asc_buffer[asc_buffer_index++] = cl_util_get_ascii_hex_char( (buffer[buffer_index] & 0xf0) >> 4 );
       asc_buffer[asc_buffer_index++] = cl_util_get_ascii_hex_char( (buffer[buffer_index] & 0x0f) );
       if (separator != NULL && (buffer_index + 1) < buf_len) {
-         strcpy(&asc_buffer[asc_buffer_index], separator);
+         strncpy(&asc_buffer[asc_buffer_index], separator, sep_length);
          asc_buffer_index += sep_length;
       }
    }

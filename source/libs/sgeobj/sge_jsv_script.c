@@ -2109,7 +2109,8 @@ jsv_do_communication(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answer_li
        * to JSV but the initialization code might also cause errors....
        */
       while (fscanf(lGetRef(jsv, JSV_err), "%[^\n]\n", input) == 1) {
-         ERROR((SGE_EVENT, MSG_JSV_LOGMSG_S, input));  
+         ERROR((SGE_EVENT, MSG_JSV_LOGMSG_S, input));
+         answer_list_add_sprintf(answer_list, STATUS_DENIED, ANSWER_QUALITY_ERROR, SGE_EVENT);
          ret = false; 
       }
    }
@@ -2235,6 +2236,7 @@ jsv_do_communication(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answer_li
              */
             while (fscanf(err_stream, "%[^\n]\n", input) == 1) {
                ERROR((SGE_EVENT, MSG_JSV_LOGMSG_S, input));  
+               answer_list_add_sprintf(answer_list, STATUS_DENIED, ANSWER_QUALITY_ERROR, SGE_EVENT);
                ret = false;
             }
             if (!ret && lGetBool(jsv, JSV_done) == false) {

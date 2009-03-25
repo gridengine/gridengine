@@ -1127,7 +1127,7 @@ jsv_do_verify(sge_gdi_ctx_class_t* ctx, const char *context, lListElem **job,
             } else {
                u_long32 jid = lGetUlong(new_job, JB_job_number);
 
-               DPRINTF(("JSV rejects job"));
+               DPRINTF(("JSV rejects job\n"));
                if (jid == 0) {
                   INFO((SGE_EVENT, MSG_JSV_REJECTED_S, context));
                } else {

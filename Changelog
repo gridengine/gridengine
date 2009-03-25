@@ -1,4 +1,4 @@
-CR-2009-03-??-0: Bugfix:      o qconf -m* reports misleading error if tmp dir
+CR-2009-03-25-0: Bugfix:      o qconf -m* reports misleading error if tmp dir
                                 is not writeable for the user and need 100% cpu
                  Cleanup:     o commlib: Fixed some errors reported by lint
                  Bugster:     6819649

@@ -240,6 +240,10 @@
 #define MSG_UTI_DAEMONIZE_TIMEOUT              _MESSAGE(59144, _("daemonize error: timeout while waiting for daemonize state"))
 
 #define MSG_POINTER_INVALIDSTRTOKCALL1         _MESSAGE(49145, _("Invalid sge_strtok_r call, last is NULL"))
-                                                                                                                                                 
+#define MSG_TMPNAM_GOT_NULL_PARAMETER          _MESSAGE(59146, _("got NULL parameter for file buffer"))
+#define MSG_TMPNAM_CANNOT_GET_TMP_PATH         _MESSAGE(59147, _("can't get temporary directory path"))
+#define MSG_TMPNAM_SGE_MAX_PATH_LENGTH_US      _MESSAGE(59148, _("reached max path length of "sge_U32CFormat" bytes for file "SFQ))
+#define MSG_TMPNAM_GOT_SYSTEM_ERROR_SS         _MESSAGE(59149, _("got system error "SFQ" while checking file in "SFQ))
+
 #endif /* __MSG_UTILIB_H */
 

@@ -154,11 +154,18 @@ const lListElem *ep
    case 1:
    case 2:
       if (how==1) {
-         if (!sge_tmpnam(filename)) {
-            CRITICAL((SGE_EVENT, MSG_TMPNAM_GENERATINGTMPNAM));
+         dstring tmp_name_error = DSTRING_INIT;
+         if (sge_tmpnam(filename, &tmp_name_error) == NULL) {
+            if (sge_dstring_get_string(&tmp_name_error) != NULL) {
+               CRITICAL((SGE_EVENT, sge_dstring_get_string(&tmp_name_error)));
+            } else {
+               CRITICAL((SGE_EVENT, MSG_TMPNAM_GENERATINGTMPNAM));
+            }
+            sge_dstring_free(&tmp_name_error);
             DEXIT;
             return NULL;
          }
+         sge_dstring_free(&tmp_name_error);
       } else { 
          sprintf(filename, "%s/.%s", CAL_DIR, lGetString(ep, CAL_name));
          sprintf(real_filename, "%s/%s", CAL_DIR, lGetString(ep, CAL_name));

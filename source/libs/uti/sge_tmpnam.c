@@ -46,10 +46,10 @@
 #include "sge_string.h"
 #include "sgermon.h"
 #include "sge_unistd.h"
-
+#include "msg_utilib.h"
 
 static int elect_path(dstring *aBuffer);
-static int spawn_file(dstring *aBuffer);
+static int spawn_file(dstring *aBuffer, dstring *error_message);
 
 
 /****** uti/sge_tmpnam/sge_tmpnam() *******************************************
@@ -91,20 +91,20 @@ static int spawn_file(dstring *aBuffer);
 *  NOTE
 *     MT-NOTE: sge_tmpnam() is MT safe.
 ******************************************************************************/
-char *sge_tmpnam(char *aBuffer)
+char *sge_tmpnam(char *aBuffer, dstring *error_message)
 {
    dstring s = DSTRING_INIT;
 
-   DENTER(BASIS_LAYER, "sge_tmpnam");
+   DENTER(TOP_LAYER, "sge_tmpnam");
 
    if (aBuffer == NULL) {
-      errno = EINVAL;
+      sge_dstring_sprintf(error_message, MSG_TMPNAM_GOT_NULL_PARAMETER);
       DEXIT;
       return NULL;
    }
 
    if (elect_path(&s) < 0) {
-      errno = ENOENT;
+      sge_dstring_sprintf(error_message, MSG_TMPNAM_CANNOT_GET_TMP_PATH);
       sge_dstring_free(&s);
       DEXIT;
       return NULL;
@@ -114,15 +114,8 @@ char *sge_tmpnam(char *aBuffer)
       sge_dstring_append_char(&s, '/'); 
    }
 
-   if (spawn_file(&s) < 0) {
+   if (spawn_file(&s, error_message) < 0) {
       sge_dstring_free(&s);
-      DEXIT;
-      return NULL;
-   }
-
-   if (sge_dstring_strlen(&s) > (SGE_PATH_MAX - 1)) {
-      sge_dstring_free(&s);
-      errno = ENAMETOOLONG;
       DEXIT;
       return NULL;
    }
@@ -155,53 +148,47 @@ static int elect_path(dstring *aBuffer)
 }
 
 
-/*
- * NOTE: If the size of SUFFIX_LEN is increased on 32-bit architectures, the
- *       generated filename will contain the same characters after the current
- *       SUFFIX_LEN position (pid-123456XX - XX will be the same for a suffix 
- *       length of 8).
- *
- *       The reason for this is, that the value of 'v' in the inner loop will
- *       become 0 after the sixth iteration and reamin constant on a 32-bit
- *       architectures. Thus, the same element of POOL_SIZE will be referenced
- *       for the following iterations.
- */
-static int spawn_file(dstring *aBuffer)
-{
-   static const char pool[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-   static const int POOL_SIZE = 62;
-   static const int DELTA = 7575;
-   static const int SUFFIX_LEN = 6;
-   static unsigned long val; /* no need to synchronize */
-   struct timeval tv;
-   int i, j, fd;
-   unsigned long rand;
-   dstring s = DSTRING_INIT;
-   unsigned int trails = POOL_SIZE * POOL_SIZE * POOL_SIZE * POOL_SIZE;  /* try POOL_SIZE**4 times */
+static int spawn_file(dstring *aBuffer, dstring *error_message) {
+   int my_errno;
+   char* mktemp_return = NULL;
+   char tmp_file_string[256];
+   char tmp_string[SGE_PATH_MAX];
 
-   gettimeofday(&tv, NULL);
-   rand = ((unsigned long)tv.tv_usec << 16) ^ tv.tv_sec;
-   val += rand ^ getpid();
+   /*
+    * generate template filename for mktemp()
+    */   
+   snprintf(tmp_file_string, 256, "pid-%u-XXXXXX", (unsigned int)getpid()); 
 
-   sge_dstring_sprintf(&s, "%u-", (unsigned int)getpid());
-
-   for (i = 0; i < trails; val += DELTA, i++) {
-      unsigned long v = val;
-
-      for (j = 0; j < SUFFIX_LEN; v /= POOL_SIZE, j++) {
-         sge_dstring_append_char(&s, pool[v % POOL_SIZE]);
-      }
-
-      sge_dstring_append_dstring(aBuffer, &s);
-      fd = SGE_OPEN3(sge_dstring_get_string(aBuffer), O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
-      if (fd >= 0) {
-         close(fd);
-         break;
-      }
-      sge_dstring_clear(&s); /* no luck, need another name */
+   /*
+    * check final length of path
+    */
+   if (sge_dstring_strlen(aBuffer) + strlen(tmp_file_string) >= SGE_PATH_MAX) {
+      sge_dstring_append(aBuffer, tmp_file_string);
+      sge_dstring_sprintf(error_message, MSG_TMPNAM_SGE_MAX_PATH_LENGTH_US,
+                          sge_u32c(SGE_PATH_MAX), sge_dstring_get_string(aBuffer));
+      return -1;
    }
-   
-   sge_dstring_free(&s);
-   return (fd >= 0) ? 0 : -1 ;
-}
 
+   /*
+    * now build full path string for mktemp()
+    */
+   snprintf(tmp_string, SGE_PATH_MAX, "%s%s", sge_dstring_get_string(aBuffer), tmp_file_string);
+
+   /*
+    * generate temp file by call to mktemp()
+    */
+   errno = 0;
+   mktemp_return = mktemp(tmp_string);
+   my_errno = errno;
+   if (mktemp_return[0] == '\0') {
+      sge_dstring_sprintf(error_message, MSG_TMPNAM_GOT_SYSTEM_ERROR_SS, 
+                                strerror(my_errno), sge_dstring_get_string(aBuffer));
+      return -1;
+   }
+
+   /*
+    * finally copy the resulting path to aBuffer
+    */
+   sge_dstring_sprintf(aBuffer, tmp_string);
+   return 0;
+}

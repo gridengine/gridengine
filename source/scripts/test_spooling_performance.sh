@@ -32,10 +32,60 @@
 ##########################################################################
 #___INFO__MARK_END__
 
+#___CREATEDIST_MARK_START
+README=" \n\
+This standalone test uses the SGEs spooling frameworks to measure the performance \n\
+of the target filesystem. \n\
+\n\
+By default the test uses the classic and BerkeleyDB framework to: \n\
+  - generate 30000 jobs in memory \n\
+  - write all jobs to disk \n\
+  - read all jobs from disk \n\
+  - remove all jobs from disk \n\
+\n\
+For every run the wallclock times of every operation gets reported plus the \n\
+wallclock time for the whole test run. At the end of every spooling method test \n\
+the min and average wallclock time is computed and reported. \n\
+\n\
+A sample output looks like: \n\
+\n\
+   #./test_spooling_performance.sh -noclassic -r 3 /export/home/tmp/ \n\
+   spooling in /export/home/testsuite/ \n\
+   \n\
+   SKIPPING CLASSIC SPOOLING TEST on sol-sparc64 \n\
+   \n\
+   STARTING BDB SPOOLING TEST on sol-sparc64 \n\
+   generating jobs took       2.840 \n\
+   spooling jobs took         19.920 \n\
+   reading jobs took          3.590 \n\
+   deleting jobs took         17.880 \n\
+   ------------------------------------- \n\
+   Wallclock time of run 1 is 44.230 s \n\
+    \n\
+   generating jobs took       2.810 \n\
+   spooling jobs took         19.720 \n\
+   reading jobs took          3.310 \n\
+   deleting jobs took         18.650 \n\
+   ------------------------------------- \n\
+   Wallclock time of run 2 is 44.490 s \n\
+    \n\
+   generating jobs took       2.820 \n\
+   spooling jobs took         19.640 \n\
+   reading jobs took          3.990 \n\
+   deleting jobs took         18.720 \n\
+   ------------------------------------- \n\
+   Wallclock time of run 3 is 45.170 s \n\
+   \n\
+   Min is 44.230 s, Average is 44.630 s \n
+"
+createdist=false
+#___CREATEDIST_MARK_END
+
 SPOOLDIR=""
 ARCH=""
-createdist=false
-runs=5
+testclassic=true
+testbdb=true
+runs=1
 
 SHARED_LIBRARIES="libspoolc libspoolb"
 BERKELEYDB_SHARED_LIBRARIES="libdb-4.4"
@@ -87,13 +137,13 @@ ParseOutputExtensive()
       if [ "$search" != "" ]; then
          time=`echo $line | awk '{ print $7 }' | tr -s 's' ' ' | tr -s ',' ' '`
          if [ $j -eq 0 ]; then
-            echo "generating jobs took $time"
+            echo "generating jobs took       $time"
          elif [ $j -eq 1 ]; then
-            echo "spooling jobs took $time"
+            echo "spooling jobs took         $time"
          elif [ $j -eq 2 ]; then
-            echo "reading jobs took $time"
+            echo "reading jobs took          $time"
          elif [ $j -eq 3 ]; then
-            echo "deleting jobs took $time"
+            echo "deleting jobs took         $time"
          fi
          j=`expr $j + 1`
       fi
@@ -164,7 +214,10 @@ fi
 # command line parsing
 #
 if  [ $# -eq 0 ]; then
-   echo "Usage: test_spooling_performance.sh directory_to_spool"
+   echo "Usage: test_spooling_performance.sh [-opts] directory_to_spool"
+   echo "       \"-noclassic\"                   = skip classic spooling test"
+   echo "       \"-nobdb\"                       = skip bdb spooling test"
+   echo "       \"-r runs\"                      = number of iterations per spooling method, default is 1"
    echo "       \"directory_to_spool\"           = directory used to perform the tests"
 
    exit 1
@@ -172,6 +225,7 @@ fi
 
 while [ $# -ge 1 ]; do
    case "$1" in
+#___CREATEDIST_MARK_START
    -createdist)
       createdist=true
       # Parse path where to install
@@ -191,6 +245,17 @@ while [ $# -ge 1 ]; do
          shift
       done
       ;;
+#___CREATEDIST_MARK_END
+   -r)
+      shift
+      runs=$1
+      ;;
+   -noclassic)
+      testclassic=false
+      ;;
+   -nobdb)
+      testbdb=false
+      ;;
    *)
       SPOOLDIR="$1"
       ;;
@@ -200,6 +265,7 @@ while [ $# -ge 1 ]; do
    fi
 done
 
+#___CREATEDIST_MARK_START
 if [ $createdist = true ]; then
 
    for i in $ARCH; do
@@ -212,8 +278,11 @@ if [ $createdist = true ]; then
       Execute cp dist/util/arch.dist $SPOOLDIR/util/arch
 
       # Install this script
-      # TODO sed to have a stand alone script
-      Execute cp scripts/test_spooling_performance.sh $SPOOLDIR/
+      sed '/\_\_\_CREATEDIST_MARK_START/,/\_\_\_CREATEDIST_MARK_END/d' scripts/test_spooling_performance.sh > $SPOOLDIR/test_spooling_performance.sh
+      Execute chmod 755 $SPOOLDIR/test_spooling_performance.sh
+      
+      # Add README
+      Execute echo $README > $SPOOLDIR/README
 
       if [ $ARCHBIN != undefined ]; then
          cd $ARCHBIN
@@ -268,6 +337,7 @@ if [ $createdist = true ]; then
       fi
    done
 else
+#___CREATEDIST_MARK_END
    echo "spooling in $SPOOLDIR"
    if [ ! -d $SPOOLDIR ]; then
       echo "$SPOOLDIR does not exists"
@@ -286,64 +356,86 @@ else
       BDBLIB=${BERKELEYDBBASE}/${ARCH}/lib
    fi
 
-   # test classic spooling
+
    echo 
-   echo "STARTING CLASSIC SPOOLING TEST on $ARCH"
+   if [ $testclassic = "false" ]; then
+      echo "SKIPPING CLASSIC SPOOLING TEST on $ARCH"
+   elif [ -s ${SPOOLDIR}/classic ]; then
+      echo "SKIPPING CLASSIC SPOOLING TEST on $ARCH because $SPOOLDIR/classic already exists"
+   else
+      MIN="99999999"
+      echo "STARTING CLASSIC SPOOLING TEST on $ARCH"
 
-   rm -rf ${SPOOLDIR}/classic
-   mkdir ${SPOOLDIR}/classic
-   mkdir ${SPOOLDIR}/classic/cell
-   mkdir ${SPOOLDIR}/classic/spool
+      rm -rf ${SPOOLDIR}/classic
+      mkdir ${SPOOLDIR}/classic
+      mkdir ${SPOOLDIR}/classic/cell
+      mkdir ${SPOOLDIR}/classic/spool
 
-   LD_LIBRARY_PATH=${ARCHLIB}
-   export LD_LIBRARY_PATH
+      LD_LIBRARY_PATH=${ARCHLIB}
+      export LD_LIBRARY_PATH
 
-   ${ARCHBIN}/spoolinit classic libspoolc "${SPOOLDIR}/classic/cell;${SPOOLDIR}/classic/spool" init
+      ${ARCHBIN}/spoolinit classic libspoolc "${SPOOLDIR}/classic/cell;${SPOOLDIR}/classic/spool" init
 
-   i=1
-   WCSUM=0
-   while [ $i -le $runs ]; do
-      ${ARCHBIN}/test_performance classic libspoolc "${SPOOLDIR}/classic/cell;${SPOOLDIR}/classic/spool" > ${SPOOLDIR}/tmp_output.txt 2>&1
-      ParseOutputExtensive
-      WCTIME=`ParseOutput`
-      echo "Wallclock time of run $i is $WCTIME s"
-      WCSUM=`echo $WCSUM + $WCTIME | bc`
-      i=`expr $i + 1`
-   done
-   AVG=`echo "scale=3; $WCSUM / $runs" | bc`
-   echo "Average is $AVG s"
+      i=1
+      WCSUM=0
+      while [ $i -le $runs ]; do
+         ${ARCHBIN}/test_performance classic libspoolc "${SPOOLDIR}/classic/cell;${SPOOLDIR}/classic/spool" > ${SPOOLDIR}/tmp_output.txt 2>&1
+         ParseOutputExtensive
+         WCTIME=`ParseOutput`
+         echo "-------------------------------------"
+         echo "Wallclock time of run $i is $WCTIME s"
+         echo
+         WCSUM=`echo $WCSUM + $WCTIME | bc`
+         MIN_RESULT=`echo "if ($WCTIME < $MIN) 1"|bc`
+         if [ "$MIN_RESULT" != "" ]; then
+            MIN=$WCTIME
+         fi 
+         i=`expr $i + 1`
+      done
+      AVG=`echo "scale=3; $WCSUM / $runs" | bc`
+      echo "Min is ${MIN} s, Average is ${AVG} s"
 
-   rm -rf ${SPOOLDIR}/classic
+      rm -rf ${SPOOLDIR}/classic
+   fi
 
-   # test berkeleydb spooling
    echo 
-   echo "STARTING BDB SPOOLING TEST on $ARCH"
+   if [ $testbdb = "false" ]; then
+      echo "SKIPPING BDB SPOOLING TEST on $ARCH"
+   elif [ -s ${SPOOLDIR}/bdb ]; then
+      echo "SKIPPING BDB SPOOLING TEST on $ARCH because $SPOOLDIR/bdb already exists"
+   else
+      MIN="99999999"
+      echo "STARTING BDB SPOOLING TEST on $ARCH"
 
-   rm -rf ${SPOOLDIR}/bdb
-   mkdir ${SPOOLDIR}/bdb
+      rm -rf ${SPOOLDIR}/bdb
+      mkdir ${SPOOLDIR}/bdb
 
-   LD_LIBRARY_PATH="${ARCHLIB}:$BDBLIB"
-   export LD_LIBRARY_PATH
+      LD_LIBRARY_PATH="${ARCHLIB}:$BDBLIB"
+      export LD_LIBRARY_PATH
 
-   ${ARCHBIN}/spoolinit berkeleydb libspoolb ${SPOOLDIR}/bdb init
+      ${ARCHBIN}/spoolinit berkeleydb libspoolb ${SPOOLDIR}/bdb init
 
-   i=1
-   WCSUM=0
-   while [ $i -le $runs ]; do
-      ${ARCHBIN}/test_performance berkeleydb libspoolb ${SPOOLDIR}/bdb  > ${SPOOLDIR}/tmp_output.txt 2>&1
-      ParseOutputExtensive
-      WCTIME=`ParseOutput`
-      echo "Wallclock time of run $i is $WCTIME s"
-      WCSUM=`echo $WCSUM + $WCTIME | bc`
-      i=`expr $i + 1`
-   done
-   AVG=`echo "scale=3; $WCSUM / $runs" | bc`
-   echo "Average is $AVG s"
+      i=1
+      WCSUM=0
+      while [ $i -le $runs ]; do
+         ${ARCHBIN}/test_performance berkeleydb libspoolb ${SPOOLDIR}/bdb  > ${SPOOLDIR}/tmp_output.txt 2>&1
+         ParseOutputExtensive
+         WCTIME=`ParseOutput`
+         echo "-------------------------------------"
+         echo "Wallclock time of run $i is $WCTIME s"
+         echo 
+         WCSUM=`echo $WCSUM + $WCTIME | bc`
+         MIN_RESULT=`echo "if ($WCTIME < $MIN) 1"|bc`
+         if [ "$MIN_RESULT" != "" ]; then
+            MIN=$WCTIME
+         fi 
+         i=`expr $i + 1`
+      done
+      AVG=`echo "scale=3; $WCSUM / $runs" | bc`
+      echo "Min is ${MIN} s, Average is ${AVG} s"
 
-   rm -rf ${SPOOLDIR}/bdb
+      rm -rf ${SPOOLDIR}/bdb
+   fi
+#___CREATEDIST_MARK_START
 fi
-
-
-
-
-
+#___CREATEDIST_MARK_END

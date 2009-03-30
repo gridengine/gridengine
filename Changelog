@@ -1,3 +1,9 @@
+CR-2009-03-30-0: Bugfix:      qmaster csp installation fails when using port
+                              from /etc/services 
+                 Bugster:     6784919
+                 Issue:       2833
+                 Review:      MD
+
 RD-2009-03-26-0: Enhancem.:   improved test_spooling_performance.sh
                  Review:      AS
 

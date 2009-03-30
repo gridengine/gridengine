@@ -2184,16 +2184,18 @@ CreateSGEStartUpScripts()
          Execute sed -e "s/=GENSGE_QMASTER_PORT/=$SGE_QMASTER_PORT/" \
                      ${TMP_SGE_STARTUP_FILE}.0 > $TMP_SGE_STARTUP_FILE.1
       else
-         Execute sed -e "/GENSGE_QMASTER_PORT/d" \
-                     ${TMP_SGE_STARTUP_FILE}.0 > $TMP_SGE_STARTUP_FILE.1
+         # ATTENTION: No line break for this eval call here !!!
+         sed_param="s/^.*GENSGE_QMASTER_PORT.*SGE_QMASTER_PORT/unset SGE_QMASTER_PORT/"
+         ExecuteEval 'sed -e "$sed_param" ${TMP_SGE_STARTUP_FILE}.0 > $TMP_SGE_STARTUP_FILE.1'
       fi
 
       if [ "$SGE_EXECD_PORT" != "" -a "$execd_service" != "true" ]; then
          Execute sed -e "s/=GENSGE_EXECD_PORT/=$SGE_EXECD_PORT/" \
                      ${TMP_SGE_STARTUP_FILE}.1 > $TMP_SGE_STARTUP_FILE
       else
-         Execute sed -e "/GENSGE_EXECD_PORT/d" \
-                     ${TMP_SGE_STARTUP_FILE}.1 > $TMP_SGE_STARTUP_FILE
+         # ATTENTION: No line break for this eval call here !!!
+         sed_param="s/^.*GENSGE_EXECD_PORT.*SGE_EXECD_PORT/unset SGE_EXECD_PORT/"
+         ExecuteEval 'sed -e "$sed_param" ${TMP_SGE_STARTUP_FILE}.1 > $TMP_SGE_STARTUP_FILE'
       fi
       Execute $CHMOD 666 $TMP_SGE_STARTUP_FILE
       ExecuteAsAdmin $CP $TMP_SGE_STARTUP_FILE $SGE_STARTUP_FILE

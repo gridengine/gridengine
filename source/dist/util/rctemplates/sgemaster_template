@@ -296,11 +296,13 @@ CheckRunningQmaster()
    loop=0
 
    if [ "$SGE_QMASTER_PORT" = "" ]; then
-      SGE_QMASTER_PORT=`$utilbin_dir/getservbyname -number sge_qmaster`
+      ping_port=`$utilbin_dir/getservbyname -number sge_qmaster`
+   else
+      ping_port=$SGE_QMASTER_PORT
    fi
 
    while [ $running = "false" -a $loop -ne 30 ]; do 
-      $bin_dir/qping -info $masterhost $SGE_QMASTER_PORT qmaster 1 > /dev/null 2>&1
+      $bin_dir/qping -info $masterhost $ping_port qmaster 1 > /dev/null 2>&1
 
       if [ "$?" = 0 ]; then
          running=true
@@ -484,8 +486,13 @@ if [ "$startup" = true ]; then
        qping_count=0
        qping_retries=10
        qping_exit_state=0
+       if [ "$SGE_QMASTER_PORT" = "" ]; then
+          ping_port=`$utilbin_dir/getservbyname -number sge_qmaster`
+       else
+          ping_port=$SGE_QMASTER_PORT
+       fi
        while [ $qping_count -lt $qping_retries ]; do
-          $bin_dir/qping -info $actual_qmaster_host $SGE_QMASTER_PORT qmaster 1  > /dev/null 2>&1
+          $bin_dir/qping -info $actual_qmaster_host $ping_port qmaster 1  > /dev/null 2>&1
           qping_exit_state=$?
           if [ $qping_exit_state -ne 0 ]; then
              break

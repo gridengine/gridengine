@@ -1,3 +1,6 @@
+LP-2009-03-30-0: Enhancem.:   DetectJvmLibrary.jar available in util
+                 Review:      AA
+
 CR-2009-03-30-0: Bugfix:      qmaster csp installation fails when using port
                               from /etc/services 
                  Bugster:     6784919

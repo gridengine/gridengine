@@ -827,6 +827,8 @@ if [ $instcommon = true ]; then
          Execute sed -e "s/#ENFORCE_SHLIBPATH#//" dist/util/rctemplates/sgebdb_template > $DEST_SGE_ROOT/util/rctemplates/sgebdb_template
          Execute sed -e "s/#ENFORCE_SHLIBPATH#//" dist/util/install_modules/inst_common.sh > $DEST_SGE_ROOT/util/install_modules/inst_common.sh
       fi
+      # DetectJvmLibrary
+      Execute cp dist/DetectJvmLibrary/build/jar/DetectJvmLibrary.jar $DEST_SGE_ROOT/util
       Cleanup util
 
       # Not available in Beta
@@ -868,6 +870,7 @@ if [ $instcommon = true ]; then
                         $DEST_SGE_ROOT/util/sgeCA/*.cnf \
                         $DEST_SGE_ROOT/util/sgeSMF/*.xml \
                         $DEST_SGE_ROOT/util/sgeSMF/sge_smf_support.sh \
+                        $DEST_SGE_ROOT/util/DetectJvmLibrary.jar \
                         $DEST_SGE_ROOT/util/resources/calendars/* \
                         $DEST_SGE_ROOT/util/resources/centry/* \
                         $DEST_SGE_ROOT/util/resources/pe/* \

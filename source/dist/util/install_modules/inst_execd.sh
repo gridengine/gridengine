@@ -250,11 +250,13 @@ CheckHostNameResolving()
    while [ $done = false ]; do
       $CLEAR
       
-      PortCollision $SGE_EXECD_SRV
-
-      $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >>"
+      # No need to check ports for shadowd installation
+      if [ "$2" != "shadowd" ]; then
+         PortCollision $SGE_EXECD_SRV
+         $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >>"
+      fi
+      
       $CLEAR
-
       $INFOTEXT -u "\nChecking hostname resolving"
 
       errmsg=""
@@ -384,6 +386,7 @@ CheckHostNameResolving()
 
 #-------------------------------------------------------------------------
 # AddLocalConfiguration_With_Qconf
+# $1 - optional to specify a shadowd to include a libjvm attribute
 #
 AddLocalConfiguration_With_Qconf()
 {
@@ -398,7 +401,7 @@ AddLocalConfiguration_With_Qconf()
       $INFOTEXT -log "\nCan't create local configuration. Can't delete file >%s<" "$TMPL"
    else
       $INFOTEXT -log "\nCreating local configuration for host >%s<" $HOST
-      PrintLocalConf 0 > $TMPL
+      PrintLocalConf 0 "$1" > $TMPL
       $SGE_BIN/qconf -sconf $HOST > /dev/null 2>&1
       if [ $? -eq 0 ]; then
          ExecuteAsAdmin $SGE_BIN/qconf -Mconf $TMPL

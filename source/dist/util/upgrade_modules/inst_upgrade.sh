@@ -54,6 +54,7 @@ WelcomeTheUserUpgrade()
    $CLEAR
 }
 
+
 #-------------------------------------------------------------------------------
 # GetBackupedAdminUser: Get admin user form the cluster configuration backup
 # TODO: Cleanup duplicit with inst_common.sh GetAdminUser()
@@ -73,30 +74,6 @@ GetBackupedAdminUser()
    fi
 }
 
-#TODO: Use it in inst_sge
-#-------------------------------------------------------------------------------
-# FileGetValue: Get values from a file for appropriate key
-#  $1 - PATH to the file
-#  $2 - key: e.g: qmaster_spool_dir | ignore_fqdn | default_domain, etc.
-FileGetValue()
-{
-   if [ $# -ne 2 ]; then
-      $INFOTEXT "Expecting 2 arguments for FileGetValue. Got %s." $#
-      exit 1
-   fi
-   if [ ! -f "$1" ]; then
-      $INFOTEXT "No file %s found" $1
-      exit 1
-   fi
-   echo `cat $1 | grep "$2" | awk '{ print $2}' 2>/dev/null`
-}
-
-#Helper to get bootstrap file values
-#See FileGetValue
-BootstrapGetValue()
-{
-   FileGetValue "$1/bootstrap" $2
-}
 
 #-------------------------------------------------------------------------------
 # CheckUpgradeUser: Check if valid user performs the upgrade

@@ -122,7 +122,7 @@ ErrUsage()
 {
    echo "Usage: distinst [-opts] [other archs] [-- other progs]"
    echo "       -all           = all binaries + common"
-   echo "       -allall        = all binaries + common + doc + arco"
+   echo "       -allall        = all binaries + common + doc + arco + sgemacc"
    echo "       -basedir <dir> = define base directory for distribution"
    echo "       -bin           = all binaries and libraries"
    echo "       -help_arch     = show architectures table"
@@ -828,7 +828,9 @@ if [ $instcommon = true ]; then
          Execute sed -e "s/#ENFORCE_SHLIBPATH#//" dist/util/install_modules/inst_common.sh > $DEST_SGE_ROOT/util/install_modules/inst_common.sh
       fi
       # DetectJvmLibrary
-      Execute cp dist/DetectJvmLibrary/build/jar/DetectJvmLibrary.jar $DEST_SGE_ROOT/util
+      if [ -f dist/DetectJvmLibrary/build/jar/DetectJvmLibrary.jar ]; then
+         Execute cp dist/DetectJvmLibrary/build/jar/DetectJvmLibrary.jar $DEST_SGE_ROOT/util
+      fi
       Cleanup util
 
       # Not available in Beta
@@ -1263,12 +1265,14 @@ for i in $ARCH; do
                fi
                ;;
             sgemacc)
-               ( echo changing to $DEST_SGE_ROOT/bin/$DSTARCH ; \
-                 cd $DEST_SGE_ROOT/bin/$DSTARCH ; \
-                 rm sgemacc 2>&1 > /dev/null ; \
-                 echo ln -s ../sgemacc.sh sgemacc; \
-                 ln -s ../sgemacc.sh sgemacc; \
-               )
+               if [ -d "$MACC_SRC_DIR" ]; then
+                  ( echo changing to $DEST_SGE_ROOT/bin/$DSTARCH ; \
+                    cd $DEST_SGE_ROOT/bin/$DSTARCH ; \
+                    rm sgemacc 2>&1 > /dev/null ; \
+                    echo ln -s ../sgemacc.sh sgemacc; \
+                    ln -s ../sgemacc.sh sgemacc; \
+                  )
+               fi
                ;;
             *)
                InstallProg $prog

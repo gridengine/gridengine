@@ -1,3 +1,10 @@
+CR-2009-03-31-0: Bugfix:      qmaster csp installation fails when using port
+                              from /etc/services 
+                 Merged from: maintrunk (CR-2009-03-30-0)
+                 Bugster:     6784919
+                 Issue:       2833
+                 Review:      MD
+
 CR-2009-03-25-0: Bugfix:      o qconf -m* reports misleading error if tmp dir
                                 is not writeable for the user and need 100% cpu
                  Merged from: maintrunk (CR-2009-03-25-0)

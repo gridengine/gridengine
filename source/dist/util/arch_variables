@@ -44,7 +44,7 @@ ARCH=UNKNOWN
 if [ -f util/arch ]; then
    ARCH=`util/arch`
 elif [ "$SGE_ROOT" != "" -a -x $SGE_ROOT/util/arch ]; then
-      ARCH=`$SGE_ROOT/util/arch`
+   ARCH=`$SGE_ROOT/util/arch`
 else
    echo "can't find script \$SGE_ROOT/util/arch"
    exit 1
@@ -456,13 +456,33 @@ Execute()
 }
 
 #-------------------------------------------------------------------------
+# Execute eval command and exit if exit status != 0
+#
+ExecuteEval()
+{
+   if [ "$verbose" = true ]; then
+      $ECHO $*
+   fi
+   eval $*
+   if [ $? != 0 ]; then
+      $ECHO >&2
+      Translate 1 "Command failed: %s" "$*"
+      $ECHO "" >&2
+      Translate 1 "Probably a permission problem. Please check file access permissions."
+      Translate 1 "Check root read/write permission. Check if SGE daemons are running."
+      $ECHO "" >&2
+      exit 1
+   fi
+}
+
+#-------------------------------------------------------------------------
 # Execute command as user $ADMINUSER and exit if exit status != 0
 # if ADMINUSER = default then execute command unchanged
 #
 # uses binary "adminrun" form SGE distribution
 #
 # USES: variables "$verbose"    (if set to "true" print arguments)
-#                  $ADMINUSER   (if set to "default" do not use "adminrun)
+#                 "$ADMINUSER"   (if set to "default" do not use "adminrun")
 #                 "$V5UTILBIN"  (path to the binary in utilbin)
 #
 ExecuteAsAdmin()

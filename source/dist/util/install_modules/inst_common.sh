@@ -1476,27 +1476,30 @@ CreateSGEStartUpScripts()
          template="util/rctemplates/sgeexecd_template"
       fi
 
-      ExecuteAsAdmin sed -e "s%GENROOT%${SGE_ROOT_VAL}%g" \
-                            -e "s%GENCELL%${SGE_CELL_VAL}%g" \
-                            -e "/#+-#+-#+-#-/,/#-#-#-#-#-#/d" \
-                            $template > ${TMP_SGE_STARTUP_FILE}.0
+      Execute sed -e "s%GENROOT%${SGE_ROOT_VAL}%g" \
+                  -e "s%GENCELL%${SGE_CELL_VAL}%g" \
+                  -e "/#+-#+-#+-#-/,/#-#-#-#-#-#/d" \
+                  $template > ${TMP_SGE_STARTUP_FILE}.0
 
       if [ "$SGE_QMASTER_PORT" != "" ]; then
-         ExecuteAsAdmin sed -e "s/=GENSGE_QMASTER_PORT/=$SGE_QMASTER_PORT/" \
+         Execute sed -e "s/=GENSGE_QMASTER_PORT/=$SGE_QMASTER_PORT/" \
                             ${TMP_SGE_STARTUP_FILE}.0 > $TMP_SGE_STARTUP_FILE.1
       else
-         ExecuteAsAdmin sed -e "/GENSGE_QMASTER_PORT/d" \
-                            ${TMP_SGE_STARTUP_FILE}.0 > $TMP_SGE_STARTUP_FILE.1
+         # ATTENTION: No line break for this eval call here !!!
+         sed_param="s/^.*GENSGE_QMASTER_PORT.*SGE_QMASTER_PORT/unset SGE_QMASTER_PORT/"
+         ExecuteEval 'sed -e "$sed_param" ${TMP_SGE_STARTUP_FILE}.0 > $TMP_SGE_STARTUP_FILE.1'
       fi
 
       if [ "$SGE_EXECD_PORT" != "" ]; then
-         ExecuteAsAdmin sed -e "s/=GENSGE_EXECD_PORT/=$SGE_EXECD_PORT/" \
+         Execute sed -e "s/=GENSGE_EXECD_PORT/=$SGE_EXECD_PORT/" \
                             ${TMP_SGE_STARTUP_FILE}.1 > $TMP_SGE_STARTUP_FILE
       else
-         ExecuteAsAdmin sed -e "/GENSGE_EXECD_PORT/d" \
-                            ${TMP_SGE_STARTUP_FILE}.1 > $TMP_SGE_STARTUP_FILE
+         # ATTENTION: No line break for this eval call here !!!
+         sed_param="s/^.*GENSGE_EXECD_PORT.*SGE_EXECD_PORT/unset SGE_EXECD_PORT/"
+         ExecuteEval 'sed -e "$sed_param" ${TMP_SGE_STARTUP_FILE}.1 > $TMP_SGE_STARTUP_FILE'
       fi
 
+      Execute $CHMOD 666 $TMP_SGE_STARTUP_FILE
       ExecuteAsAdmin $CP $TMP_SGE_STARTUP_FILE $SGE_STARTUP_FILE
       ExecuteAsAdmin $CHMOD a+x $SGE_STARTUP_FILE
 

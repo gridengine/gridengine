@@ -60,7 +60,7 @@ public class CopyExecutableCommand extends CmdExec {
 
       public void execute() {
           try {
-            Thread.sleep(TestBedManager.getCopySleepLength());
+            Thread.sleep(TestBedManager.getInstance().getCopySleepLength());
           } catch (InterruptedException ex) {
           }
       }

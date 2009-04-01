@@ -66,7 +66,8 @@ public class TestBedManager implements Config {
     public static final String[] ARCHITECTURES = new String[] {
         "sol-amd64","sol-sparc64", "hp11", "hp11-64", "aix51", "lx24-ia64", "lx24-amd64", "darwin-ppc"
     };
-    public static final int[] RESOLVE_EXIT_VALUES = new int[]{
+
+    public static final int[] DEF_RESOLVE_EXIT_VALUES = new int[]{
         EXIT_VAL_SUCCESS, // Increase the hit ratio of Success
         EXIT_VAL_SUCCESS,
         EXIT_VAL_SUCCESS,
@@ -76,7 +77,9 @@ public class TestBedManager implements Config {
         EXIT_VAL_CMDEXEC_TERMINATED,
         EXIT_VAL_CMDEXEC_INTERRUPTED
     };
-    public static final int[] COPY_EXIT_VALUES = new int[]{
+    public static int[] RESOLVE_EXIT_VALUES = DEF_RESOLVE_EXIT_VALUES;
+
+    public static final int[] DEF_COPY_EXIT_VALUES = new int[]{
         EXIT_VAL_SUCCESS, // Increase the hit ratio of Success
         EXIT_VAL_SUCCESS,
         EXIT_VAL_SUCCESS,
@@ -88,7 +91,9 @@ public class TestBedManager implements Config {
         EXIT_VAL_CMDEXEC_MISSING_FILE,
         EXIT_VAL_CMDEXEC_INTERRUPTED
     };
-    public static final int[] GETARCHITECTURE_EXIT_VALUES = new int[]{
+    public static int[] COPY_EXIT_VALUES = DEF_COPY_EXIT_VALUES;
+
+    public static final int[] DEF_GETARCHITECTURE_EXIT_VALUES = new int[]{
         EXIT_VAL_SUCCESS, // Increase the hit ratio of Success
         EXIT_VAL_SUCCESS,
         EXIT_VAL_SUCCESS,
@@ -100,8 +105,16 @@ public class TestBedManager implements Config {
         EXIT_VAL_CMDEXEC_MISSING_FILE,
         EXIT_VAL_CMDEXEC_INTERRUPTED
     };
-    public static final int[] VALIDATION_EXIT_VALUES = new int[]{
+    public static int[] GETARCHITECTURE_EXIT_VALUES = DEF_GETARCHITECTURE_EXIT_VALUES;
+
+    public static final int[] DEF_VALIDATION_EXIT_VALUES = new int[]{
         EXIT_VAL_SUCCESS, // Increase the hit ratio of Success
+        EXIT_VAL_SUCCESS,
+        EXIT_VAL_SUCCESS,
+        EXIT_VAL_SUCCESS,
+        EXIT_VAL_SUCCESS,
+        EXIT_VAL_SUCCESS,
+        EXIT_VAL_SUCCESS,
         EXIT_VAL_SUCCESS,
         EXIT_VAL_SUCCESS,
         EXIT_VAL_SUCCESS,
@@ -131,8 +144,12 @@ public class TestBedManager implements Config {
         EXIT_VAL_CMDEXEC_MISSING_FILE,
         EXIT_VAL_CMDEXEC_INTERRUPTED
     };
-    public static final int[] INSTALLATION_EXIT_VALUES = new int[]{
+    public static int[] VALIDATION_EXIT_VALUES = DEF_VALIDATION_EXIT_VALUES;
+
+    public static final int[] DEF_INSTALLATION_EXIT_VALUES = new int[]{
         EXIT_VAL_SUCCESS, // Increase the hit ratio of Success
+        EXIT_VAL_SUCCESS,
+        EXIT_VAL_SUCCESS,
         EXIT_VAL_SUCCESS,
         EXIT_VAL_SUCCESS,
         EXIT_VAL_SUCCESS,
@@ -147,17 +164,25 @@ public class TestBedManager implements Config {
         EXIT_VAL_CMDEXEC_MISSING_FILE,
         EXIT_VAL_CMDEXEC_INTERRUPTED
     };
+    public static int[] INSTALLATION_EXIT_VALUES = DEF_INSTALLATION_EXIT_VALUES;
 
-    public static final int IP_RANGE_MIN = 0;
-    public static final int IP_RANGE_MAX = 255;
+    private static final int IP_RANGE_MIN = 0;
+    private static final int IP_RANGE_MAX = 255;
 
-    private static enum GenerationMode {
+    public static enum GenerationMode {
         ALWAYS_NEW,    // always generate new value
         ALWAYS_FIRST,  // generate only at first time then give the same value
-        SECOND_SUCCEDS // generate only at first time then give EXIT_VAL_SUCCESS
+        ALWAYS_SUCCEEDS,// always gives EXIT_VAL_SUCCESS
+        SECOND_SUCCEEDS // generate only at first time then give EXIT_VAL_SUCCESS
     }
 
-    private static final GenerationMode GENERATION_MODE = GenerationMode.SECOND_SUCCEDS;
+    public static enum RunMode {
+        NORMAL,
+        FAST
+    }
+
+    private GenerationMode generationMode = GenerationMode.SECOND_SUCCEEDS;
+    private RunMode runMode = RunMode.NORMAL;
 
     private TestBedManager() {
         ipAddresses = new ArrayList<String>();
@@ -212,6 +237,14 @@ public class TestBedManager implements Config {
         return validationMap;
     }
 
+    public void setRunMode(RunMode runMode) {
+        this.runMode = runMode;
+    }
+
+    public void setGenerationMode(GenerationMode generationMode) {
+        this.generationMode = generationMode;
+    }
+
     public String getName(String ip) {
         String name = "";
 
@@ -257,87 +290,87 @@ public class TestBedManager implements Config {
     }
 
     public int getCopyExitValue(String host) {
-        int exitValue = EXIT_VAL_SUCCESS;
+        Integer oldExitValue = copyMap.get(host);
+        int exitValue = generateCopyExitValue();
 
-        if (GENERATION_MODE != GenerationMode.ALWAYS_NEW &&
-                copyMap.containsKey(host)) {
-
-            if (GENERATION_MODE == GenerationMode.ALWAYS_FIRST) {
-                exitValue = copyMap.get(host);
+        switch (generationMode) {
+            case ALWAYS_FIRST: if (oldExitValue != null) exitValue = oldExitValue; break;
+            case ALWAYS_NEW: break;
+            case ALWAYS_SUCCEEDS: exitValue = EXIT_VAL_SUCCESS; break;
+            case SECOND_SUCCEEDS: if (oldExitValue != null) exitValue = EXIT_VAL_SUCCESS; break;
+            default: throw new UnsupportedOperationException("Unknown GenerationMode: " + generationMode);
             }
-        } else {
-            exitValue = generateCopyExitValue();
+
             copyMap.put(host, exitValue);
-        }
 
         return exitValue;
     }
 
     public int getResolveExitValue(String host) {
-        int exitValue = EXIT_VAL_SUCCESS;
+        Integer oldExitValue = resolveMap.get(host);
+        int exitValue = generateResolveExitValue();
 
-        if (GENERATION_MODE != GenerationMode.ALWAYS_NEW &&
-                resolveMap.containsKey(host)) {
-
-            if (GENERATION_MODE == GenerationMode.ALWAYS_FIRST) {
-                exitValue = resolveMap.get(host);
+        switch (generationMode) {
+            case ALWAYS_FIRST: if (oldExitValue != null) exitValue = oldExitValue; break;
+            case ALWAYS_NEW: break;
+            case ALWAYS_SUCCEEDS: exitValue = EXIT_VAL_SUCCESS; break;
+            case SECOND_SUCCEEDS: if (oldExitValue != null) exitValue = EXIT_VAL_SUCCESS; break;
+            default: throw new UnsupportedOperationException("Unknown GenerationMode: " + generationMode);
             }
-        } else {
-            exitValue = generateGetArchitectureExitValue();
+
             resolveMap.put(host, exitValue);
-        }
 
         return exitValue;
     }
 
     public int getGetArchitectureExitValue(String host) {
-        int exitValue = EXIT_VAL_SUCCESS;
+        Integer oldExitValue = getArchitectureMap.get(host);
+        int exitValue = generateGetArchitectureExitValue();
 
-        if (GENERATION_MODE != GenerationMode.ALWAYS_NEW &&
-                getArchitectureMap.containsKey(host)) {
-
-            if (GENERATION_MODE == GenerationMode.ALWAYS_FIRST) {
-                exitValue = getArchitectureMap.get(host);
+        switch (generationMode) {
+            case ALWAYS_FIRST: if (oldExitValue != null) exitValue = oldExitValue; break;
+            case ALWAYS_NEW: break;
+            case ALWAYS_SUCCEEDS: exitValue = EXIT_VAL_SUCCESS; break;
+            case SECOND_SUCCEEDS: if (oldExitValue != null) exitValue = EXIT_VAL_SUCCESS; break;
+            default: throw new UnsupportedOperationException("Unknown GenerationMode: " + generationMode);
             }
-        } else {
-            exitValue = generateGetArchitectureExitValue();
+
             getArchitectureMap.put(host, exitValue);
-        }
 
         return exitValue;
     }
 
     public int getValidationExitValue(String host) {
-        int exitValue = EXIT_VAL_SUCCESS;
+        Integer oldExitValue = validationMap.get(host);
+        int exitValue = generateValidationExitValue();
 
-        if (GENERATION_MODE != GenerationMode.ALWAYS_NEW &&
-                validationMap.containsKey(host)) {
-
-            if (GENERATION_MODE == GenerationMode.ALWAYS_FIRST) {
-                exitValue = validationMap.get(host);
+        switch (generationMode) {
+            case ALWAYS_FIRST: if (oldExitValue != null) exitValue = oldExitValue; break;
+            case ALWAYS_NEW: break;
+            case ALWAYS_SUCCEEDS: exitValue = EXIT_VAL_SUCCESS; break;
+            case SECOND_SUCCEEDS: if (oldExitValue != null) exitValue = EXIT_VAL_SUCCESS; break;
+            default: throw new UnsupportedOperationException("Unknown GenerationMode: " + generationMode);
             }
-        } else {
-            exitValue = generateValidationExitValue();
+
             validationMap.put(host, exitValue);
-        }
 
         return exitValue;
     }
 
     // TODO store component as key
     public int getInstallationExitValue(String host) {
-        int exitValue = EXIT_VAL_SUCCESS;
+        Integer oldExitValue = installationMap.get(host);
+        int exitValue = generateInstallationExitValue();
 
-        if (GENERATION_MODE != GenerationMode.ALWAYS_NEW &&
-                installationMap.containsKey(host)) {
-
-            if (GENERATION_MODE == GenerationMode.ALWAYS_FIRST) {
-                exitValue = installationMap.get(host);
+        switch (generationMode) {
+            case ALWAYS_FIRST: if (oldExitValue != null) exitValue = oldExitValue; break;
+            case ALWAYS_NEW: break;
+            case ALWAYS_SUCCEEDS: exitValue = EXIT_VAL_SUCCESS; break;
+            case SECOND_SUCCEEDS: if (oldExitValue != null) exitValue = EXIT_VAL_SUCCESS; break;
+            default: throw new UnsupportedOperationException("Unknown GenerationMode: " + generationMode);
             }
-        } else {
-            exitValue = generateInstallationExitValue();
+
             installationMap.put(host, exitValue);
-        }
 
         return exitValue;
     }
@@ -465,24 +498,44 @@ public class TestBedManager implements Config {
         return lo + i;
     }
 
-    public static long getResolveSleepLength() {
+    public long getResolveSleepLength() {
+        if (runMode == RunMode.FAST) {
+            return 100;
+        } else {
         return random(1000, 2000);
     }
-
-    public static long getGetArchitectureSleepLength() {
-        return random(1000, 2000);
     }
 
-    public static long getCopySleepLength() {
+    public long getGetArchitectureSleepLength() {
+        if (runMode == RunMode.FAST) {
+            return 100;
+        } else {
         return random(1000, 2000);
     }
+    }
 
-    public static long getValidationSleepLength() {
+    public long getCopySleepLength() {
+        if (runMode == RunMode.FAST) {
+            return 100;
+        } else {
+        return random(1000, 2000);
+    }
+    }
+
+    public long getValidationSleepLength() {
+        if (runMode == RunMode.FAST) {
+            return 100;
+        } else {
         return random(2000, 4000);
     }
+    }
 
-    public static long getInstallationSleepLength() {
+    public long getInstallationSleepLength() {
+        if (runMode == RunMode.FAST) {
+            return 100;
+        } else {
         return random(3000, 5000);
+    }
     }
 
     public static long getLSSleepLength() {

@@ -1,5 +1,5 @@
 /*
- * $Id: InstallerFrame.java,v 1.1 2009/03/04 17:13:53 zsiga Exp $
+ * $Id: InstallerFrame.java,v 1.2 2009/04/01 14:41:07 zsiga Exp $
  * IzPack - Copyright 2001-2008 Julien Ponge, All Rights Reserved.
  * 
  * http://izpack.org/
@@ -165,7 +165,7 @@ public class InstallerFrame extends JFrame
     /**
      * conditions
      */
-    protected RulesEngine rules;
+    protected static RulesEngine rules;
 
     /**
      * Resource name of the conditions specification
@@ -1855,6 +1855,14 @@ public class InstallerFrame extends JFrame
         }
     }
 
+    public void navigate(int lastPanel, int nextPanel) {
+        // We try to show the previous panel that we can.
+        installdata.curPanelNumber = nextPanel;
+        switchPanel(lastPanel);
+
+        HelpFrame.getHelpFrame(this, installdata).setHelpPage(nextPanel);
+    }
+
     public void showHelp() {
         if (helpButton.isEnabled()) {
             showHelp(installdata.curPanelNumber);
@@ -2382,9 +2390,9 @@ public class InstallerFrame extends JFrame
     /**
      * @return the rules
      */
-    public RulesEngine getRules()
+    public static RulesEngine getRules()
     {
-        return this.rules;
+        return InstallerFrame.rules;
     }
 
     /**
@@ -2392,6 +2400,6 @@ public class InstallerFrame extends JFrame
      */
     public void setRules(RulesEngine rules)
     {
-        this.rules = rules;
+        InstallerFrame.rules = rules;
     }
 }

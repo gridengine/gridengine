@@ -30,7 +30,6 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.installer.gui;
 
-import com.izforge.izpack.installer.AutomatedInstallData;
 import com.sun.grid.installer.gui.Host.State;
 import com.sun.grid.installer.task.ThreadPoolObserver.ThreadPoolEvent;
 import com.sun.grid.installer.task.TestableTask;
@@ -40,7 +39,6 @@ import com.sun.grid.installer.task.InstallTask;
 import com.izforge.izpack.installer.InstallData;
 import com.izforge.izpack.installer.InstallerFrame;
 import com.izforge.izpack.installer.IzPanel;
-import com.izforge.izpack.installer.PanelAutomation;
 import com.izforge.izpack.util.Debug;
 import com.izforge.izpack.util.VariableSubstitutor;
 import com.sun.grid.installer.task.TaskHandler;
@@ -48,6 +46,7 @@ import com.sun.grid.installer.task.TaskThreadFactory;
 import com.sun.grid.installer.task.ThreadPoolObserver;
 import com.sun.grid.installer.task.ThreadPoolObserver.ThreadPoolListener;
 import com.sun.grid.installer.util.Config;
+import com.sun.grid.installer.util.FileHandler;
 import com.sun.grid.installer.util.Util;
 
 import java.awt.Font;
@@ -61,6 +60,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -74,8 +74,9 @@ import java.util.concurrent.TimeUnit;
 import java.text.MessageFormat;
 
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Hashtable;
-import javax.swing.AbstractButton;
+import java.util.Map;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -92,33 +93,47 @@ import net.n3.nanoxml.XMLElement;
 
 public class HostPanel extends IzPanel implements Config,
                                                   ThreadPoolListener,
-                                                  TaskHandler,
-                                                  PanelAutomation {
+                                                  TaskHandler {
 
+    // Contains the removed listeners had been assigned to next button.
     private ActionListener[] nextButtonListeners = null;
 
+    // Indicate the installation setups
     private boolean isQmasterInst = true;
     private boolean isShadowdInst = true;
     private boolean isExecdInst = true;
     private boolean isBdbInst = true;
     private boolean isExpressInst = true;
-    private boolean advancedMode = true;
+
+//    private boolean advancedMode = true;
+    // Indicates whether the error label is visible
     private boolean errorMessageVisible = false;
+
+    // Indicates the actual state of the process
     public static boolean installMode, checkMode = false;
 
+    // Table column headers and their tooltips
     public static String[] SELECTION_TABS = null;
     public static String[] SELECTION_TABS_TOOLTIPS = null;
     public static String[] INSTALL_TABS = null;
     public static String[] INSTALL_TABS_TOOLTIPS = null;
     
-    private static Properties localizedMessages = new Properties();
+    private static Properties localizedMessages = null;
 
     private static List<String> additionalAdminHosts, additionalSubmitHosts;
     private Host firstTaskHost, lastTaskHost;
 
+    // Contains the tables(3) shown on the panel
     private Vector<HostTable> tables;
+
+    // Host lists(3) handeled by the tables
     private Vector<HostList> lists;
-    
+
+    // Stores all of the hosts which were attempted to be installed
+    // (stored in the success table after host validation)
+    private List<Host> validHostList;
+
+    // Thread pools and their observer for tasks
     private ThreadPoolExecutor threadPool = null;
     private ThreadPoolExecutor singleThreadPool = null;
     private ThreadPoolObserver observer = null;
@@ -131,7 +146,34 @@ public class HostPanel extends IzPanel implements Config,
         init();
     }
 
+    /**
+     * Initializes the GUI
+     */
     private void init() {
+        /**
+         * Reinit. Necessary for Start Over feature
+         */
+        removeAll();
+
+        threadPool = null;
+        singleThreadPool = null;
+        observer = null;
+
+        isQmasterInst = true;
+        isShadowdInst = true;
+        isExecdInst = true;
+        isBdbInst = true;
+        isExpressInst = true;
+//        advancedMode = true;
+        errorMessageVisible = false;
+        installMode = false;
+        checkMode = false;
+
+        localizedMessages = new Properties();
+        
+        /**
+         * Build gui
+         */
         SELECTION_TABS = new String[]{
                     getLabel("tab.all.label"),
                     getLabel("tab.reachable.label"),
@@ -160,7 +202,7 @@ public class HostPanel extends IzPanel implements Config,
         }
 
         initComponents();
-        setComponentSelectionVisible(advancedMode);
+//        setComponentSelectionVisible(advancedMode);
         
         progressBar.setVisible(false);
         progressBar.setMinimum(0);
@@ -258,9 +300,8 @@ public class HostPanel extends IzPanel implements Config,
             if (i == 1) {
                 table.getModel().addTableModelListener(new TableModelListener() {
                     public void tableChanged(TableModelEvent e) {
-                        if (((DefaultTableModel)e.getSource()).getRowCount() > 0) {
-                            enableNextButton(true);
-                        } else {
+                        // Just handle next button if the success table is empty (hosts have been removed)
+                        if (((DefaultTableModel)e.getSource()).getRowCount() == 0) {
                             enableNextButton(false);
                         }
                     }
@@ -377,7 +418,7 @@ public class HostPanel extends IzPanel implements Config,
         return list.toArray(a);
     }
 
-/** This method is called from within the constructor to
+   /** This method is called from within the constructor to
     * initialize the form.
     * WARNING: Do NOT modify this code. The content of this method is
     * always regenerated by the Form Editor.
@@ -566,7 +607,7 @@ public class HostPanel extends IzPanel implements Config,
                        .add(componentSelectionPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                        .addContainerGap(646, Short.MAX_VALUE))
                    .add(layout.createSequentialGroup()
-                       .add(statusBar, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 413, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                       .add(statusBar, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 813, Short.MAX_VALUE)
                        .addContainerGap())))
        );
        layout.setVerticalGroup(
@@ -763,7 +804,7 @@ public class HostPanel extends IzPanel implements Config,
         if (show) {
             nextButton.setText(getLabel("InstallPanel.install"));
             nextButton.setIcon(getImageIcon("install"));
-            nextButtonListeners = removeListeners(nextButton);
+            nextButtonListeners = Util.removeListeners(nextButton);
 
             nextButton.addActionListener(new java.awt.event.ActionListener() {
 
@@ -774,7 +815,7 @@ public class HostPanel extends IzPanel implements Config,
         } else {
             nextButton.setText(getLabel("installer.next"));
             nextButton.setIcon(getImageIcon("stepforward"));
-            removeListeners(nextButton);
+            Util.removeListeners(nextButton);
 
             for (int i = 0; i < nextButtonListeners.length; i++) {
                 nextButton.addActionListener(nextButtonListeners[i]);
@@ -839,21 +880,6 @@ public class HostPanel extends IzPanel implements Config,
     private synchronized void enableBrowseButtons(boolean enabled) {
         enableNextButton(enabled);
         enablePrevButton(enabled);
-    }
-
-    /**
-     * Removes the listeners from the given {@link AbstractButton}
-     * @param button The button which listeners have to be removed
-     * @return The removed listeners
-     */
-    private ActionListener[] removeListeners(AbstractButton button) {
-        ActionListener[] listeners = button.getActionListeners();
-
-        for (int i = 0; i < listeners.length; i++) {
-            button.removeActionListener(listeners[i]);
-        }
-
-        return listeners;
     }
 
     /**
@@ -1040,15 +1066,12 @@ public class HostPanel extends IzPanel implements Config,
         return SwingUtilities.computeStringWidth(metrics, columnHeader);
     }
 
-    @Override
-    public void makeXMLData(XMLElement arg0) {
-    }
-
     private void addHostsFromTF() {
         try {
             final String pattern = hostTF.getText().trim();
             Host.Type type = Util.isIpPattern(pattern) ? Host.Type.IP : Host.Type.HOSTNAME;
             List<String> list = Util.parsePattern(pattern, type);
+            Util.validateHostIDList(list, type);
             resolveHosts(type, list, qmasterCB.isSelected(), bdbCB.isSelected(), shadowCB.isSelected(), execCB.isSelected(), adminCB.isSelected(), submitCB.isSelected(), idata.getVariable(VAR_EXECD_SPOOL_DIR));
         } catch (IllegalArgumentException ex) {
             statusBar.setVisible(true);
@@ -1081,23 +1104,45 @@ public class HostPanel extends IzPanel implements Config,
         if (ret == JFileChooser.APPROVE_OPTION) {
             File f = fc.getSelectedFile();
             try {
-                // TODO improve
-                List<String> list = Util.parseFileList(f);
-                List<String> tmp = new ArrayList<String>();
-                Host.Type type = Host.Type.HOSTNAME;
-                for (String host : list) {
-                    type = Util.isIpPattern(host) ? Host.Type.IP : Host.Type.HOSTNAME; //Using last value as type
-                    //List<String> list = Util.parsePattern(host, type);
-                    tmp.add(host);
+                List<String> entryList = FileHandler.readFileContent(f.getAbsolutePath(), false);
+                List<Host> allHosts = new ArrayList<Host>(entryList.size());
+                for (String entry : entryList) {
+//                    try {
+                        List<Host> hostsPart = Host.fromStringInstance(entry);
+
+                        // if there are no arguments defined set the default values
+                        if (entry.split(Host.SEPARATOR).length == 1) {
+                            for (Host h : hostsPart) {
+                                h.setQmasterHost(qmasterCB.isSelected());
+                                h.setBdbHost(bdbCB.isSelected());
+                                h.setShadowHost(shadowCB.isSelected());
+                                h.setExecutionHost(execCB.isSelected());
+                                h.setAdminHost(adminCB.isSelected());
+                                h.setSubmitHost(submitCB.isSelected());
+
+                                h.setSpoolDir(idata.getVariable(VAR_EXECD_SPOOL_DIR));
+                            }
+                        }
+
+                        allHosts.addAll(hostsPart);
+//                    } catch (IllegalArgumentException e) {
+//                        Debug.error("Can not parse line '" + entry + "'! " + e);
+//                    }
                 }
-                resolveHosts(type, tmp, qmasterCB.isSelected(), bdbCB.isSelected(), shadowCB.isSelected(), execCB.isSelected(), adminCB.isSelected(), submitCB.isSelected(), idata.getVariable(VAR_EXECD_SPOOL_DIR));
+                
+                resolveHosts(allHosts);
+
             } catch (IllegalArgumentException ex) {
                 statusBar.setVisible(true);
                 statusBar.setText("Error: " + ex.getMessage());
                 errorMessageVisible = true;
             } catch (FileNotFoundException ex) {
                 statusBar.setVisible(true);
-                statusBar.setText("Error: " + ex.getMessage());
+                statusBar.setText("Error: cannot find file: " + f.getAbsolutePath());
+                errorMessageVisible = true;
+            } catch (IOException ex) {
+                statusBar.setVisible(true);
+                statusBar.setText("Error: cannot read file: " + f.getAbsolutePath());
                 errorMessageVisible = true;
             }
         }
@@ -1127,9 +1172,9 @@ public class HostPanel extends IzPanel implements Config,
         }
     }
 
-    private void setComponentSelectionVisible(boolean b) {
-        componentSelectionPanel.setVisible(b);
-    }
+//    private void setComponentSelectionVisible(boolean b) {
+//        componentSelectionPanel.setVisible(b);
+//    }
 
     private void addBActionPerformed(java.awt.event.ActionEvent evt) {
         buttonActionPerformed(evt);
@@ -1253,6 +1298,18 @@ public class HostPanel extends IzPanel implements Config,
                     case ThreadPoolEvent.EVENT_THREAD_POOL_FINISHED: {
                         progressBar.setVisible(false);
                         cancelB.setVisible(false);
+
+                        if (installMode) { // install
+                            //if ((tables.get(0).getRowCount() == 0)) { Not reliable!
+                                enableNextButton(true);
+                                triggerInstallButton(false);
+                            //}
+                        } else if (checkMode){ // validate
+                            // validateHostsAndInstall method takes care about
+                            // browse button handling
+                        } else if (tables.get(1).getRowCount() > 0) { // resolve
+                            enableNextButton(true);
+                        }
                         break;
                     }
                 }
@@ -1365,6 +1422,81 @@ public class HostPanel extends IzPanel implements Config,
                 idata.setVariable(VAR_QMASTER_HOST, h.getHostname());
             }
         }
+    }
+
+    /**
+     *  Sets install data variables depending on the current status of the panel.
+     *  Use before filling up the readme file.
+     */
+    private void createReport() {
+        String qmaster = "";
+        String execds  = "";
+        String shadows = "";
+        String admins  = "";
+        String submits = "";
+        String bdb     = "";
+
+        qmaster = Util.getHostNames(Util.getHosts(tables.get(1).getHostList(), Util.SgeComponents.qmaster), " ");
+        execds = Util.getHostNames(Util.getHosts(tables.get(1).getHostList(), Util.SgeComponents.execd), " ");
+        shadows = Util.getHostNames(Util.getHosts(tables.get(1).getHostList(), Util.SgeComponents.shadow), " ");
+        admins = Util.getHostNames(Util.getHosts(tables.get(1).getHostList(), Util.SgeComponents.admin), " ");
+        submits = Util.getHostNames(Util.getHosts(tables.get(1).getHostList(), Util.SgeComponents.submit), " ");
+        bdb = Util.getHostNames(Util.getHosts(tables.get(1).getHostList(), Util.SgeComponents.bdb), " ");
+
+        idata.setVariable(VAR_QMASTER_HOST, qmaster);
+        idata.setVariable(VAR_EXEC_HOST_LIST, execds);
+        idata.setVariable(VAR_SHADOW_HOST_LIST, shadows);
+        idata.setVariable(VAR_ADMIN_HOST_LIST, admins);
+        idata.setVariable(VAR_SUBMIT_HOST_LIST, submits);
+        idata.setVariable(VAR_DB_SPOOLING_SERVER, bdb);
+
+        qmaster = Util.getHostNames(Util.getHosts(tables.get(2).getHostList(), Util.SgeComponents.qmaster), " ");
+        execds = Util.getHostNames(Util.getHosts(tables.get(2).getHostList(), Util.SgeComponents.execd), " ");
+        shadows = Util.getHostNames(Util.getHosts(tables.get(2).getHostList(), Util.SgeComponents.shadow), " ");
+        admins = Util.getHostNames(Util.getHosts(tables.get(2).getHostList(), Util.SgeComponents.admin), " ");
+        submits = Util.getHostNames(Util.getHosts(tables.get(2).getHostList(), Util.SgeComponents.submit), " ");
+        bdb = Util.getHostNames(Util.getHosts(tables.get(2).getHostList(), Util.SgeComponents.bdb), " ");
+
+        idata.setVariable(VAR_QMASTER_HOST_FAILED, qmaster);
+        idata.setVariable(VAR_EXEC_HOST_LIST_FAILED, execds);
+        idata.setVariable(VAR_SHADOW_HOST_LIST_FAILED, shadows);
+        idata.setVariable(VAR_ADMIN_HOST_LIST_FAILED, admins);
+        idata.setVariable(VAR_SUBMIT_HOST_LIST_FAILED, submits);
+        idata.setVariable(VAR_DB_SPOOLING_SERVER_FAILED, bdb);
+
+        idata.setVariable("add.sge.jmx.with.ssl", Boolean.toString(isValueEqualsTrue(VAR_SGE_JMX) && isValueEqualsTrue(VAR_JMX_SSL)));
+
+        idata.setVariable("installed.solaris.smf", "false");
+        if (isValueEqualsTrue(idata.getVariable(VAR_SGE_ENABLE_SMF))) {
+            for (Host host : tables.get(1).getHostList()) {
+                if (host.getArchitecture().startsWith("sol-")) {
+                    idata.setVariable("installed.solaris.smf", "true");
+                }
+            }
+        }
+    }
+
+    /**
+     * Sets the enabled property of the host addition controls on the top
+     * @param b indicates whether the controls should be disabled.
+     */
+    private void disableControls(final boolean b) {
+        SwingUtilities.invokeLater(new Runnable() {
+
+            public void run() {
+                hostRB.setEnabled(!b);
+                hostTF.setEnabled(!b);
+                fileRB.setEnabled(!b);
+                fileB.setEnabled(!b);
+                shadowCB.setEnabled(!b);
+                execCB.setEnabled(!b);
+                adminCB.setEnabled(!b);
+                submitCB.setEnabled(!b);
+                addB.setEnabled(!b);
+                qmasterCB.setEnabled(!b);
+                bdbCB.setEnabled(!b);
+            }
+        });
     }
 
     /**
@@ -1687,8 +1819,6 @@ public class HostPanel extends IzPanel implements Config,
         threadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(Util.INSTALL_THREAD_POOL_SIZE);
         threadPool.setThreadFactory(new TaskThreadFactory());
 
-//        observer = new ThreadPoolObserver(threadPool);
-//        observer.addThreadPoolListener(this);
         observer.setThreadPoolExecutors(threadPool);
         observer.observe();
 
@@ -1788,6 +1918,8 @@ public class HostPanel extends IzPanel implements Config,
             idata.setVariable(VAR_SPOOLING_METHOD, "berkeleydb");
         }
 
+        validHostList = new ArrayList<Host>(hosts.size());
+        validHostList.addAll(hosts);
 
         //Disable the selecting host controls
         disableControls(true);
@@ -1982,15 +2114,15 @@ public class HostPanel extends IzPanel implements Config,
 
             if (enumer.hasMoreElements()) {
                 localExecdSpoolDir = enumer.nextElement();
-                idata.setVariable(VAR_EXEC_HOST_LIST, HostList.getHostNames(hostSelection.get(localExecdSpoolDir), " "));
-                idata.setVariable(VAR_EXEC_HOST_LIST_RM, HostList.getHostNames(hostSelection.get(localExecdSpoolDir), " "));
+                idata.setVariable(VAR_EXEC_HOST_LIST, Util.getHostNames(hostSelection.get(localExecdSpoolDir), " "));
+                idata.setVariable(VAR_EXEC_HOST_LIST_RM, Util.getHostNames(hostSelection.get(localExecdSpoolDir), " "));
             }
 
             // put the 
             if (!enumer.hasMoreElements()) {
-                idata.setVariable(VAR_SHADOW_HOST_LIST, HostList.getHostNames(installList.getHosts(Host.HOST_TYPE_SHADOWD), " "));
-                idata.setVariable(VAR_ADMIN_HOST_LIST, HostList.getHostNames(installList.getHosts(Host.HOST_TYPE_ADMIN), additionalAdminHosts, " "));
-                idata.setVariable(VAR_SUBMIT_HOST_LIST, HostList.getHostNames(installList.getHosts(Host.HOST_TYPE_SUBMIT), additionalSubmitHosts, " "));
+                idata.setVariable(VAR_SHADOW_HOST_LIST, Util.getHostNames(Util.getHosts(installList, Util.SgeComponents.shadow), " "));
+                idata.setVariable(VAR_ADMIN_HOST_LIST, Util.getHostNames(Util.getHosts(installList, Util.SgeComponents.admin), additionalAdminHosts, " "));
+                idata.setVariable(VAR_SUBMIT_HOST_LIST, Util.getHostNames(Util.getHosts(installList, Util.SgeComponents.submit), additionalSubmitHosts, " "));
 
                 outputFilePostfix = "";
             } else {
@@ -2083,21 +2215,6 @@ public class HostPanel extends IzPanel implements Config,
                 }
             });
 
-            // To the success panel add listener which handles install/next button
-            // visibility
-            if (i == 1) {
-                table.getModel().addTableModelListener(new TableModelListener() {
-                    public void tableChanged(TableModelEvent e) {
-                        if (((DefaultTableModel)e.getSource()).getRowCount() > 0) {
-                            enableNextButton(true);
-                            triggerInstallButton(false);
-                        } else {
-                            enableNextButton(false);
-                        }
-                    }
-                });
-            }
-
             tabbedPane.addTab(INSTALL_TABS[i] + " (" + lists.get(i).size() + ")", new JScrollPane(tables.get(i)));
             tabbedPane.setToolTipTextAt(i, INSTALL_TABS_TOOLTIPS[i]);
         }
@@ -2121,9 +2238,6 @@ public class HostPanel extends IzPanel implements Config,
         singleThreadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
         singleThreadPool.setThreadFactory(new TaskThreadFactory());
 
-        //progressTimer = new Timer("InstallTimer");
-//        observer = new ThreadPoolObserver(new ThreadPoolExecutor[]{threadPool, singleThreadPool});
-//        observer.addThreadPoolListener(this);
         observer.setThreadPoolExecutors(new ThreadPoolExecutor[]{threadPool, singleThreadPool});
         observer.setTaskCount(installList.size());
         observer.observe();
@@ -2227,29 +2341,21 @@ public class HostPanel extends IzPanel implements Config,
                         wait = false;
                         //If bdb, qmaster, prereq tasks fail => it's over!
                         if (h.getState() != Host.State.SUCCESS) {
-                            HostInstallTableModel updateModel;
-                            HostInstallTableModel installModel = (HostInstallTableModel) tables.get(0).getModel();
                             for (Host host : installList) {
-                                updateModel = (HostInstallTableModel) tables.get(2).getModel();
-                                installModel.setHostState(host, Host.State.FAILED_DEPENDENT_ON_PREVIOUS);
-                                installModel.setHostLog(host, "FAILED: " + MessageFormat.format(localizedMessages.getProperty("msg.previous.dependent.install.failed"), h.getComponentString()));
-                                installModel.removeHost(host);
-                                updateModel.addHost(host);
+                                setHostLog(host, "FAILED: " + MessageFormat.format(localizedMessages.getProperty("msg.previous.dependent.install.failed"), h.getComponentString()));
+                                setHostState(host, State.FAILED_DEPENDENT_ON_PREVIOUS);
                             }
+                            observer.setTaskCount(-1);
                             return;
                         }
                         completed++;
                     } else if (singleThreadPool.isTerminated()){
                         //There is not guarantee that the currently executing task wil lbe interrupted. It may also finish as SUCCESS or FAILED!
-                        HostInstallTableModel updateModel;
-                        HostInstallTableModel installModel = (HostInstallTableModel) tables.get(0).getModel();
                         for (Host host : installList) {
-                            updateModel = (HostInstallTableModel) tables.get(2).getModel();
-                            installModel.setHostState(host, Host.State.CANCELED);
-                            installModel.setHostLog(host, "CANCELED: " + MessageFormat.format(localizedMessages.getProperty("msg.install.canceled"), ""));
-                            installModel.removeHost(host);
-                            updateModel.addHost(host);
+                            setHostLog(host, "CANCELED: " + MessageFormat.format(localizedMessages.getProperty("msg.install.canceled"), ""));
+                            setHostState(host, State.CANCELED);
                         }
+                        observer.setTaskCount(-1);
                         return;
                     } else {
                         try {
@@ -2333,7 +2439,12 @@ public class HostPanel extends IzPanel implements Config,
                 tabbedPane.setSelectedIndex(1);
             }
 
+            // Create report for the ResultPanel
+            createReport();
+
             //Let's cleanup
+            observer.setTaskCount(-1);
+            
             try {
                 threadPool.awaitTermination(100, TimeUnit.MILLISECONDS);
                 singleThreadPool.awaitTermination(100, TimeUnit.MILLISECONDS);
@@ -2346,24 +2457,6 @@ public class HostPanel extends IzPanel implements Config,
         }
     }
 
-    private void disableControls(final boolean b) {
-        SwingUtilities.invokeLater(new Runnable() {
-
-            public void run() {
-                hostRB.setEnabled(!b);
-                hostTF.setEnabled(!b);
-                fileRB.setEnabled(!b);
-                fileB.setEnabled(!b);
-                shadowCB.setEnabled(!b);
-                execCB.setEnabled(!b);
-                adminCB.setEnabled(!b);
-                submitCB.setEnabled(!b);
-                addB.setEnabled(!b);
-                qmasterCB.setEnabled(!b);
-                bdbCB.setEnabled(!b);
-            }
-        });
-    }
     // Variables declaration - do not modify                     
     private javax.swing.JButton addB;
     private javax.swing.JCheckBox adminCB;
@@ -2386,11 +2479,17 @@ public class HostPanel extends IzPanel implements Config,
     // End of variables declaration                   
     private JTextField lastSelectedTF;
 
-    public void makeXMLData(AutomatedInstallData arg0, XMLElement arg1) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
+    /**
+     * Makes xml output from the panel's data for the automated instalaltion
+     */
+    @Override
+    public void makeXMLData(XMLElement panelRoot) {
+        Map<String, String> entryMap = new HashMap<String, String>();
 
-    public boolean runAutomated(AutomatedInstallData arg0, XMLElement arg1) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        for (Host h : validHostList) {
+            entryMap.put(h.getHostname(), h.toStringInstance());
+        }
+
+        new HostPanelAutomationHelper(entryMap).makeXMLData(idata, panelRoot);
     }
 }

@@ -191,14 +191,6 @@ public class ThreadPoolObserver {
                 } catch (InterruptedException e) {
                 }
 
-//                System.out.println("Started:"+isStarted);
-//                System.out.println("Finished:"+isFinished);
-//                System.out.println("PoolSize:"+getPoolSize());
-//                System.out.println("lastCompletedTaskCount:"+lastCompletedTaskCount);
-//                System.out.println("CompletedTaskCount:"+getCompletedTaskCount());
-//                System.out.println("lastRunCompletedTaskCount:"+lastRunCompletedTaskCount);
-//                System.out.println("TaskCount:"+getTaskCount());
-
                 // A new executable has been added to the thread pool
                 if (!isStarted && getPoolSize() > 0) {
                     isStarted = true;
@@ -218,7 +210,7 @@ public class ThreadPoolObserver {
                 }
 
                 // All of the executable has been finshed
-                if (isStarted && !isFinished && getCompletedTaskCount() == getTaskCount()) {
+                if (isStarted && !isFinished && areTasksReady()) {
                     isFinished = true;
 
                     /**
@@ -231,6 +223,14 @@ public class ThreadPoolObserver {
                     run = false;
                 }
             } while (run);
+        }
+    }
+
+    public boolean areTasksReady() {
+        if (taskCount > -1) {
+            return getCompletedTaskCount() == taskCount;
+        } else {
+            return getCompletedTaskCount() == getTaskCount();
         }
     }
 

@@ -60,9 +60,9 @@ public class RemoteComponentScriptCommand extends CmdExec {
       public void execute() {
           try {
               if (installScript.indexOf("install_component") > -1) {
-                  Thread.sleep(TestBedManager.getInstallationSleepLength());
+                  Thread.sleep(TestBedManager.getInstance().getInstallationSleepLength());
               } else if (installScript.indexOf("check_host") > -1) {
-                  Thread.sleep(TestBedManager.getValidationSleepLength());
+                  Thread.sleep(TestBedManager.getInstance().getValidationSleepLength());
               } else {
                   throw new IllegalArgumentException("Unknown script: " + installScript);
               }

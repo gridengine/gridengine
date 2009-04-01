@@ -36,6 +36,8 @@ import com.sun.grid.installer.util.Config;
 import com.sun.grid.installer.util.Util;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 public class Host implements Config {
@@ -53,6 +55,9 @@ public class Host implements Config {
     public static final String HOST_TYPE_SUBMIT  = "submit";
     public static final String HOST_TYPE_ADMIN   = "admin";
     public static final String HOST_TYPE_ALL     = "all hosts";
+
+    public static final String SEPARATOR = ",";
+    public static final String ARG_SPOOLDIR = "spooldir";
 
     static {
         try {
@@ -243,6 +248,126 @@ public class Host implements Config {
             string += " Log='" + log + "'";
         }
         return string;
+    }
+
+    /**
+     * Creates a string representation from this host instance.
+     * @return The fingerprint of this instance.
+     *
+     * @see Host#SEPARATOR
+     * @see Host#fromStringInstance(java.lang.String)
+     */
+    public String toStringInstance() {
+        String instance = "";
+
+        if (!hostname.equals("")) {
+            instance += hostname;
+        } else {
+            instance += ip;
+        }
+        instance += SEPARATOR;
+//        instance += ip;
+//        instance += SEPARATOR;
+//        instance += architecture;
+//        instance += SEPARATOR;
+        instance += ARG_SPOOLDIR + "=" + spoolDir;
+        instance += SEPARATOR;
+        if (isQmasterHost()) {
+            instance += Util.SgeComponents.qmaster + SEPARATOR;
+        }
+        if (isExecutionHost()) {
+            instance += Util.SgeComponents.execd + SEPARATOR;
+        }
+        if (isShadowHost()) {
+            instance += Util.SgeComponents.shadow + SEPARATOR;
+        }
+        if (isBdbHost()) {
+            instance += Util.SgeComponents.bdb + SEPARATOR;
+        }
+        if (isAdminHost()) {
+            instance += Util.SgeComponents.admin + SEPARATOR;
+        }
+        if (isSubmitHost()) {
+            instance += Util.SgeComponents.submit + SEPARATOR;
+        }
+
+        // Remove last separator
+        if (instance.endsWith(SEPARATOR)) {
+            instance = instance.substring(0, instance.length() - 1);
+        }
+
+        return instance;
+    }
+
+    /**
+     * Instantiates hosts from arguements. The record has to contain the host id (ip or name) at first place and may
+     * contains list of components and value of execution spool directory.
+     * @param instance the record which holds necessary arguments for the instantiation.
+     *
+     * @return list of hosts parsed from the record
+     * 
+     * @see Host#SEPARATOR
+     * @see Host#toStringInstance()
+     * @throws java.lang.IllegalArgumentException
+     */
+    public static List<Host> fromStringInstance(String instance) throws IllegalArgumentException {
+        if (instance.equals("")) {
+            throw new IllegalArgumentException("Missing fields!");
+        }
+
+        // Split up the arguments
+        String[] args = instance.split(SEPARATOR);
+
+        if (args.length > 8) {
+            throw new IllegalArgumentException("Too many arguments: " + args.length);
+        }
+
+        boolean isQmaster = false;
+        boolean isExecd = false;
+        boolean isShadow = false;
+        boolean isBDB = false;
+        boolean isAdmin = false;
+        boolean isSubmit = false;
+        String spoolDir = "";
+
+        // Create the list of ids
+        Type type = Util.isIpPattern(args[0]) ? Type.IP : Type.HOSTNAME;
+        List<String> ids = Util.parsePattern(args[0], type);
+
+        Util.validateHostIDList(ids, type);
+
+        // Read the arguments
+        String arg;
+        for (int i = 1; i < args.length; i++) {
+            arg = args[i].trim();
+
+            if (arg.equals(Util.SgeComponents.qmaster.toString())) {
+                isQmaster = true;
+            } else if (arg.equals(Util.SgeComponents.execd.toString())) {
+                isExecd = true;
+            } else if (arg.equals(Util.SgeComponents.shadow.toString())) {
+                isShadow = true;
+            } else if (arg.equals(Util.SgeComponents.bdb.toString())) {
+                isBDB = true;
+            } else if (arg.equals(Util.SgeComponents.submit.toString())) {
+                isSubmit = true;
+            } else if (arg.equals(Util.SgeComponents.admin.toString())) {
+                isAdmin = true;
+            } else if (arg.startsWith(ARG_SPOOLDIR)) {
+                if (arg.indexOf("=") > -1 && arg.indexOf("=") < arg.length()) {
+                    arg = arg.substring(arg.indexOf("=") + 1);
+                    spoolDir = arg;
+                }
+            }
+        }
+
+        // Create host instances
+        List<Host> hosts = new ArrayList<Host>(ids.size());
+        for (String id : ids) {
+            hosts.add(new Host(type, id, isQmaster, isBDB, isShadow, isExecd, isAdmin, isSubmit, spoolDir, State.NEW_UNKNOWN_HOST));
+        }
+
+        return hosts;
     }
 
     public String getSpoolDir() {

@@ -122,13 +122,14 @@ public class GetArchitectureTask extends TestableTask {
                 if (host.getArchitecture().startsWith("win") && host.getSpoolDir().equals(execd_spool_dir)) {
                     host.setSpoolDir(CONST_DEFAULT_WINDOWS_SPOOL_DIR + sge_qmaster_port);
                 }
-            } else if (exitValue == CmdExec.EXIT_VAL_CMDEXEC_MISSING_FILE) {
+            } else if (exitValue == EXIT_VAL_CMDEXEC_MISSING_FILE) {
                 state = Host.State.MISSING_FILE;
-            } else if (exitValue == CmdExec.EXIT_VAL_CMDEXEC_INTERRUPTED) {
+            } else if (exitValue == EXIT_VAL_CMDEXEC_INTERRUPTED) {
                 state = Host.State.CANCELED;
-            } else {
-                state = Host.State.UNREACHABLE;
+            } else if (exitValue == EXIT_VAL_CMDEXEC_TERMINATED) {
+                state = Host.State.OPERATION_TIMEOUT;
             }
+            
         } catch (UnknownHostException e) {
             state = Host.State.UNKNOWN_HOST;
         } catch (RejectedExecutionException e) {

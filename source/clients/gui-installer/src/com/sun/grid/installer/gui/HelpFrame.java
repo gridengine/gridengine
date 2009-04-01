@@ -41,6 +41,7 @@ import com.izforge.izpack.util.VariableSubstitutor;
 import com.sun.grid.installer.util.Config;
 import com.sun.grid.installer.util.FileHandler;
 
+import com.sun.grid.installer.util.Util;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -85,17 +86,19 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
 public class HelpFrame extends JFrame implements ActionListener, Config {
-	private static final long serialVersionUID = -852797126101349127L;
-	private JComboBox stepsComboBox = null;
-    private JEditorPane editorPane         = null;
-    private JTextField searchField           = null;
-    private JButton searchButton             = null;
+
+    private static final long serialVersionUID = -852797126101349127L;
+
+    private JComboBox stepsComboBox = null;
+    private JEditorPane editorPane = null;
+    private JTextField searchField = null;
+    private JButton searchButton = null;
 
     private InstallerFrame parent = null;
-    private InstallData idata  = null;
+    private InstallData idata = null;
 
     private static HelpFrame helpFrame = null;
-    
+
     public static URL errorPage = null;
     public static URL emptyPage = null;
 
@@ -103,12 +106,11 @@ public class HelpFrame extends JFrame implements ActionListener, Config {
     private static int DEF_HEIGH = 400;
     private static int MIN_WIDTH = 560;
     private static int MIN_HEIGH = 200;
-    
+
     private String workDir = null;
-
+    
     private String searchText = "";
-
-    private static String SEARCH_RESULT_PAGE    = "";
+    private static String SEARCH_RESULT_PAGE = "";
     private static String SEARCH_NO_RESULT_PAGE = "";
 
     /**
@@ -120,6 +122,7 @@ public class HelpFrame extends JFrame implements ActionListener, Config {
         super(parent.langpack.getString("installer.help"));
         setIconImage(parent.icons.getImageIcon("help").getImage());
         addWindowListener(new WindowAdapter() {
+
             @Override
             public void windowClosing(WindowEvent e) {
                 super.windowClosing(e);
@@ -132,12 +135,12 @@ public class HelpFrame extends JFrame implements ActionListener, Config {
 
         SEARCH_RESULT_PAGE = parent.langpack.getString("search.result.page");
         SEARCH_NO_RESULT_PAGE = parent.langpack.getString("search.noresult.page");
-        
+
         workDir = idata.getVariable(VAR_WORK_DIR);
         if (!workDir.endsWith(FileHandler.SEPARATOR)) {
-        	workDir += FileHandler.SEPARATOR;
+            workDir += FileHandler.SEPARATOR;
         }
-        
+
         errorPage = getURL(parent.langpack.getString(LANGID_HELP_ERROR_PAGE), null);
         emptyPage = getURL(parent.langpack.getString(LANGID_HELP_EMPTY_PAGE), errorPage);
 
@@ -157,11 +160,17 @@ public class HelpFrame extends JFrame implements ActionListener, Config {
         editorPane.addHyperlinkListener(new HyperlinkListener() {
             public void hyperlinkUpdate(HyperlinkEvent e) {
                 if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
+                    if (e.getURL().getProtocol().equals("http")) {
+                        if (Util.openBrowser(e.getURL().toString())) {
+                            return;
+                        }
+                    }
+
                     loadURL(e.getURL());
 
                     for (int i = 0; i < stepsComboBox.getItemCount(); i++) {
                         if (stepsComboBox.getItemAt(i) instanceof UrlItem) {
-                            UrlItem urlItem = (UrlItem)stepsComboBox.getItemAt(i);
+                            UrlItem urlItem = (UrlItem) stepsComboBox.getItemAt(i);
                             if (urlItem.url.equals(e.getURL())) {
                                 stepsComboBox.removeActionListener(HelpFrame.this);
                                 stepsComboBox.setSelectedIndex(i);
@@ -172,10 +181,12 @@ public class HelpFrame extends JFrame implements ActionListener, Config {
                 }
             }
         });
-        editorPane.addPropertyChangeListener("page", new PropertyChangeListener(){
-        	public void propertyChange(PropertyChangeEvent evt) {
-        		higlightText(searchText);
-        	}
+        
+        editorPane.addPropertyChangeListener("page", new PropertyChangeListener() {
+
+            public void propertyChange(PropertyChangeEvent evt) {
+                higlightText(searchText);
+            }
         });
         JScrollPane scrollPane = new JScrollPane(editorPane);
 
@@ -187,33 +198,38 @@ public class HelpFrame extends JFrame implements ActionListener, Config {
 //        stepsComboBox.setRenderer(new SeparatorComboBoxRenderer());
         stepsComboBox.addActionListener(this);
         stepsComboBox.setPreferredSize(new Dimension(230, 25));
-        
+
         JPanel stepsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         stepsPanel.add(stepsLabel);
         stepsPanel.add(stepsComboBox);
-        
+
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         searchField = new JTextField();
         searchField.setPreferredSize(new Dimension(150, 25));
         searchField.addKeyListener(new KeyListener() {
-			public void keyPressed(KeyEvent e) {
-				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-					search(searchField.getText());
-				}
-			}
-			public void keyReleased(KeyEvent e) {}
-			public void keyTyped(KeyEvent e) {}
-		});
+
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    search(searchField.getText());
+                }
+            }
+
+            public void keyReleased(KeyEvent e) {
+            }
+
+            public void keyTyped(KeyEvent e) {
+            }
+        });
         searchButton = ButtonFactory.createButton(parent.langpack.getString("button.search.label"), parent.icons.getImageIcon("search"), idata.buttonsHColor);
         searchButton.setToolTipText(parent.langpack.getString("button.search.tooltip"));
         searchButton.addActionListener(this);
         searchPanel.add(searchField);
         searchPanel.add(searchButton);
-        
+
         JPanel headPanel = new JPanel(new BorderLayout());
-        headPanel.add(stepsPanel,  BorderLayout.WEST);
+        headPanel.add(stepsPanel, BorderLayout.WEST);
         headPanel.add(searchPanel, BorderLayout.EAST);
-        
+
         getContentPane().add(headPanel, BorderLayout.NORTH);
         getContentPane().add(scrollPane);
 
@@ -241,21 +257,21 @@ public class HelpFrame extends JFrame implements ActionListener, Config {
      */
     public void setSteps() {
         stepsComboBox.removeActionListener(this);
-        
+
         int selectedStep = stepsComboBox.getSelectedIndex();
         stepsComboBox.removeAllItems();
-        
+
         ArrayList<UrlItem> helpUrls = getHelpUrls();
         for (int i = 0; i < helpUrls.size(); i++) {
-        	stepsComboBox.addItem(helpUrls.get(i));
-		}
-        
+            stepsComboBox.addItem(helpUrls.get(i));
+        }
+
         if (selectedStep < stepsComboBox.getItemCount() && selectedStep != -1) {
             stepsComboBox.setSelectedIndex(selectedStep);
         } else {
             stepsComboBox.setSelectedIndex(0);
         }
-        
+
         stepsComboBox.addActionListener(this);
     }
 
@@ -263,13 +279,13 @@ public class HelpFrame extends JFrame implements ActionListener, Config {
      * Loads the page into the editor pane selected in the combo box
      */
     private void loadSelectedPage() {
-    	Object selectedItem = stepsComboBox.getSelectedItem();
+        Object selectedItem = stepsComboBox.getSelectedItem();
         if (stepsComboBox.getSelectedIndex() != -1 && selectedItem instanceof UrlItem) {
-            UrlItem urlItem = (UrlItem)selectedItem;
+            UrlItem urlItem = (UrlItem) selectedItem;
             if (urlItem.url != null) {
-            	loadURL(urlItem.url);
+                loadURL(urlItem.url);
             } else {
-            	loadText(urlItem.getContent());
+                loadText(urlItem.getContent());
             }
         }
     }
@@ -301,11 +317,11 @@ public class HelpFrame extends JFrame implements ActionListener, Config {
                 UrlItem item = getHelpUrl(izPanel);
 
                 if (item != null) {
-                	helpUrls.add(item);
+                    helpUrls.add(item);
                 }
             }
         }
-        
+
         return helpUrls;
     }
 
@@ -316,12 +332,12 @@ public class HelpFrame extends JFrame implements ActionListener, Config {
      */
     private UrlItem getHelpUrl(IzPanel izPanel) {
         VariableSubstitutor vs = new VariableSubstitutor(idata.getVariables());
-        
+
         String name = izPanel.getI18nStringForClass("headline");
-        String url  = vs.substituteMultiple(izPanel.getI18nStringForClass("helppage"), null);
-        
+        String url = vs.substituteMultiple(izPanel.getI18nStringForClass("helppage"), null);
+
         if (name != null && !name.equals("") && url != null && !url.equals("")) {
-            Debug.log("Found help page: " + name + " " +url);
+            Debug.log("Found help page: " + name + " " + url);
             return new UrlItem(name, url);
         } else {
             return null;
@@ -366,7 +382,7 @@ public class HelpFrame extends JFrame implements ActionListener, Config {
                     break;
                 }
             }
-            
+
             //helpFrame.setMinimumSize(new Dimension(MIN_WIDTH, MIN_HEIGH));
         }
 
@@ -380,10 +396,10 @@ public class HelpFrame extends JFrame implements ActionListener, Config {
      */
     private static Rectangle[] getFrameOrientations(Rectangle parent) {
         return new Rectangle[]{
-            new Rectangle(parent.x + parent.width, parent.y, MIN_WIDTH, parent.height),
-            new Rectangle(parent.x - MIN_WIDTH, parent.y, MIN_WIDTH, parent.height),
-            new Rectangle(parent.x, parent.y + parent.height, parent.width, MIN_HEIGH),
-            new Rectangle(parent.x, parent.y - MIN_HEIGH, parent.width, MIN_HEIGH)};
+                    new Rectangle(parent.x + parent.width, parent.y, MIN_WIDTH, parent.height),
+                    new Rectangle(parent.x - MIN_WIDTH, parent.y, MIN_WIDTH, parent.height),
+                    new Rectangle(parent.x, parent.y + parent.height, parent.width, MIN_HEIGH),
+                    new Rectangle(parent.x, parent.y - MIN_HEIGH, parent.width, MIN_HEIGH)};
     }
 
     /**
@@ -391,7 +407,7 @@ public class HelpFrame extends JFrame implements ActionListener, Config {
      * @param content The text value has to be loaded
      */
     private void loadText(String content) {
-    	editorPane.setText(content);
+        editorPane.setText(content);
     }
 
     /**
@@ -411,9 +427,9 @@ public class HelpFrame extends JFrame implements ActionListener, Config {
      * @param textToHighlight The text to be highlighted
      */
     private void higlightText(String textToHighlight) {
-    	if (textToHighlight.equals("")) {
-    		return;
-    	}
+        if (textToHighlight.equals("")) {
+            return;
+        }
 
         // remove previous higlights
         Highlighter highlighter = editorPane.getHighlighter();
@@ -422,32 +438,32 @@ public class HelpFrame extends JFrame implements ActionListener, Config {
         // get the text desplayed on the pane
         String text = "";
         Document doc = editorPane.getDocument();
-		try {
-			text = doc.getText(0, doc.getLength()).toLowerCase();
-		} catch (BadLocationException e1) {
+        try {
+            text = doc.getText(0, doc.getLength()).toLowerCase();
+        } catch (BadLocationException e1) {
             Debug.error(e1);
-			return;
-		}
+            return;
+        }
 
         // find the indexes of the given text in the document
         ArrayList<Integer> result = indexesOf(text, textToHighlight);
 
         // set the highlights depending on the indexies has been found
         for (Iterator iter = result.iterator(); iter.hasNext();) {
-			Integer element = (Integer) iter.next();
-			try {
-				highlighter.addHighlight(element.intValue(), element.intValue() + textToHighlight.length(), new DefaultHighlighter.DefaultHighlightPainter(Color.yellow));
-			} catch (BadLocationException e) {
-				Debug.error(e);
-			}
-		}
+            Integer element = (Integer) iter.next();
+            try {
+                highlighter.addHighlight(element.intValue(), element.intValue() + textToHighlight.length(), new DefaultHighlighter.DefaultHighlightPainter(Color.yellow));
+            } catch (BadLocationException e) {
+                Debug.error(e);
+            }
+        }
     }
 
     public void actionPerformed(ActionEvent e) {
         if (e.getSource().equals(stepsComboBox)) {
-            loadSelectedPage();          
+            loadSelectedPage();
         } else if (e.getSource().equals(searchButton)) {
-        	search(searchField.getText());
+            search(searchField.getText());
         }
     }
 
@@ -456,26 +472,26 @@ public class HelpFrame extends JFrame implements ActionListener, Config {
      * @param text
      */
     private void search(String text) {
-    	if (text.equals("")) {
-    		return;
-    	}
-    	
-    	searchText = text;
+        if (text.equals("")) {
+            return;
+        }
+
+        searchText = text;
 
         // keep only those help pages which hold the search text
-    	ArrayList<UrlItem> helpUrls = getHelpUrls();
+        ArrayList<UrlItem> helpUrls = getHelpUrls();
         for (int i = helpUrls.size() - 1; i >= 0; i--) {
             if (!searchPage(helpUrls.get(i).url, text)) {
-				helpUrls.remove(i);
-			}
+                helpUrls.remove(i);
+            }
         }
 
         // create the search result page
-    	UrlItem searchUrl = new UrlItem(parent.langpack.getString("button.search.label") + "...");
-    	searchUrl.setContent(generateSearchResultPage(helpUrls));
+        UrlItem searchUrl = new UrlItem(parent.langpack.getString("button.search.label") + "...");
+        searchUrl.setContent(generateSearchResultPage(helpUrls));
 
         // refress the gui
-    	setSteps();
+        setSteps();
 //    	stepsComboBox.removeActionListener(this);
 //    	stepsComboBox.addItem(new JSeparator(JSeparator.HORIZONTAL));
 //    	stepsComboBox.addItem(searchUrl);
@@ -491,22 +507,22 @@ public class HelpFrame extends JFrame implements ActionListener, Config {
      * @return true if the page coantins the given text value, false otherwise.
      */
     private boolean searchPage(URL page, String searchText) {
-    	try {
+        try {
             // create a document instance to search only in the view
             // and to exlude the formatting texts like HTML tags
-    		HTMLEditorKit editorKit = new HTMLEditorKit();
-    		Document doc = editorKit.createDefaultDocument();
-    		doc.putProperty("IgnoreCharsetDirective", new Boolean(true));
-    		editorKit.read(page.openStream(), doc, 0);
-    		
-    		String content = doc.getText(0, doc.getLength());
-    		
-			return content.toLowerCase().indexOf(searchText.toLowerCase()) > -1;
-		} catch (Exception e) {
-			Debug.error(e);
-		}
-    	
-    	return false;
+            HTMLEditorKit editorKit = new HTMLEditorKit();
+            Document doc = editorKit.createDefaultDocument();
+            doc.putProperty("IgnoreCharsetDirective", new Boolean(true));
+            editorKit.read(page.openStream(), doc, 0);
+
+            String content = doc.getText(0, doc.getLength());
+
+            return content.toLowerCase().indexOf(searchText.toLowerCase()) > -1;
+        } catch (Exception e) {
+            Debug.error(e);
+        }
+
+        return false;
     }
 
     /**
@@ -515,15 +531,15 @@ public class HelpFrame extends JFrame implements ActionListener, Config {
      * @return The HTML formatted search result pane if urls >=1, otherwise the "No matches found" page.
      */
     private String generateSearchResultPage(ArrayList<UrlItem> urls) {
-    	String srp = "";
+        String srp = "";
 
-    	if (urls != null && urls.size() > 0) {
+        if (urls != null && urls.size() > 0) {
             // generate the HTML links
             StringBuffer sr = new StringBuffer();
-    		for (int i = 0; i < urls.size(); i++) {
-    			sr.append("<a href=\"" + urls.get(i).url + "\">" + urls.get(i).name + "</a>");
-    			sr.append("<br>");
-    		}
+            for (int i = 0; i < urls.size(); i++) {
+                sr.append("<a href=\"" + urls.get(i).url + "\">" + urls.get(i).name + "</a>");
+                sr.append("<br>");
+            }
 
             // build a Properties instance for substitution
             Properties prop = new Properties();
@@ -533,11 +549,11 @@ public class HelpFrame extends JFrame implements ActionListener, Config {
             VariableSubstitutor vs = new VariableSubstitutor(prop);
             srp = vs.substitute(SEARCH_RESULT_PAGE, null);
 
-    	} else {
-    		srp = SEARCH_NO_RESULT_PAGE;
-    	}
-    	
-    	return srp;
+        } else {
+            srp = SEARCH_NO_RESULT_PAGE;
+        }
+
+        return srp;
     }
 
     /**
@@ -546,7 +562,7 @@ public class HelpFrame extends JFrame implements ActionListener, Config {
      * @param defaultUrl The default URL instance
      * @return the new URL instance has been created. If an exception occurs during the instantiation returns with the default URL
      */
-    public static URL getURL(String url, URL defaultUrl)  {
+    public static URL getURL(String url, URL defaultUrl) {
         try {
             return new URL(url);
         } catch (MalformedURLException e) {
@@ -565,38 +581,39 @@ public class HelpFrame extends JFrame implements ActionListener, Config {
     private static ArrayList<Integer> indexesOf(String string, String textToFind) {
         ArrayList<Integer> indexes = new ArrayList<Integer>();
         int from = 0;
-        while(from < string.length()) {
-        	int index = string.indexOf(textToFind, from);
-        	if (index != -1) {
-        		indexes.add(new Integer(index));
-        		from = index +1;
-        	} else {
-        		break;
-        	}
+        while (from < string.length()) {
+            int index = string.indexOf(textToFind, from);
+            if (index != -1) {
+                indexes.add(new Integer(index));
+                from = index + 1;
+            } else {
+                break;
+            }
         }
 
         return indexes;
-	}
+    }
 
     /**
      * Class to encapsulate an URL a name and a content value.
      */
     private class UrlItem {
+
         private String name = "";
         private URL url = null;
         private String content = "";
-        
+
         public UrlItem(String name) {
             this.name = name;
         }
-        
+
         public UrlItem(String name, String url) {
             this(name, HelpFrame.getURL(url, HelpFrame.errorPage));
         }
 
         public UrlItem(String name, URL url) {
             this.name = name;
-            this.url  = url;
+            this.url = url;
         }
 
         public String getContent() {
@@ -617,13 +634,13 @@ public class HelpFrame extends JFrame implements ActionListener, Config {
             if (obj == this) {
                 return true;
             } else if (obj instanceof UrlItem) {
-                UrlItem o = (UrlItem)obj;
+                UrlItem o = (UrlItem) obj;
 
                 boolean result = true;
                 if (url != null && o.url != null) {
                     result = result && url.equals(o.url);
                 }
-                    
+
                 return result && name.equals(o.name) && content.equals(o.content);
             } else {
                 return false;
@@ -643,35 +660,36 @@ public class HelpFrame extends JFrame implements ActionListener, Config {
      * Class to render separator like combo box element
      */
     private class SeparatorComboBoxRenderer implements ListCellRenderer {
-        private JLabel label = null;
-    	
-    	public SeparatorComboBoxRenderer() {
-            label = new JLabel();
-    		label.setOpaque(true);
-    		label.setBorder(new EmptyBorder(2, 2, 2, 2));
-    	}
 
-		public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-			String text = "";
-			
-			if (value instanceof UrlItem) {
-				text = ((UrlItem)value).name;
-			} else if (value instanceof JSeparator) {
-				return (JSeparator)value;
-			}
+        private JLabel label = null;
+
+        public SeparatorComboBoxRenderer() {
+            label = new JLabel();
+            label.setOpaque(true);
+            label.setBorder(new EmptyBorder(2, 2, 2, 2));
+        }
+
+        public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+            String text = "";
+
+            if (value instanceof UrlItem) {
+                text = ((UrlItem) value).name;
+            } else if (value instanceof JSeparator) {
+                return (JSeparator) value;
+            }
 
             label.setFont(list.getFont());
-			label.setText(text);
+            label.setText(text);
 
-			if (isSelected) {
-				label.setBackground(list.getSelectionBackground());
-				label.setForeground(list.getSelectionForeground());
-			} else {
-				label.setBackground(list.getBackground());
-				label.setForeground(list.getForeground());
-			}
+            if (isSelected) {
+                label.setBackground(list.getSelectionBackground());
+                label.setForeground(list.getSelectionForeground());
+            } else {
+                label.setBackground(list.getBackground());
+                label.setForeground(list.getForeground());
+            }
 
-			return label;
+            return label;
         }
     }
 }

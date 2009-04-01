@@ -116,6 +116,13 @@ public interface Config {
     public static final String VAR_JMX_SSL_KEYSTORE = "cfg.sge.jmx.ssl.keystore";
     public static final String VAR_JMX_SSL_KEYSTORE_DEF = "add.sge.jmx.ssl.keystore.def";
     public static final String VAR_JMX_SSL_KEYSTORE_PWD = "cfg.sge.jmx.ssl.keystore.pw";
+
+    public static final String VAR_QMASTER_HOST_FAILED = "add.qmaster.host.failed";
+    public static final String VAR_EXEC_HOST_LIST_FAILED = "add.exec.host.list.failed";
+    public static final String VAR_SHADOW_HOST_LIST_FAILED = "add.shadow.host.failed";
+    public static final String VAR_DB_SPOOLING_SERVER_FAILED = "add.db.spooling.server.failed";
+    public static final String VAR_ADMIN_HOST_LIST_FAILED = "add.admin.host.list.failed";
+    public static final String VAR_SUBMIT_HOST_LIST_FAILED = "add.submit.host.list.failed";
     
     public static final String PARAMETER_1 = "param1";
     public static final String PARAMETER_2 = "param2";

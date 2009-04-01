@@ -32,7 +32,6 @@
 package com.sun.grid.installer.util;
 
 import com.sun.grid.installer.gui.Host;
-import com.sun.grid.installer.util.Util;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -476,8 +475,27 @@ public class UtilTest {
         testParseHostPattern("aaa[1-]9", Arrays.asList("aaa[1-]9"));
     }
 
+    @Test  (expected=IllegalArgumentException.class)
+    public void testParseHostPattern36() {
+        testParseHostPattern("aaa[1-9-]", Arrays.asList("aaa[1-9-]"));
+    }
+
     private void testParseHostPattern(String input, List<String> expResult) {
         System.out.println("parseHostPattern: "+input);
         assertEquals(expResult, Util.parseHostPattern(input));
+    }
+
+    @Test (expected=IllegalArgumentException.class)
+    public void testValidateHostIDList1() {
+        ArrayList<String> hostIDs = new ArrayList<String>();
+        hostIDs.add("localhost");
+        Util.validateHostIDList(hostIDs, Host.Type.HOSTNAME);
+    }
+
+    @Test (expected=IllegalArgumentException.class)
+    public void testValidateHostIDList2() {
+        ArrayList<String> hostIDs = new ArrayList<String>();
+        hostIDs.add("127.0.0.0");
+        Util.validateHostIDList(hostIDs, Host.Type.IP);
     }
 }

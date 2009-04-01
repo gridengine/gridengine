@@ -53,7 +53,7 @@ public class ResolveHostCommand extends CmdExec {
         this.host = host;
         
         try {
-            Thread.sleep(TestBedManager.getResolveSleepLength());
+            Thread.sleep(TestBedManager.getInstance().getResolveSleepLength());
         } catch (InterruptedException ex) {
         }
     }

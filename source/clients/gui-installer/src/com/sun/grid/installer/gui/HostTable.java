@@ -60,6 +60,8 @@ public class HostTable extends JTable {
         super();
 
         this.handler = handler;
+
+        initPopupMenu();
     }
 
     /**
@@ -78,7 +80,6 @@ public class HostTable extends JTable {
     @Override
     public void setModel(TableModel dataModel) {
         super.setModel(dataModel);
-        initPopupMenu();
     }
 
     /**
@@ -93,12 +94,7 @@ public class HostTable extends JTable {
      * Initializes the popup menu for the table
      */
     private void initPopupMenu() {
-        //Add popup menu to offer delete/save operations for items in the SelectionTable
-        if (this.getModel() instanceof HostSelectionTableModel) {
-            createSelectionPopupMenu(handler.getLabel("menu.title"));
-        } else if (this.getModel() instanceof HostInstallTableModel) {
-            //TODO: createInstallPopupMenu("Edit Actions");
-        }
+        createPopupMenu(handler.getLabel("menu.title"));
     }
 
     /**
@@ -150,7 +146,7 @@ public class HostTable extends JTable {
      * @param label The main label of the popup menu
      * @return The created menu
      */
-    private JPopupMenu createSelectionPopupMenu(String label) {
+    private JPopupMenu createPopupMenu(String label) {
         final JPopupMenu tableMenu = new JPopupMenu(label);
         tableMenu.setToolTipText(handler.getTooltip(label));
 
@@ -237,7 +233,9 @@ public class HostTable extends JTable {
                 Host h;
                 for (int i = selectedHostIndexes.length - 1 ; i >= 0; i--) {
                     h = hostList.get(selectedHostIndexes[i]);
-                    list.add(h.getHostname());
+                    if (!h.isFirstTask() && !h.isLastTask()) {
+                        list.add(h.toStringInstance());
+                    }
                 }
 
                 Util.saveListToFile(HostTable.this, list);
@@ -255,7 +253,9 @@ public class HostTable extends JTable {
                 HostList hostList = getHostList();
                 List<String> list = new ArrayList<String>();
                 for (Host h : hostList) {
-                    list.add(h.getHostname());
+                    if (!h.isFirstTask() && !h.isLastTask()) {
+                        list.add(h.toStringInstance());
+                    }
                 }
 
                 Util.saveListToFile(HostTable.this, list);
@@ -275,12 +275,18 @@ public class HostTable extends JTable {
                     deleteSelectionMI.setVisible(table.getSelectedRowCount() > 0);
                     saveSelectionMI.setVisible(table.getSelectedRowCount() > 0);
                     tableMenu.show(e.getComponent(), e.getX(), e.getY());
+
+                    if (HostTable.this.getModel() instanceof HostInstallTableModel) {
+                        resolveSelectionMI.setVisible(false);
+                        resolveAllMI.setVisible(false);
+                    }
                 } else {
                     tableMenu.setVisible(false);
                     super.mousePressed(e);
                 }
             }
         });
+        
         return tableMenu;
     }
 }

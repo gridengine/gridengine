@@ -58,7 +58,7 @@ public class GetArchCommand extends CmdExec {
 
     public void execute() {
         try {
-            Thread.sleep(TestBedManager.getGetArchitectureSleepLength());
+            Thread.sleep(TestBedManager.getInstance().getGetArchitectureSleepLength());
         } catch (InterruptedException ex) {
         }
     }

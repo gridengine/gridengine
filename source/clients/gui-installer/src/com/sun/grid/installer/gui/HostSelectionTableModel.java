@@ -59,6 +59,9 @@ public class HostSelectionTableModel extends SortedTableModel implements HostTab
         this.types = types;
         this.hostList = hostList;
         this.langProperies = langProperies;
+
+        qmasterHost = null;
+        bdbHost = null;
     }
 
     @Override
@@ -131,6 +134,10 @@ public class HostSelectionTableModel extends SortedTableModel implements HostTab
                         qmasterHost = null;
                     } else {
                         qmasterHost = h;
+
+                        // Qmaster is always admin and submit host
+                        h.setAdminHost(true);
+                        h.setSubmitHost(true);
                     }
                 }
                 break;
@@ -272,6 +279,10 @@ public class HostSelectionTableModel extends SortedTableModel implements HostTab
                     h.setQmasterHost(false);
                 } else {
                     qmasterHost = h;
+
+                    //Set admin/submit components by default to qmaster host
+                    h.setAdminHost(true);
+                    h.setSubmitHost(true);
                 }
             }
 

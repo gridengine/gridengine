@@ -54,9 +54,9 @@ ___INFO__MARK_END__-->
     <!--Head lines-->
     <str id="WelcomePanel.headline" txt="Welcome"/>
     <str id="PreActionPanel.headline" txt="Check prerequisites"/>
-    <str id="IntermediateActionPanel.headline" txt="Check values"/>
     <str id="UserInputPanel.headline.ComponentPanel" txt="Choose component"/>
     <str id="UserInputPanel.headline.MainPanel" txt="Main configuration"/>
+    <str id="IntermediateActionPanel.headline" txt="Check values"/>
     <str id="UserInputPanel.headline.JMXPanel" txt="JMX configuration"/>
     <str id="UserInputPanel.headline.SpoolingPanel" txt="Spooling configuration"/>
     <str id="UserInputPanel.headline.CSPPanel" txt="SSL certificate configuration"/>
@@ -119,7 +119,7 @@ ___INFO__MARK_END__-->
     <str id="state.missing_file.tooltip" txt="<html>Missing file '${cfg.sge.root}/util/arch' on remote host.</html>"/>
     <str id="state.contacting.tooltip" txt="<html>Contacting remote host...</html>"/>
     <str id="state.validating.tooltip" txt="<html>Validating configuration on remote host...</html>"/>
-    <str id="state.operation_timeout.tooltip" txt="<html>Operation took longer that a timeout value.</html>"/>
+    <str id="state.operation_timeout.tooltip" txt="<html>Operation took longer than the timeout value.</html>"/>
     <str id="state.copy_timeout_check_host.tooltip" txt="<html>Timeout while copying 'check_host' to remote host.<br>Maybe a password requested?</html>"/>
     <str id="state.copy_failed_check_host.tooltip" txt="<html>Copying file 'check_host' to remote host failed.</html>"/>
     <str id="state.ready_to_install.tooltip" txt="<html>Waiting for a slot...</html>"/>
@@ -545,9 +545,14 @@ ___INFO__MARK_END__-->
         <str id="result.info.label" txt="Read me"/>
         <str id="button.save.label" txt="Save as..."/>
         <str id="button.print.label" txt="Print"/>
+        <str id="button.startover.label" txt="Continue"/>
         <!-- Tooltips -->
-        <str id="button.save.tooltip" txt="Save as..."/>
-        <str id="button.print.tooltip" txt="Print"/>
+        <str id="button.save.tooltip" txt="<html>Save Read Me into the specified file.</html>"/>
+        <str id="button.print.tooltip" txt="<html>Print the content of Read Me.</html>"/>
+        <str id="button.startover.tooltip" txt="<html>Continue installing more hosts.</html>"/>
+        <!-- Messages -->
+        <str id="error.can.not.open.browser.message" txt="Can not open browser!"/>
+        <str id="error.can.not.open.browser.title" txt="Error!"/>
         
     <!-- Help Page -->
         <!-- Labels -->

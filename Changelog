@@ -1,4 +1,16 @@
-LP-2009-04-01-0: Reverting LP-2009-03-31-0 for TS
+ZG-2009-04-01-1: Enhancem.:   Silent installation
+                 Enhancem.:   Start-over feature on ResultPanel
+                 Enhancem.:   Store the component selection with the name of the
+                              host in the file
+                 Enhancem.:   Improve ResultPanel's content
+                 Enhancem.:   JUnit test for class Host
+                 Bugfix:      create test/classes diretory before compile
+                 Bugfix:      On main progress bar, show the overall task count
+                              during installation
+                 Bugfix:      Grammar fails on 'ge[1-]4' pattern.
+                 Bugfix:      Timeout state is never shown at resolving
+                 Bugfix:      Can enter loopback network interface name and address.
+                 Review:      LP
 
 LP-2009-03-31-0: Enhancem.:   Can install&enable JMX for running qmaster
 			                  inst_sge -add-jmx
@@ -21,7 +33,7 @@ LP-2009-03-30-0: Enhancem.:   DetectJvmLibrary.jar available in util
                  Review:      AA
 
 CR-2009-03-30-0: Bugfix:      qmaster csp installation fails when using port
-                              from /etc/services 
+                              from /etc/services
                  Bugster:     6784919
                  Issue:       2833
                  Review:      MD
@@ -53,7 +65,7 @@ RD-2009-03-24-0: Bugfix:      - qconf -Mc did not print any output in case
                               - build-in complex "display_win_gui" could
                                 be deleted
                  Bugster:     6821207, 6821237
-                 Issue:       2963, 2964 
+                 Issue:       2963, 2964
                  Review:      CR
 
 EB-2009-03-23-0: Enhancemn.:  JSV log command now has possibility to log empty lines
@@ -72,10 +84,10 @@ DG-2009-03-19-0: Bugfix:      stopping an execution daemon does not stop jobs
                  Issue:       2759
                  Review:      JG
 
-EB-2009-03-19-0: Bugfix:      Some variable names can't be used in Bourne shell JSV scripts  
+EB-2009-03-19-0: Bugfix:      Some variable names can't be used in Bourne shell JSV scripts
                  Bugster:     6818825
                  Issue:       2958
-                 Bugfix:      A qmaster not running a root exits with return code 1 if a 
+                 Bugfix:      A qmaster not running a root exits with return code 1 if a
                               JSV script to start as user is configured
                  Bugster:     6810490
                  Issue:       2957
@@ -83,8 +95,8 @@ EB-2009-03-19-0: Bugfix:      Some variable names can't be used in Bourne shell 
 
 SH-2009-03-19-0: Bugfix:      qsub exits with a error msg when the event client was killed
                  Bugster:     6808617
-                 Issue:       2934 
-                 Reviewed by: DG 
+                 Issue:       2934
+                 Reviewed by: DG
 
 ZG-2009-03-18-0: Enhancem.:   Create JUnit test for HostPanel
                  Enhancem.:   Enable JMX by default

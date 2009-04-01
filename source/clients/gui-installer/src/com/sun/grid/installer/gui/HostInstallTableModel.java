@@ -59,11 +59,10 @@ public class HostInstallTableModel extends SortedTableModel implements HostTable
 
     @Override
     public Object getValueAt(int row, int col) {
+        row = getSortedRowIndex(row);
         if (row >= hostList.size()) {
             return null;
         }
-
-        row = getSortedRowIndex(row);
         
         Host h = hostList.get(row);
 

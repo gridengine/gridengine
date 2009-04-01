@@ -1,16 +1,16 @@
 /*
- * $Id: IzPanel.java,v 1.1 2009/03/18 18:35:11 zsiga Exp $
+ * $Id: IzPanel.java,v 1.1 2009/04/01 14:41:07 zsiga Exp $
  * IzPack - Copyright 2001-2008 Julien Ponge, All Rights Reserved.
- *
+ * 
  * http://izpack.org/
  * http://izpack.codehaus.org/
- *
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ *     
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,7 +21,9 @@ package com.izforge.izpack.installer;
 
 import com.izforge.izpack.Panel;
 import com.izforge.izpack.gui.LabelFactory;
+import com.izforge.izpack.gui.LayoutConstants;
 import com.izforge.izpack.util.AbstractUIHandler;
+import com.izforge.izpack.util.Debug;
 import com.izforge.izpack.util.MultiLineLabel;
 import com.izforge.izpack.util.VariableSubstitutor;
 import net.n3.nanoxml.XMLElement;
@@ -46,7 +48,7 @@ import java.awt.*;
  * @author Julien Ponge
  * @author Klaus Bartz
  */
-public class IzPanel extends JPanel
+public class IzPanel extends JPanel implements AbstractUIHandler, LayoutConstants
 {
 
     private static final long serialVersionUID = 3256442495255786038L;
@@ -164,10 +166,10 @@ public class IzPanel extends JPanel
     {
         super();
         init(parent, idata);
-//        if (lm != null)
-//        {
-//            getLayoutHelper().startLayout(lm);
-//        }
+        if (lm != null)
+        {
+            getLayoutHelper().startLayout(lm);
+        }
     }
 
     /**
@@ -193,7 +195,10 @@ public class IzPanel extends JPanel
     public IzPanel(InstallerFrame parent, InstallData idata, String iconName, int instance)
     {
         this(parent, idata);
-        buildHeadline(iconName, instance);
+
+        if (parent != null) {
+            buildHeadline(iconName, instance);
+        }
     }
 
     /**
@@ -211,80 +216,79 @@ public class IzPanel extends JPanel
      */
     protected boolean buildHeadline(String imageIconName, int instanceNumber)
     {
-//        boolean result = false;
-//        if (parent.isHeading(this))
-//        {
-//            return (false);
-//        }
-//
-//        // TODO: proteced instancenumber
-//        // TODO: is to be validated
-//        // TODO:
-//        // TODO: first Test if a Resource for your protected Instance exists.
-//        String headline;
-//        String headlineSearchBaseKey = myClassname + d + "headline"; // Results for example in "ShortcutPanel.headline" :
-//
-//        if (instanceNumber > -1)  // Search for Results for example in "ShortcutPanel.headline.1, 2, 3 etc." :
-//        {
-//            String instanceSearchKey = headlineSearchBaseKey + d +
-//                    Integer.toString(instanceNumber);
-//
-//            String instanceHeadline = getString(instanceSearchKey);
-//
-//            if (Debug.isLOG())
-//            {
-//                System.out.println("found headline: " + instanceHeadline + d + " for instance # " + instanceNumber);
-//            }
-//            if (!instanceSearchKey.equals(instanceHeadline))
-//            {
-//                headline = instanceHeadline;
-//            }
-//            else
-//            {
-//                headline = getString(headlineSearchBaseKey);
-//            }
-//        }
-//        else
-//        {
-//            headline = getString(headlineSearchBaseKey);
-//        }
-//
-//        if (headline != null)
-//        {
-//            if ((imageIconName != null) && !"".equals(imageIconName))
-//            {
-//                headLineLabel = new JLabel(headline, getImageIcon(imageIconName),
-//                        SwingConstants.LEADING);
-//            }
-//            else
-//            {
-//                headLineLabel = new JLabel(headline);
-//            }
-//
-//            Font font = headLineLabel.getFont();
-//            float size = font.getSize();
-//            int style = 0;
-//            font = font.deriveFont(style, (size * 1.5f));
-//            headLineLabel.setFont(font);
-//
-//            GridBagConstraints gbc = new GridBagConstraints();
-//
-//            gbc.gridx = 0;
-//            gbc.gridy = 0;
-//            gbc.gridwidth = 1;
-//            gbc.gridheight = 1;
-//
-//            gbc.fill = GridBagConstraints.HORIZONTAL;
-//            gbc.anchor = GridBagConstraints.WEST;
-//            gbc.insets = new Insets(0, 0, 0, 0);
-//            headLineLabel.setName(HEADLINE);
-//            ((GridBagLayout) getLayout()).addLayoutComponent(headLineLabel, gbc);
-//
-//            add(headLineLabel);
-//        }
-//
-//        return result;
-        return true;
+        boolean result = false;
+        if (parent.isHeading(this))
+        {
+            return (false);
+        }
+
+        // TODO: proteced instancenumber
+        // TODO: is to be validated
+        // TODO:
+        // TODO: first Test if a Resource for your protected Instance exists.
+        String headline;
+        String headlineSearchBaseKey = myClassname + d + "headline"; // Results for example in "ShortcutPanel.headline" :
+
+        if (instanceNumber > -1)  // Search for Results for example in "ShortcutPanel.headline.1, 2, 3 etc." :
+        {
+            String instanceSearchKey = headlineSearchBaseKey + d +
+                    Integer.toString(instanceNumber);
+
+            String instanceHeadline = getString(instanceSearchKey);
+
+            if (Debug.isLOG())
+            {
+                System.out.println("found headline: " + instanceHeadline + d + " for instance # " + instanceNumber);
+            }
+            if (!instanceSearchKey.equals(instanceHeadline))
+            {
+                headline = instanceHeadline;
+            }
+            else
+            {
+                headline = getString(headlineSearchBaseKey);
+            }
+        }
+        else
+        {
+            headline = getString(headlineSearchBaseKey);
+        }
+
+        if (headline != null)
+        {
+            if ((imageIconName != null) && !"".equals(imageIconName))
+            {
+                headLineLabel = new JLabel(headline, getImageIcon(imageIconName),
+                        SwingConstants.LEADING);
+            }
+            else
+            {
+                headLineLabel = new JLabel(headline);
+            }
+
+            Font font = headLineLabel.getFont();
+            float size = font.getSize();
+            int style = 0;
+            font = font.deriveFont(style, (size * 1.5f));
+            headLineLabel.setFont(font);
+
+            GridBagConstraints gbc = new GridBagConstraints();
+
+            gbc.gridx = 0;
+            gbc.gridy = 0;
+            gbc.gridwidth = 1;
+            gbc.gridheight = 1;
+
+            gbc.fill = GridBagConstraints.HORIZONTAL;
+            gbc.anchor = GridBagConstraints.WEST;
+            gbc.insets = new Insets(0, 0, 0, 0);
+            headLineLabel.setName(HEADLINE);
+            ((GridBagLayout) getLayout()).addLayoutComponent(headLineLabel, gbc);
+
+            add(headLineLabel);
+        }
+
+        return result;
     }
 
     /**
@@ -295,7 +299,7 @@ public class IzPanel extends JPanel
      */
     public String getString(String key)
     {
-        return idata.langpack.getString(key);
+        return (parent != null ? parent.langpack.getString(key) : "");
     }
 
     /**
@@ -306,7 +310,7 @@ public class IzPanel extends JPanel
      */
     public ImageIcon getImageIcon(String iconName)
     {
-        return null;
+        return (parent != null ? parent.icons.getImageIcon(iconName) : null);
     }
 
 
@@ -315,7 +319,7 @@ public class IzPanel extends JPanel
      */
     protected void initLayoutHelper()
     {
-//        layoutHelper = new LayoutHelper(this);
+        layoutHelper = new LayoutHelper(this);
     }
 
 
@@ -349,10 +353,9 @@ public class IzPanel extends JPanel
         // this hack...
         // Problems with this hack will be exist if more than one threads calls the
         // constructors of derived clases. This is not the case.
-//        this.metadata = idata.currentPanel;
-//        idata.currentPanel = null;
-//        initLayoutHelper();
-
+        this.metadata = idata.currentPanel;
+        idata.currentPanel = null;
+        initLayoutHelper();
     }
 
     /**
@@ -420,48 +423,47 @@ public class IzPanel extends JPanel
      */
     public int askQuestion(String title, String question, int choices, int default_choice)
     {
-//        int jo_choices = 0;
-//
-//        if (choices == AbstractUIHandler.CHOICES_YES_NO)
-//        {
-//            jo_choices = JOptionPane.YES_NO_OPTION;
-//        }
-//        else if (choices == AbstractUIHandler.CHOICES_YES_NO_CANCEL)
-//        {
-//            jo_choices = JOptionPane.YES_NO_CANCEL_OPTION;
-//        }
-//
-//        int user_choice = JOptionPane.showConfirmDialog(this, question, title, jo_choices,
-//                JOptionPane.QUESTION_MESSAGE);
-//
-//        if (user_choice == JOptionPane.CANCEL_OPTION)
-//        {
-//            return AbstractUIHandler.ANSWER_CANCEL;
-//        }
-//
-//        if (user_choice == JOptionPane.YES_OPTION)
-//        {
-//            return AbstractUIHandler.ANSWER_YES;
-//        }
-//
-//        if (user_choice == JOptionPane.CLOSED_OPTION)
-//        {
-//            return AbstractUIHandler.ANSWER_NO;
-//        }
-//
-//        if (user_choice == JOptionPane.NO_OPTION)
-//        {
-//            return AbstractUIHandler.ANSWER_NO;
-//        }
+        int jo_choices = 0;
+
+        if (choices == AbstractUIHandler.CHOICES_YES_NO)
+        {
+            jo_choices = JOptionPane.YES_NO_OPTION;
+        }
+        else if (choices == AbstractUIHandler.CHOICES_YES_NO_CANCEL)
+        {
+            jo_choices = JOptionPane.YES_NO_CANCEL_OPTION;
+        }
+
+        int user_choice = JOptionPane.showConfirmDialog(this, question, title, jo_choices,
+                JOptionPane.QUESTION_MESSAGE);
+
+        if (user_choice == JOptionPane.CANCEL_OPTION)
+        {
+            return AbstractUIHandler.ANSWER_CANCEL;
+        }
+
+        if (user_choice == JOptionPane.YES_OPTION)
+        {
+            return AbstractUIHandler.ANSWER_YES;
+        }
+
+        if (user_choice == JOptionPane.CLOSED_OPTION)
+        {
+            return AbstractUIHandler.ANSWER_NO;
+        }
+
+        if (user_choice == JOptionPane.NO_OPTION)
+        {
+            return AbstractUIHandler.ANSWER_NO;
+        }
 
         return default_choice;
     }
 
     public boolean emitNotificationFeedback(String message)
     {
-//        return (JOptionPane.showConfirmDialog(this, message, idata.langpack.getString("installer.Message"), JOptionPane.WARNING_MESSAGE,
-//                JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION);
-        return true;
+        return (JOptionPane.showConfirmDialog(this, message, idata.langpack.getString("installer.Message"), JOptionPane.WARNING_MESSAGE,
+                JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION);
     }
 
     /**
@@ -471,7 +473,7 @@ public class IzPanel extends JPanel
      */
     public void emitNotification(String message)
     {
-//        JOptionPane.showMessageDialog(this, message);
+        JOptionPane.showMessageDialog(this, message);
     }
 
     /**
@@ -481,9 +483,8 @@ public class IzPanel extends JPanel
      */
     public boolean emitWarning(String title, String message)
     {
-//        return (JOptionPane.showConfirmDialog(this, message, title, JOptionPane.WARNING_MESSAGE,
-//                JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION);
-        return true;
+        return (JOptionPane.showConfirmDialog(this, message, title, JOptionPane.WARNING_MESSAGE,
+                JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION);
 
     }
 
@@ -494,7 +495,7 @@ public class IzPanel extends JPanel
      */
     public void emitError(String title, String message)
     {
-//        JOptionPane.showMessageDialog(this, message, title, JOptionPane.ERROR_MESSAGE);
+        JOptionPane.showMessageDialog(this, message, title, JOptionPane.ERROR_MESSAGE);
     }
 
     /**
@@ -924,21 +925,20 @@ public class IzPanel extends JPanel
      */
     public String getSummaryCaption()
     {
-//        String caption;
-//        if (parent.isHeading(this)
-//                && idata.guiPrefs.modifier.containsKey("useHeadingForSummary")
-//                && (idata.guiPrefs.modifier.get("useHeadingForSummary"))
-//                .equalsIgnoreCase("yes"))
-//        {
-//            caption = getI18nStringForClass("headline", this.getClass().getName());
-//        }
-//        else
-//        {
-//            caption = getI18nStringForClass("summaryCaption", this.getClass().getName());
-//        }
-//
-//        return (caption);
-        return "";
+        String caption;
+        if (parent.isHeading(this)
+                && idata.guiPrefs.modifier.containsKey("useHeadingForSummary")
+                && (idata.guiPrefs.modifier.get("useHeadingForSummary"))
+                .equalsIgnoreCase("yes"))
+        {
+            caption = getI18nStringForClass("headline", this.getClass().getName());
+        }
+        else
+        {
+            caption = getI18nStringForClass("summaryCaption", this.getClass().getName());
+        }
+
+        return (caption);
     }
 
     // ------------------- Summary stuff -------------------- END ---

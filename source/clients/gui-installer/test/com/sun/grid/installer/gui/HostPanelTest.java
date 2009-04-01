@@ -71,6 +71,8 @@ public class HostPanelTest implements Config {
     @BeforeClass
     public static void setUpClass() throws Exception {
        automatedInstaller = new AutomatedInstaller("");
+
+       TestBedManager.getInstance().setRunMode(TestBedManager.RunMode.FAST);
     }
 
     @AfterClass
@@ -88,6 +90,8 @@ public class HostPanelTest implements Config {
         UPDATED.ready = false;
 
         maxWaitTime = 10000;
+
+        TestBedManager.getInstance().setGenerationMode(TestBedManager.GenerationMode.ALWAYS_NEW);
     }
 
     /**
@@ -200,13 +204,8 @@ public class HostPanelTest implements Config {
         getJTables(hostPanel, tables);
         HostList successHostList = ((HostTable)tables.get(1)).getHostList();
 
-        List<Host> hostList = new ArrayList<Host>(successHostList.size());
-        for(Host host : successHostList) {
-            hostList.add(host);
-        }
-
-        maxWaitTime = hostList.size() * 8000;
-        callMethod_SwitchToInstallModeAndInstall(hostPanel, hostList);
+        maxWaitTime = successHostList.size() * 8000;
+        callMethod_SwitchToInstallModeAndInstall(hostPanel, successHostList);
 
         waitForTPFinished();
 
@@ -217,8 +216,10 @@ public class HostPanelTest implements Config {
 //        testAddedAndRecievedEquivalency((HostTable)tables.get(0), (HostTable)tables.get(1), (HostTable)tables.get(2), hostList.size());
     }
 
-    @Test
+    @Ignore
     public void testShadowOnQmaster() throws Exception {
+        TestBedManager.getInstance().setGenerationMode(TestBedManager.GenerationMode.ALWAYS_SUCCEEDS);
+        automatedInstaller = getAutomatedInstallerInstance("");
         setQmasterHost(automatedInstaller, "qmaster");
         setComponentSelection(automatedInstaller, true, true, true, false, true);
         hostPanel = getHostPanelInstance(automatedInstaller);
@@ -229,7 +230,13 @@ public class HostPanelTest implements Config {
         hosts.add("execd");
         callMethod_ResolveHosts(hostPanel, Host.Type.HOSTNAME, hosts, false, false, false, true, false, true, "execd_spool_dir");
 
+        maxWaitTime = 5000;
         waitForTPFinished();
+
+        ArrayList<JTable> tables = new ArrayList<JTable>(3);
+        getJTables(hostPanel, tables);
+        //System.out.println("Begin");
+        debugTablesContent(tables);
 
         callMethod_PanelDeactivate(hostPanel);
 
@@ -237,9 +244,13 @@ public class HostPanelTest implements Config {
 
         callMethod_PanelActivate(hostPanel);
 
+        //System.out.println("Middle");
+        debugTablesContent(tables);
+
         callMethod_ValidateHostsAndInstall(hostPanel, true);
 
         maxWaitTime = 10000;
+        waitForTPFinished();
         waitForTPFinished();
 
 //        ArrayList<JTable> tables = new ArrayList<JTable>(3);
@@ -255,32 +266,32 @@ public class HostPanelTest implements Config {
 //        callMethod_SwitchToInstallModeAndInstall(hostPanel, hostList);
 //
 //        waitForTPFinished();
+//        try {
+//            Thread.sleep(10000);
+//        } catch (Exception e) {
+//        }
 
-        ArrayList<JTable> tables = new ArrayList<JTable>(3);
+        tables = new ArrayList<JTable>(3);
         getJTables(hostPanel, tables);
 
-        HostList result = ((HostTable)tables.get(1)).getHostList();
-        for (Host h : result) {
-            System.out.println(h);
-            if (h.isShadowHost()) {
-                return;
-            }
-        }
-        result = ((HostTable)tables.get(2)).getHostList();
-        for (Host h : result) {
-            System.out.println(h);
-            if (h.isShadowHost()) {
+        //System.out.println("End:");
+        debugTablesContent(tables);
+        
+        HostList result = ((HostTableModel)tables.get(1).getModel()).getHostList();
+        for (Host host : result) {
+            if (host.isShadowHost()) {
                 return;
             }
         }
         
-
         Assert.fail("Qmaster host - missing shadow deamon.");
     }
 
     @Test
     public void testShadowOnQmasterBasic() throws Exception {
-        setQmasterHost(automatedInstaller, "qmaster");
+        TestBedManager.getInstance().setGenerationMode(TestBedManager.GenerationMode.ALWAYS_SUCCEEDS);
+        automatedInstaller = getAutomatedInstallerInstance("");
+        setQmasterHost(automatedInstaller, "qmaster2");
         setComponentSelection(automatedInstaller, true, true, true, false, true);
         hostPanel = getHostPanelInstance(automatedInstaller);
         hostPanel.addThreadPoolListener(new ThreadPoolEventNotifier());
@@ -290,7 +301,13 @@ public class HostPanelTest implements Config {
 //        hosts.add("execd");
 //        callMethod_ResolveHosts(hostPanel, Host.Type.HOSTNAME, hosts, false, false, false, true, false, true, "execd_spool_dir");
 
+        maxWaitTime = 5000;
         waitForTPFinished();
+
+        //System.out.println("Begin");
+        ArrayList<JTable> tables = new ArrayList<JTable>(3);
+        getJTables(hostPanel, tables);
+        debugTablesContent(tables);
 
         callMethod_PanelDeactivate(hostPanel);
 
@@ -298,9 +315,15 @@ public class HostPanelTest implements Config {
 
         callMethod_PanelActivate(hostPanel);
 
+        //System.out.println("Middle");
+        tables = new ArrayList<JTable>(3);
+        getJTables(hostPanel, tables);
+        debugTablesContent(tables);
+
         callMethod_ValidateHostsAndInstall(hostPanel, true);
 
         maxWaitTime = 10000;
+        waitForTPFinished();
         waitForTPFinished();
 
 //        ArrayList<JTable> tables = new ArrayList<JTable>(3);
@@ -317,20 +340,14 @@ public class HostPanelTest implements Config {
 //
 //        waitForTPFinished();
 
-        ArrayList<JTable> tables = new ArrayList<JTable>(3);
+        //System.out.println("End");
+        tables = new ArrayList<JTable>(3);
         getJTables(hostPanel, tables);
+        debugTablesContent(tables);
 
-        HostList result = ((HostTable)tables.get(1)).getHostList();
-        for (Host h : result) {
-            System.out.println(h);
-            if (h.isShadowHost()) {
-                return;
-            }
-        }
-        result = ((HostTable)tables.get(2)).getHostList();
-        for (Host h : result) {
-            System.out.println(h);
-            if (h.isShadowHost()) {
+        HostList result = ((HostTableModel)tables.get(1).getModel()).getHostList();
+        for (Host host : result) {
+            if (host.isShadowHost()) {
                 return;
             }
         }
@@ -563,6 +580,22 @@ public class HostPanelTest implements Config {
     }
 
     /**
+     * Prints out the hosts stored in the tables in the given list.
+     * @param tables The tables which implement {@link HostTableModel} interface
+     */
+    public static void debugTablesContent(ArrayList<JTable> tables) {
+        int index = 0;
+        for (JTable table : tables) {
+            HostList hostList = ((HostTableModel)table.getModel()).getHostList();
+            for (Host host : hostList) {
+                System.out.println(index + ". table: " + host);
+            }
+
+            index++;
+        }
+    }
+
+    /**
      * Wait till the thread pool gets started.
      */
     private void waitForTPStarted() {
@@ -597,12 +630,13 @@ public class HostPanelTest implements Config {
 //            while (!waitForObject.ready) {
             try {
                 waitForObject.wait(maxWaitTime);
+                //System.out.println("!!!!AWAKE");
             } catch (InterruptedException ex) {
             }
 //            }
-        }
 
-        waitForObject.ready = false;
+            waitForObject.ready = false;
+        }
     }
 
     /**
@@ -650,6 +684,22 @@ public class HostPanelTest implements Config {
     /**
      * Calls the {@link HostPanel#switchToInstallModeAndInstall()} method on the given {@link HostPanel} instance
      * @param hostPanelInstance The {@link HostPanel} instance
+     * @param hostList List of hosts to install
+     * @throws java.lang.Exception
+     */
+    private void callMethod_SwitchToInstallModeAndInstall(HostPanel hostPanelInstance, HostList hostList) throws Exception {
+        List<Host> hostListList = new ArrayList<Host>(hostList.size());
+        for(Host host : hostList) {
+            hostList.add(host);
+        }
+
+        callMethod_SwitchToInstallModeAndInstall(hostPanelInstance, hostListList);
+    }
+
+    /**
+     * Calls the {@link HostPanel#switchToInstallModeAndInstall()} method on the given {@link HostPanel} instance
+     * @param hostPanelInstance The {@link HostPanel} instance
+     * @param hostList List of hosts to install
      * @throws java.lang.Exception
      */
     private void callMethod_SwitchToInstallModeAndInstall(HostPanel hostPanelInstance, List<Host> hostList) throws Exception {
@@ -674,16 +724,19 @@ public class HostPanelTest implements Config {
             
             if (threadPoolEvent.getType() == ThreadPoolEvent.EVENT_THREAD_POOL_STARTED) {
                 waitForObject = STARTED;
+                //System.out.println("!!!!STARTED");
             } else if (threadPoolEvent.getType() == ThreadPoolEvent.EVENT_THREAD_POOL_UPDATED) {
                 waitForObject = UPDATED;
+                //System.out.println("!!!!UPDATED");
             } else if (threadPoolEvent.getType() == ThreadPoolEvent.EVENT_THREAD_POOL_FINISHED) {
                 waitForObject = FINISHED;
+                //System.out.println("!!!!FINISHED");
             }
 
             // Notify the appropriate object
             synchronized (waitForObject) {
                 waitForObject.ready = true;
-                waitForObject.notify();
+                waitForObject.notifyAll();
             }
         }
     }

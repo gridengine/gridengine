@@ -111,7 +111,6 @@ SGE_NOMSG="undef"
 
 CERT_COPY_HOST_LIST="undef"
 SERVICE_TAGS="enable"
-ONLY_ENABLE_JMX=false
 
 #Save changed host names during resolving
 RESOLVED_CHANGED_HOSTNAMES=""
@@ -332,12 +331,6 @@ while [ $ARGC != 0 ]; do
      SGE_ENABLE_SMF="false"
      SMF_FLAGS="-nosmf"
      ;;
-   -add-jmx)
-     ONLY_ENABLE_JMX=true
-     SGE_ENABLE_JMX=true
-     . ./util/install_modules/inst_qmaster.sh
-     . ./util/upgrade_modules/inst_upgrade.sh
-     ;;
    -help)
      ErrUsage
      ;;
@@ -411,7 +404,7 @@ if [ $USE_OLD_IJS = "false" ]; then
    RSH_COMMAND="builtin"
 fi
 
-if [ "$START_CLUSTER" = "true" ]; then
+if [ "$START_CLUSTER" = true ]; then
    if [ -z "$SGE_ROOT" -o -z "$SGE_CELL" ]; then
       $INFOTEXT "\Can't start cluster: $SGE_ROOT and \$SGE_CELL must be set!"
       exit 2
@@ -421,54 +414,6 @@ if [ "$START_CLUSTER" = "true" ]; then
    ManipulateOneDaemonType "" qmaster ""
    ManipulateOneDaemonType "" execd ""
    exit
-fi
-
-if [ $ONLY_ENABLE_JMX = "true" ]; then
-   GetAdminUser
-   ProcessSGERoot
-   GetCell
-   #Ensure we are on qmaster   
-   qmaster_host=`cat $SGE_ROOT/$SGE_CELL/common/act_qmaster`
-   if [ "$qmaster_host" != "$HOST" ]; then
-      $INFOTEXT "JMX can be enabled only from qmaster host %s!" $qmaster_host
-      exit 2
-   fi
-   QMDIR=`BootstrapGetValue $SGE_ROOT/$SGE_CELL/common qmaster_spool_dir`
-   CheckRunningDaemon sge_qmaster
-   is_running=$?
-   if [ $is_running - ne 0 ]; then
-      $INFOTEXT "Qmaster is not running! Cannot enable JMX." $qmaster_host
-      exit 2
-   fi
-   #Source the settings file
-   . $SGE_ROOT/$SGE_CELL/common/settings.sh   
-   GetJMXPort
-   COMMONDIR=$SGE_ROOT/$SGE_CELL/common
-   AddJMXFiles
-   ReplaceOrAddLine "$SGE_ROOT/$SGE_CELL/common/bootstrap" 666 'jvm_threads.*' "jvm_threads             1"
-   ExecuteAsAdmin $CHMOD 644 "$SGE_ROOT/$SGE_CELL/common/bootstrap"
-   #TODO: CSP mode - InitCA
-   InitCA
-   MakeUserKs $ADMINUSER
-   CopyCA execd
-   CopyCA submit
-   #Update the default config
-   dir=/tmp/conf.$$
-   mkdir -p $dir
-   #Update global libjvm entry
-   #TODO: Update local as well?
-   $SGE_ROOT/bin/$SGE_ARCH/qconf -sconf > $dir/global
-   ReplaceOrAddLine "$dir/global" 666 'libjvm_path.*' "libjvm_path $SGE_JVM_LIB_PATH"
-   $SGE_ROOT/bin/$SGE_ARCH/qconf -Mconf $dir/global > /dev/null 2>&1
-   rm -rf $dir
-   
-   $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Do you want to start the JMX thread in qmaster now (y/n) [y] >> "
-   if [ $? = 0 ]; then
-      $SGE_ROOT/bin/$SGE_ARCH/qconf -at jvm
-   fi
-   
-   #TODO: Need to reinstall shadowds (no jvmlib path)
-   exit 0
 fi
 
 if [ "$WIN_UPDATE" = "true" ]; then
@@ -547,11 +492,11 @@ if [ "$UPDATE" = true ]; then
       #Just copy the configuration to a new SGE_CELL
       UPGRADE_MODE="copy"
       if [ -n "$SGE_QMASTER_PORT" ]; then
-         SGE_QMASTER_PORT=`expr $SGE_QMASTER_PORT + 10`
+         SGE_QMASTER_PORT=`expr $SGE_QMASTER_PORT + 2`
       fi
       GetQmasterPort
       if [ -n "$SGE_EXECD_PORT" ]; then
-         SGE_EXECD_PORT=`expr $SGE_EXECD_PORT + 10`
+         SGE_EXECD_PORT=`expr $SGE_EXECD_PORT + 2`
       fi
       GetExecdPort
    else
@@ -863,12 +808,10 @@ if [ "$QMASTER" = "install" -a "$UPDATE" != "true" ]; then
  StartQmaster
  AddWindowsAdmin
  AddHosts
- MakeUserKs $ADMINUSER
  if [ "$AUTOGUI" != "true" ]; then
     CopyCA execd
     CopyCA submit
  fi
- 
  SetScheddConfig
  GiveHints
  CheckRunningDaemon sge_qmaster
@@ -883,22 +826,6 @@ if [ "$QMASTER" = "install" -a "$UPDATE" != "true" ]; then
     $INFOTEXT -log "sge_qmaster not successfully installed!\n" 
     MoveLog
     exit 1 
- fi
- 
- # Let's simplify copying of the certs to remote hosts if they exist (how? - we no longer need scp)
- # TODO: Need to support CALOCALTOP value (for non-root installation)!
- if [ -d /var/sgeCA ]; then
-    #TODO: sge_master as port is rather problematic (shadowds might operate with port$SGE_QMASTER_PORT!)
-    if [ "$SGE_QMASTER_PORT" = "" ]; then
-         PORT_DIR="sge_qmaster"
-    else
-       PORT_DIR="port$SGE_QMASTER_PORT"
-    fi
-    #TODO: save only the keystores and certs (JMX stuff only)?
-    tar -cpf /var/sgeCA/$PORT_DIR.tar /var/sgeCA/$PORT_DIR
-    gzip -f /var/sgeCA/$PORT_DIR.tar
-    chown $ADMINUSER /var/sgeCA/$PORT_DIR.tar.gz
-    chmod 400 /var/sgeCA/$PORT_DIR.tar.gz
  fi
 
  is_master=""
@@ -1274,7 +1201,7 @@ if [ $SHADOW = "install" ]; then
 
       SearchForExistingInstallations "shadowd"
 
-      CheckHostNameResolving "install" "shadowd"
+      CheckHostNameResolving install
  
       if [ $HOST != "" ]; then
          $SGE_UTILBIN/gethostname -all | grep $HOST > /dev/null
@@ -1286,10 +1213,7 @@ if [ $SHADOW = "install" ]; then
       else
          SHADOW_HOST=`$SGE_UTILBIN/gethostname -aname`
       fi
-      
-      #Detect if JMX needs to be setup
-      GetJMXPort "shadowd"
-      
+
       #check if spooling is supported!
       spooling_method=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap 2>/dev/null | grep "spooling_method" | awk '{ print $2 }'`
       #if spooling_params contains no "/" then we have rpc server spooling
@@ -1322,8 +1246,8 @@ if [ $SHADOW = "install" ]; then
          fi
        fi
 
-      #creating the local_conf now with new libjvm_path entry
-      AddLocalConfiguration_With_Qconf "shadowd"
+      #creating the local_conf now!
+      AddLocalConfiguration_With_Qconf
 
       $INFOTEXT "Creating shadow_masters file for host %s\n" $SHADOW_HOST
       ExecuteAsAdmin touch $SGE_ROOT/$SGE_CELL/common/shadow_masters
@@ -1343,7 +1267,7 @@ if [ $SHADOW = "install" ]; then
       done
       ExecuteAsAdmin chmod go-w $SGE_ROOT/$SGE_CELL/common/shadow_masters
       ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL/common/shadow_masters.1
-      
+
       if [ $SHADOW_HOST = `$SGE_UTILBIN/gethostname -aname` ]; then
          . $SGE_ROOT/$SGE_CELL/common/settings.sh
          SGE_ARCH=`$SGE_ROOT/util/arch`
@@ -1357,14 +1281,9 @@ if [ $SHADOW = "install" ]; then
       else
         for shs in `cat $SGE_ROOT/$SGE_CELL/common/shadow_masters`; do
            echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; SGE_ARCH=`$SGE_ROOT/util/arch`; $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &" | $SHELL_NAME $shs /bin/sh &
-           #TODO: install rc script if not on qmaster?
+           #TODO: install rc script
         done
       fi
-      
-      #JMX keystores need to be copied to the shadowd
-      #TODO: Should be done the opposite way qmaster -> shadowd, not shadowd -> qmaster
-      #TODO: Only when not copied during qmaster installation private keystore
-      CopyCaFromQmaster
 
       $INFOTEXT "Shadowhost installation completed!"
    else

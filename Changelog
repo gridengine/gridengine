@@ -1,3 +1,7 @@
+LP-2009-04-02-1: Enhancem.:   Added utilbin/valid_jvmlib to validate JVM library
+                              path before it's accepted in the installation
+                 Review:      EB
+
 LP-2009-04-02-0: Enhancem.:   Can install&enable JMX for running qmaster
 			                  inst_sge -add-jmx
                  Enhancem.:   Upgrade in clone mode has a default PORT+10

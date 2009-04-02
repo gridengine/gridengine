@@ -49,7 +49,7 @@ UTILITYBINARIES="uidgid gethostname gethostbyname gethostbyaddr \
                  getservbyname filestat checkprog loadcheck now checkuser \
                  adminrun qrsh_starter testsuidroot authuser read_raw echo_raw \
                  sge_share_mon infotext spooldefaults spooledit spoolinit \
-                 fstype SGE_Helper_Service.exe SGE_Starter.exe"
+                 fstype SGE_Helper_Service.exe SGE_Starter.exe valid_jvmlib"
 
 BDBUTILITYBINARIES="berkeley_db_svc db_archive db_checkpoint db_deadlock db_dump db_load db_printlog db_recover db_stat db_upgrade db_verify"
 
@@ -694,7 +694,7 @@ for prog in $PROG; do
       arco)
          instarco=true
          ;;
-      sgemacc)         
+      sgemacc)
          instsgemacc=true
          ;;
       common|distcommon) 

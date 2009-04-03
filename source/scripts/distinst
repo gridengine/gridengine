@@ -1365,8 +1365,8 @@ for i in $ARCH; do
                if [ "$DSTARCH" = "win32-x86" ]; then
                   InstallProg $prog
                fi
-            elif [ "$DSTARCH" = "win32-x86" -a "$prog" = "spooledit" ]; then
-               # Don't install spooledit for win32-x86
+            elif [ "$DSTARCH" = "win32-x86" -a \( "$prog" = "spooledit" -o "$prog" = "valid_jvmlib" \) ]; then
+               # Don't install spooledit, valid_jvmlib for win32-x86
                :
             else
                InstallProg $prog

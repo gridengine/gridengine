@@ -1,13 +1,16 @@
+LP-2009-04-03-1: Bugfix:      Fixing buildbreak on windows
+                 Review:      RD
+
 RD-2009-04-03-1: Cleanup:     some minor cleanups
                  Review:      CR
 
 LP-2009-04-03-0: Enhancem.:   gui-installer: Enable RC should be displayed in
                               shadowd installation
-                 Enhacem.:    gui-installer: improved java detection and version
+                 Enhancem.:   gui-installer: improved java detection and version
                               validation in start_gui_installer
-                 Enhacem.:    gui-installer: updated shadowd installation for
+                 Enhancem.:   gui-installer: updated shadowd installation for
                               changes in 6824933
-                 Enhacem.:    gui-installer: Improved checking for JVM library
+                 Enhancem.:   gui-installer: Improved checking for JVM library
                               on qmaster and shadows when JMX enabled
                  Bugfix:      gui-installer: Execd spool dir check should check
                               permissions also as root in root installation

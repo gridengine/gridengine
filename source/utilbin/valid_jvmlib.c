@@ -32,7 +32,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <jni.h>
+
+#ifndef NO_JNI
+
 #ifdef LINUX
 #ifndef __USE_GNU
 #define __USE_GNU
@@ -52,6 +54,7 @@
 #include <link.h>
 #endif
 
+#include <jni.h>
 typedef int (*JNI_CreateJavaVM_Func)(JavaVM **pvm, void **penv, void *args);
 typedef int (*JNI_GetCreatedJavaVMs_Func)(JavaVM **pvm, jsize size, jsize *real_size);
 
@@ -63,9 +66,10 @@ void usage(void) {
     printf("usage: valid_jvmlib [-help] <libpath>\n" \
            "       <libpath> ... path to the java library\n");
 }
-
+#endif /* NOJNI */
 
 int main(int argc, char** argv) {
+#ifndef NO_JNI
     const char* JNI_CreateJavaVM_FuncName;
     const char* JNI_GetCreatedJavaVMs_FuncName;
     const char *libjvm_path;
@@ -134,6 +138,7 @@ int main(int argc, char** argv) {
         printf("Error: Unable to find %s function in %s library!\n", JNI_GetCreatedJavaVMs_FuncName, libjvm_path);
         return 1;
     }
+#endif
     return 0;
 }
 

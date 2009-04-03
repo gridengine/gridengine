@@ -33,7 +33,7 @@ ___INFO__MARK_END__-->
 <installation version="1.0">
     <info>
         <appname>Sun Grid Engine</appname>
-        <appversion>6.2u3alpha1</appversion>
+        <appversion>6.2u3alpha2</appversion>
         <authors>
             <author name="Sun Microsystems, Inc." email="www.sun.com"/>
         </authors>

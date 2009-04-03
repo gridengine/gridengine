@@ -39,6 +39,8 @@ import java.io.Serializable;
  */
 public class JobStateFilter implements Serializable {
 
+    private final static long serialVersionUID = -2009040301L;
+    
     public static class State {
 
         private int mask;

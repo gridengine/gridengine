@@ -46,6 +46,7 @@ import java.io.Serializable;
  */
 public class QQuotaOptions implements Serializable {
     
+    private final static long serialVersionUID = -2009040301L;
     
     /* -q option */
     private QueueFilter queueFilter;

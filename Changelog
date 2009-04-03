@@ -1,3 +1,9 @@
+AA-2009-04-03-0: Bugfix:      - Incorrect slots values for Queue Instance detail view
+                              - sgemacc->sgeinspect script and sgeinspect.zip
+                              - serialVersionUID for jgdi monitoring
+                              - sge_ca check for cacert.pem
+                 Bugster:     6824160
+
 LP-2009-04-03-1: Bugfix:      Fixing buildbreak on windows
                  Review:      RD
 

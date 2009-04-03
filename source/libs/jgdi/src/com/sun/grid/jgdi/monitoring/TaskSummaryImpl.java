@@ -38,6 +38,8 @@ import java.io.Serializable;
  */
 public class TaskSummaryImpl implements TaskSummary, Serializable {
     
+    private final static long serialVersionUID = -2009040301L;
+    
     private String taskId;
     private String state;
     private boolean hasCpuUsage;

@@ -37,6 +37,8 @@ import java.io.Serializable;
  * Default implemenation of {@link QueueInfo}
  */
 public class QueueInfoImpl implements QueueInfo, Serializable {
+
+    private final static long serialVersionUID = -2009040301L;
     
     private int slotsTotal;
     private int slotsUsed;

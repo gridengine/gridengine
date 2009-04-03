@@ -38,6 +38,8 @@ import java.util.Date;
  * Default implemenation of {@link JobInfo}
  */
 public class JobInfoImpl implements JobInfo, Serializable {
+
+    private final static long serialVersionUID = -2009040301L;
     
     private int id;
     private String taskId;

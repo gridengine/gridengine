@@ -31,12 +31,8 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.monitoring;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**

@@ -995,6 +995,11 @@ MakePKCS12()
    fi
    RANDFILE=$RSFILE; export RANDFILE
 
+   if [ ! -s $CATOP/cacert.pem ]; then
+      PrintError "openssl pkcs12 command failed: $CATOP/cacert.pem missing"
+      return 1
+   fi
+
    $P12 $pwoptions -export -nodes -inkey $KEYFILE -out $myoutdir/$keyowner.p12 -in $CERTFILE -certfile $CATOP/cacert.pem -caname "SGE CA"
    if [ $? -ne 0 ]; then
       PrintError "openssl pkcs12 command failed"

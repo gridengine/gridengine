@@ -46,7 +46,9 @@ import java.util.Set;
  *
  */
 public class JobSummaryImpl extends JobInfoImpl implements JobSummary, Serializable {
-    
+
+    private final static long serialVersionUID = -2009040301L;
+
     private double nurg;
     private double urg;
     private double nppri;

@@ -31,11 +31,7 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jgdi.monitoring;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -68,13 +64,22 @@ public interface QueueInstanceSummary {
      *  @return number of used slots
      */
     public int getUsedSlots();
-    
+
     /**
+     *
      *  Get the number of free slots
+     *  (returns not free but total slots -> use getTotalSlots)
      *  @return number of free slots
      */
+    @Deprecated
     public int getFreeSlots();
-    
+
+    /**
+     *  Get the number of total slots
+     *  @return number of total slots
+     */
+    public int getTotalSlots();
+
     /**
      *  Get the architecture of the queue instance
      *  @return architecture of the queue instance

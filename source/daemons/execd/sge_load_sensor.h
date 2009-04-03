@@ -57,7 +57,7 @@ void sge_ls_gnu_ls(int);
 
 void set_ls_fds(fd_set *fds);
 
-int sge_ls_stop_if_pid(pid_t pid, int send_no_quit_command);
+int sge_ls_stop_if_pid(pid_t pid);
 
 #endif /* __SGE_LOAD_SENSOR_H */
 

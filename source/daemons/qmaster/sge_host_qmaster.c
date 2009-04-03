@@ -720,7 +720,7 @@ void sge_update_load_values(sge_gdi_ctx_class_t *ctx, const char *rhost, lList *
     */
    now = sge_get_gmt();
 
-   host_ep = host_list_locate(*object_type_get_master_list(SGE_TYPE_EXECHOST), rhost);
+   host_ep = lGetElemHost(*object_type_get_master_list(SGE_TYPE_EXECHOST), EH_name, rhost);
    if (host_ep == NULL) {
       /* report from unknown host arrived, ignore it */
       DRETURN_VOID;
@@ -775,7 +775,7 @@ void sge_update_load_values(sge_gdi_ctx_class_t *ctx, const char *rhost, lList *
          }
 
          /* get the new host */
-         *hepp = host_list_locate(*object_type_get_master_list(SGE_TYPE_EXECHOST), host);
+         *hepp = lGetElemHost(*object_type_get_master_list(SGE_TYPE_EXECHOST), EH_name, host);
          if (*hepp == NULL) {
             INFO((SGE_EVENT, MSG_CANT_ASSOCIATE_LOAD_SS, rhost, host));
             continue;

@@ -64,13 +64,7 @@ typedef enum {
 
    LOCK_MASTER_CONF = 1,
 
-   /* 
-    * this lock takes care that MULTI GDI GET requests will be handled
-    * as an atomar operations.  
-    */
-   LOCK_ATOMIC_MULTI_GDI = 2, 
-
-   NUM_OF_LOCK_TYPES = 3
+   NUM_OF_LOCK_TYPES = 2
 } sge_locktype_t;
 
 void 

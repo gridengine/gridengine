@@ -63,10 +63,6 @@ int cull_compress_definition_list(lList *lp_new, int nm_var, int nm_value, int d
 
 int cull_parse_simple_list(char *str, lList **lpp, char *name, lDescr *descr, int *interpretation_rule);
 
-#if 0
-int cull_parse_job_list(char *str, lList **lpp, char *name, lDescr *descr, int *interpretation_rule);
-#endif
-
 int cull_parse_string_list(char **pstrlist, const char *listname, lDescr *descr, int *interpretation_rule, lList **pplist);
 
 int uni_print_list(FILE *fp, char *buff, u_long32 max_len, const lList *lp, int *which_elements_rule, const char *pdelis[], unsigned long flags);

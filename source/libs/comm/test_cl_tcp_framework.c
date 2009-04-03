@@ -327,7 +327,6 @@ void *server_thread(void *t_conf) {
             cl_com_tcp_close_connection(&new_con);
             CL_LOG(CL_LOG_ERROR,"error receiving connection data");
          } else {
-            printf("RD: 1\n");
             cl_connection_list_append_connection(connection_list, new_con,1);
          }
          

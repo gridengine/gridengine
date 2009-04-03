@@ -2757,15 +2757,15 @@ bool sge_unparse_acl_dstring(dstring *category_str, const char *owner, const cha
           sge_contained_in_access_list(owner, group, elem, NULL)) {
          if (first) {      
             if (sge_dstring_strlen(category_str) > 0) {
-               sge_dstring_append(category_str, " ");
+               sge_dstring_append_char(category_str, ' ');
             }
             sge_dstring_append(category_str, option);
-            sge_dstring_append(category_str, " ");
+            sge_dstring_append_char(category_str, ' ');
             sge_dstring_append(category_str, lGetString(elem, US_name));
             first = false;
          }
          else {
-            sge_dstring_append(category_str, ",");
+            sge_dstring_append_char(category_str, ',');
             sge_dstring_append(category_str, lGetString(elem, US_name));
          }
       }
@@ -2813,15 +2813,15 @@ bool sge_unparse_queue_list_dstring(dstring *category_str, lListElem *job_elem,
       for_each (sub_elem, print_list) {
          if (first) {      
             if (sge_dstring_strlen(category_str) > 0) {
-               sge_dstring_append(category_str, " ");
+               sge_dstring_append_char(category_str, ' ');
             }
             sge_dstring_append(category_str, option);
-            sge_dstring_append(category_str, " ");
+            sge_dstring_append_char(category_str, ' ');
             sge_dstring_append(category_str, lGetString(sub_elem, QR_name));
             first = false;
          }
          else {
-            sge_dstring_append(category_str, ",");
+            sge_dstring_append_char(category_str, ',');
             sge_dstring_append(category_str, lGetString(sub_elem, QR_name));
          }
       }

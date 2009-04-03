@@ -40,7 +40,7 @@
 #include "sge_pe_task.h"
 #include "sge_usageL.h"
 #include "sge_report_execd.h"
-#include "sge_sched.h"
+#include "sge_usage.h"
 #include "sge_prog.h"
 #include "execution_states.h"
 #include "sge_feature.h"

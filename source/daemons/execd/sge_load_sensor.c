@@ -784,13 +784,12 @@ void trigger_ls_restart(void)
 *
 *  INPUTS
 *     pid - process id
-*     send_no_quit_command - do not communicate with loadsensor
 *
 *  RESULT
 *     0 - pid was not a loadsensor
 *     1 - we triggerd the restart because pid was a loadsensor
 ******************************************************************************/
-int sge_ls_stop_if_pid(pid_t pid, int send_no_quit_command)
+int sge_ls_stop_if_pid(pid_t pid)
 {
    lListElem *ls;
 

@@ -47,4 +47,6 @@ usage_list_set_double_usage(lList *usage_list, const char *name, double value);
 void
 usage_list_sum(lList *usage_list, const lList *add_usage_list);
 
+lList *scale_usage(lList *scaling, lList *prev_usage, lList *scaled_usage);
+ 
 #endif /* __SGE_USAGE_H */

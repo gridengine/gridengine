@@ -1,3 +1,6 @@
+RD-2009-04-03-1: Cleanup:     some minor cleanups
+                 Review:      CR
+
 LP-2009-04-03-0: Enhancem.:   gui-installer: Enable RC should be displayed in
                               shadowd installation
                  Enhacem.:    gui-installer: improved java detection and version

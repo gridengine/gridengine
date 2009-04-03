@@ -1030,6 +1030,7 @@ static bool ar_reserve_queues(lList **alpp, lListElem *ar)
    lList *talp = NULL;
    lList *ar_queue_request = lGetList(ar, AR_queue_list);
    const char *ar_pe_request = lGetString(ar, AR_pe);
+   const char *ar_ckpt_request = lGetString(ar, AR_checkpoint_name);
 
    lListElem *cqueue = NULL;
    bool ret = true;
@@ -1129,6 +1130,13 @@ static bool ar_reserve_queues(lList **alpp, lListElem *ar)
                continue;
             }
 
+         }
+
+         /* we only have to consider queues containing the requested checkpoint object */
+         if (ar_ckpt_request != NULL) {
+            if (lGetSubStr(qinstance, ST_name, ar_ckpt_request, QU_ckpt_list) == NULL) {
+               continue;
+            }
          }
 
          /* sort out queue that are calendar disabled in requested time frame */

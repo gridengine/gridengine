@@ -1,3 +1,9 @@
+AP-2009-04-03-0: Bugfix:      qrsub allows to request a non existing checkpoint
+                              object
+                 Bugster:     6755146
+                 Issue:       2967
+                 Review:      JG
+
 LP-2009-04-02-1: Enhancem.:   Added utilbin/valid_jvmlib to validate JVM library
                               path before it's accepted in the installation
                  Review:      EB

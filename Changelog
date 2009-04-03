@@ -1,3 +1,8 @@
+RD-2009-04-03-0: Bugfix:      profiling output is wrongly accumulated
+                 Bugster:     6823086
+                 Issue:       2975
+                 Review:      CR
+
 CR-2009-03-31-0: Bugfix:      qmaster csp installation fails when using port
                               from /etc/services 
                  Merged from: maintrunk (CR-2009-03-30-0)

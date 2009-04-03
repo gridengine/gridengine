@@ -1407,6 +1407,7 @@ bool prof_output_info(prof_level level, bool with_sub, const char *info)
               message = sge_strtok_r(NULL, "\n", &context)) {
             PROFILING((SGE_EVENT, "PROF(%d): %s", (int)thread_id, message));
          }
+         prof_reset(level, NULL);
 
          sge_free_saved_vars(context);
          ret = true;

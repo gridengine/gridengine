@@ -1,3 +1,19 @@
+LP-2009-04-03-0: Enhancem.:   gui-installer: Enable RC should be displayed in
+                              shadowd installation
+                 Enhacem.:    gui-installer: improved java detection and version
+                              validation in start_gui_installer
+                 Enhacem.:    gui-installer: updated shadowd installation for
+                              changes in 6824933
+                 Enhacem.:    gui-installer: Improved checking for JVM library
+                              on qmaster and shadows when JMX enabled
+                 Bugfix:      gui-installer: Execd spool dir check should check
+                              permissions also as root in root installation
+                 Bugfix:      gui-installer: JVM library detection should offer
+                              a correct library based on qmaster architecture
+                 Bugster:     6786364
+                 Issue:       2974
+                 Review:      ZG
+
 RD-2009-04-03-0: Bugfix:      profiling output is wrongly accumulated
                  Bugster:     6823086
                  Issue:       2975

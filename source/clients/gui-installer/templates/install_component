@@ -439,7 +439,7 @@ if [ -n "${first_install_task}" ]; then
       list="${gui_csphosts}"
       CSP_FLAGS=""
       #-copycerts needs -rsh if rsh is to be used
-      if [ "$SHELL_NAME" != "ssh" ]; then
+      if [ x`echo $SHELL_NAME` | grep "ssh" = x ]; then
          CSP_FLAGS="-rsh"
       fi
       total=0

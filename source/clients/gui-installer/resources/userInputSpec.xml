@@ -149,7 +149,7 @@ ___INFO__MARK_END__-->
             </validator>
         </field>
         <field type="space" />
-        <field type="check" variable="cfg.add.to.rc" conditionid="(!(cond.no.connect.user)|cond.user.root)+(cond.install.qmaster|cond.install.execd|cond.install.bdb)">
+        <field type="check" variable="cfg.add.to.rc" conditionid="(!(cond.no.connect.user)|cond.user.root)">
             <spec align="left" id="cfg.add.to.rc.label" true="true" false="false" />
         </field>
         <field type="check" variable="add.sge.jmx" conditionid="cond.install.qmaster+cond.custom.install">
@@ -215,6 +215,7 @@ ___INFO__MARK_END__-->
             <validator id="cfg.sge.jvm.lib.path.fileexistsvalidator" class="com.sun.grid.installer.gui.FileExistsValidator">
                 <param name="file" value=""/>
             </validator>
+            <!-- TODO: Check validity using utilbin/$ARCH/valid_jvmlib -->
         </field>
         <field type="text" variable="cfg.sge.additional.jvm.args">
             <spec id="cfg.sge.additional.jvm.args.label" size="35" />

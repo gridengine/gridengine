@@ -946,7 +946,12 @@ public class HostPanel extends IzPanel implements Config,
                    shadowCB.setSelected(false);
                    shadowCB.setVisible(false);
                 } else {
-                   shadowCB.setSelected(false);
+                   if (!isQmasterInst || !isExecdInst) {
+                      //Enabled if shandalone installation or shadowd+bdb
+                      shadowCB.setSelected(true);
+                   } else {
+                      shadowCB.setSelected(false);
+                   }
                    shadowCB.setVisible(true);
                 }
                 qmasterCB.setSelected(false);
@@ -2016,6 +2021,13 @@ public class HostPanel extends IzPanel implements Config,
         }
         //TODO: Sort the rest of the list alphabetically
 
+        //Add first task if none added so far
+        if (!haveFirstTask) {
+            //We add additional prerequisite task (first task)
+            //After issue 2973 fixed in 6.2u3 needed also for shadowds
+            installList.addUnchecked(firstTaskHost);
+        }
+
         //We cannot install shadowds in parallel!
         if (isShadowdInst) {
             //Find shadowds and put them as next
@@ -2046,11 +2058,7 @@ public class HostPanel extends IzPanel implements Config,
                 }
             }
         }
-        //Add first task if none added so far
-        if (!haveFirstTask) {
-            //We add additional prerequisite task (first task)
-            installList.addUnchecked(firstTaskHost);
-        }
+        
         //Copy the rest (execds)
         for (Host host : tmpList) {
             installList.addUnchecked(new Host(host));

@@ -158,24 +158,6 @@ public class PreActionPanel extends ActionPanel {
         idata.setVariable(VAR_DB_SPOOLING_SERVER, Host.localHostName);
         Debug.trace("cfg.db.spooling.server='" + idata.getVariable(VAR_DB_SPOOLING_SERVER) + "'");
 
-        // cfg.sge.jvm.lib.path
-        List<String> libPaths = new ArrayList<String>();
-        libPaths.addAll(Arrays.asList(idata.getVariable("SYSTEM_java_library_path").split(":")));
-        libPaths.add(idata.getVariable("SYSTEM_sun_boot_library_path"));
-        //MacOS last resort
-        libPaths.add("/System/Library/Frameworks/JavaVM.framework/Libraries");
-
-        String libjvm = "/" + System.mapLibraryName("jvm");
-        if (libjvm.endsWith(".jnilib")) {
-            libjvm = libjvm.substring(0, libjvm.lastIndexOf(".jnilib")) + ".dylib";
-        }
-
-        for (String libPath : libPaths) {
-            if (new File(libPath + libjvm).exists()) {
-                idata.setVariable(VAR_JVM_LIB_PATH, libPath + libjvm);
-                Debug.trace("cfg.sge.jvm.lib.path='" + idata.getVariable(VAR_JVM_LIB_PATH) + "'");
-                break;
-            }
-        }
+        // cfg.sge.jvm.lib.path  must be detected only when JMX was enabled later via remote call to DetectJvmLibrary.jar
     }
 }

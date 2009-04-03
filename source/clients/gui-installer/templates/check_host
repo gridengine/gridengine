@@ -31,7 +31,7 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-# arguements
+# arguments
 IS_BDB=$1
 IS_QMASTER=$2
 IS_SHADOW=$3
@@ -47,7 +47,7 @@ DB_SPOOLING_SERVER="${cfg.db.spooling.server}"
 EXIT_CODE=0
 
 ADMINUSER="${cfg.admin.user}"
-if [ "$SGE_ARCH" = "win32-x86" ]; then
+if [ "${host.arch}" = "win32-x86" ]; then
    HOSTNAME=`hostname | tr "[a-z]" "[A-Z]"`
    ADMINUSER="$HOSTNAME+$ADMINUSER"
 fi
@@ -164,9 +164,12 @@ if [ "$IS_QMASTER" = true ]; then
       fi
 
       # check JVM library validity
-#      if [ ]; then
-#         Exit 24
-#      fi
+      if [ -n "${cfg.sge.jvm.lib.path}" ]; then
+         "${cfg.sge.root}"/utilbin/"${host.arch}"/valid_jvmlib "${cfg.sge.jvm.lib.path}"
+         if [ $? -ne 0 ]; then
+            Exit 24
+         fi
+      fi
   fi
 
    # if local BDB spooling is enabled ...
@@ -193,16 +196,25 @@ fi
 
 # if shadowd host
 if [ "$IS_SHADOW" = true ]; then
-   # check JVM library
    # TODO check whether to start jmx
-   if [ "${add.sge.jmx}" = "true" -a \( -z "${cfg.sge.jvm.lib.path}" -o ! -f "${cfg.sge.jvm.lib.path}" \) ]; then
-      Exit 30
+   # check JVM library
+   if [ "${add.sge.jmx}" = "true" ]; then
+      if [ -z "${cfg.sge.jvm.lib.path}" -o ! -f "${cfg.sge.jvm.lib.path}" ]; then
+         #Detecting JVM will only verify it will be detected during the installation
+         SGE_ROOT="${cfg.sge.root}" ; export SGE_ROOT
+         . $SGE_ROOT/util/install_modules/inst_qmaster.sh
+         HaveSuitableJavaBin "1.5.0" "jvm"
+         if [ -z "$jvm_lib_path" ]; then
+            Exit 30
+         fi
+      else
+         # Need to do validity check only if not autodetected (already doen there)
+         "${cfg.sge.root}"/utilbin/"${host.arch}"/valid_jvmlib "${cfg.sge.jvm.lib.path}"
+         if [ $? -ne 0 ]; then
+            Exit 31
+         fi
+      fi
    fi
-
-   # check JVM library validity
-#  if [ ]; then
-#     Exit 31
-#  fi
 fi
 
 # if execd host
@@ -213,7 +225,8 @@ if [ "$IS_EXECD" = true ]; then
    if [ -n "${cfg.exec.spool.dir.local}" ]; then
       IsDirWritable "${cfg.exec.spool.dir.local}"
    else
-      IsDirWritableByAdminUser "${cfg.execd.spool.dir}"
+      # Need to check both install and admin users, since root can create whatever he wants
+      IsDirWritable "${cfg.execd.spool.dir}"
    fi
 
    if [ $EXIT_CODE -ne 0 ]; then

@@ -1,3 +1,8 @@
+RD-2009-04-03-0: Bugfix:      profiling output is wrongly accumulated
+                 Bugster:     6823086
+                 Issue:       2975
+                 Review:      CR
+
 AP-2009-04-03-0: Bugfix:      qrsub allows to request a non existing checkpoint
                               object
                  Bugster:     6755146

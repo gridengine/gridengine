@@ -1,3 +1,17 @@
+LP-2009-04-03-2: Enhancem.:   Renamed sgemacc to sgeinspect in install scripts
+                 Enhancem.:   Improved auto install messages for shadowd
+                 Enhancem.:   Validating JVM library in qmaster/shadowd
+                              installations
+                 Bugfix:      qmaster startup might take too long if network is
+                              unavailable
+                 Bugster:     6824159
+                 Issue:       2970
+                 Bugfix:      Qmaster does not display any message when started
+                              on non-qmaster host
+                 Bugster:     6824165
+                 Issue:       2971
+                 Review:      AA, CR
+
 AA-2009-04-03-0: Bugfix:      - Incorrect slots values for Queue Instance detail view
                               - sgemacc->sgeinspect script and sgeinspect.zip
                               - serialVersionUID for jgdi monitoring

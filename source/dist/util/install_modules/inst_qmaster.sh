@@ -1886,8 +1886,13 @@ IsJavaBinSuitable()
          jvm_lib_path=""
          GetJvmLib $java_bin
          if [ -n "$jvm_lib_path" ]; then
-            #echo $java_bin
-            return 0
+            #Verify we can load it
+            if [ "$SGE_ARCH" != "win32-x86" ]; then
+               $SGE_ROOT/utilbin/$SGE_ARCH/valid_jvmlib "$jvm_lib_path" >/dev/null 2>&1
+               return $?
+            else
+               return 0
+            fi
          fi
       else
          return 0
@@ -2082,6 +2087,15 @@ SetLibJvmPath() {
    NUM_MIN_JAVA_VERSION=`JavaVersionString2Num $MIN_JAVA_VERSION`
    
    jvm_lib_path=""
+   if [ -n "$SGE_JVM_LIB_PATH" -a "$SGE_ARCH" != "win32-x86" ]; then
+      #verify we got a correct platform library
+      $SGE_ROOT/utilbin/$SGE_ARCH/valid_jvmlib "$SGE_JVM_LIB_PATH" >/dev/null 2>&1 
+      if [ $? -ne 0 ]; then
+         $INFOTEXT -log -n "Specified JVM library %s is not correct. Will try to find another one." "$SGE_JVM_LIB_PATH"
+         SGE_JVM_LIB_PATH=""         
+      fi
+   fi
+      
    #Try to detect the library, if none specified via SGE_JVM_LIB_PATH
    if [ -z "$SGE_JVM_LIB_PATH" ]; then      
       HaveSuitableJavaBin $MIN_JAVA_VERSION "jvm"
@@ -2156,10 +2170,9 @@ SetLibJvmPath() {
 GetJMXPort() {
    $CLEAR
    $INFOTEXT -u "\nGrid Engine JMX MBean server"
-   $INFOTEXT -n "\nIn order to use the SGE Monitoring and Configuration Console (SGE MaCC)\n" \
-                "or the Service Domain Manager (SDM) SGE adapter you need to configure a\n" \
-                "JMX server in qmaster. Qmaster will then load a Java Virtual Machine through\n" \
-                "a shared library.\n\n"   
+   $INFOTEXT -n "\nIn order to use the SGE Inspect or the Service Domain Manager (SDM)\n" \
+                "SGE adapter you need to configure a JMX server in qmaster. Qmaster \n" \
+                "will then load a Java Virtual Machine through a shared library.\n\n"   
    #Shadowds keep qmaster setting, JMX for all or JMX for nobody
    if [ "$1" = "shadowd" ]; then
       default_value=`BootstrapGetValue $SGE_ROOT/$SGE_CELL/common "jvm_threads"`

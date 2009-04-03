@@ -301,16 +301,25 @@ CheckRunningQmaster()
       ping_port=$SGE_QMASTER_PORT
    fi
 
+   #If the port cannot be bound, qping takes a long time to finish and multiplied by 30 seems like forever
+   start=`$SGE_ROOT/utilbin/$ARCH/now 2>/dev/null`
    while [ $running = "false" -a $loop -ne 30 ]; do 
       $bin_dir/qping -info $masterhost $ping_port qmaster 1 > /dev/null 2>&1
 
       if [ "$?" = 0 ]; then
          running=true
       else
+         if [ -n "$start" ]; then
+            now=`$SGE_ROOT/utilbin/$ARCH/now 2>/dev/null`
+            elapsed=`expr $now - $start`
+            if [ $elapsed -gt 60 ]; then
+               break
+            fi
+         fi
          sleep 2 
          masterhost=`cat $SGE_ROOT/$SGE_CELL/common/act_qmaster`
-         loop=`expr $loop + 1`
-      fi
+         loop=`expr $loop + 1`         
+      fi            
    done
 
    if [ $running = "false" ]; then
@@ -531,7 +540,13 @@ if [ "$startup" = true ]; then
        qmaster_host=true
    fi
 
-   if [ $qmaster = true ]; then
+   if [ $qmaster = true -a $qmaster_host = false ]; then
+      echo
+      echo "sge_qmaster didn't start!"
+      echo "This is not a qmaster host!"
+      echo "Please, check your act_qmaster file!" 
+      echo
+   elif [ $qmaster = true ]; then
       DetectSMFService qmaster
       #We want to use smf
       if [ -z "$SMF_FMRI" -a -n "$service"  ]; then
@@ -544,12 +559,6 @@ if [ "$startup" = true ]; then
          [ $? -eq 0 -a -d /var/lock/subsys ] && touch /var/lock/subsys/sgemaster >/dev/null 2>&1
          CheckRunningQmaster
       fi
-   elif [ $qmaster = true -a $qmaster_host = false ]; then
-      echo
-      echo "sge_qmaster didn't start!"
-      echo "This is not a qmaster host!"
-      echo "Please, check your act_qmaster file!" 
-      echo
    fi
       
    if [ $shadowd = true -a $shadow_host = true ]; then
@@ -581,9 +590,9 @@ if [ "$startup" = true ]; then
             svcadm enable -st $service
          else
             $bin_dir/sge_shadowd
-	 fi
+         fi
       else
-	 echo "   found running sge_shadowd - not starting"
+         echo "   found running sge_shadowd - not starting"
          exit 1
       fi
    fi

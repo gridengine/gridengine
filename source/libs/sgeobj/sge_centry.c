@@ -62,7 +62,7 @@
 
 /* EB: ADOC: add commets */
 
-const int max_host_resources=23;/* specifies the number of elements in the host_resource array */
+const int max_host_resources=24;/* specifies the number of elements in the host_resource array */
 const struct queue2cmplx host_resource[] = {
    {"arch",           0, 0, 0, TYPE_STR},
    {"cpu",            0, 0, 0, TYPE_DOUBLE},
@@ -86,7 +86,8 @@ const struct queue2cmplx host_resource[] = {
    {"swap_used",      0, 0, 0, TYPE_MEM},
    {"virtual_free",   0, 0, 0, TYPE_MEM},
    {"virtual_total",  0, 0, 0, TYPE_MEM},
-   {"virtual_used",   0, 0, 0, TYPE_MEM}
+   {"virtual_used",   0, 0, 0, TYPE_MEM},
+   {"display_win_gui",0, 0, 0, TYPE_BOO}
 };
 
 const int max_queue_resources=24; /* specifies the number of elements in the queue_resource array */
@@ -278,15 +279,16 @@ map_op2str(u_long32 op)
 {
    static char *opv[] = {
       "??",
-      "==", /* CMPLXEQ_OP */
-      ">=", /* CMPLXGE_OP */
-      ">",  /* CMPLXGT_OP */
-      "<",  /* CMPLXLT_OP */
-      "<=", /* CMPLXLE_OP */
-      "!="  /* CMPLXNE_OP */
+      "==",  /* CMPLXEQ_OP */
+      ">=",  /* CMPLXGE_OP */
+      ">",   /* CMPLXGT_OP */
+      "<",   /* CMPLXLT_OP */
+      "<=",  /* CMPLXLE_OP */
+      "!=",  /* CMPLXNE_OP */
+      "EXCL" /* CMPLXEXCL_OP */
    };
 
-   if (op < CMPLXEQ_OP || op > CMPLXNE_OP) {
+   if (op < CMPLXEQ_OP || op > CMPLXEXCL_OP) {
       op = 0;
    }
    return opv[op];
@@ -358,7 +360,6 @@ map_type2str(u_long32 type)
 
       "TYPE_ACC",/* TYPE_ACC */
       "TYPE_LOG",/* TYPE_LOG */
-      "TYPE_LOF" /* TYPE_LOF */
    };
 
    if (type < TYPE_FIRST || type > TYPE_LAST) {
@@ -757,6 +758,15 @@ centry_list_fill_request(lList *this_list, lList **answer_list, lList *master_ce
          lSetUlong(entry, CE_valtype, lGetUlong(cep, CE_valtype));
 
          /* we also know wether it is a consumable attribute */
+         {
+            /* With 6.2u2 the type for CE_consumable changed from bool to ulong
+               for old objects we change the type to the new one */
+            int pos = lGetPosViaElem(entry, CE_consumable, SGE_NO_ABORT);
+            if (mt_get_type(entry->descr[pos].mt) == lBoolT) {
+               DPRINTF(("Upgrading CE_consumable from bool to ulong\n"));
+               entry->descr[pos].mt = cep->descr[pos].mt;
+            }
+         }
          lSetUlong(entry, CE_consumable, lGetUlong(cep, CE_consumable));
 
          if (centry_fill_and_check(entry, answer_list, allow_empty_boolean, allow_neg_consumable)) {
@@ -988,7 +998,12 @@ bool centry_elem_validate(lListElem *centry, lList *centry_list,
       case TYPE_INT :
       case TYPE_MEM :
       case TYPE_DOUBLE:
-      case TYPE_TIM : /* no checks, they can have everything */
+      case TYPE_TIM :
+         if (relop == CMPLXEXCL_OP) {
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR,
+                                    MSG_MUST_BOOL_TO_BE_EXCL_S, attrname);  
+            ret = false;
+         }
          break;
       
       case TYPE_STR :
@@ -1007,14 +1022,20 @@ bool centry_elem_validate(lListElem *centry, lList *centry_list,
                        }
          break;
 
-      case TYPE_BOO : if ( relop != CMPLXEQ_OP ){
+      case TYPE_BOO : if (relop != CMPLXEQ_OP && relop != CMPLXEXCL_OP){
                            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR,
                                                    MSG_INVALID_CENTRY_TYPE_RELOP_S, attrname); 
                            ret = false;
                        } 
-                       if (lGetUlong(centry, CE_consumable)) {
+                       if (lGetUlong(centry, CE_consumable) && relop != CMPLXEXCL_OP) {
                            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR,
-                                                   MSG_INVALID_CENTRY_CONSUMABLE_TYPE_SS, attrname, 
+                                                   MSG_INVALID_CENTRY_EXCL_S, attrname, 
+                                                   map_type2str(type));
+                           ret = false;
+                       }
+                       if (relop == CMPLXEXCL_OP && !lGetUlong(centry, CE_consumable)) {
+                           answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR,
+                                                   MSG_INVALID_CENTRY_EXCL_S, attrname, 
                                                    map_type2str(type));
                            ret = false;
                        }
@@ -1042,8 +1063,8 @@ bool centry_elem_validate(lListElem *centry, lList *centry_list,
       }
 
       if (lGetUlong(centry, CE_consumable)) {
-   
-         if (relop != CMPLXLE_OP) {
+  
+         if (relop != CMPLXEXCL_OP && relop != CMPLXLE_OP) {
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR,
                                     MSG_INVALID_CENTRY_CONSUMABLE_RELOP_S , attrname);
             ret = false;
@@ -1060,8 +1081,7 @@ bool centry_elem_validate(lListElem *centry, lList *centry_list,
                                        MSG_INVALID_CENTRY_CONSUMABLE_REQ1_S, attrname);
                ret = false;
             }
-         }
-         else if (lGetUlong(centry, CE_requestable) == REQU_FORCED) {
+         } else if (lGetUlong(centry, CE_requestable) == REQU_FORCED) {
             if(!parse_ulong_val(&dval, NULL, type, lGetString(centry, CE_default), error_msg, 199)){
                answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR, 
                                     MSG_INVALID_CENTRY_PARSE_DEFAULT_SS, attrname, error_msg);
@@ -1073,8 +1093,7 @@ bool centry_elem_validate(lListElem *centry, lList *centry_list,
                ret = false;
             }
          }
-      }
-      else if ( (temp = lGetString(centry, CE_default)) ) {
+      } else if ( (temp = lGetString(centry, CE_default)) ) {
       
          switch(type){
             case TYPE_INT:

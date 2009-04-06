@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2009/01/12 13:54:14 $     Revision: $Revision: 1.32 $
+.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2009/03/12 14:13:23 $     Revision: $Revision: 1.33 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QUEUE_CONF 5 "$Date: 2009/01/12 13:54:14 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH QUEUE_CONF 5 "$Date: 2009/03/12 14:13:23 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 queue_conf \- xxQS_NAMExx queue configuration file format
@@ -706,7 +706,11 @@ If \fBs_rt\fP is exceeded, the job is first
 finally aborted after the notification time 
 defined in the queue configuration parameter
 .B notify
-(see above) has passed.
+(see above) has passed. In cases when \fBs_rt\fP is used in combination with job 
+notification it might be necessary to configure a signal other than SIGUSR1 
+using the NOTIFY_KILL and NOTIFY_SUSP execd_params (see 
+.M sge_conf 5 )
+so that the jobs' signal-catching mechanism can "differ" the cases and react accordingly.
 .PP
 The resource limit parameters \fBs_cpu\fP and \fBh_cpu\fP are implemented
 by xxQS_NAMExx as a job limit. They 

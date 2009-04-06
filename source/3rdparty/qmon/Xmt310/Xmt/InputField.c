@@ -1,6 +1,6 @@
 /* 
  * Motif Tools Library, Version 3.1
- * $Id: InputField.c,v 1.3 2007/05/29 11:52:34 andre Exp $
+ * $Id: InputField.c,v 1.4 2009/03/17 15:18:05 roland Exp $
  * 
  * Written by David Flanagan.
  * Copyright (c) 1992-2001 by David Flanagan.
@@ -9,6 +9,15 @@
  * There is no warranty for this software.  See NO_WARRANTY for details.
  *
  * $Log: InputField.c,v $
+ * Revision 1.4  2009/03/17 15:18:05  roland
+ * RD-2009-03-17-0: Enhancem.:   - added EXCL relop for boolean consumable
+ *                  Bugster:     6731441
+ *                  Issue:       2629
+ *                  Bugfix:      - libspoolb and libspoolc should not link against
+ *                                 jemalloc/mtmalloc
+ *                  Bugfix:      - fixed memory leak in shepherd and buildin_starter
+ *                  Review:      AA
+ *
  * Revision 1.3  2007/05/29 11:52:34  andre
  * AA-2007-05-29-0: Enhancem:  - Advance Reservation qmon changes
  *                             - various qmon bug fixes:
@@ -1280,7 +1289,7 @@ Cardinal size;
     String s = XmtInputFieldGetString(w);
 
     if (type == XmtQString)
-	*(String *)address = s;
+	   *(String *)address = s;
     else if (type == XmtQBuffer) {
 	int len = strlen(s);
 

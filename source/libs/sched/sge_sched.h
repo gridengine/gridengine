@@ -42,7 +42,6 @@
 #include "sge_pe_schedd.h"
 #include "debit.h"
 #include "subordinate_schedd.h"
-#include "scale_usage.h"
 
 /* Temporary SGE switches */
 #define project_enforcement 0

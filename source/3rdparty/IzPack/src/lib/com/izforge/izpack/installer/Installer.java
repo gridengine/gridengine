@@ -56,6 +56,15 @@ public class Installer
             System.setProperty("com.apple.mrj.application.growbox.intrudes", "false");
             System.setProperty("com.apple.mrj.application.live-resize", "true");
         }
+        
+        try {
+            // Check whether it's a demo version
+            Class.forName("com.sun.grid.installer.util.cmd.TestBedManager");
+            System.out.println("DEMO version");
+            //TODO show it in the title as well
+        } catch (ClassNotFoundException ex) {
+            // Normal version
+        }
 
         try
         {

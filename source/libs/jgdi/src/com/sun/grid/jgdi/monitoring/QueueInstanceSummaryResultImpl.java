@@ -39,6 +39,8 @@ import java.util.Collections;
  *
  */
 public class QueueInstanceSummaryResultImpl implements QueueInstanceSummaryResult, Serializable {
+
+    private final static long serialVersionUID = -2009040301L;
     
     private List<QueueInstanceSummary> queueInstanceSummaryList = new ArrayList<QueueInstanceSummary>();
     private List<JobSummary> unassignedJobSummaryList = new ArrayList<JobSummary>();

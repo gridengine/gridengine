@@ -184,8 +184,6 @@ static void        init_array_first(void);
 static void        init_thread_info(void);
 static int         get_prof_info_thread_id(pthread_t thread_num);
 
-static const char *prof_add_error_sprintf(dstring *buffer, const char *fmt, ...);
-
 static sge_prof_info_t **theInfo = NULL;
 static sge_thread_info_t *thrdInfo = NULL;
 
@@ -296,12 +294,12 @@ bool prof_set_level_name(prof_level level, const char *name, dstring *error)
    bool ret = true;
 
    if (level >= SGE_PROF_ALL) {
-      prof_add_error_sprintf(error, MSG_PROF_INVALIDLEVEL_SD, "prof_set_level_name", level);
+      sge_dstring_sprintf_append(error, MSG_PROF_INVALIDLEVEL_SD, "prof_set_level_name", level);
       ret = false;
    } else if (name == NULL) {
-      prof_add_error_sprintf(error, MSG_PROF_NULLLEVELNAME_S, "prof_set_level_name");
+      sge_dstring_sprintf_append(error, MSG_PROF_NULLLEVELNAME_S, "prof_set_level_name");
       ret = false;
-   } else if (profiling_enabled) {
+   } else {
       thread_id = pthread_self();
       
       thread_num = get_prof_info_thread_id(thread_id);
@@ -389,7 +387,7 @@ bool prof_start(prof_level level, dstring *error)
    bool ret = true;
 
    if (level > SGE_PROF_ALL) {
-      prof_add_error_sprintf(error, MSG_PROF_INVALIDLEVEL_SD, "prof_start", level);
+      sge_dstring_sprintf_append(error, MSG_PROF_INVALIDLEVEL_SD, "prof_start", level);
       ret = false;
    } else if (profiling_enabled) {
       thread_id = pthread_self();
@@ -397,10 +395,10 @@ bool prof_start(prof_level level, dstring *error)
       thread_num = get_prof_info_thread_id(thread_id);
 
       if ((thread_num < 0) || (thread_num >= MAX_THREAD_NUM)) {
-         prof_add_error_sprintf(error, MSG_PROF_MAXTHREADSEXCEEDED_S, "prof_start");
+         sge_dstring_sprintf_append(error, MSG_PROF_MAXTHREADSEXCEEDED_S, "prof_start");
          ret = false;
       } else if (theInfo[thread_num][level].prof_is_started) {
-         prof_add_error_sprintf(error, MSG_PROF_ALREADYACTIVE_S, "prof_start");
+         sge_dstring_sprintf_append(error, MSG_PROF_ALREADYACTIVE_S, "prof_start");
          ret = false;
       } else {
          struct tms tms_buffer;
@@ -483,7 +481,7 @@ bool prof_stop(prof_level level, dstring *error)
    prof_level i;
 
    if (level > SGE_PROF_ALL) {
-      prof_add_error_sprintf(error, MSG_PROF_INVALIDLEVEL_SD, "prof_stop", level);
+      sge_dstring_sprintf_append(error, MSG_PROF_INVALIDLEVEL_SD, "prof_stop", level);
       ret = false;
    } else if (profiling_enabled) {
       thread_id = pthread_self();
@@ -491,10 +489,10 @@ bool prof_stop(prof_level level, dstring *error)
       thread_num = get_prof_info_thread_id(thread_id);
 
       if ((thread_num < 0) || (thread_num >= MAX_THREAD_NUM)) {
-         prof_add_error_sprintf(error, MSG_PROF_MAXTHREADSEXCEEDED_S, "prof_stop");
+         sge_dstring_sprintf_append(error, MSG_PROF_MAXTHREADSEXCEEDED_S, "prof_stop");
          ret = false;
       } else if (!theInfo[thread_num][level].prof_is_started) {
-         prof_add_error_sprintf(error, MSG_PROF_NOTACTIVE_S, "prof_stop");
+         sge_dstring_sprintf_append(error, MSG_PROF_NOTACTIVE_S, "prof_stop");
          ret = false;
       } else {
          prof_stop_measurement(SGE_PROF_OTHER, error);
@@ -544,7 +542,7 @@ bool prof_start_measurement(prof_level level, dstring *error)
    bool ret = true;
 
    if (level >= SGE_PROF_ALL) {
-      prof_add_error_sprintf(error, MSG_PROF_INVALIDLEVEL_SD, "prof_start_measurement", level);
+      sge_dstring_sprintf_append(error, MSG_PROF_INVALIDLEVEL_SD, "prof_start_measurement", level);
       ret = false;
    } else if (profiling_enabled) {
       thread_id = pthread_self();
@@ -552,10 +550,10 @@ bool prof_start_measurement(prof_level level, dstring *error)
       thread_num = get_prof_info_thread_id(thread_id);
 
       if ((thread_num < 0) || (thread_num >= MAX_THREAD_NUM)) {
-         prof_add_error_sprintf(error, MSG_PROF_MAXTHREADSEXCEEDED_S, "prof_start_measurement");
+         sge_dstring_sprintf_append(error, MSG_PROF_MAXTHREADSEXCEEDED_S, "prof_start_measurement");
          ret = false;
       } else if (!theInfo[thread_num][level].prof_is_started) { 
-         prof_add_error_sprintf(error, MSG_PROF_NOTACTIVE_S, "prof_start_measurement");
+         sge_dstring_sprintf_append(error, MSG_PROF_NOTACTIVE_S, "prof_start_measurement");
          ret = false;
       } else if (theInfo[thread_num][SGE_PROF_ALL].akt_level == level) {
          /* multiple start_measurement calls within one level are allowed */
@@ -564,7 +562,7 @@ bool prof_start_measurement(prof_level level, dstring *error)
          /* we cannot yet handle cyclic measurements between multiple levels
           * produce an error and stop profiling
           */
-         prof_add_error_sprintf(error, MSG_PROF_CYCLICNOTALLOWED_SD, "prof_start_measurement", level);
+         sge_dstring_sprintf_append(error, MSG_PROF_CYCLICNOTALLOWED_SD, "prof_start_measurement", level);
          prof_stop(level, error);
          ret = false;
       } else {
@@ -615,7 +613,7 @@ bool prof_stop_measurement(prof_level level, dstring *error)
    bool ret = true;
 
    if (level >= SGE_PROF_ALL) {
-      prof_add_error_sprintf(error, MSG_PROF_INVALIDLEVEL_SD, "prof_stop_measurement", level);
+      sge_dstring_sprintf_append(error, MSG_PROF_INVALIDLEVEL_SD, "prof_stop_measurement", level);
       ret = false;
    } else if (profiling_enabled) {
       thread_id = pthread_self();
@@ -623,10 +621,10 @@ bool prof_stop_measurement(prof_level level, dstring *error)
       thread_num = get_prof_info_thread_id(thread_id);
 
       if ((thread_num < 0) || (thread_num >= MAX_THREAD_NUM)) {
-         prof_add_error_sprintf(error, MSG_PROF_MAXTHREADSEXCEEDED_S, "prof_stop_measurement");
+         sge_dstring_sprintf_append(error, MSG_PROF_MAXTHREADSEXCEEDED_S, "prof_stop_measurement");
          ret = false;
       } else if (!theInfo[thread_num][level].prof_is_started) {
-         prof_add_error_sprintf(error, MSG_PROF_NOTACTIVE_S, "prof_stop_measurement");
+         sge_dstring_sprintf_append(error, MSG_PROF_NOTACTIVE_S, "prof_stop_measurement");
          ret = false;
       } else {
          clock_t time, utime, stime;
@@ -699,7 +697,7 @@ bool prof_reset(prof_level level, dstring *error)
    bool ret = true;
 
    if (level > SGE_PROF_ALL) {
-      prof_add_error_sprintf(error, MSG_PROF_INVALIDLEVEL_SD, "prof_reset", level);
+      sge_dstring_sprintf_append(error, MSG_PROF_INVALIDLEVEL_SD, "prof_reset", level);
       ret = false;
    } else if (profiling_enabled) {
       thread_id = pthread_self();
@@ -707,10 +705,10 @@ bool prof_reset(prof_level level, dstring *error)
       thread_num = get_prof_info_thread_id(thread_id);
 
       if ((thread_num < 0) || (thread_num >= MAX_THREAD_NUM)) {
-         prof_add_error_sprintf(error, MSG_PROF_MAXTHREADSEXCEEDED_S, "prof_reset");
+         sge_dstring_sprintf_append(error, MSG_PROF_MAXTHREADSEXCEEDED_S, "prof_reset");
          ret = false;
       } else if (theInfo[thread_num][SGE_PROF_ALL].akt_level > SGE_PROF_OTHER) {
-         prof_add_error_sprintf(error, MSG_PROF_RESETWHILEMEASUREMENT_S, "prof_reset");
+         sge_dstring_sprintf_append(error, MSG_PROF_RESETWHILEMEASUREMENT_S, "prof_reset");
          ret = false;
       } else {
          if (theInfo[thread_num][level].prof_is_started) {
@@ -815,14 +813,14 @@ double prof_get_measurement_wallclock(prof_level level, bool with_sub, dstring *
    double ret = 0.0;
    
    if (level >= SGE_PROF_ALL) {
-      prof_add_error_sprintf(error, MSG_PROF_INVALIDLEVEL_SD, "prof_get_measurement_wallclock", level);
+      sge_dstring_sprintf_append(error, MSG_PROF_INVALIDLEVEL_SD, "prof_get_measurement_wallclock", level);
    } else if (profiling_enabled) {
       thread_id = pthread_self();
 
       thread_num = get_prof_info_thread_id(thread_id);
 
       if ((thread_num < 0) || (thread_num >= MAX_THREAD_NUM)) {
-         prof_add_error_sprintf(error, MSG_PROF_MAXTHREADSEXCEEDED_S, "prof_get_measurement_wallclock");
+         sge_dstring_sprintf_append(error, MSG_PROF_MAXTHREADSEXCEEDED_S, "prof_get_measurement_wallclock");
       } else {
          clock = theInfo[thread_num][level].end - theInfo[thread_num][level].start;
 
@@ -869,14 +867,14 @@ double prof_get_measurement_utime(prof_level level, bool with_sub, dstring *erro
    double ret = 0.0;
    
    if (level >= SGE_PROF_ALL) {
-      prof_add_error_sprintf(error, MSG_PROF_INVALIDLEVEL_SD, "prof_get_measurement_utime", level);
+      sge_dstring_sprintf_append(error, MSG_PROF_INVALIDLEVEL_SD, "prof_get_measurement_utime", level);
    } else if (profiling_enabled) {
       thread_id = pthread_self();
 
       thread_num = get_prof_info_thread_id(thread_id);
 
       if ((thread_num < 0) || (thread_num >= MAX_THREAD_NUM)) {
-         prof_add_error_sprintf(error, MSG_PROF_MAXTHREADSEXCEEDED_S, "prof_get_measurement_utime");
+         sge_dstring_sprintf_append(error, MSG_PROF_MAXTHREADSEXCEEDED_S, "prof_get_measurement_utime");
       } else {
          clock = (theInfo[thread_num][level].tms_end.tms_utime - theInfo[thread_num][level].tms_start.tms_utime);
 
@@ -923,14 +921,14 @@ double prof_get_measurement_stime(prof_level level, bool with_sub, dstring *erro
    double ret = 0.0;
 
    if (level >= SGE_PROF_ALL) {
-      prof_add_error_sprintf(error, MSG_PROF_INVALIDLEVEL_SD, "prof_get_measurement_stime", level);
+      sge_dstring_sprintf_append(error, MSG_PROF_INVALIDLEVEL_SD, "prof_get_measurement_stime", level);
    } else if (profiling_enabled) {
       thread_id = pthread_self();
 
       thread_num = get_prof_info_thread_id(thread_id);
 
       if ((thread_num < 0) || (thread_num >= MAX_THREAD_NUM)) {
-         prof_add_error_sprintf(error, MSG_PROF_MAXTHREADSEXCEEDED_S, "prof_get_measurement_stime");
+         sge_dstring_sprintf_append(error, MSG_PROF_MAXTHREADSEXCEEDED_S, "prof_get_measurement_stime");
       } else {
          clock = (theInfo[thread_num][level].tms_end.tms_stime - theInfo[thread_num][level].tms_start.tms_stime);
 
@@ -975,16 +973,16 @@ double prof_get_total_wallclock(prof_level level, dstring *error)
    double ret = 0.0;
 
    if (level >= SGE_PROF_ALL) {
-      prof_add_error_sprintf(error, MSG_PROF_INVALIDLEVEL_SD, "prof_get_total_wallclock", level);
+      sge_dstring_sprintf_append(error, MSG_PROF_INVALIDLEVEL_SD, "prof_get_total_wallclock", level);
    } else if (profiling_enabled) {
       thread_id = pthread_self();
 
       thread_num = get_prof_info_thread_id(thread_id);
 
       if ((thread_num < 0) || (thread_num >= MAX_THREAD_NUM)) {
-         prof_add_error_sprintf(error, MSG_PROF_MAXTHREADSEXCEEDED_S, "prof_get_total_wallclock");
+         sge_dstring_sprintf_append(error, MSG_PROF_MAXTHREADSEXCEEDED_S, "prof_get_total_wallclock");
       } else if (!theInfo[thread_num][level].prof_is_started) {
-         prof_add_error_sprintf(error, MSG_PROF_NOTACTIVE_S, "prof_get_total_wallclock");
+         sge_dstring_sprintf_append(error, MSG_PROF_NOTACTIVE_S, "prof_get_total_wallclock");
       } else {
          struct tms tms_buffer;
          clock_t now;
@@ -1047,14 +1045,14 @@ double prof_get_total_busy(prof_level level, bool with_sub, dstring *error)
    int thread_num;
 
    if (level > SGE_PROF_ALL) {
-      prof_add_error_sprintf(error, MSG_PROF_INVALIDLEVEL_SD, "prof_get_total_busy", level);
+      sge_dstring_sprintf_append(error, MSG_PROF_INVALIDLEVEL_SD, "prof_get_total_busy", level);
    } else if (profiling_enabled) {
       thread_id = pthread_self();
       
       thread_num = get_prof_info_thread_id(thread_id);
 
       if ((thread_num < 0) || (thread_num >= MAX_THREAD_NUM)) {
-         prof_add_error_sprintf(error, MSG_PROF_MAXTHREADSEXCEEDED_S, "prof_get_total_busy");
+         sge_dstring_sprintf_append(error, MSG_PROF_MAXTHREADSEXCEEDED_S, "prof_get_total_busy");
       } else if (level == SGE_PROF_ALL) {
          prof_level i;
 
@@ -1117,14 +1115,14 @@ double prof_get_total_utime(prof_level level, bool with_sub, dstring *error)
    int thread_num;
 
    if (level > SGE_PROF_ALL) {
-      prof_add_error_sprintf(error, MSG_PROF_INVALIDLEVEL_SD, "prof_get_total_utime", level);
+      sge_dstring_sprintf_append(error, MSG_PROF_INVALIDLEVEL_SD, "prof_get_total_utime", level);
    } else if (profiling_enabled) {
       thread_id = pthread_self();
 
       thread_num = get_prof_info_thread_id(thread_id);
 
       if ((thread_num < 0) || (thread_num >= MAX_THREAD_NUM)) {
-         prof_add_error_sprintf(error, MSG_PROF_MAXTHREADSEXCEEDED_S, "prof_get_total_utime");         
+         sge_dstring_sprintf_append(error, MSG_PROF_MAXTHREADSEXCEEDED_S, "prof_get_total_utime");         
       } else if (level == SGE_PROF_ALL) {
          prof_level i;
 
@@ -1187,14 +1185,14 @@ double prof_get_total_stime(prof_level level, bool with_sub, dstring *error)
    int thread_num;
 
    if (level > SGE_PROF_ALL) {
-      prof_add_error_sprintf(error, MSG_PROF_INVALIDLEVEL_SD, "prof_get_total_stime", level);
+      sge_dstring_sprintf_append(error, MSG_PROF_INVALIDLEVEL_SD, "prof_get_total_stime", level);
    } else if (profiling_enabled) {
       thread_id = pthread_self();
 
       thread_num = get_prof_info_thread_id(thread_id);
 
       if ((thread_num < 0) || (thread_num >= MAX_THREAD_NUM)) {
-         prof_add_error_sprintf(error, MSG_PROF_MAXTHREADSEXCEEDED_S, "prof_get_total_stime");
+         sge_dstring_sprintf_append(error, MSG_PROF_MAXTHREADSEXCEEDED_S, "prof_get_total_stime");
       } else if (level == SGE_PROF_ALL) {
          prof_level i;
 
@@ -1282,7 +1280,7 @@ prof_get_info_string(prof_level level, bool with_sub, dstring *error)
    const char *ret = NULL;
 
    if (level > SGE_PROF_ALL) {
-      prof_add_error_sprintf(error, MSG_PROF_INVALIDLEVEL_SD, "prof_get_info_string", level);
+      sge_dstring_sprintf_append(error, MSG_PROF_INVALIDLEVEL_SD, "prof_get_info_string", level);
       ret = sge_dstring_get_string (error);
    } else if (!profiling_enabled) {
       ret = "Profiling disabled";
@@ -1292,7 +1290,7 @@ prof_get_info_string(prof_level level, bool with_sub, dstring *error)
       thread_num = get_prof_info_thread_id(thread_id);
 
       if ((thread_num < 0) || (thread_num >= MAX_THREAD_NUM)) {
-         prof_add_error_sprintf(error, MSG_PROF_MAXTHREADSEXCEEDED_S, "prof_get_info_string");
+         sge_dstring_sprintf_append(error, MSG_PROF_MAXTHREADSEXCEEDED_S, "prof_get_info_string");
       /* total summary: one line for each level, one line for summary */
       } else if (level == SGE_PROF_ALL) {
          double busy, utime, stime, utilization;
@@ -1339,25 +1337,6 @@ prof_get_info_string(prof_level level, bool with_sub, dstring *error)
    return ret;
 }
 
-static const char *prof_add_error_sprintf(dstring *buffer, const char *fmt, ...)
-{
-   const char *ret = NULL;
-
-   if (buffer != NULL) {
-      dstring new_buffer = DSTRING_INIT;
-      va_list ap;
-
-      va_start(ap, fmt);
-      ret = sge_dstring_vsprintf(&new_buffer, fmt, ap);
-      if (ret != NULL) {
-         ret = sge_dstring_append_dstring(buffer, &new_buffer);
-      }
-      
-      sge_dstring_free(&new_buffer);
-   }
-   
-   return ret;
-}
 
 bool prof_output_info(prof_level level, bool with_sub, const char *info)
 {
@@ -1383,14 +1362,14 @@ bool prof_output_info(prof_level level, bool with_sub, const char *info)
               message = sge_strtok_r(NULL, "\n", &context)) {
             PROFILING((SGE_EVENT, "PROF(%d): %s", (int)thread_id, message));
          }
+         prof_reset(level, NULL);
 
          sge_free_saved_vars(context);
          ret = true;
       }
    }
 
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 

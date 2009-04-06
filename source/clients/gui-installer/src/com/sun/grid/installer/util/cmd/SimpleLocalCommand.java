@@ -35,7 +35,7 @@ package com.sun.grid.installer.util.cmd;
 import com.izforge.izpack.util.Debug;
 import com.sun.grid.installer.util.Util;
 
-public class SimpleLocalCommand extends com.sun.grid.installer.util.cmd.CmdExec {
+public class SimpleLocalCommand extends CmdExec {
       private String command;
 
       public SimpleLocalCommand(String command) {

@@ -38,6 +38,8 @@ import java.io.Serializable;
  */
 public class QueueStateFilter implements Serializable {
 
+    private final static long serialVersionUID = -2009040301L;
+    
     private int options;
 //  [-qs {a|c|d|o|s|u|A|C|D|E|S}]     selects queues, which are in the given state(s)
     public static final int ALARM = 1; // a

@@ -35,7 +35,7 @@
 
 SGEHELPERSERVICE_DIR = $(SDIR)/utilbin/windows/SGE_Helper_Service
 
-SGEHELPERSERVICE_TARGETS = SGE_Helper_Service.exe
+SGEHELPERSERVICE_TARGETS = SGE_Helper_Service.exe SGE_Starter.exe
 
 SGEHELPERSERVICE_SRC = Communication.cpp \
                     Job.cpp \
@@ -68,8 +68,14 @@ sge_helper_service_depend:
 
 all: $(SGEHELPERSERVICE_TARGETS) 
 
+SGE_Starter.exe: SGE_Starter.obj
+	$(WINCC) SGE_Starter.obj /link /OUT:SGE_Starter.exe /SUBSYSTEM:WINDOWS $(WINLFLAGS) $(WINLIBS)
+
+SGE_Starter.obj: $(SGEHELPERSERVICE_DIR)/SGE_Starter.cpp
+	$(WINCC) $(WINCFLAGS) -c $(SGEHELPERSERVICE_DIR)/SGE_Starter.cpp
+
 SGE_Helper_Service.exe: $(SGEHELPERSERVICE_OBJS) 
-	$(WINCC) $(SGEHELPERSERVICE_OBJS) /link /OUT:SGE_Helper_Service.exe $(SGEHELPERSERVICE_WINLFLAGS) $(WINLIBS)
+	$(WINCC) $(SGEHELPERSERVICE_OBJS) /link /OUT:SGE_Helper_Service.exe $(SGEHELPERSERVICE_WINLFLAGS) $(WINLIBS) Psapi.lib Wtsapi32.lib
 
 Communication.obj: $(SGEHELPERSERVICE_DIR)/Communication.cpp
 	$(WINCC) $(WINCFLAGS) -c $(SGEHELPERSERVICE_DIR)/Communication.cpp

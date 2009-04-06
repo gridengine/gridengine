@@ -1826,6 +1826,7 @@ static void shepconf_deliver_signal_or_method(int sig, int pid, pid_t *ctrl_pid)
       shepherd_trace("kill(%d, %s)", -pid, sge_sys_sig2str(sig));
       shepherd_signal_job(-pid, sig);
    }
+   sge_dstring_free(&method);
 }
 
 /*--------------------------------------------------------------------

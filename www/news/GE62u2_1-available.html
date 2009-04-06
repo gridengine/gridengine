@@ -1,0 +1,119 @@
+<!DOCTYPE html PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+
+
+  
+  
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+
+
+  
+  
+  <meta name="GENERATOR" content="Mozilla/4.79C-CCK-MCD  [en] (X11; U; SunOS 5.9 sun4u) [Netscape]">
+</head>
+
+
+<body>
+
+
+<center>
+<h1>Grid Engine 6.2u2_1 Courtesy Binaries now Available for Download<br>
+
+
+</h1>
+
+
+Regensburg, Germany -- March 31, 2009
+</center>
+
+<p>Grid Engine 6.2 Update 2_1 is now ready and courtesy binaries are
+available for download. We are also announcing a major reconstruction of the SGE wiki docs
+which will lead to better usability and navigation.
+
+SGE 6.2u2_1 is a "feature update" release. We are delivering a few much
+demanded features, scalability improvements and memory foot print reductions
+in huge HPC clusters, and bug fixes.
+
+Open source courtesy binaries will be made available next week.
+
+<h2>What's new</h2>
+
+<h3>GUI Installer</h3>
+Sun Grid Engine 6.2u2_1 comes with a new GUI installer to simplify the
+installation process. The GUI installer enables you to easily install a
+whole cluster interactively. To install a cluster, you need to set up the
+environment in a similar way to an automatic installation.
+
+<h3>Microsoft Windows Vista Support</h3>
+New support for 32-bit and 64-bit editions of Microsoft Windows Vista
+(Enterprise and Ultimate Edition), Windows Server 2003R2 and Windows Server
+2008.
+
+<h3>Job Submission Verifiers (JSVs)</h3>
+JSVs allow users and administrators to define rules that determine which
+jobs are allowed to enter into a cluster and which jobs should be rejected
+immediately. A JSV is a script or binary that can be used to verify, modify,
+or reject a job during the time of job submission or on the master host.
+
+<h3>Consumable Resources Per Job</h3>
+Consumable complex attributes can now be configured as per job. Such
+consumables are consumed as requested and are no longer multiplied by the
+requested slots. This makes resource requests for parallel jobs much easier
+to define, especially when using slot ranges.
+
+<h3>jemalloc Library</h3>
+Linux distributions (x64 platforms) come with a default memory allocator
+library which is not as efficient as the open source jemalloc memory
+allocator library also used by the Firefox browser. SGE 6.2 Update 2_1
+replaces the native Linux malloc library with the jemalloc library. This has
+a positive effect on the master host performance in large and high
+throughput Sun Grid Engine clusters on Linux and reduces the memory
+footprint up to 20%. This will lead to a significant performance increase.
+
+</p>
+The courtesy binaries are available at:<br>
+<br>
+<div style="margin-left: 40px;"><a
+ href="http://gridengine.sunsource.net/downloads/latest.html">http://gridengine.sunsource.net/downloads/latest.html</a><br>
+</div>
+<br>
+A list of fixed problems since SGE 6.2 beta2 is available at<br>
+<br>
+<div style="margin-left: 40px;"><a
+ href="http://gridengine.sunsource.net/project/gridengine/62patches.txt">http://gridengine.sunsource.net/project/gridengine/62patches.txt</a><br>
+</div>
+<br>
+The patch installation notes are available at<br>
+<br>
+<div style="margin-left: 40px;"><a
+ href="http://gridengine.sunsource.net/project/gridengine/install62patch.txt">http://gridengine.sunsource.net/project/gridengine/install62patch.txt</a><br>
+</div>
+<br>
+Please send support questions and feedback to the "users" mailing list of
+the Grid Engine open source project.<br>
+<br>
+
+The courtesy binary distribution is now hosted on Sun Microsystems servers
+on Sun Download Center (SDLC).<br><br>
+
+The corresponding source code tag in the CVS repository has the name<br>
+&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <span style="font-weight: bold;">V62u2_1_TAG</span> (Grid Engine) and <br>
+&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <span style="font-weight: bold;">V62u2_TAG</span> (ARCo)<br><br>
+A snapshot of the sources is available at the <a href="http://gridengine.sunsource.net/servlets/ProjectDownloadList">Documents &amp; Files</a> page<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;<a href="http://gridengine.sunsource.net/files/documents/7/198/arco-V62u2_TAG-src.tar.gz">arco-V62u1_TAG-src.tar.gz</a><br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;<a href="http://gridengine.sunsource.net/files/documents/7/197/ge-V62u2_1_TAG-src.tar.gz">ge-V62u2_1_TAG-src.tar.gz</a><br>
+<br>
+The documentation and release notes are available at<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <a href="http://wikis.sun.com/display/gridengine62u2">http://wikis.sun.com/display/gridengine62u2</a><br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+Patch Matrix is available at<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <a href=" http://wikis.sun.com/display/gridengine62u2/Patch+Matrix"> http://wikis.sun.com/display/gridengine62u2/Patch+Matrix</a><br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+Man Pages Online are available at<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <a href="http://gridengine.sunsource.net/manpages.html">http://gridengine.sunsource.net/manpages.html</a><br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+
+
+</body>
+</html>

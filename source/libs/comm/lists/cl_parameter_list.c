@@ -31,7 +31,6 @@
 /*___INFO__MARK_END__*/
 
 #include <stdio.h>
-#include <errno.h>
 #include <string.h>
 #include <stdlib.h>
 #include "cl_parameter_list.h"

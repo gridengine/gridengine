@@ -40,6 +40,8 @@ import java.util.List;
  *
  */
 public class ParallelEnvironmentFilter implements Serializable {
+
+    private final static long serialVersionUID = -2009040301L;
     
     private List<String> peList = new LinkedList<String>();
     

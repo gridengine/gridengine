@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="DetectJvmLibrary" default="all" basedir=".">
+    <property name="sge.srcdir" location="../.."/>
+    <property file="${sge.srcdir}/build_testsuite.properties"/>
+    <property file="${sge.srcdir}/build_private.properties"/>
+    <property file="${sge.srcdir}/build.properties"/>
+    <exec executable="hostname" outputproperty="hostname"/>
+    <condition property="isJavaBuildHost">
+        <not>
+            <isset property="java.buildhost"/>
+        </not>
+    </condition>
+
+    <condition property="isJavaBuildHost" >
+        <contains string="${java.buildhost}" substring="${hostname}" casesensitive="false"/>
+    </condition>
+
+    <echo>isJavaBuildHost=${isJavaBuildHost}</echo>
+    <echo>java.buildhost=${java.buildhost}</echo>
+    <echo>hostname=${hostname}</echo>
+
+    <target name="compile" depends="clean" if="isJavaBuildHost">
+        <mkdir dir="build/classes"/>
+        <javac srcdir="src" destdir="build/classes" source="${default.sge.javac.source}" target="${default.sge.javac.target}"/>
+    </target>
+
+    <target name="run">
+        <java jar="build/jar/DetectJvmLibrary.jar" fork="true"/>
+    </target>
+
+    <target name="clean" if="isJavaBuildHost">
+        <delete dir="build"/>
+    </target>
+
+    <target name="all" depends="compile" if="isJavaBuildHost">
+        <mkdir dir="build/jar"/>
+        <jar destfile="build/jar/DetectJvmLibrary.jar" basedir="build/classes">
+            <manifest>
+                <attribute name="Main-Class" value="com.sun.grid.util.DetectJvmLibrary"/>
+            </manifest>
+        </jar>
+    </target>
+
+</project>

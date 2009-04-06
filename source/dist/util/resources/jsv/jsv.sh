@@ -164,7 +164,7 @@ jsv_on_verify()
    fi 
 
    if [ "`jsv_get_param pe_name`" != "" ]; then
-      slots=`jsv_get_param pe_slots`
+      slots=`jsv_get_param pe_min`
       i=`echo "$slots % 16" | bc`
 
       if [ $i -gt 0 ]; then

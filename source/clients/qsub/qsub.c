@@ -236,22 +236,6 @@ char **argv
       SGE_EXIT((void**)&ctx, 1);
    }
 
-   /*
-    * fill in user and group
-    *
-    * following is not used for security. qmaster can not rely
-    * on that information. but it is still necessary to set the
-    * attributes in the job so that the information is available
-    * in the JSV client context
-    */
-   job_set_owner_and_group(job, ctx->get_uid(ctx), ctx->get_gid(ctx),
-                           ctx->get_username(ctx), ctx->get_groupname(ctx));
-
-   /* Check is we're just verifying the job */
-   just_verify = (lGetUlong(job, JB_verify_suitable_queues)==JUST_VERIFY || 
-                  lGetUlong(job, JB_verify_suitable_queues)==POKE_VERIFY);
-   DPRINTF(("Just verifying job\n"));
-
    /* Check if job is immediate */
    is_immediate = (int)JOB_TYPE_IS_IMMEDIATE(lGetUlong(job, JB_type));
    DPRINTF(("Job is%s immediate\n", is_immediate ? "" : " not"));
@@ -296,7 +280,7 @@ char **argv
    num_tasks = (end - start) / step + 1;
 
    if (num_tasks > 1) {
-      int error = japi_run_bulk_jobs(&jobids, job, start, end, step, &diag);
+      int error = japi_run_bulk_jobs(&jobids, &job, start, end, step, &diag);
       if (error != DRMAA_ERRNO_SUCCESS) {
          /* No active session here means that japi_enable_job_wait() was
           * interrupted by the signal handler, in which case we just break out
@@ -328,7 +312,7 @@ char **argv
       jobid_string = get_bulk_jobid_string((long)jobids->it.ji.jobid, start, end, step);
    }
    else if (num_tasks == 1) {
-      int error = japi_run_job(&jobid, job, &diag);
+      int error = japi_run_job(&jobid, &job, &diag);
       
       if (error != DRMAA_ERRNO_SUCCESS) {
          if (error != DRMAA_ERRNO_NO_ACTIVE_SESSION) {
@@ -367,6 +351,11 @@ char **argv
    }
   
    /* only success message is printed to stdout */
+
+   just_verify = (lGetUlong(job, JB_verify_suitable_queues)==JUST_VERIFY || 
+                  lGetUlong(job, JB_verify_suitable_queues)==POKE_VERIFY);
+   DPRINTF(("Just verifying job\n"));
+
    if (!just_verify) {
       const char *output = sge_dstring_get_string(&diag); 
 

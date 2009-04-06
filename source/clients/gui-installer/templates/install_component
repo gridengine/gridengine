@@ -303,7 +303,9 @@ PRODUCT_MODE=${add.product.mode}                      #1 none, 2 csp, 3 afs
 QMASTER_FLAGS=""
 GUI_CSP_MODE_ENABLED=false
 if [ "$USE_JMX" = true ]; then
-   QMASTER_FLAGS="$QMASTER_FLAGS -jmx"
+   QMASTER_FLAGS="$QMASTER_FLAGS -jmx"                # -jmx is implicit
+else
+   QMASTER_FLAGS="$QMASTER_FLAGS -no-jmx"
 fi
 #Set proper product mode flags
 if [ "$PRODUCT_MODE" = "csp" ]; then
@@ -437,7 +439,7 @@ if [ -n "${first_install_task}" ]; then
       list="${gui_csphosts}"
       CSP_FLAGS=""
       #-copycerts needs -rsh if rsh is to be used
-      if [ "$SHELL_NAME" != "ssh" ]; then
+      if [ x`echo $SHELL_NAME` | grep "ssh" = x ]; then
          CSP_FLAGS="-rsh"
       fi
       total=0

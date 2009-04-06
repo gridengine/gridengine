@@ -139,9 +139,9 @@ cqueue_get_via_gdi(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *na
    DRETURN(ret);
 }
 
-bool
-cqueue_hgroup_get_via_gdi(sge_gdi_ctx_class_t *ctx, lList **answer_list, const lList *qref_list,
-                          lList **hgrp_list, lList **cq_list)
+static bool cqueue_hgroup_get_via_gdi(sge_gdi_ctx_class_t *ctx, lList **answer_list,
+                                      const lList *qref_list, lList **hgrp_list,
+                                      lList **cq_list)
 {
    bool ret = true;
 

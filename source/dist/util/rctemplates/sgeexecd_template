@@ -174,17 +174,22 @@ ShutdownSMF()
 
 #---------------------------------------------------------------------------
 # Shutdown
-# Send SIGTERM to process name $1 with pid in file $2
+# Send SIGTERM (default) or signal $3 to process name $1 with pid in file $2
 #
 Shutdown()
 {
    name=$1
    pidfile=$2
+   signal="-TERM"
+   
+   if [ $# = 3 ]; then 
+      signal="-$3"
+   fi 
    if [ -f $pidfile ]; then
       pid=`cat $pidfile`
       $utilbin_dir/checkprog $pid $name > /dev/null
       if [ "$?" = 0 ]; then
-         kill -TERM $pid
+         kill $signal $pid
          return $?
       fi
    fi
@@ -345,8 +350,10 @@ if [ "$startup" = true ]; then
          exit $?
       fi
       # execution daemon is started on this host!
-      if [ -z "$SGE_EXECD_PORT" ]; then
-         SGE_EXECD_PORT=`$utilbin_dir/getservbyname -number sge_execd`
+      if [ "$SGE_EXECD_PORT" = "" ]; then
+         ping_port=`$utilbin_dir/getservbyname -number sge_execd`
+      else
+         ping_port=$SGE_EXECD_PORT
       fi
       echo "   starting sge_execd"
       exec 1>/dev/null 2>&1
@@ -354,12 +361,12 @@ if [ "$startup" = true ]; then
       [ $? -eq 0 -a -d /var/lock/subsys ] && touch /var/lock/subsys/sgeexecd
       
       #Don't exit until daemon is up
-      $bin_dir/qping -info "$HOST" "$SGE_EXECD_PORT" execd 1 > /dev/null 2>&1
+      $bin_dir/qping -info "$HOST" "$ping_port" execd 1 > /dev/null 2>&1
       ret=$?
       loop=0
       while [ $ret -ne 0 -a $loop -ne 61 ]; do
          sleep 1
-         $bin_dir/qping -info "$HOST" "$SGE_EXECD_PORT" execd 1 > /dev/null 2>&1
+         $bin_dir/qping -info "$HOST" "$ping_port" execd 1 > /dev/null 2>&1
          ret=$?
          loop=`expr $loop + 1`
       done
@@ -394,10 +401,10 @@ else
          fi
       fi
       if [ $softstop = false ]; then
-         # Send SIGTERM to all shepherds
+         # Send SIGTERM to all shepherds (send SIGTSTP which is converted to SIGTERM by shepherd)
          for jobid in `ls $execd_spool_dir/active_jobs`; do
             echo "   Shutting down Grid Engine shepherd of job $jobid"
-            Shutdown sge_shepherd $execd_spool_dir/active_jobs/$jobid/pid
+            Shutdown sge_shepherd $execd_spool_dir/active_jobs/$jobid/pid TSTP 
          done
       fi
    fi

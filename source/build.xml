@@ -37,9 +37,9 @@
       </macrodef>
    </target>
     
-   <target name="all" depends="drmaa, juti, jgdi, gui_inst"/>
+   <target name="all" depends="detect_jvm_lib, drmaa, juti, jgdi, gui_inst"/>
    <target name="depend" depends="init"/>
-   <target name="clean" depends="drmaa.clean, juti.clean, jgdi.clean, gui_inst.clean"/>
+   <target name="clean" depends="detect_jvm_lib.clean, drmaa.clean, juti.clean, jgdi.clean, gui_inst.clean"/>
    <target name="javadoc" depends="drmaa.javadoc, juti.javadoc, jgdi.javadoc, gui_inst.javadoc"/>
    <target name="test" depends="drmaa.test, juti.test, jgdi.test, gui_inst.test"/>
     
@@ -109,5 +109,14 @@
 
    <target name="gui_inst.test" unless="skip.gui.inst" depends="init">
       <ant antfile="build.xml" target="test" dir="clients/gui-installer/" inheritall="false"/>
+   </target>
+
+   <!-- DetectJvmLibrary java util -->
+   <target name="detect_jvm_lib" depends="init" description="Builds GUI Installer">
+      <echo message="Building DetectJvmLibrary ..."/>
+      <ant antfile="build.xml" target="all" dir="dist/DetectJvmLibrary" inheritall="false"/>
+   </target>
+   <target name="detect_jvm_lib.clean" depends="init">
+      <ant antfile="build.xml" target="clean" dir="dist/DetectJvmLibrary" inheritall="false"/>
    </target>
 </project>

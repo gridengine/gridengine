@@ -311,7 +311,7 @@ void procfs_kill_addgrpid(gid_t add_grp_id, int sig,
       if (!strcmp(dent->d_name, "self"))
          continue;
 
-      sprintf(procnam, "%s/%s/status", PROC_DIR, dent->d_name);
+      sprintf(procnam, PROC_DIR "/%s/status", dent->d_name);
       if (!(fp = fopen(procnam, "r")))
          continue;
 #endif
@@ -497,7 +497,7 @@ int time_stamp
          continue;
 
 #if defined(LINUX)
-      sprintf(procnam, "%s/%s/stat", PROC_DIR, dent->d_name);
+      sprintf(procnam, PROC_DIR "/%s/stat", dent->d_name);
 #else
       sprintf(procnam, "%s/%s", PROC_DIR, dent->d_name);
 #endif
@@ -607,7 +607,7 @@ int time_stamp
          char buf[1024];
          FILE* f = (FILE*) NULL;
    
-         sprintf(procnam,  "%s/%s/status", PROC_DIR, dent->d_name);
+         sprintf(procnam, PROC_DIR "/%s/status", dent->d_name);
          if (!(f = fopen(procnam, "r"))) {
             close(fd);
             continue;
@@ -765,6 +765,58 @@ FCLOSE_ERROR:
    proc_elem->proc.pd_stime  = ((double)pr.pr_stime)/HZ;
    /* could retrieve uid/gid using stat() on stat file */
    proc_elem->vmem           = pr.pr_vsize;
+
+   /*
+    * I/O accounting
+    */
+   proc_elem->delta_chars    = 0UL;
+   {
+      char procnam[256];
+      FILE *fd;
+
+      sprintf(procnam, PROC_DIR "/%s/io", dent->d_name);
+
+      if ((fd = fopen(procnam, "r")))
+      {
+         uint64 new_iochars = 0UL;
+         char buf[1024];
+      
+         /*
+          * Trying to parse /proc/<pid>/io
+          */
+
+         while (fgets(buf, sizeof(buf), fd))
+         {
+           char *label = strtok(buf, " \t\n");
+           char *token = strtok((char*) NULL, " \t\n");
+
+           if (label && token)
+             if (!strcmp("rchar:", label) ||
+                 !strcmp("wchar:", label))
+             {
+                unsigned long long nchar = 0UL;
+                if (sscanf(token, "%Lu", &nchar) == 1)
+                   new_iochars += (uint64) nchar;
+             }
+         } /* while */
+
+         fclose(fd);
+
+         /*
+          *  Update process I/O info
+          */
+         if (new_iochars > 0UL)
+         {
+            uint64 old_iochars = proc_elem->iochars;
+
+            if (new_iochars > old_iochars)
+            {
+               proc_elem->delta_chars = (new_iochars - old_iochars);
+               proc_elem->iochars = new_iochars;
+            }
+         }
+      }
+   }
 #else
    proc_elem->proc.pd_utime  = pr.pr_utime.tv_sec + pr.pr_utime.tv_nsec*1E-9;
    proc_elem->proc.pd_stime  = pr.pr_stime.tv_sec + pr.pr_stime.tv_nsec*1E-9;

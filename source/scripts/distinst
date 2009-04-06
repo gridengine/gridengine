@@ -49,7 +49,7 @@ UTILITYBINARIES="uidgid gethostname gethostbyname gethostbyaddr \
                  getservbyname filestat checkprog loadcheck now checkuser \
                  adminrun qrsh_starter testsuidroot authuser read_raw echo_raw \
                  sge_share_mon infotext spooldefaults spooledit spoolinit \
-                 fstype SGE_Helper_Service.exe"
+                 fstype SGE_Helper_Service.exe SGE_Starter.exe valid_jvmlib"
 
 BDBUTILITYBINARIES="berkeley_db_svc db_archive db_checkpoint db_deadlock db_dump db_load db_printlog db_recover db_stat db_upgrade db_verify"
 
@@ -122,7 +122,7 @@ ErrUsage()
 {
    echo "Usage: distinst [-opts] [other archs] [-- other progs]"
    echo "       -all           = all binaries + common"
-   echo "       -allall        = all binaries + common + doc + arco"
+   echo "       -allall        = all binaries + common + doc + arco + sgeinspect"
    echo "       -basedir <dir> = define base directory for distribution"
    echo "       -bin           = all binaries and libraries"
    echo "       -help_arch     = show architectures table"
@@ -158,6 +158,7 @@ ErrUsage()
    echo "       \"qmontree\"   = PIXMAPS, resource-, help-, copyright files"
    echo "       \"sec\"        = DCE/Kerberos security modules"
    echo "       \"secbin\"     = DCE/Kerberos security binaries"
+   echo "       \"sgeinspect\" = SGE Inspect binaries"
    echo "       \"txtdoc\"     = doc/ directory tree without PS and PDF files"
    echo "       \"utilbin\"    = utilbin/\$ARCH/*"
    echo "       \"utiltree\"   = util/ directory tree"
@@ -421,6 +422,7 @@ instopenssl=true
 instbdb=true
 instarco=false
 instguiinst=true
+instsgeinspect=false
 enforce_shlibpath=false
 
 cmdname=`basename $0`
@@ -467,7 +469,7 @@ fi
 while [ $# -ge 1 ]; do
    case "$1" in
    -allall)
-      PROG="$DEFAULTPROG distcommon arco"
+      PROG="$DEFAULTPROG distcommon arco sgeinspect"
       instsharedlibs=true
       ;;
    -all)
@@ -692,6 +694,9 @@ for prog in $PROG; do
       arco)
          instarco=true
          ;;
+      sgeinspect)         
+         instsgeinspect=true
+         ;;
       common|distcommon) 
          instdrmaa=true
          instcommon=true
@@ -822,6 +827,10 @@ if [ $instcommon = true ]; then
          Execute sed -e "s/#ENFORCE_SHLIBPATH#//" dist/util/rctemplates/sgebdb_template > $DEST_SGE_ROOT/util/rctemplates/sgebdb_template
          Execute sed -e "s/#ENFORCE_SHLIBPATH#//" dist/util/install_modules/inst_common.sh > $DEST_SGE_ROOT/util/install_modules/inst_common.sh
       fi
+      # DetectJvmLibrary
+      if [ -f dist/DetectJvmLibrary/build/jar/DetectJvmLibrary.jar ]; then
+         Execute cp dist/DetectJvmLibrary/build/jar/DetectJvmLibrary.jar $DEST_SGE_ROOT/util
+      fi
       Cleanup util
 
       # Not available in Beta
@@ -863,6 +872,7 @@ if [ $instcommon = true ]; then
                         $DEST_SGE_ROOT/util/sgeCA/*.cnf \
                         $DEST_SGE_ROOT/util/sgeSMF/*.xml \
                         $DEST_SGE_ROOT/util/sgeSMF/sge_smf_support.sh \
+                        $DEST_SGE_ROOT/util/DetectJvmLibrary.jar \
                         $DEST_SGE_ROOT/util/resources/calendars/* \
                         $DEST_SGE_ROOT/util/resources/centry/* \
                         $DEST_SGE_ROOT/util/resources/pe/* \
@@ -1154,8 +1164,34 @@ if [ $instguiinst = true ]; then
       Execute cp $GUI_DIR/templates/install_component $GUI_DIR/templates/gui_inst_template.conf $GUI_DIR/templates/readme_template.html $GUI_DIR/templates/check_host $DEST_SGE_ROOT/util/gui-installer/templates
       Execute chmod 755 $DEST_SGE_ROOT/start_gui_installer
       Cleanup util/gui-installer
+      echo GUI installer part done
+      echo
    else
       echo "GUI Installer dir \"$GUI_DIR\" does not exist"
+   fi
+fi
+
+if [ $instsgeinspect = true ]; then
+   if [ -d "$SGE_INSPECT_SRC_DIR" ]; then
+      if [ `echo $SGE_INSPECT_SRC_DIR | cut -c 1` = "/" ]; then
+         ABSOLUTE_SGE_INSPECT_SRC_DIR=$SGE_INSPECT_SRC_DIR
+      else
+         ABSOLUTE_SGE_INSPECT_SRC_DIR=`pwd`/$SGE_INSPECT_SRC_DIR
+      fi
+      echo Installing \"sgeinspect\" directory tree
+      Execute rm -rf $DEST_SGE_ROOT/sgeinspect
+      ( cd $DEST_SGE_ROOT; \
+        Execute unzip $ABSOLUTE_SGE_INSPECT_SRC_DIR/EventMonitor/dist/sgeinspect.zip; \
+      )
+      Execute mkdir -p $DEST_SGE_ROOT/bin
+      Execute cp $ABSOLUTE_SGE_INSPECT_SRC_DIR/scripts/sgeinspect.sh $DEST_SGE_ROOT/bin/
+      chown root:root $DEST_SGE_ROOT/bin/sgeinspect.sh
+      Execute chmod 755 $DEST_SGE_ROOT/bin/sgeinspect.sh
+      Cleanup sgeinspect
+      echo sgeinspect part done
+      echo
+   else
+      echo "sgeinspect dir \"$SGE_INSPECT_SRC_DIR\" does not exist"
    fi
 fi
 
@@ -1226,6 +1262,16 @@ for i in $ARCH; do
                if [ "$DSTARCH" = "win32-x86" ]; then
                   # Currently qloadsensor.exe is needed only for win32-x86
                   InstallProg $prog
+               fi
+               ;;
+            sgeinspect)
+               if [ -f "$DEST_SGE_ROOT/bin/sgeinspect.sh" ]; then
+                  ( echo changing to $DEST_SGE_ROOT/bin/$DSTARCH ; \
+                    cd $DEST_SGE_ROOT/bin/$DSTARCH ; \
+                    rm sgeinspect 2>&1 > /dev/null ; \
+                    echo ln -s ../sgeinspect.sh sgeinspect; \
+                    ln -s ../sgeinspect.sh sgeinspect; \
+                  )
                fi
                ;;
             *)
@@ -1315,12 +1361,12 @@ for i in $ARCH; do
                      InstallProg $prog
                   fi
                fi
-            elif [ "$prog" = "SGE_Helper_Service.exe" ]; then
+            elif [ "$prog" = "SGE_Helper_Service.exe" -o "$prog" = "SGE_Starter.exe" ]; then
                if [ "$DSTARCH" = "win32-x86" ]; then
                   InstallProg $prog
                fi
-            elif [ "$DSTARCH" = "win32-x86" -a "$prog" = "spooledit" ]; then
-               # Don't install spooledit for win32-x86
+            elif [ "$DSTARCH" = "win32-x86" -a \( "$prog" = "spooledit" -o "$prog" = "valid_jvmlib" \) ]; then
+               # Don't install spooledit, valid_jvmlib for win32-x86
                :
             else
                InstallProg $prog

@@ -11,6 +11,8 @@ import com.izforge.izpack.util.VariableSubstitutor;
 import com.sun.grid.installer.util.ExtendedFile;
 import com.sun.grid.installer.util.Util;
 import com.sun.grid.installer.util.cmd.GetArchCommand;
+import com.sun.grid.installer.util.cmd.RemoteCommand;
+import com.sun.grid.installer.util.cmd.SimpleLocalCommand;
 import java.util.Enumeration;
 import java.util.Properties;
 import javax.swing.JOptionPane;
@@ -29,17 +31,19 @@ public class IntermediateActionPanel extends ActionPanel {
     }
 
     private void initializeVariables() {
-        boolean isQmasterInst, isShadowdInst, isExecdInst;
+        boolean isQmasterInst, isShadowdInst, isExecdInst, isJmxEnabled;
         isQmasterInst = parent.getRules().isConditionTrue(COND_INSTALL_QMASTER, idata.getVariables());
         isShadowdInst = parent.getRules().isConditionTrue(COND_INSTALL_SHADOWD, idata.getVariables());
         isExecdInst = parent.getRules().isConditionTrue(COND_INSTALL_EXECD, idata.getVariables());
+        isJmxEnabled = parent.getRules().isConditionTrue(COND_JMX, idata.getVariables());
 
         VariableSubstitutor vs = new VariableSubstitutor(idata.getVariables());
 
         // Only once...
         if (getNumOfExecution() == 0) {
             // Localhost arch
-            GetArchCommand archCmd = new GetArchCommand(idata.getVariables(), Host.localHostName);
+            Properties variables = idata.getVariables();
+            GetArchCommand archCmd = new GetArchCommand(Host.localHostName, Util.CONNECT_USER, variables.getProperty(VAR_SHELL_NAME, ""), Util.IS_MODE_WINDOWS, variables.getProperty(VAR_SGE_ROOT, ""));
             archCmd.execute();
             if (archCmd.getExitValue() == 0 && archCmd.getOutput().size() > 0) {
                 Host.localHostArch = archCmd.getOutput().get(0).trim();
@@ -85,11 +89,36 @@ public class IntermediateActionPanel extends ActionPanel {
             idata.setVariable(VAR_SPOOLING_METHOD, vs.substituteMultiple(idata.getVariable(VAR_SPOOLING_METHOD_BERKELEYDB), null));
         }
 
-        // In case of execd and/or shadow host stabdalone installation source the settings.sh boostrap and act_qmaster files
+        // Detect Jvm Library if on qmaster host
+        if (isJmxEnabled && (isQmasterInst || isShadowdInst)) {
+            String sgeRoot = idata.getVariable(VAR_SGE_ROOT);
+            String remHost = (isQmasterInst) ? idata.getVariable(VAR_QMASTER_HOST) : Host.localHostName;
+            String libjvm="";
+            if (remHost.equals(Host.localHostName)) {
+               SimpleLocalCommand cmd = new SimpleLocalCommand(". " + sgeRoot + "/util/install_modules/inst_qmaster.sh ; HaveSuitableJavaBin 1.5.0 jvm ; echo $jvm_lib_path");
+               cmd.execute();
+               if (cmd.getOutput() != null && cmd.getOutput().size() > 0) {
+                   libjvm = cmd.getOutput().get(0);
+               }
+            } else {
+               //TODO: Verify behavior of delay and when connection is not possible via rsh
+               //TODO: Need sh -c
+               RemoteCommand cmd = new RemoteCommand(5000, remHost, Util.CONNECT_USER, idata.getVariable(VAR_SHELL_NAME), Util.IS_MODE_WINDOWS,
+                                   ". " + sgeRoot + "/util/install_modules/inst_qmaster.sh ; HaveSuitableJavaBin 1.5.0 jvm ; echo $jvm_lib_path", "");
+               cmd.execute();
+               if (cmd.getOutput() != null && cmd.getOutput().size() > 0) {
+                   libjvm = cmd.getOutput().get(0);
+               }
+            }
+            //           
+            idata.setVariable(VAR_JVM_LIB_PATH, libjvm);
+        }
+
+        // In case of execd and/or shadow host standalone installation source the settings.sh boostrap and act_qmaster files
         if (!isQmasterInst && (isExecdInst || isShadowdInst)) {
             try {
                 Properties settingsProps = Util.sourceSGESettings(idata.getVariable(VAR_SGE_ROOT), idata.getVariable(VAR_SGE_CELL_NAME));
-                Properties bootsrapProps = Util.sourceSGEBootstrap(idata.getVariable(VAR_SGE_ROOT), idata.getVariable(VAR_SGE_CELL_NAME));
+                Properties bootstrapProps = Util.sourceSGEBootstrap(idata.getVariable(VAR_SGE_ROOT), idata.getVariable(VAR_SGE_CELL_NAME));
                 String qmasterHost = Util.getQmasterHost(idata.getVariable(VAR_SGE_ROOT), idata.getVariable(VAR_SGE_CELL_NAME));
 
                 String origKey = "";
@@ -101,10 +130,26 @@ public class IntermediateActionPanel extends ActionPanel {
                 }
 
                 idata.setVariable(VAR_QMASTER_HOST, qmasterHost);
-                idata.setVariable(VAR_ADMIN_USER, bootsrapProps.getProperty("admin_user"));
-                idata.setVariable("add.product.mode", bootsrapProps.getProperty("add.product.mode")); //To correctly set CSP mode in execd only installs
+                idata.setVariable(VAR_ADMIN_USER, bootstrapProps.getProperty("admin_user"));
+                idata.setVariable("add.product.mode", bootstrapProps.getProperty("add.product.mode")); //To correctly set CSP mode in execd only installs
+
+                if (isShadowdInst) {
+                    /**
+                     * Read JMX specific settings
+                     */
+                    boolean jmxEnabled = !bootstrapProps.getProperty("jvm_threads").equals("0");
+                    idata.setVariable(VAR_SGE_JMX, (jmxEnabled ? "true" : "false"));
+                    if (jmxEnabled) {
+                        Properties jmxProps = Util.sourceJMXSettings(idata.getVariable(VAR_SGE_ROOT), idata.getVariable(VAR_SGE_CELL_NAME));
+                        idata.setVariable(VAR_SGE_JMX_PORT, jmxProps.getProperty("com.sun.grid.jgdi.management.jmxremote.port"));
+                        idata.setVariable(VAR_JMX_SSL, jmxProps.getProperty("com.sun.grid.jgdi.management.jmxremote.ssl"));
+                        idata.setVariable(VAR_JMX_SSL_CLIENT, jmxProps.getProperty("com.sun.grid.jgdi.management.jmxremote.ssl.need.client.auth"));
+                        idata.setVariable(VAR_JMX_SSL_KEYSTORE, jmxProps.getProperty("com.sun.grid.jgdi.management.jmxremote.ssl.serverKeystore"));
+                        idata.setVariable(VAR_JMX_SSL_KEYSTORE_PWD, jmxProps.getProperty("com.sun.grid.jgdi.management.jmxremote.ssl.serverKeystorePassword"));
+                    }
+                }
             } catch (Exception ex) {
-                Debug.error("Can not source 'settings.sh' and/or 'bootstrap' and/or 'act_qmaster' files! " + ex);
+                Debug.error("Can not source 'settings.sh' and/or 'bootstrap' and/or 'act_qmaster' and/or 'management.properties' files! " + ex);
             }
         }
 

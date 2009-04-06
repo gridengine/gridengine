@@ -35,17 +35,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if !defined(WIN32)
-#include <unistd.h>
-#include <strings.h>
-#endif
-
 #include "cl_commlib.h"
 #include "cl_lists.h"
 #include "cl_errors.h"
 #include "cl_util.h"
 #include "cl_xml_parsing.h"
-#include "cl_host_list.h"
 
 #include "basis_types.h"
 
@@ -587,9 +581,7 @@ int cl_xml_parse_CM(unsigned char* buffer, unsigned long buffer_length, cl_com_C
                }
                buffer[buf_pointer] = '\0';
 
-               if (strncmp(charptr, "cm", 2) == 0) {
-                  /* do nothing */
-               } else if (strncmp(charptr, "df", 2) == 0) {
+               if (strncmp(charptr, "df", 2) == 0) {
                   if (closing_tag == CL_FALSE) {
                      df_begin = buf_pointer + 1;
                   } else {
@@ -1221,9 +1213,7 @@ int cl_xml_parse_MIH(unsigned char* buffer, unsigned long buffer_length, cl_com_
 
                buffer[buf_pointer] = '\0';
 
-               if (strcmp(charptr,"mih") == 0) {
-                  /* do nothing */
-               } else if (strcmp(charptr,"mid") == 0 ) {
+               if (strcmp(charptr,"mid") == 0 ) {
                   if (closing_tag == CL_FALSE) {
                      mid_begin = tag_end + 2;
                   } else {
@@ -1426,9 +1416,7 @@ int cl_xml_parse_SIRM(unsigned char* buffer, unsigned long buffer_length, cl_com
               
                buffer[buf_pointer] = '\0';
                
-               if (strcmp(charptr,"sirm") == 0) {
-                  /* do nothing */
-               } else if (strcmp(charptr,"mid") == 0 ) {
+               if (strcmp(charptr,"mid") == 0 ) {
                   if (closing_tag == CL_FALSE) {
                      mid_begin = tag_end + 2;
                   } else {
@@ -1603,9 +1591,7 @@ int cl_xml_parse_AM(unsigned char* buffer, unsigned long buffer_length, cl_com_A
 
                buffer[buf_pointer] = '\0';
 
-               if (strcmp(charptr,"am") == 0) {
-                  /* do nothing */
-               } else if (strcmp(charptr,"mid") == 0 ) {
+               if (strcmp(charptr,"mid") == 0 ) {
                   if (closing_tag == CL_FALSE) {
                      mid_begin = tag_end + 2;
                   } else {

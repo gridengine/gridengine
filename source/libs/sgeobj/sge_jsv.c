@@ -139,8 +139,6 @@ jsv_create(const char *name, const char *context, lList **answer_list, const cha
             lSetRef(new_jsv, JSV_out, NULL);
             lSetRef(new_jsv, JSV_err, NULL);
             lSetBool(new_jsv, JSV_has_to_restart, false);
-            lSetList(new_jsv, JSV_incomplete, lCreateList("", JSV_Type));
-            lSetList(new_jsv, JSV_complete, lCreateList("", JSV_Type));
             lSetUlong(new_jsv, JSV_last_mod, st.st_mtime);
             lSetBool(new_jsv, JSV_test, false);
 
@@ -259,19 +257,14 @@ jsv_send_data(lListElem *jsv, lList **answer_list, const char *buffer, size_t si
    if (jsv_is_send_ready(jsv, answer_list)) {
       int lret;
 
-      DPRINTF(("JSV - before sending data\n"));
       lret = fprintf(lGetRef(jsv, JSV_in), buffer);
-      DPRINTF(("JSV - after sending data\n"));
       fflush(lGetRef(jsv, JSV_in));
-      DPRINTF(("JSV - after flushing data\n"));
       if (lret != size) {
-         DPRINTF(("JSV - had sent error\n"));
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
                                  MSG_JSV_SEND_S);
          ret = false;
       }
    } else {
-      DPRINTF(("JSV - no data sent becaus fd was not ready\n"));
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
                               MSG_JSV_SEND_READY_S);
       ret = false;
@@ -329,7 +322,15 @@ jsv_start(lListElem *jsv, lList **answer_list)
          pid = sge_peopen_r("/bin/sh", 0, scriptfile, 
                             (user != NULL ? user : get_admin_user_name()), NULL,
                             &fp_in, &fp_out, &fp_err, false);
-         if (pid != -1) {
+         if (pid == -1) {
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
+                                    MSG_JSV_START_S, scriptfile);
+            ret = false;
+         } else if (pid == -2) {
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
+                                    MSG_JSV_STARTPERMISSION);
+            ret = false;
+         } else {
             jsv_set_pid(jsv, pid);
             lSetRef(jsv, JSV_in, fp_in);
             lSetRef(jsv, JSV_out, fp_out);
@@ -340,10 +341,6 @@ jsv_start(lListElem *jsv, lList **answer_list)
             fcntl(fileno(fp_err), F_SETFL, O_NONBLOCK);
 
             INFO((SGE_EVENT, MSG_JSV_STARTED_S, scriptfile));
-         } else {
-            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
-                                    MSG_JSV_START_S, scriptfile);
-            ret = false;
          }
       } else {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
@@ -1130,7 +1127,7 @@ jsv_do_verify(sge_gdi_ctx_class_t* ctx, const char *context, lListElem **job,
             } else {
                u_long32 jid = lGetUlong(new_job, JB_job_number);
 
-               DPRINTF(("JSV rejects job"));
+               DPRINTF(("JSV rejects job\n"));
                if (jid == 0) {
                   INFO((SGE_EVENT, MSG_JSV_REJECTED_S, context));
                } else {
@@ -1144,7 +1141,6 @@ jsv_do_verify(sge_gdi_ctx_class_t* ctx, const char *context, lListElem **job,
 
                DPRINTF(("JSV has to be rstarted\n"));
                INFO((SGE_EVENT, MSG_JSV_RESTART_S, context));
-               DPRINTF(("Before termination of JSV\n"));
                ret &= jsv_stop(jsv, answer_list, soft_shutdown);
             }
          }

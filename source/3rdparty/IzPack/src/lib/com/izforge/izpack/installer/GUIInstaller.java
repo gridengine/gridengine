@@ -1,5 +1,5 @@
 /*
- * $Id: GUIInstaller.java,v 1.2 2008/12/12 15:12:05 zsiga Exp $
+ * $Id: GUIInstaller.java,v 1.1 2009/03/04 17:13:54 zsiga Exp $
  * IzPack - Copyright 2001-2008 Julien Ponge, All Rights Reserved.
  * 
  * http://izpack.org/

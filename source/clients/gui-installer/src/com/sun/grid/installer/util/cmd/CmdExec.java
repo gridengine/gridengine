@@ -51,23 +51,17 @@ import java.util.Properties;
 public abstract class CmdExec implements Config {
     private ProcessBuilder processBuilder = null;
 
-    public static final int EXITVAL_INITIAL       = -1;
-    public static final int EXITVAL_OTHER         = -2;
-    public static final int EXITVAL_INTERRUPTED   = -3;
-    public static final int EXITVAL_TERMINATED    = -4;
-    public static final int EXITVAL_MISSING_FILE  = 15;
+    private static long WAIT_TIME = 300;
+    long MAX_WAIT_TIME;
 
-    private static int WAIT_TIME                  = 300;
-    int MAX_WAIT_TIME;
-
-    private int exitValue                         = EXITVAL_INITIAL;
+    private int exitValue = EXIT_VAL_CMDEXEC_INITIAL;
 
     private Vector<String> outVector, errVector, additionalErrors;
     private String firstMessage;
 
     private File outFile, errFile;
 
-    public CmdExec(int timeout) {
+    public CmdExec(long timeout) {
         MAX_WAIT_TIME = timeout;
         additionalErrors = new Vector<String>();
     }
@@ -132,17 +126,17 @@ public abstract class CmdExec implements Config {
                     if (waitTime > MAX_WAIT_TIME) {
                         Debug.error("Terminated ("+MAX_WAIT_TIME / 1000+"sec): '" + processBuilder.command() + "'!");
                         process.destroy();
-                        exitValue = EXITVAL_TERMINATED;
+                        exitValue = EXIT_VAL_CMDEXEC_TERMINATED;
                         break;
                     }
                 }
             }
             cmdId = (long)(Math.random()*1000000);
         } catch (IOException ex) {
-            exitValue = EXITVAL_OTHER;
+            exitValue = EXIT_VAL_CMDEXEC_OTHER;
             additionalErrors.add(ex.getLocalizedMessage());
         } catch (InterruptedException ex) {
-            exitValue = EXITVAL_INTERRUPTED;
+            exitValue = EXIT_VAL_CMDEXEC_INTERRUPTED;
             additionalErrors.add(ex.getLocalizedMessage());
         } finally {
             outVector = getInput(outFile);
@@ -207,13 +201,13 @@ public abstract class CmdExec implements Config {
     public String generateLog(int exitValue, final Properties msgs) {
         String log = "", stdLog = "", errLog = "", message = "";
 
-        if (exitValue == CmdExec.EXITVAL_INITIAL) {
+        if (exitValue == EXIT_VAL_CMDEXEC_INITIAL) {
             return "Tried to retrieve exit code before command has finished! We have no log so far.";
         }
 
         String SEP = System.getProperty("line.separator");
         message = (String) msgs.get("msg.exit." + exitValue);
-        if (exitValue == CmdExec.EXITVAL_TERMINATED) {
+        if (exitValue == EXIT_VAL_CMDEXEC_TERMINATED) {
             //timeout
             message = MessageFormat.format(message, MAX_WAIT_TIME / 1000);
             log += "FAILED: " + message + SEP;

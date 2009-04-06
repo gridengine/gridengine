@@ -173,8 +173,7 @@ static int sge_ls_status(lListElem *this_ls)
    DENTER(TOP_LAYER, "sge_ls_status");
 
    if (sge_ls_get_pid(this_ls) == -1) {
-      DEXIT;
-      return LS_NOT_STARTED;
+      DRETURN(LS_NOT_STARTED);
    }
 
    /* build writefds */
@@ -186,11 +185,10 @@ static int sge_ls_status(lListElem *this_ls)
    ret = select(higest_fd + 1, NULL, &writefds, NULL, NULL);
 
    if (ret <= 0) {
-      DEXIT;
-      return LS_BROKEN_PIPE;
+      DRETURN(LS_BROKEN_PIPE);
    }
-   DEXIT;
-   return LS_OK;
+
+   DRETURN(LS_OK);
 }
 
 /****** execd/loadsensor/sge_ls_start_ls() ************************************
@@ -255,8 +253,7 @@ static void sge_ls_start_ls(const char *qualified_hostname, lListElem *this_ls)
       free(envp);
    }
    if (pid == -1) {
-      DEXIT;
-      return;
+      DRETURN_VOID;
    }
    /* we need load reports non blocking */
    fcntl(fileno(fp_out), F_SETFL, O_NONBLOCK);
@@ -271,6 +268,8 @@ static void sge_ls_start_ls(const char *qualified_hostname, lListElem *this_ls)
 
    /* request first load report after starting */
    ls_send_command(this_ls, "\n");
+
+   DRETURN_VOID;
 }
 
 /******* execd/loadsensor/sge_ls_create_ls() **********************************
@@ -365,8 +364,7 @@ static void sge_ls_stop_ls(lListElem *this_ls, int send_no_quit_command)
    DENTER(TOP_LAYER, "sge_ls_stop_ls");
 
    if (sge_ls_get_pid(this_ls) == -1) {
-      DEXIT;
-      return;
+      DRETURN_VOID;
    }
 
    if (!send_no_quit_command) {
@@ -393,8 +391,7 @@ static void sge_ls_stop_ls(lListElem *this_ls, int send_no_quit_command)
    }
 
    sge_ls_set_pid(this_ls, -1);
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 /****** execd/loadsensor/read_ls() ********************************************
@@ -435,21 +432,20 @@ static int read_ls(void)
    DENTER(TOP_LAYER, "read_ls");
 
    for_each(ls_elem, ls_list) {
+         FILE *file = lGetRef(ls_elem, LS_out);
       
       if (sge_ls_get_pid(ls_elem) == -1) {
          continue;
       }
+
       DPRINTF(("receiving from %s\n", lGetString(ls_elem, LS_command)));
 
       while (flag) {
-         FILE *file = lGetRef(ls_elem, LS_out);
-         lList *tmp_list;
-
          if (fscanf(file, "%[^\n]\n", input) != 1) {
             break;
          }
 #ifdef INTERIX
-         if(input[strlen(input)-1] == '\r') {
+         if (input[strlen(input)-1] == '\r') {
             input[strlen(input)-1] = '\0';
          }
 #endif
@@ -463,9 +459,10 @@ static int read_ls(void)
 
          if (!strcmp(input, "end")) {
             /* replace old load report by new one */
-            lSetList(ls_elem, LS_complete, lCreateList("", LR_Type));
-            lSetList(ls_elem, LS_complete,
-                     lCopyList("", lGetList(ls_elem, LS_incomplete)));
+            lList *tmp_list = NULL;
+            lXchgList(ls_elem, LS_incomplete, &tmp_list);
+            lXchgList(ls_elem, LS_complete, &tmp_list);
+            lFreeList(&tmp_list);
 
             /* request next load report from ls */
             ls_send_command(ls_elem, "\n");
@@ -476,8 +473,7 @@ static int read_ls(void)
          strcat(input, "\n");
          if (sscanf(input, "%[^:]:%[^:]:%[^\n]", host, name, value) != 3) {
             DPRINTF(("format error in line: \"%100s\"\n", input));
-            ERROR((SGE_EVENT, MSG_LS_FORMAT_ERROR_SS,
-                   lGetString(ls_elem, LS_command), input));
+            ERROR((SGE_EVENT, MSG_LS_FORMAT_ERROR_SS, lGetString(ls_elem, LS_command), input));
          } else {
 #ifdef INTERIX
             char error_buffer[4 * MAX_STRING_SIZE] = "";
@@ -485,7 +481,7 @@ static int read_ls(void)
             if (wl_handle_ls_results(name, value, host, error_buffer)) 
 #endif
             {
-               tmp_list = lGetList(ls_elem, LS_incomplete);
+               lList *tmp_list = lGetList(ls_elem, LS_incomplete);
                sge_add_str2load_report(&tmp_list, name, value, host);
             }
 #ifdef INTERIX
@@ -552,29 +548,24 @@ static int ls_send_command(lListElem *this_ls, const char *command)
       default:
          DPRINTF(("select failed with unexpected errno %d", errno));
       }
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
 
    if (!FD_ISSET(fileno((FILE *) lGetRef(this_ls, LS_in)), &writefds)) {
       DPRINTF(("received: cannot read\n"));
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
 
    /* send command to load sensor */
    file = lGetRef(this_ls, LS_in);
    if (fprintf(file, "%s", command) != strlen(command)) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
    if (fflush(file) != 0) {
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 /****** execd/loadsensor/sge_ls_qidle() ***************************************
@@ -793,13 +784,12 @@ void trigger_ls_restart(void)
 *
 *  INPUTS
 *     pid - process id
-*     send_no_quit_command - do not communicate with loadsensor
 *
 *  RESULT
 *     0 - pid was not a loadsensor
 *     1 - we triggerd the restart because pid was a loadsensor
 ******************************************************************************/
-int sge_ls_stop_if_pid(pid_t pid, int send_no_quit_command)
+int sge_ls_stop_if_pid(pid_t pid)
 {
    lListElem *ls;
 
@@ -900,6 +890,7 @@ int sge_ls_get(const char *qualified_hostname, const char *binary_path, lList **
                                  lGetHost(ep, LR_host));
       }
    }
+
    FREE(load_sensor);
 
    DRETURN(0);

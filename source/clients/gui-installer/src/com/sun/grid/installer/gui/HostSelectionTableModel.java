@@ -36,7 +36,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.event.TableModelEvent;
 
-public class HostSelectionTableModel extends SortedTableModel {
+public class HostSelectionTableModel extends SortedTableModel implements HostTableModel {
 
     final private String[] headers;
     final private Class[] types;
@@ -59,6 +59,9 @@ public class HostSelectionTableModel extends SortedTableModel {
         this.types = types;
         this.hostList = hostList;
         this.langProperies = langProperies;
+
+        qmasterHost = null;
+        bdbHost = null;
     }
 
     @Override
@@ -131,6 +134,10 @@ public class HostSelectionTableModel extends SortedTableModel {
                         qmasterHost = null;
                     } else {
                         qmasterHost = h;
+
+                        // Qmaster is always admin and submit host
+                        h.setAdminHost(true);
+                        h.setSubmitHost(true);
                     }
                 }
                 break;
@@ -245,8 +252,13 @@ public class HostSelectionTableModel extends SortedTableModel {
 
     public void setHostState(Host h, Host.State state) {
         h.setState(state);
+
+        int index = hostList.indexOf(h);
+        if (index == -1) {
+            return;
+        }
         
-        int row = getRowIndex(hostList.indexOf(h));
+        int row = getRowIndex(index);
         if (row == -1 || row >= hostList.size()) {
             return;
         }
@@ -267,6 +279,10 @@ public class HostSelectionTableModel extends SortedTableModel {
                     h.setQmasterHost(false);
                 } else {
                     qmasterHost = h;
+
+                    //Set admin/submit components by default to qmaster host
+                    h.setAdminHost(true);
+                    h.setSubmitHost(true);
                 }
             }
 
@@ -308,5 +324,13 @@ public class HostSelectionTableModel extends SortedTableModel {
             fireTableRowsDeleted(row, row);
             fireTableChanged(new TableModelEvent(this));
         }
+    }
+
+    public void setHostLog(Host h, String log) {
+        h.setLogContent(log);
+    }
+
+    public HostList getHostList() {
+        return hostList;
     }
 }

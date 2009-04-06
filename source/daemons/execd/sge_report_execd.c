@@ -144,15 +144,14 @@ int sge_add_int2load_report(lList **lpp, const char *name, int value,
    add a string value to the load report list lpp
 
 */
-int sge_add_str2load_report(lList **lpp, const char *name, const char *value,
-                            const char *host)
+int sge_add_str2load_report(lList **lpp, const char *name, const char *value, const char *host)
 {
    lListElem *ep = NULL, *search_ep = NULL;
    const void *iterator = NULL;
 
    DENTER(BASIS_LAYER, "sge_add_str2load_report");
 
-   if (!lpp || !name || !value) {
+   if (lpp == NULL || name == NULL || value == NULL || host == NULL) {
       DRETURN(-1);
    }
 

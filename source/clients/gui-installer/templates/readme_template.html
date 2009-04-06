@@ -35,7 +35,7 @@ ___INFO__MARK_END__-->
         <title>Read Me</title>
     </head>
     <body>
-        <h3>Grid Engine configuration</h3>
+        <h2>Grid Engine cluster configuration</h2>
         <table border = "0">
             <tr><td>Grid Engine root directory (<code>$SGE_ROOT</code>)</td><td>${cfg.sge.root}</td></tr>
             <tr><td>Cell name (<code>$SGE_CELL</code>)</td><td>${cfg.cell.name}</td></tr>
@@ -43,48 +43,93 @@ ___INFO__MARK_END__-->
             <tr><td>Qmaster port (<code>$SGE_QMASTER_PORT</code>)</td><td>${cfg.sge.qmaster.port}</td></tr>
             <tr><td>Execd port (<code>$SGE_EXECD_PORT</code>)</td><td>${cfg.sge.execd.port}</td></tr>
             <tr><td>Group id range (<code>$SGE_GID_RANGE</code>)</td><td>${cfg.gid.range}</td></tr>
+            <tr><td>Qmaster spool directory</td><td>${cfg.qmaster.spool.dir}</td></tr>
+            <tr><td>Global execd spool directory</td><td>${cfg.execd.spool.dir}</td></tr>
+            <tr><td>Spooling method</td><td>${cfg.spooling.method}</td></tr>
+            <!--.if !cond.spooling.classic.-->
+            <tr><td>Spooling directory</td><td>${cfg.db.spooling.dir}</td></tr>
+            <!--.endif.-->
+            <!--.if ${add.sge.jmx}.-->
+            <tr><td>JMX port</td><td>${cfg.sge.jmx.port}</td></tr>
+            <tr><td>JVM library path</td><td>${cfg.sge.jvm.lib.path}</td></tr>
+            <!--.endif.-->
+            <!--.if ${add.sge.jmx.with.ssl}.-->
+            <tr><td>JMX SSL server keystore path</td><td>${cfg.sge.jmx.ssl.keystore}</td></tr>
+            <!--.endif.-->
+            <tr><td>Administrator mail</td><td>${cfg.admin.mail}</td></tr>
         </table>
         <br>
-        <table border = "1">
-            <tr><td>Qmaster host</td><td>${add.qmaster.host}</td></tr>
-            <tr><td>Execution host(s)</td><td>${cfg.exec.host.list}</td></tr>
-            <tr><td>Shadow host(s)</td><td>${cfg.shadow.host}</td></tr>
-            <tr><td>Berkeley db host</td><td>${cfg.db.spooling.server}</td></tr>
-            <tr><td>Admin host(s)</td><td>${cfg.admin.host.list}</td></tr>
-            <tr><td>Submit host(s)</td><td>${cfg.submit.host.list}</td></tr>
+        <table border = "0">
+            <tr><td></td><td align="center"><b>Succeded</b></td><td align="center"><b>Failed</b></td></tr>
+            <tr><td>Qmaster host</td><td>${add.qmaster.host}</td><td><font color="red">${add.qmaster.host.failed}</font></td></tr>
+            <tr><td>Execution host(s)</td><td>${cfg.exec.host.list}</td><td><font color="red">${add.exec.host.list.failed}</font></td></tr>
+            <tr><td>Shadow host(s)</td><td>${cfg.shadow.host}</td><td><font color="red">${add.shadow.host.failed}</font></td></tr>
+            <tr><td>Berkeley db host</td><td>${cfg.db.spooling.server}</td><td><font color="red">${add.db.spooling.server.failed}</font></td></tr>
+            <tr><td>Admin host(s)</td><td>${cfg.admin.host.list}</td><td><font color="red">${add.admin.host.list.failed}</font></td></tr>
+            <tr><td>Submit host(s)</td><td>${cfg.submit.host.list}</td><td><font color="red">${add.submit.host.list.failed}</font></td></tr>
         </table>
+        
+        <h2>How to start with Grid Engine</h2>
+        <ol>
+            <li>
+                Set the environment...<br>
+                ... if you are a csh/tcsh user:<br>
+                <code>source ${cfg.sge.root}/${cfg.cell.name}/common/settings.csh</code><br>
+                ... if you are a sh/ksh user:<br>
+                <code>. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh</code><br>
+                <br>
+                This will set or expand the following environment variables:
+                <ul>
+                    <li><code>$SGE_ROOT</code>         (always necessary)</li>
+                    <li><code>$SGE_CELL</code>         (if you are using a cell other than <code>default</code>)</li>
+                    <li><code>$SGE_CLUSTER_NAME</code> (always necessary)</li>
+                    <li><code>$SGE_QMASTER_PORT</code> (if you haven't added the service <code>sge_qmaster</code>)</li>
+                    <li><code>$SGE_EXECD_PORT</code>   (if you haven't added the service <code>sge_execd</code>)</li>
+                    <li><code>$PATH/$path</code>       (to find the Grid Engine binaries)</li>
+                    <li><code>$MANPATH</code>          (to access the manual pages)</li>
+                </ul>
+            </li>
+            <br>
+            <li>
+                Submit one of the sample scripts contained in the ${cfg.sge.root}/examples/jobs directory.<br>
+                <code>qsub ${cfg.sge.root}/examples/jobs/simple.sh</code><br>
+                or<br>
+                <code>qsub ${cfg.sge.root}/examples/jobs/sleeper.sh</code>
+            </li>
+            <br>
+            <li>
+                Use the qstat command to monitor the job's behavior.<br>
+                <code>qstat -f</code>
+            </li>
+            <br>
+            <li>
+                After the job finishes executing, check your home directory for 
+                the redirected stdout/stderr files <code>script-name.ejob-id</code> and <code>script-name.ojob-id</code>.<br>
+                The <code>job-id</code> is a consecutive unique integer number assigned to each job.
+            </li>
+        </ol>
 
-
-        <h3>Using Grid Engine</h3>
-        You should now enter the command:<br>
-        <code>source ${cfg.sge.root}/${cfg.cell.name}/common/settings.csh</code><br>
-        if you are a csh/tcsh user or<br>
-        <code>. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh</code><br>
-        if you are a sh/ksh user.<br>
-        This will set or expand the following environment variables:
-        <ul>
-            <li><code>$SGE_ROOT</code>         (always necessary)</li>
-            <li><code>$SGE_CELL</code>         (if you are using a cell other than <code>default</code>)</li>
-            <li><code>$SGE_CLUSTER_NAME</code> (always necessary)</li>
-            <li><code>$SGE_QMASTER_PORT</code> (if you haven't added the service <code>sge_qmaster</code>)</li>
-            <li><code>$SGE_EXECD_PORT</code>   (if you haven't added the service <code>sge_execd</code>)</li>
-            <li><code>$PATH/$path</code>       (to find the Grid Engine binaries)</li>
-            <li><code>$MANPATH</code>          (to access the manual pages)</li>
-        </ul>
-
-        <h3>Grid Engine messages</h3>
-        Grid Engine messages can be found at:<br>
+        <h2>Administering Grid Engine</h2>
+        Grid Engine startup scripts can be found at:<br>
+        Qmaster:     <code>${cfg.sge.root}/${cfg.cell.name}/common/sgemaster start/stop</code><br>
+        Exec daemon: <code>${cfg.sge.root}/${cfg.cell.name}/common/sgeexecd start/stop</code><br>
+        <br>
+        
+        <!--.if ${installed.solaris.smf}.-->
         Startup messages can be found in SMF service log files.<br>
         You can get the name of the log file by calling svcs -l &lt;SERVICE_NAME&gt;<br>
-        E.g.: <code>svcs -l svc:/application/sge/qmaster:p10500</code><br>
+        E.g.: <code>svcs -l svc:/application/sge/qmaster:${cfg.sge.cluster.name}</code><br>
         <br>
+        <!--.endif.-->
+
         After startup the daemons log their messages in their spool directories.<br>
         Qmaster:     <code>${cfg.qmaster.spool.dir}/messages</code><br>
         Exec daemon: <code>&lt;execd_spool_dir&gt;/&lt;hostname&gt;/messages</code>
 
-        <h3>Grid Engine startup scripts</h3>
-        Grid Engine startup scripts can be found at:<br>
-        <code>${cfg.sge.root}/${cfg.cell.name}/common/sgemaster</code> (qmaster)<br>
-        <code>${cfg.sge.root}/${cfg.cell.name}/common/sgeexecd</code> (execd)
+        <h2>Useful links</h2>
+        <table border = "0">
+        <tr><td>Sun Grid Engine Information Center</td><td><a href="http://wikis.sun.com/display/SunGridEngine/Home">http://wikis.sun.com/display/SunGridEngine/Home</a></td></tr>
+        <tr><td>Grid Engine project home</td><td><a href="http://gridengine.sunsource.net">http://gridengine.sunsource.net</a></td></tr>
+        </table>
     </body>
 </html>

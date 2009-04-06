@@ -54,9 +54,9 @@ ___INFO__MARK_END__-->
     <!--Head lines-->
     <str id="WelcomePanel.headline" txt="Welcome"/>
     <str id="PreActionPanel.headline" txt="Check prerequisites"/>
-    <str id="IntermediateActionPanel.headline" txt="Check values"/>
     <str id="UserInputPanel.headline.ComponentPanel" txt="Choose component"/>
     <str id="UserInputPanel.headline.MainPanel" txt="Main configuration"/>
+    <str id="IntermediateActionPanel.headline" txt="Check values"/>
     <str id="UserInputPanel.headline.JMXPanel" txt="JMX configuration"/>
     <str id="UserInputPanel.headline.SpoolingPanel" txt="Spooling configuration"/>
     <str id="UserInputPanel.headline.CSPPanel" txt="SSL certificate configuration"/>
@@ -101,42 +101,47 @@ ___INFO__MARK_END__-->
     <str id="state.used_qmaster_port" txt="Used port"/>
     <str id="state.used_execd_port" txt="Used port"/>
     <str id="state.used_jmx_port" txt="Used port"/>
+    <str id="state.jvm_lib_missing" txt="JVM library is missing"/>
+    <str id="state.jvm_lib_invalid" txt="JVM library is invalid"/>
     <str id="state.unknown_error" txt="Unknown error"/>
 
-    <str id="state.new_unknown_host.tooltip" txt="New unknown host"/>
-    <str id="state.unknown_host.tooltip" txt="Unknown host"/>
-    <str id="state.ok.tooltip" txt="Ok"/>
-    <str id="state.failed.tooltip" txt="Failed"/>
-    <str id="state.failed_dependent_on_previous.tooltip" txt="This installation depended on previous installation which failed."/>
-    <str id="state.failed_already_installed_component.tooltip" txt="The selected component to be installed already exists on the remote host"/>
-    <str id="state.success.tooltip" txt="Success"/>
-    <str id="state.reachable.tooltip" txt="Reachable"/>
-    <str id="state.unreachable.tooltip" txt="Unreachable remote host via ${cfg.shell.name}/${cfg.copy.command} without a password"/>
-    <str id="state.resolvable.tooltip" txt="Resolvable"/>
-    <str id="state.resolving.tooltip" txt="Resolving"/>
-    <str id="state.missing_file.tooltip" txt="Missing file '${cfg.sge.root}/util/arch' on remote host"/>
-    <str id="state.contacting.tooltip" txt="Contacting remote host"/>
-    <str id="state.validating.tooltip" txt="Validating configuration on remote host"/>
-    <str id="state.operation_timeout.tooltip" txt="Operation took longer that a timeout value."/>
-    <str id="state.copy_timeout_check_host.tooltip" txt="Timeout while copying 'check_host' to remote host. Maybe a password requested?"/>
-    <str id="state.copy_failed_check_host.tooltip" txt="Copying file 'check_host' to remote host failed."/>
-    <str id="state.ready_to_install.tooltip" txt="Waiting for a slot"/>
-    <str id="state.copy_timeout_install_component.tooltip" txt="Timeout while copying 'install_component' to remote host. Maybe a password requested?"/>
-    <str id="state.copy_failed_install_component.tooltip" txt="Copying file 'install_component' to remote host failed."/>
-    <str id="state.processing.tooltip" txt="Processing task"/>
-    <str id="state.canceled.tooltip" txt="Canceled"/>
-    <str id="state.perm_qmaster_spool_dir.tooltip" txt="<html>No permission to create qmaster spool directory:<br>${cfg.qmaster.spool.dir}</html>"/>
-    <str id="state.perm_execd_spool_dir.tooltip.global" txt="<html>No permission to create execd spool directory:<br>${cfg.execd.spool.dir}</html>"/>
-    <str id="state.perm_execd_spool_dir.tooltip.local" txt="<html>No permission to create execd spool directory</html>"/>
-    <str id="state.perm_bdb_spool_dir.tooltip" txt="<html>No permission to create Berkeley db spool directory:<br>${cfg.db.spooling.dir}</html>"/>
-    <str id="state.bdb_spool_dir_wrong_fstype.tooltip" txt="<html>Berkeley db spool directory has wrong file system type:<br>${cfg.db.spooling.dir}</html>"/>
-    <str id="state.perm_jmx_keystore.tooltip" txt="<html>No permission to create JMX keystore directory:<br>${cfg.sge.jmx.ssl.keystore}</html>"/>
-    <str id="state.bdb_spool_dir_exists.tooltip" txt="<html>Berkeley db spool directory exists:<br>${cfg.db.spooling.dir}</html>"/>
-    <str id="state.admin_user_not_known.tooltip" txt="Admin user '${cfg.admin.user}' does not exist on this host!"/>
-    <str id="state.used_qmaster_port.tooltip" txt="Qmaster port '${cfg.sge.qmaster.port}' could not be bound."/>
-    <str id="state.used_execd_port.tooltip" txt="Execd port '${cfg.sge.execd.port}' is in use"/>
-    <str id="state.used_jmx_port.tooltip" txt="JMX port '${cfg.sge.jmx.port}' is in use"/>
-    <str id="state.unknown_error.tooltip" txt="Unknown error occured while checking the host."/>
+    <str id="state.new_unknown_host.tooltip" txt="<html>New unknown host.</html>"/>
+    <str id="state.unknown_host.tooltip" txt="<html>Unknown host.</html>"/>
+    <str id="state.ok.tooltip" txt="<html>Ok.</html>"/>
+    <str id="state.failed.tooltip" txt="<html>Task finished with failure.</html>"/>
+    <str id="state.failed_dependent_on_previous.tooltip" txt="<html>This installation depended on previous installation which failed.</html>"/>
+    <str id="state.failed_already_installed_component.tooltip" txt="<html>The selected component to be installed already exists on the remote host.</html>"/>
+    <str id="state.success.tooltip" txt="<html>Task finished with success.</html>"/>
+    <str id="state.reachable.tooltip" txt="<html>Host is reachable.</html>"/>
+    <str id="state.unreachable.tooltip" txt="<html>Unreachable remote host via ${cfg.shell.name}/${cfg.copy.command} without a password.</html>"/>
+    <str id="state.resolvable.tooltip" txt="<html>Host is resolvable.</html>"/>
+    <str id="state.resolving.tooltip" txt="<html>Resolving...</html>"/>
+    <str id="state.missing_file.tooltip" txt="<html>Missing file '${cfg.sge.root}/util/arch' on remote host.</html>"/>
+    <str id="state.contacting.tooltip" txt="<html>Contacting remote host...</html>"/>
+    <str id="state.validating.tooltip" txt="<html>Validating configuration on remote host...</html>"/>
+    <str id="state.operation_timeout.tooltip" txt="<html>Operation took longer than the timeout value.</html>"/>
+    <str id="state.copy_timeout_check_host.tooltip" txt="<html>Timeout while copying 'check_host' to remote host.<br>Maybe a password requested?</html>"/>
+    <str id="state.copy_failed_check_host.tooltip" txt="<html>Copying file 'check_host' to remote host failed.</html>"/>
+    <str id="state.ready_to_install.tooltip" txt="<html>Waiting for a slot...</html>"/>
+    <str id="state.copy_timeout_install_component.tooltip" txt="<html>Timeout while copying 'install_component' to remote host.<br>Maybe a password requested?</html>"/>
+    <str id="state.copy_failed_install_component.tooltip" txt="<html>Copying file 'install_component' to remote host failed.</html>"/>
+    <str id="state.processing.tooltip" txt="<html>Processing task.</html>"/>
+    <str id="state.canceled.tooltip" txt="<html>Task has been canceled.</html>"/>
+    <str id="state.perm_qmaster_spool_dir.tooltip" txt="<html>No permission to create qmaster spool directory:<br>${cfg.qmaster.spool.dir}${tooltip.hint}</html>"/>
+    <str id="state.perm_execd_spool_dir.tooltip.global" txt="<html>No permission to create execd spool directory:<br>${cfg.execd.spool.dir}${tooltip.hint}</html>"/>
+    <str id="state.perm_execd_spool_dir.tooltip.local" txt="<html>No permission to create execd spool directory.</html>"/>
+    <str id="state.perm_bdb_spool_dir.tooltip" txt="<html>No permission to create Berkeley db spool directory:<br>${cfg.db.spooling.dir}${tooltip.hint}</html>"/>
+    <str id="state.bdb_spool_dir_wrong_fstype.tooltip" txt="<html>Berkeley db spool directory has wrong file system type:<br>${cfg.db.spooling.dir}${tooltip.hint}</html>"/>
+    <str id="state.perm_jmx_keystore.tooltip" txt="<html>No permission to create JMX keystore directory:<br>${cfg.sge.jmx.ssl.keystore}${tooltip.hint}</html>"/>
+    <str id="state.bdb_spool_dir_exists.tooltip" txt="<html>Berkeley db spool directory exists:<br>${cfg.db.spooling.dir}${tooltip.hint}</html>"/>
+    <str id="state.admin_user_not_known.tooltip" txt="<html>Admin user '${cfg.admin.user}' does not exist on this host!</html>"/>
+    <str id="state.used_qmaster_port.tooltip" txt="<html>Qmaster port '${cfg.sge.qmaster.port}' could not be bound.</html>"/>
+    <str id="state.used_execd_port.tooltip" txt="<html>Execd port '${cfg.sge.execd.port}' is in use.</html>"/>
+    <str id="state.used_jmx_port.tooltip" txt="<html>JMX port '${cfg.sge.jmx.port}' is in use.</html>"/>
+    <str id="state.jvm_lib_missing.tooltip" txt="<html>JVM library is missing on the remote host:<br>${cfg.sge.jvm.lib.path}${tooltip.hint}</html>"/>
+    <str id="state.jvm_lib_invalid.tooltip" txt="<html>JVM library is invalid on the remote host:<br>${cfg.sge.jvm.lib.path}<br>Maybe belongs to other architecture?${tooltip.hint}</html>"/>
+    <str id="state.unknown_error.tooltip" txt="<html>Task ended with unknown error.</html>"/>
+    <str id="express.mode.tooltip.hint" txt="<br><br><b>Hint:</b>To modify this value switch to custom installation mode."/>
 
     <!-- Labels, tooltips, messages -->
     <!-- Welcome Panel -->
@@ -434,6 +439,7 @@ ___INFO__MARK_END__-->
     <!-- Host Panel -->
         <!-- Labels -->
         <str id="hostinput.label" txt="Hostname or IP" />
+        <str id="hostinput.value" txt="<Enter a hostname or IP adress here ...>" />
         <str id="fromfile.label" txt="From file" />
         <str id="component.qmaster.host.label" txt="Master host" />
         <str id="component.execd.host.label" txt="Execution host" />
@@ -539,9 +545,14 @@ ___INFO__MARK_END__-->
         <str id="result.info.label" txt="Read me"/>
         <str id="button.save.label" txt="Save as..."/>
         <str id="button.print.label" txt="Print"/>
+        <str id="button.startover.label" txt="Continue"/>
         <!-- Tooltips -->
-        <str id="button.save.tooltip" txt="Save as..."/>
-        <str id="button.print.tooltip" txt="Print"/>
+        <str id="button.save.tooltip" txt="<html>Save Read Me into the specified file.</html>"/>
+        <str id="button.print.tooltip" txt="<html>Print the content of Read Me.</html>"/>
+        <str id="button.startover.tooltip" txt="<html>Continue installing more hosts.</html>"/>
+        <!-- Messages -->
+        <str id="error.can.not.open.browser.message" txt="Can not open browser!"/>
+        <str id="error.can.not.open.browser.title" txt="Error!"/>
         
     <!-- Help Page -->
         <!-- Labels -->

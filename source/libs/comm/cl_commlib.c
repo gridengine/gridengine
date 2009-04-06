@@ -32,12 +32,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <errno.h>
-#include "sge_arch.h"
 #include "sge_string.h"
 #include "sge_signal.h"
 
@@ -4628,14 +4626,16 @@ static int cl_commlib_handle_connection_write(cl_com_connection_t* connection) {
           }
           connection->statistic->real_bytes_sent = connection->statistic->real_bytes_sent + connection->data_write_buffer_pos ;
 
-          sprintf((char*)connection->data_write_buffer, CL_MIH_MESSAGE ,
-                   CL_MIH_MESSAGE_VERSION,
-                   message->message_id,
-                   message->message_length,
-                   cl_com_get_mih_df_string(message->message_df),
-                   cl_com_get_mih_mat_string(message->message_mat),
-                   message->message_tag ,
-                   message->message_response_id);
+          snprintf((char*) connection->data_write_buffer, 
+                           connection->data_buffer_size,
+                           CL_MIH_MESSAGE ,
+                           CL_MIH_MESSAGE_VERSION,
+                           message->message_id,
+                           message->message_length,
+                           cl_com_get_mih_df_string(message->message_df),
+                           cl_com_get_mih_mat_string(message->message_mat),
+                           message->message_tag ,
+                           message->message_response_id);
 
 #ifdef CL_DO_COMMLIB_DEBUG         
           CL_LOG_STR(CL_LOG_DEBUG,"write buffer:",(char*)connection->data_write_buffer);
@@ -5228,6 +5228,8 @@ int cl_commlib_search_endpoint(cl_com_handle_t* handle,
 static int cl_commlib_send_ack_message(cl_com_connection_t* connection, cl_com_message_t* message) {
    cl_byte_t* ack_message_data = NULL;
    unsigned long ack_message_size = 0;
+   unsigned long ack_message_malloc_size = 0;
+
    int ret_val = CL_RETVAL_OK;
    cl_com_message_t* ack_message = NULL;
 
@@ -5237,12 +5239,13 @@ static int cl_commlib_send_ack_message(cl_com_connection_t* connection, cl_com_m
    
    ack_message_size = CL_AM_MESSAGE_SIZE;
    ack_message_size = ack_message_size + cl_util_get_ulong_number_length(message->message_id);
-   
-   ack_message_data = (cl_byte_t*)malloc(sizeof(cl_byte_t)* ( ack_message_size + 1) ) ;
+   ack_message_malloc_size = sizeof(cl_byte_t)* ( ack_message_size + 1);
+
+   ack_message_data = (cl_byte_t*)malloc(ack_message_malloc_size) ;
    if (ack_message_data == NULL) {
       return CL_RETVAL_MALLOC;
    }
-   sprintf((char*)ack_message_data,CL_AM_MESSAGE, CL_AM_MESSAGE_VERSION, message->message_id);
+   snprintf((char*)ack_message_data, ack_message_malloc_size, CL_AM_MESSAGE, CL_AM_MESSAGE_VERSION, message->message_id);
 
    ret_val = cl_com_setup_message(&ack_message, connection, ack_message_data, ack_message_size, CL_MIH_MAT_NAK, 0, 0);
    if (ret_val != CL_RETVAL_OK) {
@@ -5265,6 +5268,7 @@ static int cl_commlib_send_ack_message(cl_com_connection_t* connection, cl_com_m
 static int cl_commlib_send_ccm_message(cl_com_connection_t* connection) {
    cl_byte_t* ccm_message_data = NULL;
    unsigned long ccm_message_size = 0;
+   unsigned long ccm_message_malloc_size = 0;
    int ret_val = CL_RETVAL_OK;
    cl_com_message_t* ccm_message = NULL;
 
@@ -5272,13 +5276,13 @@ static int cl_commlib_send_ccm_message(cl_com_connection_t* connection) {
       return CL_RETVAL_PARAMS;
    }
 
-   ccm_message_size = CL_CCM_MESSAGE_SIZE;
-   
-   ccm_message_data = (cl_byte_t*)malloc(sizeof(cl_byte_t)* ( ccm_message_size + 1) ) ;
+   ccm_message_size        = CL_CCM_MESSAGE_SIZE;
+   ccm_message_malloc_size = sizeof(cl_byte_t)* ( ccm_message_size + 1);
+   ccm_message_data = (cl_byte_t*)malloc(ccm_message_malloc_size) ;
    if (ccm_message_data == NULL) {
       return CL_RETVAL_MALLOC;
    }
-   sprintf((char*)ccm_message_data, CL_CCM_MESSAGE, CL_CCM_MESSAGE_VERSION);
+   snprintf((char*)ccm_message_data, ccm_message_malloc_size, CL_CCM_MESSAGE, CL_CCM_MESSAGE_VERSION);
 
    ret_val = cl_com_setup_message(&ccm_message, connection, ccm_message_data , ccm_message_size , CL_MIH_MAT_NAK , 0 ,0);
    if (ret_val != CL_RETVAL_OK) {
@@ -5294,6 +5298,8 @@ static int cl_commlib_send_ccm_message(cl_com_connection_t* connection) {
 static int cl_commlib_send_sim_message(cl_com_connection_t* connection, unsigned long* mid) {
    cl_byte_t* sim_message_data = NULL;
    unsigned long sim_message_size = 0;
+   unsigned long sim_message_malloc_size = 0;
+
    int ret_val = CL_RETVAL_OK;
    cl_com_message_t* sim_message = NULL;
 
@@ -5302,12 +5308,12 @@ static int cl_commlib_send_sim_message(cl_com_connection_t* connection, unsigned
    }
 
    sim_message_size = CL_SIM_MESSAGE_SIZE;
-   
-   sim_message_data = (cl_byte_t*)malloc(sizeof(cl_byte_t)* ( sim_message_size + 1) ) ;
+   sim_message_malloc_size = sizeof(cl_byte_t)* ( sim_message_size + 1);
+   sim_message_data = (cl_byte_t*)malloc(sim_message_malloc_size) ;
    if (sim_message_data == NULL) {
       return CL_RETVAL_MALLOC;
    }
-   sprintf((char*)sim_message_data, CL_SIM_MESSAGE, CL_SIM_MESSAGE_VERSION);
+   snprintf((char*)sim_message_data, sim_message_malloc_size, CL_SIM_MESSAGE, CL_SIM_MESSAGE_VERSION);
 
    ret_val = cl_com_setup_message(&sim_message, connection, sim_message_data , sim_message_size , CL_MIH_MAT_NAK , 0 ,0);
    if (ret_val != CL_RETVAL_OK) {
@@ -5335,6 +5341,7 @@ static int cl_commlib_send_sirm_message(cl_com_connection_t* connection,
    cl_byte_t* sirm_message_data = NULL;
    char* xml_infotext = NULL;
    unsigned long sirm_message_size = 0;
+   unsigned long sirm_message_malloc_size = 0;
    int ret_val = CL_RETVAL_OK;
    cl_com_message_t* sirm_message = NULL;
 
@@ -5357,7 +5364,8 @@ static int cl_commlib_send_sirm_message(cl_com_connection_t* connection,
    sirm_message_size += cl_util_get_ulong_number_length(application_status);
    sirm_message_size += strlen(xml_infotext);
 
-   sirm_message_data = (cl_byte_t*)malloc(sizeof(cl_byte_t)* (sirm_message_size + 1));
+   sirm_message_malloc_size = sizeof(cl_byte_t)* (sirm_message_size + 1);
+   sirm_message_data = (cl_byte_t*)malloc(sirm_message_malloc_size);
    if (sirm_message_data == NULL) {
       if (xml_infotext != NULL) {
          free(xml_infotext);
@@ -5365,7 +5373,7 @@ static int cl_commlib_send_sirm_message(cl_com_connection_t* connection,
       }
       return CL_RETVAL_MALLOC;
    }
-   sprintf((char*)sirm_message_data, CL_SIRM_MESSAGE,
+   snprintf((char*)sirm_message_data, sirm_message_malloc_size, CL_SIRM_MESSAGE,
            CL_SIRM_MESSAGE_VERSION,
            message->message_id,
            starttime,
@@ -5401,6 +5409,8 @@ static int cl_commlib_send_sirm_message(cl_com_connection_t* connection,
 static int cl_commlib_send_ccrm_message(cl_com_connection_t* connection) {
    cl_byte_t* ccrm_message_data = NULL;
    unsigned long ccrm_message_size = 0;
+   unsigned long ccrm_message_malloc_size = 0;
+
    int ret_val = CL_RETVAL_OK;
    cl_com_message_t* ccrm_message = NULL;
 
@@ -5409,12 +5419,12 @@ static int cl_commlib_send_ccrm_message(cl_com_connection_t* connection) {
    }
 
    ccrm_message_size = CL_CCRM_MESSAGE_SIZE;
-   
-   ccrm_message_data = (cl_byte_t*)malloc(sizeof(cl_byte_t)* (ccrm_message_size + 1)) ;
+   ccrm_message_malloc_size = sizeof(cl_byte_t)* (ccrm_message_size + 1);
+   ccrm_message_data = (cl_byte_t*)malloc(ccrm_message_malloc_size) ;
    if (ccrm_message_data == NULL) {
       return CL_RETVAL_MALLOC;
    }
-   sprintf((char*)ccrm_message_data, CL_CCRM_MESSAGE, CL_CCRM_MESSAGE_VERSION);
+   snprintf((char*)ccrm_message_data, ccrm_message_malloc_size, CL_CCRM_MESSAGE, CL_CCRM_MESSAGE_VERSION);
 
    ret_val = cl_com_setup_message(&ccrm_message, connection, ccrm_message_data , ccrm_message_size , CL_MIH_MAT_NAK , 0 ,0);
    if (ret_val != CL_RETVAL_OK) {
@@ -6669,7 +6679,7 @@ int cl_commlib_get_last_message_time(cl_com_handle_t* handle,
 
    /* set time to 0 if endpoint not found, otherwise return last communication time */
    /* otherwise return error */
-   if (message_time) {
+   if (message_time != NULL) {
       *message_time = 0;
    }
 
@@ -6677,7 +6687,7 @@ int cl_commlib_get_last_message_time(cl_com_handle_t* handle,
       return CL_RETVAL_PARAMS;
    }
    
-   if (component_id <= 0) {
+   if (component_id == 0) {
       CL_LOG(CL_LOG_ERROR,"component id 0 is not allowed");
       return CL_RETVAL_PARAMS;
    }
@@ -6700,7 +6710,7 @@ int cl_commlib_get_last_message_time(cl_com_handle_t* handle,
    }
 
    return_value = cl_endpoint_list_get_last_touch_time(cl_com_get_endpoint_list(), &receiver, message_time);
-   if (message_time) {
+   if (message_time != NULL) {
       CL_LOG_STR(CL_LOG_DEBUG,"host              :", receiver.comp_host);
       CL_LOG_STR(CL_LOG_DEBUG,"component         :", receiver.comp_name);
       CL_LOG_INT(CL_LOG_DEBUG,"last transfer time:", (int)*message_time);

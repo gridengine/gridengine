@@ -63,6 +63,7 @@ C_Communication g_Communication;
 C_JobList       g_JobList;
 BOOL            g_bAcceptJobs    = TRUE;
 int             g_Port = 0;
+int             g_bDoLogging = FALSE;
 
 // module variables
 static SERVICE_STATUS_HANDLE g_hServiceStatus = NULL;
@@ -259,6 +260,11 @@ static void WINAPI SunGridEngineHelperServiceStart(DWORD dwArgc, LPTSTR *lpszArg
    int                   ret;
    char                  job_result[] = "done";
 
+   if (dwArgc > 1) {
+      if (stricmp(lpszArgv[1], "-log") == 0) {
+         g_bDoLogging = TRUE;
+      }
+   }
    WriteToLogFile("Starting %s.", g_szServiceDisplayName);
 
    ServiceStatus.dwServiceType             = SERVICE_WIN32_OWN_PROCESS
@@ -405,30 +411,44 @@ static void ServiceError()
 *
 *  RESULT
 *     int - 0 if message was written to log file, 1 else
+*           2 if logging is disabled
 *
 *  NOTES
 *******************************************************************************/
 int WriteToLogFile(const char *szMessage, ...)
 {
    int        ret = 1;
-#ifdef _DEBUG
    FILE       *fp = NULL;
+#ifdef _DEBUG
    SYSTEMTIME sysTime;
    va_list    args;
    char       Buffer[4096];
+   char       NameBuf[1024];
+   DWORD      dwLastError;
+
+   if (g_bDoLogging == FALSE) {
+      return 2;
+   }
+   dwLastError = GetLastError();
+   
    va_start(args, szMessage);
-
    _vsnprintf(Buffer, 4095, szMessage, args);
-
-   fp = fopen("c:\\SGE_helper_service.log", "a+");
+   GetLocalTime(&sysTime);
+  
+   fp = fopen("c:\\Temp\\SGE_Helper_service.log", "a+");
+   if (fp == NULL) {
+      sprintf(NameBuf, "c:\\Temp\\SGE_Helper_service.%02d%02d%02d.log", 
+         sysTime.wHour, sysTime.wMinute, sysTime.wSecond);
+      fp = fopen(NameBuf, "a+");
+   }
    if(fp != NULL) {
-      GetLocalTime(&sysTime);
       fprintf(fp, "%02d:%02d:%02d [SGE_Helper_Service] %s\n",
          sysTime.wHour, sysTime.wMinute, sysTime.wSecond, Buffer);
       fflush(fp);
       fclose(fp);
       ret = 0;
    }
-#endif 
+   SetLastError(dwLastError);
+#endif
    return ret;
 }

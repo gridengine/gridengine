@@ -30,6 +30,7 @@
 /*___INFO__MARK_END__*/
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 #include <sys/types.h>
 #include <fcntl.h>
 #include <sys/time.h>
@@ -142,7 +143,7 @@ static int qconf_is_adminhost(sge_gdi_ctx_class_t *ctx, const char *host);
 /************************************************************************/
 
 static const char *write_attr_tmp_file(const char *name, const char *value, 
-                                       const char *delimiter);
+                                       const char *delimiter, dstring *error_message);
 
 /***************************************************************************/
 static char **sge_parser_get_next(char **arg) 
@@ -1907,7 +1908,9 @@ char *argv[]
          qconf_is_adminhost(ctx, qualified_hostname);
          qconf_is_manager(ctx, username);
 
-         centry_list_modify(ctx, &answer_list);
+         if (centry_list_modify(ctx, &answer_list) == false) {
+            sge_parse_return = 1;
+         }
          sge_parse_return |= show_answer_list(answer_list);
          lFreeList(&answer_list);
          spp++;
@@ -2059,9 +2062,9 @@ char *argv[]
             sge_error_and_exit(MSG_FILE_NOFILEARGUMENTGIVEN);
          }
          if (!centry_list_modify_from_file(ctx, &answer_list, file)) {
-            show_answer_list(answer_list);
             sge_parse_return = 1;
-         }   
+         }
+         show_answer_list(answer_list);
          lFreeList(&answer_list);
          spp++;
          continue;
@@ -7028,13 +7031,20 @@ static int qconf_modify_attribute(sge_gdi_ctx_class_t *ctx,
       } else {
          sge_dstring_append_char(&delim, info_entry->instr->name_value_delimiter);
       }
-      filename = write_attr_tmp_file(name, value, sge_dstring_get_string(&delim));
-
-      *epp = spool_flatfile_read_object(alpp, info_entry->cull_descriptor, NULL,
-                                info_entry->fields, fields, true, info_entry->instr,
-                                SP_FORM_ASCII, NULL, filename);
-      unlink(filename);
-      FREE(filename);
+      {
+         dstring write_attr_tmp_file_error = DSTRING_INIT;
+         filename = write_attr_tmp_file(name, value, sge_dstring_get_string(&delim), &write_attr_tmp_file_error);
+         if (filename == NULL && sge_dstring_get_string(&write_attr_tmp_file_error) != NULL) {
+            answer_list_add_sprintf(alpp, STATUS_EDISK, ANSWER_QUALITY_ERROR, sge_dstring_get_string(&write_attr_tmp_file_error));
+         } else {
+            *epp = spool_flatfile_read_object(alpp, info_entry->cull_descriptor, NULL,
+                                      info_entry->fields, fields, true, info_entry->instr,
+                                      SP_FORM_ASCII, NULL, filename);
+            unlink(filename);
+            FREE(filename);
+         }
+         sge_dstring_free(&write_attr_tmp_file_error);
+      }
 
       /* Bugfix: Issuezilla #1005
        * Since we're writing the information from the command line to a file so
@@ -7181,20 +7191,23 @@ static int qconf_modify_attribute(sge_gdi_ctx_class_t *ctx,
 }
 
 static const char *write_attr_tmp_file(const char *name, const char *value, 
-                                       const char *delimiter)
+                                       const char *delimiter, dstring *error_message)
 {
    char *filename = (char *)malloc(sizeof(char) * SGE_PATH_MAX);
    FILE *fp = NULL;
-
+   int my_errno;
    DENTER(TOP_LAYER, "write_attr_tmp_file");
 
-   if (sge_tmpnam(filename) == NULL) {
+   if (sge_tmpnam(filename, error_message) == NULL) {
       DRETURN(NULL);
    }
 
+   errno = 0;
    fp = fopen(filename, "w");
-   
+   my_errno = errno;
+
    if (fp == NULL) {
+      sge_dstring_sprintf(error_message, MSG_ERROROPENINGFILEFORWRITING_SS, filename, strerror(my_errno));
       DRETURN(NULL);
    }
    

@@ -995,6 +995,11 @@ MakePKCS12()
    fi
    RANDFILE=$RSFILE; export RANDFILE
 
+   if [ ! -s $CATOP/cacert.pem ]; then
+      PrintError "openssl pkcs12 command failed: $CATOP/cacert.pem missing"
+      return 1
+   fi
+
    $P12 $pwoptions -export -nodes -inkey $KEYFILE -out $myoutdir/$keyowner.p12 -in $CERTFILE -certfile $CATOP/cacert.pem -caname "SGE CA"
    if [ $? -ne 0 ]; then
       PrintError "openssl pkcs12 command failed"
@@ -1586,15 +1591,20 @@ MakeCADirs()
 
    $INFOTEXT "Creating %s" ${CATOP}/serial
    $INFOTEXT -log "Creating %s" ${CATOP}/serial
-   # TruncCreateAndMakeWriteable ${CATOP}/serial
-   ExecuteAsAdmin $TOUCH ${CATOP}/serial
-   ExecuteAsAdmin $CHMOD 666 ${CATOP}/serial
+   ExecuteAsAdmin $TOUCH /tmp/serial.$$
+   ExecuteAsAdmin $CHMOD 644 /tmp/serial.$$
    if [ $? != 0 ]; then
-      PrintError "Could not touch file as %s (%s)" $ADMINUSER ${CATOP}/serial
+      PrintError "Could not touch file as %s (%s)" $ADMINUSER /tmp/serial.$$
       return 1
    fi
-   
-   echo 01 > ${CATOP}/serial
+   echo 01 > /tmp/serial.$$
+   ExecuteAsAdmin cp /tmp/serial.$$ ${CATOP}/serial
+   if [ $? != 0 ]; then
+      PrintError "Could not copy file as %s (%s)" $ADMINUSER ${CATOP}/serial
+      return 1
+   fi
+   ExecuteAsAdmin rm -f /tmp/serial.$$
+
    ExecuteAsAdmin $CHMOD 644 ${CATOP}/serial
    if [ $? != 0 ]; then
       PrintError "chmod failed (%s)" ${CATOP}/serial

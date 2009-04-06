@@ -38,6 +38,8 @@ package com.sun.grid.jgdi.monitoring;
  *
  */
 public class ClusterQueueSummary implements java.io.Serializable {
+
+    private final static long serialVersionUID = -2009040301L;
     
     private String name;
     private double load;

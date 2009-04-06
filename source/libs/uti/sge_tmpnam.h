@@ -33,7 +33,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "sge_dstring.h"
 
-char *sge_tmpnam(char *aBuffer);
+char *sge_tmpnam(char *aBuffer, dstring *error_message);
 
 #endif /* __SGE_TMPNAM_H */

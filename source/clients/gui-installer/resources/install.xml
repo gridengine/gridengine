@@ -33,7 +33,7 @@ ___INFO__MARK_END__-->
 <installation version="1.0">
     <info>
         <appname>Sun Grid Engine</appname>
-        <appversion>6.2u2</appversion>
+        <appversion>6.2u3alpha2</appversion>
         <authors>
             <author name="Sun Microsystems, Inc." email="www.sun.com"/>
         </authors>
@@ -169,7 +169,7 @@ ___INFO__MARK_END__-->
         <panel classname="UserInputPanel"  id="ComponentPanel" />
         <panel classname="UserInputPanel"  id="MainPanel" />
         <panel classname="IntermediateActionPanel"  id="IntermediateActionPanel" />
-        <panel classname="UserInputPanel"  id="JMXPanel" condition="cond.custom.install+cond.sge.jmx+cond.install.qmaster"/>
+        <panel classname="UserInputPanel"  id="JMXPanel" condition="cond.custom.install+cond.sge.jmx+(cond.install.qmaster|cond.install.shadowd)"/>
         <panel classname="UserInputPanel"  id="SpoolingPanel" condition="cond.custom.install+cond.install.qmaster|cond.install.bdb"/>
         <panel classname="UserInputPanel"  id="CSPPanel" condition="cond.custom.install+cond.install.qmaster+(cond.product.mode.csp|(cond.sge.jmx+cond.sge.jmx.ssl))"/>
         <panel classname="HostPanel"       id="HostPanel" />
@@ -213,7 +213,7 @@ ___INFO__MARK_END__-->
         <variable name="cfg.qmaster.spool.dir" value="${cfg.sge.root}/${cfg.cell.name}/spool/qmaster"/>
         <variable name="cfg.execd.spool.dir" value="${cfg.sge.root}/${cfg.cell.name}/spool"/>
         <variable name="cfg.sge.cluster.name" value="p${cfg.sge.qmaster.port}"/>
-        <variable name="add.sge.jmx" value="false"/>
+        <variable name="add.sge.jmx" value="true"/>
         <variable name="cfg.sge.jmx.port" value="6446"/>
         <variable name="cfg.sge.jmx.ssl" value="true"/>
         <variable name="cfg.sge.jmx.ssl.client" value="true"/>
@@ -265,7 +265,6 @@ ___INFO__MARK_END__-->
         <variable name="cfg.csp.orga" value="Organisation"/>
         <variable name="cfg.csp.orga.unit" value="Organisation_unit"/>
         <variable name="cfg.csp.mail.address" value="name@yourdomain.com"/>
-        <variable name="add.hostinput" value="<Enter a hostname or IP adress here ...>"/>
         <variable name="root.user" value="root"/>
         <variable name="connect_user" value=""/>
    </variables>

@@ -40,6 +40,8 @@ import java.util.List;
  *
  */
 public class UserFilter implements Serializable {
+
+    private final static long serialVersionUID = -2009040301L;
     
     private List<String> userList = new LinkedList<String>();
     

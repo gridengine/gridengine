@@ -59,6 +59,7 @@ public class DrmaaSuite extends TestCase {
         suite.addTest(com.sun.grid.drmaa.SessionImplJobTest.suite());
         suite.addTest(com.sun.grid.drmaa.Issues.suite());
         suite.addTest(com.sun.grid.drmaa.Issue2608Test.suite());
+        suite.addTest(com.sun.grid.drmaa.Issue2882Test.suite());
         return suite;
     }
 }

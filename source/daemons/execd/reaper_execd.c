@@ -275,7 +275,7 @@ int sge_reap_children_execd(int max_count)
 
          flush_job_report(jr);
 
-      } else  if (sge_ls_stop_if_pid(pid, 1)) {
+      } else  if (sge_ls_stop_if_pid(pid)) {
          if (child_signal) {
             ERROR((SGE_EVENT, MSG_STATUS_LOADSENSORDIEDWITHSIGNALXY_SI,
                   core_dumped ? MSG_COREDUMPED: "",

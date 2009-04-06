@@ -149,7 +149,7 @@ ___INFO__MARK_END__-->
             </validator>
         </field>
         <field type="space" />
-        <field type="check" variable="cfg.add.to.rc" conditionid="(!(cond.no.connect.user)|cond.user.root)+(cond.install.qmaster|cond.install.execd|cond.install.bdb)">
+        <field type="check" variable="cfg.add.to.rc" conditionid="(!(cond.no.connect.user)|cond.user.root)">
             <spec align="left" id="cfg.add.to.rc.label" true="true" false="false" />
         </field>
         <field type="check" variable="add.sge.jmx" conditionid="cond.install.qmaster+cond.custom.install">
@@ -173,7 +173,7 @@ ___INFO__MARK_END__-->
     </panel>
     <panel id="JMXPanel">
         <field type="devider" align="top" />
-        <field type="text" variable="cfg.sge.jmx.port">
+        <field type="text" variable="cfg.sge.jmx.port" conditionid="cond.install.qmaster">
             <spec id="cfg.sge.jmx.port.label" size="35" />
             <validator id="cfg.sge.jmx.port.notemptyvalidator" class="com.izforge.izpack.util.NotEmptyValidator" />
             <validator id="cfg.sge.jmx.port.rangevalidator" class="com.sun.grid.installer.gui.RangeValidator">
@@ -181,26 +181,26 @@ ___INFO__MARK_END__-->
                 <param name="max" value="65535"/>
             </validator>
         </field>
-        <field type="check" variable="cfg.sge.jmx.ssl">
+        <field type="check" variable="cfg.sge.jmx.ssl" conditionid="cond.install.qmaster">
             <spec align="left" id="cfg.sge.jmx.ssl.label" true="true" false="false" revalidate="yes" />
         </field>
-        <field type="check" variable="cfg.sge.jmx.ssl.client">
+        <field type="check" variable="cfg.sge.jmx.ssl.client" conditionid="cond.install.qmaster">
             <spec align="left" id="cfg.sge.jmx.ssl.client.label" true="true" false="false"/>
             <dependency type="enable" refid="cfg.sge.jmx.ssl" value="true" />
         </field>
         <!--JMX keystore dir if qmaster on localhost (with browse button)-->
-        <field type="dir" align="left" variable="cfg.sge.jmx.ssl.keystore" conditionid="cond.qmaster.on.localhost">
+        <field type="dir" align="left" variable="cfg.sge.jmx.ssl.keystore" conditionid="cond.qmaster.on.localhost+cond.install.qmaster">
             <spec id="cfg.sge.jmx.ssl.keystore.label" size="35" />
             <dependency type="enable" refid="cfg.sge.jmx.ssl" value="true" />
             <validator id="cfg.sge.jmx.ssl.keystore.notemptyvalidator" class="com.izforge.izpack.util.NotEmptyValidator" />
         </field>
         <!--JMX keystore dir if qmaster on remote host (without browse button)-->
-        <field type="text" align="left" variable="cfg.sge.jmx.ssl.keystore" conditionid="!cond.qmaster.on.localhost">
+        <field type="text" align="left" variable="cfg.sge.jmx.ssl.keystore" conditionid="!(cond.qmaster.on.localhost)+cond.install.qmaster">
             <spec id="cfg.sge.jmx.ssl.keystore.label" size="35" />
             <dependency type="enable" refid="cfg.sge.jmx.ssl" value="true" />
             <validator id="cfg.sge.jmx.ssl.keystore.notemptyvalidator" class="com.izforge.izpack.util.NotEmptyValidator" />
         </field>
-        <field type="password" align="left" variable="cfg.sge.jmx.ssl.keystore.pw">
+        <field type="password" align="left" variable="cfg.sge.jmx.ssl.keystore.pw" conditionid="cond.install.qmaster">
             <dependency type="enable" refid="cfg.sge.jmx.ssl" value="true"/>
             <spec>
                 <pwd id="cfg.sge.jmx.ssl.keystore.pw.1" size="15" set="changeit"/>
@@ -215,6 +215,7 @@ ___INFO__MARK_END__-->
             <validator id="cfg.sge.jvm.lib.path.fileexistsvalidator" class="com.sun.grid.installer.gui.FileExistsValidator">
                 <param name="file" value=""/>
             </validator>
+            <!-- TODO: Check validity using utilbin/$ARCH/valid_jvmlib -->
         </field>
         <field type="text" variable="cfg.sge.additional.jvm.args">
             <spec id="cfg.sge.additional.jvm.args.label" size="35" />

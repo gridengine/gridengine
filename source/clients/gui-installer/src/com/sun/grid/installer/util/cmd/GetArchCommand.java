@@ -36,46 +36,43 @@ import com.izforge.izpack.util.Debug;
 import com.sun.grid.installer.gui.Host;
 import com.sun.grid.installer.util.Util;
 import java.text.MessageFormat;
-import java.util.Properties;
 
-public class GetArchCommand extends com.sun.grid.installer.util.cmd.CmdExec {
+public class GetArchCommand extends CmdExec {
       //         0             1              2          3          4    5                      6
       //E.g.: rsh/ssh [-l <connect_user>] [-o ....] HOSTNAME [\"sh -c ']if [ ! -s SGE_ROOT....['\"]
-      private static String installCommand = "{0} {1} {2} {3} {4}if [ ! -s {5}/util/arch ]; then echo File\\ {5}/util/arch\\ does\\ not\\ exist\\ or\\ is\\ empty. ; echo ___EXIT_CODE_"+CmdExec.EXITVAL_MISSING_FILE+"___ ; exit " + CmdExec.EXITVAL_MISSING_FILE + "; else {5}/util/arch ; fi{6}";
+      private static String installCommand = "{0} {1} {2} {3} {4}if [ ! -s {5}/util/arch ]; then echo File\\ {5}/util/arch\\ does\\ not\\ exist\\ or\\ is\\ empty. ; echo ___EXIT_CODE_"+EXIT_VAL_CMDEXEC_MISSING_FILE+"___ ; exit " + EXIT_VAL_CMDEXEC_MISSING_FILE + "; else {5}/util/arch ; fi{6}";
       private String command;
 
-
-      public GetArchCommand(Properties variables, String host) {
-          this(variables, Util.RESOLVE_TIMEOUT, host);
+      public GetArchCommand(String host, String user, String shell, boolean isWindowsMode, String sge_root) {
+          this(Util.RESOLVE_TIMEOUT, host, user, shell, isWindowsMode, sge_root);
       }
 
-      public GetArchCommand(Properties variables, int timeout, String host) {
+      public GetArchCommand(long timeout, String host, String user, String shell, boolean isWindowsMode, String sge_root) {
           super(timeout);
           boolean onLocalHost = host.equalsIgnoreCase(Host.localHostName);
-          String connectUser = variables.getProperty(ARG_CONNECT_USER, "");
-          String SGE_ROOT = variables.getProperty(VAR_SGE_ROOT, "");
 
-          String shell = "";                     //0
+          String shellArg = "";                  //0
           String userArg = "";                   //1
           String sshOptions = "";                //2
           String hostToReplace = "";             //3
           String arg4 = "";                      //4
           String arg6 = "";                      //6
           if (!onLocalHost) {
-             shell = variables.getProperty(VAR_SHELL_NAME, "");
-             if (connectUser.length() > 0) {
-                 if (Util.isWindowsMode(variables)) {
-                     connectUser = host.toUpperCase().split("\\.")[0] + "+" + connectUser;
+             shellArg = shell;
+             if (user.length() > 0) {
+                 if (isWindowsMode) {
+                     user = host.toUpperCase().split("\\.")[0] + "+" + user;
                  }
-                 userArg = "-l "+connectUser;
+                 userArg = "-l "+user;
              }
              sshOptions = (isSameCommand(shell, "ssh")) ? "-o StrictHostKeyChecking=yes -o PreferredAuthentications=gssapi-keyex,publickey" : "";
              hostToReplace = host;
              arg4 = "\"sh -c '";
              arg6 = "'\"";
           }
-          String extendedTimeout = String.valueOf(timeout/1000 + 10); //We add additinal 10 secs to the timeout after which the installScript kills itself, if Java failed to do so in within timeout
-          this.command  = MessageFormat.format(installCommand, shell, userArg, sshOptions, hostToReplace, arg4, SGE_ROOT, arg6).trim();
+          
+          //String extendedTimeout = String.valueOf(timeout/1000 + 10); //We add additinal 10 secs to the timeout after which the installScript kills itself, if Java failed to do so in within timeout
+          this.command  = MessageFormat.format(installCommand, shellArg, userArg, sshOptions, hostToReplace, arg4, sge_root, arg6).trim();
       }
 
       public void execute() {

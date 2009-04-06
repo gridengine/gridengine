@@ -58,7 +58,7 @@ proc jsv_on_verify {} {
    }
 
    if {[string compare [jsv_get_param "pe_name"] ""] != 0} {
-      set slots [jsv_get_param "pe_slots"]
+      set slots [jsv_get_param "pe_min"]
       set i [expr $slots % 16]
 
       if {$i > 0} {

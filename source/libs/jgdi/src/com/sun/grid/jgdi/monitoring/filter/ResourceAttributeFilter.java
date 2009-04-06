@@ -41,6 +41,8 @@ import java.util.StringTokenizer;
  *
  */
 public class ResourceAttributeFilter implements Serializable {
+
+    private final static long serialVersionUID = -2009040301L;
     
     private List<String> valueNames = new LinkedList<String>();
     

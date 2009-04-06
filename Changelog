@@ -1,3 +1,7 @@
+RD-2009-04-06-0: Enhancem.:   - corrected aimk -no-opt switch to really don't optimize
+                              - enabled optimization for aimk -debug switch
+                 Review:      AA
+
 RD-2009-04-03-0: Bugfix:      profiling output is wrongly accumulated
                  Bugster:     6823086
                  Issue:       2975

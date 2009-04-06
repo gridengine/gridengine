@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2009/03/06 06:49:48 $     Revision: $Revision: 1.86 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2009/04/06 15:31:31 $     Revision: $Revision: 1.87 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2009/03/06 06:49:48 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2009/04/06 15:31:31 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -1266,6 +1266,13 @@ Deprecated, may be removed in future release.
 .br
 If this parameter is set to true, the usage of reserved resources is taken for the 
 xxQS_NAMExx share tree consumption instead of measured usage.
+.br
+.B Note:
+When running tightly integrated jobs with \fISHARETREE_RESERVED_USAGE\fP set,
+and with having \fIaccounting_summary\fP enabled in the parallel environment,
+reserved usage will only be reported by the master task of the parallel job.
+No per parallel task usage records will be sent from execd to qmaster, which 
+can significantly reduce load on qmaster when running large tightly integrated parallel jobs.
 .PP
 .IP "\fIUSE_QSUB_GID\fP"
 If this parameter is set to true, the primary group id  active when a

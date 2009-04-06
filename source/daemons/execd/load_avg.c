@@ -63,6 +63,7 @@
 #include "sge_report.h"
 
 #include "sgeobj/sge_object.h"
+#include "sgeobj/sge_usage.h"
 
 #include "uti/sge_bootstrap.h"
 
@@ -364,7 +365,7 @@ execd_add_job_report(sge_gdi_ctx_class_t *ctx, lList *report_list, u_long32 now,
 
       /* copy reports (all or only to flush) */
       for_each (jr, jr_list) {
-         if (!only_flush || lGetBool(jr, JR_flush)) {
+         if ((!only_flush || lGetBool(jr, JR_flush)) && !lGetBool(jr, JR_no_send)) {
             lAppendElem(job_report_list, lCopyElem(jr));
             lSetBool(jr, JR_flush, false);
          }
@@ -758,7 +759,6 @@ void update_job_usage(const char* qualified_hostname)
    lList *usage_list = NULL;
    lListElem *jr;
    lListElem *usage;
-   lListElem *next_usage;
 
    DENTER(TOP_LAYER, "update_job_usage");
 
@@ -787,25 +787,23 @@ void update_job_usage(const char* qualified_hostname)
             in case this is the first call to ptf_get_usage()
             since a new job was started
          */
-         DEXIT;
-         return;
+         DRETURN_VOID;
       }
    }
 #endif
 
-   if (mconf_get_sharetree_reserved_usage())
+   if (mconf_get_sharetree_reserved_usage()) {
       get_reserved_usage(qualified_hostname, &usage_list);
+   }
 
    if (usage_list == NULL) {
-      DEXIT;
-      return;
+      DRETURN_VOID;
    }
 
    if (lGetNumberOfElem(usage_list) == 0) {
       /* could be an empty list head */
       lFreeList(&usage_list);
-      DEXIT;
-      return;
+      DRETURN_VOID;
    }
 
 #ifdef COMPILE_DC
@@ -815,22 +813,17 @@ void update_job_usage(const char* qualified_hostname)
 #endif
 
    /* replace existing usage in the job report with the new one */
-   next_usage = lFirst(usage_list);
-   while( (usage=next_usage) ) {
+   for_each(usage, usage_list) {
       u_long32 job_id;
       lListElem *ja_task;
-      lListElem *next_ja_task;
 
-      next_usage = lNext(usage);
       job_id = lGetUlong(usage, JB_job_number);
 
-      next_ja_task = lFirst(lGetList(usage, JB_ja_tasks));
-      while ( (ja_task=next_ja_task) ) {
+      for_each(ja_task, lGetList(usage, JB_ja_tasks)) {
          u_long32 ja_task_id;
          lListElem *uep;
          lListElem *pe_task;
 
-         next_ja_task = lNext(ja_task);
          ja_task_id = lGetUlong(ja_task, JAT_task_number);
          /* search matching job report */
          if (!(jr = get_job_report(job_id, ja_task_id, NULL))) {
@@ -879,7 +872,7 @@ void update_job_usage(const char* qualified_hostname)
             if (!(jr = get_job_report(job_id, ja_task_id, pe_task_id))) {
                /* should not happen in theory */
                ERROR((SGE_EVENT, "could not find job report for job "sge_u32"."sge_u32" "
-                  "task %s contained in job usage from ptf", job_id, ja_task_id, pe_task_id));
+                  "task "SFN" contained in job usage from ptf", job_id, ja_task_id, pe_task_id));
 #ifdef COMPILE_DC
 #ifdef DEBUG_DC
                ptf_show_registered_jobs();
@@ -922,8 +915,7 @@ void update_job_usage(const char* qualified_hostname)
    }
    lFreeList(&usage_list);
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 static double
@@ -944,7 +936,7 @@ calculate_reserved_vmem(lListElem *queue, int nslots)
                       lGetString(queue, QU_s_vmem),
                       err_str, sizeof(err_str)-1);
 
-      lim = h_vmem_lim<s_vmem_lim ? h_vmem_lim : s_vmem_lim;
+      lim = MIN(h_vmem_lim, s_vmem_lim);
 
       /* INFINITY is mapped to DBL_MAX -> use 0; we cannot account INFINITY! */
       if (lim == DBL_MAX) {
@@ -963,134 +955,52 @@ calculate_reserved_usage(const char* qualified_hostname, const lListElem *ja_tas
                          const char *pe_task_id,
                          const lListElem *pe, u_long32 now)
 {
-   lList *ul;
-   lListElem *u;
-   int nslots=0, total_slots=0, usage_mul_factor = 1;
-   u_long32 start_time;
-   double cpu_val, vmem_val, io_val, iow_val, vmem, maxvmem;
-   double wall_clock_time;
+   lList *ul = NULL;
+   lListElem *jr;
 
-   lListElem *gdil_ep;
+   /* We only build new reserved online usage,
+    * when the final (acct) usage has not yet been generated.
+    * Otherwise online usage might get higher than final usage!
+    */
+   jr = get_job_report(job_id, ja_task_id, pe_task_id);
+   if (lGetSubStr(jr, UA_name, USAGE_ATTR_CPU_ACCT, JR_usage) == NULL) {
+      double cpu, mem, io, iow, maxvmem;
+      double wall_clock_time;
 
-   /* calculate usage */
-   if (pe_task == NULL) {
-      start_time = lGetUlong(ja_task, JAT_start_time);
-   } else {
-      start_time = lGetUlong(pe_task, PET_start_time);
-   }
-   if (start_time && start_time < now) {
-      wall_clock_time = now - start_time;
-   } else {
-      wall_clock_time = 0;
-   }
+      build_reserved_usage(now, ja_task, pe_task, &wall_clock_time, &cpu, &mem, &maxvmem);
 
-   cpu_val = vmem_val = vmem = 0;
+      io = iow = 0.0;
 
-   if (pe != NULL && lGetBool(pe, PE_control_slaves)) {
-      /* tight integration:
-       * master task: ja_task contains all granted queues. Take the first
-       *              queue of this host.
-       * slave tasks: pe_ja_task contains the queue the task is running in,
-       *              but without the queue information.
-       *              Get queue name from pe_ja_task and lookup queue info
-       *              from ja_task.
-       */
-      if (pe_task == NULL) {
-         gdil_ep = lGetElemHost(lGetList(ja_task, 
-                                         JAT_granted_destin_identifier_list),
-                                JG_qhostname, 
-                                qualified_hostname);
-      } else {
-         const char *queue_name;
-
-         queue_name = lGetString(lFirst(lGetList(pe_task, 
-                                        PET_granted_destin_identifier_list)),
-                                 JG_qname);
-         gdil_ep = lGetElemStr(lGetList(ja_task, 
-                                        JAT_granted_destin_identifier_list), 
-                               JG_qname, queue_name);
-      }
-
-      if (gdil_ep != NULL) {
-         vmem = calculate_reserved_vmem(lGetObject(gdil_ep, JG_queue), 1);
-      }
-
-      /* we have the master task or a slave task of a tightly integrated job:
-       * reserved usage = wallclock * 1
-       */
-      usage_mul_factor = 1;
-   } else {
-      /* loose integration:
-       * loop over granted_destin_identifier_list and sum up limits * nslots
-       * of each queue.
-       */
-      lListElem *master_queue = lFirst(lGetList(ja_task, JAT_granted_destin_identifier_list));
-
-      for_each (gdil_ep, lGetList(ja_task, JAT_granted_destin_identifier_list)) {
-         nslots = lGetUlong(gdil_ep, JG_slots);
-         total_slots += nslots;
-
-         /* for loose integration with job_is_first_task:
-          * account vmem for one additional slot in the master queue
-          */
-         if (gdil_ep == master_queue && pe != NULL && !lGetBool(pe, PE_job_is_first_task)) {
-            nslots++;
+   #ifdef COMPILE_DC
+      {
+         /* use PDC actual I/O if available */
+         lList *jul;
+         lListElem *uep;
+         if ((jul=ptf_get_job_usage(job_id, ja_task_id, pe_task_id))) {
+            io = ((uep=lGetElemStr(jul, UA_name, USAGE_ATTR_IO))) ?
+                     lGetDouble(uep, UA_value) : 0;
+            iow = ((uep=lGetElemStr(jul, UA_name, USAGE_ATTR_IOW))) ?
+                     lGetDouble(uep, UA_value) : 0;
+            lFreeList(&jul);
          }
-         vmem += calculate_reserved_vmem(lGetObject(gdil_ep, JG_queue), nslots);
       }
-      usage_mul_factor = execd_get_acct_multiplication_factor(pe, total_slots, false);
-   }
-
-   /* calc reserved vmem (in GB seconds) */
-   vmem_val = (vmem / 1073741824.0) * wall_clock_time;
-
-   /* calc reserved CPU time */
-   cpu_val = usage_mul_factor * wall_clock_time;
-
-   io_val = iow_val = maxvmem = 0;
-
-#ifdef COMPILE_DC
-   {
-      /* use PDC actual I/O if available */
-      lList *jul;
-      lListElem *uep;
-      if ((jul=ptf_get_job_usage(job_id, ja_task_id, pe_task_id))) {
-         io_val = ((uep=lGetElemStr(jul, UA_name, USAGE_ATTR_IO))) ?
-                  lGetDouble(uep, UA_value) : 0;
-         iow_val = ((uep=lGetElemStr(jul, UA_name, USAGE_ATTR_IOW))) ?
-                  lGetDouble(uep, UA_value) : 0;
-         maxvmem = ((uep=lGetElemStr(jul, UA_name, USAGE_ATTR_MAXVMEM))) ?
-                  lGetDouble(uep, UA_value) : 0;
-         lFreeList(&jul);
-      }
-   }
 #endif
 
-   /* create the reserved usage list */
-   ul = lCreateList("usage_list", UA_Type);
+      /* create the reserved usage list */
+      ul = lCreateList("usage_list", UA_Type);
 
-   if (!(u=lGetElemStr(ul, UA_name, USAGE_ATTR_CPU)))
-      u = lAddElemStr(&ul, UA_name, USAGE_ATTR_CPU, UA_Type);
-   lSetDouble(u, UA_value, cpu_val);
-   if (!(u=lGetElemStr(ul, UA_name, USAGE_ATTR_MEM)))
-      u = lAddElemStr(&ul, UA_name, USAGE_ATTR_MEM, UA_Type);
-   lSetDouble(u, UA_value, vmem_val);
-   if (!(u=lGetElemStr(ul, UA_name, USAGE_ATTR_IO)))
-      u = lAddElemStr(&ul, UA_name, USAGE_ATTR_IO, UA_Type);
-   lSetDouble(u, UA_value, io_val);
-   if (!(u=lGetElemStr(ul, UA_name, USAGE_ATTR_IOW)))
-      u = lAddElemStr(&ul, UA_name, USAGE_ATTR_IOW, UA_Type);
-   lSetDouble(u, UA_value, iow_val);
+      usage_list_set_double_usage(ul, USAGE_ATTR_CPU, cpu);
+      usage_list_set_double_usage(ul, USAGE_ATTR_MEM, mem);
+      usage_list_set_double_usage(ul, USAGE_ATTR_IO, io);
+      usage_list_set_double_usage(ul, USAGE_ATTR_IOW, iow);
 
-   if (vmem != DBL_MAX) {
-      if (!(u=lGetElemStr(ul, UA_name, USAGE_ATTR_MAXVMEM)))
-         u = lAddElemStr(&ul, UA_name, USAGE_ATTR_MAXVMEM, UA_Type);
-      lSetDouble(u, UA_value, vmem);
-   }
-   if (maxvmem != 0) {
-      if (!(u=lGetElemStr(ul, UA_name, USAGE_ATTR_MAXVMEM)))
-         u = lAddElemStr(&ul, UA_name, USAGE_ATTR_MAXVMEM, UA_Type);
-      lSetDouble(u, UA_value, maxvmem);
+      /* for reserved usage, we assume that the job always
+       * consumes the maximum allowed memory (by h_vmem/s_vmem)
+       */
+      if (maxvmem != 0) {
+         usage_list_set_double_usage(ul, USAGE_ATTR_VMEM, maxvmem);
+         usage_list_set_double_usage(ul, USAGE_ATTR_MAXVMEM, maxvmem);
+      }
    }
 
    return ul;
@@ -1162,7 +1072,7 @@ calculate_reserved_usage_pe_task(const char* qualified_hostname,
 }
 
 /* calculate reserved resource usage */
-static void get_reserved_usage(const char*qualified_hostname, lList **job_usage_list)
+static void get_reserved_usage(const char *qualified_hostname, lList **job_usage_list)
 {
    lList *temp_job_usage_list;
    const lListElem *job;
@@ -1198,7 +1108,7 @@ static void get_reserved_usage(const char*qualified_hostname, lList **job_usage_
           */
          pe = lGetObject(ja_task, JAT_pe_object);
 
-         /* if we have a pid for the ja_task: it's either a non parallel job
+         /* If we have a pid for the ja_task: it's either a non parallel job
           * or the master task of a parallel job.
           * Produce a usage record for it.
           */
@@ -1208,18 +1118,21 @@ static void get_reserved_usage(const char*qualified_hostname, lList **job_usage_
                                                        pe, now, new_job);
          }
 
-         /* if we have pe tasks (tightly integrated): Produce a usage record
+         /* If we have pe tasks (tightly integrated): Produce a usage record
           * for each of them.
+          * Do not report reserved usage, if accounting_summary is activated!
           */
-         for_each(pe_task, lGetList(ja_task, JAT_task_list)) {
-            const char *pe_task_id;
+         if (!(pe != NULL && lGetBool(pe, PE_accounting_summary))) {
+            for_each(pe_task, lGetList(ja_task, JAT_task_list)) {
+               const char *pe_task_id;
 
-            pe_task_id = lGetString(pe_task, PET_id);
-            new_job = calculate_reserved_usage_pe_task(qualified_hostname, 
-                                                       ja_task, pe_task, 
-                                                       job_id, ja_task_id, 
-                                                       pe_task_id, 
-                                                       pe, now, new_job);
+               pe_task_id = lGetString(pe_task, PET_id);
+               new_job = calculate_reserved_usage_pe_task(qualified_hostname, 
+                                                          ja_task, pe_task, 
+                                                          job_id, ja_task_id, 
+                                                          pe_task_id, 
+                                                          pe, now, new_job);
+            }
          }
       }
 
@@ -1234,5 +1147,142 @@ static void get_reserved_usage(const char*qualified_hostname, lList **job_usage_
    lFreeList(&temp_job_usage_list);
    lFreeWhat(&what);
 
-   DEXIT;
+   DRETURN_VOID;
 }
+
+static void build_reserved_mem_usage(const lListElem *gdil_ep, int slots, double wallclock, double *mem, double *maxvmem)
+{
+   /* 
+    * sum up memory usage (integral current memory * wallclock time)
+    * and maxvmem (assume it is vmem)
+    */
+   double vmem = calculate_reserved_vmem(lGetObject(gdil_ep, JG_queue), slots);
+   *mem += vmem * wallclock / (1024*1024*1024);
+   *maxvmem += vmem;
+}
+
+/****** load_avg/build_reserved_usage() ****************************************
+*  NAME
+*     build_reserved_usage() -- calculate reserved usage for job or pe task
+*
+*  SYNOPSIS
+*     void build_reserved_usage(const u_long32 now, const lListElem *ja_task, 
+*                               const lListElem *pe_task, double *wallclock, 
+*                               double *cpu, double *mem, double *maxvmem) 
+*
+*  FUNCTION
+*     Computes reserved usage for a job (array task) or the task of a tightly 
+*     integrated parallel job.
+*     The following values are computed and returned via call by reference:
+*     - wallclock time (current time - start time)
+*     - memory usage (integral of current memory usage times wallclock time)
+*       This can only be computed if the job requests memory (h_vmem/s_vmem).
+*     - maxvmem (assume the job will consume as much memory as possible (as
+*       requested by h_vmem or s_vmem).
+*
+*  INPUTS
+*     const u_long32 now       - current time
+*     const lListElem *ja_task - job array task
+*     const lListElem *pe_task - parallel task, or NULL for job ja task
+*
+*  RESULT
+*     double *wallclock        - returns the wallclock time
+*     double *cpu              - returns the reserved cpu usage
+*     double *mem              - returns the reserved memory (integral vmem * wallclock)
+*     double *maxvmem          - returns the maximum virtual memory used
+*
+*  NOTES
+*     MT-NOTE: build_reserved_usage() is MT safe 
+*******************************************************************************/
+void build_reserved_usage(const u_long32 now, const lListElem *ja_task, const lListElem *pe_task,
+                          double *wallclock, double *cpu, double *mem, double *maxvmem)
+{
+   u_long32 start_time;
+
+   if (ja_task == NULL || wallclock == NULL || cpu == NULL || mem == NULL || maxvmem == NULL) {
+      return;
+   }
+
+   /* calculate wallclock time */ 
+   if (pe_task == NULL) {
+      start_time = lGetUlong(ja_task, JAT_start_time);
+   } else {
+      start_time = lGetUlong(pe_task, PET_start_time);
+   }
+   if (start_time > 0 && start_time < now) {
+      *wallclock = now - start_time;
+   } else {
+      *wallclock = 0;
+   }
+
+   /* if wallclock == 0, something is wrong with start_time vs. end_time
+    * and we cannot report any usage
+    */
+   *cpu = 0.0;
+   *mem = 0.0;
+   *maxvmem = 0.0;
+   if (*wallclock != 0) {
+      /* 
+       * compute cpu, mem and maxvmem 
+       * we must take into account that we might have multiple gdil elements
+       * having different settings for h_vmem!
+       * mem is the integral of h_vmem * slots * wallclock
+       * this computation only works, if h_vmem is *not* INFINITY (DBL_MAX)
+       *
+       * we have to consider different cases:
+       * - ordinary sequential job (only one slot == all gdil)
+       * - loosely integrated parallel job (usage computation only for master task, but all gdil)
+       * - tightly integrated parallel job: usage computation done
+       *   - if we want to see the accounting summary:
+       *       - for the master task (all gdil, similar to loose integration)
+       *   - without accounting_summary
+       *       - for the master task (1 slot)
+       *       - for the individual pe tasks
+       */
+      if (pe_task != NULL) {
+         /*
+          * A pe task occupies one slot,
+          * we get the virtual memory information from the queue
+          * it is running in.
+          */
+         const char *queue_name;
+         const lListElem *gdil_ep;
+
+         *cpu = *wallclock;
+         queue_name = lGetString(lFirst(lGetList(pe_task, PET_granted_destin_identifier_list)), JG_qname);
+         gdil_ep = lGetElemStr(lGetList(ja_task, JAT_granted_destin_identifier_list), JG_qname, queue_name);
+         build_reserved_mem_usage(gdil_ep, 1, *wallclock, mem, maxvmem);
+      } else {
+         /* compute cpu */
+         int slots = 0;
+         int slots_total = 0;
+         const lList *gdil = lGetList(ja_task, JAT_granted_destin_identifier_list);
+         const lListElem *gdil_ep;
+         const lListElem *pe = lGetObject(ja_task, JAT_pe_object);
+
+         /* sequential job, or loose integration, or tight integration with accounting_summary */
+         if (pe == NULL || !lGetBool(pe, PE_control_slaves) || lGetBool(pe, PE_accounting_summary)) {
+            /* account for all gdil */
+            const lListElem *master_gdil_ep = lFirst(gdil);
+            for_each(gdil_ep, gdil) {
+               slots = lGetUlong(gdil_ep, JG_slots);
+               /* respect job_is_first_task, only once (for the master task gdil) */
+               if (pe != NULL && gdil_ep == master_gdil_ep && !lGetBool(pe, PE_job_is_first_task)) {
+                  slots++;
+               }
+               slots_total += slots;
+               build_reserved_mem_usage(gdil_ep, slots, *wallclock, mem, maxvmem);
+            }
+         } else {
+            /* tightly integrated without accounting_summary, this is the master task only */
+            gdil_ep = lFirst(gdil);
+            slots_total = 1;
+            build_reserved_mem_usage(gdil_ep, 1, *wallclock, mem, maxvmem);
+         }
+
+         /* cpu is wallclock time * total number of job slots */
+         *cpu = *wallclock * slots_total;
+      }
+   }
+}
+

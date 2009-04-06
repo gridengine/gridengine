@@ -47,5 +47,8 @@ void execd_trash_load_report(void);
 bool sge_get_flush_lr_flag(void);
 void sge_set_flush_lr_flag(bool new_val);
 
+void build_reserved_usage(const u_long32 now, const lListElem *ja_task, const lListElem *pe_task,
+                          double *wallclock, double *cpu, double *mem, double *maxvmem);
+
 #endif /* __LOAD_AVG_H */
 

@@ -1,3 +1,9 @@
+JG-2009-04-06-0: Bugfix:      need tight integration accounting and sharetree
+                              usage according to reserved resources
+                 Bugster:     6746750
+                 Issue:       2977
+                 Review:      RD
+
 RD-2009-04-06-1: Enhancem.:   - corrected aimk -no-opt switch to really don't optimize
                               - enabled optimization for aimk -debug switch
                  Review:      AA

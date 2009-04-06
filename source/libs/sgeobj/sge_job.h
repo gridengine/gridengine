@@ -56,20 +56,20 @@
 *        no qmod -c "*" is supported.
 *******************************************************************************/
 
-#define JOB_TYPE_IMMEDIATE  0x01L
-#define JOB_TYPE_QSH        0x02L
-#define JOB_TYPE_QLOGIN     0x04L
-#define JOB_TYPE_QRSH       0x08L
-#define JOB_TYPE_QRLOGIN    0x10L
-#define JOB_TYPE_NO_ERROR   0x20L
+#define JOB_TYPE_IMMEDIATE  0x01UL
+#define JOB_TYPE_QSH        0x02UL
+#define JOB_TYPE_QLOGIN     0x04UL
+#define JOB_TYPE_QRSH       0x08UL
+#define JOB_TYPE_QRLOGIN    0x10UL
+#define JOB_TYPE_NO_ERROR   0x20UL
 
 /* submitted via "qsub -b y" or "qrsh [-b y]" */ 
-#define JOB_TYPE_BINARY     0x40L
+#define JOB_TYPE_BINARY     0x40UL
 
 /* array job (qsub -t ...) */
-#define JOB_TYPE_ARRAY      0x80L
+#define JOB_TYPE_ARRAY      0x80UL
 /* Do a raw exec (qsub -noshell) */
-#define JOB_TYPE_NO_SHELL   0x100L
+#define JOB_TYPE_NO_SHELL   0x100UL
 
 #define JOB_TYPE_QXXX_MASK \
    (JOB_TYPE_QSH | JOB_TYPE_QLOGIN | JOB_TYPE_QRSH | JOB_TYPE_QRLOGIN | JOB_TYPE_NO_ERROR)

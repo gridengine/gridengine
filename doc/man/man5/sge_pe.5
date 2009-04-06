@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_pe.5,v $     Last Update: $Date: 2008/12/29 08:09:36 $     Revision: $Revision: 1.20 $
+.\" $RCSfile: sge_pe.5,v $     Last Update: $Date: 2009/04/06 15:31:32 $     Revision: $Revision: 1.21 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_PE 5 "$Date: 2008/12/29 08:09:36 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_PE 5 "$Date: 2009/04/06 15:31:32 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_pe \- xxQS_NAMExx parallel environment configuration file format
@@ -314,6 +314,13 @@ file, containing the accounting summary of the whole job including all slave tas
 while a value of FALSE indicates an individual
 .M accounting 5
 record is written for every slave task, as well as for the master task.
+.br
+.B Note:
+When running tightly integrated jobs with \fISHARETREE_RESERVED_USAGE\fP set,
+and with having \fIaccounting_summary\fP enabled in the parallel environment,
+reserved usage will only be reported by the master task of the parallel job.
+No per parallel task usage records will be sent from execd to qmaster, which 
+can significantly reduce load on qmaster when running large tightly integrated parallel jobs.
 .\"
 .\"
 .SH RESTRICTIONS

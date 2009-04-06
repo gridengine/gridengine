@@ -617,7 +617,7 @@ static void qping_print_line(char* buffer, int nonewline, int dump_tag, const ch
                      if (cull_unpack_list(&buf, &rep) == 0) {
                         printf("      unpacked report request (binary buffer length %lu):\n", buffer_length );
                         if (rep) {
-                           lWriteListTo(rep,stdout); 
+                           lWriteListTo(rep, stdout); 
                         } else {
                            printf("rep: NULL\n");
                         }

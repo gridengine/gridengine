@@ -4650,7 +4650,7 @@ lListElem *lGetSubCaseStr(const lListElem *ep, int nm, const char *str,
    int sublist_pos;
    lListElem *ret;
 
-   DENTER(CULL_LAYER, "lGetSubStr");
+   DENTER(CULL_LAYER, "lGetSubCaseStr");
 
    /* get position of sublist in ep */
    sublist_pos = lGetPosViaElem(ep, snm, SGE_DO_ABORT);

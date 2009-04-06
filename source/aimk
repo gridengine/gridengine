@@ -177,7 +177,7 @@ usage:
    echo "-no-jni           -> don't compile JNI library"
    echo "-no-intl          -> do not compile with internationalization library"
    echo "-no-mk            -> only return the specific architecture string"
-   echo "-no-opt           -> compile with low optimization"
+   echo "-no-opt           -> compile with no optimization"
    echo "-no-qmake         -> don't compile qmake"
    echo "-no-qmon          -> don't compile qmon 3rdparty libs and qmon client"
    echo "-no-qtcsh         -> don't compile qtcsh"
@@ -904,7 +904,7 @@ case AIX51:
    if ( $OPTIMIZATION == 1 ) then
       set OFLAG = "-O3 -qstrict -qmaxmem=8192"
    else
-      set OFLAG    = "-O -qmaxmem=8192"
+      set OFLAG    = "-qmaxmem=8192"
    endif
    set CC       = xlc_r
    set CXX      = xlC_r
@@ -936,7 +936,7 @@ case ALPHA5:
    if ( $OPTIMIZATION == 1 ) then
       set OFLAG = "-O3"
    else
-      set OFLAG = "-O"
+      set OFLAG = ""
    endif
 
    set CXX = "cxx"
@@ -981,7 +981,7 @@ case DARWIN_PPC:
    if ( $OPTIMIZATION == 1 ) then
       set OFLAG = "-O3"
    else
-      set OFLAG = "-O"
+      set OFLAG = ""
    endif
 
    set CC = "gcc"
@@ -1082,7 +1082,7 @@ case FREEBSD_*:
    if ( $OPTIMIZATION == 1 ) then
       set OFLAG = "-O3"
    else
-      set OFLAG = "-O"
+      set OFLAG = ""
    endif
    set ARFLAGS  = rcv
    set CC       = gcc
@@ -1148,7 +1148,7 @@ case IRIX65:
    if ( $OPTIMIZATION == 1 ) then
       set OFLAG = "-O3"
    else
-      set OFLAG = "-O"
+      set OFLAG = ""
    endif
 
    if ( $DEBUGGED == 1 ) then
@@ -1299,7 +1299,7 @@ case LINUXSPARC64:
    if ($OPTIMIZATION == 1 && $BUILDARCH != LINUXIA64) then
       set OFLAG = "-O3"
    else
-      set OFLAG = "-O"
+      set OFLAG = ""
    endif
 
    set CC  = gcc
@@ -1317,7 +1317,6 @@ case LINUXSPARC64:
 
    if ($DEBUGGED == 1) then
       set DEBUG_FLAG = "-g $INSURE_FLAG -DSGE_LOCK_DEBUG"
-      set OFLAG = ""
    endif
 
    if ($GPROFFED == 1) then
@@ -1447,7 +1446,7 @@ case WIN32_X86:
    if ($OPTIMIZATION == 1) then
       set OFLAG = "-O3"
    else
-      set OFLAG = "-O"
+      set OFLAG = ""
    endif
 
    if ($CC == gcc) then
@@ -1603,16 +1602,14 @@ case SOLARISAMD64:
          endif
       endif
    else
-       set OFLAG = "-O"
+       set OFLAG = ""
    endif
 
    if ( $DEBUGGED == 1 ) then
       set DEBUG_FLAG = "-g $INSURE_FLAG -DSGE_LOCK_DEBUG"
-      set OFLAG = ""
    endif
 
    if ( $GPROFFED == 1 ) then
-      set OFLAG = "-O"
       if ( $CC == gcc ) then
          set DEBUG_FLAG = "-g -pg"
          set LIBS = "$LIBS -ldl"

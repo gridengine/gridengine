@@ -1,3 +1,7 @@
+RD-2009-04-06-0: Enhancem.:   - corrected aimk -no-opt switch to really don't optimize
+                              - enabled optimization for aimk -debug switch
+                 Review:      AA
+
 JF-2009-03-10-0: Bugfix:      Fix qsub truncation of scripts
                  Issue:       2876
                  Bugster:     6810688
@@ -22138,4 +22142,5 @@ CR-2001-07-20-0: Testsuite:
 AH-2001-07-20-0: - increased GRM_GDI_VERSION for GE 5.3
                  - fix qmaster core dump caused by old execd's sending load 
                    reports w/o REP_seqno
+
 

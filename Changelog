@@ -1,3 +1,9 @@
+LP-2009-04-06-0: Enhancem.:   gui-installer: Displaying (Sun) Grid Engine based
+                              based on distribution (sun/courtesy)
+                 Enhancem.:   gui-installer: Reading SGE version from
+                              libs/gdi/version.c file
+                 Review:      ZG
+
 RD-2009-04-06-0: Doc:         enhanced man page for exclusive host scheduling
                  Review:      AA
 

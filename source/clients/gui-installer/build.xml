@@ -110,6 +110,15 @@ ___INFO__MARK_END__-->
         <condition property="sge.license" value="${legal.dir}/LICENSE">
             <equals arg1="${env.AIMK_COPYRIGHT}" arg2="courtesy" trim="true"/>
         </condition>
+        <!-- Set the product name correctly -->
+        <condition property="product.name" value="Sun Grid Engine">
+            <equals arg1="${env.AIMK_COPYRIGHT}" arg2="sun" trim="true"/>
+        </condition>
+        <condition property="product.name" value="Grid Engine">
+            <not>
+                <isset property="product.name"/>
+            </not>
+        </condition>
     </target>
 
     <target name="prepare-license" if="sge.license">
@@ -236,6 +245,24 @@ ___INFO__MARK_END__-->
                 <include name="install.xml"/>                
             </fileset>
         </copy>
+
+        <!-- Prepare the sge.version -->
+        <property name="out.tmp" value="${sge.srcdir}/../sge_version.tmp"/>
+        <exec dir="${build.dir}"  executable="sh" output="${out.tmp}">
+            <arg value="${sge.srcdir}/clients/gui-installer/nbproject/get_sge_version.sh"/>
+            <arg value="${sge.srcdir}/libs/gdi/version.c"/>
+        </exec>
+        <loadfile property="sge.version" srcFile="${out.tmp}">
+            <filterchain>
+                <striplinebreaks/>
+            </filterchain>
+        </loadfile>
+        <delete file="${out.tmp}"/>
+        <!-- Replace PRODUCT_NAME, SGE_VERSION with the proper one -->
+        <replace file="${build.dir}/install.xml">
+            <replacefilter token="@PRODUCT_NAME@" value="${product.name}"/>
+            <replacefilter token="@SGE_VERSION@" value="${sge.version}"/>
+        </replace>
 
         <java classname="com.izforge.izpack.compiler.Compiler" classpath="${compiler.path}"  failonerror="true" fork="true" maxmemory="512m" dir="${build.dir}/..">
             <arg value="${build.dir}/install.xml"/>

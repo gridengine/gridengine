@@ -31,16 +31,9 @@
 #
 ##########################################################################
 #___INFO__MARK_END__
-
 FILE=$1
-TMP_FILE=${FILE}.new
+if [ ! -f $FILE ]; then
+   exit 1
+fi
 
-#Remove existing license
-sed -e "/___INFO__MARK_BEGIN__/,/___INFO__MARK_END__/d" $FILE > $TMP_FILE
-
-#Insert new license
-sed '1 i\
-<!-- (c) 2009 Sun Microsystems, Inc. All rights reserved. Use is subject to license terms. -->' $TMP_FILE > $FILE
-
-#Remove temp file
-rm -f $TMP_FILE
+cat $FILE | grep "const char GDI_VERSION\[] =" | awk -F\" '{print $2}' 2>/dev/null

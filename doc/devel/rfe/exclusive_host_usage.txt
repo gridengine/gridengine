@@ -1,9 +1,10 @@
-Exclusive Host Scheduling
-=========================
+Exclusive Complex Scheduling
+============================
 
    Version 	Comments 	                   Date      Author
    ----------------------------------------------------
    1.0 	  	Initial Version                17-03-09  RD
+   1.1 	  	Clarified PE behavior          06-04-09  RD
 
 1 Introduction
 ==============
@@ -48,8 +49,8 @@ complex framework exclusive requests will work with:
 3.1 Enhancement Functions
 
 A new complex relation operator called EXCL will be introduced that can be used for BOOL
-consumable complexes. The consumable type can be YES, which means every task of a PE job
-will be exclusive, or JOB, which means only the master task will be exclusive.
+consumable complexes. The consumable type can be YES, which means every node getting tasks
+of the PE job will be exclusive, or JOB, which means only the master task will be exclusive.
 The default request is always used for exclusive consumables and a value of 0 means, jobs
 not requesting the exclusive consumable are handled as non-exclusive jobs.
 
@@ -81,7 +82,7 @@ The following example defines a exclusive consumable:
 % qconf -sc
 #name               shortcut   type        relop requestable consumable default  urgency
 #----------------------------------------------------------------------------------------
-exclusive           excl         BOOL        EXCL  YES         YES        0        1000
+exclusive           excl       BOOL        EXCL  YES         YES        0        1000
 ...
 
 To make a host or a queue exclusive the complex needs to be attached to the

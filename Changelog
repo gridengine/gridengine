@@ -1,3 +1,6 @@
+LP-2009-04-07-0: Enhancem.:   gui-installer: Improved build process
+                 Review:      ZG
+
 JG-2009-04-07-0: Bugfix:      qmaster reports commlib read error in message file
                               when qconf -m(s)conf fails
                  Bugster:     6815435

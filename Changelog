@@ -1,3 +1,6 @@
+EB-2009-04-07-0: Doc:         Added spec doc:  Timed Event Thread Pool
+					  Review:      JG, RD
+
 JG-2009-04-06-0: Bugfix:      need tight integration accounting and sharetree
                               usage according to reserved resources
                  Bugster:     6746750

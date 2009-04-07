@@ -66,7 +66,7 @@
 #include "msg_clients_common.h"
 
 
-bool sge_parse_qrsub(lList *pcmdline, lList **alpp, lListElem **ar)
+bool sge_parse_qrsub(sge_gdi_ctx_class_t *ctx, lList *pcmdline, lList **alpp, lListElem **ar)
 {
    lListElem *ep = NULL, *next_ep = NULL;
    lList *lp = NULL;
@@ -77,7 +77,7 @@ bool sge_parse_qrsub(lList *pcmdline, lList **alpp, lListElem **ar)
       lRemoveElem(pcmdline, &ep);
       sge_usage(QRSUB, stdout);
       DEXIT;
-      SGE_EXIT(NULL, 0);
+      SGE_EXIT((void **)&ctx, 0);
    }
 
    /*  -a date_time 	 start time in [[CC]YY]MMDDhhmm[.SS] SGE_ULONG */

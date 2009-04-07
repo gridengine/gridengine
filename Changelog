@@ -1,3 +1,9 @@
+JG-2009-04-07-0: Bugfix:      qmaster reports commlib read error in message file
+                              when qconf -m(s)conf fails
+                 Bugster:     6815435
+                 Issue:       2953
+                 Review:      CR
+
 EB-2009-04-07-0: Doc:         Added spec doc:  Timed Event Thread Pool
 					  Review:      JG, RD
 

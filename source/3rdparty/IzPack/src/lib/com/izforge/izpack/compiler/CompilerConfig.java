@@ -1,5 +1,5 @@
 /*
- * $Id: CompilerConfig.java,v 1.1 2009/03/04 17:13:51 zsiga Exp $
+ * $Id: CompilerConfig.java,v 1.2 2009/04/08 13:59:45 petrik Exp $
  * IzPack - Copyright 2001-2008 Julien Ponge, All Rights Reserved.
  * 
  * http://izpack.org/
@@ -54,7 +54,7 @@ import java.util.zip.ZipInputStream;
  * perform the install compilation.
  *
  * @author Scott Stark
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  */
 public class CompilerConfig extends Thread
 {
@@ -267,7 +267,8 @@ public class CompilerConfig extends Thread
         }
         catch (CompilerException ce)
         {
-            System.out.println(ce.getMessage() + "\n");
+            System.err.println(ce.getMessage() + "\n");
+            System.exit(1);
         }
         catch (Exception e)
         {
@@ -277,8 +278,9 @@ public class CompilerConfig extends Thread
             }
             else
             {
-                System.out.println("ERROR: " + e.getMessage());
+                System.err.println("ERROR: " + e.getMessage());
             }
+            System.exit(1);
         }
     }
 
@@ -2545,10 +2547,11 @@ public class CompilerConfig extends Thread
             err.printStackTrace();
             System.err.println("");
             System.err.println("(tip : use -? to get the commmand line parameters)");
+            exitCode = 1;
+        } finally {
+            // Closes the JVM
+            System.exit(exitCode);
         }
-
-        // Closes the JVM
-        System.exit(exitCode);
     }
 
     private static String resolveIzPackHome(String home)

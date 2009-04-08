@@ -1,3 +1,7 @@
+LP-2009-04-08-0: Bugfix:      IzPack CompilerConfig might report successful
+                              installer generation on unknown failure
+                 Review:      ZG
+
 LP-2009-04-07-0: Enhancem.:   gui-installer: Improved build process
                  Review:      ZG
 

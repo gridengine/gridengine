@@ -1,3 +1,8 @@
+ZG-2009-04-09-0: Enhancem.:   gui-installer: New window to configure host specific
+                              settings as local execd spool dir, jvm path and args,
+                              connect user and timeouts.
+                 Review:      LP
+
 LP-2009-04-08-0: Bugfix:      IzPack CompilerConfig might report successful
                               installer generation on unknown failure
                  Review:      ZG

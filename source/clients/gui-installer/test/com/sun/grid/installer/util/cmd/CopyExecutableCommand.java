@@ -44,7 +44,7 @@ public class CopyExecutableCommand extends CmdExec {
       private String outputPath;
 
       public CopyExecutableCommand(String host, String user, String shell, boolean isWindowsMode, String inputPath, String outputPath) {
-          this(Util.RESOLVE_TIMEOUT, host, user, shell, isWindowsMode, inputPath, outputPath);
+          this(Util.DEF_RESOLVE_TIMEOUT, host, user, shell, isWindowsMode, inputPath, outputPath);
       }
 
       public CopyExecutableCommand(long timeout, String host, String user, String shell, boolean isWindowsMode, String inputPath, String outputPath) {

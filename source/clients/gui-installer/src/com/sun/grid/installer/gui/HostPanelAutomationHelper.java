@@ -167,7 +167,7 @@ public class HostPanelAutomationHelper implements PanelAutomation {
 
         // Resolve hosts
         hostPanel.addHosts(allHosts);
-        waitForTPFinished(allHosts.size() * Util.RESOLVE_TIMEOUT); // TODO diveded by the paralell thread numbers
+        waitForTPFinished(allHosts.size() * Util.DEF_RESOLVE_TIMEOUT); // TODO diveded by the paralell thread numbers
 
         ArrayList<JTable> tables = new ArrayList<JTable>(3);
         getJTables(hostPanel, tables);
@@ -190,7 +190,7 @@ public class HostPanelAutomationHelper implements PanelAutomation {
             Debug.error("Failed to call method 'validateHostsAndInstall'! " + e);
             return false;
         }
-        waitForTPFinished(allHosts.size() * Util.RESOLVE_TIMEOUT);
+        waitForTPFinished(allHosts.size() * Util.DEF_RESOLVE_TIMEOUT);
         HostList reachableList = ((HostTable)tables.get(1)).getHostList();
         for (Host host : reachableList) {
             if (host.getState() != Host.State.REACHABLE) {
@@ -211,7 +211,7 @@ public class HostPanelAutomationHelper implements PanelAutomation {
             Debug.error("Failed to call method 'switchToInstallModeAndInstall'! " + e);
             return false;
         }
-        waitForTPFinished(allHosts.size() * Util.INSTALL_TIMEOUT);
+        waitForTPFinished(allHosts.size() * Util.DEF_INSTALL_TIMEOUT);
 
         tables = new ArrayList<JTable>(3);
         getJTables(hostPanel, tables);

@@ -44,10 +44,10 @@ public class RemoteComponentScriptCommand extends CmdExec {
       private String command;
 
       public RemoteComponentScriptCommand(Host host, String user, String shell, boolean isWindowsMode, String installScript) {
-          this(Util.INSTALL_TIMEOUT, host, user, shell, isWindowsMode, installScript);
+          this(Util.DEF_INSTALL_TIMEOUT, host, user, shell, isWindowsMode, installScript);
       }
 
-      public RemoteComponentScriptCommand(int timeout, Host host, String user, String shell, boolean isWindowsMode, String installScript) {
+      public RemoteComponentScriptCommand(long timeout, Host host, String user, String shell, boolean isWindowsMode, String installScript) {
           super(timeout);
           String hostname = host.getHostname();
           boolean onLocalHost = hostname.equalsIgnoreCase(Host.localHostName);

@@ -73,7 +73,7 @@ public class PreActionPanel extends ActionPanel {
             } catch (NumberFormatException e) {
                 Debug.error("Invalid '" + ARG_RESOLVE_THREAD_POOL_SIZE + "' value: " + idata.getVariable(ARG_RESOLVE_THREAD_POOL_SIZE));
             } finally {
-                Debug.trace(ARG_RESOLVE_THREAD_POOL_SIZE +" is now set to "+Util.RESOLVE_THREAD_POOL_SIZE);
+                Debug.trace(ARG_RESOLVE_THREAD_POOL_SIZE + " is now set to " + Util.RESOLVE_THREAD_POOL_SIZE);
             }
         }
         if (idata.getVariable(ARG_INSTALL_THREAD_POOL_SIZE) != null) {
@@ -86,7 +86,7 @@ public class PreActionPanel extends ActionPanel {
             } catch (NumberFormatException e) {
                 Debug.error("Invalid '" + ARG_INSTALL_THREAD_POOL_SIZE + "' value: " + idata.getVariable(ARG_INSTALL_THREAD_POOL_SIZE));
             } finally {
-                Debug.trace(ARG_INSTALL_THREAD_POOL_SIZE +" is now set to "+Util.INSTALL_THREAD_POOL_SIZE);
+                Debug.trace(ARG_INSTALL_THREAD_POOL_SIZE + " is now set to " + Util.INSTALL_THREAD_POOL_SIZE);
             }
         }
         //Set the timeout values
@@ -96,11 +96,11 @@ public class PreActionPanel extends ActionPanel {
                 if (size < 1) {
                     throw new NumberFormatException();
                 }
-                Util.RESOLVE_TIMEOUT = size * 1000; //we need ms not seconds
+                Util.DEF_RESOLVE_TIMEOUT = size * 1000; //we need ms not seconds
             } catch (NumberFormatException e) {
                 Debug.error("Invalid '" + ARG_RESOLVE_TIMEOUT + "' value: " + idata.getVariable(ARG_RESOLVE_THREAD_POOL_SIZE));
             } finally {
-                Debug.trace(ARG_RESOLVE_TIMEOUT +" is now set to "+Util.RESOLVE_TIMEOUT);
+                Debug.trace(ARG_RESOLVE_TIMEOUT + " is now set to " + Util.DEF_RESOLVE_TIMEOUT);
             }
         }
         if (idata.getVariable(ARG_INSTALL_TIMEOUT) != null) {
@@ -109,11 +109,11 @@ public class PreActionPanel extends ActionPanel {
                 if (size < 1) {
                     throw new NumberFormatException();
                 }
-                Util.INSTALL_TIMEOUT = size * 1000; //we need ms not seconds
+                Util.DEF_INSTALL_TIMEOUT = size * 1000; //we need ms not seconds
             } catch (NumberFormatException e) {
                 Debug.error("Invalid '" + ARG_INSTALL_TIMEOUT + "' value: " + idata.getVariable(ARG_INSTALL_THREAD_POOL_SIZE));
             } finally {
-                Debug.trace(ARG_INSTALL_TIMEOUT +" is now set to "+Util.INSTALL_TIMEOUT);
+                Debug.trace(ARG_INSTALL_TIMEOUT + " is now set to " + Util.DEF_INSTALL_TIMEOUT);
             }
         }
         // Set connect_mode
@@ -123,17 +123,14 @@ public class PreActionPanel extends ActionPanel {
            Debug.trace("Using mode '" + CONST_MODE_WINDOWS + "'.");
         }
         // Set connect_user
-        String user = idata.getVariable(ARG_CONNECT_USER);
-        if (user != null) {
-            Util.CONNECT_USER = user;
-            Debug.trace("Using connect user '" + user + "'.");
-        }
+        Util.DEF_CONNECT_USER = vs.substituteMultiple(idata.getVariable(ARG_CONNECT_USER), null);
+        Debug.trace("Using connect user '" + Util.DEF_CONNECT_USER + "'.");
 
         /**
          * Other initializations
          */
-        String sgeRootPath = vs.substitute(idata.getVariable(VAR_SGE_ROOT), null);
-        String userName = vs.substitute(idata.getVariable(VAR_USER_NAME), null);
+        String sgeRootPath = vs.substituteMultiple(idata.getVariable(VAR_SGE_ROOT), null);
+        String userName = vs.substituteMultiple(idata.getVariable(VAR_USER_NAME), null);
 
         ExtendedFile sgeRootDir = new ExtendedFile(sgeRootPath);
 

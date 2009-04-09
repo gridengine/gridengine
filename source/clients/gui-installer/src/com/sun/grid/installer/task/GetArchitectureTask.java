@@ -33,7 +33,6 @@ package com.sun.grid.installer.task;
 import com.sun.grid.installer.gui.*;
 import com.izforge.izpack.util.Debug;
 import com.sun.grid.installer.util.Util;
-import com.sun.grid.installer.util.cmd.CmdExec;
 import com.sun.grid.installer.util.cmd.GetArchCommand;
 import com.sun.grid.installer.util.cmd.ResolveHostCommand;
 import java.net.UnknownHostException;
@@ -84,7 +83,7 @@ public class GetArchitectureTask extends TestableTask {
             Vector<String> output = getTestOutput();
 
             if (!isIsTestMode()) {
-                ResolveHostCommand resolveHostCommand = new ResolveHostCommand();
+                ResolveHostCommand resolveHostCommand = new ResolveHostCommand(host.getResolveTimeout());
                 resolveHostCommand.execute(value);
                 exitValue = resolveHostCommand.getExitValue();
 
@@ -109,7 +108,8 @@ public class GetArchitectureTask extends TestableTask {
             //TODO:Need to remove the CONNECTING state in case of failure.
 
             if (!isIsTestMode()) {
-                GetArchCommand cmd = new GetArchCommand(host.getHostname(), Util.CONNECT_USER, shell, Util.IS_MODE_WINDOWS, sge_root);
+                GetArchCommand cmd = new GetArchCommand(host.getResolveTimeout(), host.getHostname(), host.getConnectUser(),
+                        shell, (Util.IS_MODE_WINDOWS && host.getArchitecture().startsWith("win")), sge_root);
                 cmd.execute();
                 exitValue = cmd.getExitValue();
                 output = cmd.getOutput();

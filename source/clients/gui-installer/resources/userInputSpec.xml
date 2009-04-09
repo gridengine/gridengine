@@ -207,7 +207,11 @@ ___INFO__MARK_END__-->
                 <pwd id="cfg.sge.jmx.ssl.keystore.pw.2" size="15" set="changeit"/>
             </spec>
             <validator id="cfg.sge.jmx.ssl.keystore.pw.passwordequalityvalidator" class="com.izforge.izpack.util.PasswordEqualityValidator" />
+            <validator id="cfg.sge.jmx.ssl.keystore.pw.regularexpressionvalidator" class="com.izforge.izpack.util.RegularExpressionValidator">
+                <param name="pattern" value=".{6,}" />
+            </validator>
         </field>
+        <!-- Move these values to Configuration frame on Host Selection panel
         <field type="space" />
         <field type="file" variable="cfg.sge.jvm.lib.path">
             <spec id="cfg.sge.jvm.lib.path.label" size="35"/>
@@ -215,11 +219,11 @@ ___INFO__MARK_END__-->
             <validator id="cfg.sge.jvm.lib.path.fileexistsvalidator" class="com.sun.grid.installer.gui.FileExistsValidator">
                 <param name="file" value=""/>
             </validator>
-            <!-- TODO: Check validity using utilbin/$ARCH/valid_jvmlib -->
         </field>
         <field type="text" variable="cfg.sge.additional.jvm.args">
             <spec id="cfg.sge.additional.jvm.args.label" size="35" />
         </field>
+        -->
     </panel>
     <panel id="SpoolingPanel">
         <field type="devider" align="top" />

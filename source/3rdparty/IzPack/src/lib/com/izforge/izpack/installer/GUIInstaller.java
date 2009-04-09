@@ -1,5 +1,5 @@
 /*
- * $Id: GUIInstaller.java,v 1.1 2009/03/04 17:13:54 zsiga Exp $
+ * $Id: GUIInstaller.java,v 1.2 2009/04/09 16:16:34 zsiga Exp $
  * IzPack - Copyright 2001-2008 Julien Ponge, All Rights Reserved.
  * 
  * http://izpack.org/
@@ -56,6 +56,8 @@ public class GUIInstaller extends InstallerBase
      * The installation data.
      */
     private static InstallData installdata;
+
+    private static InstallerFrame installerFrame = null;
 
     /**
      * The L&F.
@@ -157,12 +159,28 @@ public class GUIInstaller extends InstallerBase
         objIn.close();
     }
 
+    /**
+     * Puts variables to the global InstallData instance
+     * @param extraData The values to be added
+     */
     public void addExtraVariables(Properties extraData) {
         installdata.getVariables().putAll(extraData);
     }
 
+    /**
+     * Rerturns with the single InstallData instance
+     * @return The InstallData instance
+     */
     public static InstallData getInstallData() {
         return installdata;
+    }
+
+    /**
+     * Returns with the single InstallerFrame instance
+     * @return The InstallerFrame instance
+     */
+    public static InstallerFrame getInstallerFrame() {
+        return installerFrame;
     }
 
     /**
@@ -602,7 +620,8 @@ public class GUIInstaller extends InstallerBase
             VariableSubstitutor vs = new VariableSubstitutor(installdata.getVariables());
             title = vs.substitute(message, null);
         }
-        new InstallerFrame(title, this.installdata);
+
+        installerFrame = new InstallerFrame(title, this.installdata);
     }
 
     /**

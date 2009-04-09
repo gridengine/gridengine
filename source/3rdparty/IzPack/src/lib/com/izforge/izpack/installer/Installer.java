@@ -57,15 +57,6 @@ public class Installer
             System.setProperty("com.apple.mrj.application.live-resize", "true");
         }
         
-        try {
-            // Check whether it's a demo version
-            Class.forName("com.sun.grid.installer.util.cmd.TestBedManager");
-            System.out.println("DEMO version");
-            //TODO show it in the title as well
-        } catch (ClassNotFoundException ex) {
-            // Normal version
-        }
-
         try
         {
             String inputFileName = "";
@@ -86,6 +77,22 @@ public class Installer
                 // can't load the GUIInstaller class on headless machines,
                 // so we use Class.forName to force lazy loading.
                 GUIInstaller guiInstaller = (GUIInstaller)Class.forName("com.izforge.izpack.installer.GUIInstaller").newInstance();
+
+                try {
+                    // Check whether it's a demo version
+                    Class.forName("com.sun.grid.installer.util.cmd.TestBedManager");
+
+                    Thread.sleep(2000);
+
+                    String appTitle = GUIInstaller.getInstallerFrame().getTitle();
+                    appTitle += " - DEMO version";
+                    GUIInstaller.getInstallerFrame().setTitle(appTitle);
+                } catch (ClassNotFoundException ex) {
+                    // Normal version
+                } catch (Exception e) {
+                    // can not set the title
+                }
+
                 guiInstaller.addExtraVariables(argValues);
             }
             else

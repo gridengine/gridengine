@@ -151,6 +151,32 @@ public class HostTable extends JTable {
         tableMenu.setToolTipText(handler.getTooltip(label));
 
         // menu item for resolving the selected hosts in the table
+        final JMenuItem configureMI = new JMenuItem(handler.getLabel("menu.configure"));
+        configureMI.setToolTipText(handler.getTooltip("menu.configure"));
+        configureMI.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                if (getSelectedRowCount() > 0) {
+                    int[] selectedHostIndexes = getSelectedHostIndexes();
+                    HostList hostList = getHostList();
+                    HostList resultHostList = new HostList();
+                    Host host;
+                    for (int i = selectedHostIndexes.length - 1; i >= 0; i--) {
+                        host = hostList.get(selectedHostIndexes[i]);
+                        resultHostList.addUnchecked(host);
+                    }
+
+                    HostConfigFrame.getInstance().open(resultHostList);
+                } else {
+                    HostConfigFrame.getInstance().open(getHostList());
+                }
+            }
+        });
+        tableMenu.add(configureMI);
+
+        final JPopupMenu.Separator configureSeparator = new JPopupMenu.Separator();
+        tableMenu.add(configureSeparator);
+
+        // menu item for resolving the selected hosts in the table
         final JMenuItem resolveSelectionMI = new JMenuItem(handler.getLabel("menu.resolve.selected"));
         resolveSelectionMI.setToolTipText(handler.getTooltip("menu.resolve.selected"));
         resolveSelectionMI.addActionListener(new ActionListener() {
@@ -189,7 +215,8 @@ public class HostTable extends JTable {
         });
         tableMenu.add(resolveAllMI);
 
-        tableMenu.addSeparator();
+        final JPopupMenu.Separator refreshSeparator = new JPopupMenu.Separator();
+        tableMenu.add(refreshSeparator);
 
         // menu item for deleting selected hosts in the table
         final JMenuItem deleteSelectionMI = new JMenuItem(handler.getLabel("menu.remove.selected"));
@@ -274,12 +301,18 @@ public class HostTable extends JTable {
                     resolveSelectionMI.setVisible(table.getSelectedRowCount() > 0);
                     deleteSelectionMI.setVisible(table.getSelectedRowCount() > 0);
                     saveSelectionMI.setVisible(table.getSelectedRowCount() > 0);
-                    tableMenu.show(e.getComponent(), e.getX(), e.getY());
 
                     if (HostTable.this.getModel() instanceof HostInstallTableModel) {
+                        refreshSeparator.setVisible(false);
+                        configureSeparator.setVisible(false);
+                        
+                        configureMI.setVisible(false);
+
                         resolveSelectionMI.setVisible(false);
                         resolveAllMI.setVisible(false);
                     }
+
+                    tableMenu.show(e.getComponent(), e.getX(), e.getY());
                 } else {
                     tableMenu.setVisible(false);
                     super.mousePressed(e);

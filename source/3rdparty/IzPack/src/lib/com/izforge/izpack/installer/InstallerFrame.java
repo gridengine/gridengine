@@ -1,5 +1,4 @@
 /*
- * $Id: InstallerFrame.java,v 1.2 2009/04/01 14:41:07 zsiga Exp $
  * IzPack - Copyright 2001-2008 Julien Ponge, All Rights Reserved.
  * 
  * http://izpack.org/
@@ -1415,7 +1414,8 @@ public class InstallerFrame extends JFrame
     {
         if (installdata.canClose ||
                 ((!nextButton.isVisible() || !nextButton.isEnabled()) &&
-                        (!prevButton.isVisible() || !prevButton.isEnabled()))
+                        (!prevButton.isVisible() || !prevButton.isEnabled())) ||
+                installdata.curPanelNumber >= installdata.panels.size() - 1
                 )
         {
             // this does nothing if the uninstaller was not included
@@ -2398,7 +2398,7 @@ public class InstallerFrame extends JFrame
     /**
      * @param rules the rules to set
      */
-    public void setRules(RulesEngine rules)
+    public static void setRules(RulesEngine rules)
     {
         InstallerFrame.rules = rules;
     }

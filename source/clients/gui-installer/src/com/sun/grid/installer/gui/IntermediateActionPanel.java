@@ -43,7 +43,8 @@ public class IntermediateActionPanel extends ActionPanel {
         if (getNumOfExecution() == 0) {
             // Localhost arch
             Properties variables = idata.getVariables();
-            GetArchCommand archCmd = new GetArchCommand(Host.localHostName, Util.CONNECT_USER, variables.getProperty(VAR_SHELL_NAME, ""), Util.IS_MODE_WINDOWS, variables.getProperty(VAR_SGE_ROOT, ""));
+            GetArchCommand archCmd = new GetArchCommand(Host.localHostName, Util.DEF_CONNECT_USER, 
+                    variables.getProperty(VAR_SHELL_NAME, ""), (Util.IS_MODE_WINDOWS && Host.localHostArch.startsWith("win")), variables.getProperty(VAR_SGE_ROOT, ""));
             archCmd.execute();
             if (archCmd.getExitValue() == 0 && archCmd.getOutput().size() > 0) {
                 Host.localHostArch = archCmd.getOutput().get(0).trim();
@@ -85,7 +86,7 @@ public class IntermediateActionPanel extends ActionPanel {
         // cfg.spooling.method
         if (parent.getRules().isConditionTrue(COND_INSTALL_BDB, idata.getVariables())) {
             idata.setVariable(VAR_SPOOLING_METHOD, vs.substituteMultiple(idata.getVariable(VAR_SPOOLING_METHOD_BERKELEYDBSERVER), null));
-        } else {
+        } else if (getNumOfExecution() == 0) {
             idata.setVariable(VAR_SPOOLING_METHOD, vs.substituteMultiple(idata.getVariable(VAR_SPOOLING_METHOD_BERKELEYDB), null));
         }
 
@@ -103,7 +104,7 @@ public class IntermediateActionPanel extends ActionPanel {
             } else {
                //TODO: Verify behavior of delay and when connection is not possible via rsh
                //TODO: Need sh -c
-               RemoteCommand cmd = new RemoteCommand(5000, remHost, Util.CONNECT_USER, idata.getVariable(VAR_SHELL_NAME), Util.IS_MODE_WINDOWS,
+               RemoteCommand cmd = new RemoteCommand(5000, remHost, Util.DEF_CONNECT_USER, idata.getVariable(VAR_SHELL_NAME), Util.IS_MODE_WINDOWS,
                                    ". " + sgeRoot + "/util/install_modules/inst_qmaster.sh ; HaveSuitableJavaBin 1.5.0 jvm ; echo $jvm_lib_path", "");
                cmd.execute();
                if (cmd.getOutput() != null && cmd.getOutput().size() > 0) {

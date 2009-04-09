@@ -266,6 +266,6 @@ ___INFO__MARK_END__-->
         <variable name="cfg.csp.orga.unit" value="Organisation_unit"/>
         <variable name="cfg.csp.mail.address" value="name@yourdomain.com"/>
         <variable name="root.user" value="root"/>
-        <variable name="connect_user" value=""/>
+        <variable name="connect_user" value="${user.name}"/>
    </variables>
 </installation>

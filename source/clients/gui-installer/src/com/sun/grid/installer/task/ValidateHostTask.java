@@ -129,7 +129,8 @@ public class ValidateHostTask extends TestableTask {
             checkHostFile = Util.fillUpTemplate(checkHostTempFile, checkHostFile, variables);
 
             Debug.trace("Copy auto_conf file to '" + host.getHostname() + ":" + checkHostFile + "'.");
-            CopyExecutableCommand copyCmd = new CopyExecutableCommand(host.getHostname(), Util.CONNECT_USER, variables.getProperty(VAR_SHELL_NAME, ""), Util.IS_MODE_WINDOWS, checkHostFile, checkHostFile);
+            CopyExecutableCommand copyCmd = new CopyExecutableCommand(host.getResolveTimeout(), host.getHostname(), host.getConnectUser(),
+                    variables.getProperty(VAR_SHELL_NAME, ""), (Util.IS_MODE_WINDOWS && host.getArchitecture().startsWith("win")), checkHostFile, checkHostFile);
             copyCmd.execute();
             exitValue = copyCmd.getExitValue();
             if (exitValue == EXIT_VAL_CMDEXEC_TERMINATED) {
@@ -142,7 +143,8 @@ public class ValidateHostTask extends TestableTask {
             } else if (exitValue != 0) {
                 newState = Host.State.COPY_FAILED_CHECK_HOST;
             } else {
-                RemoteComponentScriptCommand checkCmd = new RemoteComponentScriptCommand((2 * Util.RESOLVE_TIMEOUT), host, Util.CONNECT_USER, variables.getProperty(VAR_SHELL_NAME, ""), Util.IS_MODE_WINDOWS, checkHostFile);
+                RemoteComponentScriptCommand checkCmd = new RemoteComponentScriptCommand((2 * host.getResolveTimeout()), host, host.getConnectUser(), 
+                        variables.getProperty(VAR_SHELL_NAME, ""), (Util.IS_MODE_WINDOWS && host.getArchitecture().startsWith("win")), checkHostFile);
                 checkCmd.execute();
                 exitValue = checkCmd.getExitValue();
 

@@ -44,7 +44,7 @@ public class GetArchCommand extends CmdExec {
       private String command;
 
       public GetArchCommand(String host, String user, String shell, boolean isWindowsMode, String sge_root) {
-          this(Util.RESOLVE_TIMEOUT, host, user, shell, isWindowsMode, sge_root);
+          this(Util.DEF_RESOLVE_TIMEOUT, host, user, shell, isWindowsMode, sge_root);
       }
 
       public GetArchCommand(long timeout, String host, String user, String shell, boolean isWindowsMode, String sge_root) {

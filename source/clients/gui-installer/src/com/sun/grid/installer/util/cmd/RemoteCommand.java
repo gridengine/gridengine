@@ -43,10 +43,10 @@ public class RemoteCommand extends CmdExec {
       private String command;
 
       public RemoteCommand(String host, String user, String shell, boolean isWindowsMode, String fstypePath, String dirPath) {
-          this(Util.RESOLVE_TIMEOUT, host, user, shell, isWindowsMode, fstypePath, dirPath);
+          this(Util.DEF_RESOLVE_TIMEOUT, host, user, shell, isWindowsMode, fstypePath, dirPath);
       }
 
-      public RemoteCommand(int timeout, String host, String user, String shell, boolean isWindowsMode, String fstypePath, String dirPath) {
+      public RemoteCommand(long timeout, String host, String user, String shell, boolean isWindowsMode, String fstypePath, String dirPath) {
           super(timeout);
           boolean onLocalHost = host.equalsIgnoreCase(Host.localHostName);
 

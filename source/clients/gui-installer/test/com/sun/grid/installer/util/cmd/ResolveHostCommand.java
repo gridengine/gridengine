@@ -41,7 +41,7 @@ public class ResolveHostCommand extends CmdExec {
     private String hostAddress = "";
 
     public ResolveHostCommand() {
-        super(Util.RESOLVE_TIMEOUT);
+        super(Util.DEF_RESOLVE_TIMEOUT);
     }
     
     private ResolveHostCommand(long timeout) {

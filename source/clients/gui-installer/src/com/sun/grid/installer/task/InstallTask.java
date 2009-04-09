@@ -34,7 +34,6 @@ import com.sun.grid.installer.gui.*;
 import com.izforge.izpack.util.Debug;
 import com.izforge.izpack.util.VariableSubstitutor;
 import com.sun.grid.installer.util.Util;
-import com.sun.grid.installer.util.cmd.CmdExec;
 import com.sun.grid.installer.util.cmd.CopyExecutableCommand;
 import com.sun.grid.installer.util.cmd.RemoteComponentScriptCommand;
 import java.util.Properties;
@@ -116,7 +115,8 @@ public class InstallTask extends TestableTask {
                  */
                 //TODO: Do this only when not on a shared FS (file is not yet accessible)
                 Debug.trace("Copy auto_conf file to '" + host.getHostname() + ":" + autoConfFile + "'.");
-                copyCmd = new CopyExecutableCommand(host.getHostname(), Util.CONNECT_USER, variables.getProperty(VAR_SHELL_NAME, ""), Util.IS_MODE_WINDOWS, autoConfFile, autoConfFile);
+                copyCmd = new CopyExecutableCommand(host.getResolveTimeout(), host.getHostname(), host.getConnectUser(),
+                        variables.getProperty(VAR_SHELL_NAME, ""), (Util.IS_MODE_WINDOWS && host.getArchitecture().startsWith("win")), autoConfFile, autoConfFile);
                 copyCmd.execute();
                 exitValue = copyCmd.getExitValue();
             } else {
@@ -146,7 +146,7 @@ public class InstallTask extends TestableTask {
                 /**
                  * Execute installation
                  */
-                int timeout = Util.INSTALL_TIMEOUT;
+                long timeout = host.getInstallTimeout();
                 if (host.isFirstTask()) {
                     String cspHosts = variables.getProperty(VAR_ALL_CSPHOSTS);
                     int cspCount = (cspHosts == null) ? 0 : cspHosts.split(" ").length;
@@ -156,7 +156,8 @@ public class InstallTask extends TestableTask {
                 }
 
                 if (!isIsTestMode()) {
-                    installCmd = new RemoteComponentScriptCommand(timeout, host, Util.CONNECT_USER, variables.getProperty(VAR_SHELL_NAME, ""), Util.IS_MODE_WINDOWS, autoConfFile);
+                    installCmd = new RemoteComponentScriptCommand(timeout, host, host.getConnectUser(), 
+                            variables.getProperty(VAR_SHELL_NAME, ""), (Util.IS_MODE_WINDOWS && host.getArchitecture().startsWith("win")), autoConfFile);
                     installCmd.execute();
                     exitValue = installCmd.getExitValue();
                 }

@@ -76,10 +76,9 @@ public class Util implements Config{
 
     public static int RESOLVE_THREAD_POOL_SIZE = 12;
     public static int INSTALL_THREAD_POOL_SIZE = 8;
-    public static int RESOLVE_TIMEOUT = 20000;
-    public static int INSTALL_TIMEOUT = 120000;
-
-    public static String CONNECT_USER = "";
+    public static long DEF_RESOLVE_TIMEOUT = 20000;
+    public static long DEF_INSTALL_TIMEOUT = 120000;
+    public static String DEF_CONNECT_USER = "";
     public static boolean IS_MODE_WINDOWS = false;
 
     // Currently we accept pattern in list of hosts in a file
@@ -826,7 +825,7 @@ public class Util implements Config{
         try {
             // Call the 'fstype' script of the proper architecture
             String fstypeScript = sge_root + "/utilbin/" + arch + "/fstype";
-            RemoteCommand fstypeCmd = new RemoteCommand(host, CONNECT_USER, shell, IS_MODE_WINDOWS, fstypeScript, dir);
+            RemoteCommand fstypeCmd = new RemoteCommand(host, DEF_CONNECT_USER, shell, IS_MODE_WINDOWS, fstypeScript, dir);
             fstypeCmd.execute();
 
             if (fstypeCmd.getExitValue() == 0) {
@@ -857,7 +856,7 @@ public class Util implements Config{
 
         try {
             String command = "groups";
-            RemoteCommand groupCmd = new RemoteCommand(host, CONNECT_USER, shell, IS_MODE_WINDOWS, command,  userToCheck);
+            RemoteCommand groupCmd = new RemoteCommand(host, DEF_CONNECT_USER, shell, IS_MODE_WINDOWS, command,  userToCheck);
             groupCmd.execute();
 
             if (groupCmd.getExitValue() == 0) {

@@ -40,4 +40,5 @@ ___INFO__MARK_END__-->
     <icon res="/img/search.png" id="search"/>
     <icon res="/img/error_small_16.png" id="error.small"/>
     <icon res="/img/refresh_16.png" id="refresh"/>
+    <icon res="/img/options_16.png" id="options"/>
 </icons>

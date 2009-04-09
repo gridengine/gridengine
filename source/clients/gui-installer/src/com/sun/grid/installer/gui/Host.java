@@ -58,6 +58,9 @@ public class Host implements Config {
 
     public static final String SEPARATOR = ",";
     public static final String ARG_SPOOLDIR = "spooldir";
+    public static final String ARG_CONNECT_USER = "connectuser";
+    public static final String ARG_JVM_LIB_PATH = "jvmlibpath";
+    public static final String ARG_JVM_ADD_ARGS = "jvmaddargs";
 
     static {
         try {
@@ -142,7 +145,12 @@ public class Host implements Config {
     private String ip = "";
     private String architecture = "";
     private String spoolDir = "";
+    private String connectUser = "";
+    private String jvmLibPath = "";
+    private String jvmAddArgs = "";
     private String log = "";
+    private long   resolveTimeout = 0;
+    private long   installTimeout = 0;
     private State state = State.UNKNOWN_HOST;
     private boolean bdbHost, qmasterHost, shadowHost, executionHost, adminHost, submitHost, firstTask, lastTask;
 
@@ -158,6 +166,13 @@ public class Host implements Config {
         submitHost = h.isSubmitHost();
         bdbHost = h.isBdbHost();
         qmasterHost = h.isQmasterHost();
+
+        connectUser = h.getConnectUser();
+        jvmLibPath  = h.getJvmLibPath();
+        jvmAddArgs  = h.getJvmAddArgs();
+
+        resolveTimeout = h.getResolveTimeout();
+        installTimeout = h.getInstallTimeout();
 
         checkArchDependencies();
     }
@@ -261,17 +276,16 @@ public class Host implements Config {
         String instance = "";
 
         if (!hostname.equals("")) {
-            instance += hostname;
+            instance += hostname + SEPARATOR;
         } else {
-            instance += ip;
+            instance += ip + SEPARATOR;
         }
-        instance += SEPARATOR;
-//        instance += ip;
-//        instance += SEPARATOR;
-//        instance += architecture;
-//        instance += SEPARATOR;
-        instance += ARG_SPOOLDIR + "=" + spoolDir;
-        instance += SEPARATOR;
+        
+        instance += ARG_SPOOLDIR + "=" + spoolDir + SEPARATOR;
+        instance += ARG_CONNECT_MODE + "=" + connectUser + SEPARATOR;
+        instance += ARG_JVM_LIB_PATH + "=" + jvmLibPath + SEPARATOR;
+        instance += ARG_JVM_ADD_ARGS + "=" + jvmAddArgs + SEPARATOR;
+        
         if (isQmasterHost()) {
             instance += Util.SgeComponents.qmaster + SEPARATOR;
         }
@@ -329,6 +343,9 @@ public class Host implements Config {
         boolean isAdmin = false;
         boolean isSubmit = false;
         String spoolDir = "";
+        String connectUser = "";
+        String jvmLibPath = "";
+        String jvmAddArgs = "";
 
         // Create the list of ids
         Type type = Util.isIpPattern(args[0]) ? Type.IP : Type.HOSTNAME;
@@ -358,13 +375,32 @@ public class Host implements Config {
                     arg = arg.substring(arg.indexOf("=") + 1);
                     spoolDir = arg;
                 }
+            } else if (arg.startsWith(ARG_CONNECT_USER)) {
+                if (arg.indexOf("=") > -1 && arg.indexOf("=") < arg.length()) {
+                    arg = arg.substring(arg.indexOf("=") + 1);
+                    connectUser = arg;
+            }
+            } else if (arg.startsWith(ARG_JVM_LIB_PATH)) {
+                if (arg.indexOf("=") > -1 && arg.indexOf("=") < arg.length()) {
+                    arg = arg.substring(arg.indexOf("=") + 1);
+                    jvmLibPath = arg;
+        }
+            } else if (arg.startsWith(ARG_JVM_ADD_ARGS)) {
+                if (arg.indexOf("=") > -1 && arg.indexOf("=") < arg.length()) {
+                    arg = arg.substring(arg.indexOf("=") + 1);
+                    jvmAddArgs = arg;
+                }
             }
         }
 
         // Create host instances
         List<Host> hosts = new ArrayList<Host>(ids.size());
         for (String id : ids) {
-            hosts.add(new Host(type, id, isQmaster, isBDB, isShadow, isExecd, isAdmin, isSubmit, spoolDir, State.NEW_UNKNOWN_HOST));
+            Host h = new Host(type, id, isQmaster, isBDB, isShadow, isExecd, isAdmin, isSubmit, spoolDir, State.NEW_UNKNOWN_HOST);
+            h.setConnectUser(connectUser);
+            h.setJvmLibPath(jvmLibPath);
+            h.setJvmAddArgs(jvmAddArgs);
+            hosts.add(h);
         }
 
         return hosts;
@@ -535,6 +571,46 @@ public class Host implements Config {
             }
         }
         return getHostname();
+    }
+
+    public String getConnectUser() {
+        return connectUser;
+    }
+
+    public void setConnectUser(String connectUser) {
+        this.connectUser = connectUser;
+    }
+
+    public String getJvmAddArgs() {
+        return jvmAddArgs;
+    }
+
+    public void setJvmAddArgs(String jvmAddArgs) {
+        this.jvmAddArgs = jvmAddArgs;
+    }
+
+    public String getJvmLibPath() {
+        return jvmLibPath;
+    }
+
+    public void setJvmLibPath(String jvmLibPath) {
+        this.jvmLibPath = jvmLibPath;
+    }
+
+    public long getInstallTimeout() {
+        return installTimeout;
+    }
+
+    public void setInstallTimeout(long installTimeout) {
+        this.installTimeout = installTimeout;
+    }
+
+    public long getResolveTimeout() {
+        return resolveTimeout;
+    }
+
+    public void setResolveTimeout(long resolveTimeout) {
+        this.resolveTimeout = resolveTimeout;
     }
 
     public String getComponentString() {

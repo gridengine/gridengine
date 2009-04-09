@@ -44,7 +44,7 @@ public class HostSelectionTableModel extends SortedTableModel implements HostTab
     private HostList hostList;
     private JTable table;
 
-    private Properties langProperies;
+    private Properties langProperties;
 
     // To ensure the qmaster host singularity among diff. tables, default: no qmaster
     private static Host qmasterHost = null;
@@ -52,13 +52,13 @@ public class HostSelectionTableModel extends SortedTableModel implements HostTab
     // To ensure the Berkeley db host singularity among diff. tables, default: no bdb server
     private static Host bdbHost = null;
 
-    public HostSelectionTableModel(JTable table, HostList hostList, String [] headers, Class[] types, Properties langProperies) {
+    public HostSelectionTableModel(JTable table, HostList hostList, String [] headers, Class[] types, Properties langProperties) {
         super(new Object[][]{}, headers);
         this.table = table;
         this.headers = headers;
         this.types = types;
         this.hostList = hostList;
-        this.langProperies = langProperies;
+        this.langProperties = langProperties;
 
         qmasterHost = null;
         bdbHost = null;
@@ -133,11 +133,14 @@ public class HostSelectionTableModel extends SortedTableModel implements HostTab
                     if (!bValue) {
                         qmasterHost = null;
                     } else {
-                        qmasterHost = h;
-
                         // Qmaster is always admin and submit host
                         h.setAdminHost(true);
-                        h.setSubmitHost(true);
+                        //h.setSubmitHost(true);
+
+                        fireTableCellUpdated(row, 7);
+                        //fireTableCellUpdated(row, 8);
+                        
+                        qmasterHost = h;
                     }
                 }
                 break;
@@ -189,13 +192,16 @@ public class HostSelectionTableModel extends SortedTableModel implements HostTab
                 // if there is already a qmaster host and it's not the selected host...
                 if (qmasterHost != null && !qmasterHost.equals(h)) {
                     // ...ask whether the user want to change qmaster host selection
-                    String message = MessageFormat.format(langProperies.getProperty("msg.qmasterhost.already.selected"), h.getHostname(), qmasterHost.getHostname());
+                    String message = MessageFormat.format(langProperties.getProperty("msg.qmasterhost.already.selected"), h.getHostname(), qmasterHost.getHostname());
                     if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(table, message, 
-                            langProperies.getProperty("title.confirmation"), JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE)) {
+                            langProperties.getProperty("title.confirmation"), JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE)) {
                         qmasterHost.setQmasterHost(false);
                         fireTableCellUpdated(getRowIndex(hostList.indexOf(qmasterHost)), col);
 
                         h.setQmasterHost(true);
+                        h.setAdminHost(true);
+                        //h.setSubmitHost(true);
+                        
                         fireTableCellUpdated(row, col);
 
                         qmasterHost = h;
@@ -210,15 +216,25 @@ public class HostSelectionTableModel extends SortedTableModel implements HostTab
             case 4:
             case 5:
             case 6:
-            case 7:
             case 8: return true;
+            case 7: {
+                if (qmasterHost != null && qmasterHost.equals(h)) {
+                    String message = langProperties.getProperty("msg.qmaster.hastobe.admin.submit");
+
+                    JOptionPane.showMessageDialog(table, message, langProperties.getProperty("installer.warning"), JOptionPane.WARNING_MESSAGE);
+
+                    return false;
+                } else {
+                    return true;
+                }
+            }
             case 9: {
                 // if there is already a bdb host and it's not the selected host...
                 if (bdbHost != null && !bdbHost.equals(h)) {
                     // ...ask whether the user want to change bdb host selection
-                    String message = MessageFormat.format(langProperies.getProperty("msg.bdbhost.already.selected"), h.getHostname(), bdbHost.getHostname());
+                    String message = MessageFormat.format(langProperties.getProperty("msg.bdbhost.already.selected"), h.getHostname(), bdbHost.getHostname());
                     if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(table, message,
-                            langProperies.getProperty("title.confirmation"), JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE)) {
+                            langProperties.getProperty("title.confirmation"), JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE)) {
                         bdbHost.setBdbHost(false);
                         fireTableCellUpdated(getRowIndex(hostList.indexOf(bdbHost)), col);
 

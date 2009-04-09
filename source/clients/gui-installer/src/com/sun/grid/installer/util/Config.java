@@ -72,6 +72,7 @@ public interface Config {
     public static final String VAR_WIN_ADMIN_NAME = "cfg.win.admin.name";
     public static final String VAR_HOSTNAME_RESOLVING = "cfg.hostname.resolving";
     public static final String VAR_JVM_LIB_PATH = "cfg.sge.jvm.lib.path";
+    public static final String VAR_ADDITIONAL_JVM_ARGS = "cfg.sge.additional.jvm.args";
     public static final String VAR_DB_SPOOLING_DIR = "cfg.db.spooling.dir";
     public static final String VAR_SGE_JMX_PORT = "cfg.sge.jmx.port";
     public static final String VAR_ADD_TO_RC = "cfg.add.to.rc";

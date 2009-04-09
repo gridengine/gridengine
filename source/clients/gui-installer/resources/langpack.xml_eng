@@ -146,7 +146,7 @@ ___INFO__MARK_END__-->
     <!-- Labels, tooltips, messages -->
     <!-- Welcome Panel -->
         <!-- Labels -->
-        <str id="WelcomePanel.welcome" txt="<html>Welcome to the <b>${APP_NAME} ${APP_VER}</b> installation wizard.<br> This program will install the <b>${APP_NAME} ${APP_VER}</b> on your computer(s).  </html>" />
+        <str id="WelcomePanel.welcome" txt="<html>Welcome to the <b>${APP_NAME} ${APP_VER}</b> installation wizard.<br> This program will install the <b>${APP_NAME} ${APP_VER}</b> on your computer(s). |</html>" />
 
     <!-- PreAction Panel -->
         <!-- Messages -->
@@ -335,7 +335,8 @@ ___INFO__MARK_END__-->
         <str id="cfg.sge.jmx.port.rangevalidator" txt="JMX port has invalid range! Valid range is 1-65535." />
         <str id="cfg.sge.jmx.ssl.keystore.notemptyvalidator" txt="Keystore path is mandatory!" />
         <str id="cfg.sge.jmx.ssl.keystore.permissionvalidator" txt="No write permission on the keystore directory!" />
-        <str id="cfg.sge.jmx.ssl.keystore.pw.passwordequalityvalidator" txt="The passwords must match." />
+        <str id="cfg.sge.jmx.ssl.keystore.pw.passwordequalityvalidator" txt="The keystore passwords must match!" />
+        <str id="cfg.sge.jmx.ssl.keystore.pw.regularexpressionvalidator" txt="The keystore password has to be at least 6 characters!" />
         <str id="cfg.sge.jvm.lib.path.notemptyvalidator" txt="JVM library path is mandatory!" />
         <str id="cfg.sge.jvm.lib.path.fileexistsvalidator" txt="JVM library does not exist!" />
 
@@ -472,6 +473,7 @@ ___INFO__MARK_END__-->
         <str id="tab.done.label" txt="Succeeded" />
         <str id="tab.failed.label" txt="Failed" />
         <str id="menu.title" txt="Edit actions"/>
+        <str id="menu.configure" txt="Configure..."/>
         <str id="menu.resolve.selected" txt="Refresh selected"/>
         <str id="menu.resolve.all" txt="Refresh all"/>
         <str id="menu.remove.selected" txt="Remove selected"/>
@@ -522,6 +524,7 @@ ___INFO__MARK_END__-->
         <str id="tab.done.label.tooltip" txt="Successfully performed task(s)" />
         <str id="tab.failed.label.tooltip" txt="Failed task(s)" />
         <str id="menu.title.tooltip" txt="Edit actions"/>
+        <str id="menu.configure.tooltip" txt="Configure selected host(s)"/>
         <str id="menu.resolve.selected.tooltip" txt="Resolve selected host(s)"/>
         <str id="menu.resolve.all.tooltip" txt="Resolve all hosts"/>
         <str id="menu.remove.selected.tooltip" txt="Remove selected host(s)"/>
@@ -539,7 +542,8 @@ ___INFO__MARK_END__-->
         <str id="msg.previous.dependent.install.failed" txt="Not started! It depended on {0} task that failed."/>
         <str id="msg.install.canceled" txt="Task has been canceled by the user."/>
         <str id="msg.qmasterhost.already.selected" txt="<html>Do you really want to change qmaster host to <b>{0}</b>?<br>Currently selected qmaster host is <b>{1}</b>.<br></html>"/>
-        <str id="msg.bdbhost.already.selected" txt="<html>Do you really want to change BDB server to <b>{0}</b>?<br>Currently selected BDB server is <b>{1}</b>.<br></html></html>"/>
+        <str id="msg.bdbhost.already.selected" txt="<html>Do you really want to change BDB server to <b>{0}</b>?<br>Currently selected BDB server is <b>{1}</b>.<br></html>"/>
+        <str id="msg.qmaster.hastobe.admin.submit" txt="<html>Qmaster host has to be admin host!</html>"/>
     <!-- Result Panel -->
         <!-- Labels -->
         <str id="result.info.label" txt="Read me"/>
@@ -554,7 +558,7 @@ ___INFO__MARK_END__-->
         <str id="error.can.not.open.browser.message" txt="Can not open browser!"/>
         <str id="error.can.not.open.browser.title" txt="Error!"/>
         
-    <!-- Help Page -->
+    <!-- Help Frame -->
         <!-- Labels -->
         <str id="button.search.label" txt="Search"/>
         <str id="step.label" txt="Topic"/>
@@ -563,6 +567,38 @@ ___INFO__MARK_END__-->
         <!-- General -->
         <str id="search.result.page" txt="<html><body><h1>Search result</h1><br><br>${search.result}</body></html>"/>
         <str id="search.noresult.page" txt="<html><body><h1>No matches found!</h1></body></html>"/>
+
+    <!-- Host Config Frame -->
+        <!-- Labels -->
+        <str id="host.config.frame.title" txt="Configuration"/>
+        <str id="cfg.exec.spool.dir.local.label" txt="Local execd spool directory"/>
+        <str id="resolve.timeout.label" txt="Resolve timeout"/>
+        <str id="connect.user.label" txt="Connect user"/>
+        <str id="resolve.timeout.label" txt="Resolve timeout"/>
+        <str id="install.timeout.label" txt="Install timeout"/>
+        <str id="sec.label" txt="sec"/>
+        <str id="button.ok.label" txt="Ok"/>
+        <!-- Tooltips -->
+        <str id="cfg.exec.spool.dir.local.tooltip" txt="<html><b>Local execd spool directory</b><br><br>
+        The name of the user that will be used to connect to remote host via ${cfg.shell.name}/${cfg.copy.command}.</html>"/>
+        <str id="connect.user.tooltip" txt="<html><b>Connect user</b><br><br>
+        The name of the user that will be used to connect to remote host via ${cfg.shell.name}/${cfg.copy.command}.</html>"/>
+        <str id="resolve.timeout.tooltip" txt="<html><b>Resolve timeout</b><br><br>
+        A timeout value for any resolving task. Increase the default value if you see<br>
+        hosts with Unreachable state and you are sure that password-less connection<br>
+        is working correctly for the connect user.<br>
+        Host validation has a timeout which is always equal to (2 * Resolve timeout) value.</html>"/>
+        <str id="install.timeout.tooltip" txt="<html><b>Install timeout</b><br><br>
+        A timeout value for any installation task. Increase the default value if you see<br>
+        that the installation tasks are failing with a Timeout state.</html>"/>
+        <!-- General -->
+        <str id="multiple.values.text" txt="-- Multiple values --"/>
+        <str id="cfg.exec.spool.dir.local.notemptyvalidator" txt="Local execd spool directory is mandatory!"/>
+        <str id="connect.user.notemptyvalidator" txt="Connect user is mandatory!"/>
+        <str id="resolve.timeout.notemptyvalidator" txt="Resolve timeout is mandatory!"/>
+        <str id="install.timeout.notemptyvalidator" txt="Install timeout is mandatory!"/>
+        <str id="resolve.timeout.invalidnumber" txt="Invalid resolve timeout value!"/>
+        <str id="install.timeout.invalidnumber" txt="Invalid install timeout value!"/>
 
     <!-- Log Window -->
         <!-- Labels -->

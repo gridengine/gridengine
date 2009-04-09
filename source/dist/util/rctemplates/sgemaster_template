@@ -292,8 +292,6 @@ GetPathToUtilbin()
 CheckRunningQmaster()
 {
    masterhost=`cat $SGE_ROOT/$SGE_CELL/common/act_qmaster`
-   running=false
-   loop=0
 
    if [ "$SGE_QMASTER_PORT" = "" ]; then
       ping_port=`$utilbin_dir/getservbyname -number sge_qmaster`
@@ -301,32 +299,55 @@ CheckRunningQmaster()
       ping_port=$SGE_QMASTER_PORT
    fi
 
-   #If the port cannot be bound, qping takes a long time to finish and multiplied by 30 seems like forever
    start=`$SGE_ROOT/utilbin/$ARCH/now 2>/dev/null`
-   while [ $running = "false" -a $loop -ne 30 ]; do 
-      $bin_dir/qping -info $masterhost $ping_port qmaster 1 > /dev/null 2>&1
 
-      if [ "$?" = 0 ]; then
+   running=false
+   retries=0
+   qping_timeout=false
+
+   # qping may have a long timeout in case of network or hostname resolution
+   # related problems.
+   # ensure that the test for a running qmaster does not take too long
+   # by limiting the total time and numbers the connection test is repeated
+
+   while [ $retries -le 30 ]; do
+      $bin_dir/qping -info $masterhost $ping_port qmaster 1 > /dev/null 2>&1
+      if [ $? -eq 0 ]; then
          running=true
+         break
       else
-         if [ -n "$start" ]; then
-            now=`$SGE_ROOT/utilbin/$ARCH/now 2>/dev/null`
-            elapsed=`expr $now - $start`
-            if [ $elapsed -gt 60 ]; then
-               break
-            fi
+         now=`$SGE_ROOT/utilbin/$ARCH/now 2>/dev/null`
+         if [ "$now" -lt "$start" ]; then
+            start=$now
          fi
-         sleep 2 
+         elapsed=`expr $now - $start`
+         if [ $elapsed -gt 60 ]; then
+            if [ $retries -eq 0 ]; then
+               qping_timeout=true
+            fi
+            break
+         fi
+         sleep 2
          masterhost=`cat $SGE_ROOT/$SGE_CELL/common/act_qmaster`
-         loop=`expr $loop + 1`         
-      fi            
+         retries=`expr $retries + 1`
+      fi
    done
 
-   if [ $running = "false" ]; then
+   if [ $running = "true" ]; then
+      if [ `CheckIfQmasterHost $HOST` = false ]; then
+         echo "sge_qmaster is running on another host (${masterhost})"
+         return 1
+      else
+         return 0
+      fi
+   else
       echo
-      echo "sge_qmaster didn't start!"
-      echo "Please check the messages file"
+      echo "sge_qmaster start problem"
+      if [ $qping_timeout = true ]; then
+         echo "Possibly a network or hostname configuration problem (got timeout)."
+      fi
       echo
+      return 1
    fi
 }
 
@@ -463,7 +484,7 @@ qmaster_spool_dir=`QmasterSpoolDir`
 CheckIfShadowMasterHost $HOST
 
 if [ "$startup" = true ]; then
-
+   
    # if service tags are enabled
    st_enabled=`sh $SGE_ROOT/util/sgeST/sge_st "enabled"`
    if [ "$st_enabled" = "true" -a "$qmaster" = "true" ]; then
@@ -540,12 +561,14 @@ if [ "$startup" = true ]; then
        qmaster_host=true
    fi
 
+   exit_val=0
    if [ $qmaster = true -a $qmaster_host = false ]; then
       echo
       echo "sge_qmaster didn't start!"
       echo "This is not a qmaster host!"
       echo "Please, check your act_qmaster file!" 
       echo
+      exit_val=1
    elif [ $qmaster = true ]; then
       DetectSMFService qmaster
       #We want to use smf
@@ -558,7 +581,11 @@ if [ "$startup" = true ]; then
          $bin_dir/sge_qmaster
          [ $? -eq 0 -a -d /var/lock/subsys ] && touch /var/lock/subsys/sgemaster >/dev/null 2>&1
          CheckRunningQmaster
+         exit_val=$?
       fi
+   fi
+   if [ $exit_val -ne 0 ]; then
+      exit $exit_value
    fi
       
    if [ $shadowd = true -a $shadow_host = true ]; then
@@ -590,6 +617,11 @@ if [ "$startup" = true ]; then
             svcadm enable -st $service
          else
             $bin_dir/sge_shadowd
+            res=$?
+         fi
+         if [ $res -ne 0 ]; then
+            echo "   sge_shadowd didn't start correctly!"
+            exit $res
          fi
       else
          echo "   found running sge_shadowd - not starting"

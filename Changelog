@@ -1,3 +1,13 @@
+LP-2009-04-09-0: Enhancem.:   Improved timeout handling code reliability
+                 Enhancem.:   improve hostname resolving error detection for
+                              invalid hostname settings
+                 Bugster:     6819732
+                 Issue:       2983
+                 Bugfix:      sgemaster script might return 0 on failure
+                 Bugster:     6827877
+                 Issue:       2987
+                 Review:      EB, AS
+
 ZG-2009-04-09-0: Enhancem.:   gui-installer: New window to configure host specific
                               settings as local execd spool dir, jvm path and args,
                               connect user and timeouts.

@@ -1,3 +1,9 @@
+LP-2009-04-09-1: Bugfix:      Execd uninstallation should not remove host
+                              configuration if there is still a shadowd
+                 Bugster:     6828272
+                 Issue:       2988
+                 Review:      EB
+
 LP-2009-04-09-0: Enhancem.:   Improved timeout handling code reliability
                  Enhancem.:   improve hostname resolving error detection for
                               invalid hostname settings

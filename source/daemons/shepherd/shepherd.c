@@ -117,7 +117,7 @@ struct rusage {
 #elif defined(INTERIX)
 #  include <termios.h>
 #  include <sys/ioctl.h>
-#elif defined(FREEBSD)
+#elif defined(FREEBSD) || defined(NETBSD)
 #  include <termios.h>
 #else
 #  include <termio.h>

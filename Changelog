@@ -1,7 +1,11 @@
+RC-2009-04-13-2: Enhancem.:   refresh SPARC/Linux port (from Rayson)
+                 Review:      RC
+
 RC-2009-04-13-1: Enhancem.:   refresh NetBSD port (from Kevin M. Buckley)
                  Review:      RC
 
-RC-2009-04-13-0: Enhancem.:   MIPS/Linux port (from Rayson)
+RC-2009-04-13-0: Enhancem.:   - Gentoo start-up script
+                              - MIPS/Linux port (both from Rayson)
                  Review:      RC
 
 LP-2009-04-09-1: Bugfix:      Execd uninstallation should not remove host

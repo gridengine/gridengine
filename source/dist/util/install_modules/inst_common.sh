@@ -1696,7 +1696,7 @@ CheckRCfiles()
    rc_ret=0
    rc_path=""
    # LSB, etc.
-   if [ "$RC_FILE" = "lsb" -o "$RC_FILE" = "insserv-linux" -o "$RC_FILE" = "update-rc.d" ]; then
+   if [ "$RC_FILE" = "lsb" -o "$RC_FILE" = "insserv-linux" -o "$RC_FILE" = "update-rc.d" -o "$RC_FILE" = "rc-update" ]; then
       rc_path="$RC_PREFIX/$STARTUP_FILE_NAME"
    # System V
    elif [ "$RC_FILE" = "sysv_rc" ]; then
@@ -2392,6 +2392,12 @@ InstallRcScript()
       echo /usr/sbin/update-rc.d $STARTUP_FILE_NAME
       Execute cp $SGE_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
       /usr/sbin/update-rc.d $STARTUP_FILE_NAME defaults 95 03
+   elif [ "$RC_FILE" = "rc-update" ]; then
+      # let Gentoo install scripts according to defaults
+      echo  cp $SGE_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
+      echo /sbin/rc-update add $STARTUP_FILE_NAME
+      Execute cp $SGE_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
+      /sbin/rc-update add $STARTUP_FILE_NAME default
    elif [ "$RC_FILE" = "freebsd" ]; then
       echo  cp $SGE_STARTUP_FILE $RC_PREFIX/sge${RC_SUFFIX}
       Execute cp $SGE_STARTUP_FILE $RC_PREFIX/sge${RC_SUFFIX}

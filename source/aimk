@@ -54,7 +54,8 @@ set AIMK_TARGETOPT   = 0
 set NO_XDEPEND   = ""
 set ERR_WARN_NONE = ""
 set ERR_WARN_ALL = ""
-set UNMODIFIED_ARGUMENTS = ( $argv ) 
+set UNMODIFIED_ARGUMENTS = ( $argv )
+set FORCE_32BIT = 0
 
 if ( -f dist/util/arch ) then
    set buildarch = `dist/util/arch`
@@ -101,6 +102,8 @@ while ($i <= $#argv)
       else if ($BUILDARCH == HP1164) then
          set BUILDARCH = HP11
          set buildarch = hp11
+      else if ($BUILDARCH == LINUXMIPS64 || $BUILDARCH == LINUXPPC64) then
+         set FORCE_32BIT = 1
       else
          echo "32-bit switch not supported for $buildarch"
          exit 1
@@ -1328,6 +1331,8 @@ case ALINUX:
 case LINUX86:
 case LINUXAMD64:
 case LINUXIA64:
+case LINUXMIPS:
+case LINUXMIPS64:
 case LINUXPPC:
 case LINUXPPC64:
 case LINUXSPARC:
@@ -1358,10 +1363,12 @@ case LINUXSPARC64:
       set CFLAGS = "-m32 $CFLAGS"
       set LFLAGS = "-m32 $LFLAGS"
       set SHARED_LFLAGS = "-m32 $SHARED_LFLAGS"
-   else if ($BUILDARCH == LINUXSPARC64 || $BUILDARCH == LINUXPPC64) then
-      set CFLAGS = "-m64 $CFLAGS"
-      set LFLAGS = "-m64 $LFLAGS"
-      set SHARED_LFLAGS = "-m64 $SHARED_LFLAGS"
+   else if ($BUILDARCH == LINUXSPARC64 || $BUILDARCH == LINUXPPC64 || $BUILDARCH == LINUXMIPS64) then
+      if ($FORCE_32BIT != 1)
+         set CFLAGS = "-m64 $CFLAGS"
+         set LFLAGS = "-m64 $LFLAGS"
+         set SHARED_LFLAGS = "-m64 $SHARED_LFLAGS"
+      endif
    endif
 
    if ($DEBUGGED == 1) then
@@ -1388,7 +1395,7 @@ case LINUXSPARC64:
       endif
    endif
 
-   if ($buildarch == "lx24-x86" || $buildarch == "lx26-amd64" || $buildarch == "lx26-x86" || $buildarch == "lx26-sparc") then
+   if ($buildarch == "lx24-x86" || $buildarch == "lx26-amd64" || $buildarch == "lx26-x86" || $buildarch == "lx26-sparc" || $buildarch == "lx26-mips" || $buildarch == "lx26-mips64") then
       set CFLAGS = "$CFLAGS -Wno-strict-aliasing"
    endif
 
@@ -2013,7 +2020,7 @@ if ( $WITH_GETTEXT == 1 ) then
       set LFLAGS = "-L $MYILIB"
       echo "Using $MYILIB path for i18n support"
    else
-      if ( $BUILDARCH == "SOLARIS" || $BUILDARCH == "SOLARIS64" || $BUILDARCH == "SOLARIS86" || $BUILDARCH == "SOLARISAMD64" || $BUILDARCH == "LINUX86" || $BUILDARCH == LINUXIA64 || $BUILDARCH == LINUXAMD64 || $BUILDARCH == "LINUXPPC" || $BUILDARCH == "LINUXPPC64") then
+      if ( $BUILDARCH == "SOLARIS" || $BUILDARCH == "SOLARIS64" || $BUILDARCH == "SOLARIS86" || $BUILDARCH == "SOLARISAMD64" || $BUILDARCH == "LINUX86" || $BUILDARCH == LINUXIA64 || $BUILDARCH == LINUXAMD64 || $BUILDARCH == "LINUXPPC" || $BUILDARCH == "LINUXPPC64" || $BUILDARCH == "LINUXMIPS" || $BUILDARCH == "LINUXMIPS64" ) then
          set LIBINTL = ""
          set HFLAGS = ""
       else

@@ -198,6 +198,12 @@ Linux)
    ppc64)
       lxmachine=ppc64
       ;;
+   mips)
+      lxmachine=mips
+       ;;
+   mips64)
+      lxmachine=mips64
+      ;;
    *)
       unsupported="UNSUPPORTED-"
       lxmachine=$osmachine

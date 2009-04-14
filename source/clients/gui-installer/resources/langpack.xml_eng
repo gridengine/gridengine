@@ -474,6 +474,10 @@ ___INFO__MARK_END__-->
         <str id="tab.failed.label" txt="Failed" />
         <str id="menu.title" txt="Edit actions"/>
         <str id="menu.configure" txt="Configure..."/>
+        <str id="menu.set" txt="Set"/>
+        <str id="menu.unset" txt="Unset"/>
+        <str id="menu.all" txt="all as"/>
+        <str id="menu.selected" txt="selected as"/>
         <str id="menu.resolve.selected" txt="Refresh selected"/>
         <str id="menu.resolve.all" txt="Refresh all"/>
         <str id="menu.remove.selected" txt="Remove selected"/>
@@ -525,6 +529,10 @@ ___INFO__MARK_END__-->
         <str id="tab.failed.label.tooltip" txt="Failed task(s)" />
         <str id="menu.title.tooltip" txt="Edit actions"/>
         <str id="menu.configure.tooltip" txt="Configure selected host(s)"/>
+        <str id="menu.setas.all.tooltip" txt="Set all hosts as {0}"/>
+        <str id="menu.unsetas.all.tooltip" txt="Unset all hosts as {0}"/>
+        <str id="menu.setas.selected.tooltip" txt="Set selected host(s) as {0}"/>
+        <str id="menu.unsetas.selected.tooltip" txt="Unset selected host(s) as {0}"/>
         <str id="menu.resolve.selected.tooltip" txt="Resolve selected host(s)"/>
         <str id="menu.resolve.all.tooltip" txt="Resolve all hosts"/>
         <str id="menu.remove.selected.tooltip" txt="Remove selected host(s)"/>
@@ -570,12 +578,12 @@ ___INFO__MARK_END__-->
 
     <!-- Host Config Frame -->
         <!-- Labels -->
-        <str id="host.config.frame.title" txt="Configuration"/>
+        <str id="host.config.frame.title" txt="Configuration of {0} host(s)"/>
         <str id="cfg.exec.spool.dir.local.label" txt="Local execd spool directory"/>
         <str id="resolve.timeout.label" txt="Resolve timeout"/>
         <str id="connect.user.label" txt="Connect user"/>
-        <str id="resolve.timeout.label" txt="Resolve timeout"/>
-        <str id="install.timeout.label" txt="Install timeout"/>
+        <str id="resolve.timeout.label" txt="Resolve timeout (sec)"/>
+        <str id="install.timeout.label" txt="Install timeout (sec)"/>
         <str id="sec.label" txt="sec"/>
         <str id="button.ok.label" txt="Ok"/>
         <!-- Tooltips -->
@@ -597,8 +605,8 @@ ___INFO__MARK_END__-->
         <str id="connect.user.notemptyvalidator" txt="Connect user is mandatory!"/>
         <str id="resolve.timeout.notemptyvalidator" txt="Resolve timeout is mandatory!"/>
         <str id="install.timeout.notemptyvalidator" txt="Install timeout is mandatory!"/>
-        <str id="resolve.timeout.invalidnumber" txt="Invalid resolve timeout value!"/>
-        <str id="install.timeout.invalidnumber" txt="Invalid install timeout value!"/>
+        <str id="resolve.timeout.invalidnumber" txt="<html>Invalid resolve timeout value!<br>Has to be a number bigger then 1!</html>"/>
+        <str id="install.timeout.invalidnumber" txt="<html>Invalid install timeout value!<br>Has to be a number bigger then 1!</html>"/>
 
     <!-- Log Window -->
         <!-- Labels -->

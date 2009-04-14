@@ -270,23 +270,36 @@ public class ResultPanel extends IzPanel implements Printable, Config {
         /**
          * Reset install data
          */
-        idata.setVariable(VAR_INSTALL_QMASTER, "false");
+        // Select qmaster component to be installed in the next round if it failed at last.
+        if (idata.getVariable(VAR_QMASTER_HOST).equals("") && !idata.getVariable(VAR_QMASTER_HOST_FAILED).equals("")) {
+            idata.setVariable(VAR_INSTALL_QMASTER, "true");
+            idata.setVariable(VAR_QMASTER_HOST, idata.getVariable(VAR_QMASTER_HOST_FAILED));
+        } else {
+            idata.setVariable(VAR_INSTALL_QMASTER, "false");
+            idata.setVariable(VAR_QMASTER_HOST, Host.localHostName);
+        }
+        
         idata.setVariable(VAR_INSTALL_EXECD, "true");
         idata.setVariable(VAR_INSTALL_SHADOW, "false");
-        idata.setVariable(VAR_INSTALL_BDB, "false");
-        //idata.setVariable(VAR_INSTALL_MODE, "");
 
-        //idata.setVariable(VAR_QMASTER_HOST, "");
+        // Select bdbserver component to be installed in the next round if it failed at last.
+        idata.setVariable(VAR_SPOOLING_METHOD_BERKELEYDBSERVER, "none");
+        if (idata.getVariable(VAR_DB_SPOOLING_SERVER).equals("") && !idata.getVariable(VAR_DB_SPOOLING_SERVER_FAILED).equals("")) {
+            idata.setVariable(VAR_INSTALL_BDB, "true");
+            idata.setVariable(VAR_SPOOLING_METHOD, idata.getVariable(VAR_SPOOLING_METHOD_BERKELEYDBSERVER));
+            idata.setVariable(VAR_DB_SPOOLING_SERVER, idata.getVariable(VAR_DB_SPOOLING_SERVER_FAILED));
+        } else {
+            idata.setVariable(VAR_INSTALL_BDB, "false");
+            idata.setVariable(VAR_SPOOLING_METHOD, idata.getVariable(VAR_SPOOLING_METHOD_BERKELEYDB));
+            idata.setVariable(VAR_DB_SPOOLING_SERVER, Host.localHostName);
+        }
+
+        //idata.setVariable(VAR_INSTALL_MODE, ""); leave the mode the same
+
         idata.setVariable(VAR_EXEC_HOST_LIST, "");
-        idata.setVariable(VAR_SHADOW_HOST_LIST, "");
-        idata.setVariable(VAR_DB_SPOOLING_SERVER, Host.localHostName);
+        idata.setVariable(VAR_SHADOW_HOST_LIST, "");       
         idata.setVariable(VAR_ADMIN_HOST_LIST, "");
         idata.setVariable(VAR_SUBMIT_HOST_LIST, "");
-
-        idata.setVariable(VAR_SPOOLING_METHOD_BERKELEYDBSERVER, "none");
-        if (!idata.getVariable(VAR_DB_SPOOLING_SERVER).equals("") && idata.getVariable(VAR_SPOOLING_METHOD).equals("berkeleydb")) {
-            idata.setVariable(VAR_SPOOLING_METHOD, "none");
-        }
 
         /**
          * Reset buttons

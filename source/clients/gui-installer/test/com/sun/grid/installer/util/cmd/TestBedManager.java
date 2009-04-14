@@ -86,6 +86,8 @@ public class TestBedManager implements Config {
         EXIT_VAL_SUCCESS,
         EXIT_VAL_SUCCESS,
         EXIT_VAL_SUCCESS,
+        EXIT_VAL_SUCCESS,
+        EXIT_VAL_SUCCESS,
         EXIT_VAL_SOMETHING, // TODO define an overall failed exit value
         EXIT_VAL_CMDEXEC_TERMINATED,
         EXIT_VAL_CMDEXEC_MISSING_FILE,
@@ -95,6 +97,8 @@ public class TestBedManager implements Config {
 
     public static final int[] DEF_GETARCHITECTURE_EXIT_VALUES = new int[]{
         EXIT_VAL_SUCCESS, // Increase the hit ratio of Success
+        EXIT_VAL_SUCCESS,
+        EXIT_VAL_SUCCESS,
         EXIT_VAL_SUCCESS,
         EXIT_VAL_SUCCESS,
         EXIT_VAL_SUCCESS,

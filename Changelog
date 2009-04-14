@@ -1,3 +1,18 @@
+ZG-2009-04-14-0: Enhancem.:   gui-installer: Improve table menu
+                 Bugster:     6786388
+                 Bugfix:      gui-installer: The result panel shows the admin/submit
+                              hosts as successfully installed even the last task failed.
+                 Bugfix:      gui-installer - Continue feature: After successful
+                              BDB server installation the BDB host is added again
+                              by default to the host list.
+                 Bugster:     6830071
+                 Bugfix:      gui-installer: After resolving the host is not marked
+                              as RESOLVABLE but UNKNOWN_HOST even the IP is available
+                              just the execution of the arch script failed for some
+                              reason.
+                 Bugfix:      6830063
+                 Review:      LP
+
 LP-2009-04-14-2: Bugfix:      gui-installer: first/last task might not be done
                               on qmaster host
                  Bugster:     6829933
@@ -183,6 +198,7 @@ ZG-2009-04-01-1: Enhancem.:   Silent installation
                  Enhancem.:   Store the component selection with the name of the
                               host in the file
                  Enhancem.:   Improve ResultPanel's content
+                 Bugster:     6786397
                  Enhancem.:   JUnit test for class Host
                  Bugfix:      create test/classes diretory before compile
                  Bugfix:      On main progress bar, show the overall task count
@@ -414,6 +430,7 @@ ZG-2009-03-04-0: Enhancem.:   Major cleanup:
                                -redesign progress bar refreshing
                                -generalize worker threads
                                -write comments
+                 Bugster:     6812970
                  Review:      LP
 
 DG-2009-03-04-0: Cleanup:     Added Java DRMAA issue test. 

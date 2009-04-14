@@ -105,7 +105,6 @@ public class HostPanel extends IzPanel implements Config,
     private boolean isBdbInst = true;
     private boolean isExpressInst = true;
 
-//    private boolean advancedMode = true;
     // Indicates whether the error label is visible
     private boolean errorMessageVisible = false;
 
@@ -164,7 +163,6 @@ public class HostPanel extends IzPanel implements Config,
         isExecdInst = true;
         isBdbInst = true;
         isExpressInst = true;
-//        advancedMode = true;
         errorMessageVisible = false;
         installMode = false;
         checkMode = false;
@@ -1184,10 +1182,6 @@ public class HostPanel extends IzPanel implements Config,
         }
     }
 
-//    private void setComponentSelectionVisible(boolean b) {
-//        componentSelectionPanel.setVisible(b);
-//    }
-
     private void addBActionPerformed(java.awt.event.ActionEvent evt) {
         buttonActionPerformed(evt);
     }
@@ -1461,12 +1455,16 @@ public class HostPanel extends IzPanel implements Config,
         String submits = "";
         String bdb     = "";
 
-        qmaster = Util.getHostNames(Util.getHosts(tables.get(1).getHostList(), Util.SgeComponents.qmaster), " ");
-        execds = Util.getHostNames(Util.getHosts(tables.get(1).getHostList(), Util.SgeComponents.execd), " ");
-        shadows = Util.getHostNames(Util.getHosts(tables.get(1).getHostList(), Util.SgeComponents.shadow), " ");
-        admins = Util.getHostNames(Util.getHosts(tables.get(1).getHostList(), Util.SgeComponents.admin), " ");
-        submits = Util.getHostNames(Util.getHosts(tables.get(1).getHostList(), Util.SgeComponents.submit), " ");
-        bdb = Util.getHostNames(Util.getHosts(tables.get(1).getHostList(), Util.SgeComponents.bdb), " ");
+        /**
+         * Create lists from succeded hosts
+         */
+        HostList hostList = tables.get(1).getHostList();
+        qmaster = Util.getHostNames(Util.getHosts(hostList, Util.SgeComponents.qmaster), " ");
+        execds = Util.getHostNames(Util.getHosts(hostList, Util.SgeComponents.execd), " ");
+        shadows = Util.getHostNames(Util.getHosts(hostList, Util.SgeComponents.shadow), " ");
+        admins = Util.getHostNames(Util.getHosts(hostList, Util.SgeComponents.admin), " ");
+        submits = Util.getHostNames(Util.getHosts(hostList, Util.SgeComponents.submit), " ");
+        bdb = Util.getHostNames(Util.getHosts(hostList, Util.SgeComponents.bdb), " ");
 
         idata.setVariable(VAR_QMASTER_HOST, qmaster);
         idata.setVariable(VAR_EXEC_HOST_LIST, execds);
@@ -1475,12 +1473,25 @@ public class HostPanel extends IzPanel implements Config,
         idata.setVariable(VAR_SUBMIT_HOST_LIST, submits);
         idata.setVariable(VAR_DB_SPOOLING_SERVER, bdb);
 
-        qmaster = Util.getHostNames(Util.getHosts(tables.get(2).getHostList(), Util.SgeComponents.qmaster), " ");
-        execds = Util.getHostNames(Util.getHosts(tables.get(2).getHostList(), Util.SgeComponents.execd), " ");
-        shadows = Util.getHostNames(Util.getHosts(tables.get(2).getHostList(), Util.SgeComponents.shadow), " ");
-        admins = Util.getHostNames(Util.getHosts(tables.get(2).getHostList(), Util.SgeComponents.admin), " ");
-        submits = Util.getHostNames(Util.getHosts(tables.get(2).getHostList(), Util.SgeComponents.submit), " ");
-        bdb = Util.getHostNames(Util.getHosts(tables.get(2).getHostList(), Util.SgeComponents.bdb), " ");
+        /**
+         * Create lists from failed hosts
+         */
+        hostList = tables.get(2).getHostList();
+        qmaster = Util.getHostNames(Util.getHosts(hostList, Util.SgeComponents.qmaster), " ");
+        execds = Util.getHostNames(Util.getHosts(hostList, Util.SgeComponents.execd), " ");
+        shadows = Util.getHostNames(Util.getHosts(hostList, Util.SgeComponents.shadow), " ");
+        admins = Util.getHostNames(Util.getHosts(hostList, Util.SgeComponents.admin), " ");
+        submits = Util.getHostNames(Util.getHosts(hostList, Util.SgeComponents.submit), " ");
+        bdb = Util.getHostNames(Util.getHosts(hostList, Util.SgeComponents.bdb), " ");
+
+        // remove every host from success admin/submit list if the last task fails
+        for (Host h : hostList) {
+            if (h.isLastTask()) {
+                idata.setVariable(VAR_ADMIN_HOST_LIST, "");
+                idata.setVariable(VAR_SUBMIT_HOST_LIST, "");
+                break;
+            }
+        }
 
         idata.setVariable(VAR_QMASTER_HOST_FAILED, qmaster);
         idata.setVariable(VAR_EXEC_HOST_LIST_FAILED, execds);
@@ -1570,7 +1581,6 @@ public class HostPanel extends IzPanel implements Config,
             //Move nowhere
             case NEW_UNKNOWN_HOST:
             case RESOLVING:
-            case RESOLVABLE:
             case CONTACTING:
             case VALIDATING:
             case COPY_TIMEOUT_CHECK_HOST:
@@ -1585,38 +1595,41 @@ public class HostPanel extends IzPanel implements Config,
             case USED_QMASTER_PORT:
             case USED_EXECD_PORT:
             case USED_JMX_PORT:
-            case UNKNOWN_ERROR:
             case READY_TO_INSTALL:
             case JVM_LIB_MISSING:
             case JVM_LIB_INVALID:
             case PROCESSING: break;
 
             //Success. Move to the success table
-            case REACHABLE: {
-                // At successful validation move nowhere
-                if (checkMode) {
-                    break;
-                }
-            }
+            case REACHABLE:
             case OK:
-            case SUCCESS: targetTable = 1; break;
+            case SUCCESS: {
+                // At validation move nowhere
+                if (!checkMode) {
+                    targetTable = 1;
+                }
+                break;
+            }
 
             // Failed! Move to failed table.
+            case RESOLVABLE:
+            case OPERATION_TIMEOUT:
+            case UNKNOWN_ERROR:
+            case CANCELED:
             case MISSING_FILE:
             case UNKNOWN_HOST:
             case UNREACHABLE:
-            case OPERATION_TIMEOUT:
             case COPY_TIMEOUT_INSTALL_COMPONENT:
             case COPY_FAILED_INSTALL_COMPONENT:
-            case CANCELED: {
-                // At canceled validation move nowhere
-                if (checkMode) {
-                    break;
-                }
-            }
             case FAILED:
             case FAILED_ALREADY_INSTALLED_COMPONENT: //not used
-            case FAILED_DEPENDENT_ON_PREVIOUS: targetTable = 2; break;
+            case FAILED_DEPENDENT_ON_PREVIOUS: {
+                // At validation move nowhere
+                if (!checkMode) {
+                    targetTable = 2;
+                }
+                break;
+            }
 
             //Unknown state
             default: throw new IllegalArgumentException("Unknown state: " + state);

@@ -37,6 +37,7 @@ import com.izforge.izpack.util.VariableSubstitutor;
 import com.sun.grid.installer.util.Config;
 import java.awt.Color;
 import java.awt.Font;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -49,18 +50,14 @@ public class HostConfigFrame extends JFrame implements Config {
 
     private InstallerFrame parent = null;
     private InstallData idata = null;
-
     private HostList hosts = null;
-
     private static HostConfigFrame instance = null;
-
     // Indicate the installation setups
     private boolean isQmasterInst = true;
     private boolean isShadowdInst = true;
     private boolean isExecdInst = true;
     private boolean isBdbInst = true;
     private boolean isExpressInst = true;
-
     private static Font DEF_TEXTFIELD_FONT = null;
     private static Font MULTIPLEVALUES_TEXTFIELD_FONT = null;
     private static Color DEF_FOREGROUND_COLOR = null;
@@ -68,13 +65,12 @@ public class HostConfigFrame extends JFrame implements Config {
 
     static {
         JTextField tmpTextField = new JTextField();
-        
+
         DEF_TEXTFIELD_FONT = tmpTextField.getFont();
         MULTIPLEVALUES_TEXTFIELD_FONT = new Font("Arial", Font.ITALIC, DEF_TEXTFIELD_FONT.getSize());
         DEF_FOREGROUND_COLOR = tmpTextField.getForeground();
         DEF_BACKGROUND_COLOR = tmpTextField.getBackground();
     }
-
     private static String multipleValuesString = "";
 
     /**
@@ -83,7 +79,7 @@ public class HostConfigFrame extends JFrame implements Config {
      * @param idata The {@link InstallData}
      */
     private HostConfigFrame(InstallerFrame parent, InstallData idata) {
-        super(parent.langpack.getString("host.config.frame.title"));
+        super("");
 
         setLocationRelativeTo(parent);
         setIconImage(parent.icons.getImageIcon("options").getImage());
@@ -132,6 +128,8 @@ public class HostConfigFrame extends JFrame implements Config {
      * @param hosts The list of hosts to configure
      */
     public void open(HostList hosts) {
+        setTitle(MessageFormat.format(getLabel("host.config.frame.title"), hosts.size()));
+
         parent.blockGUI();
 
         setComponents();
@@ -187,9 +185,15 @@ public class HostConfigFrame extends JFrame implements Config {
         boolean isThereExecd = false;
 
         for (Host h : hosts) {
-            if (h.isQmasterHost()) isThereQmaster = true;
-            if (h.isShadowHost()) isThereShadow = true;
-            if (h.isExecutionHost()) isThereExecd = true;
+            if (h.isQmasterHost()) {
+                isThereQmaster = true;
+            }
+            if (h.isShadowHost()) {
+                isThereShadow = true;
+            }
+            if (h.isExecutionHost()) {
+                isThereExecd = true;
+            }
 
             if (!spoolDirs.contains(h.getSpoolDir())) {
                 spoolDirs.add(h.getSpoolDir());
@@ -248,39 +252,51 @@ public class HostConfigFrame extends JFrame implements Config {
         String message = "";
 
         // Local execd spool dir field
-        if (spoolDirTextField.getText().equals("")) {
+        if (spoolDirTextField.isVisible() && spoolDirTextField.getText().equals("")) {
             message = getLabel("cfg.exec.spool.dir.local.notemptyvalidator");
         }
 
         // JVM library path field
-        if (jvmLibPathTextField.getText().equals("")) {
+        if (jvmLibPathTextField.isVisible() && jvmLibPathTextField.getText().equals("")) {
             message = getLabel("cfg.sge.jvm.lib.path.notemptyvalidator");
         }
 
         // Connect user field
-        if (connectUserTextField.getText().equals("")) {
+        if (connectUserTextField.isVisible() && connectUserTextField.getText().equals("")) {
             message = getLabel("connect.user.notemptyvalidator");
         }
 
         // Resolve timeout field
-        if (resolveTimeoutTextField.getText().equals("")) {
-            message = getLabel("resolve.timeout.notemptyvalidator");
-        } else if (!resolveTimeoutTextField.getText().equals(multipleValuesString)) {
-            try {
-                Long.valueOf(resolveTimeoutTextField.getText());
-            } catch (NumberFormatException e) {
-                message = getLabel("resolve.timeout.invalidnumber");
+        if (resolveTimeoutTextField.isVisible()) {
+            if (resolveTimeoutTextField.getText().equals("")) {
+                message = getLabel("resolve.timeout.notemptyvalidator");
+            } else if (!resolveTimeoutTextField.getText().equals(multipleValuesString)) {
+                try {
+                    Long value = Long.valueOf(resolveTimeoutTextField.getText());
+
+                    if (value < 1L) {
+                        throw new NumberFormatException("Value has to be equal or bigger then 1!");
+                    }
+                } catch (NumberFormatException e) {
+                    message = getLabel("resolve.timeout.invalidnumber");
+                }
             }
         }
 
         // Install timeout field
-        if (installTimeoutTextField.getText().equals("")) {
-            message = getLabel("install.timeout.notemptyvalidator");
-        } else if (!installTimeoutTextField.getText().equals(multipleValuesString)) {
-            try {
-                Long.valueOf(installTimeoutTextField.getText());
-            } catch (NumberFormatException e) {
-                message = getLabel("install.timeout.invalidnumber");
+        if (installTimeoutTextField.isVisible()) {
+            if (installTimeoutTextField.getText().equals("")) {
+                message = getLabel("install.timeout.notemptyvalidator");
+            } else if (!installTimeoutTextField.getText().equals(multipleValuesString)) {
+                try {
+                    Long value = Long.valueOf(installTimeoutTextField.getText());
+
+                    if (value < 1L) {
+                        throw new NumberFormatException("Value has to be equal or bigger then 1!");
+                    }
+                } catch (NumberFormatException e) {
+                    message = getLabel("install.timeout.invalidnumber");
+                }
             }
         }
 
@@ -291,7 +307,7 @@ public class HostConfigFrame extends JFrame implements Config {
             JOptionPane.showOptionDialog(this, message, getLabel("installer.error"),
                     JOptionPane.CANCEL_OPTION, JOptionPane.ERROR_MESSAGE, null,
                     new Object[]{getLabel("installer.cancel")}, getLabel("installer.cancel"));
-            
+
             return false;
         } else {
             return true;
@@ -303,18 +319,30 @@ public class HostConfigFrame extends JFrame implements Config {
      */
     private void readFields() {
         for (Host h : hosts) {
-            if (!spoolDirTextField.getText().equals(multipleValuesString))
+            if (spoolDirTextField.isVisible() &&
+                    !spoolDirTextField.getText().equals(multipleValuesString)) {
                 h.setSpoolDir(spoolDirTextField.getText());
-            if (!jvmLibPathTextField.getText().equals(multipleValuesString))
+            }
+            if (jvmLibPathTextField.isVisible() &&
+                    !jvmLibPathTextField.getText().equals(multipleValuesString)) {
                 h.setJvmLibPath(jvmLibPathTextField.getText());
-            if (!jvmAddArgsTextField.getText().equals(multipleValuesString))
+            }
+            if (jvmAddArgsTextField.isVisible() &&
+                    !jvmAddArgsTextField.getText().equals(multipleValuesString)) {
                 h.setJvmAddArgs(jvmAddArgsTextField.getText());
-            if (!connectUserTextField.getText().equals(multipleValuesString))
+            }
+            if (connectUserTextField.isVisible() &&
+                    !connectUserTextField.getText().equals(multipleValuesString)) {
                 h.setConnectUser(connectUserTextField.getText());
-            if (!resolveTimeoutTextField.getText().equals(multipleValuesString))
+            }
+            if (resolveTimeoutTextField.isVisible() &&
+                    !resolveTimeoutTextField.getText().equals(multipleValuesString)) {
                 h.setResolveTimeout(Long.valueOf(resolveTimeoutTextField.getText()).longValue() * 1000);
-            if (!installTimeoutTextField.getText().equals(multipleValuesString))
+            }
+            if (installTimeoutTextField.isVisible() &&
+                    !installTimeoutTextField.getText().equals(multipleValuesString)) {
                 h.setInstallTimeout(Long.valueOf(installTimeoutTextField.getText()).longValue() * 1000);
+            }
         }
     }
 
@@ -427,8 +455,6 @@ public class HostConfigFrame extends JFrame implements Config {
         connectUserTextField = new javax.swing.JTextField();
         resolveTimeoutTextField = new javax.swing.JTextField();
         installTimeoutTextField = new javax.swing.JTextField();
-        secLabel = new javax.swing.JLabel();
-        secLabel2 = new javax.swing.JLabel();
         cancelButton = new javax.swing.JButton();
         okButton = new javax.swing.JButton();
 
@@ -490,10 +516,6 @@ public class HostConfigFrame extends JFrame implements Config {
             }
         });
 
-        secLabel.setText(getLabel("sec.label"));
-
-        secLabel2.setText(getLabel("sec.label"));
-
         cancelButton.setText(getLabel("installer.cancel"));
         cancelButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -526,17 +548,11 @@ public class HostConfigFrame extends JFrame implements Config {
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                             .add(spoolDirTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 408, Short.MAX_VALUE)
-                            .add(layout.createSequentialGroup()
-                                .add(installTimeoutTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 323, Short.MAX_VALUE)
-                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(secLabel2))
-                            .add(layout.createSequentialGroup()
-                                .add(resolveTimeoutTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 323, Short.MAX_VALUE)
-                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(secLabel))
                             .add(connectUserTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 408, Short.MAX_VALUE)
                             .add(jvmAddArgsTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 408, Short.MAX_VALUE)
-                            .add(jvmLibPathTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 408, Short.MAX_VALUE)))
+                            .add(jvmLibPathTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 408, Short.MAX_VALUE)
+                            .add(resolveTimeoutTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 408, Short.MAX_VALUE)
+                            .add(installTimeoutTextField, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 408, Short.MAX_VALUE)))
                     .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
                         .add(okButton)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
@@ -568,12 +584,10 @@ public class HostConfigFrame extends JFrame implements Config {
                 .add(8, 8, 8)
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(resolveTimeoutLabel)
-                    .add(secLabel)
                     .add(resolveTimeoutTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .add(6, 6, 6)
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(installTimeoutTextField, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(secLabel2)
                     .add(installTimeoutLabel))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -619,7 +633,6 @@ public class HostConfigFrame extends JFrame implements Config {
             close();
         }
     }//GEN-LAST:event_okButtonActionPerformed
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton cancelButton;
     private javax.swing.JLabel connectUserLabel;
@@ -633,10 +646,7 @@ public class HostConfigFrame extends JFrame implements Config {
     private javax.swing.JButton okButton;
     private javax.swing.JLabel resolveTimeoutLabel;
     private javax.swing.JTextField resolveTimeoutTextField;
-    private javax.swing.JLabel secLabel;
-    private javax.swing.JLabel secLabel2;
     private javax.swing.JLabel spoolDirLabel;
     private javax.swing.JTextField spoolDirTextField;
     // End of variables declaration//GEN-END:variables
-
 }

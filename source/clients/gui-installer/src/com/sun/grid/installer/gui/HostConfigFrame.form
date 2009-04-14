@@ -39,19 +39,11 @@
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Component id="spoolDirTextField" alignment="0" pref="408" max="32767" attributes="0"/>
-                          <Group type="102" alignment="0" attributes="0">
-                              <Component id="installTimeoutTextField" pref="323" max="32767" attributes="1"/>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Component id="secLabel2" min="-2" max="-2" attributes="0"/>
-                          </Group>
-                          <Group type="102" alignment="0" attributes="0">
-                              <Component id="resolveTimeoutTextField" pref="323" max="32767" attributes="1"/>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Component id="secLabel" min="-2" max="-2" attributes="0"/>
-                          </Group>
                           <Component id="connectUserTextField" alignment="0" pref="408" max="32767" attributes="0"/>
                           <Component id="jvmAddArgsTextField" alignment="0" pref="408" max="32767" attributes="0"/>
                           <Component id="jvmLibPathTextField" alignment="0" pref="408" max="32767" attributes="0"/>
+                          <Component id="resolveTimeoutTextField" alignment="0" pref="408" max="32767" attributes="1"/>
+                          <Component id="installTimeoutTextField" alignment="0" pref="408" max="32767" attributes="1"/>
                       </Group>
                   </Group>
                   <Group type="102" alignment="1" attributes="0">
@@ -90,13 +82,11 @@
               <EmptySpace min="-2" pref="8" max="-2" attributes="0"/>
               <Group type="103" groupAlignment="3" attributes="0">
                   <Component id="resolveTimeoutLabel" alignment="3" min="-2" max="-2" attributes="0"/>
-                  <Component id="secLabel" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="resolveTimeoutTextField" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace min="-2" pref="6" max="-2" attributes="0"/>
               <Group type="103" groupAlignment="3" attributes="0">
                   <Component id="installTimeoutTextField" alignment="3" min="-2" max="-2" attributes="0"/>
-                  <Component id="secLabel2" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="installTimeoutLabel" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace max="32767" attributes="0"/>
@@ -211,20 +201,6 @@
       <Events>
         <EventHandler event="focusGained" listener="java.awt.event.FocusListener" parameters="java.awt.event.FocusEvent" handler="installTimeoutTextFieldFocusGained"/>
       </Events>
-    </Component>
-    <Component class="javax.swing.JLabel" name="secLabel">
-      <Properties>
-        <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
-          <Connection code="getLabel(&quot;sec.label&quot;)" type="code"/>
-        </Property>
-      </Properties>
-    </Component>
-    <Component class="javax.swing.JLabel" name="secLabel2">
-      <Properties>
-        <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
-          <Connection code="getLabel(&quot;sec.label&quot;)" type="code"/>
-        </Property>
-      </Properties>
     </Component>
     <Component class="javax.swing.JButton" name="cancelButton">
       <Properties>

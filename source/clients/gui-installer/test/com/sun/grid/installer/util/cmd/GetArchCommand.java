@@ -65,7 +65,7 @@ public class GetArchCommand extends CmdExec {
 
     @Override
     public int getExitValue() {
-        return TestBedManager.getInstance().getResolveExitValue(host);
+        return TestBedManager.getInstance().getGetArchitectureExitValue(host);
     }
 
     @Override

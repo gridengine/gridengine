@@ -37,8 +37,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JTable;
@@ -142,6 +144,45 @@ public class HostTable extends JTable {
     }
 
     /**
+     * Creates a menu item to set/unset components in the table
+     * @param all If true all host in the table will be assigned with the selected component(s).
+     *            Otherwise just the selected host(s).
+     * @param set If true the host(s) will be assigned with the selected component(s).
+     *            Otherwise the selected component(s) will be removed.
+     * @param text The text of the menu item
+     * @param tooltip The tooltip of the menu item
+     * @param execd Mark the host(s) as execd component
+     * @param shadow Mark the host(s) as shadow component
+     * @param admin Mark the host(s) as admin component
+     * @param submit Mark the host(s) as submit component
+     *
+     * @return The constructed menu item
+     */
+    private JMenuItem createSetAsSubMenuItem(final boolean all, final boolean set, String text, String tooltip,
+            final boolean execd, final boolean shadow, final boolean admin, final boolean submit) {
+        JMenuItem mi = new JMenuItem(text);
+
+        mi.setToolTipText(tooltip);
+        mi.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                int length = (all ? getHostList().size() : getSelectedRowCount());
+                Host h;
+                for (int i = 0; i < length; i++) {
+                    h = getHostList().get((all ? i : getSelectedHostIndexes()[i]));
+                    if (execd) h.setExecutionHost(set);
+                    if (shadow) h.setShadowHost(set);
+                    if (admin) h.setAdminHost(set);
+                    if (submit) h.setSubmitHost(set);
+                }
+
+                ((HostSelectionTableModel)HostTable.this.getModel()).fireTableDataChanged();
+            }
+        });
+
+        return mi;
+    }
+
+    /**
      * Creates a popup menu for the table
      * @param label The main label of the popup menu
      * @return The created menu
@@ -172,6 +213,71 @@ public class HostTable extends JTable {
             }
         });
         tableMenu.add(configureMI);
+
+        // menu items for SET
+        final JMenu setMenu = new JMenu(handler.getLabel("menu.set"));
+        final JMenu setAllMenu = new JMenu(handler.getLabel("menu.all"));
+        setAllMenu.add(createSetAsSubMenuItem(true, true, handler.getLabel("column.execd.label"),
+                MessageFormat.format(handler.getTooltip("menu.setas.all.tooltip"), handler.getLabel("column.execd.label").toLowerCase()),
+                true, false, false, false));
+        setAllMenu.add(createSetAsSubMenuItem(true, true, handler.getLabel("column.shadowd.label"),
+                MessageFormat.format(handler.getTooltip("menu.setas.all.tooltip"), handler.getLabel("column.shadowd.label").toLowerCase()),
+                false, true, false, false));
+        setAllMenu.add(createSetAsSubMenuItem(true, true, handler.getLabel("column.admin.label"),
+                MessageFormat.format(handler.getTooltip("menu.setas.all.tooltip"), handler.getLabel("column.admin.label").toLowerCase()),
+                false, false, true, false));
+        setAllMenu.add(createSetAsSubMenuItem(true, true, handler.getLabel("column.submit.label"),
+                MessageFormat.format(handler.getTooltip("menu.setas.all.tooltip"), handler.getLabel("column.submit.label").toLowerCase()),
+                false, false, false, true));
+        setMenu.add(setAllMenu);
+        final JMenu setSelectedMenu = new JMenu(handler.getLabel("menu.selected"));
+        setSelectedMenu.add(createSetAsSubMenuItem(false, true, handler.getLabel("column.execd.label"),
+                MessageFormat.format(handler.getTooltip("menu.setas.selected.tooltip"), handler.getLabel("column.execd.label").toLowerCase()),
+                true, false, false, false));
+        setSelectedMenu.add(createSetAsSubMenuItem(false, true, handler.getLabel("column.shadowd.label"),
+                MessageFormat.format(handler.getTooltip("menu.setas.selected.tooltip"), handler.getLabel("column.shadowd.label").toLowerCase()),
+                false, true, false, false));
+        setSelectedMenu.add(createSetAsSubMenuItem(false, true, handler.getLabel("column.admin.label"),
+                MessageFormat.format(handler.getTooltip("menu.setas.selected.tooltip"), handler.getLabel("column.admin.label").toLowerCase()),
+                false, false, true, false));
+        setSelectedMenu.add(createSetAsSubMenuItem(false, true, handler.getLabel("column.submit.label"),
+                MessageFormat.format(handler.getTooltip("menu.setas.selected.tooltip"), handler.getLabel("column.submit.label").toLowerCase()),
+                false, false, false, true));
+        setMenu.add(setSelectedMenu);
+
+        // menu items for UNSET
+        final JMenu unsetMenu = new JMenu(handler.getLabel("menu.unset"));
+        final JMenu unsetAllMenu = new JMenu(handler.getLabel("menu.all"));
+        unsetAllMenu.add(createSetAsSubMenuItem(true, false, handler.getLabel("column.execd.label"),
+                MessageFormat.format(handler.getTooltip("menu.unsetas.all.tooltip"), handler.getLabel("column.execd.label").toLowerCase()),
+                true, false, false, false));
+        unsetAllMenu.add(createSetAsSubMenuItem(true, false, handler.getLabel("column.shadowd.label"),
+                MessageFormat.format(handler.getTooltip("menu.unsetas.all.tooltip"), handler.getLabel("column.shadowd.label").toLowerCase()),
+                false, true, false, false));
+        unsetAllMenu.add(createSetAsSubMenuItem(true, false, handler.getLabel("column.admin.label"),
+                MessageFormat.format(handler.getTooltip("menu.unsetas.all.tooltip"), handler.getLabel("column.admin.label").toLowerCase()),
+                false, false, true, false));
+        unsetAllMenu.add(createSetAsSubMenuItem(true, false, handler.getLabel("column.submit.label"),
+                MessageFormat.format(handler.getTooltip("menu.unsetas.all.tooltip"), handler.getLabel("column.submit.label").toLowerCase()),
+                false, false, false, true));
+        unsetMenu.add(unsetAllMenu);
+        final JMenu unsetSelectedMenu = new JMenu(handler.getLabel("menu.selected"));
+        unsetSelectedMenu.add(createSetAsSubMenuItem(false, false, handler.getLabel("column.execd.label"),
+                MessageFormat.format(handler.getTooltip("menu.unsetas.selected.tooltip"), handler.getLabel("column.execd.label").toLowerCase()),
+                true, false, false, false));
+        unsetSelectedMenu.add(createSetAsSubMenuItem(false, false, handler.getLabel("column.shadowd.label"),
+                MessageFormat.format(handler.getTooltip("menu.unsetas.selected.tooltip"), handler.getLabel("column.shadowd.label").toLowerCase()),
+                false, true, false, false));
+        unsetSelectedMenu.add(createSetAsSubMenuItem(false, false, handler.getLabel("column.admin.label"),
+                MessageFormat.format(handler.getTooltip("menu.unsetas.selected.tooltip"), handler.getLabel("column.admin.label").toLowerCase()),
+                false, false, true, false));
+        unsetSelectedMenu.add(createSetAsSubMenuItem(false, false, handler.getLabel("column.submit.label"),
+                MessageFormat.format(handler.getTooltip("menu.unsetas.selected.tooltip"), handler.getLabel("column.submit.label").toLowerCase()),
+                false, false, false, true));
+        unsetMenu.add(unsetSelectedMenu);
+
+        tableMenu.add(setMenu);
+        tableMenu.add(unsetMenu);
 
         final JPopupMenu.Separator configureSeparator = new JPopupMenu.Separator();
         tableMenu.add(configureSeparator);
@@ -301,12 +407,17 @@ public class HostTable extends JTable {
                     resolveSelectionMI.setVisible(table.getSelectedRowCount() > 0);
                     deleteSelectionMI.setVisible(table.getSelectedRowCount() > 0);
                     saveSelectionMI.setVisible(table.getSelectedRowCount() > 0);
+                    setSelectedMenu.setVisible(table.getSelectedRowCount() > 0);
+                    unsetSelectedMenu.setVisible(table.getSelectedRowCount() > 0);
 
                     if (HostTable.this.getModel() instanceof HostInstallTableModel) {
                         refreshSeparator.setVisible(false);
                         configureSeparator.setVisible(false);
                         
                         configureMI.setVisible(false);
+
+                        setMenu.setVisible(false);
+                        unsetMenu.setVisible(false);
 
                         resolveSelectionMI.setVisible(false);
                         resolveAllMI.setVisible(false);

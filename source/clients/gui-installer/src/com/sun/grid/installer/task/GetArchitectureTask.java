@@ -76,7 +76,7 @@ public class GetArchitectureTask extends TestableTask {
         String name, ip;
         handler.setHostState(host, Host.State.RESOLVING);
         String value = (host.getHostname().trim().length() == 0) ? host.getIp() : host.getHostname();
-        Host.State state = Host.State.UNKNOWN_ERROR;
+        Host.State state = Host.State.UNREACHABLE;
         
         try {
             int exitValue = getTestExitValue();
@@ -94,18 +94,13 @@ public class GetArchitectureTask extends TestableTask {
                     throw new UnknownHostException(ip);
                 }
 
-                handler.setHostState(host, Host.State.RESOLVABLE);
+                //handler.setHostState(host, Host.State.RESOLVABLE);
+                state = Host.State.RESOLVABLE;
                 host.setHostname(name);
                 host.setIp(ip);
             }
 
-            //Done only for RESOLVABLE hosts
-            if (host.getState() != Host.State.RESOLVABLE) {
-                return;
-            }
-
             handler.setHostState(host, Host.State.CONTACTING);
-            //TODO:Need to remove the CONNECTING state in case of failure.
 
             if (!isIsTestMode()) {
                 GetArchCommand cmd = new GetArchCommand(host.getResolveTimeout(), host.getHostname(), host.getConnectUser(),

@@ -427,38 +427,50 @@ if [ $ONLY_ENABLE_JMX = "true" ]; then
    GetAdminUser
    ProcessSGERoot
    GetCell
+   #Exit if we already have JMX
+   if [ -d "$SGE_ROOT/$SGE_CELL/common/jmx" ]; then
+      $INFOTEXT "JMX is already enabled. Exiting."
+      exit 2
+   fi
    #Ensure we are on qmaster   
    qmaster_host=`cat $SGE_ROOT/$SGE_CELL/common/act_qmaster`
    if [ "$qmaster_host" != "$HOST" ]; then
       $INFOTEXT "JMX can be enabled only from qmaster host %s!" $qmaster_host
       exit 2
    fi
-   QMDIR=`BootstrapGetValue $SGE_ROOT/$SGE_CELL/common qmaster_spool_dir`
+   QMDIR=`BootstrapGetValue "$SGE_ROOT/$SGE_CELL/common" qmaster_spool_dir`
    CheckRunningDaemon sge_qmaster
    is_running=$?
    if [ $is_running - ne 0 ]; then
       $INFOTEXT "Qmaster is not running! Cannot enable JMX." $qmaster_host
       exit 2
    fi
+   
    #Source the settings file
-   . $SGE_ROOT/$SGE_CELL/common/settings.sh   
+   . "$SGE_ROOT/$SGE_CELL/common/settings.sh"   
    GetJMXPort
-   COMMONDIR=$SGE_ROOT/$SGE_CELL/common
+   COMMONDIR="$SGE_ROOT/$SGE_CELL/common"
    AddJMXFiles
    ReplaceOrAddLine "$SGE_ROOT/$SGE_CELL/common/bootstrap" 666 'jvm_threads.*' "jvm_threads             1"
    ExecuteAsAdmin $CHMOD 644 "$SGE_ROOT/$SGE_CELL/common/bootstrap"
-   #TODO: CSP mode - InitCA
-   InitCA
-   MakeUserKs $ADMINUSER
+   # Do InitCA only when no CSP mode
+   if [ x`BootstrapGetValue "$SGE_ROOT/$SGE_CELL/common" "security_mode" | tr [A-Z] [a-z]` != xcsp ]; then
+      InitCA
+   elif [ "$SGE_JMX_SSL" = true ]; then
+      if [ ! -f "$SGE_JMX_SSL_KEYSTORE" ]; then
+         InitSysKs
+      fi
+      MakeUserKs $ADMINUSER
+   fi
    CopyCA execd
    CopyCA submit
    #Update the default config
    dir=/tmp/conf.$$
-   mkdir -p $dir
+   ExecuteAsAdmin mkdir -p $dir
    #Update global libjvm entry
-   #TODO: Update local as well?
    $SGE_ROOT/bin/$SGE_ARCH/qconf -sconf > $dir/global
    ReplaceOrAddLine "$dir/global" 666 'libjvm_path.*' "libjvm_path $SGE_JVM_LIB_PATH"
+   ReplaceOrAddLine "$dir/global" 666 'additional_jvm_args.*' "additional_jvm_args $SGE_ADDITIONAL_JVM_ARGS"
    $SGE_ROOT/bin/$SGE_ARCH/qconf -Mconf $dir/global > /dev/null 2>&1
    rm -rf $dir
    
@@ -467,7 +479,14 @@ if [ $ONLY_ENABLE_JMX = "true" ]; then
       $SGE_ROOT/bin/$SGE_ARCH/qconf -at jvm
    fi
    
-   #TODO: Need to reinstall shadowds (no jvmlib path)
+   # shadowds might have no jvmlib path
+   shadow_count=`cat "$SGE_ROOT/$SGE_CELL/common/shadow_masters" 2>/dev/null | grep -v $qmaster_host | wc -l`
+   if [ ${shadow_count:-0} -gt 0 ]; then
+      $INFOTEXT -n "Found configured shadow daemons. Update manually their configuration using \n" \
+                   "qconf -mconf <shadow_hostname> as add the correct libjvm_path entry, if it \n" \
+                   "differs from the value used for qmaster (qconf -sconf global).\n"
+      #TODO: Could offer to autodetect if passwordless access is available
+   fi
    exit 0
 fi
 
@@ -573,7 +592,7 @@ if [ "$UPDATE" = true ]; then
       GetAdminUser     #Get current admin user of the cluster
       CheckUpgradeUser #Stop if admin user mismatch (backup vs. current cluster)
       #Detect spool dir from the backup
-      QMDIR=`BootstrapGetValue $SGE_ROOT/$SGE_CELL/common "qmaster_spool_dir"`
+      QMDIR=`BootstrapGetValue "$SGE_ROOT/$SGE_CELL/common" "qmaster_spool_dir"`
    else
       CheckWhoInstallsSGE
       #Ask for new QMaster spool dir
@@ -601,7 +620,7 @@ if [ "$UPDATE" = true ]; then
    fi
    SetPermissions
    #Detect the product mode
-   PRODUCT_MODE=`BootstrapGetValue ${UPGRADE_BACKUP_DIR}/cell "security_mode"`
+   PRODUCT_MODE=`BootstrapGetValue "${UPGRADE_BACKUP_DIR}/cell" "security_mode"`
    if [ "$UPGRADE_MODE" = "copy" ]; then
       case $PRODUCT_MODE in
          csp)
@@ -886,18 +905,16 @@ if [ "$QMASTER" = "install" -a "$UPDATE" != "true" ]; then
  fi
  
  # Let's simplify copying of the certs to remote hosts if they exist (how? - we no longer need scp)
+ if [ "$SGE_QMASTER_PORT" = "" ]; then
+    PORT_DIR="sge_qmaster"
+ else
+    PORT_DIR="port$SGE_QMASTER_PORT"
+ fi
  # TODO: Need to support CALOCALTOP value (for non-root installation)!
- if [ -d /var/sgeCA ]; then
-    #TODO: sge_master as port is rather problematic (shadowds might operate with port$SGE_QMASTER_PORT!)
-    if [ "$SGE_QMASTER_PORT" = "" ]; then
-         PORT_DIR="sge_qmaster"
-    else
-       PORT_DIR="port$SGE_QMASTER_PORT"
-    fi
+ if [ -d "/var/sgeCA/$PORT_DIR" ]; then
     #TODO: save only the keystores and certs (JMX stuff only)?
     tar -cpf /var/sgeCA/$PORT_DIR.tar /var/sgeCA/$PORT_DIR
     gzip -f /var/sgeCA/$PORT_DIR.tar
-    chown $ADMINUSER /var/sgeCA/$PORT_DIR.tar.gz
     chmod 400 /var/sgeCA/$PORT_DIR.tar.gz
  fi
 
@@ -1258,13 +1275,22 @@ if [ $SHADOW = "install" ]; then
 
    if [ $AUTO = "true" ]; then
       Stdout2Log
+      ignore_fqdn=`BootstrapGetValue "$SGE_ROOT/$CELL_NAME/common" ignore_fqdn | tr [A-Z] [a-z]`
+      CURRENT_HOST=`$SGE_UTILBIN/gethostname -aname`
+      if [ "$ignore_fqdn" = "true" ]; then
+         CURRENT_HOST=`echo $CURRENT_HOST | cut -f1 -d. | tr "[A-Z]" "[a-z]"`
+      fi
       SHADOWD_HOSTS_TO_INSTALL=$SHADOW_HOST
       FAILED_SHADOW_HOSTS=""
       for SHADOW in $SHADOW_HOST; do
          SHADOWD_HOSTS_TO_INSTALL=`RemoveHostFromList "$SHADOWD_HOSTS_TO_INSTALL" "$SHADOW"`
+         SHADOW_COMPARE="$SHADOW"
+         if [ "$ignore_fqdn" = "true" ]; then
+            SHADOW_COMPARE=`echo "$SHADOW_COMPARE" | cut -f1 -d. | tr [A-Z] [a-z]`
+         fi
          if [ "$NOREMOTE" = false ]; then
             LOCALINST=false
-            if [ $SHADOW = `$SGE_UTILBIN/gethostname -aname` ]; then
+            if [ $SHADOW_COMPARE = $CURRENT_HOST ]; then
                $INFOTEXT -log "Shadow installation on host %s" $SHADOW         #the selected host is the local host, start
                ./inst_sge -sm $SMF_FLAGS -auto $FILE -noremote                 #installation without rsh/ssh
             else
@@ -1279,7 +1305,7 @@ if [ $SHADOW = "install" ]; then
                   FAILED_SHADOW_HOSTS="$FAILED_SHADOW_HOSTS $SHADOW"
                fi
             fi
-         elif [ $SHADOW = `$SGE_UTILBIN/gethostname -aname` ]; then
+         elif [ $SHADOW_COMPARE = $CURRENT_HOST ]; then
             LOCALINST=true
             break
          fi
@@ -1304,7 +1330,7 @@ if [ $SHADOW = "install" ]; then
 
       $INFOTEXT -n -auto $AUTO "Please enter your SGE_CELL directory or use the default [default] >> "
 
-      SGE_CELL=`Enter default`
+      SGE_CELL=`Enter "${CELL_NAME:-default}"`
       export SGE_CELL
       $INFOTEXT -log "Your \$SGE_CELL directory: %s" $SGE_CELL
       . $SGE_ROOT/$SGE_CELL/common/settings.sh
@@ -1389,12 +1415,12 @@ if [ $SHADOW = "install" ]; then
          SGE_ARCH=`$SGE_ROOT/util/arch`
          AddSGEStartUpScript $euid shadow
          $INFOTEXT "Starting sge_shadowd on host %s\n" $SHADOW_HOST
-	     $INFOTEXT -log "Starting sge_shadowd on host %s\n" $SHADOW_HOST
-	     if [ "$SGE_ENABLE_SMF" = "true" ]; then
-	        $SVCADM enable -s "svc:/application/sge/shadowd:$SGE_CLUSTER_NAME"
-	     else
-	        $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &
-	     fi
+	      $INFOTEXT -log "Starting sge_shadowd on host %s\n" $SHADOW_HOST
+	      if [ "$SGE_ENABLE_SMF" = "true" ]; then
+	         $SVCADM enable -s "svc:/application/sge/shadowd:$SGE_CLUSTER_NAME"
+	      else
+	         $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &
+	      fi
       else
         for shs in `cat $SGE_ROOT/$SGE_CELL/common/shadow_masters`; do
            echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; SGE_ARCH=`$SGE_ROOT/util/arch`; $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &" | $SHELL_NAME $shs /bin/sh &
@@ -1403,9 +1429,15 @@ if [ $SHADOW = "install" ]; then
       
       #JMX keystores need to be copied to the shadowd
       #TODO: Should be done the opposite way qmaster -> shadowd, not shadowd -> qmaster
-      #TODO: Only when not copied during qmaster installation private keystore
-      # Will not work with TS
-      #CopyCaFromQmaster
+      #Setup CA location
+      if [ "$SGE_QMASTER_PORT" = "" ]; then
+         PORT_DIR="sge_qmaster"
+      else
+         PORT_DIR="port$SGE_QMASTER_PORT"
+      fi
+      if [ "$SGE_JMX_SSL" = true -a ! -f /var/sgeCA/$PORT_DIR/default/private/keystore ]; then
+         CopyCaFromQmaster
+      fi
 
       $INFOTEXT "Shadowhost installation completed!"
       $INFOTEXT -log "Shadowhost installation completed!"

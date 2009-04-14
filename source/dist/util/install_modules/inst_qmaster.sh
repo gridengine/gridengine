@@ -1171,6 +1171,35 @@ CreateSettingsFile()
 
 
 #--------------------------------------------------------------------------
+# InitSysKs Create system keystore (JMX with SSL)
+#
+InitSysKs()
+{
+   if [ "$SGE_ENABLE_JMX" = true -a "$SGE_JMX_SSL" = true ]; then
+      SGE_CA_CMD=util/sgeCA/sge_ca
+      if [ "$SGE_JMX_SSL" = true ]; then
+         touch /tmp/pwfile.$$
+         chmod 600 /tmp/pwfile.$$
+         echo "$SGE_JMX_SSL_KEYSTORE_PW" > /tmp/pwfile.$$
+         OUTPUT=`$SGE_CA_CMD -sysks -ksout $SGE_JMX_SSL_KEYSTORE -kspwf /tmp/pwfile.$$ 2>&1`
+         if [ $? != 0 ]; then
+            $INFOTEXT "Error: Cannot create keystore $SGE_JMX_SSL_KEYSTORE\n$OUTPUT"
+           $INFOTEXT -log "Error: Cannot create keystore $SGE_JMX_SSL_KEYSTORE\n$OUTPUT"
+            ret=1
+         else
+            ret=0
+         fi
+         rm /tmp/pwfile.$$
+         if [ $ret = 1 ]; then
+            MoveLog
+            exit 1
+         fi
+      fi
+   fi
+}
+
+
+#--------------------------------------------------------------------------
 # InitCA Create CA and initialize it for daemons and users
 #
 InitCA()
@@ -1194,25 +1223,7 @@ InitCA()
       fi
 
       #  TODO: CAErrUsage no longer available, error handling ???:w
-
-      if [ "$SGE_JMX_SSL" = true ]; then
-         touch /tmp/pwfile.$$
-         chmod 600 /tmp/pwfile.$$
-         echo "$SGE_JMX_SSL_KEYSTORE_PW" > /tmp/pwfile.$$
-         OUTPUT=`$SGE_CA_CMD -sysks -ksout $SGE_JMX_SSL_KEYSTORE -kspwf /tmp/pwfile.$$ 2>&1`
-         if [ $? != 0 ]; then
-            $INFOTEXT "Error: Cannot create keystore $SGE_JMX_SSL_KEYSTORE\n$OUTPUT"
-	        $INFOTEXT -log "Error: Cannot create keystore $SGE_JMX_SSL_KEYSTORE\n$OUTPUT"
-            ret=1
-         else
-            ret=0
-         fi
-         rm /tmp/pwfile.$$
-         if [ $ret = 1 ]; then
-            MoveLog
-            exit 1
-         fi
-      fi
+      InitSysKs
       
       $INFOTEXT -auto $AUTO -wait -n "Hit <RETURN> to continue >> "
       $CLEAR
@@ -1235,13 +1246,16 @@ StartQmaster()
                    "svcs -l svc:/application/sge/qmaster:%s" $SGE_CLUSTER_NAME
          $INFOTEXT -log "\nFailed to start qmaster deamon over SMF. Check service by issuing "\
                         "svcs -l svc:/application/sge/qmaster:%s" $SGE_CLUSTER_NAME
-         if [ $AUTO = true ]; then
-            MoveLog
-         fi
+         MoveLog
          exit 1
       fi
    else
       $SGE_STARTUP_FILE -qmaster
+      if [ $? -ne 0 ]; then
+         $INFOTEXT -log "sge_qmaster start problem"
+         MoveLog
+         exit 1
+      fi
    fi
    # wait till qmaster.pid file is written
    sleep 1
@@ -1879,7 +1893,7 @@ IsJavaBinSuitable()
    check=$3
    
    JAVA_VERSION=`$java_bin -version 2>&1 | head -1`
-   JAVA_VERSION=`echo $JAVA_VERSION | awk '{if (NF > 2) print $3; else print ""}' | sed -e "s/\"//g" 2>/dev/null`
+   JAVA_VERSION=`echo $JAVA_VERSION | awk '{if (NF > 2) print $3; else print ""}' 2>/dev/null | sed -e "s/\"//g" 2>/dev/null`
    NUM_JAVA_VERSION=`JavaVersionString2Num $JAVA_VERSION`      
    if [ $NUM_JAVA_VERSION -ge $NUM_MIN_JAVA_VERSION ]; then
       if [ "$check" = "jvm" ]; then
@@ -1911,7 +1925,7 @@ GetSuitableJavaBin()
 {
    list=$1
    # Make the list unique and correct list
-   list=`echo $list | awk '{for (i=1; i<=NF ; i++) print $i}' | uniq 2>/dev/null`
+   list=`echo $list | awk '{for (i=1; i<=NF ; i++) print $i}' 2>/dev/null| uniq 2>/dev/null`
    #Find a first good one
    for java_bin in $list; do
       IsJavaBinSuitable $java_bin $2 $3
@@ -2016,10 +2030,10 @@ HaveSuitableJavaBin() {
       #Solaris
       if [ x`echo $SGE_ARCH| grep "sol-"` != x ]; then
          #TODO: How to do it on Solaris 9/10?
-         SOLARIS_VERSION=`uname -r | awk -F. '{print $2}' 2>/dev/null`
+         SOLARIS_VERSION=`uname -r 2>/dev/null| awk -F. '{print $2}' 2>/dev/null`
          #OpenSolaris
          if [ "$SOLARIS_VERSION" = 11 ]; then        
-            list="$list `pkg search java | grep bin/java | grep file | awk '{print "/"$3}' 2>/dev/null`"
+            list="$list `pkg search java 2>/dev/null| grep bin/java | grep file | awk '{print "/"$3}' 2>/dev/null`"
          fi
       #Linux
       elif [ x`echo $SGE_ARCH| grep "lx-"` != x ]; then
@@ -2035,7 +2049,13 @@ HaveSuitableJavaBin() {
       GetSuitableJavaBin "$list" $MIN_JAVA_VERSION $check
       res=$?
    fi
-   
+   if [ "$3" = "print" -a "$res" = 0 ]; then
+      if [ "$2" = "jvm" ]; then
+         echo "$jvm_lib_path"
+      else
+         echo "$java_bin"
+      fi
+   fi
    return $res
 }
 
@@ -2211,7 +2231,10 @@ GetJMXPort() {
                SGE_JVM_LIB_PATH=$jvm_lib_path
             fi
             SGE_JMX_PORT=`PropertiesGetValue $SGE_ROOT/$SGE_CELL/common/jmx/management.properties com.sun.grid.jgdi.management.jmxremote.port`
-            #SGE_ADDITIONAL_JVM_ARGS=`$SGE_BIN/qconf -sconf | grep additional_jvm_args | awk '{print $2}' 2>/dev/null`
+            if [ -z "$SGE_ADDITIONAL_JVM_ARGS" ]; then
+               global_value=`$SGE_BIN/qconf -sconf 2>/dev/null | grep additional_jvm_args | awk '{print $2}' 2>/dev/null`
+               SGE_ADDITIONAL_JVM_ARGS="${global_value:--Xmx256m}"
+            fi
             SGE_JMX_SSL=`PropertiesGetValue $SGE_ROOT/$SGE_CELL/common/jmx/management.properties com.sun.grid.jgdi.management.jmxremote.ssl`
             SGE_JMX_SSL_CLIENT=`PropertiesGetValue $SGE_ROOT/$SGE_CELL/common/jmx/management.properties com.sun.grid.jgdi.management.jmxremote.ssl.need.client.auth`
             SGE_JMX_SSL_KEYSTORE=`PropertiesGetValue $SGE_ROOT/$SGE_CELL/common/jmx/management.properties com.sun.grid.jgdi.management.jmxremote.ssl.serverKeystore`
@@ -2251,7 +2274,7 @@ GetJMXPort() {
          
          if [ "$1" = "shadowd" ]; then
             sge_jmx_port=`PropertiesGetValue $SGE_ROOT/$SGE_CELL/common/jmx/management.properties com.sun.grid.jgdi.management.jmxremote.port`
-            sge_additional_jvm_args=`$SGE_BIN/qconf -sconf | grep additional_jvm_args | awk '{print $2}' 2>/dev/null` 
+            sge_additional_jvm_args=`$SGE_BIN/qconf -sconf 2>/dev/null| grep additional_jvm_args | awk '{print $2}'` 
             sge_jmx_ssl=`PropertiesGetValue $SGE_ROOT/$SGE_CELL/common/jmx/management.properties com.sun.grid.jgdi.management.jmxremote.ssl`
             sge_jmx_ssl_client=`PropertiesGetValue $SGE_ROOT/$SGE_CELL/common/jmx/management.properties com.sun.grid.jgdi.management.jmxremote.ssl.need.client.auth`
             sge_jmx_ssl_keystore=`PropertiesGetValue $SGE_ROOT/$SGE_CELL/common/jmx/management.properties com.sun.grid.jgdi.management.jmxremote.ssl.serverKeystore`
@@ -2288,7 +2311,7 @@ GetJMXPort() {
             # set SGE_ADDITIONAL_JVM_ARGS
             $INFOTEXT -n "Please enter additional JVM arguments (optional, default is [%s]) >> " "$sge_additional_jvm_args"
             INP=`Enter "$sge_additional_jvm_args"`
-            sge_additional_jvm_args="$INP"
+            sge_additional_jvm_args="${INP:--Xmx256m}"
 
             # The rest asked only during the qmaster installation
             if [ "$1" != "shadowd" ]; then                  

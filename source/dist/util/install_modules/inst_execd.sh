@@ -384,6 +384,21 @@ CheckHostNameResolving()
    done
 }
 
+
+#-------------------------------------------------------------------------
+# UpdateConfiguration - will update $1 with entries from $2, keeping the onces that
+#                       are not specified in $1
+# $1 - old config file
+# $2 - new config file
+#
+UpdateConfiguration()
+{
+   cat $2 | while read line; do
+      ReplaceOrAddLine "$1" 666 `echo $line | awk '{print $1}'`'.*' "$line"
+   done
+}
+
+
 #-------------------------------------------------------------------------
 # AddLocalConfiguration_With_Qconf
 # $1 - optional to specify a shadowd to include a libjvm attribute
@@ -393,7 +408,7 @@ AddLocalConfiguration_With_Qconf()
    $CLEAR
    $INFOTEXT -u "\nCreating local configuration"
 
-   mkdir /tmp/$$
+   ExecuteAsAdmin mkdir /tmp/$$
    TMPL=/tmp/$$/${HOST}
    rm -f $TMPL
    if [ -f $TMPL ]; then
@@ -401,11 +416,15 @@ AddLocalConfiguration_With_Qconf()
       $INFOTEXT -log "\nCan't create local configuration. Can't delete file >%s<" "$TMPL"
    else
       $INFOTEXT -log "\nCreating local configuration for host >%s<" $HOST
-      PrintLocalConf 0 "$1" > $TMPL
-      $SGE_BIN/qconf -sconf $HOST > /dev/null 2>&1
+      $SGE_BIN/qconf -sconf $HOST > $TMPL 2>/dev/null
       if [ $? -eq 0 ]; then
+         # We should always keep entries that do not appear in the new configuration, but are in the old one
+         PrintLocalConf 0 "$1" > $TMPL.1
+         cp $TMPL $TMPL.old
+         UpdateConfiguration $TMPL $TMPL.1
          ExecuteAsAdmin $SGE_BIN/qconf -Mconf $TMPL
       else
+         PrintLocalConf 0 "$1" > $TMPL
          ExecuteAsAdmin $SGE_BIN/qconf -Aconf $TMPL
       fi
       rm -rf /tmp/$$

@@ -1019,7 +1019,13 @@ CheckConfigFile()
          if [ "$SGE_JMX_SSL" != "true" -a "$SGE_JMX_SSL" != "false" ]; then
             $INFOTEXT -e "Your >SGE_JMX_SSL< flag is wrong! Valid values are:0,1,true,false,TRUE,FALSE"
             is_valid="false" 
-         fi   
+         fi
+         if [ "$SGE_JMX_SSL" = "true" ]; then
+            if [ `echo "$SGE_JMX_SSL_KEYSTORE_PW" | awk '{print length($0)'` -lt 6 ]; then
+               $INFOTEXT -e "Your SGE_JMX_SSL_KEYSTORE_PW is too short! Password must have at least 6 characters."
+               is_valid="false"
+            fi
+         fi
          if [ -z "$SGE_JMX_SSL_CLIENT" ]; then
             $INFOTEXT -e "Your >SGE_JMX_SSL_CLIENT< flag is not set!"
             is_valid="false" 
@@ -1033,7 +1039,7 @@ CheckConfigFile()
          if [ "$SGE_JMX_SSL_CLIENT" != "true" -a "$SGE_JMX_SSL_CLIENT" != "false" ]; then
             $INFOTEXT -e "Your >SGE_JMX_SSL_CLIENT< flag is wrong! Valid values are:0,1,true,false,TRUE,FALSE"
             is_valid="false" 
-         fi   
+         fi
       fi
 
       if [ -z "$DEFAULT_DOMAIN" ]; then
@@ -3859,7 +3865,7 @@ CopyCaFromQmaster()
    $INFOTEXT "Copying certificates to host %s" $HOST
    $INFOTEXT -log "Copying certificates to host %s" $HOST
    
-   #TODO: Better to have global clever parsing for ssh options when SHELL_NAME is first specified   
+   #TODO: Better to have global clever parsing for ssh options when SHELL_NAME is first specified
    #Prepare SSH
    echo $SHELL_NAME | grep "ssh" >/dev/null 2>&1
    no_ssh=$?
@@ -3874,7 +3880,7 @@ CopyCaFromQmaster()
    
    #Need to verify we can connect without a password for AUTO mode
    if [ $AUTO = "true" ]; then
-      rem_host=`$REM_SH -l $ADMINUSER $QMASTER_HOST hostname 2>/dev/null`
+      rem_host=`$REM_SH $QMASTER_HOST hostname 2>/dev/null`
       if [ -z "$rem_host" ]; then
          $INFOTEXT "%s connection to host %s is not working!" $SHELL_NAME $QMASTER_HOST
          $INFOTEXT "Certificates couldn't be copied!"
@@ -3886,9 +3892,11 @@ CopyCaFromQmaster()
    fi
    
    tmp_dir=/tmp/sgeCA.$$
-   mkdir -p $tmp_dir ; chown $ADMINUSER $tmp_dir ; chmod 600 $tmp_dir
-   $REM_SH -l $ADMINUSER $QMASTER_HOST cat $CA_SRC > $tmp_dir/$PORT_DIR.tar.gz
-   chown $ADMINUSER $tmp_dir/$PORT_DIR.tar.gz ; chmod 400 $tmp_dir/$PORT_DIR.tar.gz
+   mkdir -p $tmp_dir ; chmod 600 $tmp_dir
+   connect_user=`id |awk '{print $1}' 2>/dev/null`
+   $INFOTEXT "Connecting as %s to host %s ..." "${connect_user:-root}" "$QMASTER_HOST"
+   $REM_SH $QMASTER_HOST cat $CA_SRC > $tmp_dir/$PORT_DIR.tar.gz
+   chmod 400 $tmp_dir/$PORT_DIR.tar.gz
    #TODO: Support CALOCALTOP
    ( mkdir -p /var/sgeCA ; cd /var/sgeCA ; rm -rf /var/sgeCA/$PORT_DIR ; gunzip -f $tmp_dir/$PORT_DIR.tar.gz ; tar xpf $tmp_dir/$PORT_DIR.tar ; rm -rf $tmp_dir )
    
@@ -3906,9 +3914,9 @@ CopyCaFromQmaster()
 #
 MakeUserKs()
 {
-   OLD_ADMINUSER="$ADMINUSER"
-   ADMINUSER=$1
    if [ \( "$SGE_ENABLE_JMX" = "true" -a "$SGE_JMX_SSL" = true \) ]; then
+      OLD_ADMINUSER="$ADMINUSER"
+      ADMINUSER=$1
       $CLEAR
       tmp_file=/tmp/inst_sge_ks.$$
       ExecuteAsAdmin touch $tmp_file
@@ -3936,9 +3944,9 @@ MakeUserKs()
       $INFOTEXT "Generating keystore for $ADMINUSER ..."
       ExecuteAsAdmin echo "$keystore_pw" > $tmp_file ; keystore_pw=""     
       $SGE_ROOT/util/sgeCA/sge_ca -ks $ADMINUSER -kspwf $tmp_file
-      ExecuteAsAdmin rm -f $tmp_file      
+      ExecuteAsAdmin rm -f $tmp_file
+     ADMINUSER="$OLD_ADMINUSER"      
   fi
-  ADMINUSER="$OLD_ADMINUSER"
 }
 
 
@@ -4358,4 +4366,80 @@ BootstrapGetValue()
 PropertiesGetValue()
 {
    FileGetValue "$1" "${2}=" "="
+}
+
+ReplaceLineWithMatch()
+{
+   repFile="${1:?Need the file name to operate}"
+   filePerms="${2:?Need file final permissions}"
+   repExpr="${3:?Need an expression, where to replace}" 
+   replace="${4:?Need the replacement text}" 
+
+   #Return if no match
+   grep "${repExpr}" $repFile >/dev/null 2>&1
+   if [ $? -ne 0 ]; then
+      return
+   fi
+   #We need to change the file
+   ExecuteAsAdmin touch ${repFile}.tmp
+   ExecuteAsAdmin chmod 666 ${repFile}.tmp
+  
+   SEP="|"
+   echo "$repExpr $replace" | grep "|" >/dev/null 2>&1
+   if [ $? -eq 0 ]; then
+      echo "$repExpr $replace" | grep "%" >/dev/null 2>&1
+      if [ $? -ne 0 ]; then
+         SEP="%"
+      else
+         echo "$repExpr $replace" | grep "?" >/dev/null 2>&1
+         if [ $? -ne 0 ]; then
+            SEP="?"
+         else
+            $INFOTEXT "repExpr $replace contains |,% and ? characters: cannot use sed"
+            exit 1
+         fi
+      fi
+   fi
+   #We need to change the file
+   sed -e "s${SEP}${repExpr}${SEP}${replace}${SEP}g" "$repFile" >> "${repFile}.tmp"
+   ExecuteAsAdmin mv -f "${repFile}.tmp"  "${repFile}"
+   ExecuteAsAdmin chmod "${filePerms}" "${repFile}"
+}
+
+ReplaceOrAddLine()
+{
+   repFile="${1:?Need the file name to operate}"
+   filePerms="${2:?Need file final permissions}"
+   repExpr="${3:?Need an expression, where to replace}" 
+   replace="${4:?Need the replacement text}"
+   
+   #Does the pattern exists
+   grep "${repExpr}" "${repFile}" > /dev/null 2>&1
+   if [ $? -eq 0 ]; then #match
+      ReplaceLineWithMatch "$repFile" "$filePerms" "$repExpr" "$replace"
+   else                  #line does not exist
+      #copy tmp, add, replace
+      echo "$replace" >> "$repFile"
+   fi
+}
+
+#Remove line with maching expression
+RemoveLineWithMatch()
+{
+   remFile="${1:?Need the file name to operate}"
+   filePerms="${2:?Need file final permissions}"
+   remExpr="${3:?Need an expression, where to remove lines}"
+   
+   #Return if no match
+   grep "${remExpr}" $remFile >/dev/null 2>&1
+   if [ $? -ne 0 ]; then
+      return
+   fi
+
+   #We need to change the file
+   ExecuteAsAdmin touch ${remFile}.tmp
+   ExecuteAsAdmin chmod 666 ${remFile}.tmp
+   sed -e "/${remExpr}/d" "$remFile" > "${remFile}.tmp"
+   ExecuteAsAdmin mv -f "${remFile}.tmp"  "${remFile}"
+   ExecuteAsAdmin chmod "${filePerms}" "${remFile}"
 }

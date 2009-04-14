@@ -1,3 +1,14 @@
+LP-2009-04-14-0: Enhancem.:   Disallow using empty ADDITIONAL_JVM_ARGS            
+                 Bugfix:      Existing local host configuration should be merged
+                              with the new one instead of replacing the old one
+                 Bugster:     6829839
+                 Enhancem.:   Adminuser JMX keystore generated during qmaster
+                              installation
+                 Enhancem.:   Added keystore password length check for the auto
+                              install template
+                 Cleanup:     JMX related install scripts
+                 Review:      EB, AA
+
 AA-2009-04-14-0: Enhancem.:   install logging.properties for sgeinspect
                  Review:      CR
 

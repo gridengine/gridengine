@@ -1187,6 +1187,13 @@ if [ $instsgeinspect = true ]; then
       Execute cp $ABSOLUTE_SGE_INSPECT_SRC_DIR/scripts/sgeinspect.sh $DEST_SGE_ROOT/bin/
       chown root:root $DEST_SGE_ROOT/bin/sgeinspect.sh
       Execute chmod 755 $DEST_SGE_ROOT/bin/sgeinspect.sh
+      
+      if [ -f $ABSOLUTE_SGE_INSPECT_SRC_DIR/scripts/logging.properties ]; then
+         Execute cp $ABSOLUTE_SGE_INSPECT_SRC_DIR/scripts/logging.properties $DEST_SGE_ROOT/sgeinspect/etc
+         chown root:root $DEST_SGE_ROOT/sgeinspect/etc/logging.properties
+         Execute chmod 644 $DEST_SGE_ROOT/sgeinspect/etc/logging.properties
+      fi
+
       Cleanup sgeinspect
       echo sgeinspect part done
       echo

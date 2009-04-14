@@ -1,3 +1,6 @@
+LP-2009-04-14-1: Enhancem.:   Improved comment in sgemaster script
+                 Review:      ZG
+
 LP-2009-04-14-0: Enhancem.:   Disallow using empty ADDITIONAL_JVM_ARGS            
                  Bugfix:      Existing local host configuration should be merged
                               with the new one instead of replacing the old one

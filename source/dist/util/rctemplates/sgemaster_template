@@ -385,7 +385,7 @@ DetectSMFService()
    service="svc:/application/sge/$name:$SGE_CLUSTER_NAME"
 
    if [ -n "$SMF_FMRI" -a "$service" != "$SMF_FMRI" ]; then
-      #Someone is trying to fool us
+      #Something is wrong, variables do not come from the SMF
       echo "Error: $service does not match FMRI $SMF_FMRI provided by SMF!"
       echo "Check that service instance $SGE_CLUSTER_NAME exist on your system"
       exit $SMF_EXIT_ERR_CONFIG

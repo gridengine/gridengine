@@ -37,42 +37,44 @@ import com.sun.grid.installer.gui.Host;
 import java.text.MessageFormat;
 import com.sun.grid.installer.util.Util;
 
-public class RemoteCommand extends CmdExec {
-      //E.g.: rsh/ssh [-l <connect_user>] [-o ....] HOSTNAME FSTYPE DIR
-      private static String installCommand = "{0} {1} {2} {3} {4} {5}";
+public class GetJvmLibCommand extends CmdExec {
+      //E.g.: rsh/ssh [-l <connect_user>] [-o ....] HOSTNAME CMD
+      private static String getJvmLibCommand = "{0} {1} {2} {3} {4}cd {5} ; . {5}/util/install_modules/inst_qmaster.sh ; HaveSuitableJavaBin 1.5.0 jvm print'\"";
+      //E.g.: CMD
+      private static String localGetJvmLibCommand = "cd \"{0}\" ; . \"{0}\"/util/install_modules/inst_qmaster.sh ; HaveSuitableJavaBin 1.5.0 jvm print";
       private String command;
 
-      public RemoteCommand(String host, String user, String shell, boolean isWindowsMode, String fstypePath, String dirPath) {
-          this(Util.DEF_RESOLVE_TIMEOUT, host, user, shell, isWindowsMode, fstypePath, dirPath);
+      public GetJvmLibCommand(String host, String user, String shell, boolean isWindowsMode, String sge_root) {
+          this(Util.DEF_RESOLVE_TIMEOUT, host, user, shell, isWindowsMode, sge_root);
       }
 
-      public RemoteCommand(long timeout, String host, String user, String shell, boolean isWindowsMode, String fstypePath, String dirPath) {
+      public GetJvmLibCommand(long timeout, String host, String user, String shell, boolean isWindowsMode, String sge_root) {
           super(timeout);
           boolean onLocalHost = host.equalsIgnoreCase(Host.localHostName);
 
-          String shellArg = "";             //0
-          String userArg = "";              //1
-          String sshOptions = "";           //2
-          String hostToReplace = "";        //3
-          if (!onLocalHost) {
-             shellArg = shell;
-             if (user.length() > 0) {
-                 if (isWindowsMode) {
-                     user = host.toUpperCase().split("\\.")[0] + "+" + user;
-                 }
-                 userArg = "-l "+user;
-             }
-             sshOptions = (isSameCommand(shell, "ssh")) ? "-o StrictHostKeyChecking=yes -o PreferredAuthentications=gssapi-keyex,publickey" : "";
-             hostToReplace = host;
-             fstypePath = "\""+fstypePath;
-             dirPath += "\"";
+          if (onLocalHost) {
+             this.command = MessageFormat.format(localGetJvmLibCommand, sge_root).trim();
+             return;
           }
+
+          String shellArg = shell;               //0
+          String userArg = "";                   //1
+          String sshOptions = "";                //2
+          String hostToReplace = host;           //3
+          String arg4 = "\"sh -c '";             //4
+          if (user.length() > 0) {
+              if (isWindowsMode) {
+                  user = host.toUpperCase().split("\\.")[0] + "+" + user;
+              }
+              userArg = "-l "+user;
+          }
+          sshOptions = (isSameCommand(shell, "ssh")) ? "-o StrictHostKeyChecking=yes -o PreferredAuthentications=gssapi-keyex,publickey" : "";
           
-          this.command  = MessageFormat.format(installCommand, shellArg, userArg, sshOptions, hostToReplace, fstypePath, dirPath).trim();
+          this.command  = MessageFormat.format(getJvmLibCommand, shellArg, userArg, sshOptions, hostToReplace, arg4, "\\\""+sge_root+"\\\"").trim();
       }
 
       public void execute() {
-          Debug.trace("Initializing GetFsTypeCommand: " + command + " timeout="+(MAX_WAIT_TIME/1000)+"sec");
+          Debug.trace("Initializing GetJvmLibCommand: " + command + " timeout="+(MAX_WAIT_TIME/1000)+"sec");
           super.execute(command);
       }
 }

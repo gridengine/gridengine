@@ -1,3 +1,21 @@
+LP-2009-04-14-2: Bugfix:      gui-installer: first/last task might not be done
+                              on qmaster host
+                 Bugster:     6829933
+                 Issue:       2991
+                 Bugfix:      gui-installer: install list might contain line
+                              with shadow and other component at once
+                 Bugster:     6829940
+                 Issue:       2992
+                 Bugfix:      gui-installer: CopyExecutableCommand might fail
+                              due to an existing file
+                 Bugster:     6829947
+                 Issue:       2993
+                 Enhancem.:   gui-installer: It should be possible to add admin
+                              submit hosts only
+                 Cleanup:     gui-installer: commands handle spaces,
+                              added GetJvmLibCommand, cleanup
+                 Review:      ZG
+
 LP-2009-04-14-1: Enhancem.:   Improved comment in sgemaster script
                  Review:      ZG
 

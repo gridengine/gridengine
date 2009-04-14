@@ -34,9 +34,9 @@ import com.sun.grid.installer.gui.*;
 import com.izforge.izpack.util.Debug;
 import com.izforge.izpack.util.VariableSubstitutor;
 import com.sun.grid.installer.util.Util;
-import com.sun.grid.installer.util.cmd.CmdExec;
 import com.sun.grid.installer.util.cmd.CopyExecutableCommand;
 import com.sun.grid.installer.util.cmd.RemoteComponentScriptCommand;
+import java.io.File;
 import java.util.Properties;
 
 /**
@@ -120,17 +120,20 @@ public class ValidateHostTask extends TestableTask {
             // Fill up template file
             String checkHostTempFile = vs.substituteMultiple(variables.getProperty(VAR_CHECK_HOST_TEMP_FILE), null);
             String checkHostFile = vs.substituteMultiple(variables.getProperty(VAR_CHECK_HOST_FILE), null);
+            String remoteFile = "";
 
-            checkHostFile = "/tmp/" + checkHostFile + "." + host.getHostname();
+            checkHostFile = "/tmp/" + checkHostFile + "." + host.getHostname() + ".tmp";
             Debug.trace("Generating check_host file: '" + checkHostFile + "'.");
 
             variables.put("host.arch", host.getArchitecture());
 
             checkHostFile = Util.fillUpTemplate(checkHostTempFile, checkHostFile, variables);
+            remoteFile = checkHostFile.substring(0, checkHostFile.length() - 4);
+            new File(checkHostFile).deleteOnExit();           
 
             Debug.trace("Copy auto_conf file to '" + host.getHostname() + ":" + checkHostFile + "'.");
             CopyExecutableCommand copyCmd = new CopyExecutableCommand(host.getResolveTimeout(), host.getHostname(), host.getConnectUser(),
-                    variables.getProperty(VAR_SHELL_NAME, ""), (Util.IS_MODE_WINDOWS && host.getArchitecture().startsWith("win")), checkHostFile, checkHostFile);
+                    variables.getProperty(VAR_SHELL_NAME, ""), (Util.IS_MODE_WINDOWS && host.getArchitecture().startsWith("win")), checkHostFile, remoteFile);
             copyCmd.execute();
             exitValue = copyCmd.getExitValue();
             if (exitValue == EXIT_VAL_CMDEXEC_TERMINATED) {
@@ -144,7 +147,7 @@ public class ValidateHostTask extends TestableTask {
                 newState = Host.State.COPY_FAILED_CHECK_HOST;
             } else {
                 RemoteComponentScriptCommand checkCmd = new RemoteComponentScriptCommand((2 * host.getResolveTimeout()), host, host.getConnectUser(), 
-                        variables.getProperty(VAR_SHELL_NAME, ""), (Util.IS_MODE_WINDOWS && host.getArchitecture().startsWith("win")), checkHostFile);
+                        variables.getProperty(VAR_SHELL_NAME, ""), (Util.IS_MODE_WINDOWS && host.getArchitecture().startsWith("win")), remoteFile);
                 checkCmd.execute();
                 exitValue = checkCmd.getExitValue();
 

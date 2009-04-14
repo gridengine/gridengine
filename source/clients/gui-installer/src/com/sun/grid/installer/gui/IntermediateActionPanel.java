@@ -11,8 +11,7 @@ import com.izforge.izpack.util.VariableSubstitutor;
 import com.sun.grid.installer.util.ExtendedFile;
 import com.sun.grid.installer.util.Util;
 import com.sun.grid.installer.util.cmd.GetArchCommand;
-import com.sun.grid.installer.util.cmd.RemoteCommand;
-import com.sun.grid.installer.util.cmd.SimpleLocalCommand;
+import com.sun.grid.installer.util.cmd.GetJvmLibCommand;
 import java.util.Enumeration;
 import java.util.Properties;
 import javax.swing.JOptionPane;
@@ -95,23 +94,13 @@ public class IntermediateActionPanel extends ActionPanel {
             String sgeRoot = idata.getVariable(VAR_SGE_ROOT);
             String remHost = (isQmasterInst) ? idata.getVariable(VAR_QMASTER_HOST) : Host.localHostName;
             String libjvm="";
-            if (remHost.equals(Host.localHostName)) {
-               SimpleLocalCommand cmd = new SimpleLocalCommand(". " + sgeRoot + "/util/install_modules/inst_qmaster.sh ; HaveSuitableJavaBin 1.5.0 jvm ; echo $jvm_lib_path");
-               cmd.execute();
-               if (cmd.getOutput() != null && cmd.getOutput().size() > 0) {
-                   libjvm = cmd.getOutput().get(0);
-               }
-            } else {
-               //TODO: Verify behavior of delay and when connection is not possible via rsh
-               //TODO: Need sh -c
-               RemoteCommand cmd = new RemoteCommand(5000, remHost, Util.DEF_CONNECT_USER, idata.getVariable(VAR_SHELL_NAME), Util.IS_MODE_WINDOWS,
-                                   ". " + sgeRoot + "/util/install_modules/inst_qmaster.sh ; HaveSuitableJavaBin 1.5.0 jvm ; echo $jvm_lib_path", "");
-               cmd.execute();
-               if (cmd.getOutput() != null && cmd.getOutput().size() > 0) {
-                   libjvm = cmd.getOutput().get(0);
-               }
-            }
-            //           
+            
+            //TODO: Verify behavior of delay and when connection is not possible via rsh
+            GetJvmLibCommand cmd = new GetJvmLibCommand(remHost, Util.DEF_CONNECT_USER, idata.getVariable(VAR_SHELL_NAME), Util.IS_MODE_WINDOWS, sgeRoot);
+            cmd.execute();
+            if (cmd.getOutput() != null && cmd.getOutput().size() > 0) {
+                libjvm = cmd.getOutput().get(0);
+            }         
             idata.setVariable(VAR_JVM_LIB_PATH, libjvm);
         }
 

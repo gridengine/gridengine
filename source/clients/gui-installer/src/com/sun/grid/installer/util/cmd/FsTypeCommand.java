@@ -34,35 +34,34 @@ package com.sun.grid.installer.util.cmd;
 
 import com.izforge.izpack.util.Debug;
 import com.sun.grid.installer.gui.Host;
-import com.sun.grid.installer.util.Util;
 import java.text.MessageFormat;
+import com.sun.grid.installer.util.Util;
 
-public class GetArchCommand extends CmdExec {
-      //         0             1              2          3          4    5                      6
-      //E.g.: rsh/ssh [-l <connect_user>] [-o ....] HOSTNAME [\"sh -c ']if [ ! -s SGE_ROOT....['\"]
-      private static String getArchCommand = "{0} {1} {2} {3} {4}if [ ! -s {5}/util/arch ]; then echo File\\ {5}/util/arch\\ does\\ not\\ exist\\ or\\ is\\ empty. ; echo ___EXIT_CODE_"+EXIT_VAL_CMDEXEC_MISSING_FILE+"___ ; exit " + EXIT_VAL_CMDEXEC_MISSING_FILE + "; else {5}/util/arch ; fi{6}";
-      private static String localGetArchCommand = "if [ ! -s \"{0}\"/util/arch ]; then echo File\\ \"{0}\"/util/arch\\ does\\ not\\ exist\\ or\\ is\\ empty. ; echo ___EXIT_CODE_"+EXIT_VAL_CMDEXEC_MISSING_FILE+"___ ; exit " + EXIT_VAL_CMDEXEC_MISSING_FILE + "; else \"{0}\"/util/arch ; fi";
+public class FsTypeCommand extends CmdExec {
+      //E.g.: rsh/ssh [-l <connect_user>] [-o ....] HOSTNAME FSTYPE DIR
+      private static String fsTypeCommand = "{0} {1} {2} {3} \"\\\"{4}\\\" {5}\"";
+      //E.g.: FSTYPE DIR
+      private static String localFsTypeCommand = "\"{0}\" {1}";
       private String command;
 
-      public GetArchCommand(String host, String user, String shell, boolean isWindowsMode, String sge_root) {
-          this(Util.DEF_RESOLVE_TIMEOUT, host, user, shell, isWindowsMode, sge_root);
+      public FsTypeCommand(String host, String user, String shell, boolean isWindowsMode, String fstypePath, String dirPath) {
+          this(Util.DEF_RESOLVE_TIMEOUT, host, user, shell, isWindowsMode, fstypePath, dirPath);
       }
 
-      public GetArchCommand(long timeout, String host, String user, String shell, boolean isWindowsMode, String sge_root) {
+      public FsTypeCommand(long timeout, String host, String user, String shell, boolean isWindowsMode, String fstypePath, String dirPath) {
           super(timeout);
           boolean onLocalHost = host.equalsIgnoreCase(Host.localHostName);
 
           if (onLocalHost) {
-             this.command = MessageFormat.format(localGetArchCommand, sge_root).trim();
+             this.command = MessageFormat.format(localFsTypeCommand, fstypePath, dirPath).trim();
              return;
           }
 
-          String shellArg = shell;               //0
-          String userArg = "";                   //1
-          String sshOptions = "";                //2
-          String hostToReplace = host;           //3
-          String arg4 = "\"sh -c '";             //4
-          String arg6 = "'\"";                   //6
+          String shellArg = "";             //0
+          String userArg = "";              //1
+          String sshOptions = "";           //2
+          String hostToReplace = "";        //3
+          shellArg = shell;
           if (user.length() > 0) {
               if (isWindowsMode) {
                   user = host.toUpperCase().split("\\.")[0] + "+" + user;
@@ -70,13 +69,12 @@ public class GetArchCommand extends CmdExec {
               userArg = "-l "+user;
           }
           sshOptions = (isSameCommand(shell, "ssh")) ? "-o StrictHostKeyChecking=yes -o PreferredAuthentications=gssapi-keyex,publickey" : "";
-
-          //String extendedTimeout = String.valueOf(timeout/1000 + 10); //We add additinal 10 secs to the timeout after which the installScript kills itself, if Java failed to do so in within timeout
-          this.command  = MessageFormat.format(getArchCommand, shellArg, userArg, sshOptions, hostToReplace, arg4, "\\\""+sge_root+"\\\"", arg6).trim();
+          hostToReplace = host;          
+          this.command  = MessageFormat.format(fsTypeCommand, shellArg, userArg, sshOptions, hostToReplace, fstypePath, dirPath).trim();
       }
 
       public void execute() {
-          Debug.trace("Initializing GetArchCommand: " + command + " timeout="+(MAX_WAIT_TIME/1000)+"sec");
+          Debug.trace("Initializing GetFsTypeCommand: " + command + " timeout="+(MAX_WAIT_TIME/1000)+"sec");
           super.execute(command);
       }
 }

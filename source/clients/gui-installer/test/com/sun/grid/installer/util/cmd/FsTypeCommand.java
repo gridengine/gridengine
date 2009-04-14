@@ -34,7 +34,7 @@ package com.sun.grid.installer.util.cmd;
 import com.sun.grid.installer.util.Util;
 import java.util.Vector;
 
-public class RemoteCommand extends CmdExec {
+public class FsTypeCommand extends CmdExec {
     private String host;
     private String user;
     private String shell;
@@ -42,11 +42,11 @@ public class RemoteCommand extends CmdExec {
     private String fstypePath;
     private String dirPath;
 
-    public RemoteCommand(String host, String user, String shell, boolean isWindowsMode, String fstypePath, String dirPath) {
+    public FsTypeCommand(String host, String user, String shell, boolean isWindowsMode, String fstypePath, String dirPath) {
         this(Util.DEF_RESOLVE_TIMEOUT, host, user, shell, isWindowsMode, fstypePath, dirPath);
     }
 
-    public RemoteCommand(long timeout, String host, String user, String shell, boolean isWindowsMode, String fstypePath, String dirPath) {
+    public FsTypeCommand(long timeout, String host, String user, String shell, boolean isWindowsMode, String fstypePath, String dirPath) {
         super(timeout);
 
         this.host = host;

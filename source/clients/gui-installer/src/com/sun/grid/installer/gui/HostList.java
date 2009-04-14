@@ -115,7 +115,7 @@ public class HostList extends ArrayBlockingQueue<Host> {
     }
     
     public Host addHost(Host o) {
-        //Debug.trace("adding - "+o.toString());
+        //Debug.trace("add: "+o.toString());
         if (o == null) {
             throw new NullPointerException();
         }
@@ -160,7 +160,7 @@ public class HostList extends ArrayBlockingQueue<Host> {
     }
 
     public boolean remove(Host o) {
-        //Debug.trace("remove - "+o.toString());
+        //Debug.trace("remove: "+o.toString());
         if (o == null) {
             throw new NullPointerException();
         }
@@ -203,7 +203,7 @@ public class HostList extends ArrayBlockingQueue<Host> {
 
 
     public boolean addUnchecked(Host o) {
-        //Debug.trace("addingUn - "+o.toString());
+        //Debug.trace("addingUn: "+o.toString());
         if (o == null) {
             throw new NullPointerException();
         }
@@ -218,7 +218,7 @@ public class HostList extends ArrayBlockingQueue<Host> {
     }
 
     public boolean removeUnchecked(Host o) {
-        //Debug.trace("removeUn - "+o.toString());
+        //Debug.trace("removeUn: "+o.toString());
         if (o == null) {
             throw new NullPointerException();
         }

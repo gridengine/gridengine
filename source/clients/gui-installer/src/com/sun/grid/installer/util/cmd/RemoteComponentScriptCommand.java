@@ -39,7 +39,9 @@ import java.text.MessageFormat;
 
 public class RemoteComponentScriptCommand extends CmdExec {
       //E.g.: rsh/ssh [-l <connect_user>] [-o ....] HOSTNAME INSTALL_SCRIPT/CHECK_HOST arg_component
-      private static String installCommand = "{0} {1} {2} {3} {4} {5}";
+      private static String installCommand = "{0} {1} {2} {3} \"\\\"{4}\\\" {5}\"";
+      //E.g.: INSTALL_SCRIPT/CHECK_HOST arg_component
+      private static String localInstallCommand = "\"{0}\" {1}";
       //private static String installCommand = "{0} {1} {2} {3} {4} {5} ; rm -f {4}";
       private String command;
 
@@ -52,24 +54,24 @@ public class RemoteComponentScriptCommand extends CmdExec {
           String hostname = host.getHostname();
           boolean onLocalHost = hostname.equalsIgnoreCase(Host.localHostName);
 
-          String shellArg = "";             //0
-          String userArg = "";              //1
-          String sshOptions = "";           //2
-          String hostArg = "";              //3
-          String scriptArgs = String.valueOf(host.isBdbHost()) + " " + String.valueOf(host.isQmasterHost()) + " " + String.valueOf(host.isShadowHost()) + " " + String.valueOf(host.isExecutionHost());
-          if (!onLocalHost) {
-             shellArg = shell;
-             if (user.length() > 0) {
-                 if (isWindowsMode) {
-                     user = hostname.toUpperCase().split("\\.")[0] + "+" + user;
-                 }
-                 userArg = "-l "+user;
-             }
-             sshOptions = (isSameCommand(shell, "ssh")) ? "-o StrictHostKeyChecking=yes -o PreferredAuthentications=gssapi-keyex,publickey" : "";
-             hostArg = host.getHostname();
-             installScript = "\""+installScript;
-             scriptArgs += "\"";
+          String scriptArgs = String.valueOf(host.isBdbHost()) + " " + String.valueOf(host.isQmasterHost()) + " " + String.valueOf(host.isShadowHost()) + " " + String.valueOf(host.isExecutionHost()); //4
+
+          if (onLocalHost) {
+             this.command = MessageFormat.format(localInstallCommand, installScript, scriptArgs).trim();
+             return;
           }
+
+          String shellArg = shell;               //0
+          String userArg = "";                   //1
+          String sshOptions = "";                //2
+          String hostArg = host.getHostname();   //3
+          if (user.length() > 0) {
+              if (isWindowsMode) {
+                 user = hostname.toUpperCase().split("\\.")[0] + "+" + user;
+              }
+              userArg = "-l "+user;
+          }
+          sshOptions = (isSameCommand(shell, "ssh")) ? "-o StrictHostKeyChecking=yes -o PreferredAuthentications=gssapi-keyex,publickey" : "";
           
           //String extendedTimeout = String.valueOf(timeout/1000 + 10); //We add additinal 10 secs to the timeout after which the installScript kills itself, if Java failed to do so
           this.command  = MessageFormat.format(installCommand, shellArg, userArg, sshOptions, hostArg, installScript, scriptArgs).trim();

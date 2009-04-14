@@ -39,9 +39,9 @@ import java.text.MessageFormat;
 
 /* Copies executable script to a remote host. If host is localhost command is skipped */
 public class CopyExecutableCommand extends CmdExec {
-      //E.g.: rsh/ssh [-l <connect_user>] [-o ....] HOSTNAME < FILE_TO_COPY "cat >DEST_FILE ; chmod 755 DEST_FILE"
-      private static String copyCommand = "{0} {1} {2} {3} < {4} \"cat >{5} ; chmod 755 {5}\"";
-      private static String localCopyCommand = "cp {0} {1} ; chmod 755 {1}";
+      //E.g.: rsh/ssh [-l <connect_user>] [-o ....] HOSTNAME < "FILE_TO_COPY" "cat >"DEST_FILE" ; chmod 755 "DEST_FILE""
+      private static String copyCommand = "{0} {1} {2} {3} < \"{4}\" \"cat >\\\"{5}\\\" ; chmod 755 \\\"{5}\\\"\"";
+      private static String localCopyCommand = "cp \"{0}\" \"{1}\" ; chmod 755 \"{1}\"";
       private String command;
 
       public CopyExecutableCommand(String host, String user, String shell, boolean isWindowsMode, String inputPath, String outputPath) {
@@ -50,6 +50,8 @@ public class CopyExecutableCommand extends CmdExec {
 
       public CopyExecutableCommand(long timeout, String host, String user, String shell, boolean isWindowsMode, String inputPath, String outputPath) {
           super(timeout);
+          //TODO: Need better understading of local
+          //If host has aliases they are treated as remote hosts which is not necessary
           boolean onLocalHost = host.equalsIgnoreCase(Host.localHostName);
 
           if (onLocalHost) {
@@ -60,16 +62,14 @@ public class CopyExecutableCommand extends CmdExec {
           String shellArg = "";
           String userArg = "";
           String sshOptions = "";
-          if (!onLocalHost) {
-             shellArg = shell;
-             if (user.length() > 0) {
-                 if (isWindowsMode) {
-                     user = host.toUpperCase().split("\\.")[0] + "+" + user;
-                 }
-                 userArg = "-l "+user;
-             }
-             sshOptions = (isSameCommand(shell, "ssh")) ? "-o StrictHostKeyChecking=yes -o PreferredAuthentications=gssapi-keyex,publickey" : "";
+          shellArg = shell;
+          if (user.length() > 0) {
+              if (isWindowsMode) {
+                  user = host.toUpperCase().split("\\.")[0] + "+" + user;
+              }
+              userArg = "-l "+user;
           }
+          sshOptions = (isSameCommand(shell, "ssh")) ? "-o StrictHostKeyChecking=yes -o PreferredAuthentications=gssapi-keyex,publickey" : "";
           this.command  = MessageFormat.format(copyCommand, shellArg, userArg, sshOptions, host, inputPath, outputPath).trim();
       }
 

@@ -36,7 +36,7 @@ import com.izforge.izpack.rules.RulesEngine;
 import com.izforge.izpack.util.Debug;
 import com.izforge.izpack.util.OsVersion;
 import com.izforge.izpack.util.VariableSubstitutor;
-import com.sun.grid.installer.util.cmd.RemoteCommand;
+import com.sun.grid.installer.util.cmd.FsTypeCommand;
 import com.sun.grid.installer.gui.*;
 import com.sun.grid.installer.util.cmd.SimpleLocalCommand;
 import java.awt.Component;
@@ -632,8 +632,8 @@ public class Util implements Config{
 
         Debug.trace("Fill up template from '" + templateFilePath + "' to '" + resultFilePath + "'.");
         File f = new File(resultFilePath);
-    	
-    	try {
+
+        try {
     	    bufferedReader = new BufferedReader(new FileReader(templateFilePath));
             bufferedWriter = new BufferedWriter(new FileWriter(f, false));
 
@@ -664,7 +664,7 @@ public class Util implements Config{
                         // check whether the actual comment holds special commands
                         if (formattedLine.indexOf(".if") > -1) {
                             // Skip next line(s) if the condition is false
-                            skipLine = !evaulateConditionalComment(formattedLine);
+                            skipLine = !evaluateConditionalComment(formattedLine);
                         } else if (formattedLine.indexOf(".endif") > -1) {
                             // Write upcoming lines if the special block is over
                             skipLine = false;
@@ -707,7 +707,7 @@ public class Util implements Config{
      * @param comment A comment line to evaulate
      * @return the result of the evaulation or false in case of failure.
      */
-    public static boolean evaulateConditionalComment(String comment) {
+    public static boolean evaluateConditionalComment(String comment) {
         Debug.trace("Evaulate conditional comment: " + comment);
         
         if (comment.indexOf(".if") == -1 || comment.equals("")) {
@@ -825,7 +825,7 @@ public class Util implements Config{
         try {
             // Call the 'fstype' script of the proper architecture
             String fstypeScript = sge_root + "/utilbin/" + arch + "/fstype";
-            RemoteCommand fstypeCmd = new RemoteCommand(host, DEF_CONNECT_USER, shell, IS_MODE_WINDOWS, fstypeScript, dir);
+            FsTypeCommand fstypeCmd = new FsTypeCommand(host, DEF_CONNECT_USER, shell, IS_MODE_WINDOWS, fstypeScript, dir);
             fstypeCmd.execute();
 
             if (fstypeCmd.getExitValue() == 0) {
@@ -856,7 +856,7 @@ public class Util implements Config{
 
         try {
             String command = "groups";
-            RemoteCommand groupCmd = new RemoteCommand(host, DEF_CONNECT_USER, shell, IS_MODE_WINDOWS, command,  userToCheck);
+            FsTypeCommand groupCmd = new FsTypeCommand(host, DEF_CONNECT_USER, shell, IS_MODE_WINDOWS, command,  userToCheck);
             groupCmd.execute();
 
             if (groupCmd.getExitValue() == 0) {

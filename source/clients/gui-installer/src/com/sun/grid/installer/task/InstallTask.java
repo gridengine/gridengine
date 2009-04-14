@@ -81,6 +81,7 @@ public class InstallTask extends TestableTask {
 
         try {
             String autoConfFile = null;
+            String remoteFile = "";
             int exitValue;
 
             if (host.isBdbHost() || host.isQmasterHost() || host.isShadowHost() || host.isExecutionHost() || isSpecialTask) {
@@ -103,9 +104,10 @@ public class InstallTask extends TestableTask {
 
                 //Appended CELL_NAME prevents a race in case of parallel multiple cell installations
                 String taskName = isSpecialTask == true ? (Boolean.valueOf(variables.getProperty(VAR_FIRST_TASK, "false")).booleanValue() == true ? "first_task" : "last_task") : host.getComponentString();
-                autoConfFile = "/tmp/" + autoConfFile + "." + host.getHostname() + "." + taskName + "." + variables.getProperty(VAR_SGE_CELL_NAME);
+                autoConfFile = "/tmp/" + autoConfFile + "." + host.getHostname() + "." + taskName + "." + variables.getProperty(VAR_SGE_CELL_NAME) + ".tmp";                
                 Debug.trace("Generating auto_conf file: '" + autoConfFile + "'.");
                 autoConfFile = Util.fillUpTemplate(autoConfTempFile, autoConfFile, variables);
+                remoteFile = autoConfFile.substring(0, autoConfFile.length() - 4);
                 new File(autoConfFile).deleteOnExit();
             }
 
@@ -116,7 +118,7 @@ public class InstallTask extends TestableTask {
                 //TODO: Do this only when not on a shared FS (file is not yet accessible)
                 Debug.trace("Copy auto_conf file to '" + host.getHostname() + ":" + autoConfFile + "'.");
                 copyCmd = new CopyExecutableCommand(host.getResolveTimeout(), host.getHostname(), host.getConnectUser(),
-                        variables.getProperty(VAR_SHELL_NAME, ""), (Util.IS_MODE_WINDOWS && host.getArchitecture().startsWith("win")), autoConfFile, autoConfFile);
+                        variables.getProperty(VAR_SHELL_NAME, ""), (Util.IS_MODE_WINDOWS && host.getArchitecture().startsWith("win")), autoConfFile, remoteFile);
                 copyCmd.execute();
                 exitValue = copyCmd.getExitValue();
             } else {
@@ -157,7 +159,7 @@ public class InstallTask extends TestableTask {
 
                 if (!isIsTestMode()) {
                     installCmd = new RemoteComponentScriptCommand(timeout, host, host.getConnectUser(), 
-                            variables.getProperty(VAR_SHELL_NAME, ""), (Util.IS_MODE_WINDOWS && host.getArchitecture().startsWith("win")), autoConfFile);
+                            variables.getProperty(VAR_SHELL_NAME, ""), (Util.IS_MODE_WINDOWS && host.getArchitecture().startsWith("win")), remoteFile);
                     installCmd.execute();
                     exitValue = installCmd.getExitValue();
                 }

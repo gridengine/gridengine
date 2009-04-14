@@ -149,8 +149,8 @@ public class Host implements Config {
     private String jvmLibPath = "";
     private String jvmAddArgs = "";
     private String log = "";
-    private long   resolveTimeout = 0;
-    private long   installTimeout = 0;
+    private long   resolveTimeout = Util.DEF_RESOLVE_TIMEOUT;
+    private long   installTimeout = Util.DEF_INSTALL_TIMEOUT;
     private State state = State.UNKNOWN_HOST;
     private boolean bdbHost, qmasterHost, shadowHost, executionHost, adminHost, submitHost, firstTask, lastTask;
 
@@ -611,6 +611,10 @@ public class Host implements Config {
 
     public void setResolveTimeout(long resolveTimeout) {
         this.resolveTimeout = resolveTimeout;
+    }
+
+    public boolean hasAnyComponent() {
+        return isBdbHost() || isQmasterHost() || isShadowHost() || isExecutionHost() || isAdminHost() || isSubmitHost();
     }
 
     public String getComponentString() {

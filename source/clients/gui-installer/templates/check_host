@@ -77,11 +77,11 @@ GetFirstExistingDir()
 
   if [ ! -d "$dir" ]; then
      while [ ! -d "$dir" ]; do
-        tmp_dir=`dirname $dir`
+        tmp_dir=`dirname "$dir"`
         dir="$tmp_dir"
      done
   fi
-  echo $dir
+  echo "$dir"
 }
 
 #Genaretes output from the exit code and terminates the script
@@ -97,7 +97,7 @@ Exit()
 # the given directory even if the directory does not exist.
 IsDirWritable()
 {
-   dir=`GetFirstExistingDir $1`
+   dir=`GetFirstExistingDir "$1"`
    RunAsBoth test -w "$dir"
    #TODO: Even when rwx, the dir can be mounted as read-only => permission denied during installation
 }
@@ -106,7 +106,7 @@ IsDirWritable()
 # the given directory even if the directory does not exist.
 IsDirWritableByAdminUser()
 {
-   dir=`GetFirstExistingDir $1`
+   dir=`GetFirstExistingDir "$1"`
    RunAsAdmin test -w "$dir"
 }
 
@@ -175,7 +175,7 @@ if [ "$IS_QMASTER" = true ]; then
    # if local BDB spooling is enabled ...
    if [ "$SPOOLING_METHOD" = "berkeleydb" -a "$DB_SPOOLING_SERVER" = "none"  ]; then
       # ...fail if exists
-      if [ -d ${cfg.db.spooling.dir} ]; then
+      if [ -d "${cfg.db.spooling.dir}" ]; then
          Exit 25
       fi
 

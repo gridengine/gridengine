@@ -56,7 +56,7 @@ C_Job::C_Job()
    m_pe_task_id = NULL;
    m_comm_sock  = 0;
    m_hProcess   = INVALID_HANDLE_VALUE;
-   m_hJobObject = INVALID_HANDLE_VALUE;
+   m_hJobObject = NULL;
    m_ForwardedSignal = 0;
 
    // data members to start the job
@@ -615,7 +615,7 @@ void C_Job::BuildEnvironment(char *&pszEnv) const
    // Merge pathes, let job environment win over system environment for all other variables
    BuildSysEnvTable(mapSysEnv);
    MergeSysEnvTableWithJobEnvTable(mapSysEnv, mapMergedEnv);
-   BuildEnvironmentFromTable(mapMergedEnv,  pszEnv);
+   BuildEnvironmentFromTable(mapMergedEnv, pszEnv);
 }
 
 /****** C_Job::BuildTableFromJobEnv() const ************************************
@@ -843,14 +843,14 @@ void C_Job::BuildEnvironmentFromTable(const CMapStringToString &mapMergedEnv,
    Pos = mapMergedEnv.GetStartPosition();
    while(Pos) {
       mapMergedEnv.GetNextAssoc(Pos, strKey, strValue);
-      nEnvSize += strKey.GetLength() + strlen("=") + strValue.GetLength();
-      nEnvSize++;
+      nEnvSize += strKey.GetLength() + strlen("=") + strValue.GetLength() + 1;
    }
    nEnvSize++;
 
    // Allocate environment buffer, copy system and job environment
    // to buffer
-   ptr = pszEnv = (char*)malloc(nEnvSize);
+   pszEnv = (char*)malloc(nEnvSize);
+   ptr = pszEnv;
    Pos = mapMergedEnv.GetStartPosition();
    while(Pos) {
       mapMergedEnv.GetNextAssoc(Pos, strKey, strValue);
@@ -860,63 +860,76 @@ void C_Job::BuildEnvironmentFromTable(const CMapStringToString &mapMergedEnv,
    *ptr = '\0';
 }
 
+/****** C_Job::Terminate() *****************************************************
+*  NAME
+*     C_Job::Terminate() -- terminates all processes in the Windows job object
+*                           associated to this C_Job object.
+*
+*  SYNOPSIS
+*     int C_Job::Terminate()
+*
+*  FUNCTION
+*    Terminates all processes in the Windows job object associated to this
+*    C_Job object. This avoids getting zombies and orphans of this job.
+*
+*  RESULT
+*     int
+*     0:  All processes where terminated successfully.
+*     >0: value of GetLastError()
+*
+*  NOTES
+*******************************************************************************/
+int C_Job:: Terminate()
+{
+   if (TerminateJobObject(m_hJobObject, 999) == FALSE) {
+      return GetLastError();
+   }
+   return 0;
+}
+
 /****** C_Job::StoreUsage() ****************************************************
 *  NAME
 *     C_Job::StoreUsage() -- retrieves job usage from the system and stores it
 *                            in the C_Job object.
 *
 *  SYNOPSIS
-*     DWORD C_Job::StoreUsage(HANDLE hProcess, C_Job &Job)
+*     int C_Job::StoreUsage()
 *
 *  FUNCTION
 *    retrieves job usage from the system and stores it in the C_Job object.
 *
-*  INPUTS
-*     HANDLE hProcess - handle to informations about the process in the system
-*
 *  RESULT
 *     DWORD 
-*     0:  the usage was retrieved successfully
-*     >0: value of GetLastError()
+*     0: the usage was retrieved successfully
+*     1: can't get the exit code of the job 
+*     2: can't get the usage of the job
 *
 *  NOTES
+*     Call this function only when the main process of the job has terminated.
 *******************************************************************************/
-DWORD C_Job::StoreUsage(HANDLE hProcess)
+int C_Job::StoreUsage()
 {
-   FILETIME       CreationTime;
-   FILETIME       ExitTime;
-   FILETIME       KernelTime;
-   FILETIME       UserTime;
-   DWORD          dwError = 0;
-   ULARGE_INTEGER temp;
-   __int64        itemp;
+   JOBOBJECT_BASIC_AND_IO_ACCOUNTING_INFORMATION JobInfo;
+   DWORD                                         dwReturnLength = 0;
+   int                                           ret = 0;
 
    try {
-      if(!GetExitCodeProcess(hProcess, &dwExitCode)) {
+      if(GetExitCodeProcess(m_hProcess, &dwExitCode) == FALSE) {
          throw 1;
       }
-      if(!GetProcessTimes(hProcess, &CreationTime,
-                          &ExitTime, &KernelTime, &UserTime)) {
+
+      ZeroMemory(&JobInfo, sizeof(JobInfo));
+      if (QueryInformationJobObject(m_hJobObject, JobObjectBasicAndIoAccountingInformation,
+             &JobInfo, sizeof(JobInfo), &dwReturnLength) == FALSE) {
          throw 2;
       }
-
-      temp.HighPart = KernelTime.dwHighDateTime;
-      temp.LowPart  = KernelTime.dwLowDateTime;
-
-      itemp = temp.QuadPart;
-      lKernelSec  = (long)(itemp/10000000);
-      lKernelUSec = (long)(itemp%10000000) / 10;
-
-      temp.HighPart = UserTime.dwHighDateTime;
-      temp.LowPart  = UserTime.dwLowDateTime;
-
-      itemp = temp.QuadPart;
-      lUserSec   = (long)(itemp/10000000);
-      lUserUSec  = (long)(itemp%10000000) / 10;
+      lUserSec    = (long)((_int64)JobInfo.BasicInfo.TotalUserTime.QuadPart/10000000);
+      lUserUSec   = (long)((_int64)JobInfo.BasicInfo.TotalUserTime.QuadPart%10000000) / 10;
+      lKernelSec  = (long)((_int64)JobInfo.BasicInfo.TotalKernelTime.QuadPart/1000000);
+      lKernelUSec = (long)((_int64)JobInfo.BasicInfo.TotalKernelTime.QuadPart%1000000) / 10;
    }
-   catch(int retval) {
-      dwError = (DWORD)retval; // dummy to avoid compiler warning
-      dwError = GetLastError();
+   catch (int retval) {
+      ret = retval;
    }
-   return dwError;
+   return ret;
 }

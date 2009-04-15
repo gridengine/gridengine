@@ -49,6 +49,7 @@ set COMPILE_DIR  = ""
 set buildarch    = UNKNOWN
 set WINCC        = ""
 set WINCFLAGS    = ""
+set WINLFLAGS    = ""
 set WINLIBS      = ""
 set AIMK_TARGETOPT   = 0
 set NO_XDEPEND   = ""
@@ -1480,6 +1481,7 @@ case LINUXSPARC64:
    breaksw
    
 case WIN32_X86:
+   setenv LD_LIBRARY_PATH /usr/lib/x86:/usr/local/lib
    set CC = gcc
    set WINCC = "env TMP=$WINTEMPDIR cl.exe"
    set RM = "rm -f"
@@ -1521,7 +1523,12 @@ case WIN32_X86:
       set CXX = gcc
       set CFLAGS = "$DEBUG_FLAG $CFLAGS"
       set CFLAGS = "-DGETHOSTBYADDR_M -D_ALL_SOURCE -D_REENTRANT $CFLAGS"
-      set CFLAGS = "-DINTERIX -D$COMPILE_ARCH -DGETHOSTBYNAME_M -DUSE_SGE_UNSETENV $CFLAGS" 
+      if (`uname -r` == "3.5") then
+         set CFLAGS = "-DINTERIX $CFLAGS"
+      else
+         set CFLAGS = "-DINTERIX -DINTERIX52 $CFLAGS"
+      endif
+      set CFLAGS = "-D$COMPILE_ARCH -DGETHOSTBYNAME_M -DUSE_SGE_UNSETENV $CFLAGS" 
       set CFLAGS = "-Wall -Werror -O0 -pipe $CFLAGS"
       #set LFLAGS = "-Wl,-EL,-b=pe-i1386 $LFLAGS"
    else
@@ -1562,6 +1569,34 @@ case WIN32_X86:
    set XINCD        = "$XMTINCD $XINCD -I/usr/X11R6/include -I/usr/local/include/bind"
    set XCFLAGS      = "-Wno-strict-prototypes -Wno-error $XMTDEF $XINCD"
    set XLIBS        = "-lXm -lXpm -lXt -lXext -lXmu -lX11 -lSM -lICE -lXp"
+
+   if ( $DEBUGGED == 1 ) then
+      set WINCFLAGS = "/Od /D "WIN32" /D "_DEBUG" /MTd /Zi"
+   else
+      set WINCFLAGS = "/MT"
+   endif
+   set WINCFLAGS = "${WINCFLAGS} /D "WINDOWS" /D "_CONSOLE""
+   set WINCFLAGS = "${WINCFLAGS} /D "_CRT_SECURE_NO_WARNINGS" /W3 /WX"
+   set WINCFLAGS = "${WINCFLAGS} /nologo /c /EHsc"
+   set WINCFLAGS = "${WINCFLAGS} -I'${WIN32_VS_I1}'"
+   set WINCFLAGS = "${WINCFLAGS} -I'${WIN32_VS_I2}'"
+   set WINCFLAGS = "${WINCFLAGS} -I'${WIN32_VS_I3}'"
+   set WINCFLAGS = "${WINCFLAGS} -I'..\\common'"
+   set WINCFLAGS = "${WINCFLAGS} -I'..\\utilbin'"
+   set WINCFLAGS = "${WINCFLAGS} -I'..\\libs\\juti'"
+
+   if ( $DEBUGGED == 1 ) then
+      set WINLFLAGS = "/DEBUG"
+   else
+      set WINLFLAGS = ""
+   endif 
+   set WINLFLAGS = "${WINLFLAGS} /INCREMENTAL:NO /NOLOGO"
+   set WINLFLAGS = "${WINLFLAGS} /MACHINE:X86"
+   set WINLFLAGS = "${WINLFLAGS} /LIBPATH:'${WIN32_VS_L1}'"
+   set WINLFLAGS = "${WINLFLAGS} /LIBPATH:'${WIN32_VS_L2}'"
+   set WINLFLAGS = "${WINLFLAGS} /LIBPATH:'${WIN32_VS_L3}'"
+
+   set WINLIBS = "pdh.lib ws2_32.lib advapi32.lib user32.lib"
    breaksw
    
 case NECSX4:
@@ -2196,33 +2231,6 @@ if ( "$MAKEWINGRIDAPP" == 1 ) then
    endif
    cd "${COMPILE_ARCH}"
 
-   if ( $DEBUGGED == 1 ) then
-      set WINCFLAGS = "/Od /D "WIN32" /D "_DEBUG" /MTd /Zi"
-   else
-      set WINCFLAGS = "/MT"
-   endif
-   set WINCFLAGS = "${WINCFLAGS} /D "WINDOWS" /D "_CONSOLE" /W3 /WX"
-   set WINCFLAGS = "${WINCFLAGS} /nologo /c /Wp64 /EHsc"
-   set WINCFLAGS = "${WINCFLAGS} -I'${WIN32_VS_I1}'"
-   set WINCFLAGS = "${WINCFLAGS} -I'${WIN32_VS_I2}'"
-   set WINCFLAGS = "${WINCFLAGS} -I'${WIN32_VS_I3}'"
-   set WINCFLAGS = "${WINCFLAGS} -I'..\\common'"
-   set WINCFLAGS = "${WINCFLAGS} -I'..\\utilbin'"
-   set WINCFLAGS = "${WINCFLAGS} -I'..\\libs\\juti'"
-
-   if ( $DEBUGGED == 1 ) then
-      set WINLFLAGS = "/DEBUG"
-   else
-      set WINLFLAGS = ""
-   endif 
-   set WINLFLAGS = "${WINLFLAGS} /INCREMENTAL:NO /NOLOGO"
-   set WINLFLAGS = "${WINLFLAGS} /MACHINE:X86"
-   set WINLFLAGS = "${WINLFLAGS} /LIBPATH:'${WIN32_VS_L1}'"
-   set WINLFLAGS = "${WINLFLAGS} /LIBPATH:'${WIN32_VS_L2}'"
-   set WINLFLAGS = "${WINLFLAGS} /LIBPATH:'${WIN32_VS_L3}'"
-
-   set WINLIBS = "pdh.lib ws2_32.lib advapi32.lib user32.lib"
-
    switch ( "$argv" )
       case clean:
          set param = clean 
@@ -2244,7 +2252,7 @@ if ( "$MAKEWINGRIDAPP" == 1 ) then
 
    if ( $status != 0 ) then
       echo not done
-      #exit 1
+      exit 1
    endif
 
    cd ..
@@ -2523,7 +2531,8 @@ if ( "$CORE" == 1 && "$JAVA" != 2 ) then
          "AUTHUSER_ALL=$AUTHUSER_ALL" "LOADCHECK_ALL=$LOADCHECK_ALL" \
          "AUTHUSER_OBJ=$AUTHUSER_OBJ" "LOADCHECK_OBJ=$LOADCHECK_OBJ" \
          "JUTI_OBJ=$JUTI_OBJ" \
-         "WINCC=$WINCC" "WINCFLAGS=$WINCFLAGS" "WINLIBS=$WINLIBS" "LIBRARY_LIBS=$LIBRARY_LIBS" \
+         "WINCC=$WINCC" "WINCFLAGS=$WINCFLAGS" "WINLFLAGS=$WINLFLAGS" \
+         "WINLIBS=$WINLIBS" "LIBRARY_LIBS=$LIBRARY_LIBS" \
          $argv
    if ( $status != 0 ) then
       echo not done

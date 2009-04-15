@@ -63,7 +63,7 @@ C_Communication g_Communication;
 C_JobList       g_JobList;
 BOOL            g_bAcceptJobs    = TRUE;
 int             g_Port = 0;
-int             g_bDoLogging = FALSE;
+BOOL            g_bDoLogging = FALSE;
 
 // module variables
 static SERVICE_STATUS_HANDLE g_hServiceStatus = NULL;
@@ -260,9 +260,11 @@ static void WINAPI SunGridEngineHelperServiceStart(DWORD dwArgc, LPTSTR *lpszArg
    int                   ret;
    char                  job_result[] = "done";
 
-   if (dwArgc > 1) {
-      if (stricmp(lpszArgv[1], "-log") == 0) {
+   // Parse command line options
+   for (DWORD i=1; i<dwArgc; i++) {
+      if (strcmp(lpszArgv[i], "-log") == 0) {
          g_bDoLogging = TRUE;
+         break;
       }
    }
    WriteToLogFile("Starting %s.", g_szServiceDisplayName);
@@ -417,31 +419,42 @@ static void ServiceError()
 *******************************************************************************/
 int WriteToLogFile(const char *szMessage, ...)
 {
-   int        ret = 1;
-   FILE       *fp = NULL;
-#ifdef _DEBUG
-   SYSTEMTIME sysTime;
-   va_list    args;
-   char       Buffer[4096];
-   char       NameBuf[1024];
-   DWORD      dwLastError;
+   int         ret = 1;
+   FILE        *fp = NULL;
+   SYSTEMTIME  sysTime;
+   va_list     args;
+   char        Buffer[4096];
+   DWORD       dwLastError;
+   static BOOL g_bFirstTime = TRUE;
+   static char g_szTraceFile[5000];
 
    if (g_bDoLogging == FALSE) {
       return 2;
    }
+   // We do not want to change LastError in here.
    dwLastError = GetLastError();
-   
-   va_start(args, szMessage);
-   _vsnprintf(Buffer, 4095, szMessage, args);
    GetLocalTime(&sysTime);
+
+   // If we don't have a trace file yet, create it's name.
+   if (g_bFirstTime == TRUE) {
+      g_bFirstTime = FALSE;
+      // The trace file name is $TEMP\SGE_Helper_Service.log
+      // e.g. "C:\Temp\SGE_Helper_Service.log"
+      strcpy(Buffer, "C:\\TEMP");
+      GetEnvironmentVariable("TEMP", Buffer, 4095);
+      _snprintf(g_szTraceFile, 4999, "%s\\SGE_Helper_Service.log", Buffer);
+   }
   
-   fp = fopen("c:\\Temp\\SGE_Helper_service.log", "a+");
+   fp = fopen(g_szTraceFile, "a+");
    if (fp == NULL) {
-      sprintf(NameBuf, "c:\\Temp\\SGE_Helper_service.%02d%02d%02d.log", 
+      // Create a "panic" trace file
+      sprintf(g_szTraceFile, "c:\\Temp\\SGE_Helper_Service.%02d%02d%02d.log", 
          sysTime.wHour, sysTime.wMinute, sysTime.wSecond);
-      fp = fopen(NameBuf, "a+");
+      fp = fopen(g_szTraceFile, "a+");
    }
    if(fp != NULL) {
+      va_start(args, szMessage);
+      _vsnprintf(Buffer, 4095, szMessage, args);
       fprintf(fp, "%02d:%02d:%02d [SGE_Helper_Service] %s\n",
          sysTime.wHour, sysTime.wMinute, sysTime.wSecond, Buffer);
       fflush(fp);
@@ -449,6 +462,6 @@ int WriteToLogFile(const char *szMessage, ...)
       ret = 0;
    }
    SetLastError(dwLastError);
-#endif
+
    return ret;
 }

@@ -1,3 +1,11 @@
+HP-2009-04-15-0: Bugfix:      * Return values of SGE_Starter.exe are handled
+                                correctly now.
+                              * Logging of SGE_Starter.exe and SGE_Helper_Service.exe
+                                works now.
+                 Bugster:     6817190, 6817193
+                 Issue:       TBD
+                 Review       EB
+
 ZG-2009-04-14-0: Enhancem.:   gui-installer: Improve table menu
                  Bugster:     6786388
                  Bugfix:      gui-installer: The result panel shows the admin/submit

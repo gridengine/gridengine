@@ -86,13 +86,23 @@ static int CreatePipeForStarter(char **pszPipeName, HANDLE &hPipe);
 static int BuildCommandLineForStarter(const C_Job &Job, const char *pszPipeName,
                                       const char *pszCmdLineArgs, char **pszStarterCmdLine);
 static int WritePasswordToPipe(const HANDLE &hPipe, const HANDLE &hProcess,
-                               const char *szPassword);
+                               const char *szPassword, char *szError);
 
 // external variables
 extern C_JobList       g_JobList;
 extern C_Communication g_Communication;
 extern HANDLE          g_hWinstaACLMutex;
 extern HANDLE          g_hDeskACLMutex;
+extern BOOL            g_bDoLogging;
+
+// static variables
+static char *szStarterError[] = {
+   "Ok",
+   "Missing command line arguments",
+   "Can't create job process",
+   "Got invalid job process handle",
+   "Can't get exit code of job process"
+};
 
 /****** JobStarterThread() ****************************************************
 *  NAME
@@ -180,6 +190,7 @@ DWORD StartJob(C_Job &Job)
    HANDLE              hPipe         = INVALID_HANDLE_VALUE;
    char                *pszEnv = NULL;
    char                *pszCmdLine = NULL;
+   char                szBuf[101];
    char                szError[4096];
    char                szErrorPart[4096];
    BOOL                bError      = TRUE;
@@ -200,6 +211,10 @@ DWORD StartJob(C_Job &Job)
       return 1;
    }
 
+   // Put logging flag to environment, it will get copied into the job
+   // environment below
+   _snprintf(szBuf, 100, "%d", (int)g_bDoLogging);
+   SetEnvironmentVariable("SGE_DO_LOGGING", szBuf);
    // Build environment as local Administrator
    Job.BuildEnvironment(pszEnv);
    Job.BuildCommandLine(pszCmdLine);
@@ -240,7 +255,6 @@ DWORD StartJob(C_Job &Job)
          goto Cleanup;
       }
 
-      WriteToLogFile("Trying to OpenWindowStation");
       // Get a handle to the interactive window station.
       hWinsta = OpenWindowStation(
          "WinSta0",                   // the interactive window station 
@@ -252,7 +266,6 @@ DWORD StartJob(C_Job &Job)
          goto Cleanup;
       }
 
-      WriteToLogFile("Trying to SetProcessWindowStation");
       // To get the correct default desktop, set the caller's 
       // window station to the interactive window station.
       if(!SetProcessWindowStation(hWinsta)) {
@@ -260,7 +273,6 @@ DWORD StartJob(C_Job &Job)
          goto Cleanup;
       }
 
-      WriteToLogFile("Trying to OpenDesktop");
       // Get a handle to the interactive desktop.
       hDesk = OpenDesktop(
          "Default",     // the interactive window station 
@@ -271,7 +283,6 @@ DWORD StartJob(C_Job &Job)
          DESKTOP_WRITEOBJECTS | 
          DESKTOP_READOBJECTS);
 
-      WriteToLogFile("Trying to revert from SetProcessWindowStation");
       // Restore the caller's window station.
       if(!SetProcessWindowStation(hWinstaSave)) {
          sprintf(szErrorPart, "SetProcessWindowStation(hWinstaSave) failed:");
@@ -283,21 +294,18 @@ DWORD StartJob(C_Job &Job)
          goto Cleanup;
       }
 
-      WriteToLogFile("Trying to GetLogonSID");
       // Get the SID for the client's logon session.
       if(!GetLogonSID(hUserToken, pSid)) {
          sprintf(szErrorPart, "GetLogonSID failed:");
          goto Cleanup;
       }
 
-      WriteToLogFile("Trying to AddAceToWindowStation");
       // Allow logon SID full access to interactive window station.
       if(!AddAceToWindowStation(hWinsta, pSid))  {
          sprintf(szErrorPart, "AddAceToWindowStation failed:");
          goto Cleanup;
       }
 
-      WriteToLogFile("Trying to AddAceToDesktop");
       // Allow logon SID full access to interactive desktop.
       if(!AddAceToDesktop(hDesk, pSid)) {
          sprintf(szErrorPart, "AddAceToDesktop failed:");
@@ -306,12 +314,11 @@ DWORD StartJob(C_Job &Job)
    }
 
    // Impersonate job user to create the stdout/stderr files as the right user.
-   WriteToLogFile("Trying to ImpersonateLoggedOnUser (JobUser)");
    if (!ImpersonateLoggedOnUser(hUserToken)) {
       sprintf(szErrorPart, "ImpersonateLoggedOnUser (JobUser) failed:");
       goto Cleanup;
    }
-   WriteToLogFile("Redirecting standard file handles");
+
    // Redirect stdout and stderr
    if(RedirectStdHandles(Job, hStdout, hStderr)!=0) {
        sprintf(szErrorPart, "Redirecting File Handles failed:");
@@ -329,13 +336,11 @@ DWORD StartJob(C_Job &Job)
          goto Cleanup;
       }
 
-      WriteToLogFile("Trying to ImpersonateLoggedOnUser (DesktopUser)");
       // Impersonate client to ensure access to executable file.
       if(!ImpersonateLoggedOnUser(hSessionToken))  {
          sprintf(szErrorPart, "ImpersonateLoggedOnUser (DesktopUser) failed:");
          goto Cleanup;
       }
-      WriteToLogFile("Setting up data for SGE_Starter.exe");
    }
    // Fill STARTUPINFO struct
    si.cb          = sizeof(STARTUPINFO); 
@@ -358,7 +363,12 @@ DWORD StartJob(C_Job &Job)
    }
 
    Job.m_hJobObject = CreateJobObject(NULL, NULL);
+   if (Job.m_hJobObject == NULL) {
+      singleLock.Unlock();
+      goto Cleanup;
+   }
 
+   WriteToLogFile("Starting Job %s", pszCmdLine);
    if (IsSystemWindowsVista() == TRUE) {
       char *pszStarterCmdLine = NULL;
       char *pszPipeName = NULL;
@@ -372,9 +382,7 @@ DWORD StartJob(C_Job &Job)
       if (BuildCommandLineForStarter(Job, pszPipeName, pszCmdLine, &pszStarterCmdLine) != 0) {
          goto Cleanup;
       }
-
       // Launch the process in the client's logon session.
-      WriteToLogFile("Trying to CreateProcessAsUser");
       bResult = CreateProcessAsUser(hSessionToken,
          NULL,
          pszStarterCmdLine,
@@ -415,6 +423,7 @@ DWORD StartJob(C_Job &Job)
       goto Cleanup;
    }
 
+   WriteToLogFile("Job started successfully.");
    AssignProcessToJobObject(Job.m_hJobObject, pi.hProcess);
 
    // End impersonation of client.
@@ -429,29 +438,42 @@ DWORD StartJob(C_Job &Job)
    // Wait blocking for job end
    if (bResult && pi.hProcess != INVALID_HANDLE_VALUE) {
       if (IsSystemWindowsVista() == TRUE) {
-         WritePasswordToPipe(hPipe, pi.hProcess, Job.pass);
+         // On Vista, send job user's password to SGE_Starter.exe, it needs it
+         // to call CreateProcessWithLogon().
+         if (WritePasswordToPipe(hPipe, pi.hProcess, Job.pass, szErrorPart) != 0) {
+            // szErrorPart should already be filled by WritePasswordToPipe();
+            goto Cleanup;
+         }
          CloseHandle(hPipe);
-// TODO: Logging for error values of WritePasswordToPipe()
          hPipe = INVALID_HANDLE_VALUE;
       }
-
-// TODO: Handle return value of SGE_Starter.exe properly!
+      // Wait blocking for end of the main process of the job
+      // (or for end of SGE_Starter.exe on Vista)
       WriteToLogFile("Waiting for job end.");
       dwWait = WaitForSingleObjectEx(pi.hProcess, INFINITE, FALSE);
       if(dwWait==WAIT_OBJECT_0) {
-         Job.StoreUsage(pi.hProcess);
+         // Make sure all child processes are killed
+         if (Job.Terminate() != 0) {
+            goto Cleanup;
+         }
+         // Read usage data from Windows job object and store it in our Job object
+         if (Job.StoreUsage() != 0) {
+            goto Cleanup;
+         }
       }
-      WriteToLogFile("Job ended.");
-      CloseHandle(pi.hProcess); 
-      pi.hProcess = INVALID_HANDLE_VALUE;
-      CloseHandle(Job.m_hJobObject);
-      Job.m_hProcess = INVALID_HANDLE_VALUE;
-      Job.m_hJobObject = INVALID_HANDLE_VALUE;
+      if (IsSystemWindowsVista() == TRUE) {
+         DWORD dwStarterExit;
+         // Translate SGE_Starter.exe exit status
+         dwStarterExit = (Job.dwExitCode & 0xffff0000) >> 16;
+         Job.dwExitCode = Job.dwExitCode & 0x0000ffff;
+         if (dwStarterExit != 0) {
+            sprintf(szErrorPart, "SGE_Starter.exe failed, %d: %s",
+               dwStarterExit, szStarterError[dwStarterExit]);
+            goto Cleanup;
+         }
+      }
       Job.m_JobStatus = js_Finished;
-   }
-   if(pi.hThread != INVALID_HANDLE_VALUE) {
-      CloseHandle(pi.hThread); 
-      pi.hThread = INVALID_HANDLE_VALUE;
+      WriteToLogFile("Job ended.");
    }
 
    if(bBackgndMode == FALSE) {
@@ -471,12 +493,12 @@ DWORD StartJob(C_Job &Job)
    }
 
 Cleanup: 
-   if(bError == TRUE) {   
+   if (bError == TRUE) {   
       char szLastError[501];
 
       dwError = GetLastError();
 
-      if(dwError == 193) {
+      if (dwError == 193) {
          // FormatMessage doesn't provide an error message for errno=193
          // The table of System Errors from the MSDN Libary tells us:
          // 193 Is not a valid application.  ERROR_BAD_EXE_FORMAT 
@@ -486,9 +508,9 @@ Cleanup:
             NULL, dwError, 0, szLastError, 500, NULL);
       }
 
-      if(strlen(szLastError) > 0) {
-         if(szLastError[strlen(szLastError)-2] == '\r') {
-            szLastError[strlen(szLastError)-2] = '\0';
+      if (strlen(szLastError) > 0) {
+         if (szLastError[strlen(szLastError)-2] == '\r') {
+             szLastError[strlen(szLastError)-2] = '\0';
          }
       } else {
          strcpy(szLastError, "(no error message available from system)");
@@ -504,39 +526,52 @@ Cleanup:
       Job.m_JobStatus = js_Failed;
    }
 
-   if(hStdout != INVALID_HANDLE_VALUE) {
+   if (hStdout != INVALID_HANDLE_VALUE) {
       CloseHandle(hStdout);
    }
-   if(hStderr != INVALID_HANDLE_VALUE) {
+   if (hStderr != INVALID_HANDLE_VALUE) {
       CloseHandle(hStderr);
    }
    if (hPipe != INVALID_HANDLE_VALUE) {
       CloseHandle(hPipe);
    }
-
-   if(hWinstaSave != NULL) {
+   if (hWinstaSave != NULL) {
       SetProcessWindowStation(hWinstaSave);
    }
 
    // Free the buffer for the logon SID.
-   if(pSid) {
+   if (pSid) {
       FreeLogonSID(pSid);
    }
 
    // Close the handles to the interactive window station and desktop.
-   if(hWinsta != NULL) {
+   if (hWinsta != NULL) {
       CloseWindowStation(hWinsta);
    }
-   if(hDesk != NULL) {
+   if (hDesk != NULL) {
       CloseDesktop(hDesk);
    }
    // Close the handle to the client's access token.
-   if(hUserToken != INVALID_HANDLE_VALUE) {
+   if (hUserToken != INVALID_HANDLE_VALUE) {
       CloseHandle(hUserToken);  
    }
    // Close the handle to the session token.
-   if(hSessionToken != INVALID_HANDLE_VALUE) {
+   if (hSessionToken != INVALID_HANDLE_VALUE) {
       CloseHandle(hSessionToken);  
+   }
+
+   if (pi.hProcess != INVALID_HANDLE_VALUE) {
+      CloseHandle(pi.hProcess); 
+      pi.hProcess = INVALID_HANDLE_VALUE;
+      Job.m_hProcess = INVALID_HANDLE_VALUE;
+   }
+   if (Job.m_hJobObject != NULL) {
+      CloseHandle(Job.m_hJobObject);
+      Job.m_hJobObject = NULL;
+   }
+   if(pi.hThread != INVALID_HANDLE_VALUE) {
+      CloseHandle(pi.hThread); 
+      pi.hThread = INVALID_HANDLE_VALUE;
    }
 
    free(pszEnv);
@@ -1740,7 +1775,7 @@ static int BuildCommandLineForStarter(const C_Job &Job,
 *  NOTES
 *******************************************************************************/
 static int WritePasswordToPipe(const HANDLE &hPipe, const HANDLE &hProcess,
-                               const char *szPassword)
+                               const char *szPassword, char *szError)
 {
    BOOL   bPipeIsConnected = FALSE;
    DWORD  dwWritten;
@@ -1779,6 +1814,7 @@ static int WritePasswordToPipe(const HANDLE &hPipe, const HANDLE &hProcess,
 
    // Pipe is not connected, return error
    if (bPipeIsConnected == FALSE) {
+      strcpy(szError, "SGE_Starter.exe didn't start the job");
       WriteToLogFile("SGE_Starter.exe didn't start the job");
       return 1;
    }
@@ -1786,6 +1822,7 @@ static int WritePasswordToPipe(const HANDLE &hPipe, const HANDLE &hProcess,
    // Pipe is connected, write to pipe
    if (WriteFile(hPipe, szPassword, (DWORD)strlen(szPassword), &dwWritten, &ov) == FALSE
       || dwWritten != strlen(szPassword)) {
+      strcpy(szError, "Couldn't write all data to pipe");
       WriteToLogFile("Couldn't write all data to pipe");
       return 2;
    }
@@ -1793,6 +1830,7 @@ static int WritePasswordToPipe(const HANDLE &hPipe, const HANDLE &hProcess,
    // As the pipe is asynchronous, we will see here if the child process really
    // read all bytes or if it died before
    if (FlushFileBuffers(hPipe) == FALSE) {
+      strcpy(szError, "Flushing the pipe failed");
       WriteToLogFile("Flushing the pipe failed");
       return 3;
    }

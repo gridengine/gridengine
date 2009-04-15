@@ -704,7 +704,7 @@ int sge_uid2user(uid_t uid, char *dst, size_t sz, int retries)
 *     int sge_gid2group(gid_t gid, char *dst, size_t sz, int retries) 
 *
 *  FUNCTION
-*     Resolves gid to user name. if 'dst' is NULL the function checks
+*     Resolves gid to group name. if 'dst' is NULL the function checks
 *     only if the gid is resolvable. 
 *
 *  INPUTS

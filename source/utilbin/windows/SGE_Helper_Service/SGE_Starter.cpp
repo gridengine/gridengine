@@ -1,4 +1,3 @@
-
 #include <afxtempl.h>
 #include <afxmt.h>
 #include <winsock2.h>
@@ -13,10 +12,12 @@
 #include <Psapi.h>
 #include <Wtsapi32.h>
 #include <Sddl.h>
+#include <process.h>
 
 // Global Variables:
 static char  *g_pCmdLine       = NULL;
 static TCHAR g_szWindowClass[] = "SGE_Starter"; // the main window class name
+static BOOL  g_bDoLogging = FALSE;
 
 // Forward declarations of functions included in this code module:
 ATOM                    MyRegisterClass(HINSTANCE hInstance);
@@ -46,32 +47,44 @@ int                     StartJob(int argc, char *argv[]);
 *
 *  RESULTS
 *     int - 0 if the line was successfully appended to the log file,
-*           1 if an error occured.
+*           1 if an error occured,
+*           2 if logging is disabled.
 ******************************************************************************/
 static int WriteToLogFile(const char *szMessage, ...)
 {
-   int        ret = 1;
-   FILE       *fp = NULL;
-#ifdef _DEBUG
-   DWORD      dwLastError;
-   SYSTEMTIME sysTime;
-   va_list    args;
-   char       Buffer[4096];
-   char       NameBuf[1024];
+   int         ret = 1;
+   FILE        *fp = NULL;
+   DWORD       dwLastError;
+   SYSTEMTIME  sysTime;
+   va_list     args;
+   char        Buffer[4096];
+   static BOOL g_bFirstTime = TRUE;
+   static char g_szTraceFile[5000];
+
+   if (g_bDoLogging == FALSE) {
+      return 2;
+   }
 
    // We do not want to change LastError in here.
    dwLastError = GetLastError();
-   va_start(args, szMessage);
-   _vsnprintf(Buffer, 4095, szMessage, args);
    GetLocalTime(&sysTime);
 
-   fp = fopen("c:\\Temp\\SGE_Starter.log", "a+");
-   if (fp == NULL) {
-      sprintf(NameBuf, "c:\\Temp\\SGE_Starter.%02d%02d%02d.log", 
-         sysTime.wHour, sysTime.wMinute, sysTime.wSecond);
-      fp = fopen(NameBuf, "a+");
+   // If we don't have a trace file yet, create it's name.
+   if (g_bFirstTime == TRUE) {
+      g_bFirstTime = FALSE;
+      // The trace file name is $TEMP\SGE_Starter.$PID_$TIMESTAMP.log
+      // e.g. "C:\Temp\SGE_Starter.18732_142316.log"
+      // This should be unique enough for this purpose.
+      strcpy(Buffer, "C:\\TEMP");
+      GetEnvironmentVariable("TEMP", Buffer, 4095);
+      _snprintf(g_szTraceFile, 4999, "%s\\SGE_Starter.%d_%02d%02d%02d.log", Buffer,
+         _getpid(), sysTime.wHour, sysTime.wMinute, sysTime.wSecond);
    }
+
+   fp = fopen(g_szTraceFile, "a+");
    if(fp != NULL) {
+      va_start(args, szMessage);
+      _vsnprintf(Buffer, 4095, szMessage, args);
       fprintf(fp, "%02d:%02d:%02d [SGE_Starter] %s\n",
          sysTime.wHour, sysTime.wMinute, sysTime.wSecond, Buffer);
       fflush(fp);
@@ -79,7 +92,7 @@ static int WriteToLogFile(const char *szMessage, ...)
       ret = 0;
    }
    SetLastError(dwLastError);
-#endif
+
    return ret;
 }
 
@@ -400,7 +413,11 @@ int APIENTRY WinMain(HINSTANCE hInstance,
                      LPTSTR    lpCmdLine,
                      int       nCmdShow)
 {
-   MSG msg;
+   MSG  msg;
+   char szBuf[101];
+
+   GetEnvironmentVariable("SGE_DO_LOGGING", szBuf, 100);
+   sscanf(szBuf, "%d", (int*)&g_bDoLogging);
 
    g_pCmdLine = _strdup(lpCmdLine);
 
@@ -497,7 +514,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
          LogProcessOwnerToFile();
 #endif
          ParseCmdLine(g_pCmdLine, &argc, argv);
-         ret = StartJob(argc, argv);
+         ret = StartJob(argc, argv);   // Forward exit status of job
          WriteToLogFile("----------- ending --------------");
          PostQuitMessage(ret);
 		   break;
@@ -581,6 +598,7 @@ int StartJob(int argc, char *argv[])
    PROCESS_INFORMATION pi; 
    BOOL                bResult     = FALSE;
    DWORD               dwError     = ERROR_SUCCESS;
+   DWORD               dwExitCode  = 0;
    HANDLE              hStdout     = INVALID_HANDLE_VALUE;
    HANDLE              hStderr     = INVALID_HANDLE_VALUE;
    int                 nRet        = 0;
@@ -608,7 +626,7 @@ int StartJob(int argc, char *argv[])
          sprintf(szErrorPart, "Missing command line arguments");
          throw 1;
       }
-   
+
       // The command line arguments of the job were the last arguments in
       // our command line - just copy them to the command line of the job.
       for (int i=4; i<argc; i++) {
@@ -663,14 +681,14 @@ int StartJob(int argc, char *argv[])
          sprintf(szErrorPart, "CreateProcessAsUser failed, Command is \"%s\"", szCmdLine);
          // Re-set the LastError of CreateProcessWithLogonW()
          SetLastError(dwError);
-         throw 3;
+         throw 2;
       }
       WriteToLogFile("Successfully created process");
  
       // Process should already be in Job object because of inheritation
       if (pi.hProcess == INVALID_HANDLE_VALUE) {
          sprintf(szErrorPart, "Got invalid process handle");
-         throw 4;
+         throw 3;
       }
 
       // Wait for job to finish
@@ -678,14 +696,26 @@ int StartJob(int argc, char *argv[])
       WriteToLogFile("Waiting for job end.");
       dwWait = WaitForSingleObjectEx(pi.hProcess, INFINITE, FALSE);
       if(dwWait==WAIT_OBJECT_0) {
+         if (GetExitCodeProcess(pi.hProcess, &dwExitCode) == FALSE) {
+            throw 4;
+         }
+         nRet = (int)dwExitCode;
          WriteToLogFile("The SGE_Helper_Service should get the complete usage of the job");
+      } else {
+         WriteToLogFile("Waiting for job end failed!");
+         throw 5;
       }
+
       WriteToLogFile("Job ended.");
       CloseHandle(pi.hProcess); 
    }
    catch (int nRetVal) {
       LogErrorMessageToFile(szErrorPart);
-      nRet = nRetVal;
+      // In order to transfer the job exit code and the SGE_Starter.exe
+      // exit code to the SGE_Helper_Service.exe, we place the job
+      // exit code into the lower 16 bit and the SGE_Starter.exe exit code
+      // into the higher 16 bit of our return value.
+      nRet = (nRetVal << 16) + dwExitCode;
    }
 
    if(pi.hThread != INVALID_HANDLE_VALUE) {
@@ -693,5 +723,3 @@ int StartJob(int argc, char *argv[])
    }
    return nRet;
 }
-
-

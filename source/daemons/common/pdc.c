@@ -249,14 +249,14 @@ void pdc_kill_addgrpid(gid_t add_grp_id, int sig,
    for (; nprocs >= 0; nprocs--, procs++) {
       for (i = 0; i < procs->ki_ngroups; i++) {
          if (procs->ki_groups[i] == add_grp_id) {
-	    char err_str[256];
+	         char err_str[256];
 
-	    if (procs->ki_uid != 0 && procs->ki_ruid != 0 &&
-           procs->ki_svuid != 0 &&
-           procs->ki_rgid != 0 && procs->ki_svgid != 0) {
-	       kill(procs->ki_pid, sig);
-	       sprintf(err_str, MSG_SGE_KILLINGPIDXY_UI ,
-		       sge_u32c(procs->ki_pid), add_grp_id);
+	         if (procs->ki_uid != 0 && procs->ki_ruid != 0 &&
+                procs->ki_svuid != 0 &&
+                procs->ki_rgid != 0 && procs->ki_svgid != 0) {
+                kill(procs->ki_pid, sig);
+	             sprintf(err_str, MSG_SGE_KILLINGPIDXY_UI,
+		            sge_u32c(procs->ki_pid), add_grp_id);
 	    } else {
 	       sprintf(err_str, MSG_SGE_DONOTKILLROOTPROCESSXY_UI ,
 		       sge_u32c(procs->ki_pid), add_grp_id);

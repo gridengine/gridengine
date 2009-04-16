@@ -353,7 +353,8 @@ public class HostTable extends JTable {
         });
         tableMenu.add(deleteAllMI);
 
-        tableMenu.addSeparator();
+        final JPopupMenu.Separator saveSeparator = new JPopupMenu.Separator();
+        tableMenu.add(saveSeparator);
 
         // menu item for saving selected hosts in the table
         final JMenuItem saveSelectionMI = new JMenuItem(handler.getLabel("menu.save.selection"));
@@ -413,6 +414,7 @@ public class HostTable extends JTable {
                     if (HostTable.this.getModel() instanceof HostInstallTableModel) {
                         refreshSeparator.setVisible(false);
                         configureSeparator.setVisible(false);
+                        saveSeparator.setVisible(false);
                         
                         configureMI.setVisible(false);
 
@@ -421,6 +423,9 @@ public class HostTable extends JTable {
 
                         resolveSelectionMI.setVisible(false);
                         resolveAllMI.setVisible(false);
+
+                        deleteSelectionMI.setVisible(false);
+                        deleteAllMI.setVisible(false);
                     }
 
                     tableMenu.show(e.getComponent(), e.getX(), e.getY());

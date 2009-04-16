@@ -100,6 +100,7 @@ public class ThreadPoolObserver {
      * Starts the observation of the thread pool(s)
      */
     public void observe() {
+        //TODO: does not work when pool will be empty (no tasks will be executed)
         if (thread == null || !thread.isAlive()) {
             run = true;
             isStarted = false;

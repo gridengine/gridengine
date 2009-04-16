@@ -1,3 +1,13 @@
+LP-2009-04-16-2: Bugfix:      gui-installer: host grammar needs improvements
+                 Bugster:     6786390
+                 Issue:       2997
+                 Enhancem.:   gui-installer: disabled xmloutput file generation
+                 Enhancem.:   gui-installer: removed remove host menu action in
+                              the installation
+                 Bugfix.:     gui-installer: Fixed CSP mode prerequisites task
+                              failure
+                 Review:      ZG
+
 LP-2009-04-16-1: Bugfix:      error message when testing JAVA version
                  Bugster:     6830972
                  Bugfix:      load_sge_config.sh fails when userset pass and 

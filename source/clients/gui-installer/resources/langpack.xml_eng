@@ -476,8 +476,8 @@ ___INFO__MARK_END__-->
         <str id="menu.configure" txt="Configure..."/>
         <str id="menu.set" txt="Set"/>
         <str id="menu.unset" txt="Unset"/>
-        <str id="menu.all" txt="all as"/>
-        <str id="menu.selected" txt="selected as"/>
+        <str id="menu.all" txt="All as"/>
+        <str id="menu.selected" txt="Selected as"/>
         <str id="menu.resolve.selected" txt="Refresh selected"/>
         <str id="menu.resolve.all" txt="Refresh all"/>
         <str id="menu.remove.selected" txt="Remove selected"/>

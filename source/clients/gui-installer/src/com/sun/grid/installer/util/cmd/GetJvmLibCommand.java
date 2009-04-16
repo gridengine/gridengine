@@ -39,9 +39,9 @@ import com.sun.grid.installer.util.Util;
 
 public class GetJvmLibCommand extends CmdExec {
       //E.g.: rsh/ssh [-l <connect_user>] [-o ....] HOSTNAME CMD
-      private static String getJvmLibCommand = "{0} {1} {2} {3} {4}cd {5} ; . {5}/util/install_modules/inst_qmaster.sh ; HaveSuitableJavaBin 1.5.0 jvm print'\"";
+      private static String getJvmLibCommand = "{0} {1} {2} {3} {4}export SGE_ROOT={5} ; cd {5} ; . {5}/util/install_modules/inst_qmaster.sh ; HaveSuitableJavaBin 1.5.0 jvm print'\"";
       //E.g.: CMD
-      private static String localGetJvmLibCommand = "cd \"{0}\" ; . \"{0}\"/util/install_modules/inst_qmaster.sh ; HaveSuitableJavaBin 1.5.0 jvm print";
+      private static String localGetJvmLibCommand = "export SGE_ROOT=\"{0}\" ; cd \"{0}\" ; . \"{0}\"/util/install_modules/inst_qmaster.sh ; HaveSuitableJavaBin 1.5.0 jvm print";
       private String command;
 
       public GetJvmLibCommand(String host, String user, String shell, boolean isWindowsMode, String sge_root) {

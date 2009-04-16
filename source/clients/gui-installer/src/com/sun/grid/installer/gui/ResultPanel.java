@@ -218,7 +218,7 @@ public class ResultPanel extends IzPanel implements Printable, Config {
 
         // Generate auto installation file
         // TODO set proper output
-        try {
+        /*try {
             FileOutputStream out = new FileOutputStream("xmloutput.xml");
             BufferedOutputStream outBuff = new BufferedOutputStream(out, 5120);
             parent.writeXMLTree(idata.xmlData, outBuff);
@@ -226,7 +226,7 @@ public class ResultPanel extends IzPanel implements Printable, Config {
             outBuff.close();
         } catch (Exception e) {
             Debug.error("Can not write auto installation file! " + e);
-        }
+        }*/
     }
 
     /**

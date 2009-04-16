@@ -121,6 +121,7 @@ public class Util implements Config{
                 case '[':
                 case ']':
                 case '.':
+                case ' ':
                     break;
                 default:
                     return false;

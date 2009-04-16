@@ -1,3 +1,12 @@
+LP-2009-04-16-1: Bugfix:      error message when testing JAVA version
+                 Bugster:     6830972
+                 Bugfix:      load_sge_config.sh fails when userset pass and 
+                              users not in a first interation
+                 Bugster:     6830081
+                 Issue:       2994
+                 Bugfix:      Qmaster autoinstallation fails
+                 Review:      MD
+
 LP-2009-04-16-0: Bugfix:      Message from tar command appears in installation
                               output
                  Bugster:     6830900

@@ -1893,8 +1893,8 @@ IsJavaBinSuitable()
    check=$3
    
    JAVA_VERSION=`$java_bin -version 2>&1 | head -1`
-   JAVA_VERSION=`echo $JAVA_VERSION | awk '{if (NF > 2) print $3; else print ""}' 2>/dev/null | sed -e "s/\"//g" 2>/dev/null`
-   NUM_JAVA_VERSION=`JavaVersionString2Num $JAVA_VERSION`      
+   JAVA_VERSION=`echo $JAVA_VERSION | awk '$3 ~ /"1.[45678]/ {print $3}' 2>/dev/null | sed -e "s/\"//g" 2>/dev/null`
+   NUM_JAVA_VERSION=`JavaVersionString2Num $JAVA_VERSION`     
    if [ $NUM_JAVA_VERSION -ge $NUM_MIN_JAVA_VERSION ]; then
       if [ "$check" = "jvm" ]; then
          jvm_lib_path=""

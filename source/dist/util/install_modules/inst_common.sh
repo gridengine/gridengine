@@ -1021,7 +1021,7 @@ CheckConfigFile()
             is_valid="false" 
          fi
          if [ "$SGE_JMX_SSL" = "true" ]; then
-            if [ `echo "$SGE_JMX_SSL_KEYSTORE_PW" | awk '{print length($0)'` -lt 6 ]; then
+            if [ `echo "$SGE_JMX_SSL_KEYSTORE_PW" | awk '{print length($0)}'` -lt 6 ]; then
                $INFOTEXT -e "Your SGE_JMX_SSL_KEYSTORE_PW is too short! Password must have at least 6 characters."
                is_valid="false"
             fi

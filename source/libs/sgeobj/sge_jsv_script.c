@@ -33,6 +33,7 @@
 #include "sge.h"
 
 #include <time.h>
+#include <ctype.h>
 
 #include "rmon/sgermon.h"
 
@@ -182,7 +183,7 @@ jsv_handle_param_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answe
       {
          int i = 0;
          const char *read_only_param[] = {
-            "CLIENT", "CONTEXT", "GROUP", "JOB_ID", "USER", "VERSION", "CMDARGS",
+            "CLIENT", "CONTEXT", "GROUP", "JOB_ID", "USER", "VERSION",
             NULL
          };
 
@@ -329,28 +330,51 @@ jsv_handle_param_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answe
       }
 
       /* CMDARG<id> */
-      {
+      {         
          if (ret && strncmp("CMDARG", param, 6) == 0) {
             lList *arg_list = lGetList(new_job, JB_job_args);
-            const char *id_string = param + 6;
             lListElem *elem;
             u_long32 id = 0;
             u_long32 length;
             int i;
+            const char *id_string = param + 6;
+            if (!isdigit(id_string[0])) {
+               if (value) {
+                  u_long32 to_create = 0;
+                  u_long32 to_remove = 0;
 
-            if (value) {
-               u_long32 to_create = 0;
-
-               length = lGetNumberOfElem(arg_list);
-               ret &= ulong_parse_from_string(&id, &local_answer_list, id_string);
-               if (ret) {
-                  to_create = (length < id + 1) ? (id + 1 - length) : 0;
-                  while (to_create-- > 0) {
-                     lAddElemStr(&arg_list, ST_name, "", ST_Type);
+                  length = lGetNumberOfElem(arg_list);
+                  ret &= ulong_parse_from_string(&id, &local_answer_list, value);
+                  if (ret) {
+                     if (id > length) {
+                        to_create = id - length;
+                        while (to_create > 0) {
+                           lAddElemStr(&arg_list, ST_name, "", ST_Type);
+                           to_create--;
+                        }
+                     } else {
+                        to_remove = length - id;
+                        while (to_remove > 0) {
+                           lListElem *tmp = lLast(arg_list);
+                           lRemoveElem(arg_list, &tmp);
+                           to_remove--;
+                        }
+                     }
                   }
                }
-            }
-            if (ret) {
+            } else {
+               u_long32 to_create = 0;
+               length = lGetNumberOfElem(arg_list);
+               ret &= ulong_parse_from_string(&id, &local_answer_list, id_string);
+
+               if (id > length) {
+                  to_create = id - length + 1;
+                  while (to_create > 0) {
+                     lAddElemStr(&arg_list, ST_name, "", ST_Type);
+                     to_create--;
+                  }
+               }
+
                length = lGetNumberOfElem(arg_list);
                elem = lFirst(arg_list);
                for (i = 0; i <= length - 1; i++) {
@@ -361,7 +385,7 @@ jsv_handle_param_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answe
                   elem = lNext(elem);
                }
             }
-         }
+         } 
       }
 
       /* -a */

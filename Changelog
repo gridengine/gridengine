@@ -1,3 +1,8 @@
+LP-2009-04-16-0: Bugfix:      Message from tar command appears in installation
+                              output
+                 Bugster:     6830900
+                 Review:      AP
+
 HP-2009-04-15-0: Bugfix:      * Return values of SGE_Starter.exe are handled
                                 correctly now.
                               * Logging of SGE_Starter.exe and SGE_Helper_Service.exe

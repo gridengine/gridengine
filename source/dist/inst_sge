@@ -913,9 +913,9 @@ if [ "$QMASTER" = "install" -a "$UPDATE" != "true" ]; then
  # TODO: Need to support CALOCALTOP value (for non-root installation)!
  if [ -d "/var/sgeCA/$PORT_DIR" ]; then
     #TODO: save only the keystores and certs (JMX stuff only)?
-    tar -cpf /var/sgeCA/$PORT_DIR.tar /var/sgeCA/$PORT_DIR
-    gzip -f /var/sgeCA/$PORT_DIR.tar
-    chmod 400 /var/sgeCA/$PORT_DIR.tar.gz
+    tar -cpf /var/sgeCA/$PORT_DIR.tar /var/sgeCA/$PORT_DIR >/dev/null 2>&1
+    gzip -f /var/sgeCA/$PORT_DIR.tar >/dev/null 2>&1
+    chmod 400 /var/sgeCA/$PORT_DIR.tar.gz >/dev/null 2>&1
  fi
 
  is_master=""

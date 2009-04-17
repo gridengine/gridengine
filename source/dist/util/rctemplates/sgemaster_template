@@ -313,7 +313,7 @@ CheckRunningQmaster()
    
    while [ $retries -le 30 ]; do
       $bin_dir/qping -info $masterhost $ping_port qmaster 1 > /dev/null 2>&1
-      if [ $? -eq 0 -a -s "$qmaster_spool_dir/qmaster.pid" ]; then
+      if [ $? -eq 0 ]; then
          running=true
          break
       else
@@ -577,11 +577,10 @@ if [ "$startup" = true ]; then
          daemon_pid=`cat "$qmaster_spool_dir/qmaster.pid"`
          $utilbin_dir/checkprog $daemon_pid sge_qmaster > /dev/null
          if [ $? -eq 0 ]; then
-            already_running=true          
-         else
-            rm -f "$qmaster_spool_dir/qmaster.pid" >/dev/null 2>&1
+            already_running=true
          fi
       fi
+      # We can't detect pid file race, but we'll catch it most of the time
       if [ "$already_running" = "true" ]; then
          echo
          echo "sge_qmaster with PID $daemon_pid is already running"

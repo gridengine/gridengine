@@ -890,19 +890,11 @@ if [ "$QMASTER" = "install" -a "$UPDATE" != "true" ]; then
  
  SetScheddConfig
  GiveHints
- CheckRunningDaemon sge_qmaster
  
- if [ $? = 0 ]; then
-    $INFOTEXT "sge_qmaster successfully installed!\n"
-    $INFOTEXT -log "sge_qmaster successfully installed!\n"
-    MoveLog
-    $CLEAR
- else
-    $INFOTEXT "sge_qmaster not successfully installed!\n" 
-    $INFOTEXT -log "sge_qmaster not successfully installed!\n" 
-    MoveLog
-    exit 1 
- fi
+ $INFOTEXT "sge_qmaster successfully installed!\n"
+ $INFOTEXT -log "sge_qmaster successfully installed!\n"
+ MoveLog
+ $CLEAR
  
  # Let's simplify copying of the certs to remote hosts if they exist (how? - we no longer need scp)
  if [ "$SGE_QMASTER_PORT" = "" ]; then

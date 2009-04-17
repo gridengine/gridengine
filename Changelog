@@ -1,3 +1,8 @@
+LP-2009-04-17-1: Bugfix:      CheckRunningDeamon for qmaster returns true even
+                              if no pid file created
+                 Belongs to:  LP-2009-04-17-0
+                 Review:      CR
+
 LP-2009-04-17-0: Bugfix:      CheckRunningDeamon for qmaster returns true even
                               if no pid file created
                  Bugster:     6824148

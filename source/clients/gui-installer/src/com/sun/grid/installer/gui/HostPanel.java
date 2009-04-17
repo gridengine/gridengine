@@ -2364,6 +2364,10 @@ public class HostPanel extends IzPanel implements Config,
                 //BDB, Qmaster, Shadowd installation go to special singlethreadPool
                 if (h.isBdbHost() || h.isQmasterHost() || h.isShadowHost()) {
                     try {
+                        if (h.isQmasterHost() && h.getInstallTimeout() < 360000) {
+                            //Qmaster installation can wait up to 5mins to qmaster to startup
+                            h.setInstallTimeout(Util.DEF_INSTALL_TIMEOUT + 300000);
+                        }
                         singleThreadPool.execute(new InstallTask(h, this, variablesCopy, localizedMessages));
                     } catch (RejectedExecutionException e) {
                         setHostState(h, State.CANCELED);

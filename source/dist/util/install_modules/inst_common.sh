@@ -2639,14 +2639,30 @@ CheckRunningDaemon()
    case $daemon_name in
 
       sge_qmaster )
-         if [ ! -s $QMDIR/qmaster.pid ]; then
-            return 1
-         else
-            daemon_pid=`cat $QMDIR/qmaster.pid`
-            $SGE_UTILBIN/checkprog $daemon_pid $daemon_name > /dev/null
-            return $?
-         fi
-        ;;      
+         # First start has no pid file, we wait until it's there (up to 5mins)
+         start=`$SGE_UTILBIN/now 2>/dev/null`
+         ready=false
+         while [ $ready = "false" ]; do
+            if [ -s "$QMDIR/qmaster.pid" ]; then
+               ready="true"
+            else
+               now=`$SGE_UTILBIN/now 2>/dev/null`
+               if [ "$now" -lt "$start" ]; then
+                  start=$now
+               fi
+               elapsed=`expr $now - $start`
+               if [ $elapsed -gt 300 ]; then
+                  $INFOTEXT "Reached 5min timeout, while waiting for qmaster PID file."
+                  $INFOTEXT -log "Reached 5min timeout, while waiting for qmaster PID file."
+                  return 1
+               fi
+               sleep 2
+            fi
+         done
+         daemon_pid=`cat "$QMDIR/qmaster.pid"`
+         $SGE_UTILBIN/checkprog $daemon_pid $daemon_name > /dev/null
+         return $?
+        ;;
 
       sge_execd )
        h=`hostname`

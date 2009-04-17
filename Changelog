@@ -1,3 +1,7 @@
+RC-2009-04-17-0: Enhancem.:   better handling of SGE_ARCH_STRING for
+                              FreeBSD and NetBSD (from Rayson, Kevin)
+                 Review:      HP, BD, RC
+
 MP-2009-04-16-0: Bugfix:      Changing CMDARG[1-n] always changes the first 
                               commandline argument in the jsv script. Also the
                               number of arguments is handled as read-only parameter
@@ -132,7 +136,7 @@ JG-2009-04-07-0: Bugfix:      qmaster reports commlib read error in message file
                  Review:      CR
 
 EB-2009-04-07-0: Doc:         Added spec doc:  Timed Event Thread Pool
-					  Review:      JG, RD
+                 Review:      JG, RD
 
 JG-2009-04-06-0: Bugfix:      need tight integration accounting and sharetree
                               usage according to reserved resources
@@ -564,7 +568,7 @@ CR-2009-02-16-0: Bugfix:      o sge_execd may crash at start-up time due to
                  Enhancem.:   o new utilib function: sge_get_max_fd()
                  Review:      RD
 
-EB-2009-02-16-0: Doc:		   added new manpage describing the JSV script
+EB-2009-02-16-0: Doc:         added new manpage describing the JSV script
                               interface
                  Review:      SK
 
@@ -1530,9 +1534,9 @@ RD-2008-11-26-0: Enhancem.:   enabled jemalloc as default for linux hosts
                  Review       JG
 
 EB-2008-11-25-0: Bugfix:      - removed deadlock situation in qmaster in
-										  combination with server JSV
-							         - fixed bug in Perl JSV
-					  Review:      RD
+                                combination with server JSV
+                              - fixed bug in Perl JSV
+                 Review:      RD
 
 LP-2008-11-24-0: Enhancem.:   Modifed JMX behavior -jmx and no flag are equal
                  Enhancem.:   Improvements for -autogui option
@@ -1544,11 +1548,11 @@ LP-2008-11-24-0: Enhancem.:   Modifed JMX behavior -jmx and no flag are equal
 RD-2008-11-24-0: Bugfix:      corrected complex man page for non-multiplied consumables
                  Review:      AH
 
-EB-2008-11-24-0: Bugfix:		- added missing functions to Perl jsv
-										- fixed bug in master which handled -o switch
-										- fixed qlogin, qsh, qrsh so taht JSV is
-										  executed in client environment
-					  Review:      MD
+EB-2008-11-24-0: Bugfix:      - added missing functions to Perl jsv
+                              - fixed bug in master which handled -o switch
+                              - fixed qlogin, qsh, qrsh so taht JSV is
+                                executed in client environment
+                 Review:      MD
 
 HP-2008-11-21-1: Bugfix:      fixed several minor bugs, type casts, wording,
                               added debug output and cleaned things up
@@ -1568,11 +1572,11 @@ HP-2008-11-21-0: Bugfix:      on Windows, execd installation failed when hostnam
                  Review:      MD
 
 EB-2008-11-21-0: Bugfix:      Master installation with JMX support fails on DARWIN
-					  Enhancem.:   mask special characters contained in env when
-										they are passed to JSV scripts
-					  Bugster:     6774811
-					  Issue:       2803
-					  Review:      MD, JG
+                 Enhancem.:   mask special characters contained in env when
+                              they are passed to JSV scripts
+                 Bugster:     6774811
+                 Issue:       2803
+                 Review:      MD, JG
 
 RD-2008-11-21-0: Enhancem.:   analyzed generated events and reduced to minimum
                               where possible.
@@ -1619,7 +1623,7 @@ RD-2008-11-19-0: Bugfix:      - fixed two JSV related memory leaks
                  Review:      EB
 
 EB-2008-11-19-0: Bugfix:      - fixed several minor issues concerning JSV
-					  Review:      MD
+                 Review:      MD
 
 DG-2008-11-18-1: Bugfix:      Verification of qlogin and qsh does always
                               return error code 0.
@@ -1645,13 +1649,13 @@ TB-2008-11-17-0: Bugfix:      improved error handling in perl JSV script
                  Review:      MD
 
 EB-2008-11-13-0: Enhancem.:   - added JSV URL to submit dialog of qmon
-										  and to global configuration
-										- added missing parsing code
-										- fixed bug in parsing code of JSV URLs
-										- added code comments
-										- moved error/info messages to msg files
-										- fixed bug in JSV scripts
-										- disabled logging in JSV scripts
+                                and to global configuration
+                              - added missing parsing code
+                              - fixed bug in parsing code of JSV URLs
+                              - added code comments
+                              - moved error/info messages to msg files
+                              - fixed bug in JSV scripts
+                              - disabled logging in JSV scripts
                  Review:      MD
 
 CR-2008-11-12-0: Bugfix:      fixed test_issues module test binary
@@ -1677,13 +1681,13 @@ JG-2008-11-10-0: Bugfix:      fixed a qmaster deadlock on linux
                  Review:      RD
 
 EB-2008-11-06-0: Enhancem.:   - added TCL implementation for JSV template
-										- parsing code for JSV output
+                              - parsing code for JSV output
                               - functionality to test parsing if JSV related
-										  is executed within TS
+                                is executed within TS
                               - added man page jsv.1
-										- source code documentation
-										- fixed several adoc headers which broke
-										  generation of pdf files
+                              - source code documentation
+                              - fixed several adoc headers which broke
+                                generation of pdf files
                  Review:      MD
 
 JG-2008-11-06-0: Bugfix:      When a shadow master took over, the exec daemons
@@ -7391,7 +7395,7 @@ JG-2006-02-03-0: Testsuite: Improved error handling for sge functions called
 
 OJ-2006-01-31-0: Testsuite: Added error handling in *attr routines
                             in sge_procedures.tcl; modified *cal routines
-			                   in sge_calendar.tcl
+                            in sge_calendar.tcl
                  Review:    DT
                  Issue:     477
 
@@ -7411,7 +7415,7 @@ JG-2006-01-25-0: Testsuite: Fixes and cleanup in testsuite framework.
 
 OJ-2006-01-18-0: Testsuite: Added -M(m)ckpt functionality to
                             in sge_checkpoint.tcl, modified set_exechost.tcl
-		                      to support fast add
+                            to support fast add
                  Review:    DT, JG
                  Issue:     477
 
@@ -7457,7 +7461,7 @@ DT-2006-01-04-0: Testsuite: o Enhanced drmaa_wait() tests
 SG-2006-01-04-0: Bugfix:    fixed the build
 
 OJ-2006-01-03-0: Testsuite: added stnode, event client functionality to
-			                   qconf test
+                            qconf test
                             added sge_sharetree*, sge_event_client in tcl_files
                  Changed:   testsuite
                  Review:    pending
@@ -7764,7 +7768,7 @@ DT-2005-11-29-0: Bugfix:    o Fixed broken build on Irix 6.5
                  Review:    RD
 
 RD-2005-11-29-0: Bugfix:    broken build for fbsd-i386
-	              Review:    DT
+                 Review:    DT
 
 CR-2005-11-29-1: Testsuite: added queue error check for
                             checktree/system_tests/clients/qrsh/check.exp
@@ -8911,9 +8915,9 @@ SG-2005-08-20-1: Bugfix:    qstat -j shows wrong message for parallel jobs which
 
 SG-2005-08-20-0: Bugfix:    - performance enhancement for pe-ranges and
                               sequential soft requests
-                            -	consumables as thresholds are not working correctly with pe jobs
+                            - consumables as thresholds are not working correctly with pe jobs
                             - Soft requirements on load values ignored
-                            -	wrong soft requests decission
+                            - wrong soft requests decission
                             - Testsuite test for consumables as load thresholds
                             - Testsuite test for soft requests
                             - Testsuite test for pe ranges
@@ -9052,7 +9056,7 @@ SG-2005-08-01-1: Bugfix:    bug in qstat -XML output (does not match the schema)
                  Changed:   qstat
                  Review:    RD
 
-SG-2005-08-01-0: Bugfix:  	 strange reservation
+SG-2005-08-01-0: Bugfix:    strange reservation
                  Issue:     1655
                  Bugtraq:   6287955
                  Changed:   scheduler
@@ -13930,12 +13934,12 @@ BD-2004-05-19-5: Enhamcem:  - If 3rdparty/{qmake,qtcsh}/COMPILE_ARCH
 
 BD-2004-05-19-4: Enhamcem:  - Add three new variables to aimk.site and
                               use them in aimk and Makefiles to allow
-			                     Berkeley DB's headers and libraries to
-			                     live in subdirectories of include/ and
-			                     lib/ as well as allowing the library to
-			                     have a suffix.  This is needed to allow
-			                     FreeBSD and NetBSD to build against the
-			                     DB version from ports/pkgsrc.
+                              Berkeley DB's headers and libraries to
+                              live in subdirectories of include/ and
+                              lib/ as well as allowing the library to
+                              have a suffix.  This is needed to allow
+                              FreeBSD and NetBSD to build against the
+                              DB version from ports/pkgsrc.
 
 BD-2004-05-19-3: Bugfix:    - Revert incomplete rename of RC_FILE value
                               "freebsd" to "fbsd"
@@ -18140,12 +18144,12 @@ AH-2003-11-21-0: Bugfix:    Fix schedd/qstat/... crash
                  Review:    EB
 
 DT-2003-11-21-1: Enhancem.: Fixed broken build (AIX51) and added test for
-													  usage information from drmaa_wait()
-								 Changed:   test_drmaa.c
+                            usage information from drmaa_wait()
+                            Changed:   test_drmaa.c
 
-DT-2003-11-21-0: Bugfix:	  Fixed scheduler startup issue -- cleaned up event
-														client changes
-								 Changed:	  sge_process_events.c
+DT-2003-11-21-0: Bugfix:    Fixed scheduler startup issue -- cleaned up event
+                            client changes
+                 Changed:   sge_process_events.c
 
 EB-2003-11-21-0: Bugfix:    Fixed broken build
                             SuSE 9.0 x86:
@@ -18175,7 +18179,7 @@ AH-2003-11-19-0: Bugfix:    The drmaa_run_job()/drmaa_run_bulk_jobs()
                             drmaa_job_template_t * input arguments must be
                             const.
 
-DT-2003-11-18-1: Bugfix:	 Made changes from code review.  Mostly stylisitic.
+DT-2003-11-18-1: Bugfix:    Made changes from code review.  Mostly stylisitic.
                  Changed:   DRMAA & read_defaults.c
 
 DT-2003-11-18-0: Bugfix:    Fixed broken build

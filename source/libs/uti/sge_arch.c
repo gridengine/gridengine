@@ -69,10 +69,7 @@ const char *sge_get_arch(void)
 #   pragma "Define an architecture for SGE"
 #endif
 
-#define xstr(s) str(s)
-#define str(s) #s
-
-   return xstr(SGE_ARCH_STRING);
+   return (SGE_ARCH_STRING);
 }
 
 /****** uti/prog/sge_get_root_dir() *******************************************

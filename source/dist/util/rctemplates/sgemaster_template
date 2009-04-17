@@ -309,10 +309,11 @@ CheckRunningQmaster()
    # related problems.
    # ensure that the test for a running qmaster does not take too long
    # by limiting the total time and numbers the connection test is repeated
-
+   # we also require that the qmaster created a PID file before returning
+   
    while [ $retries -le 30 ]; do
       $bin_dir/qping -info $masterhost $ping_port qmaster 1 > /dev/null 2>&1
-      if [ $? -eq 0 ]; then
+      if [ $? -eq 0 -a -s "$qmaster_spool_dir/qmaster.pid" ]; then
          running=true
          break
       else
@@ -570,18 +571,35 @@ if [ "$startup" = true ]; then
       echo
       exit_val=1
    elif [ $qmaster = true ]; then
-      DetectSMFService qmaster
-      #We want to use smf
-      if [ -z "$SMF_FMRI" -a -n "$service"  ]; then
-         echo "   starting sge_qmaster"
-         svcadm enable -st $service
-      #For -migrate with SMF qmaster_host is not yet set for SMF start (2nd)
-      elif [ $qmaster_host = true -o \( -n "$SMF_FMRI" -a "$SMF_FMRI" = "$service" \) ]; then
-         echo "   starting sge_qmaster"
-         $bin_dir/sge_qmaster
-         [ $? -eq 0 -a -d /var/lock/subsys ] && touch /var/lock/subsys/sgemaster >/dev/null 2>&1
-         CheckRunningQmaster
-         exit_val=$?
+      already_running=false
+      #Check if pid file exists      
+      if [ -s "$qmaster_spool_dir/qmaster.pid" ]; then
+         daemon_pid=`cat "$qmaster_spool_dir/qmaster.pid"`
+         $utilbin_dir/checkprog $daemon_pid sge_qmaster > /dev/null
+         if [ $? -eq 0 ]; then
+            already_running=true          
+         else
+            rm -f "$qmaster_spool_dir/qmaster.pid" >/dev/null 2>&1
+         fi
+      fi
+      if [ "$already_running" = "true" ]; then
+         echo
+         echo "sge_qmaster with PID $daemon_pid is already running"
+         echo
+      else
+         DetectSMFService qmaster
+         #We want to use smf
+         if [ -z "$SMF_FMRI" -a -n "$service"  ]; then
+            echo "   starting sge_qmaster"
+            svcadm enable -st $service
+         #For -migrate with SMF qmaster_host is not yet set for SMF start (2nd)
+         elif [ $qmaster_host = true -o \( -n "$SMF_FMRI" -a "$SMF_FMRI" = "$service" \) ]; then
+            echo "   starting sge_qmaster"
+            $bin_dir/sge_qmaster
+            [ $? -eq 0 -a -d /var/lock/subsys ] && touch /var/lock/subsys/sgemaster >/dev/null 2>&1
+            CheckRunningQmaster
+            exit_val=$?
+         fi
       fi
    fi
    if [ $exit_val -ne 0 ]; then
@@ -630,7 +648,7 @@ if [ "$startup" = true ]; then
    fi
 else
    if [ $shadowd = true -a $shadow_host = true ]; then
-      echo "   Shutting down Grid Engine shadowd"
+      echo "   shutting down Grid Engine shadowd"
       DetectSMFService shadowd
       if [ -z "$SMF_FMRI" -a -n "$service"  ]; then
          svcadm disable -st $service
@@ -646,7 +664,7 @@ else
 
    if [ $qmaster = true ]; then
       if [ `CheckIfQmasterHost $HOST` = true ]; then
-         echo "   Shutting down Grid Engine qmaster"
+         echo "   shutting down Grid Engine qmaster"
          DetectSMFService qmaster
          if [ -z "$SMF_FMRI" -a -n "$service"  ]; then
             svcadm disable -st $service

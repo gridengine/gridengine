@@ -1,3 +1,9 @@
+LP-2009-04-17-0: Bugfix:      CheckRunningDeamon for qmaster returns true even
+                              if no pid file created
+                 Bugster:     6824148
+                 Issue:       2969
+                 Review:      CR
+
 RC-2009-04-17-0: Enhancem.:   better handling of SGE_ARCH_STRING for
                               FreeBSD and NetBSD (from Rayson, Kevin)
                  Review:      HP, BD, RC

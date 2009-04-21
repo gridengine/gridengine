@@ -436,7 +436,8 @@ hgroup_find_all_referencees(const lListElem *this_elem,
 *     hgroup_find_referencees(const lListElem *this_elem, 
 *                             lList **answer_list, 
 *                             lList *master_list, 
-*                             lList **occupants_groups) 
+*                             lList **occupants_groups
+*                             lList **occupants_queues)
 *
 *  FUNCTION
 *     Find all hostgroups from 'master_list' which reference the

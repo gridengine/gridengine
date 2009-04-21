@@ -5078,7 +5078,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
          continue;
       }
 
-      /* "-dhgrp user "  */
+      /* "-dhgrp group "  */
       if (strcmp("-dhgrp", *spp) == 0) {
          lList *answer_list = NULL;
    

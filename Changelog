@@ -1,3 +1,9 @@
+CR-2009-04-21-0: Bugfix:      shadowd startup script returns error if SMF 
+                              support is enabled
+                 Bugster:     6832406
+                 Issue:       3006
+                 Review:      LP
+
 MD-2009-04-21-0: CVS:		Created V62u3beta_TAG
 -----------------------------------------------------
 

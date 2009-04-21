@@ -1,3 +1,9 @@
+AP-2009-04-21-0: Bugfix:      qconf -dhgrp can delete a host group referenced
+                              from a queue instance
+                 Bugster:     6619384
+                 Issue:       2408
+                 Review:      DG
+
 RD-2009-04-06-0: Enhancem.:   - corrected aimk -no-opt switch to really don't optimize
                               - enabled optimization for aimk -debug switch
                  Review:      AA

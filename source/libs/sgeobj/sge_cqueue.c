@@ -387,9 +387,28 @@ cqueue_is_hgroup_referenced(const lListElem *this_elem, const lListElem *hgroup)
       if (name != NULL) {
          lList *href_list = lGetList(this_elem, CQ_hostlist);
          lListElem *tmp_href = lGetElemHost(href_list, HR_name, name);
-
+         /*
+          * Is the host group part of the hostlist definition ...
+          */
          if (tmp_href != NULL) {
             ret = true;
+         } else {
+            /*
+             * ... or is it contained on one of the attribute lists
+             */
+            int index = 0;
+            while (cqueue_attribute_array[index].cqueue_attr != NoName) {
+               lList *attr_list = lGetList(this_elem,
+                                       cqueue_attribute_array[index].cqueue_attr);
+               lListElem *attr_elem = lGetElemHost(attr_list,
+                              cqueue_attribute_array[index].href_attr, name);
+
+               if (attr_elem != NULL) {
+                  ret = true;
+                  break;
+               }
+               index++;
+            }
          }
       }
    }

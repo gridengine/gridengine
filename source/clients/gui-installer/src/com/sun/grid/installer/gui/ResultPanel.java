@@ -35,6 +35,7 @@ import com.izforge.izpack.gui.ButtonFactory;
 import com.izforge.izpack.gui.FlowLayout;
 import com.izforge.izpack.gui.IzPanelLayout;
 import com.izforge.izpack.gui.LabelFactory;
+import com.izforge.izpack.gui.LayoutConstants;
 import com.izforge.izpack.installer.InstallData;
 import com.izforge.izpack.installer.InstallerFrame;
 import com.izforge.izpack.installer.IzPanel;
@@ -53,11 +54,16 @@ import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import javax.swing.*;
+import javax.swing.event.HyperlinkEvent;
+import javax.swing.event.HyperlinkListener;
 
 public class ResultPanel extends IzPanel implements Printable, Config {
 
@@ -67,6 +73,7 @@ public class ResultPanel extends IzPanel implements Printable, Config {
     private JEditorPane editorPane = null;
     private String readmeTemplatePath = "";
     private String readmePath = "";
+    private ActionListener[] nextButtonActionListeners = null;
 
     /**
      * The constructor.
@@ -79,13 +86,23 @@ public class ResultPanel extends IzPanel implements Printable, Config {
 
         // The info label.
         add(LabelFactory.create(parent.langpack.getString("result.info.label"),
-                parent.icons.getImageIcon("edit"), LEADING), NEXT_LINE);
+                parent.icons.getImageIcon("edit"), SwingConstants.LEADING), LayoutConstants.NEXT_LINE);
         // The text area which shows the info.
         editorPane = new JEditorPane();
         editorPane.setCaretPosition(0);
         editorPane.setContentType("text/html");
         editorPane.setEditable(false);
         editorPane.setBackground(Color.white);
+        editorPane.addHyperlinkListener(new HyperlinkListener() {
+            public void hyperlinkUpdate(HyperlinkEvent e) {
+                if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
+                    if (!Util.openBrowser(e.getURL().toString())) {
+                        emitError(ResultPanel.this.parent.langpack.getString("error.can.not.open.browser.title"),
+                                ResultPanel.this.parent.langpack.getString("error.can.not.open.browser.message"));
+                    }
+                }
+            }
+        });
         JScrollPane scroller = new JScrollPane(editorPane);
 
         JButton saveButton = ButtonFactory.createButton(parent.langpack.getString("button.save.label"), parent.icons.getImageIcon("save"), idata.buttonsHColor);
@@ -134,8 +151,8 @@ public class ResultPanel extends IzPanel implements Printable, Config {
         buttonPanel.add(saveButton);
         buttonPanel.add(printButton);
 
-        add(scroller, NEXT_LINE);
-        add(buttonPanel, NEXT_LINE);
+        add(scroller, LayoutConstants.NEXT_LINE);
+        add(buttonPanel, LayoutConstants.NEXT_LINE);
 
         // At end of layouting we should call the completeLayout method also they do nothing.
         getLayoutHelper().completeLayout();
@@ -159,7 +176,7 @@ public class ResultPanel extends IzPanel implements Printable, Config {
             // execd - qconf -sel
             // submit hosts - qconf -ss
             // admin hosts - qconf -sh
-            Util.fillUpTemplate(readmeTemplatePath, readmePath, idata.getVariables());
+            Util.fillUpTemplate(readmeTemplatePath, readmePath, idata.getVariables(), new String[]{"<!--", "/*", "*", "-->"}, true);
             Debug.trace("Generating readme.html file: '" + readmePath + "'.");
 
             editorPane.setPage("file://" + readmePath);
@@ -167,7 +184,7 @@ public class ResultPanel extends IzPanel implements Printable, Config {
             String  readmePath2 = vs.substituteMultiple(idata.getVariable(VAR_README_FILE_NAME_2), null);
             readmePath2 += "_" + Util.generateTimeStamp() + ".html";
 
-            Util.fillUpTemplate(readmeTemplatePath, readmePath2, idata.getVariables());
+            Util.fillUpTemplate(readmeTemplatePath, readmePath2, idata.getVariables(), new String[]{"<!--", "/*", "*"}, true);
         } catch (Exception e) {
             Debug.error("Can not generate readme file! " + e);
         }
@@ -175,12 +192,41 @@ public class ResultPanel extends IzPanel implements Printable, Config {
 
     @Override
     public void panelActivate() {
-        parent.lockNextButton();
-        parent.lockPrevButton();
         parent.setQuitButtonText(parent.langpack.getString("FinishPanel.done"));
         parent.setQuitButtonIcon("done");
 
+        JButton nextButton = parent.getNextButton();
+        nextButton.setText(parent.langpack.getString("button.startover.label"));
+        nextButton.setIcon(parent.icons.getImageIcon("refresh"));
+        nextButton.setVisible(true);
+        nextButton.setToolTipText(parent.langpack.getString("button.startover.tooltip"));
+        nextButtonActionListeners = Util.removeListeners(nextButton);
+        parent.unlockNextButton();
+        nextButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    resetInstaller();
+
+                    parent.navigate(idata.curPanelNumber, 3);
+                } catch (Exception ex) {
+                    Debug.error("Can not start over the installation! " + ex);
+                }
+            }
+        });
+
         loadResult();
+
+        // Generate auto installation file
+        // TODO set proper output
+        /*try {
+            FileOutputStream out = new FileOutputStream("xmloutput.xml");
+            BufferedOutputStream outBuff = new BufferedOutputStream(out, 5120);
+            parent.writeXMLTree(idata.xmlData, outBuff);
+            outBuff.flush();
+            outBuff.close();
+        } catch (Exception e) {
+            Debug.error("Can not write auto installation file! " + e);
+        }*/
     }
 
     /**
@@ -214,5 +260,68 @@ public class ResultPanel extends IzPanel implements Printable, Config {
             editorPane.printAll((Graphics) g2d);
             return Printable.PAGE_EXISTS;
         }
+    }
+
+    /**
+     * Reset the vales/components for starting over the installation
+     * @throws java.lang.Exception
+     */
+    private void resetInstaller() throws Exception {
+        /**
+         * Reset install data
+         */
+        // Select qmaster component to be installed in the next round if it failed at last.
+        if (idata.getVariable(VAR_QMASTER_HOST).equals("") && !idata.getVariable(VAR_QMASTER_HOST_FAILED).equals("")) {
+            idata.setVariable(VAR_INSTALL_QMASTER, "true");
+            idata.setVariable(VAR_QMASTER_HOST, idata.getVariable(VAR_QMASTER_HOST_FAILED));
+        } else {
+            idata.setVariable(VAR_INSTALL_QMASTER, "false");
+            idata.setVariable(VAR_QMASTER_HOST, Host.localHostName);
+        }
+        
+        idata.setVariable(VAR_INSTALL_EXECD, "true");
+        idata.setVariable(VAR_INSTALL_SHADOW, "false");
+
+        // Select bdbserver component to be installed in the next round if it failed at last.
+        idata.setVariable(VAR_SPOOLING_METHOD_BERKELEYDBSERVER, "none");
+        if (idata.getVariable(VAR_DB_SPOOLING_SERVER).equals("") && !idata.getVariable(VAR_DB_SPOOLING_SERVER_FAILED).equals("")) {
+            idata.setVariable(VAR_INSTALL_BDB, "true");
+            idata.setVariable(VAR_SPOOLING_METHOD, idata.getVariable(VAR_SPOOLING_METHOD_BERKELEYDBSERVER));
+            idata.setVariable(VAR_DB_SPOOLING_SERVER, idata.getVariable(VAR_DB_SPOOLING_SERVER_FAILED));
+        } else {
+            idata.setVariable(VAR_INSTALL_BDB, "false");
+            idata.setVariable(VAR_SPOOLING_METHOD, idata.getVariable(VAR_SPOOLING_METHOD_BERKELEYDB));
+            idata.setVariable(VAR_DB_SPOOLING_SERVER, Host.localHostName);
+        }
+
+        //idata.setVariable(VAR_INSTALL_MODE, ""); leave the mode the same
+
+        idata.setVariable(VAR_EXEC_HOST_LIST, "");
+        idata.setVariable(VAR_SHADOW_HOST_LIST, "");       
+        idata.setVariable(VAR_ADMIN_HOST_LIST, "");
+        idata.setVariable(VAR_SUBMIT_HOST_LIST, "");
+
+        /**
+         * Reset buttons
+         */
+        JButton nextButton = parent.getNextButton();
+        Util.removeListeners(nextButton);
+        for (ActionListener actionListener : nextButtonActionListeners) {
+            nextButton.addActionListener(actionListener);
+        }
+        nextButton.setText(parent.langpack.getString("installer.next"));
+        nextButton.setIcon(parent.icons.getImageIcon("stepforward"));
+        nextButton.setToolTipText(null);
+
+        parent.setQuitButtonText(parent.langpack.getString("installer.quit"));
+        parent.setQuitButtonIcon("stop");
+
+        /**
+         * Reset panels
+         */
+        HostPanel hostPanel = (HostPanel)idata.panels.get(idata.curPanelNumber - 2);
+        Method initMethod = HostPanel.class.getDeclaredMethod("init", (Class[])null);
+        initMethod.setAccessible(true);
+        initMethod.invoke(hostPanel, (Object[])null);
     }
 }

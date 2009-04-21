@@ -43,6 +43,8 @@ import java.util.Set;
  *
  */
 public class QQuotaResultImpl implements QQuotaResult, Serializable {
+
+    private final static long serialVersionUID = -2009040301L;
     
     private Map<String, ResourceQuotaRuleInfo> resourceQuotaRuleInfoMap = new HashMap<String, ResourceQuotaRuleInfo>();
     private List<ResourceQuotaRuleInfo> resourceQuotaRuleInfoList = new ArrayList<ResourceQuotaRuleInfo>();

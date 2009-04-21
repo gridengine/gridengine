@@ -80,7 +80,7 @@ int sge_send_all_reports(sge_gdi_ctx_class_t *ctx, u_long32 now, int which,
       master_host = ctx->get_master(ctx, false);
       DPRINTF(("SENDING LOAD AND REPORTS\n"));
       report_list = lCreateList("report list", REP_Type);
-      for (i=0; report_sources[i].type; i++) {
+      for (i = 0; report_sources[i].type; i++) {
          if (!which || which == report_sources[i].type) {
             DPRINTF(("%s\n", report_types[report_sources[i].type - 1]));
             report_sources[i].func(ctx, report_list, now, &(report_sources[i].next_send));
@@ -144,15 +144,14 @@ int sge_add_int2load_report(lList **lpp, const char *name, int value,
    add a string value to the load report list lpp
 
 */
-int sge_add_str2load_report(lList **lpp, const char *name, const char *value,
-                            const char *host)
+int sge_add_str2load_report(lList **lpp, const char *name, const char *value, const char *host)
 {
    lListElem *ep = NULL, *search_ep = NULL;
    const void *iterator = NULL;
 
    DENTER(BASIS_LAYER, "sge_add_str2load_report");
 
-   if (!lpp || !name || !value) {
+   if (lpp == NULL || name == NULL || value == NULL || host == NULL) {
       DRETURN(-1);
    }
 

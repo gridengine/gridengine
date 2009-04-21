@@ -41,6 +41,8 @@ import java.util.List;
  *
  */
 public class ResourceQuotaRuleInfoImpl implements ResourceQuotaRuleInfo, Serializable {
+
+    private final static long serialVersionUID = -2009040301L;
     
     private String resourceQuotaRuleName;
     private List<String> users = new ArrayList<String>();

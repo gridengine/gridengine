@@ -41,6 +41,8 @@ import java.io.Serializable;
  *
  */
 public class ClusterQueueSummaryOptions extends BasicQueueOptions implements Serializable {
+
+    private final static long serialVersionUID = -2009040301L;
     
     /** Creates a new instance of ClusterQueueSummaryOptions */
     public ClusterQueueSummaryOptions() {

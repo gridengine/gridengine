@@ -36,7 +36,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.event.TableModelEvent;
 
-public class HostSelectionTableModel extends SortedTableModel {
+public class HostSelectionTableModel extends SortedTableModel implements HostTableModel {
 
     final private String[] headers;
     final private Class[] types;
@@ -44,7 +44,7 @@ public class HostSelectionTableModel extends SortedTableModel {
     private HostList hostList;
     private JTable table;
 
-    private Properties langProperies;
+    private Properties langProperties;
 
     // To ensure the qmaster host singularity among diff. tables, default: no qmaster
     private static Host qmasterHost = null;
@@ -52,13 +52,16 @@ public class HostSelectionTableModel extends SortedTableModel {
     // To ensure the Berkeley db host singularity among diff. tables, default: no bdb server
     private static Host bdbHost = null;
 
-    public HostSelectionTableModel(JTable table, HostList hostList, String [] headers, Class[] types, Properties langProperies) {
+    public HostSelectionTableModel(JTable table, HostList hostList, String [] headers, Class[] types, Properties langProperties) {
         super(new Object[][]{}, headers);
         this.table = table;
         this.headers = headers;
         this.types = types;
         this.hostList = hostList;
-        this.langProperies = langProperies;
+        this.langProperties = langProperties;
+
+        qmasterHost = null;
+        bdbHost = null;
     }
 
     @Override
@@ -130,6 +133,13 @@ public class HostSelectionTableModel extends SortedTableModel {
                     if (!bValue) {
                         qmasterHost = null;
                     } else {
+                        // Qmaster is always admin and submit host
+                        h.setAdminHost(true);
+                        //h.setSubmitHost(true);
+
+                        fireTableCellUpdated(row, 7);
+                        //fireTableCellUpdated(row, 8);
+                        
                         qmasterHost = h;
                     }
                 }
@@ -182,13 +192,16 @@ public class HostSelectionTableModel extends SortedTableModel {
                 // if there is already a qmaster host and it's not the selected host...
                 if (qmasterHost != null && !qmasterHost.equals(h)) {
                     // ...ask whether the user want to change qmaster host selection
-                    String message = MessageFormat.format(langProperies.getProperty("msg.qmasterhost.already.selected"), h.getHostname(), qmasterHost.getHostname());
+                    String message = MessageFormat.format(langProperties.getProperty("msg.qmasterhost.already.selected"), h.getHostname(), qmasterHost.getHostname());
                     if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(table, message, 
-                            langProperies.getProperty("title.confirmation"), JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE)) {
+                            langProperties.getProperty("title.confirmation"), JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE)) {
                         qmasterHost.setQmasterHost(false);
                         fireTableCellUpdated(getRowIndex(hostList.indexOf(qmasterHost)), col);
 
                         h.setQmasterHost(true);
+                        h.setAdminHost(true);
+                        //h.setSubmitHost(true);
+                        
                         fireTableCellUpdated(row, col);
 
                         qmasterHost = h;
@@ -203,15 +216,25 @@ public class HostSelectionTableModel extends SortedTableModel {
             case 4:
             case 5:
             case 6:
-            case 7:
             case 8: return true;
+            case 7: {
+                if (qmasterHost != null && qmasterHost.equals(h)) {
+                    String message = langProperties.getProperty("msg.qmaster.hastobe.admin.submit");
+
+                    JOptionPane.showMessageDialog(table, message, langProperties.getProperty("installer.warning"), JOptionPane.WARNING_MESSAGE);
+
+                    return false;
+                } else {
+                    return true;
+                }
+            }
             case 9: {
                 // if there is already a bdb host and it's not the selected host...
                 if (bdbHost != null && !bdbHost.equals(h)) {
                     // ...ask whether the user want to change bdb host selection
-                    String message = MessageFormat.format(langProperies.getProperty("msg.bdbhost.already.selected"), h.getHostname(), bdbHost.getHostname());
+                    String message = MessageFormat.format(langProperties.getProperty("msg.bdbhost.already.selected"), h.getHostname(), bdbHost.getHostname());
                     if (JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(table, message,
-                            langProperies.getProperty("title.confirmation"), JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE)) {
+                            langProperties.getProperty("title.confirmation"), JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE)) {
                         bdbHost.setBdbHost(false);
                         fireTableCellUpdated(getRowIndex(hostList.indexOf(bdbHost)), col);
 
@@ -245,8 +268,13 @@ public class HostSelectionTableModel extends SortedTableModel {
 
     public void setHostState(Host h, Host.State state) {
         h.setState(state);
+
+        int index = hostList.indexOf(h);
+        if (index == -1) {
+            return;
+        }
         
-        int row = getRowIndex(hostList.indexOf(h));
+        int row = getRowIndex(index);
         if (row == -1 || row >= hostList.size()) {
             return;
         }
@@ -267,6 +295,10 @@ public class HostSelectionTableModel extends SortedTableModel {
                     h.setQmasterHost(false);
                 } else {
                     qmasterHost = h;
+
+                    //Set admin/submit components by default to qmaster host
+                    h.setAdminHost(true);
+                    h.setSubmitHost(true);
                 }
             }
 
@@ -308,5 +340,13 @@ public class HostSelectionTableModel extends SortedTableModel {
             fireTableRowsDeleted(row, row);
             fireTableChanged(new TableModelEvent(this));
         }
+    }
+
+    public void setHostLog(Host h, String log) {
+        h.setLogContent(log);
+    }
+
+    public HostList getHostList() {
+        return hostList;
     }
 }

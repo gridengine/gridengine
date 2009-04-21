@@ -69,6 +69,7 @@
 #include "sge_bootstrap.h"
 #include "sge_answer.h"
 #include "sge_ckpt.h"
+#include "sgeobj/sge_report.h"
 
 #include "msg_common.h"
 #include "msg_execd.h"
@@ -172,8 +173,7 @@ int do_job_exec(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, sge_pack_buffer *a
             (long) lGetUlong(petrep, PETR_jobid), 
             (long) lGetUlong(petrep, PETR_jataskid)));
 
-      ret = handle_task(ctx, petrep, aMsg->snd_name, aMsg->snd_host,
-                          aMsg->snd_id, apb);
+      ret = handle_task(ctx, petrep, aMsg->snd_name, aMsg->snd_host, aMsg->snd_id, apb);
 
       lFreeElem(&petrep);
    }
@@ -759,6 +759,10 @@ DTRACE;
    {
       lListElem *jr = add_job_report(jobid, jataskid, new_task_id, jep);
       add_usage(jr, "submission_time", NULL, lGetUlong(petep, PET_submission_time));
+      /* if we are not interested in online usage per task, suppress sending of this job report */
+      if (mconf_get_sharetree_reserved_usage() && lGetBool(pe, PE_accounting_summary)) {
+         lSetBool(jr, JR_no_send, true);
+      }
    }
 DTRACE;
 

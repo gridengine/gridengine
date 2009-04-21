@@ -36,7 +36,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include <strings.h>
 #include <limits.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -62,7 +61,6 @@
 #include "cl_connection_list.h"
 #include "cl_endpoint_list.h"
 #include "cl_communication.h"
-#include "cl_parameter_list.h"
 #include "msg_commlib.h"
 
 #define CL_DO_COMMUNICATION_DEBUG 0
@@ -463,15 +461,15 @@ int cl_com_free_debug_client_setup(cl_debug_client_setup_t** dc_setup) {
 int cl_com_create_ssl_setup(cl_ssl_setup_t**     new_setup,
                             cl_ssl_cert_mode_t   ssl_cert_mode,
                             cl_ssl_method_t      ssl_method,
-                            char*                ssl_CA_cert_pem_file,
-                            char*                ssl_CA_key_pem_file,
-                            char*                ssl_cert_pem_file,
-                            char*                ssl_key_pem_file,
-                            char*                ssl_rand_file,
-                            char*                ssl_reconnect_file,
-                            char*                ssl_crl_file,
+                            const char*                ssl_CA_cert_pem_file,
+                            const char*                ssl_CA_key_pem_file,
+                            const char*                ssl_cert_pem_file,
+                            const char*                ssl_key_pem_file,
+                            const char*                ssl_rand_file,
+                            const char*                ssl_reconnect_file,
+                            const char*                ssl_crl_file,
                             unsigned long        ssl_refresh_time,
-                            char*                ssl_password,
+                            const char*                ssl_password,
                             cl_ssl_verify_func_t ssl_verify_func) {
 
    cl_ssl_setup_t* tmp_setup = NULL;
@@ -4570,8 +4568,8 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
          if (connection->data_buffer_size < (connect_message_size + gmsh_message_size + 1) ) {
             return CL_RETVAL_STREAM_BUFFER_OVERFLOW;
          }
-         sprintf((char*)connection->data_write_buffer, CL_GMSH_MESSAGE , connect_message_size);
-         sprintf((char*)&((connection->data_write_buffer)[gmsh_message_size]), CL_CONNECT_MESSAGE, 
+         snprintf((char*)connection->data_write_buffer, connection->data_buffer_size, CL_GMSH_MESSAGE , connect_message_size);
+         snprintf((char*)&((connection->data_write_buffer)[gmsh_message_size]), connection->data_buffer_size - gmsh_message_size, CL_CONNECT_MESSAGE, 
                   CL_CONNECT_MESSAGE_VERSION, 
                   format_type,
                   flow_type,

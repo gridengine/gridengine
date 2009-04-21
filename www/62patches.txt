@@ -1,3 +1,134 @@
+Bugs fixed in SGE 6.2u2_1 since release 6.2u2
+---------------------------------------------
+2949 6814823 Update to 6.2u2 fails with error "wrong type for field CE_consumable (lBoolT)Abort"
+
+Bugs fixed in SGE 6.2u2 since release 6.2u1
+-------------------------------------------
+-    6285245 New parameter DURATION_OFFSET in sched_conf(5) should be described in admin guide 
+-    6355464 CSP documentation is confusing and partial wrong 
+-    6518002 qdel -t not documented in man page 
+-    6637141 New -hold_jid_ad option must be covered in 6.2 Users Guide 
+-    6675023 qconf -kej should remove jobs and then shutdown execd 
+-    6704958 description of qsub -notify option is inadequate 
+-    6709535 changes in Advance Reservation dialogues due to fix of 6706406 
+-    6738108 information of bootstrap file is missing in admin and install guide 
+-    6738122 "Using Files and Scripts..." is not complete in wiki 
+-    6738131 Explanation for queue priority parameter is missing in wiki page 
+-    6776017 non-multiplied job consumable need to be covered in documentation 
+-    6776026 The new qalter/qsub -w p switch need to be covered in the documentation 
+-    6784558 man page sge_conf - enforce_user is not by default false but auto 
+-    6786338 gui-installer: should check bdb server spool dir permissions on the remote host 
+-    6786371 gui-installer: Should warn a user that some of  the selected components were not really selected 
+-    6786384 gui-installer: GUI installer should generete auto_inst file before starting with the installation 
+-    6790504 gui-installer: CSP installation does not work properly 
+-    6793169 gui-installer: it's not possible to switch-off 'service automatic startup' feature 
+-    6799964 gui-installer: on result panel the 'Save as...' button pops-up an open file dialog window 
+-    6799969 gui-installer: The spool directory text field is missing on spooling configuration panel 
+-    6799971 gui-installer: check_host script does not work properly with rsh 
+-    6799976 gui-installer: improve host state cell tooltips to show exact values from configuration 
+-    6800509 gui-installer: admin/submit hosts not set properly 
+-    6800511 gui-installer: Standalone execd installation must read in values from bootstrap file
+100  6738140 admin guide  for new qconf options -secl and -kec 
+104  6738144 enforce_user not documented in administrators guide 
+233  6738586 Multiple load sensors may be configured 
+498  6288944 SCHEDULER_TIMEOUT needs to be documented in sge_conf man page 
+505  6288945 sge_execd may crash at start-up time due to fd_set used incorrectly in sge_close_all_fds() 
+877  6739237 Appendix A on the Arco setup document should mention that Solaris kernel tunables must be changed
+1197 5082660 aborted slave task on tight integration job generates error log in execd 
+1663 6285117 Reference to deprecated qmod options 
+1768 6317028 quotes in job category or native specification can result in memory corruption 
+1776 6320659 qstat -j XXX -xml schema not well documented 
+1806 6326191 execd: "ptf complains: Job does not exist" message in log file 
+2058 6792604 shell_start_mode should be documentated to be only used for batch jobs 
+2208 6535332 qsub(1) explanation of -b n shall mention performance impact 
+2215 6788577 qconf -Msconf filename at wrong position in man page 
+2268 6399453 max_unheard default value in sge_conf man page has incorrect value 
+2273 6575730 default value for finished_jobs is wrong in sge_conf(5) 
+2291 6575742 load sensor information is incomplete in sge_execd(8) 
+2318 6575743 shepherd_cmd is missing from sge_conf(5) man page 
+2329 6579326 end of parallel job doesn't kill subsequently added, longer running tasks 
+2389 6788579 man qconf should mention sge_resource_quota(5) in "SEE ALSO" 
+2393 6695481 qrsh -inherit should access the 'rsh_command'-cache more persevering 
+2464 6686621 schedd_job_info can cause immense memory consumption 
+2551 6702908 SGE sometimes too strict with its complete accounting principle 
+2594 6673742 qmaster reinstall overwriting an existing installation fails 
+2682 6732134 broken output with qstat -r when a job requests more than a single queue using -q wc_queue_list 
+2732 6344900 man queue_conf section on subordinate list is a little unclear 
+2742 6749902 sge_qmaster might crash when schedd_job_info is turned on and qsub / qalter -w is used 
+2750 6755684 qalter -w p JID command returns incorrect output when no jobs running under AR-reserved resources 
+2770 6769528 man qsub has wrong formatting in -C section 
+2784 6743012 upgrade in copy mode should suggest spooling method from the backup first 
+2789 6751310 inst_sge -rst: doesn't restore resource_quotas and advance reservation with classic spooling 
+2790 6764942 Dbwriter is not starting after reboot of the machine. 
+2791 6751309 inst_sge -rst: can't resolve username "none" 
+2793 6773584 sge_resource_quota(5) should warn that resource quotas are not enforced as job resource limits 
+2796 6315286 ibm-loadsensor should be automatically copied to correct location during install 
+2797 6774221 inst_sge -x -auto ... fails 
+2798 6774228 inst_sge -m -jmx may never finish 
+2799 6724000 event generation needs to be analyzed and reduced 
+2803 6774811 master installation with JMX support fails on DARWIN 
+2806 6774847 on Windows, execd installation fails when hostname command returns full qualified name 
+2809 6776137 qmaster exits with lGetString: wrong type for field JG_qhostname (lHostT) 
+2815 6728379 incomplete accounting for the last short tasks of tightly integrated parallel job 
+2823 6782086 several auto installation problems with jmx mode 
+2827 6784461 project(5) man page should say that "acl" set to "NONE" means "all users" 
+2836 6785207 TCL server JSV script does not work on some architectures 
+2837 6786152 execd job start might produce communication errors because of not posix compliant fork() system call 
+2838 6786247 enforce limit option might fail when execd for a slave or master parallel task is restarted 
+2839 6786343 qresub for job in hold state produces new job with same job id 
+2840 6786406 qmaster reports commlib read error in message file when qstat -j is executed 
+2841 6785777 submit(1) man page reports that qrsh does not support -display option 
+2843 6786957 The reprioritization code is inefficient and executed even if feature is disabled 
+2846 6787485 TMPDIR of the master task is sometimes not cleaned for tight integration jobs 
+2848 6788512 "echo_raw -e" without further parameters causes segmentation fault 
+2849 6788514 read_raw doesn't return 1 on EOF 
+2850 6788539 qalter -h u <job id> fails if a jsv_url is configured 
+2852 6788570 insufficient error message from JSV if script fails 
+2853 6778386 the man page accounting(5) is missing info about 2 new fields introduced in 6.2 
+2854 6788644 qalter rejects other modification if -w is not explicitly allowed in jsv_allowed_mod when JSV is use 
+2855 6788646 qalter rejects modification of hold state if -t is not also allowed in jsv_allowed_mod 
+2856 6788647 Tight pe job might stuck in system although enforce_limit parameter is set. 
+2857 6788649 Impossible to change -i -e and -S via JSV 
+2858 6788665 Impossible to delete -ckpt via JSV if -c was still set 
+2859 6788651 Pe range (pe_min, pe_max) can't be modified via JSV 
+2860 6788652 Master rejects job if JSV verification process takes longer than 10 seconds. 
+2861 6788654 Documentation of JSV scripts is missing. 
+2862 6741415 sge_pe man page should document that job_is_first_task is evaluated if wallclock accounting 
+2863 6789620 JSV(1) man page issues 
+2864 6791556 Sequence numbers broken for parallel jobs when multpile queues are used 
+2867 6609691 sgepasswd(1) is missing SGE_RANDFILE variable and default pathes are wrong 
+2868 6791931 qping aborts when connected to an execd running a tightly integrated parallel job 
+2869 6792542 SQL queries don't display all column values and saving of the result causes an exception 
+2873 6784258 man sched_conf minor corrections 
+2874 6793547 missing fields in qmon 
+2875 6793554 wrong certificate path for jmx with /etc/services 
+2877 6792704 no scheduler activity to schedule pending jobs when the qmaster installed on RHEL4 
+2878 6794303 qmaster param SCHEDULER_TIMEOUT is used for all event clients 
+2882 6796175 calling drmaa_exit before any calls to drmaa_init results in segfault 
+2883 6795248 Critical message gets logged if a fresh queue is created with a subordinate_list 
+2884 6796068 Queue Subordination is broken if new queue instance must be suspended at creation time 
+2886 6793687 Subordinate suspension state can not be changed 
+2887 6797579 hostgroup modification leads to huge qmaster memory use 
+2888 6797581 the load_sge_config.sh script fails to restore the configuration in big clusters 
+2890 6793076 internal event clients, like the scheduler, do not reconnect after timing out 
+2895 6799028 hostname resolving problem might cause execution daemon shutdown 
+2896 6799032 Resource Reservation uses infinity runtime instead of default_duration for unbound running jobs 
+2897 6799088 using IP String in first column of host_aliases file produces dead lock 
+2903 6801151 qrstat -help shows advance reservations 
+2908 6802883 spooledit might crash undumping big objects 
+2910 6802994 test_java_drmaa_perf.sh crashes 
+2912 6804721 qacct -j option parameter is described wrongly in qacct(1) man page 
+2915 6805914 qrsh (new interactive job support) does not work with host aliasing 
+2920 6804626 qmon: duration and end_time fields in Advance Reservation Window are both effective 
+2927 6808084 inst_sge -x -auto will end up in infinite loop for windows hosts 
+2928 6808089 inst_sge -copycerts in AUTO mode does not work 
+2929 6800497 Autoinstallation on loopback interface fails with exit code 0 
+2930 6808600 ADMIN_USER not used in auto install mode 
+2931 6808604 ShutdownQmaster - can't use SMF when not root 
+2932 6808597 qmaster auto installation with jmx will fail if CSP_RECREATE flag is not set 
+2933 6808594 autoconf doesn't need JMX args for execd uninstall 
+
+
 Bugs fixed in SGE 6.2u1 since release 6.2
 -----------------------------------------
 

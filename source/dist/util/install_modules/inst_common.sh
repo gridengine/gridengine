@@ -389,7 +389,7 @@ CheckBinaries()
    WINUTILFILES="SGE_Helper_Service.exe adminrun checkprog checkuser filestat \
                  gethostbyaddr gethostbyname gethostname getservbyname loadcheck.exe \
                  now qrsh_starter rlogin rsh rshd testsuidroot authuser.exe uidgid \
-                 infotext"
+                 infotext SGE_Starter.exe"
 
    #SUIDFILES="rsh rlogin testsuidroot sgepasswd"
 
@@ -444,7 +444,8 @@ CheckBinaries()
          "adminrun        gethostbyaddr  loadcheck.exe  rlogin         uidgid\n" \
          "authuser.exe    checkprog      gethostbyname  now            rsh\n" \
          "infotext        checkuser      gethostname    openssl        rshd\n" \
-         "filestat        getservbyname  qrsh_starter   testsuidroot   SGE_Helper_Service.exe\n\n" \
+         "filestat        getservbyname  qrsh_starter   testsuidroot   SGE_Helper_Service.exe\n" \
+         "SGE_Starter.exe\n\n" \
          "Installation failed. Exit.\n" $SGE_BIN $SGE_UTILBIN
       else
          $INFOTEXT "\nMissing Grid Engine binaries!\n\n" \
@@ -497,7 +498,7 @@ ErrUsage()
              "       -copycerts <host|hostlist>|-v|-upd|-upd-execd|-upd-rc|-upd-win| \n" \
              "       -post_upd|-start-all|-rccreate|[-host <hostname>] [-resport] [-rsh] \n" \
              "       [-auto <filename>] [-nr] [-winupdate] [-winsvc] [-uwinsvc] [-csp] \n" \
-             "       [-jmx] [-oldijs] [-afs] [-noremote] [-nosmf]\n" \
+             "       [-jmx] [-no-jmx] [-add-jmx] [-oldijs] [-afs] [-noremote] [-nosmf]\n" \
              "   -m         install qmaster host\n" \
              "   -um        uninstall qmaster host\n" \
              "   -x         install execution host\n" \
@@ -515,7 +516,7 @@ ErrUsage()
              "   -upd-execd delete/initialize all execd spool directories\n" \
              "   -upd-rc    create new autostart scripts for the whole cluster\n" \
              "   -upd-win   update/install windows helper service on all Windows hosts\n" \
-             "   -post_upd  finish the upgrade procedure (initialize execd spool directories,\n" \
+             "   -post-upd  finish the upgrade procedure (initialize execd spool directories,\n" \
              "              create autostart scripts and update windows helper service)\n" \
              "   -start-all start whole cluster\n" \
              "   -rccreate  create startup scripts from templates\n" \
@@ -531,15 +532,21 @@ ErrUsage()
              "   -uwinsvc   uninstall windows helper service\n" \
              "   -csp       install system with security framework protocol\n" \
              "              functionality\n" \
-             "   -jmx       install qmaster with JMX server thread enabled\n" \
+             "   -jmx       install qmaster with JMX server thread enabled (default)\n" \
+             "   -no-jmx    install qmaster without JMX server thread\n" \
+             "   -add-jmx  install and enable JMX server thread for existing qmaster\n" \
              "   -oldijs    configure old interactive job support\n" \
              "   -afs       install system with AFS functionality\n" \
              "   -noremote  supress remote installation during autoinstall\n" \
              "   -nosmf     disable SMF for Solaris 10+ machines (RC scripts are used)\n" \
              "   -help      show this help text\n\n" \
              "   Examples:\n" \
-             "   inst_sge -m -x\n" \
-             "                     Installs qmaster and exechost on localhost\n" \
+             "   inst_sge -m -x   or   inst_sge -m -jmx -x\n" \
+             "                     Installs qmaster with JMX thread enabled\n" \
+             "                     and exechost on localhost\n" \
+             "   inst_sge -m -no-jmx -x\n" \
+             "                     Installs qmaster without JMX thread enabled\n" \
+             "                     and exechost on localhost\n" \
              "   inst_sge -m -x -auto /path/to/config-file\n" \
              "                     Installs qmaster and exechost using the given\n" \
              "                     configuration file\n" \
@@ -1012,7 +1019,13 @@ CheckConfigFile()
          if [ "$SGE_JMX_SSL" != "true" -a "$SGE_JMX_SSL" != "false" ]; then
             $INFOTEXT -e "Your >SGE_JMX_SSL< flag is wrong! Valid values are:0,1,true,false,TRUE,FALSE"
             is_valid="false" 
-         fi   
+         fi
+         if [ "$SGE_JMX_SSL" = "true" ]; then
+            if [ `echo "$SGE_JMX_SSL_KEYSTORE_PW" | awk '{print length($0)}'` -lt 6 ]; then
+               $INFOTEXT -e "Your SGE_JMX_SSL_KEYSTORE_PW is too short! Password must have at least 6 characters."
+               is_valid="false"
+            fi
+         fi
          if [ -z "$SGE_JMX_SSL_CLIENT" ]; then
             $INFOTEXT -e "Your >SGE_JMX_SSL_CLIENT< flag is not set!"
             is_valid="false" 
@@ -1026,7 +1039,7 @@ CheckConfigFile()
          if [ "$SGE_JMX_SSL_CLIENT" != "true" -a "$SGE_JMX_SSL_CLIENT" != "false" ]; then
             $INFOTEXT -e "Your >SGE_JMX_SSL_CLIENT< flag is wrong! Valid values are:0,1,true,false,TRUE,FALSE"
             is_valid="false" 
-         fi   
+         fi
       fi
 
       if [ -z "$DEFAULT_DOMAIN" ]; then
@@ -1689,7 +1702,7 @@ CheckRCfiles()
    rc_ret=0
    rc_path=""
    # LSB, etc.
-   if [ "$RC_FILE" = "lsb" -o "$RC_FILE" = "insserv-linux" -o "$RC_FILE" = "update-rc.d" ]; then
+   if [ "$RC_FILE" = "lsb" -o "$RC_FILE" = "insserv-linux" -o "$RC_FILE" = "update-rc.d" -o "$RC_FILE" = "rc-update" ]; then
       rc_path="$RC_PREFIX/$STARTUP_FILE_NAME"
    # System V
    elif [ "$RC_FILE" = "sysv_rc" ]; then
@@ -2091,7 +2104,8 @@ GiveHints()
 
 #-------------------------------------------------------------------------
 # PrintLocalConf:  print execution host local SGE configuration
-#
+# $1 - flag not to modify
+# $2 - "shadowd", optinal to include local conf libjvm attribute  
 PrintLocalConf()
 {
 
@@ -2123,6 +2137,14 @@ PrintLocalConf()
    fi
    if [ "$LOADSENSOR_COMMAND" != "undef" ]; then
       $ECHO "load_sensor            $SGE_ROOT/$LOADSENSOR_COMMAND"
+   fi
+   if [ "$2" = "shadowd" -o "$2" = "qmaster" ]; then
+      if [ "$SGE_ENABLE_JMX" = "true" -a "$SGE_JVM_LIB_PATH" != "" ]; then
+         $ECHO "libjvm_path            $SGE_JVM_LIB_PATH"
+      fi
+      if [ "$SGE_ENABLE_JMX" = "true" -a "$SGE_ADDITIONAL_JVM_ARGS" != "" ]; then
+         $ECHO "additional_jvm_args            $SGE_ADDITIONAL_JVM_ARGS"
+      fi
    fi
 }
 
@@ -2178,16 +2200,18 @@ CreateSGEStartUpScripts()
          Execute sed -e "s/=GENSGE_QMASTER_PORT/=$SGE_QMASTER_PORT/" \
                      ${TMP_SGE_STARTUP_FILE}.0 > $TMP_SGE_STARTUP_FILE.1
       else
-         Execute sed -e "/GENSGE_QMASTER_PORT/d" \
-                     ${TMP_SGE_STARTUP_FILE}.0 > $TMP_SGE_STARTUP_FILE.1
+         # ATTENTION: No line break for this eval call here !!!
+         sed_param="s/^.*GENSGE_QMASTER_PORT.*SGE_QMASTER_PORT/unset SGE_QMASTER_PORT/"
+         ExecuteEval 'sed -e "$sed_param" ${TMP_SGE_STARTUP_FILE}.0 > $TMP_SGE_STARTUP_FILE.1'
       fi
 
       if [ "$SGE_EXECD_PORT" != "" -a "$execd_service" != "true" ]; then
          Execute sed -e "s/=GENSGE_EXECD_PORT/=$SGE_EXECD_PORT/" \
                      ${TMP_SGE_STARTUP_FILE}.1 > $TMP_SGE_STARTUP_FILE
       else
-         Execute sed -e "/GENSGE_EXECD_PORT/d" \
-                     ${TMP_SGE_STARTUP_FILE}.1 > $TMP_SGE_STARTUP_FILE
+         # ATTENTION: No line break for this eval call here !!!
+         sed_param="s/^.*GENSGE_EXECD_PORT.*SGE_EXECD_PORT/unset SGE_EXECD_PORT/"
+         ExecuteEval 'sed -e "$sed_param" ${TMP_SGE_STARTUP_FILE}.1 > $TMP_SGE_STARTUP_FILE'
       fi
       Execute $CHMOD 666 $TMP_SGE_STARTUP_FILE
       ExecuteAsAdmin $CP $TMP_SGE_STARTUP_FILE $SGE_STARTUP_FILE
@@ -2374,6 +2398,12 @@ InstallRcScript()
       echo /usr/sbin/update-rc.d $STARTUP_FILE_NAME
       Execute cp $SGE_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
       /usr/sbin/update-rc.d $STARTUP_FILE_NAME defaults 95 03
+   elif [ "$RC_FILE" = "rc-update" ]; then
+      # let Gentoo install scripts according to defaults
+      echo  cp $SGE_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
+      echo /sbin/rc-update add $STARTUP_FILE_NAME
+      Execute cp $SGE_STARTUP_FILE $RC_PREFIX/$STARTUP_FILE_NAME
+      /sbin/rc-update add $STARTUP_FILE_NAME default
    elif [ "$RC_FILE" = "freebsd" ]; then
       echo  cp $SGE_STARTUP_FILE $RC_PREFIX/sge${RC_SUFFIX}
       Execute cp $SGE_STARTUP_FILE $RC_PREFIX/sge${RC_SUFFIX}
@@ -2609,12 +2639,30 @@ CheckRunningDaemon()
    case $daemon_name in
 
       sge_qmaster )
-       if [ -s $QMDIR/qmaster.pid ]; then
-          daemon_pid=`cat $QMDIR/qmaster.pid`
-          $SGE_UTILBIN/checkprog $daemon_pid $daemon_name > /dev/null
-          return $?      
-       fi
-      ;;
+         # First start has no pid file, we wait until it's there (up to 5mins)
+         start=`$SGE_UTILBIN/now 2>/dev/null`
+         ready=false
+         while [ $ready = "false" ]; do
+            if [ -s "$QMDIR/qmaster.pid" ]; then
+               ready="true"
+            else
+               now=`$SGE_UTILBIN/now 2>/dev/null`
+               if [ "$now" -lt "$start" ]; then
+                  start=$now
+               fi
+               elapsed=`expr $now - $start`
+               if [ $elapsed -gt 300 ]; then
+                  $INFOTEXT "Reached 5min timeout, while waiting for qmaster PID file."
+                  $INFOTEXT -log "Reached 5min timeout, while waiting for qmaster PID file."
+                  return 1
+               fi
+               sleep 2
+            fi
+         done
+         daemon_pid=`cat "$QMDIR/qmaster.pid"`
+         $SGE_UTILBIN/checkprog $daemon_pid $daemon_name > /dev/null
+         return $?
+        ;;
 
       sge_execd )
        h=`hostname`
@@ -2623,7 +2671,7 @@ CheckRunningDaemon()
       ;;
 
       sge_shadowd )
-
+         #TODO: Should do something!
       ;;
    esac
 
@@ -3684,6 +3732,7 @@ CopyCA()
 }
 
 # copy the ca certs to all cluster host, which equals the given host type
+# TODO: Does not work from trusted node != qmaster node (no certs on trusted node)
 CopyCaToHostType()
 {
    if [ "$1" = "admin" ]; then
@@ -3696,49 +3745,226 @@ CopyCaToHostType()
 
    for RHOST in $cmd; do
       if [ "$RHOST" != "$HOST" ]; then
-            CheckRSHConnection $RHOST
+         CheckRSHConnection $RHOST
+         if [ "$?" = 0 ]; then
+            $INFOTEXT "Copying certificates to host %s" $RHOST
+            $INFOTEXT -log "Copying certificates to host %s" $RHOST
+            echo "mkdir /var/sgeCA > /dev/null 2>&1" | $SHELL_NAME $RHOST /bin/sh &
+            if [ "$SGE_QMASTER_PORT" = "" ]; then
+               $COPY_COMMAND -pr $HOST:/var/sgeCA/sge_qmaster $RHOST:/var/sgeCA
+            else
+               $COPY_COMMAND -pr $HOST:/var/sgeCA/port$SGE_QMASTER_PORT $RHOST:/var/sgeCA
+            fi
             if [ "$?" = 0 ]; then
-         $INFOTEXT "Copying certificates to host %s" $RHOST
-         $INFOTEXT -log "Copying certificates to host %s" $RHOST
-               echo "mkdir /var/sgeCA > /dev/null 2>&1" | $SHELL_NAME $RHOST /bin/sh &
-         if [ "$SGE_QMASTER_PORT" = "" ]; then
-                  $COPY_COMMAND -pr $HOST:/var/sgeCA/sge_qmaster $RHOST:/var/sgeCA
+               $INFOTEXT "Setting ownership to adminuser %s" $ADMINUSER
+               $INFOTEXT -log "Setting ownership to adminuser %s" $ADMINUSER
+               if [ "$SGE_QMASTER_PORT" = "" ]; then
+                  PORT_DIR="sge_qmaster"
                else
-                  $COPY_COMMAND -pr $HOST:/var/sgeCA/port$SGE_QMASTER_PORT $RHOST:/var/sgeCA
+                  PORT_DIR="port$SGE_QMASTER_PORT"
                fi
-               if [ "$?" = 0 ]; then
-                  $INFOTEXT "Setting ownership to adminuser %s" $ADMINUSER
-                  $INFOTEXT -log "Setting ownership to adminuser %s" $ADMINUSER
-                  if [ "$SGE_QMASTER_PORT" = "" ]; then
-            PORT_DIR="sge_qmaster"
-         else
-            PORT_DIR="port$SGE_QMASTER_PORT"
-         fi
-                  echo "chown $ADMINUSER /var/sgeCA/$PORT_DIR" | $SHELL_NAME $RHOST /bin/sh &
-                  echo "chown -R $ADMINUSER /var/sgeCA/$PORT_DIR/$SGE_CELL" | $SHELL_NAME $RHOST /bin/sh &
+               echo "chown $ADMINUSER /var/sgeCA/$PORT_DIR" | $SHELL_NAME $RHOST /bin/sh &
+               echo "chown -R $ADMINUSER /var/sgeCA/$PORT_DIR/$SGE_CELL" | $SHELL_NAME $RHOST /bin/sh &
                for dir in `ls /var/sgeCA/$PORT_DIR/$SGE_CELL/userkeys`; do
-                     echo "chown -R $dir /var/sgeCA/$PORT_DIR/$SGE_CELL/userkeys/$dir" | $SHELL_NAME $RHOST /bin/sh &
+                  echo "chown -R $dir /var/sgeCA/$PORT_DIR/$SGE_CELL/userkeys/$dir" | $SHELL_NAME $RHOST /bin/sh &
                done               
             else
-                  $INFOTEXT "The certificate copy failed!"      
-                  $INFOTEXT -log "The certificate copy failed!"      
-	    fi
+               $INFOTEXT "The certificate copy failed!"      
+               $INFOTEXT -log "The certificate copy failed!"      
+            fi
          else
-               $INFOTEXT "rsh/ssh connection to host %s is not working!" $RHOST
-               $INFOTEXT "Certificates couldn't be copied!"
+            $INFOTEXT "rsh/ssh connection to host %s is not working!" $RHOST
+            $INFOTEXT "Certificates couldn't be copied!"
             $INFOTEXT -log "rsh/ssh connection to host %s is not working!" $RHOST
             $INFOTEXT -log "Certificates couldn't be copied!"
             $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-	 fi
+         fi
       else
             $INFOTEXT "rsh/ssh connection to host %s is not working!" $RHOST
             $INFOTEXT "Certificates couldn't be copied!"
             $INFOTEXT -log "rsh/ssh connection to host %s is not working!" $RHOST
             $INFOTEXT -log "Certificates couldn't be copied!"
-         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+            $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
       fi
   done
 }
+
+
+#TODO: Not used
+#-------------------------------------------------------------------------
+# CopyCaToHost
+# $1 - remote host (only when on qmaster), if empty RHOST=QMASTER_HOST
+CopyCaToHost()
+{
+   RHOST="$1"   
+   
+   # TODO: PrimaryMaster?
+   QMASTER_HOST=`cat $SGE_ROOT/$SGE_CELL/common/act_qmaster 2>/dev/null`   
+   #Skip qmaster host
+   #TODO: Ignore domain name?
+   if [ x`echo $QMASTER_HOST | grep $RHOST` != x ]; then
+      return
+   fi
+   
+   #Setup CA location
+   if [ "$SGE_QMASTER_PORT" = "" ]; then
+      PORT_DIR="sge_qmaster"
+   else
+      PORT_DIR="port$SGE_QMASTER_PORT"
+   fi
+   CA_SRC="${CA_SRC}/var/sgeCA/$PORT_DIR.tar.gz"
+   
+   $INFOTEXT "Copying certificates to host %s" $RHOST
+   $INFOTEXT -log "Copying certificates to host %s" $RHOST
+   
+   #TODO: Better to have global clever parsing for ssh options when SHELL_NAME is first specified   
+   #Prepare SSH
+   echo $SHELL_NAME | grep "ssh" >/dev/null 2>&1
+   no_ssh=$?
+   if [ $no_ssh -eq 1 ]; then
+      REM_SH=$SHELL_NAME
+   else
+      REM_SH="$SHELL_NAME -o StrictHostKeyChecking=no"
+      if [ $AUTO = "true" ]; then
+         REM_SH="$REM_SH -o PreferredAuthentications=gssapi-keyex,publickey"
+      fi
+   fi
+   
+   #Need to verify we can connect without a password for AUTO mode
+   if [ $AUTO = "true" ]; then
+      rem_host=`$REM_SH $RHOST hostname 2>/dev/null`
+      if [ -z "$rem_host" ]; then
+         $INFOTEXT "%s connection to host %s is not working!" $SHELL_NAME $RHOST
+         $INFOTEXT "Certificates couldn't be copied!"
+         $INFOTEXT -log "rsh/ssh connection to host %s is not working!" $RHOST
+         $INFOTEXT -log "Certificates couldn't be copied!"
+         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+         return 1
+      fi
+   fi
+   
+   tmp_dir=/tmp/sgeCA.$$
+   mkdir -p $tmp_dir ; chown $ADMINUSER $tmp_dir ; chmod 600 $tmp_dir
+   #TODO: Support CALOCALTOP
+   #TODO: Connect_user
+   $REM_SH $RHOST < $CA_SRC \"cat > $tmp_dir/$PORT_DIR.tar.gz ; chown $ADMINUSER $tmp_dir/$PORT_DIR.tar.gz ; chmod 400 $tmp_dir/$PORT_DIR.tar.gz ; mkdir -p /var/sgeCA ; cd /var/sgeCA ; rm -rf /var/sgeCA/$PORT_DIR ; gunzip -f $tmp_dir/$PORT_DIR.tar.gz ; tar xpf $tmp_dir/$PORT_DIR.tar ; rm -rf $tmp_dir\"
+   
+   #Let's verify we have the keystores
+   if [ $? -ne 0 ]; then
+      $INFOTEXT "The certificate copy failed for host %s!" "$RHOST"
+      $INFOTEXT -log "The certificate copy failed for host %s!" "$RHOST"
+   fi
+}
+
+#-------------------------------------------------------------------------
+# CopyCaFromQmaster
+#
+CopyCaFromQmaster()
+{
+   # TODO: PrimaryMaster?
+   QMASTER_HOST=`cat $SGE_ROOT/$SGE_CELL/common/act_qmaster 2>/dev/null`   
+   #Skip qmaster host
+   #TODO: Ignore domain name?
+   if [ x`echo $QMASTER_HOST | grep $HOST` != x ]; then
+      return
+   fi
+
+   #Setup CA location
+   if [ "$SGE_QMASTER_PORT" = "" ]; then
+      PORT_DIR="sge_qmaster"
+   else
+      PORT_DIR="port$SGE_QMASTER_PORT"
+   fi
+   #TODO: User CALOCALTOP
+   CA_SRC="/var/sgeCA/$PORT_DIR.tar.gz"
+   
+   $INFOTEXT "Copying certificates to host %s" $HOST
+   $INFOTEXT -log "Copying certificates to host %s" $HOST
+   
+   #TODO: Better to have global clever parsing for ssh options when SHELL_NAME is first specified
+   #Prepare SSH
+   echo $SHELL_NAME | grep "ssh" >/dev/null 2>&1
+   no_ssh=$?
+   if [ $no_ssh -eq 1 ]; then
+      REM_SH=$SHELL_NAME
+   else
+      REM_SH="$SHELL_NAME -o StrictHostKeyChecking=no"
+      if [ $AUTO = "true" ]; then
+         REM_SH="$REM_SH -o PreferredAuthentications=gssapi-keyex,publickey"
+      fi
+   fi
+   
+   #Need to verify we can connect without a password for AUTO mode
+   if [ $AUTO = "true" ]; then
+      rem_host=`$REM_SH $QMASTER_HOST hostname 2>/dev/null`
+      if [ -z "$rem_host" ]; then
+         $INFOTEXT "%s connection to host %s is not working!" $SHELL_NAME $QMASTER_HOST
+         $INFOTEXT "Certificates couldn't be copied!"
+         $INFOTEXT -log "rsh/ssh connection to host %s is not working!" $QMASTER_HOST
+         $INFOTEXT -log "Certificates couldn't be copied!"
+         $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+         return 1
+      fi
+   fi
+   
+   tmp_dir=/tmp/sgeCA.$$
+   mkdir -p $tmp_dir ; chmod 600 $tmp_dir
+   connect_user=`id |awk '{print $1}' 2>/dev/null`
+   $INFOTEXT "Connecting as %s to host %s ..." "${connect_user:-root}" "$QMASTER_HOST"
+   $REM_SH $QMASTER_HOST cat $CA_SRC > $tmp_dir/$PORT_DIR.tar.gz
+   chmod 400 $tmp_dir/$PORT_DIR.tar.gz
+   #TODO: Support CALOCALTOP
+   ( mkdir -p /var/sgeCA ; cd /var/sgeCA ; rm -rf /var/sgeCA/$PORT_DIR ; gunzip -f $tmp_dir/$PORT_DIR.tar.gz ; tar xpf $tmp_dir/$PORT_DIR.tar ; rm -rf $tmp_dir )
+   
+   #Let's verify we have the keystores
+   if [ ! -f /var/sgeCA/$PORT_DIR/default/userkeys/$ADMINUSER/keystore ]; then
+      $INFOTEXT "The certificate copy failed for host %s!" "$HOST"
+      $INFOTEXT -log "The certificate copy failed for host %s!" "$HOST"
+   fi
+}
+
+
+#-------------------------------------------------------------------------
+# MakeUserKs - Generate keystore for adminuser (for JMX)
+# $1 - user name
+#
+MakeUserKs()
+{
+   if [ \( "$SGE_ENABLE_JMX" = "true" -a "$SGE_JMX_SSL" = true \) ]; then
+      OLD_ADMINUSER="$ADMINUSER"
+      ADMINUSER=$1
+      $CLEAR
+      tmp_file=/tmp/inst_sge_ks.$$
+      ExecuteAsAdmin touch $tmp_file
+      ExecuteAsAdmin chmod 600 $tmp_file
+      if [ "$AUTO" != "true" ]; then
+         STTY_ORGMODE=`stty -g`
+         done=false
+         keystore_pw=""
+         while [ $done != true ]; do 
+            $INFOTEXT -n "Enter pw for $ADMINUSER's keystore (at least 6 characters) >> "
+            stty -echo
+            keystore_pw=`Enter`
+            len=`echo $keystore_pw | awk '{ print length($0) }'`
+            stty "$STTY_ORGMODE"
+            if [ $len -ge 6 ]; then
+                done=true
+            else
+                keystore_pw=""
+                $INFOTEXT -n "\nPassword only %s characters long. Try again.\n" "$len" 
+            fi
+         done
+      else
+         keystore_pw="changeit"
+      fi
+      $INFOTEXT "Generating keystore for $ADMINUSER ..."
+      ExecuteAsAdmin echo "$keystore_pw" > $tmp_file ; keystore_pw=""     
+      $SGE_ROOT/util/sgeCA/sge_ca -ks $ADMINUSER -kspwf $tmp_file
+      ExecuteAsAdmin rm -f $tmp_file
+     ADMINUSER="$OLD_ADMINUSER"      
+  fi
+}
+
 
 #-------------------------------------------------------------------------
 # GetAdminUser
@@ -4118,3 +4344,118 @@ DeleteQueueNumberAttribute()
    done
 }
 
+#-------------------------------------------------------------------------------
+# FileGetValue: Get values from a file for appropriate key
+#  $1 - PATH to the file
+#  $2 - key: e.g: qmaster_spool_dir | ignore_fqdn | default_domain, etc.
+#  $3 - separator, if empty then " "
+FileGetValue()
+{
+   if [ $# -lt 2 ]; then
+      $INFOTEXT "Expecting at least 2 arguments for FileGetValue. Got %s." $#
+      exit 1
+   fi
+   if [ ! -f "$1" ]; then
+      $INFOTEXT "No file %s found" "$1"
+      exit 1
+   fi
+   SEP=""
+   if [ `echo "$3" | awk '{print length($0)}'` -gt 0 ]; then
+      SEP=-F"${3}"
+   fi
+   echo `cat $1 | grep "^${2}" | tail -1 | awk $SEP '{ print $2}' 2>/dev/null`
+}
+
+#Helper to get bootstrap file values
+#See FileGetValue
+#  $1 - PATH to the file/bootstrap
+#  $2 - key: e.g: qmaster_spool_dir | ignore_fqdn | default_domain, etc.
+BootstrapGetValue()
+{
+   FileGetValue "$1/bootstrap" "$2"
+}
+
+#Helper to get values from preperties file
+#See FileGetValue
+#  $1 - PATH to the properties file
+#  $2 - key: e.g: com.sun.grid.jgdi.management.jmxremote.port, etc.
+PropertiesGetValue()
+{
+   FileGetValue "$1" "${2}=" "="
+}
+
+ReplaceLineWithMatch()
+{
+   repFile="${1:?Need the file name to operate}"
+   filePerms="${2:?Need file final permissions}"
+   repExpr="${3:?Need an expression, where to replace}" 
+   replace="${4:?Need the replacement text}" 
+
+   #Return if no match
+   grep "${repExpr}" $repFile >/dev/null 2>&1
+   if [ $? -ne 0 ]; then
+      return
+   fi
+   #We need to change the file
+   ExecuteAsAdmin touch ${repFile}.tmp
+   ExecuteAsAdmin chmod 666 ${repFile}.tmp
+  
+   SEP="|"
+   echo "$repExpr $replace" | grep "|" >/dev/null 2>&1
+   if [ $? -eq 0 ]; then
+      echo "$repExpr $replace" | grep "%" >/dev/null 2>&1
+      if [ $? -ne 0 ]; then
+         SEP="%"
+      else
+         echo "$repExpr $replace" | grep "?" >/dev/null 2>&1
+         if [ $? -ne 0 ]; then
+            SEP="?"
+         else
+            $INFOTEXT "repExpr $replace contains |,% and ? characters: cannot use sed"
+            exit 1
+         fi
+      fi
+   fi
+   #We need to change the file
+   sed -e "s${SEP}${repExpr}${SEP}${replace}${SEP}g" "$repFile" >> "${repFile}.tmp"
+   ExecuteAsAdmin mv -f "${repFile}.tmp"  "${repFile}"
+   ExecuteAsAdmin chmod "${filePerms}" "${repFile}"
+}
+
+ReplaceOrAddLine()
+{
+   repFile="${1:?Need the file name to operate}"
+   filePerms="${2:?Need file final permissions}"
+   repExpr="${3:?Need an expression, where to replace}" 
+   replace="${4:?Need the replacement text}"
+   
+   #Does the pattern exists
+   grep "${repExpr}" "${repFile}" > /dev/null 2>&1
+   if [ $? -eq 0 ]; then #match
+      ReplaceLineWithMatch "$repFile" "$filePerms" "$repExpr" "$replace"
+   else                  #line does not exist
+      #copy tmp, add, replace
+      echo "$replace" >> "$repFile"
+   fi
+}
+
+#Remove line with maching expression
+RemoveLineWithMatch()
+{
+   remFile="${1:?Need the file name to operate}"
+   filePerms="${2:?Need file final permissions}"
+   remExpr="${3:?Need an expression, where to remove lines}"
+   
+   #Return if no match
+   grep "${remExpr}" $remFile >/dev/null 2>&1
+   if [ $? -ne 0 ]; then
+      return
+   fi
+
+   #We need to change the file
+   ExecuteAsAdmin touch ${remFile}.tmp
+   ExecuteAsAdmin chmod 666 ${remFile}.tmp
+   sed -e "/${remExpr}/d" "$remFile" > "${remFile}.tmp"
+   ExecuteAsAdmin mv -f "${remFile}.tmp"  "${remFile}"
+   ExecuteAsAdmin chmod "${filePerms}" "${remFile}"
+}

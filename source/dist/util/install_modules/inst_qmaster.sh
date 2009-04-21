@@ -871,10 +871,10 @@ PrintConf()
    $ECHO "delegated_file_staging false"
    $ECHO "reprioritize           0"
    $ECHO "jsv_url                none"
-   if [ "$SGE_JVM_LIB_PATH" != "" ]; then
+   if [ "$SGE_ENABLE_JMX" = "true" -a "$SGE_JVM_LIB_PATH" != "" ]; then
       $ECHO "libjvm_path            $SGE_JVM_LIB_PATH"
    fi
-   if [ "$SGE_ADDITIONAL_JVM_ARGS" != "" ]; then
+   if [ "$SGE_ENABLE_JMX" = "true" -a "$SGE_ADDITIONAL_JVM_ARGS" != "" ]; then
       $ECHO "additional_jvm_args            $SGE_ADDITIONAL_JVM_ARGS"
    fi
 }
@@ -1171,6 +1171,35 @@ CreateSettingsFile()
 
 
 #--------------------------------------------------------------------------
+# InitSysKs Create system keystore (JMX with SSL)
+#
+InitSysKs()
+{
+   if [ "$SGE_ENABLE_JMX" = true -a "$SGE_JMX_SSL" = true ]; then
+      SGE_CA_CMD=util/sgeCA/sge_ca
+      if [ "$SGE_JMX_SSL" = true ]; then
+         touch /tmp/pwfile.$$
+         chmod 600 /tmp/pwfile.$$
+         echo "$SGE_JMX_SSL_KEYSTORE_PW" > /tmp/pwfile.$$
+         OUTPUT=`$SGE_CA_CMD -sysks -ksout $SGE_JMX_SSL_KEYSTORE -kspwf /tmp/pwfile.$$ 2>&1`
+         if [ $? != 0 ]; then
+            $INFOTEXT "Error: Cannot create keystore $SGE_JMX_SSL_KEYSTORE\n$OUTPUT"
+           $INFOTEXT -log "Error: Cannot create keystore $SGE_JMX_SSL_KEYSTORE\n$OUTPUT"
+            ret=1
+         else
+            ret=0
+         fi
+         rm /tmp/pwfile.$$
+         if [ $ret = 1 ]; then
+            MoveLog
+            exit 1
+         fi
+      fi
+   fi
+}
+
+
+#--------------------------------------------------------------------------
 # InitCA Create CA and initialize it for daemons and users
 #
 InitCA()
@@ -1194,25 +1223,7 @@ InitCA()
       fi
 
       #  TODO: CAErrUsage no longer available, error handling ???:w
-
-      if [ "$SGE_JMX_SSL" = true ]; then
-         touch /tmp/pwfile.$$
-         chmod 600 /tmp/pwfile.$$
-         echo "$SGE_JMX_SSL_KEYSTORE_PW" > /tmp/pwfile.$$
-         OUTPUT=`$SGE_CA_CMD -sysks -ksout $SGE_JMX_SSL_KEYSTORE -kspwf /tmp/pwfile.$$ 2>&1`
-         if [ $? != 0 ]; then
-            $INFOTEXT "Error: Cannot create keystore $SGE_JMX_SSL_KEYSTORE\n$OUTPUT"
-	        $INFOTEXT -log "Error: Cannot create keystore $SGE_JMX_SSL_KEYSTORE\n$OUTPUT"
-            ret=1
-         else
-            ret=0
-         fi
-         rm /tmp/pwfile.$$
-         if [ $ret = 1 ]; then
-            MoveLog
-            exit 1
-         fi
-      fi
+      InitSysKs
       
       $INFOTEXT -auto $AUTO -wait -n "Hit <RETURN> to continue >> "
       $CLEAR
@@ -1235,13 +1246,16 @@ StartQmaster()
                    "svcs -l svc:/application/sge/qmaster:%s" $SGE_CLUSTER_NAME
          $INFOTEXT -log "\nFailed to start qmaster deamon over SMF. Check service by issuing "\
                         "svcs -l svc:/application/sge/qmaster:%s" $SGE_CLUSTER_NAME
-         if [ $AUTO = true ]; then
-            MoveLog
-         fi
+         MoveLog
          exit 1
       fi
    else
       $SGE_STARTUP_FILE -qmaster
+      if [ $? -ne 0 ]; then
+         $INFOTEXT -log "sge_qmaster start problem"
+         MoveLog
+         exit 1
+      fi
    fi
    # wait till qmaster.pid file is written
    sleep 1
@@ -1795,7 +1809,11 @@ EnterAndValidatePortNumber()
 #
 ########################################################
 JavaVersionString2Num () {
-
+   if [ -z "$1" ]; then
+      echo 0
+      return
+   fi
+   
    # Minor and micro default to 0 if not specified.
    major=`echo $1 | awk -F. '{print $1}'`
    minor=`echo $1 | awk -F. '{print $2}'`
@@ -1837,23 +1855,294 @@ JavaVersionString2Num () {
 } # versionString2Num
 
 
+
+#---------------------------------------------------------------------------
+# GetJvmLib - sets jvm_lib_path if found from a java_bin
+#             java_bin version must be checked before going here
+# $1 - java_bin
+GetJvmLib()
+{
+   java_bin=$1
+   java_home=`dirname $java_bin`
+   java_home=`dirname $java_home`
+   jvm_lib_path=`GetJvmLibFromJavaHome $java_home`
+    
+   # Not found, let's try a java based detection
+   if [ -z "$jvm_lib_path" ]; then
+      FLAGS=""
+      if [ x`echo $SGE_ARCH | grep 64` != x ]; then
+         FLAGS="-d64"
+      fi         
+      jvm_lib_path=`$java_bin $FLAGS -jar $SGE_ROOT/util/DetectJvmLibrary.jar 2>/dev/null`
+      if [ -z "$jvm_lib_path" ]; then
+         java_home=""
+      fi
+   fi
+}
+
+
+#---------------------------------------------------------------------------
+# IsJavaBinSuitable - prints the java_bin if valid min version
+# $1 - java_bin
+# $2 - MIN_JAVA_VERSION
+# $3 - (optional) check type, default is "none", allowed is "jvm"
+IsJavaBinSuitable()
+{
+   java_bin=$1
+   NUM_MIN_JAVA_VERSION=`JavaVersionString2Num $2`
+   check=$3
+   
+   JAVA_VERSION=`$java_bin -version 2>&1 | head -1`
+   JAVA_VERSION=`echo $JAVA_VERSION | awk '$3 ~ /"1.[45678]/ {print $3}' 2>/dev/null | sed -e "s/\"//g" 2>/dev/null`
+   NUM_JAVA_VERSION=`JavaVersionString2Num $JAVA_VERSION`     
+   if [ $NUM_JAVA_VERSION -ge $NUM_MIN_JAVA_VERSION ]; then
+      if [ "$check" = "jvm" ]; then
+         jvm_lib_path=""
+         GetJvmLib $java_bin
+         if [ -n "$jvm_lib_path" ]; then
+            #Verify we can load it
+            if [ "$SGE_ARCH" != "win32-x86" ]; then
+               $SGE_ROOT/utilbin/$SGE_ARCH/valid_jvmlib "$jvm_lib_path" >/dev/null 2>&1
+               return $?
+            else
+               return 0
+            fi
+         fi
+      else
+         return 0
+      fi
+   fi
+   return 1
+}
+
+
+#---------------------------------------------------------------------------
+# GetSuitableJavaBin - finds first valid java_bin valid min version
+# $1 - list
+# $2 - MIN_JAVA_VERSION
+# $3 - (optional) check type, default is "none", allowed is "jvm"
+GetSuitableJavaBin()
+{
+   list=$1
+   # Make the list unique and correct list
+   list=`echo $list | awk '{for (i=1; i<=NF ; i++) print $i}' 2>/dev/null| uniq 2>/dev/null`
+   #Find a first good one
+   for java_bin in $list; do
+      IsJavaBinSuitable $java_bin $2 $3
+      if [ $? -eq 0 ]; then
+         #echo $java_bin
+         return 0
+      fi
+   done
+   return 1
+}
+
+#---------------------------------------------------------------------------
+# GetDefaultJavaForPlatform - helper for HaveSuitableJavaBinList
+#                             adds java_homes to the list variable
+#
+GetDefaultJavaForPlatform()
+{
+   case $SGE_ARCH in
+      sol-sparc64) 
+         java_homes="/usr/java
+/usr/jdk/latest"
+         ;;
+      sol-amd64)   
+         java_homes="/usr/java
+/usr/jdk/latest"
+         ;;
+      sol-x86)     
+         java_homes="/usr/java
+/usr/jdk/latest"
+         ;;
+      lx*-amd64)   
+         java_homes="/usr/java
+/usr/jdk/latest
+/etc/alternatives/jre"
+         ;;
+      lx*-x86)     
+         java_homes="/usr/java
+/usr/jdk/latest
+/etc/alternatives/jre"
+         ;;
+      darwin-ppc)
+         java_homes="/Library/Java/Home
+/System/Library/Frameworks/JavaVM.framework/Home"
+         ;;
+      darwin-x86)  
+         java_homes="/Library/Java/Home
+/System/Library/Frameworks/JavaVM.framework/Home"
+         ;;
+   #TODO: Missing HP, AIX platforms
+   esac
+   for java_home in $java_homes; do
+      if [ -x $java_home/bin/java ]; then
+         list="$list $java_home/bin/java"
+      fi
+   done
+}
+
+
+#---------------------------------------------------------------------------
+# HaveSuitableJavaBin
+# $1 - minimal Java version
+# $2 - (optional) check type, default is "none", allowed is "jvm"
+HaveSuitableJavaBin() {
+   MIN_JAVA_VERSION=$1
+   check=$2
+   if [ "$check" != "jvm" ]; then
+      check="none"
+   fi
+   #Set SGE_ARCH if not available
+   if [ -z "$SGE_ARCH" ]; then
+      if [ -z "$SGE_ROOT" ]; then
+         SGE_ROOT="."
+      fi
+      SGE_ARCH=`$SGE_ROOT/util/arch`
+   fi
+   
+   #Default paths to look for Java
+   list=""
+   if [ -n "$JAVA_HOME" ]; then
+      list="$list $JAVA_HOME/bin/java"
+      list="$list $JAVA_HOME/jre/bin/java"
+   fi
+   if [ -n "$JDK_HOME" ]; then
+      list="$list $JDK_HOME/bin/java"
+      list="$list $JDK_HOME/jre/bin/java"
+   fi
+
+   on_path=`which java 2>/dev/null`
+   if [ -n "$on_path" ]; then
+      list="$list $on_path"
+   fi
+   
+   #Try known default locations for each platform
+   GetDefaultJavaForPlatform   
+   GetSuitableJavaBin "$list" $MIN_JAVA_VERSION $check
+   res=$?
+   #If we didn't find a suitable jvm library we need to try further
+   if [ -z "$res" ]; then
+      list=""
+      #Arch specific methods to look for a bin/java
+      #Breakdown the detection for each plaform since same tools might behave differently
+      #Solaris
+      if [ x`echo $SGE_ARCH| grep "sol-"` != x ]; then
+         #TODO: How to do it on Solaris 9/10?
+         SOLARIS_VERSION=`uname -r 2>/dev/null| awk -F. '{print $2}' 2>/dev/null`
+         #OpenSolaris
+         if [ "$SOLARIS_VERSION" = 11 ]; then        
+            list="$list `pkg search java 2>/dev/null| grep bin/java | grep file | awk '{print "/"$3}' 2>/dev/null`"
+         fi
+      #Linux
+      elif [ x`echo $SGE_ARCH| grep "lx-"` != x ]; then
+         #Try whereis
+         temp=`whereis java 2>/dev/null`
+         if [ -n "$temp" ]; then
+            list="$list `echo $temp | awk '{for (i=1; i<=NF ; i++) print $i}' 2>/dev/null`"
+         fi
+         #TODO: other tools like locate?
+      fi
+      #TODO: Other platforms
+      
+      GetSuitableJavaBin "$list" $MIN_JAVA_VERSION $check
+      res=$?
+   fi
+   if [ "$3" = "print" -a "$res" = 0 ]; then
+      if [ "$2" = "jvm" ]; then
+         echo "$jvm_lib_path"
+      else
+         echo "$java_bin"
+      fi
+   fi
+   return $res
+}
+
+#---------------------------------------------------------------------------
+# GetJvmLibFromJavaHome
+# $1 - java binary
+#
+GetJvmLibFromJavaHome() {
+   java_home=$1
+   suffix=""
+   case $SGE_ARCH in
+      sol-sparc64) 
+         suffix=lib/sparcv9/server/libjvm.so
+         ;;
+      sol-amd64)   
+         suffix=lib/amd64/server/libjvm.so
+         ;;
+      sol-x86)     
+         #causes a SEGV of libjvm.so for JVM_RawMonitorCreate
+         #suffix=lib/i386/server/libjvm.so
+         suffix=lib/i386/client/libjvm.so
+         ;;
+      lx*-amd64)   
+         suffix=lib/amd64/server/libjvm.so
+         ;;
+      lx*-x86)     
+         suffix=lib/i386/server/libjvm.so
+         ;;
+      darwin-ppc)
+         suffix=../Libraries/libjvm.dylib
+         ;;
+      darwin-x86)  
+         suffix=../Libraries/libjvm.dylib
+         ;;
+   #TODO: Missing HP, AIX platforms
+   esac
+   if [ -f $java_home/$suffix ]; then
+      echo $java_home/$suffix
+   fi
+}
+
 #---------------------------------------------------------------------------
 #  SetLibJvmPath
 #
-#     sets the env variable SGE_JVM_LIB_PATH
+#     sets the env variable SGE_JVM_LIB_PATH and JAVA_HOME
 SetLibJvmPath() {
    
    MIN_JAVA_VERSION=1.5.0
    NUM_MIN_JAVA_VERSION=`JavaVersionString2Num $MIN_JAVA_VERSION`
    
-   if [ "$JAVA_HOME" != "" ]; then
-      java_home=$JAVA_HOME
-   else
-      java_home=/usr/java
+   jvm_lib_path=""
+   if [ -n "$SGE_JVM_LIB_PATH" -a "$SGE_ARCH" != "win32-x86" ]; then
+      #verify we got a correct platform library
+      $SGE_ROOT/utilbin/$SGE_ARCH/valid_jvmlib "$SGE_JVM_LIB_PATH" >/dev/null 2>&1 
+      if [ $? -ne 0 ]; then
+         $INFOTEXT -log -n "Specified JVM library %s is not correct. Will try to find another one." "$SGE_JVM_LIB_PATH"
+         SGE_JVM_LIB_PATH=""         
+      fi
+   fi
+      
+   #Try to detect the library, if none specified via SGE_JVM_LIB_PATH
+   if [ -z "$SGE_JVM_LIB_PATH" ]; then      
+      HaveSuitableJavaBin $MIN_JAVA_VERSION "jvm"
+      if [ -n "$jvm_lib_path" ]; then      
+         # Remove java_home if just "/" or "/usr"
+         if [ "$java_home" = "/" -o "$java_home" = "/usr" ]; then
+            java_home=""
+         fi
+      fi
    fi
    
+   if [ "$AUTO" = "true" ]; then
+      #Autoconf file is used first if specified file exists 
+      if [ -f "$SGE_JVM_LIB_PATH" ]; then
+         jvm_lib_path=$SGE_JVM_LIB_PATH
+      fi
+      if [ -z "$jvm_lib_path" ]; then
+         $INFOTEXT -log -n "Warning: No JVM library path specified or detected. JMX will not work on this host!" \
+                           "\nModify the host configuration manually after the installation!"
+      fi
+      return 0
+   fi
+   
+   #In interactive mode we provide detected values as defaults
    # set JRE_HOME 
    isdone=false
+   #$CLEAR
    while [ $isdone != true ]; do
       $INFOTEXT -n "Please enter JAVA_HOME or press enter [%s] >> " "$java_home"
       INP=`Enter $java_home`
@@ -1870,7 +2159,7 @@ SetLibJvmPath() {
    fi
 
    JAVA_VERSION=`$java_home/bin/java -version 2>&1 | head -1`
-   JAVA_VERSION=`echo $JAVA_VERSION | awk '{print $3}' | sed -e "s/\"//g"`
+   JAVA_VERSION=`echo $JAVA_VERSION | awk '{if (NF > 2) print $3; else print ""}' | sed -e "s/\"//g"`
    NUM_JAVA_VERSION=`JavaVersionString2Num $JAVA_VERSION`
    
    if [ $NUM_JAVA_VERSION -lt $NUM_MIN_JAVA_VERSION ]; then
@@ -1878,45 +2167,17 @@ SetLibJvmPath() {
       return 1
    fi
    
-   case $ARCH in
-      sol-sparc64) 
-         jvm_lib_path=$java_home/lib/sparcv9/server/libjvm.so
-         ;;
-      sol-amd64)   
-         jvm_lib_path=$java_home/lib/amd64/server/libjvm.so
-         ;;
-      sol-x86)     
-         #causes a SEGV of libjvm.so for JVM_RawMonitorCreate
-         #jvm_lib_path=$java_home/lib/i386/server/libjvm.so
-         jvm_lib_path=$java_home/lib/i386/client/libjvm.so
-         ;;
-      lx*-amd64)   
-         jvm_lib_path=$java_home/lib/amd64/server/libjvm.so
-         ;;
-      lx*-x86)     
-         jvm_lib_path=$java_home/lib/i386/server/libjvm.so
-         ;;
-      darwin-ppc)
-         jvm_lib_path=$java_home/../Libraries/libjvm.dylib
-         ;;
-      darwin-x86)  
-         jvm_lib_path=$java_home/../Libraries/libjvm.dylib
-         ;;
-      *) 
-         $INFOTEXT "Warning: Cannot start jvm thread: Have no java support for $ARCH"
-         return 1
-         ;;
-   esac
-   
-   if [ ! -f "$jvm_lib_path" ]; then
+   GetJvmLib $java_home/bin/java
+         
+   if [ -z "$jvm_lib_path" -o ! -f "$jvm_lib_path" ]; then
       jvm_lib_path=""
-      $INFOTEXT -log "\nWarning: Cannot start jvm thread: jvm library %s not found" "$jvm_lib_path"
+      $INFOTEXT -log "\nWarning: Cannot start jvm thread: jvm library not found"
       return 1
    fi
+   
    if [ "$JAVA_HOME" = "" ]; then
-      JAVA_HOME=$java_home
+      JAVA_HOME=$java_home ; export JAVA_HOME
    fi
-   export jvm_lib_path JAVA_HOME
    return 0
 }
 
@@ -1924,59 +2185,110 @@ SetLibJvmPath() {
 #  GetJMXPort
 #
 #     sets the env variable SGE_LIBJVM_PATH, SGE_ADDITIONAL_JVM_ARGS, SGE_JMX_PORT
+# $1 - optional, specifying that shadow is being installer by a value "shadowd"
 #
 GetJMXPort() {
-
-   if [ "$SGE_ENABLE_JMX" = "true" ]; then
-
-      $INFOTEXT -u "\nGrid Engine JMX MBean server"
+   $CLEAR
+   $INFOTEXT -u "\nGrid Engine JMX MBean server"
+   $INFOTEXT -n "\nIn order to use the SGE Inspect or the Service Domain Manager (SDM)\n" \
+                "SGE adapter you need to configure a JMX server in qmaster. Qmaster \n" \
+                "will then load a Java Virtual Machine through a shared library.\n\n"   
+   #Shadowds keep qmaster setting, JMX for all or JMX for nobody
+   if [ "$1" = "shadowd" ]; then
+      default_value=`BootstrapGetValue $SGE_ROOT/$SGE_CELL/common "jvm_threads"`
+      if [ -z "$default_value" -o "$default_value" = 0 ]; then 
+         SGE_ENABLE_JMX="false"
+      else
+         SGE_ENABLE_JMX="true"
+      fi
+   else
+      if [ "$SGE_ENABLE_JMX" = "false" ]; then
+         default_value="n"
+      else
+         default_value="y"
+      fi
+      $INFOTEXT -auto $AUTO -ask "y" "n" -def $default_value -n "Do you want to enable the JMX MBean server (y/n) [%s] >> " $default_value
+      ret=$?
+      if [ $ret = 0 ]; then
+         SGE_ENABLE_JMX="true"
+      else
+         SGE_ENABLE_JMX="false"
+      fi
+   fi
+   
+   if [ $SGE_ENABLE_JMX = "true" ]; then
 
       jmx_port_min=1
       jmx_port_max=65500
 
       if [ $AUTO = "true" ]; then
+         # Autodetect shadowd configs from qmaster, except for libjvm
+         if [ "$1" = "shadowd" ]; then            
+            SetLibJvmPath    # Try to detect libjvm
+            if [ -z "$jvm_lib_path" ]; then # If empty use invalid value
+               SGE_JVM_LIB_PATH="jvm_missing"
+            else
+               SGE_JVM_LIB_PATH=$jvm_lib_path
+            fi
+            SGE_JMX_PORT=`PropertiesGetValue $SGE_ROOT/$SGE_CELL/common/jmx/management.properties com.sun.grid.jgdi.management.jmxremote.port`
+            if [ -z "$SGE_ADDITIONAL_JVM_ARGS" ]; then
+               global_value=`$SGE_BIN/qconf -sconf 2>/dev/null | grep additional_jvm_args | awk '{print $2}' 2>/dev/null`
+               SGE_ADDITIONAL_JVM_ARGS="${global_value:--Xmx256m}"
+            fi
+            SGE_JMX_SSL=`PropertiesGetValue $SGE_ROOT/$SGE_CELL/common/jmx/management.properties com.sun.grid.jgdi.management.jmxremote.ssl`
+            SGE_JMX_SSL_CLIENT=`PropertiesGetValue $SGE_ROOT/$SGE_CELL/common/jmx/management.properties com.sun.grid.jgdi.management.jmxremote.ssl.need.client.auth`
+            SGE_JMX_SSL_KEYSTORE=`PropertiesGetValue $SGE_ROOT/$SGE_CELL/common/jmx/management.properties com.sun.grid.jgdi.management.jmxremote.ssl.serverKeystore`
+            SGE_JMX_SSL_KEYSTORE_PW=`PropertiesGetValue $SGE_ROOT/$SGE_CELL/common/jmx/management.properties com.sun.grid.jgdi.management.jmxremote.ssl.serverKeystorePassword`            
+         fi
 
-            if [ ! -f "$SGE_JVM_LIB_PATH" ]; then
-               $INFOTEXT -log "\nWarning: Cannot start jvm thread: jvm library %s not found" "$SGE_JVM_LIB_PATH"
+         if [ ! -f "$SGE_JVM_LIB_PATH" ]; then
+            #TODO: Improve the message?
+            $INFOTEXT -log "\nWarning: Cannot start jvm thread: jvm library %s not found" "$SGE_JVM_LIB_PATH"
+         else   
+            $INFOTEXT -log "\nUsing jvm library >%s<" "$SGE_JVM_LIB_PATH"
+         fi                 
+         
+         if [ "$SGE_JMX_PORT" != "" ]; then
+            if [ $SGE_JMX_PORT -ge $jmx_port_min -a $SGE_JMX_PORT -le $jmx_port_max ]; then
+               $INFOTEXT -log "Using SGE_JMX_PORT >%s<." $SGE_JMX_PORT
+            else
+               $INFOTEXT -log "Your \$SGE_JMX_PORT=%s\n\n" \
+                         "has an invalid value (it must be in range %s..%s).\n\n" \
+                         "Please check your configuration file and restart\n" \
+                         "the installation or configure the service >sge_qmaster<." $SGE_JMX_PORT $jmx_port_min $jmx_port_max
                MoveLog
                exit 1
-            else   
-               $INFOTEXT -log "\nUsing jvm library >%s<" "$SGE_JVM_LIB_PATH"
             fi
+         fi
 
-            if [ "$SGE_JMX_PORT" != "" ]; then
-               if [ $SGE_JMX_PORT -ge $jmx_port_min -a $SGE_JMX_PORT -le $jmx_port_max ]; then
-                  $INFOTEXT -log "Using SGE_JMX_PORT >%s<." $SGE_JMX_PORT
-               else
-                  $INFOTEXT -log "Your \$SGE_JMX_PORT=%s\n\n" \
-                            "has an invalid value (it must be in range %s..%s).\n\n" \
-                            "Please check your configuration file and restart\n" \
-                            "the installation or configure the service >sge_qmaster<." $SGE_JMX_PORT $jmx_port_min $jmx_port_max
-                  MoveLog
-                  exit 1
-               fi
-            fi
-
-            # if not set initialize to false
-            if [ "$SGE_JMX_SSL" = "" ]; then
-               SGE_JMX_SSL=false
-            fi
-            if [ "$SGE_JMX_SSL_CLIENT" = "" ]; then
-               SGE_JMX_SSL_CLIENT=false
-            fi
+         # if not set initialize to false
+         if [ "$SGE_JMX_SSL" = "" ]; then
+            SGE_JMX_SSL=false
+         fi
+         if [ "$SGE_JMX_SSL_CLIENT" = "" ]; then
+            SGE_JMX_SSL_CLIENT=false
+         fi
       else
-
          # interactive setup
-
          sge_jvm_lib_path=""
-         sge_jmx_port=""
-         sge_additional_jvm_args="-Xmx256m"
-         sge_jmx_ssl=false
-         sge_jmx_ssl_client=false
-         sge_jxm_ssl_keystore=""
-         alldone=false
-         while [ $alldone = false ]; do
-
+         
+         if [ "$1" = "shadowd" ]; then
+            sge_jmx_port=`PropertiesGetValue $SGE_ROOT/$SGE_CELL/common/jmx/management.properties com.sun.grid.jgdi.management.jmxremote.port`
+            sge_additional_jvm_args=`$SGE_BIN/qconf -sconf 2>/dev/null| grep additional_jvm_args | awk '{print $2}'` 
+            sge_jmx_ssl=`PropertiesGetValue $SGE_ROOT/$SGE_CELL/common/jmx/management.properties com.sun.grid.jgdi.management.jmxremote.ssl`
+            sge_jmx_ssl_client=`PropertiesGetValue $SGE_ROOT/$SGE_CELL/common/jmx/management.properties com.sun.grid.jgdi.management.jmxremote.ssl.need.client.auth`
+            sge_jmx_ssl_keystore=`PropertiesGetValue $SGE_ROOT/$SGE_CELL/common/jmx/management.properties com.sun.grid.jgdi.management.jmxremote.ssl.serverKeystore`
+            sge_jmx_ssl_keystore_pw=`PropertiesGetValue $SGE_ROOT/$SGE_CELL/common/jmx/management.properties com.sun.grid.jgdi.management.jmxremote.ssl.serverKeystorePassword`
+            $INFOTEXT -e "Please give some basic parameters for JMX MBean server\n" \
+            "We may ask for \n" \
+            "   - JAVA_HOME\n" \
+            "   - additional JVM arguments (optional)\n"
+         else
+            sge_jmx_port=""
+            sge_additional_jvm_args="-Xmx256m"
+            sge_jmx_ssl=false
+            sge_jmx_ssl_client=false
+            sge_jxm_ssl_keystore=""
             $INFOTEXT -e "Please give some basic parameters for JMX MBean server\n" \
             "We will ask for\n" \
             "   - JAVA_HOME\n" \
@@ -1986,100 +2298,125 @@ GetJMXPort() {
             "   - JMX ssl client authentication\n" \
             "   - JMX ssl server keystore path\n" \
             "   - JMX ssl server keystore password\n"
+         fi
+         
+         alldone=false     
+         while [ $alldone = false ]; do            
             
             # set sge_jvm_lib_path
+            $INFOTEXT "Detecting suitable JAVA ..."                        
             SetLibJvmPath
             sge_jvm_lib_path=$jvm_lib_path
-
+            
             # set SGE_ADDITIONAL_JVM_ARGS
             $INFOTEXT -n "Please enter additional JVM arguments (optional, default is [%s]) >> " "$sge_additional_jvm_args"
             INP=`Enter "$sge_additional_jvm_args"`
-            sge_additional_jvm_args="$INP"
+            sge_additional_jvm_args="${INP:--Xmx256m}"
 
-            done=false
-            while [ $done != true ]; do
-               $INFOTEXT -n "Please enter an unused port number for the JMX MBean server >> "
-               INP=`Enter $sge_jmx_port`
-               if [ "$INP" = "" ]; then
-                  $INFOTEXT "\nInvalid input. Must be a number."
-                  continue
+            # The rest asked only during the qmaster installation
+            if [ "$1" != "shadowd" ]; then                  
+               done=false
+               #Let's provide a default for JMX port as SGE_QMASTER_PORT + 2
+               if [ -z "$sge_jmx_port" -a -n "$SGE_QMASTER_PORT" ]; then
+                  sge_jmx_port=`expr $SGE_QMASTER_PORT + 2`
                fi
-               chars=`echo $INP | wc -c`
-               chars=`expr $chars - 1`
-               digits=`expr $INP : "[0-9][0-9]*"`
-               if [ "$chars" != "$digits" ]; then
-                  $INFOTEXT "\nInvalid input. Must be a number."
-               elif [ $INP -lt $jmx_port_min -o $INP -gt $jmx_port_max ]; then
-                  $INFOTEXT "\nInvalid port number. Must be in range [%s..%s]." $jmx_port_min $jmx_port_max
-               elif [ $INP -le 1024 -a $euid != 0 ]; then
-                  $INFOTEXT "\nYou are not user >root<. You need to use a port above 1024."
-               else
-                  done=true
-               fi
-            done
-            sge_jmx_port=$INP
-
-            # set SGE_JMX_SSL
-            $INFOTEXT -n -ask "y" "n" -def "y" \
-               "Enable JMX SSL server authentication (y/n) [y] >> "
-            if [ $? = 0 ]; then
-               sge_jmx_ssl="true"
-            else    
-               sge_jmx_ssl="false"
-            fi   
-
-            if [ "$sge_jmx_ssl" = true ]; then
-               # set SGE_JMX_SSL_CLIENT
+               while [ $done != true ]; do
+                  $INFOTEXT -n "Please enter an unused port number for the JMX MBean server [%s] >> " "$sge_jmx_port" 
+                  INP=`Enter $sge_jmx_port`
+                  if [ "$INP" = "" ]; then
+                     $INFOTEXT "\nInvalid input. Must be a number."
+                     sge_jmx_port=""
+                     continue
+                  fi
+                  chars=`echo $INP | wc -c`
+                  chars=`expr $chars - 1`
+                  digits=`expr $INP : "[0-9][0-9]*"`
+                  if [ "$chars" != "$digits" ]; then
+                     $INFOTEXT "\nInvalid input. Must be a number."
+                  elif [ $INP -lt $jmx_port_min -o $INP -gt $jmx_port_max ]; then
+                     $INFOTEXT "\nInvalid port number. Must be in range [%s..%s]." $jmx_port_min $jmx_port_max
+                  elif [ $INP -le 1024 -a $euid != 0 ]; then
+                     $INFOTEXT "\nYou are not user >root<. You need to use a port above 1024."
+                  else
+                     done=true
+                  fi
+               done
+               sge_jmx_port=$INP
+   
+               # set SGE_JMX_SSL
                $INFOTEXT -n -ask "y" "n" -def "y" \
-                  "Enable JMX SSL client authentication (y/n) [y] >> "
+                  "Enable JMX SSL server authentication (y/n) [y] >> "
                if [ $? = 0 ]; then
-                  sge_jmx_ssl_client="true"
-               else    
-                  sge_jmx_ssl_client="false"
-               fi   
-
-               # set SGE_JMX_SSL_KEYSTORE
-               if [ "$SGE_QMASTER_PORT" != "" -a "$qmaster_service" = false ]; then
-                  ca_port=port$SGE_QMASTER_PORT
+                  sge_jmx_ssl="true"
                else
-                  ca_port=sge_qmaster
+                  sge_jmx_ssl="false"
                fi
-               # must be in sync with definitions in sge_ca.cnf
-               euid=`$SGE_UTILBIN/uidgid -euid`
-               if [ $euid = 0 ]; then
-                  CALOCALTOP=/var/sgeCA/$ca_port/$SGE_CELL
-               else
-                  CALOCALTOP=/tmp/sgeCA/$ca_port/$SGE_CELL
+   
+               if [ "$sge_jmx_ssl" = true ]; then
+                  # set SGE_JMX_SSL_CLIENT
+                  $INFOTEXT -n -ask "y" "n" -def "y" \
+                     "Enable JMX SSL client authentication (y/n) [y] >> "
+                  if [ $? = 0 ]; then
+                     sge_jmx_ssl_client="true"
+                  else    
+                     sge_jmx_ssl_client="false"
+                  fi   
+   
+                  # set SGE_JMX_SSL_KEYSTORE
+                  if [ "$SGE_QMASTER_PORT" != "" -a "$qmaster_service" = false ]; then
+                     ca_port=port$SGE_QMASTER_PORT
+                  else
+                     ca_port=sge_qmaster
+                  fi
+                  # must be in sync with definitions in sge_ca.cnf
+                  euid=`$SGE_UTILBIN/uidgid -euid`
+                  if [ $euid = 0 ]; then
+                     CALOCALTOP=/var/sgeCA/$ca_port/$SGE_CELL
+                  else
+                     CALOCALTOP=/tmp/sgeCA/$ca_port/$SGE_CELL
+                  fi
+                  if [ "$sge_jmx_ssl_keystore" = "" ]; then 
+                     sge_jmx_ssl_keystore=$CALOCALTOP/private/keystore
+                  fi
+                  $INFOTEXT -n "Enter JMX SSL server keystore path [%s] >> " "$sge_jmx_ssl_keystore"
+                  INP=`Enter "$sge_jmx_ssl_keystore"`
+                  sge_jmx_ssl_keystore="$INP"
+   
+                  # set SGE_JMX_SSL_KEYSTORE_PW
+                  sge_jmx_ssl_keystore_pw=""
+                  STTY_ORGMODE=`stty -g`
+                  done=false
+                  while [ $done != true ]; do 
+                     $INFOTEXT -n "Enter JMX SSL server keystore pw (at least 6 characters) >> "
+                     stty -echo
+                     INP=`Enter "$sge_jmx_ssl_keystore_pw"`
+                     sge_jmx_ssl_keystore_pw="$INP"
+                     len=`echo $sge_jmx_ssl_keystore_pw | awk '{ print length($0) }'`
+                     stty "$STTY_ORGMODE"
+                     if [ $len -ge 6 ]; then
+                        done=true
+                     else
+                        $INFOTEXT -n "\nPassword only %s characters long. Try again.\n" "$len" 
+                     fi
+                  done
                fi
-               if [ "$sge_jmx_ssl_keystore" = "" ]; then 
-                  sge_jmx_ssl_keystore=$CALOCALTOP/private/keystore
-               fi
-               $INFOTEXT -n "Enter JMX SSL server keystore path [%s] >> " "$sge_jmx_ssl_keystore"
-               INP=`Enter "$sge_jmx_ssl_keystore"`
-               sge_jmx_ssl_keystore="$INP"
-
-               # set SGE_JMX_SSL_KEYSTORE_PW
-               sge_jmx_ssl_keystore_pw=""
-               STTY_ORGMODE=`stty -g`
-               $INFOTEXT -n "Enter JMX SSL server keystore pw >> "
-               stty -echo
-               INP=`Enter "$sge_jmx_ssl_keystore_pw"`
-               sge_jmx_ssl_keystore_pw="$INP"
-               stty "$STTY_ORGMODE"
-               # echo $sge_jmx_ssl_keystore_pw
-
             fi
 
+            if [ -z "$sge_jvm_lib_path" ]; then
+               sge_jvm_lib_path="jvm_missing"
+            fi
             # show all parameters and redo if needed
             $INFOTEXT "\nUsing the following JMX MBean server settings."
             $INFOTEXT "   libjvm_path              >%s<" "$sge_jvm_lib_path"
             $INFOTEXT "   Additional JVM arguments >%s<" "$sge_additional_jvm_args"
-            $INFOTEXT "   JMX port                 >%s<" "$sge_jmx_port"
-            $INFOTEXT "   JMX ssl                  >%s<" "$sge_jmx_ssl"
-            $INFOTEXT "   JMX client ssl           >%s<" "$sge_jmx_ssl_client"
-            $INFOTEXT "   JMX server keystore      >%s<" "$sge_jmx_ssl_keystore"
-            obfuscated_pw=`echo "$sge_jmx_ssl_keystore_pw" | sed 's/./*/g'`
-            $INFOTEXT "   JMX server keystore pw   >%s<" "$obfuscated_pw"
+            if [ "$1" != "shadowd" ]; then
+               $INFOTEXT "   JMX port                 >%s<" "$sge_jmx_port"
+               $INFOTEXT "   JMX ssl                  >%s<" "$sge_jmx_ssl"
+               $INFOTEXT "   JMX client ssl           >%s<" "$sge_jmx_ssl_client"
+               $INFOTEXT "   JMX server keystore      >%s<" "$sge_jmx_ssl_keystore"
+               obfuscated_pw=`echo "$sge_jmx_ssl_keystore_pw" | sed 's/./*/g'`
+               $INFOTEXT "   JMX server keystore pw   >%s<" "$obfuscated_pw"
+            fi
             $INFOTEXT "\n"
 
             $INFOTEXT -ask "y" "n" -def "y" -n \
@@ -2102,9 +2439,9 @@ GetJMXPort() {
 
       $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
       $CLEAR
-
+   else
+      SGE_ENABLE_JMX="false"      
    fi
-
 }
 
 

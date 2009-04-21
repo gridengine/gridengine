@@ -49,7 +49,6 @@ SCHEDLIB_SRC = sge_select_queue.c \
               load_correction.c \
               suspend_thresholds.c \
               schedd_monitor.c \
-              scale_usage.c \
               sgeee.c \
               sge_urgency.c \
               sge_resource_utilization.c \
@@ -141,9 +140,6 @@ sge_range_schedd.o : $(SCHEDLIB_DIR)/sge_range_schedd.c
 debit.o : $(SCHEDLIB_DIR)/debit.c
 	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SCHEDLIB_DIR)/debit.c
 
-scale_usage.o : $(SCHEDLIB_DIR)/scale_usage.c
-	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SCHEDLIB_DIR)/scale_usage.c
- 
 sort_hosts.o : $(SCHEDLIB_DIR)/sort_hosts.c
 	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SCHEDLIB_DIR)/sort_hosts.c
 

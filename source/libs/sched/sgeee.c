@@ -1317,10 +1317,11 @@ decay_and_sum_usage( sge_ref_t *ref,
          for_each(petask, lGetList(ja_task, JAT_task_list)) {
             lListElem *dst, *src;
             for_each(src, lGetList(petask, PET_scaled_usage)) {
-               if ((dst=lGetElemStr(job_usage_list, UA_name, lGetString(src, UA_name))))
+               if ((dst=lGetElemStr(job_usage_list, UA_name, lGetString(src, UA_name)))) {
                   lSetDouble(dst, UA_value, lGetDouble(dst, UA_value) + lGetDouble(src, UA_value));
-               else
+               } else {
                   lAppendElem(job_usage_list, lCopyElem(src));
+               }
             }
          }
       }
@@ -1401,7 +1402,6 @@ decay_and_sum_usage( sge_ref_t *ref,
    }
 
    if (job_usage_list) {
-
       lListElem *job_usage;
 
       /*-------------------------------------------------------------

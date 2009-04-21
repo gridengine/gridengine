@@ -42,6 +42,14 @@ public interface Config {
     public static final String CONST_DEFAULT_WINDOWS_SPOOL_DIR = "/var/spool/";
     public static final String CONST_MODE_WINDOWS = "windows";
 
+    public static final String VAR_INSTALL_QMASTER = "install.qmaster";
+    public static final String VAR_INSTALL_EXECD = "install.execd";
+    public static final String VAR_INSTALL_SHADOW = "install.shadowd";
+    public static final String VAR_INSTALL_BDB = "install.bdb";
+    public static final String VAR_INSTALL_MODE = "install.mode";
+    public static final String VAR_INSTALL_MODE_EXPRESS = "install.mode.express";
+    public static final String VAR_INSTALL_MODE_CUSTOM = "install.mode.custom";
+
     public static final String VAR_SGE_ROOT    = "cfg.sge.root";
     public static final String VAR_SGE_CELL_NAME = "cfg.cell.name";
     public static final String VAR_ADMIN_USER  = "cfg.admin.user";
@@ -64,6 +72,7 @@ public interface Config {
     public static final String VAR_WIN_ADMIN_NAME = "cfg.win.admin.name";
     public static final String VAR_HOSTNAME_RESOLVING = "cfg.hostname.resolving";
     public static final String VAR_JVM_LIB_PATH = "cfg.sge.jvm.lib.path";
+    public static final String VAR_ADDITIONAL_JVM_ARGS = "cfg.sge.additional.jvm.args";
     public static final String VAR_DB_SPOOLING_DIR = "cfg.db.spooling.dir";
     public static final String VAR_SGE_JMX_PORT = "cfg.sge.jmx.port";
     public static final String VAR_ADD_TO_RC = "cfg.add.to.rc";
@@ -103,8 +112,18 @@ public interface Config {
     public static final String VAR_DB_SPOOLING_DIR_BDB = "add.db.spooling.dir.bdb";
     public static final String VAR_DB_SPOOLING_DIR_BDBSERVER = "add.db.spooling.dir.bdbserver";
     public static final String VAR_DB_SPOOLING_DIR_BDB_DEF = "add.db.spooling.dir.bdb.def";
+    public static final String VAR_JMX_SSL = "cfg.sge.jmx.ssl";
+    public static final String VAR_JMX_SSL_CLIENT = "cfg.sge.jmx.ssl.client";
     public static final String VAR_JMX_SSL_KEYSTORE = "cfg.sge.jmx.ssl.keystore";
     public static final String VAR_JMX_SSL_KEYSTORE_DEF = "add.sge.jmx.ssl.keystore.def";
+    public static final String VAR_JMX_SSL_KEYSTORE_PWD = "cfg.sge.jmx.ssl.keystore.pw";
+
+    public static final String VAR_QMASTER_HOST_FAILED = "add.qmaster.host.failed";
+    public static final String VAR_EXEC_HOST_LIST_FAILED = "add.exec.host.list.failed";
+    public static final String VAR_SHADOW_HOST_LIST_FAILED = "add.shadow.host.failed";
+    public static final String VAR_DB_SPOOLING_SERVER_FAILED = "add.db.spooling.server.failed";
+    public static final String VAR_ADMIN_HOST_LIST_FAILED = "add.admin.host.list.failed";
+    public static final String VAR_SUBMIT_HOST_LIST_FAILED = "add.submit.host.list.failed";
     
     public static final String PARAMETER_1 = "param1";
     public static final String PARAMETER_2 = "param2";
@@ -143,15 +162,35 @@ public interface Config {
     public static final String ARG_CONNECT_USER = "connect_user";
     public static final String ARG_CONNECT_MODE = "connect_mode";
 
+    // Overall exit value
     public static final int EXIT_VAL_SUCCESS = 0;
-    public static final int EXIT_VAL_BDB_SERVER_SPOOL_DIR_PERM_DENIED = 10;
+
+    // Check_host exit values
     public static final int EXIT_VAL_QMASTER_SPOOL_DIR_PERM_DENIED = 20;
     public static final int EXIT_VAL_EXECD_SPOOL_DIR_PERM_DENIED = 21;
     public static final int EXIT_VAL_JMX_KEYSTORE_PERM_DENIED = 22;
-    public static final int EXIT_VAL_BDB_SPOOL_DIR_PERM_DENIED = 23;
-    public static final int EXIT_VAL_BDB_SPOOL_DIR_EXISTS = 24;
-    public static final int EXIT_VAL_BDB_SPOOL_WRONG_FSTYPE = 25;
+    public static final int EXIT_VAL_JVM_LIB_DOES_NOT_EXIST_QMASTER = 23;
+    public static final int EXIT_VAL_JVM_LIB_INVALID_QMASTER = 24;
+    public static final int EXIT_VAL_BDB_SPOOL_DIR_EXISTS = 25;
+    public static final int EXIT_VAL_BDB_SPOOL_WRONG_FSTYPE = 26;
+    public static final int EXIT_VAL_BDB_SPOOL_DIR_PERM_DENIED = 27;
+    public static final int EXIT_VAL_JVM_LIB_DOES_NOT_EXIST_SHADOWD = 30;
+    public static final int EXIT_VAL_JVM_LIB_INVALID_SHADOWD = 31;
     public static final int EXIT_VAL_EXECD_SPOOL_DIR_LOCAL_PERM_DENIED = 40;
-    public static final int EXIT_VAL_ADMIN_USER_NOT_KNOWN = 50;
+    public static final int EXIT_VAL_BDB_SERVER_SPOOL_DIR_PERM_DENIED = 50;
+    public static final int EXIT_VAL_BDB_SERVER_SPOOL_DIR_EXISTS = 51;
+    public static final int EXIT_VAL_ADMIN_USER_NOT_KNOWN = 60;
+
+    // Get architecture task exit values
+    public static final int EXIT_VAL_UNKNOWN_HOST = 70;
+
+    // Install task exit values
     public static final int EXIT_VAL_FAILED_ALREADY_INSTALLED_COMPONENT = 10;
+
+    // Command executor exit values
+    public static final int EXIT_VAL_CMDEXEC_INITIAL       = -1;
+    public static final int EXIT_VAL_CMDEXEC_OTHER         = -2;
+    public static final int EXIT_VAL_CMDEXEC_INTERRUPTED   = -3;
+    public static final int EXIT_VAL_CMDEXEC_TERMINATED    = -4;
+    public static final int EXIT_VAL_CMDEXEC_MISSING_FILE  = 15;
 }

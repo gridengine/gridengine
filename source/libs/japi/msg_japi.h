@@ -48,6 +48,7 @@ extern "C" {
 #define MSG_JAPI_NO_HANDLE_S    _MESSAGE(45507, _("Unable to open a connection to the qmaster: "SFN))
 #define MSG_JAPI_NEGATIVE_TIMEOUT  _MESSAGE(45508, _("Negative timeout values are not allowed."))
 #define MSG_JAPI_EC_THREAD_NOT_STARTED_S  _MESSAGE(45509, _("Couldn't create event client thread: "SFN))
+#define MSG_JAPI_KILLED_EVENT_CLIENT   _MESSAGE(45510, _("Event client got shutdown signal."))
 #ifdef ENABLE_PERSISTENT_JAPI_SESSIONS
 #endif
 #define MSG_JAPI_CANNOT_CLOSE_COMMLIB_S  _MESSAGE(45514, _("Unable to shutdown commlib handle: "SFN))

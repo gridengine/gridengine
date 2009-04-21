@@ -35,22 +35,22 @@ package com.sun.grid.installer.util.cmd;
 import com.izforge.izpack.util.Debug;
 import com.sun.grid.installer.util.Util;
 
-public class SimpleLocalCommand extends com.sun.grid.installer.util.cmd.CmdExec {
+public class SimpleLocalCommand extends CmdExec {
       private String command;
 
       public SimpleLocalCommand(String command) {
-          this(Util.RESOLVE_TIMEOUT, command);
+          this(Util.DEF_RESOLVE_TIMEOUT, command);
       }
 
       public SimpleLocalCommand(String... commands) {
-          this(Util.RESOLVE_TIMEOUT, getSingleCommand(commands));
+          this(Util.DEF_RESOLVE_TIMEOUT, getSingleCommand(commands));
       }
 
-      public SimpleLocalCommand(int timeout, String... commands) {
+      public SimpleLocalCommand(long timeout, String... commands) {
           this(timeout, getSingleCommand(commands));
       }
 
-      public SimpleLocalCommand(int timeout, String command) {
+      public SimpleLocalCommand(long timeout, String command) {
           super(timeout);
           this.command  = command;
       }

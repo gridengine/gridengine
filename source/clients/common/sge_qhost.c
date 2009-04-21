@@ -128,7 +128,7 @@ int do_qhost(void *ctx, lList *host_list, lList *user_list, lList *resource_matc
    if (have_lists == false) {
       free_all_lists(&ql, &jl, &cl, &ehl, &pel);
       DRETURN(QHOST_ERROR);
-   }   
+   }
 
    /* 
    ** delete ok message 
@@ -521,10 +521,11 @@ lList **alpp
             ** number of used/free slots 
             */
             if (report_handler == NULL) {
-               sprintf(buf, "%d/%d ",
+               sprintf(buf, "%d/%d/%d ",
+                       qinstance_slots_reserved(qep),
                        qinstance_slots_used(qep),
                        (int)lGetUlong(qep, QU_job_slots));
-               printf("%-9.9s", buf);
+               printf("%-14.14s", buf);
             } else {
                ret = report_handler->report_queue_ulong_value(report_handler,
                                        qname, "slots_used",
@@ -539,6 +540,13 @@ lList **alpp
                                          lGetUlong(qep, QU_job_slots),
                                          alpp);
                
+               if (ret != QHOST_SUCCESS ) {
+                  DRETURN(ret);
+               }
+               ret = report_handler->report_queue_ulong_value(report_handler,
+                                       qname, "slots_resv",
+                                       qinstance_slots_reserved(qep),
+                                       alpp);
                if (ret != QHOST_SUCCESS ) {
                   DRETURN(ret);
                }

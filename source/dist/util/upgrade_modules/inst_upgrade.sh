@@ -73,31 +73,6 @@ GetBackupedAdminUser()
    fi
 }
 
-#TODO: Use it in inst_sge
-#-------------------------------------------------------------------------------
-# FileGetValue: Get values from a file for appropriate key
-#  $1 - PATH to the file
-#  $2 - key: e.g: qmaster_spool_dir | ignore_fqdn | default_domain, etc.
-FileGetValue()
-{
-   if [ $# -ne 2 ]; then
-      $INFOTEXT "Expecting 2 arguments for FileGetValue. Got %s." $#
-      exit 1
-   fi
-   if [ ! -f "$1" ]; then
-      $INFOTEXT "No file %s found" $1
-      exit 1
-   fi
-   echo `cat $1 | grep "$2" | awk '{ print $2}' 2>/dev/null`
-}
-
-#Helper to get bootstrap file values
-#See FileGetValue
-BootstrapGetValue()
-{
-   FileGetValue "$1/bootstrap" $2
-}
-
 #-------------------------------------------------------------------------------
 # CheckUpgradeUser: Check if valid user performs the upgrade
 #
@@ -424,77 +399,3 @@ PrepareConfiguration()
    GetConfiguration "$SGE_ROOT/$SGE_CELL/spool" `FileGetValue "$UPGRADE_BACKUP_DIR/configurations/global" "administrator_mail"`
 }
 
-ReplaceLineWithMatch()
-{
-   repFile="${1:?Need the file name to operate}"
-   filePerms="${2:?Need file final permissions}"
-   repExpr="${3:?Need an expression, where to replace}" 
-   replace="${4:?Need the replacement text}" 
-
-   #Return if no match
-   grep "${repExpr}" $repFile >/dev/null 2>&1
-   if [ $? -ne 0 ]; then
-      return
-   fi
-   #We need to change the file
-   ExecuteAsAdmin touch ${repFile}.tmp
-   ExecuteAsAdmin chmod 666 ${repFile}.tmp
-  
-   SEP="|"
-   echo "$repExpr $replace" | grep "|" >/dev/null 2>&1
-   if [ $? -eq 0 ]; then
-      echo "$repExpr $replace" | grep "%" >/dev/null 2>&1
-      if [ $? -ne 0 ]; then
-         SEP="%"
-      else
-         echo "$repExpr $replace" | grep "?" >/dev/null 2>&1
-         if [ $? -ne 0 ]; then
-            SEP="?"
-         else
-            $INFOTEXT "repExpr $replace contains |,% and ? characters: cannot use sed"
-            exit 1
-         fi
-      fi
-   fi
-   #We need to change the file
-   sed -e "s${SEP}${repExpr}${SEP}${replace}${SEP}g" "$repFile" >> "${repFile}.tmp"
-   ExecuteAsAdmin mv -f "${repFile}.tmp"  "${repFile}"
-   ExecuteAsAdmin chmod "${filePerms}" "${repFile}"
-}
-
-ReplaceOrAddLine()
-{
-   repFile="${1:?Need the file name to operate}"
-   filePerms="${2:?Need file final permissions}"
-   repExpr="${3:?Need an expression, where to replace}" 
-   replace="${4:?Need the replacement text}" 
-   
-   #Does the pattern exists
-   grep "${repExpr}" "${repFile}" > /dev/null 2>&1
-   if [ $? -eq 0 ]; then #match
-      ReplaceLineWithMatch "$repFile" "$filePerms" "$repExpr" "$replace"
-   else                  #line does not exist
-      echo "$replace" >> "$repFile"
-   fi
-}
-
-#Remove line with maching expression
-RemoveLineWithMatch()
-{
-   remFile="${1:?Need the file name to operate}"
-   filePerms="${2:?Need file final permissions}"
-   remExpr="${3:?Need an expression, where to remove lines}"
-   
-   #Return if no match
-   grep "${remExpr}" $remFile >/dev/null 2>&1
-   if [ $? -ne 0 ]; then
-      return
-   fi
-
-   #We need to change the file
-   ExecuteAsAdmin touch ${remFile}.tmp
-   ExecuteAsAdmin chmod 666 ${remFile}.tmp
-   sed -e "/${remExpr}/d" "$remFile" > "${remFile}.tmp"
-   ExecuteAsAdmin mv -f "${remFile}.tmp"  "${remFile}"
-   ExecuteAsAdmin chmod "${filePerms}" "${remFile}"
-}

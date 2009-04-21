@@ -45,6 +45,8 @@ import com.sun.grid.jgdi.monitoring.filter.HostFilter;
  */
 public class QHostOptions implements Serializable {
     
+    private final static long serialVersionUID = -2009040301L;
+
     private boolean includeJobs;
     private boolean includeQueue;
     private boolean showAsXML;

@@ -1214,10 +1214,8 @@ int get_channel_fd()
    }
 }    
 
-int sge_getloadavg(
-double loadavg[],
-int nelem 
-) {
+int sge_getloadavg(double loadavg[], int nelem)
+{
    int   elem = 0;   
 
 #if defined(SOLARIS) || defined(FREEBSD) || defined(NETBSD) || defined(DARWIN)
@@ -1225,9 +1223,9 @@ int nelem
 #elif defined(ALPHA4) || defined(ALPHA5) || defined(IRIX) || defined(HPUX) || defined(CRAY) || defined(NECSX4) || defined(NECSX5) || defined(LINUX) || defined(HAS_AIX5_PERFLIB)
    elem = get_load_avg(loadavg, nelem); 
 #else
-   elem = -1;    
+   elem = -2;
 #endif
-   if (elem != -1) {
+   if (elem >= 0) {
       elem = nelem;  
    }
    return elem;

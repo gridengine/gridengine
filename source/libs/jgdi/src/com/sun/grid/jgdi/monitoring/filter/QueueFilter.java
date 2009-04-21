@@ -43,6 +43,8 @@ import java.util.logging.Logger;
  */
 public class QueueFilter implements Serializable {
 
+    private final static long serialVersionUID = -2009040301L;
+    
     private static Logger logger = Logger.getLogger(QueueFilter.class.getName());
     private List<String> queues = new ArrayList<String>();
 

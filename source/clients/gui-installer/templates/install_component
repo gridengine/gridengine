@@ -303,7 +303,9 @@ PRODUCT_MODE=${add.product.mode}                      #1 none, 2 csp, 3 afs
 QMASTER_FLAGS=""
 GUI_CSP_MODE_ENABLED=false
 if [ "$USE_JMX" = true ]; then
-   QMASTER_FLAGS="$QMASTER_FLAGS -jmx"
+   QMASTER_FLAGS="$QMASTER_FLAGS -jmx"                # -jmx is implicit
+else
+   QMASTER_FLAGS="$QMASTER_FLAGS -no-jmx"
 fi
 #Set proper product mode flags
 if [ "$PRODUCT_MODE" = "csp" ]; then
@@ -414,8 +416,8 @@ if [ -n "${first_install_task}" ]; then
    echo "Prerequisities"
    #Add all hosts as admin hosts on qmaster host only if this is a first task or right after the installation
    #Only first installation tasks have $cfg.allhosts set (no action otherwise)
-   ARCH=`sh -c ${cfg.sge.root}/util/arch 2>/dev/null`
-   QMASTER_HOST=`cat $SGE_ROOT/$CELL_NAME/common/act_qmaster 2>/dev/null`
+   ARCH=`sh -c "${cfg.sge.root}/util/arch" 2>/dev/null`
+   QMASTER_HOST=`cat "$SGE_ROOT/$CELL_NAME/common/act_qmaster" 2>/dev/null`
    CURRENT_HOST=`sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ;  ${cfg.sge.root}/utilbin/'${ARCH}'/gethostname -aname' 2>/dev/null`
    #if [ "$HOSTNAME_RESOLVING" = true ]; then
       QMASTER_HOST=`echo $QMASTER_HOST | cut -f1 -d. | tr "[A-Z]" "[a-z]"`
@@ -432,12 +434,13 @@ if [ -n "${first_install_task}" ]; then
          fi
       done
    fi
+   #TODO: Need a subset of copycerts also for JMX with SSL!
    #For the CSP mode we have to copy the certificates to each of the execd/submit/admin hosts
    if [ "$GUI_CSP_MODE_ENABLED" = "true" -a "$CSP_RECREATE" = "true" -a -n "${gui_csphosts}" ]; then
       list="${gui_csphosts}"
       CSP_FLAGS=""
       #-copycerts needs -rsh if rsh is to be used
-      if [ "$SHELL_NAME" != "ssh" ]; then
+      if [ x`echo $SHELL_NAME | grep "ssh"` = x ]; then
          CSP_FLAGS="-rsh"
       fi
       total=0
@@ -471,12 +474,12 @@ if [ "$IS_SHADOW" = true ]; then
    #Shadowd is considered installed if it's listed in the shadow_masters file
    SM_FILE="${cfg.sge.root}/$CELL_NAME/common/shadow_masters"   
    if [ -f "$SM_FILE" ]; then
-      RES=`cat $SM_FILE | grep $EXEC_HOST_LIST 2>/dev/null`
+      RES=`cat "$SM_FILE" | grep $EXEC_HOST_LIST 2>/dev/null`
       #Uninstall existing installation if chosen      
       if [ "$REMOVE_EXISTING_COMPONENT" = true -a -n "$RES" ]; then
          RES=`${cfg.sge.root}/inst_sge -usm -noremote -autogui`
          ret=$?			
-         RES2=`cat $SM_FILE | grep $EXEC_HOST_LIST 2>/dev/null`
+         RES2=`cat "$SM_FILE" | grep $EXEC_HOST_LIST 2>/dev/null`
          #Uninstallation failed if non-zero or shadow_masters still references it
          if [ $ret -ne 0 -o -n "$RES2" ]; then            
             #Uninstallation failed
@@ -525,7 +528,7 @@ fi
 #To setup the final submit/admin hosts settings as specifed
 #Extra last tasks runs only this part of the script (otherwise ${cfg.allhosts.current.last} is not set)
 if [ -n "${last_install_task}" ]; then
-   ARCH=`sh -c ${cfg.sge.root}/util/arch 2>/dev/null`
+   ARCH=`sh -c "${cfg.sge.root}/util/arch" 2>/dev/null`
    CURRENT_HOST=`sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ;  ${cfg.sge.root}/utilbin/'${ARCH}'/gethostname -aname' 2>/dev/null`
    #if [ "$HOSTNAME_RESOLVING" = true ]; then
    CURRENT_HOST=`echo $CURRENT_HOST | cut -f1 -d. | tr "[A-Z]" "[a-z]"`

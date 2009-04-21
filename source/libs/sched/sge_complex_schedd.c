@@ -189,7 +189,7 @@ lListElem* get_attribute(const char *attrname, lList *config_attr, lList *actual
          if (actual_attr && (actual_el = lGetElemStr(actual_attr, RUE_name, attrname))){
             dstring ds;
             char as_str[20];
-            double utilized = zero_utilization ? 0 : utilization_max(actual_el, start_time, duration);
+            double utilized = zero_utilization ? 0 : utilization_max(actual_el, start_time, duration, false);
 
             switch (lGetUlong(cplx_el, CE_relop)) {
                case CMPLXGE_OP:
@@ -866,6 +866,9 @@ static int resource_cmp(u_long32 relop, double req, double src_dl) {
    case CMPLXNE_OP :
       match = (req!=src_dl);
       break;
+   case CMPLXEXCL_OP :
+      match = (req == 0 || req<=src_dl);
+      break;
    default:
       match = 0; /* default -> no match */
    }
@@ -922,7 +925,7 @@ int compare_complexes(int slots, lListElem *req_cplx, lListElem *src_cplx, char 
          break;
       }
    } else {
-      used_relop = relop ;
+      used_relop = relop;
    }
    switch (type) {
       const char *request;
@@ -988,13 +991,12 @@ int compare_complexes(int slots, lListElem *req_cplx, lListElem *src_cplx, char 
 
          switch (type) {
          case TYPE_BOO:
-            sge_dstring_copy_string(&resource_string, src_dl?"true":"false");
+            sge_dstring_copy_string(&resource_string, (src_dl > 0)?"true":"false");
 /*            sprintf(availability_text1, "%s:%s=%s", dom_str, name, src_dl?"true":"false");*/
 #if 0
-            DPRINTF(("-l %s=%f, Q: %s:%s%s%f, Comparison: %s\n",
-                     name, req_dl?"true":"false", dom_str, name,
-                     map_op2str(used_relop),
-                     sge_dstring_get_string(&resource_string), m1?"ok":"no match"));
+            DPRINTF(("-l %s=%f, Q: %s:%s:%f, Comparison(1): %s\n",
+                     name, req_all_slots, dom_str, map_op2str(used_relop),
+                     src_dl, m1?"ok":"no match"));
 #endif
             break;
          case TYPE_MEM:
@@ -1050,9 +1052,9 @@ int compare_complexes(int slots, lListElem *req_cplx, lListElem *src_cplx, char 
 
          switch (type) {
          case TYPE_BOO:
-            sge_dstring_copy_string(&resource_string, src_dl?"true":"false");
+            sge_dstring_copy_string(&resource_string, (src_dl > 0)?"true":"false");
 #if 0
-            DPRINTF(("-l %s=%f, Q: %s:%s%s%f, Comparison: %s\n",
+            DPRINTF(("-l %s=%f, Q: %s:%s%s%f, Comparison(2): %s\n",
                      name, req_dl?"true":"false", dom_str, name, 
                      map_op2str(used_relop),
                      src_dl?"true":"false", m2?"ok":"no match"));

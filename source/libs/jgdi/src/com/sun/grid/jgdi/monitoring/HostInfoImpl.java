@@ -44,6 +44,8 @@ import java.util.Set;
  *
  */
 public class HostInfoImpl implements HostInfo, Serializable {
+
+    private final static long serialVersionUID = -2009040301L;
     
     private String hostname;
     private Map<String, Object> hostValueMap = new HashMap<String, Object>();

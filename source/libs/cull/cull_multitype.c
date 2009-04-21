@@ -1684,28 +1684,6 @@ int lSetUlong(lListElem *ep, int name, lUlong value)
    return 0;
 }
 
-/****** cull_multitype/lAddDouble() ********************************************
-*  NAME
-*     lAddDouble() -- Adds a lDouble offset to the lDouble field
-*
-*  SYNOPSIS
-*     lAddDouble(lListElem *ep, int name, lDouble offset)
-*
-*  FUNCTION
-*     The 'offset' is added to the lDouble field 'name' of
-*     the CULL element 'ep'.
-*
-*  INPUTS
-*     lListElem *ep  - element
-*     int name       - field name id
-*     lDouble offset - the offset
-*
-*  RESULT
-*     int - error state
-*         0 - OK
-*        -1 - Error
-*******************************************************************************/
-
 /****** cull_multitype/lAddUlong() *********************************************
 *  NAME
 *     lAddUlong() -- Adds a lUlong offset to the lUlong field
@@ -4672,7 +4650,7 @@ lListElem *lGetSubCaseStr(const lListElem *ep, int nm, const char *str,
    int sublist_pos;
    lListElem *ret;
 
-   DENTER(CULL_LAYER, "lGetSubStr");
+   DENTER(CULL_LAYER, "lGetSubCaseStr");
 
    /* get position of sublist in ep */
    sublist_pos = lGetPosViaElem(ep, snm, SGE_DO_ABORT);

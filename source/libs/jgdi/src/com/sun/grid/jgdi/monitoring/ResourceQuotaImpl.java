@@ -37,6 +37,8 @@ import java.io.Serializable;
  *
  */
 public class ResourceQuotaImpl implements ResourceQuota, Serializable {
+
+    private final static long serialVersionUID = -2009040301L;
     
     private String resourceName;
     private String limitValue;

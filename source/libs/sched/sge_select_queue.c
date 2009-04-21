@@ -199,8 +199,7 @@ ri_slots_by_time(const sge_assignment_t *a, int *slots, int *slots_qend,
                 bool no_centry, const char *object_name);
 
 static dispatch_t
-match_static_resource(int slots, lListElem *req_cplx, lListElem *src_cplx, dstring *reason, 
-             int is_threshold, int force_existence, bool allow_non_requestable);
+match_static_resource(int slots, lListElem *req_cplx, lListElem *src_cplx, dstring *reason, bool allow_non_requestable);
 
 static int 
 resource_cmp(u_long32 relop, double req, double src_dl); 
@@ -1342,7 +1341,7 @@ rc_time_by_slots(const sge_assignment_t *a, lList *requested, lList *load_attr, 
                parse_ulong_val(&dval, NULL, valtype, def_req, NULL, 0);
 
                /* ignore default request if the value is 0 */
-               if (def_req != NULL && dval != 0.0) {
+               if ((def_req != NULL && dval != 0.0) || lGetUlong(default_request, CE_relop) == CMPLXEXCL_OP) {
                   dstring tmp_reason;
                   char tmp_reason_buf[2048];
 
@@ -1368,8 +1367,8 @@ rc_time_by_slots(const sge_assignment_t *a, lList *requested, lList *load_attr, 
                            " to "sge_U32CFormat"\n", object_name, name, latest_time, MAX(latest_time, tmp_start)));
                      latest_time = MAX(latest_time, tmp_start);
                   }
-               } 
-            } 
+               }
+            }
          }/* end for*/
       }
    } else {
@@ -1431,7 +1430,7 @@ rc_time_by_slots(const sge_assignment_t *a, lList *requested, lList *load_attr, 
 
 static dispatch_t 
 match_static_resource(int slots, lListElem *req_cplx, lListElem *src_cplx, dstring *reason,
-                      int is_threshold, int force_existence, bool allow_non_requestable)
+                      bool allow_non_requestable)
 {
    int match;
    dispatch_t ret = DISPATCH_OK;
@@ -3343,7 +3342,7 @@ sequential_tag_queues_suitable4job(sge_assignment_t *a)
                break;
             }
 
-            result = match_static_resource(1, rep, cplx_el, &reason, false, false, false);
+            result = match_static_resource(1, rep, cplx_el, &reason, false);
             lFreeElem(&cplx_el);
             if (result != DISPATCH_OK) {
                break;
@@ -3888,12 +3887,13 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
                   int rqs_hslots = 0, maxslots, slots, slots_qend;
 
                   /* still broken for cases where round robin requires multiple rounds */
-                  if (ALLOC_RULE_IS_BALANCED(allocation_rule))
+                  if (ALLOC_RULE_IS_BALANCED(allocation_rule)) {
                      maxslots = allocation_rule;
-                  else if (allocation_rule == ALLOC_RULE_FILLUP)
-                     maxslots = a->slots - accu_host_slots; 
-                  else /* ALLOC_RULE_ROUNDROBIN */
+                  } else if (allocation_rule == ALLOC_RULE_FILLUP) {
+                     maxslots = MIN(a->slots - accu_host_slots, hslots); 
+                  } else {/* ALLOC_RULE_ROUNDROBIN */
                      maxslots = 1;
+                  }
 
                   /* debit on RQS limits */
                   for (qep = lGetElemHostFirst(a->queue_list, QU_qhostname, eh_name, &iter); qep;
@@ -4008,13 +4008,14 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
                   int rqs_hslots = 0, maxslots, slots, slots_qend;
 
                   /* still broken for cases where round robin requires multiple rounds */
-                  if (ALLOC_RULE_IS_BALANCED(allocation_rule))
+                  if (ALLOC_RULE_IS_BALANCED(allocation_rule)) {
                      maxslots = allocation_rule;
-                  else if (allocation_rule == ALLOC_RULE_FILLUP)
-                     maxslots = a->slots - accu_host_slots_qend; 
-                  else /* ALLOC_RULE_ROUNDROBIN */
+                  } else if (allocation_rule == ALLOC_RULE_FILLUP) {
+                     maxslots = MIN(a->slots - accu_host_slots_qend, hslots_qend); 
+                  } else { /* ALLOC_RULE_ROUNDROBIN */
                      maxslots = 1; 
-                  
+                  }
+
                   /* debit on RQS limits */
                   for (qep = lGetElemHostFirst(a->queue_list, QU_qhostname, eh_name, &iter); qep;
                        qep = lGetElemHostNext(a->queue_list, QU_qhostname, eh_name, &iter)) {
@@ -4398,7 +4399,7 @@ parallel_tag_hosts_queues(sge_assignment_t *a, lListElem *hep, int *slots, int *
          cplx_el = get_attribute(attrname, config_attr, actual_attr, load_attr, a->centry_list, NULL,
                   DOMINANT_LAYER_HOST, 0, &reason, false, DISPATCH_TIME_NOW, 0);
          if (cplx_el != NULL) {
-            if (match_static_resource(1, rep, cplx_el, &reason, false, false, false) == DISPATCH_OK) {
+            if (match_static_resource(1, rep, cplx_el, &reason, false) == DISPATCH_OK) {
                lSetUlong(rep, CE_tagged, HOST_TAG); 
             }
             lFreeElem(&cplx_el);
@@ -5042,7 +5043,7 @@ parallel_queue_slots(sge_assignment_t *a, lListElem *qep, int *slots, int *slots
             cplx_el = get_attribute(attrname, ar_queue_config_attr, ar_queue_actual_attr, NULL, a->centry_list, NULL,
                      DOMINANT_LAYER_QUEUE, 0, &reason, false, DISPATCH_TIME_NOW, 0);
             if (cplx_el != NULL) {
-               if (match_static_resource(1, rep, cplx_el, &reason, false, false, false) == DISPATCH_OK) {
+               if (match_static_resource(1, rep, cplx_el, &reason, false) == DISPATCH_OK) {
                   lSetUlong(rep, CE_tagged, PE_TAG); 
                }
                lFreeElem(&cplx_el);
@@ -5609,6 +5610,7 @@ ri_time_by_slots(const sge_assignment_t *a, lListElem *rep, lList *load_attr, lL
    bool schedule_based = (a->is_advance_reservation || a->is_schedule_based) ? true : false;
    u_long32 now = a->now;
    int utilized = 0;
+   bool is_exclusive = false;
 
    DENTER(TOP_LAYER, "ri_time_by_slots");
 
@@ -5626,18 +5628,19 @@ ri_time_by_slots(const sge_assignment_t *a, lListElem *rep, lList *load_attr, lL
       DRETURN(DISPATCH_MISSING_ATTR);
    }
 
-   ret = match_static_resource(slots, rep, cplx_el, reason, false, false, allow_non_requestable);
+   DPRINTF(("ri_time_by_slots(%s) consumable = %s\n", 
+         attrname, map_consumable2str(lGetUlong(cplx_el, CE_consumable))));
+
+   ret = match_static_resource(slots, rep, cplx_el, reason, allow_non_requestable);
    if (actual_el != NULL) {
       utilized = lGetNumberOfElem(lGetList(actual_el, RUE_utilized));
    } 
 
-   if (ret != DISPATCH_OK || (!schedule_based && utilized == 0)) {
+   if (ret != DISPATCH_OK || (!schedule_based && utilized == 0 && lGetUlong(cplx_el, CE_relop) != CMPLXEXCL_OP)) {
+      DPRINTF(("skipping expensive checks, utilized is %d\n", utilized));
       lFreeElem(&cplx_el);
       DRETURN(ret);
    }
-
-   DPRINTF(("ri_time_by_slots(%s) consumable = %s\n", 
-         attrname, map_consumable2str(lGetUlong(cplx_el, CE_consumable))));
 
    if (lGetUlong(cplx_el, CE_consumable) == CONSUMABLE_NO) {
       if (ready_time == DISPATCH_TIME_QUEUE_END) {
@@ -5664,7 +5667,13 @@ ri_time_by_slots(const sge_assignment_t *a, lListElem *rep, lList *load_attr, lL
       lFreeElem(&cplx_el);
       DRETURN(DISPATCH_NEVER_CAT);
    }
-   lFreeElem(&cplx_el);
+
+   if (request != 0.0) {
+      DPRINTF(("exclusive_request\n"));
+      is_exclusive = true;
+   } else {
+      DPRINTF(("non-exclusive_request\n"));
+   }
 
    if (ready_time == DISPATCH_TIME_QUEUE_END) {
       double threshold = total - request * slots;
@@ -5674,7 +5683,7 @@ ri_time_by_slots(const sge_assignment_t *a, lListElem *rep, lList *load_attr, lL
          ret = DISPATCH_NEVER_CAT;
       } else {
          /* seek for the time near queue end where resources are sufficient */
-         u_long32 when = utilization_below(actual_el, threshold, object_name);
+         u_long32 when = utilization_below(actual_el, threshold, object_name, is_exclusive);
          if (when == 0) {
             /* may happen only if scheduler code is run outside scheduler with 
                DISPATCH_TIME_QUEUE_END time spec */
@@ -5684,60 +5693,92 @@ ri_time_by_slots(const sge_assignment_t *a, lListElem *rep, lList *load_attr, lL
          }   
          ret = DISPATCH_OK;
 
-         DPRINTF(("\t\t%s: time_by_slots: %d of %s=%f can be served %s\n", 
-               object_name, slots, attrname, request,
-                  ret == DISPATCH_OK ? "at time" : "never"));
-
       }
+      DPRINTF(("\t\t%s: time_by_slots: %d of %s=%f can be served %s\n", 
+            object_name, slots, attrname, request,
+               ret == DISPATCH_OK ? "at time" : "never"));
+
+      lFreeElem(&cplx_el);
       DRETURN(ret);
    } 
 
-   /* here we handle DISPATCH_TIME_NOW + any other time */
-   if (*start_time == DISPATCH_TIME_NOW) {
-      ready_time = now;
-   } else {
+   if (lGetUlong(cplx_el, CE_relop) == CMPLXEXCL_OP) {
+
+      /* here we handle DISPATCH_TIME_NOW + any other time */
       ready_time = *start_time;
-   }   
 
-   util = utilization_max(actual_el, ready_time, a->duration);
-
-   DPRINTF(("\t\t%s: time_by_slots: %s total = %f util = %f from "sge_U32CFormat" plus "sge_U32CFormat" seconds\n", 
-            object_name, attrname, total, util, ready_time, a->duration));
-
-   /* ensure resource is sufficient from now until finish */
-   if (request * slots > total - util) {
-      char dom_str[5];
-      dstring availability; char availability_text[2048];
-
-      sge_dstring_init(&availability, availability_text, sizeof(availability_text));
-      
-      /* we can't assign right now - maybe later ? */  
-      if (request * slots > total) {
-         DPRINTF(("\t\t%s: time_by_slots: %s %f > %f (never)\n", object_name, attrname,
-            request * slots, total));
-         ret = DISPATCH_NEVER_CAT; /* surely not */
-      } else if (request * slots > total - utilization_queue_end(actual_el)) {
-         DPRINTF(("\t\t%s: time_by_slots: %s %f <= %f (but booked out!!)\n", object_name, attrname,
-            request * slots, total));
-         ret = DISPATCH_NEVER_CAT; /* booked out until infinity */
+      util = utilization_max(actual_el, ready_time, a->duration, is_exclusive);
+      if (util == 0.0) {
+         if (schedule_based || utilized != 0) {
+            /* check for reservations */
+            ready_time = now;
+            util = utilization_max(actual_el, ready_time, a->duration, is_exclusive);
+            if (util == 0.0) {
+               ret = DISPATCH_OK;
+            } else {
+               ret = DISPATCH_NOT_AT_TIME;
+            }
+         } else {
+            ret = DISPATCH_OK;
+         }
       } else {
-         DPRINTF(("\t\t%s: time_by_slots: %s %f > %f (later)\n", object_name, attrname, 
-            request * slots, total - util));
          ret = DISPATCH_NOT_AT_TIME;
       }
 
-      monitor_dominance(dom_str, DOMINANT_TYPE_CONSUMABLE | layer);
-      sge_dstring_sprintf(&availability, "%s:%s=%f", dom_str, attrname, total - util);
-      sge_dstring_append(reason, MSG_SCHEDD_ITOFFERSONLY);
-      sge_dstring_append(reason, availability_text);
-
-      if ((a->duration != DISPATCH_TIME_NOW) &&
-          (request * slots <= total - utilization_max(actual_el, ready_time, DISPATCH_TIME_NOW))) {
-         sge_dstring_append(reason, MSG_SCHEDD_DUETORR);
+      if (ret != DISPATCH_OK) {
+         sge_dstring_sprintf(reason, MSG_SCHEDD_EXCLUSIVE_IN_USE_S, attrname);
       }
+
    } else {
-      ret = DISPATCH_OK;
+      /* here we handle DISPATCH_TIME_NOW + any other time */
+      if (*start_time == DISPATCH_TIME_NOW) {
+         ready_time = now;
+      } else {
+         ready_time = *start_time;
+      }
+
+      util = utilization_max(actual_el, ready_time, a->duration, false);
+
+      DPRINTF(("\t\t%s: time_by_slots: %s total = %f util = %f from "sge_U32CFormat" plus "sge_U32CFormat" seconds\n", 
+               object_name, attrname, total, util, ready_time, a->duration));
+
+      /* ensure resource is sufficient from now until finish */
+      if (request * slots > total - util) {
+         char dom_str[5];
+         dstring availability; char availability_text[2048];
+
+         sge_dstring_init(&availability, availability_text, sizeof(availability_text));
+         
+         /* we can't assign right now - maybe later ? */  
+         if (request * slots > total) {
+            DPRINTF(("\t\t%s: time_by_slots: %s %f > %f (never)\n", object_name, attrname,
+               request * slots, total));
+            ret = DISPATCH_NEVER_CAT; /* surely not */
+         } else if (request * slots > total - utilization_queue_end(actual_el, false)) {
+            DPRINTF(("\t\t%s: time_by_slots: %s %f <= %f (but booked out!!)\n", object_name, attrname,
+               request * slots, total));
+            ret = DISPATCH_NEVER_CAT; /* booked out until infinity */
+         } else {
+            DPRINTF(("\t\t%s: time_by_slots: %s %f > %f (later)\n", object_name, attrname, 
+               request * slots, total - util));
+            ret = DISPATCH_NOT_AT_TIME;
+         }
+
+         monitor_dominance(dom_str, DOMINANT_TYPE_CONSUMABLE | layer);
+         sge_dstring_sprintf(&availability, "%s:%s=%f", dom_str, attrname, total - util);
+         sge_dstring_append(reason, MSG_SCHEDD_ITOFFERSONLY);
+         sge_dstring_append(reason, availability_text);
+
+         if ((a->duration != DISPATCH_TIME_NOW) &&
+             (request * slots <= total - utilization_max(actual_el, ready_time, DISPATCH_TIME_NOW, false))) {
+            sge_dstring_append(reason, MSG_SCHEDD_DUETORR);
+         }
+      } else {
+         ret = DISPATCH_OK;
+      }
    }
+
+   lFreeElem(&cplx_el);
 
    DPRINTF(("\t\t%s: time_by_slots: %d of %s=%f can be served %s\n", 
          object_name, slots, attrname, request, 
@@ -5793,11 +5834,12 @@ ri_slots_by_time(const sge_assignment_t *a, int *slots, int *slots_qend,
    bool allow_non_requestable, bool no_centry, const char *object_name)
 {
    const char *name;
-   lListElem *cplx_el, *uep, *tep = NULL;
+   lListElem *uep, *tep = NULL;
    u_long32 start = a->start;
    bool schedule_based = (a->is_advance_reservation || a->is_schedule_based) ? true : false;
    int utilized = 0;
    u_long32 consumable = CONSUMABLE_NO;
+   bool exclusive_centry = false;
 
    dispatch_t ret = DISPATCH_OK;
    double used, total, request_val;
@@ -5812,12 +5854,13 @@ ri_slots_by_time(const sge_assignment_t *a, int *slots, int *slots_qend,
    DPRINTF(("\t\t%s: ri_slots_by_time(%s)\n", object_name, name));
 
    if (!no_centry) {
+      lListElem *cplx_el;
       if (!(cplx_el = get_attribute(name, total_list, rue_list, load_attr, a->centry_list, queue, layer, 
                            lc_factor, reason, schedule_based, DISPATCH_TIME_NOW, 0))) {
          DRETURN(DISPATCH_MISSING_ATTR); /* does not exist */
       }
 
-      ret = match_static_resource(1, request, cplx_el, reason, false, false, allow_non_requestable);
+      ret = match_static_resource(1, request, cplx_el, reason, allow_non_requestable);
       if (ret != DISPATCH_OK) {
          lFreeElem(&cplx_el);
          DRETURN(ret);
@@ -5838,88 +5881,126 @@ ri_slots_by_time(const sge_assignment_t *a, int *slots, int *slots_qend,
          *slots_qend = INT_MAX;
          DRETURN(DISPATCH_OK);
       }
+      if (lGetUlong(cplx_el, CE_relop) == CMPLXEXCL_OP) {
+         exclusive_centry = true;
+      }
       lFreeElem(&cplx_el);
    }
 
    if (!tep && !(tep=lGetElemStr(total_list, CE_name, name))) {
       DRETURN(DISPATCH_NEVER_CAT);
    }
-   total = lGetDouble(tep, CE_doubleval);
-
-   if (uep != NULL) {
-      utilized = lGetNumberOfElem(lGetList(uep, RUE_utilized));
-   } 
-
-   if (!a->is_advance_reservation && sconf_get_qs_state() == QS_STATE_EMPTY) {
-      DPRINTF(("QS_STATE is empty, skipping extensive checks!\n"));
-      used = 0;
-   } else if ((schedule_based || utilized != 0)) {
-      if (!a->is_reservation) {
-         start = a->now;
-      }   
-      used = utilization_max(uep, start, a->duration);
-      DPRINTF(("\t\t%s: ri_slots_by_time: utilization_max("sge_u32", "sge_u32") returns %f\n", 
-            object_name, start, a->duration, used));
-   } else {
-      used = lGetDouble(lGetElemStr(rue_list, RUE_name, name), RUE_utilized_now);
-   }
 
    request_val = lGetDouble(request, CE_doubleval);
-
-   if ((request_val != 0) && (total < DBL_MAX)) {
-      *slots      = (int)((total - used) / request_val);
-      if (uep) {
-         *slots_qend = (int)((total - utilization_queue_end(uep)) / request_val);
+   if (exclusive_centry) {
+      bool exclusive_request = false;
+      if (request_val != 0.0) {
+         DPRINTF(("exclusive_request\n"));
+         exclusive_request = true;
       } else {
-         *slots_qend = (int)(total / request_val);
+         DPRINTF(("non-exclusive_request\n"));
       }
-      if (consumable == CONSUMABLE_JOB) {
-         /*
-            because the scheduler works on slots basis the amount we return is used as
-            it is. Therefore we map our job consumable here to just works (INT_MAX)
-            and if the queue can be used as master queue
-          */
-         if (*slots == 0 || *slots_qend == 0) {
-            ret = DISPATCH_NOT_AT_TIME;
-         }
 
-         if (layer != DOMINANT_LAYER_GLOBAL) {
-            *slots = INT_MAX;
-            *slots_qend = INT_MAX;
-         } else {
-            if (*slots > 0) {
-               *slots = INT_MAX;
-            }
-            if (*slots_qend > 0) {
-               *slots_qend = INT_MAX;
-            }
-         }
+      DPRINTF(("schedule_based=%d, is_reservation=%d\n", schedule_based, a->is_reservation));
+      if (schedule_based && !a->is_reservation) {
+         start = a->now;
+      }
+
+      used = utilization_max(uep, start, a->duration, exclusive_request);
+      if (used == 0.0) {
+         ret = DISPATCH_OK;
+         *slots = INT_MAX;
+      } else {
+         ret = DISPATCH_NOT_AT_TIME;
+         *slots = 0;
+      }
+      used = utilization_queue_end(uep, exclusive_request);
+      if (used == 0.0) {
+         *slots_qend = INT_MAX;
+      } else {
+         ret = DISPATCH_NOT_AT_TIME;
+         *slots_qend = 0;
+      }
+
+      if (ret != DISPATCH_OK) {
+         sge_dstring_sprintf(reason, MSG_SCHEDD_EXCLUSIVE_IN_USE_S, name);
       }
    } else {
-      *slots = INT_MAX;
-      *slots_qend = INT_MAX;
-   }   
+      total = lGetDouble(tep, CE_doubleval);
 
-   if (*slots == 0 || *slots_qend == 0) {
-      char dom_str[5];
-      dstring availability; char availability_text[1024];
+      if (uep != NULL) {
+         utilized = lGetNumberOfElem(lGetList(uep, RUE_utilized));
+      } 
 
-      sge_dstring_init(&availability, availability_text, sizeof(availability_text));
-      
-      monitor_dominance(dom_str, DOMINANT_TYPE_CONSUMABLE | layer);
-      sge_dstring_sprintf(&availability, "%s:%s=%f", dom_str, lGetString(request, CE_name), (total - used));
-      sge_dstring_append(reason, MSG_SCHEDD_ITOFFERSONLY);
-      sge_dstring_append(reason, availability_text);
-
-      if ((a->duration != DISPATCH_TIME_NOW) &&
-          (*slots != 0 && *slots_qend == 0)) {
-         sge_dstring_append(reason, MSG_SCHEDD_DUETORR);
+      if (!a->is_advance_reservation && sconf_get_qs_state() == QS_STATE_EMPTY) {
+         DPRINTF(("QS_STATE is empty, skipping extensive checks!\n"));
+         used = 0;
+      } else if (schedule_based || utilized != 0) {
+         if (!a->is_reservation) {
+            start = a->now;
+         }   
+         used = utilization_max(uep, start, a->duration, false);
+         DPRINTF(("\t\t%s: ri_slots_by_time: utilization_max("sge_u32", "sge_u32") returns %f\n", 
+               object_name, start, a->duration, used));
+      } else {
+         used = lGetDouble(uep, RUE_utilized_now);
       }
+
+      if ((request_val != 0.0) && (total < DBL_MAX)) {
+         *slots      = (int)((total - used) / request_val);
+         if (uep) {
+            *slots_qend = (int)((total - utilization_queue_end(uep, false)) / request_val);
+         } else {
+            *slots_qend = (int)(total / request_val);
+         }
+         if (consumable == CONSUMABLE_JOB) {
+            /*
+               because the scheduler works on slots basis the amount we return is used as
+               it is. Therefore we map our job consumable here to just works (INT_MAX)
+               and if the queue can be used as master queue
+             */
+            if (*slots == 0 || *slots_qend == 0) {
+               ret = DISPATCH_NOT_AT_TIME;
+            }
+
+            if (layer != DOMINANT_LAYER_GLOBAL) {
+               *slots = INT_MAX;
+               *slots_qend = INT_MAX;
+            } else {
+               if (*slots > 0) {
+                  *slots = INT_MAX;
+               }
+               if (*slots_qend > 0) {
+                  *slots_qend = INT_MAX;
+               }
+            }
+         }
+      } else {
+         *slots = INT_MAX;
+         *slots_qend = INT_MAX;
+      }
+
+      if (*slots == 0 || *slots_qend == 0) {
+         char dom_str[5];
+         dstring availability; char availability_text[1024];
+
+         sge_dstring_init(&availability, availability_text, sizeof(availability_text));
+         
+         monitor_dominance(dom_str, DOMINANT_TYPE_CONSUMABLE | layer);
+         sge_dstring_sprintf(&availability, "%s:%s=%f", dom_str, lGetString(request, CE_name), (total - used));
+         sge_dstring_append(reason, MSG_SCHEDD_ITOFFERSONLY);
+         sge_dstring_append(reason, availability_text);
+
+         if ((a->duration != DISPATCH_TIME_NOW) &&
+             (*slots != 0 && *slots_qend == 0)) {
+            sge_dstring_append(reason, MSG_SCHEDD_DUETORR);
+         }
+      }
+
+      DPRINTF(("\t\t%s: ri_slots_by_time: %s=%f has %d (%d) slots at time "sge_U32CFormat"%s (avail: %f total: %f)\n", 
+            object_name, lGetString(uep, RUE_name), request_val, *slots, *slots_qend, start,
+              !a->is_reservation?" (= now)":"", total - used, total));
    }
-   
-   DPRINTF(("\t\t%s: ri_slots_by_time: %s=%f has %d (%d) slots at time "sge_U32CFormat"%s (avail: %f total: %f)\n", 
-         object_name, lGetString(uep, RUE_name), request_val, *slots, *slots_qend, start,
-           !a->is_reservation?" (= now)":"", total - used, total));
 
    DRETURN(ret);
 }
@@ -5972,9 +6053,10 @@ parallel_rc_slots_by_time(const sge_assignment_t *a, lList *requests,  int *slot
          lSetDouble(implicit_slots_request, CE_doubleval, 1);
       }
 
-      if (ri_slots_by_time(a, &avail, &avail_qend, 
+      result = ri_slots_by_time(a, &avail, &avail_qend, 
             rue_list, implicit_slots_request, load_attr, total_list, queue, layer, lc_factor, 
-            &reason, allow_non_requestable, false, object_name)) {
+            &reason, allow_non_requestable, false, object_name);
+      if (result != DISPATCH_OK) {
          /* If the request is made from the resource quota module, this error message
           * is not informative and should not be displayed */
          if (!isRQ) {
@@ -5982,7 +6064,7 @@ parallel_rc_slots_by_time(const sge_assignment_t *a, lList *requests,  int *slot
                            SCHEDD_INFO_CANNOTRUNINQUEUE_SSS, "slots=1",
                            object_name, reason_buf);
          }
-         DRETURN(DISPATCH_NEVER_CAT);
+         DRETURN(result);
       }
       max_slots      = MIN(max_slots,      avail);
       max_slots_qend = MIN(max_slots_qend, avail_qend);
@@ -6005,14 +6087,15 @@ parallel_rc_slots_by_time(const sge_assignment_t *a, lList *requests,  int *slot
          if (def_req) {
             parse_ulong_val(&request, NULL, lGetUlong(cep, CE_valtype), def_req, NULL, 0);
 
-            if (request != 0) {
+            if (request != 0 || lGetUlong(cep, CE_relop) == CMPLXEXCL_OP) {
 
                lSetString(cep, CE_stringval, def_req);
                lSetDouble(cep, CE_doubleval, request);
 
-               if (ri_slots_by_time(a, &avail, &avail_qend, 
+               result = ri_slots_by_time(a, &avail, &avail_qend, 
                         rue_list, cep, load_attr, total_list, queue, layer, lc_factor,   
-                        &reason, allow_non_requestable, false, object_name)==-1) {
+                        &reason, allow_non_requestable, false, object_name);
+               if (result != DISPATCH_OK) {
                   if (!isRQ) {
                      char buff[1024 + 1];
                      centry_list_append_to_string(requests, buff, sizeof(buff) - 1);
@@ -6055,8 +6138,19 @@ parallel_rc_slots_by_time(const sge_assignment_t *a, lList *requests,  int *slot
                            SCHEDD_INFO_CANNOTRUNINQUEUE_SSS, buff, object_name,
                            reason_buf);
          }
-      } else if (result == DISPATCH_NOT_AT_TIME && lGetUlong(req, CE_consumable) == CONSUMABLE_JOB) {
-         lSetUlong(queue, QU_tagged4schedule, 1);
+      } else if (result == DISPATCH_NOT_AT_TIME) {
+         if (lGetUlong(req, CE_consumable) == CONSUMABLE_JOB) {
+            lSetUlong(queue, QU_tagged4schedule, 1);
+         } else {
+            char buff[1024 + 1];
+            centry_list_append_to_string(requests, buff, sizeof(buff) - 1);
+            if (*buff && (buff[strlen(buff) - 1] == '\n')) {
+               buff[strlen(buff) - 1] = 0;
+            }   
+            schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,
+                           SCHEDD_INFO_CANNOTRUNINQUEUE_SSS, buff, object_name,
+                           reason_buf);
+         }
       }
       
       switch (result) {

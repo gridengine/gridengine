@@ -93,6 +93,11 @@ case $ARCH in
       RC_FILE=update-rc.d
       RC_PREFIX=/etc/init.d
       RC_DIR=unused
+   elif [ -x /sbin/rc-update ]; then
+      # Gentoo uses rc-update to add startup scripts
+      RC_FILE=rc-update
+      RC_PREFIX=/etc/init.d
+      RC_DIR=unused
    else
       RC_FILE=sysv_rc
       RC_PREFIX=/etc/rc.d
@@ -452,6 +457,26 @@ Execute()
       $ECHO $*
    fi
    $*
+   if [ $? != 0 ]; then
+      $ECHO >&2
+      Translate 1 "Command failed: %s" "$*"
+      $ECHO "" >&2
+      Translate 1 "Probably a permission problem. Please check file access permissions."
+      Translate 1 "Check root read/write permission. Check if SGE daemons are running."
+      $ECHO "" >&2
+      exit 1
+   fi
+}
+
+#-------------------------------------------------------------------------
+# Execute eval command and exit if exit status != 0
+#
+ExecuteEval()
+{
+   if [ "$verbose" = true ]; then
+      $ECHO $*
+   fi
+   eval $*
    if [ $? != 0 ]; then
       $ECHO >&2
       Translate 1 "Command failed: %s" "$*"

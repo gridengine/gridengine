@@ -7,9 +7,11 @@
             <minimum-ant-version>1.6.5</minimum-ant-version>
             <source-roots>
                 <root id="src.dir"/>
+                <root id="src.lib.dir"/>
+                <root id="src.test.dir"/>
             </source-roots>
             <test-roots>
-                <root id="test.src.dir"/>
+                <root id="test.test.dir"/>
             </test-roots>
         </data>
     </configuration>

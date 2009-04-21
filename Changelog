@@ -1,3 +1,517 @@
+MD-2009-04-21-0: CVS:		Created V62u3beta_TAG
+-----------------------------------------------------
+
+LP-2009-04-17-1: Bugfix:      CheckRunningDeamon for qmaster returns true even
+                              if no pid file created
+                 Belongs to:  LP-2009-04-17-0
+                 Review:      CR
+
+LP-2009-04-17-0: Bugfix:      CheckRunningDeamon for qmaster returns true even
+                              if no pid file created
+                 Bugster:     6824148
+                 Issue:       2969
+                 Review:      CR
+
+RC-2009-04-17-0: Enhancem.:   better handling of SGE_ARCH_STRING for
+                              FreeBSD and NetBSD (from Rayson, Kevin)
+                 Review:      HP, BD, RC
+
+MP-2009-04-16-0: Bugfix:      Changing CMDARG[1-n] always changes the first 
+                              commandline argument in the jsv script. Also the
+                              number of arguments is handled as read-only parameter
+                 Bugster:     6825381, 6825376
+                 Issue:       2998, 2999
+                 Review:      EB
+
+LP-2009-04-16-2: Bugfix:      gui-installer: host grammar needs improvements
+                 Bugster:     6786390
+                 Issue:       2997
+                 Enhancem.:   gui-installer: disabled xmloutput file generation
+                 Enhancem.:   gui-installer: removed remove host menu action in
+                              the installation
+                 Bugfix.:     gui-installer: Fixed CSP mode prerequisites task
+                              failure
+                 Review:      ZG
+
+LP-2009-04-16-1: Bugfix:      error message when testing JAVA version
+                 Bugster:     6830972
+                 Bugfix:      load_sge_config.sh fails when userset pass and 
+                              users not in a first interation
+                 Bugster:     6830081
+                 Issue:       2994
+                 Bugfix:      Qmaster autoinstallation fails
+                 Review:      MD
+
+LP-2009-04-16-0: Bugfix:      Message from tar command appears in installation
+                              output
+                 Bugster:     6830900
+                 Review:      AP
+
+HP-2009-04-15-0: Bugfix:      * Return values of SGE_Starter.exe are handled
+                                correctly now.
+                              * Logging of SGE_Starter.exe and SGE_Helper_Service.exe
+                                works now.
+                 Bugster:     6817190, 6817193
+                 Issue:       2995, 2996
+                 Review       EB
+
+ZG-2009-04-14-0: Enhancem.:   gui-installer: Improve table menu
+                 Bugster:     6786388
+                 Bugfix:      gui-installer: The result panel shows the admin/submit
+                              hosts as successfully installed even the last task failed.
+                 Bugfix:      gui-installer - Continue feature: After successful
+                              BDB server installation the BDB host is added again
+                              by default to the host list.
+                 Bugster:     6830071
+                 Bugfix:      gui-installer: After resolving the host is not marked
+                              as RESOLVABLE but UNKNOWN_HOST even the IP is available
+                              just the execution of the arch script failed for some
+                              reason.
+                 Bugfix:      6830063
+                 Review:      LP
+
+LP-2009-04-14-2: Bugfix:      gui-installer: first/last task might not be done
+                              on qmaster host
+                 Bugster:     6829933
+                 Issue:       2991
+                 Bugfix:      gui-installer: install list might contain line
+                              with shadow and other component at once
+                 Bugster:     6829940
+                 Issue:       2992
+                 Bugfix:      gui-installer: CopyExecutableCommand might fail
+                              due to an existing file
+                 Bugster:     6829947
+                 Issue:       2993
+                 Enhancem.:   gui-installer: It should be possible to add admin
+                              submit hosts only
+                 Cleanup:     gui-installer: commands handle spaces,
+                              added GetJvmLibCommand, cleanup
+                 Review:      ZG
+
+LP-2009-04-14-1: Enhancem.:   Improved comment in sgemaster script
+                 Review:      ZG
+
+LP-2009-04-14-0: Enhancem.:   Disallow using empty ADDITIONAL_JVM_ARGS            
+                 Bugfix:      Existing local host configuration should be merged
+                              with the new one instead of replacing the old one
+                 Bugster:     6829839
+                 Enhancem.:   Adminuser JMX keystore generated during qmaster
+                              installation
+                 Enhancem.:   Added keystore password length check for the auto
+                              install template
+                 Cleanup:     JMX related install scripts
+                 Review:      EB, AA
+
+AA-2009-04-14-0: Enhancem.:   install logging.properties for sgeinspect
+                 Review:      CR
+
+RC-2009-04-13-2: Enhancem.:   refresh SPARC/Linux port (from Rayson)
+                 Review:      RC
+
+RC-2009-04-13-1: Enhancem.:   refresh NetBSD port (from Kevin M. Buckley)
+                 Review:      RC
+
+RC-2009-04-13-0: Enhancem.:   - Gentoo start-up script
+                              - MIPS/Linux port (both from Rayson)
+                 Review:      RC
+
+LP-2009-04-09-1: Bugfix:      Execd uninstallation should not remove host
+                              configuration if there is still a shadowd
+                 Bugster:     6828272
+                 Issue:       2988
+                 Review:      EB
+
+LP-2009-04-09-0: Enhancem.:   Improved timeout handling code reliability
+                 Enhancem.:   improve hostname resolving error detection for
+                              invalid hostname settings
+                 Bugster:     6819732
+                 Issue:       2983
+                 Bugfix:      sgemaster script might return 0 on failure
+                 Bugster:     6827877
+                 Issue:       2987
+                 Review:      EB, AS
+
+ZG-2009-04-09-0: Enhancem.:   gui-installer: New window to configure host specific
+                              settings as local execd spool dir, jvm path and args,
+                              connect user and timeouts.
+                 Review:      LP
+
+LP-2009-04-08-0: Bugfix:      IzPack CompilerConfig might report successful
+                              installer generation on unknown failure
+                 Review:      ZG
+
+LP-2009-04-07-0: Enhancem.:   gui-installer: Improved build process
+                 Review:      ZG
+
+JG-2009-04-07-0: Bugfix:      qmaster reports commlib read error in message file
+                              when qconf -m(s)conf fails
+                 Bugster:     6815435
+                 Issue:       2953
+                 Review:      CR
+
+EB-2009-04-07-0: Doc:         Added spec doc:  Timed Event Thread Pool
+                 Review:      JG, RD
+
+JG-2009-04-06-0: Bugfix:      need tight integration accounting and sharetree
+                              usage according to reserved resources
+                 Bugster:     6746750
+                 Issue:       2977
+                 Review:      RD
+
+RD-2009-04-06-1: Enhancem.:   - corrected aimk -no-opt switch to really don't optimize
+                              - enabled optimization for aimk -debug switch
+                 Review:      AA
+
+LP-2009-04-06-0: Enhancem.:   gui-installer: Displaying (Sun) Grid Engine based
+                              based on distribution (sun/courtesy)
+                 Enhancem.:   gui-installer: Reading SGE version from
+                              libs/gdi/version.c file
+                 Review:      ZG
+
+RD-2009-04-06-0: Doc:         enhanced man page for exclusive host scheduling
+                 Review:      AA
+
+RD-2009-04-03-2: CVS:         Created V62u3alpha2_TAG
+-----------------------------------------------------
+
+LP-2009-04-03-2: Enhancem.:   Renamed sgemacc to sgeinspect in install scripts
+                 Enhancem.:   Improved auto install messages for shadowd
+                 Enhancem.:   Validating JVM library in qmaster/shadowd
+                              installations
+                 Bugfix:      qmaster startup might take too long if network is
+                              unavailable
+                 Bugster:     6824159
+                 Issue:       2970
+                 Bugfix:      Qmaster does not display any message when started
+                              on non-qmaster host
+                 Bugster:     6824165
+                 Issue:       2971
+                 Review:      AA, CR
+
+AA-2009-04-03-0: Bugfix:      - Incorrect slots values for Queue Instance detail view
+                              - sgemacc->sgeinspect script and sgeinspect.zip
+                              - serialVersionUID for jgdi monitoring
+                              - sge_ca check for cacert.pem
+                 Bugster:     6824160
+
+LP-2009-04-03-1: Bugfix:      Fixing buildbreak on windows
+                 Review:      RD
+
+RD-2009-04-03-1: Cleanup:     some minor cleanups
+                 Review:      CR
+
+LP-2009-04-03-0: Enhancem.:   gui-installer: Enable RC should be displayed in
+                              shadowd installation
+                 Enhancem.:   gui-installer: improved java detection and version
+                              validation in start_gui_installer
+                 Enhancem.:   gui-installer: updated shadowd installation for
+                              changes in 6824933
+                 Enhancem.:   gui-installer: Improved checking for JVM library
+                              on qmaster and shadows when JMX enabled
+                 Bugfix:      gui-installer: Execd spool dir check should check
+                              permissions also as root in root installation
+                 Bugfix:      gui-installer: JVM library detection should offer
+                              a correct library based on qmaster architecture
+                 Bugster:     6786364
+                 Issue:       2974
+                 Review:      ZG
+
+RD-2009-04-03-0: Bugfix:      profiling output is wrongly accumulated
+                 Bugster:     6823086
+                 Issue:       2975
+                 Review:      CR
+
+AP-2009-04-03-0: Bugfix:      qrsub allows to request a non existing checkpoint
+                              object
+                 Bugster:     6755146
+                 Issue:       2967
+                 Review:      JG
+
+LP-2009-04-02-1: Enhancem.:   Added utilbin/valid_jvmlib to validate JVM library
+                              path before it's accepted in the installation
+                 Review:      EB
+
+LP-2009-04-02-0: Enhancem.:   Can install&enable JMX for running qmaster
+			                  inst_sge -add-jmx
+                 Enhancem.:   Upgrade in clone mode has a default PORT+10
+                              instead of PORT+2
+                 Enhancem.:   Adminuser's keystore generated by default
+                              during qmaster installation (when JMX enabled)
+                 Enhancem.:   Improved JVM library auto detection
+                 Enhancem.:   JMX support for shadowd (initial version)
+                 Bugster:     6772999
+                 Bugfix:      CheckRunningDeamon for qmaster returns true even
+                              if no pid file created
+                 Bugster:     6824148
+                 Issue:       2969
+                 Bugfix:      shadowd auto installation is not equivalent to the
+                              interactive installation
+                 Bugster:     6824933
+                 Issue:       2973
+                 Review:      AP, AA, EB (6824933)
+
+ZG-2009-04-01-1: Enhancem.:   Silent installation
+                 Enhancem.:   Start-over feature on ResultPanel
+                 Enhancem.:   Store the component selection with the name of the
+                              host in the file
+                 Enhancem.:   Improve ResultPanel's content
+                 Bugster:     6786397
+                 Enhancem.:   JUnit test for class Host
+                 Bugfix:      create test/classes diretory before compile
+                 Bugfix:      On main progress bar, show the overall task count
+                              during installation
+                 Bugfix:      Grammar fails on 'ge[1-]4' pattern.
+                 Bugfix:      Timeout state is never shown at resolving
+                 Bugfix:      Can enter loopback network interface name and address.
+                 Review:      LP
+
+LP-2009-04-01-0: Reverting LP-2009-03-31-0 for TS
+
+LP-2009-03-31-0: Enhancem.:   Can install&enable JMX for running qmaster
+			                  inst_sge -add-jmx
+                 Enhancem.:   Upgrade in clone mode has a default PORT+10
+                              instead of PORT+2
+                 Enhancem.:   Adminuser's keystore generated by default
+                              during qmaster installation (when JMX enabled)
+                 Enhancem.:   Improved JVM library auto detection
+                 Enhancem.:   JMX support for shadowd (initial version)
+                 Bugster:     6772999
+                 Bugfix:      CheckRunningDeamon for qmaster returns true even
+                              if no pid file created
+                 Bugster:     6824148
+                 Issue:       2969
+                 Review:      AP, AA
+
+MD-2009-03-31-1: Enhancem.:   Added announce page, source snapshots
+
+LP-2009-03-30-0: Enhancem.:   DetectJvmLibrary.jar available in util
+                 Review:      AA
+
+CR-2009-03-30-0: Bugfix:      qmaster csp installation fails when using port
+                              from /etc/services
+                 Bugster:     6784919
+                 Issue:       2833
+                 Review:      MD
+
+RD-2009-03-26-0: Enhancem.:   improved test_spooling_performance.sh
+                 Review:      AS
+
+CR-2009-03-25-1: Cleanup:     jsv_do_communication() did not return an answer
+                              list for every error
+                 Review:      EB
+
+EB-2009-03-25-1: Cleanup.:    made local variable in sge_peopen* non-static
+                              and added code comments
+                 Review:      JG
+
+EB-2009-03-25-0: Enhancemn.:  Added example section to jsv_script_functions
+                              man page
+                 Review:      CR
+
+CR-2009-03-25-0: Bugfix:      o qconf -m* reports misleading error if tmp dir
+                                is not writeable for the user and need 100% cpu
+                 Cleanup:     o commlib: Fixed some errors reported by lint
+                 Bugster:     6819649
+                 Issue:       2960
+                 Review:      RD
+
+RD-2009-03-24-0: Bugfix:      - qconf -Mc did not print any output in case
+                                of success
+                              - build-in complex "display_win_gui" could
+                                be deleted
+                 Bugster:     6821207, 6821237
+                 Issue:       2963, 2964
+                 Review:      CR
+
+EB-2009-03-23-0: Enhancemn.:  JSV log command now has possibility to log empty lines
+                 Review:      MD
+
+MD-2009-03-24-0: Enhancem:    updated 62patches.txt file
+
+JG-2009-03-23-0: Bugfix:      misleading execd logging "Can't get load values"
+                              on AIX
+                 Bugster:     6746960
+                 Issue:       2961
+                 Review:      DG
+
+DG-2009-03-19-0: Bugfix:      stopping an execution daemon does not stop jobs
+                 Bugster:     6761993
+                 Issue:       2759
+                 Review:      JG
+
+EB-2009-03-19-0: Bugfix:      Some variable names can't be used in Bourne shell JSV scripts
+                 Bugster:     6818825
+                 Issue:       2958
+                 Bugfix:      A qmaster not running a root exits with return code 1 if a
+                              JSV script to start as user is configured
+                 Bugster:     6810490
+                 Issue:       2957
+                 Review:      JF
+
+SH-2009-03-19-0: Bugfix:      qsub exits with a error msg when the event client was killed
+                 Bugster:     6808617
+                 Issue:       2934
+                 Reviewed by: DG
+
+ZG-2009-03-18-0: Enhancem.:   Create JUnit test for HostPanel
+                 Enhancem.:   Enable JMX by default
+                 Enhancem.:   Option to build demo version
+                 Review:      LP
+
+RD-2009-03-17-0: CVS:         Created V62u3alpha1_TAG
+-----------------------------------------------------
+
+RD-2009-03-17-0: Enhancem.:   - added EXCL relop for boolean consumable
+                 Bugster:     6731441
+                 Issue:       2629
+                 Bugfix:      - libspoolb and libspoolc should not link against
+                                jemalloc/mtmalloc
+                 Bugfix:      - fixed memory leak in shepherd and buildin_starter
+                 Review:      AA
+
+LP-2009-03-16-0: Enhancem:    gui-installer build process improved
+                 Enhancem:    updated the gui-installer version
+                 Review:      ZG
+
+EB-2009-03-16-0: Bugfix:      c_occasion job parameter can't be changed
+                 Bugster:     6814059
+                 Issue:       2946
+                 Bugfix:      JSV: change of requested resources is rejected
+                              if also queues were selected during job submission
+                 Bugster:     6817691
+                 Issue:       2954
+                 Bugfix:      influence of c_occasion on c_interval and vice
+                              versa is not documented explicitly
+                 Bugster:     6814060
+                 Issue:       2947
+                 Enhancemen.: minor change of sge_ca which allowes csp
+                              installaion in environments where root is not
+                              even mapped to nobody on NFS mounted fs.:wq
+                 Review:      MD
+
+AH-2009-03-12-1: Bugfix:      Incorrect referrences to "SGE_H_ALIASES" man pages
+                 Changed:     hostnameutils(1), qping(1)
+                 Bugster:     6816705
+                 Issue:       2056
+                 Review:      RD
+
+AH-2009-03-12-0: Bugfix:      SIGUSR1 clash between s_rt and NOTIFY_SUS
+                 Changed:     queue_conf(5)
+                 Bugster:     6816634
+                 Issue:       2103
+                 Review:      RD
+
+MD-2009-03-11-0: Enhancem:    problems with gaussian due to memory limitations of SGE
+                 Bugster:     6816037
+                 Review:      AS
+
+AA-2009-03-11-1: Bugfix:      MACC_SRC_DIR absolute path fix
+                 Review:      MD
+
+HP-2009-03-11-2: Bugfix:      Fixed compile error
+
+HP-2009-03-11-1: Bugfix:      Fixed wrongly merged inst_execd.sh file
+
+HP-2009-03-11-0: Bugfix:      jobs started with -l dwg=true can't display their
+                              GUI on Windows Vista and Server 2008
+                 Bugster:     6801748
+                 Issue:       2904
+                 Review:      EB
+
+AA-2009-03-11-0: Bugfix:      sgemacc distinst, comment in continuation lines
+                 Review:      MD
+
+LP-2009-03-10-1: Enhancem:    JMX used by default, -no-jmx option
+                 Review:      AA
+
+LP-2009-03-10-0: Enhancem:    Support for sgemacc
+                 Review:      AA
+
+AA-2009-03-10-0: Enhancem:    - qhost slots_resv
+                              - jgdi_qhost slots_resv
+                              - JobStateFilter corrections
+                              - jgdi.jar + jgdi-test.jar
+                 Review:      RD, RH
+
+RD-2009-03-10-0: Bugfix:      fixed qmaster abort at update from previous version
+                 Bugster:     6814823
+                 Issue:       2949
+                 Review:      JG
+
+GH-2009-03-10-0: Bugfix:      qmod -r does not delete the old instance 
+                              of a job before the new one is started
+                 Bugster:     6244911
+                 Issue:       2950
+                 Review:      JG
+
+JF-2009-03-10-0: Bugfix:      Fix qsub truncation of scripts
+                 Issue:       2876
+                 Bugster:     6810688
+                 Review:      AP
+
+RC-2009-03-07-1: Enhancem:    I/O accounting on Linux
+                 Issue:       2429
+                 Review:      RC (original patch by johna)
+
+RC-2009-03-07-0: Cleanup:     - fixed build on lx-ppc
+                              - removed dependency on ssl & crypto libs
+                                when SGE is built with -no-secure
+
+MD-2009-03-06-0: Enhancem:    updating webpages for 62u2 courtesy binaries
+          
+EB-2009-03-06-0: Bugfix:      JSV -w param has wrong value inside script 
+                 Bugster:     6806219 
+                 Issue:       2917
+                 Bugfix:      Changing "w" job parameter to "n" in client 
+                              JSV is not handled correctly
+                 Bugster:     6810493
+                 Issues:      2938   
+                 Bugfix:      DRMAA test_drmaa_perf produces segmentation fault 
+                              when using user .sge_request file
+                 Bugster:     6806363 
+                 Issues:      2923
+                 Bugfix:      qsub man page refers to "see -jsv option below"
+                              but it is above in some cases
+                 Bugster:     6806324
+                 Issue:       2939
+                 Bugfix:      The cluster config paramter jsv_allowed_mod does
+                              not work -w switch
+                 Bugster:     6806209
+                 Issue:       2940
+                 Review:      CR 
+
+ZG-2009-03-04-0: Enhancem.:   Major cleanup:
+                               -new package hierarchy as 3party/IzPack/src/lib/com/...
+                               -new package .../grid/installer/task
+                               -move nested classes to separate files
+                               -redesign progress bar refreshing
+                               -generalize worker threads
+                               -write comments
+                 Bugster:     6812970
+                 Review:      LP
+
+DG-2009-03-04-0: Cleanup:     Added Java DRMAA issue test. 
+                 Bugster:     6796175
+                 Issue:       2882
+                 Review:      CR 
+
+ZG-2009-03-03-0: Enhancem.:   Update man pages for v62u2_tag
+
+CR-2009-03-03-0: Enhancem.:   test_general binary now prints FD_SETSIZE value
+                 Review:      DG
+
+RD-2009-02-26-0: Bugfix:      fixed scheduling issue with fill_up allocation rule
+                 Bugster:     6807072
+                 Issue:       2901
+                 Review:      CR
+
+MP-2009-02-25-0: Bugfix:      Fixed temp file name in loadsensor has problems on
+                              arch AIX.
+                              Merged from MP-2009-02-23-0
+                 Bugster:     6740546
+                 Issue:       2715
+                 Review:      DG
+
 RD-2009-02-19-0: CVS:         Created V62u2_TAG
 -----------------------------------------------
 
@@ -68,7 +582,7 @@ CR-2009-02-16-0: Bugfix:      o sge_execd may crash at start-up time due to
                  Enhancem.:   o new utilib function: sge_get_max_fd()
                  Review:      RD
 
-EB-2009-02-16-0: Doc:		   added new manpage describing the JSV script
+EB-2009-02-16-0: Doc:         added new manpage describing the JSV script
                               interface
                  Review:      SK
 
@@ -456,8 +970,15 @@ LP-2009-01-22-0: Bugfix:      gui-installer: Parallel shadowd installation might
 
 GH-2009-01-22-0: Bugfix:      bad logging if "act_qmaster" file does not exist
                  Bugster:     6288964
-                 Issue:       2881
+                 Issue:       2881, 860
                  Review:      CR
+
+AH-2009-01-22-0: Bugfix:      Sequence numbers broken for parallel jobs when multpile 
+                              queues are used
+                 Changed:     libs/sched/sge_select_queue.c
+                 Issue:       2864
+                 Bugster:     6791556
+                 Review:      RD
 
 DG-2009-01-22-0: Bugfix:      Calling drmaa_exit before any calls to drmaa_init
                               results in segfault
@@ -1027,9 +1548,9 @@ RD-2008-11-26-0: Enhancem.:   enabled jemalloc as default for linux hosts
                  Review       JG
 
 EB-2008-11-25-0: Bugfix:      - removed deadlock situation in qmaster in
-										  combination with server JSV
-							         - fixed bug in Perl JSV
-					  Review:      RD
+                                combination with server JSV
+                              - fixed bug in Perl JSV
+                 Review:      RD
 
 LP-2008-11-24-0: Enhancem.:   Modifed JMX behavior -jmx and no flag are equal
                  Enhancem.:   Improvements for -autogui option
@@ -1041,11 +1562,11 @@ LP-2008-11-24-0: Enhancem.:   Modifed JMX behavior -jmx and no flag are equal
 RD-2008-11-24-0: Bugfix:      corrected complex man page for non-multiplied consumables
                  Review:      AH
 
-EB-2008-11-24-0: Bugfix:		- added missing functions to Perl jsv
-										- fixed bug in master which handled -o switch
-										- fixed qlogin, qsh, qrsh so taht JSV is
-										  executed in client environment
-					  Review:      MD
+EB-2008-11-24-0: Bugfix:      - added missing functions to Perl jsv
+                              - fixed bug in master which handled -o switch
+                              - fixed qlogin, qsh, qrsh so taht JSV is
+                                executed in client environment
+                 Review:      MD
 
 HP-2008-11-21-1: Bugfix:      fixed several minor bugs, type casts, wording,
                               added debug output and cleaned things up
@@ -1065,11 +1586,11 @@ HP-2008-11-21-0: Bugfix:      on Windows, execd installation failed when hostnam
                  Review:      MD
 
 EB-2008-11-21-0: Bugfix:      Master installation with JMX support fails on DARWIN
-					  Enhancem.:   mask special characters contained in env when
-										they are passed to JSV scripts
-					  Bugster:     6774811
-					  Issue:       2803
-					  Review:      MD, JG
+                 Enhancem.:   mask special characters contained in env when
+                              they are passed to JSV scripts
+                 Bugster:     6774811
+                 Issue:       2803
+                 Review:      MD, JG
 
 RD-2008-11-21-0: Enhancem.:   analyzed generated events and reduced to minimum
                               where possible.
@@ -1116,7 +1637,7 @@ RD-2008-11-19-0: Bugfix:      - fixed two JSV related memory leaks
                  Review:      EB
 
 EB-2008-11-19-0: Bugfix:      - fixed several minor issues concerning JSV
-					  Review:      MD
+                 Review:      MD
 
 DG-2008-11-18-1: Bugfix:      Verification of qlogin and qsh does always
                               return error code 0.
@@ -1142,13 +1663,13 @@ TB-2008-11-17-0: Bugfix:      improved error handling in perl JSV script
                  Review:      MD
 
 EB-2008-11-13-0: Enhancem.:   - added JSV URL to submit dialog of qmon
-										  and to global configuration
-										- added missing parsing code
-										- fixed bug in parsing code of JSV URLs
-										- added code comments
-										- moved error/info messages to msg files
-										- fixed bug in JSV scripts
-										- disabled logging in JSV scripts
+                                and to global configuration
+                              - added missing parsing code
+                              - fixed bug in parsing code of JSV URLs
+                              - added code comments
+                              - moved error/info messages to msg files
+                              - fixed bug in JSV scripts
+                              - disabled logging in JSV scripts
                  Review:      MD
 
 CR-2008-11-12-0: Bugfix:      fixed test_issues module test binary
@@ -1174,13 +1695,13 @@ JG-2008-11-10-0: Bugfix:      fixed a qmaster deadlock on linux
                  Review:      RD
 
 EB-2008-11-06-0: Enhancem.:   - added TCL implementation for JSV template
-										- parsing code for JSV output
+                              - parsing code for JSV output
                               - functionality to test parsing if JSV related
-										  is executed within TS
+                                is executed within TS
                               - added man page jsv.1
-										- source code documentation
-										- fixed several adoc headers which broke
-										  generation of pdf files
+                              - source code documentation
+                              - fixed several adoc headers which broke
+                                generation of pdf files
                  Review:      MD
 
 JG-2008-11-06-0: Bugfix:      When a shadow master took over, the exec daemons
@@ -6888,7 +7409,7 @@ JG-2006-02-03-0: Testsuite: Improved error handling for sge functions called
 
 OJ-2006-01-31-0: Testsuite: Added error handling in *attr routines
                             in sge_procedures.tcl; modified *cal routines
-			                   in sge_calendar.tcl
+                            in sge_calendar.tcl
                  Review:    DT
                  Issue:     477
 
@@ -6908,7 +7429,7 @@ JG-2006-01-25-0: Testsuite: Fixes and cleanup in testsuite framework.
 
 OJ-2006-01-18-0: Testsuite: Added -M(m)ckpt functionality to
                             in sge_checkpoint.tcl, modified set_exechost.tcl
-		                      to support fast add
+                            to support fast add
                  Review:    DT, JG
                  Issue:     477
 
@@ -6954,7 +7475,7 @@ DT-2006-01-04-0: Testsuite: o Enhanced drmaa_wait() tests
 SG-2006-01-04-0: Bugfix:    fixed the build
 
 OJ-2006-01-03-0: Testsuite: added stnode, event client functionality to
-			                   qconf test
+                            qconf test
                             added sge_sharetree*, sge_event_client in tcl_files
                  Changed:   testsuite
                  Review:    pending
@@ -7261,7 +7782,7 @@ DT-2005-11-29-0: Bugfix:    o Fixed broken build on Irix 6.5
                  Review:    RD
 
 RD-2005-11-29-0: Bugfix:    broken build for fbsd-i386
-	              Review:    DT
+                 Review:    DT
 
 CR-2005-11-29-1: Testsuite: added queue error check for
                             checktree/system_tests/clients/qrsh/check.exp
@@ -8408,9 +8929,9 @@ SG-2005-08-20-1: Bugfix:    qstat -j shows wrong message for parallel jobs which
 
 SG-2005-08-20-0: Bugfix:    - performance enhancement for pe-ranges and
                               sequential soft requests
-                            -	consumables as thresholds are not working correctly with pe jobs
+                            - consumables as thresholds are not working correctly with pe jobs
                             - Soft requirements on load values ignored
-                            -	wrong soft requests decission
+                            - wrong soft requests decission
                             - Testsuite test for consumables as load thresholds
                             - Testsuite test for soft requests
                             - Testsuite test for pe ranges
@@ -8549,7 +9070,7 @@ SG-2005-08-01-1: Bugfix:    bug in qstat -XML output (does not match the schema)
                  Changed:   qstat
                  Review:    RD
 
-SG-2005-08-01-0: Bugfix:  	 strange reservation
+SG-2005-08-01-0: Bugfix:    strange reservation
                  Issue:     1655
                  Bugtraq:   6287955
                  Changed:   scheduler
@@ -13427,12 +13948,12 @@ BD-2004-05-19-5: Enhamcem:  - If 3rdparty/{qmake,qtcsh}/COMPILE_ARCH
 
 BD-2004-05-19-4: Enhamcem:  - Add three new variables to aimk.site and
                               use them in aimk and Makefiles to allow
-			                     Berkeley DB's headers and libraries to
-			                     live in subdirectories of include/ and
-			                     lib/ as well as allowing the library to
-			                     have a suffix.  This is needed to allow
-			                     FreeBSD and NetBSD to build against the
-			                     DB version from ports/pkgsrc.
+                              Berkeley DB's headers and libraries to
+                              live in subdirectories of include/ and
+                              lib/ as well as allowing the library to
+                              have a suffix.  This is needed to allow
+                              FreeBSD and NetBSD to build against the
+                              DB version from ports/pkgsrc.
 
 BD-2004-05-19-3: Bugfix:    - Revert incomplete rename of RC_FILE value
                               "freebsd" to "fbsd"
@@ -17637,12 +18158,12 @@ AH-2003-11-21-0: Bugfix:    Fix schedd/qstat/... crash
                  Review:    EB
 
 DT-2003-11-21-1: Enhancem.: Fixed broken build (AIX51) and added test for
-													  usage information from drmaa_wait()
-								 Changed:   test_drmaa.c
+                            usage information from drmaa_wait()
+                            Changed:   test_drmaa.c
 
-DT-2003-11-21-0: Bugfix:	  Fixed scheduler startup issue -- cleaned up event
-														client changes
-								 Changed:	  sge_process_events.c
+DT-2003-11-21-0: Bugfix:    Fixed scheduler startup issue -- cleaned up event
+                            client changes
+                 Changed:   sge_process_events.c
 
 EB-2003-11-21-0: Bugfix:    Fixed broken build
                             SuSE 9.0 x86:
@@ -17672,7 +18193,7 @@ AH-2003-11-19-0: Bugfix:    The drmaa_run_job()/drmaa_run_bulk_jobs()
                             drmaa_job_template_t * input arguments must be
                             const.
 
-DT-2003-11-18-1: Bugfix:	 Made changes from code review.  Mostly stylisitic.
+DT-2003-11-18-1: Bugfix:    Made changes from code review.  Mostly stylisitic.
                  Changed:   DRMAA & read_defaults.c
 
 DT-2003-11-18-0: Bugfix:    Fixed broken build

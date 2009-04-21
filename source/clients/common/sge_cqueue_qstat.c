@@ -766,7 +766,7 @@ int qinstance_slots_reserved_now(const lListElem *this_elem)
 
    slots = lGetSubStr(this_elem, RUE_name, SGE_ATTR_SLOTS, QU_resource_utilization);
    if (slots != NULL) {
-      ret = utilization_max(slots, now, 0);
+      ret = utilization_max(slots, now, 0, false);
    } 
 
    DRETURN(ret);

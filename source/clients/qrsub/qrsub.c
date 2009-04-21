@@ -114,7 +114,7 @@ int main(int argc, char **argv) {
    */
    ar = lCreateElem(AR_Type);
 
-   if (!sge_parse_qrsub(pcmdline, &alp, &ar)) {
+   if (!sge_parse_qrsub(ctx, pcmdline, &alp, &ar)) {
       answer_list_output(&alp);
       lFreeList(&pcmdline);
       goto error_exit;

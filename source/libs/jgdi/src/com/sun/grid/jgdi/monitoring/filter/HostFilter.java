@@ -44,6 +44,8 @@ import java.util.logging.Logger;
  */
 public class HostFilter implements Serializable {
 
+    private final static long serialVersionUID = -2009040301L;
+    
     private static Logger logger = Logger.getLogger(HostFilter.class.getName());
     private List<String> hostList = new LinkedList<String>();
 

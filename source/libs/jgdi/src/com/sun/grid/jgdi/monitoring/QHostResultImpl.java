@@ -42,6 +42,8 @@ import java.util.Set;
  *
  */
 public class QHostResultImpl implements QHostResult, Serializable {
+
+    private final static long serialVersionUID = -2009040301L;
     
     private Map<String, HostInfo> hostInfoMap = new HashMap<String, HostInfo>();
     private List<HostInfo> hostInfoList = new ArrayList<HostInfo>();

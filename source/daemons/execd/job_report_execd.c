@@ -65,7 +65,6 @@ bool sge_get_flush_jr_flag(void) {
    return flush_jr;
 }
 
-
 void 
 flush_job_report(lListElem *jr)
 {
@@ -372,30 +371,6 @@ int do_ack(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg)
    }
 
    DRETURN(0);
-}
-
-int
-execd_get_acct_multiplication_factor(const lListElem *pe, int slots, bool task)
-{
-   int factor = 1;
-
-   DENTER(TOP_LAYER, "execd_get_acct_multiplication_factor");
-
-   /* task of tightly integrated job: default factor 1 is OK - skip it */
-   /* only parallel jobs need factors != 0 */
-   /* only loosely integrated job will get factor != 0 */
-   if (!task && pe != NULL && !lGetBool(pe, PE_control_slaves)) {
-      /* if job is first task: factor = n, else n + 1 */
-      if (lGetBool(pe, PE_job_is_first_task)) {
-         factor = slots;
-      } else {
-         factor = slots + 1;
-      }
-   }
-
-   DPRINTF(("reserved usage will be multiplied by %d\n", factor));
-
-   DRETURN(factor);
 }
 
 void modify_queue_limits_flag_for_job(const char *qualified_hostname, lListElem *jep, bool increase)

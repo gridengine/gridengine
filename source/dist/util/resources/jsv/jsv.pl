@@ -58,7 +58,7 @@ jsv_on_verify(sub {
    }
 
    if ($params{pe_name}) {
-      my $slots = $params{pe_slots};
+      my $slots = $params{pe_min};
 
       if (($slots % 16) != 0) {
          jsv_reject('Parallel job does not request a multiple of 16 slots');

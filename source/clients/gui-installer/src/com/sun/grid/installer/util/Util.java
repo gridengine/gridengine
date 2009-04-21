@@ -32,11 +32,15 @@
 package com.sun.grid.installer.util;
 
 import com.izforge.izpack.installer.InstallerFrame;
+import com.izforge.izpack.rules.RulesEngine;
 import com.izforge.izpack.util.Debug;
+import com.izforge.izpack.util.OsVersion;
 import com.izforge.izpack.util.VariableSubstitutor;
-import com.sun.grid.installer.util.cmd.RemoteCommand;
+import com.sun.grid.installer.util.cmd.FsTypeCommand;
 import com.sun.grid.installer.gui.*;
+import com.sun.grid.installer.util.cmd.SimpleLocalCommand;
 import java.awt.Component;
+import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -44,19 +48,18 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.StringReader;
-import java.io.StringWriter;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.Scanner;
+import javax.swing.AbstractButton;
 import javax.swing.JFileChooser;
 import javax.swing.SwingUtilities;
 
@@ -69,13 +72,15 @@ public class Util implements Config{
         ADD, REMOVE, DELETE
     }
 
-    public enum SgeComponents { bdb, qmaster, shadow, execd}
+    public enum SgeComponents { bdb, qmaster, shadow, execd, admin, submit }
 
     public static int RESOLVE_THREAD_POOL_SIZE = 12;
     public static int INSTALL_THREAD_POOL_SIZE = 8;
-    public static int RESOLVE_TIMEOUT = 20000;
-    public static int INSTALL_TIMEOUT = 120000;
-    
+    public static long DEF_RESOLVE_TIMEOUT = 20000;
+    public static long DEF_INSTALL_TIMEOUT = 120000;
+    public static String DEF_CONNECT_USER = "";
+    public static boolean IS_MODE_WINDOWS = false;
+
     // Currently we accept pattern in list of hosts in a file
     public static List<String> parseFileList(File f) throws FileNotFoundException {
         List<String> hostList = new LinkedList<String>(), tempList;
@@ -93,7 +98,11 @@ public class Util implements Config{
         return hostList;
     }
 
-    /* Tests if valid characters for IP */
+    /**
+     * Tests if valid characters for IP
+     * @param pattern The patter to test
+     * @return true if the pattern contains only characters for IP range. False otherwise.
+     */
     public static boolean isIpPattern(String pattern) {
         for (int i=0 ; i < pattern.length() ;i++) {
             char c = pattern.charAt(i);
@@ -112,6 +121,7 @@ public class Util implements Config{
                 case '[':
                 case ']':
                 case '.':
+                case ' ':
                     break;
                 default:
                     return false;
@@ -120,18 +130,47 @@ public class Util implements Config{
         return true;
     }
 
-    public static List<String> parseHostPattern(String input) {
+    /**
+     * Validates the host ids depending on it's type.
+     * @param idList list of ids
+     * @param type The {@link Host.Type} of the ids
+     *
+     * @throws java.lang.IllegalArgumentException if a validation fails
+     */
+    public static void validateHostIDList(List<String> idList, Host.Type type) throws IllegalArgumentException {
+        for (String id : idList) {
+            switch (type) {
+                case HOSTNAME : {
+                    if (id.equals("localhost")) {
+                        throw new IllegalArgumentException("the 'localhost' loopback network interface name is not allowed!");
+                    }
+                    break;
+                }
+                case IP: {
+                    if (id.startsWith("127")) {
+                        throw new IllegalArgumentException("range of 127.x.x.x loopback network interface addresses are not allowed!");
+                    }
+                    break;
+                }
+                default: {
+                    throw new IllegalArgumentException("unknown type '" + type + "'!");
+                }
+            }
+        }
+    }
+
+    public static List<String> parseHostPattern(String input) throws IllegalArgumentException {
         //TODO: Might need some additional checks for all the hostnames
         return parsePattern(input.toLowerCase().trim(), Host.Type.HOSTNAME);
     }
 
 
-    public static List<String> parseIpPattern(String input) {
+    public static List<String> parseIpPattern(String input) throws IllegalArgumentException {
         return parsePattern(input.toLowerCase().trim(), Host.Type.IP);
     }
 
 
-    public static List<String> parsePattern(String input, Host.Type type) {
+    public static List<String> parsePattern(String input, Host.Type type) throws IllegalArgumentException {
         long start=System.currentTimeMillis(),endL;
         LinkedList<List<String>> list = new LinkedList<List<String>>();
         int i=0;
@@ -171,14 +210,14 @@ public class Util implements Config{
                     }                  
                 default:
                     s.close();
-                    throw new IllegalArgumentException("error - invalid value " + elem + " for type " + type.toString());
+                    throw new IllegalArgumentException("invalid value " + elem + " for type " + type.toString() + ".");
             }
         }
         s.close();
 
         //Ip must have 4 octects
         if (type == Host.Type.IP && i != 4) {
-            throw new IllegalArgumentException("error - IP must have 4 octects. Got "+i);
+            throw new IllegalArgumentException("IP must have 4 octects! Got " + i + ".");
         }
 
         //Final reduction to single host list
@@ -197,7 +236,7 @@ public class Util implements Config{
     }
     
 
-    private  static List<String> parseSinglePattern(String input, Host.Type type) {
+    private  static List<String> parseSinglePattern(String input, Host.Type type) throws IllegalArgumentException {
         LinkedList list = new LinkedList(), start;
         LinkedList<String> item = new LinkedList();
         char c;
@@ -222,7 +261,7 @@ public class Util implements Config{
                     }
                     break;
                 default:
-                    throw new IllegalArgumentException("error - unknown type " + type.toString());
+                    throw new IllegalArgumentException("unknown type '" + type + "'!");
             }
             //Something else
             switch (c) {
@@ -236,7 +275,7 @@ public class Util implements Config{
                     level++; //increase bracket level
                     //We support only single level of brackets
                     if (level > 1) {
-                        throw new IllegalArgumentException("error - invalid character '"+c+"' in "+input);
+                        throw new IllegalArgumentException("invalid character '" + c + "' in '" + input + "'!");
                     }
                     
                     //TODO We should reduce here what we can
@@ -352,7 +391,7 @@ public class Util implements Config{
                           continue;
                        } else {
                           //We have "[-" in hostname
-                          throw new IllegalArgumentException("error - invalid character '"+c+"' in "+input);
+                          throw new IllegalArgumentException("invalid character '" + c + "' in '" + input + "'!");
                        }
                     }
                     sb = new StringBuilder();
@@ -361,9 +400,9 @@ public class Util implements Config{
                     continue;
                 case ']':
                     level--;
-                    //We support only                  //We support only single level of brackets
+                    //We support only single level of brackets
                     if (level < 0) {
-                        throw new IllegalArgumentException("error - invalid character '"+c+"' in "+input);
+                        throw new IllegalArgumentException("invalid character '" + c + "' in '" + input + "'!");
                     }
                     if (sb.toString().trim().length() > 0) {
                        item.add(sb.toString().trim());
@@ -374,7 +413,10 @@ public class Util implements Config{
                             item.add("");
                         //We got "[]"
                         } else if (list.peek().getClass() == String.class && ((String) list.peek()).equals("[")) {
-                            throw new IllegalArgumentException("error - empty '[]' in "+input);
+                            throw new IllegalArgumentException("empty '[]' in '" + input + "'!");
+                        //We got "-]"
+                        } else if (list.peek().getClass() == String.class && ((String) list.peek()).equals("-")) {
+                            throw new IllegalArgumentException("incomplete range in '" + input + "'!");
                         } else {
                             item = (LinkedList<String>) list.poll();
                         }
@@ -408,11 +450,11 @@ public class Util implements Config{
                     item = new LinkedList<String>();
                     continue;
                 default:
-                    throw new IllegalArgumentException("error - invalid character '"+c+"' in "+input);
+                    throw new IllegalArgumentException("invalid character '" + c + "' in '" + input + "'!");
             }
         }
         if (level > 0) {
-            throw new IllegalArgumentException("error - uneven brackets in "+input);
+            throw new IllegalArgumentException("uneven brackets in '" + input + "'!");
         }
         if (sb.toString().trim().length()>0) {
             if (item.size()>0) {
@@ -458,7 +500,7 @@ public class Util implements Config{
         return item;
     }
 
-    private static List<String> generateRange(List<String> start, List<String> end, final Host.Type type) {
+    private static List<String> generateRange(List<String> start, List<String> end, final Host.Type type) throws IllegalArgumentException {
         List<String> list = new LinkedList();
         String val;
         for (String s : start) {
@@ -475,7 +517,7 @@ public class Util implements Config{
                             //We should just concatenete
                             return concatenateList(start, end, "-");
                         default:
-                            throw new IllegalArgumentException("error - invalid num-numeric IP range");
+                            throw new IllegalArgumentException("invalid numeric IP range!");
                     }
                 }
                 //Small fix for invalid in IP ranges
@@ -556,38 +598,6 @@ public class Util implements Config{
         }
     }
 
-    public static String substituteMultiple(Properties vars, String str, String type) throws IllegalArgumentException
-    {
-        if (str == null)
-        {
-            return null;
-        }
-
-        // Create reader and writer for the strings
-        StringReader reader = null;
-        StringWriter writer = null;
-
-        // Substitute any variables
-        try
-        {
-        	int numOfSub = 1;
-        	while (numOfSub != 0) {
-        		reader = new StringReader(str);
-        		writer = new StringWriter();
-        		numOfSub = new VariableSubstitutor(vars).substitute(reader, writer, type);
-        		str = writer.getBuffer().toString();
-        	}
-        }
-        catch (IOException e)
-        {
-            throw new Error("Unexpected I/O exception when reading/writing memory "
-                    + "buffer; nested exception is: " + e);
-        }
-
-        // Return the resulting string
-        return str;
-    }
-
     /**
      * Filles up a template file by substituting the variables names with their values
      * @param templateFilePath The template input file to fill up
@@ -596,27 +606,83 @@ public class Util implements Config{
      *
      * @throws java.lang.Exception
      *
+     * @see Util#fillUpTemplate(java.lang.String, java.lang.String, java.util.Properties, java.lang.String[], boolean) 
      * @see VariableSubstitutor
      */
     public static String fillUpTemplate(String templateFilePath, String resultFilePath, Properties variables) throws Exception {
+        return fillUpTemplate(templateFilePath, resultFilePath, variables, null, false);
+    }
+
+
+    /**
+     * Filles up a template file by substituting the variables names with their values
+     * @param templateFilePath The template input file to fill up
+     * @param resultFilePath The result output file
+     * @param variables The variables and their values
+     * @param commentChars Array of special characters which specify a line as comment (e.g.: new String[]{\/**,*,**\/})
+     * @param removeComments indicates whether the comments should be removed from the result.
+     *
+     * @throws java.lang.Exception
+     *
+     * @see VariableSubstitutor
+     */
+    public static String fillUpTemplate(String templateFilePath, String resultFilePath, Properties variables, String[] commentChars, boolean removeComments) throws Exception {
     	BufferedReader bufferedReader = null;
     	BufferedWriter bufferedWriter     = null;
         VariableSubstitutor vs = new VariableSubstitutor(variables);
 
         Debug.trace("Fill up template from '" + templateFilePath + "' to '" + resultFilePath + "'.");
         File f = new File(resultFilePath);
-    	
-    	try {
-    		bufferedReader = new BufferedReader(new FileReader(templateFilePath));
-    		bufferedWriter = new BufferedWriter(new FileWriter(f, false));
 
-    		String line = null;
-    		while ((line = bufferedReader.readLine()) != null) {
-    			line = vs.substituteMultiple(line, null);
+        try {
+    	    bufferedReader = new BufferedReader(new FileReader(templateFilePath));
+            bufferedWriter = new BufferedWriter(new FileWriter(f, false));
 
-    			bufferedWriter.write(line);
-    			bufferedWriter.newLine();
-    		}
+            String line = "";
+            String formattedLine = "";
+
+            boolean commentedLine = false;
+            boolean skipLine = false;
+            while ((line = bufferedReader.readLine()) != null) {
+                line = vs.substituteMultiple(line, null);
+                formattedLine = line.trim().toLowerCase();
+
+                // if comment characters are specified....
+                if (commentChars != null) {
+                    commentedLine = false;
+
+                    // check whether the current line is a comment
+                    // TODO handle multiline comments
+                    for (String comment : commentChars) {
+                        if (formattedLine.startsWith(comment) || formattedLine.endsWith(comment)) {
+                            commentedLine = true;
+                            break;
+                        }
+                    }
+
+
+                    if (commentedLine) {
+                        // check whether the actual comment holds special commands
+                        if (formattedLine.indexOf(".if") > -1) {
+                            // Skip next line(s) if the condition is false
+                            skipLine = !evaluateConditionalComment(formattedLine);
+                        } else if (formattedLine.indexOf(".endif") > -1) {
+                            // Write upcoming lines if the special block is over
+                            skipLine = false;
+                        }
+
+                        // remove commented lines
+                        if (removeComments) {
+                            continue;
+                        }
+                    } else if (skipLine) {
+                        continue;
+                    }
+                }
+
+                bufferedWriter.write(line);
+                bufferedWriter.newLine();
+            }
     	} finally {
     		if (bufferedReader != null) {
     			bufferedReader.close();
@@ -626,6 +692,42 @@ public class Util implements Config{
     		}
             return f.getAbsolutePath();
     	}
+    }
+
+    /**
+     * Evaulates a conditional comment which follows the following rules:<br>
+     *  - the condition starts with ".if"<br>
+     *  - the condition ends with one "." character<br>
+     *  - in the middle contains the condition should be evaulated. Can be string "true" or
+     *    "false" or a condition id (with/without '!') which is managed by the {@link RulesEngine}.<br>
+     * <br>
+     * Example:<br>
+     * -html: &lt!--.if cond.true.--&gt<br>
+     * -script: #.if cond.true.
+     *
+     * @param comment A comment line to evaulate
+     * @return the result of the evaulation or false in case of failure.
+     */
+    public static boolean evaluateConditionalComment(String comment) {
+        Debug.trace("Evaulate conditional comment: " + comment);
+        
+        if (comment.indexOf(".if") == -1 || comment.equals("")) {
+            return false;
+        }
+
+        try {
+            String condition = comment.substring(comment.indexOf(".") + 3, comment.lastIndexOf(".")).trim();
+
+            if (condition.equalsIgnoreCase("true")) {
+                return true;
+            } else if (condition.equalsIgnoreCase("false")) {
+                return false;
+            } else {
+                return InstallerFrame.getRules().isConditionTrue(condition);
+            }
+        } catch (IndexOutOfBoundsException e) {
+            return false;
+        }
     }
 
     /**
@@ -710,15 +812,12 @@ public class Util implements Config{
      * @param dir The directory path to be checked
      * @return The FS type of the given directory if the check was successful, otherwise empty string.
      */
-    public static String getDirFSType(Properties variables, String dir) {
-       return getDirFSType(Host.localHostName, variables, dir);
+    public static String getDirFSType(String shell, String sge_root, String dir) {
+       return getDirFSType(Host.localHostName, Host.localHostArch, shell, sge_root, dir);
     }
 
-    public static String getDirFSType(String host, Properties variables, String dir) {
-        VariableSubstitutor vs = new VariableSubstitutor(variables);        
+    public static String getDirFSType(String host, String arch, String shell, String sge_root, String dir) {    
         String result = "";
-
-        dir = vs.substituteMultiple(dir, null);
 
         ExtendedFile file = new ExtendedFile(dir).getFirstExistingParent();
         Debug.trace("First existing parent of '" + dir + "' is '" + file.getAbsolutePath() +"'.");
@@ -726,8 +825,8 @@ public class Util implements Config{
 
         try {
             // Call the 'fstype' script of the proper architecture
-            String fstypeScript = "${cfg.sge.root}/utilbin/${localhost.arch}/fstype";
-            RemoteCommand fstypeCmd = new RemoteCommand(variables, host, vs.substituteMultiple(fstypeScript, null), dir);
+            String fstypeScript = sge_root + "/utilbin/" + arch + "/fstype";
+            FsTypeCommand fstypeCmd = new FsTypeCommand(host, DEF_CONNECT_USER, shell, IS_MODE_WINDOWS, fstypeScript, dir);
             fstypeCmd.execute();
 
             if (fstypeCmd.getExitValue() == 0) {
@@ -743,29 +842,33 @@ public class Util implements Config{
         return result;
     }
 
+    public static String[] getUserGroups(String shell, String userToCheck) {
+        return getUserGroups(Host.localHostName, shell, userToCheck);
+    }
+
     /**
      * Returns the group id of the user.
      * @param user The user name
      * @return The group id of the user if the process was successful, otherwise empty string.
      */
-    public static String[] getUserGroups(String host, Properties variables, String user) {
+    public static String[] getUserGroups(String host, String shell, String userToCheck) {
         String[] groups = null;
         ExtendedFile tmpFile = null;
 
         try {
             String command = "groups";
-            RemoteCommand groupCmd = new RemoteCommand(variables, host, command, user);
+            FsTypeCommand groupCmd = new FsTypeCommand(host, DEF_CONNECT_USER, shell, IS_MODE_WINDOWS, command,  userToCheck);
             groupCmd.execute();
 
             if (groupCmd.getExitValue() == 0) {
                 groups = groupCmd.getOutput().firstElement().trim().split(" ");
 
-                Debug.trace("Group of user '" + user + "' are '" + Arrays.toString(groups) + "'.");
+                Debug.trace("Group of user '" + userToCheck + "' are '" + Arrays.toString(groups) + "'.");
             } else {
-                Debug.error("Failed to get the group id's of user '" + user + "'! Error: " + groupCmd.getError());
+                Debug.error("Failed to get the group id's of user '" + userToCheck + "'! Error: " + groupCmd.getError());
             }
         } catch (Exception ex) {
-            Debug.error("Failed to get the group id's of user '" + user + "'! " + ex);
+            Debug.error("Failed to get the group id's of user '" + userToCheck + "'! " + ex);
         } 
 
         return groups;
@@ -795,6 +898,40 @@ public class Util implements Config{
 
         Debug.trace("Sourced settings from '" + settingsshFile + "' are " + settings + ".");
 
+        return settings;
+    }
+
+
+    /**
+     * Sources the sge <SGE_ROOT>/<CELL_NAME>/common/jmx/management.properties file.
+     * @param sgeRoot The SGE_ROOT directory
+     * @param cellName The CELL_NAME value
+     * @return List of key values pairs sourced from the file.
+     *
+     * @throws java.io.FileNotFoundException
+     * @throws java.io.IOException
+     */
+    public static Properties sourceJMXSettings(String sgeRoot, String cellName) throws FileNotFoundException, IOException {
+        Properties settings = new Properties();
+        String settingsJMXFile = sgeRoot + "/" + cellName + "/common/jmx/management.properties";
+        ArrayList<String> settingsJMXLines = FileHandler.readFileContent(settingsJMXFile, false);
+
+        String key, value;
+        for (String line : settingsJMXLines) {
+            // Skip comments
+            if (line.startsWith("#")) {
+                continue;
+            }
+            // Process lines like 'com.sun.grid.jgdi.management.jmxremote.ssl=true'
+            int spaceIndex = line.indexOf('=');
+            key = line.substring(0, spaceIndex).trim();
+            value = line.substring(spaceIndex).trim();
+
+            //finally set the key, value pair
+            settings.setProperty(key, value);
+        }
+
+        Debug.trace("Sourced settings from '" + settingsJMXFile + "' are " + settings + ".");
         return settings;
     }
 
@@ -934,6 +1071,157 @@ public class Util implements Config{
         return new SimpleDateFormat("yyyy.MM.dd_HH:mm:ss").format(new Date());
     }
 
+        /**
+     * Removes the listeners from the given {@link AbstractButton}
+     * @param button The button which listeners have to be removed
+     * @return The removed listeners
+     */
+    public static ActionListener[] removeListeners(AbstractButton button) {
+        ActionListener[] listeners = button.getActionListeners();
+
+        for (int i = 0; i < listeners.length; i++) {
+            button.removeActionListener(listeners[i]);
+        }
+
+        return listeners;
+    }
+
+    /**
+     * Returns all of the host from the list in the given type.
+     * @param type The type of the hosts should return.
+     * @return All of the hosts with the given type (list is unique)
+     *
+     * @see Host
+     */
+    public static ArrayList<Host> getHosts(HostList hostList, SgeComponents type) {
+        ArrayList<Host> result = new ArrayList<Host>();
+        ArrayList<String> hostnames = new ArrayList<String>();
+
+        for (Host host : hostList) {
+            //We need a unique list of Hosts of single type
+            if (hostnames.contains(host.getHostname())) {
+                continue;
+            }
+
+            switch (type) {
+                case qmaster: {
+                    if (host.isQmasterHost()) break;
+                    else continue;
+                }
+                case execd: {
+                    if (host.isExecutionHost()) break;
+                    else continue;
+                }
+                case shadow: {
+                    if (host.isShadowHost()) break;
+                    else continue;
+                }
+                case bdb: {
+                    if (host.isBdbHost()) break;
+                    else continue;
+                }
+                case admin: {
+                    if (host.isAdminHost()) break;
+                    else continue;
+                }
+                case submit: {
+                    if (host.isSubmitHost()) break;
+                    else continue;
+                }
+                default: throw new IllegalArgumentException("Unknown sge component: " + type);
+            }
+
+            result.add(host);
+            hostnames.add(host.getHostname());
+        }
+
+        return result;
+    }
+
+    /**
+     * Creates a string from the host's name
+     * @param hosts The host which names should be appended
+     * @param separator The separator string between the host names
+     * @return The string from the host names
+     */
+    public static String getHostNames(ArrayList<Host> hosts, String separator) {
+        return getHostNames(hosts, null, separator);
+    }
+
+    /**
+     * Creates a string from the host's name
+     * @param hosts The host which names should be appended
+     * @param additionalHostnames The hostnames to be appendedt
+     * @param separator The separator string between the host names
+     * @return The string from the host names
+     */
+    public static String getHostNames(ArrayList<Host> hosts, List<String> additionalHostnames, String separator) {
+        StringBuffer result = new StringBuffer();
+        List<String> finalList = new ArrayList<String>();
+
+        for (Host h : hosts) {
+            finalList.add(h.getHostname());
+        }
+
+        if (additionalHostnames != null) {
+            for (String hostname : additionalHostnames) {
+                if (!finalList.contains(hostname)) {
+                    finalList.add(hostname);
+                }
+            }
+        }
+        //Sort the list
+        Collections.sort(finalList);
+
+        //Create a string out of the list
+        for (int i = 0; i < finalList.size(); i++) {
+            result.append(finalList.get(i));
+            // do not append separator to the end of the elements
+            if (i + 1 != hosts.size()) {
+                result.append(separator);
+            }
+        }
+
+        return result.toString();
+    }
+
+    /**
+     * Opens a browser.
+     * @param url The url to open in the browser
+     * @return true only if the a browser was found and the startup was successful. False otherwise.
+     */
+    public static boolean openBrowser(String url) {
+        SimpleLocalCommand command = null;
+        if (OsVersion.IS_OSX && OsVersion.IS_MAC) {
+            command = new SimpleLocalCommand("open " + url);
+            command.execute();
+            if (command.getExitValue() == 0) {
+                return true;
+            }
+        } else if (OsVersion.IS_WINDOWS) {
+            command = new SimpleLocalCommand("cmd /C start " + url);
+            command.execute();
+            if (command.getExitValue() == 0) {
+                return true;
+            }
+        } else {
+            String[] browsers = new String[]{"firefox", "opera", "mozilla", "netscape", 
+            "htmlview", "xdg-open", "gnome-open", "kfmclient openURL", "call-browser",
+            "konqueror", "epiphany"};
+
+            for (String browser : browsers) {
+                command = new SimpleLocalCommand(3000, browser, url);
+                command.execute();
+                if (command.getExitValue() == 0) {
+                    return true;
+                }
+            }
+
+        }
+
+        return false;
+    }
+
     /*public static boolean runAsAdminUser(String host, String arch, String sgeRoot, String adminUser, String command, Properties variables) throws Exception {
         CommandExecutor cmdExec = null;
 
@@ -949,12 +1237,4 @@ public class Util implements Config{
             return false;
         }
     }*/
-
-    public static boolean isWindowsMode(Properties p) {
-        String mode = p.getProperty(ARG_CONNECT_MODE);
-        if (mode != null && mode.equalsIgnoreCase(CONST_MODE_WINDOWS)) {
-            return true;
-        }
-        return false;
-    }
 }

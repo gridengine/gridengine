@@ -368,7 +368,7 @@ public class QueueInstanceSummaryPrinter {
                 ret.append('/');
                 ret.append(qi.getUsedSlots());
                 ret.append('/');
-                ret.append(qi.getFreeSlots() + qi.getUsedSlots());
+                ret.append(qi.getTotalSlots());
                 return ret.toString();
             }
         };

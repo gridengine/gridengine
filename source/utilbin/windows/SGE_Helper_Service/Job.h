@@ -73,15 +73,16 @@ class C_Job {
       void            BuildCommandLine(char *&szCmdLine) const;
       void            BuildEnvironment(char *&pszEnv) const;
 
-      DWORD           StoreUsage(HANDLE hProcess);
+      int             StoreUsage();
+      int             Terminate();
 
       en_JobStatus m_JobStatus;
       DWORD        m_job_id;
       DWORD        m_ja_task_id;
       const char   *m_pe_task_id;
       SOCKET       m_comm_sock;
-      HANDLE       m_hProcess;
-      HANDLE       m_hJobObject;
+      HANDLE       m_hProcess;           // The main process of the job
+      HANDLE       m_hJobObject;         // The Windows job object
       int          m_ForwardedSignal;
 
       // data members to start the job

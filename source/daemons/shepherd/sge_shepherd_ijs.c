@@ -54,7 +54,7 @@
 #elif defined(INTERIX)
 #  include <termios.h>
 #  include <sys/ioctl.h>
-#elif defined(FREEBSD)
+#elif defined(FREEBSD) || defined(NETBSD)
 #  include <sys/ioctl.h>
 #  include <termios.h>
 #else

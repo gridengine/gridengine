@@ -285,9 +285,13 @@ RemoveSpoolDir()
    $INFOTEXT -log "Checking local spooldir configuration for host \"%s\"!" $exechost
    SPOOL_DIR=`qconf -sconf $exechost | grep execd_spool_dir | awk '{ print $2 }'`
 
-   $INFOTEXT "Delete configuration for host \"%s\"!" $exechost
-   $INFOTEXT -log "Delete configuration for host \"%s\"!" $exechost
-   qconf -dconf $exechost
+   #Check that configuration is no longer needed
+   if [ x`cat $SGE_ROOT/$SGE_CELL/common/shadow_masters 2>/dev/null | grep $exechost` = x -a \
+        x`cat $SGE_ROOT/$SGE_CELL/common/act_qmaster    2>/dev/null | grep $exechost` = x ]; then
+      $INFOTEXT "Delete configuration for host \"%s\"!" $exechost
+      $INFOTEXT -log "Delete configuration for host \"%s\"!" $exechost
+      qconf -dconf $exechost
+   fi
 
    if [ "$SPOOL_DIR" != "" ]; then
       if [ -d "$SPOOL_DIR/$HOST_DIR" ]; then

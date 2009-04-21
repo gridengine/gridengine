@@ -58,6 +58,9 @@ public class PreActionPanel extends ActionPanel {
     private void initializeVariables() {
         VariableSubstitutor vs = new VariableSubstitutor(idata.getVariables());
 
+        /**
+         * Read arguments
+         */
         // set thread spool sizes
         int size = 0;
         if (idata.getVariable(ARG_RESOLVE_THREAD_POOL_SIZE) != null) {
@@ -70,7 +73,7 @@ public class PreActionPanel extends ActionPanel {
             } catch (NumberFormatException e) {
                 Debug.error("Invalid '" + ARG_RESOLVE_THREAD_POOL_SIZE + "' value: " + idata.getVariable(ARG_RESOLVE_THREAD_POOL_SIZE));
             } finally {
-                Debug.trace(ARG_RESOLVE_THREAD_POOL_SIZE +" is now set to "+Util.RESOLVE_THREAD_POOL_SIZE);
+                Debug.trace(ARG_RESOLVE_THREAD_POOL_SIZE + " is now set to " + Util.RESOLVE_THREAD_POOL_SIZE);
             }
         }
         if (idata.getVariable(ARG_INSTALL_THREAD_POOL_SIZE) != null) {
@@ -83,7 +86,7 @@ public class PreActionPanel extends ActionPanel {
             } catch (NumberFormatException e) {
                 Debug.error("Invalid '" + ARG_INSTALL_THREAD_POOL_SIZE + "' value: " + idata.getVariable(ARG_INSTALL_THREAD_POOL_SIZE));
             } finally {
-                Debug.trace(ARG_INSTALL_THREAD_POOL_SIZE +" is now set to "+Util.INSTALL_THREAD_POOL_SIZE);
+                Debug.trace(ARG_INSTALL_THREAD_POOL_SIZE + " is now set to " + Util.INSTALL_THREAD_POOL_SIZE);
             }
         }
         //Set the timeout values
@@ -93,11 +96,11 @@ public class PreActionPanel extends ActionPanel {
                 if (size < 1) {
                     throw new NumberFormatException();
                 }
-                Util.RESOLVE_TIMEOUT = size * 1000; //we need ms not seconds
+                Util.DEF_RESOLVE_TIMEOUT = size * 1000; //we need ms not seconds
             } catch (NumberFormatException e) {
                 Debug.error("Invalid '" + ARG_RESOLVE_TIMEOUT + "' value: " + idata.getVariable(ARG_RESOLVE_THREAD_POOL_SIZE));
             } finally {
-                Debug.trace(ARG_RESOLVE_TIMEOUT +" is now set to "+Util.RESOLVE_TIMEOUT);
+                Debug.trace(ARG_RESOLVE_TIMEOUT + " is now set to " + Util.DEF_RESOLVE_TIMEOUT);
             }
         }
         if (idata.getVariable(ARG_INSTALL_TIMEOUT) != null) {
@@ -106,19 +109,28 @@ public class PreActionPanel extends ActionPanel {
                 if (size < 1) {
                     throw new NumberFormatException();
                 }
-                Util.INSTALL_TIMEOUT = size * 1000; //we need ms not seconds
+                Util.DEF_INSTALL_TIMEOUT = size * 1000; //we need ms not seconds
             } catch (NumberFormatException e) {
                 Debug.error("Invalid '" + ARG_INSTALL_TIMEOUT + "' value: " + idata.getVariable(ARG_INSTALL_THREAD_POOL_SIZE));
             } finally {
-                Debug.trace(ARG_INSTALL_TIMEOUT +" is now set to "+Util.INSTALL_TIMEOUT);
+                Debug.trace(ARG_INSTALL_TIMEOUT + " is now set to " + Util.DEF_INSTALL_TIMEOUT);
             }
         }
-        if (Util.isWindowsMode(idata.getVariables())) {
-           Debug.trace("Using mode "+CONST_MODE_WINDOWS);
+        // Set connect_mode
+        String mode = idata.getVariable(ARG_CONNECT_MODE);
+        Util.IS_MODE_WINDOWS = (mode != null && mode.equalsIgnoreCase(CONST_MODE_WINDOWS));
+        if (Util.IS_MODE_WINDOWS) {
+           Debug.trace("Using mode '" + CONST_MODE_WINDOWS + "'.");
         }
-        
-        String sgeRootPath = vs.substitute(idata.getVariable(VAR_SGE_ROOT), null);
-        String userName = vs.substitute(idata.getVariable(VAR_USER_NAME), null);
+        // Set connect_user
+        Util.DEF_CONNECT_USER = vs.substituteMultiple(idata.getVariable(ARG_CONNECT_USER), null);
+        Debug.trace("Using connect user '" + Util.DEF_CONNECT_USER + "'.");
+
+        /**
+         * Other initializations
+         */
+        String sgeRootPath = vs.substituteMultiple(idata.getVariable(VAR_SGE_ROOT), null);
+        String userName = vs.substituteMultiple(idata.getVariable(VAR_USER_NAME), null);
 
         ExtendedFile sgeRootDir = new ExtendedFile(sgeRootPath);
 
@@ -128,34 +140,12 @@ public class PreActionPanel extends ActionPanel {
         idata.setVariable(VAR_ADMIN_USER, sgeRootDir.getOwner());
         Debug.trace("cfg.admin.user='" + idata.getVariable(VAR_ADMIN_USER) + "'");
 
-        // Check user
-//        if (!userName.equals(rootUser)) {
-//             if (userName.equals(sgeRootDir.getOwner())) {
-//                 if (JOptionPane.NO_OPTION == JOptionPane.showOptionDialog(this, vs.substituteMultiple(idata.langpack.getString(WARNING_USER_NOT_ROOT), null),
-//                         idata.langpack.getString("installer.warning"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null,
-//                         new Object[]{idata.langpack.getString("installer.yes"), idata.langpack.getString("installer.no")}, idata.langpack.getString("installer.yes"))) {
-//                     parent.exit(true);
-//                 }
-//             } else {
-//                 JOptionPane.showOptionDialog(this, vs.substituteMultiple(idata.langpack.getString(ERROR_USER_INVALID), null),
-//                         idata.langpack.getString("installer.error"), JOptionPane.CANCEL_OPTION, JOptionPane.ERROR_MESSAGE, null,
-//                         new Object[]{idata.langpack.getString("button.exit.label")}, idata.langpack.getString("button.exit.label"));
-//
-//                 parent.exit(true);
-//             }
-//        }
-
         // set cfg.add.to.rc
         if (parent.getRules().isConditionTrue(COND_USER_ROOT) || !parent.getRules().isConditionTrue(COND_NO_CONNECT_USER)) {
             idata.setVariable(VAR_ADD_TO_RC, "true");
         } else {
             idata.setVariable(VAR_ADD_TO_RC, "false");
         }
-
-        // set user group
-//        String[] groups = Util.getUserGroups(Host.localHostName, idata.getVariables(), idata.getVariable(VAR_USER_NAME));
-//        idata.setVariable(VAR_USER_GROUP, group);
-//        Debug.trace("Group of executing user '" + idata.getVariable(VAR_USER_NAME) + "' is '" + group + "'.");
 
         // add.qmaster.host
         idata.setVariable(VAR_QMASTER_HOST, Host.localHostName);
@@ -165,24 +155,6 @@ public class PreActionPanel extends ActionPanel {
         idata.setVariable(VAR_DB_SPOOLING_SERVER, Host.localHostName);
         Debug.trace("cfg.db.spooling.server='" + idata.getVariable(VAR_DB_SPOOLING_SERVER) + "'");
 
-        // cfg.sge.jvm.lib.path
-        List<String> libPaths = new ArrayList<String>();
-        libPaths.addAll(Arrays.asList(idata.getVariable("SYSTEM_java_library_path").split(":")));
-        libPaths.add(idata.getVariable("SYSTEM_sun_boot_library_path"));
-        //MacOS last resort
-        libPaths.add("/System/Library/Frameworks/JavaVM.framework/Libraries");
-
-        String libjvm = "/" + System.mapLibraryName("jvm");
-        if (libjvm.endsWith(".jnilib")) {
-            libjvm = libjvm.substring(0, libjvm.lastIndexOf(".jnilib")) + ".dylib";
-        }
-
-        for (String libPath : libPaths) {
-            if (new File(libPath + libjvm).exists()) {
-                idata.setVariable(VAR_JVM_LIB_PATH, libPath + libjvm);
-                Debug.trace("cfg.sge.jvm.lib.path='" + idata.getVariable(VAR_JVM_LIB_PATH) + "'");
-                break;
-            }
-        }
+        // cfg.sge.jvm.lib.path  must be detected only when JMX was enabled later via remote call to DetectJvmLibrary.jar
     }
 }

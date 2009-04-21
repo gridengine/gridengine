@@ -556,12 +556,12 @@ LoadListFromLocation()
 
    failed=0
 
-   case $SUCCEEDED_LOADLOC in
-   *$loadLoc*)
-      LogIt "I" "qconf $qconfOpt $loadLoc skipped because succeeded already in previous run"
-      return 0
-      ;;
-   esac
+   for finished in `echo "$SUCCEEDED_LOADLOC" | awk '{for (i=1; i<=NF ; i++) print $i}'`; do
+      if [ "$finished" = "$loadLoc" ]; then
+         LogIt "I" "qconf $qconfOpt $loadLoc skipped because succeeded already in previous run"
+         return 0
+      fi
+   done
 
    LogIt "I" "qconf $qconfOpt $loadLoc"
    

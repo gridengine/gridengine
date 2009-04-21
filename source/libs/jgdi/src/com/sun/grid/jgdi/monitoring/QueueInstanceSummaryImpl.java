@@ -45,14 +45,16 @@ import java.util.logging.Logger;
  *
  */
 public class QueueInstanceSummaryImpl implements QueueInstanceSummary, Serializable {
-    
+
+    private final static long serialVersionUID = -2009040301L;
+
     private static Logger logger = Logger.getLogger(QueueInstanceSummaryImpl.class.getName());
     
     private String name;
     private String queueType;
     private int reservedSlots;
     private int usedSlots;
-    private int freeSlots;
+    private int totalSlots;
     private String arch;
     private String state;
     private String loadAvgStr;
@@ -139,21 +141,31 @@ public class QueueInstanceSummaryImpl implements QueueInstanceSummary, Serializa
         }
         this.usedSlots = usedSlots;
     }
-    
+
     /**
      *  Get the number of free slots
+     *  (returns total instead of free slots)
      *  @return number of free slots
      */
+    @Deprecated
     public int getFreeSlots() {
-        return freeSlots;
+        return totalSlots;
+    }
+
+    /**
+     *  Get the number of total slots
+     *  @return number of total slots
+     */
+    public int getTotalSlots() {
+        return totalSlots;
     }
     
     /**
-     *  Set the number of free slots
-     *  @param freeSlots  number of free slots
+     *  Set the number of total slots
+     *  @param totalSlots  number of total slots
      */
-    public void setFreeSlots(int freeSlots) {
-        this.freeSlots = freeSlots;
+    public void setTotalSlots(int totalSlots) {
+        this.totalSlots = totalSlots;
     }
     
     /**

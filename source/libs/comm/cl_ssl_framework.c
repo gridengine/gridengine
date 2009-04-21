@@ -43,8 +43,6 @@
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
-#include <limits.h>
 
 
 #define ENABLE_CRL
@@ -3047,12 +3045,14 @@ int cl_com_ssl_connection_complete_accept(cl_com_connection_t*  connection,
       ssl_accept_back = cl_com_ssl_func__SSL_accept(private->ssl_obj);
 
       if (ssl_accept_back != 1) {
+#if 0
          if (ssl_accept_back == 0) {
             /* 
              * TLS/SSL handshake was not successful but was shutdown controlled 
              * reason -> check SSL_get_error()
              */
          }
+#endif
 
          /* Try to find out more about the error and set save error in private object */
          ssl_error = cl_com_ssl_func__SSL_get_error(private->ssl_obj, ssl_accept_back);
@@ -3435,12 +3435,14 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout) {
        /* now do a SSL Connect */
       ssl_connect_error = cl_com_ssl_func__SSL_connect(private->ssl_obj);
       if (ssl_connect_error != 1) {
+#if 0
          if (ssl_connect_error == 0) {
             /* 
              * TLS/SSL handshake was not successful but was shutdown controlled 
              * reason -> check SSL_get_error()
              */
          }
+#endif
          /* Try to find out more about the connect error */
          ssl_error = cl_com_ssl_func__SSL_get_error(private->ssl_obj, ssl_connect_error);
          CL_LOG_STR(CL_LOG_INFO,"ssl_error:", cl_com_ssl_get_error_text(ssl_error) );

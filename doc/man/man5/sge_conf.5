@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2008/12/23 16:56:46 $     Revision: $Revision: 1.85 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2009/04/06 15:31:31 $     Revision: $Revision: 1.87 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2008/12/23 16:56:46 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2009/04/06 15:31:31 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -1266,6 +1266,13 @@ Deprecated, may be removed in future release.
 .br
 If this parameter is set to true, the usage of reserved resources is taken for the 
 xxQS_NAMExx share tree consumption instead of measured usage.
+.br
+.B Note:
+When running tightly integrated jobs with \fISHARETREE_RESERVED_USAGE\fP set,
+and with having \fIaccounting_summary\fP enabled in the parallel environment,
+reserved usage will only be reported by the master task of the parallel job.
+No per parallel task usage records will be sent from execd to qmaster, which 
+can significantly reduce load on qmaster when running large tightly integrated parallel jobs.
 .PP
 .IP "\fIUSE_QSUB_GID\fP"
 If this parameter is set to true, the primary group id  active when a
@@ -1690,6 +1697,8 @@ be used with clients to modify certain job attributes. The value for this parame
 comma separated list of JSV job parameter names as they are documented in
 .M qsub 1
 or the value \fBnone\fP to indicate that no modification should be allowed. 
+Please note that even if \fBnone\fP is specified the switches \fB-w\fP and \fB-t\fP are
+allowed for qalter.
 .\"
 .\"
 .SS "\fBlibjvm_path\fP"

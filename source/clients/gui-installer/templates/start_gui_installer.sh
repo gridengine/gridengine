@@ -39,7 +39,7 @@ ErrUsage()
    echo ""
    echo "   <num> ... decimal number greater than zero"
    echo "   <sec> ... number of seconds, must be greater then zero"
-   echo "   <usr> ... user id"
+   echo "   <usr> ... user name"
    exit 1
 }
 
@@ -67,24 +67,16 @@ while [ $ARGC != 0 ]; do
 done
 
 #Detect JAVA
-if [ -n "$JAVA_HOME" -a -f "$JAVA_HOME"/bin/java ]; then
-   JAVA_BIN="$JAVA_HOME"/bin/java
-else
-   JAVA_BIN=`which java`
-fi
-
-if [ ! -f "$JAVA_BIN" ]; then
-   echo "Java not found! Specify JAVA_HOME or adjust your PATH and try again."
+. ./util/install_modules/inst_qmaster.sh
+HaveSuitableJavaBin "1.5.0" "none"
+if [ $? -ne 0 ]; then
+   echo "Could not find Java 1.5 or later! Install Java from http://www.java.com/getjava and set your JAVA_HOME correcly or put java on your PATH!"
    exit 1
 fi
 
-#Try to detect platform
-#if [ x`./util/arch | grep 64` != x ]; then
-#   FLAGS="-d64 $FLAGS"
-#fi
 echo "Starting Installer ..."
 if [ "$DEBUG_ENABLED" = "true" ]; then
-   $JAVA_BIN $FLAGS -jar ./util/gui-installer/installer.jar $ARGUMENTS
+   $java_bin $FLAGS -jar ./util/gui-installer/installer.jar $ARGUMENTS
 else
-   $JAVA_BIN $FLAGS -jar ./util/gui-installer/installer.jar $ARGUMENTS
+   $java_bin $FLAGS -jar ./util/gui-installer/installer.jar $ARGUMENTS
 fi

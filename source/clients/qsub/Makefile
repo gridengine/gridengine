@@ -53,7 +53,7 @@ QSUB_ADD_LIBS = -levc -lgdi -lsgeobj -lsgeobjd  \
 
 QSUB_LIB_DEPENDS = $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) \
                    $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) \
-                   $(WINGRIDLIB_DEP) $(LCKLIB) $(UTILIB) $(RMONLIB)
+                   $(WINGRIDLIB_DEP) $(LCKLIB) $(UTILIB) $(RMONLIB) \
                    $(TPLIB)
 
 ###############################################################################

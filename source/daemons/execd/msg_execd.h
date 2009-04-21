@@ -139,7 +139,7 @@
 
 
 /*
-** src/load_avg.c
+** load_avg.c
 */
 #define MSG_LOAD_NOMEMINDICES          _MESSAGE(29088, _("failed retrieving memory indices"))
 #define MSG_LOAD_NOPTFUSAGE_S          _MESSAGE(29089, _("ptf failed to determine job usage: "SFN))
@@ -257,6 +257,7 @@
 /* #define MSG_LS_NORESTARTLS            _message(29164, _("load sensor not restarted because load sensor file was not modified")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_LS_NOMODTIME_SS           _MESSAGE(29165, _("can't get mod_time from load sensor file "SFN": "SFN))
 #define MSG_LS_FORMAT_ERROR_SS        _MESSAGE(29166, _("Format error of loadsensor "SFQ". Received: \"%100s\""))
+#define MSG_LS_USE_EXTERNAL_LS_S      _MESSAGE(29167, _("execd cannot retrieve load values on platform "SFQ" - please configure an external load sensor"))
 
 
 

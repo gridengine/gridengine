@@ -37,6 +37,8 @@ import java.io.Serializable;
  *
  */
 public class HardRequestValue implements Serializable {
+
+    private final static long serialVersionUID = -2009040301L;
     
     private String resource;
     private String value;

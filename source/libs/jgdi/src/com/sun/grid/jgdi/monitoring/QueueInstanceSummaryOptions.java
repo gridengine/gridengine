@@ -42,6 +42,8 @@ import java.io.Serializable;
  * @see com.sun.grid.jgdi.JGDI#getQueueInstanceSummary
  */
 public class QueueInstanceSummaryOptions extends BasicQueueOptions implements Serializable {
+
+    private final static long serialVersionUID = -2009040301L;
     
     /* qstat -F */
     private ResourceAttributeFilter resourceAttributeFilter;

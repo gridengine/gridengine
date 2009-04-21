@@ -202,8 +202,7 @@ typedef char stringT[MAX_STRING_SIZE];
 /* used in config */
 #define TYPE_ACC          10 
 #define TYPE_LOG          11
-#define TYPE_LOF          12
-#define TYPE_LAST         TYPE_LOF
+#define TYPE_LAST         TYPE_LOG
 
 /* save string format quoted */
 #define SFQ  "\"%-.100s\""

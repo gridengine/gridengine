@@ -46,8 +46,10 @@
 #include "sge.h"
 #include "symbols.h"
 #include "config.h"
-#include "sge_ja_task.h"
-#include "sge_pe_task.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_pe_task.h"
+#include "sgeobj/sge_pe.h"
 #include "sge_qinstance.h"
 #include "sge_os.h"
 #include "sge_log.h"
@@ -81,7 +83,6 @@
 #include "sge_feature.h"
 #include "sge_spool.h"
 #include "spool/classic/read_write_job.h"
-#include "sge_job.h"
 #include "sge_unistd.h"
 #include "sge_uidgid.h"
 #include "sge_var.h"
@@ -89,19 +90,20 @@
 #include "sge_ulong.h"
 #include "sgeobj/sge_object.h"
 #include "uti/sge_stdio.h"
+#include "load_avg.h"
 
 #ifdef COMPILE_DC
 #  include "ptf.h"
 static void unregister_from_ptf(u_long32 jobid, u_long32 jataskid, const char *pe_task_id, lListElem *jr);
 #endif
 
-static int clean_up_job(lListElem *jr, int failed, int signal, int is_array, const lListElem *pe, const char *job_owner);
+static int clean_up_job(lListElem *jr, int failed, int signal, int is_array, const lListElem *ja_task, const char *job_owner);
 static void convert_attribute(lList **cflpp, lListElem *jr, char *name, u_long32 udefau);
 static int extract_ulong_attribute(lList **cflpp, char *name, u_long32 *valuep); 
 
 static lListElem *execd_job_failure(lListElem *jep, lListElem *jatep, lListElem *petep, const char *error_string, int general, int failed);
-static int read_dusage(lListElem *jr, const char *jobdir, u_long32 jobid, u_long32 jataskid, int failed, int usage_mul_factor);
-static void build_derived_final_usage(lListElem *jr, int usage_mul_factor);
+static int read_dusage(lListElem *jr, const char *jobdir, u_long32 job_id, u_long32 ja_task_id, const char *pe_task_id, int failed);
+static void build_derived_final_usage(lListElem *jr, u_long32 job_id, u_long32 ja_task_id, const char *pe_task_id);
 
 static void examine_job_task_from_file(sge_gdi_ctx_class_t *ctx, int startup, char *dir, lListElem *jep, lListElem *jatep, lListElem *petep, pid_t *pids, int npids);
 
@@ -270,12 +272,11 @@ int sge_reap_children_execd(int max_count)
             lSetUlong(jatep, JAT_status, JEXITING);
          }
 
-         clean_up_job(jr, failed, exit_status, job_is_array(jep),
-                      lGetObject(jatep, JAT_pe_object), lGetString(jep, JB_owner));
+         clean_up_job(jr, failed, exit_status, job_is_array(jep), jatep, lGetString(jep, JB_owner));
 
          flush_job_report(jr);
 
-      } else  if (sge_ls_stop_if_pid(pid, 1)) {
+      } else  if (sge_ls_stop_if_pid(pid)) {
          if (child_signal) {
             ERROR((SGE_EVENT, MSG_STATUS_LOADSENSORDIEDWITHSIGNALXY_SI,
                   core_dumped ? MSG_COREDUMPED: "",
@@ -357,7 +358,7 @@ static void unregister_from_ptf(u_long32 job_id, u_long32 ja_task_id,
    failed = indicates a failure of job execution, see shepherd_states.h
  ************************************************************************/
 static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status, 
-                        int is_array, const lListElem *pe, const char* job_owner) 
+                        int is_array, const lListElem *ja_task, const char* job_owner) 
 {
    dstring jobdir = DSTRING_INIT;
    dstring fname  = DSTRING_INIT;
@@ -371,7 +372,6 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
    u_long32 job_id, job_pid, ckpt_arena, general_failure = 0, ja_task_id;
    const char *pe_task_id = NULL;
    lListElem *du;
-   int usage_mul_factor;
 
    DENTER(TOP_LAYER, "clean_up_job");
 
@@ -551,21 +551,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
    ** to do with the job also goes in there, this should be changed
    ** read_dusage gets the failed parameter to decide what should be there
    */
-   
-   /* to report correct usage for loosly integrated parallel jobs,
-    * we have to compute a multiplication factor for acct_reserved_usage
-    */
-
-   {
-      const char *s;
-      int slots;
-
-      slots = (s=get_conf_val("pe_slots"))?atoi(s):1;
-      usage_mul_factor = execd_get_acct_multiplication_factor(pe, slots, 
-                                                         (pe_task_id != NULL) ? true : false);
-   }
-
-   if (read_dusage(jr, sge_dstring_get_string(&jobdir), job_id, ja_task_id, failed, usage_mul_factor)) {
+   if (read_dusage(jr, sge_dstring_get_string(&jobdir), job_id, ja_task_id, pe_task_id, failed)) {
       if (error[0] == '\0') {
          sprintf(error, MSG_JOB_CANTREADUSAGEFILEFORJOBXY_S, 
             job_get_id_string(job_id, ja_task_id, pe_task_id, &id_dstring));
@@ -1362,11 +1348,9 @@ examine_job_task_from_file(sge_gdi_ctx_class_t *ctx, int startup, char *dir, lLi
             jr = add_job_report(jobid, jataskid, pe_task_id_str, NULL);
          }
          lSetUlong(jr, JR_state, JEXITING);
-         clean_up_job(jr, ESSTATE_NO_PID, 0, job_is_array(jep),
-                      lGetObject(jatep, JAT_pe_object), lGetString(jep, JB_owner));  /* failed before execution */
+         clean_up_job(jr, ESSTATE_NO_PID, 0, job_is_array(jep), jatep, lGetString(jep, JB_owner));  /* failed before execution */
       }
-      DEXIT;
-      return;
+      DRETURN_VOID;
    }
    
    if (fscanf(fp, pid_t_fmt, &pid) != 1) {
@@ -1431,17 +1415,15 @@ examine_job_task_from_file(sge_gdi_ctx_class_t *ctx, int startup, char *dir, lLi
       for this job and we wait for ACK from qmaster */
    if (lGetUlong(jr, JR_state)==JEXITING) {
       DPRINTF(("State of job "sge_u32"."sge_u32" already changed to JEXITING\n", jobid, jataskid));
-      DEXIT;
-      return;
+      DRETURN_VOID;
    }
 
-   clean_up_job(jr, 0, 0, job_is_array(jep), lGetObject(jatep, JAT_pe_object), lGetString(jep, JB_owner));
+   clean_up_job(jr, 0, 0, job_is_array(jep), jatep, lGetString(jep, JB_owner));
    lSetUlong(jr, JR_state, JEXITING);
    
    flush_job_report(jr);
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 /************************************************************/
@@ -1451,8 +1433,7 @@ examine_job_task_from_file(sge_gdi_ctx_class_t *ctx, int startup, char *dir, lLi
 /*   if we cant read "usage" exit_status = 0xffffffff       */ 
 /************************************************************/
 static int 
-read_dusage(lListElem *jr, const char *jobdir, u_long32 jobid, 
-            u_long32 jataskid, int failed, int usage_mul_factor) 
+read_dusage(lListElem *jr, const char *jobdir, u_long32 jobid, u_long32 jataskid, const char *pe_task_id, int failed)
 {
    char pid_file[SGE_PATH_MAX];
    FILE *fp;
@@ -1569,19 +1550,17 @@ read_dusage(lListElem *jr, const char *jobdir, u_long32 jobid,
 #endif
 #endif   
 
-         build_derived_final_usage(jr, usage_mul_factor);
+         build_derived_final_usage(jr, jobid, jataskid, pe_task_id);
          lFreeList(&cflp);
-      }
-      else {
+      } else {
          ERROR((SGE_EVENT, MSG_SHEPHERD_CANTOPENUSAGEFILEXFORJOBYZX_SUUS,
                 usage_file, sge_u32c(jobid), sge_u32c(jataskid), strerror(errno)));
-         DEXIT;
-         return -1;
+         DRETURN(-1);
       }
    }
 
 
-#if 1
+#if 0
    {
       lListElem *ep;
 
@@ -1598,30 +1577,29 @@ read_dusage(lListElem *jr, const char *jobdir, u_long32 jobid,
       }
    }
 #endif
-   DEXIT;
-   return 0;
+   DRETURN(0);
 FCLOSE_ERROR:
    ERROR((SGE_EVENT, MSG_FILE_ERRORCLOSEINGXY_SS, "usage or pid", 
           strerror(errno)));
-   DEXIT;
-   return -1;
+   DRETURN(-1);
 }
 
 
-static void build_derived_final_usage(lListElem *jr, int usage_mul_factor) 
+static void build_derived_final_usage(lListElem *jr, u_long32 job_id, u_long32 ja_task_id, const char *pe_task_id)
 {
    lList *usage_list;
    double ru_cpu, pdc_cpu;
    double cpu, r_cpu,
           mem, r_mem,
           io, iow, r_io, r_iow, maxvmem, r_maxvmem;
-   double h_vmem = 0, s_vmem = 0;
+
+   lListElem *job = NULL;
+   lListElem *ja_task = NULL;
+   lListElem *pe_task = NULL;
+
+   bool accounting_summary = false;
 
    DENTER(TOP_LAYER, "build_derived_final_usage");
-
-   parse_ulong_val(&h_vmem, NULL, TYPE_MEM, get_conf_val("h_vmem"), NULL, 0);
-   parse_ulong_val(&s_vmem, NULL, TYPE_MEM, get_conf_val("s_vmem"), NULL, 0);
-   h_vmem = MIN(s_vmem, h_vmem);
 
    usage_list = lGetList(jr, JR_usage);
    
@@ -1631,21 +1609,27 @@ static void build_derived_final_usage(lListElem *jr, int usage_mul_factor)
    pdc_cpu = usage_list_get_double_usage(usage_list, USAGE_ATTR_CPU, 0);
    cpu = MAX(ru_cpu, pdc_cpu);
 
-   /* r_cpu  = h_rt * usage_mul_factor
-    * (see execd_get_acct_multiplication_factor) 
-    */
-   r_cpu = (usage_list_get_double_usage(usage_list, "end_time", 0) -
-           usage_list_get_double_usage(usage_list, "start_time", 0)) *
-           usage_mul_factor;
+   /* build reserved usage if required */ 
+   r_cpu = r_mem = r_maxvmem = 0.0;
+   if (mconf_get_acct_reserved_usage() || mconf_get_sharetree_reserved_usage()) {
+      if (execd_get_job_ja_task(job_id, ja_task_id, &job, &ja_task)) {
+         double wallclock;
+         u_long32 end_time = usage_list_get_ulong_usage(usage_list, "end_time", 0);
+         const lListElem *pe = lGetObject(ja_task, JAT_pe_object);
+         if (pe != NULL && lGetBool(pe, PE_accounting_summary)) {
+            accounting_summary = true;
+         }
+
+         if (pe_task_id != NULL) {
+            pe_task = lGetSubStr(ja_task, PET_id, pe_task_id, JAT_task_list);
+         }
+
+         build_reserved_usage(end_time, ja_task, pe_task, &wallclock, &r_cpu, &r_mem, &r_maxvmem);
+      }
+   }
 
    /* mem    = PDC "mem" usage or zero */
    mem = usage_list_get_double_usage(usage_list, USAGE_ATTR_MEM, 0);
-
-   /* r_mem  = r_cpu * h_vmem */
-   if (h_vmem != DBL_MAX)
-      r_mem = (r_cpu * h_vmem)/(1024*1024*1024);
-   else
-      r_mem = mem;
 
    /* io     = PDC "io" usage or zero */
    io = usage_list_get_double_usage(usage_list, USAGE_ATTR_IO, 0);
@@ -1660,42 +1644,66 @@ static void build_derived_final_usage(lListElem *jr, int usage_mul_factor)
    r_iow = iow;
 
    /* maxvmem */
-   r_maxvmem = maxvmem = usage_list_get_double_usage(usage_list, USAGE_ATTR_MAXVMEM, 0);
+   maxvmem = usage_list_get_double_usage(usage_list, USAGE_ATTR_MAXVMEM, 0);
 
    DPRINTF(("CPU/MEM/IO: M(%f/%f/%f) R(%f/%f/%f) acct: %s stree: %s\n",
          cpu, mem, io, r_cpu, r_mem, r_io,
          mconf_get_acct_reserved_usage()?"R":"M", mconf_get_sharetree_reserved_usage()?"R":"M"));
 
+   /* Report reserved usage or real usage.
+    * If accounting_summary is activated for a tightly integrated
+    * parallel job, we do not send any usage for the pe tasks.
+    */
    if (mconf_get_acct_reserved_usage()) {
-      add_usage(jr, USAGE_ATTR_CPU_ACCT, NULL, r_cpu);
-      add_usage(jr, USAGE_ATTR_MEM_ACCT, NULL, r_mem);
-      add_usage(jr, USAGE_ATTR_IO_ACCT,  NULL, r_io);
-      add_usage(jr, USAGE_ATTR_IOW_ACCT, NULL, r_iow);
-      if (r_maxvmem != DBL_MAX)
-         add_usage(jr, USAGE_ATTR_MAXVMEM_ACCT, NULL, r_maxvmem);
+      if (!(accounting_summary && pe_task_id != NULL)) {
+         add_usage(jr, USAGE_ATTR_CPU_ACCT, NULL, r_cpu);
+         add_usage(jr, USAGE_ATTR_MEM_ACCT, NULL, r_mem);
+         add_usage(jr, USAGE_ATTR_IO_ACCT,  NULL, r_io);
+         add_usage(jr, USAGE_ATTR_IOW_ACCT, NULL, r_iow);
+         if (r_maxvmem != DBL_MAX) {
+            add_usage(jr, USAGE_ATTR_MAXVMEM_ACCT, NULL, r_maxvmem);
+         }
+      }
    } else {
       add_usage(jr, USAGE_ATTR_CPU_ACCT, NULL, cpu);
       add_usage(jr, USAGE_ATTR_MEM_ACCT, NULL, mem);
       add_usage(jr, USAGE_ATTR_IO_ACCT,  NULL, io);
       add_usage(jr, USAGE_ATTR_IOW_ACCT, NULL, iow);
-      if (maxvmem != DBL_MAX)
+      if (maxvmem != DBL_MAX) {
          add_usage(jr, USAGE_ATTR_MAXVMEM_ACCT, NULL, maxvmem);
+      }
+
+      /* We might have switched off sending of pe task job reports
+       * when starting the task with accounting_summary & sharetree_reserved_usage.
+       * But if we want to see *real* acct usage, enable sending this final report.
+       */
+      if (pe_task_id != NULL && lGetBool(jr, JR_no_send)) {
+         lSetBool(jr, JR_no_send, false);
+      }
    }
 
+   /* Report reserved usage or real usage.
+    * If accounting_summary is activated for a tightly integrated
+    * parallel job, we do not send any usage for the pe tasks.
+    */
    if (mconf_get_sharetree_reserved_usage()) {
-      add_usage(jr, USAGE_ATTR_CPU, NULL, r_cpu);
-      add_usage(jr, USAGE_ATTR_MEM, NULL, r_mem);
-      add_usage(jr, USAGE_ATTR_IO,  NULL, r_io);
-      add_usage(jr, USAGE_ATTR_IOW, NULL, r_iow);
-      if (r_maxvmem!= DBL_MAX)
-         add_usage(jr, USAGE_ATTR_MAXVMEM, NULL, r_maxvmem);
+      if (!(accounting_summary && pe_task_id != NULL)) {
+         add_usage(jr, USAGE_ATTR_CPU, NULL, r_cpu);
+         add_usage(jr, USAGE_ATTR_MEM, NULL, r_mem);
+         add_usage(jr, USAGE_ATTR_IO,  NULL, r_io);
+         add_usage(jr, USAGE_ATTR_IOW, NULL, r_iow);
+         if (r_maxvmem != DBL_MAX) {
+            add_usage(jr, USAGE_ATTR_MAXVMEM, NULL, r_maxvmem);
+         }
+      }
    } else {
       add_usage(jr, USAGE_ATTR_CPU, NULL, cpu);
       add_usage(jr, USAGE_ATTR_MEM, NULL, mem);
       add_usage(jr, USAGE_ATTR_IO,  NULL, io);
       add_usage(jr, USAGE_ATTR_IOW, NULL, iow);
-      if (maxvmem!= DBL_MAX)
+      if (maxvmem != DBL_MAX) {
          add_usage(jr, USAGE_ATTR_MAXVMEM, NULL, maxvmem);
+      }
    }
 
    DRETURN_VOID;

@@ -411,7 +411,7 @@ void qmonARSubPopup(Widget w, XtPointer cld, XtPointer cad)
       */
       ar_to_set = lCreateElem(AR_Type);
 
-      if (!sge_parse_qrsub(pcmdline, &alp, &ar_to_set)) {
+      if (!sge_parse_qrsub(ctx, pcmdline, &alp, &ar_to_set)) {
          qmonMessageBox(w, alp, 0);
          lFreeElem(&ar_to_set);
          lFreeList(&alp);

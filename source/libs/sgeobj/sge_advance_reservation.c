@@ -55,6 +55,7 @@
 #include "sge_centry.h"
 #include "sge_qref.h"
 #include "sge_pe.h"
+#include "sge_ckpt.h"
 #include "msg_qmaster.h"
 #include "sge_range.h"
 #include "sge_rangeL.h"
@@ -196,10 +197,25 @@ bool ar_validate(lListElem *ar, lList **alpp, bool in_master, bool is_spool)
       /*   AR_error_handling, SGE_ULONG      how to deal with soft and hard exceptions */
       /*   AR_checkpoint_name, SGE_STRING    Named checkpoint */
       NULL_OUT_NONE(ar, AR_checkpoint_name);
+      {
+         /* request for non existing ckpt object will be refused */
+         const char *ckpt_name = NULL;
+
+         ckpt_name = lGetString(ar, AR_checkpoint_name);
+         if (ckpt_name != NULL) {
+            lList *master_ckpt_list = *object_base[SGE_TYPE_CKPT].list;
+            lListElem *ckpt_ep = ckpt_list_locate(master_ckpt_list, ckpt_name);
+            if (!ckpt_ep) {
+               ERROR((SGE_EVENT, MSG_JOB_CKPTUNKNOWN_S, ckpt_name));
+               answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+               goto ERROR;
+            }
+          }
+      }
       /*   AR_resource_list, SGE_LIST */
       {
          lList *master_centry_list = *object_base[SGE_TYPE_CENTRY].list;
-         
+
          if (centry_list_fill_request(lGetList(ar, AR_resource_list),
                                       alpp, master_centry_list, false, true,
                                       false)) {

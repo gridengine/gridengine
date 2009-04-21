@@ -50,7 +50,7 @@ ___INFO__MARK_END__-->
     <echo>isJavaBuildHost=${isJavaBuildHost}</echo>
     <echo>java.buildhost=${java.buildhost}</echo>
     <echo>hostname=${hostname}</echo>
-    
+
     <import file="nbproject/build-impl.xml"/>
 
     <target name="do.jar" if="isJavaBuildHost" description="Builds the final jar if build host">
@@ -59,40 +59,42 @@ ___INFO__MARK_END__-->
 
     <target name="build.izpack" unless="izpack.isbuild" description="Builds IzPack">
            <echo message="IzPack is not yet built. Building now..."/>
-           <ant antfile="${izpack.home}/src/build.xml" target="all" dir="${izpack.home}" inheritall="true"/>
+           <touch file="${izpack.home}/src/building.tmp"/>
+           <ant antfile="${izpack.home}/src/build.xml" target="all" dir="${izpack.home}" inheritall="false"/>
+           <delete file="${izpack.home}/src/building.tmp"/>
     </target>
 
     <target name="-pre-compile" description="Compile IzPack if it hasn't been yet">
         <echo message="Check IzPack"/>
-            <!-- Check IzPack is build, if not build it -->
+        <!-- Check someone else is not building IzPack right now -->
+        <condition property="izpack.building.already">
+           <available file="${izpack.home}/src/building.tmp"/>
+        </condition>
+         <fail if="izpack.building.already" message="Someone else is building Izpack right now. Try again later! If problem remains manually delete ${izpack.home}/src/building.tmp file."/>
+        <!-- Check IzPack is build, if not build it -->
         <condition property="izpack.isbuild">
             <available file="${izpack.home}/_build"/>
         </condition>
         <antcall target="build.izpack"/>
-            <!-- Check that IzPack was build and we have it on the classpath -->
+        <!-- Check that IzPack was build and we have it on the classpath -->
         <condition property="izpack.complete">
-            <available classpath="${javac.classpath}" classname="com.izforge.izpack.installer.IzPanel"/>
-        </condition>
+            <and>
+                <available classpath="${javac.classpath}" classname="com.izforge.izpack.installer.IzPanel"/>
+                <available classpath="${javac.classpath}" classname="com.izforge.izpack.installer.InstallerBase"/>
+            </and>
+        </condition> 
         <fail unless="izpack.complete" message="You need to install IzPack 4.1.1 and set the izpack.home property in the gridengine/source/build_private.properties first!"/>
 
         <!-- Let's copy the stuff we need locally to our build.dir, so each user works with his own files -->
         <property name="build.panels.dir" value="bin/panels"/>
         <property name="compiler.path" value="${build.dir}/standalone-compiler.jar"/>
         <mkdir dir="${build.panels.dir}"/>
-        <copyfile src="${izpack.home}/lib/standalone-compiler.jar" dest="${compiler.path}"/>
+        <copy file="${izpack.home}/lib/standalone-compiler.jar" tofile="${compiler.path}"/>
 
-        <echo message="Building prerequsities from source/3rdparty/IzPack/src ..."/>
-        <javac srcdir="../../3rdparty/IzPack/src" 
-               excludes="izforge/izpack/installer/InstallerFrame.java"
+        <echo message="Building prerequsities from source/3rdparty/IzPack/src/lib ..."/>
+        <javac srcdir="../../3rdparty/IzPack/src/lib"
                classpath="${build.classes.dir}:${javac.classpath}"
-               source="${javac.source}" target="${javac.target}" destdir="${build.classes.dir}"/>
-        <javac srcdir="${src.dir}"
-               includes="com/sun/grid/installer/gui/HelpFrame.java"
-               classpath="${build.classes.dir}:${javac.classpath}"
-               source="${javac.source}" target="${javac.target}" destdir="${build.classes.dir}"/>
-        <javac srcdir="../../3rdparty/IzPack/src"
-               includes="izforge/izpack/installer/InstallerFrame.java"
-               classpath="${build.classes.dir}:${javac.classpath}"
+               sourcepath="${src.dir}"
                source="${javac.source}" target="${javac.target}" destdir="${build.classes.dir}"/>
 
         <!-- Prepare sge.license property -->
@@ -118,6 +120,15 @@ ___INFO__MARK_END__-->
         <condition property="sge.license" value="${legal.dir}/LICENSE">
             <equals arg1="${env.AIMK_COPYRIGHT}" arg2="courtesy" trim="true"/>
         </condition>
+        <!-- Set the product name correctly -->
+        <condition property="product.name" value="Sun Grid Engine">
+            <equals arg1="${env.AIMK_COPYRIGHT}" arg2="sun" trim="true"/>
+        </condition>
+        <condition property="product.name" value="Grid Engine">
+            <not>
+                <isset property="product.name"/>
+            </not>
+        </condition>
     </target>
 
     <target name="prepare-license" if="sge.license">
@@ -130,15 +141,15 @@ ___INFO__MARK_END__-->
 
     <target depends="prepare-license" name="prepare-legal" if="sun.copyright">
         <!-- Replace SISSL licence with Sun license -->
-        <exec executable="sh">
+        <exec executable="sh" failonerror="true">
             <arg value="${build.dir}/../nbproject/replace_license.sh"/>
             <arg value="${build.dir}/jar/res/CustomLangpack.xml_eng"/>
         </exec>
-        <exec executable="sh">
+        <exec executable="sh" failonerror="true">
             <arg value="${build.dir}/../nbproject/replace_license.sh"/>
             <arg value="${build.dir}/jar/res/customicons.xml"/>
         </exec>
-        <exec executable="sh">
+        <exec executable="sh" failonerror="true">
             <arg value="${build.dir}/../nbproject/replace_license.sh"/>
             <arg value="${build.dir}/jar/res/userInputSpec.xml"/>
         </exec>
@@ -163,6 +174,7 @@ ___INFO__MARK_END__-->
             <fileset dir="${build.classes.dir}">
                 <include name="com/sun/grid/installer/util/*.class"/>
                 <include name="com/sun/grid/installer/util/cmd/*.class"/>
+                <include name="com/sun/grid/installer/task/*.class"/>
                 <exclude name="com/sun/grid/installer/util/Util.class"/>
             </fileset>
         </jar>
@@ -175,6 +187,7 @@ ___INFO__MARK_END__-->
             <fileset dir="${build.classes.dir}">
                 <include name="com/sun/grid/installer/util/*.class"/>
                 <include name="com/sun/grid/installer/util/cmd/*.class"/>
+                <include name="com/sun/grid/installer/task/*.class"/>
                 <exclude name="com/sun/grid/installer/util/Util.class"/>
             </fileset>
         </jar>
@@ -187,6 +200,7 @@ ___INFO__MARK_END__-->
             <fileset dir="${build.classes.dir}">
                 <include name="com/sun/grid/installer/util/*.class"/>
                 <include name="com/sun/grid/installer/util/cmd/*.class"/>
+                <include name="com/sun/grid/installer/task/*.class"/>
                 <exclude name="com/sun/grid/installer/util/Util.class"/>
             </fileset>
         </jar>
@@ -204,6 +218,7 @@ ___INFO__MARK_END__-->
             <fileset dir="${build.classes.dir}">
                 <include name="com/sun/grid/installer/util/*.class"/>
                 <include name="com/sun/grid/installer/util/cmd/*.class"/>
+                <include name="com/sun/grid/installer/task/*.class"/>
                 <exclude name="com/sun/grid/installer/util/ExtendedFile.class"/>
             </fileset>
         </jar>
@@ -218,7 +233,7 @@ ___INFO__MARK_END__-->
                 <include name="com/sun/grid/installer/util/Util.class"/>
                 <include name="com/sun/grid/installer/util/Config.class"/>
             </fileset>
-        </jar> 
+        </jar>
 
         <!-- Replace compiler classes -->
         <jar compress="${jar.compress}" destfile="${compiler.path}" update="true" description="Replace compiler classes">
@@ -240,6 +255,24 @@ ___INFO__MARK_END__-->
                 <include name="install.xml"/>                
             </fileset>
         </copy>
+
+        <!-- Prepare the sge.version -->
+        <property name="out.tmp" value="${sge.srcdir}/../sge_version.tmp"/>
+        <exec dir="${build.dir}"  executable="sh" output="${out.tmp}" failonerror="true">
+            <arg value="${sge.srcdir}/clients/gui-installer/nbproject/get_sge_version.sh"/>
+            <arg value="${sge.srcdir}/libs/gdi/version.c"/>
+        </exec>
+        <loadfile property="sge.version" srcFile="${out.tmp}">
+            <filterchain>
+                <striplinebreaks/>
+            </filterchain>
+        </loadfile>
+        <delete file="${out.tmp}"/>
+        <!-- Replace PRODUCT_NAME, SGE_VERSION with the proper one -->
+        <replace file="${build.dir}/install.xml">
+            <replacefilter token="@PRODUCT_NAME@" value="${product.name}"/>
+            <replacefilter token="@SGE_VERSION@" value="${sge.version}"/>
+        </replace>
 
         <java classname="com.izforge.izpack.compiler.Compiler" classpath="${compiler.path}"  failonerror="true" fork="true" maxmemory="512m" dir="${build.dir}/..">
             <arg value="${build.dir}/install.xml"/>
@@ -281,8 +314,25 @@ ___INFO__MARK_END__-->
             <fileset dir="${build.dir}/jar"/>
             <zipfileset src="${libs.swing-layout.classpath}" includes="**/*.class"/>            
         </zip>
-
+        
         <property name="dist.ready" value="true"/>     
+    </target>
+
+    <target depends="init, do.jar" name="build-demo">
+        <echo message="WARNING! Creating demo version!" />
+        <mkdir dir="${build.test.classes.dir}" description="Create destiantion directory for test classes."/>
+
+        <javac srcdir="test" description="Compile test classes."
+               includes="com/sun/grid/installer/util/cmd/*.java"
+               classpath="${build.classes.dir}:${javac.classpath}"
+               source="${javac.source}" target="${javac.target}" destdir="${build.test.classes.dir}"/>
+
+        <jar compress="${jar.compress}" destfile="${dist.jar}" update="true" description="Replace original classes with their demo version.">
+            <fileset dir="${build.test.classes.dir}">
+                <exclude name="com/izforge/izpack/installer/*.class"/>
+                <include name="com/sun/grid/installer/util/cmd/*.class"/>
+            </fileset>
+        </jar>
     </target>
 
     <target name="javadoc" if="isJavaBuildHost">
@@ -290,12 +340,31 @@ ___INFO__MARK_END__-->
         <antcall target="-javadoc-browse"/>
     </target>
 
-    <target name="test" if="isJavaBuildHost">
+    <target depends="init" name="test" if="isJavaBuildHost">
+        <mkdir dir="${build.test.classes.dir}"/>
+        <javac srcdir="../../3rdparty/IzPack/tests"
+               classpath="${build.test.classes.dir}:${javac.test.classpath}"
+               source="${javac.source}" target="${javac.target}" destdir="${build.test.classes.dir}"/>
+
         <antcall target="compile-test"/>
         <antcall target="-pre-test-run"/>
         <antcall target="-do-test-run"/>
         <antcall target="test-report"/>
         <antcall target="-post-test-run"/>
+        <antcall target="-test-browse"/>
+    </target>
+
+    <target depends="init" name="test-single" if="isJavaBuildHost">
+        <mkdir dir="${build.test.classes.dir}"/>
+        <javac srcdir="../../3rdparty/IzPack/tests"
+               classpath="${build.test.classes.dir}:${javac.test.classpath}"
+               source="${javac.source}" target="${javac.target}" destdir="${build.test.classes.dir}"/>
+
+        <antcall target="compile-test-single"/>
+        <antcall target="-pre-test-run-single"/>
+        <antcall target="-do-test-run-single"/>
+        <antcall target="test-report"/>
+        <antcall target="-post-test-run-single"/>
         <antcall target="-test-browse"/>
     </target>
 

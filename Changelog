@@ -1,3 +1,6 @@
+MD-2009-04-21-0: CVS:		Created V62u3beta_TAG
+-----------------------------------------------------
+
 LP-2009-04-17-1: Bugfix:      CheckRunningDeamon for qmaster returns true even
                               if no pid file created
                  Belongs to:  LP-2009-04-17-0

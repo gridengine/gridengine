@@ -1,3 +1,6 @@
+RD-2009-04-22-0: Added showq binary (Contribution by TACC)
+                 Review:      DG
+
 HP-2009-04-22-0: Fixed broken build on Samba shares
                  Changed:     libs/japi/Makefile
                  Review:      HP

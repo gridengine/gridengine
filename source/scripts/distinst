@@ -57,7 +57,7 @@ SSLUTILITYBINARIES="openssl"
 
 REMOTEBINARIES="rsh rshd rlogin"
 
-JOBBINARIES="work"
+JOBBINARIES="work showq"
 
 SHARED_LIBRARIES="libcom libcull libgdi librmon libsched libsge libuti \
                   libspool libspoolb libspoold libspoolc libspoolf \

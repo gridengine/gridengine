@@ -105,7 +105,7 @@ libdrmaa$(SHAREDEXT).1.0:  $(JAPILIB_10) $(JAPI_DEPEND_OBJS) $(DRMAALIB_OBJS) $(
 
 # Needed to compile howtos, examples, and unit tests
 libdrmaa$(SHAREDEXT): $(DRMAALIB_V)
-	rm -f libdrmaa$(SHAREDEXT) ; ln -s libdrmaa$(SHAREDEXT).1.0 libdrmaa$(SHAREDEXT)
+	rm -f libdrmaa$(SHAREDEXT) ; cp libdrmaa$(SHAREDEXT).1.0 libdrmaa$(SHAREDEXT)
 	../scripts/link_jnilib.sh libdrmaa  $(SHAREDEXT) $(JAVA_SHAREDEXT)
 	
 ###############################################################################
@@ -133,7 +133,7 @@ com_sun_grid_drmaa_SessionImpl.o: $(CLASSES_DIR)/com_sun_grid_drmaa_SessionImpl.
 #---------------------------------------------------------------------
 
 test_drmaa: test_drmaa.1.0
-	rm -f test_drmaa ; ln -s test_drmaa.1.0 test_drmaa
+	rm -f test_drmaa ; cp test_drmaa.1.0 test_drmaa
 
 test_drmaa.1.0: test_drmaa.o $(DRMAALIB) $(WINGRIDLIB_DEP)
 	$(LD_WRAPPER) $(CC) -o $@ $(LFLAGS) test_drmaa.o $(LIBS) libdrmaa$(SHAREDEXT).1.0 $(WINGRIDLIB)

@@ -1,3 +1,7 @@
+HP-2009-04-22-0: Fixed broken build on Samba shares
+                 Changed:     libs/japi/Makefile
+                 Review:      HP
+
 LP-2009-04-22-0: Updated log description
                  Belongs to:  LP-2009-04-14-0
 

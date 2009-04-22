@@ -1,3 +1,6 @@
+LP-2009-04-22-0: Updated log description
+                 Belongs to:  LP-2009-04-14-0
+
 AP-2009-04-21-0: Bugfix:      qconf -dhgrp can delete a host group referenced
                               from a queue instance
                  Bugster:     6619384
@@ -103,7 +106,10 @@ LP-2009-04-14-2: Bugfix:      gui-installer: first/last task might not be done
 LP-2009-04-14-1: Enhancem.:   Improved comment in sgemaster script
                  Review:      ZG
 
-LP-2009-04-14-0: Enhancem.:   Disallow using empty ADDITIONAL_JVM_ARGS            
+LP-2009-04-14-0: Bugfix:      auto_install does not set the additional_jvm_args
+                              which limits qmaster size
+                 Bugster:     6827662
+                 Issue:       3007
                  Bugfix:      Existing local host configuration should be merged
                               with the new one instead of replacing the old one
                  Bugster:     6829839

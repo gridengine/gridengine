@@ -52,10 +52,10 @@ import javax.net.ssl.TrustManager;
 public final class SSLHelper {
 
     private final static String SSL_PROTOCOL = "SSL";
-    private static SSLContext ctx;
-    private static final GECAKeyManager keyManager = new GECAKeyManager();
-    private static final GECATrustManager trustManager = new GECATrustManager();
-    private static final Lock lock = new ReentrantLock();
+    private SSLContext ctx;
+    private final GECAKeyManager keyManager = new GECAKeyManager();
+    private final GECATrustManager trustManager = new GECATrustManager();
+    private final Lock lock = new ReentrantLock();
     
     private SSLHelper(File caTop) {
         trustManager.setCaTop(caTop);

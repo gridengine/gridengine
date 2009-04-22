@@ -1,3 +1,8 @@
+AA-2009-04-22-0: Bugfix:      jgdi SSL connections from one client jvm to different SGE cluster might not work
+                 Bugster:     6831573
+                 Issue:       3005
+                 Review:      RH
+
 RD-2009-04-22-0: Added showq binary (Contribution by TACC)
                  Review:      DG
 

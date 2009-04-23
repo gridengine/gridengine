@@ -32,11 +32,12 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+int lStr2NmGenerator(const char *str, lNameSpace *ns);
+
+
 #ifndef NO_JNI
 
 #include <jni.h>
-
-int lStr2NmGenerator(const char *str, lNameSpace *ns);
 
 /*
  * Class:     com_sun_grid_cull_CullConstantConverter

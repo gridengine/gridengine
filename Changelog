@@ -1,3 +1,7 @@
+HP-2009-04-23-0: Bugfix:      Fixed broken build on win32-x86 and aix43 in consequence
+                              of checkin RD-2009-04-22-0
+                 Changed:     libs/sgeobj/str2nm_converter.c/.h
+
 JG-2009-04-23-0: Bugfix:      we need the ability for qrsh to ignore SIGUSR1 and
                               SIGUSR2 to support -notify
                  Bugster:     6802351

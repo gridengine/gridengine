@@ -40,7 +40,6 @@
 #include "sge_all_listsL.h"
 #include "str2nm_converter.h"
 
-#ifndef NO_JNI
 
 static int _lStr2Nm(const lNameSpace *nsp, const char *str) 
 {
@@ -70,6 +69,7 @@ static int _lStr2Nm(const lNameSpace *nsp, const char *str)
 }
 
 
+#ifndef NO_JNI
 JNIEXPORT jint JNICALL Java_com_sun_grid_cull_CullConstantConverter_strToNm
 (JNIEnv *env, jobject obj, jstring nameObj) {
    
@@ -83,7 +83,7 @@ JNIEXPORT jint JNICALL Java_com_sun_grid_cull_CullConstantConverter_strToNm
    
    return ret;
 }
-  
+#endif  
 
 
 int lStr2NmGenerator(const char *str, lNameSpace *ns)
@@ -124,6 +124,4 @@ int main(int argc, char *argv[])
     DEXIT;
     return 0;
 }
-#endif
-
 #endif

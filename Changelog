@@ -1,3 +1,7 @@
+RD-2009-04-23-0: Bugfix:      qconf -Mc returned always 0 even in case of error
+                 Belongs to:  RD-2009-03-24-0
+                 Review:      CR
+
 AA-2009-04-22-0: Bugfix:      jgdi SSL connections from one client jvm to different SGE cluster might not work
                  Bugster:     6831573
                  Issue:       3005

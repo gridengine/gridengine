@@ -2060,7 +2060,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
          if (!centry_list_modify_from_file(ctx, &answer_list, file)) {
             sge_parse_return = 1;
          }
-         show_answer_list(answer_list);
+         sge_parse_return |= show_answer_list(answer_list);
          lFreeList(&answer_list);
          spp++;
          continue;

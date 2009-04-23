@@ -1,3 +1,8 @@
+AA-2009-04-23-0: Bugfix:      fixed authuser root check to allow test install
+                              - cause of login failure sgeinspect in test installation mode
+                 Bugster:     6822025
+                 Review:      RD
+
 HP-2009-04-23-0: Bugfix:      Fixed broken build on win32-x86 and aix43 in consequence
                               of checkin RD-2009-04-22-0
                  Changed:     libs/sgeobj/str2nm_converter.c/.h

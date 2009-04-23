@@ -195,7 +195,7 @@ int main(int argc, char** argv) {
 #ifndef WINDOWS
 #define SGE_SUPERUSER_UID 0
    /* only root can successfull execute this */
-   if(geteuid() != SGE_SUPERUSER_UID) {
+   if(geteuid() != SGE_SUPERUSER_UID && geteuid() != getuid()) {
       print_error(MSG_AUTHUSER_ONLY_ROOT_S, argv[0]);
       return 1;
    }
@@ -214,6 +214,10 @@ int main(int argc, char** argv) {
             print_error(MSG_AUTUSER_UNKNOWN_PARAM_S, argv[i]);
             usage();
          }
+      }
+      if (service == NULL) {
+         print_error(MSG_AUTUSER_MISSING_PAM_SERVICE);
+         usage();
       }
    } else if (strcmp(auth_method, "system" ) == 0 ) {
    } else {

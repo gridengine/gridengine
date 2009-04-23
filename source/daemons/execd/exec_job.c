@@ -696,9 +696,9 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
          /* for tightly integrated jobs, also set the rsh_command SGE_RSH_COMMAND */
          pe = lGetObject(jatep, JAT_pe_object);
          if (pe != NULL && lGetBool(pe, PE_control_slaves) == true) {
-            const char *rsh_command = mconf_get_rsh_command();
-            if (rsh_command != NULL && sge_strnullcasecmp(rsh_command, "none") != 0) {
-               var_list_set_string(&environmentList, "SGE_RSH_COMMAND", rsh_command);
+            const char *mconf_string = mconf_get_rsh_command();
+            if (mconf_string != NULL && sge_strnullcasecmp(mconf_string, "none") != 0) {
+               var_list_set_string(&environmentList, "SGE_RSH_COMMAND", mconf_string);
             } else {
                char default_buffer[SGE_PATH_MAX];
                dstring default_dstring;
@@ -706,8 +706,24 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
                sge_dstring_init(&default_dstring, default_buffer, SGE_PATH_MAX);
                sge_dstring_sprintf(&default_dstring, "%s/utilbin/%s/rsh", sge_root, arch);
                var_list_set_string(&environmentList, "SGE_RSH_COMMAND", sge_dstring_get_string(&default_dstring));
-      }   
-            FREE(rsh_command);
+            }   
+            FREE(mconf_string);
+
+            /* transport the notify kill and susp signals to qrsh -inherit */
+            if (mconf_get_notify_kill_type() == 0) {
+               mconf_string = mconf_get_notify_kill();
+               if (mconf_string != NULL) {
+                  var_list_set_string(&environmentList, "SGE_NOTIFY_KILL_SIGNAL", mconf_string);
+                  FREE(mconf_string);
+               }
+            }
+            if (mconf_get_notify_susp_type() == 0) {
+               mconf_string = mconf_get_notify_susp();
+               if (mconf_string != NULL) {
+                  var_list_set_string(&environmentList, "SGE_NOTIFY_SUSP_SIGNAL", mconf_string);
+                  FREE(mconf_string);
+               }
+            }
          }
       }
 
@@ -1277,8 +1293,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
       fprintf(fp, "set_token_cmd=%s\n", set_token_cmd ? set_token_cmd : "none");
       FREE(set_token_cmd);
       fprintf(fp, "token_extend_time=%d\n", (int) mconf_get_token_extend_time());
-   }
-   else {
+   } else {
       fprintf(fp, "use_afs=0\n");
    }
    FREE(pag_cmd);

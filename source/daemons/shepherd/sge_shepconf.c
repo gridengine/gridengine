@@ -129,8 +129,8 @@ int shepconf_has_notify_signal(const char *notify_name, int *signal)
    const char *notify_array[] = {
       "notify_susp", "notify_kill", NULL
    };
-   int signal_array[] = { 
-      SIGUSR1, SIGUSR2, 0 
+   int signal_array[] = {
+      SIGUSR1, SIGUSR2, 0
    };
    dstring param_name = DSTRING_INIT;
    char *conf_type = NULL;

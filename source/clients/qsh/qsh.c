@@ -1200,8 +1200,72 @@ void set_command_to_env(lList *envlp, lList *opts_qrsh)
    sge_dstring_free(&buffer);
 }
 
+/****** qsh/block_notification_signals() ***************************************
+*  NAME
+*     block_notification_signals() -- block signals used by -notify
+*
+*  SYNOPSIS
+*     void block_notification_signals(void)
+*
+*  FUNCTION
+*     Makes sure that signals used for job notification are blocked
+*     for qrsh -inherit.
+*  
+*     Background: A job that is submitted with the -notify option
+*     will get a notification signal some time before certain actions
+*     are performed on the job, e.g. it gets notified with a SIGUSR2
+*     when it shall be deleted by qdel, before it actually gets killed
+*     with a SIGKILL. See submit.1 for more details.
+*
+*     Problem: The master task (job script) of a job being submitted
+*     with -notify will handle the notification signal.
+*     But the notification signal is sent to the whole process group
+*     of the job, meaning to all qrsh -inherit processes as well.
+*     But the qrsh -inherit may not exit on receiving the signal.
+*     Therefore they have to block it.
+*
+*     The default notification signals are SIGUSR1 and SIGUSR2.
+*     They can be redefined by the execd_params NOTIFY_SUSP and NOTIFY_KILL.
+*     In this case, execd sets environment variables SGE_NOTIFY_SUSP_SIGNAL
+*     and SGE_NOTIFY_KILL_SIGNAL.
+*
+*  NOTES
+*     MT-NOTE: block_notification_signals() is MT safe 
+*******************************************************************************/
+void block_notification_signals(void)
+{
+   /* default notification signals */
+   int sig1 = SIGUSR1;
+   int sig2 = SIGUSR2;
+
+   const char *signal_name;
+
+   DENTER(TOP_LAYER, "block_notification_signals");
+
+   /* check if they have been redefined */
+   signal_name = getenv("SGE_NOTIFY_SUSP_SIGNAL"); 
+   if (signal_name != NULL) {
+      sig1 = sge_sys_str2signal(signal_name);
+   }
+   signal_name = getenv("SGE_NOTIFY_KILL_SIGNAL"); 
+   if (signal_name != NULL) {
+      sig2 = sge_sys_str2signal(signal_name);
+   }
+
+   if (sig1 > 0) {
+      sigignore(sig1);
+      DPRINTF(("ignoring signal %d\n", (int)sig1));
+   }
+   if (sig2 > 0) {
+      sigignore(sig2);
+      DPRINTF(("ignoring signal %d\n", (int)sig2));
+   }
+
+   DRETURN_VOID;
+}
+
 int main(int argc, char **argv) 
-{ 
+{
    u_long32 my_who = QSH; 
    lList *opts_cmdline = NULL;
    lList *opts_defaults = NULL;
@@ -1670,8 +1734,13 @@ int main(int argc, char **argv)
       VERBOSE_LOG((stderr, MSG_QSH_SENDINGTASKTO_S, host)); 
       VERBOSE_LOG((stderr, "\n"));
 
+      /* block certain signals to allow qrsh -inherit for jobs which
+       * have been started with the -notify switch
+       */
+      block_notification_signals();
+
       /* connection to qmaster is not needed any longer */
-      cl_commlib_shutdown_handle(cl_com_get_handle(progname,0),CL_FALSE);
+      cl_commlib_shutdown_handle(cl_com_get_handle(progname, 0), CL_FALSE);
 
       /* start task in tightly integrated job */
       /* directly connect to commlib of exec daemon and submit task */

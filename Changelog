@@ -1,3 +1,9 @@
+JG-2009-04-23-0: Bugfix:      we need the ability for qrsh to ignore SIGUSR1 and
+                              SIGUSR2 to support -notify
+                 Bugster:     6802351
+                 Issue:       2986
+                 Review:      HP
+
 RD-2009-04-23-0: Bugfix:      qconf -Mc returned always 0 even in case of error
                  Belongs to:  RD-2009-03-24-0
                  Review:      CR

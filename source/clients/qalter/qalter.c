@@ -281,6 +281,7 @@ int *all_users
    /* initialize job field set */
    job_field[0] = NoName;
    nm_set(job_field, JB_job_number);
+   nm_set(job_field, JB_job_name);
 
    /* don't do verification of schedulability per default */
    lSetUlong(job, JB_verify_suitable_queues, SKIP_VERIFY);

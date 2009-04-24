@@ -1,3 +1,8 @@
+MD-2009-04-24-0: Bugfix:      qalter -h U <jobname> fails with CULL error
+                 Bugster:     6824346
+                 Issue:       2972
+                 Review:      CR
+
 AA-2009-04-23-0: Bugfix:      fixed authuser root check to allow test install
                               - cause of login failure sgeinspect in test installation mode
                  Bugster:     6822025

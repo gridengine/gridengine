@@ -1,3 +1,9 @@
+JG-2009-04-24-0: Bugfix:      we need the ability for qrsh to ignore SIGUSR1 and
+                              SIGUSR2 to support -notify
+                 Bugster:     6802351
+                 Issue:       2986
+                 Review:      HP
+
 AP-2009-04-21-0: Bugfix:      qconf -dhgrp can delete a host group referenced
                               from a queue instance
                  Bugster:     6619384

@@ -121,11 +121,8 @@ static long get_next_addgrpid(lList *, long);
    in case of tasks the queue is the appropriate entry in the gdil list of the slave job
 */
 
-lListElem* responsible_queue(
-lListElem *jep,
-lListElem *jatep,
-lListElem *petep
-) {
+lListElem* responsible_queue(lListElem *jep, lListElem *jatep, lListElem *petep)
+{
    lListElem *master_q = NULL;
 
    DENTER(TOP_LAYER, "responsible_queue");
@@ -135,22 +132,17 @@ lListElem *petep
    } else {
       lListElem *pe_queue = lFirst(lGetList(petep, PET_granted_destin_identifier_list));
       master_q = lGetObject(lGetElemStr(lGetList(jatep, JAT_granted_destin_identifier_list),
-                                        JG_qname,
-                                        lGetString(pe_queue, JG_qname)),
-                            JG_queue);
+                                        JG_qname, lGetString(pe_queue, JG_qname)), JG_queue);
       
    }
 
-   DEXIT;
-   return master_q;
+   DRETURN(master_q);
 }
 
 #if COMPILE_DC
 #if defined(SOLARIS) || defined(ALPHA) || defined(LINUX) || defined(FREEBSD) || defined(DARWIN)
-static long get_next_addgrpid(
-lList *rlp,
-long last_addgrpid 
-) {
+static long get_next_addgrpid(lList *rlp, long last_addgrpid)
+{
    lListElem *rep;
    int take_next = 0;
    
@@ -221,13 +213,9 @@ static int addgrpid_already_in_use(long add_grp_id)
         err_str set to error string
         err_length size of err_str
  ************************************************************************/
-int sge_exec_job(
-sge_gdi_ctx_class_t *ctx,
-lListElem *jep,
-lListElem *jatep,
-lListElem *petep,
-char *err_str,
-int err_length) {
+int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
+                 lListElem *petep, char *err_str, int err_length)
+{
    int i;
    char sge_mail_subj[1024];
    char sge_mail_body[2048];
@@ -467,10 +455,11 @@ int err_length) {
       {
          lListElem *user_path;
          dstring buffer = DSTRING_INIT;
-         if ((user_path=lGetElemStr(environmentList, VA_variable, "PATH")))
+         if ((user_path=lGetElemStr(environmentList, VA_variable, "PATH"))) {
             sge_dstring_sprintf(&buffer, "%s:%s", tmpdir, lGetString(user_path, VA_value));
-         else
+         } else {
             sge_dstring_sprintf(&buffer, "%s:%s", tmpdir, SGE_DEFAULT_PATH);
+         }
             var_list_set_string(&environmentList, "PATH", sge_dstring_get_string(&buffer));
             sge_dstring_free(&buffer);
       }
@@ -716,9 +705,9 @@ int err_length) {
          /* for tightly integrated jobs, also set the rsh_command SGE_RSH_COMMAND */
          pe = lGetObject(jatep, JAT_pe_object);
          if (pe != NULL && lGetBool(pe, PE_control_slaves) == true) {
-            const char *rsh_command = mconf_get_rsh_command();
-            if (rsh_command != NULL && sge_strnullcasecmp(rsh_command, "none") != 0) {
-               var_list_set_string(&environmentList, "SGE_RSH_COMMAND", rsh_command);
+            const char *mconf_string = mconf_get_rsh_command();
+            if (mconf_string != NULL && sge_strnullcasecmp(mconf_string, "none") != 0) {
+               var_list_set_string(&environmentList, "SGE_RSH_COMMAND", mconf_string);
             } else {
                char default_buffer[SGE_PATH_MAX];
                dstring default_dstring;
@@ -727,7 +716,23 @@ int err_length) {
                sge_dstring_sprintf(&default_dstring, "%s/utilbin/%s/rsh", sge_root, arch);
                var_list_set_string(&environmentList, "SGE_RSH_COMMAND", sge_dstring_get_string(&default_dstring));
             }
-            FREE(rsh_command);
+            FREE(mconf_string);
+
+            /* transport the notify kill and susp signals to qrsh -inherit */
+            if (mconf_get_notify_kill_type() == 0) {
+               mconf_string = mconf_get_notify_kill();
+               if (mconf_string != NULL) {
+                  var_list_set_string(&environmentList, "SGE_NOTIFY_KILL_SIGNAL", mconf_string);
+                  FREE(mconf_string);
+         }
+      }
+            if (mconf_get_notify_susp_type() == 0) {
+               mconf_string = mconf_get_notify_susp();
+               if (mconf_string != NULL) {
+                  var_list_set_string(&environmentList, "SGE_NOTIFY_SUSP_SIGNAL", mconf_string);
+                  FREE(mconf_string);
+               }
+            }
          }
       }
 
@@ -1294,8 +1299,7 @@ int err_length) {
       fprintf(fp, "set_token_cmd=%s\n", set_token_cmd ? set_token_cmd : "none");
       FREE(set_token_cmd);
       fprintf(fp, "token_extend_time=%d\n", (int) mconf_get_token_extend_time());
-   }
-   else {
+   } else {
       fprintf(fp, "use_afs=0\n");
    }
    FREE(pag_cmd);
@@ -1311,10 +1315,11 @@ int err_length) {
    notify_susp = mconf_get_notify_susp();
    fprintf(fp, "notify_susp=%s\n", notify_susp?notify_susp:"default");   
    FREE(notify_susp);
-   if (mconf_get_use_qsub_gid())
+   if (mconf_get_use_qsub_gid()) {
       fprintf(fp, "qsub_gid="sge_u32"\n", lGetUlong(jep, JB_gid));
-   else
+   } else {
       fprintf(fp, "qsub_gid=%s\n", "no");
+   }
 
    /* config for interactive jobs */
    {
@@ -1410,14 +1415,12 @@ int err_length) {
       ulong      ultemp = 0;
       lListElem  *ep    = job_get_request(jep, "display_win_gui");
    
-      if(ep != NULL) {
+      if (ep != NULL) {
          s = lGetString(ep, CE_stringval);
-         if(s == NULL ||
-            !parse_ulong_val(NULL, &ultemp, TYPE_BOO, s, err_str, err_length)) {
+         if (s == NULL || !parse_ulong_val(NULL, &ultemp, TYPE_BOO, s, err_str, err_length)) {
             lFreeList(&environmentList);
             FCLOSE(fp);
-            DEXIT;
-            return -3;
+            DRETURN(-3);
          }
       }
       fprintf(fp, "display_win_gui="sge_u32"\n", ultemp);
@@ -1600,9 +1603,9 @@ int err_length) {
    /* now fork and exec the shepherd */
    if (getenv("SGE_FAILURE_BEFORE_FORK")) {
       i = -1;
-   }
-   else
+   } else {
       i = fork();
+   }
 
    if (i != 0) { /* parent or -1 */
       sigprocmask(SIG_SETMASK, &sigset_oset, NULL);

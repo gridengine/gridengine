@@ -114,18 +114,6 @@ char   *copyargs __P((char **));
 void	sendsig __P((int));
 void	talk __P((int, long, pid_t, int, int));
 void	usage __P((void));
-/*
-int getNetworkPort(int port) {
-   short port_short;
-
-   if(port <= (MAXSHORT)) {
-      port_short = port % (256 * 256);
-      return htons(port_short);
-   } else {
-      return htonl(port);
-   }   
-}
-*/
 
 int
 main(int argc, char *argv[])
@@ -360,6 +348,10 @@ try_connect:
 		(void)signal(SIGQUIT, sendsig);
 	if (signal(SIGTERM, SIG_IGN) != SIG_IGN)
 		(void)signal(SIGTERM, sendsig);
+
+   /* Fix for IZ 2986: block the default notification signals */
+   sigignore(SIGUSR1);
+   sigignore(SIGUSR2);
 
 	if (!nflag) {
 		pid = fork();

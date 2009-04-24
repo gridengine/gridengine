@@ -1,3 +1,7 @@
+JG-2009-04-24-0: Bugfix:      make utilbin/<arch>/rsh ignore SIGUSR1/2
+                 Belongs to:  JG-2009-04-23-0
+                 Review:      HP
+
 MD-2009-04-24-0: Bugfix:      qalter -h U <jobname> fails with CULL error
                  Bugster:     6824346
                  Issue:       2972

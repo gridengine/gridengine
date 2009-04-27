@@ -44,4 +44,6 @@ void *get_thrd_func_arg(void);
 
 void set_thread_count(int count); 
 
+int validate(int count);
+
 #endif  /* _TEST_SGE_LOCK_MAIN_H_ */

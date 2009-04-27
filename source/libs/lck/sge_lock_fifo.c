@@ -222,7 +222,7 @@ sge_fifo_lock(sge_fifo_rw_lock_t *lock, bool is_reader)
        * Append the thread to the queue if it is necessary
        *
        * read lock:
-       *    if there is currently a writer active or another thread is currently 
+       *    if there is currently a writer active or waiting or another thread is currently 
        *    waking up (because is was signaled) then this reader has to wait in 
        *    queue. If there are other readers active or none is active then this 
        *    reader can continue.
@@ -232,7 +232,7 @@ sge_fifo_lock(sge_fifo_rw_lock_t *lock, bool is_reader)
        *    writer or if someone is currently waking up...
        */
       if (is_reader) {
-         do_wait_in_queue = (bool)(lock->writer_active + lock->signaled> 0);
+         do_wait_in_queue = (bool)(lock->writer_active + lock->writer_waiting + lock->signaled> 0);
       } else {
          do_wait_in_queue = (bool)((lock->writer_active + lock->reader_active + lock->signaled > 0));
       }

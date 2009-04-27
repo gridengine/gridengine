@@ -47,9 +47,10 @@ LCKLIB_SRC = \
 
 LCKLIB_OBJS = $(LCKLIB_SRC:.c=.o)
 
-LCKLIB_TEST_ADD_LIBS = -llck -lrmon
+LCKLIB_TEST_ADD_LIBS = $(COMMLISTSLIB) $(RMONLIB) $(UTILIB) $(WINGRIDLIB) $(LCKLIB) $(LIBS)
 
-LCKLIB_TEST_LIB_DEPENDS = $(LCKLIB) $(RMONLIB) 
+# defines does not work at this time
+LCKLIB_TEST_LIB_DEPENDS = liblck.a librmon.a libcommlists.a libuti.a
 
 LCKLIB_TEST_OBJS = \
               test_sge_lock_main.o \
@@ -58,18 +59,20 @@ LCKLIB_TEST_OBJS = \
               test_sge_lock_fifo.o \
               test_sge_mutex_fifo.o \
               test_sge_deadlock.o \
-              test_sge_recursive.o
+              test_sge_recursive.o \
+              test_sge_lock_fifo.o
 
 LCKLIB_TEST_PROGS = \
               test_sge_lock_simple \
               test_sge_lock_multiple \
               test_sge_deadlock \
-              test_sge_recursive
+              test_sge_recursive \
+              test_sge_lock_fifo
 
 ###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
-lcklib: $(LCKLIB) test_sge_lock_multiple
+lcklib: $(LCKLIB) $(LCKLIB_TEST_PROGS)
 
 lcklib_clean:
 		$(RM) $(LCKLIB_OBJS) liblck.a liblck$(SHAREDEXT) $(LCKLIB_TEST_OBJS) $(LCKLIB_TEST_PROGS)
@@ -114,41 +117,41 @@ sge_mtutil.o:	$(LCKLIB_DIR)/sge_mtutil.c
 ###############################################################################
 # rules to build object codes
 ###############################################################################
-test_sge_lock_simple:	test_sge_lock_main.o test_sge_lock_simple.o $(COMMLISTSLIB) $(LCKLIB) $(LCKLIB_TEST_LIB_DEPENDS)
-		$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_lock_simple $(LFLAGS) test_sge_lock_main.o test_sge_lock_simple.o $(LCKLIB_TEST_ADD_LIBS) $(COMMLISTSLIB) $(LIBS)
-
-test_sge_lock_fifo: test_sge_lock_fifo.o $(COMMLISTSLIB) $(LCKLIB) $(LCKLIB_TEST_LIB_DEPENDS)
-		$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_lock_fifo $(LFLAGS) test_sge_lock_fifo.o $(LCKLIB_TEST_ADD_LIBS) $(COMMLISTSLIB) $(LIBS)
-
-test_sge_mutex_fifo: test_sge_mutex_fifo.o $(COMMLISTSLIB) $(LCKLIB) $(LCKLIB_TEST_LIB_DEPENDS)
-		$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_mutex_fifo $(LFLAGS) test_sge_mutex_fifo.o $(LCKLIB_TEST_ADD_LIBS) $(COMMLISTSLIB) $(LIBS)
-
-test_sge_lock_main.o:	$(LCKLIB_DIR)/test_sge_lock_main.c
+test_sge_lock_main.o: $(LCKLIB_DIR)/test_sge_lock_main.c
 		$(CC) $(CFLAGS) -c $(LCKLIB_DIR)/test_sge_lock_main.c
-
-test_sge_lock_fifo.o:	$(LCKLIB_DIR)/test_sge_lock_fifo.c
-		$(CC) $(CFLAGS) -c $(LCKLIB_DIR)/test_sge_lock_fifo.c
-
-test_sge_mutex_fifo.o:	$(LCKLIB_DIR)/test_sge_mutex_fifo.c
-		$(CC) $(CFLAGS) -c $(LCKLIB_DIR)/test_sge_mutex_fifo.c
 
 test_sge_lock_simple.o:	$(LCKLIB_DIR)/test_sge_lock_simple.c
 		$(CC) $(CFLAGS) -c $(LCKLIB_DIR)/test_sge_lock_simple.c
 
-test_sge_lock_multiple:	test_sge_lock_main.o test_sge_lock_multiple.o $(WINGRIDLIB_DEP) $(UTILIB) $(COMMLISTSLIB) $(LCKLIB) $(RMONLIB)
-		$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_lock_multiple $(LFLAGS) test_sge_lock_main.o test_sge_lock_multiple.o $(COMMLISTSLIB) $(LCKLIB) $(RMONLIB) $(UTILIB) $(WINGRIDLIB) $(LIBS)
+test_sge_lock_simple: test_sge_lock_main.o test_sge_lock_simple.o $(LCKLIB_TEST_LIB_DEPENDS)
+		$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_lock_simple $(LFLAGS) test_sge_lock_main.o test_sge_lock_simple.o  $(LCKLIB_TEST_ADD_LIBS)
 
-test_sge_lock_multiple.o:	$(LCKLIB_DIR)/test_sge_lock_multiple.c
+test_sge_mutex_fifo.o: $(LCKLIB_DIR)/test_sge_mutex_fifo.c
+		$(CC) $(CFLAGS) -c $(LCKLIB_DIR)/test_sge_mutex_fifo.c
+
+test_sge_mutex_fifo: test_sge_mutex_fifo.o $(LCKLIB_TEST_LIB_DEPENDS)
+		$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_mutex_fifo $(LFLAGS) test_sge_mutex_fifo.o $(LCKLIB_TEST_ADD_LIBS) 
+
+test_sge_lock_multiple.o: $(LCKLIB_DIR)/test_sge_lock_multiple.c
 		$(CC) $(CFLAGS) -c $(LCKLIB_DIR)/test_sge_lock_multiple.c
 
-test_sge_deadlock:	test_sge_lock_main.o test_sge_deadlock.o $(LCKLIB) $(LCKLIB_TEST_LIB_DEPENDS)
-		$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_deadlock $(LFLAGS) test_sge_lock_main.o test_sge_deadlock.o $(COMMLISTSLIB) $(LCKLIB_TEST_ADD_LIBS) $(LIBS)
+test_sge_lock_multiple: test_sge_lock_main.o test_sge_lock_multiple.o $(LCKLIB_TEST_LIB_DEPENDS)
+		$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_lock_multiple $(LFLAGS) test_sge_lock_main.o test_sge_lock_multiple.o $(LCKLIB_TEST_ADD_LIBS)
 
 test_sge_deadlock.o:	$(LCKLIB_DIR)/test_sge_deadlock.c
 		$(CC) $(CFLAGS) -c $(LCKLIB_DIR)/test_sge_deadlock.c
 
-test_sge_recursive:	test_sge_lock_main.o test_sge_recursive.o $(LCKLIB) $(LCKLIB_TEST_LIB_DEPENDS)
-		$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_recursive $(LFLAGS) test_sge_lock_main.o test_sge_recursive.o $(COMMLISTSLIB) $(LCKLIB_TEST_ADD_LIBS) $(LIBS)
+test_sge_deadlock: test_sge_lock_main.o test_sge_deadlock.o $(LCKLIB_TEST_LIB_DEPENDS)
+		$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_deadlock $(LFLAGS) test_sge_lock_main.o test_sge_deadlock.o $(LCKLIB_TEST_ADD_LIBS)
 
-test_sge_recursive.o:	$(LCKLIB_DIR)/test_sge_recursive.c
+test_sge_recursive.o: $(LCKLIB_DIR)/test_sge_recursive.c
 		$(CC) $(CFLAGS) -c $(LCKLIB_DIR)/test_sge_recursive.c
+
+test_sge_recursive: test_sge_lock_main.o test_sge_recursive.o $(LCKLIB_TEST_LIB_DEPENDS)
+		$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_recursive $(LFLAGS) test_sge_lock_main.o test_sge_recursive.o $(LCKLIB_TEST_ADD_LIBS)
+
+test_sge_lock_fifo.o: $(LCKLIB_DIR)/test_sge_lock_fifo.c
+		$(CC) $(CFLAGS) -c $(LCKLIB_DIR)/test_sge_lock_fifo.c
+
+test_sge_lock_fifo: test_sge_lock_main.o test_sge_lock_fifo.o $(LCKLIB_TEST_LIB_DEPENDS)
+		$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_lock_fifo $(LFLAGS) test_sge_lock_main.o test_sge_lock_fifo.o $(LCKLIB_TEST_ADD_LIBS)

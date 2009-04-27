@@ -274,3 +274,7 @@ static void *thread_function(void *anArg)
    DEXIT;
    return (void *)NULL;
 } /* thread_function */
+
+int validate(int thread_count) {
+   return 0;
+}

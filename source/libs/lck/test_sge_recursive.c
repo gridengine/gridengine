@@ -106,3 +106,12 @@ static void *thread_function_2(void *anArg)
    DEXIT;
    return (void *)NULL;
 } /* thread_function_2 */
+
+int validate(int thread_count) {
+   return 0;
+}
+
+void set_thread_count(int count) 
+{
+   return;
+}

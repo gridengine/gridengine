@@ -40,8 +40,7 @@
 #include "lck/sge_lock.h"
 #include "lck/sge_mtutil.h"
 #include "uti/sge_stdlib.h"
-
-static void setup(void);
+#include "uti/sge_time.h"
 
 /****** test_sge_lock_main/main() **********************************************
 *  NAME
@@ -75,13 +74,10 @@ int main(int argc, char *argv[])
    int i;
    int j;
    int thrd_count;
-   struct timeval before;
-   struct timeval after;
-   double time_new;
+   u_long32 before, after, time_new;
+   int ret = 0;
    
    DENTER_MAIN(TOP_LAYER, "main");
-
-   setup();
 
    thrd_count = get_thrd_demand();
    t = (pthread_t *)malloc(thrd_count * sizeof(pthread_t));
@@ -93,7 +89,7 @@ int main(int argc, char *argv[])
      
       set_thread_count(i);
       
-      gettimeofday(&before, NULL); 
+      before = sge_get_gmt();
 
       printf("\n%s Create %d threads\n\n", SGE_FUNC, i);
 
@@ -104,44 +100,17 @@ int main(int argc, char *argv[])
          pthread_join(t[j], NULL);
       }
 
-      gettimeofday(&after, NULL);
+      after = sge_get_gmt();
+      time_new = after - before;
 
-      time_new = after.tv_usec - before.tv_usec;
-      time_new = after.tv_sec - before.tv_sec + (time_new/1000000);
-
-      printf("the test took: %fs\n", time_new);
+      ret = validate(i);
+      printf("the test took "sge_U32CFormat"s and was %s\n", time_new, ret==0?"successfull":"unsuccessfull");
+      if (ret != 0) {
+         break;
+      }
    }
    FREE(t);
 
    DEXIT;
-   return 0;
+   return ret;
 } /* main */
-
-/****** test_sge_lock_main/setup() *********************************************
-*  NAME
-*     setup() -- Setup the locking API 
-*
-*  SYNOPSIS
-*     static void setup(void) 
-*
-*  FUNCTION
-*     Create and initialize the pthread mutexes needed. Register the callbacks
-*     required by the locking API. 
-*
-*  INPUTS
-*     void - none 
-*
-*  RESULT
-*     static void - none 
-*
-*  SEE ALSO
-*     test_sge_lock_main/teardown()
-*******************************************************************************/
-static void setup(void)
-{
-   DENTER(TOP_LAYER, "setup");
-
-   DEXIT;
-   return;
-} /* setup */
-

@@ -1,3 +1,8 @@
+RD-2009-04-27-0: Bugfix:      fixed write lock starvation
+                 Bugster:     6834507
+                 Issue:       3010
+                 Review:      EB, AA
+
 RN-2009-04-27-0: Bugfix:      loadsensor infrastructure in the ibm platform is inconsistent
                  Bugster:     6816902
                  Issue:       3009

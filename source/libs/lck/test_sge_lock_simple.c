@@ -30,13 +30,13 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "test_sge_lock_main.h"
 
 #include <unistd.h>
 #include <stdio.h>
 
-#include "sge_lock.h"
-
+#include "test_sge_lock_main.h"
+#include "lck/sge_lock.h"
+#include "uti/sge_time.h"
 
 static void *thread_function(void *anArg);
 
@@ -59,6 +59,11 @@ void *(*get_thrd_func(void))(void *anArg)
 void *get_thrd_func_arg(void)
 {
    return NULL;
+}
+
+void set_thread_count(int count) 
+{
+   return;
 }
 
 /****** test_sge_lock_simple/thread_function() *********************************
@@ -86,7 +91,9 @@ static void *thread_function(void *anArg)
    
    SGE_LOCK(LOCK_GLOBAL, LOCK_READ);
 
-   DPRINTF(("Thread %u sleeping\n", sge_locker_id()));
+#if 1
+   DPRINTF(("Thread %u sleeping at %d\n", sge_locker_id(), sge_get_gmt()));
+#endif
    sleep(5);
 
    SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
@@ -94,3 +101,7 @@ static void *thread_function(void *anArg)
    DEXIT;
    return (void *)NULL;
 } /* thread_function */
+
+int validate(int thread_count) {
+   return 0;
+}

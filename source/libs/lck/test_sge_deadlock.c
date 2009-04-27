@@ -34,7 +34,8 @@
 
 #include <unistd.h>
 #include <stdio.h>
-#include "sge_lock.h"
+#include "lck/sge_lock.h"
+#include "uti/sge_time.h"
 
 
 static void *thread_function_1(void *anArg);
@@ -61,6 +62,11 @@ void *(*get_thrd_func(void))(void *anArg)
 void *get_thrd_func_arg(void)
 {
    return NULL;
+}
+
+void set_thread_count(int count) 
+{
+   return;
 }
 
 /****** test_sge_lock_simple/thread_function_1() *********************************
@@ -103,13 +109,13 @@ static void *thread_function_1(void *anArg)
    SGE_LOCK(LOCK_GLOBAL, LOCK_READ);
    sleep(3);
 
-   SGE_LOCK(LOCK_MASTER_PROJECT_LST, LOCK_READ);
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
    sleep(3);
 
-   DPRINTF(("Thread %u sleeping\n", sge_locker_id()));
+   DPRINTF(("Thread %u sleeping at %d\n", sge_locker_id(), sge_get_gmt()));
    sleep(5);
 
-   SGE_UNLOCK(LOCK_MASTER_PROJECT_LST, LOCK_READ);
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
    sleep(3);
 
    SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
@@ -156,7 +162,7 @@ static void *thread_function_2(void *anArg)
 {
    DENTER(TOP_LAYER, "thread_function");
 
-   SGE_LOCK(LOCK_MASTER_PROJECT_LST, LOCK_READ);
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
    sleep(3);
 
    SGE_LOCK(LOCK_GLOBAL, LOCK_READ);
@@ -168,9 +174,14 @@ static void *thread_function_2(void *anArg)
    SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
    sleep(3);
 
-   SGE_UNLOCK(LOCK_MASTER_PROJECT_LST, LOCK_READ);
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
    sleep(3);
 
    DEXIT;
    return (void *)NULL;
 } /* thread_function_2 */
+
+int validate(int thread_count) {
+   return 0;
+}
+

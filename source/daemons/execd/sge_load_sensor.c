@@ -59,7 +59,7 @@ static pid_t sge_ls_get_pid(lListElem *this_ls);
 static void sge_ls_set_pid(lListElem *this_ls, pid_t pid);
 static int sge_ls_status(lListElem *this_ls);
 static lListElem *sge_ls_create_ls(const char* qualified_hostname, char *name, const char *scriptfile);
-static void sge_ls_start_ls(const char *qualified_hostname, lListElem *this_ls);
+static int sge_ls_start_ls(const char *qualified_hostname, lListElem *this_ls);
 static void sge_ls_stop_ls(lListElem *this_ls, int send_no_quit_command);
 static int sge_ls_start(const char* qualified_hostname, const char *binary_path, char *scriptfile);
 
@@ -220,8 +220,10 @@ static int sge_ls_status(lListElem *this_ls)
 *        LS_pid containes the pid of the ls process 
 *        LS_in, LS_out, LS_err are the FILE-streams for the
 *        communication with the ls-process     
+*        returns LS_OK
+*     If sge_peopen fails, returns LS_CANT_PEOPEN     
 ******************************************************************************/
-static void sge_ls_start_ls(const char *qualified_hostname, lListElem *this_ls)
+static int sge_ls_start_ls(const char *qualified_hostname, lListElem *this_ls)
 {
    pid_t pid = -1;
    FILE *fp_in = NULL;
@@ -253,7 +255,7 @@ static void sge_ls_start_ls(const char *qualified_hostname, lListElem *this_ls)
       free(envp);
    }
    if (pid == -1) {
-      DRETURN_VOID;
+      return LS_CANT_PEOPEN;
    }
    /* we need load reports non blocking */
    fcntl(fileno(fp_out), F_SETFL, O_NONBLOCK);
@@ -269,7 +271,7 @@ static void sge_ls_start_ls(const char *qualified_hostname, lListElem *this_ls)
    /* request first load report after starting */
    ls_send_command(this_ls, "\n");
 
-   DRETURN_VOID;
+   return LS_OK;
 }
 
 /******* execd/loadsensor/sge_ls_create_ls() **********************************
@@ -284,6 +286,8 @@ static void sge_ls_start_ls(const char *qualified_hostname, lListElem *this_ls)
 *     The function creates a new CULL element of type LS_Type and
 *     returns a pointer to this object. The loadsensor will be
 *     started immediately.
+*     If it cannot be started then, LS_has_to_restart is set to 
+*     true so that it will be attempted to be restarted in the next load interval
 *
 *  INPUTS
 *     qualified_hostname - qualified host name
@@ -327,10 +331,14 @@ static lListElem *sge_ls_create_ls(const char *qualified_hostname, char *name, c
          lSetList(new_ls, LS_complete, lCreateList("", LR_Type));
          lSetUlong(new_ls, LS_last_mod, st.st_mtime);
 
-         sge_ls_start_ls(qualified_hostname, new_ls);
+         /* start loadsensor, if couldn't set the restart flag so that we
+          * restart it in the next load interval
+          */
+         if (sge_ls_start_ls(qualified_hostname, new_ls) != LS_OK) {
+            lSetBool(new_ls, LS_has_to_restart, true);
+         }
       }
    }
-
    DRETURN(new_ls);
 }
 
@@ -538,30 +546,37 @@ static int ls_send_command(lListElem *this_ls, const char *command)
       switch (errno) {
       case EINTR:
          DPRINTF(("select failed with EINTR\n"));
+         WARNING((SGE_EVENT, "[load_sensor %s] select failed with EINTR", lGetString(this_ls, LS_pid)));
          break;
       case EBADF:
          DPRINTF(("select failed with EBADF\n"));
+         WARNING((SGE_EVENT, "[load_sensor %s] select failed with EBADF", lGetString(this_ls, LS_pid)));
          break;
       case EINVAL:
          DPRINTF(("select failed with EINVAL\n"));
+         WARNING((SGE_EVENT, "[load_sensor %s] select failed with EINVAL", lGetString(this_ls, LS_pid)));
          break;
       default:
          DPRINTF(("select failed with unexpected errno %d", errno));
+         WARNING((SGE_EVENT, "[load_sensor %s] select failed with [%s]", lGetString(this_ls, LS_pid), strerror(errno)));
       }
       DRETURN(-1);
    }
 
    if (!FD_ISSET(fileno((FILE *) lGetRef(this_ls, LS_in)), &writefds)) {
       DPRINTF(("received: cannot read\n"));
+      WARNING((SGE_EVENT, "[load_sensor %s] received: cannot read", lGetString(this_ls, LS_pid)));
       DRETURN(-1);
    }
 
    /* send command to load sensor */
    file = lGetRef(this_ls, LS_in);
    if (fprintf(file, "%s", command) != strlen(command)) {
+      WARNING((SGE_EVENT, "[load_sensor %s] couldn't send command [%s]", lGetString(this_ls, LS_pid), strerror(errno)));
       DRETURN(-1);
    }
    if (fflush(file) != 0) {
+      WARNING((SGE_EVENT, "[load_sensor %s] fflush failed [%s]", lGetString(this_ls, LS_pid), strerror(errno)));
       DRETURN(-1);
    }
 
@@ -875,8 +890,13 @@ int sge_ls_get(const char *qualified_hostname, const char *binary_path, lList **
       if (restart) {
          INFO((SGE_EVENT, MSG_LS_RESTARTLS_S, ls_command ? ls_command : ""));
          sge_ls_stop_ls(ls_elem, 0);
-         sge_ls_start_ls(qualified_hostname, ls_elem);
-         lSetBool(ls_elem, LS_has_to_restart, false);
+         /* start the load sensor script, set the restart flag if the load
+          * sensor didn't start so that we try to start it again in the next
+          * load interval! 
+          */
+         if (sge_ls_start_ls(qualified_hostname, ls_elem) == LS_OK) {
+            lSetBool(ls_elem, LS_has_to_restart, false);
+         }
       }
    }
 

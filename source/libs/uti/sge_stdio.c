@@ -259,6 +259,8 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
           ERROR((SGE_EVENT, MSG_SMF_FORK_FAILED_SS, "sge_peopen()", err_str));
       }
 #endif
+      /* fork could have failed, report it */
+      ERROR((SGE_EVENT, MSG_SMF_FORK_FAILED_SS, "sge_peopen()", strerror(errno)));
       DEXIT;
       return -1;
    }

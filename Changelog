@@ -1,3 +1,10 @@
+CR-2009-04-28-0: Bugfix:      fixed JSV for qalter "-N" option which turned out not to
+                              work because of fix for CR 6824346 (qalter using job
+                              name as job id was broken)
+                 Belongs To:  MD-2009-04-24-0
+                 Cleanup:     improved some execd message loggings
+                 Review:      EB, RD
+
 LP-2009-04-28-0: Bugfix:      Install script do not recognize OpenJDK as valid
                               Java version
                  Bugster:     6834901

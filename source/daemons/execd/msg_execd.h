@@ -89,6 +89,7 @@
 /* #define MSG_SHEPHERD_CANTDELCREDENTIALSFORJOBXYBINARYNOTEXIST_US    _message(29036, _("could not delete credentials for job " sge_U32CFormat" - "SFN" binary does not exist")) __TS Removed automatically from testsuite!! TS__*/
 #define MSG_FILE_CANTREMOVEDIRECTORY_SS    _MESSAGE(29037, _("can't remove directory "SFQ": "SFN))
 #define MSG_SHEPHERD_ACKNOWLEDGEFORUNKNOWNJOBXYZ_UUS    _MESSAGE(29038, _("acknowledge for unknown job "sge_U32CFormat"."sge_U32CFormat"/"SFN))
+#define MSG_SHEPHERD_NOMOREOLDJOBSAFTERSTARTUP    _MESSAGE(29039, _("no more old jobs after startup"))
 #define MSG_SHEPHERD_CANTFINDACTIVEJOBSDIRXFORREAPINGJOBY_SU    _MESSAGE(29040, _("can't find active jobs directory "SFQ" for reaping job "sge_U32CFormat ))
 #define MSG_SHEPHERD_INCORRECTCONFIGFILEFORJOBXY_UU    _MESSAGE(29041, _("incorrect config file for job "sge_U32CFormat"."sge_U32CFormat""))
 #define MSG_SHEPHERD_CANTSTARTJOBXY_US     _MESSAGE(29042, _("can't start job \""sge_U32CFormat"\": "SFN))
@@ -105,8 +106,9 @@
 #define MSG_SHEPHERD_CANTREADPIDFILEXFORJOBYSTARTTIMEZX_SSUS    _MESSAGE(29053, _("can't read pid file "SFQ" of shepherd for job "SFQ" - starttime: "sge_U32CFormat" cleaning up: "SFN))
 #define MSG_SHEPHERD_MISSINGJOBXINJOBREPORTFOREXITINGJOB_U    _MESSAGE(29054, _("missing job \""sge_U32CFormat"\" in job report for exiting job"))
 #define MSG_SHEPHERD_CANTREADPIDFROMPIDFILEXFORJOBY_SS    _MESSAGE(29055, _("can't read pid from pid file "SFQ" of shepherd for job "SFN))
-#define MSG_SHEPHERD_SHEPHERDFORJOBXHASPIDYANDISZALIVE_SUS    _MESSAGE(29056, _("shepherd for job "SFN" has pid \""sge_U32CFormat"\" and is "SFN" alive"))
-#define MSG_NOT    _MESSAGE(29057, _("not"))
+#define MSG_SHEPHERD_SHEPHERDFORJOBXHASPIDYANDISZALIVE_SU    _MESSAGE(29056, _("shepherd for job "SFN" has pid \""sge_U32CFormat"\" and is alive"))
+#define MSG_SHEPHERD_SHEPHERDFORJOBXHASPIDYANDISNOTALIVE_SU    _MESSAGE(29057, _("shepherd for job "SFN" has pid \""sge_U32CFormat"\" and is not alive"))
+
 #define MSG_SHEPHERD_INCONSISTENTDATAFORJOBX_U    _MESSAGE(29058, _("inconsistent data for job \""sge_U32CFormat"\""))
 #define MSG_SHEPHERD_MISSINGJOBXYINJOBREPORT_UU    _MESSAGE(29059, _("Missing job "sge_U32CFormat"."sge_U32CFormat" in job report"))
 #define MSG_SHEPHERD_CANTOPENPIDFILEXFORJOBYZ_SUU    _MESSAGE(29060, _("can't open pid file "SFQ" for job "sge_U32CFormat"."sge_U32CFormat))

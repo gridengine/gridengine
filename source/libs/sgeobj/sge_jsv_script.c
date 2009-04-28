@@ -2327,7 +2327,34 @@ jsv_cull_attr2switch_name(int cull_attr, lListElem *job)
    } else if (cull_attr == JB_mail_list) {
       ret = "M";
    } else if (cull_attr == JB_job_name) {
-      ret = "N";
+      /*
+       * This is a special case for JB_job_name parameter. 
+       * A) null
+       *    qalter ... <jid>         => qalter with job id
+       * B) <string>
+       *    qalter -N <string> <jid> => qalter with job id using -N option 
+       *                                to change name
+       * C) :<job_name>:
+       *    qalter ... <job_name>    => qalter with job name instead
+       *                                of job id
+       * D) :<job_name>:<string2>             
+       *    qalter -N <string2> <job_name> => qalter with job name instead of
+       *                                      job id using -N option to change name
+       */
+      #define JOB_NAME_DEL ':'
+      const char *job_name = lGetString(job, JB_job_name);
+      if (job_name != NULL) {
+         if (job_name[0] == JOB_NAME_DEL) {
+            const char *help_str = strchr(&(job_name[1]), JOB_NAME_DEL);
+            if (help_str != NULL && help_str[1] != '\0') {
+               /* This is case D) */
+               ret = "N";
+            }
+         } else {
+              /* This is case B) */
+            ret = "N";
+         }
+      }
    } else if (cull_attr == JB_stdout_path_list) {
       ret = "o";
    } else if (cull_attr == JB_project) {
@@ -2448,10 +2475,11 @@ jsv_is_modify_rejected(sge_gdi_ctx_class_t *context, lList **answer_list, lListE
                bool first = true;
 
                for_each (not_allowed, got_switches) {
-                  if (!first) {
-                     sge_dstring_append_char(&switches, ',');
+                  if (first) {
                      first = false;
-                  }
+                  } else {
+                     sge_dstring_append_char(&switches, ',');
+                  } 
                   sge_dstring_append(&switches, lGetString(not_allowed, ST_name));
                }
                ERROR((SGE_EVENT, MSG_JSV_SWITCH_S, sge_dstring_get_string(&switches)));

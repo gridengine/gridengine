@@ -1189,7 +1189,15 @@ int clean_up_old_jobs(sge_gdi_ctx_class_t *ctx, int startup)
        lGetNumberOfElem(*(object_type_get_master_list(SGE_TYPE_JOB))) == 0 ||
        !lost_children) {
       if (lost_children) {
-         INFO((SGE_EVENT, MSG_SHEPHERD_NOOLDJOBSATSTARTUP));
+         if (startup) {
+            INFO((SGE_EVENT, MSG_SHEPHERD_NOOLDJOBSATSTARTUP));
+         } else {
+            INFO((SGE_EVENT, MSG_SHEPHERD_NOMOREOLDJOBSAFTERSTARTUP));
+         }
+         /* 
+          * Now setting lost_children to 0 which disables further pid checking
+          * for the whole runtime of the execd
+          */
          lost_children = 0;
       }
       /* all children exited */
@@ -1370,8 +1378,11 @@ examine_job_task_from_file(sge_gdi_ctx_class_t *ctx, int startup, char *dir, lLi
    shepherd_alive = sge_contains_pid(pid, pids, npids);
 
    /* report this information */
-   sprintf(err_str, MSG_SHEPHERD_SHEPHERDFORJOBXHASPIDYANDISZALIVE_SUS, 
-           dir, sge_u32c(pid), (shepherd_alive ? "": MSG_NOT));
+   if (shepherd_alive) {
+      sprintf(err_str, MSG_SHEPHERD_SHEPHERDFORJOBXHASPIDYANDISZALIVE_SU, dir, sge_u32c(pid));
+   } else {
+      sprintf(err_str, MSG_SHEPHERD_SHEPHERDFORJOBXHASPIDYANDISNOTALIVE_SU, dir, sge_u32c(pid));
+   }
    if (startup) {
       INFO((SGE_EVENT, err_str));
       modify_queue_limits_flag_for_job(ctx->get_qualified_hostname(ctx), jep, true);

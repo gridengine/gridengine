@@ -1,3 +1,6 @@
+LP-2009-04-28-1: Updated log description
+                 Belongs to:  LP-2009-04-03-0
+
 CR-2009-04-28-0: Bugfix:      fixed JSV for qalter "-N" option which turned out not to
                               work because of fix for CR 6824346 (qalter using job
                               name as job id was broken)
@@ -286,8 +289,10 @@ RD-2009-04-03-1: Cleanup:     some minor cleanups
 
 LP-2009-04-03-0: Enhancem.:   gui-installer: Enable RC should be displayed in
                               shadowd installation
-                 Enhancem.:   gui-installer: improved java detection and version
-                              validation in start_gui_installer
+                 Enhancem.:   gui-installer: the start_gui_installer wrapper 
+                              should check JAVA version
+                 Bugster:     6828239
+                 Issue:       3012
                  Enhancem.:   gui-installer: updated shadowd installation for
                               changes in 6824933
                  Enhancem.:   gui-installer: Improved checking for JVM library

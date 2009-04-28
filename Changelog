@@ -1,3 +1,6 @@
+RH-2009-04-28-0: Bugfix:      jgdi eventmon did not use credentials from keystore
+                 Review:      AA
+
 RD-2009-04-27-0: Bugfix:      fixed write lock starvation
                  Bugster:     6834507
                  Issue:       3010

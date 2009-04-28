@@ -173,6 +173,10 @@ public class ConnectDialog extends JDialog {
         }
         return keyStorePasswordTextField.getPassword();
     }
+    
+    public boolean useSSL() {
+        return useSSL;
+    }
 
     private class OKAction extends AbstractAction {
 

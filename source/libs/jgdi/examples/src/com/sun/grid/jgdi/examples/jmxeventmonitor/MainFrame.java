@@ -34,11 +34,16 @@ package com.sun.grid.jgdi.examples.jmxeventmonitor;
 import com.sun.grid.jgdi.event.Event;
 import com.sun.grid.jgdi.event.EventListener;
 import com.sun.grid.jgdi.event.EventTypeEnum;
+import com.sun.grid.jgdi.management.JGDIProxy;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
+import java.io.File;
+import java.io.FileInputStream;
+import java.security.KeyStore;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -411,7 +416,15 @@ public class MainFrame extends JFrame {
                 
                 try {
                     statusLabel.setText("Connecting to " + dlg.getHost() + ":" + dlg.getPort());
-                    controller.connect(dlg.getHost(), dlg.getPort(), new String []  { dlg.getUsername(), new String(dlg.getPassword()) }, dlg.getCaTop(), dlg.getKeystore(), dlg.getKeyStorePassword());
+                    
+                    Object credential = null;
+                    if (dlg.useSSL()) {
+                        KeyStore ks = createKeyStore(dlg.getKeystore(), dlg.getUsername(), dlg.getKeyStorePassword());
+                        credential = JGDIProxy.createCredentialsFromKeyStore(ks, dlg.getUsername(), dlg.getKeyStorePassword());
+                    } else {
+                        credential = new String []  { dlg.getUsername(), new String(dlg.getPassword()) };
+                    }
+                    controller.connect(dlg.getHost(), dlg.getPort(), credential, dlg.getCaTop(), dlg.getKeystore(), dlg.getKeyStorePassword());
                     dlg.saveInPrefs();
                     break;
                 } catch (Exception ex) {
@@ -420,6 +433,24 @@ public class MainFrame extends JFrame {
                 }
             }
         }
+        
+        private KeyStore createKeyStore(String path, String username, char[] pw) throws Exception {
+
+            File keyStoreFile = new File(path);
+            FileInputStream fin = new FileInputStream(keyStoreFile);
+
+            try {
+                KeyStore ret = KeyStore.getInstance(KeyStore.getDefaultType());
+                ret.load(fin, pw);
+
+                if (!ret.isKeyEntry(username)) {
+                    throw new Exception(MessageFormat.format("Keystore {0} does not contain credentials for user {1}", path, username));
+                }
+                return ret;
+            } finally {
+                fin.close();
+            }
+        }        
     }
     
     private class ExitAction extends AbstractAction {

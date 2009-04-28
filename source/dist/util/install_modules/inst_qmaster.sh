@@ -208,7 +208,7 @@ GetQmasterSpoolDir()
       if [ $? = 1 ]; then
          done=true
       else
-         $INFOTEXT -n "Please enter a qmaster spool directory now! >>" 
+         $INFOTEXT -n "Please enter a qmaster spool directory now! >>"
          QMDIR=`Enter $SGE_ROOT_VAL/$SGE_CELL_VAL/spool/qmaster`
          done=true
       fi
@@ -1835,6 +1835,8 @@ JavaVersionString2Num () {
    # For these internal builds, we drop the -XX and assume a patch number 
    # of "00".  Otherwise, we extract that patch number.
    #
+   # OpenJDK uses "0" instead of "00"
+   #
    patch="00"
    dash=`echo $micro | grep "-"`
    if [ $? -eq 0 ]; then
@@ -1846,7 +1848,8 @@ JavaVersionString2Num () {
    if [ $? -eq 0 ]; then
       # Extract the seperate micro and patch numbers, ignoring anything
       # after the 2-digit patch.
-      patch=`echo $micro | awk -F_ '{print substr($2, 1, 2)}'`
+      # we ensure we return 2 characters as patch
+      patch=`echo $micro | awk -F_ '{print substr($2, 1, 2)}' | awk '{if (length($0) < 2) print 0$0; else print $0}'`
       micro=`echo $micro | awk -F_ '{print $1}'`
    fi
 

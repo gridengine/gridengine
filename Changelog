@@ -1,3 +1,9 @@
+LP-2009-04-28-0: Bugfix:      Install script do not recognize OpenJDK as valid
+                              Java version
+                 Bugster:     6834901
+                 Issue:       3008
+                 Review:      AP
+
 RH-2009-04-28-0: Bugfix:      jgdi eventmon did not use credentials from keystore
                  Review:      AA
 

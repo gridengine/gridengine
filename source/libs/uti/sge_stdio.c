@@ -285,6 +285,8 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
          close(pipefds[i][0]);
          close(pipefds[i][1]);
       }
+      /* fork could have failed, report it */
+      ERROR((SGE_EVENT, "sge_peopen(): fork failed - %s", strerror(errno)));
       DEXIT;
       return -1;
    }

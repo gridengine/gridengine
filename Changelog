@@ -1,3 +1,8 @@
+RN-2009-04-29-0: Bugfix:      loadsensor infrastructure in the ibm platform is inconsistent
+                 Bugster:     6816902
+                 Issue:       3009
+                 Review:      JG
+
 JG-2009-04-29-0: Bugfix:      problem with broken dot-file writing for
                               sequential jobs in classic spooling mode
                  Bugster:     6773642

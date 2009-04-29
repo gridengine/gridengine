@@ -290,7 +290,7 @@ char *sge_get_file_path(char *buffer, sge_file_path_id_t id,
          get_spool_dir_range(ulong_val2, &start, &end);
          sprintf(id_range, sge_u32"-"sge_u32, start, end);
       }
-      if (id == JOB_SPOOL_DIR) {
+      if (id == JOB_SPOOL_DIR || id == JOB_SPOOL_DIR_AS_FILE) {
          sprintf(buffer, "%s/%s", spool_dir, job_dir);
       } else if (id == JOB_SPOOL_FILE) {
          sprintf(buffer, "%s/%s/%s%s", spool_dir, job_dir, 

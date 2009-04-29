@@ -1,3 +1,9 @@
+JG-2009-04-29-0: Bugfix:      problem with broken dot-file writing for
+                              sequential jobs in classic spooling mode
+                 Bugster:     6773642
+                 Issue:       2801
+                 Review:      EB
+
 JG-2009-04-24-0: Bugfix:      we need the ability for qrsh to ignore SIGUSR1 and
                               SIGUSR2 to support -notify
                  Bugster:     6802351

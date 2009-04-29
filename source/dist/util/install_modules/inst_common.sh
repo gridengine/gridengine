@@ -1358,7 +1358,7 @@ GiveHints()
       $INFOTEXT -u "\nGrid Engine messages"
       $INFOTEXT "\nGrid Engine messages can be found at:\n\n" \
                 "   /tmp/qmaster_messages (during qmaster startup)\n" \
-                "   /tmp/execd_messages   (during execution daemon startup)\n\n" \
+                "   /tmp/execd_messages.*   (during execution daemon startup)\n\n" \
                 "After startup the daemons log their messages in their spool directories.\n\n" \
                 "   Qmaster:     %s\n" \
                 "   Exec daemon: <execd_spool_dir>/<hostname>/messages\n" $master_spool/qmaster/messages

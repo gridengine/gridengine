@@ -1,3 +1,9 @@
+MP-2009-04-29-0: Bugfix:      reference to /tmp/execd_messages should instead say 
+                              /tmp/execd_messages* because .PID is appended
+                 Bugster:     6742105
+                 Issue:       2705
+                 Review:      AP
+
 RN-2009-04-29-0: Bugfix:      loadsensor infrastructure in the ibm platform is inconsistent
                  Bugster:     6816902
                  Issue:       3009

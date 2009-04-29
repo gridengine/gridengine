@@ -108,6 +108,7 @@ static lListElem *job_create_from_file(u_long32 job_id, u_long32 ja_task_id,
    char spool_path[SGE_PATH_MAX] = "";
 
    DENTER(TOP_LAYER, "job_create_from_file");
+
    sge_get_file_path(spool_path, JOB_SPOOL_DIR, FORMAT_DEFAULT, 
                      flags, job_id, ja_task_id, NULL);  
 
@@ -406,9 +407,9 @@ static int job_write_as_single_file(lListElem *job, u_long32 ja_task_id,
    sge_get_file_path(job_dir_third, JOB_SPOOL_DIR, FORMAT_THIRD_PART,
                      flags, job_id, ja_task_id, NULL);
    sge_mkdir(job_dir_third, 0755, 0, 0);
-   sge_get_file_path(spool_file, JOB_SPOOL_DIR, FORMAT_DEFAULT,
+   sge_get_file_path(spool_file, JOB_SPOOL_DIR_AS_FILE, FORMAT_DEFAULT,
                      flags, job_id, ja_task_id, NULL);
-   sge_get_file_path(tmp_spool_file, JOB_SPOOL_DIR, FORMAT_DOT_FILENAME,
+   sge_get_file_path(tmp_spool_file, JOB_SPOOL_DIR_AS_FILE, FORMAT_DOT_FILENAME,
                      flags, job_id, ja_task_id, NULL);
    ret = lWriteElemToDisk(job, tmp_spool_file, NULL, "job");
    if (!ret && (rename(tmp_spool_file, spool_file) == -1)) {

@@ -63,12 +63,6 @@ static const char *spoolmsg_message[] = {
 };
 
 static void get_spool_dir_range(u_long32 ja_task_id, u_long32 *start, 
-                                u_long32 *end);
-
-static void get_spool_dir_parts(u_long32 job_id, char *first, char *second, 
-                                char *third);
-
-static void get_spool_dir_range(u_long32 ja_task_id, u_long32 *start, 
                                 u_long32 *end)
 {
    u_long32 row = (ja_task_id - 1) / sge_get_ja_tasks_per_directory(); 
@@ -217,7 +211,7 @@ char *sge_get_file_path(char *buffer, sge_file_path_id_t id,
 
       get_spool_dir_parts(ulong_val1, job_dir_first, job_dir_second,
                           job_dir_third);
-      
+
       if (first_part) {
          ;
       } else if (second_part) {
@@ -227,20 +221,20 @@ char *sge_get_file_path(char *buffer, sge_file_path_id_t id,
       } else {
          if (id == JOB_SPOOL_DIR_AS_FILE && insert_dot) {
             if (in_execd) {
-               sprintf(job_dir, "%s/%s/.%s."sge_u32, job_dir_first, 
+               sprintf(job_dir, "%s/%s/.%s."sge_u32, job_dir_first,
                        job_dir_second, job_dir_third, ulong_val2);
             } else {
                sprintf(job_dir, "%s/%s/.%s", job_dir_first,
                        job_dir_second, job_dir_third);
-            }  
+            }
          } else {
             if (in_execd) {
-               sprintf(job_dir, "%s/%s/%s."sge_u32, job_dir_first, 
+               sprintf(job_dir, "%s/%s/%s."sge_u32, job_dir_first,
                        job_dir_second, job_dir_third, ulong_val2);
             } else {
                sprintf(job_dir, "%s/%s/%s", job_dir_first,
                        job_dir_second, job_dir_third);
-            }  
+            }
          }
       }
       if (insert_dot && (id == JOB_SPOOL_FILE || id == TASK_SPOOL_DIR_AS_FILE ||
@@ -254,7 +248,7 @@ char *sge_get_file_path(char *buffer, sge_file_path_id_t id,
          get_spool_dir_range(ulong_val2, &start, &end);
          sprintf(id_range, sge_u32"-"sge_u32, start, end);
       }
-      if (id == JOB_SPOOL_DIR) {
+      if (id == JOB_SPOOL_DIR || id == JOB_SPOOL_DIR_AS_FILE) {
          sprintf(buffer, "%s/%s", spool_dir, job_dir);
       } else if (id == JOB_SPOOL_FILE) {
          sprintf(buffer, "%s/%s/%s%s", spool_dir, job_dir, 

@@ -1,3 +1,9 @@
+JG-2009-04-29-0: Bugfix:      problem with broken dot-file writing for
+                              sequential jobs in classic spooling mode
+                 Bugster:     6773642
+                 Issue:       2801
+                 Review:      EB
+
 LP-2009-04-28-1: Updated log description
                  Belongs to:  LP-2009-04-03-0
 

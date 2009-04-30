@@ -1,3 +1,8 @@
+DG-2009-04-30-0: Bugfix:      parallel job submission verfication result 
+                              differs when turning on non-restricting 
+                              resource quota
+                 Review:      RD 
+
 JG-2009-04-29-1: Bugfix:      fixed missing depencency for libspoolc.so
                  Review:      RD
 

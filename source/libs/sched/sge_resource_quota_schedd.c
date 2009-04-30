@@ -1150,19 +1150,22 @@ parallel_rqs_slots_by_time(sge_assignment_t *a, int *slots, int *slots_qend, lLi
 
             /* reuse earlier result */
             if ((rql=lGetElemStr(a->limit_list, RQL_name, limit_s))) {
-               u_long32 tagged4schedule = lGetUlong(rql, RQL_tagged4schedule);
+              u_long32 tagged4schedule = lGetUlong(rql, RQL_tagged4schedule); 
                result = (dispatch_t)lGetInt(rql, RQL_result);
                tslots = MIN(tslots, lGetInt(rql, RQL_slots));
                tslots_qend = MIN(tslots_qend, lGetInt(rql, RQL_slots_qend));
 
-               lSetUlong(qep, QU_tagged4schedule, tagged4schedule);
+               lSetUlong(qep, QU_tagged4schedule, MIN(tagged4schedule, lGetUlong(qep, QU_tagged4schedule)));
 
                DPRINTF(("parallel_rqs_slots_by_time(%s@%s) result %d slots %d slots_qend %d for "SFQ" (cache)\n",
                      queue, host, result, tslots, tslots_qend, limit_s));
             } else {
                int ttslots = INT_MAX;
                int ttslots_qend = INT_MAX;
-
+               
+               u_long32 tagged_for_schedule_old = lGetUlong(qep, QU_tagged4schedule);  /* default value or set in match_static_queue() */
+               lSetUlong(qep, QU_tagged4schedule, 2);
+               
                for_each(limit, lGetList(rule, RQR_limit)) {
                   const char *limit_name = lGetString(limit, RQRL_name);
 
@@ -1206,6 +1209,7 @@ parallel_rqs_slots_by_time(sge_assignment_t *a, int *slots, int *slots_qend, lLi
                         break;
                      }
                   }
+
                }
 
                DPRINTF(("parallel_rqs_slots_by_time(%s@%s) result %d slots %d slots_qend %d for "SFQ" (fresh)\n",
@@ -1216,11 +1220,13 @@ parallel_rqs_slots_by_time(sge_assignment_t *a, int *slots, int *slots_qend, lLi
                lSetInt(rql, RQL_result, result);
                lSetInt(rql, RQL_slots, ttslots);
                lSetInt(rql, RQL_slots_qend, ttslots_qend);
-               lSetUlong(rql, RQL_tagged4schedule, lGetUlong(qep, QU_tagged4schedule));
+               lSetUlong(rql, RQL_tagged4schedule, lGetUlong(qep, QU_tagged4schedule)); 
+               
+               /* reset tagged4schedule if necessary */
+               lSetUlong(qep, QU_tagged4schedule, MIN(tagged_for_schedule_old, lGetUlong(qep, QU_tagged4schedule)));
 
                tslots = MIN(tslots, ttslots);
                tslots_qend = MIN(tslots_qend, ttslots_qend);
-
             }
 
             if (result != DISPATCH_OK || (tslots == 0 && ( a->is_reservation || !a->care_reservation || tslots_qend == 0))) {
@@ -1477,6 +1483,8 @@ dispatch_t rqs_by_slots(sge_assignment_t *a, const char *queue, const char *host
             rql = lAddElemStr(&(a->limit_list), RQL_name, limit, RQL_Type);
             lSetInt(rql, RQL_result, result);
             lSetUlong(rql, RQL_time, tt_rqs);
+            /* init with same value as QU_tagged4schedule */
+            lSetUlong(rql, RQL_tagged4schedule, 2);
 
             if (result != DISPATCH_OK && result != DISPATCH_MISSING_ATTR) {
                schedd_mes_add(a->monitor_alpp, a->monitor_next_run, a->job_id,

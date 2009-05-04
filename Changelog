@@ -1,3 +1,8 @@
+DG-2009-05-04-0: Cleanup:     Upgrade routine is misleading when asking for 
+                              existing backup directory from configuration 
+                              of the old cluster.
+                 Review:      JG, TB
+
 RD-2009-05-04-0: Bugfix:      fixed IDs of classic spooled sharetree
                  Bugster:     6836897
                  Issue:       3016

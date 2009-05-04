@@ -1,3 +1,8 @@
+RD-2009-05-04-0: Bugfix:      fixed IDs of classic spooled sharetree
+                 Bugster:     6836897
+                 Issue:       3016
+                 Review:      JG
+
 JG-2009-05-04-0: Bugfix:      qmaster crash in schedd_mes_add_global/lGetPosViaElem
                  Bugster:     6827155
                  Issue:       3014

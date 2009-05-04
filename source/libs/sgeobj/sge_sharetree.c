@@ -46,12 +46,8 @@
 /************************************************************************
    id_sharetree - set the sharetree node id
 ************************************************************************/
-bool id_sharetree(
-lList **alpp,
-lListElem *ep,
-int id,  
-int *ret_id
-) {
+bool id_sharetree(lList **alpp, lListElem *ep, int id, int *ret_id)
+{
    lListElem *cep = NULL;
    int my_id = id;
 

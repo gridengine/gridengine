@@ -4517,7 +4517,6 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
  
          ep = lFirst(lp);
          
-         id_sharetree(&alp, ep, 0, NULL);
          sge_parse_return |= show_answer_list(alp);
          if (sge_parse_return) {
             lFreeList(&alp);
@@ -6083,8 +6082,6 @@ static lListElem *edit_sharetree(sge_gdi_ctx_class_t *ctx, lListElem *ep, uid_t 
    }
 
    fields = sge_build_STN_field_list(false, true);
-   
-   id_sharetree(NULL, ep, 0, NULL);
    
    filename = spool_flatfile_write_object(&alp, ep, false,
                                           fields, &qconf_name_value_list_sfi,

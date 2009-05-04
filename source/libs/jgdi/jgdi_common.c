@@ -3778,7 +3778,6 @@ void jgdi_fill(JNIEnv *env, jobject jgdi, jobject list, jobject filter, const ch
    }   
 
    if (target_list == SGE_SHARETREE_LIST) {
-      id_sharetree(&alp, lFirst(lp), 0, NULL);
       if (answers != NULL) {
          generic_fill_list(env, answers, "com/sun/grid/jgdi/configuration/JGDIAnswer", alp, NULL);
       }

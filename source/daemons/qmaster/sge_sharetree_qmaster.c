@@ -137,6 +137,8 @@ int sge_mod_sharetree(sge_gdi_ctx_class_t *ctx,
 
    lSetUlong(ep, STN_version, prev_version+1);
 
+   id_sharetree(alpp, ep, 0, NULL);
+
    /* now insert new element */
    lAppendElem(*lpp, lCopyElem(ep));
   

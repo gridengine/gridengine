@@ -560,10 +560,12 @@ void schedd_mes_add_global(lList **monitor_alpp, bool monitor_next_run, u_long32
 #endif
    if (!monitor_alpp && sconf_get_schedd_job_info() != SCHEDD_JOB_INFO_FALSE) {
       lListElem *sme = sconf_get_sme();
-      mes = lCreateElem(MES_Type);
-      lSetUlong(mes, MES_message_number, message_number);
-      lSetString(mes, MES_message, msg);
-      lAppendElem(lGetList(sme, SME_global_message_list), mes);
+      if (sme != NULL) {
+         mes = lCreateElem(MES_Type);
+         lSetUlong(mes, MES_message_number, message_number);
+         lSetString(mes, MES_message, msg);
+         lAppendElem(lGetList(sme, SME_global_message_list), mes);
+      }
    }
 
    /* Write entry into log file */

@@ -1,3 +1,8 @@
+JG-2009-05-04-0: Bugfix:      qmaster crash in schedd_mes_add_global/lGetPosViaElem
+                 Bugster:     6827155
+                 Issue:       3014
+                 Review:      RD
+
 DG-2009-04-30-0: Bugfix:      parallel job submission verfication result 
                               differs when turning on non-restricting 
                               resource quota

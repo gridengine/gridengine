@@ -86,6 +86,7 @@ public interface Config {
     public static final String VAR_LAST_TASK = "last_install_task";
 
     public static final String VAR_AUTO_CONF_TEMP_FILE = "auto.conf.temp.file";
+    public static final String VAR_SILENT_INSTALL_FILE = "silent.install.file";
     public static final String VAR_AUTO_CONF_FILE = "auto.conf.file";
     public static final String VAR_INSTALL_SCRIPT_FILE_NAME = "install.script.file.name";
     public static final String VAR_INSTALL_SCRIPT_FILE_DIR  = "install.script.file.dir";

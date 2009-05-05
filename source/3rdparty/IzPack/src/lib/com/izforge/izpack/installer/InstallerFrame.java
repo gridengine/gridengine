@@ -1059,8 +1059,8 @@ public class InstallerFrame extends JFrame
             {
                 loadAndShowImage(visiblePanelMapping.get(installdata.curPanelNumber));
             }
-            isBack = false;
             callGUIListener(GUIListener.PANEL_SWITCHED);
+            isBack = false;
             Log.getInstance().addDebugMessage("InstallerFrame.switchPanel: switched", null,
                     DebugConstants.PANEL_TRACE, null);
         }

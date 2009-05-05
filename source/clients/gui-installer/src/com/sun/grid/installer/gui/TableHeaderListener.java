@@ -70,7 +70,6 @@ public class TableHeaderListener extends MouseAdapter {
         }
 
         // flip the sorting order
-        // TODO store order for every column
         isAscent = !isAscent;
 
         // set the header view

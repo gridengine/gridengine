@@ -82,7 +82,9 @@ public class HostConfigFrame extends JFrame implements Config {
         super("");
 
         setLocationRelativeTo(parent);
-        setIconImage(parent.icons.getImageIcon("options").getImage());
+        if (parent != null) {
+            setIconImage(parent.icons.getImageIcon("options").getImage());
+        }
 
         this.parent = parent;
         this.idata = idata;
@@ -256,10 +258,10 @@ public class HostConfigFrame extends JFrame implements Config {
             message = getLabel("cfg.exec.spool.dir.local.notemptyvalidator");
         }
 
-        // JVM library path field
-        if (jvmLibPathTextField.isVisible() && jvmLibPathTextField.getText().equals("")) {
-            message = getLabel("cfg.sge.jvm.lib.path.notemptyvalidator");
-        }
+        // JVM library path field if it's empty means auto detected
+//        if (jvmLibPathTextField.isVisible() && jvmLibPathTextField.getText().equals("")) {
+//            message = getLabel("cfg.sge.jvm.lib.path.notemptyvalidator");
+//        }
 
         // Connect user field
         if (connectUserTextField.isVisible() && connectUserTextField.getText().equals("")) {
@@ -379,7 +381,9 @@ public class HostConfigFrame extends JFrame implements Config {
     public String getLabel(String key) {
         String label = "";
 
-        label = parent.langpack.getString(key);
+        if (parent != null) {
+            label = parent.langpack.getString(key);
+        }
 
         return label;
     }

@@ -68,6 +68,7 @@ ___INFO__MARK_END__-->
     <!--General texts-->
     <str id="button.exit.label" txt="Exit" />
     <str id="title.confirmation" txt="Confirmation" />
+    <str id="title.please.wait" txt="Please wait..." />
 
     <str id="state.new_unknown_host" txt="New unknown host"/>
     <str id="state.unknown_host" txt="Unknown host"/>
@@ -325,7 +326,7 @@ ___INFO__MARK_END__-->
         <str id="cfg.sge.jmx.ssl.keystore.pw.2.tooltip" txt="<html><b>Retype password</b><br><br>
         Retype the keystore password.</html>" />
         <str id="cfg.sge.jvm.lib.path.label.tooltip" txt="<html><b>JVM library path</b><br><br>
-        Path to the JVM library on the qmaster host.<br><br>
+        Path to the JVM library on the qmaster and/or shadow host(s). Leave it empty for auto detection.<br><br>
         <b>Variable: </b><code>$SGE_JVM_LIB_PATH</code></html>" />
         <str id="cfg.sge.additional.jvm.args.label.tooltip" txt="<html><b>Additional JVM arguments</b><br><br>
         Additional arguments to be used when starting the JVM in qmaster.<br><br>
@@ -580,7 +581,6 @@ ___INFO__MARK_END__-->
         <!-- Labels -->
         <str id="host.config.frame.title" txt="Configuration of {0} host(s)"/>
         <str id="cfg.exec.spool.dir.local.label" txt="Local execd spool directory"/>
-        <str id="resolve.timeout.label" txt="Resolve timeout"/>
         <str id="connect.user.label" txt="Connect user"/>
         <str id="resolve.timeout.label" txt="Resolve timeout (sec)"/>
         <str id="install.timeout.label" txt="Install timeout (sec)"/>
@@ -588,7 +588,10 @@ ___INFO__MARK_END__-->
         <str id="button.ok.label" txt="Ok"/>
         <!-- Tooltips -->
         <str id="cfg.exec.spool.dir.local.tooltip" txt="<html><b>Local execd spool directory</b><br><br>
-        The name of the user that will be used to connect to remote host via ${cfg.shell.name}/${cfg.copy.command}.</html>"/>
+        The pathname of the local spool directory for the execution host.<br>
+        If differs from the global spool directory this value will be used.<br>
+        User '${cfg.admin.user}' must have the right to create this directory and<br>
+        to write into it.</html>"/>
         <str id="connect.user.tooltip" txt="<html><b>Connect user</b><br><br>
         The name of the user that will be used to connect to remote host via ${cfg.shell.name}/${cfg.copy.command}.</html>"/>
         <str id="resolve.timeout.tooltip" txt="<html><b>Resolve timeout</b><br><br>

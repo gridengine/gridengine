@@ -115,4 +115,12 @@ public class SortedColumnHeaderRenderer extends JButton implements TableCellRend
         this.selectedColumn = selectedColumn;
         this.columnState = state;
     }
+
+    /**
+     * Returns with the selected column's state.
+     * @return the selected column's state. States: STATE_NONE, STATE_UP, STATE_DOWN
+     */
+    public int getSelectedColumnState() {
+        return columnState;
+    }
 }

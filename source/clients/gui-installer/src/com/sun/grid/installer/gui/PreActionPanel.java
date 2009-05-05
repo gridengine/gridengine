@@ -38,10 +38,6 @@ import com.izforge.izpack.util.VariableSubstitutor;
 import com.sun.grid.installer.util.ExtendedFile;
 
 import com.sun.grid.installer.util.Util;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 public class PreActionPanel extends ActionPanel {
 

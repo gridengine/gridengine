@@ -135,4 +135,27 @@ public class HostTest {
             assertTrue("Host's spool directory is not empty!", host.getSpoolDir().equals(""));
         }
     }
+
+    public void testEquals() {
+        Host host = new Host(Host.Type.HOSTNAME, "grid1", true, true, true, true, "spool/dir");
+        host.setIp("1.1.1.1");
+        Host host2 = new Host(Host.Type.HOSTNAME, "grid1", false, false, false, false, "spool/dir2");
+        host2.setIp("1.1.1.1");
+        Host host3 = new Host(Host.Type.HOSTNAME, "grid1", false, true, true, false, "spool/dir3");
+        host2.setIp("1.1.1.1");
+
+        assertTrue("Equals null!", !host.equals(null));
+        assertTrue("Not reflexive!", host.equals(host));
+        assertTrue("Not simmetric!", host.equals(host2) && host2.equals(host));
+        assertTrue("Not transitive!", host.equals(host2) && host2.equals(host3) && host.equals(host3));
+}
+
+    public void testHashCode() {
+        Host host = new Host(Host.Type.HOSTNAME, "grid1", true, true, true, true, "spool/dir");
+        host.setIp("1.1.1.1");
+        Host host2 = new Host(Host.Type.HOSTNAME, "grid1", false, false, false, false, "spool/dir2");
+        host2.setIp("1.1.1.1");
+
+        assertTrue("Not equals!", host.hashCode() == host2.hashCode());
+    }
 }

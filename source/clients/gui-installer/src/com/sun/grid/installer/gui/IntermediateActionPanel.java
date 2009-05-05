@@ -1,7 +1,34 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+/*___INFO__MARK_BEGIN__*/
+/*************************************************************************
+ *
+ *  The Contents of this file are made available subject to the terms of
+ *  the Sun Industry Standards Source License Version 1.2
+ *
+ *  Sun Microsystems Inc., March, 2001
+ *
+ *
+ *  Sun Industry Standards Source License Version 1.2
+ *  =================================================
+ *  The contents of this file are subject to the Sun Industry Standards
+ *  Source License Version 1.2 (the "License"); You may not use this file
+ *  except in compliance with the License. You may obtain a copy of the
+ *  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
+ *
+ *  Software provided under this License is provided on an "AS IS" basis,
+ *  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
+ *  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
+ *  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
+ *  See the License for the specific provisions governing your rights and
+ *  obligations concerning the Software.
+ *
+ *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+ *
+ *   Copyright: 2001 by Sun Microsystems, Inc.
+ *
+ *   All Rights Reserved.
+ *
+ ************************************************************************/
+/*___INFO__MARK_END__*/
 package com.sun.grid.installer.gui;
 
 import com.izforge.izpack.installer.InstallData;
@@ -52,7 +79,7 @@ public class IntermediateActionPanel extends ActionPanel {
             }
 
             // Check user
-            if (idata.getVariables().getProperty(ARG_CONNECT_USER, "").equals("")) {
+            if (parent.getRules().isConditionTrue(COND_NO_CONNECT_USER)) {
                 String sgeRoot = vs.substitute(idata.getVariable(VAR_SGE_ROOT), null);
                 String userName = vs.substitute(idata.getVariable(VAR_USER_NAME), null);
 
@@ -62,20 +89,23 @@ public class IntermediateActionPanel extends ActionPanel {
 
                 if (!userName.equals("root")) {
                     if (userName.equals(sgeRootDir.getOwner())) {
-                        if (JOptionPane.NO_OPTION == JOptionPane.showOptionDialog(this, vs.substituteMultiple(idata.langpack.getString(WARNING_USER_NOT_ROOT), null),
+                        if (JOptionPane.NO_OPTION == JOptionPane.showOptionDialog(parent, vs.substituteMultiple(idata.langpack.getString(WARNING_USER_NOT_ROOT), null),
                                 idata.langpack.getString("installer.warning"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null,
                                 new Object[]{idata.langpack.getString("installer.yes"), idata.langpack.getString("installer.no")}, idata.langpack.getString("installer.yes"))) {
                             parent.exit(true);
                         }
                     } else {
-                        JOptionPane.showOptionDialog(this, vs.substituteMultiple(idata.langpack.getString(ERROR_USER_INVALID), null),
+                        JOptionPane.showOptionDialog(parent, vs.substituteMultiple(idata.langpack.getString(ERROR_USER_INVALID), null),
                                 idata.langpack.getString("installer.error"), JOptionPane.CANCEL_OPTION, JOptionPane.ERROR_MESSAGE, null,
                                 new Object[]{idata.langpack.getString("button.exit.label")}, idata.langpack.getString("button.exit.label"));
 
                         parent.exit(true);
                     }
                 }
-            } 
+            }
+
+            // Set SGE_JMX_PORT to SGE_QMASTER_PORT + 2
+            idata.setVariable(VAR_SGE_JMX_PORT, Integer.toString(Integer.valueOf(idata.getVariable(VAR_SGE_QMASTER_PORT)) + 2));
         }
 
         // Set value for 'cond.qmaster.on.localhost' condition

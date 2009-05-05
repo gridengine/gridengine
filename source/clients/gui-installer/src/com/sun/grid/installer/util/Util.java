@@ -829,7 +829,7 @@ public class Util implements Config{
             FsTypeCommand fstypeCmd = new FsTypeCommand(host, DEF_CONNECT_USER, shell, IS_MODE_WINDOWS, fstypeScript, dir);
             fstypeCmd.execute();
 
-            if (fstypeCmd.getExitValue() == 0) {
+            if (fstypeCmd.getExitValue() == EXIT_VAL_SUCCESS) {
                 result = fstypeCmd.getOutput().firstElement().trim();
                 Debug.trace("FSType of '" + dir + "' is '" + result +"'.");
             } else {
@@ -860,7 +860,7 @@ public class Util implements Config{
             FsTypeCommand groupCmd = new FsTypeCommand(host, DEF_CONNECT_USER, shell, IS_MODE_WINDOWS, command,  userToCheck);
             groupCmd.execute();
 
-            if (groupCmd.getExitValue() == 0) {
+            if (groupCmd.getExitValue() == EXIT_VAL_SUCCESS) {
                 groups = groupCmd.getOutput().firstElement().trim().split(" ");
 
                 Debug.trace("Group of user '" + userToCheck + "' are '" + Arrays.toString(groups) + "'.");
@@ -872,6 +872,46 @@ public class Util implements Config{
         } 
 
         return groups;
+    }
+
+    /**
+     * Check whether the executor user is superuser.
+     * @param sgeRoot The SGE_ROOT
+     * @param architecture The architecture to be used
+     * @return true if the user has the id of '0', false otherwise.
+     */
+    public static boolean isRootUser(String sgeRoot, String architecture) {
+        String userId = getUserId(sgeRoot, architecture);
+
+        return userId.equals("0");
+    }
+
+    /**
+     * Returns with the user id of the executor user
+     * @param sgeRoot The SGE_ROOT
+     * @param architecture The architecure of the local host
+     * @return The id of the executor user
+     */
+    public static String getUserId(String sgeRoot, String architecture) {
+        String userId = "";
+
+        try {
+            String command = sgeRoot + "/" + architecture + "/uidgid";
+            SimpleLocalCommand cmd = new SimpleLocalCommand(command, "-euid");
+            cmd.execute();
+
+            if (cmd.getExitValue() == EXIT_VAL_SUCCESS) {
+                userId = cmd.getOutput().firstElement().trim();
+
+                Debug.trace("Id of the executor user is '" + userId + "'.");
+            } else {
+                Debug.error("Failed to get the user id of executor user! Error: " + cmd.getError());
+            }
+        } catch (Exception e) {
+            Debug.error("Failed to get the user id of executor user! " + e);
+        }
+
+        return userId;
     }
 
     /**

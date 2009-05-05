@@ -133,10 +133,21 @@ public class FileHandler {
             return null;
         }
 
-        // call 'ls -la' command
-        //TODO: Ensure that /usr/bin has ls !!!
-        SimpleLocalCommand cmd = new SimpleLocalCommand("ls -la "+filePath);
+        // call 'ls -la' command...
+        SimpleLocalCommand cmd = new SimpleLocalCommand("ls -la " + filePath);
         cmd.execute();
+
+        // in case of failure try /usr/bin/ls -la...
+        if (cmd.getExitValue() != Config.EXIT_VAL_SUCCESS) {
+            cmd = new SimpleLocalCommand("/usr/bin/ls -la " + filePath);
+            cmd.execute();
+        }
+
+        if (cmd.getExitValue() != Config.EXIT_VAL_SUCCESS) {
+            Debug.trace("Failed to execute 'ls -la " + filePath + "'. Out:"
+                    + cmd.getOutput().toString() + " Err:" + cmd.getError().toString());
+            return null;
+        }
 
         // process output
         Vector<String> result = cmd.getOutput();
@@ -152,7 +163,7 @@ public class FileHandler {
         props = cleanUpFileProps(props);
 
         if (props.length < 4) {
-            Debug.trace("Unexpected empty output from ls -la "+filePath);
+            Debug.trace("Unexpected empty output from ls -la " + filePath);
             return null;
         }
 

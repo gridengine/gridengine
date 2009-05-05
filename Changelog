@@ -1,3 +1,21 @@
+ZG-2009-05-05-0: Docs:        gui-installer: Update help pages
+                 Enhancem.:   gui-installer: Show "Please wait..." text in case 
+                              of longer procedures on action panels
+                 Enhancem.:   gui-installer: using gethostbyname/gethostbyaddr
+                              binaries instead of InetAddress class
+                 Enhancem.:   gui-installer: fix old and implement new JUnit tests
+                 Bugfix:      gui-installer: JVM library path is not mandatory on
+                              Configuration window.
+                 Bugfix:      gui-installer: JMX port has to have the value of
+                              SGE_QMASTER_PORT + 2 by default
+                 Bugfix:      gui-installer: when moving columns the sorting stays
+                              in the column index not on the column ifself
+                 Bugster:     6786350
+                 Bugfix:      gui-installer: let's the user be informed about the
+                              user who is running the installer
+                 Bugster:     6831971
+                 Review:      LP
+
 DG-2009-05-04-0: Cleanup:     Upgrade routine is misleading when asking for 
                               existing backup directory from configuration 
                               of the old cluster.

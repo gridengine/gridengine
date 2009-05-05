@@ -215,6 +215,33 @@ supported expressions are lists and numeric ranges.
 </CENTER>
 <P><BR>
 </P>
+<H2>Configuring hosts</H2>
+<P>
+By performing right mouse click on the host selection table and selecting
+'Configure...' menu item, you can reach the host configuration window. Here you
+can modify host specific values for the selected/all hosts have been added to the table.
+<UL>
+<LI><P><B>Local execd spool directory</B> - The pathname of the local spool directory
+        for the execution host. If differs from the gobal spool directory this value will be used.
+        The specified admin user must have the right to create this directory and
+        to write into it.</P>
+<LI><P><B>JVM library path</B> - Path to the JVM library on the qmaster and/or shadow host(s).
+        Be sure to enter a correct path! If you are on a 64-bit system you may
+        have executed the GUI installer in default Java<SUP>TM</SUP> 32-bit mode.
+        In that case the detected path to the library will be for a 32-bit Java<SUP>TM</SUP>
+	and thread will fail to start later in 64-bit mode. Leave it empty for auto detection.</P>
+<LI><P><B>Additional JVM args</B> - Additional arguments to be used when starting
+        the JVM on qmaster and/or shadow host(s). Default is <I>-Xmx256m</I></P>
+<LI><P><B>Connect user</B> - The user name that will be used to connect to the remote host.</P>
+<LI><P><B>Resolve timeout</B> - A timeout value for any operation in a resolve_pool
+        (resolving hosts, refreshing host states, copying an installation script to remote host).
+        Increase the default value if you see hosts with <FONT COLOR="#ff0000">Unreachable</FONT>
+        state and you are sure that password-less access is working correctly for the connect user.</P>
+<LI><P><B>Install timeout</B> - A timeout value for any installation task.
+        Increase the default value if you see that the installation tasks are
+        failing with a <FONT COLOR="#ff0000">Timeout</FONT> state.</P>
+</UL>
+</P>
 <H2>Explanation of Host and Install Task States</H2>
 <P>Complete lists and description of all possible states one may
 encounter in this screen can be found below. The states can be

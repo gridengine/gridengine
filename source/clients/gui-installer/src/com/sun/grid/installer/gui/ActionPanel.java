@@ -31,34 +31,72 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.installer.gui;
 
+import com.izforge.izpack.gui.IzPanelConstraints;
+import com.izforge.izpack.gui.IzPanelLayout;
+import com.izforge.izpack.gui.LayoutConstants;
+import com.izforge.izpack.installer.GUIListener;
 import com.izforge.izpack.installer.InstallData;
 import com.izforge.izpack.installer.InstallerFrame;
 import com.izforge.izpack.installer.IzPanel;
+import com.izforge.izpack.util.VariableSubstitutor;
 import com.sun.grid.installer.util.Config;
+import javax.swing.JLabel;
 
-public class ActionPanel extends IzPanel implements Config {
+public class ActionPanel extends IzPanel implements Config, GUIListener {
     public static String PROP_NUM_OF_EXECUTION = "numOfExecution";
 
     private String panelId = "";    
     private int numOfMaxExecution = 1;
 
+    private boolean panelActivated = false;
+
     public ActionPanel(InstallerFrame parent, InstallData idata) {
-        super(parent, idata);
+        super(parent, idata, new IzPanelLayout(LayoutConstants.FILL_OUT_COLUMN_WIDTH));
+
+        buildPanel();
+
+        parent.addGuiListener(this);
+    }
+
+    private void buildPanel() {
+        VariableSubstitutor vs = new VariableSubstitutor(idata.getVariables());
+        
+        JLabel textLabel = new JLabel(vs.substituteMultiple(parent.langpack.getString("title.please.wait"), null));
+        textLabel.setHorizontalAlignment(JLabel.CENTER);
+
+        IzPanelConstraints ipc = new IzPanelConstraints();
+        ipc.setXStretch(1.0);
+        ipc.setYStretch(1.0);
+        
+        add(textLabel, ipc);
+
+        getLayoutHelper().completeLayout();
     }
 
     public void doAction() {}
     
     @Override
     public void panelActivate() {
-        panelId = idata.panels.get(idata.curPanelNumber).getMetadata().getPanelid();
+        panelActivated = true;
+    }
 
-        if (getNumOfExecution() < numOfMaxExecution) {
-            doAction();
-        
-            incNumOfExecution();
+    @Override
+    public void panelDeactivate() {
+        panelActivated = false;
+    }
+    
+    public void guiActionPerformed(int what, Object arg1) {
+        if (panelActivated && what == GUIListener.PANEL_SWITCHED) {
+            panelId = idata.panels.get(idata.curPanelNumber).getMetadata().getPanelid();
+
+            if (getNumOfExecution() < numOfMaxExecution) {
+                doAction();
+
+                incNumOfExecution();
+            }
+
+            getInstallerFrame().skipPanel();
         }
-
-        getInstallerFrame().skipPanel();
     }
 
     public int getNumOfExecution() {

@@ -131,7 +131,7 @@ ___INFO__MARK_END__-->
         </condition>
         <condition type="variable" id="cond.no.connect.user">
             <name>connect_user</name>
-            <value></value>
+            <value>${user.name}</value>
         </condition>
         <condition type="variable" id="cond.mode.install">
             <name>mode</name>
@@ -183,7 +183,7 @@ ___INFO__MARK_END__-->
         <variable name="readme.temp.file" value="${templates.dir}/readme_template.html"/>
         <variable name="readme.file.name.1" value="/tmp/readme"/> <!-- gets the '.html' extension later -->
         <variable name="readme.file.name.2" value="${cfg.sge.root}/${cfg.cell.name}/readme"/>
-        <variable name="silent.install.file" value="${cfg.sge.root}/${cfg.cell.name}/gui_auto_install.xml"/>
+        <variable name="silent.install.file" value="${cfg.sge.root}/${cfg.cell.name}/gui_auto_install"/> <!-- gets the '.xml' extension later -->
         <variable name="auto.conf.temp.file" value="${templates.dir}/gui_inst_template.conf"/>
         <variable name="auto.conf.file" value="${cfg.sge.root}/${cfg.cell.name}/gui_autoinst"/> <!-- gets the '.conf' extension later -->
         <variable name="auto.install.component.temp.file" value="${templates.dir}/install_component"/>

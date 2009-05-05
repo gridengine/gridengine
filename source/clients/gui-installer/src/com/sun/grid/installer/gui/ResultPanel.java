@@ -217,16 +217,28 @@ public class ResultPanel extends IzPanel implements Printable, Config {
         loadResult();
 
         // Generate auto installation file
-        // TODO set proper output
-        /*try {
-            FileOutputStream out = new FileOutputStream("xmloutput.xml");
-            BufferedOutputStream outBuff = new BufferedOutputStream(out, 5120);
-            parent.writeXMLTree(idata.xmlData, outBuff);
-            outBuff.flush();
-            outBuff.close();
-        } catch (Exception e) {
-            Debug.error("Can not write auto installation file! " + e);
-        }*/
+//        FileOutputStream out = null;
+//        BufferedOutputStream outBuff = null;
+//        try {
+//            VariableSubstitutor vs = new VariableSubstitutor(idata.getVariables());
+//            String silentInstallationFile = vs.substituteMultiple(idata.getVariable(VAR_SILENT_INSTALL_FILE), null);
+//            silentInstallationFile += "_" + Util.generateTimeStamp() + ".xml";
+//
+//            Debug.trace("Generating auto installation file: '" + silentInstallationFile + "'.");
+//
+//            out = new FileOutputStream(silentInstallationFile);
+//            outBuff = new BufferedOutputStream(out, 5120);
+//            parent.writeXMLTree(idata.xmlData, outBuff);
+//            outBuff.flush();
+//
+//        } catch (Exception e) {
+//            Debug.error("Can not write auto installation file! " + e);
+//        } finally {
+//            try {
+//                out.close();
+//                outBuff.close();
+//            } catch (Exception ex) {}
+//        }
     }
 
     /**

@@ -148,7 +148,6 @@ public class HostList extends ArrayBlockingQueue<Host> {
                     h.setBdbHost(true);
                 }
                 return h;
-            //TODO: Should be added only if we are actually installing that type
             } else { //if (o.isQmasterHost() || o.isAdminHost() || o.isExecutionHost() || o.isShadowHost() || o.isSubmitHost() || o.isBdbHost()) {
                 return (super.add(o) ? o : null);
             }

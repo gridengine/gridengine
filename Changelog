@@ -1,3 +1,6 @@
+ZG-2009-05-05-1: Reverting:   gui-installer: using gethostbyname/gethostbyaddr
+                              binaries instead of InetAddress class
+
 ZG-2009-05-05-0: Docs:        gui-installer: Update help pages
                  Enhancem.:   gui-installer: Show "Please wait..." text in case 
                               of longer procedures on action panels

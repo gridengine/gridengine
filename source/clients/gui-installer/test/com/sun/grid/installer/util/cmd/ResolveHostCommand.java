@@ -37,8 +37,6 @@ public class ResolveHostCommand extends CmdExec {
     private int exitVal = EXIT_VAL_SUCCESS;
 
     private String host = "";
-    private String sgeRoot = "";
-
     private String hostName = "";
     private String hostAddress = "";
 
@@ -46,14 +44,14 @@ public class ResolveHostCommand extends CmdExec {
         super(Util.DEF_RESOLVE_TIMEOUT);
     }
     
-    public ResolveHostCommand(long timeout, String host, String sgeRoot) {
+    private ResolveHostCommand(long timeout) {
         super(timeout);
-
-        this.host = host;
-        this.sgeRoot = sgeRoot;
     }
 
-    public void execute() {
+    @Override
+    public void execute(String host) {
+        this.host = host;
+        
         try {
             Thread.sleep(TestBedManager.getInstance().getResolveSleepLength());
         } catch (InterruptedException ex) {

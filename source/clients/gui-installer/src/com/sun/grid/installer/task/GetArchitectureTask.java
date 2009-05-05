@@ -83,8 +83,8 @@ public class GetArchitectureTask extends TestableTask {
             Vector<String> output = getTestOutput();
 
             if (!isIsTestMode()) {
-                ResolveHostCommand resolveHostCommand = new ResolveHostCommand(host.getResolveTimeout(), value, sge_root);
-                resolveHostCommand.execute();
+                ResolveHostCommand resolveHostCommand = new ResolveHostCommand(host.getResolveTimeout());
+                resolveHostCommand.execute(value);
                 exitValue = resolveHostCommand.getExitValue();
 
                 name = resolveHostCommand.getHostName(); //If IP can't be resolved takes took long on windows

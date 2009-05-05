@@ -313,7 +313,7 @@
           <Color blue="0" green="0" red="ff" type="rgb"/>
         </Property>
         <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
-          <Connection code="parent.icons.getImageIcon(&quot;error.small&quot;)" type="code"/>
+          <Connection code="getImageIcon(&quot;error.small&quot;)" type="code"/>
         </Property>
       </Properties>
     </Component>

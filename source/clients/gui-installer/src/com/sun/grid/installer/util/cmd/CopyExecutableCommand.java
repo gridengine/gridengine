@@ -69,7 +69,7 @@ public class CopyExecutableCommand extends CmdExec {
               }
               userArg = "-l "+user;
           }
-          sshOptions = (isSameCommand(shell, "ssh")) ? "-o StrictHostKeyChecking=yes -o PreferredAuthentications=gssapi-keyex,publickey" : "";
+          sshOptions = getShellOptions(shell);
           this.command  = MessageFormat.format(copyCommand, shellArg, userArg, sshOptions, host, inputPath, outputPath).trim();
       }
 

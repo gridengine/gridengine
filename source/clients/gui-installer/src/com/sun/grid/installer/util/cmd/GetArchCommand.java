@@ -69,7 +69,7 @@ public class GetArchCommand extends CmdExec {
               }
               userArg = "-l "+user;
           }
-          sshOptions = (isSameCommand(shell, "ssh")) ? "-o StrictHostKeyChecking=yes -o PreferredAuthentications=gssapi-keyex,publickey" : "";
+          sshOptions = getShellOptions(shell);
 
           //String extendedTimeout = String.valueOf(timeout/1000 + 10); //We add additinal 10 secs to the timeout after which the installScript kills itself, if Java failed to do so in within timeout
           this.command  = MessageFormat.format(getArchCommand, shellArg, userArg, sshOptions, hostToReplace, arg4, "\\\""+sge_root+"\\\"", arg6).trim();

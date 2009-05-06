@@ -71,7 +71,7 @@ public class RemoteComponentScriptCommand extends CmdExec {
               }
               userArg = "-l "+user;
           }
-          sshOptions = (isSameCommand(shell, "ssh")) ? "-o StrictHostKeyChecking=yes -o PreferredAuthentications=gssapi-keyex,publickey" : "";
+          sshOptions = getShellOptions(shell);
           
           //String extendedTimeout = String.valueOf(timeout/1000 + 10); //We add additinal 10 secs to the timeout after which the installScript kills itself, if Java failed to do so
           this.command  = MessageFormat.format(installCommand, shellArg, userArg, sshOptions, hostArg, installScript, scriptArgs).trim();

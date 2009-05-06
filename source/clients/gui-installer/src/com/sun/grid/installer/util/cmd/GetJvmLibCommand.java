@@ -68,7 +68,7 @@ public class GetJvmLibCommand extends CmdExec {
               }
               userArg = "-l "+user;
           }
-          sshOptions = (isSameCommand(shell, "ssh")) ? "-o StrictHostKeyChecking=yes -o PreferredAuthentications=gssapi-keyex,publickey" : "";
+          sshOptions = getShellOptions(shell);
           
           this.command  = MessageFormat.format(getJvmLibCommand, shellArg, userArg, sshOptions, hostToReplace, arg4, "\\\""+sge_root+"\\\"").trim();
       }

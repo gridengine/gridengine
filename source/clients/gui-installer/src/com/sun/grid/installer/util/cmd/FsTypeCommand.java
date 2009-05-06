@@ -68,7 +68,7 @@ public class FsTypeCommand extends CmdExec {
               }
               userArg = "-l "+user;
           }
-          sshOptions = (isSameCommand(shell, "ssh")) ? "-o StrictHostKeyChecking=yes -o PreferredAuthentications=gssapi-keyex,publickey" : "";
+          sshOptions = getShellOptions(shell);
           hostToReplace = host;          
           this.command  = MessageFormat.format(fsTypeCommand, shellArg, userArg, sshOptions, hostToReplace, fstypePath, dirPath).trim();
       }

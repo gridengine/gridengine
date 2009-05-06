@@ -188,7 +188,7 @@ public class ThreadPoolObserver {
         public void run() {
             do {
                 try {
-                    Thread.sleep(300);
+                    Thread.sleep(200);
                 } catch (InterruptedException e) {
                 }
 

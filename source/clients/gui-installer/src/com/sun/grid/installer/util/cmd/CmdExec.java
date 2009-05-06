@@ -83,6 +83,10 @@ public abstract class CmdExec implements Config {
         return false;
     }
 
+    public static String  getShellOptions(String shell) {
+        return (isSameCommand(shell, "ssh")) ? "-o StrictHostKeyChecking=yes -o PreferredAuthentications=gssapi-keyex,publickey" : "";
+    }
+
     private String setupOutputFiles(String commands) {
         try {
             outFile = File.createTempFile("gui-cmdexec", ".out", new File("/tmp"));

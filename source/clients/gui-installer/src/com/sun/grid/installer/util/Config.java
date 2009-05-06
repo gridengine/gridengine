@@ -82,6 +82,9 @@ public interface Config {
     public static final String VAR_ALL_ADMIN_HOSTS = "gui_alladminhosts";
     public static final String VAR_ALL_SUBMIT_HOSTS = "gui_allsubmithosts";
     public static final String VAR_ALL_CSPHOSTS = "gui_csphosts";
+    public static final String VAR_ALL_COPYUSERS = "gui_csphosts_connectusers";
+    public static final String VAR_QMASTER_CONNECT_USER = "gui_qmaster_connect_user";
+    public static final String VAR_GUI_SHELL_OPTIONS = "gui_shell_options";
     public static final String VAR_FIRST_TASK = "first_install_task";
     public static final String VAR_LAST_TASK = "last_install_task";
 

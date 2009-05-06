@@ -49,6 +49,7 @@ import com.sun.grid.installer.util.Config;
 import com.sun.grid.installer.util.FileHandler;
 import com.sun.grid.installer.util.Util;
 
+import com.sun.grid.installer.util.cmd.CmdExec;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.event.ActionListener;
@@ -445,213 +446,213 @@ public class HostPanel extends IzPanel implements Config,
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        hostButtonGroup = new javax.swing.ButtonGroup();
-        tabbedPane = new javax.swing.JTabbedPane();
-        allHostsScrollPane = new javax.swing.JScrollPane();
-        progressBar = new javax.swing.JProgressBar();
-        hostRB = new javax.swing.JRadioButton();
-        hostTF = new javax.swing.JTextField();
-        addB = new javax.swing.JButton();
-        fileB = new javax.swing.JButton();
-        fileRB = new javax.swing.JRadioButton();
-        componentSelectionPanel = new javax.swing.JPanel();
-        shadowCB = new javax.swing.JCheckBox();
-        execCB = new javax.swing.JCheckBox();
-        adminCB = new javax.swing.JCheckBox();
-        submitCB = new javax.swing.JCheckBox();
-        qmasterCB = new javax.swing.JCheckBox();
-        bdbCB = new javax.swing.JCheckBox();
-        statusBar = new javax.swing.JLabel();
-        cancelB = new javax.swing.JButton();
+       hostButtonGroup = new javax.swing.ButtonGroup();
+       tabbedPane = new javax.swing.JTabbedPane();
+       allHostsScrollPane = new javax.swing.JScrollPane();
+       progressBar = new javax.swing.JProgressBar();
+       hostRB = new javax.swing.JRadioButton();
+       hostTF = new javax.swing.JTextField();
+       addB = new javax.swing.JButton();
+       fileB = new javax.swing.JButton();
+       fileRB = new javax.swing.JRadioButton();
+       componentSelectionPanel = new javax.swing.JPanel();
+       shadowCB = new javax.swing.JCheckBox();
+       execCB = new javax.swing.JCheckBox();
+       adminCB = new javax.swing.JCheckBox();
+       submitCB = new javax.swing.JCheckBox();
+       qmasterCB = new javax.swing.JCheckBox();
+       bdbCB = new javax.swing.JCheckBox();
+       statusBar = new javax.swing.JLabel();
+       cancelB = new javax.swing.JButton();
 
-        hostButtonGroup.add(hostRB);
-        hostButtonGroup.add(fileRB);
+       hostButtonGroup.add(hostRB);
+       hostButtonGroup.add(fileRB);
 
-        allHostsScrollPane.setBackground(new java.awt.Color(255, 255, 255));
-        tabbedPane.addTab("All hosts (0)", allHostsScrollPane);
+       allHostsScrollPane.setBackground(new java.awt.Color(255, 255, 255));
+       tabbedPane.addTab("All hosts (0)", allHostsScrollPane);
 
-        progressBar.setMaximum(10);
-        progressBar.setMinimum(1);
+       progressBar.setMaximum(10);
+       progressBar.setMinimum(1);
 
-        hostButtonGroup.add(hostRB);
-        hostRB.setSelected(true);
-        hostRB.setText(getLabel("hostinput.label"));
-        hostRB.setToolTipText(getTooltip("hostinput.label.tooltip"));
-        hostRB.addFocusListener(new java.awt.event.FocusAdapter() {
-            public void focusGained(java.awt.event.FocusEvent evt) {
-                hostRBFocusGained(evt);
-            }
-        });
+       hostButtonGroup.add(hostRB);
+       hostRB.setSelected(true);
+       hostRB.setText(getLabel("hostinput.label"));
+       hostRB.setToolTipText(getTooltip("hostinput.label.tooltip"));
+       hostRB.addFocusListener(new java.awt.event.FocusAdapter() {
+           public void focusGained(java.awt.event.FocusEvent evt) {
+               hostRBFocusGained(evt);
+           }
+       });
 
-        hostTF.setText(idata.getVariable("add.hostinput"));
-        hostTF.setToolTipText(getTooltip("hostinput.label.tooltip"));
-        hostTF.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                hostTFActionPerformed(evt);
-            }
-        });
-        hostTF.addFocusListener(new java.awt.event.FocusAdapter() {
-            public void focusGained(java.awt.event.FocusEvent evt) {
-                hostTFFocusGained(evt);
-            }
-        });
+       hostTF.setText(getLabel("hostinput.value"));
+       hostTF.setToolTipText(getTooltip("hostinput.label.tooltip"));
+       hostTF.addActionListener(new java.awt.event.ActionListener() {
+           public void actionPerformed(java.awt.event.ActionEvent evt) {
+               hostTFActionPerformed(evt);
+           }
+       });
+       hostTF.addFocusListener(new java.awt.event.FocusAdapter() {
+           public void focusGained(java.awt.event.FocusEvent evt) {
+               hostTFFocusGained(evt);
+           }
+       });
 
-        addB.setText(getLabel("button.add.label"));
-        addB.setToolTipText(getTooltip("button.add.label.tooltip"));
-        addB.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                addBActionPerformed(evt);
-            }
-        });
+       addB.setText(getLabel("button.add.label"));
+       addB.setToolTipText(getTooltip("button.add.label.tooltip"));
+       addB.addActionListener(new java.awt.event.ActionListener() {
+           public void actionPerformed(java.awt.event.ActionEvent evt) {
+               addBActionPerformed(evt);
+           }
+       });
 
-        fileB.setText(getLabel("UserInputPanel.search.browse"));
-        fileB.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                fileBActionPerformed(evt);
-            }
-        });
-        fileB.addFocusListener(new java.awt.event.FocusAdapter() {
-            public void focusGained(java.awt.event.FocusEvent evt) {
-                fileBFocusGained(evt);
-            }
-        });
+       fileB.setText(getLabel("UserInputPanel.search.browse"));
+       fileB.addActionListener(new java.awt.event.ActionListener() {
+           public void actionPerformed(java.awt.event.ActionEvent evt) {
+               fileBActionPerformed(evt);
+           }
+       });
+       fileB.addFocusListener(new java.awt.event.FocusAdapter() {
+           public void focusGained(java.awt.event.FocusEvent evt) {
+               fileBFocusGained(evt);
+           }
+       });
 
-        hostButtonGroup.add(fileRB);
-        fileRB.setText(getLabel("fromfile.label"));
-        fileRB.setToolTipText(getTooltip("fromfile.label.tooltip"));
-        fileRB.addFocusListener(new java.awt.event.FocusAdapter() {
-            public void focusGained(java.awt.event.FocusEvent evt) {
-                fileRBFocusGained(evt);
-            }
-        });
+       hostButtonGroup.add(fileRB);
+       fileRB.setText(getLabel("fromfile.label"));
+       fileRB.setToolTipText(getTooltip("fromfile.label.tooltip"));
+       fileRB.addFocusListener(new java.awt.event.FocusAdapter() {
+           public void focusGained(java.awt.event.FocusEvent evt) {
+               fileRBFocusGained(evt);
+           }
+       });
 
-        shadowCB.setText(getLabel("component.shadow.host.label"));
-        shadowCB.setToolTipText(getTooltip("component.shadow.host.label.tooltip"));
+       shadowCB.setText(getLabel("component.shadow.host.label"));
+       shadowCB.setToolTipText(getTooltip("component.shadow.host.label.tooltip"));
 
-        execCB.setSelected(true);
-        execCB.setText(getLabel("component.execd.host.label"));
-        execCB.setToolTipText(getTooltip("component.execd.host.label.tooltip"));
+       execCB.setSelected(true);
+       execCB.setText(getLabel("component.execd.host.label"));
+       execCB.setToolTipText(getTooltip("component.execd.host.label.tooltip"));
 
-        adminCB.setSelected(true);
-        adminCB.setText(getLabel("component.admin.host.label"));
-        adminCB.setToolTipText(getTooltip("component.admin.host.label.tooltip"));
+       adminCB.setSelected(true);
+       adminCB.setText(getLabel("component.admin.host.label"));
+       adminCB.setToolTipText(getTooltip("component.admin.host.label.tooltip"));
 
-        submitCB.setSelected(true);
-        submitCB.setText(getLabel("component.submit.host.label"));
-        submitCB.setToolTipText(getTooltip("component.submit.host.label.tooltip"));
+       submitCB.setSelected(true);
+       submitCB.setText(getLabel("component.submit.host.label"));
+       submitCB.setToolTipText(getTooltip("component.submit.host.label.tooltip"));
 
-        qmasterCB.setText(getLabel("component.qmaster.host.label"));
-        qmasterCB.setToolTipText(getTooltip("component.shadow.host.label.tooltip"));
+       qmasterCB.setText(getLabel("component.qmaster.host.label"));
+       qmasterCB.setToolTipText(getTooltip("component.shadow.host.label.tooltip"));
 
-        bdbCB.setText(getLabel("component.bdb.host.label"));
-        bdbCB.setToolTipText(getTooltip("component.bdb.host.label.tooltip"));
+       bdbCB.setText(getLabel("component.bdb.host.label"));
+       bdbCB.setToolTipText(getTooltip("component.bdb.host.label.tooltip"));
 
-        org.jdesktop.layout.GroupLayout componentSelectionPanelLayout = new org.jdesktop.layout.GroupLayout(componentSelectionPanel);
-        componentSelectionPanel.setLayout(componentSelectionPanelLayout);
-        componentSelectionPanelLayout.setHorizontalGroup(
-            componentSelectionPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(0, 666, Short.MAX_VALUE)
-            .add(componentSelectionPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                .add(componentSelectionPanelLayout.createSequentialGroup()
-                    .addContainerGap()
-                    .add(qmasterCB)
-                    .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                    .add(shadowCB)
-                    .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
-                    .add(execCB)
-                    .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                    .add(bdbCB)
-                    .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                    .add(adminCB)
-                    .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
-                    .add(submitCB)
-                    .addContainerGap(62, Short.MAX_VALUE)))
-        );
-        componentSelectionPanelLayout.setVerticalGroup(
-            componentSelectionPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(0, 34, Short.MAX_VALUE)
-            .add(componentSelectionPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                .add(componentSelectionPanelLayout.createSequentialGroup()
-                    .addContainerGap()
-                    .add(componentSelectionPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                        .add(shadowCB)
-                        .add(execCB)
-                        .add(qmasterCB)
-                        .add(bdbCB)
-                        .add(adminCB)
-                        .add(submitCB))
-                    .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-        );
+       org.jdesktop.layout.GroupLayout componentSelectionPanelLayout = new org.jdesktop.layout.GroupLayout(componentSelectionPanel);
+       componentSelectionPanel.setLayout(componentSelectionPanelLayout);
+       componentSelectionPanelLayout.setHorizontalGroup(
+           componentSelectionPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+           .add(0, 666, Short.MAX_VALUE)
+           .add(componentSelectionPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+               .add(componentSelectionPanelLayout.createSequentialGroup()
+                   .addContainerGap()
+                   .add(qmasterCB)
+                   .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                   .add(shadowCB)
+                   .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
+                   .add(execCB)
+                   .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                   .add(bdbCB)
+                   .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                   .add(adminCB)
+                   .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
+                   .add(submitCB)
+                   .addContainerGap(62, Short.MAX_VALUE)))
+       );
+       componentSelectionPanelLayout.setVerticalGroup(
+           componentSelectionPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+           .add(0, 34, Short.MAX_VALUE)
+           .add(componentSelectionPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+               .add(componentSelectionPanelLayout.createSequentialGroup()
+                   .addContainerGap()
+                   .add(componentSelectionPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                       .add(shadowCB)
+                       .add(execCB)
+                       .add(qmasterCB)
+                       .add(bdbCB)
+                       .add(adminCB)
+                       .add(submitCB))
+                   .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+       );
 
-        statusBar.setForeground(new java.awt.Color(255, 0, 0));
-        statusBar.setIcon(getImageIcon("error.small"));
+       statusBar.setForeground(new java.awt.Color(255, 0, 0));
+       statusBar.setIcon(getImageIcon("error.small"));
 
-        cancelB.setText(getLabel("button.cancel.label"));
-        cancelB.setToolTipText(getTooltip("button.cancel.label.tooltip"));
-        cancelB.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                cancelBActionPerformed(evt);
-            }
-        });
+       cancelB.setText(getLabel("button.cancel.label"));
+       cancelB.setToolTipText(getTooltip("button.cancel.label.tooltip"));
+       cancelB.addActionListener(new java.awt.event.ActionListener() {
+           public void actionPerformed(java.awt.event.ActionEvent evt) {
+               cancelBActionPerformed(evt);
+           }
+       });
 
-        org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(this);
-        this.setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(layout.createSequentialGroup()
-                .addContainerGap()
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(layout.createSequentialGroup()
-                        .add(tabbedPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1300, Short.MAX_VALUE)
-                        .addContainerGap())
-                    .add(layout.createSequentialGroup()
-                        .add(progressBar, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1184, Short.MAX_VALUE)
-                        .add(9, 9, 9)
-                        .add(cancelB)
-                        .addContainerGap())
-                    .add(layout.createSequentialGroup()
-                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(hostRB)
-                            .add(fileRB))
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(fileB)
-                            .add(layout.createSequentialGroup()
-                                .add(hostTF, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 815, Short.MAX_VALUE)
-                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)))
-                        .add(addB)
-                        .add(284, 284, 284))
-                    .add(layout.createSequentialGroup()
-                        .add(componentSelectionPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                        .addContainerGap(646, Short.MAX_VALUE))
-                    .add(layout.createSequentialGroup()
-                        .add(statusBar, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 413, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                        .addContainerGap())))
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(hostRB)
-                    .add(addB)
-                    .add(hostTF, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(fileRB)
-                    .add(fileB))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(statusBar, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 23, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(componentSelectionPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 34, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(tabbedPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 330, Short.MAX_VALUE)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(cancelB, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(progressBar, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap())
-        );
-    }// </editor-fold>//GEN-END:initComponents
+       org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(this);
+       this.setLayout(layout);
+       layout.setHorizontalGroup(
+           layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+           .add(layout.createSequentialGroup()
+               .addContainerGap()
+               .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                   .add(layout.createSequentialGroup()
+                       .add(tabbedPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1300, Short.MAX_VALUE)
+                       .addContainerGap())
+                   .add(layout.createSequentialGroup()
+                       .add(progressBar, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1184, Short.MAX_VALUE)
+                       .add(9, 9, 9)
+                       .add(cancelB)
+                       .addContainerGap())
+                   .add(layout.createSequentialGroup()
+                       .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                           .add(hostRB)
+                           .add(fileRB))
+                       .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                       .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                           .add(fileB)
+                           .add(layout.createSequentialGroup()
+                               .add(hostTF, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 815, Short.MAX_VALUE)
+                               .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)))
+                       .add(addB)
+                       .add(284, 284, 284))
+                   .add(layout.createSequentialGroup()
+                       .add(componentSelectionPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                       .addContainerGap(646, Short.MAX_VALUE))
+                   .add(layout.createSequentialGroup()
+                       .add(statusBar, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 813, Short.MAX_VALUE)
+                       .addContainerGap())))
+       );
+       layout.setVerticalGroup(
+           layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+           .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
+               .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                   .add(hostRB)
+                   .add(addB)
+                   .add(hostTF, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+               .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+               .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                   .add(fileRB)
+                   .add(fileB))
+               .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+               .add(statusBar, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 23, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+               .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+               .add(componentSelectionPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 34, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+               .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+               .add(tabbedPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 330, Short.MAX_VALUE)
+               .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+               .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                   .add(cancelB, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                   .add(progressBar, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+               .addContainerGap())
+       );
+   }// </editor-fold>//GEN-END:initComponents
 
     @Override
     public void panelActivate() {
@@ -1264,7 +1265,7 @@ public class HostPanel extends IzPanel implements Config,
             try {
                 tabbedPane.setTitleAt(i, tabTitles[i] + " (" + tables.get(i).getRowCount() + ")");
             } catch (Exception e) {}
-        }
+       }
     }
 
     public void addThreadPoolListener(ThreadPoolListener threadPoolListener) {
@@ -1300,19 +1301,17 @@ public class HostPanel extends IzPanel implements Config,
                     text = getLabel("progressbar.installing.label");
                 }
 
+                progressBar.setValue(cur);
+                progressBar.setMaximum(max);
+                progressBar.setString(text + " " + cur + " / " + max);
+
                 switch (type) {
                     case ThreadPoolEvent.EVENT_THREAD_POOL_STARTED: {
-                        progressBar.setValue(cur);
-                        progressBar.setMaximum(max);
-                        progressBar.setString(text + " " + cur + " / " + max);
                         progressBar.setVisible(true);
                         cancelB.setVisible(true);
                         break;
                     }
                     case ThreadPoolEvent.EVENT_THREAD_POOL_UPDATED: {
-                        progressBar.setValue(obs.getLastRunCompletedTaskCount());
-                        progressBar.setMaximum(obs.getLastRunTaskCount());
-                        progressBar.setString(text + " " + cur + " / " + max);
                         break;
                     }
                     case ThreadPoolEvent.EVENT_THREAD_POOL_FINISHED: {
@@ -1980,6 +1979,9 @@ public class HostPanel extends IzPanel implements Config,
         final List<String> adminHosts = new ArrayList<String>();
         final List<String> submitHosts = new ArrayList<String>();
         final List<String> allHosts = new ArrayList<String>();
+        final List<String> allConnectUsers = new ArrayList<String>();
+        final List<String> allShadowHosts = new ArrayList<String>();
+        final List<String> allShadowConnectUsers = new ArrayList<String>();
         final List<String> possibleAdminHosts = new ArrayList<String>();
         //Remove hosts with no components + setup all admin/submit hosts
         HostList tmpList = new HostList();
@@ -2000,8 +2002,13 @@ public class HostPanel extends IzPanel implements Config,
             if (h.isSubmitHost()) {
                 submitHosts.add(h.getHostname());
             }
+            if (h.isShadowHost()) {
+                allShadowHosts.add(h.getHostname());
+                allShadowConnectUsers.add(h.getConnectUser());
+            }
             if (h.hasAnyComponent()) {
                 allHosts.add(h.getHostname());
+                allConnectUsers.add(h.getConnectUser());
             }
         }
         Host h, o;
@@ -2024,7 +2031,7 @@ public class HostPanel extends IzPanel implements Config,
             Debug.error(ex);
         }
 
-        firstTaskHost = new Host(Host.Type.HOSTNAME, QMASTER_HOST, Host.HOST_TYPE_ALL, true, false);
+        firstTaskHost = new Host(Host.Type.HOSTNAME, Host.localHostName, Host.HOST_TYPE_ALL, true, false);
         firstTaskHost.setIp("all");
         firstTaskHost.setArchitecture("all");
         firstTaskHost.setConnectUser(qmasterConnectUser);
@@ -2069,6 +2076,7 @@ public class HostPanel extends IzPanel implements Config,
             for (int i = 0; i < tmpList.size(); i++) {
                 h = tmpList.get(i);
                 if (h.isQmasterHost()) {
+                    qmasterConnectUser=h.getConnectUser();
                     o = new Host(h);
                     boolean hasMore = false;
                     //Clear selection
@@ -2204,6 +2212,9 @@ public class HostPanel extends IzPanel implements Config,
 
         autoConfFile = autoConfFile + "_" + Util.generateTimeStamp();
 
+        //Set global values
+        idata.setVariable(VAR_QMASTER_CONNECT_USER, qmasterConnectUser);
+        idata.setVariable(VAR_GUI_SHELL_OPTIONS, CmdExec.getShellOptions(idata.getVariable(VAR_SHELL_NAME)));
         // Generate the auto_conf file for every different local execd spool dirs
         int index = 0;
         String outputFilePostfix = "";
@@ -2336,12 +2347,12 @@ public class HostPanel extends IzPanel implements Config,
 
             @Override
             public void run() {
-                startInstallation(installList, possibleAdminHosts, adminHosts, submitHosts, allHosts);
+                startInstallation(installList, possibleAdminHosts, adminHosts, submitHosts, allHosts, allConnectUsers, allShadowHosts, allShadowConnectUsers);
             }
         }.start();
     }
 
-    private void startInstallation(HostList installList, final List<String> possibleAdminHosts, final List<String> adminHosts, final List<String> submitHosts, final List<String> allHosts) {
+    private void startInstallation(HostList installList, final List<String> possibleAdminHosts, final List<String> adminHosts, final List<String> submitHosts, final List<String> allHosts, final List<String> allConnectUsers, final List<String> allShadowHosts, final List<String> allShadowConnectUsers) {
         //Initialize new threadPool for the installation
         threadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(Util.INSTALL_THREAD_POOL_SIZE);
         threadPool.setThreadFactory(new TaskThreadFactory());
@@ -2403,16 +2414,35 @@ public class HostPanel extends IzPanel implements Config,
                     Properties vars = new Properties();
                     vars.putAll(idata.getVariables());
                     vars.put(VAR_ALL_ADMIN_HOSTS, Util.listToString(possibleAdminHosts));
+                    vars.setProperty(VAR_ALL_CSPHOSTS, "");
+                    vars.setProperty(VAR_ALL_COPYUSERS, "");
                     //Only for CSP mode
-                    if (vars.getProperty("add.product.mode").equals("csp")) {
+                    if (vars.getProperty("add.product.mode").equalsIgnoreCase("csp")) {
                         List<String> cspList = allHosts;
-                        String val = Util.listToString(cspList);
-                        String[] vals = val.split(h.getHostname());
-                        String val2 = "";
-                        for (String s : vals) {
-                            val2 += s.trim() + " ";
+                        int splitPosition = cspList.indexOf(h.getHostname());
+                        String allHostsButCurrent = "";
+                        String allUsers = "";
+                        for (int i=0; i < cspList.size(); i++) {
+                            if (i != splitPosition) {
+                                allHostsButCurrent += cspList.get(i).trim() + " ";
+                                allUsers += allConnectUsers.get(i).trim() + " ";
+                            }
                         }
-                        vars.setProperty(VAR_ALL_CSPHOSTS, val2.trim());
+                        vars.setProperty(VAR_ALL_CSPHOSTS, allHostsButCurrent.trim());
+                        vars.setProperty(VAR_ALL_COPYUSERS, allUsers.trim());
+                    } else if (vars.getProperty(VAR_SGE_JMX).equalsIgnoreCase("true") && vars.getProperty(VAR_JMX_SSL).equalsIgnoreCase("true")) {
+                        //Copy certs to all shadow hosts (need the keystores to be able to start JMX thread)
+                        String allHostsButCurrent = "";
+                        String allUsers = "";
+                        int splitPosition = allShadowHosts.indexOf(h.getHostname());
+                        for (int i=0; i < allShadowHosts.size(); i++) {
+                            if (i != splitPosition) {
+                                allHostsButCurrent += allShadowHosts.get(i).trim() + " ";
+                                allUsers += allShadowConnectUsers.get(i).trim() + " ";
+                            }
+                        }
+                        vars.setProperty(VAR_ALL_CSPHOSTS, allHostsButCurrent.trim());
+                        vars.setProperty(VAR_ALL_COPYUSERS, allUsers.trim());
                     }
                     vars.put(VAR_FIRST_TASK, "true");
                     wait = true;
@@ -2457,7 +2487,7 @@ public class HostPanel extends IzPanel implements Config,
                         return;
                     } else {
                         try {
-                            Thread.sleep(100);
+                            Thread.sleep(200);
                         } catch (InterruptedException ex) {
                         }
                     }

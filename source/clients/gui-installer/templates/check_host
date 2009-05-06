@@ -157,15 +157,20 @@ if [ "$IS_QMASTER" = true ]; then
          Exit 22
       fi
 
-      # check JVM library
-      # TODO check whether to start jmx
-      if [ "${add.sge.jmx}" = "true" -a \( -z "${cfg.sge.jvm.lib.path}" -o ! -f "${cfg.sge.jvm.lib.path}" \) ]; then
-         Exit 23
+      jvm_lib_path="${cfg.sge.jvm.lib.path}"
+      if [ -z "${cfg.sge.jvm.lib.path}" -o ! -f "${cfg.sge.jvm.lib.path}" ]; then
+         #Detecting JVM will only verify it will be detected during the installation
+         SGE_ROOT="${cfg.sge.root}" ; export SGE_ROOT
+         . $SGE_ROOT/util/install_modules/inst_qmaster.sh
+         HaveSuitableJavaBin "1.5.0" "jvm"
+         if [ -z "$jvm_lib_path" ]; then
+            Exit 23
+         fi
       fi
 
       # check JVM library validity
-      if [ -n "${cfg.sge.jvm.lib.path}" ]; then
-         "${cfg.sge.root}"/utilbin/"${host.arch}"/valid_jvmlib "${cfg.sge.jvm.lib.path}"
+      if [ -n "$jvm_lib_path" ]; then
+         "${cfg.sge.root}"/utilbin/"${host.arch}"/valid_jvmlib "$jvm_lib_path"
          if [ $? -ne 0 ]; then
             Exit 24
          fi

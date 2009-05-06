@@ -423,20 +423,66 @@ if [ -n "${first_install_task}" ]; then
       QMASTER_HOST=`echo $QMASTER_HOST | cut -f1 -d. | tr "[A-Z]" "[a-z]"`
       CURRENT_HOST=`echo $CURRENT_HOST | cut -f1 -d. | tr "[A-Z]" "[a-z]"`
    #fi
+   qmaster_connect_user="${gui_qmaster_connect_user}"
+   shell_options="${gui_shell_options}"
    if [ -n "${gui_alladminhosts}" ]; then
       list="${gui_alladminhosts}"
+      total=0
+      failed=0
       for host in $list ; do
          echo "Adding \"$host\" as admin host ..."
          if [ "$QMASTER_HOST" != "$CURRENT_HOST" ]; then
-            $SHELL_NAME $QMASTER_HOST "sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ; qconf -ah '${host}" 2>&1
+            output=`$SHELL_NAME -l $qmaster_connect_user $shell_options $QMASTER_HOST "sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ; qconf -ah '${host}" 2>&1`
          else
-            sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ; qconf -ah '${host} 2>&1
+            output=`sh -c '. ${cfg.sge.root}/${cfg.cell.name}/common/settings.sh ; qconf -ah '${host} 2>&1`
          fi
+         case "$output" in
+            *' added '*|*' already exists'*)
+               echo "   OK"
+               ;;
+            *)
+               echo "   FAILED: $output"
+               failed=`expr $failed + 1`
+               ;;
+         esac
+         total=`expr $total + 1`
       done
+      #We fail this task if at least 50% hosts fail
+      if [ $failed -gt `expr $total / 2` ]; then
+         ExitAndLog "Adding admin hosts failed for many hosts! Further component installations will fail!" 1
+      elif [ $failed -gt 0 ]; then
+         ExitAndLog "Adding admin hosts failed for ${failed}/${total} hosts! Further component installations will fail on failed hosts!" 0
+      else
+         echo "Adding admin hosts succeeded."
+      fi
    fi
-   #TODO: Need a subset of copycerts also for JMX with SSL!
+   #TODO: Need only subset of copycerts also for JMX with SSL!
    #For the CSP mode we have to copy the certificates to each of the execd/submit/admin hosts
-   if [ "$GUI_CSP_MODE_ENABLED" = "true" -a "$CSP_RECREATE" = "true" -a -n "${gui_csphosts}" ]; then
+   if [ -n "${gui_csphosts}" ]; then
+      # Setup PORT_DIR
+      if [ "$SGE_QMASTER_PORT" = "" ]; then
+         PORT_DIR="sge_qmaster"
+      else
+         PORT_DIR="port$SGE_QMASTER_PORT"
+      fi
+      SOURCE_CERT_FILE="/var/sgeCA/$PORT_DIR.tar.gz"
+      TARGET_CERT_FILE="$SOURCE_CERT_FILE"
+      TMP_TARGET_CERT_FILE="/tmp/$PORT_DIR.tar.gz"
+      TMP_TARGET_CERT_FILE_TAR="/tmp/$PORT_DIR.tar"
+      # Part 1 - copy CERTS from QMASTER locally (if not on qmaster)
+      if [ "$QMASTER_HOST" != "$CURRENT_HOST" ]; then
+         echo "Copy CERT from qmaster host $QMASTER_HOST to local host."
+         $SHELL_NAME -l $qmaster_connect_user $shell_options $QMASTER_HOST "cat $SOURCE_CERT_FILE" > "$TMP_TARGET_CERT_FILE"
+         # Let's end here with failure if we can't verify local archive with the certs
+         gunzip -t "$TMP_TARGET_CERT_FILE"
+         if [ $? -ne 0 ]; then
+            rm -f "$TMP_TARGET_CERT_FILE"
+            ExitAndLog "Could not retrieve certificates from qmaster host $QMASTER_HOST!" 1
+         fi
+         chmod 400 "$TMP_TARGET_CERT_FILE"
+         SOURCE_CERT_FILE="$TMP_TARGET_CERT_FILE"
+      fi
+      # Part 2 - copy the local certs to all hosts
       list="${gui_csphosts}"
       CSP_FLAGS=""
       #-copycerts needs -rsh if rsh is to be used
@@ -446,18 +492,20 @@ if [ -n "${first_install_task}" ]; then
       total=0
       failed=0
       for host in $list ; do
-         RES=`${cfg.sge.root}/inst_sge -autogui $CSP_FLAGS -copycerts $host`
-         ret=$?
-         if [ "$ret" -ne 0 ]; then
-            echo "Copying CSP certificates to host $host failed! Further component installation will not work due to missing certificates."
-            failed=`expr $failed + 1`
-         else
-            echo "Copied CSP certificates to host \"$host\""
-         fi
+         echo "Copy CERT to $host."
+         connect_user=`echo "${gui_csphosts_connectusers}" | awk '{print $(i+1)}' i=$total`
+         $SHELL_NAME -l $connect_user $shell_options $host < $SOURCE_CERT_FILE "cat > $TMP_TARGET_CERT_FILE ; chmod 400 $TMP_TARGET_CERT_FILE ; mkdir -p /var/sgeCA ; cd /var/sgeCA ; rm -rf /var/sgeCA/$PORT_DIR ; gunzip -f $TMP_TARGET_CERT_FILE ; tar xpf $TMP_TARGET_CERT_FILE_TAR ; rm -rf $TMP_TARGET_CERT_FILE_TAR"
+         # TODO: Keep track of failed hosts
          total=`expr $total + 1`
       done
-      #Exit with failed dependancy only if all copy tasks fail
-      #TODO: Task must be displayed in the dependancy list!
+      # if qmaster is not on the local host (CERT is missing locally)
+      # TODO execute it only if other component will be installed there
+      if [ "$QMASTER_HOST" != "$CURRENT_HOST" ]; then
+         echo "Copy CERT locally."
+         output=`mkdir -p /var/sgeCA ; cd /var/sgeCA ; rm -rf /var/sgeCA/"$PORT_DIR" ; gunzip -f "$TMP_TARGET_CERT_FILE" ; tar xpf "$TMP_TARGET_CERT_FILE_TAR" 2>&1`
+         total=`expr $total + 1`
+      fi
+
       if [ $total -eq $failed ]; then
          ExitAndLog "Copying CSP certificates failed for all hosts! Further component installations will fail due to missing certificates. Try inst_sge -copycerts manually for each host" 1
       elif [ $failed -gt 0 ]; then

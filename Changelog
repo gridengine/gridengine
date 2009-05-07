@@ -1,3 +1,6 @@
+RD-2009-05-07-1: Bugfix:      fixed broken build
+                 Related To:  RD-2009-05-07-0
+
 RD-2009-05-07-0: Bugfix:      improved qacct performance
                  Bugster:     6838487
                  Issue:       2510

@@ -354,7 +354,7 @@ int main(int argc, char **argv)
                qacct_usage(&ctx, stderr);
             }
             options.begin_time = (time_t)tmp_begin_time;
-            DPRINTF(("begin is: %ld\n", begin_time));
+            DPRINTF(("begin is: %ld\n", options.begin_time));
             beginflag = 1; 
          } else {
             qacct_usage(&ctx, stderr);

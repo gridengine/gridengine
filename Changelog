@@ -1,3 +1,8 @@
+RD-2009-05-07-0: Bugfix:      improved qacct performance
+                 Bugster:     6838487
+                 Issue:       2510
+                 Review:      CR
+
 ZG-2009-05-06-0: Enhancem.:   gui-installer: improved JVM library validation in
                               check_host script
                  Bugfix:      gui-installer: admin/submit error handling is broken

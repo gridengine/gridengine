@@ -89,6 +89,40 @@ typedef struct {
    int arid;
 } sge_qacct_columns;
 
+typedef struct {
+   char *group;
+   char *host;
+   const char *owner;
+   const char *job_name;
+   const char *project;
+   const char *department;
+   const char *account;
+   const char *granted_pe;
+   const char *complexes;
+   u_long32 job_number;
+   u_long32 slots;
+   u_long32 ar_number;
+   int jobflag;
+   int ownerflag;
+   int groupflag;
+   int jobfound;
+   int complexflag;
+   int queueflag;
+   int projectflag;
+   int departmentflag;
+   int hostflag;
+   int accountflag;
+   int granted_peflag;
+   int slotsflag;
+   int arflag;
+   u_long32 taskstart;
+   u_long32 taskend;
+   u_long32 taskstep;
+   time_t begin_time;
+   time_t end_time;
+   lList *queue_name_list;
+} sge_qacct_options;
+
 static void qacct_usage(sge_gdi_ctx_class_t **ctx, FILE *fp);
 static void print_full(int length, const char* string);
 static void print_full_ulong(int length, u_long32 value); 
@@ -98,7 +132,7 @@ static bool get_qacct_lists(sge_gdi_ctx_class_t *ctx, lList **alpp,
                             lList **ppcomplex, lList **ppqeues, lList **ppexechosts,
                             lList **hgrp_l);
 static void free_qacct_lists(lList **ppcomplex, lList **ppqeues, lList **ppexechosts, lList **hgrp_l);
-static int sge_read_rusage(FILE *fp, sge_rusage_type *d);
+static int sge_read_rusage(FILE *f, sge_rusage_type *d, sge_qacct_options *options);
 
 /*
 ** statics
@@ -126,42 +160,15 @@ int main(int argc, char *argv[]);
 */
 int main(int argc, char **argv)
 {
-   const char *owner = NULL;
-   char *group = NULL;
-   char *host = NULL;
-   const char *project = NULL;
-   const char *department = NULL;
-   const char *account = NULL;
-   const char *granted_pe = NULL;
-   const char *complexes = NULL;
-   const char *job_name = NULL;
-   u_long32 slots;
-   u_long32 job_number = 0;
-   u_long32 ar_number = 0;
-   int jobfound=0;
-   time_t begin_time = -1, end_time = -1;
    u_long32 days;
    sge_qacct_columns column_sizes;
-   int groupflag=0;
-   int queueflag=0;
-   int ownerflag=0;
-   int projectflag=0;
-   int departmentflag=0;
-   int hostflag=0;
-   int jobflag=0;
-   int complexflag=0;
    int beginflag=0;
    int endflag=0;
    int daysflag=0;
-   int accountflag=0;
-   int granted_peflag = 0;
-   int slotsflag = 0;
-   int arflag=0;
-   u_long32 taskstart = 0;
-   u_long32 taskend = 0;
-   u_long32 taskstep = 0;
    bool summary_view = false;
    int ignored_jobs = 0;             /* counter of ignored jobs for accounting */
+
+   sge_qacct_options options;
 
    sge_rusage_type dusage;
    sge_rusage_type totals;
@@ -172,7 +179,6 @@ int main(int argc, char **argv)
    lList *exechost_list = NULL;
    lList *hgrp_list = NULL;
    lList *queueref_list = NULL;
-   lList *queue_name_list = NULL;
    lList *sorted_list = NULL;
    lSortOrder *sort_order = NULL;
    int is_path_setup = 0;   
@@ -192,8 +198,10 @@ int main(int argc, char **argv)
       goto QACCT_EXIT;
    }
 
-   slots = 0;
    memset(&totals, 0, sizeof(totals));
+   memset(&options, 0, sizeof(options));
+   options.begin_time = -1;
+   options.end_time = -1;
 
    column_sizes.host       = strlen(MSG_HISTORY_HOST)+1;
    column_sizes.queue      = strlen(MSG_HISTORY_QUEUE)+1;
@@ -215,12 +223,12 @@ int main(int argc, char **argv)
       if (!strcmp("-o", argv[ii])) {
          if (argv[ii+1]) {
             if (*(argv[ii+1]) == '-') {
-               ownerflag = 1;
+               options.ownerflag = 1;
             } else {
-               owner = argv[++ii];
+               options.owner = argv[++ii];
             }
          } else {
-            ownerflag = 1;
+            options.ownerflag = 1;
          }
       }
       /*
@@ -229,7 +237,7 @@ int main(int argc, char **argv)
       else if (!strcmp("-g", argv[ii])) {
          if (argv[ii+1]) {
             if (*(argv[ii+1]) == '-') {
-               groupflag = 1;
+               options.groupflag = 1;
             } else {
                u_long32 gid;
                stringT buffer;
@@ -237,26 +245,26 @@ int main(int argc, char **argv)
                if (sscanf(argv[++ii], sge_u32, &gid) == 1) {
                   if (sge_gid2group((gid_t)gid, buffer, 
                                    MAX_STRING_SIZE, MAX_NIS_RETRIES) != 0) {
-                     group = sge_strdup(group, argv[ii]);
+                     options.group = sge_strdup(options.group, argv[ii]);
                   } else {
-                     group = sge_strdup(group, buffer);
+                     options.group = sge_strdup(options.group, buffer);
                   }
                } else {
-                  group = sge_strdup(group, argv[ii]);
+                  options.group = sge_strdup(options.group, argv[ii]);
                }
             }
          } else {
-            groupflag = 1;
+            options.groupflag = 1;
          }
       }
       /*
       ** queue
       */
       else if (!strcmp("-q", argv[ii])) {
-         queueflag = 1;
+         options.queueflag = 1;
          if (argv[ii+1]) {
             if (*(argv[ii+1]) != '-') {
-               hostflag = 1;
+               options.hostflag = 1;
                lAddElemStr(&queueref_list, QR_name, argv[++ii], QR_Type);
             }
          }
@@ -267,7 +275,7 @@ int main(int argc, char **argv)
       else if (!strcmp("-h", argv[ii])) {
          if (argv[ii+1]) {
             if (*(argv[ii+1])=='-') {
-               hostflag = 1;
+               options.hostflag = 1;
             } else {
                char unique[CL_MAXHOSTLEN];
                ctx->prepare_enroll(ctx);
@@ -277,13 +285,13 @@ int main(int argc, char **argv)
                     * maybe the hostname is no longer active but the usage information
                     * is already available
                     */
-                  host = sge_strdup(host, argv[ii]);
+                  options.host = sge_strdup(options.host, argv[ii]);
                } else {
-                  host = sge_strdup(host, unique);
+                  options.host = sge_strdup(options.host, unique);
                }
             }
          } else {
-            hostflag = 1;
+            options.hostflag = 1;
          }
       }
       /*
@@ -292,13 +300,13 @@ int main(int argc, char **argv)
       else if (!strcmp("-j", argv[ii])) {
          if (argv[ii+1]) {
             if (*(argv[ii+1])=='-') {
-               jobflag = 1;
-            } else if (sscanf(argv[++ii], sge_u32, &job_number) != 1) {
-               job_number = 0;
-               job_name = argv[ii];
+               options.jobflag = 1;
+            } else if (sscanf(argv[++ii], sge_u32, &options.job_number) != 1) {
+               options.job_number = 0;
+               options.job_name = argv[ii];
             }
          } else {
-            jobflag = 1;
+            options.jobflag = 1;
          }
       }
       /*
@@ -323,11 +331,11 @@ int main(int argc, char **argv)
                qacct_usage(&ctx, stderr);
                DRETURN(1); 
             }
-            taskstart = lGetUlong(lFirst(task_id_range_list), RN_min);
-            taskend = lGetUlong(lFirst(task_id_range_list), RN_max);
-            taskstep = lGetUlong(lFirst(task_id_range_list), RN_step);
-            if (!taskstep) {
-               taskstep = 1;
+            options.taskstart = lGetUlong(lFirst(task_id_range_list), RN_min);
+            options.taskend = lGetUlong(lFirst(task_id_range_list), RN_max);
+            options.taskstep = lGetUlong(lFirst(task_id_range_list), RN_step);
+            if (!options.taskstep) {
+               options.taskstep = 1;
             }
          }
       }
@@ -345,7 +353,7 @@ int main(int argc, char **argv)
                */
                qacct_usage(&ctx, stderr);
             }
-            begin_time = (time_t)tmp_begin_time;
+            options.begin_time = (time_t)tmp_begin_time;
             DPRINTF(("begin is: %ld\n", begin_time));
             beginflag = 1; 
          } else {
@@ -365,8 +373,8 @@ int main(int argc, char **argv)
                */
                qacct_usage(&ctx, stderr);
             }
-            end_time = (time_t)tmp_end_time;
-            DPRINTF(("end is: %ld\n", end_time));
+            options.end_time = (time_t)tmp_end_time;
+            DPRINTF(("end is: %ld\n", options.end_time));
             endflag = 1; 
          } else {
             qacct_usage(&ctx, stderr);
@@ -395,12 +403,12 @@ int main(int argc, char **argv)
       else if (!strcmp("-P", argv[ii])) {
          if (argv[ii+1]) {
             if (*(argv[ii+1]) == '-') {
-               projectflag = 1;
+               options.projectflag = 1;
             } else {
-               project = argv[++ii];
+               options.project = argv[++ii];
             }
          } else {
-            projectflag = 1;
+            options.projectflag = 1;
          }
       }
       /*
@@ -409,32 +417,32 @@ int main(int argc, char **argv)
       else if (!strcmp("-D", argv[ii])) {
          if (argv[ii+1]) {
             if (*(argv[ii+1]) == '-') {
-               departmentflag = 1;
+               options.departmentflag = 1;
             } else {
-               department = argv[++ii];
+               options.department = argv[++ii];
             }
          } else {
-            departmentflag = 1;
+            options.departmentflag = 1;
          }
       } else if (!strcmp("-pe", argv[ii])) {
          if (argv[ii+1]) {
             if (*(argv[ii+1]) == '-') {
-               granted_peflag = 1;
+               options.granted_peflag = 1;
             } else {
-               granted_pe = argv[++ii];
+               options.granted_pe = argv[++ii];
             }
          } else {
-            granted_peflag = 1;
+            options.granted_peflag = 1;
          }
       } else if (!strcmp("-slots", argv[ii])) {
          if (argv[ii+1]) {
             if (*(argv[ii+1]) == '-') {
-               slotsflag = 1;
+               options.slotsflag = 1;
             } else {
-               slots = atol(argv[++ii]);
+               options.slots = atol(argv[++ii]);
             }
          } else {
-            slotsflag = 1;
+            options.slotsflag = 1;
          }
       }
       /*
@@ -443,9 +451,9 @@ int main(int argc, char **argv)
       else if (!strcmp("-ar", argv[ii])) {
          if (argv[ii+1]) {
             if (*(argv[ii+1])=='-') {
-               arflag = 1;
+               options.arflag = 1;
             } else {
-               if (sscanf(argv[++ii], sge_u32, &ar_number) != 1) {
+               if (sscanf(argv[++ii], sge_u32, &options.ar_number) != 1) {
                   fprintf(stderr, MSG_PARSE_INVALID_AR_MUSTBEUINT);
                   fprintf(stderr, "\n");
                   qacct_usage(&ctx, stderr);
@@ -453,7 +461,7 @@ int main(int argc, char **argv)
                }
             }
          } else {
-            arflag = 1;
+            options.arflag = 1;
          }
       }
       /*
@@ -467,8 +475,8 @@ int main(int argc, char **argv)
             ** add blank cause no range can be specified
             ** as described in sge_resource.c
             */
-            complexes = argv[++ii];
-            complexflag = 1;
+            options.complexes = argv[++ii];
+            options.complexflag = 1;
          } else {
             qacct_usage(&ctx, stderr);
          }
@@ -488,8 +496,8 @@ int main(int argc, char **argv)
       */
       else if (!strcmp("-A",argv[ii])) {
          if (argv[ii+1]) {
-            account = argv[++ii];
-            accountflag = 1;
+            options.account = argv[++ii];
+            options.accountflag = 1;
          } else {
             qacct_usage(&ctx, stderr);
          }
@@ -534,22 +542,22 @@ int main(int argc, char **argv)
    */
    if (!endflag) {
       if (daysflag && beginflag) {
-         end_time = begin_time + (time_t)(days*24*3600);
+         options.end_time = options.begin_time + (time_t)(days*24*3600);
       } else {
-         end_time = -1; /* infty */
+         options.end_time = -1; /* infty */
       }
    }
    if (!beginflag) {
       if (endflag && daysflag) {
-         begin_time = end_time - (time_t)(days*24*3600);
+         options.begin_time = options.end_time - (time_t)(days*24*3600);
       } else if (daysflag) {
-         begin_time = time(NULL) - (time_t)(days*24*3600);
+         options.begin_time = time(NULL) - (time_t)(days*24*3600);
       } else {
-         begin_time = -1; /* minus infty */
+         options.begin_time = -1; /* minus infty */
       }
    }
-   DPRINTF((" begin_time: %s", ctime(&begin_time)));
-   DPRINTF((" end_time:   %s", ctime(&end_time)));
+   DPRINTF((" begin_time: %s", ctime(&options.begin_time)));
+   DPRINTF((" end_time:   %s", ctime(&options.end_time)));
 
    {
       dstring cqueue_name = DSTRING_INIT;
@@ -587,18 +595,18 @@ int main(int argc, char **argv)
                sge_dstring_append(&qi_name, "*");
             }
             
-            lAddElemStr(&queue_name_list, QR_name, sge_dstring_get_string(&qi_name), QR_Type);
+            lAddElemStr(&options.queue_name_list, QR_name, sge_dstring_get_string(&qi_name), QR_Type);
 
             sge_dstring_free(&qi_name);
          }   
       }
-      if (complexflag || (queueref_list && has_domain)) {
+      if (options.complexflag || (queueref_list && has_domain)) {
          /*
          ** parsing complex flags and initialising complex list
          */
          bool found_something;
 
-         complex_options = centry_list_parse_from_string(NULL, complexes, true);
+         complex_options = centry_list_parse_from_string(NULL, options.complexes, true);
          if (!complex_options) {
             /*
             ** problem: still to tell some more to the user
@@ -622,14 +630,14 @@ int main(int argc, char **argv)
                goto QACCT_EXIT;
             }   
 
-            qref_list_resolve(queueref_list, NULL, &queue_name_list, 
+            qref_list_resolve(queueref_list, NULL, &options.queue_name_list, 
                            &found_something, queue_list, hgrp_list, true, true);
             if (!found_something) {
                fprintf(stderr, "%s\n", MSG_QINSTANCE_NOQUEUES);
                goto QACCT_EXIT;
             }
          }  
-         if (complexflag) {
+         if (options.complexflag) {
             if (!get_qacct_lists(ctx, &alp, &centry_list, &queue_list, &exechost_list, NULL)) {
                answer_list_output(&alp);
                goto QACCT_EXIT;
@@ -665,8 +673,8 @@ int main(int argc, char **argv)
    totals.io = 0;
    totals.iow = 0;
 
-   if (hostflag || queueflag || groupflag || ownerflag || projectflag ||
-       departmentflag || granted_peflag || slotsflag || arflag) {
+   if (options.hostflag || options.queueflag || options.groupflag || options.ownerflag || options.projectflag ||
+       options.departmentflag || options.granted_peflag || options.slotsflag || options.arflag) {
       sorted_list = lCreateList("sorted_list", QAJ_Type);
       sort_order = lParseSortOrderVarArg(QAJ_Type, "%I+ %I+ %I+ %I+ %I+ %I+ %I+ %I+ %I+",
                                          QAJ_host,
@@ -691,84 +699,18 @@ int main(int argc, char **argv)
       int i_ret;
       line++;
 
-      i_ret = sge_read_rusage(fp, &dusage);
-      if (i_ret > 0) {
+      i_ret = sge_read_rusage(fp, &dusage, &options);
+      if (i_ret == -2) {
+         /* ignore, the line just doesn't match the command options */
+         continue;
+      } else if (i_ret > 0) {
 	      break;
       } else if (i_ret < 0) {
 	      ERROR((SGE_EVENT, MSG_HISTORY_IGNORINGINVALIDENTRYINLINEX_U , sge_u32c(line)));
 	      continue;
       }
 
-      /*
-      ** skipping jobs that never ran
-      */
-      if ((dusage.start_time == 0) && complexflag)  {
-         DPRINTF(("skipping job that never ran\n"));
-         continue;
-      }
-      if ((begin_time != -1) && ((time_t) dusage.start_time < begin_time)) { 
-         continue;
-      }
-      if ((end_time != -1) && ((time_t) dusage.start_time > end_time)) {
-         dstring ds = DSTRING_INIT;
-         DPRINTF(("job no %ld started %s", dusage.job_number, \
-            sge_ctime32(&dusage.start_time, &ds)));
-         DPRINTF(("job count ends %s", ctime(&end_time)));
-         sge_dstring_free(&ds);
-         continue;
-      }
-
-      if (owner != NULL && sge_strnullcmp(owner, dusage.owner)) {
-         continue;
-      }
-      if (group != NULL && sge_strnullcmp(group, dusage.group)) {
-         continue;
-      }
-      if (queue_name_list){
-         dstring qi = DSTRING_INIT;
-         lListElem *elem = NULL;
-         const char *queue;
-         bool found = false;
-
-         queue = sge_dstring_sprintf(&qi,"%s@%s", dusage.qname, dusage.hostname );
- 
-         for_each(elem, queue_name_list) {
-            if (fnmatch(lGetString(elem, QR_name), queue, 0) == 0) {
-               found = true;
-               break;
-            }
-         }
-
-         sge_dstring_free(&qi);
-         
-         if (!found){
-            continue;
-         }  
-      }
-
-      if (project != NULL && sge_strnullcmp(project, dusage.project)) {
-         continue;
-      }
-      if (department != NULL && sge_strnullcmp(department, dusage.department)) {
-         continue;
-      }
-      if (granted_pe != NULL && sge_strnullcmp(granted_pe, dusage.granted_pe)) {
-         continue; 
-      }
-      if ((slots > 0) && (slots != dusage.slots)) {
-         continue;
-      }
-      if ((ar_number > 0) && (ar_number != dusage.ar)) {
-         continue;
-      }
-      if (host != NULL && sge_hostcmp(host, dusage.hostname)) {
-         continue;
-      }
-      if (accountflag && sge_strnullcmp(account, dusage.account)) {
-         continue;
-      }
-      
-      if (complexflag) {
+      if (options.complexflag) {
          dstring qi = DSTRING_INIT;
          lListElem *queue;
          int selected;
@@ -796,26 +738,8 @@ int main(int argc, char **argv)
          }
       } /* endif complexflag */
 
-      if (jobflag) {
+      if (options.jobflag || options.job_number || options.job_name != NULL) {
          showjob(&dusage);
-      } else if (job_number || job_name != NULL) {
-         int show_ja_task = 0;
-
-         if (taskstart && taskend && taskstep) {
-            if (dusage.task_number >= taskstart && dusage.task_number <= taskend && 
-                ((dusage.task_number-taskstart)%taskstep) == 0) { 
-               show_ja_task = 1; 
-            }
-         } else {
-            show_ja_task = 1;
-         }
-        
-         if (((dusage.job_number == job_number) || !sge_patternnullcmp(dusage.job_name, job_name)) &&
-         /*!sge_strnullcmp(dusage.job_name, job_name)) && */
-               show_ja_task) {
-            showjob(&dusage);
-            jobfound = 1;
-         }
       }
 
       totals.ru_wallclock += dusage.ru_wallclock;
@@ -839,15 +763,15 @@ int main(int argc, char **argv)
          ** or the existing element to increase
          */
 
-         while (ep && ((slotsflag && (lGetUlong(ep, QAJ_slots) != dusage.slots)) || 
-                (granted_peflag && (sge_strnullcmp(lGetString(ep, QAJ_granted_pe), dusage.granted_pe))) || 
-                (departmentflag && (sge_strnullcmp(lGetString(ep, QAJ_department), dusage.department))) ||
-                (projectflag && (sge_strnullcmp(lGetString(ep, QAJ_project), dusage.project))) ||
-                (ownerflag && (sge_strnullcmp(lGetString(ep, QAJ_owner), dusage.owner))) ||
-                (hostflag && (sge_hostcmp(lGetHost(ep, QAJ_host), dusage.hostname))) || 
-                (queueflag && (sge_strnullcmp(lGetString(ep, QAJ_queue), dusage.qname))) ||
-                (groupflag && (sge_strnullcmp(lGetString(ep, QAJ_group) , dusage.group))) ||
-                (arflag && (lGetUlong(ep, QAJ_arid) != dusage.ar))
+         while (ep && ((options.slotsflag && (lGetUlong(ep, QAJ_slots) != dusage.slots)) || 
+                (options.granted_peflag && (sge_strnullcmp(lGetString(ep, QAJ_granted_pe), dusage.granted_pe))) || 
+                (options.departmentflag && (sge_strnullcmp(lGetString(ep, QAJ_department), dusage.department))) ||
+                (options.projectflag && (sge_strnullcmp(lGetString(ep, QAJ_project), dusage.project))) ||
+                (options.ownerflag && (sge_strnullcmp(lGetString(ep, QAJ_owner), dusage.owner))) ||
+                (options.hostflag && (sge_hostcmp(lGetHost(ep, QAJ_host), dusage.hostname))) || 
+                (options.queueflag && (sge_strnullcmp(lGetString(ep, QAJ_queue), dusage.qname))) ||
+                (options.groupflag && (sge_strnullcmp(lGetString(ep, QAJ_group) , dusage.group))) ||
+                (options.arflag && (lGetUlong(ep, QAJ_arid) != dusage.ar))
                 )){
              ep = lNext(ep);
          }
@@ -880,23 +804,23 @@ int main(int argc, char **argv)
             lListElem *new_ep;
 
             new_ep = lCreateElem(QAJ_Type);
-            if (hostflag && dusage.hostname)
+            if (options.hostflag && dusage.hostname)
                lSetHost(new_ep, QAJ_host, dusage.hostname);
-            if (queueflag && dusage.qname)
+            if (options.queueflag && dusage.qname)
                lSetString(new_ep, QAJ_queue, dusage.qname);
-            if (groupflag && dusage.group)
+            if (options.groupflag && dusage.group)
                lSetString(new_ep, QAJ_group, dusage.group);
-            if (ownerflag && dusage.owner)
+            if (options.ownerflag && dusage.owner)
                lSetString(new_ep, QAJ_owner, dusage.owner);
-            if (projectflag && dusage.project)
+            if (options.projectflag && dusage.project)
                lSetString(new_ep, QAJ_project, dusage.project);
-            if (departmentflag && dusage.department)
+            if (options.departmentflag && dusage.department)
                lSetString(new_ep, QAJ_department, dusage.department);
-            if (granted_peflag && dusage.granted_pe)
+            if (options.granted_peflag && dusage.granted_pe)
                lSetString(new_ep, QAJ_granted_pe, dusage.granted_pe);
-            if (slotsflag)
+            if (options.slotsflag)
                lSetUlong(new_ep, QAJ_slots, dusage.slots);
-            if (arflag)
+            if (options.arflag)
                lSetUlong(new_ep, QAJ_arid, dusage.ar);
 
             lSetDouble(new_ep, QAJ_ru_wallclock, dusage.ru_wallclock);
@@ -931,21 +855,21 @@ int main(int argc, char **argv)
       printf("%s\n", MSG_USER_ABORT);
       goto QACCT_EXIT;
    }
-   if (job_number || job_name != NULL) {
-      if (!jobfound) {
-         if (job_number) {
-            if (taskstart && taskend && taskstep) {
+   if (options.job_number || options.job_name != NULL) {
+      if (!options.jobfound) {
+         if (options.job_number) {
+            if (options.taskstart && options.taskend && options.taskstep) {
                ERROR((SGE_EVENT, MSG_HISTORY_JOBARRAYTASKSWXYZNOTFOUND_DDDD , 
-                  sge_u32c(job_number), sge_u32c(taskstart), sge_u32c(taskend), sge_u32c(taskstep)));
+                  sge_u32c(options.job_number), sge_u32c(options.taskstart), sge_u32c(options.taskend), sge_u32c(options.taskstep)));
             } else {
-               ERROR((SGE_EVENT, MSG_HISTORY_JOBIDXNOTFOUND_D, sge_u32c(job_number)));
+               ERROR((SGE_EVENT, MSG_HISTORY_JOBIDXNOTFOUND_D, sge_u32c(options.job_number)));
             }
          } else {
-            if (taskstart && taskend && taskstep) {
+            if (options.taskstart && options.taskend && options.taskstep) {
                ERROR((SGE_EVENT, MSG_HISTORY_JOBARRAYTASKSWXYZNOTFOUND_SDDD , 
-                  job_name, sge_u32c(taskstart),sge_u32c( taskend),sge_u32c( taskstep)));
+                  options.job_name, sge_u32c(options.taskstart),sge_u32c(options.taskend),sge_u32c(options.taskstep)));
             } else {
-               ERROR((SGE_EVENT, MSG_HISTORY_JOBNAMEXNOTFOUND_S  , job_name));
+               ERROR((SGE_EVENT, MSG_HISTORY_JOBNAMEXNOTFOUND_S, options.job_name));
             }
          }
          goto QACCT_EXIT;
@@ -953,7 +877,7 @@ int main(int argc, char **argv)
          free_qacct_lists(&centry_list, &queue_list, &exechost_list, &hgrp_list);
          SGE_EXIT((void**)&ctx, 0);
       }
-   } else if (taskstart && taskend && taskstep) {
+   } else if (options.taskstart && options.taskend && options.taskstep) {
       ERROR((SGE_EVENT, MSG_HISTORY_TOPTIONREQUIRESJOPTION ));
       qacct_usage(&ctx, stderr);
       free_qacct_lists(&centry_list, &queue_list, &exechost_list, &hgrp_list);
@@ -963,23 +887,23 @@ int main(int argc, char **argv)
    /*
    ** assorted output of statistics
    */
-   if (host != NULL) {
-      column_sizes.host = strlen(host) + 1;
+   if (options.host != NULL) {
+      column_sizes.host = strlen(options.host) + 1;
    } 
-   if (group != NULL) {
-      column_sizes.group = strlen(group) + 1;
+   if (options.group != NULL) {
+      column_sizes.group = strlen(options.group) + 1;
    } 
-   if (owner != NULL) {
-      column_sizes.owner = strlen(owner) + 1;
+   if (options.owner != NULL) {
+      column_sizes.owner = strlen(options.owner) + 1;
    } 
-   if (project != NULL) {
-      column_sizes.project = strlen(project) + 1;
+   if (options.project != NULL) {
+      column_sizes.project = strlen(options.project) + 1;
    } 
-   if (department != NULL) {
-      column_sizes.department = strlen(department) + 1;
+   if (options.department != NULL) {
+      column_sizes.department = strlen(options.department) + 1;
    } 
-   if (granted_pe != NULL) {
-      column_sizes.granted_pe = strlen(granted_pe) + 1;
+   if (options.granted_pe != NULL) {
+      column_sizes.granted_pe = strlen(options.granted_pe) + 1;
    }
  
    calc_column_sizes(lFirst(sorted_list), &column_sizes);
@@ -988,39 +912,39 @@ int main(int argc, char **argv)
       int dashcnt = 0;
       char title_array[500];
 
-      if (host != NULL || hostflag) {
+      if (options.host != NULL || options.hostflag) {
          print_full(column_sizes.host , MSG_HISTORY_HOST);
          dashcnt += column_sizes.host ;
       }
-      if (queueflag) {
+      if (options.queueflag) {
          print_full(column_sizes.queue ,MSG_HISTORY_QUEUE );
          dashcnt += column_sizes.queue ;
       }
-      if (group != NULL || groupflag) {
+      if (options.group != NULL || options.groupflag) {
          print_full(column_sizes.group , MSG_HISTORY_GROUP);
          dashcnt += column_sizes.group ;
       }
-      if (owner != NULL || ownerflag) {
+      if (options.owner != NULL || options.ownerflag) {
          print_full(column_sizes.owner ,MSG_HISTORY_OWNER );
          dashcnt += column_sizes.owner ;
       }
-      if (project != NULL || projectflag) {
+      if (options.project != NULL || options.projectflag) {
          print_full(column_sizes.project, MSG_HISTORY_PROJECT);
          dashcnt += column_sizes.project ;
       }
-      if (department != NULL || departmentflag) {
+      if (options.department != NULL || options.departmentflag) {
          print_full(column_sizes.department, MSG_HISTORY_DEPARTMENT);
          dashcnt += column_sizes.department;
       }
-      if (granted_pe != NULL || granted_peflag) {
+      if (options.granted_pe != NULL || options.granted_peflag) {
          print_full(column_sizes.granted_pe, MSG_HISTORY_PE);
          dashcnt += column_sizes.granted_pe;
       }   
-      if (slots > 0 || slotsflag) {
+      if (options.slots > 0 || options.slotsflag) {
          print_full(column_sizes.slots, MSG_HISTORY_SLOTS);
          dashcnt += column_sizes.slots;
       }
-      if (ar_number > 0 || arflag) {
+      if (options.ar_number > 0 || options.arflag) {
          print_full(column_sizes.slots, MSG_HISTORY_AR);
          dashcnt += column_sizes.slots;
       }
@@ -1053,9 +977,9 @@ int main(int argc, char **argv)
       while (totals.ru_wallclock) {
          const char *cp;
 
-         if (host != NULL) {
-            print_full(column_sizes.host,  host);
-         } else if (hostflag) {
+         if (options.host != NULL) {
+            print_full(column_sizes.host,  options.host);
+         } else if (options.hostflag) {
             if (ep == NULL) {
                break;
             }
@@ -1067,66 +991,66 @@ int main(int argc, char **argv)
             */
             print_full(column_sizes.host, ((cp = lGetHost(ep, QAJ_host)) ? cp : ""));
          }
-         if (queueflag) {
+         if (options.queueflag) {
             if (ep == NULL) {
                break;
             }
             print_full(column_sizes.queue, ((cp = lGetString(ep, QAJ_queue)) ? cp : ""));
          }
-         if (group != NULL) {
-            print_full(column_sizes.group, group);
-         } else if (groupflag) {
+         if (options.group != NULL) {
+            print_full(column_sizes.group, options.group);
+         } else if (options.groupflag) {
             if (ep == NULL) {
                break;
             }
             print_full(column_sizes.group, ((cp = lGetString(ep, QAJ_group)) ? cp : ""));
          }
-         if (owner != NULL) {
-            print_full(column_sizes.owner, owner);
+         if (options.owner != NULL) {
+            print_full(column_sizes.owner, options.owner);
          }
-         else if (ownerflag) {
+         else if (options.ownerflag) {
             if (ep == NULL) {
                break;
             }
             print_full(column_sizes.owner, ((cp = lGetString(ep, QAJ_owner)) ? cp : "") );
          }
-         if (project != NULL) {
-              print_full(column_sizes.project, project);
+         if (options.project != NULL) {
+              print_full(column_sizes.project, options.project);
          }
-         else if (projectflag) {
+         else if (options.projectflag) {
             if (ep == NULL) {
                break;
             }
             print_full(column_sizes.project ,((cp = lGetString(ep, QAJ_project)) ? cp : ""));
          }
-         if (department != NULL) {
-            print_full(column_sizes.department, department);
-         } else if (departmentflag) {
+         if (options.department != NULL) {
+            print_full(column_sizes.department, options.department);
+         } else if (options.departmentflag) {
             if (ep == NULL) {
                break;
             }
             print_full(column_sizes.department, ((cp = lGetString(ep, QAJ_department)) ? cp : ""));
          }
-         if (granted_pe != NULL) {
-            print_full(column_sizes.granted_pe, granted_pe);
-         } else if (granted_peflag) {
+         if (options.granted_pe != NULL) {
+            print_full(column_sizes.granted_pe, options.granted_pe);
+         } else if (options.granted_peflag) {
             if (ep == NULL) {
                break;
             }
             print_full(column_sizes.granted_pe, ((cp = lGetString(ep, QAJ_granted_pe)) ? cp : ""));
          }         
-         if (slots > 0) {
-            print_full_ulong(column_sizes.slots, slots);
-         } else if (slotsflag) {
+         if (options.slots > 0) {
+            print_full_ulong(column_sizes.slots, options.slots);
+         } else if (options.slotsflag) {
             if (ep == NULL) {
                break;
             }
             print_full_ulong(column_sizes.slots, lGetUlong(ep, QAJ_slots));
          }
 
-         if (ar_number > 0) {
-            print_full_ulong(column_sizes.arid, ar_number);
-         } else if (arflag) {
+         if (options.ar_number > 0) {
+            print_full_ulong(column_sizes.arid, options.ar_number);
+         } else if (options.arflag) {
             if (ep == NULL) {
                break;
             }
@@ -1168,8 +1092,8 @@ int main(int argc, char **argv)
    ** problem: other clients evaluate some status here
    */
    sge_prof_cleanup();
-   FREE(group);
-   FREE(host);
+   FREE(options.group);
+   FREE(options.host);
    free_qacct_lists(&centry_list, &queue_list, &exechost_list, &hgrp_list);
    SGE_EXIT((void**)&ctx, 0);
    DRETURN(0);
@@ -1180,8 +1104,8 @@ QACCT_EXIT:
    sge_prof_cleanup();
    lFreeList(&sorted_list);
    lFreeSortOrder(&sort_order);
-   FREE(group);
-   FREE(host);
+   FREE(options.group);
+   FREE(options.host);
    free_qacct_lists(&centry_list, &queue_list, &exechost_list, &hgrp_list);
    SGE_EXIT((void**)&ctx, 1);
    DRETURN(1);
@@ -1432,9 +1356,6 @@ sge_rusage_type *dusage
    printf("%-13.12s%-20s\n",MSG_HISTORY_SHOWJOB_JOBNAME, (dusage->job_name ? dusage->job_name : MSG_HISTORY_SHOWJOB_NULL));
    printf("%-13.12s%-20"sge_fu32"\n",MSG_HISTORY_SHOWJOB_JOBNUMBER, dusage->job_number);
    
-
-
-
    if (dusage->task_number) {
       printf("%-13.12s%-20"sge_fu32"\n",MSG_HISTORY_SHOWJOB_TASKID, dusage->task_number);              /* job-array task number */
    } else {
@@ -1654,9 +1575,10 @@ static void free_qacct_lists(lList **ppcentries, lList **ppqueues, lList **ppexe
 }
 
 static int 
-sge_read_rusage(FILE *f, sge_rusage_type *d) 
+sge_read_rusage(FILE *f, sge_rusage_type *d, sge_qacct_options *options) 
 {
    static char szLine[MAX_STRING_SIZE * 10] = "";
+   const char *qname, *hostname, *group, *owner, *job_name, *account, *project, *department, *granted_pe;
    char  *pc;
    int len;
 
@@ -1680,7 +1602,7 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
    if (!pc) {
       DRETURN(-1);
    }
-   d->qname = sge_strdup(d->qname, pc);
+   qname = pc;
    
    /*
     * hostname
@@ -1689,7 +1611,32 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
    if (!pc) {
       DRETURN(-1);
    }
-   d->hostname = sge_strdup(d->hostname, pc);
+   hostname = pc;
+   if (options->host != NULL && sge_hostcmp(options->host, hostname)) {
+      DRETURN(-2);
+   }
+
+   if (options->queue_name_list){
+      dstring qi = DSTRING_INIT;
+      lListElem *elem = NULL;
+      const char *queue;
+      bool found = false;
+
+      queue = sge_dstring_sprintf(&qi,"%s@%s", qname, hostname);
+
+      for_each(elem, options->queue_name_list) {
+         if (fnmatch(lGetString(elem, QR_name), queue, 0) == 0) {
+            found = true;
+            break;
+         }
+      }
+
+      sge_dstring_free(&qi);
+      
+      if (!found){
+         DRETURN(-2);
+      }  
+   }
 
    /*
     * group
@@ -1698,9 +1645,11 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
    if (!pc) {
       DRETURN(-1);
    }
-   d->group = sge_strdup(d->group, pc);
+   group = pc;
+   if (options->group != NULL && sge_strnullcmp(options->group, group)) {
+      DRETURN(-2);
+   }
           
-           
    /*
     * owner
     */
@@ -1708,7 +1657,10 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
    if (!pc) {
       DRETURN(-1);
    }
-   d->owner = sge_strdup(d->owner, pc);
+   owner = pc;
+   if (options->owner != NULL && sge_strnullcmp(options->owner, owner)) {
+      DRETURN(-2);
+   }
 
    /*
     * job_name
@@ -1717,7 +1669,7 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
    if (!pc) {
       DRETURN(-1);
    }
-   d->job_name = sge_strdup(d->job_name, pc);
+   job_name = pc;
 
    /*
     * job_number
@@ -1728,7 +1680,12 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
    }
    
    d->job_number = atol(pc);
-   
+   if (!options->jobflag && (options->job_number || options->job_name != NULL)) {
+      if (((d->job_number != options->job_number) && sge_patternnullcmp(job_name, options->job_name))) {
+         DRETURN(-2);
+      }
+   }
+
    /*
     * account
     */
@@ -1736,7 +1693,10 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
    if (!pc) {
       DRETURN(-1);
    }
-   d->account = sge_strdup(d->account, pc);
+   account = pc;
+   if (options->accountflag && sge_strnullcmp(options->account, account)) {
+      DRETURN(-2);
+   }
 
    /*
     * priority
@@ -1764,6 +1724,19 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
       DRETURN(-1);
    }
    d->start_time = atol(pc);
+   /*
+   ** skipping jobs that never ran
+   */
+   if ((d->start_time == 0) && options->complexflag)  {
+      DPRINTF(("skipping job that never ran\n"));
+      DRETURN(-2);
+   }
+   if ((options->begin_time != -1) && ((time_t) d->start_time < options->begin_time)) { 
+      DRETURN(-2);
+   }
+   if ((options->end_time != -1) && ((time_t) d->start_time > options->end_time)) {
+      DRETURN(-2);
+   }
 
    /*
     * end_time
@@ -1961,7 +1934,10 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
    if (!pc) {
       DRETURN(-1);
    }
-   d->project = sge_strdup(d->project, pc);
+   project = pc;
+   if (options->project != NULL && sge_strnullcmp(options->project, project)) {
+      DRETURN(-2);
+   }
 
    /*
     * department
@@ -1970,14 +1946,20 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
    if (!pc) {
       DRETURN(-1);
    }
-   d->department = sge_strdup(d->department, pc);
+   department = pc;
+   if (options->department != NULL && sge_strnullcmp(options->department, department)) {
+      DRETURN(-2);
+   }
 
    /* PE name */
    pc = strtok(NULL, ":");
    if (pc) {
-      d->granted_pe = sge_strdup(d->granted_pe, pc);
+      granted_pe = pc;
    } else {
-      d->granted_pe = sge_strdup(d->granted_pe, "none");   
+      granted_pe = "none";   
+   }
+   if (options->granted_pe != NULL && sge_strnullcmp(options->granted_pe, granted_pe)) {
+      DRETURN(-2);
    }
 
    /* slots */
@@ -1987,6 +1969,9 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
    } else {
       d->slots = 0;
    }
+   if ((options->slots > 0) && (options->slots != d->slots)) {
+      DRETURN(-2);
+   }
 
    /* task number */
    pc = strtok(NULL, ":");
@@ -1994,6 +1979,16 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
       d->task_number = atol(pc);
    } else {
       d->task_number = 0;
+   }
+
+   if (!options->jobflag) {
+
+      if (options->taskstart && options->taskend && options->taskstep) {
+         if (d->task_number < options->taskstart || d->task_number > options->taskend || 
+             !((d->task_number-options->taskstart)%options->taskstep) == 0) { 
+            DRETURN(-2);
+         }
+      }
    }
 
    d->cpu = ((pc=strtok(NULL, ":")))?atof(pc):0;
@@ -2022,8 +2017,21 @@ sge_read_rusage(FILE *f, sge_rusage_type *d)
 
    d->maxvmem = ((pc=strtok(NULL, ":")))?atof(pc):0;
    d->ar = ((pc=strtok(NULL, ":")))?atol(pc):0;
+   if ((options->ar_number > 0) && (options->ar_number != d->ar)) {
+      DRETURN(-2);
+   }
 
    /* ... */ 
+   d->qname = sge_strdup(d->qname, qname);
+   d->hostname = sge_strdup(d->hostname, hostname);
+   d->group = sge_strdup(d->group, group);
+   d->owner = sge_strdup(d->owner, owner);
+   d->job_name = sge_strdup(d->job_name, job_name);
+   d->account = sge_strdup(d->account, account);
+   d->project = sge_strdup(d->project, project);
+   d->department = sge_strdup(d->department, department);
+   d->granted_pe = sge_strdup(d->granted_pe, granted_pe);
+   options->jobfound=1;
 
    DRETURN(0);
 }

@@ -3869,22 +3869,20 @@ static int cl_commlib_handle_connection_ack_timeouts(cl_com_connection_t* connec
                }
                cl_message_list_remove_send(connection, message, 0);
                cl_com_free_message(&message);
-            } else {
-               if ( ignore_timeouts == CL_TRUE) {
-                  if ( connection->connection_state == CL_CONNECTED &&
-                       connection->connection_sub_state == CL_COM_WORK ) {
-                     CL_LOG(CL_LOG_INFO,"ignore ack timeout flag is set, but this connection is connected and waiting for ack - continue waiting");
-                  } else {
-                     CL_LOG(CL_LOG_INFO,"ignore ack timeout flag is set and connection is not connected - ignore timeout");
-                     if (message->message_id == connection->check_endpoint_mid && connection->check_endpoint_mid != 0) {
-                        connection->check_endpoint_mid = 0;
-                        connection->check_endpoint_flag = CL_FALSE; /* now the next check can be done */
-                     }
-                     cl_message_list_remove_send(connection, message, 0);
-                     cl_com_free_message(&message);
+            } else if ( ignore_timeouts == CL_TRUE) {
+               if ( connection->connection_state == CL_CONNECTED &&
+                    connection->connection_sub_state == CL_COM_WORK ) {
+                  CL_LOG(CL_LOG_INFO,"ignore ack timeout flag is set, but this connection is connected and waiting for ack - continue waiting");
+               } else {
+                  CL_LOG(CL_LOG_INFO,"ignore ack timeout flag is set and connection is not connected - ignore timeout");
+                  if (message->message_id == connection->check_endpoint_mid && connection->check_endpoint_mid != 0) {
+                     connection->check_endpoint_mid = 0;
+                     connection->check_endpoint_flag = CL_FALSE; /* now the next check can be done */
                   }
-               } 
-            }
+                  cl_message_list_remove_send(connection, message, 0);
+                  cl_com_free_message(&message);
+               }
+            } 
          }
          message_list_elem = next_message_list_elem;
       }
@@ -6008,6 +6006,7 @@ int cl_commlib_close_connection(cl_com_handle_t* handle,char* un_resolved_hostna
                      /* there are messages in ready to deliver state for this connection */
                      if (return_for_messages == CL_TRUE) {
                         do_return_after_trigger = CL_TRUE;
+                        break;
                      } else {
                         cl_com_message_t* message = NULL;
 
@@ -6040,7 +6039,9 @@ int cl_commlib_close_connection(cl_com_handle_t* handle,char* un_resolved_hostna
                   break;
                case CL_RW_THREAD:
                   /* we just want to trigger write , no wait for read*/
-                  cl_thread_trigger_event(handle->write_thread);
+                  cl_thread_wait_for_thread_condition(handle->read_condition,
+                                                      handle->select_sec_timeout,
+                                                      handle->select_usec_timeout);
                   break;
             }
          }
@@ -6191,6 +6192,23 @@ int cl_commlib_get_endpoint_status(cl_com_handle_t* handle, char* un_resolved_ho
                   return CL_RETVAL_OK;
                } else {
                   CL_LOG_INT(CL_LOG_DEBUG, "still no SRIM for SIM with id", (int)my_mid);
+                  /* 
+                   * This is a workaround when the SIM wasn't send by handle_connection_write()
+                   * because of network problems. Here we check the message instert time and
+                   * return CL_RETVAL_SEND_TIMEOUT when message wasn't send within ack timeout
+                   */
+                  if (message->message_state == CL_MS_INIT_SND) {
+                     long timeout_time = 0;
+                     struct timeval now;
+                     /* get current timeout time */
+                     gettimeofday(&now,NULL);
+
+                     CL_LOG_INT(CL_LOG_WARNING, "SIM not send - checking message insert time", (int)my_mid);
+                     timeout_time = (message->message_insert_time).tv_sec + connection->handler->acknowledge_timeout;
+                     if ( timeout_time <= now.tv_sec ) {
+                        found_message = 2;
+                     }
+                  }
                }
             }
             message_list_elem = next_message_list_elem;
@@ -6206,10 +6224,15 @@ int cl_commlib_get_endpoint_status(cl_com_handle_t* handle, char* un_resolved_ho
       cl_raw_list_unlock(handle->connection_list);
 
       if (found_message == 0) {
-         CL_LOG_INT(CL_LOG_ERROR,"SIM not found or removed because of SIRM ack timeout", (int)my_mid);
+         CL_LOG_INT(CL_LOG_ERROR, "SIM not found or removed because of SIRM ack timeout - msg_id was", (int)my_mid);
          free(unique_hostname);
          free(receiver.hash_id);
          return CL_RETVAL_MESSAGE_ACK_ERROR; /* message not found or removed because of ack timeout */
+      } else if (found_message == 2) {
+         CL_LOG_INT(CL_LOG_ERROR, "cannot send SIM - ack timeout reached - msg_id was", (int)my_mid);
+         free(unique_hostname);
+         free(receiver.hash_id);
+         return CL_RETVAL_SEND_TIMEOUT;
       }
 
       switch(cl_com_create_threads) {

@@ -1,3 +1,8 @@
+CR-2009-05-08-0: Bugifx:      qmaster fail-over results in very slow execd reconnect
+                 Bugster:     6823756
+                 Issue:       2900
+                 Review:      SH, RD
+
 RD-2009-05-07-1: Bugfix:      fixed broken build
                  Related To:  RD-2009-05-07-0
 

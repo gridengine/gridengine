@@ -1,3 +1,9 @@
+JG-2009-05-11-0: Bugfix:      inconsistent signal delivery behavior with and
+                              without -notify
+                 Bugster:     6811202
+                 Issue:       3017
+                 Review:      HP
+
 AP-2009-05-11-0: Bugfix:      the path to PE_HOSTFILE variable may not be set for
                               pe slave tasks
                  Bugster:     6825385

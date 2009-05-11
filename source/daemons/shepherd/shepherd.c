@@ -1835,8 +1835,7 @@ char *childname            /* "job", "pe_start", ...     */
                                       "signal", -pid, 
                                       sge_sys_sig2str(postponed_signal));
                
-               shepconf_deliver_signal_or_method(postponed_signal, -pid, 
-                                                 ctrl_pid);
+               shepconf_deliver_signal_or_method(postponed_signal, pid, ctrl_pid);
                /*shepherd_signal_job(-pid, postponed_signal);*/
                postponed_signal = 0;
             } else {

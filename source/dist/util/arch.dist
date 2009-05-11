@@ -87,7 +87,7 @@ AIX)
       ;;
    5)
       case $osrelease in
-      1)
+      1|2|3)
          ARCH=aix51
          ;;
       *)

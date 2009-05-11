@@ -1,3 +1,11 @@
+DG-2009-05-11-0: Bugfix:      SGE util/arch script is broken for AIX 5.3 
+                              Operating System
+                 Merged from: MAINTRUNK (DG-2009-05-11-0)
+                 Belongs to:  MP-2008-05-14-0
+                 Bugster:     6648160
+                 Issue:       2572
+                 Review:      JG
+
 MP-2009-04-29-0: Bugfix:      reference to /tmp/execd_messages should instead say 
                               /tmp/execd_messages* because .PID is appended
                  Bugster:     6742105

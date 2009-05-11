@@ -1,3 +1,16 @@
+LP-2009-05-11-0: Bugfix:      auto_install does not set the additional_jvm_args
+                              which limits qmaster size
+                 Bugster:     6827662
+                 Issue:       3007
+                 Belongs to:  LP-2009-04-14-0
+                 Bugfix:      gui-installer: qmaster installation validation
+                              always reports JMV lib missing if not set properly
+                 Bugster:     6835592
+                 Issue:       3027
+                 Enhancem.:   Detecting JAVA message displaye only when really
+                              doing the detection
+                 Review:      ZG, MD
+
 RN-2009-05-11-0: Bugfix:      qhost failed to filter the resource request
                               correctly
                  Bugster:     6782283

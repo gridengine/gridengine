@@ -2120,24 +2120,20 @@ SetLibJvmPath() {
    fi
       
    #Try to detect the library, if none specified via SGE_JVM_LIB_PATH
-   if [ -z "$SGE_JVM_LIB_PATH" ]; then      
+   if [ -z "$SGE_JVM_LIB_PATH" ]; then
+      $INFOTEXT "Detecting suitable JAVA ..."
+      $INFOTEXT -log "Detecting suitable JAVA ..."
       HaveSuitableJavaBin $MIN_JAVA_VERSION "jvm"
-      if [ -n "$jvm_lib_path" ]; then      
-         # Remove java_home if just "/" or "/usr"
-         if [ "$java_home" = "/" -o "$java_home" = "/usr" ]; then
-            java_home=""
-         fi
-      fi
    fi
    
    if [ "$AUTO" = "true" ]; then
-      #Autoconf file is used first if specified file exists 
-      if [ -f "$SGE_JVM_LIB_PATH" ]; then
-         jvm_lib_path=$SGE_JVM_LIB_PATH
-      fi
-      if [ -z "$jvm_lib_path" ]; then
+      if [ -z "$SGE_JVM_LIB_PATH" -a -z "$jvm_lib_path" ]; then
+         SGE_JVM_LIB_PATH="jvm_missing"
          $INFOTEXT -log -n "Warning: No JVM library path specified or detected. JMX will not work on this host!" \
-                           "\nModify the host configuration manually after the installation!"
+                           "\nModify the host configuration manually after the installation!\n"
+      else
+         SGE_JVM_LIB_PATH="${SGE_JVM_LIB_PATH:-$jvm_lib_path}"
+         $INFOTEXT -log "\nUsing jvm library >%s<" "$SGE_JVM_LIB_PATH"
       fi
       return 0
    fi
@@ -2174,7 +2170,6 @@ SetLibJvmPath() {
          
    if [ -z "$jvm_lib_path" -o ! -f "$jvm_lib_path" ]; then
       jvm_lib_path=""
-      $INFOTEXT -log "\nWarning: Cannot start jvm thread: jvm library not found"
       return 1
    fi
    
@@ -2225,14 +2220,9 @@ GetJMXPort() {
       jmx_port_max=65500
 
       if [ $AUTO = "true" ]; then
+         SetLibJvmPath
          # Autodetect shadowd configs from qmaster, except for libjvm
          if [ "$1" = "shadowd" ]; then            
-            SetLibJvmPath    # Try to detect libjvm
-            if [ -z "$jvm_lib_path" ]; then # If empty use invalid value
-               SGE_JVM_LIB_PATH="jvm_missing"
-            else
-               SGE_JVM_LIB_PATH=$jvm_lib_path
-            fi
             SGE_JMX_PORT=`PropertiesGetValue $SGE_ROOT/$SGE_CELL/common/jmx/management.properties com.sun.grid.jgdi.management.jmxremote.port`
             if [ -z "$SGE_ADDITIONAL_JVM_ARGS" ]; then
                global_value=`$SGE_BIN/qconf -sconf 2>/dev/null | grep additional_jvm_args | awk '{print $2}' 2>/dev/null`
@@ -2242,14 +2232,10 @@ GetJMXPort() {
             SGE_JMX_SSL_CLIENT=`PropertiesGetValue $SGE_ROOT/$SGE_CELL/common/jmx/management.properties com.sun.grid.jgdi.management.jmxremote.ssl.need.client.auth`
             SGE_JMX_SSL_KEYSTORE=`PropertiesGetValue $SGE_ROOT/$SGE_CELL/common/jmx/management.properties com.sun.grid.jgdi.management.jmxremote.ssl.serverKeystore`
             SGE_JMX_SSL_KEYSTORE_PW=`PropertiesGetValue $SGE_ROOT/$SGE_CELL/common/jmx/management.properties com.sun.grid.jgdi.management.jmxremote.ssl.serverKeystorePassword`            
-         fi
-
-         if [ ! -f "$SGE_JVM_LIB_PATH" ]; then
-            #TODO: Improve the message?
-            $INFOTEXT -log "\nWarning: Cannot start jvm thread: jvm library %s not found" "$SGE_JVM_LIB_PATH"
-         else   
-            $INFOTEXT -log "\nUsing jvm library >%s<" "$SGE_JVM_LIB_PATH"
-         fi                 
+         else
+            #QMASTER must also provide a default memory limit for JMX thread
+            SGE_ADDITIONAL_JVM_ARGS="${SGE_ADDITIONAL_JVM_ARGS:--Xmx256m}"
+         fi              
          
          if [ "$SGE_JMX_PORT" != "" ]; then
             if [ $SGE_JMX_PORT -ge $jmx_port_min -a $SGE_JMX_PORT -le $jmx_port_max ]; then
@@ -2306,10 +2292,9 @@ GetJMXPort() {
          alldone=false     
          while [ $alldone = false ]; do            
             
-            # set sge_jvm_lib_path
-            $INFOTEXT "Detecting suitable JAVA ..."                        
+            # set sge_jvm_lib_path                     
             SetLibJvmPath
-            sge_jvm_lib_path=$jvm_lib_path
+            sge_jvm_lib_path="$jvm_lib_path"
             
             # set SGE_ADDITIONAL_JVM_ARGS
             $INFOTEXT -n "Please enter additional JVM arguments (optional, default is [%s]) >> " "$sge_additional_jvm_args"

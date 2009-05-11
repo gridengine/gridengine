@@ -1,3 +1,10 @@
+DG-2009-05-11-0: Bugfix:      SGE util/arch script is broken for AIX 5.3 
+                              Operating System
+                 Belongs To:  MP-2008-05-15-0
+                 Bugster:     6648160
+                 Issue:       2572
+                 Review:      JG
+
 CR-2009-05-08-0: Bugifx:      qmaster fail-over results in very slow execd reconnect
                  Bugster:     6823756
                  Issue:       2900

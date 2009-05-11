@@ -87,7 +87,7 @@ AIX)
       ;;
    5)
       case $osrelease in
-      1)
+      1|2|3)
          ARCH=aix51
          ;;
       *)
@@ -194,13 +194,13 @@ Linux)
       ;;
    ppc)
       lxmachine=ppc
-       ;;
+      ;;
    ppc64)
       lxmachine=ppc64
       ;;
    mips)
       lxmachine=mips
-       ;;
+      ;;
    mips64)
       lxmachine=mips64
       ;;

@@ -690,9 +690,11 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
          const lListElem *pe;
 
          var_list_set_string(&environmentList, "PE", lGetString(jatep, JAT_granted_pe));
-         sprintf(buffer, "%s/%s/%s", execd_spool_dir, active_dir_buffer, PE_HOSTFILE);
-         var_list_set_string(&environmentList, "PE_HOSTFILE", buffer);
-
+         /* forward PE_HOSTFILE only to master task */
+         if (petep == NULL) {
+            sprintf(buffer, "%s/%s/%s", execd_spool_dir, active_dir_buffer, PE_HOSTFILE);
+            var_list_set_string(&environmentList, "PE_HOSTFILE", buffer);
+         }
          /* for tightly integrated jobs, also set the rsh_command SGE_RSH_COMMAND */
          pe = lGetObject(jatep, JAT_pe_object);
          if (pe != NULL && lGetBool(pe, PE_control_slaves) == true) {

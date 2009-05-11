@@ -1,3 +1,9 @@
+AP-2009-05-11-0: Bugfix:      the path to PE_HOSTFILE variable may not be set for
+                              pe slave tasks
+                 Bugster:     6825385
+                 Issue:       3018
+                 Review:      JG
+
 DG-2009-05-11-0: Bugfix:      SGE util/arch script is broken for AIX 5.3 
                               Operating System
                  Merged from: MAINTRUNK (DG-2009-05-11-0)

@@ -1,3 +1,9 @@
+RN-2009-05-11-0: Bugfix:      qhost failed to filter the resource request
+                              correctly
+                 Bugster:     6782283
+                 Issue:       3026
+                 Review:      JG
+
 JG-2009-05-11-0: Bugfix:      inconsistent signal delivery behavior with and
                               without -notify
                  Bugster:     6811202

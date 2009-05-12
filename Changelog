@@ -1,3 +1,6 @@
+LP-2009-05-12-0: Updated log description
+                 Belongs to:  ZG-2009-05-06-0
+
 DG-2009-05-12-1: Cleanup:     Fixed typo in man page. 
                  Review:      CR
 
@@ -68,8 +71,9 @@ ZG-2009-05-06-0: Enhancem.:   gui-installer: improved JVM library validation in
                               check_host script
                  Bugfix:      gui-installer: admin/submit error handling is broken
                  Bugster:     6806241
-                 Bugfix:      gui-installer: copy certification from qmaster host
-                              to each of the remote hosts.
+                 Bugfix:      gui-installer: CSP installation might fail when
+                              qmaster!=startup node
+                 Bugster:     6831094
                  Review:      LP
 
 ZG-2009-05-05-1: Reverting:   gui-installer: using gethostbyname/gethostbyaddr

@@ -132,7 +132,7 @@ static bool get_qacct_lists(sge_gdi_ctx_class_t *ctx, lList **alpp,
                             lList **ppcomplex, lList **ppqeues, lList **ppexechosts,
                             lList **hgrp_l);
 static void free_qacct_lists(lList **ppcomplex, lList **ppqeues, lList **ppexechosts, lList **hgrp_l);
-static int sge_read_rusage(FILE *f, sge_rusage_type *d, sge_qacct_options *options);
+static int sge_read_rusage(FILE *f, sge_rusage_type *d, sge_qacct_options *options, char *szLine, size_t size);
 
 /*
 ** statics
@@ -186,6 +186,9 @@ int main(int argc, char **argv)
    const char *acct_file = NULL; 
    lList *alp = NULL;
    sge_gdi_ctx_class_t *ctx = NULL;
+
+   char szLine[MAX_STRING_SIZE * 10];
+   size_t szLine_size = sizeof(szLine);
 
    DENTER_MAIN(TOP_LAYER, "qacct");
 
@@ -695,11 +698,12 @@ int main(int argc, char **argv)
 
    memset(&dusage, 0, sizeof(dusage));
 
+   /* main loop */
    while (!shut_me_down) {
       int i_ret;
       line++;
 
-      i_ret = sge_read_rusage(fp, &dusage, &options);
+      i_ret = sge_read_rusage(fp, &dusage, &options, szLine, szLine_size);
       if (i_ret == -2) {
          /* ignore, the line just doesn't match the command options */
          continue;
@@ -809,6 +813,7 @@ int main(int argc, char **argv)
             lListElem *new_ep;
 
             new_ep = lCreateElem(QAJ_Type);
+
             if (options.hostflag && dusage.hostname)
                lSetHost(new_ep, QAJ_host, dusage.hostname);
             if (options.queueflag && dusage.qname)
@@ -1580,17 +1585,15 @@ static void free_qacct_lists(lList **ppcentries, lList **ppqueues, lList **ppexe
 }
 
 static int 
-sge_read_rusage(FILE *f, sge_rusage_type *d, sge_qacct_options *options) 
+sge_read_rusage(FILE *f, sge_rusage_type *d, sge_qacct_options *options, char *szLine, size_t size) 
 {
-   static char szLine[MAX_STRING_SIZE * 10] = "";
-   const char *qname, *hostname, *group, *owner, *job_name, *account, *project, *department, *granted_pe;
    char  *pc;
    int len;
 
    DENTER(TOP_LAYER, "sge_read_rusage");
 
    do {
-      pc = fgets(szLine, sizeof(szLine), f);
+      pc = fgets(szLine, size, f);
       if (pc == NULL) { 
          DRETURN(2);
       }   
@@ -1607,7 +1610,7 @@ sge_read_rusage(FILE *f, sge_rusage_type *d, sge_qacct_options *options)
    if (!pc) {
       DRETURN(-1);
    }
-   qname = pc;
+   d->qname = pc;
    
    /*
     * hostname
@@ -1616,8 +1619,8 @@ sge_read_rusage(FILE *f, sge_rusage_type *d, sge_qacct_options *options)
    if (!pc) {
       DRETURN(-1);
    }
-   hostname = pc;
-   if (options->host != NULL && sge_hostcmp(options->host, hostname)) {
+   d->hostname = pc;
+   if (options->host != NULL && sge_hostcmp(options->host, d->hostname)) {
       DRETURN(-2);
    }
 
@@ -1627,7 +1630,7 @@ sge_read_rusage(FILE *f, sge_rusage_type *d, sge_qacct_options *options)
       const char *queue;
       bool found = false;
 
-      queue = sge_dstring_sprintf(&qi,"%s@%s", qname, hostname);
+      queue = sge_dstring_sprintf(&qi,"%s@%s", d->qname, d->hostname);
 
       for_each(elem, options->queue_name_list) {
          if (fnmatch(lGetString(elem, QR_name), queue, 0) == 0) {
@@ -1650,8 +1653,8 @@ sge_read_rusage(FILE *f, sge_rusage_type *d, sge_qacct_options *options)
    if (!pc) {
       DRETURN(-1);
    }
-   group = pc;
-   if (options->group != NULL && sge_strnullcmp(options->group, group)) {
+   d->group = pc;
+   if (options->group != NULL && sge_strnullcmp(options->group, d->group)) {
       DRETURN(-2);
    }
           
@@ -1662,8 +1665,8 @@ sge_read_rusage(FILE *f, sge_rusage_type *d, sge_qacct_options *options)
    if (!pc) {
       DRETURN(-1);
    }
-   owner = pc;
-   if (options->owner != NULL && sge_strnullcmp(options->owner, owner)) {
+   d->owner = pc;
+   if (options->owner != NULL && sge_strnullcmp(options->owner, d->owner)) {
       DRETURN(-2);
    }
 
@@ -1674,7 +1677,7 @@ sge_read_rusage(FILE *f, sge_rusage_type *d, sge_qacct_options *options)
    if (!pc) {
       DRETURN(-1);
    }
-   job_name = pc;
+   d->job_name = pc;
 
    /*
     * job_number
@@ -1686,7 +1689,7 @@ sge_read_rusage(FILE *f, sge_rusage_type *d, sge_qacct_options *options)
    
    d->job_number = atol(pc);
    if (!options->jobflag && (options->job_number || options->job_name != NULL)) {
-      if (((d->job_number != options->job_number) && sge_patternnullcmp(job_name, options->job_name))) {
+      if (((d->job_number != options->job_number) && sge_patternnullcmp(d->job_name, options->job_name))) {
          DRETURN(-2);
       }
    }
@@ -1698,8 +1701,8 @@ sge_read_rusage(FILE *f, sge_rusage_type *d, sge_qacct_options *options)
    if (!pc) {
       DRETURN(-1);
    }
-   account = pc;
-   if (options->accountflag && sge_strnullcmp(options->account, account)) {
+   d->account = pc;
+   if (options->accountflag && sge_strnullcmp(options->account, d->account)) {
       DRETURN(-2);
    }
 
@@ -1939,8 +1942,8 @@ sge_read_rusage(FILE *f, sge_rusage_type *d, sge_qacct_options *options)
    if (!pc) {
       DRETURN(-1);
    }
-   project = pc;
-   if (options->project != NULL && sge_strnullcmp(options->project, project)) {
+   d->project = pc;
+   if (options->project != NULL && sge_strnullcmp(options->project, d->project)) {
       DRETURN(-2);
    }
 
@@ -1951,19 +1954,19 @@ sge_read_rusage(FILE *f, sge_rusage_type *d, sge_qacct_options *options)
    if (!pc) {
       DRETURN(-1);
    }
-   department = pc;
-   if (options->department != NULL && sge_strnullcmp(options->department, department)) {
+   d->department = pc;
+   if (options->department != NULL && sge_strnullcmp(options->department, d->department)) {
       DRETURN(-2);
    }
 
    /* PE name */
    pc = strtok(NULL, ":");
    if (pc) {
-      granted_pe = pc;
+      d->granted_pe = pc;
    } else {
-      granted_pe = "none";   
+      d->granted_pe = "none";   
    }
-   if (options->granted_pe != NULL && sge_strnullcmp(options->granted_pe, granted_pe)) {
+   if (options->granted_pe != NULL && sge_strnullcmp(options->granted_pe, d->granted_pe)) {
       DRETURN(-2);
    }
 
@@ -2027,15 +2030,6 @@ sge_read_rusage(FILE *f, sge_rusage_type *d, sge_qacct_options *options)
    }
 
    /* ... */ 
-   d->qname = sge_strdup(d->qname, qname);
-   d->hostname = sge_strdup(d->hostname, hostname);
-   d->group = sge_strdup(d->group, group);
-   d->owner = sge_strdup(d->owner, owner);
-   d->job_name = sge_strdup(d->job_name, job_name);
-   d->account = sge_strdup(d->account, account);
-   d->project = sge_strdup(d->project, project);
-   d->department = sge_strdup(d->department, department);
-   d->granted_pe = sge_strdup(d->granted_pe, granted_pe);
    options->jobfound=1;
 
    DRETURN(0);

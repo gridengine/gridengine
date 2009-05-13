@@ -1,3 +1,8 @@
+RD-2009-05-13-0: Enhancem.:   further qacct optimizations from Ron Chen and
+                              Rayson Ho
+                 BelongsTo:   RD-2009-05-07-0
+                 Review:      JG, CR
+
 JF-2009-05-13-0: Bugfix:      qacct does not resolve complex shortcut names
                  Bugster:     6499573
                  Issue:       3024

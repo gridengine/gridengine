@@ -1,3 +1,8 @@
+JF-2009-05-13-0: Bugfix:      qacct does not resolve complex shortcut names
+                 Bugster:     6499573
+                 Issue:       3024
+                 Review:      JG
+
 LP-2009-05-12-0: Updated log description
                  Belongs to:  ZG-2009-05-06-0
 

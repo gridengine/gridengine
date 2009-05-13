@@ -730,6 +730,11 @@ int main(int argc, char **argv)
    
          sconf_set_qs_state(QS_STATE_EMPTY);
 
+         if (centry_list_fill_request(complex_options, &alp, centry_list, true, true, false)) {
+            answer_list_output(&alp);
+            goto QACCT_EXIT;
+         }
+
          selected = sge_select_queue(complex_options, queue, NULL, exechost_list,
                     centry_list, true, 1, NULL, NULL, NULL);
   

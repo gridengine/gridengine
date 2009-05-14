@@ -1193,6 +1193,17 @@ unsigned long comm_write_message(COMMUNICATION_HANDLE *handle,
                            CL_FALSE,  /* don't copy the sendbuf */
                            CL_FALSE); /* don't wait for ack */
 
+   /* TODO: change send_message to ACK, i.e. CL_MIH_MAT_ACK && CL_TRUE in
+    *       the last line. This ensures that the connection is open
+    *       before the threads are created when this function is used by
+    *       parent_loop(). Better solution: Move this to a function
+    *       comm_write_first_message() or so.
+    *
+    *       Problem seems to be: Both threads try to open a connection
+    *       to the qrsh client. This problem shoud be handled by the commlib.
+    */
+
+
    /* sendbuf was freed by the commlib */
    sge_dstring_sprintf(err_msg, "%s", cl_get_error_text(ret));
 
@@ -1325,7 +1336,13 @@ int comm_recv_message(COMMUNICATION_HANDLE *handle, cl_bool_t b_synchron,
    DENTER(TOP_LAYER, "recv_message");
 
    /* check validity of parameters */
-   if(handle == NULL || recv_mess == NULL) {
+   if (handle == NULL || recv_mess == NULL) {
+      if (handle == NULL) {
+         sge_dstring_sprintf(err_msg, "Invalid parameter: handle == NULL");
+      } else {
+         sge_dstring_sprintf(err_msg, "Invalid parameter: recv_mess == NULL");
+      }
+      DPRINTF((sge_dstring_get_string(err_msg)));
       DEXIT;
       return COMM_INVALID_PARAMETER;
    }
@@ -1341,18 +1358,32 @@ int comm_recv_message(COMMUNICATION_HANDLE *handle, cl_bool_t b_synchron,
    if (ret != CL_RETVAL_OK) {
       switch (ret) {
          case CL_RETVAL_NO_SELECT_DESCRIPTORS:
+            sge_dstring_sprintf(err_msg, cl_get_error_text(ret));
+            DPRINTF(("cl_commlib_receive_message() failed: %s (%d)\n",
+               sge_dstring_get_string(err_msg), ret));
             ret_val = COMM_NO_SELECT_DESCRIPTORS;
          break;
          case CL_RETVAL_CONNECTION_NOT_FOUND:
+            sge_dstring_sprintf(err_msg, cl_get_error_text(ret));
+            DPRINTF(("cl_commlib_receive_message() failed: %s (%d)\n",
+               sge_dstring_get_string(err_msg), ret));
             ret_val = COMM_CONNECTION_NOT_FOUND;
          break;
          case CL_RETVAL_SYNC_RECEIVE_TIMEOUT:
+            sge_dstring_sprintf(err_msg, cl_get_error_text(ret));
+            DPRINTF(("cl_commlib_receive_message() failed: %s (%d)\n",
+               sge_dstring_get_string(err_msg), ret));
             ret_val = COMM_SYNC_RECEIVE_TIMEOUT;
          break;
          case CL_RETVAL_NO_MESSAGE:
+            sge_dstring_sprintf(err_msg, cl_get_error_text(ret));
+            DPRINTF(("cl_commlib_receive_message() failed: %s (%d)\n",
+               sge_dstring_get_string(err_msg), ret));
             ret_val = COMM_NO_MESSAGE_AVAILABLE;
          break;
          default:
+            sge_dstring_sprintf(err_msg, "can't receive message");
+            DPRINTF(("cl_commlib_receive_message() couldn't receive a message\n"));
             ret_val = COMM_CANT_RECEIVE_MESSAGE;
       }
    }

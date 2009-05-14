@@ -1,3 +1,6 @@
+HP-2009-05-14-0: Enhancem.:   Improved error messages
+                 Changed:     common/sge_ijs_comm.c
+
 RD-2009-05-13-0: Enhancem.:   further qacct optimizations from Ron Chen and
                               Rayson Ho
                  BelongsTo:   RD-2009-05-07-0

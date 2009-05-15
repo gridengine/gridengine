@@ -383,9 +383,9 @@ sge_write_rusage(dstring *buffer,
    {
       dstring cqueue = DSTRING_INIT;
       dstring hname = DSTRING_INIT;
-      bool has_host, has_domain;
 
-      cqueue_name_split(lGetString(jr, JR_queue_name), &cqueue, &hname, &has_host, &has_domain);
+      cqueue_name_split(lGetString(jr, JR_queue_name), &cqueue, &hname, NULL, 
+         NULL);
 
       qname = strdup(sge_dstring_get_string(&cqueue));
       hostname = strdup(sge_dstring_get_string(&hname));

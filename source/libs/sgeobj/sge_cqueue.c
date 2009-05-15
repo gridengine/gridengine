@@ -71,6 +71,7 @@
 #include "commlib.h"
 
 #include "msg_common.h"
+#include "msg_clients_common.h"
 #include "msg_sgeobjlib.h"
 
 #define CQUEUE_LAYER TOP_LAYER
@@ -236,7 +237,15 @@ cqueue_name_split(const char *name,
          if (!at_skiped && *name == '@') {
             at_skiped = true;
             name++;
+            if (*name == '\0') {
+               ret = false;
+               break;
+            }
             if (*name == '@') {
+               if (*(name + 1) == '\0') {
+                  ret = false;
+                  break;
+               }
                if (has_domain)
                   *has_domain = true;
                if (has_hostname)
@@ -1185,8 +1194,14 @@ cqueue_xattr_pre_gdi(lList *this_list, lList **answer_list)
          bool has_hostname = false;
          bool has_domain = false;
 
-         cqueue_name_split(name, &cqueue_name, &host_domain,
-                           &has_hostname, &has_domain);
+         if (!cqueue_name_split(name, &cqueue_name, &host_domain,
+                           &has_hostname, &has_domain)) {
+            answer_list_add_sprintf(answer_list, STATUS_ESYNTAX,
+               ANSWER_QUALITY_ERROR, MSG_CQUEUE_NOQMATCHING_S, name);
+            ret = false;
+            break;
+         }
+
          if (has_domain || has_hostname) {
             int index = 0;
 

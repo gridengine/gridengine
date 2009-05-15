@@ -838,18 +838,23 @@ bool sge_is_pattern(const char *s)
 bool sge_is_expression(const char *s) 
 {
    char c;
-   while ((c = *s++)) {
-      switch (c) {
-         case '*':
-         case '?':
-         case '[':
-         case ']':
-         case '&':
-         case '|':
-         case '!':
-         case '(':
-         case ')':
-         return true;
+   
+   if (s != NULL) {
+      while (*s != '\0') {
+         c = *s;
+         switch (c) {
+            case '*':
+            case '?':
+            case '[':
+            case ']':
+            case '&':
+            case '|':
+            case '!':
+            case '(':
+            case ')':
+           return true;
+         }
+         s++;
       }
    }
    return false;

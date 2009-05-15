@@ -1260,6 +1260,9 @@ qinstance_verify_full_name(lList **answer_list, const char *full_name)
    if (ret) {
       if (!cqueue_name_split(full_name, &cqueue_name, &host_domain, 
                              &has_hostname, &has_domain)) {
+         /* report syntax error */                    
+         answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
+                                 MSG_INVALID_QINSTANCE_NAME_S, full_name);                    
          ret = false;
       }
    }

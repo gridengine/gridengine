@@ -166,8 +166,11 @@ static bool cqueue_hgroup_get_via_gdi(sge_gdi_ctx_class_t *ctx, lList **answer_l
          lCondition *add_cqueue_where = NULL;
          const char* cqueue_name_str = NULL;
          
-         cqueue_name_split(name, &cqueue_name, &host_domain,
-                           &has_hostname, &has_domain);
+         if (!cqueue_name_split(name, &cqueue_name, &host_domain,
+                           &has_hostname, &has_domain)) {
+            answer_list_add_sprintf(answer_list, STATUS_ESYNTAX,
+               ANSWER_QUALITY_ERROR, MSG_CQUEUE_NOQMATCHING_S, name);
+         }
 
          fetch_all_hgroup = (fetch_all_hgroup || has_domain) ? true : false;
          fetch_all_qi = (fetch_all_qi || (has_domain || has_hostname)) ? true : false;
@@ -176,11 +179,9 @@ static bool cqueue_hgroup_get_via_gdi(sge_gdi_ctx_class_t *ctx, lList **answer_l
          cqueue_name_str = sge_dstring_get_string(&cqueue_name);
          
          if (cqueue_name_str == NULL) {
-            char buffer[MAX_STRING_SIZE];
-            
-            sprintf (buffer, MSG_CQUEUE_NAMENOTCORRECT_SS, name, name);
-            answer_list_add (answer_list, buffer, STATUS_ESYNTAX,
-                             ANSWER_QUALITY_ERROR);
+            answer_list_add_sprintf(answer_list, STATUS_ESYNTAX,
+                             ANSWER_QUALITY_ERROR, MSG_CQUEUE_NAMENOTCORRECT_SS, 
+                             name, name);
             ret = false;
             break;
          }
@@ -202,8 +203,8 @@ static bool cqueue_hgroup_get_via_gdi(sge_gdi_ctx_class_t *ctx, lList **answer_l
          lFreeWhat(&what);
       }  
       if (ret) {
-         lEnumeration *what; 
-         
+         lEnumeration *what;
+
          what = enumeration_create_reduced_cq(fetch_all_qi, fetch_all_nqi);
          cq_id = ctx->gdi_multi(ctx, answer_list, SGE_GDI_SEND, SGE_CQUEUE_LIST,
                                SGE_GDI_GET, NULL, cqueue_where, what,
@@ -581,8 +582,12 @@ cqueue_show(sge_gdi_ctx_class_t *ctx, lList **answer_list, const lList *qref_pat
             bool found_something = false;
 
             name = lGetString(qref_pattern, QR_name);
-            cqueue_name_split(name, &cqueue_name, &host_domain,
-                              &has_hostname, &has_domain);
+            if (!cqueue_name_split(name, &cqueue_name, &host_domain,
+                              &has_hostname, &has_domain)) {
+               /* splitting was not successful means we have a syntax error */               
+               ret = false;
+               break;
+            }
             cq_pattern = sge_dstring_get_string(&cqueue_name);
             cqueue_list_find_all_matching_references(cqueue_list, NULL,
                                                      cq_pattern, &qref_list);

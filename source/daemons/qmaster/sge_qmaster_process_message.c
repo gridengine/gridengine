@@ -540,11 +540,10 @@ static void sge_c_job_ack(sge_gdi_ctx_class_t *ctx, const char *host, const char
          lListElem *cqueue = NULL;
          dstring cqueue_name = DSTRING_INIT;
          dstring host_domain = DSTRING_INIT;
-         bool has_hostname, has_domain;
 
-         cqueue_name_split(ack_str, &cqueue_name, &host_domain, 
-                           &has_hostname, &has_domain);
-
+         cqueue_name_split(ack_str, &cqueue_name, &host_domain, NULL,  
+                          NULL);
+            
          cqueue = lGetElemStr(*(object_type_get_master_list(SGE_TYPE_CQUEUE)),
                               CQ_name, sge_dstring_get_string(&cqueue_name));
 

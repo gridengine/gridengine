@@ -188,15 +188,15 @@ sge_gdi_qmod(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_t
                const char *full_name = NULL;
                const char *cqueue_name = NULL;
                const char *hostname = NULL;
-               bool has_hostname = false;
-               bool has_domain = false;
                lListElem *cqueue = NULL;
                lListElem *qinstance = NULL;
                lList *qinstance_list = NULL;
 
                full_name = lGetString(qref, QR_name);
-               cqueue_name_split(full_name, &cqueue_buffer, &hostname_buffer,
-                                 &has_hostname, &has_domain);
+               if (!cqueue_name_split(full_name, &cqueue_buffer, &hostname_buffer, NULL,
+                                 NULL)) {
+                  continue;
+               }                  
                cqueue_name = sge_dstring_get_string(&cqueue_buffer);
                hostname = sge_dstring_get_string(&hostname_buffer);
                cqueue = lGetElemStr(cqueue_list, CQ_name, cqueue_name);

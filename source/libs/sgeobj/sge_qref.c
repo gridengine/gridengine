@@ -56,6 +56,7 @@
 #include "comm/commlib.h"
 
 #include "msg_common.h"
+#include "msg_clients_common.h"
 #include "msg_sgeobjlib.h"
 
 #define QREF_LAYER TOP_LAYER
@@ -366,8 +367,14 @@ qref_list_resolve(const lList *src_qref_list, lList **answer_list,
           * Find all existing parts of the qref-pattern
           */ 
          name = lGetString(qref_pattern, QR_name); 
-         cqueue_name_split(name, &cqueue_name, &host_or_hgroup,
-                           &has_hostname, &has_domain);
+         if (!cqueue_name_split(name, &cqueue_name, &host_or_hgroup,
+                           &has_hostname, &has_domain)) {
+            /* we've got an syntax error */ 
+            answer_list_add_sprintf(answer_list, STATUS_ESYNTAX,
+               ANSWER_QUALITY_ERROR, MSG_CQUEUE_NOQMATCHING_S, name);
+            lFreeList(&cq_ref_list);
+            continue;
+         }                 
          cq_pattern = sge_dstring_get_string(&cqueue_name);
 
          cqueue_list_find_all_matching_references(cqueue_list, answer_list,
@@ -671,53 +678,57 @@ qref_list_trash_some_elemts(lList **this_list, const char *full_name)
       dstring host_or_hgroup_buffer = DSTRING_INIT;
       dstring cqueue_buffer1 = DSTRING_INIT;
       dstring host_or_hgroup_buffer1 = DSTRING_INIT;
-      bool has_hostname1;
-      bool has_domain1;
       const char *cqueue1 = NULL;
       const char *host1 = NULL;
 
-      cqueue_name_split(full_name, &cqueue_buffer1, &host_or_hgroup_buffer1,
-                        &has_hostname1, &has_domain1);
-      cqueue1 = sge_dstring_get_string(&cqueue_buffer1);
-      host1 = sge_dstring_get_string(&host_or_hgroup_buffer1);
+      if (!cqueue_name_split(full_name, &cqueue_buffer1, &host_or_hgroup_buffer1, NULL, 
+                        NULL)) {
+         /* we got an syntax error while splitting */               
+         ret = false;
+      } else {                
+         cqueue1 = sge_dstring_get_string(&cqueue_buffer1); 
+         host1 = sge_dstring_get_string(&host_or_hgroup_buffer1);
 
-      next_qref = lFirst(*this_list);
-      while ((qref = next_qref) != NULL) {
-         bool has_hostname;
-         bool has_domain;
-         const char *name = NULL;
-         const char *cqueue = NULL;
-         const char *host = NULL;
+         next_qref = lFirst(*this_list);
+         while ((qref = next_qref) != NULL) {
+            const char *name = NULL;
+            const char *cqueue = NULL;
+            const char *host = NULL;
 
-         next_qref = lNext(qref);
+            next_qref = lNext(qref);
 
-         name = lGetString(qref, QR_name);
-         cqueue_name_split(name, &cqueue_buffer, &host_or_hgroup_buffer,
-                           &has_hostname, &has_domain);
-         cqueue = sge_dstring_get_string(&cqueue_buffer);
-         host = sge_dstring_get_string(&host_or_hgroup_buffer);
+            name = lGetString(qref, QR_name);
+            if (!cqueue_name_split(name, &cqueue_buffer, &host_or_hgroup_buffer, NULL,
+                              NULL)) {
+               sge_dstring_clear(&cqueue_buffer);
+               sge_dstring_clear(&host_or_hgroup_buffer);
+               ret = false;
+               break;
+            }
+            cqueue = sge_dstring_get_string(&cqueue_buffer);
+            host = sge_dstring_get_string(&host_or_hgroup_buffer);
 
-         /*
-          * Same cluster queue or different host?
-          */
-         if (!strcmp(cqueue1, cqueue) || strcmp(host1, host)) {
-            lRemoveElem(*this_list, &qref);
+            /*
+             * Same cluster queue or different host?
+             */
+            if (!sge_strnullcmp(cqueue1, cqueue) || sge_strnullcmp(host1, host)) {
+               lRemoveElem(*this_list, &qref);
+            }
+
+            sge_dstring_clear(&cqueue_buffer);
+            sge_dstring_clear(&host_or_hgroup_buffer);
+         }
+         if (lGetNumberOfElem(*this_list) == 0) {
+            lFreeList(this_list);
          }
 
-         sge_dstring_clear(&cqueue_buffer);
-         sge_dstring_clear(&host_or_hgroup_buffer);
+         sge_dstring_free(&cqueue_buffer);
+         sge_dstring_free(&host_or_hgroup_buffer);
+         sge_dstring_free(&cqueue_buffer1);
+         sge_dstring_free(&host_or_hgroup_buffer1);
       }
-      if (lGetNumberOfElem(*this_list) == 0) {
-         lFreeList(this_list);
-      }
-
-      sge_dstring_free(&cqueue_buffer);
-      sge_dstring_free(&host_or_hgroup_buffer);
-      sge_dstring_free(&cqueue_buffer1);
-      sge_dstring_free(&host_or_hgroup_buffer1);
-   }
-   DEXIT;
-   return ret;
+   }   
+   DRETURN(ret);
 }
 
 /****** sgeobj/qref/qref_list_is_valid() **************************************
@@ -839,33 +850,36 @@ qref_resolve_hostname(lListElem *this_elem)
    
    DENTER(TOP_LAYER, "qref_resolve_hostname");
    name = lGetString(this_elem, QR_name);
-   cqueue_name_split(name, &cqueue_name, &host_or_hgroup,
-                     &has_hostname, &has_domain);
-   unresolved_name = sge_dstring_get_string(&host_or_hgroup);
-   /* Find all CQ names which match 'cq_pattern' */
-   if (has_hostname && !sge_is_expression(unresolved_name)) {
-      char resolved_name[CL_MAXHOSTLEN+1];
-      int back = getuniquehostname(unresolved_name, resolved_name, 0);
 
-      if (back == CL_RETVAL_OK) {
-         dstring new_qref_pattern = DSTRING_INIT;
-         if (sge_dstring_strlen(&cqueue_name) == 0) {
-             sge_dstring_sprintf(&new_qref_pattern, "@%s",
-                                 resolved_name);
-         } else {
-            sge_dstring_sprintf(&new_qref_pattern, "%s@%s",
-                                sge_dstring_get_string(&cqueue_name),
-                                resolved_name);
+   if (cqueue_name_split(name, &cqueue_name, &host_or_hgroup,
+                     &has_hostname, &has_domain)) {
+      unresolved_name = sge_dstring_get_string(&host_or_hgroup);
+      /* Find all CQ names which match 'cq_pattern' */
+      if (has_hostname && unresolved_name != NULL &&!sge_is_expression(unresolved_name)) {
+         char resolved_name[CL_MAXHOSTLEN+1];
+         int back = getuniquehostname(unresolved_name, resolved_name, 0);
+
+         if (back == CL_RETVAL_OK) {
+            dstring new_qref_pattern = DSTRING_INIT;
+            if (sge_dstring_strlen(&cqueue_name) == 0) {
+                sge_dstring_sprintf(&new_qref_pattern, "@%s",
+                                    resolved_name);
+            } else {
+               sge_dstring_sprintf(&new_qref_pattern, "%s@%s",
+                                   sge_dstring_get_string(&cqueue_name),
+                                   resolved_name);
+            }
+            lSetString(this_elem, QR_name, 
+                       sge_dstring_get_string(&new_qref_pattern));
+            sge_dstring_free(&new_qref_pattern);
          }
-         lSetString(this_elem, QR_name, 
-                    sge_dstring_get_string(&new_qref_pattern));
-         sge_dstring_free(&new_qref_pattern);
       }
    }
+
    sge_dstring_free(&cqueue_name);
    sge_dstring_free(&host_or_hgroup);
-   DEXIT;
-   return;
+
+   DRETURN_VOID;
 }
 
 /****** sge_qref/cull_parse_destination_identifier_list() **********************

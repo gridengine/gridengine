@@ -1805,16 +1805,19 @@ bool reporting_create_ar_acct_records(lList **answer_list, const lListElem *ar, 
       u_long32 slots = lGetUlong(elem, JG_slots);
       dstring cqueue_name = DSTRING_INIT;
       dstring host_or_hgroup = DSTRING_INIT;
-      bool has_hostname;
-      bool has_domain;
 
-      cqueue_name_split(queue_name, &cqueue_name, &host_or_hgroup,
-                        &has_hostname, &has_domain);
+      if (!cqueue_name_split(queue_name, &cqueue_name, &host_or_hgroup, NULL, 
+                        NULL)) {
+         ret = false;
+         continue;
+      }
      
-      ret |= reporting_create_ar_acct_record(NULL, ar,
+      if (!reporting_create_ar_acct_record(NULL, ar,
                                       sge_dstring_get_string(&cqueue_name),
                                       sge_dstring_get_string(&host_or_hgroup),
-                                      slots, report_time); 
+                                      slots, report_time)) {
+         ret = false;
+      }
 
       sge_dstring_free(&cqueue_name);
       sge_dstring_free(&host_or_hgroup);

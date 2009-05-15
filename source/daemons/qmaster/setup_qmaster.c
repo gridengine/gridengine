@@ -766,7 +766,9 @@ static void sge_propagate_queue_suspension(object_description *object_base, lLis
 
       for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
 
-         cqueue_name_split(lGetString(gdil_ep, JG_qname), cqueue_name, host_domain, NULL, NULL);
+         if (!cqueue_name_split(lGetString(gdil_ep, JG_qname), cqueue_name, host_domain, NULL, NULL)) {
+            continue;
+         } 
 
          if (!(cq = lGetElemStr(*object_base[SGE_TYPE_CQUEUE].list, CQ_name, sge_dstring_get_string(cqueue_name))) ||
              !(qi = lGetElemHost(lGetList(cq, CQ_qinstances), QU_qhostname, sge_dstring_get_string(host_domain)))) 

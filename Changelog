@@ -1,9 +1,12 @@
+DG-2009-05-15-0: Bugfix:      Wrong argument syntax could cause qmaster crash.
+                 Review:      JG
+
 HP-2009-05-14-0: Enhancem.:   Improved error messages
                  Changed:     common/sge_ijs_comm.c
 
 RD-2009-05-13-0: Enhancem.:   further qacct optimizations from Ron Chen and
                               Rayson Ho
-                 BelongsTo:   RD-2009-05-07-0
+                 Belongs to:   RD-2009-05-07-0
                  Review:      JG, CR
 
 JF-2009-05-13-0: Bugfix:      qacct does not resolve complex shortcut names
@@ -62,7 +65,7 @@ AP-2009-05-11-0: Bugfix:      the path to PE_HOSTFILE variable may not be set fo
 
 DG-2009-05-11-0: Bugfix:      SGE util/arch script is broken for AIX 5.3 
                               Operating System
-                 Belongs To:  MP-2008-05-15-0
+                 Belongs to:  MP-2008-05-15-0
                  Bugster:     6648160
                  Issue:       2572
                  Review:      JG
@@ -73,7 +76,7 @@ CR-2009-05-08-0: Bugifx:      qmaster fail-over results in very slow execd recon
                  Review:      SH, RD
 
 RD-2009-05-07-1: Bugfix:      fixed broken build
-                 Related To:  RD-2009-05-07-0
+                 Belongs to:  RD-2009-05-07-0
 
 RD-2009-05-07-0: Bugfix:      improved qacct performance
                  Bugster:     6838487

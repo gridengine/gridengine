@@ -225,26 +225,20 @@ select_by_qref_list(lList *cqueue_list, const lList *hgrp_list, const lList *qre
          dstring cqueue_buffer = DSTRING_INIT;
          dstring hostname_buffer = DSTRING_INIT;
          const char *full_name = NULL;
-         const char *cqueue_name = NULL;
-         const char *hostname = NULL;
-         bool has_hostname = false;
-         bool has_domain = false;
-         lListElem *cqueue = NULL;
-         lListElem *qinstance = NULL;
-         lList *qinstance_list = NULL;
-         u_long32 tag = 0;
 
          full_name = lGetString(qref, QR_name); 
-         cqueue_name_split(full_name, &cqueue_buffer, &hostname_buffer,
-                           &has_hostname, &has_domain);
-         cqueue_name = sge_dstring_get_string(&cqueue_buffer);
-         hostname = sge_dstring_get_string(&hostname_buffer);
-         cqueue = lGetElemStr(cqueue_list, CQ_name, cqueue_name);
-         qinstance_list = lGetList(cqueue, CQ_qinstances);
-         qinstance = lGetElemHost(qinstance_list, QU_qhostname, hostname);
 
-         tag = lGetUlong(qinstance, QU_tag);
-         lSetUlong(qinstance, QU_tag, tag | TAG_SELECT_IT);
+         if (cqueue_name_split(full_name, &cqueue_buffer, &hostname_buffer, NULL, 
+                           NULL)) {
+            const char *cqueue_name = sge_dstring_get_string(&cqueue_buffer);
+            const char *hostname = sge_dstring_get_string(&hostname_buffer);
+            lListElem *cqueue = lGetElemStr(cqueue_list, CQ_name, cqueue_name);
+            lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
+            lListElem *qinstance = lGetElemHost(qinstance_list, QU_qhostname, hostname);
+
+            u_long32 tag = lGetUlong(qinstance, QU_tag);
+            lSetUlong(qinstance, QU_tag, tag | TAG_SELECT_IT);
+          }  
 
          sge_dstring_free(&cqueue_buffer);
          sge_dstring_free(&hostname_buffer);

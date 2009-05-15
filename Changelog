@@ -1,3 +1,6 @@
+RH-2009-05-15-0: Enhancem.:   startup script for jgdi eventmon improved
+                 Review:      AA
+
 DG-2009-05-15-0: Bugfix:      Wrong argument syntax could cause qmaster crash.
                  Review:      JG
 

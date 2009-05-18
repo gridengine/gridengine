@@ -1,3 +1,10 @@
+HP-2009-05-15-0: Bugfix:      redirecting "qrsh -pty yes" output to a file or
+                              a pipe doesn't work
+                 Changed:     clients/common/sge_client_ijs.c
+                 Bugster:     6841529
+                 Issue:       3031
+                 Review:      MD
+
 RH-2009-05-15-0: Enhancem.:   startup script for jgdi eventmon improved
                  Review:      AA
 

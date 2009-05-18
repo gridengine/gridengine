@@ -634,10 +634,13 @@ int do_server_loop(u_long32 job_id, int nostdin, int noshell,
     * qrsh without command and qlogin both have is_rsh == 0 and is_qlogin == 1
     * qrsh with command and qsh don't need to set terminal mode.
     * If the user requested a pty we also have to set terminal mode.
+    * But only if stdout is still connected to a tty and not redirected
+    * to a file or a pipe.
     */
-   if ((force_pty == 2 && is_rsh == 0 && is_qlogin == 1) || force_pty == 1) {
+   if (isatty(STDOUT_FILENO) == 1 &&
+      ((force_pty == 2 && is_rsh == 0 && is_qlogin == 1) || force_pty == 1)) {
       /*
-       * Set this terminal to raw mode, just output everything, don't interpreti
+       * Set this terminal to raw mode, just output everything, don't interpret
        * it. Let the pty on the client side interpret the characters.
        */
       ret = terminal_enter_raw_mode();

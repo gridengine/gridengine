@@ -575,8 +575,9 @@ MD-2009-03-24-0: Enhancem:    updated 62patches.txt file
 
 JG-2009-03-23-0: Bugfix:      misleading execd logging "Can't get load values"
                               on AIX
-                 Bugster:     6746960
-                 Issue:       2961
+                              make load_sensor protocol compliant
+                 Bugster:     6746960, 6842629
+                 Issue:       2961, 3033
                  Review:      DG
 
 DG-2009-03-19-0: Bugfix:      stopping an execution daemon does not stop jobs

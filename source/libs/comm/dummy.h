@@ -23,11 +23,11 @@
  *  See the License for the specific provisions governing your rights and
  *  obligations concerning the Software.
  *
- *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+ *  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
  *
- *   Copyright: 2001 by Sun Microsystems, Inc.
+ *  Copyright: 2001 by Sun Microsystems, Inc.
  *
- *   All Rights Reserved.
+ *  All Rights Reserved.
  *
  ************************************************************************/
 /*___INFO__MARK_END__*/       

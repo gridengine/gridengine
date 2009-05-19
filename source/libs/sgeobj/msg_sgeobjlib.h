@@ -128,6 +128,7 @@
 #define MSG_CENTRYREFINHOST_SS                     _MESSAGE(64188, _("Complex attribute "SFQ" is still referenced in host "SFQ"."))
 #define MSG_CENTRYREFINSCONF_S                     _MESSAGE(64189, _("Complex attribute "SFQ" is still referenced in scheduler configuration."))
 #define MSG_PARSE_DUPLICATEHOSTINFILESPEC          _MESSAGE(64190,_("ERROR! two files are specified for the same host"))
+#define MSG_EXCL_MUST_BE_CONSUMABLE_S              _MESSAGE(64199, _("Exclusive complex "SFQ" must be a consumable"))
 #define MSG_MUST_BOOL_TO_BE_EXCL_S                 _MESSAGE(64200, _("Complex "SFQ" must be BOOL to use EXCL as relational operator"))
 #define MSG_INVALID_CENTRY_EXCL_S                  _MESSAGE(64201, _("Exclusive complex "SFQ" must have EXCL as relational operator"))
 #define MSG_INVALID_CENTRY_DEFAULT_S               _MESSAGE(64202, _("Complex "SFQ" cannot have a default value"))

@@ -1035,7 +1035,7 @@ bool centry_elem_validate(lListElem *centry, lList *centry_list,
                        }
                        if (relop == CMPLXEXCL_OP && !lGetUlong(centry, CE_consumable)) {
                            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN , ANSWER_QUALITY_ERROR,
-                                                   MSG_INVALID_CENTRY_EXCL_S, attrname, 
+                                                   MSG_EXCL_MUST_BE_CONSUMABLE_S, attrname, 
                                                    map_type2str(type));
                            ret = false;
                        }

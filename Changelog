@@ -1,3 +1,9 @@
+RD-2009-05-19-0: Bugfix:      corrected error message for EXCL complex without
+                              consumable flag
+                 Bugster:     6842644
+                 Issue:       3034
+                 Review:      JG
+
 HP-2009-05-15-0: Bugfix:      redirecting "qrsh -pty yes" output to a file or
                               a pipe doesn't work
                  Changed:     clients/common/sge_client_ijs.c

@@ -1,10 +1,11 @@
 /*___INFO__MARK_BEGIN__*/
-/**************************************************************************
+/*************************************************************************
  *
  *  The Contents of this file are made available subject to the terms of
  *  the Sun Industry Standards Source License Version 1.2
  *
  *  Sun Microsystems Inc., March, 2001
+ *
  *
  *  Sun Industry Standards Source License Version 1.2
  *  =================================================
@@ -20,12 +21,12 @@
  *  See the License for the specific provisions governing your rights and
  *  obligations concerning the Software.
  *
- *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
- * 
- *   Copyright: 2008 by Sun Microsystems, Inc.
- * 
- *   All Rights Reserved.
- * 
+ *  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+ *
+ *  Copyright: 2008 by Sun Microsystems, Inc.
+ *
+ *  All Rights Reserved.
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 

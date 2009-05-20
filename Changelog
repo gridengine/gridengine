@@ -1,3 +1,8 @@
+JG-2009-05-20-0: Bugfix:      accounting_summary in PE only adding cpu/mem/io
+                 Bugster:     6774196
+                 Issue:       2787
+                 Review:      AP
+
 CR-2009-05-19-1: Cleanup:     fixed some copyright headers
                  Review:      AA
 
@@ -28,7 +33,7 @@ HP-2009-05-14-0: Enhancem.:   Improved error messages
 
 RD-2009-05-13-0: Enhancem.:   further qacct optimizations from Ron Chen and
                               Rayson Ho
-                 Belongs to:   RD-2009-05-07-0
+                 Belongs to:  RD-2009-05-07-0
                  Review:      JG, CR
 
 JF-2009-05-13-0: Bugfix:      qacct does not resolve complex shortcut names

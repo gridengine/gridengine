@@ -42,14 +42,37 @@ import com.izforge.izpack.util.VariableSubstitutor;
 import com.sun.grid.installer.util.Config;
 import javax.swing.JLabel;
 
-public class ActionPanel extends IzPanel implements Config, GUIListener {
-    public static String PROP_NUM_OF_EXECUTION = "numOfExecution";
+/**
+ * Abstarct panel class whitch offers the faacility to create view-less background
+ * process panels.
+ */
+public abstract class ActionPanel extends IzPanel implements Config, GUIListener {
+    /**
+     * String suffix to store the execution time for the current panel in the
+     * {@link InstallData}. Format <panelId>.<PROP_NUM_OF_EXECUTION>
+     */
+    private static final String PROP_NUM_OF_EXECUTION = "numOfExecution";
 
-    private String panelId = "";    
+    /**
+     * The id of the panel.
+     */
+    private String panelId = "";
+
+    /**
+     * Indicates the maximum time the undelying actions should be called.
+     */
     private int numOfMaxExecution = 1;
 
+    /**
+     * Indicates whether this panel is activated or not.
+     */
     private boolean panelActivated = false;
 
+    /**
+     * Constructor
+     * @param parent The parent {@link InstallerFrame}
+     * @param idata The {@link InstallData}
+     */
     public ActionPanel(InstallerFrame parent, InstallData idata) {
         super(parent, idata, new IzPanelLayout(LayoutConstants.FILL_OUT_COLUMN_WIDTH));
 
@@ -58,12 +81,17 @@ public class ActionPanel extends IzPanel implements Config, GUIListener {
         parent.addGuiListener(this);
     }
 
+    /**
+     * Builds the panel
+     */
     private void buildPanel() {
         VariableSubstitutor vs = new VariableSubstitutor(idata.getVariables());
-        
+
+        // Draw the "Please wait..." text
         JLabel textLabel = new JLabel(vs.substituteMultiple(parent.langpack.getString("title.please.wait"), null));
         textLabel.setHorizontalAlignment(JLabel.CENTER);
 
+        // Center the text
         IzPanelConstraints ipc = new IzPanelConstraints();
         ipc.setXStretch(1.0);
         ipc.setYStretch(1.0);
@@ -73,7 +101,11 @@ public class ActionPanel extends IzPanel implements Config, GUIListener {
         getLayoutHelper().completeLayout();
     }
 
-    public void doAction() {}
+    /**
+     * Executes the underlying actions. It's called only if the maximum number of
+     * execution hasn't been reached.
+     */
+    abstract public void doAction();
     
     @Override
     public void panelActivate() {
@@ -84,46 +116,107 @@ public class ActionPanel extends IzPanel implements Config, GUIListener {
     public void panelDeactivate() {
         panelActivated = false;
     }
-    
-    public void guiActionPerformed(int what, Object arg1) {
+
+    /**
+     * Called from the parent {@link InstallerFrame} any time an action performed.
+     * Never call it explicitly.
+     *
+     * @param what the id of the action
+     * @param arg the argument
+     */
+    public void guiActionPerformed(int what, Object arg) {
+        /**
+         * We are interested only in panel switching events and only if the current
+         * panel is visible
+         */
         if (panelActivated && what == GUIListener.PANEL_SWITCHED) {
-            panelId = idata.panels.get(idata.curPanelNumber).getMetadata().getPanelid();
+            // Spawn a new working thread in order to let the event thread finish properly
+            new Thread(new Runnable() {
+                public void run() {
+                    parent.blockGUI();
 
-            if (getNumOfExecution() < numOfMaxExecution) {
-                doAction();
+                    panelId = idata.panels.get(idata.curPanelNumber).getMetadata().getPanelid();
 
-                incNumOfExecution();
-            }
+                    // call the actions only if we haven't reached the maximum execution number
+                    if (getNumOfExecution() < numOfMaxExecution) {
+                        doAction();
 
-            getInstallerFrame().skipPanel();
+                        incNumOfExecution();
+                    }
+
+                    parent.releaseGUI();
+
+                    // finally jump to the next panel
+                    getInstallerFrame().skipPanel();
+                }
+            }).start();
         }
     }
 
+    /**
+     * Returns the execution number of the current panel
+     * @return the number of the execution
+     *
+     * @see ActionPanel#incNumOfExecution()
+     * @see ActionPanel#getNumOfMaxExecution()
+     * @see ActionPanel#setNumOfMaxExecution()
+     */
     public int getNumOfExecution() {
         int num = 0;
         String numStr= null;
         
         if ((numStr = idata.getVariable(panelId + D + PROP_NUM_OF_EXECUTION)) != null) {
-            num = Integer.parseInt(numStr);
+            try {
+                num = Integer.parseInt(numStr);
+            } catch (NumberFormatException e) {
+                throw new IllegalStateException("Corrupted panel execution number: " + numStr);
+            }
         }
         
         return num;
     }
 
+    /**
+     * Increments the number by one the current panel has gotten executed
+     *
+     * @see ActionPanel#getNumOfExecution()
+     * @see ActionPanel#getNumOfMaxExecution()
+     * @see ActionPanel#setNumOfMaxExecution()
+     */
     public void incNumOfExecution() {
         int actNum = getNumOfExecution();
         actNum++;
         idata.setVariable(panelId + D + PROP_NUM_OF_EXECUTION, String.valueOf(actNum));
     }
 
+    /**
+     * Returns the id of the current panel.
+     * @return the panel id
+     */
     public String getPanelId() {
         return panelId;
     }
 
+    /**
+     * Returns the maximum number the current panel should be executed
+     * @return the maximum execution number
+     *
+     * @see ActionPanel#getNumOfExecution()
+     * @see ActionPanel#incNumOfExecution()
+     * @see ActionPanel#setNumOfMaxExecution()
+     */
     public int getNumOfMaxExecution() {
         return numOfMaxExecution;
     }
-    
+
+    /**
+     * Sets the maximum number the current panel should be executed
+     * @param numOfMaxExecution the maximum execution number
+     *
+     * @see ActionPanel#getNumOfExecution()
+     * @see ActionPanel#incNumOfExecution()
+     * @see ActionPanel#getNumOfMaxExecution()
+     */
     public void setNumOfMaxExecution(int numOfMaxExecution) {
         this.numOfMaxExecution = numOfMaxExecution;
     }

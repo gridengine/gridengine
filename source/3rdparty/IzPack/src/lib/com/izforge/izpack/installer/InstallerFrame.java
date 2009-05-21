@@ -908,10 +908,7 @@ public class InstallerFrame extends JFrame
         refreshDynamicVariables();
         try
         {
-            if (installdata.curPanelNumber < last)
-            {
-                isBack = true;
-            }
+            isBack = installdata.curPanelNumber < last;
             panelsContainer.setVisible(false);
             IzPanel panel = installdata.panels.get(installdata.curPanelNumber);
             IzPanel l_panel = installdata.panels.get(last);
@@ -1060,7 +1057,6 @@ public class InstallerFrame extends JFrame
                 loadAndShowImage(visiblePanelMapping.get(installdata.curPanelNumber));
             }
             callGUIListener(GUIListener.PANEL_SWITCHED);
-            isBack = false;
             Log.getInstance().addDebugMessage("InstallerFrame.switchPanel: switched", null,
                     DebugConstants.PANEL_TRACE, null);
         }

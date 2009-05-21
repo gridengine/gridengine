@@ -205,11 +205,12 @@ public class ResultPanel extends IzPanel implements Printable, Config {
         nextButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 try {
+                    Debug.trace("@@@@@@@@@@@@@ Continue @@@@@@@@@@@@@");
                     resetInstaller();
 
                     parent.navigate(idata.curPanelNumber, 3);
                 } catch (Exception ex) {
-                    Debug.error("Can not start over the installation! " + ex);
+                    Debug.error("Can not continue the installation! " + ex);
                 }
             }
         });

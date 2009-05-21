@@ -1,3 +1,8 @@
+ZG-2009-05-21-0: Bugfix:      gui-installer: the "Please wait..." text on 
+                              ActionPanel is invisible during long last actions
+                              in the background.
+                 Review:      LP
+
 JG-2009-05-20-0: Bugfix:      accounting_summary in PE only adding cpu/mem/io
                  Bugster:     6774196
                  Issue:       2787

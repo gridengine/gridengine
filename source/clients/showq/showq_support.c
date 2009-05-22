@@ -578,8 +578,8 @@ void show_active_jobs(lList *joblist, int flags)
          printf("%-10s", "");
       }
 
-      strncpy(truncated_jobname, lGetString(job, TACCDJ_jobname), 10);
-      if (truncated_jobname) {
+      if (lGetString(job, TACCDJ_jobname)) {
+         strncpy(truncated_jobname, lGetString(job, TACCDJ_jobname), 10);
          truncated_jobname[10] = '\0';
          printf("%-11s", truncated_jobname);
       } else {

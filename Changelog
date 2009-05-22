@@ -1,3 +1,6 @@
+LP-2009-05-22-1: Bugfix:      showq does not compile on OpenSuse 11.1
+                 Review:      RD
+
 LP-2009-05-22-0: Bugfix:      gui-installer: CSP installation might fail when
                               qmaster!=startup node
                  Bugster:     6831094

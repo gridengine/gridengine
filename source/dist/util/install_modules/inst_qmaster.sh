@@ -252,8 +252,8 @@ SetPermissions()
                       "to set the file permissions (enter: n) (y/n) [n] >> "
          else
             $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
-                      "Did you install this version with >pkgadd< or did you already\n" \
-                      "verify and set the file permissions of your distribution (y/n) [y] >> "
+                      "Did you install this version with >pkgadd< or did you already verify\n" \
+                      "and set the file permissions of your distribution (enter: y) (y/n) [y] >> "
          fi
          if [ $? = 0 ]; then
             $INFOTEXT -wait -auto $AUTO -n "We do not verify file permissions. Hit <RETURN> to continue >> "
@@ -956,7 +956,7 @@ GetConfiguration()
       $INFOTEXT -u "\nGrid Engine cluster configuration (continued)"
       $INFOTEXT -n "\n<administrator_mail>\n\n" \
                    "The email address of the administrator to whom problem reports are sent.\n\n" \
-                   "It's is recommended to configure this parameter. You may use >none<\n" \
+                   "It is recommended to configure this parameter. You may use >none<\n" \
                    "if you do not wish to receive administrator mail.\n\n" \
                    "Please enter an email address in the form >user@foo.com<.\n\n" \
                    "Default: [%s] >> " $default_value

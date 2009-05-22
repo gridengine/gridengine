@@ -1,3 +1,8 @@
+MD-2009-05-22-0: Bugfix:      english language issues in install_qmaster
+                 Bugster:     6810076
+                 Issue:       3037
+                 Review:      JG
+
 JG-2009-05-11-0: Bugfix:      inconsistent signal delivery behavior with and
                               without -notify
                  Bugster:     6811202

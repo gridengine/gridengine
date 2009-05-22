@@ -243,8 +243,8 @@ SetPermissions()
                       "to set the file permissions (enter: n) (y/n) [n] >> "
          else
             $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
-                      "Did you install this version with >pkgadd< or did you already\n" \
-                      "verify and set the file permissions of your distribution (y/n) [y] >> "
+                      "Did you install this version with >pkgadd< or did you already verify\n" \
+                      "and set the file permissions of your distribution (enter: y) (y/n) [y] >> "
          fi
          if [ $? = 0 ]; then
             $INFOTEXT -wait -auto $AUTO -n "We do not verify file permissions. Hit <RETURN> to continue >> "

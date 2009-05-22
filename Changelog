@@ -1,3 +1,8 @@
+LP-2009-05-22-2: Enhancem.:   Removed -no-jmx install flag
+                 Enhancem.:   Wrong FS type message not displayed during auto
+                              installation
+                 Review:      ZG, HP
+
 LP-2009-05-22-1: Bugfix:      showq does not compile on OpenSuse 11.1
                  Review:      RD
 

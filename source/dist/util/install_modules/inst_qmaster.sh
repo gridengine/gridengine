@@ -1962,11 +1962,13 @@ GetDefaultJavaForPlatform()
       lx*-amd64)   
          java_homes="/usr/java
 /usr/jdk/latest
+/usr/java/latest
 /etc/alternatives/jre"
          ;;
       lx*-x86)     
          java_homes="/usr/java
 /usr/jdk/latest
+/usr/java/latest
 /etc/alternatives/jre"
          ;;
       darwin-ppc)
@@ -2114,7 +2116,7 @@ SetLibJvmPath() {
       #verify we got a correct platform library
       $SGE_ROOT/utilbin/$SGE_ARCH/valid_jvmlib "$SGE_JVM_LIB_PATH" >/dev/null 2>&1 
       if [ $? -ne 0 ]; then
-         $INFOTEXT -log -n "Specified JVM library %s is not correct. Will try to find another one." "$SGE_JVM_LIB_PATH"
+         $INFOTEXT -log -n "Specified JVM library %s is not correct. Will try to find another one.\n" "$SGE_JVM_LIB_PATH"
          SGE_JVM_LIB_PATH=""         
       fi
    fi

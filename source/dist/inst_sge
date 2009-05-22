@@ -38,7 +38,7 @@
 # set -x
 
 SCRIPT_VERSION="6"
-SGE_VERSION="6.2u3beta"
+SGE_VERSION="6.2u3"
 
 #Reset PATH to a safe value
 #
@@ -303,10 +303,7 @@ while [ $ARGC != 0 ]; do
      CSP=true
      ;;
    -jmx)
-     SGE_ENABLE_JMX=true
-     ;;
-   -no-jmx)
-     SGE_ENABLE_JMX=false
+     :
      ;;
    -copycerts)
      if [ "$2" = "" ]; then
@@ -396,8 +393,15 @@ fi
 #because the commandline switches are completely parsed and we know the selected options.
 #This will influence the configfile parsing and checking mechanism.
 if [ $AUTO = "true" -a  $AUTOGUI != "true" ]; then
+   unset SGE_JVM_LIB_PATH
    GetConfigFromFile
+   #Now we check if we want to enable JMX or not based on SGE_JVM_LIB_PATH
+   if [ -z "$SGE_JMV_LIB_PATH" -o x`echo "$SGE_JVM_LIB_PATH" | tr [A-Z] [a-z]` = "xnone" ]; then
+      SGE_ENABLE_JMX="false"
+   fi
    CheckConfigFile $FILE
+elif [ $AUTOGUI = true -a x`echo "$SGE_JVM_LIB_PATH" | tr [A-Z] [a-z]` = "xnone" ]; then
+   SGE_ENABLE_JMX="false"
 fi
 
 $CLEAR
@@ -896,20 +900,6 @@ if [ "$QMASTER" = "install" -a "$UPDATE" != "true" ]; then
  MoveLog
  $CLEAR
  
- # Let's simplify copying of the certs to remote hosts if they exist (how? - we no longer need scp)
- if [ "$SGE_QMASTER_PORT" = "" ]; then
-    PORT_DIR="sge_qmaster"
- else
-    PORT_DIR="port$SGE_QMASTER_PORT"
- fi
- # TODO: Need to support CALOCALTOP value (for non-root installation)!
- if [ -d "/var/sgeCA/$PORT_DIR" ]; then
-    #TODO: save only the keystores and certs (JMX stuff only)?
-    tar -cpf /var/sgeCA/$PORT_DIR.tar /var/sgeCA/$PORT_DIR >/dev/null 2>&1
-    gzip -f /var/sgeCA/$PORT_DIR.tar >/dev/null 2>&1
-    chmod 400 /var/sgeCA/$PORT_DIR.tar.gz >/dev/null 2>&1
- fi
-
  is_master=""
 fi
 
@@ -1361,12 +1351,16 @@ if [ $SHADOW = "install" ]; then
             if [ "$spooling_method" = "berkeleydb" ]; then
                if [ `echo $fstype | grep "nfs" | wc -l` -gt 0 ]; then
                   if [ "$fstype" != "nfs4" ]; then
-                     $INFOTEXT "Spooling directory exported as $s is not supported!\n" $fstype
+                     $INFOTEXT "Spooling directory exported as %s is not supported!\n" $fstype
+                     $INFOTEXT -log "Spooling directory exported as %s is not supported!\n" $fstype
                      $INFOTEXT "\nPlease install the database directory on a NFSv4 fileserver or use the RPC Client/Server mechanism"
+                     $INFOTEXT -log "\nPlease install the database directory on a NFSv4 fileserver or use the RPC Client/Server mechanism"
                      MoveLog
                      exit 1;
                   else
                      $INFOTEXT "We detected local Berkeley DB Spooling without a RPC Server. Local spooling\n is not working under " \
+                               "mixed architectures.\n\n "
+                     $INFOTEXT -log "We detected local Berkeley DB Spooling without a RPC Server. Local spooling\n is not working under " \
                                "mixed architectures.\n\n "
                      $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Do you want to continue (y/n) ('n' will abort) [y] >> "
                      if [ $? != 0 ]; then

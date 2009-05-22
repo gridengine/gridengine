@@ -305,7 +305,7 @@ GUI_CSP_MODE_ENABLED=false
 if [ "$USE_JMX" = true ]; then
    QMASTER_FLAGS="$QMASTER_FLAGS -jmx"                # -jmx is implicit
 else
-   QMASTER_FLAGS="$QMASTER_FLAGS -no-jmx"
+   SGE_JVM_LIB_PATH="none"                            # this disables JMX
 fi
 #Set proper product mode flags
 if [ "$PRODUCT_MODE" = "csp" ]; then
@@ -460,58 +460,78 @@ if [ -n "${first_install_task}" ]; then
    #For the CSP mode we have to copy the certificates to each of the execd/submit/admin hosts
    if [ -n "${gui_csphosts}" ]; then
       # Setup PORT_DIR
+      CA_TOP="/var/sgeCA"
       if [ "$SGE_QMASTER_PORT" = "" ]; then
          PORT_DIR="sge_qmaster"
       else
          PORT_DIR="port$SGE_QMASTER_PORT"
       fi
-      SOURCE_CERT_FILE="/var/sgeCA/$PORT_DIR.tar.gz"
-      TARGET_CERT_FILE="$SOURCE_CERT_FILE"
-      TMP_TARGET_CERT_FILE="/tmp/$PORT_DIR.tar.gz"
-      TMP_TARGET_CERT_FILE_TAR="/tmp/$PORT_DIR.tar"
-      # Part 1 - copy CERTS from QMASTER locally (if not on qmaster)
+      TMP_CERTS="/tmp/sgeCA.${CELL_NAME}.$$.tar"
+      # Part 1 - copy certs from QMASTER locally (if not on qmaster)
       if [ "$QMASTER_HOST" != "$CURRENT_HOST" ]; then
-         echo "Copy CERT from qmaster host $QMASTER_HOST to local host."
-         $SHELL_NAME -l $qmaster_connect_user $shell_options $QMASTER_HOST "cat $SOURCE_CERT_FILE" > "$TMP_TARGET_CERT_FILE"
-         # Let's end here with failure if we can't verify local archive with the certs
-         gunzip -t "$TMP_TARGET_CERT_FILE"
+         echo "Copying certificates from qmaster ($QMASTER_HOST) to localhost ($CURRENT_HOST) ..."
+         $SHELL_NAME -l $qmaster_connect_user $shell_options $QMASTER_HOST \
+                     "cd $CA_TOP ; tar cpf - ./$PORT_DIR | gzip -" > "$TMP_CERTS".gz
          if [ $? -ne 0 ]; then
-            rm -f "$TMP_TARGET_CERT_FILE"
-            ExitAndLog "Could not retrieve certificates from qmaster host $QMASTER_HOST!" 1
+            ExitAndLog "Preparing local tar.gz file with certicates from qmaster host failed." 1
          fi
-         chmod 400 "$TMP_TARGET_CERT_FILE"
-         SOURCE_CERT_FILE="$TMP_TARGET_CERT_FILE"
+      else
+         #We create the tar.gz locally anyway
+         (cd $CA_TOP ; tar cpf "$TMP_CERTS" ./$PORT_DIR && gzip "$TMP_CERTS")
+         if [ $? -ne 0 ]; then
+            ExitAndLog "Preparing local tar.gz file with certicates failed." 1
+         fi
       fi
-      # Part 2 - copy the local certs to all hosts
+      chmod 400 ${TMP_CERTS}.gz
+      # Part 2 - copy the local certs to all hosts (last one is the local host)
       list="${gui_csphosts}"
-      CSP_FLAGS=""
-      #-copycerts needs -rsh if rsh is to be used
-      if [ x`echo $SHELL_NAME | grep "ssh"` = x ]; then
-         CSP_FLAGS="-rsh"
-      fi
       total=0
       failed=0
+      current=0
       for host in $list ; do
-         echo "Copy CERT to $host."
-         connect_user=`echo "${gui_csphosts_connectusers}" | awk '{print $(i+1)}' i=$total`
-         $SHELL_NAME -l $connect_user $shell_options $host < $SOURCE_CERT_FILE "cat > $TMP_TARGET_CERT_FILE ; chmod 400 $TMP_TARGET_CERT_FILE ; mkdir -p /var/sgeCA ; cd /var/sgeCA ; rm -rf /var/sgeCA/$PORT_DIR ; gunzip -f $TMP_TARGET_CERT_FILE ; tar xpf $TMP_TARGET_CERT_FILE_TAR ; rm -rf $TMP_TARGET_CERT_FILE_TAR"
-         # TODO: Keep track of failed hosts
+         current=`expr $current + 1`
          total=`expr $total + 1`
+         if [ "$host" = "$QMASTER_HOST" ]; then
+            echo "Skipping qmaster host (already has certificates)"
+            total=`expr $total - 1`
+            continue
+         fi
+         echo "Copying certificates to $host ..."
+         #Need a remote connection
+         if [ "$host" != "$CURRENT_HOST" ]; then
+            currect_connect_user=`echo "${gui_csphosts_connectusers}" | awk '{print $i}' i=$current`
+            # Send the certs via ssh as tar.gz
+            cat "$TMP_CERTS".gz | $SHELL_NAME -l $currect_connect_user $shell_options $host sh -c "cat > ${TMP_CERTS}.gz && chmod 400 ${TMP_CERTS}.gz && mkdir -p ${CA_TOP} && cd ${CA_TOP} && rm -rf ${CA_TOP}/${PORT_DIR} && gunzip -f ${TMP_CERTS}.gz && tar xpf ${TMP_CERTS} && rm -f ${TMP_CERTS} && for user in \`ls -1 ${CA_TOP}/${PORT_DIR}/${CELL_NAME}/userkeys\`; do chown -R \$user ${CA_TOP}/${PORT_DIR}/${CELL_NAME}/userkeys/\${user} ; done"
+            if [ $? -ne 0 ]; then
+               failed=`expr $failed + 1`
+               echo "   FAILED"
+            else
+               echo "   OK"
+            fi
+         elif [ "$host" != "QMASTER_HOST" ]; then
+            # If qmaster is not on the local host (CERT is missing locally). 
+            # Must be the last since we move the TMP_CERTS to a final location
+            mkdir -p ${CA_TOP} ; rm -rf ${CA_TOP}/${PORT_DIR}
+            ( cd ${CA_TOP} ; gunzip -f ${TMP_CERTS}.gz && tar xpf ${TMP_CERTS} )
+            if [ $? -ne 0 ]; then
+               failed=`expr $failed + 1`
+            fi
+            #Set correct owners, tar might not preserve uid>60000 on some platforms
+            for user in `ls -1 ${CA_TOP}/${PORT_DIR}/${CELL_NAME}/userkeys`; do 
+               chown -R $user ${CA_TOP}/${PORT_DIR}/${CELL_NAME}/userkeys/${user}
+            done
+         fi
       done
-      # if qmaster is not on the local host (CERT is missing locally)
-      # TODO execute it only if other component will be installed there
-      if [ "$QMASTER_HOST" != "$CURRENT_HOST" ]; then
-         echo "Copy CERT locally."
-         output=`mkdir -p /var/sgeCA ; cd /var/sgeCA ; rm -rf /var/sgeCA/"$PORT_DIR" ; gunzip -f "$TMP_TARGET_CERT_FILE" ; tar xpf "$TMP_TARGET_CERT_FILE_TAR" 2>&1`
-         total=`expr $total + 1`
-      fi
+      
+      #Remove the temporary certificates copied in Part1
+      rm -f ${TMP_CERTS}.gz
 
-      if [ $total -eq $failed ]; then
-         ExitAndLog "Copying CSP certificates failed for all hosts! Further component installations will fail due to missing certificates. Try inst_sge -copycerts manually for each host" 1
+      if [ $total -eq $failed -a $total -gt 0 ]; then
+         ExitAndLog "Copying certificates failed for all hosts! Further component installations will fail due to missing certificates. Try inst_sge -copycerts manually for each host" 1
       elif [ $failed -gt 0 ]; then
-         ExitAndLog "Copying CSP certificates failed for ${failed}/${total} hosts! Further component installations will fail due to missing certificates on failed hosts. Try inst_sge -copycerts manually for each host where installation failed." 0
+         ExitAndLog "Copying certificates failed for ${failed}/${total} hosts! Further component installations will fail due to missing certificates on failed hosts. Try inst_sge -copycerts manually for each host where installation failed." 0
       else
-         ExitAndLog "CSP certificates copied sucessfully to all hosts." 0
+         ExitAndLog "Certificates copied sucessfully to all hosts." 0
       fi
    fi
    ExitAndLog "Prerequisities done." 0

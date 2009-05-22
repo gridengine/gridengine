@@ -1,3 +1,15 @@
+LP-2009-05-22-0: Bugfix:      gui-installer: CSP installation might fail when
+                              qmaster!=startup node
+                 Bugster:     6831094
+                 Belongs to:  ZG-2009-05-06-0
+                 Bugfix:      gui-installer: Exception when reading empty line
+                              in managemenent.properties file
+                 Bugster:     6844300
+                 Bugfix:      gui-installer: Empty JMX screen displayed in
+                              custom standalone shadowd installation
+                 Bugster:     6844305
+                 Review:      ZG
+
 MD-2009-05-22-0: Bugfix:      english language issues in install_qmaster
                  Bugster:     6810076
                  Issue:       3037

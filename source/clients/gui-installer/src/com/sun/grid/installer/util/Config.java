@@ -181,8 +181,8 @@ public interface Config {
     public static final int EXIT_VAL_JVM_LIB_DOES_NOT_EXIST_SHADOWD = 30;
     public static final int EXIT_VAL_JVM_LIB_INVALID_SHADOWD = 31;
     public static final int EXIT_VAL_EXECD_SPOOL_DIR_LOCAL_PERM_DENIED = 40;
-    public static final int EXIT_VAL_BDB_SERVER_SPOOL_DIR_PERM_DENIED = 50;
-    public static final int EXIT_VAL_BDB_SERVER_SPOOL_DIR_EXISTS = 51;
+    public static final int EXIT_VAL_BDB_SERVER_SPOOL_DIR_EXISTS = 50;
+    public static final int EXIT_VAL_BDB_SERVER_SPOOL_DIR_PERM_DENIED = 51;
     public static final int EXIT_VAL_ADMIN_USER_NOT_KNOWN = 60;
 
     // Get architecture task exit values

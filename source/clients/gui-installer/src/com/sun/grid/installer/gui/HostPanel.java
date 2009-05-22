@@ -2013,9 +2013,9 @@ public class HostPanel extends IzPanel implements Config,
         }
         Host h, o;
 
-        // Need qmaster host
+        // Need qmaster host, try VAR_QMASTER_CONNECT_USER from the previous run first
+        String qmasterConnectUser=(idata.getVariable(VAR_QMASTER_CONNECT_USER) != null) ? idata.getVariable(VAR_QMASTER_CONNECT_USER) : Util.DEF_CONNECT_USER;
         String QMASTER_HOST=Host.localHostName;
-        String qmasterConnectUser=Util.DEF_CONNECT_USER;
         try {
             QMASTER_HOST = Util.getQmasterHost(idata.getVariable(VAR_SGE_ROOT), idata.getVariable(VAR_SGE_CELL_NAME));
         } catch (FileNotFoundException ex) {
@@ -2419,28 +2419,24 @@ public class HostPanel extends IzPanel implements Config,
                     //Only for CSP mode
                     if (vars.getProperty("add.product.mode").equalsIgnoreCase("csp")) {
                         List<String> cspList = allHosts;
-                        int splitPosition = cspList.indexOf(h.getHostname());
                         String allHostsButCurrent = "";
                         String allUsers = "";
-                        for (int i=0; i < cspList.size(); i++) {
-                            if (i != splitPosition) {
+                        // Construct a reverse odered list so the local host will be the last one
+                        for (int i = cspList.size() - 1; i >= 0; i--) {
                                 allHostsButCurrent += cspList.get(i).trim() + " ";
                                 allUsers += allConnectUsers.get(i).trim() + " ";
                             }
-                        }
                         vars.setProperty(VAR_ALL_CSPHOSTS, allHostsButCurrent.trim());
                         vars.setProperty(VAR_ALL_COPYUSERS, allUsers.trim());
                     } else if (vars.getProperty(VAR_SGE_JMX).equalsIgnoreCase("true") && vars.getProperty(VAR_JMX_SSL).equalsIgnoreCase("true")) {
                         //Copy certs to all shadow hosts (need the keystores to be able to start JMX thread)
                         String allHostsButCurrent = "";
                         String allUsers = "";
-                        int splitPosition = allShadowHosts.indexOf(h.getHostname());
-                        for (int i=0; i < allShadowHosts.size(); i++) {
-                            if (i != splitPosition) {
+                        // Construct a reverse odered list so the local host will be the last one
+                        for (int i = allShadowHosts.size() - 1; i >= 0; i--) {
                                 allHostsButCurrent += allShadowHosts.get(i).trim() + " ";
                                 allUsers += allShadowConnectUsers.get(i).trim() + " ";
                             }
-                        }
                         vars.setProperty(VAR_ALL_CSPHOSTS, allHostsButCurrent.trim());
                         vars.setProperty(VAR_ALL_COPYUSERS, allUsers.trim());
                     }
@@ -2478,7 +2474,7 @@ public class HostPanel extends IzPanel implements Config,
                         }
                         completed++;
                     } else if (singleThreadPool.isTerminated()){
-                        //There is not guarantee that the currently executing task wil lbe interrupted. It may also finish as SUCCESS or FAILED!
+                        //There is not guarantee that the currently executing task will be interrupted. It may also finish as SUCCESS or FAILED!
                         for (Host host : installList) {
                             setHostLog(host, "CANCELED: " + MessageFormat.format(localizedMessages.getProperty("msg.install.canceled"), ""));
                             setHostState(host, State.CANCELED);

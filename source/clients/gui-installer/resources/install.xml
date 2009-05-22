@@ -169,7 +169,7 @@ ___INFO__MARK_END__-->
         <panel classname="UserInputPanel"  id="ComponentPanel" />
         <panel classname="UserInputPanel"  id="MainPanel" />
         <panel classname="IntermediateActionPanel"  id="IntermediateActionPanel" />
-        <panel classname="UserInputPanel"  id="JMXPanel" condition="cond.custom.install+cond.sge.jmx+(cond.install.qmaster|cond.install.shadowd)"/>
+        <panel classname="UserInputPanel"  id="JMXPanel" condition="cond.custom.install+cond.sge.jmx+cond.install.qmaster"/>
         <panel classname="UserInputPanel"  id="SpoolingPanel" condition="cond.custom.install+cond.install.qmaster|cond.install.bdb"/>
         <panel classname="UserInputPanel"  id="CSPPanel" condition="cond.custom.install+cond.install.qmaster+(cond.product.mode.csp|(cond.sge.jmx+cond.sge.jmx.ssl))"/>
         <panel classname="HostPanel"       id="HostPanel" />

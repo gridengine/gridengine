@@ -959,13 +959,13 @@ public class Util implements Config{
         String key, value;
         for (String line : settingsJMXLines) {
             // Skip comments
-            if (line.startsWith("#")) {
+            if (line.startsWith("#") || !line.contains("=")) {
                 continue;
             }
             // Process lines like 'com.sun.grid.jgdi.management.jmxremote.ssl=true'
             int spaceIndex = line.indexOf('=');
             key = line.substring(0, spaceIndex).trim();
-            value = line.substring(spaceIndex).trim();
+            value = line.substring(spaceIndex + 1).trim();
 
             //finally set the key, value pair
             settings.setProperty(key, value);

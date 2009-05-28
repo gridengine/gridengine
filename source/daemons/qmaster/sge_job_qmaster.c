@@ -3282,14 +3282,32 @@ int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bool is_m
             const char *cqname = lGetString(cqueue, CQ_name);
             lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
             lListElem *qinstance;
+            u_long32 qi_state;
 
+            /* we sort out explicit -q -l requests on queues */
             if (cqueue_match_static(cqname, &a) != DISPATCH_OK) {
                continue;
             }
 
             for_each(qinstance, qinstance_list) {
 
-               /* we only have to consider requested queues */
+               /* we would need to work on a reduced set of queues, filter the queues
+                * that cannot be used, i.e (ALARM/SUS/DIS/UNK/ERR) 
+                */ 
+               qi_state = lGetUlong(qinstance, QU_state);
+               if ((qi_state & QI_CAL_SUSPENDED) ||
+                     (qi_state & QI_CAL_DISABLED) || 
+                     (qi_state & QI_SUSPENDED) || 
+                     (qi_state & QI_SUSPENDED_ON_SUBORDINATE) || 
+                     (qi_state & QI_ERROR) || 
+                     (qi_state & QI_UNKNOWN) || 
+                     (qi_state & QI_DISABLED) || 
+                     (qi_state & QI_AMBIGUOUS)) {
+                  schedd_mes_add(a.monitor_alpp, a.monitor_next_run, a.job_id, SCHEDD_INFO_QUEUENOTAVAIL_, lGetString(qinstance, QU_full_name));
+                  continue;
+               }
+
+               /* we only have to consider requested queues or hosts*/
                if (job_hard_queue_list != NULL) {
                   if (qref_list_cq_rejected(job_hard_queue_list, cqname,
                            lGetHost(qinstance, QU_qhostname), a.hgrp_list)) {
@@ -3300,10 +3318,9 @@ int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bool is_m
 
                if (ar_granted_slots != NULL) {
                   if (lGetElemStr(ar_granted_slots, JG_qname, lGetString(qinstance, QU_full_name)) == NULL) {
-                    continue; 
+                     continue; 
                   }
                }
-               
 
                /* we only have to consider queues containing the requested pe */
                if (pe_name != NULL) {
@@ -3322,10 +3339,12 @@ int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bool is_m
 
                }
 
+               /* add this QIs to the probable list of QIs for the job */
                lAppendElem(a.queue_list, lCopyElem(qinstance));
             }
          }
 
+         /* check if this job can be actually scheduled */
          if (pe_name) {
             sge_select_parallel_environment(&a, *object_base[SGE_TYPE_PE].list);
          } else {

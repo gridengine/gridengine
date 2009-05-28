@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qselect.1,v $     Last Update: $Date: 2007/01/19 11:13:24 $     Revision: $Revision: 1.13 $
+.\" $RCSfile: qselect.1,v $     Last Update: $Date: 2009/05/28 16:09:10 $     Revision: $Revision: 1.14 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QSELECT 1 "$Date: 2007/01/19 11:13:24 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QSELECT 1 "$Date: 2009/05/28 16:09:10 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qselect \- select queues.
 .\"
@@ -78,6 +78,8 @@ queues based on non-mutable resource availability information only.
 That means load values are always ignored except the so-called static 
 load values (i.e. "arch", "num_proc", "mem_total", "swap_total" and 
 "virtual_total") ones. Also consumable utilization is ignored.
+If there are multiple -l resource requests they will be concatenated by
+a logical AND: a queue needs to offer all resources to be displayed.
 .\"
 .IP "\fB\-pe pe_name,...\fP"
 Includes queues into the output which are attached to at least one of the 

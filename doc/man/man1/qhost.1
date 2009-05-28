@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QHOST 1 "$Date: 2009/03/10 16:29:08 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QHOST 1 "$Date: 2009/05/28 16:09:10 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qhost \- show the status of xxQS_NAMExx hosts, queues, jobs
 .\"
@@ -56,7 +56,9 @@ qhost \- show the status of xxQS_NAMExx hosts, queues, jobs
 shows the current status of the available xxQS_NAMExx hosts, queues and the
 jobs associated with the queues. Selection options allow you
 to get information about specific hosts, queues, jobs or users.
-Without any option
+If multiple selections are done a host is only displayed if all
+selection criteria for a host are met.
+Without any options
 .I qhost
 will display a list of all hosts without queue or job
 information.
@@ -84,9 +86,14 @@ Prints all jobs running on the queues hosted by the shown hosts. This
 switch calls \fB\-q\fP implicitly.
 .\"
 .IP "\fB\-l resource\fP[\fB=value\fP],..."
-Defines the resources required by the hosts 
-on which information is requested.
-Matching is performed on hosts.
+Defines the resources to be granted by the hosts which should be 
+included in the host list output. Matching is performed on 
+hosts based on non-mutable resource availability information only. 
+That means load values are always ignored except the so-called static 
+load values (i.e. "arch", "num_proc", "mem_total", "swap_total" and 
+"virtual_total") ones. Also consumable utilization is ignored.
+If there are multiple -l resource requests they will be concatenated by
+a logical AND: a host needs to match all resources to be displayed.
 .\"
 .\"
 .IP "\fB\-q\fP"

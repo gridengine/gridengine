@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2009/01/05 17:25:13 $     Revision: $Revision: 1.39 $
+.\" $RCSfile: qstat.1,v $     Last Update: $Date: 2009/05/28 16:09:10 $     Revision: $Revision: 1.40 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QSTAT 1 "$Date: 2009/01/05 17:25:13 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QSTAT 1 "$Date: 2009/05/28 16:09:10 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qstat \- show the status of xxQS_NAMExx jobs and queues
 .\"
@@ -81,6 +81,8 @@ qstat \- show the status of xxQS_NAMExx jobs and queues
 shows the current status of the available xxQS_NAMExx queues and the
 jobs associated with the queues. Selection options allow you
 to get information about specific jobs, queues or users.
+If multiple selections are done a queue is only displayed if all
+selection criteria for a queue instance are met.
 Without any option
 .I qstat
 will display only a list of jobs with no queue status
@@ -176,11 +178,13 @@ queues on which information is requested. Matching is performed
 on queues based on non-mutable resource availability information 
 only. That means load values are always ignored except the 
 so-called static load values (i.e. "arch", "num_proc", "mem_total", "swap_total" and 
-"virtual_total") ones. Consumable utilization is also ignored.
+"virtual_total"). Consumable utilization is also ignored.
 The pending jobs are restricted to jobs that might run in 
 one of the above queues. In a similar fashion also the queue-job
 matching bases only on non-mutable resource availability 
 information.
+If there are multiple -l resource requests they will be concatenated by
+a logical AND: a queue needs to match all resources to be displayed.
 .\"
 .IP "\fB\-ne\fP"
 In combination with \fB\-f\fP the option suppresses the display of empty 

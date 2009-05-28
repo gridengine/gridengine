@@ -1,3 +1,7 @@
+MP-2009-05-28-1: Bugfix:      spelling errors in the man pages
+                 Bugster:     6845162
+                 Issue:       3041
+
 MP-2009-05-28-0: Bugfix:      qhost man page needs to clarify how it handles
                               multiple resource attribute requests
                  Bugster:     6843269

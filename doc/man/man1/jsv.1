@@ -4,7 +4,7 @@
 .\" Copyright: 2008 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: jsv.1,v $     Last Update: $Date: 2009/02/11 12:33:12 $     Revision: $Revision: 1.5 $
+.\" $RCSfile: jsv.1,v $     Last Update: $Date: 2009/05/28 16:56:18 $     Revision: $Revision: 1.6 $
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
 .\"
@@ -28,7 +28,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH JSV 1 "$Date: 2009/02/11 12:33:12 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH JSV 1 "$Date: 2009/05/28 16:56:18 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 JSV \- xxQS_NAMExx Job Submission Verifier 
@@ -73,7 +73,7 @@ As soon as one JSV instance rejects a job the whole process of verification
 is stopped and the end user will get a corresponding error message
 that the submission of the job has failed.
 .PP
-If a JSV accepts a job or accepts a job after it applied serveral 
+If a JSV accepts a job or accepts a job after it applied several 
 modifications then the following JSV instance will get the job parameters 
 including all modifications as input for the verification process. 
 This is done as long as either the job is accepted or rejected.
@@ -99,7 +99,7 @@ Server JSV instances are started for each worker thread part of the
 qmaster process (for version 6.2 of xxQS_NAMExx this means that two
 processes are started). Each of those processes have to verify
 job parameters for multiple jobs as long as the master is running,
-the underlaying JSV configuration is not changed and no error occurs.
+the underlying JSV configuration is not changed and no error occurs.
 .\"
 .\"
 .SH PROTOCOL 
@@ -208,7 +208,7 @@ verification task.
 \fBlog_commands\fP can be used whenever the client or qmaster expects
 input from a JSV instance. This command can be used in client
 JSVs to send information to the user submitting the job. In client
-JSVs all messages, independed of the \fBlog_level\fP will be printed
+JSVs all messages, independent of the \fBlog_level\fP will be printed
 to the \fBstdout\fP stream of the used submit client. If a server JSV
 receives a \fBlog_command\fP it will add the received message to the
 message file respecting the specified \fBlog_level\fP. Please note that
@@ -294,7 +294,7 @@ JSV instances.
 .\"
 .IP "\fBGROUP\fP"
 Defines Primary group of the user which tries to submit the job which 
-should be verifyed. This parameter cannot be changed but is always sent as part 
+should be verified. This parameter cannot be changed but is always sent as part 
 of the verification process. The user name is passed as parameters
 with the name \fBUSER\fP.
 .\"
@@ -302,7 +302,7 @@ with the name \fBUSER\fP.
 Not available in the client context (see \fBCONTEXT\fP). Otherwise
 it contains the job number of the job which will be
 submitted to Grid Engine when the verification process
-is successfull. \fBJOB_ID\fP is an optional parameter which can't be
+is successful. \fBJOB_ID\fP is an optional parameter which can't be
 changed by JSV instances. 
 .\"
 .IP "\fBUSER\fP"
@@ -330,7 +330,7 @@ when following job is submitted:
 Data in the first column is sent from the client/qmaster to the
 JSV instance. That data contained in the second column is sent from 
 the JSV script to the client/qmaster. New line characters
-which terminate each line in the communication protocol are ommited.
+which terminate each line in the communication protocol are omitted.
 .PP
 .nf
    START

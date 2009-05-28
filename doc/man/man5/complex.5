@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: complex.5,v $     Last Update: $Date: 2009/05/12 15:38:01 $     Revision: $Revision: 1.29 $
+.\" $RCSfile: complex.5,v $     Last Update: $Date: 2009/05/28 16:56:19 $     Revision: $Revision: 1.30 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH COMPLEX 5 "$Date: 2009/05/12 15:38:01 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH COMPLEX 5 "$Date: 2009/05/28 16:56:19 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 complex \- xxQS_NAMExx complexes configuration file format
@@ -297,7 +297,7 @@ is "==".
 .sp
 The "EXCL" relation operator implements exclusive scheduling and is
 only valid for consumable boolean type attributes. Exclusive means the result
-of the comparision is only true if a job requests to be exclusive and no
+of the comparison is only true if a job requests to be exclusive and no
 other exclusive or non-exclusive jobs uses the complex. If the job does not request
 to be exclusive and no other exclusive job uses the complex the comparison is also
 true.
@@ -336,8 +336,8 @@ manage limited resources such a available memory, free space on a file
 system, network bandwidth or floating software licenses.
 .sp 1
 A consumable defined by 'y' is a per slot consumables which means the limit is
-mulitplied by the number of slots being used by the job before being applied.
-In case of 'j' the consumable is a per job consuamble. This resource is debited
+multiplied by the number of slots being used by the job before being applied.
+In case of 'j' the consumable is a per job consumable. This resource is debited
 as requested (without multiplication) from the allocated master queue. The 
 resource needs not be available for the slave task queues.
 .sp 1

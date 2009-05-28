@@ -466,6 +466,8 @@ pid_t sge_peopen_r(const char *shell, int login_shell, const char *command,
          tuid = pw->pw_uid;
          DPRINTF(("target uid = %d\n", (int)tuid));
       }
+
+      FREE(buffer);
    }
 
    DPRINTF(("Now process will fork\n"));

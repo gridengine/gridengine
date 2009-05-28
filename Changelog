@@ -1,3 +1,7 @@
+JG-2009-05-28-0: Bugfix:      Fixed minor memory leaks (mostly introduced in
+                              6.2u3 development).
+                 Review:      EB
+
 CR-2009-05-26-0: Cleanup:     Fixed copyright headers in source/dist/mpi dir 
                               and source/dist and source/clients/gui-installer
                               and source/daemons/shepherd

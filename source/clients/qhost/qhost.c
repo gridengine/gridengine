@@ -448,7 +448,7 @@ int main(int argc, char **argv)
    }
 
    qhost_result = do_qhost(ctx, host_list, ul, resource_match_list, resource_list, 
-                              show, &alp, report_handler);
+                           show, &alp, report_handler);
 
    if (report_handler != NULL) {
       report_handler->destroy(&report_handler, &alp);

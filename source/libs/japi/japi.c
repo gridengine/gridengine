@@ -1265,6 +1265,7 @@ static int japi_send_job(lListElem **sge_job_template, u_long32 *jobid, dstring 
    alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_ADD|SGE_GDI_RETURN_NEW_VERSION, &job_lp, NULL, NULL);
 
    /* reinitialize 'job' with pointer to new version from qmaster */
+   lFreeElem(sge_job_template);
    if ((*sge_job_template = lFirst(job_lp))) {
       *jobid = lGetUlong(*sge_job_template, JB_job_number);
    }

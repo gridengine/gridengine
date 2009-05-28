@@ -4047,13 +4047,16 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
             fprintf(stderr, "%s\n", lGetString(aep, AN_text));
             sge_parse_return = 1;
             spp++;
+            lFreeList(&alp);
+            lFreeList(&lp);
             continue;
          }
          lFreeList(&alp);
 
-         if (!lp || lGetNumberOfElem(lp) == 0) {
+         if (lp == NULL || lGetNumberOfElem(lp) == 0) {
             fprintf(stderr, MSG_CKPT_XISNOTCHKPINTERFACEDEF_S, *spp);
             fprintf(stderr, "\n");
+            lFreeList(&lp);
             DRETURN(1);
          }
 

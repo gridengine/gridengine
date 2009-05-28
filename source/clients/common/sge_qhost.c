@@ -146,15 +146,14 @@ int do_qhost(void *ctx, lList *host_list, lList *user_list, lList *resource_matc
          free_all_lists(&ql, &jl, &cl, &ehl, &pel);
          DRETURN(QHOST_ERROR);
       }
-      
+
       {/* clean host list */
          lListElem *host = NULL;
          for_each(host, ehl) {
             lSetUlong(host, EH_tagged, 0);
-         }  
-      }   
-      
-         
+         }
+      }
+
       /* prepare request */
       global = lGetElemHost(ehl, EH_name, "global");
       selected = sge_select_queue(resource_match_list, NULL, global, ehl, cl,
@@ -164,15 +163,14 @@ int do_qhost(void *ctx, lList *host_list, lList *user_list, lList *resource_matc
             lSetUlong(ep, EH_tagged, 1);
          }
       } else {
-
         lListElem *tmp_resource_list = NULL;
-        /* if there is hostname request, remove it as we cannot match hostname in                                                                                
-         * sge_select_queue                                                                                                                                     
-         * we'll process this tmp_resource_list separately!! 
-         */                                                                                                                                                    
-         if ((tmp_resource_list = lGetElemStr(resource_match_list, CE_name, "hostname"))) {                                                                    
-            lDechainElem( resource_match_list, tmp_resource_list);                                                                                            
-         } 
+        /* if there is hostname request, remove it as we cannot match hostname in
+         * sge_select_queue
+         * we'll process this tmp_resource_list separately!!
+         */
+         if ((tmp_resource_list = lGetElemStr(resource_match_list, CE_name, "hostname"))) {
+            lDechainElem( resource_match_list, tmp_resource_list);
+         }
          for_each(ep, ehl) {
             /* prepare complex attributes */
             if (strcmp(lGetHost(ep, EH_name), SGE_TEMPLATE_NAME) == 0) {
@@ -181,7 +179,7 @@ int do_qhost(void *ctx, lList *host_list, lList *user_list, lList *resource_matc
 
             DPRINTF(("matching host %s with qhost -l\n", lGetHost(ep, EH_name)));
 
-            selected = sge_select_queue(resource_match_list, NULL, ep, ehl, cl, 
+            selected = sge_select_queue(resource_match_list, NULL, ep, ehl, cl,
                                         true, -1, NULL, NULL, NULL);
             if(selected) { /* found other matching attribs */
                lSetUlong(ep, EH_tagged, 1);
@@ -196,6 +194,7 @@ int do_qhost(void *ctx, lList *host_list, lList *user_list, lList *resource_matc
                lSetUlong(ep, EH_tagged, 0);
             }
          }
+         lFreeElem(&tmp_resource_list);
       }
 
       /*

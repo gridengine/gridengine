@@ -514,6 +514,7 @@ hgroup_del(sge_gdi_ctx_class_t *ctx,
                }
             }
             lFreeList(&href_list);
+            lFreeList(&qref_list);
 
 
 #ifndef __SGE_NO_USERMAPPING__

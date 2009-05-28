@@ -989,11 +989,25 @@ CheckConfigFile()
          $INFOTEXT -e "Your >SGE_ENABLE_JMX< flag is wrong! Valid values are:0,1,true,false,TRUE,FALSE"
          is_valid="false" 
       fi   
-      if [ "$SGE_ENABLE_JMX" = "true" -a \( -z "$SGE_JVM_LIB_PATH" -o  "`echo "$SGE_JVM_LIB_PATH" | cut -d"/" -f1`" = "`echo "$SGE_JVM_LIB_PATH" | cut -d"/" -f2`" \) ]; then
-         $INFOTEXT -e "Your >SGE_JVM_LIB_PATH< is empty or an invalid path. It must be a full path!"
-         is_valid="false"
-      fi   
+
       if [ "$SGE_ENABLE_JMX" = "true" ]; then
+   
+         if [ -z "$SGE_JVM_LIB_PATH" ]; then
+            $INFOTEXT -e "Your >SGE_JVM_LIB_PATH< is empty. It must be a full path!"
+            is_valid="false"
+         else
+            first="`echo "$SGE_JVM_LIB_PATH" | cut -d"/" -f1`"
+            second="`echo "$SGE_JVM_LIB_PATH" | cut -d"/" -f2`"
+            if [ "$first" != "" ]; then
+               $INFOTEXT -e "Your >SGE_JVM_LIB_PATH< does not start with a \"/\". It must be a full path!"
+               is_valid="false"
+            fi
+            if [ "$second" = "" ]; then
+               $INFOTEXT -e "Your >SGE_JVM_LIB_PATH< is set to \"$SGE_JVM_LIB_PATH\" which is not a valid path!"
+               is_valid="false"
+            fi
+         fi
+            
          `IsNumeric "$SGE_JMX_PORT"`
          if [ "$?" -eq 1 ]; then
             $INFOTEXT -e "Your >SGE_JMX_PORT< entry is invalid, please enter a number between 1\n and number of execution host"

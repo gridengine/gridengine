@@ -396,7 +396,7 @@ if [ $AUTO = "true" -a  $AUTOGUI != "true" ]; then
    unset SGE_JVM_LIB_PATH
    GetConfigFromFile
    #Now we check if we want to enable JMX or not based on SGE_JVM_LIB_PATH
-   if [ -z "$SGE_JMV_LIB_PATH" -o x`echo "$SGE_JVM_LIB_PATH" | tr [A-Z] [a-z]` = "xnone" ]; then
+   if [ -z "$SGE_JVM_LIB_PATH" -o x`echo "$SGE_JVM_LIB_PATH" | tr [A-Z] [a-z]` = "xnone" ]; then
       SGE_ENABLE_JMX="false"
    fi
    CheckConfigFile $FILE

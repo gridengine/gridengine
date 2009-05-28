@@ -1,3 +1,6 @@
+JG-2009-05-28-1: Enhancem.:   Scheduler optimization with many complex variables.
+                 Review:      AH, EB
+
 JG-2009-05-28-0: Bugfix:      Fixed minor memory leaks (mostly introduced in
                               6.2u3 development).
                  Review:      EB

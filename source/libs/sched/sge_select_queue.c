@@ -1722,11 +1722,14 @@ job_is_forced_centry_missing(const sge_assignment_t *a, const lListElem *queue_o
       lList *res_list = lGetList(a->job, JB_hard_resource_list);  
       bool is_qinstance = object_has_type(queue_or_host, QU_Type);
 
+      /* Optimization: Have a forced_centry_list in the assignment structure 
+       * and only iterate over this list.
+       */
       for_each(centry, a->centry_list) {
          const char *name = lGetString(centry, CE_name);
          bool is_forced = lGetUlong(centry, CE_requestable) == REQU_FORCED ? true : false;
 
-         if (is_requested(res_list, name) || !is_forced) {
+         if (!is_forced || is_requested(res_list, name)) {
             /* if requested or not forced we are always fine */
             continue;
          }
@@ -3093,6 +3096,8 @@ dispatch_t cqueue_match_static(const char *cqname, sge_assignment_t *a)
                      SCHEDD_INFO_QUEUENOTINTERACTIVE_S, cqname);
       DRETURN(DISPATCH_NEVER_CAT);
    }
+
+   /* Optimization: Walk through forced_centry_list and reject cq if possible */
 
    DRETURN(DISPATCH_OK);
 }

@@ -1,3 +1,8 @@
+CR-2009-05-29-1: Bugfix:      Fixed typo in path for gethostname 
+                              save_sge_config.sh
+                 Belongs to:  CR-2009-05-29-0
+                 Review:      DG
+
 CR-2009-05-29-0: Bugfix:      Hotfix: wrong source command for sh scripts
                  Belongs to:  SH-2009-05-29-0
                  Review:      DG

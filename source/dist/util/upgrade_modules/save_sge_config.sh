@@ -52,7 +52,7 @@ ARCH=`$SGE_ROOT/util/arch`
 MKDIR=mkdir
 QCONF=$SGE_ROOT/bin/$ARCH/qconf
 QHOST=$SGE_ROOT/bin/$ARCH/qhost
-SGE_UTILBIN=$SGE_ROOT/utilbon/$ARCH
+SGE_UTILBIN=$SGE_ROOT/utilbin/$ARCH
 HOST=`$SGE_UTILBIN/gethostname -name`
 ResolveHosts $HOST
 HOST="$ResolveHostsResult"

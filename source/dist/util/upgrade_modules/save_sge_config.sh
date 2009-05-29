@@ -39,7 +39,7 @@
 # To make sure that we source the inst_common.sh where this scripts comes
 # from
 cd `dirname $0`
-source ../install_modules/inst_common.sh
+. ../install_modules/inst_common.sh
 INFOTEXT=echo
 
 if [ -z "$SGE_ROOT" -o -z "$SGE_CELL" ]; then

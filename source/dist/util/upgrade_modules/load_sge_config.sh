@@ -37,7 +37,7 @@
 #___INFO__MARK_END__
 
 cd `dirname $0`
-source ../install_modules/inst_common.sh
+. ../install_modules/inst_common.sh
 INFOTEXT=echo
 
 if [ -z "$SGE_ROOT" -o -z "$SGE_CELL" ]; then

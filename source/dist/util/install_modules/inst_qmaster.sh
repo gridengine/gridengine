@@ -37,7 +37,7 @@
 #___INFO__MARK_END__
 
 #set -x
-source $SGE_ROOT/util/install_modules/inst_common.sh
+. $SGE_ROOT/util/install_modules/inst_common.sh
 
 
 #-------------------------------------------------------------------------

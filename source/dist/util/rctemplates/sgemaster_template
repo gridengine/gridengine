@@ -91,7 +91,7 @@ unset CODINE_ROOT GRD_ROOT COD_CELL GRD_CELL
 
 ARCH=`$SGE_ROOT/util/arch`
 SGE_UTILBIN=$SGE_ROOT/utilbin/$ARCH
-source $SGE_ROOT/util/install_modules/inst_common.sh
+. $SGE_ROOT/util/install_modules/inst_common.sh
 
 # library path setting required only for architectures where RUNPATH is not supported
 case $ARCH in

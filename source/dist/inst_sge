@@ -1421,7 +1421,7 @@ if [ $SHADOW = "install" ]; then
       else
          PORT_DIR="port$SGE_QMASTER_PORT"
       fi
-      if [ "$SGE_JMX_SSL" = true -a ! -f /var/sgeCA/$PORT_DIR/default/private/keystore ]; then
+      if [ "$SGE_JMX_SSL" = true -a ! -f /var/sgeCA/$PORT_DIR/$SGE_CELL/private/keystore ]; then
          CopyCaFromQmaster
       fi
 

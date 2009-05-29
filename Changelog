@@ -1,3 +1,8 @@
+DG-2009-05-29-0: Bugfix:      Installation problems when using non 
+                              default cellname. Hostcompare does not 
+                              work correctly. 
+                 Review:      CR 
+
 MP-2009-05-28-1: Bugfix:      spelling errors in the man pages
                  Bugster:     6845162
                  Issue:       3041

@@ -3808,11 +3808,10 @@ CopyCaFromQmaster()
    # TODO: PrimaryMaster?
    QMASTER_HOST=`cat $SGE_ROOT/$SGE_CELL/common/act_qmaster 2>/dev/null`   
    #Skip qmaster host
-   #TODO: Ignore domain name?
-   if [ x`echo $QMASTER_HOST | grep $HOST` != x ]; then
+   if [ x`ResolveHosts $HOST` = x`ResolveHosts $QMASTER_HOST` ]; then 
       return
-   fi
-   
+   fi 
+ 
    CA_TOP="/var/sgeCA"
 
    #Setup CA location
@@ -3865,7 +3864,7 @@ CopyCaFromQmaster()
    rm -rf "$tmp_dir"
    
    #Let's verify we have the keystores
-   if [ ! -f /var/sgeCA/$PORT_DIR/default/userkeys/$ADMINUSER/keystore ]; then
+   if [ ! -f /var/sgeCA/$PORT_DIR/$SGE_CELL/userkeys/$ADMINUSER/keystore ]; then
       $INFOTEXT "The certificate copy failed for host %s!" "$HOST"
       $INFOTEXT -log "The certificate copy failed for host %s!" "$HOST"
    fi

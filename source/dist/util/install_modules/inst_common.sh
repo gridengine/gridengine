@@ -703,7 +703,11 @@ ResolveHosts()
                done
             fi
             ResolveSingleHost $host
-            HOSTS="$HOSTS $ResolveSingleHostResult" 
+            if [ "$HOSTS" = "" ]; then
+               HOSTS="$ResolveSingleHostResult"
+            else
+               HOSTS="$HOSTS $ResolveSingleHostResult" 
+            fi
          fi
       done
    fi

@@ -1,3 +1,8 @@
+SH-2009-05-29-0: Bugfix:      Let upgrade scripts use ResolveHosts function
+                 Bugster:     6845858
+                 Issue:       3038
+                 Review:      CR
+
 DG-2009-05-29-0: Bugfix:      Installation problems when using non 
                               default cellname. Hostcompare does not 
                               work correctly. 

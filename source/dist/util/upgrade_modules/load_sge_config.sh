@@ -36,6 +36,8 @@
 ##########################################################################
 #___INFO__MARK_END__
 
+cd `dirname $0`
+source ../install_modules/inst_common.sh
 INFOTEXT=echo
 
 if [ -z "$SGE_ROOT" -o -z "$SGE_CELL" ]; then
@@ -49,7 +51,10 @@ CAT=cat
 MKDIR=mkdir
 LS=ls
 QCONF=$SGE_ROOT/bin/$ARCH/qconf
-HOST=`$SGE_ROOT/utilbin/$ARCH/gethostname -name`
+SGE_UTILBIN=$SGE_ROOT/utilbin/$ARCH
+HOST=`$SGE_UTILBIN/gethostname -name`
+ResolveHosts $HOST
+HOST="$ResolveHostsResult"
 
 SUCCEEDED_LOADLOC=""
 

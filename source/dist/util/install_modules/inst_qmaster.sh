@@ -37,6 +37,7 @@
 #___INFO__MARK_END__
 
 #set -x
+source $SGE_ROOT/util/install_modules/inst_common.sh
 
 
 #-------------------------------------------------------------------------
@@ -160,6 +161,8 @@ GetCell()
      $INFOTEXT -e "can't get hostname of this machine. Installation failed."
      exit 1
   fi
+  ResolveHosts $HOST
+  HOST="$ResolveHostsResult"
 }
 
 

@@ -1,3 +1,6 @@
+CR-2009-06-02-1: Bugfix:      merged requested changes from LP
+                 Review:      SH
+
 CR-2009-06-02-0: Revert:      Reverted changes. Fix seems to have to much
                               effect on current code base and will go into
                               next release.

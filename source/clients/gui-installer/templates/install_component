@@ -501,7 +501,7 @@ if [ -n "${first_install_task}" ]; then
          if [ "$host" != "$CURRENT_HOST" ]; then
             currect_connect_user=`echo "${gui_csphosts_connectusers}" | awk '{print $i}' i=$current`
             # Send the certs via ssh as tar.gz
-            cat "$TMP_CERTS".gz | $SHELL_NAME -l $currect_connect_user $shell_options $host sh -c "cat > ${TMP_CERTS}.gz && chmod 400 ${TMP_CERTS}.gz && mkdir -p ${CA_TOP} && cd ${CA_TOP} && rm -rf ${CA_TOP}/${PORT_DIR} && gunzip -f ${TMP_CERTS}.gz && tar xpf ${TMP_CERTS} && rm -f ${TMP_CERTS} && for user in \`ls -1 ${CA_TOP}/${PORT_DIR}/${CELL_NAME}/userkeys\`; do chown -R \$user ${CA_TOP}/${PORT_DIR}/${CELL_NAME}/userkeys/\${user} ; done"
+            cat "$TMP_CERTS".gz | $SHELL_NAME -l $currect_connect_user $shell_options $host sh -c "cat > ${TMP_CERTS}.gz && chmod 400 ${TMP_CERTS}.gz && mkdir -p ${CA_TOP} && cd ${CA_TOP} && rm -rf ${CA_TOP}/${PORT_DIR} && gunzip -f ${TMP_CERTS}.gz && tar xpf ${TMP_CERTS} ; rm -f ${TMP_CERTS} && for user in \`ls -1 ${CA_TOP}/${PORT_DIR}/${CELL_NAME}/userkeys\`; do chown -R \$user ${CA_TOP}/${PORT_DIR}/${CELL_NAME}/userkeys/\${user} ; done"
             if [ $? -ne 0 ]; then
                failed=`expr $failed + 1`
                echo "   FAILED"

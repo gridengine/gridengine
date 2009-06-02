@@ -3908,7 +3908,7 @@ MakeUserKs()
       else
          keystore_pw="changeit"
       fi
-      $INFOTEXT "Generating keystore for $ADMINUSER ..."
+      $INFOTEXT "\nGenerating keystore for $ADMINUSER ..."
       ExecuteAsAdmin echo "$keystore_pw" > $tmp_file ; keystore_pw=""     
       $SGE_ROOT/util/sgeCA/sge_ca -ks $ADMINUSER -kspwf $tmp_file
       ExecuteAsAdmin rm -f $tmp_file

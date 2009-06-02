@@ -1,3 +1,9 @@
+CR-2009-06-02-0: Revert:      Reverted changes. Fix seems to have to much
+                              effect on current code base and will go into
+                              next release.
+                 Belongs to:  SH-2009-05-29-0
+                 Review:      SH
+
 JG-2009-06-02-0: Bugfix:      qconf -sstree output wrong error message, if
                               there was no sharetree.
                  Belongs to:  RD-2009-05-04-0

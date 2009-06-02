@@ -36,10 +36,6 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-# To make sure that we source the inst_common.sh where this scripts comes
-# from
-cd `dirname $0`
-. ../install_modules/inst_common.sh
 INFOTEXT=echo
 
 if [ -z "$SGE_ROOT" -o -z "$SGE_CELL" ]; then
@@ -52,10 +48,7 @@ ARCH=`$SGE_ROOT/util/arch`
 MKDIR=mkdir
 QCONF=$SGE_ROOT/bin/$ARCH/qconf
 QHOST=$SGE_ROOT/bin/$ARCH/qhost
-SGE_UTILBIN=$SGE_ROOT/utilbin/$ARCH
-HOST=`$SGE_UTILBIN/gethostname -name`
-ResolveHosts $HOST
-HOST="$ResolveHostsResult"
+HOST=`$SGE_ROOT/utilbin/$ARCH/gethostname -name`
 
 
 Usage()

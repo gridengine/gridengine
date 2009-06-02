@@ -4519,9 +4519,10 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
          }
  
          ep = lFirst(lp);
-         
-         sge_parse_return |= show_answer_list(alp);
-         if (sge_parse_return) {
+
+         if (ep == NULL) {
+            fprintf(stderr, "%s\n", MSG_OBJ_NOSTREEELEM);
+            sge_parse_return = 1;
             lFreeList(&alp);
             lFreeList(&lp);
             spp++;

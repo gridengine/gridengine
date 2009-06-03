@@ -291,7 +291,6 @@ void assignment_release(sge_assignment_t *a)
    lFreeList(&(a->limit_list));
    lFreeList(&(a->skip_cqueue_list));
    lFreeList(&(a->skip_host_list));
-   lFreeList(a->monitor_alpp);
 }
 
 void assignment_clear_cache(sge_assignment_t *a)

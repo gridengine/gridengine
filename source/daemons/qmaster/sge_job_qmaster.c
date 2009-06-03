@@ -3394,6 +3394,8 @@ int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bool is_m
             DRETURN(STATUS_ESEMANTIC);
          }
       }
+      lFreeList(&talp);
+      a.monitor_alpp = NULL;
 
       if (verify_only) {
          if (trigger) {

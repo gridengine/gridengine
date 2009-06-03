@@ -772,8 +772,10 @@ centry_list_provide_modify_context(sge_gdi_ctx_class_t *ctx,
                                            SP_FORM_ASCII, NULL, false);
       
       if (answer_list_output(answer_list)) {
-         unlink(filename);
-         FREE(filename);
+         if (filename != NULL) {
+            unlink(filename);
+            FREE(filename);
+         }
          DRETURN(false);
       }
 

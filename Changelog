@@ -797,6 +797,8 @@ AA-2009-03-10-0: Enhancem:    - qhost slots_resv
                               - jgdi_qhost slots_resv
                               - JobStateFilter corrections
                               - jgdi.jar + jgdi-test.jar
+                 Bugster:     6840435
+                 Issue:       3028
                  Review:      RD, RH
 
 RD-2009-03-10-0: Bugfix:      fixed qmaster abort at update from previous version

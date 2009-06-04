@@ -1,3 +1,8 @@
+MP-2009-06-04-0: Bugfix:      qconf -ke[j] must return non-zero exit code on failure
+                 Bugster:     6675570
+                 Issue:       2942
+                 Review:      HP
+
 MD-2009-05-22-0: Bugfix:      english language issues in install_qmaster
                  Bugster:     6810076
                  Issue:       3037

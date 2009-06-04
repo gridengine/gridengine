@@ -1145,6 +1145,7 @@ int force
    char sge_mail_body[1024];
    unsigned long last_heard_from;
    bool job_spooling = ctx->get_job_spooling(ctx);
+   int result;
 
    DENTER(TOP_LAYER, "notify");
 
@@ -1162,15 +1163,17 @@ int force
                      ANSWER_QUALITY_WARNING);
    }
    if (execd_alive || force) {
-      if (host_notify_about_kill(ctx, lel, kill_jobs)) {
+      result = host_notify_about_kill(ctx, lel, kill_jobs);
+      if (result != 0) {
          INFO((SGE_EVENT, MSG_COM_NONOTIFICATION_SSS, action_str, 
                (execd_alive ? "" : MSG_OBJ_UNKNOWN), hostname));
+         answer_list_add(&(answer->alp), SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);         
       } else {
          INFO((SGE_EVENT, MSG_COM_NOTIFICATION_SSS, action_str, 
                (execd_alive ? "" : MSG_OBJ_UNKNOWN), hostname));
+         answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
       }
       DPRINTF((SGE_EVENT));
-      answer_list_add(&(answer->alp), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
    }
 
    if(kill_jobs) {

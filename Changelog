@@ -128,7 +128,8 @@ HP-2009-05-15-0: Bugfix:      redirecting "qrsh -pty yes" output to a file or
 RH-2009-05-15-0: Enhancem.:   startup script for jgdi eventmon improved
                  Review:      AA
 
-DG-2009-05-15-0: Bugfix:      Wrong argument syntax could cause qmaster crash.
+DG-2009-05-15-0: Bugfix:      wrong argument syntax could cause qmaster crash
+                 Bugster:     6848366
                  Review:      JG
 
 HP-2009-05-14-0: Enhancem.:   Improved error messages

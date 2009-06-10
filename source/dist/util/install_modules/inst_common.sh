@@ -117,7 +117,7 @@ BasicSettings()
   HOST=`$SGE_UTILBIN/gethostname -name`
   if [ "$HOST" = "" ]; then
      $INFOTEXT -e "can't get hostname of this machine. Installation failed."
-     exit 1
+     exit 2
   fi
 
   RM="rm -f"
@@ -1228,7 +1228,7 @@ CheckForLocalHostResolving()
                 "physical or logical network interfaces of this machine.\n\n" \
                 "Installation failed.\n\n" \
                 "Press <RETURN> to exit the installation procedure >> "
-      exit
+      exit 2
    fi
 }
                

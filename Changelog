@@ -1,3 +1,10 @@
+LP-2009-06-10-0: Bugfix:      autoinstallation on loopback interface fails with
+                              exit code 0
+                 Merged from: maintrunk (LP-2009-02-03-1)
+                 Bugster:     6800497
+                 Issue:       2929
+                 Review:      AP
+
 MP-2009-06-04-0: Bugfix:      qconf -ke[j] must return non-zero exit code on failure
                  Bugster:     6675570
                  Issue:       2942

@@ -1,3 +1,10 @@
+LP-2009-06-10-1: Bugfix:      inst_sge -x -auto will end up in infinite loop for
+                              windows hosts
+                 Merged from: maintrunk (LP-2009-02-16-0)
+                 Bugster:     6808084
+                 Issue:       2927
+                 Review:      AP
+
 LP-2009-06-10-0: Bugfix:      autoinstallation on loopback interface fails with
                               exit code 0
                  Merged from: maintrunk (LP-2009-02-03-1)

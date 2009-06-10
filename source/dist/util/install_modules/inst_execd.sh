@@ -523,6 +523,9 @@ GetLocalExecdSpoolDir()
          ret=$?
          else
             ret=0 #windows need it, don't need to ask
+            if [ "$AUTO" = "true" ]; then # but we don't want to wait in infinite while loop
+               ret=1
+            fi
          fi
          LOCAL_EXECD_SPOOL="undef"
       else

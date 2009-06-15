@@ -1109,6 +1109,7 @@ notify(sge_gdi_ctx_class_t *ctx, lListElem *lel, sge_gdi_packet_class_t *packet,
    int mail_options;
    unsigned long last_heard_from;
    bool job_spooling = ctx->get_job_spooling(ctx);
+   int result;
 
    DENTER(TOP_LAYER, "notify");
 
@@ -1125,18 +1126,20 @@ notify(sge_gdi_ctx_class_t *ctx, lListElem *lel, sge_gdi_packet_class_t *packet,
       answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_ESEMANTIC, 
                      ANSWER_QUALITY_WARNING);
    } else {
-      if (host_notify_about_kill(ctx, lel, kill_jobs)) {
+      result = host_notify_about_kill(ctx, lel, kill_jobs);
+      if (result != 0) {
          INFO((SGE_EVENT, MSG_COM_NONOTIFICATION_SSS, action_str, 
                (execd_alive ? "" : MSG_OBJ_UNKNOWN), hostname));
+         answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);         
       } else {
          INFO((SGE_EVENT, MSG_COM_NOTIFICATION_SSS, action_str, 
                (execd_alive ? "" : MSG_OBJ_UNKNOWN), hostname));
+         answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
       }
       DPRINTF((SGE_EVENT));
-      answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
    }
 
-   if (kill_jobs) {
+   if(kill_jobs) {
       char sge_mail_subj[1024];
       char sge_mail_body[1024];
 
@@ -1148,7 +1151,7 @@ notify(sge_gdi_ctx_class_t *ctx, lListElem *lel, sge_gdi_packet_class_t *packet,
 
          for_each(jatep, lGetList(jep, JB_ja_tasks)) {
             gdil = lGetList(jatep, JAT_granted_destin_identifier_list);
-            if (gdil) {
+            if(gdil) {
                if(!(sge_hostcmp(lGetHost(lFirst(gdil), JG_qhostname), hostname))) {
                   /*   send mail to users if requested                  */
                   if (mail_users == NULL) {

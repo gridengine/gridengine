@@ -1,3 +1,5 @@
+MD-2009-06-15-0: Enhancem.:   changed version strings to 6.2u3
+
 JG-2009-06-03-0: Bugfix:      Fix for memory leak fix JG-2009-05-28-0.
                               Fixed a potential qconf client core dump.
                  Belongs to:  JG-2009-05-28-0

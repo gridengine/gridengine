@@ -1,3 +1,10 @@
+JG-2009-06-16-0: Bugfix:      man page of sge_ckpt points to wrong reference in
+                              queue_conf
+                 Cleanup:     Some code cleanup (formatting).
+                 Bugster:     6494492
+                 Issue:       3055
+                 Review:      DG
+
 MP-2009-06-15-0: Bugfix:      qconf -ke[j] must return non-zero exit 
                               code on failure
                               Merged from V61_BRANCH MP-2009-06-04-0

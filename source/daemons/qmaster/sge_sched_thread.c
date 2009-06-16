@@ -731,7 +731,7 @@ static int dispatch_jobs(sge_evc_class_t *evc, scheduler_all_data_t *lists, orde
             is_reserve = true;
          } else {
             is_reserve = false;
-         }  
+         }
 
          /* Don't need to look for a 'now' assignment if the last job 
             of this category got no 'now' assignement either */
@@ -867,7 +867,7 @@ static int dispatch_jobs(sge_evc_class_t *evc, scheduler_all_data_t *lists, orde
 
             /* mark the category as rejected */
             if ((cat = lGetRef(orig_job, JB_category))) {
-               DPRINTF(("SKIP JOB " sge_u32 " of category '%s' (rc: "sge_u32 ")\n", job_id,
+               DPRINTF(("SKIP JOB (R)" sge_u32 " of category '%s' (rc: "sge_u32 ")\n", job_id,
                            lGetString(cat, CT_str), lGetUlong(cat, CT_refcount)));
                sge_reject_category(cat, false);
             }
@@ -895,13 +895,14 @@ static int dispatch_jobs(sge_evc_class_t *evc, scheduler_all_data_t *lists, orde
          case DISPATCH_NEVER_CAT: /* never this category */
             /* before deleting the element mark the category as rejected */
             if ((cat = lGetRef(orig_job, JB_category))) {
-               DPRINTF(("SKIP JOB " sge_u32 " of category '%s' (rc: "sge_u32 ")\n", job_id,
+               DPRINTF(("SKIP JOB (N)" sge_u32 " of category '%s' (rc: "sge_u32 ")\n", job_id,
                         lGetString(cat, CT_str), lGetUlong(cat, CT_refcount)));
                sge_reject_category(cat, is_reserve);
             }
+            /* fall through to DISPATCH_NEVER_JOB */
 
          case DISPATCH_NEVER_JOB: /* never this particular job */
-
+            DPRINTF(("SKIP JOB (J)" sge_u32 "\n", job_id));
             /* here no reservation was made for a job that couldn't be started now 
                or the job is not dispatchable at all */
             schedd_mes_commit(*(splitted_job_lists[SPLIT_PENDING]), 0, cat);
@@ -928,6 +929,7 @@ static int dispatch_jobs(sge_evc_class_t *evc, scheduler_all_data_t *lists, orde
             break;
 
          case DISPATCH_MISSING_ATTR :  /* should not happen */
+            DPRINTF(("DISPATCH_MISSING_ATTR\n"));
          default:
             break;
          }
@@ -940,7 +942,7 @@ static int dispatch_jobs(sge_evc_class_t *evc, scheduler_all_data_t *lists, orde
           *------------------------------------------------------------------*/
 
          /* no more free queues - then exit */
-         if (lGetNumberOfElem(lists->queue_list)==0) {
+         if (lGetNumberOfElem(lists->queue_list) == 0) {
             break;
          }  
 

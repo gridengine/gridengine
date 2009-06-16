@@ -700,8 +700,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
          order_job_pos = &(Follow_Control.cull_order_pos->order_job);
          
          if (lGetPosUlong(jatp, ja_pos->JAT_status_pos) == JFINISHED) {
-
-            WARNING((SGE_EVENT, MSG_JOB_CHANGEPTICKETS_UU, 
+            WARNING((SGE_EVENT, MSG_JOB_CHANGEPTICKETS_UU,
                      sge_u32c(lGetUlong(jep, JB_job_number)), 
                      sge_u32c(lGetUlong(jatp, JAT_task_number))));
             answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_WARNING);

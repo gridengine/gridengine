@@ -1,3 +1,9 @@
+JG-2009-06-17-0: Bugfix:      removing admin user from the manager list leads to
+                              a qmaster dead lock
+                 Bugster:     6684465
+                 Issue:       3053
+                 Review:      EB
+
 JG-2009-06-16-0: Bugfix:      man page of sge_ckpt points to wrong reference in
                               queue_conf
                  Cleanup:     Some code cleanup (formatting).

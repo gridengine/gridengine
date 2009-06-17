@@ -342,20 +342,23 @@ int job_get_next_task(lListElem *job, lListElem **task_ret, u_long32 *id_ret)
    if (ja_task == NULL) {
       lList *answer_list = NULL;
 
-      ja_task_id = range_list_get_first_id(lGetList(job, JB_ja_n_h_ids), &answer_list);
+      ja_task_id = range_list_get_first_id(lGetList(job, JB_ja_n_h_ids),
+                                           &answer_list);
       if (answer_list_has_error(&answer_list)) {
          lFreeList(&answer_list);
-         DRETURN(-1);
+         return -1;
       }
       ja_task = job_get_ja_task_template_pending(job, ja_task_id);
-   } else {
+   } 
+   else {
       ja_task_id = lGetUlong(ja_task, JAT_task_number);
    }
 
    *task_ret = ja_task;
    *id_ret   = ja_task_id;
 
-   DRETURN(0);
+   DEXIT;
+   return 0;
 }
 
 

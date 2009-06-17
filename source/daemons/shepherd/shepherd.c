@@ -1330,7 +1330,8 @@ int ckpt_type
       if (!strcmp("job", childname)) {
          if (ckpt_pid)   {
             shepherd_signal_job(-ckpt_pid, SIGKILL);
-         } else {
+         }
+         else {
             shepherd_signal_job(-pid, SIGKILL);
          }
       }
@@ -2653,8 +2654,8 @@ shepherd_signal_job(pid_t pid, int sig) {
       static u_long32 first_kill_ts = 0;
       static bool is_qrsh = false;
    
-      if (first_kill == 1 || sig != SIGKILL) {
-         if (search_conf_val("qrsh_pid_file") != NULL) {
+      if(first_kill == 1 || sig != SIGKILL) {
+         if(search_conf_val("qrsh_pid_file") != NULL) {
             char *pid_file_name = NULL;
             pid_t qrsh_pid = 0;
 
@@ -2679,25 +2680,26 @@ shepherd_signal_job(pid_t pid, int sig) {
       * qrsh_exit_code file is written (see Issue: 1679)
       */
       if ((first_kill == 1) || (sge_get_gmt() - first_kill_ts > 10) || (sig != SIGKILL)) {
-        shepherd_trace("now sending signal %s to pid "pid_t_fmt, sge_sys_sig2str(sig), pid);
+        shepherd_trace("now sending signal %s to pid "pid_t_fmt, 
+                       sge_sys_sig2str(sig), pid);
         sge_switch2start_user();
         kill(pid, sig);
         sge_switch2admin_user();
 
 #if defined(SOLARIS) || defined(LINUX) || defined(ALPHA) || defined(IRIX) || defined(FREEBSD) || defined(DARWIN)
-        if (first_kill == 0 || sig != SIGKILL || is_qrsh == false) {
+        if (first_kill == 0 || sig != SIGKILL || is_qrsh == false) {                        
 #   if defined(SOLARIS) || defined(LINUX) || defined(ALPHA) || defined(FREEBSD) || defined(DARWIN)
 #      ifdef COMPILE_DC
             if (atoi(get_conf_val("enable_addgrp_kill")) == 1) {
                 gid_t add_grp_id;
                 char *cp = search_conf_val("add_grp_id");
-
+                
                 if (cp) {
                     add_grp_id = atol(cp);
                 } else {
                     add_grp_id = 0;
                 }
-
+                
                 shepherd_trace("pdc_kill_addgrpid: %d %d", (int) add_grp_id , sig);
                 sge_switch2start_user();
                 pdc_kill_addgrpid(add_grp_id, sig, shepherd_trace);
@@ -2723,7 +2725,7 @@ shepherd_signal_job(pid_t pid, int sig) {
         shepherd_trace("ignored signal %s to pid "pid_t_fmt, sge_sys_sig2str(sig), pid);
       }
 
-      if (sig == SIGKILL) {
+      if(sig == SIGKILL) {
         first_kill = 0;
         first_kill_ts = sge_get_gmt();
       }

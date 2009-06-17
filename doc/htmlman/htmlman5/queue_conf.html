@@ -8,7 +8,7 @@ NAME
 DESCRIPTION
      This manual page describes the format of the  template  file
      for  the  cluster  queue configuration.  Via the -aq and -mq
-     options of the <B><A HREF="../htmlman1/qconf.html?pathrev=V62u2_TAG">qconf(1)</A></B> command, you can add cluster  queues
+     options of the <B><A HREF="../htmlman1/qconf.html?pathrev=V62u3_TAG">qconf(1)</A></B> command, you can add cluster  queues
      and  modify  the  configuration of any queue in the cluster.
      Any of these change operations can be rejected, as a  result
      of a failed integrity verification.
@@ -16,7 +16,7 @@ DESCRIPTION
      The queue configuration parameters take as  values  strings,
      integer  decimal numbers or boolean, time and memory specif-
      iers   (see   <I>time</I>_<I>specifier</I>   and    <I>memory</I>_<I>specifier</I>    in
-     <B><A HREF="../htmlman5/sge_types.html?pathrev=V62u2_TAG">sge_types(5)</A></B>) as well as comma separated lists.
+     <B><A HREF="../htmlman5/sge_types.html?pathrev=V62u3_TAG">sge_types(5)</A></B>) as well as comma separated lists.
 
      Note, Sun Grid Engine allows  backslashes  (\)  be  used  to
      escape  newline (\newline) characters. The backslash and the
@@ -29,11 +29,11 @@ FORMAT
 
   qname
      The name of the cluster queue as defined for  <I>queue</I>_<I>name</I>  in
-     <B><A HREF="../htmlman1/sge_types.html?pathrev=V62u2_TAG">sge_types(1)</A></B>.  As template default "template" is used.
+     <B><A HREF="../htmlman1/sge_types.html?pathrev=V62u3_TAG">sge_types(1)</A></B>.  As template default "template" is used.
 
   hostlist
      A list of host identifiers as defined for <I>host</I>_<I>identifier</I> in
-     <B><A HREF="../htmlman1/sge_types.html?pathrev=V62u2_TAG">sge_types(1)</A></B>.   For  each  host  Sun Grid Engine maintains a
+     <B><A HREF="../htmlman1/sge_types.html?pathrev=V62u3_TAG">sge_types(1)</A></B>.   For  each  host  Sun Grid Engine maintains a
      queue instance for running jobs  on  that  particular  host.
      Large  amounts  of hosts can easily be managed by using host
      groups rather than by single host names.  As list separators
@@ -64,12 +64,12 @@ FORMAT
      attribute setting for a particular host are rejected.   Con-
      figurations   containing   override  values  for  hosts  not
      enlisted under 'hostname' are accepted but are indicated  by
-     -sds of <B><A HREF="../htmlman1/qconf.html?pathrev=V62u2_TAG">qconf(1)</A></B>.  The cluster queue should contain an unam-
+     -sds of <B><A HREF="../htmlman1/qconf.html?pathrev=V62u3_TAG">qconf(1)</A></B>.  The cluster queue should contain an unam-
      biguous specification for each  configuration  attribute  of
      each  queue  instance  specified under hostname in the queue
      configuration. Ambiguous configurations with more  than  one
      attribute setting resulting from overlapping host groups are
-     indicated by -explain c of  <B><A HREF="../htmlman1/qstat.html?pathrev=V62u2_TAG">qstat(1)</A></B>  and  cause  the  queue
+     indicated by -explain c of  <B><A HREF="../htmlman1/qstat.html?pathrev=V62u3_TAG">qstat(1)</A></B>  and  cause  the  queue
      instance   with   ambiguous   configurations  to  enter  the
      c(onfiguration ambiguous) state.
 
@@ -78,9 +78,9 @@ FORMAT
      parameter  specifies this queue's position in the scheduling
      order within the suitable queues for a job to be  dispatched
      under    consideration   of   the   queue_sort_method   (see
-     <B><A HREF="../htmlman5/sched_conf.html?pathrev=V62u2_TAG">sched_conf(5)</A></B> ).
+     <B><A HREF="../htmlman5/sched_conf.html?pathrev=V62u3_TAG">sched_conf(5)</A></B> ).
 
-     Regardless  of  the  queue_sort_method   setting,   <B><A HREF="../htmlman1/qstat.html?pathrev=V62u2_TAG">qstat(1)</A></B>
+     Regardless  of  the  queue_sort_method   setting,   <B><A HREF="../htmlman1/qstat.html?pathrev=V62u3_TAG">qstat(1)</A></B>
      reports  queue information in the order defined by the value
      of  the  seq_no.  Set  this  parameter  to  a  monotonically
      increasing sequence. (type number; template default: 0).
@@ -88,13 +88,13 @@ FORMAT
   load_thresholds
      load_thresholds is a list of load thresholds. Already if one
      of  the  thresholds  is  exceeded  no  further  jobs will be
-     scheduled to the queues and <B><A HREF="../htmlman1/qmon.html?pathrev=V62u2_TAG">qmon(1)</A></B> will signal an  overload
+     scheduled to the queues and <B><A HREF="../htmlman1/qmon.html?pathrev=V62u3_TAG">qmon(1)</A></B> will signal an  overload
      condition for this node. Arbitrary load values being defined
-     in the "host" and "global"  complexes  (see  <B><A HREF="../htmlman5/complex.html?pathrev=V62u2_TAG">complex(5)</A></B>  for
+     in the "host" and "global"  complexes  (see  <B><A HREF="../htmlman5/complex.html?pathrev=V62u3_TAG">complex(5)</A></B>  for
      details) can be used.
 
      The syntax is that of a comma separated list with each  list
-     element consisting of the <I>complex</I>_<I>name</I> (see <B><A HREF="../htmlman5/sge_types.html?pathrev=V62u2_TAG">sge_types(5)</A></B>) of
+     element consisting of the <I>complex</I>_<I>name</I> (see <B><A HREF="../htmlman5/sge_types.html?pathrev=V62u3_TAG">sge_types(5)</A></B>) of
      a load value, an equal sign and the  threshold  value  being
      intended   to   trigger   the   overload   situation   (e.g.
      load_avg=1.75,users_logged_in=5).
@@ -102,7 +102,7 @@ FORMAT
      Note: Load values as well as  consumable  resources  may  be
      scaled  differently  for different hosts if specified in the
      corresponding   execution   host   definitions   (refer   to
-     <B><A HREF="../htmlman5/host_conf.html?pathrev=V62u2_TAG">host_conf(5)</A></B> for more information). Load thresholds are com-
+     <B><A HREF="../htmlman5/host_conf.html?pathrev=V62u3_TAG">host_conf(5)</A></B> for more information). Load thresholds are com-
      pared against the scaled load and consumable values.
 
 
@@ -132,10 +132,10 @@ FORMAT
      both) is exceeded by the current load on the host  on  which
      the  queue  is located.  The time interval is also used when
      enabling the jobs. The syntax is that of a <I>time</I>_<I>specifier</I> in
-     <B><A HREF="../htmlman5/sge_types.html?pathrev=V62u2_TAG">sge_types(5)</A></B>.
+     <B><A HREF="../htmlman5/sge_types.html?pathrev=V62u3_TAG">sge_types(5)</A></B>.
 
   priority
-     The priority parameter specifies the <B><A HREF="../htmlman2/nice.html?pathrev=V62u2_TAG">nice(2)</A></B> value at  which
+     The priority parameter specifies the <B><A HREF="../htmlman2/nice.html?pathrev=V62u3_TAG">nice(2)</A></B> value at  which
      jobs  in  this queue will be run. The type is number and the
      default is zero (which means no nice  value  is  set  expli-
      citly).  Negative  values (up to -20) correspond to a higher
@@ -145,13 +145,13 @@ FORMAT
      Note, the value of priority  has  no  effect,  if  Sun  Grid
      Engine  adjusts  priorities dynamically to implement ticket-
      based entitlement policy goals. Dynamic priority  adjustment
-     is  switched  off by default due to <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62u2_TAG">sge_conf(5)</A></B> reprioritize
+     is  switched  off by default due to <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62u3_TAG">sge_conf(5)</A></B> reprioritize
      being set to false.
 
   min_cpu_interval
      The time between two automatic checkpoints in case of  tran-
      sparently  checkpointing  jobs.  The  maximum  of  the  time
-     requested by the user via <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B> and the  time  defined  by
+     requested by the user via <B><A HREF="../htmlman1/qsub.html?pathrev=V62u3_TAG">qsub(1)</A></B> and the  time  defined  by
      the  queue  configuration  is  used  as checkpoint interval.
      Since checkpoint files may be considerably  large  and  thus
      writing  them to the file system may become expensive, users
@@ -159,20 +159,20 @@ FORMAT
      time  intervals.  min_cpu_interval  is  of type time and the
      default is 5 minutes (which usually  is  suitable  for  test
      purposes  only).   The syntax is that of a <I>time</I>_<I>specifier</I> in
-     <B><A HREF="../htmlman5/sge_types.html?pathrev=V62u2_TAG">sge_types(5)</A></B>.
+     <B><A HREF="../htmlman5/sge_types.html?pathrev=V62u3_TAG">sge_types(5)</A></B>.
 
   processors
      A set of processors in case of  a  multiprocessor  execution
      host  can  be  defined  to  which the jobs executing in this
      queue are bound. The value type of this parameter is a range
-     description  like that of the -pe option of <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B> (e.g. 1-
+     description  like that of the -pe option of <B><A HREF="../htmlman1/qsub.html?pathrev=V62u3_TAG">qsub(1)</A></B> (e.g. 1-
      4,8,10) denoting the processor  numbers  for  the  processor
      group  to  be  used.  Obviously  the interpretation of these
      values relies on operating system specifics and is thus per-
-     formed inside <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u2_TAG">sge_execd(8)</A></B> running on the queue host. There-
+     formed inside <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u3_TAG">sge_execd(8)</A></B> running on the queue host. There-
      fore, the parsing of the parameter has to be provided by the
      execution  daemon  and  the parameter is only passed through
-     <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u2_TAG">sge_qmaster(8)</A></B> as a string.
+     <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u3_TAG">sge_qmaster(8)</A></B> as a string.
 
      Currently,  support  is  only  provided  for  multiprocessor
      machines  running  Solaris, SGI multiprocessor machines run-
@@ -205,20 +205,20 @@ FORMAT
 
   pe_list
      The list of administrator-defined parallel environment  (see
-     <B><A HREF="../htmlman5/sge_pe.html?pathrev=V62u2_TAG">sge_pe(5)</A></B>)  names  to  be  associated  with  the  queue. The
+     <B><A HREF="../htmlman5/sge_pe.html?pathrev=V62u3_TAG">sge_pe(5)</A></B>)  names  to  be  associated  with  the  queue. The
      default is <I>NONE</I>.
 
   ckpt_list
      The list of  administrator-defined  checkpointing  interface
-     names  (see <I>ckpt</I>_<I>name</I> in <B><A HREF="../htmlman1/sge_types.html?pathrev=V62u2_TAG">sge_types(1)</A></B>) to be associated with
+     names  (see <I>ckpt</I>_<I>name</I> in <B><A HREF="../htmlman1/sge_types.html?pathrev=V62u3_TAG">sge_types(1)</A></B>) to be associated with
      the queue. The default is <I>NONE</I>.
 
   rerun
      Defines a default behavior for jobs  which  are  aborted  by
-     system crashes or manual "violent" (via <B><A HREF="../htmlman1/kill.html?pathrev=V62u2_TAG">kill(1)</A></B>) shutdown of
+     system crashes or manual "violent" (via <B><A HREF="../htmlman1/kill.html?pathrev=V62u3_TAG">kill(1)</A></B>) shutdown of
      the  complete  Sun  Grid  Engine   system   (including   the
-     <B><A HREF="../htmlman8/sge_shepherd.html?pathrev=V62u2_TAG">sge_shepherd(8)</A></B>  of the jobs and their process hierarchy) on
-     the queue host. As soon as  <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u2_TAG">sge_execd(8)</A></B>  is  restarted  and
+     <B><A HREF="../htmlman8/sge_shepherd.html?pathrev=V62u3_TAG">sge_shepherd(8)</A></B>  of the jobs and their process hierarchy) on
+     the queue host. As soon as  <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u3_TAG">sge_execd(8)</A></B>  is  restarted  and
      detects  that a job has been aborted for such reasons it can
      be restarted if the jobs are restartable. A job may  not  be
      restartable,  for  example,  if  it updates databases (first
@@ -226,7 +226,7 @@ FORMAT
      because  the  abortion of the job may have left the database
      in an inconsistent state. If the owner of  a  job  wants  to
      overrule  the default behavior for the jobs in the queue the
-     -r option of <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B> can be used.
+     -r option of <B><A HREF="../htmlman1/qsub.html?pathrev=V62u3_TAG">qsub(1)</A></B> can be used.
 
      The type of this parameter is boolean, thus either  TRUE  or
      FALSE  can  be  specified. The default is FALSE, i.e. do not
@@ -238,7 +238,7 @@ FORMAT
 
   tmpdir
      The tmpdir parameter specifies the absolute path to the base
-     of  the  temporary  directory  filesystem. When <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u2_TAG">sge_execd(8)</A></B>
+     of  the  temporary  directory  filesystem. When <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u3_TAG">sge_execd(8)</A></B>
      launches a job, it creates  a  uniquely-named  directory  in
      this  filesystem  for  the  purpose of holding scratch files
      during job execution. At job completion, this directory  and
@@ -248,11 +248,11 @@ FORMAT
 
   shell
      If either <I>posix</I>_<I>compliant</I> or <I>script</I>_<I>from</I>_<I>stdin</I> is  specified
-     as  the  shell_start_mode parameter in <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62u2_TAG">sge_conf(5)</A></B> the shell
+     as  the  shell_start_mode parameter in <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62u3_TAG">sge_conf(5)</A></B> the shell
      parameter specifies  the  executable  path  of  the  command
-     interpreter  (e.g.   <B><A HREF="../htmlman1/sh.html?pathrev=V62u2_TAG">sh(1)</A></B>  or <B><A HREF="../htmlman1/csh.html?pathrev=V62u2_TAG">csh(1)</A></B>) to be used to process
+     interpreter  (e.g.   <B><A HREF="../htmlman1/sh.html?pathrev=V62u3_TAG">sh(1)</A></B>  or <B><A HREF="../htmlman1/csh.html?pathrev=V62u3_TAG">csh(1)</A></B>) to be used to process
      the job scripts executed in the  queue.  The  definition  of
-     shell  can  be overruled by the job owner via the <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B> -S
+     shell  can  be overruled by the job owner via the <B><A HREF="../htmlman1/qsub.html?pathrev=V62u3_TAG">qsub(1)</A></B> -S
      option.
 
      The  type  of  the  parameter  is  string.  The  default  is
@@ -281,13 +281,13 @@ FORMAT
           preters  instead.  Thus,  if shell_start_mode is set to
           <I>posix</I>_<I>compliant</I> Sun Grid Engine  will  either  use  the
           command  interpreter  indicated by the -S option of the
-          <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B> command or the shell parameter of the queue  to
+          <B><A HREF="../htmlman1/qsub.html?pathrev=V62u3_TAG">qsub(1)</A></B> command or the shell parameter of the queue  to
           be used (see above).
 
      <I>script</I>_<I>from</I>_<I>stdin</I>
           Setting  the  shell_start_mode  parameter   either   to
           <I>posix</I>_<I>compliant</I>  or  <I>unix</I>_<I>behavior</I>  requires you to set
-          the umask in use for <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u2_TAG">sge_execd(8)</A></B> such that every  user
+          the umask in use for <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u3_TAG">sge_execd(8)</A></B> such that every  user
           has  read  access  to  the active_jobs directory in the
           spool directory of the corresponding execution  daemon.
           In  case you have prolog and epilog scripts configured,
@@ -297,16 +297,16 @@ FORMAT
           want to set shell_start_mode to <I>script</I>_<I>from</I>_<I>stdin</I>. This
           will force Sun Grid Engine to open the  job  script  as
           well  as  the epilogue and prologue scripts for reading
-          into STDIN as root  (if  <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u2_TAG">sge_execd(8)</A></B>  was  started  as
+          into STDIN as root  (if  <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u3_TAG">sge_execd(8)</A></B>  was  started  as
           root)  before changing to the job owner's user account.
           The script is then fed into the  STDIN  stream  of  the
           command  interpreter  indicated by the -S option of the
-          <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B> command or the shell parameter of the queue  to
+          <B><A HREF="../htmlman1/qsub.html?pathrev=V62u3_TAG">qsub(1)</A></B> command or the shell parameter of the queue  to
           be used (see above).
           Thus setting shell_start_mode to <I>script</I>_<I>from</I>_<I>stdin</I> also
           implies  <I>posix</I>_<I>compliant</I>  behavior. Note, however, that
           feeding scripts into the  STDIN  stream  of  a  command
-          interpreter  may  cause trouble if commands like <B><A HREF="../htmlman1/rsh.html?pathrev=V62u2_TAG">rsh(1)</A></B>
+          interpreter  may  cause trouble if commands like <B><A HREF="../htmlman1/rsh.html?pathrev=V62u3_TAG">rsh(1)</A></B>
           are invoked inside a job script as  they  also  process
           the  STDIN  stream  of  the  command interpreter. These
           problems can usually be  resolved  by  redirecting  the
@@ -319,8 +319,8 @@ FORMAT
 
      The default for shell_start_mode is <I>posix</I>_<I>compliant</I>.   Note,
      though, that the shell_start_mode can only be used for batch
-     jobs submitted by <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B> and can't be used for  interactive
-     jobs submitted by <B><A HREF="../htmlman1/qrsh.html?pathrev=V62u2_TAG">qrsh(1)</A></B>, <B><A HREF="../htmlman1/qsh.html?pathrev=V62u2_TAG">qsh(1)</A></B>, <B><A HREF="../htmlman1/qlogin.html?pathrev=V62u2_TAG">qlogin(1)</A></B>.
+     jobs submitted by <B><A HREF="../htmlman1/qsub.html?pathrev=V62u3_TAG">qsub(1)</A></B> and can't be used for  interactive
+     jobs submitted by <B><A HREF="../htmlman1/qrsh.html?pathrev=V62u3_TAG">qrsh(1)</A></B>, <B><A HREF="../htmlman1/qsh.html?pathrev=V62u3_TAG">qsh(1)</A></B>, <B><A HREF="../htmlman1/qlogin.html?pathrev=V62u3_TAG">qlogin(1)</A></B>.
 
   prolog
      The executable path of a shell script that is started before
@@ -336,13 +336,13 @@ FORMAT
      temporary file systems with the need for  the  same  context
      information  as  the  job.  This  queue  configuration entry
      overwrites cluster global or execution host specific  prolog
-     definitions (see <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62u2_TAG">sge_conf(5)</A></B>).
+     definitions (see <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62u3_TAG">sge_conf(5)</A></B>).
 
      The default for prolog is  the  special  value  NONE,  which
      prevents  from execution of a prologue script.  The  special
      variables for constituting a command line are the same  like
      in  prolog  definitions  of  the  cluster configuration (see
-     <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62u2_TAG">sge_conf(5)</A></B>).
+     <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62u3_TAG">sge_conf(5)</A></B>).
 
      Exit codes for the prolog attribute can be interpreted based
      on the following exit values:
@@ -365,12 +365,12 @@ FORMAT
      temporary file systems with the need for  the  same  context
      information  as  the  job.  This  queue  configuration entry
      overwrites cluster global or execution host specific  epilog
-     definitions (see <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62u2_TAG">sge_conf(5)</A></B>).
+     definitions (see <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62u3_TAG">sge_conf(5)</A></B>).
      The default for epilog is  the  special  value  NONE,  which
      prevents  from execution of a epilogue script.  The  special
      variables for constituting a command line are the same  like
      in  prolog  definitions  of  the  cluster configuration (see
-     <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62u2_TAG">sge_conf(5)</A></B>).
+     <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62u3_TAG">sge_conf(5)</A></B>).
 
      Exit codes for the epilog attribute can be interpreted based
      on the following exit values:
@@ -398,7 +398,7 @@ FORMAT
 
      <I>SGE</I>_<I>STARTER</I>_<I>USE</I>_<I>LOGIN</I>_<I>SHELL</I>
           Set to "true" if the shell is supposed to be used as  a
-          login shell (see login_shells in <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62u2_TAG">sge_conf(5)</A></B>)
+          login shell (see login_shells in <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62u3_TAG">sge_conf(5)</A></B>)
 
      The starter_method will not be invoked for  qsh,  qlogin  or
      qrsh acting as rlogin.
@@ -451,12 +451,12 @@ FORMAT
   notify
      The time waited between delivery of SIGUSR1/SIGUSR2  notifi-
      cation signals and suspend/kill signals if job was submitted
-     with the <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B> -<I>notify</I> option.
+     with the <B><A HREF="../htmlman1/qsub.html?pathrev=V62u3_TAG">qsub(1)</A></B> -<I>notify</I> option.
 
   owner_list
-     The owner_list enlists comma  separated  the  <B><A HREF="../htmlman1/login.html?pathrev=V62u2_TAG">login(1)</A></B>  user
-     names (see <I>user</I>_<I>name</I> in <B><A HREF="../htmlman1/sge_types.html?pathrev=V62u2_TAG">sge_types(1)</A></B>) of those users who are
-     authorized to disable and suspend this queue through <B><A HREF="../htmlman1/qmod.html?pathrev=V62u2_TAG">qmod(1)</A></B>
+     The owner_list enlists comma  separated  the  <B><A HREF="../htmlman1/login.html?pathrev=V62u3_TAG">login(1)</A></B>  user
+     names (see <I>user</I>_<I>name</I> in <B><A HREF="../htmlman1/sge_types.html?pathrev=V62u3_TAG">sge_types(1)</A></B>) of those users who are
+     authorized to disable and suspend this queue through <B><A HREF="../htmlman1/qmod.html?pathrev=V62u3_TAG">qmod(1)</A></B>
      (Sun  Grid  Engine  operators  and  managers  can do this by
      default). It is customary to set this field  for  queues  on
      interactive  workstations  where the computing resources are
@@ -467,7 +467,7 @@ FORMAT
   user_lists
      The user_lists parameter contains a comma separated list  of
      Sun  Grid  Engine  user  access  list  names as described in
-     <B><A HREF="../htmlman5/access_list.html?pathrev=V62u2_TAG">access_list(5)</A></B>.  Each user contained in at least one of  the
+     <B><A HREF="../htmlman5/access_list.html?pathrev=V62u3_TAG">access_list(5)</A></B>.  Each user contained in at least one of  the
      enlisted  access  lists  has  access  to  the  queue. If the
      user_lists parameter is set to NONE (the default)  any  user
      has access being not explicitly excluded via the xuser_lists
@@ -478,7 +478,7 @@ FORMAT
   xuser_lists
      The xuser_lists parameter contains a comma separated list of
      Sun  Grid  Engine  user  access  list  names as described in
-     <B><A HREF="../htmlman5/access_list.html?pathrev=V62u2_TAG">access_list(5)</A></B>.  Each user contained in at least one of  the
+     <B><A HREF="../htmlman5/access_list.html?pathrev=V62u3_TAG">access_list(5)</A></B>.  Each user contained in at least one of  the
      enlisted access lists is not allowed to access the queue. If
      the xuser_lists parameter is set to NONE (the  default)  any
      user  has  access.  If a user is contained both in an access
@@ -487,7 +487,7 @@ FORMAT
 
   projects
      The projects parameter contains a comma  separated  list  of
-     Sun  Grid  Engine projects (see <B><A HREF="../htmlman5/project.html?pathrev=V62u2_TAG">project(5)</A></B>) that have access
+     Sun  Grid  Engine projects (see <B><A HREF="../htmlman5/project.html?pathrev=V62u3_TAG">project(5)</A></B>) that have access
      to the queue. Any project not in this list are denied access
      to  the queue. If set to NONE (the default), any project has
      access that is not specifically excluded via  the  xprojects
@@ -497,7 +497,7 @@ FORMAT
 
   xprojects
      The xprojects parameter contains a comma separated  list  of
-     Sun  Grid  Engine  projects (see <B><A HREF="../htmlman5/project.html?pathrev=V62u2_TAG">project(5)</A></B>) that are denied
+     Sun  Grid  Engine  projects (see <B><A HREF="../htmlman5/project.html?pathrev=V62u3_TAG">project(5)</A></B>) that are denied
      access to the queue. If set to NONE (the default),  no  pro-
      jects are denied access other than those denied access based
      on the projects parameter described above.  If a project  is
@@ -506,7 +506,7 @@ FORMAT
 
   subordinate_list
      A list of  Sun  Grid  Engine  queue  names  as  defined  for
-     <I>queue</I>_<I>name</I>  in  <B><A HREF="../htmlman1/sge_types.html?pathrev=V62u2_TAG">sge_types(1)</A></B>.  Subordinate relationships are
+     <I>queue</I>_<I>name</I>  in  <B><A HREF="../htmlman1/sge_types.html?pathrev=V62u3_TAG">sge_types(1)</A></B>.  Subordinate relationships are
      in effect only between queue instances residing at the  same
      host.  The  relationship  does not apply and is ignored when
      jobs are running in queue instances on  other  hosts.  Queue
@@ -531,7 +531,7 @@ FORMAT
      managed  via  this  queue.  The  syntax  is  the same as for
      load_thresholds (see above). The quotas are related  to  the
      resource  consumption  of all jobs in a queue in the case of
-     consumable resources (see <B><A HREF="../htmlman5/complex.html?pathrev=V62u2_TAG">complex(5)</A></B> for details on  consum-
+     consumable resources (see <B><A HREF="../htmlman5/complex.html?pathrev=V62u3_TAG">complex(5)</A></B> for details on  consum-
      able  resources) or they are interpreted on a per queue slot
      (see slots  above)  basis  in  the  case  of  non-consumable
      resources.  Consumable resource attributes are commonly used
@@ -554,9 +554,9 @@ FORMAT
 
      Note: Load values replacing  the  quota  specifications  may
      have  become  more  stringent  because they have been scaled
-     (see <B><A HREF="../htmlman5/host_conf.html?pathrev=V62u2_TAG">host_conf(5)</A></B>) and/or load adjusted (see <B><A HREF="../htmlman5/sched_conf.html?pathrev=V62u2_TAG">sched_conf(5)</A></B>).
-     The  -<I>F</I>  option  of  <B><A HREF="../htmlman1/qstat.html?pathrev=V62u2_TAG">qstat(1)</A></B>  and  the  load display in the
-     <B><A HREF="../htmlman1/qmon.html?pathrev=V62u2_TAG">qmon(1)</A></B> queue control dialog (activated  by  clicking  on  a
+     (see <B><A HREF="../htmlman5/host_conf.html?pathrev=V62u3_TAG">host_conf(5)</A></B>) and/or load adjusted (see <B><A HREF="../htmlman5/sched_conf.html?pathrev=V62u3_TAG">sched_conf(5)</A></B>).
+     The  -<I>F</I>  option  of  <B><A HREF="../htmlman1/qstat.html?pathrev=V62u3_TAG">qstat(1)</A></B>  and  the  load display in the
+     <B><A HREF="../htmlman1/qmon.html?pathrev=V62u3_TAG">qmon(1)</A></B> queue control dialog (activated  by  clicking  on  a
      queue  icon  while  the  "Shift"  key  is  pressed)  provide
      detailed information on the actual availability  of  consum-
      able  resources  and  on the origin of the values taken into
@@ -566,9 +566,9 @@ FORMAT
      for  the  availability  calculation) as well as the resource
      requests of the jobs waiting to be dispatched either may  be
      derived  from  explicit  user requests during job submission
-     (see the -<I>l</I> option to <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B>) or  from  a  "default"  value
+     (see the -<I>l</I> option to <B><A HREF="../htmlman1/qsub.html?pathrev=V62u3_TAG">qsub(1)</A></B>) or  from  a  "default"  value
      configured  for  an attribute by the administrator (see <I>com-</I>
-     <B><A HREF="../htmlman5/plex.html?pathrev=V62u2_TAG">plex(5)</A></B>).  The  -<I>r</I>  option  to  <B><A HREF="../htmlman1/qstat.html?pathrev=V62u2_TAG">qstat(1)</A></B>  can  be  used  for
+     <B><A HREF="../htmlman5/plex.html?pathrev=V62u3_TAG">plex(5)</A></B>).  The  -<I>r</I>  option  to  <B><A HREF="../htmlman1/qstat.html?pathrev=V62u3_TAG">qstat(1)</A></B>  can  be  used  for
      retrieving  full  detail  on the actual resource requests of
      all jobs in the system.
 
@@ -576,7 +576,7 @@ FORMAT
      the   job's   attribute   requests  with  the  corresponding
      specification in complex_values taking the relation operator
      of  the  complex attribute definition into account (see <I>com-</I>
-     <B><A HREF="../htmlman5/plex.html?pathrev=V62u2_TAG">plex(5)</A></B>).  If the result of the comparison  is  "true",  the
+     <B><A HREF="../htmlman5/plex.html?pathrev=V62u3_TAG">plex(5)</A></B>).  If the result of the comparison  is  "true",  the
      queue is suitable for the job with respect to the particular
      attribute. For parallel jobs each queue slot to be  occupied
      by  a  parallel  task  is meant to provide the same resource
@@ -594,31 +594,31 @@ FORMAT
      specifies the calendar to be valid for this  queue  or  con-
      tains  NONE (the default). A calendar defines the availabil-
      ity of a queue depending on time  of  day,  week  and  year.
-     Please refer to <B><A HREF="../htmlman5/calendar_conf.html?pathrev=V62u2_TAG">calendar_conf(5)</A></B> for details on the Sun Grid
+     Please refer to <B><A HREF="../htmlman5/calendar_conf.html?pathrev=V62u3_TAG">calendar_conf(5)</A></B> for details on the Sun Grid
      Engine calendar facility.
 
      Note: Jobs can request queues with a certain calendar  model
-     via a "-<I>l</I> <I>c</I>=&lt;<I>cal</I>_<I>name</I>&gt;" option to <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B>.
+     via a "-<I>l</I> <I>c</I>=&lt;<I>cal</I>_<I>name</I>&gt;" option to <B><A HREF="../htmlman1/qsub.html?pathrev=V62u3_TAG">qsub(1)</A></B>.
 
   initial_state
      defines an initial state for the queue  either  when  adding
      the queue to the system for the first time or on start-up of
-     the <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u2_TAG">sge_execd(8)</A></B> on the host on  which  the  queue  resides.
+     the <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u3_TAG">sge_execd(8)</A></B> on the host on  which  the  queue  resides.
      Possible values are:
 
      default   The queue is enabled when adding the queue  or  is
-               reset  to  the  previous  status when <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u2_TAG">sge_execd(8)</A></B>
+               reset  to  the  previous  status when <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u3_TAG">sge_execd(8)</A></B>
                comes up (this corresponds to the behavior in ear-
                lier  Sun  Grid  Engine  releases  not  supporting
                initial_state).
 
      enabled   The queue is  enabled  in  either  case.  This  is
                equivalent to a manual and explicit '<I>qmod</I> -<I>e</I>' com-
-               mand (see <B><A HREF="../htmlman1/qmod.html?pathrev=V62u2_TAG">qmod(1)</A></B>).
+               mand (see <B><A HREF="../htmlman1/qmod.html?pathrev=V62u3_TAG">qmod(1)</A></B>).
 
      disabled  The queue is  disable  in  either  case.  This  is
                equivalent to a manual and explicit '<I>qmod</I> -<I>d</I>' com-
-               mand (see <B><A HREF="../htmlman1/qmod.html?pathrev=V62u2_TAG">qmod(1)</A></B>).
+               mand (see <B><A HREF="../htmlman1/qmod.html?pathrev=V62u3_TAG">qmod(1)</A></B>).
 
 RESOURCE LIMITS
      The first two resource limit parameters, s_rt and h_rt,  are
@@ -626,18 +626,23 @@ RESOURCE LIMITS
      or also called "elapsed" or "wall clock" time having  passed
      since  the  start  of  the job. If h_rt is exceeded by a job
      running in the queue, it is aborted via the  SIGKILL  signal
-     (see  <B><A HREF="../htmlman1/kill.html?pathrev=V62u2_TAG">kill(1)</A></B>).   If  s_rt  is  exceeded,  the  job is first
+     (see  <B><A HREF="../htmlman1/kill.html?pathrev=V62u3_TAG">kill(1)</A></B>).   If  s_rt  is  exceeded,  the  job is first
      "warned" via the SIGUSR1 signal (which can be caught by  the
      job) and finally aborted after the notification time defined
      in the queue configuration parameter notify (see above)  has
-     passed.
+     passed.  In  cases when s_rt is used in combination with job
+     notification it might be necessary  to  configure  a  signal
+     other  than  SIGUSR1  using  the NOTIFY_KILL and NOTIFY_SUSP
+     execd_params (see <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62u3_TAG">sge_conf(5)</A></B>) so  that  the  jobs'  signal-
+     catching  mechanism can "differ" the cases and react accord-
+     ingly.
 
      The resource limit parameters s_cpu  and  h_cpu  are  imple-
      mented  by  Sun  Grid  Engine  as a job limit. They impose a
      limit on the amount of combined CPU time consumed by all the
      processes  in the job. If h_cpu is exceeded by a job running
      in the queue, it  is  aborted  via  a  SIGKILL  signal  (see
-     <B><A HREF="../htmlman1/kill.html?pathrev=V62u2_TAG">kill(1)</A></B>).   If  s_cpu is exceeded, the job is sent a SIGXCPU
+     <B><A HREF="../htmlman1/kill.html?pathrev=V62u3_TAG">kill(1)</A></B>).   If  s_cpu is exceeded, the job is sent a SIGXCPU
      signal which can be caught by the job. If you wish to  allow
      a  job to be "warned" so it can exit gracefully before it is
      killed then you should set the s_cpu limit to a lower  value
@@ -650,7 +655,7 @@ RESOURCE LIMITS
      limit on the amount of combined virtual memory  consumed  by
      all the processes in the job. If h_vmem is exceeded by a job
      running in the queue, it is aborted  via  a  SIGKILL  signal
-     (see  <B><A HREF="../htmlman1/kill.html?pathrev=V62u2_TAG">kill(1)</A></B>).   If  s_vmem  is exceeded, the job is sent a
+     (see  <B><A HREF="../htmlman1/kill.html?pathrev=V62u3_TAG">kill(1)</A></B>).   If  s_vmem  is exceeded, the job is sent a
      SIGXCPU signal which can be caught by the job.  If you  wish
      to  allow  a  job  to  be "warned" so it can exit gracefully
      before it is killed then you should set the s_vmem limit  to
@@ -661,20 +666,20 @@ RESOURCE LIMITS
 
      The remaining parameters in the queue configuration template
      specify per job soft and hard resource limits as implemented
-     by the <B><A HREF="../htmlman2/setrlimit.html?pathrev=V62u2_TAG">setrlimit(2)</A></B> system call. See  this  manual  page  on
+     by the <B><A HREF="../htmlman2/setrlimit.html?pathrev=V62u3_TAG">setrlimit(2)</A></B> system call. See  this  manual  page  on
      your  system  for  more information.  By default, each limit
      field is set  to  infinity  (which  means  RLIM_INFINITY  as
-     described  in  the <B><A HREF="../htmlman2/setrlimit.html?pathrev=V62u2_TAG">setrlimit(2)</A></B> manual page). The value type
+     described  in  the <B><A HREF="../htmlman2/setrlimit.html?pathrev=V62u3_TAG">setrlimit(2)</A></B> manual page). The value type
      for the CPU-time limits s_cpu and h_cpu is time.  The  value
      type  for the other limits is memory.  Note: Not all systems
-     support <B><A HREF="../htmlman2/setrlimit.html?pathrev=V62u2_TAG">setrlimit(2)</A></B>.
+     support <B><A HREF="../htmlman2/setrlimit.html?pathrev=V62u3_TAG">setrlimit(2)</A></B>.
 
      Note also: s_vmem  and  h_vmem  (virtual  memory)  are  only
      available    on    systems   supporting   RLIMIT_VMEM   (see
-     <B><A HREF="../htmlman2/setrlimit.html?pathrev=V62u2_TAG">setrlimit(2)</A></B> on your operating system).
+     <B><A HREF="../htmlman2/setrlimit.html?pathrev=V62u3_TAG">setrlimit(2)</A></B> on your operating system).
 
      The UNICOS operating system supplied by  SGI/Cray  does  not
-     support  the  <B><A HREF="../htmlman2/setrlimit.html?pathrev=V62u2_TAG">setrlimit(2)</A></B>  system  call,  using  their  own
+     support  the  <B><A HREF="../htmlman2/setrlimit.html?pathrev=V62u3_TAG">setrlimit(2)</A></B>  system  call,  using  their  own
      resource limit-setting system call instead.  For UNICOS sys-
      tems only, the following meanings apply:
 
@@ -698,20 +703,15 @@ RESOURCE LIMITS
                create.
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/sge_types.html?pathrev=V62u2_TAG">sge_types(1)</A></B>, <B><A HREF="../htmlman1/csh.html?pathrev=V62u2_TAG">csh(1)</A></B>, <B><A HREF="../htmlman1/qconf.html?pathrev=V62u2_TAG">qconf(1)</A></B>, <B><A HREF="../htmlman1/qmon.html?pathrev=V62u2_TAG">qmon(1)</A></B>, <I>qres-</I>
-     <B><A HREF="../htmlman1/tart.html?pathrev=V62u2_TAG">tart(1)</A></B>,  <B><A HREF="../htmlman1/qstat.html?pathrev=V62u2_TAG">qstat(1)</A></B>,  <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B>,  <B><A HREF="../htmlman1/sh.html?pathrev=V62u2_TAG">sh(1)</A></B>, <B><A HREF="../htmlman2/nice.html?pathrev=V62u2_TAG">nice(2)</A></B>, <B><A HREF="../htmlman2/setrlimit.html?pathrev=V62u2_TAG">setrlimit(2)</A></B>,
-     <B><A HREF="../htmlman5/access_list.html?pathrev=V62u2_TAG">access_list(5)</A></B>, <B><A HREF="../htmlman5/calendar_conf.html?pathrev=V62u2_TAG">calendar_conf(5)</A></B>,  <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62u2_TAG">sge_conf(5)</A></B>,  <B><A HREF="../htmlman5/complex.html?pathrev=V62u2_TAG">complex(5)</A></B>,
-     <B><A HREF="../htmlman5/host_conf.html?pathrev=V62u2_TAG">host_conf(5)</A></B>,  <B><A HREF="../htmlman5/sched_conf.html?pathrev=V62u2_TAG">sched_conf(5)</A></B>,  <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u2_TAG">sge_execd(8)</A></B>, <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u2_TAG">sge_qmaster(8)</A></B>,
-     <B><A HREF="../htmlman8/sge_shepherd.html?pathrev=V62u2_TAG">sge_shepherd(8)</A></B>.
+     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u3_TAG">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/sge_types.html?pathrev=V62u3_TAG">sge_types(1)</A></B>, <B><A HREF="../htmlman1/csh.html?pathrev=V62u3_TAG">csh(1)</A></B>, <B><A HREF="../htmlman1/qconf.html?pathrev=V62u3_TAG">qconf(1)</A></B>, <B><A HREF="../htmlman1/qmon.html?pathrev=V62u3_TAG">qmon(1)</A></B>, <I>qres-</I>
+     <B><A HREF="../htmlman1/tart.html?pathrev=V62u3_TAG">tart(1)</A></B>,  <B><A HREF="../htmlman1/qstat.html?pathrev=V62u3_TAG">qstat(1)</A></B>,  <B><A HREF="../htmlman1/qsub.html?pathrev=V62u3_TAG">qsub(1)</A></B>,  <B><A HREF="../htmlman1/sh.html?pathrev=V62u3_TAG">sh(1)</A></B>, <B><A HREF="../htmlman2/nice.html?pathrev=V62u3_TAG">nice(2)</A></B>, <B><A HREF="../htmlman2/setrlimit.html?pathrev=V62u3_TAG">setrlimit(2)</A></B>,
+     <B><A HREF="../htmlman5/access_list.html?pathrev=V62u3_TAG">access_list(5)</A></B>, <B><A HREF="../htmlman5/calendar_conf.html?pathrev=V62u3_TAG">calendar_conf(5)</A></B>,  <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62u3_TAG">sge_conf(5)</A></B>,  <B><A HREF="../htmlman5/complex.html?pathrev=V62u3_TAG">complex(5)</A></B>,
+     <B><A HREF="../htmlman5/host_conf.html?pathrev=V62u3_TAG">host_conf(5)</A></B>,  <B><A HREF="../htmlman5/sched_conf.html?pathrev=V62u3_TAG">sched_conf(5)</A></B>,  <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u3_TAG">sge_execd(8)</A></B>, <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u3_TAG">sge_qmaster(8)</A></B>,
+     <B><A HREF="../htmlman8/sge_shepherd.html?pathrev=V62u3_TAG">sge_shepherd(8)</A></B>.
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u3_TAG">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
-
-
-
 
 
 

@@ -48,7 +48,7 @@ SYNOPSIS
 
 DESCRIPTION
      The functions documented here implement the server  side  of
-     the  JSV protocol as it is described in the man page <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>.
+     the  JSV protocol as it is described in the man page <B><A HREF="../htmlman1/jsv.html?pathrev=V62u3_TAG">jsv(1)</A></B>.
      These script functions are available in Bourne shell, TCL or
      Perl    scripts    after    sourcing/including   the   files
      jsv_inlcude.sh, jsv_include.tcl or JSV.pm.   The  files  and
@@ -89,10 +89,10 @@ DESCRIPTION
      are mentioned only if they are different  from  the  command
      line switches.
 
-     Find additional information in <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B> man  page  describing
+     Find additional information in <B><A HREF="../htmlman1/qsub.html?pathrev=V62u3_TAG">qsub(1)</A></B> man  page  describing
      the availability and value format. Job parameters written in
      capital letters are pseudo parameters. A  detailed  descrip-
-     tion for them can be found in <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>
+     tion for them can be found in <B><A HREF="../htmlman1/jsv.html?pathrev=V62u3_TAG">jsv(1)</A></B>
 
         param_name              command line switch/description
         a
@@ -173,7 +173,7 @@ DESCRIPTION
      it is not allowed to pass an empty string as <I>param</I>_<I>value</I>.
 
      Also for the parameters <I>c</I> and <I>m</I> it is  not  allowed  to  use
-     empty strings. Details can be found in <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B>.
+     empty strings. Details can be found in <B><A HREF="../htmlman1/qsub.html?pathrev=V62u3_TAG">qsub(1)</A></B>.
 
   jsv_del_param()
      This function deletes the job parameter <I>param</I>_<I>name</I>.
@@ -238,7 +238,7 @@ DESCRIPTION
      tion jsv_sub_is_param().
 
   jsv_sub_del_param()
-     Some job parameters are  lists  which  can  contain  muliple
+     Some job parameters are lists  which  can  contain  multiple
      variables with an optional value.
 
      This function deletes  a  variable  (<I>variable</I>_<I>name</I>)  and  if
@@ -284,7 +284,7 @@ DESCRIPTION
      If <I>variable</I>_<I>name</I> already exists in the set of  job  environ-
      ment   variables,  then  the  corresponding  value  will  be
      replaced by <I>variable</I>_<I>value</I>, as if the function jsv_mod_env()
-     was  used.  If  an  emty string is passed then the old value
+     was  used.  If  an empty string is passed then the old value
      will be deleted.
 
      To delete a environment variable the function  jsv_del_env()
@@ -404,6 +404,8 @@ DESCRIPTION
      Server JSVs will print that message as an  info  message  to
      the master daemon message file.
 
+     If <I>message</I> is missing then and empty line will be printed.
+
   jsv_log_warning()
      This function sends a warning <I>message</I> to the client or  mas-
      ter daemon instance that started the JSV script.
@@ -413,14 +415,17 @@ DESCRIPTION
      Server JSVs will print that message as an warning message to
      the master daemon message file.
 
+     If <I>message</I> is missing then and empty line will be printed.
+
   jsv_log_error()
      This function sends an error <I>message</I> to the client or master
      daemon instance that started the JSV script.
-
      For client JSVs, this means that  the  command  line  client
      will  get the information and print it to the stdout stream.
      Server JSVs will print that message as an error  message  to
      the master daemon message file.
+
+     If <I>message</I> is missing then and empty line will be printed.
 
   jsv_send_env()
      This function can only be used in jsv_on_start(). If  it  is
@@ -472,6 +477,7 @@ DESCRIPTION
      List  based   job   parameters   can   be   accessed   with:
      jsv_sub_is_param,  jsv_sub_get_param,  jsv_sub_add_param and
      jsv_sub_del_param
+
      If the environment  was  requested  with  jsv_send_env()  in
      jsv_on_start() then the environment can be accessed/modified
      with  the  following  commands:   jsv_is_env,   jsv_get_env,
@@ -512,13 +518,59 @@ DESCRIPTION
      jsv_reject_wait()  or  jsv_correct()  is  called  before the
      function returns.
 
+EXAMPLES
+     Find in the table below the returned values for  the  "*is*"
+     and "*get*" functions when following job is submitted:
+
+           qsub -l mem=1G,mem2=200M ...
+
+           function call                    returned value
+           -----------------------------    -----------------
+           jsv_is_param(l_hard)             "true"
+           jsv_get_param(l_hard)            "mem=1G,mem2=200M"
+           jsv_sub_is_param(l_hard,mem)     "true"
+           jsv_sub_get_param(l_hard,mem)    "1G"
+           jsv_sub_get_param(l_hard,mem3)   "false"
+           jsv_sub_get_param(l_hard,mem3)   ""
+
+
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B>,  <B><A HREF="../htmlman1/jsv.html?pathrev=V62u2_TAG">jsv(1)</A></B>,   <B><A HREF="../htmlman1/qalter.html?pathrev=V62u2_TAG">qalter(1)</A></B>,   <B><A HREF="../htmlman1/qlogin.html?pathrev=V62u2_TAG">qlogin(1)</A></B>,   <B><A HREF="../htmlman1/qmake.html?pathrev=V62u2_TAG">qmake(1)</A></B>,
-     <B><A HREF="../htmlman1/qrsh.html?pathrev=V62u2_TAG">qrsh(1)</A></B>, <B><A HREF="../htmlman1/qsh.html?pathrev=V62u2_TAG">qsh(1)</A></B>, <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B>, <B><A HREF="../htmlman1/qtcsh.html?pathrev=V62u2_TAG">qtcsh(1)</A></B>,
+     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u3_TAG">sge_intro(1)</A></B>,  <B><A HREF="../htmlman1/jsv.html?pathrev=V62u3_TAG">jsv(1)</A></B>,   <B><A HREF="../htmlman1/qalter.html?pathrev=V62u3_TAG">qalter(1)</A></B>,   <B><A HREF="../htmlman1/qlogin.html?pathrev=V62u3_TAG">qlogin(1)</A></B>,   <B><A HREF="../htmlman1/qmake.html?pathrev=V62u3_TAG">qmake(1)</A></B>,
+     <B><A HREF="../htmlman1/qrsh.html?pathrev=V62u3_TAG">qrsh(1)</A></B>, <B><A HREF="../htmlman1/qsh.html?pathrev=V62u3_TAG">qsh(1)</A></B>, <B><A HREF="../htmlman1/qsub.html?pathrev=V62u3_TAG">qsub(1)</A></B>, <B><A HREF="../htmlman1/qtcsh.html?pathrev=V62u3_TAG">qtcsh(1)</A></B>,
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u3_TAG">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -16,7 +16,7 @@ DESCRIPTION
      arguments described below. The output of <I>qselect</I> can be  fed
      into  other Sun Grid Engine commands to apply actions on the
      selected queue sets. For example together with  the  -<I>mqattr</I>
-     option  to  <B><A HREF="../htmlman1/qconf.html?pathrev=V62u2_TAG">qconf(1)</A></B>,  <I>qselect</I>  can  be used to modify queue
+     option  to  <B><A HREF="../htmlman1/qconf.html?pathrev=V62u3_TAG">qconf(1)</A></B>,  <I>qselect</I>  can  be used to modify queue
      attributes on a set of queues.
 
 OPTIONS
@@ -31,7 +31,10 @@ OPTIONS
           are always ignored except  the  so-called  static  load
           values    (i.e.    "arch",   "num_proc",   "mem_total",
           "swap_total" and "virtual_total") ones. Also consumable
-          utilization is ignored.
+          utilization  is  ignored.   If  there  are  multiple -l
+          resource requests they will be concatenated by a  logi-
+          cal  AND:  a  queue  needs to offer all resources to be
+          displayed.
 
      -pe pe_name,...
           Includes queues into the output which are  attached  to
@@ -44,7 +47,7 @@ OPTIONS
           only meaningful in  conjunction  with  another  <I>qselect</I>
           option  to  extract a subset of queue names from a list
           given by -q.  Description of <I>wc</I>_<I>queue</I> can be  found  in
-          <B><A HREF="../htmlman1/sge_types.html?pathrev=V62u2_TAG">sge_types(1)</A></B>.
+          <B><A HREF="../htmlman1/sge_types.html?pathrev=V62u3_TAG">sge_types(1)</A></B>.
 
      -qs {a|c|d|o|s|u|A|C|D|E|S}
           This option allows to filter  for  queue  instances  in
@@ -68,8 +71,8 @@ EXAMPLES
      the output to those queues with access  permission  for  the
      users  <I>andreas</I>  and  <I>shannon</I>.  The third command changes the
      queue attribute <I>h</I>_<I>vmem</I> to 1 Gigabyte on queues  residing  on
-     Linux  machines (see the <B><A HREF="../htmlman1/qconf.html?pathrev=V62u2_TAG">qconf(1)</A></B> manual page for details on
-     the -<I>mattr</I> option  and  the  <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62u2_TAG">queue_conf(5)</A></B>  manual  page  on
+     Linux  machines (see the <B><A HREF="../htmlman1/qconf.html?pathrev=V62u3_TAG">qconf(1)</A></B> manual page for details on
+     the -<I>mattr</I> option  and  the  <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62u3_TAG">queue_conf(5)</A></B>  manual  page  on
      details of queue configuration entries).
 
 ENVIRONMENTAL VARIABLES
@@ -96,7 +99,7 @@ ENVIRONMENTAL VARIABLES
 
      SGE_QMASTER_PORT
                     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u2_TAG">sge_qmaster(8)</A></B> is expected to listen for com-
+                    <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u3_TAG">sge_qmaster(8)</A></B> is expected to listen for com-
                     munication requests.  Most installations will
                     use  a  services  map  entry  for the service
                     "sge_qmaster" instead to define that port.
@@ -105,15 +108,12 @@ FILES
      &lt;<I>sge</I>_<I>root</I>&gt;/&lt;<I>cell</I>&gt;/<I>common</I>/<I>act</I>_<I>qmaster</I>
                      Sun Grid Engine master host file
 
-
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qconf.html?pathrev=V62u2_TAG">qconf(1)</A></B>, <B><A HREF="../htmlman1/qmod.html?pathrev=V62u2_TAG">qmod(1)</A></B>, <B><A HREF="../htmlman1/qstat.html?pathrev=V62u2_TAG">qstat(1)</A></B>, <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62u2_TAG">queue_conf(5)</A></B>,
+     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u3_TAG">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qconf.html?pathrev=V62u3_TAG">qconf(1)</A></B>, <B><A HREF="../htmlman1/qmod.html?pathrev=V62u3_TAG">qmod(1)</A></B>, <B><A HREF="../htmlman1/qstat.html?pathrev=V62u3_TAG">qstat(1)</A></B>, <B><A HREF="../htmlman5/queue_conf.html?pathrev=V62u3_TAG">queue_conf(5)</A></B>,
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u3_TAG">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
-
-
 
 
 

@@ -1,3 +1,6 @@
+ZG-2009-06-17-0: Update:      update html man pages
+                 Review:      LP
+
 DG-2009-06-17-0: Bugfix:      man page for drmaa_control() refers to deprecated 
                               parameters
                  Bugster:     6713724

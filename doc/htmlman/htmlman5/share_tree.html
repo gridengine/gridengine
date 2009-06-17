@@ -10,14 +10,14 @@ DESCRIPTION
      of  users/projects  and  of  a hierarchy of arbitrary groups
      thereof.
 
-     The current share tree can be  displayed  via  the  <B><A HREF="../htmlman1/qconf.html?pathrev=V62u2_TAG">qconf(1)</A></B>
+     The current share tree can be  displayed  via  the  <B><A HREF="../htmlman1/qconf.html?pathrev=V62u3_TAG">qconf(1)</A></B>
      -sstree  option.  The  output  follows the <I>share</I>_<I>tree</I> format
      description. A share tree can be created and an existing can
-     be modified via the -astree and -mstree options to <B><A HREF="../htmlman1/qconf.html?pathrev=V62u2_TAG">qconf(1)</A></B>.
-     The -sst option shows a formated  share  tree  (tree  view).
+     be modified via the -astree and -mstree options to <B><A HREF="../htmlman1/qconf.html?pathrev=V62u3_TAG">qconf(1)</A></B>.
+     The -sst option shows a formatted share  tree  (tree  view).
      Individual  share  tree  nodes  can  be  created,  modified,
      deleted, or shown via the -astnode, -dstnode, -mstnode,  and
-     -sstnode options to <B><A HREF="../htmlman1/qconf.html?pathrev=V62u2_TAG">qconf(1)</A></B>.
+     -sstnode options to <B><A HREF="../htmlman1/qconf.html?pathrev=V62u3_TAG">qconf(1)</A></B>.
 
      Note, Sun Grid Engine allows  backslashes  (\)  be  used  to
      escape  newline (\newline) characters. The backslash and the
@@ -39,8 +39,8 @@ FORMAT
         of child nodes to this node.
 
      <B>o</B>  The parameter name refers to an arbitrary  name  for  the
-        node  or to a corresponding user (see <B><A HREF="../htmlman5/user.html?pathrev=V62u2_TAG">user(5)</A></B>) or project
-        (see <B><A HREF="../htmlman5/project.html?pathrev=V62u2_TAG">project(5)</A></B>) if the node is a leaf node of the  share
+        node  or to a corresponding user (see <B><A HREF="../htmlman5/user.html?pathrev=V62u3_TAG">user(5)</A></B>) or project
+        (see <B><A HREF="../htmlman5/project.html?pathrev=V62u3_TAG">project(5)</A></B>) if the node is a leaf node of the  share
         tree. The name for the root node of the tree is "Root" by
         convention.
 
@@ -48,18 +48,18 @@ FORMAT
         the nodes with the same parent node.
 
      <B>o</B>  A user leaf node named 'default' can be defined as a des-
-        cendant  of  a  <B><A HREF="../htmlman5/project.html?pathrev=V62u2_TAG">project(5)</A></B>)  node  in the share tree. The
+        cendant  of  a  <B><A HREF="../htmlman5/project.html?pathrev=V62u3_TAG">project(5)</A></B>)  node  in the share tree. The
         default node defines the number of shares for users   who
         are  running  in  the project, but who do not have a user
         node defined under the project. The default user node  is
         a  convenient  way  of  specifying  a single node for all
         users which should receive an equal share of the  project
         resources. The default node may be specified by itself or
-        with other <B><A HREF="../htmlman5/user.html?pathrev=V62u2_TAG">user(5)</A></B>) nodes at the same level below a  pro-
+        with other <B><A HREF="../htmlman5/user.html?pathrev=V62u3_TAG">user(5)</A></B>) nodes at the same level below a  pro-
         ject.  All  users, whether explicitly specified as a user
         node or those which map to the 'default' user  node  must
-        have  a corresponding <B><A HREF="../htmlman5/user.html?pathrev=V62u2_TAG">user(5)</A></B>) object defined in order to
-        get shares. Do not  configure  a  <B><A HREF="../htmlman5/user.html?pathrev=V62u2_TAG">user(5)</A></B>)  object  named
+        have  a corresponding <B><A HREF="../htmlman5/user.html?pathrev=V62u3_TAG">user(5)</A></B>) object defined in order to
+        get shares. Do not  configure  a  <B><A HREF="../htmlman5/user.html?pathrev=V62u3_TAG">user(5)</A></B>)  object  named
         'default'.
 
 
@@ -89,10 +89,10 @@ EXAMPLES
      childnodes=NONE
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qconf.html?pathrev=V62u2_TAG">qconf(1)</A></B>, <B><A HREF="../htmlman5/project.html?pathrev=V62u2_TAG">project(5)</A></B>, <B><A HREF="../htmlman5/user.html?pathrev=V62u2_TAG">user(5)</A></B>.
+     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u3_TAG">sge_intro(1)</A></B>, <B><A HREF="../htmlman1/qconf.html?pathrev=V62u3_TAG">qconf(1)</A></B>, <B><A HREF="../htmlman5/project.html?pathrev=V62u3_TAG">project(5)</A></B>, <B><A HREF="../htmlman5/user.html?pathrev=V62u3_TAG">user(5)</A></B>.
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u3_TAG">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
 
 

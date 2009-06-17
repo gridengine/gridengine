@@ -48,14 +48,14 @@ CONFIGURATION
      has failed.
 
      If a JSV accepts a job or accepts a  job  after  it  applied
-     serveral  modifications then the following JSV instance will
+     several  modifications  then the following JSV instance will
      get the job parameters including all modifications as  input
      for the verification process. This is done as long as either
      the job is accepted or rejected.
 
 
-     Find more information how to use Client JSVs in <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B>  and
-     for Server JSVs in <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62u2_TAG">sge_conf(5)</A></B>
+     Find more information how to use Client JSVs in <B><A HREF="../htmlman1/qsub.html?pathrev=V62u3_TAG">qsub(1)</A></B>  and
+     for Server JSVs in <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62u3_TAG">sge_conf(5)</A></B>
 
 LIFETIME
      A Client or Server JSV is started as own UNIX process.  This
@@ -72,8 +72,8 @@ LIFETIME
      of  the  qmaster process (for version 6.2 of Sun Grid Engine
      this means that two processes are started).  Each  of  those
      processes have to verify job parameters for multiple jobs as
-     long as the master is running, the  underlaying  JSV  confi-
-     guration is not changed and no error occurs.
+     long as the master is running, the underlying JSV configura-
+     tion is not changed and no error occurs.
 
 PROTOCOL
      After a JSV script or binary is started it will get commands
@@ -132,7 +132,7 @@ PROTOCOL (JSV side)
           The param_command has two  additional  arguments  which
           are  separated  by space characters. The first argument
           is either a submit_parameter  as  it  is  specified  in
-          <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B>  or  it  is  a  pseudo_parameters as documented
+          <B><A HREF="../htmlman1/qsub.html?pathrev=V62u3_TAG">qsub(1)</A></B>  or  it  is  a  pseudo_parameters as documented
           below.  The  second  parameter  is  the  value  of  the
           corresponding param_parameter.
 
@@ -144,7 +144,7 @@ PROTOCOL (JSV side)
           submit_parameters are for example  b  (similar  to  the
           qsub  -b  switch)  or masterq (similar to qsub -masterq
           switch). Find a complete list of  submit_parameters  in
-          the <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B> man page. Please note that not in all cases
+          the <B><A HREF="../htmlman1/qsub.html?pathrev=V62u3_TAG">qsub(1)</A></B> man page. Please note that not in all cases
           the param_parameter name and  the  corresponding  value
           format  is equivalent with the qsub switch name and its
           argument format.  E.g. the qsub -pe parameters will  by
@@ -152,7 +152,7 @@ PROTOCOL (JSV side)
           pe_min, pe_max or the switch combination -soft -l  will
           be  passed  to  JSV  scripts  as  l_soft parameter. For
           details concerning this differences  consult  also  the
-          <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B> man page.
+          <B><A HREF="../htmlman1/qsub.html?pathrev=V62u3_TAG">qsub(1)</A></B> man page.
 
      start_command := 'START' ;
           The start_command has  no  additional  arguments.  This
@@ -195,7 +195,7 @@ PROTOCOL (client/qmaster side)
           expects  input from a JSV instance. This command can be
           used in client JSVs to send  information  to  the  user
           submitting  the  job.  In  client  JSVs  all  messages,
-          independed of the log_level  will  be  printed  to  the
+          independent of the log_level will  be  printed  to  the
           stdout  stream  of  the used submit client. If a server
           JSV receives a log_command it  will  add  the  received
           message  to  the  message file respecting the specified
@@ -286,7 +286,7 @@ PSEUDO PARAMETERS
 
      GROUP
           Defines Primary group of the user which tries to submit
-          the job which should be verifyed. This parameter cannot
+          the job which should be verified. This parameter cannot
           be changed but is always sent as part of the  verifica-
           tion  process.  The  user  name is passed as parameters
           with the name USER.
@@ -295,7 +295,7 @@ PSEUDO PARAMETERS
           Not available in the client context (see CONTEXT). Oth-
           erwise it contains the job number of the job which will
           be submitted to Grid Engine when the verification  pro-
-          cess  is  successfull.  JOB_ID is an optional parameter
+          cess  is  successful.  JOB_ID  is an optional parameter
           which can't be changed by JSV instances.
 
      USER Username of the user which  tries  to  submit  the  job
@@ -321,7 +321,7 @@ EXAMPLE
      the  JSV  instance. That data contained in the second column
      is sent from the JSV script to the client/qmaster. New  line
      characters  which  terminate  each line in the communication
-     protocol are ommited.
+     protocol are omitted.
 
         START
                                 SEND ENV
@@ -348,11 +348,11 @@ EXAMPLE
 
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B>,  <B><A HREF="../htmlman1/qalter.html?pathrev=V62u2_TAG">qalter(1)</A></B>,  <B><A HREF="../htmlman1/qlogin.html?pathrev=V62u2_TAG">qlogin(1)</A></B>,   <B><A HREF="../htmlman1/qmake.html?pathrev=V62u2_TAG">qmake(1)</A></B>,   <B><A HREF="../htmlman1/qrsh.html?pathrev=V62u2_TAG">qrsh(1)</A></B>,
-     <B><A HREF="../htmlman1/qsh.html?pathrev=V62u2_TAG">qsh(1)</A></B>, <B><A HREF="../htmlman1/qsub.html?pathrev=V62u2_TAG">qsub(1)</A></B>, <B><A HREF="../htmlman1/qtcsh.html?pathrev=V62u2_TAG">qtcsh(1)</A></B>,
+     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u3_TAG">sge_intro(1)</A></B>,  <B><A HREF="../htmlman1/qalter.html?pathrev=V62u3_TAG">qalter(1)</A></B>,  <B><A HREF="../htmlman1/qlogin.html?pathrev=V62u3_TAG">qlogin(1)</A></B>,   <B><A HREF="../htmlman1/qmake.html?pathrev=V62u3_TAG">qmake(1)</A></B>,   <B><A HREF="../htmlman1/qrsh.html?pathrev=V62u3_TAG">qrsh(1)</A></B>,
+     <B><A HREF="../htmlman1/qsh.html?pathrev=V62u3_TAG">qsh(1)</A></B>, <B><A HREF="../htmlman1/qsub.html?pathrev=V62u3_TAG">qsub(1)</A></B>, <B><A HREF="../htmlman1/qtcsh.html?pathrev=V62u3_TAG">qtcsh(1)</A></B>,
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u2_TAG">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u3_TAG">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
 
 

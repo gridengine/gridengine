@@ -1,3 +1,8 @@
+MD-2009-06-17-0: Bugfix:      $SGE_ROOT/util/setfileperm.sh does not change 
+                              ownership of $SGE_ROOT/start_gui_installer
+                 Bugster:     6808082
+                 Review:      HP
+
 DG-2009-06-17-2: Bugfix:      qsub man page does not mention the existance of 
                               $JOB_SCRIPT environment variable within a job
                  Bugster:     6851538

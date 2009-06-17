@@ -1,3 +1,9 @@
+JG-2009-06-17-0: Bugfix:      removing admin user from the manager list leads to
+                              a qmaster dead lock
+                 Bugster:     6684465
+                 Issue:       3053
+                 Review:      EB
+
 LP-2009-06-10-2: Bugfix:      inst_sge -copycerts in AUTO mode does not work
                  Merged from: maintrunk (LP-2009-02-06-0)
                  Bugster:     6808089

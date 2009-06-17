@@ -1109,6 +1109,9 @@
 #define MSG_PARSE_INVALIDOPTIONARGUMENT   _MESSAGE(60712, _("ERROR! invalid option argument!"))
 #define MSG_CANTSPOOL_SS                  _MESSAGE(60713, _("unable to spool "SFN" "SFQ))
 
+#define MSG_PACK_ERRORUNPACKING_S      _MESSAGE(60714, _("error unpacking: "SFN))
+#define MSG_PACK_INVALIDPACKDATA       _MESSAGE(60715, _("the pack string contained invalid characters"))
+#define MSG_PACK_WRONGPACKTYPE_UI      _MESSAGE(60716, _("wrong pack type (got: "sge_U32CFormat" / expected %d"))
 
 /* =================================================
  * please do not enter new messages after this point,

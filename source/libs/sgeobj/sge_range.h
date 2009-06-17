@@ -36,7 +36,7 @@
 /*___INFO__MARK_END__*/
 
 #include "sge_dstring.h"
-#include "sge_rangeL.h"
+#include "sge_range_RN_L.h"
 
 #define JUST_PARSE        true
 #define INF_ALLOWED       true
@@ -44,6 +44,8 @@
 
 #define MAX_IDS_PER_LINE  8
 #define MAX_LINE_LEN      70
+
+#define RANGE_INFINITY (9999999)
 
 typedef void (*range_remove_insert_t) (lList **, lList **, u_long32);
 

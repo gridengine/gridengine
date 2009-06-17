@@ -54,7 +54,7 @@
 #include "gdi/sge_gdi_packet_queue.h"
 
 #include "sgeobj/sge_answer.h"
-#include "sgeobj/sge_multiL.h"
+#include "sgeobj/sge_multi_MA_L.h"
 #include "sgeobj/sge_jsv.h"
 
 #include "msg_common.h"

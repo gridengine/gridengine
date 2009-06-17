@@ -33,30 +33,35 @@
 #include <string.h>
 #include <limits.h>
 
-#include "sched/sge_select_queue.h"
-#include "sched/sge_resource_quota_schedd.h"
-#include "sched/sge_resource_utilizationL.h"
-#include "sgeobj/sge_centry.h"
-#include "sgeobj/sge_strL.h"
-#include "sgeobj/sge_jobL.h"
-#include "sgeobj/sge_ctL.h"
-#include "sgeobj/sge_cqueueL.h"
-#include "sgeobj/sge_qinstance.h"
+#include "rmon/sgermon.h"
 
+#include "uti/sge_hostname.h"
+#include "uti/sge_log.h"
+#include "uti/sge_parse_num_par.h"
+
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_str.h"
+#include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_job.h"
 #include "sgeobj/sge_resource_quota.h"
 #include "sgeobj/sge_object.h"
-#include "uti/sge_hostname.h"
-#include "sge_complex_schedd.h"
 #include "sgeobj/sge_job.h"
 #include "sgeobj/sge_pe.h"
 #include "sgeobj/sge_host.h"
-#include "sgermon.h"
-#include "sched/sort_hosts.h"
-#include "sge_log.h"
-#include "sched/sge_schedd_text.h"
-#include "sched/schedd_message.h"
-#include "uti/sge_parse_num_par.h"
 
+#include "sge_ct_SCT_L.h"
+#include "sge_ct_REF_L.h"
+#include "sge_ct_CT_L.h"
+#include "sge_ct_CCT_L.h"
+#include "sge_ct_CTI_L.h"
+
+#include "sge_complex_schedd.h"
+#include "sge_select_queue.h"
+#include "sge_resource_quota_schedd.h"
+#include "sort_hosts.h"
+#include "sge_schedd_text.h"
+#include "schedd_message.h"
 
 static void rqs_can_optimize(const lListElem *rule, bool *host, bool *queue, sge_assignment_t *a);
 

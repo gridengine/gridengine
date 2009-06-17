@@ -122,13 +122,6 @@
 #define MSG_GDI_MEMORY_NOTENOUGHMEMORYFORPACKINGGDIREQUEST        _MESSAGE(43132, _("not enough memory for packing gdi request"))
 #define MSG_GDI_SYNCRECEIVETIMEOUT                       _MESSAGE(43133, _("got gdi request receive timeout"))
 
-/**
- * cull/cull_where.c
- */
-#define MSG_PACK_ERRORUNPACKING_S      _MESSAGE(43150, _("error unpacking: "SFN))
-#define MSG_PACK_INVALIDPACKDATA       _MESSAGE(43151, _("the pack string contained invalid characters"))
-#define MSG_PACK_WRONGPACKTYPE_UI      _MESSAGE(43152, _("wrong pack type (got: "sge_U32CFormat" / expected %d"))
- 
 /*
  * common/usage.c
  */

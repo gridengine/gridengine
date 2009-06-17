@@ -42,7 +42,6 @@
 #include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_profiling.h"
-#include "sge_eventL.h"
 #include "qm_name.h"
 #include "sge_log.h"
 #include "sge_time.h"
@@ -57,7 +56,7 @@
 
 #include "gdi/sge_gdi2.h"
 
-#include "sgeobj/sge_eventL.h"
+#include "sgeobj/sge_event.h"
 
 #include "msg_evclib.h"
 #include "msg_common.h"

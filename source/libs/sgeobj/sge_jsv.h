@@ -37,7 +37,7 @@
 
 #include "gdi/sge_gdi_ctx.h"
 
-#include "sgeobj/sge_jsvL.h"
+#include "sgeobj/sge_jsv_JSV_L.h"
 
 #define JSV_CONTEXT_CLIENT "client"
 

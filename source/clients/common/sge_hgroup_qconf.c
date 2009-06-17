@@ -41,7 +41,7 @@
 #include "sgeobj/sge_object.h"
 #include "sgeobj/sge_hgroup.h"
 #include "sgeobj/sge_href.h"
-#include "sgeobj/sge_hgroupL.h"
+#include "sgeobj/sge_hgroup.h"
 
 #include "spool/flatfile/sge_flatfile.h"
 #include "spool/flatfile/sge_flatfile_obj.h"

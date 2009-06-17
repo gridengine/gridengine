@@ -60,6 +60,7 @@
 #include "execd.h"
 #include "sgeobj/sge_object.h"
 #include "sgeobj/sge_job.h"
+#include "sgeobj/sge_report.h"
 
 #include "msg_common.h"
 #include "msg_execd.h"

@@ -36,7 +36,7 @@
 
 #include "sge_ja_task.h"
 #include "sge_pe_task.h"
-#include "sge_usageL.h"
+#include "sge_usage.h"
 #include "sge_time.h"
 #include "sge_prog.h"
 #include "commlib.h"

@@ -69,6 +69,7 @@
 #include "sge_ulong.h"
 #include "sge_ja_task.h"
 #include "sge_qstat.h"
+#include "sgeobj/sge_usage.h"
 
 static int sge_print_job(lListElem *job, lListElem *jatep, lListElem *qep, int print_jobid, 
                          char *master, dstring *task_str, u_long32 full_listing, int

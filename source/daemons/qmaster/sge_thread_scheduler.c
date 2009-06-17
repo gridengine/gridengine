@@ -65,6 +65,7 @@
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_manop.h"
 #include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_schedd_conf.h"
 
 #include "gdi/qm_name.h"
 #include "gdi/sge_security.h"

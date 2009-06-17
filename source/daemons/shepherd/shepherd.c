@@ -98,7 +98,7 @@ struct rusage {
 #include "sge_stdio.h"
 #include "sge_job.h"
 
-#include "sge_reportL.h"
+#include "sge_report.h"
 
 #if defined(IRIX)
 #include "sge_processes_irix.h"

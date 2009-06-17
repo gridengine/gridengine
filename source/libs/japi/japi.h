@@ -36,6 +36,9 @@
 #include "drmaa.h"
 #include "sge_dstring.h"
 #include "basis_types.h"
+#include "sge_japi_JJ_L.h"
+#include "sge_japi_JJAT_L.h"
+#include "sge_japi_NSV_L.h"
 #include "cull.h"
 
 /****** JAPI/-JAPI_Interface *******************************************************

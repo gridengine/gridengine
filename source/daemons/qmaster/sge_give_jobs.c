@@ -38,11 +38,10 @@
 
 #include "sge_ja_task.h"
 #include "sge_pe_task.h"
-#include "sge_usageL.h"
-#include "sge_strL.h"
-#include "sge_job_refL.h"
+#include "sge_usage.h"
+#include "sge_str.h"
 #include "sge_report.h"
-#include "sge_time_eventL.h"
+#include "sge_time_event_TE_L.h"
 
 #include "basis_types.h"
 #include "sgermon.h"

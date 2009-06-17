@@ -51,7 +51,7 @@
 #include "sge_conf.h"
 #include "sge_bootstrap.h"
 #include "sge_security.h"
-#include "sge_ja_taskL.h"
+#include "sge_ja_task.h"
 #include "sge_job.h"
 #include "sge_qinstance.h"
 #include "sge_cqueue.h"

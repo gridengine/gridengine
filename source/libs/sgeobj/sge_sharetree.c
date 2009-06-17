@@ -32,16 +32,20 @@
 
 #include <string.h>
 
-#include "sge_string.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "cull_list.h"
-#include "msg_common.h"
-#include "sched/sge_support.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_string.h"
+#include "uti/sge_log.h"
 #include "uti/sge_unistd.h"
+
+#include "cull/cull_list.h"
+
+#include "sched/sge_support.h"
 
 #include "sge_sharetree.h"
 #include "sge_answer.h"
+#include "msg_common.h"
+
 
 /************************************************************************
    id_sharetree - set the sharetree node id

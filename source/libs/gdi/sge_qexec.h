@@ -36,9 +36,20 @@
 extern "C" {
 #endif
 
+#include "sgeobj/sge_qexec_RT_L.h"
+
 #include "gdi/sge_gdi_ctx.h"
 
 typedef char *sge_tid_t;
+
+enum {                           /* possible values for RT_state */
+   RT_STATE_WAIT4ACK,            /* started - we are waiting for the exit msg
+                                  * for task */
+   RT_STATE_EXITED,              /* we got the exit message - keep in our list 
+                                  * to prevent task ids used multiple */
+   RT_STATE_WAITED               /* user reaped task by calling sge_qwaittid() */
+};
+
 #if 0
 /* put these values into task environment list 'envlp' in order 
    to overwrite default behaviour */ 

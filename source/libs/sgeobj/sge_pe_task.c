@@ -32,24 +32,24 @@
 
 #include <string.h>
 
-#include "sge_string.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "cull_list.h"
+#include "rmon/sgermon.h"
 
-#include "sgeobj/sge_object.h"
-#include "sgeobj/sge_answer.h"
+#include "uti/sge_string.h"
+#include "uti/sge_log.h"
 
-#include "sgeobj/sge_job.h"
-#include "sgeobj/sge_ja_task.h"
-#include "sgeobj/sge_path_alias.h"
-#include "sgeobj/sge_pe_task.h"
-#include "sgeobj/sge_var.h"
-#include "sgeobj/sge_utility.h"
-#include "sgeobj/sge_usage.h"
+#include "cull/cull_list.h"
 
+#include "sge_object.h"
+#include "sge_answer.h"
+#include "sge_job.h"
+#include "sge_ja_task.h"
+#include "sge_path_alias.h"
+#include "sge_pe_task.h"
+#include "sge_var.h"
+#include "sge_utility.h"
+#include "sge_usage.h"
 #include "msg_common.h"
-#include "sgeobj/msg_sgeobjlib.h"
+#include "msg_sgeobjlib.h"
 
 /****** sgeobj/pe_task/pe_task_sum_past_usage() *******************************
 *  NAME

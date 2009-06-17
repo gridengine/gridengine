@@ -51,7 +51,6 @@
 
 #include "pack.h"
 #include "cull_pack.h"
-#include "cull_packL.h"
 #include "msg_gdilib.h"
 
 static lEnumeration *subscope_lWhat(cull_parse_state* state, va_list *app);

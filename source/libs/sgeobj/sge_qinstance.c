@@ -33,21 +33,25 @@
 #include <fnmatch.h>
 #include <string.h>
 
-#include "sgermon.h"
-#include "sge_string.h"
-#include "sge_log.h"
-#include "cull_list.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_string.h"
+#include "uti/sge_log.h"
+#include "uti/sge_hostname.h"
+#include "uti/sge_parse_num_par.h"
+#include "uti/sge_dstring.h"
+
+#include "cull/cull_list.h"
+
+#include "comm/commlib.h"
+
+#include "sched/sge_select_queue.h"
+#include "sched/sge_resource_utilization.h"
+
 #include "symbols.h"
 #include "sge.h"
-
-#include "commlib.h"
-#include "sge_hostname.h"
-#include "sge_parse_num_par.h"
-
 #include "sge_manop.h"
-
 #include "parse.h"
-#include "sge_dstring.h"
 #include "sge_answer.h"
 #include "sge_attr.h"
 #include "sge_calendar.h"
@@ -70,10 +74,9 @@
 #include "sge_load.h"
 #include "sge_utility.h"
 #include "sge_path_alias.h"
-
-#include "sge_select_queue.h"
-#include "sge_resource_utilization.h"
 #include "sge_eval_expression.h"
+#include "sge_resource_utilization_RDE_L.h"
+#include "sge_resource_utilization_RUE_L.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"

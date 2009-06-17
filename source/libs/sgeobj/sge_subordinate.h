@@ -34,7 +34,7 @@
 /*___INFO__MARK_END__*/
 
 #include "sge_dstring.h"
-#include "sge_subordinateL.h"
+#include "sge_subordinate_SO_L.h"
 
 bool
 tst_sos(int used, int total, lListElem *so);

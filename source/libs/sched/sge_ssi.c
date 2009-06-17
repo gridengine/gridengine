@@ -34,28 +34,26 @@
 #include <string.h>
 #include <strings.h>
 
-#include "cull.h"
-#include "sgermon.h"
-#include "sge_log.h"
+#include "rmon/sgermon.h"
 
-#include "sge_answer.h"
-#include "sge_job.h"
-#include "sge_ja_task.h"
-#include "sge_object.h"
-#include "sge_qinstance.h"
-#include "sge_range.h"
+#include "uti/sge_log.h"
 
-#include "sge_idL.h"
-#include "sge_orderL.h"
-
-#include "sge_orders.h"
+#include "cull/cull.h"
 
 #include "gdi/sge_gdi.h"
 
-#include "msg_schedd.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_id.h"
+#include "sgeobj/sge_order.h"
 
+#include "sge_orders.h"
 #include "sge_ssi.h"
-
+#include "msg_schedd.h"
 
 /* MT-NOTE: parse_job_identifier() is not MT safe */
 static bool parse_job_identifier(const char *id, u_long32 *job_id, u_long32 *ja_task_id)

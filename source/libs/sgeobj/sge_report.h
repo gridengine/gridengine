@@ -33,7 +33,66 @@
 /*___INFO__MARK_END__*/
 
 #include "cull.h"
-#include "sge_reportL.h"
+
+#include "sge_report_REP_L.h"
+#include "sge_report_JR_L.h"
+#include "sge_report_LIC_L.h"
+#include "sge_report_LR_L.h"
+
+/* 
+ * ** valid values for REP_type 
+ * */
+
+/* REP_list is LR_Type */
+#define NUM_REP_REPORT_LOAD    1
+
+/* REP_list is ET_Type */
+#define NUM_REP_REPORT_EVENTS  2
+
+/* REP_list is CONF_Type */
+#define NUM_REP_REPORT_CONF    3
+
+/* REP_list is LIC_Type */
+#define NUM_REP_REPORT_PROCESSORS 4
+
+/* REP_list is JR_Type */
+#define NUM_REP_REPORT_JOB     5
+
+/* REP_list is LR_Type */
+#define NUM_REP_FULL_REPORT_LOAD  6 
+
+#define SGE_WEXITED_BIT      0x00000001
+#define SGE_WSIGNALED_BIT    0x00000002
+#define SGE_WCOREDUMP_BIT    0x00000004
+#define SGE_NEVERRAN_BIT     0x00000008
+/* POSIX exit status has only 8 bit */
+#define SGE_EXIT_STATUS_BITS 0x00000FF0
+/* SGE signal numbers are high numbers so we use 16 bit */
+#define SGE_SIGNAL_BITS      0x0FFFF000
+
+/* these macros shall be used for read access on JR_wait_status */
+#define SGE_GET_WEXITED(status)   ((status)&SGE_WEXITED_BIT)
+#define SGE_GET_WSIGNALED(status) ((status)&SGE_WSIGNALED_BIT)
+#define SGE_GET_WCOREDUMP(status)   ((status)&SGE_WCOREDUMP_BIT)
+#define SGE_GET_NEVERRAN(status)    ((status)&SGE_NEVERRAN_BIT)
+#define SGE_GET_WEXITSTATUS(status) (((status)&SGE_EXIT_STATUS_BITS)>>4)
+#define SGE_GET_WSIGNAL(status)     (((status)&SGE_SIGNAL_BITS)>>12)
+
+/* these macros shall be used for write access on JR_wait_status */
+
+#define SGE_SET_WEXITED(status, flag) \
+   ((status) & ~SGE_WEXITED_BIT)   | ((flag)?SGE_WEXITED_BIT:0)
+#define SGE_SET_WSIGNALED(status, flag) \
+   ((status) & ~SGE_WSIGNALED_BIT) | ((flag)?SGE_WSIGNALED_BIT:0)
+#define SGE_SET_WCOREDUMP(status, flag) \
+   ((status) & ~SGE_WCOREDUMP_BIT) | ((flag)?SGE_WCOREDUMP_BIT:0)
+#define SGE_SET_NEVERRAN(status, flag) \
+   ((status) & ~SGE_NEVERRAN_BIT)  | ((flag)?SGE_NEVERRAN_BIT:0)
+#define SGE_SET_WEXITSTATUS(status, exit_status) \
+   ((status) & ~SGE_EXIT_STATUS_BITS)  |(((exit_status)<<4) & SGE_EXIT_STATUS_BITS)
+#define SGE_SET_WSIGNAL(status, signal) \
+   ((status) & ~SGE_SIGNAL_BITS)       |(((signal)<<12) & SGE_SIGNAL_BITS)
+
 
 void job_report_print_usage(const lListElem *jr, FILE *fp);
 void job_report_init_from_job(lListElem *jr, const lListElem *jep, 

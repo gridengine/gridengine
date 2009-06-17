@@ -65,13 +65,14 @@
 #include "sgeobj/sge_cqueue.h"
 #include "sgeobj/sge_object.h"
 #include "sgeobj/sge_range.h"
+#include "sgeobj/sge_schedd_conf.h"
 #include "lck/sge_mtutil.h"
 #include "configuration_qmaster.h"   /* bad dependency!! */
 #include "comm/lists/cl_errors.h"
 #include "comm/cl_commlib.h"
 #include "uti/sge_profiling.h"
 #include "uti/sge_spool.h"
-#include "sgeobj/sge_event_requestL.h"
+#include "sge_event_request_EVR_L.h"
 
 #include "lck/sge_lock.h"
 

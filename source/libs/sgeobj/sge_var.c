@@ -33,16 +33,19 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "sgermon.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_time.h"
+#include "uti/sge_log.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_stdlib.h"
+#include "uti/sge_string.h"
+
+#include "cull/cull.h"
+
 #include "symbols.h"
-#include "sge.h"
-#include "sge_time.h"
-#include "sge_log.h"
-#include "cull.h"
 #include "sge_var.h"
-#include "sge_prog.h"
-#include "sge_stdlib.h"
-#include "sge_string.h"
+#include "sge.h"
 #include "sge_centry.h"
 #include "sge_answer.h"
 #include "msg_sgeobjlib.h"

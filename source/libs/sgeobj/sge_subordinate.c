@@ -33,15 +33,16 @@
 #include <fnmatch.h>
 #include <string.h>
 
-#include "sgermon.h"
-#include "sge_string.h"
-#include "sge_log.h"
-#include "cull_list.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_string.h"
+#include "uti/sge_log.h"
+#include "uti/sge_dstring.h"
+#include "uti/sge_signal.h"
+
+#include "cull/cull_list.h"
+
 #include "sge.h"
-
-#include "sge_dstring.h"
-#include "sge_signal.h"
-
 #include "sge_answer.h"
 #include "sge_object.h"
 #include "sge_cqueue.h"

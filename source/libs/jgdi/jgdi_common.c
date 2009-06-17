@@ -31,37 +31,46 @@
 /*___INFO__MARK_END__*/
 #include <ctype.h>
 #include <string.h>
-#include "jni.h"
-#include "jgdi.h"
-#include "basis_types.h"
-#include "cull.h"
-#include "commlib.h"
-#include "sgermon.h"
-#include "sge_all_listsL.h"
-#include "sge_answer.h"
-#include "sge_prog.h"
-#include "sge_bootstrap.h"
-#include "version.h"
-#include "cl_errors.h"
-#include "sge_log.h"
-#include "sge_error_class.h"
-#include "sge_qinstance_state.h"
-#include "jgdi_common.h"
-#include "cull_list.h"
-#include "jgdi_wrapper.h"
-#include "jgdi_factory.h"
-#include "sge_calendar.h"
-#include "sge_cqueue.h"
-#include "jgdi_logging.h"
-#include "sge_ja_task.h"
-#include "msg_sgeobjlib.h"
-#include "msg_common.h"
-#include "sge_edit.h"
-#include "sge_sharetree.h"
-#include "sge_utility.h"
 
+#include "jni.h"
+
+#include "rmon/sgermon.h"
+
+#include "uti/sge_prog.h"
+#include "uti/sge_bootstrap.h"
+#include "uti/sge_edit.h"
+#include "uti/sge_log.h"
+#include "uti/sge_error_class.h"
+
+#include "cull/cull_list.h"
+#include "cull/cull.h"
+
+#include "commlib.h"
+#include "cl_errors.h"
+
+#include "gdi/version.h"
 #include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi2.h"
+
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_calendar.h"
+#include "sgeobj/sge_qinstance_state.h"
+#include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_sharetree.h"
+#include "sgeobj/sge_utility.h"
+#include "sgeobj/sge_event.h"
+
+#include "jgdi.h"
+#include "basis_types.h"
+#include "jgdi_common.h"
+#include "jgdi_wrapper.h"
+#include "jgdi_factory.h"
+#include "jgdi_logging.h"
+
+#include "msg_sgeobjlib.h"
+#include "msg_common.h"
 
 #define MAX_GDI_CTX_ARRAY_SIZE 1024
 

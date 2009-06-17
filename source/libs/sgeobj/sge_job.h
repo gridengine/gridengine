@@ -34,9 +34,119 @@
 
 #include "sge_htable.h"
 #include "sge_dstring.h"
-#include "sge_jobL.h"
-#include "sge_job_refL.h"
-#include "sge_messageL.h"
+#include "sge_job_JB_L.h"
+#include "sge_job_ref_JRE_L.h"
+
+/* Job states moved in from def.h */
+#define JIDLE                                0x00000000
+/* #define JENABLED                             0x00000008 */
+#define JHELD                                0x00000010
+#define JMIGRATING                           0x00000020
+#define JQUEUED                              0x00000040
+#define JRUNNING                             0x00000080
+#define JSUSPENDED                           0x00000100
+#define JTRANSFERING                         0x00000200
+#define JDELETED                             0x00000400
+#define JWAITING                             0x00000800
+#define JEXITING                             0x00001000
+#define JWRITTEN                             0x00002000
+/* used in execd - job waits for getting its ASH/JOBID */
+#define JWAITING4OSJID                       0x00004000
+/* used in execd - shepherd reports job exit but there are still processes */
+#define JERROR                               0x00008000
+#define JSUSPENDED_ON_THRESHOLD              0x00010000
+/*
+ *    SGEEE: qmaster delays job removal till schedd 
+ *       does no longer need this finished job 
+ *       */
+#define JFINISHED                            0x00010000
+/* used in execd to prevent slave jobs from getting started */
+#define JSLAVE                               0x00020000
+#define JDEFERRED_REQ                        0x00100000
+
+/* 
+   GDI request syntax for JB_hold 
+
+   Example:
+ 
+   qalter -h {u|s|o|n}
+
+  POSIX (overwriting):
+  u: SET|USER 
+  o: SET|OPERATOR
+  s: SET|SYSTEM 
+  n: SUB|USER|SYSTEM|OPERATOR
+ 
+  SGE (adding):
+  +u: ADD|USER
+  +o: ADD|OPERATOR
+  +s: ADD|SYSTEM
+ 
+  SGE (removing):
+  -u: SUB|USER
+  -o: SUB|OPERATOR
+  -s: SUB|SYSTEM
+   
+*/
+enum {
+   /* need place for tree bits */
+   MINUS_H_CMD_ADD = (0<<4), /* adds targetted flags */
+   MINUS_H_CMD_SUB = (1<<4), /* remove targetted flags */
+   MINUS_H_CMD_SET = (2<<4)  /* overwrites using targetted flags */
+}; 
+
+enum {
+   MINUS_H_TGT_USER     = 1, /* remove needs at least job owner */
+   MINUS_H_TGT_OPERATOR = 2, /* remove needs at least operator  */
+   MINUS_H_TGT_SYSTEM   = 4, /* remove needs at least manager   */
+   MINUS_H_TGT_JA_AD    = 8, /* removed automatically */
+   MINUS_H_TGT_ALL      = 15,
+   MINUS_H_TGT_NONE     = 31
+};
+
+/* values for JB_verify_suitable_queues */
+#define OPTION_VERIFY_STR "nwevp"
+enum {
+   SKIP_VERIFY = 0,     /* -w n no expendable verifications will be done */
+   WARNING_VERIFY,      /* -w w qmaster will warn about these jobs - but submit will succeed */
+   ERROR_VERIFY,        /* -w e qmaster will make expendable verifications to reject 
+                            jobs that are not schedulable (default) */
+   JUST_VERIFY,         /* -w v just verify at qmaster but do not submit */
+   POKE_VERIFY          /* -w p do verification with all resource utilizations in place (poke) */
+};
+
+/************    scheduling constants   *****************************************/
+/* priorities are in the range from -1023 to 1024 */
+/* to put them in into u_long we need to add 1024 */
+#define BASE_PRIORITY  1024
+
+/* int -> u_long */
+#define PRI_ITOU(x) ((x)+BASE_PRIORITY)
+/* u_long -> int */
+#define PRI_UTOI(x) ((x)-BASE_PRIORITY)
+
+#define PRIORITY_OFFSET 8
+#define NEWCOMER_FLAG     0x1000000
+
+/* forced negative sign bit  */
+#define MAX_JOBS_EXCEEDED 0x8000000
+#define ALREADY_SCANNED   0x4000000
+#define PRIORITY_MASK     0xffff00
+#define SUBPRIORITY_MASK  0x0000ff
+#define JOBS_SCANNED_PER_PASS 10
+
+/* 
+   used in qstat:
+
+   JSUSPENDED_ON_SUBORDINATE means that the job is
+   suspended because its queue is suspended
+
+*/
+#define JSUSPENDED_ON_SUBORDINATE            0x00002000
+
+/* reserved names for JB_context */
+#define CONTEXT_IOR "IOR"
+#define CONTEXT_PARENT "PARENT"
 
 /****** sgeobj/job/jb_now *****************************************************
 *  NAME

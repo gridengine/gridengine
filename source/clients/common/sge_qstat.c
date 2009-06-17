@@ -71,6 +71,7 @@
 #include "sgeobj/sge_job.h"
 #include "sgeobj/sge_qinstance_type.h"
 #include "sgeobj/sge_ulong.h"
+#include "sgeobj/sge_usage.h"
 
 #include "sched/sge_sched.h"
 #include "sched/sge_urgency.h"

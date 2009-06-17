@@ -61,6 +61,8 @@
 #include "sge_host.h"
 #include "sge_hgroup.h"
 #include "sge_hgroup_qconf.h"
+#include "sge_usage.h"
+
 #include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi_ctx.h"
 

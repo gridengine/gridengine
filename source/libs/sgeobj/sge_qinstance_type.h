@@ -34,7 +34,6 @@
 /*___INFO__MARK_END__*/
 
 #include "sge_dstring.h"
-#include "sge_qinstanceL.h"
 
 extern const char *queue_types[];
 

@@ -29,11 +29,14 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
 #include <stdio.h>
 #include <string.h>
+
+#include "rmon/sgermon.h"
+
 #include "basis_types.h"
 #include "sge_schedd_text.h"
-#include "sgermon.h"
 #include "msg_schedd.h"
 
 /*

@@ -65,6 +65,7 @@
 #include "sgeobj/sge_ulong.h"
 #include "sgeobj/sge_centry.h"
 #include "sgeobj/sge_schedd_conf.h"
+#include "sgeobj/sge_job.h"
 
 #include "gdi/sge_gdi_ctx.h"
 #include "gdi/sge_gdi.h"

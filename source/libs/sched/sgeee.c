@@ -41,36 +41,41 @@
 #include <float.h>
 #include <math.h>
 
-#include "sge_profiling.h"
-#include "sge_log.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_profiling.h"
+#include "uti/sge_log.h"
+#include "uti/sge_time.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_language.h"
+#include "uti/sge_string.h"
+
+#include "comm/commlib.h"
+
+#include "sgeobj/sge_order.h"
+#include "sgeobj/sge_schedd_conf.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_usage.h"
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_pe.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_userprj.h"
+#include "sgeobj/sge_sharetree.h"
+#include "sgeobj/sge_userset.h"
+#include "sgeobj/sge_pe_task.h"
+
+#include "sge_eejob_FCAT_L.h"
+#include "sge_eejob_SGEJ_L.h"
 #include "sge.h"
-#include "sge_all_listsL.h"
-#include "commlib.h"
-#include "sge_time.h"
-#include "sge_prog.h"
-#include "sgermon.h"
-#include "sge_orders.h"
 #include "sge_job_schedd.h"
 #include "sge_urgency.h"
-
 #include "sgeee.h"
 #include "sge_support.h"
-#include "sge_schedd_conf.h"
-#include "sge_ja_task.h"
-#include "sge_usageL.h"
-#include "sge_eejobL.h"
-
 #include "sort_hosts.h"
 #include "msg_schedd.h"
-#include "sge_language.h"
-#include "sge_string.h"
-#include "sge_conf.h"
-#include "sge_job.h"
-#include "sge_range.h"
-#include "sge_pe.h"
-#include "sge_qinstance.h"
-#include "sge_host.h"
-#include "sge_userprj.h"
 
 /* 
  * Following fields are necessary for tasks which are not

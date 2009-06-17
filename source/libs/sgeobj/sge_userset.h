@@ -32,7 +32,24 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_usersetL.h"
+#include "sge_userset_US_L.h"
+#include "sge_userset_UE_L.h"
+#include "sge_userset_JC_L.h"
+
+#define US_ACL       (1<<0)
+#define US_DEPT      (1<<1)
+
+/* 
+ *  This is the list type we use to hold the 
+ *  user set lists in the qmaster. These are also used as 
+ *  (x)access lists.
+ */
+
+/* special list element */
+#define DEADLINE_USERS     "deadlineusers"
+#define DEFAULT_DEPARTMENT "defaultdepartment"
+#define AR_USERS           "arusers"
+
 
 extern const char *userset_types[];
 

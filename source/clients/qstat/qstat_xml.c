@@ -87,6 +87,7 @@
 
 #include "sge_mt_init.h"
 #include "sge_qstat.h"
+#include "sge_cull_xml.h"
 
 /* ----------------------- qselect xml handler ------------------------------ */
 

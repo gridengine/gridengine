@@ -32,6 +32,30 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "sge_order_OR_L.h"
+#include "sge_order_OQ_L.h"
+#include "sge_order_RTIC_L.h"
+
+/* 
+ * valid values for OR_type 
+ */
+enum {
+   ORT_start_job = 1,               /* 1*/
+   ORT_tickets,                     /* 2*/
+   ORT_ptickets,                    /* 3*/
+   ORT_remove_job,                  /* 4*/
+   ORT_update_project_usage,        /* 5*/
+   ORT_update_user_usage,           /* 6*/
+   ORT_share_tree,                  /* 7*/
+   ORT_remove_immediate_job,        /* 8*/
+   ORT_sched_conf,                  /* 9*/   ORT_suspend_on_threshold,        /*10*/
+   ORT_unsuspend_on_threshold,      /*11*/
+   ORT_job_schedd_info,             /*12*/
+   ORT_clear_pri_info               /*13*/  /*the ja_task_number field has a special meaning with the order
+: */
+                                            /* == 0 : only pending jobs are set to 0*/
+                                            /* != 0 : pending and running jobs are set to 0 */
+};
 
 /* struct containing the cull pos for fields in the ticket order */
 typedef struct {

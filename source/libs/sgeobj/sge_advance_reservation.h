@@ -32,7 +32,49 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sgeobj/sge_advance_reservationL.h"
+#include "sge_advance_reservation_AR_L.h"
+#include "sge_advance_reservation_ARA_L.h"
+
+/* values for AR_verify */
+#define AR_OPTION_VERIFY_STR "ev"
+enum {
+   AR_ERROR_VERIFY = 0,
+   AR_JUST_VERIFY
+};
+
+/* AR states for AR_state */
+typedef enum {
+   AR_UNKNOWN = 0,  /* should never be seen. only used for variable initialisation */
+
+   AR_WAITING,      /* w   waiting - granted but start time not reached */
+   AR_RUNNING,      /* r   running - start time reached */
+   AR_EXITED,       /* x   exited - end time reached and doing cleanup */
+   AR_DELETED,      /* d   deleted - manual deletion */
+   AR_ERROR,        /* E   error - AR became invalid and start time is reached */
+   AR_WARNING       /* W   error - AR became invalid but start time not reached */
+
+   /* append new states below! otherwise update procedures for reporting an accounting 
+    * have to be written. change ar_state2dstring if you change something here */
+
+} ar_state_t;
+
+/* AR event types which trigger state changes */
+
+typedef enum {
+   ARL_UNKNOWN = 0, /* should never be seen. only used for variable initialisation */
+
+   ARL_CREATION,           /* incoming request to create a new ar object */
+   ARL_STARTTIME_REACHED,  /* start time reached */
+   ARL_ENDTIME_REACHED,    /* end time reached */
+   ARL_UNSATISFIED,        /* resources are unsatisfied */
+   ARL_OK,                 /* resources are OK after they were unsatisfied */
+   ARL_TERMINATED,         /* ar object deleted */
+   ARL_DELETED
+
+   /* append new events below! otherwise update procedures for reporting an accounting 
+    * have to be written*/
+
+} ar_state_event_t;
 
 lListElem *
 ar_list_locate(lList *ar_list, u_long32 job_id);

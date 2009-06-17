@@ -37,7 +37,7 @@
 #include "sge_prog.h"
 #include "sge_time.h"
 #include "sge_feature.h"
-#include "sge_idL.h"
+#include "sge_id.h"
 #include "sge_ja_task.h"
 #include "commlib.h"
 #include "sge_host.h"

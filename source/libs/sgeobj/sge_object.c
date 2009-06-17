@@ -38,11 +38,16 @@
 #include <signal.h>
 #include <string.h>
 
-#include "sgermon.h"
-#include "sge_log.h"
+#include "rmon/sgermon.h"
 
-#include "sge_stdlib.h"
-#include "sge_string.h"
+#include "uti/sge_log.h"
+#include "uti/sge_stdlib.h"
+#include "uti/sge_string.h"
+#include "uti/sge_hostname.h"
+#include "uti/sge_parse_num_par.h"
+
+#include "gdi/sge_gdi.h"
+
 #include "sge_all_listsL.h"
 #include "sge_calendar.h"
 #include "sge_ckpt.h"
@@ -61,7 +66,6 @@
 #include "sge_cuser.h"
 #include "sge_userprj.h"
 #include "sge_userset.h"
-#include "sge_hostname.h"
 #include "sge_answer.h"
 #include "sge_range.h"
 #include "sge_object.h"
@@ -70,15 +74,11 @@
 #include "sge_qref.h"
 #include "sge_str.h"
 #include "sge_subordinate.h"
-#include "sge_parse_num_par.h"
 #include "sge_utility.h"
 #include "cull_parse_util.h"
 #include "parse.h"
 #include "sge_eval_expression.h"
-
-#include "gdi/sge_gdi.h"
-
-#include "sgeobj/sge_suser.h"
+#include "sge_suser.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"

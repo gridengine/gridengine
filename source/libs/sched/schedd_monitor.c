@@ -35,15 +35,16 @@
 #include <limits.h>
 #include <errno.h>
 
+#include "rmon/sgermon.h"
+
 #include "uti/sge_stdio.h"
-#include "sge_all_listsL.h"
-#include "schedd_monitor.h"
-#include "sgermon.h"
-#include "cull_parse_util.h"
-#include "sge_time.h"
-#include "sge_answer.h"
+#include "uti/sge_time.h"
 #include "uti/sge_string.h"
 
+#include "sgeobj/cull_parse_util.h"
+#include "sgeobj/sge_answer.h"
+
+#include "schedd_monitor.h"
 #include "msg_common.h"
 
 static char log_string[2048 + 1] = "invalid log_string";

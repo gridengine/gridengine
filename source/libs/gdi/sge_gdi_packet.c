@@ -64,7 +64,7 @@
 
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_feature.h"
-#include "sgeobj/sge_multiL.h"
+#include "sgeobj/sge_multi_MA_L.h"
 
 #include "msg_common.h"
 #include "msg_gdilib.h"

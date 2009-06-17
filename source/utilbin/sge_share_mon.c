@@ -44,11 +44,11 @@
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_object.h"
 #include "sgeobj/sge_userprj.h"
+#include "sgeobj/sge_usage.h"
 
 #include "sge_sharetree_printing.h"
 #include "sgermon.h"
 #include "sge_all_listsL.h"
-#include "sge_usageL.h"
 #include "sge_time.h"
 #include "sge_language.h"
 #include "sgeee.h"

@@ -33,17 +33,20 @@
 #include <ctype.h>
 #include <string.h>
 
-#include "sgermon.h"
-#include "sge_log.h"
-#include "cull_list.h"
+#include "rmon/sgermon.h"
+
+#include "cull/cull_list.h"
+
+#include "comm/cl_communication.h" 
+
+#include "uti/sge_log.h"
+#include "uti/sge_string.h"
+
 #include "parse.h"
 #include "sge_str.h"
-#include "sge_idL.h"
-#include "sge_string.h"
+#include "sge_id.h"
 #include "sge_answer.h"
 #include "sge_utility.h"
-
-#include "cl_communication.h" /* CL_MAXHOSTNAMELEN_LENGTH */
 
 #include "msg_common.h"
 #include "msg_qmaster.h"

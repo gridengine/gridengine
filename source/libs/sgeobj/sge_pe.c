@@ -38,29 +38,30 @@
 #include <dlfcn.h>
 #endif
 
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/config_file.h"
+#include "uti/sge_string.h"
+
+#include "cull/cull_list.h"
+
+#include "sched/sge_resource_utilization.h"
+
 #include "sge.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "cull_list.h"
-
-#include "config_file.h"
-
 #include "sge_object.h"
 #include "sge_feature.h"
 #include "sge_answer.h"
 #include "sge_job.h"
 #include "sge_cqueue.h"
-#include "sge_attrL.h"
+#include "sge_attr.h"
 #include "sge_qinstance.h"
 #include "sge_range.h"
 #include "sge_userset.h"
 #include "sge_utility.h"
-#include "sge_resource_utilization.h"
 #include "sge_pe.h"
 #include "sge_str.h"
-#ifdef SGE_PQS_API
-#include "sge_string.h"
-#endif
+#include "sge_resource_utilization_RUE_L.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"

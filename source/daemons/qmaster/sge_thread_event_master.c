@@ -88,6 +88,8 @@
 #include "uti/sge_os.h"
 #include "uti/sge_thread_ctrl.h"
 
+#include "sgeobj/sge_report.h"
+
 #include "sge_thread_main.h"
 #include "sge_thread_timer.h"
 #include "sge_thread_event_master.h"

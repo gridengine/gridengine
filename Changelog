@@ -1,3 +1,10 @@
+EB-2009-06-17-0: Cleanup:     separated CULL object definition from other C code
+                              removed superfluous includes
+                              corrected some includes
+                              eleminated link dependency to sgeobj if some cull
+                              function was used
+                 Review:      JG
+
 MD-2009-06-17-0: Bugfix:      $SGE_ROOT/util/setfileperm.sh does not change 
                               ownership of $SGE_ROOT/start_gui_installer
                  Bugster:     6808082

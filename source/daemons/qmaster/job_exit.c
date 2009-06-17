@@ -35,7 +35,6 @@
 
 #include "sge.h"
 #include "sge_ja_task.h"
-#include "sge_job_refL.h"
 #include "sge_job_qmaster.h"
 #include "sge_pe_qmaster.h"
 #include "sge_host.h"

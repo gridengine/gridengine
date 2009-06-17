@@ -39,37 +39,39 @@
 #include <mcheck.h>
 #endif
 
-#include "sge.h"
-#include "basis_types.h"
-#include "sge_conf.h"
-#include "sge_stdlib.h"
-#include "cull.h"
-#include "commlib.h"
-#include "sge_parse_num_par.h"
-#include "sge_feature.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "sge_string.h"
-#include "sge_userset_qmaster.h"
-#include "sge_prog.h"
-#include "setup_path.h"
-#include "sge_usageL.h"
-#include "sge_time.h"
-#include "sge_host.h"
-#include "sge_hostname.h"
-#include "sge_answer.h"
-#include "sge_userprj.h"
-#include "sge_userset.h"
+#include "rmon/sgermon.h"
+
+#include "cull/cull.h"
+
+#include "uti/sge_stdlib.h"
+#include "uti/sge_parse_num_par.h"
+#include "uti/sge_log.h"
+#include "uti/sge_string.h"
+#include "uti/sge_prog.h"
+#include "uti/setup_path.h"
+#include "uti/sge_hostname.h"
+#include "uti/sge_time.h"
+#include "uti/sge_profiling.h"
+#include "uti/config_file.h"
+
+#include "comm/commlib.h"
 
 #include "lck/sge_lock.h"
 
 #include "gdi/sge_gdi.h"
 
-#include "uti/sge_profiling.h"
-#include "uti/config_file.h"
-
 #include "sgeobj/msg_sgeobjlib.h"
 
+#include "sge.h"
+#include "basis_types.h"
+#include "sge_conf.h"
+#include "sge_feature.h"
+#include "sge_usage.h"
+#include "sge_userset_qmaster.h"
+#include "sge_host.h"
+#include "sge_answer.h"
+#include "sge_userprj.h"
+#include "sge_userset.h"
 
 #define SGE_BIN "bin"
 #define STREESPOOLTIMEDEF 240

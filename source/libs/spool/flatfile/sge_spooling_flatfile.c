@@ -49,7 +49,7 @@
 #include "sge_conf.h"
 #include "sge_str.h"
 #include "sge_io.h"
-#include "sge_strL.h"
+#include "sge_str.h"
 #include "sge_host.h"
 #include "sge_calendar.h"
 #include "sge_ckpt.h"
@@ -59,8 +59,8 @@
 #include "sge_manop.h"
 
 #include "sgeobj/sge_job.h"
-#include "sgeobj/sge_qinstanceL.h"
-#include "sgeobj/sge_cqueueL.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_cqueue.h"
 
 /* includes for old job spooling */
 #include "spool/classic/read_write_job.h"

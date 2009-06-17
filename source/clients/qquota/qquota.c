@@ -83,6 +83,7 @@
 #include "read_defaults.h"
 #include "uti/sge_io.h"
 #include "gdi/sge_gdi_ctx.h"
+#include "sgeobj/sge_cull_xml.h"
 
 static report_handler_t* create_xml_report_handler(lList **alpp);
 

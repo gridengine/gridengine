@@ -32,19 +32,29 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#include "cull.h"
-#include "sge_messageL.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+
+#include "cull/cull.h"
+
+#include "sgeobj/sge_ulong.h"
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_schedd_conf.h"
+
+#include "sge_message_SME_L.h"
+#include "sge_message_MES_L.h"
+#include "sge_ct_SCT_L.h"
+#include "sge_ct_REF_L.h"
+#include "sge_ct_CT_L.h"
+#include "sge_ct_CCT_L.h"
+#include "sge_ct_CTI_L.h"
+
 #include "schedd_message.h"
-#include "sgermon.h"
 #include "schedd_monitor.h"
-#include "sge_log.h"
-#include "sge_ulongL.h"
 #include "sge_schedd_text.h"
 #include "msg_schedd.h"
-#include "sge_range.h"
-#include "sge_job.h"
-#include "sge_schedd_conf.h"
-#include "sge_ctL.h"
 
 static lList *schedd_mes_get_same_category_jids(lRef category,
                                                 lList *job_list,

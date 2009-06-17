@@ -45,6 +45,8 @@
 #include "uti/sge_unistd.h"
 #include "uti/sge_uidgid.h"
 
+#include "sgeobj/sge_schedd_conf.h"
+
 #include "sge.h"
 #include "sge_all_listsL.h"
 #include "sge_sched.h"
@@ -68,6 +70,7 @@
 #include "sge_qinstance.h"
 #include "sge_cqueue.h"
 #include "sge_profiling.h"
+#include "sge_qref.h"
 
 #include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi_ctx.h"

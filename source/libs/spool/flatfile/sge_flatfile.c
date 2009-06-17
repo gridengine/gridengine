@@ -68,7 +68,7 @@
 #include "sge_answer.h"
 #include "sge_utility.h"
 #include "sgeobj/sge_feature.h"
-#include "sgeobj//sge_sharetreeL.h"
+#include "sgeobj/sge_sharetree.h"
 
 /* spool */
 #include "spool/sge_spooling_utilities.h"

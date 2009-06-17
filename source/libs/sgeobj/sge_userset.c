@@ -35,20 +35,21 @@
 #include <errno.h>
 #include <fnmatch.h>
 
-#include "sgeobj/sge_userset.h"
-#include "sgeobj/sge_object.h"
+#include "rmon/sgermon.h"
 
-#include "sgermon.h"
-#include "sge_log.h"
+#include "uti/sge_log.h"
+#include "uti/sge_hostname.h"
+#include "uti/sge_string.h"
+
 #include "sge_answer.h"
 #include "parse.h"
 #include "sge_utility.h"
 #include "sge_hgroup.h"
-#include "sge_hostname.h"
+#include "sge_userset.h"
+#include "sge_object.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
-#include "sge_string.h"
 
 const char* userset_types[] = {
    "ACL",   /* US_ACL   */

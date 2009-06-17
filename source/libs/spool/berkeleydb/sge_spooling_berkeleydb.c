@@ -54,7 +54,7 @@
 #include "sgeobj/sge_cqueue.h"
 #include "sgeobj/sge_host.h"
 #include "sgeobj/sge_job.h"
-#include "sgeobj/sge_strL.h"
+#include "sgeobj/sge_str.h"
 #include "sgeobj/sge_ja_task.h"
 #include "sgeobj/sge_pe_task.h"
 #include "sgeobj/sge_qinstance.h"

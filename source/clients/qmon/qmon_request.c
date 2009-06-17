@@ -62,6 +62,7 @@
 #include "AskForTime.h"
 #include "IconList.h"
 #include "uti/sge_string.h"
+#include "sge_centry.h"
 
 
 

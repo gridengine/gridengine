@@ -84,6 +84,7 @@
 #include "sge_cqueue_qstat.h"
 #include "sge_ja_task.h"
 #include "uti/sge_string.h"
+#include "sgeobj/sge_usage.h"
 
 /*-------------------------------------------------------------------------*/
 /* Prototypes */

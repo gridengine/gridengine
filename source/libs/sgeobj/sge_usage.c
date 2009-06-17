@@ -32,7 +32,8 @@
 
 #include <string.h>
 
-#include "cull.h"
+#include "cull/cull.h"
+
 #include "sge_usage.h"
 #include "sge_host.h"
 

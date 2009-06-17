@@ -71,21 +71,17 @@
 /* SGEOBJ */
 #include "sge_path_alias.h"
 #include "sge_job.h"
-#include "parse_qsubL.h"
 #include "parse.h"
-#include "sge_mailrecL.h"
+#include "sge_mailrec.h"
 #include "sge_range.h"
 #include "sge_ulong.h"
+#include "sge_var.h"
+#include "sge_job.h"
+#include "sge_ja_task.h"
+#include "sge_str.h"
 
 /* GDI */
 #include "sge_qtcsh.h"
-
-/* OBJ */
-#include "sge_varL.h"
-#include "sge_jobL.h"
-#include "sge_ja_taskL.h"
-#include "sge_japiL.h"
-#include "sge_strL.h"
 
 #include "gdi/sge_gdi_ctx.h"
 

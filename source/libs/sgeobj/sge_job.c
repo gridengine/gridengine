@@ -37,39 +37,42 @@
 
 #include "sge.h"
 
-#include "sgermon.h"
-#include "sge_log.h"
-#include "commlib.h"
-#include "cull_list.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_htable.h"
+#include "uti/sge_stdlib.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_parse_num_par.h"
+
+#include "comm/commlib.h"
+
+#include "cull/cull_list.h"
+
+#include "gdi/sge_gdi.h"
+#include "gdi/msg_gdilib.h"
+
 #include "sge_ja_task.h"
 #include "sge_pe_task.h"
 #include "sge_manop.h"
 #include "sge_range.h"
-#include "sge_htable.h"
-#include "sge_stdlib.h"
 #include "sge_var.h"
 #include "sge_path_alias.h"
 #include "sge_answer.h"
 #include "sge_object.h"
-#include "sge_prog.h"
 #include "sge_pe.h"
 #include "sge_ckpt.h"
 #include "sge_centry.h"
 #include "sge_qinstance.h"
 #include "sge_host.h"
 #include "symbols.h"
-#include "sge_mesobj.h"
-#include "sge_parse_num_par.h"
-
-#include "gdi/sge_gdi.h"
-
-#include "sgeobj/sge_advance_reservation.h"
-#include "sgeobj/sge_userset.h"
-#include "sgeobj/sge_qrefL.h"
-#include "sgeobj/sge_utility.h"
+#include "sge_mesobj_QIM_L.h"
+#include "sge_advance_reservation.h"
+#include "sge_userset.h"
+#include "sge_qref.h"
+#include "sge_utility.h"
 
 #include "msg_sgeobjlib.h"
-#include "msg_gdilib.h"
 #include "msg_common.h"
 
 #include "sge_job.h"

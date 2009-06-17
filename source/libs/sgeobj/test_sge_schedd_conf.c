@@ -34,10 +34,12 @@
 #include <stdlib.h>
 
 #include "rmon/sgermon.h"
+
 #include "cull/cull.h"
-#include "sgeobj/sge_all_listsL.h"
-#include "sgeobj/sge_answer.h"
-#include "sgeobj/sge_schedd_conf.h"
+
+#include "sge_all_listsL.h"
+#include "sge_answer.h"
+#include "sge_schedd_conf.h"
 
 /**
  * This test only tests issue: 1826. A complete

@@ -88,6 +88,7 @@
 #include "sge_qstat.h"
 #include "qstat_xml.h"
 #include "qstat_cmdline.h"
+#include "sgeobj/sge_usage.h"
 
 
 #define FORMAT_I_20 "%I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I "

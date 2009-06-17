@@ -83,6 +83,7 @@
 #include "qstat_printing.h"
 #include "sge_cqueue_qstat.h"
 #include "uti/sge_string.h"
+#include "sgeobj/sge_advance_reservation.h"
 
 /*-------------------------------------------------------------------------*/
 /* Prototypes */

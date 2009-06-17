@@ -35,6 +35,7 @@
 #include "commlib.h"
 #include "sge_all_listsL.h"
 #include "sge_answer.h"
+#include "sge_job.h"
 
 #include "gdi/sge_gdi_ctx.h"
 

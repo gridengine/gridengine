@@ -96,6 +96,7 @@
 
 #include "sgeobj/sge_event.h"
 #include "sgeobj/sge_utility.h"
+#include "sgeobj/sge_schedd_conf.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"

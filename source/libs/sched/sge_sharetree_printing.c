@@ -33,26 +33,20 @@
 #include <string.h>
 #include <pthread.h>
 
-/* rmon */
-#include "sgermon.h"
+#include "rmon/sgermon.h"
 
-/* uti */
-#include "sge_log.h"
-#include "sge_time.h"
-#include "sge_string.h"
+#include "uti/sge_log.h"
+#include "uti/sge_time.h"
+#include "uti/sge_string.h"
 
-/* sgeobj */
-#include "sge_sharetree.h"
-#include "sge_userprj.h"
-#include "sge_schedd_conf.h"
-#include "sge_usage.h"
+#include "sgeobj/sge_sharetree.h"
+#include "sgeobj/sge_userprj.h"
+#include "sgeobj/sge_schedd_conf.h"
+#include "sgeobj/sge_usage.h"
 
-/* sched */
+#include "lck/sge_mtutil.h"
+
 #include "sge_support.h"
-
-/* lck */
-#include "sge_mtutil.h"
-
 #include "sge_sharetree_printing.h"
 
 typedef enum {

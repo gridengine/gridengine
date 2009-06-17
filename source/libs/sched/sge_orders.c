@@ -34,18 +34,23 @@
 #include <unistd.h>
 #include <sys/types.h>
 
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_profiling.h"
+
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_order.h"
+#include "sgeobj/sge_feature.h"
+
+#include "evc/sge_event_client.h"
+
 #include "sge_orders.h"
 #include "sge_all_listsL.h"
-#include "sge_feature.h"
-#include "sgermon.h"
-#include "sge_log.h"
 #include "schedd_message.h"
-#include "sge_answer.h"
-#include "sge_event_client.h"
+
 #include "msg_schedd.h"
 #include "msg_common.h"
-#include "sge_profiling.h"
-#include "sge_order.h"
 
 /****** sge_orders/sge_add_schedd_info() ***************************************
 *  NAME

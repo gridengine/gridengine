@@ -49,7 +49,7 @@
 
 #include "gdi/sge_gdi.h"
 
-#include "sgeobj/sge_jobL.h"
+#include "sgeobj/sge_job.h"
 #include "sgeobj/sge_answer.h"
 
 #include "uti/sge_profiling.h"

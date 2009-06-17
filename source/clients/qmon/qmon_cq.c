@@ -75,6 +75,7 @@
 #include "sge_cqueue.h"
 #include "sge_cqueue_qstat.h"
 #include "sge_cqueue_qconf.h"
+#include "sge_host.h"
 #include "sge_select_queue.h"
 #include "sge_qinstance.h"
 #include "sge_qinstance_state.h"

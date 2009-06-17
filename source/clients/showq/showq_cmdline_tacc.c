@@ -57,7 +57,6 @@
 #include "showq_cmdline_tacc.h"
 
 #include "msg_common.h"
-#include "msg_qstat.h"
 #include "msg_clients_common.h"
 
 

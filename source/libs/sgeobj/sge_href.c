@@ -31,16 +31,19 @@
 /*___INFO__MARK_END__*/
 
 
+#include "rmon/sgermon.h" 
+
+#include "uti/sge_string.h"
+#include "uti/sge_log.h"
+#include "uti/sge_hostname.h"
+
+#include "comm/commlib.h"
+
 #include "basis_types.h"
-#include "sgermon.h" 
-#include "sge_string.h"
-#include "sge_str.h"
-#include "sge_log.h"
 #include "sge_answer.h"
-#include "sge_hostname.h"
+#include "sge_str.h"
 #include "sge_href.h"
 #include "sge_hgroup.h"
-#include "commlib.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"

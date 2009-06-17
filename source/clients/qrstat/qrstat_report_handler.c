@@ -35,8 +35,7 @@
 #include "basis_types.h"
 #include "sge.h"
 #include "sgermon.h"
-#include "sge_strL.h"
-#include "sge_ulongL.h"
+#include "sge_str.h"
 
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_advance_reservation.h"
@@ -45,6 +44,7 @@
 #include "sgeobj/sge_range.h"
 #include "sgeobj/sge_mailrec.h"
 #include "sgeobj/sge_userset.h"
+#include "sgeobj/sge_ulong.h"
 #include "sgeobj/sge_qinstance.h"
 #include "sgeobj/sge_qref.h"
 #include "sgeobj/sge_mesobj.h"

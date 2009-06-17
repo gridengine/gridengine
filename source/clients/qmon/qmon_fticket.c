@@ -59,6 +59,7 @@
 #include "qmon_appres.h"
 #include "sge_all_listsL.h"
 #include "sge_answer.h"
+#include "sge_userset.h"
 
 #include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi_ctx.h"

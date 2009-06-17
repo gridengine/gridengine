@@ -35,7 +35,7 @@
 
 #include "symbols.h"
 #include "sge_all_listsL.h"
-#include "parse_qsubL.h"
+#include "sge_parse_SPA_L.h"
 #include "parse_job_cull.h"
 #include "sge_mailrec.h"
 #include "parse_qsub.h"
@@ -62,6 +62,7 @@
 #include "sgeobj/sge_var.h"
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_jsv.h"
+#include "sgeobj/sge_qref.h"
 
 #include "msg_common.h"
 

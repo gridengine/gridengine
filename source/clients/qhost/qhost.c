@@ -78,7 +78,7 @@
 #include "sge_object.h"
 #include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi_ctx.h"
-
+#include "sgeobj/sge_cull_xml.h"
 
 extern char **environ;
 

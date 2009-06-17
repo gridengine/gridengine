@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_cuserL.h"
+#include "sge_cuser_CU_L.h"
 
 lListElem *
 cuser_create(lList **answer_list, const char *cluster_user, lList *remote_user);

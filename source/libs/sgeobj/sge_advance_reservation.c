@@ -36,37 +36,36 @@
 #include <fnmatch.h>
 #include <ctype.h>
 
-#include "sge_advance_reservation.h"
+#include "rmon/sgermon.h"
 
 #include "uti/sge_stdlib.h"
 #include "uti/sge_stdio.h"
-
-#include "rmon/sgermon.h"
-#include "sgeobj/sge_answer.h"
 #include "uti/sge_time.h"
-#include "sgeobj/msg_sgeobjlib.h"
-#include "sge_time.h"
-#include "sge_log.h"
+#include "uti/sge_log.h"
+#include "uti/sge_time.h"
+
 #include "sge.h"
-#include "sge_strL.h"
 #include "symbols.h"
+#include "sge_str.h"
+#include "sge_advance_reservation.h"
+#include "sge_answer.h"
 #include "sge_utility.h"
 #include "sge_object.h"
 #include "sge_centry.h"
 #include "sge_qref.h"
 #include "sge_pe.h"
 #include "sge_ckpt.h"
-#include "msg_qmaster.h"
 #include "sge_range.h"
-#include "sge_rangeL.h"
 #include "sge_userset.h"
 #include "sge_str.h"
+#include "sge_hgroup.h"
+#include "sge_job.h"
+#include "sge_qinstance_state.h"
+#include "sge_qinstance.h"
+#include "sge_cqueue.h"
 
-#include "sgeobj/sge_hgroup.h"
-#include "sgeobj/sge_job.h"
-#include "sgeobj/sge_qinstance_state.h"
-#include "sgeobj/sge_qinstance.h"
-#include "sgeobj/sge_cqueue.h"
+#include "msg_sgeobjlib.h"
+#include "msg_qmaster.h"
 
 /****** sge_advance_reservation/ar_list_locate() *******************************
 *  NAME

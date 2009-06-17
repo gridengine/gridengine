@@ -82,26 +82,24 @@
 #include "gdi/sge_security.h"
 
 /* SGEOBJ */
-#include "sge_cqueue.h"
-#include "sge_event.h"
-#include "sge_feature.h"
-#include "sge_id.h"
-#include "sge_job.h"
-#include "sge_object.h"
-#include "sge_qinstance.h"
-#include "sge_qinstance_state.h"
-#include "sge_range.h"
-#include "msg_common.h"
+#include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_event.h"
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_id.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_qinstance_state.h"
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_report.h"
+#include "sgeobj/sge_str.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_report.h"
+#include "sgeobj/sge_usage.h"
 
-/* OBJ */
-#include "sge_jobL.h"
-#include "sge_ja_taskL.h"
-#include "sge_japiL.h"
-#include "sge_idL.h"
-#include "sge_strL.h"
-#include "sge_answerL.h"
-#include "sge_reportL.h"
-#include "sge_usageL.h"
+/* MSG */
+#include "msg_common.h"
 
 
 #include "gdi/sge_gdi_ctx.h"

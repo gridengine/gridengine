@@ -32,14 +32,18 @@
 
 #include <stdlib.h>
 
-#include "sge_string.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "cull_list.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_string.h"
+#include "uti/sge_hostname.h"
+#include "uti/sge_log.h"
+
+#include "comm/commlib.h"
+
+#include "cull/cull_list.h"
+
 #include "sge_answer.h"
 #include "sge_str.h"
-#include "sge_hostname.h"
-#include "commlib.h"
 #include "sge_hgroup.h"
 #include "sge_href.h"
 #include "sge_attr.h"

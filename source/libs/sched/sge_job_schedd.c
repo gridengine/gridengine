@@ -32,35 +32,40 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "sgermon.h"
-#include "sge_log.h"
-#include "sge_pe.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_parse_num_par.h"
+#include "uti/sge_string.h"
+#include "uti/sge_time.h"
+
+#include "cull/cull_hash.h"
+#include "cull/cull_lerrnoP.h"
+
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_userset.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_schedd_conf.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_pe.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_pe_task.h"
+
 #include "sge_job_schedd.h"
 #include "sge_range_schedd.h"
 #include "valid_queue_user.h"
-#include "sge_parse_num_par.h"
 #include "schedd_monitor.h"
-#include "sge_sched.h"            /*added to support SGE*/
+#include "sge_sched.h"          
 #include "schedd_message.h"
-#include "sge_ja_task.h"
-#include "sge_pe_task.h"
-#include "cull_lerrnoP.h"
-#include "msg_schedd.h"
-#include "msg_common.h"
 #include "sge_schedd_text.h"
 #include "sge_all_listsL.h"
-#include "sge_string.h"
-#include "sge_range.h"
-#include "sge_job.h"
-#include "sge_time.h"
-#include "sge_userset.h"
-#include "sge_centry.h"
-#include "sge_schedd_conf.h"
-#include "sge_qinstance.h"
-#include "sge_answer.h"
 #include "sge_orders.h"
 
-#include "cull_hash.h"
+#include "msg_schedd.h"
+#include "msg_common.h"
+
 
 #define IDLE 0
 

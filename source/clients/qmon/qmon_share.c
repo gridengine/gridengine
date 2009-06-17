@@ -64,6 +64,9 @@
 #include "sge_string.h"
 #include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi_ctx.h"
+#include "sgeobj/sge_usage.h"
+#include "sgeobj/sge_sharetree.h"
+#include "sgeobj/sge_schedd_conf.h"
 
 extern sge_gdi_ctx_class_t *ctx;
 

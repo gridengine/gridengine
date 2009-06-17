@@ -52,6 +52,7 @@
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/cull_parse_util.h"
 #include "sgeobj/sge_mailrec.h"
+#include "sgeobj/sge_usage.h"
 
 #include "gdi/sge_gdi.h"
 

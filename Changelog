@@ -1,3 +1,13 @@
+DG-2009-06-17-2: Bugfix:      qsub man page does not mention the existance of 
+                              $JOB_SCRIPT environment variable within a job
+                 Bugster:     6851538
+                 Issue:       3058
+                 Bugfix:      qalter man page does not imply that qalter works
+                              also on running jobs
+                 Bugster:     6849741
+                 Issue:       3059
+                 Review:      JG
+
 DG-2009-06-17-1: Bugfix:      DrmaaSuite.java imports are too broad
                  Bugster:     6808646
                  Issue:       2924

@@ -1,3 +1,8 @@
+DG-2009-06-17-1: Bugfix:      DrmaaSuite.java imports are too broad
+                 Bugster:     6808646
+                 Issue:       2924
+                 Review:      SH
+
 ZG-2009-06-17-0: Update:      update html man pages
                  Review:      LP
 

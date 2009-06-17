@@ -352,7 +352,7 @@ char **argv
    if (qstat_env.job_info) {
       int ret = 0;
 
-      if(lGetNumberOfElem(jid_list) > 0) {
+      if (lGetNumberOfElem(jid_list) > 0) {
          /* RH TODO: implement the qstat_show_job_info with and handler */
          ret = qstat_show_job(ctx, jid_list, isXML);
       } else {
@@ -371,7 +371,7 @@ char **argv
       
       if (qstat_env.qselect_mode) {
          qselect_handler_t handler;
-         if(isXML) {
+         if (isXML) {
             if(qselect_xml_init(&handler, &answer_list)) {
                for_each(aep, answer_list) {
                   fprintf(stderr, "%s\n", lGetString(aep, AN_text));
@@ -385,12 +385,12 @@ char **argv
             qselect_stdout_init(&handler, &answer_list);
          }
          ret = qselect(&qstat_env, &handler, &answer_list);
-         if(handler.destroy != NULL) {
+         if (handler.destroy != NULL) {
             handler.destroy(&handler, &answer_list);
          }
       } else if (qstat_env.group_opt & GROUP_CQ_SUMMARY) {
          cqueue_summary_handler_t handler;
-         if(isXML) {
+         if (isXML) {
             ret = cqueue_summary_xml_handler_init(&handler, &answer_list);
          } else {
             ret = cqueue_summary_stdout_init(&handler, &answer_list);
@@ -404,7 +404,7 @@ char **argv
       } else {
          qstat_handler_t handler;
          
-         if(isXML) {
+         if (isXML) {
             ret = qstat_xml_handler_init(&handler, &answer_list);
          } else {
             ret = qstat_stdout_init(&handler, &answer_list);

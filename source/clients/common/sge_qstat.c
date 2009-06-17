@@ -2893,10 +2893,12 @@ lCondition *qstat_get_JB_Type_selection(lList *user_list, u_long32 show)
       }
    }
 
-   if (jw == NULL) {
-      jw = nw;
-   } else {
-      jw = lAndWhere(jw, nw);
+   if (nw != NULL) {
+      if (jw == NULL) {
+         jw = nw;
+      } else {
+         jw = lAndWhere(jw, nw);
+      }
    }
 
    DRETURN(jw);

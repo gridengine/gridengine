@@ -1,3 +1,9 @@
+DG-2009-06-17-0: Bugfix:      man page for drmaa_control() refers to deprecated 
+                              parameters
+                 Bugster:     6713724
+                 Issue:       3056
+                 Review:      SH
+
 JG-2009-06-17-0: Bugfix:      removing admin user from the manager list leads to
                               a qmaster dead lock
                  Bugster:     6684465

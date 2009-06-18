@@ -2374,40 +2374,6 @@ FF_DEBUG("after parsing list");
    return list;
 }
 
-static lListElem *search_for_tree_node(lListElem *ep, const char *id,
-                                       int nm1, int nm2)
-{
-   lListElem *cep, *fep;
-   lList *alp;
-   dstring node_id = DSTRING_INIT;
-   const char *node_id_str = NULL;
-
-   DENTER(TOP_LAYER, "search_for_tree_node");
-
-   if (!ep) {
-      DEXIT;
-      return NULL;
-   }
-   
-   object_append_field_to_dstring (ep, &alp, &node_id, nm2, '\0');
-   node_id_str = sge_dstring_get_string(&node_id);
-   
-   if (strcmp(id, node_id_str) == 0) {
-      DEXIT;
-      return ep;
-   }
-
-   for_each(cep, lGetList(ep, nm1)) {
-      if ((fep = search_for_tree_node(cep, id, nm1, nm2))) {
-         DEXIT;
-         return fep;
-      }
-   }
-      
-   DEXIT;
-   return NULL;
-}
-
 static spooling_field *get_recursion_field_list (const spool_flatfile_instr *instr)
 {
    /* Only 2 entries in a recursion field list */

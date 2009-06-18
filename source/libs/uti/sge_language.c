@@ -81,7 +81,7 @@ typedef struct {
    const char* local_message;  /* local translated message */
 } sge_error_message_t;
 
-static pthread_once_t message_id_once = { PTHREAD_ONCE_INIT };
+static pthread_once_t message_id_once = PTHREAD_ONCE_INIT;
 static void          message_id_once_init(void);
 
 static pthread_key_t message_id_key;

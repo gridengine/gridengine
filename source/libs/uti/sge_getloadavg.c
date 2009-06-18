@@ -1301,8 +1301,10 @@ static long percentages(int cnt, double *out, long *new, long *old, long *diffs)
    half_total = total_change / 2l;
    for (i = 0; i < cnt; i++) {
       *out = ((double)((*diffs++ * 1000 + half_total) / total_change))/10;
+#if 0
       DPRINTF(("diffs: %lu half_total: %lu total_change: %lu -> %f",
             *diffs, half_total, total_change, *out));
+#endif
       out++;
    }
 

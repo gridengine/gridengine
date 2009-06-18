@@ -116,9 +116,9 @@ libdrmaa$(SHAREDEXT).1.0:  $(JAPILIB_10) $(JAPI_DEPEND_OBJS) $(DRMAALIB_OBJS) $(
 # the linked library, meaning that the testsuite must add the compiled source
 # directory to the shared lib path before running test_drmaa.0.95
 libdrmaa$(SHAREDEXT): $(DRMAALIB_V)
-	rm -f libdrmaa$(SHAREDEXT) ; ln -s libdrmaa$(SHAREDEXT).1.0 libdrmaa$(SHAREDEXT)
+	rm -f libdrmaa$(SHAREDEXT) ; cp libdrmaa$(SHAREDEXT).1.0 libdrmaa$(SHAREDEXT)
 	../scripts/link_jnilib.sh libdrmaa  $(SHAREDEXT) $(JAVA_SHAREDEXT)
-	rm -f libdrmaa95$(SHAREDEXT) ; ln -s libdrmaa$(SHAREDEXT).0.95 libdrmaa95$(SHAREDEXT)
+	rm -f libdrmaa95$(SHAREDEXT) ; cp libdrmaa$(SHAREDEXT).0.95 libdrmaa95$(SHAREDEXT)
 
 	
 ###############################################################################
@@ -155,7 +155,7 @@ com_sun_grid_drmaa_SessionImpl.0.95.o: $(CLASSES_DIR)/com_sun_grid_drmaa_Session
 #---------------------------------------------------------------------
 
 test_drmaa: test_drmaa.1.0 test_drmaa.0.95
-	rm -f test_drmaa ; ln -s test_drmaa.1.0 test_drmaa
+	rm -f test_drmaa ; cp test_drmaa.1.0 test_drmaa
 
 test_drmaa.1.0: test_drmaa.1.0.o $(DRMAALIB) $(WINGRIDLIB_DEP)
 	$(LD_WRAPPER) $(CC) -o $@ test_drmaa.1.0.o $(LFLAGS) $(LIBS) libdrmaa$(SHAREDEXT).1.0 $(WINGRIDLIB)

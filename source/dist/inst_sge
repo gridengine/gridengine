@@ -1060,10 +1060,13 @@ if [ "$COPY_CA" = "true" ]; then
       CSP="true"
    fi
    CopyCA copyonly
-   if [ "$?" != 1 ]; then
+   ret=$?
+   if [ $ret -eq 0 ]; then
       $INFOTEXT "Copying certificates is complete!"
+   else
+      $INFOTEXT "No certificats to copy in your current cluster setup!" 
    fi
-   exit 0
+   exit $ret
 fi
 
 if [ $BACKUP = "true" ]; then

@@ -1,3 +1,9 @@
+MD-2009-06-18-0: Bugfix:      inst_sge -copycerts exits without error message 
+                              when called for a cluster having no certificates
+                 Bugster:     6769515
+                 Issue:       3062
+                 Review:      SH
+
 SH-2009-06-18-0: Bugfix:      segfault of 6.1 binaries when using it in a 
                               6.2 cluster
                  Bugster:     6847570

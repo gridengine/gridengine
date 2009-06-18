@@ -1555,6 +1555,8 @@ if [ "$COPY_CA" = "true" ]; then
    ret=$?
    if [ $ret -eq 0 ]; then
       $INFOTEXT "Copying certificates is complete!"
+   else
+      $INFOTEXT "No certificats to copy in your current cluster setup!" 
    fi
    exit $ret
 fi

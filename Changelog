@@ -1,3 +1,9 @@
+SH-2009-06-18-0: Bugfix:      segfault of 6.1 binaries when using it in a 
+                              6.2 cluster
+                 Bugster:     6847570
+                 Issue:       3042
+                 Review:      DG
+
 DG-2009-06-17-1: Bugfix:      qsub man page does not mention the existance of 
                               $JOB_SCRIPT environment variable within a job
                  Bugster:     6851538

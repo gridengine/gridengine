@@ -4763,27 +4763,35 @@ int cl_com_connection_complete_request( cl_com_connection_t* connection, long ti
          CL_LOG_STR(CL_LOG_INFO,"remote resolved component host name (local host) :", crm_message->rdata->comp_host);
          CL_LOG_STR(CL_LOG_INFO,"local resolved component host name (local host) :", connection->local->comp_host);
    
-         CL_LOG_STR(CL_LOG_INFO,"remote resolved component host name (receiver host) :", crm_message->dst->comp_host);
+         CL_LOG_STR(CL_LOG_INFO,"remote resolved component host name (receiver host) :", 
+                                crm_message->dst == NULL ? "NULL" : crm_message->dst->comp_host);
          CL_LOG_STR(CL_LOG_INFO,"local resolved component host name (receiver host) :", connection->receiver->comp_host);
    
-         CL_LOG_STR(CL_LOG_INFO,"remote resolved component host name (sender host) :", crm_message->src->comp_host);
+         CL_LOG_STR(CL_LOG_INFO,"remote resolved component host name (sender host) :", 
+                                 crm_message->src == NULL ? "NULL" : crm_message->src->comp_host);
          CL_LOG_STR(CL_LOG_INFO,"local resolved component host name (sender host) :", connection->sender->comp_host);
    
          connection->statistic->real_bytes_received = connection->statistic->real_bytes_received + connection->data_read_buffer_pos;
    
-         if ( cl_com_compare_hosts(crm_message->rdata->comp_host , connection->local->comp_host    ) != CL_RETVAL_OK ||
-              cl_com_compare_hosts(crm_message->dst->comp_host   , connection->receiver->comp_host ) != CL_RETVAL_OK ||
-              cl_com_compare_hosts(crm_message->src->comp_host   , connection->sender->comp_host   ) != CL_RETVAL_OK    ) {
-            CL_LOG(CL_LOG_ERROR,"host names are not resolved equal");
+         if (crm_message->dst == NULL || crm_message->src == NULL) {
+            CL_LOG(CL_LOG_ERROR, "it seems that qmaster has another version");
             connection->connection_state = CL_CLOSING;  /* That was it */
             connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
+         } else {
+            if (cl_com_compare_hosts(crm_message->rdata->comp_host , connection->local->comp_host   ) != CL_RETVAL_OK ||
+                cl_com_compare_hosts(crm_message->dst->comp_host   , connection->receiver->comp_host) != CL_RETVAL_OK ||
+                cl_com_compare_hosts(crm_message->src->comp_host   , connection->sender->comp_host  ) != CL_RETVAL_OK) {
+               CL_LOG(CL_LOG_ERROR,"host names are not resolved equal");
+               connection->connection_state = CL_CLOSING;  /* That was it */
+               connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
+            }
          }
    
-         if ( connection->local->comp_id == 0 ) {
+         if (connection->local->comp_id == 0) {
             connection->local->comp_id = crm_message->rdata->comp_id;
             CL_LOG_INT(CL_LOG_INFO,"requested local component id from server is", (int)connection->local->comp_id);
          }
-         if ( connection->sender->comp_id == 0 ) {
+         if (connection->sender->comp_id == 0  && crm_message->src != NULL) {
             connection->sender->comp_id = crm_message->src->comp_id;
             CL_LOG_INT(CL_LOG_INFO,"requested sender component id from server is", (int)connection->sender->comp_id );
          }

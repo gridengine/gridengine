@@ -1,3 +1,7 @@
+LP-2009-06-22-0: Bugfix:      Fixed broken build on Windows
+                 Merged from: maintrunk
+                 Review:      HP
+
 JG-2009-06-22-0: Bugfix:      fixed a minor memory leak in qstat client
                  Merged from: maintrunk (JG-2009-06-17-1)
                  Review:      EB

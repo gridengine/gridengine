@@ -49,6 +49,7 @@ set COMPILE_DIR  = ""
 set buildarch    = UNKNOWN
 set WINCC        = ""
 set WINCFLAGS    = ""
+set WINLFLAGS    = ""
 set WINLIBS      = ""
 set AIMK_TARGETOPT   = 0
 set UNMODIFIED_ARGUMENTS = ( $argv )
@@ -2284,7 +2285,7 @@ if ( "$CORE" == 1 && "$JAVA" != 2 ) then
          "SONAME_LFLAG_DRMAA95=$SONAME_LFLAG_DRMAA95" \
          "JUTI_ALL=$JUTI_ALL" "JUTI_CLEAN=$JUTI_CLEAN" "JUTI_DEPEND=$JUTI_DEPEND" \
          "AUTHUSER_ALL=$AUTHUSER_ALL" "LOADCHECK_ALL=$LOADCHECK_ALL" \
-         "WINCC=$WINCC" "WINCFLAGS=$WINCFLAGS" "WINLIBS=$WINLIBS" \
+         "WINCC=$WINCC" "WINCFLAGS=$WINCFLAGS" "WINLFLAGS=$WINLFLAGS" "WINLIBS=$WINLIBS" \
          "ODRMAAFLAGS=$ODRMAAFLAGS" \
          $argv
    if ( $status != 0 ) then

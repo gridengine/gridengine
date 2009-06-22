@@ -1,3 +1,7 @@
+JG-2009-06-22-0: Bugfix:      fixed a minor memory leak in qstat client
+                 Merged from: maintrunk (JG-2009-06-17-1)
+                 Review:      EB
+
 LP-2009-06-18-0: Bugfix:      Fixed broken build on Samba shares
                  Merged from: maintrunk (MD-2009-04-22-0)
                  Bugfix:      Fixed broken build on OpenSuse 11.1

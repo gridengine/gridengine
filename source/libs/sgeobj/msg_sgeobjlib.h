@@ -268,6 +268,10 @@
 #define MSG_JOB_NOJOBNAME              _MESSAGE(64357, _("job rejected cause there is no job_name in the request"))
 
 
+#define MSG_RESOURCEQUOTA_INVALIDUSERFILTER     _MESSAGE(64366, _("resource quota set contains invalid user filter"))
+#define MSG_RESOURCEQUOTA_INVALIDPROJECTFILTER  _MESSAGE(64367, _("resource quota set contains invalid project filter"))
+#define MSG_RESOURCEQUOTA_INVALIDPEFILTER       _MESSAGE(64368, _("resource quota set contains invalid pe filter"))
+
 #define MSG_RESOURCEQUOTA_NORULEDEFINED         _MESSAGE(64369, _("no resource quota rule specified for modification"))
 #define MSG_RESOURCEQUOTA_NOVALIDEXPANDEDLIST   _MESSAGE(64370, _("no valid expanded list"))
 

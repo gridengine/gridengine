@@ -1,3 +1,8 @@
+JG-2009-06-22-0: Bugfix:      bad RQS syntax can crash/hang qmaster process
+                 Bugster:     6810411
+                 Issue:       2899
+                 Review:      DG
+
 MD-2009-06-18-0: Bugfix:      inst_sge -copycerts exits without error message 
                               when called for a cluster having no certificates
                  Bugster:     6769515

@@ -1,3 +1,8 @@
+JG-2009-06-22-0: Bugfix:      bad RQS syntax can crash/hang qmaster process
+                 Bugster:     6810411
+                 Issue:       2899
+                 Review:      DG
+
 LP-2009-06-22-0: Bugfix:      Fixed broken build on Windows
                  Merged from: maintrunk
                  Review:      HP

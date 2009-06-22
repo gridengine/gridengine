@@ -262,6 +262,66 @@ lListElem* rqs_set_defaults(lListElem* rqs)
    DRETURN(rqs);
 }
 
+/****** sge_resource_quota/rqs_verify_filter() *********************************
+*  NAME
+*     rqs_verify_filter() -- verify a filter in rqs rule
+*
+*  SYNOPSIS
+*     static bool
+*     rqs_verify_filter(const lListElem *rule, lList **answer_list, 
+*                       int nm, const char *message) 
+*
+*  FUNCTION
+*     Checks validity of a filter rule.
+*     The object names referenced in the scope and xscope parts of the rule
+*     are verified.
+*
+*  INPUTS
+*     const lListElem *rule - the rule to check
+*     lList **answer_list  - to pass back error messages
+*     int nm               - nm of the filter to check, e.g. RQR_filter_users
+*     const char *message  - error message to add to anwer_list in case of error
+*
+*  RESULT
+*     static bool - true if everything is OK, else false
+*
+*  NOTES
+*     MT-NOTE: rqs_verify_filter() is MT safe 
+*
+*  SEE ALSO
+*     sge_resource_quota/rqs_verify_attributes()
+*******************************************************************************/
+static bool
+rqs_verify_filter(const lListElem *rule, lList **answer_list, int nm, const char *message)
+{
+   bool ret = true;
+   if (rule == NULL) {
+      ret = false;
+   } else {
+      const lListElem *filter = lGetObject(rule, nm);
+      if (filter != NULL) {
+         const lListElem *ep;
+
+         for_each(ep, lGetList(filter, RQRF_scope)) {
+            if (lGetString(ep, ST_name) == NULL) {
+               answer_list_add(answer_list, message, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+               ret = false;
+               break;
+            }
+         }
+         for_each(ep, lGetList(filter, RQRF_xscope)) {
+            if (lGetString(ep, ST_name) == NULL) {
+               answer_list_add(answer_list, message, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+               ret = false;
+               break;
+            }
+         }
+      }
+   }
+
+   return ret;
+}
+
 /****** sge_resource_quota/rqs_verify_attributes() **********************
 *  NAME
 *     rqs_verify_attributes() -- verify the attributes of a rqs Object 
@@ -319,8 +379,23 @@ bool rqs_verify_attributes(lListElem *rqs, lList **answer_list, bool in_master)
          lListElem *filter = NULL;
          lList *limit_list = lGetList(rule, RQR_limit);
 
-         /* set rule level. Needed by schedd */
+         /* check user, project and pe filters */
+         if (!rqs_verify_filter(rule, answer_list, RQR_filter_users, MSG_RESOURCEQUOTA_INVALIDUSERFILTER)) {
+            ret = false;
+            break;
+         }
 
+         if (!rqs_verify_filter(rule, answer_list, RQR_filter_projects, MSG_RESOURCEQUOTA_INVALIDPROJECTFILTER)) {
+            ret = false;
+            break;
+         }
+         
+         if (!rqs_verify_filter(rule, answer_list, RQR_filter_pes, MSG_RESOURCEQUOTA_INVALIDPEFILTER)) {
+            ret = false;
+            break;
+         }
+
+         /* check host and queue filters, set rule level. Needed by schedd */
          if ((filter = lGetObject(rule, RQR_filter_hosts))) {
             lListElem *host = NULL;
             host_expand = lGetBool(filter, RQRF_expand) ? true : false;
@@ -880,7 +955,7 @@ rqs_debit_rule_usage(lListElem *job, lListElem *rule, dstring *rue_name, int slo
       }
 
       rue_elem = lGetSubStr(limit, RUE_name, sge_dstring_get_string(rue_name), RQRL_usage);
-      if(rue_elem == NULL) {
+      if (rue_elem == NULL) {
          rue_elem = lAddSubStr(limit, RUE_name, sge_dstring_get_string(rue_name), RQRL_usage, RUE_Type);
          /* RUE_utilized_now is implicitly set to zero */
       }

@@ -7,7 +7,7 @@
 4) Shutting down the Grid Engine qmaster, scheduler and execution daemons
 5) Installing the patch and restarting the software
 6) Restarting the software
-7) New functionality delivered with SGE 6.2 Update 2 release
+7) New functionality delivered with SGE 6.2 Update 3 release
    
 
 

@@ -1,3 +1,7 @@
+MD-2009-06-23-0: Enhancem.:   o updated webpages on sunsource.net
+                              o added announcement page for 62u3
+                              o updated 62patches.txt file
+
 JG-2009-06-22-0: Bugfix:      bad RQS syntax can crash/hang qmaster process
                  Bugster:     6810411
                  Issue:       2899

@@ -71,6 +71,7 @@ int verydummyprocfs;
 
 #if defined(LINUX)
 #include <sys/param.h>          /* for HZ (jiffies -> seconds ) */
+#include "sge_proc.h"
 #endif
 
 #include "uti/sge_stdio.h"
@@ -100,43 +101,6 @@ int verydummyprocfs;
 
 #define BIGLINE 1024
 
-typedef struct _tLinProcStat {     /* process Linux /proc/pid/stat structure */
-   int   pr_pid;                  /*  1 process id */
-   char  pr_cmd[16];              /*  2 command name */
-   char  pr_stat;                 /*  3 process status */
-   int   pr_ppid;                 /*  4 parent process id */
-   int   pr_pgrp;                 /*  5 process group */
-   int   pr_sid;                  /*  6 session id */
-   int   pr_tty;                  /*  7 tty line MAJOR << ? + MINOR */
-   int   pr_tty_pgrp;             /*  8 tty process group */
-   long  pr_flags;                /*  9 process flags PF_* in <linux/sched.h> */
-   long  pr_min_flt;              /* 10 minor page faults */
-   long  pr_cmin_flt;             /* 11 children minor page faults */
-   long  pr_maj_flt;              /* 12 major page faults */
-   long  pr_cmaj_flt;             /* 13 children major page faults */
-   long  pr_utime;                /* 14 user time */
-   long  pr_stime;                /* 15 system time */
-   long  pr_cutime;               /* 16 children user time */
-   long  pr_cstime;               /* 17 children system time */
-   long  pr_counter;		        /* 18 jiffies */
-   long  pr_pri;                  /* 19 priority (nice) */
-   long  pr_tmout;                /* 20 Timeout time for scheduling */
-   long  pr_it_real_value;        /* 21 itimer real value */
-   long  pr_start;                /* 22 start of execution in jiffies since boot*/
-   long  pr_vsize;                /* 23 total size t + d + s NOT pages */
-   long  pr_rss;                  /* 24 resident set size pages */
-   long  pr_rlim_cur;             /* 25 current rlimit ro rss */
-   long  pr_start_code;           /* 26 start of code */
-   long  pr_end_code;             /* 27 end of code */
-   long  pr_start_stack;          /* 28 start of stack */
-   long  pr_esp;                  /* 29 head of stack (stack pointer) */
-   long  pr_eip;                  /* 30 instruction pointer */
-   long  pr_signal;               /* 31 pending signals mask */
-   long  pr_blocked;              /* 32 blocked signals mask */
-   long  pr_sigignore;            /* 33 ignored signals mask */
-   long  pr_sigcatch;             /* 34 catched signals mask */
-   long  pr_wchan;                /* 35 WCHAN (seems to be a return address) */
-} tLinProcStat;
 #endif
 
 
@@ -169,7 +133,6 @@ FCLOSE_ERROR:
 }
 
 #endif
-
 
 /* search in job list for the pid
    return the proc element */
@@ -432,14 +395,24 @@ void pt_close(void)
 
 int pt_dispatch_proc_to_job(
 lnk_link_t *job_list,
-int time_stamp 
+int time_stamp,
+time_t last_time
 ) {
    char procnam[128];
    int fd = -1;
 #if defined(LINUX)
    char buffer[BIGLINE];
-   tLinProcStat pr;
+   lListElem *pr = NULL;
    SGE_STRUCT_STAT fst;
+   int pos_pid = lGetPosInDescr(PRO_Type, PRO_pid);
+   int pos_utime = lGetPosInDescr(PRO_Type, PRO_utime);
+   int pos_stime = lGetPosInDescr(PRO_Type, PRO_stime);
+   int pos_vsize = lGetPosInDescr(PRO_Type, PRO_vsize);
+   int pos_groups = lGetPosInDescr(PRO_Type, PRO_groups);
+   int pos_rel = lGetPosInDescr(PRO_Type, PRO_rel);
+   int pos_run = lGetPosInDescr(PRO_Type, PRO_run);
+   int pos_group = lGetPosInDescr(GR_Type, GR_group);
+
 #else
    prstatus_t pr;
    prpsinfo_t pri;
@@ -459,6 +432,7 @@ int time_stamp
    lnk_link_t *curr;
    double old_time = 0;
    uint64 old_vmem = 0;
+   int pid_tmp;
 
    DENTER(TOP_LAYER, "pt_dispatch_proc_to_job");
 
@@ -497,106 +471,100 @@ int time_stamp
          continue;
 
 #if defined(LINUX)
+      /* check only processes which belongs to a GE job */
+      if ((pr = get_pr(atoi(pidname))) != NULL) {
+         /* set process as still running */
+         lSetPosBool(pr, pos_run, true);
+         if (lGetPosBool(pr, pos_rel) != true) {
+            continue;
+         }
+      }
       sprintf(procnam, "%s/%s/stat", PROC_DIR, dent->d_name);
-#else
-      sprintf(procnam, "%s/%s", PROC_DIR, dent->d_name);
-#endif
-      if ((fd = open(procnam, O_RDONLY, 0)) == -1) {
+
+      if (SGE_STAT(procnam, &fst)) {
          if (errno != ENOENT) {
 #ifdef MONITOR_PDC
-            if (errno == EACCES)
-               INFO((SGE_EVENT, "(uid:"gid_t_fmt" euid:"gid_t_fmt") could not open %s: %s\n",
-                        getuid(), geteuid(), procnam, strerror(errno)));
-            else
-               INFO((SGE_EVENT, "could not open %s: %s\n", procnam, strerror(errno)));
+            INFO((SGE_EVENT, "could not stat %s: %s\n", procnam, strerror(errno)));
 #endif
             touch_time_stamp(dent->d_name, time_stamp, job_list);
          }
          continue;
       }
+      /*
+       * If the stat file was not changed since our last parsing there is no need to do it again
+       */
+      if (pr == NULL || fst.st_mtime > last_time) {
+         unsigned long utime, stime, vsize, pid;
+#else
+         sprintf(procnam, "%s/%s", PROC_DIR, dent->d_name);
+#endif
+         if ((fd = open(procnam, O_RDONLY, 0)) == -1) {
+            if (errno != ENOENT) {
+#ifdef MONITOR_PDC
+               if (errno == EACCES)
+                  INFO((SGE_EVENT, "(uid:"gid_t_fmt" euid:"gid_t_fmt") could not open %s: %s\n",
+                           getuid(), geteuid(), procnam, strerror(errno)));
+               else
+                  INFO((SGE_EVENT, "could not open %s: %s\n", procnam, strerror(errno)));
+#endif
+                  touch_time_stamp(dent->d_name, time_stamp, job_list);
+            }
+            continue;
+         }
 
-      /** 
-       ** get a list of supplementary group ids to decide
-       ** whether this process will be needed;
-       ** read also prstatus
-       **/
+         /** 
+          ** get a list of supplementary group ids to decide
+          ** whether this process will be needed;
+          ** read also prstatus
+          **/
 
 #  if defined(LINUX)
 
-      /* 
-       * Read the line and append a 0-Byte 
-       */
-      if ((ret = read(fd, buffer, BIGLINE-1))<=0) {
-         close(fd);
-         if (ret == -1 && errno != ENOENT) {
+         /* 
+          * Read the line and append a 0-Byte 
+          */
+         if ((ret = read(fd, buffer, BIGLINE-1))<=0) {
+            close(fd);
+            if (ret == -1 && errno != ENOENT) {
 #ifdef MONITOR_PDC
-            INFO((SGE_EVENT, "could not read %s: %s\n", procnam, strerror(errno)));
+               INFO((SGE_EVENT, "could not read %s: %s\n", procnam, strerror(errno)));
 #endif
-            touch_time_stamp(dent->d_name, time_stamp, job_list);
+               touch_time_stamp(dent->d_name, time_stamp, job_list);
+            }
+            continue;
          }
-         continue;
-      }
-      buffer[BIGLINE-1] = '\0';
-      
-      if (SGE_FSTAT(fd, &fst)) {
+         buffer[BIGLINE-1] = '\0';
+
+         /* 
+          * get prstatus
+          */
+         ret = sscanf(buffer, "%lu %*s %*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %lu %lu %*d %*d %*d %*d %*d %*d %*u %lu",
+                      &pid,
+                      &utime,
+                      &stime,
+                      &vsize);
+
+         if (ret != 4) {
+            close(fd);
+            continue;
+         }
+
+         if (pr == NULL) {
+            pr = lCreateElem(PRO_Type);
+            lSetPosUlong(pr, pos_pid, pid);
+            lSetPosBool(pr, pos_rel, false);
+            append_pr(pr);
+         }
+         
+         lSetPosUlong(pr, pos_utime, utime);
+         lSetPosUlong(pr, pos_stime, stime);
+         lSetPosUlong(pr, pos_vsize, vsize);
+
          close(fd);
-         if (errno != ENOENT) {
-#ifdef MONITOR_PDC
-            INFO((SGE_EVENT, "could not fstat %s: %s\n", procnam, strerror(errno)));
-#endif
-            touch_time_stamp(dent->d_name, time_stamp, job_list);
-         }
-         continue;
       }
 
-      /* 
-       * get prstatus
-       */
-      ret = sscanf(buffer, 
-                   "%d %s %c %d %d %d %d %d %lu %lu \
-                    %lu %lu %lu %ld %ld %ld %ld %ld %ld %lu \
-                    %lu %ld %lu %lu %lu %lu %lu %lu %lu %lu \
-                    %lu %lu %lu %lu %lu",
-                    &pr.pr_pid,
-                    pr.pr_cmd, 
-                    &pr.pr_stat,
-                    &pr.pr_ppid,
-                    &pr.pr_pgrp,
-                    &pr.pr_sid,
-                    &pr.pr_tty,
-                    &pr.pr_tty_pgrp,
-                    &pr.pr_flags,   
-                    &pr.pr_min_flt, 
-                    &pr.pr_cmin_flt,
-                    &pr.pr_maj_flt, 
-                    &pr.pr_cmaj_flt,
-                    &pr.pr_utime,   
-                    &pr.pr_stime,   
-                    &pr.pr_cutime,  
-                    &pr.pr_cstime,
-                    &pr.pr_counter,  
-                    &pr.pr_pri,     
-                    &pr.pr_tmout,   
-                    &pr.pr_it_real_value,
-                    &pr.pr_start,
-                    &pr.pr_vsize,
-                    &pr.pr_rss,  
-                    &pr.pr_rlim_cur,
-                    &pr.pr_start_code,
-                    &pr.pr_end_code,  
-                    &pr.pr_start_stack,
-                    &pr.pr_esp,
-                    &pr.pr_eip,
-                    &pr.pr_signal,
-                    &pr.pr_blocked,
-                    &pr.pr_sigignore,
-                    &pr.pr_sigcatch, 
-                    &pr.pr_wchan);   
-
-      if (ret != 35) {
-         close(fd);
-         continue;
-      }
+      /* mark this process as still running */
+      lSetPosBool(pr, pos_run, true);
 
       /* 
        * get number of groups; 
@@ -604,29 +572,54 @@ int time_stamp
        */
       {
          char procnam[256];
-         char buf[1024];
-         FILE* f = (FILE*) NULL;
-   
+         lList *groupTable = lGetPosList(pr, pos_groups);
+
          sprintf(procnam,  "%s/%s/status", PROC_DIR, dent->d_name);
-         if (!(f = fopen(procnam, "r"))) {
-            close(fd);
+         if (SGE_STAT(procnam, &fst) != 0) {
+            if (errno != ENOENT) {
+#ifdef MONITOR_PDC
+               INFO((SGE_EVENT, "could not stat %s: %s\n", procnam, strerror(errno)));
+#endif
+               touch_time_stamp(dent->d_name, time_stamp, job_list);
+            }
             continue;
          }
+
          groups = 0;
-         while (fgets(buf, sizeof(buf), f)) {
-            if (strcmp("Groups:", strtok(buf, "\t"))==0) {
-               char *token;
-                  
-               while ((token=strtok((char*) NULL, " "))) {
-                  list[groups]=atol(token);
-                  groups++;
-               }
-               break;
+         if (fst.st_mtime < last_time && groupTable != NULL) {
+            lListElem *group;
+
+            for_each(group, groupTable) {
+               list[groups] = lGetPosUlong(group, pos_group);
+               groups++;
             }
+         } else {
+            char buf[1024];
+            FILE* f = (FILE*) NULL;
+
+            if (!(f = fopen(procnam, "r"))) {
+               continue;
+            }
+            /* save groups also in the table */
+            groupTable = lCreateList("groupTable", GR_Type);
+            while (fgets(buf, sizeof(buf), f)) {
+               if (strcmp("Groups:", strtok(buf, "\t"))==0) {
+                  char *token;
+                  
+                  while ((token=strtok((char*) NULL, " "))) {
+                     lListElem *gr = lCreateElem(GR_Type);
+                     long group = atol(token);
+                     list[groups] = group;
+                     lSetPosUlong(gr, pos_group, group);
+                     lAppendElem(groupTable, gr);
+                     groups++;
+                  }
+                  break;
+               }
+            }
+            lSetPosList(pr, pos_groups, groupTable);
+            fclose(f);
          }
-         FCLOSE(f);
-FCLOSE_ERROR:
-         ;
       } 
 #  elif defined(SOLARIS) || defined(ALPHA)
       
@@ -687,6 +680,10 @@ FCLOSE_ERROR:
          job_elem = LNK_DATA(curr, job_elem_t, link);
          for (group=0; !found_it && group<groups; group++) {
             if (job_elem->job.jd_jid == list[group]) {
+#if defined(LINUX)
+               /* mark this process as relevant */
+               lSetPosBool(pr, pos_rel, true);
+#endif
                found_it = 1;
             }
          }
@@ -707,6 +704,9 @@ FCLOSE_ERROR:
    free(list);
 
    if (!dent) {/* visited all files in procfs */
+#if defined(LINUX)
+      clean_procList();
+#endif
       DEXIT;
       return 1;
    }
@@ -714,11 +714,16 @@ FCLOSE_ERROR:
     * try to find process in this jobs' proc list 
     */
 
+#if defined(LINUX)
+   pid_tmp = lGetPosUlong(pr, pos_pid);
+#else
+   pid_tmp = pr.pr_pid;
+#endif
    for (curr=job_elem->procs.next; curr != &job_elem->procs; 
             curr=curr->next) {
       proc_elem = LNK_DATA(curr, proc_elem_t, link);
       
-      if (proc_elem->proc.pd_pid == pr.pr_pid)
+      if (proc_elem->proc.pd_pid == pid_tmp)
          break;
    }
 
@@ -740,14 +745,14 @@ FCLOSE_ERROR:
       {
          double utime, stime;
 #if defined(LINUX)
-         utime = ((double)pr.pr_utime)/HZ; 
-         stime = ((double)pr.pr_stime)/HZ;
+         utime = ((double)lGetPosUlong(pr, pos_utime))/HZ;
+         stime = ((double)lGetPosUlong(pr, pos_stime))/HZ;
 #else
          utime = pr.pr_utime.tv_sec + pr.pr_utime.tv_nsec*1E-9;
          stime = pr.pr_stime.tv_sec + pr.pr_stime.tv_nsec*1E-9;
 #endif
          INFO((SGE_EVENT, "new process "pid_t_fmt" for job "pid_t_fmt" (utime = %f stime = %f)\n", 
-               pr.pr_pid, job_elem->job.jd_jid, utime, stime)); 
+               pid_tmp, job_elem->job.jd_jid, utime, stime)); 
       }
 #endif
 
@@ -759,12 +764,12 @@ FCLOSE_ERROR:
 
    proc_elem->proc.pd_tstamp = time_stamp;
 
-   proc_elem->proc.pd_pid    = pr.pr_pid;
+   proc_elem->proc.pd_pid    = pid_tmp;
 #if defined(LINUX)
-   proc_elem->proc.pd_utime  = ((double)pr.pr_utime)/HZ;
-   proc_elem->proc.pd_stime  = ((double)pr.pr_stime)/HZ;
+   proc_elem->proc.pd_utime  = ((double)lGetPosUlong(pr, pos_utime))/HZ;
+   proc_elem->proc.pd_stime  = ((double)lGetPosUlong(pr, pos_stime))/HZ;
    /* could retrieve uid/gid using stat() on stat file */
-   proc_elem->vmem           = pr.pr_vsize;
+   proc_elem->vmem           = lGetPosUlong(pr, pos_vsize);
 #else
    proc_elem->proc.pd_utime  = pr.pr_utime.tv_sec + pr.pr_utime.tv_nsec*1E-9;
    proc_elem->proc.pd_stime  = pr.pr_stime.tv_sec + pr.pr_stime.tv_nsec*1E-9;

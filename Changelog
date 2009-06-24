@@ -1,3 +1,10 @@
+SH-2009-06-24-0: Bugfix:      the execution daemon on Linux generate huge CPU
+                              load based on monitoring processes
+                 Bugster:     6749299 
+                 Issue:       2962
+                 Enhancem.:   build pdc as standalone binary
+                 Review:      JG 
+
 JG-2009-06-22-0: Bugfix:      bad RQS syntax can crash/hang qmaster process
                  Bugster:     6810411
                  Issue:       2899

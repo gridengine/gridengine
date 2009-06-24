@@ -93,9 +93,9 @@
 #   include "sgedefs.h"
 #endif
 
-
-
-
+#if defined(LINUX)
+#  include "sge_proc.h"
+#endif
 
 volatile int jobs_to_start = 1;
 
@@ -193,6 +193,10 @@ char **argv
    lList *alp = NULL;
 
    DENTER_MAIN(TOP_LAYER, "execd");
+
+#if defined(LINUX)
+   gen_procList();
+#endif
 
    sge_prof_setup();
    set_thread_name(pthread_self(),"Execd Thread");
@@ -371,6 +375,10 @@ char **argv
          execd_register(ctx); /* reregister at qmaster */
       }
    }
+
+#if defined(LINUX)
+   free_procList();
+#endif
 
    lFreeList(master_job_list);
   

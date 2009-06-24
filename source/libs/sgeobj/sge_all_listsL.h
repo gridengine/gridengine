@@ -77,6 +77,7 @@
 #include "sge_userprjL.h"
 #include "sge_hostL.h"
 #include "sge_centryL.h"
+#include "sge_procL.h"
 #include "sge_manopL.h"
 #include "sge_calendarL.h"
 #include "sge_hgroupL.h"
@@ -268,6 +269,8 @@ extern "C" {
       {RQR_LOWERBOUND, RQRS, RQRN},             /* resource quota rule */
       {RQRF_LOWERBOUND, RQRFS, RQRFN},          /* resource quota rule filter */
       {RQRL_LOWERBOUND, RQRLS, RQRLN},          /* resource quota rule limit */
+      {PRO_LOWERBOUND, PROS, PRON},             /* list for all running processes under Linux */
+      {GR_LOWERBOUND, GRS, GRN},                /* list of all process groups of Linux process */
       
       {0, 0, NULL}
    };

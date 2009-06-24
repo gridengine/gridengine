@@ -106,9 +106,6 @@ main(int argc, char **argv) {
    sge_err_init();
 
    ret = test_err_has_which_error();
-#if 0
-   ret = test_err_history();
-#endif
 
    DRETURN(ret == true ? 0 : 1);
 }

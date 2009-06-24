@@ -62,7 +62,7 @@
 *     Elements can also be inserted into a sorted list or they can
 *     be searched using a user defined compare function.
 *
-*        sge_sl_insort()
+*        sge_sl_insert_search()
 *        sge_sl_delete_search()
 *        sge_sl_data_search()
 *        sge_sl_sort()
@@ -108,7 +108,7 @@
 *     uti/sl/sge_sl_lock()
 *     uti/sl/sge_sl_unlock()
 *     uti/sl/sge_sl_insert()
-*     uti/sl/sge_sl_insort()
+*     uti/sl/sge_sl_insert_search()
 *     uti/sl/sge_sl_data()
 *     uti/sl/sge_sl_data_search()
 *     uti/sl/sge_sl_delete()
@@ -156,8 +156,6 @@ struct _sge_sl_list_t {
    u_long32 elements;
 };
 
-/* */
-
 bool
 sge_sl_elem_create(sge_sl_elem_t **elem, void *data);
 
@@ -175,8 +173,6 @@ bool
 sge_sl_elem_search(sge_sl_list_t *list, sge_sl_elem_t **elem, void *data, 
                    sge_sl_compare_f compare, sge_sl_direction_t direction);
 
-/* thread safe */
- 
 bool
 sge_sl_create(sge_sl_list_t **list);
 
@@ -193,14 +189,6 @@ bool
 sge_sl_append_after(sge_sl_list_t *list, sge_sl_elem_t *new_elem, sge_sl_elem_t *elem);
 
 bool
-sge_sl_first_elem(sge_sl_list_t *list, sge_sl_elem_t **elem);
-
-bool
-sge_sl_last_elem(sge_sl_list_t *list, sge_sl_elem_t **elem);
-
-/* thread safe */
-
-bool
 sge_sl_lock(sge_sl_list_t *list);
 
 bool
@@ -210,7 +198,7 @@ bool
 sge_sl_insert(sge_sl_list_t *list, void *data, sge_sl_direction_t direction);
 
 bool
-sge_sl_insort(sge_sl_list_t *list, void *data, sge_sl_compare_f compare);
+sge_sl_insert_search(sge_sl_list_t *list, void *data, sge_sl_compare_f compare);
 
 bool
 sge_sl_data(sge_sl_list_t *list, void **data, sge_sl_direction_t direction);
@@ -228,7 +216,7 @@ sge_sl_delete_search(sge_sl_list_t *list, void *key, sge_sl_destroy_f destroy,
                      sge_sl_compare_f compare, sge_sl_direction_t direction);
 
 u_long32
-sge_sl_get_elements(sge_sl_list_t *list);
+sge_sl_get_elem_count(sge_sl_list_t *list);
 
 bool
 sge_sl_sort(sge_sl_list_t *list, sge_sl_compare_f compare);

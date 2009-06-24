@@ -1,3 +1,6 @@
+EB-2009-06-24-1: Cleanup.:    renamed some sl functions 
+                 Review:      HP, CR 
+
 EB-2009-06-24-0: Enhancem.:   implemented thread safe list that will replace
                               different list implementations in GE code.
                  Review:      JG, MD

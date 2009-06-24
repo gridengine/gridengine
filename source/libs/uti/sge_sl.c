@@ -227,7 +227,7 @@ sge_sl_elem_data(sge_sl_elem_t *elem) {
 *     uti/sl/sge_sl_append_after()
 *     uti/sl/sge_sl_insert()
 *     uti/sl/sge_sl_insert_before()
-*     uti/sl/sge_sl_insort()
+*     uti/sl/sge_sl_insert_search()
 *******************************************************************************/
 bool
 sge_sl_dechain(sge_sl_list_t *list, sge_sl_elem_t *elem) {
@@ -289,7 +289,7 @@ sge_sl_dechain(sge_sl_list_t *list, sge_sl_elem_t *elem) {
 *     uti/sl/sge_sl_append_after()
 *     uti/sl/sge_sl_insert()
 *     uti/sl/sge_sl_insert_before()
-*     uti/sl/sge_sl_insort()
+*     uti/sl/sge_sl_insert_search()
 *******************************************************************************/
 bool
 sge_sl_insert_before(sge_sl_list_t *list, sge_sl_elem_t *new_elem, sge_sl_elem_t *elem) {
@@ -349,7 +349,7 @@ sge_sl_insert_before(sge_sl_list_t *list, sge_sl_elem_t *new_elem, sge_sl_elem_t
 *     uti/sl/sge_sl_append_after()
 *     uti/sl/sge_sl_insert()
 *     uti/sl/sge_sl_insert_before()
-*     uti/sl/sge_sl_insort()
+*     uti/sl/sge_sl_insert_search()
 *******************************************************************************/
 bool
 sge_sl_append_after(sge_sl_list_t *list, sge_sl_elem_t *new_elem, sge_sl_elem_t *elem) {
@@ -791,7 +791,7 @@ sge_sl_unlock(sge_sl_list_t *list) {
 *
 *  SEE ALSO
 *     uti/sl/sge_sl_append() 
-*     uti/sl/sge_sl_insort() 
+*     uti/sl/sge_sl_insert_search() 
 *******************************************************************************/
 bool
 sge_sl_insert(sge_sl_list_t *list, void *data, sge_sl_direction_t direction) {
@@ -830,12 +830,12 @@ sge_sl_insert(sge_sl_list_t *list, void *data, sge_sl_direction_t direction) {
    DRETURN(ret);
 }
 
-/****** uti/sl/sge_sl_insort() *************************************************
+/****** uti/sl/sge_sl_insert_search() *************************************************
 *  NAME
-*     sge_sl_insort() -- inserts a new element in a sorted list
+*     sge_sl_insert_search() -- inserts a new element in a sorted list
 *
 *  SYNOPSIS
-*     bool sge_sl_insort(sge_sl_list_t *list, void *data, 
+*     bool sge_sl_insert_search(sge_sl_list_t *list, void *data, 
 *                        sge_sl_compare_f *compare) 
 *
 *  FUNCTION
@@ -867,17 +867,17 @@ sge_sl_insert(sge_sl_list_t *list, void *data, sge_sl_direction_t direction) {
 *     }
 *
 *  NOTES
-*     MT-NOTE: sge_sl_insort() is MT safe 
+*     MT-NOTE: sge_sl_insert_search() is MT safe 
 *
 *  SEE ALSO
 *     uti/sl/sge_sl_insert() 
 *     uti/sl/sge_sl_append() 
 *******************************************************************************/
 bool
-sge_sl_insort(sge_sl_list_t *list, void *data, sge_sl_compare_f compare) {
+sge_sl_insert_search(sge_sl_list_t *list, void *data, sge_sl_compare_f compare) {
    bool ret = true;
 
-   DENTER(SL_LAYER, "sge_sl_insort");
+   DENTER(SL_LAYER, "sge_sl_insert_search");
    if (list != NULL && compare != NULL) {
       sge_sl_elem_t *new_elem;
 
@@ -1120,12 +1120,12 @@ sge_sl_delete_search(sge_sl_list_t *list, void *key, sge_sl_destroy_f destroy,
    DRETURN(ret);
 }
 
-/****** uti/sl/sge_sl_get_elements() *****************************************
+/****** uti/sl/sge_sl_elem_count() *****************************************
 *  NAME
-*     sge_sl_get_elements() -- returns the number of elements 
+*     sge_sl_elem_count() -- returns the number of elements 
 *
 *  SYNOPSIS
-*     u_long32 sge_sl_get_elements(sge_sl_list_t *list) 
+*     u_long32 sge_sl_elem_count(sge_sl_list_t *list) 
 *
 *  FUNCTION
 *     This function returns the number of elements contained in 'list'. 
@@ -1137,13 +1137,13 @@ sge_sl_delete_search(sge_sl_list_t *list, void *key, sge_sl_destroy_f destroy,
 *     u_long32 - number of elements
 *
 *  NOTES
-*     MT-NOTE: sge_sl_get_elements() is MT safe 
+*     MT-NOTE: sge_sl_elem_count() is MT safe 
 *******************************************************************************/
 u_long32
-sge_sl_get_elements(sge_sl_list_t *list) {
+sge_sl_get_elem_count(sge_sl_list_t *list) {
    u_long32 elems = 0; 
    
-   DENTER(TOP_LAYER, "sge_sl_get_elements");
+   DENTER(TOP_LAYER, "sge_sl_elem_count");
    if (list != NULL) {
       pthread_mutex_lock(&list->internal_mutex);
       elems = list->elements;
@@ -1176,7 +1176,7 @@ sge_sl_get_elements(sge_sl_list_t *list) {
 *     MT-NOTE: sge_sl_sort() is MT safe 
 *
 *  SEE ALSO
-*     uti/sl/sge_sl_insort
+*     uti/sl/sge_sl_insert_search()
 *******************************************************************************/
 bool
 sge_sl_sort(sge_sl_list_t *list, sge_sl_compare_f compare) {

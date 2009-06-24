@@ -124,9 +124,9 @@ test_sequence(sge_sl_list_t *list, bool forward, const char *expected,
                  expected, sge_dstring_get_string(&test_string), function);
          ret = false;
       }
-      if (elems != sge_sl_get_elements(list)) {
+      if (elems != sge_sl_get_elem_count(list)) {
          fprintf(stderr, "Error: Expected %d elements in list but got %d "
-                 "in function %s()\n", (int)elems, (int)sge_sl_get_elements(list), function);
+                 "in function %s()\n", (int)elems, (int)sge_sl_get_elem_count(list), function);
          ret = false;
       }
 
@@ -166,9 +166,9 @@ test_search_sequence(sge_sl_list_t *list, bool forward, const char *key,
                  expected, sge_dstring_get_string(&test_string), function);
          ret = false;
       }
-      if (elems != sge_sl_get_elements(list)) {
+      if (elems != sge_sl_get_elem_count(list)) {
          fprintf(stderr, "Error: Expected %d elements in list but got %d "
-                 "in function %s()\n", (int)elems, (int)sge_sl_get_elements(list), function);
+                 "in function %s()\n", (int)elems, (int)sge_sl_get_elem_count(list), function);
          ret = false;
       }
 
@@ -276,16 +276,16 @@ test_create_insort(void) {
    /* insert elements */
    if (ret) {
 
-      ret &= sge_sl_insort(list, "h", test_compare);  /* first and last*/
-      ret &= sge_sl_insort(list, "f", test_compare);  /* new first */
-      ret &= sge_sl_insort(list, "d", test_compare);  /* new first */
-      ret &= sge_sl_insort(list, "g", test_compare);  /* in between */
-      ret &= sge_sl_insort(list, "e", test_compare);  /* in between */
-      ret &= sge_sl_insort(list, "a", test_compare);  /* new first */
-      ret &= sge_sl_insort(list, "i", test_compare);  /* new last */
-      ret &= sge_sl_insort(list, "c", test_compare);  /* in between */
-      ret &= sge_sl_insort(list, "b", test_compare);  /* in between */
-      ret &= sge_sl_insort(list, "j", test_compare);  /* new last */
+      ret &= sge_sl_insert_search(list, "h", test_compare);  /* first and last*/
+      ret &= sge_sl_insert_search(list, "f", test_compare);  /* new first */
+      ret &= sge_sl_insert_search(list, "d", test_compare);  /* new first */
+      ret &= sge_sl_insert_search(list, "g", test_compare);  /* in between */
+      ret &= sge_sl_insert_search(list, "e", test_compare);  /* in between */
+      ret &= sge_sl_insert_search(list, "a", test_compare);  /* new first */
+      ret &= sge_sl_insert_search(list, "i", test_compare);  /* new last */
+      ret &= sge_sl_insert_search(list, "c", test_compare);  /* in between */
+      ret &= sge_sl_insert_search(list, "b", test_compare);  /* in between */
+      ret &= sge_sl_insert_search(list, "j", test_compare);  /* new last */
    }
 
    /* test links forward and backward */
@@ -652,7 +652,7 @@ test_thread1_main(void *arg) {
                break;
             case 2:
                /* somewhere in middle */
-               i = sge_sl_get_elements(global->list) / 2;
+               i = sge_sl_get_elem_count(global->list) / 2;
                elem = NULL;
                next = NULL;
                sge_sl_elem_next(global->list, &next, SGE_SL_BACKWARD);
@@ -680,7 +680,7 @@ test_thread1_main(void *arg) {
             /* sort and insert sorted */
             sge_sl_lock(global->list);
             sge_sl_sort(global->list, test_compare);
-            sge_sl_insort(global->list, (void *)"2", test_compare_ulong);
+            sge_sl_insert_search(global->list, (void *)"2", test_compare_ulong);
             sge_sl_unlock(global->list);
             break;
          case 3:
@@ -719,7 +719,7 @@ test_thread1_main(void *arg) {
             break;
          case 9:
             /* terminate all threads when there are enough elements in list */
-            if (sge_sl_get_elements(global->list) >= 10000) {
+            if (sge_sl_get_elem_count(global->list) >= 10000) {
                pthread_mutex_lock(&global->mutex);
                global->do_terminate = true;
                pthread_mutex_unlock(&global->mutex);

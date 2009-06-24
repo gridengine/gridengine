@@ -992,6 +992,7 @@
 /* general error messages */
 #define MSG_UNKNOWNREASON                 _MESSAGE(60000, _("<unknown reason>"))
 #define MSG_NOTYETIMPLEMENTED_S           _MESSAGE(60001, _("feature "SFQ" not yet implemented"))
+#define MSG_INVPARAMETER_S                _MESSAGE(60002, _("invalid parameter in function "SFN"()"))
 /* memory */
 #define MSG_UNABLETOALLOCATEBYTES_DS      _MESSAGE(60100, _("unable to allocate %d bytes of memory in function "SFQ))
 

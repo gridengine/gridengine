@@ -37,9 +37,13 @@
 #include "sge_bootstrap.h"
 #include "sge_feature.h"
 #include "sge_profiling.h"
+#include "sge_err.h"
+
 #include "lck/sge_lock.h"
+
 #include "sgeobj/sge_object.h"
 #include "sgeobj/sge_schedd_conf.h"
+
 #include "gdi/sge_gdi_ctx.h"
 
 /****** common/sge_mt_init/sge_mt_init() ***************************************
@@ -78,6 +82,7 @@ void sge_mt_init(void)
 
    prof_mt_init();
    uidgid_mt_init();
+   sge_err_init();
    path_mt_init();
 
    bootstrap_mt_init(); 

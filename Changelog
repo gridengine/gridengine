@@ -1,3 +1,7 @@
+EB-2009-06-24-0: Enhancem.:   implemented thread safe list that will replace
+                              different list implementations in GE code.
+                 Review:      JG, MD
+
 SH-2009-06-24-0: Bugfix:      the execution daemon on Linux generate huge CPU
                               load based on monitoring processes
                  Bugster:     6749299

@@ -169,6 +169,7 @@
 #include "sge_userset_UE_L.h"
 #include "sge_userset_JC_L.h"
 #include "sge_var_VA_L.h"
+#include "sge_procL.h"
 
 #ifdef  __cplusplus
 extern "C" {
@@ -353,6 +354,8 @@ extern "C" {
       {EVR_LOWERBOUND, EVRS, EVRN},             /* event master requests */
       {JSV_LOWERBOUND, JSVS, JSVN},             /* job submission verifier */
       {RTIC_LOWERBOUND, RTICS, RTICN},          /* internal list for reprioritzie tickets to distribute */
+      {PRO_LOWERBOUND, PROS, PRON},             /* list for all running processes under Linux */
+      {GR_LOWERBOUND, GRS, GRN},                /* list of all process groups of Linux process */
 
       {0, 0, NULL}
    };

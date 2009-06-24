@@ -1,3 +1,10 @@
+SH-2009-06-24-0: Bugfix:      the execution daemon on Linux generate huge CPU
+                              load based on monitoring processes
+                 Bugster:     6749299
+                 Issue:       2962
+                 Enhancem.:   build pdc as standalone binary
+                 Review:      JG
+
 MD-2009-06-23-0: Enhancem.:   o updated webpages on sunsource.net
                               o added announcement page for 62u3
                               o updated 62patches.txt file

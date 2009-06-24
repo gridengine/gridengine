@@ -39,7 +39,7 @@
 
 int verydummypdc;
 
-#   ifdef MODULE_TEST
+#   if defined(MODULE_TEST) || defined(PDC_STANDALONE)
 #include <stdio.h>
 #include "basis_types.h"
 #include "sge_language.h"
@@ -189,6 +189,14 @@ int getpagesize(void);
 #include "sge_language.h"
 #include "sgermon.h"
 
+#if defined(PDC_STANDALONE)
+#  include "sge_log.h"
+#  include "sge_language.h"
+#  if defined(LINUX)
+#     include "sge_proc.h"
+#  endif
+#endif
+
 typedef struct {
    int job_collection_interval;  /* max job data collection interval */
    int prc_collection_interval;  /* max process data collection interval */
@@ -198,6 +206,7 @@ typedef struct {
 /* default collection intervals */
 static ps_config_t ps_config = { 0, 0, 5 };
 
+time_t last_time = 0;
 lnk_link_t job_list;
 long pagesize;           /* size of a page of memory (probably 8k) */
 int physical_memory;     /* size of real mem in KB                 */
@@ -1459,8 +1468,9 @@ static int psRetrieveOSJobData(void) {
          table to decide whether a process is needed for a job or not. */
       pt_open();
 
-      while (!pt_dispatch_proc_to_job(&job_list, time_stamp))
+      while (!pt_dispatch_proc_to_job(&job_list, time_stamp, last_time))
          ; 
+      last_time = time_stamp;
       pt_close();
    }
 #elif defined(AIX)
@@ -2806,7 +2816,7 @@ int psVerify(void)
 }
 
 
-#ifdef MODULE_TEST
+#ifdef PDC_STANDALONE
 
 #define INTOMEGS(x) (((double)x)/(1024*1024))
 
@@ -2859,7 +2869,11 @@ print_job_data(psJob_t *job)
    printf("jd_rwtime_c=%8.3f\n", job->jd_rwtime_c);
 #endif
    printf("jd_srtime_c=%8.3f\n", job->jd_srtime_c);
+#if defined(IRIX)
    printf("jd_mem="F64"\n", job->jd_mem);
+#else
+   printf("jd_mem=%lu\n", job->jd_mem);
+#endif
    printf("jd_chars=%8.3fM\n", INTOMEGS(job->jd_chars));
    printf("jd_vmem=%8.3fM\n", INTOMEGS(job->jd_vmem));
    printf("jd_rss=%8.3fM\n", INTOMEGS(job->jd_rss));
@@ -2877,7 +2891,11 @@ print_process_data(psProc_t *proc)
    printf("\tpd_tstamp=%s\n", ctime(&proc->pd_tstamp));
    printf("\tpd_uid="uid_t_fmt"\n", proc->pd_uid);
    printf("\tpd_gid="uid_t_fmt"\n", proc->pd_gid);
+#if defined(IRIX)
    printf("\tpd_acid="F64"\n", proc->pd_acid);
+#else
+   printf("\tpd_acid=%lu\n", proc->pd_acid);
+#endif
    printf("\tpd_state=%d\n", (int)proc->pd_state);
    printf("\tpd_pstart=%8.3f\n", proc->pd_pstart);
    printf("\tpd_utime=%8.3f\n", proc->pd_utime);
@@ -2966,24 +2984,30 @@ main(int argc, char **argv)
    double *curr_cpu=NULL, *prev_cpu=NULL, *diff_cpu=NULL;
    int jobid_count = 0;
    char *jobids[256];
-   dstring ds;
+   int stop = 1;
+/* dstring ds;
    char buffer[256];
 
    sge_dstring_init(&ds, buffer, sizeof(buffer));
    sprintf(sgeview_bar_title, "%-.250s", MSG_SGE_CPUUSAGE  );
    sprintf(sgeview_window_title, "%-.100s %-.150s", feature_get_product_name(FS_SHORT, &ds) ,MSG_SGE_SGEJOBUSAGECOMPARSION );
+*/
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__ 
    /* init language output for gettext() , it will use the right language */
-   install_language_func((gettext_func_type)        gettext,
+
+   sge_init_language_func((gettext_func_type)        gettext,
                          (setlocale_func_type)      setlocale,
                          (bindtextdomain_func_type) bindtextdomain,
                          (textdomain_func_type)     textdomain);
-   sge_lang_init(NULL,NULL);   
+   sge_init_language(NULL,NULL);  
 #endif /* __SGE_COMPILE_WITH_GETTEXT__  */
    
    psStartCollector();
 
+#if defined (LINUX)
+   gen_procList();
+#endif
    if (argc < 2) {
       usage();
       exit(1);
@@ -3108,7 +3132,7 @@ main(int argc, char **argv)
 
    }
 
-   while(1) {
+   while(stop == 1) {
       psJob_t *jobs, *ojob;
       psProc_t *procs;
       psStat_t *stat = NULL;
@@ -3225,6 +3249,9 @@ main(int argc, char **argv)
 
       sleep(interval);
    }
+#if defined(LINUX)
+   free_procList();
+#endif
    return 0;
 }
 

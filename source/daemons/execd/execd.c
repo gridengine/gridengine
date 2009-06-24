@@ -76,6 +76,9 @@
 #   include "sge_string.h"
 #endif
 
+#if defined(LINUX)
+#  include "sge_proc.h"
+#endif
 
 
 
@@ -152,6 +155,10 @@ int main(int argc, char **argv)
    lList *alp = NULL;
 
    DENTER_MAIN(TOP_LAYER, "execd");
+
+#if defined(LINUX)
+   gen_procList ();
+#endif
 
    prof_mt_init();
 
@@ -375,6 +382,9 @@ int main(int argc, char **argv)
        INFO((SGE_EVENT, "SIGPIPE received\n"));
    }
 
+#if defined(LINUX)
+   free_procList();
+#endif
    lFreeList(master_job_list);
 
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);

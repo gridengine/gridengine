@@ -1550,8 +1550,8 @@ ProcessSGERoot()
       fi
       SGE_ROOT_VAL=`eval echo $SGE_ROOT`
 
-      # do not check for correct SGE_ROOT in case of -nostrict
-      if [ "$strict" = true ]; then
+      # Need to check for correct SGE_ROOT directory in case of qmaster install
+      if [ "$QMASTER" = "install" ]; then
          # create a file in SGE_ROOT
          if [ "$ADMINUSER" != default ]; then
             $SGE_UTILBIN/adminrun $ADMINUSER $TOUCH $SGE_ROOT_VAL/tst$$ 2> /dev/null > /dev/null
@@ -1576,6 +1576,7 @@ ProcessSGERoot()
                         "doesn't match the current directory.\n" $SGE_ROOT_VAL
             ExecuteAsAdmin $RM -f $SGE_ROOT_VAL/tst$$
             unset $SGE_ROOT
+            $INFOTEXT -wait -n "Hit <RETURN> to continue >> "
          else
             ExecuteAsAdmin $RM -f $SGE_ROOT_VAL/tst$$
             done=true

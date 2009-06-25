@@ -1,3 +1,10 @@
+MP-2009-06-25-0: Bugfix:      inadequate inst_qmaster/inst_execd diagnosis if binary
+                              and common packages are not in $SGE_ROOT
+                              Merged from MP-2008-12-01-0 in V61_BRANCH
+                 Bugster:     6617928
+                 Issue:       2807
+                 Review:      JG
+
 MD-2009-06-25-0: Bugfix:      inst_sge shows wrong dialogs during
                               csp certificate installation
                  Bugster:     6834894

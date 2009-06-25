@@ -3714,9 +3714,10 @@ CopyCA()
       $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Should the script try to copy the cert files, for you, to each\n" \
       "<%s> host? (y/n) [y] >>" $out_text
    fi
+   ret=$?
 
    if [ "$AUTOGUI" != "true" ]; then #GUI made has the correct shell already
-    if [ "$?" = 0 ]; then
+    if [ "$ret" = 0 ]; then
       $INFOTEXT "You can use a rsh or a ssh copy to transfer the cert files to each\n" \
                 "<%s> host (default: ssh)" $out_text
       $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" -n "Do you want to use rsh/rcp instead of ssh/scp? (y/n) [n] >>"

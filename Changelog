@@ -1,3 +1,7 @@
+SH-2009-06-25-0: Bugfix:      fixed typo on pdc
+                 Belongs to:  SH-2009-06-24-0
+                 Review:      CR
+
 SH-2009-06-24-0: Bugfix:      the execution daemon on Linux generate huge CPU
                               load based on monitoring processes
                  Bugster:     6749299 

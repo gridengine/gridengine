@@ -3072,7 +3072,7 @@ main(int argc, char **argv)
    char *jobids[256];
    dstring ds;
    char buffer[256];
-   int stop = 0;
+   int stop = 1;
 
    sge_dstring_init(&ds, buffer, sizeof(buffer));
    sprintf(sgeview_bar_title, "%-.250s", MSG_SGE_CPUUSAGE  );

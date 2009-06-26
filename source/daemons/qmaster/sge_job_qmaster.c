@@ -3203,10 +3203,9 @@ int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bool is_m
    }
 
    /* can happen only from qalter -w ... */
-   if (is_modify == true && job_get_not_enrolled_ja_tasks(jep) == 0) {
+   if (is_modify == true && job_count_pending_tasks(jep, false) == 0) {
       /* since we can rule out a finished jobs it can be running only */
-      sprintf(SGE_EVENT, "verification: job is already running");
-      answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+      answer_list_add(alpp, MSG_JOB_VERIFYRUNNING, STATUS_OK, ANSWER_QUALITY_INFO);
       DRETURN(0);
    }  
  
@@ -3359,7 +3358,6 @@ int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bool is_m
          lFreeList(&(a.queue_list));
       }
 
-      assignment_release(&a);
 
       /* consequences */
       if (!try_it || !a.slots) {
@@ -3391,6 +3389,7 @@ int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bool is_m
          }
 
          if (verify_mode != WARNING_VERIFY) {
+            assignment_release(&a);
             DRETURN(STATUS_ESEMANTIC);
          }
       }
@@ -3407,8 +3406,10 @@ int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bool is_m
             sprintf(SGE_EVENT, MSG_JOB_VERIFYFOUNDSLOTS_I, a.slots);
          }
          answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+         assignment_release(&a);
          DRETURN(STATUS_ESEMANTIC);
       }
+      assignment_release(&a);
    }
 
    DRETURN(0);

@@ -1,3 +1,9 @@
+MP-2009-06-29-0: Bugfix:      autoinstall fails if spooling dir (BDB) already exits 
+                              without any error mgs/log file being created
+                 Bugster:     6618009
+                 Issue:       3063
+                 Review:      JG
+
 RN-2009-06-26-0: Bugfix:      qalter -w p reports running jobs for jobs that
                               are rescheduled due to queue error
                  Bugster:     6847548

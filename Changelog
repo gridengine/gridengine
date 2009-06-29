@@ -1,3 +1,10 @@
+MP-2009-06-29-0: Bugfix:      autoinstall fails if spooling dir (BDB) already exits
+                              without any error mgs/log file being created
+                              Merged from MP-2009-06-29-0 in maintrunk
+                 Bugster:     6618009
+                 Issue:       3063
+                 Review:      JG
+
 LP-2009-06-29-0: Bugfix:      CheckRunningDeamon for qmaster returns true even
                               if no pid file created
                  Merged from: maintrunk (LP-2009-04-17-0)

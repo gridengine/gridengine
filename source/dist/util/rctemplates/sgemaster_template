@@ -289,8 +289,6 @@ GetPathToUtilbin()
 CheckRunningQmaster()
 {
    masterhost=`cat $SGE_ROOT/$SGE_CELL/common/act_qmaster`
-   running=false
-   loop=0
 
    if [ "$SGE_QMASTER_PORT" = "" ]; then
       ping_port=`$utilbin_dir/getservbyname -number sge_qmaster`
@@ -298,23 +296,56 @@ CheckRunningQmaster()
       ping_port=$SGE_QMASTER_PORT
    fi
 
-   while [ $running = "false" -a $loop -ne 30 ]; do 
-      $bin_dir/qping -info $masterhost $ping_port qmaster 1 > /dev/null 2>&1
+   start=`$SGE_ROOT/utilbin/$ARCH/now 2>/dev/null`
 
-      if [ "$?" = 0 ]; then
+   running=false
+   retries=0
+   qping_timeout=false
+
+   # qping may have a long timeout in case of network or hostname resolution
+   # related problems.
+   # ensure that the test for a running qmaster does not take too long
+   # by limiting the total time and numbers the connection test is repeated
+   # we also require that the qmaster created a PID file before returning
+   
+   while [ $retries -le 30 ]; do
+      $bin_dir/qping -info $masterhost $ping_port qmaster 1 > /dev/null 2>&1
+      if [ $? -eq 0 ]; then
          running=true
+         break
       else
-         sleep 2 
+         now=`$SGE_ROOT/utilbin/$ARCH/now 2>/dev/null`
+         if [ "$now" -lt "$start" ]; then
+            start=$now
+         fi
+         elapsed=`expr $now - $start`
+         if [ $elapsed -gt 60 ]; then
+            if [ $retries -eq 0 ]; then
+               qping_timeout=true
+            fi
+            break
+         fi
+         sleep 2
          masterhost=`cat $SGE_ROOT/$SGE_CELL/common/act_qmaster`
-         loop=`expr $loop + 1`
+         retries=`expr $retries + 1`
       fi
    done
 
-   if [ $running = "false" ]; then
+   if [ $running = "true" ]; then
+      if [ `CheckIfQmasterHost $HOST` = false ]; then
+         echo "sge_qmaster is running on another host (${masterhost})"
+         return 1
+      else
+         return 0
+      fi
+   else
       echo
-      echo "sge_qmaster didn't start!"
-      echo "Please check the messages file"
+      echo "sge_qmaster start problem"
+      if [ $qping_timeout = true ]; then
+         echo "Possibly a network or hostname configuration problem (got timeout)."
+      fi
       echo
+      return 1
    fi
 }
 
@@ -469,19 +500,41 @@ if [ "$startup" = true ]; then
        qmaster_host=true
    fi
 
-   if [ $qmaster = true -a $qmaster_host = true ]; then
-      echo "   starting sge_qmaster"
-      $bin_dir/sge_qmaster
-      [ $? -eq 0 -a -d /var/lock/subsys ] && touch /var/lock/subsys/sgemaster >/dev/null 2>&1
-      CheckRunningQmaster
-      echo "   starting sge_schedd"
-      $bin_dir/sge_schedd
-   elif [ $qmaster = true -a $qmaster_host = false ]; then
+   exit_val=0
+   if [ $qmaster = true -a $qmaster_host = false ]; then
       echo
       echo "sge_qmaster didn't start!"
       echo "This is not a qmaster host!"
       echo "Please, check your act_qmaster file!" 
       echo
+      exit_val=1
+   elif [ $qmaster = true ]; then
+      already_running=false
+      #Check if pid file exists      
+      if [ -s "$qmaster_spool_dir/qmaster.pid" ]; then
+         daemon_pid=`cat "$qmaster_spool_dir/qmaster.pid"`
+         $utilbin_dir/checkprog $daemon_pid sge_qmaster > /dev/null
+         if [ $? -eq 0 ]; then
+            already_running=true
+         fi
+      fi
+      # We can't detect pid file race, but we'll catch it most of the time
+      if [ "$already_running" = "true" ]; then
+         echo
+         echo "sge_qmaster with PID $daemon_pid is already running"
+         echo
+      else
+         echo "   starting sge_qmaster"
+         $bin_dir/sge_qmaster
+         [ $? -eq 0 -a -d /var/lock/subsys ] && touch /var/lock/subsys/sgemaster >/dev/null 2>&1
+         echo "   starting sge_schedd"
+         $bin_dir/sge_schedd
+         CheckRunningQmaster
+         exit_val=$?
+      fi
+   fi
+   if [ $exit_val -ne 0 ]; then
+      exit $exit_value
    fi
       
    if [ $shadowd = true -a $shadow_host = true ]; then
@@ -493,7 +546,6 @@ if [ "$startup" = true ]; then
          pid=`cat $pidfile`
          $utilbin_dir/checkprog $pid sge_shadowd > /dev/null
          if [ "$?" = 0 ]; then
-            echo "   found running sge_shadowd - not starting"
             start_shadowd=false 
          fi
       fi
@@ -502,7 +554,6 @@ if [ "$startup" = true ]; then
          pid=`cat $UQpidfile`
          $utilbin_dir/checkprog $pid sge_shadowd > /dev/null
          if [ "$?" = 0 ]; then
-            echo "   found running sge_shadowd - not starting"
             start_shadowd=false
          fi
       fi
@@ -510,7 +561,13 @@ if [ "$startup" = true ]; then
       if [ $start_shadowd = true ]; then
          echo "   starting sge_shadowd"
          $bin_dir/sge_shadowd
+         res=$?
+         if [ $res -ne 0 ]; then
+            echo "   sge_shadowd didn't start correctly!"
+            exit $res
+         fi
       else
+         echo "   found running sge_shadowd - not starting"
          exit 1
       fi
    fi

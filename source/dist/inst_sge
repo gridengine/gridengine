@@ -127,7 +127,7 @@ ARGC=$#
 
 if [ $ARGC = 0 ]; then
    ErrUsage
-   exit 1
+   exit 2
 fi
 
 while [ $ARGC != 0 ]; do
@@ -196,7 +196,7 @@ while [ $ARGC != 0 ]; do
      . ./util/install_modules/inst_berkeley.sh
      ;;
    -s)
-     #add a subit host and copy ca certs if needed
+     #add a submit host and copy ca certs if needed
      SUBMIT="install"
      . ./util/install_modules/inst_qmaster.sh
      . ./util/install_modules/inst_execd.sh
@@ -405,6 +405,8 @@ fi
 
 if [ "$BERKELEY" = "install" ]; then
 
+   is_bdb="true"
+
    if [ "$AUTO" = "true" ]; then
       Stdout2Log
       $INFOTEXT -log "Starting Berkeley DB installation!"
@@ -426,7 +428,9 @@ if [ "$BERKELEY" = "install" ]; then
       sleep 5
    fi
 
+   MoveLog
    BERKELEY="undef"
+   is_bdb=""
 fi
 
 if [ "$QMASTER" = "install" -a "$UPDATE" != "true" ]; then
@@ -499,6 +503,7 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
     max_retries=20
     Stdout2Log
     . $SGE_ROOT/$SGE_CELL/common/settings.sh
+    GetAdminUser
 
    if [ -f "$SGE_ROOT/$SGE_CELL/common/bootstrap" ]; then
       ignore_fqdn=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "ignore_fqdn" | awk '{ print $2 }'`
@@ -661,6 +666,7 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
       CheckQmasterInstallation
       CheckCellDirectory
       . $SGE_ROOT/$SGE_CELL/common/settings.sh
+      GetAdminUser
       CheckWinAdminUser
       CheckCSP
       CheckHostNameResolving install
@@ -731,6 +737,8 @@ if [ "$EXECD" = "uninstall" ]; then
       $INFOTEXT -log "Starting execution host uninstallation!"
    fi
 
+   GetAdminUser
+
    if [ "$SGE_REMOTE_FLAG" != "REMOTE_EXECD_UNINSTALL" ]; then 
       WelcomeUninstall 
 
@@ -770,7 +778,9 @@ if [ "$EXECD" = "uninstall" ]; then
 fi
 
 if [ $BERKELEY = "uninstall" ]; then
-
+   is_bdb="true"
+   GetAdminUser
+   
    if [ "$AUTO" = "true" ]; then
       Stdout2Log
       $INFOTEXT -log "Starting berkeley rpc uninstallation!"
@@ -787,13 +797,16 @@ if [ $BERKELEY = "uninstall" ]; then
       $INFOTEXT -log "remote berkeley rpc server uninstallation on host %s" $DB_SPOOLING_SERVER
       echo "cd $SGE_ROOT && ./inst_sge -udb -auto $FILE -noremote" | $SHELL_NAME $DB_SPOOLING_SERVER /bin/sh
    fi
-
-   BERKELEY="undef"
    
+   MoveLog
+   BERKELEY="undef"
+   is_bdb=""
 fi
 
 if [ $QMASTER = "uninstall" ]; then
-
+   is_qmaster="true"
+   GetAdminUser
+   
    if [ "$AUTO" = "true" ]; then
       Stdout2Log
       $INFOTEXT -log "Starting qmaster uninstallation!"
@@ -815,14 +828,62 @@ if [ $QMASTER = "uninstall" ]; then
    . $SGE_ROOT/$SGE_CELL/common/settings.sh
    RemoveQmaster
    MoveLog
+   is_qmaster=""
 fi
 
 
 if [ $SHADOW = "install" ]; then
 
-   if [ $AUTO = "false" ]; then
+   is_shadow="true"
+
+   if [ $AUTO = "true" ]; then
+      Stdout2Log
+      ignore_fqdn=`BootstrapGetValue "$SGE_ROOT/$CELL_NAME/common" ignore_fqdn | tr [A-Z] [a-z]`
+      CURRENT_HOST=`$SGE_UTILBIN/gethostname -aname`
+      if [ "$ignore_fqdn" = "true" ]; then
+         CURRENT_HOST=`echo $CURRENT_HOST | cut -f1 -d. | tr "[A-Z]" "[a-z]"`
+      fi
+      SHADOWD_HOSTS_TO_INSTALL=$SHADOW_HOST
+      FAILED_SHADOW_HOSTS=""
+      for SHADOW in $SHADOW_HOST; do
+         SHADOWD_HOSTS_TO_INSTALL=`RemoveHostFromList "$SHADOWD_HOSTS_TO_INSTALL" "$SHADOW"`
+         SHADOW_COMPARE="$SHADOW"
+         if [ "$ignore_fqdn" = "true" ]; then
+            SHADOW_COMPARE=`echo "$SHADOW_COMPARE" | cut -f1 -d. | tr [A-Z] [a-z]`
+         fi
+         if [ "$NOREMOTE" = false ]; then
+            LOCALINST=false
+            if [ $SHADOW_COMPARE = $CURRENT_HOST ]; then
+               $INFOTEXT -log "Shadow installation on host %s" $SHADOW         #the selected host is the local host, start
+               ./inst_sge -sm -auto $FILE -noremote                            #installation without rsh/ssh
+            else
+               CheckRSHConnection $SHADOW
+               if [ "$?" = 0 ]; then
+                  #host is remote, start installation via rsh/ssh
+                  $INFOTEXT -log "remote shadow installation on host %s" $SHADOW
+                  echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; cd $SGE_ROOT && ./inst_sge -sm -auto $FILE -noremote" | $SHELL_NAME $SHADOW /bin/sh
+               else
+                  #host is remote, start installation via rsh/ssh
+                  $INFOTEXT -log "rsh/ssh connection to host %s is not working" $SHADOW
+                  FAILED_SHADOW_HOSTS="$FAILED_SHADOW_HOSTS $SHADOW"
+               fi
+            fi
+         elif [ $SHADOW_COMPARE = $CURRENT_HOST ]; then
+            LOCALINST=true
+            break
+         fi
+      done
+      if [ "$SHADOWD_HOSTS_TO_INSTALL" = "" ]; then
+         for e in $FAILED_SHADOW_HOSTS; do
+               $INFOTEXT -log "The host %s failed installing an shadowd" $e #log hostnames, which have been marked as failed to log file
+               $INFOTEXT -log "Please check these hosts, it's also possible that the installation\n timed out and the installation went well, anyhow!"
+         done
+      fi
+   fi
+
+   if [ $AUTO = "false"  -o "$LOCALINST" = "true" ]; then   
       $INFOTEXT -u "\nShadow Master Host Setup"   
-      $INFOTEXT -wait -n "\nMake sure, that the host, you wish to configure as a " \
+      $INFOTEXT -wait -auto $AUTO -n "\nMake sure, that the host, you wish to configure as a " \
                       "shadow host,\n has read/write permissions to the qmaster spool " \
                       "and SGE_ROOT/<cell>/common \ndirectory! For using a shadow master it " \
                       "is recommended to set up a \nBerkeley DB Spooling Server\n\n Hit <RETURN> to continue >> "
@@ -830,13 +891,14 @@ if [ $SHADOW = "install" ]; then
       CheckForLocalHostResolving
       ProcessSGERoot
 
-      $INFOTEXT -n "Please enter your SGE_CELL directory or use the default [default] >> "
+      $INFOTEXT -n -auto $AUTO "Please enter your SGE_CELL directory or use the default [default] >> "
 
-      SGE_CELL=`Enter default`
+      SGE_CELL=`Enter "${CELL_NAME:-default}"`
       export SGE_CELL
+      $INFOTEXT -log "Your \$SGE_CELL directory: %s" $SGE_CELL
       . $SGE_ROOT/$SGE_CELL/common/settings.sh
    
-      CheckHostNameResolving install
+      CheckHostNameResolving "install" "shadowd"
  
       if [ $HOST != "" ]; then
          $SGE_UTILBIN/gethostname -all | grep $HOST > /dev/null
@@ -859,20 +921,27 @@ if [ $SHADOW = "install" ]; then
          if [ $? != 0 ]; then
             $INFOTEXT "\n Shadow master can not access spool directory at %s! \n" $db_home 
             $INFOTEXT "Check if the spool directory is mounted and has read/write permissions.\n"
+            MoveLog
             exit 1
          elif [ `echo $db_home | cut -d":" -f2` = "$db_home" ]; then
             if [ "$spooling_method" = "berkeleydb" ]; then
                if [ `echo $fstype | grep "nfs" | wc -l` -gt 0 ]; then
                   if [ "$fstype" != "nfs4" ]; then
-                     $INFOTEXT "Spooling directory exported as $s is not supported!\n" $fstype
+                     $INFOTEXT "Spooling directory exported as %s is not supported!\n" $fstype
+                     $INFOTEXT -log "Spooling directory exported as %s is not supported!\n" $fstype
                      $INFOTEXT "\nPlease install the database directory on a NFSv4 fileserver or use the RPC Client/Server mechanism"
+                     $INFOTEXT -log "\nPlease install the database directory on a NFSv4 fileserver or use the RPC Client/Server mechanism"
+                     MoveLog
                      exit 1;
                   else
                      $INFOTEXT "We detected local Berkeley DB Spooling without a RPC Server. Local spooling\n is not working under " \
                                "mixed architectures.\n\n "
+                     $INFOTEXT -log "We detected local Berkeley DB Spooling without a RPC Server. Local spooling\n is not working under " \
+                               "mixed architectures.\n\n "
                      $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n "Do you want to continue (y/n) ('n' will abort) [y] >> "
                      if [ $? != 0 ]; then
                         $INFOTEXT "Installation aborted"
+                        MoveLog
                         exit 1;
                      fi
                   fi
@@ -944,7 +1013,7 @@ if [ $SHADOW = "install" ]; then
 fi
 
 if [ $SHADOW = "uninstall" ]; then
-
+   is_shadow="true"
    GetAdminUser
 
    if [ "$HOST" = "undef" -o "$HOST" = `$SGE_UTILBIN/gethostname -aname`  ]; then
@@ -1010,7 +1079,7 @@ if [ $SHADOW = "uninstall" ]; then
          echo "cd $SGE_ROOT; . $SGE_ROOT/$SGE_CELL/common/settings.sh; ./inst_sge -usm" | $SHELL_NAME $s_host /bin/sh &   
       fi     
    fi
-
+   is_shadow=""
 fi
 
 if [ "$SUBMIT" = "install" ]; then
@@ -1038,7 +1107,7 @@ fi
 if [ "$COPY_CA" = "true" ]; then
    #In standalone -copycert auto mode we don't have SGE_CELL
    if [ -z "$SGE_CELL" -a "$AUTO" = "true" ]; then
-       SGE_CELL="$CELL_NAME"
+      SGE_CELL="$CELL_NAME"
    fi
 
    if [ "$SGE_ROOT" = "" -o "$SGE_CELL" = "" ]; then

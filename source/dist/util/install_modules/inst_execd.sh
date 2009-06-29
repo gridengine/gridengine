@@ -250,9 +250,12 @@ CheckHostNameResolving()
    while [ $done = false ]; do
       $CLEAR
       
-      PortCollision $SGE_EXECD_SRV
-
-      $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >>"
+      # No need to check ports for shadowd installation
+      if [ "$2" != "shadowd" ]; then
+         PortCollision $SGE_EXECD_SRV
+         $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >>"
+      fi
+      
       $CLEAR
 
       $INFOTEXT -u "\nChecking hostname resolving"
@@ -377,7 +380,7 @@ CheckHostNameResolving()
       loop_counter=`expr $loop_counter + 1`
       if [ $loop_counter -ge $loop_max ]; then
          $INFOTEXT -e "$MODE failed after %s retries" $loop_max
-         exit
+         exit 1
       fi
    done
 }
@@ -509,9 +512,12 @@ GetLocalExecdSpoolDir()
 
    if [ "$SGE_ARCH" != "win32-x86" ]; then
       $INFOTEXT -n -auto $AUTO -ask "y" "n" -def "n" "Do you want to configure a different spool directory\n for this host (y/n) [n] >> "
-   ret=$?
+      ret=$?
    else
       ret=0 #windows need it, don't need to ask
+      if [ "$AUTO" = "true" ]; then # but we don't want to wait in infinite while loop
+         ret=1
+      fi
    fi
 
    while [ $ret = 0 ]; do 
@@ -523,9 +529,6 @@ GetLocalExecdSpoolDir()
          ret=$?
          else
             ret=0 #windows need it, don't need to ask
-            if [ "$AUTO" = "true" ]; then # but we don't want to wait in infinite while loop
-               ret=1
-            fi
          fi
          LOCAL_EXECD_SPOOL="undef"
       else

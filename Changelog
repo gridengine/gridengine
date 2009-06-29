@@ -1,3 +1,41 @@
+LP-2009-06-29-0: Bugfix:      CheckRunningDeamon for qmaster returns true even
+                              if no pid file created
+                 Merged from: maintrunk (LP-2009-04-17-0)
+                 Bugster:     6824148
+                 Issue:       2969
+                 Bugfix:      the ADMIN_USER not used in auto install mode
+                 Merged from: maintrunk (LP-2008-12-11-0)
+                 Bugster:     6808600
+                 Issue:       2930
+                 Bugfix:      shadowd auto installation is not equivalent to the
+                              interactive installation
+                 Merged from: maintrunk (LP-2009-04-02-0)
+                 Bugster:     6824933
+                 Issue:       2973
+                 Bugfix:      qmaster startup might take too long if network is
+                              unavailable
+                 Merged from: maintrunk (LP-2009-04-03-2)
+                 Bugster:     6824159
+                 Issue:       2970
+                 Bugfix:      sgemaster script might return 0 on failure
+                 Merged from: maintrunk (LP-2009-04-09-0)
+                 Bugster:     6827877
+                 Issue:       2987
+                 Bugfix:      improve hostname resolving error detection for
+                              invalid hostname settings
+                 Merged from: maintrunk (LP-2009-04-09-0)
+                 Bugster:     6819732
+                 Issue:       2983
+                 Enhancem.:   CLI installation suggests default values most
+                              parameters
+                 Merged from: maintrunk (LP-2008-06-04-0)
+                 Enhancem.:   Installation now uses exit code 2, where
+                              appropriate
+                 Merged from: maintrunk
+                 Enhancem.:   Autoinstallation generates per component log files
+                 Merged from: maintrunk
+                 Review:      AP, MD
+
 SH-2009-06-25-0: Bugfix:      fixed typo on pdc
                  Belongs to:  SH-2009-06-24-0
                  Review:      CR

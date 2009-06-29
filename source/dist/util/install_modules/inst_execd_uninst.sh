@@ -273,7 +273,7 @@ RemoveSpoolDir()
    if [ -d "$SPOOL_DIR/$HOST_DIR" ]; then
       $INFOTEXT "Removing spool directory [%s]" $SPOOL_DIR/$HOST_DIR
       $INFOTEXT -log "Removing spool directory [%s]" $SPOOL_DIR/$HOST_DIR
-      ExecuteAsAdmin rm -Rf $SPOOL_DIR/$HOST_DIR
+      ExecuteAsAdmin rm -R $SPOOL_DIR/$HOST_DIR
  
       if [ `ls -la $SPOOL_DIR | wc -l` -lt 4 ]; then
          Removedir $SPOOL_DIR
@@ -285,17 +285,21 @@ RemoveSpoolDir()
    $INFOTEXT -log "Checking local spooldir configuration for host \"%s\"!" $exechost
    SPOOL_DIR=`qconf -sconf $exechost | grep execd_spool_dir | awk '{ print $2 }'`
 
-   $INFOTEXT "Delete configuration for host \"%s\"!" $exechost
-   $INFOTEXT -log "Delete configuration for host \"%s\"!" $exechost
-   qconf -dconf $exechost
+   #Check that configuration is no longer needed
+   if [ x`cat $SGE_ROOT/$SGE_CELL/common/shadow_masters 2>/dev/null | grep $exechost` = x -a \
+        x`cat $SGE_ROOT/$SGE_CELL/common/act_qmaster    2>/dev/null | grep $exechost` = x ]; then
+      $INFOTEXT "Delete configuration for host \"%s\"!" $exechost
+      $INFOTEXT -log "Delete configuration for host \"%s\"!" $exechost
+      qconf -dconf $exechost
+   fi
 
    if [ "$SPOOL_DIR" != "" ]; then
       if [ -d "$SPOOL_DIR/$HOST_DIR" ]; then
          $INFOTEXT "Removing local spool directory [%s]" "$SPOOL_DIR/$HOST_DIR"
          $INFOTEXT -log "Removing local spool directory [%s]" "$SPOOL_DIR/$HOST_DIR"
-         ExecuteAsAdmin rm -Rf $SPOOL_DIR/$HOST_DIR
+         ExecuteAsAdmin rm -R $SPOOL_DIR/$HOST_DIR
          if [ `ls -la $SPOOL_DIR | wc -l` -lt 4 ]; then
-            ExecuteAsAdmin rm -Rf $SPOOL_DIR
+            ExecuteAsAdmin rm -R $SPOOL_DIR
          fi
       fi
    fi

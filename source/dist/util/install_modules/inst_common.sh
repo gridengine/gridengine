@@ -87,13 +87,13 @@ BasicSettings()
       u*)
          $ECHO "Failed: $SGE_ARCH platform is not supported."
          $ECHO "Exiting installation."
-         exit 1
+         exit 2
          ;;   
       *)
          $ECHO "Can't find binaries for architecture: $SGE_ARCH!"
          $ECHO "Please check your binaries. Installation failed!"
          $ECHO "Exiting installation."
-         exit 1
+         exit 2
       esac
    fi
 
@@ -103,14 +103,14 @@ BasicSettings()
       if [ ! -f $SPOOLDEFAULTS ]; then
          $ECHO "can't find \"$SPOOLDEFAULTS\""
          $ECHO "Installation failed."
-         exit 1
+         exit 2
       fi
 
       SPOOLINIT=$SGE_UTILBIN/spoolinit
       if [ ! -f $SPOOLINIT ]; then
          $ECHO "can't find \"$SPOOLINIT\""
          $ECHO "Installation failed."
-         exit 1
+         exit 2
       fi
    fi
 
@@ -148,7 +148,7 @@ INFOTEXT=$INFOTXT_DUMMY
 if [ ! -f $INFOTXT_DUMMY ]; then
    $ECHO "can't find \"$INFOTXT_DUMMY\""
    $ECHO "Installation failed."
-   exit 1
+   exit 2
 fi
 }
 
@@ -268,7 +268,9 @@ ExecuteAsAdmin()
       $INFOTEXT -log "Probably a permission problem. Please check file access permissions."
       $INFOTEXT -log "Check read/write permission. Check if SGE daemons are running."
 
-      MoveLog
+      if [ "$insideMoveLog" != true ]; then #To prevent endless recursion when failure occures in the MoveLog due to perm problems when moving the log file   
+         MoveLog
+      fi
       if [ "$ADMINRUN_NO_EXIT" != "true" ]; then
          exit 1
       fi
@@ -915,10 +917,6 @@ CheckConfigFile()
          $INFOTEXT -e "The>CSP_MAIL_ADDRESS< entry is empty!\n"
          is_valid="false"
       fi
-      if [ "$COPY_COMMAND" != "scp" -a "$COPY_COMMAND" != "rcp" ]; then
-         $INFOTEXT -e "Your >COPY_COMMAND< entry is invalid"
-         is_valid="false"
-      fi
       if [ -z "$CSP_RECREATE" ]; then
          $INFOTEXT -e "Your >CSP_RECREATE< flag is not set!"
          is_valid="false" 
@@ -947,6 +945,11 @@ CheckConfigFile()
       if [ "$CSP_COPY_CERTS" != "true" -a "$CSP_COPY_CERTS" != "false" ]; then
          $INFOTEXT -e "Your >CSP_COPY_CERTS< flag is wrong! Valid values are:0, 1, true, false"
          is_valid="false" 
+      fi
+      #COPY_COMMAND is checked only if CSP_COPY_CERTS=true
+      if [ "$CSP_COPY_CERTS" = true -a \( "$COPY_COMMAND" != "scp" -a "$COPY_COMMAND" != "rcp" \) ]; then
+         $INFOTEXT -e "Your >COPY_COMMAND< entry is invalid"
+         is_valid="false"
       fi
    fi
 
@@ -1779,6 +1782,8 @@ MoveLog()
    if [ "$AUTO" = "false" ]; then
       return
    fi
+   
+   insideMoveLog=true
 
    GetAdminUser
 
@@ -1805,11 +1810,15 @@ MoveLog()
    if [ "$is_master" = "true" ]; then
       loghosttype="qmaster"
       is_master="false"
+   elif [ "$is_shadow" = "true" ]; then
+      loghosttype="shadowd"
+   elif [ "$is_bdb" = "true" ]; then
+      loghosttype="bdb"
    else
       loghosttype="execd"
    fi
 
-   if [ $EXECD = "uninstall" -o $QMASTER = "uninstall" ]; then
+   if [ $EXECD = "uninstall" -o $QMASTER = "uninstall" -o $SHADOW = "uninstall" -o $BERKELEY = "uninstall" ]; then
       installtype="uninstall"
    else
       installtype="install"
@@ -1824,8 +1833,10 @@ MoveLog()
       $INFOTEXT "Install log can be found in: %s" $install_log_dir/$loghosttype"_"$installtype"_"`hostname`"_"$DATE.log
       rm -f /tmp/$LOGSNAME 2>&1
    else
-      $INFOTEXT "Can't find install log file: /tmp/%s" $LOGSNAME
+      $INFOTEXT "Can't find install log file: /tmp/%s" "$LOGSNAME"
    fi
+   
+   insideMoveLog=""
 }
 
 
@@ -1847,9 +1858,9 @@ Stdout2Log()
 {
    if [ "$STDOUT2LOG" = "0" ]; then
       CLEAR=:
+      CreateLog
       SGE_NOMSG=1
       export SGE_NOMSG
-      CreateLog
       # make Filedescriptor(FD) 4 a copy of stdout (FD 1)
       exec 4>&1
       # open logfile for writing
@@ -1882,12 +1893,30 @@ CheckRunningDaemon()
    case $daemon_name in
 
       sge_qmaster )
-       if [ -f $QMDIR/qmaster.pid ]; then
-          daemon_pid=`cat $QMDIR/qmaster.pid`
-          $SGE_UTILBIN/checkprog $daemon_pid $daemon_name > /dev/null
-          return $?      
-       fi
-      ;;
+         # First start has no pid file, we wait until it's there (up to 5mins)
+         start=`$SGE_UTILBIN/now 2>/dev/null`
+         ready=false
+         while [ $ready = "false" ]; do
+            if [ -s "$QMDIR/qmaster.pid" ]; then
+               ready="true"
+            else
+               now=`$SGE_UTILBIN/now 2>/dev/null`
+               if [ "$now" -lt "$start" ]; then
+                  start=$now
+               fi
+               elapsed=`expr $now - $start`
+               if [ $elapsed -gt 300 ]; then
+                  $INFOTEXT "Reached 5min timeout, while waiting for qmaster PID file."
+                  $INFOTEXT -log "Reached 5min timeout, while waiting for qmaster PID file."
+                  return 1
+               fi
+               sleep 2
+            fi
+         done
+         daemon_pid=`cat "$QMDIR/qmaster.pid"`
+         $SGE_UTILBIN/checkprog $daemon_pid $daemon_name > /dev/null
+         return $?
+        ;;
 
       sge_schedd )
        if [ -f $QMDIR/schedd/schedd.pid ]; then
@@ -3020,12 +3049,29 @@ CopyCaToHostType()
 #
 GetAdminUser()
 {
-   ADMINUSER=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "admin_user" | awk '{ print $2 }'`
+   if [ "$AUTO" = true ]; then
+	   #For auto we use template, since SGE_CELL might not yet exist
+	   TMP_CELL=$CELL_NAME
+   else
+	   TMP_CELL=$SGE_CELL
+   fi
+   #Try to get admin user from a bootstrap file
+   TMP_ADMINUSER=`cat $SGE_ROOT/$TMP_CELL/common/bootstrap 2>/dev/null | grep "admin_user" | awk '{ print $2 }'`
+   if [ -n "$TMP_ADMINUSER" ]; then
+      ADMINUSER=$TMP_ADMINUSER
+   elif [ "$AUTO" = "true" ]; then
+	   #For auto installation, if no bootstrap file use the value from the template
+	   ADMINUSER=$ADMIN_USER
+   fi
    euid=`$SGE_UTILBIN/uidgid -euid`
 
    TMP_USER=`echo "$ADMINUSER" |tr "[A-Z]" "[a-z]"`
-   if [ \( -z "$TMP_USER" -o "$TMP_USER" = "none" \) -a $euid = 0 ]; then
-      ADMINUSER=default
+   if [ -z "$TMP_USER" -o "$TMP_USER" = "none" ]; then
+      if [ $euid = 0 ]; then
+         ADMINUSER=default
+      else
+         ADMINUSER=`whoami`
+      fi
    fi
 
    if [ "$SGE_ARCH" = "win32-x86" ]; then
@@ -3146,4 +3192,35 @@ CheckPortsCollision()
            collision_flag="no_ports"
            return
    fi
+}
+
+#-------------------------------------------------------------------------------
+# FileGetValue: Get values from a file for appropriate key
+#  $1 - PATH to the file
+#  $2 - key: e.g: qmaster_spool_dir | ignore_fqdn | default_domain, etc.
+#  $3 - separator, if empty then " "
+FileGetValue()
+{
+   if [ $# -lt 2 ]; then
+      $INFOTEXT "Expecting at least 2 arguments for FileGetValue. Got %s." $#
+      exit 1
+   fi
+   if [ ! -f "$1" ]; then
+      $INFOTEXT "No file %s found" "$1"
+      exit 1
+   fi
+   SEP=""
+   if [ `echo "$3" | awk '{print length($0)}'` -gt 0 ]; then
+      SEP=-F"${3}"
+   fi
+   echo `cat $1 | grep "^${2}" | tail -1 | awk $SEP '{ print $2}' 2>/dev/null`
+}
+
+#Helper to get bootstrap file values
+#See FileGetValue
+#  $1 - PATH to the file/bootstrap
+#  $2 - key: e.g: qmaster_spool_dir | ignore_fqdn | default_domain, etc.
+BootstrapGetValue()
+{
+   FileGetValue "$1/bootstrap" "$2"
 }

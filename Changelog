@@ -1,3 +1,8 @@
+MP-2009-06-30-0: Bugfix:      cluster name check is failing in installation
+                 Bugster:     6659197
+                 Issue:       3046
+                 Review:      LP, MD
+
 MP-2009-06-29-0: Bugfix:      autoinstall fails if spooling dir (BDB) already exits 
                               without any error mgs/log file being created
                  Bugster:     6618009

@@ -1850,11 +1850,11 @@ CheckIfClusterNameAlreadyExists()
    if [ "$SGE_ENABLE_SMF" = true ]; then
       ServiceAlreadyExists $hosttype
       if [ $? -eq 1 ]; then
-         infotext_temp_msg="Specified cluster name >\$SGE_CLUSTER_NAME=%s< is already used by your system!\nDetected SMF service svc:/application/sge/$hosttype:%s."
+         infotext_temp_msg="Detected SMF service svc:/application/sge/$hosttype:%s."
          if [ $AUTO = true ]; then
-            $INFOTEXT  -log "$infotext_temp_msg" $SGE_CLUSTER_NAME $SGE_CLUSTER_NAME
+            $INFOTEXT  -log "$infotext_temp_msg" $SGE_CLUSTER_NAME
          else
-            $INFOTEXT  "$infotext_temp_msg" $SGE_CLUSTER_NAME $SGE_CLUSTER_NAME
+            $INFOTEXT  "$infotext_temp_msg" $SGE_CLUSTER_NAME
          fi
          ret=1
       fi

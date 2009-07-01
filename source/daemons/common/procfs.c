@@ -406,6 +406,7 @@ time_t last_time
    char buffer[BIGLINE];
    lListElem *pr = NULL;
    SGE_STRUCT_STAT fst;
+   unsigned long utime, stime, vsize, pid;
    int pos_pid = lGetPosInDescr(PRO_Type, PRO_pid);
    int pos_utime = lGetPosInDescr(PRO_Type, PRO_utime);
    int pos_stime = lGetPosInDescr(PRO_Type, PRO_stime);
@@ -428,6 +429,7 @@ time_t last_time
    u_long32 max_groups;
    gid_t *list;
    int groups=0;
+   int pid_tmp;
 
    proc_elem_t *proc_elem = NULL;
    job_elem_t *job_elem = NULL;
@@ -519,7 +521,6 @@ time_t last_time
           **/
 
 #  if defined(LINUX)
-         unsigned long utime, stime, vsize, pid;
 
          /* 
           * Read the line and append a 0-Byte 
@@ -714,7 +715,6 @@ time_t last_time
     * try to find process in this jobs' proc list 
     */
 
-   int pid_tmp;
 #if defined(LINUX)
    pid_tmp = lGetPosUlong(pr, pos_pid);
 #else
@@ -782,9 +782,9 @@ time_t last_time
    proc_elem->delta_chars    = 0UL;
    {
       char procnam[256];
+      uint64 new_iochars = 0UL;
 
       sprintf(procnam, PROC_DIR "/%s/io", dent->d_name);
-      uint64 new_iochars = 0UL;
 
       /* This io processing needs to be enabled in the kernel */
       if (SGE_STAT(procnam, &fst) == 0) {

@@ -61,7 +61,10 @@
 
 static lList *sge_parse_cmdline_qmod(char **argv, char **envp, lList **ppcmdline);
 static lList *sge_parse_qmod(lList **ppcmdline, lList **ppreflist, u_long32 *pforce);
+
 static int qmod_usage(FILE *fp, char *what);
+
+static bool answer_list_has_exit_code_error(lList **answer_list);
 
 extern char **environ;
 
@@ -134,7 +137,7 @@ char **argv
       alp = ctx->gdi(ctx, SGE_CQUEUE_LIST, SGE_GDI_TRIGGER, &ref_list, NULL, NULL);
    }
 
-   answ_list_has_err = answer_list_has_error(&alp);
+   answ_list_has_err = answer_list_has_exit_code_error(&alp); 
 
    /*
    ** show answer list
@@ -159,6 +162,53 @@ char **argv
    return 0;
 }
 
+
+/****** qmod/answer_list_has_exit_code_error() *********************************
+*  NAME
+*     answer_list_has_exit_code_error() -- Returns if there was a critical error 
+*                                          or when the return status was not OK. 
+*
+*  SYNOPSIS
+*     static bool answer_list_has_exit_code_error(lList **answer_list) 
+*
+*  FUNCTION
+*     Checks the answer list if there was any critical error or in the other 
+*     cases if there was a status other than ok. 
+*
+*  INPUTS
+*     lList **answer_list - AN_Type list
+*
+*  RESULT
+*     static bool - "true" if an error is found "false" otherwise 
+*
+*  NOTES
+*     MT-NOTE: answer_list_has_exit_code_error() is not MT safe 
+*
+*******************************************************************************/
+static bool answer_list_has_exit_code_error(lList **answer_list)
+{
+   bool ret = false;
+
+   DENTER(TOP_LAYER, "answer_list_has_exit_code_error");
+
+   if (answer_list_has_quality(answer_list, ANSWER_QUALITY_CRITICAL) == true) {
+      ret = true;
+   } else {
+      lListElem *answer;   /* AN_Type */
+      /* check each ERROR if the status is really != 1 (STATUS_OK) */
+      u_long32 status;
+      for_each(answer, *answer_list) {
+         if (answer_has_quality(answer, ANSWER_QUALITY_ERROR)) {
+            status = answer_get_status(answer);       
+            if (status != STATUS_OK) {
+               ret = true;
+            }
+         }   
+      }
+  } 
+
+   DRETURN(ret);
+}            
 
 
 /****

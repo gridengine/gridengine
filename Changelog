@@ -1,3 +1,9 @@
+DG-2009-07-01-0: Bugfix:      qmod -usj jid returns error status even though 
+                              job is suspended
+                 Bugster:     6842457
+                 Issue:       3071
+                 Review:      CR
+
 SH-2009-07-01-0: Cleanup:     fixed broken build on ulx24-x86
                  Belongs to:  SH-2009-06-24-0
                  Review:      DG

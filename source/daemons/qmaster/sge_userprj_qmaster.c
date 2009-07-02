@@ -506,7 +506,7 @@ sge_automatic_user_cleanup_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent,
          next = lNext(user);
 
          /* 
-          * For non auto users, delete_time = 0. 
+          * For non auto users, delete_time = 0.
           * Never delete them automatically 
           */
          if (delete_time > 0) {

@@ -61,7 +61,6 @@
 #include "sgeobj/sge_suser.h"
 
 #include "spool/sge_spooling_utilities.h"
-#include "spool/sge_spooling_database.h"
 
 #include "msg_common.h"
 #include "spool/msg_spoollib.h"

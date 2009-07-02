@@ -1237,9 +1237,9 @@ CheckConfigFile()
       fi
 
       if [ "$SGE_ENABLE_JMX" = "true" -a "$QMASTER" = "uninstall" ]; then
-         if [ -z "$JMX_PORT" -o -z "$SGE_JVM_LIB_PATH" ]; then
-            $INFOTEXT -e "The JMX_PORT or SGE_JVM_LIB_PATH has not been set in config file!\n"
-            $INFOTEXT -log "The JMX_PORT or SGE_JVM_LIB_PATH has not been set in config file!\n"
+         if [ -z "$SGE_JMX_PORT" -o -z "$SGE_JVM_LIB_PATH" ]; then
+            $INFOTEXT -e "The SGE_JMX_PORT or SGE_JVM_LIB_PATH has not been set in config file!\n"
+            $INFOTEXT -log "The SGE_JMX_PORT or SGE_JVM_LIB_PATH has not been set in config file!\n"
             is_valid="false"
          fi
       fi

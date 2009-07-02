@@ -3431,13 +3431,13 @@ static bool sconf_eval_set_profiling(lList *param_list, lList **answer_list, con
    schedd_profiling = false;
 
    if (!strncasecmp(param, "PROFILE=1", sizeof("PROFILE=1")-1) || 
-       !strncasecmp(param, "PROFILE=TRUE", sizeof("PROFILE=FALSE")-1) ) {
+       !strncasecmp(param, "PROFILE=TRUE", sizeof("PROFILE=TRUE")-1) ) {
       schedd_profiling = true;
       elem = lCreateElem(PARA_Type);
       lSetString(elem, PARA_name, "profile");
       lSetString(elem, PARA_value, "true");
    }      
-   else if (!strncasecmp(param, "PROFILE=0", sizeof("PROFILE=1")-1) ||
+   else if (!strncasecmp(param, "PROFILE=0", sizeof("PROFILE=0")-1) ||
             !strncasecmp(param, "PROFILE=FALSE", sizeof("PROFILE=FALSE")-1) ) {
       elem = lCreateElem(PARA_Type);
       lSetString(elem, PARA_name, "profile");

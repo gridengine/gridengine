@@ -184,6 +184,7 @@ int scheduler_method(sge_evc_class_t *evc, lList **answer_list, scheduler_all_da
    
    sconf_reset_jobs();
    schedd_mes_initialize();
+   schedd_order_initialize();
    
    for (i = SPLIT_FIRST; i < SPLIT_LAST; i++) {
       splitted_job_lists[i] = NULL;
@@ -363,6 +364,7 @@ int scheduler_method(sge_evc_class_t *evc, lList **answer_list, scheduler_all_da
          splitted_job_lists[i] = NULL;
       }
    }
+   schedd_order_destroy();
 
    if(prof_is_active(SGE_PROF_CUSTOM5)) {
       prof_stop_measurement(SGE_PROF_CUSTOM5, NULL);

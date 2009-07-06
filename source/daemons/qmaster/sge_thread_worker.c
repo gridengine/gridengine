@@ -36,66 +36,68 @@
 #include <errno.h>
 #include <fcntl.h>
 
+#include "rmon/sgermon.h"
+
+#include "lck/sge_mtutil.h"
+#include "lck/sge_lock.h"
+
+#include "uti/sge_prog.h"
+#include "uti/sge_log.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_uidgid.h"
+#include "uti/sge_bootstrap.h"
+#include "uti/msg_utilib.h"  /* remove once 'sge_daemonize_qmaster' did become 'sge_daemonize' */
+#include "uti/sge_profiling.h"
+#include "uti/setup_path.h"
+#include "uti/sge_os.h"
+#include "uti/sge_time.h"
+#include "uti/sge_spool.h"
+#include "uti/sge_thread_ctrl.h"
+
+#include "sgeobj/sge_jsv.h"
+#include "sgeobj/sge_manop.h"
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_answer.h"
+
+#include "gdi/sge_security.h"
+#include "gdi/qm_name.h"
+#include "gdi/sge_gdi_packet.h"
+#include "gdi/sge_gdi_packet_internal.h"
+
+#include "evm/sge_event_master.h"
+
+#include "comm/cl_commlib.h"
+
 #include "basis_types.h"
-#include "sge_qmaster_threads.h"
-#include "sgermon.h"
-#include "sge_mt_init.h"
-#include "sge_prog.h"
-#include "sge_log.h"
-#include "sge_unistd.h"
-#include "sge_answer.h"
+#include "sge_all_listsL.h"
 #include "setup_qmaster.h"
-#include "sge_security.h"
-#include "sge_manop.h"
-#include "sge_mtutil.h"
-#include "sge_lock.h"
 #include "sge_qmaster_process_message.h"
-#include "sge_event_master.h"
+#include "sge_mt_init.h"
+#include "sge_qmaster_threads.h"
 #include "sge_persistence_qmaster.h"
 #include "sge_reporting_qmaster.h"
 #include "sge_qmaster_timed_event.h"
 #include "sge_host_qmaster.h"
 #include "sge_userprj_qmaster.h"
 #include "sge_give_jobs.h"
-#include "sge_all_listsL.h"
 #include "sge_calendar_qmaster.h"
-#include "sge_time.h"
 #include "lock.h"
 #include "qmaster_heartbeat.h"
 #include "shutdown.h"
-#include "sge_spool.h"
-#include "cl_commlib.h"
-#include "sge_uidgid.h"
-#include "sge_bootstrap.h"
-#include "msg_common.h"
-#include "msg_qmaster.h"
-#include "msg_daemons_common.h"
-#include "msg_utilib.h"  /* remove once 'sge_daemonize_qmaster' did become 'sge_daemonize' */
 #include "sge.h"
 #include "sge_qmod_qmaster.h"
 #include "reschedule.h"
 #include "sge_job_qmaster.h"
-#include "sge_profiling.h"
-#include "sgeobj/sge_conf.h"
-#include "qm_name.h"
-#include "setup_path.h"
-#include "uti/sge_os.h"
 #include "sge_advance_reservation_qmaster.h"
 #include "sge_sched_process_events.h"
 #include "sge_follow.h"
 #include "sge_c_report.h"
-
-#include "gdi/sge_gdi_packet.h"
-#include "gdi/sge_gdi_packet_queue.h"
-#include "gdi/sge_gdi_packet_internal.h"
-
-#include "uti/sge_thread_ctrl.h"
-
-#include "sgeobj/sge_jsv.h"
-
 #include "sge_thread_main.h"
 #include "sge_thread_worker.h"
 #include "sge_qmaster_process_message.h"
+#include "msg_common.h"
+#include "msg_qmaster.h"
+#include "msg_daemons_common.h"
 
 static void
 sge_worker_cleanup_monitor(monitoring_t *monitor)
@@ -113,6 +115,8 @@ sge_worker_initialize(sge_gdi_ctx_class_t *ctx)
    int i;   
 
    DENTER(TOP_LAYER, "sge_worker_initialize");
+
+   sge_tq_create(&Master_Task_Queue);
 
    sge_init_job_number();
    sge_init_ar_id();
@@ -143,7 +147,7 @@ sge_worker_terminate(sge_gdi_ctx_class_t *ctx)
 
    DENTER(TOP_LAYER, "sge_worker_terminate");
 
-   sge_gdi_packet_queue_wakeup_all_waiting(&Master_Packet_Queue);
+   sge_tq_wakeup_waiting(Master_Task_Queue);
 
    /*
     * trigger pthread_cancel for each thread so that further 
@@ -238,8 +242,14 @@ sge_worker_main(void *arg)
        * before all worker threads so that this won't be a problem.
        */
       MONITOR_IDLE_TIME((
-      sge_gdi_packet_queue_wait_for_new_packet(&Master_Packet_Queue, &packet, &monitor)
+      sge_tq_wait_for_task(Master_Task_Queue, 1, SGE_TQ_GDI_PACKET, (void *)&packet)
       ), &monitor, mconf_get_monitor_time(), mconf_is_monitor_message());
+
+      {
+         monitoring_t *monitor_ptr = &monitor;
+
+         MONITOR_SET_QLEN(monitor_ptr, sge_tq_get_task_count(Master_Task_Queue));
+      }
 
       if (packet != NULL) {
          sge_gdi_task_class_t *task = packet->first_task;

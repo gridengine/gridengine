@@ -70,6 +70,7 @@ UTILIB_DRMAA_SRC = \
          sge_thread_ctrl.c \
          sge_time.c \
          sge_tmpnam.c \
+         sge_tq.c \
          sge_uidgid.c \
          sge_unistd.c \
 
@@ -87,6 +88,7 @@ UTILIB_TEST_OBJS = \
          test_sge_uidgid.o \
          test_threads.o \
 			test_sge_sl.o \
+			test_sge_tq.o \
 			test_sge_err.o
 
 UTILIB_TEST_PROGS = \
@@ -96,6 +98,7 @@ UTILIB_TEST_PROGS = \
          test_sge_uidgid \
          test_threads \
 			test_sge_sl \
+			test_sge_tq \
 			test_sge_err
 
 ###############################################################################
@@ -232,6 +235,9 @@ sge_language.o:	$(UTILIB_DIR)/sge_language.c
 sge_tmpnam.o:	$(UTILIB_DIR)/sge_tmpnam.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_tmpnam.c
 
+sge_tq.o:	$(UTILIB_DIR)/sge_tq.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_tq.c
+
 sge_edit.o:	$(UTILIB_DIR)/sge_edit.c 
 		$(CC) $(CFLAGS) $(MEMCFLAG) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_edit.c
 
@@ -291,6 +297,12 @@ test_sge_sl: test_sge_sl.o $(UTILIB) $(COMMLISTSBIN) $(LCKLIB) $(RMONLIB)
 
 test_sge_sl.o: $(UTILIB_DIR)/test_sge_sl.c
 	$(CC) $(CFLAGS) -c $(UTILIB_DIR)/test_sge_sl.c
+
+test_sge_tq: test_sge_tq.o $(UTILIB) $(COMMLISTSBIN) $(LCKLIB) $(RMONLIB)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_tq $(LFLAGS) test_sge_tq.o $(UTILIB) $(COMMLISTSLIB) $(LCKLIB) $(RMONLIB) $(LIBS)
+
+test_sge_tq.o: $(UTILIB_DIR)/test_sge_tq.c
+	$(CC) $(CFLAGS) -c $(UTILIB_DIR)/test_sge_tq.c
 
 test_sge_err: test_sge_err.o $(UTILIB) $(COMMLISTSBIN) $(LCKLIB) $(RMONLIB)
 	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_err $(LFLAGS) test_sge_err.o $(UTILIB) $(COMMLISTSLIB) $(LCKLIB) $(RMONLIB) $(LIBS)

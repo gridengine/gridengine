@@ -46,21 +46,23 @@
 #include "lck/sge_mtutil.h"
 
 #include "uti/sge_log.h"
-
-#include "gdi/sge_gdi2.h"
-#include "gdi/sge_gdi_packet_pb_cull.h"
-#include "gdi/sge_security.h"
-#include "gdi/sge_gdi_packet.h"
-#include "gdi/sge_gdi_packet_queue.h"
+#include "uti/sge_tq.h"
 
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_multi_MA_L.h"
 #include "sgeobj/sge_jsv.h"
 
+#include "sge_gdi2.h"
+#include "sge_gdi_packet_pb_cull.h"
+#include "sge_security.h"
+#include "sge_gdi_packet.h"
+
 #include "msg_common.h"
 #include "msg_gdilib.h"
 
 #define CLIENT_WAIT_TIME_S 1
+
+sge_tq_queue_t *Master_Task_Queue = NULL;
 
 /****** gdi/request_internal/sge_gdi_packet_create_multi_answer() ***********
 *  NAME
@@ -778,7 +780,7 @@ sge_gdi_packet_execute_internal(sge_gdi_ctx_class_t* ctx, lList **answer_list,
    /* 
     * append the packet to the packet list of the worker threads
     */
-   sge_gdi_packet_queue_store_notify(&Master_Packet_Queue, packet, NULL);
+   sge_tq_store_notify(Master_Task_Queue, SGE_TQ_GDI_PACKET, packet);
 
    DRETURN(ret);
 }

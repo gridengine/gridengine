@@ -35,13 +35,17 @@
 
 #include "rmon/sgermon.h"
 
+#include "lck/sge_mtutil.h"
+
 #include "sge_err.h"
 #include "sge_stdlib.h"
 #include "sge_sl.h"
+#include "sge_thread_ctrl.h"
 
 #include "msg_common.h"
 
 #define SL_LAYER TOP_LAYER
+#define SL_MUTEX_NAME "sl_mutex"
 
 /****** uti/sl/sge_sl_elem_create() ******************************************
 *  NAME
@@ -85,7 +89,7 @@ sge_sl_elem_create(sge_sl_elem_t **elem, void *data) {
 
    DENTER(SL_LAYER, "sge_sl_elem_create");
    if (elem != NULL) {
-      size_t size = sizeof(sge_sl_elem_t);
+      const size_t size = sizeof(sge_sl_elem_t);
       sge_sl_elem_t *new_elem;
 
       new_elem = (sge_sl_elem_t *)malloc(size);
@@ -153,19 +157,18 @@ sge_sl_elem_destroy(sge_sl_elem_t **elem, sge_sl_destroy_f destroy) {
    bool ret = true;
 
    DENTER(SL_LAYER, "sge_sl_elem_destroy");
-   if (elem != NULL) {
+   if (elem != NULL && *elem != NULL) {
       if (destroy != NULL) {
          destroy(&(*elem)->data);
       }
-      free(*elem);
-      *elem = NULL;
+      FREE(*elem);
    }
    DRETURN(ret);
 }
 
 /****** uti/sl/sge_sl_elem_data() ******************************************
 *  NAME
-*     sge_sl_elem_data() -- ??? 
+*     sge_sl_elem_data() -- return first/last data pointer 
 *
 *  SYNOPSIS
 *     void *sge_sl_elem_data(sge_sl_elem_t *elem) 
@@ -235,7 +238,7 @@ sge_sl_dechain(sge_sl_list_t *list, sge_sl_elem_t *elem) {
 
    DENTER(SL_LAYER, "sge_sl_dechain");
    if (list != NULL && elem != NULL) {
-      pthread_mutex_lock(&list->internal_mutex);
+      sge_mutex_lock(SL_MUTEX_NAME, SGE_FUNC, __LINE__, &list->mutex);
       if (elem->prev) {
          elem->prev->next = elem->next;
       } else {
@@ -251,7 +254,7 @@ sge_sl_dechain(sge_sl_list_t *list, sge_sl_elem_t *elem) {
       elem->prev = NULL;
 
       list->elements--;
-      pthread_mutex_unlock(&list->internal_mutex);
+      sge_mutex_unlock(SL_MUTEX_NAME, SGE_FUNC, __LINE__, &list->mutex);
    }
    DRETURN(ret);
 }
@@ -298,8 +301,8 @@ sge_sl_insert_before(sge_sl_list_t *list, sge_sl_elem_t *new_elem, sge_sl_elem_t
    DENTER(SL_LAYER, "sge_sl_insert_before");
    if (list != NULL && new_elem != NULL && elem != NULL) {
       sge_sl_elem_t *last;
-  
-      pthread_mutex_lock(&list->internal_mutex);
+ 
+      sge_mutex_lock(SL_MUTEX_NAME, SGE_FUNC, __LINE__, &list->mutex); 
       last = elem->prev;
       if (last == NULL) {
          elem->prev = new_elem;
@@ -312,7 +315,7 @@ sge_sl_insert_before(sge_sl_list_t *list, sge_sl_elem_t *new_elem, sge_sl_elem_t
          new_elem->next = elem;
       }
       list->elements++;
-      pthread_mutex_unlock(&list->internal_mutex);
+      sge_mutex_unlock(SL_MUTEX_NAME, SGE_FUNC, __LINE__, &list->mutex);
    }
    DRETURN(ret);
 }
@@ -359,7 +362,7 @@ sge_sl_append_after(sge_sl_list_t *list, sge_sl_elem_t *new_elem, sge_sl_elem_t 
    if (list != NULL && new_elem != NULL && elem != NULL) {
       sge_sl_elem_t *current;
 
-      pthread_mutex_lock(&list->internal_mutex);
+      sge_mutex_lock(SL_MUTEX_NAME, SGE_FUNC, __LINE__, &list->mutex);
       current = elem->next;
       if (current == NULL) {
          elem->next = new_elem;
@@ -372,7 +375,7 @@ sge_sl_append_after(sge_sl_list_t *list, sge_sl_elem_t *new_elem, sge_sl_elem_t 
          new_elem->next = current;
       }
       list->elements++;
-      pthread_mutex_unlock(&list->internal_mutex);
+      sge_mutex_unlock(SL_MUTEX_NAME, SGE_FUNC, __LINE__, &list->mutex);
    }
    DRETURN(ret);
 }
@@ -443,27 +446,24 @@ bool
 sge_sl_elem_next(sge_sl_list_t *list, 
                  sge_sl_elem_t **elem, sge_sl_direction_t direction) {
    bool ret = true;
-   static int i;
 
    DENTER(BASIS_LAYER, "sge_sl_elem_next");
    if (list != NULL && elem != NULL) {
-      pthread_mutex_lock(&list->internal_mutex);
+      sge_mutex_lock(SL_MUTEX_NAME, SGE_FUNC, __LINE__, &list->mutex);
       if (*elem != NULL) {
-         i++;
          if (direction == SGE_SL_FORWARD) {
             *elem = (*elem)->next;
          } else { 
             *elem = (*elem)->prev;
          }
       } else {
-         i = 0;
          if (direction == SGE_SL_FORWARD) {
             *elem = list->first;
          } else { 
             *elem = list->last;
          }
       }
-      pthread_mutex_unlock(&list->internal_mutex);
+      sge_mutex_unlock(SL_MUTEX_NAME, SGE_FUNC, __LINE__, &list->mutex);
    } 
    DRETURN(ret);
 }
@@ -542,7 +542,7 @@ sge_sl_elem_search(sge_sl_list_t *list, sge_sl_elem_t **elem, void *key,
       sge_sl_elem_t *next = NULL;
       sge_sl_elem_t *current = NULL;
 
-      pthread_mutex_lock(&list->internal_mutex);
+      sge_mutex_lock(SL_MUTEX_NAME, SGE_FUNC, __LINE__, &list->mutex);
       if (*elem != NULL) {
          if (direction == SGE_SL_FORWARD) {
             next = (*elem)->next;
@@ -565,7 +565,7 @@ sge_sl_elem_search(sge_sl_list_t *list, sge_sl_elem_t **elem, void *key,
          }
       }
       *elem = current;
-      pthread_mutex_unlock(&list->internal_mutex);
+      sge_mutex_unlock(SL_MUTEX_NAME, SGE_FUNC, __LINE__, &list->mutex);
    }
    DRETURN(ret);
 }
@@ -601,21 +601,27 @@ sge_sl_create(sge_sl_list_t **list) {
    
    DENTER(SL_LAYER, "sge_sl_create");
    if (list != NULL) {
+      const size_t size = sizeof(sge_sl_list_t);
       sge_sl_list_t *new_list;
 
-      new_list = (sge_sl_list_t *)malloc(sizeof(sge_sl_list_t));
+      new_list = (sge_sl_list_t *)malloc(size);
       if (new_list != NULL) {
          pthread_mutexattr_t mutex_attr;
 
+         /* initialize the mutex */
          pthread_mutexattr_init(&mutex_attr);
          pthread_mutexattr_settype(&mutex_attr, PTHREAD_MUTEX_RECURSIVE);
-         pthread_mutex_init(&new_list->internal_mutex, &mutex_attr);
+         pthread_mutex_init(&new_list->mutex, &mutex_attr);
          pthread_mutexattr_destroy(&mutex_attr);
+
+         /* other members */
          new_list->first = NULL;
          new_list->last = NULL;
          new_list->elements = 0;
+
          *list = new_list;
       } else {
+         sge_err_set(SGE_ERR_MEMORY, MSG_UNABLETOALLOCATEBYTES_DS, size, SGE_FUNC);
          ret = false;
          *list = NULL;
       }
@@ -673,17 +679,17 @@ sge_sl_destroy(sge_sl_list_t **list, sge_sl_destroy_f destroy) {
       sge_sl_elem_t *current;
   
       /* destroy content */ 
-      pthread_mutex_lock(&(*list)->internal_mutex);
+      sge_mutex_lock(SL_MUTEX_NAME, SGE_FUNC, __LINE__, &(*list)->mutex);
       next = (*list)->first;
       while ((current = next) != NULL) {
          next = current->next;
 
          ret &= sge_sl_elem_destroy(&current, destroy);
       }
-      pthread_mutex_unlock(&(*list)->internal_mutex);
+      sge_mutex_unlock(SL_MUTEX_NAME, SGE_FUNC, __LINE__, &(*list)->mutex);
 
       /* final destroy */
-      pthread_mutex_destroy(&(*list)->internal_mutex);
+      pthread_mutex_destroy(&(*list)->mutex);
       FREE(*list);
    }
    DRETURN(ret);
@@ -721,7 +727,7 @@ sge_sl_lock(sge_sl_list_t *list) {
 
    DENTER(SL_LAYER, "sge_sl_lock");
    if (list != NULL) {
-      pthread_mutex_lock(&list->internal_mutex);
+      sge_mutex_lock(SL_MUTEX_NAME, SGE_FUNC, __LINE__, &list->mutex);
    }
    DRETURN(ret);
 }
@@ -757,7 +763,7 @@ sge_sl_unlock(sge_sl_list_t *list) {
 
    DENTER(SL_LAYER, "sge_sl_unlock");
    if (list != NULL) {
-      pthread_mutex_unlock(&list->internal_mutex);
+      sge_mutex_unlock(SL_MUTEX_NAME, SGE_FUNC, __LINE__, &list->mutex);
    }
    DRETURN(ret);
 }
@@ -803,7 +809,7 @@ sge_sl_insert(sge_sl_list_t *list, void *data, sge_sl_direction_t direction) {
 
       ret = sge_sl_elem_create(&new_elem, data);
       if (ret) {
-         pthread_mutex_lock(&list->internal_mutex);
+         sge_mutex_lock(SL_MUTEX_NAME, SGE_FUNC, __LINE__, &list->mutex);
          if (direction == SGE_SL_FORWARD) {
             if (list->first != NULL) {
                list->first->prev = new_elem;
@@ -824,7 +830,7 @@ sge_sl_insert(sge_sl_list_t *list, void *data, sge_sl_direction_t direction) {
             }
          }
          list->elements++;
-         pthread_mutex_unlock(&list->internal_mutex);
+         sge_mutex_unlock(SL_MUTEX_NAME, SGE_FUNC, __LINE__, &list->mutex);
       } 
    }
    DRETURN(ret);
@@ -886,7 +892,7 @@ sge_sl_insert_search(sge_sl_list_t *list, void *data, sge_sl_compare_f compare) 
          sge_sl_elem_t *last = NULL;
          sge_sl_elem_t *current = NULL;
 
-         pthread_mutex_lock(&list->internal_mutex);
+         sge_mutex_lock(SL_MUTEX_NAME, SGE_FUNC, __LINE__, &list->mutex);
          current = list->first;
          while (current != NULL && 
                 compare((const void *)&data, (const void *)&current->data) > 0) {
@@ -912,7 +918,7 @@ sge_sl_insert_search(sge_sl_list_t *list, void *data, sge_sl_compare_f compare) 
             new_elem->next = current;
          }
          list->elements++;
-         pthread_mutex_unlock(&list->internal_mutex);
+         sge_mutex_unlock(SL_MUTEX_NAME, SGE_FUNC, __LINE__, &list->mutex);
       }
    }
    DRETURN(ret);
@@ -950,7 +956,7 @@ sge_sl_data(sge_sl_list_t *list, void **data, sge_sl_direction_t direction) {
 
    DENTER(SL_LAYER, "sge_sl_data");
    if (list != NULL && data != NULL) {
-      pthread_mutex_lock(&list->internal_mutex);
+      sge_mutex_lock(SL_MUTEX_NAME, SGE_FUNC, __LINE__, &list->mutex);
       if (direction == SGE_SL_FORWARD && list->first != NULL) {
          *data = list->first->data;
       } else if (direction == SGE_SL_BACKWARD && list->last != NULL) {
@@ -958,7 +964,7 @@ sge_sl_data(sge_sl_list_t *list, void **data, sge_sl_direction_t direction) {
       } else {
          *data = NULL;
       }
-      pthread_mutex_unlock(&list->internal_mutex);
+      sge_mutex_unlock(SL_MUTEX_NAME, SGE_FUNC, __LINE__, &list->mutex);
    }
    DRETURN(ret);
 }
@@ -1003,14 +1009,14 @@ sge_sl_data_search(sge_sl_list_t *list, void *key, void **data,
    if (list != NULL && data != NULL && compare != NULL) {
       sge_sl_elem_t *elem = NULL;
 
-      pthread_mutex_lock(&list->internal_mutex);
+      sge_mutex_lock(SL_MUTEX_NAME, SGE_FUNC, __LINE__, &list->mutex);
       ret &= sge_sl_elem_search(list, &elem, key, compare, direction);
       if (ret && elem != NULL) {
          *data = elem->data;
       } else {
          *data = NULL;
       }
-      pthread_mutex_unlock(&list->internal_mutex);
+      sge_mutex_unlock(SL_MUTEX_NAME, SGE_FUNC, __LINE__, &list->mutex);
    }
    DRETURN(ret);
 }
@@ -1051,15 +1057,17 @@ sge_sl_delete(sge_sl_list_t *list,
    if (list != NULL) {
       sge_sl_elem_t *elem;
 
-      pthread_mutex_lock(&list->internal_mutex);
+      sge_mutex_lock(SL_MUTEX_NAME, SGE_FUNC, __LINE__, &list->mutex);
       if (direction == SGE_SL_FORWARD) {
          elem = list->first;
       } else {
          elem = list->last;
       }
-      sge_sl_dechain(list, elem);
-      sge_sl_elem_destroy(&elem, destroy);
-      pthread_mutex_unlock(&list->internal_mutex);
+      ret &= sge_sl_dechain(list, elem);
+      if (ret) {
+         ret &= sge_sl_elem_destroy(&elem, destroy);
+      }
+      sge_mutex_unlock(SL_MUTEX_NAME, SGE_FUNC, __LINE__, &list->mutex);
    }
    DRETURN(ret);
 }
@@ -1107,7 +1115,7 @@ sge_sl_delete_search(sge_sl_list_t *list, void *key, sge_sl_destroy_f destroy,
    if (list != NULL && key != NULL && compare != NULL) {
       sge_sl_elem_t *elem = NULL;
 
-      pthread_mutex_lock(&list->internal_mutex);
+      sge_mutex_lock(SL_MUTEX_NAME, SGE_FUNC, __LINE__, &list->mutex);
       ret &= sge_sl_elem_search(list, &elem, key, compare, direction);
       if (ret) {
          ret &= sge_sl_dechain(list, elem);
@@ -1115,7 +1123,7 @@ sge_sl_delete_search(sge_sl_list_t *list, void *key, sge_sl_destroy_f destroy,
       if (ret) {
          ret &= sge_sl_elem_destroy(&elem, destroy);
       }
-      pthread_mutex_unlock(&list->internal_mutex);
+      sge_mutex_unlock(SL_MUTEX_NAME, SGE_FUNC, __LINE__, &list->mutex);
    }
    DRETURN(ret);
 }
@@ -1143,11 +1151,11 @@ u_long32
 sge_sl_get_elem_count(sge_sl_list_t *list) {
    u_long32 elems = 0; 
    
-   DENTER(TOP_LAYER, "sge_sl_elem_count");
+   DENTER(SL_LAYER, "sge_sl_elem_count");
    if (list != NULL) {
-      pthread_mutex_lock(&list->internal_mutex);
+      sge_mutex_lock(SL_MUTEX_NAME, SGE_FUNC, __LINE__, &list->mutex);
       elems = list->elements;
-      pthread_mutex_unlock(&list->internal_mutex);
+      sge_mutex_unlock(SL_MUTEX_NAME, SGE_FUNC, __LINE__, &list->mutex);
    }
    DRETURN(elems);
 }
@@ -1185,9 +1193,11 @@ sge_sl_sort(sge_sl_list_t *list, sge_sl_compare_f compare) {
    DENTER(SL_LAYER, "sge_sl_sort");
    if (list != NULL && compare != NULL) {
       void **pointer_array;
+      size_t size;
 
-      pthread_mutex_lock(&list->internal_mutex);
-      pointer_array = (void**) malloc(sizeof(void *) * list->elements);
+      sge_mutex_lock(SL_MUTEX_NAME, SGE_FUNC, __LINE__, &list->mutex);
+      size = sizeof(void *) * list->elements;
+      pointer_array = (void**) malloc(size);
       if (pointer_array != NULL) {
          sge_sl_elem_t *elem = NULL;
          int i;
@@ -1210,11 +1220,40 @@ sge_sl_sort(sge_sl_list_t *list, sge_sl_compare_f compare) {
          /* cleanup */
          FREE(pointer_array);
       } else {
-         /* error */
+         sge_err_set(SGE_ERR_MEMORY, MSG_UNABLETOALLOCATEBYTES_DS, size, SGE_FUNC);
          ret = false;
       }
-      pthread_mutex_unlock(&list->internal_mutex);
+      sge_mutex_unlock(SL_MUTEX_NAME, SGE_FUNC, __LINE__, &list->mutex);
    }
    DRETURN(ret);
 }
 
+/****** uti/sl/sge_sl_get_mutex() **********************************************
+*  NAME
+*     sge_sl_get_mutex() -- returns the list mutex 
+*
+*  SYNOPSIS
+*     pthread_mutex_t * sge_sl_get_mutex(sge_sl_list_t *list) 
+*
+*  FUNCTION
+*     retrns the list mutex 
+*
+*  INPUTS
+*     sge_sl_list_t *list - list 
+*
+*  RESULT
+*     pthread_mutex_t * - mutex used in the list to secure actions
+*
+*  NOTES
+*     MT-NOTE: sge_sl_get_mutex() is MT safe 
+*******************************************************************************/
+pthread_mutex_t *
+sge_sl_get_mutex(sge_sl_list_t *list) {
+   pthread_mutex_t *mutex = NULL; 
+   
+   DENTER(SL_LAYER, "sge_sl_get_mutex");
+   if (list != NULL) {
+      mutex = &list->mutex;
+   }
+   DRETURN(mutex);
+}

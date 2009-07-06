@@ -54,17 +54,16 @@
 #include "uti/sge_string.h"
 #include "uti/sge_thread_ctrl.h"
 
-#include "gdi/sge_gdi2.h"
-#include "gdi/sge_gdiP.h"
-#include "gdi/sge_gdi_packet.h"
-#include "gdi/sge_gdi_packet_queue.h"
-#include "gdi/sge_gdi_packet_pb_cull.h"
-#include "gdi/version.h"
-#include "gdi/sge_security.h"
-
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_feature.h"
 #include "sgeobj/sge_multi_MA_L.h"
+
+#include "sge_gdi2.h"
+#include "sge_gdiP.h"
+#include "sge_gdi_packet.h"
+#include "sge_gdi_packet_pb_cull.h"
+#include "version.h"
+#include "sge_security.h"
 
 #include "msg_common.h"
 #include "msg_gdilib.h"

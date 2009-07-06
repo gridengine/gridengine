@@ -40,10 +40,10 @@
 #include "uti/sge_sl.h"
 #include "uti/sge_err.h"
 
+/* following is used in test_mt_support() */
 #define TEST_SL_MAX_THREADS 10
 #define TEST_SL_MAX_ACTIONS 10
 
-/* struct used in mt test */
 struct _test_sl_thread_t {
    pthread_mutex_t mutex;
    sge_sl_list_t *list;
@@ -52,6 +52,7 @@ struct _test_sl_thread_t {
 
 typedef struct _test_sl_thread_t test_sl_thread_t;
 
+/* used in test to check the destroy sequence */
 dstring test_string = DSTRING_INIT;
 
 bool

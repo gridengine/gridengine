@@ -1,5 +1,6 @@
-#ifndef __SGE_PACKET_INTERNAL_H
-#define __SGE_PACKET_INTERNAL_H
+#ifndef __SGE_TQ_H
+#define __SGE_TQ_H
+
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -25,53 +26,68 @@
  * 
  *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
  * 
- *   Copyright: 2001 by Sun Microsystems, Inc.
+ *   Copyright: 2009 by Sun Microsystems, Inc.
  * 
  *   All Rights Reserved.
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "basis_types.h"
+#include "sge_sl.h"
 
-#ifdef  __cplusplus
-extern "C" {
+struct _sge_tq_queue_t {
+   /*
+    * List that stores tasks.
+    * Mutex of the list will be used to secure also this structure
+    */
+   sge_sl_list_t *list;
+
+   /* Condition to signal waiting threads */
+   pthread_cond_t cond;
+
+   /* Waiting threads */
+   u_long32 waiting;
+};
+
+typedef struct _sge_tq_queue_t sge_tq_queue_t;
+
+enum _sge_tq_type_t {
+   SGE_TQ_UNKNOWN = 0, 
+   
+   SGE_TQ_GDI_PACKET,    /* GDI packets */
+ 
+   SGE_TQ_TYPE1,  /* used for module tests */
+   SGE_TQ_TYPE2,  /* used for module tests */
+};
+
+typedef enum _sge_tq_type_t sge_tq_type_t;
+
+struct _sge_tq_task_t {
+   sge_tq_type_t type;
+   void *data;
+};
+
+typedef struct _sge_tq_task_t sge_tq_task_t;
+
+bool
+sge_tq_create(sge_tq_queue_t **queue);
+
+bool
+sge_tq_destroy(sge_tq_queue_t **queue);
+
+u_long32
+sge_tq_get_task_count(sge_tq_queue_t *queue);
+
+u_long32
+sge_tq_get_waiting_count(sge_tq_queue_t *queue);
+
+bool
+sge_tq_store_notify(sge_tq_queue_t *queue, sge_tq_type_t type, void *data);
+
+bool
+sge_tq_wakeup_waiting(sge_tq_queue_t *queue);
+
+bool
+sge_tq_wait_for_task(sge_tq_queue_t *queue, int seconds, sge_tq_type_t type, void **data);
+
 #endif
-
-#include "uti/sge_tq.h"
-
-extern sge_tq_queue_t *Master_Task_Queue;
-
-void
-sge_gdi_packet_wait_till_handled(sge_gdi_packet_class_t *packet);
-
-void
-sge_gdi_packet_broadcast_that_handled(sge_gdi_packet_class_t *packet);
-
-bool
-sge_gdi_packet_is_handled(sge_gdi_packet_class_t *packet);
-
-bool
-sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
-                                sge_gdi_packet_class_t *packet);
-
-bool
-sge_gdi_packet_execute_internal(sge_gdi_ctx_class_t* ctx, lList **answer_list,
-                                sge_gdi_packet_class_t *packet);
-
-bool 
-sge_gdi_packet_wait_for_result_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
-                                        sge_gdi_packet_class_t **packet_handle, lList **malpp);
-
-bool 
-sge_gdi_packet_wait_for_result_internal(sge_gdi_ctx_class_t* ctx, lList **answer_list,
-                                        sge_gdi_packet_class_t **packet_handle, lList **malpp);
-
-#ifdef  __cplusplus
-}
-#endif
-
-#endif 
-
-
-

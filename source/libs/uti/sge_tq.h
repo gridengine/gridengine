@@ -57,7 +57,7 @@ enum _sge_tq_type_t {
    SGE_TQ_GDI_PACKET,    /* GDI packets */
  
    SGE_TQ_TYPE1,  /* used for module tests */
-   SGE_TQ_TYPE2,  /* used for module tests */
+   SGE_TQ_TYPE2   /* used for module tests */
 };
 
 typedef enum _sge_tq_type_t sge_tq_type_t;

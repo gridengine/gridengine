@@ -908,20 +908,20 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
 
    if (!host_list_locate(*object_base[SGE_TYPE_EXECHOST].list, SGE_TEMPLATE_NAME)) {
       /* add an exec host "template" */
-      if (sge_add_host_of_type(ctx, SGE_TEMPLATE_NAME, SGE_EXECHOST_LIST, &monitor))
+      if (sge_add_host_of_type(ctx, SGE_TEMPLATE_NAME, SGE_EH_LIST, &monitor))
          ERROR((SGE_EVENT, MSG_CONFIG_ADDINGHOSTTEMPLATETOEXECHOSTLIST));
    }
 
    /* add host "global" to Master_Exechost_List as an exec host */
    if (!host_list_locate(*object_base[SGE_TYPE_EXECHOST].list, SGE_GLOBAL_NAME)) {
       /* add an exec host "global" */
-      if (sge_add_host_of_type(ctx, SGE_GLOBAL_NAME, SGE_EXECHOST_LIST, &monitor))
+      if (sge_add_host_of_type(ctx, SGE_GLOBAL_NAME, SGE_EH_LIST, &monitor))
          ERROR((SGE_EVENT, MSG_CONFIG_ADDINGHOSTGLOBALTOEXECHOSTLIST));
    }
 
    /* add qmaster host to Master_Adminhost_List as an administrativ host */
    if (!host_list_locate(*object_base[SGE_TYPE_ADMINHOST].list, qualified_hostname)) {
-      if (sge_add_host_of_type(ctx, qualified_hostname, SGE_ADMINHOST_LIST, &monitor)) {
+      if (sge_add_host_of_type(ctx, qualified_hostname, SGE_AH_LIST, &monitor)) {
          DRETURN(-1);
       }
    }

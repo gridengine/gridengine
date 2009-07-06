@@ -77,7 +77,7 @@ public class TestJobSchedulingInfo extends com.sun.grid.jgdi.BaseTestCase {
                 for (JobSchedulingMessage mes : schedInfo.getMessageList()) {
                     pw.println(mes.getMessage() + " (" + mes.getMessageNumber() + ")");
                     for (int i = 0; i < mes.getJobNumberCount(); i++) {
-                        int jobId = ((ULNG) mes.getJobNumberList().get(i)).getULNG();
+                        int jobId = ((ULNG) mes.getJobNumberList().get(i)).getValue();
                         pw.println("job_number: " + jobId);
                         Job job = jgdi.getJob(jobId);
                         pw.println("exec_file:  " + job.getExecFile());

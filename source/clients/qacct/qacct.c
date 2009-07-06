@@ -1477,11 +1477,11 @@ lList **hgrp_l
    DENTER(TOP_LAYER, "get_qacct_lists");
 
    /*
-   ** GET SGE_CENTRY_LIST 
+   ** GET SGE_CE_LIST 
    */
    if (ppcentries) {
       what = lWhat("%T(ALL)", CE_Type);
-      ce_id = ctx->gdi_multi(ctx, alpp, SGE_GDI_RECORD, SGE_CENTRY_LIST, SGE_GDI_GET,
+      ce_id = ctx->gdi_multi(ctx, alpp, SGE_GDI_RECORD, SGE_CE_LIST, SGE_GDI_GET,
                              NULL, NULL, what, &state, true);
       lFreeWhat(&what);
 
@@ -1490,12 +1490,12 @@ lList **hgrp_l
       }
    }
    /*
-   ** GET SGE_EXECHOST_LIST 
+   ** GET SGE_EH_LIST 
    */
    if (ppexechosts) {
       where = lWhere("%T(%I!=%s)", EH_Type, EH_name, SGE_TEMPLATE_NAME);
       what = lWhat("%T(ALL)", EH_Type);
-      eh_id = ctx->gdi_multi(ctx, alpp, SGE_GDI_RECORD, SGE_EXECHOST_LIST, SGE_GDI_GET,
+      eh_id = ctx->gdi_multi(ctx, alpp, SGE_GDI_RECORD, SGE_EH_LIST, SGE_GDI_GET,
                               NULL, where, what, &state, true);
       lFreeWhat(&what);
       lFreeWhere(&where);
@@ -1510,7 +1510,7 @@ lList **hgrp_l
    */
    if (hgrp_l) {
       what = lWhat("%T(ALL)", HGRP_Type);
-      hgrp_id = ctx->gdi_multi(ctx, alpp, SGE_GDI_RECORD, SGE_HGROUP_LIST, SGE_GDI_GET, 
+      hgrp_id = ctx->gdi_multi(ctx, alpp, SGE_GDI_RECORD, SGE_HGRP_LIST, SGE_GDI_GET, 
                            NULL, NULL, what, &state, true);
       lFreeWhat(&what);
 
@@ -1522,7 +1522,7 @@ lList **hgrp_l
    ** GET SGE_QUEUE_LIST 
    */
    what = lWhat("%T(ALL)", QU_Type);
-   q_id = ctx->gdi_multi(ctx, alpp, SGE_GDI_SEND, SGE_CQUEUE_LIST, SGE_GDI_GET,
+   q_id = ctx->gdi_multi(ctx, alpp, SGE_GDI_SEND, SGE_CQ_LIST, SGE_GDI_GET,
                            NULL, NULL, what, &state, true);
    ctx->gdi_wait(ctx, alpp, &mal, &state);
    lFreeWhat(&what);
@@ -1537,7 +1537,7 @@ lList **hgrp_l
    */
    /* --- complex */
    if (ppcentries) {
-      sge_gdi_extract_answer(alpp, SGE_GDI_GET, SGE_CENTRY_LIST, ce_id,
+      sge_gdi_extract_answer(alpp, SGE_GDI_GET, SGE_CE_LIST, ce_id,
                                    mal, ppcentries);
       if (answer_list_has_error(alpp)) { 
          lFreeList(&mal);
@@ -1547,7 +1547,7 @@ lList **hgrp_l
 
    /* --- exec host */
    if (ppexechosts) {
-      sge_gdi_extract_answer(alpp, SGE_GDI_GET, SGE_EXECHOST_LIST, eh_id, 
+      sge_gdi_extract_answer(alpp, SGE_GDI_GET, SGE_EH_LIST, eh_id, 
                                     mal, ppexechosts);
       if (answer_list_has_error(alpp)) { 
          lFreeList(&mal);
@@ -1557,7 +1557,7 @@ lList **hgrp_l
 
    /* --- queue */
    if (ppqueues) {
-      sge_gdi_extract_answer(alpp, SGE_GDI_GET, SGE_CQUEUE_LIST, q_id, 
+      sge_gdi_extract_answer(alpp, SGE_GDI_GET, SGE_CQ_LIST, q_id, 
                                  mal, ppqueues);
       if (answer_list_has_error(alpp)) { 
          lFreeList(&mal);
@@ -1567,7 +1567,7 @@ lList **hgrp_l
 
    /* --- hgrp */
    if (hgrp_l) {
-      sge_gdi_extract_answer(alpp, SGE_GDI_GET, SGE_HGROUP_LIST, hgrp_id, mal, 
+      sge_gdi_extract_answer(alpp, SGE_GDI_GET, SGE_HGRP_LIST, hgrp_id, mal, 
                                    hgrp_l);
       if (answer_list_has_error(alpp)) { 
          lFreeList(&mal);

@@ -437,7 +437,7 @@ jsv_handle_param_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answe
                   lListElem *first = lFirst(ar_id_list);
 
                   if (first != NULL) {
-                     id = lGetUlong(first, ULNG);
+                     id = lGetUlong(first, ULNG_value);
                   }
                }
                lFreeList(&ar_id_list);

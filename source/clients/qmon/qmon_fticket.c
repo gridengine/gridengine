@@ -233,23 +233,23 @@ static void qmonFOTOpenLink(Widget w, XtPointer cld, XtPointer cad)
    DENTER(GUI_LAYER, "qmonFOTOpenLink");
 
    switch (info->list_type) {
-      case SGE_USER_LIST:
+      case SGE_UU_LIST:
          qmonPopupManopConfig(w, NULL, NULL); 
          break;
 
-      case SGE_USERSET_LIST:
+      case SGE_US_LIST:
          qmonPopupManopConfig(w, NULL, NULL); 
          break;
 
-      case SGE_PROJECT_LIST:
+      case SGE_PR_LIST:
          qmonPopupProjectConfig(w, NULL, NULL); 
          break;
 
-      case SGE_JOB_LIST:
+      case SGE_JB_LIST:
          qmonJobPopup(w, NULL, NULL); 
          break;
 
-      case SGE_CQUEUE_LIST:
+      case SGE_CQ_LIST:
          qmonCQPopup(w, NULL, NULL); 
          break;
    }
@@ -728,28 +728,28 @@ XtPointer cad
       case FOT_USER:
          fticket_info.field0 = UU_name;
          fticket_info.field1 = UU_fshare;
-         fticket_info.list_type = SGE_USER_LIST;
+         fticket_info.list_type = SGE_UU_LIST;
          fticket_info.dp = UU_Type;
          break;
       
       case FOT_PROJECT:
          fticket_info.field0 = PR_name;
          fticket_info.field1 = PR_fshare;
-         fticket_info.list_type = SGE_PROJECT_LIST;
+         fticket_info.list_type = SGE_PR_LIST;
          fticket_info.dp = PR_Type;
          break;
       
       case FOT_USERSET:
          fticket_info.field0 = US_name;
          fticket_info.field1 = US_fshare;
-         fticket_info.list_type = SGE_USERSET_LIST;
+         fticket_info.list_type = SGE_US_LIST;
          fticket_info.dp = US_Type;
          break;
 
       case FOT_JOB:
          fticket_info.field0 = JB_job_number;
          fticket_info.field1 = JB_jobshare;
-         fticket_info.list_type = SGE_JOB_LIST;
+         fticket_info.list_type = SGE_JB_LIST;
          fticket_info.dp = JB_Type;
          break;
 
@@ -785,7 +785,7 @@ static void qmonFTUpdate(Widget w, XtPointer cld, XtPointer cad)
    /*
    ** filter usersets
    */
-   if (fticket_info.list_type == SGE_USERSET_LIST) {
+   if (fticket_info.list_type == SGE_US_LIST) {
       where = lWhere("%T(%I m= %u)", US_Type, US_type, US_DEPT);
       what = lWhat("%T(ALL)", US_Type);
       lp = lSelect("Departments", lp, where, what);
@@ -799,7 +799,7 @@ static void qmonFTUpdate(Widget w, XtPointer cld, XtPointer cad)
    lPSortList(lp, "%I+", fticket_info.field0);
    qmonFOTCullToMatrix(fticket_info.matrix, lp, 
                         fticket_info.field0, fticket_info.field1);
-   if (fticket_info.list_type == SGE_USERSET_LIST) {
+   if (fticket_info.list_type == SGE_US_LIST) {
       lFreeList(&lp);
    }
 
@@ -830,22 +830,22 @@ static void qmonOTUpdate(Widget w, XtPointer cld, XtPointer cad)
    DENTER(GUI_LAYER, "qmonOTUpdate");
    
    switch (oticket_info.list_type) {
-      case SGE_USERSET_LIST:
+      case SGE_US_LIST:
          selector = USERSET_T;
          break;
-      case SGE_CQUEUE_LIST:
+      case SGE_CQ_LIST:
          selector = CQUEUE_T;
          break;
          
-      case SGE_JOB_LIST:
+      case SGE_JB_LIST:
          selector = JOB_T;
          break;
          
-      case SGE_USER_LIST:
+      case SGE_UU_LIST:
          selector = USER_T;
          break;
          
-      case SGE_PROJECT_LIST:
+      case SGE_PR_LIST:
          selector = PROJECT_T;
          break;
    }        
@@ -862,7 +862,7 @@ static void qmonOTUpdate(Widget w, XtPointer cld, XtPointer cad)
    /*
    ** filter usersets
    */
-   if (oticket_info.list_type == SGE_USERSET_LIST) {
+   if (oticket_info.list_type == SGE_US_LIST) {
       where = lWhere("%T(%I m= %u)", US_Type, US_type, US_DEPT);
       what = lWhat("%T(ALL)", US_Type);
       lp = lSelect("Departments", lp, where, what);
@@ -876,7 +876,7 @@ static void qmonOTUpdate(Widget w, XtPointer cld, XtPointer cad)
    lPSortList(lp, "%I+", oticket_info.field0);
    qmonFOTCullToMatrix(oticket_info.matrix, lp, 
                         oticket_info.field0, oticket_info.field1);
-   if (oticket_info.list_type == SGE_USERSET_LIST) {
+   if (oticket_info.list_type == SGE_US_LIST) {
       lFreeList(&lp);
    }
 
@@ -1010,28 +1010,28 @@ XtPointer cad
       case FOT_USER:
          oticket_info.field0 = UU_name;
          oticket_info.field1 = UU_oticket;
-         oticket_info.list_type = SGE_USER_LIST;
+         oticket_info.list_type = SGE_UU_LIST;
          oticket_info.dp = UU_Type;
          break;
       
       case FOT_PROJECT:
          oticket_info.field0 = PR_name;
          oticket_info.field1 = PR_oticket;
-         oticket_info.list_type = SGE_PROJECT_LIST;
+         oticket_info.list_type = SGE_PR_LIST;
          oticket_info.dp = PR_Type;
          break;
       
       case FOT_USERSET:
          oticket_info.field0 = US_name;
          oticket_info.field1 = US_oticket;
-         oticket_info.list_type = SGE_USERSET_LIST;
+         oticket_info.list_type = SGE_US_LIST;
          oticket_info.dp = US_Type;
          break;
 
       case FOT_JOB:
          oticket_info.field0 = JB_job_number;
          oticket_info.field1 = JB_override_tickets;
-         oticket_info.list_type = SGE_JOB_LIST;
+         oticket_info.list_type = SGE_JB_LIST;
          oticket_info.dp = JB_Type;
          break;
 

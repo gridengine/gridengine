@@ -72,30 +72,30 @@ static int contact_ok = 1;
 */
 static tQmonMirrorList QmonMirrorList[] = {
    { 0, 0, 0, NULL, 0, NULL, NULL },   /* DUMMY   */
-   { 0, SGE_ADMINHOST_LIST, ADMINHOST_T, NULL, 0, NULL, NULL },
-   { 0, SGE_SUBMITHOST_LIST, SUBMITHOST_T, NULL, 0, NULL, NULL },
-   { 0, SGE_EXECHOST_LIST, EXECHOST_T, NULL, 0, NULL, NULL },
-   { 0, SGE_CQUEUE_LIST, CQUEUE_T, NULL, 0, NULL, NULL },
-   { 0, SGE_JOB_LIST, JOB_T, NULL, 0, NULL, NULL },
-   { 0, SGE_EVENT_LIST, EVENT_T, NULL, 0, NULL, NULL },
-   { 0, SGE_CENTRY_LIST, CENTRY_T, NULL, 0, NULL, NULL },
+   { 0, SGE_AH_LIST, ADMINHOST_T, NULL, 0, NULL, NULL },
+   { 0, SGE_SH_LIST, SUBMITHOST_T, NULL, 0, NULL, NULL },
+   { 0, SGE_EH_LIST, EXECHOST_T, NULL, 0, NULL, NULL },
+   { 0, SGE_CQ_LIST, CQUEUE_T, NULL, 0, NULL, NULL },
+   { 0, SGE_JB_LIST, JOB_T, NULL, 0, NULL, NULL },
+   { 0, SGE_EV_LIST, EVENT_T, NULL, 0, NULL, NULL },
+   { 0, SGE_CE_LIST, CENTRY_T, NULL, 0, NULL, NULL },
    { 0, SGE_ORDER_LIST, ORDER_T, NULL, 0, NULL, NULL },
    { 0, SGE_MASTER_EVENT, MASTER_EVENT_T, NULL, 0, NULL, NULL },
-   { 0, SGE_CONFIG_LIST, CONFIG_T, NULL, 0, NULL, NULL },
-   { 0, SGE_MANAGER_LIST, MANAGER_T, NULL, 0, NULL, NULL },
-   { 0, SGE_OPERATOR_LIST, OPERATOR_T, NULL, 0, NULL, NULL },
+   { 0, SGE_CONF_LIST, CONFIG_T, NULL, 0, NULL, NULL },
+   { 0, SGE_UM_LIST, MANAGER_T, NULL, 0, NULL, NULL },
+   { 0, SGE_UO_LIST, OPERATOR_T, NULL, 0, NULL, NULL },
    { 0, SGE_PE_LIST, PE_T, NULL, 0, NULL, NULL },
    { 0, SGE_SC_LIST, SC_T, NULL, 0, NULL, NULL },
-   { 0, SGE_USER_LIST, USER_T, NULL, 0, NULL, NULL },
-   { 0, SGE_USERSET_LIST, USERSET_T, NULL, 0, NULL, NULL },
-   { 0, SGE_PROJECT_LIST, PROJECT_T, NULL, 0, NULL, NULL },
-   { 0, SGE_SHARETREE_LIST, SHARETREE_T, NULL, 0, NULL, NULL },
-   { 0, SGE_CKPT_LIST, CKPT_T, NULL, 0, NULL, NULL },
-   { 0, SGE_CALENDAR_LIST, CALENDAR_T, NULL, 0, NULL, NULL },
-   { 0, SGE_JOB_SCHEDD_INFO_LIST, JOB_SCHEDD_INFO_T, NULL, 0, NULL, NULL },
+   { 0, SGE_UU_LIST, USER_T, NULL, 0, NULL, NULL },
+   { 0, SGE_US_LIST, USERSET_T, NULL, 0, NULL, NULL },
+   { 0, SGE_PR_LIST, PROJECT_T, NULL, 0, NULL, NULL },
+   { 0, SGE_STN_LIST, SHARETREE_T, NULL, 0, NULL, NULL },
+   { 0, SGE_CK_LIST, CKPT_T, NULL, 0, NULL, NULL },
+   { 0, SGE_CAL_LIST, CALENDAR_T, NULL, 0, NULL, NULL },
+   { 0, SGE_SME_LIST, JOB_SCHEDD_INFO_T, NULL, 0, NULL, NULL },
    { 0, SGE_ZOMBIE_LIST, ZOMBIE_T, NULL, 0, NULL, NULL },
    { 0, SGE_USER_MAPPING_LIST, USER_MAPPING_T, NULL, 0, NULL, NULL },
-   { 0, SGE_HGROUP_LIST, HGROUP_T, NULL, 0, NULL, NULL },
+   { 0, SGE_HGRP_LIST, HGROUP_T, NULL, 0, NULL, NULL },
    { 0, SGE_RQS_LIST, RQS_T, NULL, 0, NULL, NULL },
    { 0, SGE_AR_LIST, AR_T, NULL, 0, NULL, NULL },
 };
@@ -138,30 +138,30 @@ void qmonMirrorListInit(void)
    
    DENTER(GUI_LAYER, "qmonMirrorListInit");
 
-   QmonMirrorList[SGE_ADMINHOST_LIST].what = lWhat("%T(ALL)", AH_Type);
-   QmonMirrorList[SGE_SUBMITHOST_LIST].what = lWhat("%T(ALL)", SH_Type);
-   QmonMirrorList[SGE_EXECHOST_LIST].what = lWhat("%T(ALL)", EH_Type);
-   QmonMirrorList[SGE_CQUEUE_LIST].what = lWhat("%T(ALL)", CQ_Type);
-   QmonMirrorList[SGE_JOB_LIST].what = lWhat("%T(ALL)", JB_Type);
-   QmonMirrorList[SGE_EVENT_LIST].what = lWhat("%T(ALL)", EV_Type);
-   QmonMirrorList[SGE_CENTRY_LIST].what = lWhat("%T(ALL)", CE_Type);
+   QmonMirrorList[SGE_AH_LIST].what = lWhat("%T(ALL)", AH_Type);
+   QmonMirrorList[SGE_SH_LIST].what = lWhat("%T(ALL)", SH_Type);
+   QmonMirrorList[SGE_EH_LIST].what = lWhat("%T(ALL)", EH_Type);
+   QmonMirrorList[SGE_CQ_LIST].what = lWhat("%T(ALL)", CQ_Type);
+   QmonMirrorList[SGE_JB_LIST].what = lWhat("%T(ALL)", JB_Type);
+   QmonMirrorList[SGE_EV_LIST].what = lWhat("%T(ALL)", EV_Type);
+   QmonMirrorList[SGE_CE_LIST].what = lWhat("%T(ALL)", CE_Type);
    QmonMirrorList[SGE_ORDER_LIST].what = lWhat("%T(ALL)", OR_Type);
    QmonMirrorList[SGE_MASTER_EVENT].what = lWhat("%T(ALL)", EV_Type);
-   QmonMirrorList[SGE_CONFIG_LIST].what = lWhat("%T(ALL)", CONF_Type);
-   QmonMirrorList[SGE_MANAGER_LIST].what = lWhat("%T(ALL)", UM_Type);
-   QmonMirrorList[SGE_OPERATOR_LIST].what = lWhat("%T(ALL)", UO_Type);
+   QmonMirrorList[SGE_CONF_LIST].what = lWhat("%T(ALL)", CONF_Type);
+   QmonMirrorList[SGE_UM_LIST].what = lWhat("%T(ALL)", UM_Type);
+   QmonMirrorList[SGE_UO_LIST].what = lWhat("%T(ALL)", UO_Type);
    QmonMirrorList[SGE_PE_LIST].what = lWhat("%T(ALL)", PE_Type);
    QmonMirrorList[SGE_SC_LIST].what = lWhat("%T(ALL)", SC_Type);
-   QmonMirrorList[SGE_USER_LIST].what = lWhat("%T(ALL)", UU_Type);
-   QmonMirrorList[SGE_USERSET_LIST].what = lWhat("%T(ALL)", US_Type);
-   QmonMirrorList[SGE_PROJECT_LIST].what = lWhat("%T(ALL)", PR_Type);
-   QmonMirrorList[SGE_SHARETREE_LIST].what = lWhat("%T(ALL)", STN_Type);
-   QmonMirrorList[SGE_CKPT_LIST].what = lWhat("%T(ALL)", CK_Type);
-   QmonMirrorList[SGE_CALENDAR_LIST].what = lWhat("%T(ALL)", CAL_Type);
-   QmonMirrorList[SGE_JOB_SCHEDD_INFO_LIST].what = lWhat("%T(ALL)", SME_Type);
+   QmonMirrorList[SGE_UU_LIST].what = lWhat("%T(ALL)", UU_Type);
+   QmonMirrorList[SGE_US_LIST].what = lWhat("%T(ALL)", US_Type);
+   QmonMirrorList[SGE_PR_LIST].what = lWhat("%T(ALL)", PR_Type);
+   QmonMirrorList[SGE_STN_LIST].what = lWhat("%T(ALL)", STN_Type);
+   QmonMirrorList[SGE_CK_LIST].what = lWhat("%T(ALL)", CK_Type);
+   QmonMirrorList[SGE_CAL_LIST].what = lWhat("%T(ALL)", CAL_Type);
+   QmonMirrorList[SGE_SME_LIST].what = lWhat("%T(ALL)", SME_Type);
    QmonMirrorList[SGE_ZOMBIE_LIST].what = lWhat("%T(ALL)", JB_Type);
    QmonMirrorList[SGE_USER_MAPPING_LIST].what = lWhat("%T(ALL)", CU_Type);
-   QmonMirrorList[SGE_HGROUP_LIST].what = lWhat("%T(ALL)", HGRP_Type);
+   QmonMirrorList[SGE_HGRP_LIST].what = lWhat("%T(ALL)", HGRP_Type);
    QmonMirrorList[SGE_RQS_LIST].what = lWhat("%T(ALL)", RQS_Type);
    QmonMirrorList[SGE_AR_LIST].what = lWhat("%T(ALL)", AR_Type);
 
@@ -328,7 +328,7 @@ lEnumeration *what
    
    alp = ctx->gdi(ctx, type, SGE_GDI_DEL, lpp, where, what); 
 
-   if (type == SGE_JOB_LIST) {
+   if (type == SGE_JB_LIST) {
 #if 0
       /* modify local list */
       for_each2(alep, alp, ep, *lpp) {
@@ -339,7 +339,7 @@ lEnumeration *what
                job_list_locate(local, jid); 
             }
             else {
-               sep = job_list_locate(qmonMirrorList(SGE_JOB_LIST), jid);
+               sep = job_list_locate(qmonMirrorList(SGE_JB_LIST), jid);
                if (sep) {
                   lListElem *jatep;
                   for_each (jatep, lGetList(sep, JB_ja_tasks)) {
@@ -360,7 +360,7 @@ printf("__________________________________\n");
 */
 #endif
    }
-   else { /* type != SGE_JOB_LIST */
+   else { /* type != SGE_JB_LIST */
       /* modify local list */
       for_each2(alep, alp, ep, *lpp) {
          if ( lGetUlong(alep, AN_status) == STATUS_OK) {
@@ -412,7 +412,7 @@ lEnumeration *what
    
    sge_stopwatch_start(0);
    
-   if (type == SGE_JOB_LIST || type == SGE_AR_LIST) {
+   if (type == SGE_JB_LIST || type == SGE_AR_LIST) {
       alp = ctx->gdi(ctx, type, SGE_GDI_ADD | SGE_GDI_RETURN_NEW_VERSION, 
                         lpp, where, what);
    } else {
@@ -499,7 +499,7 @@ lEnumeration *what
 
    alp = ctx->gdi(ctx, type, SGE_GDI_MOD, lpp, where, what); 
 
-   if (!(type == SGE_SC_LIST || type == SGE_SHARETREE_LIST)) {
+   if (!(type == SGE_SC_LIST || type == SGE_STN_LIST)) {
       /* right now we change the whole element */
       for_each2(alep, alp, ep, *lpp) {
          if ( lGetUlong(alep, AN_status) == STATUS_OK) {
@@ -570,7 +570,7 @@ int action
    sge_stopwatch_start(0);
   
    if (id_list_build_from_str_list(&id_list, &alp, lp, action, force)) {
-      alp = ctx->gdi(ctx, SGE_CQUEUE_LIST, SGE_GDI_TRIGGER, &id_list, NULL, NULL);
+      alp = ctx->gdi(ctx, SGE_CQ_LIST, SGE_GDI_TRIGGER, &id_list, NULL, NULL);
       lFreeList(&id_list);
    }
 

@@ -886,7 +886,7 @@ static void get_rid_of_schedd_job_messages(u_long32 job_number)
          lListElem *job_ulng;
          next = lNext(mes);
          
-         if ((job_ulng = lGetElemUlong(lGetList(mes, MES_job_number_list), ULNG, job_number)) != NULL) {
+         if ((job_ulng = lGetElemUlong(lGetList(mes, MES_job_number_list), ULNG_value, job_number)) != NULL) {
             /* 
             ** more than one job in list for this message => remove job id
             ** else => remove whole message 

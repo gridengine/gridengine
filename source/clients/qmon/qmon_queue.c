@@ -211,11 +211,11 @@ void updateQueueList(void)
    
    DENTER(GUI_LAYER, "updateQueueList");
 
-   cl = qmonMirrorList(SGE_CENTRY_LIST);
+   cl = qmonMirrorList(SGE_CE_LIST);
    /*
    ** copy of host list
    */
-   hl = lCopyList("HL", qmonMirrorList(SGE_EXECHOST_LIST));
+   hl = lCopyList("HL", qmonMirrorList(SGE_EH_LIST));
 
    /* 
    **
@@ -229,7 +229,7 @@ void updateQueueList(void)
 #else   
    whatall = lWhat("%T(ALL)", CQ_Type);
 #endif  
-   qlp = lSelect("SQL", qmonMirrorList(SGE_CQUEUE_LIST), where, whatall); 
+   qlp = lSelect("SQL", qmonMirrorList(SGE_CQ_LIST), where, whatall); 
    lFreeWhere(&where);
    lFreeWhat(&whatall);
 
@@ -841,8 +841,8 @@ lListElem *qep
 
    DENTER(GUI_LAYER, "qmonQueueSetLoad");
 
-   ehl = qmonMirrorList(SGE_EXECHOST_LIST);
-   cl = qmonMirrorList(SGE_CENTRY_LIST);
+   ehl = qmonMirrorList(SGE_EH_LIST);
+   cl = qmonMirrorList(SGE_CE_LIST);
 
    correct_capacities(ehl, cl);
    queue_complexes2scheduler(&ncl, qep, ehl, cl);
@@ -1158,8 +1158,8 @@ static void qmonDrawQueueButton(Widget w, XtPointer cld, XtPointer cad)
       ** get info from queue 
       */
       if (qB->qI->qp) {
-         ehl = qmonMirrorList(SGE_EXECHOST_LIST);
-         cl = qmonMirrorList(SGE_CENTRY_LIST);
+         ehl = qmonMirrorList(SGE_EH_LIST);
+         cl = qmonMirrorList(SGE_CE_LIST);
          q = qB->qI->qp;
 
          qname     = lGetString(q, CQ_name);
@@ -1429,7 +1429,7 @@ static void qmonQueueDeleteQuick(Widget w, XtPointer cld, XtPointer cad)
                      False, &answer, NULL);
          
       if (answer) { 
-         alp = qmonDelList(SGE_CQUEUE_LIST, qmonMirrorListRef(SGE_CQUEUE_LIST), 
+         alp = qmonDelList(SGE_CQ_LIST, qmonMirrorListRef(SGE_CQ_LIST), 
                            CQ_name, &lp, NULL, what);
 
          qmonMessageBox(w, alp, 0);
@@ -1481,7 +1481,7 @@ static void qmonQueueChangeState(Widget w, XtPointer cld, XtPointer cad)
    }
 
    if (ql) {
-      alp = qmonChangeStateList(SGE_CQUEUE_LIST, ql, force, action); 
+      alp = qmonChangeStateList(SGE_CQ_LIST, ql, force, action); 
    
       qmonMessageBox(w, alp, 0);
 
@@ -1513,7 +1513,7 @@ const char *qhostname
       return NULL;
    }
    
-   ehl = qmonMirrorList(SGE_EXECHOST_LIST);
+   ehl = qmonMirrorList(SGE_EH_LIST);
    ehp = host_list_locate(ehl, qhostname);
    if (ehp)
       lep = lGetSubStr(ehp, HL_name, "arch", EH_load_list);

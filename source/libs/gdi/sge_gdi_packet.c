@@ -245,7 +245,7 @@ sge_gdi_task_verify(sge_gdi_task_class_t * task, lList **answer_list)
        && !(operation == SGE_GDI_PERMCHECK || operation == SGE_GDI_GET
             || operation == SGE_GDI_TRIGGER || (operation == SGE_GDI_DEL
                                                 && target ==
-                                                SGE_SHARETREE_LIST))
+                                                SGE_STN_LIST))
       ) {
       answer_list_add_sprintf(answer_list, STATUS_ESEMANTIC,
                  ANSWER_QUALITY_ERROR, MSG_GDI_GDI_VERIFY_REQUEST_FAILED);

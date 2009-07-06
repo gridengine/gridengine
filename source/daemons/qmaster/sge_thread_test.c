@@ -174,7 +174,7 @@ sge_test_main(void *arg)
          lCondition *where = NULL;
          lList *data_list = NULL;
 
-         answer_list = ctx->gdi(ctx, SGE_CQUEUE_LIST, SGE_GDI_GET, &data_list,
+         answer_list = ctx->gdi(ctx, SGE_CQ_LIST, SGE_GDI_GET, &data_list,
                                 where, what);
 
          if (answer_list_has_error(&answer_list)) {
@@ -199,10 +199,10 @@ sge_test_main(void *arg)
          int job_request_id;
 
          cqueue_request_id = ctx->gdi_multi(ctx, &local_answer_list, SGE_GDI_RECORD, 
-                                           SGE_CQUEUE_LIST, SGE_GDI_GET, NULL,
+                                           SGE_CQ_LIST, SGE_GDI_GET, NULL,
                                            where_cqueue, what_cqueue, &state, true);
          job_request_id = ctx->gdi_multi(ctx, &local_answer_list, SGE_GDI_SEND, 
-                                         SGE_JOB_LIST, SGE_GDI_GET, NULL,
+                                         SGE_JB_LIST, SGE_GDI_GET, NULL,
                                          where_job, what_job, &state, true);
          if (cqueue_request_id != -1 && job_request_id != -1 && 
              answer_list_has_error(&local_answer_list) == false) {
@@ -213,9 +213,9 @@ sge_test_main(void *arg)
             lList *answer_job = NULL;
      
             ctx->gdi_wait(ctx, &local_answer_list, &multi_answer_list, &state);
-            sge_gdi_extract_answer(&answer_cqueue, SGE_GDI_GET, SGE_CQUEUE_LIST, 
+            sge_gdi_extract_answer(&answer_cqueue, SGE_GDI_GET, SGE_CQ_LIST, 
                                    cqueue_request_id, multi_answer_list, &list_cqueue);
-            sge_gdi_extract_answer(&answer_job, SGE_GDI_GET, SGE_CQUEUE_LIST, 
+            sge_gdi_extract_answer(&answer_job, SGE_GDI_GET, SGE_CQ_LIST, 
                                    job_request_id, multi_answer_list, &list_job);
 
             if (answer_list_has_error(&answer_cqueue) || answer_list_has_error(&answer_job) ||

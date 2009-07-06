@@ -1,5 +1,5 @@
-#ifndef __SGE_HOSTL_H
-#define __SGE_HOSTL_H
+#ifndef __SGE_HOST_EH_L_H
+#define __SGE_HOST_EH_L_H
 
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
@@ -124,7 +124,7 @@ enum {
 };
 
 LISTDEF(EH_Type)
-   JGDI_ROOT_OBJ(ExecHost, SGE_EXECHOST_LIST, ADD | MODIFY | DELETE | GET | GET_LIST)
+   JGDI_ROOT_OBJ(ExecHost, SGE_EH_LIST, ADD | MODIFY | DELETE | GET | GET_LIST)
    JGDI_EVENT_OBJ(ADD(sgeE_EXECHOST_ADD) | MODIFY(sgeE_EXECHOST_MOD) | DELETE(sgeE_EXECHOST_DEL) | GET_LIST(sgeE_EXECHOST_LIST))
    SGE_HOST_D(EH_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL | CULL_JGDI_CONF, "template")
    SGE_MAP(EH_scaling_list, HS_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_CONF)
@@ -214,118 +214,8 @@ NAMEDEF(EHN)
 NAMEEND
 
 #define EHS sizeof(EHN)/sizeof(char*)
-
-/*
- * reschedule unknown list
- */
-enum {
-   RU_job_number = RU_LOWERBOUND,
-   RU_task_number,
-   RU_state
-};
-
-LISTDEF(RU_Type)
-   JGDI_OBJ(RescheduleUnknown)
-   SGE_ULONG(RU_job_number, CULL_DEFAULT)
-   SGE_ULONG(RU_task_number, CULL_DEFAULT)
-   SGE_ULONG(RU_state, CULL_DEFAULT)
-LISTEND 
-
-NAMEDEF(RUN)
-   NAME("RU_job_number")
-   NAME("RU_task_number")
-   NAME("RU_state")
-NAMEEND
-
-#define RUS sizeof(RUN)/sizeof(char*)
-
-/*
- *  admin host
- */
-enum {
-   AH_name = AH_LOWERBOUND
-};
-
-LISTDEF(AH_Type)
-   JGDI_ROOT_OBJ(AdminHost, SGE_ADMINHOST_LIST, ADD | DELETE | GET_LIST)
-   JGDI_EVENT_OBJ(ADD(sgeE_ADMINHOST_ADD) | MODIFY(sgeE_ADMINHOST_MOD) | DELETE(sgeE_ADMINHOST_DEL) | GET_LIST(sgeE_ADMINHOST_LIST))
-   SGE_HOST(AH_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL | CULL_JGDI_CONF)
-LISTEND 
-
-NAMEDEF(AHN)
-   NAME("AH_name")
-NAMEEND
-
-#define AHS sizeof(AHN)/sizeof(char*)
-
-/*
- * submit host
- */
-enum {
-   SH_name = SH_LOWERBOUND
-};
-
-LISTDEF(SH_Type)
-   JGDI_ROOT_OBJ( SubmitHost, SGE_SUBMITHOST_LIST, ADD | DELETE | GET_LIST)
-   JGDI_EVENT_OBJ(ADD(sgeE_SUBMITHOST_ADD) | MODIFY(sgeE_SUBMITHOST_MOD) | DELETE(sgeE_SUBMITHOST_DEL) | GET_LIST(sgeE_SUBMITHOST_LIST))
-   SGE_HOST(SH_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SPOOL | CULL_JGDI_CONF)
-LISTEND 
-
-NAMEDEF(SHN)
-   NAME("SH_name")
-NAMEEND
-
-#define SHS sizeof(SHN)/sizeof(char*)
-
-/*
- * host load
- */
-enum {
-   HL_name = HL_LOWERBOUND,
-   HL_value,
-   HL_last_update,
-   HL_static
-};
-
-LISTDEF(HL_Type)
-   JGDI_MAP_OBJ(HL_name, HL_value)
-   SGE_STRING(HL_name, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_SUBLIST)
-   SGE_STRING(HL_value, CULL_DEFAULT | CULL_SUBLIST)
-   SGE_ULONG(HL_last_update, CULL_DEFAULT)
-   SGE_BOOL(HL_static, CULL_DEFAULT)
-LISTEND 
-
-NAMEDEF(HLN)
-   NAME("HL_name")
-   NAME("HL_value")
-   NAME("HL_last_update")
-   NAME("HL_static")
-NAMEEND
-
-#define HLS sizeof(HLN)/sizeof(char*)
-
-/*
- * load scaling
- */
-enum {
-   HS_name = HS_LOWERBOUND,
-   HS_value
-};
-
-LISTDEF(HS_Type)
-   JGDI_MAP_OBJ(HS_name, HS_value)
-   SGE_STRING(HS_name, CULL_PRIMARY_KEY | CULL_DEFAULT | CULL_SUBLIST)
-   SGE_DOUBLE(HS_value, CULL_DEFAULT | CULL_SUBLIST)
-LISTEND 
-
-NAMEDEF(HSN)
-   NAME("HS_name")
-   NAME("HS_value")
-NAMEEND
-
 /* *INDENT-ON* */
 
-#define HSS sizeof(HSN)/sizeof(char*)
 #ifdef  __cplusplus
 }
 #endif

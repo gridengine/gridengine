@@ -1164,7 +1164,7 @@ void xml_qstat_show_job_info(lList **list, lList **answer_list) {
          mlp = lGetList(sme, SME_message_list);         
       }      
       for_each(mes, mlp) {
-         lPSortList (lGetList(mes, MES_job_number_list), "I+", ULNG);
+         lPSortList (lGetList(mes, MES_job_number_list), "I+", ULNG_value);
 
          for_each(jid_ulng, lGetList(mes, MES_job_number_list)) {
             u_long32 mid;            

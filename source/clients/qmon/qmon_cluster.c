@@ -519,7 +519,7 @@ void updateClusterList(void)
    
    DENTER(GUI_LAYER, "updateClusterList");
 
-   cl = qmonMirrorList(SGE_CONFIG_LIST);
+   cl = qmonMirrorList(SGE_CONF_LIST);
    UpdateXmListFromCull(cluster_host_list, XmFONTLIST_DEFAULT_TAG, cl, CONF_name);
    XmListMoveItemToPos(cluster_host_list, "global", 1);
 
@@ -555,7 +555,7 @@ static void qmonSelectHost(Widget w, XtPointer cld, XtPointer cad)
       return;
    }
 
-   ep = lGetElemHost(qmonMirrorList(SGE_CONFIG_LIST), CONF_name, hname);
+   ep = lGetElemHost(qmonMirrorList(SGE_CONF_LIST), CONF_name, hname);
    XtFree((char*) hname);
    qmonClusterFillConf(cluster_conf_list, ep);
    
@@ -870,7 +870,7 @@ static void qmonClusterChange(Widget w, XtPointer cld, XtPointer cad)
             qmonClusterLayoutSetSensitive(False);
       }
       if (selectedItemCount && host) {
-         ep = lGetElemHost(qmonMirrorList(SGE_CONFIG_LIST), CONF_name, host);
+         ep = lGetElemHost(qmonMirrorList(SGE_CONF_LIST), CONF_name, host);
          qmonCullToCClEntry(ep, &cluster_entry);
          XmtInputFieldSetString(cluster_host, host);
          XtVaSetValues( cluster_host,
@@ -931,7 +931,7 @@ static void qmonClusterOk(Widget w, XtPointer cld, XtPointer cad)
       local = 0;
    } else {
       if (add_mode) {
-         lList *old = qmonMirrorList(SGE_CONFIG_LIST);
+         lList *old = qmonMirrorList(SGE_CONF_LIST);
          lListElem *ep = lGetElemHost(old, CONF_name, host ? host :"");
 
          if (ep) {
@@ -961,7 +961,7 @@ static void qmonClusterOk(Widget w, XtPointer cld, XtPointer cad)
       */
       what = lWhat("%T(ALL)", CONF_Type);
 
-      alp = qmonModList(SGE_CONFIG_LIST, qmonMirrorListRef(SGE_CONFIG_LIST), CONF_name, &confl, NULL, what);
+      alp = qmonModList(SGE_CONF_LIST, qmonMirrorListRef(SGE_CONF_LIST), CONF_name, &confl, NULL, what);
 
       aep = lFirst(alp);
       if (lFirst(alp) && lGetUlong(aep, AN_status) == STATUS_OK)
@@ -1088,7 +1088,7 @@ static void qmonClusterDelete(Widget w, XtPointer cld, XtPointer cad)
       if (answer) {
          what = lWhat("%T(ALL)", CONF_Type);
 
-         alp = qmonDelList(SGE_CONFIG_LIST, qmonMirrorListRef(SGE_CONFIG_LIST), CONF_name, 
+         alp = qmonDelList(SGE_CONF_LIST, qmonMirrorListRef(SGE_CONF_LIST), CONF_name, 
                            &lp, NULL, what);
 
          qmonMessageBox(w, alp, 0);
@@ -1152,7 +1152,7 @@ int local
    /*
    ** get the global conf list
    */
-   gep = lGetElemHost(qmonMirrorList(SGE_CONFIG_LIST), CONF_name, "global");
+   gep = lGetElemHost(qmonMirrorList(SGE_CONF_LIST), CONF_name, "global");
    if (!gep) {
       *lpp = NULL;
       DEXIT;
@@ -2548,7 +2548,7 @@ static void qmonClusterAskForUsers(Widget w, XtPointer cld, XtPointer cad)
       DEXIT;
       return;
    }
-   ql_in = qmonMirrorList(SGE_USERSET_LIST);
+   ql_in = qmonMirrorList(SGE_US_LIST);
    ql_out = XmStringToCull(list, US_Type, US_name, ALL_ITEMS);
 
    status = XmtAskForItems(w, NULL, NULL, "@{Select Access Lists}", ql_in, US_name,
@@ -2581,7 +2581,7 @@ static void qmonClusterAskForProjects(Widget w, XtPointer cld, XtPointer cad)
       DEXIT;
       return;
    }
-   ql_in = qmonMirrorList(SGE_PROJECT_LIST);
+   ql_in = qmonMirrorList(SGE_PR_LIST);
    ql_out = XmStringToCull(list, PR_Type, PR_name, ALL_ITEMS);
 
    status = XmtAskForItems(w, NULL, NULL, "@{Select Project}", ql_in, PR_name,

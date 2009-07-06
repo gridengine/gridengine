@@ -201,7 +201,7 @@ XtPointer cad)
       DEXIT;
       return;
    }
-   cl = qmonMirrorList(SGE_CENTRY_LIST);
+   cl = qmonMirrorList(SGE_CE_LIST);
 
    if (!where)
       where = lWhere("%T(%I != %s)", CE_Type, CE_name, "slots");

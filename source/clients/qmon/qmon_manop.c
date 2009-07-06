@@ -99,7 +99,7 @@ static Widget user_matrix = NULL;
 static Widget user_name = NULL;
 static Widget manop_modify = NULL;
 
-static int dialog_mode = SGE_MANAGER_LIST;
+static int dialog_mode = SGE_UM_LIST;
 
 static Widget manop_folder = 0;
 static Widget userset_layout = 0;
@@ -277,12 +277,12 @@ static void qmonManopFillList(void)
    DENTER(GUI_LAYER, "qmonManopFillList");
 
    /* manager list */
-   lp = qmonMirrorList(SGE_MANAGER_LIST);
+   lp = qmonMirrorList(SGE_UM_LIST);
    lPSortList(lp, "%I+", UM_name);
    UpdateXmListFromCull(manager_list, XmFONTLIST_DEFAULT_TAG, lp, UM_name);
    
    /* operator list */
-   lp = qmonMirrorList(SGE_OPERATOR_LIST);
+   lp = qmonMirrorList(SGE_UO_LIST);
    lPSortList(lp, "%I+", UO_name);
    UpdateXmListFromCull(operator_list, XmFONTLIST_DEFAULT_TAG, lp, UO_name);
 
@@ -290,7 +290,7 @@ static void qmonManopFillList(void)
    updateUsersetList();
 
    /* user list */
-   lp = qmonMirrorList(SGE_USER_LIST);
+   lp = qmonMirrorList(SGE_UU_LIST);
    lPSortList(lp, "%I+", UU_name);
    /*
    ** set UU_default_project to NONE
@@ -333,18 +333,18 @@ static void qmonManopDelete(Widget w, XtPointer cld, XtPointer cad)
    DENTER(GUI_LAYER, "qmonManopDelete");
 
    switch (type) {
-      case SGE_MANAGER_LIST:
+      case SGE_UM_LIST:
          lp = XmStringToCull(manager_list, UM_Type, UM_name, SELECTED_ITEMS);
          dp = UM_Type;
          nm = UM_name;
          break;
-      case SGE_OPERATOR_LIST:
+      case SGE_UO_LIST:
          lp = XmStringToCull(operator_list, UO_Type, UO_name, SELECTED_ITEMS);
          dp = UO_Type;
          nm = UO_name;
          break;
 
-      case SGE_USER_LIST:
+      case SGE_UU_LIST:
          rows = XbaeMatrixNumRows(user_matrix);
          for (i=0; i<rows; i++) {
             String s = XbaeMatrixGetCell(user_matrix, i, 0);
@@ -357,7 +357,7 @@ static void qmonManopDelete(Widget w, XtPointer cld, XtPointer cad)
          nm = UU_name;
          break;
 
-      case SGE_USERSET_LIST:
+      case SGE_US_LIST:
          qmonUsersetDelete(w, NULL, NULL);
          DEXIT;
          return;
@@ -398,24 +398,24 @@ static void qmonManopAdd(Widget w, XtPointer cld, XtPointer cad)
    DENTER(GUI_LAYER, "qmonManopAdd");
 
    switch (type) {
-      case SGE_MANAGER_LIST:
+      case SGE_UM_LIST:
          dp = UM_Type;
          nm = UM_name;
          username = manager_name;
          break;
-      case SGE_OPERATOR_LIST:
+      case SGE_UO_LIST:
          dp = UO_Type;
          nm = UO_name;
          username = operator_name;
          break;
 
-      case SGE_USER_LIST:
+      case SGE_UU_LIST:
          dp = UU_Type;
          nm = UU_name;
          username = user_name;
          break;
 
-      case SGE_USERSET_LIST:
+      case SGE_US_LIST:
          if ((long)cld == 1)
             qmonUsersetAdd(w, NULL, NULL);
          else
@@ -438,7 +438,7 @@ static void qmonManopAdd(Widget w, XtPointer cld, XtPointer cad)
          return;
       }
       lSetString(lFirst(lp), nm, user);
-/*       if (type == SGE_USER_LIST) */
+/*       if (type == SGE_UU_LIST) */
 /*          lSetString(lFirst(lp), UU_default_project, "NONE"); */
       
       alp = qmonAddList(type, qmonMirrorListRef(type), 
@@ -468,16 +468,16 @@ static void qmonManopFolderChange(Widget w, XtPointer cld, XtPointer cad)
    DPRINTF(("%s\n", XtName(cbs->tab_child)));
 
    if (!strcmp(XtName(cbs->tab_child), "manager_layout"))
-      dialog_mode = SGE_MANAGER_LIST;
+      dialog_mode = SGE_UM_LIST;
 
    if (!strcmp(XtName(cbs->tab_child), "operator_layout"))
-      dialog_mode = SGE_OPERATOR_LIST;
+      dialog_mode = SGE_UO_LIST;
 
    if (!strcmp(XtName(cbs->tab_child), "user_layout"))
-      dialog_mode = SGE_USER_LIST;
+      dialog_mode = SGE_UU_LIST;
 
    if (!strcmp(XtName(cbs->tab_child), "userset_layout"))
-      dialog_mode = SGE_USERSET_LIST;
+      dialog_mode = SGE_US_LIST;
 
    /*
    ** fetch changed lists and update dialogues
@@ -494,7 +494,7 @@ static void qmonManopFolderChange(Widget w, XtPointer cld, XtPointer cad)
    /*
    ** set Modify button sensitivity
    */
-   if (dialog_mode==SGE_USERSET_LIST) {
+   if (dialog_mode==SGE_US_LIST) {
       XtSetSensitive(manop_modify, True);
    } else {
       XtSetSensitive(manop_modify, False);
@@ -510,16 +510,16 @@ static void qmonManopHelp(Widget w, XtPointer cld, XtPointer cad)
    DENTER(GUI_LAYER, "qmonManopHelp");
 
    switch(dialog_mode) {
-      case SGE_MANAGER_LIST:
+      case SGE_UM_LIST:
          widget = manager_list; 
          break;
-      case SGE_OPERATOR_LIST:
+      case SGE_UO_LIST:
          widget = operator_list; 
          break;
-      case SGE_USER_LIST:
+      case SGE_UU_LIST:
          widget = user_matrix; 
          break;
-      case SGE_USERSET_LIST:
+      case SGE_US_LIST:
          widget = userset_layout; 
          break;
       default:
@@ -548,7 +548,7 @@ static void updateUsersetList(void)
    
    DENTER(GUI_LAYER, "updateUsersetList");
 
-   al = qmonMirrorList(SGE_USERSET_LIST);
+   al = qmonMirrorList(SGE_US_LIST);
    lPSortList(al, "%I+", US_name);
    UpdateXmListFromCull(userset_names, XmFONTLIST_DEFAULT_TAG, al, 
                            US_name);
@@ -611,8 +611,8 @@ static void qmonSelectUserset(Widget w, XtPointer cld, XtPointer cad)
       return;
    }
 
-   ep = lGetElemStr(qmonMirrorList(SGE_USERSET_LIST), US_name, usetname);
-   if (dialog_mode==SGE_USERSET_LIST) {
+   ep = lGetElemStr(qmonMirrorList(SGE_US_LIST), US_name, usetname);
+   if (dialog_mode==SGE_US_LIST) {
       if (usetname && !strcmp(usetname, DEFAULT_DEPARTMENT)) 
          XtSetSensitive(manop_modify, False);
       else
@@ -859,7 +859,7 @@ static void qmonUsersetOk(Widget w, XtPointer cld, XtPointer cad)
          lAddElemStr(&lp, US_name, usetname, US_Type);
       }
       else {
-         up = lCopyElem(lGetElemStr(qmonMirrorList(SGE_USERSET_LIST), 
+         up = lCopyElem(lGetElemStr(qmonMirrorList(SGE_US_LIST), 
                            US_name, usetname));
          lp = lCreateList("userset", US_Type);
          lAppendElem(lp, up);
@@ -871,13 +871,13 @@ static void qmonUsersetOk(Widget w, XtPointer cld, XtPointer cad)
       what = lWhat("%T(ALL)", US_Type);
 
       if (add_mode) {
-         alp = qmonAddList(SGE_USERSET_LIST, 
-                        qmonMirrorListRef(SGE_USERSET_LIST),
+         alp = qmonAddList(SGE_US_LIST, 
+                        qmonMirrorListRef(SGE_US_LIST),
                         US_name, &lp, NULL, what);
       }
       else {
-         alp = qmonModList(SGE_USERSET_LIST, 
-                           qmonMirrorListRef(SGE_USERSET_LIST),
+         alp = qmonModList(SGE_US_LIST, 
+                           qmonMirrorListRef(SGE_US_LIST),
                            US_name, &lp, NULL, what);
       }
 
@@ -935,8 +935,8 @@ static void qmonUsersetDelete(Widget w, XtPointer cld, XtPointer cad)
          
       if (answer) { 
          what = lWhat("%T(ALL)", US_Type);
-         alp = qmonDelList(SGE_USERSET_LIST, 
-                           qmonMirrorListRef(SGE_USERSET_LIST),
+         alp = qmonDelList(SGE_US_LIST, 
+                           qmonMirrorListRef(SGE_US_LIST),
                            US_name, &lp, NULL, what);
 
          qmonMessageBox(w, alp, 0);
@@ -993,7 +993,7 @@ static void qmonUserAskForProject(Widget w, XtPointer cld, XtPointer cad)
       DEXIT;
       return;
    }
-   pl = qmonMirrorList(SGE_PROJECT_LIST);
+   pl = qmonMirrorList(SGE_PR_LIST);
    lPSortList(pl, "%I+", PR_name);
    n = lGetNumberOfElem(pl);
    if (n>0) {
@@ -1034,8 +1034,8 @@ static void qmonUserAskForProject(Widget w, XtPointer cld, XtPointer cad)
                lSetString(ep, UU_default_project, NULL);
          }
          if (lp) {
-             alp = qmonModList(SGE_USER_LIST, 
-                               qmonMirrorListRef(SGE_USER_LIST),
+             alp = qmonModList(SGE_UU_LIST, 
+                               qmonMirrorListRef(SGE_UU_LIST),
                                UU_name, &lp, NULL, what);
              qmonMessageBox(w, alp, 0);
              updateManopList();

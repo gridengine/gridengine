@@ -233,7 +233,7 @@ static Widget reporting_variables_chosen = 0;
 
 static tHostEntry host_data = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 static int add_mode = 0;
-static int dialog_mode = SGE_ADMINHOST_LIST;
+static int dialog_mode = SGE_AH_LIST;
 
 
 
@@ -406,12 +406,12 @@ static void qmonHostFillList(void)
 
 
    /* admin host list */
-   lp = qmonMirrorList(SGE_ADMINHOST_LIST);
+   lp = qmonMirrorList(SGE_AH_LIST);
    lPSortList(lp, "%I+", AH_name);
    UpdateXmListFromCull(adminhost_list, XmFONTLIST_DEFAULT_TAG, lp, AH_name);
 
    /* submit host list */
-   lp = qmonMirrorList(SGE_SUBMITHOST_LIST);
+   lp = qmonMirrorList(SGE_SH_LIST);
    lPSortList(lp, "%I+", SH_name);
    UpdateXmListFromCull(submithost_list, XmFONTLIST_DEFAULT_TAG, lp, SH_name);
 
@@ -421,7 +421,7 @@ static void qmonHostFillList(void)
    if (!what)
       what = lWhat("%T(ALL)", EH_Type);
    
-   lp = lSelect("EHL", qmonMirrorList(SGE_EXECHOST_LIST), where, what);
+   lp = lSelect("EHL", qmonMirrorList(SGE_EH_LIST), where, what);
    lPSortList(lp, "%I+", EH_name);
    UpdateXmListFromCull(exechost_list, XmFONTLIST_DEFAULT_TAG, lp, EH_name);
    XmListMoveItemToPos(exechost_list, "global", 1);
@@ -429,7 +429,7 @@ static void qmonHostFillList(void)
    XmListSelectPos(exechost_list, 1, True);
 
    /* host groups */
-   lp = qmonMirrorList(SGE_HGROUP_LIST);
+   lp = qmonMirrorList(SGE_HGRP_LIST);
    lPSortList(lp, "%I+", HGRP_name);
    UpdateXmListFromCull(hostgroup_list, XmFONTLIST_DEFAULT_TAG, lp, HGRP_name);
    XmListSelectPos(hostgroup_list, 1, True);
@@ -444,7 +444,7 @@ static void qmonHostAvailableReportVars(void)
    
    DENTER(GUI_LAYER, "qmonHostAvailableReportVars");
 
-   lp = qmonMirrorList(SGE_CENTRY_LIST);
+   lp = qmonMirrorList(SGE_CE_LIST);
    lPSortList(lp, "%I+", CE_name);
    UpdateXmListFromCull(reporting_variables_list, XmFONTLIST_DEFAULT_TAG, lp, CE_name);
 
@@ -458,7 +458,7 @@ static void qmonHostAvailableAcls(void)
    
    DENTER(GUI_LAYER, "qmonHostAvailableAcls");
 
-   lp = qmonMirrorList(SGE_USERSET_LIST);
+   lp = qmonMirrorList(SGE_US_LIST);
    lPSortList(lp, "%I+", US_name);
    UpdateXmListFromCull(access_list, XmFONTLIST_DEFAULT_TAG, lp, US_name);
 
@@ -472,7 +472,7 @@ static void qmonHostAvailableProjects(void)
    
    DENTER(GUI_LAYER, "qmonHostAvailableProjects");
 
-   lp = qmonMirrorList(SGE_PROJECT_LIST);
+   lp = qmonMirrorList(SGE_PR_LIST);
    lPSortList(lp, "%I+", PR_name);
    UpdateXmListFromCull(project_list, XmFONTLIST_DEFAULT_TAG, lp, PR_name);
 
@@ -521,7 +521,7 @@ XtPointer cld
    XtAddCallback(exechost_modify, XmNactivateCallback, 
                      qmonExecHostChange, (XtPointer) 0);
    XtAddCallback(exechost_delete, XmNactivateCallback, 
-                     qmonHostDelete, (XtPointer) SGE_EXECHOST_LIST);
+                     qmonHostDelete, (XtPointer) SGE_EH_LIST);
    XtAddCallback(exechost_shutdown, XmNactivateCallback, 
                      qmonExecHostShutdown, NULL);
 #endif
@@ -555,7 +555,7 @@ static void qmonExecHostSelect(Widget w, XtPointer cld, XtPointer cad)
       return;
    }
 
-   ehp = host_list_locate(qmonMirrorList(SGE_EXECHOST_LIST), ehname);
+   ehp = host_list_locate(qmonMirrorList(SGE_EH_LIST), ehname);
    XtFree((char*) ehname);
 
    if (ehp) {
@@ -807,10 +807,10 @@ static void qmonExecHostOk(Widget w, XtPointer cld, XtPointer cad)
       what = lWhat("%T(ALL)", EH_Type);
       
       if (add_mode) {
-         alp = qmonAddList(SGE_EXECHOST_LIST, qmonMirrorListRef(SGE_EXECHOST_LIST), EH_name, &ehl, NULL, what);
+         alp = qmonAddList(SGE_EH_LIST, qmonMirrorListRef(SGE_EH_LIST), EH_name, &ehl, NULL, what);
       }
       else {
-         alp = qmonModList(SGE_EXECHOST_LIST, qmonMirrorListRef(SGE_EXECHOST_LIST), EH_name, &ehl, NULL, what);
+         alp = qmonModList(SGE_EH_LIST, qmonMirrorListRef(SGE_EH_LIST), EH_name, &ehl, NULL, what);
       }
 
       if (lFirst(alp) && lGetUlong(lFirst(alp), AN_status) == STATUS_OK)
@@ -951,10 +951,10 @@ StringConst name
    
    DENTER(GUI_LAYER, "qmonExecHostSetAsk");
 
-   cl = qmonMirrorList(SGE_CENTRY_LIST);
-   ehl = qmonMirrorList(SGE_EXECHOST_LIST);
-   acls = qmonMirrorList(SGE_USERSET_LIST);
-   prjs = qmonMirrorList(SGE_PROJECT_LIST);
+   cl = qmonMirrorList(SGE_CE_LIST);
+   ehl = qmonMirrorList(SGE_EH_LIST);
+   acls = qmonMirrorList(SGE_US_LIST);
+   prjs = qmonMirrorList(SGE_PR_LIST);
 
    if (name) {
       /*
@@ -1149,22 +1149,22 @@ static void qmonHostDelete(Widget w, XtPointer cld, XtPointer cad)
    DENTER(GUI_LAYER, "qmonHostDelete");
 
    switch (type) {
-      case SGE_ADMINHOST_LIST:
+      case SGE_AH_LIST:
          dp = AH_Type;
          list = adminhost_list;
          field = AH_name;
          break;
-      case SGE_SUBMITHOST_LIST:
+      case SGE_SH_LIST:
          dp = SH_Type;
          list = submithost_list;
          field = SH_name;
          break;
-      case SGE_EXECHOST_LIST:
+      case SGE_EH_LIST:
          dp = EH_Type;
          list = exechost_list;
          field = EH_name;
          break;
-      case SGE_HGROUP_LIST:
+      case SGE_HGRP_LIST:
          dp = HGRP_Type;
          list = hostgroup_list;
          field = HGRP_name;
@@ -1200,16 +1200,16 @@ static void qmonHostHelp(Widget w, XtPointer cld, XtPointer cad)
    DENTER(GUI_LAYER, "qmonHostHelp");
 
    switch(dialog_mode) {
-      case SGE_ADMINHOST_LIST:
+      case SGE_AH_LIST:
          widget = adminhost_list; 
          break;
-      case SGE_SUBMITHOST_LIST:
+      case SGE_SH_LIST:
          widget = submithost_list; 
          break;
-      case SGE_HGROUP_LIST:
+      case SGE_HGRP_LIST:
          widget = hostgroup_list; 
          break;
-      case SGE_EXECHOST_LIST:
+      case SGE_EH_LIST:
          widget = exechost_list; 
          break;
    }
@@ -1237,23 +1237,23 @@ static void qmonHostAdd(Widget w, XtPointer cld, XtPointer cad)
    DENTER(GUI_LAYER, "qmonHostAdd");
 
    switch (type) {
-      case SGE_ADMINHOST_LIST:
+      case SGE_AH_LIST:
          dp = AH_Type;
          list = adminhost_list;
          field = AH_name;
          hostname = XmtNameToWidget(list, "~*adminhost_hostname");
          break;
-      case SGE_SUBMITHOST_LIST:
+      case SGE_SH_LIST:
          dp = SH_Type;
          list = submithost_list;
          field = SH_name;
          hostname = XmtNameToWidget(list, "~*submithost_hostname");
          break;
-      case SGE_HGROUP_LIST:
+      case SGE_HGRP_LIST:
          qmonHostgroupChange(w, cld, NULL); 
          DEXIT;
          return;
-      case SGE_EXECHOST_LIST:
+      case SGE_EH_LIST:
          qmonExecHostChange(w, cld, NULL); 
          DEXIT;
          return;
@@ -1443,23 +1443,23 @@ static void qmonHostFolderChange(Widget w, XtPointer cld, XtPointer cad)
    DPRINTF(("%s\n", XtName(cbs->tab_child)));
 
    if (!strcmp(XtName(cbs->tab_child), "adminhost_layout"))
-      dialog_mode = SGE_ADMINHOST_LIST;
+      dialog_mode = SGE_AH_LIST;
 
    if (!strcmp(XtName(cbs->tab_child), "submithost_layout"))
-      dialog_mode = SGE_SUBMITHOST_LIST;
+      dialog_mode = SGE_SH_LIST;
 
    if (!strcmp(XtName(cbs->tab_child), "hostgroup_layout"))
-      dialog_mode = SGE_HGROUP_LIST;
+      dialog_mode = SGE_HGRP_LIST;
 
    if (!strcmp(XtName(cbs->tab_child), "exechost_layout"))
-      dialog_mode = SGE_EXECHOST_LIST;
+      dialog_mode = SGE_EH_LIST;
 
    
    updateHostListCB(w, NULL, NULL);
 
-   XtSetSensitive(host_modify, (dialog_mode==SGE_EXECHOST_LIST ||
-                   dialog_mode==SGE_HGROUP_LIST) ? True:False);
-   XtSetSensitive(host_shutdown, (dialog_mode==SGE_EXECHOST_LIST) ? True:False);
+   XtSetSensitive(host_modify, (dialog_mode==SGE_EH_LIST ||
+                   dialog_mode==SGE_HGRP_LIST) ? True:False);
+   XtSetSensitive(host_shutdown, (dialog_mode==SGE_EH_LIST) ? True:False);
       
    DEXIT;
 }
@@ -1879,7 +1879,7 @@ StringConst name
    
    DENTER(GUI_LAYER, "qmonHostgroupSetAsk");
 
-   hgl = qmonMirrorList(SGE_HGROUP_LIST);
+   hgl = qmonMirrorList(SGE_HGRP_LIST);
 
    if (name) {
       /*
@@ -1925,7 +1925,7 @@ static void qmonHostgroupSelect(Widget w, XtPointer cld, XtPointer cad)
       return;
    }
 
-   hgp = hgroup_list_locate(qmonMirrorList(SGE_HGROUP_LIST), hgname);
+   hgp = hgroup_list_locate(qmonMirrorList(SGE_HGRP_LIST), hgname);
    XtFree((char*) hgname);
 
    if (hgp) {

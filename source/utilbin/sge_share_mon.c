@@ -86,7 +86,7 @@ setup_lists(sge_gdi_ctx_class_t *ctx, lList **sharetree, lList **users, lList **
 
    /* get share tree */
    what = lWhat("%T(ALL)", STN_Type);
-   sharetree_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_RECORD, SGE_SHARETREE_LIST, 
+   sharetree_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_RECORD, SGE_STN_LIST, 
                                  SGE_GDI_GET, NULL, NULL, what, &state, true);
    lFreeWhat(&what);
    error = answer_list_output(&alp);
@@ -103,7 +103,7 @@ setup_lists(sge_gdi_ctx_class_t *ctx, lList **sharetree, lList **users, lList **
    /* get user list */
    if (!error) {
       what = lWhat("%T(ALL)", UU_Type);
-      user_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_RECORD, SGE_USER_LIST, SGE_GDI_GET, 
+      user_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_RECORD, SGE_UU_LIST, SGE_GDI_GET, 
                               NULL, NULL, what, &state, true);
       lFreeWhat(&what);
       error = answer_list_output(&alp);
@@ -112,7 +112,7 @@ setup_lists(sge_gdi_ctx_class_t *ctx, lList **sharetree, lList **users, lList **
    /* get project list */
    if (!error) {
       what = lWhat("%T(ALL)", PR_Type);
-      project_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_RECORD, SGE_PROJECT_LIST, 
+      project_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_RECORD, SGE_PR_LIST, 
                                   SGE_GDI_GET, NULL, NULL, what, &state, true);
       lFreeWhat(&what);
       error = answer_list_output(&alp);
@@ -124,7 +124,7 @@ setup_lists(sge_gdi_ctx_class_t *ctx, lList **sharetree, lList **users, lList **
     */
    if (!error) {
       what = lWhat("%T(ALL)", US_Type);
-      userset_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_SEND, SGE_USERSET_LIST, SGE_GDI_GET, 
+      userset_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_SEND, SGE_US_LIST, SGE_GDI_GET, 
                                  NULL, NULL, what, &state, true);
       ctx->gdi_wait(ctx, &alp, &malp, &state);
       lFreeWhat(&what);
@@ -138,7 +138,7 @@ setup_lists(sge_gdi_ctx_class_t *ctx, lList **sharetree, lList **users, lList **
    }
 
    /* extract the sharetree lists */
-   sge_gdi_extract_answer(&alp, SGE_GDI_GET, SGE_SHARETREE_LIST, sharetree_id, malp, sharetree);
+   sge_gdi_extract_answer(&alp, SGE_GDI_GET, SGE_STN_LIST, sharetree_id, malp, sharetree);
    error = answer_list_output(&alp);
 
    /* if we have no sharetree, output message and exit */
@@ -157,15 +157,15 @@ setup_lists(sge_gdi_ctx_class_t *ctx, lList **sharetree, lList **users, lList **
       error = answer_list_output(&alp);
    }
    if (!error) {
-      sge_gdi_extract_answer(&alp, SGE_GDI_GET, SGE_USER_LIST, user_id, malp, users);
+      sge_gdi_extract_answer(&alp, SGE_GDI_GET, SGE_UU_LIST, user_id, malp, users);
       error = answer_list_output(&alp);
    }
    if (!error) {
-      sge_gdi_extract_answer(&alp, SGE_GDI_GET, SGE_PROJECT_LIST, project_id, malp, projects);
+      sge_gdi_extract_answer(&alp, SGE_GDI_GET, SGE_PR_LIST, project_id, malp, projects);
       error = answer_list_output(&alp);
    }
    if (!error) {
-      sge_gdi_extract_answer(&alp, SGE_GDI_GET, SGE_USERSET_LIST, userset_id, malp, usersets);
+      sge_gdi_extract_answer(&alp, SGE_GDI_GET, SGE_US_LIST, userset_id, malp, usersets);
       error = answer_list_output(&alp);
    }
 

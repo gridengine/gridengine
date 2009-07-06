@@ -82,7 +82,7 @@ enum {
 };
 
 LISTDEF(UU_Type)
-   JGDI_ROOT_OBJ(User, SGE_USER_LIST, ADD | MODIFY | DELETE | GET | GET_LIST)
+   JGDI_ROOT_OBJ(User, SGE_UU_LIST, ADD | MODIFY | DELETE | GET | GET_LIST)
    JGDI_EVENT_OBJ(ADD(sgeE_USER_ADD) | MODIFY(sgeE_USER_MOD) | DELETE(sgeE_USER_DEL) | GET_LIST(sgeE_USER_LIST))
 
    /* configured user name spooled */

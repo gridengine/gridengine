@@ -396,7 +396,7 @@ static void qmonResFilterSet(Widget w, XtPointer cld, XtPointer cad)
 
    DENTER(GUI_LAYER, "qmonResFilterSet");
 
-   arl = qmonGetResources(qmonMirrorList(SGE_CENTRY_LIST), ALL_RESOURCES);
+   arl = qmonGetResources(qmonMirrorList(SGE_CE_LIST), ALL_RESOURCES);
 
    for_each (ep, queue_filter_resources) {
       rp = lGetElemStr(arl, CE_name, lGetString(ep, CE_name));
@@ -434,7 +434,7 @@ static void qmonResFilterEditResource(Widget w, XtPointer cld, XtPointer cad)
 
    DENTER(GUI_LAYER, "qmonResFilterEditResource");
 
-   arl = qmonGetResources(qmonMirrorList(SGE_CENTRY_LIST), ALL_RESOURCES);
+   arl = qmonGetResources(qmonMirrorList(SGE_CE_LIST), ALL_RESOURCES);
 
    if (!how) {
       fill_in_request = lGetElemStr(arl, CE_name, cbs->element->string[0]);

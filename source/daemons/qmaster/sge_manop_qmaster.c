@@ -63,7 +63,7 @@ lListElem *ep,
 lList **alpp,
 char *ruser,
 char *rhost,
-u_long32 target  /* may be SGE_MANAGER_LIST or SGE_OPERATOR_LIST */
+u_long32 target  /* may be SGE_UM_LIST or SGE_UO_LIST */
 ) {
    const char *manop_name;
    const char *object_name;
@@ -84,14 +84,14 @@ u_long32 target  /* may be SGE_MANAGER_LIST or SGE_OPERATOR_LIST */
    }
 
    switch (target) {
-   case SGE_MANAGER_LIST:
+   case SGE_UM_LIST:
       lpp = object_type_get_master_list(SGE_TYPE_MANAGER);
       object_name = MSG_OBJ_MANAGER;
       key = UM_name;
       descr = UM_Type;
       eve = sgeE_MANAGER_ADD;
       break;
-   case SGE_OPERATOR_LIST:
+   case SGE_UO_LIST:
       lpp = object_type_get_master_list(SGE_TYPE_OPERATOR);
       object_name = MSG_OBJ_OPERATOR;
       key = UO_name;
@@ -170,7 +170,7 @@ u_long32 target  /* may be SGE_MANAGER_LIST or SGE_OPERATOR_LIST */
 *     lList **alpp             - answer list to return messages
 *     char *ruser              - user having triggered the action
 *     char *rhost              - host from which the action has been triggered
-*     u_long32 target          - SGE_MANAGER_LIST or SGE_OPERATOR_LIST
+*     u_long32 target          - SGE_UM_LIST or SGE_UO_LIST
 *
 *  RESULT
 *     int - STATUS_OK or STATUS_* error code
@@ -197,13 +197,13 @@ int sge_del_manop(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **alpp, char *r
    }
 
    switch (target) {
-      case SGE_MANAGER_LIST:
+      case SGE_UM_LIST:
          lpp = object_type_get_master_list(SGE_TYPE_MANAGER);
          object_name = MSG_OBJ_MANAGER;
          key = UM_name;
          eve = sgeE_MANAGER_DEL;
          break;
-      case SGE_OPERATOR_LIST:
+      case SGE_UO_LIST:
          lpp = object_type_get_master_list(SGE_TYPE_OPERATOR);
          object_name = MSG_OBJ_OPERATOR;
          key = UO_name;

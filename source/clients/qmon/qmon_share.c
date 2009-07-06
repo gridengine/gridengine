@@ -498,12 +498,12 @@ static void qmonShareTreeOkay(Widget w, XtPointer cld, XtPointer cad)
 
    what = lWhat("%T(ALL)", STN_Type);
    if (lp)
-      alp = qmonModList(SGE_SHARETREE_LIST, 
-                     qmonMirrorListRef(SGE_SHARETREE_LIST),
+      alp = qmonModList(SGE_STN_LIST, 
+                     qmonMirrorListRef(SGE_STN_LIST),
                      0, &lp, NULL, what);
    else
-      alp = qmonDelList(SGE_SHARETREE_LIST,
-                     qmonMirrorListRef(SGE_SHARETREE_LIST),
+      alp = qmonDelList(SGE_STN_LIST,
+                     qmonMirrorListRef(SGE_STN_LIST),
                      0, &lp, NULL, what);
                      
 
@@ -994,8 +994,8 @@ static void qmonShareTreeClearUsage(Widget w, XtPointer cld, XtPointer cad)
       DEXIT;
       return;
    }
-   ul = qmonMirrorList(SGE_USER_LIST);
-   pl = qmonMirrorList(SGE_PROJECT_LIST);
+   ul = qmonMirrorList(SGE_UU_LIST);
+   pl = qmonMirrorList(SGE_PR_LIST);
 
    /* clear user usage */
    for_each(ep, ul) {
@@ -1011,12 +1011,12 @@ static void qmonShareTreeClearUsage(Widget w, XtPointer cld, XtPointer cad)
 
    /* update user usage */
    if (ul) {
-      alp = ctx->gdi(ctx, SGE_USER_LIST, SGE_GDI_MOD, &ul, NULL, NULL);
+      alp = ctx->gdi(ctx, SGE_UU_LIST, SGE_GDI_MOD, &ul, NULL, NULL);
    }
 
    /* update project usage */
    if (pl) {
-      alp2 = ctx->gdi(ctx, SGE_PROJECT_LIST, SGE_GDI_MOD, &pl, NULL, NULL);
+      alp2 = ctx->gdi(ctx, SGE_PR_LIST, SGE_GDI_MOD, &pl, NULL, NULL);
    }
 
    if (alp || alp2) {
@@ -1132,10 +1132,10 @@ static void qmonShareTreeUpdate(Widget w, XtPointer cld, XtPointer cad)
       return;
    }
 
-   share_tree = qmonMirrorList(SGE_SHARETREE_LIST);
-   ul = qmonMirrorList(SGE_USER_LIST);
-   usl = qmonMirrorList(SGE_USERSET_LIST);
-   pl = qmonMirrorList(SGE_PROJECT_LIST);
+   share_tree = qmonMirrorList(SGE_STN_LIST);
+   ul = qmonMirrorList(SGE_UU_LIST);
+   usl = qmonMirrorList(SGE_US_LIST);
+   pl = qmonMirrorList(SGE_PR_LIST);
    
    /* 
    ** actual values from master  must be set for sconf_get_config() 
@@ -1375,7 +1375,7 @@ static void qmonShareTreeModifyNode(Widget w, XtPointer cld, XtPointer cad)
          DEXIT;
          return;
       }
-      shl = qmonMirrorList(SGE_SHARETREE_LIST);  
+      shl = qmonMirrorList(SGE_STN_LIST);  
       ep = lGetElemStr(shl, STN_name, name);
 
       node_data(item, share, ep);

@@ -98,7 +98,7 @@ cqueue_add_del_mod_via_gdi(sge_gdi_ctx_class_t *ctx, lListElem *this_elem, lList
 
          cqueue_list = lCreateList("", CQ_Type);
          lAppendElem(cqueue_list, this_elem);
-         gdi_answer_list = ctx->gdi(ctx, SGE_CQUEUE_LIST, gdi_command,
+         gdi_answer_list = ctx->gdi(ctx, SGE_CQ_LIST, gdi_command,
                                    &cqueue_list, NULL, NULL);
          answer_list_replace(answer_list, &gdi_answer_list);
          lDechainElem(cqueue_list, this_elem);
@@ -122,7 +122,7 @@ cqueue_get_via_gdi(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *na
 
       what = lWhat("%T(ALL)", CQ_Type);
       where = lWhere("%T(%I==%s)", CQ_Type, CQ_name, name);
-      gdi_answer_list = ctx->gdi(ctx, SGE_CQUEUE_LIST, SGE_GDI_GET, 
+      gdi_answer_list = ctx->gdi(ctx, SGE_CQ_LIST, SGE_GDI_GET, 
                                 &cqueue_list, where, what);
       lFreeWhat(&what);
       lFreeWhere(&where);
@@ -198,7 +198,7 @@ static bool cqueue_hgroup_get_via_gdi(sge_gdi_ctx_class_t *ctx, lList **answer_l
       }
       if (ret && fetch_all_hgroup) { 
          lEnumeration *what = lWhat("%T(ALL)", HGRP_Type);
-         hgrp_id = ctx->gdi_multi(ctx, answer_list, SGE_GDI_RECORD, SGE_HGROUP_LIST, 
+         hgrp_id = ctx->gdi_multi(ctx, answer_list, SGE_GDI_RECORD, SGE_HGRP_LIST, 
                                  SGE_GDI_GET, NULL, NULL, what, &state, true);
          lFreeWhat(&what);
       }  
@@ -206,7 +206,7 @@ static bool cqueue_hgroup_get_via_gdi(sge_gdi_ctx_class_t *ctx, lList **answer_l
          lEnumeration *what;
 
          what = enumeration_create_reduced_cq(fetch_all_qi, fetch_all_nqi);
-         cq_id = ctx->gdi_multi(ctx, answer_list, SGE_GDI_SEND, SGE_CQUEUE_LIST,
+         cq_id = ctx->gdi_multi(ctx, answer_list, SGE_GDI_SEND, SGE_CQ_LIST,
                                SGE_GDI_GET, NULL, cqueue_where, what,
                                &state, true);
          ctx->gdi_wait(ctx, answer_list, &multi_answer_list, &state);
@@ -216,7 +216,7 @@ static bool cqueue_hgroup_get_via_gdi(sge_gdi_ctx_class_t *ctx, lList **answer_l
          lList *local_answer_list = NULL;
          
          sge_gdi_extract_answer(&local_answer_list, SGE_GDI_GET, 
-                      SGE_HGROUP_LIST, hgrp_id, multi_answer_list, hgrp_list);
+                      SGE_HGRP_LIST, hgrp_id, multi_answer_list, hgrp_list);
          if (local_answer_list != NULL) {
             lListElem *answer = lFirst(local_answer_list);
 
@@ -232,7 +232,7 @@ static bool cqueue_hgroup_get_via_gdi(sge_gdi_ctx_class_t *ctx, lList **answer_l
          lList *local_answer_list = NULL;
          
          sge_gdi_extract_answer(&local_answer_list, SGE_GDI_GET, 
-                      SGE_CQUEUE_LIST, cq_id, multi_answer_list, cq_list);
+                      SGE_CQ_LIST, cq_id, multi_answer_list, cq_list);
          if (local_answer_list != NULL) {
             lListElem *answer = lFirst(local_answer_list);
 
@@ -268,13 +268,13 @@ cqueue_hgroup_get_all_via_gdi(sge_gdi_ctx_class_t *ctx, lList **answer_list,
 
       /* HGRP */
       hgrp_what = lWhat("%T(ALL)", HGRP_Type);
-      hgrp_id = ctx->gdi_multi(ctx, answer_list, SGE_GDI_RECORD, SGE_HGROUP_LIST,
+      hgrp_id = ctx->gdi_multi(ctx, answer_list, SGE_GDI_RECORD, SGE_HGRP_LIST,
                                SGE_GDI_GET, NULL, NULL, hgrp_what, &state, true);
       lFreeWhat(&hgrp_what);
 
       /* CQ */
       cqueue_what = lWhat("%T(ALL)", CQ_Type);
-      cq_id = ctx->gdi_multi(ctx, answer_list, SGE_GDI_SEND, SGE_CQUEUE_LIST,
+      cq_id = ctx->gdi_multi(ctx, answer_list, SGE_GDI_SEND, SGE_CQ_LIST,
                             SGE_GDI_GET, NULL, NULL, cqueue_what,
                             &state, true);
       ctx->gdi_wait(ctx, answer_list, &multi_answer_list, &state);
@@ -282,7 +282,7 @@ cqueue_hgroup_get_all_via_gdi(sge_gdi_ctx_class_t *ctx, lList **answer_list,
 
       /* HGRP */
       sge_gdi_extract_answer(&local_answer_list, SGE_GDI_GET,
-                      SGE_HGROUP_LIST, hgrp_id, multi_answer_list, hgrp_list);
+                      SGE_HGRP_LIST, hgrp_id, multi_answer_list, hgrp_list);
       if (local_answer_list != NULL) {
          lListElem *answer = lFirst(local_answer_list);
 
@@ -296,7 +296,7 @@ cqueue_hgroup_get_all_via_gdi(sge_gdi_ctx_class_t *ctx, lList **answer_list,
       
       /* CQ */   
       sge_gdi_extract_answer(&local_answer_list, SGE_GDI_GET, 
-                   SGE_CQUEUE_LIST, cq_id, multi_answer_list, cq_list);
+                   SGE_CQ_LIST, cq_id, multi_answer_list, cq_list);
       if (local_answer_list != NULL) {
          lListElem *answer = lFirst(local_answer_list);
 

@@ -85,7 +85,7 @@ lList *acl_args
          user_name=lGetString(userarg, UE_name);
    
          /* get old acl */
-         answers = ctx->gdi(ctx, SGE_USERSET_LIST, SGE_GDI_GET, &acl, where, what);
+         answers = ctx->gdi(ctx, SGE_US_LIST, SGE_GDI_GET, &acl, where, what);
          lFreeList(&answers);
 
          if (acl && lGetNumberOfElem(acl) > 0) {
@@ -93,7 +93,7 @@ lList *acl_args
                lAddSubStr(lFirst(acl), UE_name, user_name, US_entries, UE_Type);
 
                /* mod the acl */
-               answers = ctx->gdi(ctx, SGE_USERSET_LIST, SGE_GDI_MOD, &acl, 
+               answers = ctx->gdi(ctx, SGE_US_LIST, SGE_GDI_MOD, &acl, 
                         NULL, NULL);   
             } else {
                already = 1;
@@ -104,7 +104,7 @@ lList *acl_args
             lAddSubStr(lFirst(acl), UE_name, user_name, US_entries, UE_Type);
             
             /* add the acl */
-            answers = ctx->gdi(ctx, SGE_USERSET_LIST, SGE_GDI_ADD, &acl, 
+            answers = ctx->gdi(ctx, SGE_US_LIST, SGE_GDI_ADD, &acl, 
                      NULL, NULL);   
          }
 
@@ -176,7 +176,7 @@ lList *acl_args
          char *cp = NULL;
          user_name=lGetString(userarg, UE_name);
          /* get old acl */
-         answers = ctx->gdi(ctx, SGE_USERSET_LIST, SGE_GDI_GET, &acl, where, what);
+         answers = ctx->gdi(ctx, SGE_US_LIST, SGE_GDI_GET, &acl, where, what);
          cp = sge_strdup(cp, lGetString(lFirst(answers), AN_text));
          lFreeList(&answers);
          if (acl && lGetNumberOfElem(acl) > 0) {
@@ -184,7 +184,7 @@ lList *acl_args
             cp = NULL;
             if (lGetSubStr(lFirst(acl), UE_name, user_name, US_entries)) {
                lDelSubStr(lFirst(acl), UE_name, user_name, US_entries);
-               answers = ctx->gdi(ctx, SGE_USERSET_LIST, SGE_GDI_MOD, &acl, NULL, NULL);
+               answers = ctx->gdi(ctx, SGE_US_LIST, SGE_GDI_MOD, &acl, NULL, NULL);
                cp = sge_strdup(cp, lGetString(lFirst(answers), AN_text));
                status = lGetUlong(lFirst(answers), AN_status);
                lFreeList(&answers);
@@ -272,7 +272,7 @@ lList **dst
       }
    }
    what = lWhat("%T(ALL)", US_Type);
-   answers = ctx->gdi(ctx, SGE_USERSET_LIST, SGE_GDI_GET, dst, where, what);
+   answers = ctx->gdi(ctx, SGE_US_LIST, SGE_GDI_GET, dst, where, what);
    lFreeWhat(&what);
    lFreeWhere(&where);
 

@@ -1860,7 +1860,7 @@ static void qmonJobFilterSet(Widget w, XtPointer cld, XtPointer cad)
 
    DENTER(GUI_LAYER, "qmonJobFilterSet");
 
-   arl = qmonGetResources(qmonMirrorList(SGE_CENTRY_LIST), ALL_RESOURCES);
+   arl = qmonGetResources(qmonMirrorList(SGE_CE_LIST), ALL_RESOURCES);
 
    for_each (ep, jobfilter_resources) {
       rp = lGetElemStr(arl, CE_name, lGetString(ep, CE_name));
@@ -1901,7 +1901,7 @@ static void qmonJobFilterEditResource(Widget w, XtPointer cld, XtPointer cad)
 
    DENTER(GUI_LAYER, "qmonJobFilterEditResource");
 
-   arl = qmonGetResources(qmonMirrorList(SGE_CENTRY_LIST), ALL_RESOURCES);
+   arl = qmonGetResources(qmonMirrorList(SGE_CE_LIST), ALL_RESOURCES);
 
 
    if (!how) {

@@ -245,7 +245,7 @@ host_list_add_missing_href(sge_gdi_ctx_class_t *ctx,
       lListElem *host = host_list_locate(this_list, hostname);
 
       if (host == NULL) {
-         ret &= (sge_add_host_of_type(ctx, hostname, SGE_EXECHOST_LIST, monitor) == 0);
+         ret &= (sge_add_host_of_type(ctx, hostname, SGE_EH_LIST, monitor) == 0);
       }
    }
    DRETURN(ret);
@@ -283,17 +283,17 @@ int sge_del_host(sge_gdi_ctx_class_t *ctx, lListElem *hep, lList **alpp,
    }
 
    switch ( target ) {
-   case SGE_EXECHOST_LIST:
+   case SGE_EH_LIST:
       host_list = object_type_get_master_list(SGE_TYPE_EXECHOST);
       nm = EH_name;
       name = "execution host";
       break;
-   case SGE_ADMINHOST_LIST:
+   case SGE_AH_LIST:
       host_list = object_type_get_master_list(SGE_TYPE_ADMINHOST);
       nm = AH_name;
       name = "administrative host";
       break;
-   case SGE_SUBMITHOST_LIST:
+   case SGE_SH_LIST:
       host_list = object_type_get_master_list(SGE_TYPE_SUBMITHOST);
       nm = SH_name;
       name = "submit host";
@@ -352,7 +352,7 @@ int sge_del_host(sge_gdi_ctx_class_t *ctx, lListElem *hep, lList **alpp,
       check if someone tries to delete 
       the qmaster host from admin host list
    */
-   if (target==SGE_ADMINHOST_LIST && 
+   if (target==SGE_AH_LIST && 
          !sge_hostcmp(unique, qualified_hostname)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTDELADMINQMASTER_S, 
           qualified_hostname));
@@ -361,7 +361,7 @@ int sge_del_host(sge_gdi_ctx_class_t *ctx, lListElem *hep, lList **alpp,
       return STATUS_EEXIST;
    }
 
-   if (target == SGE_EXECHOST_LIST && 
+   if (target == SGE_EH_LIST && 
        host_is_referenced(hep, alpp, 
                           *(object_type_get_master_list(SGE_TYPE_CQUEUE)),
                           master_hGroup_List)) {
@@ -370,7 +370,7 @@ int sge_del_host(sge_gdi_ctx_class_t *ctx, lListElem *hep, lList **alpp,
       return STATUS_ESEMANTIC;
    }
 
-   if (target==SGE_EXECHOST_LIST && !strcasecmp(unique, "global")) {
+   if (target==SGE_EH_LIST && !strcasecmp(unique, "global")) {
       ERROR((SGE_EVENT, MSG_OBJ_DELGLOBALHOST));
       answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
@@ -379,7 +379,7 @@ int sge_del_host(sge_gdi_ctx_class_t *ctx, lListElem *hep, lList **alpp,
 
    /* remove host file and send event */
    switch(target) {
-      case SGE_ADMINHOST_LIST:
+      case SGE_AH_LIST:
          {
             lList *answer_list = NULL;
             sge_event_spool(ctx, &answer_list, 0, sgeE_ADMINHOST_DEL, 
@@ -388,7 +388,7 @@ int sge_del_host(sge_gdi_ctx_class_t *ctx, lListElem *hep, lList **alpp,
             answer_list_output(&answer_list);
          }
          break;
-      case SGE_EXECHOST_LIST:
+      case SGE_EH_LIST:
          {
             lList *answer_list = NULL;
             sge_event_spool(ctx, &answer_list, 0, sgeE_EXECHOST_DEL, 
@@ -399,7 +399,7 @@ int sge_del_host(sge_gdi_ctx_class_t *ctx, lListElem *hep, lList **alpp,
 	 host_update_categories(NULL, ep);
 
          break;
-      case SGE_SUBMITHOST_LIST:
+      case SGE_SH_LIST:
          {
             lList *answer_list = NULL;
             sge_event_spool(ctx, &answer_list, 0, sgeE_SUBMITHOST_DEL, 
@@ -1237,7 +1237,7 @@ sge_execd_startedup(sge_gdi_ctx_class_t *ctx, lListElem *host, lList **alpp,
    
    hep = host_list_locate(*object_type_get_master_list(SGE_TYPE_EXECHOST), rhost);
    if (!hep) {
-      if (sge_add_host_of_type(ctx, rhost, SGE_EXECHOST_LIST, monitor) < 0) {
+      if (sge_add_host_of_type(ctx, rhost, SGE_EH_LIST, monitor) < 0) {
          ERROR((SGE_EVENT, MSG_OBJ_INVALIDHOST_S, rhost));
          answer_list_add(alpp, SGE_EVENT, STATUS_DENIED, ANSWER_QUALITY_ERROR);
          DRETURN(STATUS_DENIED);

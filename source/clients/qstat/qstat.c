@@ -1920,7 +1920,7 @@ u_long32 isXML
 
    /* get job scheduling information */
    what = lWhat("%T(ALL)", SME_Type);
-   alp = ctx->gdi(ctx, SGE_JOB_SCHEDD_INFO_LIST, SGE_GDI_GET, &ilp, NULL, what);
+   alp = ctx->gdi(ctx, SGE_SME_LIST, SGE_GDI_GET, &ilp, NULL, what);
    lFreeWhat(&what);
 
    if (!isXML){
@@ -1971,7 +1971,7 @@ u_long32 isXML
             JB_hard_wallclock_gmt, JB_override_tickets, JB_version,
             JB_ja_structure, JB_type); 
    /* get job list */
-   alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_GET, &jlp, where, what);
+   alp = ctx->gdi(ctx, SGE_JB_LIST, SGE_GDI_GET, &jlp, where, what);
    lFreeWhere(&where);
    lFreeWhat(&what);
 
@@ -1998,7 +1998,7 @@ u_long32 isXML
             
             while (jbElem) {
                tmp_jbElem = lNext(jbElem);
-               if (lGetElemUlong(jlp, JB_job_number, lGetUlong(jbElem, ULNG)) == NULL) {
+               if (lGetElemUlong(jlp, JB_job_number, lGetUlong(jbElem, ULNG_value)) == NULL) {
                   lRemoveElem(jbList, &jbElem);
                }
                jbElem = tmp_jbElem;
@@ -2088,7 +2088,7 @@ u_long32 isXML
                lListElem *mes_jid;
 
                for_each(mes_jid, lGetList(mes, MES_job_number_list)) {
-                  if (lGetUlong(mes_jid, ULNG) == jid) {
+                  if (lGetUlong(mes_jid, ULNG_value) == jid) {
                      if (first_run) {
                         printf("%s:            ",MSG_SCHEDD_SCHEDULINGINFO);
                         first_run = 0;
@@ -2130,7 +2130,7 @@ static int qstat_show_job_info(sge_gdi_ctx_class_t *ctx, u_long32 isXML)
 
    /* get job scheduling information */
    what = lWhat("%T(ALL)", SME_Type);
-   alp = ctx->gdi(ctx, SGE_JOB_SCHEDD_INFO_LIST, SGE_GDI_GET, &ilp, NULL, what);
+   alp = ctx->gdi(ctx, SGE_SME_LIST, SGE_GDI_GET, &ilp, NULL, what);
    lFreeWhat(&what);
    if (isXML){
       xml_qstat_show_job_info(&ilp, &alp);
@@ -2198,8 +2198,8 @@ static int qstat_show_job_info(sge_gdi_ctx_class_t *ctx, u_long32 isXML)
                     
                      found_jid = 0; 
                      for_each(ref_jid, lGetList(ref_msg, MES_job_number_list)) {
-                        if (lGetUlong(ref_jid, ULNG) == 
-                            lGetUlong(flt_jid, ULNG)) {
+                        if (lGetUlong(ref_jid, ULNG_value) == 
+                            lGetUlong(flt_jid, ULNG_value)) {
                            lRemoveElem(lGetList(flt_msg, MES_job_number_list), &flt_jid);
                            found_jid = 1;
                            break;
@@ -2224,7 +2224,7 @@ static int qstat_show_job_info(sge_gdi_ctx_class_t *ctx, u_long32 isXML)
 
       text[0]=0;
       for_each(mes, mlp) {
-         lPSortList (lGetList(mes, MES_job_number_list), "I+", ULNG);
+         lPSortList (lGetList(mes, MES_job_number_list), "I+", ULNG_value);
 
          for_each(jid_ulng, lGetList(mes, MES_job_number_list)) {
             u_long32 mid;
@@ -2233,7 +2233,7 @@ static int qstat_show_job_info(sge_gdi_ctx_class_t *ctx, u_long32 isXML)
             int header = 0;
 
             mid = lGetUlong(mes, MES_message_number);
-            jid = lGetUlong(jid_ulng, ULNG);
+            jid = lGetUlong(jid_ulng, ULNG_value);
 
             if (initialized) {
                if (last_mid == mid && last_jid == jid)

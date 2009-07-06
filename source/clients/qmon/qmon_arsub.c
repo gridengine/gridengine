@@ -1430,7 +1430,7 @@ static void qmonARSubAskForCQ(Widget w, XtPointer cld, XtPointer cad)
       DEXIT;
       return;
    }
-   ql_in = qmonMirrorList(SGE_CQUEUE_LIST);
+   ql_in = qmonMirrorList(SGE_CQ_LIST);
    
    str = XmtInputFieldGetString(inputfield);
    lString2List(str, &ql_out, QR_Type, QR_name, ",");
@@ -1530,7 +1530,7 @@ static void qmonARSubAskForCkpt(Widget w, XtPointer cld, XtPointer cad)
       DEXIT;
       return;
    }
-   ckptl = qmonMirrorList(SGE_CKPT_LIST);
+   ckptl = qmonMirrorList(SGE_CK_LIST);
    n = lGetNumberOfElem(ckptl);
    if (n>0) {
       strs = (StringConst*)XtMalloc(sizeof(String)*n); 
@@ -1831,7 +1831,7 @@ static void qmonARResourceSetResources(Widget w, XtPointer cld, XtPointer cad)
       return;
    }
    
-   arl = qmonGetResources(qmonMirrorList(SGE_CENTRY_LIST), ALL_RESOURCES);
+   arl = qmonGetResources(qmonMirrorList(SGE_CE_LIST), ALL_RESOURCES);
 
    for_each (ep, arresource_resources) {
       rp = lGetElemStr(arl, CE_name, lGetString(ep, CE_name));
@@ -1879,7 +1879,7 @@ static void qmonARResourceEditResource(Widget w, XtPointer cld, XtPointer cad)
 
    DENTER(GUI_LAYER, "qmonARResourceEditResource");
 
-   arl = qmonGetResources(qmonMirrorList(SGE_CENTRY_LIST), ALL_RESOURCES);
+   arl = qmonGetResources(qmonMirrorList(SGE_CE_LIST), ALL_RESOURCES);
 
 
    if (!how) {
@@ -2143,7 +2143,7 @@ static void qmonARAccessSelect(Widget w, XtPointer cld, XtPointer cad)
       return;
    }
 
-   acl = userset_list_locate(qmonMirrorList(SGE_USERSET_LIST), aclname);
+   acl = userset_list_locate(qmonMirrorList(SGE_US_LIST), aclname);
    XtFree((char*) aclname);
 
    if (acl) {
@@ -2202,7 +2202,7 @@ static void qmonARAccessSetAsk(void) {
       DEXIT;
       return;
    }
-   usl = qmonMirrorList(SGE_USERSET_LIST);
+   usl = qmonMirrorList(SGE_US_LIST);
 
    /* preset acls */
    UpdateXmListFromCull(ar_acl_available_acl_list_w, XmFONTLIST_DEFAULT_TAG,

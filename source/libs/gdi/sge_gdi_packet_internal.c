@@ -443,7 +443,7 @@ sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
 
 #ifdef KERBEROS
    /* request that the Kerberos library forward the TGT */
-   if (ret && packet->first_task->target == SGE_JOB_LIST && 
+   if (ret && packet->first_task->target == SGE_JB_LIST && 
        SGE_GDI_GET_OPERATION(packet->first_task->command) == SGE_GDI_ADD ) {
       krb_set_client_flags(krb_get_client_flags() | KRB_FORWARD_TGT);
       krb_set_tgt_id(packet->id);
@@ -459,7 +459,7 @@ sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
     if (ret) {
        sge_gdi_task_class_t *task = packet->first_task;
 
-       if (task->target == SGE_JOB_LIST &&
+       if (task->target == SGE_JB_LIST &&
            ((SGE_GDI_GET_OPERATION(task->command) == SGE_GDI_ADD) ||
            (SGE_GDI_GET_OPERATION(task->command) == SGE_GDI_COPY))) {
           lListElem *job, *next_job;
@@ -695,7 +695,7 @@ sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
 
 #ifdef KERBEROS
    /* clear the forward TGT request */
-   if (ret && state->first->target == SGE_JOB_LIST &&
+   if (ret && state->first->target == SGE_JB_LIST &&
        SGE_GDI_GET_OPERATION(packet->first_task->command) == SGE_GDI_ADD) {
       krb_set_client_flags(krb_get_client_flags() & ~KRB_FORWARD_TGT);
       krb_set_tgt_id(0);

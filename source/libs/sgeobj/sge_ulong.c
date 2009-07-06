@@ -570,7 +570,7 @@ ulong_list_parse_from_string(lList **this_list, lList **answer_list,
 
          ret = ulong_parse_from_string(&value, answer_list, token);
          if (ret) {
-            lAddElemUlong(this_list, ULNG, value, ULNG_Type);
+            lAddElemUlong(this_list, ULNG_value, value, ULNG_Type);
          } else {
             break;
          }

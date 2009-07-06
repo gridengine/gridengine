@@ -79,7 +79,7 @@ static void schedd_mes_find_others(lListElem *tmp_sme, lList *job_list, int igno
          lList *jid_list = lGetList(message_elem, MES_job_number_list);
          u_long32 jid;
          lRef jid_category; 
-         jid = lGetUlong(lFirst(jid_list), ULNG);
+         jid = lGetUlong(lFirst(jid_list), ULNG_value);
          jid_category = schedd_mes_get_category(jid, job_list);
 
          /*
@@ -124,7 +124,7 @@ static lList *schedd_mes_get_same_category_jids(lRef category,
    if (job_list != NULL && category != NULL) {
       for_each(job, job_list) {
          if (ignore_category || lGetRef(job, JB_category) == category) {
-            lAddElemUlong(&ret, ULNG, lGetUlong(job, JB_job_number), ULNG_Type);
+            lAddElemUlong(&ret, ULNG_value, lGetUlong(job, JB_job_number), ULNG_Type);
          }
       }
    }
@@ -414,7 +414,7 @@ void schedd_mes_add(lList **monitor_alpp, bool monitor_next_run, u_long32 job_id
          lAppendElem(lGetList(tmp_sme, SME_message_list), mes);
 
          jid_ulng = lCreateElem(ULNG_Type);
-         lSetUlong(jid_ulng, ULNG, job_id);
+         lSetUlong(jid_ulng, ULNG_value, job_id);
          lAppendElem(jobs_ulng, jid_ulng);
       }
    }
@@ -503,7 +503,7 @@ void schedd_mes_add_join(bool monitor_next_run, u_long32 job_number, u_long32 me
          }
 
          jid_ulng = lCreateElem(ULNG_Type);
-         lSetUlong(jid_ulng, ULNG, job_number);
+         lSetUlong(jid_ulng, ULNG_value, job_number);
          lAppendElem(jobs_ulng, jid_ulng);
       }
 
@@ -639,7 +639,7 @@ void schedd_mes_set_tmp_list(lListElem *category, int name, u_long32 job_number)
    lXchgList(category, name, &tmp_list);
 
    for_each(tmp_elem, tmp_list)
-      lAddSubUlong(tmp_elem, ULNG, job_number, MES_job_number_list, ULNG_Type);
+      lAddSubUlong(tmp_elem, ULNG_value, job_number, MES_job_number_list, ULNG_Type);
 
    if (tmp_sme && tmp_list) {
       lList *prev = NULL;

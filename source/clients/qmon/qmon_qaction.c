@@ -1420,7 +1420,7 @@ static void qmonQCClone(Widget w, XtPointer cld, XtPointer cad)
       return;
    }
 
-   ql = qmonMirrorList(SGE_CQUEUE_LIST);
+   ql = qmonMirrorList(SGE_CQ_LIST);
    n = lGetNumberOfElem(ql);
    if (n>0) {
       strs = (StringConst*)XtMalloc(sizeof(String)*n); 
@@ -1565,7 +1565,7 @@ StringConst href
    }
    
    qmonMirrorMulti(CQUEUE_T);
-   ql = qmonMirrorList(SGE_CQUEUE_LIST);
+   ql = qmonMirrorList(SGE_CQ_LIST);
 
    if (current_qep) {
       lFreeElem(&current_qep);
@@ -1791,7 +1791,7 @@ static void qmonQCCalendar(Widget w, XtPointer cld, XtPointer cad)
    DENTER(GUI_LAYER, "qmonQCCalendar");
 
    qmonMirrorMulti(CALENDAR_T);
-   cl = qmonMirrorList(SGE_CALENDAR_LIST);
+   cl = qmonMirrorList(SGE_CAL_LIST);
    n = lGetNumberOfElem(cl);
    if (n>0) {
       strs = (StringConst*)XtMalloc(sizeof(String)*n); 
@@ -1898,7 +1898,7 @@ static void qmonQCSOQ(Widget w, XtPointer cld, XtPointer cad)
    
    if (cbs->column == 0) {
       qmonMirrorMulti(CQUEUE_T);
-      ql = qmonMirrorList(SGE_CQUEUE_LIST);
+      ql = qmonMirrorList(SGE_CQ_LIST);
       n = lGetNumberOfElem(ql);
       if (n>0) {
          strs = (StringConst*)XtMalloc(sizeof(String)*n); 
@@ -2145,7 +2145,7 @@ void updateQCQ(void)
       /* disable/enable redisplay while updating */
       XmtLayoutDisableLayout(cq_dialog);
       /* list with template sorted alphabetically */
-      qlf = lCopyList("qlf", qmonMirrorList(SGE_CQUEUE_LIST));
+      qlf = lCopyList("qlf", qmonMirrorList(SGE_CQ_LIST));
       lPSortList(qlf, "%I+", QU_qname);
       UpdateXmListFromCull(cq_queue_list, XmFONTLIST_DEFAULT_TAG, qlf, 
                               QU_qname);
@@ -2173,7 +2173,7 @@ static void updateQCA(void)
    DENTER(GUI_LAYER, "updateQCA");
    
    /* What about sorting */
-   al = qmonMirrorList(SGE_USERSET_LIST);
+   al = qmonMirrorList(SGE_US_LIST);
    lPSortList(al, "%I+", US_name);
    
    /* disable/enable redisplay while updating */
@@ -2192,7 +2192,7 @@ static void updateQCP(void)
    DENTER(GUI_LAYER, "updateQCP");
    
    /* What about sorting */
-   pl = qmonMirrorList(SGE_PROJECT_LIST);
+   pl = qmonMirrorList(SGE_PR_LIST);
    
    /* disable/enable redisplay while updating */
    XmtLayoutDisableLayout(cq_dialog);
@@ -2230,7 +2230,7 @@ static void updateQCCkpt(void)
    DENTER(GUI_LAYER, "updateQCCkpt");
    
    /* What about sorting */
-   pl = qmonMirrorList(SGE_CKPT_LIST);
+   pl = qmonMirrorList(SGE_CK_LIST);
    
    /* disable/enable redisplay while updating */
    XmtLayoutDisableLayout(cq_dialog);

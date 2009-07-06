@@ -441,7 +441,7 @@ static void execd_exit_func(void **ctx_ref, int i)
 *     int sge_execd_register_at_qmaster(void) 
 *
 *  FUNCTION
-*     add local execd name to SGE_EXECHOST_LIST in order to register at
+*     add local execd name to SGE_EH_LIST in order to register at
 *     qmaster
 *
 *  INPUTS
@@ -483,13 +483,13 @@ int sge_execd_register_at_qmaster(sge_gdi_ctx_class_t *ctx, bool is_restart) {
          /*
           * This is a regular startup.
           */
-         alp = ctx->gdi(ctx, SGE_EXECHOST_LIST, SGE_GDI_ADD, &hlp, NULL, NULL);
+         alp = ctx->gdi(ctx, SGE_EH_LIST, SGE_GDI_ADD, &hlp, NULL, NULL);
       } else {
          /*
           * Indicate this is a restart to qmaster.
           * This is used for the initial_state of queue_configuration implementation.
           */
-         alp = ctx->gdi(ctx, SGE_EXECHOST_LIST, SGE_GDI_ADD | SGE_GDI_EXECD_RESTART,
+         alp = ctx->gdi(ctx, SGE_EH_LIST, SGE_GDI_ADD | SGE_GDI_EXECD_RESTART,
                         &hlp, NULL, NULL);
       }
       lFreeList(&hlp);

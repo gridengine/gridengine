@@ -827,7 +827,7 @@ static void qmonCQUpdateTree(void)
       return;
    }
 
-   cluster_queue_tree = qmonMirrorList(SGE_CQUEUE_LIST);
+   cluster_queue_tree = qmonMirrorList(SGE_CQ_LIST);
 
    ListTreeRefreshOff(tree);
    /*
@@ -1193,7 +1193,7 @@ Boolean *ctd
                      lListElem *qp;
                      dstring queue_info = DSTRING_INIT;
                      qp = cqueue_list_locate_qinstance(
-                                 qmonMirrorList(SGE_CQUEUE_LIST), str);
+                                 qmonMirrorList(SGE_CQ_LIST), str);
                      if (qp) {
                         sprintf(line, "+++++++++++++++++++++++++++++++++++++++++++\n");  
                         qmonBrowserShow(line);
@@ -1490,11 +1490,11 @@ static void qmonQinstanceExplain(Widget w, XtPointer cld, XtPointer cad)
                   dstring queue_info = DSTRING_INIT;
                   DPRINTF(("CQ/QI to explain: %s\n", str));
                   qp = cqueue_list_locate_qinstance(
-                                 qmonMirrorList(SGE_CQUEUE_LIST), str);
+                                 qmonMirrorList(SGE_CQ_LIST), str);
                   if (qp) {
                      qmonQinstanceShowBrowserExplain(&queue_info, qp,
-                                             qmonMirrorList(SGE_CENTRY_LIST),
-                                             qmonMirrorList(SGE_EXECHOST_LIST),
+                                             qmonMirrorList(SGE_CE_LIST),
+                                             qmonMirrorList(SGE_EH_LIST),
                                              explain_bits);
                      qmonBrowserShow(sge_dstring_get_string(&queue_info));
                      qmonBrowserShow(line);
@@ -1623,7 +1623,7 @@ Boolean *ctd
                   /* locate the quue */
                   str = XbaeMatrixGetCell(w, row, 0);
                   if (str && *str != '\0') {
-                     qp = cqueue_list_locate(qmonMirrorList(SGE_CQUEUE_LIST), str);
+                     qp = cqueue_list_locate(qmonMirrorList(SGE_CQ_LIST), str);
                      if (qp) {
                         queue_info = qmonCQShowBrowserInfo(qp);      
                         qmonBrowserShow(queue_info);
@@ -1800,7 +1800,7 @@ static void qmonCQChangeState(Widget w, XtPointer cld, XtPointer cad)
          }
       }
       if (ql) {
-         alp = qmonChangeStateList(SGE_CQUEUE_LIST, ql, force, action); 
+         alp = qmonChangeStateList(SGE_CQ_LIST, ql, force, action); 
       
          qmonMessageBox(w, alp, 0);
          /*
@@ -1938,13 +1938,13 @@ static void qmonCQUpdateCQMatrix(void)
       setButtonLabel(cq_customize, "@{Customize}");
    }   
    
-   ehl = qmonMirrorList(SGE_EXECHOST_LIST);
-   cl = qmonMirrorList(SGE_CENTRY_LIST);
-   ql = qmonMirrorList(SGE_CQUEUE_LIST);
-   acl = qmonMirrorList(SGE_USERSET_LIST);
-   prjl = qmonMirrorList(SGE_PROJECT_LIST);
+   ehl = qmonMirrorList(SGE_EH_LIST);
+   cl = qmonMirrorList(SGE_CE_LIST);
+   ql = qmonMirrorList(SGE_CQ_LIST);
+   acl = qmonMirrorList(SGE_US_LIST);
+   prjl = qmonMirrorList(SGE_PR_LIST);
    pel = qmonMirrorList(SGE_PE_LIST);
-   hgl = qmonMirrorList(SGE_HGROUP_LIST);
+   hgl = qmonMirrorList(SGE_HGRP_LIST);
 
    /*
    ** match filter criteria
@@ -2092,13 +2092,13 @@ static void qmonCQUpdateQIMatrix(void)
       setButtonLabel(cq_customize, "@{Customize}");
    }   
    
-   ehl = qmonMirrorList(SGE_EXECHOST_LIST);
-   cl = qmonMirrorList(SGE_CENTRY_LIST);
-   ql = qmonMirrorList(SGE_CQUEUE_LIST);
-   acl = qmonMirrorList(SGE_USERSET_LIST);
-   prjl = qmonMirrorList(SGE_PROJECT_LIST);
+   ehl = qmonMirrorList(SGE_EH_LIST);
+   cl = qmonMirrorList(SGE_CE_LIST);
+   ql = qmonMirrorList(SGE_CQ_LIST);
+   acl = qmonMirrorList(SGE_US_LIST);
+   prjl = qmonMirrorList(SGE_PR_LIST);
    pel = qmonMirrorList(SGE_PE_LIST);
-   hgl = qmonMirrorList(SGE_HGROUP_LIST);
+   hgl = qmonMirrorList(SGE_HGRP_LIST);
 
    /*
    ** match filter criteria
@@ -2350,8 +2350,8 @@ static void qmonCQUpdateQhostMatrix(void)
       return;
    }
 
-   ehl = qmonMirrorList(SGE_EXECHOST_LIST);
-   cl = qmonMirrorList(SGE_CENTRY_LIST);
+   ehl = qmonMirrorList(SGE_EH_LIST);
+   cl = qmonMirrorList(SGE_CE_LIST);
    /*
    lWriteListTo(ehl, stdout);
    lWriteListTo(cl, stdout);
@@ -2548,9 +2548,9 @@ static void qmonQinstanceSetLoad(Widget matrix, const char *qiname)
 
    DENTER(GUI_LAYER, "qmonQueueSetLoad");
 
-   ehl = qmonMirrorList(SGE_EXECHOST_LIST);
-   cl = qmonMirrorList(SGE_CENTRY_LIST);
-   ql = qmonMirrorList(SGE_CQUEUE_LIST);
+   ehl = qmonMirrorList(SGE_EH_LIST);
+   cl = qmonMirrorList(SGE_CE_LIST);
+   ql = qmonMirrorList(SGE_CQ_LIST);
 
    qep = cqueue_list_locate_qinstance(ql, qiname);
 /*    TODO                                            */    
@@ -2650,13 +2650,13 @@ static void qmonCQSick(Widget w, XtPointer cld, XtPointer cad)
          return;
       }
 
-      hgl = qmonMirrorList(SGE_HGROUP_LIST);
+      hgl = qmonMirrorList(SGE_HGRP_LIST);
       for (i=0; i<rows; i++) {
          /* is this row selected */ 
          if (XbaeMatrixIsRowSelected(matrix, i)) {
             str = XbaeMatrixGetCell(cluster_queue_settings, i, 0);
             if ( str && *str != '\0' ) { 
-               qp = cqueue_list_locate(qmonMirrorList(SGE_CQUEUE_LIST), str);
+               qp = cqueue_list_locate(qmonMirrorList(SGE_CQ_LIST), str);
                cqueue_sick(qp, &alp, hgl, &ds);
             }
          }

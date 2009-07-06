@@ -83,7 +83,7 @@ enum {
 };
 
 LISTDEF(PR_Type)
-   JGDI_ROOT_OBJ(Project, SGE_PROJECT_LIST, ADD | MODIFY | DELETE | GET | GET_LIST)
+   JGDI_ROOT_OBJ(Project, SGE_PR_LIST, ADD | MODIFY | DELETE | GET | GET_LIST)
    JGDI_EVENT_OBJ(ADD(sgeE_PROJECT_ADD) | MODIFY(sgeE_PROJECT_MOD) | DELETE(sgeE_PROJECT_DEL) | GET_LIST(sgeE_PROJECT_LIST))
 
    /* configured project name spooled */

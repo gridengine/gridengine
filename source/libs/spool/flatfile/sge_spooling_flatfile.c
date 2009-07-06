@@ -578,10 +578,10 @@ spool_classic_default_list_func(lList **answer_list,
             directory = EXECHOST_DIR;
             break;
          case SGE_TYPE_MANAGER:
-            ret = read_manop(SGE_MANAGER_LIST);
+            ret = read_manop(SGE_UM_LIST);
             break;
          case SGE_TYPE_OPERATOR:
-            ret = read_manop(SGE_OPERATOR_LIST);
+            ret = read_manop(SGE_UO_LIST);
             break;
          case SGE_TYPE_PE:
             directory = PE_DIR;
@@ -1020,10 +1020,10 @@ spool_classic_default_write_func(lList **answer_list,
          filename  = key;
          break;
       case SGE_TYPE_MANAGER:
-         ret = write_manop(1, SGE_MANAGER_LIST);
+         ret = write_manop(1, SGE_UM_LIST);
          break;
       case SGE_TYPE_OPERATOR:
-         ret = write_manop(1, SGE_OPERATOR_LIST);
+         ret = write_manop(1, SGE_UO_LIST);
          break;
       case SGE_TYPE_PE:
          directory = PE_DIR;
@@ -1291,10 +1291,10 @@ spool_classic_default_delete_func(lList **answer_list,
          }
          break;
       case SGE_TYPE_MANAGER:
-         write_manop(1, SGE_MANAGER_LIST);
+         write_manop(1, SGE_UM_LIST);
          break;
       case SGE_TYPE_OPERATOR:
-         write_manop(1, SGE_OPERATOR_LIST);
+         write_manop(1, SGE_UO_LIST);
          break;
       case SGE_TYPE_SHARETREE:
          ret = sge_unlink(NULL, SHARETREE_FILE);
@@ -1363,7 +1363,7 @@ static bool write_manop(int spool, int target) {
    DENTER(TOP_LAYER, "write_manop");
 
    switch (target) {
-   case SGE_MANAGER_LIST:
+   case SGE_UM_LIST:
       lp = *object_type_get_master_list(SGE_TYPE_MANAGER);      
       strcpy(filename, ".");
       strcat(filename, MAN_FILE);
@@ -1371,7 +1371,7 @@ static bool write_manop(int spool, int target) {
       key = UM_name;
       break;
       
-   case SGE_OPERATOR_LIST:
+   case SGE_UO_LIST:
       lp = *object_type_get_master_list(SGE_TYPE_OPERATOR);      
       strcpy(filename, ".");
       strcat(filename, OP_FILE);
@@ -1427,14 +1427,14 @@ static bool read_manop(int target) {
    DENTER(TOP_LAYER, "read_manop");
 
    switch (target) {
-   case SGE_MANAGER_LIST:
+   case SGE_UM_LIST:
       lpp = object_type_get_master_list(SGE_TYPE_MANAGER);      
       strcpy(filename, MAN_FILE);
       key = UM_name;
       descr = UM_Type;
       break;
       
-   case SGE_OPERATOR_LIST:
+   case SGE_UO_LIST:
       lpp = object_type_get_master_list(SGE_TYPE_OPERATOR);      
       strcpy(filename, OP_FILE);
       key = UO_name;

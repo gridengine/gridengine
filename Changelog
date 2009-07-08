@@ -1,3 +1,19 @@
+JF-2009-07-08-0: Bugfix:      Man page should mention reprioritize_interval is
+                              coupled to scheduler_interval
+                 Bugster:     6786258
+                 Issue:       3078
+                 Review:      MP
+                 Bugfix:      Relationship between suspend_threshold and
+                              scheduler_interval needs to be documented
+                 Bugster:     6291037
+                 Issue:       1636
+                 Review:      MP
+                 Bugfix:      Man page entry for SCHEDULER_TIMEOUT incorrectly
+                              states that default is 600
+                 Bugster:     6806918
+                 Issue:       3079
+                 Review:      MP
+
 GH-2009-07-08-0: Bugfix:      h_vmem setting as JOB consumable fails to properly 
                               set the virtual memory limit of a job
                  Bugster:     6823365

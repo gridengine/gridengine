@@ -452,4 +452,7 @@ set_context(lList *jbctx, lListElem *job);
 bool 
 job_parse_validation_level(int *level, const char *input, int prog_number, lList **answer_list);
 
+bool
+job_is_requesting_consumable(lListElem *jep, const char *resource_name);
+
 #endif /* __SGE_JOB_H */    

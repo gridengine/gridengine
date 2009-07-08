@@ -3552,7 +3552,7 @@ bool job_get_wallclock_limit(u_long32 *limit, const lListElem *jep) {
    DRETURN(got_duration);
 }
 
-/****** sgeobj/job/job_is_binary() ******************************************
+/****** sgeobj/job_is_binary() ******************************************
 *  NAME
 *     job_is_binary() -- Was "job" job submitted with -b y? 
 *
@@ -3794,4 +3794,47 @@ job_parse_validation_level(int *level, const char *input, int prog_number, lList
       ret = false;
    }
    DRETURN(ret);
+}
+
+/****** sgeobj/job_is_requesting_consumable() ******************************************
+*  NAME
+*     job_is_requesting_consumable() -- Is job requesting resources of type 
+*                                       CONSUMABLE_JOB?
+*
+*  SYNOPSIS
+*     bool job_is_requesting_consumable(lListElem *jep, const char *resoure_name) 
+*
+*  FUNCTION
+*     This function returns true if "job" is requesting a resource with type
+*     CONSUMABLE_JOB.
+*
+*  INPUTS
+*     lListELem *jep - JB_Type element 
+*     const char *resource_name - Name of resource
+*
+*  RESULT
+*     bool - true or false
+*
+*  SEE ALSO
+******************************************************************************/
+bool
+job_is_requesting_consumable(lListElem *jep, const char *resource_name)
+{
+   lList *request_list;
+   lListElem *cep = NULL;
+   u_long32 consumable;
+
+
+   request_list = lGetList(jep, JB_hard_resource_list);
+
+   if (request_list != NULL) {
+      cep = centry_list_locate(request_list, resource_name);
+      if (cep != NULL) {
+         consumable = lGetUlong(cep, CE_consumable);
+         if (consumable == CONSUMABLE_JOB) {
+            return true;
+         }
+      }
+   }
+   return false;
 }

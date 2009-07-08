@@ -1,3 +1,9 @@
+GH-2009-07-08-0: Bugfix:      h_vmem setting as JOB consumable fails to properly 
+                              set the virtual memory limit of a job
+                 Bugster:     6823365
+                 Issue:       3068
+                 Review:      JG, MP
+
 EB-2009-07-06-1: Cleanup:     o replaced list implementation in master and schedd
                               by utilib implementation
                  Review:      MD

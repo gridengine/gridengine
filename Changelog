@@ -1,3 +1,22 @@
+GH-2009-07-09-0: Bugfix:      execd installation on Windows doesn't provide global 
+                              spool dir as default, even if it's local
+                 Bugster:     6802751
+                 Issue:       3081
+                 Review:      HP, MD
+                 Bugfix:      windows exec autoinstall fails if spooldir was already 
+                              created with wrong perms/ownership
+                 Bugster:     6822285
+                 Issue:       3082
+                 Review:      HP, MD
+                 Bugfix:      autoinstall of Windows exec host hangs in GetLocalSpoolDir
+                 Bugster:     6822285
+                 Issue:       3083
+                 Review:      HP, MD
+                 Bugfix:      Windows exechost install failed to create the local spooldir
+                 Bugster:     6798623
+                 Issue:       3084
+                 Review:      HP, MD
+
 JF-2009-07-08-0: Bugfix:      Man page should mention reprioritize_interval is
                               coupled to scheduler_interval
                  Bugster:     6786258

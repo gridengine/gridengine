@@ -6,6 +6,10 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 -----------------+-----------+--------------------------------------------------
+DG-2009-07-10-0: Bugfix:      Fixed broken installation. 
+                 Belongs to:  GH-2009-07-09-0
+                 Review:      CR
+
 CR-2009-07-10-0: Cleanup:     Fixed possible free(NULL) problem in commlib 
                               logging in the case when running out of memory.
                  Merged from: V61_BRANCH (CR-2009-07-10-0)

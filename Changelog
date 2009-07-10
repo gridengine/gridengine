@@ -1,3 +1,7 @@
+CR-2009-07-10-0: Cleanup:     Fixed possible free(NULL) problem in commlib logging
+                              in the case when running out of memory.
+                 Review:      SH
+
 MP-2009-06-29-0: Bugfix:      autoinstall fails if spooling dir (BDB) already exits
                               without any error mgs/log file being created
                               Merged from MP-2009-06-29-0 in maintrunk

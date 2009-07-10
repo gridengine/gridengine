@@ -188,6 +188,7 @@ int getpagesize(void);
 #include "sge_feature.h"
 #include "sge_language.h"
 #include "sgermon.h"
+#include "sge_uidgid.h"
 
 #if defined(PDC_STANDALONE)
 #  include "sge_log.h"

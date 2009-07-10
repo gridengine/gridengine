@@ -57,6 +57,7 @@ UTILIB_DRMAA_SRC = \
          sge_log.c \
          sge_nprocs.c \
          sge_os.c \
+         sge_parse_args.c \
          sge_parse_num_par.c \
          sge_profiling.c \
          sge_prog.c \
@@ -147,6 +148,9 @@ sge_smf.o: 	$(UTILIB_DIR)/sge_smf.c
 
 sge_hostname.o:	$(UTILIB_DIR)/sge_hostname.c
 		$(CC) $(CFLAGS) $(NOERR_CFLAG) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_hostname.c
+
+sge_parse_args.o:	$(UTILIB_DIR)/sge_parse_args.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_parse_args.c
 
 sge_parse_num_par.o:	$(UTILIB_DIR)/sge_parse_num_par.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_parse_num_par.c

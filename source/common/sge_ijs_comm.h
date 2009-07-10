@@ -36,7 +36,7 @@
 #include "cl_connection_list.h"
 
 #define BUFSIZE              64*1024
-#define COMMUNICATION_HANDLE cl_com_handle_t
+#define COMM_HANDLE cl_com_handle_t
 
 #define STDIN_DATA_MSG               0
 #define STDOUT_DATA_MSG              1
@@ -91,30 +91,32 @@ int comm_open_connection(bool                 b_server,
                          const char           *this_component,
                          int                  port, 
                          const char           *other_component,
+                         char                 *hostname,
                          const char           *user_name,
-                         COMMUNICATION_HANDLE **handle, 
+                         COMM_HANDLE          **handle, 
                          dstring              *err_msg);
 
 int comm_get_application_error(dstring *err_msg);
-int comm_shutdown_connection(COMMUNICATION_HANDLE *handle,
+int comm_shutdown_connection(COMM_HANDLE *handle,
                              const char *component_name,
+                             char *hostname,
                              dstring *err_msg);
 
 
-int comm_set_connection_param(COMMUNICATION_HANDLE* g_comm_handle, int param, int value,
+int comm_set_connection_param(COMM_HANDLE *handle, int param, int value,
                               dstring *err_msg);
 int comm_ignore_timeouts(bool b_ignore, dstring *err_msg);
 
-int comm_wait_for_connection(COMMUNICATION_HANDLE *handle, const char *component, 
+int comm_wait_for_connection(COMM_HANDLE *handle, const char *component, 
                              int wait_secs, const char **host, dstring *err_msg);
-int comm_wait_for_no_connection(COMMUNICATION_HANDLE *handle, const char *component, 
+int comm_wait_for_no_connection(COMM_HANDLE *handle, const char *component, 
                                 int wait_secs, dstring *err_msg);
-int comm_get_connection_count(COMMUNICATION_HANDLE *handle, dstring *err_msg);
+int comm_get_connection_count(const COMM_HANDLE *handle, dstring *err_msg);
 
-int comm_trigger(COMMUNICATION_HANDLE *handle, int synchron, dstring *err_msg);
+int comm_trigger(COMM_HANDLE *handle, int synchron, dstring *err_msg);
 
 
-unsigned long comm_write_message(COMMUNICATION_HANDLE *handle,
+unsigned long comm_write_message(COMM_HANDLE *handle,
                   const char *unresolved_hostname,
                   const char *component_name,
                   unsigned long component_id,
@@ -123,14 +125,16 @@ unsigned long comm_write_message(COMMUNICATION_HANDLE *handle,
                   unsigned char type,
                   dstring *err_msg);
 
-int comm_flush_write_messages(COMMUNICATION_HANDLE *handle, dstring *err_msg);
+int comm_flush_write_messages(COMM_HANDLE *handle, dstring *err_msg);
 
-int comm_recv_message(COMMUNICATION_HANDLE *handle, 
+int comm_recv_message(COMM_HANDLE *handle, 
                  cl_bool_t b_synchron, 
                  recv_message_t *recv_mess, 
                  dstring *err_msg);
 
 int comm_free_message(recv_message_t *recv_mess, dstring *err_msg);
-int check_client_alive(COMMUNICATION_HANDLE *handle, const char *component_name,
+int check_client_alive(COMM_HANDLE *handle,
+                       const char *component_name,
+                       char *hostname,
                        dstring *err_msg);
 

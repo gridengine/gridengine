@@ -111,6 +111,8 @@ static char *build_path(int type);
 static char *parse_script_params(char **script_file);
 static void setup_environment (void);
 static bool inherit_env(void);
+static void start_qlogin_job(const char *shell_path);
+static void start_qrsh_job(void);
 #if 0 /* Not currently used, but looks kinda useful... */
 static void set_inherit_env (bool inherit);
 #endif
@@ -152,7 +154,7 @@ static int count_command(char *command) {
 
  It is also used to start the external starter command .. 
  ************************************************************************/
-void son(char *childname, char *script_file, int truncate_stderr_out)
+void son(const char *childname, char *script_file, int truncate_stderr_out)
 {
    int   in, out, err;          /* hold fds */
    int   i;
@@ -268,14 +270,23 @@ void son(char *childname, char *script_file, int truncate_stderr_out)
 #ifdef NECSX5
    if (!is_qlogin_starter)
 #endif
-   if (g_new_interactive_job_support == false || !is_qlogin_starter) {
-      if ((newpgrp = setsid()) < 0) {
-         shepherd_error(1, "setsid() failed, errno=%d", errno);
+   /* 
+    * g_newpgrp is != -1 if setsid() was already called in pty.c, fork_pty(),
+    * in case of new IJS when a pty was created.
+    * For all other jobs and cases we have to setsid() here, if it's not already set.
+    */
+   if (g_newpgrp == -1) {
+      /* assume we are already in a new session */
+      newpgrp = getpgrp();
+      /* check if our assumption is true */
+      if (newpgrp != getpid()) {
+         /* were not in a new session - create a new one */
+         newpgrp = setsid();
+         if (newpgrp < 0) {
+            shepherd_error(1, "setsid() failed, errno=%d, %s", errno, strerror(errno));
+         }
       }
    } else {
-      /* g_newpgrp was set in pty.c, fork_pty() */
-      /* TODO: "qrsh -pty no <command>" doesn't set g_newpgrp, so we 
-       *       must check if we must call setsid() in this case. */
       newpgrp = g_newpgrp;
    }
 
@@ -422,25 +433,23 @@ void son(char *childname, char *script_file, int truncate_stderr_out)
 
 /* --- switch to intermediate user */
    shepherd_trace("switching to intermediate/target user");
-   if(is_qlogin_starter &&
-      g_new_interactive_job_support == false) {
-         /* 
-          * In the old IJS, we didn't have to set the additional group id,
-          * because our custom rshd did it for us.
-          * The add_grp_id is necessary to obtain online usage and to
-          * kill subprocesses.
-          */
-         ret = sge_set_uid_gid_addgrp(target_user, intermediate_user, 0, 0, 
-                                   0, err_str, use_qsub_gid, gid);
+   if(is_qlogin_starter && g_new_interactive_job_support == false) {
+      /* 
+       * In the old IJS, we didn't have to set the additional group id,
+       * because our custom rshd did it for us.
+       * The add_grp_id is necessary to obtain online usage and to
+       * kill subprocesses.
+       */
+      ret = sge_set_uid_gid_addgrp(target_user, intermediate_user,
+               0, 0, 0, err_str, use_qsub_gid, gid);
    } else { /* if (!is_qlogin_starter || g_new_interactive_job_support == true) */
       /*
        * In not-interactive jobs and in the new IJS we must set the 
        * additional group id here, because there is no custum rshd that will
        * do this for us.
        */
-      ret = sge_set_uid_gid_addgrp(target_user, intermediate_user, min_gid, 
-                                min_uid, add_grp_id, err_str, use_qsub_gid, 
-                                gid);
+      ret = sge_set_uid_gid_addgrp(target_user, intermediate_user,
+               min_gid, min_uid, add_grp_id, err_str, use_qsub_gid, gid);
    }
 
    if (ret < 0) {
@@ -510,10 +519,10 @@ void son(char *childname, char *script_file, int truncate_stderr_out)
    fs_stdout = atoi(get_conf_val("fs_stdout_file_staging"));
    fs_stderr = atoi(get_conf_val("fs_stderr_file_staging"));
    
-   if (!strcmp(childname, "pe_start") ||
-       !strcmp(childname, "pe_stop") ||
-       !strcmp(childname, "prolog") ||
-       !strcmp(childname, "epilog")) {
+   if (strcmp(childname, "pe_start") == 0
+       || strcmp(childname, "pe_stop") == 0
+       || strcmp(childname, "prolog") == 0
+       || strcmp(childname, "epilog") == 0) {
 
       /* use login shell */
       use_login_shell = 1; 
@@ -546,7 +555,7 @@ void son(char *childname, char *script_file, int truncate_stderr_out)
             stderr_path  = build_path(SGE_PAR_STDERR);
          }
       }
-   } else {
+   } else { /* the job itself */
       if (!is_rsh && g_new_interactive_job_support == true) {
          shell_path = strdup(pw->pw_shell);
          sge_chdir(pw->pw_dir);
@@ -1274,10 +1283,6 @@ int use_starter_method /* If this flag is set the shellpath contains the
    char **pre_args_ptr;
    char err_str[2048];
 
-#if 1
-char *buf = NULL;
-#endif
-
    pre_args_ptr = &pre_args[0];
    
 #if 0
@@ -1315,7 +1320,7 @@ char *buf = NULL;
       sge_dstring_append(&arguments, script_file);
      
       sge_dstring_append(&arguments, " ");
-      for (i = 0; i < n_job_args; i++) {
+      for (i=0; i<n_job_args; i++) {
          char conf_val[256];
 
          sprintf(conf_val, "job_arg%lu", i + 1);
@@ -1463,7 +1468,7 @@ char *buf = NULL;
       }
    }
 
-   if(is_qlogin) {
+   if(is_qlogin) { /* qlogin, qrsh (without command), qrsh <command> */
       if (g_new_interactive_job_support == false) {
          shepherd_trace("start qlogin");
          
@@ -1480,127 +1485,14 @@ char *buf = NULL;
          }
 #endif
          qlogin_starter(shepherd_job_dir, args[1], sge_get_environment());
-      } else {
-         int  i=0;
-
-         if (is_rsh == false) { /* rlogin and qlogin = rlogind and telnet */
-         /* TODO: Move this to a function */
-            char minusname[50];
-            static	char	shell[256] = { "SHELL=" };
-            static	char	home[MAXPATHLEN] = { "HOME=" };
-            static	char	term[64] = { "TERM=" };
-            static	char	logname[30] = { "LOGNAME=" };
-            static	char	timez[100] = { "TZ=" };
-            static	char	hertz[10] = { "HZ=" };
-            static	char	path[MAXPATHLEN] = { "PATH=" };
-            char *my_env[8];
-
-            struct passwd *pw=NULL;
-            struct passwd pw_struct;
-            char *buffer;
-            int size;
-
-            snprintf(minusname, sizeof(minusname), 
-                     "-%s", sge_basename(shell_path, '/'));
-            args[0] = shell_path;
-            args[1] = minusname;
-            args[2] = NULL;
-
-            size = get_pw_buffer_size();
-            buffer = sge_malloc(size);
-            getpwuid_r(getuid(), &pw_struct, buffer, size, &pw);
-            if (!pw) {
-               shepherd_error(1, "can't get password entry for user id %d",
-                             (int)getuid());
-            }
-            i = 0;
-            if (pw != NULL && pw->pw_shell != NULL) {
-               my_env[i++] = strcat(shell, pw->pw_shell);
-            }
-            if (pw != NULL && pw->pw_dir != NULL) {
-               my_env[i++] = strcat(home, pw->pw_dir);
-            }
-            if (getenv("TERM") != NULL) {
-               my_env[i++] = strcat(term, getenv("TERM"));
-            }
-            if (pw != NULL && pw->pw_name != NULL) {
-               my_env[i++] = strcat(logname, pw->pw_name);
-            }
-            my_env[i++] = strcat(timez, "");
-            my_env[i++] = strcat(hertz, "");
-#if defined(LINUX86) || defined(LINUXAMD64) || defined(LINUXIA64) || defined(LINUXPPC) || defined (LINUXSPARC) || defined(LINUXSPARC64) || defined(ALINUX) || defined(DARWIN_PPC) || defined(DARWIN_X86)
-            my_env[i++] = strcat(path, "/bin:/usr/bin");
-#else
-            my_env[i++] = strcat(path, "/usr/bin");
-#endif
-            my_env[i] = NULL;
-           
-            shepherd_trace("execle(%s, %s, NULL, env)", shell_path, minusname);
-
-            execle(shell_path, minusname, NULL, my_env);
-         } else { /*if (is_qrsh) */
-            /* TODO: RFE: Make a minimal qrsh_starter for new IJS */
-            const char *sge_root = NULL;
-            const char *arch = NULL;
-            char *command = NULL;
-            int  nargs;
-            char cwd[SGE_PATH_MAX+1];
-            
-            args[0] = NULL;
-
-            command = (char*)sge_get_env_value("QRSH_COMMAND");
-            nargs = count_command(command);
-
-            if (nargs > 0) {
-               buf = (char*)malloc(strlen(command)+2049);
-
-               sge_root = sge_get_root_dir(0, NULL, 0, 1);
-               arch = sge_get_arch();
-               getcwd(cwd, SGE_PATH_MAX);
-               
-               if (sge_root == NULL || arch == NULL) {
-                  shepherd_trace("reading environment SGE_ROOT and ARC failed");
-                  return;
-               }
-               snprintf(buf, 2048, "%s/utilbin/%s/qrsh_starter",
-                  sge_root, arch);
-#if 0
-               {
-                  int i,j;
-
-                  args[0] = buf;
-                  args[1] = cwd;
-                  for (i=0, j=2; i<nargs; i++) {
-                     args[j++] = tmp_args[i++];
-                  }
-                  args[j++] = NULL;
-               }
-#else
-               args[0] = buf;
-               args[1] = shepherd_job_dir;
-               if (g_noshell == 1) {
-                  args[2] = "noshell";
-                  args[3] = NULL;
-               } else {
-                  args[2] = NULL;
-               }
-#endif
-            }
+      } else { /* g_new_interactive_job_support == true */
+         if (is_rsh == false) { /* qlogin, qrsh (without command) */
+            start_qlogin_job(shell_path);
+         } else { /* qrsh <command> */
+            start_qrsh_job();
          }
-
-         for (i=0; args[i] != NULL; i++) {
-            shepherd_trace("args[%d] = \"%s\"\n", i, args[i]);
-         }
-#if 0
-         shepherd_trace("execve(%s, ....);", args[0]);
-         execve(args[0], args, sge_get_environment());
-#else
-         shepherd_trace("execvp(%s, ...);", args[0]);
-         execvp(args[0], args);
-#endif
-         /* END TODO: Move this to a function */
       }
-   } else {
+   } else { /* batch job */
       char *filename = NULL;
 
       if( use_starter_method ) {
@@ -1617,7 +1509,9 @@ char *buf = NULL;
       pc += strlen(pc);
       for (pstr = args; pstr && *pstr; pstr++) {
       
-         /* calculate rest length in string - 15 is just lazyness for blanks, "..." string, etc. */
+         /* calculate rest length in string - 15 is just lazyness for blanks,
+          * "..." string, etc.
+          */
          if (strlen(*pstr) < ((sizeof(err_str)  - (pc - err_str) - 15))) {
             sprintf(pc, " \"%s\"", *pstr);
             pc += strlen(pc);
@@ -1712,7 +1606,9 @@ char *buf = NULL;
       } else 
 #endif
       {
+#if defined(INTERIX)
          shepherd_trace("not a GUI job, starting directly");
+#endif
          if (!inherit_env()) {
             /* The closest thing to execvp that takes an environment pointer is
              * execve.  The problem is that execve does not resolve the path.
@@ -1852,7 +1748,7 @@ int type
       /* 'base' is a existing directory, but not a file! */
       if (type == SGE_STDIN) {
          shepherd_state = SSTATE_OPEN_OUTPUT; /* job's failure */
-         shepherd_error(1, SFQ" is a directory not a file\n", base);
+         shepherd_error(1, SFQ" is a directory not a file", base);
          return "/dev/null";
       } else {
          job_name = get_conf_val("job_name");
@@ -1981,3 +1877,160 @@ static void set_inherit_env (bool inherit)
    inherit_environ = inherit ? 1 : 0;
 }
 #endif
+
+/****** builtin_starter/start_qlogin_job() *************************************
+*  NAME
+*     start_qlogin_job() -- starts the qlogin/qrsh (without command) job
+*
+*  SYNOPSIS
+*     static void start_qlogin_job(const char *shell_path) 
+*
+*  FUNCTION
+*     Prepares the argument list, the environment and starts the qlogin/qrsh
+*     (without command) job, i.e. usually starts the users login shell.
+*     This function doesn't return if it succeeds, because it exec's the job.
+*
+*  INPUTS
+*     const char *shell_path - The path of the users login shell,
+*                              i.e. "/bin/bash".
+*
+*  RESULT
+*     static void - no result. If this function succeeds, it doesn't return,
+*                   because it execs the job.
+*
+*  NOTES
+*     MT-NOTE: start_qlogin_job() is not MT safe 
+*
+*  SEE ALSO
+*     builtin_starter/start_qrsh_job
+*******************************************************************************/
+static void start_qlogin_job(const char *shell_path)
+{
+   static char	shell[8+256]       = { "SHELL=" };
+   static char	home[8+MAXPATHLEN] = { "HOME=" };
+   static char	term[8+64]         = { "TERM=" };
+   static char	logname[8+30]      = { "LOGNAME=" };
+   static char	timez[8+100]       = { "TZ=" };
+   static char	hertz[8+10]        = { "HZ=" };
+   static char	path[8+MAXPATHLEN] = { "PATH=" };
+   struct passwd *pw = NULL;
+   struct passwd pw_struct;
+   char minusname[50];
+   char *my_env[8];
+   char *buffer;
+   int  i, size, ret;
+
+   /* generate e.g. "-bash" from the shell path "/bin/bash" */
+   snprintf(minusname, sizeof(minusname), "-%s", sge_basename(shell_path, '/'));
+
+   /* get passwd information for current user */
+   size = get_pw_buffer_size();
+   buffer = sge_malloc(size);
+   errno = 0;
+   ret = getpwuid_r(getuid(), &pw_struct, buffer, size, &pw);
+   if (pw == NULL || ret != 0) {
+      shepherd_error(1, "can't get password entry for user id %d, error: %s (%d)",
+         (int)getuid(), strerror(errno), errno);
+      /* shepherd_error(1,...) does an exit()! */
+   }
+   
+   i = 0;
+   if (pw->pw_shell != NULL) {
+      my_env[i++] = strncat(shell, pw->pw_shell, 256);
+   }
+   if (pw->pw_dir != NULL) {
+      my_env[i++] = strncat(home, pw->pw_dir, MAXPATHLEN);
+   }
+   if (getenv("TERM") != NULL) {
+      my_env[i++] = strncat(term, getenv("TERM"), 64);
+   }
+   if (pw->pw_name != NULL) {
+      my_env[i++] = strncat(logname, pw->pw_name, 30);
+   }
+   my_env[i++] = strcat(timez, "");
+   my_env[i++] = strcat(hertz, "");
+#if defined(LINUX86) || defined(LINUXAMD64) || defined(LINUXIA64) || defined(LINUXPPC) || defined (LINUXSPARC) || defined(LINUXSPARC64) || defined(ALINUX) || defined(DARWIN_PPC) || defined(DARWIN_X86)
+   my_env[i++] = strcat(path, "/bin:/usr/bin");
+#else
+   my_env[i++] = strcat(path, "/usr/bin");
+#endif
+   my_env[i] = NULL;
+
+   sge_free(buffer);
+  
+   shepherd_trace("execle(%s, %s, NULL, env)", shell_path, minusname);
+   execle(shell_path, minusname, NULL, my_env);
+}
+
+/****** builtin_starter/start_qrsh_job() ***************************************
+*  NAME
+*     start_qrsh_job() -- starts the "qrsh <command>" job
+*
+*  SYNOPSIS
+*     static void start_qrsh_job(void) 
+*
+*  FUNCTION
+*     Prepares the argument list and starts the qrsh <command> job, i.e.
+*     usually starts the qrsh_starter binary. If this function succeeds, it
+*     doesn't return, because it execs the job. If it returns, an error occured.
+*
+*  INPUTS
+*     void - no input 
+*
+*  RESULT
+*     void - no result. If this function succeeds, it doesn't return, because
+*            it execs the job.
+*
+*  NOTES
+*     MT-NOTE: start_qrsh_job() is not MT safe 
+*
+*  SEE ALSO
+*     builtin_starter/start_qlogin_job()
+*******************************************************************************/
+static void start_qrsh_job(void)
+{
+   /* TODO: RFE: Make a minimal qrsh_starter for new IJS */
+   const char *sge_root = NULL;
+   const char *arch = NULL;
+   char *command = NULL;
+   char *buf = NULL;
+   char cwd[SGE_PATH_MAX+1];
+   char *args[9];
+   int  nargs;
+   int  i=0;
+
+   args[0] = NULL;
+
+   command = (char*)sge_get_env_value("QRSH_COMMAND");
+   nargs = count_command(command);
+
+   if (nargs > 0) {
+      buf = (char*)malloc(strlen(command)+2049);
+
+      sge_root = sge_get_root_dir(0, NULL, 0, 1);
+      arch = sge_get_arch();
+      getcwd(cwd, SGE_PATH_MAX);
+      
+      if (sge_root == NULL || arch == NULL) {
+         shepherd_trace("reading environment SGE_ROOT and ARC failed");
+         return;
+      }
+      snprintf(buf, 2048, "%s/utilbin/%s/qrsh_starter", sge_root, arch);
+
+      args[0] = buf;
+      args[1] = shepherd_job_dir;
+      if (g_noshell == 1) {
+         args[2] = "noshell";
+         args[3] = NULL;
+      } else {
+         args[2] = NULL;
+      }
+   }
+
+   for (i=0; args[i] != NULL; i++) {
+      shepherd_trace("args[%d] = \"%s\"", i, args[i]);
+   }
+
+   shepherd_trace("execvp(%s, ...);", args[0]);
+   execvp(args[0], args);
+}

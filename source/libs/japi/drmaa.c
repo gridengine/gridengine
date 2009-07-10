@@ -60,6 +60,7 @@
 /* UTI */
 #include "setup_path.h"
 #include "sge_dstring.h"
+#include "sge_parse_args.h"
 #include "sge_prog.h"
 #include "sge_string.h"
 #include "sge_uidgid.h"

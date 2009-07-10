@@ -1,3 +1,22 @@
+HP-2009-07-10-0: Cleanup:     Cleanup of builtin IJS
+                              Cleanups without CR:
+                              o improved error handling in 20-30 places - output
+                                of error messages from lib functions, added missing
+                                error handling, ...
+                              o code cleanup - indention, brackets, variable names,
+                                comments and ADOC headers
+                              o got rid of some global and some module variables
+                              o improved command parsing in qsh.c - now a list 
+                                instead of a static array is used to collect the
+                                tokens, an allocated array is the generated from the list
+                              o if this command line contains quoted arguments,
+                                they are parsed as one token now
+                              o moved large code blocks to separate functions 
+                              
+                 Bugster:     6857639
+                 Issue:       3075
+                 Review:      EB
+
 GH-2009-07-10-0: Bugfix:      SGE does not handle multiline variable using qsub -v 
                  Bugster:     6855413
                  Issue:       3085

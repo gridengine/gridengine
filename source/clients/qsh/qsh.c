@@ -82,6 +82,7 @@
 #include "msg_qsh.h"
 #include "msg_common.h"
 #include "sge_hostname.h"
+#include "sge_sl.h"
 
 #include "gdi/sge_gdi_ctx.h"
 
@@ -100,20 +101,20 @@
 #  include <termio.h>
 #endif
 
-#include "sge_client_ijs.h"
 #include "sge_pty.h"
 #include "sge_ijs_comm.h"
 #include "sge_ijs_threads.h"
+#include "sge_client_ijs.h"
+#include "sge_parse_args.h"
 
 #include "sgeobj/cull_parse_util.h"
 #include "sgeobj/sge_jsv.h"
 
-extern COMMUNICATION_HANDLE *g_comm_handle;
-
-bool g_csp_mode = false;
-bool g_new_interactive_job_support = false;
-
+/* global variables */
 sge_gdi_ctx_class_t *ctx = NULL;
+
+/* module variables */
+static bool g_new_interactive_job_support = false;
 
 static int open_qrsh_socket(int *port);
 static int wait_for_qrsh_socket(int sock, int timeout);
@@ -133,14 +134,12 @@ static int start_client_program(const char *client_name,
                                 int noshell,
                                 int sock);
 static int get_client_server_context(int msgsock, char **port, char **job_dir, char **utilbin_dir, const char **host);
-/* static char *get_rshd_name(char *hostname); */
 static const char *get_client_name(sge_gdi_ctx_class_t *ctx, int is_rsh, int is_rlogin, int inherit_job);
-/* static char *get_master_host(lListElem *jep); */
 static void set_job_info(lListElem *job, const char *name, int is_qlogin, int is_rsh, int is_rlogin);
-/* static lList *parse_script_options(lList *opts_cmdline); */
 static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrated, bool error,
                                 int is_qlogin, int is_rsh, int is_qsh); 
 static void delete_job(sge_gdi_ctx_class_t *ctx, u_long32 job_id, lList *lp);
+static void set_builtin_ijs_signals_and_handlers(void);
 
 int main(int argc, char **argv);
 
@@ -724,10 +723,10 @@ static int start_client_program(const char *client_name,
       while (!done) {
          int status;
 
-      /* Always try to get exit code (or error) from shepherd.
-       * If rsh didn't return EXIT_SUCCESS or didn't exit (!WIFEXITED), 
-       * output a message "cleaning up ..." and delete the job
-       */
+         /* Always try to get exit code (or error) from shepherd.
+          * If rsh didn't return EXIT_SUCCESS or didn't exit (!WIFEXITED), 
+          * output a message "cleaning up ..." and delete the job
+          */
          if (waitpid(child_pid, &status, 0) == child_pid) {
             int ret = -1;  /* default: delete job */
 
@@ -755,64 +754,69 @@ static int start_client_program(const char *client_name,
          }
       }
    } else {
-      /* JG: TODO: args should be dynamically allocated 
-       *           we should have some utility similar to dstring
-       *           allowing to add any number of arguments, storing
-       *           them somewhere, e.g. in a list, and converting
-       *           this list into an argument vector.
-       */
-      char* args[20]; 
-      int i = 0;
-      char shellpath[SGE_PATH_MAX];
-      char *command = strdup(client_name); /* needn't be freed, as we exec */
+      sge_sl_list_t *sl_args;
+      char          shellpath[SGE_PATH_MAX];
+      char          **args;
+      char          *command = strdup(client_name); /* needn't be freed, as we exec */
+      int           ret;
 
-      /* split command commandline into single arguments */
-      /* JG: TODO: might contain quoted arguments containing spaces 
-       *           make function to split or use an already existing one
-       */
-      args[i++] = strtok(command, " ");
-      while((args[i] = strtok(NULL, " ")) != NULL) {
-         i++;
+      /* create an argument list */
+      if (!sge_sl_create(&sl_args)) {
+         ERROR((SGE_EVENT, MSG_SGETEXT_NOMEM));
+         exit(EXIT_FAILURE);
       }
 
+      /* split command command line into single arguments in argument list */
+      ret = parse_quoted_command_line(command, sl_args);
+      if (ret != 0) {
+         ERROR((SGE_EVENT, MSG_QSH_UNMATCHED_C, ret==1 ? '\"' : '\''));
+         exit(EXIT_FAILURE);
+      }
+
+      /* add additional arguments to argument list */
       if (is_rsh || is_rlogin) {
          sge_set_def_sig_mask(NULL, NULL);
          sge_unblock_all_signals();
          
          if (is_rsh && nostdin) {
-            args[i++] = "-n";
+            sge_sl_insert(sl_args, "-n", SGE_SL_BACKWARD);
          }   
 
-         args[i++] = "-p";
-         args[i++] = (char *)port;
-         args[i++] = (char *)host;
+         sge_sl_insert(sl_args, "-p", SGE_SL_BACKWARD);
+         sge_sl_insert(sl_args, (void*)port, SGE_SL_BACKWARD);
+         sge_sl_insert(sl_args, (void*)host, SGE_SL_BACKWARD);
          if (is_rsh) {
             sprintf(shellpath, "%s/qrsh_starter", utilbin_dir);
-            args[i++] = "exec";
-            args[i++] = (char *)quote_argument(shellpath);
-            args[i++] = (char *)quote_argument(job_dir);
+            sge_sl_insert(sl_args, "exec", SGE_SL_BACKWARD);
+            sge_sl_insert(sl_args, (void*)quote_argument(shellpath), SGE_SL_BACKWARD);
+            sge_sl_insert(sl_args, (void*)quote_argument(job_dir), SGE_SL_BACKWARD);
             if (noshell) {
-               args[i++] = "noshell";
+               sge_sl_insert(sl_args, "noshell", SGE_SL_BACKWARD);
             }   
          }   
       } else {
-         args[i++] = (char *)host;
-         args[i++] = (char *)port;
+         sge_sl_insert(sl_args, (void*)host, SGE_SL_BACKWARD);
+         sge_sl_insert(sl_args, (void*)port, SGE_SL_BACKWARD);
       }
+
+      /* convert argument list to argument vector */
+      convert_arg_list_to_vector(sl_args, &args);
+
+      /* destroy the argument list, keep the argument buffers */
+      sge_sl_destroy(&sl_args, NULL);
    
-      args[i] = NULL;
-      
 #if 0
+      /* just for debugging purposes */
       {
-      int i;
-      fflush(stdout); fflush(stderr);
-      for(i = 0; args[i] != NULL; i++) {
-         printf("qsh: args[%d] = %s\n", i, args[i]);
-      }  
-      fflush(stdout); fflush(stderr);
+         int i;
+         fflush(stdout); fflush(stderr);
+         for(i = 0; args[i] != NULL; i++) {
+            printf("qsh: args[%d] = %s\n", i, args[i]);
+         }  
+         fflush(stdout); fflush(stderr);
       }
 #endif
-     
+
       execvp(args[0], args);
       ERROR((SGE_EVENT, MSG_EXEC_CANTEXECXYZ_SS, args[0], strerror(errno)));
       DEXIT;
@@ -986,8 +990,9 @@ get_client_name(sge_gdi_ctx_class_t *ctx, int is_rsh, int is_rlogin, int inherit
     * In case of qrsh -inherit, try to read client_command from
     * an environment variable set by sge_execd
     *
-    * In case of new IJS, the environment variable contains "builtin" if the rsh_command
-    * rlogin_command or qlogin_command is builtin. So we can use it as before.
+    * In case of new IJS, the environment variable contains "builtin" if the
+    * rsh_command, rlogin_command or qlogin_command is builtin. So we can use
+    * it like before.
     */
    if (inherit_job) {
       client_name = getenv("SGE_RSH_COMMAND");
@@ -1164,7 +1169,7 @@ static void set_job_info(lListElem *job, const char *name, int is_qlogin,
 ****************************************************************************
 *
 */
-void set_command_to_env(lList *envlp, lList *opts_qrsh)
+static void set_command_to_env(lList *envlp, lList *opts_qrsh)
 {
    dstring buffer = DSTRING_INIT;
 
@@ -1198,6 +1203,105 @@ void set_command_to_env(lList *envlp, lList *opts_qrsh)
 
    var_list_set_string(&envlp, "QRSH_COMMAND", sge_dstring_get_string(&buffer));
    sge_dstring_free(&buffer);
+}
+
+/****** qsh/set_builtin_ijs_signals_and_handlers() *****************************
+*  NAME
+*     set_builtin_ijs_signals_and_handlers() -- sets signal mask and handlers
+*                                               for the builtin interactive
+*                                               job support
+*
+*  SYNOPSIS
+*     static void set_builtin_ijs_signals_and_handlers() 
+*
+*  FUNCTION
+*     In the builtin interactive job support, qsh/qrsh/qlogin need to catch
+*     specific signals. The mask and handlers for this signals must be set
+*     before the first thread (which is a commlib thread) is created, so that
+*     every thread inherits the mask and handlers.
+*
+*  RESULT
+*     static void - no result
+*
+*  NOTES
+*     MT-NOTE: set_builtin_ijs_signals_and_handlers() is not MT safe 
+*******************************************************************************/
+static void set_builtin_ijs_signals_and_handlers()
+{
+   sge_set_def_sig_mask(NULL, NULL);
+   sge_unblock_all_signals();
+   set_signal_handlers();
+}
+
+/****** qsh/write_builtin_ijs_connection_data_to_job_object() ******************
+*  NAME
+*     write_builtin_ijs_connection_data_to_job_object() -- writes the connection
+*                                                         data to the job object
+*
+*  SYNOPSIS
+*     static void write_builtin_ijs_connection_data_to_job_object(const char* 
+*     qualified_hostname, lListElem *job, lList *opts_qrsh) 
+*
+*  FUNCTION
+*     Writes the data necessary to connect to the commlib server that was
+*     started before this function gets called to the job object.
+*
+*  INPUTS
+*     const char* qualified_hostname - The qualified hostname of this host.
+*                                      Returned by sge_gethostbyname().
+*     int port                       - The TCP/SSL/??? port this server is
+*                                      listening on for new connections
+*     lListElem *job                 - The job object where the connection data
+*                                      gets written to.
+*     lList *opts_qrsh               - The command line of this command. We need
+*                                      the name of the binary from the command
+*                                      line, the shepherd must know which kind
+*                                      of interactive job this is.
+*
+*  OUTPUTS
+*     lListElem *job                 - The job object where the connection data
+*                                      gets written to.
+*
+*  RESULT
+*     static void -  no result
+*
+*  NOTES
+*     MT-NOTE: write_builtin_ijs_connection_data_to_job_object() is not MT safe 
+*******************************************************************************/
+static void write_builtin_ijs_connection_data_to_job_object(
+const char* qualified_hostname,
+int port,
+lListElem *job,
+lList *opts_qrsh)
+{
+   dstring connection_params = DSTRING_INIT;
+   lList   *envlp            = NULL;
+
+   sge_dstring_sprintf(&connection_params, "%s:%d",
+                       qualified_hostname, port); 
+
+   /*
+    * Get environment from job object. If there is no environment yet,
+    * create one.
+    */
+   envlp = lGetList(job, JB_env_list);
+   if (envlp == NULL) {
+      envlp = lCreateList("environment list", VA_Type);
+      lSetList(job, JB_env_list, envlp);
+   }   
+
+   /* TODO: Instead of using env, use job field to transfer infos
+    *       JB_qrsh_port field.
+    * HP: Do this in the next minor release, not in a patch update.
+    */
+   var_list_set_string(&envlp, "QRSH_PORT", 
+                       sge_dstring_get_string(&connection_params));
+
+   /* TODO: write the command in JB_job_args field
+    * HP: Do this in the next minor release, not in a patch update.
+    */
+   set_command_to_env(envlp, opts_qrsh);
+   sge_dstring_free(&connection_params);
 }
 
 /****** qsh/block_notification_signals() ***************************************
@@ -1292,7 +1396,7 @@ int main(int argc, char **argv)
    int existing_job = 0;
    int nostdin = 0;
    int noshell = 0;
-   int pty_option = 2;  /* 0 means "no" is specified, 1 "yes", 2 means not specified */
+   ternary_t pty_option = UNSET;
 
    const char *host = NULL;
    char name[MAX_JOB_NAME + 1];
@@ -1300,6 +1404,7 @@ int main(int argc, char **argv)
    char *port = NULL;
    char *job_dir = NULL;
    char *utilbin_dir = NULL;
+   bool csp_mode = false;
 
    int alp_error;
 
@@ -1315,6 +1420,7 @@ int main(int argc, char **argv)
    u_long32 myuid = 0;
    const char* username = NULL;
    const char* mastername = NULL;
+   COMM_HANDLE *comm_handle = NULL;
 
    sge_gdi_ctx_class_t *ctx = NULL;
    sge_bootstrap_state_class_t *bootstrap_state = NULL;
@@ -1355,7 +1461,7 @@ int main(int argc, char **argv)
 
    bootstrap_state = ctx->get_sge_bootstrap_state(ctx);
    if (strcasecmp(bootstrap_state->get_security_mode(bootstrap_state), "csp") == 0) {
-      g_csp_mode = true;
+      csp_mode = true;
    }
 
    /*
@@ -1431,7 +1537,7 @@ int main(int argc, char **argv)
 
    /* parse -pty <yes|no> */
    if (opt_list_has_X(opts_cmdline, "-pty")) {
-      pty_option = opt_list_is_X_true(opts_cmdline, "-pty");
+      pty_option = (ternary_t)opt_list_is_X_true(opts_cmdline, "-pty");
    }
    lSetUlong(job, JB_pty, pty_option);
    /* remove the pty option from commandline before proceeding */
@@ -1635,6 +1741,12 @@ int main(int argc, char **argv)
                      lGetUlong(job, JB_verify_suitable_queues) == POKE_VERIFY);
    }
 
+   /*
+   ** start a network server where the telnetd/rlogind or the shepherd (for
+   ** builtin ijs) can connect to and set it's hostname and port
+   ** in the job environment variable QRSH_PORT, so the qrsh_starter or the
+   ** shepherd can parse it and establish a connection.
+   */
    if (g_new_interactive_job_support == false) {
       /*
       ** open socket for qlogin communication and set host and port 
@@ -1655,68 +1767,40 @@ int main(int argc, char **argv)
       var_list_set_string(&envlp, "QRSH_PORT", buffer);
       set_command_to_env(envlp, opts_qrsh);
    } else {
-      /* TODO: Move this to a function */
-      int     ret;
-      dstring connection_params = DSTRING_INIT;
-      dstring error_msg = DSTRING_INIT;
-      lList   *envlp = NULL;
+      int     ret = 0;
+      dstring err_msg = DSTRING_INIT;
 
-      /*
-       * Set all signal handlers
-       */
-      sge_set_def_sig_mask(NULL, NULL);
-      sge_unblock_all_signals();
-      set_signal_handlers();
+      /* before starting a commlib server, we must set signal masks and handlers */
+      set_builtin_ijs_signals_and_handlers();
 
-      /*
-       * start the commlib server
-       */
-      DPRINTF(("starting commlib server\n"));
-      ret = comm_open_connection(true, g_csp_mode, COMM_SERVER, 0, COMM_CLIENT,
-                                 username, &g_comm_handle, &error_msg);
-
+      /* then start the commlib server */
+      ret = start_ijs_server(csp_mode, username, &comm_handle, &err_msg);
       if (ret != 0) {
-         ERROR((SGE_EVENT, MSG_QSH_CREATINGCOMMLIBSERVER_S,
-               sge_dstring_get_string(&error_msg)));
-         sge_dstring_free(&connection_params); 
-         sge_dstring_free(&error_msg);
+         if (ret == 1) {
+            ERROR((SGE_EVENT, MSG_QSH_CREATINGCOMMLIBSERVER_S,
+               sge_dstring_get_string(&err_msg)));
+         } else if (ret == 2) {
+            ERROR((SGE_EVENT, MSG_QSH_SETTINGCONNECTIONPARAMS_S,
+               sge_dstring_get_string(&err_msg)));
+         }
          SGE_EXIT((void**)&ctx, 1);
       }
 
-      comm_set_connection_param(g_comm_handle, HEARD_FROM_TIMEOUT, 0, &error_msg);
-
-      /*
-       * Write connection data to job object
+      /* if it started successfully, write the connection data to the job object,
+       * so it can be sent over the QMaster to the execution host.
        */
-      sge_dstring_sprintf(&connection_params, "%s:%d",
-                          qualified_hostname, g_comm_handle->service_port);
-
-      if((envlp = lGetList(job, JB_env_list)) == NULL) {
-         envlp = lCreateList("environment list", VA_Type);
-         lSetList(job, JB_env_list, envlp);
-      }   
-      /* TODO: Instead of using env, use job field to transfer infos
-       *       JB_qrsh_port field.
-       */
-      var_list_set_string(&envlp, "QRSH_PORT", 
-                          sge_dstring_get_string(&connection_params));
-
-      /* TODO: write the command in JB_job_args field */
-      set_command_to_env(envlp, opts_qrsh);
-
-      sge_dstring_free(&connection_params);
-      sge_dstring_free(&error_msg);
-      /* END TODO: Move this to a function */
+      write_builtin_ijs_connection_data_to_job_object(qualified_hostname,
+         comm_handle->service_port, job, opts_qrsh);
    }
 
    /* 
    ** if environment QRSH_WRAPPER is set, pass it trough environment
    */
    {
-      char *wrapper;
-      lList *envlp = lGetList(job, JB_env_list);
+      char  *wrapper = getenv("QRSH_WRAPPER");
 
-      if ((wrapper = getenv("QRSH_WRAPPER")) != NULL) {
+      if (wrapper != NULL) {
+         lList *envlp = lGetList(job, JB_env_list);
          var_list_set_string(&envlp, "QRSH_WRAPPER", wrapper);
       }
    }
@@ -1791,12 +1875,12 @@ int main(int argc, char **argv)
           * Wait for the client (=shepherd) to connect to us
           */
          DPRINTF(("waiting for connection\n"));
-         ret = comm_wait_for_connection(g_comm_handle, COMM_CLIENT,
+         ret = comm_wait_for_connection(comm_handle, COMM_CLIENT,
                                         QSH_SOCKET_FINAL_TIMEOUT, &host, &err_msg);
-         sge_dstring_free(&err_msg);
          if (ret != COMM_RETVAL_OK) {
-            ERROR((SGE_EVENT, MSG_QSH_GOTNOCONNECTIONWITHINSECONDS_I, 
-                  QSH_SOCKET_FINAL_TIMEOUT));
+            ERROR((SGE_EVENT, MSG_QSH_GOTNOCONNECTIONWITHINSECONDS_IS, 
+                  QSH_SOCKET_FINAL_TIMEOUT, sge_dstring_get_string(&err_msg)));
+            sge_dstring_free(&err_msg);
             return 1;
          }
 
@@ -1804,11 +1888,19 @@ int main(int argc, char **argv)
             close(STDIN_FILENO);
          }
 
-         DPRINTF(("starting server loop\n"));
-         /* TODO: Add proper error handling and error propagation to do_server_loop() */
-         ret = do_server_loop(job_id, nostdin, noshell, 
+         DPRINTF(("starting IJS server\n"));
+         sge_dstring_sprintf(&err_msg, "<null>");
+         ret = run_ijs_server(comm_handle, host, job_id, nostdin, noshell, 
                               is_rsh, is_qlogin, pty_option,
-                              &exit_status);
+                              &exit_status, &err_msg);
+         if (ret != 0) {
+            ERROR((SGE_EVENT, MSG_QSH_ERRORRUNNINGIJSSERVER_S,
+               sge_dstring_get_string(&err_msg)));
+         }
+         stop_ijs_server(&comm_handle, &err_msg);
+         DPRINTF(("stop_ijs_server returned error: %s\n",
+            sge_dstring_get_string(&err_msg)));
+         sge_dstring_free(&err_msg);
          if (ret != 0) {
             return 1;
          }
@@ -1925,6 +2017,7 @@ int main(int argc, char **argv)
          lList *lp_poll = NULL;
          lListElem *ja_task = NULL;
          lListElem* jep;
+         bool b_already_logged_job_was_scheduled = false;
          int msgsock = -1;
          int random_poll = polling_interval + (rand() % polling_interval);
 
@@ -1961,7 +2054,8 @@ int main(int argc, char **argv)
                   VERBOSE_LOG((stderr, "\n")); 
                   VERBOSE_LOG((stderr, MSG_QSH_ESTABLISHINGREMOTESESSIONTO_SS, 
                      client_name, host));
-                  VERBOSE_LOG((stderr, "\n")); 
+                  VERBOSE_LOG((stderr, "\n"));
+                  b_already_logged_job_was_scheduled = true;
 
                   /* 
                    * start client program (e.g. rsh) and wait blocking until
@@ -1992,26 +2086,42 @@ int main(int argc, char **argv)
             } else { /* if (g_new_interactive_job_support == true) */
                int     ret;
                dstring err_msg = DSTRING_INIT;
+
+               if (comm_handle == NULL) {
+                  /* If we get here we already had a connection that was closed
+                   * and the loop was done again accidentially.
+                   * However, we can just exit the loop here.
+                   */
+                  do_exit = 1;
+                  continue;
+               }
+
                /*
                 * Wait for the client to connect to us
                 */
                DPRINTF(("waiting for connection\n"));
-               ret = comm_wait_for_connection(g_comm_handle, COMM_CLIENT, 
+               sge_dstring_sprintf(&err_msg, "<null>");
+               ret = comm_wait_for_connection(comm_handle, COMM_CLIENT, 
                                               random_poll, &host, &err_msg);
-               /* JG: TODO: nothing is done with err_msg?? */
-               sge_dstring_free(&err_msg);
+
                if (ret != COMM_RETVAL_OK) {
                   if (ret == COMM_GOT_TIMEOUT) {
                      DPRINTF(("got no connection within timeout of %d s\n", random_poll));
                      /* Loop again */
                   } else {
+                     /* comm_wait_for_connection() returned an error */
+                     ERROR((SGE_EVENT, MSG_QSH_ERRORWHILEWAITINGFORBUILTINIJSCONNECTION_S,
+                        sge_dstring_get_string(&err_msg)));
+
                      DPRINTF(("got error while waiting for connection\n"));
                      cl_com_ignore_timeouts(CL_FALSE);
+                     /* Tell the master to delete the job */
                      cl_commlib_open_connection(cl_com_get_handle(progname,0),
                                         (char*)mastername,
                                         (char*)prognames[QMASTER],
                                         1);
                      delete_job(ctx, job_id, lp_jobs);
+
                      do_exit = 1;
                      exit_status = 1;
                      break;
@@ -2023,25 +2133,35 @@ int main(int argc, char **argv)
                   VERBOSE_LOG((stderr, "\n")); 
                   VERBOSE_LOG((stderr, MSG_QSH_ESTABLISHINGREMOTESESSIONTO_SS, 
                      client_name, host));
-                  VERBOSE_LOG((stderr, "\n")); 
+                  VERBOSE_LOG((stderr, "\n"));
+                  b_already_logged_job_was_scheduled = true;
            
                   if (nostdin == 1) {
                      DPRINTF(("closing STDIN\n"));
                      close(STDIN_FILENO);
                   }
 
-                  /* do_server_loop() loops until the client has disconnected */
-                  ret = do_server_loop(job_id, nostdin, noshell, 
+                  /* run_ijs_server() loops until the client has disconnected */
+                  sge_dstring_sprintf(&err_msg, "<null>");
+                  ret = run_ijs_server(comm_handle, host, job_id, nostdin, noshell, 
                                        is_rsh, is_qlogin, pty_option,
-                                       &exit_status);
-                  DPRINTF(("exit_status = %d\n", exit_status));
-                  if (ret == COMM_RETVAL_OK) {
+                                       &exit_status, &err_msg);
+                  if (ret != 0) {
+                     ERROR((SGE_EVENT, MSG_QSH_ERRORRUNNINGIJSSERVER_S,
+                        sge_dstring_get_string(&err_msg)));
+                  }
+                  stop_ijs_server(&comm_handle, &err_msg);
+                  DPRINTF(("stop_ijs_server returned: %s\n",
+                     sge_dstring_get_string(&err_msg)));
+                  if (ret != 0) {
+                     sge_dstring_free(&err_msg);
                      do_exit = 1;
                      continue;
                   }
-                  /* do_server_loop() didn't return 0, some unexpected error
+                  /* run_ijs_server() didn't return 0, some unexpected error
                    * occured -> do the while loop again. */
                }
+               sge_dstring_free(&err_msg);
             }
          } else {
             /* wait for qsh job to be scheduled */
@@ -2108,26 +2228,45 @@ int main(int argc, char **argv)
    
             case JRUNNING:
             case JTRANSFERING:
-               VERBOSE_LOG((stderr, "\n")); 
-               VERBOSE_LOG((stderr, MSG_QSH_INTERACTIVEJOBHASBEENSCHEDULED_S, 
-                            job_get_id_string(job_id, 0, NULL, &id_dstring)));
-               VERBOSE_LOG((stderr, "\n")); 
-   
-               /* in case of qlogin: has been scheduled / is transitting just after */
-               /* timeout -> loop */
-               if (is_qlogin) {
+               /* log this only once */
+               if (b_already_logged_job_was_scheduled == false) {
+                  VERBOSE_LOG((stderr, "\n")); 
+                  VERBOSE_LOG((stderr, MSG_QSH_INTERACTIVEJOBHASBEENSCHEDULED_S, 
+                               job_get_id_string(job_id, 0, NULL, &id_dstring)));
+                  VERBOSE_LOG((stderr, "\n")); 
+                  b_already_logged_job_was_scheduled = true;
+               }
+  
+               /* For old IJS:
+                * in case of qlogin: has been scheduled / is transitting just after 
+                * timeout -> loop.
+                * For new IJS:
+                * If it was a qrsh with command, it's finished here even if the
+                * QMaster didn't already recognize it -> exit.
+                */
+               if ((g_new_interactive_job_support == false && is_qlogin)
+                  || (g_new_interactive_job_support == true && is_qlogin && !is_rsh)) {
                   continue;
                } else {
                   /* qsh: xterm has been started -> exit */   
                   do_exit = 1;
                }
-               break;
+               continue; /* continue loop immediatley, don't break out of switch first */
    
             case JFINISHED:
-               WARNING((SGE_EVENT, MSG_QSH_CANTSTARTINTERACTIVEJOB));
-               do_exit = 1;
-               exit_status = 1;
-               break;
+               /* This was (or might have been) true for the old IJS
+                * - in the new IJS, a finished job is really finished,
+                * so exit qrsh/qlogin with real exit_status.
+                */
+               if (g_new_interactive_job_support == false) {
+                  WARNING((SGE_EVENT, MSG_QSH_CANTSTARTINTERACTIVEJOB));
+                  do_exit = 1;
+                  exit_status = 1;
+               } else {
+                  do_exit = 1;
+               }
+               continue; /* continue loop immediatley, don't break out of switch first */
+
             default:
                ERROR((SGE_EVENT, MSG_QSH_UNKNOWNJOBSTATUS_X, sge_x32c(job_status)));
                do_exit = 1;
@@ -2140,18 +2279,12 @@ int main(int argc, char **argv)
             DPRINTF(("polling_interval set to %d\n", polling_interval));
          }
       } /* end of while (1) polling */
-      if (g_new_interactive_job_support == true && g_comm_handle != NULL) {
+      if (g_new_interactive_job_support == true && comm_handle != NULL) {
          dstring err_msg = DSTRING_INIT;
-         int     ret;
 
-         /* This will remove the handle (g_comm_handle) */
-         ret = comm_shutdown_connection(g_comm_handle, COMM_CLIENT, &err_msg);
-         if (ret != COMM_RETVAL_OK) {
-            DPRINTF(("comm_shutdown_connection() failed: %s (%d)",
-                     sge_dstring_get_string(&err_msg), ret));
+         if (force_ijs_server_shutdown(&comm_handle, COMM_CLIENT, &err_msg) != 0) {
+            ERROR((SGE_EVENT, "%s", sge_dstring_get_string(&err_msg)));
          }
-         g_comm_handle = NULL;
-         
          sge_dstring_free(&err_msg);
       }
 

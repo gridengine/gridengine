@@ -30,12 +30,13 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-int parent_loop(char *hostname, int port, int ptym,
-                int *fd_pipe_in, int *fd_pipe_out, int *fd_pipe_err,
-                int *fd_pipe_to_child,
-                int ckpt_pid, int ckpt_type, int timeout, 
-                int ckpt_interval, char *childname,
-                char *user_name, int *exit_status, 
-                struct rusage *rusage, int job_pid, dstring *err_msg);
+#include "shepherd.h"
+
+int
+parent_loop(int job_pid, const char *childname, int timeout,
+            ckpt_info_t *p_ckpt_info, ijs_fds_t *p_ijs_fds,
+            const char *job_owner, const char *remote_host, int remote_port, bool csp_mode,
+            int *exit_status, struct rusage *rusage, dstring *err_msg);
  
-int close_parent_loop(int exit_status);
+int
+close_parent_loop(int exit_status);

@@ -78,4 +78,6 @@ bool var_list_verify(const lList *lp, lList **answer_list);
 int var_list_parse_from_string(lList **lpp, const char *variable_str,
                                int check_environment);
 
+void getenv_and_set(lListElem *ep, char *variable);
+
 #endif /* __SGE_VAR_H */

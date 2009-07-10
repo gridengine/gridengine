@@ -1,11 +1,8 @@
-################################################################################
-# This is the Changelog for gridengine source code changes.                    #
-# Possible keywords: "Bugfix", "Belongs to", "Review", "Enhancem.",            #
-#                    "Merged from", "Cleanup", "Issue"                         #
-################################################################################
-          1         2         3         4         5         6         7
-01234567890123456789012345678901234567890123456789012345678901234567890123456789
------------------+-----------+--------------------------------------------------
+GH-2009-07-10-0: Bugfix:      SGE does not handle multiline variable using qsub -v 
+                 Bugster:     6855413
+                 Issue:       3085
+                 Review:      CR
+
 DG-2009-07-10-0: Bugfix:      Fixed broken installation. 
                  Belongs to:  GH-2009-07-09-0
                  Review:      CR

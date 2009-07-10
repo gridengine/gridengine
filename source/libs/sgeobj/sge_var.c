@@ -859,7 +859,12 @@ int var_list_parse_from_string(lList **lpp, const char *variable_str,
       if (val_str[var_len] == '=') {
           lSetString(ep, VA_value, &val_str[var_len+1]);
       } else if(check_environment) {
-         lSetString(ep, VA_value, sge_getenv(variable));
+         /*
+          * Support for multi-line environment variables:
+          * remove newline characters to avoid confusion
+          * with environment file.
+          */
+         getenv_and_set(ep, variable);
       } else {
          lSetString(ep, VA_value, NULL);
       }
@@ -870,4 +875,91 @@ int var_list_parse_from_string(lList **lpp, const char *variable_str,
    DRETURN(0);
 }
 
+/****** sge_var/getenv_and_set() *******************************
+*  NAME
+*     getenv_and_set() -- obtain value for environment name, 
+*                         remove \n characters from value string
+*                         and set VA_Value member of *ep.
+*
+*  SYNOPSIS
+*     void getenv_and_set(lListElem *ep, char *variable)
+*
+*  FUNCTION
+*     Obtain value for environment name; check for any \n 
+*     characters in input string. Shell enters this character 
+*     for multi-line environment variables. If nothing found, 
+*     just store value in VA_Value member of *ep.
+*
+*     Otherwise, count number of newline characters, figure out
+*     string length and allocate new memory for the modified 
+*     string. Next, copy over string, skipping over \n characters.
+*     Then, store value in VA_Value member of *ep.
+*
+*  INPUTS
+*     lListElem *ep                  - target list element
+*     char *variable                 - environment variable
+*
+*  RESULT
+*     void
+*
+*  NOTES
+*     MT-NOTE: remove_newline_chars() is MT safe
+*******************************************************************************/
+
+void getenv_and_set(lListElem *ep, char *variable)
+{
+   const char *env_value = NULL;
+   char *new_env_value = NULL;
+   char *a = NULL;
+   char *b = NULL;
+   int i, nchars;
+   int newline_chars = 0;
+
+   env_value = sge_getenv(variable);
+   if (env_value == NULL) {
+      lSetString(ep, VA_value, NULL);
+      return;
+   }
+   /*
+    * Any work to do? Check for any newline
+    * character.
+    */
+   a = strchr(env_value, '\n');
+   if (a == NULL) {
+      /*
+       * Nothing to do. Just leave it alone.
+       */
+      lSetString(ep, VA_value, env_value);
+      return;
+   }
+   /*
+    * This is a multi-line environment variable. Allocate
+    * new string and copy over, but without newline chars.
+    */
+   nchars = strlen(env_value);
+   a = (char *)env_value;
+   newline_chars = 0;
+   for (i = 0; i < nchars; i++) {
+      if (*a == '\n') {
+         newline_chars++;
+      }
+      a++;
+   }
+   new_env_value = sge_malloc(nchars - newline_chars + 1);
+   a = new_env_value;
+   b = (char *)env_value;
+   for (i = 0; i < nchars; i++) {
+      if (*b != '\n') {
+         *a = *b;
+         a++;
+      }
+      b++;
+   }
+   *a = '\0';
+
+   lSetString(ep, VA_value, new_env_value);
+   sge_free(new_env_value);
+   return;
+
+}
 

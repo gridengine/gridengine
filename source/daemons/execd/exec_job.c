@@ -1005,7 +1005,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
     */
 #define WRITE_COMPLEX_AND_CONSUMABLE_ATTR(A) \
    fprintf(fp, #A"=%s\n", lGetString(master_q, QU_##A)); \
-   job_is_requesting_consumable(jep, #A) ? fprintf(fp, #A"_is_consumble_job=1\n") : fprintf(fp, #A"_is_consumble_job=0\n");
+   job_is_requesting_consumable(jep, #A) ? fprintf(fp, #A"_is_consumable_job=1\n") : fprintf(fp, #A"_is_consumable_job=0\n");
 
    WRITE_COMPLEX_AND_CONSUMABLE_ATTR(h_vmem);
    WRITE_COMPLEX_AND_CONSUMABLE_ATTR(s_vmem);

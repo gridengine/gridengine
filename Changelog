@@ -1,3 +1,7 @@
+GH-2009-07-12-0: Bugfix:      Fixed missing xyz_is_consumable_job parameters
+                              in job config file
+                 Belongs to:  GH-2009-07-08-0
+
 HP-2009-07-10-0: Cleanup:     Cleanup of builtin IJS
                               Cleanups without CR:
                               o improved error handling in 20-30 places - output

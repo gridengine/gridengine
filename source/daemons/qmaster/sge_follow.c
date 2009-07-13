@@ -899,10 +899,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
             /* tickets should only be further distributed in the scheduler reprioritize_interval. Only in
                those intervales does the ticket order structure contain a JAT_granted_destin_identifier_list.
                We use that as an identifier to go on, or not. */
-            if (distribute_tickets) {
-               /* add a copy of this order to the ticket orders list */
-               if (!*topp) 
-                  *topp = lCreateList("ticket orders", OR_Type);
+            if (distribute_tickets && topp != NULL) {
 
                /* If a ticket order has a queuelist, then this is a parallel job
                   with controlled sub-tasks. We generate a ticket order for

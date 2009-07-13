@@ -1,3 +1,17 @@
+################################################################################
+# This is the Changelog for testsuite source code changes.                     #
+# Possible keywords: "Bugfix", "Belongs to", "Review", "Enhancem.",            #
+#                    "Merged from", "Cleanup", "Issue"                         #
+#                                                                              #
+#                ===== PLEASE DO NOT DELETE THIS HEADER ====                   #
+################################################################################
+          1         2         3         4         5         6         7
+01234567890123456789012345678901234567890123456789012345678901234567890123456789
+-----------------+-----------+--------------------------------------------------
+CR-2009-07-13-0: Cleanup:     Added some shepherd trace file logging for 
+                              INTERIX and TODO statements
+                 Review:      DG
+
 GH-2009-07-12-0: Bugfix:      Fixed missing xyz_is_consumable_job parameters
                               in job config file
                  Belongs to:  GH-2009-07-08-0

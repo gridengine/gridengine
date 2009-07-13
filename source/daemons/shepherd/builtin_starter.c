@@ -385,32 +385,50 @@ void son(const char *childname, char *script_file, int truncate_stderr_out)
     * it usually is the superuser.
     * 'pw' is the pw of the target_user.
     */
-   if(strcmp(childname, "job") == 0
-      && wl_use_sgepasswd() == true
-      && wl_get_GUI_mode(get_conf_val("display_win_gui")) == true
-      && wl_is_user_id_superuser(pw->pw_uid) == false) {
-      char  *pass = NULL;
-      uid_t uid;
-      int   res;
+   if(strcmp(childname, "job") == 0) {
 
-      uid = geteuid();
-      seteuid(SGE_SUPERUSER_UID);
-      res = uidgid_read_passwd(target_user, &pass, err_str);
-      seteuid(uid);
+      /* set empty user_password */
+      strcpy(user_passwd, "");
 
-      if(res == 0) {
-         strlcpy(user_passwd, pass, MAX_STRING_SIZE);
-         FREE(pass);
-      } else {
-         if(res == 1) {
-            shepherd_state = SSTATE_PASSWD_FILE_ERROR;
-         } else if (res == 2) {
-            shepherd_state = SSTATE_PASSWD_MISSING;
-         } else if (res == 3) {
-            shepherd_state = SSTATE_PASSWD_WRONG;
+      if (wl_use_sgepasswd() == true) {
+         if (wl_get_GUI_mode(get_conf_val("display_win_gui")) == true) {
+            if (wl_is_user_id_superuser(pw->pw_uid) == false) {
+               char  *pass = NULL;
+               uid_t uid;
+               int   res;
+
+               uid = geteuid();
+               seteuid(SGE_SUPERUSER_UID);
+               res = uidgid_read_passwd(target_user, &pass, err_str);
+               seteuid(uid);
+
+               if(res == 0) {
+                  strlcpy(user_passwd, pass, MAX_STRING_SIZE);
+                  FREE(pass);
+                  if (strlen(user_passwd) == 0) {
+                     shepherd_trace("uidgid_read_passwd() returned empty password string!");
+                  }
+               } else {
+                  if(res == 1) {
+                     shepherd_state = SSTATE_PASSWD_FILE_ERROR;
+                  } else if (res == 2) {
+                     shepherd_state = SSTATE_PASSWD_MISSING;
+                  } else if (res == 3) {
+                     shepherd_state = SSTATE_PASSWD_WRONG;
+                  }
+                  shepherd_error(1, err_str);
+               }
+            } else {
+               shepherd_trace("target user is superuser!");
+            }
+         } else {
+            shepherd_trace("\"display_win_gui\" configuration value is disabled!");
          }
-         shepherd_error(1, err_str);
+      } else {
+         shepherd_trace("wl_enable_windomacc is false!");
       }
+   } else {
+      shepherd_trace("childname: %s", childname);
    }
 #endif
 
@@ -1541,9 +1559,14 @@ int use_starter_method /* If this flag is set the shellpath contains the
          enum en_JobStatus job_status;
          int  failure = -1;
 
-         shepherd_trace("starting job remote: %s", filename);
+         shepherd_trace("starting GUI job remote: %s", filename);
 
          env = sge_get_environment();
+
+         if (strlen(user_passwd) == 0) {
+            shepherd_trace("got empty password string!");
+         }
+
          ret = wl_start_job_remote(filename, args, env, 
                              job_user, user_passwd, 
                              &win32_exit_status, &job_status, err_msg);

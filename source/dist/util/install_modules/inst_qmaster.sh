@@ -1777,7 +1777,9 @@ EnterAndValidatePortNumber()
    chars=`echo $INP | wc -c`
    chars=`expr $chars - 1`
    digits=`expr $INP : "[0-9][0-9]*"`
-   if [ "$chars" != "$digits" ]; then
+   if [ "$INP" -eq "" ]; then
+      $INFOTEXT "\nYou must enter an integer value."
+   elif [ "$chars" != "$digits" ]; then
       $INFOTEXT "\nInvalid input. Must be a number."
    elif [ $INP -le 1 -o $INP -ge $comm_port_max ]; then
       $INFOTEXT "\nInvalid port number. Must be in range [1..%s]." $comm_port_max

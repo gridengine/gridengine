@@ -1094,17 +1094,28 @@ spool_classic_default_write_func(lList **answer_list,
 
             DPRINTF(("spooling job %d.%d %s\n", job_id, ja_task_id, 
                      pe_task_id != NULL ? pe_task_id : "<null>"));
-            if (only_job) {
-               flags |= SPOOL_IGNORE_TASK_INSTANCES;
-            }
 
             if (object_type == SGE_TYPE_JOB) {
                job = (lListElem *)object;
+
+               /* we only want to spool the job object */
+               if (only_job) {
+                  flags |= SPOOL_IGNORE_TASK_INSTANCES;
+               }
             } else {
                /* job_write_spool_file takes a job, even if we only want
                 * to spool a ja_task or pe_task
                 */
                job = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), job_id);
+
+               /* additional flags for job_write_spool_file
+                * to avoid spooling too many files
+                */
+               if (object_type == SGE_TYPE_PETASK) {
+                  flags |= SPOOL_ONLY_PETASK;
+               } else if (object_type == SGE_TYPE_JATASK) {
+                  flags |= SPOOL_ONLY_JATASK;
+               }
             }
 
             if (job_write_spool_file((lListElem *)job, ja_task_id, pe_task_id, flags) != 0) {

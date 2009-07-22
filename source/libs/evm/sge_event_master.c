@@ -1308,7 +1308,7 @@ u_long32 sge_get_max_dynamic_event_clients(void){
    DRETURN(actual_value);
 }
 
-/****** Eventclient/Server/sge_add_event_client() ******************************
+/****** Eventclient/Server/sge_has_event_client() ******************************
 *  NAME
 *     sge_has_event_client() -- Is a event client registered
 *

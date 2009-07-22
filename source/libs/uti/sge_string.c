@@ -780,26 +780,26 @@ int sge_strnullcasecmp(const char *a, const char *b)
 }
 
 /****** uti/string/sge_is_pattern() *******************************************
- *  NAME
- *     sge_is_pattern() -- Test if string contains  wildcard pattern
- *
- *  SYNOPSIS
- *     int sge_is_pattern(const char *s)
- *
- *  FUNCTION
- *     Check whether string 's' contains a wildcard pattern.
- *
- *  INPUTS
- *     const char *s - string
- *
- *  RESULT
- *     int - result
- *         0 - no wildcard pattern
- *         1 - it is a wildcard pattern
- *
- *  NOTES
- *     MT-NOTE: sge_is_pattern() is MT safe
- ******************************************************************************/
+*  NAME
+*     sge_is_pattern() -- Test if string contains  wildcard pattern
+*
+*  SYNOPSIS
+*     int sge_is_pattern(const char *s)
+*
+*  FUNCTION
+*     Check whether string 's' contains a wildcard pattern.
+*
+*  INPUTS
+*     const char *s - string
+*
+*  RESULT
+*     int - result
+*         0 - no wildcard pattern
+*         1 - it is a wildcard pattern
+*
+*  NOTES
+*     MT-NOTE: sge_is_pattern() is MT safe
+******************************************************************************/
 bool sge_is_pattern(const char *s) 
 {
    char c;
@@ -816,26 +816,26 @@ bool sge_is_pattern(const char *s)
 }
 
 /****** uti/string/sge_is_expression() *******************************************
- *  NAME
- *     sge_is_expression() -- Test if string contains expressions & wildcard pattern
- *
- *  SYNOPSIS
- *     int sge_is_expression(const char *s)
- *
- *  FUNCTION
- *     Check whether string 's' contains a expressions & a wildcard pattern.
- *
- *  INPUTS
- *     const char *s - string
- *
- *  RESULT
- *     int - result
- *         0 - no wildcard pattern
- *         1 - it is a wildcard pattern
- *
- *  NOTES
- *     MT-NOTE: sge_is_expression() is MT safe
- ******************************************************************************/
+*  NAME
+*     sge_is_expression() -- Test if string contains expressions & wildcard pattern
+*
+*  SYNOPSIS
+*     int sge_is_expression(const char *s)
+*
+*  FUNCTION
+*     Check whether string 's' contains a expressions & a wildcard pattern.
+*
+*  INPUTS
+*     const char *s - string
+*
+*  RESULT
+*     int - result
+*         0 - no wildcard pattern
+*         1 - it is a wildcard pattern
+*
+*  NOTES
+*     MT-NOTE: sge_is_expression() is MT safe
+******************************************************************************/
 bool sge_is_expression(const char *s) 
 {
    char c;

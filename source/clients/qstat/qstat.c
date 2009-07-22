@@ -466,7 +466,7 @@ sge_parse_qstat(sge_gdi_ctx_class_t *ctx, lList **ppcmdline, qstat_env_t *qstat_
       if (parse_flag(ppcmdline, "-help",  &alp, &helpflag)) {
          usageshowed = qstat_usage(qstat_env->qselect_mode, stdout, NULL);
          DEXIT;
-         SGE_EXIT((void**)&ctx, 1);
+         SGE_EXIT((void**)&ctx, 0);
          break;
       }
 

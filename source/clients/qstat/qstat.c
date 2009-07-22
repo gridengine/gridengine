@@ -456,7 +456,7 @@ sge_parse_qstat(sge_gdi_ctx_class_t *ctx, lList **ppcmdline, qstat_env_t *qstat_
       if (parse_flag(ppcmdline, "-help",  &alp, &helpflag)) {
          usageshowed = qstat_usage(qstat_env->qselect_mode, stdout, NULL);
          DEXIT;
-         SGE_EXIT((void**)&ctx, 1);
+         SGE_EXIT((void**)&ctx, 0);
          break;
       }
 
@@ -1259,7 +1259,7 @@ static int job_stdout_soft_requested_queues_started(job_handler_t* handler, lLis
 
    DENTER(TOP_LAYER, "job_stdout_soft_requested_queues_started");
    
-   printf(QSTAT_INDENT "Hard requested queues: ");
+   printf(QSTAT_INDENT "Soft requested queues: ");
    ctx->soft_requested_queue_count = 0;
 
    DEXIT;

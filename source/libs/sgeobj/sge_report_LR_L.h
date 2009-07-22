@@ -57,7 +57,7 @@ LISTDEF(LR_Type)
    SGE_STRING(LR_value, CULL_DEFAULT)
    SGE_ULONG(LR_global, CULL_DEFAULT)       /* ==1 global load value */
    SGE_ULONG(LR_static, CULL_DEFAULT)       /* ==1 static load value */
-   SGE_HOST(LR_host, CULL_HASH)        /* sender host of load value */  /* CR - hostname change */
+   SGE_HOST(LR_host, CULL_HASH)        /* sender host of load value */
 LISTEND
 
 NAMEDEF(LRN)

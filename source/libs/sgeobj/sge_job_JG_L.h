@@ -65,7 +65,7 @@ enum {
 LISTDEF(JG_Type)
    SGE_STRING(JG_qname, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE | CULL_DEFAULT | CULL_SUBLIST)    /* the queue instance name                           */
    SGE_ULONG(JG_qversion, CULL_DEFAULT | CULL_JGDI_HIDDEN)  /* it's version                               */
-   SGE_HOST(JG_qhostname, CULL_DEFAULT | CULL_HASH | CULL_SUBLIST)/* redundant qualified host name for caching  */  /* CR - hostname change */
+   SGE_HOST(JG_qhostname, CULL_DEFAULT | CULL_HASH | CULL_SUBLIST)/* redundant qualified host name for caching  */
    SGE_ULONG(JG_slots, CULL_DEFAULT | CULL_SUBLIST)     /* from orders list                           */
    SGE_OBJECT(JG_queue, QU_Type, CULL_DEFAULT | CULL_JGDI_HIDDEN | CULL_JGDI_RO) /* QU_Type - complete queue only in execd */
    SGE_ULONG(JG_tag_slave_job, CULL_DEFAULT | CULL_JGDI_HIDDEN) /* whether slave execds job has arrived in 

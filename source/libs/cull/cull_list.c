@@ -78,27 +78,36 @@ static void lWriteElem_(const lListElem *lp, dstring *buffer, int nesting_level)
 *        SGE_STRING(QU_qname, CULL_HASH | CULL_UNIQUE)
 *
 *     The following attributes can be given to a field:
-*        CULL_DEFAULT       
+*        CULL_DEFAULT
 *           no special settings - default behaviour
-*        CULL_PRIMARY_KEY   
+*        CULL_PRIMARY_KEY
 *           the field is part of the primary key
-*           not yet implemented
+*           does *not* imply uniqueness or hashing
 *        CULL_HASH          
 *           a hash table will be created on the field for lists of the 
-*           object type
+*           object type (non unique, unless explicitly specified by CULL_UNIQUE)
 *        CULL_UNIQUE        
 *           the field value has to be unique for all objects in a list
 *           currently only used for the definition of hash tables,
 *           but it could be used for general consistency checks.
-*        CULL_SHOW          
-*           the field shall be shown in object output functions
-*           not yet implemented
+*        CULL_JGDI_HIDDEN
 *        CULL_CONFIGURE     
 *           the field can be changed by configuration functions
 *           not yet implemented
 *        CULL_SPOOL         
-*           the field shall be spooled
-*           not yet implemented
+*           the field is spooled
+*        CULL_SUBLIST
+*           the field is spooled when the type is used as subtype in another
+*           type, but less fields shall be spooled, e.g. in the CE_TYPE:
+*           all fields are spooled if the complex variable definition is spooled,
+*           but only CE_name and CE_stringval are spooled when used as subtype,
+*           like in the complex_values of exec host or queue
+*        CULL_SPOOL_PROJECT
+*           deprecated?
+*        CULL_SPOOL_USER
+*           deprecated?
+*        CULL_JGDI_RO
+*        CULL_JGDI_CONF
 *
 *  NOTES
 *     Further attributes can be introduced as necessary, e.g.

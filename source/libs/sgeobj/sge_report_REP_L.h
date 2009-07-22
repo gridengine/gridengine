@@ -55,7 +55,7 @@ enum {
 
 LISTDEF(REP_Type)
    SGE_ULONG(REP_type, CULL_DEFAULT)        /* type of report, e.g. load report */
-   SGE_HOST(REP_host, CULL_DEFAULT)       /* hostname as it is seen by sender of report */ /* CR - hostname change */
+   SGE_HOST(REP_host, CULL_DEFAULT)       /* hostname as it is seen by sender of report */
    SGE_LIST(REP_list, CULL_ANY_SUBTYPE, CULL_DEFAULT)         /* list type depends on REP_type */
    SGE_ULONG(REP_version, CULL_DEFAULT)     /* used to report software version of execd */
    SGE_ULONG(REP_seqno, CULL_DEFAULT)       /* used to recognize old reports sent by execd */

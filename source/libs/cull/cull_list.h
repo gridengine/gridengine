@@ -67,7 +67,7 @@ typedef char lChar;
 typedef char lBool;
 typedef int lInt;
 typedef char *lString;
-typedef char *lHost;      /* CR - hostname change */
+typedef char *lHost;
 typedef lListElem *lObject;
 typedef void*  lRef;
 
@@ -85,12 +85,13 @@ enum _enum_lMultiType {
    lListT,
    lObjectT,
    lRefT,
-   lHostT             /* CR - hostname change */
+   lHostT
 };
 
 /* flags for the field definition 
-** reserve 8 bit for data types (currently only 4 bit in use)
-*/
+ * reserve 8 bit for data types (currently only 4 bit in use)
+ * see doc header cull/list/-Field_Attributes in cull_list.c for details
+ */
 #define CULL_DEFAULT       0x00000000
 #define CULL_PRIMARY_KEY   0x00000100
 #define CULL_HASH          0x00000200

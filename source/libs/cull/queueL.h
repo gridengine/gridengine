@@ -48,7 +48,7 @@ enum {
 
 LISTDEF( QueueT )
    SGE_STRING   ( Q_name, CULL_DEFAULT )
-   SGE_HOST     ( Q_hostname, CULL_DEFAULT )                    /* CR - hostname change */
+   SGE_HOST     ( Q_hostname, CULL_DEFAULT )
    SGE_INT      ( Q_load, CULL_DEFAULT )
    SGE_ULONG    ( Q_status, CULL_DEFAULT )
    SGE_LIST     ( Q_ownerlist, OwnerT , CULL_DEFAULT)

@@ -63,7 +63,7 @@ enum {
 
 LISTDEF(SEC_Type)
    SGE_ULONG(SEC_ConnectionID, CULL_DEFAULT)
-   SGE_HOST(SEC_Host, CULL_DEFAULT)               /* CR - hostname change */
+   SGE_HOST(SEC_Host, CULL_DEFAULT)
    SGE_STRING(SEC_Commproc, CULL_DEFAULT)
    SGE_INT(SEC_Id, CULL_DEFAULT)
    SGE_STRING(SEC_UniqueIdentifier, CULL_DEFAULT)

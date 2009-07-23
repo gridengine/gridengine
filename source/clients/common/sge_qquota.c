@@ -31,35 +31,23 @@
 /*___INFO__MARK_END__*/
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <limits.h>
 #include <math.h>
-#include <float.h>
 #include <fnmatch.h>
 
 #include "rmon/sgermon.h"
 
-#include "comm/commlib.h"
 
-#include "uti/sge_profiling.h"
 #include "uti/setup_path.h"
-#include "uti/sge_string.h"
 #include "uti/sge_hostname.h"
-#include "uti/sge_log.h"
-#include "uti/sge_unistd.h"
-#include "uti/sge_stdlib.h"
 #include "uti/sge_prog.h"
 #include "uti/sge_bootstrap.h"
-#include "uti/sge_parse_num_par.h"
 
 #include "sched/sort_hosts.h"
-#include "sched/load_correction.h"
-#include "sched/sge_complex_schedd.h"
 #include "sched/sge_select_queue.h"
 
 #include "sgeobj/parse.h"
 #include "sgeobj/sge_schedd_conf.h"
-#include "sgeobj/cull_parse_util.h"
 #include "sgeobj/sge_conf.h"
 #include "sgeobj/sge_range.h"
 #include "sgeobj/sge_resource_quota.h"
@@ -68,8 +56,6 @@
 #include "sgeobj/sge_host.h"
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_qinstance.h"
-#include "sgeobj/sge_qinstance_state.h"
-#include "sgeobj/sge_qinstance_type.h"
 #include "sgeobj/sge_ulong.h"
 #include "sgeobj/sge_centry.h"
 #include "sgeobj/sge_feature.h"
@@ -79,14 +65,10 @@
 #include "gdi/sge_gdi_ctx.h"
 
 #include "basis_types.h"
-#include "sig_handlers.h"
-#include "qstat_printing.h"
-#include "sge_mt_init.h"
 #include "sge_qstat.h"
 #include "sge_qquota.h"
 #include "sge.h"
 
-#include "msg_common.h"
 #include "msg_clients_common.h"
 
 #define HEAD_FORMAT "%-18s %-20.20s %s\n"

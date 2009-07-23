@@ -31,9 +31,7 @@
 /*___INFO__MARK_END__*/
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <unistd.h>
-#include <errno.h>
 #include <time.h>
 
 #include "sge_ja_task.h"
@@ -41,7 +39,6 @@
 #include "sge_usage.h"
 #include "sge_str.h"
 #include "sge_report.h"
-#include "sge_time_event_TE_L.h"
 
 #include "basis_types.h"
 #include "sgermon.h"
@@ -50,29 +47,20 @@
 #include "sge_stdlib.h"
 #include "sge.h"
 #include "sge_conf.h"
-#include "commlib.h"
 #include "pack_job_delivery.h"
 #include "sge_subordinate_qmaster.h" 
-#include "sge_complex_schedd.h" 
 #include "sge_ckpt_qmaster.h"
 #include "sge_job_qmaster.h" 
-#include "job_exit.h" 
 #include "sge_give_jobs.h"
 #include "sge_host_qmaster.h"
 #include "sge_host.h"
-#include "sge_pe_qmaster.h"
 #include "sge_event_master.h"
 #include "sge_queue_event_master.h"
 #include "sge_cqueue_qmaster.h"
 #include "sge_prog.h"
 #include "sge_select_queue.h"
-#include "sort_hosts.h"
-#include "sge_afsutil.h"
 #include "setup_path.h"
-#include "execution_states.h"
 #include "sge_parse_num_par.h"
-#include "symbols.h"
-#include "mail.h"
 #include "reschedule.h"
 #include "sge_security.h"
 #include "sge_pe.h"
@@ -80,17 +68,12 @@
 #include "msg_qmaster.h"
 #include "sge_range.h"
 #include "sge_job.h"
-#include "sge_string.h"
 #include "sge_suser.h"
-#include "sge_io.h"
 #include "sge_hostname.h"
-#include "sge_schedd_conf.h"
 #include "sge_answer.h"
 #include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
 #include "sge_ckpt.h"
-#include "sge_hgroup.h"
-#include "sge_cuser.h"
 #include "sge_centry.h"
 #include "sge_cqueue.h"
 #include "sge_lock.h"

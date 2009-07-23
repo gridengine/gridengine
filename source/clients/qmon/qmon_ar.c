@@ -43,8 +43,6 @@
 #include <Xmt/Create.h>
 #include <Xmt/Icon.h>
 #include <Xmt/Dialogs.h>
-#include <Xmt/Chooser.h>
-#include <Xmt/InputField.h>
 
 #include "Matrix.h"
 #include "Tab.h"
@@ -54,32 +52,20 @@
 #include "qmon_arsub.h"
 #include "qmon_arcustom.h"
 #include "qmon_comm.h"
-#include "qmon_appres.h"
-#include "qmon_submit.h"
 #include "qmon_timer.h"
 #include "qmon_globals.h"
 #include "qmon_browser.h"
 #include "qmon_message.h"
 #include "qmon_init.h"
-#include "qmon_request.h"
 #include "qmon_util.h"
 #include "basis_types.h"
-#include "sge_signal.h"
-#include "sge_time.h"
 #include "sge_all_listsL.h"
 #include "sge_answer.h"
-#include "sge_utility.h"
-#include "sge_feature.h"
 #include "qmon_matrix.h"
-#include "sge_range.h"
-#include "parse.h"
 #include "sge_dstring.h"
-#include "sge_schedd_text.h"
 #include "sgeee.h"
-#include "sge_support.h"
 #include "sge_range.h"
 #include "sge_object.h"
-#include "sge_centry.h"
 #include "sge_advance_reservation.h"
 
 #include "gdi/sge_gdi_ctx.h"

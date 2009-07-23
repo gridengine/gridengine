@@ -31,7 +31,6 @@
 /*___INFO__MARK_END__*/
 #include <stdio.h>
 #include <stdlib.h>
-#include <ctype.h>
 
 #include <X11/IntrinsicP.h>
 
@@ -40,7 +39,6 @@
 #include <Xm/ToggleB.h>
 
 #include <Xmt/Xmt.h>
-#include <Xmt/Hash.h>
 #include <Xmt/Create.h>
 #include <Xmt/Chooser.h>
 #include <Xmt/Layout.h>
@@ -49,43 +47,30 @@
 #include <Xmt/MsgLine.h>
 #include <Xmt/InputField.h>
 #include <Xmt/Procedures.h>
-#include <Xmt/Symbols.h>
 
 
 /*----------------------------------------------------------------------------*/
 #include "sge_all_listsL.h"
 #include "Matrix.h"
-#include "Tab.h"
 #include "commlib.h"
-#include "sge_parse_num_par.h"
-#include "sge_complex_schedd.h"
 #include "qmon_proto.h"
 #include "qmon_rmon.h"
 #include "qmon_util.h"
-#include "qmon_cull.h"
 #include "qmon_qaction.h"
 #include "qmon_comm.h"
-#include "qmon_widgets.h"
 #include "qmon_load.h"
 #include "qmon_quarks.h"
-#include "qmon_timer.h"
 #include "qmon_message.h"
 #include "qmon_init.h"
 #include "qmon_manop.h"
 #include "qmon_cq.h"
-#include "qmon_cplx.h"
 #include "qmon_pe.h"
 #include "qmon_ckpt.h"
 #include "qmon_globals.h"
 #include "qmon_project.h"
 #include "AskForTime.h"
-#include "AskForItems.h"
-#include "sge_host.h"
-#include "sge_feature.h"
 #include "sge_answer.h"
 #include "sge_cqueue.h"
-#include "sge_qinstance.h"
-#include "sge_qinstance_state.h"
 #include "sge_attr.h"
 #include "sge_cqueue_qconf.h"
 

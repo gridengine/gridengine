@@ -29,14 +29,11 @@
  *
  ************************************************************************/
 
-#include <fnmatch.h>
 #include <string.h>
 
 #include "rmon/sgermon.h"
 
 #include "uti/sge_log.h"
-#include "uti/sge_unistd.h"
-#include "uti/sge_string.h"
 #include "uti/sge_hostname.h"
 #include "uti/sge_edit.h"
 #include "uti/sge_prog.h"
@@ -48,27 +45,20 @@
 #include "spool/flatfile/sge_flatfile_obj.h"
 
 #include "sgeobj/sge_conf.h"
-#include "sgeobj/sge_attr.h"
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_cqueue.h"
-#include "sgeobj/sge_feature.h"
 #include "sgeobj/sge_object.h"
 #include "sgeobj/sge_qinstance.h"
 #include "sgeobj/sge_hgroup.h"
 #include "sgeobj/sge_href.h"
 #include "sgeobj/sge_qref.h"
 #include "sgeobj/sge_centry.h"
-#include "sgeobj/sge_userset.h"
-#include "sgeobj/sge_str.h"
-#include "sgeobj/sge_userprj.h"
-#include "sgeobj/sge_subordinate.h"
 #include "sgeobj/sge_eval_expression.h"
 
 #include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi_ctx.h"
 
 #include "sge_cqueue_qconf.h"
-#include "sge.h"
 
 static void insert_custom_complex_values_writer(spooling_field *fields);
 static int write_QU_consumable_config_list(const lListElem *ep, int nm,

@@ -36,17 +36,11 @@
 #include <Xm/List.h>
 
 #include <Xmt/Xmt.h>
-#include <Xmt/Dialog.h>
 #include <Xmt/Create.h>
 #include <Xmt/Layout.h>
 #include <Xmt/Chooser.h>
-#include <Xmt/Converters.h>
-#include <Xmt/Procedures.h>
-#include <Xmt/WidgetType.h>
-#include <Xmt/Include.h>
 #include <Xmt/InputField.h>
 
-#include "Matrix.h" 
 
 #include "qmon_rmon.h"
 #include "qmon_cull.h"
@@ -55,10 +49,7 @@
 #include "qmon_util.h"
 #include "qmon_request.h"
 #include "qmon_comm.h"
-#include "qmon_appres.h"
-#include "qmon_widgets.h"
 #include "sge_sched.h"      
-#include "commlib.h"
 #include "sge_all_listsL.h"
 #include "IconList.h"
 #include "qmon_preferences.h"

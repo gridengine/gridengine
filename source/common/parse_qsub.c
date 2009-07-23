@@ -33,14 +33,11 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "symbols.h"
 #include "sge_all_listsL.h"
 #include "sge_parse_SPA_L.h"
 #include "parse_job_cull.h"
 #include "sge_mailrec.h"
 #include "parse_qsub.h"
-#include "sge_feature.h"
-#include "sge_userset.h"
 #include "sge_parse_num_par.h"
 #include "parse.h"
 #include "sge_options.h"

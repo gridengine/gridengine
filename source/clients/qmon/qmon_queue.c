@@ -34,12 +34,9 @@
 #include <ctype.h>
  
 #include <Xm/Xm.h>
-#include <Xm/PushB.h>
 #include <Xm/ToggleB.h>
-#include <Xm/DialogS.h>
 #include <Xm/DrawingA.h>
 #include <Xm/DrawnB.h>
-#include <Xm/Label.h>
 
 #include <Xmt/Xmt.h>
 #include <Xmt/Menu.h>
@@ -47,9 +44,7 @@
 #include <Xmt/Hash.h>
 #include <Xmt/Create.h>
 #include <Xmt/Pixmap.h>
-#include <Xmt/Layout.h>
 #include <Xmt/Dialogs.h>
-#include <Xmt/SetValue.h>
 
 #include "sge_all_listsL.h"
 #include "sge.h"
@@ -57,7 +52,6 @@
 #include "qmon_rmon.h"
 #include "qmon_queue.h"
 #include "qmon_qaction.h"
-#include "qmon_submit.h"
 #include "qmon_menus.h"
 #include "qmon_comm.h"
 #include "qmon_timer.h"
@@ -65,16 +59,12 @@
 #include "qmon_init.h"
 #include "qmon_ticket.h"
 #include "qmon_util.h"
-#include "qmon_appres.h"
 #include "qmon_message.h"
 #include "qmon_browser.h"
 #include "qmon_qcustom.h"
-#include "qmon_jobcustom.h"
-#include "sge_feature.h"
 #include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
 #include "sge_host.h"
-#include "sge_cqueue.h"
 #include "sge_complex_schedd.h"
 #include "Matrix.h"
 #include "load_correction.h"

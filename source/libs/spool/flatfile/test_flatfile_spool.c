@@ -32,53 +32,27 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <strings.h>
 #include <unistd.h>
-#include <ctype.h>
 
 #include <sys/types.h>
 #include <sys/wait.h>
 
 #include "sge_unistd.h"
 #include "sge_gdi.h"
-#include "sig_handlers.h"
 #include "commlib.h"
-#include "sge_prog.h"
-#include "msg_clients_common.h"
-#include "msg_common.h"
 #include "sge_answer.h"
 #include "sge_mt_init.h"
-#include "sge_log.h"
 #include "cull/cull_multitype.h"
 #include "cull/cull_list.h"
 #include "rmon/sgermon.h"
-#include "sgeobj/config.h"
 #include "sgeobj/sge_all_listsL.h"
 #include "sgeobj/sge_answer.h"
-#include "sgeobj/sge_attr.h"
-#include "sgeobj/sge_calendar.h"
 #include "sgeobj/sge_centry.h"
-#include "sgeobj/sge_ckpt.h"
-#include "sgeobj/sge_cqueue.h"
-#include "sgeobj/sge_host.h"
-#include "sgeobj/sge_href.h"
-#include "sgeobj/sge_feature.h"
-#include "sgeobj/sge_pe.h"
-#include "sgeobj/sge_range.h"
-#include "sgeobj/sge_str.h"
-#include "sgeobj/sge_sharetree.h"
-#include "sgeobj/sge_subordinate.h"
-#include "sgeobj/sge_usage.h"
-#include "sgeobj/sge_userprj.h"
-#include "sgeobj/sge_userset.h"
-#include "sgeobj/sge_resource_quota.h"
 #include "spool/sge_spooling_utilities.h"
 #include "spool/flatfile/sge_flatfile.h"
 #include "spool/flatfile/sge_flatfile_obj.h"
 #include "spool/flatfile/sge_spooling_flatfile_scanner.h"
 #include "uti/sge_prog.h"
-#include "uti/sge_tmpnam.h"
 
 #define allow_delete_time_modification
 

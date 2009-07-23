@@ -50,12 +50,6 @@
 #include "sge_str.h"
 #include "sge_io.h"
 #include "sge_str.h"
-#include "sge_host.h"
-#include "sge_calendar.h"
-#include "sge_ckpt.h"
-#include "sge_userprj.h"
-#include "sge_sharetree.h"
-#include "sge_userset.h"
 #include "sge_manop.h"
 
 #include "sgeobj/sge_job.h"

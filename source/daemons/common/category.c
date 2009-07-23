@@ -31,39 +31,20 @@
 /*___INFO__MARK_END__*/
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 #include <unistd.h>
 
 #include "sge_ja_task.h"
-#include "sge_job_schedd.h"
 #include "sge_log.h"
-#include "sge_pe.h"
 #include "sge_prog.h"
-#include "sge_ct_SCT_L.h"
-#include "sge_ct_REF_L.h"
-#include "sge_ct_CT_L.h"
-#include "sge_ct_CCT_L.h"
-#include "sge_ct_CTI_L.h"
-#include "sge_schedd_conf.h"
-#include "sge_time.h"
 #include "sgermon.h"
-#include "commlib.h"
-#include "cull_sort.h"
 #include "sge_event.h"
-#include "sge_feature.h"
 #include "schedd_monitor.h"
-#include "unparse_job_cull.h"
 #include "sge_dstring.h"
-#include "sge_parse_SPA_L.h"
-#include "parse.h"
-#include "category.h"
 #include "sge_job.h"
-#include "lck/sge_mtutil.h"
 #include "sgeobj/sge_userprj.h"
 #include "sge_select_queue.h"
 #include "sge_resource_quota_schedd.h"
 
-#include "msg_daemons_common.h"
 
 #if 0 /* TODO: EB: ST: should this be enabled again? */
 

@@ -49,10 +49,7 @@
 #include "sge_sharetree_printing.h"
 #include "sgermon.h"
 #include "sge_all_listsL.h"
-#include "sge_time.h"
 #include "sge_language.h"
-#include "sgeee.h"
-#include "sge_support.h"
 #include "sge_schedd_conf.h"
 #include "sge_profiling.h"
 

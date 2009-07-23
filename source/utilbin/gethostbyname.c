@@ -41,7 +41,6 @@
 #include "comm/lists/cl_util.h"
 #include "comm/cl_commlib.h"
 
-#include "uti/sge_string.h"
 #include "uti/sge_hostname.h"
 #include "uti/sge_language.h"
 

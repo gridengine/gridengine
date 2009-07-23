@@ -33,40 +33,31 @@
 #include <stdlib.h>
 #include <string.h>
 #include <fnmatch.h>
-#include <ctype.h>
 
 #include "rmon/sgermon.h"
 
-#include "comm/commlib.h"
 
 #include "cull/cull_sort.h"
 
 #include "uti/sge_dstring.h"
 #include "uti/sge_prog.h"
 #include "uti/sge_parse_num_par.h"
-#include "uti/sge_string.h"
-#include "uti/sge_unistd.h"
 #include "uti/setup_path.h"
 #include "uti/sge_time.h"
-#include "uti/sge_log.h"
 #include "uti/sge_stdlib.h"
 
 #include "sgeobj/sge_all_listsL.h"
 #include "sgeobj/sge_host.h"
-#include "sgeobj/sge_feature.h"
 #include "sgeobj/parse.h"
 #include "sgeobj/sge_range.h"
 #include "sgeobj/sge_conf.h" 
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_pe.h"
-#include "sgeobj/sge_str.h"
-#include "sgeobj/sge_ckpt.h"
 #include "sgeobj/sge_qinstance.h"
 #include "sgeobj/sge_qinstance_state.h"
 #include "sgeobj/sge_centry.h"
 #include "sgeobj/sge_schedd_conf.h"
 #include "sgeobj/sge_cqueue.h"
-#include "sgeobj/sge_qref.h"
 #include "sgeobj/sge_ja_task.h"
 #include "sgeobj/sge_job.h"
 #include "sgeobj/sge_qinstance_type.h"
@@ -75,26 +66,17 @@
 
 #include "sched/sge_sched.h"
 #include "sched/sge_urgency.h"
-#include "sched/sgeee.h" 
 #include "sched/sge_support.h"
-#include "sched/sge_schedd_text.h"
 #include "sched/load_correction.h"
 
 #include "gdi/sge_gdi_ctx.h"
 #include "gdi/sge_gdi.h"
-#include "gdi/qm_name.h"
 
 #include "sge_cqueue_qstat.h"
 #include "sge_qstat.h"
-#include "sge_mt_init.h"
-#include "show_job.h"
 #include "qstat_printing.h"
-#include "usage.h"
-#include "symbols.h"
 #include "sge.h"
-#include "sig_handlers.h"
 
-#include "msg_common.h"
 #include "msg_clients_common.h"
 
 static int qstat_env_get_all_lists(qstat_env_t *qstat_env, bool need_job_list, lList** alpp);

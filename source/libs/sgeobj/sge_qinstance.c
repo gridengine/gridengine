@@ -30,12 +30,10 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include <fnmatch.h>
 #include <string.h>
 
 #include "rmon/sgermon.h"
 
-#include "uti/sge_string.h"
 #include "uti/sge_log.h"
 #include "uti/sge_hostname.h"
 #include "uti/sge_parse_num_par.h"
@@ -43,35 +41,25 @@
 
 #include "cull/cull_list.h"
 
-#include "comm/commlib.h"
 
 #include "sched/sge_select_queue.h"
-#include "sched/sge_resource_utilization.h"
 
-#include "symbols.h"
 #include "sge.h"
 #include "sge_manop.h"
-#include "parse.h"
 #include "sge_answer.h"
-#include "sge_attr.h"
 #include "sge_calendar.h"
 #include "sge_centry.h"
 #include "sge_ckpt.h"
 #include "sge_cqueue.h"
 #include "sge_job.h"
-#include "sge_object.h"
 #include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
-#include "sge_ja_task.h"
 #include "sge_mesobj.h"
 #include "sge_pe.h"
 #include "sge_qref.h"
-#include "sge_range.h"
 #include "sge_str.h"
 #include "sge_userset.h"
-#include "sge_subordinate.h"
 #include "sge_host.h"
-#include "sge_load.h"
 #include "sge_utility.h"
 #include "sge_path_alias.h"
 #include "sge_eval_expression.h"

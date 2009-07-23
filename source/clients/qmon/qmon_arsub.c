@@ -41,11 +41,8 @@
 #include <Xm/ToggleB.h>
 
 #include <Xmt/Xmt.h>
-#include <Xmt/Hash.h>
-#include <Xmt/Icon.h>
 #include <Xmt/Create.h>
 #include <Xmt/Chooser.h>
-#include <Xmt/Layout.h>
 #include <Xmt/Dialog.h>
 #include <Xmt/Dialogs.h>
 #include <Xmt/InputField.h>
@@ -53,19 +50,14 @@
 
 /*----------------------------------------------------------------------------*/
 #include "msg_common.h"
-#include "msg_clients_common.h"
-#include "msg_qmon.h"
 
 #include "sge_unistd.h"
 #include "sge_prog.h"
 #include "sge_all_listsL.h"
-#include "sge_userset.h"
 #include "AskForTime.h"
 #include "AskForItems.h"
-#include "Matrix.h"
 #include "IconList.h"
 #include "symbols.h"
-#include "parse_qsub.h"
 #include "sge_time.h"
 #include "parse_job_cull.h"
 #include "unparse_job_cull.h"
@@ -74,7 +66,6 @@
 #include "qmon_rmon.h"
 #include "qmon_appres.h"
 #include "qmon_util.h"
-#include "qmon_cull.h"
 #include "qmon_arsub.h"
 #include "qmon_comm.h"
 #include "qmon_request.h"
@@ -85,19 +76,10 @@
 #include "qmon_message.h"
 #include "qmon_ar.h"
 #include "qmon_init.h"
-#include "sge_feature.h"
-#include "sge_afsutil.h"
 #include "sge_range.h"
-#include "sge_path_alias.h"
-#include "qm_name.h"
-#include "sge_security.h" 
 #include "sge_job.h"
-#include "sge_stdlib.h"
-#include "sge_io.h"
-#include "sge_var.h"
 #include "sge_answer.h"
 #include "sge_ulong.h"
-#include "sge_ja_task.h"
 #include "sge_string.h"
 #include "sge_qrsub.h"
 

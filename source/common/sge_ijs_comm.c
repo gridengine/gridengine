@@ -35,7 +35,6 @@
 #include <string.h>
 #include <signal.h>
 #include <unistd.h>
-#include <memory.h>
 #include <termios.h>
 #include <fcntl.h>
 #ifndef  TIOCGWINSZ

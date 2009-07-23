@@ -30,7 +30,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_mt_init.h"
 
 #include "sge_uidgid.h"
 #include "setup_path.h"

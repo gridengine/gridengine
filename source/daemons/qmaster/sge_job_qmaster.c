@@ -33,7 +33,6 @@
 #include <string.h>
 #include <errno.h>
 #include <limits.h>
-#include <fnmatch.h>
 #include <ctype.h>
 
 #include "uti/sge_stdlib.h"
@@ -48,7 +47,6 @@
 #include "sge_str.h"
 #include "sge_sched.h"
 #include "sge_object.h"
-#include "sge_feature.h"
 #include "sge_manop.h"
 #include "mail.h"
 #include "sge_ja_task.h"
@@ -57,36 +55,24 @@
 #include "sge_job_qmaster.h"
 #include "sge_cqueue_qmaster.h"
 #include "sge_give_jobs.h"
-#include "sge_pe_qmaster.h"
 #include "sge_qmod_qmaster.h"
-#include "sge_userset_qmaster.h"
-#include "sge_ckpt_qmaster.h"
-#include "job_report_qmaster.h"
-#include "sge_parse_num_par.h"
 #include "sge_event_master.h"
 #include "sge_signal.h"
-#include "sge_subordinate_qmaster.h"
 #include "sge_advance_reservation.h"
 #include "sge_userset.h"
-#include "sge_userprj_qmaster.h"
 #include "sge_prog.h"
 #include "cull_parse_util.h"
-#include "schedd_monitor.h"
 #include "sge_message_SME_L.h"
 #include "sge_message_MES_L.h"
 #include "sge_id.h"
-#include "sge_afsutil.h"
 #include "sge_ulong.h"
 #include "setup_path.h"
 #include "sge_string.h"
-#include "sge_security.h"
 #include "sge_range.h"
 #include "sge_job.h"
 #include "sge_job_schedd.h"
 #include "sge_qmaster_main.h"
 #include "sge_suser.h"
-#include "sge_io.h"
-#include "sge_hostname.h"
 #include "sge_var.h"
 #include "sge_answer.h"
 #include "sge_schedd_conf.h"
@@ -100,7 +86,6 @@
 #include "sge_lock.h"
 #include "sge_mtutil.h"
 #include "sge_task_depend.h"
-#include "sge_job_enforce_limit.h"
 #include "schedd_message.h"
 #include "sge_schedd_text.h"
 #include "sge_persistence_qmaster.h"
@@ -118,14 +103,12 @@
 
 #include "sgeobj/sge_pe_task.h"
 #include "sgeobj/sge_report.h"
-#include "sgeobj/sge_usage.h"
 #include "sgeobj/sge_qinstance_state.h"
 #include "sgeobj/sge_jsv.h"
 #include "sgeobj/sge_jsv_script.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
-#include "msg_daemons_common.h"
 
 
 /****** qmaster/job/spooling ***************************************************

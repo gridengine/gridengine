@@ -38,11 +38,9 @@
 #include "usage.h"
 #include "sge_feature.h"
 
-#include "sge.h"
 #include "sgermon.h"
 #include "sge_prog.h"
 #include "sge_options.h"
-#include "sge_unistd.h"
 
 #include "msg_common.h"
 #include "msg_gdilib.h"

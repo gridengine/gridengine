@@ -42,7 +42,6 @@
 #include "cl_util.h"
 #include "sge_arch.h"
 #include "version.h"
-#include "sge_mt_init.h"
 #include "sge_profiling.h"
 #include "sge_uidgid.h"
 #include "sge_signal.h"
@@ -53,8 +52,6 @@
 #include "sge_security.h"
 #include "sge_all_listsL.h"
 #include "msg_utilbin.h"
-
-#include "sgeobj/sge_ack.h"
 
 #include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi_ctx.h"

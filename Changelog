@@ -1,3 +1,10 @@
+MD-2008-07-28-0: Bugfix:     o Submit client or master might fail if JSV is 
+                               enabled and environment contains fprint format
+                               spec
+		 Bugster:    6862580
+		 Issue:	     3088
+		 Review:     EB
+
 MD-2009-06-15-1: CVS:           Created V62u3_TAG
 -----------------------------------------------------
 
@@ -8,7 +15,7 @@ JG-2009-06-03-0: Bugfix:      Fix for memory leak fix JG-2009-05-28-0.
                  Belongs to:  JG-2009-05-28-0
                  Review:      EB
 
-CR-2009-06-02-1: Bugfix:      merged requested changes from LP
+
                  Review:      SH
 
 CR-2009-06-02-0: Revert:      Reverted changes. Fix seems to have to much

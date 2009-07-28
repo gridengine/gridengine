@@ -256,7 +256,7 @@ jsv_send_data(lListElem *jsv, lList **answer_list, const char *buffer, size_t si
    if (jsv_is_send_ready(jsv, answer_list)) {
       int lret;
 
-      lret = fprintf(lGetRef(jsv, JSV_in), buffer);
+      lret = fprintf(lGetRef(jsv, JSV_in), "%s", buffer);
       fflush(lGetRef(jsv, JSV_in));
       if (lret != size) {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,

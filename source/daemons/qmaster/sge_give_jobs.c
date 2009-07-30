@@ -1339,7 +1339,7 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
          const char *session = lGetString (jep, JB_session);
          sge_event_spool(ctx, &answer_list, now, sgeE_JATASK_MOD, 
                          jobid, jataskid, NULL, NULL, session,
-                         jep, jatep, NULL, true, true);
+                         jep, jatep, NULL, true, false);
          answer_list_output(&answer_list);
       }
       break;

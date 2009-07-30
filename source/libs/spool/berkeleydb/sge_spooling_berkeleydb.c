@@ -956,9 +956,8 @@ spool_berkeleydb_default_write_func(lList **answer_list,
                                                           object,
                                                           job_id, ja_task_id);
                   } else {
-                     ret = spool_berkeleydb_write_job(answer_list, info,
-                                                      object,
-                                                      job_id, only_job);
+                     ret = spool_berkeleydb_write_job(answer_list, info, object,
+                                                      job_id, ja_task_id, only_job);
                   }
                   FREE(dup);
                }

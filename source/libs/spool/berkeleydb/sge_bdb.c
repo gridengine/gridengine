@@ -654,7 +654,7 @@ spool_berkeleydb_start_transaction(lList **answer_list, bdb_info info)
       }
 
       bdb_set_txn(info, txn);
-      DEBUG((SGE_EVENT, "BEGIN transaction\n"));
+      DEBUG((SGE_EVENT, "BEGIN transaction"));
    }
 
    DEXIT;
@@ -695,12 +695,12 @@ spool_berkeleydb_end_transaction(lList **answer_list, bdb_info info,
          ret = false;
       } else {
          if (commit) {
-            DEBUG((SGE_EVENT, "COMMIT transaction\n"));
+            DEBUG((SGE_EVENT, "COMMIT transaction"));
             PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
             dbret = txn->commit(txn, 0);
             PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
          } else {
-            DEBUG((SGE_EVENT, "ABORT transaction\n"));
+            DEBUG((SGE_EVENT, "ABORT transaction"));
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, 
                                     ANSWER_QUALITY_WARNING, 
                                     MSG_BERKELEY_ABORTINGTRANSACTION);
@@ -789,7 +789,7 @@ spool_berkeleydb_read_list(lList **answer_list, bdb_info info,
       spool_berkeleydb_error_close(info);
       ret = false;
    } else {
-      DEBUG((SGE_EVENT, "querying objects with keys %s*\n", key));
+      DEBUG((SGE_EVENT, "querying objects with keys %s*", key));
 
       PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
       dbret = db->cursor(db, txn, &dbc, 0);
@@ -972,8 +972,7 @@ spool_berkeleydb_write_object(lList **answer_list, bdb_info info,
                                           key, dbret, db_strerror(dbret));
                   ret = false;
                } else {
-                  DEBUG((SGE_EVENT, "stored object with key "SFQ", size %d\n",
-                         key, data_dbt.size));
+                  DEBUG((SGE_EVENT, "stored object with key "SFQ", size %d", key, data_dbt.size));
                }
             }
          }
@@ -1039,8 +1038,7 @@ bool spool_berkeleydb_write_string(lList **answer_list, bdb_info info,
                                     key, dbret, db_strerror(dbret));
             ret = false;
          } else {
-            DEBUG((SGE_EVENT, "stored object with key "SFQ", size %d\n",
-                   key, data_dbt.size));
+            DEBUG((SGE_EVENT, "stored object with key "SFQ", size %d", key, data_dbt.size));
          }
       }
    }
@@ -1102,7 +1100,7 @@ spool_berkeleydb_write_ja_task(lList **answer_list, bdb_info info,
 bool
 spool_berkeleydb_write_job(lList **answer_list, bdb_info info,
                            const lListElem *object, 
-                           u_long32 job_id, bool only_job)
+                           u_long32 job_id, u_long32 ja_task_id, bool only_job)
 {
    bool ret = true;
    dstring dbkey_dstring;
@@ -1126,15 +1124,10 @@ spool_berkeleydb_write_job(lList **answer_list, bdb_info info,
 
    if (ret && !only_job) {
       lListElem *ja_task;
-      for_each(ja_task, lGetList(object, JB_ja_tasks)) {
-         ret = spool_berkeleydb_write_ja_task(answer_list, info,
-                                              ja_task,
-                                              job_id, 
-                                              lGetUlong(ja_task, 
-                                                        JAT_task_number));
-         if (!ret) {
-            break;
-         }
+
+      ja_task = lGetElemUlong(lGetList(object, JB_ja_tasks), JAT_task_number, ja_task_id);
+      if (ja_task != NULL) {
+         ret = spool_berkeleydb_write_ja_task(answer_list, info, ja_task, job_id, ja_task_id);
       }
    }
 
@@ -1298,7 +1291,7 @@ spool_berkeleydb_delete_object(lList **answer_list, bdb_info info,
                      done = true;
                      break;
                   } else {
-                     DEBUG((SGE_EVENT, "deleted record with key "SFQ"\n", (char *)delete_dbt.data));
+                     DEBUG((SGE_EVENT, "deleted record with key "SFQ, (char *)delete_dbt.data));
                   }
                   free(delete_dbt.data);
                }
@@ -1323,7 +1316,7 @@ spool_berkeleydb_delete_object(lList **answer_list, bdb_info info,
                                     key, dbret, db_strerror(dbret));
             ret = false;
          } else {
-            DEBUG((SGE_EVENT, "deleted record with key "SFQ"\n", key));
+            DEBUG((SGE_EVENT, "deleted record with key "SFQ, key));
          }
       }
    }

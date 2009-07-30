@@ -95,7 +95,7 @@ spool_berkeleydb_write_ja_task(lList **answer_list, bdb_info info,
 bool
 spool_berkeleydb_write_job(lList **answer_list, bdb_info info,
                            const lListElem *object, 
-                           u_long32 job_id, bool only_job);
+                           u_long32 job_id, u_long32 ja_task_id, bool only_job);
 bool
 spool_berkeleydb_write_cqueue(lList **answer_list, bdb_info info, 
                               const lListElem *object, const char *key);

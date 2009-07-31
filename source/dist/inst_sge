@@ -1146,6 +1146,8 @@ fi
 
 if [ "$EXECD" = "uninstall" ]; then
 
+   uninstall_ret=0
+
    if [ "$AUTO" = "true" ]; then
       Stdout2Log
       $INFOTEXT -log "Starting execution host uninstallation!"
@@ -1182,6 +1184,7 @@ if [ "$EXECD" = "uninstall" ]; then
    fi
    
    FetchHostname
+   uninstall_ret=$?
    SetupWinSvc uninstall
    
    MoveLog
@@ -1190,6 +1193,7 @@ if [ "$EXECD" = "uninstall" ]; then
       exit 0
    fi
 
+exit $uninstall_ret
 fi
 
 if [ $BERKELEY = "uninstall" ]; then

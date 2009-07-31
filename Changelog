@@ -8,6 +8,12 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 -----------------+-----------+--------------------------------------------------
+MD-2008-07-31-0: Bugfix:     o inst_sge -ux does not report error if hostname
+                             resovling is inconsistent
+		 Bugster:    6849718
+		 Issue:	     3043
+		 Review:     RH
+
 JG-2008-07-30-0: Bugfix:      more spooling ops than needed during job start
                               order processing for seq jobs
                  Bugster:     6773668

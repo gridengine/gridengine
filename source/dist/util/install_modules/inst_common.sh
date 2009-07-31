@@ -662,7 +662,7 @@ ResolveSingleHost()
 {
    UNRESOLVED=$1
    RESOLVED=""
-   ResolveSingleHostResult=""
+   ret=0
    # It is better to resolve the host by finding out its
    # ip address. If the host matches to exaclty one ip address
    # we use the ip address to resolve the host local.
@@ -677,41 +677,52 @@ ResolveSingleHost()
          # Resolve by name
          RESOLVED=`$SGE_UTILBIN/gethostbyname -name $UNRESOLVED`
       fi
+      ret=$?
    fi
 
    # Save the resolve result in RESOLVED_CHANGED_HOSTNAMES
    AddChangedHost ${UNRESOLVED} ${RESOLVED}
-   ResolveSingleHostResult=$RESOLVED
+   if [ $ret -eq 0 ]; then
+      $INFOTEXT -log "resolved hostname: $RESOLVED"
+      echo $RESOLVED
+   fi
+
+return $ret
 }
 
 #--------------------------------------------------------------------------
 # Resolves the given hostname list to the names used by SGE
-#
+# Write the correctly resolved hostnames to stdout
+# return 0 if all host has been correctly resolved
+#        1 if at least one host could not be resolved
 ResolveHosts()
 {
-   HOSTS=""
-   ResolveHostsResult=""
-   if [ $# -ge 1 ]; then
-      for host in $*; do
-         if [ "$host" = "none" ]; then
-            HOSTS="$HOSTS $host"
+   ret=0
+   for host in $*; do
+      if [ "$host" = "none" ]; then
+         echo $host
+      else
+         if [ -f $host ]; then
+            for fhost in `cat $host`; do
+               fhost=`ResolveSingleHost $fhost`
+               if [ $? -ne 0 ]; then
+                  echo $fhost
+               else
+                  ret=1
+               fi
+            done
          else
-            if [ -f $host ]; then
-               for fhost in `cat $host`; do
-                  ResolveSingleHost $fhost
-                  HOSTS="$HOSTS $ResolveSingleHostResult"
-               done
-            fi
-            ResolveSingleHost $host
-            if [ "$HOSTS" = "" ]; then
-               HOSTS="$ResolveSingleHostResult"
+            # no filename treat it as hostname
+            host=`ResolveSingleHost $host`
+            if [ $? -eq 0 ]; then
+               echo $host
             else
-               HOSTS="$HOSTS $ResolveSingleHostResult" 
+               ret=1
             fi
          fi
-      done
-   fi
-   ResolveHostsResult=$HOSTS
+      fi
+   done
+   return $ret
 }
 
 #--------------------------------------------------------------------------
@@ -845,24 +856,24 @@ CheckConfigFile()
    #do hostname resolving. fetching hostname from config file, try to resolve and
    #and recreate the hostname lists
    if [ "$DB_SPOOLING_SERVER" != "none" ]; then
-      ResolveHosts $DB_SPOOLING_SERVER
-      DB_SPOOLING_SERVER=$ResolveHostsResult
+      $INFOTEXT -log "Resolving DB_SPOOLING_SERVER"
+      DB_SPOOLING_SERVER=`ResolveHosts $DB_SPOOLING_SERVER`
    fi
 
-   ResolveHosts $ADMIN_HOST_LIST
-   ADMIN_HOST_LIST=$ResolveHostsResult
+   $INFOTEXT -log "Resolving ADMIN_HOST_LIST"
+   ADMIN_HOST_LIST=`ResolveHosts $ADMIN_HOST_LIST`
 
-   ResolveHosts $SUBMIT_HOST_LIST
-   SUBMIT_HOST_LIST=$ResolveHostsResult
+   $INFOTEXT -log "Resolving SUBMIT_HOST_LIST"
+   SUBMIT_HOST_LIST=`ResolveHosts $SUBMIT_HOST_LIST`
 
-   ResolveHosts $EXEC_HOST_LIST
-   EXEC_HOST_LIST=$ResolveHostsResult
+   $INFOTEXT -log "Resolving EXEC_HOST_LIST"
+   EXEC_HOST_LIST=`ResolveHosts $EXEC_HOST_LIST`
 
-   ResolveHosts $SHADOW_HOST
-   SHADOW_HOST=$ResolveHostsResult
+   $INFOTEXT -log "Resolving SHADOW_HOST_LIST"
+   SHADOW_HOST=`ResolveHosts $SHADOW_HOST`
 
-   ResolveHosts $EXEC_HOST_LIST_RM
-   EXEC_HOST_LIST_RM=$ResolveHostsResult
+   $INFOTEXT -log "Resolving EXEC_HOST_LIST_RM"
+   EXEC_HOST_LIST_RM=`ResolveHosts $EXEC_HOST_LIST_RM`
 
    if [ "$QMASTER" = "install" -o "$EXECD" = "install" -o "$QMASTER" = "uninstall" -o "$EXECD" = "uninstall" ]; then
       for e in $CONFIG_ENTRIES; do
@@ -1247,9 +1258,9 @@ CheckConfigFile()
 
    if [  "$EXECD" = "uninstall" ]; then
       if [ -z "$EXEC_HOST_LIST_RM" ]; then
-         $INFOTEXT -e "Your >EXEC_HOST_LIST_RM< is empty!"
+         $INFOTEXT -e "Your >EXEC_HOST_LIST_RM< is empty or not resolveable!"
          $INFOTEXT -e "For a automatic execd unintallation you have to enter a valid exechost name!"
-         $INFOTEXT -log "Your >EXEC_HOST_LIST_RM< is empty!"
+         $INFOTEXT -log "Your >EXEC_HOST_LIST_RM< is empty or not resolveable!"
          $INFOTEXT -log "For a automatic execd unintallation you have to enter a valid exechost name!"
          is_valid="false"
       fi

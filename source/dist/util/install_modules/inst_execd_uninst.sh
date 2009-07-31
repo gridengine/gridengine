@@ -63,8 +63,10 @@ FetchHostname()
    HOSTS=""
    euid=`$SGE_UTILBIN/uidgid -euid`
    local_host=`$SGE_UTILBIN/gethostname -aname`
+   local_host=`ResolveHosts $local_host`
    LOCAL_UNINST="false"
    REMOTE_UNINST_ARGS=""
+   ret=2 #the exit code for installer exit at a point where no changes have been made to the cluster
 
    if [ $AUTO = "true" ]; then
       tmp_local=""
@@ -90,6 +92,7 @@ FetchHostname()
       if [ "$NOREMOTE" = "true" -a "$h" = "$local_host" ]; then    #only the local host (from RM list) should be uninstalled and 
          LOCAL_UNINST="true"                                    #if actual host is equal to local host do uninstallation
          doUninstall $h
+         ret=0
          break                                                  #break loop, if host found and uninstalled
       fi
 
@@ -97,6 +100,7 @@ FetchHostname()
          if [ "$h" = "$local_host" ]; then                          #if actual host equals to local_host, no rsh/ssh is used for
             LOCAL_UNINST="true"                                    #uninstallation
             doUninstall $h
+            ret=0
          else
             $INFOTEXT -n "The uninstall script has to login to the uninstalled execution host %s\n" \
                          "Enter the shell name to be used (rsh/ssh) [%s] >>" $h $SHELL_NAME
@@ -124,8 +128,11 @@ cd $SGE_ROOT; ./inst_sge -ux $REMOTE_UNINST_ARGS\""
             qconf -dh $h >/dev/null 2>&1
          fi
          LOCAL_UNINST="false"                                   #reset LOCAL_UNINST variable for following uninstallations
+         ret=0
       fi
    done
+
+return $ret
 
 }
 

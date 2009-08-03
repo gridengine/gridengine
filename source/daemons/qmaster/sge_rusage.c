@@ -84,7 +84,7 @@ sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","
 *  SYNOPSIS
 *     static u_long32
 *     reporting_get_ulong_usage(const lList *usage_list, lList *reported_list, 
-*                               const char *name, u_long32 def) 
+*                               const char *name, const char *rname, u_long32 def) 
 *
 *  FUNCTION
 *     Return the usage information of a certain attribute (e.g. cpu, mem, ...).
@@ -93,10 +93,18 @@ sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","
 *     If no usage information is available for the given attribute, a default
 *     value will be returned.
 *
+*     name and rname may differ, as already reported usage is taken from job 
+*     online usage, e.g. attr USAGE_ATTR_CPU, whereas the final usage
+*     is reported in the attr USAGE_ATTR_CPU_ACCT. When we report final usage,
+*     we take the usage given by USAGE_ATTR_CPU_ACCT, but have to subtract 
+*     already reported usage coming from online usage USAGE_ATTR_CPU.
+*
 *  INPUTS
 *     const lList *usage_list - the usage (of a ja_task or pe_task)
 *     lList *reported_list    - the already (earlier) reported usage
 *     const char *name        - the name of the attribute
+*     const char *rname       - the name of the attribute in the already
+*                               reported usage
 *     u_long32 def            - default value
 *
 *  RESULT
@@ -110,7 +118,7 @@ sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","
 *******************************************************************************/
 static u_long32
 reporting_get_ulong_usage(const lList *usage_list, lList *reported_list,
-                           const char *name, u_long32 def) 
+                           const char *name, const char *rname, u_long32 def)
 {
    /* total usage */
    u_long32 usage = usage_list_get_ulong_usage(usage_list, name, def);
@@ -119,10 +127,10 @@ reporting_get_ulong_usage(const lList *usage_list, lList *reported_list,
       u_long32 reported;
 
       /* usage already reported */
-      reported = usage_list_get_ulong_usage(reported_list, name, def);
+      reported = usage_list_get_ulong_usage(reported_list, rname, def);
 
       /* after this action, we'll have reported the total usage */
-      usage_list_set_ulong_usage(reported_list, name, usage);
+      usage_list_set_ulong_usage(reported_list, rname, usage);
 
       /* in this intermediate accounting record, we'll report the usage 
        * consumed since the last intermediate accounting record.
@@ -141,7 +149,7 @@ reporting_get_ulong_usage(const lList *usage_list, lList *reported_list,
 *     static u_long32
 *     reporting_get_ulong_usage_sum(const lList *usage_list, lList *reported_list,
 *                                   bool accounting_summary, const lListElem *ja_task,
-*                                   const char *name, u_long32 def)
+*                                   const char *name, const char *rname, u_long32 def)
 *
 *  FUNCTION
 *     Return the usage information of a certain attribute (e.g. cpu, mem, ...).
@@ -154,12 +162,20 @@ reporting_get_ulong_usage(const lList *usage_list, lList *reported_list,
 *     If reported_usage is NULL, no usage will be booked as already reported,
 *     e.g. for maximum values.
 *
+*     name and rname may differ, as already reported usage is taken from job 
+*     online usage, e.g. attr USAGE_ATTR_CPU, whereas the final usage
+*     is reported in the attr USAGE_ATTR_CPU_ACCT. When we report final usage,
+*     we take the usage given by USAGE_ATTR_CPU_ACCT, but have to subtract 
+*     already reported usage coming from online usage USAGE_ATTR_CPU.
+*
 *  INPUTS
 *     const lList *usage_list  - the usage (of a ja_task or pe_task)
 *     lList *reported_list     - the already (earlier) reported usage
 *     bool accounting_summary  - shall we sum up pe_task usage?
 *     const lListElem *ja_task - ja_task having pe_tasks
 *     const char *name         - the name of the attribute
+*     const char *rname        - the name of the attribute in the already
+*                                reported usage
 *     u_long32 def             - default value
 *
 *  RESULT
@@ -174,9 +190,9 @@ reporting_get_ulong_usage(const lList *usage_list, lList *reported_list,
 static u_long32
 reporting_get_ulong_usage_sum(const lList *usage_list, lList *reported_list,
                                bool accounting_summary, const lListElem *ja_task,
-                               const char *name, u_long32 def)
+                               const char *name, const char *rname, u_long32 def)
 {
-   u_long32 usage = reporting_get_ulong_usage(usage_list, reported_list, name, def);
+   u_long32 usage = reporting_get_ulong_usage(usage_list, reported_list, name, rname, def);
 
    /* when we do an accounting summary, we also have to sum up the pe task usage */
    if (accounting_summary) {
@@ -191,7 +207,7 @@ reporting_get_ulong_usage_sum(const lList *usage_list, lList *reported_list,
                pe_reported_list = lGetOrCreateList(pe_task, PET_reported_usage,
                                                    "reported_usage", UA_Type);
             }
-            usage += reporting_get_ulong_usage(pe_usage_list, pe_reported_list, name, def);
+            usage += reporting_get_ulong_usage(pe_usage_list, pe_reported_list, name, rname, def);
          }
       }
    }
@@ -206,7 +222,7 @@ reporting_get_ulong_usage_sum(const lList *usage_list, lList *reported_list,
 *  SYNOPSIS
 *     static double
 *     reporting_get_double_usage(const lList *usage_list, lList *reported_list, 
-*                                const char *name, double def) 
+*                                const char *name, const char *rname, double def) 
 *
 *  FUNCTION
 *     Return the usage information of a certain attribute (e.g. cpu, mem, ...).
@@ -215,10 +231,18 @@ reporting_get_ulong_usage_sum(const lList *usage_list, lList *reported_list,
 *     If no usage information is available for the given attribute, a default
 *     value will be returned.
 *
+*     name and rname may differ, as already reported usage is taken from job 
+*     online usage, e.g. attr USAGE_ATTR_CPU, whereas the final usage
+*     is reported in the attr USAGE_ATTR_CPU_ACCT. When we report final usage,
+*     we take the usage given by USAGE_ATTR_CPU_ACCT, but have to subtract 
+*     already reported usage coming from online usage USAGE_ATTR_CPU.
+*
 *  INPUTS
 *     const lList *usage_list - the usage (of a ja_task or pe_task)
 *     lList *reported_list    - the already (earlier) reported usage
 *     const char *name        - the name of the attribute
+*     const char *rname       - the name of the attribute in the already
+*                               reported usage
 *     double def              - default value
 *
 *  RESULT
@@ -232,7 +256,7 @@ reporting_get_ulong_usage_sum(const lList *usage_list, lList *reported_list,
 *******************************************************************************/
 static double
 reporting_get_double_usage(const lList *usage_list, lList *reported_list,
-                           const char *name, double def) 
+                           const char *name, const char *rname, double def) 
 {
    /* total usage */
    double usage = usage_list_get_double_usage(usage_list, name, def);
@@ -241,10 +265,10 @@ reporting_get_double_usage(const lList *usage_list, lList *reported_list,
       double reported;
 
       /* usage already reported */
-      reported = usage_list_get_double_usage(reported_list, name, def);
+      reported = usage_list_get_double_usage(reported_list, rname, def);
 
       /* after this action, we'll have reported the total usage */
-      usage_list_set_double_usage(reported_list, name, usage);
+      usage_list_set_double_usage(reported_list, rname, usage);
 
       /* in this intermediate accounting record, we'll report the usage 
        * consumed since the last intermediate accounting record.
@@ -263,7 +287,7 @@ reporting_get_double_usage(const lList *usage_list, lList *reported_list,
 *     static double
 *     reporting_get_double_usage_sum(const lList *usage_list, lList *reported_list,
 *                                    bool accounting_summary, const lListElem *ja_task,
-*                                    const char *name, double def)
+*                                    const char *name, const char *rname, double def)
 *
 *  FUNCTION
 *     Return the usage information of a certain attribute (e.g. cpu, mem, ...).
@@ -276,12 +300,20 @@ reporting_get_double_usage(const lList *usage_list, lList *reported_list,
 *     If reported_usage is NULL, no usage will be booked as already reported,
 *     e.g. for maximum values.
 *
+*     name and rname may differ, as already reported usage is taken from job 
+*     online usage, e.g. attr USAGE_ATTR_CPU, whereas the final usage
+*     is reported in the attr USAGE_ATTR_CPU_ACCT. When we report final usage,
+*     we take the usage given by USAGE_ATTR_CPU_ACCT, but have to subtract 
+*     already reported usage coming from online usage USAGE_ATTR_CPU.
+*
 *  INPUTS
 *     const lList *usage_list  - the usage (of a ja_task or pe_task)
 *     lList *reported_list     - the already (earlier) reported usage
 *     bool accounting_summary  - shall we sum up pe_task usage?
 *     const lListElem *ja_task - ja_task having pe_tasks
 *     const char *name         - the name of the attribute
+*     const char *rname        - the name of the attribute in the already
+*                                reported usage
 *     double def               - default value
 *
 *  RESULT
@@ -296,9 +328,9 @@ reporting_get_double_usage(const lList *usage_list, lList *reported_list,
 static double
 reporting_get_double_usage_sum(const lList *usage_list, lList *reported_list,
                                bool accounting_summary, const lListElem *ja_task,
-                               const char *name, double def)
+                               const char *name, const char *rname, double def)
 {
-   double usage = reporting_get_double_usage(usage_list, reported_list, name, def);
+   double usage = reporting_get_double_usage(usage_list, reported_list, name, rname, def);
 
    /* when we do an accounting summary, we also have to sum up the pe task usage */
    if (accounting_summary) {
@@ -313,7 +345,7 @@ reporting_get_double_usage_sum(const lList *usage_list, lList *reported_list,
                pe_reported_list = lGetOrCreateList(pe_task, PET_reported_usage,
                                                    "reported_usage", UA_Type);
             }
-            usage += reporting_get_double_usage(pe_usage_list, pe_reported_list, name, def);
+            usage += reporting_get_double_usage(pe_usage_list, pe_reported_list, name, rname, def);
          }
       }
    }
@@ -588,40 +620,40 @@ sge_write_rusage(dstring *buffer,
           lGetUlong(jr, JR_failed), delimiter,
           exit_status, delimiter,
           usage_list_get_ulong_usage(usage_list, "ru_wallclock", 0), delimiter,
-          reporting_get_double_usage_sum(usage_list, reported_list, do_accounting_summary, ja_task, "ru_utime", 0), delimiter,
-          reporting_get_double_usage_sum(usage_list, reported_list, do_accounting_summary, ja_task, "ru_stime", 0), delimiter,
-          reporting_get_double_usage_sum(usage_list, reported_list, do_accounting_summary, ja_task, "ru_maxrss", 0), delimiter,
-          reporting_get_ulong_usage_sum(usage_list, reported_list, do_accounting_summary, ja_task, "ru_ixrss", 0), delimiter,
-          reporting_get_ulong_usage_sum(usage_list, reported_list, do_accounting_summary, ja_task, "ru_ismrss", 0), delimiter,
-          reporting_get_ulong_usage_sum(usage_list, reported_list, do_accounting_summary, ja_task, "ru_idrss", 0), delimiter,
-          reporting_get_ulong_usage_sum(usage_list, reported_list, do_accounting_summary, ja_task, "ru_isrss", 0), delimiter,
-          reporting_get_ulong_usage_sum(usage_list, reported_list, do_accounting_summary, ja_task, "ru_minflt", 0), delimiter,
-          reporting_get_ulong_usage_sum(usage_list, reported_list, do_accounting_summary, ja_task, "ru_majflt", 0), delimiter,
-          reporting_get_ulong_usage_sum(usage_list, reported_list, do_accounting_summary, ja_task, "ru_nswap", 0), delimiter,
-          reporting_get_double_usage_sum(usage_list, reported_list, do_accounting_summary, ja_task, "ru_inblock", 0), delimiter,
-          reporting_get_ulong_usage_sum(usage_list, reported_list, do_accounting_summary, ja_task, "ru_oublock", 0), delimiter,
-          reporting_get_ulong_usage_sum(usage_list, reported_list, do_accounting_summary, ja_task, "ru_msgsnd", 0), delimiter,
-          reporting_get_ulong_usage_sum(usage_list, reported_list, do_accounting_summary, ja_task, "ru_msgrcv", 0), delimiter,
-          reporting_get_ulong_usage_sum(usage_list, reported_list, do_accounting_summary, ja_task, "ru_nsignals", 0), delimiter,
-          reporting_get_ulong_usage_sum(usage_list, reported_list, do_accounting_summary, ja_task, "ru_nvcsw", 0), delimiter,
-          reporting_get_ulong_usage_sum(usage_list, reported_list, do_accounting_summary, ja_task, "ru_nivcsw", 0), delimiter,
+          reporting_get_double_usage_sum(usage_list, reported_list, do_accounting_summary, ja_task, "ru_utime", "ru_utime", 0), delimiter,
+          reporting_get_double_usage_sum(usage_list, reported_list, do_accounting_summary, ja_task, "ru_stime", "ru_stime", 0), delimiter,
+          reporting_get_double_usage_sum(usage_list, reported_list, do_accounting_summary, ja_task, "ru_maxrss", "ru_maxrss", 0), delimiter,
+          reporting_get_ulong_usage_sum(usage_list, reported_list, do_accounting_summary, ja_task, "ru_ixrss", "ru_ixrss", 0), delimiter,
+          reporting_get_ulong_usage_sum(usage_list, reported_list, do_accounting_summary, ja_task, "ru_ismrss", "ru_ismrss", 0), delimiter,
+          reporting_get_ulong_usage_sum(usage_list, reported_list, do_accounting_summary, ja_task, "ru_idrss", "ru_idrss", 0), delimiter,
+          reporting_get_ulong_usage_sum(usage_list, reported_list, do_accounting_summary, ja_task, "ru_isrss", "ru_isrss", 0), delimiter,
+          reporting_get_ulong_usage_sum(usage_list, reported_list, do_accounting_summary, ja_task, "ru_minflt", "ru_minflt", 0), delimiter,
+          reporting_get_ulong_usage_sum(usage_list, reported_list, do_accounting_summary, ja_task, "ru_majflt", "ru_majflt", 0), delimiter,
+          reporting_get_ulong_usage_sum(usage_list, reported_list, do_accounting_summary, ja_task, "ru_nswap", "ru_nswap", 0), delimiter,
+          reporting_get_double_usage_sum(usage_list, reported_list, do_accounting_summary, ja_task, "ru_inblock", "ru_inblock", 0), delimiter,
+          reporting_get_ulong_usage_sum(usage_list, reported_list, do_accounting_summary, ja_task, "ru_oublock", "ru_oublock", 0), delimiter,
+          reporting_get_ulong_usage_sum(usage_list, reported_list, do_accounting_summary, ja_task, "ru_msgsnd", "ru_msgsnd", 0), delimiter,
+          reporting_get_ulong_usage_sum(usage_list, reported_list, do_accounting_summary, ja_task, "ru_msgrcv", "ru_msgrcv", 0), delimiter,
+          reporting_get_ulong_usage_sum(usage_list, reported_list, do_accounting_summary, ja_task, "ru_nsignals", "ru_nsignals", 0), delimiter,
+          reporting_get_ulong_usage_sum(usage_list, reported_list, do_accounting_summary, ja_task, "ru_nvcsw", "ru_nvcsw", 0), delimiter,
+          reporting_get_ulong_usage_sum(usage_list, reported_list, do_accounting_summary, ja_task, "ru_nivcsw", "ru_nivcsw", 0), delimiter,
           none_string(lGetString(job, JB_project)), delimiter,
           none_string(lGetString(job, JB_department)), delimiter,
           none_string(lGetString(ja_task, JAT_granted_pe)), delimiter,
           sge_granted_slots(lGetList(ja_task, JAT_granted_destin_identifier_list)), delimiter,
           job_is_array(job) ? lGetUlong(ja_task, JAT_task_number) : 0, delimiter,
           reporting_get_double_usage_sum(usage_list, reported_list, do_accounting_summary, ja_task,
-                                         USAGE_ATTR_CPU, 0), delimiter,
+                                         intermediate ? USAGE_ATTR_CPU : USAGE_ATTR_CPU_ACCT, USAGE_ATTR_CPU, 0), delimiter,
           reporting_get_double_usage_sum(usage_list, reported_list, do_accounting_summary, ja_task,
-                                         USAGE_ATTR_MEM, 0), delimiter,
+                                         intermediate ? USAGE_ATTR_MEM : USAGE_ATTR_MEM_ACCT, USAGE_ATTR_MEM, 0), delimiter,
           reporting_get_double_usage_sum(usage_list, reported_list, do_accounting_summary, ja_task,
-                                         USAGE_ATTR_IO, 0), delimiter,
+                                         intermediate ? USAGE_ATTR_IO : USAGE_ATTR_IO_ACCT, USAGE_ATTR_IO, 0), delimiter,
           none_string(category_str), delimiter,
           reporting_get_double_usage_sum(usage_list, reported_list, do_accounting_summary, ja_task,
-                                         USAGE_ATTR_IOW, 0), delimiter,
+                                         intermediate ? USAGE_ATTR_IOW : USAGE_ATTR_IOW_ACCT, USAGE_ATTR_IOW, 0), delimiter,
           none_string(pe_task_id), delimiter,
           reporting_get_double_usage_sum(usage_list, NULL, do_accounting_summary, ja_task,
-                                         USAGE_ATTR_MAXVMEM, 0), delimiter, 
+                                         intermediate ? USAGE_ATTR_MAXVMEM : USAGE_ATTR_MAXVMEM_ACCT, USAGE_ATTR_MAXVMEM, 0), delimiter,
           lGetUlong(job, JB_ar), delimiter,
           (ar != NULL) ? lGetUlong(ar, AR_submission_time): 0
 #ifdef NEC_ACCOUNTING_ENTRIES

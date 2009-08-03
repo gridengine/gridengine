@@ -8,11 +8,16 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 -----------------+-----------+--------------------------------------------------
-MD-2008-07-31-0: Bugfix:     o inst_sge -ux does not report error if hostname
-                             resovling is inconsistent
-		 Bugster:    6849718
-		 Issue:	     3043
-		 Review:     RH
+JG-2008-08-03-0: Bugfix:      ACCT_RESERVED_USAGE is broken
+                 Bugster:     6867805
+                 Issue:       3094
+                 Review:      HP
+
+MD-2008-07-31-0: Bugfix:      o inst_sge -ux does not report error if hostname
+                              resovling is inconsistent
+                 Bugster:     6849718
+                 Issue:       3043
+                 Review:      RH
 
 JG-2008-07-30-0: Bugfix:      more spooling ops than needed during job start
                               order processing for seq jobs
@@ -20,11 +25,11 @@ JG-2008-07-30-0: Bugfix:      more spooling ops than needed during job start
                  Issue:       2804
                  Review:      EB
 
-MP-2009-07-29-0: Bugfix:     qmaster uninstallation fails when BDB RPC server 
-                             is used
-                 Bugster:    6688019
-                 Issue:      3064
-                 Review:     JG
+MP-2009-07-29-0: Bugfix:      qmaster uninstallation fails when BDB RPC server 
+                              is used
+                 Bugster:     6688019
+                 Issue:       3064
+                 Review:      JG
 
 MD-2008-07-28-0: Bugfix:      Submit client or master might fail if JSV is 
                               enabled and environment contains fprint format

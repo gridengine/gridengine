@@ -90,7 +90,7 @@ sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","
 *  SYNOPSIS
 *     static double
 *     reporting_get_double_usage(const lList *usage_list, lList *reported_list, 
-*                                const char *name, double def) 
+*                                const char *name, const char *rname, double def) 
 *
 *  FUNCTION
 *     Return the usage information of a certain attribute (e.g. cpu, mem, ...).
@@ -99,10 +99,18 @@ sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","
 *     If no usage information is available for the given attribute, a default
 *     value will be returned.
 *
+*     name and rname may differ, as already reported usage is taken from job 
+*     online usage, e.g. attr USAGE_ATTR_CPU, whereas the final usage
+*     is reported in the attr USAGE_ATTR_CPU_ACCT. When we report final usage,
+*     we take the usage given by USAGE_ATTR_CPU_ACCT, but have to subtract 
+*     already reported usage coming from online usage USAGE_ATTR_CPU.
+*
 *  INPUTS
 *     const lList *usage_list - the usage (of a ja_task or pe_task)
 *     lList *reported_list    - the already (earlier) reported usage
 *     const char *name        - the name of the attribute
+*     const char *rname       - the name of the attribute in the already
+*                               reported usage
 *     double def              - default value
 *
 *  RESULT
@@ -116,7 +124,7 @@ sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","sge_u32","
 *******************************************************************************/
 static double
 reporting_get_double_usage(const lList *usage_list, lList *reported_list,
-                           const char *name, double def) 
+                           const char *name, const char *rname, double def) 
 {
    /* total usage */
    double usage = usage_list_get_double_usage(usage_list, name, def);
@@ -125,10 +133,10 @@ reporting_get_double_usage(const lList *usage_list, lList *reported_list,
       double reported;
 
       /* usage already reported */
-      reported = usage_list_get_double_usage(reported_list, name, def);
+      reported = usage_list_get_double_usage(reported_list, rname, def);
 
       /* after this action, we'll have reported the total usage */
-      usage_list_set_double_usage(reported_list, name, usage);
+      usage_list_set_double_usage(reported_list, rname, usage);
 
       /* in this intermediate accounting record, we'll report the usage 
        * consumed since the last intermediate accounting record.
@@ -387,11 +395,11 @@ sge_write_rusage(dstring *buffer,
           none_string(lGetString(ja_task, JAT_granted_pe)), delimiter,
           sge_granted_slots(lGetList(ja_task, JAT_granted_destin_identifier_list)), delimiter,
           job_is_array(job) ? lGetUlong(ja_task, JAT_task_number) : 0, delimiter,
-          reporting_get_double_usage(usage_list, reported_list, USAGE_ATTR_CPU, 0), delimiter,
-          reporting_get_double_usage(usage_list, reported_list, USAGE_ATTR_MEM, 0), delimiter,
-          reporting_get_double_usage(usage_list, reported_list, USAGE_ATTR_IO, 0), delimiter,
+          reporting_get_double_usage(usage_list, reported_list, intermediate ? USAGE_ATTR_CPU : USAGE_ATTR_CPU_ACCT, USAGE_ATTR_CPU, 0), delimiter,
+          reporting_get_double_usage(usage_list, reported_list, intermediate ? USAGE_ATTR_MEM : USAGE_ATTR_MEM_ACCT, USAGE_ATTR_MEM, 0), delimiter,
+          reporting_get_double_usage(usage_list, reported_list, intermediate ? USAGE_ATTR_IO : USAGE_ATTR_IO_ACCT, USAGE_ATTR_IO, 0), delimiter,
           none_string(category_str), delimiter,
-          reporting_get_double_usage(usage_list, reported_list, USAGE_ATTR_IOW, 0), delimiter,
+          reporting_get_double_usage(usage_list, reported_list, intermediate ? USAGE_ATTR_IOW : USAGE_ATTR_IOW_ACCT, USAGE_ATTR_IOW, 0), delimiter,
           none_string(pe_task_id), delimiter,
           usage_list_get_double_usage(usage_list, USAGE_ATTR_MAXVMEM, 0) 
 #ifdef NEC_ACCOUNTING_ENTRIES

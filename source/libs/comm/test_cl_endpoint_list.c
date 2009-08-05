@@ -92,9 +92,9 @@ main(int argc, char** argv)
 
      printf("append \"%s\" (static):\n", argv[arg]);
      new = cl_com_create_endpoint(argv[arg], "name", 1, &in_addr);
-     retval = cl_endpoint_list_define_endpoint(endpoint_list, new, 1024+ arg,CL_CM_AC_DISABLED , CL_TRUE );
+     retval = cl_endpoint_list_define_endpoint(endpoint_list, new, 1024+ arg, CL_CM_AC_DISABLED, CL_TRUE);
      printf("%s\n\n",cl_get_error_text(retval));
-     retval = cl_endpoint_list_define_endpoint(endpoint_list, new, 1024+ arg,CL_CM_AC_DISABLED,  CL_TRUE );
+     retval = cl_endpoint_list_define_endpoint(endpoint_list, new, 1024+ arg, CL_CM_AC_DISABLED, CL_TRUE);
      printf("%s\n\n",cl_get_error_text(retval));
 
      cl_com_free_endpoint(&new);
@@ -103,7 +103,7 @@ main(int argc, char** argv)
 
      printf("append \"%s\" (non static):\n", argv[arg]);
      new = cl_com_create_endpoint(argv[arg], "name", 2, &in_addr);
-     retval = cl_endpoint_list_define_endpoint(endpoint_list, new, 1024 +arg,CL_CM_AC_DISABLED , CL_FALSE );
+     retval = cl_endpoint_list_define_endpoint(endpoint_list, new, 1024 +arg,CL_CM_AC_DISABLED, CL_FALSE);
      printf("%s\n\n",cl_get_error_text(retval));
      cl_com_free_endpoint(&new);
 
@@ -171,7 +171,7 @@ main(int argc, char** argv)
 
      if (touches) {
         printf("touch endpoint %s/%s/%ld:\n",last_endpoint->comp_host,last_endpoint->comp_name,last_endpoint->comp_id );
-        retval = cl_endpoint_list_define_endpoint(endpoint_list,last_endpoint, 1024 +arg,CL_CM_AC_DISABLED , CL_FALSE);
+        retval = cl_endpoint_list_define_endpoint(endpoint_list, last_endpoint, 1024+arg, CL_CM_AC_DISABLED, CL_FALSE);
         printf("%s\n\n",cl_get_error_text(retval));
      }
 

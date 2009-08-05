@@ -1,43 +1,41 @@
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
- * 
+ *
  *  The Contents of this file are made available subject to the terms of
  *  the Sun Industry Standards Source License Version 1.2
- * 
+ *
  *  Sun Microsystems Inc., March, 2001
- * 
- * 
+ *
+ *
  *  Sun Industry Standards Source License Version 1.2
  *  =================================================
  *  The contents of this file are subject to the Sun Industry Standards
  *  Source License Version 1.2 (the "License"); You may not use this file
  *  except in compliance with the License. You may obtain a copy of the
  *  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
- * 
+ *
  *  Software provided under this License is provided on an "AS IS" basis,
  *  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
  *  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
  *  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
  *  See the License for the specific provisions governing your rights and
  *  obligations concerning the Software.
- * 
- *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
- * 
- *   Copyright: 2001 by Sun Microsystems, Inc.
- * 
- *   All Rights Reserved.
- * 
+ *
+ *  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+ *
+ *  Copyright: 2001 by Sun Microsystems, Inc.
+ *
+ *  All Rights Reserved.
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <errno.h>
-#include "sge_arch.h"
 #include "sge_string.h"
 #include "sge_signal.h"
 
@@ -3871,22 +3869,20 @@ static int cl_commlib_handle_connection_ack_timeouts(cl_com_connection_t* connec
                }
                cl_message_list_remove_send(connection, message, 0);
                cl_com_free_message(&message);
-            } else {
-               if ( ignore_timeouts == CL_TRUE) {
-                  if ( connection->connection_state == CL_CONNECTED &&
-                       connection->connection_sub_state == CL_COM_WORK ) {
-                     CL_LOG(CL_LOG_INFO,"ignore ack timeout flag is set, but this connection is connected and waiting for ack - continue waiting");
-                  } else {
-                     CL_LOG(CL_LOG_INFO,"ignore ack timeout flag is set and connection is not connected - ignore timeout");
-                     if (message->message_id == connection->check_endpoint_mid && connection->check_endpoint_mid != 0) {
-                        connection->check_endpoint_mid = 0;
-                        connection->check_endpoint_flag = CL_FALSE; /* now the next check can be done */
-                     }
-                     cl_message_list_remove_send(connection, message, 0);
-                     cl_com_free_message(&message);
+            } else if ( ignore_timeouts == CL_TRUE) {
+               if ( connection->connection_state == CL_CONNECTED &&
+                    connection->connection_sub_state == CL_COM_WORK ) {
+                  CL_LOG(CL_LOG_INFO,"ignore ack timeout flag is set, but this connection is connected and waiting for ack - continue waiting");
+               } else {
+                  CL_LOG(CL_LOG_INFO,"ignore ack timeout flag is set and connection is not connected - ignore timeout");
+                  if (message->message_id == connection->check_endpoint_mid && connection->check_endpoint_mid != 0) {
+                     connection->check_endpoint_mid = 0;
+                     connection->check_endpoint_flag = CL_FALSE; /* now the next check can be done */
                   }
-               } 
-            }
+                  cl_message_list_remove_send(connection, message, 0);
+                  cl_com_free_message(&message);
+               }
+            } 
          }
          message_list_elem = next_message_list_elem;
       }
@@ -4628,14 +4624,16 @@ static int cl_commlib_handle_connection_write(cl_com_connection_t* connection) {
           }
           connection->statistic->real_bytes_sent = connection->statistic->real_bytes_sent + connection->data_write_buffer_pos ;
 
-          sprintf((char*)connection->data_write_buffer, CL_MIH_MESSAGE ,
-                   CL_MIH_MESSAGE_VERSION,
-                   message->message_id,
-                   message->message_length,
-                   cl_com_get_mih_df_string(message->message_df),
-                   cl_com_get_mih_mat_string(message->message_mat),
-                   message->message_tag ,
-                   message->message_response_id);
+          snprintf((char*) connection->data_write_buffer, 
+                           connection->data_buffer_size,
+                           CL_MIH_MESSAGE ,
+                           CL_MIH_MESSAGE_VERSION,
+                           message->message_id,
+                           message->message_length,
+                           cl_com_get_mih_df_string(message->message_df),
+                           cl_com_get_mih_mat_string(message->message_mat),
+                           message->message_tag ,
+                           message->message_response_id);
 
 #ifdef CL_DO_COMMLIB_DEBUG         
           CL_LOG_STR(CL_LOG_DEBUG,"write buffer:",(char*)connection->data_write_buffer);
@@ -5228,6 +5226,8 @@ int cl_commlib_search_endpoint(cl_com_handle_t* handle,
 static int cl_commlib_send_ack_message(cl_com_connection_t* connection, cl_com_message_t* message) {
    cl_byte_t* ack_message_data = NULL;
    unsigned long ack_message_size = 0;
+   unsigned long ack_message_malloc_size = 0;
+
    int ret_val = CL_RETVAL_OK;
    cl_com_message_t* ack_message = NULL;
 
@@ -5237,12 +5237,13 @@ static int cl_commlib_send_ack_message(cl_com_connection_t* connection, cl_com_m
    
    ack_message_size = CL_AM_MESSAGE_SIZE;
    ack_message_size = ack_message_size + cl_util_get_ulong_number_length(message->message_id);
-   
-   ack_message_data = (cl_byte_t*)malloc(sizeof(cl_byte_t)* ( ack_message_size + 1) ) ;
+   ack_message_malloc_size = sizeof(cl_byte_t)* ( ack_message_size + 1);
+
+   ack_message_data = (cl_byte_t*)malloc(ack_message_malloc_size) ;
    if (ack_message_data == NULL) {
       return CL_RETVAL_MALLOC;
    }
-   sprintf((char*)ack_message_data,CL_AM_MESSAGE, CL_AM_MESSAGE_VERSION, message->message_id);
+   snprintf((char*)ack_message_data, ack_message_malloc_size, CL_AM_MESSAGE, CL_AM_MESSAGE_VERSION, message->message_id);
 
    ret_val = cl_com_setup_message(&ack_message, connection, ack_message_data, ack_message_size, CL_MIH_MAT_NAK, 0, 0);
    if (ret_val != CL_RETVAL_OK) {
@@ -5265,6 +5266,7 @@ static int cl_commlib_send_ack_message(cl_com_connection_t* connection, cl_com_m
 static int cl_commlib_send_ccm_message(cl_com_connection_t* connection) {
    cl_byte_t* ccm_message_data = NULL;
    unsigned long ccm_message_size = 0;
+   unsigned long ccm_message_malloc_size = 0;
    int ret_val = CL_RETVAL_OK;
    cl_com_message_t* ccm_message = NULL;
 
@@ -5272,13 +5274,13 @@ static int cl_commlib_send_ccm_message(cl_com_connection_t* connection) {
       return CL_RETVAL_PARAMS;
    }
 
-   ccm_message_size = CL_CCM_MESSAGE_SIZE;
-   
-   ccm_message_data = (cl_byte_t*)malloc(sizeof(cl_byte_t)* ( ccm_message_size + 1) ) ;
+   ccm_message_size        = CL_CCM_MESSAGE_SIZE;
+   ccm_message_malloc_size = sizeof(cl_byte_t)* ( ccm_message_size + 1);
+   ccm_message_data = (cl_byte_t*)malloc(ccm_message_malloc_size) ;
    if (ccm_message_data == NULL) {
       return CL_RETVAL_MALLOC;
    }
-   sprintf((char*)ccm_message_data, CL_CCM_MESSAGE, CL_CCM_MESSAGE_VERSION);
+   snprintf((char*)ccm_message_data, ccm_message_malloc_size, CL_CCM_MESSAGE, CL_CCM_MESSAGE_VERSION);
 
    ret_val = cl_com_setup_message(&ccm_message, connection, ccm_message_data , ccm_message_size , CL_MIH_MAT_NAK , 0 ,0);
    if (ret_val != CL_RETVAL_OK) {
@@ -5294,6 +5296,8 @@ static int cl_commlib_send_ccm_message(cl_com_connection_t* connection) {
 static int cl_commlib_send_sim_message(cl_com_connection_t* connection, unsigned long* mid) {
    cl_byte_t* sim_message_data = NULL;
    unsigned long sim_message_size = 0;
+   unsigned long sim_message_malloc_size = 0;
+
    int ret_val = CL_RETVAL_OK;
    cl_com_message_t* sim_message = NULL;
 
@@ -5302,12 +5306,12 @@ static int cl_commlib_send_sim_message(cl_com_connection_t* connection, unsigned
    }
 
    sim_message_size = CL_SIM_MESSAGE_SIZE;
-   
-   sim_message_data = (cl_byte_t*)malloc(sizeof(cl_byte_t)* ( sim_message_size + 1) ) ;
+   sim_message_malloc_size = sizeof(cl_byte_t)* ( sim_message_size + 1);
+   sim_message_data = (cl_byte_t*)malloc(sim_message_malloc_size) ;
    if (sim_message_data == NULL) {
       return CL_RETVAL_MALLOC;
    }
-   sprintf((char*)sim_message_data, CL_SIM_MESSAGE, CL_SIM_MESSAGE_VERSION);
+   snprintf((char*)sim_message_data, sim_message_malloc_size, CL_SIM_MESSAGE, CL_SIM_MESSAGE_VERSION);
 
    ret_val = cl_com_setup_message(&sim_message, connection, sim_message_data , sim_message_size , CL_MIH_MAT_NAK , 0 ,0);
    if (ret_val != CL_RETVAL_OK) {
@@ -5335,6 +5339,7 @@ static int cl_commlib_send_sirm_message(cl_com_connection_t* connection,
    cl_byte_t* sirm_message_data = NULL;
    char* xml_infotext = NULL;
    unsigned long sirm_message_size = 0;
+   unsigned long sirm_message_malloc_size = 0;
    int ret_val = CL_RETVAL_OK;
    cl_com_message_t* sirm_message = NULL;
 
@@ -5357,7 +5362,8 @@ static int cl_commlib_send_sirm_message(cl_com_connection_t* connection,
    sirm_message_size += cl_util_get_ulong_number_length(application_status);
    sirm_message_size += strlen(xml_infotext);
 
-   sirm_message_data = (cl_byte_t*)malloc(sizeof(cl_byte_t)* (sirm_message_size + 1));
+   sirm_message_malloc_size = sizeof(cl_byte_t)* (sirm_message_size + 1);
+   sirm_message_data = (cl_byte_t*)malloc(sirm_message_malloc_size);
    if (sirm_message_data == NULL) {
       if (xml_infotext != NULL) {
          free(xml_infotext);
@@ -5365,7 +5371,7 @@ static int cl_commlib_send_sirm_message(cl_com_connection_t* connection,
       }
       return CL_RETVAL_MALLOC;
    }
-   sprintf((char*)sirm_message_data, CL_SIRM_MESSAGE,
+   snprintf((char*)sirm_message_data, sirm_message_malloc_size, CL_SIRM_MESSAGE,
            CL_SIRM_MESSAGE_VERSION,
            message->message_id,
            starttime,
@@ -5401,6 +5407,8 @@ static int cl_commlib_send_sirm_message(cl_com_connection_t* connection,
 static int cl_commlib_send_ccrm_message(cl_com_connection_t* connection) {
    cl_byte_t* ccrm_message_data = NULL;
    unsigned long ccrm_message_size = 0;
+   unsigned long ccrm_message_malloc_size = 0;
+
    int ret_val = CL_RETVAL_OK;
    cl_com_message_t* ccrm_message = NULL;
 
@@ -5409,12 +5417,12 @@ static int cl_commlib_send_ccrm_message(cl_com_connection_t* connection) {
    }
 
    ccrm_message_size = CL_CCRM_MESSAGE_SIZE;
-   
-   ccrm_message_data = (cl_byte_t*)malloc(sizeof(cl_byte_t)* (ccrm_message_size + 1)) ;
+   ccrm_message_malloc_size = sizeof(cl_byte_t)* (ccrm_message_size + 1);
+   ccrm_message_data = (cl_byte_t*)malloc(ccrm_message_malloc_size) ;
    if (ccrm_message_data == NULL) {
       return CL_RETVAL_MALLOC;
    }
-   sprintf((char*)ccrm_message_data, CL_CCRM_MESSAGE, CL_CCRM_MESSAGE_VERSION);
+   snprintf((char*)ccrm_message_data, ccrm_message_malloc_size, CL_CCRM_MESSAGE, CL_CCRM_MESSAGE_VERSION);
 
    ret_val = cl_com_setup_message(&ccrm_message, connection, ccrm_message_data , ccrm_message_size , CL_MIH_MAT_NAK , 0 ,0);
    if (ret_val != CL_RETVAL_OK) {
@@ -5998,6 +6006,7 @@ int cl_commlib_close_connection(cl_com_handle_t* handle,char* un_resolved_hostna
                      /* there are messages in ready to deliver state for this connection */
                      if (return_for_messages == CL_TRUE) {
                         do_return_after_trigger = CL_TRUE;
+                        break;
                      } else {
                         cl_com_message_t* message = NULL;
 
@@ -6030,7 +6039,9 @@ int cl_commlib_close_connection(cl_com_handle_t* handle,char* un_resolved_hostna
                   break;
                case CL_RW_THREAD:
                   /* we just want to trigger write , no wait for read*/
-                  cl_thread_trigger_event(handle->write_thread);
+                  cl_thread_wait_for_thread_condition(handle->read_condition,
+                                                      handle->select_sec_timeout,
+                                                      handle->select_usec_timeout);
                   break;
             }
          }
@@ -6181,6 +6192,23 @@ int cl_commlib_get_endpoint_status(cl_com_handle_t* handle, char* un_resolved_ho
                   return CL_RETVAL_OK;
                } else {
                   CL_LOG_INT(CL_LOG_DEBUG, "still no SRIM for SIM with id", (int)my_mid);
+                  /* 
+                   * This is a workaround when the SIM wasn't send by handle_connection_write()
+                   * because of network problems. Here we check the message instert time and
+                   * return CL_RETVAL_SEND_TIMEOUT when message wasn't send within ack timeout
+                   */
+                  if (message->message_state == CL_MS_INIT_SND) {
+                     long timeout_time = 0;
+                     struct timeval now;
+                     /* get current timeout time */
+                     gettimeofday(&now,NULL);
+
+                     CL_LOG_INT(CL_LOG_WARNING, "SIM not send - checking message insert time", (int)my_mid);
+                     timeout_time = (message->message_insert_time).tv_sec + connection->handler->acknowledge_timeout;
+                     if ( timeout_time <= now.tv_sec ) {
+                        found_message = 2;
+                     }
+                  }
                }
             }
             message_list_elem = next_message_list_elem;
@@ -6196,10 +6224,15 @@ int cl_commlib_get_endpoint_status(cl_com_handle_t* handle, char* un_resolved_ho
       cl_raw_list_unlock(handle->connection_list);
 
       if (found_message == 0) {
-         CL_LOG_INT(CL_LOG_ERROR,"SIM not found or removed because of SIRM ack timeout", (int)my_mid);
+         CL_LOG_INT(CL_LOG_ERROR, "SIM not found or removed because of SIRM ack timeout - msg_id was", (int)my_mid);
          free(unique_hostname);
          free(receiver.hash_id);
          return CL_RETVAL_MESSAGE_ACK_ERROR; /* message not found or removed because of ack timeout */
+      } else if (found_message == 2) {
+         CL_LOG_INT(CL_LOG_ERROR, "cannot send SIM - ack timeout reached - msg_id was", (int)my_mid);
+         free(unique_hostname);
+         free(receiver.hash_id);
+         return CL_RETVAL_SEND_TIMEOUT;
       }
 
       switch(cl_com_create_threads) {
@@ -6658,6 +6691,12 @@ int cl_commlib_send_message(cl_com_handle_t*  handle,
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_commlib_get_last_message_time()"
+
+
+/*
+TODO: Enhance this to deliver last read and last write 
+*/
+
 int cl_commlib_get_last_message_time(cl_com_handle_t* handle, 
                                     const char* un_resolved_hostname, const char* component_name, unsigned long component_id, 
                                     unsigned long* message_time) {
@@ -6669,7 +6708,7 @@ int cl_commlib_get_last_message_time(cl_com_handle_t* handle,
 
    /* set time to 0 if endpoint not found, otherwise return last communication time */
    /* otherwise return error */
-   if (message_time) {
+   if (message_time != NULL) {
       *message_time = 0;
    }
 
@@ -6677,7 +6716,7 @@ int cl_commlib_get_last_message_time(cl_com_handle_t* handle,
       return CL_RETVAL_PARAMS;
    }
    
-   if (component_id <= 0) {
+   if (component_id == 0) {
       CL_LOG(CL_LOG_ERROR,"component id 0 is not allowed");
       return CL_RETVAL_PARAMS;
    }
@@ -6700,7 +6739,7 @@ int cl_commlib_get_last_message_time(cl_com_handle_t* handle,
    }
 
    return_value = cl_endpoint_list_get_last_touch_time(cl_com_get_endpoint_list(), &receiver, message_time);
-   if (message_time) {
+   if (message_time != NULL) {
       CL_LOG_STR(CL_LOG_DEBUG,"host              :", receiver.comp_host);
       CL_LOG_STR(CL_LOG_DEBUG,"component         :", receiver.comp_name);
       CL_LOG_INT(CL_LOG_DEBUG,"last transfer time:", (int)*message_time);

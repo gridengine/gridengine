@@ -884,7 +884,9 @@ void sge_load_value_cleanup_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent
       cl_commlib_get_last_message_time((cl_com_get_handle(prognames[QMASTER],0)),
                                      (char*)host, (char*)prognames[EXECD], 1, &last_heard);
       
-
+#if 0
+      TODO: use same timeout for sge_mark_unheard() calls in sge_give_jobs.c (e.g.: send_job())
+#endif
       timeout = MAX(load_report_interval(hep)*3, max_unheard); 
       if (now <= last_heard + timeout) {
          continue;

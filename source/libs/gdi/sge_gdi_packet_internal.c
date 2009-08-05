@@ -519,7 +519,7 @@ sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
          commlib_error = ctx->is_alive(ctx);
          if (commlib_error != CL_RETVAL_OK) {
             u_long32 sge_qmaster_port = ctx->get_sge_qmaster_port(ctx);
-            const char *mastername = ctx->get_master(ctx, false);
+            const char *mastername = ctx->get_master(ctx, true);
 
             if (commlib_error == CL_RETVAL_CONNECT_ERROR ||
                 commlib_error == CL_RETVAL_CONNECTION_NOT_FOUND ) {
@@ -619,7 +619,7 @@ sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
          commlib_error = ctx->is_alive(ctx);
          if (commlib_error != CL_RETVAL_OK) {
             u_long32 sge_qmaster_port = ctx->get_sge_qmaster_port(ctx);
-            const char *mastername = ctx->get_master(ctx, false);
+            const char *mastername = ctx->get_master(ctx, true);
 
             if (commlib_error == CL_RETVAL_CONNECT_ERROR ||
                 commlib_error == CL_RETVAL_CONNECTION_NOT_FOUND ) {

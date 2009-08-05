@@ -1007,7 +1007,7 @@ static void ec2_mark4registration(sge_evc_class_t *thiz)
    cl_com_handle_t* handle = NULL;
    sge_evc_t *sge_evc = (sge_evc_t*)thiz->sge_evc_handle;
    sge_gdi_ctx_class_t *sge_gdi_ctx = thiz->get_gdi_ctx(thiz);
-   const char *mastername = sge_gdi_ctx->get_master(sge_gdi_ctx, false);
+   const char *mastername = sge_gdi_ctx->get_master(sge_gdi_ctx, true);
 
    DENTER(EVC_LAYER, "ec2_mark4registration");
 

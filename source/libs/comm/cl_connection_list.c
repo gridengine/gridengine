@@ -1,32 +1,32 @@
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
- * 
+ *
  *  The Contents of this file are made available subject to the terms of
  *  the Sun Industry Standards Source License Version 1.2
- * 
+ *
  *  Sun Microsystems Inc., March, 2001
- * 
- * 
+ *
+ *
  *  Sun Industry Standards Source License Version 1.2
  *  =================================================
  *  The contents of this file are subject to the Sun Industry Standards
  *  Source License Version 1.2 (the "License"); You may not use this file
  *  except in compliance with the License. You may obtain a copy of the
  *  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
- * 
+ *
  *  Software provided under this License is provided on an "AS IS" basis,
  *  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
  *  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
  *  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
  *  See the License for the specific provisions governing your rights and
  *  obligations concerning the Software.
- * 
- *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
- * 
- *   Copyright: 2001 by Sun Microsystems, Inc.
- * 
- *   All Rights Reserved.
- * 
+ *
+ *  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+ *
+ *  Copyright: 2001 by Sun Microsystems, Inc.
+ *
+ *  All Rights Reserved.
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
@@ -288,8 +288,12 @@ int cl_connection_list_destroy_connections_to_close(cl_com_handle_t* handle) {
       connection = act_elem->connection;
       if (connection->data_flow_type == CL_CM_CT_MESSAGE ) {
          if (connection->connection_state == CL_CONNECTED &&
-             connection->connection_sub_state == CL_COM_DONE) {
+             connection->connection_sub_state != CL_COM_WORK) {
 
+            /*
+             * This is for connections which are not in in CL_COM_WORK state. Connections
+             * will be closed when they reach close connection timeout ...
+             */
             if (connection->connection_close_time.tv_sec == 0) {
                /* there is no timeout set, set connection close time for this connection */
                gettimeofday(&(connection->connection_close_time),NULL);
@@ -297,7 +301,8 @@ int cl_connection_list_destroy_connections_to_close(cl_com_handle_t* handle) {
             }
 
             if( cl_raw_list_get_elem_count(connection->received_message_list) == 0 &&
-                cl_raw_list_get_elem_count(connection->send_message_list) == 0) {
+                cl_raw_list_get_elem_count(connection->send_message_list)     == 0 &&
+                connection->connection_sub_state == CL_COM_DONE) {
                  connection->connection_state = CL_CLOSING;   
                  connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                  CL_LOG(CL_LOG_INFO,"setting connection state to close this connection");
@@ -308,7 +313,7 @@ int cl_connection_list_destroy_connections_to_close(cl_com_handle_t* handle) {
                   connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                   CL_LOG(CL_LOG_INFO,"setting connection state to close this connection");
                } else {
-                  CL_LOG(CL_LOG_WARNING,"wait for empty message buffers");
+                  CL_LOG(CL_LOG_INFO, "waiting for connection close handshake");
                }
             }
          }
@@ -326,15 +331,12 @@ int cl_connection_list_destroy_connections_to_close(cl_com_handle_t* handle) {
                      if (connection->was_opened == CL_TRUE) {
                         CL_LOG(CL_LOG_WARNING,"client connection ignores connection transfer timeout");
                      } else {
-                        if (cl_raw_list_get_elem_count(connection->send_message_list) == 0) {
-                           CL_LOG_STR(CL_LOG_WARNING,"closing connection to host:", connection->remote->comp_host );
-                           CL_LOG_STR(CL_LOG_WARNING,"component name:            ", connection->remote->comp_name );
-                           CL_LOG_INT(CL_LOG_WARNING,"component id:              ", (int)connection->remote->comp_id );
-                           connection->connection_state = CL_CLOSING;
-                           connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
-                        } else {
-                           CL_LOG(CL_LOG_WARNING,"unsent messages in send list, don't close connection");
-                        }
+                        CL_LOG_STR_STR_INT(CL_LOG_WARNING, "connection timeout! Shutdown connection to:", 
+                                           connection->remote->comp_host,
+                                           connection->remote->comp_name,
+                                           (int)connection->remote->comp_id);  
+                        connection->connection_state = CL_CLOSING;
+                        connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                      }
                   } else {
                      CL_LOG(CL_LOG_WARNING,"closing unconnected connection object");

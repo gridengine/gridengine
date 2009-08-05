@@ -1,3 +1,24 @@
+CR-2009-08-04-0: Cleanup:     Fixed test binary "test_general" for testsuite
+                 Review:      AA
+
+CR-2009-08-03-2: Bugfix:      qmon does not reconnect to qmaster after shadowd takeover
+                 Bugster:     6868133
+                 Issue:       3097
+                 Review:      JG
+
+CR-2009-08-03-1: Bugfix:      qmaster fail-over results in very slow execd reconnect
+                 Bugster:     6823756
+                 Issue:       2900
+                 Review:      SH, RD
+                 Merged from: maintrunk (CR-2009-05-08-0)
+                 Review:      JG
+
+CR-2009-08-03-0: Bugfix:      qsub -sync does not connect to shadow master after failover
+                              (Fixed reconnect problem of event client)
+                 Bugster:     6867897
+                 Issue:       3096
+                 Review:      JG
+
 RD-2009-03-11-0: CVS:         Created V62u2_1_TAG
 -------------------------------------------------
 

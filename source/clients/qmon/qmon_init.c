@@ -280,8 +280,13 @@ void qmonInitSge(sge_gdi_ctx_class_t **ctx_ref, char *progname, int usage)
                                    mastername, 
                                    cl_get_error_text(error)));
          }
-         
          fprintf(stderr, "%s\n", SGE_EVENT);
+         if (error != CL_RETVAL_OK) {
+            /*
+            ** re-read act_qmaster file
+            */
+            ctx->get_master(ctx, true);
+         }
       }
       if (endless_loop == 0) {
          qmonExitFunc(1);
@@ -296,6 +301,12 @@ void qmonInitSge(sge_gdi_ctx_class_t **ctx_ref, char *progname, int usage)
          qmonExitFunc(0);
       }
       sleep(endless_loop);
+      if (error != CL_RETVAL_OK) {
+         /*
+         ** re-read act_qmaster file
+         */
+         ctx->get_master(ctx, true);
+      }
    }
    log_state_set_log_gui(0);
 

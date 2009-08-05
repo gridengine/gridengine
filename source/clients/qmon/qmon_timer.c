@@ -392,7 +392,7 @@ XtIntervalId *id
 
    DENTER(GUI_LAYER, "qmonTimerCheckInteractiveJob");
 
-   if (ctx->is_alive(ctx) == false) {
+   if (ctx->is_alive(ctx) != CL_RETVAL_OK) {
       sprintf(msg, XmtLocalize(AppShell, "cannot reach qmaster", "cannot reach qmaster"));
       contact_ok = XmtDisplayErrorAndAsk(AppShell, "nocontact",
                                                 msg, "@{Retry}", "@{Abort}",
@@ -404,6 +404,10 @@ XtIntervalId *id
          DEXIT;
          qmonExitFunc(1);
       }
+      /*
+      ** re-read act_qmaster file
+      */
+      ctx->get_master(ctx, true);
    }
 
    /*

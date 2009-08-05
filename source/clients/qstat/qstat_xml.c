@@ -1170,15 +1170,13 @@ void xml_qstat_show_job(lList **job_list, lList **msg_list, lList **answer_list,
       xml_elem = xml_getHead("comunication_error", *answer_list, NULL);
       lWriteElemXMLTo(xml_elem, stdout);
       lFreeElem(&xml_elem);
-   }
-   else {
+   } else {
       if (lGetNumberOfElem(*job_list) == 0) {
          xml_elem = xml_getHead("unknown_jobs", *id_list, NULL);
          lWriteElemXMLTo(xml_elem, stdout);
          lFreeElem(&xml_elem);
          *id_list = NULL;
-      }
-      else {
+      } else {
          lList *XML_out = lCreateList("detailed_job_info", XMLE_Type);
          lListElem *xmlElem = NULL;
          lListElem *attrElem = NULL;
@@ -1214,7 +1212,6 @@ void xml_qstat_show_job(lList **job_list, lList **msg_list, lList **answer_list,
    }
 
    lFreeList(answer_list);
-
    DEXIT;
    return;
 }

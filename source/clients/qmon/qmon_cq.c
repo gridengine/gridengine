@@ -135,13 +135,13 @@ enum {
 };
 
 static lDescr qi_descr[] = {
-   { QI_queue, lStringT, NULL },
-   { QI_qtype, lStringT, NULL },
-   { QI_used_total, lStringT, NULL },
-   { QI_load_avg, lStringT, NULL },
-   { QI_arch, lStringT, NULL },
-   { QI_states, lStringT, NULL },
-   { NoName, lEndT, NULL}};
+   { QI_queue, lStringT | CULL_IS_REDUCED, NULL},
+   { QI_qtype, lStringT | CULL_IS_REDUCED, NULL},
+   { QI_used_total, lStringT | CULL_IS_REDUCED, NULL},
+   { QI_load_avg, lStringT | CULL_IS_REDUCED, NULL},
+   { QI_arch, lStringT | CULL_IS_REDUCED, NULL},
+   { QI_states, lStringT | CULL_IS_REDUCED, NULL},
+   { NoName, lEndT | CULL_IS_REDUCED, NULL}};
 
 enum {
    SORT_ASCENDING = 0,
@@ -2438,7 +2438,7 @@ static void qmonCQUpdateQhostMatrix(void)
           sge_dstring_clear(&rs);
           lFreeElem(&lep);
        } else {
-	      strcpy(buffer, "-");
+	       strcpy(buffer, "-");
        }
        
        XbaeMatrixSetCell(qhost_settings, row, column++, buffer);

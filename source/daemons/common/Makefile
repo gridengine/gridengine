@@ -85,7 +85,7 @@ daemons_common_messages:
 # rules to build binaries
 ###############################################################################
 
-test_category:	test_category.o category.o unparse_job_cull.o $(WINGRIDLIB_DEP) $(SCHEDLIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(COMMLISTSLIB_DEP) $(CULLLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
+test_category:	test_category.o category.o unparse_job_cull.o $(WINGRIDLIB_DEP) $(SCHEDLIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(COMMLISTSLIB) $(CULLLIB) $(UTILIB) $(LCKLIB) $(RMONLIB)
 		$(LD_WRAPPER) $(CC) -o $@ $(LFLAGS) test_category.o category.o unparse_job_cull.o $(SCHEDLIB) $(SGEOBJLIB) $(COMMLIB) $(COMMLISTSLIB) $(SGEOBJDLIB) $(CULLLIB) $(UTILIB) $(WINGRIDLIB) $(LCKLIB) $(DLLIB) $(RMONLIB) $(SECLIB) $(SLIBS) $(LIBS)
 test_heartbeat:	test_heartbeat.o qmaster_heartbeat.o $(WINGRIDLIB_DEP) $(UTILIB) $(COMMLISTSLIB) $(LCKLIB) $(RMONLIB)
 		$(LD_WRAPPER) $(CC) -o $@ $(LFLAGS) test_heartbeat.o qmaster_heartbeat.o $(UTILIB) $(WINGRIDLIB) $(COMMLISTSLIB) $(LCKLIB) $(DLLIB) $(RMONLIB) $(SLIBS) $(LIBS) 

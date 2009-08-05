@@ -44,6 +44,7 @@
 #include "sgeobj/sge_userprj.h"
 #include "sge_select_queue.h"
 #include "sge_resource_quota_schedd.h"
+#include "sge_qref.h"
 
 
 #if 0 /* TODO: EB: ST: should this be enabled again? */

@@ -433,8 +433,8 @@ int sge_gdi_del_job(sge_gdi_ctx_class_t *ctx, lListElem *idep, lList **alpp, cha
       a job name is specified. We do not care for users, if we work on jid*/
    if (!all_users_flag && !user_list_flag && (jid_str != NULL) &&
        !isdigit(jid_str[0])) {
-      lList *user_list = lGetList(idep, ID_user_list);
       lListElem *current_user = lCreateElem(ST_Type);
+
       if (user_list == NULL) {
          user_list = lCreateList("user list", ST_Type);
          lSetList(idep, ID_user_list, user_list);
@@ -449,7 +449,7 @@ int sge_gdi_del_job(sge_gdi_ctx_class_t *ctx, lListElem *idep, lList **alpp, cha
       DRETURN(STATUS_EUNKNOWN);
    }
 
-   job_list_filter(user_list_flag? lGetList(idep, ID_user_list):NULL, 
+   job_list_filter(user_list_flag? user_list : NULL, 
                     jid_flag?jid_str:NULL, &job_where);
 
    start_time = sge_get_gmt();
@@ -488,7 +488,7 @@ int sge_gdi_del_job(sge_gdi_ctx_class_t *ctx, lListElem *idep, lList **alpp, cha
 
    if (!njobs && !deleted_tasks) {
       empty_job_list_filter(alpp, 0, user_list_flag,
-            lGetList(idep, ID_user_list), jid_flag,
+            user_list, jid_flag,
             jid_flag?lGetString(idep, ID_str):"0",
             all_users_flag, all_jobs_flag, ruser,
             alltasks == 0 ? 1 : 0, r_start, r_end, step);

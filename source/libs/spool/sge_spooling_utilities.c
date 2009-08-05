@@ -190,7 +190,7 @@ _spool_get_fields_to_spool(lList **answer_list, const lDescr *descr,
     */
 
    /* count fields to spool */
-   for (i = 0, size = 0; descr[i].mt != lEndT; i++) {
+   for (i = 0, size = 0; mt_get_type(descr[i].mt) != lEndT; i++) {
       if ((descr[i].mt & instr->selection) != 0) {
          size++;
       }
@@ -226,7 +226,7 @@ _spool_get_fields_to_spool(lList **answer_list, const lDescr *descr,
    }
 
    /* copy field info */
-   for (i = 0, j = 0; descr[i].mt != lEndT; i++) {
+   for (i = 0, j = 0; mt_get_type(descr[i].mt) != lEndT; i++) {
       if ((descr[i].mt & instr->selection) != 0) {
          spooling_field *sub_fields = NULL;
 

@@ -1605,16 +1605,16 @@ static int japi_user_hold_add_jobid(u_long32 gdi_action, lList **request_list,
                                     dstring *diag)
 {
    const lDescr job_descr[] = {
-         {JB_job_number,             lUlongT},
-         {JB_verify_suitable_queues, lUlongT},
-         {JB_ja_tasks,               lListT },
-         {JB_ja_structure,           lListT },
-         {NoName,                    lEndT}
+         {JB_job_number, lUlongT | CULL_IS_REDUCED, NULL},
+         {JB_verify_suitable_queues, lUlongT | CULL_IS_REDUCED, NULL},
+         {JB_ja_tasks, lListT | CULL_IS_REDUCED, NULL},
+         {JB_ja_structure, lListT | CULL_IS_REDUCED, NULL},
+         {NoName, lEndT | CULL_IS_REDUCED, NULL}
    };
    const lDescr task_descr[] = {
-         {JAT_task_number, lUlongT},
-         {JAT_hold, lUlongT},
-         {NoName, lEndT}
+         {JAT_task_number, lUlongT | CULL_IS_REDUCED, NULL},
+         {JAT_hold, lUlongT | CULL_IS_REDUCED, NULL},
+         {NoName, lEndT | CULL_IS_REDUCED, NULL}
    };
    lListElem *jep = NULL;
    lListElem *tep = NULL;

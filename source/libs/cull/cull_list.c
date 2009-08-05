@@ -277,7 +277,7 @@ lCopyElemPartialPack(lListElem *dst, int *jp, const lListElem *src,
    case WHAT_ALL:               /* all fields of element src is copied */
       if (pb == NULL) {
          for (i = 0; src->descr[i].nm != NoName; i++, (*jp)++) {
-            if (lCopySwitchPack(src, dst, i, *jp, isHash, enp[0].ep, pb) != 0) {
+            if (lCopySwitchPack(src, dst, i, *jp, isHash, enp[0].ep, NULL) != 0) {
                LERROR(LECOPYSWITCH);
                DRETURN(-1);
             }
@@ -307,7 +307,7 @@ lCopyElemPartialPack(lListElem *dst, int *jp, const lListElem *src,
                DRETURN(-1);
             }
 
-            if (lCopySwitchPack(src, dst, enp[i].pos, *jp, isHash, enp[i].ep, pb) != 0) {
+            if (lCopySwitchPack(src, dst, enp[i].pos, *jp, isHash, enp[i].ep, NULL) != 0) {
                LERROR(LECOPYSWITCH);
                DRETURN(-1);
             }
@@ -706,7 +706,7 @@ static void lWriteElem_(const lListElem *ep, dstring *buffer, int nesting_level)
 DTRACE;
    sge_dstring_sprintf_append(buffer, "%s-------------------------------\n", space);
 
-   for (i = 0; ep->descr[i].mt != lEndT; i++)
+   for (i = 0; mt_get_type(ep->descr[i].mt) != lEndT; i++)
    {
       bool changed = sge_bitfield_get(&(ep->changed), i);
       const char *name = ((lNm2Str(ep->descr[i].nm) != NULL) ? lNm2Str(ep->descr[i].nm) : "(null)");
@@ -918,6 +918,7 @@ lListElem *lCreateElem(const lDescr *dp)
    /* new descr has no htables yet */
    for (i = 0; i <= n; i++) {
       ep->descr[i].ht = NULL;
+      ep->descr[i].mt |= (dp->mt & CULL_IS_REDUCED);
    }
                   
    ep->status = FREE_ELEM;
@@ -993,7 +994,7 @@ lList *lCreateListHash(const char *listname, const lDescr *descr, bool hash)
       listname = "No list name specified";
    }
 
-   if (!descr || descr[0].mt == lEndT) {
+   if (!descr || mt_get_type(descr[0].mt) == lEndT) {
       LERROR(LEDESCRNULL);
       DRETURN(NULL);
    }
@@ -1035,6 +1036,7 @@ lList *lCreateListHash(const char *listname, const lDescr *descr, bool hash)
       } else {
          lp->descr[i].ht = NULL;
       }
+      lp->descr[i].mt |= (descr[i].mt & CULL_IS_REDUCED);
    }
 
    lp->changed = false;
@@ -1122,7 +1124,7 @@ void lFreeElem(lListElem **ep1)
       abort();
    }
 
-   for (i = 0; ep->descr[i].mt != lEndT; i++) {
+   for (i = 0; mt_get_type(ep->descr[i].mt) != lEndT; i++) {
       /* remove element from hash tables */
       if(ep->descr[i].ht != NULL) {
          cull_hash_remove(ep, i);
@@ -1950,7 +1952,7 @@ lListElem *lDechainElem(lList *lp, lListElem *ep)
    }   
 
    /* remove hash entries */
-   for(i = 0; ep->descr[i].mt != lEndT; i++) {
+   for(i = 0; mt_get_type(ep->descr[i].mt) != lEndT; i++) {
       if(ep->descr[i].ht != NULL) {
          cull_hash_remove(ep, i);
       }

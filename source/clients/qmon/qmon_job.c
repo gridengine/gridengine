@@ -1269,12 +1269,12 @@ static void qmonJobPriority(Widget w, XtPointer cld, XtPointer cad)
    int new_priority = 0;
 
    lDescr prio_descr[] = {
-      {JB_job_number, lUlongT},
-      {JB_ja_tasks, lListT},
-      {JB_ja_structure, lListT},
+      {JB_job_number, lUlongT | CULL_IS_REDUCED, NULL},
+      {JB_ja_tasks, lListT | CULL_IS_REDUCED, NULL},
+      {JB_ja_structure, lListT | CULL_IS_REDUCED, NULL},
       /* optional fields */
-      {JB_priority, lUlongT},
-      {NoName, lEndT}
+      {JB_priority, lUlongT | CULL_IS_REDUCED, NULL},
+      {NoName, lEndT | CULL_IS_REDUCED, NULL}
    };
    
    DENTER(GUI_LAYER, "qmonJobPriority");
@@ -1341,10 +1341,10 @@ static void qmonJobHold(Widget w, XtPointer cld, XtPointer cad)
    lListElem *jatep = NULL;
 
    lDescr hold_descr[] = {
-      {JB_job_number, lUlongT},
-      {JB_ja_tasks, lListT},
-      {JB_ja_structure, lListT},
-      {NoName, lEndT}
+      {JB_job_number, lUlongT | CULL_IS_REDUCED, NULL},
+      {JB_ja_tasks, lListT | CULL_IS_REDUCED, NULL},
+      {JB_ja_structure, lListT | CULL_IS_REDUCED, NULL},
+      {NoName, lEndT | CULL_IS_REDUCED, NULL}
    };
    
    DENTER(GUI_LAYER, "qmonJobHold");
@@ -1777,8 +1777,8 @@ static void qmonJobScheddInfo(Widget w, XtPointer cld, XtPointer cad)
    lList *jl = NULL;
 
    lDescr info_descr[] = {
-      {ST_name, lStringT},
-      {NoName, lEndT}
+      {ST_name, lStringT | CULL_IS_REDUCED, NULL},
+      {NoName, lEndT | CULL_IS_REDUCED, NULL}
    };
    
    DENTER(GUI_LAYER, "qmonJobScheddInfo");

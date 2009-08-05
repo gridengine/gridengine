@@ -347,24 +347,22 @@ static int spool_object_list(const char *directory,
    DENTER(TOP_LAYER, "spool_object_list");
 
    direntries = sge_get_dirents(directory);
-   if (direntries) {
-      for_each(direntry, direntries) {
-         name = lGetString(direntry, ST_name);
-         if (name[0] != '.') {
-            sge_dstring_sprintf(&file, "%s/%s", directory, name);
-            ep = spool_flatfile_read_object(&answer_list, descr, NULL,
-                                            fields, NULL, true, instr,
-                                            SP_FORM_ASCII, NULL, sge_dstring_get_string(&file));
-            
-            if (ep != NULL && !spool_write_object(&answer_list, spool_get_default_context(), ep, 
-                                    name, obj_type, true)) {
-               /* error output has been done in spooling function */
-               ret = EXIT_FAILURE;
-               answer_list_output(&answer_list);
-               break;
-            }
-            lFreeElem(&ep);
+   for_each(direntry, direntries) {
+      name = lGetString(direntry, ST_name);
+      if (name[0] != '.') {
+         sge_dstring_sprintf(&file, "%s/%s", directory, name);
+         ep = spool_flatfile_read_object(&answer_list, descr, NULL,
+                                         fields, NULL, true, instr,
+                                         SP_FORM_ASCII, NULL, sge_dstring_get_string(&file));
+         
+         if (ep != NULL && !spool_write_object(&answer_list, spool_get_default_context(), ep, 
+                                 name, obj_type, true)) {
+            /* error output has been done in spooling function */
+            ret = EXIT_FAILURE;
+            answer_list_output(&answer_list);
+            break;
          }
+         lFreeElem(&ep);
       }
    }
    lFreeList(&direntries);

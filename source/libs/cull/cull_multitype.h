@@ -50,6 +50,7 @@ extern const char *multitypes[];
 typedef int (*lCmpFunction)(lListElem *, lListElem *, int);
 
 void lWriteDescrTo(const lDescr *dp, FILE *fp);
+int _lGetPosInDescr(const lDescr *dp, int name);
 int lGetPosInDescr(const lDescr *dp, int name);
 int lGetPosType(const lDescr *dp, int pos);
 int lCountDescr(const lDescr *dp);

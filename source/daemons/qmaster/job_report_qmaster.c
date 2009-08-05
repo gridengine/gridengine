@@ -146,6 +146,7 @@ void process_job_report(sge_gdi_ctx_class_t *ctx, lListElem *report,
    ** first process job reports of sub tasks to ensure this we put all these 
    ** job reports to the top of the 'jrl' list this is necessary to ensure 
    ** slave tasks get accounted on a shm machine 
+   ** TODO: could be sorted on execd
    */
    {
       static lSortOrder *jr_sort_order = NULL;

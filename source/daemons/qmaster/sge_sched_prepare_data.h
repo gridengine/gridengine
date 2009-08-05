@@ -59,12 +59,6 @@ typedef struct {
    lEnumeration *what_pe;
 } sge_where_what_t;
 
-void
-set_rebuild_categories(bool new_value); 
-
-bool
-get_rebuild_categories(void); 
-
 void 
 ensure_valid_what_and_where(sge_where_what_t *where_what);
 

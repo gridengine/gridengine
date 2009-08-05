@@ -731,7 +731,6 @@ static u_long32 sge_get_config_version_for_host(const char* aName)
 
    DENTER(TOP_LAYER, "sge_get_configuration_for_host");
 
-
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
   
    conf = lGetElemHost(config_list, CONF_name, aName);

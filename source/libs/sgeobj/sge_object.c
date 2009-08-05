@@ -387,7 +387,7 @@ object_has_type(const lListElem *object, const lDescr *descr)
     * --> make sure that your object is handled in object_get_primary_key() 
     */
    if (object != NULL && descr != NULL &&
-       lGetPosInDescr(object->descr, object_get_primary_key(descr)) != -1) {
+       _lGetPosInDescr(object->descr, object_get_primary_key(descr)) != -1) {
       ret = true;
    }
 

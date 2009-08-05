@@ -722,17 +722,8 @@ sge_scheduler_main(void *arg)
                lGetNumberOfLeafs(NULL, master_sharetree_list, STN_children)
             ));
 
-            if (get_rebuild_categories()) {
-               DPRINTF(("### ### ### ###   REBUILDING CATEGORIES   ### ### ### ###\n"));
-               sge_rebuild_job_category(master_job_list, master_userset_list,
+            sge_rebuild_job_category(master_job_list, master_userset_list,
                                         master_project_list, master_rqs_list);
-               /*
-                * category references are used in the access tree
-                * so rebuilding categories makes necessary to rebuild
-                * the access tree
-                */
-               set_rebuild_categories(false);
-            }
 
             PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM7);
             prof_init = prof_get_measurement_wallclock(SGE_PROF_CUSTOM7, true, NULL);

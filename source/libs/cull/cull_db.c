@@ -659,8 +659,7 @@ lSelectElemDPack(const lListElem *slp, const lCondition *cp, const lDescr *dp,
 
    DENTER(CULL_LAYER, "lSelectElemDPack");
    if (!slp || (!dp && !pb)) {
-      DEXIT;
-      return NULL;
+      DRETURN(NULL);
    }
    /*
     * iterate through the source list call lCompare and add
@@ -669,11 +668,10 @@ lSelectElemDPack(const lListElem *slp, const lCondition *cp, const lDescr *dp,
    if (lCompare(slp, cp)) {
       if (pb == NULL) {
          if (!(new = lCreateElem(dp))) {
-            DEXIT;
-            return NULL;
+            DRETURN(NULL);
          }
          
-         if (lCopyElemPartialPack(new, &index, slp, enp, isHash, pb)) {
+         if (lCopyElemPartialPack(new, &index, slp, enp, isHash, NULL)) {
             lFreeElem(&new);
          }
       } else {
@@ -685,8 +683,7 @@ lSelectElemDPack(const lListElem *slp, const lCondition *cp, const lDescr *dp,
          new = NULL;
       }
    }
-   DEXIT;
-   return new;
+   DRETURN(new);
 }
 
 /****** cull/db/lSelect() *****************************************************
@@ -712,7 +709,7 @@ lSelectElemDPack(const lListElem *slp, const lCondition *cp, const lDescr *dp,
 ******************************************************************************/
 lList *lSelect(const char *name, const lList *slp, const lCondition *cp,
                const lEnumeration *enp) {
-   return lSelectHashPack(name, slp, cp, enp, true, NULL);               
+   return lSelectHashPack(name, slp, cp, enp, true, NULL);
 }               
 
 /****** cull/db/lSelectHashPack() *********************************************
@@ -959,6 +956,7 @@ int lPartialDescr(const lEnumeration *ep, const lDescr *sdp, lDescr *ddp,
                   int *indexp) 
 {
    int i;
+   bool reduced = false;
 
    DENTER(CULL_LAYER, "lPartialDescr");
 
@@ -983,7 +981,7 @@ int lPartialDescr(const lEnumeration *ep, const lDescr *sdp, lDescr *ddp,
       DEXIT;
       return 0;
    case WHAT_ALL:
-      for (i = 0; sdp[i].mt != lEndT; i++) {
+      for (i = 0; mt_get_type(sdp[i].mt) != lEndT; i++) {
          ddp[*indexp].mt = sdp[i].mt;
          ddp[*indexp].nm = sdp[i].nm;
          ddp[*indexp].ht = NULL;
@@ -997,7 +995,7 @@ int lPartialDescr(const lEnumeration *ep, const lDescr *sdp, lDescr *ddp,
          maxpos = lCountDescr(sdp);
 
          /* copy and check descr */
-         for (i = 0; ep[i].mt != lEndT; i++) {
+         for (i = 0; mt_get_type(ep[i].mt) != lEndT; i++) {
             if (mt_get_type(ep[i].mt) == mt_get_type(sdp[ep[i].pos].mt) &&
                 ep[i].nm == sdp[ep[i].pos].nm) {
 
@@ -1009,6 +1007,8 @@ int lPartialDescr(const lEnumeration *ep, const lDescr *sdp, lDescr *ddp,
                ddp[*indexp].mt = sdp[ep[i].pos].mt;
                ddp[*indexp].nm = sdp[ep[i].pos].nm;
                ddp[*indexp].ht = NULL;
+               ddp[*indexp].mt |= CULL_IS_REDUCED;
+               reduced = true;
     
                (*indexp)++;
             } else {
@@ -1023,6 +1023,9 @@ int lPartialDescr(const lEnumeration *ep, const lDescr *sdp, lDescr *ddp,
    ddp[*indexp].mt = lEndT;
    ddp[*indexp].nm = NoName;
    ddp[*indexp].ht = NULL;
+   if (reduced) {
+      ddp[*indexp].mt |= CULL_IS_REDUCED;
+   }
 
    /* 
       We don't do (*indexp)++ in order to end up correctly if
@@ -1030,8 +1033,7 @@ int lPartialDescr(const lEnumeration *ep, const lDescr *sdp, lDescr *ddp,
       we concatenate two descriptors
     */
 
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 /****** cull/db/lJoinDescr() **************************************************

@@ -731,9 +731,9 @@ int *all_users
       lList *task_list = NULL;
       lListElem *task;
       lDescr task_descr[] = { 
-            {JAT_task_number, lUlongT},
-            {JAT_hold, lUlongT},
-            {NoName, lEndT}
+            {JAT_task_number, lUlongT | CULL_IS_REDUCED, NULL},
+            {JAT_hold, lUlongT | CULL_IS_REDUCED, NULL},
+            {NoName, lEndT | CULL_IS_REDUCED, NULL}
       };
 
       jobid = atol(lGetString(ep, ID_str));

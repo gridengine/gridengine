@@ -104,6 +104,7 @@ enum _enum_lMultiType {
 #define CULL_SPOOL_USER    0x00040000
 #define CULL_JGDI_RO       0x00080000
 #define CULL_JGDI_CONF     0x00100000
+#define CULL_IS_REDUCED    0x00200000
 
 /*
 ** JGDI specific defines
@@ -154,8 +155,8 @@ enum _enum_lMultiType {
 #define SGE_ULONG_D(name,flags,def)       { name, lUlongT  | flags, NULL },
 #define SGE_BOOL_D(name,flags,def)        { name, lBoolT   | flags, NULL },
 #define SGE_LIST_D(name,type,flags,def)   { name, lListT   | flags, NULL },
-#define SGE_MAP_D(name,type,flags,defkey,keyvalue,jgdi_keyname,jgdi_valuename)   { name, lListT   | flags, NULL },
-#define SGE_MAPLIST_D(name,type,flags,defkey,defvalue,jgdi_keyname,jgdi_valuename)   { name, lListT   | flags, NULL },
+#define SGE_MAP_D(name,type,flags,defkey,keyvalue,jgdi_keyname,jgdi_valuename)   { name, lListT   | flags, NULL},
+#define SGE_MAPLIST_D(name,type,flags,defkey,defvalue,jgdi_keyname,jgdi_valuename)   { name, lListT   | flags, NULL},
 #define SGE_OBJECT_D(name,type,flags,def) { name, lObjectT | flags, NULL },
 #define SGE_REF_D(name,type,flags,def)    { name, lRefT    | flags, NULL },
 

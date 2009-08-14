@@ -9,6 +9,11 @@
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 -----------------+------------+-------------------------------------------------
 
+EB-2009-08-14-0: Enhancem.:   added script that might be used to start a bunch 
+                              of jobs as qmake job. As input it expects a task
+                              or makefile.
+                 Review:      TBD
+
 EB-2009-08-05-0: Enhancem.:   optimized lGetPosInDescr
                  Review:      (RD partially), DG 
 

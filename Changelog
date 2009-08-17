@@ -9,6 +9,11 @@
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 -----------------+------------+-------------------------------------------------
 
+RM-2009-08-17-0: Bugfix.:     Resource leak in juti.jar
+                 Bugster:     6869559
+                 Issue:       3098
+                 Review:      LP
+
 LP-2009-08-17-1: Bugfix.:     Qmaster installation might fail when more than 1
                               qmaster is installed in parallel on the same host
                  Bugster:     6872473

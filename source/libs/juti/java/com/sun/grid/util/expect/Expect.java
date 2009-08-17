@@ -235,6 +235,12 @@ public class Expect {
         } catch(IOException ex) {
             LOGGER.throwing("Expect", "exec", ex);
             throw ex;
+        } finally {
+            if (process != null) {
+                process.getOutputStream().close();
+                process.getErrorStream().close();
+                process.getInputStream().close();
+            }
         }
     }
     
@@ -300,9 +306,13 @@ public class Expect {
                     error = ioe;
                 }
             } finally {
-                if(LOGGER.isLoggable(Level.FINEST)) {
-                    LOGGER.log(Level.FINEST, "{0} finished", tag);
+                try {                   
+                    LOGGER.log(Level.FINEST, "{0} finished", tag);                    
+                    in.close();
+                } catch (IOException ex) {
+                    LOGGER.log(Level.WARNING, "Failed to close stream. Details: {0}", ex.getLocalizedMessage());
                 }
+
             }
         }
     }

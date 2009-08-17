@@ -783,7 +783,7 @@ AddConfiguration()
       #TruncCreateAndMakeWriteable $COMMONDIR/configuration
       #PrintConf >> $COMMONDIR/configuration
       #SetPerm $COMMONDIR/configuration
-      TMPC=/tmp/configuration_`date '+%Y-%m-%d_%H:%M:%S'`
+      TMPC=/tmp/configuration_$SGE_CLUSTER_NAME_`date '+%Y-%m-%d_%H:%M:%S'`
       TOUCH=touch
       rm -f $TMPC
       ExecuteAsAdmin $TOUCH $TMPC

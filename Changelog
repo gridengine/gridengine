@@ -9,13 +9,18 @@
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 -----------------+------------+-------------------------------------------------
 
+LP-2009-08-17-0: Bugfix.:     Qmaster installation might fail when more than 1
+                              qmaster is installed in parallel on the same host
+                 Bugster:     6872473
+                 Review:      AP
+
 EB-2009-08-14-0: Enhancem.:   added script that might be used to start a bunch 
                               of jobs as qmake job. As input it expects a task
                               or makefile.
                  Review:      TBD
 
 EB-2009-08-05-0: Enhancem.:   optimized lGetPosInDescr
-                 Review:      (RD partially), DG 
+                 Review:      (RD partially), DG
 
 CR-2009-08-05-1: Bugfix:      qsub -sync does not connect to shadow master after
                               failover
@@ -3163,8 +3168,9 @@ RD-2008-06-04-1: Bugfix:    corrected max_advance_reservation entry in sge_conf(
 LP-2008-06-04-0: Enhancem:  New upgrade 6.0+ to 6.2, new method introduced to
                             upgrade to different SGE_ROOT, SGE_CELL and tranfer
                             old configuration to a new cluster
+                 Bugster:   6447131
                  Bugfix:    install fails creating unique cluster name
-                 Bugtraq:   6709231
+                 Bugster:   6709231
                  Review:    RD, PJ, AP
 
 EB-2008-06-04-0: Bugfix:    schedd_runlog file is not written when qconf -tsm is used

@@ -8,6 +8,16 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 -----------------+------------+-------------------------------------------------
+RN-2009-08-21-0: Bugfix:      Original primary group vanishes after newgrp
+                              command (USE_QSUB_GID=true)
+                 Issue:       2342
+                 Bugster:     6590010
+                 Review:      JG
+                 Bugfix:      interactive jobs (qlogin, qrsh without command)
+                              don't set the TZ environment variable correctly
+                 Issue:       2716
+                 Bugster:     6744724
+                 Review:      HP
 
 LP-2009-08-20-0: Bugfix.:     SGE 6.2 auto installation does unnecessary check 
                               on SGE_JMX_PORT and prints a misleading suggestion

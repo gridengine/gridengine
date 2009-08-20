@@ -1970,8 +1970,20 @@ static void start_qlogin_job(const char *shell_path)
    if (pw->pw_name != NULL) {
       my_env[i++] = strncat(logname, pw->pw_name, 30);
    }
-   my_env[i++] = strcat(timez, "");
-   my_env[i++] = strcat(hertz, "");
+
+   /* we inherit the TZ and HZ variables from execd, which it should have
+    * inherited from init, unless execd is started manually with TZ unset in the
+    * corresponding shell
+    */ 
+   if (getenv("TZ") != NULL) {
+      my_env[i++] = strncat(timez, getenv("TZ"), 100);
+   }
+
+   if (getenv("HZ") != NULL) {
+      my_env[i++] = strncat(hertz, getenv("HZ"), 10);
+   }
+
+
 #if defined(LINUX86) || defined(LINUXAMD64) || defined(LINUXIA64) || defined(LINUXPPC) || defined (LINUXSPARC) || defined(LINUXSPARC64) || defined(ALINUX) || defined(DARWIN_PPC) || defined(DARWIN_X86)
    my_env[i++] = strcat(path, "/bin:/usr/bin");
 #else

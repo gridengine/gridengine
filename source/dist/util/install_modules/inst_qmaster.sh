@@ -126,7 +126,7 @@ GetCell()
                if [ $sel_ret = 0 -a $with_bdb = 0 ]; then
                   $INFOTEXT "Deleting bootstrap and cluster_name files!"
                   ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL_VAL/common/bootstrap
-                  ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL_VAL/common/cluster_name                  
+                  ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL_VAL/common/cluster_name
                elif [ $sel_ret -ne 0 ]; then
                   $INFOTEXT "Deleting directory \"%s\" now!" $SGE_ROOT/$SGE_CELL_VAL
                   Removedir $SGE_ROOT/$SGE_CELL_VAL
@@ -169,8 +169,17 @@ GetCell()
 GetQmasterSpoolDir()
 {
    if [ $AUTO = true ]; then
-      QMDIR=$QMASTER_SPOOL_DIR
+      QMDIR="$QMASTER_SPOOL_DIR"
       $INFOTEXT -log "Using >%s< as QMASTER_SPOOL_DIR." "$QMDIR"
+      #If directory exists and has files, we exit the auto installation
+      if [ -d "$QMDIR" -a `ls -1 "$QMDIR" | wc -l` -gt 0 ]; then
+         $INFOTEXT -log "Specified qmaster spool directory \"$QMDIR\" is not empty!"
+         $INFOTEXT -log "Maybe different system is using it. Check this directory"
+         $INFOTEXT -log "and remove it, or use any other qmaster spool directory."
+         $INFOTEXT -log "Exiting installation now!"
+         MoveLog
+         exit 1
+      fi
    else
    euid=$1
 
@@ -198,22 +207,23 @@ GetQmasterSpoolDir()
                    "the qmaster daemon on other hosts (see the corresponding section in the\n" \
                    "Grid Engine Installation and Administration Manual for details) the account\n" \
                    "on the shadow master hosts also needs read/write access to this directory.\n\n" \
-                   "The following directory\n\n [%s]\n\n will be used as qmaster spool directory by default!\n" \
-                   $SGE_ROOT_VAL/$SGE_CELL_VAL/spool/qmaster
-                   QMDIR=$SGE_ROOT_VAL/$SGE_CELL_VAL/spool/qmaster
-
-      $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" -n \
-                "Do you want to select another qmaster spool directory (y/n) [n] >> "
-
-      if [ $? = 1 ]; then
-         done=true
-      else
-         $INFOTEXT -n "Please enter a qmaster spool directory now! >>"
-         QMDIR=`Enter $SGE_ROOT_VAL/$SGE_CELL_VAL/spool/qmaster`
-         done=true
+                   "Enter a qmaster spool directory [%s] >> " "$SGE_ROOT_VAL/$SGE_CELL_VAL/spool/qmaster"
+      QMDIR=`Enter "$SGE_ROOT_VAL/$SGE_CELL_VAL/spool/qmaster"`
+      done=true
+      #If directory is not empty need now require a new one
+      if [ -d "$QMDIR" ]; then
+         if [ `ls -1 "$QMDIR" | wc -l` -gt 0 ]; then
+            $INFOTEXT "Specified qmaster spool directory is not empty!"
+            $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
+               "Do you want to select another qmaster spool directory (y/n) [y] >> "
+            if [ $? = 0 ]; then
+               done=false
+            fi
+         fi
       fi
    done
    fi
+   $INFOTEXT -wait -auto $AUTO -n "\nUsing qmaster spool directory >%s<. \nHit <RETURN> to continue >> " "$QMDIR"
    export QMDIR
 }
 
@@ -783,7 +793,7 @@ AddConfiguration()
       #TruncCreateAndMakeWriteable $COMMONDIR/configuration
       #PrintConf >> $COMMONDIR/configuration
       #SetPerm $COMMONDIR/configuration
-      TMPC=/tmp/configuration_${SGE_CLUSTER_NAME}_`date '+%Y-%m-%d_%H:%M:%S'`
+      TMPC=/tmp/configuration_`date '+%Y-%m-%d_%H:%M:%S'`.$$
       TOUCH=touch
       rm -f $TMPC
       ExecuteAsAdmin $TOUCH $TMPC
@@ -1105,7 +1115,8 @@ AddJMXFiles() {
                   -e "s#@@SGE_JMX_SSL_KEYSTORE@@#$SGE_JMX_SSL_KEYSTORE#g" \
                   -e "s#@@SGE_JMX_SSL_KEYSTORE_PW@@#$SGE_JMX_SSL_KEYSTORE_PW#g" \
                   util/management.properties.template > /tmp/management.properties.$$
-      ExecuteAsAdmin mv /tmp/management.properties.$$ $jmx_dir/management.properties
+      ExecuteAsAdmin cp /tmp/management.properties.$$ $jmx_dir/management.properties
+      Execute rm -f /tmp/management.properties.$$
       ExecuteAsAdmin chmod $FILEPERM $jmx_dir/management.properties
       $INFOTEXT "Adding >jmx/%s< jmx configuration" management.properties
       
@@ -2194,7 +2205,8 @@ GetJMXPort() {
    $INFOTEXT -u "\nGrid Engine JMX MBean server"
    $INFOTEXT -n "\nIn order to use the SGE Inspect or the Service Domain Manager (SDM)\n" \
                 "SGE adapter you need to configure a JMX server in qmaster. Qmaster \n" \
-                "will then load a Java Virtual Machine through a shared library.\n\n"   
+                "will then load a Java Virtual Machine through a shared library.\n" \
+                "NOTE: Java 1.5 or later is required for the JMX MBean server.\n\n"
    #Shadowds keep qmaster setting, JMX for all or JMX for nobody
    if [ "$1" = "shadowd" ]; then
       default_value=`BootstrapGetValue $SGE_ROOT/$SGE_CELL/common "jvm_threads"`

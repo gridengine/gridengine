@@ -305,6 +305,9 @@ RemoveSpoolDir()
          $INFOTEXT "Removing local spool directory [%s]" "$SPOOL_DIR/$HOST_DIR"
          $INFOTEXT -log "Removing local spool directory [%s]" "$SPOOL_DIR/$HOST_DIR"
          ExecuteAsAdmin rm -R $SPOOL_DIR/$HOST_DIR
+         if [ `ls -la $SPOOL_DIR | wc -l` -lt 4 ]; then
+            ExecuteAsAdmin rm -R $SPOOL_DIR
+         fi
       fi
    fi
 }

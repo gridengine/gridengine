@@ -374,7 +374,7 @@ AddDummyConfiguration()
    RLOGIN_DAEMON=builtin
    RSH_COMMAND=builtin
    RSH_DAEMON=builtin
-   TMPC=/tmp/configuration_`date '+%Y-%m-%d_%H:%M:%S'`
+   TMPC=/tmp/configuration_`date '+%Y-%m-%d_%H:%M:%S'`.$$
    rm -f $TMPC
    SafelyCreateFile $TMPC 666 ""
    PrintConf >> $TMPC

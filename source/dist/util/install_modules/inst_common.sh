@@ -782,7 +782,7 @@ CheckConfigFile()
    MAX_GID=2147483647 #unsigned int = 32bit - 1
    MIN_GID=100        #from 0 - 100 may be reserved GIDs
    is_valid="true"
-
+   
    CONFIG_ENTRIES=`grep -v "^\#" $CONFIG_FILE | cut -d"=" -f1`
 
    if [ "$BACKUP" = "true" ]; then
@@ -1046,10 +1046,10 @@ CheckConfigFile()
          $INFOTEXT -e "Your >SGE_ENABLE_JMX< flag is wrong! Valid values are:0,1,true,false,TRUE,FALSE"
          $INFOTEXT -log "Your >SGE_ENABLE_JMX< flag is wrong! Valid values are:0,1,true,false,TRUE,FALSE"
          is_valid="false" 
-      fi   
-
+      fi
+      
       if [ "$SGE_ENABLE_JMX" = "true" ]; then
-   
+
          if [ -z "$SGE_JVM_LIB_PATH" ]; then
             $INFOTEXT -e "Your >SGE_JVM_LIB_PATH< is empty. It must be a full path!"
             $INFOTEXT -log "Your >SGE_JVM_LIB_PATH< is empty. It must be a full path!"
@@ -1071,8 +1071,8 @@ CheckConfigFile()
             
          `IsNumeric "$SGE_JMX_PORT"`
          if [ "$?" -eq 1 ]; then
-            $INFOTEXT -e "Your >SGE_JMX_PORT< entry is invalid, please enter a number between 1\n and number of execution host"
-            $INFOTEXT -log "Your >SGE_JMX_PORT< entry is invalid, please enter a number between 1\n and number of execution host"
+            $INFOTEXT -e "Your >SGE_JMX_PORT< entry is invalid. It must be a number between 1 and 65536!"
+            $INFOTEXT -log "Your >SGE_JMX_PORT< entry is invalid. It must be a number between 1 and 65536!"
             is_valid="false"
          elif [ "$SGE_JMX_PORT" -le 1 -a "$SGE_JMX_PORT" -ge 65536 ]; then
             $INFOTEXT -e "Your >SGE_JMX_PORT< entry is invalid. It must be a number between 1 and 65536!"
@@ -2687,7 +2687,7 @@ MoveLog()
       $INFOTEXT "Install log can be found in: %s" $install_log_dir/$loghosttype"_"$installtype"_"`hostname`"_"$DATE.log
       rm -f /tmp/$LOGSNAME 2>&1
    else
-      $INFOTEXT "Can't find install log file: /tmp/%s" $LOGSNAME
+      $INFOTEXT "Can't find install log file: /tmp/%s" "$LOGSNAME"
    fi
    
    insideMoveLog=""
@@ -3290,9 +3290,18 @@ RemoveRcScript()
             MoveLog
             exit 1
          fi
+         $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
+         $CLEAR
+         return
       fi
+      #If we didn't remove any SMF service we continue and try to remove 
+      #RC script (sysv_rc)
+      #This might happen when we do a reinstall and have RC scripts, but now
+      #want to use SMF.
+   fi
+   
    # If system is Linux Standard Base (LSB) compliant, use the install_initd utility
-   elif [ "$RC_FILE" = lsb ]; then
+   if [ "$RC_FILE" = lsb ]; then
       echo /usr/lib/lsb/remove_initd $RC_PREFIX/$STARTUP_FILE_NAME
       Execute /usr/lib/lsb/remove_initd $RC_PREFIX/$STARTUP_FILE_NAME
       # Several old Red Hat releases do not create/remove startup links from LSB conform
@@ -3779,7 +3788,7 @@ CheckServiceAndPorts()
 
 CopyCA()
 {
-   if [ "$CSP" = "false" -a \( "$WINDOWS_SUPPORT" = "false" -o "$WIN_DOMAIN_ACCESS" = "false" \) ]; then
+   if [ "$CSP" = "false" -a \( "$WINDOWS_SUPPORT" = "false" -o "$WIN_DOMAIN_ACCESS" = "false" \) -a "$1" != "copyonly" ]; then
       return 1
    fi
    
@@ -4038,7 +4047,7 @@ GetAdminUser()
    euid=`$SGE_UTILBIN/uidgid -euid`
 
    TMP_USER=`echo "$ADMINUSER" |tr "[A-Z]" "[a-z]"`
-   if [  -z "$TMP_USER" -o "$TMP_USER" = "none" ]; then
+   if [ -z "$TMP_USER" -o "$TMP_USER" = "none" ]; then
       if [ $euid = 0 ]; then
          ADMINUSER=default
       else
@@ -4302,6 +4311,10 @@ ManipulateOneDaemonType()
          $INFOTEXT "Unknown type %s in ManipulateOneTypeRC" "$type"
          exit 1
       esac
+   fi
+   
+   if [ "$NOREMOTE" = true ]; then
+      list="$HOST"
    fi
    
    if [ -z "$list" ]; then

@@ -139,7 +139,9 @@ while [ $ARGC != 0 ]; do
      AUTO="true"
      FILE="$2"
      if [ ! -f "$2" ]; then
-        ErrUsage
+        AUTO="false"
+        $INFOTEXT "Error: File $FILE does not exist!" 
+        ErrUsage        
      fi
      shift
      ARGC=`expr $ARGC - 1`
@@ -393,10 +395,17 @@ fi
 #because the commandline switches are completely parsed and we know the selected options.
 #This will influence the configfile parsing and checking mechanism.
 if [ $AUTO = "true" -a  $AUTOGUI != "true" ]; then
-   unset SGE_JVM_LIB_PATH
+   SGE_JVM_LIB_PATH="undef"
    GetConfigFromFile
-   #Now we check if we want to enable JMX or not based on SGE_JVM_LIB_PATH
-   if [ -z "$SGE_JVM_LIB_PATH" -o x`echo "$SGE_JVM_LIB_PATH" | tr [A-Z] [a-z]` = "xnone" ]; then
+   #Now we check if we want to enable JMX or not based on SGE_JVM_LIB_PATH and/or SGE_JMX_PORT
+   if [ "$SGE_JVM_LIB_PATH" = "undef" -o x"`echo $SGE_JVM_LIB_PATH | tr [A-Z] [a-z]`" = "xnone" ]; then
+      $INFOTEXT -log "Disabling JMX since \$SGE_JVM_LIB_PATH=none or is missing in $FILE file."
+      SGE_ENABLE_JMX="false"
+   fi
+   #Since we no longer have JMX flag (SGE_ENABLE_JMX is always true) we set to to false if
+   #SGE_JMX_PORT is missing or is empty in the autoinstall template
+   if [ -z "$SGE_JMX_PORT" ]; then
+      $INFOTEXT -log "Disabling JMX since \$SGE_JMX_PORT=\"$SGE_JMX_PORT\" in $FILE file."
       SGE_ENABLE_JMX="false"
    fi
    CheckConfigFile $FILE
@@ -722,6 +731,8 @@ if [ "$UPDATE" = true ]; then
       "        inst_sge -upd-rc -nosmf\n" \
       "\n" \
       "TIP: Use inst_sge -post-upd to do all above actions\n"
+      "TIP: Add the -noremote flag to the above commands to perform the action\n"
+      "     only on the current host without making any remote connections\n"
       exit 0
    fi
 fi

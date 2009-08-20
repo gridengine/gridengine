@@ -278,6 +278,8 @@ static void clean_conf(void);
  */
 
 static int max_job_deletion_time = 3;
+static int jsv_timeout = 10;
+static int jsv_threshold = 5;
 
 #define MAILER                    "/bin/mail"
 #define PROLOG                    "none"
@@ -673,6 +675,8 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
       max_job_deletion_time = 3;
       enable_reschedule_kill = false;
       enable_reschedule_slave = false;
+      jsv_threshold = 5;
+      jsv_timeout= 10;
 
       for (s=sge_strtok_r(qmaster_params, ",; ", &conf_context); s; s=sge_strtok_r(NULL, ",; ", &conf_context)) {
          if (parse_bool_param(s, "FORBID_RESCHEDULE", &forbid_reschedule)) {
@@ -770,6 +774,24 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
             continue;
          }
          if (parse_bool_param(s, "ENABLE_RESCHEDULE_SLAVE", &enable_reschedule_slave)) {
+            continue;
+         }
+         if (parse_int_param(s, "jsv_threshold", &jsv_threshold, TYPE_TIM)) {
+            if (jsv_threshold < 0) {
+               answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_WARNING,
+                                       MSG_CONF_INVALIDPARAM_SSI, "qmaster_params", "jsv_threshold",
+                                       5);
+               jsv_threshold = 5;
+            }
+            continue;
+         }
+         if (parse_int_param(s, "jsv_timeout", &jsv_timeout, TYPE_TIM)) {
+            if (jsv_timeout <= 0) {
+               answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_WARNING,
+                                       MSG_CONF_INVALIDPARAM_SSI, "qmaster_params", "jsv_timeout",
+                                       10);
+               jsv_timeout = 10;
+            }
             continue;
          }
       }
@@ -2482,4 +2504,28 @@ void mconf_get_s_locks(char **pret) {
    
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
    DRETURN_VOID;
+}
+
+int mconf_get_jsv_threshold(void) {
+   int threshold;
+
+   DENTER(BASIS_LAYER, "mconf_get_jsv_threshold");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   threshold = jsv_threshold;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(threshold);
+}
+
+int mconf_get_jsv_timeout(void) {
+   int timeout;
+
+   DENTER(BASIS_LAYER, "mconf_get_jsv_timeout");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   timeout = jsv_timeout;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(timeout);
 }

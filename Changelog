@@ -8,6 +8,14 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 -----------------+------------+-------------------------------------------------
+MP-2009-08-20-0: Bugfix:      jsv Protocol is not handled correctly in client JSV
+                 Bugster:     6862641
+                 Issue:       3089
+                 Bugfix:      need means to set the jsv command timeout
+                 Bugster:     6865717
+                 Issue:       3111
+                 Review:      HP
+
 RN-2009-08-21-0: Bugfix:      Original primary group vanishes after newgrp
                               command (USE_QSUB_GID=true)
                  Issue:       2342

@@ -214,10 +214,12 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
    bool job_spooling = ctx->get_job_spooling(ctx);
    object_description *object_base = object_type_get_object_description();
    cl_thread_settings_t *tc = cl_thread_get_thread_config();
-
+   
    DENTER(TOP_LAYER, "sge_gdi_add_job");
 
    if (jsv_is_enabled(tc->thread_name)) {
+      u_long32 start_time;
+      int jsv_threshold = mconf_get_jsv_threshold();
       /*
        * first verify before JSV is executed
        */
@@ -230,10 +232,16 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
       /*
        * JSV verification
        */
+      start_time = sge_get_gmt();
       lret = jsv_do_verify(ctx, tc->thread_name, jep, alpp, true);
+      if ((sge_get_gmt()-start_time) > jsv_threshold || jsv_threshold == 0) {
+         INFO((SGE_EVENT, MSG_JSV_THRESHOLD_UU, sge_u32c(lGetUlong(*jep, JB_job_number)),
+                      (sge_get_gmt()-start_time)));
+      }
       if (!lret) {
          DRETURN(STATUS_EUNKNOWN);
       }
+      
    }
 
    /*

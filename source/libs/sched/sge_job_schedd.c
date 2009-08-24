@@ -763,10 +763,16 @@ void split_jobs(lList **job_list, u_long32 max_aj_instances,
       if (target_for_ids == SPLIT_LAST &&
           result_list[SPLIT_PENDING_EXCLUDED_INSTANCES] &&
           max_aj_instances > 0) {
+         u_long32 task_concurrency = lGetUlong(job, JB_ja_task_concurrency);
+         u_long32 max_aj_conc_instances = max_aj_instances;
+         if(task_concurrency > 0 && task_concurrency < max_aj_instances)
+         {
+            max_aj_conc_instances = task_concurrency;
+         }
          excluded_n_h_ids = n_h_ids;
          n_h_ids = NULL;
-         if (task_instances < max_aj_instances) {
-            u_long32 allowed_instances = max_aj_instances - task_instances;
+         if (task_instances < max_aj_conc_instances) {
+            u_long32 allowed_instances = max_aj_conc_instances - task_instances;
 
             range_list_move_first_n_ids(&excluded_n_h_ids, NULL, &n_h_ids,
                                         allowed_instances);

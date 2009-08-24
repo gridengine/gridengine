@@ -390,6 +390,9 @@ extern "C" {
 *     SGE_ULONG(JB_pty)
 *        Interactive job should be started in a pty. 0=no, 1=yes, 2=use default.
 *
+*     SGE_ULONG(JB_ja_task_concurrency)
+*        The number of concurrent array tasks executing at any given time.
+*
 *
 *  FUNCTION
 *     JB_Type elements make only sense in conjunction with JAT_Type
@@ -514,7 +517,8 @@ enum {
    JB_dlcontr,
    JB_wtcontr,
    JB_ar,
-   JB_pty
+   JB_pty,
+   JB_ja_task_concurrency
 };
 
 /* 
@@ -600,7 +604,7 @@ LISTDEF(JB_Type)
    SGE_LIST(JB_ja_a_h_ids, RN_Type, CULL_DEFAULT | CULL_SPOOL)   
    SGE_LIST(JB_ja_z_ids, RN_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_HIDDEN)   
    SGE_LIST(JB_ja_template, JAT_Type, CULL_DEFAULT | CULL_SPOOL)  
-   SGE_LIST(JB_ja_tasks, JAT_Type, CULL_DEFAULT | CULL_SPOOL)  
+   SGE_LIST(JB_ja_tasks, JAT_Type, CULL_DEFAULT | CULL_SPOOL)
 
    SGE_HOST(JB_host, CULL_DEFAULT | CULL_JGDI_RO)       
    SGE_REF(JB_category, CT_Type, CULL_DEFAULT)    
@@ -621,7 +625,7 @@ LISTDEF(JB_Type)
    SGE_DOUBLE(JB_wtcontr, CULL_DEFAULT | CULL_JGDI_RO)         
    SGE_ULONG(JB_ar, CULL_DEFAULT | CULL_SPOOL)     
    SGE_ULONG(JB_pty, CULL_DEFAULT | CULL_SPOOL)     
- 
+   SGE_ULONG(JB_ja_task_concurrency, CULL_DEFAULT | CULL_SPOOL)
    /* 
     * IF YOU ADD SOMETHING HERE THEN CHANGE ALSO THE ADOC COMMENT ABOVE 
     */
@@ -725,6 +729,7 @@ NAMEDEF(JBN)
    NAME("JB_wtcontr")
    NAME("JB_ar")
    NAME("JB_pty")
+   NAME("JB_ja_task_concurrency")
 NAMEEND
 
 #define JBS sizeof(JBN)/sizeof(char*)

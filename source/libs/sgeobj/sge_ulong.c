@@ -598,4 +598,20 @@ ulong_parse_priority(lList **answer_list, int *valp, const char *priority_str)
    DRETURN(ret);
 }
 
+bool
+ulong_parse_task_concurrency(lList **answer_list, int *valp, const char *task_concurrency_str)
+{
+   bool ret = true;
+   char *s;
+
+   DENTER(TOP_LAYER, "ulong_parse_task_concurrency");
+   *valp = strtol(task_concurrency_str, &s, 10);
+   if (task_concurrency_str == s || *valp < 0) {
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ULNG_INVALID_TASK_CONCURRENCY_I, (int) *valp));
+      answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+      ret = false;
+   }
+   DRETURN(ret);
+}
+
 

@@ -1559,6 +1559,30 @@ DTRACE;
       }
 
 /*-----------------------------------------------------------------------------*/
+      /* "-tc number */
+
+      if (!strcmp("-tc", *sp)) {
+         int number;
+
+         sp++;
+         if (!*sp) {
+             answer_list_add_sprintf(&answer, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
+                       MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S, "-tc" );
+             DRETURN(answer);
+         }
+
+         if (ulong_parse_task_concurrency(&answer, &number, *sp) == false) {
+            DRETURN(answer);
+         }
+
+         ep_opt = sge_add_arg(pcmdline, tc_OPT, lUlongT, *(sp - 1), *sp);
+         lSetUlong(ep_opt, SPA_argval_lUlongT, number);
+
+         sp++;
+         continue;
+      }
+
+/*-----------------------------------------------------------------------------*/
       /* "-terse" */
 
       if(!strcmp("-terse", *sp)) {

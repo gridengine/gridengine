@@ -286,7 +286,8 @@ enum {
    xml_OPT,      /* generate xml outout */
    terse_OPT,    /* tersed output */
    at_OPT,       /* add/start thread */
-   kt_OPT        /* kill/terminate thread */
+   kt_OPT,        /* kill/terminate thread */
+   tc_OPT        /* task concurrency */
 };
 
 /* macros used in parsing */

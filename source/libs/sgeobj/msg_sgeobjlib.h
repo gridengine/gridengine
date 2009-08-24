@@ -317,6 +317,7 @@
 #define MSG_CQUEUE_UNKNOWNSHELL_S                _MESSAGE(64509, _("Invalid value "SFQ" for shell "))
 #define MSG_CENTRY_NOTREQUESTABLE_S              _MESSAGE(64510, _("Complex attribute "SFQ" is not requestable"))
 #define MSG_ULNG_INVALIDPRIO_I                   _MESSAGE(64511, _("invalid priority %d. must be an integer from -1023 to 1024"))
+#define MSG_ULNG_INVALID_TASK_CONCURRENCY_I      _MESSAGE(64512, _("invalid task concurrency number %d. Must be an integer greater or equal to 0."))
 
 #define MSG_JSV_EXISTS_S         _MESSAGE(64521, _("JSV file "SFQ" does not exist"))
 #define MSG_JSV_INSTANCIATE_S    _MESSAGE(64522, _("JSV file "SFQ" can't be started"))

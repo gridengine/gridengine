@@ -3478,6 +3478,15 @@ job_verify_submitted_job(const lListElem *job, lList **answer_list)
    if (ret) {
       ret = object_verify_double_null(job, answer_list, JB_wtcontr);
     }
+   /* JB_ja_task_concurrency must be NULL */
+   if (ret) {
+      u_long32 task_concurrency = lGetUlong(job, JB_ja_task_concurrency);
+      if (task_concurrency > 0 && !job_is_array(job) || task_concurrency < 0) {
+         answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                              MSG_INVALIDJOB_REQUEST_S, "task concurrency");
+         ret = false;
+      }
+   }
 
    DRETURN(ret);
 }

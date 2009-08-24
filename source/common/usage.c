@@ -193,6 +193,8 @@ static char* get_argument_syntax(u_long32 prog_number, int nr)
          return MSG_GDI_ARGUMENTSYNTAX_OA_OBJECT_NAME3;
      case OA_TIME:
          return MSG_GDI_ARGUMENTSYNTAX_OA_TIME;
+     case OA_TASK_CONCURRENCY:
+         return MSG_GDI_ARGUMENTSYNTAX_OA_TASK_CONCURRENCY;
      default:
          break; 
    }
@@ -1228,7 +1230,12 @@ void sge_usage(u_long32 prog_number, FILE *fp) {
          MSG_GDI_UTEXT_t_OPT_TASK_ID_RANGE );
       MARK(OA_TASK_ID_RANGE);
    }
- 
+
+   if (VALID_OPT(tc_OPT, prog_number)) {
+      PRINTITD(MSG_GDI_USAGE_tc_OPT, MSG_GDI_UTEXT_tc_OPT);
+      MARK(OA_TASK_CONCURRENCY);
+   }
+
    if (VALID_OPT(terse_OPT, prog_number)) {
       PRINTITD(MSG_GDI_USAGE_terse_OPT , MSG_GDI_UTEXT_terse_OPT );
    }

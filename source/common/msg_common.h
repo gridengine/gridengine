@@ -331,7 +331,8 @@
 #define MSG_GDI_ARGUMENTSYNTAX_OA_WC_QUEUE             "wc_queue                wc_cqueue|wc_qdomain|wc_qinstance"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_WC_QUEUE_LIST        "wc_queue_list           wc_queue[,wc_queue,...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_TIME                 "time                    hours:minutes:seconds | seconds"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_THREAD_NAME          "thread_name             \"scheduler\"|\"jvm\"" 
+#define MSG_GDI_ARGUMENTSYNTAX_OA_THREAD_NAME          "thread_name             \"scheduler\"|\"jvm\""
+#define MSG_GDI_ARGUMENTSYNTAX_OA_TASK_CONCURRENCY     "max_running_tasks       maximum number of simultaneously running tasks"
 
 #define MSG_GDI_USAGE_a_OPT_DATE_TIME                    "[-a date_time]"
 #define MSG_GDI_UTEXT_a_OPT_DATE_TIME                    _MESSAGE(23290, _("request a start time"))
@@ -849,6 +850,9 @@
 
 #define MSG_GDI_USAGE_AT_OPT_FILE                        "[-@ file]"
 #define MSG_GDI_UTEXT_AT_OPT_FILE                        _MESSAGE(23463, _("read commandline input from file"))
+
+#define MSG_GDI_USAGE_tc_OPT                             "[-tc max_running_tasks]"
+#define MSG_GDI_UTEXT_tc_OPT                             _MESSAGE(23464, _("throttle the number of concurrent tasks"))
 
 #define MSG_GDI_USAGE_noread_argfile_OPT                 "[-noread-argfile]"
 /* #define MSG_GDI_UTEXT_noread_argfile_OPT                 _message(23465, _("do not read \"qmaster_args\" file")) __TS Removed automatically from testsuite!! TS__*/

@@ -204,6 +204,14 @@ lList *cull_parse_job_parameter(u_long32 uid, const char *username, const char *
    }
 
    /*
+   ** -tc option throttle the number of concurrent tasks
+   */
+   while ((ep = lGetElemStr(cmdline, SPA_switch, "-tc"))) {
+      lSetUlong(*pjob, JB_ja_task_concurrency, lGetUlong(ep, SPA_argval_lUlongT));
+      lRemoveElem(cmdline, &ep);
+   }
+
+   /*
    ** -clear option is special, is sensitive to order
    ** kills all options that come before
    ** there might be more than one -clear

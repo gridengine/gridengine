@@ -279,7 +279,7 @@ static void clean_conf(void);
 
 static int max_job_deletion_time = 3;
 static int jsv_timeout = 10;
-static int jsv_threshold = 5;
+static int jsv_threshold = 5000;
 
 #define MAILER                    "/bin/mail"
 #define PROLOG                    "none"
@@ -675,7 +675,7 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
       max_job_deletion_time = 3;
       enable_reschedule_kill = false;
       enable_reschedule_slave = false;
-      jsv_threshold = 5;
+      jsv_threshold = 5000;
       jsv_timeout= 10;
 
       for (s=sge_strtok_r(qmaster_params, ",; ", &conf_context); s; s=sge_strtok_r(NULL, ",; ", &conf_context)) {
@@ -780,8 +780,8 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
             if (jsv_threshold < 0) {
                answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_WARNING,
                                        MSG_CONF_INVALIDPARAM_SSI, "qmaster_params", "jsv_threshold",
-                                       5);
-               jsv_threshold = 5;
+                                       5000);
+               jsv_threshold = 5000;
             }
             continue;
          }

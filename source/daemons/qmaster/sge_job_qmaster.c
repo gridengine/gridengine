@@ -218,7 +218,8 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
    DENTER(TOP_LAYER, "sge_gdi_add_job");
 
    if (jsv_is_enabled(tc->thread_name)) {
-      u_long32 start_time;
+      struct timeval start_time;
+      struct timeval end_time;
       int jsv_threshold = mconf_get_jsv_threshold();
       /*
        * first verify before JSV is executed
@@ -232,11 +233,13 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
       /*
        * JSV verification
        */
-      start_time = sge_get_gmt();
+      gettimeofday(&start_time,NULL);
       lret = jsv_do_verify(ctx, tc->thread_name, jep, alpp, true);
-      if ((sge_get_gmt()-start_time) > jsv_threshold || jsv_threshold == 0) {
-         INFO((SGE_EVENT, MSG_JSV_THRESHOLD_UU, sge_u32c(lGetUlong(*jep, JB_job_number)),
-                      (sge_get_gmt()-start_time)));
+      gettimeofday(&end_time,NULL);
+      if (((end_time.tv_sec-start_time.tv_sec)*1000+(end_time.tv_usec-start_time.tv_usec)/1000) 
+              > jsv_threshold || jsv_threshold == 0) {
+              INFO((SGE_EVENT, MSG_JSV_THRESHOLD_UI, sge_u32c(lGetUlong(*jep, JB_job_number)), 
+              ((end_time.tv_sec-start_time.tv_sec)*1000+(end_time.tv_usec-start_time.tv_usec)/1000)));
       }
       if (!lret) {
          DRETURN(STATUS_EUNKNOWN);

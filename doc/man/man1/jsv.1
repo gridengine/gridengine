@@ -4,7 +4,7 @@
 .\" Copyright: 2008 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: jsv.1,v $     Last Update: $Date: 2009/05/28 16:56:18 $     Revision: $Revision: 1.6 $
+.\" $RCSfile: jsv.1,v $     Last Update: $Date: 2009/08/25 19:39:34 $     Revision: $Revision: 1.7 $
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
 .\"
@@ -28,7 +28,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH JSV 1 "$Date: 2009/05/28 16:56:18 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH JSV 1 "$Date: 2009/08/25 19:39:34 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 JSV \- xxQS_NAMExx Job Submission Verifier 
@@ -100,6 +100,26 @@ qmaster process (for version 6.2 of xxQS_NAMExx this means that two
 processes are started). Each of those processes have to verify
 job parameters for multiple jobs as long as the master is running,
 the underlying JSV configuration is not changed and no error occurs.
+.\"
+.\"
+.SH TIMEOUT 
+The timeout is a modifiable value that will measure the response time of either 
+the client or server JSV. In the event that the response time of the JSV is longer 
+than timeout value specified, this will result in the JSV being re-started. The 
+server JSV timeout value is specified through the qmaster parameter jsv_timeout. 
+The client JSV timeout value is set through the environment variable 
+\fBSGE_JSV_TIMEOUT\fP. The default value is 10 seconds, and this value must be greater 
+than 0. If the timeout has been reach, the JSV will only try to re-start once, 
+if the timeout is reached again an error will occur.
+.\"
+.\"
+.SH THRESHOLD 
+The threshold value is defined as a qmaster parameter jsv_threshold. This value 
+measures the time for a server job verification. If this time exceeds the defined 
+threshold then additional logging will appear in the master message file at the
+INFO level. This value is specified in milliseconds and has a default value of 
+5000. If a value of 0 is defined then this means all jobs will be logged in the 
+message file.
 .\"
 .\"
 .SH PROTOCOL 

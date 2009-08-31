@@ -149,6 +149,7 @@ static int queue_field[] = { QU_qhostname,
                              QU_epilog,
                              QU_starter_method,
                              QU_suspend_method,
+                             QU_processors,
                              QU_resume_method,
                              QU_terminate_method,
                              QU_min_cpu_interval,
@@ -289,7 +290,7 @@ send_slave_jobs(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep, lLis
    /* add all queues referenced in gdil to qlp 
     * (necessary for availability of ALL resource limits and tempdir in queue) 
     * AND
-    * copy all JG_processors from all queues to the JG_processors in tmpgdil
+    * copy all JG_processors from all queues to the JG_processors in gdil
     * (so the execd can decide on which processors (-sets) the job will be run).
     */
    what = lIntVector2What(QU_Type, queue_field);
@@ -300,7 +301,7 @@ send_slave_jobs(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep, lLis
       const char *src_qname = lGetString(gdil_ep, JG_qname);
       lListElem *src_qep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), src_qname);
 
-      /* copy all JG_processors from all queues to tmpgdil (which will be
+      /* copy all JG_processors from all queues to gdil (which will be
        * sent to the execd).
        */
       lSetString(gdil_ep, JG_processors, lGetString(src_qep, QU_processors));
@@ -501,7 +502,7 @@ send_job(sge_gdi_ctx_class_t *ctx,
    int failed;
    u_long32 now;
    sge_pack_buffer pb;
-   lListElem *tmpjep, *qep, *tmpjatep, *tmpgdil_ep=NULL;
+   lListElem *tmpjep, *qep, *tmpjatep;
    lListElem *gdil_ep;
    unsigned long last_heard_from;
    lList *master_centry_list = *object_type_get_master_list(SGE_TYPE_CENTRY);
@@ -555,7 +556,7 @@ send_job(sge_gdi_ctx_class_t *ctx,
    /* add all queues referenced in gdil to qlp 
     * (necessary for availability of ALL resource limits and tempdir in queue) 
     * AND
-    * copy all JG_processors from all queues to the JG_processors in tmpgdil
+    * copy all JG_processors from all queues to the JG_processors in gdil
     * (so the execd can decide on which processors (-sets) the job will be run).
     */
    what = lIntVector2What(QU_Type, queue_field);
@@ -565,10 +566,10 @@ send_job(sge_gdi_ctx_class_t *ctx,
       const char *src_qname = lGetString(gdil_ep, JG_qname);
       lListElem *src_qep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), src_qname);
 
-      /* copy all JG_processors from all queues to tmpgdil (which will be
+      /* copy all JG_processors from all queues to gdil (which will be
        * sent to the execd).
        */
-      lSetString(tmpgdil_ep, JG_processors, lGetString(src_qep, QU_processors));
+      lSetString(gdil_ep, JG_processors, lGetString(src_qep, QU_processors));
 
       qep = lSelectElemDPack(src_qep, NULL, rdp, what, false, NULL, NULL);
 

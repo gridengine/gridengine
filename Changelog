@@ -8,6 +8,11 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 -----------------+------------+-------------------------------------------------
+DG-2009-08-31-0: Bugfix:      processor set does not work on Solaris architecture
+                 Bugster:     6861758
+                 Issue:       3122
+                 Review:      JG
+
 MP-2009-08-25-0: Bugfix:      fixes to initial checkin MP-2009-08-20-0
                  Bugster:     6865717
                  Issue:       3111

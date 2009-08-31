@@ -695,6 +695,8 @@ sge_event_master_process_mod_event_client(lListElem *request, monitoring_t *moni
 
    DENTER(TOP_LAYER, "sge_event_master_process_mod_event_client");
 
+   MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_READ), monitor);
+
    clio = lGetObject(request, EVR_event_client);
 
    /* try to find event_client */
@@ -705,6 +707,7 @@ sge_event_master_process_mod_event_client(lListElem *request, monitoring_t *moni
 
    if (event_client == NULL) {
       sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Event_Master_Control.mutex);
+      SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
       ERROR((SGE_EVENT, MSG_EVE_UNKNOWNEVCLIENT_US, sge_u32c(id), "modify"));
       DRETURN_VOID;
    }
@@ -717,12 +720,14 @@ sge_event_master_process_mod_event_client(lListElem *request, monitoring_t *moni
    /* check for validity */
    if (ev_d_time < 1) {
       sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Event_Master_Control.mutex);
+      SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
       ERROR((SGE_EVENT, MSG_EVE_INVALIDINTERVAL_U, sge_u32c(ev_d_time)));
       DRETURN_VOID;
    }
 
    if (lGetBool(clio, EV_changed) && lGetList(clio, EV_subscribed) == NULL) {
       sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Event_Master_Control.mutex);
+      SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
       ERROR((SGE_EVENT, MSG_EVE_INVALIDSUBSCRIPTION));
       DRETURN_VOID;
    }
@@ -747,7 +752,6 @@ sge_event_master_process_mod_event_client(lListElem *request, monitoring_t *moni
       new_sub = lGetRef(clio, EV_sub_array);
       old_sub = lGetRef(event_client, EV_sub_array);
 
-      MONITOR_WAIT_TIME(SGE_LOCK(LOCK_GLOBAL, LOCK_READ), monitor);
 
       check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_ADMINHOST_LIST, master_table);
       check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_CALENDAR_LIST, master_table);
@@ -773,8 +777,6 @@ sge_event_master_process_mod_event_client(lListElem *request, monitoring_t *moni
 #ifndef __SGE_NO_USERMAPPING__
       check_send_new_subscribed_list(old_sub, new_sub, event_client, sgeE_CUSER_LIST, master_table);
 #endif      
-
-      SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
 
 #if 0
 /* JG: TODO: better use lXchgList? */
@@ -821,6 +823,7 @@ sge_event_master_process_mod_event_client(lListElem *request, monitoring_t *moni
           "master host", lGetString(event_client, EV_name), MSG_EVE_EVENTCLIENT));
 
    sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Event_Master_Control.mutex);
+   SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
 
    DRETURN_VOID;
 } /* sge_event_master_process_mod_event_client() */

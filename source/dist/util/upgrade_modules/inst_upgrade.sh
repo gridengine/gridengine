@@ -205,7 +205,14 @@ RestoreJMX()
       if [ $? -eq 0 ]; then
 	      #Use backup
 	      ExecuteAsAdmin cp -r "${old_jmx}" "$SGE_ROOT/$SGE_CELL/common"
-	      SGE_ENABLE_JMX=false
+	      #Ensure we have correct file permissions (see AddJMXFiles)
+	      ExecuteAsAdmin chmod 644 "$SGE_ROOT/$SGE_CELL/common/jmx/jmxremote.access"
+	      ExecuteAsAdmin chmod 600 "$SGE_ROOT/$SGE_CELL/common/jmx/jmxremote.password"
+	      ExecuteAsAdmin chmod 644 "$SGE_ROOT/$SGE_CELL/common/jmx/logging.properties"
+	      ExecuteAsAdmin chmod 644 "$SGE_ROOT/$SGE_CELL/common/jmx/java.policy"
+	      ExecuteAsAdmin chmod 644 "$SGE_ROOT/$SGE_CELL/common/jmx/jaas.config"
+	      ExecuteAsAdmin chmod 600 "$SGE_ROOT/$SGE_CELL/common/jmx/management.properties"
+	      SGE_SKIP_JMX_SETTING=true
       fi
    fi
 }

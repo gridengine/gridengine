@@ -933,7 +933,7 @@ CheckConfigFile()
          $INFOTEXT -e "in use. If you still need this directory, please choose any other!"
          $INFOTEXT -log "Your >DB_SPOOLING_DIR< already exists. Please check, if this directory is still"
          $INFOTEXT -log "in use. If you still need this directory, please choose any other!"
-         $INFOTEXT -e "Please check your logfile!\n >%s<" $LOGSNAME
+         $INFOTEXT -e "Please check your logfile!\n >%s<" "$LOGSNAME"
          is_valid="false"
       fi
     
@@ -3901,12 +3901,6 @@ CopyCaToHostType()
             $INFOTEXT -log "Certificates couldn't be copied!"
             $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
          fi
-      else
-            $INFOTEXT "rsh/ssh connection to host %s is not working!" $RHOST
-            $INFOTEXT "Certificates couldn't be copied!"
-            $INFOTEXT -log "rsh/ssh connection to host %s is not working!" $RHOST
-            $INFOTEXT -log "Certificates couldn't be copied!"
-            $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
       fi
   done
 }
@@ -4426,7 +4420,12 @@ FileGetValue()
    if [ `echo "$3" | awk '{print length($0)}'` -gt 0 ]; then
       SEP=-F"${3}"
    fi
-   echo `cat $1 | grep "^${2}" | tail -1 | awk $SEP '{ print $2}' 2>/dev/null`
+   #Test if file is readable as root, if not we use ExecuteAsAdmin
+   get_cmd="cat"
+   if [ ! -r "$1" ]; then
+      get_cmd="ExecuteAsAdmin cat"
+   fi
+   echo `$get_cmd $1 | grep "^${2}" | tail -1 | awk $SEP '{ print $2}' 2>/dev/null`
 }
 
 #Helper to get bootstrap file values

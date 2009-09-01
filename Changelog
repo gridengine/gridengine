@@ -8,6 +8,23 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 -----------------+------------+-------------------------------------------------
+LP-2009-09-01-0: Bugfix.:     CSP qmaster installation displays confusing
+                              message that suggests a failure if qmaster=execd
+                 Bugster:     6875947
+                 Issue:       3117
+                 Bugfix:      management.properties file should only be readable
+                              by admin user or root
+                 Bugster:     6876508
+                 Issue:       3123
+                 Bugfix:      SMF services should be started even when different
+                              SMF service starts them
+                 Bugster:     6877588
+                 Issue:       3124
+                 Bugfix:      Upgrade JMX logic misleading
+                 Bugster:     6877580
+                 Issue:       3125
+                 Review:      MD
+
 GH-2009-08-31-0: Bugfix:      too many qsub -sync jobs wedge the qmaster on 
                               failover
                  Bugster:     6873140

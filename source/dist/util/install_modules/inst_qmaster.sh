@@ -172,13 +172,15 @@ GetQmasterSpoolDir()
       QMDIR="$QMASTER_SPOOL_DIR"
       $INFOTEXT -log "Using >%s< as QMASTER_SPOOL_DIR." "$QMDIR"
       #If directory exists and has files, we exit the auto installation
-      if [ -d "$QMDIR" -a `ls -1 "$QMDIR" | wc -l` -gt 0 ]; then
-         $INFOTEXT -log "Specified qmaster spool directory \"$QMDIR\" is not empty!"
-         $INFOTEXT -log "Maybe different system is using it. Check this directory"
-         $INFOTEXT -log "and remove it, or use any other qmaster spool directory."
-         $INFOTEXT -log "Exiting installation now!"
-         MoveLog
-         exit 1
+      if [ -d "$QMDIR" ]; then
+         if [ `ls -1 "$QMDIR" | wc -l` -gt 0 ]; then
+            $INFOTEXT -log "Specified qmaster spool directory \"$QMDIR\" is not empty!"
+            $INFOTEXT -log "Maybe different system is using it. Check this directory"
+            $INFOTEXT -log "and remove it, or use any other qmaster spool directory."
+            $INFOTEXT -log "Exiting installation now!"
+            MoveLog
+            exit 1
+         fi
       fi
    else
    euid=$1
@@ -1117,7 +1119,7 @@ AddJMXFiles() {
                   util/management.properties.template > /tmp/management.properties.$$
       ExecuteAsAdmin cp /tmp/management.properties.$$ $jmx_dir/management.properties
       Execute rm -f /tmp/management.properties.$$
-      ExecuteAsAdmin chmod $FILEPERM $jmx_dir/management.properties
+      ExecuteAsAdmin chmod 600 $jmx_dir/management.properties
       $INFOTEXT "Adding >jmx/%s< jmx configuration" management.properties
       
    fi
@@ -2127,19 +2129,19 @@ SetLibJvmPath() {
    jvm_lib_path=""
    if [ -n "$SGE_JVM_LIB_PATH" -a "$SGE_ARCH" != "win32-x86" ]; then
       #verify we got a correct platform library
-      $SGE_ROOT/utilbin/$SGE_ARCH/valid_jvmlib "$SGE_JVM_LIB_PATH" >/dev/null 2>&1 
+      $SGE_ROOT/utilbin/$SGE_ARCH/valid_jvmlib "$SGE_JVM_LIB_PATH" >/dev/null 2>&1
       if [ $? -ne 0 ]; then
          $INFOTEXT -log -n "Specified JVM library %s is not correct. Will try to find another one.\n" "$SGE_JVM_LIB_PATH"
          SGE_JVM_LIB_PATH=""         
       fi
    fi
-      
+   
    #Try to detect the library, if none specified via SGE_JVM_LIB_PATH
    if [ -z "$SGE_JVM_LIB_PATH" ]; then
       $INFOTEXT "Detecting suitable JAVA ..."
       $INFOTEXT -log "Detecting suitable JAVA ..."
       HaveSuitableJavaBin $MIN_JAVA_VERSION "jvm"
-   fi
+      fi
    
    if [ "$AUTO" = "true" ]; then
       if [ -z "$SGE_JVM_LIB_PATH" -a -z "$jvm_lib_path" ]; then
@@ -2167,27 +2169,27 @@ SetLibJvmPath() {
          isdone=true
       fi
    done
-   
-   if [ -d $java_home/jre ]; then
-      java_home=$java_home/jre
-   fi
 
-   JAVA_VERSION=`$java_home/bin/java -version 2>&1 | head -1`
-   JAVA_VERSION=`echo $JAVA_VERSION | awk '{if (NF > 2) print $3; else print ""}' | sed -e "s/\"//g"`
-   NUM_JAVA_VERSION=`JavaVersionString2Num $JAVA_VERSION`
-   
-   if [ $NUM_JAVA_VERSION -lt $NUM_MIN_JAVA_VERSION ]; then
+         if [ -d $java_home/jre ]; then
+            java_home=$java_home/jre
+         fi
+      
+         JAVA_VERSION=`$java_home/bin/java -version 2>&1 | head -1`
+         JAVA_VERSION=`echo $JAVA_VERSION | awk '{if (NF > 2) print $3; else print ""}' | sed -e "s/\"//g"`
+         NUM_JAVA_VERSION=`JavaVersionString2Num $JAVA_VERSION`
+         
+         if [ $NUM_JAVA_VERSION -lt $NUM_MIN_JAVA_VERSION ]; then
       $INFOTEXT "Warning: Cannot start jvm thread: Invalid java version (%s)), we need %s or higher" $JAVA_VERSION $MIN_JAVA_VERSION
       return 1
-   fi
+         fi
    
-   GetJvmLib $java_home/bin/java
+         GetJvmLib $java_home/bin/java
          
-   if [ -z "$jvm_lib_path" -o ! -f "$jvm_lib_path" ]; then
+         if [ -z "$jvm_lib_path" -o ! -f "$jvm_lib_path" ]; then
       jvm_lib_path=""
       return 1
-   fi
-   
+         fi
+
    if [ "$JAVA_HOME" = "" ]; then
       JAVA_HOME=$java_home ; export JAVA_HOME
    fi

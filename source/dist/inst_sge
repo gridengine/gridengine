@@ -653,7 +653,9 @@ if [ "$UPDATE" = true ]; then
    RestoreJMX "${UPGRADE_BACKUP_DIR}/cell/jmx"
    #Load and upgrade old cell
    RestoreCell "${UPGRADE_BACKUP_DIR}/cell"
-   GetJMXPort
+   if [ "$SGE_SKIP_JMX_SETTING" != "true" ]; then
+      GetJMXPort
+   fi
    if [ -d "$QMDIR" ]; then
       ExecuteAsAdmin rm -rf "$QMDIR/*"   # remove old qmaster spool dir
    fi
@@ -679,7 +681,9 @@ if [ "$UPDATE" = true ]; then
       CFG_MAIL_ADDR=""
       CFG_GID_RANGE=""
    fi
-   AddJMXFiles
+   if [ "$SGE_SKIP_JMX_SETTING" != "true" ]; then
+      AddJMXFiles
+   fi
    RestoreSequenceNumberFiles $QMDIR #Restore jobseqnum and arseqnum
    CreateSGEStartUpScripts $euid true master
    CreateSGEStartUpScripts $euid true execd
@@ -704,7 +708,11 @@ if [ "$UPDATE" = true ]; then
    #Load configuration, show only critical errors
    "$SGE_ROOT/util/upgrade_modules/load_sge_config.sh" "$UPGRADE_BACKUP_DIR" -log "C" -mode "$UPGRADE_MODE" \
 -newijs "$newIJS" -execd_spool_dir "$CFG_EXE_SPOOL" -gid_range "$CFG_GID_RANGE" -admin_mail "$CFG_MAIL_ADDR"
-   
+   #Need to restart the qmaster to use the new config
+   $INFOTEXT -n "\nRestarting qmaster due to the changed configuration\n"
+   $SGE_STARTUP_FILE -qmaster stop
+   $SGE_STARTUP_FILE -qmaster start
+   exit_val=$?
    if [ "$POST_UPDATE" != true ]; then
       $INFOTEXT -n "\nIf loading the configuration succeeded run these additional commands:\n" \
       "REQUIRED:\n" \
@@ -730,10 +738,10 @@ if [ "$UPDATE" = true ]; then
       "   TIP: To disable SMF on Solaris systems, use the command\n" \
       "        inst_sge -upd-rc -nosmf\n" \
       "\n" \
-      "TIP: Use inst_sge -post-upd to do all above actions\n"
-      "TIP: Add the -noremote flag to the above commands to perform the action\n"
+      "TIP: Use inst_sge -post-upd to do all above actions\n" \
+      "TIP: Add the -noremote flag to the above commands to perform the action\n" \
       "     only on the current host without making any remote connections\n"
-      exit 0
+      exit $exit_val
    fi
 fi
 
@@ -1532,7 +1540,10 @@ if [ "$SUBMIT" = "install" ]; then
    product_mode=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "security_mode" | awk '{ print $2 }'`
    if [ "$product_mode" = "csp" ]; then
       CSP="true"
-   fi 
+   fi
+   #TODO XXX: This will attempt to copy certs to every submit host! We just need one.
+   #Also, we probably prefer to do this from trusted (qmaster) node, that has remote 
+   #access to this submit host
    CopyCA submit
    MoveLog
    $INFOTEXT "Submit host installation is complete!"

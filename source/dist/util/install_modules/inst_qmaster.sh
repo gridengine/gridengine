@@ -1760,7 +1760,7 @@ SelectedPortOutput()
 EnterAndValidatePortNumber()
 {
    $INFOTEXT -u "\nGrid Engine TCP/IP service >%s<\n" $service_name
-   $INFOTEXT -n "\n" 
+   $INFOTEXT -n "\n"
 
    port_ok="false"
 
@@ -1790,7 +1790,7 @@ EnterAndValidatePortNumber()
    chars=`echo $INP | wc -c`
    chars=`expr $chars - 1`
    digits=`expr $INP : "[0-9][0-9]*"`
-   if [ "$INP" -eq "" ]; then
+   if [ "$INP" = "" ]; then
       $INFOTEXT "\nYou must enter an integer value."
    elif [ "$chars" != "$digits" ]; then
       $INFOTEXT "\nInvalid input. Must be a number."

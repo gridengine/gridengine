@@ -4422,7 +4422,9 @@ FileGetValue()
    fi
    #Test if file is readable as root, if not we use ExecuteAsAdmin
    get_cmd="cat"
-   if [ ! -r "$1" ]; then
+   #Try if we can really read the file (-r seems to be misleading)
+   $get_cmd $1 >/dev/null 2>&1
+   if [ $? -ne 0 ]; then
       get_cmd="ExecuteAsAdmin cat"
    fi
    echo `$get_cmd $1 | grep "^${2}" | tail -1 | awk $SEP '{ print $2}' 2>/dev/null`

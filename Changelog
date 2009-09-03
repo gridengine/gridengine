@@ -8,6 +8,12 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 -----------------+------------+-------------------------------------------------
+MP-2009-09-03-0: Bugfix:      Added missing man page information to submit man
+                              page for check in MP-2009-08-25-0
+                 Bugster:     6865717
+                 Issue:       3111
+                 Review:      AS
+
 LP-2009-09-01-0: Bugfix.:     CSP qmaster installation displays confusing
                               message that suggests a failure if qmaster=execd
                  Bugster:     6875947

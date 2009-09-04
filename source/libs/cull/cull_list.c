@@ -706,8 +706,7 @@ static void lWriteElem_(const lListElem *ep, dstring *buffer, int nesting_level)
 DTRACE;
    sge_dstring_sprintf_append(buffer, "%s-------------------------------\n", space);
 
-   for (i = 0; mt_get_type(ep->descr[i].mt) != lEndT; i++)
-   {
+   for (i = 0; mt_get_type(ep->descr[i].mt) != lEndT; i++) {
       bool changed = sge_bitfield_get(&(ep->changed), i);
       const char *name = ((lNm2Str(ep->descr[i].nm) != NULL) ? lNm2Str(ep->descr[i].nm) : "(null)");
 

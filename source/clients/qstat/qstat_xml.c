@@ -1207,7 +1207,6 @@ void xml_qstat_show_job(lList **job_list, lList **msg_list, lList **answer_list,
          lFreeElem(&xml_elem);
          *job_list = NULL;
          *msg_list = NULL;
-         
       }
    }
 

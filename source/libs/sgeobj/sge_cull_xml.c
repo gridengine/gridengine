@@ -305,21 +305,23 @@ static void lWriteElemXML_(const lListElem *ep, int nesting_level, FILE *fp)
 
    if (!ep) {
       LERROR(LEELEMNULL);
-      DEXIT;
-      return;
+      DRETURN_VOID;
    }
  
-   if (max > 128)
+   if (max > 128) {
       max = 128;
-   for (i = 0; i < max; i++)
+   }
+
+   for (i = 0; i < max; i++) {
       space[i] = ' ';
+   }
    space[i] = '\0';
    
    if (lGetPosViaElem(ep, XMLH_Version, SGE_NO_ABORT) != -1) {   
       lWriteXMLHead_(ep, nesting_level, fp);        
    }
    else if (lGetPosViaElem(ep, XMLE_Attribute, SGE_NO_ABORT) !=-1 ) {
-      if (lGetBool(ep, XMLE_Print)){
+      if (lGetBool(ep, XMLE_Print)) {
          dstring attr = DSTRING_INIT;
          bool is_attr; 
          lListElem *elem = lGetObject(ep, XMLE_Element);
@@ -342,9 +344,8 @@ static void lWriteElemXML_(const lListElem *ep, int nesting_level, FILE *fp)
          lWriteElemXML_(lGetObject(ep, XMLE_Element), nesting_level, fp);
          lWriteListXML_(lGetList(ep, XMLE_List), nesting_level, fp);
       }
-   }
-   else {   
-      for (i = 0; ep->descr[i].mt != lEndT; i++) {
+   } else {   
+      for (i = 0; mt_get_type(ep->descr[i].mt) != lEndT; i++) {
          
          /* ignore empty lists */
          switch (mt_get_type(ep->descr[i].mt)) {

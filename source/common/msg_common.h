@@ -852,7 +852,7 @@
 #define MSG_GDI_UTEXT_AT_OPT_FILE                        _MESSAGE(23463, _("read commandline input from file"))
 
 #define MSG_GDI_USAGE_tc_OPT                             "[-tc max_running_tasks]"
-#define MSG_GDI_UTEXT_tc_OPT                             _MESSAGE(23464, _("throttle the number of concurrent tasks"))
+#define MSG_GDI_UTEXT_tc_OPT                             _MESSAGE(23464, _("throttle the number of concurrent tasks (experimental)"))
 
 #define MSG_GDI_USAGE_noread_argfile_OPT                 "[-noread-argfile]"
 /* #define MSG_GDI_UTEXT_noread_argfile_OPT                 _message(23465, _("do not read \"qmaster_args\" file")) __TS Removed automatically from testsuite!! TS__*/

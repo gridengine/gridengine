@@ -8,6 +8,18 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 -----------------+------------+-------------------------------------------------
+RN-2009-09-04-0: Bugfix:      Scheduler crashes with got NULL element for
+                              CE_requestable
+                 Bugster:     6873408
+                 Issue:       3126
+                 Review:      GH
+
+RN-2009-09-04-1: Bugfix:      sge clients/daemons segfault when bootstrap file
+                              is corrupted
+                 Bugster:     6876458
+                 Issue:       3127
+                 Review:      JG
+
 JG-2009-09-05-1: Bugfix:      Fixed memory access problem in qstat -xml output.
                  Belongs to:  EB-2009-08-05-0
                  Review:      MD

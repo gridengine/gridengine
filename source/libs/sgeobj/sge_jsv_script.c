@@ -2145,12 +2145,23 @@ jsv_do_communication(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answer_li
    if (ret) {
       u_long32 start_time = sge_get_gmt();
       bool do_retry = true;
+      int jsv_timeout = 10;
+      
+      if (strcmp(lGetString(jsv, JSV_context), JSV_CONTEXT_CLIENT) == 0 && getenv("SGE_JSV_TIMEOUT") != NULL) {
+         if (atoi(getenv("SGE_JSV_TIMEOUT")) > 0) {
+            jsv_timeout = atoi(getenv("SGE_JSV_TIMEOUT")); 
+            DPRINTF(("JSV_TIMEOUT value of %d s being used from environment variable\n", jsv_timeout))
+         }         
+      } else {
+         jsv_timeout = mconf_get_jsv_timeout();
+         DPRINTF(("JSV_TIMEOUT value of %d s being used from qmaster parameter\n", jsv_timeout))
+      }
 
       lSetBool(jsv, JSV_done, false);
       lSetBool(jsv, JSV_soft_shutdown, true);
       while (!lGetBool(jsv, JSV_done)) {
-         if (sge_get_gmt() - start_time > JSV_CMD_TIMEOUT) {
-            DPRINTF(("JSV - master waited longer than JSV_CMD_TIMEOUT to get response from JSV\n"));
+         if (sge_get_gmt() - start_time > jsv_timeout) {
+            DPRINTF(("JSV - master waited longer than %d s to get response from JSV\n", jsv_timeout));
             /*
              * In case of a timeout we try it a second time. In that case we kill
              * the old instance and start a new one before we continue

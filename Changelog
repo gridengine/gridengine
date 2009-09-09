@@ -1,3 +1,15 @@
+MP-2009-09-09-2: Enhancem.:   changed version strings to 6.2u3_1
+
+MP-2009-09-09-1: Bugfix:      jsv Protocol is not handled correctly in client JSV
+                 Bugster:     6862641
+                 Issue:       3089
+                 Bugfix:      need means to set the jsv command timeout
+                 Bugster:     6865717
+                 Issue:       3111
+                 Review:      EB,HP
+
+MP-2009-09-09-0: CVS:         Created V62u3_1_BRANCH
+
 MD-2009-06-15-1: CVS:           Created V62u3_TAG
 -----------------------------------------------------
 

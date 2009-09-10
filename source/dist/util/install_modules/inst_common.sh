@@ -683,7 +683,6 @@ ResolveSingleHost()
    # Save the resolve result in RESOLVED_CHANGED_HOSTNAMES
    AddChangedHost ${UNRESOLVED} ${RESOLVED}
    if [ $ret -eq 0 ]; then
-      $INFOTEXT -log "resolved hostname: $RESOLVED"
       echo $RESOLVED
    fi
 
@@ -829,7 +828,7 @@ CheckConfigFile()
       elif [ "$TAR" = "0" ]; then
          TAR="false"
       fi
-      TAR=`echo $TAR | tr [A-Z] [a-z]`
+      TAR=`echo $TAR | tr "[A-Z]" "[a-z]"`
       if [ "$TAR" != "true" -a "$TAR" != "false" ]; then
          $INFOTEXT -e "Your >TAR< flag is wrong! Valid values are: 0, 1, true, false"
          $INFOTEXT -log "Your >TAR< flag is wrong! Valid values are: 0, 1, true, false"
@@ -1008,7 +1007,7 @@ CheckConfigFile()
       elif [ "$SERVICE_TAGS" = "0" -o "$SERVICE_TAGS" = "false" -o "$SERVICE_TAGS" = "false" ]; then
          SERVICE_TAGS="disable"
       fi
-      SERVICE_TAGS=`echo "$SERVICE_TAGS" | tr [A-Z] [a-z]`
+      SERVICE_TAGS=`echo "$SERVICE_TAGS" | tr "[A-Z]" "[a-z]"`
       if [ "$SERVICE_TAGS" != "enable" -a "$SERVICE_TAGS" != "disable" ]; then
          $INFOTEXT -e "Your >SERVICE_TAGS< flag is wrong! Valid values are:enable,disable,0,1,true,false,TRUE,FALSE"
          $INFOTEXT -log "Your >SERVICE_TAGS< flag is wrong! Valid values are:enable,disable,0,1,true,false,TRUE,FALSE"
@@ -1024,7 +1023,7 @@ CheckConfigFile()
       elif [ "$HOSTNAME_RESOLVING" = "0" ]; then
          HOSTNAME_RESOLVING="false"
       fi
-      HOSTNAME_RESOLVING=`echo "$HOSTNAME_RESOLVING" | tr [A-Z] [a-z]`
+      HOSTNAME_RESOLVING=`echo "$HOSTNAME_RESOLVING" | tr "[A-Z]" "[a-z]"`
       if [ "$HOSTNAME_RESOLVING" != "true" -a "$HOSTNAME_RESOLVING" != "false" ]; then
          $INFOTEXT -e "Your >HOSTNAME_RESOLVING< flag is wrong! Valid values are: 0, 1, true, false"
          $INFOTEXT -log "Your >HOSTNAME_RESOLVING< flag is wrong! Valid values are: 0, 1, true, false"
@@ -1041,7 +1040,7 @@ CheckConfigFile()
       elif [ "$SGE_ENABLE_JMX" = "0" ]; then
          SGE_ENABLE_JMX="false"
       fi
-      SGE_ENABLE_JMX=`echo "$SGE_ENABLE_JMX" | tr [A-Z] [a-z]`
+      SGE_ENABLE_JMX=`echo "$SGE_ENABLE_JMX" | tr "[A-Z]" "[a-z]"`
       if [ "$SGE_ENABLE_JMX" != "true" -a "$SGE_ENABLE_JMX" != "false" ]; then
          $INFOTEXT -e "Your >SGE_ENABLE_JMX< flag is wrong! Valid values are:0,1,true,false,TRUE,FALSE"
          $INFOTEXT -log "Your >SGE_ENABLE_JMX< flag is wrong! Valid values are:0,1,true,false,TRUE,FALSE"
@@ -1089,7 +1088,7 @@ CheckConfigFile()
          elif [ "$SGE_JMX_SSL" = "0" ]; then
             SGE_JMX_SSL="false"
          fi
-         SGE_JMX_SSL=`echo "$SGE_JMX_SSL" | tr [A-Z] [a-z]`
+         SGE_JMX_SSL=`echo "$SGE_JMX_SSL" | tr "[A-Z]" "[a-z]"`
          if [ "$SGE_JMX_SSL" != "true" -a "$SGE_JMX_SSL" != "false" ]; then
             $INFOTEXT -e "Your >SGE_JMX_SSL< flag is wrong! Valid values are:0,1,true,false,TRUE,FALSE"
             $INFOTEXT -log "Your >SGE_JMX_SSL< flag is wrong! Valid values are:0,1,true,false,TRUE,FALSE"
@@ -1112,7 +1111,7 @@ CheckConfigFile()
          elif [ "$SGE_JMX_SSL_CLIENT" = "0" ]; then
             SGE_JMX_SSL_CLIENT="false"
          fi
-         SGE_JMX_SSL_CLIENT=`echo "$SGE_JMX_SSL_CLIENT" | tr [A-Z] [a-z]`
+         SGE_JMX_SSL_CLIENT=`echo "$SGE_JMX_SSL_CLIENT" | tr "[A-Z]" "[a-z]"`
          if [ "$SGE_JMX_SSL_CLIENT" != "true" -a "$SGE_JMX_SSL_CLIENT" != "false" ]; then
             $INFOTEXT -e "Your >SGE_JMX_SSL_CLIENT< flag is wrong! Valid values are:0,1,true,false,TRUE,FALSE"
             $INFOTEXT -log "Your >SGE_JMX_SSL_CLIENT< flag is wrong! Valid values are:0,1,true,false,TRUE,FALSE"
@@ -1141,7 +1140,7 @@ CheckConfigFile()
       elif [ "$SET_FILE_PERMS" = "0" ]; then
          SET_FILE_PERMS="false"
       fi
-      SET_FILE_PERMS=`echo $SET_FILE_PERMS | tr [A-Z] [a-z]`
+      SET_FILE_PERMS=`echo $SET_FILE_PERMS | tr "[A-Z]" "[a-z]"`
       if [ "$SET_FILE_PERMS" != "true" -a "$SET_FILE_PERMS" != "false" ]; then
          $INFOTEXT -e "Your >SET_FILE_PERMS< flag is wrong! Valid values are: 0, 1, true, false"
          $INFOTEXT -log "Your >SET_FILE_PERMS< flag is wrong! Valid values are: 0, 1, true, false"
@@ -1158,7 +1157,7 @@ CheckConfigFile()
       elif [ "$WINDOWS_SUPPORT" = "0" ]; then
          WINDOWS_SUPPORT="false"
       fi
-      WINDOWS_SUPPORT=`echo $WINDOWS_SUPPORT | tr [A-Z] [a-z]`
+      WINDOWS_SUPPORT=`echo $WINDOWS_SUPPORT | tr "[A-Z]" "[a-z]"`
       if [ "$WINDOWS_SUPPORT" != "true" -a "$WINDOWS_SUPPORT" != "false" ]; then
          $INFOTEXT -e "Your >WINDOWS_SUPPORT< flag is wrong! Valid values are: 0, 1, true, false"
          $INFOTEXT -log "Your >WINDOWS_SUPPORT< flag is wrong! Valid values are: 0, 1, true, false"
@@ -1188,7 +1187,7 @@ CheckConfigFile()
       elif [ "$ADD_TO_RC" = "0" ]; then
          ADD_TO_RC="false"
       fi
-      ADD_TO_RC=`echo $ADD_TO_RC | tr [A-Z] [a-z]`
+      ADD_TO_RC=`echo $ADD_TO_RC | tr "[A-Z]" "[a-z]"`
       if [ "$ADD_TO_RC" != "true" -a "$ADD_TO_RC" != "false" ]; then
          $INFOTEXT -e "Your >ADD_TO_RC< flag is wrong! Valid values are: 0, 1, true, false"
          $INFOTEXT -log "Your >ADD_TO_RC< flag is wrong! Valid values are: 0, 1, true, false"
@@ -1209,7 +1208,7 @@ CheckConfigFile()
       elif [ "$SGE_ENABLE_SMF" = "0" ]; then
          SGE_ENABLE_SMF="false"
       fi
-      SGE_ENABLE_SMF=`echo $SGE_ENABLE_SMF | tr [A-Z] [a-z]`
+      SGE_ENABLE_SMF=`echo $SGE_ENABLE_SMF | tr "[A-Z]" "[a-z]"`
       if [ "$SGE_ENABLE_SMF" != "true" -a "$SGE_ENABLE_SMF" != "false" ]; then
          $INFOTEXT -e "Your >SGE_ENABLE_SMF< flag is wrong! Valid values are: 0, 1, true, false"
          $INFOTEXT -log "Your >SGE_ENABLE_SMF< flag is wrong! Valid values are: 0, 1, true, false"
@@ -1240,7 +1239,7 @@ CheckConfigFile()
       elif [ "$REMOVE_RC" = "0" ]; then
          REMOVE_RC="false"
       fi
-      REMOVE_RC=`echo $REMOVE_RC | tr [A-Z] [a-z]`
+      REMOVE_RC=`echo $REMOVE_RC | tr "[A-Z]" "[a-z]"`
       if [ "$REMOVE_RC" != "true" -a "$REMOVE_RC" != "false" ]; then
          $INFOTEXT -e "Your >REMOVE_RC< flag is wrong! Valid values are: 0, 1, true, false"
          $INFOTEXT -log "Your >REMOVE_RC< flag is wrong! Valid values are: 0, 1, true, false"
@@ -1307,7 +1306,7 @@ CheckConfigFile()
       elif [ "$CSP_RECREATE" = "0" ]; then
          CSP_RECREATE="false"
       fi
-      CSP_RECREATE=`echo $CSP_RECREATE | tr [A-Z] [a-z]`
+      CSP_RECREATE=`echo $CSP_RECREATE | tr "[A-Z]" "[a-z]"`
       if [ "$CSP_RECREATE" != "true" -a "$CSP_RECREATE" != "false" ]; then
          $INFOTEXT -e "Your >CSP_RECREATE< flag is wrong! Valid values are: 0, 1, true, false"
          $INFOTEXT -log "Your >CSP_RECREATE< flag is wrong! Valid values are: 0, 1, true, false"
@@ -1324,7 +1323,7 @@ CheckConfigFile()
       elif [ "$CSP_COPY_CERTS" = "0" ]; then
          CSP_COPY_CERTS="false"
       fi
-      CSP_COPY_CERTS=`echo $CSP_COPY_CERTS | tr [A-Z] [a-z]`
+      CSP_COPY_CERTS=`echo $CSP_COPY_CERTS | tr "[A-Z]" "[a-z]"`
       if [ "$CSP_COPY_CERTS" != "true" -a "$CSP_COPY_CERTS" != "false" ]; then
          $INFOTEXT -e "Your >CSP_COPY_CERTS< flag is wrong! Valid values are:0, 1, true, false"
          $INFOTEXT -log "Your >CSP_COPY_CERTS< flag is wrong! Valid values are:0, 1, true, false"
@@ -4219,7 +4218,7 @@ DoRemoteActionForHosts()
         cat $SGE_ROOT/$SGE_CELL/win_hosts_to_update | grep $host > /dev/null 2>&1
 	if [ "$?" -eq 0 -a $HOST != $host ]; then
 	   #We want to connect to a windows host only if not already there (but as who?)
-	   host_str=`echo $host_uqdn | tr [a-z] [A-Z]`
+	   host_str=`echo $host_uqdn | tr "[a-z]" "[A-Z]"`
 	   if [ -n "$SGE_WIN_ADMIN" ]; then
 	      user="${host_str}+$SGE_WIN_ADMIN"
 	   else

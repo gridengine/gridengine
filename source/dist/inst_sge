@@ -398,7 +398,7 @@ if [ $AUTO = "true" -a  $AUTOGUI != "true" ]; then
    SGE_JVM_LIB_PATH="undef"
    GetConfigFromFile
    #Now we check if we want to enable JMX or not based on SGE_JVM_LIB_PATH and/or SGE_JMX_PORT
-   if [ "$SGE_JVM_LIB_PATH" = "undef" -o x"`echo $SGE_JVM_LIB_PATH | tr [A-Z] [a-z]`" = "xnone" ]; then
+   if [ "$SGE_JVM_LIB_PATH" = "undef" -o x"`echo $SGE_JVM_LIB_PATH | tr \"[A-Z]\" \"[a-z]\"`" = "xnone" ]; then
       $INFOTEXT -log "Disabling JMX since \$SGE_JVM_LIB_PATH=none or is missing in $FILE file."
       SGE_ENABLE_JMX="false"
    fi
@@ -409,7 +409,7 @@ if [ $AUTO = "true" -a  $AUTOGUI != "true" ]; then
       SGE_ENABLE_JMX="false"
    fi
    CheckConfigFile $FILE
-elif [ $AUTOGUI = true -a x`echo "$SGE_JVM_LIB_PATH" | tr [A-Z] [a-z]` = "xnone" ]; then
+elif [ $AUTOGUI = true -a x"`echo $SGE_JVM_LIB_PATH | tr \"[A-Z]\" \"[a-z]\"`" = "xnone" ]; then
    SGE_ENABLE_JMX="false"
 fi
 
@@ -467,7 +467,7 @@ if [ $ONLY_ENABLE_JMX = "true" ]; then
    ReplaceOrAddLine "$SGE_ROOT/$SGE_CELL/common/bootstrap" 666 'jvm_threads.*' "jvm_threads             1"
    ExecuteAsAdmin $CHMOD 644 "$SGE_ROOT/$SGE_CELL/common/bootstrap"
    # Do InitCA only when no CSP mode
-   if [ x`BootstrapGetValue "$SGE_ROOT/$SGE_CELL/common" "security_mode" | tr [A-Z] [a-z]` != xcsp ]; then
+   if [ x`BootstrapGetValue "$SGE_ROOT/$SGE_CELL/common" "security_mode" | tr "[A-Z]" "[a-z]"` != xcsp ]; then
       InitCA
    elif [ "$SGE_JMX_SSL" = true ]; then
       if [ ! -f "$SGE_JMX_SSL_KEYSTORE" ]; then
@@ -1280,7 +1280,7 @@ if [ $SHADOW = "install" ]; then
 
    if [ $AUTO = "true" ]; then
       Stdout2Log
-      ignore_fqdn=`BootstrapGetValue "$SGE_ROOT/$CELL_NAME/common" ignore_fqdn | tr [A-Z] [a-z]`
+      ignore_fqdn=`BootstrapGetValue "$SGE_ROOT/$CELL_NAME/common" ignore_fqdn | tr "[A-Z]" "[a-z]"`
       CURRENT_HOST=`$SGE_UTILBIN/gethostname -aname`
       if [ "$ignore_fqdn" = "true" ]; then
          CURRENT_HOST=`echo $CURRENT_HOST | cut -f1 -d. | tr "[A-Z]" "[a-z]"`
@@ -1291,7 +1291,7 @@ if [ $SHADOW = "install" ]; then
          SHADOWD_HOSTS_TO_INSTALL=`RemoveHostFromList "$SHADOWD_HOSTS_TO_INSTALL" "$SHADOW"`
          SHADOW_COMPARE="$SHADOW"
          if [ "$ignore_fqdn" = "true" ]; then
-            SHADOW_COMPARE=`echo "$SHADOW_COMPARE" | cut -f1 -d. | tr [A-Z] [a-z]`
+            SHADOW_COMPARE=`echo "$SHADOW_COMPARE" | cut -f1 -d. | tr "[A-Z]" "[a-z]"`
          fi
          if [ "$NOREMOTE" = false ]; then
             LOCALINST=false
@@ -1334,7 +1334,7 @@ if [ $SHADOW = "install" ]; then
       ProcessSGERoot
 
       $INFOTEXT -n -auto $AUTO "Please enter your SGE_CELL directory or use the default [default] >> "
-
+      #TODO XXX: Will never use env SGE_CELL
       SGE_CELL=`Enter "${CELL_NAME:-default}"`
       export SGE_CELL
       $INFOTEXT -log "Your \$SGE_CELL directory: %s" $SGE_CELL

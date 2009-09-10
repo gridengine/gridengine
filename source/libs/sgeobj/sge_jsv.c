@@ -1012,8 +1012,7 @@ jsv_do_verify(sge_gdi_ctx_class_t* ctx, const char *context, lListElem **job,
    lListElem *jsv;
    lListElem *jsv_next;
    const void *iterator = NULL;
-   lListElem *jsv_old = NULL;
-
+   
    DENTER(TOP_LAYER, "jsv_do_verify");
 
    if (context != NULL && job != NULL) {
@@ -1144,11 +1143,10 @@ jsv_do_verify(sge_gdi_ctx_class_t* ctx, const char *context, lListElem **job,
                ret &= jsv_stop(jsv, answer_list, soft_shutdown);
             }
          }
-         jsv_old = jsv;
+         if (strcmp(context, JSV_CONTEXT_CLIENT) == 0) {
+            ret &= jsv_stop(jsv, answer_list, true);
+         } 
       }
-      if (jsv_old != NULL  && strcmp(context, JSV_CONTEXT_CLIENT) == 0) {
-         ret &= jsv_stop(jsv_old, answer_list, true);
-      }      
       if (holding_mutex) {
          sge_mutex_unlock("jsv_list", SGE_FUNC, __LINE__, &jsv_mutex);
       }

@@ -493,10 +493,11 @@ time_t last_time
          }
          continue;
       }
-      /*
+      /* TODO (SH): This does not work with Linux 2.6. I'm looking for a workaround.
        * If the stat file was not changed since our last parsing there is no need to do it again
        */
-      if (pr == NULL || fst.st_mtime > last_time) {
+      /*if (pr == NULL || fst.st_mtime > last_time) {*/
+      {
 #else
          sprintf(procnam, "%s/%s", PROC_DIR, dent->d_name);
 #endif
@@ -788,7 +789,8 @@ time_t last_time
 
       /* This io processing needs to be enabled in the kernel */
       if (SGE_STAT(procnam, &fst) == 0) {
-         if (fst.st_mtime > last_time) {
+         {
+         /*if (fst.st_mtime > last_time) {*/
             FILE *fd;
             if ((fd = fopen(procnam, "r"))) {
                char buf[1024];

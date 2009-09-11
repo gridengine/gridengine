@@ -1,3 +1,20 @@
+RN-2009-09-11-2: Bugfix:      sge clients/daemons segfault when bootstrap file
+                              is corrupted
+                 Bugster:     6876458
+                 Issue:       3127
+                 Review:      JG
+
+RN-2009-09-11-1: Bugfix:      Scheduler crashes with got NULL element for
+                              CE_requestable
+                 Bugster:     6873408
+                 Issue:       3126
+                 Review:      GH
+
+RN-2009-09-11-0: Bugfix:      sge_qmaster hangs and also hangs after restart
+                 Bugster:     6855814
+                 Issue:       3113
+                 Review:      JG
+
 CR-2009-08-05-0: CVS:         Created V62u2_1_1_TAG
 ---------------------------------------------------
 

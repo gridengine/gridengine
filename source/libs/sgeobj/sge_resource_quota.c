@@ -1395,7 +1395,7 @@ bool sge_centry_referenced_in_rqs(const lListElem *rqs, const lListElem *centry)
    for_each(rule, lGetList(rqs, RQS_rule)) {
       lListElem *limit;
       for_each(limit, lGetList(rule, RQR_limit)) {
-         const char *limit_name = lGetString(limit, RQRL_value);
+         const char *limit_name = lGetString(limit, RQRL_name);
          DPRINTF(("limit name %s\n", limit_name));
          if (strchr(limit_name, '$') != NULL) {
             /* dynamical limit */

@@ -108,6 +108,16 @@ public class CullConstantConverter extends AbstractCullToJavaConverter {
 //          p.print( '_' );
             p.print(name);
             p.print(" = ");
+            // -----------------------------------------------------------------
+            // Preliminary Fix for issue 3128.
+            // We can not fix it really it in sge_str_STU_L.h because the fix requires an update
+            // procedure.
+            // This hack fix it only on the jgdi side
+            // -----------------------------------------------------------------
+            if (name.equals("STU_name")) {
+                name = "ST_name";
+            }
+            // Preliminary Fix for issue 3128 end.
             p.print(strToNm(name));
             p.println(";");
         }

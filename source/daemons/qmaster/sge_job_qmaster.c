@@ -238,8 +238,8 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
       gettimeofday(&end_time,NULL);
       if (((end_time.tv_sec-start_time.tv_sec)*1000+(end_time.tv_usec-start_time.tv_usec)/1000) 
               > jsv_threshold || jsv_threshold == 0) {
-              INFO((SGE_EVENT, MSG_JSV_THRESHOLD_UI, sge_u32c(lGetUlong(*jep, JB_job_number)), 
-              ((end_time.tv_sec-start_time.tv_sec)*1000+(end_time.tv_usec-start_time.tv_usec)/1000)));
+              INFO((SGE_EVENT, MSG_JSV_THRESHOLD_UU, sge_u32c(lGetUlong(*jep, JB_job_number)), 
+              sge_u32c((end_time.tv_sec-start_time.tv_sec)*1000+(end_time.tv_usec-start_time.tv_usec)/1000)));
       }
       if (!lret) {
          DRETURN(STATUS_EUNKNOWN);

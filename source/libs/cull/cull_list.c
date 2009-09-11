@@ -898,7 +898,9 @@ lListElem *lCreateElem(const lDescr *dp)
       DRETURN(NULL);
    }
 
-   if (!(ep = (lListElem *) malloc(sizeof(lListElem)))) {
+   ep = (lListElem *) malloc(sizeof(lListElem));
+
+   if (ep == NULL) {
       LERROR(LEMALLOC);
       DRETURN(NULL);
    }

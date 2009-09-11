@@ -1929,7 +1929,7 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
                bool already_handled = false;
    
                while (in[j] != '\0') {
-                  if (in[j] == value[j]) {
+                  if (in[j] == value[i]) {
                      sge_dstring_append(&buffer, out[j]);
                      already_handled = true;
                   }

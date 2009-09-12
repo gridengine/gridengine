@@ -490,7 +490,7 @@ sge_tq_wait_for_task(sge_tq_queue_t *queue, int seconds,
       sge_tq_task_t key;
 
       key.type = type;
-      data = NULL;
+      *data = NULL;
 
       sge_mutex_lock(TQ_MUTEX_NAME, SGE_FUNC, __LINE__, sge_sl_get_mutex(queue->list));
      

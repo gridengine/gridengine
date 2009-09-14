@@ -8,6 +8,9 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 -----------------+------------+-------------------------------------------------
+HP-2009-09-14-0: Bugfix:      Fixed broken build on most systems because of
+                              checkin RN-2009-09-04
+
 MD-2009-09-12-0: Bugfix:      qmaster did not start, resulte of a leak fix.
                  Belongs To:  MD-2009-09-11-0
 

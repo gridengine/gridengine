@@ -1311,10 +1311,11 @@ static dispatch_t rqs_limitation_reached(sge_assignment_t *a, const lListElem *r
 
    limit_list = lGetList(rule, RQR_limit);
    for_each(limit, limit_list) {
-      
+      bool       is_forced = false;
+      lList      *job_centry_list = NULL;
+      lListElem  *job_centry = NULL;
       const char *limit_name = lGetString(limit, RQRL_name);
-
-      lListElem *raw_centry = centry_list_locate(a->centry_list, limit_name);
+      lListElem  *raw_centry = centry_list_locate(a->centry_list, limit_name);
 
       if (raw_centry == NULL) {
          DPRINTF(("ignoring limit %s because not defined", limit_name));
@@ -1323,9 +1324,9 @@ static dispatch_t rqs_limitation_reached(sge_assignment_t *a, const lListElem *r
          DPRINTF(("checking limit %s\n", lGetString(raw_centry, CE_name)));
       }
 
-      bool is_forced = lGetUlong(raw_centry, CE_requestable) == REQU_FORCED ? true : false;
-      lList *job_centry_list = lGetList(a->job, JB_hard_resource_list);
-      lListElem *job_centry = centry_list_locate(job_centry_list, limit_name);
+      is_forced = lGetUlong(raw_centry, CE_requestable) == REQU_FORCED ? true : false;  
+      job_centry_list = lGetList(a->job, JB_hard_resource_list);
+      job_centry = centry_list_locate(job_centry_list, limit_name);
 
       /* check for implicit slot and default request */
       if (job_centry == NULL) {

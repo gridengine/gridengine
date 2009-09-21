@@ -8,6 +8,12 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 -----------------+------------+-------------------------------------------------
+CR-2009-09-21-0: Cleanup:     commlib did check for timed-out messages in
+                              application messages queue every second. Since the
+                              timeout is 3600 seconds the check now is done once
+                              per minute.
+                 Review:      MD
+
 MD-2009-09-21-0: Bugfix:      fixed issues reported by insure 
                  Review:      CR
 

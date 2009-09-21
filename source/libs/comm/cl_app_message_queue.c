@@ -94,7 +94,7 @@ int cl_app_message_queue_append(cl_raw_list_t*        list_p,
    new_elem->snd_size         = snd_size;
    new_elem->snd_response_mid = snd_response_mid;
    new_elem->snd_tag          = snd_tag;
-
+   new_elem->raw_elem         = NULL;
 
    /* lock the list */
    if (do_lock != 0) {

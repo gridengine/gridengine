@@ -165,7 +165,10 @@ int cl_raw_list_cleanup(cl_raw_list_t** list_p) {  /* CR check */
       ret_val = pthread_mutex_destroy((*list_p)->list_mutex);
       if ( ret_val == EBUSY ) {
          if (do_log) {
-            CL_LOG_STR(CL_LOG_ERROR,"raw list mutex cleanup error: EBUSY for list:",(*list_p)->list_name );
+            CL_LOG_STR(CL_LOG_ERROR, "raw list mutex cleanup error: EBUSY for list:",(*list_p)->list_name );
+#ifdef CL_DO_COMMLIB_DEBUG
+            CL_LOG_STR(CL_LOG_ERROR, "last logger:", (*list_p)->last_locker);
+#endif
          }
          return CL_RETVAL_MUTEX_CLEANUP_ERROR;
       }
@@ -177,6 +180,8 @@ int cl_raw_list_cleanup(cl_raw_list_t** list_p) {  /* CR check */
    if (do_log) {
       CL_LOG_STR(CL_LOG_DEBUG,"raw list cleanup complete for list:",(*list_p)->list_name );
    }
+   free((*list_p)->last_locker);
+   (*list_p)->last_locker = NULL;
 #endif
 
    /* destroy list name */

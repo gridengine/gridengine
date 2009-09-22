@@ -8,6 +8,9 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 -----------------+------------+-------------------------------------------------
+JG-2009-09-22-0: Bugfix:      fixed a memory leak in qmaster
+                 Review:      EB, MD
+
 MD-2009-09-22-0: Enhancem.:   check in file containig version string 6.2u4
 
 CR-2009-09-21-0: Cleanup:     commlib did check for timed-out messages in
@@ -1332,7 +1335,7 @@ RD-2009-03-10-0: Bugfix:      fixed qmaster abort at update from previous versio
 GH-2009-03-10-0: Bugfix:      qmod -r does not delete the old instance 
                               of a job before the new one is started
                  Bugster:     6244911
-                 Issue:       2950
+                 Issue:       1521
                  Review:      JG
 
 JF-2009-03-10-0: Bugfix:      Fix qsub truncation of scripts

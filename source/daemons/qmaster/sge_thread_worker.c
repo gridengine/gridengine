@@ -356,6 +356,11 @@ sge_worker_main(void *arg)
                }
             } else {
                sge_gdi_packet_broadcast_that_handled(packet);
+               /* this is an internal request, packet will get destroyed later,
+                * where the caller waits for the answer
+                * make sure it is no longer accessed here
+                */
+               packet = NULL;
             }
 #endif
          } else {
@@ -366,7 +371,6 @@ sge_worker_main(void *arg)
                                  &next_prof_output);
 
          sge_monitor_output(&monitor);
-
       } else { 
          int execute = 0;
 
@@ -378,7 +382,6 @@ sge_worker_main(void *arg)
          cl_thread_func_testcancel(thread_config);
          pthread_cleanup_pop(execute); 
       }
-
    }
 
    /*

@@ -64,7 +64,7 @@ schedd_order_destroy(void) {
 
    DENTER(TOP_LAYER, "schedd_order_initialize");   
    ret &= sge_sl_destroy(&Master_Request_Queue.request_list, NULL);
-   DRETURN(ret);    
+   DRETURN(ret);
 }
 
 
@@ -139,7 +139,6 @@ sge_schedd_block_until_orders_processed(sge_gdi_ctx_class_t *ctx,
    sge_sl_elem_t *current_elem = NULL;
 
    DENTER(TOP_LAYER, "sge_schedd_block_until_orders_processed");
-
 
    /*
     * wait till all GDI order requests are finished

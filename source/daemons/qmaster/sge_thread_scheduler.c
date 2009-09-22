@@ -902,6 +902,7 @@ sge_scheduler_main(void *arg)
 
             /* block till master handled all GDI orders */
             sge_schedd_block_until_orders_processed(evc->get_gdi_ctx(evc), NULL);
+            schedd_order_destroy();
 
             /*
              * Stop profiling for "schedd run total" and the subcategories

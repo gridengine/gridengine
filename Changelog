@@ -8,6 +8,8 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 -----------------+------------+-------------------------------------------------
+MD-2009-09-22-0: Enhancem.:   check in file containig version string 6.2u4
+
 CR-2009-09-21-0: Cleanup:     commlib did check for timed-out messages in
                               application messages queue every second. Since the
                               timeout is 3600 seconds the check now is done once

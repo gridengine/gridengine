@@ -160,7 +160,7 @@ void updateCkptList(void)
    
    DENTER(GUI_LAYER, "updateCkptList");
 
-   cl = qmonMirrorList(SGE_CKPT_LIST);
+   cl = qmonMirrorList(SGE_CK_LIST);
    lPSortList(cl, "%I+", CK_name);
    UpdateXmListFromCull(ckpt_names, XmFONTLIST_DEFAULT_TAG, cl, CK_name);
 
@@ -274,7 +274,7 @@ static void qmonSelectCkpt(Widget w, XtPointer cld, XtPointer cad)
       return;
    }
 
-   ep = ckpt_list_locate(qmonMirrorList(SGE_CKPT_LIST), ckpt_name);
+   ep = ckpt_list_locate(qmonMirrorList(SGE_CK_LIST), ckpt_name);
 
    XtFree((char*) ckpt_name);
 
@@ -399,7 +399,7 @@ static void qmonCkptModify(Widget w, XtPointer cld, XtPointer cad)
       XtVaSetValues( ckpt_name_w,
                      XmNeditable, False,
                      NULL);
-      ckp = ckpt_list_locate(qmonMirrorList(SGE_CKPT_LIST), ckptstr);
+      ckp = ckpt_list_locate(qmonMirrorList(SGE_CK_LIST), ckptstr);
       XtFree((char*)ckptstr);
       if (ckp) {
          add_mode = 0;
@@ -441,11 +441,11 @@ static void qmonCkptOk(Widget w, XtPointer cld, XtPointer cad)
          what = lWhat("%T(ALL)", CK_Type);
          
          if (add_mode) {
-            alp = qmonAddList(SGE_CKPT_LIST, qmonMirrorListRef(SGE_CKPT_LIST),
+            alp = qmonAddList(SGE_CK_LIST, qmonMirrorListRef(SGE_CK_LIST),
                               CK_name, &ckptl, NULL, what);
          }
          else {
-            alp = qmonModList(SGE_CKPT_LIST, qmonMirrorListRef(SGE_CKPT_LIST),
+            alp = qmonModList(SGE_CK_LIST, qmonMirrorListRef(SGE_CK_LIST),
                               CK_name, &ckptl, NULL, what);
          }
 
@@ -502,7 +502,7 @@ static void qmonCkptDelete(Widget w, XtPointer cld, XtPointer cad)
                      False, &answer, NULL);
       if (answer) { 
          what = lWhat("%T(ALL)", CK_Type);
-         alp = qmonDelList(SGE_CKPT_LIST, qmonMirrorListRef(SGE_CKPT_LIST),
+         alp = qmonDelList(SGE_CK_LIST, qmonMirrorListRef(SGE_CK_LIST),
                                  CK_name, &lp, NULL, what);
 
          qmonMessageBox(w, alp, 0);

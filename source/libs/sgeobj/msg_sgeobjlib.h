@@ -268,6 +268,10 @@
 #define MSG_JOB_NOJOBNAME              _MESSAGE(64357, _("job rejected cause there is no job_name in the request"))
 
 
+#define MSG_RESOURCEQUOTA_INVALIDUSERFILTER     _MESSAGE(64366, _("resource quota set contains invalid user filter"))
+#define MSG_RESOURCEQUOTA_INVALIDPROJECTFILTER  _MESSAGE(64367, _("resource quota set contains invalid project filter"))
+#define MSG_RESOURCEQUOTA_INVALIDPEFILTER       _MESSAGE(64368, _("resource quota set contains invalid pe filter"))
+
 #define MSG_RESOURCEQUOTA_NORULEDEFINED         _MESSAGE(64369, _("no resource quota rule specified for modification"))
 #define MSG_RESOURCEQUOTA_NOVALIDEXPANDEDLIST   _MESSAGE(64370, _("no valid expanded list"))
 
@@ -313,6 +317,7 @@
 #define MSG_CQUEUE_UNKNOWNSHELL_S                _MESSAGE(64509, _("Invalid value "SFQ" for shell "))
 #define MSG_CENTRY_NOTREQUESTABLE_S              _MESSAGE(64510, _("Complex attribute "SFQ" is not requestable"))
 #define MSG_ULNG_INVALIDPRIO_I                   _MESSAGE(64511, _("invalid priority %d. must be an integer from -1023 to 1024"))
+#define MSG_ULNG_INVALID_TASK_CONCURRENCY_I      _MESSAGE(64512, _("invalid task concurrency number %d. Must be an integer greater or equal to 0."))
 
 #define MSG_JSV_EXISTS_S         _MESSAGE(64521, _("JSV file "SFQ" does not exist"))
 #define MSG_JSV_INSTANCIATE_S    _MESSAGE(64522, _("JSV file "SFQ" can't be started"))

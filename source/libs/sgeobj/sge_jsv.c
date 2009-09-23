@@ -57,13 +57,12 @@
 
 #include "gdi/sge_gdi_ctx.h"
 
-#include "sgeobj/sge_answer.h"
-#include "sgeobj/sge_job.h"
-#include "sgeobj/sge_jsv.h"
-#include "sgeobj/sge_jsv_script.h"
-#include "sgeobj/sge_str.h"
-
-#include "sgeobj/msg_sgeobjlib.h"
+#include "sge_answer.h"
+#include "sge_job.h"
+#include "sge_jsv.h"
+#include "sge_jsv_script.h"
+#include "sge_str.h"
+#include "msg_sgeobjlib.h"
 
 /*
  * defines the timeout between the soft shutdown signal and the kill
@@ -257,7 +256,7 @@ jsv_send_data(lListElem *jsv, lList **answer_list, const char *buffer, size_t si
    if (jsv_is_send_ready(jsv, answer_list)) {
       int lret;
 
-      lret = fprintf(lGetRef(jsv, JSV_in), buffer);
+      lret = fprintf(lGetRef(jsv, JSV_in), "%s", buffer);
       fflush(lGetRef(jsv, JSV_in));
       if (lret != size) {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
@@ -1013,7 +1012,7 @@ jsv_do_verify(sge_gdi_ctx_class_t* ctx, const char *context, lListElem **job,
    lListElem *jsv;
    lListElem *jsv_next;
    const void *iterator = NULL;
-
+   
    DENTER(TOP_LAYER, "jsv_do_verify");
 
    if (context != NULL && job != NULL) {
@@ -1144,6 +1143,9 @@ jsv_do_verify(sge_gdi_ctx_class_t* ctx, const char *context, lListElem **job,
                ret &= jsv_stop(jsv, answer_list, soft_shutdown);
             }
          }
+         if (strcmp(context, JSV_CONTEXT_CLIENT) == 0) {
+            ret &= jsv_stop(jsv, answer_list, true);
+         } 
       }
       if (holding_mutex) {
          sge_mutex_unlock("jsv_list", SGE_FUNC, __LINE__, &jsv_mutex);

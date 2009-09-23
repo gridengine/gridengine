@@ -29,6 +29,7 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -42,20 +43,26 @@
 #   define NO_SGE_COMPILE_DEBUG
 #endif
 
-#include "sge_all_listsL.h"
-#include "commlib.h"
-#include "sgermon.h"
-#include "sge_prog.h"
-#include "sge_time.h"
+#include "rmon/sgermon.h"
+
+#include "comm/commlib.h"
+
+#include "uti/sge_prog.h"
+#include "uti/sge_time.h"
+
+#include "sgeobj/sge_schedd_conf.h"
+#include "sgeobj/sge_usage.h"
+#include "sgeobj/sge_userprj.h"
+#include "sgeobj/sge_sharetree.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_ja_task.h"
+
 #include "sge_orders.h"
 #include "sge_job_schedd.h"
 #include "sgeee.h"
 #include "sge_support.h"
-#include "sge_schedd_conf.h"
-#include "sge_usageL.h"
-#include "sge_userprj.h"
-#include "sgeobj/sge_sharetree.h"
 #include "valid_queue_user.h"
+#include "sge_eejob_SGEJ_L.h"
 
 static const long sge_usage_interval = SGE_USAGE_INTERVAL;
 

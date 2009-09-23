@@ -33,7 +33,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_qetiL.h"
+#include "sge_qeti_QETI_L.h"
 
 typedef struct sge_qeti_s sge_qeti_t;
 

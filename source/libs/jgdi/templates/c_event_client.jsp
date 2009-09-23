@@ -57,7 +57,7 @@
 #include "sge_event_client.h"
 #include "jgdi_event.h"
 #include "sge_mirror.h"
-#include "sge_eventL.h"
+#include "sge_event.h"
 #include "jgdi_wrapper.h"
 
 <%

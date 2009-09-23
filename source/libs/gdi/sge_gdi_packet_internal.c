@@ -46,21 +46,23 @@
 #include "lck/sge_mtutil.h"
 
 #include "uti/sge_log.h"
-
-#include "gdi/sge_gdi2.h"
-#include "gdi/sge_gdi_packet_pb_cull.h"
-#include "gdi/sge_security.h"
-#include "gdi/sge_gdi_packet.h"
-#include "gdi/sge_gdi_packet_queue.h"
+#include "uti/sge_tq.h"
 
 #include "sgeobj/sge_answer.h"
-#include "sgeobj/sge_multiL.h"
+#include "sgeobj/sge_multi_MA_L.h"
 #include "sgeobj/sge_jsv.h"
+
+#include "sge_gdi2.h"
+#include "sge_gdi_packet_pb_cull.h"
+#include "sge_security.h"
+#include "sge_gdi_packet.h"
 
 #include "msg_common.h"
 #include "msg_gdilib.h"
 
 #define CLIENT_WAIT_TIME_S 1
+
+sge_tq_queue_t *Master_Task_Queue = NULL;
 
 /****** gdi/request_internal/sge_gdi_packet_create_multi_answer() ***********
 *  NAME
@@ -443,7 +445,7 @@ sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
 
 #ifdef KERBEROS
    /* request that the Kerberos library forward the TGT */
-   if (ret && packet->first_task->target == SGE_JOB_LIST && 
+   if (ret && packet->first_task->target == SGE_JB_LIST && 
        SGE_GDI_GET_OPERATION(packet->first_task->command) == SGE_GDI_ADD ) {
       krb_set_client_flags(krb_get_client_flags() | KRB_FORWARD_TGT);
       krb_set_tgt_id(packet->id);
@@ -459,7 +461,7 @@ sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
     if (ret) {
        sge_gdi_task_class_t *task = packet->first_task;
 
-       if (task->target == SGE_JOB_LIST &&
+       if (task->target == SGE_JB_LIST &&
            ((SGE_GDI_GET_OPERATION(task->command) == SGE_GDI_ADD) ||
            (SGE_GDI_GET_OPERATION(task->command) == SGE_GDI_COPY))) {
           lListElem *job, *next_job;
@@ -519,7 +521,7 @@ sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
          commlib_error = ctx->is_alive(ctx);
          if (commlib_error != CL_RETVAL_OK) {
             u_long32 sge_qmaster_port = ctx->get_sge_qmaster_port(ctx);
-            const char *mastername = ctx->get_master(ctx, false);
+            const char *mastername = ctx->get_master(ctx, true);
 
             if (commlib_error == CL_RETVAL_CONNECT_ERROR ||
                 commlib_error == CL_RETVAL_CONNECTION_NOT_FOUND ) {
@@ -619,7 +621,7 @@ sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
          commlib_error = ctx->is_alive(ctx);
          if (commlib_error != CL_RETVAL_OK) {
             u_long32 sge_qmaster_port = ctx->get_sge_qmaster_port(ctx);
-            const char *mastername = ctx->get_master(ctx, false);
+            const char *mastername = ctx->get_master(ctx, true);
 
             if (commlib_error == CL_RETVAL_CONNECT_ERROR ||
                 commlib_error == CL_RETVAL_CONNECTION_NOT_FOUND ) {
@@ -695,7 +697,7 @@ sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
 
 #ifdef KERBEROS
    /* clear the forward TGT request */
-   if (ret && state->first->target == SGE_JOB_LIST &&
+   if (ret && state->first->target == SGE_JB_LIST &&
        SGE_GDI_GET_OPERATION(packet->first_task->command) == SGE_GDI_ADD) {
       krb_set_client_flags(krb_get_client_flags() & ~KRB_FORWARD_TGT);
       krb_set_tgt_id(0);
@@ -778,7 +780,7 @@ sge_gdi_packet_execute_internal(sge_gdi_ctx_class_t* ctx, lList **answer_list,
    /* 
     * append the packet to the packet list of the worker threads
     */
-   sge_gdi_packet_queue_store_notify(&Master_Packet_Queue, packet, NULL);
+   sge_tq_store_notify(Master_Task_Queue, SGE_TQ_GDI_PACKET, packet);
 
    DRETURN(ret);
 }

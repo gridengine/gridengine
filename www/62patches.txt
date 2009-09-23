@@ -1,3 +1,104 @@
+Bugs fixed in SGE 6.2u3 since release 6.2u2_1
+---------------------------------------------
+-    6830972 error message when testing JAVA version 
+-    6786381 gui-installer: silent installation support 
+-    6806241 gui-installer: admin/submit error handling is confusing 
+-    6242663 dbwriter and reporting installation documenation has to be changed due to the fix of issue 6240658 
+-    6517628 job exit codes explanations are incomplete in the N1GE user's guide 
+-    6545757 adding sge_statistic tables description 
+-    6684943 spooldefaults does nothing when SGE_ROOT is not set 
+-    6729416 LSB insserv in Suse does not handle new RC script names correctly 
+-    6783301 users guide should have a section that explains job chunking 
+-    6786350 gui-installer: when moving columns the sorting stays in the column index not on the column ifself 
+-    6786393 Need support for parallel shadowd installation 
+-    6816037 problems with gaussian due to memory limitations of SGE 
+-    6821250 dependecy error wenn installing 6.2u2_1 rpm patches 
+-    6830897 Startup of qmaster fails onHP11/HP11_64 during installation 
+-    6830975 unsatisfied link error exception 
+-    6831094 gui-installer: CSP installation might fail when qmaster!=startup node 
+-    6831971 gui-installer: let's the user uninformed about the user who's running the installer 
+-    6834855 gui-installer: Next button is not disabled during the installation 
+-    6844300 gui-installer: Exception when reading empty line in managemenent.properties file 
+-    6844305 gui-installer: Empty JMX screen displayed in custom standalone shadowd installation 
+-    6847167 qconf -sstree fails with NULL object pointer passed to function "" message 
+-    6848366 wrong argument syntax could cause qmaster crash 
+-    6851480 common packages contains wrong legal files
+616  6739139 the configuration of the scheduler and master has been changed 
+641  6739197 binary submission / script submission 
+643  6832360 Deadlock in jvm shutdown process 
+645  6834875 Resources end up in ERROR state (EXECD_DEL event timeout) 
+649  6837412 RP assigns too many resources for a need 
+651  6838346 GEAdapter clears static flag for resources moved with -static option 
+654  6839438 Service ends in strange state after 'sdmadm sus' command 
+659  6842095 Improve error message when local VPN client cannot be started up correctly 
+663  6842882 Crashed managed host causes a 10 min delay in show_component command 
+664  6842887 Too short "wait for resource removal" timeout 
+666  6844741 No cloud resources start up but cloud shows started hosts 
+670  6851541 bootstrap file on cloud resource has wrong permissions
+1521 6244911 qmod -r does not delete the old instance of a job before a new one is started 
+2056 6816705 incorrect referrences to "SGE_H_ALIASES" man page 
+2103 6816634 SIGUSR1 clash between s_rt and NOTIFY_SUSP 
+2408 6619384 qconf -dhgrp can delete a host group referenced from a queue instance 
+2510 6838487 poor qacct -j <jobid> performance 
+2572 6648160 SGE util/arch script is broken for AIX 5.3 Operating System 
+2629 6731441 provide Exclusive Host Scheduling 
+2735 6751413 cannot delete qlogin job - qlogin job hanging 
+2759 6761993 stopping an execution daemon does not stop jobs 
+2787 6774196 accounting_summary in PE only adding cpu/mem/io 
+2801 6773642 problem with broken dot-file writing for sequential jobs in classic spooling mode 
+2833 6784919 qmaster csp installation fails when using port from /etc/services 
+2876 6810688 fix qsub truncation of scripts 
+2900 6823756 qmaster fail-over results in very slow execd reconnect 
+2901 6807072 fill_up is oversubscribing one node instead of distributing to other free nodes. 
+2904 6801748 jobs started with -l dwg=true can't display their GUI on Windows Vista and Server 2008 
+2914 6805845 classic spooling method (flatfile spooling) should be more error tolerant 
+2917 6806219 JSV -w param has wrong value inside script 
+2923 6806363 DRMAA test_drmaa_perf produces segmentation fault when using user .sge_request file 
+2934 6808617 a running qsub -sync y session doesn't handle the shutdown signal from a qconf -kec all 
+2938 6810493 Changing "w" job parameter to "n" in client JSV is not handled correctly 
+2939 6806324 qsub man page refers to "see -jsv option below" but it is above in some cases 
+2940 6806209 The cluster config paramter jsv_allowed_mod does not work -w switch 
+2946 6814059 c_occasion job parameter can't be changed by JSV script 
+2947 6814060 influence of c_occasion on c_interval and vice versa is not documented explicitly in JSV doc 
+2953 6815435 qmaster reports commlib read error in message file when qconf -m(s)conf fails 
+2957 6810490 a qmaster not running a root exits with return code 1 if a JSV script to start as user is configured 
+2958 6818825 some variable names can't be used in Bourne shell JSV scripts 
+2960 6819649 qconf -m* reports misleading error if tmp dir is not writeable for the user and needs 100% cpu 
+2961 6746960 misleading execd logging "Can't get load values" on AIX 
+2963 6821207 "qconf -Mc <filename>" gives no output in case of success 
+2964 6821237 built-in complex "display_win_gui" is not protected against remove 
+2967 6755146 qrsub allows to request a non existing checkpoint object 
+2972 6824346 qalter -h U <jobname> fails with CULL error 
+2975 6823086 scheduler profile reports accumulated values instead of actual values per profiling period 
+2977 6746750 need tight integration accounting and sharetree usage according to reserved resources 
+2986 6802351 we need the ability for qrsh to ignore SIGUSR1 and SIGUSR2 to support -notify 
+2995 6817190 in case of errors, the return values of the SGE_Starter.exe are not handled correctly 
+2996 6817193 add logging to SGE_Helper_Service.exe 
+2998 6825381 JSV: Changing CMDARG[1-n] always changes the first commandline argument. 
+2999 6825376 JSV: Number of arguments is handled as read-only parameter 
+3005 6831573 jgdi SSL connections from one client jvm to different SGE cluster might not work 
+3006 6832406 shadowd startup script returns error if SMF support is enabled 
+3008 6834901 Install script do not recognize OpenJDK as valid Java version 
+3009 6816902 loadsensor infrastructure in the ibm platform is inconsistent 
+3010 6834507 SGE locking implementation may lead to write lock starvation 
+3013 6832457 parallel job submission verfication result differs when turning on non-restricting resource quota 
+3014 6827155 qmaster crash in schedd_mes_add_global/lGetPosViaElem 
+3016 6836897 Classic spooled sharetree does no longer set correct leaf ID 
+3017 6811202 inconsistent signal delivery behavior with and without -notify 
+3018 6825385 the path to PE_HOSTFILE variable may not be set for pe slave tasks 
+3020 6838070 exechost wrongly named "exec server" in qconf -help 
+3023 6838220 man qmod synopsis mentions only queue and omits job 
+3024 6499573 qacct does not resolve complex shortcut names 
+3026 6782283 qhost failed to filter the resource request correctly 
+3027 6835592 gui-installer: qmaster installation validation always reports JMV lib missing if not set properly 
+3031 6841529 redirecting "qrsh -pty yes" output to a file or a pipe doesn't work 
+3033 6842629 load_sensor script does not comply to protocol 
+3034 6842644 qconf error message for EXCL bool without comsumable flag is incorrect 
+3037 6810076 english language issues in install_qmaster 
+3039 6843269 qhost man page needs to clarify how it handles multiple resource attribute requests 
+3040 6833511 qalter -w p output fails to match qstat -j output 
+3041 6845162 spelling errors in the man pages 
+
 Bugs fixed in SGE 6.2u2_1 since release 6.2u2
 ---------------------------------------------
 2949 6814823 Update to 6.2u2 fails with error "wrong type for field CE_consumable (lBoolT)Abort"

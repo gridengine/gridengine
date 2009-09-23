@@ -38,14 +38,19 @@
 #   include <malloc.h>
 #endif
 
-#include "sgermon.h"
+#include "rmon/sgermon.h"
+
 #include "sge.h"
-#include "sge_all_listsL.h"
-#include "sge_parse_num_par.h"
+
+#include "uti/sge_string.h"
+#include "uti/sge_parse_num_par.h"
+
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_schedd_conf.h"
+
 #include "sort_hosts.h"
 #include "sge_sched.h"
-#include "sge_string.h"
-#include "sge_host.h"
 
 static const char load_ops[]={
         '+',

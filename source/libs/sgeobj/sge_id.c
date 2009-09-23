@@ -30,17 +30,19 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/                                   
 
-#include "sge_string.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "cull_list.h"
-#include "parse.h"
+#include "rmon/sgermon.h"
 
+#include "uti/sge_log.h"
+#include "uti/sge_string.h"
+
+#include "cull/cull_list.h"
+
+#include "parse.h"
 #include "sge_answer.h"
 #include "sge_id.h"
 #include "sge_str.h"
 #include "sge_qinstance_state.h"
-#include "sgeobj/sge_ja_task.h"
+#include "sge_ja_task.h"
 
 #include "msg_sgeobjlib.h"
 

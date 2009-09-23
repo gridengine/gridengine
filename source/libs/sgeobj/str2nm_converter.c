@@ -34,9 +34,12 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "sgermon.h"
-#include "cull.h"
-#include "sge_string.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_string.h"
+
+#include "cull/cull.h"
+
 #include "sge_all_listsL.h"
 #include "str2nm_converter.h"
 

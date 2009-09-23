@@ -35,6 +35,7 @@
 #include "commlib.h"
 #include "sge_all_listsL.h"
 #include "sge_answer.h"
+#include "sge_job.h"
 
 #include "gdi/sge_gdi_ctx.h"
 
@@ -88,30 +89,30 @@ static char *sge_gdi_list_timers[] = {
 
 static tQmonPoll QmonListTimer[] = {
    /*  type   timercount fetch_frequency fetch update_proc_list */
-   { SGE_ADMINHOST_LIST, 0, 1, 0, NULL },  
-   { SGE_SUBMITHOST_LIST, 0, 1, 0, NULL },  
-   { SGE_EXECHOST_LIST, 0, 1, 0, NULL },  
-   { SGE_CQUEUE_LIST, 0, 1, 0, NULL },  
-   { SGE_JOB_LIST, 0, 1, 0, NULL },  
-   { SGE_EVENT_LIST, 0, 1, 0, NULL },  
-   { SGE_CENTRY_LIST, 0, 1, 0, NULL },  
+   { SGE_AH_LIST, 0, 1, 0, NULL },  
+   { SGE_SH_LIST, 0, 1, 0, NULL },  
+   { SGE_EH_LIST, 0, 1, 0, NULL },  
+   { SGE_CQ_LIST, 0, 1, 0, NULL },  
+   { SGE_JB_LIST, 0, 1, 0, NULL },  
+   { SGE_EV_LIST, 0, 1, 0, NULL },  
+   { SGE_CE_LIST, 0, 1, 0, NULL },  
    { SGE_ORDER_LIST, 0, 1, 0, NULL },  
    { SGE_MASTER_EVENT, 0, 1, 0, NULL },  
-   { SGE_CONFIG_LIST, 0, 1, 0, NULL },  
-   { SGE_MANAGER_LIST, 0, 1, 0, NULL },  
-   { SGE_OPERATOR_LIST, 0, 1, 0, NULL },
+   { SGE_CONF_LIST, 0, 1, 0, NULL },  
+   { SGE_UM_LIST, 0, 1, 0, NULL },  
+   { SGE_UO_LIST, 0, 1, 0, NULL },
    { SGE_PE_LIST, 0, 1, 0, NULL }, 
    { SGE_SC_LIST, 0, 1, 0, NULL },
-   { SGE_USER_LIST, 0, 1, 0, NULL },
-   { SGE_USERSET_LIST, 0, 1, 0, NULL }, 
-   { SGE_PROJECT_LIST, 0, 1, 0, NULL }, 
-   { SGE_SHARETREE_LIST, 0, 1, 0, NULL },
-   { SGE_CKPT_LIST, 0, 1, 0, NULL },
-   { SGE_CALENDAR_LIST, 0, 1, 0, NULL },
-   { SGE_JOB_SCHEDD_INFO_LIST, 0, 1, 0, NULL },
+   { SGE_UU_LIST, 0, 1, 0, NULL },
+   { SGE_US_LIST, 0, 1, 0, NULL }, 
+   { SGE_PR_LIST, 0, 1, 0, NULL }, 
+   { SGE_STN_LIST, 0, 1, 0, NULL },
+   { SGE_CK_LIST, 0, 1, 0, NULL },
+   { SGE_CAL_LIST, 0, 1, 0, NULL },
+   { SGE_SME_LIST, 0, 1, 0, NULL },
    { SGE_ZOMBIE_LIST, 0, 1, 0, NULL },
    { SGE_USER_MAPPING_LIST, 0, 1, 0, NULL },
-   { SGE_HGROUP_LIST, 0, 1, 0, NULL },
+   { SGE_HGRP_LIST, 0, 1, 0, NULL },
    { SGE_RQS_LIST, 0, 1, 0, NULL },
    { SGE_AR_LIST, 0, 1, 0, NULL },
    { 0, 0, 0, 0, NULL}
@@ -391,7 +392,7 @@ XtIntervalId *id
 
    DENTER(GUI_LAYER, "qmonTimerCheckInteractiveJob");
 
-   if (ctx->is_alive(ctx) == false) {
+   if (ctx->is_alive(ctx) != CL_RETVAL_OK) {
       sprintf(msg, XmtLocalize(AppShell, "cannot reach qmaster", "cannot reach qmaster"));
       contact_ok = XmtDisplayErrorAndAsk(AppShell, "nocontact",
                                                 msg, "@{Retry}", "@{Abort}",
@@ -403,6 +404,10 @@ XtIntervalId *id
          DEXIT;
          qmonExitFunc(1);
       }
+      /*
+      ** re-read act_qmaster file
+      */
+      ctx->get_master(ctx, true);
    }
 
    /*
@@ -411,7 +416,7 @@ XtIntervalId *id
    */
    what = lWhat("%T(ALL)", JB_Type);
    where = lWhere("%T(%I == %u)", JB_Type, JB_job_number, job_number);
-   alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_GET, &lp, where, what);
+   alp = ctx->gdi(ctx, SGE_JB_LIST, SGE_GDI_GET, &lp, where, what);
    aep = lFirst(alp);
    ep = lFirst(lp);
 

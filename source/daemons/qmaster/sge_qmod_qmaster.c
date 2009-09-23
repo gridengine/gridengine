@@ -38,7 +38,7 @@
 #include "symbols.h"
 #include "sge_ja_task.h"
 #include "sge_str.h"
-#include "sge_idL.h"
+#include "sge_id.h"
 #include "sge_pe.h"
 #include "sge_signal.h"
 #include "sge_prog.h"
@@ -468,7 +468,7 @@ sge_change_queue_state(sge_gdi_ctx_class_t *ctx,
          break;
       default:
          INFO((SGE_EVENT, MSG_LOG_QUNKNOWNQMODCMD_U, sge_u32c(action)));
-         answer_list_add(answer, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
+         answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
          break;
    }
 
@@ -514,10 +514,11 @@ monitoring_t *monitor
 
    if (!jatep) {
       /* unenrolled tasks always are not-running pending/hold */
-      if (task_id)
+      if (task_id) {
          WARNING((SGE_EVENT, MSG_QMODJOB_NOTENROLLED_UU, sge_u32c(job_id), sge_u32c(task_id)));
-      else
+      } else {
          WARNING((SGE_EVENT, MSG_QMODJOB_NOTENROLLED_U, sge_u32c(job_id)));
+      }   
       answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
       DEXIT;
       return -1;
@@ -567,12 +568,12 @@ monitoring_t *monitor
                INFO((SGE_EVENT, MSG_JOB_NOERRORSTATEJOB_UU, sge_u32c(job_id)));
             }
          }
-         answer_list_add(answer, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
+         answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
          break;
 
       default:
          INFO((SGE_EVENT, MSG_LOG_JOBUNKNOWNQMODCMD_U, sge_u32c(action)));
-         answer_list_add(answer, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
+         answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
          break;
    }
 
@@ -860,7 +861,7 @@ monitoring_t *monitor
          } else {
             INFO((SGE_EVENT, MSG_JOB_RMADMSUSPENDJOB_SSU, user, host, sge_u32c(jobid)));
          }
-         answer_list_add(answer, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
+         answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
 
          state = lGetUlong(jatep, JAT_state);
          CLEARBIT(JSUSPENDED, state);

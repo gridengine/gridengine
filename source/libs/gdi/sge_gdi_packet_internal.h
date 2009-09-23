@@ -38,6 +38,10 @@
 extern "C" {
 #endif
 
+#include "uti/sge_tq.h"
+
+extern sge_tq_queue_t *Master_Task_Queue;
+
 void
 sge_gdi_packet_wait_till_handled(sge_gdi_packet_class_t *packet);
 

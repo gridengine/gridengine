@@ -40,12 +40,11 @@
 #include "sge_qinstance_state.h"
 #include "sge_time.h"
 #include "sge_log.h"
-#include "sge_orderL.h"
 #include "sge_order.h"
-#include "sge_usageL.h"
+#include "sge_order.h"
+#include "sge_usage.h"
 #include "sge_schedd_conf.h"
 #include "sgermon.h"
-#include "commlib.h"
 #include "sge_host.h"
 #include "sge_signal.h"
 #include "sge_job_qmaster.h"
@@ -54,41 +53,28 @@
 #include "sgeee.h"
 #include "sge_support.h"
 #include "sge_userprj_qmaster.h"
-#include "sge_pe_qmaster.h"
 #include "sge_qmod_qmaster.h"
 #include "sge_subordinate_qmaster.h"
 #include "sge_sharetree_qmaster.h"
 #include "sge_give_jobs.h"
 #include "sge_event_master.h"
 #include "sge_queue_event_master.h"
-#include "sge_feature.h"
 #include "sge_prog.h"
-#include "config.h"
-#include "mail.h"
-#include "sge_str.h"
-#include "sge_messageL.h"
-#include "sge_string.h"
-#include "sge_security.h"
+#include "sge_message_SME_L.h"
 #include "sge_range.h"
 #include "sge_job.h"
 #include "sge_hostname.h"
 #include "sge_answer.h"
 #include "sge_userprj.h"
-#include "sge_userset.h"
-#include "sge_sharetree.h"
 #include "sge_cqueue.h"
 #include "sge_persistence_qmaster.h"
 
-#include "spool/sge_spooling.h"
 
-#include "lck/sge_lock.h"
 
 #include "sgeobj/sge_advance_reservation.h"
 
-#include "uti/sge_thread_ctrl.h"
 
 #include "msg_common.h"
-#include "msg_evmlib.h"
 #include "msg_qmaster.h"
 #include "sge_mtutil.h"
 
@@ -244,31 +230,22 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
       jatp = job_search_task(jep, NULL, task_number);
       if (jatp == NULL) {
          if (range_list_is_id_within(lGetList(jep, JB_ja_n_h_ids), task_number)) {
-            lList *answer_list = NULL;
-           
-            /* 
-             * CR - TODO:
-             *
-             * job_create_task() should check if it should create the task and
-             * not the user by first checking the function range_list_is_id_within()
-             *
-             */
-
             jatp = job_create_task(jep, NULL, task_number);
-
             if (jatp == NULL) {
                WARNING((SGE_EVENT, MSG_JOB_FINDJOBTASK_UU, sge_u32c(task_number), 
                         sge_u32c(job_number)));
                DRETURN(-1);
             }
 
-            /* spooling of the JATASK will be done in sge_commit_job */
+            /* spooling of the JATASK will be done later
+             * TODO: we could reduce the number of events sent:
+             * Currently we send the ADD event, and a MOD event.
+             * This could be reduced to just the ADD event, if we
+             * roll back creation of the ja_task in every error situation
+             * (delete the ja_task *and* rollback the range information).
+             */
             sge_add_event(0, sgeE_JATASK_ADD, job_number, task_number, 
                           NULL, NULL, lGetString(jep, JB_session), jatp);
-            sge_event_spool(ctx, &answer_list, 0, sgeE_JOB_MOD,
-                            job_number, 0, NULL, NULL, 
-                            lGetString(jep, JB_session),
-                            jep, NULL, NULL, true, true);
          } else {
             INFO((SGE_EVENT, MSG_JOB_IGNORE_DELETED_TASK_UU,
                   sge_u32c(job_number), sge_u32c(task_number)));
@@ -499,14 +476,25 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
             could not be delivered. The jobslotsfree had been increased even if
             they where not decreased bevore. */
 
-         ERROR((SGE_EVENT, MSG_JOB_JOBDELIVER_UU, 
+         ERROR((SGE_EVENT, MSG_JOB_JOBDELIVER_UU,
                 sge_u32c(lGetUlong(jep, JB_job_number)), sge_u32c(lGetUlong(jatp, JAT_task_number))));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DRETURN(-3);
       }
-     
+
       /* job is now sent and goes into transfering state */
       sge_commit_job(ctx, jep, jatp, NULL, COMMIT_ST_SENT, COMMIT_DEFAULT, monitor);   /* mode==0 -> really accept when execd acks */
+
+      /* now send events and spool the job */
+      {
+         u_long32 now = sge_get_gmt();
+         const char *session = lGetString(jep, JB_session);
+
+         /* spool job and ja_task in one transaction, send job mod event */
+         sge_event_spool(ctx, alpp, now, sgeE_JOB_MOD,
+                         job_number, task_number, NULL, NULL, session,
+                         jep, jatp, NULL, true, true);
+      }
 
       /* set timeout for job resend */
       trigger_job_resend(sge_get_gmt(), master_host, job_number, task_number, 5);
@@ -700,8 +688,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
          order_job_pos = &(Follow_Control.cull_order_pos->order_job);
          
          if (lGetPosUlong(jatp, ja_pos->JAT_status_pos) == JFINISHED) {
-
-            WARNING((SGE_EVENT, MSG_JOB_CHANGEPTICKETS_UU, 
+            WARNING((SGE_EVENT, MSG_JOB_CHANGEPTICKETS_UU,
                      sge_u32c(lGetUlong(jep, JB_job_number)), 
                      sge_u32c(lGetUlong(jatp, JAT_task_number))));
             answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_WARNING);

@@ -51,20 +51,17 @@
 #include "rmon/sgermon.h"
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_conf.h"
-#include "sgeobj/sge_reportL.h"
+#include "sgeobj/sge_report.h"
 #include "sgeobj/sge_schedd_conf.h"
 #include "sgeobj/sge_job.h"
-#include "sgeobj//sge_jobL.h"
-#include "sgeobj/sge_cqueueL.h"
-#include "sgeobj/sge_qinstanceL.h"
-#include "sgeobj/sge_ja_taskL.h"
-#include "sgeobj/sge_usersetL.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_userset.h"
 #include "sgeobj/sge_qinstance_state.h"
 #include "sgeobj/sge_userprj.h"
 #include "sgeobj/sge_sharetree.h"
 #include "sgeobj/sge_host.h"
 #include "sgeobj/sge_centry.h"
-#include "sgeobj/sge_ctL.h"
 #include "sgeobj/sge_ckpt.h"
 #include "sgeobj/sge_pe.h"
 #include "sgeobj/sge_range.h"
@@ -91,7 +88,7 @@
 #include "sge_schedd_text.h"
 #include "schedd_monitor.h"
 #include "sge_interactive_sched.h"
-#include "sge_orderL.h"
+#include "sge_order.h"
 #include "sgeee.h"
 #include "load_correction.h"
 #include "sge_resource_utilization.h"
@@ -155,7 +152,7 @@ bool st_get_flag_new_global_conf(void)
    DRETURN(ret);
 } 
 
-int scheduler_method(sge_evc_class_t *evc, lList **answer_list, scheduler_all_data_t *lists, lList **order) 
+int scheduler_method(sge_evc_class_t *evc, lList **answer_list, scheduler_all_data_t *lists, lList **order)
 {
    order_t orders = ORDER_INIT;
    lList **splitted_job_lists[SPLIT_LAST];         /* JB_Type */
@@ -187,6 +184,7 @@ int scheduler_method(sge_evc_class_t *evc, lList **answer_list, scheduler_all_da
    
    sconf_reset_jobs();
    schedd_mes_initialize();
+   schedd_order_initialize();
    
    for (i = SPLIT_FIRST; i < SPLIT_LAST; i++) {
       splitted_job_lists[i] = NULL;
@@ -265,7 +263,7 @@ int scheduler_method(sge_evc_class_t *evc, lList **answer_list, scheduler_all_da
    if (sge_thread_has_shutdown_started() == false) {
       sge_schedd_send_orders(evc->get_gdi_ctx(evc), &orders, &(orders.configOrderList), NULL, "C: config orders");
       sge_schedd_send_orders(evc->get_gdi_ctx(evc), &orders, &(orders.jobStartOrderList), NULL, "C: job start orders");
-      sge_schedd_send_orders(evc->get_gdi_ctx(evc), &orders, &(orders.pendingOrderList), NULL, "C: peding ticket orders");
+      sge_schedd_send_orders(evc->get_gdi_ctx(evc), &orders, &(orders.pendingOrderList), NULL, "C: pending ticket orders");
    }
 
    PROF_START_MEASUREMENT(SGE_PROF_SCHEDLIB4);
@@ -310,7 +308,7 @@ int scheduler_method(sge_evc_class_t *evc, lList **answer_list, scheduler_all_da
 
    sge_schedd_send_orders(evc->get_gdi_ctx(evc), &orders, &(orders.configOrderList), answer_list, "D: config orders");
    sge_schedd_send_orders(evc->get_gdi_ctx(evc), &orders, &(orders.jobStartOrderList), answer_list, "D: job start orders");
-   sge_schedd_send_orders(evc->get_gdi_ctx(evc), &orders, &(orders.pendingOrderList), answer_list, "D: pendig ticket orders");
+   sge_schedd_send_orders(evc->get_gdi_ctx(evc), &orders, &(orders.pendingOrderList), answer_list, "D: pending ticket orders");
 
    if (Master_Request_Queue.order_list != NULL) {
       sge_schedd_add_gdi_order_request(evc->get_gdi_ctx(evc), &orders, answer_list, &Master_Request_Queue.order_list);
@@ -367,7 +365,7 @@ int scheduler_method(sge_evc_class_t *evc, lList **answer_list, scheduler_all_da
       }
    }
 
-   if(prof_is_active(SGE_PROF_CUSTOM5)) {
+   if (prof_is_active(SGE_PROF_CUSTOM5)) {
       prof_stop_measurement(SGE_PROF_CUSTOM5, NULL);
 
       PROFILING((SGE_EVENT, "PROF: send orders and cleanup took: %.3f (u %.3f,s %.3f) s",
@@ -595,7 +593,7 @@ static int dispatch_jobs(sge_evc_class_t *evc, scheduler_all_data_t *lists, orde
 
       sge_schedd_send_orders(evc->get_gdi_ctx(evc), orders, &(orders->configOrderList), NULL, "A: config orders");
       sge_schedd_send_orders(evc->get_gdi_ctx(evc), orders, &(orders->jobStartOrderList), NULL, "A: job start orders");
-      sge_schedd_send_orders(evc->get_gdi_ctx(evc), orders, &(orders->pendingOrderList), NULL, "A: pendig ticket orders");
+      sge_schedd_send_orders(evc->get_gdi_ctx(evc), orders, &(orders->pendingOrderList), NULL, "A: pending ticket orders");
 
       if (prof_is_active(SGE_PROF_CUSTOM1)) {
          prof_stop_measurement(SGE_PROF_CUSTOM1, NULL);
@@ -731,7 +729,7 @@ static int dispatch_jobs(sge_evc_class_t *evc, scheduler_all_data_t *lists, orde
             is_reserve = true;
          } else {
             is_reserve = false;
-         }  
+         }
 
          /* Don't need to look for a 'now' assignment if the last job 
             of this category got no 'now' assignement either */
@@ -852,7 +850,7 @@ static int dispatch_jobs(sge_evc_class_t *evc, scheduler_all_data_t *lists, orde
                      lList *answer_list = NULL;
                      sge_schedd_send_orders(evc->get_gdi_ctx(evc), orders, &(orders->configOrderList), &answer_list, "B: config orders");
                      sge_schedd_send_orders(evc->get_gdi_ctx(evc), orders, &(orders->jobStartOrderList), &answer_list, "B: job start orders");
-                     sge_schedd_send_orders(evc->get_gdi_ctx(evc), orders, &(orders->pendingOrderList), &answer_list, "B: pendig ticket orders");
+                     sge_schedd_send_orders(evc->get_gdi_ctx(evc), orders, &(orders->pendingOrderList), &answer_list, "B: pending ticket orders");
                      answer_list_output(&answer_list);
                      gettimeofday(&tnow, NULL);
                   }
@@ -867,7 +865,7 @@ static int dispatch_jobs(sge_evc_class_t *evc, scheduler_all_data_t *lists, orde
 
             /* mark the category as rejected */
             if ((cat = lGetRef(orig_job, JB_category))) {
-               DPRINTF(("SKIP JOB " sge_u32 " of category '%s' (rc: "sge_u32 ")\n", job_id,
+               DPRINTF(("SKIP JOB (R)" sge_u32 " of category '%s' (rc: "sge_u32 ")\n", job_id,
                            lGetString(cat, CT_str), lGetUlong(cat, CT_refcount)));
                sge_reject_category(cat, false);
             }
@@ -895,13 +893,14 @@ static int dispatch_jobs(sge_evc_class_t *evc, scheduler_all_data_t *lists, orde
          case DISPATCH_NEVER_CAT: /* never this category */
             /* before deleting the element mark the category as rejected */
             if ((cat = lGetRef(orig_job, JB_category))) {
-               DPRINTF(("SKIP JOB " sge_u32 " of category '%s' (rc: "sge_u32 ")\n", job_id,
+               DPRINTF(("SKIP JOB (N)" sge_u32 " of category '%s' (rc: "sge_u32 ")\n", job_id,
                         lGetString(cat, CT_str), lGetUlong(cat, CT_refcount)));
                sge_reject_category(cat, is_reserve);
             }
+            /* fall through to DISPATCH_NEVER_JOB */
 
          case DISPATCH_NEVER_JOB: /* never this particular job */
-
+            DPRINTF(("SKIP JOB (J)" sge_u32 "\n", job_id));
             /* here no reservation was made for a job that couldn't be started now 
                or the job is not dispatchable at all */
             schedd_mes_commit(*(splitted_job_lists[SPLIT_PENDING]), 0, cat);
@@ -928,6 +927,7 @@ static int dispatch_jobs(sge_evc_class_t *evc, scheduler_all_data_t *lists, orde
             break;
 
          case DISPATCH_MISSING_ATTR :  /* should not happen */
+            DPRINTF(("DISPATCH_MISSING_ATTR\n"));
          default:
             break;
          }
@@ -940,7 +940,7 @@ static int dispatch_jobs(sge_evc_class_t *evc, scheduler_all_data_t *lists, orde
           *------------------------------------------------------------------*/
 
          /* no more free queues - then exit */
-         if (lGetNumberOfElem(lists->queue_list)==0) {
+         if (lGetNumberOfElem(lists->queue_list) == 0) {
             break;
          }  
 

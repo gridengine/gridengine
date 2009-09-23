@@ -34,12 +34,16 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "sge_pe.h"
-#include "sge_job.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "cull.h"
-#include "cull_list.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+
+#include "cull/cull.h"
+#include "cull/cull_list.h"
+
+#include "sgeobj/sge_pe.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_host.h"
 
 #include "sge_pe_schedd.h"
 #include "valid_queue_user.h"
@@ -47,8 +51,6 @@
 #include "schedd_monitor.h"
 #include "sge_schedd_text.h"
 #include "schedd_message.h"
-#include "sge_host.h"
-
 #include "msg_schedd.h"
 
 #ifdef WIN32NATIVE

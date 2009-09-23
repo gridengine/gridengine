@@ -83,7 +83,7 @@ centry_add_del_mod_via_gdi(sge_gdi_ctx_class_t *ctx, lListElem *this_elem, lList
 
       centry_list = lCreateList("", CE_Type);
       lAppendElem(centry_list, this_elem);
-      gdi_answer_list = ctx->gdi(ctx, SGE_CENTRY_LIST, gdi_command,
+      gdi_answer_list = ctx->gdi(ctx, SGE_CE_LIST, gdi_command,
                                 &centry_list, NULL, NULL);
       answer_list_replace(answer_list, &gdi_answer_list);
    }
@@ -105,7 +105,7 @@ centry_get_via_gdi(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *na
 
       what = lWhat("%T(ALL)", CE_Type);
       where = lWhere("%T(%I==%s)", CE_Type, CE_name, name);
-      gdi_answer_list = ctx->gdi(ctx, SGE_CENTRY_LIST, SGE_GDI_GET, 
+      gdi_answer_list = ctx->gdi(ctx, SGE_CE_LIST, SGE_GDI_GET, 
                                 &centry_list, where, what);
       lFreeWhat(&what);
       lFreeWhere(&where);
@@ -407,7 +407,7 @@ centry_list_get_via_gdi(sge_gdi_ctx_class_t *ctx, lList **answer_list)
 
    DENTER(TOP_LAYER, "centry_list_get_via_gdi");
    what = lWhat("%T(ALL)", CE_Type);
-   gdi_answer_list = ctx->gdi(ctx, SGE_CENTRY_LIST, SGE_GDI_GET,
+   gdi_answer_list = ctx->gdi(ctx, SGE_CE_LIST, SGE_GDI_GET,
                              &ret, NULL, what);
    lFreeWhat(&what);
 
@@ -608,7 +608,7 @@ centry_list_add_del_mod_via_gdi(sge_gdi_ctx_class_t *ctx, lList **this_list, lLi
          if (ret && do_del) {
             int mode = (--number_req > 0) ? SGE_GDI_RECORD : SGE_GDI_SEND;
             del_id = ctx->gdi_multi(ctx, &gdi_answer_list, mode, 
-                                   SGE_CENTRY_LIST, SGE_GDI_DEL, old_list,
+                                   SGE_CE_LIST, SGE_GDI_DEL, old_list,
                                    NULL, NULL, &state, false);
             if (mode == SGE_GDI_SEND) {
                ctx->gdi_wait(ctx, &gdi_answer_list, &mal_answer_list, &state);
@@ -623,7 +623,7 @@ centry_list_add_del_mod_via_gdi(sge_gdi_ctx_class_t *ctx, lList **this_list, lLi
          if (ret && do_mod) {
             int mode = (--number_req > 0) ? SGE_GDI_RECORD : SGE_GDI_SEND;
             mod_id = ctx->gdi_multi(ctx, &gdi_answer_list, mode, 
-                                   SGE_CENTRY_LIST, SGE_GDI_MOD, &modify_list,
+                                   SGE_CE_LIST, SGE_GDI_MOD, &modify_list,
                                    NULL, NULL, &state, false);
             if (mode == SGE_GDI_SEND) {
                ctx->gdi_wait(ctx, &gdi_answer_list, &mal_answer_list, &state);
@@ -638,7 +638,7 @@ centry_list_add_del_mod_via_gdi(sge_gdi_ctx_class_t *ctx, lList **this_list, lLi
          if (ret && do_add) {
             int mode = (--number_req > 0) ? SGE_GDI_RECORD : SGE_GDI_SEND;
             add_id = ctx->gdi_multi(ctx, &gdi_answer_list, mode, 
-                                   SGE_CENTRY_LIST, SGE_GDI_ADD, &add_list,
+                                   SGE_CE_LIST, SGE_GDI_ADD, &add_list,
                                    NULL, NULL, &state, false);
             if (mode == SGE_GDI_SEND) {
                ctx->gdi_wait(ctx, &gdi_answer_list, &mal_answer_list, &state);
@@ -656,19 +656,19 @@ centry_list_add_del_mod_via_gdi(sge_gdi_ctx_class_t *ctx, lList **this_list, lLi
           */
          if (do_del && ret) {
             sge_gdi_extract_answer(&gdi_answer_list, SGE_GDI_DEL, 
-                                                     SGE_CENTRY_LIST, del_id,
+                                                     SGE_CE_LIST, del_id,
                                                      mal_answer_list, NULL);
             answer_list_append_list(answer_list, &gdi_answer_list);
          }
          if (do_mod && ret) {
             sge_gdi_extract_answer(&gdi_answer_list, SGE_GDI_MOD, 
-                                                     SGE_CENTRY_LIST, mod_id,
+                                                     SGE_CE_LIST, mod_id,
                                                      mal_answer_list, NULL);
             answer_list_append_list(answer_list, &gdi_answer_list);
          }
          if (do_add && ret) {
             sge_gdi_extract_answer(&gdi_answer_list, SGE_GDI_ADD, 
-                                                     SGE_CENTRY_LIST, add_id,
+                                                     SGE_CE_LIST, add_id,
                                                      mal_answer_list, NULL);
             answer_list_append_list(answer_list, &gdi_answer_list);
          }

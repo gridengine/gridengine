@@ -65,6 +65,7 @@
 #include "sgeobj/sge_ulong.h"
 #include "sgeobj/sge_centry.h"
 #include "sgeobj/sge_schedd_conf.h"
+#include "sgeobj/sge_job.h"
 
 #include "gdi/sge_gdi_ctx.h"
 #include "gdi/sge_gdi.h"
@@ -841,7 +842,7 @@ u_long32 show
    eh_all = lWhat("%T(ALL)", EH_Type);
    
    eh_id = ctx->gdi_multi(ctx,
-                          answer_list, SGE_GDI_RECORD, SGE_EXECHOST_LIST, SGE_GDI_GET, 
+                          answer_list, SGE_GDI_RECORD, SGE_EH_LIST, SGE_GDI_GET, 
                           NULL, where, eh_all, &state, true);
    lFreeWhat(&eh_all);
    lFreeWhere(&where);
@@ -854,7 +855,7 @@ u_long32 show
       q_all = lWhat("%T(ALL)", QU_Type);
       
       q_id = ctx->gdi_multi(ctx, 
-                            answer_list, SGE_GDI_RECORD, SGE_CQUEUE_LIST, SGE_GDI_GET, 
+                            answer_list, SGE_GDI_RECORD, SGE_CQ_LIST, SGE_GDI_GET, 
                             NULL, NULL, q_all, &state, true);
       lFreeWhat(&q_all);
 
@@ -924,7 +925,7 @@ u_long32 show
 /* lWriteWhereTo(jw, stdout); */
 
       j_id = ctx->gdi_multi(ctx, 
-                         answer_list, SGE_GDI_RECORD, SGE_JOB_LIST, SGE_GDI_GET, 
+                         answer_list, SGE_GDI_RECORD, SGE_JB_LIST, SGE_GDI_GET, 
                          NULL, jw, j_all, &state, true);
       lFreeWhat(&j_all);
       lFreeWhere(&jw);
@@ -939,7 +940,7 @@ u_long32 show
    */
    ce_all = lWhat("%T(ALL)", CE_Type);
    ce_id = ctx->gdi_multi(ctx, 
-                          answer_list, SGE_GDI_RECORD, SGE_CENTRY_LIST, SGE_GDI_GET, 
+                          answer_list, SGE_GDI_RECORD, SGE_CE_LIST, SGE_GDI_GET, 
                           NULL, NULL, ce_all, &state, true);
    lFreeWhat(&ce_all);
 
@@ -968,7 +969,7 @@ u_long32 show
    gc_what = lWhat("%T(ALL)", CONF_Type);
    
    gc_id = ctx->gdi_multi(ctx, 
-                          answer_list, SGE_GDI_SEND, SGE_CONFIG_LIST, SGE_GDI_GET,
+                          answer_list, SGE_GDI_SEND, SGE_CONF_LIST, SGE_GDI_GET,
                           NULL, gc_where, gc_what, &state, true);
    ctx->gdi_wait(ctx, answer_list, &mal, &state);
    lFreeWhat(&gc_what);
@@ -983,7 +984,7 @@ u_long32 show
    ** handle results
    */
    /* --- exec host */
-   sge_gdi_extract_answer(answer_list, SGE_GDI_GET, SGE_EXECHOST_LIST, eh_id, 
+   sge_gdi_extract_answer(answer_list, SGE_GDI_GET, SGE_EH_LIST, eh_id, 
                                  mal, exechost_l);
    if (answer_list_has_error(answer_list)) {
       lFreeList(&mal);
@@ -992,7 +993,7 @@ u_long32 show
 
    /* --- queue */
    if (show & QHOST_DISPLAY_JOBS || show & QHOST_DISPLAY_QUEUES) {
-      sge_gdi_extract_answer(answer_list, SGE_GDI_GET, SGE_CQUEUE_LIST, q_id, 
+      sge_gdi_extract_answer(answer_list, SGE_GDI_GET, SGE_CQ_LIST, q_id, 
                                     mal, queue_l);
       if (answer_list_has_error(answer_list)) {
          lFreeList(&mal);
@@ -1003,7 +1004,7 @@ u_long32 show
    /* --- job */
    if (job_l && (show & QHOST_DISPLAY_JOBS)) {
       lListElem *ep = NULL;
-      sge_gdi_extract_answer(answer_list, SGE_GDI_GET, SGE_JOB_LIST, j_id,
+      sge_gdi_extract_answer(answer_list, SGE_GDI_GET, SGE_JB_LIST, j_id,
                                     mal, job_l);
       if (answer_list_has_error(answer_list)) {
          lFreeList(&mal);
@@ -1021,7 +1022,7 @@ u_long32 show
    }
 
    /* --- complex attribute */
-   sge_gdi_extract_answer(answer_list, SGE_GDI_GET, SGE_CENTRY_LIST, ce_id,
+   sge_gdi_extract_answer(answer_list, SGE_GDI_GET, SGE_CE_LIST, ce_id,
                                  mal, centry_l);
    if (answer_list_has_error(answer_list)) {
       lFreeList(&mal);
@@ -1037,7 +1038,7 @@ u_long32 show
    }
 
    /* --- apply global configuration for sge_hostcmp() scheme */
-   sge_gdi_extract_answer(answer_list, SGE_GDI_GET, SGE_CONFIG_LIST, gc_id,
+   sge_gdi_extract_answer(answer_list, SGE_GDI_GET, SGE_CONF_LIST, gc_id,
                           mal, &conf_l);
    if (answer_list_has_error(answer_list)) {
       lFreeList(&mal);

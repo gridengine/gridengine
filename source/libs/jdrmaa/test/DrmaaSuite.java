@@ -5,7 +5,9 @@
  * Created on November 14, 2004, 12:50 AM
  */
 
-import junit.framework.*;
+import junit.framework.TestSuite;
+import junit.framework.TestCase;
+import junit.framework.Test; 
 
 /**
  *

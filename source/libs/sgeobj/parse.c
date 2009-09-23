@@ -35,26 +35,27 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-#include "sgermon.h"
-#include "sge_string.h"
-#include "sge_log.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_string.h"
+#include "uti/sge_log.h"
+#include "uti/sge_parse_num_par.h"
+
 #include "sge_pe.h"
 #include "sge_str.h"
-#include "parse_qsubL.h"
-#include "sge_job_refL.h"
+#include "parse_qsub.h"
 #include "usage.h"
-#include "sge_parse_num_par.h"
 #include "parse.h"
 #include "sge_options.h"
-#include "sge_idL.h"
+#include "sge_id.h"
 #include "sge_answer.h"
 #include "sge_range.h"
+#include "sge_job.h"
+#include "sge_ja_task.h"
 #include "sge_job.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
-
-#include "sgeobj/sge_ja_task.h"
 
 /*-------------------------------------------------------------------------*/
 /* use cstring_list_parse_from_string() if you need a parsing function */

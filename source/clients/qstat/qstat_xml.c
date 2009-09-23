@@ -32,61 +32,25 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <fnmatch.h>
-#include <ctype.h>
-
 
 #include "sgermon.h"
 #include "symbols.h"
 #include "sge.h"
 #include "gdi/sge_gdi.h"
 #include "sge_time.h"
-#include "sge_log.h"
 #include "sge_stdlib.h"
 #include "sge_all_listsL.h"
-#include "commlib.h"
-#include "sge_host.h"
-#include "sig_handlers.h"
 #include "sge_sched.h"
-#include "cull_sort.h"
-#include "usage.h"
 #include "sge_dstring.h"
-#include "sge_feature.h"
 #include "parse.h"
 #include "sge_prog.h"
-#include "sge_parse_num_par.h"
-#include "sge_string.h"
-#include "show_job.h"
 #include "qstat_printing.h"
-#include "sge_range.h"
 #include "sge_schedd_text.h"
-#include "qm_name.h"
-#include "load_correction.h"
-#include "msg_common.h"
-#include "msg_clients_common.h"
-#include "msg_qstat.h"
-#include "sge_conf.h" 
 #include "sgeee.h" 
-#include "sge_support.h"
-#include "sge_unistd.h"
 #include "sge_answer.h"
-#include "sge_pe.h"
-#include "sge_ckpt.h"
-#include "sge_qinstance.h"
-#include "sge_qinstance_state.h"
-#include "sge_qinstance_type.h"
-#include "sge_centry.h"
-#include "sge_schedd_conf.h"
-#include "sge_cqueue.h"
-#include "sge_qref.h"
-#include "sge_ja_task.h"
 
-#include "sge_job.h"
-#include "sge_urgency.h"
-#include "sge_ulong.h"
-
-#include "sge_mt_init.h"
 #include "sge_qstat.h"
+#include "sge_cull_xml.h"
 
 /* ----------------------- qselect xml handler ------------------------------ */
 
@@ -1163,7 +1127,7 @@ void xml_qstat_show_job_info(lList **list, lList **answer_list) {
          mlp = lGetList(sme, SME_message_list);         
       }      
       for_each(mes, mlp) {
-         lPSortList (lGetList(mes, MES_job_number_list), "I+", ULNG);
+         lPSortList (lGetList(mes, MES_job_number_list), "I+", ULNG_value);
 
          for_each(jid_ulng, lGetList(mes, MES_job_number_list)) {
             u_long32 mid;            
@@ -1206,15 +1170,13 @@ void xml_qstat_show_job(lList **job_list, lList **msg_list, lList **answer_list,
       xml_elem = xml_getHead("comunication_error", *answer_list, NULL);
       lWriteElemXMLTo(xml_elem, stdout);
       lFreeElem(&xml_elem);
-   }
-   else {
+   } else {
       if (lGetNumberOfElem(*job_list) == 0) {
          xml_elem = xml_getHead("unknown_jobs", *id_list, NULL);
          lWriteElemXMLTo(xml_elem, stdout);
          lFreeElem(&xml_elem);
          *id_list = NULL;
-      }
-      else {
+      } else {
          lList *XML_out = lCreateList("detailed_job_info", XMLE_Type);
          lListElem *xmlElem = NULL;
          lListElem *attrElem = NULL;
@@ -1245,12 +1207,10 @@ void xml_qstat_show_job(lList **job_list, lList **msg_list, lList **answer_list,
          lFreeElem(&xml_elem);
          *job_list = NULL;
          *msg_list = NULL;
-         
       }
    }
 
    lFreeList(answer_list);
-
    DEXIT;
    return;
 }

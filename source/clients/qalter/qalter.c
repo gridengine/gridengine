@@ -190,7 +190,7 @@ int main(int argc, char **argv) {
    if (all_users)
       gdi_cmd |= SGE_GDI_ALL_USERS;
 
-   alp = ctx->gdi(ctx, SGE_JOB_LIST, gdi_cmd, &request_list, NULL, NULL); 
+   alp = ctx->gdi(ctx, SGE_JB_LIST, gdi_cmd, &request_list, NULL, NULL); 
    for_each (aep, alp) {
       printf("%s\n", lGetString(aep, AN_text));
       if (ret == STATUS_OK) {
@@ -731,9 +731,9 @@ int *all_users
       lList *task_list = NULL;
       lListElem *task;
       lDescr task_descr[] = { 
-            {JAT_task_number, lUlongT},
-            {JAT_hold, lUlongT},
-            {NoName, lEndT}
+            {JAT_task_number, lUlongT | CULL_IS_REDUCED, NULL},
+            {JAT_hold, lUlongT | CULL_IS_REDUCED, NULL},
+            {NoName, lEndT | CULL_IS_REDUCED, NULL}
       };
 
       jobid = atol(lGetString(ep, ID_str));

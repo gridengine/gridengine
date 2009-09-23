@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/       
 
-#include "sgeobj/sge_jsvL.h"
+#include "sgeobj/sge_jsv_JSV_L.h"
 
 bool
 jsv_do_communication(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answer_list);

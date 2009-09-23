@@ -998,21 +998,36 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
    } else {
       fprintf(fp, "ckpt_job=0\n");
    }   
-      
-   fprintf(fp, "s_cpu=%s\n", lGetString(master_q, QU_s_cpu));
-   fprintf(fp, "h_cpu=%s\n", lGetString(master_q, QU_h_cpu));
-   fprintf(fp, "s_core=%s\n", lGetString(master_q, QU_s_core));
+   /*
+    * Shorthand for this code sequence:
+    *   - obtain resource A from master queue and write out to shepherd config file
+    *   - check if resource is job consumable and indicate to shepherd
+    */
+#define WRITE_COMPLEX_AND_CONSUMABLE_ATTR(A) \
+   fprintf(fp, #A"=%s\n", lGetString(master_q, QU_##A)); \
+   job_is_requesting_consumable(jep, #A) ? fprintf(fp, #A"_is_consumable_job=1\n") : fprintf(fp, #A"_is_consumable_job=0\n");
+
+   WRITE_COMPLEX_AND_CONSUMABLE_ATTR(h_vmem);
+   WRITE_COMPLEX_AND_CONSUMABLE_ATTR(s_vmem);
+
+   WRITE_COMPLEX_AND_CONSUMABLE_ATTR(h_cpu);
+   WRITE_COMPLEX_AND_CONSUMABLE_ATTR(s_cpu);
+
+   WRITE_COMPLEX_AND_CONSUMABLE_ATTR(h_stack);
+   WRITE_COMPLEX_AND_CONSUMABLE_ATTR(s_stack);
+
+   WRITE_COMPLEX_AND_CONSUMABLE_ATTR(h_data);
+   WRITE_COMPLEX_AND_CONSUMABLE_ATTR(s_data);
+
    fprintf(fp, "h_core=%s\n", lGetString(master_q, QU_h_core));
-   fprintf(fp, "s_data=%s\n", lGetString(master_q, QU_s_data));
-   fprintf(fp, "h_data=%s\n", lGetString(master_q, QU_h_data));
-   fprintf(fp, "s_stack=%s\n", lGetString(master_q, QU_s_stack));
-   fprintf(fp, "h_stack=%s\n", lGetString(master_q, QU_h_stack));
-   fprintf(fp, "s_rss=%s\n", lGetString(master_q, QU_s_rss));
+   fprintf(fp, "s_core=%s\n", lGetString(master_q, QU_s_core));
+      
    fprintf(fp, "h_rss=%s\n", lGetString(master_q, QU_h_rss));
-   fprintf(fp, "s_fsize=%s\n", lGetString(master_q, QU_s_fsize));
+   fprintf(fp, "s_rss=%s\n", lGetString(master_q, QU_s_rss));
+
    fprintf(fp, "h_fsize=%s\n", lGetString(master_q, QU_h_fsize));
-   fprintf(fp, "s_vmem=%s\n", lGetString(master_q, QU_s_vmem));
-   fprintf(fp, "h_vmem=%s\n", lGetString(master_q, QU_h_vmem));
+   fprintf(fp, "s_fsize=%s\n", lGetString(master_q, QU_s_fsize));
+
    {
       char *s;
 

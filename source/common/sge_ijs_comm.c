@@ -35,7 +35,6 @@
 #include <string.h>
 #include <signal.h>
 #include <unistd.h>
-#include <memory.h>
 #include <termios.h>
 #include <fcntl.h>
 #ifndef  TIOCGWINSZ
@@ -58,7 +57,6 @@
 #include "sge_log.h"
 #include "msg_gdilib.h"
 
-extern char *g_hostname;
 extern sig_atomic_t received_signal;
 
 /*
@@ -443,34 +441,36 @@ int comm_cleanup_lib(dstring *err_msg)
 *  SYNOPSIS
 *     int comm_open_connection(bool b_server, int port, 
 *            const char *component_name, bool b_secure, const char *user_name, 
-*            COMMUNICATION_HANDLE **handle, dstring *err_msg) 
+*            COMM_HANDLE **handle, dstring *err_msg) 
 *
 *  FUNCTION
 *     Either start a comm server or connect to a running comm server.
 *
 *  INPUTS
-*     bool b_server               - If true, a comm server is started, if false
+*     bool       b_server         - If true, a comm server is started, if false
 *                                   a connection to a server is established.
-*     bool b_secure               - If true: Use secured connections
+*     bool       b_secure         - If true: Use secured connections
 *     const char *this_component  - A unique name for this end of the connection.
-*     int port                    - In case of server: Port on which the server
+*     int        port             - In case of server: Port on which the server
 *                                   should listen. If this is 0, a free port is
 *                                   selected.
 *                                   In case of client: Port on which the server
 *                                   listens.
 *     const char *other_component - The unique name of the other end of the
 *                                   connection.
+*     char       *remote_host     - Name of the host to connect to. Ignored if
+*                                   b_server == true.
 *     const char *user_name       - For secured connections: Name of the user
 *                                   whose certificates are to be used.
 *                                   Ignored for unsecured connections.
-*     COMMUNICATION_HANDLE **handle - The address of a COMMUNICATION_HANDLE 
-*                                   pointer which must be initialized to NULL.
+*     COMM_HANDLE **handle        - The address of a COMM_HANDLE pointer
+*                                   which must be initialized to NULL.
 *     dstring *err_msg            - Pointer to an empty dstring to receive
 *                                   error messages.
 *
 *  OUTPUT
-*    COMMUNICATION_HANDLE **handle - The COMMUNICATION_HANDLE of the connection.
-*    dstring              *err_msg - In case of error: The error reason.
+*    COMM_HANDLE **handle - The COMM_HANDLE of the connection.
+*    dstring     *err_msg - In case of error: The error reason.
 *
 *
 *  RESULT
@@ -492,14 +492,15 @@ int comm_cleanup_lib(dstring *err_msg)
 *  SEE ALSO
 *     communication/comm_shutdown_connection()
 *******************************************************************************/
-int comm_open_connection(bool                 b_server, 
-                         bool                 b_secure,
-                         const char           *this_component,
-                         int                  port, 
-                         const char           *other_component,
-                         const char           *user_name,
-                         COMMUNICATION_HANDLE **handle, 
-                         dstring              *err_msg)
+int comm_open_connection(bool        b_server, 
+                         bool        b_secure,
+                         const char  *this_component,
+                         int         port, 
+                         const char  *other_component,
+                         char        *remote_host,
+                         const char  *user_name,
+                         COMM_HANDLE **handle, 
+                         dstring     *err_msg)
 {
    int              ret;
    int              old_euid                = SGE_SUPERUSER_UID;
@@ -611,7 +612,7 @@ int comm_open_connection(bool                 b_server,
          old_euid = geteuid();
          seteuid(SGE_SUPERUSER_UID);
       }
-      ret = cl_commlib_open_connection(*handle, g_hostname, (char*)other_component, 1);
+      ret = cl_commlib_open_connection(*handle, remote_host, (char*)other_component, 1);
       if (old_euid != SGE_SUPERUSER_UID) {
          seteuid(old_euid);
       }
@@ -633,17 +634,19 @@ int comm_open_connection(bool                 b_server,
 *     comm_shutdown_connection() -- gracefully shuts down a connection
 *
 *  SYNOPSIS
-*     int comm_shutdown_connection(COMMUNICATION_HANDLE *handle,  
+*     int comm_shutdown_connection(COMM_HANDLE *handle,  
 *                                  const char *component_name, dstring *err_msg) 
 *
 *  FUNCTION
 *     All connections get closed and then the communication handle gets freed.
 *
 *  INPUTS
-*     COMMUNICATION_HANDLE *handle  - Handle of the connection to be shut down.
-*     const char *component_name    - Name of the remote component of the
-*                                     connection to be shut down.
-*     dstring              *err_msg - Gets the error reason in case of error.
+*     COMM_HANDLE *handle         - Handle of the connection to be shut down.
+*     const char  *component_name - Name of the remote component of the
+*                                   connection to be shut down.
+*     char        *remote_host    - Name of the server we are connected to.
+*                                   Ignored if we are a server.
+*     dstring     *err_msg        - Gets the error reason in case of error.
 *
 *  RESULT
 *     int - COMM_RETVAL_OK:
@@ -661,8 +664,8 @@ int comm_open_connection(bool                 b_server,
 *  SEE ALSO
 *     communication/comm_open_connection()
 *******************************************************************************/
-int comm_shutdown_connection(COMMUNICATION_HANDLE *handle, 
-                             const char *component_name, dstring *err_msg)
+int comm_shutdown_connection(COMM_HANDLE *handle, const char *component_name,
+                             char *remote_host, dstring *err_msg)
 {
    int ret;
    int ret_val = COMM_RETVAL_OK;
@@ -674,7 +677,7 @@ int comm_shutdown_connection(COMMUNICATION_HANDLE *handle,
     * during the shutdown of the connection - just shut down.
     */
    ret = cl_com_set_error_func(NULL);
-   ret = cl_commlib_close_connection(handle, g_hostname, 
+   ret = cl_commlib_close_connection(handle, remote_host, 
                                      (char*)component_name, 1, CL_FALSE);
    if (ret != CL_RETVAL_OK) {
       sge_dstring_sprintf(err_msg, cl_get_error_text(ret));
@@ -701,7 +704,7 @@ int comm_shutdown_connection(COMMUNICATION_HANDLE *handle,
 *     comm_set_connection_param() -- Set several connection parameters.
 *
 *  SYNOPSIS
-*     int comm_set_connection_param(COMMUNICATION_HANDLE *handle, int param, 
+*     int comm_set_connection_param(COMM_HANDLE *handle, int param, 
 *                                   int value, dstring *err_msg) 
 *
 *  FUNCTION
@@ -710,12 +713,11 @@ int comm_shutdown_connection(COMMUNICATION_HANDLE *handle,
 *                            treat a connection as lost.
 *
 *  INPUTS
-*     COMMUNICATION_HANDLE *handle  - Handle of the connection.
-*     int                  param    - ID of the param to set. Currently
-*                                     HEARD_FROM_TIMEOUT (in seconds) is 
-*                                     supported.
-*     int                  value    - Value to set the param to. 
-*     dstring              *err_msg - Gets the error reason in case of error.
+*     COMM_HANDLE *handle  - Handle of the connection.
+*     int         param    - ID of the param to set. Currently
+*                            HEARD_FROM_TIMEOUT (in seconds) is supported.
+*     int         value    - Value to set the param to. 
+*     dstring     *err_msg - Gets the error reason in case of error.
 *
 *  RESULT
 *     int - COMM_RETVAL_OK:
@@ -727,7 +729,7 @@ int comm_shutdown_connection(COMMUNICATION_HANDLE *handle,
 *  NOTES
 *     MT-NOTE: comm_set_connection_param() is not MT safe 
 *******************************************************************************/
-int comm_set_connection_param(COMMUNICATION_HANDLE *handle, int param, int value,
+int comm_set_connection_param(COMM_HANDLE *handle, int param, int value,
                               dstring *err_msg)
 {
    int ret;
@@ -795,20 +797,18 @@ int comm_ignore_timeouts(bool b_ignore, dstring *err_msg)
 *     comm_wait_for_connection() -- Waits until at least one client has connected
 *
 *  SYNOPSIS
-*     int comm_wait_for_connection(COMMUNICATION_HANDLE *handle, const char 
+*     int comm_wait_for_connection(COMM_HANDLE *handle, const char 
 *         *component, int wait_secs, const char **host, dstring *err_msg) 
 *
 *  FUNCTION
 *     On a server, waits until at least one client has connected.
 *
 *  INPUTS
-*     COMMUNICATION_HANDLE *handle    - Handle of the connection.
-*     const char           *component - Wait for a client with this component
-*                                       name.
-*     int                  wait_secs  - Wait at most wait_secs seconds.
-*     const char           **host     - Name of the host from where the client
-*                                       connects.
-*     dstring              *err_msg   - Gets the error reason in case of error.
+*     COMM_HANDLE *handle    - Handle of the connection.
+*     const char  *component - Wait for a client with this component name.
+*     int         wait_secs  - Wait at most wait_secs seconds.
+*     const char  **host     - Name of the host from where the client connects.
+*     dstring     *err_msg   - Gets the error reason in case of error.
 *
 *  RESULT
 *     int - COMM_RETVAL_OK:
@@ -823,13 +823,16 @@ int comm_ignore_timeouts(bool b_ignore, dstring *err_msg)
 *           COMM_CANT_SEARCH_ENDPOINT:
 *              err_msg contains the reason.
 *
+*           COMM_INVALID_PARAMETER:
+*              handle = NULL, err_msg doesn't contain an error reason.
+*
 *  NOTES
 *     MT-NOTE: comm_wait_for_connection() is not MT safe 
 *
 *  SEE ALSO
 *     communication/comm_wait_for_no_connection()
 *******************************************************************************/
-int comm_wait_for_connection(COMMUNICATION_HANDLE *handle, 
+int comm_wait_for_connection(COMM_HANDLE *handle, 
                              const char *component, 
                              int wait_secs, 
                              const char **host, 
@@ -843,6 +846,10 @@ int comm_wait_for_connection(COMMUNICATION_HANDLE *handle,
    cl_endpoint_list_elem_t *endpoint;
 
    DENTER(TOP_LAYER, "wait_for_connection");
+
+   if (handle == NULL) {
+      return COMM_INVALID_PARAMETER;
+   }
   
    /*
     * In the while loop, do this:
@@ -884,10 +891,9 @@ int comm_wait_for_connection(COMMUNICATION_HANDLE *handle,
       /* A client connected to us, get it's hostname */
       if (endpoint_list->elem_count > 0) {
          endpoint = cl_endpoint_list_get_first_elem(endpoint_list);
-         g_hostname = strdup(endpoint->endpoint->comp_host);
          FREE(*host);
-         *host = g_hostname;
-         DPRINTF(("A client from host %s has connected\n", g_hostname));
+         *host = strdup(endpoint->endpoint->comp_host);
+         DPRINTF(("A client from host %s has connected\n", *host));
       }
       cl_endpoint_list_cleanup(&endpoint_list);
    }
@@ -904,17 +910,17 @@ int comm_wait_for_connection(COMMUNICATION_HANDLE *handle,
 *                                      more
 *
 *  SYNOPSIS
-*     int comm_wait_for_no_connection(COMMUNICATION_HANDLE *handle, const char 
+*     int comm_wait_for_no_connection(COMM_HANDLE *handle, const char 
 *     *component, int wait_secs, dstring *err_msg) 
 *
 *  FUNCTION
 *     Waits until no client is connected to us any more.
 *
 *  INPUTS
-*     COMMUNICATION_HANDLE *handle - Handle of the connection. 
-*     const char *component        - Filter for clients with this component name
-*     int wait_secs                - Wait at most wait_secs seconds.
-*     dstring *err_msg             - Gets the error reason in case of error.
+*     COMM_HANDLE *handle   - Handle of the connection. 
+*     const char *component - Filter for clients with this component name
+*     int wait_secs         - Wait at most wait_secs seconds.
+*     dstring *err_msg      - Gets the error reason in case of error.
 *
 *  RESULT
 *     int - COMM_RETVAL_OK:
@@ -935,7 +941,7 @@ int comm_wait_for_connection(COMMUNICATION_HANDLE *handle,
 *  SEE ALSO
 *     communication/comm_wait_for_connection()
 *******************************************************************************/
-int comm_wait_for_no_connection(COMMUNICATION_HANDLE *handle, const char *component, 
+int comm_wait_for_no_connection(COMM_HANDLE *handle, const char *component, 
                                 int wait_secs, dstring *err_msg)
 {
    int                     waited_usec = 0;
@@ -1013,15 +1019,14 @@ int comm_wait_for_no_connection(COMMUNICATION_HANDLE *handle, const char *compon
 *     comm_get_connection_count() -- Retrieves the current number of connections
 *
 *  SYNOPSIS
-*     int comm_get_connection_count(COMMUNICATION_HANDLE *handle, dstring 
-*     *err_msg) 
+*     int comm_get_connection_count(COMM_HANDLE *handle, dstring *err_msg) 
 *
 *  FUNCTION
 *     Retrieves the current number of connections.
 *
 *  INPUTS
-*     COMMUNICATION_HANDLE *handle - Handle of the connection. 
-*     dstring *err_msg             - Gets the error reason in case of error.
+*     COMM_HANDLE *handle - Handle of the connection. 
+*     dstring *err_msg    - Gets the error reason in case of error.
 *
 *  RESULT
 *     int - Number of connections.
@@ -1036,7 +1041,7 @@ int comm_wait_for_no_connection(COMMUNICATION_HANDLE *handle, const char *compon
 *  NOTES
 *     MT-NOTE: comm_get_connection_count() is not MT safe 
 *******************************************************************************/
-int comm_get_connection_count(COMMUNICATION_HANDLE *handle, dstring *err_msg)
+int comm_get_connection_count(const COMM_HANDLE *handle, dstring *err_msg)
 {
    int                        ret;
    int                        ret_val = 1;
@@ -1073,18 +1078,17 @@ int comm_get_connection_count(COMMUNICATION_HANDLE *handle, dstring *err_msg)
 *     comm_trigger() -- Trigger communication library
 *
 *  SYNOPSIS
-*     int comm_trigger(COMMUNICATION_HANDLE *handle, int synchron, dstring 
-*     *err_msg) 
+*     int comm_trigger(COMM_HANDLE *handle, int synchron, dstring *err_msg) 
 *
 *  FUNCTION
 *     Triggers the communication library  to do pending tasks.
 *
 *  INPUTS
-*     COMMUNICATION_HANDLE *handle - Handle of the connection. 
-*     int     synchron             - Set to != 0 to wait until all pending
-*                                    messages are sent, == 0 to just do one
-*                                    piece of work and return then.
-*     dstring *err_msg             - Gets the error reason in case of error.
+*     COMM_HANDLE *handle  - Handle of the connection. 
+*     int         synchron - Set to != 0 to wait until all pending
+*                            messages are sent, == 0 to just do one
+*                            piece of work and return then.
+*     dstring     *err_msg - Gets the error reason in case of error.
 *
 *  RESULT
 *     int - COMM_RETVAL_OK:
@@ -1102,7 +1106,7 @@ int comm_get_connection_count(COMMUNICATION_HANDLE *handle, dstring *err_msg)
 *  NOTES
 *     MT-NOTE: comm_trigger() is not MT safe 
 *******************************************************************************/
-int comm_trigger(COMMUNICATION_HANDLE *handle, int synchron, dstring *err_msg)
+int comm_trigger(COMM_HANDLE *handle, int synchron, dstring *err_msg)
 {
    int ret;
    int ret_val = COMM_RETVAL_OK;
@@ -1128,7 +1132,7 @@ int comm_trigger(COMMUNICATION_HANDLE *handle, int synchron, dstring *err_msg)
 *     comm_write_message() -- Write a message to the connection
 *
 *  SYNOPSIS
-*     unsigned long comm_write_message(COMMUNICATION_HANDLE *handle, const char 
+*     unsigned long comm_write_message(COMM_HANDLE *handle, const char 
 *     *unresolved_hostname, const char *component_name, unsigned long component_id, 
 *     unsigned char *buffer, unsigned long size, unsigned char type, dstring 
 *     *err_msg) 
@@ -1137,7 +1141,7 @@ int comm_trigger(COMMUNICATION_HANDLE *handle, int synchron, dstring *err_msg)
 *     Writes a message to the connection.
 *
 *  INPUTS
-*     COMMUNICATION_HANDLE *handle    - Handle of the connection.
+*     COMM_HANDLE *handle             - Handle of the connection.
 *     const char *unresolved_hostname - Hostname of the destination host.
 *     const char *component_name      - Component name of the destination.
 *     unsigned long component_id      - Component ID of the destination.
@@ -1156,7 +1160,7 @@ int comm_trigger(COMMUNICATION_HANDLE *handle, int synchron, dstring *err_msg)
 *  SEE ALSO
 *     communication/comm_recv_message
 *******************************************************************************/
-unsigned long comm_write_message(COMMUNICATION_HANDLE *handle,
+unsigned long comm_write_message(COMM_HANDLE *handle,
                             const char *unresolved_hostname,
                             const char *component_name,
                             unsigned long component_id,
@@ -1225,7 +1229,7 @@ unsigned long comm_write_message(COMMUNICATION_HANDLE *handle,
 *                                    of the communication library
 *
 *  SYNOPSIS
-*     int comm_flush_write_messages(COMMUNICATION_HANDLE *handle, dstring *err_msg)
+*     int comm_flush_write_messages(COMM_HANDLE *handle, dstring *err_msg)
 *
 *  FUNCTION
 *     Flushes all messages still in the write list of the communication library.
@@ -1234,8 +1238,8 @@ unsigned long comm_write_message(COMMUNICATION_HANDLE *handle,
 *     makes sure all messages are really written. 
 *
 *  INPUTS
-*     COMMUNICATION_HANDLE *handle - Handle of the connection.
-*     dstring *err_msg             - Contains error message in case of error.
+*     COMM_HANDLE *handle - Handle of the connection.
+*     dstring *err_msg    - Contains error message in case of error.
 *
 *  RESULT
 *     int - 0: Ok, all messages were flushed.
@@ -1248,7 +1252,7 @@ unsigned long comm_write_message(COMMUNICATION_HANDLE *handle,
 *  SEE ALSO
 *     communication/comm_write_message
 *******************************************************************************/
-int comm_flush_write_messages(COMMUNICATION_HANDLE *handle, dstring *err_msg)
+int comm_flush_write_messages(COMM_HANDLE *handle, dstring *err_msg)
 {
    unsigned long elems = 0;
    int           ret = 0, retries = 0;
@@ -1291,14 +1295,14 @@ int comm_flush_write_messages(COMMUNICATION_HANDLE *handle, dstring *err_msg)
 *     comm_recv_message() -- Receives a message from the connection
 *
 *  SYNOPSIS
-*     int comm_recv_message(COMMUNICATION_HANDLE *handle, cl_bool_t b_synchron, 
+*     int comm_recv_message(COMM_HANDLE *handle, cl_bool_t b_synchron, 
 *     recv_message_t *recv_mess, dstring *err_msg) 
 *
 *  FUNCTION
 *     Receives a message from the connection.
 *
 *  INPUTS
-*     COMMUNICATION_HANDLE *handle - Handle of the connection.
+*     COMM_HANDLE *handle          - Handle of the connection.
 *     cl_bool_t b_synchron         - true: Wait until a complete message was read
 *                                    false: Get what's available and return.     
 *     recv_message_t *recv_mess    - The message gets filled into this struct.
@@ -1324,7 +1328,7 @@ int comm_flush_write_messages(COMMUNICATION_HANDLE *handle, dstring *err_msg)
 *  SEE ALSO
 *     communication/comm_send_message, communication/comm_free_message
 *******************************************************************************/
-int comm_recv_message(COMMUNICATION_HANDLE *handle, cl_bool_t b_synchron, 
+int comm_recv_message(COMM_HANDLE *handle, cl_bool_t b_synchron, 
                       recv_message_t *recv_mess, dstring *err_msg)
 {
    int  ret_val = COMM_RETVAL_OK;
@@ -1495,16 +1499,17 @@ int comm_free_message(recv_message_t *recv_mess, dstring *err_msg)
 *     check_client_alive() -- Checks is a know, connected client is still alive
 *
 *  SYNOPSIS
-*     int check_client_alive(COMMUNICATION_HANDLE *handle, 
+*     int check_client_alive(COMM_HANDLE *handle, 
 *                            const char *component_name, dstring *err_msg) 
 *
 *  FUNCTION
 *     Checks if a known, connected client is still alive.
 *
 *  INPUTS
-*     COMMUNICATION_HANDLE *handle - Handle to the connection.
-*     const char *component_name   - Name of the comonent to check.
-*     dstring *err_msg             - Gets the error reason in case of error.
+*     COMM_HANDLE *handle          - Handle to the connection.
+*     const char  *component_name  - Name of the comonent to check.
+*     char        *hostname        - Host of the client.
+*     dstring     *err_msg         - Gets the error reason in case of error.
 *
 *  RESULT
 *     int - COMM_RETVAL_OK:
@@ -1517,7 +1522,9 @@ int comm_free_message(recv_message_t *recv_mess, dstring *err_msg)
 *     MT-NOTE: check_client_alive() is not MT safe 
 *
 *******************************************************************************/
-int check_client_alive(COMMUNICATION_HANDLE *handle, const char *component_name,
+int check_client_alive(COMM_HANDLE *handle,
+                       const char *component_name,
+                       char *hostname,
                        dstring *err_msg)
 {
    int           ret;
@@ -1529,9 +1536,9 @@ int check_client_alive(COMMUNICATION_HANDLE *handle, const char *component_name,
    DPRINTF(("handle->connect_port = %d\n", handle->connect_port));
    DPRINTF(("handle->service_port = %d\n", handle->service_port));
    DPRINTF(("client component name = %s\n", component_name));
-   DPRINTF(("g_hostname = %s\n", g_hostname));
+   DPRINTF(("hostname = %s\n", hostname));
 
-   ret = cl_commlib_get_endpoint_status(handle, g_hostname, 
+   ret = cl_commlib_get_endpoint_status(handle, hostname, 
                                         (char*)component_name, 1, &status);
    if (ret != CL_RETVAL_OK) {
       sge_dstring_sprintf(err_msg, cl_get_error_text(ret));

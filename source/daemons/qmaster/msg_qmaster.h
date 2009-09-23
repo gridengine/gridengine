@@ -391,7 +391,8 @@
 #define MSG_JOB_VERIFYVERIFY          _MESSAGE(33302, _("verification"))
 #define MSG_JOB_VERIFYFOUNDQ          _MESSAGE(33303, _("verification: found suitable queue(s)"))
 #define MSG_JOB_VERIFYFOUNDSLOTS_I    _MESSAGE(33304, _("verification: found possible assignment with %d slots"))
-#define MSG_NOSEQFILECLOSE_SSS     _MESSAGE(33305, _("can't close "SFN" sequence number file "SFQ": for reading: "SFN))
+#define MSG_JOB_VERIFYRUNNING         _MESSAGE(33305, _("verification: job is already running"))
+#define MSG_NOSEQFILECLOSE_SSS     _MESSAGE(33306, _("can't close "SFN" sequence number file "SFQ": for reading: "SFN))
 #define MSG_JOB_MOD_SOFTREQCONSUMABLE_S  _MESSAGE(33307, _("denied: soft requests on consumables like "SFQ" are not supported"))
 #define MSG_JOB_MOD_MISSINGRUNNINGJOBCONSUMABLE_S     _MESSAGE(33308, _("denied: former resource request on consumable "SFQ" of running job lacks in new resource request"))
 #define MSG_JOB_MOD_ADDEDRUNNINGJOBCONSUMABLE_S       _MESSAGE(33309, _("denied: resource request on consumable "SFQ" of running job was not contained former resource request"))
@@ -426,6 +427,7 @@
 #define MSG_SGETEXT_DEL_JOB_SS                        _MESSAGE(33340, _("The job "SFN" of user(s) "SFN" does not exist"))
 #define MSG_SGETEXT_DOESNOTEXISTTASK_SU               _MESSAGE(33341, _("job \""SFN"\" task \"" sge_U32CFormat "\" does not exist"))
 #define MSG_SGETEXT_DOESNOTEXISTTASKRANGE_SUUU        _MESSAGE(33342, _("job \""SFN"\" task id range \"" sge_U32CFormat "-" sge_U32CFormat ":" sge_U32CFormat "\" comprises no tasks"))
+#define MSG_JSV_THRESHOLD_UU                            _MESSAGE(33343, _("JSV for job "sge_U32CFormat" took "sge_U32CFormat" ms"))
 /*
 ** sge_manop.c
 */

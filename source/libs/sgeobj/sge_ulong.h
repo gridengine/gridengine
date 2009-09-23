@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_ulongL.h"
+#include "sge_ulong_ULNG_L.h"
 
 bool 
 double_print_infinity_to_dstring(double value, dstring *string);
@@ -71,5 +71,8 @@ ulong_list_parse_from_string(lList **this_list, lList **answer_list,
 
 bool
 ulong_parse_priority(lList **alpp, int *valp, const char *priority_str);
+
+bool
+ulong_parse_task_concurrency(lList **alpp, int *valp, const char *task_concurrency_str);
 
 #endif /* __SGE_ULONG_H */

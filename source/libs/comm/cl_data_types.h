@@ -352,6 +352,8 @@ typedef struct cl_com_handle {
    long shutdown_timeout;                   /* used when shutting down handle */
    cl_com_connection_t* service_handler;    /* service handler of this handle */
    struct timeval start_time;
+   struct timeval last_statistic_update_time;      /* used in service thread */
+   struct timeval last_message_queue_cleanup_time; /* used in service thread */
 } cl_com_handle_t;
 
 #ifdef USE_POLL

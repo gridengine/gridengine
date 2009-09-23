@@ -647,7 +647,7 @@ int sge_get_confval_array(const char *fname, int n, int nmissing, bootstrap_entr
             }
             else {
                sge_dstring_sprintf(error_dstring, MSG_UTI_CANNOTLOCATEATTRIBUTE_SS, 
-                                   name[i], fname);
+                                   name[i].name, fname);
             }
             
             break;

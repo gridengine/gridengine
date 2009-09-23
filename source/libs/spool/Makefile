@@ -39,9 +39,7 @@ SPOOLLIB_DIR = $(SDIR)/libs/spool
 
 SPOOLLIB_SRC = \
          sge_spooling.c \
-         sge_spooling_database.c \
          sge_spooling_utilities.c \
-         sge_spooling_sql.c \
          sge_dirent.c
 
 SPOOLLIB_OBJS = $(SPOOLLIB_SRC:.c=.o)
@@ -63,13 +61,13 @@ SPOOLLIB_TEST_PROGS = \
 ###############################################################################
 spoollib: $(SPOOLLIB) spoolclib $(SPOOLLIB_TEST_PROGS)
 
-spoollib_clean: spoolloaderlib_clean spooldlib_clean spoolblib_clean spoolclib_clean spoolclib_old_clean spoolplib_clean
+spoollib_clean: spoolloaderlib_clean spooldlib_clean spoolblib_clean spoolclib_clean spoolclib_old_clean
 		$(RM) $(SPOOLLIB_OBJS) libspool.a libspool$(SHAREDEXT) $(SPOOLLIB_TEST_PROGS) $(SPOOLLIB_TEST_PROGS_OBJ)
 
-spoollib_depend: spoolloaderlib_depend spoolblib_depend spoolclib_depend spoolclib_old_depend spoolplib_depend
+spoollib_depend: spoolloaderlib_depend spoolblib_depend spoolclib_depend spoolclib_old_depend
 		$(DEPEND) -f$(SPOOLLIB_DIR)/spool_dependencies $(SPOOLLIB_DIR)/*.c
 
-spoollib_messages: spoolloaderlib_messages spoolblib_messages spoolclib_messages spoolclib_old_messages spoolplib_messages
+spoollib_messages: spoolloaderlib_messages spoolblib_messages spoolclib_messages spoolclib_old_messages
 	@echo Creating $@
 	@for i in `ls $(SPOOLLIB_DIR)/*.c`; do \
 	   $(CC) $(CFLAGS) -DEXTRACT_MESSAGES -E $$i | $(XGETTEXT) - ;\
@@ -95,12 +93,6 @@ include $(SPOOLLIB_DIR)/spool_dependencies
 ###############################################################################
 sge_spooling.o: $(SPOOLLIB_DIR)/sge_spooling.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SPOOLLIB_DIR)/sge_spooling.c
-
-sge_spooling_database.o: $(SPOOLLIB_DIR)/sge_spooling_database.c 
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SPOOLLIB_DIR)/sge_spooling_database.c
-
-sge_spooling_sql.o: $(SPOOLLIB_DIR)/sge_spooling_sql.c 
-		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SPOOLLIB_DIR)/sge_spooling_sql.c
 
 sge_spooling_utilities.o: $(SPOOLLIB_DIR)/sge_spooling_utilities.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SPOOLLIB_DIR)/sge_spooling_utilities.c
@@ -143,4 +135,3 @@ include $(SDIR)/libs/spool/berkeleydb/Makefile
 include $(SDIR)/libs/spool/classic/Makefile
 include $(SDIR)/libs/spool/dynamic/Makefile
 include $(SDIR)/libs/spool/flatfile/Makefile
-include $(SDIR)/libs/spool/postgres/Makefile

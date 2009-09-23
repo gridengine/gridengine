@@ -82,26 +82,24 @@
 #include "gdi/sge_security.h"
 
 /* SGEOBJ */
-#include "sge_cqueue.h"
-#include "sge_event.h"
-#include "sge_feature.h"
-#include "sge_id.h"
-#include "sge_job.h"
-#include "sge_object.h"
-#include "sge_qinstance.h"
-#include "sge_qinstance_state.h"
-#include "sge_range.h"
-#include "msg_common.h"
+#include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_event.h"
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_id.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_qinstance_state.h"
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_report.h"
+#include "sgeobj/sge_str.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_report.h"
+#include "sgeobj/sge_usage.h"
 
-/* OBJ */
-#include "sge_jobL.h"
-#include "sge_ja_taskL.h"
-#include "sge_japiL.h"
-#include "sge_idL.h"
-#include "sge_strL.h"
-#include "sge_answerL.h"
-#include "sge_reportL.h"
-#include "sge_usageL.h"
+/* MSG */
+#include "msg_common.h"
 
 
 #include "gdi/sge_gdi_ctx.h"
@@ -1262,7 +1260,7 @@ static int japi_send_job(lListElem **sge_job_template, u_long32 *jobid, dstring 
                            ctx->get_username(ctx), ctx->get_groupname(ctx));
 
    /* use GDI to submit job for this session */
-   alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_ADD|SGE_GDI_RETURN_NEW_VERSION, &job_lp, NULL, NULL);
+   alp = ctx->gdi(ctx, SGE_JB_LIST, SGE_GDI_ADD|SGE_GDI_RETURN_NEW_VERSION, &job_lp, NULL, NULL);
 
    /* reinitialize 'job' with pointer to new version from qmaster */
    lFreeElem(sge_job_template);
@@ -1584,7 +1582,7 @@ int japi_run_bulk_jobs(drmaa_attr_values_t **jobidsp, lListElem **sge_job_templa
 *
 *  FUNCTION
 *     Adds a reduced job structure to the request list that causes the job/task
-*     be hold/released when it is used with sge_gdi(SGE_JOB_LIST, SGE_GDI_MOD).
+*     be hold/released when it is used with sge_gdi(SGE_JB_LIST, SGE_GDI_MOD).
 *
 *  INPUTS
 *     u_long32 gdi_action  - the GDI action to be performed
@@ -1607,16 +1605,16 @@ static int japi_user_hold_add_jobid(u_long32 gdi_action, lList **request_list,
                                     dstring *diag)
 {
    const lDescr job_descr[] = {
-         {JB_job_number,             lUlongT},
-         {JB_verify_suitable_queues, lUlongT},
-         {JB_ja_tasks,               lListT },
-         {JB_ja_structure,           lListT },
-         {NoName,                    lEndT}
+         {JB_job_number, lUlongT | CULL_IS_REDUCED, NULL},
+         {JB_verify_suitable_queues, lUlongT | CULL_IS_REDUCED, NULL},
+         {JB_ja_tasks, lListT | CULL_IS_REDUCED, NULL},
+         {JB_ja_structure, lListT | CULL_IS_REDUCED, NULL},
+         {NoName, lEndT | CULL_IS_REDUCED, NULL}
    };
    const lDescr task_descr[] = {
-         {JAT_task_number, lUlongT},
-         {JAT_hold, lUlongT},
-         {NoName, lEndT}
+         {JAT_task_number, lUlongT | CULL_IS_REDUCED, NULL},
+         {JAT_hold, lUlongT | CULL_IS_REDUCED, NULL},
+         {NoName, lEndT | CULL_IS_REDUCED, NULL}
    };
    lListElem *jep = NULL;
    lListElem *tep = NULL;
@@ -1784,7 +1782,7 @@ int japi_control(const char *jobid_str, int drmaa_action, dstring *diag)
                id_list_build_from_str_list(&id_list, &alp, ref_list,
                                            QI_DO_UNSUSPEND, 0);
             }
-            alp = ctx->gdi(ctx, SGE_CQUEUE_LIST, SGE_GDI_TRIGGER, 
+            alp = ctx->gdi(ctx, SGE_CQ_LIST, SGE_GDI_TRIGGER, 
                           &id_list, NULL, NULL);
             lFreeList(&id_list);
             lFreeList(&ref_list);
@@ -1888,7 +1886,7 @@ int japi_control(const char *jobid_str, int drmaa_action, dstring *diag)
          }
 
          if (request_list) {
-            alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_MOD, &request_list, NULL, NULL);
+            alp = ctx->gdi(ctx, SGE_JB_LIST, SGE_GDI_MOD, &request_list, NULL, NULL);
             lFreeList(&request_list);
 
             for_each (aep, alp) {
@@ -3266,13 +3264,13 @@ static int japi_get_job(u_long32 jobid, lList **retrieved_job_list, dstring *dia
       DRETURN(DRMAA_ERRNO_NO_MEMORY);
    }
    
-   jb_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_SEND, SGE_JOB_LIST, SGE_GDI_GET, NULL, 
+   jb_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_SEND, SGE_JB_LIST, SGE_GDI_GET, NULL, 
                           job_selection, job_fields, &state, true);
    ctx->gdi_wait(ctx, &alp, &mal, &state);
    lFreeWhere(&job_selection);
    lFreeWhat(&job_fields);
 
-   sge_gdi_extract_answer(&alp, SGE_GDI_GET, SGE_JOB_LIST, jb_id, mal, retrieved_job_list);
+   sge_gdi_extract_answer(&alp, SGE_GDI_GET, SGE_JB_LIST, jb_id, mal, retrieved_job_list);
    lFreeList(&mal);
    aep = lFirst(alp);
    
@@ -4904,7 +4902,7 @@ static int do_gdi_delete(lList **id_list, int action, bool delete_all,
 
    DENTER (TOP_LAYER, "do_gdi_delete");
 
-   alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_DEL, id_list, NULL, NULL);
+   alp = ctx->gdi(ctx, SGE_JB_LIST, SGE_GDI_DEL, id_list, NULL, NULL);
    lFreeList(id_list);
 
    for_each (aep, alp) {

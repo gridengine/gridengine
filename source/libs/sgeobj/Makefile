@@ -58,6 +58,7 @@ SGEOBJLIB_SRC = \
          sge_cqueue_verify.c \
          sge_ckpt.c \
          sge_cuser.c \
+			sge_cull_xml.c \
          sge_event.c \
          sge_host.c \
          sge_hgroup.c \
@@ -65,6 +66,7 @@ SGEOBJLIB_SRC = \
          sge_id.c \
          sge_ja_task.c \
          sge_job.c \
+         sge_proc.c \
          sge_jsv.c \
          sge_jsv_script.c \
          sge_resource_quota.c \
@@ -74,6 +76,7 @@ SGEOBJLIB_SRC = \
          sge_manop.c \
          sge_mesobj.c \
          sge_object.c \
+         sge_pack.c \
          sge_path_alias.c \
          sge_pe.c \
          sge_pe_task.c \
@@ -194,6 +197,9 @@ sge_cqueue_verify.o: $(SGEOBJLIB_DIR)/sge_cqueue_verify.c
 sge_cuser.o: $(SGEOBJLIB_DIR)/sge_cuser.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_cuser.c
 
+sge_cull_xml.o: $(SGEOBJLIB_DIR)/sge_cull_xml.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_cull_xml.c
+
 sge_ckpt.o: $(SGEOBJLIB_DIR)/sge_ckpt.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_ckpt.c
 
@@ -218,6 +224,9 @@ sge_ja_task.o: $(SGEOBJLIB_DIR)/sge_ja_task.c
 sge_job.o: $(SGEOBJLIB_DIR)/sge_job.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_job.c
 
+sge_proc.o: $(SGEOBJLIB_DIR)/sge_proc.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_proc.c
+
 sge_jsv.o: $(SGEOBJLIB_DIR)/sge_jsv.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_jsv.c
 
@@ -241,6 +250,9 @@ sge_mesobj.o: $(SGEOBJLIB_DIR)/sge_mesobj.c
 
 sge_object.o: $(SGEOBJLIB_DIR)/sge_object.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_object.c
+
+sge_pack.o: $(SGEOBJLIB_DIR)/sge_pack.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_pack.c
 
 sge_path_alias.o: $(SGEOBJLIB_DIR)/sge_path_alias.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_path_alias.c

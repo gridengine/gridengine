@@ -33,20 +33,24 @@
 #include <string.h>
 #include <time.h>
 
-#include "cull.h"
-#include "sge_conf.h"
-#include "sge_job.h"
-#include "sge_ja_task.h"
-#include "sge_qinstance.h"
-#include "sge_qinstance_state.h"
-#include "sge_orderL.h"
-#include "sge_time.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_time.h"
+#include "uti/sge_parse_num_par.h"
+
+#include "cull/cull.h"
+
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_qinstance_state.h"
+#include "sgeobj/sge_order.h"
+
 #include "sge_select_queue.h"
 #include "schedd_monitor.h"
-#include "sge_parse_num_par.h"
 #include "sge_orders.h"
 #include "suspend_thresholds.h"
-#include "sgermon.h"
 
 
 static int select4suspension(lList *job_list, lListElem *queues, lListElem **jepp, lListElem **ja_taskp);

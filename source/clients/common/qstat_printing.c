@@ -32,25 +32,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
-#include <fnmatch.h>
 
 #include "sge_unistd.h"
 #include "sgermon.h"
-#include "symbols.h"
 #include "sge.h"
 #include "sge_time.h"
-#include "sge_log.h"
 #include "sge_all_listsL.h"
 #include "sge_host.h"
 #include "sge_sched.h"
-#include "cull_sort.h"
-#include "usage.h"
-#include "sge_feature.h"
 #include "parse.h"
 #include "sge_prog.h"
 #include "sge_parse_num_par.h"
-#include "sge_string.h"
 #include "show_job.h"
 #include "sge_dstring.h"
 #include "qstat_printing.h"
@@ -58,17 +50,11 @@
 #include "sig_handlers.h"
 #include "msg_clients_common.h"
 #include "sge_job.h"
-#include "get_path.h"
-#include "sge_var.h"
-#include "sge_answer.h"
 #include "sge_qinstance.h"
-#include "sge_qinstance_state.h"
-#include "sge_qinstance_type.h"
 #include "sge_urgency.h"
 #include "sge_pe.h"
 #include "sge_ulong.h"
-#include "sge_ja_task.h"
-#include "sge_qstat.h"
+#include "sgeobj/sge_usage.h"
 
 static int sge_print_job(lListElem *job, lListElem *jatep, lListElem *qep, int print_jobid, 
                          char *master, dstring *task_str, u_long32 full_listing, int

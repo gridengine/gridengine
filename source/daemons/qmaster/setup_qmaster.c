@@ -34,21 +34,16 @@
 #include <string.h>
 #include <signal.h>
 #include <unistd.h>  
-#include <errno.h>
 #include <time.h>
-#include <pthread.h>
 #include <sys/resource.h>
 
 #include "rmon/sgermon.h"
 
-#include "comm/commlib.h"
 
 #include "uti/sge_log.h"
 #include "uti/sge_prog.h"
-#include "uti/sge_time.h"
 #include "uti/sge_unistd.h"
 #include "uti/sge_uidgid.h"
-#include "uti/sge_io.h"
 #include "uti/sge_os.h"
 #include "uti/sge_hostname.h"
 #include "uti/sge_bootstrap.h"
@@ -69,20 +64,13 @@
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_job.h"
 #include "sgeobj/sge_resource_quota.h"
-#include "sgeobj/sge_pe.h"
 #include "sgeobj/sge_qinstance.h"
 #include "sgeobj/sge_qinstance_state.h"
 #include "sgeobj/sge_cqueue.h"
-#include "sgeobj/sge_ckpt.h"
 #include "sgeobj/sge_userprj.h"
 #include "sgeobj/sge_manop.h"
-#include "sgeobj/sge_calendar.h"
-#include "sgeobj/sge_hgroup.h"
-#include "sgeobj/sge_cuser.h"
 #include "sgeobj/sge_centry.h"
 #include "sgeobj/sge_userset.h"
-#include "sgeobj/sge_feature.h"
-#include "sgeobj/sge_sharetree.h"
 #include "sgeobj/sge_conf.h"
 
 #include "sched/sge_sched.h"
@@ -93,26 +81,16 @@
 #include "sge_qinstance_qmaster.h"
 #include "sge_qmod_qmaster.h"
 #include "sge_persistence_qmaster.h"
-#include "sge_reporting_qmaster.h"
-#include "sge_ckpt_qmaster.h"
 #include "sge_sharetree_qmaster.h"
-#include "sge_userset_qmaster.h"
 #include "sge_host_qmaster.h"
 #include "sge_pe_qmaster.h"
 #include "sge_cqueue_qmaster.h"
-#include "sge_manop_qmaster.h"
 #include "sge_job_qmaster.h"
-#include "sge_subordinate_qmaster.h"
-#include "sge_calendar_qmaster.h"
 #include "sge_task_depend.h"
 #include "sched_conf_qmaster.h"
 #include "configuration_qmaster.h"
-#include "setup_qmaster.h"
-#include "qmaster_heartbeat.h"
 #include "lock.h"
-#include "qmaster_to_execd.h"
 #include "usage.h"
-#include "reschedule.h"
 #include "shutdown.h"
 #include "sge_give_jobs.h"
 
@@ -125,7 +103,6 @@
 #include "sge_advance_reservation_qmaster.h"
 #include "sge_qinstance_qmaster.h"
 #include "uti/sge_time.h"
-#include "uti/sge_string.h"
 
 
 static void   process_cmdline(char**);
@@ -908,20 +885,20 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
 
    if (!host_list_locate(*object_base[SGE_TYPE_EXECHOST].list, SGE_TEMPLATE_NAME)) {
       /* add an exec host "template" */
-      if (sge_add_host_of_type(ctx, SGE_TEMPLATE_NAME, SGE_EXECHOST_LIST, &monitor))
+      if (sge_add_host_of_type(ctx, SGE_TEMPLATE_NAME, SGE_EH_LIST, &monitor))
          ERROR((SGE_EVENT, MSG_CONFIG_ADDINGHOSTTEMPLATETOEXECHOSTLIST));
    }
 
    /* add host "global" to Master_Exechost_List as an exec host */
    if (!host_list_locate(*object_base[SGE_TYPE_EXECHOST].list, SGE_GLOBAL_NAME)) {
       /* add an exec host "global" */
-      if (sge_add_host_of_type(ctx, SGE_GLOBAL_NAME, SGE_EXECHOST_LIST, &monitor))
+      if (sge_add_host_of_type(ctx, SGE_GLOBAL_NAME, SGE_EH_LIST, &monitor))
          ERROR((SGE_EVENT, MSG_CONFIG_ADDINGHOSTGLOBALTOEXECHOSTLIST));
    }
 
    /* add qmaster host to Master_Adminhost_List as an administrativ host */
    if (!host_list_locate(*object_base[SGE_TYPE_ADMINHOST].list, qualified_hostname)) {
-      if (sge_add_host_of_type(ctx, qualified_hostname, SGE_ADMINHOST_LIST, &monitor)) {
+      if (sge_add_host_of_type(ctx, qualified_hostname, SGE_AH_LIST, &monitor)) {
          DRETURN(-1);
       }
    }

@@ -254,4 +254,10 @@ typedef char stringT[MAX_STRING_SIZE];
 #define HAS_LOCALTIME_R
 #define HAS_CTIME_R
 
+typedef enum {
+   NO    = 0,
+   YES   = 1,
+   UNSET = 2
+} ternary_t;
+
 #endif /* __BASIS_TYPES_H */

@@ -654,12 +654,12 @@ void updateJobList(void)
                       JAT_state, JEXITING);
    where_exiting = lWhere("%T(!(%I m= %u))", JAT_Type, JAT_status, JFINISHED);
  
-   jl = lSelect("jl", qmonMirrorList(SGE_JOB_LIST), where_unfinished, what);
+   jl = lSelect("jl", qmonMirrorList(SGE_JB_LIST), where_unfinished, what);
 
-   ql = lSelect("ql", qmonMirrorList(SGE_CQUEUE_LIST), where_no_template, 
+   ql = lSelect("ql", qmonMirrorList(SGE_CQ_LIST), where_no_template, 
                   what_queue);
-   ehl = qmonMirrorList(SGE_EXECHOST_LIST);
-   cl = qmonMirrorList(SGE_CENTRY_LIST);
+   ehl = qmonMirrorList(SGE_EH_LIST);
+   cl = qmonMirrorList(SGE_CE_LIST);
    /* don't free rl, ol they are maintained in qmon_jobcustom.c */
    rl = qmonJobFilterResources();
    ol = qmonJobFilterOwners();
@@ -790,10 +790,10 @@ void updateJobList(void)
          for_each(jap, rtasks) {
             ql = lGetList(jap, JAT_granted_destin_identifier_list);
             if (ql) {
-               lList *ehl = qmonMirrorList(SGE_EXECHOST_LIST);
-               lList *cl = qmonMirrorList(SGE_CENTRY_LIST);
+               lList *ehl = qmonMirrorList(SGE_EH_LIST);
+               lList *cl = qmonMirrorList(SGE_CE_LIST);
                qnm = lGetString(lFirst(ql), JG_qname);
-               qep = cqueue_list_locate_qinstance(qmonMirrorList(SGE_CQUEUE_LIST), qnm);
+               qep = cqueue_list_locate_qinstance(qmonMirrorList(SGE_CQ_LIST), qnm);
                if (qep) {
                   lList *st = lGetList(qep, QU_suspend_thresholds);
                   qstate = lGetUlong(qep, QU_state);
@@ -1032,7 +1032,7 @@ lList **local
             }   
          }
          num_jobs = lGetNumberOfElem(jl);
-         alp = qmonDelList(SGE_JOB_LIST, local, 
+         alp = qmonDelList(SGE_JB_LIST, local, 
                            ID_str, &sl, NULL, NULL);
          qmonMessageBox(w, alp, 0);
          lFreeList(&alp);
@@ -1102,7 +1102,7 @@ XtPointer cad
       XbaeMatrixDeselectAll(job_running_jobs);
 
    status = qmonDeleteJobForMatrix(w, job_pending_jobs,
-                           qmonMirrorListRef(SGE_JOB_LIST));
+                           qmonMirrorListRef(SGE_JB_LIST));
    if (status)
       XbaeMatrixDeselectAll(job_pending_jobs);
 
@@ -1153,7 +1153,7 @@ XtPointer cad
 
    if (jl) {
 
-      alp = qmonChangeStateList(SGE_JOB_LIST, jl, force, action); 
+      alp = qmonChangeStateList(SGE_JB_LIST, jl, force, action); 
 
       qmonMessageBox(w, alp, 0);
 
@@ -1269,12 +1269,12 @@ static void qmonJobPriority(Widget w, XtPointer cld, XtPointer cad)
    int new_priority = 0;
 
    lDescr prio_descr[] = {
-      {JB_job_number, lUlongT},
-      {JB_ja_tasks, lListT},
-      {JB_ja_structure, lListT},
+      {JB_job_number, lUlongT | CULL_IS_REDUCED, NULL},
+      {JB_ja_tasks, lListT | CULL_IS_REDUCED, NULL},
+      {JB_ja_structure, lListT | CULL_IS_REDUCED, NULL},
       /* optional fields */
-      {JB_priority, lUlongT},
-      {NoName, lEndT}
+      {JB_priority, lUlongT | CULL_IS_REDUCED, NULL},
+      {NoName, lEndT | CULL_IS_REDUCED, NULL}
    };
    
    DENTER(GUI_LAYER, "qmonJobPriority");
@@ -1307,7 +1307,7 @@ static void qmonJobPriority(Widget w, XtPointer cld, XtPointer cad)
       for_each(jep, jl) {
          lSetUlong(jep, JB_priority, BASE_PRIORITY + new_priority);
       }
-      alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_MOD, &jl, NULL, NULL); 
+      alp = ctx->gdi(ctx, SGE_JB_LIST, SGE_GDI_MOD, &jl, NULL, NULL); 
    
       qmonMessageBox(w, alp, 0);
 
@@ -1341,10 +1341,10 @@ static void qmonJobHold(Widget w, XtPointer cld, XtPointer cad)
    lListElem *jatep = NULL;
 
    lDescr hold_descr[] = {
-      {JB_job_number, lUlongT},
-      {JB_ja_tasks, lListT},
-      {JB_ja_structure, lListT},
-      {NoName, lEndT}
+      {JB_job_number, lUlongT | CULL_IS_REDUCED, NULL},
+      {JB_ja_tasks, lListT | CULL_IS_REDUCED, NULL},
+      {JB_ja_structure, lListT | CULL_IS_REDUCED, NULL},
+      {NoName, lEndT | CULL_IS_REDUCED, NULL}
    };
    
    DENTER(GUI_LAYER, "qmonJobHold");
@@ -1375,7 +1375,7 @@ static void qmonJobHold(Widget w, XtPointer cld, XtPointer cad)
       */
       selected_job = lFirst(jl);
       selected_job_id = lGetUlong(selected_job, JB_job_number);
-      job = job_list_locate(qmonMirrorList(SGE_JOB_LIST), selected_job_id);
+      job = job_list_locate(qmonMirrorList(SGE_JB_LIST), selected_job_id);
       selected_ja_task = lFirst(lGetList(selected_job, JB_ja_tasks));
       selected_ja_task_id = lGetUlong(selected_ja_task, JAT_task_number);
       if (job_is_enrolled(job, selected_ja_task_id)) {
@@ -1415,7 +1415,7 @@ static void qmonJobHold(Widget w, XtPointer cld, XtPointer cad)
          }
 
 /* lWriteListTo(jl, stdout); */
-         alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_MOD, &jl, NULL, NULL); 
+         alp = ctx->gdi(ctx, SGE_JB_LIST, SGE_GDI_MOD, &jl, NULL, NULL); 
          qmonMessageBox(w, alp, 0);
 
          lFreeList(&jl);
@@ -1527,7 +1527,7 @@ Boolean *ctd
                   str = XbaeMatrixGetCell(w, row, 0);
                   if (str && *str != '\0') {
                      job_nr = atoi(str);
-                     jep = job_list_locate(qmonMirrorList(SGE_JOB_LIST), 
+                     jep = job_list_locate(qmonMirrorList(SGE_JB_LIST), 
                                           (u_long32)job_nr);
                      if (jep) {
                         dstring job_info = DSTRING_INIT;
@@ -1777,8 +1777,8 @@ static void qmonJobScheddInfo(Widget w, XtPointer cld, XtPointer cad)
    lList *jl = NULL;
 
    lDescr info_descr[] = {
-      {ST_name, lStringT},
-      {NoName, lEndT}
+      {ST_name, lStringT | CULL_IS_REDUCED, NULL},
+      {NoName, lEndT | CULL_IS_REDUCED, NULL}
    };
    
    DENTER(GUI_LAYER, "qmonJobScheddInfo");
@@ -1885,7 +1885,7 @@ dstring *sb
  
    /* get job scheduling information */
    what = lWhat("%T(ALL)", SME_Type);
-   alp = ctx->gdi(ctx, SGE_JOB_SCHEDD_INFO_LIST, SGE_GDI_GET, &ilp, NULL, what);
+   alp = ctx->gdi(ctx, SGE_SME_LIST, SGE_GDI_GET, &ilp, NULL, what);
    lFreeWhat(&what);
    for_each(aep, alp) {
       if (lGetUlong(aep, AN_status) != STATUS_OK) {
@@ -1913,7 +1913,7 @@ dstring *sb
    }                                          
    what = lWhat("%T(ALL)", JB_Type);
    /* get job list */
-   alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_GET, &jlp, where, what);
+   alp = ctx->gdi(ctx, SGE_JB_LIST, SGE_GDI_GET, &jlp, where, what);
    lFreeWhere(&where);
    lFreeWhat(&what);
    for_each(aep, alp) {
@@ -1961,8 +1961,7 @@ dstring *sb
             }
  
             /* job scheduling info */
-            where = lWhere("%T(%I->%T(%I==%u))", MES_Type, MES_job_number_list,
-               ULNG_Type, ULNG, jid);
+            where = lWhere("%T(%I->%T(%I==%u))", MES_Type, MES_job_number_list, ULNG_Type, ULNG_value, jid);
             mes = lFindFirst(lGetList(sme, SME_message_list), where);
             if (mes) {
                if (first_run) {
@@ -2035,7 +2034,7 @@ dstring *sb
  
    /* get job scheduling information */
    what = lWhat("%T(ALL)", SME_Type);
-   alp = ctx->gdi(ctx, SGE_JOB_SCHEDD_INFO_LIST, SGE_GDI_GET, &ilp, NULL, what);
+   alp = ctx->gdi(ctx, SGE_SME_LIST, SGE_GDI_GET, &ilp, NULL, what);
    lFreeWhat(&what);
    for_each(aep, alp) {
       if (lGetUlong(aep, AN_status) != STATUS_OK) {
@@ -2078,7 +2077,7 @@ dstring *sb
  
       text[0]=0;
       for_each(mes, mlp) {
-         lPSortList (lGetList(mes, MES_job_number_list), "I+", ULNG);
+         lPSortList (lGetList(mes, MES_job_number_list), "I+", ULNG_value);
  
          for_each(jid_ulng, lGetList(mes, MES_job_number_list)) {
             u_long32 mid;
@@ -2087,7 +2086,7 @@ dstring *sb
             int header = 0;
  
             mid = lGetUlong(mes, MES_message_number);
-            jid = lGetUlong(jid_ulng, ULNG);
+            jid = lGetUlong(jid_ulng, ULNG_value);
  
             if (initialized) {
                if (last_mid == mid && last_jid == jid)

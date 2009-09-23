@@ -38,10 +38,12 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "sge_string.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "sge_hostname.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_string.h"
+#include "uti/sge_log.h"
+#include "uti/sge_hostname.h"
+
 #include "sge_answer.h"
 #include "sge_eval_expression.h"
 

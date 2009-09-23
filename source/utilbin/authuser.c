@@ -58,8 +58,6 @@
 #     include <crypt.h>
 #  endif
 #  include <unistd.h>
-#include <dlfcn.h>
-#include <sys/param.h>
 #include <grp.h>
 
 #endif

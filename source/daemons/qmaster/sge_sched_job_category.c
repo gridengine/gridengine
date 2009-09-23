@@ -40,7 +40,11 @@
 #include "sge_log.h"
 #include "sge_pe.h"
 #include "sge_prog.h"
-#include "sge_ctL.h"
+#include "sge_ct_SCT_L.h"
+#include "sge_ct_REF_L.h"
+#include "sge_ct_CT_L.h"
+#include "sge_ct_CCT_L.h"
+#include "sge_ct_CTI_L.h"
 #include "sge_schedd_conf.h"
 #include "sge_time.h"
 #include "sgermon.h"
@@ -50,18 +54,17 @@
 #include "schedd_monitor.h"
 #include "unparse_job_cull.h"
 #include "sge_dstring.h"
-#include "parse_qsubL.h"
+#include "sge_parse_SPA_L.h"
 #include "parse.h"
 #include "sge_sched_job_category.h"
 #include "category.h"
-#include "sge_qinstanceL.h"
 #include "sge_qinstance.h"
-#include "sge_rangeL.h"
+#include "sge_range.h"
 #include "sge_qinstance_state.h"
 #include "schedd_message.h"
 #include "sge_schedd_text.h"
 #include "sge_orders.h"
-#include "sge_orderL.h"
+#include "sge_order.h"
 
 #include "msg_schedd.h"
 
@@ -110,6 +113,8 @@ static lList *CS_CATEGORY_LIST = NULL;/* Category list, which contains the categ
                                        * run, when the jobs are copied. The flag JC_FILTER=true has
                                        * to be set to make use of it.
                                        */
+
+static bool reb_cat = true;
 
 static bool is_job_pending(lListElem *job); 
 
@@ -400,6 +405,10 @@ int sge_rebuild_job_category(lList *job_list, lList *acl_list, const lList *prj_
 
    DENTER(TOP_LAYER, "sge_rebuild_job_category");
 
+   if (!reb_cat) {
+      DRETURN(0);
+   }
+
    DPRINTF(("### ### ### ###   REBUILDING CATEGORIES   ### ### ### ###\n"));
 
    lFreeList(&CATEGORY_LIST);
@@ -408,6 +417,9 @@ int sge_rebuild_job_category(lList *job_list, lList *acl_list, const lList *prj_
    for_each (job, job_list) {
       sge_add_job_category(job, acl_list, prj_list, rqs_list);
    } 
+
+   reb_cat = false;
+
    DRETURN(0);
 }
 
@@ -581,4 +593,9 @@ lList *sge_category_job_copy(lList *queue_list, lList **orders, bool monitor_nex
    cull_hash_create_hashtables(jobListCopy);
  
    DRETURN(jobListCopy);
+}
+
+void set_rebuild_categories(bool new_value) 
+{
+   reb_cat = new_value; 
 }

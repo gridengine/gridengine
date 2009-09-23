@@ -46,10 +46,13 @@
 #include <strings.h>
 #include <stdlib.h>
 #include <string.h>
-#include "sgermon.h"
-#include "sge_bootstrap.h"
+
+#include "rmon/sgermon.h"
+
+#include "uti/sge_bootstrap.h"
+#include "uti/sge_string.h"
+
 #include "sge_feature.h"
-#include "sge_string.h"
 #include "sge_eval_expression.h"
 
 #define T 0

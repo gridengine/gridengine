@@ -30,11 +30,14 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_all_listsL.h"
-#include "sgermon.h"
-#include "sge_bootstrap.h"
-#include "sge_centry.h"
-#include "sge_answer.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_bootstrap.h"
+
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_all_listsL.h"
+
 #include "sort_hosts.h"
 
 typedef struct {

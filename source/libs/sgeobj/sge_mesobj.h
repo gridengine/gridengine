@@ -36,7 +36,7 @@
 #include "sge_dstring.h"
 #include "cull.h"
 
-#include "sge_mesobjL.h"
+#include "sge_mesobj_QIM_L.h"
 
 bool
 object_message_add(lListElem *this_elem, int name, 

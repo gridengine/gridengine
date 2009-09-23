@@ -102,7 +102,7 @@ const lSortOrder *sp
       return;
    }
 
-   for (i = 0; sp[i].mt != lEndT; i++) {
+   for (i = 0; mt_get_type(sp[i].mt) != lEndT; i++) {
       DPRINTF(("nm: %d mt: %d pos: %d asc/desc: %d\n", sp[i].nm, sp[i].mt,
                sp[i].pos, sp[i].ad));
    }

@@ -77,8 +77,8 @@
 #include "sge_pe_task_mirror.h"
 #include "sge_sharetree_mirror.h"
 #include "sge_sched_conf_mirror.h"
-#include "sge_hgroupL.h"
-#include "sge_hostL.h"
+#include "sge_hgroup.h"
+#include "sge_host.h"
 
 #include "mir/sge_mirror.h"
 #include "gdi/sge_gdi_ctx.h"

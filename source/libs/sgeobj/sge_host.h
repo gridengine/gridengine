@@ -32,7 +32,44 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_hostL.h"
+#include "sge_host_EH_L.h"
+#include "sge_host_RU_L.h"
+#include "sge_host_AH_L.h"
+#include "sge_host_SH_L.h"
+#include "sge_host_HL_L.h"
+#include "sge_host_HS_L.h"
+
+/* 
+ * sge standard load value names
+ *
+ * use these defined names for refering
+ */
+
+/* static load parameters */
+#define LOAD_ATTR_ARCH           "arch"
+#define LOAD_ATTR_NUM_PROC       "num_proc"
+
+/* raw load parameters */
+#define LOAD_ATTR_LOAD_SHORT     "load_short"
+#define LOAD_ATTR_LOAD_MEDIUM    "load_medium"
+#define LOAD_ATTR_LOAD_LONG      "load_long"
+#define LOAD_ATTR_LOAD_AVG       "load_avg"
+
+/* values divided by LOAD_ATTR_NUM_PROC */
+#define LOAD_ATTR_NP_LOAD_SHORT  "np_load_short"
+#define LOAD_ATTR_NP_LOAD_MEDIUM "np_load_medium"
+#define LOAD_ATTR_NP_LOAD_LONG   "np_load_long"
+#define LOAD_ATTR_NP_LOAD_AVG    "np_load_avg"
+#define LOAD_ATTR_MEM_FREE       "mem_free"
+#define LOAD_ATTR_SWAP_FREE      "swap_free"
+#define LOAD_ATTR_VIRTUAL_FREE   "virtual_free"
+#define LOAD_ATTR_MEM_TOTAL      "mem_total"
+#define LOAD_ATTR_SWAP_TOTAL     "swap_total"
+#define LOAD_ATTR_VIRTUAL_TOTAL  "virtual_total"
+#define LOAD_ATTR_MEM_USED       "mem_used"
+#define LOAD_ATTR_SWAP_USED      "swap_used"
+#define LOAD_ATTR_VIRTUAL_USED   "virtual_used"
+#define LOAD_ATTR_SWAP_RSVD      "swap_rsvd"
 
 bool host_is_referenced(const lListElem *host, lList **answer_list,
                         const lList *queue_list, const lList *hgrp_list);

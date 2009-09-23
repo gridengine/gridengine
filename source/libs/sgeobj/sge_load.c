@@ -32,12 +32,13 @@
 
 #include <string.h>
 
-#include "basis_types.h"
-#include "sgermon.h" 
-#include "sge_string.h"
-#include "sge_str.h"
-#include "sge_log.h"
+#include "rmon/sgermon.h" 
 
+#include "uti/sge_string.h"
+#include "uti/sge_log.h"
+
+#include "basis_types.h"
+#include "sge_str.h"
 #include "sge_answer.h"
 #include "sge_host.h"
 #include "sge_load.h"

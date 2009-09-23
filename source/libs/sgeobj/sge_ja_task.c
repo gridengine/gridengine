@@ -35,26 +35,26 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-#include "sge_string.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "cull_list.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_string.h"
+#include "uti/sge_log.h"
+
+#include "cull/cull_list.h"
 
 #include "sge_range.h"
 #include "sge_ja_task.h"
 #include "sge_pe_task.h"
-#include "sgeobj/sge_mesobj.h"
-
+#include "sge_mesobj.h"
 #include "sge_job.h"
-#include "sgeobj/sge_idL.h"
-#include "sgeobj/sge_strL.h"
-#include "sgeobj/sge_object.h"
-#include "sgeobj/sge_answer.h"
-#include "sgeobj/sge_pe.h"
-#include "sgeobj/sge_qinstance.h"
-#include "sgeobj/sge_utility.h"
-
-#include "sge_usageL.h"
+#include "sge_id.h"
+#include "sge_str.h"
+#include "sge_object.h"
+#include "sge_answer.h"
+#include "sge_pe.h"
+#include "sge_qinstance.h"
+#include "sge_utility.h"
+#include "sge_usage.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"

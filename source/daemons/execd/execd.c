@@ -60,6 +60,7 @@
 #include "execd.h"
 #include "sgeobj/sge_object.h"
 #include "sgeobj/sge_job.h"
+#include "sgeobj/sge_report.h"
 
 #include "msg_common.h"
 #include "msg_execd.h"
@@ -75,6 +76,9 @@
 #   include "sge_string.h"
 #endif
 
+#if defined(LINUX)
+#  include "sge_proc.h"
+#endif
 
 
 
@@ -151,6 +155,10 @@ int main(int argc, char **argv)
    lList *alp = NULL;
 
    DENTER_MAIN(TOP_LAYER, "execd");
+
+#if defined(LINUX)
+   gen_procList ();
+#endif
 
    prof_mt_init();
 
@@ -374,6 +382,9 @@ int main(int argc, char **argv)
        INFO((SGE_EVENT, "SIGPIPE received\n"));
    }
 
+#if defined(LINUX)
+   free_procList();
+#endif
    lFreeList(master_job_list);
 
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
@@ -430,7 +441,7 @@ static void execd_exit_func(void **ctx_ref, int i)
 *     int sge_execd_register_at_qmaster(void) 
 *
 *  FUNCTION
-*     add local execd name to SGE_EXECHOST_LIST in order to register at
+*     add local execd name to SGE_EH_LIST in order to register at
 *     qmaster
 *
 *  INPUTS
@@ -472,13 +483,13 @@ int sge_execd_register_at_qmaster(sge_gdi_ctx_class_t *ctx, bool is_restart) {
          /*
           * This is a regular startup.
           */
-         alp = ctx->gdi(ctx, SGE_EXECHOST_LIST, SGE_GDI_ADD, &hlp, NULL, NULL);
+         alp = ctx->gdi(ctx, SGE_EH_LIST, SGE_GDI_ADD, &hlp, NULL, NULL);
       } else {
          /*
           * Indicate this is a restart to qmaster.
           * This is used for the initial_state of queue_configuration implementation.
           */
-         alp = ctx->gdi(ctx, SGE_EXECHOST_LIST, SGE_GDI_ADD | SGE_GDI_EXECD_RESTART,
+         alp = ctx->gdi(ctx, SGE_EH_LIST, SGE_GDI_ADD | SGE_GDI_EXECD_RESTART,
                         &hlp, NULL, NULL);
       }
       lFreeList(&hlp);

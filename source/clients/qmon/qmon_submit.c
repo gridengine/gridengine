@@ -619,7 +619,7 @@ void qmonSubmitPopup(Widget w, XtPointer cld, XtPointer cad)
          DEXIT;
          return;
       }
-      job_to_set = job_list_locate(qmonMirrorList(SGE_JOB_LIST), 
+      job_to_set = job_list_locate(qmonMirrorList(SGE_JB_LIST), 
                                    submit_mode_data.job_id);
       /*
       ** is it an interactive job ?
@@ -1073,7 +1073,7 @@ int submode
    /*
    ** set sensitivity of deadline field
    */
-   if (userset_is_deadline_user(qmonMirrorList(SGE_USERSET_LIST),
+   if (userset_is_deadline_user(qmonMirrorList(SGE_US_LIST),
             username)) {
       if (sensitive) {      
          XtSetSensitive(submit_deadline, sensitive2);
@@ -1433,7 +1433,7 @@ static void qmonSubmitJobSubmit(Widget w, XtPointer cld, XtPointer cad)
                       lGetUlong(lFirst(lp), JB_verify_suitable_queues) == POKE_VERIFY);
 
       what = lWhat("%T(ALL)", JB_Type);
-      alp = qmonAddList(SGE_JOB_LIST, qmonMirrorListRef(SGE_JOB_LIST), 
+      alp = qmonAddList(SGE_JB_LIST, qmonMirrorListRef(SGE_JB_LIST), 
                         JB_job_number, &lp, NULL, what);
 
       if (lFirst(alp) && (lGetUlong(lFirst(alp), AN_status) == STATUS_OK
@@ -1544,7 +1544,7 @@ static void qmonSubmitJobSubmit(Widget w, XtPointer cld, XtPointer cad)
          return;
       }
 
-      if (userset_is_deadline_user(qmonMirrorList(SGE_USERSET_LIST),
+      if (userset_is_deadline_user(qmonMirrorList(SGE_US_LIST),
             username)) 
          nm_set((int*)qalter_fields, JB_deadline);
 
@@ -1584,7 +1584,7 @@ static void qmonSubmitJobSubmit(Widget w, XtPointer cld, XtPointer cad)
          printf("________________________________________\n");
       }
 
-      alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
+      alp = ctx->gdi(ctx, SGE_JB_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
       if (!qmonMessageBox(w, alp, 0)) {
          updateJobListCB(w, NULL, NULL);
          XmtMsgLinePrintf(submit_message, "Job %d altered", 
@@ -2965,7 +2965,7 @@ static void qmonSubmitAskForCkpt(Widget w, XtPointer cld, XtPointer cad)
       DEXIT;
       return;
    }
-   ckptl = qmonMirrorList(SGE_CKPT_LIST);
+   ckptl = qmonMirrorList(SGE_CK_LIST);
    n = lGetNumberOfElem(ckptl);
    if (n>0) {
       strs = (StringConst*)XtMalloc(sizeof(String)*n); 
@@ -3017,7 +3017,7 @@ static void qmonSubmitAskForProject(Widget w, XtPointer cld, XtPointer cad)
       DEXIT;
       return;
    }
-   pl = qmonMirrorList(SGE_PROJECT_LIST);
+   pl = qmonMirrorList(SGE_PR_LIST);
    n = lGetNumberOfElem(pl);
    if (n>0) {
       strs = (StringConst*)XtMalloc(sizeof(String)*n); 

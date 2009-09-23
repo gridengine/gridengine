@@ -33,17 +33,22 @@
 #include <string.h>
 #include <fnmatch.h>
 
-#include "sgermon.h"
-#include "sge_string.h"
-#include "sge_log.h"
-#include "cull_list.h"
-#include "symbols.h"
-#include "sge.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_string.h"
+#include "uti/sge_log.h"
+#include "uti/sge_dstring.h"
+#include "uti/sge_hostname.h"
+
+#include "comm/commlib.h"
+
+#include "cull/cull_list.h"
 
 #include "gdi/sge_gdi.h"
 
+#include "symbols.h"
+#include "sge.h"
 #include "parse.h"
-#include "sge_dstring.h"
 #include "sge_object.h"
 #include "sge_answer.h"
 #include "sge_attr.h"
@@ -66,9 +71,7 @@
 #include "sge_qref.h"
 #include "sge_range.h"
 #include "sge_subordinate.h"
-#include "sge_hostname.h"
 #include "sge_eval_expression.h"
-#include "commlib.h"
 
 #include "msg_common.h"
 #include "msg_clients_common.h"

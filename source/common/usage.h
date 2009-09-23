@@ -103,6 +103,7 @@ enum {
    OA_WC_AR_LIST,
    OA_WC_AR,
    OA_THREAD_NAME,
+   OA_TASK_CONCURRENCY,
 
    OA__END
 };

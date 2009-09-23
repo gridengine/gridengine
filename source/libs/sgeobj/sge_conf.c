@@ -39,37 +39,39 @@
 #include <mcheck.h>
 #endif
 
-#include "sge.h"
-#include "basis_types.h"
-#include "sge_conf.h"
-#include "sge_stdlib.h"
-#include "cull.h"
-#include "commlib.h"
-#include "sge_parse_num_par.h"
-#include "sge_feature.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "sge_string.h"
-#include "sge_userset_qmaster.h"
-#include "sge_prog.h"
-#include "setup_path.h"
-#include "sge_usageL.h"
-#include "sge_time.h"
-#include "sge_host.h"
-#include "sge_hostname.h"
-#include "sge_answer.h"
-#include "sge_userprj.h"
-#include "sge_userset.h"
+#include "rmon/sgermon.h"
+
+#include "cull/cull.h"
+
+#include "uti/sge_stdlib.h"
+#include "uti/sge_parse_num_par.h"
+#include "uti/sge_log.h"
+#include "uti/sge_string.h"
+#include "uti/sge_prog.h"
+#include "uti/setup_path.h"
+#include "uti/sge_hostname.h"
+#include "uti/sge_time.h"
+#include "uti/sge_profiling.h"
+#include "uti/config_file.h"
+
+#include "comm/commlib.h"
 
 #include "lck/sge_lock.h"
 
 #include "gdi/sge_gdi.h"
 
-#include "uti/sge_profiling.h"
-#include "uti/config_file.h"
-
 #include "sgeobj/msg_sgeobjlib.h"
 
+#include "sge.h"
+#include "basis_types.h"
+#include "sge_conf.h"
+#include "sge_feature.h"
+#include "sge_usage.h"
+#include "sge_userset_qmaster.h"
+#include "sge_host.h"
+#include "sge_answer.h"
+#include "sge_userprj.h"
+#include "sge_userset.h"
 
 #define SGE_BIN "bin"
 #define STREESPOOLTIMEDEF 240
@@ -276,6 +278,8 @@ static void clean_conf(void);
  */
 
 static int max_job_deletion_time = 3;
+static int jsv_timeout = 10;
+static int jsv_threshold = 5000;
 
 #define MAILER                    "/bin/mail"
 #define PROLOG                    "none"
@@ -671,6 +675,8 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
       max_job_deletion_time = 3;
       enable_reschedule_kill = false;
       enable_reschedule_slave = false;
+      jsv_threshold = 5000;
+      jsv_timeout= 10;
 
       for (s=sge_strtok_r(qmaster_params, ",; ", &conf_context); s; s=sge_strtok_r(NULL, ",; ", &conf_context)) {
          if (parse_bool_param(s, "FORBID_RESCHEDULE", &forbid_reschedule)) {
@@ -768,6 +774,24 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
             continue;
          }
          if (parse_bool_param(s, "ENABLE_RESCHEDULE_SLAVE", &enable_reschedule_slave)) {
+            continue;
+         }
+         if (parse_int_param(s, "jsv_threshold", &jsv_threshold, TYPE_TIM)) {
+            if (jsv_threshold < 0) {
+               answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_WARNING,
+                                       MSG_CONF_INVALIDPARAM_SSI, "qmaster_params", "jsv_threshold",
+                                       5000);
+               jsv_threshold = 5000;
+            }
+            continue;
+         }
+         if (parse_int_param(s, "jsv_timeout", &jsv_timeout, TYPE_TIM)) {
+            if (jsv_timeout <= 0) {
+               answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_WARNING,
+                                       MSG_CONF_INVALIDPARAM_SSI, "qmaster_params", "jsv_timeout",
+                                       10);
+               jsv_timeout = 10;
+            }
             continue;
          }
       }
@@ -2480,4 +2504,28 @@ void mconf_get_s_locks(char **pret) {
    
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
    DRETURN_VOID;
+}
+
+int mconf_get_jsv_threshold(void) {
+   int threshold;
+
+   DENTER(BASIS_LAYER, "mconf_get_jsv_threshold");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   threshold = jsv_threshold;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(threshold);
+}
+
+int mconf_get_jsv_timeout(void) {
+   int timeout;
+
+   DENTER(BASIS_LAYER, "mconf_get_jsv_timeout");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   timeout = jsv_timeout;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(timeout);
 }

@@ -38,7 +38,7 @@
 # set -x
 
 SCRIPT_VERSION="6"
-SGE_VERSION="6.2u3"
+SGE_VERSION="6.2u4"
 
 #Reset PATH to a safe value
 #
@@ -139,7 +139,9 @@ while [ $ARGC != 0 ]; do
      AUTO="true"
      FILE="$2"
      if [ ! -f "$2" ]; then
-        ErrUsage
+        AUTO="false"
+        $INFOTEXT "Error: File $FILE does not exist!" 
+        ErrUsage        
      fi
      shift
      ARGC=`expr $ARGC - 1`
@@ -393,14 +395,21 @@ fi
 #because the commandline switches are completely parsed and we know the selected options.
 #This will influence the configfile parsing and checking mechanism.
 if [ $AUTO = "true" -a  $AUTOGUI != "true" ]; then
-   unset SGE_JVM_LIB_PATH
+   SGE_JVM_LIB_PATH="undef"
    GetConfigFromFile
-   #Now we check if we want to enable JMX or not based on SGE_JVM_LIB_PATH
-   if [ -z "$SGE_JVM_LIB_PATH" -o x`echo "$SGE_JVM_LIB_PATH" | tr [A-Z] [a-z]` = "xnone" ]; then
+   #Now we check if we want to enable JMX or not based on SGE_JVM_LIB_PATH and/or SGE_JMX_PORT
+   if [ "$SGE_JVM_LIB_PATH" = "undef" -o x"`echo $SGE_JVM_LIB_PATH | tr \"[A-Z]\" \"[a-z]\"`" = "xnone" ]; then
+      $INFOTEXT -log "Disabling JMX since \$SGE_JVM_LIB_PATH=none or is missing in $FILE file."
+      SGE_ENABLE_JMX="false"
+   fi
+   #Since we no longer have JMX flag (SGE_ENABLE_JMX is always true) we set to to false if
+   #SGE_JMX_PORT is missing or is empty in the autoinstall template
+   if [ -z "$SGE_JMX_PORT" ]; then
+      $INFOTEXT -log "Disabling JMX since \$SGE_JMX_PORT=\"$SGE_JMX_PORT\" in $FILE file."
       SGE_ENABLE_JMX="false"
    fi
    CheckConfigFile $FILE
-elif [ $AUTOGUI = true -a x`echo "$SGE_JVM_LIB_PATH" | tr [A-Z] [a-z]` = "xnone" ]; then
+elif [ $AUTOGUI = true -a x"`echo $SGE_JVM_LIB_PATH | tr \"[A-Z]\" \"[a-z]\"`" = "xnone" ]; then
    SGE_ENABLE_JMX="false"
 fi
 
@@ -458,7 +467,7 @@ if [ $ONLY_ENABLE_JMX = "true" ]; then
    ReplaceOrAddLine "$SGE_ROOT/$SGE_CELL/common/bootstrap" 666 'jvm_threads.*' "jvm_threads             1"
    ExecuteAsAdmin $CHMOD 644 "$SGE_ROOT/$SGE_CELL/common/bootstrap"
    # Do InitCA only when no CSP mode
-   if [ x`BootstrapGetValue "$SGE_ROOT/$SGE_CELL/common" "security_mode" | tr [A-Z] [a-z]` != xcsp ]; then
+   if [ x`BootstrapGetValue "$SGE_ROOT/$SGE_CELL/common" "security_mode" | tr "[A-Z]" "[a-z]"` != xcsp ]; then
       InitCA
    elif [ "$SGE_JMX_SSL" = true ]; then
       if [ ! -f "$SGE_JMX_SSL_KEYSTORE" ]; then
@@ -644,7 +653,9 @@ if [ "$UPDATE" = true ]; then
    RestoreJMX "${UPGRADE_BACKUP_DIR}/cell/jmx"
    #Load and upgrade old cell
    RestoreCell "${UPGRADE_BACKUP_DIR}/cell"
-   GetJMXPort
+   if [ "$SGE_SKIP_JMX_SETTING" != "true" ]; then
+      GetJMXPort
+   fi
    if [ -d "$QMDIR" ]; then
       ExecuteAsAdmin rm -rf "$QMDIR/*"   # remove old qmaster spool dir
    fi
@@ -670,7 +681,9 @@ if [ "$UPDATE" = true ]; then
       CFG_MAIL_ADDR=""
       CFG_GID_RANGE=""
    fi
-   AddJMXFiles
+   if [ "$SGE_SKIP_JMX_SETTING" != "true" ]; then
+      AddJMXFiles
+   fi
    RestoreSequenceNumberFiles $QMDIR #Restore jobseqnum and arseqnum
    CreateSGEStartUpScripts $euid true master
    CreateSGEStartUpScripts $euid true execd
@@ -695,7 +708,11 @@ if [ "$UPDATE" = true ]; then
    #Load configuration, show only critical errors
    "$SGE_ROOT/util/upgrade_modules/load_sge_config.sh" "$UPGRADE_BACKUP_DIR" -log "C" -mode "$UPGRADE_MODE" \
 -newijs "$newIJS" -execd_spool_dir "$CFG_EXE_SPOOL" -gid_range "$CFG_GID_RANGE" -admin_mail "$CFG_MAIL_ADDR"
-   
+   #Need to restart the qmaster to use the new config
+   $INFOTEXT -n "\nRestarting qmaster due to the changed configuration\n"
+   $SGE_STARTUP_FILE -qmaster stop
+   $SGE_STARTUP_FILE -qmaster start
+   exit_val=$?
    if [ "$POST_UPDATE" != true ]; then
       $INFOTEXT -n "\nIf loading the configuration succeeded run these additional commands:\n" \
       "REQUIRED:\n" \
@@ -721,8 +738,10 @@ if [ "$UPDATE" = true ]; then
       "   TIP: To disable SMF on Solaris systems, use the command\n" \
       "        inst_sge -upd-rc -nosmf\n" \
       "\n" \
-      "TIP: Use inst_sge -post-upd to do all above actions\n"
-      exit 0
+      "TIP: Use inst_sge -post-upd to do all above actions\n" \
+      "TIP: Add the -noremote flag to the above commands to perform the action\n" \
+      "     only on the current host without making any remote connections\n"
+      exit $exit_val
    fi
 fi
 
@@ -1146,6 +1165,8 @@ fi
 
 if [ "$EXECD" = "uninstall" ]; then
 
+   uninstall_ret=0
+
    if [ "$AUTO" = "true" ]; then
       Stdout2Log
       $INFOTEXT -log "Starting execution host uninstallation!"
@@ -1182,6 +1203,7 @@ if [ "$EXECD" = "uninstall" ]; then
    fi
    
    FetchHostname
+   uninstall_ret=$?
    SetupWinSvc uninstall
    
    MoveLog
@@ -1190,6 +1212,7 @@ if [ "$EXECD" = "uninstall" ]; then
       exit 0
    fi
 
+exit $uninstall_ret
 fi
 
 if [ $BERKELEY = "uninstall" ]; then
@@ -1257,7 +1280,7 @@ if [ $SHADOW = "install" ]; then
 
    if [ $AUTO = "true" ]; then
       Stdout2Log
-      ignore_fqdn=`BootstrapGetValue "$SGE_ROOT/$CELL_NAME/common" ignore_fqdn | tr [A-Z] [a-z]`
+      ignore_fqdn=`BootstrapGetValue "$SGE_ROOT/$CELL_NAME/common" ignore_fqdn | tr "[A-Z]" "[a-z]"`
       CURRENT_HOST=`$SGE_UTILBIN/gethostname -aname`
       if [ "$ignore_fqdn" = "true" ]; then
          CURRENT_HOST=`echo $CURRENT_HOST | cut -f1 -d. | tr "[A-Z]" "[a-z]"`
@@ -1268,7 +1291,7 @@ if [ $SHADOW = "install" ]; then
          SHADOWD_HOSTS_TO_INSTALL=`RemoveHostFromList "$SHADOWD_HOSTS_TO_INSTALL" "$SHADOW"`
          SHADOW_COMPARE="$SHADOW"
          if [ "$ignore_fqdn" = "true" ]; then
-            SHADOW_COMPARE=`echo "$SHADOW_COMPARE" | cut -f1 -d. | tr [A-Z] [a-z]`
+            SHADOW_COMPARE=`echo "$SHADOW_COMPARE" | cut -f1 -d. | tr "[A-Z]" "[a-z]"`
          fi
          if [ "$NOREMOTE" = false ]; then
             LOCALINST=false
@@ -1311,7 +1334,7 @@ if [ $SHADOW = "install" ]; then
       ProcessSGERoot
 
       $INFOTEXT -n -auto $AUTO "Please enter your SGE_CELL directory or use the default [default] >> "
-
+      #TODO XXX: Will never use env SGE_CELL
       SGE_CELL=`Enter "${CELL_NAME:-default}"`
       export SGE_CELL
       $INFOTEXT -log "Your \$SGE_CELL directory: %s" $SGE_CELL
@@ -1517,7 +1540,10 @@ if [ "$SUBMIT" = "install" ]; then
    product_mode=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep "security_mode" | awk '{ print $2 }'`
    if [ "$product_mode" = "csp" ]; then
       CSP="true"
-   fi 
+   fi
+   #TODO XXX: This will attempt to copy certs to every submit host! We just need one.
+   #Also, we probably prefer to do this from trusted (qmaster) node, that has remote 
+   #access to this submit host
    CopyCA submit
    MoveLog
    $INFOTEXT "Submit host installation is complete!"
@@ -1555,6 +1581,8 @@ if [ "$COPY_CA" = "true" ]; then
    ret=$?
    if [ $ret -eq 0 ]; then
       $INFOTEXT "Copying certificates is complete!"
+   else
+      $INFOTEXT "No certificats to copy in your current cluster setup!" 
    fi
    exit $ret
 fi

@@ -36,23 +36,27 @@
 #include <time.h>
 #include <sys/time.h>
 
-#include "cull_list.h"
+#include "rmon/sgermon.h"
+
+#include "cull/cull_list.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_string.h"
+#include "uti/sge_time.h"
+#include "uti/sge_unistd.h"
+
 #include "sge.h"
-#include "sge_log.h"
-#include "sge_string.h"
-#include "sgermon.h"
 #include "sge_c_gdi.h"
 #include "sge_calendar_qmaster.h"
 #include "sge_qmod_qmaster.h"
 #include "sge_answer.h"
 #include "sge_utility.h"
-#include "sge_time.h"
-#include "sge_unistd.h"
 #include "sge_cqueue.h"
-#include "sge_attrL.h"
+#include "sge_attr.h"
 #include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
 #include "sge_calendar.h"
+
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
 #include "msg_qmaster.h"

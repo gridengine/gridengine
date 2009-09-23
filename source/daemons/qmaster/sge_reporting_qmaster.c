@@ -77,6 +77,7 @@
 #include "sgeobj/sge_userprj.h"
 #include "sgeobj/sge_userset.h"
 #include "sgeobj/sge_cqueue.h"
+#include "sge_resource_utilization_RUE_L.h"
 
 /* sched */
 #include "sched/sge_resource_utilization.h"

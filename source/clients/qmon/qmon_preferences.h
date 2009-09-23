@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "qmon_prefL.h"
+#include "sge_pref_PREF_L.h"
 
 lListElem* qmonGetPreferences(void);
 void qmonReadPreferences(void);

@@ -32,7 +32,28 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sgeobj/sge_resource_quotaL.h"
+#include "sge_resource_quota_RQS_L.h"
+#include "sge_resource_quota_RQR_L.h"
+#include "sge_resource_quota_RQRF_L.h"
+#include "sge_resource_quota_RQRL_L.h"
+#include "sge_resource_quota_RQL_L.h"
+
+enum {
+   FILTER_USERS = 0,
+   FILTER_PROJECTS,
+   FILTER_PES,
+   FILTER_QUEUES,
+   FILTER_HOSTS
+};
+
+/* values found in RQR_level */
+enum {
+   RQR_ALL = 0,
+   RQR_GLOBAL,
+   RQR_CQUEUE,
+   RQR_HOST,
+   RQR_QUEUEI
+};
 
 bool rqs_parse_filter_from_string(lListElem **filter, const char* buffer, lList **alp);
 bool rqs_append_filter_to_dstring(const lListElem *filter, dstring *buffer, lList **alp);

@@ -134,10 +134,10 @@ sge_fifo_lock_init(sge_fifo_rw_lock_t *lock)
 *
 *     If the value of "is_reader" is "true" the function returns as soon
 *     as it gets the read lock. This is the case if there is noone 
-*     currently holding the write lock add if there was noone previously
+*     currently holding the write lock and if there was noone previously
 *     trying to get the write lock.
 *
-*     If the value od "is_reader" is "false" then the function returns
+*     If the value of "is_reader" is "false" then the function returns
 *     as soon as it gets the write lock. This is only the case if there
 *     is noone holding a read or write lock and only if there was noone 
 *     else who tried to get the read or write lock.
@@ -157,7 +157,7 @@ sge_fifo_lock_init(sge_fifo_rw_lock_t *lock)
 *     If more than FIFO_LOCK_QUEUE_LENGTH threads try to get the lock 
 *     it might happen that then there are threads which will never 
 *     get the lock (This behaviour depends on the implementation
-*     of the pthread libraray).
+*     of the pthread library).
 *
 *     A read/write lock has to be initialized with sge_fifo_lock_init()
 *     before it can be used with this function.

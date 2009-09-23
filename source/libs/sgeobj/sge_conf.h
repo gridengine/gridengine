@@ -32,7 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_confL.h"
+#include "sge_conf_CONF_L.h"
+#include "sge_conf_CF_L.h"
 
 /* The scheduler configuration changes this configuration element only. It is
    not spooled and is not shown in qconf -mconf */
@@ -155,5 +156,7 @@ void mconf_get_h_memorylocked(char **pret);
 void mconf_get_s_memorylocked(char **pret);
 void mconf_get_h_locks(char **pret);
 void mconf_get_s_locks(char **pret);
+int mconf_get_jsv_timeout(void);
+int mconf_get_jsv_threshold(void);
 
 #endif /* __SGE_CONF_H */

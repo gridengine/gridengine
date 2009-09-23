@@ -224,21 +224,23 @@ SMFRegister()
 {  
    case "$1" in
    master | qmaster)
+      BDB_DEPENDENCY=""
       if [ "$2" = "true" ]; then
          ServiceAlreadyExists bdb
+         ret=$?
          #Service exists and BDB server was chosen as spooling method
-         if [ $? -eq 1 ]; then
-            BDB_DEPENDENCY="<dependency name='bdb' grouping='require_all' restart_on='none' type='service'><service_fmri value=\'svc:/application/sge/bdb:$SGE_CLUSTER_NAME\' /></dependency>"
-         else
-         #Error we expect BDB to be using SMF as well
-            $INFOTEXT "You chose to install qmaster with SMF and you use Berkley DB server, but bdb \n" \
-                      "SMF service was not found!\n" \
-                      "Either start qmaster installation with -nosmf, or reinstall Berkley DB server \n" \
-                      "to use SMF (do not use -nosmf flag)."
-            return 1
+         if [ "$SPOOLING_SERVER" = "`$SGE_UTILBIN/gethostname -aname`" ]; then
+            if [ $ret -eq 1 ]; then
+               BDB_DEPENDENCY="<dependency name='bdb' grouping='require_all' restart_on='none' type='service'><service_fmri value=\'svc:/application/sge/bdb:$SGE_CLUSTER_NAME\' /></dependency>"
+            else
+            #Error we expect BDB to be using SMF as well
+               $INFOTEXT "You chose to install qmaster with SMF and you use Berkley DB server, but bdb \n" \
+                         "SMF service was not found!\n" \
+                         "Either start qmaster installation with -nosmf, or reinstall Berkley DB server \n" \
+                         "to use SMF (do not use -nosmf flag)."
+               return 1
+            fi
          fi
-      else
-         BDB_DEPENDENCY=""
       fi
       SMFCreateAndImportService "qmaster"
       ;;
@@ -353,7 +355,7 @@ SMF()
 
    cmd="$1"
 
-   if [ "$#" -lt 1 -o  "$#" -gt 3 -o "$cmd" = "-h" -o "$cmd" = "help"  -o "$cmd" = "-help" "$cmd" = "--help" ]; then
+   if [ "$#" -lt 1 -o  "$#" -gt 3 -o "$cmd" = "-h" -o "$cmd" = "help"  -o "$cmd" = "-help" -o "$cmd" = "--help" ]; then
       SMFusage
       return 1
    fi

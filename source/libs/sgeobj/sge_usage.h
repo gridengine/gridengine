@@ -32,7 +32,34 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_usageL.h"
+#include "sge_usage_UA_L.h"
+
+/*
+ * sge standard usage value names
+ * 
+ * use these defined names for refering special usage values
+ */
+
+#define USAGE_ATTR_CPU "cpu"
+
+/* integral memory usage */
+#define USAGE_ATTR_MEM "mem"
+#define USAGE_ATTR_IO "io"
+#define USAGE_ATTR_IOW "iow"
+
+#define USAGE_ATTR_CPU_ACCT "acct_cpu"
+
+/* these are used for accounting */
+#define USAGE_ATTR_MEM_ACCT "acct_mem"
+#define USAGE_ATTR_IO_ACCT "acct_io"
+#define USAGE_ATTR_IOW_ACCT "acct_iow"
+#define USAGE_ATTR_MAXVMEM_ACCT "acct_maxvmem"
+
+/* actual amount of used memory */
+#define USAGE_ATTR_VMEM "vmem"
+
+/* max. vmem */
+#define USAGE_ATTR_MAXVMEM "maxvmem"
 
 u_long32
 usage_list_get_ulong_usage(const lList *usage_list, const char *name, u_long32 def);

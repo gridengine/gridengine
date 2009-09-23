@@ -323,9 +323,6 @@ static lListElem *pe_task_create_from_file(u_long32 job_id,
 *                         +--- 2.speedy    (PET_Type file)
 *                         +--- past_usage  (PET_Type file)
 *
-*     To optimize the spool behaviour please find the defines
-*     MAX_JA_TASK_PER_DIR and MAX_JA_TASK_PER_FILE
-*
 *  INPUTS
 *     lListElem *job          - full job (JB_Type) 
 *     u_long32 ja_taskid      - 0 or a allowed array job task id 
@@ -342,7 +339,7 @@ int job_write_spool_file(lListElem *job, u_long32 ja_taskid,
                          const char *pe_task_id,
                          sge_spool_flags_t flags) 
 {
-   int ret;
+   int ret = 0;
    int report_long_delays = flags & SPOOL_WITHIN_EXECD;
    u_long32 start = 0;
    
@@ -356,7 +353,9 @@ int job_write_spool_file(lListElem *job, u_long32 ja_taskid,
                                         flags)) {
       ret = job_write_as_single_file(job, ja_taskid, flags); 
    } else {
-      ret = job_write_common_part(job, ja_taskid, flags);
+      if (!(flags & SPOOL_ONLY_JATASK) && !(flags & SPOOL_ONLY_PETASK)) {
+         ret = job_write_common_part(job, ja_taskid, flags);
+      }
       if (!ret && !(flags & SPOOL_IGNORE_TASK_INSTANCES)) {
          ret = job_write_ja_task_part(job, ja_taskid, pe_task_id, flags); 
       }
@@ -431,21 +430,21 @@ static int job_write_ja_task_part(lListElem *job, u_long32 ja_task_id,
    DENTER(TOP_LAYER, "job_write_ja_task_part"); 
 
    job_id = lGetUlong(job, JB_job_number);
-   if (ja_task_id) {
+   if (ja_task_id != 0) {
       next_ja_task = lGetElemUlong(lGetList(job, JB_ja_tasks),
                                    JAT_task_number, ja_task_id);
    } else {
       next_ja_task = lFirst(lGetList(job, JB_ja_tasks));
    }
-   while((ja_task = next_ja_task)) {
-      if (ja_task_id) {
+   while ((ja_task = next_ja_task)) {
+      if (ja_task_id != 0) {
          next_ja_task = NULL;
       } else {
          next_ja_task = lNext(ja_task);
       }
 
       if ((flags & SPOOL_WITHIN_EXECD) ||
-          job_is_enrolled(job, lGetUlong(ja_task, JAT_task_number))) {
+         job_is_enrolled(job, lGetUlong(ja_task, JAT_task_number))) {
          if (job_might_be_tight_parallel(job, *object_type_get_master_list(SGE_TYPE_PE))) {
             flags |= SPOOL_HANDLE_PARALLEL_TASKS;
          }
@@ -457,8 +456,7 @@ static int job_write_ja_task_part(lListElem *job, u_long32 ja_task_id,
          }
       }
    }
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 int job_write_common_part(lListElem *job, u_long32 ja_task_id,
@@ -505,6 +503,7 @@ static int ja_task_write_to_disk(lListElem *ja_task, u_long32 job_id,
    int ret = 0;
    DENTER(TOP_LAYER, "ja_task_write_to_disk");
 
+   /* this is a tightly integrated parallel job */
    if (handle_pe_tasks) {
       char task_spool_dir[SGE_PATH_MAX];
       char task_spool_file[SGE_PATH_MAX];
@@ -521,60 +520,69 @@ static int ja_task_write_to_disk(lListElem *ja_task, u_long32 job_id,
       sge_get_file_path(tmp_task_spool_file, TASK_SPOOL_FILE, 
                         FORMAT_DOT_FILENAME, flags, job_id, ja_task_id, NULL);
 
+      /* create task spool directory if necessary */
       if ((flags & SPOOL_WITHIN_EXECD) || 
           strcmp(old_task_spool_dir, task_spool_dir)) {
          strcpy(old_task_spool_dir, task_spool_dir);
          sge_mkdir(task_spool_dir, 0755, 0, 0);
       }
 
-      {
+      /* spool ja_task */
+      if (!(flags & SPOOL_ONLY_PETASK)) {
          lList *tmp_task_list = NULL;
 
+         /* we do *not* want to spool the pe_tasks together with the ja_task */
          lXchgList(ja_task, JAT_task_list, &tmp_task_list);
+         /* spool ja_task to temporary file */
          ret = lWriteElemToDisk(ja_task, tmp_task_spool_file, NULL, "ja_task");
          lXchgList(ja_task, JAT_task_list, &tmp_task_list);
+         /* make spooling permanent = COMMIT */
          if (!ret && (rename(tmp_task_spool_file, task_spool_file) == -1)) {
             DTRACE;
             goto error;
          }
       }
 
-      if (pe_task_id) {
-         next_pe_task = lGetElemStr(pe_task_list, PET_id, pe_task_id);
-      } else {
-         next_pe_task = lFirst(pe_task_list);
-      }
-      while ((pe_task = next_pe_task)) {
-         char pe_task_spool_file[SGE_PATH_MAX];
-         char tmp_pe_task_spool_file[SGE_PATH_MAX];
-         const char* pe_task_id_string = lGetString(pe_task, PET_id);
-
-         if (pe_task_id) {
-            next_pe_task = NULL;
+      /* spool pe_task(s) */
+      if (!(flags & SPOOL_ONLY_JATASK)) {
+         if (pe_task_id != 0) {
+            next_pe_task = lGetElemStr(pe_task_list, PET_id, pe_task_id);
          } else {
-            next_pe_task = lNext(pe_task);
+            next_pe_task = lFirst(pe_task_list);
          }
+         while ((pe_task = next_pe_task)) {
+            char pe_task_spool_file[SGE_PATH_MAX];
+            char tmp_pe_task_spool_file[SGE_PATH_MAX];
+            const char* pe_task_id_string = lGetString(pe_task, PET_id);
 
-         DTRACE;
+            if (pe_task_id != 0) {
+               next_pe_task = NULL;
+            } else {
+               next_pe_task = lNext(pe_task);
+            }
 
-         sge_get_file_path(pe_task_spool_file, PE_TASK_SPOOL_FILE, 
-                           FORMAT_DEFAULT, flags, job_id, ja_task_id, 
-                           pe_task_id_string);
-         sge_get_file_path(tmp_pe_task_spool_file, PE_TASK_SPOOL_FILE, 
-                           FORMAT_DOT_FILENAME, flags, job_id, ja_task_id, 
-                           pe_task_id_string);
-
-         ret = lWriteElemToDisk(pe_task, tmp_pe_task_spool_file, 
-                                NULL, "pe_task");
-         if (!ret && 
-             (rename(tmp_pe_task_spool_file, pe_task_spool_file) == -1)) {
             DTRACE;
-            goto error;
+
+            sge_get_file_path(pe_task_spool_file, PE_TASK_SPOOL_FILE, 
+                              FORMAT_DEFAULT, flags, job_id, ja_task_id, 
+                              pe_task_id_string);
+            sge_get_file_path(tmp_pe_task_spool_file, PE_TASK_SPOOL_FILE, 
+                              FORMAT_DOT_FILENAME, flags, job_id, ja_task_id, 
+                              pe_task_id_string);
+
+            /* spool pe_task to temporary file */
+            ret = lWriteElemToDisk(pe_task, tmp_pe_task_spool_file, NULL, "pe_task");
+            /* make spooling permanent = COMMIT */
+            if (!ret && (rename(tmp_pe_task_spool_file, pe_task_spool_file) == -1)) {
+               DTRACE;
+               goto error;
+            }
+      
+            DTRACE;
          }
-   
-         DTRACE;
       }
    } else {
+      /* this is a non tightly parallel array task */
       char task_spool_dir[SGE_PATH_MAX];
       char task_spool_file[SGE_PATH_MAX];
       char tmp_task_spool_file[SGE_PATH_MAX];
@@ -588,13 +596,16 @@ static int ja_task_write_to_disk(lListElem *ja_task, u_long32 job_id,
                         FORMAT_DOT_FILENAME, flags, job_id, 
                         lGetUlong(ja_task, JAT_task_number), NULL);
 
+      /* create task spool directory if necessary */
       if ((flags & SPOOL_WITHIN_EXECD) ||
           strcmp(old_task_spool_dir, task_spool_dir)) {
          strcpy(old_task_spool_dir, task_spool_dir);
          sge_mkdir(task_spool_dir, 0755, 0, 0);
       }
 
+      /* spool ja_task to temporary file */
       ret = lWriteElemToDisk(ja_task, tmp_task_spool_file, NULL, "ja_task");
+      /* make spooling permanent = COMMIT */
       if (!ret && (rename(tmp_task_spool_file, task_spool_file) == -1)) {
          DTRACE;
          goto error;
@@ -602,8 +613,7 @@ static int ja_task_write_to_disk(lListElem *ja_task, u_long32 job_id,
    }
 
 error:
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 int job_remove_spool_file(u_long32 jobid, u_long32 ja_taskid, 

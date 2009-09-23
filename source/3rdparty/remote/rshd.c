@@ -1,4 +1,4 @@
-/*	$Id: rshd.c,v 1.22 2007/12/21 21:18:20 pollinger Exp $	*/
+/*	$Id: rshd.c,v 1.23 2009/08/20 20:20:44 ravinallan Exp $	*/
 
 /*-
  * Copyright (c) 1988, 1989, 1992, 1993, 1994
@@ -544,6 +544,7 @@ fail:
 
 {
    gid_t add_grp_id;
+   gid_t old_grp_id;
    
    /* chdir(active_jobs_dir); */
    sge_switch2admin_user();
@@ -559,13 +560,19 @@ fail:
 	if (setlogin(pwd->pw_name) < 0)
 		syslog(LOG_ERR, "setlogin() failed: %m");
 #endif
+   /*
+    * preserve the old primary gid for initgroups()
+    * see cr 6590010
+    */
+   old_grp_id = pwd->pw_gid;
+
    if(s_qsub_gid != NULL && strcmp(s_qsub_gid, "no") != 0) {
       pwd->pw_gid = atoi(s_qsub_gid);
    }
 
 	(void) setgid((gid_t)pwd->pw_gid);
 #if !defined(INTERIX) /* EB: TODO: There is no initgroups() in INTERIX */
-	initgroups(pwd->pw_name, pwd->pw_gid);
+	initgroups(pwd->pw_name, old_grp_id);
 #endif
    
 #if (SOLARIS || ALPHA || LINUX)     

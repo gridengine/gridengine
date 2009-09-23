@@ -34,19 +34,22 @@
 #include <string.h>
 #include <sys/types.h>
 
+#include "rmon/sgermon.h" 
+
+#include "uti/sge_string.h"
+#include "uti/sge_log.h"
+#include "uti/sge_hostname.h"
+#include "uti/sge_stdlib.h"
+
+#include "comm/commlib.h"
+
 #include "basis_types.h"
-#include "sgermon.h" 
-#include "sge_string.h"
 #include "sge_str.h"
-#include "sge_log.h"
 #include "sge_answer.h"
-#include "sge_hostname.h"
 #include "sge_attr.h"
 #include "sge_href.h"
 #include "sge_hgroup.h"
 #include "sge_object.h"
-#include "sge_stdlib.h"
-#include "commlib.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"

@@ -33,7 +33,6 @@
 #include <string.h>
 #include <errno.h>
 #include <limits.h>
-#include <fnmatch.h>
 #include <ctype.h>
 
 #include "uti/sge_stdlib.h"
@@ -48,7 +47,6 @@
 #include "sge_str.h"
 #include "sge_sched.h"
 #include "sge_object.h"
-#include "sge_feature.h"
 #include "sge_manop.h"
 #include "mail.h"
 #include "sge_ja_task.h"
@@ -57,35 +55,24 @@
 #include "sge_job_qmaster.h"
 #include "sge_cqueue_qmaster.h"
 #include "sge_give_jobs.h"
-#include "sge_pe_qmaster.h"
 #include "sge_qmod_qmaster.h"
-#include "sge_userset_qmaster.h"
-#include "sge_ckpt_qmaster.h"
-#include "job_report_qmaster.h"
-#include "sge_parse_num_par.h"
 #include "sge_event_master.h"
 #include "sge_signal.h"
-#include "sge_subordinate_qmaster.h"
 #include "sge_advance_reservation.h"
 #include "sge_userset.h"
-#include "sge_userprj_qmaster.h"
 #include "sge_prog.h"
 #include "cull_parse_util.h"
-#include "schedd_monitor.h"
-#include "sge_messageL.h"
-#include "sge_idL.h"
-#include "sge_afsutil.h"
-#include "sge_ulongL.h"
+#include "sge_message_SME_L.h"
+#include "sge_message_MES_L.h"
+#include "sge_id.h"
+#include "sge_ulong.h"
 #include "setup_path.h"
 #include "sge_string.h"
-#include "sge_security.h"
 #include "sge_range.h"
 #include "sge_job.h"
 #include "sge_job_schedd.h"
 #include "sge_qmaster_main.h"
 #include "sge_suser.h"
-#include "sge_io.h"
-#include "sge_hostname.h"
 #include "sge_var.h"
 #include "sge_answer.h"
 #include "sge_schedd_conf.h"
@@ -99,7 +86,6 @@
 #include "sge_lock.h"
 #include "sge_mtutil.h"
 #include "sge_task_depend.h"
-#include "sge_job_enforce_limit.h"
 #include "schedd_message.h"
 #include "sge_schedd_text.h"
 #include "sge_persistence_qmaster.h"
@@ -115,17 +101,14 @@
 #include "uti/sge_bootstrap.h"
 #include "uti/sge_string.h"
 
-#include "sgeobj/sge_pe_taskL.h"
 #include "sgeobj/sge_pe_task.h"
 #include "sgeobj/sge_report.h"
-#include "sgeobj/sge_usage.h"
 #include "sgeobj/sge_qinstance_state.h"
 #include "sgeobj/sge_jsv.h"
 #include "sgeobj/sge_jsv_script.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
-#include "msg_daemons_common.h"
 
 
 /****** qmaster/job/spooling ***************************************************
@@ -231,10 +214,13 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
    bool job_spooling = ctx->get_job_spooling(ctx);
    object_description *object_base = object_type_get_object_description();
    cl_thread_settings_t *tc = cl_thread_get_thread_config();
-
+   
    DENTER(TOP_LAYER, "sge_gdi_add_job");
 
    if (jsv_is_enabled(tc->thread_name)) {
+      struct timeval start_time;
+      struct timeval end_time;
+      int jsv_threshold = mconf_get_jsv_threshold();
       /*
        * first verify before JSV is executed
        */
@@ -247,10 +233,18 @@ int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
       /*
        * JSV verification
        */
+      gettimeofday(&start_time,NULL);
       lret = jsv_do_verify(ctx, tc->thread_name, jep, alpp, true);
+      gettimeofday(&end_time,NULL);
+      if (((end_time.tv_sec-start_time.tv_sec)*1000+(end_time.tv_usec-start_time.tv_usec)/1000) 
+              > jsv_threshold || jsv_threshold == 0) {
+              INFO((SGE_EVENT, MSG_JSV_THRESHOLD_UU, sge_u32c(lGetUlong(*jep, JB_job_number)), 
+              sge_u32c((end_time.tv_sec-start_time.tv_sec)*1000+(end_time.tv_usec-start_time.tv_usec)/1000)));
+      }
       if (!lret) {
          DRETURN(STATUS_EUNKNOWN);
       }
+      
    }
 
    /*
@@ -450,8 +444,8 @@ int sge_gdi_del_job(sge_gdi_ctx_class_t *ctx, lListElem *idep, lList **alpp, cha
       a job name is specified. We do not care for users, if we work on jid*/
    if (!all_users_flag && !user_list_flag && (jid_str != NULL) &&
        !isdigit(jid_str[0])) {
-      lList *user_list = lGetList(idep, ID_user_list);
       lListElem *current_user = lCreateElem(ST_Type);
+
       if (user_list == NULL) {
          user_list = lCreateList("user list", ST_Type);
          lSetList(idep, ID_user_list, user_list);
@@ -466,7 +460,7 @@ int sge_gdi_del_job(sge_gdi_ctx_class_t *ctx, lListElem *idep, lList **alpp, cha
       DRETURN(STATUS_EUNKNOWN);
    }
 
-   job_list_filter(user_list_flag? lGetList(idep, ID_user_list):NULL, 
+   job_list_filter(user_list_flag? user_list : NULL, 
                     jid_flag?jid_str:NULL, &job_where);
 
    start_time = sge_get_gmt();
@@ -505,7 +499,7 @@ int sge_gdi_del_job(sge_gdi_ctx_class_t *ctx, lListElem *idep, lList **alpp, cha
 
    if (!njobs && !deleted_tasks) {
       empty_job_list_filter(alpp, 0, user_list_flag,
-            lGetList(idep, ID_user_list), jid_flag,
+            user_list, jid_flag,
             jid_flag?lGetString(idep, ID_str):"0",
             all_users_flag, all_jobs_flag, ruser,
             alltasks == 0 ? 1 : 0, r_start, r_end, step);
@@ -886,7 +880,7 @@ static void get_rid_of_schedd_job_messages(u_long32 job_number)
          lListElem *job_ulng;
          next = lNext(mes);
          
-         if ((job_ulng = lGetElemUlong(lGetList(mes, MES_job_number_list), ULNG, job_number)) != NULL) {
+         if ((job_ulng = lGetElemUlong(lGetList(mes, MES_job_number_list), ULNG_value, job_number)) != NULL) {
             /* 
             ** more than one job in list for this message => remove job id
             ** else => remove whole message 
@@ -3203,10 +3197,9 @@ int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bool is_m
    }
 
    /* can happen only from qalter -w ... */
-   if (is_modify == true && job_get_not_enrolled_ja_tasks(jep) == 0) {
+   if (is_modify == true && job_count_pending_tasks(jep, false) == 0) {
       /* since we can rule out a finished jobs it can be running only */
-      sprintf(SGE_EVENT, "verification: job is already running");
-      answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+      answer_list_add(alpp, MSG_JOB_VERIFYRUNNING, STATUS_OK, ANSWER_QUALITY_INFO);
       DRETURN(0);
    }  
  
@@ -3359,7 +3352,6 @@ int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bool is_m
          lFreeList(&(a.queue_list));
       }
 
-      assignment_release(&a);
 
       /* consequences */
       if (!try_it || !a.slots) {
@@ -3391,6 +3383,7 @@ int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bool is_m
          }
 
          if (verify_mode != WARNING_VERIFY) {
+            assignment_release(&a);
             DRETURN(STATUS_ESEMANTIC);
          }
       }
@@ -3407,8 +3400,10 @@ int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bool is_m
             sprintf(SGE_EVENT, MSG_JOB_VERIFYFOUNDSLOTS_I, a.slots);
          }
          answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+         assignment_release(&a);
          DRETURN(STATUS_ESEMANTIC);
       }
+      assignment_release(&a);
    }
 
    DRETURN(0);

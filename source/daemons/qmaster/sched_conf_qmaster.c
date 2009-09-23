@@ -36,8 +36,8 @@
 
 #include "sgermon.h"
 #include "sge_schedd_conf.h"
-#include "sge_usageL.h"
-#include "sge_confL.h"
+#include "sge_usage.h"
+#include "sge_conf.h"
 #include "sched_conf_qmaster.h"
 #include "sge_event_master.h"
 #include "sge_sched.h"

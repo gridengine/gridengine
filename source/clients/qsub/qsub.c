@@ -35,7 +35,6 @@
 
 #include "sge_all_listsL.h"
 #include "usage.h"
-#include "parse_qsub.h"
 #include "parse_job_cull.h"
 #include "read_defaults.h"
 #include "show_job.h"
@@ -43,9 +42,7 @@
 #include "sig_handlers.h"
 #include "sge_prog.h"
 #include "sgermon.h"
-#include "sge_afsutil.h"
 #include "setup_path.h"
-#include "qm_name.h"
 #include "sge_unistd.h"
 #include "sge_security.h"
 #include "sge_answer.h"
@@ -53,7 +50,6 @@
 #include "japi.h"
 #include "japiP.h"
 #include "lck/sge_mtutil.h"
-#include "uti/sge_log.h"
 #include "sge_profiling.h"
 #include "gdi/sge_gdi_ctx.h"
 
@@ -61,7 +57,6 @@
 #include "msg_qsub.h"
 #include "msg_qmaster.h"
 #include "basis_types.h"
-#include "msg_common.h"
 
 
 extern sge_gdi_ctx_class_t *ctx;

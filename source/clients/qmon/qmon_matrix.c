@@ -39,7 +39,7 @@
 #include <Xmt/InputField.h>
 #include <Xmt/Procedures.h>
 
-#include "sge_usageL.h"
+#include "sge_usage.h"
 
 #include "cull.h"
 #include "gdi/sge_gdi.h"

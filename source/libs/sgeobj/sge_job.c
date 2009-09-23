@@ -37,39 +37,42 @@
 
 #include "sge.h"
 
-#include "sgermon.h"
-#include "sge_log.h"
-#include "commlib.h"
-#include "cull_list.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_htable.h"
+#include "uti/sge_stdlib.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_parse_num_par.h"
+
+#include "comm/commlib.h"
+
+#include "cull/cull_list.h"
+
+#include "gdi/sge_gdi.h"
+#include "gdi/msg_gdilib.h"
+
 #include "sge_ja_task.h"
 #include "sge_pe_task.h"
 #include "sge_manop.h"
 #include "sge_range.h"
-#include "sge_htable.h"
-#include "sge_stdlib.h"
 #include "sge_var.h"
 #include "sge_path_alias.h"
 #include "sge_answer.h"
 #include "sge_object.h"
-#include "sge_prog.h"
 #include "sge_pe.h"
 #include "sge_ckpt.h"
 #include "sge_centry.h"
 #include "sge_qinstance.h"
 #include "sge_host.h"
 #include "symbols.h"
-#include "sge_mesobj.h"
-#include "sge_parse_num_par.h"
-
-#include "gdi/sge_gdi.h"
-
-#include "sgeobj/sge_advance_reservation.h"
-#include "sgeobj/sge_userset.h"
-#include "sgeobj/sge_qrefL.h"
-#include "sgeobj/sge_utility.h"
+#include "sge_mesobj_QIM_L.h"
+#include "sge_advance_reservation.h"
+#include "sge_userset.h"
+#include "sge_qref.h"
+#include "sge_utility.h"
 
 #include "msg_sgeobjlib.h"
-#include "msg_gdilib.h"
 #include "msg_common.h"
 
 #include "sge_job.h"
@@ -3475,6 +3478,15 @@ job_verify_submitted_job(const lListElem *job, lList **answer_list)
    if (ret) {
       ret = object_verify_double_null(job, answer_list, JB_wtcontr);
     }
+   /* JB_ja_task_concurrency must be NULL */
+   if (ret) {
+      u_long32 task_concurrency = lGetUlong(job, JB_ja_task_concurrency);
+      if (task_concurrency > 0 && !job_is_array(job)) {
+         answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                              MSG_INVALIDJOB_REQUEST_S, "task concurrency");
+         ret = false;
+      }
+   }
 
    DRETURN(ret);
 }
@@ -3549,7 +3561,7 @@ bool job_get_wallclock_limit(u_long32 *limit, const lListElem *jep) {
    DRETURN(got_duration);
 }
 
-/****** sgeobj/job/job_is_binary() ******************************************
+/****** sgeobj/job_is_binary() ******************************************
 *  NAME
 *     job_is_binary() -- Was "job" job submitted with -b y? 
 *
@@ -3791,4 +3803,47 @@ job_parse_validation_level(int *level, const char *input, int prog_number, lList
       ret = false;
    }
    DRETURN(ret);
+}
+
+/****** sgeobj/job_is_requesting_consumable() ******************************************
+*  NAME
+*     job_is_requesting_consumable() -- Is job requesting resources of type 
+*                                       CONSUMABLE_JOB?
+*
+*  SYNOPSIS
+*     bool job_is_requesting_consumable(lListElem *jep, const char *resoure_name) 
+*
+*  FUNCTION
+*     This function returns true if "job" is requesting a resource with type
+*     CONSUMABLE_JOB.
+*
+*  INPUTS
+*     lListELem *jep - JB_Type element 
+*     const char *resource_name - Name of resource
+*
+*  RESULT
+*     bool - true or false
+*
+*  SEE ALSO
+******************************************************************************/
+bool
+job_is_requesting_consumable(lListElem *jep, const char *resource_name)
+{
+   lList *request_list;
+   lListElem *cep = NULL;
+   u_long32 consumable;
+
+
+   request_list = lGetList(jep, JB_hard_resource_list);
+
+   if (request_list != NULL) {
+      cep = centry_list_locate(request_list, resource_name);
+      if (cep != NULL) {
+         consumable = lGetUlong(cep, CE_consumable);
+         if (consumable == CONSUMABLE_JOB) {
+            return true;
+         }
+      }
+   }
+   return false;
 }

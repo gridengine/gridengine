@@ -1,3 +1,530 @@
+################################################################################
+# This is the Changelog for Grid Engine source code changes.                   #
+# Possible keywords: "Bugfix", "Belongs to", "Review", "Enhancem.",            #
+#                    "Merged from", "Cleanup", "Issue"                         #
+#                                                                              #
+#                ===== PLEASE DO NOT DELETE THIS HEADER ====                   #
+################################################################################
+          1         2         3         4         5         6         7
+01234567890123456789012345678901234567890123456789012345678901234567890123456789
+-----------------+------------+-------------------------------------------------
+MD-2009-09.23-2: Enhancem.:   raised GDI version
+
+MD-2009-09-23-1: Bugfix:      fixed broken build
+
+MD-2009-09-23-0: Cleanup:     fixed issues reported by insure, 
+                              forgot to check in.
+                 Belongs to:  MD-2009-09-21-0
+                 Review:      CR
+ 
+JG-2009-09-22-0: Bugfix:      fixed a memory leak in qmaster
+                 Review:      EB, MD
+
+MD-2009-09-22-0: Enhancem.:   check in file containig version string 6.2u4
+
+CR-2009-09-21-0: Cleanup:     commlib did check for timed-out messages in
+                              application messages queue every second. Since the
+                              timeout is 3600 seconds the check now is done once
+                              per minute.
+                 Review:      MD
+
+MD-2009-09-21-0: Bugfix:      fixed issues reported by insure 
+                 Review:      CR
+
+HP-2009-09-14-0: Bugfix:      Fixed broken build on most systems because of
+                              checkin RN-2009-09-04
+
+MD-2009-09-12-0: Bugfix:      qmaster did not start, resulte of a leak fix.
+                 Belongs To:  MD-2009-09-11-0
+
+MD-2009-09-11-0: Bugfix:      fixed memory leaks found with insure
+                 Review:      EB
+
+SH-2009-09-11-0: Bugfix:      With kernel 2.6 in Linux there is no timestamping 
+                              on the procfs anymore. Therefore the suggested 
+                              fix does not work.
+                 Bugster:     6749299
+                 Issue:       2962
+                 Review:      JG
+
+RH-2009-09-11-0: Bugfix:      jgdi can not convert exec hosts objects with reporting variable
+                              (temp fix that does not require an update procuedure for 6.2u4
+                              release)
+                 Bugster:     6880144
+                 Issue:       3128
+                 Review:      AA
+
+LP-2009-09-10-0: Bugfix:      Automatic execd uninstallation does not work on 
+                              CentOS r4u5
+                 Bugster:     6880888
+                 Issue:       3130
+                 Bugfix:      Automatic execd uninstallation might not work
+                 Bugster:     6880894
+                 Issue:       3131
+                 Review:      JG
+
+MP-2009-09-10-0: Bugfix:      made modification of checkin from MP-2009-08-20-0
+                 Bugster:     6865717
+                 Issue:       3111
+                 Review:      EB
+
+RN-2009-09-04-0: Bugfix:      Scheduler crashes with got NULL element for
+                              CE_requestable
+                 Bugster:     6873408
+                 Issue:       3126
+                 Review:      GH
+
+RN-2009-09-04-1: Bugfix:      sge clients/daemons segfault when bootstrap file
+                              is corrupted
+                 Bugster:     6876458
+                 Issue:       3127
+                 Review:      JG
+
+JG-2009-09-05-1: Bugfix:      Fixed memory access problem in qstat -xml output.
+                 Belongs to:  EB-2009-08-05-0
+                 Review:      MD
+
+JG-2009-09-05-0: Enhancem.:   mark new qsub -tc switch as experimental in
+                              -help output
+                 Belongs to:  JF-2009-08-24-0
+                 Review:      MD
+
+LP-2009-09-03-0: Bugfix:      management.properties file should only be readable
+                              by admin user or root
+                 Bugster:     6876508
+                 Issue:       3123
+                 Belongs to:  LP-2009-09-01-0
+                 Review:      MD
+
+MP-2009-09-03-0: Bugfix:      Added missing man page information to submit man
+                              page for check in MP-2009-08-25-0
+                 Bugster:     6865717
+                 Issue:       3111
+                 Review:      AS
+
+LP-2009-09-01-0: Bugfix.:     CSP qmaster installation displays confusing
+                              message that suggests a failure if qmaster=execd
+                 Bugster:     6875947
+                 Issue:       3117
+                 Bugfix:      management.properties file should only be readable
+                              by admin user or root
+                 Bugster:     6876508
+                 Issue:       3123
+                 Bugfix:      SMF services should be started even when different
+                              SMF service starts them
+                 Bugster:     6877588
+                 Issue:       3124
+                 Bugfix:      Upgrade JMX logic misleading
+                 Bugster:     6877580
+                 Issue:       3125
+                 Review:      MD
+
+GH-2009-08-31-0: Bugfix:      too many qsub -sync jobs wedge the qmaster on 
+                              failover
+                 Bugster:     6873140
+                 Issue:       3113
+                 Review:      JG
+
+DG-2009-08-31-0: Bugfix:      processor set does not work on Solaris architecture
+                 Bugster:     6861758
+                 Issue:       3122
+                 Review:      JG
+
+MP-2009-08-25-0: Bugfix:      fixes to initial checkin MP-2009-08-20-0
+                 Bugster:     6865717
+                 Issue:       3111
+                 Review:      HP, EB
+
+JF-2009-08-24-0: Bugfix:      allow users to limit concurrent array job task
+                              execution
+                 Bugster:     6684887
+                 Issue:       2542
+                 Review:      HP
+
+MP-2009-08-20-0: Bugfix:      jsv Protocol is not handled correctly in client JSV
+                 Bugster:     6862641
+                 Issue:       3089
+                 Bugfix:      need means to set the jsv command timeout
+                 Bugster:     6865717
+                 Issue:       3111
+                 Review:      HP
+
+RN-2009-08-21-0: Bugfix:      Original primary group vanishes after newgrp
+                              command (USE_QSUB_GID=true)
+                 Issue:       2342
+                 Bugster:     6590010
+                 Review:      JG
+                 Bugfix:      interactive jobs (qlogin, qrsh without command)
+                              don't set the TZ environment variable correctly
+                 Issue:       2716
+                 Bugster:     6744724
+                 Review:      HP
+
+LP-2009-08-20-0: Bugfix.:     SGE 6.2 auto installation does unnecessary check 
+                              on SGE_JMX_PORT and prints a misleading suggestion
+                 Bugster:     6831541
+                 Issue:       2724
+                 Bugfix:      RC script removal is broken if SMF is used
+                 Bugster:     6760650
+                 Issue:       3104
+                 Bugfix:      Berkeley DB server auto installation does not 
+                              work when HOSTNAME_RESOLVING=true
+                 Bugster:     6806917
+                 Issue:       2944
+                 Bugfix:      permission problem during local config creation
+                 Bugster:     6830974
+                 Issue:       3105
+                 Bugfix:      should ensure qmaster spool dir is empty before 
+                              continuing the qmaster installation
+                 Bugster:     6831541
+                 Issue:       3106
+                 Bugfix:      smf support was not enabled but getting a error 
+                              with SMF dependecy error
+                 Bugster:     6832008
+                 Issue:       3107
+                 Bugfix:      Upgrade script from 61 to 62 requires working 
+                              ssh connection to remote hosts
+                 Bugster:     6848042
+                 Issue:       3108
+                 Bugfix:      Calling inst_sge -auto with non-existing file 
+                              argument leads to an error
+                 Bugster:     6848095
+                 Issue:       3109
+                 Bugfix:      inst_sge -copycerts no longer works when no JMX 
+                              or CSP mode used
+                 Bugster:     6856564
+                 Issue:       3110
+                 Bugfix:      JMX gets disabled in the autoinstallation if 
+                              SGE_JVM_LIB_PATH set is to ""
+                 Bugster:     6874070
+                 Issue:       3102
+                 Review:      AP
+
+RM-2009-08-17-0: Bugfix.:     Resource leak in juti.jar
+                 Bugster:     6869559
+                 Issue:       3098
+                 Review:      LP
+
+LP-2009-08-17-1: Bugfix.:     Qmaster installation might fail when more than 1
+                              qmaster is installed in parallel on the same host
+                 Bugster:     6872473
+                 Belongs to:  LP-2009-08-17-0
+                 Review:      AP
+
+LP-2009-08-17-0: Bugfix.:     Qmaster installation might fail when more than 1
+                              qmaster is installed in parallel on the same host
+                 Bugster:     6872473
+                 Review:      AP
+
+EB-2009-08-14-0: Enhancem.:   added script that might be used to start a bunch 
+                              of jobs as qmake job. As input it expects a task
+                              or makefile.
+                 Review:      TBD
+
+EB-2009-08-05-0: Enhancem.:   optimized lGetPosInDescr
+                 Review:      (RD partially), DG
+
+CR-2009-08-05-1: Bugfix:      qsub -sync does not connect to shadow master after
+                              failover
+                 Bugster:     6867897
+                 Issue:       3096
+                 Review:      JG
+
+CR-2009-08-05-0: Bugfix:      qmon does not reconnect to qmaster after shadowd
+                              takeover
+                 Bugster:     6868133
+                 Issue:       3097
+                 Review:      JG
+
+SH-2009-08-04-0: Bugfix:      online usage of maxvmem incorrect for tightly 
+                              integrated parallel jobs
+                 Bugster:     6287864
+                 Issue:       1314
+                 Review:      JG
+
+JG-2008-08-03-0: Bugfix:      ACCT_RESERVED_USAGE is broken
+                 Bugster:     6867805
+                 Issue:       3094
+                 Review:      HP
+
+MD-2008-07-31-0: Bugfix:      o inst_sge -ux does not report error if hostname
+                              resovling is inconsistent
+                 Bugster:     6849718
+                 Issue:       3043
+                 Review:      RH
+
+JG-2008-07-30-0: Bugfix:      more spooling ops than needed during job start
+                              order processing for seq jobs
+                 Bugster:     6773668
+                 Issue:       2804
+                 Review:      EB
+
+MP-2009-07-29-0: Bugfix:      qmaster uninstallation fails when BDB RPC server 
+                              is used
+                 Bugster:     6688019
+                 Issue:       3064
+                 Review:      JG
+
+MD-2008-07-28-0: Bugfix:      Submit client or master might fail if JSV is 
+                              enabled and environment contains fprint format
+                              spec
+                 Bugster:     6862580
+                 Issue:	      3088
+                 Review:      EB
+
+MD-2009-07-23-0: Cleanup:     removing unused INCLUDES from source 
+                              code (part 1)
+                 Issue:       3090
+
+JG-2009-07-22-1: Cleanup:     Added documentation for CULL field attributes.
+                              Fixed some ADOC headers.
+                 Review:      EB
+
+JG-2009-07-22-0: Bugfix:      qstat -help exits 1
+                 Bugster:     6862617
+                 Issue:       3091
+                 Review:      EB
+
+JG-2009-07-17-0: Bugfix:      task spooling always causes job be spooled as well
+                              for array jobs with classic spooling
+                 Bugster:     6774120
+                 Issue:       2805
+                 Review:      EB
+
+MP-2009-07-16-0: Bugfix:      syntax error for empty SGE_QMASTER/EXECD_PORT
+                 Bugster:     6750689
+                 Issue:       3076
+                 Review:      JG
+
+CR-2009-07-13-0: Cleanup:     Added some shepherd trace file logging for 
+                              INTERIX and TODO statements
+                 Review:      DG
+
+GH-2009-07-12-0: Bugfix:      Fixed missing xyz_is_consumable_job parameters
+                              in job config file
+                 Belongs to:  GH-2009-07-08-0
+
+HP-2009-07-10-0: Cleanup:     Cleanup of builtin IJS
+                              Cleanups without CR:
+                              o improved error handling in 20-30 places - output
+                                of error messages from lib functions, added missing
+                                error handling, ...
+                              o code cleanup - indention, brackets, variable names,
+                                comments and ADOC headers
+                              o got rid of some global and some module variables
+                              o improved command parsing in qsh.c - now a list 
+                                instead of a static array is used to collect the
+                                tokens, an allocated array is the generated from the list
+                              o if this command line contains quoted arguments,
+                                they are parsed as one token now
+                              o moved large code blocks to separate functions 
+                              
+                 Bugster:     6857639
+                 Issue:       3075
+                 Review:      EB
+
+GH-2009-07-10-0: Bugfix:      SGE does not handle multiline variable using qsub -v 
+                 Bugster:     6855413
+                 Issue:       3085
+                 Review:      CR
+
+DG-2009-07-10-0: Bugfix:      Fixed broken installation. 
+                 Belongs to:  GH-2009-07-09-0
+                 Review:      CR
+
+CR-2009-07-10-0: Cleanup:     Fixed possible free(NULL) problem in commlib 
+                              logging in the case when running out of memory.
+                 Merged from: V61_BRANCH (CR-2009-07-10-0)
+                 Review:      SH
+
+GH-2009-07-09-0: Bugfix:      execd installation on Windows doesn't provide global 
+                              spool dir as default, even if it's local
+                 Bugster:     6802751
+                 Issue:       3081
+                 Review:      HP, MD
+                 Bugfix:      windows exec autoinstall fails if spooldir was already 
+                              created with wrong perms/ownership
+                 Bugster:     6822285
+                 Issue:       3082
+                 Review:      HP, MD
+                 Bugfix:      autoinstall of Windows exec host hangs in GetLocalSpoolDir
+                 Bugster:     6822285
+                 Issue:       3083
+                 Review:      HP, MD
+                 Bugfix:      Windows exechost install failed to create the local spooldir
+                 Bugster:     6798623
+                 Issue:       3084
+                 Review:      HP, MD
+
+JF-2009-07-08-0: Bugfix:      Man page should mention reprioritize_interval is
+                              coupled to scheduler_interval
+                 Bugster:     6786258
+                 Issue:       3078
+                 Review:      MP
+                 Bugfix:      Relationship between suspend_threshold and
+                              scheduler_interval needs to be documented
+                 Bugster:     6291037
+                 Issue:       1636
+                 Review:      MP
+                 Bugfix:      Man page entry for SCHEDULER_TIMEOUT incorrectly
+                              states that default is 600
+                 Bugster:     6806918
+                 Issue:       3079
+                 Review:      MP
+
+GH-2009-07-08-0: Bugfix:      h_vmem setting as JOB consumable fails to properly 
+                              set the virtual memory limit of a job
+                 Bugster:     6823365
+                 Issue:       3068
+                 Review:      JG, MP
+
+EB-2009-07-06-1: Cleanup:     o replaced list implementation in master and schedd
+                              by utilib implementation
+                 Review:      MD
+
+EB-2009-07-06-0: Enhancem.:   o prepared list names for code generation
+                 Review:      MD 
+
+MP-2009-07-02-0: Bugfix:      automatic uninstallation failed when using 
+                              -jmx option
+                 Bugster:     6747579
+                 Issue:       2727
+                 Review:      CR
+
+DG-2009-07-02-0: Cleanup:     wrong size when comparing strings 
+                 Review:      JG
+
+JG-2009-07-02-0: Cleanup:     Removed outdated spooling to postgres database.
+                 Review:      DG
+
+DG-2009-07-01-0: Bugfix:      qmod -usj jid returns error status even though 
+                              job is suspended
+                 Bugster:     6842457
+                 Issue:       3071
+                 Review:      CR
+
+SH-2009-07-01-0: Cleanup:     fixed broken build on ulx24-x86
+                 Belongs to:  SH-2009-06-24-0
+                 Review:      DG
+
+MP-2009-06-30-0: Bugfix:      cluster name check is failing in installation
+                 Bugster:     6659197
+                 Issue:       3046
+                 Review:      LP, MD
+
+MP-2009-06-29-0: Bugfix:      autoinstall fails if spooling dir (BDB) already exits 
+                              without any error mgs/log file being created
+                 Bugster:     6618009
+                 Issue:       3063
+                 Review:      JG
+
+RN-2009-06-26-0: Bugfix:      qalter -w p reports running jobs for jobs that
+                              are rescheduled due to queue error
+                 Bugster:     6847548
+                 Issue:       3040
+                 Review:      JG
+
+MP-2009-06-25-0: Bugfix:      inadequate inst_qmaster/inst_execd diagnosis if binary
+                              and common packages are not in $SGE_ROOT
+                              Merged from MP-2008-12-01-0 in V61_BRANCH
+                 Bugster:     6617928
+                 Issue:       2807
+                 Review:      JG
+
+MD-2009-06-25-0: Bugfix:      inst_sge shows wrong dialogs during
+                              csp certificate installation
+                 Bugster:     6834894
+                 Issue:       3066
+                 Review:      CR
+
+EB-2009-06-24-1: Cleanup.:    renamed some sl functions 
+                 Review:      HP, CR 
+
+EB-2009-06-24-0: Enhancem.:   implemented thread safe list that will replace
+                              different list implementations in GE code.
+                 Review:      JG, MD
+
+SH-2009-06-24-0: Bugfix:      the execution daemon on Linux generate huge CPU
+                              load based on monitoring processes
+                 Bugster:     6749299
+                 Issue:       2962
+                 Enhancem.:   build pdc as standalone binary
+                 Review:      JG
+
+MD-2009-06-23-0: Enhancem.:   o updated webpages on sunsource.net
+                              o added announcement page for 62u3
+                              o updated 62patches.txt file
+
+JG-2009-06-22-0: Bugfix:      bad RQS syntax can crash/hang qmaster process
+                 Bugster:     6810411
+                 Issue:       2899
+                 Review:      DG
+
+MD-2009-06-18-0: Bugfix:      inst_sge -copycerts exits without error message 
+                              when called for a cluster having no certificates
+                 Bugster:     6769515
+                 Issue:       3062
+                 Review:      SH
+
+EB-2009-06-17-0: Cleanup:     separated CULL object definition from other C code
+                              removed superfluous includes
+                              corrected some includes
+                              eleminated link dependency to sgeobj if some cull
+                              function was used
+                 Review:      JG
+
+MD-2009-06-17-0: Bugfix:      $SGE_ROOT/util/setfileperm.sh does not change 
+                              ownership of $SGE_ROOT/start_gui_installer
+                 Bugster:     6808082
+                 Review:      HP
+
+DG-2009-06-17-2: Bugfix:      qsub man page does not mention the existance of 
+                              $JOB_SCRIPT environment variable within a job
+                 Bugster:     6851538
+                 Issue:       3058
+                 Bugfix:      qalter man page does not imply that qalter works
+                              also on running jobs
+                 Bugster:     6849741
+                 Issue:       3059
+                 Review:      JG
+
+DG-2009-06-17-1: Bugfix:      DrmaaSuite.java imports are too broad
+                 Bugster:     6808646
+                 Issue:       2924
+                 Review:      SH
+
+ZG-2009-06-17-0: Update:      update html man pages
+                 Review:      LP
+
+DG-2009-06-17-0: Bugfix:      man page for drmaa_control() refers to deprecated 
+                              parameters
+                 Bugster:     6713724
+                 Issue:       3056
+                 Review:      SH
+
+JG-2009-06-17-1: Bugfix:      fixed a minor memory leak in qstat client
+                 Review:      EB
+
+JG-2009-06-17-0: Bugfix:      removing admin user from the manager list leads to
+                              a qmaster dead lock
+                 Bugster:     6684465
+                 Issue:       3053
+                 Review:      EB
+
+JG-2009-06-16-0: Bugfix:      man page of sge_ckpt points to wrong reference in
+                              queue_conf
+                 Cleanup:     Some code cleanup (formatting).
+                 Bugster:     6494492
+                 Issue:       3055
+                 Review:      DG
+
+MP-2009-06-15-0: Bugfix:      qconf -ke[j] must return non-zero exit 
+                              code on failure
+                              Merged from V61_BRANCH MP-2009-06-04-0
+                 Bugster:     6675570
+                 Issue:       2942
+                 Review:      HP
+
 MD-2009-06-15-1: CVS:           Created V62u3_TAG
 -----------------------------------------------------
 
@@ -20,6 +547,7 @@ CR-2009-06-02-0: Revert:      Reverted changes. Fix seems to have to much
 JG-2009-06-02-0: Bugfix:      qconf -sstree output wrong error message, if
                               there was no sharetree.
                  Belongs to:  RD-2009-05-04-0
+                 Bugster:     6847167
                  Review:      CR
 
 CR-2009-05-29-1: Bugfix:      Fixed typo in path for gethostname 
@@ -816,7 +1344,7 @@ RD-2009-03-10-0: Bugfix:      fixed qmaster abort at update from previous versio
 GH-2009-03-10-0: Bugfix:      qmod -r does not delete the old instance 
                               of a job before the new one is started
                  Bugster:     6244911
-                 Issue:       2950
+                 Issue:       1521
                  Review:      JG
 
 JF-2009-03-10-0: Bugfix:      Fix qsub truncation of scripts
@@ -2842,8 +3370,9 @@ RD-2008-06-04-1: Bugfix:    corrected max_advance_reservation entry in sge_conf(
 LP-2008-06-04-0: Enhancem:  New upgrade 6.0+ to 6.2, new method introduced to
                             upgrade to different SGE_ROOT, SGE_CELL and tranfer
                             old configuration to a new cluster
+                 Bugster:   6447131
                  Bugfix:    install fails creating unique cluster name
-                 Bugtraq:   6709231
+                 Bugster:   6709231
                  Review:    RD, PJ, AP
 
 EB-2008-06-04-0: Bugfix:    schedd_runlog file is not written when qconf -tsm is used

@@ -33,14 +33,11 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "symbols.h"
 #include "sge_all_listsL.h"
-#include "parse_qsubL.h"
+#include "sge_parse_SPA_L.h"
 #include "parse_job_cull.h"
 #include "sge_mailrec.h"
 #include "parse_qsub.h"
-#include "sge_feature.h"
-#include "sge_userset.h"
 #include "sge_parse_num_par.h"
 #include "parse.h"
 #include "sge_options.h"
@@ -62,6 +59,7 @@
 #include "sgeobj/sge_var.h"
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_jsv.h"
+#include "sgeobj/sge_qref.h"
 
 #include "msg_common.h"
 
@@ -1555,6 +1553,30 @@ DTRACE;
 
          ep_opt = sge_add_arg(pcmdline, t_OPT, lListT, *(sp - 1), *sp);
          lSetList(ep_opt, SPA_argval_lListT, task_id_range_list);
+
+         sp++;
+         continue;
+      }
+
+/*-----------------------------------------------------------------------------*/
+      /* "-tc number */
+
+      if (!strcmp("-tc", *sp)) {
+         int number;
+
+         sp++;
+         if (!*sp) {
+             answer_list_add_sprintf(&answer, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
+                       MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S, "-tc" );
+             DRETURN(answer);
+         }
+
+         if (ulong_parse_task_concurrency(&answer, &number, *sp) == false) {
+            DRETURN(answer);
+         }
+
+         ep_opt = sge_add_arg(pcmdline, tc_OPT, lUlongT, *(sp - 1), *sp);
+         lSetUlong(ep_opt, SPA_argval_lUlongT, number);
 
          sp++;
          continue;

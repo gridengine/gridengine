@@ -31,16 +31,18 @@
 /*___INFO__MARK_END__*/
 
 
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+
 #include "sge.h"
-#include "sgermon.h"
 #include "basis_types.h"
 #include "sge_ja_task.h"
 #include "sge_answer.h"
-#include "sge_log.h"
-#include "sge_suserL.h"
+#include "sge_suser.h"
 #include "sge_job.h"
 #include "sge_suser.h"
-#include "sgeobj/sge_object.h"
+#include "sge_object.h"
 
 #include "msg_qmaster.h"
 

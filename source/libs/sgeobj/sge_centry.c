@@ -33,29 +33,34 @@
 #include <string.h>
 #include <float.h>
 
-#include "sge.h"
-#include "sge_string.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "cull_list.h"
+#include "rmon/sgermon.h"
 
-#include "commd_message_flags.h"
-#include "cull_parse_util.h"
+#include "uti/sge_string.h"
+#include "uti/sge_log.h"
+#include "uti/sge_parse_num_par.h"
+
+#include "cull/cull_list.h"
+
+#include "comm/commd_message_flags.h"
+
+#include "sgeobj/sge_resource_quota.h"
+
+#include "sched/msg_schedd.h"
+
+#include "sge.h"
 #include "sge_answer.h"
 #include "sge_schedd_conf.h"
-#include "sge_parse_num_par.h"
 #include "sge_host.h"
 #include "sge_cqueue.h"
-#include "sge_attrL.h"
+#include "sge_attr.h"
 #include "sge_qinstance.h"
 #include "sge_ulong.h"
 #include "sge_centry.h"
 #include "sge_object.h"
 #include "sge_eval_expression.h"
-#include "sgeobj/sge_resource_quota.h"
+#include "cull_parse_util.h"
 
 #include "msg_common.h"
-#include "msg_schedd.h"
 #include "msg_sgeobjlib.h"
 
 #define CENTRY_LAYER BASIS_LAYER

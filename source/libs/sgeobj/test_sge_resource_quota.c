@@ -30,9 +30,11 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "rmon/sgermon.h"
+
+#include "uti/sge_bootstrap.h"
+
 #include "sge_all_listsL.h"
-#include "sgermon.h"
-#include "sge_bootstrap.h"
 #include "sge_hgroup.h"
 #include "sge_href.h"
 #include "sge_userset.h"

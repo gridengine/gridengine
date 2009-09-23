@@ -1304,8 +1304,11 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
    }
    memset(new_handle->statistic, 0, sizeof(cl_com_handle_statistic_t));
 
+   /* init time structures with current system time */
    gettimeofday(&(new_handle->statistic->last_update),NULL);
    gettimeofday(&(new_handle->start_time),NULL);
+   gettimeofday(&(new_handle->last_message_queue_cleanup_time),NULL);
+   gettimeofday(&(new_handle->last_statistic_update_time),NULL);
 
    new_handle->messages_ready_mutex = (pthread_mutex_t*)malloc(sizeof(pthread_mutex_t));
    if (new_handle->messages_ready_mutex == NULL) {
@@ -3332,6 +3335,22 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
       }
    } else if (connection->data_flow_type == CL_CM_CT_MESSAGE) {
 
+      /*
+         lock order:
+            1) handle->messages_ready_mutex
+            2) handle->received_message_queue
+            3) connection->received_message_list
+
+         unlock order:
+            1) connection->received_message_list
+            2) handle->received_message_queue
+            3) handle->messages_ready_mutex
+      */
+
+      if (connection->handler != NULL) { 
+         pthread_mutex_lock(connection->handler->messages_ready_mutex); 
+         cl_raw_list_lock(connection->handler->received_message_queue);
+      }
       cl_raw_list_lock(connection->received_message_list);
 
       message = NULL;
@@ -3349,6 +3368,10 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
          return_value = cl_com_create_message(&message);
          if (return_value != CL_RETVAL_OK) {
             cl_raw_list_unlock(connection->received_message_list);
+            if (connection->handler != NULL) { 
+               cl_raw_list_unlock(connection->handler->received_message_queue);
+               pthread_mutex_unlock(connection->handler->messages_ready_mutex); 
+            }
             CL_LOG(CL_LOG_ERROR,"error creating new empty read message");
             return return_value;   
          }
@@ -3356,6 +3379,10 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
          return_value = cl_message_list_append_receive(connection, message, 0);
          if (return_value != CL_RETVAL_OK) {
             cl_raw_list_unlock(connection->received_message_list);
+            if (connection->handler != NULL) { 
+               cl_raw_list_unlock(connection->handler->received_message_queue);
+               pthread_mutex_unlock(connection->handler->messages_ready_mutex); 
+            }
             CL_LOG(CL_LOG_ERROR,"error appending new empty read message");
             return return_value;   
          }
@@ -3382,6 +3409,10 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
          if (return_value != CL_RETVAL_OK ) {
              /* header is not complete, try later */
              cl_raw_list_unlock(connection->received_message_list);
+             if (connection->handler != NULL) { 
+                cl_raw_list_unlock(connection->handler->received_message_queue);
+                pthread_mutex_unlock(connection->handler->messages_ready_mutex); 
+             }
              CL_LOG_STR(CL_LOG_INFO,"cl_com_read_GMSH returned", cl_get_error_text(return_value));
 
              /* recalculate timeout when some data was received */
@@ -3413,6 +3444,10 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
             connection->data_read_buffer_pos = connection->data_read_buffer_pos + data_read;
             if (return_value != CL_RETVAL_OK) {
                cl_raw_list_unlock(connection->received_message_list);
+               if (connection->handler != NULL) { 
+                  cl_raw_list_unlock(connection->handler->received_message_queue);
+                  pthread_mutex_unlock(connection->handler->messages_ready_mutex); 
+               }
                CL_LOG_STR(CL_LOG_INFO,"cl_com_read returned:", cl_get_error_text(return_value));
 
                /* recalculate timeout when some data was received */
@@ -3429,6 +3464,10 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
 
          if (return_value != CL_RETVAL_OK ) {
              cl_raw_list_unlock(connection->received_message_list);
+             if (connection->handler != NULL) { 
+                cl_raw_list_unlock(connection->handler->received_message_queue);
+                pthread_mutex_unlock(connection->handler->messages_ready_mutex); 
+             }
              CL_LOG_STR(CL_LOG_INFO,"cl_xml_parse_MIH returned", cl_get_error_text(return_value));
              return return_value;
          }
@@ -3444,6 +3483,10 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
          message->message = (cl_byte_t*) malloc( sizeof(cl_byte_t) * message->message_length);
          if (message->message == NULL) {
             cl_raw_list_unlock(connection->received_message_list);
+            if (connection->handler != NULL) { 
+               cl_raw_list_unlock(connection->handler->received_message_queue);
+               pthread_mutex_unlock(connection->handler->messages_ready_mutex); 
+            }
             return CL_RETVAL_MALLOC;
          }
          message->message_state = CL_MS_RCV;
@@ -3462,6 +3505,10 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
             message->message_rcv_pointer = message->message_rcv_pointer + size;
             if (return_value != CL_RETVAL_OK) {
                cl_raw_list_unlock(connection->received_message_list);
+               if (connection->handler != NULL) { 
+                  cl_raw_list_unlock(connection->handler->received_message_queue);
+                  pthread_mutex_unlock(connection->handler->messages_ready_mutex); 
+               }
                CL_LOG_STR(CL_LOG_INFO,"cl_com_read returned:", cl_get_error_text(return_value));
 
                /* recalculate timeout when some data was received */
@@ -3551,6 +3598,11 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
             case CL_MIH_DF_SIM: {
                return_value = cl_message_list_remove_receive(connection, message, 0);
                cl_raw_list_unlock(connection->received_message_list);
+               if (connection->handler != NULL) { 
+                  cl_raw_list_unlock(connection->handler->received_message_queue);
+                  pthread_mutex_unlock(connection->handler->messages_ready_mutex); 
+               }
+
                if (return_value != CL_RETVAL_OK) {
                   return return_value;
                }
@@ -3600,6 +3652,10 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
             case CL_MIH_DF_SIRM: {
                return_value = cl_message_list_remove_receive(connection, message, 0);
                cl_raw_list_unlock(connection->received_message_list);
+               if (connection->handler != NULL) { 
+                  cl_raw_list_unlock(connection->handler->received_message_queue);
+                  pthread_mutex_unlock(connection->handler->messages_ready_mutex); 
+               }
                if (return_value != CL_RETVAL_OK) {
                   return return_value;
                }
@@ -3640,6 +3696,10 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
             case CL_MIH_DF_AM: {
                return_value = cl_message_list_remove_receive(connection, message, 0);
                cl_raw_list_unlock(connection->received_message_list);
+               if (connection->handler != NULL) { 
+                  cl_raw_list_unlock(connection->handler->received_message_queue);
+                  pthread_mutex_unlock(connection->handler->messages_ready_mutex); 
+               }
                if (return_value != CL_RETVAL_OK) {
                   return return_value;
                }
@@ -3681,6 +3741,10 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
             case CL_MIH_DF_CCM: {
                return_value = cl_message_list_remove_receive(connection, message,0);
                cl_raw_list_unlock(connection->received_message_list);
+               if (connection->handler != NULL) { 
+                  cl_raw_list_unlock(connection->handler->received_message_queue);
+                  pthread_mutex_unlock(connection->handler->messages_ready_mutex); 
+               }
                if (return_value != CL_RETVAL_OK) {
                   return return_value;
                }
@@ -3725,6 +3789,11 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
             case CL_MIH_DF_CCRM: {
                return_value = cl_message_list_remove_receive(connection, message, 0);
                cl_raw_list_unlock(connection->received_message_list);
+               if (connection->handler != NULL) { 
+                  cl_raw_list_unlock(connection->handler->received_message_queue);
+                  pthread_mutex_unlock(connection->handler->messages_ready_mutex); 
+               }
+
                if (return_value != CL_RETVAL_OK) {
                   return return_value;
                }
@@ -3763,19 +3832,23 @@ static int cl_commlib_handle_connection_read(cl_com_connection_t* connection) {
          }
       }
 
-      cl_raw_list_unlock(connection->received_message_list);
-
       if (new_message_for_queue == CL_TRUE) {
          if (connection->handler != NULL) { 
             /* increase counter for ready messages */
-            pthread_mutex_lock(connection->handler->messages_ready_mutex);
             connection->handler->messages_ready_for_read = connection->handler->messages_ready_for_read + 1;
-            cl_app_message_queue_append(connection->handler->received_message_queue, connection, NULL, CL_MIH_MAT_UNDEFINED, NULL, 0,0,0,1);
-            pthread_mutex_unlock(connection->handler->messages_ready_mutex);
+            cl_app_message_queue_append(connection->handler->received_message_queue, connection, NULL, CL_MIH_MAT_UNDEFINED, NULL, 0,0,0,0);
 
             cl_thread_trigger_thread_condition(connection->handler->app_condition, 1);
          }
       }
+
+      cl_raw_list_unlock(connection->received_message_list);
+
+      if (connection->handler != NULL) { 
+         cl_raw_list_unlock(connection->handler->received_message_queue);
+         pthread_mutex_unlock(connection->handler->messages_ready_mutex); 
+      }
+
    }
    return return_value;
 }
@@ -4275,28 +4348,34 @@ static int cl_commlib_calculate_statistic(cl_com_handle_t* handle, cl_bool_t for
       CL_LOG(CL_LOG_ERROR,"no handle specified");
       return CL_RETVAL_PARAMS;
    }
+   gettimeofday(&now,NULL);
+   /* only update every 60 seconds - execpt force_update is CL_TRUE */
+   if ( force_update == CL_FALSE ) {
+      if (now.tv_sec < handle->last_statistic_update_time.tv_sec) {
+         /* system clock was modified */
+         handle->last_statistic_update_time.tv_sec = 0;
+      }
+      if (now.tv_sec - handle->last_statistic_update_time.tv_sec < 60) {
+         CL_LOG(CL_LOG_DEBUG, "skipping statistic update - update time not reached");
+         return CL_RETVAL_OK; 
+      }
+   }
 
    if (lock_list != 0) {
       cl_raw_list_lock(handle->connection_list);
    }
-   gettimeofday(&now,NULL);
+   gettimeofday(&now,NULL);  /* right after getting the lock */
+
+   handle->last_statistic_update_time.tv_sec  = now.tv_sec;
+   handle->last_statistic_update_time.tv_usec = now.tv_usec;
 
    handle_time_now = now.tv_sec + (now.tv_usec / 1000000.0);
    handle_time_last = handle->statistic->last_update.tv_sec + (handle->statistic->last_update.tv_usec / 1000000.0 );
    handle_time_range = handle_time_now - handle_time_last;
 
-   if ( force_update == CL_FALSE && handle_time_range < 60.0 ) {
-      /* only update once per minute */
-      CL_LOG_INT(CL_LOG_DEBUG, "skipping statistic update, time till next update:", (int) (60 - (int)handle_time_range));
-      if (lock_list != 0) {
-         cl_raw_list_unlock(handle->connection_list);
-      }
-      return CL_RETVAL_OK; 
-   }
-
    CL_LOG(CL_LOG_INFO, "performing statistic update");
-   gettimeofday(&(handle->statistic->last_update),NULL);
-
+   handle->statistic->last_update.tv_sec  = now.tv_sec;
+   handle->statistic->last_update.tv_usec = now.tv_usec;
 
    /* get application status */
    pthread_mutex_lock(&cl_com_application_mutex);
@@ -4900,7 +4979,7 @@ int cl_commlib_receive_message(cl_com_handle_t*      handle,
           * cl_connection_list_destroy_connections_to_close() will also lock
           * the mutex to remove all queue entries referencing to a connection 
           * which will be removed. So as long the messages_ready_mutex lock
-          * is owned the connection is guilty!
+          * is owned the connection is valid!
           */
 
 
@@ -5293,6 +5372,10 @@ static int cl_commlib_send_ccm_message(cl_com_connection_t* connection) {
 }
 
 /* connection_list is locked inside of this call */
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_commlib_send_sim_message()"
 static int cl_commlib_send_sim_message(cl_com_connection_t* connection, unsigned long* mid) {
    cl_byte_t* sim_message_data = NULL;
    unsigned long sim_message_size = 0;
@@ -6860,6 +6943,8 @@ static void *cl_com_handle_service_thread(void *t_conf) {
       /* ceck for debug clients */
       cl_commlib_handle_debug_clients(handle, CL_TRUE);
       /* do received message queue cleanup every second */
+
+      /* check for message timeouts in application message queue */
       cl_commlib_app_message_queue_cleanup(handle);
 
       /* there is nothing to do, wait for events */
@@ -7284,14 +7369,13 @@ static int cl_com_handle_ccm_process(cl_com_connection_t* connection) {
       return CL_RETVAL_PARAMS;
    }
    if (connection->connection_state == CL_CONNECTED && connection->connection_sub_state == CL_COM_RECEIVED_CCM) {
-      CL_LOG(CL_LOG_INFO, "checking message buffers ...");
       if (cl_raw_list_get_elem_count(connection->send_message_list)     == 0 && 
           cl_raw_list_get_elem_count(connection->received_message_list) == 0) {
-         CL_LOG(CL_LOG_INFO, "we have empty message buffers");
+         CL_LOG(CL_LOG_INFO, "message lists are empty - sending ccrm ...");
          connection->connection_sub_state = CL_COM_SENDING_CCRM;
          return cl_commlib_send_ccrm_message(connection);
       } else {
-         CL_LOG(CL_LOG_INFO, "waiting for empty message buffers");
+         CL_LOG(CL_LOG_INFO, "waiting for empty message buffers before sending CCRM message ...");
          CL_LOG_INT(CL_LOG_INFO, "receive buffer:",(int)cl_raw_list_get_elem_count(connection->received_message_list) );
          CL_LOG_INT(CL_LOG_INFO, "send buffer   :",(int)cl_raw_list_get_elem_count(connection->send_message_list) );
          return CL_RETVAL_LIST_NOT_EMPTY;
@@ -7648,11 +7732,27 @@ int getuniquehostname(const char *hostin, char *hostout, int refresh_aliases) {
 #endif
 #define __CL_FUNCTION__ "cl_commlib_app_message_queue_cleanup()"
 static void cl_commlib_app_message_queue_cleanup(cl_com_handle_t* handle) {
+   struct timeval now;
+
    /*
       do some connection cleanup
       - remove received messages not fetched by application
     */
    if (handle != NULL) {
+      gettimeofday(&now,NULL);
+      if (now.tv_sec < handle->last_message_queue_cleanup_time.tv_sec) {
+         /* system clock was modified */
+         handle->last_message_queue_cleanup_time.tv_sec = 0;
+      }
+      if (now.tv_sec - handle->last_message_queue_cleanup_time.tv_sec < 60) {
+         CL_LOG(CL_LOG_DEBUG, "skipping application message queue update - time not reached");
+         return;
+      }
+      handle->last_message_queue_cleanup_time.tv_sec  = now.tv_sec;
+      handle->last_message_queue_cleanup_time.tv_usec = now.tv_usec;
+
+      CL_LOG(CL_LOG_INFO, "checking application message queue for out-timed messages ...");
+
       pthread_mutex_lock(handle->messages_ready_mutex); 
       if (handle->messages_ready_for_read != 0) {
          cl_app_message_queue_elem_t* app_mq_elem = NULL;

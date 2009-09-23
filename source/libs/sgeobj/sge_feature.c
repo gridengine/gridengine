@@ -36,16 +36,21 @@
 #include <errno.h>
 #include <pthread.h>
 
+#include "rmon/sgermon.h"
+
+#include "uti/config_file.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_log.h"
+
+#include "cull/cull.h"
+
+#include "gdi/version.h"
+
 #include "sge.h"
 #include "basis_types.h"
-#include "cull.h"
-#include "config_file.h"
-#include "sge_prog.h"
-#include "sgermon.h"
-#include "sge_log.h"
 #include "sge_answer.h"
 #include "sge_utility.h"
-#include "version.h"
+
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
 

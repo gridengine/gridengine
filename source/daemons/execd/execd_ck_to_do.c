@@ -47,7 +47,7 @@
 #include "sge_qinstance.h"
 #include "sge_log.h"
 #include "sge_time.h"
-#include "sge_usageL.h"
+#include "sge_usage.h"
 #include "dispatcher.h"
 #include "sge_parse_num_par.h"
 #include "reaper_execd.h"

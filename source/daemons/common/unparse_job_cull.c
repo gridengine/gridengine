@@ -38,8 +38,6 @@
 #include "sge_pe.h"
 #include "sge_qinstance.h"
 #include "sge_string.h"
-#include "parse_qsubL.h"
-#include "sge_job_refL.h"
 #include "parse_qsub.h"
 #include "parse_job_cull.h"
 #include "unparse_job_cull.h"

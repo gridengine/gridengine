@@ -98,7 +98,7 @@ struct rusage {
 #include "sge_stdio.h"
 #include "sge_job.h"
 
-#include "sge_reportL.h"
+#include "sge_report.h"
 
 #if defined(IRIX)
 #include "sge_processes_irix.h"
@@ -128,6 +128,7 @@ struct rusage {
 #include "sge_ijs_threads.h"
 #include "sge_ijs_comm.h"
 #include "sge_shepherd_ijs.h"
+#include "shepherd.h"
 
 #if defined(SOLARIS) || defined(ALPHA)
 /* ALPHA4 only has wait3() prototype if _XOPEN_SOURCE_EXTENDED is defined */
@@ -153,65 +154,74 @@ pid_t wait3(int *, int, struct rusage *);
 #define RESCHEDULE_EXIT_STATUS 99
 #define APPERROR_EXIT_STATUS 100
 
+/* global variables */
 bool g_new_interactive_job_support = false;
-bool g_csp_mode = false;        /* communication between shepherd and qsh client */
 int  g_noshell = 0;
-int signalled_ckpt_job = 0;   /* marker if signalled a ckpt job */
-int ckpt_signal = 0;          /* signal to send to ckpt job */
-
-static int notify_tasker(u_long32 exit_status);
-int main(int argc, char **argv);
-static int start_child(char *childname, char *script_file, pid_t *pidp, 
-                       int timeout, int ckpt_type);
-static void forward_signal_to_job(int pid, int timeout, int *postponed_signal, 
-                       int remaining_alarm, pid_t ctrl_pid[3]);
-static int check_ckpttype(void);
-int wait_my_child(int pid, int ckpt_pid, int ckpt_type, 
-                         struct rusage *rusage, int timeout, 
-                         int ckpt_interval, char *childname);
-static void set_ckpt_params(int, char *, int, char *, int, char *, int, int *);
-static void set_ckpt_restart_command(char *, int, char *, int);
-static void handle_job_pid(int, int, int *);
-static int start_async_command(const char *descr, char *cmd);
-static void start_clean_command(char *);
-static pid_t start_token_cmd(int, char *, char *, char *, char *);
-static int do_wait(pid_t);
-static void set_sig_handler(int);
-static void shepherd_signal_handler(int);
-
-
-static void shepconf_deliver_signal_or_method(int sig, int pid, pid_t *ctrl_pid);
-
-/* overridable control methods */
-static void verify_method(char *method_name);
-void shepherd_signal_job(pid_t pid, int sig);
 
 char shepherd_job_dir[2048];
+int  received_signal=0;  /* set by signalhandler, when a signal arrives */
 
-char ckpt_command[2048], migr_command[2048], rest_command[2048],
-     clean_command[2048];
 
-int received_signal=0;    /* set by signalhandler, when a signal arrives */
-int notify; /* 0 if no notify or # of seconds to delay signal */
+/* module variables */
+static char ckpt_command[2048], migr_command[2048];
+static char rest_command[2048], clean_command[2048];
 
+static int notify;      /* 0 if no notify or # of seconds to delay signal */
+static int exit_status_for_qrsh = 0;
+
+static int ckpt_signal = 0;        /* signal to send to ckpt job */
+static int signalled_ckpt_job = 0; /* marker if signalled a ckpt job */
+
+
+/* function forward declarations */
+static int notify_tasker(u_long32 exit_status);
+static int start_child(const char *childname, char *script_file, pid_t *pidp, 
+                       int timeout, int ckpt_type);
+static int wait_my_builtin_ijs_child(int pid, const char *childname, int timeout,
+   ckpt_info_t *p_ckpt_info, ijs_fds_t *p_ijs_fds, struct rusage *rusage,
+   dstring *err_msg);
+static int do_wait(pid_t pid);
+
+/* checkpointing functions */
+static int check_ckpttype(void);
+static void set_ckpt_params(int ckpt_type, char *ckpt_command, int ckpt_len,
+   char *migr_command, int migr_len, char *clean_command, int clean_len,
+   int *ckpt_interval);
+static void set_ckpt_restart_command(const char *childname, int ckpt_type, 
+   char *rest_command, int rest_len);
+
+static void handle_job_pid(int ckpt_type, int pid, int *ckpt_pid);
+
+static int start_async_command(const char *descr, char *cmd);
+static void start_clean_command(char *cmd);
+
+static pid_t start_token_cmd(int wait_for_finish, const char *cmd,
+   const char *arg1, const char *arg2, const char *arg3);
+
+/* overridable control methods */
+static void verify_method(const char *method_name);
+void shepherd_signal_job(pid_t pid, int sig);
+
+/* signal functions */
 static void signal_handler(int signal);
 static void set_shepherd_signal_mask(void);
 static void change_shepherd_signal_mask(void);
-
-static int exit_status_for_qrsh = 0;
+static void shepherd_deliver_signal(int sig,
+                                    int pid,
+                                    int *postponed_signal,
+                                    int remaining_alarm,
+                                    pid_t *ctrl_pid);
+static int map_signal(int signal);
+static void set_sig_handler(int sig_num);
+static void shepherd_signal_handler(int dummy);
+static void shepconf_deliver_signal_or_method(int sig, int pid, pid_t *ctrl_pid);
+static void forward_signal_to_job(int pid, int timeout, int *postponed_signal, 
+                       int remaining_alarm, pid_t ctrl_pid[3]);
 
 static int do_prolog(int timeout, int ckpt_type);
 static int do_epilog(int timeout, int ckpt_type);
 static int do_pe_start(int timeout, int ckpt_type, pid_t *pe_pid);
 static int do_pe_stop(int timeout, int ckpt_type, pid_t *pe_pid);
-
-void shepherd_deliver_signal(int sig,
-                             int pid,
-                             int *postponed_signal,
-                             int remaining_alarm,
-                             pid_t *ctrl_pid);
-
-static int map_signal(int signal);
 
 static int wait_until_parent_has_registered_to_server(int fd_pipe_to_child[])
 {
@@ -223,27 +233,26 @@ static int wait_until_parent_has_registered_to_server(int fd_pipe_to_child[])
    /* TODO: Why do we ingore SIGWINCH here? Why do we ignore only SIGWINCH here?*/
    sigignore(SIGWINCH);
 
-   /* close parents end of out copy of the pipe */
-   shepherd_trace("Child: closing parents end of the pipe");
+   /* close parents end of our copy of the pipe */
+   shepherd_trace("child: closing parents end of the pipe");
    close(fd_pipe_to_child[1]);
    fd_pipe_to_child[1] = -1;
 
    /* wait until parent has registered at the server */
-   shepherd_trace("Child: trying to read from parent through the pipe");
+   shepherd_trace("child: trying to read from parent through the pipe");
    ret = read(fd_pipe_to_child[0], tmpbuf, 11);
    if (ret <= 0) {
-      shepherd_trace("Child: Error communicating with parent: %d, %s\n", 
+      shepherd_trace("child: error communicating with parent: %d, %s", 
                      errno, strerror(errno));
       ret = -1;
    } else {
       /* close other side of our copy of the pipe */
       close(fd_pipe_to_child[0]);
       fd_pipe_to_child[0] = -1;
-      shepherd_trace("Child: Parent sent us '%s'", tmpbuf);
+      shepherd_trace("child: parent sent us '%s'", tmpbuf);
       sscanf(tmpbuf, "noshell = %d", &g_noshell);
-      shepherd_trace("noshell = %d", g_noshell);
       if (g_noshell != 0 && g_noshell != 1) {
-         shepherd_trace("Child: Parent didn't register to server. %d, %s\n", 
+         shepherd_trace("child: parent didn't register to server. %d, %s", 
                         errno, strerror(errno));
          ret = -1;
       }
@@ -710,17 +719,6 @@ int main(int argc, char **argv)
          }
       }
       config_errfunc = shepherd_error_ptr;
-
-      /* 
-       * For performance reasons, we read the csp state from the config,
-       * not from the bootstrap file. The bootstrap file may reside on
-       * a very, very slow drive.
-       */
-      if (strcasecmp(get_conf_val("csp"), "true") == 0 ||
-          strcasecmp(get_conf_val("csp"), "1") == 0) {
-         g_csp_mode = true;
-      }
-      shepherd_trace("csp = %d", g_csp_mode);
    }
    
 #if defined( INTERIX )
@@ -741,7 +739,7 @@ int main(int argc, char **argv)
 	 * to the job owner so not only root/admin user but also he can use
 	 * the trace file later.
 	 */
-   shepherd_trace_chown( get_conf_val("job_owner"));
+   shepherd_trace_chown(get_conf_val("job_owner"));
    /*
     * Close trace file to force a new open() with super user credentials for
     * NFS writes. Otherwise we will see EACCESS for all writes from now on
@@ -974,32 +972,29 @@ PARAMETER
 
  *******************************************************************/
 static int start_child(
-char *childname,        /* prolog, job, epilog */
+const char *childname,        /* prolog, job, epilog */
 char *script_file,
 pid_t *pidp,
 int timeout,
 int ckpt_type 
 ) {
    SGE_STRUCT_STAT buf;
-   u_long32 start_time;
-   u_long32 end_time;
-   int pid;
    struct rusage rusage;
-   int  status, child_signal=0, exit_status=0;
+   u_long32 start_time, end_time;
    u_long32 wait_status = 0;
-   int core_dumped, ckpt_interval, ckpt_pid = 0;
+   int pid, status, core_dumped, ret;
+   int child_signal = 0;
+   int exit_status = 0;
    int wexit_flag_true = 1; /* to please IRIX compiler */
    int fd_pipe_in[2] = {-1, -1};
    int fd_pipe_out[2] = {-1, -1};
    int fd_pipe_err[2] = {-1, -1};
    int fd_pipe_to_child[2] = {-1, -1};
-   int ret;
    int fd_pty_master = -1;
-   int use_pty = 2;   /* 2 means: use default */
+   ternary_t use_pty = UNSET;
    dstring err_msg = DSTRING_INIT;
    bool is_interactive = false;
-
-
+   ckpt_info_t ckpt_info = {0, 0, 0};
 #if defined(IRIX)
    ash_t ash = 0;
 #elif defined(NECSX4) || defined(NECSX5)
@@ -1007,7 +1002,9 @@ int ckpt_type
 #elif defined(CRAY)
    int jobid = 0;
 #endif
-   /*TODO: Define a function or macro "is_interactive(script_file)"*/
+
+   ckpt_info.type = ckpt_type;
+
    /* Do we have an interactive job? */
    if (strcasecmp(script_file, JOB_TYPE_STR_QLOGIN) == 0 ||
        strcasecmp(script_file, JOB_TYPE_STR_QRSH) == 0 ||
@@ -1019,24 +1016,26 @@ int ckpt_type
    {
       char *conf_val = get_conf_val("pty");
       if (conf_val != NULL) {
-         sscanf(conf_val, "%d", &use_pty);
+         sscanf(conf_val, "%d", (int*)&use_pty);
       }
-      if (use_pty == 2) {  /* use default */
-         if (strcasecmp(script_file, JOB_TYPE_STR_QRSH) == 0) { 
-            use_pty = 0;
+      if (use_pty == UNSET) {  /* use default */
+         if (strcasecmp(script_file, JOB_TYPE_STR_QRSH) == 0) {
+            /* by default, qrsh <no command> doesn't use a pty */
+            use_pty = NO;
          } else {
-            use_pty = 1;
+            /* by default, qrsh <command> and qlogin use a pty */
+            use_pty = YES;
          }
       }
    }
    
    /* Don't care about checkpointing for "commands other than "job" */
-   if (strcmp(childname, "job"))
-      ckpt_type = 0;
+   if (strcmp(childname, "job")) {
+      ckpt_info.type = 0;
+   }
 
-
-   if ((ckpt_type & CKPT_REST_KERNEL) && !strcmp(childname, "job")) {
-      set_ckpt_restart_command(childname, ckpt_type,
+   if (ISSET(ckpt_info.type, CKPT_REST_KERNEL) && strcmp(childname, "job") == 0) {
+      set_ckpt_restart_command(childname, ckpt_info.type,
                                rest_command, sizeof(rest_command) -1);
       shepherd_trace("restarting job from checkpoint arena");
 
@@ -1068,11 +1067,11 @@ int ckpt_type
           * and child can start the job.
           */
          ret = pipe(fd_pipe_to_child);
-         shepherd_trace("fd_pipe_to_child[0] = %d, fd_pipe_to_child[1] = %d",
+         shepherd_trace("pipe to child uses fds %d and %d",
                         fd_pipe_to_child[0], fd_pipe_to_child[1]);
          if (ret < 0) {
-            shepherd_error(1, "can't create pipe! errno=%d: %s\n",
-                           errno, strerror(errno));
+            shepherd_error(1, "can't create pipe to child! %s (%d)",
+                           strerror(errno), errno);
             return 1;
          }
 
@@ -1081,7 +1080,7 @@ int ckpt_type
           * child gets the pty slave. The slave pty becomes stdin/stdout/stderr
           * of the child.
           */
-         if (use_pty == 1) {
+         if (use_pty == YES) {
             shepherd_trace("calling fork_pty()");
             pid = fork_pty(&fd_pty_master, fd_pipe_err, &err_msg);
          } else {
@@ -1097,7 +1096,7 @@ int ckpt_type
                return ret;
             }
          }
-         shepherd_trace("Child: Starting son(%s, %s, 0);\n", childname, script_file);
+         shepherd_trace("child: starting son(%s, %s, 0);", childname, script_file);
          son(childname, script_file, 0);
       }
    }
@@ -1106,13 +1105,13 @@ int ckpt_type
       if (g_new_interactive_job_support == false || !is_interactive) {
          shepherd_error(1, "can't fork \"%s\"", childname);
       } else {
-         shepherd_error(1, "can't fork \"%s\": %s\n", 
+         shepherd_error(1, "can't fork \"%s\": %s", 
             childname, sge_dstring_get_string(&err_msg));
       }
    }
 
    /* parent */
-   shepherd_trace("forked \"%s\" with pid %d", childname, pid);
+   shepherd_trace("parent: forked \"%s\" with pid %d", childname, pid);
 
    change_shepherd_signal_mask();
    
@@ -1123,17 +1122,17 @@ int ckpt_type
     * sets ckpt_pid to 0 for non kernel level checkpointing jobs
     */
    if (!strcmp(childname, "job"))
-      handle_job_pid(ckpt_type, pid, &ckpt_pid);
+      handle_job_pid(ckpt_info.type, pid, &(ckpt_info.pid));
 
    /* Does not affect pe/prolog/epilog etc. since ckpt_type is set to 0 */
-   set_ckpt_params(ckpt_type,
+   set_ckpt_params(ckpt_info.type,
                    ckpt_command, 
                    sizeof(ckpt_command) - 1,
                    migr_command,
                    sizeof(migr_command) - 1,
                    clean_command,
                    sizeof(clean_command) - 1,
-                   &ckpt_interval);
+                   &(ckpt_info.interval));
    
    if (received_signal > 0 && received_signal != SIGALRM) {
       int sig = map_signal(received_signal);
@@ -1152,106 +1151,48 @@ int ckpt_type
       int number_of_signals = get_n_sigs();
 
       if (number_of_signals > 0) {
-         shepherd_trace("There are %d signals to deliver. Wait until "
+         shepherd_trace("there are %d signals to deliver. Wait until "
                                 "job has been started.", number_of_signals);
          alarm(10);
       }
    }
 
-   if (ckpt_type) {
-      shepherd_trace("child: %s - pid: %d - ckpt_pid: %d - "
+   if (ckpt_info.type) {
+      shepherd_trace("parent: %s-pid: %d - ckpt_pid: %d - "
                      "ckpt_interval: %d - ckpt_signal %d", childname, 
-                     pid, ckpt_pid, ckpt_interval, ckpt_signal);
+                     pid, ckpt_info.pid, ckpt_info.interval, ckpt_signal);
    } else {
-      shepherd_trace("child: %s - pid: %d", childname, pid);
+      shepherd_trace("parent: %s-pid: %d", childname, pid);
    }
-         
+
    if (g_new_interactive_job_support == false || !is_interactive) {
       /* Wait until child finishes ----------------------------------------*/         
-      status = wait_my_child(pid, ckpt_pid, ckpt_type, 
-                             &rusage, timeout, ckpt_interval, childname);
-      alarm(0);
+      status = wait_my_child(pid, childname, timeout, &ckpt_info, &rusage);
    } else { /* g_new_interactive_job_support == true && is_interactive */
-      /* TODO: If possible, move this to a function */
-      char *address;
-      char *hostname;
-      char *username;
-      int  port;
-      char *separator;
-      dstring err_msg = DSTRING_INIT;
+      ijs_fds_t ijs_fds;
 
-      /* close childs end of the pipe */
-      shepherd_trace("Parent: closing childs end of the pipe");
-      close(fd_pipe_to_child[0]);
-      fd_pipe_to_child[0] = -1;
+      ijs_fds.pty_master    = fd_pty_master;
+      ijs_fds.pipe_in       = fd_pipe_in[1];        /* write end of pipe */
+      ijs_fds.pipe_out      = fd_pipe_out[0];       /* read end of pipe */
+      ijs_fds.pipe_err      = fd_pipe_err[0];       /* read end of pipe */
+      ijs_fds.pipe_to_child = fd_pipe_to_child[1];  /* write end of pipe */
 
-      /* read destination host and port from config */
-      address = get_conf_val("qrsh_control_port");
+      /* close the not used ends of the pipes */
+      close(fd_pipe_in[0]);       fd_pipe_in[0] = -1;
+      close(fd_pipe_out[1]);      fd_pipe_out[1] = -1;
+      close(fd_pipe_err[1]);      fd_pipe_err[1] = -1;
+      close(fd_pipe_to_child[0]); fd_pipe_to_child[0] = -1;
 
-      if (address == NULL) {
-         shepherd_trace("config does not contain entry for qrsh_control_port");
-         return 1;
-      }
-      address = strdup(address);
-
-      shepherd_trace("qrsh listens on address = %s", address);
-
-      separator = strchr(address, ':');
-      if (separator == NULL) {
-         shepherd_trace("illegal value for qrsh_control_port: "
-                        "\"%s\". Should be host:port", address);
-         FREE(address);
-         return 2;
-      }
-     
-      *separator = '\0';
-      hostname = address;
-      port = atoi(separator + 1);
-
-      shepherd_trace("qrsh listens on - host = %s, port = %d", hostname, port);
-      shepherd_trace("starting parent loop with hostname = %s, "
-                     "port = %d, fd_pty_master = %d, "
-                     "fd_pipe_in = %d, fd_pipe_out = %d, "
-                     "fd_pipe_err = %d, fd_pipe_to_child = %d",
-                     hostname, port, fd_pty_master, fd_pipe_in[1], 
-                     fd_pipe_out[0], fd_pipe_err[0], fd_pipe_to_child[0]);
-
-      username = get_conf_val("job_owner");
-      start_time = sge_get_gmt();
-
-      exit_status = -1;
-      ret = parent_loop(hostname, port, fd_pty_master, fd_pipe_in, 
-                        fd_pipe_out, fd_pipe_err, fd_pipe_to_child,
-                        ckpt_pid, ckpt_type, timeout, ckpt_interval, 
-                        childname, username, &exit_status, &rusage,
-                        pid, &err_msg);
-      if (ret != 0) {
-         shepherd_error(1, "startup of qrsh job failed: "SFN"",
-                        sge_dstring_get_string(&err_msg));
-      }
-
-      /*shepherd_signal_job(-pid, SIGKILL);*/
-      sge_switch2start_user();
-      kill(-pid, SIGKILL);
-      sge_switch2admin_user();
-
-      status = exit_status;
-      ckpt_interval = 0;
-
-      shepherd_trace("   status = %d", status);
-      shepherd_trace("   rusage.ru_stime.tv_sec  = %d", rusage.ru_stime.tv_sec);
-      shepherd_trace("   rusage.ru_stime.tv_usec = %d", rusage.ru_stime.tv_usec);
-      shepherd_trace("   rusage.ru_utime.tv_sec  = %d", rusage.ru_utime.tv_sec);
-      shepherd_trace("   rusage.ru_utime.tv_usec = %d", rusage.ru_utime.tv_usec);
-      FREE(address);
-      sge_dstring_free(&err_msg);
-      /* END TODO: Move this to a function */
+      /* wait blocking until the child process has ended */
+      status = wait_my_builtin_ijs_child(pid, childname, timeout,
+                  &ckpt_info, &ijs_fds, &rusage, &err_msg);
    }
+   alarm(0);
    end_time = sge_get_gmt();
 
    shepherd_trace("reaped \"%s\" with pid %d", childname, pid);
 
-   if (ckpt_type) {
+   if (ckpt_info.type) {
       /* 
        * empty file is a hint to reschedule that job. If we already have a
        * checkpoint in the arena there is a dummy string in the file
@@ -1264,10 +1205,10 @@ int ckpt_type
    if (WIFSIGNALED(status)) {
       shepherd_trace("%s exited due to signal", childname);
 
-      if (ckpt_type && !signalled_ckpt_job) {
+      if (ckpt_info.type != 0 && signalled_ckpt_job == false) {
          unlink("checkpointed");
          shepherd_trace("%s exited due to signal but not due to checkpoint", childname);
-         if (ckpt_type & CKPT_KERNEL) {
+         if (ISSET(ckpt_info.type, CKPT_KERNEL)) {
             shepherd_trace("starting ckpt clean command");
             start_clean_command(clean_command);
          }
@@ -1297,10 +1238,10 @@ int ckpt_type
    } else {
       shepherd_trace("%s exited not due to signal", childname);
 
-      if (!signalled_ckpt_job && ckpt_type) {
+      if (ckpt_info.type != 0 && signalled_ckpt_job == false) {
          shepherd_trace("checkpointing job exited normally");
          unlink("checkpointed");
-         if (ckpt_type & CKPT_KERNEL) {
+         if (ISSET(ckpt_info.type, CKPT_KERNEL)) {
             shepherd_trace("starting ckpt clean command");
             start_clean_command(clean_command);
          }
@@ -1328,10 +1269,9 @@ int ckpt_type
       /* Kill all processes of the process group of the forked child.
          This is to ensure that nothing hangs around. */
       if (!strcmp("job", childname)) {
-         if (ckpt_pid)   {
-            shepherd_signal_job(-ckpt_pid, SIGKILL);
-         }
-         else {
+         if (ckpt_info.pid != 0)   {
+            shepherd_signal_job(-ckpt_info.pid, SIGKILL);
+         } else {
             shepherd_signal_job(-pid, SIGKILL);
          }
       }
@@ -1372,7 +1312,7 @@ int ckpt_type
             if (success != 0) {
                /* This case should never happen */
                /* See Issue 1679 */
-               shepherd_trace("can't get qrsh_exit_code\n");
+               shepherd_trace("can't get qrsh_exit_code");
             }
 
             /* normal exit */
@@ -1429,7 +1369,165 @@ int ckpt_type
    return exit_status;
 }
 
-static void verify_method(char *method_name) 
+/****** shepherd/get_remote_host_and_port_from_config() ************************
+*  NAME
+*     get_remote_host_and_port_from_config() -- reads the hostname and the port
+*                                               of the builtin ijs server from
+*                                               the job config
+*
+*  SYNOPSIS
+*     static int get_remote_host_and_port_from_config(char **hostname, int 
+*     *port, dstring *err_msg) 
+*
+*  FUNCTION
+*     Reads the hostname and the port of the builtin ijs server (in the
+*     qrsh or qlogin client) from the job config.
+*
+*  OUTPUTS
+*     char **hostname  - The name of the remote host (= submit host) of this
+*                        builtin qrsh/qlogin job. The buffer of this string
+*                        gets allocated in this function, it has to be freed
+*                        after use.
+*     int *port        - The port of the builtin ijs server.
+*     dstring *err_msg - Gets filled with an error message in case of error.
+*                        Doesn't get modified if this function succeeds.
+*
+*  RESULT
+*     int - 0: OK
+*           1: err_msg points to NULL
+*           2: "qrsh_control_port" not set in config
+*           3: "qrsh_control_port" value is invalid
+*
+*  NOTES
+*     MT-NOTE: get_remote_host_and_port_from_config() is not MT safe 
+*******************************************************************************/
+static int get_remote_host_and_port_from_config(
+char **hostname,
+int *port,
+dstring *err_msg)
+{
+   char *address;
+   char *separator;
+
+   if (err_msg == NULL) {
+      return 1;
+   }
+
+   address = get_conf_val("qrsh_control_port");
+   if (address == NULL) {
+      sge_dstring_sprintf(err_msg, "config does not contain entry for qrsh_control_port");
+      return 2;
+   }
+   /* address now points to the configuration buffer, but we want to keep it
+    * independently of the configuration buffer, so we copy it.
+    */
+   address = strdup(address);
+   separator = strchr(address, ':');
+   if (separator == NULL) {
+      sge_dstring_sprintf(err_msg, "illegal value for qrsh_control_port: "
+                        "\"%s\". Should be host:port", address);
+      FREE(address);
+      return 3;
+   }
+     
+   *separator = '\0';
+   *hostname = address;
+   *port = atoi(separator + 1);
+
+   return 0;
+}
+
+/****** shepherd/wait_my_builtin_ijs_child() ***********************************
+*  NAME
+*     wait_my_builtin_ijs_child() -- waits until the builtin ijs job finishes
+*
+*  SYNOPSIS
+*     static int wait_my_builtin_ijs_child(int pid, const char *childname, int 
+*     timeout, ckpt_info_t *p_ckpt_info, ijs_fds_t *p_ijs_fds, struct rusage 
+*     *rusage, dstring *err_msg) 
+*
+*  FUNCTION
+*     Waits until the builtin ijs job has finished.
+*     In case of severe errors this function exits the shepherd!
+*
+*  INPUTS
+*     int           pid          - PID of the builtin ijs job
+*     const char    *childname   - What kind of job is it? Can be 
+*     int           timeout      - Timeout for prolog/epilog script. 
+*     ckpt_info_t   *p_ckpt_info - Checkpointing info
+*     ijs_fds_t     *p_ijs_fds   - The fds that connect us to the job
+*
+*  OUTPUTS
+*     struct rusage *rusage      - Gets filled with the usage of the job
+*     dstring       *err_msg     - Gets filled with an error message if an
+*                                  error happens
+*
+*  RESULT
+*     int - The exit status of the job.
+*
+*  NOTES
+*     MT-NOTE: wait_my_builtin_ijs_child() is not MT safe 
+*
+*  SEE ALSO
+*     shepherd/wait_my_child
+*******************************************************************************/
+static int wait_my_builtin_ijs_child(
+int           pid,           /* IN: pid of child/job */
+const char    *childname,    /* IN: "job", "pe_start", ...     */
+int           timeout,       /* IN: used for prolog/epilog script, 0 for job */
+ckpt_info_t   *p_ckpt_info,  /* IN: data for checkpointing handling */
+ijs_fds_t     *p_ijs_fds,    /* IN: file descriptors needed for IJS */
+struct rusage *rusage,       /* OUT: accounting information */
+dstring       *err_msg       /* OUT: error message - if any */
+) {
+   char    *job_owner;
+   char    *remote_host = NULL;
+   bool    csp_mode     = false;
+   int     ret;
+   int     remote_port  = 0;
+   int     exit_status  = -1;
+
+   /* close childs end of the pipe */
+   shepherd_trace("parent: closing childs end of the pipe");
+
+   /* read destination host and port from config */
+   ret = get_remote_host_and_port_from_config(&remote_host, &remote_port, err_msg);
+   if (ret != 0 || remote_host == NULL || remote_port == 0) {
+      shepherd_error(1, "startup of qrsh job failed: "SFN"",
+                     sge_dstring_get_string(err_msg));
+   }
+   job_owner = get_conf_val("job_owner");
+
+   /* 
+    * For performance reasons, we read the csp state from the config,
+    * not from the bootstrap file. The bootstrap file might reside on
+    * a very, very slow drive.
+    */
+   if (strcasecmp(get_conf_val("csp"), "true") == 0 ||
+       strcasecmp(get_conf_val("csp"), "1") == 0) {
+      csp_mode = true;
+   }
+   shepherd_trace("csp = %d", csp_mode);
+
+   ret = parent_loop(pid, childname, timeout, p_ckpt_info, p_ijs_fds, job_owner,
+            remote_host, remote_port, csp_mode, &exit_status, rusage, err_msg);
+   FREE(remote_host);
+   if (ret != 0) {
+      shepherd_error(1, "startup of qrsh job failed: "SFN"",
+                     sge_dstring_get_string(err_msg));
+   }
+
+   /*shepherd_signal_job(-pid, SIGKILL);*/
+   sge_switch2start_user();
+   kill(-pid, SIGKILL);
+   sge_switch2admin_user();
+
+   p_ckpt_info->interval = 0;
+
+   return exit_status;
+}
+
+static void verify_method(const char *method_name) 
 {
    char *override_signal;
 
@@ -1778,7 +1876,7 @@ void shepherd_deliver_signal(int sig, int pid, int *postponed_signal,
 *
 *  SYNOPSIS
 *     static void shepconf_deliver_signal_or_method(int sig, int pid, 
-                                                    pid_t *ctrl_pid)
+*                                                   pid_t *ctrl_pid)
 *
 *  FUNCTION
 *
@@ -2008,23 +2106,21 @@ static int check_ckpttype(void)
 }
 
 /*------------------------------------------------------------------------*/
-void handle_signals_and_methods(
+static void handle_signals_and_methods(
    int npid,
    int pid,
    int *postponed_signal,
    pid_t ctrl_pid[3],
-   int ckpt_interval,
-   int ckpt_type,
+   ckpt_info_t *p_ckpt_info,
    int *ckpt_cmd_pid,
    int *rest_ckpt_interval,
    int timeout,
    int *migr_cmd_pid,
-   int ckpt_pid,
    int *kill_job_after_checkpoint,
    int status,
    int *inArena,
    int *inCkpt,
-   char *childname,
+   const char *childname,
    int *job_status,
    int *job_pid)
 {
@@ -2049,24 +2145,24 @@ void handle_signals_and_methods(
             shepherd_trace("no postponed signal");
 
             /* userdefined ckpt has always ckpt_interval = 0 */ 
-            if (ckpt_interval) {
-               if (ckpt_type & CKPT_KERNEL) {
+            if (p_ckpt_info->interval) {
+               if (p_ckpt_info->type & CKPT_KERNEL) {
                   shepherd_trace("initiate regular kernel level checkpoint");
                   *ckpt_cmd_pid = start_async_command("ckpt", ckpt_command);
                   rest_ckpt_interval = 0;
                   if (*ckpt_cmd_pid == -1) {
                      *ckpt_cmd_pid = -999;
-                     *rest_ckpt_interval = ckpt_interval;
+                     *rest_ckpt_interval = p_ckpt_info->interval;
                   }
                   else
                      *inCkpt = 1;
-               } else if (ckpt_type & CKPT_TRANS) {
+               } else if (p_ckpt_info->type & CKPT_TRANS) {
                   shepherd_trace("send checkpointing signal to transparent "
                                  "checkpointing job");
                   sge_switch2start_user();
                   kill(-pid, ckpt_signal);
                   sge_switch2admin_user();
-               } else if (ckpt_type & CKPT_USER) {
+               } else if (p_ckpt_info->type & CKPT_USER) {
                   shepherd_trace("send checkpointing signal to userdefined "
                                  "checkpointing job");
                   sge_switch2start_user();
@@ -2077,7 +2173,7 @@ void handle_signals_and_methods(
             forward_signal_to_job(pid, timeout, postponed_signal,
                                   remaining_alarm, ctrl_pid);
          }
-      } else if (ckpt_pid && (received_signal == SIGTTOU)) {
+      } else if (p_ckpt_info->pid && (received_signal == SIGTTOU)) {
          shepherd_trace("initiate checkpoint due to migration request");
          rest_ckpt_interval = 0; /* disable regular checkpoint */
          if (!(*inCkpt)) {
@@ -2139,7 +2235,7 @@ void handle_signals_and_methods(
       *inCkpt = 0;
       shepherd_trace("reaped checkpoint command");
       if (!(*kill_job_after_checkpoint))
-         *rest_ckpt_interval = ckpt_interval; 
+         *rest_ckpt_interval = p_ckpt_info->interval; 
       *ckpt_cmd_pid = -999;
       if (WIFEXITED(status)) {
          shepherd_trace("checkpoint command exited normally");
@@ -2195,12 +2291,10 @@ void handle_signals_and_methods(
 /*------------------------------------------------------------------------*/
 int wait_my_child(
 int pid,                   /* pid of job */
-int ckpt_pid,              /* pid of restarted job or same as pid */
-int ckpt_type,             /* type of checkpointing */
-struct rusage *rusage,     /* accounting information */
+const char *childname,     /* "job", "pe_start", ...     */
 int timeout,               /* used for prolog/epilog script, 0 for job */
-int ckpt_interval,         /* action depend on ckpt_type */
-char *childname            /* "job", "pe_start", ...     */
+ckpt_info_t *p_ckpt_info,  /* infos used for checkpointing */
+struct rusage *rusage      /* accounting information */
 ) {
    int i, npid, status, job_status;
    int ckpt_cmd_pid, migr_cmd_pid;
@@ -2219,17 +2313,17 @@ char *childname            /* "job", "pe_start", ...     */
    memset(rusage, 0, sizeof(*rusage));
    kill_job_after_checkpoint = 0;
    inCkpt = 0;
-   rest_ckpt_interval = ckpt_interval;
+   rest_ckpt_interval = p_ckpt_info->interval;
    job_pid = pid;
    ckpt_cmd_pid = migr_cmd_pid = -999;
    job_status = 0;
    for (i=0; i<3; i++)
       ctrl_pid[i] = -999;
 
-   rest_ckpt_interval = ckpt_interval;
+   rest_ckpt_interval = p_ckpt_info->interval;
 
    /* Write info that we already have a checkpoint in the arena */
-   if (ckpt_type & CKPT_REST_KERNEL) {
+   if (ISSET(p_ckpt_info->type, CKPT_REST_KERNEL)) {
       inArena = 1;
       create_checkpointed_file(1);
    } else {
@@ -2241,8 +2335,9 @@ char *childname            /* "job", "pe_start", ...     */
 #endif
    
    do {
-      if (ckpt_interval && rest_ckpt_interval)
+      if (p_ckpt_info->interval != 0 && rest_ckpt_interval != 0) {
          alarm(rest_ckpt_interval);
+      }
 
 #if defined(CRAY) || defined(NECSX4) || defined(NECSX5) || defined(INTERIX)
       npid = waitpid(-1, &status, 0);
@@ -2295,13 +2390,11 @@ char *childname            /* "job", "pe_start", ...     */
          pid,
          &postponed_signal,
          ctrl_pid,
-         ckpt_interval,
-         ckpt_type,
+         p_ckpt_info,
          &ckpt_cmd_pid,
          &rest_ckpt_interval,
          timeout,
          &migr_cmd_pid,
-         ckpt_pid,
          &kill_job_after_checkpoint,
          status,
          &inArena,
@@ -2346,7 +2439,7 @@ char *childname            /* "job", "pe_start", ...     */
  * don't do anything for non ckpt jobs except setting ckpt_interval = 0
  *-------------------------------------------------------------------------*/
 static void set_ckpt_params(int ckpt_type, char *ckpt_command, int ckpt_len,
-                            char *migr_command, int migr_len, 
+                            char *migr_command, int migr_len,
                             char *clean_command, int clean_len,
                             int *ckpt_interval) 
 {
@@ -2403,7 +2496,7 @@ static void set_ckpt_params(int ckpt_type, char *ckpt_command, int ckpt_len,
  *   "job_pid" is the original pid of the checkpointed job and not the pid 
  *   of the restart command.
  *-------------------------------------------------------------------------*/
-static void set_ckpt_restart_command(char *childname, int ckpt_type, 
+static void set_ckpt_restart_command(const char *childname, int ckpt_type, 
                                      char *rest_command, int rest_len) 
 {
    char *cmd;
@@ -2534,7 +2627,8 @@ static int start_async_command(const char *descr, char *cmd)
       }   
 
       sge_set_def_sig_mask(NULL, NULL);
-      start_command(descr, get_conf_val("shell_path"), cmd, cmd, "start_as_command", 0, 0, 0, 0, "", 0);
+      start_command(descr, get_conf_val("shell_path"),
+         cmd, cmd, "start_as_command", 0, 0, 0, 0, "", 0);
       return 0;   
    }
 
@@ -2654,8 +2748,8 @@ shepherd_signal_job(pid_t pid, int sig) {
       static u_long32 first_kill_ts = 0;
       static bool is_qrsh = false;
    
-      if(first_kill == 1 || sig != SIGKILL) {
-         if(search_conf_val("qrsh_pid_file") != NULL) {
+      if (first_kill == 1 || sig != SIGKILL) {
+         if (search_conf_val("qrsh_pid_file") != NULL) {
             char *pid_file_name = NULL;
             pid_t qrsh_pid = 0;
 
@@ -2680,26 +2774,25 @@ shepherd_signal_job(pid_t pid, int sig) {
       * qrsh_exit_code file is written (see Issue: 1679)
       */
       if ((first_kill == 1) || (sge_get_gmt() - first_kill_ts > 10) || (sig != SIGKILL)) {
-        shepherd_trace("now sending signal %s to pid "pid_t_fmt, 
-                       sge_sys_sig2str(sig), pid);
+        shepherd_trace("now sending signal %s to pid "pid_t_fmt, sge_sys_sig2str(sig), pid);
         sge_switch2start_user();
         kill(pid, sig);
         sge_switch2admin_user();
 
 #if defined(SOLARIS) || defined(LINUX) || defined(ALPHA) || defined(IRIX) || defined(FREEBSD) || defined(DARWIN)
-        if (first_kill == 0 || sig != SIGKILL || is_qrsh == false) {                        
+        if (first_kill == 0 || sig != SIGKILL || is_qrsh == false) {
 #   if defined(SOLARIS) || defined(LINUX) || defined(ALPHA) || defined(FREEBSD) || defined(DARWIN)
 #      ifdef COMPILE_DC
             if (atoi(get_conf_val("enable_addgrp_kill")) == 1) {
                 gid_t add_grp_id;
                 char *cp = search_conf_val("add_grp_id");
-                
+
                 if (cp) {
                     add_grp_id = atol(cp);
                 } else {
                     add_grp_id = 0;
                 }
-                
+
                 shepherd_trace("pdc_kill_addgrpid: %d %d", (int) add_grp_id , sig);
                 sge_switch2start_user();
                 pdc_kill_addgrpid(add_grp_id, sig, shepherd_trace);
@@ -2725,7 +2818,7 @@ shepherd_signal_job(pid_t pid, int sig) {
         shepherd_trace("ignored signal %s to pid "pid_t_fmt, sge_sys_sig2str(sig), pid);
       }
 
-      if(sig == SIGKILL) {
+      if (sig == SIGKILL) {
         first_kill = 0;
         first_kill_ts = sge_get_gmt();
       }
@@ -2824,8 +2917,8 @@ FCLOSE_ERROR:
 }
 
 /*------------------------------------------------------------------*/
-static pid_t start_token_cmd(int wait_for_finish, char *cmd, char *arg1, 
-                             char *arg2, char *arg3) 
+static pid_t start_token_cmd(int wait_for_finish, const char *cmd,
+   const char *arg1, const char *arg2, const char *arg3) 
 {
    pid_t pid;
    pid_t ret;

@@ -34,51 +34,34 @@
 #include <sys/types.h>
 #include <pthread.h>
 #include <stdio.h>
-#include <errno.h>
-#include <signal.h>
 #include <string.h>
 
-#include "sgermon.h"
-#include "sge_log.h"
+#include "rmon/sgermon.h"
 
-#include "sge_stdlib.h"
-#include "sge_string.h"
+#include "uti/sge_log.h"
+#include "uti/sge_stdlib.h"
+#include "uti/sge_string.h"
+#include "uti/sge_hostname.h"
+#include "uti/sge_parse_num_par.h"
+
+#include "gdi/sge_gdi.h"
+
 #include "sge_all_listsL.h"
-#include "sge_calendar.h"
-#include "sge_ckpt.h"
-#include "sge_conf.h"
-#include "sge_host.h"
-#include "sge_hgroup.h"
-#include "sge_job.h"
-#include "sge_ja_task.h"
-#include "sge_pe_task.h"
-#include "sge_manop.h"
 #include "sge_pe.h"
-#include "sge_qinstance.h"
 #include "sge_qinstance_type.h"
 #include "sge_schedd_conf.h"
-#include "sge_sharetree.h"
-#include "sge_cuser.h"
 #include "sge_userprj.h"
 #include "sge_userset.h"
-#include "sge_hostname.h"
 #include "sge_answer.h"
 #include "sge_range.h"
 #include "sge_object.h"
 #include "sge_centry.h"
-#include "sge_cqueue.h"
-#include "sge_qref.h"
 #include "sge_str.h"
 #include "sge_subordinate.h"
-#include "sge_parse_num_par.h"
 #include "sge_utility.h"
 #include "cull_parse_util.h"
 #include "parse.h"
 #include "sge_eval_expression.h"
-
-#include "gdi/sge_gdi.h"
-
-#include "sgeobj/sge_suser.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
@@ -404,7 +387,7 @@ object_has_type(const lListElem *object, const lDescr *descr)
     * --> make sure that your object is handled in object_get_primary_key() 
     */
    if (object != NULL && descr != NULL &&
-       lGetPosInDescr(object->descr, object_get_primary_key(descr)) != -1) {
+       _lGetPosInDescr(object->descr, object_get_primary_key(descr)) != -1) {
       ret = true;
    }
 

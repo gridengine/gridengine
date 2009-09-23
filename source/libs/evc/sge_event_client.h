@@ -34,7 +34,7 @@
 
 #include "sge_gdi.h"
 #include "sge_gdi_ctx.h"
-#include "sge_eventL.h"
+#include "sge_event.h"
 #include "uti/sge_monitor.h"
 #include "gdi/sge_gdi_ctx.h"
 

@@ -31,26 +31,28 @@
 /*___INFO__MARK_END__*/
 #include <string.h>
 
+#include "rmon/sgermon.h"
+
+#include "uti/sge_string.h"
+#include "uti/sge_log.h"
+
+#include "comm/commlib.h"
+
+#include "sge_qinstance.h"
+#include "sge_answer.h"
+#include "sge_centry.h"
+#include "sge_load.h"
+#include "sge_str.h"
 #include "sge.h"
 #include "sge_object.h"
 #include "sge_conf.h"
 #include "sge_host.h"
-#include "sge_string.h"
-#include "sge_qinstance.h"
-#include "commlib.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "sge_answer.h"
-#include "sge_centry.h"
-#include "sge_load.h"
-
-#include "sgeobj/sge_str.h"
+#include "sge_cqueue.h" 
+#include "sge_hgroup.h"
+#include "sge_href.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
-#include "sge_cqueueL.h" 
-#include "sge_hgroup.h"
-#include "sge_hrefL.h"
 
 lListElem *
 host_list_locate(const lList *host_list, const char *hostname) 

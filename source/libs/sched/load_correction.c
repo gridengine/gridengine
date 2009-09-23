@@ -33,17 +33,22 @@
 #include <string.h>
 #include <time.h>
 
-#include "sge_all_listsL.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_time.h"
+#include "uti/sge_parse_num_par.h"
+
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_schedd_conf.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_resource_utilization_RUE_L.h"
+
 #include "schedd_monitor.h"
 #include "load_correction.h"
-#include "sgermon.h"
-#include "sge_time.h"
 #include "sge_complex_schedd.h"
-#include "sge_parse_num_par.h"
-#include "sge_host.h"
-#include "sge_centry.h"
-#include "sge_schedd_conf.h"
-#include "sge_qinstance.h"
 
 int correct_load(lList *running_jobs, lList *queue_list, lList *host_list,
                   u_long32 decay_time, bool monitor_next_run) 

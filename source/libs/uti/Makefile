@@ -44,8 +44,12 @@ UTILIB_DRMAA_SRC = \
          sge_arch.c \
          sge_bitfield.c \
          sge_bootstrap.c \
+         sge_csp_path.c \
          sge_dstring.c \
          sge_edit.c \
+         sge_env.c \
+         sge_err.c \
+         sge_error_class.c \
          sge_hostname.c \
          sge_htable.c \
          sge_io.c \
@@ -53,10 +57,13 @@ UTILIB_DRMAA_SRC = \
          sge_log.c \
          sge_nprocs.c \
          sge_os.c \
+         sge_parse_args.c \
          sge_parse_num_par.c \
          sge_profiling.c \
          sge_prog.c \
          sge_signal.c \
+         sge_sl.c \
+	 		sge_smf.c \
          sge_spool.c \
          sge_stdio.c \
          sge_stdlib.c \
@@ -64,12 +71,9 @@ UTILIB_DRMAA_SRC = \
          sge_thread_ctrl.c \
          sge_time.c \
          sge_tmpnam.c \
+         sge_tq.c \
          sge_uidgid.c \
          sge_unistd.c \
-         sge_env.c \
-         sge_error_class.c \
-         sge_csp_path.c \
-	 sge_smf.c
 
 UTILIB_SRC = sge_pty.c sge_loadmem.c sge_getloadavg.c sge_monitor.c $(UTILIB_DRMAA_SRC)
 
@@ -83,14 +87,20 @@ UTILIB_TEST_OBJS = \
          test_sge_bitfield.o \
          test_sge_dstring.o \
          test_sge_uidgid.o \
-         test_threads.o
+         test_threads.o \
+			test_sge_sl.o \
+			test_sge_tq.o \
+			test_sge_err.o
 
 UTILIB_TEST_PROGS = \
          test_sge_profiling \
          test_sge_bitfield \
          test_sge_dstring \
          test_sge_uidgid \
-         test_threads
+         test_threads \
+			test_sge_sl \
+			test_sge_tq \
+			test_sge_err
 
 ###############################################################################
 # global rules: all, clean, depend, messages
@@ -138,6 +148,9 @@ sge_smf.o: 	$(UTILIB_DIR)/sge_smf.c
 
 sge_hostname.o:	$(UTILIB_DIR)/sge_hostname.c
 		$(CC) $(CFLAGS) $(NOERR_CFLAG) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_hostname.c
+
+sge_parse_args.o:	$(UTILIB_DIR)/sge_parse_args.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_parse_args.c
 
 sge_parse_num_par.o:	$(UTILIB_DIR)/sge_parse_num_par.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_parse_num_par.c
@@ -208,6 +221,9 @@ sge_log.o:	$(UTILIB_DIR)/sge_log.c
 sge_signal.o:	$(UTILIB_DIR)/sge_signal.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_signal.c
 
+sge_sl.o:	$(UTILIB_DIR)/sge_sl.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_sl.c
+
 sge_htable.o:	$(UTILIB_DIR)/sge_htable.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_htable.c
 
@@ -223,6 +239,9 @@ sge_language.o:	$(UTILIB_DIR)/sge_language.c
 sge_tmpnam.o:	$(UTILIB_DIR)/sge_tmpnam.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_tmpnam.c
 
+sge_tq.o:	$(UTILIB_DIR)/sge_tq.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_tq.c
+
 sge_edit.o:	$(UTILIB_DIR)/sge_edit.c 
 		$(CC) $(CFLAGS) $(MEMCFLAG) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_edit.c
 
@@ -232,7 +251,10 @@ sge_monitor.o:	$(UTILIB_DIR)/sge_monitor.c
 sge_env.o:	$(UTILIB_DIR)/sge_env.c 
 		$(CC) $(CFLAGS) $(MEMCFLAG) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_env.c
 
-sge_error_class.o:	$(UTILIB_DIR)/sge_error_class.c 
+sge_err.o: $(UTILIB_DIR)/sge_err.c 
+		$(CC) $(CFLAGS) $(MEMCFLAG) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_err.c
+
+sge_error_class.o: $(UTILIB_DIR)/sge_error_class.c 
 		$(CC) $(CFLAGS) $(MEMCFLAG) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_error_class.c
 
 sge_csp_path.o:	$(UTILIB_DIR)/sge_csp_path.c 
@@ -273,3 +295,21 @@ test_threads: test_threads.o
 
 test_threads.o: $(UTILIB_DIR)/test_threads.c
 	$(CC) $(CFLAGS) -c $(UTILIB_DIR)/test_threads.c
+
+test_sge_sl: test_sge_sl.o $(UTILIB) $(COMMLISTSBIN) $(LCKLIB) $(RMONLIB)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_sl $(LFLAGS) test_sge_sl.o $(UTILIB) $(COMMLISTSLIB) $(LCKLIB) $(RMONLIB) $(LIBS)
+
+test_sge_sl.o: $(UTILIB_DIR)/test_sge_sl.c
+	$(CC) $(CFLAGS) -c $(UTILIB_DIR)/test_sge_sl.c
+
+test_sge_tq: test_sge_tq.o $(UTILIB) $(COMMLISTSBIN) $(LCKLIB) $(RMONLIB)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_tq $(LFLAGS) test_sge_tq.o $(UTILIB) $(COMMLISTSLIB) $(LCKLIB) $(RMONLIB) $(LIBS)
+
+test_sge_tq.o: $(UTILIB_DIR)/test_sge_tq.c
+	$(CC) $(CFLAGS) -c $(UTILIB_DIR)/test_sge_tq.c
+
+test_sge_err: test_sge_err.o $(UTILIB) $(COMMLISTSBIN) $(LCKLIB) $(RMONLIB)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_err $(LFLAGS) test_sge_err.o $(UTILIB) $(COMMLISTSLIB) $(LCKLIB) $(RMONLIB) $(LIBS)
+
+test_sge_err.o: $(UTILIB_DIR)/test_sge_err.c
+	$(CC) $(CFLAGS) -c $(UTILIB_DIR)/test_sge_err.c

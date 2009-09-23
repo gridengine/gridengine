@@ -31,7 +31,6 @@
 /*___INFO__MARK_END__*/
 #include <stdio.h>
 #include <stdlib.h>
-#include <ctype.h>
 
 #include <X11/IntrinsicP.h>
 
@@ -40,7 +39,6 @@
 #include <Xm/ToggleB.h>
 
 #include <Xmt/Xmt.h>
-#include <Xmt/Hash.h>
 #include <Xmt/Create.h>
 #include <Xmt/Chooser.h>
 #include <Xmt/Layout.h>
@@ -49,43 +47,30 @@
 #include <Xmt/MsgLine.h>
 #include <Xmt/InputField.h>
 #include <Xmt/Procedures.h>
-#include <Xmt/Symbols.h>
 
 
 /*----------------------------------------------------------------------------*/
 #include "sge_all_listsL.h"
 #include "Matrix.h"
-#include "Tab.h"
 #include "commlib.h"
-#include "sge_parse_num_par.h"
-#include "sge_complex_schedd.h"
 #include "qmon_proto.h"
 #include "qmon_rmon.h"
 #include "qmon_util.h"
-#include "qmon_cull.h"
 #include "qmon_qaction.h"
 #include "qmon_comm.h"
-#include "qmon_widgets.h"
 #include "qmon_load.h"
 #include "qmon_quarks.h"
-#include "qmon_timer.h"
 #include "qmon_message.h"
 #include "qmon_init.h"
 #include "qmon_manop.h"
 #include "qmon_cq.h"
-#include "qmon_cplx.h"
 #include "qmon_pe.h"
 #include "qmon_ckpt.h"
 #include "qmon_globals.h"
 #include "qmon_project.h"
 #include "AskForTime.h"
-#include "AskForItems.h"
-#include "sge_host.h"
-#include "sge_feature.h"
 #include "sge_answer.h"
 #include "sge_cqueue.h"
-#include "sge_qinstance.h"
-#include "sge_qinstance_state.h"
 #include "sge_attr.h"
 #include "sge_cqueue_qconf.h"
 
@@ -1420,7 +1405,7 @@ static void qmonQCClone(Widget w, XtPointer cld, XtPointer cad)
       return;
    }
 
-   ql = qmonMirrorList(SGE_CQUEUE_LIST);
+   ql = qmonMirrorList(SGE_CQ_LIST);
    n = lGetNumberOfElem(ql);
    if (n>0) {
       strs = (StringConst*)XtMalloc(sizeof(String)*n); 
@@ -1565,7 +1550,7 @@ StringConst href
    }
    
    qmonMirrorMulti(CQUEUE_T);
-   ql = qmonMirrorList(SGE_CQUEUE_LIST);
+   ql = qmonMirrorList(SGE_CQ_LIST);
 
    if (current_qep) {
       lFreeElem(&current_qep);
@@ -1791,7 +1776,7 @@ static void qmonQCCalendar(Widget w, XtPointer cld, XtPointer cad)
    DENTER(GUI_LAYER, "qmonQCCalendar");
 
    qmonMirrorMulti(CALENDAR_T);
-   cl = qmonMirrorList(SGE_CALENDAR_LIST);
+   cl = qmonMirrorList(SGE_CAL_LIST);
    n = lGetNumberOfElem(cl);
    if (n>0) {
       strs = (StringConst*)XtMalloc(sizeof(String)*n); 
@@ -1898,7 +1883,7 @@ static void qmonQCSOQ(Widget w, XtPointer cld, XtPointer cad)
    
    if (cbs->column == 0) {
       qmonMirrorMulti(CQUEUE_T);
-      ql = qmonMirrorList(SGE_CQUEUE_LIST);
+      ql = qmonMirrorList(SGE_CQ_LIST);
       n = lGetNumberOfElem(ql);
       if (n>0) {
          strs = (StringConst*)XtMalloc(sizeof(String)*n); 
@@ -2145,7 +2130,7 @@ void updateQCQ(void)
       /* disable/enable redisplay while updating */
       XmtLayoutDisableLayout(cq_dialog);
       /* list with template sorted alphabetically */
-      qlf = lCopyList("qlf", qmonMirrorList(SGE_CQUEUE_LIST));
+      qlf = lCopyList("qlf", qmonMirrorList(SGE_CQ_LIST));
       lPSortList(qlf, "%I+", QU_qname);
       UpdateXmListFromCull(cq_queue_list, XmFONTLIST_DEFAULT_TAG, qlf, 
                               QU_qname);
@@ -2173,7 +2158,7 @@ static void updateQCA(void)
    DENTER(GUI_LAYER, "updateQCA");
    
    /* What about sorting */
-   al = qmonMirrorList(SGE_USERSET_LIST);
+   al = qmonMirrorList(SGE_US_LIST);
    lPSortList(al, "%I+", US_name);
    
    /* disable/enable redisplay while updating */
@@ -2192,7 +2177,7 @@ static void updateQCP(void)
    DENTER(GUI_LAYER, "updateQCP");
    
    /* What about sorting */
-   pl = qmonMirrorList(SGE_PROJECT_LIST);
+   pl = qmonMirrorList(SGE_PR_LIST);
    
    /* disable/enable redisplay while updating */
    XmtLayoutDisableLayout(cq_dialog);
@@ -2230,7 +2215,7 @@ static void updateQCCkpt(void)
    DENTER(GUI_LAYER, "updateQCCkpt");
    
    /* What about sorting */
-   pl = qmonMirrorList(SGE_CKPT_LIST);
+   pl = qmonMirrorList(SGE_CK_LIST);
    
    /* disable/enable redisplay while updating */
    XmtLayoutDisableLayout(cq_dialog);

@@ -41,16 +41,19 @@
 #include <errno.h>
 #include <fnmatch.h>
 
+#include "rmon/sgermon.h" 
+
+#include "uti/sge_string.h"
+#include "uti/sge_log.h"
+#include "uti/sge_hostname.h"
+
+#include "comm/commlib.h"
+
 #include "basis_types.h"
 #include "sge.h"
-#include "sgermon.h" 
-#include "sge_string.h"
 #include "sge_str.h"
-#include "commlib.h"
-#include "sge_log.h"
 #include "sge_answer.h"
 #include "sge_cqueue.h"
-#include "sge_hostname.h"
 #include "sge_eval_expression.h"
 #include "sge_hgroup.h"
 #include "sge_href.h"

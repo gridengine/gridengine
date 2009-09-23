@@ -660,8 +660,8 @@ XtPointer cad
       DEXIT;
       return;
    }
-   cl = qmonMirrorList(SGE_CENTRY_LIST);
-   ehl = qmonMirrorList(SGE_EXECHOST_LIST);
+   cl = qmonMirrorList(SGE_CE_LIST);
+   ehl = qmonMirrorList(SGE_EH_LIST);
 
    for_each (hep, ehl) {
       lList *temp_entries = NULL;

@@ -35,16 +35,11 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <errno.h>
-#include <sys/stat.h>
 
 #include "uti/sge_stdio.h"
 #include "symbols.h"
 #include "sge_string.h"
-#include "sge_time.h"
-#include "parse_qsubL.h"
 #include "sge_str.h"
-#include "sge_idL.h"
-#include "sge_job_refL.h"
 #include "parse_qsub.h"
 #include "parse_job_cull.h"
 #include "sge_path_alias.h"
@@ -53,7 +48,6 @@
 #include "cull_parse_util.h"
 #include "unparse_job_cull.h"
 #include "sge_language.h"
-#include "sge_feature.h"
 #include "sge_stdlib.h"
 #include "sge_io.h"
 #include "sge_prog.h"
@@ -62,11 +56,9 @@
 
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_centry.h"
-#include "sgeobj/sge_ja_task.h"
 #include "sgeobj/sge_job.h"
 #include "sgeobj/sge_jsv.h"
 #include "sgeobj/sge_mailrec.h"
-#include "sgeobj/sge_range.h"
 #include "sgeobj/sge_var.h"
 
 #include "msg_common.h"
@@ -209,6 +201,14 @@ lList *cull_parse_job_parameter(u_long32 uid, const char *username, const char *
    job_initialize_id_lists(*pjob, &answer);
    if (answer != NULL) {
       DRETURN(answer);
+   }
+
+   /*
+   ** -tc option throttle the number of concurrent tasks
+   */
+   while ((ep = lGetElemStr(cmdline, SPA_switch, "-tc"))) {
+      lSetUlong(*pjob, JB_ja_task_concurrency, lGetUlong(ep, SPA_argval_lUlongT));
+      lRemoveElem(cmdline, &ep);
    }
 
    /*

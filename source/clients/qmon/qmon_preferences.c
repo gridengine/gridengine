@@ -42,8 +42,8 @@
 #include "uti/sge_unistd.h"
 
 #include "sge.h"
-#include "qmon_prefL.h"
-#include "sge_qrefL.h"
+#include "sge_pref_PREF_L.h"
+#include "sge_qref.h"
 #include "sge_str.h"
 #include "qmon_preferences.h"
 #include "config.h"

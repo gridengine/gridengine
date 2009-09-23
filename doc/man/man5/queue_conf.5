@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2009/03/12 14:13:23 $     Revision: $Revision: 1.33 $
+.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2009/07/08 14:42:39 $     Revision: $Revision: 1.34 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QUEUE_CONF 5 "$Date: 2009/03/12 14:13:23 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH QUEUE_CONF 5 "$Date: 2009/07/08 14:42:39 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 queue_conf \- xxQS_NAMExx queue configuration file format
@@ -148,7 +148,12 @@ A list of load thresholds with the same semantics as that of the
 parameter (see above) except that exceeding one of the denoted
 thresholds initiates suspension of one of multiple jobs in the queue.
 See the \fBnsuspend\fP parameter below for details on the number of
-jobs which are suspended.
+jobs which are suspended. There is an important relationship between the
+\fsuspend_threshold\fP and the \fscheduler_interval\fP. If you have for example
+a suspend threshold on the np_load_avg, and the load exceeds the threshold,
+this does not have immediate effect. Jobs continue running until the next
+scheduling run, where the scheduler detects the threshold has been exceeded and
+sends an order to qmaster to suspend the job. The same applies for unsuspending.
 .SS "\fBnsuspend\fP"
 The number of jobs which are suspended/enabled
 per time interval if at least one of

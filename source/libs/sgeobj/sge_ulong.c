@@ -36,17 +36,18 @@
 #include <string.h>
 #include <limits.h>
 
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_time.h"
+#include "uti/sge_string.h"
+#include "uti/sge_dstring.h"
+#include "uti/sge_parse_num_par.h"
+
 #include "basis_types.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "sge_time.h"
-#include "sge_string.h"
 #include "sge_answer.h"
-#include "sge_dstring.h"
 #include "sge_ulong.h"
 #include "sge_centry.h"
-#include "sge_parse_num_par.h"
-
 #include "msg_sgeobjlib.h"
 
 #define ULONG_LAYER TOP_LAYER
@@ -569,7 +570,7 @@ ulong_list_parse_from_string(lList **this_list, lList **answer_list,
 
          ret = ulong_parse_from_string(&value, answer_list, token);
          if (ret) {
-            lAddElemUlong(this_list, ULNG, value, ULNG_Type);
+            lAddElemUlong(this_list, ULNG_value, value, ULNG_Type);
          } else {
             break;
          }
@@ -591,6 +592,22 @@ ulong_parse_priority(lList **answer_list, int *valp, const char *priority_str)
    *valp = strtol(priority_str, &s, 10);
    if ((char*)valp == s || *valp > 1024 || *valp < -1023) {
       SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ULNG_INVALIDPRIO_I, (int) *valp));
+      answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+      ret = false;
+   }
+   DRETURN(ret);
+}
+
+bool
+ulong_parse_task_concurrency(lList **answer_list, int *valp, const char *task_concurrency_str)
+{
+   bool ret = true;
+   char *s;
+
+   DENTER(TOP_LAYER, "ulong_parse_task_concurrency");
+   *valp = strtol(task_concurrency_str, &s, 10);
+   if (task_concurrency_str == s || *valp < 0) {
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ULNG_INVALID_TASK_CONCURRENCY_I, (int) *valp));
       answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       ret = false;
    }

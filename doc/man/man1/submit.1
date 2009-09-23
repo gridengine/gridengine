@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2009/05/28 16:56:18 $     Revision: $Revision: 1.93 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2009/09/03 09:38:08 $     Revision: $Revision: 1.95 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2009/05/28 16:56:18 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2009/09/03 09:38:08 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -41,7 +41,7 @@ submit an interactive login session to xxQS_NAMExx.
 .IP "qrsh   \-" 1i
 submit an interactive rsh session to xxQS_NAMExx.
 .IP "qalter \-" 1i
-modify a pending batch job of xxQS_NAMExx.
+modify a pending or running batch job of xxQS_NAMExx.
 .IP "qresub \-" 1i
 submit a copy of an existing xxQS_NAMExx job.
 .\"
@@ -2049,6 +2049,9 @@ For interactive jobs it is set to `INTERACTIVE' for \fIqsh\fP jobs, `QLOGIN' for
 This default may be overwritten by the
 .I -N.
 option.
+.IP "JOB_SCRIPT" 1.5i
+The path to the job script which is executed. The value can not be 
+overwritten by the \fB\-v\fP or \fB\-V\fP option. 
 .IP "LOGNAME" 1.5i
 The user's login name from the
 .M passwd 5
@@ -2111,6 +2114,11 @@ if set.
 The user's login name from the
 .M passwd 5
 file.
+.IP "SGE_JSV_TIMEOUT" 1.5i
+If the response time of the client JSV is greater than this timeout value, then the
+JSV will attempt to be re-started. The default value is 10 seconds, and this value 
+must be greater than 0. If the timeout has been reached, the JSV will only try to 
+re-start once, if the timeout is reached again an error will occur.
 .\"
 .\"
 .SH RESTRICTIONS

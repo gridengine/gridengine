@@ -62,7 +62,7 @@ static void _lWriteWhatTo(const lEnumeration *ep, dstring *buffer, int level)
       DEXIT;
       return;
    }
-   for (i = 0; ep[i].mt != lEndT; i++) {
+   for (i = 0; mt_get_type(ep[i].mt) != lEndT; i++) {
       int j;
 
       for (j = 0; j < level; j++) {

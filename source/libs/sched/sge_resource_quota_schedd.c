@@ -1295,13 +1295,10 @@ static dispatch_t rqs_limitation_reached(sge_assignment_t *a, const lListElem *r
    dispatch_t ret = DISPATCH_MISSING_ATTR;
    lList *limit_list = NULL;
    lListElem * limit = NULL;
-   lListElem *job_centry = NULL;
-   lList *job_centry_list = NULL;
    static lListElem *implicit_slots_request = NULL;
    lListElem *exec_host = host_list_locate(a->host_list, host);
    dstring rue_name = DSTRING_INIT;
    dstring reason = DSTRING_INIT;
-   bool is_forced = false;
 
    DENTER(TOP_LAYER, "rqs_limitation_reached");
 

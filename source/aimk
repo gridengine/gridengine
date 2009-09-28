@@ -246,6 +246,7 @@ set QMON             = 1
 set CORE             = 1
 set REMOTE           = 1
 set QMAKE            = 1
+set PLPA             = 1
 set QTCSH            = 1
 set MAKEJEMALLOCLIB  = 0
 set MAKESTRPTIME     = 0
@@ -470,6 +471,7 @@ while ($#argv >= 1 && $?found)
    case "-adoc":
       set CORE   = 0
       set QMAKE  = 0
+      set PLPA   = 0
       set QMON   = 0
       set QTCSH  = 0
       set REMOTE = 0
@@ -652,11 +654,15 @@ while ($#argv >= 1 && $?found)
    case "-no-jemalloc":
       set MAKEJEMALLOCLIB = 0
       breaksw
+   case "-no-plpa":
+      set PLPA = 0
+      breaksw
    case "-only-core":
       set CORE   = 1
       set JAVA   = 0
       set JAVA_GUI_INST = 0
       set QMAKE  = 0
+      set PLPA   = 0
       set QMON   = 0
       set QTCSH  = 0
       set REMOTE = 0
@@ -669,6 +675,7 @@ while ($#argv >= 1 && $?found)
       set JAVA       = 0
       set JAVA_GUI_INST = 0
       set QMAKE      = 0
+      set PLPA       = 0
       set QMON       = 0
       set QTCSH      = 0
       set REMOTE     = 0
@@ -691,6 +698,7 @@ while ($#argv >= 1 && $?found)
       set JAVA   = 0
       set JAVA_GUI_INST = 0
       set QMAKE  = 0
+      set PLPA   = 0
       set QMON   = 0
       set QTCSH  = 0
       set REMOTE = 0
@@ -704,6 +712,20 @@ while ($#argv >= 1 && $?found)
       set JAVA   = 0
       set JAVA_GUI_INST = 0
       set QMAKE  = 1
+      set PLPA   = 0
+      set QMON   = 0
+      set QTCSH  = 0
+      set REMOTE = 0
+      set MAKEWINGRIDAPP = 0
+      set MAKEWINGRIDLIB = 0
+      set ONLY_PARAM_SPEC = 1
+      breaksw
+   case "-only-plpa":
+      set PLPA   = 1
+      set CORE   = 0
+      set JAVA   = 0
+      set JAVA_GUI_INST = 0
+      set QMAKE  = 0 
       set QMON   = 0
       set QTCSH  = 0
       set REMOTE = 0
@@ -716,6 +738,7 @@ while ($#argv >= 1 && $?found)
       set JAVA   = 0
       set JAVA_GUI_INST = 0
       set QMAKE  = 0
+      set PLPA   = 0
       set QMON   = 1
       set QTCSH  = 0
       set REMOTE = 0
@@ -728,6 +751,7 @@ while ($#argv >= 1 && $?found)
       set JAVA   = 0
       set JAVA_GUI_INST = 0
       set QMAKE  = 0
+      set PLPA   = 0
       set QMON   = 0
       set QTCSH  = 1
       set REMOTE = 0
@@ -740,6 +764,7 @@ while ($#argv >= 1 && $?found)
       set JAVA   = 0
       set JAVA_GUI_INST = 0
       set QMAKE  = 0
+      set PLPA   = 0
       set QMON   = 0
       set QTCSH  = 0
       set REMOTE = 0
@@ -752,6 +777,7 @@ while ($#argv >= 1 && $?found)
       set JAVA   = 0
       set JAVA_GUI_INST = 0
       set QMAKE  = 0
+      set PLPA   = 0
       set QMON   = 0
       set QTCSH  = 0
       set REMOTE = 1
@@ -815,6 +841,8 @@ while ($#argv >= 1 && $?found)
       set USE_QMAKE    = 1
       set MAKE     = "qmake"
       set MAKEOPT = "-cwd -v PATH -pe make 2-100 -now n -- $MAKEOPT"
+      breaksw
+   case "-plpa" 
       breaksw
    case "-secure"
       echo "___________W_A_R_N_I_N_G_____________"
@@ -1815,10 +1843,10 @@ case SOLARISAMD64:
    #       
    if ( $rel < 10 ) then
       # Solaris version < 10 needs -lpthread
-      set LIBS     = "-lsocket -lnsl -lm -lpthread -lthread"
+      set LIBS     = "-lsocket -lnsl -lm -lpthread -lthread" 
    else
       # Solaris versions >= 10 have posix fork()
-      set LIBS     = "-lsocket -lnsl -lm -lthread"
+      set LIBS     = "-lsocket -lnsl -lm -lthread -llgrp -lkstat"
    endif
    set LOADAVGLIBS = "-lkstat"
    set FSTYPELIBS = "-lkstat"
@@ -2718,6 +2746,37 @@ if ( "$QMAKE" == 1) then
       echo not done
       exit 1
    endif
+
+   cd $SOURCE
+endif
+
+if ( "$PLPA" == 1) then
+   echo _________3_r_d_p_a_r_t_y__P_L_P_A_______
+
+   if ( ( $BUILDARCH == LINUXAMD64 || \
+      $BUILDARCH == LINUX86 ) && \
+      $COMPILE_ARCH != "ULINUX86_24" && $COMPILE_ARCH != "ULINUXAMD64_24" ) then  
+      
+      if ( ! -d $SOURCE/3rdparty/plpa/plpa-1.3.1/$COMPILE_ARCH || \
+	      ! -r $SOURCE/3rdparty/plpa/plpa-1.3.1/$COMPILE_ARCH/Makefile ) then
+         mkdir -p $SOURCE/3rdparty/plpa/plpa-1.3.1/$COMPILE_ARCH
+         cd $SOURCE/3rdparty/plpa/plpa-1.3.1/$COMPILE_ARCH
+         env CFLAGS="${CFLAGS} ${NOERR_CFLAG}" \ 
+          ../configure 
+      endif
+
+      cd $SOURCE/3rdparty/plpa/plpa-1.3.1/$COMPILE_ARCH
+
+      $MAKE $MAKEOPT -f Makefile "MAKE=$MAKE" "COMPILE_ARCH=$COMPILE_ARCH" "DLLIB=$DLLIB" $argv
+
+      if ( $status != 0 ) then
+         echo not done
+         exit 1
+      endif
+   
+   else 
+      echo plpa on architecture "$BUILDARCH" not supported 
+   endif 
 
    cd $SOURCE
 endif

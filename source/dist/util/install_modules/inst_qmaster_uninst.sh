@@ -109,21 +109,38 @@ ShutdownMaster()
       $INFOTEXT "sge_qmaster is down!"
 
    master_spool=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep qmaster_spool_dir | awk '{ print $2 }'`
-
+   reporting=$SGE_ROOT/$SGE_CELL/reporting
+   
+   toDelete="accounting act_qmaster bootstrap cluster_name configuration jmx local_conf qtask sched_configuration sgeCA sge_request sgemaster"
+   
    RemoveRcScript $HOST master $euid
+
+   if [ -f $SGE_ROOT/$SGE_CELL/common/sgebdb ]; then
+      $INFOTEXT "Berkeley db server is being used with this installation"
+      $INFOTEXT "Skipping removal of berkeley spool directory"
+      $INFOTEXT "Uninstall the berkeley db server before removing the spool directory"
+   else
+      berkeley_spool=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep spooling_params | awk '{ print $2 }'`
+
+      $INFOTEXT "Removing berkeley spool directory!"
+      $INFOTEXT -log "Removing berkeley spool directory!"
+      ExecuteAsAdmin $RM -rf $berkeley_spool
+   fi
 
    $INFOTEXT "Removing qmaster spool directory!"
    $INFOTEXT -log "Removing qmaster spool directory!"
-   RM="rm -fR"
-   ExecuteAsAdmin $RM $master_spool
+   ExecuteAsAdmin $RM -fR $master_spool
 
-   berkeley_spool=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep spooling_params | awk '{ print $2 }'`
+   $INFOTEXT "Removing reporting file"
+   $INFOTEXT -log "Removing reporting file"
+   ExecuteAsAdmin $RM $reporting
 
-   $INFOTEXT "Removing berkeley spool directory!"
-   $INFOTEXT -log "Removing berkeley spool directory!"
-   ExecuteAsAdmin $RM $berkeley_spool
-
-   $INFOTEXT "Removing %s directory!" $SGE_CELL
-   $INFOTEXT -log "Removing %s directory!" $SGE_CELL
-   ExecuteAsAdmin $RM $SGE_CELL
+   for path in $toDelete
+   do
+     if [ -f $SGE_ROOT/$SGE_CELL/common/$path ]; then
+         $INFOTEXT "Removing $path"
+         $INFOTEXT -log "Removing $SGE_ROOT/$SGE_CELL/common/$path"
+         ExecuteAsAdmin $RM -rf $SGE_ROOT/$SGE_CELL/common/$path
+      fi
+   done
 }

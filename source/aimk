@@ -2761,7 +2761,7 @@ if ( "$PLPA" == 1) then
 	      ! -r $SOURCE/3rdparty/plpa/plpa-1.3.1/$COMPILE_ARCH/Makefile ) then
          mkdir -p $SOURCE/3rdparty/plpa/plpa-1.3.1/$COMPILE_ARCH
          cd $SOURCE/3rdparty/plpa/plpa-1.3.1/$COMPILE_ARCH
-         env CFLAGS="${CFLAGS} ${NOERR_CFLAG}" \ 
+         env CFLAGS="${CFLAGS} ${NOERR_CFLAG}" \
           ../configure 
       endif
 

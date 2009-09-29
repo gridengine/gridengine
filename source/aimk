@@ -1843,7 +1843,7 @@ case SOLARISAMD64:
    #       
    if ( $rel < 10 ) then
       # Solaris version < 10 needs -lpthread
-      set LIBS     = "-lsocket -lnsl -lm -lpthread -lthread" 
+      set LIBS     = "-lsocket -lnsl -lm -lpthread -lthread -lkstat" 
    else
       # Solaris versions >= 10 have posix fork()
       set LIBS     = "-lsocket -lnsl -lm -lthread -llgrp -lkstat"
@@ -2761,8 +2761,7 @@ if ( "$PLPA" == 1) then
 	      ! -r $SOURCE/3rdparty/plpa/plpa-1.3.1/$COMPILE_ARCH/Makefile ) then
          mkdir -p $SOURCE/3rdparty/plpa/plpa-1.3.1/$COMPILE_ARCH
          cd $SOURCE/3rdparty/plpa/plpa-1.3.1/$COMPILE_ARCH
-         env CFLAGS="${CFLAGS} ${NOERR_CFLAG}" \
-          ../configure 
+         ../configure
       endif
 
       cd $SOURCE/3rdparty/plpa/plpa-1.3.1/$COMPILE_ARCH

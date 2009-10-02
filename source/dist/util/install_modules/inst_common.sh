@@ -116,13 +116,14 @@ BasicSettings()
 
   HOST=`$SGE_UTILBIN/gethostname -name`
   if [ "$HOST" = "" ]; then
-     $INFOTEXT -e "can't get hostname of this machine. Installation failed."
+     echo "can't get hostname of this machine. Installation failed."
      exit 2
   fi
 
   RM="rm -f"
   TOUCH="touch"
   MORE_CMD="more"
+  CHMOD="chmod"
 
 }
 
@@ -188,26 +189,27 @@ Makedir()
       done
 
        $INFOTEXT "creating directory: %s" "$dir"
-       if [ "`$SGE_UTILBIN/filestat -owner $tmp_dir`" != "$ADMINUSER" ]; then
-         Execute $MKDIR -p $dir
-         if [ "$ADMINUSER" = "default" ]; then
-            Execute $CHOWN -R root $chown_dir
-         else
-             group=`$SGE_UTILBIN/checkuser -gid $ADMINUSER`
+       owner=`$SGE_UTILBIN/filestat -owner $tmp_dir 2> /dev/null`
+       if [ "$owner" != "$ADMINUSER" ]; then
+          Execute $MKDIR -p $dir
+          if [ "$ADMINUSER" = "default" ]; then
+             Execute $CHOWN -R root $chown_dir
+          else
+		       group=`$SGE_UTILBIN/checkuser -gid $ADMINUSER`
              Execute $CHOWN -R $ADMINUSER:$group $chown_dir
-         fi
-	     Execute $CHMOD -R $DIRPERM $chown_dir
+          fi
+	       Execute $CHMOD -R $DIRPERM $chown_dir
        else
-         ExecuteAsAdmin $MKDIR -p $dir
-         ExecuteAsAdmin $CHMOD -R $DIRPERM $chown_dir
+          ExecuteAsAdmin $MKDIR -p $dir
+		    ExecuteAsAdmin $CHMOD -R $DIRPERM $chown_dir
        fi
    fi
 
-   if [ "`$SGE_UTILBIN/filestat -owner $dir`" != "$ADMINUSER" ]; then
-      Execute $CHMOD $DIRPERM $dir
-   else
-      ExecuteAsAdmin $CHMOD $DIRPERM $dir
-   fi
+	if [ "`$SGE_UTILBIN/filestat -owner $dir`" != "$ADMINUSER" ]; then
+	    Execute $CHMOD $DIRPERM $dir
+	else
+       ExecuteAsAdmin $CHMOD $DIRPERM $dir
+	fi
 }
 
 #-------------------------------------------------------------------------
@@ -620,29 +622,37 @@ CheckConfigFile()
          if [ $? != 0 ]; then
             $INFOTEXT -e "Your configuration entry >%s< is not allowed or not in the list of known\nentries!" $e
             $INFOTEXT -e "Please check your autobackup config file!\n >%s<" $FILE
+            $INFOTEXT -log "Your configuration entry >%s< is not allowed or not in the list of known\nentries!" $e
+            $INFOTEXT -log "Please check your autobackup config file!\n >%s<" $FILE
             exit 2
          fi
       done
       if [ -z "$SGE_ROOT" ]; then
          $INFOTEXT -e "Your >SGE_ROOT< entry is not set!"
+         $INFOTEXT -log "Your >SGE_ROOT< entry is not set!"
          is_valid="false" 
       elif [ ! -d "$SGE_ROOT" ]; then
          $INFOTEXT -e "Your >SGE_ROOT< directory %s does not exist!" $SGE_ROOT
+         $INFOTEXT -log "Your >SGE_ROOT< directory %s does not exist!" $SGE_ROOT
          is_valid="false" 
       fi
       if [ -z "$SGE_CELL" ]; then
          $INFOTEXT -e "Your >SGE_CELL< entry is not set!" 
+         $INFOTEXT -log "Your >SGE_CELL< entry is not set!"
          is_valid="false"
       elif [ ! -d "$SGE_ROOT/$SGE_CELL" ]; then
          $INFOTEXT -e "Your >SGE_CELL< directory %s does not exist!" $SGE_ROOT/$SGE_CELL
+         $INFOTEXT -log "Your >SGE_CELL< directory %s does not exist!" $SGE_ROOT/$SGE_CELL
          is_valid="false"
       fi
       if [ -z "$BACKUP_DIR" ]; then
          $INFOTEXT -e "Your >BACKUP_DIR< directory is not set!"
+         $INFOTEXT -log "Your >BACKUP_DIR< directory is not set!"
          is_valid="false" 
       fi
       if [ -z "$TAR" ]; then
          $INFOTEXT -e "Your >TAR< flag is not set!"
+         $INFOTEXT -log "Your >TAR< flag is not set!"
          is_valid="false"
       fi 
       if [ "$TAR" = "1" ]; then
@@ -650,18 +660,22 @@ CheckConfigFile()
       elif [ "$TAR" = "0" ]; then
          TAR="false"
       fi
-      TAR=`echo $TAR | tr [A-Z] [a-z]`
+      TAR=`echo $TAR | tr "[A-Z]" "[a-z]"`
       if [ "$TAR" != "true" -a "$TAR" != "false" ]; then
          $INFOTEXT -e "Your >TAR< flag is wrong! Valid values are: 0, 1, true, false"
+         $INFOTEXT -log "Your >TAR< flag is wrong! Valid values are: 0, 1, true, false"
          is_valid="false" 
       fi
       if [ -z "$BACKUP_FILE" -a "$TAR" = "true" ]; then
          $INFOTEXT -e "Your >BACKUP_FILE< name is not set!"
+         $INFOTEXT -log "Your >BACKUP_FILE< name is not set!"
          is_valid="false" 
       fi
       if [ "$is_valid" = "false" ]; then
          $INFOTEXT -e "\nAn invalid entry was found in your autobackup configuration file"
          $INFOTEXT -e "Please check your autobackup configuration file!\n >%s<" $FILE
+         $INFOTEXT -log "\nAn invalid entry was found in your autobackup configuration file"
+         $INFOTEXT -log "Please check your autobackup configuration file!\n >%s<" $FILE
          exit 2  #ToDo: documentation exit 2 configuration file error 
       fi
       return
@@ -673,12 +687,23 @@ CheckConfigFile()
    #do hostname resolving. fetching hostname from config file, try to resolve and
    #and recreate the hostname lists
    if [ "$DB_SPOOLING_SERVER" != "none" ]; then
+      $INFOTEXT -log "Resolving DB_SPOOLING_SERVER"
       DB_SPOOLING_SERVER=`ResolveHosts $DB_SPOOLING_SERVER`
    fi
+
+   $INFOTEXT -log "Resolving ADMIN_HOST_LIST"
    ADMIN_HOST_LIST=`ResolveHosts $ADMIN_HOST_LIST`
+
+   $INFOTEXT -log "Resolving SUBMIT_HOST_LIST"
    SUBMIT_HOST_LIST=`ResolveHosts $SUBMIT_HOST_LIST`
+
+   $INFOTEXT -log "Resolving EXEC_HOST_LIST"
    EXEC_HOST_LIST=`ResolveHosts $EXEC_HOST_LIST`
+
+   $INFOTEXT -log "Resolving SHADOW_HOST_LIST"
    SHADOW_HOST=`ResolveHosts $SHADOW_HOST`
+
+   $INFOTEXT -log "Resolving EXEC_HOST_LIST_RM"
    EXEC_HOST_LIST_RM=`ResolveHosts $EXEC_HOST_LIST_RM`
 
    if [ "$QMASTER" = "install" -o "$EXECD" = "install" -o "$QMASTER" = "uninstall" -o "$EXECD" = "uninstall" ]; then
@@ -739,7 +764,7 @@ CheckConfigFile()
          $INFOTEXT -e "in use. If you still need this directory, please choose any other!"
          $INFOTEXT -log "Your >DB_SPOOLING_DIR< already exists. Please check, if this directory is still"
          $INFOTEXT -log "in use. If you still need this directory, please choose any other!"
-         $INFOTEXT -e "Please check your logfile!\n >%s<" $LOGSNAME
+         $INFOTEXT -e "Please check your logfile!\n >%s<" "$LOGSNAME"
          is_valid="false"
       fi
     
@@ -808,7 +833,7 @@ CheckConfigFile()
       elif [ "$HOSTNAME_RESOLVING" = "0" ]; then
          HOSTNAME_RESOLVING="false"
       fi
-      HOSTNAME_RESOLVING=`echo "$HOSTNAME_RESOLVING" | tr [A-Z] [a-z]`
+      HOSTNAME_RESOLVING=`echo "$HOSTNAME_RESOLVING" | tr "[A-Z]" "[a-z]"`
       if [ "$HOSTNAME_RESOLVING" != "true" -a "$HOSTNAME_RESOLVING" != "false" ]; then
          $INFOTEXT -e "Your >HOSTNAME_RESOLVING< flag is wrong! Valid values are: 0, 1, true, false"
          is_valid="false" 
@@ -835,7 +860,7 @@ CheckConfigFile()
       elif [ "$SET_FILE_PERMS" = "0" ]; then
          SET_FILE_PERMS="false"
       fi
-      SET_FILE_PERMS=`echo $SET_FILE_PERMS | tr [A-Z] [a-z]`
+      SET_FILE_PERMS=`echo $SET_FILE_PERMS | tr "[A-Z]" "[a-z]"`
       if [ "$SET_FILE_PERMS" != "true" -a "$SET_FILE_PERMS" != "false" ]; then
          $INFOTEXT -e "Your >SET_FILE_PERMS< flag is wrong! Valid values are: 0, 1, true, false"
          $INFOTEXT -log "Your >SET_FILE_PERMS< flag is wrong! Valid values are: 0, 1, true, false"
@@ -852,7 +877,7 @@ CheckConfigFile()
       elif [ "$WINDOWS_SUPPORT" = "0" ]; then
          WINDOWS_SUPPORT="false"
       fi
-      WINDOWS_SUPPORT=`echo $WINDOWS_SUPPORT | tr [A-Z] [a-z]`
+      WINDOWS_SUPPORT=`echo $WINDOWS_SUPPORT | tr "[A-Z]" "[a-z]"`
       if [ "$WINDOWS_SUPPORT" != "true" -a "$WINDOWS_SUPPORT" != "false" ]; then
          $INFOTEXT -e "Your >WINDOWS_SUPPORT< flag is wrong! Valid values are: 0, 1, true, false"
          $INFOTEXT -log "Your >WINDOWS_SUPPORT< flag is wrong! Valid values are: 0, 1, true, false"
@@ -882,7 +907,7 @@ CheckConfigFile()
       elif [ "$ADD_TO_RC" = "0" ]; then
          ADD_TO_RC="false"
       fi
-      ADD_TO_RC=`echo $ADD_TO_RC | tr [A-Z] [a-z]`
+      ADD_TO_RC=`echo $ADD_TO_RC | tr "[A-Z]" "[a-z]"`
       if [ "$ADD_TO_RC" != "true" -a "$ADD_TO_RC" != "false" ]; then
          $INFOTEXT -e "Your >ADD_TO_RC< flag is wrong! Valid values are: 0, 1, true, false"
          $INFOTEXT -log "Your >ADD_TO_RC< flag is wrong! Valid values are: 0, 1, true, false"
@@ -916,7 +941,7 @@ CheckConfigFile()
       elif [ "$REMOVE_RC" = "0" ]; then
          REMOVE_RC="false"
       fi
-      REMOVE_RC=`echo $REMOVE_RC | tr [A-Z] [a-z]`
+      REMOVE_RC=`echo $REMOVE_RC | tr "[A-Z]" "[a-z]"`
       if [ "$REMOVE_RC" != "true" -a "$REMOVE_RC" != "false" ]; then
          $INFOTEXT -e "Your >REMOVE_RC< flag is wrong! Valid values are: 0, 1, true, false"
          $INFOTEXT -log "Your >REMOVE_RC< flag is wrong! Valid values are: 0, 1, true, false"
@@ -926,12 +951,12 @@ CheckConfigFile()
 
    if [  "$EXECD" = "uninstall" ]; then
       if [ -z "$EXEC_HOST_LIST_RM" ]; then
-         $INFOTEXT -e "Your >EXEC_HOST_LIST_RM< is empty!"
+         $INFOTEXT -e "Your >EXEC_HOST_LIST_RM< is empty or not resolveable!"
          $INFOTEXT -e "For a automatic execd unintallation you have to enter a valid exechost name!"
-         $INFOTEXT -log "Your >EXEC_HOST_LIST_RM< is empty!"
+         $INFOTEXT -log "Your >EXEC_HOST_LIST_RM< is empty or not resolveable!"
          $INFOTEXT -log "For a automatic execd unintallation you have to enter a valid exechost name!"
          is_valid="false"
-      fi      
+      fi
    fi
 
    if [ "$CSP" = "true" -o "$WINDOWS_SUPPORT" = "true" ]; then
@@ -975,7 +1000,7 @@ CheckConfigFile()
       elif [ "$CSP_RECREATE" = "0" ]; then
          CSP_RECREATE="false"
       fi
-      CSP_RECREATE=`echo $CSP_RECREATE | tr [A-Z] [a-z]`
+      CSP_RECREATE=`echo $CSP_RECREATE | tr "[A-Z]" "[a-z]"`
       if [ "$CSP_RECREATE" != "true" -a "$CSP_RECREATE" != "false" ]; then
          $INFOTEXT -e "Your >CSP_RECREATE< flag is wrong! Valid values are: 0, 1, true, false"
          $INFOTEXT -log "Your >CSP_RECREATE< flag is wrong! Valid values are: 0, 1, true, false"
@@ -992,7 +1017,7 @@ CheckConfigFile()
       elif [ "$CSP_COPY_CERTS" = "0" ]; then
          CSP_COPY_CERTS="false"
       fi
-      CSP_COPY_CERTS=`echo $CSP_COPY_CERTS | tr [A-Z] [a-z]`
+      CSP_COPY_CERTS=`echo $CSP_COPY_CERTS | tr "[A-Z]" "[a-z]"`
       if [ "$CSP_COPY_CERTS" != "true" -a "$CSP_COPY_CERTS" != "false" ]; then
          $INFOTEXT -e "Your >CSP_COPY_CERTS< flag is wrong! Valid values are:0, 1, true, false"
          $INFOTEXT -log "Your >CSP_COPY_CERTS< flag is wrong! Valid values are:0, 1, true, false"
@@ -2890,7 +2915,7 @@ RestoreCheckBootStrapFile()
       MASTER_PORT=`cat $BACKUP_DIR/sgemaster | grep "SGE_QMASTER_PORT=" | head -1 | awk '{ print $1 }' | cut -d"=" -f2 | cut -d";" -f1` 
 
       ACT_QMASTER=`cat $BACKUP_DIR/act_qmaster`
-      
+
       $SGE_BIN/qping -info $ACT_QMASTER $MASTER_PORT qmaster 1 > /dev/null 2>&1
       ret=$?
 
@@ -3268,7 +3293,14 @@ FileGetValue()
    if [ `echo "$3" | awk '{print length($0)}'` -gt 0 ]; then
       SEP=-F"${3}"
    fi
-   echo `cat $1 | grep "^${2}" | tail -1 | awk $SEP '{ print $2}' 2>/dev/null`
+   #Test if file is readable as root, if not we use ExecuteAsAdmin
+   get_cmd="cat"
+   #Try if we can really read the file (-r seems to be misleading)
+   $get_cmd $1 >/dev/null 2>&1
+   if [ $? -ne 0 ]; then
+      get_cmd="ExecuteAsAdmin cat"
+   fi
+   echo `$get_cmd $1 | grep "^${2}" | tail -1 | awk $SEP '{ print $2}' 2>/dev/null`
 }
 
 #Helper to get bootstrap file values

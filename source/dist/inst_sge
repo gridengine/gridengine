@@ -38,7 +38,7 @@
 # set -x
 
 SCRIPT_VERSION="6"
-SGE_VERSION="6.1u6"
+SGE_VERSION="6.1u7"
 
 #Reset PATH to a safe value
 #
@@ -136,7 +136,9 @@ while [ $ARGC != 0 ]; do
      AUTO="true"
      FILE="$2"
      if [ ! -f "$2" ]; then
-        ErrUsage
+        AUTO="false"
+        $INFOTEXT "Error: File $FILE does not exist!" 
+        ErrUsage        
      fi
      shift
      ARGC=`expr $ARGC - 1`
@@ -492,7 +494,7 @@ if [ "$QMASTER" = "install" -a "$UPDATE" != "true" ]; then
     MoveLog
     exit 1 
  fi
-
+ is_master=""
 fi
 
 
@@ -502,7 +504,7 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
     install_is_done="false"
     max_retries=20
     Stdout2Log
-    . $SGE_ROOT/$SGE_CELL/common/settings.sh
+    . $SGE_ROOT/$CELL_NAME/common/settings.sh
     GetAdminUser
 
    if [ -f "$SGE_ROOT/$SGE_CELL/common/bootstrap" ]; then
@@ -644,7 +646,7 @@ if [ "$EXECD" = "install" -a "$UPDATE" != "true" ]; then
       AddQueue
       GiveHints
       CheckRunningDaemon sge_execd
-         
+      
       if [ $? = 0 ]; then
          $INFOTEXT "Execd on host %s is running!\n" $h
          $INFOTEXT -log "Execd on host %s is running!\n" $h
@@ -838,7 +840,7 @@ if [ $SHADOW = "install" ]; then
 
    if [ $AUTO = "true" ]; then
       Stdout2Log
-      ignore_fqdn=`BootstrapGetValue "$SGE_ROOT/$CELL_NAME/common" ignore_fqdn | tr [A-Z] [a-z]`
+      ignore_fqdn=`BootstrapGetValue "$SGE_ROOT/$CELL_NAME/common" ignore_fqdn | tr "[A-Z]" "[a-z]"`
       CURRENT_HOST=`$SGE_UTILBIN/gethostname -aname`
       if [ "$ignore_fqdn" = "true" ]; then
          CURRENT_HOST=`echo $CURRENT_HOST | cut -f1 -d. | tr "[A-Z]" "[a-z]"`
@@ -849,7 +851,7 @@ if [ $SHADOW = "install" ]; then
          SHADOWD_HOSTS_TO_INSTALL=`RemoveHostFromList "$SHADOWD_HOSTS_TO_INSTALL" "$SHADOW"`
          SHADOW_COMPARE="$SHADOW"
          if [ "$ignore_fqdn" = "true" ]; then
-            SHADOW_COMPARE=`echo "$SHADOW_COMPARE" | cut -f1 -d. | tr [A-Z] [a-z]`
+            SHADOW_COMPARE=`echo "$SHADOW_COMPARE" | cut -f1 -d. | tr "[A-Z]" "[a-z]"`
          fi
          if [ "$NOREMOTE" = false ]; then
             LOCALINST=false
@@ -960,56 +962,37 @@ if [ $SHADOW = "install" ]; then
       ExecuteAsAdmin mv $SGE_ROOT/$SGE_CELL/common/shadow_masters $SGE_ROOT/$SGE_CELL/common/shadow_masters.1
       ExecuteAsAdmin touch $SGE_ROOT/$SGE_CELL/common/shadow_masters
       ExecuteAsAdmin chmod a+rw $SGE_ROOT/$SGE_CELL/common/shadow_masters
-      ExecuteAsAdmin cat $SGE_ROOT/$SGE_CELL/common/act_qmaster >> $SGE_ROOT/$SGE_CELL/common/shadow_masters
+      ACT_QMASTER=`cat $SGE_ROOT/$SGE_CELL/common/act_qmaster`
+      if [ "$ACT_QMASTER" != "$SHADOW_HOST" ]; then
+         ExecuteAsAdmin echo "$ACT_QMASTER" >> $SGE_ROOT/$SGE_CELL/common/shadow_masters
+      fi
       ExecuteAsAdmin echo $SHADOW_HOST >> $SGE_ROOT/$SGE_CELL/common/shadow_masters
       for s in `echo $ALREADY_SHADOWS`; do
-         ExecuteAsAdmin echo $s >> $SGE_ROOT/$SGE_CELL/common/shadow_masters
+         if [ "$ACT_QMASTER" != "$s" ]; then
+            ExecuteAsAdmin echo $s >> $SGE_ROOT/$SGE_CELL/common/shadow_masters
+         fi
       done
       ExecuteAsAdmin chmod go-w $SGE_ROOT/$SGE_CELL/common/shadow_masters
       ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL/common/shadow_masters.1
- 
+      
       if [ $SHADOW_HOST = `$SGE_UTILBIN/gethostname -aname` ]; then
          . $SGE_ROOT/$SGE_CELL/common/settings.sh
          SGE_ARCH=`$SGE_ROOT/util/arch`
+         AddSGEStartUpScript $euid shadow
+         $INFOTEXT "Starting sge_shadowd on host %s\n" $SHADOW_HOST
+	 $INFOTEXT -log "Starting sge_shadowd on host %s\n" $SHADOW_HOST
          $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &
-         AddSGEStartUpScript $euid shadow 
       else
         for shs in `cat $SGE_ROOT/$SGE_CELL/common/shadow_masters`; do
            echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; SGE_ARCH=`$SGE_ROOT/util/arch`; $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &" | $SHELL_NAME $shs /bin/sh &
-           #TODO: install rc script
         done
       fi
 
       $INFOTEXT "Shadowhost installation completed!"
-   else
-      euid=`$SGE_UTILBIN/uidgid -euid`
-      Stdout2Log
-      for SHADOW in $SHADOW_HOST; do
-         $INFOTEXT -log "Starting sge_shadowd on host %s" $SHADOW   
-         ExecuteAsAdmin touch $SGE_ROOT/$SGE_CELL/common/shadow_masters
-         ALREADY_SHADOWS=`cat $SGE_ROOT/$SGE_CELL/common/shadow_masters | grep -v "$SHADOW"`
-         ExecuteAsAdmin mv $SGE_ROOT/$SGE_CELL/common/shadow_masters $SGE_ROOT/$SGE_CELL/common/shadow_masters.1
-         ExecuteAsAdmin touch $SGE_ROOT/$SGE_CELL/common/shadow_masters
-         ExecuteAsAdmin chmod a+rw $SGE_ROOT/$SGE_CELL/common/shadow_masters
-         ExecuteAsAdmin cat $SGE_ROOT/$SGE_CELL/common/act_qmaster >> $SGE_ROOT/$SGE_CELL/common/shadow_masters
-         ExecuteAsAdmin echo $SHADOW >> $SGE_ROOT/$SGE_CELL/common/shadow_masters
-         for s in `echo $ALREADY_SHADOWS`; do
-            ExecuteAsAdmin echo $s >> $SGE_ROOT/$SGE_CELL/common/shadow_masters
-         done
-         ExecuteAsAdmin chmod go-w $SGE_ROOT/$SGE_CELL/common/shadow_masters
-         ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL/common/shadow_masters.1
-         if [ $SHADOW = `$SGE_UTILBIN/gethostname -aname` ]; then
-            . $SGE_ROOT/$SGE_CELL/common/settings.sh
-            SGE_ARCH=`$SGE_ROOT/util/arch`
-            $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &
-            AddSGEStartUpScript $euid shadow
-         else
-              echo ". $SGE_ROOT/$SGE_CELL/common/settings.sh; SGE_ARCH=`$SGE_ROOT/util/arch`; $SGE_ROOT/bin/$SGE_ARCH/sge_shadowd &" | $SHELL_NAME $SHADOW /bin/sh &
-              #TODO: install rc script
-         fi
-      done
+      $INFOTEXT -log "Shadowhost installation completed!"
    fi
    MoveLog
+   is_shadow=""
 fi
 
 if [ $SHADOW = "uninstall" ]; then
@@ -1175,7 +1158,7 @@ if [ $MAKE_RC = "true" ]; then
                 "does not exist. Exit." \$SGE_ROOT/$SGE_CELL/common/bootstrap
       exit 1
    fi
-
+   
    if [ -f $SGE_ROOT/$SGE_CELL/common/settings.sh ]; then
       . $SGE_ROOT/$SGE_CELL/common/settings.sh
    else

@@ -116,7 +116,7 @@ else
    ADMINUSER=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep admin_user | awk '{ print $2 }'`
 
    if [ "$SGE_ARCH" = "win32-x86" ]; then
-      WIN_HOST_NAME=`hostname | tr [a-z] [A-Z]`
+      WIN_HOST_NAME=`hostname | tr "[a-z]" "[A-Z]"`
       WIN_ADMINUSER="$WIN_HOST_NAME+$ADMINUSER"
       #UID=`id | cut -d"(" -f1 | cut -d"=" -f2`
       UID=`id -u`

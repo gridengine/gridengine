@@ -444,7 +444,7 @@ SetSpoolingOptionsBerkeleyDB()
          if [ "$AUTO" = "true" ]; then
                if [ $SPOOLING_SERVER = "none" ]; then
                   $ECHO
-                  ExecuteAsAdmin $MKDIR $SPOOLING_DIR
+                  Makedir $SPOOLING_DIR
                   SPOOLING_ARGS="$SPOOLING_DIR"
                else
                   $INFOTEXT -log "We found a running berkeley db server on this host!"
@@ -756,7 +756,7 @@ AddConfiguration()
       #TruncCreateAndMakeWriteable $COMMONDIR/configuration
       #PrintConf >> $COMMONDIR/configuration
       #SetPerm $COMMONDIR/configuration
-      TMPC=/tmp/configuration_`date '+%Y-%m-%d_%H:%M:%S'`
+      TMPC=/tmp/configuration_`date '+%Y-%m-%d_%H:%M:%S'`.$$
       TOUCH=touch
       rm -f $TMPC
       ExecuteAsAdmin $TOUCH $TMPC
@@ -848,7 +848,7 @@ AddLocalConfiguration()
       ExecuteAsAdmin rm -f $TMPH
       ExecuteAsAdmin touch $TMPH
       PrintLocalConf 1 >> $TMPH
-      ExecuteAsAdmin $SPOOLDEFAULTS local_conf $TMPH $HOST 2>/dev/null >/dev/null
+      ExecuteAsAdmin $SPOOLDEFAULTS local_conf $TMPH $HOST
       ExecuteAsAdmin rm -rf /tmp/$$
 }
 

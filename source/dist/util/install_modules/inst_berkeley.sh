@@ -125,6 +125,11 @@ SpoolingCheckParams()
       fi
    else
       if [ "$BERKELEY" = "install" ]; then
+         if [ "$IGNORE_FQDN_DEFAULT" != "true" -a "$IGNORE_FQDN_DEFAULT" != "false" ]; then
+            SelectHostNameResolving
+         fi      
+         ignore_fqdn=$IGNORE_FQDN_DEFAULT
+         default_domain=$CFG_DEFAULT_DOMAIN
          if [ "$ignore_fqdn" = "true" ]; then
             tmp_host=`echo $HOST | cut -d. -f1 | tr "[A-Z]" "[a-z]"`
             tmp_spooling=`echo $SPOOLING_SERVER | cut -d. -f1 | tr "[A-Z]" "[a-z]"`
@@ -246,10 +251,10 @@ ExecuteRPCServerScript()
 DeleteSpoolingDir()
 {
    QMDIR="$SGE_ROOT/$SGE_CELL/qmaster"
-   SpoolingQueryChange  
+   SpoolingQueryChange
 
    ExecuteAsAdmin rm -fr $SPOOLING_DIR
-   
+
 }
 
 EditStartupScript()

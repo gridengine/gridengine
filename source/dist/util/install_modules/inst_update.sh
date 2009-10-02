@@ -238,10 +238,10 @@ GetOldComplexes()
 
          CE_NAME=`cat /tmp/centry/$ce_name"_tmp3" | grep "name" | awk '{ print $2 }'`
          CE_SHORTCUT=`cat /tmp/centry/$ce_name"_tmp3" | grep "shortcut" | awk '{ print $2 }'`
-         CE_TYPE=`cat /tmp/centry/$ce_name"_tmp3" | grep "type" | awk '{ print $2 }' | tr [a-z] [A-Z]`
+         CE_TYPE=`cat /tmp/centry/$ce_name"_tmp3" | grep "type" | awk '{ print $2 }' | tr "[a-z]" "[A-Z]"`
          CE_RELOP=`cat /tmp/centry/$ce_name"_tmp3" | grep "relop" | awk '{ print $2 }'`
-         CE_REQUESTABLE=`cat /tmp/centry/$ce_name"_tmp3" | grep "requestable" | awk '{ print $2 }' | tr [a-z] [A-Z]`
-         CE_CONSUMABLE=`cat /tmp/centry/$ce_name"_tmp3" | grep "consumable" | awk '{ print $2 }' | tr [a-z] [A-Z]`
+         CE_REQUESTABLE=`cat /tmp/centry/$ce_name"_tmp3" | grep "requestable" | awk '{ print $2 }' | tr "[a-z]" "[A-Z]"`
+         CE_CONSUMABLE=`cat /tmp/centry/$ce_name"_tmp3" | grep "consumable" | awk '{ print $2 }' | tr "[a-z]" "[A-Z]"`
          CE_DEFAULT=`cat /tmp/centry/$ce_name"_tmp3" | grep "default" | awk '{ print $2 }'`
          CE_URGENCY=`cat /tmp/centry/$ce_name"_tmp3" | grep "urgency" | awk '{ print $2 }'`
 

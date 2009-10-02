@@ -101,7 +101,7 @@ FetchHostname()
             $INFOTEXT -n "The uninstall script has to login to the uninstalled execution host %s\n" \
                          "Enter the shell name to be used (rsh/ssh) [%s] >>" $h $SHELL_NAME
             SHELL_NAME=`Enter $SHELL_NAME`
-            SHELL_NAME=`echo "$SHELL_NAME" | tr [A-Z] [a-z]`
+            SHELL_NAME=`echo "$SHELL_NAME" | tr "[A-Z]" "[a-z]"`
             if [ "$SHELL_NAME" != "rsh" -a "$SHELL_NAME" != "ssh" ]; then
                $INFOTEXT -n "Skipping uninstallation of exec host $host.\n"\
                             "Invalid shell name %s was selected." $SHELL_NAME

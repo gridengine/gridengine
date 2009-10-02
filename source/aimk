@@ -190,6 +190,7 @@ usage:
    echo "-no-rmon          -> disable rmon debug output"
    echo "-no-secure        -> disable ssl security (enabled by default)"
    echo "-no-jemalloc      -> disable jemalloc (enabled by default on Linux hosts)"
+   echo "-no-mtmalloc      -> disable mtmalloc (this is needed for dbx debugging)"
    echo "-only-core        -> build only the core system"
    echo "-only-depend      -> only compile 3rdparty/sge_depend"
    echo "-only-java        -> only compile Java[TM] class files"
@@ -248,6 +249,7 @@ set REMOTE           = 1
 set QMAKE            = 1
 set PLPA             = 1
 set QTCSH            = 1
+set MAKEMTMALLOCLIB  = 1
 set MAKEJEMALLOCLIB  = 0
 set MAKESTRPTIME     = 0
 set MAKESNPRINTF     = 0
@@ -656,6 +658,9 @@ while ($#argv >= 1 && $?found)
       breaksw
    case "-no-plpa":
       set PLPA = 0
+      breaksw
+   case "-no-mtmalloc":
+      set MAKEMTMALLOCLIB = 0
       breaksw
    case "-only-core":
       set CORE   = 1
@@ -1896,7 +1901,9 @@ case SOLARISAMD64:
       set JEMALLOC_CFLAGS  = "-DMOZ_MEMORY_SOLARIS -xc99"
       set LIBS = "-ljemalloc $LIBS"
    else
-      set LIBS = "-lmtmalloc $LIBS"
+      if ( $MAKEMTMALLOCLIB == 1 ) then
+         set LIBS = "-lmtmalloc $LIBS"
+      endif
    endif
 
    breaksw

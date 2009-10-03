@@ -597,10 +597,14 @@ enum NameSpaceBoundaries {
    PRO_UPPERBOUND = PRO_LOWERBOUND + 1 * BASIC_UNIT - 1,
 
    /* list for process groups */
-   GR_LOWERBOUND =PRO_UPPERBOUND + 1,
-   GR_UPPERBOUND = GR_LOWERBOUND + 1 * BASIC_UNIT - 1
+   GR_LOWERBOUND = PRO_UPPERBOUND + 1,
+   GR_UPPERBOUND = GR_LOWERBOUND + 1 * BASIC_UNIT - 1, 
 
-#  define LAST_UPPERBOUND GR_UPPERBOUND
+   /* list with information about processor binding */ 
+   BN_LOWERBOUND = GR_UPPERBOUND + 1, 
+   BN_UPPERBOUND = BN_LOWERBOUND + 1 * BASIC_UNIT - 1
+
+#  define LAST_UPPERBOUND BN_UPPERBOUND
 
 };
 

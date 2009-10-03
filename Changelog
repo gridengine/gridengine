@@ -8,6 +8,11 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 -----------------+------------+-------------------------------------------------
+DG-2009-10-03-0: Enhancem.:   Initial dirty checkin of core binding feature 
+                              for collaboration purposes. Do not use any 
+                              new parameters. 
+                 Review:      EB
+
 SH-2009-10-02-0: Enhancem.:   Added -no-mtmalloc option in aimk to disable 
                               linking against the mtmalloc-library.
                               This is needed to use memory leak detection in dbx.

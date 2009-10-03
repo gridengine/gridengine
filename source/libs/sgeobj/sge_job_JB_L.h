@@ -183,7 +183,10 @@ extern "C" {
 *        ("qsub/qalter -ac/-dc context_list")
 *
 *     SGE_LIST(JB_job_args)  
-*        Job arguments (ST_Type). 
+*        Job arguments (ST_Type).
+*
+*     SGE_LIST(JB_binding)
+*        Binding strategy for execution host (and later scheduler)
 *
 *     Checkpointing/Restart
 *     =====================
@@ -462,7 +465,7 @@ enum {
    JB_env_list,
    JB_context,
    JB_job_args,
-  
+ 
    JB_checkpoint_attr,
    JB_checkpoint_name,
    JB_checkpoint_object,
@@ -518,7 +521,8 @@ enum {
    JB_wtcontr,
    JB_ar,
    JB_pty,
-   JB_ja_task_concurrency
+   JB_ja_task_concurrency,
+   JB_binding 
 };
 
 /* 
@@ -626,6 +630,7 @@ LISTDEF(JB_Type)
    SGE_ULONG(JB_ar, CULL_DEFAULT | CULL_SPOOL)     
    SGE_ULONG(JB_pty, CULL_DEFAULT | CULL_SPOOL)     
    SGE_ULONG(JB_ja_task_concurrency, CULL_DEFAULT | CULL_SPOOL)
+   SGE_LIST(JB_binding, BN_Type, CULL_DEFAULT | CULL_SPOOL)
    /* 
     * IF YOU ADD SOMETHING HERE THEN CHANGE ALSO THE ADOC COMMENT ABOVE 
     */
@@ -730,6 +735,7 @@ NAMEDEF(JBN)
    NAME("JB_ar")
    NAME("JB_pty")
    NAME("JB_ja_task_concurrency")
+   NAME("JB_binding")
 NAMEEND
 
 #define JBS sizeof(JBN)/sizeof(char*)

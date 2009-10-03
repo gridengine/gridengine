@@ -75,6 +75,10 @@
 #  include "ptf.h"
 #endif
 
+#if ( defined(LINUXAMD64) || defined(LINUX86) ) && !defined(ULINUX86_24) && !defined(LINUXIA64_24)
+#   include <plpa.h> 
+#   include <dlfcn.h>
+#endif
 
 
 static void 
@@ -89,6 +93,11 @@ static int
 execd_add_job_report(sge_gdi_ctx_class_t *ctx, lList *report_list, u_long32 now, u_long32 *next_send);
 static int 
 sge_get_loadavg(const char *qualified_hostname, lList **lpp);
+
+static int sge_get_topology(const char *qualified_hostname, lList **lpp);
+static int sge_get_topology_inuse(const char *qualified_hostname, lList **lpp);
+static int sge_get_sockets(const char *qualified_hostname, lList **lpp);
+static int sge_get_cores(const char *qualified_hostname, lList **lpp);
 
 report_source execd_report_sources[] = {
    { NUM_REP_REPORT_LOAD, execd_add_load_report , 0 },
@@ -219,7 +228,8 @@ execd_add_load_report(sge_gdi_ctx_class_t *ctx, lList *report_list, u_long32 now
                      /* value hasn't changed, remove it from list */ 
                      lRemoveElem(tmp_lr_list, &ep);
                   } else {
-                     DPRINTF(("value %s has changed from %s to %s\n", name, value ? value:"NULL", lGetString(ep, LR_value)));
+                     DPRINTF(("value %s has changed from %s to %s\n", name, 
+                        value ? value:"NULL", lGetString(ep, LR_value)));
                      /* Old value is no longer valid */
                      lSetString(lr, LR_value, NULL);
                   }
@@ -410,6 +420,11 @@ lList *sge_build_load_report(const char* qualified_hostname, const char* binary_
    sge_switch2start_user();
    sge_get_loadavg(qualified_hostname, &lp);
    sge_switch2admin_user(); 
+   /* report topology reporting */
+   sge_get_topology(qualified_hostname, &lp);
+   sge_get_topology_inuse(qualified_hostname, &lp); 
+   sge_get_sockets(qualified_hostname, &lp);
+   sge_get_cores(qualified_hostname, &lp);
 
    /* get load report from external load sensor */
    sge_ls_get(qualified_hostname, binary_path, &lp);
@@ -505,6 +520,145 @@ lList *sge_build_load_report(const char* qualified_hostname, const char* binary_
 
    DRETURN(lp);
 }
+
+/****** load_avg/sge_get_sockets() *********************************************
+*  NAME
+*     sge_get_sockets() -- Appends the amount of sockets on a Linux platform 
+*
+*  SYNOPSIS
+*     static int sge_get_sockets(const char* qualified_hostname, lList **lpp) 
+*
+*  FUNCTION
+*     Appends to the given list of load values the amount of sockets on 
+*     Linux platform only
+*
+*  INPUTS
+*     const char* qualified_hostname - Hostname 
+*     lList **lpp                    - List with load values 
+*
+*  RESULT
+*     static int - 
+*
+*  NOTES
+*     MT-NOTE: sge_get_sockets() is MT safe 
+*
+*  SEE ALSO
+*     ???/???
+*******************************************************************************/
+static int sge_get_sockets(const char* qualified_hostname, lList **lpp) {
+  
+   int sockets = 0;
+   
+   DENTER(TOP_LAYER, "sge_get_sockets");
+   
+   /* get total amount of sockets installed on system */ 
+   sockets = getExecdAmountOfSockets();
+   
+   /* append the amount of sockets to the load report list */
+   sge_add_int2load_report(lpp, LOAD_ATTR_SOCKETS, sockets, qualified_hostname);
+
+   DRETURN(0);
+}
+
+/****** load_avg/sge_get_cores() ***********************************************
+*  NAME
+*     sge_get_cores() -- ??? 
+*
+*  SYNOPSIS
+*     static int sge_get_cores(const char* qualified_hostname, lList **lpp) 
+*
+*  FUNCTION
+*     Appends to the given list of load values the amount of cores 
+*     on current system (Linux platform only). For other OSs it is 0.
+*
+*  INPUTS
+*     const char* qualified_hostname - Hostname 
+*     lList **lpp                    - List with load values 
+*
+*  RESULT
+*     static int - 0 if everything was ok
+*
+*  NOTES
+*     MT-NOTE: sge_get_cores() is MT safe 
+*
+*  SEE ALSO
+*     ???/???
+*******************************************************************************/
+static int sge_get_cores(const char* qualified_hostname, lList **lpp) {
+   
+   int cores = 0;
+   
+   DENTER(TOP_LAYER, "sge_get_cores");
+
+   /* get the total amount of cores */
+   cores = getExecdAmountOfCores();
+   
+   /* append the amount of cores to the list */
+   sge_add_int2load_report(lpp, LOAD_ATTR_CORES, cores, qualified_hostname);
+   
+   DRETURN(0);
+}
+
+
+static int sge_get_topology(const char* qualified_hostname, lList **lpp) {
+
+   /* Because the linux topology is a list with an undefined length 
+     (each socket could have a differnt amount of cores, so we need 
+     for each socket the amount of cores) we put the whole topology 
+     in a String value. 
+     The format is following: SCCSCC 
+            s(cc)s(cc) or sccscc or 22? 
+     This means that we have a 2 socket machine with 2 cores on 
+     socket one (or 0 when you start at 0) and 2 cores on socket 
+     two.
+     When threads could be detected this could be changed to 
+           SCTTCTTSCTTCTT 
+   */
+
+   /* pointer to topology string */
+   char* topology = NULL;
+   int topology_length = 0;
+
+   DENTER(TOP_LAYER, "sge_get_topology");
+   
+   if (get_execd_topology(&topology, &topology_length)) {
+      /* add topology to return value */
+      sge_add_str2load_report(lpp, LOAD_ATTR_TOPOLOGY, topology, qualified_hostname);
+
+   } else {
+      /* add 'NONE' as topology in case of only error */
+      sge_add_str2load_report(lpp, LOAD_ATTR_TOPOLOGY, "NONE", qualified_hostname);
+   }
+   
+   DRETURN(0);
+}
+
+
+static int sge_get_topology_inuse(const char* qualified_hostname, lList **lpp) {
+   
+   /* this topology is the topology in use which means that 
+      characters like S C T are showing not (fully) occupied resources 
+      while s c t are showing that they are used */
+   
+   /* pointer to topology string */
+   char* topology = NULL;
+   
+   DENTER(TOP_LAYER, "sge_get_topology_inuse");
+
+   if (get_execd_topology_in_use(&topology)) {
+      /* add topology to return value */
+      sge_add_str2load_report(lpp, LOAD_ATTR_TOPOLOGY_INUSE, topology, qualified_hostname);
+
+   } else {
+      /* add 'NONE' as topology in case of only error */
+      sge_add_str2load_report(lpp, LOAD_ATTR_TOPOLOGY_INUSE, "NONE", qualified_hostname);
+   }
+   
+   DRETURN(0);
+}
+
+
+
 
 static int sge_get_loadavg(const char* qualified_hostname, lList **lpp) 
 {

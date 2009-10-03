@@ -32,6 +32,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <fnmatch.h>
 
 #include "sge_all_listsL.h"
 #include "sge_parse_SPA_L.h"
@@ -60,6 +61,7 @@
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_jsv.h"
 #include "sgeobj/sge_qref.h"
+#include "sgeobj/sge_binding.h"
 
 #include "msg_common.h"
 
@@ -321,6 +323,163 @@ u_long32 flags
          continue;
       }
 
+/*----------------------------------------------------------------------------*/
+      /* "-binding linear:<amount>[:<socket>,<core>] 
+            | striding:<amount>:<stepsize>[:<socket>,<core>] 
+            | explicit:<socket>,<core>[:<socket>,<core>]* " */
+
+      if (!strcmp("-binding", *sp)) {
+
+         /* list and elements of binding */
+         lList *binding_list = lCreateList("binding", BN_Type);
+         lListElem *binding_elem = lCreateElem(BN_Type);
+
+         /* next field is "linear" or "striding" or "explicit" */
+         sp++;
+         if (!*sp) {
+            answer_list_add_sprintf(&answer, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
+                                     MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S,"-binding");
+            DRETURN(answer);
+         }
+
+         if (strstr(*sp, "linear") != NULL) {
+            int amount;
+            int socket_offset;
+            int core_offset;
+
+            DPRINTF(("\"%s %s\"\n", *(sp - 1), *sp));
+            
+            amount = binding_linear_parse_amount(*sp);
+
+            if (amount < 0) {
+               answer_list_add_sprintf(&answer, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
+                  MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S,"-binding linear:<amount>[:<socket>,<core>]");
+               DRETURN(answer);
+            }
+
+            /* add the number of cores to be bound into cull list */
+            lSetUlong(binding_elem, BN_parameter_n, amount);
+          
+            /* check if there is a first socket and first core to begin with 
+               given */
+            socket_offset = binding_linear_parse_socket_offset(*sp);
+            core_offset   = binding_linear_parse_core_offset(*sp);
+
+            if (socket_offset == -1 || core_offset == -1) {
+               /* socket and core number have to be determined automatically on execution host */
+               lSetString(binding_elem, BN_strategy, "linear_automatic");
+               /* fill in dummy values */
+               lSetUlong(binding_elem, BN_parameter_socket_offset, 0);
+               lSetUlong(binding_elem, BN_parameter_core_offset, 0);
+            } else {
+               lSetString(binding_elem, BN_strategy, "linear");
+               lSetUlong(binding_elem, BN_parameter_socket_offset, socket_offset);
+               lSetUlong(binding_elem, BN_parameter_core_offset, core_offset);
+            }
+
+            lAppendElem(binding_list, binding_elem);
+            
+            ep_opt = sge_add_arg(pcmdline, binding_OPT, lListT, *(sp - 1), *sp);
+            lSetList(ep_opt, SPA_argval_lListT, binding_list);
+
+            sp++;
+            continue;
+         } else if (strstr(*sp, "striding") != NULL) {
+            int amount;
+            int step_size;
+            int first_socket;
+            int first_core;
+
+            /* (core) striding requires amount of cores and step size 
+               socket number and core number (beginning with 0) are optional */
+            
+            DPRINTF(("\"%s %s\"\n", *(sp - 1), *sp));
+
+            /* request is: "striding:<amount>:<stepsize>[:<socket>;<core>]" */
+            /* parse the amount of cores */
+            amount = binding_striding_parse_amount(*sp);
+            /* parse the step size */
+            step_size = binding_striding_parse_step_size(*sp);
+
+            /* check if parsing failed */
+            if (amount == -1 || step_size == -1) {
+               answer_list_add_sprintf(&answer, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
+                  MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S,"-binding striding:<amount>:<stepsize>");
+               DRETURN(answer);
+            }
+
+            /* try to parse socket number and core number if possible */
+            first_socket = binding_striding_parse_first_socket(*sp);
+            first_core = binding_striding_parse_first_core(*sp);
+
+            if (first_socket == -1 || first_core == -1) {
+               /* didn't find socket and core which has to be bound first */
+               lSetString(binding_elem, BN_strategy, "striding_automatic");
+               /* fill out with dummy values */
+               lSetUlong(binding_elem, BN_parameter_socket_offset, 0);
+               lSetUlong(binding_elem, BN_parameter_core_offset, 0);
+            } else {
+               /* we have both: request binding striding with these parameters */
+               lSetString(binding_elem, BN_strategy, "striding");
+               lSetUlong(binding_elem, BN_parameter_socket_offset, first_socket);
+               lSetUlong(binding_elem, BN_parameter_core_offset, first_core);
+            }
+
+            /* mandatory values */
+            lSetUlong(binding_elem, BN_parameter_n, amount);
+            lSetUlong(binding_elem, BN_parameter_striding_step_size, step_size);
+
+            lAppendElem(binding_list, binding_elem);
+            
+            ep_opt = sge_add_arg(pcmdline, binding_OPT, lListT, *(sp - 1), *sp);
+            lSetList(ep_opt, SPA_argval_lListT, binding_list);
+
+            sp++;
+            continue;
+
+         } else if (!strstr("explict", *sp)) {
+           
+            /* check if syntax is corrrect */
+            if (binding_explicit_has_correct_syntax(*sp) != true) {
+
+               /* explicit string have a wrong syntax */
+               /* TODO DG introduce new message that syntax is not correct */
+               answer_list_add_sprintf(&answer, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
+                                       MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S, 
+                                       "-binding explicit:<socket>,<core>[:<socket>,<core>]*");
+               DRETURN(answer);
+
+            } else {
+               
+               DPRINTF(("\"%s %s\"\n", *(sp - 1), *sp));
+
+               /* explicit request has correct syntax therefore it is added to the list */
+               lSetString(binding_elem, BN_strategy, "explicit");
+
+               /* add the complete <socket>,<core> list */
+               lSetString(binding_elem, BN_parameter_explicit, *sp);
+               
+               lAppendElem(binding_list, binding_elem);
+            
+               ep_opt = sge_add_arg(pcmdline, binding_OPT, lListT, *(sp - 1), *sp);
+               lSetList(ep_opt, SPA_argval_lListT, binding_list);
+
+               sp++;
+               continue;
+            }
+            
+         } else {
+
+            /* -binding has no valid option */ 
+            answer_list_add_sprintf(&answer, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
+                                    MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S, 
+               "-binding linear:<amount>|striding:<amount>:<stepsize>|explicit:<socket>,<core>;...");  
+            DRETURN(answer);
+         }
+         
+      }
+
+/*-----------------------------------------------------------------------------*/
 
 /*-----------------------------------------------------------------------------*/
       /* "-c [op] interval */

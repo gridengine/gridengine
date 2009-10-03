@@ -91,6 +91,14 @@
 #include "sgeobj/sge_object.h"
 #include "uti/sge_stdio.h"
 #include "load_avg.h"
+#include "sge_binding.h"
+
+#if defined(SOLARISAMD64) || defined(SOLARIS86)
+#  include "uti/sge_uidgid.h"
+#  include <sys/processor.h>
+#  include <sys/types.h>
+#  include <sys/pset.h>
+#endif 
 
 #ifdef COMPILE_DC
 #  include "ptf.h"
@@ -107,6 +115,7 @@ static void build_derived_final_usage(lListElem *jr, u_long32 job_id, u_long32 j
 
 static void examine_job_task_from_file(sge_gdi_ctx_class_t *ctx, int startup, char *dir, lListElem *jep, lListElem *jatep, lListElem *petep, pid_t *pids, int npids);
 
+static void clean_up_binding(char* binding);
 
 /*****************************************************************************
  This code is used only by execd.
@@ -360,6 +369,7 @@ static void unregister_from_ptf(u_long32 job_id, u_long32 ja_task_id,
 static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status, 
                         int is_array, const lListElem *ja_task, const char* job_owner) 
 {
+   char* binding;
    dstring jobdir = DSTRING_INIT;
    dstring fname  = DSTRING_INIT;
 
@@ -443,7 +453,13 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
 
    DTRACE;
 
+   /* job to core binding: on Solaris the processor set have to be deleted 
+      and the cores have to be freed */ 
       
+   binding = get_conf_val("binding");
+   
+   clean_up_binding(binding);
+
    /*
     * look for exit status of shepherd This is the last file the shepherd
     * creates. So if we can find this shepherd terminated normal.
@@ -2009,3 +2025,61 @@ void execd_slave_job_exit(u_long32 job_id, u_long32 ja_task_id)
       }
    }
 }
+
+static void clean_up_binding(char* binding)
+{
+
+   if (binding == NULL || strcasecmp("NULL", binding) == 0) {
+      /* no binding was instructed */
+      return;
+   }
+   
+   if (strcasecmp("no_job_binding", binding) == 0) {
+      /* no binding should be done */
+      return;
+   }
+
+   #if defined(SOLARIS86) || defined(SOLARISAMD64)
+   if (strstr(binding, "psrset:") != NULL) {
+      /* we are on Solaris and a processor set was created -> deaccount it and delete it */
+      int processor_set_id = -1;
+
+      /* parse the psrset number right after "psrset:" */
+      if (sge_strtok(binding, ":") != NULL) {
+         /* parse the rest of the line */
+         char* pset_id;
+         /* topology used by job */ 
+         char* topo; 
+
+         if ((pset_id = sge_strtok(NULL, ":")) != NULL) {
+            /* finally get the processor set id */
+            processor_set_id = atoi(pset_id);
+            /* must be root in order to delete processor set */
+            sge_switch2start_user();
+            /* TODO get process numbers occupied this job */ 
+            
+
+            if (pset_destroy((psetid_t)processor_set_id) != 0) {
+               /* couldn't delete pset */
+               
+            }
+
+            /* switch back TODO DG check if needed*/
+            sge_switch2admin_user();
+
+            /* de-account the resources used from job */
+            if ((topo = sge_strtok(NULL, ":")) != NULL) {
+               /* update the string which represents the currently used cores 
+                  on execution daemon host */
+               free_topology(topo, -1);
+            }
+
+         }
+      }
+
+   }
+   #endif 
+   return;
+}
+
+

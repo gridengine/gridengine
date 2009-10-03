@@ -3488,7 +3488,7 @@ static bool sconf_eval_set_job_category_filtering(lList *param_list, lList **ans
    is_category_job_filtering= false;
 
    if (!strncasecmp(param, "JC_FILTER=1", sizeof("JC_FILTER=1")-1) || 
-       !strncasecmp(param, "JC_FILTER=TRUE", sizeof("JC_FILTER=FALSE")-1) ) {
+       !strncasecmp(param, "JC_FILTER=TRUE", sizeof("JC_FILTER=TRUE")-1) ) {
       is_category_job_filtering= true;
       elem = lCreateElem(PARA_Type);
       lSetString(elem, PARA_name, "jc_filter");

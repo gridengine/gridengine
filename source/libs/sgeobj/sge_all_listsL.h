@@ -58,6 +58,7 @@
 #include "sge_attr_ACELIST_L.h"
 #include "sge_attr_ASOLIST_L.h"
 #include "sge_attr_AQTLIST_L.h"
+#include "sge_binding_BN_L.h"
 #include "sge_calendar_CAL_L.h"
 #include "sge_calendar_CA_L.h"
 #include "sge_calendar_CQU_L.h"
@@ -359,6 +360,8 @@ extern "C" {
       {RTIC_LOWERBOUND, RTICS, RTICN},          /* internal list for reprioritzie tickets to distribute */
       {PRO_LOWERBOUND, PROS, PRON},             /* list for all running processes under Linux */
       {GR_LOWERBOUND, GRS, GRN},                /* list of all process groups of Linux process */
+
+      {BN_LOWERBOUND, BNS, BNN},                /* list of binding information */
 
       {0, 0, NULL}
    };

@@ -570,7 +570,7 @@ double utilization_max(const lListElem *cr, u_long32 start_time, u_long32 durati
    }
    
    if (for_excl_request) {
-     double max_nonexclusive = 0.0;
+      double max_nonexclusive = 0.0;
       utilization_find_time_or_prevstart_or_prev(lGetList(cr, RUE_utilized_nonexclusive), start_time, 
             &start, &prev);
 

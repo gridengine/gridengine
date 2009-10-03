@@ -252,4 +252,8 @@ int sge_silent_get(void);
 int sge_get_management_entry(const char *fname, int n, int nmissing, bootstrap_entry_t name[],
                           char value[][SGE_PATH_MAX], dstring *error_dstring);
 
+/* get path to active_jobs directory (just for execd and shepherd) */
+const char *sge_get_active_job_file_path(dstring *buffer, u_long32 job_id, 
+   u_long32 ja_task_id, const char *pe_task_id, const char *filename);
+
 #endif /* _SGE_FILE_PATH_H_ */

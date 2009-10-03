@@ -46,6 +46,11 @@
 #   include <sys/schedctl.h>
 #endif
 
+#if defined(LINUX) 
+#include <plpa.h> 
+#include <dlfcn.h>
+#endif
+
 #include "sge_uidgid.h"
 #include "sge_nprocs.h"
 #include "sge_pset.h"
@@ -54,6 +59,7 @@
 #include "execution_states.h"
 #include "err_trace.h"
 #include "sge_stdio.h"
+#include "shepherd_binding.h"
 
 #define PROC_SET_OK            0
 #define PROC_SET_WARNING       1
@@ -85,9 +91,10 @@ int create_pset(void);
 void print_pset_error(int ret);
 #endif
 
-#if defined(__sgi) || defined(ALPHA)
+#if defined(__sgi) || defined(ALPHA) 
 static int range2proc_vec(char *, sbv_t *, char *);
 #endif
+
 
 #if defined(__sgi) || defined(ALPHA) || defined(SOLARIS64) || defined(SOLARISAMD64)
 static int free_processor_set(char *err_str);
@@ -120,6 +127,19 @@ void sge_pset_create_processor_set(void)
       }
    }
 #endif
+
+#if ( ( defined(LINUXAMD64) || defined(LINUX86) ) && !defined(ULINUX86_24) && !defined(LINUXIA64_24) ) || defined(SOLARIS86) || defined(SOLARISAMD64) 
+   shepherd_trace("binding: start");
+   
+   sge_switch2start_user();
+
+   /* TODO DG: move this to outer function */ 
+   do_core_binding();
+
+   sge_switch2admin_user();
+
+   shepherd_trace("binding: end");
+#endif     
 }
 
 void sge_pset_free_processor_set(void)
@@ -162,7 +182,7 @@ void sge_pset_free_processor_set(void)
 #endif
 }
 
-#if defined(__sgi) || defined(ALPHA) || defined(SOLARIS64) || defined(SOLARISAMD64)
+#if defined(__sgi) || defined(ALPHA) || defined(SOLARIS64) || defined(SOLARISAMD64)  
 /****** shepherd/pset/set_processor_range() ***********************************
 *  NAME
 *     set_processor_range() -- sets processor range according to string 
@@ -206,7 +226,9 @@ void sge_pset_free_processor_set(void)
 ******************************************************************************/
 static int set_processor_range(char *crange, int proc_set_num, char *err_str) 
 {
+#if defined(__sgi) || defined(ALPHA) 
    int ret;
+#endif
    FILE *fp;
 #if defined(__sgi) || defined(ALPHA)
    sbv_t proc_vec;
@@ -320,6 +342,8 @@ FCLOSE_ERROR:
    return PROC_SET_ERROR;
 }
 
+
+
 /****** shepherd/pset/free_processor_set() ************************************
 *  NAME
 *     free_processor_set() -- Release the previously occupied proc set. 
@@ -389,6 +413,8 @@ static int free_processor_set(char *err_str)
 #endif
    return PROC_SET_OK;
 }
+
+#endif 
 
 #if defined(__sgi) || defined(ALPHA) 
 /****** shepherd/pset/range2proc_vec() ****************************************
@@ -497,4 +523,4 @@ static int range2proc_vec(char *crange, sbv_t *proc_vec, char *err_str)
 
 #endif
 
-#endif
+

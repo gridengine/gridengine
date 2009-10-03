@@ -73,6 +73,10 @@ bool
 ulong_parse_priority(lList **alpp, int *valp, const char *priority_str);
 
 bool
+ulong_parse_value_from_string(u_long32 *this_ulong, 
+                           lList **answer_list, const char *string);
+
+bool
 ulong_parse_task_concurrency(lList **alpp, int *valp, const char *task_concurrency_str);
 
 #endif /* __SGE_ULONG_H */

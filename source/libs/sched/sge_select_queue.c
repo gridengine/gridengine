@@ -4987,6 +4987,8 @@ parallel_assignment(sge_assignment_t *a, category_use_t *use_category, int *avai
       sconf_set_last_dispatch_type(DISPATCH_TYPE_PE);
    }
 
+   /* DG TODO here ok to create the rankfile list if neccessary? */
+
 #ifdef SGE_PQS_API
    /* if dynamic qsort function was supplied, call it */
    if ((qsort_args=lGetString(a->pe, PE_qsort_args)) != NULL) {

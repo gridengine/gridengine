@@ -53,6 +53,8 @@
 #include "sge_prog.h"
 #include "setup_path.h"
 #include "sge_log.h"
+#include "sge_binding.h"
+#include "sge_binding_BN_L.h"
 
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_centry.h"
@@ -160,6 +162,54 @@ lList *cull_parse_job_parameter(u_long32 uid, const char *username, const char *
       
       lSetUlong(*pjob, JB_type, jb_now);
       lRemoveElem(cmdline, &ep);
+   }
+   
+   /* 
+    * -binding : when using "-binding linear" overwrite previous 
+    *      TODO      but not in with "-binding one_per_socket x" 
+    *      TODO      or "-binding striding offset x"
+    *  binding n offset <- wie fehlerbehandlung??
+    */
+   ep = lGetElemStr(cmdline, SPA_switch, "-binding");
+   if (ep != NULL) {
+
+      /* TODO DG : we found CL parameter: parse it */
+      lList *binding_list = lGetList(ep, SPA_argval_lListT);
+      lList *new_binding_list = lCopyList("binding",  binding_list);
+      
+      lSetList(*pjob, JB_binding, new_binding_list);
+      lRemoveElem(cmdline, &ep);
+
+   } else {
+
+      /* DG we have to create the binding list itself */
+      /* DG TODO set list to NULL */
+
+      lListElem *binding_elem;  /* BN_Type */
+      binding_elem = lFirst(lGetList(*pjob, JB_binding)); 
+      
+      if (binding_elem == NULL) {
+         /* the binding sublist does not exist */ 
+         lList *bind_list;
+         binding_elem = lCreateElem(BN_Type);
+         bind_list = lCreateList("binding", BN_Type);
+         if (binding_elem != NULL && bind_list != NULL) {
+            lAppendElem(bind_list, binding_elem);
+            lSetList(*pjob, JB_binding, bind_list);
+         }  
+         /* else TODO no memory */
+      }
+      
+      /* TODO DG set the binding parameters */ 
+      lSetString(binding_elem, BN_strategy, "no_job_binding");
+      lSetUlong(binding_elem, BN_parameter_n, 0);
+      lSetUlong(binding_elem, BN_parameter_socket_offset, 0);
+      lSetUlong(binding_elem, BN_parameter_core_offset, 0);
+      lSetUlong(binding_elem, BN_parameter_striding_first_core, 0);
+      lSetUlong(binding_elem, BN_parameter_striding_last_core, 0);
+      lSetUlong(binding_elem, BN_parameter_striding_step_size, 0);
+      lSetString(binding_elem, BN_parameter_explicit, "no_explicit_binding");
+
    }
 
    /*

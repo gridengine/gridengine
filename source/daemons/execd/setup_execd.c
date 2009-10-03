@@ -59,6 +59,7 @@
 #include "sge_io.h"
 #include "sge_os.h"
 #include "sge_job.h"
+#include "sge_binding.h"
 
 #include "msg_common.h"
 #include "msg_daemons_common.h"
@@ -146,6 +147,11 @@ void sge_setup_sge_execd(sge_gdi_ctx_class_t *ctx, const char* tmp_err_file_name
    sge_mkdir(EXEC_DIR, 0775, 1, 0);
    sge_mkdir(JOB_DIR, 0775, 1, 0);
    sge_mkdir(ACTIVE_DIR,  0775, 1, 0);
+
+   /* initialize processor topology */
+   if (initialize_topology() != true) {
+      DPRINTF(("Couldn't initizalize topology-----------------------\n"));
+   }
 
    FREE(spool_dir);
    DRETURN_VOID;

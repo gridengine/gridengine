@@ -502,7 +502,7 @@ send_job(sge_gdi_ctx_class_t *ctx,
    int failed;
    u_long32 now;
    sge_pack_buffer pb;
-   lListElem *tmpjep, *qep, *tmpjatep;
+   lListElem *tmpjep, *qep, *tmpjatep = NULL;
    lListElem *gdil_ep;
    unsigned long last_heard_from;
    lList *master_centry_list = *object_type_get_master_list(SGE_TYPE_CENTRY);

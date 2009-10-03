@@ -92,6 +92,8 @@
 #include "sge_centry.h"
 #include "sgeobj/sge_object.h"
 #include "uti/sge_stdio.h"
+#include "sge_binding.h"
+#include "sge_binding_BN_L.h"
 
 #include "msg_common.h"
 #include "msg_execd.h"
@@ -109,6 +111,23 @@ static int get_nhosts(lList *gdil_list);
 
 /* from execd.c import the working dir of the execd */
 extern char execd_spool_dir[SGE_PATH_MAX];
+
+#if ( defined(LINUXAMD64) || defined(LINUX86) ) && !defined(ULINUX86_24) && !defined(LINUXIA64_24)
+/* creates string with core binding which is written to job "config" file */
+static const char* createBindingStrategyString(lListElem *jep);
+#endif 
+
+#if defined(SOLARIS86) || defined(SOLARISAMD64)
+/* creates string with processor set id created here which is then written 
+   to "config" file */
+static const char* create_binding_strategy_string_solaris(lListElem *jep, 
+   char* err_str, int err_length);
+/* do striding binding on solaris */   
+static const char* striding_solaris(lListElem* binding_elem, const bool automatic, 
+   char* err_str, int err_length);
+/* do explicit binding on solaris */   
+static const char* explicit_solaris(lListElem* binding_elem, char* err_str, int err_length);
+#endif 
 
 #if COMPILE_DC
 #if defined(SOLARIS) || defined(ALPHA) || defined(LINUX) || defined(FREEBSD) || defined(FREEBSD)
@@ -287,6 +306,8 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
    const char *fs_stdin_file="", *fs_stdout_file="", *fs_stderr_file="";
 
    bool bInputFileStaging, bOutputFileStaging, bErrorFileStaging;
+   
+   const char* processor_binding_strategy = NULL;
 
       /* retrieve the job, jatask and petask id once */
       u_long32 job_id;
@@ -309,6 +330,8 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
       SGE_ASSERT((jatep));
 
       job_id = lGetUlong(jep, JB_job_number);
+     
+
       ja_task_id = lGetUlong(jatep, JAT_task_number);
       gdil = lGetList(jatep, JAT_granted_destin_identifier_list);
 
@@ -399,7 +422,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
          for_each (gdil_ep, gdil) {
             int slots;
             lList *alp = NULL;
-            const char *q_set;
+            const char *q_set = NULL;
 
             slots = (int)lGetUlong(gdil_ep, JG_slots);
             q_set = lGetString(gdil_ep, JG_processors);
@@ -408,6 +431,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
                slots, 
                lGetString(gdil_ep, JG_qname), 
                q_set ? q_set : "<NULL>");
+
             if (!sge_hostcmp(lGetHost(master_q, QU_qhostname), lGetHost(gdil_ep, JG_qhostname))) {
                host_slots += slots;
                if (q_set && strcasecmp(q_set, "UNDEFINED")) {
@@ -1161,12 +1185,32 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
    fprintf(fp, "host=%s\n", lGetHost(master_q, QU_qhostname));
    {
       dstring range_string = DSTRING_INIT;
-
       range_list_print_to_string(processor_set, &range_string, true, false, false);
-      fprintf(fp, "processors=%s", sge_dstring_get_string(&range_string)); 
+      fprintf(fp, "processors=%s\n", sge_dstring_get_string(&range_string));
       sge_dstring_free(&range_string);
+      
+      /* binding strategy: SOLARIS -> create processor set id */
+      #if ( defined(LINUXAMD64) || defined(LINUX86) ) && !defined(ULINUX86_24) && !defined(LINUXIA64_24)
+
+         processor_binding_strategy = createBindingStrategyString(jep);
+
+      #elif defined(SOLARIS86) || defined(SOLARISAMD64) 
+
+         /* try to create processor set according to binding strategy 
+            and write processor set id to "binding" element in 
+            config file */
+         processor_binding_strategy = create_binding_strategy_string_solaris(jep, 
+            err_str, err_length);
+      
+      #endif 
+      
+      if (processor_binding_strategy == NULL) {
+         processor_binding_strategy = "NULL";
+      } 
+      /* write binding strategy */ 
+      fprintf(fp, "binding=%s\n", processor_binding_strategy);
+      
    }
-   fprintf(fp, "\n");
    if(petep != NULL) {
       fprintf(fp, "job_name=%s\n", lGetString(petep, PET_name));
    } else {
@@ -1849,4 +1893,379 @@ lList *gdil_orig  /* JG_Type */
    lFreeList(&cache);
 
    DRETURN(nhosts);
-} 
+}
+
+/* creates binding string for config file */
+#if ( defined(LINUXAMD64) || defined(LINUX86) ) && !defined(ULINUX86_24) && !defined(LINUXIA64_24)
+static const char* createBindingStrategyString(lListElem *jep)
+{
+   /* binding strategy */
+   lList *binding = lGetList(jep, JB_binding);
+   lListElem *binding_elem = NULL;
+
+   /* strategy string to be written in job "config" file */
+   const char* cbs = NULL;
+
+   if (binding != NULL) {
+      /* get sublist */
+      if ((binding_elem = lFirst(binding)) != NULL) {
+          /* binding_str = lGetElemStr(binding, BN_strategy, "binding"); */
+          /* lList *binding_list = lGetList(binding, BN_strategy); */
+
+         /* re-create the binding string (<strategy>:<parameter>:<parameter>) */
+         dstring strategy = DSTRING_INIT;
+         
+         /* check strategy in order to create specific string */
+         if (strcmp(lGetString(binding_elem, BN_strategy), "linear") == 0) {
+            
+            cbs = sge_dstring_sprintf(&strategy, "%s:%d:%d,%d", 
+               lGetString(binding_elem, BN_strategy), 
+               lGetUlong(binding_elem, BN_parameter_n), 
+               lGetUlong(binding_elem, BN_parameter_socket_offset), 
+               lGetUlong(binding_elem, BN_parameter_core_offset));
+
+         } else if (strcmp(lGetString(binding_elem, BN_strategy), "linear_automatic") == 0) {
+           
+            /* first core and first socket have to be determined */
+            int first_socket = 0;
+            int first_core = 0;
+
+            char* topo_job = NULL;
+            int topo_job_length = 0;
+
+            /* amount of cores try to get */
+            int amount = (int) lGetUlong(binding_elem, BN_parameter_n);
+
+            /* try to allocate first core and first socket */
+            if (get_striding_first_socket_first_core_and_account(amount, 1, 0, 0, true, 
+               &first_socket, &first_core, &topo_job, &topo_job_length)) {
+
+               /* found first socket and first core ! */
+               cbs = sge_dstring_sprintf(&strategy, "%s:%d:%d,%d", 
+                  "linear", 
+                  lGetUlong(binding_elem, BN_parameter_n), 
+                  lGetUlong(binding_elem, first_socket), 
+                  lGetUlong(binding_elem, first_core));
+               
+            } else {
+
+               /* it was not possible to fit the binding strategy on host 
+                  because it is occupied already or any other reason */
+                  /* DG TODO report error in anther way */ 
+               cbs = "binding_not_possible_does_not_fit";   
+
+            }
+
+            if (topo_job != NULL)
+               free(topo_job);
+            
+         } else if (strcmp(lGetString(binding_elem, BN_strategy), "striding") == 0) {
+            
+            /* unchecked user request: shepherd is trying and reports result in "binding" file */
+
+            cbs = sge_dstring_sprintf(&strategy, "%s:%d:%d:%d,%d", 
+               lGetString(binding_elem, BN_strategy), 
+               lGetUlong(binding_elem, BN_parameter_n),
+               lGetUlong(binding_elem, BN_parameter_striding_step_size), 
+               lGetUlong(binding_elem, BN_parameter_socket_offset), 
+               lGetUlong(binding_elem, BN_parameter_core_offset)); 
+         
+         } else if (strcmp(lGetString(binding_elem, BN_strategy), "striding_automatic") == 0) {
+            
+            /* first core and first socket have to be determined */
+            int first_socket = 0;
+            int first_core = 0;
+
+            char* topo_job = NULL;
+            int topo_job_length = 0;
+
+            /* amount of cores try to get */
+            int amount = (int) lGetUlong(binding_elem, BN_parameter_n);
+            int stepsize = (int) lGetUlong(binding_elem, BN_parameter_striding_step_size);
+
+            /* try to allocate first core and first socket */
+            if (get_striding_first_socket_first_core_and_account(amount, stepsize, 0, 0, true,  
+               &first_socket, &first_core, &topo_job, &topo_job_length)) {
+
+               /* found first socket and first core ! */
+               cbs = sge_dstring_sprintf(&strategy, "%s:%d:%d,%d", 
+                  "striding", 
+                  lGetUlong(binding_elem, BN_parameter_n), 
+                  lGetUlong(binding_elem, BN_parameter_striding_step_size), 
+                  lGetUlong(binding_elem, first_socket), 
+                  lGetUlong(binding_elem, first_core));
+               
+            } else {
+
+               /* it was not possible to fit the binding strategy on host 
+                  because it is occupied already or any other reason */
+                  /* introduce logging LOG_INFO -> WARNING */
+               cbs = "binding_not_possible_does_not_fit_striding_automatic";   
+
+            }
+
+            if (topo_job != NULL)
+               free(topo_job);
+
+         } else if (strcmp(lGetString(binding_elem, BN_strategy), "explicit") == 0) {
+
+            cbs = sge_dstring_sprintf(&strategy, "%s", lGetString(binding_elem, 
+                     BN_parameter_explicit));   
+
+         }
+                  
+        /* processor_binding_strategy = lGetString(binding_elem, BN_strategy); */
+                 
+        if (cbs == NULL) {
+           cbs = "binding_strategy_was_null";
+        }
+      } else {
+         cbs = "binding_str_was_null";
+      }
+   } else {
+      cbs = "binding_list_was_null";
+   }      
+
+   return cbs;
+}
+#endif
+
+#if defined(SOLARIS86) || defined(SOLARISAMD64)
+static const char* create_binding_strategy_string_solaris(lListElem *jep, 
+   char* err_str, int err_length)
+{
+   
+   /* 1. check cull list and check which binding strategy was requested */
+
+   /* binding strategy */
+   lList *binding = lGetList(jep, JB_binding);
+   lListElem *binding_elem = NULL;
+
+   /* strategy string to be written in job "config" file */
+   const char* cbs = NULL;
+   
+   DENTER(TOP_LAYER, "create_binding_strategy_string_solaris");
+
+   if (binding != NULL && ((binding_elem = lFirst(binding)) != NULL)) {
+
+      if (strcmp(lGetString(binding_elem, BN_strategy), "striding_automatic") == 0) {
+         
+         /* try to allocate processor set according the settings and account it on 
+            execution host level */
+         cbs = striding_solaris(binding_elem, true, err_str, err_length);
+         
+      }
+
+      if (strcmp(lGetString(binding_elem, BN_strategy), "striding") == 0) {
+         
+         cbs = striding_solaris(binding_elem, false, err_str, err_length);
+         
+      }
+      
+      if (strcmp(lGetString(binding_elem, BN_strategy), "linear_automatic") == 0) {
+         
+         
+      }
+
+      if (strcmp(lGetString(binding_elem, BN_strategy), "linear") == 0) {
+         
+         
+      }
+
+      if (strcmp(lGetString(binding_elem, BN_strategy), "explicit") == 0) {
+         
+         cbs = explicit_solaris(binding_elem, err_str, err_length);
+
+      }
+
+   } /* end binding */
+
+   /* 7. shepherd have to append current process on processor set */
+   DEXIT;
+
+   return cbs;
+}
+
+static const char* striding_solaris(lListElem* binding_elem, const bool automatic, 
+   char* err_str, int err_length)
+{
+   /* DG TODO return value as input parameter */
+
+   /* 2. check if a starting point exist */ 
+   int first_socket = 0;
+   int first_core = 0;
+   int used_first_socket = 0;
+   int used_first_core = 0;
+
+   /* topology consumed by job */
+   char* topo_by_job = NULL;
+   int topo_by_job_length = 0;
+
+   /* core binding string for "config" file */
+   const char* cbs = NULL;
+
+   /* get mandatory parameters of -binding striding */
+   int amount = (int) lGetUlong(binding_elem, BN_parameter_n);
+   int step_size = (int) lGetUlong(binding_elem, BN_parameter_striding_step_size);
+
+   DENTER(TOP_LAYER, "striding_solaris");
+
+   /* in automatic mode the socket,core pair which is bound first is determined 
+      automatically */
+   if (automatic == false) {
+      /* get the start socket and start core which was a submission parameter */
+      DPRINTF(("Get user defined starting point for binding (socket, core)"));
+      first_socket = (int) lGetUlong(binding_elem, BN_parameter_socket_offset);
+      first_core = (int) lGetUlong(binding_elem, BN_parameter_core_offset);
+      if (first_socket < 0 || first_core < 0) {
+         /* socket and core numbers were not parsed or are not valid */
+         DPRINTF(("Socket and core numbers were not parsed or are not valid"));
+         return false;
+      }
+   } else {
+      DPRINTF(("Do determine starting point autmatically"));
+   }
+
+   /* try to allocate first core and first socket */
+   if (get_striding_first_socket_first_core_and_account(amount, step_size, 
+      first_socket, first_core, automatic, &used_first_socket, &used_first_core, 
+      &topo_by_job, &topo_by_job_length)) {
+            
+      int processor_set = 0;
+      
+      /* check against errors: in automatic case the used first socket (and core) 
+         must be the same than the first socket (and core) from user parameters */
+      if (automatic == false && (first_socket != used_first_socket 
+            || first_core != used_first_core)) {
+         /* we've a bug */ 
+         DPRINTF(("The starting point for binding is not like the user specified!"));
+      }
+
+      /* we found a socket and a core we can use as start point */
+      DPRINTF(("Found a socket and a core as starting point for binding"));
+            
+      /* 4. create processor set */
+      sge_switch2start_user();
+
+      processor_set = create_processor_set_striding_solaris(used_first_socket, 
+         used_first_core, amount, step_size);
+          
+      sge_switch2admin_user();
+
+      /* 5. delete accounting when creating of processor set was not successful */
+      if (processor_set < 0) {
+               
+         snprintf(err_str, err_length, "binding: couldn't create processor set");
+
+         /* free the cores occupied by this job because we couldn't generate processor set */
+         free_topology(topo_by_job, topo_by_job_length);
+
+         DPRINTF(("Couldn't create processor set"));
+
+      } else {
+           /* 6. write processor set id into "binding" in config file */
+
+           snprintf(err_str, err_length, "binding: created processor set");
+
+           dstring strategy = DSTRING_INIT;
+           /* record processor set id and the topology which the job consumes */
+           cbs = sge_dstring_sprintf(&strategy, "psrset:%d:%s:", processor_set, 
+              topo_by_job);
+               
+           /* DG TODO check if it should be deleted */
+      }
+
+   } else {
+      
+      snprintf(err_str, err_length, "binding: strategy does not fit on execution host");
+
+      DPRINTF(("Didn't find socket,core to start binding with"));
+      /*cbs = "binding_not_possible_no_start_point_found"; */
+      cbs = "NULL"; 
+
+   }
+
+   DEXIT;
+
+   return cbs;
+}
+
+static const char* explicit_solaris(lListElem* binding_elem, char* err_str, 
+                                       int err_length)
+{
+   /* core binding string for "config" file */
+   const char* cbs = NULL;
+   /* pointer to string which contains the <socket>,<core> pairs */
+   const char* request = NULL;
+   
+   /* the topology used by the job */
+   char* topo_by_job = NULL;
+   int topo_by_job_length;
+
+   /* the from the request extracted sockets and cores (to bind to) */
+   int* socket_list = NULL;
+   int* core_list = NULL;
+   int socket_list_length, core_list_length;
+   
+   int processor_set = 0;
+
+   DENTER(TOP_LAYER, "explicit_solaris");
+
+   /* get the socket and core numbers */ 
+   request = (char*) lGetString(binding_elem, BN_parameter_explicit);
+   if (binding_explicit_exctract_sockets_cores(request, &socket_list, 
+      &socket_list_length, &core_list, &core_list_length) == false) {
+      /* problems while parsing the binding request */ 
+      snprintf(err_str, err_length, "binding: couldn't parse explicit parameter");
+      cbs = "NULL";
+   } else {  
+
+      /* check if socket and core numbers are free */ 
+      if (binding_explicit_check_and_account(socket_list, socket_list_length, 
+         core_list, core_list_length, &topo_by_job, &topo_by_job_length) == true) {
+         /* it is possible to bind to the given cores */
+         
+         /* create the processor set as user root */ 
+         sge_switch2start_user();
+
+         processor_set = create_processor_set_explicit_solaris(socket_list, 
+            socket_list_length, core_list, core_list_length);
+         
+         sge_switch2admin_user();      
+         
+         if (processor_set < 0) {
+            /* creating processor set was not possible (could be also because 
+               these are ALL remaining cores on system [one must left]) 
+               TODO DG check this in create_processor_set method */ 
+            snprintf(err_str, err_length, "binding: couldn't create processor set");
+            /* free the cores occupied by this job because we couldn't generate processor set */
+            free_topology(topo_by_job, topo_by_job_length);
+            DPRINTF(("Couldn't create processor set"));
+         } else {
+           /* write processor set id into "binding" in config file */
+           snprintf(err_str, err_length, "binding: created processor set");
+           dstring strategy = DSTRING_INIT;
+           /* record processor set id and the topology which the job consumes */
+           cbs = sge_dstring_sprintf(&strategy, "psrset:%d:%s:", processor_set, 
+              topo_by_job);
+           /* DG TODO check if it should be deleted */
+         }
+
+      } else {
+         /* "binding explicit" with the given cores is not possible */ 
+         snprintf(err_str, err_length, "binding: strategy does not fit on execution host");
+         DPRINTF(("Can not bind to the given <socket>,<core> pairs"));
+         cbs = "NULL"; 
+      }
+   
+   
+  }
+   DEXIT;
+   
+   return cbs;
+}
+
+
+#endif
+
+

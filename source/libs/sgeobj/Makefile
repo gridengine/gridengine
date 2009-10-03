@@ -51,6 +51,7 @@ SGEOBJLIB_SRC = \
          cull_parse_util.c \
          parse.c \
          sge_attr.c \
+         sge_binding.c \
          sge_calendar.c \
          sge_centry.c \
          sge_conf.c \
@@ -178,6 +179,9 @@ parse.o: $(SGEOBJLIB_DIR)/parse.c
 
 sge_attr.o: $(SGEOBJLIB_DIR)/sge_attr.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_attr.c
+
+sge_binding.o: $(SGEOBJLIB_DIR)/sge_binding.c 
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_binding.c
 
 sge_calendar.o: $(SGEOBJLIB_DIR)/sge_calendar.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_calendar.c

@@ -44,7 +44,8 @@ SHEPHERD_SRC = shepherd.c \
            setjoblimit.c \
            sge_pset.c \
            sge_fileio.c \
-           sge_shepherd_ijs.c
+           sge_shepherd_ijs.c \
+           shepherd_binding.c 
 
 SHEPHERD_ADD_SRC = \
            config_file.c \
@@ -56,7 +57,8 @@ SHEPHERD_ADD_SRC = \
            pdc.c \
            procfs.c \
            sge_mt_init.c \
-           sge_processes_irix.c
+           sge_processes_irix.c \
+           sge_spool.c
 
 SHEPHERD_OBJS = $(SHEPHERD_SRC:.c=.o) sge_ijs_comm.o sge_ijs_threads.o
 
@@ -126,3 +128,7 @@ sge_fileio.o: $(SHEPHERD_DIR)/sge_fileio.c
 
 sge_shepherd_ijs.o: $(SHEPHERD_DIR)/sge_shepherd_ijs.c
 		$(CC) -I$(SHEPHERD_DIR) $(CFLAGS) -c $(SHEPHERD_DIR)/sge_shepherd_ijs.c
+
+shepherd_binding.o: $(SHEPHERD_DIR)/shepherd_binding.c
+		$(CC) -I$(SHEPHERD_DIR) $(CFLAGS) -c $(SHEPHERD_DIR)/shepherd_binding.c
+

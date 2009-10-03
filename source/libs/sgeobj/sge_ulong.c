@@ -598,6 +598,26 @@ ulong_parse_priority(lList **answer_list, int *valp, const char *priority_str)
    DRETURN(ret);
 }
 
+/* DG: TODO: add ADOC */
+bool
+ulong_parse_value_from_string(u_long32 *this_ulong, 
+                           lList **answer_list, const char *string)
+{
+   bool ret = true;
+   char *s;
+   
+   DENTER(TOP_LAYER, "ulong_parse_value_from_string");
+   
+   *this_ulong = strtol(string, &s, 10);
+   if (string == s) {
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ULNG_INVALID_VALUE));
+      answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+      ret = false;
+   }
+
+   DRETURN(ret);
+}
+
 bool
 ulong_parse_task_concurrency(lList **answer_list, int *valp, const char *task_concurrency_str)
 {
@@ -613,5 +633,4 @@ ulong_parse_task_concurrency(lList **answer_list, int *valp, const char *task_co
    }
    DRETURN(ret);
 }
-
 

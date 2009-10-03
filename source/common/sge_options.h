@@ -286,8 +286,12 @@ enum {
    xml_OPT,      /* generate xml outout */
    terse_OPT,    /* tersed output */
    at_OPT,       /* add/start thread */
-   kt_OPT,        /* kill/terminate thread */
-   tc_OPT        /* task concurrency */
+   kt_OPT,       /* kill/terminate thread */
+
+   tc_OPT,        /* task concurrency */
+
+   /* added for job to core binding */
+   binding_OPT    /* requests job binding strategy */
 };
 
 /* macros used in parsing */

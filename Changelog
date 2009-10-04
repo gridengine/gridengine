@@ -94,7 +94,6 @@ MP-2009-09-10-0: Bugfix:      made modification of checkin from MP-2009-08-20-0
                  Issue:       3111
                  Review:      EB
 
->>>>>>> 1.4911
 RN-2009-09-04-0: Bugfix:      Scheduler crashes with got NULL element for
                               CE_requestable
                  Bugster:     6873408

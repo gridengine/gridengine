@@ -46,9 +46,12 @@
 #   include <sys/schedctl.h>
 #endif
 
-#if defined(LINUX) 
-#include <plpa.h> 
-#include <dlfcn.h>
+#if defined(LINUX)
+#   include <dlfcn.h>
+#endif
+
+#if ( defined(LINUXAMD64) || defined(LINUX86) ) && !defined(ULINUX86_24) && !defined(LINUXIA64_24)
+#   include <plpa.h>
 #endif
 
 #include "sge_uidgid.h"

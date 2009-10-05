@@ -71,15 +71,15 @@
 #include "gdi/sge_gdi_ctx.h"
 #include "gdi/sge_gdiP.h"
 
+#include "sgeobj/sge_binding.h"
+
 #ifdef COMPILE_DC
 #  include "ptf.h"
 #endif
 
-#if ( defined(LINUXAMD64) || defined(LINUX86) ) && !defined(ULINUX86_24) && !defined(LINUXIA64_24)
-#   include <plpa.h> 
+#if defined(LINUX)
 #   include <dlfcn.h>
 #endif
-
 
 static void 
 get_reserved_usage(const char*qualified_hostname, lList **job_usage_list);

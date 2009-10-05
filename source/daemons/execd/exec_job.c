@@ -112,7 +112,7 @@ static int get_nhosts(lList *gdil_list);
 /* from execd.c import the working dir of the execd */
 extern char execd_spool_dir[SGE_PATH_MAX];
 
-#if ( defined(LINUXAMD64) || defined(LINUX86) ) && !defined(ULINUX86_24) && !defined(LINUXIA64_24)
+#if defined(PLPA_LINUX) 
 /* creates string with core binding which is written to job "config" file */
 static const char* createBindingStrategyString(lListElem *jep);
 #endif 
@@ -1190,19 +1190,15 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
       sge_dstring_free(&range_string);
       
       /* binding strategy: SOLARIS -> create processor set id */
-      #if ( defined(LINUXAMD64) || defined(LINUX86) ) && !defined(ULINUX86_24) && !defined(LINUXIA64_24)
-
+#if defined(PLPA_LINUX)
          processor_binding_strategy = createBindingStrategyString(jep);
-
-      #elif defined(SOLARIS86) || defined(SOLARISAMD64) 
-
+#elif defined(SOLARIS86) || defined(SOLARISAMD64) 
          /* try to create processor set according to binding strategy 
             and write processor set id to "binding" element in 
             config file */
          processor_binding_strategy = create_binding_strategy_string_solaris(jep, 
             err_str, err_length);
-      
-      #endif 
+#endif 
       
       if (processor_binding_strategy == NULL) {
          processor_binding_strategy = "NULL";
@@ -1896,7 +1892,7 @@ lList *gdil_orig  /* JG_Type */
 }
 
 /* creates binding string for config file */
-#if ( defined(LINUXAMD64) || defined(LINUX86) ) && !defined(ULINUX86_24) && !defined(LINUXIA64_24)
+#if defined(PLPA_LINUX)
 static const char* createBindingStrategyString(lListElem *jep)
 {
    /* binding strategy */
@@ -2264,7 +2260,6 @@ static const char* explicit_solaris(lListElem* binding_elem, char* err_str,
    
    return cbs;
 }
-
 
 #endif
 

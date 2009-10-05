@@ -50,7 +50,7 @@
 #   include <dlfcn.h>
 #endif
 
-#if ( defined(LINUXAMD64) || defined(LINUX86) ) && !defined(ULINUX86_24) && !defined(LINUXIA64_24)
+#if defined(PLPA_LINUX)
 #   include <plpa.h>
 #endif
 
@@ -131,7 +131,7 @@ void sge_pset_create_processor_set(void)
    }
 #endif
 
-#if ( ( defined(LINUXAMD64) || defined(LINUX86) ) && !defined(ULINUX86_24) && !defined(LINUXIA64_24) ) || defined(SOLARIS86) || defined(SOLARISAMD64) 
+#if defined(PLPA_LINUX) || defined(SOLARIS86) || defined(SOLARISAMD64) 
    shepherd_trace("binding: start");
    
    sge_switch2start_user();

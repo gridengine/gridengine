@@ -51,9 +51,16 @@
 #include "sge_pe_task_PET_L.h"
 #include "sge_spool.h"
 
-#if ( defined(LINUXAMD64) || defined(LINUX86) ) && !defined(ULINUX86_24) 
-#  include "plpa.h"
+#if ( defined(LINUXAMD64) || defined(LINUX86) ) && !defined(ULINUX86_24) && !defined(LINUXIA64_24) && !defined(ULINUXAMD64_24)
+#define PLPA_LINUX
+#endif 
+
+#if defined(LINUX)
 #  include <dlfcn.h>
+#endif
+
+#if defined(PLPA_LINUX) 
+#  include "plpa.h"
 #endif 
 
 /* binding strategy functions */

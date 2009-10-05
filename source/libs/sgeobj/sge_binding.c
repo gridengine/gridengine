@@ -48,7 +48,7 @@
 static char* logical_used_topology = NULL;
 static int logical_used_topology_length = 0;
 
-#if ( defined(LINUXAMD64) || defined(LINUX86) ) && !defined(ULINUX86_24) && !defined(LINUXIA64_24)
+#if defined(PLPA_LINUX)
 /* local functions for binding */
 static bool binding_set_linear_Linux(int first_socket, int first_core, int amount_of_cores,
                         int offset);
@@ -201,7 +201,7 @@ bool binding_set_linear(int first_socket, int first_core, int amount_of_cores, i
 {
   
 /* above is just needed in order to get it compiled without deleting code */
-#if ( defined(LINUXAMD64) || defined(LINUX86) ) && !defined(ULINUX86_24) && !defined(LINUXIA64_24) 
+#if defined(PLPA_LINUX)
    return binding_set_linear_Linux(first_socket, first_core, amount_of_cores, offset);
 #elif defined(SOLARISAMD64) || defined(SOLARIS86)
    /* the processor set id which we need in order to delete it when the job 
@@ -1046,7 +1046,7 @@ bool bind_shepherd_to_pset(int pset_id)
 
 #endif 
 
-#if ( defined(LINUXAMD64) || defined(LINUX86) ) && !defined(ULINUX86_24) && !defined(LINUXIA64_24)
+#if defined(PLPA_LINUX)
 
 /****** sge_binding/binding_set_linear_Linux() ***************************************
 *  NAME
@@ -1188,7 +1188,7 @@ bool binding_set_striding(int first_socket, int first_core, int amount_of_cores,
                           int offset, int n, char** reason)
 {
 
-   #if ( defined(LINUXAMD64) || defined(LINUX86) ) && !defined(ULINUX86_24) && !defined(LINUXIA64_24) 
+   #if defined(PLPA_LINUX)
       return binding_set_striding_Linux(first_socket, first_core, amount_of_cores,
                           offset, n, reason);
    #elif defined(SOLARISX86) || defined(SOLARISAMD64)
@@ -1262,7 +1262,7 @@ bool binding_set_striding_Linux(int first_socket, int first_core, int amount_of_
    /* n := take every n-th core */ 
    bool bound = false;
 
-   #if ( defined(LINUXAMD64) || defined(LINUX86) ) && !defined(ULINUX86_24) && !defined(LINUXIA64_24) 
+#if defined(PLPA_LINUX) 
    if (has_core_binding() == true) {
 
       /* get access to the dynamically loaded plpa library */
@@ -1512,8 +1512,7 @@ bool binding_explicit(const int* list_of_sockets, const int samount,
    if (camount != samount) {
       return false;
    }
-
-   #if ( defined(LINUXAMD64) || defined(LINUX86) ) && !defined(ULINUX86_24) && !defined(LINUXIA64_24)
+#if defined(PLPA_LINUX) 
    /* do only on linux when we have core binding feature in kernel */
    if (has_core_binding() == true) {
       
@@ -2042,13 +2041,13 @@ int binding_striding_parse_step_size(const char* parameter)
 *******************************************************************************/
 int getExecdAmountOfCores() 
 {
-   #if ( defined(LINUXAMD64) || defined(LINUX86) ) && !defined(ULINUX86_24) && !defined(LINUXIA64_24) 
+#if defined(PLPA_LINUX) 
       return get_total_amount_of_cores();
-   #elif defined(SOLARISAMD64) || defined(SOLARIS86) 
+#elif defined(SOLARISAMD64) || defined(SOLARIS86) 
       return get_total_amount_of_cores_solaris();
-   #else   
+#else   
       return 0;
-   #endif  
+#endif  
 }
 
 /****** sge_binding/getExecdAmountOfSockets() **********************************
@@ -2074,13 +2073,13 @@ int getExecdAmountOfCores()
 *******************************************************************************/
 int getExecdAmountOfSockets()
 {
-   #if ( defined(LINUXAMD64) || defined(LINUX86) ) && !defined(ULINUX86_24) && !defined(LINUXIA64_24) 
-      return get_amount_of_sockets();
-   #elif defined(SOLARISAMD64) || defined(SOLARIS86) 
-      return get_total_amount_of_sockets_solaris();
-   #else
-      return 0;
-   #endif
+#if defined(PLPA_LINUX) 
+   return get_amount_of_sockets();
+#elif defined(SOLARISAMD64) || defined(SOLARIS86) 
+   return get_total_amount_of_sockets_solaris();
+#else
+   return 0;
+#endif
 }
 
 
@@ -2090,24 +2089,22 @@ bool get_execd_topology(char** topology, int* length)
 
    /* topology must be a NULL pointer */
    if ((*topology) == NULL) {
-   
-   #if ( defined(LINUXAMD64) || defined(LINUX86) ) && !defined(ULINUX86_24) && !defined(LINUXIA64_24) 
+#if defined(PLPA_LINUX)  
       if (get_topology_linux(topology, length) == true) {
          success = true;
       } else {
          success = false;
       }   
-   #elif defined(SOLARISAMD64) || defined(SOLARIS86) 
+#elif defined(SOLARISAMD64) || defined(SOLARIS86) 
       if (get_topology_solaris(topology, length) == true) {
          success = true;
       } else {
          success = false;
       }   
-   #else 
+#else 
       /* currently other architectures are not supported */
       success = false;
-   #endif
-   
+#endif
    }
 
   return success; 
@@ -2166,14 +2163,14 @@ bool get_execd_topology_in_use(char** topology)
   
    if (logical_used_topology_length == 0 || logical_used_topology == NULL) {
 
-      #if ( defined(LINUXAMD64) || defined(LINUX86) ) && !defined(ULINUX86_24) && !defined(LINUXIA64_24) 
+#if defined(PLPA_LINUX) 
       /* initialize without any usage */
       get_topology_linux(&logical_used_topology, 
               &logical_used_topology_length); 
-      #elif defined(SOLARISAMD64) || defined(SOLARIS86) 
+#elif defined(SOLARISAMD64) || defined(SOLARIS86) 
       get_topology_solaris(&logical_used_topology, 
                &logical_used_topology_length);
-      #endif
+#endif
 
    }
       
@@ -2450,8 +2447,7 @@ bool free_topology(const char* topology, const int topology_length)
 /* ---------------------------------------------------------------------------*/
 /* ---------------------------------------------------------------------------*/
 
-#if ( defined(LINUXAMD64) || defined(LINUX86) ) && !defined(ULINUX86_24) && !defined(LINUXIA64_24) 
-
+#if defined(PLPA_LINUX) 
 static bool get_topology_linux(char** topology, int* length)
 {
    /* topology string */

@@ -667,7 +667,7 @@ static void communication_setup(sge_gdi_ctx_class_t *ctx)
    /* fetching qmaster_params and begin to parse */
    qmaster_params = mconf_get_qmaster_params();
 
-   /* updateing the commlib paramterlist with new or changed parameters */
+   /* updating the commlib paramterlist with new or changed parameters */
    cl_com_update_parameter_list(qmaster_params);
    DPRINTF(("received qmaster_params are: %s\n", qmaster_params));
    FREE(qmaster_params);

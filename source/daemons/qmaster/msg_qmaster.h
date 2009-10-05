@@ -55,8 +55,8 @@
 #define MSG_OBJ_UNABLE2FINDPE_S       _MESSAGE(33021, _("unable to find pe "SFQ))
 #define MSG_OBJ_NOQNAME               _MESSAGE(33022, _("can't get q_name"))
 
-#define MSG_ORD_QVERSION_SUU          _MESSAGE(33023, _("scheduler send a order for a changed queue "SFQ" (version: old "sge_U32CFormat" new "sge_U32CFormat))
-#define MSG_ORD_USRPRJVERSION_SUU     _MESSAGE(33024, _("scheduler send a order for a changed user/project "SFQ" (version: old "sge_U32CFormat") new "sge_U32CFormat))
+#define MSG_ORD_QVERSION_SUU          _MESSAGE(33023, _("scheduler sent an order for a changed queue "SFQ" (version: old "sge_U32CFormat" new "sge_U32CFormat))
+#define MSG_ORD_USRPRJVERSION_SUU     _MESSAGE(33024, _("scheduler sent an order for a changed user/project "SFQ" (version: old "sge_U32CFormat") new "sge_U32CFormat))
 
 
 #define MSG_JOB_JOBACCESSQ_US         _MESSAGE(33025, _("job "sge_U32CFormat" has no access to queue "SFQ))

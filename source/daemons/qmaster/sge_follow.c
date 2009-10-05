@@ -1076,7 +1076,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
        
             now = Follow_Control.now = sge_get_gmt();
       
-            DPRINTF((">>next spooling now:%ld next: %ld\n",Follow_Control.now, Follow_Control.last_update));
+            DPRINTF((">>next spooling now: %ld next: %ld\n", Follow_Control.now, Follow_Control.last_update));
             
             if (now >= Follow_Control.last_update) {
                Follow_Control.is_spooling = DO_SPOOL;
@@ -1090,7 +1090,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
         
          sge_mutex_unlock("follow_last_update_mutex", SGE_FUNC, __LINE__, &Follow_Control.last_update_mutex);
 
-         DPRINTF(("ORDER: update %d users/prjs\n", 
+         DPRINTF(("ORDER: update %d projects\n", 
             lGetNumberOfElem(lGetList(ep, OR_joker))));
 
          for_each (up_order, lGetList(ep, OR_joker)) {
@@ -1118,18 +1118,18 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
 
             lAddUlong(up, PR_version, 1);
 
-            if ((pos=lGetPosViaElem(up_order, PR_project, SGE_NO_ABORT))>=0) {
+            if ((pos=lGetPosViaElem(up_order, PR_project, SGE_NO_ABORT)) >= 0) {
                lSwapList(up_order, PR_project, up, PR_project);
             }
 
-            if ((pos=lGetPosViaElem(up_order, PR_usage_time_stamp, SGE_NO_ABORT))>=0)
+            if ((pos=lGetPosViaElem(up_order, PR_usage_time_stamp, SGE_NO_ABORT)) >= 0)
                lSetUlong(up, PR_usage_time_stamp, lGetPosUlong(up_order, pos));
 
             if ((pos=lGetPosViaElem(up_order, PR_usage, SGE_NO_ABORT))>=0) {
                lSwapList(up_order, PR_usage, up, PR_usage);
             }
 
-            if ((pos=lGetPosViaElem(up_order, PR_long_term_usage, SGE_NO_ABORT))>=0) {
+            if ((pos=lGetPosViaElem(up_order, PR_long_term_usage, SGE_NO_ABORT)) >= 0) {
                lSwapList(up_order, PR_long_term_usage, up, PR_long_term_usage);
             }
 
@@ -1142,8 +1142,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
                job_number = lGetUlong(ju, UPU_job_number);
               
                /* seek for existing debited usage of this job */
-               if ((up_ju=lGetSubUlong(up, UPU_job_number, job_number,
-                                       PR_debited_job_usage))) { 
+               if ((up_ju=lGetSubUlong(up, UPU_job_number, job_number, PR_debited_job_usage))) { 
                   
                   /* if passed old usage list is NULL, delete existing usage */
                   if (lGetList(ju, UPU_old_usage_list) == NULL) {

@@ -397,13 +397,11 @@ sge_parse_num_val(sge_rlim_t *rlimp, double *dvalp,
       *dvalp = 1;
       *rlimp = 1;
       return 1;
-   }
-   else if (!strcasecmp(str, "false")) {
+   } else if (!strcasecmp(str, "false")) {
       *dvalp = 0;
       *rlimp = 0;
       return 0;
-   }
-   else if (!strcasecmp(str, "infinity")) {
+   } else if (!strcasecmp(str, "infinity")) {
       *dvalp = DBL_MAX;       /* use this for comparing limits */
       *rlimp = RLIM_INFINITY; /* use this for limit setting */
 #ifndef CRAY      
@@ -411,8 +409,7 @@ sge_parse_num_val(sge_rlim_t *rlimp, double *dvalp,
 #else
       return RLIM_MAX;
 #endif            
-   }
-   else if (strchr(str, ':')) {
+   } else if (strchr(str, ':')) {
       /* This is a time value in the format hr:min:sec */
 
       /* find the hours first */
@@ -462,8 +459,7 @@ sge_parse_num_val(sge_rlim_t *rlimp, double *dvalp,
 
       return (ldummy);
 
-   }
-   else if (strchr(str, '.') || *str != '0') {
+   } else if (strchr(str, '.') || *str != '0') {
       /* obviously this is no hex and no oct
        * ==> allow for both decimal and fixed float
        */
@@ -493,8 +489,7 @@ sge_parse_num_val(sge_rlim_t *rlimp, double *dvalp,
 
       return (u_long32)dummy;
 
-   }
-   else {                       /* if ( strchr(str,'.') || *str != '0' ) */
+   } else { /* if (strchr(str, '.') || *str != '0') */
       /* This is either a hex or an octal ==> no fixed float allowed;
        * just use strtol
        */

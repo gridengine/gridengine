@@ -2321,7 +2321,7 @@ sge_load_alarm(char *reason, lListElem *qep, lList *threshold,
       limit_value = lGetString(tep, CE_stringval);
       type = lGetUlong(cep, CE_valtype);
 
-      if(load_check_alarm(reason, name, load_value, limit_value, relop, 
+      if (load_check_alarm(reason, name, load_value, limit_value, relop, 
                               type, hep, hlep, lc_host, lc_global, 
                               load_adjustments, load_is_value)) {
          if (need_free_cep) {

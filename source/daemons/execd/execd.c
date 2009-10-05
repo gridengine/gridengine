@@ -464,7 +464,7 @@ int sge_execd_register_at_qmaster(sge_gdi_ctx_class_t *ctx, bool is_restart) {
     * re-read in order to update ctx qmaster cache when master migrates. 
     */
    const char *master_host = ctx->get_master(ctx, is_restart);
-   
+
    DENTER(TOP_LAYER, "sge_execd_register_at_qmaster");
 
    /* We will not try to make a gdi request when qmaster is not alive. The

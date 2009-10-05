@@ -4213,7 +4213,7 @@ int sgeee_scheduler(scheduler_all_data_t *lists,
       /* we are not calculation pending tickets here, only the running, finished jobs,
          and the sharetree changes are processed. The pending tickets are calculated at the
          end of the scheduler cycle */
-      sge_build_sgeee_orders(lists, running_jobs,NULL, finished_jobs, orders, true, seqno, 
+      sge_build_sgeee_orders(lists, running_jobs, NULL, finished_jobs, orders, true, seqno, 
                              update_execd);
    }
 
@@ -4221,7 +4221,7 @@ int sgeee_scheduler(scheduler_all_data_t *lists,
       prof_stop_measurement(SGE_PROF_SCHEDLIB4, NULL);
 
       PROFILING((SGE_EVENT, "PROF: create active job orders: %.3f s",
-               prof_get_measurement_wallclock(SGE_PROF_SCHEDLIB4,false, NULL)));
+               prof_get_measurement_wallclock(SGE_PROF_SCHEDLIB4, false, NULL)));
    }  
    
    DEXIT;

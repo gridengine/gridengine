@@ -86,7 +86,7 @@ int
 sge_job_verify_adjust(sge_gdi_ctx_class_t *ctx, lListElem *jep, lList **alpp, 
                       lList **lpp, char *ruser, char *rhost, uid_t uid, gid_t gid, char *group, 
                       sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task,
-                      monitoring_t *monitor) 
+                      monitoring_t *monitor)
 {
    object_description *object_base = object_type_get_object_description();
    int ret = STATUS_OK;
@@ -638,7 +638,7 @@ sge_job_verify_adjust(sge_gdi_ctx_class_t *ctx, lListElem *jep, lList **alpp,
 
    job_suc_pre_ad(jep);
 
-   DRETURN(ret); 
-} 
+   DRETURN(ret);
+}
 
 

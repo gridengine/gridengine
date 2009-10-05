@@ -151,7 +151,6 @@ void sge_c_report(sge_gdi_ctx_class_t *ctx, char *rhost, char *commproc, int id,
    ** and a configuration version report
    */
    for_each(report, report_list) {
-
       rep_type = lGetUlong(report, REP_type);
 
       switch (rep_type) {
@@ -189,7 +188,7 @@ void sge_c_report(sge_gdi_ctx_class_t *ctx, char *rhost, char *commproc, int id,
                               lSetHost(clp, LR_host, sim_host);
                            }
                         }
-                        sge_update_load_values(ctx, sim_host, lGetList(report,REP_list));
+                        sge_update_load_values(ctx, sim_host, lGetList(report, REP_list));
                      }
                   }
                }

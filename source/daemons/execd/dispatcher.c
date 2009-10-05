@@ -237,6 +237,9 @@ int sge_execd_process_messages(sge_gdi_ctx_class_t *ctx)
                   last_heard = sge_get_gmt();
                   sge_get_com_error_flag(EXECD, SGE_COM_WAS_COMMUNICATION_ERROR, true);
                   sge_get_com_error_flag(EXECD, SGE_COM_ACCESS_DENIED, true);
+
+                  /* after a reconnect, we want to send a full load report - immediately */
+                  execd_trash_load_report();
                   sge_set_flush_lr_flag(true);
                }
             }

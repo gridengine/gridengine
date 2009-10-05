@@ -30,10 +30,11 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include <ctype.h>
+
 #include "sge_string.h"
 #include "sge_sl.h"
 #include "sgermon.h"
-#include "ctype.h"
 
 /* This method counts the number of arguments in the string using a quick and
  * dirty algorithm.  The algorithm may incorrectly report the number of arguments

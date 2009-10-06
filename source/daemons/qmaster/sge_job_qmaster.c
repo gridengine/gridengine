@@ -1405,100 +1405,32 @@ void sge_add_jatask_event(ev_event type, lListElem *jep, lListElem *jatask)
    no need to spool them or to send
    events to update schedd data 
 */
-void job_suc_pre(
-lListElem *jep 
-) {
+static void job_suc_pre_doit(lListElem *jep, bool array_deps)
+{
    lListElem *parent_jep, *prep, *task;
+   int pre_nm, suc_nm;
 
-   DENTER(TOP_LAYER, "job_suc_pre");
+   DENTER(TOP_LAYER, "job_suc_pre_doit");
 
-   /* 
-      here we check whether every job 
-      in the predecessor list has exited
-   */
-   prep = lFirst(lGetList(jep, JB_jid_predecessor_list));
-   while (prep) {
-      u_long32 pre_ident = lGetUlong(prep, JRE_job_number);
-      parent_jep = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), pre_ident);
-
-      if (parent_jep) {
-         int Exited = 1;
-         lListElem *ja_task;
-
-         if (lGetList(parent_jep, JB_ja_n_h_ids) != NULL ||
-             lGetList(parent_jep, JB_ja_u_h_ids) != NULL ||
-             lGetList(parent_jep, JB_ja_o_h_ids) != NULL ||
-             lGetList(parent_jep, JB_ja_a_h_ids) != NULL ||
-             lGetList(parent_jep, JB_ja_s_h_ids) != NULL) {
-            Exited = 0;
-         }
-         if (Exited) {
-            for_each(ja_task, lGetList(parent_jep, JB_ja_tasks)) {
-               if (lGetUlong(ja_task, JAT_status) != JFINISHED) {
-                  Exited = 0;
-                  break;
-               }
-               for_each(task, lGetList(ja_task, JAT_task_list)) {
-                  if (lGetUlong(lFirst(lGetList(task, JB_ja_tasks)), JAT_status)
-                        !=JFINISHED) {
-                     /* at least one task exists */
-                     Exited = 0;
-                     break;
-                  }
-               }
-               if (!Exited)
-                  break;
-            }
-         }
-         if (!Exited) {
-            DPRINTF(("adding jid "sge_u32" into successor list of job "sge_u32"\n",
-               lGetUlong(jep, JB_job_number), pre_ident));
-
-            /* add jid to successor_list of parent job */
-            lAddSubUlong(parent_jep, JRE_job_number, lGetUlong(jep, JB_job_number), 
-               JB_jid_successor_list, JRE_Type);
-            
-            prep = lNext(prep);
-            
-         } else {
-            DPRINTF(("job "sge_u32" from predecessor list already exited - ignoring it\n", 
-                  pre_ident));
-
-            prep = lNext(prep);      
-            lDelSubUlong(jep, JRE_job_number, pre_ident, JB_jid_predecessor_list);
-         }
-      } else {
-         DPRINTF(("predecessor job "sge_u32" does not exist\n", pre_ident));
-         prep = lNext(prep);
-         lDelSubUlong(jep, JRE_job_number, pre_ident, JB_jid_predecessor_list);
-      }
+   if (array_deps) {
+      pre_nm = JB_ja_ad_predecessor_list;
+      suc_nm = JB_ja_ad_successor_list;
+   } else {
+      pre_nm = JB_jid_predecessor_list;
+      suc_nm = JB_jid_successor_list;
    }
-   DRETURN_VOID;
-}
-
-/*
-   build up jid_ad hold links for a job
-   no need to spool them or to send
-   events to update schedd data
-*/
-void job_suc_pre_ad(
-lListElem *jep
-) {
-   lListElem *parent_jep, *prep, *task;
-
-   DENTER(TOP_LAYER, "job_suc_pre_ad");
 
    /*
-      here we check whether every job
-      in the predecessor list has exited
-   */
-   prep = lFirst(lGetList(jep, JB_ja_ad_predecessor_list));
+    * here we check whether every job
+    * in the predecessor list has exited
+    */
+   prep = lFirst(lGetList(jep, pre_nm));
    while (prep) {
       u_long32 pre_ident = lGetUlong(prep, JRE_job_number);
-      parent_jep = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), pre_ident);
 
+      parent_jep = job_list_locate(*(object_type_get_master_list(SGE_TYPE_JOB)), pre_ident);
       if (parent_jep) {
-         int Exited = 1;
+         bool Exited = true;
          lListElem *ja_task;
 
          if (lGetList(parent_jep, JB_ja_n_h_ids) != NULL ||
@@ -1506,24 +1438,29 @@ lListElem *jep
              lGetList(parent_jep, JB_ja_o_h_ids) != NULL ||
              lGetList(parent_jep, JB_ja_a_h_ids) != NULL ||
              lGetList(parent_jep, JB_ja_s_h_ids) != NULL) {
-            Exited = 0;
+            Exited = false;
          }
          if (Exited) {
             for_each(ja_task, lGetList(parent_jep, JB_ja_tasks)) {
                if (lGetUlong(ja_task, JAT_status) != JFINISHED) {
-                  Exited = 0;
+                  Exited = false;
                   break;
                }
                for_each(task, lGetList(ja_task, JAT_task_list)) {
-                  if (lGetUlong(lFirst(lGetList(task, JB_ja_tasks)), JAT_status)
-                        !=JFINISHED) {
-                     /* at least one task exists */
-                     Exited = 0;
-                     break;
+                  /* skip the pseudo pe task used for summing up the usage
+                   * of already finished tasks
+                   */
+                  if (strcmp(lGetString(task, PET_id), PE_TASK_PAST_USAGE_CONTAINER) != 0) {
+                     if (lGetUlong(task, PET_status) != JFINISHED) {
+                        /* at least one running pe task exists */
+                        Exited = false;
+                        break;
+                     }
                   }
                }
-               if (!Exited)
+               if (!Exited) {
                   break;
+               }
             }
          }
          if (!Exited) {
@@ -1531,27 +1468,86 @@ lListElem *jep
                lGetUlong(jep, JB_job_number), pre_ident));
 
             /* add jid to successor_list of parent job */
-            lAddSubUlong(parent_jep, JRE_job_number, lGetUlong(jep, JB_job_number),
-               JB_ja_ad_successor_list, JRE_Type);
+            lAddSubUlong(parent_jep, JRE_job_number, lGetUlong(jep, JB_job_number), suc_nm, JRE_Type);
 
             prep = lNext(prep);
-
          } else {
-            DPRINTF(("job "sge_u32" from predecessor list already exited - ignoring it\n",
-                  pre_ident));
+            DPRINTF(("job "sge_u32" from predecessor list already exited - ignoring it\n", pre_ident));
 
             prep = lNext(prep);
-            lDelSubUlong(jep, JRE_job_number, pre_ident, JB_ja_ad_predecessor_list);
+            lDelSubUlong(jep, JRE_job_number, pre_ident, pre_nm);
          }
       } else {
          DPRINTF(("predecessor job "sge_u32" does not exist\n", pre_ident));
          prep = lNext(prep);
-         lDelSubUlong(jep, JRE_job_number, pre_ident, JB_ja_ad_predecessor_list);
+         lDelSubUlong(jep, JRE_job_number, pre_ident, pre_nm);
       }
    }
+
    DRETURN_VOID;
 }
 
+/****** sge_job_qmaster/job_suc_pre() ******************************************
+*  NAME
+*     job_suc_pre() -- build job depencency hold links
+*
+*  SYNOPSIS
+*     void job_suc_pre(lListElem *jep) 
+*
+*  FUNCTION
+*     Builds the hold links for job dependencies,
+*     both in the dependent job, as well in its predecessor jobs.
+*
+*  INPUTS
+*     lListElem *jep - the dependent job
+*
+*  NOTES
+*     MT-NOTE: job_suc_pre() is MT safe if the caller holds the global lock
+*
+*     no need to spool the dependency links or to send events to 
+*     update event clients - this is done in the calling functions
+*
+*  SEE ALSO
+*     sge_job_qmaster/job_suc_pre_doit()
+*     sge_job_qmaster/job_suc_pre_ad()
+*******************************************************************************/
+void job_suc_pre(lListElem *jep)
+{
+   DENTER(TOP_LAYER, "job_suc_pre");
+   job_suc_pre_doit(jep, false);
+   DRETURN_VOID;
+}
+
+/****** sge_job_qmaster/job_suc_pre_ad() ******************************************
+*  NAME
+*     job_suc_pre_ad() -- build job array task depencency hold links
+*
+*  SYNOPSIS
+*     void job_suc_pre_ad(lListElem *jep) 
+*
+*  FUNCTION
+*     Builds the hold links for job array task dependencies,
+*     both in the dependent job, as well in its predecessor jobs.
+*
+*  INPUTS
+*     lListElem *jep - the dependent job
+*
+*  NOTES
+*     MT-NOTE: job_suc_pre_ad() is MT safe if the caller holds the global lock
+*
+*     no need to spool the dependency links or to send events to 
+*     update event clients - this is done in the calling functions
+*
+*  SEE ALSO
+*     sge_job_qmaster/job_suc_pre_doit()
+*     sge_job_qmaster/job_suc_pre()
+*******************************************************************************/
+void job_suc_pre_ad(lListElem *jep)
+{
+   DENTER(TOP_LAYER, "job_suc_pre_ad");
+   job_suc_pre_doit(jep, true);
+   DRETURN_VOID;
+}
 /* handle all per task attributes which are changeable 
    from outside using gdi requests 
 
@@ -2344,10 +2340,8 @@ int *trigger
       if (!lGetNumberOfElem(new_pre_list)){
          lSetList(new_job, JB_jid_predecessor_list, NULL);
          new_pre_list = NULL;      
-      }   
-      else if (contains_dependency_cycles(new_job, lGetUlong(new_job, JB_job_number), alpp)) {
+      } else if (contains_dependency_cycles(new_job, lGetUlong(new_job, JB_job_number), alpp)) {
         DRETURN(STATUS_EUNKNOWN);
-         
       }
       
       *trigger |= (RECHAIN_JID_HOLD|MOD_EVENT);

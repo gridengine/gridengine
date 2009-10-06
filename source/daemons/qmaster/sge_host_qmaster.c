@@ -846,7 +846,7 @@ void sge_load_value_cleanup_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent
    /* get "template" element pointer */
    template_host_elem = host_list_locate(master_exechost_list, SGE_TEMPLATE_NAME); 
    /* take each host including the "global" host */
-   for_each(hep, master_exechost_list) {   
+   for_each(hep, master_exechost_list) {
       unsigned long last_heard;
       if (hep == template_host_elem || hep == global_host_elem) {
          continue;

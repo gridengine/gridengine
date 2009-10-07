@@ -50,6 +50,7 @@
 #include "sge_manop.h"
 #include "mail.h"
 #include "sge_ja_task.h"
+#include "sge_pe_task.h"
 #include "sge_pe.h"
 #include "sge_job_refL.h"
 #include "sge_host.h"
@@ -2057,16 +2058,15 @@ void sge_add_jatask_event(ev_event type, lListElem *jep, lListElem *jatask)
    no need to spool them or to send
    events to update schedd data 
 */
-void job_suc_pre(
-lListElem *jep 
-) {
+void job_suc_pre(lListElem *jep)
+{
    lListElem *parent_jep, *prep, *task;
 
    DENTER(TOP_LAYER, "job_suc_pre");
 
    /* 
-      here we check whether every job 
-      in the predecessor list has exited
+    * here we check whether every job
+    * in the predecessor list has exited
    */
    prep = lFirst(lGetList(jep, JB_jid_predecessor_list));
    while (prep) {
@@ -2090,30 +2090,33 @@ lListElem *jep
                   break;
                }
                for_each(task, lGetList(ja_task, JAT_task_list)) {
-                  if (lGetUlong(lFirst(lGetList(task, JB_ja_tasks)), JAT_status)
-                        !=JFINISHED) {
-                     /* at least one task exists */
-                     Exited = 0;
-                     break;
+                  /* skip the pseudo pe task used for summing up the usage
+                   * of already finished tasks
+                   */
+                  if (strcmp(lGetString(task, PET_id), PE_TASK_PAST_USAGE_CONTAINER) != 0) {
+                     if (lGetUlong(task, PET_status) != JFINISHED) {
+                        /* at least one running pe task exists */
+                        Exited = false;
+                        break;
+                     }
                   }
                }
-               if (!Exited)
+               if (!Exited) {
                   break;
+               }
             }
          }
          if (!Exited) {
-            DPRINTF(("adding jid "sge_u32" into sucessor list of job "sge_u32"\n",
+            DPRINTF(("adding jid "sge_u32" into successor list of job "sge_u32"\n",
                lGetUlong(jep, JB_job_number), pre_ident));
 
-            /* add jid to sucessor_list of parent job */
+            /* add jid to successor_list of parent job */
             lAddSubUlong(parent_jep, JRE_job_number, lGetUlong(jep, JB_job_number), 
                JB_jid_sucessor_list, JRE_Type);
             
             prep = lNext(prep);
-            
          } else {
-            DPRINTF(("job "sge_u32" from predecessor list already exited - ignoring it\n", 
-                  pre_ident));
+            DPRINTF(("job "sge_u32" from predecessor list already exited - ignoring it\n", pre_ident));
 
             prep = lNext(prep);      
             lDelSubUlong(jep, JRE_job_number, pre_ident, JB_jid_predecessor_list);

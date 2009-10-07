@@ -1,3 +1,19 @@
+################################################################################
+# This is the Changelog for Grid Engine source code changes.                   #
+# Possible keywords: "Bugfix", "Belongs to", "Review", "Enhancem.",            #
+#                    "Merged from", "Cleanup", "Issue"                         #
+#                                                                              #
+#                ===== PLEASE DO NOT DELETE THIS HEADER ====                   #
+################################################################################
+          1         2         3         4         5         6         7
+01234567890123456789012345678901234567890123456789012345678901234567890123456789
+-----------------+------------+-------------------------------------------------
+JG-2009-10-07-0: Bugfix:      qmaster aborts when submitting a job depending on
+                              a just finishing tightly integrated parallel job
+                 Bugster:     6880212
+                 Issue:       3152
+                 Review:      EB
+
 RD-2009-04-03-0: Bugfix:      profiling output is wrongly accumulated
                  Bugster:     6823086
                  Issue:       2975

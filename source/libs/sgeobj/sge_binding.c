@@ -3012,7 +3012,10 @@ static bool get_topology_solaris(char** topology, int* length)
    char* C = "C"; /* core   */
    char* T = "T"; /* thread */
    
+   bool retval = true;
+   
    (*length) = 0;
+
 
    /* generate matrix with socket_id and core_id */
    if (generate_chipID_coreID_matrix(&matrix, length)) {
@@ -3055,23 +3058,26 @@ static bool get_topology_solaris(char** topology, int* length)
          /* go one socket further */ 
          all_cores += cores_per_socket[socket];
       } /* all sockets */
-   } else {
-      /* we couldn't get the kernel kstat values therefor we have no topology */
+   } 
+   
+   if ((*length) == 0) {
+      /* we couldn't get the kernel kstat values therefore we have no topology */
       (*topology) = "NONE";
       (*length)   = 5;
-      return false;
-   }
+      retval = false;
+   } else {
 
-   /* we need `\0' at the end */
-   (*length) += 1;
+      /* we need `\0' at the end */
+      (*length) += 1;
                  
-   /* free matrix, cores_per_socket, and threads_per_socket vector */
-   /* (*topology) = (char *) sge_dstring_get_string(&d_topology);  */
-   (*topology) = (char *) calloc((*length), sizeof(char));
+      /* free matrix, cores_per_socket, and threads_per_socket vector */
+      /* (*topology) = (char *) sge_dstring_get_string(&d_topology);  */
+      (*topology) = (char *) calloc((*length), sizeof(char));
    
-   memcpy((*topology), (char *) sge_dstring_get_string(&d_topology), (*length));
+      memcpy((*topology), (char *) sge_dstring_get_string(&d_topology), (*length));
+   }   
 
-   return true;
+   return retval;
 }
 
 /****** lgroups/generate_chipID_coreID_matrix() ********************************
@@ -4652,7 +4658,7 @@ bool initialize_topology() {
 
    if (logical_used_topology != NULL) {
       /* if we have already such a string: delete it   */
-      free(logical_used_topology);
+      FREE(logical_used_topology);
       logical_used_topology_length = 0;
    }
 

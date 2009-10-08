@@ -11,7 +11,7 @@
 JG-2009-10-06-0: Bugfix:      qmaster aborts when submitting a job depending on
                               a just finishing tightly integrated parallel job
                               Updated version string to be "6.2u3_2".
-                 Bugster:     6880212
+                 Bugster:     6883957
                  Issue:       3152
                  Review:      EB
 

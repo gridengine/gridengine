@@ -52,6 +52,9 @@ DG-2009-09-28-0: Enhancem.:   Added PLPA library and installation and build
                               support for core binding in Linux. 
                  Review:      AA
 
+MD-2009-09-24-0: CVS:           Created V62u4_TAG
+-----------------------------------------------------
+
 MD-2009-09-23-2: Enhancem.:   raised GDI version
 
 MD-2009-09-23-1: Bugfix:      fixed broken build

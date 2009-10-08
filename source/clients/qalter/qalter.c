@@ -618,6 +618,11 @@ int *all_users
          nm_set(job_field, JB_qs_args);
       }
 
+      while ((ep = lGetElemStr(cmdline, SPA_switch, "-tc"))) {
+         lSetUlong(job, JB_ja_task_concurrency, lGetUlong(ep, SPA_argval_lUlongT));
+         lRemoveElem(cmdline, &ep);
+         nm_set(job_field, JB_ja_task_concurrency);
+      }
 
       if ((ep = lGetElemStr(cmdline, SPA_switch, "--"))) {
          lRemoveElem(cmdline, &ep);
@@ -846,6 +851,7 @@ int *all_users
             JB_restart,
             JB_verify_suitable_queues,
             JB_ar,
+            JB_ja_task_concurrency,
             NoName
          };
          static int bool_nm[] = {

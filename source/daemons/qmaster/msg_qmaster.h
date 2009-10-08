@@ -381,6 +381,7 @@
 #define MSG_JOB_QSARGS                _MESSAGE(33292, _("qs args"))
 #define MSG_JOB_SCRIPTARGS            _MESSAGE(33293, _("script arguments"))
 #define MSG_JOB_CONTEXT               _MESSAGE(33294, _("context"))
+#define MSG_JOB_TASK_CONCURRENCY      _MESSAGE(33295, _("task concurrency"))
 
 #define MSG_NOSEQNRREAD_SSS           _MESSAGE(33296, _("can't read "SFN" sequence number in file "SFQ": "SFN))
 #define MSG_NOSEQFILEOPEN_SSS         _MESSAGE(33297, _("can't open "SFN" sequence number file "SFQ": for reading: "SFN" -- guessing next number"))

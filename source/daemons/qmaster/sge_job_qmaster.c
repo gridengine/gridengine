@@ -2669,6 +2669,24 @@ int *trigger
       DRETURN(STATUS_EEXIST);
    }
 
+   /* ---- JB_ja_task_concurrency */
+   if ((pos=lGetPosViaElem(jep, JB_ja_task_concurrency, SGE_NO_ABORT))>=0) {
+      u_long32 task_concurrency;
+      DPRINTF(("got new JB_ja_task_concurrency\n"));
+      task_concurrency = lGetUlong(jep, JB_ja_task_concurrency);
+
+      if (task_concurrency > 0 && !job_is_array(new_job)) {
+         ERROR((SGE_EVENT, MSG_PARSE_INVALIDOPTIONARGUMENTX_S, MSG_JOB_TASK_CONCURRENCY));
+         answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
+         DRETURN(STATUS_EUNKNOWN);
+      }
+
+      lSetUlong(new_job, JB_ja_task_concurrency, task_concurrency);
+      *trigger |= MOD_EVENT;
+      sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_TASK_CONCURRENCY, sge_u32c(task_concurrency));
+      answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+   }
+
    DRETURN(0);
 }
 

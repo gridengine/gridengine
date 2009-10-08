@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2009/09/03 09:38:08 $     Revision: $Revision: 1.95 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2009/10/08 15:04:49 $     Revision: $Revision: 1.96 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2009/09/03 09:38:08 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2009/10/08 15:04:49 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -1703,6 +1703,13 @@ with the name \fBt_min\fP, \fBt_max\fP and \fBt_step\fP
 .\"
 .\" Empty .SH required below to fix man indentation bug
 .SH
+.\"
+.IP "\fB\-tc max_running_tasks\fP"
+-allow users to limit concurrent array job task execution. Parameter
+max_running_tasks specifies maximum number of simultaneously running tasks.
+For example we have running SGE with 10 free slots. We call qsub -t 1-100 -tc 2
+jobscript. Then only 2 tasks will be scheduled to run even when 8 slots are
+free.
 .\"
 .IP "\fB\-terse\fP"
 Available for \fIqsub\fP only.

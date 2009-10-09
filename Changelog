@@ -8,6 +8,12 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 -----------------+-----------+--------------------------------------------------
+RN-2009-10-09-0: Bugfix:      qhost failed to filter the resource request 
+                              correctly
+                 Bugster:     6782283
+                 Issue:       3026
+                 Review:      JG
+
 JG-2009-10-07-0: Bugfix:      qmaster aborts when submitting a job depending on
                               a just finishing tightly integrated parallel job
                  Bugster:     6883957

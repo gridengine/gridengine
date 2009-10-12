@@ -311,7 +311,7 @@ static void qping_printf_fill_up(FILE* fd, char* name, int length, char c, int b
 
 }
 
-static void qping_print_line(char* buffer, int nonewline, int dump_tag, const char *sender_comp_name) {
+static void qping_print_line(const char* buffer, int nonewline, int dump_tag, const char *sender_comp_name) {
    int i=0;
    int max_name_length = 0;
    int full_width = 0;
@@ -1466,7 +1466,7 @@ int main(int argc, char *argv[]) {
             for (i=0; i < message->message_length; i++) {
                sge_dstring_append_char(&line_buffer, message->message[i]);
                if (message->message[i] == '\n') {
-                  qping_print_line((char*)sge_dstring_get_string(&line_buffer), option_nonewline, dump_tag, sender->comp_name);
+                  qping_print_line(sge_dstring_get_string(&line_buffer), option_nonewline, dump_tag, sender->comp_name);
                   sge_dstring_free(&line_buffer);
                }
             }

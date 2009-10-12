@@ -8,6 +8,11 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 -----------------+------------+-------------------------------------------------
+DG-2009-10-12-2: Cleanup:     - aimk reduces environment for plpa lib configure
+                              - added function for parsing command line
+                              everything for Job2Core binding
+                 Review:      EB
+
 SH-2009-10-12-0: Bugfix:      Add ability to commlib to wait for data on 
                               external file descriptors
                  Bugster:     6860857
@@ -27,7 +32,7 @@ JF-2009-10-08-0: Bugfix:      allow users to limit concurrent array job task
                  Issue:       2542
                  Review:      EB
 
-DG-2009-10-08-0: Bugfix:      Fixed segfault when kstat cpu_info return nothing.
+DG-2009-10-08-0: Bugfix:      Fixed segfault when kstat cpu_info returns nothing.
                  Review:      SH
 
 JG-2009-10-06-0: Bugfix:      qmaster aborts when submitting a job depending on

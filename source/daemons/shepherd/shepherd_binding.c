@@ -306,6 +306,34 @@ int do_core_binding(void)
    return retval;
 }
 
+/****** shepherd_binding/bind_shepherd_to_pset() *******************************
+*  NAME
+*     bind_shepherd_to_pset() -- ??? 
+*
+*  SYNOPSIS
+*     static bool bind_shepherd_to_pset(int pset_id) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     int pset_id - ??? 
+*
+*  RESULT
+*     static bool - 
+*
+*  EXAMPLE
+*     ??? 
+*
+*  NOTES
+*     MT-NOTE: bind_shepherd_to_pset() is not MT safe 
+*
+*  BUGS
+*     ??? 
+*
+*  SEE ALSO
+*     ???/???
+*******************************************************************************/
 static bool bind_shepherd_to_pset(int pset_id) 
 {
    /* try to bind current process to processor set */
@@ -328,7 +356,7 @@ static bool bind_shepherd_to_pset(int pset_id)
 
 #if defined(PLPA_LINUX)
 
-/****** sge_binding/binding_set_linear_linux() ***************************************
+/****** shepherd_binding/binding_set_linear_linux() ***************************************
 *  NAME
 *     binding_set_linear_linux() -- Bind current process linear to chunk of cores. 
 *
@@ -376,16 +404,27 @@ static bool binding_set_linear_linux(int first_socket, int first_core,
    if (_has_core_binding(&error) == true) {
 
       /* get access to the dynamically loaded plpa library */
-      void* plpa_lib = _get_plpa_handle(&error);
+      void* plpa_lib = NULL;
       
-      sge_dstring_free(&error);
+      sge_dstring_clear(&error);
+      
+      plpa_lib = _get_plpa_handle(&error);
 
-      if (plpa_lib != NULL) {
+      if (plpa_lib == NULL) {
+         
+         shepherd_trace("binding_set_linear_linux: couldn't load PLPA library: %s", 
+            sge_dstring_get_string(&error));
+         sge_dstring_free(&error);
+         return false;
+         
+      } else {
          /* bitmask for processors to turn on and off */
          plpa_cpu_set_t cpuset;
          /* turn off all processors */
          PLPA_CPU_ZERO(&cpuset);
-
+         
+         sge_dstring_free(&error);
+         
          if (_has_topology_information()) {
             /* amount of cores set in processor binding mask */ 
             int cores_set;
@@ -416,7 +455,8 @@ static bool binding_set_linear_linux(int first_socket, int first_core,
                   return false;
                }
             }  
-           proc_id[0] = get_processor_id(next_socket, next_core);
+            
+            proc_id[0] = get_processor_id(next_socket, next_core);
 
             /* collect the other processor ids with the strategy */
             for (cores_set = 1; cores_set < amount_of_cores; cores_set++) {
@@ -447,28 +487,29 @@ static bool binding_set_linear_linux(int first_socket, int first_core,
             }
 
          } else {
+            
             /* TODO DG strategy without topology information but with 
                working library? */
+            shepherd_trace("binding_set_linear_linux: no info about topology");
             return false;
          }
          
-      } else {
-         /* have no access to plpa library */
-         return false;
-      }
+      } 
 
    } else {
 
+      shepherd_trace("binding_set_linear_linux: PLPA binding not supported: %s", 
+                        sge_dstring_get_string(&error));
+
       sge_dstring_free(&error);
    }
-   
 
    _close_plpa_handle();
    
    return true;
 }
 
-/****** sge_binding/binding_set_striding_linux() *************************************
+/****** shepherd_binding/binding_set_striding_linux() *************************************
 *  NAME
 *     binding_set_striding_linux() -- Binds current process to cores.  
 *
@@ -657,7 +698,7 @@ bool binding_set_striding_linux(int first_socket, int first_core, int amount_of_
    return bound;
 }
 
-/****** sge_binding/set_processor_binding_mask() *******************************
+/****** shepherd_binding/set_processor_binding_mask() *******************************
 *  NAME
 *     set_processor_binding_mask() -- ??? 
 *
@@ -699,7 +740,7 @@ static bool set_processor_binding_mask(plpa_cpu_set_t* cpuset, const int process
 }
 
 
-/****** sge_binding/bind_process_to_mask() *************************************
+/****** shepherd_binding/bind_process_to_mask() *************************************
 *  NAME
 *     bind_process_to_mask() -- ??? 
 *
@@ -743,7 +784,7 @@ static bool bind_process_to_mask(const pid_t pid, const plpa_cpu_set_t cpuset)
    return false;
 }
 
-/****** sge_binding/binding_explicit() *****************************************
+/****** shepherd_binding/binding_explicit() *****************************************
 *  NAME
 *     binding_explicit() -- Binds current process to specified CPU cores. 
 *

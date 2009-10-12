@@ -61,7 +61,7 @@
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_jsv.h"
 #include "sgeobj/sge_qref.h"
-#include "sgeobj/sge_binding.h"
+#include "uti/sge_binding_hlp.h"
 
 #include "msg_common.h"
 
@@ -329,7 +329,17 @@ u_long32 flags
             | explicit:<socket>,<core>[:<socket>,<core>]* " */
 
       if (!strcmp("-binding", *sp)) {
-
+         /* parameter particles for binding which are added to CULL 
+            list */
+         int amount = 0;
+         int stepsize = 0;
+         int firstsocket = 0;
+         int firstcore = 0;
+         u_long32 type = 0; 
+         dstring strategy = DSTRING_INIT;
+         dstring socketcorelist = DSTRING_INIT;
+         dstring error = DSTRING_INIT;
+         
          /* list and elements of binding */
          lList *binding_list = lCreateList("binding", BN_Type);
          lListElem *binding_elem = lCreateElem(BN_Type);
@@ -342,141 +352,62 @@ u_long32 flags
             DRETURN(answer);
          }
 
-         if (strstr(*sp, "linear") != NULL) {
-            int amount;
-            int socket_offset;
-            int core_offset;
-
-            DPRINTF(("\"%s %s\"\n", *(sp - 1), *sp));
+         if (parse_binding_parameter_string(*sp, &type, &strategy, &amount, 
+               &stepsize, &firstsocket, &firstcore, &socketcorelist, &error) 
+               != true) {
             
-            amount = binding_linear_parse_amount(*sp);
+            /* report parsing error */
+            dstring parse_binding_error = DSTRING_INIT;
+            sge_dstring_sprintf(&parse_binding_error, "-binding: ");
+            sge_dstring_append_dstring(&parse_binding_error, &error);
 
-            if (amount < 0) {
-               answer_list_add_sprintf(&answer, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
-                  MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S,"-binding linear:<amount>[:<socket>,<core>]");
-               DRETURN(answer);
-            }
+            answer_list_add_sprintf(&answer, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
+                                     MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S, 
+                                     sge_dstring_get_string(&parse_binding_error));
 
-            /* add the number of cores to be bound into cull list */
-            lSetUlong(binding_elem, BN_parameter_n, amount);
-          
-            /* check if there is a first socket and first core to begin with 
-               given */
-            socket_offset = binding_linear_parse_socket_offset(*sp);
-            core_offset   = binding_linear_parse_core_offset(*sp);
+            sge_dstring_free(&parse_binding_error);
 
-            if (socket_offset == -1 || core_offset == -1) {
-               /* socket and core number have to be determined automatically on execution host */
-               lSetString(binding_elem, BN_strategy, "linear_automatic");
-               /* fill in dummy values */
-               lSetUlong(binding_elem, BN_parameter_socket_offset, 0);
-               lSetUlong(binding_elem, BN_parameter_core_offset, 0);
-            } else {
-               lSetString(binding_elem, BN_strategy, "linear");
-               lSetUlong(binding_elem, BN_parameter_socket_offset, socket_offset);
-               lSetUlong(binding_elem, BN_parameter_core_offset, core_offset);
-            }
-
-            lAppendElem(binding_list, binding_elem);
-            
-            ep_opt = sge_add_arg(pcmdline, binding_OPT, lListT, *(sp - 1), *sp);
-            lSetList(ep_opt, SPA_argval_lListT, binding_list);
-
-            sp++;
-            continue;
-         } else if (strstr(*sp, "striding") != NULL) {
-            int amount;
-            int step_size;
-            int first_socket;
-            int first_core;
-
-            /* (core) striding requires amount of cores and step size 
-               socket number and core number (beginning with 0) are optional */
-            
-            DPRINTF(("\"%s %s\"\n", *(sp - 1), *sp));
-
-            /* request is: "striding:<amount>:<stepsize>[:<socket>;<core>]" */
-            /* parse the amount of cores */
-            amount = binding_striding_parse_amount(*sp);
-            /* parse the step size */
-            step_size = binding_striding_parse_step_size(*sp);
-
-            /* check if parsing failed */
-            if (amount == -1 || step_size == -1) {
-               answer_list_add_sprintf(&answer, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
-                  MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S,"-binding striding:<amount>:<stepsize>");
-               DRETURN(answer);
-            }
-
-            /* try to parse socket number and core number if possible */
-            first_socket = binding_striding_parse_first_socket(*sp);
-            first_core = binding_striding_parse_first_core(*sp);
-
-            if (first_socket == -1 || first_core == -1) {
-               /* didn't find socket and core which has to be bound first */
-               lSetString(binding_elem, BN_strategy, "striding_automatic");
-               /* fill out with dummy values */
-               lSetUlong(binding_elem, BN_parameter_socket_offset, 0);
-               lSetUlong(binding_elem, BN_parameter_core_offset, 0);
-            } else {
-               /* we have both: request binding striding with these parameters */
-               lSetString(binding_elem, BN_strategy, "striding");
-               lSetUlong(binding_elem, BN_parameter_socket_offset, first_socket);
-               lSetUlong(binding_elem, BN_parameter_core_offset, first_core);
-            }
-
-            /* mandatory values */
-            lSetUlong(binding_elem, BN_parameter_n, amount);
-            lSetUlong(binding_elem, BN_parameter_striding_step_size, step_size);
-
-            lAppendElem(binding_list, binding_elem);
-            
-            ep_opt = sge_add_arg(pcmdline, binding_OPT, lListT, *(sp - 1), *sp);
-            lSetList(ep_opt, SPA_argval_lListT, binding_list);
-
-            sp++;
-            continue;
-
-         } else if (!strstr("explict", *sp)) {
-           
-            /* check if syntax is corrrect */
-            if (binding_explicit_has_correct_syntax(*sp) != true) {
-
-               /* explicit string have a wrong syntax */
-               /* TODO DG introduce new message that syntax is not correct */
-               answer_list_add_sprintf(&answer, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
-                                       MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S, 
-                                       "-binding explicit:<socket>,<core>[:<socket>,<core>]*");
-               DRETURN(answer);
-
-            } else {
-               
-               DPRINTF(("\"%s %s\"\n", *(sp - 1), *sp));
-
-               /* explicit request has correct syntax therefore it is added to the list */
-               lSetString(binding_elem, BN_strategy, "explicit");
-
-               /* add the complete <socket>,<core> list */
-               lSetString(binding_elem, BN_parameter_explicit, *sp);
-               
-               lAppendElem(binding_list, binding_elem);
-            
-               ep_opt = sge_add_arg(pcmdline, binding_OPT, lListT, *(sp - 1), *sp);
-               lSetList(ep_opt, SPA_argval_lListT, binding_list);
-
-               sp++;
-               continue;
-            }
+            DRETURN(answer);
             
          } else {
+            
+            /* add parameters to CULL list */ 
+            
+            lSetString(binding_elem, BN_strategy, sge_dstring_get_string(&strategy));
+            
+            if (firstsocket >= 0) {
+               lSetUlong(binding_elem, BN_parameter_socket_offset, firstsocket);
+            } else {
+               lSetUlong(binding_elem, BN_parameter_socket_offset, 0);
+            }
+            if (firstcore >= 0) {
+               lSetUlong(binding_elem, BN_parameter_core_offset, firstcore);
+            } else {
+               lSetUlong(binding_elem, BN_parameter_core_offset, 0);
+            }
+            if (amount >= 0) {
+               lSetUlong(binding_elem, BN_parameter_n, amount);
+            } else {
+               lSetUlong(binding_elem, BN_parameter_n, 0);
+            }
+            if (stepsize >= 0) {
+               lSetUlong(binding_elem, BN_parameter_striding_step_size, stepsize);
+            } else {
+               lSetUlong(binding_elem, BN_parameter_striding_step_size, 0);
+            }
+            
+            if (strstr(sge_dstring_get_string(&strategy), "explicit") != NULL) {
+               lSetString(binding_elem, BN_parameter_explicit, sge_dstring_get_string(&socketcorelist));
+            }
 
-            /* -binding has no valid option */ 
-            answer_list_add_sprintf(&answer, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
-                                    MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S, 
-               "-binding linear:<amount>|striding:<amount>:<stepsize>|explicit:<socket>,<core>;...");  
-            DRETURN(answer);
+            lAppendElem(binding_list, binding_elem);
+            ep_opt = sge_add_arg(pcmdline, binding_OPT, lListT, *(sp - 1), *sp);
+            lSetList(ep_opt, SPA_argval_lListT, binding_list);
+
+            sp++;
+            continue;
          }
-         
+
       }
 
 /*-----------------------------------------------------------------------------*/

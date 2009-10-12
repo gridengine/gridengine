@@ -72,8 +72,6 @@ bool binding_one_per_socket(int first_socket, int amount_of_sockets, int n);
 
 bool binding_n_per_socket(int first_socket, int amount_of_sockets, int n);
 
-
-bool binding_explicit_has_correct_syntax(const char* parameter);
 bool binding_explicit_exctract_sockets_cores(const char* parameter, int** list_of_sockets, 
    int* samount, int** list_of_cores, int* camount);
 bool binding_explicit_check_and_account(const int* list_of_sockets, const int samount, 

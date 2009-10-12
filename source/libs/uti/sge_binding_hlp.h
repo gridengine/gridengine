@@ -48,6 +48,10 @@
 
 /* functions related for parsing command line (see parse_qsub.c) */
 /* shepherd also needs them */
+bool parse_binding_parameter_string(char* parameter, u_long32* type, 
+      dstring* strategy, int* amount, int* stepsize, int* firstsocket, 
+      int* firstcore, dstring* socketcorelist, dstring* error);
+
 int binding_linear_parse_amount(const char* parameter);
 int binding_linear_parse_core_offset(const char* parameter);
 int binding_linear_parse_socket_offset(const char* parameter);
@@ -59,6 +63,8 @@ int binding_striding_parse_step_size(const char* parameter);
 
 bool binding_explicit_extract_sockets_cores(const char* parameter, 
    int** list_of_sockets, int* samount, int** list_of_cores, int* camount); 
+
+bool binding_explicit_has_correct_syntax(const char* parameter);
 
 #if defined(PLPA_LINUX)
 

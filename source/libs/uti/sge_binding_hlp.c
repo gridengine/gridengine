@@ -55,6 +55,150 @@
 static void* plpa_lib_handle = NULL;
 #endif 
 
+/****** sge_binding_hlp/parse_binding_parameter_string() ***********************
+*  NAME
+*     parse_binding_parameter_string() -- Parses binding parameter string. 
+*
+*  SYNOPSIS
+*     bool parse_binding_parameter_string(const char* parameter, u_long32* 
+*     type, dstring* strategy, int* amount, int* stepsize, int* firstsocket, 
+*     int* firstcore, dstring* socketcorelist, dstring* error) 
+*
+*  FUNCTION
+*     Parses binding parameter string and returns the values of the parameter.
+*     Please check output values in dependency of the strategy string.
+*
+*  INPUTS
+*     const char* parameter   - binding parameter string 
+*
+*  OUTPUT 
+*     u_long32* type          - type of binding (pe = 0| env = 1|set = 2)
+*     dstring* strategy       - binding strategy string
+*     int* amount             - amount of cores to bind to 
+*     int* stepsize           - step size between cores (or -1)
+*     int* firstsocket        - first socket to use (or -1)
+*     int* firstcore          - first core to use (on "first socket") (or -1)
+*     dstring* socketcorelist - list of socket,core pairs with prefix explicit or NULL
+*     dstring* error          - error as string in case of return false
+*
+*  RESULT
+*     bool - true in case parsing was successful false in case of errors
+*
+*  NOTES
+*     MT-NOTE: parse_binding_parameter_string() is MT safe 
+*
+*  BUGS
+*     ??? 
+*
+*  SEE ALSO
+*     ???/???
+*******************************************************************************/
+bool parse_binding_parameter_string(char* parameter, u_long32* type, 
+      dstring* strategy, int* amount, int* stepsize, int* firstsocket, 
+      int* firstcore, dstring* socketcorelist, dstring* error)
+{
+   bool retval = true;
+
+   if (parameter == NULL) {
+      sge_dstring_sprintf(error, "input parameter was NULL");
+      return false;
+   }
+   
+   /* check the type [pe|env|set] = 0 1 2 (2 is default) */
+   if (strstr(parameter, " pe ") != NULL) {
+      *type = 0;
+   } else if (strstr(parameter, " env ") != NULL) {
+      *type = 1;
+   } else {
+      /* default case: when " set " is set or not */
+      *type = 2;   
+   }
+
+   if (strstr(parameter, "linear") != NULL) {
+
+      *amount = binding_linear_parse_amount(parameter);
+
+      if (*amount  < 0) {
+         /* couldn't parse amount of cores */
+         sge_dstring_sprintf(error, "couldn't parse amount (linear)");
+         return false;
+      }
+
+      *firstsocket = binding_linear_parse_socket_offset(parameter);
+      *firstcore   = binding_linear_parse_core_offset(parameter);
+      
+      if (*firstsocket < 0 || *firstcore < 0) {
+         /* couldn't find start <socket,core> -> must be determined 
+            automatically */
+         sge_dstring_sprintf(strategy, "linear_automatic");
+
+         /* this might be an error on shepherd side only */
+         *firstsocket = -1;
+         *firstcore = -1;
+      } else {
+         
+         sge_dstring_sprintf(strategy, "linear");
+      }
+      
+      /* set step size to dummy */ 
+      *stepsize = -1;
+      
+   } else if (strstr(parameter, "striding") != NULL) {
+      
+      *amount = binding_striding_parse_amount(parameter);
+      
+      if (*amount  < 0) {
+         /* couldn't parse amount of cores */
+         sge_dstring_sprintf(error, "couldn't parse amount (striding)");
+         return false;
+      }
+  
+      *stepsize = binding_striding_parse_step_size(parameter);
+
+      if (*stepsize < 0) {
+         sge_dstring_sprintf(error, "couldn't parse stepsize (striding)");
+         return false;
+      }
+
+      *firstsocket = binding_striding_parse_first_socket(parameter);
+      *firstcore = binding_striding_parse_first_core(parameter);
+   
+      if (*firstsocket < 0 || *firstcore < 0) {
+         sge_dstring_sprintf(strategy, "striding_automatic");   
+
+         /* this might be an error on shepherd side only */
+         *firstsocket = -1;
+         *firstcore = -1;
+      }
+
+   } else if (strstr(parameter, "explicit") != NULL) {
+
+      if (binding_explicit_has_correct_syntax(parameter) == false) {
+         sge_dstring_sprintf(error, "couldn't parse <socket>,<core> list (explicit)");
+         retval = false;   
+      } else {
+         sge_dstring_sprintf(strategy, "explicit");
+         /* explicit:<socket>,<core>:... */
+         if (socketcorelist == NULL) {
+            sge_dstring_sprintf(error, "BUG detected: DSTRING NOT INITIALIZED");
+            retval = false;  
+         } else {
+            char* pos = strstr(parameter, "explicit"); 
+            sge_dstring_copy_string(socketcorelist, pos);
+            pos = NULL;
+         }   
+      }   
+      
+   } else {
+      
+      /* error: no valid strategy found */
+      sge_dstring_sprintf(error, "couldn't parse binding parameter (no strategy found)"); 
+      retval = false;
+   }
+   
+  return retval; 
+}
+
 #if defined(PLPA_LINUX)
 
 /****** sge_binding_hlp/has_topology_information() *********************************
@@ -115,6 +259,7 @@ bool has_core_binding()
    
    return false;
 }
+
 
 
 /****** sge_binding_hlp/has_core_binding() *****************************************

@@ -39,7 +39,9 @@ COMMLIB      = libcomm$(LIBEXT)
 
 COMM_EXAMPLES_SRC =       \
          server_demo.c    \
-         client_demo.c
+         client_demo.c    \
+         external_fd_demo.c \
+         external_fd_server_demo.c
          
          
 
@@ -49,11 +51,11 @@ COMM_EXAMPLES_OBJS = $(COMM_EXAMPLES_SRC:.c=.o)
 ###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
-commexamples_all: server_demo client_demo
+commexamples_all: server_demo client_demo external_fd_demo external_fd_server_demo
 
 
 commexamples_clean:
-		$(RM) $(COMM_EXAMPLES_OBJS) server_demo client_demo
+		$(RM) $(COMM_EXAMPLES_OBJS) server_demo client_demo external_fd_demo external_fd_server_demo
 
 commexamples_depend:
 		$(DEPEND) -f $(COMM_EXAMPLES_DIR)/commexamples_dependencies $(COMM_EXAMPLES_DIR)/*.c
@@ -78,8 +80,17 @@ server_demo: server_demo.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB_DEP
 client_demo: client_demo.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB_DEP) $(LCKLIB) $(RMONLIB)
 	$(CC) -o client_demo $(LFLAGS) client_demo.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(LCKLIB) $(RMONLIB) $(DLLIB) $(LIBS)
 
+external_fd_server_demo: external_fd_server_demo.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB_DEP) $(LCKLIB) $(RMONLIB)
+	$(CC) -o external_fd_server_demo $(LFLAGS) external_fd_server_demo.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(LCKLIB) $(RMONLIB) $(DLLIB) $(LIBS)
+
+external_fd_demo: external_fd_demo.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB_DEP) $(LCKLIB) $(RMONLIB)
+	$(CC) -o external_fd_demo $(LFLAGS) external_fd_demo.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(LCKLIB) $(RMONLIB) $(DLLIB) $(LIBS)
 
 server_demo.o: $(COMM_EXAMPLES_DIR)/server_demo.c
 	$(CC) $(CFLAGS) -c $(COMM_EXAMPLES_DIR)/server_demo.c
 client_demo.o: $(COMM_EXAMPLES_DIR)/client_demo.c
 	$(CC) $(CFLAGS) -c $(COMM_EXAMPLES_DIR)/client_demo.c
+external_fd_server_demo.o: $(COMM_EXAMPLES_DIR)/external_fd_server_demo.c
+	$(CC) $(CFLAGS) -c $(COMM_EXAMPLES_DIR)/external_fd_server_demo.c
+external_fd_demo.o: $(COMM_EXAMPLES_DIR)/external_fd_demo.c
+	$(CC) $(CFLAGS) -c $(COMM_EXAMPLES_DIR)/external_fd_demo.c

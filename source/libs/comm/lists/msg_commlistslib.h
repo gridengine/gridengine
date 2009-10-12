@@ -70,7 +70,7 @@
 #define MSG_CL_RETVAL_READ_TIMEOUT                _MESSAGE(80034, _("got read timeout"))
 #define MSG_CL_RETVAL_UNDEFINED_FRAMEWORK         _MESSAGE(80035, _("framework is not defined"))
 #define MSG_CL_RETVAL_NOT_SERVICE_HANDLER         _MESSAGE(80036, _("handle is not defined as service handler"))
-#define MSG_CL_RETVAL_NO_FRAMEWORK_INIT           _MESSAGE(80037, _("framework is not initalized"))
+#define MSG_CL_RETVAL_NO_FRAMEWORK_INIT           _MESSAGE(80037, _("framework is not initialized"))
 #define MSG_CL_RETVAL_SETSOCKOPT_ERROR            _MESSAGE(80038, _("can't set socket options"))
 #define MSG_CL_RETVAL_FCNTL_ERROR                 _MESSAGE(80039, _("got fcntl error"))
 #define MSG_CL_RETVAL_LISTEN_ERROR                _MESSAGE(80040, _("got listen error"))

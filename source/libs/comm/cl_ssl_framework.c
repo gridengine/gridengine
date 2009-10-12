@@ -88,6 +88,7 @@
 
 #include "cl_errors.h"
 #include "cl_connection_list.h"
+#include "cl_fd_list.h"
 #include "cl_ssl_framework.h"
 #include "cl_communication.h"
 #include "cl_commlib.h"
@@ -3924,6 +3925,7 @@ int cl_com_ssl_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
    cl_com_connection_t** ufds_con = NULL;
    unsigned long ufds_index = 0;
    unsigned long fd_index = 0;
+   int fd_offset = 2;
 #else
    fd_set my_read_fds;
    fd_set my_write_fds;
@@ -3977,9 +3979,10 @@ int cl_com_ssl_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
 
 #ifdef USE_POLL
    /* first check if we have a poll_array of the correct size*/
-   if (poll_handle->poll_fd_count != handle->max_open_connections + 2) {
+   fd_offset = fd_offset + cl_raw_list_get_elem_count(handle->file_descriptor_list);
+   if (poll_handle->poll_fd_count != handle->max_open_connections + fd_offset) {
       /* max_open_connections might have changed */
-      int poll_return = cl_com_malloc_poll_array(poll_handle, handle->max_open_connections + 2);
+      int poll_return = cl_com_malloc_poll_array(poll_handle, handle->max_open_connections + fd_offset);
       if (poll_return != CL_RETVAL_OK) {
          cl_raw_list_unlock(connection_list);
          return poll_return;
@@ -3987,9 +3990,9 @@ int cl_com_ssl_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
    }
 
    /* check poll_array size */
-   if (poll_handle->poll_fd_count < cl_raw_list_get_elem_count(connection_list) + 2) {
+   if (poll_handle->poll_fd_count < cl_raw_list_get_elem_count(connection_list) + fd_offset) {
       /* This should not happen, but we want to be on the save side */
-      int poll_return = cl_com_malloc_poll_array(poll_handle, cl_raw_list_get_elem_count(connection_list) + 2);
+      int poll_return = cl_com_malloc_poll_array(poll_handle, cl_raw_list_get_elem_count(connection_list) + fd_offset);
       CL_LOG(CL_LOG_WARNING, "max_open_connection count < current connection size - this must NOT happen!");
       if (poll_return != CL_RETVAL_OK) {
          cl_raw_list_unlock(connection_list);
@@ -4349,6 +4352,46 @@ int cl_com_ssl_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
       con_elem = cl_connection_list_get_next_elem(con_elem);
    }
 
+   /* add the external file descriptors to the FD_SETS */
+   if (handle->file_descriptor_list != NULL){
+      cl_fd_list_elem_t* elem = NULL;
+      cl_raw_list_lock(handle->file_descriptor_list);
+      elem = cl_fd_list_get_first_elem(handle->file_descriptor_list);
+      while (elem) {
+         if(do_read_select == 1 || do_write_select == 1){
+#ifdef USE_POLL
+            ufds[ufds_index].fd = elem->data->fd;
+#endif
+            if(do_read_select == 1){
+#ifdef USE_POLL
+               ufds[ufds_index].events |= POLLIN|POLLPRI;
+#else
+               FD_SET(elem->data->fd, &my_read_fds);
+#endif
+            }
+            if(do_write_select == 1){
+               if (elem->data->ready_for_writing == CL_TRUE) {
+#ifdef USE_POLL
+                  ufds[ufds_index].events |= POLLOUT;
+#else
+                  FD_SET(elem->data->fd, &my_write_fds);
+#endif
+               }
+            }
+            max_fd = MAX(max_fd, elem->data->fd);
+#ifdef USE_POLL
+            ufds_index++;
+            ufds_con[ufds_index] = NULL;
+            memset(&(ufds[ufds_index]), 0, sizeof(struct pollfd));
+#endif
+            nr_of_descriptors++;
+         }
+         
+         elem = cl_fd_list_get_next_elem(elem);
+      }
+      cl_raw_list_unlock(handle->file_descriptor_list);
+   }
+
    /* we don't have any file descriptor for select(), find out why: */
    if (max_fd == -1) {
       CL_LOG_INT(CL_LOG_INFO,"max fd =", max_fd);
@@ -4479,6 +4522,44 @@ int cl_com_ssl_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
                   con_elem = cl_connection_list_get_next_elem(con_elem);
                } /* while */
                cl_raw_list_unlock(connection_list);
+               /* look for a broken external file descriptor call its callback function and remove it afterwards */
+               if (handle->file_descriptor_list != NULL) {
+                  cl_fd_list_elem_t* elem = NULL;
+                  cl_raw_list_lock(handle->file_descriptor_list);
+#ifdef USE_POLL
+                  for (fd_index = 0; fd_index < ufds_index; fd_index++){
+                     if(ufds_con[fd_index] != NULL) {
+                        continue;
+                     }
+                     if(ufds[fd_index].revents & (POLLHUP|POLLERR|POLLNVAL)) {
+                        elem = cl_fd_list_get_first_elem(handle->file_descriptor_list);
+                        while(elem) {
+                           if (elem->data->fd == ufds[fd_index].fd) {
+                              elem->data->callback(elem->data->fd,
+                                                   elem->data->read_ready, 
+                                                   elem->data->write_ready, 
+                                                   elem->data->user_data, 
+                                                   ufds[fd_index].revents);
+                              cl_fd_list_unregister_fd(handle->file_descriptor_list, elem, 0);
+                              break;
+                           }
+                           elem = cl_fd_list_get_next_elem(elem);
+                        }
+                     }
+                  }
+#else
+                  elem = cl_fd_list_get_first_elem(handle->file_descriptor_list);
+                  while(elem) {
+                     SGE_STRUCT_STAT buf;
+                     if(SGE_FSTAT(elem->data->fd, &buf) == -1) {
+                        elem->data->callback(elem->data->fd, elem->data->read_ready, elem->data->write_ready, elem->data->user_data, errno);
+                        cl_fd_list_unregister_fd(handle->file_descriptor_list, elem, 0);
+                     }
+                     elem = cl_fd_list_get_next_elem(elem);
+                  }
+#endif
+                  cl_raw_list_unlock(handle->file_descriptor_list);
+               }
                break;
             }
             CL_LOG_INT(CL_LOG_WARNING, "unexpected errno value: ", (int) my_errno);
@@ -4551,12 +4632,39 @@ int cl_com_ssl_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
                      }
                   }
                }
+               /* look for external file descriptors and set its ready flags */
+               if (handle->file_descriptor_list != NULL) {
+                  cl_fd_list_elem_t *elem = NULL;
+                  cl_raw_list_lock(handle->file_descriptor_list);
+                  elem = cl_fd_list_get_first_elem(handle->file_descriptor_list);
+                  while(elem) {
+                     if (elem->data->fd == ufds[fd_index].fd) {
+                        if(do_read_select == 1) {
+                           if(ufds[fd_index].revents & (POLLIN|POLLPRI)){
+                              elem->data->read_ready = CL_TRUE;
+                           }else{
+                              elem->data->read_ready = CL_FALSE;
+                           }
+                        }
+                        if(do_write_select == 1) {
+                           if(ufds[fd_index].revents & POLLOUT){
+                              elem->data->write_ready = CL_TRUE;
+                           }else{
+                              elem->data->write_ready = CL_FALSE;
+                           }
+                        }
+                     }
+                     elem = cl_fd_list_get_next_elem(elem);
+                  }
+                  cl_raw_list_unlock(handle->file_descriptor_list);
+               }
             }
             cl_raw_list_unlock(connection_list);
             return CL_RETVAL_OK; /* OK - done */
          }
 #else
          {
+            cl_fd_list_elem_t* fd_elem = NULL;
             cl_raw_list_lock(connection_list); 
             /* now set the read flags for connections, where data is available */
             con_elem = cl_connection_list_get_first_elem(connection_list);
@@ -4588,6 +4696,27 @@ int cl_com_ssl_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
                   service_connection->data_read_flag = CL_COM_DATA_READY;
                }
                service_connection->is_read_selected = CL_FALSE;
+            }
+
+            /* look for ready external file descriptors and set their ready flags */
+            if (handle->file_descriptor_list != NULL){
+               cl_raw_list_lock(handle->file_descriptor_list);
+               fd_elem = cl_fd_list_get_first_elem(handle->file_descriptor_list);
+
+               while(fd_elem) {
+                  if (FD_ISSET(fd_elem->data->fd, &my_read_fds)) {
+                     fd_elem->data->read_ready = CL_TRUE;
+                  }else{
+                     fd_elem->data->read_ready = CL_FALSE;
+                  }
+                  if (FD_ISSET(fd_elem->data->fd, &my_write_fds)) {
+                     fd_elem->data->write_ready = CL_TRUE;
+                  }else{
+                     fd_elem->data->write_ready = CL_FALSE;
+                  }
+                  fd_elem = cl_fd_list_get_next_elem(fd_elem);
+               }
+               cl_raw_list_unlock(handle->file_descriptor_list);
             }
             return CL_RETVAL_OK; /* OK - done */
          }

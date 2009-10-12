@@ -50,6 +50,7 @@
 #include "cl_application_error_list.h"
 #include "cl_host_alias_list.h"
 #include "cl_parameter_list.h"
+#include "cl_fd_list.h"
 #include "cl_communication.h"
 #include "cl_tcp_framework.h"
 #include "cl_ssl_framework.h"
@@ -205,6 +206,8 @@ static cl_app_debug_client_func_t cl_com_debug_client_callback_func = cl_com_def
 static pthread_mutex_t  cl_com_ssl_setup_mutex = PTHREAD_MUTEX_INITIALIZER;
 static cl_ssl_setup_t*  cl_com_ssl_setup_config = NULL;
 
+/* external fd-list mutex */
+static pthread_mutex_t  cl_com_external_fd_list_setup_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /* this is the offical commlib boolean parameter setup 
    TODO: merge all global settings into this structure */
@@ -658,6 +661,27 @@ char* cl_com_get_resolvable_hosts(void) {
 #define __CL_FUNCTION__ "cl_com_get_unresolvable_hosts()"
 char* cl_com_get_unresolvable_hosts(void) {
    return cl_commlib_debug_unresolvable_hosts;
+}
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_is_valid_fd()"
+cl_bool_t cl_com_is_valid_fd (int fd) {
+
+   if (fd >= 0){
+#ifndef USE_POLL
+      if(fd >= FD_SETSIZE){
+         CL_LOG_INT(CL_LOG_WARNING, "filedescriptor is >= FD_SETSIZE: ", fd);
+         return CL_FALSE;
+      }
+#endif
+   } else {
+      CL_LOG_INT(CL_LOG_WARNING, "filedescriptor is < 0: ", fd);
+      return CL_FALSE;
+   }
+
+   return CL_TRUE;
 }
 
 #ifdef __CL_FUNCTION__
@@ -1146,6 +1170,9 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
       }
       return NULL;
    }
+
+   /* setup the file descriptor list */
+   new_handle->file_descriptor_list = NULL;
 
    /* setup SSL configuration */
    new_handle->ssl_setup = NULL;
@@ -2116,6 +2143,8 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, cl_bool_t return_for_mes
 
       cl_com_free_ssl_setup(&(handle->ssl_setup));
 
+      cl_fd_list_cleanup(&(handle->file_descriptor_list));
+
       free(handle);
       return CL_RETVAL_OK;
    } 
@@ -2836,6 +2865,69 @@ int cl_commlib_trigger(cl_com_handle_t* handle, int synchron) {
    return CL_RETVAL_PARAMS;
 }
 
+/* this function looks for read/write/read_write ready external file descriptors
+   and calls their callback funcitons */
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_trigger_external_fds()"
+static cl_bool_t cl_com_trigger_external_fds(cl_com_handle_t* handle, cl_select_method_t mode) {
+   cl_bool_t retval = CL_FALSE;
+
+   if(handle->file_descriptor_list != NULL) {
+      cl_fd_list_elem_t *fd;
+      cl_raw_list_lock(handle->file_descriptor_list);
+      fd = cl_fd_list_get_first_elem(handle->file_descriptor_list);
+      while(fd){
+         cl_bool_t read = fd->data->read_ready;
+         cl_bool_t write = fd->data->write_ready;
+         switch(mode) {
+            case CL_RW_SELECT: {
+               read &= CL_TRUE;
+               write &= CL_TRUE;
+               break;
+            }
+            case CL_R_SELECT: {
+               read &= CL_TRUE;
+               write &= CL_FALSE;
+               break;
+            }
+            case CL_W_SELECT: {
+               read &= CL_FALSE;
+               write &= CL_TRUE;
+               if(write == CL_FALSE && fd->data->ready_for_writing)
+                  CL_LOG(CL_LOG_INFO, "fd seems not to be ready, yet");
+               break;
+            }
+         }
+         if(read == CL_TRUE || (write & fd->data->ready_for_writing) == CL_TRUE) {
+            /* reset ready_for_writing flag after writing */
+            cl_bool_t written = CL_FALSE;
+            if ((fd->data->ready_for_writing & write) == CL_TRUE) {
+               fd->data->ready_for_writing = CL_FALSE;
+               written = CL_TRUE;
+            }
+
+            if(fd->data->callback(fd->data->fd, read, write, fd->data->user_data, 0) != CL_RETVAL_OK){
+               cl_fd_list_elem_t *fd_temp = fd;
+               fd = cl_fd_list_get_next_elem(fd);
+               cl_fd_list_unregister_fd(handle->file_descriptor_list, fd_temp, 0);
+               continue;
+            }
+            /* trigger */
+            if (written == CL_TRUE) {
+               cl_thread_trigger_thread_condition(handle->app_condition, 1);
+            }
+            retval = CL_TRUE;
+         }
+         fd = cl_fd_list_get_next_elem(fd);
+      }
+      cl_raw_list_unlock(handle->file_descriptor_list);
+   }
+
+   return retval;
+}
+
 /* this function is used for no thread implementation and must be called 
    permanent to get data into the data structures and lists */
 #ifdef __CL_FUNCTION__
@@ -3118,6 +3210,8 @@ static int cl_com_trigger(cl_com_handle_t* handle, int synchron) {
 
    cl_raw_list_unlock(handle->connection_list);
 
+   /* look for read/write_ready external file descriptors and call their callback functions */
+   cl_com_trigger_external_fds(handle, CL_RW_SELECT);
 
    /* when threads enabled: this is done by cl_com_handle_service_thread() */
    if (handle->service_provider                == CL_TRUE && 
@@ -4233,6 +4327,149 @@ int cl_com_get_actual_statistic_data(cl_com_handle_t* handle, cl_com_handle_stat
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif
+#define __CL_FUNCTION__ "cl_commlib_external_fd_unregister()"
+static int cl_commlib_external_fd_unregister(cl_com_handle_t* handle, int fd, int lock) {
+   int ret_val = CL_RETVAL_PARAMS;
+   cl_fd_list_elem_t* elem = NULL;
+   
+   if (handle == NULL || cl_com_is_valid_fd(fd) == CL_FALSE || handle->file_descriptor_list == NULL){
+      return CL_RETVAL_PARAMS;
+   }
+
+   if (lock != 0) {
+      cl_raw_list_lock(handle->file_descriptor_list);
+   }
+
+   elem = cl_fd_list_get_first_elem(handle->file_descriptor_list);
+
+   while(elem) {
+      if (elem->data->fd == fd) {
+         /* found matching element */
+         ret_val = cl_fd_list_unregister_fd(handle->file_descriptor_list, elem, 0);
+         break;
+      }
+      elem = cl_fd_list_get_next_elem(elem);
+   }
+   if (lock != 0) {
+      cl_raw_list_unlock(handle->file_descriptor_list);
+   }
+
+   return ret_val;
+}
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_external_fd_register()"
+int cl_com_external_fd_register(cl_com_handle_t* handle,
+                               int fd,
+                               cl_fd_func_t callback,
+                               cl_select_method_t mode,
+                               void *user_data){
+   int ret_val = CL_RETVAL_OK;
+   int con_fd = -1;
+   cl_com_fd_data_t *new_fd = NULL;
+   cl_connection_list_elem_t *con_elem = NULL;
+  
+   if (handle == NULL || cl_com_is_valid_fd(fd) == CL_FALSE || callback == NULL){
+      return CL_RETVAL_PARAMS;
+   }
+
+   /* check if the fd is already registered in the connection list */
+
+   cl_com_connection_get_fd(handle->service_handler, &con_fd);
+   if (fd == con_fd) {
+      return CL_RETVAL_DUP_SOCKET_FD_ERROR;
+   }
+
+   cl_raw_list_lock(handle->connection_list);
+   con_elem = cl_connection_list_get_first_elem(handle->connection_list);
+   while(con_elem){
+      cl_com_connection_get_fd(con_elem->connection, &con_fd);
+      if (fd == con_fd) {
+         cl_raw_list_unlock(handle->connection_list);
+         return CL_RETVAL_DUP_SOCKET_FD_ERROR;
+      }
+      con_elem = cl_connection_list_get_next_elem(con_elem);
+   }
+   cl_raw_list_unlock(handle->connection_list);
+
+   pthread_mutex_lock(&cl_com_external_fd_list_setup_mutex);
+   if (handle->file_descriptor_list == NULL) {
+      if ((ret_val = cl_fd_list_setup(&(handle->file_descriptor_list), "external file descriptor list")) != CL_RETVAL_OK) {
+         return ret_val;
+      }
+   }
+   pthread_mutex_unlock(&cl_com_external_fd_list_setup_mutex);
+
+   new_fd = (cl_com_fd_data_t*) malloc(sizeof(cl_com_fd_data_t));
+   if (new_fd == NULL) {
+      return CL_RETVAL_MALLOC;
+   }
+
+   new_fd->fd = fd;
+   new_fd->callback = callback;
+   new_fd->select_mode = mode;
+   new_fd->user_data = user_data;
+   new_fd->read_ready = CL_FALSE;
+   new_fd->write_ready = CL_FALSE;
+   new_fd->ready_for_writing = CL_FALSE;
+
+
+   /* if the fd already extists, delete it */
+
+   cl_raw_list_lock(handle->file_descriptor_list);
+   if (cl_commlib_external_fd_unregister(handle, fd, 0) == CL_RETVAL_OK) {
+      CL_LOG(CL_LOG_WARNING, "fd was already registered, will be overwritten with the new one");
+   }
+
+   ret_val = cl_fd_list_register_fd(handle->file_descriptor_list, new_fd, 0);
+   cl_raw_list_unlock(handle->file_descriptor_list);
+   
+   return ret_val;
+}
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_external_fd_unregister()"
+int cl_com_external_fd_unregister(cl_com_handle_t* handle, int fd) {
+   return cl_commlib_external_fd_unregister(handle, fd, 1);
+}
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_com_external_fd_set_write_ready()"
+int cl_com_external_fd_set_write_ready(cl_com_handle_t* handle, int fd) {
+   int ret_val = CL_RETVAL_PARAMS;
+   cl_fd_list_elem_t* elem = NULL;
+
+   if (handle == NULL || cl_com_is_valid_fd(fd) == CL_FALSE || handle->file_descriptor_list == NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+
+   cl_raw_list_lock(handle->file_descriptor_list);
+   elem = cl_fd_list_get_first_elem(handle->file_descriptor_list);
+
+   while(elem){
+      if (elem->data->fd == fd) {
+         elem->data->ready_for_writing = CL_TRUE;
+         cl_thread_trigger_event(handle->write_thread);
+         ret_val = CL_RETVAL_OK;
+         break;
+      }
+      elem = cl_fd_list_get_next_elem(elem);
+   }
+
+   cl_raw_list_unlock(handle->file_descriptor_list);
+
+   return ret_val;
+}
+
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
 #define __CL_FUNCTION__ "cl_com_set_application_debug_client_callback_func()"
 int cl_com_set_application_debug_client_callback_func(cl_app_debug_client_func_t debug_client_callback_func ) {
    pthread_mutex_lock(&cl_com_debug_client_callback_func_mutex);
@@ -4774,6 +5011,7 @@ static int cl_commlib_handle_connection_write(cl_com_connection_t* connection) {
              return return_value;
           }
           if (message->message_snd_pointer == message->message_length) {
+             cl_thread_trigger_thread_condition(connection->handler->app_condition, 1);
              message->message_state = CL_MS_READY;
           } else {
              cl_raw_list_unlock(connection->send_message_list);
@@ -7295,6 +7533,12 @@ static void *cl_com_handle_read_thread(void *t_conf) {
       }
       cl_raw_list_unlock(handle->connection_list);
 
+      /* look for read_ready external file descriptors and call their callback functions */
+      if (cl_com_trigger_external_fds(handle, CL_R_SELECT) == CL_TRUE) {
+         message_received = 1;
+      }
+
+
       /* check for new connections */
       if (handle->service_provider                == CL_TRUE           && 
           handle->service_handler->data_read_flag == CL_COM_DATA_READY) {
@@ -7314,7 +7558,6 @@ static void *cl_com_handle_read_thread(void *t_conf) {
          }
       }
 
-
       if (trigger_write_thread != 0) {
          cl_thread_trigger_event(handle->write_thread);
       }
@@ -7324,6 +7567,7 @@ static void *cl_com_handle_read_thread(void *t_conf) {
          for reading) or when we have received a message */
       if ( wait_for_events || message_received != 0 ) {
          cl_thread_trigger_thread_condition(handle->read_condition,1);
+         cl_thread_trigger_thread_condition(handle->app_condition,1);
 
          /* if we have received a message which was no protocol message
             trigger application ( cl_commlib_receive_message() ) */
@@ -7672,6 +7916,9 @@ static void *cl_com_handle_write_thread(void *t_conf) {
             CL_LOG_STR(CL_LOG_ERROR,"got error:",cl_get_error_text(ret_val));
             break;
       }  /* switch */
+      /* look for write_ready external file descriptors and call their callback functions */
+      cl_com_trigger_external_fds(handle, CL_W_SELECT);
+
       if (wait_for_events != 0 ) {
          if ((ret_val = cl_thread_wait_for_event(thread_config, handle->select_sec_timeout, handle->select_usec_timeout)) != CL_RETVAL_OK) {
             switch(ret_val) {

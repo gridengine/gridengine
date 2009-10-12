@@ -317,6 +317,7 @@ typedef struct cl_com_handle {
    pthread_mutex_t* connection_list_mutex;
    cl_raw_list_t* connection_list;  /* connections of this handle */
    cl_raw_list_t* allowed_host_list; /* string list with hostnames allowed to connect */
+   cl_raw_list_t* file_descriptor_list; /* list with all registered file descriptors */
    unsigned long next_free_client_id;
 
    cl_raw_list_t* send_message_queue;     /* used as queue for application messages which have to 
@@ -399,6 +400,26 @@ typedef struct cl_com_host_spec_type {
 
 } cl_com_host_spec_t;
 
+/* callback function for external file descriptors.
+   The return value has to be CL_RETVAL_OK, otherwise
+   the external file descriptor will be removed form the list.
+
+   int fd                   the external file descriptor
+   cl_bool_t read_ready     states if the fd is ready for reading
+   cl_bool_t write_ready    states if the fd is ready for writing
+   void* user_data          void pointer to some data of the application
+   int err_val              states if an error occured while poll/select of the external fd
+*/
+typedef int   (*cl_fd_func_t)   (int fd, cl_bool_t read_ready, cl_bool_t write_ready, void* user_data, int err_val);
+typedef struct cl_com_fd_data_type {
+   int                  fd;
+   cl_select_method_t   select_mode;         /* select mode of the fd (read, write, read/write) */
+   cl_bool_t            read_ready;          /* is fd ready for read, write, read/write */
+   cl_bool_t            write_ready;         /* is fd ready for read, write, read/write */
+   cl_bool_t            ready_for_writing;   /* the application has data to write */
+   cl_fd_func_t         callback;
+   void*                user_data;
+} cl_com_fd_data_t;
 
 
 

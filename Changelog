@@ -8,6 +8,11 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 -----------------+------------+-------------------------------------------------
+SH-2009-10-12-0: Bugfix:      Add ability to commlib to wait for data on 
+                              external file descriptors
+                 Bugster:     6860857
+                 Review:      CR
+
 DG-2009-10-12-1: Enhancem.:   Moved methods from obj to uti. Smaller fixes and 
                               functionality added. (Job2Core binding).
                  Review:      EB

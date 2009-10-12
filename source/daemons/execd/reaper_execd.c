@@ -2026,20 +2026,41 @@ void execd_slave_job_exit(u_long32 job_id, u_long32 ja_task_id)
    }
 }
 
+/****** reaper_execd/clean_up_binding() ****************************************
+*  NAME
+*     clean_up_binding() -- Releases the resources used by a job for core binding. 
+*
+*  SYNOPSIS
+*     static void clean_up_binding(char* binding) 
+*
+*  FUNCTION
+*     Checks which cores the job was bound to and releases them (i.e. 
+*     the as used marked cores where marked as free so that other jobs 
+*     can be bound to any of these cores). 
+*
+*  INPUTS
+*     char* binding - Pointer to the "binding" line out of the config file. 
+*
+*  RESULT
+*     static void - void
+*
+*
+*  NOTES
+*     MT-NOTE: clean_up_binding() is not MT safe 
+*
+*  SEE ALSO
+*     ???/???
+*******************************************************************************/
 static void clean_up_binding(char* binding)
 {
 
-   if (binding == NULL || strcasecmp("NULL", binding) == 0) {
+   if (binding == NULL || strcasecmp("NULL", binding) == 0 
+      || strcasecmp("no_job_binding", binding) == 0) {
       /* no binding was instructed */
       return;
    }
    
-   if (strcasecmp("no_job_binding", binding) == 0) {
-      /* no binding should be done */
-      return;
-   }
-
-   #if defined(SOLARIS86) || defined(SOLARISAMD64)
+#if defined(SOLARIS86) || defined(SOLARISAMD64)
    if (strstr(binding, "psrset:") != NULL) {
       /* we are on Solaris and a processor set was created -> deaccount it and delete it */
       int processor_set_id = -1;
@@ -2078,7 +2099,39 @@ static void clean_up_binding(char* binding)
       }
 
    }
-   #endif 
+#endif
+
+#if defined(PLPA_LINUX)
+   /* on Linux the used topology can be found just after the last ":" */
+   /* -> find the used topology and release it */
+   char* topo = NULL;
+
+   if (strstr(binding, "linear:") != NULL) {
+      /* linear:<amount>:<socket>,<core>:topology */
+      
+   } else if (strstr(binding, "striding:") != NULL) {
+      /* striding:<amount>:<stepsize>:<socket>,<core>:topology */
+      if (sge_strtok(binding, ":") != NULL) {
+         if (sge_strtok(NULL, ":") != NULL) {
+            if (sge_strtok(NULL, ":") != NULL) {
+               if (sge_strtok(NULL, ":") != NULL) {
+                  if ((topo = sge_strtok(NULL, ":")) != NULL) {
+                     /* update the string which represents the currently used cores 
+                        on execution daemon host */
+                     free_topology(topo, -1);
+                  } /* topology */
+               } /* socket, core */
+            } /* stepsize */
+         } /* amount */
+      } /* striding */
+      
+   } else if (strstr(binding, "explicit:") != NULL) {
+      /* explicit:<socket>,<core>:...::topology */
+      /* just search for "::" */
+   }
+   
+#endif
+
    return;
 }
 

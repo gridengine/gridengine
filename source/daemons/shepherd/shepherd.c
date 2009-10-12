@@ -43,6 +43,10 @@
 #include <sys/resource.h>
 #include <sys/wait.h>
 
+#if defined(PLPA_LINUX) || defined(SOLARISAMD64) || defined(SOLARIS86)
+#  include "shepherd_binding.h"
+#endif
+
 #if defined(LINUX)
 #  include <grp.h>
 #endif
@@ -787,6 +791,16 @@ int main(int argc, char **argv)
     * Create processor set
     */
    sge_pset_create_processor_set();
+
+   /* 
+    * Perform core binding (do not use processor set together with core binding) 
+    */ 
+#if defined(PLPA_LINUX)
+   do_core_binding();
+#elif defined(SOLARIS86) || defined(SOLARISAMD64)
+   /*switch later to startuser */
+   do_core_binding();
+#endif    
 
    /*
     * this blocks sge_shepherd until the first time the token is

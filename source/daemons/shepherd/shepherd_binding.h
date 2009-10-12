@@ -37,10 +37,10 @@
 #include <string.h>
 #include <errno.h>
 
-#include "sge_binding.h" 
-
 #include "basis_types.h"
 #include "config_file.h"
+
+#include "sge_binding_hlp.h"
 
 int do_core_binding(void);
 

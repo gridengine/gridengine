@@ -50,10 +50,6 @@
 #   include <dlfcn.h>
 #endif
 
-#if defined(PLPA_LINUX)
-#   include <plpa.h>
-#endif
-
 #include "sge_uidgid.h"
 #include "sge_nprocs.h"
 #include "sge_pset.h"
@@ -62,7 +58,6 @@
 #include "execution_states.h"
 #include "err_trace.h"
 #include "sge_stdio.h"
-#include "shepherd_binding.h"
 
 #define PROC_SET_OK            0
 #define PROC_SET_WARNING       1
@@ -131,18 +126,6 @@ void sge_pset_create_processor_set(void)
    }
 #endif
 
-#if defined(PLPA_LINUX) || defined(SOLARIS86) || defined(SOLARISAMD64) 
-   shepherd_trace("binding: start");
-   
-   sge_switch2start_user();
-
-   /* TODO DG: move this to outer function */ 
-   do_core_binding();
-
-   sge_switch2admin_user();
-
-   shepherd_trace("binding: end");
-#endif     
 }
 
 void sge_pset_free_processor_set(void)

@@ -8,6 +8,10 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 -----------------+------------+-------------------------------------------------
+DG-2009-10-12-1: Enhancem.:   Moved methods from obj to uti. Smaller fixes and 
+                              functionality added. (Job2Core binding).
+                 Review:      EB
+
 DG-2009-10-12-0: Cleanup:     Avoid casting from const (compiler warning).
                  Review:      CR
 

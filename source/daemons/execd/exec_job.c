@@ -114,7 +114,11 @@ extern char execd_spool_dir[SGE_PATH_MAX];
 
 #if defined(PLPA_LINUX) 
 /* creates string with core binding which is written to job "config" file */
-static const char* createBindingStrategyString(lListElem *jep);
+static const char* create_binding_strategy_string_linux(lListElem *jep);
+
+static const char* striding_linux(lListElem* binding_elem, const bool automatic); 
+
+static const char* explicit_linux(lListElem* binding_elem); 
 #endif 
 
 #if defined(SOLARIS86) || defined(SOLARISAMD64)
@@ -1189,9 +1193,14 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
       fprintf(fp, "processors=%s\n", sge_dstring_get_string(&range_string));
       sge_dstring_free(&range_string);
       
-      /* binding strategy: SOLARIS -> create processor set id */
+      /* binding strategy: SOLARIS -> create processor set id  
+                           LINUX   -> use setaffinity */
 #if defined(PLPA_LINUX)
-         processor_binding_strategy = createBindingStrategyString(jep);
+         /* check, depending on the used topology, which cores are can be used 
+            in order to fulfill the selected strategy. if strategy is not 
+            applicable or in case of errors "NULL" is written to this 
+            line in the "config" file */
+         processor_binding_strategy = create_binding_strategy_string_linux(jep);
 #elif defined(SOLARIS86) || defined(SOLARISAMD64) 
          /* try to create processor set according to binding strategy 
             and write processor set id to "binding" element in 
@@ -1688,7 +1697,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
        }
 #else
       i = fork();
-#endif
+#endif      
    }
 
    if (i != 0) { /* parent or -1 */
@@ -1753,6 +1762,12 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
     * over a fork.
     */
    seteuid(SGE_SUPERUSER_UID);
+#endif
+
+   /* Linux problem with dlopen() */
+   /* DG TODO */
+#if defined(PLPA_LINUX)
+      seteuid(SGE_SUPERUSER_UID);
 #endif
 
    DPRINTF(("**********************CHILD*********************\n"));
@@ -1893,7 +1908,7 @@ lList *gdil_orig  /* JG_Type */
 
 /* creates binding string for config file */
 #if defined(PLPA_LINUX)
-static const char* createBindingStrategyString(lListElem *jep)
+static const char* create_binding_strategy_string_linux(lListElem *jep)
 {
    /* binding strategy */
    lList *binding = lGetList(jep, JB_binding);
@@ -1909,105 +1924,67 @@ static const char* createBindingStrategyString(lListElem *jep)
           /* lList *binding_list = lGetList(binding, BN_strategy); */
 
          /* re-create the binding string (<strategy>:<parameter>:<parameter>) */
-         dstring strategy = DSTRING_INIT;
+         /* dstring strategy = DSTRING_INIT; */
          
          /* check strategy in order to create specific string */
          if (strcmp(lGetString(binding_elem, BN_strategy), "linear") == 0) {
             
+            /*
             cbs = sge_dstring_sprintf(&strategy, "%s:%d:%d,%d", 
                lGetString(binding_elem, BN_strategy), 
                lGetUlong(binding_elem, BN_parameter_n), 
                lGetUlong(binding_elem, BN_parameter_socket_offset), 
                lGetUlong(binding_elem, BN_parameter_core_offset));
 
+              */ 
+
          } else if (strcmp(lGetString(binding_elem, BN_strategy), "linear_automatic") == 0) {
            
+           
             /* first core and first socket have to be determined */
-            int first_socket = 0;
+
+/*          int first_socket = 0;
             int first_core = 0;
 
             char* topo_job = NULL;
             int topo_job_length = 0;
 
-            /* amount of cores try to get */
             int amount = (int) lGetUlong(binding_elem, BN_parameter_n);
 
-            /* try to allocate first core and first socket */
             if (get_striding_first_socket_first_core_and_account(amount, 1, 0, 0, true, 
                &first_socket, &first_core, &topo_job, &topo_job_length)) {
 
-               /* found first socket and first core ! */
                cbs = sge_dstring_sprintf(&strategy, "%s:%d:%d,%d", 
                   "linear", 
                   lGetUlong(binding_elem, BN_parameter_n), 
-                  lGetUlong(binding_elem, first_socket), 
-                  lGetUlong(binding_elem, first_core));
+                  first_socket, 
+                  first_core);
                
             } else {
 
-               /* it was not possible to fit the binding strategy on host 
-                  because it is occupied already or any other reason */
-                  /* DG TODO report error in anther way */ 
-               cbs = "binding_not_possible_does_not_fit";   
+               cbs = "NULL";   
 
             }
 
             if (topo_job != NULL)
                free(topo_job);
+*/               
             
          } else if (strcmp(lGetString(binding_elem, BN_strategy), "striding") == 0) {
             
-            /* unchecked user request: shepherd is trying and reports result in "binding" file */
-
-            cbs = sge_dstring_sprintf(&strategy, "%s:%d:%d:%d,%d", 
-               lGetString(binding_elem, BN_strategy), 
-               lGetUlong(binding_elem, BN_parameter_n),
-               lGetUlong(binding_elem, BN_parameter_striding_step_size), 
-               lGetUlong(binding_elem, BN_parameter_socket_offset), 
-               lGetUlong(binding_elem, BN_parameter_core_offset)); 
+            cbs = striding_linux(binding_elem, false); 
          
          } else if (strcmp(lGetString(binding_elem, BN_strategy), "striding_automatic") == 0) {
             
-            /* first core and first socket have to be determined */
-            int first_socket = 0;
-            int first_core = 0;
-
-            char* topo_job = NULL;
-            int topo_job_length = 0;
-
-            /* amount of cores try to get */
-            int amount = (int) lGetUlong(binding_elem, BN_parameter_n);
-            int stepsize = (int) lGetUlong(binding_elem, BN_parameter_striding_step_size);
-
-            /* try to allocate first core and first socket */
-            if (get_striding_first_socket_first_core_and_account(amount, stepsize, 0, 0, true,  
-               &first_socket, &first_core, &topo_job, &topo_job_length)) {
-
-               /* found first socket and first core ! */
-               cbs = sge_dstring_sprintf(&strategy, "%s:%d:%d,%d", 
-                  "striding", 
-                  lGetUlong(binding_elem, BN_parameter_n), 
-                  lGetUlong(binding_elem, BN_parameter_striding_step_size), 
-                  lGetUlong(binding_elem, first_socket), 
-                  lGetUlong(binding_elem, first_core));
-               
-            } else {
-
-               /* it was not possible to fit the binding strategy on host 
-                  because it is occupied already or any other reason */
-                  /* introduce logging LOG_INFO -> WARNING */
-               cbs = "binding_not_possible_does_not_fit_striding_automatic";   
-
-            }
-
-            if (topo_job != NULL)
-               free(topo_job);
-
+            cbs = striding_linux(binding_elem, true); 
+            
          } else if (strcmp(lGetString(binding_elem, BN_strategy), "explicit") == 0) {
 
+/*
             cbs = sge_dstring_sprintf(&strategy, "%s", lGetString(binding_elem, 
                      BN_parameter_explicit));   
-
+*/
+            cbs = explicit_linux(binding_elem);
          }
                   
         /* processor_binding_strategy = lGetString(binding_elem, BN_strategy); */
@@ -2024,6 +2001,88 @@ static const char* createBindingStrategyString(lListElem *jep)
 
    return cbs;
 }
+
+
+static const char* striding_linux(lListElem* binding_elem, const bool automatic) 
+{
+   int first_socket = 0;
+   int first_core = 0;
+   int used_first_socket = 0;
+   int used_first_core = 0;
+
+   char* topo_job = NULL;
+   int topo_job_length = 0;
+   
+   /* strategy string to be written in job "config" file */
+   const char* cbs = NULL;
+      
+   /* get mandatory parameters of -binding striding */
+   int amount = (int) lGetUlong(binding_elem, BN_parameter_n);
+   int step_size = (int) lGetUlong(binding_elem, BN_parameter_striding_step_size);
+   
+   DENTER(TOP_LAYER, "striding_linux");
+
+   if (automatic == false) {
+
+      /* We have to determine the first socket and core to use for core binding 
+         automatically. The rest of the cores are then implicitly given by the 
+         strategy. */
+      
+      /* get the start socket and start core which was a submission parameter */
+      DPRINTF(("Get user defined starting point for binding (socket, core)"));
+      first_socket = (int) lGetUlong(binding_elem, BN_parameter_socket_offset);
+      first_core = (int) lGetUlong(binding_elem, BN_parameter_core_offset);
+      if (first_socket < 0 || first_core < 0) {
+         /* socket and core numbers were not parsed or are not valid */
+         DPRINTF(("Socket and core numbers were not parsed or are not valid"));
+         return false;
+      }
+
+   } 
+
+   /* try to allocate first core and first socket */
+   if (get_striding_first_socket_first_core_and_account(amount, step_size, first_socket, 
+      first_core, automatic, &used_first_socket, &used_first_core, &topo_job, &topo_job_length)) {
+
+      /* DG TODO */
+      /* this string must be freed outside! */
+      dstring strategy = DSTRING_INIT;
+
+      /* found first socket and first core ! */
+      cbs = sge_dstring_sprintf(&strategy, "%s:%d:%d:%d,%d:%s", 
+         "striding", 
+         amount, 
+         step_size,
+         automatic?used_first_socket:first_socket, 
+         automatic?used_first_socket:first_core, 
+         topo_job);
+               
+   } else {
+
+      /* it was not possible to fit the binding strategy on host 
+         because it is occupied already or any other reason */
+      /* DG TODO report error in anther way */ 
+      cbs = "NULL";   
+
+   }
+
+   /* free topology string */
+   if (topo_job != NULL)
+      free(topo_job);
+
+   /* return core binding string */
+   DEXIT;
+   return cbs;
+}
+
+
+static const char* explicit_linux(lListElem* binding_elem) 
+{
+   
+   
+  return NULL; 
+}
+
 #endif
 
 #if defined(SOLARIS86) || defined(SOLARISAMD64)
@@ -2113,13 +2172,8 @@ static const char* striding_solaris(lListElem* binding_elem, const bool automati
       DPRINTF(("Get user defined starting point for binding (socket, core)"));
       first_socket = (int) lGetUlong(binding_elem, BN_parameter_socket_offset);
       first_core = (int) lGetUlong(binding_elem, BN_parameter_core_offset);
-      if (first_socket < 0 || first_core < 0) {
-         /* socket and core numbers were not parsed or are not valid */
-         DPRINTF(("Socket and core numbers were not parsed or are not valid"));
-         return false;
-      }
    } else {
-      DPRINTF(("Do determine starting point autmatically"));
+      DPRINTF(("Do determine starting point automatically"));
    }
 
    /* try to allocate first core and first socket */

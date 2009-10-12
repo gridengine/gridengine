@@ -31,13 +31,40 @@
 /*___INFO__MARK_END__*/
 
 #include "shepherd_binding.h"
-#include "sge_binding.h"
+
+#include "sge_dstring.h"
+#include "sge_string.h"
+#include "err_trace.h"
 
 #if defined(SOLARISAMD64) || defined(SOLARIS86)
 #  include "sge_uidgid.h"
+#  include <sys/pset.h>
 #endif
 
-#if ( defined(LINUXAMD64) || defined(LINUX86) ) && !defined(ULINUX86_24) && !defined(LINUXIA64_24)
+#if defined(PLPA_LINUX)
+
+static bool binding_set_linear_linux(int first_socket, int first_core, 
+               int amount_of_cores, int offset);
+
+static bool binding_set_striding_linux(int first_socket, int first_core, 
+               int amount_of_cores, int offset, int n, char** reason);
+
+static bool set_processor_binding_mask(plpa_cpu_set_t* cpuset, const int processor_ids[], 
+                  const int no_of_ids);
+
+/* DG TODO BETTER WITH POINTER */
+static bool bind_process_to_mask(const pid_t pid, const plpa_cpu_set_t cpuset);
+
+static bool binding_explicit(const int* list_of_sockets, const int samount, 
+      const int* list_of_cores, const int camount);
+
+#endif
+
+#if defined(SOLARISAMD64) || defined(SOLARIS86)
+   static bool bind_shepherd_to_pset(int pset_id); 
+#endif
+
+#if defined(PLPA_LINUX)
 int do_core_binding(void) 
 {
    /* Check if "binding" parameter in 'config' file 
@@ -53,9 +80,9 @@ int do_core_binding(void)
    
    if (strcasecmp("no_job_binding", binding) == 0) {
       shepherd_trace("do_core_binding: skip binding - no core binding configured");
-      return -2;
+      return -1;
    }
-      
+
    /* do a binding accorting the strategy */
    if (strstr(binding, "linear") != NULL) {
       /* do a linear binding */ 
@@ -84,15 +111,11 @@ int do_core_binding(void)
       }
 
       /* perform core binding on current process */
-      if (binding_set_linear(socket, core, amount, 1) == false) {
-
+      if (binding_set_linear_linux(socket, core, amount, 1) == false) {
          /* core binding was not successful */
          shepherd_trace("do_core_binding: linear binding was not successful");
-
       } else {
-
-         /* DG TODO create binding file in active jobs directory */ 
-         shepherd_trace("do_core_binding: TODO -> create binding file");
+         shepherd_trace("do_core_binding: job successfully bound");
       }
 
    } else if (strstr(binding, "striding") != NULL) {
@@ -108,16 +131,25 @@ int do_core_binding(void)
 
       if (amount <= 0) {
          shepherd_trace("do_core_binding: error parsing <amount>");
-         return -3;
+         return -1;
       }
 
       if (stepsize < 0) {
          shepherd_trace("do_core_binding: error parsing <stepsize>");
-         return -3;
+         return -1;
+      }
+      
+      first_socket = binding_striding_parse_first_socket(binding);
+      if (first_core == -1) {
+         shepherd_trace("do_core_binding: error parsing <socket>");
+         return -1;
       }
       
       first_core   = binding_striding_parse_first_core(binding);
-      first_socket = binding_striding_parse_first_socket(binding);
+      if (first_socket == -1) {
+         shepherd_trace("do_core_binding: error parsing <core>");
+         return -1;
+      }
 
       /* last core has to be incremented because core 0 is first core to be used */
       if (stepsize == 0) {
@@ -132,53 +164,10 @@ int do_core_binding(void)
 
       /* perform core binding on current process                */
 
-      if (binding_set_striding(first_socket, first_core, 
-         amount, 0, stepsize, &reason)) {
-
-         /* we need job_id, ja_task_id and pe_task_id */
-         u_long32 job_id = 0;
-         char* c_job_id = NULL;
-         u_long32 task_id = 0;
-         char* c_task_id = NULL;
-         char* pe_task_id = NULL;
-            
-         /* get job_id from configuration file  */
-         if (((c_job_id = get_conf_val("job_id")) && c_job_id != NULL)) {
-            job_id = atoi(c_job_id);
-         } else {
-           shepherd_trace("do_core_binding: didn't get job id from config - abort");
-            return 0;
-         }
-
-         /* get task id from configuration file */
-         if (((c_task_id = get_conf_val("task_id")) && c_task_id != NULL)) {
-            task_id = atoi(c_task_id);
-         } else {
-            shepherd_trace("do_core_binding: didn't get task id from config - abort");
-            return 0;
-         }
-      
-         /* TODO DG we need the pe_task_id -> it seems not to be in the config */
-         /* hence this works only for non-slave tasks now */ 
+      if (binding_set_striding_linux(first_socket, first_core, amount, 0, stepsize, 
+            &reason)) {
 
          shepherd_trace("do_core_binding: striding: binding done");
-            
-         /* write binding file */
-         /* if we are on Solaris the psetid is reported in 'reason' */ 
-         #if defined(SOLARISX86) || defined(SOLARISAMD64) 
-            /* appending the processor set id */
-            if (write_binding_file_striding(first_socket, first_core, amount, 
-               stepsize, reason, job_id, task_id, pe_task_id) == true) {
-               shepherd_trace("do_core_binding: successfully written binding file in active jobs dir");
-            } else {
-               shepherd_trace("do_core_binding: problems while writing binding file in active jobs dir");
-            }
-         #else 
-            /* we have not to append the processor set id */
-            write_binding_file_striding(first_socket, first_core, amount, stepsize, NULL, 
-               job_id, task_id, pe_task_id);
-         #endif 
-
             
       } else {
          if (reason != NULL) {
@@ -202,7 +191,7 @@ int do_core_binding(void)
       shepherd_trace("do_core_binding: explicit");
       
       /* get <socket>,<core> pairs out of binding string */ 
-      if (binding_explicit_exctract_sockets_cores(binding, &sockets, &nr_of_sockets,
+      if (binding_explicit_extract_sockets_cores(binding, &sockets, &nr_of_sockets,
             &cores, &nr_of_cores) == true) {
 
          if (nr_of_sockets == 0 && nr_of_cores == 0) {
@@ -226,10 +215,8 @@ int do_core_binding(void)
 
       }
 
-
-
    } else {
-      
+   
       if (binding != NULL) {
          shepherd_trace("do_core_binding: WARNING: unknown \"binding\" parameter: %s", 
             binding);
@@ -238,7 +225,6 @@ int do_core_binding(void)
       }   
 
    }
-   
    
    shepherd_trace("do_core_binding: finishing");
 
@@ -261,7 +247,7 @@ int do_core_binding(void)
       retval = -1;
    } else if (strcasecmp("no_job_binding", binding) == 0 || strcasecmp("NULL", binding) == 0) {
       shepherd_trace("do_core_binding: skip binding - no core binding configured");
-      retval = -2;
+      retval = -1;
    }
 
    if (retval == 0 && strstr(binding, "psrset:") != NULL) {
@@ -277,11 +263,11 @@ int do_core_binding(void)
             processor_set_id = atoi(pset_id);
          } else {
             shepherd_trace("do_core_binding: couldn't find the psrset id after \"psrset:\" in config file (binding)");
-            retval = -5;
+            retval = -1;
          }
       } else {
          shepherd_trace("do_core_binding: found string \"psrset:\" but no \":\" - almost impossible");
-         retval = -5;
+         retval = -1;
       }
 
       if (retval == 0) {
@@ -312,7 +298,7 @@ int do_core_binding(void)
 
    } else {  /* "psrset" is not in config file defined */
       shepherd_trace("do_core_binding: no processor set found in config file! do nothing");
-      retval = -4;
+      retval = -1;
    }
 
    shepherd_trace("do_core_binding: finishing");
@@ -320,5 +306,542 @@ int do_core_binding(void)
    return retval;
 }
 
+static bool bind_shepherd_to_pset(int pset_id) 
+{
+   /* try to bind current process to processor set */
+   if (pset_bind((psetid_t)pset_id, P_PID, P_MYID, NULL) != 0) {
+      /* binding was not successful */
+      return false;
+   }
+
+   /* successfully bound current process to processor set */
+   return true;
+}
+
+
+
+
 #endif 
+
+
+/* helper for core_binding */
+
+#if defined(PLPA_LINUX)
+
+/****** sge_binding/binding_set_linear_linux() ***************************************
+*  NAME
+*     binding_set_linear_linux() -- Bind current process linear to chunk of cores. 
+*
+*  SYNOPSIS
+*     bool binding_set_linear(int first_socket, int first_core, int 
+*     amount_of_cores, int offset) 
+*
+*  FUNCTION
+*     Binds current process (shepherd) to a set of cores. All processes 
+*     started by the current process are inheriting the core binding (Linux).
+*     
+*     The core binding is done in a linear manner, that means that 
+*     the process is bound to 'amount_of_cores' cores using one core 
+*     after another starting at socket 'first_socket' (usually 0) and 
+*     core = 'first_core' (usually 0) + 'offset'. If the core number 
+*     is higher than the number of cores which are provided by socket 
+*     'first_socket' then the next socket is taken (the core number 
+*      defines how many cores are skiped).
+*
+*  INPUTS
+*     int first_socket    - The first socket (starting at 0) to bind to. 
+*     int first_core      - The first core to bind. 
+*     int amount_of_cores - The amount of cores to bind to. 
+*     int offset          - The user specified core number offset. 
+*
+*  RESULT
+*     bool - true if binding for current process was done, false if not
+*
+*  NOTES
+*     MT-NOTE: binding_set_linear() is not MT safe 
+*
+*  SEE ALSO
+*     ???/???
+*******************************************************************************/
+static bool binding_set_linear_linux(int first_socket, int first_core, 
+               int amount_of_cores, int offset)
+{
+
+   /* sets bitmask in a linear manner        */ 
+   /* first core is on exclusive host 0      */ 
+   /* first core could be set from scheduler */ 
+   /* offset is the first core to start with (make sense only with exclusive host) */
+   dstring error = DSTRING_INIT;
+
+   if (_has_core_binding(&error) == true) {
+
+      /* get access to the dynamically loaded plpa library */
+      void* plpa_lib = _get_plpa_handle(&error);
+      
+      sge_dstring_free(&error);
+
+      if (plpa_lib != NULL) {
+         /* bitmask for processors to turn on and off */
+         plpa_cpu_set_t cpuset;
+         /* turn off all processors */
+         PLPA_CPU_ZERO(&cpuset);
+
+         if (_has_topology_information()) {
+            /* amount of cores set in processor binding mask */ 
+            int cores_set;
+            /* next socket to use */
+            int next_socket = first_socket;
+            /* the amount of cores of the next socket */
+            int socket_amount_of_cores;
+            /* next core to use */
+            int next_core = first_core + offset;
+            /* all the processor ids selected for the mask */
+            int proc_id[amount_of_cores]; 
+            /* maximal amount of sockets on this system */
+            int max_amount_of_sockets = get_amount_of_sockets();
+
+            /* strategy: go to the first_socket and the first_core + offset and 
+               fill up socket and go to the next one. */ 
+               
+            /* TODO maybe better to search for using a core exclusively? */
+            
+            while (get_amount_of_cores(next_socket) <= next_core) {
+               /* TODO which kind of warning when first socket does not offer this? */
+               /* move on to next socket - could be that we have to deal only with cores 
+                  instead of <socket><core> tuples */
+               next_core -= get_amount_of_cores(next_socket); 
+               next_socket++;
+               if (next_socket >= max_amount_of_sockets) {
+                  /* we are out of sockets - we do nothing */
+                  return false;
+               }
+            }  
+           proc_id[0] = get_processor_id(next_socket, next_core);
+
+            /* collect the other processor ids with the strategy */
+            for (cores_set = 1; cores_set < amount_of_cores; cores_set++) {
+               next_core++;
+               /* jump to next socket when it is needed */
+               /* maybe the next socket could offer 0 cores (I can' see when, 
+                  but just to be sure) */
+               while ((socket_amount_of_cores = get_amount_of_cores(next_socket)) 
+                  <= next_core) {
+                  next_socket++;
+                  next_core = next_core - socket_amount_of_cores;
+                  if (next_socket >= max_amount_of_sockets) {
+                     /* we are out of sockets - we do nothing */
+                     return false;
+                  }
+               }
+               /* get processor id */ 
+               proc_id[cores_set] = get_processor_id(next_socket, next_core);
+            }
+            
+            /* set the mask for all processor ids */ 
+            set_processor_binding_mask(&cpuset, proc_id, amount_of_cores);
+            
+            /* bind process to mask */ 
+            if (bind_process_to_mask((pid_t) 0, cpuset) == false) {
+               /* there was an error while binding */ 
+               return false;
+            }
+
+         } else {
+            /* TODO DG strategy without topology information but with 
+               working library? */
+            return false;
+         }
+         
+      } else {
+         /* have no access to plpa library */
+         return false;
+      }
+
+   } else {
+
+      sge_dstring_free(&error);
+   }
+   
+
+   _close_plpa_handle();
+   
+   return true;
+}
+
+/****** sge_binding/binding_set_striding_linux() *************************************
+*  NAME
+*     binding_set_striding_linux() -- Binds current process to cores.  
+*
+*  SYNOPSIS
+*     bool binding_set_striding_linux(int first_socket, int first_core, int 
+*     amount_of_cores, int offset, int stepsize) 
+*
+*  FUNCTION
+*     Performs a core binding for the calling process according to the 
+*     'striding' strategy. The first core used is specified by first_socket
+*     (beginning with 0) and first_core (beginning with 0). If first_core is 
+*     greater than available cores on first_socket, the next socket is examined 
+*     and first_core is reduced by the skipped cores. If the first_core could 
+*     not be found on system (because it was to high) no binding will be done.
+*     
+*     If the first core was choosen the next one is defined by the step size 'n' 
+*     which is incremented to the first core found. If the socket has not the 
+*     core (because it was the last core of the socket for example) the next 
+*     socket is examined.
+*
+*     If the system is out of cores and there are still some cores to select 
+*     (because of the amount_of_cores parameter) no core binding will be performed.
+*    
+*  INPUTS
+*     int first_socket    - first socket to begin with  
+*     int first_core      - first core to start with  
+*     int amount_of_cores - total amount of cores to be used 
+*     int offset          - core offset for first core (increments first core used) 
+*     int stepsize        - step size 
+*
+*  RESULT
+*     bool - Returns true if the binding was performed, otherwise false.
+*
+*  EXAMPLE
+*     ??? 
+*
+*  NOTES
+*     MT-NOTE: binding_set_striding() is MT safe 
+*
+*  SEE ALSO
+*     ???/???
+*******************************************************************************/
+bool binding_set_striding_linux(int first_socket, int first_core, int amount_of_cores,
+                          int offset, int stepsize, char** reason)
+{
+   /* n := take every n-th core */ 
+   bool bound = false;
+
+   dstring error = DSTRING_INIT;
+
+   if (_has_core_binding(&error) == true) {
+
+      /* get access to the dynamically loaded plpa library */
+      void* plpa_lib = _get_plpa_handle(&error);
+   
+      sge_dstring_free(&error);
+
+      if (plpa_lib != NULL) {
+         /* bitmask for processors to turn on and off */
+         plpa_cpu_set_t cpuset;  
+         /* turn off all processors */
+         PLPA_CPU_ZERO(&cpuset);
+
+         /* when library offers architecture: 
+            - get virtual processor ids in the following manner:
+              * on socket "first_socket" choose core number "first_core + offset"
+              * then add n: if core is not available go to next socket
+              * ...
+         */
+         if (_has_topology_information()) {
+            /* amount of cores set in processor binding mask */ 
+            int cores_set = 0;
+            /* next socket to use */
+            int next_socket = first_socket;
+            /* next core to use */
+            int next_core = first_core + offset;
+            /* all the processor ids selected for the mask */
+            int proc_id[amount_of_cores]; 
+            /* single processor id */
+            int processorid;
+            /* maximal amount of sockets on this system */
+            int max_amount_of_sockets = get_amount_of_sockets();
+            
+            /* check if we are already out of range */
+            if (next_socket >= max_amount_of_sockets) {
+               (*reason) = "already out of sockets!";
+               return false;
+            }   
+
+            while (get_amount_of_cores(next_socket) <= next_core) {
+               /* TODO which kind of warning when first socket does not offer this? */
+               /* move on to next socket - could be that we have to deal only with cores 
+                  instead of <socket><core> tuples */
+               next_core -= get_amount_of_cores(next_socket); 
+               next_socket++;
+               if (next_socket >= max_amount_of_sockets) {
+                  /* we are out of sockets - we do nothing */
+                  (*reason) = "first core: out of sockets!";
+                  return false;
+               }
+            }  
+
+            proc_id[0] = get_processor_id(next_socket, next_core);
+            
+            /* turn on processor id in mask */ 
+            /* TODO */ 
+            
+            /* collect the rest of the processor ids */ 
+            for (cores_set = 1; cores_set < amount_of_cores; cores_set++) {
+               /* calculate next_core number */ 
+               next_core += stepsize;
+               
+               /* check if we are already out of range */
+               if (next_socket >= max_amount_of_sockets) {
+                  (*reason) = "out of sockets";
+                  return false;
+               }   
+
+
+               while (get_amount_of_cores(next_socket) <= next_core) {
+                  /* TODO which kind of warning when first socket does not offer this? */
+                  /* move on to next socket - could be that we have to deal only with cores 
+                     instead of <socket><core> tuples */
+                  next_core -= get_amount_of_cores(next_socket); 
+                  next_socket++;
+                  if (next_socket >= max_amount_of_sockets) {
+                     /* we are out of sockets - we do nothing */
+                     (*reason) = "nextcore: out of sockets!";
+                     return false;
+                  }
+               }    
+
+               /* TODO DG add processor id to mask */ 
+               processorid = get_processor_id(next_socket, next_core);
+               if (processorid >= 0) {
+                  proc_id[cores_set] = processorid;
+               } else {
+                  if (processorid == -2) {
+                     (*reason) = "processor id couldn't be retrieved!";
+                  }
+                  if (processorid == -3) {
+                     (*reason) = "socket id couldn't be retrieved!";
+                  }
+                  (*reason) = "couldn' set processor id!";
+                  return false;
+               }   
+               
+            } /* collecting processor ids */
+
+            /* set the mask for all processor ids */ 
+            set_processor_binding_mask(&cpuset, proc_id, amount_of_cores);
+            
+            /* bind process to mask */ 
+            if (bind_process_to_mask((pid_t) 0, cpuset) == true) {
+               /* there was an error while binding */ 
+               bound = true;
+            }
+            
+         } else {
+            /* setting bitmask without topology information which could 
+               not be right? */
+            /* TODO DG */   
+
+            (*reason) = "bitmask without topology information";
+            return false;
+         }
+
+      } else {
+         /* could not load plpa library */
+         (*reason) = "could not load plpa lib";
+         return false;
+      }
+      
+   } else {
+      /* has no core binding feature */
+      sge_dstring_free(&error);
+
+      (*reason) = calloc(sge_dstring_strlen(&error)+1, sizeof(char));
+      memcpy(*reason, sge_dstring_get_string(&error), 
+         sge_dstring_strlen(&error)*sizeof(char));
+      sge_dstring_free(&error);   
+      return false;
+   }
+   
+   
+   return bound;
+}
+
+/****** sge_binding/set_processor_binding_mask() *******************************
+*  NAME
+*     set_processor_binding_mask() -- ??? 
+*
+*  SYNOPSIS
+*     static bool set_processor_binding_mask(plpa_cpu_set_t* cpuset, const int* 
+*     processor_ids) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     plpa_cpu_set_t* cpuset   - ??? 
+*     const int* processor_ids - ??? 
+*
+*  RESULT
+*     static bool - 
+*
+*  NOTES
+*     MT-NOTE: set_processor_binding_mask() is not MT safe 
+*
+*  SEE ALSO
+*     ???/???
+*******************************************************************************/
+static bool set_processor_binding_mask(plpa_cpu_set_t* cpuset, const int processor_ids[], 
+                  const int no_of_ids)
+{
+   int proc_num;
+
+   if (processor_ids == NULL || cpuset == NULL) {
+      return false;
+   }
+
+   /* turns on all processors from processor_ids array */
+   for (proc_num = 0; proc_num < no_of_ids; proc_num++) {
+      PLPA_CPU_SET(processor_ids[proc_num], cpuset);
+   }
+  
+   return true;
+}
+
+
+/****** sge_binding/bind_process_to_mask() *************************************
+*  NAME
+*     bind_process_to_mask() -- ??? 
+*
+*  SYNOPSIS
+*     static bool bind_process_to_mask(const pid_t pid, const plpa_cpu_set_t 
+*     cpuset) 
+*
+*  FUNCTION
+*     ??? 
+*
+*  INPUTS
+*     const pid_t pid             - ??? 
+*     const plpa_cpu_set_t cpuset - ??? 
+*
+*  RESULT
+*     static bool - 
+*
+*  NOTES
+*     MT-NOTE: bind_process_to_mask() is not MT safe 
+*
+*  SEE ALSO
+*     ???/???
+*******************************************************************************/
+static bool bind_process_to_mask(const pid_t pid, const plpa_cpu_set_t cpuset)
+{
+   void* plpa_handle = get_plpa_handle();
+
+   if (plpa_handle != NULL && has_core_binding() && &cpuset != NULL) {
+      /* we only need core binding capabilites, no topology is required */
+      /* DG TODO do it once while execd init (binding_init) */
+      int (*sched_setaffinity)(pid_t, size_t, const plpa_cpu_set_t*) 
+                                 = dlsym(plpa_handle, "plpa_sched_setaffinity"); 
+      /* DG TODO delete addres and change header in order to make cputset to pointer */ 
+      if ((*sched_setaffinity)(pid, sizeof(plpa_cpu_set_t), &cpuset) != 0) {
+         return false;
+      } else {
+         return true;
+      }   
+   }
+   
+   return false;
+}
+
+/****** sge_binding/binding_explicit() *****************************************
+*  NAME
+*     binding_explicit() -- Binds current process to specified CPU cores. 
+*
+*  SYNOPSIS
+*     bool binding_explicit(int* list_of_cores, int camount, int* 
+*     list_of_sockets, int samount) 
+*
+*  FUNCTION
+*     Binds the current process to the cores specified by a <socket>,<core>
+*     tuple. The tuple is given by a list of sockets and a list of cores. 
+*     The elements on the same position of these lists are reflecting 
+*     a tuple. Therefore the length of the lists must be the same.
+*
+*     Binding is currently done on Linux hosts only where the machine topology 
+*     can be retrieved with PLPA library. It also does require this library.
+*
+*  INPUTS
+*     int* list_of_sockets - List of sockets in the same order as list of cores. 
+*     int samount          - Length of the list of sockets. 
+*     int* list_of_cores   - List of cores in the same order as list of sockets. 
+*     int camount          - Length of the list of cores. 
+*
+*  RESULT
+*     bool - true when the current process was bound like specified with the 
+*            input parameter
+*
+*  NOTES
+*     MT-NOTE: binding_explicit() is not MT safe 
+*
+*  SEE ALSO
+*     ???/???
+*******************************************************************************/
+static bool binding_explicit(const int* list_of_sockets, const int samount, 
+   const int* list_of_cores, const int camount)
+{
+   /* return value: successful bound or not */ 
+   bool bound = false;
+
+   /* check if we have exactly the same amount of sockets as cores */
+   if (camount != samount) {
+      return false;
+   }
+   /* do only on linux when we have core binding feature in kernel */
+   if (has_core_binding() == true) {
+      
+      /* get access to the dynamically loaded plpa library */
+      void* plpa_lib = get_plpa_handle();
+
+      if (plpa_lib != NULL && _has_topology_information()) {
+         /* bitmask for processors to turn on and off */
+         plpa_cpu_set_t cpuset;  
+         /* turn off all processors */
+         PLPA_CPU_ZERO(&cpuset);
+         /* the internal processor ids selected for the binding mask */
+         int proc_id[camount];
+         /* processor id counter */
+         int pr_id_ctr;
+
+         /* Fetch for each socket,core tuple the processor id. 
+            If this is not possible for one do nothing and return false. */ 
+
+         /* go through all socket,core tuples and get the processor id */
+         for (pr_id_ctr = 0; pr_id_ctr < camount; pr_id_ctr++) { 
+
+            /* get the processor id */
+            if (&list_of_cores[pr_id_ctr] == NULL || 
+                &list_of_sockets[pr_id_ctr] == NULL) {
+                /* got a null pointer therefore we abort*/
+               return false;
+            }
+
+            /* get the OS internal processor id */ 
+            proc_id[pr_id_ctr] = get_processor_id(list_of_sockets[pr_id_ctr], 
+                                                   list_of_cores[pr_id_ctr]);
+            /* check if this was successful */
+            if (proc_id[pr_id_ctr] < 0) {
+               /* a problem occured while getting the processor id */
+               /* aborting and do nothing */
+               return false;
+            }
+         }
+
+         /* generate the core binding mask out of the processor id array */
+         set_processor_binding_mask(&cpuset, proc_id, camount);
+
+         /* do the core binding for the current process with the mask */
+         if (bind_process_to_mask((pid_t) 0, cpuset) == true) {
+            /* there was an error while binding */ 
+            bound = true;
+         } /* couldn't be bound return false */
+          
+      } /* has no PLPA lib or topology information */
+
+   } /* has no core binding ability */
+
+   return bound;
+}
+
+#endif
+
 

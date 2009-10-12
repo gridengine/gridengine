@@ -37,67 +37,64 @@
 #  include <sys/processor.h>
 #  include <sys/types.h>
 #  include <sys/pset.h>
+#  include <kstat.h>
+#  include <sys/statfs.h>
 #endif 
 
 #include <pthread.h>
 #include "sge_mtutil.h"
 #include "sge_log.h"
 
+#include "uti/sge_binding_hlp.h"
+
 /* these sockets cores or threads are currently in use from SGE */
 /* access them via getExecdTopologyInUse() because of initialization */
 static char* logical_used_topology = NULL;
 static int logical_used_topology_length = 0;
 
-#if defined(PLPA_LINUX)
-/* local functions for binding */
-static bool binding_set_linear_Linux(int first_socket, int first_core, int amount_of_cores,
-                        int offset);
 
-static bool binding_set_striding_Linux(int first_socket, int first_core, int amount_of_cores,
-                          int offset, int n, char** reason);
+/* creates a string with the topology used from a single job */
+static bool create_topology_used_per_job(char** accounted_topology, 
+               int* accounted_topology_length, char* logical_used_topology, 
+               char* used_topo_with_job, int logical_used_topology_length);
 
-/* local functions for accessing PLPA */
-static bool get_topology_linux(char** topology, int* length);
-static int get_processor_id(int socket_number, int core_number);
-static int get_amount_of_cores(int socket_number);
-static int get_total_amount_of_cores(void);
-static int get_amount_of_sockets(void); 
-static bool set_processor_binding_mask(plpa_cpu_set_t* cpuset, const int processor_ids[], const int no_of_ids);
-/* TODO DG do it with a pointer */
-static bool bind_process_to_mask(const pid_t pid, const plpa_cpu_set_t cpuset); 
-static bool has_core_binding(void);
-static bool has_topology_information(void); 
-static void* get_plpa_handle(void);
-static void close_plpa_handle(void);
-
-/* local handle for daemon in order to access PLPA library */
-static void* plpa_lib_handle = NULL;
-
-#endif
+/* main functions */
 
 #if defined(SOLARISAMD64) || defined(SOLARIS86)
-#  include <kstat.h>
-#  include <sys/statfs.h>
 
-/* public */
 static bool get_topology_solaris(char** topology, int* length);
-static bool generate_chipID_coreID_matrix(int*** matrix, int* length); 
-static int get_amount_of_sockets_from_matrix(const int** matrix, const int length);
-static int get_amount_of_cores_from_matrix(const int** matrix, const int length, int** cores, int* size);
-static int get_amount_of_threads_from_matrix(const int** matrix, const int length, 
-   int** threads, int* size); 
 
-/* private */
-static int get_chip_ids_from_matrix(const int** matrix, const int length, int** chip_ids, int* amount);
-static int get_core_ids_from_matrix(const int** matrix, const int length, int** core_ids, int* amount);
-static int get_ids_from_matrix(const int** matrix, const int length, const int which_ID,  
-   int** ids, int* amount); 
-static int is_different_id(const int id); 
-static int get_amount_of_core_or_threads_from_matrix(const int** matrix, const int length, 
-   int core, int** core_or_threads, int* size);
+static bool generate_chipID_coreID_matrix(int*** matrix, int* length); 
+
+static int get_amount_of_sockets_from_matrix(const int** matrix, const int length);
+
+static int get_amount_of_cores_from_matrix(const int** matrix, const int length, 
+               int** cores, int* size);
+
+static int get_amount_of_threads_from_matrix(const int** matrix, const int length, 
+               int** threads, int* size); 
+
+/* helpers */
+
+static int get_chip_ids_from_matrix(const int** matrix, const int length, 
+               int** chip_ids, int* amount);
+
+static int get_core_ids_from_matrix(const int** matrix, const int length, 
+               int** core_ids, int* amount);
+
+static int get_ids_from_matrix(const int** matrix, const int length, 
+               const int which_ID, int** ids, int* amount);
+
+/* DG TODO this function is not MT -> introduce context */
+static int is_different_id(const int id);
+
+static int get_amount_of_core_or_threads_from_matrix(const int** matrix, 
+               const int length, int core, int** core_or_threads, int* size);
 
 /* access functions for load report */
+
 static int get_total_amount_of_cores_solaris(void);
+
 static int get_total_amount_of_sockets_solaris(void);
 
 /* for processor sets */
@@ -153,21 +150,9 @@ static bool update_binding_system_status(void);
 #endif 
 
 /* find next core in topology string */
-static bool go_to_next_core(const char* topology, const int pos, int* new_pos); 
-
-/* creates the binding file in the active jobs directory */
-static bool create_binding_file(const char* topology, const char* psetid, const u_long32 job_id, 
-   const u_long32 ja_task_id, const char *pe_task_id); 
-
-/* parses the binding file from active_jobs directory and account on global string */
 #if 0
-static bool parse_binding_file_and_account(const char* fname);
-#endif 
-
-/* creates a string with the topology used from a single job */
-static bool create_topology_used_per_job(char** accounted_topology, int* accounted_topology_length, 
-            char* logical_used_topology, char* used_topo_with_job, int logical_used_topology_length);
-
+static bool go_to_next_core(const char* topology, const int pos, int* new_pos); 
+#endif
 
 /* here threads could be introduced */ 
 
@@ -201,9 +186,7 @@ bool binding_set_linear(int first_socket, int first_core, int amount_of_cores, i
 {
   
 /* above is just needed in order to get it compiled without deleting code */
-#if defined(PLPA_LINUX)
-   return binding_set_linear_Linux(first_socket, first_core, amount_of_cores, offset);
-#elif defined(SOLARISAMD64) || defined(SOLARIS86)
+#if defined(SOLARISAMD64) || defined(SOLARIS86)
    /* the processor set id which we need in order to delete it when the job 
       does finish */
    psetid_t psetid;
@@ -514,7 +497,7 @@ int create_processor_set_striding_solaris(const int first_socket,
    const int first_core, const int amount, const int step_size) 
 {
 
-      /* the topology matrix */
+   /* the topology matrix */
    int** matrix = NULL;
    /* size of the topology matrix */
    int mlength = 0;
@@ -710,108 +693,6 @@ static void free_matrix(int** matrix, const int length)
    FREE(matrix);
 }
 
-
-/****** sge_binding/binding_explicit_check_and_account() ***********************
-*  NAME
-*     binding_explicit_check_and_account() -- Checks if a job can be bound.  
-*
-*  SYNOPSIS
-*     bool binding_explicit_check_and_account(const int* list_of_sockets, const 
-*     int samount, const int** list_of_cores, const int score, char** 
-*     topo_used_by_job, int* topo_used_by_job_length) 
-*
-*  FUNCTION
-*     Checks if the job can bind to the given by the <socket>,<core> pairs. 
-*     If so these cores are marked as used and true is returned. Also an 
-*     topology string is returned where all cores consumed by the job are 
-*     marked with smaller case letters. 
-*
-*  INPUTS
-*     const int* list_of_sockets   - ??? 
-*     const int samount            - ??? 
-*     const int** list_of_cores    - ??? 
-*     const int score              - ??? 
-*     char** topo_used_by_job      - (out) 
-*     int* topo_used_by_job_length - (out) 
-*
-*  RESULT
-*     bool - True if the job can be bound to the topology, false if not. 
-*
-*  NOTES
-*     MT-NOTE: binding_explicit_check_and_account() is MT safe 
-*
-*
-*  SEE ALSO
-*     ???/???
-*******************************************************************************/
-bool binding_explicit_check_and_account(const int* list_of_sockets, const int samount, 
-   const int* list_of_cores, const int score, char** topo_used_by_job, 
-   int* topo_used_by_job_length)
-{
-   int i;
-
-   /* position of <socket>,<core> in topology string */
-   int pos;
-   /* status if accounting was possible */
-   bool possible = true;
-
-   /* input parameter validation */
-   if (samount != score || samount <= 0 || list_of_sockets == NULL 
-         || list_of_cores == NULL) {
-      return false;
-   }
-
-   /* check if the topology which is used already is accessable */
-   if (logical_used_topology == NULL) {
-      /* we have no topology string at the moment (should be initialized before) */
-      if (!get_execd_topology(&logical_used_topology, &logical_used_topology_length)) {
-         /* couldn't even get the topology string */
-         return false;
-      }
-   }
-   
-   /* create output string */ 
-   get_execd_topology(topo_used_by_job, topo_used_by_job_length);
-
-   /* go through the <socket>,<core> pair list */
-   for (i = 0; i < samount; i++) {
-
-      /* get position in topology string */
-     if ((pos = get_position_in_topology(list_of_sockets[i], list_of_cores[i], 
-        logical_used_topology, logical_used_topology_length) < 0)) {
-        /* the <socket>,<core> does not exist */
-        possible = false;
-        break;
-     } 
-
-      /* check if this core is available (DG TODO introduce threads) */
-      if (logical_used_topology[i] == 'C') {
-         /* do temporarily account it */
-         (*topo_used_by_job)[i] = 'c';
-      } else {
-         /* core not usable -> early abort */
-         possible = false;
-         break;
-      }
-   }
-   
-   /* do accounting if all cores can be used */
-   if (possible) {
-      if (account_job_on_topology(&logical_used_topology, logical_used_topology_length, 
-         *topo_used_by_job, *topo_used_by_job_length) == false) {
-         possible = false;
-      }   
-   }
-
-   /* free memory when unsuccessful */
-   if (possible == false) {
-      free(*topo_used_by_job);
-      *topo_used_by_job = NULL;
-      *topo_used_by_job_length = 0;
-   }
-
-   return possible;
-}
 
 /****** sge_binding/account_job_on_topology() **********************************
 *  NAME
@@ -1031,365 +912,7 @@ static bool bind_current_process_to_pset(psetid_t pset_id)
    return true;
 }
 
-bool bind_shepherd_to_pset(int pset_id) 
-{
-   /* try to bind current process to processor set */
-   if (pset_bind((psetid_t)pset_id, P_PID, P_MYID, NULL) != 0) {
-      /* binding was not successful */
-      return false;
-   }
-
-   /* successfully bound current process to processor set */
-   return true;
-}
-
-
 #endif 
-
-#if defined(PLPA_LINUX)
-
-/****** sge_binding/binding_set_linear_Linux() ***************************************
-*  NAME
-*     binding_set_linear_Linux() -- Bind current process linear to chunk of cores. 
-*
-*  SYNOPSIS
-*     bool binding_set_linear(int first_socket, int first_core, int 
-*     amount_of_cores, int offset) 
-*
-*  FUNCTION
-*     Binds current process (shepherd) to a set of cores. All processes 
-*     started by the current process are inheriting the core binding (Linux).
-*     
-*     The core binding is done in a linear manner, that means that 
-*     the process is bound to 'amount_of_cores' cores using one core 
-*     after another starting at socket 'first_socket' (usually 0) and 
-*     core = 'first_core' (usually 0) + 'offset'. If the core number 
-*     is higher than the number of cores which are provided by socket 
-*     'first_socket' then the next socket is taken (the core number 
-*      defines how many cores are skiped).
-*
-*  INPUTS
-*     int first_socket    - The first socket (starting at 0) to bind to. 
-*     int first_core      - The first core to bind. 
-*     int amount_of_cores - The amount of cores to bind to. 
-*     int offset          - The user specified core number offset. 
-*
-*  RESULT
-*     bool - true if binding for current process was done, false if not
-*
-*  NOTES
-*     MT-NOTE: binding_set_linear() is not MT safe 
-*
-*  SEE ALSO
-*     ???/???
-*******************************************************************************/
-static bool binding_set_linear_Linux(int first_socket, int first_core, int amount_of_cores,
-                        int offset)
-{
-
-   /* sets bitmask in a linear manner        */ 
-   /* first core is on exclusive host 0      */ 
-   /* first core could be set from scheduler */ 
-   /* offset is the first core to start with (make sense only with exclusive host) */
-
-   if (has_core_binding() == true) {
-
-      /* get access to the dynamically loaded plpa library */
-      void* plpa_lib = get_plpa_handle();
-
-      if (plpa_lib != NULL) {
-         /* bitmask for processors to turn on and off */
-         plpa_cpu_set_t cpuset;
-         /* turn off all processors */
-         PLPA_CPU_ZERO(&cpuset);
-
-         if (has_topology_information()) {
-            /* amount of cores set in processor binding mask */ 
-            int cores_set;
-            /* next socket to use */
-            int next_socket = first_socket;
-            /* the amount of cores of the next socket */
-            int socket_amount_of_cores;
-            /* next core to use */
-            int next_core = first_core + offset;
-            /* all the processor ids selected for the mask */
-            int proc_id[amount_of_cores]; 
-            /* maximal amount of sockets on this system */
-            int max_amount_of_sockets = get_amount_of_sockets();
-
-            /* strategy: go to the first_socket and the first_core + offset and 
-               fill up socket and go to the next one. */ 
-               
-            /* TODO maybe better to search for using a core exclusively? */
-            
-            while (get_amount_of_cores(next_socket) <= next_core) {
-               /* TODO which kind of warning when first socket does not offer this? */
-               /* move on to next socket - could be that we have to deal only with cores 
-                  instead of <socket><core> tuples */
-               next_core -= get_amount_of_cores(next_socket); 
-               next_socket++;
-               if (next_socket >= max_amount_of_sockets) {
-                  /* we are out of sockets - we do nothing */
-                  return false;
-               }
-            }  
-            
-            proc_id[0] = get_processor_id(next_socket, next_core);
-
-            /* collect the other processor ids with the strategy */
-            for (cores_set = 1; cores_set < amount_of_cores; cores_set++) {
-               next_core++;
-               /* jump to next socket when it is needed */
-               /* maybe the next socket could offer 0 cores (I can' see when, 
-                  but just to be sure) */
-               while ((socket_amount_of_cores = get_amount_of_cores(next_socket)) 
-                  <= next_core) {
-                  next_socket++;
-                  next_core = next_core - socket_amount_of_cores;
-                  if (next_socket >= max_amount_of_sockets) {
-                     /* we are out of sockets - we do nothing */
-                     return false;
-                  }
-               }
-               /* get processor id */ 
-               proc_id[cores_set] = get_processor_id(next_socket, next_core);
-            }
-            
-            /* set the mask for all processor ids */ 
-            set_processor_binding_mask(&cpuset, proc_id, amount_of_cores);
-            
-            /* bind process to mask */ 
-            if (bind_process_to_mask((pid_t) 0, cpuset) == false) {
-               /* there was an error while binding */ 
-               return false;
-            }
-
-         } else {
-            /* TODO DG strategy without topology information but with 
-               working library? */
-            return false;
-         }
-         
-      } else {
-         /* have no access to plpa library */
-         return false;
-      }
-
-   }
-   close_plpa_handle();
-   
-   return true;
-}
-
-#endif 
-
-
-bool binding_set_striding(int first_socket, int first_core, int amount_of_cores,
-                          int offset, int n, char** reason)
-{
-
-   #if defined(PLPA_LINUX)
-      return binding_set_striding_Linux(first_socket, first_core, amount_of_cores,
-                          offset, n, reason);
-   #elif defined(SOLARISX86) || defined(SOLARISAMD64)
-      /* TODO DG delete processor set later on */
-      psetid_t psetid;
-      if (binding_set_linear_Solaris(first_socket, first_core, amount_of_cores, 
-                          n, &psetid) == true) {
-
-         /* report processorset id as reason in string */
-         (*reason) = (char *) calloc(10, sizeof(char)); /* processor id storage */
-         sprintf((*reason), "%d", (int) psetid);
-         return true;
-      } else {
-         /* could not do binding */ 
-         return false;
-      }
-   #else
-      /* unsupported architecture */
-      return false;
-   #endif 
-   
-}
-
-
-/****** sge_binding/binding_set_striding_Linux() *************************************
-*  NAME
-*     binding_set_striding_Linux() -- Binds current process to cores.  
-*
-*  SYNOPSIS
-*     bool binding_set_striding(int first_socket, int first_core, int 
-*     amount_of_cores, int offset, int n) 
-*
-*  FUNCTION
-*     Performs a core binding for the calling process according to the 
-*     'striding' strategy. The first core used is specified by first_socket
-*     (beginning with 0) and first_core (beginning with 0). If first_core is 
-*     greater than available cores on first_socket, the next socket is examined 
-*     and first_core is reduced by the skipped cores. If the first_core could 
-*     not be found on system (because it was to high) no binding will be done.
-*     
-*     If the first core was choosen the next one is defined by the step size 'n' 
-*     which is incremented to the first core found. If the socket has not the 
-*     core (because it was the last core of the socket for example) the next 
-*     socket is examined.
-*
-*     If the system is out of cores and there are still some cores to select 
-*     (because of the amount_of_cores parameter) no core binding will be performed.
-*    
-*  INPUTS
-*     int first_socket    - first socket to begin with  
-*     int first_core      - first core to start with  
-*     int amount_of_cores - total amount of cores to be used 
-*     int offset          - core offset for first core (increments first core used) 
-*     int n               - step size 
-*
-*  RESULT
-*     bool - Returns true if the binding was performed, otherwise false.
-*
-*  EXAMPLE
-*     ??? 
-*
-*  NOTES
-*     MT-NOTE: binding_set_striding() is MT safe 
-*
-*  SEE ALSO
-*     ???/???
-*******************************************************************************/
-bool binding_set_striding_Linux(int first_socket, int first_core, int amount_of_cores,
-                          int offset, int n, char** reason)
-{
-   /* n := take every n-th core */ 
-   bool bound = false;
-
-#if defined(PLPA_LINUX) 
-   if (has_core_binding() == true) {
-
-      /* get access to the dynamically loaded plpa library */
-      void* plpa_lib = get_plpa_handle();
-
-      if (plpa_lib != NULL) {
-         /* bitmask for processors to turn on and off */
-         plpa_cpu_set_t cpuset;  
-         /* turn off all processors */
-         PLPA_CPU_ZERO(&cpuset);
-
-         /* when library offers architecture: 
-            - get virtual processor ids in the following manner:
-              * on socket "first_socket" choose core number "first_core + offset"
-              * then add n: if core is not available go to next socket
-              * ...
-         */
-         if (has_topology_information()) {
-            /* amount of cores set in processor binding mask */ 
-            int cores_set = 0;
-            /* next socket to use */
-            int next_socket = first_socket;
-            /* next core to use */
-            int next_core = first_core + offset;
-            /* all the processor ids selected for the mask */
-            int proc_id[amount_of_cores]; 
-            /* single processor id */
-            int processorid;
-            /* maximal amount of sockets on this system */
-            int max_amount_of_sockets = get_amount_of_sockets();
-            
-            /* check if we are already out of range */
-            if (next_socket >= max_amount_of_sockets) {
-               (*reason) = "already out of sockets!";
-               return false;
-            }   
-
-            while (get_amount_of_cores(next_socket) <= next_core) {
-               /* TODO which kind of warning when first socket does not offer this? */
-               /* move on to next socket - could be that we have to deal only with cores 
-                  instead of <socket><core> tuples */
-               next_core -= get_amount_of_cores(next_socket); 
-               next_socket++;
-               if (next_socket >= max_amount_of_sockets) {
-                  /* we are out of sockets - we do nothing */
-                  (*reason) = "first core: out of sockets!";
-                  return false;
-               }
-            }  
-
-            proc_id[0] = get_processor_id(next_socket, next_core);
-            
-            /* turn on processor id in mask */ 
-            /* TODO */ 
-            
-            /* collect the rest of the processor ids */ 
-            for (cores_set = 1; cores_set < amount_of_cores; cores_set++) {
-               /* calculate next_core number */ 
-               next_core += n;
-               
-               /* check if we are already out of range */
-               if (next_socket >= max_amount_of_sockets) {
-                  (*reason) = "out of sockets";
-                  return false;
-               }   
-
-               while (get_amount_of_cores(next_socket) <= next_core) {
-                  /* TODO which kind of warning when first socket does not offer this? */
-                  /* move on to next socket - could be that we have to deal only with cores 
-                     instead of <socket><core> tuples */
-                  next_core -= get_amount_of_cores(next_socket); 
-                  next_socket++;
-                  if (next_socket >= max_amount_of_sockets) {
-                     /* we are out of sockets - we do nothing */
-                     (*reason) = "nextcore: out of sockets!";
-                     return false;
-                  }
-               }    
-
-               /* TODO DG add processor id to mask */ 
-               processorid = get_processor_id(next_socket, next_core);
-               if (processorid >= 0) {
-                  proc_id[cores_set] = processorid;
-               } else {
-                  if (processorid == -2) {
-                     (*reason) = "processor id couldn't be retrieved!";
-                  }
-                  if (processorid == -3) {
-                     (*reason) = "socket id couldn't be retrieved!";
-                  }
-                  (*reason) = "couldn' set processor id!";
-                  return false;
-               }   
-               
-            } /* collecting processor ids */
-
-            /* set the mask for all processor ids */ 
-            set_processor_binding_mask(&cpuset, proc_id, amount_of_cores);
-            
-            /* bind process to mask */ 
-            if (bind_process_to_mask((pid_t) 0, cpuset) == true) {
-               /* there was an error while binding */ 
-               bound = true;
-            }
-            
-         } else {
-            /* setting bitmask without topology information which could 
-               not be right? */
-            /* TODO DG */   
-            return false;
-         }
-
-      } else {
-         /* could not load plpa library */
-         return false;
-      }
-      
-   } else {
-      /* has no core binding feature */
-      return false;
-   }
-   
-   #endif
-   
-   
-   return bound;
-}
 
 /****** sge_binding/binding_one_per_socket() ***********************************
 *  NAME
@@ -1469,554 +992,111 @@ bool binding_n_per_socket(int first_socket, int amount_of_sockets, int n)
 }
 
 
-/****** sge_binding/binding_explicit() *****************************************
+#if defined(SOLARIS86) || defined(SOLARISAMD64)  
+
+/****** sge_binding/binding_explicit_check_and_account() ***********************
 *  NAME
-*     binding_explicit() -- Binds current process to specified CPU cores. 
+*     binding_explicit_check_and_account() -- Checks if a job can be bound.  
 *
 *  SYNOPSIS
-*     bool binding_explicit(int* list_of_cores, int camount, int* 
-*     list_of_sockets, int samount) 
+*     bool binding_explicit_check_and_account(const int* list_of_sockets, const 
+*     int samount, const int** list_of_cores, const int score, char** 
+*     topo_used_by_job, int* topo_used_by_job_length) 
 *
 *  FUNCTION
-*     Binds the current process to the cores specified by a <socket>,<core>
-*     tuple. The tuple is given by a list of sockets and a list of cores. 
-*     The elements on the same position of these lists are reflecting 
-*     a tuple. Therefore the length of the lists must be the same.
-*
-*     Binding is currently done on Linux hosts only where the machine topology 
-*     can be retrieved with PLPA library. It also does require this library.
+*     Checks if the job can bind to the given by the <socket>,<core> pairs. 
+*     If so these cores are marked as used and true is returned. Also an 
+*     topology string is returned where all cores consumed by the job are 
+*     marked with smaller case letters. 
 *
 *  INPUTS
-*     int* list_of_sockets - List of sockets in the same order as list of cores. 
-*     int samount          - Length of the list of sockets. 
-*     int* list_of_cores   - List of cores in the same order as list of sockets. 
-*     int camount          - Length of the list of cores. 
+*     const int* list_of_sockets   - ??? 
+*     const int samount            - ??? 
+*     const int** list_of_cores    - ??? 
+*     const int score              - ??? 
+*     char** topo_used_by_job      - (out) 
+*     int* topo_used_by_job_length - (out) 
 *
 *  RESULT
-*     bool - true when the current process was bound like specified with the 
-*            input parameter
+*     bool - True if the job can be bound to the topology, false if not. 
 *
 *  NOTES
-*     MT-NOTE: binding_explicit() is not MT safe 
+*     MT-NOTE: binding_explicit_check_and_account() is MT safe 
+*
 *
 *  SEE ALSO
 *     ???/???
 *******************************************************************************/
-bool binding_explicit(const int* list_of_sockets, const int samount, 
-   const int* list_of_cores, const int camount)
+bool binding_explicit_check_and_account(const int* list_of_sockets, const int samount, 
+   const int* list_of_cores, const int score, char** topo_used_by_job, 
+   int* topo_used_by_job_length)
 {
-   /* return value: successful bound or not */ 
-   bool bound = false;
+   int i;
 
-   /* check if we have exactly the same amount of sockets as cores */
-   if (camount != samount) {
-      return false;
-   }
-#if defined(PLPA_LINUX) 
-   /* do only on linux when we have core binding feature in kernel */
-   if (has_core_binding() == true) {
-      
-      /* get access to the dynamically loaded plpa library */
-      void* plpa_lib = get_plpa_handle();
+   /* position of <socket>,<core> in topology string */
+   int pos;
+   /* status if accounting was possible */
+   bool possible = true;
 
-      if (plpa_lib != NULL && has_topology_information()) {
-         /* bitmask for processors to turn on and off */
-         plpa_cpu_set_t cpuset;  
-         /* turn off all processors */
-         PLPA_CPU_ZERO(&cpuset);
-         /* the internal processor ids selected for the binding mask */
-         int proc_id[camount];
-         /* processor id counter */
-         int pr_id_ctr;
-
-         /* Fetch for each socket,core tuple the processor id. 
-            If this is not possible for one do nothing and return false. */ 
-
-         /* go through all socket,core tuples and get the processor id */
-         for (pr_id_ctr = 0; pr_id_ctr < camount; pr_id_ctr++) { 
-
-            /* get the processor id */
-            if (&list_of_cores[pr_id_ctr] == NULL || 
-                &list_of_sockets[pr_id_ctr] == NULL) {
-                /* got a null pointer therefore we abort*/
-               return false;
-            }
-
-            /* get the OS internal processor id */ 
-            proc_id[pr_id_ctr] = get_processor_id(list_of_sockets[pr_id_ctr], 
-                                                   list_of_cores[pr_id_ctr]);
-            /* check if this was successful */
-            if (proc_id[pr_id_ctr] < 0) {
-               /* a problem occured while getting the processor id */
-               /* aborting and do nothing */
-               return false;
-            }
-         }
-
-         /* generate the core binding mask out of the processor id array */
-         set_processor_binding_mask(&cpuset, proc_id, camount);
-
-         /* do the core binding for the current process with the mask */
-         if (bind_process_to_mask((pid_t) 0, cpuset) == true) {
-            /* there was an error while binding */ 
-            bound = true;
-         } /* couldn't be bound return false */
-          
-      } /* has no PLPA lib or topology information */
-
-   } /* has no core binding ability */
-
-   #endif
-   
-   return bound;
-}
-
-
-/****** sge_binding/binding_linear_parse_amount() ******************************
-*  NAME
-*    binding_linear_parse_amount() -- Parse the amount of cores to occupy. 
-*
-*  SYNOPSIS
-*     int binding_linear_parse_amount(const char* parameter) 
-*
-*  FUNCTION
-*    Parses a string in order to get the amount of cores requested. 
-* 
-*    The string has following format: "linear:<amount>:[<socket>,<core>]" 
-*
-*  INPUTS
-*     const char* parameter - The first character of the string  
-*
-*  RESULT
-*     int - if a value >= 0 then this reflects the number of cores
-*           if a value < 0 then there was a parsing error
-*
-*  NOTES
-*     MT-NOTE: binding_linear_parse_amount() is MT safe 
-*
-*  SEE ALSO
-*     ???/???
-*******************************************************************************/
-int binding_linear_parse_amount(const char* parameter) 
-{
-   int retval = -1;
-
-   /* expect string "linear" or "linear:<amount>" or linear 
-      "linear:<amount>:<firstsocket>,<firstcore>" */
-
-   if (parameter != NULL && strstr(parameter, "linear") != NULL) {
-      /* get number after linear: and before \0 or : */ 
-      if (sge_strtok(parameter, ":") != NULL) {
-         char* n = sge_strtok(NULL, ":");
-         if (n != NULL) {
-            return atoi(n);
-         } 
-      }   
-   } 
-
-   /* parsing error */
-   return retval;
-}
-
-
-
-
-/****** sge_binding/bindingLinearParseSocketOffset() ***************************
-*  NAME
-*     bindingLinearParseSocketOffset() -- ??? 
-*
-*  SYNOPSIS
-*     int bindingLinearParseSocketOffset(const char* parameter) 
-*
-*  FUNCTION
-*     ??? 
-*
-*  INPUTS
-*     const char* parameter - ??? 
-*
-*  RESULT
-*     int - 
-*
-*  EXAMPLE
-*     ??? 
-*
-*  NOTES
-*     MT-NOTE: bindingLinearParseSocketOffset() is not MT safe 
-*
-*  BUGS
-*     ??? 
-*
-*  SEE ALSO
-*     ???/???
-*******************************************************************************/
-int binding_linear_parse_socket_offset(const char* parameter)
-{
-   /* offset is like "linear:<N>:<socket>,<core>) */
-   if (parameter != NULL && strstr(parameter, "linear") != NULL) {
-      /* fetch linear */
-      if (sge_strtok(parameter, ":") != NULL) {
-         /* fetch first number (if any) */
-         if (sge_strtok(NULL, ":") != NULL) {
-            char* offset = sge_strtok(NULL, ",");
-            if (offset != NULL) { 
-               /* offset points to <socket> */
-               return atoi(offset);
-            } 
-         }
-      }
-   }
-   
-   /* wasn't able to parse */
-   return -1;
-}
-
-/****** sge_binding/bindingLinearParseCoreOffset() *****************************
-*  NAME
-*     bindingLinearParseCoreOffset() -- ??? 
-*
-*  SYNOPSIS
-*     int bindingLinearParseCoreOffset(const char* parameter) 
-*
-*  FUNCTION
-*     ??? 
-*
-*  INPUTS
-*     const char* parameter - ??? 
-*
-*  RESULT
-*     int - 
-*
-*  EXAMPLE
-*     ??? 
-*
-*  NOTES
-*     MT-NOTE: bindingLinearParseCoreOffset() is not MT safe 
-*
-*  BUGS
-*     ??? 
-*
-*  SEE ALSO
-*     ???/???
-*******************************************************************************/
-int binding_linear_parse_core_offset(const char* parameter)
-{
-   /* offset is like "linear:<N>:<socket>,<core> (optional ":") */
-   if (parameter != NULL && strstr(parameter, "linear") != NULL) {
-      /* fetch linear */
-      if (sge_strtok(parameter, ":") != NULL) {
-         /* fetch first number (if any) */
-         if (sge_strtok(NULL, ":") != NULL) {
-            char* offset = sge_strtok(NULL, ",");
-            if (offset != NULL && 
-                  (offset = sge_strtok(NULL, ":")) != NULL) {
-               /* offset points to <core> */
-               return atoi(offset);
-            } 
-         }
-      }
-   }
-  
-   /* wasn't able to parse */
-   return -1;
-}
-
-
-/****** sge_binding/binding_explicit_has_correct_syntax() *********************
-*  NAME
-*     binding_explicit_has_correct_syntax() -- Check if parameter has correct syntax. 
-*
-*  SYNOPSIS
-*     bool binding_explicit_has_correct_syntax(const char* parameter) 
-*
-*  FUNCTION
-*     This function checks if the given string is a valid argument for the 
-*     -binding parameter which provides a list of socket, cores which have 
-*     to be selected explicitly.
-* 
-*     The accepted syntax is: "explicit:[1-9][0-9]*,[1-9][0-9]*(:[1-9][0-9]*,[1-9][0-9]*)*"
-*
-*     This is used from parse_qsub.c.
-*
-*  INPUTS
-*     const char* parameter - A string with the parameter. 
-*
-*  RESULT
-*     bool - True if the parameter has the expected syntax.
-*
-*  NOTES
-*     MT-NOTE: binding_explicit_has_correct_syntax() is MT safe 
-*
-*  SEE ALSO
-*     ???/???
-*******************************************************************************/
-bool binding_explicit_has_correct_syntax(const char* parameter) 
-{
-   
-   /* DG TODO: introduce check if particles are numbers */
-
-   /* check if the head is correct */
-   if (strstr(parameter, "explicit:") == NULL) {
+   /* input parameter validation */
+   if (samount != score || samount <= 0 || list_of_sockets == NULL 
+         || list_of_cores == NULL) {
       return false;
    }
 
-   if (sge_strtok(parameter, ":") != NULL) {
-      char* socket = NULL;
-
-      /* first socket,core is mandatory */ 
-      if ((socket = sge_strtok(NULL, ",")) == NULL) {
-         /* we have no first socket number */
+   /* check if the topology which is used already is accessable */
+   if (logical_used_topology == NULL) {
+      /* we have no topology string at the moment (should be initialized before) */
+      if (!get_execd_topology(&logical_used_topology, &logical_used_topology_length)) {
+         /* couldn't even get the topology string */
          return false;
       }
-      /* check for core */
-      if (sge_strtok(NULL, ":") == NULL) {
-         /* we have no first core number */
-         return false;
-      }
-
-      do {
-         /* get socket number */ 
-         if ((socket = sge_strtok(NULL, ",")) != NULL) {
-
-            /* we have a socket therefore we need a core number */
-            if (sge_strtok(NULL, ":") == NULL) {
-               /* no core found */
-               return false;
-            }   
-
-         } 
+   }
    
-      } while (socket != NULL);  /* we try to continue with the next socket if possible */ 
+   /* create output string */ 
+   get_execd_topology(topo_used_by_job, topo_used_by_job_length);
 
-   } else {
-      /* this should not be reachable because of the pre-check */
-      return false;
-   }
+   /* go through the <socket>,<core> pair list */
+   for (i = 0; i < samount; i++) {
 
-   return true;
-}
+      /* get position in topology string */
+     if ((pos = get_position_in_topology(list_of_sockets[i], list_of_cores[i], 
+        logical_used_topology, logical_used_topology_length)) < 0) {
+        /* the <socket>,<core> does not exist */
+        possible = false;
+        break;
+     } 
 
-bool binding_explicit_exctract_sockets_cores(const char* parameter, 
-   int** list_of_sockets, int* samount, int** list_of_cores, int* camount) 
-{
-   /* string representation of a socket number */
-   char* socket = NULL;
-   /* string representation of a core number */
-   char* core = NULL;
-   
-   /* no sockets and no cores at the beginning */
-   *samount = 0;
-   *camount = 0;
-
-   if (*list_of_sockets != NULL || *list_of_cores != NULL) {
-      /* we expect NULL pointers because we allocate memory within the function */
-      return false;
-   }
-
-   /* check if the prefix of the parameter is correct */
-   if (strstr(parameter, "explicit:") == NULL) {
-      return false;
-   }
-
-   if (sge_strtok(parameter, ":") != NULL) {
-      
-      /* first socket,core is mandatory */ 
-      if ((socket = sge_strtok(NULL, ",")) == NULL) {
-         /* we have no first socket number */
-         return false;
+      /* check if this core is available (DG TODO introduce threads) */
+      if (logical_used_topology[pos] == 'C') {
+         /* do temporarily account it */
+         (*topo_used_by_job)[pos] = 'c';
+      } else {
+         /* core not usable -> early abort */
+         possible = false;
+         break;
       }
-      if ((core = sge_strtok(NULL, ":")) == NULL) {
-         /* we have no first core number */
-         return false;
-      }
-      
-      /* adding first socket,core pair */
-      *samount = *camount = 1;
-      *list_of_sockets = realloc(*list_of_sockets, (*samount)*sizeof(int));
-      *list_of_cores = realloc(*list_of_cores, (*camount)*sizeof(int));
-      (*list_of_sockets)[0] = atoi(socket);
-      (*list_of_cores)[0] = atoi(core);
-
-      do {
-         /* get socket number */ 
-         if ((socket = sge_strtok(NULL, ",")) != NULL) {
-
-            /* we have a socket therefore we need a core number */
-            if ((core = sge_strtok(NULL, ":")) == NULL) {
-               return false;
-            }   
-            
-            /* adding the next <socket>,<core> tuple */
-            (*samount)++; (*camount)++; 
-            (*list_of_sockets) = realloc(*list_of_sockets, (*samount)*sizeof(int));
-            (*list_of_cores) = realloc(*list_of_cores, (*camount)*sizeof(int));
-            (*list_of_sockets)[*samount] = atoi(socket);
-            (*list_of_cores)[*camount] = atoi(core);
-         } 
-   
-      } while (socket != NULL);  /* we try to continue with the next socket if possible */ 
-
-   } else {
-      /* this should not be reachable because of the pre-check */
-      return false;
    }
-
-   return true; 
-}
-
-
-
-/****** sge_binding/binding_striding_parse_first_core() ************************
-*  NAME
-*     binding_striding_parse_first_core() -- Parses core number from command line. 
-*
-*  SYNOPSIS
-*     int binding_striding_parse_first_core(const char* parameter) 
-*
-*  FUNCTION
-*     Parses the core number from command line in which to start binding 
-*     in "striding" case. 
-*
-*     -binding striding:<amount>:<stepsize>:<socket>,<core>
-*
-*  INPUTS
-*     const char* parameter - Pointer to first character of CL string. 
-*
-*  RESULT
-*     int - -1 in case the string is corrupt or core number is not set
-*           >= 0 in case the core number could parsed successfully.
-*
-*  NOTES
-*     MT-NOTE: binding_striding_parse_first_core() is MT safe 
-*
-*  SEE ALSO
-*     ???/???
-*******************************************************************************/
-int binding_striding_parse_first_core(const char* parameter)
-{
-   /* DG TODO move to uti/ */
-   /* "striding:<amount>:<stepsize>:<socket>,<core>" */
-   if (parameter != NULL && strstr(parameter, "striding") != NULL) {
-      /* fetch "striding" */
-      if (sge_strtok(parameter, ":") != NULL) {
-         /* fetch <amount> */
-         if (sge_strtok(NULL, ":") != NULL) {
-            /* fetch <stepsize> */
-            if (sge_strtok(NULL, ":") != NULL) {
-               /* fetch first <socket> */
-               if (sge_strtok(NULL, ",") != NULL) {
-                  /* fetch first <core> */ 
-                  char* first_core = NULL;
-                  /* end usually with line end */
-                  if ((first_core = sge_strtok(NULL, ";")) != NULL) {
-                     return atoi(first_core);
-                  } 
-               }
-            }
-         }
+   
+   /* do accounting if all cores can be used */
+   if (possible) {
+      if (account_job_on_topology(&logical_used_topology, logical_used_topology_length, 
+         *topo_used_by_job, *topo_used_by_job_length) == false) {
+         possible = false;
       }   
    }
 
-   return -1;
-}
-
-
-/****** sge_binding/binding_striding_parse_first_socket() **********************
-*  NAME
-*     binding_striding_parse_first_socket() -- ??? 
-*
-*  SYNOPSIS
-*     int binding_striding_parse_first_socket(const char* parameter) 
-*
-*  FUNCTION
-*     ??? 
-*
-*  INPUTS
-*     const char* parameter - ??? 
-*
-*  RESULT
-*     int - 
-*
-*  EXAMPLE
-*     ??? 
-*
-*  NOTES
-*     MT-NOTE: binding_striding_parse_first_socket() is not MT safe 
-*
-*  BUGS
-*     ??? 
-*
-*  SEE ALSO
-*     ???/???
-*******************************************************************************/
-int binding_striding_parse_first_socket(const char* parameter)
-{
-   /* DG TODO move to uti/ */
-
-   /* "striding:<amount>:<stepsize>:<socket>,<core>" */
-   if (parameter != NULL && strstr(parameter, "striding") != NULL) {
-      /* fetch "striding" */
-      if (sge_strtok(parameter, ":") != NULL) {
-         /* fetch amount*/
-         if (sge_strtok(NULL, ":") != NULL) {
-            /* fetch stepsize */
-            if (sge_strtok(NULL, ":") != NULL) {
-               /* fetch first socket */ 
-               char* first_socket = NULL;
-               if ((first_socket = sge_strtok(NULL, ",")) != NULL) {
-                  return atoi(first_socket);
-               } 
-            }
-         }
-      }   
+   /* free memory when unsuccessful */
+   if (possible == false) {
+      free(*topo_used_by_job);
+      *topo_used_by_job = NULL;
+      *topo_used_by_job_length = 0;
    }
 
-   return -1;
+   return possible;
 }
 
-int binding_striding_parse_amount(const char* parameter)
-{
-   /* striding:<amount>:<step-size>:[starting-socket,starting-core] */
-
-   /* DG TODO move to uti/ */
-   if (parameter != NULL && strstr(parameter, "striding") != NULL) {
-      
-      /* fetch "striding:" */
-      if (sge_strtok(parameter, ":") != NULL) {
-         char* amount = NULL;
-
-         if ((amount = sge_strtok(NULL, ":")) != NULL) {
-            /* get the number from amount */
-            /* DG TODO check if this is really a number */
-            return atoi(amount);
-         }      
-      }
-   }
-
-   /* couldn't parse it */
-   return -1;
-}
-
-int binding_striding_parse_step_size(const char* parameter)
-{
-   /* DG TODO move to uti/ */
-   /* striding:<amount>:<step-size>:  */ 
-   if (parameter != NULL && strstr(parameter, "striding") != NULL) {
-      /* fetch "striding:" */
-      if (sge_strtok(parameter, ":") != NULL) {
-         if (sge_strtok(NULL, ":") != NULL) {
-            /* fetch step size */
-            char* stepsize = NULL;
-            if ((stepsize = sge_strtok(NULL, ":")) != NULL) {
-               /* return step size */
-               return atoi(stepsize);
-            }
-         }
-      }
-   }
-   
-   /* in default case take each core */
-   return -1;
-}
+#endif
 
 
 /****** sge_binding/getExecdAmountOfCores() ************************************
@@ -2447,512 +1527,6 @@ bool free_topology(const char* topology, const int topology_length)
 /* ---------------------------------------------------------------------------*/
 /* ---------------------------------------------------------------------------*/
 
-#if defined(PLPA_LINUX) 
-static bool get_topology_linux(char** topology, int* length)
-{
-   /* topology string */
-   dstring d_topology = DSTRING_INIT;
-   /* return value */ 
-   bool success = true;
-
-   /* get handle to the PLPA library */
-   void* plpa_handle = get_plpa_handle();
-
-   /* initialize length of topology string */
-   (*length) = 0;
-
-   if (plpa_handle) {
-      int has_topology = 0;
-      /* get access to PLPA function */
-      int (*topology_information)(int*) = dlsym(plpa_handle, "plpa_have_topology_information");
-
-      /* check if topology is supported via PLPA */
-      if ((*topology_information)(&has_topology) == 0 && has_topology == 1) {
-         int num_sockets, max_socket_id;
-         /* the topology string */ 
-         sge_dstring_clear(&d_topology);
-
-         /* build the topology string */
-         int (*socket_information)(int*, int*) = dlsym(plpa_handle, "plpa_get_socket_info");
-
-         if ((*socket_information)(&num_sockets, &max_socket_id) == 0) {
-            int (*core_information)(int, int*, int*) = dlsym(plpa_handle, "plpa_get_core_info");
-            int num_cores, max_core_id, ctr_cores, ctr_sockets;
-            char* s = "S"; /* socket */
-            char* c = "C"; /* core   */
-
-            for (ctr_sockets = 0; ctr_sockets <= max_socket_id; ctr_sockets++) {
-               /* append new socket */
-               sge_dstring_append_char(&d_topology, *s);
-               (*length)++;
-
-               /* for each socket get the number of cores */ 
-               if ((*core_information)(ctr_sockets, &num_cores, &max_core_id) == 0) {
-                     
-                  for (ctr_cores = 0; ctr_cores <= max_core_id; ctr_cores++) {
-                     sge_dstring_append_char(&d_topology, *c);
-                     (*length)++;
-                  }
-                     
-               }
-            } /* for each socket */
-
-            /* convert d_topolgy into topology */
-            (*length)++; /* we need `\0` at the end */
-            /* (*topology) = (char*) sge_dstring_get_string(&d_topology); */
-            /* copy element */ 
-            (*topology) = (char *) calloc((*length), sizeof(char));
-            memcpy((*topology), (char*) sge_dstring_get_string(&d_topology), 
-               (*length) * sizeof(char));
-         } /* when socket information is available */ 
-         else { 
-            (*topology) = "warning: socket information not available!";
-            success = false;
-         }
-
-      } else {
-         (*topology) = "warning: host has no topology";
-         success = false;
-      }
-   } else {
-      /* couldn't open library */
-      /* TODO DG print warning somwhere */
-      (*topology) = "warning: couldn't open plpa library";
-      success = false;
-   }
-
-   /* TODO DG place it somewhere at the end of execd */ 
-   close_plpa_handle();
-
-   return success;
-}
-
-
-/****** sge_binding/get_processor_id() *****************************************
-*  NAME
-*     get_processor_id() -- ??? 
-*
-*  SYNOPSIS
-*     static int get_processor_id(int socket_number, int core_number) 
-*
-*  FUNCTION
-*     ??? 
-*
-*  INPUTS
-*     int socket_number - Socket (starting at 0) to search for core. 
-*     int core_number   - Core number (starting at 0) to get id for. 
-*
-*  RESULT
-*     static int - 
-*
-*  NOTES
-*     MT-NOTE: get_processor_id() is not MT safe 
-*
-*  SEE ALSO
-*     ???/???
-*******************************************************************************/
-static int get_processor_id(int socket_number, int core_number) 
-{
-    
-   if (has_core_binding() && has_topology_information()) {
-      int proc_id = -1;
-      int socket_id = -1;
-      void* plpa_handle = get_plpa_handle();
-      
-      int (*map_to_processor_id)(int, int, int*) = dlsym(plpa_handle, 
-                                 "plpa_map_to_processor_id");
-
-      /* we need Linux internal socket_id from socket number */
-      int (*get_socket_id)(int, int*) = dlsym(plpa_handle, "plpa_get_socket_id");
-      
-      if ((*get_socket_id)(socket_number, &socket_id) != 0) {
-         /* unable to retrieve Linux logical socket id */
-         return -3;
-      }
-
-      if ((*map_to_processor_id)(socket_id, core_number, &proc_id) == 0) {
-         /* everything OK: processor id was set */
-         return proc_id;
-      } else {
-         /* processor id couldn't retrieved */
-         return -2; 
-      }
-   } 
-   
-   /* no support for this topology related call */
-  return -1;
-
-}
-
-/****** sge_binding/get_total_amount_of_cores() ********************************
-*  NAME
-*     get_total_amount_of_cores() -- Fetches the total amount of cores on system. 
-*
-*  SYNOPSIS
-*     static int get_total_amount_of_cores() 
-*
-*  FUNCTION
-*     ??? 
-*
-*  INPUTS
-*
-*  RESULT
-*     static int - Total amount of cores installed on the system. 
-*
-*  EXAMPLE
-*     ??? 
-*
-*  NOTES
-*     MT-NOTE: get_total_amount_of_cores() is MT safe 
-*
-*  SEE ALSO
-*     ???/???
-*******************************************************************************/
-static int get_total_amount_of_cores() 
-{
-   /* total amount of cores currently active on this system */
-   int total_amount_of_cores = 0;
-
-   /* handle for PLPA library */
-   void* plpa_handle = get_plpa_handle();
-
-   if (plpa_handle != NULL && has_core_binding() && has_topology_information()) {
-      /* plpa_handle just for an early pre check */ 
-      int nr_socket = get_amount_of_sockets();
-      int cntr;
-      
-      /* get for each socket the amount of cores */
-      for (cntr = 0; cntr < nr_socket; cntr++) {
-         total_amount_of_cores += get_amount_of_cores(cntr);
-      }
-   }
-   /* in case we got no information about topology we return 0 */
-   return total_amount_of_cores;
-}
-
-/****** sge_binding/get_amount_of_cores() **************************************
-*  NAME
-*     get_amount_of_cores() -- ??? 
-*
-*  SYNOPSIS
-*     static int get_amount_of_cores(int socket_number) 
-*
-*  FUNCTION
-*     ??? 
-*
-*  INPUTS
-*     int socket_number - Physical socket number starting at 0. 
-*
-*  RESULT
-*     static int - 
-*
-*  NOTES
-*     MT-NOTE: get_amount_of_cores() is not MT safe 
-*
-*  SEE ALSO
-*     ???/???
-*******************************************************************************/
-static int get_amount_of_cores(int socket_number) 
-{
-   /* handle for PLPA library */
-   void* plpa_handle = get_plpa_handle();
-
-   if (plpa_handle != NULL && has_core_binding() && has_topology_information()) {
-      int socket_id;
-      /* convert the reals socket number into the Linux socket_id */
-
-      int (*get_socket_id)(int, int*) = dlsym(plpa_handle, "plpa_get_socket_id");
-      
-      if ((*get_socket_id)(socket_number, &socket_id) == 0) {
-         int number_of_cores, max_core_id;
-         /* now retrieve the amount of core for this socket number */
-         int (*get_core_info)(int, int*, int*) 
-               = dlsym(plpa_handle, "plpa_get_core_info");
-               
-         if ((*get_core_info)(socket_id, &number_of_cores, &max_core_id) == 0) {
-            /* return the amount of cores available */
-            return number_of_cores;
-         } else {
-            /* error when doing library call */
-            return 0;
-         }   
-
-      } else {
-         /* error: we didn't get the linux socket id */
-         return 0;
-      }
-   }
-
-   /* we have 0 cores in case something is wrong */
-   return 0;
-}
-
-/****** sge_binding/get_amount_of_sockets() ************************************
-*  NAME
-*     get_amount_of_sockets() -- Get the amount of available sockets.  
-*
-*  SYNOPSIS
-*     static int get_amount_of_sockets() 
-*
-*  FUNCTION
-*     Returns the amount of sockets available on this system. 
-*
-*  RESULT
-*     static int - The amount of available sockets on system. 0 in case of 
-*                  of an error.
-*
-*  NOTES
-*     MT-NOTE: get_amount_of_sockets() is not MT safe 
-*
-*  SEE ALSO
-*     ???/???
-*******************************************************************************/
-static int get_amount_of_sockets() 
-{
-
-   void* plpa_handle = get_plpa_handle();
-
-   if (plpa_handle != NULL && has_core_binding() && has_topology_information()) {
-      int num_sockets, max_socket_id;
-
-      int (*get_socket_info)(int *, int *) = dlsym(plpa_handle, 
-         "plpa_get_socket_info");
-      
-      if ((*get_socket_info)(&num_sockets, &max_socket_id) == 0) {
-         return num_sockets;
-      } else {
-         /* in case of an error we have 0 sockets */
-         return 0;
-      }
-   }
-
-   /* we have 0 cores in case something is wrong */
-   return 0;
-}
-
-
-/****** sge_binding/set_processor_binding_mask() *******************************
-*  NAME
-*     set_processor_binding_mask() -- ??? 
-*
-*  SYNOPSIS
-*     static bool set_processor_binding_mask(plpa_cpu_set_t* cpuset, const int* 
-*     processor_ids) 
-*
-*  FUNCTION
-*     ??? 
-*
-*  INPUTS
-*     plpa_cpu_set_t* cpuset   - ??? 
-*     const int* processor_ids - ??? 
-*
-*  RESULT
-*     static bool - 
-*
-*  NOTES
-*     MT-NOTE: set_processor_binding_mask() is not MT safe 
-*
-*  SEE ALSO
-*     ???/???
-*******************************************************************************/
-static bool set_processor_binding_mask(plpa_cpu_set_t* cpuset, const int processor_ids[], 
-                  const int no_of_ids)
-{
-   int proc_num;
-
-   if (processor_ids == NULL || cpuset == NULL) {
-      return false;
-   }
-
-   /* turns on all processors from processor_ids array */
-   for (proc_num = 0; proc_num < no_of_ids; proc_num++) {
-      PLPA_CPU_SET(processor_ids[proc_num], cpuset);
-   }
-  
-   return true;
-}
-
-/****** sge_binding/bind_process_to_mask() *************************************
-*  NAME
-*     bind_process_to_mask() -- ??? 
-*
-*  SYNOPSIS
-*     static bool bind_process_to_mask(const pid_t pid, const plpa_cpu_set_t 
-*     cpuset) 
-*
-*  FUNCTION
-*     ??? 
-*
-*  INPUTS
-*     const pid_t pid             - ??? 
-*     const plpa_cpu_set_t cpuset - ??? 
-*
-*  RESULT
-*     static bool - 
-*
-*  NOTES
-*     MT-NOTE: bind_process_to_mask() is not MT safe 
-*
-*  SEE ALSO
-*     ???/???
-*******************************************************************************/
-static bool bind_process_to_mask(const pid_t pid, const plpa_cpu_set_t cpuset)
-{
-   void* plpa_handle = get_plpa_handle();
-
-   if (plpa_handle != NULL && has_core_binding() && &cpuset != NULL) {
-      /* we only need core binding capabilites, no topology is required */
-      /* DG TODO do it once while execd init (binding_init) */
-      int (*sched_setaffinity)(pid_t, size_t, const plpa_cpu_set_t*) 
-                                 = dlsym(plpa_handle, "plpa_sched_setaffinity"); 
-      /* DG TODO delete addres and change header in order to make cputset to pointer */ 
-      if ((*sched_setaffinity)(pid, sizeof(plpa_cpu_set_t), &cpuset) != 0) {
-         return false;
-      } else {
-         return true;
-      }   
-   }
-   
-   return false;
-}
-
-/****** sge_binding/has_core_binding() *****************************************
-*  NAME
-*     has_core_binding() -- Check if core binding system call is supported. 
-*
-*  SYNOPSIS
-*     static bool has_core_binding() 
-*
-*  FUNCTION
-*     Checks if core binding is supported on the machine or not. If it is 
-*     supported this does not mean that topology information (about socket 
-*     and core amount) is available (which is needed for internal functions 
-*     in order to perform a correct core binding).
-*     Nevertheless a bitmask could be generated and core binding could be 
-*     performed with this selfcreated bitmask.
-*
-*  RESULT
-*     static bool - True if core binding could be done. False if not. 
-*
-*  NOTES
-*     MT-NOTE: has_core_binding() is not MT safe 
-*
-*  SEE ALSO
-*     ???/???
-*******************************************************************************/
-static bool has_core_binding() 
-{
-   
-   /* checks if plpa is working */
-   /* TODO do it only once? */
-
-   void* plpa_handle = get_plpa_handle();
-
-   if (plpa_handle) {
-      plpa_api_type_t api_type;
-      int (*api_probe)(plpa_api_type_t*) = dlsym(plpa_handle, "plpa_api_probe");
-
-      if ((*api_probe)(&api_type) == 0 && api_type == PLPA_PROBE_OK) {
-         return true;
-      }
-   }
-   
-   return false;
-}
-
-/****** sge_binding/has_topology_information() *********************************
-*  NAME
-*     has_topology_information() -- Checks if current arch offers topology. 
-*
-*  SYNOPSIS
-*     static bool has_topology_information() 
-*
-*  FUNCTION
-*     Checks if current architecture (on which this function is called) 
-*     offers processor topology information or not.
-*
-*  RESULT
-*     static bool - true if the arch offers topology information false if not 
-*
-*  NOTES
-*     MT-NOTE: has_topology_information() is not MT safe 
-*
-*  SEE ALSO
-*     ???/???
-*******************************************************************************/
-static bool has_topology_information() 
-{
-   void* plpa_handle = get_plpa_handle();
-
-   if (plpa_handle) {
-      int has_topology = 0;
-      int (*topology_information)(int*) = dlsym(plpa_handle, 
-                                             "plpa_have_topology_information");
-
-      if ((*topology_information)(&has_topology) == 0 && has_topology == 1) {
-         return true;
-      }
-   } 
-    
-   return false;
-}
-
-/****** sge_binding/get_plpa_handle() ******************************************
-*  NAME
-*     get_plpa_handle() -- Get access handle for PLPA libary. 
-*
-*  SYNOPSIS
-*     static void* get_plpa_handle(void) 
-*
-*  FUNCTION
-*     Opens the plpa library if installed on machine 
-*     and returns the handle for using the library.
-*     If the library was opened from earlier calls 
-*     it returns the already created handle. 
-*
-*  RESULT
-*     static void* - handle for accessing the PLPA library 
-*
-*  NOTES
-*     MT-NOTE: get_plpa_handle() is not MT safe 
-*
-*  SEE ALSO
-*     ???/???
-*******************************************************************************/
-static void* get_plpa_handle(void) 
-{
-   if (plpa_lib_handle == NULL) {
-      plpa_lib_handle = dlopen("libplpa.so", RTLD_NOW | RTLD_GLOBAL | RTLD_NODELETE);
-   }     
-   
-   return plpa_lib_handle;
-}
-
-/****** sge_binding/close_plpa_handle() ****************************************
-*  NAME
-*     close_plpa_handle() -- Close global plpa library handle. 
-*
-*  SYNOPSIS
-*     static void close_plpa_handle(void) 
-*
-*  FUNCTION
-*     Closes plpa library handle if not already closed. 
-*
-*  NOTES
-*     MT-NOTE: close_plpa_handle() is not MT safe 
-*
-*  SEE ALSO
-*     ???/???
-*******************************************************************************/
-static void close_plpa_handle(void) 
-{
-   if (plpa_lib_handle != NULL) {
-      dlclose(plpa_lib_handle);
-      plpa_lib_handle = NULL;
-   }   
-}
-#endif
-
 /* ---------------------------------------------------------------------------*/
 /* ---------------------------------------------------------------------------*/
 /*                    Ending of LINUX related functions                       */
@@ -2989,7 +1563,6 @@ static bool get_topology_solaris(char** topology, int* length)
    */
    
    /* topology string */
-   dstring d_topology = DSTRING_INIT;
    
    /* matrix with the kstat values */
    int** matrix = NULL;
@@ -3014,6 +1587,8 @@ static bool get_topology_solaris(char** topology, int* length)
    
    bool retval = true;
    
+   dstring d_topology = DSTRING_INIT;
+
    (*length) = 0;
 
 
@@ -3061,10 +1636,13 @@ static bool get_topology_solaris(char** topology, int* length)
    } 
    
    if ((*length) == 0) {
+      
       /* we couldn't get the kernel kstat values therefore we have no topology */
       (*topology) = "NONE";
       (*length)   = 5;
       retval = false;
+      sge_dstring_free(&d_topology);
+
    } else {
 
       /* we need `\0' at the end */
@@ -3075,6 +1653,7 @@ static bool get_topology_solaris(char** topology, int* length)
       (*topology) = (char *) calloc((*length), sizeof(char));
    
       memcpy((*topology), (char *) sge_dstring_get_string(&d_topology), (*length));
+      sge_dstring_free(&d_topology);
    }   
 
    return retval;
@@ -4466,7 +3045,7 @@ static int getMaxCoresFromTopologyString(const char* topology) {
    return max_cores;
 }
 
-
+#if 0
 static bool go_to_next_core(const char* topology, const int pos, int* new_pos) 
 {
 
@@ -4490,119 +3069,7 @@ static bool go_to_next_core(const char* topology, const int pos, int* new_pos)
    
    return false;
 }
-
-
-bool write_binding_file_striding(const int first_socket, const int first_core, 
-   const int amount, const int stepsize, const char* psetid, 
-   const u_long32 job_id, const u_long32 ja_task_id, const char *pe_task_id)
-{
-   
-   /* get the current topology                           */ 
-   char* topology = NULL;
-   /* already accounted cores                            */
-   int accounted_cores = 0;
-   /* for winding forward to first_socket and first_core */
-   int found_sockets = 0;
-   int found_cores   = 0;
-   /* for stepping over cores                            */
-   int tmp_cores = 0;
-   /* current position in string */ 
-   int i = 0;
-   /* topology length */
-   int topology_length = 0;
-
-
-   if (stepsize < tmp_cores || first_socket < 0 || first_core < 0 || amount < 0) {
-      /* wrong input parameter */
-      return false;
-   }
-
-   if (get_execd_topology(&topology, &topology_length) != true) {
-      /* was unable to retrieve the current topology */
-      return false;
-   }
-   
-   /* go to first socket */ 
-   while (topology[i] != '\0' && i < topology_length && found_sockets < first_socket) {
-      if (topology[i] == 'S') {
-         found_sockets++;
-      }
-      i++;
-   }
-   /* go to first core */ 
-   while (topology[i] != '\0' && i < topology_length && found_cores < first_core) {
-      if (topology[i] == 'C') {
-         found_cores++;
-      }
-      i++;
-   }
-   
-   /* modify the string according the striding settings */
-   while (topology[i] != '\0' && i < topology_length && accounted_cores < amount) {
-      /* account next core                             */ 
-      /* jump ahead to next one depending on step size */
-      if (stepsize > tmp_cores) {
-         /* go on to next core */
-         if (go_to_next_core(topology, i, &i) == false) {
-            /* no more cores found */
-            free(topology);
-            return false;
-         }
-         /* increase the number of cores counted already */
-         tmp_cores++;
-      }
-      tmp_cores = 0;
-
-      /* account */
-      topology[i] = 'c';
-      accounted_cores++; 
-   }
-
-   /* write string to file                              */
-   if (accounted_cores == amount) {
-      /* write binding file into active jobs directory  */
-      return create_binding_file(topology, psetid, job_id, ja_task_id, pe_task_id);
-
-   } else {
-      /* didn't found the amount of cores needed to account 
-         (this could be only possible when the topology string 
-          changed between function calls) */
-      return false;
-   }
-}
-
-
-static bool create_binding_file(const char* topology, const char* psetid, 
-   const u_long32 job_id, const u_long32 ja_task_id, const char *pe_task_id) 
-{
-   /* path to binding file */
-   dstring fname  = DSTRING_INIT;
-   /* pointer to binding file */
-   FILE *fp;
-   /* filename */
-   const char* filename = NULL;
-
-   /* get the path to the binding file */
-   sge_get_active_job_file_path(&fname, job_id, ja_task_id, pe_task_id, 
-                                "binding");
-
-   filename = sge_dstring_get_string(&fname);
-
-   /* open file or create file         */ 
-   fp = fopen(filename, "w");
-
-   if (!fp) {
-      /* can't open binding file       */
-      return false;
-   }
-   
-   /* write topology string and psetid to "binding" file in active_jobs dir */
-   fprintf(fp, "%s;%s", topology, psetid);
-   
-   fclose(fp);
-
-   return true;
-}
+#endif
 
 #if defined(SOLARISAMD64) || defined(SOLARIS86)
 
@@ -4623,7 +3090,7 @@ static int get_position_in_topology(const int socket, const int core,
       return false;
    }
    
-   for (i = 0; i < topology_length; i++) {
+   for (i = 0; i < topology_length && topology[i] != '\0'; i++) {
       if (topology[i] == 'S') {
          /* we've got a new socket */
          s++;

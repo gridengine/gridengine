@@ -2764,35 +2764,6 @@ if ( "$QMAKE" == 1) then
    cd $SOURCE
 endif
 
-if ( "$PLPA" == 1) then
-   echo _________3_r_d_p_a_r_t_y__P_L_P_A_______
-
-   if ( ( $BUILDARCH == LINUXAMD64 || \
-      $BUILDARCH == LINUX86 ) && \
-      $COMPILE_ARCH != "ULINUX86_24" && $COMPILE_ARCH != "ULINUXAMD64_24" ) then  
-      
-      if ( ! -d $SOURCE/3rdparty/plpa/plpa-1.3.1/$COMPILE_ARCH || \
-	      ! -r $SOURCE/3rdparty/plpa/plpa-1.3.1/$COMPILE_ARCH/Makefile ) then
-         mkdir -p $SOURCE/3rdparty/plpa/plpa-1.3.1/$COMPILE_ARCH
-         cd $SOURCE/3rdparty/plpa/plpa-1.3.1/$COMPILE_ARCH
-         ../configure
-      endif
-
-      cd $SOURCE/3rdparty/plpa/plpa-1.3.1/$COMPILE_ARCH
-
-      $MAKE $MAKEOPT -f Makefile "MAKE=$MAKE" "COMPILE_ARCH=$COMPILE_ARCH" "DLLIB=$DLLIB" $argv
-
-      if ( $status != 0 ) then
-         echo not done
-         exit 1
-      endif
-   
-   else 
-      echo plpa on architecture "$BUILDARCH" not supported 
-   endif 
-
-   cd $SOURCE
-endif
 
 if ( "$SGESSH" == 1) then
    echo _________3_r_d_p_a_r_t_y__SSH_____________
@@ -2996,5 +2967,37 @@ if ( $BUILDARCH == HP1164 ) then
       ./aimk -32 "$arguments"
    endif 
 endif 
+
+if ( "$PLPA" == 1) then
+   echo _________3_r_d_p_a_r_t_y__P_L_P_A_______
+
+   if ( ( $BUILDARCH == LINUXAMD64 || \
+      $BUILDARCH == LINUX86 ) && \
+      $COMPILE_ARCH != "ULINUX86_24" && $COMPILE_ARCH != "ULINUXAMD64_24" ) then  
+      
+      if ( ! -d $SOURCE/3rdparty/plpa/plpa-1.3.1/$COMPILE_ARCH || \
+	      ! -r $SOURCE/3rdparty/plpa/plpa-1.3.1/$COMPILE_ARCH/Makefile ) then
+         mkdir -p $SOURCE/3rdparty/plpa/plpa-1.3.1/$COMPILE_ARCH
+         cd $SOURCE/3rdparty/plpa/plpa-1.3.1/$COMPILE_ARCH
+         ../configure
+      endif
+
+      cd $SOURCE/3rdparty/plpa/plpa-1.3.1/$COMPILE_ARCH
+
+      $MAKE $MAKEOPT -f Makefile "MAKE=$MAKE" "COMPILE_ARCH=$COMPILE_ARCH" "DLLIB=$DLLIB" $argv
+
+      if ( $status != 0 ) then
+         echo not done
+         exit 1
+      endif
+   
+   else 
+      echo plpa on architecture "$BUILDARCH" not supported 
+   endif 
+
+   cd $SOURCE
+endif
+
+echo done.
 
 exit 0

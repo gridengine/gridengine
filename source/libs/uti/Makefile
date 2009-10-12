@@ -43,6 +43,7 @@ UTILIB_DRMAA_SRC = \
          sge_afsutil.c \
          sge_arch.c \
          sge_bitfield.c \
+         sge_binding_hlp.c \
          sge_bootstrap.c \
          sge_csp_path.c \
          sge_dstring.c \
@@ -73,7 +74,7 @@ UTILIB_DRMAA_SRC = \
          sge_tmpnam.c \
          sge_tq.c \
          sge_uidgid.c \
-         sge_unistd.c \
+         sge_unistd.c 
 
 UTILIB_SRC = sge_pty.c sge_loadmem.c sge_getloadavg.c sge_monitor.c $(UTILIB_DRMAA_SRC)
 
@@ -262,6 +263,10 @@ sge_csp_path.o:	$(UTILIB_DIR)/sge_csp_path.c
 
 sge_pty.o:	$(UTILIB_DIR)/sge_pty.c 
 		$(CC) $(CFLAGS) $(MEMCFLAG) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_pty.c
+
+sge_binding_hlp.o:	$(UTILIB_DIR)/sge_binding_hlp.c 
+		$(CC) $(CFLAGS) $(MEMCFLAG) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_binding_hlp.c
+
 ###############################################################################
 # test targets
 ###############################################################################

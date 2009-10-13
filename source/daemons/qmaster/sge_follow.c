@@ -920,7 +920,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
                      }
                   }
 
-                  while((oep=lFirst(oeql))) {          
+                  while ((oep=lFirst(oeql))) {          
                      if (((oep_qname=lGetString(oep, OQ_dest_queue))) &&
                          ((oep_qep = cqueue_list_locate_qinstance(*object_base[SGE_TYPE_CQUEUE].list,
                                                        oep_qname))) &&
@@ -931,7 +931,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
                         double job_tickets_on_host = lGetDouble(oep, OQ_ticket);
                         lListElem *newep;
 
-                        for(curr_oep=lNext(oep); curr_oep; curr_oep=next_oep) {
+                        for (curr_oep=lNext(oep); curr_oep; curr_oep=next_oep) {
                            next_oep = lNext(curr_oep);
                            if (((curr_oep_qname=lGetString(curr_oep, OQ_dest_queue))) &&
                                ((curr_oep_qep = cqueue_list_locate_qinstance(*object_base[SGE_TYPE_CQUEUE].list, 
@@ -942,21 +942,25 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
                               lRemoveElem(oeql, &curr_oep);
                            }
                         }
+                        if (*topp == NULL) {
+                           *topp = lCreateList("", lGetElemDescr(ep));
+                        }
                         newep = lCopyElem(ep);
                         lSetDouble(newep, OR_ticket, job_tickets_on_host);
                         lAppendElem(*topp, newep);
-
-                     } else
+                     } else {
                         ERROR((SGE_EVENT, MSG_ORD_UNABLE2FINDHOST_S, oep_qname ? oep_qname : MSG_OBJ_UNKNOWN));
-
+                     }
                      lRemoveElem(oeql, &oep);
                   }
 
                   lFreeList(&oeql);
-
-               } 
-               else if (lGetPosViaElem(jatp, JAT_granted_destin_identifier_list, SGE_NO_ABORT) !=-1 )
-                     lAppendElem(*topp, lCopyElem(ep));
+               } else if (lGetPosViaElem(jatp, JAT_granted_destin_identifier_list, SGE_NO_ABORT) != -1) {
+                  if (*topp == NULL) {
+                     *topp = lCreateList("", lGetElemDescr(ep));
+                  }
+                  lAppendElem(*topp, lCopyElem(ep));
+               }
             }
          }
       } /* just ignore them being not in sge mode */

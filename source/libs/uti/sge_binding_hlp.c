@@ -169,6 +169,8 @@ bool parse_binding_parameter_string(char* parameter, u_long32* type,
          /* this might be an error on shepherd side only */
          *firstsocket = -1;
          *firstcore = -1;
+      } else {
+         sge_dstring_sprintf(strategy, "striding");   
       }
 
    } else if (strstr(parameter, "explicit") != NULL) {

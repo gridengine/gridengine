@@ -149,7 +149,7 @@ int main(int argc,char *argv[])
 #include <sys/pstat.h>
 #endif
 
-#if defined(LINUX) || defined(ALPHA) || defined(IRIX) || defined(SOLARIS) || defined(DARWIN) || defined (FREEBSD) || defined(NETBSD) || defined(HP1164) || defined(AIX)
+#if defined(LINUX) || defined(ALPHA) || defined(IRIX) || defined(SOLARIS) || defined(DARWIN) || defined (FREEBSD) || defined(NETBSD) || defined(HP1164) || defined(AIX) || defined (INTERIX)
 
 #include "sge_os.h"
 #endif
@@ -196,6 +196,7 @@ int getpagesize(void);
 #     include "sge_proc.h"
 #  endif
 #endif
+
 
 typedef struct {
    int job_collection_interval;  /* max job data collection interval */

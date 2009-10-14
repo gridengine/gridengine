@@ -30,6 +30,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "uti/sge_binding_hlp.h"
 #include "shepherd_binding.h"
 
 #include "sge_dstring.h"
@@ -42,7 +43,6 @@
 #endif
 
 #if defined(PLPA_LINUX)
-
 static bool binding_set_linear_linux(int first_socket, int first_core, 
                int amount_of_cores, int offset);
 
@@ -56,8 +56,7 @@ static bool set_processor_binding_mask(plpa_cpu_set_t* cpuset, const int process
 static bool bind_process_to_mask(const pid_t pid, const plpa_cpu_set_t cpuset);
 
 static bool binding_explicit(const int* list_of_sockets, const int samount, 
-      const int* list_of_cores, const int camount);
-
+         const int* list_of_cores, const int camount);
 #endif
 
 #if defined(SOLARISAMD64) || defined(SOLARIS86)
@@ -411,12 +410,11 @@ static bool binding_set_linear_linux(int first_socket, int first_core,
       plpa_lib = _get_plpa_handle(&error);
 
       if (plpa_lib == NULL) {
-         
+         /* couldn't get access to the PLPA library */
          shepherd_trace("binding_set_linear_linux: couldn't load PLPA library: %s", 
             sge_dstring_get_string(&error));
          sge_dstring_free(&error);
          return false;
-         
       } else {
          /* bitmask for processors to turn on and off */
          plpa_cpu_set_t cpuset;

@@ -59,6 +59,7 @@
 #include "sge_io.h"
 #include "sge_os.h"
 #include "sge_job.h"
+#include "uti/sge_binding_hlp.h"
 #include "sge_binding.h"
 
 #include "msg_common.h"
@@ -148,10 +149,12 @@ void sge_setup_sge_execd(sge_gdi_ctx_class_t *ctx, const char* tmp_err_file_name
    sge_mkdir(JOB_DIR, 0775, 1, 0);
    sge_mkdir(ACTIVE_DIR,  0775, 1, 0);
 
+#if defined(PLPA_LINUX) || defined(SOLARIS86) || defined(SOLARISAMD64)
    /* initialize processor topology */
    if (initialize_topology() != true) {
       DPRINTF(("Couldn't initizalize topology-----------------------\n"));
    }
+#endif
 
    FREE(spool_dir);
    DRETURN_VOID;

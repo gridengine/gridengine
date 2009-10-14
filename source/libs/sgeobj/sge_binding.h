@@ -59,9 +59,23 @@
 
 #if defined(PLPA_LINUX) 
 #  include "plpa.h"
-#endif 
+#endif
+ 
+/* functions related to get load values for execd (see load_avg.c) */
 
-/* binding strategy functions */
+/* get the amount of cores available on the execution host */ 
+int get_execd_amount_of_cores(void);
+
+/* get the amount of sockets of the execution host */
+int get_execd_amount_of_sockets(void);
+
+/* get the topology string with all cores installed on the system */
+bool get_execd_topology(char** topology, int* length);
+
+/* get the topology string where all cores currently in use are marked */
+bool get_execd_topology_in_use(char** topology);
+
+#if defined(PLPA_LINUX) || defined(SOLARISAMD64) || defined(SOLARIS86) 
 bool binding_set_linear(int first_socket, int first_core, int amount_of_cores,
       int offset);
 
@@ -74,14 +88,22 @@ bool binding_n_per_socket(int first_socket, int amount_of_sockets, int n);
 
 bool binding_explicit_exctract_sockets_cores(const char* parameter, int** list_of_sockets, 
    int* samount, int** list_of_cores, int* camount);
+
 bool binding_explicit_check_and_account(const int* list_of_sockets, const int samount, 
    const int* list_of_cores, const int score, char** topo_used_by_job, 
    int* topo_used_by_job_length);
 
-/* functions related to get load values for execd (see load_avg.c) */ 
+/* functions related to get load values for execd (see load_avg.c) */
+/* get the amount of cores available on the execution host */ 
 int getExecdAmountOfCores(void);
+
+/* get the amount of sockets of the execution host */
 int getExecdAmountOfSockets(void);
+
+/* get the topology string with all cores installed on the system */
 bool get_execd_topology(char** topology, int* length);
+
+/* get the topology string where all cores currently in use are marked */
 bool get_execd_topology_in_use(char** topology);
 
 /* function for determining the binding */
@@ -93,14 +115,19 @@ bool get_striding_first_socket_first_core_and_account(const int amount, const in
 /* for initializing used topology on execution daemon side */
 bool initialize_topology(void);
 
-/* free cores on execution host which were used by a job */
-bool free_topology(const char* topology, const int topology_length);
-
 /* check if core can be used */
 bool topology_is_in_use(const int socket, const int core);
 
+/* for initializing used topology on execution daemon side */
+bool initialize_topology(void);
 
-/* PLPA related functions are static in c file*/
+/* free cores on execution host which were used by a job */
+bool free_topology(const char* topology, const int topology_length);
+
+/* close dynamically loaded library */
+void close_plpa_handle(void);
+
+#endif 
 
 #if defined(SOLARISAMD64) || defined(SOLARIS86)
 
@@ -111,11 +138,5 @@ int create_processor_set_explicit_solaris(const int* list_of_sockets,
    const int samount, const int* list_of_cores, const int camount);
 
 #endif
-
-
-/* for initializing used topology on execution daemon side */
-bool initialize_topology(void);
-
-void close_plpa_handle(void);
 
 #endif /* __SGE_BINDING_H */

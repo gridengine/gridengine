@@ -33,9 +33,14 @@
 /*___INFO__MARK_END__*/
 
 /* this code is used by shepherd */
-
+#include <ctype.h>
 #include "sgermon.h"
 #include "sge_string.h"
+
+#include <pthread.h>
+#include "sge_mtutil.h"
+#include "sge_log.h"
+#include "uti/sge_binding_hlp.h"
 
 #if defined(SOLARISAMD64) || defined(SOLARIS86)
 #  include <sys/processor.h>
@@ -43,17 +48,12 @@
 #  include <sys/pset.h>
 #endif 
 
-#include <pthread.h>
-#include "sge_mtutil.h"
-#include "sge_log.h"
-
-#include "sge_binding_hlp.h"
-
 #if defined(PLPA_LINUX)
 /* module global variables */
 /* local handle for daemon in order to access PLPA library */
 static void* plpa_lib_handle = NULL;
 #endif 
+
 
 /****** sge_binding_hlp/parse_binding_parameter_string() ***********************
 *  NAME
@@ -823,7 +823,7 @@ int binding_linear_parse_core_offset(const char* parameter)
                   (offset = sge_strtok(NULL, ":")) != NULL) {
                /* offset points to <core> */
                return atoi(offset);
-            } 
+            }
          }
       }
    }
@@ -970,13 +970,14 @@ bool binding_explicit_exctract_sockets_cores(const char* parameter,
          return false;
       }
       
+      /* increase the size of the arrays */
+      *samount = *camount = 1;
+      
       /* adding first socket,core pair */
       *list_of_sockets = realloc(*list_of_sockets, (*samount)*sizeof(int));
       *list_of_cores = realloc(*list_of_cores, (*camount)*sizeof(int));
-      (*list_of_sockets)[*samount] = atoi(socket);
-      (*list_of_cores)[*camount] = atoi(core);
-      /* increase the size of the arrays */
-      *samount = *camount = 1;
+      (*list_of_sockets)[(*samount) - 1] = atoi(socket);
+      (*list_of_cores)[(*camount) - 1] = atoi(core);
 
       do {
          /* get socket number */ 
@@ -984,15 +985,22 @@ bool binding_explicit_exctract_sockets_cores(const char* parameter,
 
             /* we have a socket therefore we need a core number */
             if ((core = sge_strtok(NULL, ":")) == NULL) {
+               FREE(*list_of_sockets);
+               FREE(*list_of_cores);
                return false;
-            }   
+            } else if (isdigit(*core) == 0)  {
+               /* this is not a digit - we have no core found */
+               FREE(*list_of_sockets);
+               FREE(*list_of_cores);
+               return false;
+            }
             
             /* adding the next <socket>,<core> tuple */
+            (*samount)++; (*camount)++; 
             (*list_of_sockets) = realloc(*list_of_sockets, (*samount)*sizeof(int));
             (*list_of_cores) = realloc(*list_of_cores, (*camount)*sizeof(int));
-            (*list_of_sockets)[*samount] = atoi(socket);
-            (*list_of_cores)[*camount] = atoi(core);
-            (*samount)++; (*camount)++; 
+            (*list_of_sockets)[*samount - 1] = atoi(socket);
+            (*list_of_cores)[*camount - 1] = atoi(core);
          } 
    
       } while (socket != NULL);  /* we try to continue with the next socket if possible */ 
@@ -1034,7 +1042,6 @@ bool binding_explicit_exctract_sockets_cores(const char* parameter,
 *******************************************************************************/
 int binding_striding_parse_first_core(const char* parameter)
 {
-   /* DG TODO move to uti/ */
    /* "striding:<amount>:<stepsize>:<socket>,<core>" */
    if (parameter != NULL && strstr(parameter, "striding") != NULL) {
       /* fetch "striding" */
@@ -1089,8 +1096,6 @@ int binding_striding_parse_first_core(const char* parameter)
 *******************************************************************************/
 int binding_striding_parse_first_socket(const char* parameter)
 {
-   /* DG TODO move to uti/ */
-
    /* "striding:<amount>:<stepsize>:<socket>,<core>" */
    if (parameter != NULL && strstr(parameter, "striding") != NULL) {
       /* fetch "striding" */
@@ -1143,7 +1148,6 @@ int binding_striding_parse_amount(const char* parameter)
 {
    /* striding:<amount>:<step-size>:[starting-socket,starting-core] */
 
-   /* DG TODO move to uti/ */
    if (parameter != NULL && strstr(parameter, "striding") != NULL) {
       
       /* fetch "striding:" */
@@ -1191,7 +1195,6 @@ int binding_striding_parse_amount(const char* parameter)
 *******************************************************************************/
 int binding_striding_parse_step_size(const char* parameter)
 {
-   /* DG TODO move to uti/ */
    /* striding:<amount>:<step-size>:  */ 
    if (parameter != NULL && strstr(parameter, "striding") != NULL) {
       /* fetch "striding:" */
@@ -1200,8 +1203,13 @@ int binding_striding_parse_step_size(const char* parameter)
             /* fetch step size */
             char* stepsize = NULL;
             if ((stepsize = sge_strtok(NULL, ":")) != NULL) {
-               /* return step size */
-               return atoi(stepsize);
+               /* the step size must be followed by " " or ":" or "\0" 
+                  in order to avoid garbage like "striding:2:0,0" */
+               if ((stepsize+1) == NULL || *(stepsize+1) == ' ' || 
+                     *(stepsize+1) == ':' || *(stepsize+1) == '\0') {
+                  /* return step size */
+                  return atoi(stepsize);
+               }     
             }
          }
       }
@@ -1279,6 +1287,4 @@ bool binding_explicit_extract_sockets_cores(const char* parameter,
 
    return true; 
 }
-
-
 

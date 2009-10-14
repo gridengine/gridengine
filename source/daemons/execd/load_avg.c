@@ -71,6 +71,7 @@
 #include "gdi/sge_gdi_ctx.h"
 #include "gdi/sge_gdiP.h"
 
+#include "uti/sge_binding_hlp.h"
 #include "sgeobj/sge_binding.h"
 
 #ifdef COMPILE_DC
@@ -420,6 +421,7 @@ lList *sge_build_load_report(const char* qualified_hostname, const char* binary_
    sge_switch2start_user();
    sge_get_loadavg(qualified_hostname, &lp);
    sge_switch2admin_user(); 
+   
    /* report topology reporting */
    sge_get_topology(qualified_hostname, &lp);
    sge_get_topology_inuse(qualified_hostname, &lp); 
@@ -552,7 +554,7 @@ static int sge_get_sockets(const char* qualified_hostname, lList **lpp) {
    DENTER(TOP_LAYER, "sge_get_sockets");
    
    /* get total amount of sockets installed on system */ 
-   sockets = getExecdAmountOfSockets();
+   sockets = get_execd_amount_of_sockets();
    
    /* append the amount of sockets to the load report list */
    sge_add_int2load_report(lpp, LOAD_ATTR_SOCKETS, sockets, qualified_hostname);
@@ -591,7 +593,7 @@ static int sge_get_cores(const char* qualified_hostname, lList **lpp) {
    DENTER(TOP_LAYER, "sge_get_cores");
 
    /* get the total amount of cores */
-   cores = getExecdAmountOfCores();
+   cores = get_execd_amount_of_cores();
    
    /* append the amount of cores to the list */
    sge_add_int2load_report(lpp, LOAD_ATTR_CORES, cores, qualified_hostname);
@@ -656,9 +658,6 @@ static int sge_get_topology_inuse(const char* qualified_hostname, lList **lpp) {
    
    DRETURN(0);
 }
-
-
-
 
 static int sge_get_loadavg(const char* qualified_hostname, lList **lpp) 
 {

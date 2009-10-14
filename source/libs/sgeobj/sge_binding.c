@@ -33,6 +33,8 @@
 #include "sge_binding.h" 
 #include "sgermon.h"
 
+#include "uti/sge_binding_hlp.h"
+
 #if defined(SOLARISAMD64) || defined(SOLARIS86)
 #  include <sys/processor.h>
 #  include <sys/types.h>
@@ -45,20 +47,21 @@
 #include "sge_mtutil.h"
 #include "sge_log.h"
 
-#include "uti/sge_binding_hlp.h"
 
-/* these sockets cores or threads are currently in use from SGE */
+/* these sockets cores or threads are currently in use from SGE      */
 /* access them via getExecdTopologyInUse() because of initialization */
 static char* logical_used_topology = NULL;
+
 static int logical_used_topology_length = 0;
 
+#if defined(PLPA_LINUX) || defined(SOLARIS86) || defined(SOLARISAMD64)  
 
 /* creates a string with the topology used from a single job */
 static bool create_topology_used_per_job(char** accounted_topology, 
                int* accounted_topology_length, char* logical_used_topology, 
                char* used_topo_with_job, int logical_used_topology_length);
 
-/* main functions */
+#endif
 
 #if defined(SOLARISAMD64) || defined(SOLARIS86)
 
@@ -125,16 +128,176 @@ static bool bind_current_process_to_pset(psetid_t pset_id);
 /* frees the memory allocated by the topology matrix */
 static void free_matrix(int** matrix, const int length);
 
-/* DG TODO: make use of this in Linux */
+#endif
+
+/* arch independent functions */
+/****** sge_binding/get_execd_amount_of_cores() ************************************
+*  NAME
+*     get_execd_amount_of_cores() -- Returns the total amount of cores the host has. 
+*
+*  SYNOPSIS
+*     int get_execd_amount_of_cores() 
+*
+*  FUNCTION
+*     Retrieves the total amount of cores (currently Linux only) 
+*     the current host have.
+*
+*  RESULT
+*     int - The amount of cores the current host has. 
+*
+*  NOTES
+*     MT-NOTE: get_execd_amount_of_cores() is MT safe 
+*
+*  SEE ALSO
+*     ???/???
+*******************************************************************************/
+int get_execd_amount_of_cores() 
+{
+#if defined(PLPA_LINUX) 
+      return get_total_amount_of_cores();
+#elif defined(SOLARISAMD64) || defined(SOLARIS86) 
+      return get_total_amount_of_cores_solaris();
+#else   
+      return 0;
+#endif  
+}
+
+/****** sge_binding/get_execd_amount_of_sockets() **********************************
+*  NAME
+*    get_execd_amount_of_sockets() -- The total amount of sockets in the system. 
+*
+*  SYNOPSIS
+*     int get_execd_amount_of_sockets() 
+*
+*  FUNCTION
+*     Calculates the total amount of sockets available in the system. 
+*
+*  INPUTS
+*
+*  RESULT
+*     int - The total amount of sockets available in the system.
+*
+*  NOTES
+*     MT-NOTE: get_execd_amount_of_sockets() is MT safe 
+*
+*  SEE ALSO
+*     ???/???
+*******************************************************************************/
+int get_execd_amount_of_sockets()
+{
+#if defined(PLPA_LINUX) 
+   return get_amount_of_sockets();
+#elif defined(SOLARISAMD64) || defined(SOLARIS86) 
+   return get_total_amount_of_sockets_solaris();
+#else
+   return 0;
+#endif
+}
+
+
+bool get_execd_topology(char** topology, int* length)
+{
+   bool success = false;
+
+   /* topology must be a NULL pointer */
+   if ((*topology) == NULL) {
+#if defined(PLPA_LINUX)  
+      if (get_topology_linux(topology, length) == true) {
+         success = true;
+      } else {
+         success = false;
+      }   
+#elif defined(SOLARISAMD64) || defined(SOLARIS86) 
+      if (get_topology_solaris(topology, length) == true) {
+         success = true;
+      } else {
+         success = false;
+      }   
+#else 
+      /* currently other architectures are not supported */
+      success = false;
+#endif
+   }
+
+  return success; 
+}
+
+
+/****** sge_binding/getExecdTopologyInUse() ************************************
+*  NAME
+*     getExecdTopologyInUse() -- Creates a string which represents the used topology. 
+*
+*  SYNOPSIS
+*     bool getExecdTopologyInUse(char** topology) 
+*
+*  FUNCTION
+*     
+*     Checks all jobs (with going through active jobs directories) and their 
+*     usage of the topology (binding). Afterwards global "logical_used_topology" 
+*     string is up to date (which is also updated when a job ends and starts) and 
+*     a copy is made available for the caller. 
+*     
+*     Note: The memory is allocated within this function and 
+*           has to be freed from the caller afterwards.
+*  INPUTS
+*     char** topology - out: the current topology in use by jobs 
+*
+*  RESULT
+*     bool - true if the "topology in use" string could be created 
+*
+*  EXAMPLE
+*     ??? 
+*
+*  NOTES
+*     MT-NOTE: getExecdTopologyInUse() is not MT safe 
+*
+*  BUGS
+*     ??? 
+*
+*  SEE ALSO
+*     ???/???
+*******************************************************************************/
+bool get_execd_topology_in_use(char** topology)
+{
+   bool retval = false;
+
+   /* topology must be a NULL pointer */
+   if ((*topology) != NULL) {
+      return false;
+   }   
+
+   if (logical_used_topology_length == 0 || logical_used_topology == NULL) {
+
+#if defined(PLPA_LINUX) 
+      /* initialize without any usage */
+      get_topology_linux(&logical_used_topology, 
+              &logical_used_topology_length); 
+#elif defined(SOLARISAMD64) || defined(SOLARIS86) 
+      get_topology_solaris(&logical_used_topology, 
+               &logical_used_topology_length);
+#endif
+
+   }
+   if (logical_used_topology_length > 0) {
+      /* copy the string */
+      (*topology) = (char *) calloc(logical_used_topology_length+1, sizeof(char));
+      memcpy((*topology), logical_used_topology, sizeof(char)*(logical_used_topology_length));
+      retval = true;
+   } 
+      
+   return retval;   
+}
+
+
+
+#if defined(PLPA_LINUX) || defined(SOLARISAMD64) || defined(SOLARIS86) 
 /* gets the positions in the topology string from a given <socket>,<core> pair */
 static int get_position_in_topology(const int socket, const int core, const char* topology, 
    const int topology_length);
 
-/* DG TODO: make use of this in Linux */
 /* accounts all occupied resources given by a topology string into another one */
 static bool account_job_on_topology(char** topology, const int topology_length, 
    const char* job, const int job_length);  
-#endif
 
 static int getMaxThreadsFromTopologyString(const char* topology); 
 
@@ -143,11 +306,7 @@ static int getMaxCoresFromTopologyString(const char* topology);
 /* DG TODO length should be an output */
 static bool is_starting_point(const char* topo, const int length, const int pos, 
    const int amount, const int stepsize, char** topo_account); 
-
-/* updates the "topology in use" string by traversing the active jobs dirs */
-#if 0
-static bool update_binding_system_status(void);
-#endif 
+#endif
 
 /* find next core in topology string */
 #if 0
@@ -693,67 +852,6 @@ static void free_matrix(int** matrix, const int length)
    FREE(matrix);
 }
 
-
-/****** sge_binding/account_job_on_topology() **********************************
-*  NAME
-*     account_job_on_topology() -- Marks occupied resources. 
-*
-*  SYNOPSIS
-*     static bool account_job_on_topology(char** topology, int* 
-*     topology_length, const char* job, const int job_length) 
-*
-*  FUNCTION
-*     Marks occupied resources from one topology string (job) which 
-*     is usually a job on another topology string (topology) which 
-*     is usually the execution daemon local topology string.
-*
-*  INPUTS
-*     char** topology      - (in/out) topology on which the accounting is done 
-*     int* topology_length - (in)  length of the topology stirng
-*     const char* job      - (in) topology string from the job
-*     const int job_length - (in) length of the topology string from the job
-*
-*  RESULT
-*     static bool - 
-*
-*  NOTES
-*     MT-NOTE: account_job_on_topology() is not MT safe 
-*
-*  BUGS
-*     ??? 
-*
-*  SEE ALSO
-*     ???/???
-*******************************************************************************/
-static bool account_job_on_topology(char** topology, const int topology_length, 
-   const char* job, const int job_length)
-{
-   int i;
-   
-   /* parameter validation */
-   if (topology_length != job_length ||  job_length <= 0 
-      || (*topology) == NULL || job == NULL) {
-      return false;
-   }
-
-   /* go through topology and account */
-   for (i = 0; i < job_length; i++) {
-      if (job[i] == 'c') {
-         (*topology)[i] = 'c';
-      } else if (job[i] == 's') {
-         (*topology)[i] = 's';
-      } else if (job[i] == 't') {
-         (*topology)[i] = 't';
-      }
-   }
-
-   return true;
-}
-
-
-
-
-
 /* -----------------------------------------------------------------------------
    SOLARIS PROCESSOR SETS 
 */
@@ -992,7 +1090,65 @@ bool binding_n_per_socket(int first_socket, int amount_of_sockets, int n)
 }
 
 
-#if defined(SOLARIS86) || defined(SOLARISAMD64)  
+#if defined(PLPA_LINUX) || defined(SOLARIS86) || defined(SOLARISAMD64)  
+
+/****** sge_binding/account_job_on_topology() **********************************
+*  NAME
+*     account_job_on_topology() -- Marks occupied resources. 
+*
+*  SYNOPSIS
+*     static bool account_job_on_topology(char** topology, int* 
+*     topology_length, const char* job, const int job_length) 
+*
+*  FUNCTION
+*     Marks occupied resources from one topology string (job) which 
+*     is usually a job on another topology string (topology) which 
+*     is usually the execution daemon local topology string.
+*
+*  INPUTS
+*     char** topology      - (in/out) topology on which the accounting is done 
+*     int* topology_length - (in)  length of the topology stirng
+*     const char* job      - (in) topology string from the job
+*     const int job_length - (in) length of the topology string from the job
+*
+*  RESULT
+*     static bool - 
+*
+*  NOTES
+*     MT-NOTE: account_job_on_topology() is not MT safe 
+*
+*  BUGS
+*     ??? 
+*
+*  SEE ALSO
+*     ???/???
+*******************************************************************************/
+static bool account_job_on_topology(char** topology, const int topology_length, 
+   const char* job, const int job_length)
+{
+   int i;
+   
+   /* parameter validation */
+   if (topology_length != job_length ||  job_length <= 0 
+      || (*topology) == NULL || job == NULL) {
+      return false;
+   }
+
+   /* go through topology and account */
+   for (i = 0; i < job_length; i++) {
+      if (job[i] == 'c') {
+         (*topology)[i] = 'c';
+      } else if (job[i] == 's') {
+         (*topology)[i] = 's';
+      } else if (job[i] == 't') {
+         (*topology)[i] = 't';
+      }
+   }
+
+   return true;
+}
+
+
 
 /****** sge_binding/binding_explicit_check_and_account() ***********************
 *  NAME
@@ -1013,9 +1169,11 @@ bool binding_n_per_socket(int first_socket, int amount_of_sockets, int n)
 *     const int* list_of_sockets   - ??? 
 *     const int samount            - ??? 
 *     const int** list_of_cores    - ??? 
-*     const int score              - ??? 
-*     char** topo_used_by_job      - (out) 
-*     int* topo_used_by_job_length - (out) 
+*     const int score              - ???
+*
+*  OUTPUTS
+*     char** topo_used_by_job      -  
+*     int* topo_used_by_job_length -  
 *
 *  RESULT
 *     bool - True if the job can be bound to the topology, false if not. 
@@ -1095,175 +1253,6 @@ bool binding_explicit_check_and_account(const int* list_of_sockets, const int sa
 
    return possible;
 }
-
-#endif
-
-
-/****** sge_binding/getExecdAmountOfCores() ************************************
-*  NAME
-*     getExecdAmountOfCores() -- Returns the total amount of cores the host has. 
-*
-*  SYNOPSIS
-*     int getExecdAmountOfCores() 
-*
-*  FUNCTION
-*     Retrieves the total amount of cores (currently Linux only) 
-*     the current host have.
-*
-*  RESULT
-*     int - The amount of cores the current host has. 
-*
-*  NOTES
-*     MT-NOTE: getExecdAmountOfCores() is MT safe 
-*
-*  SEE ALSO
-*     ???/???
-*******************************************************************************/
-int getExecdAmountOfCores() 
-{
-#if defined(PLPA_LINUX) 
-      return get_total_amount_of_cores();
-#elif defined(SOLARISAMD64) || defined(SOLARIS86) 
-      return get_total_amount_of_cores_solaris();
-#else   
-      return 0;
-#endif  
-}
-
-/****** sge_binding/getExecdAmountOfSockets() **********************************
-*  NAME
-*     getExecdAmountOfSockets() -- The total amount of sockets in the system. 
-*
-*  SYNOPSIS
-*     int getExecdAmountOfSockets() 
-*
-*  FUNCTION
-*     Calculates the total amount of sockets available in the system. 
-*
-*  INPUTS
-*
-*  RESULT
-*     int - The total amount of sockets available in the system.
-*
-*  NOTES
-*     MT-NOTE: getExecdAmountOfSockets() is not MT safe 
-*
-*  SEE ALSO
-*     ???/???
-*******************************************************************************/
-int getExecdAmountOfSockets()
-{
-#if defined(PLPA_LINUX) 
-   return get_amount_of_sockets();
-#elif defined(SOLARISAMD64) || defined(SOLARIS86) 
-   return get_total_amount_of_sockets_solaris();
-#else
-   return 0;
-#endif
-}
-
-
-bool get_execd_topology(char** topology, int* length)
-{
-   bool success = false;
-
-   /* topology must be a NULL pointer */
-   if ((*topology) == NULL) {
-#if defined(PLPA_LINUX)  
-      if (get_topology_linux(topology, length) == true) {
-         success = true;
-      } else {
-         success = false;
-      }   
-#elif defined(SOLARISAMD64) || defined(SOLARIS86) 
-      if (get_topology_solaris(topology, length) == true) {
-         success = true;
-      } else {
-         success = false;
-      }   
-#else 
-      /* currently other architectures are not supported */
-      success = false;
-#endif
-   }
-
-  return success; 
-}
-
-
-/****** sge_binding/getExecdTopologyInUse() ************************************
-*  NAME
-*     getExecdTopologyInUse() -- Creates a string which represents the used topology. 
-*
-*  SYNOPSIS
-*     bool getExecdTopologyInUse(char** topology) 
-*
-*  FUNCTION
-*     
-*     Checks all jobs (with going through active jobs directories) and their 
-*     usage of the topology (binding). Afterwards global "logical_used_topology" 
-*     string is up to date (which is also updated when a job ends and starts) and 
-*     a copy is made available for the caller. 
-*     
-*     Note: The memory is allocated within this function and 
-*           has to be freed from the caller afterwards.
-*  INPUTS
-*     char** topology - out: the current topology in use by jobs 
-*
-*  RESULT
-*     bool - true if the "topology in use" string could be created 
-*
-*  EXAMPLE
-*     ??? 
-*
-*  NOTES
-*     MT-NOTE: getExecdTopologyInUse() is not MT safe 
-*
-*  BUGS
-*     ??? 
-*
-*  SEE ALSO
-*     ???/???
-*******************************************************************************/
-bool get_execd_topology_in_use(char** topology)
-{
-   bool retval = false;
-
-   /* topology must be a NULL pointer */
-   if ((*topology) != NULL) {
-      return false;
-   }   
-
-   /* update "logical_used_topology" string */
-   #if 0
-   if (update_binding_system_status() == false) {
-      return false;
-   }
-   #endif 
-  
-   if (logical_used_topology_length == 0 || logical_used_topology == NULL) {
-
-#if defined(PLPA_LINUX) 
-      /* initialize without any usage */
-      get_topology_linux(&logical_used_topology, 
-              &logical_used_topology_length); 
-#elif defined(SOLARISAMD64) || defined(SOLARIS86) 
-      get_topology_solaris(&logical_used_topology, 
-               &logical_used_topology_length);
-#endif
-
-   }
-      
-   if (logical_used_topology_length > 0) {
-      /* copy the string */
-      (*topology) = (char *) calloc(logical_used_topology_length+1, sizeof(char));
-      memcpy((*topology), logical_used_topology, sizeof(char)*(logical_used_topology_length));
-      retval = true;
-   } 
-      
-   return retval;   
-}
-
 
 #if 0
 static bool update_binding_system_status()
@@ -1520,6 +1509,7 @@ bool free_topology(const char* topology, const int topology_length)
    return true;
 }
 
+#endif
 
 /* ---------------------------------------------------------------------------*/
 /* ---------------------------------------------------------------------------*/
@@ -2642,7 +2632,7 @@ static int get_core_id_from_logical_core_number_solaris(const int** matrix,
 /* ---------------------------------------------------------------------------*/
 /*                   Bookkeeping of cores in use by SGE                       */ 
 /* ---------------------------------------------------------------------------*/
-
+#if defined(PLPA_LINUX) || defined(SOLARIS86) || defined(SOLARISAMD64)
 
 /****** sge_binding/getStridingFirstSocketFirstCore() **************************
 *  NAME
@@ -3071,8 +3061,6 @@ static bool go_to_next_core(const char* topology, const int pos, int* new_pos)
 }
 #endif
 
-#if defined(SOLARISAMD64) || defined(SOLARIS86)
-
 static int get_position_in_topology(const int socket, const int core, 
    const char* topology, const int topology_length)
 {
@@ -3114,8 +3102,6 @@ static int get_position_in_topology(const int socket, const int core,
 
    return retval;
 }
-#endif
-
 
 bool initialize_topology() {
    
@@ -3136,6 +3122,7 @@ bool initialize_topology() {
    return false;
 }
 
+#endif
 
 /* ---------------------------------------------------------------------------*/
 /*               End of bookkeeping of cores in use by SGE                    */ 

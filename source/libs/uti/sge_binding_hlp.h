@@ -69,25 +69,15 @@ bool binding_explicit_has_correct_syntax(const char* parameter);
 #if defined(PLPA_LINUX)
 
 bool _has_topology_information(void);
-
 bool _has_core_binding(dstring* error);
-
 void* _get_plpa_handle(dstring* error);
-
 void _close_plpa_handle(void);
-
 bool get_topology_linux(char** topology, int* length);
-
 int get_processor_id(int socket_number, int core_number);
-
 int get_amount_of_cores(int socket_number);
-
 int get_total_amount_of_cores(void);
-
 int get_amount_of_sockets(void); 
-
 bool has_core_binding(void);
-
 void* get_plpa_handle(void);
 
 #endif

@@ -42,10 +42,8 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <sys/wait.h>
-
-#if defined(PLPA_LINUX) || defined(SOLARISAMD64) || defined(SOLARIS86)
-#  include "shepherd_binding.h"
-#endif
+#include "uti/sge_binding_hlp.h"
+#include "shepherd_binding.h"
 
 #if defined(LINUX)
 #  include <grp.h>

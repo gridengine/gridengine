@@ -91,6 +91,7 @@
 #include "sgeobj/sge_object.h"
 #include "uti/sge_stdio.h"
 #include "load_avg.h"
+#include "uti/sge_binding_hlp.h"
 #include "sge_binding.h"
 
 #if defined(SOLARISAMD64) || defined(SOLARIS86)
@@ -2054,10 +2055,13 @@ void execd_slave_job_exit(u_long32 job_id, u_long32 ja_task_id)
 static void clean_up_binding(char* binding)
 {
 
+   
+   DENTER(TOP_LAYER, "clean_up_binding");
+
    if (binding == NULL || strcasecmp("NULL", binding) == 0 
       || strcasecmp("no_job_binding", binding) == 0) {
       /* no binding was instructed */
-      return;
+      DRETURN_VOID;
    }
    
 #if defined(SOLARIS86) || defined(SOLARISAMD64)
@@ -2106,33 +2110,21 @@ static void clean_up_binding(char* binding)
    /* -> find the used topology and release it */
    char* topo = NULL;
 
-   if (strstr(binding, "linear:") != NULL) {
-      /* linear:<amount>:<socket>,<core>:topology */
-      
-   } else if (strstr(binding, "striding:") != NULL) {
-      /* striding:<amount>:<stepsize>:<socket>,<core>:topology */
-      if (sge_strtok(binding, ":") != NULL) {
-         if (sge_strtok(NULL, ":") != NULL) {
-            if (sge_strtok(NULL, ":") != NULL) {
-               if (sge_strtok(NULL, ":") != NULL) {
-                  if ((topo = sge_strtok(NULL, ":")) != NULL) {
-                     /* update the string which represents the currently used cores 
-                        on execution daemon host */
-                     free_topology(topo, -1);
-                  } /* topology */
-               } /* socket, core */
-            } /* stepsize */
-         } /* amount */
-      } /* striding */
-      
-   } else if (strstr(binding, "explicit:") != NULL) {
-      /* explicit:<socket>,<core>:...::topology */
-      /* just search for "::" */
+   if (strstr(binding, ":") != NULL) {
+      /* there was an order from execd to shepherd for binding */
+      /* seach the string after the last ":" -> this 
+         is the topology used by the job */
+      topo = strrchr(binding, ':');
+      free_topology(++topo, -1);
+      INFO((SGE_EVENT, "topology used by job freed"));
+   } else {
+      /* couldn't find valid topology string in config file */
+      WARNING((SGE_EVENT, "Couldn't find valid topology string in config file"));
    }
    
 #endif
 
-   return;
+   DRETURN_VOID;
 }
 
 

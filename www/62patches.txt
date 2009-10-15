@@ -1,3 +1,75 @@
+Bugs fixed in SGE 6.2u4 since release 6.2u3
+-------------------------------------------
+-    6851151 Application needs to prompt for keystore or user password after restart 
+-    6876489 common package lacks 2 jar files for sdm and sge inspect 
+-    6889423 sgeinspect.sh script file delivered in common and sgeinspect package
+N/A  6872473 qmaster installation might fail when more than 1 qmaster is installed in parallel on the same host 
+2942 6675570 qconf -ke[j] must return non-zero exit code on failure 
+2342 6590010 Original primary group vanishes after newgrp command (USE_QSUB_GID=true) 
+1314 6287864 online usage of maxvmem incorrect for tightly integrated parallel jobs 
+1636 6291037 Relationship between suspend_threshold and scheduler_interval needs to be documented 
+3055 6494492 man page of sge_ckpt points to wrong reference in queue_conf 
+3063 6618009 autoinstall fails if spooling dir (BDB) already exits without any error mgs/log file being created 
+3046 6659197 cluster name check is failing in installation 
+3053 6684465 removing admin user from the manager list leads to a qmaster dead lock 
+2542 6684887 allow users to limit concurrent array job task execution 
+3064 6688019 qmaster uninstallation fails when BDB RPC server is used 
+3056 6713724 man page for drmaa_control() refers to deprecated parameters 
+2716 6744724 interactive jobs (qlogin, qrsh without command) don't set the TZ environment variable correctly 
+2724 6747515 SGE 6.2 auto installation does unnecessary check on SGE_JMX_PORT and prints a misleading suggestion 
+2727 6747579 automatic uninstallation failed when using -jmx option 
+3076 6750689 syntax error for empty SGE_QMASTER/EXECD_PORT 
+3104 6760650 RC script removal is broken if SMF is used 
+3062 6769515 inst_sge -copycerts exits without error message when called for a cluster having no certificates 
+2804 6773668 more spooling ops than needed during job start order processing for seq jobs 
+2805 6774120 task spooling always causes job be spooled as well for array jobs with classic spooling 
+3078 6786258 Man page should mention reprioritize_interval is coupled to scheduler_interval 
+3083 6797353 autoinstall of Windows exec host hangs in GetLocalSpoolDir 
+3084 6798623 Windows exechost install failed to create the local spooldir 
+2907/
+3081 6802751 execd installation on Windows doesn't provide global spool dir as default, even if it's local 
+2944 6806917 Berkeley DB server auto installation does not work when HOSTNAME_RESOLVING=true 
+3079 6806918 Man page entry for SCHEDULER_TIMEOUT incorrectly states that default is 600 
+3070 6808082 $SGE_ROOT/util/setfileperm.sh does not change ownership of $SGE_ROOT/start_gui_installer 
+2924 6808646 DrmaaSuite.java imports are too broad 
+2899 6810411 bad RQS syntax can crash/hang qmaster process 
+3082 6822285 windows exec autoinstall fails if spooldir was already created with wrong perms/ownership 
+3068 6823365 h_vmem setting as JOB consumable fails to properly set the virtual memory limit of a job. 
+3105 6830974 permission problem during local config creation 
+3106 6831541 should ensure qmaster spool dir is empty before continuing the qmaster installation 
+3107 6832008 smf support was not enabled but getting a error with SMF dependecy error 
+3066 6834894 inst_sge shows wrong dialogs during csp certificate installation 
+3071 6842457 qmod -usj jid returns error status even though job is suspended 
+3040 6847548 qalter -w p reports running jobs for jobs that are rescheduled due to queue error 
+3108 6848042 Upgrade script from 61 to 62 requires working ssh connection to remote hosts 
+3109 6848095 calling inst_sge -auto with non-existing file argument leads to an error 
+3043 6849718 inst_sge -ux does not report error if hostname resovling is inconsistent 
+3058 6849741 qalter man page does not imply that qalter works also on running jobs 
+3058 6851538 qsub man page does not mention the existence of $JOB_SCRIPT environment variable within a job 
+3085 6855413 SGE does not handle multiline variable using qsub -v 
+3110 6856564 inst_sge -copycerts no longer works when no JMX or CSP mode used 
+3075 6857639 qrsh with command doesn't always set a new process group for the job 
+3122 6861758 processor set does not work on Solaris architecture 
+3088 6862580 Submit client or master might fail if JSV is enabled and environment contains fprint format spec 
+3091 6862617 qstat -help exits 1 
+3089 6862641 JSV Protocol is not handled correctly in client JSV 
+3111 6865717 need means to set the jsv command timeout 
+3094 6867805 ACCT_RESERVED_USAGE is broken 
+3096 6867897 qsub -sync does not connect to shadow master after failover 
+3097 6868133 qmon does not reconnect to qmaster after shadowd takeover 
+3098 6869559 resource leak in juti - streams not closed after command execution 
+3113 6873140 too many qsub -sync jobs wedge the qmaster on failover 
+3126 6873408 Scheduler crashes with got NULL element for CE_requestable 
+3102 6874070 JMX gets disabled in the autoinstallation if SGE_JVM_LIB_PATH set is to "" 
+3117 6875947 CSP qmaster installation displays confusing message that suggests a failure if qmaster=execd 
+3121 6876458 sge clients/daemons segfault when bootstrap file is corrupted 
+3123 6876508 management.properties file should only be readable by admin user or root 
+3125 6877580 Upgrade JMX logic misleading 
+3124 6877588 SMF services should be started even when different SMF service starts them 
+3128 6880144 jgdi can not convert exec hosts objects with reporting variable 
+3130 6880888 automatic execd uninstallation does not work on CentOS r4u5 
+3131 6880894 Automatic execd uninstallation might not work
+
 Bugs fixed in SGE 6.2u3 since release 6.2u2_1
 ---------------------------------------------
 -    6830972 error message when testing JAVA version 
@@ -13,7 +85,7 @@ Bugs fixed in SGE 6.2u3 since release 6.2u2_1
 -    6786393 Need support for parallel shadowd installation 
 -    6816037 problems with gaussian due to memory limitations of SGE 
 -    6821250 dependecy error wenn installing 6.2u2_1 rpm patches 
--    6830897 Startup of qmaster fails onHP11/HP11_64 during installation 
+-    6830897 Startup of qmaster fails on HP11/HP11_64 during installation 
 -    6830975 unsatisfied link error exception 
 -    6831094 gui-installer: CSP installation might fail when qmaster!=startup node 
 -    6831971 gui-installer: let's the user uninformed about the user who's running the installer 

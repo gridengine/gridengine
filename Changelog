@@ -8,6 +8,11 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 -----------------+------------+-------------------------------------------------
+DG-2009-10-15-0: Cleanup:     Fixed core binding parsing code. Added more 
+                              output on execd messages. Fixed generation of 
+                              OS internal processor ids. 
+                 Review:      SH 
+
 DG-2009-10-14-0: Cleanup:     Job2Corebinding related cleanups und bug fixes.
                  Review:      EB
 
@@ -29,7 +34,7 @@ SH-2009-10-12-0: Bugfix:      Add ability to commlib to wait for data on
                  Bugster:     6860857
                  Review:      CR
 
-DG-2009-10-12-1: Enhancem.:   Moved methods from obj to uti. Smaller fixes and 
+DG-2009-10-12-1: Enhancem.:   Moved functions from obj to uti. Smaller fixes and 
                               functionality added. (Job2Core binding).
                  Review:      EB
 

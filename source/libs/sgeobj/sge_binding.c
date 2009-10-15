@@ -585,7 +585,7 @@ int create_processor_set_explicit_solaris(const int* list_of_sockets,
    processorid_t* pid_list = NULL;
    /* processor set id */
    processorid_t psetid;
-      /* the topology matrix */
+   /* the topology matrix */
    int** matrix = NULL;
    /* size of the topology matrix */
    int length = 0;
@@ -609,8 +609,8 @@ int create_processor_set_explicit_solaris(const int* list_of_sockets,
       return -1;
    }
 
-   /* allocate new memory for the processor id list */
-   pid_list = (processorid_t *) calloc(length, sizeof(processorid_t));
+   /* allocate new memory for the processor id list (it has the minimum size 
+      of amount of cores requested but could be larger in CMT case */
 
    /* generate pid list for processor set creation */
    for (i = 0; i < samount; i++) {
@@ -627,8 +627,8 @@ int create_processor_set_explicit_solaris(const int* list_of_sockets,
       }
      
       /* add the processor IDs to the global list */
-      pid_list = (processorid_t *) calloc(pid_list_length + tmp_pid_list_length, 
-                     sizeof(processorid_t));
+      pid_list = (processorid_t *) realloc(pid_list, (pid_list_length 
+                                    + tmp_pid_list_length) * sizeof(processorid_t));
       /* append the processor ids to the global pid list */
       for (j = pid_list_length; j < pid_list_length + tmp_pid_list_length; j++) {
          pid_list[j] = tmp_pid_list[j - pid_list_length];

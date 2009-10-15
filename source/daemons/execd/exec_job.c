@@ -2206,15 +2206,14 @@ static bool create_binding_strategy_string_solaris(dstring* result,
          retval = explicit_solaris(result, binding_elem, err_str, err_length);
 
       } else {
-         
-         /* no binding strategy selected */
+         /* no valid binding strategy selected */
+         INFO((SGE_EVENT, "ERROR: No valid binding strategy in CULL BN_strategy"));
          retval = false;
       }
 
    } else {
-
+      INFO((SGE_EVENT, "No CULL JB_binding sublist found"));
       retval = false;
-
    }
 
    /* in case no core binding is selected or any other error occured */
@@ -2379,7 +2378,7 @@ static bool explicit_solaris(dstring* result, lListElem* binding_elem, char* err
             snprintf(err_str, err_length, "binding: couldn't create processor set");
             /* free the cores occupied by this job because we couldn't generate processor set */
             free_topology(topo_by_job, topo_by_job_length);
-            DPRINTF(("Couldn't create processor set"));
+            INFO((SGE_EVENT, "Could't create processor set in order to bind job to."));
             retval = false;
          } else {
             /* write processor set id into "binding" in config file */

@@ -1262,23 +1262,29 @@ bool binding_explicit_extract_sockets_cores(const char* parameter,
       (*list_of_sockets)[0] = atoi(socket);
       (*list_of_cores)[0] = atoi(core);
 
-      do {
+      while (core != NULL && isdigit(*core) != 0) { 
+/*               && *core != ' ' && *core!= '\0') { */
          /* get socket number */ 
-         if ((socket = sge_strtok(NULL, ",")) != NULL) {
+         if ((socket = sge_strtok(NULL, ",")) == NULL || (isdigit(*socket) == 0)) {
+            break;
+         }
 
-            /* we have a socket therefore we need a core number */
-            if ((core = sge_strtok(NULL, ":")) == NULL) {
-               return false;
-            }   
-                        /* adding the next <socket>,<core> tuple */
-            (*samount)++; (*camount)++; 
-            (*list_of_sockets) = realloc(*list_of_sockets, (*samount)*sizeof(int));
-            (*list_of_cores) = realloc(*list_of_cores, (*camount)*sizeof(int));
-            (*list_of_sockets)[*samount] = atoi(socket);
-            (*list_of_cores)[*camount] = atoi(core);
-         } 
-   
-      } while (socket != NULL);  /* we try to continue with the next socket if possible */ 
+         /* we have a socket therefore we need a core number */
+         if ((core = sge_strtok(NULL, ":")) == NULL || (isdigit(*core) == 0)) {
+            /* missing core number */
+            return false;
+         }   
+         
+         /* adding the next <socket>,<core> tuple */
+         (*samount)++; (*camount)++; 
+         (*list_of_sockets) = realloc(*list_of_sockets, (*samount)*sizeof(int));
+         (*list_of_cores) = realloc(*list_of_cores, (*camount)*sizeof(int));
+         (*list_of_sockets)[*samount-1] = atoi(socket);
+         (*list_of_cores)[*camount-1] = atoi(core);
+      }        /* we try to continue with the next socket if possible */ 
+               /* if "S" or "s" is found this is because the binding string 
+                  in config file is parsed and the topology used by the job "SccScc" 
+                  is followed */
 
    } else {
       /* this should not be reachable because of the pre-check */

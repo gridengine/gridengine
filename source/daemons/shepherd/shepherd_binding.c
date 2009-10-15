@@ -212,6 +212,8 @@ int do_core_binding(void)
             FREE(cores);
          }
 
+      } else {
+         shepherd_trace("do_core_binding: explicit: couldn't extract <socket>,<core> pair");
       }
 
    } else {
@@ -823,6 +825,7 @@ static bool binding_explicit(const int* list_of_sockets, const int samount,
 
    /* check if we have exactly the same amount of sockets as cores */
    if (camount != samount) {
+      shepherd_trace("binding_explicit: bug: amount of sockets != amount of cores");
       return false;
    }
    /* do only on linux when we have core binding feature in kernel */
@@ -872,11 +875,20 @@ static bool binding_explicit(const int* list_of_sockets, const int samount,
          if (bind_process_to_mask((pid_t) 0, cpuset) == true) {
             /* there was an error while binding */ 
             bound = true;
-         } /* couldn't be bound return false */
+         } else {
+            /* couldn't be bound return false */
+            shepherd_trace("binding_explicit: bind_process_to_mask was not successful");
+         }   
           
-      } /* has no PLPA lib or topology information */
+      } else {
+         /* has no PLPA lib or topology information */
+         shepherd_trace("binding_explicit: couldn't load PLPA library");
+       }  
 
-   } /* has no core binding ability */
+   } else {
+      /* has no core binding ability */
+      shepherd_trace("binding_explicit: host does not support core binding");
+   }   
 
    return bound;
 }

@@ -2054,8 +2054,6 @@ void execd_slave_job_exit(u_long32 job_id, u_long32 ja_task_id)
 *******************************************************************************/
 static void clean_up_binding(char* binding)
 {
-
-   
    DENTER(TOP_LAYER, "clean_up_binding");
 
    if (binding == NULL || strcasecmp("NULL", binding) == 0 
@@ -2079,26 +2077,32 @@ static void clean_up_binding(char* binding)
          if ((pset_id = sge_strtok(NULL, ":")) != NULL) {
             /* finally get the processor set id */
             processor_set_id = atoi(pset_id);
-            /* must be root in order to delete processor set */
-            sge_switch2start_user();
-            /* TODO get process numbers occupied this job */ 
+            /* check if a processor set was created (is not the case 
+               when the job was using ALL available cores -> no 
+               processor set can be created because it is not allowed 
+               from OS) */
+            if (processor_set_id != -1) {
+               /* must be root in order to delete processor set */
+               sge_switch2start_user();
             
+               if (pset_destroy((psetid_t)processor_set_id) != 0) {
+                  /* couldn't delete pset */
+                  INFO((SGE_EVENT, "Couldn't delete processor set"));
+               }
 
-            if (pset_destroy((psetid_t)processor_set_id) != 0) {
-               /* couldn't delete pset */
-               
+               /* switch back TODO DG check if needed*/
+               sge_switch2admin_user();
+
+               /* de-account the resources used from job */
+               if ((topo = sge_strtok(NULL, ":")) != NULL) {
+                  /* update the string which represents the currently used cores 
+                     on execution daemon host */
+                  free_topology(topo, -1);
+               }
+            } else {
+               /* this job was filling up to cores on the host and 
+                  therefore is not bound */ 
             }
-
-            /* switch back TODO DG check if needed*/
-            sge_switch2admin_user();
-
-            /* de-account the resources used from job */
-            if ((topo = sge_strtok(NULL, ":")) != NULL) {
-               /* update the string which represents the currently used cores 
-                  on execution daemon host */
-               free_topology(topo, -1);
-            }
-
          }
       }
 

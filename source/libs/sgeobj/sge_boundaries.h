@@ -568,13 +568,9 @@ enum NameSpaceBoundaries {
 
    /* list for all running processes under Linux */
    PRO_LOWERBOUND = RQL_UPPERBOUND + 1,
-   PRO_UPPERBOUND = PRO_LOWERBOUND + 1 * BASIC_UNIT - 1,
+   PRO_UPPERBOUND = PRO_LOWERBOUND + 1 * BASIC_UNIT - 1
 
-   /* list for process groups */
-   GR_LOWERBOUND =PRO_UPPERBOUND + 1,
-   GR_UPPERBOUND = GR_LOWERBOUND + 1 * BASIC_UNIT - 1
-
-#  define LAST_UPPERBOUND RQL_UPPERBOUND
+#  define LAST_UPPERBOUND PRO_UPPERBOUND
 
 };
 

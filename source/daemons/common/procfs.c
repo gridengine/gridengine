@@ -403,15 +403,12 @@ time_t last_time
 #if defined(LINUX)
    char buffer[BIGLINE];
    lListElem *pr = NULL;
-   SGE_STRUCT_STAT fst;
    int pos_pid = lGetPosInDescr(PRO_Type, PRO_pid);
    int pos_utime = lGetPosInDescr(PRO_Type, PRO_utime);
    int pos_stime = lGetPosInDescr(PRO_Type, PRO_stime);
    int pos_vsize = lGetPosInDescr(PRO_Type, PRO_vsize);
-   int pos_groups = lGetPosInDescr(PRO_Type, PRO_groups);
    int pos_rel = lGetPosInDescr(PRO_Type, PRO_rel);
    int pos_run = lGetPosInDescr(PRO_Type, PRO_run);
-   int pos_group = lGetPosInDescr(GR_Type, GR_group);
 
 #else
    prstatus_t pr;
@@ -452,6 +449,7 @@ time_t last_time
 
    /* find next valid entry in procfs */ 
    while ((dent = readdir(cwd))) {
+      unsigned long utime, stime, vsize, pid;
       char *pidname;
 
       if (!dent->d_name)
@@ -459,9 +457,11 @@ time_t last_time
       if (!dent->d_name[0])
          continue;
 
-      if (!strcmp(dent->d_name, "..") || !strcmp(dent->d_name, "."))
+      if (!strcmp(dent->d_name, ".") || !strcmp(dent->d_name, ".."))
          continue;
 
+      /* this is needed on some Linux systems with an old Linux threading library */
+      /* this causes entries in the procfs with a trailing point */
       if (dent->d_name[0] == '.')
           pidname = &dent->d_name[1];
       else
@@ -480,88 +480,72 @@ time_t last_time
          }
       }
       sprintf(procnam, "%s/%s/stat", PROC_DIR, dent->d_name);
-
-      if (SGE_STAT(procnam, &fst)) {
+#else
+      sprintf(procnam, "%s/%s", PROC_DIR, dent->d_name);
+#endif
+      if ((fd = open(procnam, O_RDONLY, 0)) == -1) {
          if (errno != ENOENT) {
 #ifdef MONITOR_PDC
-            INFO((SGE_EVENT, "could not stat %s: %s\n", procnam, strerror(errno)));
+            if (errno == EACCES)
+               INFO((SGE_EVENT, "(uid:"gid_t_fmt" euid:"gid_t_fmt") could not open %s: %s\n",
+                        getuid(), geteuid(), procnam, strerror(errno)));
+            else
+               INFO((SGE_EVENT, "could not open %s: %s\n", procnam, strerror(errno)));
+#endif
+               touch_time_stamp(dent->d_name, time_stamp, job_list);
+         }
+         continue;
+      }
+
+      /** 
+       ** get a list of supplementary group ids to decide
+       ** whether this process will be needed;
+       ** read also prstatus
+       **/
+
+#  if defined(LINUX)
+
+      /* 
+       * Read the line and append a 0-Byte 
+       */
+      if ((ret = read(fd, buffer, BIGLINE-1))<=0) {
+         close(fd);
+         if (ret == -1 && errno != ENOENT) {
+#ifdef MONITOR_PDC
+            INFO((SGE_EVENT, "could not read %s: %s\n", procnam, strerror(errno)));
 #endif
             touch_time_stamp(dent->d_name, time_stamp, job_list);
          }
          continue;
       }
-      /*
-       * If the stat file was not changed since our last parsing there is no need to do it again
+      buffer[BIGLINE-1] = '\0';
+
+      /* 
+       * get prstatus
        */
-      if (pr == NULL || fst.st_mtime > last_time) {
-         unsigned long utime, stime, vsize, pid;
-#else
-         sprintf(procnam, "%s/%s", PROC_DIR, dent->d_name);
-#endif
-         if ((fd = open(procnam, O_RDONLY, 0)) == -1) {
-            if (errno != ENOENT) {
-#ifdef MONITOR_PDC
-               if (errno == EACCES)
-                  INFO((SGE_EVENT, "(uid:"gid_t_fmt" euid:"gid_t_fmt") could not open %s: %s\n",
-                           getuid(), geteuid(), procnam, strerror(errno)));
-               else
-                  INFO((SGE_EVENT, "could not open %s: %s\n", procnam, strerror(errno)));
-#endif
-                  touch_time_stamp(dent->d_name, time_stamp, job_list);
-            }
-            continue;
-         }
+      ret = sscanf(buffer, "%lu %*s %*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %lu %lu %*d %*d %*d %*d %*d %*d %*u %lu",
+                   &pid,
+                   &utime,
+                   &stime,
+                   &vsize);
 
-         /** 
-          ** get a list of supplementary group ids to decide
-          ** whether this process will be needed;
-          ** read also prstatus
-          **/
-
-#  if defined(LINUX)
-
-         /* 
-          * Read the line and append a 0-Byte 
-          */
-         if ((ret = read(fd, buffer, BIGLINE-1))<=0) {
-            close(fd);
-            if (ret == -1 && errno != ENOENT) {
-#ifdef MONITOR_PDC
-               INFO((SGE_EVENT, "could not read %s: %s\n", procnam, strerror(errno)));
-#endif
-               touch_time_stamp(dent->d_name, time_stamp, job_list);
-            }
-            continue;
-         }
-         buffer[BIGLINE-1] = '\0';
-
-         /* 
-          * get prstatus
-          */
-         ret = sscanf(buffer, "%lu %*s %*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %lu %lu %*d %*d %*d %*d %*d %*d %*u %lu",
-                      &pid,
-                      &utime,
-                      &stime,
-                      &vsize);
-
-         if (ret != 4) {
-            close(fd);
-            continue;
-         }
-
-         if (pr == NULL) {
-            pr = lCreateElem(PRO_Type);
-            lSetPosUlong(pr, pos_pid, pid);
-            lSetPosBool(pr, pos_rel, false);
-            append_pr(pr);
-         }
-         
-         lSetPosUlong(pr, pos_utime, utime);
-         lSetPosUlong(pr, pos_stime, stime);
-         lSetPosUlong(pr, pos_vsize, vsize);
-
+      if (ret != 4) {
          close(fd);
+         continue;
       }
+
+      if (pr == NULL) {
+         pr = lCreateElem(PRO_Type);
+         lSetPosUlong(pr, pos_pid, pid);
+         lSetPosBool(pr, pos_rel, false);
+         append_pr(pr);
+      }
+      
+      lSetPosUlong(pr, pos_utime, utime);
+      lSetPosUlong(pr, pos_stime, stime);
+      lSetPosUlong(pr, pos_vsize, vsize);
+
+      close(fd);
 
       /* mark this process as still running */
       lSetPosBool(pr, pos_run, true);
@@ -572,54 +556,28 @@ time_t last_time
        */
       {
          char procnam[256];
-         lList *groupTable = lGetPosList(pr, pos_groups);
-
+         char buf[1024];
+         FILE* f = (FILE*) NULL;
          sprintf(procnam,  "%s/%s/status", PROC_DIR, dent->d_name);
-         if (SGE_STAT(procnam, &fst) != 0) {
-            if (errno != ENOENT) {
-#ifdef MONITOR_PDC
-               INFO((SGE_EVENT, "could not stat %s: %s\n", procnam, strerror(errno)));
-#endif
-               touch_time_stamp(dent->d_name, time_stamp, job_list);
-            }
-            continue;
-         }
 
          groups = 0;
-         if (fst.st_mtime < last_time && groupTable != NULL) {
-            lListElem *group;
 
-            for_each(group, groupTable) {
-               list[groups] = lGetPosUlong(group, pos_group);
-               groups++;
-            }
-         } else {
-            char buf[1024];
-            FILE* f = (FILE*) NULL;
-
-            if (!(f = fopen(procnam, "r"))) {
-               continue;
-            }
-            /* save groups also in the table */
-            groupTable = lCreateList("groupTable", GR_Type);
-            while (fgets(buf, sizeof(buf), f)) {
-               if (strcmp("Groups:", strtok(buf, "\t"))==0) {
-                  char *token;
-                  
-                  while ((token=strtok((char*) NULL, " "))) {
-                     lListElem *gr = lCreateElem(GR_Type);
-                     long group = atol(token);
-                     list[groups] = group;
-                     lSetPosUlong(gr, pos_group, group);
-                     lAppendElem(groupTable, gr);
-                     groups++;
-                  }
-                  break;
-               }
-            }
-            lSetPosList(pr, pos_groups, groupTable);
-            fclose(f);
+         if (!(f = fopen(procnam, "r"))) {
+            continue;
          }
+         while (fgets(buf, sizeof(buf), f)) {
+            if (strcmp("Groups:", strtok(buf, "\t"))==0) {
+               char *token;
+                  
+               while ((token=strtok((char*) NULL, " "))) {
+                  long group = atol(token);
+                  list[groups] = group;
+                  groups++;
+               }
+               break;
+            }
+         }
+         fclose(f);
       } 
 #  elif defined(SOLARIS) || defined(ALPHA)
       

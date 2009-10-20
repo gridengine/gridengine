@@ -195,6 +195,8 @@
 #define MSG_QCONF_NOXDEFINED_S                    _MESSAGE(23167, _("no "SFN" defined"))
 #define MSG_TABLE_HOST                            "HOST"
 #define MSG_TABLE_PROCESSORS                      "PROCESSORS"
+#define MSG_TABLE_SOCKETS                         "NSOC"
+#define MSG_TABLE_CORES                           "NCOR"
 #define MSG_TABLE_ARCH                            "ARCH"
 #define MSG_TABLE_SUM_F                           "SUM"
 #define MSG_TABLE_EV_ID                           "ID"

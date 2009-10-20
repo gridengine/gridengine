@@ -52,6 +52,7 @@
 #include "sgeobj/sge_range.h"
 #include "sgeobj/sge_conf.h" 
 #include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_binding.h"
 #include "sgeobj/sge_pe.h"
 #include "sgeobj/sge_qinstance.h"
 #include "sgeobj/sge_qinstance_state.h"
@@ -2459,6 +2460,31 @@ static int sge_handle_job(lListElem *job, lListElem *jatep, lListElem *qep, lLis
             }
          }
       }
+      if (handler->report_binding && (qstat_env->full_listing & QSTAT_DISPLAY_BINDING) != 0) {
+         lList *binding_list = lGetList(job, JB_binding);
+
+         if (binding_list != NULL) {
+            lListElem *binding_elem = lFirst(binding_list);
+            dstring binding_param = DSTRING_INIT;
+
+            binding_print_to_string(binding_elem, &binding_param);
+            if (handler->report_binding_started && 
+                (ret=handler->report_binding_started(handler, alpp))) {
+               DPRINTF(("handler->report_binding_started failed\n"));
+               goto error;
+            }
+            if ((ret=handler->report_binding(handler, sge_dstring_get_string(&binding_param), alpp))) {
+               DPRINTF(("handler->report_binding failed\n"));
+               goto error;
+            }
+            if (handler->report_binding_finished && 
+                (ret=handler->report_binding_finished(handler, alpp))) {
+               DPRINTF(("handler->report_binding_finished failed\n"));
+               goto error;
+            }
+            sge_dstring_free(&binding_param);
+         }
+      }
    }
    
    if (handler->report_job_finished && (ret=handler->report_job_finished(handler, lGetUlong(job, JB_job_number), alpp))) {
@@ -3100,6 +3126,7 @@ void qstat_filter_add_r_attributes(qstat_env_t *qstat_env) {
       JB_master_hard_queue_list,
       JB_jid_request_list,
       JB_ja_ad_request_list,
+      JB_binding,
       NoName
    };
    const int nm_JAT_Type_template[] = {

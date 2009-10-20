@@ -428,8 +428,18 @@ static int handle_job(sge_gdi_ctx_class_t *ctx, lListElem *jelem, lListElem *jat
    }
 
    { 
-      lListElem *report = NULL;
-      report = add_job_report(jobid, jataskid, NULL, jelem);
+      lListElem *report = add_job_report(jobid, jataskid, NULL, jelem);
+
+#if 1 /* EB:TODO:J2C */
+      {
+         dstring pseudo_usage = DSTRING_INIT;
+
+         sge_dstring_sprintf(&pseudo_usage, "binding_inuse=%s", "EB:TODO:J2C");
+         add_usage(report, sge_dstring_get_string(&pseudo_usage), NULL, 0);
+         sge_dstring_free(&pseudo_usage);
+      }
+#endif
+
       flush_job_report(report);
    }   
 
@@ -729,14 +739,10 @@ static int handle_task(sge_gdi_ctx_class_t *ctx, lListElem *petrep, char *commpr
          
    /* put task into task_list of slave/master job */ 
    if (lGetList(jatep, JAT_task_list) == NULL) {
-DTRACE;
       lSetList(jatep, JAT_task_list, lCreateList("task_list", PET_Type));
    }
-DTRACE;
    /* put task into task_list of slave/master job */ 
    lAppendElem(lGetList(jatep, JAT_task_list), petep);
-
-DTRACE;
 
    if (!mconf_get_simulate_jobs()) {
       if (job_write_spool_file(jep, jataskid, NULL, SPOOL_WITHIN_EXECD)) { 
@@ -748,9 +754,7 @@ DTRACE;
       }
    }
    
-DTRACE;   
    /* 
-    *
     * At this time we are sure that we have the task on disk.
     * Now add a new "running" element for this job to the job 
     * report which is used as ACK for this job send request.
@@ -758,13 +762,22 @@ DTRACE;
     */
    {
       lListElem *jr = add_job_report(jobid, jataskid, new_task_id, jep);
+
       add_usage(jr, "submission_time", NULL, lGetUlong(petep, PET_submission_time));
+#if 1 /* EB:TODO:J2C */
+      {
+         dstring pseudo_usage = DSTRING_INIT;
+
+         sge_dstring_sprintf(&pseudo_usage, "binding_inuse=%s", "EB:TODO:J2C");
+         add_usage(jr, sge_dstring_get_string(&pseudo_usage), NULL, 0);
+         sge_dstring_free(&pseudo_usage);
+      }
+#endif
       /* if we are not interested in online usage per task, suppress sending of this job report */
       if (mconf_get_sharetree_reserved_usage() && lGetBool(pe, PE_accounting_summary)) {
          lSetBool(jr, JR_no_send, true);
       }
    }
-DTRACE;
 
    /* for debugging: never start job but report a failure */
    if (getenv("FAILURE_BEFORE_START")) {
@@ -775,7 +788,6 @@ DTRACE;
      goto Error;
    }
 
-DTRACE;
    /* put task into task_list of slave/master job */ 
    /* send ack to sender of task */
    if (tid) {

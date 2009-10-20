@@ -262,6 +262,7 @@ Qmon*submit_detail.xmtChildren: \
                      submit_pe = pe, \
                      submit_ar = ar_id, \
                      submit_jsv_url = jsv_url, \
+                     submit_binding = binding, \
                      submit_account = account_string; \
    TimeInput         submit_deadline = deadline; \
    StrListField      submit_mail_user = mail_list, \
@@ -313,6 +314,10 @@ Qmon*submit_detail.layout: \
             Caption tl "@{JSV URL}" Centered 30 em submit_jsv_url \
             <> \
             Fixed Centered submit_jsv_urlPB \
+         } \
+         Row { \
+            Caption tl "@{Binding}" Centered 30 em submit_binding \
+            <> \
          } \
          <> \
       } \

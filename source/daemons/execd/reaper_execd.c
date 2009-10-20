@@ -264,7 +264,11 @@ int sge_reap_children_execd(int max_count)
          if (!(jr=get_job_report(jobid, jataskid, petep != NULL ? lGetString(petep, PET_id) : NULL))) {
             ERROR((SGE_EVENT, MSG_JOB_MISSINGJOBXYINJOBREPORTFOREXITINGJOBADDINGIT_UU, 
                    sge_u32c(jobid), sge_u32c(jataskid)));
-            jr = add_job_report(jobid, jataskid, petep != NULL ? lGetString(petep, PET_id) : NULL, jep);
+            if (petep != NULL) {
+               jr = add_job_report(jobid, jataskid, lGetString(petep, PET_id), jep);
+            } else {
+               jr = add_job_report(jobid, jataskid, NULL, jep);
+            }
          }
 
          /* when restarting execd it happens that cleanup_old_jobs()
@@ -1328,7 +1332,7 @@ examine_job_task_from_file(sge_gdi_ctx_class_t *ctx, int startup, char *dir, lLi
    
    jobid = lGetUlong(jep, JB_job_number);
    jataskid = lGetUlong(jatep, JAT_task_number);
-   if(petep != NULL) {
+   if (petep != NULL) {
       pe_task_id_str = lGetString(petep, PET_id);
    }
 
@@ -1496,7 +1500,7 @@ read_dusage(lListElem *jr, const char *jobdir, u_long32 jobid, u_long32 jataskid
       sge_dstring_free(&buffer);
 
       add_usage(jr, "submission_time", get_conf_val("submission_time"), (double)0);
-      add_usage(jr, "priority",        get_conf_val("priority"),        (double)0);
+      add_usage(jr, "priority", get_conf_val("priority"),        (double)0);
    }
 
    /* read "usage" file */

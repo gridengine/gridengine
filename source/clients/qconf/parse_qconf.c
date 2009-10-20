@@ -104,7 +104,7 @@ static int sge_error_and_exit(sge_gdi_ctx_class_t *ctx, const char *ptr);
 
 /* ------------------------------------------------------------- */
 static bool show_object_list(sge_gdi_ctx_class_t *ctx, u_long32, lDescr *, int, char *);
-static int show_processors(sge_gdi_ctx_class_t *ctx);
+static int show_processors(sge_gdi_ctx_class_t *ctx, bool has_binding_param);
 static int show_eventclients(sge_gdi_ctx_class_t *ctx);
 
 /* ------------------------------------------------------------- */
@@ -169,6 +169,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
    u_long32 prog_number = ctx->get_who(ctx);
    uid_t uid = ctx->get_uid(ctx);
    gid_t gid = ctx->get_gid(ctx);
+   bool has_binding_param = false;
 
    DENTER(TOP_LAYER, "sge_parse_qconf");
 
@@ -179,9 +180,31 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
       DRETURN(1);
    }
    
+   /* 
+    * is there a -cb switch. we have to find that switch now because
+    * the loop handles all switches in specified sequence and
+    * -sep -cb would not be handled correctly.
+    */
    spp = argv;
-
    while (*spp) {
+      if (strcmp("-cb", *spp) == 0) {
+         has_binding_param = true;
+      }
+      spp++;
+   }
+
+   /* now start from beginning */
+   spp = argv;
+   while (*spp) {
+
+/*----------------------------------------------------------------------------*/
+      /* "-cb" */
+
+      if (strcmp("-cb", *spp) == 0) {
+         /* just skip it we have parsed it above */
+         spp++;
+         continue;
+      }
 
 /*----------------------------------------------------------------------------*/
       /* "-acal cal-name" */
@@ -4229,7 +4252,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
 /*----------------------------------------------------------------------------*/
       /* "-sep" */
       if (strcmp("-sep", *spp) == 0) {
-         show_processors(ctx);
+         show_processors(ctx, has_binding_param);
          spp++;
          continue;
       }
@@ -6270,7 +6293,7 @@ static int show_eventclients(sge_gdi_ctx_class_t *ctx)
 
 
 
-static int show_processors(sge_gdi_ctx_class_t *ctx)
+static int show_processors(sge_gdi_ctx_class_t *ctx, bool has_binding_param)
 {
    lEnumeration *what = NULL;
    lCondition *where = NULL;
@@ -6278,6 +6301,8 @@ static int show_processors(sge_gdi_ctx_class_t *ctx)
    lListElem *ep = NULL;
    const char *cp = NULL;
    u_long32 sum = 0;
+   u_long32 socket_sum = 0;
+   u_long32 core_sum = 0;
 
    DENTER(TOP_LAYER, "show_processors");
 
@@ -6299,25 +6324,70 @@ static int show_processors(sge_gdi_ctx_class_t *ctx)
    if (lp && lGetNumberOfElem(lp) > 0) {
       lPSortList(lp,"%I+", EH_name);
 
-      printf("%-25.24s%10.9s%12.11s\n",MSG_TABLE_HOST,MSG_TABLE_PROCESSORS,
-            MSG_TABLE_ARCH);
-      printf("===============================================\n");
+      if (has_binding_param) {
+         printf("%-25.24s%10.9s%6.5s%6.5s%12.11s\n", MSG_TABLE_HOST, MSG_TABLE_PROCESSORS, 
+            MSG_TABLE_SOCKETS, MSG_TABLE_CORES, MSG_TABLE_ARCH);
+      } else {
+         printf("%-25.24s%10.9s%12.11s\n", MSG_TABLE_HOST, MSG_TABLE_PROCESSORS, MSG_TABLE_ARCH);
+      }
+      printf("===============================================");
+      if (has_binding_param) {
+         printf("============");
+      }
+      printf("\n");
       for_each(ep, lp) {
-         lListElem *arch_elem = NULL;
-
-         arch_elem = lGetSubStr(ep, HL_name, "arch", EH_load_list);
+         lListElem *arch_elem = lGetSubStr(ep, HL_name, "arch", EH_load_list); 
+         u_long32 sockets = 0;
+         u_long32 cores = 0;
 
          printf("%-25.24s", ((cp = lGetHost(ep, EH_name)) ? cp : ""));
          printf("%10"sge_fu32, lGetUlong(ep, EH_processors));
+
+         if (has_binding_param) {
+            lListElem *socket_elem = lGetSubStr(ep, HL_name, "m_socket", EH_load_list); 
+            lListElem *core_elem = lGetSubStr(ep, HL_name, "m_core", EH_load_list); 
+
+            if (socket_elem != NULL) {
+               printf("%6.5s", lGetString(socket_elem, HL_value));
+               sockets = atol(lGetString(socket_elem, HL_value));
+            } else {
+               printf("%6.5s", "-");
+            }
+            if (core_elem != NULL) {
+               printf("%6.5s", lGetString(core_elem, HL_value));
+               cores = atol(lGetString(core_elem, HL_value));
+            } else {
+               printf("%6.5s", "-");
+            }
+         }
          if (arch_elem) {
             printf("%12.11s", lGetString(arch_elem, HL_value));
          }
          printf("\n");
          sum += lGetUlong(ep, EH_processors);
+         socket_sum += sockets;
+         core_sum += cores;
       }
-      printf("===============================================\n");
-/*      printf("%35"sge_fu32"\r%-25.24s\n",sum, MSG_TABLE_SUM_F); */
-      printf("%-25.24s%10"sge_fu32"\n",MSG_TABLE_SUM_F,sum);
+      printf("===============================================");
+      if (has_binding_param) {
+         printf("============");
+      }
+      printf("\n");
+        
+      printf("%-25.24s%10"sge_fu32, MSG_TABLE_SUM_F, sum);
+      if (has_binding_param) { 
+         if (socket_sum > 0) {
+            printf("%6"sge_fu32, socket_sum);
+         } else {
+            printf("%6.5s", "-");
+         }
+         if (core_sum > 0) {
+            printf("%6"sge_fu32, core_sum);
+         } else {
+            printf("%6.5s", "-");
+         }
+      }
+      printf("\n");
    }
    else {
       fprintf(stderr,  MSG_QCONF_NOEXECUTIONHOSTSDEFINED );

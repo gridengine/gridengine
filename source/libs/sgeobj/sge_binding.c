@@ -44,12 +44,20 @@
 #endif 
 
 #include <pthread.h>
-#include "sge_mtutil.h"
-#include "sge_log.h"
 
+#include "uti/sge_log.h"
+#include "uti/sge_binding_hlp.h"
 
-/* these sockets cores or threads are currently in use from SGE      */
-/* access them via getExecdTopologyInUse() because of initialization */
+#include "sgeobj/sge_answer.h"
+
+#include "msg_common.h"
+
+#define BINDING_LAYER TOP_LAYER
+
+/* 
+ * these sockets cores or threads are currently in use from SGE 
+ * access them via getExecdTopologyInUse() because of initialization 
+ */
 static char* logical_used_topology = NULL;
 
 static int logical_used_topology_length = 0;
@@ -299,9 +307,10 @@ static int get_position_in_topology(const int socket, const int core, const char
 static bool account_job_on_topology(char** topology, const int topology_length, 
    const char* job, const int job_length);  
 
+#if 0
 static int getMaxThreadsFromTopologyString(const char* topology); 
-
 static int getMaxCoresFromTopologyString(const char* topology);
+#endif
 
 /* DG TODO length should be an output */
 static bool is_starting_point(const char* topo, const int length, const int pos, 
@@ -2970,7 +2979,7 @@ static bool is_starting_point(const char* topo, const int length, const int pos,
    return is_possible;
 }   
 
-
+#if 0
 static int getMaxThreadsFromTopologyString(const char* topology) {
    int i = 0; 
    int threads = 0;
@@ -3006,7 +3015,6 @@ static int getMaxThreadsFromTopologyString(const char* topology) {
    return max_threads;
 }
 
-
 static int getMaxCoresFromTopologyString(const char* topology) {
    int i = 0; 
    int cores = 0;
@@ -3034,6 +3042,7 @@ static int getMaxCoresFromTopologyString(const char* topology) {
 
    return max_cores;
 }
+#endif
 
 #if 0
 static bool go_to_next_core(const char* topology, const int pos, int* new_pos) 
@@ -3128,3 +3137,95 @@ bool initialize_topology() {
 /*               End of bookkeeping of cores in use by SGE                    */ 
 /* ---------------------------------------------------------------------------*/
 
+bool
+binding_print_to_string(const lListElem *this_elem, dstring *string) {
+   bool ret = true;
+
+   DENTER(BINDING_LAYER, "binding_print_to_string");
+   if (this_elem != NULL && string != NULL) {
+      const char *const strategy = lGetString(this_elem, BN_strategy);   
+      binding_type_t type = (binding_type_t)lGetUlong(this_elem, BN_type);
+
+      switch (type) {
+         case BINDING_TYPE_SET:
+            sge_dstring_append(string, "set "); 
+            break; 
+         case BINDING_TYPE_PE:
+            sge_dstring_append(string, "pe "); 
+            break; 
+         case BINDING_TYPE_ENV:
+            sge_dstring_append(string, "env "); 
+            break; 
+         default:
+            sge_dstring_append(string, "unknown "); 
+      }
+
+      if (strcmp(strategy, "linear_automatic") == 0) {
+         sge_dstring_sprintf_append(string, "%s:"sge_U32CFormat, 
+            "linear", sge_u32c(lGetUlong(this_elem, BN_parameter_n)));
+      } else if (strcmp(strategy, "linear") == 0) {
+         sge_dstring_sprintf_append(string, "%s:"sge_U32CFormat":"sge_U32CFormat","sge_U32CFormat, 
+            "linear", sge_u32c(lGetUlong(this_elem, BN_parameter_n)), 
+            sge_u32c(lGetUlong(this_elem, BN_parameter_socket_offset)),
+            sge_u32c(lGetUlong(this_elem, BN_parameter_core_offset)));
+      } else if (strcmp(strategy, "striding") == 0) {
+         sge_dstring_sprintf_append(string, "%s:"sge_U32CFormat":"sge_U32CFormat, 
+            "striding", sge_u32c(lGetUlong(this_elem, BN_parameter_n)),
+            sge_u32c(lGetUlong(this_elem, BN_parameter_striding_step_size)));
+      } else if (strcmp(strategy, "explicit") == 0) {
+         sge_dstring_sprintf_append(string, "%s:%s", 
+            "linear", lGetUlong(this_elem, BN_parameter_explicit));
+      } else {
+         sge_dstring_append(string, "unknown");
+      }
+   }
+   DRETURN(ret);
+}
+
+bool
+binding_parse_from_string(lListElem *this_elem, lList **answer_list, dstring *string) 
+{
+   bool ret = true;
+
+   DENTER(BINDING_LAYER, "binding_parse_from_string");
+
+   if (this_elem != NULL && string != NULL) {
+      int amount = 0;
+      int stepsize = 0;
+      int firstsocket = 0;
+      int firstcore = 0;
+      binding_type_t type = BINDING_TYPE_NONE; 
+      dstring strategy = DSTRING_INIT;
+      dstring socketcorelist = DSTRING_INIT;
+      dstring error = DSTRING_INIT;
+
+      if (parse_binding_parameter_string(sge_dstring_get_string(string), 
+               &type, &strategy, &amount, &stepsize, &firstsocket, &firstcore, 
+               &socketcorelist, &error) != true) {
+         dstring parse_binding_error = DSTRING_INIT;
+
+         sge_dstring_sprintf(&parse_binding_error, "-binding: ");
+         sge_dstring_append_dstring(&parse_binding_error, &error);
+
+         answer_list_add_sprintf(answer_list, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
+                                 MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S, 
+                                 sge_dstring_get_string(&parse_binding_error));
+
+         sge_dstring_free(&parse_binding_error);
+         ret = false;
+      } else {
+         lSetString(this_elem, BN_strategy, sge_dstring_get_string(&strategy));
+         
+         lSetUlong(this_elem, BN_type, type);
+         lSetUlong(this_elem, BN_parameter_socket_offset, (firstsocket >= 0) ? firstsocket : 0);
+         lSetUlong(this_elem, BN_parameter_core_offset, (firstcore >= 0) ? firstcore : 0);
+         lSetUlong(this_elem, BN_parameter_n, (amount >= 0) ? amount : 0);
+         lSetUlong(this_elem, BN_parameter_striding_step_size, (stepsize >= 0) ? stepsize : 0);
+         
+         if (strstr(sge_dstring_get_string(&strategy), "explicit") != NULL) {
+            lSetString(this_elem, BN_parameter_explicit, sge_dstring_get_string(&socketcorelist));
+         }
+      }
+   }
+   DRETURN(ret);
+}

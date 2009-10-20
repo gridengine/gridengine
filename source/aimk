@@ -1101,6 +1101,11 @@ case DARWIN_PPC:
    case "9.*":
       set CFLAGS = "$OFLAG -no-cpp-precomp -flat_namespace -Wall -Werror -Wstrict-prototypes -DFD_SETSIZE=8192 -DDARWIN -DDARWIN9 -D$BUILDARCH -DGETHOSTBYNAME -DGETHOSTBYADDR_M $DEBUG_FLAG $CFLAGS"
       breaksw
+   case "10.*":
+      set CFLAGS = "$OFLAG -no-cpp-precomp -flat_namespace -arch i386 -Wall -Wno-format -Wstrict-prototypes -DFD_SETSIZE=8192 -DDARWIN -DDARWIN10 -D$BUILDARCH -DGETHOSTBYNAME -DGETHOSTBYADDR_M $DEBUG_FLAG $CFLAGS"
+      set SHARED_LFLAGS = "$SHARED_LFLAGS -arch i386"
+      set LFLAGS = "$LFLAGS -arch i386"
+      breaksw
    default:
       echo DARWIN release \"$REL\" not supported!
       exit 1
@@ -1141,6 +1146,7 @@ case DARWIN_PPC:
    case "7.*":
    case "8.*":
    case "9.*":
+   case "10.*":
       set XLFLAGS = "$XLIBD"
       breaksw
    default:

@@ -144,6 +144,15 @@ lList *cull_parse_qsh_parameter(u_long32 prog_number, u_long32 uid, const char *
       lSetUlong(*pjob, JB_type, type);
    }
 
+   /* -binding */
+   while ((ep = lGetElemStr(cmdline, SPA_switch, "-binding"))) {
+      lList *binding_list = lGetList(ep, SPA_argval_lListT);
+      lList *new_binding_list = lCopyList("binding",  binding_list);
+
+      lSetList(*pjob, JB_binding, new_binding_list);
+      lRemoveElem(cmdline, &ep);
+   }
+
    /*
    ** -clear option is special, is sensitive to order
    ** kills all options that come before

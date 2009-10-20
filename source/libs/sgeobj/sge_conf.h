@@ -115,6 +115,7 @@ bool mconf_get_acct_reserved_usage(void);
 bool mconf_get_sharetree_reserved_usage(void);
 bool mconf_get_keep_active(void);
 bool mconf_get_enable_windomacc(void);
+bool mconf_get_enable_binding(void);
 bool mconf_get_simulate_execds(void);
 bool mconf_get_simulate_jobs(void);
 long mconf_get_ptf_max_priority(void);

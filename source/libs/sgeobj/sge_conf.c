@@ -172,6 +172,7 @@ static long ptf_min_priority = -999;
 static int max_dynamic_event_clients = 99;
 static bool keep_active = false;
 static bool enable_windomacc = false;
+static bool enable_binding = false;
 static bool enable_addgrp_kill = false;
 static u_long32 pdc_interval = 1;
 static char s_descriptors[100];
@@ -831,6 +832,7 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
       ptf_min_priority = -999;
       keep_active = false;
       enable_windomacc = false;
+      enable_binding = false;
       enable_addgrp_kill = false;
       use_qsub_gid = false;
       prof_execd_thrd = false;
@@ -879,6 +881,9 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
             continue;
          }
          if (parse_bool_param(s, "ENABLE_WINDOMACC", &enable_windomacc)) {
+            continue;
+         }
+         if (parse_bool_param(s, "ENABLE_BINDING", &enable_binding)) {
             continue;
          }
          if (parse_bool_param(s, "ENABLE_ADDGRP_KILL", &enable_addgrp_kill)) {
@@ -2015,6 +2020,18 @@ bool mconf_get_enable_windomacc(void) {
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    ret = enable_windomacc;
+
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+}
+
+bool mconf_get_enable_binding(void) {
+   bool ret;
+
+   DENTER(BASIS_LAYER, "mconf_get_enable_binding");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   ret = enable_binding;
 
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
    DRETURN(ret);

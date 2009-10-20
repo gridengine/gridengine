@@ -484,6 +484,7 @@ FILE *fp
 
    fprintf(fp,"%s qhost [options]\n", MSG_SRC_USAGE);
          
+   fprintf(fp, "  [-cq]                      %s\n", MSG_QHOST_cq_OPT_USAGE);
    fprintf(fp, "  [-help]                    %s\n", MSG_COMMON_help_OPT_USAGE);
    fprintf(fp, "  [-h hostlist]              %s\n", MSG_QHOST_h_OPT_USAGE);
    fprintf(fp, "  [-q]                       %s\n", MSG_QHOST_q_OPT_USAGE);
@@ -519,7 +520,11 @@ lList **alpp
       if ((rp = parse_noopt(sp, "-help", NULL, ppcmdline, alpp)) != sp)
          continue;
  
-      /* -q option */
+      /* -cb */
+      if ((rp = parse_noopt(sp, "-cb", NULL, ppcmdline, alpp)) != sp)
+         continue;
+
+      /* -q */
       if ((rp = parse_noopt(sp, "-q", NULL, ppcmdline, alpp)) != sp)
          continue;
 
@@ -572,6 +577,7 @@ static int sge_parse_qhost(lList **ppcmdline,
    u_long32 helpflag;
    bool usageshowed = false;
    u_long32 full = 0;
+   u_long32 binding = 0;
    char * argstr = NULL;
    lListElem *ep;
    int ret = 1;
@@ -607,6 +613,10 @@ static int sge_parse_qhost(lList **ppcmdline,
 
       if (parse_multi_stringlist(ppcmdline, "-F", alpp, ppFres, ST_Type, ST_name)) {
          (*show) |= QHOST_DISPLAY_RESOURCES;
+         continue;
+      }
+      if (parse_flag(ppcmdline, "-cb", alpp, &binding)) {
+         (*show) |= QHOST_DISPLAY_BINDING;
          continue;
       }
       if (parse_flag(ppcmdline, "-q", alpp, &full)) {

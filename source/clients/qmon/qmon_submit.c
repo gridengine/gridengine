@@ -95,6 +95,7 @@
 #include "uti/sge_string.h"
 #include "gdi/sge_gdi_ctx.h"
 #include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_binding.h"
 #include "sgeobj/sge_ja_task.h"
 #include "sgeobj/sge_jsv.h"
 #include "sgeobj/sge_job.h"
@@ -118,6 +119,7 @@ typedef struct _tSMEntry {
    String   account_string;
    String   wd_path;
    String   jsv_url;
+   String   binding;
    String   pe;
    lList    *task_range;            /* RN_Type */
    lList    *job_args;              /* ST_Type */
@@ -208,6 +210,11 @@ XtResource sm_resources[] = {
    { "jsv_url", "jsv_url", XtRString,
       sizeof(String),
       XtOffsetOf(tSMEntry, jsv_url),
+      XtRImmediate, NULL },
+
+   { "binding", "binding", XtRString,
+      sizeof(String),
+      XtOffsetOf(tSMEntry, binding),
       XtRImmediate, NULL },
 
    { "priority", "priority", XtRInt,
@@ -444,6 +451,7 @@ static Widget submit_script = 0;
 static Widget submit_scriptPB = 0;
 static Widget submit_jsv_urlPB = 0;
 static Widget submit_jsv_url = 0;
+static Widget submit_binding = 0;
 static Widget submit_name = 0;
 static Widget submit_job_args = 0;
 static Widget submit_execution_time = 0;
@@ -783,6 +791,7 @@ Widget parent
                           "submit_script", &submit_script,
                           "submit_jsv_urlPB", &submit_jsv_urlPB,
                           "submit_jsv_url", &submit_jsv_url,
+                          "submit_binding", &submit_binding,
                           "submit_shellPB", &submit_shellPB,
                           "submit_stdoutputPB", &submit_stdoutputPB,
                           "submit_stdinputPB", &submit_stdinputPB,
@@ -916,7 +925,6 @@ Widget parent
                      qmonSubmitGreyOut, NULL);
    XtAddCallback(submit_jsv_urlPB, XmNactivateCallback, 
                      qmonSubmitGetJSVScript, NULL);
-
 
    XtAddEventHandler(XtParent(submit_layout), StructureNotifyMask, False, 
                         SetMinShellSize, NULL);
@@ -1874,6 +1882,11 @@ tSMEntry *data
       data->jsv_url = NULL;
    }   
 
+   if (data->binding) {
+      XtFree((char*)data->binding);
+      data->binding = NULL;
+   }   
+
    if (data->pe) {
       XtFree((char*)data->pe);
       data->pe = NULL;
@@ -2012,6 +2025,8 @@ char *prefix
       data->wd_path = NULL;
 
    data->jsv_url = NULL;
+
+   data->binding = NULL;
 
    data->shell_list = lCopyUniqNullNone(lGetList(jep, JB_shell_list), PN_host);
    
@@ -2320,6 +2335,7 @@ int save
    }   
    lFreeList(&path_alias);
 
+   /* job submition verifier */
    if (data->jsv_url) {
       char *jsv_script = qmon_trim(data->jsv_url);
       if (jsv_script[0] != '\0') {
@@ -2328,6 +2344,19 @@ int save
          jsv_list_remove(name, JSV_CONTEXT_CLIENT);
          jsv_list_add(name, JSV_CONTEXT_CLIENT, &alp, jsv_script);
       }   
+   }
+
+   /* core binding parameters */
+   if (data->binding) {
+      lListElem *binding_elem = lCreateElem(BN_Type);
+      char *binding_string = qmon_trim(data->binding);
+
+      if (binding_parse_from_string(binding_elem, &alp, &binding_string)) {
+         lList *binding_list = lCreateList("", BN_Type);
+
+         lAppendElem(binding_list, binding_elem);
+         lSetList(jep, JB_binding, binding_list);
+      }
    }
 
    lSetString(jep, JB_account, data->account_string);

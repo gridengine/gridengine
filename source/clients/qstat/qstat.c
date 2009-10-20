@@ -80,8 +80,8 @@
 
 static lList *sge_parse_qstat(sge_gdi_ctx_class_t *ctx, lList **ppcmdline, qstat_env_t *qstat_env,  
                               char **hostname, lList **ppljid, u_long32 *isXML);
-static int qstat_show_job(sge_gdi_ctx_class_t *ctx, lList *jid, u_long32 isXML);
-static int qstat_show_job_info(sge_gdi_ctx_class_t *ctx, u_long32 isXML);
+static int qstat_show_job(sge_gdi_ctx_class_t *ctx, lList *jid, u_long32 isXML, qstat_env_t *qstat_env);
+static int qstat_show_job_info(sge_gdi_ctx_class_t *ctx, u_long32 isXML, qstat_env_t *qstat_env);
 
 typedef struct qstat_stdout_ctx_str qstat_stdout_ctx_t;
 
@@ -165,6 +165,10 @@ static int job_stdout_ad_predecessors_requested_finished(job_handler_t* handler,
 static int job_stdout_ad_predecessors_started(job_handler_t* handler, lList **alpp);
 static int job_stdout_ad_predecessor(job_handler_t* handler, u_long32 jid, lList **alpp);
 static int job_stdout_ad_predecessors_finished(job_handler_t* handler, lList **alpp);
+
+static int job_stdout_binding_started(job_handler_t* handler, lList **alpp);
+static int job_stdout_binding(job_handler_t* handler, const char *binding, lList **alpp);
+static int job_stdout_binding_finished(job_handler_t* handler, lList **alpp);
 
 static void qselect_stdout_init(qselect_handler_t* handler, lList **alpp);
 static int qselect_stdout_report_queue(qselect_handler_t* handler, const char* qname, lList **alpp);
@@ -313,7 +317,8 @@ char **argv
       SGE_EXIT((void**)&ctx, 1);
    }
 
-   alp = sge_parse_qstat(ctx, &pcmdline, &qstat_env, &hostname, &jid_list, &isXML);
+   alp = sge_parse_qstat(ctx, &pcmdline, &qstat_env, &hostname,   
+                         &jid_list, &isXML);
 
    if (alp) {
       /*
@@ -336,10 +341,10 @@ char **argv
 
       if (lGetNumberOfElem(jid_list) > 0) {
          /* RH TODO: implement the qstat_show_job_info with and handler */
-         ret = qstat_show_job(ctx, jid_list, isXML);
+         ret = qstat_show_job(ctx, jid_list, isXML, &qstat_env);
       } else {
          /* RH TODO: implement the qstat_show_job_info with and handler */
-         ret = qstat_show_job_info(ctx, isXML);
+         ret = qstat_show_job_info(ctx, isXML, &qstat_env);
       }
       qstat_env_destroy(&qstat_env);
       SGE_EXIT((void**)&ctx, ret);
@@ -440,6 +445,7 @@ sge_parse_qstat(sge_gdi_ctx_class_t *ctx, lList **ppcmdline, qstat_env_t *qstat_
    qstat_env->need_queues = false;
    qstat_filter_add_core_attributes(qstat_env);
 
+
    /* Loop over all options. Only valid options can be in the
       ppcmdline list. 
    */
@@ -449,6 +455,11 @@ sge_parse_qstat(sge_gdi_ctx_class_t *ctx, lList **ppcmdline, qstat_env_t *qstat_
          DEXIT;
          SGE_EXIT((void**)&ctx, 0);
          break;
+      }
+
+      while (parse_flag(ppcmdline, "-cb", &alp, &(qstat_env->is_binding_format))) {
+         qstat_env->full_listing |= QSTAT_DISPLAY_BINDING;
+         continue;
       }
 
       while (parse_string(ppcmdline, "-j", &alp, &argstr)) {
@@ -772,6 +783,10 @@ static int job_stdout_init(job_handler_t *handler, lList** alpp)
    handler->report_ad_predecessors_started = job_stdout_ad_predecessors_started;
    handler->report_ad_predecessor = job_stdout_ad_predecessor;
    handler->report_ad_predecessors_finished = job_stdout_ad_predecessors_finished;
+
+   handler->report_binding_started = job_stdout_binding_started;
+   handler->report_binding = job_stdout_binding;
+   handler->report_binding_finished = job_stdout_binding_finished;
 
    DEXIT;
    return 0;
@@ -1575,6 +1590,36 @@ static int job_stdout_ad_predecessors_finished(job_handler_t* handler, lList **a
    return 0;
 }
 
+static int job_stdout_binding_started(job_handler_t* handler, lList **alpp) 
+{
+   DENTER(TOP_LAYER, "job_stdout_binding_started");
+
+   printf("       Binding:          ");
+
+   DEXIT;
+   return 0;
+}
+
+static int job_stdout_binding(job_handler_t *handler, const char* binding, lList **alpp) 
+{
+   DENTER(TOP_LAYER, "job_stdout_binding");
+
+   printf("%s", binding);
+
+   DEXIT;
+   return 0;
+}
+
+static int job_stdout_binding_finished(job_handler_t* handler, lList **alpp) 
+{
+   DENTER(TOP_LAYER, "job_stdout_binding_finished");
+   
+   putchar('\n');
+
+   DEXIT;
+   return 0;
+}
+
 static int qstat_stdout_queue_summary(qstat_handler_t* handler, const char* qname, queue_summary_t *summary, lList **alpp) 
 {
    qstat_stdout_ctx_t *ctx = (qstat_stdout_ctx_t*)handler->ctx;
@@ -1880,11 +1925,8 @@ static int qselect_stdout_report_queue(qselect_handler_t* handler, const char* q
 **
 ** returns 0 on success, non-zero on failure
 */
-static int qstat_show_job(
-sge_gdi_ctx_class_t *ctx,
-lList *jid_list,
-u_long32 isXML
-) {
+static int 
+qstat_show_job(sge_gdi_ctx_class_t *ctx, lList *jid_list, u_long32 isXML, qstat_env_t *qstat_env) {
    lListElem *j_elem = 0;
    lList* jlp = NULL;
    lList* ilp = NULL;
@@ -1934,7 +1976,7 @@ u_long32 isXML
       }
    }
    what = lWhat("%T(%I%I%I%I%I%I%I%I%I%I%I%I%I%I%I->%T%I%I%I%I%I%I->%T%I%I%I%I->%T(%I%I%I%I%I)"
-            "%I%I%I%I->%T(%I)%I->%T(%I)%I%I%I%I%I%I%I%I%I%I%I%I%I%I%I->%T%I%I%I%I%I%I%I%I%I)",
+            "%I%I%I%I->%T(%I)%I->%T(%I)%I%I%I%I%I%I%I%I%I%I%I%I%I%I%I->%T%I%I%I%I%I%I%I%I%I%I)",
             JB_Type, JB_job_number, JB_ar, JB_exec_file, JB_submission_time, JB_owner,
             JB_uid, JB_group, JB_gid, JB_account, JB_merge_stderr, JB_mail_list,
             JB_project, JB_notify, JB_job_name, JB_stdout_path_list, PN_Type,
@@ -1950,7 +1992,7 @@ u_long32 isXML
             JB_master_hard_queue_list, JB_script_size, JB_pe, RN_Type, JB_pe_range,
             JB_jid_request_list, JB_verify_suitable_queues, JB_soft_wallclock_gmt,
             JB_hard_wallclock_gmt, JB_override_tickets, JB_version,
-            JB_ja_structure, JB_type); 
+            JB_ja_structure, JB_type, JB_binding); 
    /* get job list */
    alp = ctx->gdi(ctx, SGE_JB_LIST, SGE_GDI_GET, &jlp, where, what);
    lFreeWhere(&where);
@@ -1991,7 +2033,7 @@ u_long32 isXML
          }         
       }
       
-      xml_qstat_show_job(&jlp, &ilp,  &alp, &jid_list);
+      xml_qstat_show_job(&jlp, &ilp,  &alp, &jid_list, qstat_env);
    
       lFreeList(&jlp);
       lFreeList(&alp);
@@ -2046,7 +2088,7 @@ u_long32 isXML
 
       printf("==============================================================\n");
       /* print job information */
-      cull_show_job(j_elem, 0);
+      cull_show_job(j_elem, 0, (qstat_env->full_listing & QSTAT_DISPLAY_BINDING) != 0 ? true : false);
       
       /* print scheduling information */
       if (schedd_info && (sme = lFirst(ilp))) {
@@ -2089,7 +2131,7 @@ u_long32 isXML
    DRETURN(0);
 }
 
-static int qstat_show_job_info(sge_gdi_ctx_class_t *ctx, u_long32 isXML)
+static int qstat_show_job_info(sge_gdi_ctx_class_t *ctx, u_long32 isXML, qstat_env_t *qstat_env)
 {
    lList *ilp = NULL, *mlp = NULL;
    lListElem* aep = NULL;
@@ -2114,7 +2156,7 @@ static int qstat_show_job_info(sge_gdi_ctx_class_t *ctx, u_long32 isXML)
    alp = ctx->gdi(ctx, SGE_SME_LIST, SGE_GDI_GET, &ilp, NULL, what);
    lFreeWhat(&what);
    if (isXML){
-      xml_qstat_show_job_info(&ilp, &alp);
+      xml_qstat_show_job_info(&ilp, &alp, qstat_env);
    }
    else {
       for_each(aep, alp) {

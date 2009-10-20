@@ -67,6 +67,7 @@
 #include "sgeobj/sge_suser.h"
 #include "sgeobj/sge_userprj.h"
 #include "sgeobj/sge_userset.h"
+#include "sgeobj/sge_binding.h"
 
 /* qmaster */
 #include "sge_userprj_qmaster.h"
@@ -189,6 +190,31 @@ sge_job_verify_adjust(sge_gdi_ctx_class_t *ctx, lListElem *jep, lList **alpp,
          lAddSubUlong(jep, JAT_task_number, 0, JB_ja_template, JAT_Type);
       }
    } 
+
+   if (ret == STATUS_OK) {
+      lListElem *binding_elem = lFirst(lGetList(jep, JB_binding));
+               
+      if (binding_elem == NULL) {
+         lList *bind_list = lCreateList("", BN_Type);
+
+         binding_elem = lCreateElem(BN_Type);
+         if (binding_elem != NULL && bind_list != NULL) {
+            lAppendElem(bind_list, binding_elem);
+            lSetList(jep, JB_binding, bind_list);
+
+            lSetString(binding_elem, BN_strategy, "no_job_binding");
+            lSetUlong(binding_elem, BN_parameter_n, 0);
+            lSetUlong(binding_elem, BN_parameter_socket_offset, 0);
+            lSetUlong(binding_elem, BN_parameter_core_offset, 0);
+            lSetUlong(binding_elem, BN_parameter_striding_first_core, 0);
+            lSetUlong(binding_elem, BN_parameter_striding_last_core, 0);
+            lSetUlong(binding_elem, BN_parameter_striding_step_size, 0);
+            lSetString(binding_elem, BN_parameter_explicit, "no_explicit_binding");
+         } else {
+            ret = STATUS_EUNKNOWN;
+         }
+      }
+   }
 
    /* verify or set the account string */
    if (ret == STATUS_OK) {

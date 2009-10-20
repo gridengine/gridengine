@@ -2394,10 +2394,31 @@ static void qmonCQUpdateQhostMatrix(void)
      }
      else
        strcpy(buffer, "-");
-     
      XbaeMatrixSetCell(qhost_settings, row, column++, buffer);
 
      lep=get_attribute_by_name(NULL, eh, NULL, LOAD_ATTR_NUM_PROC, cl, DISPATCH_TIME_NOW, 0);
+     if (lep) {
+       sge_strlcpy(buffer, sge_get_dominant_stringval(lep, &dominant, &rs),
+		   sizeof(buffer));
+       sge_dstring_clear(&rs);
+       lFreeElem(&lep);
+     }
+     else
+       strcpy(buffer, "-");
+     XbaeMatrixSetCell(qhost_settings, row, column++, buffer);
+
+     lep=get_attribute_by_name(NULL, eh, NULL, LOAD_ATTR_SOCKETS, cl, DISPATCH_TIME_NOW, 0);
+     if (lep) {
+       sge_strlcpy(buffer, sge_get_dominant_stringval(lep, &dominant, &rs),
+		   sizeof(buffer));
+       sge_dstring_clear(&rs);
+       lFreeElem(&lep);
+     }
+     else
+       strcpy(buffer, "-");
+     XbaeMatrixSetCell(qhost_settings, row, column++, buffer);
+
+     lep=get_attribute_by_name(NULL, eh, NULL, LOAD_ATTR_CORES, cl, DISPATCH_TIME_NOW, 0);
      if (lep) {
        sge_strlcpy(buffer, sge_get_dominant_stringval(lep, &dominant, &rs),
 		   sizeof(buffer));

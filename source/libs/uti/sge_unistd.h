@@ -103,7 +103,7 @@
 #  define SGE_STRUCT_DIRENT struct dirent
 #endif       
 
-#if defined(_UNICOS) || defined(SOLARIS) || defined(__hpux) || defined(LINUX) || defined(AIX) || defined(SINIX) || defined(NECSX4) || defined(NECSX5) || defined(DARWIN9)
+#if defined(_UNICOS) || defined(SOLARIS) || defined(__hpux) || defined(LINUX) || defined(AIX) || defined(SINIX) || defined(NECSX4) || defined(NECSX5) || defined(DARWIN9) || defined(DARWIN10)
 #   define SETPGRP setpgrp()
 #elif defined(__sgi)
 #   define SETPGRP BSDsetpgrp(getpid(),getpid())

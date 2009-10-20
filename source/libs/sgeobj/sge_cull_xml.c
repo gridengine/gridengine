@@ -48,10 +48,10 @@
 
 #include "sge_cull_xml.h"
 
-static void lWriteElemXML_(const lListElem *ep, int nesting_level, FILE *fp); 
-static void lWriteListXML_(const lList *lp, int nesting_level, FILE *fp); 
+static void lWriteElemXML_(const lListElem *ep, int nesting_level, FILE *fp, int ignore_cull_name); 
+static void lWriteListXML_(const lList *lp, int nesting_level, FILE *fp, int ignore_cull_name); 
 static bool lAttributesToString_(const lList *attr_list, dstring *attr);
-static void lWriteXMLHead_(const lListElem *ep, int nesting_level, FILE *fp);
+static void lWriteXMLHead_(const lListElem *ep, int nesting_level, FILE *fp, int ignore_cull_name);
 static lListElem *append_Attr_S(lList *attributeList, const char *name, const char *value);
 
 lListElem* xml_getHead(const char *name, lList *list, lList *attributes) {
@@ -153,7 +153,7 @@ void xml_addAttribute(lListElem *xml_elem, const char *name, const char *value){
 *    MT-NOTE: is thread save, works only on the objects which are passed in 
 *
 *******************************************************************************/
-static void lWriteListXML_(const lList *lp, int nesting_level, FILE *fp) 
+static void lWriteListXML_(const lList *lp, int nesting_level, FILE *fp, int ignore_cull_name) 
 {
    lListElem *ep;
    char indent[128];
@@ -195,12 +195,12 @@ static void lWriteListXML_(const lList *lp, int nesting_level, FILE *fp)
             if (lGetString(elem, XMLA_Value) != NULL){
                DPRINTF(("%s<%s%s>", indent, lGetString(elem, XMLA_Name), (is_attr?sge_dstring_get_string(&attr):"")));
                DPRINTF(("%s", lGetString(elem, XMLA_Value))); 
-               lWriteListXML_(lGetList(ep, XMLE_List), nesting_level+1, fp);
+               lWriteListXML_(lGetList(ep, XMLE_List), nesting_level+1, fp, ignore_cull_name);
                DPRINTF(("</%s>\n", lGetString(elem, XMLA_Name)));
             }
             else{
                DPRINTF(("%s<%s%s>\n", indent, lGetString(elem, XMLA_Name), (is_attr?sge_dstring_get_string(&attr):"")));
-               lWriteListXML_(lGetList(ep, XMLE_List), nesting_level+1, fp);
+               lWriteListXML_(lGetList(ep, XMLE_List), nesting_level+1, fp, ignore_cull_name);
                DPRINTF(("%s</%s>\n", indent,lGetString(elem, XMLA_Name)));
             }
          }
@@ -208,12 +208,12 @@ static void lWriteListXML_(const lList *lp, int nesting_level, FILE *fp)
             if (lGetString(elem, XMLA_Value) != NULL){
                fprintf(fp, "%s<%s%s>", indent, lGetString(elem, XMLA_Name), (is_attr?sge_dstring_get_string(&attr):""));
                fprintf(fp, "%s", lGetString(elem, XMLA_Value));
-               lWriteListXML_(lGetList(ep, XMLE_List), nesting_level+1, fp);
+               lWriteListXML_(lGetList(ep, XMLE_List), nesting_level+1, fp, ignore_cull_name);
                fprintf(fp, "</%s>\n", lGetString(elem, XMLA_Name));
             }
             else{
                fprintf(fp, "%s<%s%s>\n", indent, lGetString(elem, XMLA_Name), (is_attr?sge_dstring_get_string(&attr):""));
-               lWriteListXML_(lGetList(ep, XMLE_List), nesting_level+1, fp);
+               lWriteListXML_(lGetList(ep, XMLE_List), nesting_level+1, fp, ignore_cull_name);
                fprintf(fp, "%s</%s>\n", indent, lGetString(elem, XMLA_Name));
             }
          }
@@ -226,14 +226,14 @@ static void lWriteListXML_(const lList *lp, int nesting_level, FILE *fp)
          if (!fp){
             DPRINTF(("%s<%s%s>\n", indent, listName, ((is_attr)?sge_dstring_get_string(&attr):"")));
             
-            lWriteElemXML_(ep, nesting_level+1, NULL);
+            lWriteElemXML_(ep, nesting_level+1, NULL, ignore_cull_name);
             
             DPRINTF(("%s</%s>\n", indent, listName));
          }
          else {
             fprintf(fp, "%s<%s%s>\n", indent, listName, ((is_attr)?sge_dstring_get_string(&attr):""));
             
-            lWriteElemXML_(ep, nesting_level+1, fp);
+            lWriteElemXML_(ep, nesting_level+1, fp, ignore_cull_name);
             fprintf(fp, "%s</%s>\n", indent, listName);
          }
       }
@@ -260,7 +260,7 @@ void lWriteElemXML(const lListElem *ep)
 {
    DENTER(CULL_LAYER, "lWriteElem");
 
-   lWriteElemXML_(ep, 0, NULL);
+   lWriteElemXML_(ep, 0, NULL, -1);
 
    DEXIT;
 }
@@ -276,22 +276,23 @@ void lWriteElemXML(const lListElem *ep)
 *     Write a element to file stream in XML format 
 *
 *  INPUTS
-*     const lListElem *ep - element 
-*     FILE *fp            - file stream 
+*     const lListElem *ep  - element 
+*     FILE *fp             - file stream 
+*     int ignore_cull_name - ignore the specified cull name if != -1 
 *   
 *  NOTE:
 *    MT-NOTE: is thread save, works only on the objects which are passed in 
 ******************************************************************************/
-void lWriteElemXMLTo(const lListElem *ep, FILE *fp) 
+void lWriteElemXMLTo(const lListElem *ep, FILE *fp, int ignore_cull_name) 
 {
    DENTER(CULL_LAYER, "lWriteElemTo");
 
-   lWriteElemXML_(ep, 0, fp);
+   lWriteElemXML_(ep, 0, fp, ignore_cull_name);
 
    DEXIT;
 }
 
-static void lWriteElemXML_(const lListElem *ep, int nesting_level, FILE *fp) 
+static void lWriteElemXML_(const lListElem *ep, int nesting_level, FILE *fp, int ignore_cull_name) 
 {
    int i;
    char space[128];
@@ -307,7 +308,7 @@ static void lWriteElemXML_(const lListElem *ep, int nesting_level, FILE *fp)
       LERROR(LEELEMNULL);
       DRETURN_VOID;
    }
- 
+
    if (max > 128) {
       max = 128;
    }
@@ -316,11 +317,10 @@ static void lWriteElemXML_(const lListElem *ep, int nesting_level, FILE *fp)
       space[i] = ' ';
    }
    space[i] = '\0';
-   
+
    if (lGetPosViaElem(ep, XMLH_Version, SGE_NO_ABORT) != -1) {   
-      lWriteXMLHead_(ep, nesting_level, fp);        
-   }
-   else if (lGetPosViaElem(ep, XMLE_Attribute, SGE_NO_ABORT) !=-1 ) {
+      lWriteXMLHead_(ep, nesting_level, fp, ignore_cull_name);        
+   } else if (lGetPosViaElem(ep, XMLE_Attribute, SGE_NO_ABORT) !=-1 ) {
       if (lGetBool(ep, XMLE_Print)) {
          dstring attr = DSTRING_INIT;
          bool is_attr; 
@@ -329,177 +329,178 @@ static void lWriteElemXML_(const lListElem *ep, int nesting_level, FILE *fp)
          if (!fp){
             DPRINTF(("%s<%s%s>", space, lGetString(elem, XMLA_Name), (is_attr?sge_dstring_get_string(&attr):"")));
             DPRINTF(("%s", lGetString(elem, XMLA_Value))); 
-            lWriteListXML_(lGetList(ep, XMLE_List), nesting_level+1, fp);
+            lWriteListXML_(lGetList(ep, XMLE_List), nesting_level+1, fp, ignore_cull_name);
             DPRINTF(("</%s>\n", lGetString(elem, XMLA_Name)));
          }
          else {
             fprintf(fp, "%s<%s%s>", space, lGetString(elem, XMLA_Name), (is_attr?sge_dstring_get_string(&attr):""));
             fprintf(fp, "%s", lGetString(elem, XMLA_Value));
-            lWriteListXML_(lGetList(ep, XMLE_List), nesting_level+1, fp);
+            lWriteListXML_(lGetList(ep, XMLE_List), nesting_level+1, fp, ignore_cull_name);
             fprintf(fp, "</%s>\n", lGetString(elem, XMLA_Name));
          }
          sge_dstring_free(&attr);
       }
       else{
-         lWriteElemXML_(lGetObject(ep, XMLE_Element), nesting_level, fp);
-         lWriteListXML_(lGetList(ep, XMLE_List), nesting_level, fp);
+         lWriteElemXML_(lGetObject(ep, XMLE_Element), nesting_level, fp, ignore_cull_name);
+         lWriteListXML_(lGetList(ep, XMLE_List), nesting_level, fp, ignore_cull_name);
       }
-   } else {   
+   } else {  
       for (i = 0; mt_get_type(ep->descr[i].mt) != lEndT; i++) {
-         
-         /* ignore empty lists */
-         switch (mt_get_type(ep->descr[i].mt)) {
-         case lListT :
-            tlp = lGetPosList(ep, i);
-            if (lGetNumberOfElem(tlp) == 0)
+         if (ep->descr[i].nm != ignore_cull_name || ignore_cull_name == -1) { 
+            /* ignore empty lists */
+            switch (mt_get_type(ep->descr[i].mt)) {
+            case lListT :
+               tlp = lGetPosList(ep, i);
+               if (lGetNumberOfElem(tlp) == 0)
+                  continue;
+               break;   
+            case lStringT:
+               if (lGetPosString(ep, i) == NULL)
+                  continue;
+               break;
+            case lRefT:
+               /* connot print a ref */
                continue;
-            break;   
-         case lStringT:
-            if (lGetPosString(ep, i) == NULL)
-               continue;
-            break;
-         case lRefT:
-            /* connot print a ref */
-            continue;
-         }   
-         
-         attr_name = lNm2Str(ep->descr[i].nm);
-         if (!fp) {
-            DPRINTF(("%s<%s>", space, attr_name));
-         }
-         else {
-            fprintf(fp, "%s<%s>", space, attr_name);
-         }
-         switch (mt_get_type(ep->descr[i].mt)) {
-         case lIntT:
+            }   
+            
+            attr_name = lNm2Str(ep->descr[i].nm);
             if (!fp) {
-               DPRINTF(("%d", lGetPosInt(ep, i)));
-            } else {
-               fprintf(fp, "%d", lGetPosInt(ep, i));
+               DPRINTF(("%s<%s>", space, attr_name));
             }
-            break;
-         case lUlongT:
-            if (!fp) {
-               DPRINTF(( sge_u32, lGetPosUlong(ep, i)));
-            } else {
-               fprintf(fp, sge_u32, lGetPosUlong(ep, i));
+            else {
+               fprintf(fp, "%s<%s>", space, attr_name);
             }
-            break;
-         case lStringT:
-            {
-               dstring string = DSTRING_INIT;
-               str = lGetPosString(ep, i);
-               if (escape_string(str, &string)) {
-                  if (!fp) {
-                     DPRINTF(("%s", sge_dstring_get_string(&string) ));
-                  } else {
-                     fprintf(fp, "%s", sge_dstring_get_string(&string) );
+            switch (mt_get_type(ep->descr[i].mt)) {
+            case lIntT:
+               if (!fp) {
+                  DPRINTF(("%d", lGetPosInt(ep, i)));
+               } else {
+                  fprintf(fp, "%d", lGetPosInt(ep, i));
+               }
+               break;
+            case lUlongT:
+               if (!fp) {
+                  DPRINTF(( sge_u32, lGetPosUlong(ep, i)));
+               } else {
+                  fprintf(fp, sge_u32, lGetPosUlong(ep, i));
+               }
+               break;
+            case lStringT:
+               {
+                  dstring string = DSTRING_INIT;
+                  str = lGetPosString(ep, i);
+                  if (escape_string(str, &string)) {
+                     if (!fp) {
+                        DPRINTF(("%s", sge_dstring_get_string(&string) ));
+                     } else {
+                        fprintf(fp, "%s", sge_dstring_get_string(&string) );
+                     }
+                     
+                     sge_dstring_free(&string);
                   }
-                  
-                  sge_dstring_free(&string);
                }
-            }
-            break;
+               break;
 
-         case lHostT:
-            {
-               dstring string = DSTRING_INIT;
-               str = lGetPosHost(ep, i);
-               if (escape_string(str, &string)) {
-                  if (!fp) {
-                     DPRINTF(("%s", sge_dstring_get_string(&string) ));
-                  } else {
-                     fprintf(fp, "%s", sge_dstring_get_string(&string) );
+            case lHostT:
+               {
+                  dstring string = DSTRING_INIT;
+                  str = lGetPosHost(ep, i);
+                  if (escape_string(str, &string)) {
+                     if (!fp) {
+                        DPRINTF(("%s", sge_dstring_get_string(&string) ));
+                     } else {
+                        fprintf(fp, "%s", sge_dstring_get_string(&string) );
+                     }
+                     sge_dstring_free(&string);
                   }
-                  sge_dstring_free(&string);
                }
-            }
-            break;
+               break;
 
-         case lListT:
-            tlp = lGetPosList(ep, i);
-            if (tlp) {
-               if (!fp) {
-                  DPRINTF(("\n"));
-               }   
-               else {
-                  fprintf(fp, "\n");
-               }
-               lWriteListXML_(tlp, nesting_level + 1, fp);
+            case lListT:
+               tlp = lGetPosList(ep, i);
+               if (tlp) {
+                  if (!fp) {
+                     DPRINTF(("\n"));
+                  }   
+                  else {
+                     fprintf(fp, "\n");
+                  }
+                  lWriteListXML_(tlp, nesting_level + 1, fp, ignore_cull_name);
 
-               if (!fp){ 
-                  DPRINTF(("%s", space));
+                  if (!fp){ 
+                     DPRINTF(("%s", space));
+                  }
+                  else { 
+                     fprintf(fp, "%s", space);
+                  }
                }
-               else { 
-                  fprintf(fp, "%s", space);
-               }
-            }
-            break;
+               break;
 
-         case lObjectT:
-            tep = lGetPosObject(ep, i);
-            if (tep) {
+            case lObjectT:
+               tep = lGetPosObject(ep, i);
+               if (tep) {
+                  if (!fp) {
+                     DPRINTF(("\n"));
+                  }
+                  else {
+                     fprintf(fp, "\n");
+                  }
+                  lWriteElemXML_(tep, nesting_level, fp, ignore_cull_name);
+                  if (!fp) {
+                     DPRINTF(("%s", space));
+                  }
+                  else { 
+                     fprintf(fp, "%s", space);
+                  }
+               }
+               break;
+            case lFloatT:
                if (!fp) {
-                  DPRINTF(("\n"));
+                  DPRINTF(("%f", lGetPosFloat(ep, i)));
+               } else {
+                  fprintf(fp, "%f", lGetPosFloat(ep, i));
                }
-               else {
-                  fprintf(fp, "\n");
-               }
-               lWriteElemXML_(tep, nesting_level, fp);
+               break;
+            case lDoubleT:
                if (!fp) {
-                  DPRINTF(("%s", space));
+                  DPRINTF(("%f", lGetPosDouble(ep, i)));
+               } else {
+                  fprintf(fp, "%f", lGetPosDouble(ep, i));
                }
-               else { 
-                  fprintf(fp, "%s", space);
+               break;
+            case lLongT:
+               if (!fp) {
+                  DPRINTF(("%ld", lGetPosLong(ep, i)));
+               } else {
+                  fprintf(fp, "%ld", lGetPosLong(ep, i));
                }
+               break;
+            case lBoolT:
+               if (!fp) {
+                  DPRINTF(("%s", lGetPosBool(ep, i) ? "true" : "false"));
+               } else {
+                  fprintf(fp, "%s", lGetPosBool(ep, i) ? "true" : "false");
+               }
+               break;
+            case lCharT:
+               if (!fp) {
+                  DPRINTF(("%c", lGetPosChar(ep, i)));
+               } else {
+                  fprintf(fp, "%c", lGetPosChar(ep, i));
+               }
+               break;
+            case lRefT:
+               /* cannot be printed */
+               break;
+            default:
+               unknownType("lWriteElem");
             }
-            break;
-         case lFloatT:
             if (!fp) {
-               DPRINTF(("%f", lGetPosFloat(ep, i)));
-            } else {
-               fprintf(fp, "%f", lGetPosFloat(ep, i));
+               DPRINTF(("</%s>\n", space, attr_name));
             }
-            break;
-         case lDoubleT:
-            if (!fp) {
-               DPRINTF(("%f", lGetPosDouble(ep, i)));
-            } else {
-               fprintf(fp, "%f", lGetPosDouble(ep, i));
+            else {
+               fprintf(fp, "</%s>\n", attr_name);
             }
-            break;
-         case lLongT:
-            if (!fp) {
-               DPRINTF(("%ld", lGetPosLong(ep, i)));
-            } else {
-               fprintf(fp, "%ld", lGetPosLong(ep, i));
-            }
-            break;
-         case lBoolT:
-            if (!fp) {
-               DPRINTF(("%s", lGetPosBool(ep, i) ? "true" : "false"));
-            } else {
-               fprintf(fp, "%s", lGetPosBool(ep, i) ? "true" : "false");
-            }
-            break;
-         case lCharT:
-            if (!fp) {
-               DPRINTF(("%c", lGetPosChar(ep, i)));
-            } else {
-               fprintf(fp, "%c", lGetPosChar(ep, i));
-            }
-            break;
-         case lRefT:
-            /* cannot be printed */
-            break;
-         default:
-            unknownType("lWriteElem");
-         }
-         if (!fp) {
-            DPRINTF(("</%s>\n", space, attr_name));
-         }
-         else {
-            fprintf(fp, "</%s>\n", attr_name);
          }
       }
    }
@@ -562,7 +563,7 @@ static bool lAttributesToString_(const lList *attr_list, dstring *attr){
    return true;
 }
 
-static void lWriteXMLHead_(const lListElem *ep, int nesting_level, FILE *fp) {
+static void lWriteXMLHead_(const lListElem *ep, int nesting_level, FILE *fp, int ignore_cull_name) {
    const lListElem *elem = NULL;
    const char *name = NULL;
    dstring attr = DSTRING_INIT;
@@ -588,7 +589,7 @@ static void lWriteXMLHead_(const lListElem *ep, int nesting_level, FILE *fp) {
                   lGetString(elem, XMLS_Version)));
       }
       DPRINTF(("<%s %s>\n", name, (is_attr?sge_dstring_get_string(&attr):"")));
-      lWriteListXML_(lGetList(ep, XMLH_Element), nesting_level +1, fp); 
+      lWriteListXML_(lGetList(ep, XMLH_Element), nesting_level +1, fp, ignore_cull_name); 
       DPRINTF(("</%s>\n", name));
    }
    else {
@@ -600,7 +601,7 @@ static void lWriteXMLHead_(const lListElem *ep, int nesting_level, FILE *fp) {
                   lGetString(elem, XMLS_Version));
       }
       fprintf(fp, "<%s %s>\n", name, (is_attr?sge_dstring_get_string(&attr):""));
-      lWriteListXML_(lGetList(ep, XMLH_Element), nesting_level +1, fp); 
+      lWriteListXML_(lGetList(ep, XMLH_Element), nesting_level +1, fp, ignore_cull_name); 
       fprintf(fp, "</%s>\n", name);
    }
    sge_dstring_free(&attr);

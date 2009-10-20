@@ -44,7 +44,7 @@
 
 #include "msg_common.h"
 
-#define SL_LAYER TOP_LAYER
+#define SL_LAYER BASIS_LAYER
 #define SL_MUTEX_NAME "sl_mutex"
 
 /****** uti/sl/sge_sl_elem_create() ******************************************

@@ -2527,6 +2527,18 @@ int *trigger
       answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
    }
 
+   /* ---- JB_binding */
+   if ((pos=lGetPosViaElem(jep, JB_binding, SGE_NO_ABORT))>=0) {
+      DPRINTF(("got new JB_binding\n")); 
+
+      lSetList(new_job, JB_binding, 
+               lCopyList("", lGetList(jep, JB_binding)));
+
+      *trigger |= MOD_EVENT;
+      sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_HARDQLIST, sge_u32c(jobid));
+      answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+   }
+
    /* ---- JB_hard_queue_list */
    if ((pos=lGetPosViaElem(jep, JB_hard_queue_list, SGE_NO_ABORT))>=0) {
       DPRINTF(("got new JB_hard_queue_list\n")); 

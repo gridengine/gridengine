@@ -60,7 +60,7 @@
 #endif
 
 #if !defined(__cplusplus) 
-#  if defined(DARWIN9)
+#  if defined(DARWIN9) || defined(DARWIN10)
 #     include <stdbool.h>
 #  else
 typedef enum {

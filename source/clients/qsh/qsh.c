@@ -1724,7 +1724,7 @@ int main(int argc, char **argv)
 #endif
 
       if (lGetUlong(job, JB_verify)) {
-         cull_show_job(job, 0);
+         cull_show_job(job, 0, false); 
          sge_prof_cleanup();
          SGE_EXIT((void**)&ctx, 0);
       }
@@ -2351,7 +2351,7 @@ static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrat
           */
          
          /* -hold_jid and -h are only allowed in qrsh mode */
-         if (!is_rsh && (!strcmp(cp, "-hold_jid") || !strcmp(cp, "-hold_jid_ad")
+         if (!is_rsh && (!strcmp(cp, "-hold_jid") || !strcmp(cp, "-hold_jid_ad") 
              || !strcmp(cp, "-h"))){
             if (error) {
                ERROR((SGE_EVENT, MSG_ANSWER_UNKOWNOPTIONX_S, cp));
@@ -2364,6 +2364,7 @@ static void remove_unknown_opts(lList *lp, u_long32 jb_now, int tightly_integrat
          }
 
          if (strcmp(cp, "jobarg") && strcmp(cp, "script") && strcmp(cp, "-ar") &&
+            strcmp(cp, "-binding") &&
             strcmp(cp, "-A") && strcmp(cp, "-cell") && strcmp(cp, "-clear") && 
             strcmp(cp, "-cwd") && strcmp(cp, "-hard") && strcmp(cp, "-help") &&
             strcmp(cp, "-hold_jid") && strcmp(cp, "-hold_jid_ad") && strcmp(cp, "-h") && 

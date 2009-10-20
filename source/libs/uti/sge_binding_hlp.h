@@ -46,9 +46,16 @@
 #  include <dlfcn.h>
 #endif 
 
+typedef enum _binding_type_t {
+   BINDING_TYPE_NONE,
+   BINDING_TYPE_PE,
+   BINDING_TYPE_ENV,
+   BINDING_TYPE_SET
+} binding_type_t;
+
 /* functions related for parsing command line (see parse_qsub.c) */
 /* shepherd also needs them */
-bool parse_binding_parameter_string(char* parameter, u_long32* type, 
+bool parse_binding_parameter_string(const char* parameter, binding_type_t* type, 
       dstring* strategy, int* amount, int* stepsize, int* firstsocket, 
       int* firstcore, dstring* socketcorelist, dstring* error);
 
@@ -81,6 +88,9 @@ bool has_core_binding(void);
 void* get_plpa_handle(void);
 
 #endif
+
+const char *
+binding_get_topology_for_job(const char *binding_result);
 
 #endif /* __SGE_BINDING_HLP_H */
 

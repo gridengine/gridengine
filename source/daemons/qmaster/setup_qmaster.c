@@ -103,7 +103,17 @@
 #include "sge_advance_reservation_qmaster.h"
 #include "sge_qinstance_qmaster.h"
 #include "uti/sge_time.h"
-
+   
+struct cmplx_tmp {
+   char *name;
+   char *shortcut;
+   u_long32 valtype;
+   u_long32 relop;
+   u_long32 consumable;
+   char *valdefault;
+   u_long32 requestable;
+   char *urgency_weight;
+};
 
 static void   process_cmdline(char**);
 static lList* parse_cmdline_qmaster(char**, lList**);
@@ -876,6 +886,51 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
    DPRINTF(("Complex Attributes----------------------\n"));
    spool_read_list(&answer_list, spooling_context, object_base[SGE_TYPE_CENTRY].list, SGE_TYPE_CENTRY);
    answer_list_output(&answer_list);
+
+   /*
+    * for release 6.2u5 the "job to core"- binding feature has been added 
+    * that needs some additional complex entries. We check here if those
+    * entries exist and create them silently if they are not there. Only
+    * this prevents from creating a update procedure.
+    *
+    * TODO: As soon as there is a release where an update procedure is 
+    *       available we should put that code there and remove it here.
+    */
+   {
+      struct cmplx_tmp new_complexes[] = {
+         {"m_core", "core", 1, CMPLXLE_OP, CONSUMABLE_NO, "0", REQU_YES, "0"},
+         {"m_socket", "socket", 1, CMPLXLE_OP, CONSUMABLE_NO, "0", REQU_YES, "0"},
+         {"m_topology", "topo", 9, CMPLXEQ_OP, CONSUMABLE_NO, NULL, REQU_YES, "0"},
+         {"m_topology_inuse", "utopo", 9, CMPLXEQ_OP, CONSUMABLE_NO, NULL, REQU_YES, "0"},
+         {NULL, NULL, 0, 0, 0, NULL, 0, 0}
+      };
+      int i;
+
+      for (i = 0; new_complexes[i].name != NULL; i++) {
+         lList *centry_list = *(object_base[SGE_TYPE_CENTRY].list);
+         lListElem *entry_long = lGetElemStr(centry_list, CE_name, new_complexes[i].name);
+         lListElem *entry_short = lGetElemStr(centry_list, CE_shortcut, new_complexes[i].shortcut);
+
+         if (entry_long == NULL && entry_short == NULL) {
+            lListElem *new_centry = lCreateElem(CE_Type);
+
+            lSetString(new_centry, CE_name, new_complexes[i].name);
+            lSetString(new_centry, CE_shortcut, new_complexes[i].shortcut);
+            lSetString(new_centry, CE_default, new_complexes[i].valdefault);
+            lSetString(new_centry, CE_urgency_weight, new_complexes[i].urgency_weight);
+            lSetUlong(new_centry, CE_valtype, new_complexes[i].valtype);
+            lSetUlong(new_centry, CE_relop, new_complexes[i].relop);
+            lSetUlong(new_centry, CE_consumable, new_complexes[i].consumable);
+            lSetUlong(new_centry, CE_requestable, new_complexes[i].requestable);
+
+            /* append and spool the object */
+            lAppendElem(centry_list, new_centry);
+            spool_write_object(NULL, spool_get_default_context(), new_centry,
+                               lGetString(new_centry, CE_name), SGE_TYPE_CENTRY, false);
+
+         }         
+      }
+   }
 
    DPRINTF(("host_list----------------------------\n"));
    spool_read_list(&answer_list, spooling_context, object_base[SGE_TYPE_EXECHOST].list, SGE_TYPE_EXECHOST);

@@ -76,10 +76,9 @@ static void error_handler(const char *message);
 int main(int argc, char **argv);
 
 /************************************************************************/
-int main(
-int argc,
-char **argv 
-) {
+int 
+main(int argc, char **argv) 
+{
    lList *opts_cmdline = NULL;
    lList *opts_defaults = NULL;
    lList *opts_scriptfile = NULL;
@@ -238,7 +237,7 @@ char **argv
    DPRINTF(("Everything ok\n"));
 
    if (lGetUlong(job, JB_verify)) {
-      cull_show_job(job, 0);
+      cull_show_job(job, 0, false);
       DEXIT;
       SGE_EXIT((void**)&ctx, 0);
    }

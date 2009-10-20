@@ -161,7 +161,7 @@ int main(int argc, char **argv) {
          The jobid's in our request list get printed before
          show_job()
       */
-      cull_show_job(lFirst(request_list), FLG_QALTER);
+      cull_show_job(lFirst(request_list), FLG_QALTER, false);
       sge_prof_cleanup();
       SGE_EXIT((void**)&ctx, 0);
    }
@@ -320,6 +320,12 @@ int *all_users
          lSetUlong(job, JB_ar, lGetUlong(ep, SPA_argval_lUlongT));
          lRemoveElem(cmdline, &ep);
          nm_set(job_field, JB_ar);
+      }
+
+      while ((ep = lGetElemStr(cmdline, SPA_switch, "-binding"))) {
+         lSwapList(ep, SPA_argval_lListT, job, JB_binding);
+         lRemoveElem(cmdline, &ep);
+         nm_set(job_field, JB_binding);
       }
   
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-cwd"))) {
@@ -881,6 +887,7 @@ int *all_users
             JB_ja_structure,
             JB_user_list,
             JB_master_hard_queue_list,
+            JB_binding,
             NoName
          };
 

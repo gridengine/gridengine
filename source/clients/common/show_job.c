@@ -37,10 +37,12 @@
 #include "uti/sge_log.h"
 #include "uti/sge_unistd.h"
 #include "uti/sge_parse_num_par.h"
+#include "uti/sge_dstring.h"
 
 #include "sched/sge_urgency.h"
 
 #include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_binding.h"
 #include "sgeobj/sge_feature.h"
 #include "sgeobj/sge_job.h"
 #include "sgeobj/sge_var.h"
@@ -69,7 +71,7 @@ static void show_ce_type_list(lList *cel, const char *indent, const char *separa
    bool display_resource_contribution, lList *centry_list, int slots);
 
 
-void cull_show_job(lListElem *job, int flags) 
+void cull_show_job(lListElem *job, int flags, bool show_binding) 
 {
    const char *delis[] = {NULL, ",", "\n"};
    time_t ultime;   /* used to be u_long32, but problem w/ 64 bit times */
@@ -556,12 +558,25 @@ void cull_show_job(lListElem *job, int flags)
          dst += lGetDouble(uep, UA_value); \
       }
 
+   if (show_binding) {
+      lList *binding_list = lGetList(job, JB_binding);
+
+      if (binding_list != NULL) {
+         lListElem *binding_elem = lFirst(binding_list);
+         dstring binding_param = DSTRING_INIT;
+
+         binding_print_to_string(binding_elem, &binding_param);
+         printf("binding:                    "SFN"\n", sge_dstring_get_string(&binding_param));
+         sge_dstring_free(&binding_param);
+      }
+   }
+
    if (lGetPosViaElem(job, JB_ja_tasks, SGE_NO_ABORT) >= 0) {
       lListElem *uep, *jatep, *pe_task_ep;
 
       for_each (jatep, lGetList(job, JB_ja_tasks)) {
-         double cpu, mem, io, vmem, maxvmem;
          int first_task = 1;
+         double cpu, mem, io, vmem, maxvmem;
 
          /* jobs whose job start orders were not processed to the end
             due to a qmaster/schedd collision appear in the JB_ja_tasks
@@ -571,10 +586,10 @@ void cull_show_job(lListElem *job, int flags)
             continue;
 
          if (first_task) {
-            printf("usage %4d:                 ", (int)lGetUlong(jatep, JAT_task_number));
+            printf("usage   %4d:               ", (int)lGetUlong(jatep, JAT_task_number));
             first_task = 0;
          } else
-            printf("      %4d:                 ", (int)lGetUlong(jatep, JAT_task_number));
+            printf("        %4d:               ", (int)lGetUlong(jatep, JAT_task_number));
 
          cpu = mem = io = vmem = maxvmem = 0.0;
 
@@ -614,6 +629,41 @@ void cull_show_job(lListElem *job, int flags)
             sge_dstring_free(&vmem_string);
             sge_dstring_free(&maxvmem_string);
          }
+      }
+   }
+
+   if (lGetPosViaElem(job, JB_ja_tasks, SGE_NO_ABORT) >= 0) {
+      lListElem *jatep;
+
+      for_each (jatep, lGetList(job, JB_ja_tasks)) {
+         int first_task = 1;
+         lListElem *usage_elem;
+         const char *binding_inuse = NULL; 
+         const char *binding_topo = NULL;
+
+         if (lGetUlong(jatep, JAT_status) != JRUNNING && lGetUlong(jatep, JAT_status) != JTRANSFERING) {
+            continue;
+         }
+         for_each (usage_elem, lGetList(jatep, JAT_scaled_usage_list)) {
+            const char *binding_name = "binding_inuse";
+            const char *usage_name = lGetString(usage_elem, UA_name);
+
+            if (strncmp(usage_name, binding_name, strlen(binding_name)) == 0) {
+               binding_inuse = strstr(usage_name, "="); 
+               if (binding_inuse != NULL) {
+                  binding_inuse++;
+               }
+               break;
+            }
+         }
+         if (binding_inuse != NULL && strcmp(binding_inuse, "NULL") != 0) {  
+            binding_topo = binding_get_topology_for_job(binding_inuse);
+         }
+         printf("%s %4d:               %s\n", first_task ? "binding" : "       ", 
+            (int)lGetUlong(jatep, JAT_task_number), binding_topo != NULL ? binding_topo : "NONE");
+         if (first_task) {
+            first_task = 0;
+         } 
       }
    }
    if (lGetPosViaElem(job, JB_ja_tasks, SGE_NO_ABORT) >= 0) {

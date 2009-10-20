@@ -33,7 +33,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_binding.h"
+#include "sgeobj/sge_boundaries.h"
 #include "cull.h"
 
 #ifdef  __cplusplus
@@ -76,6 +76,7 @@ extern "C" {
 
 enum {
    BN_strategy = BN_LOWERBOUND,
+   BN_type,
    BN_parameter_n,
    BN_parameter_socket_offset, 
    BN_parameter_core_offset, 
@@ -88,6 +89,7 @@ enum {
 LISTDEF(BN_Type)
    JGDI_OBJ(Binding)
    SGE_STRING(BN_strategy, CULL_PRIMARY_KEY | CULL_SUBLIST)
+   SGE_ULONG(BN_type, CULL_DEFAULT | CULL_SUBLIST)
    SGE_ULONG(BN_parameter_n, CULL_DEFAULT | CULL_SUBLIST)
    SGE_ULONG(BN_parameter_socket_offset, CULL_DEFAULT | CULL_SUBLIST)
    SGE_ULONG(BN_parameter_core_offset, CULL_DEFAULT | CULL_SUBLIST)
@@ -99,6 +101,7 @@ LISTEND
 
 NAMEDEF(BNN)
    NAME("BN_strategy")
+   NAME("BN_type")
    NAME("BN_parameter_n")
    NAME("BN_parameter_socket_offset")
    NAME("BN_parameter_core_offset")

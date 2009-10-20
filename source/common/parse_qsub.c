@@ -42,18 +42,20 @@
 #include "sge_parse_num_par.h"
 #include "parse.h"
 #include "sge_options.h"
-#include "sgermon.h"
-#include "sge_log.h"
 #include "cull_parse_util.h"
-#include "sge_string.h"
-#include "sge_stdlib.h"
-#include "sge_answer.h"
-#include "sge_range.h"
-#include "sge_ckpt.h"
-#include "sge_ulong.h"
+
+#include "rmon/sgermon.h"
 
 #include "uti/sge_dstring.h"
+#include "uti/sge_binding_hlp.h"
+#include "uti/sge_stdlib.h"
+#include "uti/sge_string.h"
+#include "uti/sge_log.h"
 
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_ckpt.h"
+#include "sgeobj/sge_ulong.h"
+#include "sgeobj/sge_binding.h"
 #include "sgeobj/sge_str.h"
 #include "sgeobj/sge_centry.h"
 #include "sgeobj/sge_job.h"
@@ -61,7 +63,6 @@
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_jsv.h"
 #include "sgeobj/sge_qref.h"
-#include "uti/sge_binding_hlp.h"
 
 #include "msg_common.h"
 
@@ -329,85 +330,43 @@ u_long32 flags
             | explicit:<socket>,<core>[:<socket>,<core>]* " */
 
       if (!strcmp("-binding", *sp)) {
-         /* parameter particles for binding which are added to CULL 
-            list */
-         int amount = 0;
-         int stepsize = 0;
-         int firstsocket = 0;
-         int firstcore = 0;
-         u_long32 type = 0; 
-         dstring strategy = DSTRING_INIT;
-         dstring socketcorelist = DSTRING_INIT;
-         dstring error = DSTRING_INIT;
-         
-         /* list and elements of binding */
-         lList *binding_list = lCreateList("binding", BN_Type);
          lListElem *binding_elem = lCreateElem(BN_Type);
+         dstring argument_string = DSTRING_INIT;
+         const char *switch_name = "-binding";
+         const char *switch_argument = NULL;
 
-         /* next field is "linear" or "striding" or "explicit" */
          sp++;
-         if (!*sp) {
+         if (*sp == NULL) {
             answer_list_add_sprintf(&answer, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
                                      MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S,"-binding");
             DRETURN(answer);
          }
+         if (strcmp(*sp, "set") == 0 || strcmp(*sp, "env") == 0 || strcmp(*sp, "pe") == 0) {
 
-         if (parse_binding_parameter_string(*sp, &type, &strategy, &amount, 
-               &stepsize, &firstsocket, &firstcore, &socketcorelist, &error) 
-               != true) {
-            
-            /* report parsing error */
-            dstring parse_binding_error = DSTRING_INIT;
-            sge_dstring_sprintf(&parse_binding_error, "-binding: ");
-            sge_dstring_append_dstring(&parse_binding_error, &error);
+            sge_dstring_append(&argument_string, *sp);
+            sge_dstring_append_char(&argument_string, ' ');
+            sp++;
+            if (*sp == NULL) {
+               answer_list_add_sprintf(&answer, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
+                                        MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S,"-binding");
+               DRETURN(answer);
+            }
+         }
+         sge_dstring_append(&argument_string, *sp);
+         switch_argument = sge_dstring_get_string(&argument_string);
 
-            answer_list_add_sprintf(&answer, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
-                                     MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S, 
-                                     sge_dstring_get_string(&parse_binding_error));
-
-            sge_dstring_free(&parse_binding_error);
-
-            DRETURN(answer);
-            
-         } else {
-            
-            /* add parameters to CULL list */ 
-            
-            lSetString(binding_elem, BN_strategy, sge_dstring_get_string(&strategy));
-            
-            if (firstsocket >= 0) {
-               lSetUlong(binding_elem, BN_parameter_socket_offset, firstsocket);
-            } else {
-               lSetUlong(binding_elem, BN_parameter_socket_offset, 0);
-            }
-            if (firstcore >= 0) {
-               lSetUlong(binding_elem, BN_parameter_core_offset, firstcore);
-            } else {
-               lSetUlong(binding_elem, BN_parameter_core_offset, 0);
-            }
-            if (amount >= 0) {
-               lSetUlong(binding_elem, BN_parameter_n, amount);
-            } else {
-               lSetUlong(binding_elem, BN_parameter_n, 0);
-            }
-            if (stepsize >= 0) {
-               lSetUlong(binding_elem, BN_parameter_striding_step_size, stepsize);
-            } else {
-               lSetUlong(binding_elem, BN_parameter_striding_step_size, 0);
-            }
-            
-            if (strstr(sge_dstring_get_string(&strategy), "explicit") != NULL) {
-               lSetString(binding_elem, BN_parameter_explicit, sge_dstring_get_string(&socketcorelist));
-            }
+         if (binding_parse_from_string(binding_elem, &answer, &argument_string)) {
+            lList *binding_list = lCreateList("binding", BN_Type);
 
             lAppendElem(binding_list, binding_elem);
-            ep_opt = sge_add_arg(pcmdline, binding_OPT, lListT, *(sp - 1), *sp);
+            ep_opt = sge_add_arg(pcmdline, binding_OPT, lListT, switch_name, switch_argument);
             lSetList(ep_opt, SPA_argval_lListT, binding_list);
-
-            sp++;
-            continue;
+         } else {
+            /* answer has ween written by binding_parse_from_string() */
+            DRETURN(answer);
          }
-
+         sp++;
+         continue;
       }
 
 /*-----------------------------------------------------------------------------*/

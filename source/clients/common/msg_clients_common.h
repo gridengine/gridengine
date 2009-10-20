@@ -86,6 +86,8 @@
 #define MSG_HEADER_HOSTNAME              "HOSTNAME"
 #define MSG_HEADER_ARCH                  "ARCH"
 #define MSG_HEADER_NPROC                 "NCPU"
+#define MSG_HEADER_NSOC                  "NSOC"
+#define MSG_HEADER_NCOR                  "NCOR"
 #define MSG_HEADER_LOAD                  "LOAD"
 #define MSG_HEADER_MEMTOT                "MEMTOT"
 #define MSG_HEADER_MEMUSE                "MEMUSE"

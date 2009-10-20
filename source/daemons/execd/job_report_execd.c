@@ -201,7 +201,7 @@ void cleanup_job_report(u_long32 jobid, u_long32 jataskid)
       -1 on error
    ------------------------------------------------------------ */
 /* JG: TODO (397): move to libs/gdi/sge_usage.* */   
-int add_usage(lListElem *jr, char *name, const char *val_as_str, double val) 
+int add_usage(lListElem *jr, const char *name, const char *val_as_str, double val) 
 {
    lListElem *usage;
 

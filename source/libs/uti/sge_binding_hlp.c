@@ -93,7 +93,7 @@ static void* plpa_lib_handle = NULL;
 *  SEE ALSO
 *     ???/???
 *******************************************************************************/
-bool parse_binding_parameter_string(char* parameter, u_long32* type, 
+bool parse_binding_parameter_string(const char* parameter, binding_type_t* type, 
       dstring* strategy, int* amount, int* stepsize, int* firstsocket, 
       int* firstcore, dstring* socketcorelist, dstring* error)
 {
@@ -104,14 +104,13 @@ bool parse_binding_parameter_string(char* parameter, u_long32* type,
       return false;
    }
    
-   /* check the type [pe|env|set] = 0 1 2 (2 is default) */
-   if (strstr(parameter, " pe ") != NULL) {
-      *type = 0;
-   } else if (strstr(parameter, " env ") != NULL) {
-      *type = 1;
+   /* check the type [pe|env|set] (set is default) */
+   if (strstr(parameter, "pe ") != NULL) {
+      *type = BINDING_TYPE_PE;
+   } else if (strstr(parameter, "env ") != NULL) {
+      *type = BINDING_TYPE_ENV;
    } else {
-      /* default case: when " set " is set or not */
-      *type = 2;   
+      *type = BINDING_TYPE_SET;   
    }
 
    if (strstr(parameter, "linear") != NULL) {
@@ -1219,8 +1218,33 @@ int binding_striding_parse_step_size(const char* parameter)
    return -1;
 }
 
-
-
+/****** sge_binding_hlp/binding_striding_parse_step_size() *************************
+*  NAME
+*     binding_striding_parse_step_size() -- Parses the step size out of the "striding" query. 
+*
+*  SYNOPSIS
+*     int binding_striding_parse_step_size(const char* parameter) 
+*
+*  FUNCTION
+*     Parses the step size for the core binding strategy "striding" out of the 
+*     query.
+* 
+*     The query string is expected to have following syntax: 
+*    
+*           "striding:<amount>:<stepsize>[:<socket>,<core>]"
+*
+*  INPUTS
+*     const char* parameter - Points to the string with the query. 
+*
+*  RESULT
+*     int - Returns the step size or -1 when it could not been parsed. 
+*
+*  NOTES
+*     MT-NOTE: binding_striding_parse_step_size() is MT safe 
+*
+*  SEE ALSO
+*     ???/???
+*******************************************************************************/
 bool binding_explicit_extract_sockets_cores(const char* parameter, 
    int** list_of_sockets, int* samount, int** list_of_cores, int* camount) 
 {
@@ -1292,5 +1316,47 @@ bool binding_explicit_extract_sockets_cores(const char* parameter,
    }
 
    return true; 
+}
+
+/****** uti/binding_hlp/binding_get_topology_for_job() ********************
+*  NAME
+*     binding_get_topology_for_job() -- Returns topology string. 
+*
+*  SYNOPSIS
+*     const char *
+*     binding_get_topology_for_job(const char *binding_result)
+*
+*  FUNCTION
+*     Returns the topology string of a host where the cores are 
+*     marked with lowercase letters for those cores that were
+*     "bound" to a certain job.
+*     
+*     It is assumed the 'binding_result' parameter that is
+*     passed to this function was previously returned by
+*     create_binding_strategy_string_linux()
+*     create_binding_strategy_string_solaris()
+*
+*  INPUTS
+*     const char *binding_result - string returned by
+*                         create_binding_strategy_string_linux() 
+*                         create_binding_strategy_string_solaris() 
+*
+*  RESULT
+*     const char * - topology string like "SCc"
+*******************************************************************************/
+const char *
+binding_get_topology_for_job(const char *binding_result) {
+   const char *topology_result = NULL;
+
+   if (binding_result != NULL) {
+      /* find test after last colon character including this character */
+      topology_result = strrchr(binding_result, ':');
+
+      /* skip colon character */
+      if (topology_result != NULL) {
+         topology_result++;
+      }
+   }
+   return topology_result;
 }
 

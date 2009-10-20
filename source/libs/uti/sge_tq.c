@@ -45,7 +45,7 @@
 
 #include "msg_common.h"
 
-#define TQ_LAYER TOP_LAYER
+#define TQ_LAYER BASIS_LAYER
 #define TQ_MUTEX_NAME "tq_mutex"
 
 /****** uti/tq/sge_tq_task_compare_type() **************************************

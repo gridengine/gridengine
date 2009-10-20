@@ -46,9 +46,7 @@
 #include "err_trace.h"
 #include "cull_list.h"
 #include "sge_object.h"
-#include "sge_job_JB_L.h"
-#include "sge_ja_task_JAT_L.h"
-#include "sge_pe_task_PET_L.h"
+#include "sge_binding_BN_L.h"
 #include "sge_spool.h"
 
 #include "uti/sge_binding_hlp.h"
@@ -126,8 +124,7 @@ bool free_topology(const char* topology, const int topology_length);
 
 /* close dynamically loaded library */
 void close_plpa_handle(void);
-
-#endif 
+#endif
 
 #if defined(SOLARISAMD64) || defined(SOLARIS86)
 
@@ -138,5 +135,12 @@ int create_processor_set_explicit_solaris(const int* list_of_sockets,
    const int samount, const int* list_of_cores, const int camount);
 
 #endif
+
+bool
+binding_print_to_string(const lListElem *this_list, dstring * string);
+
+bool
+binding_parse_from_string(lListElem *this_elem, lList **answer_list, dstring *string);
+
 
 #endif /* __SGE_BINDING_H */

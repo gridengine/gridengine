@@ -8,6 +8,9 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 -----------------+------------+-------------------------------------------------
+DG-2009-10-20-0: Enhancem.    Job2Core binding spec added. 
+                 Review:      EB
+
 LP-2009-10-20-1: Bugfix:      Shadowd might be started on host which hostname 
                               is a prefix on real shadow host
                  Bugster:     6892908

@@ -8,6 +8,11 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 -----------------+-----------+--------------------------------------------------
+JG-2009-10-20-0: Bugfix:      fixed minor memory leaks in sge_qmaster and
+                              in test programs, fixed aimk problems with certain
+                              csh versions.
+                 Review:      CR
+
 SH-2009-10-16-0: Bugfix:      the execution daemon on Linux generate huge CPU 
                               load based on monitoring processes
                               report cpu online usage under linux

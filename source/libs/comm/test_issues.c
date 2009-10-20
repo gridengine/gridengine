@@ -392,7 +392,7 @@ extern int main(int argc, char** argv)
            main_return = 1;
            break;
         }
-        data = malloc(data_size * sizeof(char));
+        data = calloc(data_size, sizeof(char));
         if (data == NULL) {
            printf("malloc() error: can't malloc(%ld)\n", data_size * sizeof(char) );
            printf("issue #1389 failed\n");
@@ -405,7 +405,7 @@ extern int main(int argc, char** argv)
       
         cl_commlib_send_message(handle, com_host, "server", 1, 
                             CL_MIH_MAT_NAK, 
-                            (cl_byte_t*) data, data_size + sizeof(char), 
+                            (cl_byte_t*) data, data_size * sizeof(char), 
                             NULL, 0,0, CL_FALSE, CL_FALSE);
    
         printf("starting measurement...\n");

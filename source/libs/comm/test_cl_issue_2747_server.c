@@ -155,7 +155,7 @@ extern int main(int argc, char** argv)
 
   gettimeofday(&now,NULL);
   shutdown_time = now.tv_sec + 90;
-  while(do_shutdown != 1) {
+  while (do_shutdown != 1) {
      int ret_val;
      CL_LOG(CL_LOG_INFO,"main()");
      cl_commlib_trigger(handle, 1); 
@@ -208,18 +208,18 @@ extern int main(int argc, char** argv)
                                           CL_MIH_MAT_NAK,  
                                           message->message, message->message_length, 
                                           NULL, message->message_id,0, 
-                                          CL_FALSE,CL_FALSE);
+                                          CL_FALSE, CL_FALSE);
         if (ret_val != CL_RETVAL_OK) {
            CL_LOG_INT(CL_LOG_ERROR,"sent message response for message id", (int)message->message_id);
            CL_LOG_STR(CL_LOG_ERROR,"cl_commlib_send_message() returned:",cl_get_error_text(ret_val));
         } else {
            CL_LOG_INT(CL_LOG_INFO,"sent message response for message id", (int)message->message_id);
+           message->message = NULL; /* commlib still works on this pointer */
         }
-        message->message = NULL; /* commlib still works on this pointer */
         cl_com_free_message(&message);
         cl_com_free_endpoint(&sender);
         message = NULL;
-     } 
+     }
   }
   CL_LOG(CL_LOG_INFO,"main() - shutdown");
 

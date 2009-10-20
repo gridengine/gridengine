@@ -811,7 +811,12 @@ while ($#argv >= 1 && $?found)
       continue
       breaksw
    endsw
-   set argv     = ($argv[2-])
+
+   if ($#argv > 1 ) then
+      set argv     = ($argv[2-])
+   else
+      set argv     = ""
+   endif
 end
 
 if ( $DEBUGGED && $USE_QMAKE ) then

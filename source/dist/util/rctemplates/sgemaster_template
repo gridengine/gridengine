@@ -204,8 +204,8 @@ CheckIfShadowMasterHost()
 
    fname=$SGE_ROOT/$SGE_CELL/common/shadow_masters
 
-   if [ -f $fname ]; then
-      grep -i $host $fname 2>&1 > /dev/null
+   if [ -f $fname ]; then      
+      grep -i "^${host}$" $fname 2>&1 > /dev/null
       if [ $? = 0 ]; then
          shadow_host="true"
       else
@@ -561,9 +561,11 @@ if [ "$startup" = true ]; then
       echo
       echo "sge_qmaster didn't start!"
       echo "This is not a qmaster host!"
-      echo "Please, check your act_qmaster file!" 
+      echo "Check your ${SGE_ROOT}/${SGE_CELL}/common/act_qmaster file!" 
       echo
-      exit_val=1
+      if [ $shadowd = false ]; then
+         exit 1
+      fi
    elif [ $qmaster = true ]; then
       already_running=false
       #Check if pid file exists      
@@ -596,11 +598,17 @@ if [ "$startup" = true ]; then
          fi
       fi
    fi
-   if [ $exit_val -ne 0 ]; then
-      exit $exit_value
-   fi
-      
-   if [ $shadowd = true -a $shadow_host = true ]; then
+
+   if [ $shadowd = true -a $shadow_host = false ]; then
+      echo
+      echo "sge_shadowd didn't start!"
+      echo "This is not a shadow master host!"
+      echo "Check your ${SGE_ROOT}/${SGE_CELL}/common/shadow_masters file!" 
+      echo
+      if [ $qmaster_host = false -o $qmaster = false ]; then
+         exit 1
+      fi
+   elif [ $shadowd = true ]; then
       start_shadowd=true
       UQpidfile=$qmaster_spool_dir/shadowd_$UQHOST.pid
       pidfile=$qmaster_spool_dir/shadowd_$HOST.pid
@@ -638,8 +646,11 @@ if [ "$startup" = true ]; then
          fi
       else
          echo "   found running sge_shadowd - not starting"
-         exit 1
       fi
+   fi
+      
+   if [ $exit_val -ne 0 ]; then
+      exit $exit_val
    fi
 else
    if [ $shadowd = true -a $shadow_host = true ]; then

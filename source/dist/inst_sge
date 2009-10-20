@@ -553,8 +553,7 @@ if [ "$UPDATE" = true ]; then
       UPGRADE_MODE="upgrade"
       #Stop if not a qmaster host
       tmp_master=`cat "$UPGRADE_BACKUP_DIR/cell/act_qmaster" 2>/dev/null`
-      tmp_master2=`grep "^${HOST}#" "$UPGRADE_BACKUP_DIR/cell/shadow_masters" 2>/dev/null`
-      if [ "$tmp_master" != "$HOST" -a "$tmp_master2" != "$HOST" ]; then
+      if [ "$tmp_master" != "$HOST" ]; then
          $INFOTEXT "Upgrade must be started on a qmaster host!"
          exit 2
       fi
@@ -682,6 +681,8 @@ if [ "$UPDATE" = true ]; then
       CFG_GID_RANGE=""
    fi
    if [ "$SGE_SKIP_JMX_SETTING" != "true" ]; then
+      #TODO LP: Need add/replace jvm_thread, etc. values to the bootstrap file
+      # + need to adjust the global configuration with the new JMX params
       AddJMXFiles
    fi
    RestoreSequenceNumberFiles $QMDIR #Restore jobseqnum and arseqnum
@@ -1212,7 +1213,7 @@ if [ "$EXECD" = "uninstall" ]; then
       exit 0
    fi
 
-exit $uninstall_ret
+   exit $uninstall_ret
 fi
 
 if [ $BERKELEY = "uninstall" ]; then
@@ -1459,7 +1460,7 @@ if [ $SHADOW = "uninstall" ]; then
    is_shadow="true"
    GetAdminUser
 
-   if [ "$HOST" = "undef" -o "$HOST" = `$SGE_UTILBIN/gethostname -aname`  ]; then
+   if [ "$HOST" = "undef" -o "$HOST" = "`$SGE_UTILBIN/gethostname -aname`"  ]; then
       s_host=`$SGE_UTILBIN/gethostname -aname`
       is_local="true"
    else
@@ -1467,7 +1468,8 @@ if [ $SHADOW = "uninstall" ]; then
       is_local="false"
    fi
 
-   if [ "$s_host" = "`cat $SGE_ROOT/$SGE_CELL/common/shadow_masters | grep "$s_host"`" ]; then
+   p_host=`cat $SGE_ROOT/$SGE_CELL/common/shadow_masters | grep "^${s_host}$"`
+   if [ "$s_host" = "$p_host" ]; then
       is_shadow="true"
       m_spool=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap | grep qmaster_spool_dir | awk '{ print $2}'`
       s_pid=`cat $m_spool/shadowd_$s_host.pid`
@@ -1488,7 +1490,7 @@ if [ $SHADOW = "uninstall" ]; then
          ExecuteAsAdmin mv $SGE_ROOT/$SGE_CELL/common/shadow_masters $SGE_ROOT/$SGE_CELL/common/shadow_masters_tmp
          ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL/common/shadow_masters
          ExecuteAsAdmin touch $SGE_ROOT/$SGE_CELL/common/shadow_masters
-         cat $SGE_ROOT/$SGE_CELL/common/shadow_masters_tmp | grep -v $s_host >> $SGE_ROOT/$SGE_CELL/common/shadow_masters
+         cat $SGE_ROOT/$SGE_CELL/common/shadow_masters_tmp | grep -v "^${s_host}$" >> $SGE_ROOT/$SGE_CELL/common/shadow_masters
          ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL/common/shadow_masters_tmp
          ExecuteAsAdmin chown $ADMINUSER $SGE_ROOT/$SGE_CELL/common/shadow_masters
          MoveLog
@@ -1507,9 +1509,10 @@ if [ $SHADOW = "uninstall" ]; then
          ExecuteAsAdmin mv $SGE_ROOT/$SGE_CELL/common/shadow_masters $SGE_ROOT/$SGE_CELL/common/shadow_masters_tmp
          ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL/common/shadow_masters
          ExecuteAsAdmin touch $SGE_ROOT/$SGE_CELL/common/shadow_masters
-         cat $SGE_ROOT/$SGE_CELL/common/shadow_masters_tmp | grep -v $s_host >> $SGE_ROOT/$SGE_CELL/common/shadow_masters
+         ExecuteAsAdmin chmod 666 $SGE_ROOT/$SGE_CELL/common/shadow_masters
+         cat $SGE_ROOT/$SGE_CELL/common/shadow_masters_tmp | grep -v "^${s_host}$" >> $SGE_ROOT/$SGE_CELL/common/shadow_masters                  
+         ExecuteAsAdmin chmod 644 $SGE_ROOT/$SGE_CELL/common/shadow_masters
          ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL/common/shadow_masters_tmp
-         ExecuteAsAdmin chown $ADMINUSER $SGE_ROOT/$SGE_CELL/common/shadow_masters
          exit 0
       else
          $INFOTEXT -n "Please enter which shell you want to use for remote login (rsh/ssh) or\n hit <RETURN> to use [%s] >> " $SHELL_NAME

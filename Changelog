@@ -8,6 +8,19 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 -----------------+------------+-------------------------------------------------
+LP-2009-10-20-0: Bugfix:      Shadowd startup scripts do not work
+                 Bugster:     6892804
+                 Issue:       3163
+                 Bugfix:      Shadowd might be started on host which hostname 
+                              is a prefix on real shadow host
+                 Bugster:     6892908
+                 Issue:       3164
+                 Bugfix:      sgemaster script might return 0 on failure
+                 Belongs to:  LP-2009-04-09-0
+                 Bugster:     6827877
+                 Issue:       2987
+                 Review:      MD
+
 EB-2009-10-20-1: Enhancemn.   Job2Core binding: fixed bug in qmon
                  Review:      DG
 

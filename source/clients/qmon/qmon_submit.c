@@ -2349,14 +2349,16 @@ int save
    /* core binding parameters */
    if (data->binding) {
       lListElem *binding_elem = lCreateElem(BN_Type);
-      char *binding_string = qmon_trim(data->binding);
+      dstring binding_string = DSTRING_INIT;
 
+      sge_dstring_append(&binding_string, qmon_trim(data->binding));
       if (binding_parse_from_string(binding_elem, &alp, &binding_string)) {
          lList *binding_list = lCreateList("", BN_Type);
 
          lAppendElem(binding_list, binding_elem);
          lSetList(jep, JB_binding, binding_list);
       }
+      sge_dstring_free(&binding_string);
    }
 
    lSetString(jep, JB_account, data->account_string);

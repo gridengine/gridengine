@@ -1490,9 +1490,10 @@ if [ $SHADOW = "uninstall" ]; then
          ExecuteAsAdmin mv $SGE_ROOT/$SGE_CELL/common/shadow_masters $SGE_ROOT/$SGE_CELL/common/shadow_masters_tmp
          ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL/common/shadow_masters
          ExecuteAsAdmin touch $SGE_ROOT/$SGE_CELL/common/shadow_masters
-         cat $SGE_ROOT/$SGE_CELL/common/shadow_masters_tmp | grep -v "^${s_host}$" >> $SGE_ROOT/$SGE_CELL/common/shadow_masters
+         ExecuteAsAdmin chmod 666 $SGE_ROOT/$SGE_CELL/common/shadow_masters
+         cat $SGE_ROOT/$SGE_CELL/common/shadow_masters_tmp | grep -v "^${s_host}$" >> $SGE_ROOT/$SGE_CELL/common/shadow_masters                  
+         ExecuteAsAdmin chmod 644 $SGE_ROOT/$SGE_CELL/common/shadow_masters
          ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL/common/shadow_masters_tmp
-         ExecuteAsAdmin chown $ADMINUSER $SGE_ROOT/$SGE_CELL/common/shadow_masters
          MoveLog
          exit 0
       else

@@ -1452,27 +1452,6 @@ for i in $ARCH; do
             fi
          done
 
-         if [ "$DSTARCH" = "lx24-amd64" -o "$DSTARCH" = "lx26-amd64" \
-               -o "$DSTARCH" = "lx24-x86" -o "$DSTARCH" = "lx26-x86" ]; then
-
-           libname="../3rdparty/plpa/plpa-1.3.1/$ARCHBIN/src/libplpa/.libs/libplpa.so.0.0.0"
-
-           if [ -f $libname ]; then 
-              if [ ! -d $DEST_SGE_ROOT/lib/$DSTARCH ]; then
-                 echo "Creating directory!"
-                 sleep 30
-                 Execute mkdir $DEST_SGE_ROOT/lib/$DSTARCH 
-              fi
-                 InstallProg $libname
-                 Execute cp $libname $DEST_SGE_ROOT/lib/$DSTARCH/libplpa.so
-           else 
-              echo "ABORTING installation because of missing libplpa: $libname"
-              sleep 10000
-              exit 1
-           fi
-
-         fi
-
          for lib in $QMON_SHARED_LIBRARIES; do
             if [ "$DSTARCH" != "win32-x86" ]; then
                libname="../3rdparty/qmon/$ARCHBIN/$lib.$shlibext"

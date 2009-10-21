@@ -69,6 +69,16 @@ static bool create_topology_used_per_job(char** accounted_topology,
                int* accounted_topology_length, char* logical_used_topology, 
                char* used_topo_with_job, int logical_used_topology_length);
 
+static bool get_free_sockets(const char* topology, const int topology_length, 
+               int** sockets, int* sockets_size);
+
+static int account_cores_on_socket(char** topology, const int topology_length,
+               const int socket_number, const int cores_needed, int** list_of_sockets,
+               int* list_of_sockets_size, int** list_of_cores, int* list_of_cores_size);
+
+static bool get_socket_with_most_free_cores(const char* topology, const int topology_length, 
+               int* socket_number);
+
 #endif
 
 #if defined(SOLARISAMD64) || defined(SOLARIS86)
@@ -121,7 +131,7 @@ static int get_core_id_from_logical_core_number_solaris(const int** matrix,
 static int get_chip_id_from_logical_socket_number_solaris(const int** matrix, 
    const int length, const int logical_socket_number); 
 
-static bool binding_set_linear_Solaris(const int first_socket, const int first_core, 
+static bool binding_set_linear_solaris(const int first_socket, const int first_core, 
    const int amount_of_cores, const int step_size, psetid_t* psetid);
 
 /* processor set related */
@@ -358,7 +368,7 @@ bool binding_set_linear(int first_socket, int first_core, int amount_of_cores, i
    /* the processor set id which we need in order to delete it when the job 
       does finish */
    psetid_t psetid;
-   bool success = binding_set_linear_Solaris(first_socket, first_core, 
+   bool success = binding_set_linear_solaris(first_socket, first_core, 
       amount_of_cores, 1, &psetid);
 
    /* TODO DG save the pset id somewhere in order to delete it */ 
@@ -373,12 +383,12 @@ bool binding_set_linear(int first_socket, int first_core, int amount_of_cores, i
 }
 
 #if defined(SOLARISAMD64) || defined(SOLARIS86)
-/****** sge_binding/binding_set_linear_Solaris() *******************************
+/****** sge_binding/binding_set_linear_solaris() *******************************
 *  NAME
-*     binding_set_linear_Solaris() -- Binds current process to some cores. 
+*     binding_set_linear_solaris() -- Binds current process to some cores. 
 *
 *  SYNOPSIS
-*     bool binding_set_linear_Solaris(const int first_socket, const int 
+*     bool binding_set_linear_solaris(const int first_socket, const int 
 *     first_core, const int amount_of_cores, const int step_size, psetid_t* 
 *     psetid) 
 *
@@ -405,7 +415,7 @@ bool binding_set_linear(int first_socket, int first_core, int amount_of_cores, i
 *     bool - true if the binding was successful - false if not
 *
 *  NOTES
-*     MT-NOTE: binding_set_linear_Solaris() is not MT safe 
+*     MT-NOTE: binding_set_linear_solaris() is not MT safe 
 *
 *  BUGS
 *     ??? 
@@ -413,7 +423,7 @@ bool binding_set_linear(int first_socket, int first_core, int amount_of_cores, i
 *  SEE ALSO
 *     ???/???
 *******************************************************************************/
-static bool binding_set_linear_Solaris(const int first_socket, const int first_core, 
+static bool binding_set_linear_solaris(const int first_socket, const int first_core, 
    const int amount_of_cores, const int step_size, psetid_t* psetid)
 {
    /* the topology matrix */
@@ -440,11 +450,6 @@ static bool binding_set_linear_Solaris(const int first_socket, const int first_c
    bool retval = true;
    /* counter */
    int i = 0;
-
-   DENTER(TOP_LAYER, "binding_set_linear_Solaris");
-
-   /* shepherd_trace("binding_set_linear_Solaris: first socket: %d first core: %d amount: %d stepsize: %d", 
-      first_socket, first_core, amount_of_cores, step_size); */
 
    /* first get the topology of the host into a topology matrix */ 
    if (generate_chipID_coreID_matrix(&matrix, &mlength) != true) {
@@ -560,20 +565,16 @@ static bool binding_set_linear_Solaris(const int first_socket, const int first_c
       pid_list_length += tmp_pid_list_length;
    }
 
-   /* shepherd_trace("binding_set_linear_Solaris: length of pid list %d", pid_list_length); */
-
    /* finally bind the current process to the global pid_list and get the
       processor set id */
    if (create_pset(pid_list, pid_list_length, psetid) != true) {
       retval = false;
-/*      shepherd_trace("binding_set_linear_Solaris: could't create pset"); */
    } else if (bind_current_process_to_pset(*psetid)) {
       /* current process is bound to psetid and psetid is output parameter */
       retval = true;
    } else {
       /* binding was not successful */
       retval = false;
-/*      shepherd_trace("binding_set_linear_Solaris: couldn't bind current process to pset"); */
    }
    
    /* free memory in any case */ 
@@ -661,10 +662,10 @@ int create_processor_set_explicit_solaris(const int* list_of_sockets,
    return (int) psetid;
 }
 
+
 int create_processor_set_striding_solaris(const int first_socket, 
    const int first_core, const int amount, const int step_size) 
 {
-
    /* the topology matrix */
    int** matrix = NULL;
    /* size of the topology matrix */
@@ -692,7 +693,7 @@ int create_processor_set_striding_solaris(const int first_socket,
    /* processor set id */
    processorid_t psetid;
 
-   DENTER(TOP_LAYER, "create_processor_set_striding_Solaris");
+   DENTER(TOP_LAYER, "create_processor_set_striding_solaris");
 
    /* first get the topology of the host into a topology matrix */ 
    if (generate_chipID_coreID_matrix(&matrix, &mlength) != true) {
@@ -922,22 +923,19 @@ static bool create_pset(const processorid_t* const plist, const int length,
       /* assign the selected processor to the set */ 
       for (i = 0; i < length && successful == true; i++) {
 
-            /* try to assign processor id to the processor set */
-/*         shepherd_trace("assing processor %d to set %d", plist[i], pset_id); */
-
+         /* try to assign processor id to the processor set */
          if (pset_assign(*pset_id, plist[i], NULL) == -1) {
                /* shepherd_trace("assign error : we've to detroy the set!\n"); */
                /* problem while assigning a CPU to the set */
                /* DG TODO ??? we detroy the set and do no binding at all*/
                /* detroy the processor set and return with error */ 
             if (pset_destroy(*pset_id) != 0) {
-               /* Ooops - we have could have a major problem with a remaining pset */
-/*               shepherd_trace("Alert! Couldn't destroy pset! This have to be done manually!"); */
+               /* Ooops - we could have a major problem with a remaining pset */
                successful = false;
             } else {
+               /* assigning processor failed but eventually we could delete the 
+                  broken pset */
                successful = false;
-/*               shepherd_trace("Processor set is not created because processor %d couldn't be added!", 
-                  plist[i]); */
             }
          }
 
@@ -2643,9 +2641,278 @@ static int get_core_id_from_logical_core_number_solaris(const int** matrix,
 /* ---------------------------------------------------------------------------*/
 #if defined(PLPA_LINUX) || defined(SOLARIS86) || defined(SOLARISAMD64)
 
-/****** sge_binding/getStridingFirstSocketFirstCore() **************************
+bool get_linear_automatic_socket_core_list_and_account(const int amount, 
+      int** list_of_sockets, int* samount, int** list_of_cores, int* camount, 
+      char** topo_by_job, int* topo_by_job_length)
+{
+   /* return value: if it is possible to fit the request on the host  */
+   bool possible       = true;   
+   
+   /* temp topology string where accounting is done on     */
+   char* tmp_topo_busy = NULL;
+
+   /* amount of cores we could account already             */
+   int used_cores      = 0;
+
+   /* the numbers of the sockets which are completely free */
+   int* sockets        = NULL;
+   int sockets_size    = 0;
+
+   /* tmp counter */
+   int i;
+
+   /* get the topology which could be used by the job */
+   tmp_topo_busy = (char *) calloc(logical_used_topology_length, sizeof(char));
+   memcpy(tmp_topo_busy, logical_used_topology, logical_used_topology_length*sizeof(char));
+
+   /* 1. Find all free sockets and try to fit the request on them     */
+   if (get_free_sockets(tmp_topo_busy, logical_used_topology_length, &sockets, 
+         &sockets_size) == true) {
+      
+      /* there are free sockets: use them */
+      for (i = 0; i < sockets_size && used_cores < amount; i++) {
+         int needed_cores = amount - used_cores;
+         used_cores += account_cores_on_socket(&tmp_topo_busy, logical_used_topology_length, 
+                           sockets[i], needed_cores, list_of_sockets, samount, 
+                           list_of_cores, camount);
+      }
+
+      FREE(sockets);
+   }
+
+   /* 2. If not all cores fit there - fill up the rest of the sockets */
+   if (used_cores < amount) {
+      
+      /* the socket which offers some cores */
+      int socket_free = 0;
+      /* the amount of cores we still need */
+      int needed_cores = amount - used_cores;
+
+      while (needed_cores > 0) {
+         /* get the socket with the most free cores */
+         if (get_socket_with_most_free_cores(tmp_topo_busy, logical_used_topology_length,
+               &socket_free) == true) {
+            
+            int accounted_cores = account_cores_on_socket(&tmp_topo_busy, 
+                                    logical_used_topology_length, socket_free, 
+                                    needed_cores, list_of_sockets, samount, 
+                                    list_of_cores, camount);
+
+            if (accounted_cores < 1) {
+               /* there must be a bug in one of the last two functions! */
+               possible = false;
+               break;
+            }
+
+            needed_cores -= accounted_cores;
+            
+          } else {
+            /* we don't have free cores anymore */
+            possible = false;
+            break;
+          }
+       }   
+
+   }
+
+   if (possible == true) {
+      /* calculate the topology used by the job out of */ 
+      create_topology_used_per_job(topo_by_job, topo_by_job_length, 
+         logical_used_topology, tmp_topo_busy, logical_used_topology_length);
+
+      /* make the temporary accounting permanent */
+      memcpy(logical_used_topology, tmp_topo_busy, logical_used_topology_length*sizeof(char));
+   } 
+     
+   FREE(tmp_topo_busy);
+
+   return possible;
+}
+
+static bool get_socket_with_most_free_cores(const char* topology, const int topology_length, 
+               int* socket_number) 
+{
+   /* get the socket which offers most free cores */
+   int highest_amount_of_cores = 0;
+   *socket_number              = 0;
+   int current_socket          = -1;
+   int i;
+   /* number of unbound cores on the current socket */
+   int current_free_cores      = 0;
+
+   /* go through the topology, remember the socket with the highest amount 
+      of free cores so far and update it when it is neccessary */
+   for (i = 0; i < topology_length && topology[i] != '\0'; i++) {
+      
+      if (topology[i] == 'S' || topology[i] == 's') {
+         /* we are on a new socket */
+         current_socket++;
+         /* reset core counter */
+         current_free_cores = 0;
+      } else if (topology[i] == 'C') {
+         current_free_cores++;
+         
+         /* remember if the socket offers more free cores */
+         if (current_free_cores > highest_amount_of_cores) {
+            highest_amount_of_cores = current_free_cores;
+            *socket_number          = current_socket;
+         }
+
+      }
+
+   }
+
+   if (highest_amount_of_cores <= 0) {
+      /* there is no core free */
+      return false;
+   } else {
+      /* we've found the socket which offers most free cores (socket_number) */
+      return true;
+   }
+}
+
+static int account_cores_on_socket(char** topology, const int topology_length,
+               const int socket_number, const int cores_needed, int** list_of_sockets,
+               int* list_of_sockets_size, int** list_of_cores, int* list_of_cores_size)
+{
+   int i;
+   /* socket number we are at the moment */
+   int current_socket_number = -1;
+   /* return value */
+   int retval;
+
+   /* try to use as many cores as possible on a specific socket 
+      but not more */
+   
+   /* jump to the specific socket given by the "socket_number" */
+   for (i = 0; i < topology_length && (*topology)[i] != '\0'; i++) {
+      if ((*topology)[i] == 'S' || (*topology)[i] == 's') {
+         current_socket_number++;
+         if (current_socket_number >= socket_number) {
+            /* we are at the beginning of socket #"socket_number" */
+            break;
+         }   
+      }
+   }
+
+   /* check if we reached that socket or if it was out of range */
+   if (socket_number != current_socket_number) {
+
+      /* early abort because we couldn't find the socket we were 
+         searching for */ 
+      retval = 0;
+
+   } else {
+      
+      /* we are at a 'S' or 's' and going to the next 'S' or 's' 
+         and collecting all cores in between */
+      
+      int core_counter = 0;   /* current core number on the socket */
+      i++;                    /* just forward to the first core on the socket */  
+      retval  = 0;            /* need to initialize the amount of cores we found */
+
+      for (; i < topology_length && (*topology)[i] != '\0'; i++) {
+         if ((*topology)[i] == 'C') {
+            /* take this core */
+            (*list_of_sockets_size)++;    /* the socket list is growing */
+            (*list_of_cores_size)++;      /* the core list is growing */
+            *list_of_sockets = (int *) realloc(*list_of_sockets, (*list_of_sockets_size) 
+                                          * sizeof(int));
+            *list_of_cores   = (int *) realloc(*list_of_cores, (*list_of_cores_size)  
+                                          * sizeof(int));
+            /* store the logical <socket,core> tuple inside the lists */
+            (*list_of_sockets)[(*list_of_sockets_size) - 1]   = socket_number;
+            (*list_of_cores)[(*list_of_cores_size) - 1]       = core_counter;
+            /* increase the amount of cores we've collected so far */
+            retval++;
+            /* move forward to the next core */
+            core_counter++;
+            /* do accounting */
+            (*topology)[i] = 'c';
+         } else if ((*topology)[i] == 'c') {
+            /* this core is already in use */
+            /* move forward to the next core */
+            core_counter++;
+         } else if ((*topology)[i] == 'S' || (*topology)[i] == 's') {
+            /* we are already on another socket which we can not use */
+            break;
+         }
+
+         if (retval >= cores_needed) {
+            /* we have already collected as many cores we need to collect */
+            break;
+         }
+      }
+      
+   }
+
+   return retval;
+}
+
+
+static bool get_free_sockets(const char* topology, const int topology_length, 
+               int** sockets, int* sockets_size)
+{
+   /* temporary counter */
+   int i, j;
+   /* this amount of sockets we discovered already */ 
+   int socket_number  = 0;
+
+   (*sockets) = NULL;
+   (*sockets_size) = 0;
+
+   /* go through the whole topology and check if there are some sockets
+      completely unbound */
+   for (i = 0; i < topology_length && topology[i] != '\0'; i++) {
+
+      if (topology[i] == 'S' || topology[i] == 's') {
+
+         /* we're on a new socket: check all cores (and skip threads) after it */
+         bool free = true;
+
+         /* check the topology till the next socket (or end) */
+         for (j = i + 1; j < topology_length && topology[j] != '\0'; j++) {
+            if (topology[j] == 'c') {
+               /* this socket has at least one core in use */
+               free = false;
+            } else if (topology[j] == 'S' || topology[j] == 's') {
+               break;
+            }
+         }
+
+         /* fast forward */
+         i = j;
+
+         /* check if this socket had a core in use */ 
+         if (free == true) {
+            /* this socket can be used completely */ 
+            (*sockets) = (int *) realloc(*sockets, ((*sockets_size)+1)*sizeof(int));
+            (*sockets)[(*sockets_size)] = socket_number;
+            (*sockets_size)++;
+         }
+         
+         /* increment the amount of sockets we discovered so far */
+         socket_number++;
+
+      } /* end if this is a socket */
+      
+   }
+
+   /* it was successful when we found at least one socket not used by any job */
+   if ((*sockets_size) > 0) {
+      /* we also have to free the list outside afterwards */
+      return true;
+   } else {
+      return false;
+   }
+}
+
+
+
+/****** sge_binding/get_striding_first_socket_first_core_and_account() ********
 *  NAME
-*     getStridingFirstSocketFirstCore() -- Checks if and where striding would fit.
+*     get_striding_first_socket_first_core_and_account() -- Checks if and where 
+*                                                           striding would fit.
 *
 *  SYNOPSIS
 *     bool getStridingFirstSocketFirstCore(const int amount, const int 
@@ -2770,7 +3037,7 @@ bool get_striding_first_socket_first_core_and_account(const int amount, const in
          create_topology_used_per_job(accounted_topology, accounted_topology_length, 
             logical_used_topology, tmp_topo_busy, logical_used_topology_length);
          /* finally do execution host wide accounting */
-         /* DG TODO save with mutex */ 
+         /* DG TODO mutex */ 
          memcpy(logical_used_topology, tmp_topo_busy, logical_used_topology_length*sizeof(char));
 
          break;
@@ -3174,7 +3441,7 @@ binding_print_to_string(const lListElem *this_elem, dstring *string) {
             sge_u32c(lGetUlong(this_elem, BN_parameter_striding_step_size)));
       } else if (strcmp(strategy, "explicit") == 0) {
          sge_dstring_sprintf_append(string, "%s:%s", 
-            "linear", lGetUlong(this_elem, BN_parameter_explicit));
+            "explicit", lGetString(this_elem, BN_parameter_explicit));
       } else {
          sge_dstring_append(string, "unknown");
       }

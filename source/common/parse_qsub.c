@@ -325,7 +325,7 @@ u_long32 flags
       }
 
 /*----------------------------------------------------------------------------*/
-      /* "-binding linear:<amount>[:<socket>,<core>] 
+      /* "-binding [set|env|pe] linear:<amount>[:<socket>,<core>] 
             | striding:<amount>:<stepsize>[:<socket>,<core>] 
             | explicit:<socket>,<core>[:<socket>,<core>]* " */
 
@@ -335,6 +335,7 @@ u_long32 flags
          const char *switch_name = "-binding";
          const char *switch_argument = NULL;
 
+         /* next field is [set|env|pe] "linear" or "striding" or "explicit" */
          sp++;
          if (*sp == NULL) {
             answer_list_add_sprintf(&answer, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,

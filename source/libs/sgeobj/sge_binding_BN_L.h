@@ -78,11 +78,9 @@ enum {
    BN_strategy = BN_LOWERBOUND,
    BN_type,
    BN_parameter_n,
-   BN_parameter_socket_offset, 
-   BN_parameter_core_offset, 
-   BN_parameter_striding_first_core, 
-   BN_parameter_striding_last_core, 
-   BN_parameter_striding_step_size, 
+   BN_parameter_socket_offset,
+   BN_parameter_core_offset,
+   BN_parameter_striding_step_size,
    BN_parameter_explicit
 };
 
@@ -93,8 +91,6 @@ LISTDEF(BN_Type)
    SGE_ULONG(BN_parameter_n, CULL_DEFAULT | CULL_SUBLIST)
    SGE_ULONG(BN_parameter_socket_offset, CULL_DEFAULT | CULL_SUBLIST)
    SGE_ULONG(BN_parameter_core_offset, CULL_DEFAULT | CULL_SUBLIST)
-   SGE_ULONG(BN_parameter_striding_first_core, CULL_DEFAULT | CULL_SUBLIST)
-   SGE_ULONG(BN_parameter_striding_last_core, CULL_DEFAULT | CULL_SUBLIST)
    SGE_ULONG(BN_parameter_striding_step_size, CULL_DEFAULT | CULL_SUBLIST)
    SGE_STRING(BN_parameter_explicit, CULL_DEFAULT | CULL_SUBLIST)
 LISTEND 
@@ -105,8 +101,6 @@ NAMEDEF(BNN)
    NAME("BN_parameter_n")
    NAME("BN_parameter_socket_offset")
    NAME("BN_parameter_core_offset")
-   NAME("BN_parameter_striding_first_core")
-   NAME("BN_parameter_striding_last_core")
    NAME("BN_parameter_striding_step_size")
    NAME("BN_parameter_explicit")
 NAMEEND

@@ -51,7 +51,6 @@
 #if defined(PLPA_LINUX)
 /* module global variables */
 /* local handle for daemon in order to access PLPA library */
-static void* plpa_lib_handle = NULL;
 #endif 
 
 
@@ -135,7 +134,6 @@ bool parse_binding_parameter_string(const char* parameter, binding_type_t* type,
          *firstsocket = -1;
          *firstcore = -1;
       } else {
-         
          sge_dstring_sprintf(strategy, "linear");
       }
       
@@ -225,37 +223,26 @@ bool parse_binding_parameter_string(const char* parameter, binding_type_t* type,
 bool _has_topology_information() 
 {
    dstring error = DSTRING_INIT;
-   void* plpa_handle = _get_plpa_handle(&error);
    sge_dstring_free(&error);
 
-   if (plpa_handle) {
-      int has_topology = 0;
-      int (*topology_information)(int*) = dlsym(plpa_handle, 
-                                             "plpa_have_topology_information");
-
-      if ((*topology_information)(&has_topology) == 0 && has_topology == 1) {
-         return true;
-      }
-   } 
+   int has_topology = 0;
+   
+   if (plpa_have_topology_information(&has_topology) == 0 && has_topology == 1) {
+      return true;
+   }
     
    return false;
 }
 
 bool has_core_binding() 
 {
-   
    /* checks if plpa is working */
    /* TODO do it only once? */
 
-   void* plpa_handle = get_plpa_handle();
+   plpa_api_type_t api_type;
 
-   if (plpa_handle) {
-      plpa_api_type_t api_type;
-      int (*api_probe)(plpa_api_type_t*) = dlsym(plpa_handle, "plpa_api_probe");
-
-      if ((*api_probe)(&api_type) == 0 && api_type == PLPA_PROBE_OK) {
-         return true;
-      }
+   if (plpa_api_probe(&api_type) == 0 && api_type == PLPA_PROBE_OK) {
+      return true;
    }
    
    return false;
@@ -292,100 +279,13 @@ bool _has_core_binding(dstring* error)
    
    /* checks if plpa is working */
    /* TODO do it only once? */
+   plpa_api_type_t api_type;
 
-   void* plpa_handle = _get_plpa_handle(error);
-
-   if (plpa_handle) {
-      plpa_api_type_t api_type;
-      int (*api_probe)(plpa_api_type_t*) = dlsym(plpa_handle, "plpa_api_probe");
-
-      if ((*api_probe)(&api_type) == 0 && api_type == PLPA_PROBE_OK) {
-         return true;
-      }
+   if (plpa_api_probe(&api_type) == 0 && api_type == PLPA_PROBE_OK) {
+      return true;
    }
-   
+
    return false;
-}
-
-void* _get_plpa_handle(dstring* error) 
-{
-   /* this is for sge_shepherd */
-   if (plpa_lib_handle == NULL) {
-      plpa_lib_handle = dlopen("libplpa.so", RTLD_NOW 
-         | RTLD_LOCAL | RTLD_NODELETE);
-      if (plpa_lib_handle == NULL) {
-         sge_dstring_sprintf(error, "plpa dlopen() failed: %s", dlerror());
-      }
-   }      
-
-   return plpa_lib_handle;
-}
-
-
-
-/****** sge_binding_hlp/get_plpa_handle() ******************************************
-*  NAME
-*     get_plpa_handle() -- Get access handle for PLPA libary. 
-*
-*  SYNOPSIS
-*     void* get_plpa_handle(void) 
-*
-*  FUNCTION
-*     Opens the plpa library if installed on machine 
-*     and returns the handle for using the library.
-*     If the library was opened from earlier calls 
-*     it returns the already created handle. 
-*
-*  RESULT
-*     void* - handle for accessing the PLPA library 
-*
-*  NOTES
-*     MT-NOTE: get_plpa_handle() is not MT safe 
-*
-*  SEE ALSO
-*     ???/???
-*******************************************************************************/
-void* get_plpa_handle(void) 
-{
-   if (plpa_lib_handle == NULL) {
-      plpa_lib_handle = dlopen("libplpa.so", RTLD_NOW | RTLD_GLOBAL 
-         | RTLD_NODELETE);
-   }
-   
-   return plpa_lib_handle;
-}
-
-void _close_plpa_handle() 
-{
-   if (plpa_lib_handle != NULL) {
-      dlclose(plpa_lib_handle);
-      plpa_lib_handle = NULL;
-   }   
-}
-
-
-/****** sge_binding_hlp/close_plpa_handle() ****************************************
-*  NAME
-*     close_plpa_handle() -- Close global plpa library handle. 
-*
-*  SYNOPSIS
-*     void close_plpa_handle(void) 
-*
-*  FUNCTION
-*     Closes plpa library handle if not already closed. 
-*
-*  NOTES
-*     MT-NOTE: close_plpa_handle() is not MT safe 
-*
-*  SEE ALSO
-*     ???/???
-*******************************************************************************/
-void close_plpa_handle(void) 
-{
-   if (plpa_lib_handle != NULL) {
-      dlclose(plpa_lib_handle);
-      plpa_lib_handle = NULL;
-   }   
 }
 
 /****** sge_binding_hlp/get_total_amount_of_cores() ********************************
@@ -416,11 +316,8 @@ int get_total_amount_of_cores()
 {
    /* total amount of cores currently active on this system */
    int total_amount_of_cores = 0;
-
-   /* handle for PLPA library */
-   void* plpa_handle = get_plpa_handle();
-
-   if (plpa_handle != NULL && has_core_binding() && _has_topology_information()) {
+   
+   if (has_core_binding() && _has_topology_information()) {
       /* plpa_handle just for an early pre check */ 
       int nr_socket = get_amount_of_sockets();
       int cntr;
@@ -430,6 +327,7 @@ int get_total_amount_of_cores()
          total_amount_of_cores += get_amount_of_cores(cntr);
       }
    }
+   
    /* in case we got no information about topology we return 0 */
    return total_amount_of_cores;
 }
@@ -459,22 +357,15 @@ int get_total_amount_of_cores()
 *******************************************************************************/
 int get_amount_of_cores(int socket_number) 
 {
-   /* handle for PLPA library */
-   void* plpa_handle = get_plpa_handle();
 
-   if (plpa_handle != NULL && has_core_binding() && _has_topology_information()) {
+   if (has_core_binding() && _has_topology_information()) {
       int socket_id;
       /* convert the reals socket number into the Linux socket_id */
 
-      int (*get_socket_id)(int, int*) = dlsym(plpa_handle, "plpa_get_socket_id");
-      
-      if ((*get_socket_id)(socket_number, &socket_id) == 0) {
+      if (plpa_get_socket_id(socket_number, &socket_id) == 0) {
          int number_of_cores, max_core_id;
          /* now retrieve the amount of core for this socket number */
-         int (*get_core_info)(int, int*, int*) 
-               = dlsym(plpa_handle, "plpa_get_core_info");
-               
-         if ((*get_core_info)(socket_id, &number_of_cores, &max_core_id) == 0) {
+         if (plpa_get_core_info(socket_id, &number_of_cores, &max_core_id) == 0) {
             /* return the amount of cores available */
             return number_of_cores;
          } else {
@@ -515,15 +406,10 @@ int get_amount_of_cores(int socket_number)
 int get_amount_of_sockets() 
 {
 
-   void* plpa_handle = get_plpa_handle();
-
-   if (plpa_handle != NULL && has_core_binding() && _has_topology_information()) {
+   if (has_core_binding() && _has_topology_information()) {
       int num_sockets, max_socket_id;
-
-      int (*get_socket_info)(int *, int *) = dlsym(plpa_handle, 
-         "plpa_get_socket_info");
       
-      if ((*get_socket_info)(&num_sockets, &max_socket_id) == 0) {
+      if (plpa_get_socket_info(&num_sockets, &max_socket_id) == 0) {
          return num_sockets;
       } else {
          /* in case of an error we have 0 sockets */
@@ -565,20 +451,13 @@ int get_processor_id(int socket_number, int core_number)
    if (has_core_binding() && _has_topology_information()) {
       int proc_id = -1;
       int socket_id = -1;
-      void* plpa_handle = get_plpa_handle();
-      
-      int (*map_to_processor_id)(int, int, int*) = dlsym(plpa_handle, 
-                                 "plpa_map_to_processor_id");
 
-      /* we need Linux internal socket_id from socket number */
-      int (*get_socket_id)(int, int*) = dlsym(plpa_handle, "plpa_get_socket_id");
-      
-      if ((*get_socket_id)(socket_number, &socket_id) != 0) {
+      if (plpa_get_socket_id(socket_number, &socket_id) != 0) {
          /* unable to retrieve Linux logical socket id */
          return -3;
       }
 
-      if ((*map_to_processor_id)(socket_id, core_number, &proc_id) == 0) {
+      if (plpa_map_to_processor_id(socket_id, core_number, &proc_id) == 0) {
          /* everything OK: processor id was set */
          return proc_id;
       } else {
@@ -593,89 +472,70 @@ int get_processor_id(int socket_number, int core_number)
 
 bool get_topology_linux(char** topology, int* length)
 {
-   /* return value */ 
    bool success = true;
-
-   /* get handle to the PLPA library */
-   void* plpa_handle = get_plpa_handle();
 
    /* initialize length of topology string */
    (*length) = 0;
 
-   if (plpa_handle) {
-      int has_topology = 0;
-      /* get access to PLPA function */
-      int (*topology_information)(int*) = dlsym(plpa_handle, "plpa_have_topology_information");
+   int has_topology = 0;
 
-      /* check if topology is supported via PLPA */
-      if ((*topology_information)(&has_topology) == 0 && has_topology == 1) {
-         int num_sockets, max_socket_id;
+   /* check if topology is supported via PLPA */
+   if (plpa_have_topology_information(&has_topology) == 0 && has_topology == 1) {
+      int num_sockets, max_socket_id;
          
-         /* topology string */
-         dstring d_topology = DSTRING_INIT;
+      /* topology string */
+      dstring d_topology = DSTRING_INIT;
 
-         /* the topology string */ 
-         sge_dstring_clear(&d_topology);
+      /* the topology string */ 
+      sge_dstring_clear(&d_topology);
 
-         /* build the topology string */
-         int (*socket_information)(int*, int*) = dlsym(plpa_handle, "plpa_get_socket_info");
+      /* build the topology string */
 
-         if ((*socket_information)(&num_sockets, &max_socket_id) == 0) {
-            int (*core_information)(int, int*, int*) = dlsym(plpa_handle, "plpa_get_core_info");
+      if (plpa_get_socket_info(&num_sockets, &max_socket_id) == 0) {
             int num_cores, max_core_id, ctr_cores, ctr_sockets;
-            char* s = "S"; /* socket */
-            char* c = "C"; /* core   */
+         char* s = "S"; /* socket */
+         char* c = "C"; /* core   */
 
-            for (ctr_sockets = 0; ctr_sockets <= max_socket_id; ctr_sockets++) {
-               /* append new socket */
-               sge_dstring_append_char(&d_topology, *s);
-               (*length)++;
+         for (ctr_sockets = 0; ctr_sockets <= max_socket_id; ctr_sockets++) {
+            /* append new socket */
+            sge_dstring_append_char(&d_topology, *s);
+            (*length)++;
 
-               /* for each socket get the number of cores */ 
-               if ((*core_information)(ctr_sockets, &num_cores, &max_core_id) == 0) {
+            /* for each socket get the number of cores */ 
+            if (plpa_get_core_info(ctr_sockets, &num_cores, &max_core_id) == 0) {
                      
-                  for (ctr_cores = 0; ctr_cores <= max_core_id; ctr_cores++) {
-                     sge_dstring_append_char(&d_topology, *c);
-                     (*length)++;
-                  }
+               for (ctr_cores = 0; ctr_cores <= max_core_id; ctr_cores++) {
+                  sge_dstring_append_char(&d_topology, *c);
+                  (*length)++;
                }
-            } /* for each socket */
+            }
+         } /* for each socket */
             
-            if ((*length) == 0) {
-               (*topology) = "warning: couldn't count cores sockets";
-               success = false;
-            } else {
-               /* convert d_topolgy into topology */
-               (*length)++; /* we need `\0` at the end */
-               /* (*topology) = (char*) sge_dstring_get_string(&d_topology); */
-               /* copy element */ 
+         if ((*length) == 0) {
+             (*topology) = "warning: couldn't count cores sockets";
+             success = false;
+         } else {
+            /* convert d_topolgy into topology */
+            (*length)++; /* we need `\0` at the end */
+            /* copy element */ 
 
-               (*topology) = (char *) calloc((*length), sizeof(char));
-               memcpy((*topology), (char*) sge_dstring_get_string(&d_topology), 
+            (*topology) = (char *) calloc((*length), sizeof(char));
+            memcpy((*topology), (char*) sge_dstring_get_string(&d_topology), 
                   (*length) * sizeof(char));
             }
             
             sge_dstring_free(&d_topology);
 
          } /* when socket information is available */ 
-         else { 
-            (*topology) = "warning: socket information not available!";
-            success = false;
-         }
-
-      } else {
-         (*topology) = "warning: host has no topology";
+      else { 
+         (*topology) = "warning: socket information not available!";
          success = false;
       }
-   } else {
-      /* couldn't open library */
-      /* TODO DG print warning somwhere */
-      (*topology) = "warning: couldn't open plpa library";
-      success = false;
-   }
 
-   /* TODO DG place it somewhere at the end of execd */ 
-   close_plpa_handle();
+   } else {
+      (*topology) = "warning: host has no topology";
+      success = false;
+  }
 
    return success;
 }
@@ -829,6 +689,19 @@ int binding_linear_parse_core_offset(const char* parameter)
   
    /* wasn't able to parse */
    return -1;
+}
+
+int binding_parse_type(const char* parameter)
+{
+   int type = 0;
+   
+   if (strstr(parameter, "env_") != NULL) {
+      type = 1;
+   } else if (strstr(parameter, "pe_") != NULL) {
+      type = 2;
+   }
+
+   return type;
 }
 
 
@@ -1252,7 +1125,8 @@ bool binding_explicit_extract_sockets_cores(const char* parameter,
    char* socket = NULL;
    /* string representation of a core number */
    char* core = NULL;
-   
+   bool do_endlessly = true;
+
    /* no sockets and no cores at the beginning */
    *samount = 0;
    *camount = 0;
@@ -1286,8 +1160,7 @@ bool binding_explicit_extract_sockets_cores(const char* parameter,
       (*list_of_sockets)[0] = atoi(socket);
       (*list_of_cores)[0] = atoi(core);
 
-      while (core != NULL && isdigit(*core) != 0) { 
-/*               && *core != ' ' && *core!= '\0') { */
+      while (do_endlessly) { 
          /* get socket number */ 
          if ((socket = sge_strtok(NULL, ",")) == NULL || (isdigit(*socket) == 0)) {
             break;

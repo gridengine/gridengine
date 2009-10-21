@@ -8,10 +8,15 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 -----------------+------------+-------------------------------------------------
+DG-2009-10-21-0: Enhancem.:   - PLPA is now a static lib
+                              - Algorithm for linear binding added
+                              - Cleanups 
+                              EB 
+
 DG-2009-10-20-1: Cleanup:     Broken build on darwin fixed.
                  Review:      EB 
 
-DG-2009-10-20-0: Enhancem.    Job2Core binding spec added. 
+DG-2009-10-20-0: Enhancem.:    Job2Core binding spec added. 
                  Review:      EB
 
 LP-2009-10-20-1: Bugfix:      Shadowd might be started on host which hostname 
@@ -34,10 +39,10 @@ LP-2009-10-20-0: Bugfix:      Shadowd startup scripts do not work
                  Issue:       2987
                  Review:      MD
 
-EB-2009-10-20-1: Enhancemn.   Job2Core binding: fixed bug in qmon
+EB-2009-10-20-1: Enhancem.:   Job2Core binding: fixed bug in qmon
                  Review:      DG
 
-EB-2009-10-20-0: Enhancemn.   Job2Core binding: client related things and
+EB-2009-10-20-0: Enhancem.:   Job2Core binding: client related things and
                               infrastructure
                  Review:      DG
 

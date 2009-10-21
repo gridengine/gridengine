@@ -43,11 +43,12 @@
 #endif
 
 #if defined(PLPA_LINUX)
+
 static bool binding_set_linear_linux(int first_socket, int first_core, 
-               int amount_of_cores, int offset);
+               int amount_of_cores, int offset, const int type);
 
 static bool binding_set_striding_linux(int first_socket, int first_core, 
-               int amount_of_cores, int offset, int n, char** reason);
+               int amount_of_cores, int offset, int n, char** reason, const int type);
 
 static bool set_processor_binding_mask(plpa_cpu_set_t* cpuset, const int processor_ids[], 
                   const int no_of_ids);
@@ -56,7 +57,10 @@ static bool set_processor_binding_mask(plpa_cpu_set_t* cpuset, const int process
 static bool bind_process_to_mask(const pid_t pid, const plpa_cpu_set_t cpuset);
 
 static bool binding_explicit(const int* list_of_sockets, const int samount, 
-         const int* list_of_cores, const int camount);
+         const int* list_of_cores, const int camount, const int type);
+
+static bool create_binding_env_linux(const int* proc_id, const int amount);
+
 #endif
 
 #if defined(SOLARISAMD64) || defined(SOLARIS86)
@@ -71,6 +75,7 @@ int do_core_binding(void)
     * If so, we do an early abortion. 
     */
    char *binding = get_conf_val("binding");
+   int type;
 
    if (binding == NULL || strcasecmp("NULL", binding) == 0) {
       shepherd_trace("do_core_binding: \"binding\" parameter not found in config file");
@@ -81,6 +86,9 @@ int do_core_binding(void)
       shepherd_trace("do_core_binding: skip binding - no core binding configured");
       return -1;
    }
+   
+   /* get the binding type (set = 0 | env = 1 | pe = 2) where default is 0 */
+   type = binding_parse_type(binding); 
 
    /* do a binding accorting the strategy */
    if (strstr(binding, "linear") != NULL) {
@@ -110,11 +118,23 @@ int do_core_binding(void)
       }
 
       /* perform core binding on current process */
-      if (binding_set_linear_linux(socket, core, amount, 1) == false) {
+      if (binding_set_linear_linux(socket, core, amount, 1, type) == false) {
          /* core binding was not successful */
-         shepherd_trace("do_core_binding: linear binding was not successful");
+         if (type == BINDING_TYPE_SET) {
+            shepherd_trace("do_core_binding: linear binding was not successful");
+         } else if (type == BINDING_TYPE_ENV) {
+            shepherd_trace("do_core_binding: couldn't set SGE_BINDING environment variable");
+         } else if (type == BINDING_TYPE_PE) {
+            shepherd_trace("do_core_binding: couldn't produce rankfile");
+         }
       } else {
-         shepherd_trace("do_core_binding: job successfully bound");
+         if (type == BINDING_TYPE_SET) {
+            shepherd_trace("do_core_binding: job successfully bound");
+         } else if (type == BINDING_TYPE_ENV) {
+            shepherd_trace("do_core_binding: SGE_BINDING environment variable created");
+         } else if (type == BINDING_TYPE_PE) {
+            shepherd_trace("do_core_binding: rankefile produced");
+         }
       }
 
    } else if (strstr(binding, "striding") != NULL) {
@@ -164,7 +184,7 @@ int do_core_binding(void)
       /* perform core binding on current process                */
 
       if (binding_set_striding_linux(first_socket, first_core, amount, 0, stepsize, 
-            &reason)) {
+            &reason, type)) {
 
          shepherd_trace("do_core_binding: striding: binding done");
             
@@ -200,7 +220,7 @@ int do_core_binding(void)
             shepherd_trace("do_core_binding: explicit: unequal amount of specified sockets and cores");
          } else {
             /* do core binding according the <socket>,<core> tuples */
-            if (binding_explicit(sockets, nr_of_sockets, cores, nr_of_cores) == true) {
+            if (binding_explicit(sockets, nr_of_sockets, cores, nr_of_cores, type) == true) {
                shepherd_trace("do_core_binding: explicit: binding done");
             } else {
                shepherd_trace("do_core_binding: explicit: no core binding done");
@@ -382,7 +402,8 @@ static bool bind_shepherd_to_pset(int pset_id)
 *     int first_core      - The first core to bind. 
 *     int amount_of_cores - The amount of cores to bind to. 
 *     int offset          - The user specified core number offset. 
-*
+*     int type            - The type of binding ONLY FOR EXECD ( set | env | pe )
+*                           
 *  RESULT
 *     bool - true if binding for current process was done, false if not
 *
@@ -393,7 +414,7 @@ static bool bind_shepherd_to_pset(int pset_id)
 *     ???/???
 *******************************************************************************/
 static bool binding_set_linear_linux(int first_socket, int first_core, 
-               int amount_of_cores, int offset)
+               int amount_of_cores, int offset, const int type)
 {
 
    /* sets bitmask in a linear manner        */ 
@@ -404,20 +425,8 @@ static bool binding_set_linear_linux(int first_socket, int first_core,
 
    if (_has_core_binding(&error) == true) {
 
-      /* get access to the dynamically loaded plpa library */
-      void* plpa_lib = NULL;
-      
       sge_dstring_clear(&error);
       
-      plpa_lib = _get_plpa_handle(&error);
-
-      if (plpa_lib == NULL) {
-         /* couldn't get access to the PLPA library */
-         shepherd_trace("binding_set_linear_linux: couldn't load PLPA library: %s", 
-            sge_dstring_get_string(&error));
-         sge_dstring_free(&error);
-         return false;
-      } else {
          /* bitmask for processors to turn on and off */
          plpa_cpu_set_t cpuset;
          /* turn off all processors */
@@ -473,28 +482,45 @@ static bool binding_set_linear_linux(int first_socket, int first_core,
                      return false;
                   }
                }
-               /* get processor id */ 
+               /* get processor id */
                proc_id[cores_set] = get_processor_id(next_socket, next_core);
             }
             
-            /* set the mask for all processor ids */ 
+            /* set the mask for all processor ids */
             set_processor_binding_mask(&cpuset, proc_id, amount_of_cores);
             
-            /* bind process to mask */ 
-            if (bind_process_to_mask((pid_t) 0, cpuset) == false) {
-               /* there was an error while binding */ 
-               return false;
+            /* check what to do with the processor ids (set, env or pe) */
+            if (type == BINDING_TYPE_PE) {
+               
+               /* DG TODO create rankfile */
+
+            } else if (type == BINDING_TYPE_ENV) {
+               
+               /* set the environment variable */
+               /* DG TODO this does not show up in "environment" file */
+               if (create_binding_env_linux(proc_id, amount_of_cores) == true) {
+                  shepherd_trace("binding_set_linear_linux: SGE_BINDING env var created");
+               } else {
+                  shepherd_trace("binding_set_linear_linux: problems while creating SGE_BINDING env");
+               }
+               
+            } else {
+
+               /* bind SET process to mask */ 
+               if (bind_process_to_mask((pid_t) 0, cpuset) == false) {
+                  /* there was an error while binding */ 
+                  return false;
+               }
             }
 
          } else {
             
             /* TODO DG strategy without topology information but with 
                working library? */
-            shepherd_trace("binding_set_linear_linux: no info about topology");
+            shepherd_trace("binding_set_linear_linux: no information about topology");
             return false;
          }
          
-      } 
 
    } else {
 
@@ -504,8 +530,6 @@ static bool binding_set_linear_linux(int first_socket, int first_core,
       sge_dstring_free(&error);
    }
 
-   _close_plpa_handle();
-   
    return true;
 }
 
@@ -538,13 +562,11 @@ static bool binding_set_linear_linux(int first_socket, int first_core,
 *     int first_core      - first core to start with  
 *     int amount_of_cores - total amount of cores to be used 
 *     int offset          - core offset for first core (increments first core used) 
-*     int stepsize        - step size 
+*     int stepsize        - step size
+*     int type            - type of binding (set or env or pe)
 *
 *  RESULT
 *     bool - Returns true if the binding was performed, otherwise false.
-*
-*  EXAMPLE
-*     ??? 
 *
 *  NOTES
 *     MT-NOTE: binding_set_striding() is MT safe 
@@ -553,7 +575,7 @@ static bool binding_set_linear_linux(int first_socket, int first_core,
 *     ???/???
 *******************************************************************************/
 bool binding_set_striding_linux(int first_socket, int first_core, int amount_of_cores,
-                          int offset, int stepsize, char** reason)
+                          int offset, int stepsize, char** reason, const int type)
 {
    /* n := take every n-th core */ 
    bool bound = false;
@@ -562,12 +584,8 @@ bool binding_set_striding_linux(int first_socket, int first_core, int amount_of_
 
    if (_has_core_binding(&error) == true) {
 
-      /* get access to the dynamically loaded plpa library */
-      void* plpa_lib = _get_plpa_handle(&error);
-   
       sge_dstring_free(&error);
 
-      if (plpa_lib != NULL) {
          /* bitmask for processors to turn on and off */
          plpa_cpu_set_t cpuset;  
          /* turn off all processors */
@@ -661,11 +679,29 @@ bool binding_set_striding_linux(int first_socket, int first_core, int amount_of_
 
             /* set the mask for all processor ids */ 
             set_processor_binding_mask(&cpuset, proc_id, amount_of_cores);
+           
+            if (type == BINDING_TYPE_PE) {
             
-            /* bind process to mask */ 
-            if (bind_process_to_mask((pid_t) 0, cpuset) == true) {
-               /* there was an error while binding */ 
-               bound = true;
+               /* DG TODO create rankfile */
+
+            } else if (type == BINDING_TYPE_ENV) {
+
+               /* set the environment variable */
+               /* DG TODO this does not show up in "environment" file */
+               if (create_binding_env_linux(proc_id, amount_of_cores) == true) {
+                  shepherd_trace("binding_set_striding_linux: SGE_BINDING env var created");
+               } else {
+                  shepherd_trace("binding_set_striding_linux: problems while creating SGE_BINDING env");
+               }
+
+            } else {
+               
+               /* bind process to mask */ 
+               if (bind_process_to_mask((pid_t) 0, cpuset) == true) {
+                  /* there was an error while binding */ 
+                  bound = true;
+               }
+               
             }
             
          } else {
@@ -677,11 +713,6 @@ bool binding_set_striding_linux(int first_socket, int first_core, int amount_of_
             return false;
          }
 
-      } else {
-         /* could not load plpa library */
-         (*reason) = "could not load plpa lib";
-         return false;
-      }
       
    } else {
       /* has no core binding feature */
@@ -766,19 +797,15 @@ static bool set_processor_binding_mask(plpa_cpu_set_t* cpuset, const int process
 *******************************************************************************/
 static bool bind_process_to_mask(const pid_t pid, const plpa_cpu_set_t cpuset)
 {
-   void* plpa_handle = get_plpa_handle();
-
-   if (plpa_handle != NULL && has_core_binding() && &cpuset != NULL) {
+   if (has_core_binding()) {
       /* we only need core binding capabilites, no topology is required */
-      /* DG TODO do it once while execd init (binding_init) */
-      int (*sched_setaffinity)(pid_t, size_t, const plpa_cpu_set_t*) 
-                                 = dlsym(plpa_handle, "plpa_sched_setaffinity"); 
+      
       /* DG TODO delete addres and change header in order to make cputset to pointer */ 
-      if ((*sched_setaffinity)(pid, sizeof(plpa_cpu_set_t), &cpuset) != 0) {
+      if (plpa_sched_setaffinity(pid, sizeof(plpa_cpu_set_t), &cpuset) != 0) {
          return false;
       } else {
          return true;
-      }   
+      }
    }
    
    return false;
@@ -806,6 +833,7 @@ static bool bind_process_to_mask(const pid_t pid, const plpa_cpu_set_t cpuset)
 *     int samount          - Length of the list of sockets. 
 *     int* list_of_cores   - List of cores in the same order as list of sockets. 
 *     int camount          - Length of the list of cores. 
+*     int type             - Type of binding ( set | env | pe ).
 *
 *  RESULT
 *     bool - true when the current process was bound like specified with the 
@@ -818,7 +846,7 @@ static bool bind_process_to_mask(const pid_t pid, const plpa_cpu_set_t cpuset)
 *     ???/???
 *******************************************************************************/
 static bool binding_explicit(const int* list_of_sockets, const int samount, 
-   const int* list_of_cores, const int camount)
+   const int* list_of_cores, const int camount, const int type)
 {
    /* return value: successful bound or not */ 
    bool bound = false;
@@ -831,10 +859,8 @@ static bool binding_explicit(const int* list_of_sockets, const int samount,
    /* do only on linux when we have core binding feature in kernel */
    if (has_core_binding() == true) {
       
-      /* get access to the dynamically loaded plpa library */
-      void* plpa_lib = get_plpa_handle();
 
-      if (plpa_lib != NULL && _has_topology_information()) {
+      if (_has_topology_information()) {
          /* bitmask for processors to turn on and off */
          plpa_cpu_set_t cpuset;  
          /* turn off all processors */
@@ -871,14 +897,27 @@ static bool binding_explicit(const int* list_of_sockets, const int samount,
          /* generate the core binding mask out of the processor id array */
          set_processor_binding_mask(&cpuset, proc_id, camount);
 
-         /* do the core binding for the current process with the mask */
-         if (bind_process_to_mask((pid_t) 0, cpuset) == true) {
-            /* there was an error while binding */ 
-            bound = true;
-         } else {
-            /* couldn't be bound return false */
-            shepherd_trace("binding_explicit: bind_process_to_mask was not successful");
-         }   
+         if (type == 0) {
+            /* do the core binding for the current process with the mask */
+            if (bind_process_to_mask((pid_t) 0, cpuset) == true) {
+               /* there was an error while binding */ 
+               bound = true;
+            } else {
+               /* couldn't be bound return false */
+               shepherd_trace("binding_explicit: bind_process_to_mask was not successful");
+            }   
+         } else if (type == 1) {
+            /* set the environment variable */
+            /* DG TODO this does not show up in "environment" file */
+            if (create_binding_env_linux(proc_id, camount) == true) {
+               shepherd_trace("binding_explicit: SGE_BINDING env var created");
+            } else {
+               shepherd_trace("binding_explicit: problems while creating SGE_BINDING env");
+            }
+         } else if (type == 2) {
+            /* create the rankfile */
+            /* DG TODO */
+         }
           
       } else {
          /* has no PLPA lib or topology information */
@@ -891,6 +930,30 @@ static bool binding_explicit(const int* list_of_sockets, const int samount,
    }   
 
    return bound;
+}
+
+bool create_binding_env_linux(const int* proc_id, const int amount)
+{
+   bool retval          = true;
+   dstring sge_binding  = DSTRING_INIT;
+   dstring proc         = DSTRING_INIT;
+   int i;
+
+   for (i = 0; i < amount; i++) {
+      sge_dstring_clear(&proc);
+      sge_dstring_sprintf(&proc, " %d", proc_id[i]);
+      sge_dstring_append_dstring(&sge_binding, &proc);
+   }
+
+   if (sge_setenv("SGE_BINDING", sge_dstring_get_string(&sge_binding)) != 1) {
+      /* settting env var was not successful */
+      retval = false;
+   }
+
+   sge_dstring_free(&sge_binding);
+   sge_dstring_free(&proc);
+
+   return retval;
 }
 
 #endif

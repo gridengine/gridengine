@@ -206,10 +206,9 @@ sge_job_verify_adjust(sge_gdi_ctx_class_t *ctx, lListElem *jep, lList **alpp,
             lSetUlong(binding_elem, BN_parameter_n, 0);
             lSetUlong(binding_elem, BN_parameter_socket_offset, 0);
             lSetUlong(binding_elem, BN_parameter_core_offset, 0);
-            lSetUlong(binding_elem, BN_parameter_striding_first_core, 0);
-            lSetUlong(binding_elem, BN_parameter_striding_last_core, 0);
             lSetUlong(binding_elem, BN_parameter_striding_step_size, 0);
             lSetString(binding_elem, BN_parameter_explicit, "no_explicit_binding");
+
          } else {
             ret = STATUS_EUNKNOWN;
          }

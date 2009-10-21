@@ -1493,6 +1493,7 @@ case LINUXSPARC64:
       $BUILDARCH == LINUX86 ) && \
       $COMPILE_ARCH != "ULINUX86_24" && $COMPILE_ARCH != "ULINUXAMD64_24" ) then  
       set CORE_INCLUDE = "$CORE_INCLUDE -I$SOURCE/3rdparty/plpa/plpa-1.3.1/src/libplpa"
+      set LIBS = "$SOURCE/3rdparty/plpa/plpa-1.3.1/$COMPILE_ARCH/src/libplpa/.libs/libplpa.a $LIBS"
    endif 
 
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
@@ -2404,6 +2405,35 @@ if ( "$MAKEJEMALLOCLIB" == 1 ) then
 
    cd $SOURCE
 endif
+if ( "$PLPA" == 1 ) then
+   echo _________3_r_d_p_a_r_t_y__P_L_P_A_______
+
+   if ( ( $BUILDARCH == LINUXAMD64 || \
+      $BUILDARCH == LINUX86 ) && \
+      $COMPILE_ARCH != "ULINUX86_24" && $COMPILE_ARCH != "ULINUXAMD64_24" ) then  
+      
+      if ( ! -d $SOURCE/3rdparty/plpa/plpa-1.3.1/$COMPILE_ARCH || \
+	      ! -r $SOURCE/3rdparty/plpa/plpa-1.3.1/$COMPILE_ARCH/Makefile ) then
+         mkdir -p $SOURCE/3rdparty/plpa/plpa-1.3.1/$COMPILE_ARCH
+         cd $SOURCE/3rdparty/plpa/plpa-1.3.1/$COMPILE_ARCH
+         env -u LD_LIBRARY_PATH -u CPP ../configure --enable-static --disable-shared --with-pic
+      endif
+
+      cd $SOURCE/3rdparty/plpa/plpa-1.3.1/$COMPILE_ARCH
+
+      $MAKE $MAKEOPT -f Makefile "MAKE=$MAKE" "COMPILE_ARCH=$COMPILE_ARCH" $argv
+
+      if ( $status != 0 ) then
+         echo not done
+         exit 1
+      endif
+   
+   else 
+      echo plpa on architecture "$BUILDARCH" not supported 
+   endif 
+
+   cd $SOURCE
+endif
 if ( "$MAKESTRPTIME" == 1 ) then
    echo _________3_r_d_p_a_r_t_y__S_T_R_P_T_I_M_E_
 
@@ -2973,36 +3003,6 @@ if ( $BUILDARCH == HP1164 ) then
       ./aimk -32 "$arguments"
    endif 
 endif 
-
-if ( "$PLPA" == 1 ) then
-   echo _________3_r_d_p_a_r_t_y__P_L_P_A_______
-
-   if ( ( $BUILDARCH == LINUXAMD64 || \
-      $BUILDARCH == LINUX86 ) && \
-      $COMPILE_ARCH != "ULINUX86_24" && $COMPILE_ARCH != "ULINUXAMD64_24" ) then  
-      
-      if ( ! -d $SOURCE/3rdparty/plpa/plpa-1.3.1/$COMPILE_ARCH || \
-	      ! -r $SOURCE/3rdparty/plpa/plpa-1.3.1/$COMPILE_ARCH/Makefile ) then
-         mkdir -p $SOURCE/3rdparty/plpa/plpa-1.3.1/$COMPILE_ARCH
-         cd $SOURCE/3rdparty/plpa/plpa-1.3.1/$COMPILE_ARCH
-         env -u LD_LIBRARY_PATH -u CPP ../configure
-      endif
-
-      cd $SOURCE/3rdparty/plpa/plpa-1.3.1/$COMPILE_ARCH
-
-      $MAKE $MAKEOPT -f Makefile "MAKE=$MAKE" "COMPILE_ARCH=$COMPILE_ARCH" "DLLIB=$DLLIB" $argv
-
-      if ( $status != 0 ) then
-         echo not done
-         exit 1
-      endif
-   
-   else 
-      echo plpa on architecture "$BUILDARCH" not supported 
-   endif 
-
-   cd $SOURCE
-endif
 
 echo done.
 

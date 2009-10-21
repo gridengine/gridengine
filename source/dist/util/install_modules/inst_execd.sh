@@ -314,7 +314,7 @@ CheckHostNameResolving()
             myname=`echo $myaname | cut -f1 -d. | tr "[A-Z]" "[a-z]"`
          else
             admin_host_list=`ExecuteAsAdmin $SGE_BIN/qconf -sh | tr "[A-Z]" "[a-z]"`
-            myname=$myaname
+            myname=`echo $myaname | tr "[A-Z]" "[a-z]"`
             if [ "$default_domain" != none ]; then
                hasdot=`echo $myname|grep '\.'`
                if [ "$hasdot" = "" ]; then

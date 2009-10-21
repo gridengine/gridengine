@@ -136,6 +136,9 @@ static bool explicit_linux(dstring* result, lListElem* binding_elem);
 static bool create_binding_strategy_string_solaris(dstring* result,
    lListElem *jep, char* err_str, int err_length);
 
+/* do linear (automatic) binding on solaris */
+static bool linear_automatic_solaris(dstring* result, lListElem* binding_elem);
+
 /* do striding binding on solaris */   
 static bool striding_solaris(dstring* result, lListElem* binding_elem, 
    const bool automatic, const bool do_linear, char* err_str, int err_length);
@@ -1930,7 +1933,9 @@ lList *gdil_orig  /* JG_Type */
 #if defined(PLPA_LINUX)
 static bool create_binding_strategy_string_linux(dstring* result, lListElem *jep)
 {
-   
+   /* temporary result string with or without "env:" prefix (when environment 
+      variable for binding should be set or not) */
+   dstring tmp_result = DSTRING_INIT; 
    bool retval;
    
    /* binding strategy */
@@ -1944,25 +1949,37 @@ static bool create_binding_strategy_string_linux(dstring* result, lListElem *jep
       if ((binding_elem = lFirst(binding)) != NULL) {
 
          /* re-create the binding string (<strategy>:<parameter>:<parameter>) */
+
+         /* check if a leading "env_" or "pe_" is needed */
+         if (lGetUlong(binding_elem, BN_type) == BINDING_TYPE_ENV) {
+            /* we have just to set the environment variable SGE_BINDING for the 
+               job */
+            sge_dstring_append(result, "env_");
+
+         } else if (lGetUlong(binding_elem, BN_type) == BINDING_TYPE_PE) {
+            /* we have to attach settings to the pe_hostfile */
+            sge_dstring_append(result, "pe_");
+         }
+
          if (strcmp(lGetString(binding_elem, BN_strategy), "linear") == 0) {
             
-            retval = linear_linux(result, binding_elem, false);
+            retval = linear_linux(&tmp_result, binding_elem, false);
 
          } else if (strcmp(lGetString(binding_elem, BN_strategy), "linear_automatic") == 0) {
             
-            retval = linear_linux(result, binding_elem, true);
+            retval = linear_linux(&tmp_result, binding_elem, true);
 
          } else if (strcmp(lGetString(binding_elem, BN_strategy), "striding") == 0) {
             
-            retval = striding_linux(result, binding_elem, false); 
+            retval = striding_linux(&tmp_result, binding_elem, false); 
          
          } else if (strcmp(lGetString(binding_elem, BN_strategy), "striding_automatic") == 0) {
             
-            retval = striding_linux(result, binding_elem, true); 
+            retval = striding_linux(&tmp_result, binding_elem, true); 
             
          } else if (strcmp(lGetString(binding_elem, BN_strategy), "explicit") == 0) {
 
-            retval = explicit_linux(result, binding_elem);
+            retval = explicit_linux(&tmp_result, binding_elem);
 
          } else {
             
@@ -1973,6 +1990,9 @@ static bool create_binding_strategy_string_linux(dstring* result, lListElem *jep
         /* processor_binding_strategy = lGetString(binding_elem, BN_strategy); */
         if (retval == false) {
            INFO((SGE_EVENT, "Couldn't determine core binding string for config file!"));
+        } else {
+           /* append result to the prefix */
+           sge_dstring_append_dstring(result, &tmp_result);
         }
       } else {
          INFO((SGE_EVENT, "ERROR: No CULL sublist for binding found!"));
@@ -1984,12 +2004,14 @@ static bool create_binding_strategy_string_linux(dstring* result, lListElem *jep
    }
 
    if (retval == false) {
+      sge_dstring_clear(result);
       sge_dstring_append(result, "NULL");
    }
 
+   sge_dstring_free(&tmp_result);
+
    DRETURN(retval);
 }
-
 
 static bool linear_linux(dstring* result, lListElem* binding_elem, 
                            const bool automatic)
@@ -2015,29 +2037,73 @@ static bool linear_linux(dstring* result, lListElem* binding_elem,
       first_core   = (int) lGetUlong(binding_elem, BN_parameter_core_offset);
    }
 
-   /* DG TODO use other algorithm */
    /* check if the resources are free and binding could be performed from 
       shephered */
-   if (get_striding_first_socket_first_core_and_account(amount, 1, first_socket, 
+   
+   if (automatic == true) {   
+      /* user has not specified where to begin, this has now beeing 
+         figured out automatically */
+      int* list_of_sockets = NULL;
+      int samount          = 0;
+      int* list_of_cores   = NULL;
+      int camount          = 0;
+
+      if (get_linear_automatic_socket_core_list_and_account(amount, 
+            &list_of_sockets, &samount, &list_of_cores, &camount, 
+            &topo_job, &topo_job_length)) {
+         
+         int cn;
+         /* could get the socket,core pairs to bind to   */
+         /* tell it to shepherd like an explicit request */ 
+         sge_dstring_sprintf(result, "%s:", 
+               "explicit");
+         /* add the list of socket,core pairs */
+         for (cn = 0; cn < camount; cn++) {
+            dstring pair = DSTRING_INIT;
+            sge_dstring_sprintf(&pair, "%d,%d:", list_of_sockets[cn], 
+                                    list_of_cores[cn]); 
+            sge_dstring_append_dstring(result, &pair);
+            sge_dstring_free(&pair);
+         }
+         
+         /* finally add the topology */
+         sge_dstring_append(result, topo_job);
+
+         retval = true;
+
+      } else {
+         /* there was a problem allocating the cores */
+         DPRINTF(("ERROR: Couldn't allocate cores with respect to binding request!"));
+         sge_dstring_append(result, "NULL");
+         retval = false;
+      }
+
+   } else {    
+      /* we have already a socket,core tuple to start with, therefore we 
+         use this one if possible or do not do any binding */
+      if (get_striding_first_socket_first_core_and_account(amount, 1, first_socket, 
             first_core, automatic, &used_first_socket, &used_first_core, &topo_job, 
             &topo_job_length)) {
       
-      /* only "linear" is allowed in config file, because execd has to figure 
-         out first <socket,core> to bind to (not shepherd - because of race 
-         conditions) */
-      sge_dstring_sprintf(result, "%s:%d:%d,%d:%s", 
-            "linear", 
-            amount, 
-            automatic?used_first_socket:first_socket, 
-            automatic?used_first_core:first_core, 
-            topo_job);
-      retval = true;
-   } else { 
-      /* couldn't allocate cores */ 
-      DPRINTF(("ERROR: Couldn't allocate cores with respect to binding request!"));
-      sge_dstring_append(result, "NULL");
-      retval = false;
-   }
+         /* only "linear" is allowed in config file, because execd has to figure 
+            out first <socket,core> to bind to (not shepherd - because of race 
+            conditions) */
+         sge_dstring_sprintf(result, "%s:%d:%d,%d:%s", 
+               "linear", 
+               amount, 
+               first_socket, 
+               first_core, 
+               topo_job);
+
+         retval = true;
+
+      } else { 
+         /* couldn't allocate cores */ 
+         DPRINTF(("ERROR: Couldn't allocate cores with respect to binding request!"));
+         sge_dstring_append(result, "NULL");
+         retval = false;
+      }
+   }   
    
    /* free topology string */
    if (topo_job != NULL)
@@ -2193,8 +2259,7 @@ static bool create_binding_strategy_string_solaris(dstring* result,
          
       } else if(strcmp(lGetString(binding_elem, BN_strategy), "linear_automatic") == 0) {
          
-         /* DG TODO use a different algorithm! */
-         retval = striding_solaris(result, binding_elem, true, true, err_str, err_length);
+         retval = linear_automatic_solaris(result, binding_elem);
          
       } else if (strcmp(lGetString(binding_elem, BN_strategy), "linear") == 0) {
 
@@ -2226,6 +2291,78 @@ static bool create_binding_strategy_string_solaris(dstring* result,
    DRETURN(retval);
 }
 
+
+static bool linear_automatic_solaris(dstring* result, lListElem* binding_elem)
+{
+   int amount;  /* amount of cores to bind to       */
+   int type;    /* type of binding (set|env|pe)     */
+
+   /* the <socket, core> tuples on which the job have to be bound to */
+   int* list_of_sockets    = NULL;
+   int* list_of_cores      = NULL;
+   int samount             = 0;
+   int camount             = 0;
+
+   /* topology used by job */
+   char* topo_by_job       = NULL;
+   int topo_by_job_length  = 0;
+
+   /* return value */
+   bool retval;
+
+   DENTER(TOP_LAYER, "linear_automatic_solaris");
+
+   /* get mandatory parameters of -binding linear */
+   amount = (int) lGetUlong(binding_elem, BN_parameter_n);
+   type   = (int) lGetUlong(binding_elem, BN_type);
+
+   /* get <socket,core> tuples */
+   if (get_linear_automatic_socket_core_list_and_account(amount, 
+         &list_of_sockets, &samount, &list_of_cores, &camount, 
+         &topo_by_job, &topo_by_job_length)) {
+      
+      int processor_set = 0;
+
+      /* 4. create processor set */
+      sge_switch2start_user();
+      /* create the processor set with the given list of socket and cores */
+      processor_set = create_processor_set_explicit_solaris(list_of_sockets, 
+                         samount, list_of_cores, camount);
+      sge_switch2admin_user();       
+      
+      /* 5. delete accounting when creating of processor set was not successful */
+      if (processor_set < 0) {
+               
+         /* free the cores occupied by this job because we couldn't generate processor set */
+         free_topology(topo_by_job, topo_by_job_length);
+
+         DPRINTF(("Couldn't create processor set"));
+
+         retval = false;
+      } else {
+         /* 6. write processor set id into "binding" in config file */
+
+         /* record processor set id and the topology which the job consumes */
+         if (type == BINDING_TYPE_ENV) {
+            sge_dstring_sprintf(result, "env_psrset:%d:%s", -1, topo_by_job);
+         } else if (type == BINDING_TYPE_PE) {
+            sge_dstring_sprintf(result, "pe_psrset:%d:%s", -1, topo_by_job);
+         } else {
+            sge_dstring_sprintf(result, "psrset:%d:%s", processor_set, topo_by_job);
+         }
+
+         retval = true;
+      }
+
+   }
+   
+   FREE(list_of_cores);
+   FREE(list_of_sockets);
+   FREE(topo_by_job);
+
+   DRETURN(retval);
+}
+
 static bool striding_solaris(dstring* result, lListElem* binding_elem, const bool automatic, 
    const bool do_linear, char* err_str, int err_length)
 {
@@ -2235,16 +2372,21 @@ static bool striding_solaris(dstring* result, lListElem* binding_elem, const boo
    int used_first_socket = 0;
    int used_first_core = 0;
    int step_size;
+   int amount;
+   int type;
 
    /* topology consumed by job */
-   char* topo_by_job = NULL;
-   int topo_by_job_length = 0;
+   char* topo_by_job       = NULL;
+   int topo_by_job_length  = 0;
 
    /* return value */
    bool retval;
+   
+   DENTER(TOP_LAYER, "striding_solaris");
 
    /* get mandatory parameters of -binding striding */
-   int amount = (int) lGetUlong(binding_elem, BN_parameter_n);
+   amount = (int) lGetUlong(binding_elem, BN_parameter_n);
+   type   = (int) lGetUlong(binding_elem, BN_type);
 
    if (do_linear == false) {
       step_size = (int) lGetUlong(binding_elem, BN_parameter_striding_step_size);
@@ -2253,7 +2395,6 @@ static bool striding_solaris(dstring* result, lListElem* binding_elem, const boo
       step_size = 1;
    }
 
-   DENTER(TOP_LAYER, "striding_solaris");
 
    /* in automatic mode the socket,core pair which is bound first is determined 
       automatically */
@@ -2268,8 +2409,8 @@ static bool striding_solaris(dstring* result, lListElem* binding_elem, const boo
 
    /* try to allocate first core and first socket */
    if (get_striding_first_socket_first_core_and_account(amount, step_size, 
-      first_socket, first_core, automatic, &used_first_socket, &used_first_core, 
-      &topo_by_job, &topo_by_job_length)) {
+         first_socket, first_core, automatic, &used_first_socket, &used_first_core, 
+         &topo_by_job, &topo_by_job_length)) {
             
       int processor_set = 0;
       
@@ -2285,6 +2426,7 @@ static bool striding_solaris(dstring* result, lListElem* binding_elem, const boo
       DPRINTF(("Found a socket and a core as starting point for binding"));
             
       /* 4. create processor set */
+
       sge_switch2start_user();
 
       processor_set = create_processor_set_striding_solaris(used_first_socket, 
@@ -2304,14 +2446,20 @@ static bool striding_solaris(dstring* result, lListElem* binding_elem, const boo
 
          retval = false;
       } else {
-        /* 6. write processor set id into "binding" in config file */
+         /* 6. write processor set id into "binding" in config file */
 
          snprintf(err_str, err_length, "binding: created processor set");
 
-         /* record processor set id and the topology which the job consumes */
-         sge_dstring_sprintf(result, "psrset:%d:%s:", processor_set, topo_by_job);
-                
          retval = true;
+         /* record processor set id and the topology which the job consumes */
+         if (type == BINDING_TYPE_ENV) {
+            sge_dstring_sprintf(result, "env_psrset:%d:%s", -1, topo_by_job);
+         } else if (type == BINDING_TYPE_PE) {
+            sge_dstring_sprintf(result, "pe_psrset:%d:%s", -1, topo_by_job);
+         } else {
+            sge_dstring_sprintf(result, "psrset:%d:%s", processor_set, topo_by_job);
+         }
+
       }
 
    } else {
@@ -2321,6 +2469,8 @@ static bool striding_solaris(dstring* result, lListElem* binding_elem, const boo
       DPRINTF(("Didn't find socket,core to start binding with"));
       retval = false; 
    }
+
+   FREE(topo_by_job);
 
    DRETURN(retval);
 }
@@ -2351,7 +2501,7 @@ static bool explicit_solaris(dstring* result, lListElem* binding_elem, char* err
    INFO((SGE_EVENT, "request: %s", request));
 
    if (binding_explicit_exctract_sockets_cores(request, &socket_list, 
-      &socket_list_length, &core_list, &core_list_length) == false) {
+            &socket_list_length, &core_list, &core_list_length) == false) {
       /* problems while parsing the binding request */ 
       snprintf(err_str, err_length, "binding: couldn't parse explicit parameter");
       INFO((SGE_EVENT, "Couldn't parse binding explicit parameter")); 
@@ -2384,7 +2534,7 @@ static bool explicit_solaris(dstring* result, lListElem* binding_elem, char* err
             /* write processor set id into "binding" in config file */
             snprintf(err_str, err_length, "binding: created processor set");
             /* record processor set id and the topology which the job consumes */
-            sge_dstring_sprintf(result, "psrset:%d:%s:", processor_set, 
+            sge_dstring_sprintf(result, "psrset:%d:%s", processor_set, 
                topo_by_job);
             retval = true;
          }

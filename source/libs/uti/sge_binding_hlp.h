@@ -59,6 +59,8 @@ bool parse_binding_parameter_string(const char* parameter, binding_type_t* type,
       dstring* strategy, int* amount, int* stepsize, int* firstsocket, 
       int* firstcore, dstring* socketcorelist, dstring* error);
 
+int binding_parse_type(const char* parameter);
+
 int binding_linear_parse_amount(const char* parameter);
 int binding_linear_parse_core_offset(const char* parameter);
 int binding_linear_parse_socket_offset(const char* parameter);
@@ -77,15 +79,12 @@ bool binding_explicit_has_correct_syntax(const char* parameter);
 
 bool _has_topology_information(void);
 bool _has_core_binding(dstring* error);
-void* _get_plpa_handle(dstring* error);
-void _close_plpa_handle(void);
 bool get_topology_linux(char** topology, int* length);
 int get_processor_id(int socket_number, int core_number);
 int get_amount_of_cores(int socket_number);
 int get_total_amount_of_cores(void);
 int get_amount_of_sockets(void); 
 bool has_core_binding(void);
-void* get_plpa_handle(void);
 
 #endif
 

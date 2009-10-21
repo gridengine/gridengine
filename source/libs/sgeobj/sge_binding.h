@@ -91,6 +91,10 @@ bool binding_explicit_check_and_account(const int* list_of_sockets, const int sa
    const int* list_of_cores, const int score, char** topo_used_by_job, 
    int* topo_used_by_job_length);
 
+bool get_linear_automatic_socket_core_list_and_account(const int amount, 
+      int** list_of_sockets, int* samount, int** list_of_cores, int* camount, 
+      char** topo_by_job, int* topo_by_job_length);
+
 /* functions related to get load values for execd (see load_avg.c) */
 /* get the amount of cores available on the execution host */ 
 int getExecdAmountOfCores(void);

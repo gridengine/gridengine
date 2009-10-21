@@ -2071,8 +2071,13 @@ static void clean_up_binding(char* binding)
       /* we are on Solaris and a processor set was created -> deaccount it and delete it */
       int processor_set_id = -1;
 
-      /* parse the psrset number right after "psrset:" */
-      if (sge_strtok(binding, ":") != NULL) {
+      /* check if just the enviroment variable SGE_BINDING was set 
+         or the pe_hostfile was written */
+      if ((strstr(binding,"env_") != NULL) || (strstr(binding,"pe_") != NULL)) {
+         /* no processor set was created */
+         DPRINTF(("Environment variable or pe_hostfile was set for binding"));
+      } else if (sge_strtok(binding, ":") != NULL) {
+         /* parse the psrset number right after "psrset:" */
          /* parse the rest of the line */
          char* pset_id;
          /* topology used by job */ 
@@ -2086,6 +2091,7 @@ static void clean_up_binding(char* binding)
                processor set can be created because it is not allowed 
                from OS) */
             if (processor_set_id != -1) {
+
                /* must be root in order to delete processor set */
                sge_switch2start_user();
             
@@ -2097,15 +2103,17 @@ static void clean_up_binding(char* binding)
                /* switch back TODO DG check if needed*/
                sge_switch2admin_user();
 
-               /* de-account the resources used from job */
+               /* release the resources used by the job */
                if ((topo = sge_strtok(NULL, ":")) != NULL) {
                   /* update the string which represents the currently used cores 
                      on execution daemon host */
                   free_topology(topo, -1);
+               } else {
+                  WARNING((SGE_EVENT, "No resource string found in config entry binding"));
                }
             } else {
-               /* this job was filling up to cores on the host and 
-                  therefore is not bound */ 
+               /* processor set id was -1 -> we don't have to delete it */
+               DPRINTF(("No processor set was generated for this job!"));
             }
          }
       }
@@ -2116,20 +2124,25 @@ static void clean_up_binding(char* binding)
 #if defined(PLPA_LINUX)
    /* on Linux the used topology can be found just after the last ":" */
    /* -> find the used topology and release it */
-   char* topo = NULL;
+   
+   if ((strstr(binding, "env_") != NULL) || (strstr(binding, "pe_") != NULL)) {
+      
+      /* no processor set was created */
+      DPRINTF(("Environment variable or pe_hostfile was set for binding"));
 
-   if (strstr(binding, ":") != NULL) {
+   } else if (strstr(binding, ":") != NULL) {
       /* there was an order from execd to shepherd for binding */
       /* seach the string after the last ":" -> this 
          is the topology used by the job */
+      char* topo = NULL;   
       topo = strrchr(binding, ':');
       free_topology(++topo, -1);
       INFO((SGE_EVENT, "topology used by job freed"));
    } else {
       /* couldn't find valid topology string in config file */
-      WARNING((SGE_EVENT, "Couldn't find valid topology string in config file"));
+      WARNING((SGE_EVENT, "No resource string found in config entry binding"));
    }
-   
+
 #endif
 
    DRETURN_VOID;

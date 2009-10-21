@@ -162,11 +162,12 @@ sub handle_command_param {
          $param{$key} = { %h };
       } else {
          # not list command
-         if ($val =~ /,/) {
+         if ($key eq 'A' || $val !~ /,/) {
+            # the -A option can have any content, also a comma
+            $param{$key} = $val;
+         } else {
             # oops, but this looks like a list option (contains a comma)
             jsv_send_error("JSV script got PARAM command for non-list option '$key' but the value '$val' looks like a list");
-         } else {
-            $param{$key} = $val;
          }
       }
    } else {

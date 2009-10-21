@@ -8,6 +8,12 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 -----------------+------------+-------------------------------------------------
+MP-2009-10-21-0: Bugfix:      jsv.pm does not recognize -A option when used 
+                              with qsub
+                 Bugster:     6883285
+                 Issue:       3151
+                 Review:      TB
+
 DG-2009-10-21-1: Cleanup:     - consistent use of binding_type 
                               - memory leak 
                  Review:      EB 

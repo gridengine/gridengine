@@ -10,7 +10,7 @@
 -----------------+------------+-------------------------------------------------
 DG-2009-10-21-1: Cleanup:     - consistent use of binding_type 
                               - memory leak 
-                 Review:      DG
+                 Review:      EB 
 
 SH-2009-10-21-0: Bufix:       Make aimk -no-plpa work again
                  Belongs to:  DG-2009-10-21-0

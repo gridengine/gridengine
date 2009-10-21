@@ -691,14 +691,41 @@ int binding_linear_parse_core_offset(const char* parameter)
    return -1;
 }
 
-int binding_parse_type(const char* parameter)
+/****** sge_binding_hlp/binding_parse_type() ***********************************
+*  NAME
+*     binding_parse_type() -- Parses binding type out of binding string. 
+*
+*  SYNOPSIS
+*     binding_type_t binding_parse_type(const char* parameter) 
+*
+*  FUNCTION
+*     The execution daemon communicates with the shepherd with the config 
+*     file. This function parses the type of binding out of the specific 
+*     binding string from the config file. In case of binding type "set" 
+*     there is no special prefix in this string. In case of "environment" 
+*     the "env_" prefix in within the string. In case of setting the 
+*     rankfile the "pe_" prefix can be found in this string.
+*
+*  INPUTS
+*     const char* parameter - The binding string from the config file. 
+*
+*  RESULT
+*     binding_type_t - The type of binding. 
+*
+*  NOTES
+*     MT-NOTE: binding_parse_type() is MT safe 
+*
+*  SEE ALSO
+*     ???/???
+*******************************************************************************/
+binding_type_t binding_parse_type(const char* parameter)
 {
-   int type = 0;
+   binding_type_t type = BINDING_TYPE_SET;
    
    if (strstr(parameter, "env_") != NULL) {
-      type = 1;
+      type = BINDING_TYPE_ENV;
    } else if (strstr(parameter, "pe_") != NULL) {
-      type = 2;
+      type = BINDING_TYPE_PE;
    }
 
    return type;
@@ -790,14 +817,15 @@ bool binding_explicit_has_correct_syntax(const char* parameter)
 *  FUNCTION
 *     Extracts <socket>,<core> pairs specified in a string. 
 *     The string has the format "explicit:<socket>,<core>[:<socket>,<core>]". 
-*     
 *
 *  INPUTS
-*     const char* parameter - pointer to the string  
-*     int** list_of_sockets - out: array with the socket numbers
-*     int* samount          - out: length of the socket number array 
-*     int** list_of_cores   - out: array with the core numbers 
-*     int* camount          - out: length of the core number array 
+*     const char* parameter - pointer to the string
+*
+*  OUTPUTS
+*     int** list_of_sockets - array with the socket numbers
+*     int* samount          - length of the socket number array 
+*     int** list_of_cores   - array with the core numbers 
+*     int* camount          - length of the core number array 
 *
 *  RESULT
 *     bool - true in case of success otherwise false

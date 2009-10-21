@@ -59,7 +59,7 @@ bool parse_binding_parameter_string(const char* parameter, binding_type_t* type,
       dstring* strategy, int* amount, int* stepsize, int* firstsocket, 
       int* firstcore, dstring* socketcorelist, dstring* error);
 
-int binding_parse_type(const char* parameter);
+binding_type_t binding_parse_type(const char* parameter);
 
 int binding_linear_parse_amount(const char* parameter);
 int binding_linear_parse_core_offset(const char* parameter);

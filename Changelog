@@ -8,6 +8,10 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 -----------------+------------+-------------------------------------------------
+DG-2009-10-21-1: Cleanup:     - consistent use of binding_type 
+                              - memory leak 
+                 Review:      DG
+
 SH-2009-10-21-0: Bufix:       Make aimk -no-plpa work again
                  Belongs to:  DG-2009-10-21-0
                  Review:      DG
@@ -20,7 +24,7 @@ DG-2009-10-21-0: Enhancem.:   - PLPA is now a static lib
 DG-2009-10-20-1: Cleanup:     Broken build on darwin fixed.
                  Review:      EB 
 
-DG-2009-10-20-0: Enhancem.:    Job2Core binding spec added. 
+DG-2009-10-20-0: Enhancem.:   Job2Core binding spec added. 
                  Review:      EB
 
 LP-2009-10-20-1: Bugfix:      Shadowd might be started on host which hostname 

@@ -3493,6 +3493,11 @@ binding_parse_from_string(lListElem *this_elem, lList **answer_list, dstring *st
             lSetString(this_elem, BN_parameter_explicit, sge_dstring_get_string(&socketcorelist));
          }
       }
+
+      sge_dstring_free(&strategy);
+      sge_dstring_free(&socketcorelist);
+      sge_dstring_free(&error);
    }
+
    DRETURN(ret);
 }

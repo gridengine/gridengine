@@ -132,7 +132,8 @@ static int get_chip_id_from_logical_socket_number_solaris(const int** matrix,
    const int length, const int logical_socket_number); 
 
 static bool binding_set_linear_solaris(const int first_socket, const int first_core, 
-   const int amount_of_cores, const int step_size, psetid_t* psetid);
+   const int amount_of_cores, const int step_size, psetid_t* psetid, 
+   const binding_type_t type, char** env);
 
 /* processor set related */
 /* DG TODO do not const  */
@@ -145,6 +146,9 @@ static bool bind_current_process_to_pset(psetid_t pset_id);
 
 /* frees the memory allocated by the topology matrix */
 static void free_matrix(int** matrix, const int length);
+
+static void create_environment_string_solaris(const processorid_t* pid_list, 
+               const int pid_list_size, char** env); 
 
 #endif
 
@@ -332,55 +336,6 @@ static bool is_starting_point(const char* topo, const int length, const int pos,
 static bool go_to_next_core(const char* topology, const int pos, int* new_pos); 
 #endif
 
-/* here threads could be introduced */ 
-
-/****** sge_binding/binding_set_linear() ***************************************
-*  NAME
-*     binding_set_linear() -- ??? 
-*
-*  SYNOPSIS
-*     bool binding_set_linear(int first_socket, int first_core, int 
-*     amount_of_cores, int offset) 
-*
-*  FUNCTION
-*     ??? 
-*
-*  INPUTS
-*     int first_socket    - ??? 
-*     int first_core      - ??? 
-*     int amount_of_cores - ??? 
-*     int offset          - ??? 
-*
-*  RESULT
-*     bool - 
-*
-*  NOTES
-*     MT-NOTE: binding_set_linear() is not MT safe 
-*
-*  SEE ALSO
-*     ???/???
-*******************************************************************************/
-bool binding_set_linear(int first_socket, int first_core, int amount_of_cores, int offset) 
-{
-  
-/* above is just needed in order to get it compiled without deleting code */
-#if defined(SOLARISAMD64) || defined(SOLARIS86)
-   /* the processor set id which we need in order to delete it when the job 
-      does finish */
-   psetid_t psetid;
-   bool success = binding_set_linear_solaris(first_socket, first_core, 
-      amount_of_cores, 1, &psetid);
-
-   /* TODO DG save the pset id somewhere in order to delete it */ 
-   /* make it a global variable                                */ 
-   /* WRITE IT TO BINDING FILE IN active_jobs DIRECTORY        */
-
-   return success;
-#else 
-   /* other architectures are currently not supported */ 
-   return false;
-#endif
-}
 
 #if defined(SOLARISAMD64) || defined(SOLARIS86)
 /****** sge_binding/binding_set_linear_solaris() *******************************
@@ -424,7 +379,8 @@ bool binding_set_linear(int first_socket, int first_core, int amount_of_cores, i
 *     ???/???
 *******************************************************************************/
 static bool binding_set_linear_solaris(const int first_socket, const int first_core, 
-   const int amount_of_cores, const int step_size, psetid_t* psetid)
+   const int amount_of_cores, const int step_size, psetid_t* psetid, 
+   const binding_type_t type, char** env)
 {
    /* the topology matrix */
    int** matrix = NULL;
@@ -565,18 +521,28 @@ static bool binding_set_linear_solaris(const int first_socket, const int first_c
       pid_list_length += tmp_pid_list_length;
    }
 
-   /* finally bind the current process to the global pid_list and get the
-      processor set id */
-   if (create_pset(pid_list, pid_list_length, psetid) != true) {
-      retval = false;
-   } else if (bind_current_process_to_pset(*psetid)) {
-      /* current process is bound to psetid and psetid is output parameter */
-      retval = true;
+     /* check what we've todo with the processor id list: 
+      - ENV -> set environment variable 
+      - PE  -> DG TODO
+      - SET -> create the processor set */
+   if (type == BINDING_TYPE_ENV) {
+      /* just set the environment variable */
+      create_environment_string_solaris(pid_list, pid_list_length, env);
+      *psetid = 0;
    } else {
-      /* binding was not successful */
-      retval = false;
+      /* finally bind the current process to the global pid_list and get the
+         processor set id */
+      if (create_pset(pid_list, pid_list_length, psetid) != true) {
+         retval = false;
+      } else if (bind_current_process_to_pset(*psetid)) {
+         /* current process is bound to psetid and psetid is output parameter */
+         retval = true;
+      } else {
+         /* binding was not successful */
+         retval = false;
+      }
    }
-   
+
    /* free memory in any case */ 
    free_matrix(matrix, mlength);
    free(cores);
@@ -587,7 +553,8 @@ static bool binding_set_linear_solaris(const int first_socket, const int first_c
 
 
 int create_processor_set_explicit_solaris(const int* list_of_sockets,
-   const int samount, const int* list_of_cores, const int camount)
+   const int samount, const int* list_of_cores, const int camount, 
+   const binding_type_t type, char** env)
 {
    /* tmp variables */
    int i, j, chip_id, pr_id;
@@ -649,12 +616,22 @@ int create_processor_set_explicit_solaris(const int* list_of_sockets,
 
    }
 
-   /* create processor set */
-   if (create_pset(pid_list, samount, &psetid) != true) {
-      /* error while doing this... */
-      free_matrix(matrix, length);
-      return -1;
-   }
+   /* check what we've todo with the processor id list: 
+      - ENV -> set environment variable 
+      - PE  -> DG TODO
+      - SET -> create the processor set */
+   if (type == BINDING_TYPE_ENV) {
+      /* just set the environment variable */
+      create_environment_string_solaris(pid_list, pid_list_length, env);
+      psetid = 0;
+   } else {
+      /* create processor set */
+      if (create_pset(pid_list, samount, &psetid) != true) {
+         /* error while doing this... */
+         free_matrix(matrix, length);
+         return -1;
+      }
+   }   
 
    /* free topology matrix */ 
    free_matrix(matrix, length);
@@ -662,9 +639,33 @@ int create_processor_set_explicit_solaris(const int* list_of_sockets,
    return (int) psetid;
 }
 
+static void create_environment_string_solaris(const processorid_t* pid_list, 
+               const int pid_list_size, char** environment) 
+{
+   int plc;
+   dstring proc = DSTRING_INIT;
+   dstring env  = DSTRING_INIT;
+
+   /* add all Solaris internal processor numbers */
+   for (plc = 0; plc < pid_list_size; plc++) {
+      sge_dstring_sprintf(&proc, "%d ", pid_list[plc]);
+      sge_dstring_append_dstring(&env, &proc);
+      sge_dstring_clear(&proc);
+   }
+
+   *environment = (char*) calloc((sge_dstring_strlen(&env)+1), sizeof(char));
+   if (memcpy(*environment, sge_dstring_get_string(&env), 
+                           sge_dstring_strlen(&env) * sizeof(char)) == NULL) {
+      /* error while copying */                            
+   }   
+
+   sge_dstring_free(&env);
+   sge_dstring_free(&proc);
+}
 
 int create_processor_set_striding_solaris(const int first_socket, 
-   const int first_core, const int amount, const int step_size) 
+   const int first_core, const int amount, const int step_size, 
+   const binding_type_t type, char** env) 
 {
    /* the topology matrix */
    int** matrix = NULL;
@@ -803,15 +804,25 @@ int create_processor_set_striding_solaris(const int first_socket,
       pid_list_length += tmp_pid_list_length;
    }
 
-   /* finally bind the current process to the global pid_list and get the
-      processor set id -> root rights required !!! */
-   if (create_pset(pid_list, pid_list_length, &psetid) != true) {
-      /* couldn't generate processor set */
-      retval = -6;
+   /* check what we've todo with the processor id list: 
+      - ENV -> set environment variable 
+      - PE  -> DG TODO
+      - SET -> create the processor set */
+   if (type == BINDING_TYPE_ENV) {
+      /* just set the environment variable */
+      create_environment_string_solaris(pid_list, pid_list_length, env);
+      retval = 0; /* not an error */
    } else {
-      /* return processor set */
-      retval = (int) psetid;
-   }
+      /* finally bind the current process to the global pid_list and get the
+         processor set id -> root rights required !!! */
+      if (create_pset(pid_list, pid_list_length, &psetid) != true) {
+         /* couldn't generate processor set */
+         retval = -6;
+      } else {
+         /* return processor set */
+         retval = (int) psetid;
+      }
+   }   
    
    /* free memory in any case */ 
    free_matrix(matrix, mlength);

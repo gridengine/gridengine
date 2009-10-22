@@ -134,18 +134,20 @@ static bool explicit_linux(dstring* result, lListElem* binding_elem);
 /* creates string with processor set id created here which is then written 
    to "config" file */
 static bool create_binding_strategy_string_solaris(dstring* result,
-   lListElem *jep, char* err_str, int err_length);
+   lListElem *jep, char* err_str, int err_length, char** env);
 
 /* do linear (automatic) binding on solaris */
-static bool linear_automatic_solaris(dstring* result, lListElem* binding_elem);
+static bool linear_automatic_solaris(dstring* result, lListElem* binding_elem, 
+               char** env);
 
 /* do striding binding on solaris */   
 static bool striding_solaris(dstring* result, lListElem* binding_elem, 
-   const bool automatic, const bool do_linear, char* err_str, int err_length);
+   const bool automatic, const bool do_linear, char* err_str, int err_length, 
+   char** env);
 
 /* do explicit binding on solaris */   
 static bool explicit_solaris(dstring* result, lListElem* binding_elem, 
-                              char* err_str, int err_length);
+                              char* err_str, int err_length, char** env);
 #endif 
 
 #if COMPILE_DC
@@ -328,6 +330,9 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
    
    const char* processor_binding_strategy = NULL;
    
+   /* env var reflecting SGE_BINDING if set */
+   char* sge_binding_environment = NULL;
+   
    dstring core_binding_strategy_string = DSTRING_INIT;
 
       /* retrieve the job, jatask and petask id once */
@@ -414,6 +419,40 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
          pe_slots += (int)lGetUlong(gdil_ep, JG_slots);
       }
       
+      /***************** core binding part ************************************/
+      /* binding strategy: SOLARIS -> create processor set id  
+                           LINUX   -> use setaffinity */
+#if defined(PLPA_LINUX)
+      
+      /* check, depending on the used topology, which cores are can be used 
+         in order to fulfill the selected strategy. if strategy is not 
+         applicable or in case of errors "NULL" is written to this 
+         line in the "config" file */
+            
+      create_binding_strategy_string_linux(&core_binding_strategy_string, jep);
+
+      INFO((SGE_EVENT, "core binding: %s", sge_dstring_get_string(&core_binding_strategy_string)));
+
+#elif defined(SOLARIS86) || defined(SOLARISAMD64) 
+      
+      /* try to create processor set according to binding strategy 
+         and write processor set id to "binding" element in 
+         config file */
+      {
+
+         create_binding_strategy_string_solaris(&core_binding_strategy_string, 
+                           jep, err_str, err_length, &sge_binding_environment);
+
+         /* in case SGE_BINDING environment variable has to be setup instead 
+            of creating processor sets, this have to be done here (on Linux 
+            this is done from shepherd itself) */
+         if (sge_binding_environment != NULL) {
+            INFO((SGE_EVENT, "SGE_BINDING variable set: %s", sge_binding_environment));
+         } 
+
+      }
+#endif
+
       /***************** write out sge host file ******************************/
       /* JG: TODO: create function write_pe_hostfile() */
       /* JG: TODO (254) use function sge_get_active_job.... */
@@ -538,6 +577,11 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
       var_list_set_string(&environmentList, "SHELL", pw->pw_shell);
       var_list_set_string(&environmentList, "USER", pw->pw_name);
       var_list_set_string(&environmentList, "LOGNAME", pw->pw_name);
+
+      if (sge_binding_environment != NULL) {
+         var_list_set_string(&environmentList, "SGE_BINDING", sge_binding_environment);
+         FREE(sge_binding_environment);
+      }   
 
       /*
        * Handling of script_file and JOB_NAME:
@@ -1210,26 +1254,6 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
       fprintf(fp, "processors=%s\n", sge_dstring_get_string(&range_string));
       sge_dstring_free(&range_string);
       
-      /* binding strategy: SOLARIS -> create processor set id  
-                           LINUX   -> use setaffinity */
-#if defined(PLPA_LINUX)
-      
-      /* check, depending on the used topology, which cores are can be used 
-         in order to fulfill the selected strategy. if strategy is not 
-         applicable or in case of errors "NULL" is written to this 
-         line in the "config" file */
-            
-      create_binding_strategy_string_linux(&core_binding_strategy_string, jep); 
-
-#elif defined(SOLARIS86) || defined(SOLARISAMD64) 
-      
-      /* try to create processor set according to binding strategy 
-         and write processor set id to "binding" element in 
-         config file */
-
-      create_binding_strategy_string_solaris(&core_binding_strategy_string, 
-                                                      jep, err_str, err_length);
-#endif 
       
       if (sge_dstring_get_string(&core_binding_strategy_string) == NULL) {
          processor_binding_strategy = "NULL";
@@ -2234,7 +2258,7 @@ static bool explicit_linux(dstring* result, lListElem* binding_elem)
 
 #if defined(SOLARIS86) || defined(SOLARISAMD64)
 static bool create_binding_strategy_string_solaris(dstring* result, 
-               lListElem *jep, char* err_str, int err_length)
+               lListElem *jep, char* err_str, int err_length, char** env)
 {
    
    /* 1. check cull list and check which binding strategy was requested */
@@ -2251,24 +2275,27 @@ static bool create_binding_strategy_string_solaris(dstring* result,
          
          /* try to allocate processor set according the settings and account it on 
             execution host level */
-         retval = striding_solaris(result, binding_elem, true, false, err_str, err_length);
+         retval = striding_solaris(result, binding_elem, true, false, err_str, 
+                                    err_length, env);
          
       } else if (strcmp(lGetString(binding_elem, BN_strategy), "striding") == 0) {
          
-         retval = striding_solaris(result, binding_elem, false, false, err_str, err_length);
+         retval = striding_solaris(result, binding_elem, false, false, err_str, 
+                                    err_length, env);
          
       } else if(strcmp(lGetString(binding_elem, BN_strategy), "linear_automatic") == 0) {
          
-         retval = linear_automatic_solaris(result, binding_elem);
+         retval = linear_automatic_solaris(result, binding_elem, env);
          
       } else if (strcmp(lGetString(binding_elem, BN_strategy), "linear") == 0) {
 
          /* use same algorithm than striding with stepsize 1 */
-         retval = striding_solaris(result, binding_elem, false, true, err_str, err_length);
+         retval = striding_solaris(result, binding_elem, false, true, 
+                                    err_str, err_length, env);
          
       } else if (strcmp(lGetString(binding_elem, BN_strategy), "explicit") == 0) {
          
-         retval = explicit_solaris(result, binding_elem, err_str, err_length);
+         retval = explicit_solaris(result, binding_elem, err_str, err_length, env);
 
       } else {
          /* no valid binding strategy selected */
@@ -2286,16 +2313,16 @@ static bool create_binding_strategy_string_solaris(dstring* result,
       sge_dstring_append(result, "NULL");
    }
 
-
    /* 7. shepherd have to append current process on processor set */
    DRETURN(retval);
 }
 
 
-static bool linear_automatic_solaris(dstring* result, lListElem* binding_elem)
+static bool linear_automatic_solaris(dstring* result, lListElem* binding_elem, 
+                                       char** env)
 {
    int amount;  /* amount of cores to bind to       */
-   int type;    /* type of binding (set|env|pe)     */
+   binding_type_t type;    /* type of binding (set|env|pe)     */
 
    /* the <socket, core> tuples on which the job have to be bound to */
    int* list_of_sockets    = NULL;
@@ -2314,7 +2341,7 @@ static bool linear_automatic_solaris(dstring* result, lListElem* binding_elem)
 
    /* get mandatory parameters of -binding linear */
    amount = (int) lGetUlong(binding_elem, BN_parameter_n);
-   type   = (int) lGetUlong(binding_elem, BN_type);
+   type   = (binding_type_t) lGetUlong(binding_elem, BN_type);
 
    /* get <socket,core> tuples */
    if (get_linear_automatic_socket_core_list_and_account(amount, 
@@ -2327,7 +2354,7 @@ static bool linear_automatic_solaris(dstring* result, lListElem* binding_elem)
       sge_switch2start_user();
       /* create the processor set with the given list of socket and cores */
       processor_set = create_processor_set_explicit_solaris(list_of_sockets, 
-                         samount, list_of_cores, camount);
+                         samount, list_of_cores, camount, type, env);
       sge_switch2admin_user();       
       
       /* 5. delete accounting when creating of processor set was not successful */
@@ -2364,7 +2391,7 @@ static bool linear_automatic_solaris(dstring* result, lListElem* binding_elem)
 }
 
 static bool striding_solaris(dstring* result, lListElem* binding_elem, const bool automatic, 
-   const bool do_linear, char* err_str, int err_length)
+   const bool do_linear, char* err_str, int err_length, char** env)
 {
    /* 2. check if a starting point exist */ 
    int first_socket = 0;
@@ -2373,7 +2400,7 @@ static bool striding_solaris(dstring* result, lListElem* binding_elem, const boo
    int used_first_core = 0;
    int step_size;
    int amount;
-   int type;
+   binding_type_t type;
 
    /* topology consumed by job */
    char* topo_by_job       = NULL;
@@ -2430,7 +2457,7 @@ static bool striding_solaris(dstring* result, lListElem* binding_elem, const boo
       sge_switch2start_user();
 
       processor_set = create_processor_set_striding_solaris(used_first_socket, 
-         used_first_core, amount, step_size);
+         used_first_core, amount, step_size, type, env);
           
       sge_switch2admin_user();
 
@@ -2476,7 +2503,7 @@ static bool striding_solaris(dstring* result, lListElem* binding_elem, const boo
 }
 
 static bool explicit_solaris(dstring* result, lListElem* binding_elem, char* err_str, 
-                                       int err_length)
+                                       int err_length, char** env)
 {
    /* pointer to string which contains the <socket>,<core> pairs */
    const char* request = NULL;
@@ -2491,12 +2518,15 @@ static bool explicit_solaris(dstring* result, lListElem* binding_elem, char* err
    int socket_list_length, core_list_length;
    
    int processor_set = 0;
+   binding_type_t type;
    bool retval;
 
    DENTER(TOP_LAYER, "explicit_solaris");
 
    /* get the socket and core numbers */ 
    request = (char*) lGetString(binding_elem, BN_parameter_explicit);
+   type   = (binding_type_t) lGetUlong(binding_elem, BN_type);
+   
 
    INFO((SGE_EVENT, "request: %s", request));
 
@@ -2517,7 +2547,7 @@ static bool explicit_solaris(dstring* result, lListElem* binding_elem, char* err
          sge_switch2start_user();
 
          processor_set = create_processor_set_explicit_solaris(socket_list, 
-            socket_list_length, core_list, core_list_length);
+            socket_list_length, core_list, core_list_length, type, env);
          
          sge_switch2admin_user();      
          
@@ -2531,11 +2561,19 @@ static bool explicit_solaris(dstring* result, lListElem* binding_elem, char* err
             INFO((SGE_EVENT, "Could't create processor set in order to bind job to."));
             retval = false;
          } else {
+            
+            /* record processor set id and the topology which the job consumes */
+            if (type == BINDING_TYPE_ENV) {
+               sge_dstring_sprintf(result, "env_psrset:%d:%s", -1, topo_by_job);
+            } else if (type == BINDING_TYPE_PE) {
+               sge_dstring_sprintf(result, "pe_psrset:%d:%s", -1, topo_by_job);
+            } else {
+               sge_dstring_sprintf(result, "psrset:%d:%s", processor_set, topo_by_job);
+            }
+
             /* write processor set id into "binding" in config file */
             snprintf(err_str, err_length, "binding: created processor set");
-            /* record processor set id and the topology which the job consumes */
-            sge_dstring_sprintf(result, "psrset:%d:%s", processor_set, 
-               topo_by_job);
+            
             retval = true;
          }
 

@@ -2074,8 +2074,21 @@ static void clean_up_binding(char* binding)
       /* check if just the enviroment variable SGE_BINDING was set 
          or the pe_hostfile was written */
       if ((strstr(binding,"env_") != NULL) || (strstr(binding,"pe_") != NULL)) {
+
+         char* topo;
          /* no processor set was created */
          DPRINTF(("Environment variable or pe_hostfile was set for binding"));
+         /* do not delete processor set (because it was not created) 
+            but free resources */
+         if ((sge_strtok(binding, ":") != NULL) 
+             && (sge_strtok(NULL, ":") != NULL) 
+             && (topo = sge_strtok(NULL, ":")) != NULL) {
+            
+             /* update the string which represents the currently used cores 
+                on execution daemon host */
+             free_topology(topo, -1);
+         }
+
       } else if (sge_strtok(binding, ":") != NULL) {
          /* parse the psrset number right after "psrset:" */
          /* parse the rest of the line */
@@ -2100,7 +2113,6 @@ static void clean_up_binding(char* binding)
                   INFO((SGE_EVENT, "Couldn't delete processor set"));
                }
 
-               /* switch back TODO DG check if needed*/
                sge_switch2admin_user();
 
                /* release the resources used by the job */
@@ -2125,12 +2137,7 @@ static void clean_up_binding(char* binding)
    /* on Linux the used topology can be found just after the last ":" */
    /* -> find the used topology and release it */
    
-   if ((strstr(binding, "env_") != NULL) || (strstr(binding, "pe_") != NULL)) {
-      
-      /* no processor set was created */
-      DPRINTF(("Environment variable or pe_hostfile was set for binding"));
-
-   } else if (strstr(binding, ":") != NULL) {
+   if (strstr(binding, ":") != NULL) {
       /* there was an order from execd to shepherd for binding */
       /* seach the string after the last ":" -> this 
          is the topology used by the job */

@@ -74,9 +74,6 @@ bool get_execd_topology(char** topology, int* length);
 bool get_execd_topology_in_use(char** topology);
 
 #if defined(PLPA_LINUX) || defined(SOLARISAMD64) || defined(SOLARIS86) 
-bool binding_set_linear(int first_socket, int first_core, int amount_of_cores,
-      int offset);
-
 bool binding_set_striding(int first_socket, int first_core, int amount_of_cores,
       int offset, int stepsize, char** reason);
 
@@ -133,10 +130,12 @@ void close_plpa_handle(void);
 #if defined(SOLARISAMD64) || defined(SOLARIS86)
 
 int create_processor_set_striding_solaris(const int first_socket,
-   const int first_core, const int amount, const int step_size);
+   const int first_core, const int amount, const int step_size, 
+   const binding_type_t type, char** env);
 
 int create_processor_set_explicit_solaris(const int* list_of_sockets,
-   const int samount, const int* list_of_cores, const int camount);
+   const int samount, const int* list_of_cores, const int camount,
+   const binding_type_t type, char** env);
 
 #endif
 

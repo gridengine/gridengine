@@ -194,7 +194,7 @@ int do_core_binding(void)
          } else {
             shepherd_trace("do_core_binding: issues occured - no core binding done");
          }
-      }   
+      }
 
    } else if (strstr(binding, "explicit") != NULL) {
 
@@ -225,14 +225,16 @@ int do_core_binding(void)
             } else {
                shepherd_trace("do_core_binding: explicit: no core binding done");
             }
-            /* we are freeing these arrays allocated from the 
-                  bindingExplicitExctractSocketsCores() function 
-            */      
-            FREE(sockets);
-            FREE(cores);
          }
+         /* we are freeing these arrays allocated from the 
+            bindingExplicitExctractSocketsCores() function 
+         */      
+         FREE(sockets);
+         FREE(cores);
 
       } else {
+         FREE(sockets);
+         FREE(cores);    
          shepherd_trace("do_core_binding: explicit: couldn't extract <socket>,<core> pair");
       }
 
@@ -427,99 +429,99 @@ static bool binding_set_linear_linux(int first_socket, int first_core,
 
       sge_dstring_clear(&error);
       
-         /* bitmask for processors to turn on and off */
-         plpa_cpu_set_t cpuset;
-         /* turn off all processors */
-         PLPA_CPU_ZERO(&cpuset);
+      /* bitmask for processors to turn on and off */
+      plpa_cpu_set_t cpuset;
+      /* turn off all processors */
+      PLPA_CPU_ZERO(&cpuset);
          
-         sge_dstring_free(&error);
+      sge_dstring_free(&error);
          
-         if (_has_topology_information()) {
-            /* amount of cores set in processor binding mask */ 
-            int cores_set;
-            /* next socket to use */
-            int next_socket = first_socket;
-            /* the amount of cores of the next socket */
-            int socket_amount_of_cores;
-            /* next core to use */
-            int next_core = first_core + offset;
-            /* all the processor ids selected for the mask */
-            int proc_id[amount_of_cores]; 
-            /* maximal amount of sockets on this system */
-            int max_amount_of_sockets = get_amount_of_sockets();
+      if (_has_topology_information()) {
+         /* amount of cores set in processor binding mask */ 
+         int cores_set;
+         /* next socket to use */
+         int next_socket = first_socket;
+         /* the amount of cores of the next socket */
+         int socket_amount_of_cores;
+         /* next core to use */
+         int next_core = first_core + offset;
+         /* all the processor ids selected for the mask */
+         int proc_id[amount_of_cores]; 
+         /* maximal amount of sockets on this system */
+         int max_amount_of_sockets = get_amount_of_sockets();
 
-            /* strategy: go to the first_socket and the first_core + offset and 
-               fill up socket and go to the next one. */ 
+         /* strategy: go to the first_socket and the first_core + offset and 
+            fill up socket and go to the next one. */ 
                
-            /* TODO maybe better to search for using a core exclusively? */
+         /* TODO maybe better to search for using a core exclusively? */
             
-            while (get_amount_of_cores(next_socket) <= next_core) {
-               /* TODO which kind of warning when first socket does not offer this? */
-               /* move on to next socket - could be that we have to deal only with cores 
-                  instead of <socket><core> tuples */
-               next_core -= get_amount_of_cores(next_socket); 
+         while (get_amount_of_cores(next_socket) <= next_core) {
+            /* TODO which kind of warning when first socket does not offer this? */
+            /* move on to next socket - could be that we have to deal only with cores 
+               instead of <socket><core> tuples */
+            next_core -= get_amount_of_cores(next_socket); 
+            next_socket++;
+            if (next_socket >= max_amount_of_sockets) {
+               /* we are out of sockets - we do nothing */
+               return false;
+            }
+         }  
+            
+         proc_id[0] = get_processor_id(next_socket, next_core);
+
+         /* collect the other processor ids with the strategy */
+         for (cores_set = 1; cores_set < amount_of_cores; cores_set++) {
+            next_core++;
+            /* jump to next socket when it is needed */
+            /* maybe the next socket could offer 0 cores (I can' see when, 
+               but just to be sure) */
+            while ((socket_amount_of_cores = get_amount_of_cores(next_socket)) 
+                        <= next_core) {
                next_socket++;
+               next_core = next_core - socket_amount_of_cores;
                if (next_socket >= max_amount_of_sockets) {
                   /* we are out of sockets - we do nothing */
                   return false;
                }
-            }  
-            
-            proc_id[0] = get_processor_id(next_socket, next_core);
-
-            /* collect the other processor ids with the strategy */
-            for (cores_set = 1; cores_set < amount_of_cores; cores_set++) {
-               next_core++;
-               /* jump to next socket when it is needed */
-               /* maybe the next socket could offer 0 cores (I can' see when, 
-                  but just to be sure) */
-               while ((socket_amount_of_cores = get_amount_of_cores(next_socket)) 
-                  <= next_core) {
-                  next_socket++;
-                  next_core = next_core - socket_amount_of_cores;
-                  if (next_socket >= max_amount_of_sockets) {
-                     /* we are out of sockets - we do nothing */
-                     return false;
-                  }
-               }
-               /* get processor id */
-               proc_id[cores_set] = get_processor_id(next_socket, next_core);
             }
-            
-            /* set the mask for all processor ids */
-            set_processor_binding_mask(&cpuset, proc_id, amount_of_cores);
-            
-            /* check what to do with the processor ids (set, env or pe) */
-            if (type == BINDING_TYPE_PE) {
-               
-               /* DG TODO create rankfile */
-
-            } else if (type == BINDING_TYPE_ENV) {
-               
-               /* set the environment variable */
-               /* DG TODO this does not show up in "environment" file */
-               if (create_binding_env_linux(proc_id, amount_of_cores) == true) {
-                  shepherd_trace("binding_set_linear_linux: SGE_BINDING env var created");
-               } else {
-                  shepherd_trace("binding_set_linear_linux: problems while creating SGE_BINDING env");
-               }
-               
-            } else {
-
-               /* bind SET process to mask */ 
-               if (bind_process_to_mask((pid_t) 0, cpuset) == false) {
-                  /* there was an error while binding */ 
-                  return false;
-               }
-            }
-
-         } else {
-            
-            /* TODO DG strategy without topology information but with 
-               working library? */
-            shepherd_trace("binding_set_linear_linux: no information about topology");
-            return false;
+            /* get processor id */
+            proc_id[cores_set] = get_processor_id(next_socket, next_core);
          }
+            
+         /* set the mask for all processor ids */
+         set_processor_binding_mask(&cpuset, proc_id, amount_of_cores);
+            
+         /* check what to do with the processor ids (set, env or pe) */
+         if (type == BINDING_TYPE_PE) {
+               
+            /* DG TODO create rankfile */
+
+         } else if (type == BINDING_TYPE_ENV) {
+               
+            /* set the environment variable                    */
+            /* this does not show up in "environment" file !!! */
+            if (create_binding_env_linux(proc_id, amount_of_cores) == true) {
+               shepherd_trace("binding_set_linear_linux: SGE_BINDING env var created");
+            } else {
+               shepherd_trace("binding_set_linear_linux: problems while creating SGE_BINDING env");
+            }
+               
+         } else {
+
+             /* bind SET process to mask */ 
+            if (bind_process_to_mask((pid_t) 0, cpuset) == false) {
+               /* there was an error while binding */ 
+               return false;
+            }
+         }
+
+      } else {
+            
+         /* TODO DG strategy without topology information but with 
+            working library? */
+         shepherd_trace("binding_set_linear_linux: no information about topology");
+         return false;
+      }
          
 
    } else {
@@ -944,7 +946,8 @@ bool create_binding_env_linux(const int* proc_id, const int amount)
 
    for (i = 0; i < amount; i++) {
       sge_dstring_clear(&proc);
-      sge_dstring_sprintf(&proc, " %d", proc_id[i]);
+      /* DG TODO env ends with whitespace char */
+      sge_dstring_sprintf(&proc, "%d ", proc_id[i]);
       sge_dstring_append_dstring(&sge_binding, &proc);
    }
 

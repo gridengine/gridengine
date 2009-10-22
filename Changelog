@@ -8,6 +8,9 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 -----------------+------------+-------------------------------------------------
+ZG-2009-10-22-0: Bugfix:      gui-installer: fixed automated installation support
+                 Review:      LP
+
 MP-2009-10-21-0: Bugfix:      jsv.pm does not recognize -A option when used 
                               with qsub
                  Bugster:     6883285

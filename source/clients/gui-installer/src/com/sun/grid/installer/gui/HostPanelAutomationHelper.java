@@ -149,19 +149,21 @@ public class HostPanelAutomationHelper implements PanelAutomation {
                 allHosts.addAll(hostsPart);
             } catch (IllegalArgumentException e) {
                 Debug.error("Failed to load host instance from automated installation config file! " + e);
+                Debug.trace("Terminating the installation!");
                 return false;
             }
         }
 
         HostPanel hostPanel = new HostPanel(null, (InstallData) idata);
         hostPanel.addThreadPoolListener(new ThreadPoolEventNotifier());
-
+            
         // Panel activate
         try {
             Method method = HostPanel.class.getMethod("panelActivate", (Class[]) null);
             method.invoke(hostPanel, (Object[]) null);
         } catch (Exception e) {
             Debug.error("Failed to call method 'panelActivate'! " + e);
+            Debug.trace("Terminating the installation!");
             return false;
         }
 
@@ -178,6 +180,8 @@ public class HostPanelAutomationHelper implements PanelAutomation {
         }
         if (!failedHosts.equals("")) {
             Debug.error("Not all of the given hosts are reachable: " + failedHosts);
+            Debug.trace("Terminating the installation!");
+            return false;
         }
         failedHosts = "";
 
@@ -188,17 +192,26 @@ public class HostPanelAutomationHelper implements PanelAutomation {
             method.invoke(hostPanel, false, true);
         } catch (Exception e) {
             Debug.error("Failed to call method 'validateHostsAndInstall'! " + e);
+            Debug.trace("Terminating the installation!");
             return false;
         }
+
         waitForTPFinished(allHosts.size() * Util.DEF_RESOLVE_TIMEOUT);
-        HostList reachableList = ((HostTable)tables.get(1)).getHostList();
-        for (Host host : reachableList) {
+        
+        HostList reachableHostList = ((HostTable)tables.get(1)).getHostList();
+        // The switchToInstallModeAndInstall method expects List<Host> arg
+        List<Host> reachableList = new ArrayList<Host>(reachableHostList.size());
+        for (Host host : reachableHostList) {
             if (host.getState() != Host.State.REACHABLE) {
-                failedHosts += host.getHostname() + "(" + host.getState() + ") ";
+                Host.State state = host.getState();
+                failedHosts += host.getHostname() + "(Warning: " + state + " - Tip: " + state.getTooltip() + ") ";
+            } else {
+                reachableList.add(host);
             }
         }
         if (!failedHosts.equals("")) {
             Debug.error("Some of the hosts failed during the validation: " + failedHosts);
+            Debug.trace("Terminating the installation!");
             return false;
         }
 
@@ -209,6 +222,7 @@ public class HostPanelAutomationHelper implements PanelAutomation {
             method.invoke(hostPanel, reachableList);
         } catch (Exception e) {
             Debug.error("Failed to call method 'switchToInstallModeAndInstall'! " + e);
+            Debug.trace("Terminating the installation!");
             return false;
         }
         waitForTPFinished(allHosts.size() * Util.DEF_INSTALL_TIMEOUT);
@@ -221,9 +235,11 @@ public class HostPanelAutomationHelper implements PanelAutomation {
         }
         if (!failedHosts.equals("")) {
             Debug.error("Some of the hosts failed during the installation: " + failedHosts);
+            Debug.trace("Installation failed!");
             return false;
         }
 
+        Debug.trace("Installation succeeded!");
         return true;
     }
 
@@ -277,11 +293,9 @@ public class HostPanelAutomationHelper implements PanelAutomation {
     private void waitFor(Wait waitForObject, long maxWaitTime) {
         synchronized (waitForObject) {
 //            while (!waitForObject.ready) {
-            try {
-                waitForObject.wait(maxWaitTime);
-                System.out.println("''''AWAKE");
-            } catch (InterruptedException ex) {
-            }
+                try {
+                    waitForObject.wait(maxWaitTime);
+                } catch (InterruptedException ex) {}
 //            }
 
             waitForObject.ready = false;
@@ -299,13 +313,13 @@ public class HostPanelAutomationHelper implements PanelAutomation {
 
             if (threadPoolEvent.getType() == ThreadPoolEvent.EVENT_THREAD_POOL_STARTED) {
                 waitForObject = STARTED;
-                System.out.println("!!!!STARTED");
+                //System.out.println("!!!!STARTED");
             } else if (threadPoolEvent.getType() == ThreadPoolEvent.EVENT_THREAD_POOL_UPDATED) {
                 waitForObject = UPDATED;
-                System.out.println("!!!!UPDATED");
+                //System.out.println("!!!!UPDATED");
             } else if (threadPoolEvent.getType() == ThreadPoolEvent.EVENT_THREAD_POOL_FINISHED) {
                 waitForObject = FINISHED;
-                System.out.println("!!!!FINISHED");
+                //System.out.println("!!!!FINISHED");
             }
 
             // Notify the appropriate object

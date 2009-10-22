@@ -74,11 +74,13 @@ public abstract class ActionPanel extends IzPanel implements Config, GUIListener
      * @param idata The {@link InstallData}
      */
     public ActionPanel(InstallerFrame parent, InstallData idata) {
-        super(parent, idata, new IzPanelLayout(LayoutConstants.FILL_OUT_COLUMN_WIDTH));
+        super(parent, idata, (parent == null ? null : new IzPanelLayout(LayoutConstants.FILL_OUT_COLUMN_WIDTH)));
 
-        buildPanel();
+        if (parent != null) {
+            buildPanel();
 
-        parent.addGuiListener(this);
+            parent.addGuiListener(this);
+        }
     }
 
     /**
@@ -220,4 +222,4 @@ public abstract class ActionPanel extends IzPanel implements Config, GUIListener
     public void setNumOfMaxExecution(int numOfMaxExecution) {
         this.numOfMaxExecution = numOfMaxExecution;
     }
-}
+    }

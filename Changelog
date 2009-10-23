@@ -8,6 +8,10 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 -----------------+------------+-------------------------------------------------
+MD-2009-10-23-0: Enhancem.:   o Added 6.1u7 gdi versoin entry to version.c
+                              o Added, updated webfiles for 6.2u4 courtesy
+                                binary download
+
 DG-2009-10-22-1: Enhancem.:   Added help output for binding parameter in qsub, 
                               qrsh, qsh and qalter.
                  Review:      SH

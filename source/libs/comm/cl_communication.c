@@ -400,7 +400,7 @@ int cl_com_create_debug_client_setup(cl_debug_client_setup_t** new_setup,
 
    tmp_setup->dc_debug_list = NULL;
    if ((return_value=cl_string_list_setup(&(tmp_setup->dc_debug_list), "debug list")) != CL_RETVAL_OK) {
-      CL_LOG_STR(CL_LOG_ERROR,"could not setup debug client information list:", cl_get_error_text(return_value));
+      CL_LOG_STR(CL_LOG_ERROR, "could not setup debug client information list:", cl_get_error_text(return_value));
       cl_com_free_debug_client_setup(&tmp_setup);
       return return_value;
    }

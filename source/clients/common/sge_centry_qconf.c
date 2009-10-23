@@ -754,10 +754,12 @@ centry_list_provide_modify_context(sge_gdi_ctx_class_t *ctx,
       filename = spool_flatfile_write_list(answer_list, *this_list, CE_fields,
                                            &qconf_ce_list_sfi, SP_DEST_TMP,
                                            SP_FORM_ASCII, NULL, false);
-      
+
       if (answer_list_output(answer_list)) {
-         unlink(filename);
-         FREE(filename);
+         if (filename != NULL) {
+            unlink(filename);
+            FREE(filename);
+         }
          DRETURN(false);
       }
 

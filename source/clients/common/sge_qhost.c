@@ -158,22 +158,22 @@ int do_qhost(void *ctx, lList *host_list, lList *user_list, lList *resource_matc
          }
       } else {
          lListElem *tmp_resource_list = NULL;
-         /* if there is hostname request, remove it as we cannot match hostname in                                                                                
-         ** sge_select_queue we'll process this tmp_resource_list separately!! 
-         */                                                                                                                                                    
-         if ((tmp_resource_list = lGetElemStr(resource_match_list, CE_name, "hostname"))) {                                                                    
-            lDechainElem(resource_match_list, tmp_resource_list);                                                                                            
-         } 
+         /* if there is hostname request, remove it as we cannot match hostname in
+          * sge_select_queue we'll process this tmp_resource_list separately!!
+          */
+         if ((tmp_resource_list = lGetElemStr(resource_match_list, CE_name, "hostname"))) {
+            lDechainElem(resource_match_list, tmp_resource_list);
+         }
 
          /* Iterate over hosts to check if any of them match the
-         ** requests in resource_match_list 
-         */
+          * requests in resource_match_list
+          */
          for_each(ep, ehl) {
             /* prepare complex attributes */
             if (strcmp(lGetHost(ep, EH_name), SGE_TEMPLATE_NAME) == 0) {
                continue;
             }
-            selected = sge_select_queue(resource_match_list, NULL, ep, ehl, cl, 
+            selected = sge_select_queue(resource_match_list, NULL, ep, ehl, cl,
                                         true, -1, NULL, NULL, NULL);
             if (selected) { /* found other matching attribs */
                lSetUlong(ep, EH_tagged, 1);
@@ -190,6 +190,9 @@ int do_qhost(void *ctx, lList *host_list, lList *user_list, lList *resource_matc
             } else { /* this host is not selected */
                lSetUlong(ep, EH_tagged, 0);
             }
+         }
+         if (tmp_resource_list != NULL) {
+            lFreeElem(&tmp_resource_list);
          }
       }
 

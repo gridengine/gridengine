@@ -1122,9 +1122,10 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
    new_handle->tcp_connect_mode = tcp_connect_mode;
 
    new_handle->debug_client_setup = NULL;
-   if ((return_value = cl_com_create_debug_client_setup(&(new_handle->debug_client_setup),CL_DEBUG_CLIENT_OFF, CL_TRUE, 0)) != CL_RETVAL_OK) {
+   if ((return_value = cl_com_create_debug_client_setup(&(new_handle->debug_client_setup), CL_DEBUG_CLIENT_OFF, CL_TRUE, 0)) != CL_RETVAL_OK) {
       CL_LOG(CL_LOG_ERROR,"can't setup debug client structure");
       free(local_hostname);
+      cl_com_free_ssl_setup(&(new_handle->ssl_setup));
       free(new_handle);
       cl_raw_list_unlock(cl_com_handle_list);
       if (commlib_error) {
@@ -1145,10 +1146,10 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
    new_handle->framework = framework;
    new_handle->data_flow_type = data_flow_type;
    new_handle->service_provider = service_provider;
-   if ( new_handle->service_provider == CL_TRUE) {
+   if (new_handle->service_provider == CL_TRUE) {
       /* we are service provider */
       new_handle->connect_port = 0;
-      if ( handle_port == 0 ) {
+      if (handle_port == 0) {
          new_handle->service_port = 0;
          CL_LOG(CL_LOG_WARNING,"no port specified, using next free port");
       } else {
@@ -1189,8 +1190,10 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
       new_handle->max_open_connections = FD_SETSIZE - 1;
    }
 
-   if ( new_handle->max_open_connections < 32 ) {
+   if (new_handle->max_open_connections < 32) {
       CL_LOG_INT(CL_LOG_ERROR, "to less file descriptors:", (int)new_handle->max_open_connections );
+      cl_com_free_debug_client_setup(&(new_handle->debug_client_setup));
+      cl_com_free_ssl_setup(&(new_handle->ssl_setup));
       free(new_handle);
       free(local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
@@ -1217,6 +1220,8 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
 
    new_handle->statistic = (cl_com_handle_statistic_t*)malloc(sizeof(cl_com_handle_statistic_t));
    if (new_handle->statistic == NULL) {
+      cl_com_free_debug_client_setup(&(new_handle->debug_client_setup));
+      cl_com_free_ssl_setup(&(new_handle->ssl_setup));
       free(new_handle);
       free(local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
@@ -1235,6 +1240,8 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
    new_handle->messages_ready_mutex = (pthread_mutex_t*)malloc(sizeof(pthread_mutex_t));
    if (new_handle->messages_ready_mutex == NULL) {
       cl_com_free_handle_statistic(&(new_handle->statistic));
+      cl_com_free_debug_client_setup(&(new_handle->debug_client_setup));
+      cl_com_free_ssl_setup(&(new_handle->ssl_setup));
       free(new_handle);
       free(local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
@@ -1249,6 +1256,8 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
    if (new_handle->connection_list_mutex == NULL) {
       free(new_handle->messages_ready_mutex);
       cl_com_free_handle_statistic(&(new_handle->statistic));
+      cl_com_free_debug_client_setup(&(new_handle->debug_client_setup));
+      cl_com_free_ssl_setup(&(new_handle->ssl_setup));
       free(new_handle);
       free(local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
@@ -1267,6 +1276,8 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
       }
       free(new_handle->connection_list_mutex);
       cl_com_free_handle_statistic(&(new_handle->statistic));
+      cl_com_free_debug_client_setup(&(new_handle->debug_client_setup));
+      cl_com_free_ssl_setup(&(new_handle->ssl_setup));
       free(new_handle);
       free(local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
@@ -1288,6 +1299,8 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
          free(new_handle->messages_ready_mutex); 
       }
       cl_com_free_handle_statistic(&(new_handle->statistic));
+      cl_com_free_debug_client_setup(&(new_handle->debug_client_setup));
+      cl_com_free_ssl_setup(&(new_handle->ssl_setup));
       free(new_handle);
       free(local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
@@ -1311,6 +1324,8 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
          free(new_handle->messages_ready_mutex); 
       }
       cl_com_free_handle_statistic(&(new_handle->statistic));
+      cl_com_free_debug_client_setup(&(new_handle->debug_client_setup));
+      cl_com_free_ssl_setup(&(new_handle->ssl_setup));
       free(new_handle);
       free(local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
@@ -1335,6 +1350,8 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
          free(new_handle->messages_ready_mutex); 
       }
       cl_com_free_handle_statistic(&(new_handle->statistic));
+      cl_com_free_debug_client_setup(&(new_handle->debug_client_setup));
+      cl_com_free_ssl_setup(&(new_handle->ssl_setup));
       free(new_handle);
       free(local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
@@ -1358,6 +1375,8 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
          free(new_handle->messages_ready_mutex); 
       }
       cl_com_free_handle_statistic(&(new_handle->statistic));
+      cl_com_free_debug_client_setup(&(new_handle->debug_client_setup));
+      cl_com_free_ssl_setup(&(new_handle->ssl_setup));
       free(new_handle);
       free(local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
@@ -1383,6 +1402,8 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
          free(new_handle->messages_ready_mutex); 
       }
       cl_com_free_handle_statistic(&(new_handle->statistic));
+      cl_com_free_debug_client_setup(&(new_handle->debug_client_setup));
+      cl_com_free_ssl_setup(&(new_handle->ssl_setup));
       free(new_handle);
       free(local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
@@ -1410,6 +1431,8 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
          free(new_handle->messages_ready_mutex); 
       }
       cl_com_free_handle_statistic(&(new_handle->statistic));
+      cl_com_free_debug_client_setup(&(new_handle->debug_client_setup));
+      cl_com_free_ssl_setup(&(new_handle->ssl_setup));
       free(new_handle);
       free(local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
@@ -1451,8 +1474,12 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
          if (mutex_ret_val != EBUSY) {
             free(new_handle->messages_ready_mutex); 
          }
+
          cl_com_free_handle_statistic(&(new_handle->statistic));
+         cl_com_free_debug_client_setup(&(new_handle->debug_client_setup));
+         cl_com_free_ssl_setup(&(new_handle->ssl_setup));
          free(new_handle);
+
          cl_raw_list_unlock(cl_com_handle_list);
          if (commlib_error) {
             *commlib_error = return_value;
@@ -1484,13 +1511,12 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
          if (mutex_ret_val != EBUSY) {
             free(new_handle->messages_ready_mutex); 
          }
+
          cl_com_free_handle_statistic(&(new_handle->statistic));
-
          cl_com_free_debug_client_setup(&(new_handle->debug_client_setup));
-
          cl_com_free_ssl_setup(&(new_handle->ssl_setup));
-
          free(new_handle);
+
          cl_raw_list_unlock(cl_com_handle_list);
          if (commlib_error) {
             *commlib_error = return_value;
@@ -1503,9 +1529,9 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
 
             
       /* Set handle service port, when we use random port */
-      if ( new_handle->service_port == 0) {
+      if (new_handle->service_port == 0) {
          int service_port = 0;
-         if (cl_com_connection_get_service_port(new_con,&service_port) == CL_RETVAL_OK) {
+         if (cl_com_connection_get_service_port(new_con, &service_port) == CL_RETVAL_OK) {
             new_handle->service_port = service_port;
          }
       }
@@ -1606,6 +1632,8 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
          free(new_handle->messages_ready_mutex); 
       }
       cl_com_free_handle_statistic(&(new_handle->statistic));
+      cl_com_free_debug_client_setup(&(new_handle->debug_client_setup));
+      cl_com_free_ssl_setup(&(new_handle->ssl_setup));
       free(new_handle);
       cl_raw_list_unlock(cl_com_handle_list);
       if (commlib_error) {

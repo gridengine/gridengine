@@ -116,7 +116,8 @@ extern char execd_spool_dir[SGE_PATH_MAX];
 #if defined(PLPA_LINUX) 
 /* creates string with core binding which is written to job "config" file */
 static bool create_binding_strategy_string_linux(dstring* result, 
-                                                         lListElem *jep);
+                                                 lListElem *jep, 
+                                                 char** rankfileinput);
 
 /* generates the config file string (binding elem) for shepherd */
 static bool linear_linux(dstring* result, lListElem* binding_elem, 
@@ -134,7 +135,8 @@ static bool explicit_linux(dstring* result, lListElem* binding_elem);
 /* creates string with processor set id created here which is then written 
    to "config" file */
 static bool create_binding_strategy_string_solaris(dstring* result,
-   lListElem *jep, char* err_str, int err_length, char** env);
+   lListElem *jep, char* err_str, int err_length, char** env, 
+   char** rankfileinput);
 
 /* do linear (automatic) binding on solaris */
 static bool linear_automatic_solaris(dstring* result, lListElem* binding_elem, 
@@ -149,6 +151,12 @@ static bool striding_solaris(dstring* result, lListElem* binding_elem,
 static bool explicit_solaris(dstring* result, lListElem* binding_elem, 
                               char* err_str, int err_length, char** env);
 #endif 
+
+#if defined(SOLARIS86) || defined(SOLARISAMD64) || defined(PLPA_LINUX) 
+static bool parse_job_accounting_and_create_logical_list(const char* binding_string,
+                                                         char** rankfileinput);
+#endif
+
 
 #if COMPILE_DC
 #if defined(SOLARIS) || defined(ALPHA) || defined(LINUX) || defined(FREEBSD) || defined(FREEBSD)
@@ -332,7 +340,9 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
    
    /* env var reflecting SGE_BINDING if set */
    char* sge_binding_environment = NULL;
-   
+   /* string reflecting the logical socket,core pairs if "pe" is set */
+   char* rankfileinput = NULL;
+
    dstring core_binding_strategy_string = DSTRING_INIT;
 
       /* retrieve the job, jatask and petask id once */
@@ -429,7 +439,8 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
          applicable or in case of errors "NULL" is written to this 
          line in the "config" file */
             
-      create_binding_strategy_string_linux(&core_binding_strategy_string, jep);
+      create_binding_strategy_string_linux(&core_binding_strategy_string, jep, 
+                                           &rankfileinput);
 
       INFO((SGE_EVENT, "core binding: %s", sge_dstring_get_string(&core_binding_strategy_string)));
 
@@ -441,7 +452,8 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
       {
 
          create_binding_strategy_string_solaris(&core_binding_strategy_string, 
-                           jep, err_str, err_length, &sge_binding_environment);
+                           jep, err_str, err_length, &sge_binding_environment, 
+                           &rankfileinput);
 
          /* in case SGE_BINDING environment variable has to be setup instead 
             of creating processor sets, this have to be done here (on Linux 
@@ -452,6 +464,9 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
 
       }
 #endif
+      if (rankfileinput != NULL) {
+         INFO((SGE_EVENT, "appended socket,core list to hostfile %s", rankfileinput));
+      }
 
       /***************** write out sge host file ******************************/
       /* JG: TODO: create function write_pe_hostfile() */
@@ -463,6 +478,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
          fp = fopen(hostfilename, "w");
          if (!fp) {
             snprintf(err_str, err_length, MSG_FILE_NOOPEN_SS,  hostfilename, strerror(errno));
+            FREE(rankfileinput);
             DEXIT;
             return -2;
          }
@@ -482,15 +498,32 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
          for_each (gdil_ep, gdil) {
             int slots;
             lList *alp = NULL;
+            /* this is the processor set id in case when when using 
+               the processors feature */
             const char *q_set = NULL;
 
             slots = (int)lGetUlong(gdil_ep, JG_slots);
             q_set = lGetString(gdil_ep, JG_processors);
-            fprintf(fp, "%s %d %s %s\n", 
-               lGetHost(gdil_ep, JG_qhostname),
-               slots, 
-               lGetString(gdil_ep, JG_qname), 
-               q_set ? q_set : "<NULL>");
+
+            /* if job to core binding is used this appears in the fourth row 
+               and is more important than the processors configuration out 
+               of the queue since both should NOT be used together */
+
+            if (rankfileinput != NULL) {
+               /* print job2core binding info */
+               fprintf(fp, "%s %d %s %s\n", 
+                  lGetHost(gdil_ep, JG_qhostname),
+                  slots, 
+                  lGetString(gdil_ep, JG_qname), 
+                  rankfileinput);
+            } else {
+               /* print processors info      */
+               fprintf(fp, "%s %d %s %s\n", 
+                  lGetHost(gdil_ep, JG_qhostname),
+                  slots, 
+                  lGetString(gdil_ep, JG_qname), 
+                  q_set ? q_set : "<NULL>");
+            }
 
             if (!sge_hostcmp(lGetHost(master_q, QU_qhostname), lGetHost(gdil_ep, JG_qhostname))) {
                host_slots += slots;
@@ -504,6 +537,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
          }
 
          FCLOSE(fp);
+         FREE(rankfileinput);
       }
       /*************************** finished writing sge hostfile  ********/
 
@@ -1955,7 +1989,8 @@ lList *gdil_orig  /* JG_Type */
 
 /* creates binding string for config file */
 #if defined(PLPA_LINUX)
-static bool create_binding_strategy_string_linux(dstring* result, lListElem *jep)
+static bool create_binding_strategy_string_linux(dstring* result, lListElem *jep, 
+                                                   char** rankfileinput)
 {
    /* temporary result string with or without "env:" prefix (when environment 
       variable for binding should be set or not) */
@@ -2011,19 +2046,30 @@ static bool create_binding_strategy_string_linux(dstring* result, lListElem *jep
             retval = false;
          }
                   
-        /* processor_binding_strategy = lGetString(binding_elem, BN_strategy); */
         if (retval == false) {
-           INFO((SGE_EVENT, "Couldn't determine core binding string for config file!"));
+           /* couldn't apply the binding strategy on job */
+           WARNING((SGE_EVENT, "Core binding: Couldn't determine core binding string for config file!"));
         } else {
+           /* parse the topology used by the job out of the string (it is at the 
+              end) and convert it to "<socket>,<core>:<socket>,<core>:..." but just 
+              when config binding element has prefix "pe_" */
+           if (lGetUlong(binding_elem, BN_type) == BINDING_TYPE_PE) {
+              /* generate pe_hostfile input */ 
+              if (parse_job_accounting_and_create_logical_list(
+                     sge_dstring_get_string(&tmp_result), rankfileinput) == false) {
+                 WARNING((SGE_EVENT, "Core binding: Couldn't create input for pe_hostfile"));
+                 retval = false;
+              }
+           }
            /* append result to the prefix */
            sge_dstring_append_dstring(result, &tmp_result);
         }
       } else {
-         INFO((SGE_EVENT, "ERROR: No CULL sublist for binding found!"));
+         WARNING((SGE_EVENT, "Core binding: No CULL sublist for binding found!"));
          retval = false;
       }
    } else {
-      INFO((SGE_EVENT, "ERROR: Couldn't get binding sublist"));
+      WARNING((SGE_EVENT, "Core binding: Couldn't get binding sublist"));
       retval = false;
    }
 
@@ -2258,7 +2304,8 @@ static bool explicit_linux(dstring* result, lListElem* binding_elem)
 
 #if defined(SOLARIS86) || defined(SOLARISAMD64)
 static bool create_binding_strategy_string_solaris(dstring* result, 
-               lListElem *jep, char* err_str, int err_length, char** env)
+               lListElem *jep, char* err_str, int err_length, char** env, 
+               char** rankfileinput)
 {
    
    /* 1. check cull list and check which binding strategy was requested */
@@ -2311,6 +2358,13 @@ static bool create_binding_strategy_string_solaris(dstring* result,
    /* in case no core binding is selected or any other error occured */
    if (retval == false) {
       sge_dstring_append(result, "NULL");
+   } else {
+      /* in case of -binding PE the string with the socket,core pairs 
+         must be returned */
+      if (strstr(sge_dstring_get_string(result), "pe_") != NULL) {   
+         retval = parse_job_accounting_and_create_logical_list(
+               sge_dstring_get_string(result), rankfileinput); 
+      }
    }
 
    /* 7. shepherd have to append current process on processor set */
@@ -2421,7 +2475,6 @@ static bool striding_solaris(dstring* result, lListElem* binding_elem, const boo
       /* in case of "linear" binding the stepsize is one */
       step_size = 1;
    }
-
 
    /* in automatic mode the socket,core pair which is bound first is determined 
       automatically */
@@ -2592,3 +2645,71 @@ static bool explicit_solaris(dstring* result, lListElem* binding_elem, char* err
 #endif
 
 
+#if defined(SOLARIS86) || defined(SOLARISAMD64) || defined(PLPA_LINUX)
+static bool parse_job_accounting_and_create_logical_list(const char* binding_string,
+                                                         char** rankfileinput)
+{
+   bool retval;
+
+   int* sockets = NULL;
+   int* cores   = NULL;
+   int amount   = 0;
+
+   const char* pos;
+
+   DENTER(TOP_LAYER, "parse_job_accounting_and_create_logical_list");
+
+   /* get the position of the "SCCSCc" job accounting string in string */
+   pos = binding_get_topology_for_job(binding_string);
+
+   /* convert job usage in terms of the topology string into 
+      a list as string */ 
+   if (topology_string_to_socket_core_lists(pos, &sockets, &cores, 
+                                                &amount) == false) {
+      WARNING((SGE_EVENT, "Core binding: Couldn't parse job topology string! %s", pos));
+      retval = false;
+   
+   } else if (amount > 0) {
+
+      /* build the string */
+      int i;
+      dstring full = DSTRING_INIT;
+      dstring pair = DSTRING_INIT;
+      
+      for (i = 0; i < (amount-1); i++) {
+         sge_dstring_sprintf(&pair, "%d,%d:", sockets[i], cores[i]);
+         sge_dstring_append_dstring(&full, &pair);
+         sge_dstring_clear(&pair);
+      }
+      /* the last pair does not have the ":" at the end */
+      sge_dstring_sprintf(&pair, "%d,%d", sockets[amount-1], cores[amount-1]);
+      sge_dstring_append_dstring(&full, &pair);
+
+      /* allocate memory for the output variable "rankfileinput" */
+      *rankfileinput = sge_strdup(NULL, sge_dstring_get_string(&full));
+     
+      if (*rankfileinput == NULL) {
+         WARNING((SGE_EVENT, "Core binding: Malloc error"));
+         retval = false;
+      } else {
+         INFO((SGE_EVENT, "Core binding: PE rankfileinput is %s", *rankfileinput));
+         retval = true;
+      }   
+
+      sge_dstring_free(&pair);
+      sge_dstring_free(&full);
+
+      FREE(sockets);
+      FREE(cores);
+
+   } else {
+      /* no cores used */
+      INFO((SGE_EVENT, "Core binding: Couldn't determine any allocated cores for the job"));
+      *rankfileinput = sge_strdup(NULL, "<NULL>");
+      retval = true;
+   }
+   
+   DRETURN(retval);
+}
+
+#endif

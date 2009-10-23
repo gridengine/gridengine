@@ -88,8 +88,9 @@ bool has_core_binding(void);
 
 #endif
 
-const char *
-binding_get_topology_for_job(const char *binding_result);
+const char* binding_get_topology_for_job(const char *binding_result);
 
+bool topology_string_to_socket_core_lists(const char* topology, int** sockets, 
+                                     int** cores, int* amount); 
 #endif /* __SGE_BINDING_HLP_H */
 

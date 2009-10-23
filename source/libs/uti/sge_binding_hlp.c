@@ -1261,3 +1261,74 @@ binding_get_topology_for_job(const char *binding_result) {
    return topology_result;
 }
 
+/****** sge_binding_hlp/topology_string_to_socket_core_lists() *****************
+*  NAME
+*     topology_string_to_socket_core_lists() -- Converts a topology into socket,core lists. 
+*
+*  SYNOPSIS
+*     bool topology_string_to_socket_core_lists(const char* topology, int** 
+*     sockets, int** cores, int* amount) 
+*
+*  FUNCTION
+*     Converts a topology string into lists of cores and sockets which are marked 
+*     as beeing used and returns them.
+*
+*  INPUTS
+*     const char* topology - Pointer to a topology string.
+*
+*  OUTPUTS
+*     int** sockets        - Pointer to the location of the socket array.
+*     int** cores          - Pointer to the location of the core array. 
+*     int* amount          - Length of the arrays.  
+*
+*  RESULT
+*     bool - false when problems occured true otherwise
+*
+*  NOTES
+*     MT-NOTE: topology_string_to_socket_core_lists() is MT safe 
+*
+*  SEE ALSO
+*     ???/???
+*******************************************************************************/
+bool
+topology_string_to_socket_core_lists(const char* topology, int** sockets, 
+                                     int** cores, int* amount) {
+   bool retval = true;
+
+   int current_socket = -1;
+   int current_core   = -1;
+
+   *amount = 0;
+   
+   if (topology == NULL || *sockets != NULL || *cores != NULL) {
+      /* we expect to have clean input */
+      retval = false;
+   } else {
+   
+      while (*topology != '\0') {
+
+         if (*topology == 'S' || *topology == 's') {
+            current_socket++;
+            current_core = -1;
+         } else if (*topology == 'C') {
+            /* this core is not in use */
+            current_core++;
+         } else if (*topology == 'c') {
+            /* this core is in use hence we are collecting it */
+            (*amount)++;
+            current_core++;
+            *sockets = (int *) realloc(*sockets, (*amount) * sizeof(int));
+            *cores   = (int *) realloc(*cores, (*amount) * sizeof(int));
+            (*sockets)[(*amount)-1] = current_socket;
+            (*cores)[(*amount)-1]   = current_core;
+         }
+
+         topology++;
+      }
+      
+   }
+
+   return retval;
+}
+
+

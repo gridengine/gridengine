@@ -529,7 +529,7 @@ static bool binding_set_linear_solaris(const int first_socket, const int first_c
       /* just set the environment variable */
       create_environment_string_solaris(pid_list, pid_list_length, env);
       *psetid = 0;
-   } else {
+   } else if (type != BINDING_TYPE_PE) {
       /* finally bind the current process to the global pid_list and get the
          processor set id */
       if (create_pset(pid_list, pid_list_length, psetid) != true) {
@@ -624,6 +624,8 @@ int create_processor_set_explicit_solaris(const int* list_of_sockets,
       /* just set the environment variable */
       create_environment_string_solaris(pid_list, pid_list_length, env);
       psetid = 0;
+   } else if (type == BINDING_TYPE_PE) {
+      psetid = 0; 
    } else {
       /* create processor set */
       if (create_pset(pid_list, samount, &psetid) != true) {
@@ -693,8 +695,6 @@ int create_processor_set_striding_solaris(const int first_socket,
    int i = 0;
    /* processor set id */
    processorid_t psetid;
-
-   DENTER(TOP_LAYER, "create_processor_set_striding_solaris");
 
    /* first get the topology of the host into a topology matrix */ 
    if (generate_chipID_coreID_matrix(&matrix, &mlength) != true) {
@@ -806,12 +806,14 @@ int create_processor_set_striding_solaris(const int first_socket,
 
    /* check what we've todo with the processor id list: 
       - ENV -> set environment variable 
-      - PE  -> DG TODO
+      - PE  -> do nothing here  
       - SET -> create the processor set */
    if (type == BINDING_TYPE_ENV) {
       /* just set the environment variable */
       create_environment_string_solaris(pid_list, pid_list_length, env);
       retval = 0; /* not an error */
+   } else if (type == BINDING_TYPE_PE) {
+      retval = 0; /* do nothing - not an error */ 
    } else {
       /* finally bind the current process to the global pid_list and get the
          processor set id -> root rights required !!! */
@@ -891,8 +893,6 @@ static void free_matrix(int** matrix, const int length)
 *     pset_id is set to the ID of the processor set (output parameter), 
 *     and the function returns true. 
 *  
-*     Warning: Do only use this function in shepherd because of shepherd_trace!
-*
 *     - pset_id must not be NULL 
 *     - length must be > 0 
 *     - and plist must not be NULL and have to contain at least one element

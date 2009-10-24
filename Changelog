@@ -8,6 +8,11 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 -----------------+------------+-------------------------------------------------
+DT-2009-10-23-0: Enhancem.:   o Initial commit of JSV Java language binding
+                              o Not yet added into aimk or the testsuite
+                 Bugster:     6882592
+                 Review:      EB
+
 DG-2009-10-23-0: Enhancem.:   Added -binding pe functionality for pe_hostfile.
                  Review:      CR
 

@@ -187,7 +187,7 @@ int do_qhost(void *ctx, lList *host_list, lList *user_list, lList *resource_matc
             if(selected) { /* found other matching attribs */
                lSetUlong(ep, EH_tagged, 1);
                /* check for hostname match if there was a hostname match request */
-               if (tmp_resource_list) {
+               if (tmp_resource_list != NULL) {
                   if (sge_hostcmp(lGetString(tmp_resource_list, CE_stringval), lGetHost(ep, EH_name)) != 0 ) {
                      DPRINTF(("NOT matched hostname %s with qhost -l\n", lGetHost(ep, EH_name)));
                      lSetUlong(ep, EH_tagged, 0);
@@ -197,7 +197,9 @@ int do_qhost(void *ctx, lList *host_list, lList *user_list, lList *resource_matc
                lSetUlong(ep, EH_tagged, 0);
             }
          }
-         lFreeElem(&tmp_resource_list);
+         if (tmp_resource_list != NULL) {
+            lFreeElem(&tmp_resource_list);
+         }
       }
 
       /*

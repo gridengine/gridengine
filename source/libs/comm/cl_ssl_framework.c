@@ -2139,7 +2139,7 @@ static int cl_com_ssl_log_ssl_errors(const char* function_name) {
 
    while((ssl_error = cl_com_ssl_func__ERR_get_error())) {
       cl_com_ssl_func__ERR_error_string_n(ssl_error,buffer,512);
-      snprintf(help_buf, 1024, MSG_CL_COMMLIB_SSL_ERROR_USS, ssl_error, func_name, buffer);
+      snprintf(help_buf, 1024, MSG_CL_COMMLIB_SSL_ERROR_USS, sge_u32c(ssl_error), func_name, buffer);
       CL_LOG(CL_LOG_ERROR,help_buf);
 
       ret_val = cl_com_ssl_transform_ssl_error(ssl_error,buffer,512, &transformed_ssl_error);

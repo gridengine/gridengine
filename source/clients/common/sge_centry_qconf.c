@@ -141,8 +141,10 @@ centry_provide_modify_context(sge_gdi_ctx_class_t *ctx, lListElem **this_elem, l
                                              SP_FORM_ASCII, filename, false);
       
       if (answer_list_output(&alp)) {
-         unlink(filename);
-         FREE(filename);
+         if (filename != NULL) {
+            unlink(filename);
+            FREE(filename);
+         }
          DRETURN(false);
       }
  

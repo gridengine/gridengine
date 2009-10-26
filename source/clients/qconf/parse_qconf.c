@@ -225,7 +225,10 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
                                                  NULL, false);
             lFreeElem(&ep);
             if (answer_list_output(&alp)) {
-               FREE(filename);
+               if (filename != NULL) {
+                  unlink(filename);
+                  FREE(filename);
+               }
                sge_error_and_exit(ctx, NULL);
             }
 
@@ -334,7 +337,10 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
                                                  SP_DEST_TMP, SP_FORM_ASCII,
                                                  NULL, false);
             if (answer_list_output(&alp)) {
-               FREE(filename);
+               if (filename != NULL) {
+                  unlink(filename);
+                  FREE(filename);
+               }
                sge_error_and_exit(ctx, NULL);
             }
 
@@ -745,7 +751,10 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
             lFreeElem(&ep);
             
             if (answer_list_output(&alp)) {
-               FREE(filename);
+               if (filename != NULL) {
+                  unlink(filename);
+                  FREE(filename);
+               }
                sge_error_and_exit(ctx, NULL);
             }
 
@@ -1379,7 +1388,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
          }
 
          /* update user usage */
-         if (lp && lGetNumberOfElem(lp) > 0) {
+         if (lp != NULL && lGetNumberOfElem(lp) > 0) {
             alp = ctx->gdi(ctx, SGE_UU_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
             answer_list_on_error_print_or_exit(&alp, stderr);
             lFreeList(&alp);
@@ -1968,6 +1977,10 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
                                                  NULL, false);
             
             if (answer_list_output(&alp)) {
+               if (filename != NULL) {
+                  unlink(filename);
+                  FREE(filename);
+               }
                sge_error_and_exit(ctx, NULL);
             }
 
@@ -2121,6 +2134,10 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
                                                  NULL, false);
             
             if (answer_list_output(&alp)) {
+               if (filename != NULL) {
+                  unlink(filename);
+                  FREE(filename);
+               }
                sge_error_and_exit(ctx, NULL);
             }
 
@@ -2436,6 +2453,10 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
             lFreeList(&lp);
 
             if (answer_list_output(&alp)) {
+               if (filename != NULL) {
+                  unlink(filename);
+                  FREE(filename);
+               }
                sge_error_and_exit(ctx, NULL);
             }
 
@@ -5804,6 +5825,15 @@ static lListElem *edit_exechost(sge_gdi_ctx_class_t *ctx, lListElem *ep, uid_t u
                                                   &qconf_sfi, SP_DEST_TMP,
                                                   SP_FORM_ASCII, filename,
                                                   false);
+   if (answer_list_output(&alp)) {
+      if (filename != NULL) {
+         unlink(filename);
+         FREE(filename);
+      }
+      FREE(fields);
+      sge_error_and_exit(ctx, NULL);
+   }
+
    lFreeList(&alp);
    status = sge_edit(filename, uid, gid);
 
@@ -5951,6 +5981,10 @@ static lListElem *edit_user(sge_gdi_ctx_class_t *ctx, lListElem *ep, uid_t uid, 
                                                   &qconf_sfi, SP_DEST_TMP,
                                                   SP_FORM_ASCII, NULL, false);
    if (answer_list_output(&alp)) {
+      if (filename != NULL) {
+         unlink(filename);
+         FREE(filename);
+      }
       FREE(fields);
       sge_error_and_exit(ctx, NULL);
    }
@@ -6022,6 +6056,10 @@ static lListElem *edit_project(sge_gdi_ctx_class_t *ctx, lListElem *ep, uid_t ui
                                                   &qconf_sfi, SP_DEST_TMP,
                                                   SP_FORM_ASCII, NULL, false);
    if (answer_list_output(&alp)) {
+      if (filename != NULL) {
+         unlink(filename);
+         FREE(filename);
+      }
       FREE(fields);
       sge_error_and_exit(ctx, NULL);
    }
@@ -6109,8 +6147,11 @@ static lListElem *edit_sharetree(sge_gdi_ctx_class_t *ctx, lListElem *ep, uid_t 
    }
 
    if (answer_list_output(&alp)) {
+      if (filename != NULL) {
+         unlink(filename);
+         FREE(filename);
+      }
       FREE(fields);
-      FREE(filename);
       sge_error_and_exit(ctx, NULL);
    }
 
@@ -6270,7 +6311,7 @@ static int show_eventclients(sge_gdi_ctx_class_t *ctx)
       DRETURN(-1);
    }
 
-   if (lp && lGetNumberOfElem(lp) > 0) {
+   if (lp != NULL && lGetNumberOfElem(lp) > 0) {
       lPSortList(lp, "%I+", EV_id);
    
       printf("%8s %-15s %-25s\n",MSG_TABLE_EV_ID, MSG_TABLE_EV_NAME, MSG_TABLE_HOST);
@@ -6321,7 +6362,7 @@ static int show_processors(sge_gdi_ctx_class_t *ctx, bool has_binding_param)
       DRETURN(-1);
    }
 
-   if (lp && lGetNumberOfElem(lp) > 0) {
+   if (lp != NULL && lGetNumberOfElem(lp) > 0) {
       lPSortList(lp,"%I+", EH_name);
 
       if (has_binding_param) {
@@ -7188,15 +7229,15 @@ static int qconf_modify_attribute(sge_gdi_ctx_class_t *ctx,
    if (SGE_GDI_IS_SUBCOMMAND_SET(sub_command, SGE_GDI_CHANGE) && (lGetType((*epp)->descr, fields[0]) == lListT)) {
       lList *lp = lGetList(*epp, fields[0]);
       
-      if ((lp == NULL) || (lGetNumberOfElem(lp) == 0)) {
+      if (lp == NULL || lGetNumberOfElem(lp) == 0) {
          SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_QCONF_CANT_MODIFY_NONE));
          answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          lFreeElem(epp);
          lFreeWhat(&what);
          lFreeList(&qlp);
+         lFreeList(&lp);
          DRETURN(1);
-      }
-      else if (lGetNumberOfElem(lp) == 1) {
+      } else if (lGetNumberOfElem(lp) == 1) {
          lListElem *ep = lFirst(lp);
          int count = 1;
          int nm = 0;

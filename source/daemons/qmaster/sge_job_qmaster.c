@@ -1526,7 +1526,7 @@ void job_suc_pre(lListElem *jep)
 *     lListElem *jep - the dependent job
 *
 *  NOTES
-*     MT-NOTE: job_suc_pre() is MT safe if the caller holds the global lock
+*     MT-NOTE: job_suc_pre_ad() is MT safe if the caller holds the global lock
 *
 *     no need to spool the dependency links or to send events to 
 *     update event clients - this is done in the calling functions

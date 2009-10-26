@@ -31,18 +31,16 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jsv;
 
-import static org.junit.Assert.*;
+import junit.framework.Test;
+import junit.framework.TestCase;
 
-import org.junit.Test;
-
-public class CheckpointSpecifierTest {
+public class CheckpointSpecifierTest extends TestCase {
     public CheckpointSpecifierTest() {
     }
 
     /**
      * Test of getName method, of class CheckpointSpecifier.
      */
-    @Test
     public void testName() throws NoSuchFieldException, IllegalAccessException {
         System.out.println("name");
 
@@ -59,7 +57,6 @@ public class CheckpointSpecifierTest {
     /**
      * Test of onShutdown method, of class CheckpointSpecifier.
      */
-    @Test
     public void testOnShutdown() {
         System.out.println("onShutdown()");
 
@@ -84,7 +81,6 @@ public class CheckpointSpecifierTest {
     /**
      * Test of onMinCpuInterval method, of class CheckpointSpecifier.
      */
-    @Test
     public void testOnMinCpuInterval() {
         System.out.println("onMinCpuInterval()");
 
@@ -109,7 +105,6 @@ public class CheckpointSpecifierTest {
     /**
      * Test of onSuspend method, of class CheckpointSpecifier.
      */
-    @Test
     public void testOnSuspend() {
         System.out.println("onSuspend()");
 
@@ -134,7 +129,6 @@ public class CheckpointSpecifierTest {
     /**
      * Test of never method, of class CheckpointSpecifier.
      */
-    @Test
     public void testNever() {
         System.out.println("never()");
 
@@ -163,7 +157,6 @@ public class CheckpointSpecifierTest {
     /**
      * Test of getInterval method, of class CheckpointSpecifier.
      */
-    @Test
     public void testInterval() {
         System.out.println("interval");
 
@@ -233,7 +226,6 @@ public class CheckpointSpecifierTest {
     /**
      * Test of getOccasion method, of class CheckpointSpecifier.
      */
-    @Test
     public void testOccasion() {
         System.out.println("occasion");
 
@@ -265,7 +257,6 @@ public class CheckpointSpecifierTest {
     /**
      * Test of intercation of getOccasion() and getInterval() methods, of class CheckpointSpecifier.
      */
-    @Test
     public void testOccasionPlusInterval() {
         System.out.println("occasion");
 
@@ -299,7 +290,6 @@ public class CheckpointSpecifierTest {
     /**
      * Test of getOccasion method, of class CheckpointSpecifier.
      */
-    @Test
     public void testOccasionString() {
         System.out.println("occasionString");
 
@@ -369,7 +359,6 @@ public class CheckpointSpecifierTest {
     /**
      * Test of equals method, of class CheckpointSpecifier.
      */
-    @Test
     public void testEquals() {
         System.out.println("equals()");
 
@@ -402,7 +391,6 @@ public class CheckpointSpecifierTest {
     /**
      * Test of hashCode method, of class CheckpointSpecifier.
      */
-    @Test
     public void testHashCode() {
         System.out.println("hashCode()");
 
@@ -422,7 +410,6 @@ public class CheckpointSpecifierTest {
     /**
      * Test of clone method, of class CheckpointSpecifier.
      */
-    @Test
     public void testClone() throws Exception {
         System.out.println("clone()");
 

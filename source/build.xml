@@ -37,11 +37,11 @@
       </macrodef>
    </target>
     
-   <target name="all" depends="detect_jvm_lib, drmaa, juti, jgdi, gui_inst"/>
+   <target name="all" depends="detect_jvm_lib, drmaa, juti, jgdi, gui_inst, jsv"/>
    <target name="depend" depends="init"/>
-   <target name="clean" depends="detect_jvm_lib.clean, drmaa.clean, juti.clean, jgdi.clean, gui_inst.clean"/>
-   <target name="javadoc" depends="drmaa.javadoc, juti.javadoc, jgdi.javadoc, gui_inst.javadoc"/>
-   <target name="test" depends="drmaa.test, juti.test, jgdi.test, gui_inst.test"/>
+   <target name="clean" depends="detect_jvm_lib.clean, drmaa.clean, juti.clean, jgdi.clean, gui_inst.clean, jsv.clean"/>
+   <target name="javadoc" depends="drmaa.javadoc, juti.javadoc, jgdi.javadoc, gui_inst.javadoc, jsv.javadoc"/>
+   <target name="test" depends="drmaa.test, juti.test, jgdi.test, gui_inst.test, jsv.test"/>
     
    <!-- DRMAA -->
    <target name="drmaa" depends="init">
@@ -109,6 +109,23 @@
 
    <target name="gui_inst.test" unless="skip.gui.inst" depends="init">
       <ant antfile="build.xml" target="test" dir="clients/gui-installer/" inheritall="false"/>
+   </target>
+
+   <!-- JSV Java Language Binding -->
+   <target name="jsv" depends="init">
+      <myant dir="libs/jjsv"/>
+   </target>
+
+   <target name="jsv.clean" depends="init">
+     <myant dir="libs/jjsv" target="clean"/>
+   </target>
+
+   <target name="jsv.javadoc" depends="init">
+     <myant dir="libs/jjsv" target="javadoc"/>
+   </target>
+
+   <target name="jsv.test" depends="init">
+      <myant dir="libs/jjsv" target="test"/>
    </target>
 
    <!-- DetectJvmLibrary java util -->

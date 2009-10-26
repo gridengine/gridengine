@@ -31,18 +31,16 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jsv;
 
-import static org.junit.Assert.*;
+import junit.framework.Test;
+import junit.framework.TestCase;
 
-import org.junit.Test;
-
-public class MailSpecifierTest {
+public class MailSpecifierTest extends TestCase {
     public MailSpecifierTest() {
     }
 
     /**
      * Test of onBegin method, of class MailSpecifier.
      */
-    @Test
     public void testOnBegin() {
         System.out.println("onBegin()");
 
@@ -65,7 +63,6 @@ public class MailSpecifierTest {
     /**
      * Test of onEnd method, of class MailSpecifier.
      */
-    @Test
     public void testOnEnd() {
         System.out.println("onEnd()");
 
@@ -88,7 +85,6 @@ public class MailSpecifierTest {
     /**
      * Test of onAbort method, of class MailSpecifier.
      */
-    @Test
     public void testOnAbort() {
         System.out.println("onAbort()");
 
@@ -111,7 +107,6 @@ public class MailSpecifierTest {
     /**
      * Test of onSuspend method, of class MailSpecifier.
      */
-    @Test
     public void testOnSuspend() {
         System.out.println("onSuspend()");
 
@@ -134,7 +129,6 @@ public class MailSpecifierTest {
     /**
      * Test of never method, of class MailSpecifier.
      */
-    @Test
     public void testNever() {
         System.out.println("never()");
 
@@ -155,7 +149,6 @@ public class MailSpecifierTest {
     /**
      * Test of getOccasion method, of class MailSpecifier.
      */
-    @Test
     public void testOccasion() {
         System.out.println("occasion");
 
@@ -179,7 +172,6 @@ public class MailSpecifierTest {
     /**
      * Test of getOccasionString method, of class MailSpecifier.
      */
-    @Test
     public void testOccasionString() {
         System.out.println("occasionString");
 
@@ -243,7 +235,6 @@ public class MailSpecifierTest {
     /**
      * Test of equals method, of class MailSpecifier.
      */
-    @Test
     public void testEquals() {
         System.out.println("equals()");
 
@@ -272,7 +263,6 @@ public class MailSpecifierTest {
     /**
      * Test of hashCode method, of class MailSpecifier.
      */
-    @Test
     public void testHashCode() {
         System.out.println("hashCode()");
 
@@ -292,7 +282,6 @@ public class MailSpecifierTest {
     /**
      * Test of clone method, of class CheckpointSpecifier.
      */
-    @Test
     public void testClone() throws Exception {
         System.out.println("clone()");
 

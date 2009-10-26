@@ -45,22 +45,21 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import junit.framework.Test;
+import junit.framework.TestCase;
 
 /**
  * TODO: Add tests to testProcessMaps() for null values
  * TODO: Add tests for parse() and processMaps() for implicit results changes
  * TODO: Add tests for parse() and processMaps() for REJECT shunt
  */
-public class JsvManagerTest {
+public class JsvManagerTest extends TestCase {
     public JsvManagerTest() {
     }
 
     /**
      * Test of parse method, of class Jsv.
      */
-    @Test
     public void testParse() throws Exception {
         System.out.println("parse()");
         JsvManager instance = new JsvManager();
@@ -232,7 +231,6 @@ public class JsvManagerTest {
     /**
      * Test of log method, of class Jsv.
      */
-    @Test
     public void testLog() {
         System.out.println("log()");
         JsvManager.LogLevel level = JsvManager.LogLevel.INFO;
@@ -259,7 +257,6 @@ public class JsvManagerTest {
     /**
      * Test of log method, of class Jsv.
      */
-    @Test
     public void testSetIn() throws Exception {
         System.out.println("setIn()");
         JsvManager instance = new JsvManager();
@@ -280,7 +277,6 @@ public class JsvManagerTest {
     /**
      * Test of log method, of class Jsv.
      */
-    @Test
     public void testSetOut() throws Exception {
         System.out.println("setOut()");
         JsvManager instance = new JsvManager();
@@ -301,7 +297,6 @@ public class JsvManagerTest {
     /**
      * Test of sendCommand method, of class Jsv.
      */
-    @Test
     public void testSendCommand() throws Throwable {
         System.out.println("sendCommand()");
         String expected = "test";
@@ -333,7 +328,6 @@ public class JsvManagerTest {
     /**
      * Test of sendEnvironment method, of class Jsv.
      */
-    @Test
     public void testSendEnvironment() throws Throwable {
         System.out.println("sendEnvironment()");
         String expected = "ENV ADD test1 test2";
@@ -384,7 +378,6 @@ public class JsvManagerTest {
     /**
      * Test of sendParameter method, of class Jsv.
      */
-    @Test
     public void testSendParameter() throws Throwable {
         System.out.println("sendParameter()");
         String parameter = "test1";
@@ -428,7 +421,6 @@ public class JsvManagerTest {
     /**
      * Test of prepareMaps method, of class Jsv.
      */
-    @Test
     public void testPrepareMaps() throws Exception {
         System.out.println("prepareMaps()");
         JsvManager instance = new JsvManager();
@@ -452,7 +444,6 @@ public class JsvManagerTest {
     /**
      * Test of processMaps method, of class Jsv.
      */
-    @Test
     public void testProcessMaps() throws Exception {
         System.out.println("processMaps()");
         JsvManager instance = new JsvManager();
@@ -485,7 +476,6 @@ public class JsvManagerTest {
     /**
      * Test of sendMaps method, of class Jsv.
      */
-    @Test
     public void testLogMaps() throws Exception {
         System.out.println("logMaps()");
         JsvManager instance = new JsvManager();
@@ -506,7 +496,6 @@ public class JsvManagerTest {
     /**
      * Test of sendResult method, of class Jsv.
      */
-    @Test
     public void testSendResult() throws Exception {
         System.out.println("sendResult()");
         String accept = "RESULT STATE ACCEPT";
@@ -550,7 +539,6 @@ public class JsvManagerTest {
     /**
      * Test of ressetState method, of class Jsv.
      */
-    @Test
     public void testResetState() throws Exception {
         System.out.println("resetState()");
 
@@ -594,7 +582,6 @@ public class JsvManagerTest {
     /**
      * Test of sendResult method, of class Jsv.
      */
-    @Test
     public void testRequestEnvironment() throws Exception {
         System.out.println("requestEnvironment()");
 
@@ -615,7 +602,6 @@ public class JsvManagerTest {
     /**
      * Test of sendResult method, of class Jsv.
      */
-    @Test
     public void testGetParameters() throws Exception {
         System.out.println("getParameters()");
 
@@ -629,7 +615,6 @@ public class JsvManagerTest {
     /**
      * Test of result property, of class Jsv.
      */
-    @Test
     public void testResult() throws Exception {
         System.out.println("result");
 
@@ -670,7 +655,6 @@ public class JsvManagerTest {
     /**
      * Test of accept method, of class Jsv.
      */
-    @Test
     public void testAccept() throws Exception {
         System.out.println("accept()");
 
@@ -697,7 +681,6 @@ public class JsvManagerTest {
     /**
      * Test of accept method, of class Jsv.
      */
-    @Test
     public void testModify() throws Exception {
         System.out.println("modify()");
 
@@ -724,7 +707,6 @@ public class JsvManagerTest {
     /**
      * Test of accept method, of class Jsv.
      */
-    @Test
     public void testReject() throws Exception {
         System.out.println("reject()");
 
@@ -751,7 +733,6 @@ public class JsvManagerTest {
     /**
      * Test of accept method, of class Jsv.
      */
-    @Test
     public void testRejectWait() throws Exception {
         System.out.println("rejectWait()");
 

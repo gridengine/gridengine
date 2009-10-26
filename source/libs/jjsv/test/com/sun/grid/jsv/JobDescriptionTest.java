@@ -42,29 +42,26 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.logging.LogRecord;
-import static org.junit.Assert.*;
-
-import org.junit.Test;
 
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import junit.framework.TestCase;
 
 /**
  * The read-only properties can only be set until the baseline is set.
  * The read/write properties can be always be set.
  * TODO: Add test for clone()
  */
-public class JobDescriptionTest {
+public class JobDescriptionTest extends TestCase {
     public JobDescriptionTest() {
     }
 
     /**
      * Test of getAccount method, of class JsvParameters.
      */
-    @Test
     public void testAccount() {
         System.out.println("account");
 
@@ -95,7 +92,6 @@ public class JobDescriptionTest {
     /**
      * Test of getAdvanceReservationId method, of class JsvParameters.
      */
-    @Test
     public void testAdvanceReservationId() {
         System.out.println("advanceReservationId");
 
@@ -134,7 +130,7 @@ public class JobDescriptionTest {
     /**
      * Test of getCheckpointSpecifier method, of class JsvParameters.
      */
-    @Test
+    
     public void testCheckpointSpecifier() {
         System.out.println("checkpointSpecifier");
 
@@ -178,7 +174,7 @@ public class JobDescriptionTest {
     /**
      * Test of getClient method, of class JsvParameters.
      */
-    @Test
+    
     public void testClient() {
         System.out.println("client");
 
@@ -221,7 +217,7 @@ public class JobDescriptionTest {
     /**
      * Test of getCommmandArgs method, of class JsvParameters.
      */
-    @Test
+    
     public void testCommmandArgs() {
         System.out.println("commmandArgs");
 
@@ -244,12 +240,12 @@ public class JobDescriptionTest {
         instance.setCommandArgs(new String[0]);
         result = instance.getCommandArgs();
 
-        assertEquals("The getCommandArgs() method did not return the value set with setCommandArgs()", new String[0], result);
+        assertEquals("The getCommandArgs() method did not return the value set with setCommandArgs()", 0, result.length);
 
         instance.setCommandArgs(null);
         result = instance.getCommandArgs();
 
-        assertEquals("The getCommandArgs() method did not return the value set with setCommandArgs()", new String[0], result);
+        assertEquals("The getCommandArgs() method did not return the value set with setCommandArgs()", 0, result.length);
 
         instance.setCommandArgs(expResult);
 
@@ -299,7 +295,7 @@ public class JobDescriptionTest {
     /**
      * Test of getCommandName method, of class JsvParameters.
      */
-    @Test
+    
     public void testCommandName() {
         System.out.println("commandName");
 
@@ -342,7 +338,7 @@ public class JobDescriptionTest {
     /**
      * Test of getContext method, of class JsvParameters.
      */
-    @Test
+    
     public void testContext() {
         System.out.println("context");
 
@@ -384,7 +380,7 @@ public class JobDescriptionTest {
     /**
      * Test of getWorkingDirectory method, of class JsvParameters.
      */
-    @Test
+    
     public void testWorkingDirectory() {
         System.out.println("workingDirectory");
 
@@ -415,7 +411,7 @@ public class JobDescriptionTest {
     /**
      * Test of getDeadline method, of class JsvParameters.
      */
-    @Test
+    
     public void testDeadline() {
         System.out.println("deadline");
 
@@ -452,7 +448,7 @@ public class JobDescriptionTest {
     /**
      * Test of getDisplay method, of class JsvParameters.
      */
-    @Test
+    
     public void testDisplay() {
         System.out.println("display");
 
@@ -483,7 +479,7 @@ public class JobDescriptionTest {
     /**
      * Test of getErrorPath method, of class JsvParameters.
      */
-    @Test
+    
     public void testErrorPath() {
         System.out.println("errorPath()");
 
@@ -547,7 +543,7 @@ public class JobDescriptionTest {
     /**
      * Test of getGroup method, of class JsvParameters.
      */
-    @Test
+    
     public void testGroup() {
         System.out.println("group");
 
@@ -589,7 +585,7 @@ public class JobDescriptionTest {
     /**
      * Test of getHardQueue method, of class JsvParameters.
      */
-    @Test
+    
     public void testHardQueue() {
         System.out.println("hardQueue");
 
@@ -660,7 +656,7 @@ public class JobDescriptionTest {
     /**
      * Test of getHardResourceRequirements method, of class JsvParameters.
      */
-    @Test
+    
     public void testHardResourceRequirements() {
         System.out.println("hardResourceRequirements");
 
@@ -733,7 +729,7 @@ public class JobDescriptionTest {
     /**
      * Test of getHoldArrayJobIds method, of class JsvParameters.
      */
-    @Test
+    
     public void testHoldArrayJobIds() {
         System.out.println("holdArrayJobIds");
 
@@ -804,7 +800,7 @@ public class JobDescriptionTest {
     /**
      * Test of getHoldJobIds method, of class JsvParameters.
      */
-    @Test
+    
     public void testHoldJobIds() {
         System.out.println("holdJobIds");
 
@@ -875,7 +871,7 @@ public class JobDescriptionTest {
     /**
      * Test of getInputPath method, of class JsvParameters.
      */
-    @Test
+    
     public void testInputPath() {
         System.out.println("inputPath()");
 
@@ -940,7 +936,7 @@ public class JobDescriptionTest {
     /**
      * Test of getJobContext method, of class JsvParameters.
      */
-    @Test
+    
     public void testJobContext() {
         System.out.println("jobContext");
 
@@ -1014,7 +1010,7 @@ public class JobDescriptionTest {
     /**
      * Test of getJobId method, of class JsvParameters.
      */
-    @Test
+    
     public void testJobId() {
         System.out.println("jobId");
 
@@ -1057,7 +1053,7 @@ public class JobDescriptionTest {
     /**
      * Test of getJobShare method, of class JsvParameters.
      */
-    @Test
+    
     public void testJobShare() {
         System.out.println("jobShare");
 
@@ -1095,7 +1091,7 @@ public class JobDescriptionTest {
     /**
      * Test of getMailRecipients method, of class JsvParameters.
      */
-    @Test
+    
     public void testMailRecipients() {
         System.out.println("mailRecipients");
 
@@ -1166,7 +1162,7 @@ public class JobDescriptionTest {
     /**
      * Test of getMailSpecifier method, of class JsvParameters.
      */
-    @Test
+    
     public void testMailSpecifier() {
         System.out.println("mailSpecifier");
 
@@ -1202,7 +1198,7 @@ public class JobDescriptionTest {
     /**
      * Test of getMasterQueue method, of class JsvParameters.
      */
-    @Test
+    
     public void testMasterQueue() {
         System.out.println("masterQueue");
 
@@ -1273,7 +1269,7 @@ public class JobDescriptionTest {
     /**
      * Test of getName method, of class JsvParameters.
      */
-    @Test
+    
     public void testName() {
         System.out.println("name");
 
@@ -1306,7 +1302,7 @@ public class JobDescriptionTest {
     /**
      * Test of getOutputPath method, of class JsvParameters.
      */
-    @Test
+    
     public void testOutputPath() {
         System.out.println("outputPath()");
 
@@ -1371,7 +1367,7 @@ public class JobDescriptionTest {
     /**
      * Test of getParallelEnvironment method, of class JsvParameters.
      */
-    @Test
+    
     public void testParallelEnvironment() {
         System.out.println("paralleEnvironment");
 
@@ -1415,7 +1411,7 @@ public class JobDescriptionTest {
     /**
      * Test of getPriority method, of class JsvParameters.
      */
-    @Test
+    
     public void testPriority() {
         System.out.println("priority");
 
@@ -1453,7 +1449,7 @@ public class JobDescriptionTest {
     /**
      * Test of getProject method, of class JsvParameters.
      */
-    @Test
+    
     public void testProject() {
         System.out.println("project");
 
@@ -1484,7 +1480,7 @@ public class JobDescriptionTest {
     /**
      * Test of getShellPath method, of class JsvParameters.
      */
-    @Test
+    
     public void testShellPath() {
         System.out.println("shellPath()");
 
@@ -1549,7 +1545,7 @@ public class JobDescriptionTest {
     /**
      * Test of getSoftQueue method, of class JsvParameters.
      */
-    @Test
+    
     public void testSoftQueue() {
         System.out.println("softQueue");
 
@@ -1620,7 +1616,7 @@ public class JobDescriptionTest {
     /**
      * Test of getSoftResourceRequirements method, of class JsvParameters.
      */
-    @Test
+    
     public void testSoftResourceRequirements() {
         System.out.println("softResourceRequirements");
 
@@ -1694,7 +1690,7 @@ public class JobDescriptionTest {
     /**
      * Test of getStartTime method, of class JsvParameters.
      */
-    @Test
+    
     public void testStartTime() {
         System.out.println("startTime");
 
@@ -1731,7 +1727,7 @@ public class JobDescriptionTest {
     /**
      * Test of getTaskSpecifier method, of class JsvParameters.
      */
-    @Test
+    
     public void testTaskSpecifier() {
         System.out.println("taskSpecifier");
 
@@ -1766,7 +1762,7 @@ public class JobDescriptionTest {
     /**
      * Test of getUser method, of class JsvParameters.
      */
-    @Test
+    
     public void testUser() {
         System.out.println("user");
 
@@ -1809,7 +1805,7 @@ public class JobDescriptionTest {
     /**
      * Test of getVerification method, of class JsvParameters.
      */
-    @Test
+    
     public void testVerification() {
         System.out.println("verification");
 
@@ -1840,7 +1836,7 @@ public class JobDescriptionTest {
     /**
      * Test of getVersion method, of class JsvParameters.
      */
-    @Test
+    
     public void testVersion() {
         System.out.println("version");
 
@@ -1883,7 +1879,7 @@ public class JobDescriptionTest {
     /**
      * Test of useShell method, of class JsvParameters.
      */
-    @Test
+    
     public void testShell() {
         System.out.println("shell");
 
@@ -1916,7 +1912,7 @@ public class JobDescriptionTest {
     /**
      * Test of resourceReservation property, of class JsvParameters.
      */
-    @Test
+    
     public void testReservation() {
         System.out.println("resourceReservation");
 
@@ -1946,7 +1942,7 @@ public class JobDescriptionTest {
     /**
      * Test of isRerunnable method, of class JsvParameters.
      */
-    @Test
+    
     public void testRerunnable() {
         System.out.println("rerunnable");
 
@@ -1979,7 +1975,7 @@ public class JobDescriptionTest {
     /**
      * Test of doNotify method, of class JsvParameters.
      */
-    @Test
+    
     public void testNotify() {
         System.out.println("notify");
 
@@ -2012,7 +2008,7 @@ public class JobDescriptionTest {
     /**
      * Test of mergeStreams method, of class JsvParameters.
      */
-    @Test
+    
     public void testMergeStreams() {
         System.out.println("mergeStreams");
 
@@ -2045,7 +2041,7 @@ public class JobDescriptionTest {
     /**
      * Test of onHold method, of class JsvParameters.
      */
-    @Test
+    
     public void testHold() {
         System.out.println("hold");
 
@@ -2078,7 +2074,7 @@ public class JobDescriptionTest {
     /**
      * Test of isBinary method, of class JsvParameters.
      */
-    @Test
+    
     public void testBinary() {
         System.out.println("binary");
 
@@ -2111,7 +2107,7 @@ public class JobDescriptionTest {
     /**
      * Test of getJobContext method, of class JsvParameters.
      */
-    @Test
+    
     public void testEnvironment() {
         System.out.println("environment");
 
@@ -2186,7 +2182,7 @@ public class JobDescriptionTest {
     /**
      * Test of getJobContext method, of class JsvParameters.
      */
-    @Test
+    
     public void testGetEnvironmentDifference() {
         System.out.println("getEnvironmentDifference()");
 
@@ -2406,7 +2402,7 @@ public class JobDescriptionTest {
     /**
      * Test of setBaseline method, of class JsvParameters.
      */
-    @Test
+    
     public void testSetBaseline() throws Exception {
         System.out.println("setBaseline");
 
@@ -2706,7 +2702,7 @@ public class JobDescriptionTest {
     /**
      * Test of getDifference method, of class JsvParameters.
      */
-    @Test
+    
     public void testGetDifference() throws Exception {
         System.out.println("getDifference");
 
@@ -2898,7 +2894,9 @@ public class JobDescriptionTest {
             Arrays.sort(resultArray);
         }
 
-        assertEquals("The getDifference() method did not notice the input path property changed", new String[] { "/a/b", "h=c/d" }, resultArray);
+        assertEquals("The getDifference() method did not notice the input path property changed", 2, resultArray.length);
+        assertEquals("The getDifference() method did not notice the input path property changed",  "/a/b", resultArray[0]);
+        assertEquals("The getDifference() method did not notice the input path property changed", "h=c/d", resultArray[1]);
 
         resultString = difference.get("o");
         resultArray = null;
@@ -2908,7 +2906,9 @@ public class JobDescriptionTest {
             Arrays.sort(resultArray);
         }
 
-        assertEquals("The getDifference() method did not notice the output path property changed", new String[] { "/a/b", "h=c/d" }, resultArray);
+        assertEquals("The getDifference() method did not notice the output path property changed", 2, resultArray.length);
+        assertEquals("The getDifference() method did not notice the output path property changed",  "/a/b", resultArray[0]);
+        assertEquals("The getDifference() method did not notice the output path property changed", "h=c/d", resultArray[1]);
 
         resultString = difference.get("e");
         resultArray = null;
@@ -2918,7 +2918,9 @@ public class JobDescriptionTest {
             Arrays.sort(resultArray);
         }
 
-        assertEquals("The getDifference() method did not notice the error path property changed", new String[] { "/a/b", "h=c/d" }, resultArray);
+        assertEquals("The getDifference() method did not notice the error path property changed", 2, resultArray.length);
+        assertEquals("The getDifference() method did not notice the error path property changed",  "/a/b", resultArray[0]);
+        assertEquals("The getDifference() method did not notice the error path property changed", "h=c/d", resultArray[1]);
 
         resultString = difference.get("S");
         resultArray = null;
@@ -2928,7 +2930,9 @@ public class JobDescriptionTest {
             Arrays.sort(resultArray);
         }
 
-        assertEquals("The getDifference() method did not notice the shell path property changed", new String[] { "/a/b", "h=c/d" }, resultArray);
+        assertEquals("The getDifference() method did not notice the shell path property changed", 2, resultArray.length);
+        assertEquals("The getDifference() method did not notice the shell path property changed",  "/a/b", resultArray[0]);
+        assertEquals("The getDifference() method did not notice the shell path property changed", "h=c/d", resultArray[1]);
 
         resultString = difference.get("a");
 
@@ -2986,7 +2990,9 @@ public class JobDescriptionTest {
             Arrays.sort(resultArray);
         }
 
-        assertEquals("The getDifference() method did not notice the hard resource request property changed", new String[] { "test1=test2", "test3=test4" }, resultArray);
+        assertEquals("The getDifference() method did not notice the hard resource request property changed", 2, resultArray.length);
+        assertEquals("The getDifference() method did not notice the hard resource request property changed", "test1=test2", resultArray[0]);
+        assertEquals("The getDifference() method did not notice the hard resource request property changed", "test3=test4", resultArray[1]);
 
         resultString = difference.get("l_soft");
         resultArray = null;
@@ -2996,7 +3002,9 @@ public class JobDescriptionTest {
             Arrays.sort(resultArray);
         }
 
-        assertEquals("The getDifference() method did not notice the soft resource request property changed", new String[] { "test1=test2", "test3=test4" }, resultArray);
+        assertEquals("The getDifference() method did not notice the soft resource request property changed", 2, resultArray.length);
+        assertEquals("The getDifference() method did not notice the soft resource request property changed", "test1=test2", resultArray[0]);
+        assertEquals("The getDifference() method did not notice the soft resource request property changed", "test3=test4", resultArray[1]);
 
         resultString = difference.get("m");
 
@@ -3228,7 +3236,8 @@ public class JobDescriptionTest {
             Arrays.sort(resultArray);
         }
 
-        assertEquals("The getDifference() method did not notice the input path property changed", new String[] { "h2=efg/h/ij" }, resultArray);
+        assertEquals("The getDifference() method did not notice the input path property changed", 1, resultArray.length);
+        assertEquals("The getDifference() method did not notice the input path property changed", "h2=efg/h/ij", resultArray[0]);
 
         resultString = difference.get("o");
         resultArray = null;
@@ -3238,7 +3247,8 @@ public class JobDescriptionTest {
             Arrays.sort(resultArray);
         }
 
-        assertEquals("The getDifference() method did not notice the output path property changed", new String[] { "h2=efg/h/ij" }, resultArray);
+        assertEquals("The getDifference() method did not notice the output path property changed", 1, resultArray.length);
+        assertEquals("The getDifference() method did not notice the output path property changed", "h2=efg/h/ij", resultArray[0]);
 
         resultString = difference.get("e");
         resultArray = null;
@@ -3248,7 +3258,8 @@ public class JobDescriptionTest {
             Arrays.sort(resultArray);
         }
 
-        assertEquals("The getDifference() method did not notice the error path property changed", new String[] { "h2=efg/h/ij" }, resultArray);
+        assertEquals("The getDifference() method did not notice the error path property changed", 1, resultArray.length);
+        assertEquals("The getDifference() method did not notice the error path property changed", "h2=efg/h/ij", resultArray[0]);
 
         resultString = difference.get("S");
         resultArray = null;
@@ -3258,7 +3269,8 @@ public class JobDescriptionTest {
             Arrays.sort(resultArray);
         }
 
-        assertEquals("The getDifference() method did not notice the shell path property changed", new String[] { "h2=efg/h/ij" }, resultArray);
+        assertEquals("The getDifference() method did not notice the shell path property changed", 1, resultArray.length);
+        assertEquals("The getDifference() method did not notice the shell path property changed", "h2=efg/h/ij", resultArray[0]);
 
         resultString = difference.get("a");
 
@@ -3272,7 +3284,9 @@ public class JobDescriptionTest {
             Arrays.sort(resultArray);
         }
 
-        assertEquals("The getDifference() method did not notice the job context property changed", new String[] { "new1=new2", "new3=new4" }, resultArray);
+        assertEquals("The getDifference() method did not notice the job context property changed", 2, resultArray.length);
+        assertEquals("The getDifference() method did not notice the job context property changed", "new1=new2", resultArray[0]);
+        assertEquals("The getDifference() method did not notice the job context property changed", "new3=new4", resultArray[1]);
 
         resultString = difference.get("dc");
 
@@ -3322,7 +3336,8 @@ public class JobDescriptionTest {
             Arrays.sort(resultArray);
         }
 
-        assertEquals("The getDifference() method did not notice the hard resource request property changed", new String[] { "new1=new2" }, resultArray);
+        assertEquals("The getDifference() method did not notice the hard resource request property changed", 1, resultArray.length);
+        assertEquals("The getDifference() method did not notice the hard resource request property changed", "new1=new2", resultArray[0]);
 
         resultString = difference.get("l_soft");
         resultArray = null;
@@ -3332,7 +3347,8 @@ public class JobDescriptionTest {
             Arrays.sort(resultArray);
         }
 
-        assertEquals("The getDifference() method did not notice the soft resource request property changed", new String[] { "new1=new2" }, resultArray);
+        assertEquals("The getDifference() method did not notice the soft resource request property changed", 1, resultArray.length);
+        assertEquals("The getDifference() method did not notice the soft resource request property changed", "new1=new2", resultArray[0]);
 
         resultString = difference.get("m");
 
@@ -3390,7 +3406,7 @@ public class JobDescriptionTest {
     /**
      * Test of set method, of class JsvParameters.
      */
-    @Test
+    
     public void testSet() {
         System.out.println("set");
 
@@ -3491,32 +3507,32 @@ public class JobDescriptionTest {
         instance.set("b", "y");
         resultBoolean = instance.isBinary();
 
-        assertEquals("The isBinary() method did not return the value set with the set() method", true, resultBoolean);
+        assertEquals("The isBinary() method did not return the value set with the set() method", Boolean.TRUE, resultBoolean);
 
         instance.set("notify", "y");
         resultBoolean = instance.doNotify();
 
-        assertEquals("The doNotify() method did not return the value set with the set() method", true, resultBoolean);
+        assertEquals("The doNotify() method did not return the value set with the set() method", Boolean.TRUE, resultBoolean);
 
         instance.set("j", "y");
         resultBoolean = instance.mergeStreams();
 
-        assertEquals("The mergeStreams() method did not return the value set with the set() method", true, resultBoolean);
+        assertEquals("The mergeStreams() method did not return the value set with the set() method", Boolean.TRUE, resultBoolean);
 
         instance.set("shell", "n");
         resultBoolean = instance.useShell();
 
-        assertEquals("The useShell() method did not return the value set with the set() method", false, resultBoolean);
+        assertEquals("The useShell() method did not return the value set with the set() method", Boolean.FALSE, resultBoolean);
 
         instance.set("r", "y");
         resultBoolean = instance.isRerunnable();
 
-        assertEquals("The isRerunnable() method did not return the value set with the set() method", true, resultBoolean);
+        assertEquals("The isRerunnable() method did not return the value set with the set() method", Boolean.TRUE, resultBoolean);
 
         instance.set("R", "y");
         resultBoolean = instance.hasResourceReservation();
 
-        assertEquals("The hasReservation() method did not return the value set with the set() method", true, resultBoolean);
+        assertEquals("The hasReservation() method did not return the value set with the set() method", Boolean.TRUE, resultBoolean);
 
         instance.set("A", expectedString);
         resultString = instance.getAccount();
@@ -3606,12 +3622,12 @@ public class JobDescriptionTest {
         instance.set("h", "u");
         resultBoolean = instance.onHold();
 
-        assertEquals("The onHold() method did not return the value set with the set() method", true, resultBoolean);
+        assertEquals("The onHold() method did not return the value set with the set() method", Boolean.TRUE, resultBoolean);
 
         instance.set("h", "n");
         resultBoolean = instance.onHold();
 
-        assertEquals("The onHold() method did not return the value set with the set() method", false, resultBoolean);
+        assertEquals("The onHold() method did not return the value set with the set() method", Boolean.FALSE, resultBoolean);
 
         instance.set("hold_jid", listString);
         resultList = instance.getHoldJobIds();
@@ -3830,7 +3846,7 @@ public class JobDescriptionTest {
         }
     }
 
-    @Test
+    
     public void testFormatTime() throws Exception {
         System.out.println("formatTime()");
 
@@ -3858,7 +3874,7 @@ public class JobDescriptionTest {
         assertEquals("The formatTime() method did not return a correctly formatted time string", null, result);
     }
 
-    @Test
+    
     public void testIsMapDifferent() throws Exception {
         System.out.println("isMapDifferent()");
 
@@ -3901,7 +3917,7 @@ public class JobDescriptionTest {
         assertEquals("The isMapDifferent() method did not return the correct value", true, result);
     }
 
-    @Test
+    
     public void testMapToString() throws Exception {
         System.out.println("mapToString()");
 
@@ -3917,21 +3933,28 @@ public class JobDescriptionTest {
         String[] resultArray = result.toString().split(",");
 
         Arrays.sort(resultArray);
-        assertArrayEquals("The mapToString() method did not return the correct string", expectedResult, resultArray);
+        assertEquals("The mapToString() method did not return the correct string", expectedResult.length, resultArray.length);
+        assertEquals("The mapToString() method did not return the correct string", expectedResult[0], resultArray[0]);
+        assertEquals("The mapToString() method did not return the correct string", expectedResult[1], resultArray[1]);
+        assertEquals("The mapToString() method did not return the correct string", expectedResult[2], resultArray[2]);
 
         map.remove("test2");
         expectedResult = new String[] { "test1=Test1", "test3=Test3" };
         result = callPrivateMethod(instance, "mapToString", new Class[] { Map.class }, new Object[] { map });
         resultArray = result.toString().split(",");
         Arrays.sort(resultArray);
-        assertArrayEquals("The mapToString() method did not return the correct string", expectedResult, resultArray);
+        assertEquals("The mapToString() method did not return the correct string", expectedResult.length, resultArray.length);
+        assertEquals("The mapToString() method did not return the correct string", expectedResult[0], resultArray[0]);
+        assertEquals("The mapToString() method did not return the correct string", expectedResult[1], resultArray[1]);
 
         map.put("test3", "Test4");
         expectedResult = new String[] { "test1=Test1", "test3=Test4" };
         result = callPrivateMethod(instance, "mapToString", new Class[] { Map.class }, new Object[] { map });
         resultArray = result.toString().split(",");
         Arrays.sort(resultArray);
-        assertArrayEquals("The mapToString() method did not return the correct string", expectedResult, resultArray);
+        assertEquals("The mapToString() method did not return the correct string", expectedResult.length, resultArray.length);
+        assertEquals("The mapToString() method did not return the correct string", expectedResult[0], resultArray[0]);
+        assertEquals("The mapToString() method did not return the correct string", expectedResult[1], resultArray[1]);
 
         map.clear();
         result = callPrivateMethod(instance, "mapToString", new Class[] { Map.class }, new Object[] { map });
@@ -3941,7 +3964,7 @@ public class JobDescriptionTest {
         assertEquals("The mapToString() method did not return the correct string", null, result);
     }
 
-    @Test
+    
     public void testIsListDifferent() throws Exception {
         System.out.println("isListDifferent()");
 
@@ -3984,7 +4007,7 @@ public class JobDescriptionTest {
         assertEquals("The isListDifferent() method did not return the correct value", true, result);
     }
 
-    @Test
+    
     public void testListToString() throws Exception {
         System.out.println("listToString()");
 
@@ -4018,7 +4041,7 @@ public class JobDescriptionTest {
         assertEquals("The mapToString() method did not return the correct string", null, result);
     }
 
-    @Test
+    
     public void testParseList() throws Exception {
         System.out.println("parseList()");
 
@@ -4038,7 +4061,7 @@ public class JobDescriptionTest {
         assertEquals("The parseList() method did not parse the string correctly", expectedResult, result);
     }
 
-    @Test
+    
     public void testParseMap() throws Exception {
         System.out.println("parseMap()");
 
@@ -4084,7 +4107,7 @@ public class JobDescriptionTest {
         assertEquals("The parseMap() method did not parse the string correctly", expectedResult, result);
     }
 
-    @Test
+    
     public void testParsePath() throws Exception {
         System.out.println("parsePath()");
 
@@ -4138,7 +4161,7 @@ public class JobDescriptionTest {
         assertEquals("The parsePath() method did not log an appropriate message", Level.WARNING, handler.messages.get(0).getLevel());
     }
 
-    @Test
+    
     public void testParseTime() throws Exception {
         System.out.println("parseTime()");
 
@@ -4181,7 +4204,7 @@ public class JobDescriptionTest {
         }
     }
 
-    @Test
+    
     public void testPutDifference() throws Exception {
         System.out.println("putDifference(Map,Object,Object,String)");
 
@@ -4241,7 +4264,7 @@ public class JobDescriptionTest {
         assertEquals("The putDifference() method incorrectly put an entry into the map", 0, map.size());
     }
 
-    @Test
+    
     public void testPutDifference2() throws Exception {
         System.out.println("putDifference(Map,Object,Object,String,String)");
 
@@ -4302,7 +4325,7 @@ public class JobDescriptionTest {
         assertEquals("The putDifference() method incorrectly put an entry into the map", 0, map.size());
     }
 
-    @Test
+    
     public void testPutBooleanDifference() throws Exception {
         System.out.println("putBooleanDifference(Map,Boolean,Boolean,String,String)");
 
@@ -4348,7 +4371,7 @@ public class JobDescriptionTest {
         assertEquals("The putBooleanDifference() method incorrectly put an entry into the map", 0, map.size());
     }
 
-    @Test
+    
     public void testPutBooleanDifference2() throws Exception {
         System.out.println("putBooleanDifference(Map,Boolean,Boolean,String,String,String)");
 
@@ -4395,7 +4418,7 @@ public class JobDescriptionTest {
         assertEquals("The putBooleanDifference() method incorrectly put an entry into the map", 0, map.size());
     }
 
-    @Test
+    
     public void testPutTimeDifference() throws Exception {
         System.out.println("putTimeDifference()");
 
@@ -4437,7 +4460,7 @@ public class JobDescriptionTest {
         assertEquals("The putTimeDifference() method incorrectly put an entry into the map", 0, map.size());
     }
 
-    @Test
+    
     public void testPutListDifference() throws Exception {
         System.out.println("putListDifference()");
 
@@ -4477,7 +4500,7 @@ public class JobDescriptionTest {
         assertEquals("The putListDifference() method incorrectly put an entry into the map", 0, map.size());
     }
 
-    @Test
+    
     public void testPutMapDifference() throws Exception {
         System.out.println("putMapDifference()");
 
@@ -4517,7 +4540,7 @@ public class JobDescriptionTest {
         assertEquals("The putMapDifference() method incorrectly put an entry into the map", 0, map.size());
     }
 
-    @Test
+    
     public void testPutCmdArgsDifference() throws Exception {
         System.out.println("putCmdArgsDifference()");
 
@@ -4564,7 +4587,7 @@ public class JobDescriptionTest {
         assertEquals("The putCmdArgsDifference() method incorrectly put an entry into the map", 0, map.size());
     }
 
-    @Test
+    
     public void testPutCheckpointDifference() throws Exception {
         System.out.println("putCheckpointDifference()");
 
@@ -4613,7 +4636,7 @@ public class JobDescriptionTest {
         assertEquals("The putCheckpointDifference() method incorrectly put an entries into the map", 0, map.size());
     }
 
-    @Test
+    
     public void testPutMailDifference() throws Exception {
         System.out.println("putMailDifference()");
 
@@ -4650,7 +4673,7 @@ public class JobDescriptionTest {
         assertEquals("The putMailDifference() method incorrectly put an entry into the map", 0, map.size());
     }
 
-    @Test
+    
     public void testPutPeDifference() throws Exception {
         System.out.println("putPeDifference()");
 
@@ -4695,7 +4718,7 @@ public class JobDescriptionTest {
         assertEquals("The putPeDifference() method incorrectly put an entries into the map", 0, map.size());
     }
 
-    @Test
+    
     public void testPutTaskDifference() throws Exception {
         System.out.println("putTaskDifference()");
 
@@ -4740,7 +4763,7 @@ public class JobDescriptionTest {
         assertEquals("The putTaskDifference() method incorrectly put an entries into the map", 0, map.size());
     }
 
-    @Test
+    
     public void testPutVerificationDifference() throws Exception {
         System.out.println("putVerificationDifference()");
 
@@ -4774,7 +4797,7 @@ public class JobDescriptionTest {
         assertEquals("The putVerificationDifference() method incorrectly put an entry into the map", 0, map.size());
     }
 
-    @Test
+    
     public void testPutNameDifference() throws Exception {
         System.out.println("putNameDifference()");
 
@@ -4814,7 +4837,7 @@ public class JobDescriptionTest {
         assertEquals("The putNameDifference() method incorrectly put an entry into the map", 0, map.size());
     }
 
-    @Test
+    
     public void testAppendComma() throws Exception {
         System.out.println("appendComma()");
 
@@ -4832,7 +4855,7 @@ public class JobDescriptionTest {
         assertEquals("The appendComma() method appended a comma to an empty string", "a,,", sb.toString());
     }
 
-    @Test
+    
     public void testExtractName() throws Exception {
         System.out.println("extractName()");
 
@@ -4880,7 +4903,7 @@ public class JobDescriptionTest {
         assertEquals("The extractName() method did not produce the correct result", "NO_NAME", result);
     }
 
-    @Test
+    
     public void testVerificationToString() throws Exception {
         System.out.println("verificationToString()");
 
@@ -4909,7 +4932,7 @@ public class JobDescriptionTest {
     /**
      * Test of parseCmdArgs method, of class JobDescription.
      */
-    @Test
+    
     public void testParseCmdArgs() throws Exception {
         System.out.println("parseCmdArgs()");
 
@@ -4919,19 +4942,25 @@ public class JobDescriptionTest {
 
         String[] result = (String[])callPrivateMethod(instance, "parseCmdArgs", new Class[]{ String.class }, new Object[]{ value });
 
-        assertArrayEquals("The parseCmdArgs() method did not parse the value correctly", expResult, result);
+        assertEquals("The parseCmdArgs() method did not parse the value correctly", expResult.length, result.length);
+        assertEquals("The parseCmdArgs() method did not parse the value correctly", expResult[0], result[0]);
+        assertEquals("The parseCmdArgs() method did not parse the value correctly", expResult[1], result[1]);
+        assertEquals("The parseCmdArgs() method did not parse the value correctly", expResult[2], result[2]);
 
         setPrivateField(instance, "commandArgs", new String[]{ "test1", "test2", "test3" });
         value = "1";
         expResult = new String[]{ "test1" };
         result = (String[])callPrivateMethod(instance, "parseCmdArgs", new Class[]{ String.class }, new Object[]{ value });
-        assertArrayEquals("The parseCmdArgs() method did not parse the value correctly", expResult, result);
+        assertEquals("The parseCmdArgs() method did not parse the value correctly", expResult.length, result.length);
+        assertEquals("The parseCmdArgs() method did not parse the value correctly", expResult[0], result[0]);
 
         setPrivateField(instance, "commandArgs", new String[]{ "test1" });
         value = "2";
         expResult = new String[]{ "test1", null };
         result = (String[])callPrivateMethod(instance, "parseCmdArgs", new Class[]{ String.class }, new Object[]{ value });
-        assertArrayEquals("The parseCmdArgs() method did not parse the value correctly", expResult, result);
+        assertEquals("The parseCmdArgs() method did not parse the value correctly", expResult.length, result.length);
+        assertEquals("The parseCmdArgs() method did not parse the value correctly", expResult[0], result[0]);
+        assertEquals("The parseCmdArgs() method did not parse the value correctly", expResult[1], result[1]);
 
         setPrivateField(instance, "commandArgs", null);
         value = null;
@@ -4941,7 +4970,9 @@ public class JobDescriptionTest {
         setPrivateField(instance, "commandArgs", new String[]{ "test1", null });
         value = null;
         result = (String[])callPrivateMethod(instance, "parseCmdArgs", new Class[]{ String.class }, new Object[]{ value });
-        assertArrayEquals("The parseCmdArgs() method did not parse the value correctly", expResult, result);
+        assertEquals("The parseCmdArgs() method did not parse the value correctly", expResult.length, result.length);
+        assertEquals("The parseCmdArgs() method did not parse the value correctly", expResult[0], result[0]);
+        assertEquals("The parseCmdArgs() method did not parse the value correctly", expResult[1], result[1]);
 
         Logger log = Logger.getLogger("com.sun.grid.Jsv");
         TestHandler handler = new TestHandler();
@@ -4951,7 +4982,9 @@ public class JobDescriptionTest {
         handler.setLevel(Level.ALL);
         value = "invalid";
         result = (String[])callPrivateMethod(instance, "parseCmdArgs", new Class[]{ String.class }, new Object[]{ value });
-        assertArrayEquals("The parseCmdArgs() method changed the command args on an invalid value", expResult, result);
+        assertEquals("The parseCmdArgs() method changed the command args on an invalid value", expResult.length, result.length);
+        assertEquals("The parseCmdArgs() method changed the command args on an invalid value", expResult[0], result[0]);
+        assertEquals("The parseCmdArgs() method changed the command args on an invalid value", expResult[1], result[1]);
         assertEquals("The parseCmdArgs() method did log an appropriate error message", 1, handler.messages.size());
         assertEquals("The parseCmdArgs() method did log an appropriate error message", Level.WARNING, handler.messages.get(0).getLevel());
     }
@@ -4959,7 +4992,7 @@ public class JobDescriptionTest {
     /**
      * Test of parseCmdArg method, of class JobDescription.
      */
-    @Test
+    
     public void testParseCmdArg() throws Exception {
         System.out.println("parseCmdArg()");
 
@@ -4971,42 +5004,55 @@ public class JobDescriptionTest {
 
         String[] result = (String[])callPrivateMethod(instance, "parseCmdArg", new Class[]{ String.class, String.class }, new Object[]{ parameter, value });
 
-        assertArrayEquals("The parseCmdArg() method did not parse the value correctly", expResult, result);
+        assertEquals("The parseCmdArg() method did not parse the value correctly", expResult.length, result.length);
+        assertEquals("The parseCmdArg() method did not parse the value correctly", expResult[0], result[0]);
 
         setPrivateField(instance, "commandArgs", new String[]{ "test0" });
         parameter = name + "2";
         value = "test2";
         expResult = new String[]{ "test0", null, "test2" };
         result = (String[])callPrivateMethod(instance, "parseCmdArg", new Class[]{ String.class, String.class }, new Object[]{ parameter, value });
-        assertArrayEquals("The parseCmdArg() method did not parse the value correctly", expResult, result);
+        assertEquals("The parseCmdArg() method did not parse the value correctly", expResult.length, result.length);
+        assertEquals("The parseCmdArg() method did not parse the value correctly", expResult[0], result[0]);
+        assertEquals("The parseCmdArg() method did not parse the value correctly", expResult[1], result[1]);
+        assertEquals("The parseCmdArg() method did not parse the value correctly", expResult[2], result[2]);
 
         setPrivateField(instance, "commandArgs", new String[]{ "test0", null, "test2" });
         parameter = name + "1";
         value = "test1";
         expResult = new String[]{ "test0", "test1", "test2" };
         result = (String[])callPrivateMethod(instance, "parseCmdArg", new Class[]{ String.class, String.class }, new Object[]{ parameter, value });
-        assertArrayEquals("The parseCmdArg() method did not parse the value correctly", expResult, result);
+        assertEquals("The parseCmdArg() method did not parse the value correctly", expResult.length, result.length);
+        assertEquals("The parseCmdArg() method did not parse the value correctly", expResult[0], result[0]);
+        assertEquals("The parseCmdArg() method did not parse the value correctly", expResult[1], result[1]);
+        assertEquals("The parseCmdArg() method did not parse the value correctly", expResult[2], result[2]);
 
         setPrivateField(instance, "commandArgs", new String[]{ "test0", "test1", "test2" });
         parameter = name + "0";
         value = null;
         expResult = new String[]{ "test1", "test2" };
         result = (String[])callPrivateMethod(instance, "parseCmdArg", new Class[]{ String.class, String.class }, new Object[]{ parameter, value });
-        assertArrayEquals("The parseCmdArg() method did not parse the value correctly", expResult, result);
+        assertEquals("The parseCmdArg() method did not parse the value correctly", expResult.length, result.length);
+        assertEquals("The parseCmdArg() method did not parse the value correctly", expResult[0], result[0]);
+        assertEquals("The parseCmdArg() method did not parse the value correctly", expResult[1], result[1]);
 
         setPrivateField(instance, "commandArgs", new String[]{ "test0", "test1", "test2" });
         parameter = name + "1";
         value = null;
         expResult = new String[]{ "test0", "test2" };
         result = (String[])callPrivateMethod(instance, "parseCmdArg", new Class[]{ String.class, String.class }, new Object[]{ parameter, value });
-        assertArrayEquals("The parseCmdArg() method did not parse the value correctly", expResult, result);
+        assertEquals("The parseCmdArg() method did not parse the value correctly", expResult.length, result.length);
+        assertEquals("The parseCmdArg() method did not parse the value correctly", expResult[0], result[0]);
+        assertEquals("The parseCmdArg() method did not parse the value correctly", expResult[1], result[1]);
 
         setPrivateField(instance, "commandArgs", new String[]{ "test0", "test1", "test2" });
         parameter = name + "2";
         value = null;
         expResult = new String[]{ "test0", "test1" };
         result = (String[])callPrivateMethod(instance, "parseCmdArg", new Class[]{ String.class, String.class }, new Object[]{ parameter, value });
-        assertArrayEquals("The parseCmdArg() method did not parse the value correctly", expResult, result);
+        assertEquals("The parseCmdArg() method did not parse the value correctly", expResult.length, result.length);
+        assertEquals("The parseCmdArg() method did not parse the value correctly", expResult[0], result[0]);
+        assertEquals("The parseCmdArg() method did not parse the value correctly", expResult[1], result[1]);
 
         setPrivateField(instance, "commandArgs", null);
         parameter = name + "2";
@@ -5023,21 +5069,27 @@ public class JobDescriptionTest {
         handler.setLevel(Level.ALL);
         parameter = "invalid";
         result = (String[])callPrivateMethod(instance, "parseCmdArg", new Class[]{ String.class, String.class }, new Object[]{ parameter, value });
-        assertArrayEquals("The parseCmdArg() method changed the command args on an invalid value", expResult, result);
+        assertEquals("The parseCmdArg() method changed the command args on an invalid value", expResult.length, result.length);
+        assertEquals("The parseCmdArg() method changed the command args on an invalid value", expResult[0], result[0]);
+        assertEquals("The parseCmdArg() method changed the command args on an invalid value", expResult[1], result[1]);
         assertEquals("The parseCmdArg() method did log an appropriate error message", 1, handler.messages.size());
         assertEquals("The parseCmdArg() method did log an appropriate error message", Level.WARNING, handler.messages.get(0).getLevel());
 
         handler.messages.clear();
         parameter = name + "-1";
         result = (String[])callPrivateMethod(instance, "parseCmdArg", new Class[]{ String.class, String.class }, new Object[]{ parameter, value });
-        assertArrayEquals("The parseCmdArg() method changed the command args on an invalid value", expResult, result);
+        assertEquals("The parseCmdArg() method changed the command args on an invalid value", expResult.length, result.length);
+        assertEquals("The parseCmdArg() method changed the command args on an invalid value", expResult[0], result[0]);
+        assertEquals("The parseCmdArg() method changed the command args on an invalid value", expResult[1], result[1]);
         assertEquals("The parseCmdArg() method did log an appropriate error message", 1, handler.messages.size());
         assertEquals("The parseCmdArg() method did log an appropriate error message", Level.WARNING, handler.messages.get(0).getLevel());
 
         handler.messages.clear();
         parameter = null;
         result = (String[])callPrivateMethod(instance, "parseCmdArg", new Class[]{ String.class, String.class }, new Object[]{ parameter, value });
-        assertArrayEquals("The parseCmdArg() method changed the command args on an invalid value", expResult, result);
+        assertEquals("The parseCmdArg() method changed the command args on an invalid value", expResult.length, result.length);
+        assertEquals("The parseCmdArg() method changed the command args on an invalid value", expResult[0], result[0]);
+        assertEquals("The parseCmdArg() method changed the command args on an invalid value", expResult[1], result[1]);
         assertEquals("The parseCmdArg() method did log an appropriate error message", 1, handler.messages.size());
         assertEquals("The parseCmdArg() method did log an appropriate error message", Level.WARNING, handler.messages.get(0).getLevel());
     }
@@ -5045,7 +5097,7 @@ public class JobDescriptionTest {
     /**
      * Test of parseBoolean method, of class JobDescription.
      */
-    @Test
+    
     public void testParseBoolean() throws Exception {
         System.out.println("parseBoolean()");
 
@@ -5093,7 +5145,7 @@ public class JobDescriptionTest {
     /**
      * Test of parseInt method, of class JobDescription.
      */
-    @Test
+    
     public void testParseInt() throws Exception {
         System.out.println("parseInt()");
 
@@ -5141,7 +5193,7 @@ public class JobDescriptionTest {
     /**
      * Test of parseCheckpointName method, of class JobDescription.
      */
-    @Test
+    
     public void testParseCheckpointName() throws Exception {
         System.out.println("parseCheckpointName()");
 
@@ -5179,7 +5231,7 @@ public class JobDescriptionTest {
     /**
      * Test of parseCheckpointOccasion method, of class JobDescription.
      */
-    @Test
+    
     public void testParseCheckpointOccasion() throws Exception {
         System.out.println("parseCheckpointOccasion()");
 
@@ -5234,7 +5286,7 @@ public class JobDescriptionTest {
     /**
      * Test of parseCheckpointInterval method, of class JobDescription.
      */
-    @Test
+    
     public void testParseCheckpointInterval() throws Exception {
         System.out.println("parseCheckpointInterval()");
 
@@ -5294,7 +5346,7 @@ public class JobDescriptionTest {
     /**
      * Test of parseHold method, of class JobDescription.
      */
-    @Test
+    
     public void testParseHold() throws Exception {
         System.out.println("parseHold()");
 
@@ -5341,7 +5393,7 @@ public class JobDescriptionTest {
     /**
      * Test of parseMail method, of class JobDescription.
      */
-    @Test
+    
     public void testParseMail() throws Exception {
         System.out.println("parseMail()");
 
@@ -5396,7 +5448,7 @@ public class JobDescriptionTest {
     /**
      * Test of parseTaskMin method, of class JobDescription.
      */
-    @Test
+    
     public void testParseTaskMin() throws Exception {
         System.out.println("parseTaskMin()");
 
@@ -5469,7 +5521,7 @@ public class JobDescriptionTest {
     /**
      * Test of parseTaskMax method, of class JobDescription.
      */
-    @Test
+    
     public void testParseTaskMax() throws Exception {
         System.out.println("parseTaskMax()");
 
@@ -5542,7 +5594,7 @@ public class JobDescriptionTest {
     /**
      * Test of parseTaskStep method, of class JobDescription.
      */
-    @Test
+    
     public void testParseTaskStep() throws Exception {
         System.out.println("parseTaskStep()");
 
@@ -5615,7 +5667,7 @@ public class JobDescriptionTest {
     /**
      * Test of parsePeName method, of class JobDescription.
      */
-    @Test
+    
     public void testParsePeName() throws Exception {
         System.out.println("parsePeName()");
 
@@ -5653,7 +5705,7 @@ public class JobDescriptionTest {
     /**
      * Test of parsePeMin method, of class JobDescription.
      */
-    @Test
+    
     public void testParsePeMin() throws Exception {
         System.out.println("parsePeMin()");
 
@@ -5726,7 +5778,7 @@ public class JobDescriptionTest {
     /**
      * Test of parsePeMax method, of class JobDescription.
      */
-    @Test
+    
     public void testParsePeMax() throws Exception {
         System.out.println("parsePeMax()");
 
@@ -5799,7 +5851,7 @@ public class JobDescriptionTest {
     /**
      * Test of parseVerification method, of class JobDescription.
      */
-    @Test
+    
     public void testParseVerification() throws Exception {
         System.out.println("parseVerification()");
 

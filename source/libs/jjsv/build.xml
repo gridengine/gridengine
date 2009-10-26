@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- You may freely edit this file. See commented blocks below for -->
-<!-- some examples of how to customize the build. -->
-<!-- (If you delete it and reopen the project it will be recreated.) -->
-<!-- By default, only the Clean and Build commands use this build script. -->
-<!-- Commands such as Run, Debug, and Test only use this build script if -->
-<!-- the Compile on Save feature is turned off for the project. -->
-<!-- You can turn off the Compile on Save (or Deploy on Save) setting -->
-<!-- in the project's Project Properties dialog box.-->
-<project name="JSV" default="default" basedir=".">
+<project name="JSV" default="jar" basedir=".">
     <description>Builds, tests, and runs the project JSV.</description>
+    <property name="sge.srcdir" location="../.."/>
+    <property file="${sge.srcdir}/build_testsuite.properties"/>
+    <property file="${sge.srcdir}/build_private.properties"/>
+    <property file="${sge.srcdir}/build.properties"/>
+    <property name="javac.source" value="${default.sge.javac.source}"/>
+    <property name="javac.target" value="${default.sge.javac.target}"/>
+
     <import file="nbproject/build-impl.xml"/>
     <!--
 
@@ -71,4 +70,108 @@
     nbproject/build-impl.xml file.
 
     -->
+
+    <target name="propsinit.base">
+        <condition property="isWindows">
+            <os family="windows"/>
+        </condition>
+
+    </target>
+
+    <target name="propsinit.unix" depends="propsinit.base" unless="isWindows">
+        <property file="../../build.properties"/>
+    </target>
+
+    <target name="propsinit.win" depends="propsinit.base" if="isWindows">
+        <property file="../../build_win.properties"/>
+    </target>
+
+    <target name="propsinit" depends="propsinit.win, propsinit.unix"/>
+
+    <target name="-pre-init" >
+        <property file="../../build_testsuite.properties"/>
+        <property file="../../build_private.properties"/>
+    </target>
+
+    <target name="-post-init" depends="propsinit">
+        <property environment="env"/>
+
+        <echo>libs.junit.classpath=${libs.junit.classpath}</echo>
+        <exec executable="hostname" outputproperty="hostname"/>
+        <condition property="isJavaBuildHost">
+           <not>
+           <isset property="java.buildhost"/>
+           </not>
+        </condition>
+        <condition property="isJavaBuildHost" >
+            <contains string="${java.buildhost}" substring="${hostname}" casesensitive="false"/>
+        </condition>
+
+        <!-- Copyright stuff -->
+        <condition property="legal.dir" value="${env.AIMK_COPYRIGHT_DIR}" else="">
+            <isset property="env.AIMK_COPYRIGHT_DIR"/>
+        </condition>
+
+        <condition property="legal" value="COPYRIGHT">
+            <equals arg1="${env.AIMK_COPYRIGHT}" arg2="sun" trim="true"/>
+        </condition>
+        <condition property="legal" value="COPYRIGHT LICENSE">
+            <equals arg1="${env.AIMK_COPYRIGHT}" arg2="courtesy" trim="true"/>
+        </condition>
+        <condition property="legal" value="NA">
+           <not>
+               <or>
+                   <equals arg1="${dist.type}" arg2="courtesy" trim="true"/>
+                   <equals arg1="${dist.type}" arg2="sun" trim="true"/>
+               </or>
+           </not>
+        </condition>
+
+    </target>
+
+    <target name="-pre-compile" unless="isJavaBuildHost">
+        <waitfor maxwait="${maxwait}" maxwaitunit="minute" checkevery="10" checkeveryunit="second">
+           <available file="${dist.jar}"/>
+        </waitfor>
+        <available file="${dist.jar}" property="jar.available"/>
+        <fail unless="jar.available">
+           Timeout while waiting for jar file build on host ${java.buildhost}
+        </fail>
+    </target>
+
+    <target depends="init,compile,-pre-pre-jar,-pre-jar" name="-do-jar-without-manifest" if="isJavaBuildHost" unless="manifest.available">
+        <jar file="${dist.jar}">
+            <fileset dir="${build.classes.dir}">
+                <include name="**/*.class"/>
+            </fileset>
+            <metainf dir="${legal.dir}" includes="${legal}"/>
+        </jar>
+    </target>
+
+    <target name="-post-jar" if="isJavaBuildHost">
+        <antcall target="-test-jar"/>
+    </target>
+
+    <target name="-test-jar" depends="compile-test" if="isJavaBuildHost">
+        <jar file="${dist.dir}/jjsv-test.jar">
+            <fileset dir="${build.test.classes.dir}">
+                <include name="**/*.class"/>
+            </fileset>
+            <metainf dir="${legal.dir}" includes="${legal}"/>
+        </jar>
+    </target>
+
+    <target name="-do-clean" depends="init, -do-clean.do, -do-clean.warning"/>
+
+    <target name="-do-clean.do" depends="init" if="isJavaBuildHost">
+        <delete dir="${build.dir}"/>
+        <delete dir="${dist.dir}"/>
+    </target>
+
+    <target name="-do-clean.warning" depends="init" unless="isJavaBuildHost">
+       <echo level="warning">Warning: Do not delete</echo>
+       <echo level="warning">         ${build.dir} and</echo>
+       <echo level="warning">         ${dist.dir}</echo>
+       <echo level="warning">         I am not on the java build host (${java.buildhost}).</echo>
+    </target>
 </project>

@@ -31,18 +31,16 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jsv;
 
-import static org.junit.Assert.*;
+import junit.framework.Test;
+import junit.framework.TestCase;
 
-import org.junit.Test;
-
-public class ParallelEnvironmentTest {
+public class ParallelEnvironmentTest extends TestCase {
     public ParallelEnvironmentTest() {
     }
 
     /**
      * Test of setName method, of class ParallelEnvironment.
      */
-    @Test
     public void testName() {
         System.out.println("name");
 
@@ -60,7 +58,6 @@ public class ParallelEnvironmentTest {
     /**
      * Test of getRangeMin method, of class ParallelEnvironment.
      */
-    @Test
     public void testRangeMin() {
         System.out.println("rangeMin");
 
@@ -92,7 +89,6 @@ public class ParallelEnvironmentTest {
     /**
      * Test of getRangeMax method, of class ParallelEnvironment.
      */
-    @Test
     public void testRangeMax() {
         System.out.println("rangeMax");
 
@@ -124,7 +120,6 @@ public class ParallelEnvironmentTest {
     /**
      * Test of setRange method, of class ParallelEnvironment.
      */
-    @Test
     public void testSetRange() {
         System.out.println("setRange(int,int)");
 
@@ -185,7 +180,6 @@ public class ParallelEnvironmentTest {
     /**
      * Test of setRange method, of class ParallelEnvironment.
      */
-    @Test
     public void testSetRangeSingle() {
         System.out.println("setRange(int)");
 
@@ -222,7 +216,6 @@ public class ParallelEnvironmentTest {
     /**
      * Test of equals method, of class ParallelEnvironment.
      */
-    @Test
     public void testEquals() {
         System.out.println("equals()");
 
@@ -273,7 +266,6 @@ public class ParallelEnvironmentTest {
     /**
      * Test of hashCode method, of class ParallelEnvironment.
      */
-    @Test
     public void testHashCode() {
         System.out.println("hashCode()");
 
@@ -298,7 +290,6 @@ public class ParallelEnvironmentTest {
     /**
      * Test of clone method, of class CheckpointSpecifier.
      */
-    @Test
     public void testClone() throws Exception {
         System.out.println("clone()");
 

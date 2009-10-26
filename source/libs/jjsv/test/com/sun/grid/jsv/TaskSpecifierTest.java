@@ -31,18 +31,16 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jsv;
 
-import static org.junit.Assert.*;
+import junit.framework.Test;
+import junit.framework.TestCase;
 
-import org.junit.Test;
-
-public class TaskSpecifierTest {
+public class TaskSpecifierTest extends TestCase {
     public TaskSpecifierTest() {
     }
 
     /**
      * Test of getMin method, of class TaskSpecifier.
      */
-    @Test
     public void testMin() {
         System.out.println("min");
 
@@ -76,7 +74,6 @@ public class TaskSpecifierTest {
     /**
      * Test of getMax method, of class TaskSpecifier.
      */
-    @Test
     public void testMax() {
         System.out.println("max");
 
@@ -110,7 +107,6 @@ public class TaskSpecifierTest {
     /**
      * Test of getStep method, of class TaskSpecifier.
      */
-    @Test
     public void testStep() {
         System.out.println("step");
 
@@ -144,7 +140,6 @@ public class TaskSpecifierTest {
     /**
      * Test of setRange method, of class TaskSpecifier.
      */
-    @Test
     public void testSetRange() {
         System.out.println("setRange(int,int)");
 
@@ -187,7 +182,6 @@ public class TaskSpecifierTest {
     /**
      * Test of setRange method, of class TaskSpecifier.
      */
-    @Test
     public void testSetRangeFull() {
         System.out.println("setRange(int,int,int)");
 
@@ -246,7 +240,6 @@ public class TaskSpecifierTest {
     /**
      * Test of equals method, of class TaskSpecifier.
      */
-    @Test
     public void testEquals() {
         System.out.println("equals()");
 
@@ -293,7 +286,6 @@ public class TaskSpecifierTest {
     /**
      * Test of hashCode method, of class TaskSpecifier.
      */
-    @Test
     public void testHashCode() {
         System.out.println("hashCode()");
 
@@ -340,7 +332,6 @@ public class TaskSpecifierTest {
     /**
      * Test of clone method, of class CheckpointSpecifier.
      */
-    @Test
     public void testClone() throws Exception {
         System.out.println("clone()");
 

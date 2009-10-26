@@ -126,7 +126,13 @@ public class JobInfoImpl implements JobInfo {
             map = new HashMap();
 
             for (int count = 0; count < nameValuePairs.length; count++) {
+                if (nameValuePairs[count] == null) {
+                   continue;
+                }
                 int equals = nameValuePairs[count].indexOf('=');
+                if (equals < 0) {
+                   continue;
+                }
                 map.put(nameValuePairs[count].substring(0, equals), nameValuePairs[count].substring(equals + 1));
             }
         }

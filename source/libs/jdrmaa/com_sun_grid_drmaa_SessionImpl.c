@@ -47,14 +47,10 @@
 enum {
    /* -------------- these are relevant to all sections ---------------- */
    DRMAAJ_ERRNO_SUCCESS = 0, /* Routine returned normally with success. */
-#ifndef DRMAA_95
+
    DRMAAJ_ERRNO_INTERNAL_ERROR, /* Unexpected or internal DRMAA error like
                                    memory allocation, system call failure,
                                    etc. */
-#else
-   DRMAAJ_ERRNO_INTERNAL_ERROR, /* Unexpected or internal DRMAA error like memory
-                                   allocation, system call failure, etc. */
-#endif
    DRMAAJ_ERRNO_DRM_COMMUNICATION_FAILURE, /* Could not contact DRM system for
                                               this request. */
    DRMAAJ_ERRNO_AUTH_FAILURE, /* The specified request is not processed
@@ -1279,6 +1275,7 @@ static char *get_exception_class_name (int errnum)
          return "org/ggf/drmaa/AuthorizationException";
       case DRMAAJ_ERRNO_INVALID_ARGUMENT:
 #ifndef DRMAA_95
+         /* This is incompatible to new jdrmaa >= SGE 61 which does not contain  InvalidArgumentException class */
          return "java/lang/IllegalArgumentException";
 #else
          return "org/ggf/drmaa/InvalidArgumentException";
@@ -1324,6 +1321,7 @@ static char *get_exception_class_name (int errnum)
       case DRMAAJ_ERRNO_EXIT_TIMEOUT:
          return "org/ggf/drmaa/ExitTimeoutException";
 #ifdef DRMAA_95
+      /* This is incompatible to jdrmaa >= SGE 61 which does not contain NoResourceUsageException class */
       case DRMAAJ_ERRNO_NO_RUSAGE:
          return "org/ggf/drmaa/NoResourceUsageException";
 #endif

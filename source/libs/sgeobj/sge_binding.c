@@ -82,10 +82,7 @@ static bool get_socket_with_most_free_cores(const char* topology, const int topo
 #endif
 
 #if defined(SOLARISAMD64) || defined(SOLARIS86)
-
 static bool get_topology_solaris(char** topology, int* length);
-
-static bool generate_chipID_coreID_matrix(int*** matrix, int* length); 
 
 static int get_amount_of_sockets_from_matrix(const int** matrix, const int length);
 
@@ -94,8 +91,6 @@ static int get_amount_of_cores_from_matrix(const int** matrix, const int length,
 
 static int get_amount_of_threads_from_matrix(const int** matrix, const int length, 
                int** threads, int* size); 
-
-/* helpers */
 
 static int get_chip_ids_from_matrix(const int** matrix, const int length, 
                int** chip_ids, int* amount);
@@ -112,6 +107,12 @@ static int is_different_id(const int id);
 static int get_amount_of_core_or_threads_from_matrix(const int** matrix, 
                const int length, int core, int** core_or_threads, int* size);
 
+static int get_chip_id_from_logical_socket_number_solaris(const int** matrix, 
+   const int length, const int logical_socket_number); 
+
+static int get_core_id_from_logical_core_number_solaris(const int** matrix, 
+   const int length, const int chip_id, const int logical_core_number);
+
 /* access functions for load report */
 
 static int get_total_amount_of_cores_solaris(void);
@@ -125,12 +126,6 @@ static bool get_processor_ids_solaris(const int** matrix, const int length, cons
 static int get_processor_id_solaris(const int** matrix, const int length, const int logical_socket_number, 
       const int logical_core_number, const int logical_thread_number, processorid_t* prid);
 
-static int get_core_id_from_logical_core_number_solaris(const int** matrix, 
-   const int length, const int chip_id, const int logical_core_number);
-   
-static int get_chip_id_from_logical_socket_number_solaris(const int** matrix, 
-   const int length, const int logical_socket_number); 
-
 static bool binding_set_linear_solaris(const int first_socket, const int first_core, 
    const int amount_of_cores, const int step_size, psetid_t* psetid, 
    const binding_type_t type, char** env);
@@ -143,9 +138,6 @@ static bool create_pset(const processorid_t* const plist, const int length,
 static bool delete_pset(psetid_t pset_id);
 
 static bool bind_current_process_to_pset(psetid_t pset_id);
-
-/* frees the memory allocated by the topology matrix */
-static void free_matrix(int** matrix, const int length);
 
 static void create_environment_string_solaris(const processorid_t* pid_list, 
                const int pid_list_size, char** env); 
@@ -862,7 +854,7 @@ int create_processor_set_striding_solaris(const int first_socket,
 *  SEE ALSO
 *     ???/???
 *******************************************************************************/
-static void free_matrix(int** matrix, const int length) 
+void free_matrix(int** matrix, const int length) 
 {
    
    int i;
@@ -1130,13 +1122,10 @@ bool binding_n_per_socket(int first_socket, int amount_of_sockets, int n)
 *     const int job_length - (in) length of the topology string from the job
 *
 *  RESULT
-*     static bool - 
+*     static bool - true in case of success
 *
 *  NOTES
-*     MT-NOTE: account_job_on_topology() is not MT safe 
-*
-*  BUGS
-*     ??? 
+*     MT-NOTE: account_job_on_topology() is MT safe 
 *
 *  SEE ALSO
 *     ???/???
@@ -1184,21 +1173,20 @@ static bool account_job_on_topology(char** topology, const int topology_length,
 *     marked with smaller case letters. 
 *
 *  INPUTS
-*     const int* list_of_sockets   - ??? 
-*     const int samount            - ??? 
-*     const int** list_of_cores    - ??? 
-*     const int score              - ???
+*     const int* list_of_sockets   - List of sockets to be used 
+*     const int samount            - Size of list_of_sockets 
+*     const int** list_of_cores    - List of cores (on sockets) to be used 
+*     const int score              - Size of list_of_cores 
 *
 *  OUTPUTS
-*     char** topo_used_by_job      -  
-*     int* topo_used_by_job_length -  
+*     char** topo_used_by_job      -  Topology with resources job consumes marked.
+*     int* topo_used_by_job_length -  Topology string length.
 *
 *  RESULT
 *     bool - True if the job can be bound to the topology, false if not. 
 *
 *  NOTES
 *     MT-NOTE: binding_explicit_check_and_account() is MT safe 
-*
 *
 *  SEE ALSO
 *     ???/???
@@ -1667,7 +1655,7 @@ static bool get_topology_solaris(char** topology, int* length)
    return retval;
 }
 
-/****** lgroups/generate_chipID_coreID_matrix() ********************************
+/****** sge_binding/generate_chipID_coreID_matrix() ********************************
 *  NAME
 *     generate_chipID_coreID_matrix() -- ??? 
 *
@@ -1704,7 +1692,7 @@ static bool get_topology_solaris(char** topology, int* length)
 *  SEE ALSO
 *     ???/???
 *******************************************************************************/
-static bool generate_chipID_coreID_matrix(int*** matrix, int* length) 
+bool generate_chipID_coreID_matrix(int*** matrix, int* length) 
 {
    /* return value */
    bool success = true;
@@ -1814,7 +1802,7 @@ static bool generate_chipID_coreID_matrix(int*** matrix, int* length)
 } 
 
 
-/****** lgroups/get_amount_of_sockets_from_matrix() ****************************
+/****** sge_binding/get_amount_of_sockets_from_matrix() ****************************
 *  NAME
 *     get_amount_of_sockets_from_matrix() -- ??? 
 *
@@ -1857,7 +1845,7 @@ static int get_amount_of_sockets_from_matrix(const int** matrix, const int lengt
    return amount;
 }
 
-/****** lgroups/get_chip_ids_from_matrix() *************************************
+/****** sge_binding/get_chip_ids_from_matrix() *************************************
 *  NAME
 *     get_chip_ids_from_matrix() -- Generates a vector with chips_ids.  
 *
@@ -1897,7 +1885,7 @@ static int get_chip_ids_from_matrix(const int** matrix, const int length,
 
 
 
-/****** lgroups/get_core_ids_from_matrix() *************************************
+/****** sge_binding/get_core_ids_from_matrix() *************************************
 *  NAME
 *     get_core_ids_from_matrix() -- ??? 
 *
@@ -1936,7 +1924,7 @@ static int get_core_ids_from_matrix(const int** matrix, const int length,
 }
 
 
-/****** lgroups/get_ids_from_matrix() ******************************************
+/****** sge_binding/get_ids_from_matrix() ******************************************
 *  NAME
 *     get_ids_from_matrix() -- ??? 
 *
@@ -2011,7 +1999,7 @@ static int get_ids_from_matrix(const int** matrix, const int length,
    return nr_different_ids;
 }
 
-/****** lgroups/get_amount_of_threads_from_matrix() ****************************
+/****** sge_binding/get_amount_of_threads_from_matrix() ****************************
 *  NAME
 *     get_amount_of_threads_from_matrix() -- ??? 
 *
@@ -2051,7 +2039,7 @@ static int get_amount_of_threads_from_matrix(const int** matrix, const int lengt
 }
 
 
-/****** lgroups/get_amount_of_core_or_threads_from_matrix() ********************
+/****** sge_binding/get_amount_of_core_or_threads_from_matrix() ********************
 *  NAME
 *     get_amount_of_core_or_threads_from_matrix() -- ??? 
 *
@@ -2167,7 +2155,7 @@ static int get_amount_of_core_or_threads_from_matrix(const int** matrix, const i
    return ids_length;
 }
 
-/****** lgroups/get_amount_of_cores_from_matrix() ******************************
+/****** sge_binding/get_amount_of_cores_from_matrix() ******************************
 *  NAME
 *     get_amount_of_cores_from_matrix() -- Get the amount of cores per socket. 
 *

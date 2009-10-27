@@ -123,8 +123,6 @@ bool initialize_topology(void);
 /* free cores on execution host which were used by a job */
 bool free_topology(const char* topology, const int topology_length);
 
-/* close dynamically loaded library */
-void close_plpa_handle(void);
 #endif
 
 #if defined(SOLARISAMD64) || defined(SOLARIS86)
@@ -137,6 +135,11 @@ int create_processor_set_explicit_solaris(const int* list_of_sockets,
    const int samount, const int* list_of_cores, const int camount,
    const binding_type_t type, char** env);
 
+/* matrix represents internal kstat structure */
+bool generate_chipID_coreID_matrix(int*** matrix, int* length);
+
+/* frees the memory allocated by the topology matrix */
+void free_matrix(int** matrix, const int length);
 #endif
 
 bool

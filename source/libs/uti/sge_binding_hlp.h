@@ -70,8 +70,8 @@ int binding_striding_parse_first_core(const char* parameter);
 int binding_striding_parse_first_socket(const char* parameter);
 int binding_striding_parse_step_size(const char* parameter);
 
-bool binding_explicit_extract_sockets_cores(const char* parameter, 
-   int** list_of_sockets, int* samount, int** list_of_cores, int* camount); 
+bool binding_explicit_extract_sockets_cores(const char* parameter,
+   int** list_of_sockets, int* samount, int** list_of_cores, int* camount);
 
 bool binding_explicit_has_correct_syntax(const char* parameter);
 
@@ -83,14 +83,14 @@ bool get_topology_linux(char** topology, int* length);
 int get_processor_id(int socket_number, int core_number);
 int get_amount_of_cores(int socket_number);
 int get_total_amount_of_cores(void);
-int get_amount_of_sockets(void); 
+int get_amount_of_sockets(void);
 bool has_core_binding(void);
 
 #endif
 
 const char* binding_get_topology_for_job(const char *binding_result);
 
-bool topology_string_to_socket_core_lists(const char* topology, int** sockets, 
-                                     int** cores, int* amount); 
+bool topology_string_to_socket_core_lists(const char* topology, int** sockets,
+                                     int** cores, int* amount);
 #endif /* __SGE_BINDING_HLP_H */
 

@@ -563,7 +563,7 @@ if [ "$startup" = true ]; then
       echo "This is not a qmaster host!"
       echo "Check your ${SGE_ROOT}/${SGE_CELL}/common/act_qmaster file!" 
       echo
-      if [ $shadowd = false ]; then
+      if [ $shadowd = false -o ! -f $SGE_ROOT/$SGE_CELL/common/shadow_masters ]; then
          exit 1
       fi
    elif [ $qmaster = true ]; then
@@ -600,11 +600,21 @@ if [ "$startup" = true ]; then
    fi
 
    if [ $shadowd = true -a $shadow_host = false ]; then
-      echo
-      echo "sge_shadowd didn't start!"
-      echo "This is not a shadow master host!"
-      echo "Check your ${SGE_ROOT}/${SGE_CELL}/common/shadow_masters file!" 
-      echo
+      #Display the message only if we have installed any shadowds
+      if [ -f $SGE_ROOT/$SGE_CELL/common/shadow_masters ]; then
+         echo
+         echo "sge_shadowd didn't start!"
+         echo "This is not a shadow master host!"
+         echo "Check your ${SGE_ROOT}/${SGE_CELL}/common/shadow_masters file!"
+         echo
+      elif [ $qmaster = false ]; then
+         #Shadow masters file does not exist and we try to start only shadowd
+         echo
+         echo "sge_shadowd didn't start!"
+         echo "File ${SGE_ROOT}/${SGE_CELL}/common/shadow_masters does not exist!"
+         echo "No shadowd installed?"
+         echo
+      fi
       if [ $qmaster_host = false -o $qmaster = false ]; then
          exit 1
       fi

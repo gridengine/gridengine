@@ -8,6 +8,12 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 -----------------+------------+-------------------------------------------------
+LP-2009-10-27-1: Enhancem.:   Improved messages in sgemaster script
+                 Belongs to:  LP-2009-10-20-0
+                 Bugfix:      Upgrade load_sge_config.sh now suggests builtin 
+                              value for IJS on error                                               
+                 Review:      SH
+
 DT-2009-10-27-0: Bugfix:      o Backported libs/jjsv/build.xml to Ant 1.6.5
                               o Fixed minor jjsv javadoc error
                               o Added jjsv wrapper script

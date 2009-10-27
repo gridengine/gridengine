@@ -183,6 +183,8 @@ com.sun.grid.jgdi.management.jmxremote.password.file=@@SGE_ROOT@@/@@SGE_CELL@@/c
 com.sun.grid.jgdi.management.jmxremote.access.file=@@SGE_ROOT@@/@@SGE_CELL@@/common/jmx/jmxremote.access
 
 
-# For the JGDI keystore module use this settings for the server keystore and keystore password
+# For the JGDI keystore module use this settings for the server keystore and keystore password file
 com.sun.grid.jgdi.management.jmxremote.ssl.serverKeystore=@@SGE_JMX_SSL_KEYSTORE@@
-com.sun.grid.jgdi.management.jmxremote.ssl.serverKeystorePassword=@@SGE_JMX_SSL_KEYSTORE_PW@@
+com.sun.grid.jgdi.management.jmxremote.ssl.serverKeystorePasswordFile=@@SGE_JMX_SSL_KEYSTORE@@.password
+# moved into $CALOCALTOP/private/keystore.password
+# com.sun.grid.jgdi.management.jmxremote.ssl.serverKeystorePassword=<SGE_JMX_SSL_KEYSTORE_PW>

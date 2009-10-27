@@ -38,7 +38,6 @@ import java.io.IOException;
 import java.util.Properties;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
-import java.util.logging.LogManager;
 import javax.management.Notification;
 import javax.management.ObjectName;
 import javax.management.MBeanServer;
@@ -71,14 +70,12 @@ public class JGDIAgent implements Runnable {
     }
     private JMXConnectorServer mbeanServerConnector;
     // Platform MBeanServer used to register your MBeans
-
     private MBeanServer mbs;
     private static File sgeRoot;
     private static File caTop;
     private final static Logger log = Logger.getLogger(JGDIAgent.class.getName());
     private static final JGDIAgent agent = new JGDIAgent();
     // JGDI url string
-
     private static String url;
     private static File jmxDir;
     private final Lock stateLock = new ReentrantLock();
@@ -91,14 +88,27 @@ public class JGDIAgent implements Runnable {
     private JGDIAgent() {
     }
 
-    private void setState(State state) {
+    private boolean setState(State state) {
+        boolean ret = true;
+        log.entering("JGDIAgent", "setState", state);
         stateLock.lock();
         try {
+            // prevent overriding of State.SHUTDOWN if it has been set before
+            // startup completed
+            if (state == State.RUNNING && this.state == State.SHUTDOWN) {
+                log.log(Level.FINE, "shutdown called before State.RUNNING");
+                ret = false;
+                return ret;
+            } else {
+                log.log(Level.FINE, "old state: " + this.state + " new state: " + state);
+            }
             this.state = state;
             stateChangedCondition.signalAll();
         } finally {
             stateLock.unlock();
+            log.exiting("JGDIAgent", "setState", ret);
         }
+        return ret;
     }
 
     public void startMBeanServer() throws Exception {
@@ -137,7 +147,7 @@ public class JGDIAgent implements Runnable {
         }
         return url;
     }
-    
+
     public static File getCaTop() {
         if (caTop == null) {
             String str = System.getProperty("com.sun.grid.jgdi.caTop");
@@ -148,7 +158,7 @@ public class JGDIAgent implements Runnable {
         }
         return caTop;
     }
-    
+
     public static File getSgeRoot() {
         if (sgeRoot == null) {
             String sgeRootStr = System.getProperty("com.sun.grid.jgdi.sgeRoot");
@@ -186,13 +196,15 @@ public class JGDIAgent implements Runnable {
 
         EventClientImpl.resetShutdown();
         JGDIBaseImpl.resetShutdown();
-        setState(State.RUNNING);
-        try {
-            log.log(Level.FINE, "starting mbean server");
-            startMBeanServer();
-        } catch (Exception ex) {
-            log.log(Level.SEVERE, "startup of mbean server failed", ex);
-            return;
+        // only start MBean server if state could be set to RUNNING
+        if (setState(State.RUNNING)) {
+            try {
+                log.log(Level.FINE, "starting mbean server");
+                startMBeanServer();
+            } catch (Exception ex) {
+                log.log(Level.SEVERE, "startup of mbean server failed", ex);
+                return;
+            }
         }
         try {
             // The following code blocks until the stop or shutdown methods are called

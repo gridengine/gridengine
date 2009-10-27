@@ -8,6 +8,13 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 -----------------+------------+-------------------------------------------------
+AA-2009-10-27-0: Bugfix:      - sgeinspect for windows cannot connect in SSL mode
+                              - management.properties remove keystorePassword from management.properties
+                              - minor test fixes
+                              - JGDIAgent state fix 
+                 Bugster:     6849311,6876508
+                 Review:      RH, AF
+
 LP-2009-10-27-2: Bugfix:      JMX part of qmaster installation should verify JVM 
                               is 32-bit or 64-bit                                            
                  Bugster:     6876446

@@ -126,6 +126,7 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
      * @param caTop  ca top directory if the Grid Engine CA ($SGE_ROOT/$SGE_CELL/common/sgeCA
      * @param ks     keystore of the user
      * @param pw     password for the keystore
+     * @deprecated
      */
     public static void setupSSL(File caTop, KeyStore ks, char[] pw) {
         SSLHelper.getInstanceByCaTop(caTop).setKeystore(ks, pw);
@@ -136,6 +137,7 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
      * @param caTop  ca top directory if the Grid Engine CA ($SGE_ROOT/$SGE_CELL/common/sgeCA
      * @param ks     keystore file of the user
      * @param pw     password for the keystore
+     * @deprecated
      */
     public static void setupSSL(File caTop, File ks, char[] pw) {
         SSLHelper.getInstanceByCaTop(caTop).setKeystore(ks, pw);
@@ -145,10 +147,46 @@ public class JGDIProxy implements InvocationHandler, NotificationListener {
      * Reset the SSL setup.
      * 
      * @param caTop the ca top directory of the cluster
+     * @deprecated
      */
     public static void resetSSL(File caTop) {
         SSLHelper.getInstanceByCaTop(caTop).reset();
     }
+
+    /**
+     * Set up the ssl context
+     * @param serverHostname the server hostname
+     * @paarm serverPort the server port
+     * @param caTop  ca top directory if the Grid Engine CA ($SGE_ROOT/$SGE_CELL/common/sgeCA
+     * @param ks     keystore of the user
+     * @param pw     password for the keystore
+     */
+    public static void setupSSL(String serverHostname, int serverPort, File caTop, KeyStore ks, char[] pw) {
+        SSLHelper.getInstanceByKey(serverHostname, serverPort, caTop).setKeystore(ks, pw);
+    }
+
+    /**
+     * Set up the ssl context
+     * @param serverHostname the server hostname
+     * @paarm serverPort the server port
+     * @param caTop  ca top directory if the Grid Engine CA ($SGE_ROOT/$SGE_CELL/common/sgeCA
+     * @param ks     keystore file of the user
+     * @param pw     password for the keystore
+     */
+    public static void setupSSL(String serverHostname, int serverPort, File caTop, File ks, char[] pw) {
+        SSLHelper.getInstanceByKey(serverHostname, serverPort, caTop).setKeystore(ks, pw);
+    }
+
+    /**
+     * Reset the SSL setup.
+     * @param serverHostname the server hostname
+     * @paarm serverPort the server port
+     * @param caTop the ca top directory of the cluster
+     */
+    public static void resetSSL(String serverHostname, int serverPort, File caTop) {
+        SSLHelper.getInstanceByKey(serverHostname, serverPort, caTop).reset();
+    }
+
 
     /**
      *   Register an jgdi event listener.

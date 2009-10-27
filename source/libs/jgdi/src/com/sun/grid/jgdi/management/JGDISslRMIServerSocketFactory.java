@@ -48,6 +48,8 @@ import javax.rmi.ssl.SslRMIServerSocketFactory;
 public class JGDISslRMIServerSocketFactory extends SslRMIServerSocketFactory {
 
     private final File caTop;
+    private final String serverHostname;
+    private final int serverPort;
     
     /**
      * <p>Creates a new <code>SslRMIServerSocketFactory</code> with
@@ -58,8 +60,8 @@ public class JGDISslRMIServerSocketFactory extends SslRMIServerSocketFactory {
      * enabled and do not require client authentication.</p>
      * @param caTop the catop directory if the cluster
      */
-    public JGDISslRMIServerSocketFactory(File caTop) {
-        this(caTop, null, null, false);
+    public JGDISslRMIServerSocketFactory(String serverHostname, int serverPort, File caTop) {
+        this(serverHostname, serverPort, caTop, null, null, false);
     }
 
     /**
@@ -93,11 +95,13 @@ public class JGDISslRMIServerSocketFactory extends SslRMIServerSocketFactory {
      * @see SSLSocket#setEnabledProtocols
      * @see SSLSocket#setNeedClientAuth
      */
-    public JGDISslRMIServerSocketFactory(File caTop, String[] enabledCipherSuites,
+    public JGDISslRMIServerSocketFactory(String serverHostname, int serverPort, File caTop, String[] enabledCipherSuites,
             String[] enabledProtocols,
             boolean needClientAuth)
             throws IllegalArgumentException {
 
+        this.serverHostname = serverHostname;
+        this.serverPort = serverPort;
         this.caTop = caTop;
         // Initialize the configuration parameters.
         //
@@ -109,7 +113,7 @@ public class JGDISslRMIServerSocketFactory extends SslRMIServerSocketFactory {
         // rather than delaying it to the first time createServerSocket()
         // is called.
         //
-        final SSLSocketFactory sslSocketFactory = SSLHelper.getInstanceByCaTop(caTop).getSocketFactory();
+        final SSLSocketFactory sslSocketFactory = SSLHelper.getInstanceByKey(serverHostname, serverPort, caTop).getSocketFactory();
         SSLSocket sslSocket = null;
         if (this.enabledCipherSuites != null || this.enabledProtocols != null) {
             try {
@@ -141,7 +145,7 @@ public class JGDISslRMIServerSocketFactory extends SslRMIServerSocketFactory {
      */
     @Override
     public ServerSocket createServerSocket(int port) throws IOException {
-        final SSLSocketFactory sslSocketFactory = SSLHelper.getInstanceByCaTop(caTop).getSocketFactory();
+        final SSLSocketFactory sslSocketFactory = SSLHelper.getInstanceByKey(serverHostname, serverPort, caTop).getSocketFactory();
         return new ServerSocket(port) {
 
             @Override

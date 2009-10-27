@@ -95,6 +95,7 @@ public class JobTaskEventTestCase extends BaseTestCase {
         Thread.sleep(2);
         
         jgdi.enableQueues(new String[]{"*"}, false);
+        jgdi.triggerSchedulerMonitoring();
         
         int timeout = 300;
         assertTrue("timeout while waiting for job finish event", lis.waitForJobFinish(timeout));

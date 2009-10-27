@@ -84,6 +84,7 @@ public class JobMonitor extends JFrame {
     private Thread updateThread;
     private StatusPanel statusPanel = new StatusPanel();
     private ConnectionHistory connectionHistory;
+    static private String myurl = null;
     
     public JobMonitor() {
         super("Sun Grid Engine Job Monitor");
@@ -126,6 +127,8 @@ public class JobMonitor extends JFrame {
     }
     
     public static void main(String[] args) {
+        
+        JobMonitor.myurl = args[0];
         
         JobMonitor jm = new JobMonitor();
         
@@ -598,7 +601,7 @@ public class JobMonitor extends JFrame {
         public void actionPerformed(ActionEvent e) {
             
             if (url == null) {
-                String url = JOptionPane.showInputDialog(JobMonitor.this, "Enter Grid Engine connection url:", "bootstrap://<SGE_ROOT>@<SGE_CELL>:<SGE_QMASTER_PORT>");
+                String url = JOptionPane.showInputDialog(JobMonitor.this, "Enter Grid Engine connection url:", (myurl == null) ? "bootstrap://<SGE_ROOT>@<SGE_CELL>:<SGE_QMASTER_PORT>": myurl);
                 if (url != null) {
                     jobTableModel.setUrl(url);
                 }

@@ -1115,11 +1115,10 @@ AddJMXFiles() {
                   -e "s#@@SGE_JMX_SSL@@#$SGE_JMX_SSL#g" \
                   -e "s#@@SGE_JMX_SSL_CLIENT@@#$SGE_JMX_SSL_CLIENT#g" \
                   -e "s#@@SGE_JMX_SSL_KEYSTORE@@#$SGE_JMX_SSL_KEYSTORE#g" \
-                  -e "s#@@SGE_JMX_SSL_KEYSTORE_PW@@#$SGE_JMX_SSL_KEYSTORE_PW#g" \
                   util/management.properties.template > /tmp/management.properties.$$
       ExecuteAsAdmin cp /tmp/management.properties.$$ $jmx_dir/management.properties
       Execute rm -f /tmp/management.properties.$$
-      ExecuteAsAdmin chmod 600 $jmx_dir/management.properties
+      ExecuteAsAdmin chmod 644 $jmx_dir/management.properties
       $INFOTEXT "Adding >jmx/%s< jmx configuration" management.properties
       
    fi
@@ -1202,6 +1201,8 @@ InitSysKs()
          else
             ret=0
          fi
+         echo "com.sun.grid.jgdi.management.jmxremote.ssl.serverKeystorePassword=`cat /tmp/pwfile.$$`" > ${SGE_JMX_SSL_KEYSTORE}.password
+         chown $ADMINUSER ${SGE_JMX_SSL_KEYSTORE}.password
          rm /tmp/pwfile.$$
          if [ $ret = 1 ]; then
             MoveLog

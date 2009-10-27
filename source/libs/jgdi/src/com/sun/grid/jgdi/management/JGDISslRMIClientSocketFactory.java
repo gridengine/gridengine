@@ -56,11 +56,15 @@ import javax.rmi.ssl.SslRMIClientSocketFactory;
  */
 public class JGDISslRMIClientSocketFactory extends SslRMIClientSocketFactory {
 
-    private final static long serialVersionUID = -2008021101L;
+    private final static long serialVersionUID = -2009062301L;
 
     private final File caTop;
+    private final String serverHostname;
+    private final int serverPort;
     
-    public JGDISslRMIClientSocketFactory(File caTop) {
+    public JGDISslRMIClientSocketFactory(String serverHostname, int serverPort, File caTop) {
+        this.serverHostname = serverHostname;
+        this.serverPort = serverPort;
         this.caTop = caTop;
     }
     
@@ -94,7 +98,7 @@ public class JGDISslRMIClientSocketFactory extends SslRMIClientSocketFactory {
 
         // Retrieve the SSLSocketFactory
         //
-        final SocketFactory sslSocketFactory = SSLHelper.getInstanceByCaTop(caTop).getSocketFactory();
+        final SocketFactory sslSocketFactory = SSLHelper.getInstanceByKey(serverHostname, serverPort, caTop).getSocketFactory();
         
         // Create the SSLSocket
         //

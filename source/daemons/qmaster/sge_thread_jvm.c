@@ -141,7 +141,9 @@ sge_jvm_terminate(sge_gdi_ctx_class_t *ctx, lList **answer_list)
        * and signal the continuation to realease the JVM thread if it was unable to setup the JVM 
        */
       pthread_cancel(thread_id);
-      shutdown_main();
+      if (!shutdown_main()) {
+         INFO((SGE_EVENT, "JVM thread shutdown_main failed"));
+      }
       Master_Jvm.shutdown_started = true;
       pthread_cond_broadcast(&Master_Jvm.cond_var);
 
@@ -629,7 +631,7 @@ static int invoke_main(JNIEnv* env, jclass main_class, int argc, char** argv)
       (*env)->SetObjectArrayElement(env, main_args, i, str);
    }
 
-   INFO((SGE_EVENT, "Starting up jvm thread\n"));
+   INFO((SGE_EVENT, "Starting up jvm thread (euid/uid: %d/%d)\n", geteuid(), getuid()));
 	(*env)->CallStaticVoidMethod(env, main_class, main_mid, main_args);
    
    if ((*env)->ExceptionOccurred(env)) {

@@ -237,9 +237,9 @@ public class GEObjectEditor {
                 subElems = elems[i].split("=");
                 //name = subElems[0];
                 strVal = (String) EditorUtil.translateStringValueToObject(subElems[1]);
-                if (strVal == null) {
-                    continue;
-                }
+//                if (strVal == null) {
+//                    continue;
+//                }
                 val = EditorUtil.getParsedValueAsObject(jgdi, pd.getPropertyName(), type, elems[i]);
                 if (val == null) {
                     continue;

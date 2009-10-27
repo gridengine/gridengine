@@ -88,9 +88,11 @@ int main(int argc, char *argv[])
    double avg[3];
    int loads;
    char *name = NULL;
+#if defined(PLPA_LINUX) || defined(SOLARIS86) || defined(SOLARISAMD64)
    dstring msocket   = DSTRING_INIT;
    dstring mcore     = DSTRING_INIT;
    dstring mtopology = DSTRING_INIT;
+#endif
 
 #ifdef SGE_LOADMEM
    sge_mem_info_t mem_info;
@@ -136,7 +138,9 @@ int main(int argc, char *argv[])
    
    if (core_binding) {
       check_core_binding();
+#ifndef WINDOWS
       DEXIT;
+#endif
       return 1;
    } else if (print_as_int) {
       m = "";
@@ -214,9 +218,11 @@ int main(int argc, char *argv[])
 #ifndef WINDOWS
       DEXIT;
 #endif
+#if defined(PLPA_LINUX) || defined(SOLARIS86) || defined(SOLARISAMD64)
       sge_dstring_free(&mcore);
       sge_dstring_free(&msocket);
       sge_dstring_free(&mtopology);
+#endif
       return 1;
    }
 
@@ -249,9 +255,11 @@ int main(int argc, char *argv[])
 #ifndef WINDOWS
    DEXIT;
 #endif
+#if defined(PLPA_LINUX) || defined(SOLARIS86) || defined(SOLARISAMD64)
    sge_dstring_free(&mcore);
    sge_dstring_free(&msocket);
    sge_dstring_free(&mtopology);
+#endif
 	return 0;
 }
 

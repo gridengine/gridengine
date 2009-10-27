@@ -8,6 +8,12 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 -----------------+------------+-------------------------------------------------
+LP-2009-10-27-2: Bugfix:      JMX part of qmaster installation should verify JVM 
+                              is 32-bit or 64-bit                                            
+                 Bugster:     6876446
+                 Issue:       3120
+                 Review:      SH
+
 DT-2009-10-27-1: Bugfix:      o Backported jsv classes to 1.5
 		 Belongs to:  DT-2009-10-23-0
 

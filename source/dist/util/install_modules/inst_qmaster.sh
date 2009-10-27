@@ -590,7 +590,7 @@ SetSpoolingOptionsDynamic()
 
 #--------------------------------------------------------------------------
 # SetSpoolingOptions sets / queries options for the spooling framework
-# $1 - suggested spooling params form teh old bootstrap file
+# $1 - suggested spooling params from the old bootstrap file
 SetSpoolingOptions()
 {
    $INFOTEXT -u "\nSetup spooling"
@@ -2136,12 +2136,27 @@ SetLibJvmPath() {
       fi
    fi
    
+   if [ "$AUTO" = true -a -n "$SGE_JVM_LIB_PATH" ]; then
+      #Try to load the library and try to autodetect a correct one if this one cannot be loaded
+      $SGE_ROOT/utilbin/$SGE_ARCH/valid_jvmlib "$SGE_JVM_LIB_PATH" >/dev/null 2>&1
+      if [ $? -ne 0 ]; then
+          $INFOTEXT -log -n "Warning: Specified JVM library %s could not be loaded. Installer will now \n" \
+                            "try to detect a new suitable one!"
+          SGE_JVM_LIB_PATH=""
+      fi
+   fi
+   
    #Try to detect the library, if none specified via SGE_JVM_LIB_PATH
    if [ -z "$SGE_JVM_LIB_PATH" ]; then
       $INFOTEXT "Detecting suitable JAVA ..."
       $INFOTEXT -log "Detecting suitable JAVA ..."
       HaveSuitableJavaBin $MIN_JAVA_VERSION "jvm"
+      if [ $? -ne 0 ]; then
+         $INFOTEXT "Could not find any suitable JAVA"
+         $INFOTEXT -log "Could not find any suitable JAVA"
+         java_home=""
       fi
+   fi
    
    if [ "$AUTO" = "true" ]; then
       if [ -z "$SGE_JVM_LIB_PATH" -a -z "$jvm_lib_path" ]; then
@@ -2158,18 +2173,23 @@ SetLibJvmPath() {
    #In interactive mode we provide detected values as defaults
    # set JRE_HOME 
    isdone=false
-   #$CLEAR
+   first_java_home="$java_home"
    while [ $isdone != true ]; do
-      $INFOTEXT -n "Please enter JAVA_HOME or press enter [%s] >> " "$java_home"
+      $INFOTEXT -n "\nEnter JAVA_HOME (use \"none\" when none available) [%s] >> " "$first_java_home"
       INP=`Enter $java_home`
+      #Stop requesting and skip the JVM_LIB when user enters none
+      if [ x"`echo $INP | tr \"[A-Z]\" \"[a-z]\"`" = "xnone" ]; then
+         java_home=""
+         jvm_lib_path="jvm_missing"
+         SGE_JVM_LIB_PATH="$jvm_lib_path"
+         return 1
+      fi
+      
       if [ ! -x $INP/bin/java ]; then
          $INFOTEXT "\nInvalid input. Must be a valid JAVA_HOME path."
+         continue
       else
          java_home=$INP
-         isdone=true
-      fi
-   done
-
          if [ -d $java_home/jre ]; then
             java_home=$java_home/jre
          fi
@@ -2179,17 +2199,26 @@ SetLibJvmPath() {
          NUM_JAVA_VERSION=`JavaVersionString2Num $JAVA_VERSION`
          
          if [ $NUM_JAVA_VERSION -lt $NUM_MIN_JAVA_VERSION ]; then
-      $INFOTEXT "Warning: Cannot start jvm thread: Invalid java version (%s)), we need %s or higher" $JAVA_VERSION $MIN_JAVA_VERSION
-      return 1
+            $INFOTEXT "Warning: Invalid Java version (%s), we need %s or higher" $JAVA_VERSION $MIN_JAVA_VERSION
+            continue
          fi
    
          GetJvmLib $java_home/bin/java
          
          if [ -z "$jvm_lib_path" -o ! -f "$jvm_lib_path" ]; then
-      jvm_lib_path=""
-      return 1
+            $INFOTEXT "Warning: Cannot find JVM library for JAVA_HOME=%s" "$java_home"
+            continue
          fi
-
+         #Try to load the library and demand a correct one
+         $SGE_ROOT/utilbin/$SGE_ARCH/valid_jvmlib "$jvm_lib_path" >/dev/null 2>&1
+         if [ $? -ne 0 ]; then
+            $INFOTEXT "Warning: Cannot load JVM library %s. Maybe you used a 32-bit Java library on a 64-bit system?" "$jvm_lib_path"
+            continue
+         fi
+         java_home=$INP
+         isdone=true
+      fi
+   done
    if [ "$JAVA_HOME" = "" ]; then
       JAVA_HOME=$java_home ; export JAVA_HOME
    fi

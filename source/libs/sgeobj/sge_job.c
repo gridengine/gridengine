@@ -71,6 +71,7 @@
 #include "sge_userset.h"
 #include "sge_qref.h"
 #include "sge_utility.h"
+#include "sgeobj/sge_binding.h"
 
 #include "msg_sgeobjlib.h"
 #include "msg_common.h"
@@ -3847,3 +3848,30 @@ job_is_requesting_consumable(lListElem *jep, const char *resource_name)
    }
    return false;
 }
+
+bool
+job_init_binding_elem(lListElem *jep) 
+{
+   bool ret = true;
+   lList *binding_list = lCreateList("", BN_Type);
+   lListElem *binding_elem = lCreateElem(BN_Type); 
+
+   if (binding_elem != NULL && binding_list != NULL) {
+      lAppendElem(binding_list, binding_elem);
+      lSetList(jep, JB_binding, binding_list);
+
+      lSetString(binding_elem, BN_strategy, "no_job_binding");
+      lSetUlong(binding_elem, BN_type, BINDING_TYPE_NONE);
+      lSetUlong(binding_elem, BN_parameter_n, 0);
+      lSetUlong(binding_elem, BN_parameter_socket_offset, 0);
+      lSetUlong(binding_elem, BN_parameter_core_offset, 0);
+      lSetUlong(binding_elem, BN_parameter_striding_step_size, 0);
+      lSetString(binding_elem, BN_parameter_explicit, "no_explicit_binding");
+   } else {
+      ret = false;
+   }
+   return ret;
+}
+
+
+

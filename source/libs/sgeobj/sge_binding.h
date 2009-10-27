@@ -48,8 +48,7 @@
 #include "sge_object.h"
 #include "sge_binding_BN_L.h"
 #include "sge_spool.h"
-
-#include "uti/sge_binding_hlp.h"
+#include "sge_binding_hlp.h"
 
 #if defined(LINUX)
 #  include <dlfcn.h>
@@ -148,5 +147,7 @@ binding_print_to_string(const lListElem *this_list, dstring * string);
 bool
 binding_parse_from_string(lListElem *this_elem, lList **answer_list, dstring *string);
 
+bool
+binding_type_to_string(binding_type_t type, dstring *string);
 
 #endif /* __SGE_BINDING_H */

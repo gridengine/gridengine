@@ -461,4 +461,7 @@ job_parse_validation_level(int *level, const char *input, int prog_number, lList
 bool
 job_is_requesting_consumable(lListElem *jep, const char *resource_name);
 
+bool
+job_init_binding_elem(lListElem *jep);
+
 #endif /* __SGE_JOB_H */    

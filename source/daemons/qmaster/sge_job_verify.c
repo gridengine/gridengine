@@ -195,21 +195,9 @@ sge_job_verify_adjust(sge_gdi_ctx_class_t *ctx, lListElem *jep, lList **alpp,
       lListElem *binding_elem = lFirst(lGetList(jep, JB_binding));
                
       if (binding_elem == NULL) {
-         lList *bind_list = lCreateList("", BN_Type);
+         bool lret = job_init_binding_elem(jep);
 
-         binding_elem = lCreateElem(BN_Type);
-         if (binding_elem != NULL && bind_list != NULL) {
-            lAppendElem(bind_list, binding_elem);
-            lSetList(jep, JB_binding, bind_list);
-
-            lSetString(binding_elem, BN_strategy, "no_job_binding");
-            lSetUlong(binding_elem, BN_parameter_n, 0);
-            lSetUlong(binding_elem, BN_parameter_socket_offset, 0);
-            lSetUlong(binding_elem, BN_parameter_core_offset, 0);
-            lSetUlong(binding_elem, BN_parameter_striding_step_size, 0);
-            lSetString(binding_elem, BN_parameter_explicit, "no_explicit_binding");
-
-         } else {
+         if (lret == false) {
             ret = STATUS_EUNKNOWN;
          }
       }

@@ -60,6 +60,10 @@
 #include "sge_ulong.h"
 #include "sge_var.h"
 #include "symbols.h"
+
+#include "uti/sge_binding_parse.h"
+#include "sgeobj/sge_binding.h"
+
 #include "msg_sgeobjlib.h"
 #include "msg_common.h"
 
@@ -747,6 +751,251 @@ jsv_handle_param_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answe
             }
             if (ret) {
                lSetUlong(new_job, JB_priority, BASE_PRIORITY + priority);
+            }
+         }
+      }
+
+      /*    
+       * -binding 
+       *    <type> linear_automatic:<amount>
+       *    <type> linear:<amount>:<socket>,<core>
+       *    <type> striding_automatic:<amount>:<step>
+       *    <type> striding:<amount>:<step>:<socket>,<core>
+       *    <type> explicit:<socket_core_list>
+       * 
+       * <type> := set | env | pe
+       * <socket_core_list> := <socket>,<core>[:<socket>,<core>]
+       */
+      {
+         lList *binding_list = lGetList(new_job, JB_binding);
+         lListElem *binding_elem = lFirst(binding_list);
+  
+         /* 
+          * initialize binding CULL structure as if there was no binding
+          * specified if there is none till now
+          */ 
+         if (binding_elem == NULL) {
+            ret &= job_init_binding_elem(new_job);
+            if (!ret) {
+               answer_list_add_sprintf(&local_answer_list, STATUS_ESYNTAX, 
+                                       ANSWER_QUALITY_ERROR, MSG_JSV_MEMBINDING);
+               ret = false;
+            }
+            binding_list = lGetList(new_job, JB_binding);
+            binding_elem = lFirst(binding_list);
+         }
+         /* 
+          * parse JSV binding parameter and overwite previous setting
+          */
+         if (ret && strcmp("binding_strategy", param) == 0) {
+            if (value) {
+               lSetString(binding_elem, BN_strategy, value);
+            } else {
+               lSetString(binding_elem, BN_strategy, "no_job_binding");
+            }
+         }
+         if (ret && strcmp("binding_type", param) == 0) {
+
+            if (value) {
+               binding_type_t type = binding_type_to_enum(value);
+
+               lSetUlong(binding_elem, BN_type, type);
+            } else {
+               lSetUlong(binding_elem, BN_type, BINDING_TYPE_NONE);
+            }
+         }
+         if (ret && strcmp("binding_amount", param) == 0) {
+            u_long32 amount = 0;
+
+            if (value != NULL) {
+               if (!parse_ulong_val(NULL, &amount, TYPE_INT, value, NULL, 0)) {
+                  answer_list_add_sprintf(&local_answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                                          MSG_JSV_PARSE_VAL_SS, param, value);
+                  ret = false;
+               } else {
+                  lSetUlong(binding_elem, BN_parameter_n, amount);
+               }
+            }
+         }
+         if (ret && strcmp("binding_step", param) == 0) {
+            u_long32 step = 0;
+
+            if (value != NULL) {
+               if (!parse_ulong_val(NULL, &step, TYPE_INT, value, NULL, 0)) {
+                  answer_list_add_sprintf(&local_answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                                          MSG_JSV_PARSE_VAL_SS, param, value);
+                  ret = false;
+               } else {
+                  lSetUlong(binding_elem, BN_parameter_striding_step_size, step);
+               }
+            } 
+         }
+         if (ret && strcmp("binding_socket", param) == 0) {
+            u_long32 socket = 0;
+
+            if (value != NULL) {
+               if (!parse_ulong_val(NULL, &socket, TYPE_INT, value, NULL, 0)) {
+                  answer_list_add_sprintf(&local_answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                                          MSG_JSV_PARSE_VAL_SS, param, value);
+                  ret = false;
+               } else {
+                  lSetUlong(binding_elem, BN_parameter_socket_offset, socket);
+               }
+            } 
+         }
+         if (ret && strcmp("binding_core", param) == 0) {
+            u_long32 core = 0;
+
+            if (value != NULL) {
+               if (!parse_ulong_val(NULL, &core, TYPE_INT, value, NULL, 0)) {
+                  answer_list_add_sprintf(&local_answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                                          MSG_JSV_PARSE_VAL_SS, param, value);
+                  ret = false;
+               } else {
+                  lSetUlong(binding_elem, BN_parameter_core_offset, core);
+               }
+            } 
+         }
+         /*
+          * Following section handles the explicit socket/core list
+          *    1) fist we check if we received socket 
+          *    2) then we check if we received core 
+          *    3) then we check if the exp_n value has changed
+          *    4) if either the socket or core value addresses a position behind the
+          *       existing list or if the list length should be increased then
+          *       we increase the arrays holding socket and core values
+          *    5) after that we write the new values and store them
+          * 
+          */
+         if (ret && strncmp("binding_exp_", param, strlen("binding_exp_")) == 0) {
+            bool has_new_length = false;
+            bool has_new_socket = false;
+            bool has_new_core = false;
+            u_long32 new_length = 0;
+            u_long32 new_socket = 0;
+            u_long32 new_socket_id = 0;
+            u_long32 new_core = 0;
+            u_long32 new_core_id = 0;
+            int *socket_array = NULL;
+            int *core_array = NULL;
+            int sockets = 0;
+            int cores = 0;
+
+            /* 1) */
+            if (ret && strncmp("binding_exp_socket", param, strlen("binding_exp_socket")) == 0) {
+               const char *number = param + strlen("binding_exp_socket");
+
+               if (value != NULL) {
+                  if (!parse_ulong_val(NULL, &new_socket_id, TYPE_INT, number, NULL, 0)) {
+                     answer_list_add_sprintf(&local_answer_list, STATUS_ESYNTAX, 
+                                             ANSWER_QUALITY_ERROR, MSG_JSV_PARSE_VAL_SS, 
+                                             param, value);
+                     ret = false;
+                  } else {
+                     if (!parse_ulong_val(NULL, &new_socket, TYPE_INT, value, NULL, 0)) {
+                        answer_list_add_sprintf(&local_answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                                                MSG_JSV_PARSE_VAL_SS, param, value);
+                        ret = false;
+                     } else {
+                        has_new_socket = true;
+                     }
+                  }
+               } 
+            }
+            /* 2) */
+            if (ret && strncmp("binding_exp_core", param, strlen("binding_exp_core")) == 0) {
+               const char *number = param + strlen("binding_exp_core");
+
+               if (value != NULL) {
+                  if (!parse_ulong_val(NULL, &new_core_id, TYPE_INT, number, NULL, 0)) {
+                     answer_list_add_sprintf(&local_answer_list, STATUS_ESYNTAX, 
+                                             ANSWER_QUALITY_ERROR, MSG_JSV_PARSE_VAL_SS, 
+                                             param, value);
+                     ret = false;
+                  } else {
+                     if (!parse_ulong_val(NULL, &new_core, TYPE_INT, value, NULL, 0)) {
+                        answer_list_add_sprintf(&local_answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                                                MSG_JSV_PARSE_VAL_SS, param, value);
+                        ret = false;
+                     } else {
+                        has_new_core = true;
+                     }
+                  }
+               } 
+            }
+            /* 3) */
+            if (ret && strcmp("binding_exp_n", param) == 0) {
+
+               if (value != NULL) {
+                  if (!parse_ulong_val(NULL, &new_length, TYPE_INT, value, NULL, 0)) {
+                     answer_list_add_sprintf(&local_answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
+                                             MSG_JSV_PARSE_VAL_SS, param, value);
+                     ret = false;
+                  } else {
+                     has_new_length = true;
+                  }
+               } 
+            }
+            /* 4) */
+            if (ret) {
+               bool do_resize = false;
+               const char *old_param_exp_value = lGetString(binding_elem, BN_parameter_explicit);
+
+               ret &= binding_explicit_extract_sockets_cores(old_param_exp_value,
+                         &socket_array, &sockets, &core_array, &cores);
+
+               if (!ret) {
+                  answer_list_add_sprintf(&local_answer_list, STATUS_ESYNTAX, 
+                                          ANSWER_QUALITY_ERROR, MSG_JSV_PARSE_VAL_SS, 
+                                          param, old_param_exp_value);
+               } else {
+                  if (has_new_length) {
+                     do_resize = true;
+                  }
+                  if (has_new_socket && new_socket_id + 1 > sockets) {
+                     do_resize = true;
+                     new_length = new_socket_id + 1;
+                  }
+                  if (has_new_core && new_core_id + 1 > cores) {
+                     do_resize = true;
+                     new_length = new_core_id + 1;
+                  }
+
+                  if (do_resize) {
+                     int i;
+
+                     socket_array = realloc(socket_array, new_length * sizeof(int));
+                     for (i = sockets; i < new_length; i++) {
+                        socket_array[i] = 0;
+                     }
+                     sockets = new_length;
+                     core_array = realloc(core_array, new_length * sizeof(int));
+                     for (i = cores; i < new_length; i++) {
+                        core_array[i] = 0;
+                     }
+                     cores = new_length;
+                  }
+
+                  /* 5) */
+                  if (has_new_socket) {
+                     socket_array[new_socket_id] = new_socket;
+                  }
+                  if (has_new_core) {
+                     core_array[new_core_id] = new_core;
+                  }
+               }
+               if (ret) {
+                  dstring socket_core_string = DSTRING_INIT;
+
+                  binding_printf_explicit_sockets_cores(&socket_core_string, 
+                                                        socket_array, sockets, 
+                                                        core_array, cores);
+                  lSetString(binding_elem, BN_parameter_explicit, 
+                             sge_dstring_get_string(&socket_core_string));
+                  sge_dstring_free(&socket_core_string);
+               }
+               FREE(socket_array);
+               FREE(core_array);
             }
          }
       }
@@ -1644,6 +1893,109 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
          sge_dstring_clear(&buffer);
          sge_dstring_sprintf(&buffer, "%s p %d", prefix, priority);
          jsv_send_command(jsv, answer_list, sge_dstring_get_string(&buffer));
+      }
+   }
+
+   /*
+    * -binding 
+    *    <type> linear_automatic:<amount>
+    *    <type> linear:<amount>:<socket>,<core>
+    *    <type> striding_automatic:<amount>:<step>
+    *    <type> striding:<amount>:<step>:<socket>,<core>
+    *    <type> explicit:<socket_core_list>
+    *
+    * <type> := set | env | pe
+    * <socket_core_list> := <socket>,<core>[:<socket>,<core>]
+    */
+   {
+      lList *list = lGetList(old_job, JB_binding);
+      lListElem *binding = ((list != NULL) ? lFirst(list) : NULL);
+      const char *strategy = ((binding != NULL) ? lGetString(binding, BN_strategy) : NULL);
+
+      if (strategy != NULL && strcmp(strategy, "no_job_binding") != 0) {
+         const char *strategy_without_automatic = strategy;
+
+         /* binding_strategy */
+         if (strcmp(strategy, "linear_automatic") == 0) {
+            strategy_without_automatic = "linear";
+         } else if (strcmp(strategy, "striding_automatic") == 0) {
+            strategy_without_automatic = "striding";
+         }
+         sge_dstring_clear(&buffer);
+         sge_dstring_sprintf(&buffer, "%s binding_strategy %s", 
+                             prefix, strategy_without_automatic);
+         jsv_send_command(jsv, answer_list, sge_dstring_get_string(&buffer));
+
+         /* binding_type */
+         sge_dstring_clear(&buffer);
+         sge_dstring_sprintf(&buffer, "%s binding_type ", prefix);
+         binding_type_to_string((binding_type_t)lGetUlong(binding, BN_type), &buffer);
+         jsv_send_command(jsv, answer_list, sge_dstring_get_string(&buffer));
+
+         if (strcmp("linear", strategy_without_automatic) == 0 || strcmp("striding", strategy_without_automatic) == 0) {
+            /* binding_amount */
+            sge_dstring_clear(&buffer);
+            sge_dstring_sprintf(&buffer, "%s binding_amount "sge_U32CFormat, prefix, 
+                                sge_u32c(lGetUlong(binding, BN_parameter_n)));
+            jsv_send_command(jsv, answer_list, sge_dstring_get_string(&buffer));
+         }
+
+         /*
+          * socket and core will only be sent for linear and striding strategy
+          */
+         if (strcmp("linear", strategy) == 0 || strcmp("striding", strategy) == 0) {
+            /* binding_socket */
+            sge_dstring_clear(&buffer);
+            sge_dstring_sprintf(&buffer, "%s binding_socket "sge_U32CFormat, prefix, 
+                                sge_u32c(lGetUlong(binding, BN_parameter_socket_offset)));
+            jsv_send_command(jsv, answer_list, sge_dstring_get_string(&buffer));
+
+            /* binding_core */
+            sge_dstring_clear(&buffer);
+            sge_dstring_sprintf(&buffer, "%s binding_core "sge_U32CFormat, prefix, 
+                                sge_u32c(lGetUlong(binding, BN_parameter_core_offset)));
+            jsv_send_command(jsv, answer_list, sge_dstring_get_string(&buffer));
+         }
+
+         /*
+          * Only within striding strategy stepsize parameter is allowed
+          */ 
+         if (strcmp("striding", strategy_without_automatic) == 0) {
+            /* binding_step */
+            sge_dstring_clear(&buffer);
+            sge_dstring_sprintf(&buffer, "%s binding_step "sge_U32CFormat, prefix, 
+                                sge_u32c(lGetUlong(binding, BN_parameter_striding_step_size)));
+            jsv_send_command(jsv, answer_list, sge_dstring_get_string(&buffer));
+         }
+
+         /*
+          * "explicit" strategy requires a socket/core list
+          */
+         if (strcmp("explicit", strategy) == 0) {
+            int *socket_array = NULL;
+            int *core_array = NULL;
+            int socket = 0;
+            int core = 0;
+            int i;
+
+            binding_explicit_extract_sockets_cores(
+               lGetString(binding, BN_parameter_explicit), 
+               &socket_array, &socket, &core_array, &core);    
+
+            /* binding_strategy */
+            sge_dstring_clear(&buffer);
+            sge_dstring_sprintf(&buffer, "%s binding_exp_n "sge_U32CFormat, prefix, sge_u32c(socket));
+            jsv_send_command(jsv, answer_list, sge_dstring_get_string(&buffer));
+
+            for (i = 0; i < socket; i++) {
+               sge_dstring_clear(&buffer);
+               sge_dstring_sprintf(&buffer, "%s binding_exp_socket%d %d", prefix, i, socket_array[i]);
+               jsv_send_command(jsv, answer_list, sge_dstring_get_string(&buffer));
+               sge_dstring_clear(&buffer);
+               sge_dstring_sprintf(&buffer, "%s binding_exp_core%d %d", prefix, i, core_array[i]);
+               jsv_send_command(jsv, answer_list, sge_dstring_get_string(&buffer));
+            }
+         }
       }
    }
 

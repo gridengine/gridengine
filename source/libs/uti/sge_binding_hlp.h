@@ -39,19 +39,13 @@
 #  define PLPA_LINUX
 #endif
 
-#include "sge_dstring.h"
+#include "uti/sge_dstring.h"
+#include "uti/sge_binding_parse.h"
 
 #if defined(PLPA_LINUX)
 #  include "plpa.h"
 #  include <dlfcn.h>
 #endif 
-
-typedef enum _binding_type_t {
-   BINDING_TYPE_NONE,
-   BINDING_TYPE_PE,
-   BINDING_TYPE_ENV,
-   BINDING_TYPE_SET
-} binding_type_t;
 
 /* functions related for parsing command line (see parse_qsub.c) */
 /* shepherd also needs them */

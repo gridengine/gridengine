@@ -44,6 +44,7 @@ UTILIB_DRMAA_SRC = \
          sge_arch.c \
          sge_bitfield.c \
          sge_binding_hlp.c \
+         sge_binding_parse.c \
          sge_bootstrap.c \
          sge_csp_path.c \
          sge_dstring.c \
@@ -266,6 +267,9 @@ sge_pty.o:	$(UTILIB_DIR)/sge_pty.c
 
 sge_binding_hlp.o:	$(UTILIB_DIR)/sge_binding_hlp.c 
 		$(CC) $(CFLAGS) $(MEMCFLAG) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_binding_hlp.c
+
+sge_binding_parse.o:	$(UTILIB_DIR)/sge_binding_parse.c 
+		$(CC) $(CFLAGS) $(MEMCFLAG) $(SHARED_CFLAGS) -c $(UTILIB_DIR)/sge_binding_parse.c
 
 ###############################################################################
 # test targets

@@ -203,8 +203,13 @@ static pthread_once_t japi_once_control = PTHREAD_ONCE_INIT;
 static pthread_t japi_event_client_thread;
 
 /* ---- japi_ec_return_value ------------------------------ */
-/* static int japi_ec_return_value; */
-static lList *japi_ec_alp;
+struct japi_ec_alp_data_t {
+   lList*           japi_ec_alp;
+   pthread_mutex_t  mutex;
+};
+static struct japi_ec_alp_data_t japi_ec_alp_struct = {NULL, PTHREAD_MUTEX_INITIALIZER };
+#define JAPI_LOCK_EC_ALP(japi_ec_alp_data_t)      sge_mutex_lock("EC_ALP", SGE_FUNC, __LINE__, &(japi_ec_alp_data_t.mutex))
+#define JAPI_UNLOCK_EC_ALP(japi_ec_alp_data_t)    sge_mutex_unlock("EC_ALP", SGE_FUNC, __LINE__, &(japi_ec_alp_data_t.mutex))
 
 /* ---- japi_session --------------------------------- */
 
@@ -712,7 +717,7 @@ int japi_enable_job_wait(const char *username, const char *unqualified_hostname,
    DPRINTF(("Waiting for event client to start up\n"));
 
    i = pthread_create(&japi_event_client_thread, &attr,
-                      japi_implementation_thread, (void *)&japi_ec_alp);
+                      japi_implementation_thread, NULL);
 
    if (i != 0) {
       japi_ec_state = JAPI_EC_DOWN;
@@ -747,7 +752,6 @@ int japi_enable_job_wait(const char *username, const char *unqualified_hostname,
       JAPI_UNLOCK_EC_STATE();
       
       ret = DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE;
-      aep = lFirst(japi_ec_alp);
       if (pthread_join(japi_event_client_thread, NULL)) {
          DPRINTF(("japi_init(): pthread_join returned\n"));
       }
@@ -756,12 +760,15 @@ int japi_enable_job_wait(const char *username, const char *unqualified_hostname,
       FREE(japi_session_key);
 
       /* return error context from event client thread if there is such */
+      JAPI_LOCK_EC_ALP(japi_ec_alp_struct);
+      aep = lFirst(japi_ec_alp_struct.japi_ec_alp);
       if (aep != NULL) {
          answer_to_dstring(aep, diag);
       }
       else {
          japi_standard_error(DRMAA_ERRNO_DRM_COMMUNICATION_FAILURE, diag);
       }
+      JAPI_UNLOCK_EC_ALP(japi_ec_alp_struct);
    }
    else {
       JAPI_UNLOCK_EC_STATE();
@@ -877,10 +884,9 @@ static int japi_open_session(const char *username, const char* unqualified_hostn
 *******************************************************************************/
 int japi_exit(int flag, dstring *diag)
 {
-   int *value;
    int cl_errno;
    cl_com_handle_t* handle = NULL;
-   const char *default_cell = NULL; 
+   const char *default_cell = NULL;
 
    DENTER(TOP_LAYER, "japi_exit");
 
@@ -954,7 +960,7 @@ int japi_exit(int flag, dstring *diag)
       }
 
       DPRINTF (("Waiting for event client to terminate.\n"));
-      pthread_join (japi_event_client_thread, (void *)&value);
+      pthread_join (japi_event_client_thread, NULL);
       japi_ec_state = JAPI_EC_DOWN;
    }
    else {
@@ -2603,15 +2609,18 @@ int japi_wait(const char *job_id, dstring *waited_job, int *stat,
             DRETURN(DRMAA_ERRNO_EXIT_TIMEOUT); /* could also return something else here */
          }
          JAPI_UNLOCK_SESSION();
-         
-         aep = lFirst(japi_ec_alp);
+
+         JAPI_LOCK_EC_ALP(japi_ec_alp_struct);
+         aep = lFirst(japi_ec_alp_struct.japi_ec_alp);
          /* return error context from event client thread if there is such */
          if (aep != NULL) {
             sge_dstring_clear(diag);
             answer_to_dstring(aep, diag);
             evc_killed = true;
+            JAPI_UNLOCK_EC_ALP(japi_ec_alp_struct);
             break;
          }
+         JAPI_UNLOCK_EC_ALP(japi_ec_alp_struct);
 
          if (timeout != DRMAA_TIMEOUT_WAIT_FOREVER) {
             if (pthread_cond_timedwait(&Master_japi_job_list_finished_cv, 
@@ -2670,10 +2679,11 @@ int japi_wait(const char *job_id, dstring *waited_job, int *stat,
 
    /* copy jobid of finished job into buffer provided by caller */
    if (wait_result==JAPI_WAIT_FINISHED && waited_job) {
-      if (waited_is_task_array) 
+      if (waited_is_task_array) {
          sge_dstring_sprintf(waited_job, "%ld.%d", waited_jobid, waited_taskid);
-      else 
+      } else {
          sge_dstring_sprintf(waited_job, "%ld", waited_jobid);
+      }
    }
 
    if (wait_result != JAPI_WAIT_FINISHED) {
@@ -3191,15 +3201,16 @@ japi_sge_state_to_drmaa_state(lListElem *job, bool is_array_task, u_long32 jobid
    /* not yet enrolled tasks are always PENDING */
    *remote_ps = DRMAA_PS_SUBSTATE_PENDING;
 
-   if (range_list_is_id_within(lGetList(job, JB_ja_u_h_ids), taskid))
+   if (range_list_is_id_within(lGetList(job, JB_ja_u_h_ids), taskid)) {
       *remote_ps |= DRMAA_PS_SUBSTATE_USER_SUSP;
+   }
    if (range_list_is_id_within(lGetList(job, JB_ja_s_h_ids), taskid) ||
        range_list_is_id_within(lGetList(job, JB_ja_o_h_ids), taskid) ||
        range_list_is_id_within(lGetList(job, JB_ja_a_h_ids), taskid)  ||
        (lGetUlong(job, JB_execution_time) > sge_get_gmt()) || 
-                    lGetList(job, JB_jid_predecessor_list) 
-       )
+                    lGetList(job, JB_jid_predecessor_list)) {
       *remote_ps |= DRMAA_PS_SUBSTATE_SYSTEM_SUSP;
+   }
  
    DRETURN(DRMAA_ERRNO_SUCCESS);
 }
@@ -4005,7 +4016,7 @@ static void japi_subscribe_job_list(const char *japi_session_key, sge_evc_class_
 *  NOTES
 *     MT-NOTE: japi_implementation_thread() is MT safe
 *******************************************************************************/
-static void *japi_implementation_thread(void *p)
+static void *japi_implementation_thread(void * a_user_data_pointer)
 {
    lList *alp = NULL, *event_list = NULL;
    lListElem *event;
@@ -4040,13 +4051,13 @@ static void *japi_implementation_thread(void *p)
    sge_dstring_init(&buffer_wrapper, buffer, sizeof(buffer));
 
    if (sge_gdi2_setup(&evc_ctx, prog_number, MAIN_THREAD, &alp) != AE_OK) {
+      lListElem *aep = lFirst(alp);
       DPRINTF(("error: sge_gdi2_setup() failed for event client thread\n"));
-      if (p) {
-         lListElem *aep = lFirst(alp);
-         if (aep) {
-            answer_list_add((lList **)p, lGetString(aep, AN_text), 
-                  lGetUlong(aep, AN_status), (answer_quality_t)lGetUlong(aep, AN_quality));
-         }
+      if (aep) {
+         JAPI_LOCK_EC_ALP(japi_ec_alp_struct);
+         answer_list_add(&(japi_ec_alp_struct.japi_ec_alp), lGetString(aep, AN_text), 
+               lGetUlong(aep, AN_status), (answer_quality_t)lGetUlong(aep, AN_quality));
+         JAPI_UNLOCK_EC_ALP(japi_ec_alp_struct);
       }
       lFreeList(&alp);
       goto SetupFailed;
@@ -4071,12 +4082,12 @@ static void *japi_implementation_thread(void *p)
    DPRINTF(("registering as event client ...\n"));
    evc = sge_evc_class_create(evc_ctx, EV_ID_ANY, &alp, NULL); 
    if (evc == NULL) {
-      if (p) {
-         lListElem *aep = lFirst(alp);
-         if (aep) {
-            answer_list_add((lList **)p, lGetString(aep, AN_text), 
-                  lGetUlong(aep, AN_status), (answer_quality_t)lGetUlong(aep, AN_quality));
-         }
+      lListElem *aep = lFirst(alp);
+      if (aep) {
+         JAPI_LOCK_EC_ALP(japi_ec_alp_struct);
+         answer_list_add(&(japi_ec_alp_struct.japi_ec_alp), lGetString(aep, AN_text), 
+               lGetUlong(aep, AN_status), (answer_quality_t)lGetUlong(aep, AN_quality));
+         JAPI_UNLOCK_EC_ALP(japi_ec_alp_struct);
       }
       lFreeList(&alp);
       goto SetupFailed;
@@ -4115,14 +4126,13 @@ static void *japi_implementation_thread(void *p)
    }
    
    if (!evc->ec_register(evc, false, &alp, NULL)) {      
+      lListElem *aep = lFirst(alp);
       DPRINTF(("error: ec_register() failed\n"));
-      
-      if (p) {
-         lListElem *aep = lFirst(alp);
-         if (aep) {
-            answer_list_add((lList **)p, lGetString(aep, AN_text), 
-                  lGetUlong(aep, AN_status), (answer_quality_t)lGetUlong(aep, AN_quality));
-         }
+      if (aep) {
+         JAPI_LOCK_EC_ALP(japi_ec_alp_struct);
+         answer_list_add(&(japi_ec_alp_struct.japi_ec_alp), lGetString(aep, AN_text), 
+               lGetUlong(aep, AN_status), (answer_quality_t)lGetUlong(aep, AN_quality));
+         JAPI_UNLOCK_EC_ALP(japi_ec_alp_struct);
       }
       JAPI_UNLOCK_EC_STATE();
       lFreeList(&alp);
@@ -4340,7 +4350,9 @@ static void *japi_implementation_thread(void *p)
                         DPRINTF(("adding started task %ld for job %ld\n",
                                  intkey2, intkey));
                         range_list_insert_id (&range, &alp, intkey2);
-                        range_list_sort_uniq_compress(range, &japi_ec_alp, true);
+                        JAPI_LOCK_EC_ALP(japi_ec_alp_struct);
+                        range_list_sort_uniq_compress(range, &(japi_ec_alp_struct.japi_ec_alp), true);
+                        JAPI_UNLOCK_EC_ALP(japi_ec_alp_struct);
                         lXchgList(japi_job, JJ_started_task_ids, &range);
 
                         /* signal all application threads waiting for a job event */
@@ -4364,8 +4376,10 @@ static void *japi_implementation_thread(void *p)
                DPRINTF (("Received shutdown message\n"));
                stop_ec = true;
                qmaster_bound = false;
-               answer_list_add((lList **)p, MSG_JAPI_KILLED_EVENT_CLIENT, 
+               JAPI_LOCK_EC_ALP(japi_ec_alp_struct);
+               answer_list_add(&(japi_ec_alp_struct.japi_ec_alp), MSG_JAPI_KILLED_EVENT_CLIENT, 
                   STATUS_ERROR1, ANSWER_QUALITY_CRITICAL);
+               JAPI_UNLOCK_EC_ALP(japi_ec_alp_struct);
                pthread_cond_broadcast (&Master_japi_job_list_finished_cv);
                JAPI_UNLOCK_JOB_LIST();
             } else if (type == sgeE_ACK_TIMEOUT) {
@@ -4470,14 +4484,14 @@ static void *japi_implementation_thread(void *p)
    /* signal all application threads waiting for a job event */
    pthread_cond_broadcast (&Master_japi_job_list_finished_cv);
 
-   DRETURN(p);
+   DRETURN(NULL);
 
 SetupFailed:
    JAPI_LOCK_EC_STATE();
    japi_ec_state = JAPI_EC_FAILED;
    pthread_cond_signal(&japi_ec_state_starting_cv);
    JAPI_UNLOCK_EC_STATE();
-   DRETURN(p);
+   DRETURN(NULL);
 }
 
 

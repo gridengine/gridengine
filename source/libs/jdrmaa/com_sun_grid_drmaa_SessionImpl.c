@@ -47,6 +47,7 @@
 enum {
    /* -------------- these are relevant to all sections ---------------- */
    DRMAAJ_ERRNO_SUCCESS = 0, /* Routine returned normally with success. */
+
    DRMAAJ_ERRNO_INTERNAL_ERROR, /* Unexpected or internal DRMAA error like
                                    memory allocation, system call failure,
                                    etc. */

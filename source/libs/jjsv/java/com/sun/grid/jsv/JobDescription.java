@@ -335,7 +335,8 @@ public final class JobDescription implements Cloneable, Serializable {
         String[] retValue = null;
 
         if (commandArgs != null) {
-            retValue = Arrays.copyOf(commandArgs, commandArgs.length);
+            retValue = new String[commandArgs.length];
+            System.arraycopy(commandArgs, 0, retValue, 0, commandArgs.length);
         }
 
         return retValue;

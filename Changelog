@@ -8,6 +8,9 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 -----------------+------------+-------------------------------------------------
+DT-2009-10-27-1: Bugfix:      o Backported jsv classes to 1.5
+		 Belongs to:  DT-2009-10-23-0
+
 LP-2009-10-27-1: Enhancem.:   Improved messages in sgemaster script
                  Belongs to:  LP-2009-10-20-0
                  Bugfix:      Upgrade load_sge_config.sh now suggests builtin 

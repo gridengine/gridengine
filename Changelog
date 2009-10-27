@@ -8,6 +8,11 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 -----------------+------------+-------------------------------------------------
+DT-2009-10-27-0: Bugfix:      o Backported libs/jjsv/build.xml to Ant 1.6.5
+                              o Fixed minor jjsv javadoc error
+                              o Added jjsv wrapper script
+                 Belongs to:  DT-2009-10-23-0
+
 LP-2009-10-27-0: Bugfix:      Windows execd installation does not create proper
                               certificates
                  Bugster:     6895510
@@ -32,6 +37,7 @@ DT-2009-10-26-0: Enhancem.:   o Added JSV Java lang binding into aimk
                               o Backported JSV Java lang binding tests onto
                                 junit 3.8.2
                               - Still missing testsuite integration
+                 Belongs to:  DT-2009-10-23-0
 
 AA-2009-10-26-0: Enhancem.:   additional permissions for new keystore.password 
                               file and modifyThread problem

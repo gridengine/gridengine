@@ -170,11 +170,11 @@ public final class MailSpecifier implements Cloneable, Serializable {
      * Return a byte value that represents the occasions when email should be
      * sent about a job.  The byte value is composed by ORing together the
      * code values for all of the occasions when email should be sent.
+     * @return the occasion value
      * @see #ON_ABORT
      * @see #ON_BEGIN
      * @see #ON_END
      * @see #ON_SUSPEND
-     * @return
      */
     public byte getOccasion() {
         return when;

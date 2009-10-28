@@ -430,16 +430,6 @@ static int handle_job(sge_gdi_ctx_class_t *ctx, lListElem *jelem, lListElem *jat
    { 
       lListElem *report = add_job_report(jobid, jataskid, NULL, jelem);
 
-#if 1 /* EB:TODO:J2C */
-      {
-         dstring pseudo_usage = DSTRING_INIT;
-
-         sge_dstring_sprintf(&pseudo_usage, "binding_inuse=%s", "EB:TODO:J2C");
-         add_usage(report, sge_dstring_get_string(&pseudo_usage), NULL, 0);
-         sge_dstring_free(&pseudo_usage);
-      }
-#endif
-
       flush_job_report(report);
    }   
 
@@ -764,15 +754,7 @@ static int handle_task(sge_gdi_ctx_class_t *ctx, lListElem *petrep, char *commpr
       lListElem *jr = add_job_report(jobid, jataskid, new_task_id, jep);
 
       add_usage(jr, "submission_time", NULL, lGetUlong(petep, PET_submission_time));
-#if 1 /* EB:TODO:J2C */
-      {
-         dstring pseudo_usage = DSTRING_INIT;
-
-         sge_dstring_sprintf(&pseudo_usage, "binding_inuse=%s", "EB:TODO:J2C");
-         add_usage(jr, sge_dstring_get_string(&pseudo_usage), NULL, 0);
-         sge_dstring_free(&pseudo_usage);
-      }
-#endif
+      
       /* if we are not interested in online usage per task, suppress sending of this job report */
       if (mconf_get_sharetree_reserved_usage() && lGetBool(pe, PE_accounting_summary)) {
          lSetBool(jr, JR_no_send, true);

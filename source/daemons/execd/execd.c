@@ -350,6 +350,7 @@ int main(int argc, char **argv)
                            0, SPOOL_WITHIN_EXECD, 
                           job_initialize_job);
    
+
    /* clean up jobs hanging around (look in active_dir) */
    clean_up_old_jobs(ctx, 1);
    sge_send_all_reports(ctx, 0, NUM_REP_REPORT_JOB, execd_report_sources);

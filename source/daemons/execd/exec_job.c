@@ -95,6 +95,7 @@
 #include "uti/sge_binding_hlp.h"
 #include "sge_binding.h"
 #include "sge_binding_BN_L.h"
+#include "job_report_execd.h"
 
 #include "msg_common.h"
 #include "msg_execd.h"
@@ -433,23 +434,46 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
       /* binding strategy: SOLARIS -> create processor set id  
                            LINUX   -> use setaffinity */
 #if defined(PLPA_LINUX)
-      
-      /* check, depending on the used topology, which cores are can be used 
-         in order to fulfill the selected strategy. if strategy is not 
-         applicable or in case of errors "NULL" is written to this 
-         line in the "config" file */
-            
-      create_binding_strategy_string_linux(&core_binding_strategy_string, jep, 
+      {
+         dstring pseudo_usage = DSTRING_INIT;
+         lListElem* jr        = NULL;
+
+         /* check, depending on the used topology, which cores are can be used 
+            in order to fulfill the selected strategy. if strategy is not 
+            applicable or in case of errors "NULL" is written to this 
+            line in the "config" file */
+         create_binding_strategy_string_linux(&core_binding_strategy_string, jep, 
                                            &rankfileinput);
+ 
+         if (sge_dstring_get_string(&core_binding_strategy_string) != NULL
+               && strcmp(sge_dstring_get_string(&core_binding_strategy_string), "NULL") != 0) {
+            
+            INFO((SGE_EVENT, "core binding: %s", sge_dstring_get_string(&core_binding_strategy_string)));
 
-      INFO((SGE_EVENT, "core binding: %s", sge_dstring_get_string(&core_binding_strategy_string)));
+            /* add to job report */
+            jr = add_job_report(job_id, ja_task_id, pe_task_id, jep);
 
+            sge_dstring_sprintf(&pseudo_usage, "binding_inuse=%s", 
+                           sge_dstring_get_string(&core_binding_strategy_string));
+            
+            add_usage(jr, sge_dstring_get_string(&pseudo_usage), NULL, 0);
+            
+            sge_dstring_free(&pseudo_usage);
+         
+            /* send job report   */
+            flush_job_report(jr);
+         }
+
+         sge_dstring_free(&pseudo_usage);
+      }
 #elif defined(SOLARIS86) || defined(SOLARISAMD64) 
       
       /* try to create processor set according to binding strategy 
          and write processor set id to "binding" element in 
          config file */
       {
+         dstring pseudo_usage = DSTRING_INIT;
+         lListElem* jr        = NULL;
 
          create_binding_strategy_string_solaris(&core_binding_strategy_string, 
                            jep, err_str, err_length, &sge_binding_environment, 
@@ -461,7 +485,22 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
          if (sge_binding_environment != NULL) {
             INFO((SGE_EVENT, "SGE_BINDING variable set: %s", sge_binding_environment));
          } 
+         
+         if (sge_dstring_get_string(&core_binding_strategy_string) != NULL 
+               && strcmp(sge_dstring_get_string(&core_binding_strategy_string), "NULL") != 0) {
+            
+            sge_dstring_sprintf(&pseudo_usage, "binding_inuse=%s", 
+                           sge_dstring_get_string(&core_binding_strategy_string));
 
+            jr = add_job_report(job_id, ja_task_id, pe_task_id, jep);
+            
+            add_usage(jr, sge_dstring_get_string(&pseudo_usage), NULL, 0);
+            
+            /* send job report   */
+            flush_job_report(jr);
+         }
+
+         sge_dstring_free(&pseudo_usage);
       }
 #endif
       if (rankfileinput != NULL) {

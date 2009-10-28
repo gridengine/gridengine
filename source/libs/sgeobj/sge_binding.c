@@ -3434,13 +3434,18 @@ binding_print_to_string(const lListElem *this_elem, dstring *string) {
             "linear", sge_u32c(lGetUlong(this_elem, BN_parameter_n)), 
             sge_u32c(lGetUlong(this_elem, BN_parameter_socket_offset)),
             sge_u32c(lGetUlong(this_elem, BN_parameter_core_offset)));
-      } else if (strcmp(strategy, "striding") == 0) {
+      } else if (strcmp(strategy, "striding_automatic") == 0) {
          sge_dstring_sprintf_append(string, "%s:"sge_U32CFormat":"sge_U32CFormat, 
             "striding", sge_u32c(lGetUlong(this_elem, BN_parameter_n)),
             sge_u32c(lGetUlong(this_elem, BN_parameter_striding_step_size)));
+      } else if (strcmp(strategy, "striding") == 0) {
+         sge_dstring_sprintf_append(string, "%s:"sge_U32CFormat":"sge_U32CFormat":"sge_U32CFormat","sge_U32CFormat, 
+            "striding", sge_u32c(lGetUlong(this_elem, BN_parameter_n)),
+            sge_u32c(lGetUlong(this_elem, BN_parameter_striding_step_size)),
+            sge_u32c(lGetUlong(this_elem, BN_parameter_socket_offset)),
+            sge_u32c(lGetUlong(this_elem, BN_parameter_core_offset)));
       } else if (strcmp(strategy, "explicit") == 0) {
-         sge_dstring_sprintf_append(string, "%s:%s", 
-            "explicit", lGetString(this_elem, BN_parameter_explicit));
+         sge_dstring_sprintf_append(string, "%s", lGetString(this_elem, BN_parameter_explicit));
       } else {
          sge_dstring_append(string, "unknown");
       }

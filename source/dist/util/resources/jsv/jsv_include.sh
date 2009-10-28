@@ -67,7 +67,16 @@ __jsv_cli_params="a ar A b ckpt cwd C display dl e hard h hold_jid\
 #     pe_min: minimum of pe range (-pe <pe_name> <pe_min>-<pe_max>)
 #     pe_max: maximum of pe range (-pe <pe_name> <pe_min>-<pe_max>)
 #     pe_name: pe name (-pe <pe_name> <pe_min>-<pe_max>)
-__jsv_mod_params="ac l_hard l_soft q_hard q_soft pe_min pe_max pe_name"
+#     binding_strategy: binding strategy (-binding [<type>] <strategy>:<amount>:<socket>:<core>)
+#     binding_type: binding type name (-binding [<type>] <strategy>:<amount>:<socket>:<core>) 
+#     binding_amount: binding amount (-binding [<type>] <strategy>:<amount>:<socket>:<core>)
+#     binding_socket: binding socket (-binding [<type>] <strategy>:<amount>:<socket>:<core>)
+#     binding_core: binding core (-binding [<type>] <strategy>:<amount>:<socket>:<core>)
+#     binding_step: binding step (-binding [<type>] "striding":<amount>:<step>)
+#     binding_exp_n: length of explicit list (-binding [<type>] "explisit":<socket0>,<core0>:...)
+__jsv_mod_params="ac l_hard l_soft q_hard q_soft pe_min pe_max pe_name\
+                  binding_strategy binding_type binding_amount binding_socket\
+                  binding_core binding_step binding_exp_n"
 
 # Here are the suffixes of variable names which do not directly appear
 # as named switches in a client.

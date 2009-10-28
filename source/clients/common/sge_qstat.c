@@ -564,8 +564,10 @@ static int handle_jobs_queue(lListElem *qep, qstat_env_t* qstat_env, int print_j
             goto error;
          }
 
-         if ((jstate & JSUSPENDED_ON_SUBORDINATE))
+         if (ISSET(jstate, JSUSPENDED_ON_SUBORDINATE) ||
+             ISSET(jstate, JSUSPENDED_ON_SLOTWISE_SUBORDINATE)) {
             lSetUlong(jatep, JAT_state, jstate & ~JRUNNING);
+         }
             
          for_each (gdilep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
 
@@ -651,7 +653,8 @@ static int handle_jobs_queue(lListElem *qep, qstat_env_t* qstat_env, int print_j
                         } else if ((qstat_env->full_listing & QSTAT_DISPLAY_SUSPENDED) &&
                            ((lGetUlong(jatep, JAT_state)&JSUSPENDED) ||
                            (lGetUlong(jatep, JAT_state)&JSUSPENDED_ON_THRESHOLD) ||
-                            (lGetUlong(jatep, JAT_state)&JSUSPENDED_ON_SUBORDINATE))) {
+                           (lGetUlong(jatep, JAT_state)&JSUSPENDED_ON_SUBORDINATE) ||
+                           (lGetUlong(jatep, JAT_state)&JSUSPENDED_ON_SLOTWISE_SUBORDINATE))) {
                            print_it = true;
                         } else if ((qstat_env->full_listing & QSTAT_DISPLAY_USERHOLD) &&
                             (lGetUlong(jatep, JAT_hold)&MINUS_H_TGT_USER)) {

@@ -152,6 +152,7 @@ enum {
 
 */
 #define JSUSPENDED_ON_SUBORDINATE            0x00002000
+#define JSUSPENDED_ON_SLOTWISE_SUBORDINATE   0x00004000
 
 /* reserved names for JB_context */
 #define CONTEXT_IOR "IOR"

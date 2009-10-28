@@ -54,8 +54,9 @@ qinstance_find_suspended_subordinates(const lListElem *this_elem,
 bool
 qinstance_initialize_sos_attr(sge_gdi_ctx_class_t *ctx, lListElem *this_elem, monitoring_t *monitor);
 
-
-
+bool
+do_slotwise_x_on_subordinate_check(sge_gdi_ctx_class_t *ctx, lListElem *queue_instance,
+      bool suspend, bool called_by_qmod, monitoring_t *monitor);
 
 int count_suspended_on_subordinate(lListElem *queueep); 
 

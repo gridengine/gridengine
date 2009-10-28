@@ -492,18 +492,37 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
             {
                lList *old_value = lGetList(this_elem, attribute_name);
                lList *new_value = NULL;
+               lListElem *this_elem_copy = NULL;
 
                solist_attr_list_find_value(attr_list, answer_list,
                                            hostname, &new_value, 
                                            matching_host_or_group,
                                            matching_group, is_ambiguous);
-               if (object_list_has_differences(old_value, answer_list,
-                                               new_value, false)) {
-                  lList *master_list = 
-                               *(object_type_get_master_list(SGE_TYPE_CQUEUE));
+               if (object_list_has_differences(old_value, answer_list, new_value, false)) {
+
+                  lList *master_list = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
                   lList *unsuspended_so = NULL;
                   lList *suspended_so = NULL;
       
+                  /*
+                   * check slotwise subordinations
+                   */
+                  /* TODO: HP: Is it possible to do this more efficient,
+                   * i.e. call do_slotwise_x_on_subordinate() only once?
+                   */
+                  /* Copy the queue instance and set the new subordinate list
+                   * for checking the slotwise subordinations
+                   */
+                  this_elem_copy = lCopyElem(this_elem);
+                  lSetList(this_elem_copy, attribute_name, lCopyList("", new_value));
+
+                  do_slotwise_x_on_subordinate_check(ctx, this_elem_copy, true, true,  monitor);
+                  do_slotwise_x_on_subordinate_check(ctx, this_elem_copy, false, true,  monitor);
+                  lFreeElem(&this_elem_copy);
+
+                  /*
+                   * check "classic" queuewise subordinations
+                   */
 #ifdef QINSTANCE_MODIFY_DEBUG
                   DPRINTF(("Changed "SFQ"\n", lNm2Str(attribute_name)));
 #endif
@@ -539,7 +558,7 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                       * Remove equal entries in both lists 
                       */
                      lDiffListStr(SO_name, &suspended_so, &unsuspended_so);
-
+                     
                      /*
                       * (Un)suspend subordinated queue instances
                       */

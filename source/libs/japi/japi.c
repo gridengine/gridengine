@@ -3192,8 +3192,10 @@ japi_sge_state_to_drmaa_state(lListElem *job, bool is_array_task, u_long32 jobid
        *   - suspended because queue is suspended by calendar 
        */
       if ((ja_task_state & JSUSPENDED_ON_THRESHOLD) || 
-          (ja_task_state & JSUSPENDED_ON_SUBORDINATE))
+          (ja_task_state & JSUSPENDED_ON_SUBORDINATE) ||
+          (ja_task_state & JSUSPENDED_ON_SLOTWISE_SUBORDINATE)) {
          *remote_ps |= DRMAA_PS_SUBSTATE_SYSTEM_SUSP;
+      }
 
       DRETURN(DRMAA_ERRNO_SUCCESS);
    }

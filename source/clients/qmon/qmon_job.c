@@ -510,8 +510,10 @@ lListElem *jat
 
    color = fg;
 
-   if (state & JSUSPENDED_ON_SUBORDINATE)
+   if ((state & JSUSPENDED_ON_SUBORDINATE) ||
+       (state & JSUSPENDED_ON_SLOTWISE_SUBORDINATE)) {
       color = JobSosPixel;
+   }
 
    if (state & JSUSPENDED)
       color = JobSuspPixel;

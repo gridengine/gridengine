@@ -742,7 +742,8 @@ static bool is_qmaster_already_running(const char *qmaster_spool_dir)
 } /* is_qmaster_already_running() */
 
 
-static void sge_propagate_queue_suspension(object_description *object_base, lListElem *jep, dstring *cqueue_name, dstring *host_domain)
+static void sge_propagate_queue_suspension(object_description *object_base, lListElem *jep,
+                                           dstring *cqueue_name, dstring *host_domain)
 {
    const lListElem *gdil_ep, *cq, *qi;
    lListElem *jatep;

@@ -2105,7 +2105,8 @@ void job_get_state_string(char *str, u_long32 op)
       str[count++] = ERROR_SYM;
    }
 
-   if (VALID(JSUSPENDED_ON_SUBORDINATE, op)) {
+   if (VALID(JSUSPENDED_ON_SUBORDINATE, op) ||
+       VALID(JSUSPENDED_ON_SLOTWISE_SUBORDINATE, op)) {
       str[count++] = SUSPENDED_ON_SUBORDINATE_SYM;
    }
    

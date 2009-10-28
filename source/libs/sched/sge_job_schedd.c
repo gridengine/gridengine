@@ -694,7 +694,8 @@ void split_jobs(lList **job_list, u_long32 max_aj_instances,
 #endif
                target = &(target_tasks[SPLIT_SUSPENDED]);
             } else {
-               if ((lGetUlong(ja_task, JAT_state) & JSUSPENDED_ON_SUBORDINATE)) {
+               if ((lGetUlong(ja_task, JAT_state) & JSUSPENDED_ON_SUBORDINATE) ||
+                   (lGetUlong(ja_task, JAT_state) & JSUSPENDED_ON_SLOTWISE_SUBORDINATE)) {
 #ifdef JOB_SPLIT_DEBUG
                   DPRINTF(("Task "sge_u32" is in suspended state\n",ja_task_id));
 #endif

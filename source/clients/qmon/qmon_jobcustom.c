@@ -1068,7 +1068,8 @@ int nm
 
       /* check suspension of queue */
       if (n>0) {
-         if ((tstate & JSUSPENDED_ON_SUBORDINATE)) {
+         if ((tstate & JSUSPENDED_ON_SUBORDINATE) ||
+             (tstate & JSUSPENDED_ON_SLOTWISE_SUBORDINATE)) {
             tstate &= ~JRUNNING;
             lSetUlong(jat, JAT_state, tstate);
          }

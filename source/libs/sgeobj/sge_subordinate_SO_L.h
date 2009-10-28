@@ -44,18 +44,37 @@ extern "C" {
 
 enum {
    SO_name = SO_LOWERBOUND, 
-   SO_threshold    
+   SO_threshold,
+   SO_slots_sum,
+   SO_seq_no,
+   SO_action
 };
+
+/* We want to use the configuration parameter "subordinate_list"
+ * for both the classic queue instance-wise suspend on subordinate
+ * and the slot-wise suspend on subordinate.
+ * The fields SO_name and SO_threshold are used by the queue instance-wise
+ * suspend on subordinate, SO_name, SO_slots_sum, SO_seq_no and SO_action
+ * are used by the slot-wise suspend on subordinate.
+ * If SO_slots_sum is 0, it's queue instance-wise, otherwise slot-wise
+ * suspend on subordinate that is configured.
+ */
 
 LISTDEF(SO_Type)
    JGDI_OBJ(Subordinate)
    SGE_STRING(SO_name, CULL_PRIMARY_KEY | CULL_SUBLIST) 
    SGE_ULONG(SO_threshold, CULL_SUBLIST)
+   SGE_ULONG(SO_slots_sum, CULL_SUBLIST) /* for slot-wise sos */
+   SGE_ULONG(SO_seq_no, CULL_SUBLIST)    /* for slot-wise sos */
+   SGE_ULONG(SO_action, CULL_SUBLIST)
 LISTEND
 
 NAMEDEF(SON)
    NAME("SO_name")
    NAME("SO_threshold")
+   NAME("SO_slots_sum")
+   NAME("SO_seq_no")
+   NAME("SO_action")
 NAMEEND
 
 #define SOS sizeof(SON)/sizeof(char*)

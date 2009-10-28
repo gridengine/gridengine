@@ -668,8 +668,7 @@ attr_list_append_to_dstring(const lList *this_list, dstring *string,
 
    if ((attr = attr_list_locate(this_list, HOSTREF_DEFAULT, href_nm)) != NULL) {
       found_default = true;
-      object_append_field_to_dstring(attr, NULL, string, value_nm,
-                                     '\0');
+      object_append_field_to_dstring(attr, NULL, string, value_nm, '\0');
    }
    
    for_each(attr, this_list) {

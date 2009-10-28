@@ -8,6 +8,11 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 -----------------+------------+-------------------------------------------------
+HP-2009-10-28-0: Enhancem.:   Slotwise suspend on subordinate
+                 Bugster:     6538365
+					  Issue:       35
+                 Review:      JG, EB
+
 DG-2009-10-28-1: Cleanup:     Enabled ENABLE_BINDING execd param in order to 
                               to turn core binding feature on per host. 
                  Review:      SH

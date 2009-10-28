@@ -241,15 +241,11 @@ sge_worker_main(void *arg)
        * thread takes care that packet producers will be terminated 
        * before all worker threads so that this won't be a problem.
        */
-      MONITOR_IDLE_TIME((
-      sge_tq_wait_for_task(Master_Task_Queue, 1, SGE_TQ_GDI_PACKET, (void *)&packet)
-      ), &monitor, mconf_get_monitor_time(), mconf_is_monitor_message());
+      MONITOR_IDLE_TIME(
+         sge_tq_wait_for_task(Master_Task_Queue, 1, SGE_TQ_GDI_PACKET, (void *)&packet),
+         &monitor, mconf_get_monitor_time(), mconf_is_monitor_message());
 
-      {
-         monitoring_t *monitor_ptr = &monitor;
-
-         MONITOR_SET_QLEN(monitor_ptr, sge_tq_get_task_count(Master_Task_Queue));
-      }
+      MONITOR_SET_QLEN((&monitor), sge_tq_get_task_count(Master_Task_Queue));
 
       if (packet != NULL) {
          sge_gdi_task_class_t *task = packet->first_task;

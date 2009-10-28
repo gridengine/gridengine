@@ -1587,6 +1587,7 @@ spool_flatfile_write_list_fields(lList **answer_list, const lList *list,
 *  INPUTS
 *     lList **answer_list                - to report any errors
 *     const lDescr *descr                - object type to read
+*     lListElem *root                    - 
 *     const spooling_field *fields_in    - fields that can be contained in input
 *     int fields_out[]                   - field actually read
 *     const spool_flatfile_instr *instr  - spooling instruction

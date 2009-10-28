@@ -221,8 +221,10 @@ lList **alpp
             DRETURN(1);
          }
 
-         if ((jstate & JSUSPENDED_ON_SUBORDINATE))
+         if (ISSET(jstate, JSUSPENDED_ON_SUBORDINATE) ||
+             ISSET(jstate, JSUSPENDED_ON_SLOTWISE_SUBORDINATE)) {
             lSetUlong(jatep, JAT_state, jstate & ~JRUNNING);
+         }
 
          gdilep = lGetElemStr(lGetList(jatep, JAT_granted_destin_identifier_list), JG_qname, qnm);
          if (gdilep != NULL) {
@@ -302,9 +304,10 @@ lList **alpp
                         already_printed = 1;
                      }
                      if (!already_printed && (full_listing & QSTAT_DISPLAY_SUSPENDED) &&
-                        ((lGetUlong(jatep, JAT_state)&JSUSPENDED) ||
-                        (lGetUlong(jatep, JAT_state)&JSUSPENDED_ON_THRESHOLD) ||
-                         (lGetUlong(jatep, JAT_state)&JSUSPENDED_ON_SUBORDINATE))) {
+                         ((lGetUlong(jatep, JAT_state)&JSUSPENDED) ||
+                         (lGetUlong(jatep, JAT_state)&JSUSPENDED_ON_THRESHOLD) ||
+                         (lGetUlong(jatep, JAT_state)&JSUSPENDED_ON_SUBORDINATE) ||
+                         (lGetUlong(jatep, JAT_state)&JSUSPENDED_ON_SLOTWISE_SUBORDINATE))) {
                         sge_print_job(jlep, jatep, qep, print_jobid,
                            (master && different && (i==0))?"MASTER":"SLAVE", &dyn_task_str, full_listing,
                            slots_in_queue+slot_adjust, i, ehl, centry_list, pe_list, indent, 

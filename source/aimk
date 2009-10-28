@@ -38,7 +38,7 @@
 # which inspired the Grid Engine aimk build scheme.
 
 # Make sure to avoid confusion between shell variables and environment
-# variables
+# variables 
 #
 set noglob
 unsetenv buildarch BUILDARCH COMPILE_ARCH COMPILE_DIR LD_LIBRARY_PATH RMONLIB

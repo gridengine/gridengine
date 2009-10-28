@@ -433,8 +433,9 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
       /***************** core binding part ************************************/
       /* binding strategy: SOLARIS -> create processor set id  
                            LINUX   -> use setaffinity */
+      if (mconf_get_enable_binding()) {
+
 #if defined(PLPA_LINUX)
-      {
          dstring pseudo_usage = DSTRING_INIT;
          lListElem* jr        = NULL;
 
@@ -465,13 +466,11 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
          }
 
          sge_dstring_free(&pseudo_usage);
-      }
 #elif defined(SOLARIS86) || defined(SOLARISAMD64) 
       
       /* try to create processor set according to binding strategy 
          and write processor set id to "binding" element in 
          config file */
-      {
          dstring pseudo_usage = DSTRING_INIT;
          lListElem* jr        = NULL;
 
@@ -501,8 +500,9 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
          }
 
          sge_dstring_free(&pseudo_usage);
-      }
+
 #endif
+   }
       if (rankfileinput != NULL) {
          INFO((SGE_EVENT, "appended socket,core list to hostfile %s", rankfileinput));
       }

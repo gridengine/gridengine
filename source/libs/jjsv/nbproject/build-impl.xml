@@ -20,13 +20,6 @@ is divided into following sections:
 
         -->
 <project xmlns:j2seproject1="http://www.netbeans.org/ns/j2se-project/1" xmlns:j2seproject3="http://www.netbeans.org/ns/j2se-project/3" xmlns:jaxrpc="http://www.netbeans.org/ns/j2se-project/jax-rpc" basedir=".." default="default" name="JSV_Java_Language_Binding-impl">
-    <fail message="Please build using Ant 1.7.1 or higher.">
-        <condition>
-            <not>
-                <antversion atleast="1.7.1"/>
-            </not>
-        </condition>
-    </fail>
     <target depends="test,jar,javadoc" description="Build and test whole project." name="default"/>
     <!-- 
                 ======================
@@ -233,11 +226,6 @@ is divided into following sections:
                 <property location="${build.dir}/empty" name="empty.dir"/>
                 <mkdir dir="${empty.dir}"/>
                 <javac debug="@{debug}" deprecation="${javac.deprecation}" destdir="@{destdir}" encoding="${source.encoding}" excludes="@{excludes}" executable="${platform.javac}" fork="yes" includeantruntime="false" includes="@{includes}" source="${jjsv.javac.source}" sourcepath="@{sourcepath}" srcdir="@{srcdir}" target="${jjsv.javac.target}" tempdir="${java.io.tmpdir}">
-                    <src>
-                        <dirset dir="@{gensrcdir}" erroronmissingdir="false">
-                            <include name="*"/>
-                        </dirset>
-                    </src>
                     <classpath>
                         <path path="@{classpath}"/>
                     </classpath>
@@ -444,11 +432,6 @@ is divided into following sections:
         <!-- You can override this target in the ../build.xml file. -->
     </target>
     <target if="do.depend.true" name="-compile-depend">
-        <pathconvert property="build.generated.subdirs">
-            <dirset dir="${build.generated.sources.dir}" erroronmissingdir="false">
-                <include name="*"/>
-            </dirset>
-        </pathconvert>
         <j2seproject3:depend srcdir="${src.dir}:${build.generated.subdirs}"/>
     </target>
     <target depends="init,deps-jar,-pre-pre-compile,-pre-compile,-compile-depend" if="have.sources" name="-do-compile">
@@ -659,9 +642,6 @@ is divided into following sections:
             </classpath>
             <fileset dir="${src.dir}" excludes="${excludes}" includes="${includes}">
                 <filename name="**/*.java"/>
-            </fileset>
-            <fileset dir="${build.generated.sources.dir}" erroronmissingdir="false">
-                <include name="**/*.java"/>
             </fileset>
         </javadoc>
     </target>

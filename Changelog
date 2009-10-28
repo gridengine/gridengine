@@ -8,8 +8,14 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 -----------------+------------+-------------------------------------------------
-DT-2009-10-28-0: Bugfix       o Corrected problem with jjsv build properties
-		 Belongs to:  DT-2009-10-23-0
+SH-2009-10-29-0: Bugfix:      libraries opened with dlopen and the RTLD_DEEPBIND
+                              flag does not use our jemalloc mechanism. This
+                              causes a segfault.
+                 Bugster:     6840703
+                 Review:      HP
+
+DT-2009-10-28-0: Bugfix:      o Corrected problem with jjsv build properties
+            	  Belongs to:  DT-2009-10-23-0
 
 EB-2009-10-28-0: Bugfix:      fixed JSV-core-binding-related bugs
                  Review:      DG

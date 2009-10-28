@@ -755,6 +755,20 @@ jsv_handle_param_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answe
          }
       }
 
+      /* -tc */
+      {
+         if (ret && strcmp("tc", param) == 0) {
+            int max_tasks = 0;
+
+            if (value != NULL) {
+               ret = ulong_parse_task_concurrency(&local_answer_list, &max_tasks, value);
+            }
+            if (ret) {
+               lSetUlong(new_job, JB_ja_task_concurrency, max_tasks);
+            }
+         }
+      }
+
       /*    
        * -binding 
        *    <type> linear_automatic:<amount>
@@ -1900,6 +1914,19 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
       if (priority != 0) {
          sge_dstring_clear(&buffer);
          sge_dstring_sprintf(&buffer, "%s p %d", prefix, priority);
+         jsv_send_command(jsv, answer_list, sge_dstring_get_string(&buffer));
+      }
+   }
+
+   /* -tc task concurency
+    * optional; only provided if specified during submission
+    */
+   {
+      int max_tasks = (int) lGetUlong(old_job, JB_ja_task_concurrency);
+
+      if (max_tasks != 0) {
+         sge_dstring_clear(&buffer);
+         sge_dstring_sprintf(&buffer, "%s tc %d", prefix, max_tasks);
          jsv_send_command(jsv, answer_list, sge_dstring_get_string(&buffer));
       }
    }

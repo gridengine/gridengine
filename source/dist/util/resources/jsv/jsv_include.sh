@@ -55,7 +55,7 @@ __jsv_state="initialized"
 __jsv_cli_params="a ar A b ckpt cwd C display dl e hard h hold_jid\
                 hold_jid_ad i inherit j js m M masterq notify\
                 now N noshell nostdin o ot P p pty R r shell sync S t\
-                terse u w wd"
+                tc terse u w wd"
 
 # These names are the suffixes of variable names which will contain
 # the information of following submit client switches:

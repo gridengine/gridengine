@@ -153,6 +153,7 @@ typedef struct _tSMEntry {
    int      checkpoint_interval;
    int      verify_mode;
    int      ar_id;
+   int      task_concurrency;
 } tSMEntry;
 
    
@@ -331,6 +332,10 @@ XtResource sm_resources[] = {
 
    { "verify_mode", "verify_mode", XtRInt,
       sizeof(int), XtOffsetOf(tSMEntry, verify_mode),
+      XtRImmediate, NULL },
+
+   { "task_concurrency", "task_concurrency", XtRInt,
+      sizeof(int), XtOffsetOf(tSMEntry, task_concurrency),
       XtRImmediate, NULL },
 
 };
@@ -1523,6 +1528,7 @@ static void qmonSubmitJobSubmit(Widget w, XtPointer cld, XtPointer cad)
          JB_env_list,
          JB_verify_suitable_queues,
          JB_type,
+         JB_ja_task_concurrency,
          NoName
       };
       int qalter_fields[100];
@@ -2059,6 +2065,7 @@ char *prefix
    data->merge_output = lGetBool(jep, JB_merge_stderr);
 /*    data->reserve = lGetBool(jep, JB_reserve); */
    data->priority = lGetUlong(jep, JB_priority) - BASE_PRIORITY;
+   data->task_concurrency = lGetUlong(jep, JB_ja_task_concurrency);
    data->jobshare = lGetUlong(jep, JB_jobshare);
    data->execution_time = lGetUlong(jep, JB_execution_time);
    data->deadline = lGetUlong(jep, JB_deadline);
@@ -2231,6 +2238,10 @@ int save
 
       if (!reduced_job) {
          job_initialize_id_lists(jep, NULL);      
+      } else {
+          lList *jat_list = NULL;
+          lAddElemUlong(&jat_list, JAT_task_number, 0, JAT_Type);
+          lSetList(jep, JB_ja_tasks, jat_list);
       }
    }
    else {   
@@ -2300,6 +2311,7 @@ int save
     * process the resources from dialog
     */ 
    lSetUlong(jep, JB_priority, data->priority + (u_long32)BASE_PRIORITY);
+   lSetUlong(jep, JB_ja_task_concurrency, data->task_concurrency);
    lSetUlong(jep, JB_jobshare, data->jobshare);
    lSetUlong(jep, JB_execution_time, data->execution_time);
    lSetBool(jep, JB_merge_stderr, data->merge_output);

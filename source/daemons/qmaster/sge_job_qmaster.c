@@ -2468,20 +2468,33 @@ int *trigger
    /* ---- JB_project */
    if ((pos=lGetPosViaElem(jep, JB_project, SGE_NO_ABORT)) >= 0) {
       int ret;
-      const char *project = lGetString(jep, JB_project);
+      int changed;
+      const char *new_project = lGetString(jep, JB_project);
+      const char *old_project = lGetString(new_job, JB_project);
 
-      DPRINTF(("got new JB_project\n"));
-
-      ret = job_verify_project(jep, alpp, lGetString(new_job, JB_owner), lGetString(new_job, JB_group));
-      if (ret != STATUS_OK) {
-         DRETURN(ret);
+      if (old_project == NULL && new_project == NULL) {
+          changed = 0;
+      } else {
+         if (old_project == NULL || new_project == NULL) {
+            changed = 1;
+         } else {
+            changed = strcmp(old_project, new_project);
+         }
       }
+      if(changed) {
+         DPRINTF(("got new JB_project\n"));
 
-      lSetString(new_job, JB_project, project);
-      may_not_be_running = 1;
-      *trigger |= MOD_EVENT;
-      sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_PROJECT, sge_u32c(jobid));
-      answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+         ret = job_verify_project(jep, alpp, lGetString(new_job, JB_owner), lGetString(new_job, JB_group));
+         if (ret != STATUS_OK) {
+            DRETURN(ret);
+         }
+
+         lSetString(new_job, JB_project, new_project);
+         may_not_be_running = 1;
+         *trigger |= MOD_EVENT;
+         sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_PROJECT, sge_u32c(jobid));
+         answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+      }
    }
 
    /* ---- JB_pe */
@@ -2674,13 +2687,6 @@ int *trigger
       answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
    }
 
-   /* deny certain modifications of running jobs */
-   if (may_not_be_running && is_running) {
-      ERROR((SGE_EVENT, MSG_SGETEXT_CANT_MOD_RUNNING_JOBS_U, sge_u32c(jobid)));
-      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-      DRETURN(STATUS_EEXIST);
-   }
-
    /* ---- JB_ja_task_concurrency */
    if ((pos=lGetPosViaElem(jep, JB_ja_task_concurrency, SGE_NO_ABORT))>=0) {
       u_long32 task_concurrency;
@@ -2697,6 +2703,13 @@ int *trigger
       *trigger |= MOD_EVENT;
       sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_TASK_CONCURRENCY, sge_u32c(task_concurrency));
       answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+   }
+
+   /* deny certain modifications of running jobs */
+   if (may_not_be_running && is_running) {
+      ERROR((SGE_EVENT, MSG_SGETEXT_CANT_MOD_RUNNING_JOBS_U, sge_u32c(jobid)));
+      answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
+      DRETURN(STATUS_EEXIST);
    }
 
    DRETURN(0);

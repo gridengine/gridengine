@@ -945,10 +945,18 @@ jsv_handle_param_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answe
                          &socket_array, &sockets, &core_array, &cores);
 
                if (!ret) {
-                  answer_list_add_sprintf(&local_answer_list, STATUS_ESYNTAX, 
-                                          ANSWER_QUALITY_ERROR, MSG_JSV_PARSE_VAL_SS, 
-                                          param, old_param_exp_value);
-               } else {
+                  /* 
+                   * parsing will only fail if explicit binding list contains
+                   * string 'no_explicit_binding' and should now be changed to 
+                   * explicit binding
+                   */
+                  socket_array = NULL;
+                  sockets = 0;
+                  core_array = NULL;
+                  cores = 0;
+                  ret = true;
+               } 
+               if (ret) {
                   if (has_new_length) {
                      do_resize = true;
                   }
@@ -964,15 +972,15 @@ jsv_handle_param_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answe
                   if (do_resize) {
                      int i;
 
-                     socket_array = realloc(socket_array, new_length * sizeof(int));
+                     socket_array = (int *)realloc(socket_array, new_length * sizeof(int));
+                     core_array = (int *)realloc(core_array, new_length * sizeof(int));
                      for (i = sockets; i < new_length; i++) {
                         socket_array[i] = 0;
                      }
-                     sockets = new_length;
-                     core_array = realloc(core_array, new_length * sizeof(int));
                      for (i = cores; i < new_length; i++) {
                         core_array[i] = 0;
                      }
+                     sockets = new_length;
                      cores = new_length;
                   }
 

@@ -257,7 +257,7 @@ jsv_send_data(lListElem *jsv, lList **answer_list, const char *buffer, size_t si
    if (jsv_is_send_ready(jsv, answer_list)) {
       int lret;
 
-      lret = fprintf(lGetRef(jsv, JSV_in), "%s", buffer);
+      lret = fprintf(lGetRef(jsv, JSV_in), buffer);
       fflush(lGetRef(jsv, JSV_in));
       if (lret != size) {
          answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
@@ -1013,6 +1013,7 @@ jsv_do_verify(sge_gdi_ctx_class_t* ctx, const char *context, lListElem **job,
    lListElem *jsv;
    lListElem *jsv_next;
    const void *iterator = NULL;
+   lListElem *jsv_old = NULL;
 
    DENTER(TOP_LAYER, "jsv_do_verify");
 
@@ -1144,7 +1145,11 @@ jsv_do_verify(sge_gdi_ctx_class_t* ctx, const char *context, lListElem **job,
                ret &= jsv_stop(jsv, answer_list, soft_shutdown);
             }
          }
+         jsv_old = jsv;
       }
+      if (jsv_old != NULL  && strcmp(context, JSV_CONTEXT_CLIENT) == 0) {
+         ret &= jsv_stop(jsv_old, answer_list, true);
+      }      
       if (holding_mutex) {
          sge_mutex_unlock("jsv_list", SGE_FUNC, __LINE__, &jsv_mutex);
       }

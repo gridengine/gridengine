@@ -8,6 +8,14 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 -----------------+------------+-------------------------------------------------
+MP-2009-10-28-0: Bugfix:      jsv Protocol is not handled correctly in client JSV
+                 Bugster:     6862641
+                 Issue:       3089
+                 Bugfix:      need means to set the jsv command timeout
+                 Bugster:     6865717
+                 Issue:       3111
+                 Review:      EB,HP
+
 JG-2009-10-06-0: Bugfix:      qmaster aborts when submitting a job depending on
                               a just finishing tightly integrated parallel job
                               Updated version string to be "6.2u3_2".

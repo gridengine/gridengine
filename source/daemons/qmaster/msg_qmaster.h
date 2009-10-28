@@ -426,6 +426,7 @@
 #define MSG_SGETEXT_DEL_JOB_SS                        _MESSAGE(33340, _("The job "SFN" of user(s) "SFN" does not exist"))
 #define MSG_SGETEXT_DOESNOTEXISTTASK_SU               _MESSAGE(33341, _("job \""SFN"\" task \"" sge_U32CFormat "\" does not exist"))
 #define MSG_SGETEXT_DOESNOTEXISTTASKRANGE_SUUU        _MESSAGE(33342, _("job \""SFN"\" task id range \"" sge_U32CFormat "-" sge_U32CFormat ":" sge_U32CFormat "\" comprises no tasks"))
+#define MSG_JSV_THRESHOLD_UI                            _MESSAGE(33343, _("JSV for job "sge_U32CFormat" took "sge_U32CFormat" ms"))
 /*
 ** sge_manop.c
 */

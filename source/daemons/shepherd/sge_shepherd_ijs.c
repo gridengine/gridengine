@@ -645,6 +645,13 @@ static void* commlib_to_pty(void *t_conf)
                /* shepherd_trace("commlib_to_pty: interrupted select"); */
                b_was_connected = 1;
                break;
+            case COMM_NO_MESSAGE_AVAILABLE:
+#ifdef EXTENSIVE_TRACING
+               shepherd_trace("commlib_to_pty: didn't receive a message within 1 s "
+                  "timeout -> trying again");
+#endif
+               b_was_connected = 1; 
+               break;
             default:
                /* Unknown error, just try again */
 #ifdef EXTENSIVE_TRACING

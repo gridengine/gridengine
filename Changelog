@@ -8,6 +8,10 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 -----------------+------------+-------------------------------------------------
+HP-2009-10-28-1: Bugfix:      - Fixed lib path issue on win32-x86
+                              - Added more detailed debug output to IJS 
+                 Review:      JG
+
 HP-2009-10-28-0: Enhancem.:   Slotwise suspend on subordinate
                  Bugster:     6538365
 					  Issue:       35

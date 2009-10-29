@@ -1,5 +1,5 @@
 #!/bin/sh
-###############################################################################
+##########################################################################
 #___INFO__MARK_BEGIN__
 ##########################################################################
 #
@@ -32,43 +32,19 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-log="/tmp/jjsv.$$.log"
-java=`which java`
+echo "Stopping Hadoop PE"
 
-if [ "$java" = "" ]; then
-  if [ "$JAVA_HOME" != "" ]; then
-    java="$JAVA_HOME/bin/java"
-  else
-    echo "Please set $JAVA_HOME or add the Java bin directory to your path" > $log
-    exit 1
-  fi
+. $SGE_ROOT/hadoop/env.sh
+
+# Get the ssh wrapper out of the path -- comment out to use qrsh -inherit
+# instead of ssh for the shutdown
+mv $TMP/ssh $TMP/.ssh
+
+if [ "$HADOOP_HOME" = "" ]; then
+  echo Must specify \$HADOOP_HOME for pestop.sh
+  exit 100
 fi
 
-if [ "$SGE_ROOT" = "" ]; then
-  echo "Please set $SGE_ROOT or source your cluster's settings file" > $log
-  exit 1
-fi
+$HADOOP_HOME/bin/stop-mapred.sh
 
-cd $SGE_ROOT/util/resources/jsv
-
-classpath=`ls *.jar | tr "\n" ":"`
-
-if [ "$CLASSPATH" != "" ]; then
-  classpath="$classpath:$CLASSPATH"
-fi
-
-if [ "$1" = "-cp" -o "$1" = "-classpath" ]; then
-  classpath="$classpath:$2"
-  shift
-  shift
-fi
-
-classpath="$classpath:."
-
-if [ $# -eq 0 ]; then
-  echo "Please provide the name of the class to run" > $log
-  echo "Usage: jjsh.sh [-classpath path] classname [arg1 ...]" >> $log
-  exit 1
-fi
-
-exec $java -Djava.util.logging.config.file=./logging.properties -cp $classpath com.sun.grid.jsv.JsvManager $*
+exit 0

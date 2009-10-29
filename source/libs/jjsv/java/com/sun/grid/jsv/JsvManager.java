@@ -267,7 +267,11 @@ public class JsvManager {
                     
                     // Call handler
                     if (jsv != null) {
-                        jsv.onStart(this);
+                        try {
+                            jsv.onStart(this);
+                        } catch (Exception e) {
+                            log.warning("jsv threw an exception while starting: " + e.getClass().getSimpleName() + " -- " + e.getMessage());
+                        }
                     }
 
                     // Request environment
@@ -283,7 +287,11 @@ public class JsvManager {
 
                     // Run handler
                     if (jsv != null) {
-                        jsv.onVerify(this);
+                        try {
+                            jsv.onVerify(this);
+                        } catch (Exception e) {
+                            log.warning("jsv threw an exception while verifying: " + e.getClass().getSimpleName() + " -- " + e.getMessage());
+                        }
                     }
 
                     // Process results of handler

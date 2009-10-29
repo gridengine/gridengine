@@ -111,7 +111,7 @@
       <ant antfile="build.xml" target="test" dir="clients/gui-installer/" inheritall="false"/>
    </target>
 
-   <!-- jjsv Java Language Binding -->
+   <!-- JSV Java Language Binding -->
    <target name="jjsv" depends="init">
       <myant dir="libs/jjsv"/>
    </target>
@@ -126,6 +126,23 @@
 
    <target name="jjsv.test" depends="init">
       <myant dir="libs/jjsv" target="test"/>
+   </target>
+
+   <!-- Hadoop integration -->
+   <target name="herd" depends="init">
+      <myant dir="libs/herd"/>
+   </target>
+
+   <target name="herd.clean" depends="init">
+     <myant dir="libs/herd" target="clean"/>
+   </target>
+
+   <target name="herd.javadoc" depends="init">
+     <myant dir="libs/herd" target="javadoc"/>
+   </target>
+
+   <target name="herd.test" depends="init">
+      <myant dir="libs/herd" target="test"/>
    </target>
 
    <!-- DetectJvmLibrary java util -->

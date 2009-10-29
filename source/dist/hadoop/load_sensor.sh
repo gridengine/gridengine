@@ -1,4 +1,5 @@
-###############################################################################
+#!/bin/sh
+##########################################################################
 #___INFO__MARK_BEGIN__
 ##########################################################################
 #
@@ -30,7 +31,26 @@
 #
 ##########################################################################
 #___INFO__MARK_END__
-com.sun.grid.Jsv.handlers=java.util.logging.FileHandler
-com.sun.grid.Jsv.level=INFO
-java.util.logging.FileHandler.pattern=/tmp/JsvManager%u.log
-java.util.logging.FileHandler.formatter=java.util.logging.SimpleFormatter
+
+SGE_ROOT=/usr/local/sge6.2u3
+export SGE_ROOT
+
+. $SGE_ROOT/hadoop/env.sh
+
+if [ "$HADOOP_HOME" = "" ]; then
+  echo Must specify \$HADOOP_HOME for load_sensor.sh
+  exit 100
+fi
+
+if [ "$JAVA_HOME" = "" ]; then
+  echo Must specify \$JAVA_HOME for load_sensor.sh
+  exit 100
+fi
+
+HADOOP_CLASSPATH=$SGE_ROOT/hadoop/herd.jar
+export HADOOP_CLASSPATH
+
+HADOOP_OPTS=-Djava.util.logging.config.file=$SGE_ROOT/hadoop/logging.properties
+export HADOOP_OPTS
+
+"$HADOOP_HOME"/bin/hadoop --config $HADOOP_HOME/conf com.sun.grid.herd.HerdLoadSensor `hostname`

@@ -842,6 +842,7 @@ if [ $instcommon = true ]; then
       fi
 
       # JSV Java language binding
+      Execute cp libs/jjsv/java/com/sun/grid/jsv/examples/SimpleJsv.java $DEST_SGE_ROOT/util/resources/jsv
       if [ -f libs/jjsv/dist/JSV.jar ]; then
          Execute cp libs/jjsv/dist/JSV.jar $DEST_SGE_ROOT/util/resources/jsv
       fi

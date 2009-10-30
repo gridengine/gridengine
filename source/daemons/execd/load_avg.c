@@ -631,7 +631,9 @@ static int sge_get_topology(const char* qualified_hostname, lList **lpp) {
       /* add 'NONE' as topology in case of only error */
       sge_add_str2load_report(lpp, LOAD_ATTR_TOPOLOGY, "NONE", qualified_hostname);
    }
-   
+
+   FREE(topology);
+
    DRETURN(0);
 }
 
@@ -655,6 +657,8 @@ static int sge_get_topology_inuse(const char* qualified_hostname, lList **lpp) {
       /* add 'NONE' as topology in case of only error */
       sge_add_str2load_report(lpp, LOAD_ATTR_TOPOLOGY_INUSE, "NONE", qualified_hostname);
    }
+
+   FREE(topology);
    
    DRETURN(0);
 }

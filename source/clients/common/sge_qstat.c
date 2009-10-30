@@ -3472,7 +3472,7 @@ static void print_qstat_env_to(qstat_env_t *qstat_env, FILE* file) {
       };
       int i=0;
       
-      while(text[i] != NULL) {
+      while (text[i] != NULL) {
          if (qstat_env->full_listing & masks[i]) {
             fprintf(file,"              =  %s\n", text[i]);
          }

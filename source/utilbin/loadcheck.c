@@ -459,6 +459,7 @@ void fill_socket_core_topology(dstring* msocket, dstring* mcore, dstring* mtopol
    sge_dstring_sprintf(msocket, "%d", ms);
    sge_dstring_sprintf(mcore, "%d", mc);
    sge_dstring_append(mtopology, topo);
+   FREE(topo);
 }
 
 #endif

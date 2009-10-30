@@ -2331,8 +2331,7 @@ static bool explicit_linux(dstring* result, lListElem* binding_elem)
    } 
 
    /* free resources */
-   if (topo_by_job != NULL)
-      free(topo_by_job);
+   FREE(topo_by_job);
    FREE(socket_list);
    FREE(core_list);
 
@@ -2600,10 +2599,6 @@ static bool explicit_solaris(dstring* result, lListElem* binding_elem, char* err
    /* pointer to string which contains the <socket>,<core> pairs */
    const char* request = NULL;
    
-   /* the topology used by the job */
-   char* topo_by_job = NULL;
-   int topo_by_job_length;
-
    /* the from the request extracted sockets and cores (to bind to) */
    int* socket_list = NULL;
    int* core_list = NULL;
@@ -2628,7 +2623,10 @@ static bool explicit_solaris(dstring* result, lListElem* binding_elem, char* err
       snprintf(err_str, err_length, "binding: couldn't parse explicit parameter");
       INFO((SGE_EVENT, "Couldn't parse binding explicit parameter")); 
       retval = false;
-   } else {  
+   } else {
+      /* the topology used by the job */
+      char* topo_by_job = NULL;
+      int topo_by_job_length;
 
       /* check if socket and core numbers are free */ 
       if (binding_explicit_check_and_account(socket_list, socket_list_length, 
@@ -2675,7 +2673,8 @@ static bool explicit_solaris(dstring* result, lListElem* binding_elem, char* err
          INFO((SGE_EVENT, "Binding strategy does not fit on execution host"));
          retval = false;
       }
-   
+
+      FREE(topo_by_job);
    }
 
    DRETURN(retval);

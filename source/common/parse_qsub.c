@@ -350,6 +350,7 @@ u_long32 flags
             if (*sp == NULL) {
                answer_list_add_sprintf(&answer, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
                                         MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S,"-binding");
+               sge_dstring_free(&argument_string);
                DRETURN(answer);
             }
          }
@@ -364,8 +365,10 @@ u_long32 flags
             lSetList(ep_opt, SPA_argval_lListT, binding_list);
          } else {
             /* answer has ween written by binding_parse_from_string() */
+            sge_dstring_free(&argument_string);
             DRETURN(answer);
          }
+         sge_dstring_free(&argument_string);
          sp++;
          continue;
       }

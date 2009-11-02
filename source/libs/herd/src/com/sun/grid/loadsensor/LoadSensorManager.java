@@ -47,9 +47,10 @@ import java.util.logging.Logger;
  * @author dant
  */
 public class LoadSensorManager {
+    // There are no default handlers that log to stdout, so the logger is safe
     private static final Logger log = Logger.getLogger("com.sun.grid.LoadSensor");
     private final LoadSensor loadSensor;
-    private final Timer timer = new Timer("Measurement Reader", true);
+    private Timer timer = null;
     private long lastRun = 0L;
     private int lastInterval = 0;
     private int timeToMeasure = 0;
@@ -119,20 +120,22 @@ public class LoadSensorManager {
 
         long before = 0L;
         long after = 0L;
-        
-        log.finest("Collecting load values from load sensor");
 
-        try {
-            before = System.currentTimeMillis();
-            // We call the LoadSensor.doMeasurement() instead of our own
-            // because we don't want to confuse the time to the first load
-            // report with an actual load report interval
-            loadSensor.doMeasurement();
-            after = System.currentTimeMillis();
+        if (loadSensor != null) {
+            log.finest("Collecting load values from load sensor");
 
-            adjustTimeToMeasure((int)(after - before));
-        } catch (Exception e) {
-            log.warning("load sensor threw exception while measuring load values: " + e.getClass().getSimpleName() + " -- " + e.getMessage());
+            try {
+                before = System.currentTimeMillis();
+                // We call the LoadSensor.doMeasurement() instead of our own
+                // because we don't want to confuse the time to the first load
+                // report with an actual load report interval
+                loadSensor.doMeasurement();
+                after = System.currentTimeMillis();
+
+                adjustTimeToMeasure((int)(after - before));
+            } catch (Exception e) {
+                log.warning("load sensor threw exception while measuring load values: " + e.getClass().getSimpleName() + " -- " + e.getMessage());
+            }
         }
     }
     
@@ -191,33 +194,43 @@ public class LoadSensorManager {
                 log.warning("ignoring invalid input line: " + line);
             }
         }
+
+        if (timer != null) {
+            timer.cancel();
+        }
     }
 
     private void send(String message) throws IOException {
+        String print = message != null ? message : "";
+
         log.fine("<<< " + message);
-        out.println(message);
+        out.println(print);
     }
 
     private void adjustTimeToMeasure(int timeToMeasure) {
-        if (this.timeToMeasure > 0) {
-            this.timeToMeasure = (int)Math.ceil(((this.timeToMeasure * 7.0f / 8.0f) + (timeToMeasure / 8.0f)) / 1000);
+        if (timeToMeasure < 0) {
+            log.warning("attempted to adjust the measurement time by a negative value");
         } else {
-            this.timeToMeasure = timeToMeasure;
-        }
+            if (this.timeToMeasure > 0) {
+                this.timeToMeasure = (int)Math.ceil((this.timeToMeasure * 7.0f / 8.0f) + (timeToMeasure / 8000.0f));
+            } else {
+                this.timeToMeasure = (int)Math.ceil(timeToMeasure / 1000.0F);
+            }
 
-        // Always assume it takes some time to measure
-        if (this.timeToMeasure == 0) {
-            this.timeToMeasure = 1;
+            // Always assume it takes some time to measure
+            if (this.timeToMeasure == 0) {
+                this.timeToMeasure = 1;
+            }
+
+            log.finest("The adjusted time to measure is now " + this.timeToMeasure);
         }
-        
-        log.finest("The adjusted time to measure is now " + this.timeToMeasure);
     }
 
     private void calculateTiming() {
         long thisRun = System.currentTimeMillis();
 
         if (lastRun != 0) {
-            lastInterval = (int)(thisRun - lastRun) / 1000;
+            lastInterval = (int)Math.ceil((thisRun - lastRun) / 1000.0F);
             log.finest("The last load report interval was " + lastInterval);
         }
 
@@ -240,30 +253,15 @@ public class LoadSensorManager {
                 // handle things a little differently
                 if (!doMeasurement) {
                     lastInterval = -1;
+                    doMeasurement = true;
                 }
-                
-                doMeasurement = true;
             }
             
             if (lastInterval > 0) {
                 // If we know the last interval, use it
                 doDelayedMeasurement(adjustedInterval());
             } else if (lastInterval == 0) {
-                long before = 0L;
-                long after = 0L;
-                // If this is the first load report interval, just take the
-                // measurement now
-                log.finest("Collecting load values from load sensor");
-                
-                try {
-                    before = System.currentTimeMillis();
-                    loadSensor.doMeasurement();
-                    after = System.currentTimeMillis();
-
-                    adjustTimeToMeasure((int)(after - before));
-                } catch (Exception e) {
-                    log.warning("load sensor threw exception while measuring load values: " + e.getClass().getSimpleName() + " -- " + e.getMessage());
-                }
+                takeMeasurement();
             } // Otherwise keep the last measured values and wait for the next
               // load report
         } else {
@@ -276,22 +274,48 @@ public class LoadSensorManager {
         }
     }
 
+    private void takeMeasurement() {
+        long before = 0L;
+        long after = 0L;
+        // If this is the first load report interval, just take the
+        // measurement now
+        log.finest("Collecting load values from load sensor");
+
+        try {
+            before = System.currentTimeMillis();
+            loadSensor.doMeasurement();
+            after = System.currentTimeMillis();
+
+            adjustTimeToMeasure((int)(after - before));
+        } catch (Exception e) {
+            log.warning("load sensor threw exception while measuring load values: " + e.getClass().getSimpleName() + " -- " + e.getMessage());
+        }
+    }
+
     private int adjustedInterval() {
         int ret = 0;
 
-        if (lastInterval >= 2 * timeToMeasure) {
-            ret = lastInterval - (2 * timeToMeasure);
+        if ((lastInterval >= 2 * timeToMeasure) && (timeToMeasure >= 0)) {
+            ret = lastInterval - (2 * (timeToMeasure > 0 ? timeToMeasure : 1));
         }
 
         return ret;
     }
 
     private void doDelayedMeasurement(long timeout) {
+        if (timer == null) {
+            timer = new Timer("Measurement Thread", true);
+        }
+
         log.finest("Collecting load values again in " + timeout + " seconds");
         timer.schedule(new DelayedMeasurementTask(), timeout * 1000);
     }
 
     private void doPeriodicMeasurement(long timeout) {
+        if (timer == null) {
+            timer = new Timer("Measurement Thread", true);
+        }
+
         log.finest("Collecting load values again in " + timeout + " seconds");
         timer.schedule(new PeriodicMeasurementTask(), timeout * 1000);
     }
@@ -323,26 +347,15 @@ public class LoadSensorManager {
     private class DelayedMeasurementTask extends TimerTask {
         @Override
         public void run() {
-            long before = 0L;
-            long after = 0L;
-
-            log.finest("Collecting load values from load sensor");
-            
-            try {
-                before = System.currentTimeMillis();
-                loadSensor.doMeasurement();
-                after = System.currentTimeMillis();
-                
-                adjustTimeToMeasure((int)(after - before));
-            } catch (Exception e) {
-                log.warning("load sensor threw exception while measuring load values: " + e.getClass().getSimpleName() + " -- " + e.getMessage());
-            }
+            takeMeasurement();
         }
     }
 
-    private class PeriodicMeasurementTask extends TimerTask {
+    private class PeriodicMeasurementTask extends DelayedMeasurementTask {
         @Override
         public void run() {
+            super.run();
+            
             doMeasurement();
         }
     }

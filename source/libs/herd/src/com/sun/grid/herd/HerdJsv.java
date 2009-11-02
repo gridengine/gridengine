@@ -120,7 +120,9 @@ public class HerdJsv extends Configured implements Tool, Jsv {
             Map<String,String> soft = job.getSoftResourceRequirements();
 
             try {
-                List<LocatedBlock> blocks = getBlocks(path, getConf());
+                List<LocatedBlock> blocks = null;
+
+                blocks = getBlocks(path, getConf());
 
                 // Add new requests
                 soft.putAll(buildRackRequests(blocks));
@@ -134,7 +136,10 @@ public class HerdJsv extends Configured implements Tool, Jsv {
             } catch (FileNotFoundException e) {
                 jsv.reject("The requested data path does not exist: " + path);
             } catch (IOException e) {
-                jsv.log(JsvManager.LogLevel.ERROR, "Unable to contact Nodename: " + StringUtils.stringifyException(e));
+                jsv.log(JsvManager.LogLevel.ERROR, "Unable to contact Namenode: " + StringUtils.stringifyException(e));
+                jsv.rejectWait("Unable to process Hadoop jobs at this time.");
+            } catch (Exception e) {
+                jsv.log(JsvManager.LogLevel.ERROR, "Exception while trying to contact Namenode: " + StringUtils.stringifyException(e));
                 jsv.rejectWait("Unable to process Hadoop jobs at this time.");
             }
         }

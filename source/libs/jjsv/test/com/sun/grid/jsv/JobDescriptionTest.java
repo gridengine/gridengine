@@ -41,6 +41,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.logging.LogRecord;
 
 import java.util.List;
@@ -1366,8 +1367,7 @@ public class JobDescriptionTest extends TestCase {
 
     /**
      * Test of getParallelEnvironment method, of class JsvParameters.
-     */
-    
+     */    
     public void testParallelEnvironment() {
         System.out.println("paralleEnvironment");
 
@@ -1406,6 +1406,56 @@ public class JobDescriptionTest extends TestCase {
         instance.setParallelEnvironment(null);
         result = instance.getParallelEnvironment();
         assertEquals("The getParalleEnvironment() method did not return the value set with setParalleEnvironment(): ", null, result);
+    }
+
+    /**
+     * Test of getBindingSpecifier method, of class JsvParameters.
+     */
+
+    public void testBindingSpecifier() {
+        System.out.println("bindingSpecifier");
+
+        JobDescription instance = new JobDescription();
+        BindingSpecifier expResult = null;
+        BindingSpecifier result = null;
+
+        instance.setBindingSpecifier(expResult);
+        result = instance.getBindingSpecifier();
+        assertEquals("The getBindingSpecifier() method did not return the value set with setBindingSpecifier(): ", expResult, result);
+
+        expResult = new BindingSpecifier();
+        expResult.setLinearStrategy(3, 4, 5);
+        instance.setBindingSpecifier(expResult);
+        result = instance.getBindingSpecifier();
+        assertEquals("The getBindingSpecifier() method did not return the value set with setBindingSpecifier(): ", expResult, result);
+
+        expResult = new BindingSpecifier();
+        expResult.setLinearStrategy(10);
+        instance.setBindingSpecifier(expResult);
+        result = instance.getBindingSpecifier();
+        assertEquals("The getBindingSpecifier() method did not return the value set with setBindingSpecifier(): ", expResult, result);
+
+        expResult = new BindingSpecifier();
+        expResult.setStridingStrategy(7, 8, 9);
+        instance.setBindingSpecifier(expResult);
+        result = instance.getBindingSpecifier();
+        assertEquals("The getBindingSpecifier() method did not return the value set with setBindingSpecifier(): ", expResult, result);
+
+        expResult = new BindingSpecifier();
+        expResult.setStridingStrategy(11);
+        instance.setBindingSpecifier(expResult);
+        result = instance.getBindingSpecifier();
+        assertEquals("The getBindingSpecifier() method did not return the value set with setBindingSpecifier(): ", expResult, result);
+
+        expResult = new BindingSpecifier();
+        List<BindingSpecifier.CoreSpecifier> list = new LinkedList<BindingSpecifier.CoreSpecifier>();
+        list.add(expResult.new CoreSpecifier(0, 0));
+        list.add(expResult.new CoreSpecifier(1, 1));
+        list.add(expResult.new CoreSpecifier(2, 2));
+        expResult.setExplicitStrategy(list);
+        instance.setBindingSpecifier(expResult);
+        result = instance.getBindingSpecifier();
+        assertEquals("The getBindingSpecifier() method did not return the value set with setBindingSpecifier(): ", expResult, result);
     }
 
     /**

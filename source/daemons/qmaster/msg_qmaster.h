@@ -362,7 +362,6 @@
 #define MSG_JOB_STDERRPATHLIST        _MESSAGE(33274, _("stderr path list"))
 #define MSG_JOB_STDOUTPATHLIST        _MESSAGE(33275, _("stdout path list"))
 #define MSG_JOB_HOLDLISTMOD_USS       _MESSAGE(33276, _("modified job id hold list of job "sge_U32CFormat"\n   blocking jobs: "SFN"\n   exited jobs:   "SFN))
-#define MSG_JOB_HOLDARRAYLISTMOD_USS  _MESSAGE(33285, _("modified job id hold array list of job "sge_U32CFormat"\n   blocking jobs: "SFN"\n   exited jobs:   "SFN))
 #define MSG_JOB_MERGEOUTPUT           _MESSAGE(33277, _("output merge behaviour"))
 #define MSG_JOB_RESERVE               _MESSAGE(33699, _("reservation behaviour"))
 #define MSG_JOB_HARDRESOURCELIST      _MESSAGE(33278, _("hard resource list"))
@@ -372,6 +371,7 @@
 #define MSG_JOB_JOBNAME               _MESSAGE(33282, _("job name"))
 #define MSG_JOB_NOTIFYBEHAVIOUR       _MESSAGE(33283, _("notify behaviour"))
 #define MSG_JOB_SLOTRANGE             _MESSAGE(33284, _("slot range"))
+#define MSG_JOB_HOLDARRAYLISTMOD_USS  _MESSAGE(33285, _("modified job id hold array list of job "sge_U32CFormat"\n   blocking jobs: "SFN"\n   exited jobs:   "SFN))
 #define MSG_JOB_HARDQLIST             _MESSAGE(33286, _("hard queue list"))
 #define MSG_JOB_SOFTQLIST             _MESSAGE(33287, _("soft queue list"))
 #define MSG_JOB_MASTERHARDQLIST       _MESSAGE(33288, _("master hard queue list"))
@@ -799,6 +799,7 @@
 #define MSG_JOB_ADDJOBTRIGGER_UUUU    _MESSAGE(33955, _("added trigger to terminate job "sge_U32CFormat"."sge_U32CFormat" when runtime limit is reached ("sge_U32CFormat" + "sge_U32CFormat")"))
 #define MSG_JOB_DELJOBTRIGGER_UU      _MESSAGE(33956, _("removing trigger to terminate job "sge_U32CFormat"."sge_U32CFormat))
 #define MSG_JOB_CHGFORCED_UU          _MESSAGE(33957, _("changed non-forced request to forced request for job "sge_U32CFormat"."sge_U32CFormat"because host can't be contacted"))
+#define MSG_JOB_BINDING              _MESSAGE(33958, _("binding"))
 
 
 #endif

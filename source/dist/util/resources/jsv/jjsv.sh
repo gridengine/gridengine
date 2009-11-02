@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh 
 ##########################################################################
 #___INFO__MARK_BEGIN__
 ##########################################################################
@@ -32,41 +32,43 @@
 ##########################################################################
 #___INFO__MARK_END__
 
+# Usage: jjsh.sh [-classpath path] classname [arg1 ...]
+
 log="/tmp/jjsv.$$.log"
 java=`which java`
 
 if [ "$java" = "" ]; then
-  if [ "$JAVA_HOME" != "" ]; then
-    java="$JAVA_HOME/bin/java"
-  else
-    echo "Please set $JAVA_HOME or add the Java bin directory to your path" > $log
-    exit 1
-  fi
+   if [ "$JAVA_HOME" != "" ]; then
+      java="$JAVA_HOME/bin/java"
+   else
+      echo "Please set $JAVA_HOME or add the Java bin directory to your path" > $log
+      exit 1
+   fi
 fi
 
 if [ "$SGE_ROOT" = "" ]; then
-  echo "Please set $SGE_ROOT or source your cluster's settings file" > $log
-  exit 1
+   echo "Please set $SGE_ROOT or source your cluster's settings file" > $log
+   exit 1
 fi
 
 classpath=`ls $SGE_ROOT/util/resources/jsv/*.jar | tr "\n" ":"`
 
 if [ "$CLASSPATH" != "" ]; then
-  classpath="$classpath:$CLASSPATH"
+   classpath="$classpath:$CLASSPATH"
 fi
 
-if [ "$1" = "-cp" -o "$1" = "-classpath" ]; then
-  shift
-  classpath="$classpath:$1"
-  shift
+if [ "$0" = "-cp" -o "$1" = "-classpath" ]; then
+   shift
+   classpath="$classpath:$1"
+   shift
 fi
 
 classpath="$classpath:."
 
 if [ $# -eq 0 ]; then
-  echo "Please provide the name of the class to run" > $log
-  echo "Usage: jjsh.sh [-classpath path] classname [arg1 ...]" >> $log
-  exit 1
+   jsv_impl="com.sun.grid.jsv.examples.SimpleJsv"
+else
+   jsv_impl=$* 
 fi
 
-exec $java -Djava.util.logging.config.file=$SGE_ROOT/util/resources/jsv/logging.properties -cp $classpath com.sun.grid.jsv.JsvManager $*
+exec $java -Djava.util.logging.config.file=$SGE_ROOT/util/resources/jsv/logging.properties -cp $classpath com.sun.grid.jsv.JsvManager $jsv_impl

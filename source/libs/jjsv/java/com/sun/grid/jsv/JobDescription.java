@@ -209,6 +209,24 @@ public final class JobDescription implements Cloneable, Serializable {
     private static final String PE_MIN = "pe_min";
     // -pe name min-max
     private static final String PE_MAX = "pe_max";
+    // -binding type strategy:amount...
+    private static final String BINDING_STRATEGY = "binding_strategy";
+    // -binding type strategy:amount...
+    private static final String BINDING_TYPE = "binding_type";
+    // -binding type strategy:amount...
+    private static final String BINDING_AMOUNT = "binding_amount";
+    // -binding type strategy:amount:socket:core
+    private static final String BINDING_SOCKET = "binding_socket";
+    // -binding type strategy:amount:socket:core
+    private static final String BINDING_CORE = "binding_core";
+    // -binding type strategy:amount:step:socket:core
+    private static final String BINDING_STEP = "binding_step";
+    // -binding type strategy:socket_core_list
+    private static final String BINDING_EXP_N = "binding_exp_n";
+    // -binding type strategy:socket_core_list
+    private static final String BINDING_EXP_SOCKET = "binding_exp_socket";
+    // -binding type strategy:socket_core_list
+    private static final String BINDING_EXP_CORE = "binding_exp_core";
     // -t min-max:step
     private static final String TASK_MIN = "t_min";
     // -t min-max:step
@@ -258,6 +276,7 @@ public final class JobDescription implements Cloneable, Serializable {
     private List<String> mailRecipients = new ArrayList<String>();
     private Integer priority = null;
     private ParallelEnvironment pe = null;
+    private BindingSpecifier binding = null;
     private TaskSpecifier taskSpecifier = null;
     private Verification verification = null;
     private Map<String,String> environment = null;
@@ -678,6 +697,28 @@ public final class JobDescription implements Cloneable, Serializable {
 
         if (pe != null) {
             retValue = pe.clone();
+        }
+
+        return retValue;
+    }
+
+    /**
+     * Get the BindingSpecifier object that represents the core vinding
+     * settings for the job.
+     *
+     * The object that is returned will be a copy
+     * of the internal object, so modifications to the
+     * returned object will have no effect on the JobDescription instance.
+     *
+     * See qsub -binding.
+     * @return the binding specification
+     * @see BindingSpecifier
+     */
+    public BindingSpecifier getBindingSpecifier() {
+        BindingSpecifier retValue = null;
+
+        if (binding != null) {
+            retValue = binding.clone();
         }
 
         return retValue;
@@ -1461,6 +1502,19 @@ public final class JobDescription implements Cloneable, Serializable {
     }
 
     /**
+     * Set the BindingSpecifier object that represent's the job to core binding
+     * settings.
+     *
+     * See qsub -binding.
+     * @param binding the job binding
+     * @see BindingSpecifier
+     */
+    public void setBindingSpecifier(BindingSpecifier binding) {
+        // null is allowed to remove the binding
+        this.binding = binding;
+    }
+
+    /**
      * Set the job's priority.
      *
      * See qsub -p.
@@ -1741,6 +1795,7 @@ public final class JobDescription implements Cloneable, Serializable {
             putCheckpointDifference(ret, baseline.checkpointSpecifier, checkpointSpecifier);
             putMailDifference(ret, baseline.mailSpecifier, mailSpecifier);
             putPeDifference(ret, baseline.pe, pe);
+            putBindingDifference(ret, baseline.binding, binding);
             putTaskDifference(ret, baseline.taskSpecifier, taskSpecifier);
             putVerificationDifference(ret, baseline.verification, verification);
             putNameDifference(ret, baseline.name, name, commandName);
@@ -1944,12 +1999,45 @@ public final class JobDescription implements Cloneable, Serializable {
      */
     private static void putPeDifference(Map<String,String> map, ParallelEnvironment oldPe, ParallelEnvironment newPe) {
         if ((newPe == null) && (oldPe != null)) {
-            // TODO: Confirm that deleting the name alone is enough
             map.put(PE_NAME, null);
         } else if ((newPe != null) && !newPe.equals(oldPe)) {
             map.put(PE_NAME, newPe.getName());
             map.put(PE_MIN, Integer.toString(newPe.getRangeMin()));
             map.put(PE_MAX, Integer.toString(newPe.getRangeMax()));
+        }
+    }
+
+        /**
+     * Compare the two binding specifiers. If they are different, add the
+     * difference to the map.
+     * @param map the difference map
+     * @param oldBinding the old setting
+     * @param newBinding the new setting
+     */
+    private static void putBindingDifference(Map<String,String> map, BindingSpecifier oldBinding, BindingSpecifier newBinding) {
+        if ((newBinding == null) && (oldBinding != null)) {
+            map.put(BINDING_STRATEGY, null);
+        } else if ((newBinding != null) && !newBinding.equals(oldBinding)) {
+            int i = 0;
+
+            /*
+             * TODO: Although it might not be necessary we send
+             * all binding related parameters for simplicity reason in
+             * the moment.
+             */
+            map.put(BINDING_STRATEGY, newBinding.getStrategy().toString());
+            map.put(BINDING_TYPE, newBinding.getType().toString());
+            map.put(BINDING_AMOUNT, Integer.toString(newBinding.getAmount()));
+            map.put(BINDING_SOCKET, Integer.toString(newBinding.getSocket()));
+            map.put(BINDING_CORE, Integer.toString(newBinding.getCore()));
+            map.put(BINDING_STEP, Integer.toString(newBinding.getStep()));
+            map.put(BINDING_EXP_N, Integer.toString(newBinding.getCoreSpecifiers().size()));
+
+            for (BindingSpecifier.CoreSpecifier cs : newBinding.getCoreSpecifiers()) {
+                map.put(BINDING_EXP_SOCKET + i, Integer.toString(cs.socket));
+                map.put(BINDING_EXP_CORE + i, Integer.toString(cs.core));
+                i++;
+            }
         }
     }
 
@@ -2189,6 +2277,26 @@ public final class JobDescription implements Cloneable, Serializable {
             pe = parsePeMin(value);
         } else if (parameter.equals(PE_MAX)) {
             pe = parsePeMax(value);
+        } else if (parameter.equals(BINDING_STRATEGY)) {
+            binding = parseBindingStrategy(value);
+        } else if (parameter.equals(BINDING_TYPE)) {
+            binding = parseBindingType(BindingSpecifier.Type.valueOf(value.toUpperCase()));
+        } else if (parameter.equals(BINDING_AMOUNT)) {
+            binding = parseBindingAmount(value);
+        } else if (parameter.equals(BINDING_SOCKET)) {
+            binding = parseBindingSocket(value);
+        } else if (parameter.equals(BINDING_CORE)) {
+            binding = parseBindingCore(value);
+        } else if (parameter.equals(BINDING_STEP)) {
+            binding = parseBindingStep(value);
+        } else if (parameter.equals(BINDING_EXP_N)) {
+            binding = parseBindingExpN(value);
+        } else if (parameter.startsWith(BINDING_EXP_SOCKET)) {
+            int pos = parseBindingPos(parameter);
+            binding = parseBindingExpSocket(pos, value);
+        } else if (parameter.startsWith(BINDING_EXP_CORE)) {
+            int pos = parseBindingPos(parameter);
+            binding = parseBindingExpCore(pos, value);
         } else if (parameter.equals(TASK_MIN)) {
             taskSpecifier = parseTaskMin(value);
         } else if (parameter.equals(TASK_MAX)) {
@@ -2612,6 +2720,322 @@ public final class JobDescription implements Cloneable, Serializable {
     }
 
     /**
+     * Parse a binding strategy string
+     * @param value the String to parse
+     * @return the binding specifier
+     */
+    private BindingSpecifier parseBindingStrategy(String value) {
+        BindingSpecifier ret = null;
+
+        if (value != null) {
+            ret = binding;
+
+            if (ret == null) {
+                ret = new BindingSpecifier();
+            }
+
+            ret.setStrategy(BindingSpecifier.Strategy.valueOf(value.toUpperCase()));
+        }
+
+        return ret;
+    }
+
+    /**
+     * Parse a binding type string
+     * @param value the String to parse
+     * @return the binding type
+     */
+    private BindingSpecifier parseBindingType(BindingSpecifier.Type value) {
+        BindingSpecifier ret = null;
+
+        if (value != null) {
+            ret = binding;
+
+            if (ret == null) {
+                ret = new BindingSpecifier();
+            }
+
+            ret.setType(value);
+        }
+
+        return ret;
+    }
+
+    /**
+     * Parse a socket number
+     * @param value the String to parse
+     * @return the socket number
+     */
+    private BindingSpecifier parseBindingSocket(String value) {
+        BindingSpecifier ret = null;
+
+        if (value != null) {
+            ret = binding;
+
+            try {
+                int socket = Integer.parseInt(value);
+
+                if (ret == null) {
+                    ret = new BindingSpecifier();
+                }
+
+                ret.setSocket(socket);
+            } catch (NumberFormatException e) {
+                log.warning("Ignoring invalid binding socket value: " + value);
+            } catch (IllegalArgumentException e) {
+                // Basically means < 1
+                ret = null;
+            }
+        }
+
+        return ret;
+    }
+
+    /**
+     * Parse a core number
+     * @param value the String to parse
+     * @return the core number
+     */
+    private BindingSpecifier parseBindingCore(String value) {
+        BindingSpecifier ret = null;
+
+        if (value != null) {
+            ret = binding;
+
+            try {
+                int core = Integer.parseInt(value);
+
+                if (ret == null) {
+                    ret = new BindingSpecifier();
+                }
+
+                ret.setCore(core);
+            } catch (NumberFormatException e) {
+                log.warning("Ignoring invalid binding core value: " + value);
+            } catch (IllegalArgumentException e) {
+                // Basically means < 1
+                ret = null;
+            }
+        }
+
+        return ret;
+    }
+
+    /**
+     * Parse a step number
+     * @param value the String to parse
+     * @return the step number
+     */
+    private BindingSpecifier parseBindingStep(String value) {
+        BindingSpecifier ret = null;
+
+        if (value != null) {
+            ret = binding;
+
+            try {
+                int step = Integer.parseInt(value);
+
+                if (ret == null) {
+                    ret = new BindingSpecifier();
+                }
+
+                ret.setStep(step);
+            } catch (NumberFormatException e) {
+                log.warning("Ignoring invalid binding step value: " + value);
+            } catch (IllegalArgumentException e) {
+                // Basically means < 1
+                ret = null;
+            }
+        }
+
+        return ret;
+    }
+
+    /**
+     * Parse a binding amount number
+     * @param value the String to parse
+     * @return the amount number
+     */
+    private BindingSpecifier parseBindingAmount(String value) {
+        BindingSpecifier ret = null;
+
+        if (value != null) {
+            ret = binding;
+
+            try {
+                int amount = Integer.parseInt(value);
+
+                if (ret == null) {
+                    ret = new BindingSpecifier();
+                }
+
+                ret.setAmount(amount);
+            } catch (NumberFormatException e) {
+                log.warning("Ignoring invalid binding amount value: " + value);
+            } catch (IllegalArgumentException e) {
+                // Basically means < 1
+                ret = null;
+            }
+        }
+
+        return ret;
+    }
+
+    /**
+     * Parse a binding explicit socket core count value
+     * @param value the String to parse
+     * @return the value
+     */
+    private BindingSpecifier parseBindingExpN(String value) {
+        BindingSpecifier ret = null;
+
+        if (value != null) {
+            ret = binding;
+
+            try {
+                int length = Integer.parseInt(value);
+
+                if (ret == null) {
+                    ret = new BindingSpecifier();
+                }
+
+                List<BindingSpecifier.CoreSpecifier> list = ret.getCoreSpecifiers();
+                int difference = length - list.size();
+                if (difference > 0) {
+                    // add missing elements
+                    for (int i = 0; i < difference; i++) {
+                        BindingSpecifier.CoreSpecifier newCs = null;
+
+                        newCs = ret.new CoreSpecifier();
+                        list.add(newCs);
+                    }
+                } else if (difference < 0) {
+                    // remove elements from end of the list
+                    for (int i = 0; i < difference; i++) {
+                        list.remove(list.size() - 1);
+                    }
+                }
+            } catch (NumberFormatException e) {
+                log.warning("Ignoring invalid bindings explicit socket core list length value: " + value);
+            } catch (IllegalArgumentException e) {
+                // Basically means < 1
+                ret = null;
+            }
+        }
+
+        return ret;
+    }
+
+    /**
+     * Parse a binding socket core list position value
+     * @param value the String to parse
+     * @return the position value
+     */
+    private int parseBindingPos(String value) {
+        int ret = -1;
+
+        if (value != null) {
+            try {
+                String posString = null;
+
+                if (value.startsWith("binding_exp_socket")) {
+                    posString = value.substring("binding_exp_socket".length());
+                } else if (value.startsWith("binding_exp_core")) {
+                    posString = value.substring("binding_exp_core".length());
+                }
+                ret = Integer.parseInt(posString);
+                            } catch (NumberFormatException e) {
+            } catch (IllegalArgumentException e) {
+                // Ignore: ret is already -1
+            }
+        }
+
+        return ret;
+    }
+
+    /**
+     * Parse a binding explicit socket list value
+     * @param value the String to parse
+     * @return the value
+     */
+    private BindingSpecifier parseBindingExpSocket(Integer pos, String value) {
+        BindingSpecifier ret = null;
+
+        if (value != null) {
+            ret = binding;
+
+            try {
+                int socket = Integer.parseInt(value);
+
+                if (ret == null) {
+                    ret = new BindingSpecifier();
+                }
+
+                List<BindingSpecifier.CoreSpecifier> list = ret.getCoreSpecifiers();
+                int difference = pos - list.size();
+                if (difference > 0) {
+                    // add missing elements
+                    for (int i = 0; i < difference; i++) {
+                        BindingSpecifier.CoreSpecifier newCs = null;
+
+                        newCs = ret.new CoreSpecifier();
+                        list.add(newCs);
+                    }
+                }
+                list.get(pos).socket = socket;
+            } catch (NumberFormatException e) {
+                log.warning("Ignoring invalid bindings explicit socket list length value: " + value);
+            } catch (IllegalArgumentException e) {
+                // Basically means < 1
+                ret = null;
+            }
+        }
+
+        return ret;
+    }
+
+    /**
+     * Parse a binding explicit core list value
+     * @param value the String to parse
+     * @return the value
+     */
+    private BindingSpecifier parseBindingExpCore(Integer pos, String value) {
+        BindingSpecifier ret = null;
+
+        if (value != null) {
+            ret = binding;
+
+            try {
+                int core = Integer.parseInt(value);
+
+                if (ret == null) {
+                    ret = new BindingSpecifier();
+                }
+
+                List<BindingSpecifier.CoreSpecifier> list = ret.getCoreSpecifiers();
+                int difference = pos - list.size();
+                if (difference > 0) {
+                    // add missing elements
+                    for (int i = 0; i < difference; i++) {
+                        BindingSpecifier.CoreSpecifier newCs = null;
+
+                        newCs = ret.new CoreSpecifier();
+                        list.add(newCs);
+                    }
+                }
+                list.get(pos).core = core;
+            } catch (NumberFormatException e) {
+                log.warning("Ignoring invalid bindings explicit core list value: " + value);
+            } catch (IllegalArgumentException e) {
+                // Basically means < 1
+                ret = null;
+            }
+        }
+
+        return ret;
+    }
+
+    /**
      * Parse a the verification level.
      * @param value the String to parse
      * @return the verification level
@@ -3009,6 +3433,10 @@ public final class JobDescription implements Cloneable, Serializable {
 
         if (pe != null) {
             copy.pe = pe.clone();
+        }
+
+        if (binding != null) {
+            copy.binding = binding.clone();
         }
 
         if (taskSpecifier != null) {

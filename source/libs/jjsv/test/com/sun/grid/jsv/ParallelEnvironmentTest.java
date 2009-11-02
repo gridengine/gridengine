@@ -31,7 +31,6 @@
 /*___INFO__MARK_END__*/
 package com.sun.grid.jsv;
 
-import junit.framework.Test;
 import junit.framework.TestCase;
 
 public class ParallelEnvironmentTest extends TestCase {

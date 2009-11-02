@@ -1410,8 +1410,8 @@ public class JobDescriptionTest extends TestCase {
 
     /**
      * Test of getBindingSpecifier method, of class JsvParameters.
+     * TODO: add negative tests
      */
-
     public void testBindingSpecifier() {
         System.out.println("bindingSpecifier");
 

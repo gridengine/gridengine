@@ -35,6 +35,9 @@ import java.util.LinkedList;
 import java.util.List;
 import junit.framework.TestCase;
 
+/*
+ * TODO: add negative tests
+ */
 public class BindingSpecifierTest extends TestCase {
     public BindingSpecifierTest() {
     }

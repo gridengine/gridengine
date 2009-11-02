@@ -2686,6 +2686,8 @@ jsv_cull_attr2switch_name(int cull_attr, lListElem *job)
       ret = "ar";
    } else if (cull_attr == JB_account) {
       ret = "A";
+   } else if (cull_attr == JB_binding) {
+      ret = "binding";
    } else if (cull_attr == JB_checkpoint_interval) {
       ret = "c_interval";
    } else if (cull_attr == JB_checkpoint_attr) {

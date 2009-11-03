@@ -454,7 +454,7 @@ void fill_socket_core_topology(dstring* msocket, dstring* mcore, dstring* mtopol
    ms = get_execd_amount_of_sockets();
    mc = get_execd_amount_of_cores();
    if (!get_execd_topology(&topo, &length) || topo == NULL) {
-      topo = "-";
+      topo = sge_strdup(NULL, "-");
    }
    sge_dstring_sprintf(msocket, "%d", ms);
    sge_dstring_sprintf(mcore, "%d", mc);

@@ -512,7 +512,7 @@ bool get_topology_linux(char** topology, int* length)
          } /* for each socket */
             
          if ((*length) == 0) {
-             (*topology) = "warning: couldn't count cores sockets";
+             (*topology) = sge_strdup(NULL, "warning: couldn't count cores sockets");
              success = false;
          } else {
             /* convert d_topolgy into topology */
@@ -528,12 +528,12 @@ bool get_topology_linux(char** topology, int* length)
 
          } /* when socket information is available */ 
       else { 
-         (*topology) = "warning: socket information not available!";
+         (*topology) = sge_strdup(NULL, "warning: socket information not available!");
          success = false;
       }
 
    } else {
-      (*topology) = "warning: host has no topology";
+      (*topology) = sge_strdup(NULL, "warning: host has no topology");
       success = false;
   }
 

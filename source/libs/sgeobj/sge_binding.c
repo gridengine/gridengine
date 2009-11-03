@@ -1634,7 +1634,7 @@ static bool get_topology_solaris(char** topology, int* length)
    if ((*length) == 0) {
       
       /* we couldn't get the kernel kstat values therefore we have no topology */
-      (*topology) = "NONE";
+      (*topology) = sge_strdup(NULL, "NONE");
       (*length)   = 5;
       retval = false;
       sge_dstring_free(&d_topology);

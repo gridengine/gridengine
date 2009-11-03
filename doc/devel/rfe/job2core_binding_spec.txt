@@ -16,6 +16,7 @@ Version Comments                                                 Date        Aut
 1.8     added comments from AS; fixed typos                      09/24/2009  EB
 1.9     Added "execd_params", JSV, show_queue hints              09/28/2009  DG
 1.9.2   Added known limitations                                  10/06/2009  DG
+1.9.3   Added examples, TODOs, hints, algorithm for linear       11/03/2009  DG
 
 1 Introduction 
 --------------
@@ -262,6 +263,10 @@ found.
 
 3.2.1 New "qsub -binding" parameter
 -----------------------------------
+
+Core binding is deactivated per default. It can be activated per host 
+through adding "ENABLE_BINDING=true" to the execd_params (qconf -mconf 
+[<hostname>]).  
 
 In order to give the user the ability to request a special core affinity needed 
 for his/her application a new submission parameter ('-binding') has to be 
@@ -747,6 +752,36 @@ Example 5: Allow the job to use only one core (the first one) on each of the two
 ("striding:2:2": beginning from core 0 to core 3 take every second core 
 [resulting in 0 and 2]).
 
+Example 6: Set the environment variable SGE_BINDING with the selected cores
+           and do no binding 
+---------------------------------------------------------------------------
+
+% qsub -pe testpe 2 -b y -binding env linear:2 sleep 3600
+
+
+Example 7: Add the socket,core list in the 4th row of pe_hostfile 
+           and let binding done from the application itself 
+-----------------------------------------------------------------
+
+% qsub -pe testpe 2 -b y -binding pe linear:2 mpiscript.sh
+
+
+Example 8: loadcheck binary 
+---------------------------
+
+Detailed check if host OS supports core binding.
+
+% loadcheck -cb 
+
+Example 9: Submitting array jobs where all tasks are running 
+           (and are bound) to a different core 
+------------------------------------------------------------
+
+On Linux with a quadcore machine do: 
+
+% qsub -b y -t 1:4 -binding linear:1 sleep 3600
+
+
 
 4. Implementation details 
 -------------------------
@@ -816,16 +851,28 @@ job runs without binding.
 4.3 Linear
 ----------
 
-TBD 
+Linear binding is used in order to place the application on 
+unused sockets which are filled up. 
 
-if <amount> > max. #cores per socket 
-  - search free socket 
-  - fill up socket 
-  - search next free socket
-  - fill up socket
-  ...
+Following algorithm is used:
+
+while (there is a free socket AND we still need cores) 
+- Search a free socket 
+- Accommodate as many cores as possible on the this socket
+end while
+ 
+if (we do not need more cores) 
+- end 
+
+while (we still need cores AND there are unsused cores) 
+- Find the socket with the most free cores 
+- Use as many cores as possible on this socket 
+end while 
+
+if (we could accomodate the job on the sockets) 
+- do binding (and mark cores as selected) 
 else 
-  job have to fit on one socket or no binding is done
+- do no binding 
   
 
 5. Risks 
@@ -869,7 +916,17 @@ variable) this may lead to a non-running job. The reason is that OpenMP is not
 aware of the Solaris processor set and wants to bind threads to processors 
 outside of the set. 
 
+8. TODOs 
+--------
 
+- Execd have to check (and mark cores as used when neccessary) when starting 
+  up for running jobs (with core binding enabled)
+
+- Adding testsuite test 
+
+- Modification of showq client for the open source community. 
+
+ 
 
 
 

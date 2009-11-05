@@ -10,7 +10,7 @@
 -----------------+------------+-------------------------------------------------
 DG-2009-11-05-0: Bugfix:      - Fixed dependencies in Makefile
                               - Fixed execd reporting of bound cores when 
-                                it find running jobs while startup
+                                it finds running jobs while startup
                               - Cleanup and adoc headers
                  Review:      CR
 

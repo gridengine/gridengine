@@ -92,13 +92,13 @@ static int get_amount_of_cores_from_matrix(const int** matrix, const int length,
 static int get_amount_of_threads_from_matrix(const int** matrix, const int length, 
                int** threads, int* size); 
 
-static int get_chip_ids_from_matrix(const int** matrix, const int length, 
+static bool get_chip_ids_from_matrix(const int** matrix, const int length, 
                int** chip_ids, int* amount);
 
-static int get_core_ids_from_matrix(const int** matrix, const int length, 
+static bool get_core_ids_from_matrix(const int** matrix, const int length, 
                int** core_ids, int* amount);
 
-static int get_ids_from_matrix(const int** matrix, const int length, 
+static bool get_ids_from_matrix(const int** matrix, const int length, 
                const int which_ID, int** ids, int* amount);
 
 /* DG TODO this function is not MT -> introduce context */
@@ -214,7 +214,7 @@ bool get_execd_topology(char** topology, int* length)
    bool success = false;
 
    /* topology must be a NULL pointer */
-   if ((*topology) == NULL) {
+   if (topology != NULL && (*topology) == NULL) {
 #if defined(PLPA_LINUX)  
       if (get_topology_linux(topology, length) == true) {
          success = true;
@@ -281,7 +281,6 @@ bool get_execd_topology_in_use(char** topology)
    }   
 
    if (logical_used_topology_length == 0 || logical_used_topology == NULL) {
-
 #if defined(PLPA_LINUX) 
       /* initialize without any usage */
       get_topology_linux(&logical_used_topology, 
@@ -290,8 +289,8 @@ bool get_execd_topology_in_use(char** topology)
       get_topology_solaris(&logical_used_topology, 
                &logical_used_topology_length);
 #endif
-
    }
+
    if (logical_used_topology_length > 0) {
       /* copy the string */
       (*topology) = (char *) calloc(logical_used_topology_length+1, sizeof(char));
@@ -363,9 +362,6 @@ static bool go_to_next_core(const char* topology, const int pos, int* new_pos);
 *
 *  NOTES
 *     MT-NOTE: binding_set_linear_solaris() is not MT safe 
-*
-*  BUGS
-*     ??? 
 *
 *  SEE ALSO
 *     ???/???
@@ -544,6 +540,39 @@ static bool binding_set_linear_solaris(const int first_socket, const int first_c
 }
 
 
+/****** sge_binding/create_processor_set_explicit_solaris() ********************
+*  NAME
+*     create_processor_set_explicit_solaris() -- ??? 
+*
+*  SYNOPSIS
+*     int create_processor_set_explicit_solaris(const int* list_of_sockets, 
+*     const int samount, const int* list_of_cores, const int camount, const 
+*     binding_type_t type, char** env) 
+*
+*  FUNCTION
+*     Creates a processor set (when binding typ is "set") containing the 
+*     given <socket,core> pairs.
+*
+*  INPUTS
+*     const int* list_of_sockets - List of sockets to use for core binding 
+*     const int samount          - Size of socket list 
+*     const int* list_of_cores   - List of cores to use for core binding 
+*     const int camount          - Size of core list 
+*     const binding_type_t type  - Type of binding request (set,env or pe) 
+*
+*  OUTPUTS
+*     char** env                 - String with content of SGE_BINDING or NULL 
+*                                  when binding type other than "env"
+*
+*  RESULT
+*     int - 
+*
+*  NOTES
+*     MT-NOTE: create_processor_set_explicit_solaris() is not MT safe 
+*
+*  SEE ALSO
+*     ???/???
+*******************************************************************************/
 int create_processor_set_explicit_solaris(const int* list_of_sockets,
    const int samount, const int* list_of_cores, const int camount, 
    const binding_type_t type, char** env)
@@ -610,7 +639,7 @@ int create_processor_set_explicit_solaris(const int* list_of_sockets,
 
    /* check what we've todo with the processor id list: 
       - ENV -> set environment variable 
-      - PE  -> DG TODO
+      - PE  -> do nothing (pe_hostfile will be updated) 
       - SET -> create the processor set */
    if (type == BINDING_TYPE_ENV) {
       /* just set the environment variable */
@@ -633,6 +662,35 @@ int create_processor_set_explicit_solaris(const int* list_of_sockets,
    return (int) psetid;
 }
 
+/****** sge_binding/create_environment_string_solaris() ************************
+*  NAME
+*     create_environment_string_solaris() -- Creates a string with processor ids. 
+*
+*  SYNOPSIS
+*     static void create_environment_string_solaris(const processorid_t* 
+*     pid_list, const int pid_list_size, char** environment) 
+*
+*  FUNCTION
+*     Creates a string with space separated processor ids. This string is used 
+*     later on as the environment varibale SGE_BINDING which can be used 
+*     by the application to bind itself to these. 
+*
+*  INPUTS
+*     const processorid_t* pid_list - List with OS internal processor ids 
+*     const int pid_list_size       - Length of list
+*
+*  OUTPUTS
+*     char** environment            - String with the list space separated. 
+*
+*  RESULT
+*     static void - nothing
+*
+*  NOTES
+*     MT-NOTE: create_environment_string_solaris() is MT safe 
+*
+*  SEE ALSO
+*     ???/???
+*******************************************************************************/
 static void create_environment_string_solaris(const processorid_t* pid_list, 
                const int pid_list_size, char** environment) 
 {
@@ -657,6 +715,42 @@ static void create_environment_string_solaris(const processorid_t* pid_list,
    sge_dstring_free(&proc);
 }
 
+
+/****** sge_binding/create_processor_set_striding_solaris() ********************
+*  NAME
+*     create_processor_set_striding_solaris() -- Creates processor set for striding strategy.  
+*
+*  SYNOPSIS
+*     int create_processor_set_striding_solaris(const int first_socket, const 
+*     int first_core, const int amount, const int step_size, const 
+*     binding_type_t type, char** env) 
+*
+*  FUNCTION
+*     Create the processor set according to the input parameters for the striding 
+*     core allocation schema. Depending on the type the processor set is created 
+*     (default case), an environment variable is created and returned via the 
+*     env output parameter, or the pe_hostfile is changed.
+*
+*  INPUTS
+*     const int first_socket    - Socket to begin core allocation. 
+*     const int first_core      - Core number to begin allocation. 
+*     const int amount          - Amount of cores to allocate. 
+*     const int step_size       - Step size (distance of the allocated cores)
+*     const binding_type_t type - Type of binding (set, pe or env) 
+*
+*  OUTPUTS
+*     char** env                - String which contains the content of SGE_BINDING
+*                                 when not NULL.
+*
+*  RESULT
+*     int - 
+*
+*  NOTES
+*     MT-NOTE: create_processor_set_striding_solaris() is not MT safe 
+*
+*  SEE ALSO
+*     ???/???
+*******************************************************************************/
 int create_processor_set_striding_solaris(const int first_socket, 
    const int first_core, const int amount, const int step_size, 
    const binding_type_t type, char** env) 
@@ -928,10 +1022,8 @@ static bool create_pset(const processorid_t* const plist, const int length,
 
          /* try to assign processor id to the processor set */
          if (pset_assign(*pset_id, plist[i], NULL) == -1) {
-               /* shepherd_trace("assign error : we've to detroy the set!\n"); */
-               /* problem while assigning a CPU to the set */
-               /* DG TODO ??? we detroy the set and do no binding at all*/
-               /* detroy the processor set and return with error */ 
+            /* problem while assigning a CPU to the set */
+            /* destroy the processor set and return with error */ 
             if (pset_destroy(*pset_id) != 0) {
                /* Ooops - we could have a major problem with a remaining pset */
                successful = false;
@@ -941,8 +1033,8 @@ static bool create_pset(const processorid_t* const plist, const int length,
                successful = false;
             }
          }
-
       }
+
    }
 
    /* we could create the pset and assign all processors from the list to it */
@@ -1022,85 +1114,50 @@ static bool bind_current_process_to_pset(psetid_t pset_id)
 
 #endif 
 
-/****** sge_binding/binding_one_per_socket() ***********************************
-*  NAME
-*     binding_one_per_socket() -- ??? 
-*
-*  SYNOPSIS
-*     bool binding_one_per_socket(int first_socket, int amount_of_sockets, int 
-*     n) 
-*
-*  FUNCTION
-*     ??? 
-*
-*  INPUTS
-*     int first_socket      - ??? 
-*     int amount_of_sockets - ??? 
-*     int n                 - ??? 
-*
-*  RESULT
-*     bool - 
-*
-*  EXAMPLE
-*     ??? 
-*
-*  NOTES
-*     MT-NOTE: binding_one_per_socket() is not MT safe 
-*
-*  BUGS
-*     ??? 
-*
-*  SEE ALSO
-*     ???/???
-*******************************************************************************/
-bool binding_one_per_socket(int first_socket, int amount_of_sockets, int n)
-{
-
-   /* n := take the n-th core per socket */
-   
-   
-   return true;
-}
-
-/****** sge_binding/binding_n_per_socket() *************************************
-*  NAME
-*     binding_n_per_socket() -- ??? 
-*
-*  SYNOPSIS
-*     bool binding_n_per_socket(int first_socket, int amount_of_sockets, int n) 
-*
-*  FUNCTION
-*     ??? 
-*
-*  INPUTS
-*     int first_socket      - ??? 
-*     int amount_of_sockets - ??? 
-*     int n                 - ??? 
-*
-*  RESULT
-*     bool - 
-*
-*  EXAMPLE
-*     ??? 
-*
-*  NOTES
-*     MT-NOTE: binding_n_per_socket() is not MT safe 
-*
-*  SEE ALSO
-*     ???/???
-*******************************************************************************/
-bool binding_n_per_socket(int first_socket, int amount_of_sockets, int n)
-{
-
-   /* n := the first n cores of each socket */
-   
-
-   
-   return true;
-}
-
-
 #if defined(PLPA_LINUX) || defined(SOLARIS86) || defined(SOLARISAMD64)  
+
+
+/****** sge_binding/account_job() **********************************************
+*  NAME
+*     account_job() -- Accounts core binding from a job on host global topology. 
+*
+*  SYNOPSIS
+*     bool account_job(char* job_topology) 
+*
+*  FUNCTION
+*      Accounts core binding from a job on host global topology.
+*
+*  INPUTS
+*     char* job_topology - Topology used from core binding. 
+*
+*  RESULT
+*     bool - true when successful otherwise false
+*
+*  NOTES
+*     MT-NOTE: account_job() is not MT safe 
+*
+*  SEE ALSO
+*     ???/???
+*******************************************************************************/
+bool account_job(const char* job_topology)
+{
+   
+   if (logical_used_topology_length == 0 || logical_used_topology == NULL) {
+
+#if defined(PLPA_LINUX) 
+      /* initialize without any usage */
+      get_topology_linux(&logical_used_topology, 
+              &logical_used_topology_length); 
+#elif defined(SOLARISAMD64) || defined(SOLARIS86) 
+      get_topology_solaris(&logical_used_topology, 
+               &logical_used_topology_length);
+#endif
+
+   }
+
+   return account_job_on_topology(&logical_used_topology, strlen(logical_used_topology), 
+                           job_topology, strlen(job_topology)); 
+}
 
 /****** sge_binding/account_job_on_topology() **********************************
 *  NAME
@@ -1137,7 +1194,7 @@ static bool account_job_on_topology(char** topology, const int topology_length,
    
    /* parameter validation */
    if (topology_length != job_length ||  job_length <= 0 
-      || (*topology) == NULL || job == NULL) {
+      || topology == NULL || (*topology) == NULL || job == NULL) {
       return false;
    }
 
@@ -1260,194 +1317,6 @@ bool binding_explicit_check_and_account(const int* list_of_sockets, const int sa
    return possible;
 }
 
-#if 0
-static bool update_binding_system_status()
-{
-   /* go through all active jobs dirs        */ 
-
-   /* path to "binding" file which is in active jobs directory */
-   /* there could be more (in subdirectories for parallel slave jobs */
-   dstring fname  = DSTRING_INIT;
-
-   /* get all process ids running here */ 
-   char active_dir_buffer[SGE_PATH_MAX] = "";
-   
-   dstring active_dir;
-   
-   /* job and taskid */
-   u_long32 jobid, jataskid;
-   /*const char *pe_task_id = NULL; */
-
-   /* list entries of job list, ja task list, and pe list */
-   lListElem* jep = NULL;
-/*   lListElem* petep = NULL; */
-   lListElem* jatep = NULL;
-
-   /* return value */
-   bool success = true;
-
-   sge_dstring_init(&active_dir, active_dir_buffer, sizeof(active_dir_buffer));
-
-   /* all job ids, task ids and pe ids on execution host */
-
-   /* for all jobs */
-   for_each(jep, *(object_type_get_master_list(SGE_TYPE_JOB))) {
-
-      /* get jobid */ 
-      jobid = lGetUlong(jep, JB_job_number);
-      
-      /* go through all tasks */
-      for_each (jatep, lGetList(jep, JB_ja_tasks)) {
-        
-         /* get task id */
-         jataskid = lGetUlong(jatep, JAT_task_number);
-         
-         /* DG TODO: just go in main active_job directory (reactivate 
-            the code below in order to get core usage from parallel 
-            jobs) */
-
-         /* check if parallel entries exists 
-         if (lGetList(jatep, JAT_task_list) != NULL) {
-
-             go through all parallel entries 
-            for_each(petep, lGetList(jatep, JAT_task_list)) {
-            
-                 get parallel task id   
-               pe_task_id = lGetString(petep, PET_id); 
-               
-                check here for existance of "binding" file and 
-                  parse it ("active_jobs/X.X/pe_task_id/binding")
-                  for parallel slave tasks 
-               sge_get_active_job_file_path(&fname, jobid, jataskid, pe_task_id, 
-                                "binding");
-               
-                parse binding file and account it (for execd global view 
-                  of current status to report) 
-               if (!parse_binding_file_and_account(sge_dstring_get_string(&fname))) {
-                  success = false;
-               }  
-
-            }  all parallel entries 
-         }
-         */
-         
-         /* in any case we need the "active_jobs/X.X/binding" file */
-            
-         /* we have not such a parallel entries list - we need the main directory */ 
-         sge_get_active_job_file_path(&fname, jobid, jataskid, NULL, 
-            "binding");
-
-         /* parse binding file and do the accounting */
-         if (!parse_binding_file_and_account(sge_dstring_get_string(&fname))) {
-            success = false;
-         }
-         
-
-      } /* for all tasks */
-
-   } /* for all jobs */
-
-   sge_dstring_free(&fname);
-
-   return success;
-}
-#endif 
-
-#if 0
-static bool parse_binding_file_and_account(const char* fname)
-{
-   
-   /* binding file has following content: 
-      -first line: <used_topology> as string 
-      "SccCCscccc" for example for using 
-       the second socket completely and 
-       the first two cores of the first socket 
-       (C is a free core; c a used one)           */
-   FILE *fp;
-   char buf[10000];
-   /* size of the topology string in binding file */
-   int size = 0;
-
-   /* open binding file */
-   fp = fopen(fname, "r");
-   if (!fp) {
-      /* can't open binding file */
-      return false;
-   }
-
-   if (fgets(buf, sizeof(buf), fp)) {
-      /* we don't expect to have larger content (ca. 10000 cores
-         at one host */
-      int i;  
-      /* first check the size of the topology string 
-         -> it must be equal to current "global topology 
-            in use" string 
-         -> current "global topology in use" string must 
-            exist (if not this string would be taken for 
-            that but just for savety reasons) */
-      for (i = 0; i < sizeof(buf) && buf[i] != '\0'; i++) {
-
-         if (buf[i] == 'c' || buf[i] == 'C' || 
-             buf[i] == 'S' || buf[i] == 's' || 
-             buf[i] == 'T' || buf[i] == 't') {
-
-            /* all allowed characters */
-            size++;
-         } else {
-            /* this is an unrecognized character -> therefore the content of 
-               "binding" file is not correct */
-            return false;
-         }
-      }
-
-      buf[i] = '\0'; 
-      size++;
-
-      /* check if size is correct */
-      if (logical_used_topology == NULL || 
-            logical_used_topology_length == 0) {
-         /* we have no topology string which represents the state of 
-            the execution host yet */
-         logical_used_topology = (char *) calloc(size, sizeof(char));
-         logical_used_topology_length = size;
-         /* copy it */
-         memcpy(logical_used_topology, buf, sizeof(char) * size);
-      } else {
-         /* we have a global string but it must have the same size */ 
-         if (size != logical_used_topology_length) {
-            /* PROBLEM: the size of the topology string in "binding" file from 
-               active jobs directory has NOT the same size than the current 
-               global string which represents the topology in use !!! */
-            return false;   
-         } else {
-            /* account the topology in use from active job                  */ 
-            /* this is done by saving all lower case characters (logical OR)*/
-            for (i = 0; i < size; i++) {
-               if (buf[i] == 'c') {
-                  /* account core in use   */
-                  logical_used_topology[i] = 'c';
-               } else if (buf[i] == 's') {
-                  /* account socket in use */
-                  logical_used_topology[i] = 's';
-               } else if (buf[i] == 't') {
-                  /* account thread in use */
-                  logical_used_topology[i] = 't';
-               }
-            }
-            
-         }
-      }
-
-   } else {
-      /* nothing to read -> nothing to account */
-   }
-   
-   fclose(fp);
-
-   return true;
-}   
-#endif 
-
 /****** sge_binding/free_topology() ********************************************
 *  NAME
 *     free_topology() -- Free cores used by a job on module global accounting string. 
@@ -1538,6 +1407,36 @@ bool free_topology(const char* topology, const int topology_length)
 
 #if defined(SOLARISAMD64) || defined(SOLARIS86)
 
+/****** sge_binding/get_topology_solaris() *************************************
+*  NAME
+*     get_topology_solaris() -- Creates the topology string. 
+*
+*  SYNOPSIS
+*     static bool get_topology_solaris(char** topology, int* length) 
+*
+*  FUNCTION
+*     Creates the topology string of the host. The topology pointer has 
+*     to be initialized with NULL when calling this function.
+*
+*  OUTPUTS 
+*     char** topology - Pointer to the topology string. 
+*     int* length     - Length of the topology string. 
+*
+*  RESULT
+*     static bool - 
+*
+*  EXAMPLE
+*     char* topo = NULL;
+*     int length = 0;
+*     get_topology_solaris(&topo, &length);
+*     printf("topology: %s", topo);
+*
+*  NOTES
+*     MT-NOTE: get_topology_solaris() is not MT safe 
+*
+*  SEE ALSO
+*     ???/???
+*******************************************************************************/
 static bool get_topology_solaris(char** topology, int* length)
 {
    /* TODO implement the topology stuff */
@@ -1587,7 +1486,6 @@ static bool get_topology_solaris(char** topology, int* length)
 
    (*length) = 0;
 
-
    /* generate matrix with socket_id and core_id */
    if (generate_chipID_coreID_matrix(&matrix, length)) {
 
@@ -1632,7 +1530,6 @@ static bool get_topology_solaris(char** topology, int* length)
    } 
    
    if ((*length) == 0) {
-      
       /* we couldn't get the kernel kstat values therefore we have no topology */
       (*topology) = sge_strdup(NULL, "NONE");
       (*length)   = 5;
@@ -1640,15 +1537,12 @@ static bool get_topology_solaris(char** topology, int* length)
       sge_dstring_free(&d_topology);
 
    } else {
-
       /* we need `\0' at the end */
       (*length) += 1;
                  
       /* free matrix, cores_per_socket, and threads_per_socket vector */
-      /* (*topology) = (char *) sge_dstring_get_string(&d_topology);  */
-      (*topology) = (char *) calloc((*length), sizeof(char));
-   
-      memcpy((*topology), (char *) sge_dstring_get_string(&d_topology), (*length));
+      (*topology) = sge_strdup(NULL, sge_dstring_get_string(&d_topology));
+
       sge_dstring_free(&d_topology);
    }   
 
@@ -1657,7 +1551,7 @@ static bool get_topology_solaris(char** topology, int* length)
 
 /****** sge_binding/generate_chipID_coreID_matrix() ********************************
 *  NAME
-*     generate_chipID_coreID_matrix() -- ??? 
+*     generate_chipID_coreID_matrix() -- Generates matrix with OS specific proc settings. 
 *
 *  SYNOPSIS
 *     int generate_chipID_coreID_matrix(int*** matrix, int* length) 
@@ -1748,7 +1642,7 @@ bool generate_chipID_coreID_matrix(int*** matrix, int* length)
       if (kdata == NULL) {
          /* couldn't get data */ 
          continue;
-      }  
+      }
       core_id = kdata->value.l;
       
       /* DG TODO -> we need a serious proof that the assertion is true */
@@ -1804,43 +1698,39 @@ bool generate_chipID_coreID_matrix(int*** matrix, int* length)
 
 /****** sge_binding/get_amount_of_sockets_from_matrix() ****************************
 *  NAME
-*     get_amount_of_sockets_from_matrix() -- ??? 
+*     get_amount_of_sockets_from_matrix() -- Get amount of sockets. 
 *
 *  SYNOPSIS
 *     int get_amount_of_sockets_from_matrix(const int** matrix, const int 
 *     length) 
 *
 *  FUNCTION
-*     ??? 
+*     Gets the amount of sockets out of the given topology matrix. 
 *
 *  INPUTS
-*     const int** matrix - ??? 
-*     const int length   - ??? 
+*     const int** matrix - Pointer to the matrix. 
+*     const int length   - Size of the matrix. 
 *
 *  RESULT
-*     int - 
-*
-*  EXAMPLE
-*     ??? 
+*     int - Amount of sockets the architecture have.
 *
 *  NOTES
 *     MT-NOTE: get_amount_of_sockets_from_matrix() is not MT safe 
-*
-*  BUGS
-*     ??? 
 *
 *  SEE ALSO
 *     ???/???
 *******************************************************************************/
 static int get_amount_of_sockets_from_matrix(const int** matrix, const int length)
 {
-   int amount = 0;
-   int* chip_ids = NULL;
+   int amount     = 0;
+   int* chip_ids  = NULL;
 
    /* we don't care about the actual chip_ids here */
-   get_chip_ids_from_matrix(matrix, length, &chip_ids, &amount);
-
-   free(chip_ids);
+   if (get_chip_ids_from_matrix(matrix, length, &chip_ids, &amount) == true) {
+      FREE(chip_ids);
+   } else {
+      amount = 0;
+   }
 
    return amount;
 }
@@ -1877,8 +1767,8 @@ static int get_amount_of_sockets_from_matrix(const int** matrix, const int lengt
 *  SEE ALSO
 *     ???/???
 *******************************************************************************/
-static int get_chip_ids_from_matrix(const int** matrix, const int length, 
-   int** chip_ids, int* amount)
+static bool get_chip_ids_from_matrix(const int** matrix, const int length, 
+                                     int** chip_ids, int* amount)
 {
    return get_ids_from_matrix(matrix, length, 0, chip_ids, amount);
 }
@@ -1897,28 +1787,24 @@ static int get_chip_ids_from_matrix(const int** matrix, const int length,
 *     ??? 
 *
 *  INPUTS
-*     const int** matrix - ??? 
-*     const int length   - ??? 
-*     int** core_ids     - ??? 
-*     int* amount        - ??? 
+*     const int** matrix - Topology matrix
+*     const int length   - Size of topology matrix 
 *
+*  OUTPUTS
+*     int** core_ids     - A list with the core_ids out of the matrix.
+*     int* amount        - Length of the list with the core_ids.
+* 
 *  RESULT
 *     int - 
-*
-*  EXAMPLE
-*     ??? 
 *
 *  NOTES
 *     MT-NOTE: get_core_ids_from_matrix() is not MT safe 
 *
-*  BUGS
-*     ??? 
-*
 *  SEE ALSO
 *     ???/???
 *******************************************************************************/
-static int get_core_ids_from_matrix(const int** matrix, const int length, 
-   int** core_ids, int* amount)
+static bool get_core_ids_from_matrix(const int** matrix, const int length, 
+                                     int** core_ids, int* amount)
 {
    return get_ids_from_matrix(matrix, length, 1, core_ids, amount);
 }
@@ -1926,39 +1812,37 @@ static int get_core_ids_from_matrix(const int** matrix, const int length,
 
 /****** sge_binding/get_ids_from_matrix() ******************************************
 *  NAME
-*     get_ids_from_matrix() -- ??? 
+*     get_ids_from_matrix() -- Generates ids out of the topology matrix. 
 *
 *  SYNOPSIS
 *     int get_ids_from_matrix(const int** matrix, const int length, const int 
 *     which_ID, int** ids, int* amount) 
 *
 *  FUNCTION
-*     ??? 
+*     Scans the topology matrix for ids (either chip_ids or core_ids) and 
+*     creates a new list out of them. 
 *
 *  INPUTS
-*     const int** matrix - ??? 
-*     const int length   - ??? 
-*     const int which_ID - ??? 
-*     int** ids          - ??? 
-*     int* amount        - ??? 
+*     const int** matrix - Topology matrix 
+*     const int length   - Size of the topology matrix 
+*     const int which_ID - Determines which ids (core_ids, chip_ids) to select. 
+*
+*  OUTPUTS
+*     int** ids          - List of IDs from the matrix. 
+*     int* amount        - Size of the ID list.
 *
 *  RESULT
-*     int - 
-*
-*  EXAMPLE
-*     ??? 
+*     bool - true when the list was created false otherwise
 *
 *  NOTES
-*     MT-NOTE: get_ids_from_matrix() is not MT safe 
-*
-*  BUGS
-*     ??? 
+*     MT-NOTE: get_ids_from_matrix() is MT safe 
 *
 *  SEE ALSO
 *     ???/???
 *******************************************************************************/
-static int get_ids_from_matrix(const int** matrix, const int length, 
-   const int which_ID,  int** ids, int* amount) {
+static bool get_ids_from_matrix(const int** matrix, const int length, 
+                               const int which_ID,  int** ids, int* amount) 
+{
 
    /* go through the matrix and count the amount of different core_ids
          or chip_ids */
@@ -1968,7 +1852,7 @@ static int get_ids_from_matrix(const int** matrix, const int length,
 
    /* only allow 0 (chip_id) or 1 (core_id) for which_ID */
    if (which_ID != 0 && which_ID != 1) {
-      return -1;
+      return false;
    }   
 
    /* here the already seen IDs are stored */
@@ -1996,7 +1880,7 @@ static int get_ids_from_matrix(const int** matrix, const int length,
    
    *amount = nr_different_ids;
 
-   return nr_different_ids;
+   return true;
 }
 
 /****** sge_binding/get_amount_of_threads_from_matrix() ****************************
@@ -2104,6 +1988,7 @@ static int get_amount_of_core_or_threads_from_matrix(const int** matrix, const i
    /* check if we got at least one chip_id (at least one socket) */
    if (ids_length == 0) {
       *size = 0;
+      FREE(ids);
       return -2;
    }
 
@@ -2146,7 +2031,7 @@ static int get_amount_of_core_or_threads_from_matrix(const int** matrix, const i
    }
    
    /* free in subfunction allocated memory */
-   free(ids);
+   FREE(ids);
    
    /* reset the ID counter function */
    is_different_id(-1);
@@ -3245,97 +3130,6 @@ static bool is_starting_point(const char* topo, const int length, const int pos,
    return is_possible;
 }   
 
-#if 0
-static int getMaxThreadsFromTopologyString(const char* topology) {
-   int i = 0; 
-   int threads = 0;
-   
-   /* maximum amount of cores found per socket */
-   int max_threads = 0;
-   
-   if (topology == NULL) {
-      /* DG TODO delete dummy calls */
-      getMaxCoresFromTopologyString(NULL);
-      getMaxThreadsFromTopologyString(NULL);
-      return 0;
-   } 
-
-   while (topology[i++] != '\0') {
-      
-      if (topology[i] == 'S') {
-         /* new socket detected - reset thread counter */
-         threads = 0;
-      } else if (topology[i] == 'C') {
-         /* new core detected   - reset thread counter */
-         threads = 0;
-      } else if (topology[i] == 'T') {
-         /* count thread */
-         threads++;
-         if (threads > max_threads) {
-            /* we found more cores on this socket than we already have */
-            max_threads = threads;
-         }   
-      }
-   }
-
-   return max_threads;
-}
-
-static int getMaxCoresFromTopologyString(const char* topology) {
-   int i = 0; 
-   int cores = 0;
-   /* maximum amount of cores found per socket */
-   int max_cores = 0;
-   
-   if (topology == NULL) {
-      return 0;
-   } 
-   
-   while (topology[i++] != '\0') {
-      
-      if (topology[i] == 'S') {
-         /* new socket detected - reset core counter */
-         cores = 0;
-      } else if (topology[i] == 'C') {
-         /* count core */
-         cores++;
-         if (cores > max_cores) {
-            /* we found more cores on this socket than we already have */
-            max_cores = cores;
-         }   
-      }
-   }
-
-   return max_cores;
-}
-#endif
-
-#if 0
-static bool go_to_next_core(const char* topology, const int pos, int* new_pos) 
-{
-
-   /* the current position is taken into account */
-   int i = pos + 1;
-
-   if (topology == NULL || i < 0) {
-      return false;
-   }
-
-   while (topology[i] != '\0') {
-      /* find next core */
-      if (topology[i] == 'C' || topology[i] == 'c') {
-         /* we've found the next core   */
-         *new_pos = i;
-         return true;
-      }
-      /* go to next character in string */
-      i++;
-   }
-   
-   return false;
-}
-#endif
-
 static int get_position_in_topology(const int socket, const int core, 
    const char* topology, const int topology_length)
 {
@@ -3381,19 +3175,13 @@ static int get_position_in_topology(const int socket, const int core,
 bool initialize_topology() {
    
    /* this is done when execution daemon starts        */
-   /* does the scheduler also needs that ?             */
-   /* assumption: logical_used_topology is not set yet */
-
-   if (logical_used_topology != NULL) {
-      /* if we have already such a string: delete it   */
-      FREE(logical_used_topology);
-      logical_used_topology_length = 0;
-   }
-
-   if (get_execd_topology(&logical_used_topology, &logical_used_topology_length)) {
-      return true;
-   }
    
+   if (logical_used_topology == NULL) {
+      if (get_execd_topology(&logical_used_topology, &logical_used_topology_length)) {
+         return true;
+      }
+   }
+
    return false;
 }
 

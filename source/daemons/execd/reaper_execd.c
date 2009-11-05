@@ -92,7 +92,7 @@
 #include "uti/sge_stdio.h"
 #include "load_avg.h"
 #include "uti/sge_binding_hlp.h"
-#include "sge_binding.h"
+#include "sgeobj/sge_binding.h"
 
 #if defined(SOLARISAMD64) || defined(SOLARIS86)
 #  include "uti/sge_uidgid.h"
@@ -115,6 +115,10 @@ static int read_dusage(lListElem *jr, const char *jobdir, u_long32 job_id, u_lon
 static void build_derived_final_usage(lListElem *jr, u_long32 job_id, u_long32 ja_task_id, const char *pe_task_id);
 
 static void examine_job_task_from_file(sge_gdi_ctx_class_t *ctx, int startup, char *dir, lListElem *jep, lListElem *jatep, lListElem *petep, pid_t *pids, int npids);
+
+#if defined(PLPA_LINUX) || defined(SOLARISAMD64) || defined(SOLARIS86)
+static void update_used_cores(const char* path_to_config, lListElem** jr);
+#endif
 
 static void clean_up_binding(char* binding);
 
@@ -1329,7 +1333,7 @@ examine_job_task_from_file(sge_gdi_ctx_class_t *ctx, int startup, char *dir, lLi
    if (!startup_time) {
       startup_time = sge_get_gmt();
    }   
-   
+
    jobid = lGetUlong(jep, JB_job_number);
    jataskid = lGetUlong(jatep, JAT_task_number);
    if (petep != NULL) {
@@ -1352,7 +1356,7 @@ examine_job_task_from_file(sge_gdi_ctx_class_t *ctx, int startup, char *dir, lLi
    if (startup) {
       INFO((SGE_EVENT, MSG_SHEPHERD_FOUNDDIROFJOBX_S, dir));
    }   
-
+   
    /* Look for pid of shepherd */
    sprintf(fname, "%s/pid", dir);
    if (!(fp = fopen(fname, "r"))) {
@@ -1412,6 +1416,7 @@ examine_job_task_from_file(sge_gdi_ctx_class_t *ctx, int startup, char *dir, lLi
    }
 
    if (shepherd_alive) {     /* shepherd alive -> nothing to do */
+
       if (startup) {
          /*  
             at startup we need to change the 
@@ -1422,7 +1427,27 @@ examine_job_task_from_file(sge_gdi_ctx_class_t *ctx, int startup, char *dir, lLi
 
             lSetUlong(jr, JR_state, JRUNNING);
             /* here we will call a ptf function to get */
-            /* the first usage data after restart      */ 
+            /* the first usage data after restart      */
+
+#if defined(PLPA_LINUX) || defined(SOLARISAMD64) || defined(SOLARIS86)
+            {
+               /* do accounting of bound cores */ 
+               dstring fconfig = DSTRING_INIT;
+
+               sge_get_active_job_file_path(&fconfig, jobid, jataskid, pe_task_id_str, "config");
+               
+               if (sge_dstring_get_string(&fconfig) == NULL) {
+                  DPRINTF(("couldn't find config file for running job\n"));
+               } else {   
+                  DPRINTF(("path to config file %s\n", sge_dstring_get_string(&fconfig)));
+                  update_used_cores(sge_dstring_get_string(&fconfig), &jr);
+               }
+               
+               sge_dstring_free(&fconfig);
+                  
+            }            
+#endif
+
          } else {
             /* found job in active jobs directory 
                but not in spool directory of execd */
@@ -1453,10 +1478,65 @@ examine_job_task_from_file(sge_gdi_ctx_class_t *ctx, int startup, char *dir, lLi
    clean_up_job(jr, 0, 0, job_is_array(jep), jatep, lGetString(jep, JB_owner));
    lSetUlong(jr, JR_state, JEXITING);
    
+
    flush_job_report(jr);
 
    DRETURN_VOID;
 }
+
+#if defined(PLPA_LINUX) || defined(SOLARISAMD64) || defined(SOLARIS86)
+static void update_used_cores(const char* path_to_config, lListElem** jr)
+{
+   const char* binding_cfg;
+   
+   DENTER(TOP_LAYER, "update_used_cores");
+  
+   DPRINTF(("update used cores: %s\n", path_to_config));
+
+   if (!read_config(path_to_config)) {
+
+      binding_cfg = get_conf_val("binding");
+
+      if (binding_cfg == NULL) {
+         DPRINTF(("couldn't get binding element from config file!\n"));
+      } else {
+
+         DPRINTF(("BINDING bindingcfg %s\n", binding_cfg));
+
+         if (binding_cfg != NULL) {
+            /* extract the job binding string and account it */
+            const char* jobtopo = binding_get_topology_for_job(binding_cfg);
+         
+            if (jobtopo != NULL) {
+               /* usage in job report */
+               dstring pseudo_usage = DSTRING_INIT;
+
+               /* account the used cores on execd global */
+               DPRINTF(("account cores used by job: %s\n", jobtopo));
+               account_job(jobtopo);
+
+               /* add to job report (for qstat -j x -cb) */
+               sge_dstring_sprintf(&pseudo_usage, "binding_inuse=%s\n", jobtopo); 
+               
+               add_usage(*jr, sge_dstring_get_string(&pseudo_usage), NULL, 0);
+               sge_dstring_free(&pseudo_usage);
+
+            } else {
+               DPRINTF(("topology not found\n"));
+            }   
+         } else {
+            DPRINTF(("binding_cfg is NULL\n"));
+         }
+      
+      } /* binding_cfg found */
+
+   } else {
+      DPRINTF(("couldnt read config in\n"));
+   }
+
+   DRETURN_VOID;
+}
+#endif
 
 /************************************************************/
 /* fill dusage with:                                        */ 

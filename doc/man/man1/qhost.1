@@ -30,15 +30,18 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QHOST 1 "$Date: 2009/05/28 16:09:10 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QHOST 1 "$Date: 2009/11/05 13:18:36 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qhost \- show the status of xxQS_NAMExx hosts, queues, jobs
 .\"
 .\"
 .SH SYNTAX
 .B qhost
-[ \fB\-F\fP [\fBresource_name,...\fP]
 [
+.B -cb
+] [
+\fB\-F\fP [\fBresource_name,...\fP]
+] [
 .B -help
 ] [
 .B -h host_list
@@ -75,6 +78,23 @@ resource_name list. Please refer to the description of the
 \fBFull Format\fP in 
 section \fBOUTPUT FORMATS\fP below for further detail.
 .\"
+.IP "\fB\-cb\fP"
+This command line switch can be used since xxQS_NAMExx version 6.2u5 in combination
+with other 
+.M qhost 1
+command line switches. In that case the output
+of the corresponding command will contain information concerning the
+added job to core binding feature.
+.sp
+If this switch is not used then the command behaves as in version 6.2u4
+and previous versions. 
+.sp
+If this option is used then two additional columns will be shown for
+each displayed host in the output. The first is named NSOC and represents
+the number of available sockets on that host. The second additional column is
+named NCOR and it represents the number of cores that are available per
+socket on the corresponding machine.
+.\"
 .IP "\fB\-help\fP"
 Prints a listing of all options.
 .\"
@@ -106,6 +126,11 @@ being associated with the users from the given user list.
 .IP "\fB\-xml\fP"
 This option can be used with all other options and changes the output to XML. The used
 schemas are referenced in the XML output. The output is printed to stdout.
+.sp
+If the \fB\-xml\fP parameter is combined with \fB\-cb\fP then the XML output will
+contain additional tags containing information about job to core binding.
+You can find schema files with the suffix "_cb" in the directory
+$SGE_ROOT/util/resources/schemas/qhost that describe that changes.
 .br
 .\"
 .\"

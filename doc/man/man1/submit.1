@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2009/10/08 15:04:49 $     Revision: $Revision: 1.96 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2009/11/05 13:18:37 $     Revision: $Revision: 1.97 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2009/10/08 15:04:49 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2009/11/05 13:18:37 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -426,6 +426,92 @@ instances as parameter with the name \fBA\fP.
 (see \fB\-jsv\fP option below or find more information concerning JSV in
 .M jsv 1 )
 .
+.\"
+.IP "\fB\-binding [ binding_instance ] binding_strategy\fP"
+A job can request a job to core binding with this parameter.
+Please note that the requested binding strategy is not used for
+resource selection within xxQS_NAMExx at the moment. 
+As a result a execution host might be selected where xxQS_NAMExx 
+does not even know the hardware topology
+and therefore is not able to apply the requested binding.
+.sp
+To enforce xxQS_NAMExx to select hardware were the binding can be applied
+please use the \fB-l\fP switch in combination with the complex
+attribute \fBm_topology\fP.
+.sp
+\fBbinding_instance\fP is an optional parameter. It might either be
+\fBenv\fP, \fBpe\fP or \fBset\fP depending on which instance should accomplish the
+job to core binding. If the value for \fBbinding_instance\fP is
+not specified then \fBset\fP will be used.
+.sp
+\fBenv\fP means that the environment variable \fBSGE_MP_PROCBIND\fP will be
+exported to the job environment of the job. Within the
+job script this information can then be used to prepare the binding
+so that it can happen within some parallelisation infrastructure.
+.sp
+\fBpe\fP means that a pe hostfile will be written. This file will
+reflect the binding strategy specified. See the description of
+the $pe_hostfile parameter in 
+.M xxqs_name_sxx_pe 5  
+for details on the format of this file. 
+.sp
+\fBset\fP (default if nothing else is specified). The binding strategy is
+applied by xxQS_NAMExx. How this is achieved depends on the underlaying
+hardware architecture of the execution host were the submitted job
+will be started.
+.sp
+On Solaris 10 hosts a processor set will be created were the
+job can exclusively run in.
+.sp
+On Linux hosts a processor affinity mask will be set to restrict
+the processing of a job. Please not that on Linux the binding
+can only happen if the linux kernel version is >= 2.6.16. It might be even possible to 
+use kernel with lower version number but in that case additional kernel patches have 
+to be applied. Otherwise xxQS_NAMExx
+is not able to recognize the hardware topology correctly.
+You can use the \fB-sep\fP in combination with \fB-cb\fP of 
+.M qconf 5
+command to identify if xxQS_NAMExx is able to recognize the 
+hardware topology. 
+.sp
+Possible values for \fBbinding_strategy\fP are as follows:
+.sp
+.nf
+.ta \w''u
+    linear:<amount>[:<socket>,<core>]
+    striding:<amount>:<n>[:<socket>,<core>]
+    explicit:[<socket>,<core>;...]<socket>,<core>
+.fi
+.sp
+\fBlinear\fP means that xxQS_NAMExx tries to bind \fBamount\fP successive cores.
+If \fBsocket\fP and \fBcore\fP is omitted then xxQS_NAMExx tries to find 
+\fBamount\fP of empty cores on a empty socket. Empty means that there 
+are no jobs bound to the socket by xxQS_NAMExx.
+If this is not possible xxQS_NAMExx tries to find \fBamount\fP empty cores
+on a socket that is not empty.
+If this is also not possible then consecutive empty cores on
+consecutive sockets will be used to bind the job.
+If also this is not possible binding is not done for the job.
+.br
+If \fBsocket\fP and \fBcore\fP is specified then xxQS_NAMExx tries to find 
+\fBamount\fP of empty cores. Start point for search algorithm is the specified 
+\fBsocket\fP and \fBcore\fP. If this is not possible then binding is not done.
+.sp
+\fBstriding\fP means that xxQS_NAMExx tries to find cores with a certain offset.
+It will select \fBamount\fP of empty cores with a offset of \fBn\fP -1 cores
+in between. Start point for the search algorithm is socket 0 core 0. As soon as
+\fBamount\fP cores are found they will be used to do the job binding.
+If there are not enough empty cores or if correct offset cannot
+be achieved then there will be no binding done.
+.sp
+\fBexplicit\fP binds the specified sockets and cores that are mentioned in the 
+provided socket/core list. Each socket/core pair has to be specified only once. If a 
+socket/core pair is already in use by a differnet job the whole binding request
+will be ignored.
+.sp
+\fBQalter\fP allows changing this option even while the job executes. The
+modified parameter will only be in effect after a restart or migration
+of the job, however.
 .\"
 .IP "\fB\-b y[es]|n[o]\fP"
 Available for \fIqsub\fP, \fIqrsh\fP only. \fIQalter\fP does not allow

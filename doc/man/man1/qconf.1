@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2009/06/17 08:00:16 $     Revision: $Revision: 1.40 $
+.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2009/11/05 13:18:35 $     Revision: $Revision: 1.41 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QCONF 1 "$Date: 2009/06/17 08:00:16 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QCONF 1 "$Date: 2009/11/05 13:18:35 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qconf \- xxQS_NAMExx Queue Configuration
 .SH SYNTAX
@@ -150,6 +150,18 @@ Add the user access list (ACL) defined in
 to xxQS_NAMExx. User lists
 are used for queue usage authentication. Requires
 root/manager/operator privileges.
+.\"
+.IP "\fB\-cb\fP"
+This parameter can be used since xxQS_NAMExx version 6.2u5 in combination
+with the command line switch \fB\-sep\fP. In that case the output of the
+corresponding command will contain information about the added 
+job to core binding functionality. 
+.sp
+If \fB\-cb\fP switch is not used then \fB\-sep\fP will behave as in 
+GE version 6.2u4 and below. 
+.sp
+Please note that this command-line switch will be removed from xxQS_NAMExx with
+the next major release.
 .\"
 .IP "\fB\-Dattr obj_spec fname obj_instance,...\fP"
 .ta 2.3i
@@ -1082,9 +1094,21 @@ Displays the xxQS_NAMExx event client list.
 .IP "\fB\-sep\fP	\fI<show licensed processors>\fP"
 .B Note:
 Deprecated, may be removed in future release.
-.br
-Displays a list of number of processors which are licensed per execution 
-host and in total.
+.sp
+Displays a list of virtual processors. This value is taken from the
+underlaying OS and it depends on undelaying hardware and operating system
+whether this value represents sockets, cores or supported threads.
+.sp
+If this option is used in combination with \fB\-cb\fP  parameter then two
+additional columns will be shown in the output for the number of sockets
+and number of cores. In the case this information cannot
+be retrieved then the fields will contain the '-' character but the
+processors field will still contain the number of virtual processors.
+.sp
+The two additional columns will contain values if corresponding
+operation system on the execution host is running under 
+Linux with kernel >= 2.6.16 or Solaris 10. Additional operating systems or
+versions might be supported with future update releases.
 .\"
 .IP "\fB\-sh\fP	\fI<show administrative hosts>\fP"
 Displays the xxQS_NAMExx administrative host list.

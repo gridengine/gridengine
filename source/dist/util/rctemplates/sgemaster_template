@@ -149,7 +149,32 @@ QmasterSpoolDir()
    echo $qma_spool_dir
 }
 
+HostCompare()
+{
+   host1=$1
+   host2=$2
 
+   ignore_fqdn=true
+   if [ -f $SGE_ROOT/$SGE_CELL/common/bootstrap ]; then
+      ignore_fqdn_txt=`grep ignore_fqdn $SGE_ROOT/$SGE_CELL/common/bootstrap | awk '{print $2}'`
+      case "$ignore_fqdn_txt" in
+         [fF][aA][lL][sS][eE])
+            ignore_fqdn=false
+            ;;
+      esac
+   fi
+   
+   if [ "$ignore_fqdn" = true ]; then
+      host1=`echo $host1 | cut -f 1 -d .`
+      host2=`echo $host2 | cut -f 1 -d .`
+   fi
+
+   if [ "$host1" = "$host2" ]; then
+      echo 0
+   else
+      echo 1
+   fi
+}
 
 
 #---------------------------------------------------------------------------
@@ -160,8 +185,9 @@ QmasterSpoolDir()
 CheckIfQmasterHost()
 {
    host=$1
+   act_qmaster=`cat $SGE_ROOT/$SGE_CELL/common/act_qmaster`
 
-   if [ "$host" = "`cat $SGE_ROOT/$SGE_CELL/common/act_qmaster`" ]; then
+   if [ `HostCompare $host $act_qmaster` -eq 0 ]; then
       echo true
    else
       echo false
@@ -181,7 +207,8 @@ CheckIfPrimaryQmasterHost()
    fname=$SGE_ROOT/$SGE_CELL/common/primary_qmaster
 
    if [ -f $fname ]; then
-      if [ "$host" = "`cat $fname`" ]; then
+      primary_qmaster=`cat $fname`
+      if [ `HostCompare $host $primary_qmaster` -eq 0 ]; then
          echo true
       else
          echo false

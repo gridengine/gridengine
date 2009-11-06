@@ -1266,6 +1266,7 @@ StartQmaster()
    else
       $SGE_STARTUP_FILE -qmaster
       if [ $? -ne 0 ]; then
+         $INFOTEXT "sge_qmaster start problem"
          $INFOTEXT -log "sge_qmaster start problem"
          MoveLog
          exit 1

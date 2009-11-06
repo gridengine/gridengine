@@ -263,7 +263,7 @@ void cull_hash_create_hashtables(lList *lp)
       size = hash_compute_size(lGetNumberOfElem(lp));
 
       /* create hashtables, pass final size */
-      for(i = 0; descr[i].mt != lEndT; i++) {
+      for(i = 0; mt_get_type(descr[i].mt) != lEndT; i++) {
          if(mt_do_hashing(descr[i].mt) && descr[i].ht == NULL) {
             descr[i].ht = cull_hash_create(&descr[i], size);
          }
@@ -449,7 +449,7 @@ void cull_hash_elem(const lListElem *ep) {
 
    descr = ep->descr;
   
-   for (i = 0; descr[i].mt != lEndT; i++) {
+   for (i = 0; mt_get_type(descr[i].mt) != lEndT; i++) {
       if (descr[i].ht != NULL) {
          cull_hash_insert(ep, cull_hash_key(ep, i, host_key), descr[i].ht, 
                           mt_is_unique(descr[i].mt));
@@ -639,7 +639,7 @@ void cull_hash_delete_non_unique_chain(htable table, const void *key,
 void cull_hash_free_descr(lDescr *descr)
 {
    int i;
-   for(i = 0; descr[i].mt != lEndT; i++) {
+   for(i = 0; mt_get_type(descr[i].mt) != lEndT; i++) {
       cull_htable ht = descr[i].ht;
       if (ht != NULL) {
          if(!mt_is_unique(descr[i].mt)) {
@@ -858,7 +858,7 @@ void cull_hash_recreate_after_sort(lList *lp)
       int size = hash_compute_size(lGetNumberOfElem(lp));
 
       /* at first free and recreated old non unique hashes */
-      for (i = 0; descr[i].mt != lEndT; i++) {
+      for (i = 0; mt_get_type(descr[i].mt) != lEndT; i++) {
          cull_htable ht = descr[i].ht;
          if (ht != NULL) {
             if (!mt_is_unique(descr[i].mt)) {

@@ -41,45 +41,30 @@
 #include "sge_event_client.h"
 #include "sge_ja_task.h"
 #include "sge_pe_task.h"
-#include "sge_job_schedd.h"
 #include "sge_log.h"
 #include "sge_pe.h"
 #include "sge_prog.h"
-#include "sge_ctL.h"
 #include "sge_schedd_conf.h"
-#include "sge_time.h"
 #include "sgermon.h"
 #include "commlib.h"
-#include "cull_sort.h"
 #include "sge_event.h"
-#include "sge_feature.h"
-#include "schedd_monitor.h"
-#include "unparse_job_cull.h"
 #include "sge_dstring.h"
-#include "parse_qsubL.h"
 #include "sge_sched_job_category.h"
 #include "parse.h"
 #include "msg_schedd.h"
 #include "sge_job.h"
 #include "sge_conf.h"
 #include "sge_userprj.h"
-#include "sge_ckpt.h"
 #include "sge_host.h"
 #include "sge_userset.h"
 #include "sge_centry.h"
 #include "sge_cqueue.h"
 #include "sge_qinstance.h"
-#include "sge_sharetree.h"
 #include "sge_answer.h"
-#include "sge_parse_num_par.h"
 #include "sge_qinstance_state.h"
 #include "sgeee.h"
-#include "sgeobj/sge_usage.h"
-
 #include "sge_sched_prepare_data.h"
 #include "sge_sched_process_events.h"
-
-static bool reb_cat = true;
 
 static const int cqueue_field_ids[] = {
    CQ_name,
@@ -214,6 +199,7 @@ static const int job_nm[] = {
    JB_reserve,
    JB_ja_tasks,
    JB_ar,
+   JB_ja_task_concurrency,
    NoName
 };
 
@@ -423,17 +409,6 @@ ensure_valid_what_and_where(sge_where_what_t *where_what)
    DRETURN_VOID;
 }
 
-void
-set_rebuild_categories(bool new_value) 
-{
-   reb_cat = new_value; 
-}
-
-bool
-get_rebuild_categories(void) {
-   return reb_cat;
-}
-
 sge_callback_result
 sge_process_schedd_conf_event_before(sge_evc_class_t *evc, object_description *object_base, sge_object_type type,
                                      sge_event_action action, lListElem *event, void *clientdata)
@@ -590,20 +565,16 @@ sge_process_job_event_before(sge_evc_class_t *evc, object_description *object_ba
          ERROR((SGE_EVENT, MSG_CANTFINDJOBINMASTERLIST_S,
                 job_get_id_string(job_id, 0, NULL, &id_dstring)));
          sge_dstring_free(&id_dstring);
-         DEXIT;
-         return SGE_EMA_FAILURE;
+         DRETURN(SGE_EMA_FAILURE);
       }
    } else {
-      DEXIT;
-      return SGE_EMA_OK;
+      DRETURN(SGE_EMA_OK);
    }
 
    switch (action) {
       case SGE_EMA_DEL:
-         {
             /* delete job category if necessary */
             sge_delete_job_category(job);
-         }
          break;
 
       case SGE_EMA_MOD:
@@ -611,9 +582,6 @@ sge_process_job_event_before(sge_evc_class_t *evc, object_description *object_ba
             case sgeE_JOB_MOD:
                sge_delete_job_category(job);
             break;
-
-            case sgeE_JOB_MOD_SCHED_PRIORITY:
-               break;
 
             default:
             break;
@@ -624,8 +592,7 @@ sge_process_job_event_before(sge_evc_class_t *evc, object_description *object_ba
          break;
    }
 
-   DEXIT;
-   return SGE_EMA_OK;
+   DRETURN(SGE_EMA_OK);
 }
 
 sge_callback_result
@@ -684,7 +651,7 @@ sge_process_job_event_after(sge_evc_class_t *evc, object_description *object_bas
          switch (lGetUlong(event, ET_type)) {
             case sgeE_JOB_MOD:
                /*
-               ** after changing the job, readd category reference 
+               ** after changing the job, read category reference 
                ** for changed job
                */
 

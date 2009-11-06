@@ -68,6 +68,7 @@
 #include "qevent.h"
 #include "sge_profiling.h"
 #include "sge_mt_init.h"
+#include "sgeobj/sge_job.h"
 
 #include "gdi/sge_gdi_ctx.h"
 

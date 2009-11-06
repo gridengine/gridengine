@@ -49,6 +49,7 @@
 #include "uti/sge_prog.h"
 #include "uti/sge_stdio.h"
 #include "uti/sge_string.h"
+#include "uti/sge_parse_args.h"
 
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/config.h"
@@ -352,87 +353,6 @@ int close_stdin /* use of qrsh's -nostdin option */
    sprintf(qrsh_path, "%s/bin/%s/qrsh", sge_get_root_dir(1, NULL, 0, 1), sge_get_arch());
 
    return execvp(qrsh_path, newargv);
-}
-
-/* This method counts the number of arguments in the string using a quick and
- * dirty algorithm.  The algorithm may incorrectly report the number of arguments
- * to be too large because it does not parse quotations correctly. 
- * MT-NOTE: sge_quick_count_num_args() is MT safe
- */
-int sge_quick_count_num_args (
-const char* args /* The argument string to count by whitespace tokens */
-) {
-   int num_args = 0;
-   char *resreq = (char *)malloc (strlen (args)+1);
-   char *s;
-   struct saved_vars_s *context = NULL;
-   
-   DENTER(TOP_LAYER, "sge_quick_count_num_args");
-   
-   /* This function may return a larger number than required since it does not
-    * parse quotes.  This is ok, however, since it's current usage is for
-    * mallocing arrays, and a little too big is fine.
-    */
-   strcpy(resreq, args);
-   for (s = sge_strtok_r(resreq, " \t", &context); s != NULL; s = sge_strtok_r(NULL, " \t", &context)) {
-      num_args++;
-   }
-   free(resreq);
-   sge_free_saved_vars(context);
-   
-   DRETURN(num_args);
-}
-
-/* This method should probably be moved out of this file into somewhere more
- * common so that other routines can use it. */
-void sge_parse_args (
-const char* args, /* The argument string to parse by whitespace and quotes */
-char** pargs /* The array to contain the parsed arguments */
-) {
-   const char *s; 
-   char *d;
-   char quote;
-   char *start;
-   char *resreq;
-   int finished, count = 0;
-
-   DENTER (TOP_LAYER, "sge_parse_args");
-   
-   resreq = malloc(strlen(args) + 1);
-   d = resreq;
-   s = args;
-   start = resreq;
-   finished = 0;
-   
-   while (!finished) {
-      if (*s == '"' || *s == '\'') {      /* copy quoted arguments */
-         quote = *s++;                   /* without quotes */
-         while (*s && *s != quote) 
-           *d++ = *s++;
-         if (*s == quote) 
-            s++;
-      }
-
-      if (*s == '\0') finished = 1;          /* line end ? */
-
-      if (finished || isspace(*s)) {      /* found delimiter or line end */
-         *d++ = 0;                       /* terminate token */
-         pargs[count++] = strdup(start);   /* assign argument */
-         if (!finished) {
-            while (isspace(*(++s)));      /* skip any number whitespace */
-         }   
-         if (*s == '\0') {
-            finished = 1;
-         } else {
-            start = d;                      /* assign start of next token */
-         }
-      } else {
-         *d++ = *s++;                    /* copy one character */
-      }
-   } 
-   free(resreq);
-   
-   DRETURN_VOID;
 }
 
 /****** QTCSH/sge_get_qtask_args() *********************************************

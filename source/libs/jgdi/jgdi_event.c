@@ -32,34 +32,45 @@
 
 #include <ctype.h>
 #include <string.h>
+
 #include "jni.h"
-#include "jgdi.h"
-#include "basis_types.h"
-#include "cull.h"
-#include "commlib.h"
-#include "sgermon.h"
-#include "sge_all_listsL.h"
-#include "sge_answer.h"
-#include "sge_prog.h"
-#include "sge_bootstrap.h"
-#include "cl_errors.h"
-#include "sge_log.h"
-#include "sge_error_class.h"
-#include "jgdi_common.h"
-#include "sge_event_client.h"
-#include "jgdi_event.h"
-#include "sge_mirror.h"
-#include "sge_eventL.h"
-#include "jgdi_wrapper.h"
-#include "jgdi_logging.h"
-#include "sge_event.h"
-#include "evm/sge_event_master.h"
+
+#include "rmon/sgermon.h"
+
+#include "uti/sge_prog.h"
+#include "uti/sge_bootstrap.h"
+#include "uti/sge_log.h"
+#include "uti/sge_error_class.h"
 #include "uti/sge_time.h"
-#include "sge_mtutil.h"
+
+#include "cull/cull.h"
+
+#include "commlib.h"
+#include "cl_errors.h"
+
+#include "lck/sge_mtutil.h"
 
 #include "gdi/sge_gdi2.h"
 #include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi_ctx.h"
+
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_event.h"
+#include "sgeobj/sge_event.h"
+
+#include "evc/sge_event_client.h"
+
+#include "evm/sge_event_master.h"
+
+#include "mir/sge_mirror.h"
+
+#include "jgdi_common.h"
+#include "jgdi_event.h"
+#include "jgdi_wrapper.h"
+#include "jgdi_logging.h"
+#include "jgdi.h"
+#include "basis_types.h"
 
 #define MAX_EVC_ARRAY_SIZE 1024
 static pthread_mutex_t sge_evc_mutex = PTHREAD_MUTEX_INITIALIZER;

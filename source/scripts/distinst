@@ -36,7 +36,7 @@
 umask 022
 
 TOPFILES="3rd_party bin catman ckpt doc examples include inst_sge \
-          install_execd install_qmaster lib man mpi pvm qmon util utilbin"
+          install_execd install_qmaster lib man mpi pvm hadoop qmon util utilbin"
 
 HASARCHDIR="bin lib examples/jobsbin utilbin"
 
@@ -88,6 +88,9 @@ PVMSCRIPTS="startpvm.sh stoppvm.sh pvm.sh pvm_nogs.sh README pvm.template"
 
 MPI_FILES="README README.atm mpi.template mpich.template"
 MPI_SCRIPTS="hostname  mpi.sh mpi_cpi.sh rsh startmpi.sh stopmpi.sh"
+
+HADOOP_FILES="logging.properties"
+HADOOP_SCRIPTS="env.sh jsv.sh load_sensor.sh make_conf.sh pestart.sh pestop.sh setup.pl ssh wait.sh"
 
 DTRACE_FILES="README-dtrace.txt monitor.d"
 DTRACE_SCRIPTS="monitor.sh"
@@ -155,6 +158,7 @@ ErrUsage()
    echo "       \"man\"        = manual pages"
    echo "       \"mpi\"        = MPI scripts"
    echo "       \"pvm\"        = PVM source files and scripts"
+   echo "       \"hadoop\"        = Hadoop scripts and libraries"
    echo "       \"qmontree\"   = PIXMAPS, resource-, help-, copyright files"
    echo "       \"sec\"        = DCE/Kerberos security modules"
    echo "       \"secbin\"     = DCE/Kerberos security binaries"
@@ -411,6 +415,7 @@ insttxtdoc=false
 instjavadoc=false
 instpvm=false
 instmpi=false
+insthadoop=false
 instqmon=false
 instcommon=false
 instutilbin=false
@@ -694,7 +699,7 @@ for prog in $PROG; do
       arco)
          instarco=true
          ;;
-      sgeinspect)         
+      sgeinspect)
          instsgeinspect=true
          ;;
       common|distcommon) 
@@ -754,6 +759,9 @@ for prog in $PROG; do
       mpi)    
          instmpi=true
          instcommon=true
+         ;;
+      hadoop)
+         insthadoop=true
          ;;
       qmontree)
          instqmon=true
@@ -827,10 +835,17 @@ if [ $instcommon = true ]; then
          Execute sed -e "s/#ENFORCE_SHLIBPATH#//" dist/util/rctemplates/sgebdb_template > $DEST_SGE_ROOT/util/rctemplates/sgebdb_template
          Execute sed -e "s/#ENFORCE_SHLIBPATH#//" dist/util/install_modules/inst_common.sh > $DEST_SGE_ROOT/util/install_modules/inst_common.sh
       fi
+
       # DetectJvmLibrary
       if [ -f dist/DetectJvmLibrary/build/jar/DetectJvmLibrary.jar ]; then
          Execute cp dist/DetectJvmLibrary/build/jar/DetectJvmLibrary.jar $DEST_SGE_ROOT/util
       fi
+
+      # JSV Java language binding
+      if [ -f libs/jjsv/dist/JSV.jar ]; then
+         Execute cp libs/jjsv/dist/JSV.jar $DEST_SGE_ROOT/util/resources/jsv
+      fi
+
       Cleanup util
 
       # Not available in Beta
@@ -878,6 +893,11 @@ if [ $instcommon = true ]; then
                         $DEST_SGE_ROOT/util/resources/pe/* \
                         $DEST_SGE_ROOT/util/resources/schemas/*/* \
                         $DEST_SGE_ROOT/util/resources/usersets/*
+
+      Execute chmod 755 $DEST_SGE_ROOT/util/resources/jsv/jsv.sh \
+                        $DEST_SGE_ROOT/util/resources/jsv/jjsv.sh \
+                        $DEST_SGE_ROOT/util/resources/jsv/jsv.pl \
+                        $DEST_SGE_ROOT/util/resources/jsv/jsv.tcl
    fi
    
    if [ $instexamples = true ]; then
@@ -1028,6 +1048,29 @@ if [ $instcommon = true ]; then
       done
 
       Cleanup mpi
+   fi
+
+   if [ $insthadoop = true ]; then
+      echo Installing \"hadoop/\"
+      rm -rf $DEST_SGE_ROOT/hadoop
+      MakeDir hadoop
+
+      for f in $HADOOP_FILES; do
+         Execute cp dist/hadoop/$f $DEST_SGE_ROOT/hadoop
+         Execute chmod 644 $DEST_SGE_ROOT/hadoop/$f
+      done
+
+      for f in $HADOOP_SCRIPTS; do
+         Execute cp dist/hadoop/$f $DEST_SGE_ROOT/hadoop
+         Execute chmod 755 $DEST_SGE_ROOT/hadoop/$f
+      done
+
+      HADOOPCONF=hadoop/conf
+      Execute mkdir -p $DEST_SGE_ROOT/$HADOOPCONF
+
+      if [ -f libs/herd/dist/herd.jar ]; then
+         Execute cp libs/herd/dist/herd.jar $DEST_SGE_ROOT/hadoop
+      fi
    fi
 
    if [ $instman = true ]; then
@@ -1225,7 +1268,7 @@ for i in $ARCH; do
 
       for prog in $PROG; do
          case $prog in
-            jobs|ckpt|doc|inst_sge|utiltree|examples|man|mpi|pvm|qmontree|common|distcommon|utilbin|arco)
+            jobs|ckpt|doc|inst_sge|utiltree|examples|man|mpi|pvm|hadoop|qmontree|common|distcommon|utilbin|arco)
                : 
                ;;
             qmake)

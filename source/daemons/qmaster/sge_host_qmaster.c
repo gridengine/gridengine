@@ -37,16 +37,14 @@
 #include "sge_prog.h"
 #include "sge_time.h"
 #include "sge_feature.h"
-#include "sge_idL.h"
+#include "sge_id.h"
 #include "sge_ja_task.h"
 #include "commlib.h"
 #include "sge_host.h"
 #include "sge_manop.h"
 #include "sge_host_qmaster.h"
 #include "sge_answer.h"
-#include "sge_utility.h"
 #include "sge_event_master.h"
-#include "sge_queue_event_master.h"
 #include "sge_job_schedd.h"
 #include "sge_c_gdi.h"
 #include "mail.h"
@@ -54,19 +52,12 @@
 #include "sge_log.h"
 #include "sge_parse_num_par.h"
 #include "configuration_qmaster.h"
-#include "sge_qmod_qmaster.h"
 #include "sge_cqueue_qmaster.h"
-#include "sort_hosts.h"
 #include "sge_userset_qmaster.h"
 #include "sge_userprj_qmaster.h"
-#include "sge_complex_schedd.h"
 #include "reschedule.h"
-#include "sge_string.h"
-#include "sge_security.h"
-#include "sge_unistd.h"
 #include "sge_hostname.h"
 #include "sgeobj/sge_qinstance.h"
-#include "sgeobj/sge_qinstance_state.h"
 #include "sge_qinstance_qmaster.h"
 #include "sge_job.h"
 #include "sge_report.h"
@@ -78,7 +69,6 @@
 #include "sge_href.h"
 #include "sge_cqueue.h"
 #include "sge_str.h"
-#include "sge_load.h"
 #include "sge_lock.h"
 #include "configuration_qmaster.h"
 
@@ -245,7 +235,7 @@ host_list_add_missing_href(sge_gdi_ctx_class_t *ctx,
       lListElem *host = host_list_locate(this_list, hostname);
 
       if (host == NULL) {
-         ret &= (sge_add_host_of_type(ctx, hostname, SGE_EXECHOST_LIST, monitor) == 0);
+         ret &= (sge_add_host_of_type(ctx, hostname, SGE_EH_LIST, monitor) == 0);
       }
    }
    DRETURN(ret);
@@ -283,17 +273,17 @@ int sge_del_host(sge_gdi_ctx_class_t *ctx, lListElem *hep, lList **alpp,
    }
 
    switch ( target ) {
-   case SGE_EXECHOST_LIST:
+   case SGE_EH_LIST:
       host_list = object_type_get_master_list(SGE_TYPE_EXECHOST);
       nm = EH_name;
       name = "execution host";
       break;
-   case SGE_ADMINHOST_LIST:
+   case SGE_AH_LIST:
       host_list = object_type_get_master_list(SGE_TYPE_ADMINHOST);
       nm = AH_name;
       name = "administrative host";
       break;
-   case SGE_SUBMITHOST_LIST:
+   case SGE_SH_LIST:
       host_list = object_type_get_master_list(SGE_TYPE_SUBMITHOST);
       nm = SH_name;
       name = "submit host";
@@ -352,7 +342,7 @@ int sge_del_host(sge_gdi_ctx_class_t *ctx, lListElem *hep, lList **alpp,
       check if someone tries to delete 
       the qmaster host from admin host list
    */
-   if (target==SGE_ADMINHOST_LIST && 
+   if (target==SGE_AH_LIST && 
          !sge_hostcmp(unique, qualified_hostname)) {
       ERROR((SGE_EVENT, MSG_SGETEXT_CANTDELADMINQMASTER_S, 
           qualified_hostname));
@@ -361,7 +351,7 @@ int sge_del_host(sge_gdi_ctx_class_t *ctx, lListElem *hep, lList **alpp,
       return STATUS_EEXIST;
    }
 
-   if (target == SGE_EXECHOST_LIST && 
+   if (target == SGE_EH_LIST && 
        host_is_referenced(hep, alpp, 
                           *(object_type_get_master_list(SGE_TYPE_CQUEUE)),
                           master_hGroup_List)) {
@@ -370,7 +360,7 @@ int sge_del_host(sge_gdi_ctx_class_t *ctx, lListElem *hep, lList **alpp,
       return STATUS_ESEMANTIC;
    }
 
-   if (target==SGE_EXECHOST_LIST && !strcasecmp(unique, "global")) {
+   if (target==SGE_EH_LIST && !strcasecmp(unique, "global")) {
       ERROR((SGE_EVENT, MSG_OBJ_DELGLOBALHOST));
       answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
@@ -379,7 +369,7 @@ int sge_del_host(sge_gdi_ctx_class_t *ctx, lListElem *hep, lList **alpp,
 
    /* remove host file and send event */
    switch(target) {
-      case SGE_ADMINHOST_LIST:
+      case SGE_AH_LIST:
          {
             lList *answer_list = NULL;
             sge_event_spool(ctx, &answer_list, 0, sgeE_ADMINHOST_DEL, 
@@ -388,7 +378,7 @@ int sge_del_host(sge_gdi_ctx_class_t *ctx, lListElem *hep, lList **alpp,
             answer_list_output(&answer_list);
          }
          break;
-      case SGE_EXECHOST_LIST:
+      case SGE_EH_LIST:
          {
             lList *answer_list = NULL;
             sge_event_spool(ctx, &answer_list, 0, sgeE_EXECHOST_DEL, 
@@ -399,7 +389,7 @@ int sge_del_host(sge_gdi_ctx_class_t *ctx, lListElem *hep, lList **alpp,
 	 host_update_categories(NULL, ep);
 
          break;
-      case SGE_SUBMITHOST_LIST:
+      case SGE_SH_LIST:
          {
             lList *answer_list = NULL;
             sge_event_spool(ctx, &answer_list, 0, sgeE_SUBMITHOST_DEL, 
@@ -856,7 +846,7 @@ void sge_load_value_cleanup_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent
    /* get "template" element pointer */
    template_host_elem = host_list_locate(master_exechost_list, SGE_TEMPLATE_NAME); 
    /* take each host including the "global" host */
-   for_each(hep, master_exechost_list) {   
+   for_each(hep, master_exechost_list) {
       unsigned long last_heard;
       if (hep == template_host_elem || hep == global_host_elem) {
          continue;
@@ -1109,6 +1099,7 @@ notify(sge_gdi_ctx_class_t *ctx, lListElem *lel, sge_gdi_packet_class_t *packet,
    int mail_options;
    unsigned long last_heard_from;
    bool job_spooling = ctx->get_job_spooling(ctx);
+   int result;
 
    DENTER(TOP_LAYER, "notify");
 
@@ -1125,18 +1116,20 @@ notify(sge_gdi_ctx_class_t *ctx, lListElem *lel, sge_gdi_packet_class_t *packet,
       answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_ESEMANTIC, 
                      ANSWER_QUALITY_WARNING);
    } else {
-      if (host_notify_about_kill(ctx, lel, kill_jobs)) {
+      result = host_notify_about_kill(ctx, lel, kill_jobs);
+      if (result != 0) {
          INFO((SGE_EVENT, MSG_COM_NONOTIFICATION_SSS, action_str, 
                (execd_alive ? "" : MSG_OBJ_UNKNOWN), hostname));
+         answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_EDENIED2HOST, ANSWER_QUALITY_ERROR);         
       } else {
          INFO((SGE_EVENT, MSG_COM_NOTIFICATION_SSS, action_str, 
                (execd_alive ? "" : MSG_OBJ_UNKNOWN), hostname));
+         answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
       }
       DPRINTF((SGE_EVENT));
-      answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
    }
 
-   if (kill_jobs) {
+   if(kill_jobs) {
       char sge_mail_subj[1024];
       char sge_mail_body[1024];
 
@@ -1148,7 +1141,7 @@ notify(sge_gdi_ctx_class_t *ctx, lListElem *lel, sge_gdi_packet_class_t *packet,
 
          for_each(jatep, lGetList(jep, JB_ja_tasks)) {
             gdil = lGetList(jatep, JAT_granted_destin_identifier_list);
-            if (gdil) {
+            if(gdil) {
                if(!(sge_hostcmp(lGetHost(lFirst(gdil), JG_qhostname), hostname))) {
                   /*   send mail to users if requested                  */
                   if (mail_users == NULL) {
@@ -1234,7 +1227,7 @@ sge_execd_startedup(sge_gdi_ctx_class_t *ctx, lListElem *host, lList **alpp,
    
    hep = host_list_locate(*object_type_get_master_list(SGE_TYPE_EXECHOST), rhost);
    if (!hep) {
-      if (sge_add_host_of_type(ctx, rhost, SGE_EXECHOST_LIST, monitor) < 0) {
+      if (sge_add_host_of_type(ctx, rhost, SGE_EH_LIST, monitor) < 0) {
          ERROR((SGE_EVENT, MSG_OBJ_INVALIDHOST_S, rhost));
          answer_list_add(alpp, SGE_EVENT, STATUS_DENIED, ANSWER_QUALITY_ERROR);
          DRETURN(STATUS_DENIED);

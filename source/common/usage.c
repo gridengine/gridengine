@@ -38,11 +38,9 @@
 #include "usage.h"
 #include "sge_feature.h"
 
-#include "sge.h"
 #include "sgermon.h"
 #include "sge_prog.h"
 #include "sge_options.h"
-#include "sge_unistd.h"
 
 #include "msg_common.h"
 #include "msg_gdilib.h"
@@ -195,6 +193,14 @@ static char* get_argument_syntax(u_long32 prog_number, int nr)
          return MSG_GDI_ARGUMENTSYNTAX_OA_OBJECT_NAME3;
      case OA_TIME:
          return MSG_GDI_ARGUMENTSYNTAX_OA_TIME;
+     case OA_TASK_CONCURRENCY:
+         return MSG_GDI_ARGUMENTSYNTAX_OA_TASK_CONCURRENCY;
+     case OA_BINDING_EXPLICIT:
+         return MSG_GDI_ARGUMENTSYNTAX_QA_BINDING_STRATEGY_EXP;
+     case OA_BINDING_LINEAR:
+         return MSG_GDI_ARGUMENTSYNTAX_QA_BINDING_STRATEGY_LIN;
+     case OA_BINDING_STRIDING:
+         return MSG_GDI_ARGUMENTSYNTAX_QA_BINDING_STRATEGY_STR;
      default:
          break; 
    }
@@ -444,6 +450,13 @@ void sge_usage(u_long32 prog_number, FILE *fp) {
 
    if (VALID_OPT(b_OPT, prog_number)) {
       PRINTITD(MSG_GDI_USAGE_b_OPT_YN, MSG_GDI_UTEXT_b_OPT_YN);
+   }
+   
+   if (VALID_OPT(binding_OPT, prog_number)) {
+      PRINTITD(MSG_GDI_USAGE_binding_OPT_YN, MSG_GDI_UTEXT_binding_OPT_YN);
+      MARK(OA_BINDING_EXPLICIT);
+      MARK(OA_BINDING_LINEAR);
+      MARK(OA_BINDING_STRIDING);
    }
 
    if (VALID_OPT(c_OPT, prog_number)) {
@@ -1230,7 +1243,12 @@ void sge_usage(u_long32 prog_number, FILE *fp) {
          MSG_GDI_UTEXT_t_OPT_TASK_ID_RANGE );
       MARK(OA_TASK_ID_RANGE);
    }
- 
+
+   if (VALID_OPT(tc_OPT, prog_number)) {
+      PRINTITD(MSG_GDI_USAGE_tc_OPT, MSG_GDI_UTEXT_tc_OPT);
+      MARK(OA_TASK_CONCURRENCY);
+   }
+
    if (VALID_OPT(terse_OPT, prog_number)) {
       PRINTITD(MSG_GDI_USAGE_terse_OPT , MSG_GDI_UTEXT_terse_OPT );
    }

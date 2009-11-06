@@ -165,7 +165,7 @@ Qmon*qmon_cq.cq.cq_cqfolder.clusterqueue_layout*cluster_queue_settings.visibleRo
 Qmon*qmon_cq.cq.cq_cqfolder.clusterqueue_layout*cluster_queue_settings.fixedColumns: 1
 Qmon*qmon_cq.cq.cq_cqfolder.clusterqueue_layout*cluster_queue_settings.visibleColumns: 8
 Qmon*qmon_cq.cq.cq_cqfolder.clusterqueue_layout*cluster_queue_settings.columns: 19
-Qmon*qmon_cq.cq.cq_cqfolder.clusterqueue_layout*cluster_queue_settings.columnWidths: 20,7,7,7,7,7,7,7,5,5,5,5,5,5,5,5,5,5,5 
+Qmon*qmon_cq.cq.cq_cqfolder.clusterqueue_layout*cluster_queue_settings.columnWidths: 20,7,7,10,10,7,7,7,5,5,5,5,5,5,5,5,5,5,5 
 Qmon*qmon_cq.cq.cq_cqfolder.clusterqueue_layout*cluster_queue_settings.columnMaxLengths: 200,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20,20
 Qmon*qmon_cq.cq.cq_cqfolder.clusterqueue_layout*cluster_queue_settings.columnLabels: @{CLUSTER QUEUE},@{CQLOAD},@{USED},@{RES},@{AVAIL},@{TOTAL},aoACDS,cdsuE,s,A,S,C,u,a,d,D,c,o,E
 Qmon*qmon_cq.cq.cq_cqfolder.clusterqueue_layout*cluster_queue_settings.gridType:     GRID_CELL_SHADOW
@@ -252,10 +252,10 @@ Qmon*qmon_cq.cq.cq_cqfolder.qhost_layout*qhost_settings.rows: 30
 Qmon*qmon_cq.cq.cq_cqfolder.qhost_layout*qhost_settings.visibleRows: 30
 Qmon*qmon_cq.cq.cq_cqfolder.qhost_layout*qhost_settings.fixedColumns: 1
 Qmon*qmon_cq.cq.cq_cqfolder.qhost_layout*qhost_settings.visibleColumns: 8
-Qmon*qmon_cq.cq.cq_cqfolder.qhost_layout*qhost_settings.columns: 11
-Qmon*qmon_cq.cq.cq_cqfolder.qhost_layout*qhost_settings.columnWidths: 10,10,5,7,6,8,8,8,8,8,8 
-Qmon*qmon_cq.cq.cq_cqfolder.qhost_layout*qhost_settings.columnMaxLengths: 200,20,20,20,20,20,20,20,20,20,20
-Qmon*qmon_cq.cq.cq_cqfolder.qhost_layout*qhost_settings.columnLabels: @{Host},@{Arch},@{#CPU},@{LoadAvg},@{%CPU}, @{MemUsed},@{MemTotal},\
+Qmon*qmon_cq.cq.cq_cqfolder.qhost_layout*qhost_settings.columns: 13
+Qmon*qmon_cq.cq.cq_cqfolder.qhost_layout*qhost_settings.columnWidths: 10,10,5,5,5,7,6,8,8,8,8,8,8 
+Qmon*qmon_cq.cq.cq_cqfolder.qhost_layout*qhost_settings.columnMaxLengths: 200,20,20,20,20,20,20,20,20,20,20,20,20
+Qmon*qmon_cq.cq.cq_cqfolder.qhost_layout*qhost_settings.columnLabels: @{Host},@{Arch},@{#CPU},@{#Socket},@{#Core},@{LoadAvg},@{%CPU}, @{MemUsed},@{MemTotal},\
                             @{SwapUsed}, @{SwapTotal}, @{VirtUsed}, @{VirtTotal}
 Qmon*qmon_cq.cq.cq_cqfolder.qhost_layout*qhost_settings.gridType:     GRID_CELL_SHADOW
 Qmon*qmon_cq.cq.cq_cqfolder.qhost_layout*qhost_settings.cellShadowType: SHADOW_IN

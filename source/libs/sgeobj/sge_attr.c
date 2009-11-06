@@ -34,19 +34,22 @@
 #include <string.h>
 #include <sys/types.h>
 
+#include "rmon/sgermon.h" 
+
+#include "uti/sge_string.h"
+#include "uti/sge_log.h"
+#include "uti/sge_hostname.h"
+#include "uti/sge_stdlib.h"
+
+#include "comm/commlib.h"
+
 #include "basis_types.h"
-#include "sgermon.h" 
-#include "sge_string.h"
 #include "sge_str.h"
-#include "sge_log.h"
 #include "sge_answer.h"
-#include "sge_hostname.h"
 #include "sge_attr.h"
 #include "sge_href.h"
 #include "sge_hgroup.h"
 #include "sge_object.h"
-#include "sge_stdlib.h"
-#include "commlib.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
@@ -665,8 +668,7 @@ attr_list_append_to_dstring(const lList *this_list, dstring *string,
 
    if ((attr = attr_list_locate(this_list, HOSTREF_DEFAULT, href_nm)) != NULL) {
       found_default = true;
-      object_append_field_to_dstring(attr, NULL, string, value_nm,
-                                     '\0');
+      object_append_field_to_dstring(attr, NULL, string, value_nm, '\0');
    }
    
    for_each(attr, this_list) {

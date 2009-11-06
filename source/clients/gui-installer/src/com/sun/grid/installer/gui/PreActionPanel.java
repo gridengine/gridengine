@@ -51,7 +51,7 @@ public class PreActionPanel extends ActionPanel {
  
     }
 
-    private void initializeVariables() {
+    protected void initializeVariables() {
         VariableSubstitutor vs = new VariableSubstitutor(idata.getVariables());
 
         /**
@@ -137,7 +137,8 @@ public class PreActionPanel extends ActionPanel {
         Debug.trace("cfg.admin.user='" + idata.getVariable(VAR_ADMIN_USER) + "'");
 
         // set cfg.add.to.rc
-        if (parent.getRules().isConditionTrue(COND_USER_ROOT) || !parent.getRules().isConditionTrue(COND_NO_CONNECT_USER)) {
+        if (vs.substituteMultiple(idata.getVariable(VAR_USER_NAME),null).equals(idata.getVariable(VAR_ROOT_USER)) ||
+                !vs.substituteMultiple(idata.getVariable(VAR_CONNECT_USER), null).equals(vs.substituteMultiple(idata.getVariable(VAR_USER_NAME), null))) {
             idata.setVariable(VAR_ADD_TO_RC, "true");
         } else {
             idata.setVariable(VAR_ADD_TO_RC, "false");

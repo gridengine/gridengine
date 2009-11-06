@@ -32,7 +32,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_resource_utilizationL.h"
 #include "sge_select_queue.h"
 
 /* those are for treating resource utilization */

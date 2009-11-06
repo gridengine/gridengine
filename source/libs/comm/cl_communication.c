@@ -1523,11 +1523,11 @@ int cl_com_close_connection(cl_com_connection_t** connection) {
       cl_com_free_endpoint(&((*connection)->client_dst));
 
       free( (*connection)->data_read_buffer);
-      free( (*connection)->data_write_buffer);
-      free( (*connection)->read_gmsh_header);
       (*connection)->data_read_buffer = NULL;
+      free( (*connection)->data_write_buffer);
       (*connection)->data_write_buffer = NULL;
-
+      free( (*connection)->read_gmsh_header);
+      (*connection)->read_gmsh_header = NULL;
       (*connection)->data_flow_type = CL_CM_CT_UNDEFINED;
 
       free( (*connection)->client_host_name);
@@ -1554,6 +1554,8 @@ int cl_com_close_connection(cl_com_connection_t** connection) {
             break;
          }
       }
+      (*connection)->handler = NULL;
+      /* com_private is set to NULL by cl_com_tcp_close_connection() or cl_com_ssl_close_connection() */
       free(*connection);
       *connection = NULL;
       return retval;

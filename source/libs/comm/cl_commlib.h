@@ -113,6 +113,11 @@ int cl_com_get_max_connection_close_mode(cl_com_handle_t* handle, cl_max_count_t
 
 int cl_com_get_actual_statistic_data(cl_com_handle_t* handle, cl_com_handle_statistic_t** statistics );
 
+/* commlib external file descriptor functions */
+int cl_com_external_fd_register(cl_com_handle_t* handle, int fd, cl_fd_func_t callback, cl_select_method_t mode, void *user_data);
+int cl_com_external_fd_unregister(cl_com_handle_t* handle, int fd);
+int cl_com_external_fd_set_write_ready(cl_com_handle_t* handle, int fd);
+
 /* application can set application status for SIRM messages */
 int cl_com_set_status_func(cl_app_status_func_t status_func);
 /* application can set an error function */
@@ -130,10 +135,9 @@ char* cl_com_get_unresolvable_hosts(void);
 
 unsigned long cl_com_messages_in_send_queue(cl_com_handle_t *handle);
 
-
+cl_bool_t cl_com_is_valid_fd (int fd);
 
 cl_thread_mode_t cl_commlib_get_thread_state(void);
-
 
 int cl_com_setup_connection      (cl_com_handle_t* handle, 
                                   cl_com_connection_t** connection );

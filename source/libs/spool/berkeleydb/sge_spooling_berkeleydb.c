@@ -54,14 +54,13 @@
 #include "sgeobj/sge_cqueue.h"
 #include "sgeobj/sge_host.h"
 #include "sgeobj/sge_job.h"
-#include "sgeobj/sge_strL.h"
+#include "sgeobj/sge_str.h"
 #include "sgeobj/sge_ja_task.h"
 #include "sgeobj/sge_pe_task.h"
 #include "sgeobj/sge_qinstance.h"
 #include "sgeobj/sge_suser.h"
 
 #include "spool/sge_spooling_utilities.h"
-#include "spool/sge_spooling_database.h"
 
 #include "msg_common.h"
 #include "spool/msg_spoollib.h"
@@ -957,9 +956,8 @@ spool_berkeleydb_default_write_func(lList **answer_list,
                                                           object,
                                                           job_id, ja_task_id);
                   } else {
-                     ret = spool_berkeleydb_write_job(answer_list, info,
-                                                      object,
-                                                      job_id, only_job);
+                     ret = spool_berkeleydb_write_job(answer_list, info, object,
+                                                      job_id, ja_task_id, only_job);
                   }
                   FREE(dup);
                }

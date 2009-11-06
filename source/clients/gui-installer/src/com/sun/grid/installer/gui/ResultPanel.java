@@ -61,9 +61,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Vector;
 import javax.swing.*;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
+import net.n3.nanoxml.XMLElement;
 
 public class ResultPanel extends IzPanel implements Printable, Config {
 
@@ -217,6 +219,7 @@ public class ResultPanel extends IzPanel implements Printable, Config {
 
         loadResult();
 
+        // TODO Find a proper place for the output
         // Generate auto installation file
 //        FileOutputStream out = null;
 //        BufferedOutputStream outBuff = null;
@@ -226,6 +229,19 @@ public class ResultPanel extends IzPanel implements Printable, Config {
 //            silentInstallationFile += "_" + Util.generateTimeStamp() + ".xml";
 //
 //            Debug.trace("Generating auto installation file: '" + silentInstallationFile + "'.");
+//
+//            // Find the cfg.sge.jmx.ssl.keystore.pw entry and replace it with "changeit"
+//            Vector<XMLElement> userInputPanelElements = idata.xmlData.getChildrenNamed("com.izforge.izpack.panels.UserInputPanel");
+//            searchEnd:
+//            for (XMLElement userInputPanelElement : userInputPanelElements) {
+//                Vector<XMLElement> userInputElements = userInputPanelElement.getFirstChildNamed("userInput").getChildrenNamed("entry");
+//                for (XMLElement userInputElement : userInputElements) {
+//                    if (userInputElement.getAttribute("key").equals(VAR_JMX_SSL_KEYSTORE_PWD)) {
+//                        userInputElement.setAttribute("value", "changeit");
+//                        break searchEnd;
+//                    }
+//                }
+//            }
 //
 //            out = new FileOutputStream(silentInstallationFile);
 //            outBuff = new BufferedOutputStream(out, 5120);

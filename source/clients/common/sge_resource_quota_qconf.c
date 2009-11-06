@@ -410,8 +410,10 @@ static bool rqs_provide_modify_context(sge_gdi_ctx_class_t *ctx, lList **rqs_lis
                                         SP_FORM_ASCII, filename, false);
 
    if (answer_list_has_error(answer_list)) {
-      unlink(filename);
-      FREE(filename);
+      if (filename != NULL) {
+         unlink(filename);
+         FREE(filename);
+      }
       DRETURN(ret);
    }
 

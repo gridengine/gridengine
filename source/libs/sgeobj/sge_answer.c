@@ -33,13 +33,15 @@
 #include <stdarg.h>
 #include <string.h>
 
-#include "sge.h"
-#include "sgermon.h"
-#include "cull.h"
-#include "sge_unistd.h"
-#include "sge_dstring.h"
-#include "sge_log.h"
+#include "rmon/sgermon.h"
 
+#include "cull/cull.h"
+
+#include "uti/sge_unistd.h"
+#include "uti/sge_dstring.h"
+#include "uti/sge_log.h"
+
+#include "sge.h"
 #include "sge_answer.h"
 
 #include "msg_sgeobjlib.h"

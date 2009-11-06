@@ -297,9 +297,13 @@ on such host. Following table lists all possible states:</P>
 				<P><FONT COLOR="#ff0000">Resolvable</FONT></P>
 			</TD>
 			<TD WIDTH=85%>
-				<P>Temporary state. Once host was resolved, we immediately try to
-				get host's architecture if we have available threads in the
-				resolve pool.</P>
+				<P>Both temporary and final state. Once host has been resolved and if we
+                                have available threads in the resolve pool, we immediately try to get the
+				host's architecture via an ssh or rsh call. If this is the final state,
+				the installer was probably not able to ssh/rsh to the host without a password.
+				Check the tooltip message for more information. Right-click on the host and
+				select 'Configure...' action and verify that the intended 'Connect user' has been
+                                used for remote connection on that host.</P>
 			</TD>
 		</TR>
 		<TR>

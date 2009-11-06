@@ -41,9 +41,11 @@ set state "initialized"
 set jsv_cli_params [list a ar A b ckpt cwd C display dl e hard h hold_jid \
                          hold_jid_ad i inherit j js m M masterq notify \
                          now N noshell nostdin o ot P p pty R r shell sync S t \
-                         terse u w wd]
+                         tc terse u w wd]
 
-set jsv_mod_params [list ac l_hard l_soft q_hard q_soft pe_min pe_max pe_name]
+set jsv_mod_params [list ac l_hard l_soft q_hard q_soft pe_min pe_max pe_name \
+                         binding_strategy binding_type binding_amount binding_socket \
+                         binding_core binding_step binding_exp_n]
 
 set jsv_add_params [list CLIENT CONTEXT VERSION JOB_ID SCRIPT SCRIPT_ARGS USER]
 

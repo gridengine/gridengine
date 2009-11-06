@@ -44,18 +44,19 @@ struct qstat_env_str {
    sge_gdi_ctx_class_t *ctx;
 
    /*  Input parameters */
-   lList *resource_list;   /* -l resource_request           */ 
-   lList *qresource_list;  /* -F qresource_request          */
-   lList* queueref_list;   /* -q queue_list                 */
-   lList* peref_list;      /* -pe pe_list                   */
-   lList* user_list;       /* -u user_list - selects jobs   */
-   lList* queue_user_list; /* -U user_list - selects queues */
-   u_long32 full_listing;  /* -ext      */
-   u_long32 qselect_mode;  /* called as qselect */
-   u_long32 group_opt;     /* -g        */
-   u_long32 queue_state;   /* -qs       */
-   u_long32 explain_bits;  /* -explain  */
-   u_long32 job_info;      /* -j        */
+   lList *resource_list;         /* -l resource_request           */ 
+   lList *qresource_list;        /* -F qresource_request          */
+   lList* queueref_list;         /* -q queue_list                 */
+   lList* peref_list;            /* -pe pe_list                   */
+   lList* user_list;             /* -u user_list - selects jobs   */
+   lList* queue_user_list;       /* -U user_list - selects queues */
+   u_long32 full_listing;        /* -ext      */
+   u_long32 qselect_mode;        /* called as qselect */
+   u_long32 group_opt;           /* -g        */
+   u_long32 queue_state;         /* -qs       */
+   u_long32 explain_bits;        /* -explain  */
+   u_long32 job_info;            /* -j        */
+   u_long32 is_binding_format;   /* -cb       */
    
    /* Needed lists */
    lList* queue_list;
@@ -263,7 +264,7 @@ struct job_handler_str {
   int (*report_hard_resources_started)(job_handler_t* handler, lList **alpp);
   int (*report_hard_resource)(job_handler_t *handler, const char* name, const char* value, double uc, lList **alpp);
   int (*report_hard_resources_finished)(job_handler_t* handler, lList **alpp);
-  
+
   int (*report_soft_resources_started)(job_handler_t* handler, lList **alpp);
   /* RH TODO: the soft resource/request has no contribution => remove the parameter uc */
   int (*report_soft_resource)(job_handler_t *handler, const char* name, const char* value, double uc, lList **alpp);
@@ -297,9 +298,11 @@ struct job_handler_str {
   int (*report_ad_predecessor)(job_handler_t* handler, u_long32 jid, lList **alpp);
   int (*report_ad_predecessors_finished)(job_handler_t* handler, lList **alpp);
 
+  int (*report_binding_started)(job_handler_t* handler, lList **alpp);
+  int (*report_binding)(job_handler_t *handler, const char *binding, lList **alpp);
+  int (*report_binding_finished)(job_handler_t* handler, lList **alpp);
+
   int (*report_job_finished)(job_handler_t* handler, u_long32 jid, lList **alpp);
-  
-   
 };
 
 typedef struct qstat_handler_str qstat_handler_t;

@@ -33,6 +33,7 @@
 /*___INFO__MARK_END__*/
 
 #include "sge_report_execd.h"
+#include "sgeobj/sge_binding.h"
 
 extern report_source execd_report_sources[];
 

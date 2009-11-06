@@ -204,8 +204,8 @@ CheckIfShadowMasterHost()
 
    fname=$SGE_ROOT/$SGE_CELL/common/shadow_masters
 
-   if [ -f $fname ]; then
-      grep -i $host $fname 2>&1 > /dev/null
+   if [ -f $fname ]; then      
+      grep -i "^${host}$" $fname 2>&1 > /dev/null
       if [ $? = 0 ]; then
          shadow_host="true"
       else
@@ -385,12 +385,6 @@ DetectSMFService()
    
    service="svc:/application/sge/$name:$SGE_CLUSTER_NAME"
 
-   if [ -n "$SMF_FMRI" -a "$service" != "$SMF_FMRI" ]; then
-      #Something is wrong, variables do not come from the SMF
-      echo "Error: $service does not match FMRI $SMF_FMRI provided by SMF!"
-      echo "Check that service instance $SGE_CLUSTER_NAME exist on your system"
-      exit $SMF_EXIT_ERR_CONFIG
-   fi
    #Check if service exists
    /usr/bin/svcs $service > /dev/null 2>&1
    if [ $? -ne 0 ]; then
@@ -567,9 +561,11 @@ if [ "$startup" = true ]; then
       echo
       echo "sge_qmaster didn't start!"
       echo "This is not a qmaster host!"
-      echo "Please, check your act_qmaster file!" 
+      echo "Check your ${SGE_ROOT}/${SGE_CELL}/common/act_qmaster file!" 
       echo
-      exit_val=1
+      if [ $shadowd = false -o ! -f $SGE_ROOT/$SGE_CELL/common/shadow_masters ]; then
+         exit 1
+      fi
    elif [ $qmaster = true ]; then
       already_running=false
       #Check if pid file exists      
@@ -588,7 +584,7 @@ if [ "$startup" = true ]; then
       else
          DetectSMFService qmaster
          #We want to use smf
-         if [ -z "$SMF_FMRI" -a -n "$service"  ]; then
+         if [ \( -z "$SMF_FMRI" -o "$SMF_FMRI" != "$service" \) -a -n "$service" ]; then
             echo "   starting sge_qmaster"
             svcadm enable -st $service
             exit_val=$?
@@ -602,11 +598,27 @@ if [ "$startup" = true ]; then
          fi
       fi
    fi
-   if [ $exit_val -ne 0 ]; then
-      exit $exit_value
-   fi
-      
-   if [ $shadowd = true -a $shadow_host = true ]; then
+
+   if [ $shadowd = true -a $shadow_host = false ]; then
+      #Display the message only if we have installed any shadowds
+      if [ -f $SGE_ROOT/$SGE_CELL/common/shadow_masters ]; then
+         echo
+         echo "sge_shadowd didn't start!"
+         echo "This is not a shadow master host!"
+         echo "Check your ${SGE_ROOT}/${SGE_CELL}/common/shadow_masters file!"
+         echo
+      elif [ $qmaster = false ]; then
+         #Shadow masters file does not exist and we try to start only shadowd
+         echo
+         echo "sge_shadowd didn't start!"
+         echo "File ${SGE_ROOT}/${SGE_CELL}/common/shadow_masters does not exist!"
+         echo "No shadowd installed?"
+         echo
+      fi
+      if [ $qmaster_host = false -o $qmaster = false ]; then
+         exit 1
+      fi
+   elif [ $shadowd = true ]; then
       start_shadowd=true
       UQpidfile=$qmaster_spool_dir/shadowd_$UQHOST.pid
       pidfile=$qmaster_spool_dir/shadowd_$HOST.pid
@@ -631,7 +643,7 @@ if [ "$startup" = true ]; then
          DetectSMFService shadowd
          echo "   starting sge_shadowd"
          #We want to use smf
-         if [ -z "$SMF_FMRI" -a -n "$service"  ]; then
+         if [ \( -z "$SMF_FMRI" -o "$SMF_FMRI" != "$service" \) -a -n "$service" ]; then
             svcadm enable -st $service
             res=$?
          else
@@ -644,14 +656,17 @@ if [ "$startup" = true ]; then
          fi
       else
          echo "   found running sge_shadowd - not starting"
-         exit 1
       fi
+   fi
+      
+   if [ $exit_val -ne 0 ]; then
+      exit $exit_val
    fi
 else
    if [ $shadowd = true -a $shadow_host = true ]; then
       echo "   shutting down Grid Engine shadowd"
       DetectSMFService shadowd
-      if [ -z "$SMF_FMRI" -a -n "$service"  ]; then
+      if [ \( -z "$SMF_FMRI" -o "$SMF_FMRI" != "$service" \) -a -n "$service" ]; then
          svcadm disable -st $service
       else
          # Send SIGTERM to shadowd
@@ -667,7 +682,7 @@ else
       if [ `CheckIfQmasterHost $HOST` = true ]; then
          echo "   shutting down Grid Engine qmaster"
          DetectSMFService qmaster
-         if [ -z "$SMF_FMRI" -a -n "$service"  ]; then
+         if [ \( -z "$SMF_FMRI" -o "$SMF_FMRI" != "$service" \) -a -n "$service" ]; then
             svcadm disable -st $service
             exit $?
          else

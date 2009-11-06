@@ -33,7 +33,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_cqueueL.h"
+#include "sge_cqueue.h"
 
 bool
 cqueue_verify_calendar(lListElem *cqueue, lList **answer_list,

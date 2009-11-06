@@ -52,6 +52,8 @@
 #  include <termio.h>
 #endif
 
+#include <sys/timeb.h>
+
 #include "sgermon.h"
 #include "sge_io.h"
 #include "sge_utility.h"
@@ -60,14 +62,12 @@
 #include "sge_ijs_threads.h"
 #include "sge_client_ijs.h"
 
-/* global variables */
-char *g_hostname  = NULL;
-COMMUNICATION_HANDLE *g_comm_handle = NULL;
-
 /* module variables */
-static int  g_exit_status = 0;
-static int  g_nostdin     = 0; 
-static int  g_noshell     = 0;
+static char *g_hostname  = NULL;
+static int  g_exit_status = 0; /* set by worker thread, read by main thread */
+static int  g_nostdin     = 0; /* set by main thread, read by worker thread */
+static int  g_noshell     = 0; /* set by main thread, read by worker thread */
+static COMM_HANDLE *g_comm_handle = NULL;
 
 /*
  * static volatile sig_atomic_t received_window_change_signal = 1;
@@ -245,7 +245,7 @@ void set_signal_handlers(void)
 *                                     submit changes to pty
 *
 *  SYNOPSIS
-*     static void client_check_window_change(COMMUNICATION_HANDLE *handle)
+*     static void client_check_window_change(COMM_HANDLE *handle)
 *
 *  FUNCTION
 *     Checks if the window size of the terminal window was changed.
@@ -255,7 +255,7 @@ void set_signal_handlers(void)
 *     just checks the according flag.
 *
 *  INPUTS
-*     COMMUNICATION_HANDLE *handle - pointer to the commlib handle
+*     COMM_HANDLE *handle - pointer to the commlib handle
 *
 *  RESULT
 *     void - no result
@@ -266,7 +266,7 @@ void set_signal_handlers(void)
 *  SEE ALSO
 *     window_change_handler()
 *******************************************************************************/
-static void client_check_window_change(COMMUNICATION_HANDLE *handle)
+static void client_check_window_change(COMM_HANDLE *handle)
 {
    struct winsize ws;
    char           buf[200];
@@ -555,6 +555,12 @@ void* commlib_to_tty(void *t_conf)
                /* copy recv_mess.data to buf to append '\0' */
                memcpy(buf, recv_mess.data, MIN(99, recv_mess.cl_message->message_length - 1));
                buf[MIN(99, recv_mess.cl_message->message_length - 1)] = 0;
+
+               /* the UNREGISTER_CTRL_MSG contains the exit status of the
+                * qrsh_starter in case of qrsh <command> and the exit status
+                * of the shell for qlogin/qrsh <no command>.
+                * If the job was signalled, the exit code is 128+signal.
+                */
                sscanf(buf, "%d", &g_exit_status);
                comm_write_message(g_comm_handle, g_hostname, COMM_CLIENT, 1, 
                   (unsigned char*)" ", 1, UNREGISTER_RESPONSE_CTRL_MSG, &err_msg);
@@ -575,12 +581,12 @@ void* commlib_to_tty(void *t_conf)
    return NULL;
 }
 
-/****** do_server_loop() *******************************************************
+/****** run_ijs_server() *******************************************************
 *  NAME
-*     do_server_loop() -- The servers main loop
+*     run_ijs_server() -- The servers main loop
 *
 *  SYNOPSIS
-*     int do_server_loop(u_long32 job_id, int nostdin, int noshell,
+*     int run_ijs_server(u_long32 job_id, int nostdin, int noshell,
 *                        int is_rsh, int is_qlogin, int force_pty,
 *                        int *p_exit_status)
 *
@@ -589,43 +595,57 @@ void* commlib_to_tty(void *t_conf)
 *     and to the client.
 *
 *  INPUTS
+*     COMM_HANDLE *handle - Handle of the COMM server
 *     u_long32 job_id    - SGE job id of this job
 *     int nostdin        - The "-nostdin" switch
 *     int noshell        - The "-noshell" switch
 *     int is_rsh         - Is it a qrsh with commandline?
 *     int is_qlogin      - Is it a qlogin or qrsh without commandline?
 *     int force_pty      - The user forced use of pty by the "-pty yes" switch
-*     int *p_exit_status -
+*
+*  OUTPUTS
+*     int *p_exit_status - The exit status of qrsh_starter in case of
+*                          "qrsh <command>" or the exit status of the shell in
+*                          case of "qrsh <no command>"/"qlogin".
+*                          If the job was signalled, the exit code is 128+signal.
 *
 *  RESULT
 *     int - 0: Ok.
-*           1: An error occured.
+*           1: Invalid parameter
+*           2: Log list not initialized
+*           3: Error setting terminal mode
+*           4: Can't create tty_to_commlib thread
+*           5: Can't create commlib_to_tty thread
+*           6: Error shutting down commlib connection
+*           7: Error resetting terminal mode
 *
 *  NOTES
-*     MT-NOTE: do_server_loop is not MT-safe
-*
-*  SEE ALSO
-*     do_client_loop()
+*     MT-NOTE: run_ijs_server is not MT-safe
 *******************************************************************************/
-int do_server_loop(u_long32 job_id, int nostdin, int noshell,
-                   int is_rsh, int is_qlogin, int force_pty,
-                   int *p_exit_status)
+int run_ijs_server(COMM_HANDLE *handle, const char *remote_host,
+                   u_long32 job_id,
+                   int nostdin, int noshell,
+                   int is_rsh, int is_qlogin, ternary_t force_pty,
+                   int *p_exit_status, dstring *p_err_msg)
 {
-   bool              terminal_is_in_raw_mode = false;
-   int               ret = 0;
-   dstring           err_msg = DSTRING_INIT;
+   int               ret = 0, ret_val = 0;
    THREAD_HANDLE     *pthread_tty_to_commlib = NULL;
    THREAD_HANDLE     *pthread_commlib_to_tty = NULL;
    THREAD_LIB_HANDLE *thread_lib_handle = NULL;
    cl_raw_list_t     *cl_com_log_list = NULL;
 
-   DENTER(TOP_LAYER, "do_server_loop");
+   DENTER(TOP_LAYER, "run_ijs_server");
 
-   if (p_exit_status == NULL) {
+   if (handle == NULL || p_err_msg == NULL || p_exit_status == NULL || remote_host == NULL) {
       return 1;
    }
+   g_comm_handle = handle;
+   g_hostname    = strdup(remote_host);
 
    cl_com_log_list = cl_com_get_log_list();
+   if (cl_com_log_list == NULL) {
+      return 2;
+   }
 
    g_nostdin = nostdin;
    g_noshell = noshell;
@@ -638,39 +658,46 @@ int do_server_loop(u_long32 job_id, int nostdin, int noshell,
     * to a file or a pipe.
     */
    if (isatty(STDOUT_FILENO) == 1 &&
-      ((force_pty == 2 && is_rsh == 0 && is_qlogin == 1) || force_pty == 1)) {
+      ((force_pty == UNSET && is_rsh == 0 && is_qlogin == 1) || force_pty == YES)) {
       /*
        * Set this terminal to raw mode, just output everything, don't interpret
        * it. Let the pty on the client side interpret the characters.
        */
       ret = terminal_enter_raw_mode();
       if (ret != 0) {
-         fprintf(stderr, "Can't set terminal mode. Error reason: %s (%d)\n",
+         sge_dstring_sprintf(p_err_msg, "can't set terminal to raw mode: %s (%d)",
             strerror(ret), ret);
-         return 1;
-      } else {
-         terminal_is_in_raw_mode = true;
+         return 3;
       }
    }
 
    /*
     * Setup thread list and create two worker threads
     */
-   DPRINTF(("creating worker thread\n"));
    thread_init_lib(&thread_lib_handle);
+   /*
+    * From here on, we have to cleanup the list in case of errors, this is
+    * why we "goto cleanup" in case of error.
+    */
+
+   DPRINTF(("creating worker threads\n"));
+   DPRINTF(("creating tty_to_commlib thread\n"));
    ret = create_thread(thread_lib_handle, &pthread_tty_to_commlib, cl_com_log_list,
       "tty_to_commlib thread", 1, tty_to_commlib);
    if (ret != CL_RETVAL_OK) {
-      DPRINTF(("can't create tty_to_commlib thread, return value = %d\n",
-         ret));
+      sge_dstring_sprintf(p_err_msg, "can't create tty_to_commlib thread: %s",
+         cl_get_error_text(ret));
+      ret_val = 4;
       goto cleanup;
    }
 
+   DPRINTF(("creating commlib_to_tty thread\n"));
    ret = create_thread(thread_lib_handle, &pthread_commlib_to_tty, cl_com_log_list,
       "commlib_to_tty thread", 1, commlib_to_tty);
    if (ret != CL_RETVAL_OK) {
-      DPRINTF(("can't create commlib_to_tty thread, return value = %d\n",
-         ret));
+      sge_dstring_sprintf(p_err_msg, "can't create commlib_to_tty thread: %s",
+         cl_get_error_text(ret));
+      ret_val = 5;
       goto cleanup;
    }
 
@@ -686,18 +713,7 @@ int do_server_loop(u_long32 job_id, int nostdin, int noshell,
 
    DPRINTF(("shutting down tty_to_commlib thread\n"));
    thread_shutdown(pthread_tty_to_commlib);
-/*
- * TODO: Why doesn't this work on some hosts (e.g. oin)
- *       Is it necessary at all?
 
-   DPRINTF(("wait until there is no client connected any more\n"));
-   comm_wait_for_no_connection(g_comm_handle, COMM_CLIENT, 10, &err_msg);
-*/
-   cl_com_set_error_func(NULL);
-   cl_com_ignore_timeouts(CL_TRUE);
-   DPRINTF(("shut down the connection from our side\n"));
-   ret = cl_commlib_shutdown_handle(g_comm_handle, CL_FALSE);
-   g_comm_handle = NULL;
    /*
     * Close stdin to awake the tty_to_commlib-thread from the select() call.
     * thread_shutdown() doesn't work on all architectures.
@@ -711,16 +727,202 @@ cleanup:
     * Set our terminal back to 'unraw' mode. Should be done automatically
     * by OS on process end, but we want to be sure.
     */
-   sge_dstring_free(&err_msg);
-   if (terminal_is_in_raw_mode == true) {
-      ret = terminal_leave_raw_mode();
-      DPRINTF(("terminal_leave_raw_mode() returned %d (%s)\n", ret, strerror(ret)));
-      terminal_is_in_raw_mode = false;
+   ret = terminal_leave_raw_mode();
+   DPRINTF(("terminal_leave_raw_mode() returned %s (%d)\n", strerror(ret), ret));
+   if (ret != 0) {
+      sge_dstring_sprintf(p_err_msg, "error resetting terminal mode: %s (%d)", strerror(ret));
+      ret_val = 7; 
    }
 
    *p_exit_status = g_exit_status;
 
    thread_cleanup_lib(&thread_lib_handle);
-   DRETURN(0);
+   DRETURN(ret_val);
+}
+
+/****** sge_client_ijs/start_ijs_server() **************************************
+*  NAME
+*     start_ijs_server() -- starts the commlib server for the builtin
+*                           interactive job support
+*
+*  SYNOPSIS
+*     int start_ijs_server(const char* username, int csp_mode,
+*                          COMM_HANDLE **phandle, dstring *p_err_msg)
+*
+*  FUNCTION
+*     Starts the commlib server for the commlib connection between the shepherd
+*     of the interactive job (qrsh/qlogin) and the qrsh/qlogin command. 
+*     Over this connection the stdin/stdout/stderr input/output is transferred.
+*
+*  INPUTS
+*     bool csp_mode -        If false, the server uses unsecured communications,
+*                            otherwise it uses secured communictions.
+*     const char* username - The owner of the certificates that are used to
+*                            secure the connection.
+*                            Used only in CSP mode, otherwise ignored.
+*  OUTPUTS
+*     COMM_HANDLE **handle - Pointer to the COMM server handle.
+*                            Gets initialized in this function.
+*     dstring *p_err_msg -   Contains the error reason in case of error.
+*
+*  RESULT
+*     int - 0: OK
+*           1: Can't open connection
+*           2: Can't set connection parameters
+*
+*  NOTES
+*     MT-NOTE: start_builtin_ijs_server() is not MT safe 
+*
+*  SEE ALSO
+*     sge_client_ijs/run_ijs_server()
+*     sge_client_ijs/stop_ijs_server()
+*     sge_client_ijs/force_ijs_server_shutdown()
+*******************************************************************************/
+int start_ijs_server(bool csp_mode, const char* username,
+                     COMM_HANDLE **phandle, dstring *p_err_msg)
+{
+   int     ret, ret_val = 0;
+
+   DENTER(TOP_LAYER, "start_ijs_server");
+
+   /* we must copy the hostname here to a global variable, because the 
+    * worker threads need it later.
+    * It gets freed in force_ijs_server_shutdown().
+    * TODO: Cleaner solution for this!
+    */
+   DPRINTF(("starting commlib server\n"));
+   ret = comm_open_connection(true, csp_mode, COMM_SERVER, 0, COMM_CLIENT,
+                              NULL, username, phandle, p_err_msg);
+   if (ret != 0 || *phandle == NULL) {
+      ret_val = 1;
+   } else {
+      ret = comm_set_connection_param(*phandle, HEARD_FROM_TIMEOUT,
+                                      0, p_err_msg);
+      if (ret != 0) {
+         ret_val = 2;
+      }
+   }
+
+   DRETURN(ret_val);
+}
+
+/****** sge_client_ijs/stop_ijs_server() ***************************************
+*  NAME
+*     stop_ijs_server() -- stops the commlib server for the builtin
+*                          interactive job support
+*
+*  SYNOPSIS
+*     int stop_ijs_server(COMM_HANDLE **phandle, dstring *p_err_msg) 
+*
+*  FUNCTION
+*     Stops the commlib server for the commlib connection between the shepherd
+*     of the interactive job (qrsh/qlogin) and the qrsh/qlogin command.
+*     Over this connectin the stdin/stdout/stderr input/output is transferred.
+*
+*  INPUTS
+*     COMM_HANDLE **phandle - Pointer to the COMM server handle. Gets set to
+*                             NULL in this function.
+*     dstring *p_err_msg    - Contains the error reason in case of error.
+*
+*  RESULT
+*     int - 0: OK
+*           1: Invalid Parameter: phandle = NULL
+*           2: General error shutting down the COMM server,
+*              see p_err_msg for details
+*
+*  NOTES
+*     MT-NOTE: stop_ijs_server() is not MT safe 
+*
+*  SEE ALSO
+*     sge_client_ijs/start_ijs_server()
+*     sge_client_ijs/run_ijs_server()
+*     sge_client_ijs/force_ijs_server_shutdown()
+*******************************************************************************/
+int stop_ijs_server(COMM_HANDLE **phandle, dstring *p_err_msg)
+{
+   int ret = 0;
+
+   DENTER(TOP_LAYER, "stop_ijs_server");
+
+   if (phandle == NULL) {
+      ret = 1;
+   } else if (*phandle != NULL) {
+      cl_com_set_error_func(NULL);
+      cl_com_ignore_timeouts(CL_TRUE);
+      DPRINTF(("shut down the connection from our side\n"));
+      ret = cl_commlib_shutdown_handle(*phandle, CL_FALSE);
+      if (ret != CL_RETVAL_OK) {
+         sge_dstring_sprintf(p_err_msg, "error shutting down the connection: %s",
+            cl_get_error_text(ret));
+         ret = 2;
+      }
+      *phandle = NULL;
+   }
+   DRETURN(ret);
+}
+
+/****** sge_client_ijs/force_ijs_server_shutdown() *****************************
+*  NAME
+*     force_ijs_server_shutdown() -- forces the commlib server for the builtin
+*                                    interactive job support to shut down
+*
+*  SYNOPSIS
+*     int force_ijs_server_shutdown(COMM_HANDLE **phandle, const char 
+*     *this_component, dstring *p_err_msg) 
+*
+*  FUNCTION
+*     Forces the commlib server for the builtin interactive job support to shut
+*     down immediately and ensures it is shut down.
+*
+*  INPUTS
+*     COMM_HANDLE **phandle      - Handle of the COMM connection, gets set to
+*                                  NULL in this function.
+*     const char *this_component - Name of this component.
+*     dstring *p_err_msg         - Contains the error reason in case of error.
+*
+*  RESULT
+*     int - 0: OK
+*           1: Invalid parameter: phandle == NULL or *phandle == NULL
+*           2: Can't shut down connection, see p_err_msg for details
+*
+*  NOTES
+*     MT-NOTE: force_ijs_server_shutdown() is not MT safe 
+*
+*  SEE ALSO
+*     sge_client_ijs/start_ijs_server()
+*     sge_client_ijs/run_ijs_server()
+*     sge_client_ijs/stop_ijs_server_shutdown()
+*******************************************************************************/
+int force_ijs_server_shutdown(COMM_HANDLE **phandle,
+                              const char *this_component,
+                              dstring *p_err_msg)
+{
+   int     ret;
+
+   DENTER(TOP_LAYER, "force_ijs_server_shutdown");
+
+   if (phandle == NULL || *phandle == NULL) {
+      sge_dstring_sprintf(p_err_msg, "invalid connection handle");
+      DPRINTF(("invalid connection handle - nothing to shut down\n"));
+      DRETURN(1);
+   }
+
+   DPRINTF(("connection is still alive\n"));
+
+   /* This will remove the handle */
+   ret = comm_shutdown_connection(*phandle, COMM_CLIENT, g_hostname, p_err_msg);
+   FREE(g_hostname);
+   if (ret != COMM_RETVAL_OK) {
+      DPRINTF(("comm_shutdown_connection() failed: %s (%d)\n",
+               sge_dstring_get_string(p_err_msg), ret));
+      sge_dstring_sprintf(p_err_msg, "error shutting down the connection: %s",
+                          cl_get_error_text(ret));
+      ret = 2;
+   } else {
+      DPRINTF(("successfully shut down the connection\n"));
+   }
+   *phandle = NULL;
+
+   DRETURN(ret);
 }
 

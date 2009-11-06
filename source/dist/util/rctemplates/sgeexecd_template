@@ -140,12 +140,6 @@ DetectSMFService()
    
    service="svc:/application/sge/$name:$SGE_CLUSTER_NAME"
 
-   if [ -n "$SMF_FMRI" -a "$service" != "$SMF_FMRI" ]; then
-      #Someone is trying to fool us
-      echo "Error: $service does not match FMRI $SMF_FMRI provided by SMF!"
-      echo "Check that service instance $SGE_CLUSTER_NAME exist on your system"
-      exit $SMF_EXIT_ERR_CONFIG
-   fi
    #Check if service exists
    /usr/bin/svcs $service > /dev/null 2>&1
    if [ $? -ne 0 ]; then
@@ -345,7 +339,7 @@ DetectSMFService execd
 
 if [ "$startup" = true ]; then
       #We want to use smf
-      if [ -z "$SMF_FMRI" -a -n "$service"  ]; then
+      if [ \( -z "$SMF_FMRI" -o "$SMF_FMRI" != "$service" \) -a -n "$service" ]; then
          svcadm enable -st $service
          exit $?
       fi

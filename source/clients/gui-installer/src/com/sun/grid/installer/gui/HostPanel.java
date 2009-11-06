@@ -147,7 +147,7 @@ public class HostPanel extends IzPanel implements Config,
     public HostPanel(InstallerFrame parent, InstallData idata) {
         super(parent, idata);
         //TODO: verify that shell name is OK
-        
+
         init();
     }
 
@@ -1579,7 +1579,7 @@ public class HostPanel extends IzPanel implements Config,
      * @param state The state to set
      */
     public void setHostState(Host host, State state) {
-
+            
         /**
          * Set host state on the table(s)
          */

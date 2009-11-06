@@ -31,37 +31,46 @@
 /*___INFO__MARK_END__*/
 #include <ctype.h>
 #include <string.h>
-#include "jni.h"
-#include "jgdi.h"
-#include "basis_types.h"
-#include "cull.h"
-#include "commlib.h"
-#include "sgermon.h"
-#include "sge_all_listsL.h"
-#include "sge_answer.h"
-#include "sge_prog.h"
-#include "sge_bootstrap.h"
-#include "version.h"
-#include "cl_errors.h"
-#include "sge_log.h"
-#include "sge_error_class.h"
-#include "sge_qinstance_state.h"
-#include "jgdi_common.h"
-#include "cull_list.h"
-#include "jgdi_wrapper.h"
-#include "jgdi_factory.h"
-#include "sge_calendar.h"
-#include "sge_cqueue.h"
-#include "jgdi_logging.h"
-#include "sge_ja_task.h"
-#include "msg_sgeobjlib.h"
-#include "msg_common.h"
-#include "sge_edit.h"
-#include "sge_sharetree.h"
-#include "sge_utility.h"
 
+#include "jni.h"
+
+#include "rmon/sgermon.h"
+
+#include "uti/sge_prog.h"
+#include "uti/sge_bootstrap.h"
+#include "uti/sge_edit.h"
+#include "uti/sge_log.h"
+#include "uti/sge_error_class.h"
+
+#include "cull/cull_list.h"
+#include "cull/cull.h"
+
+#include "commlib.h"
+#include "cl_errors.h"
+
+#include "gdi/version.h"
 #include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi2.h"
+
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_calendar.h"
+#include "sgeobj/sge_qinstance_state.h"
+#include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_sharetree.h"
+#include "sgeobj/sge_utility.h"
+#include "sgeobj/sge_event.h"
+
+#include "jgdi.h"
+#include "basis_types.h"
+#include "jgdi_common.h"
+#include "jgdi_wrapper.h"
+#include "jgdi_factory.h"
+#include "jgdi_logging.h"
+
+#include "msg_sgeobjlib.h"
+#include "msg_common.h"
 
 #define MAX_GDI_CTX_ARRAY_SIZE 1024
 
@@ -3747,7 +3756,7 @@ void jgdi_fill(JNIEnv *env, jobject jgdi, jobject list, jobject filter, const ch
    jgdi_init_rmon_ctx(env, JGDI_LOGGER, &rmon_ctx);
    rmon_set_thread_ctx(&rmon_ctx);
    
-   if (filter != NULL && target_list != SGE_SHARETREE_LIST) { 
+   if (filter != NULL && target_list != SGE_STN_LIST) { 
      ret=build_filter(env, filter, &where, &alp);
      if (ret != JGDI_SUCCESS) {
         goto error;
@@ -3777,7 +3786,7 @@ void jgdi_fill(JNIEnv *env, jobject jgdi, jobject list, jobject filter, const ch
       lFreeList(&alp);
    }   
 
-   if (target_list == SGE_SHARETREE_LIST) {
+   if (target_list == SGE_STN_LIST) {
       if (answers != NULL) {
          generic_fill_list(env, answers, "com/sun/grid/jgdi/configuration/JGDIAnswer", alp, NULL);
       }
@@ -3856,7 +3865,7 @@ void jgdi_add(JNIEnv *env, jobject jgdi, jobject jobj, const char *classname, in
       what = lWhat("%T(ALL)", descr);
       
       /* add to list */
-      if (target_list == SGE_JOB_LIST || target_list == SGE_AR_LIST) {
+      if (target_list == SGE_JB_LIST || target_list == SGE_AR_LIST) {
          alp = ctx->gdi(ctx, target_list, SGE_GDI_ADD | SGE_GDI_RETURN_NEW_VERSION, &lp, where, what);
          if (answer_list_has_error(&alp)) {
             ret = JGDI_ERROR;
@@ -3898,7 +3907,7 @@ void jgdi_add(JNIEnv *env, jobject jgdi, jobject jobj, const char *classname, in
             }
          }   
          lFreeList(&lp);
-      } else if (target_list == SGE_CONFIG_LIST) {
+      } else if (target_list == SGE_CONF_LIST) {
          alp = ctx->gdi(ctx, target_list, SGE_GDI_MOD, &lp, where, what);
          lFreeList(&lp);
       } else {   
@@ -3955,14 +3964,14 @@ void jgdi_delete_array(JNIEnv *env, jobject jgdi, jobjectArray obj_array, const 
       for (i=0; i<asize; i++) {
           jobject obj = (*env)->GetObjectArrayElement(env, obj_array, i);
           if (obj) {
-             if (target_list == SGE_JOB_LIST || target_list == SGE_AR_LIST) {
+             if (target_list == SGE_JB_LIST || target_list == SGE_AR_LIST) {
                 lListElem *iep = NULL;
                 const char* name = (*env)->GetStringUTFChars(env, obj, 0);
                 if (name == NULL) {
                    answer_list_add(&alp, "jgdi_delete_array: GetStringUTFChars failed. Out of memory.", STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
                    goto error;
                 }
-                if (target_list == SGE_JOB_LIST) {
+                if (target_list == SGE_JB_LIST) {
                    if (sge_parse_jobtasks(&ref_list, &iep, name, &alp, true, NULL) == -1) {
                       answer_list_add_sprintf(&alp, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR, MSG_JOB_XISINVALIDJOBTASKID_S, name);
                    }
@@ -3991,7 +4000,7 @@ void jgdi_delete_array(JNIEnv *env, jobject jgdi, jobjectArray obj_array, const 
    /*
    ** handle the userFilter for Job and AdvanceReservation in addition
    */
-   if (userFilter != NULL && (target_list == SGE_JOB_LIST || target_list == SGE_AR_LIST)) {
+   if (userFilter != NULL && (target_list == SGE_JB_LIST || target_list == SGE_AR_LIST)) {
       lList *user_list = NULL;
       if (get_string_list(env, userFilter, "getUsers", &user_list, ST_Type, ST_name, &alp) != JGDI_SUCCESS) {
          lFreeList(&user_list);
@@ -4080,8 +4089,8 @@ void jgdi_delete(JNIEnv *env, jobject jgdi, jobject jobj, const char* classname,
    
    sge_gdi_set_thread_local_ctx(ctx);
    
-   /* we don't have an element for SGE_SHARETREE_LIST */
-   if (target_list != SGE_SHARETREE_LIST) {
+   /* we don't have an element for SGE_STN_LIST */
+   if (target_list != SGE_STN_LIST) {
       if ((ret = obj_to_listelem(env, jobj, &ep, descr, &alp)) != JGDI_SUCCESS) {
          goto error;
       }
@@ -4094,7 +4103,7 @@ void jgdi_delete(JNIEnv *env, jobject jgdi, jobject jobj, const char* classname,
    **                       forced flag
    **                       user list support
    */
-   if (target_list == SGE_JOB_LIST) {
+   if (target_list == SGE_JB_LIST) {
       sprintf(id_buf, sge_u32, lGetUlong(ep, JB_job_number));
       lFreeElem(&ep);
       iep = lAddElemStr(&lp, ID_str, id_buf, ID_Type); 
@@ -4106,7 +4115,7 @@ void jgdi_delete(JNIEnv *env, jobject jgdi, jobject jobj, const char* classname,
       iep = lAddElemStr(&lp, ID_str, id_buf, ID_Type);
       lSetUlong(iep, ID_force, force);
       what = lWhat("%T(ALL)", ID_Type);
-   } else if (target_list == SGE_SHARETREE_LIST) {
+   } else if (target_list == SGE_STN_LIST) {
       /* special handling: lp remains NULL */
    } else {
       lp = lCreateList("", descr);
@@ -4299,7 +4308,7 @@ static void jgdi_clearusage(JNIEnv *env, jobject jgdi, jobject answers)
 
    what = lWhat("%T(ALL)", STN_Type);
 
-   alp = ctx->gdi(ctx, SGE_USER_LIST, SGE_GDI_GET, &lp, NULL, what);
+   alp = ctx->gdi(ctx, SGE_UU_LIST, SGE_GDI_GET, &lp, NULL, what);
    
    /* if error throw exception */
    if (answer_list_has_error(&alp)) {
@@ -4308,7 +4317,7 @@ static void jgdi_clearusage(JNIEnv *env, jobject jgdi, jobject answers)
    }
    lFreeList(&alp);
 
-   alp = ctx->gdi(ctx, SGE_PROJECT_LIST, SGE_GDI_GET, &lp2, NULL, what);
+   alp = ctx->gdi(ctx, SGE_PR_LIST, SGE_GDI_GET, &lp2, NULL, what);
 
    /* if error throw exception */
    if (answer_list_has_error(&alp)) {
@@ -4330,7 +4339,7 @@ static void jgdi_clearusage(JNIEnv *env, jobject jgdi, jobject answers)
    }
    /* update user usage */
    if (lp && lGetNumberOfElem(lp) > 0) {
-      alp = ctx->gdi(ctx, SGE_USER_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
+      alp = ctx->gdi(ctx, SGE_UU_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
    }
 
    /* if error throw exception */
@@ -4345,7 +4354,7 @@ static void jgdi_clearusage(JNIEnv *env, jobject jgdi, jobject answers)
    
    /* update project usage */
    if (lp2 && lGetNumberOfElem(lp2) > 0) {
-      alp = ctx->gdi(ctx, SGE_PROJECT_LIST, SGE_GDI_MOD, &lp2, NULL, NULL);
+      alp = ctx->gdi(ctx, SGE_PR_LIST, SGE_GDI_MOD, &lp2, NULL, NULL);
    }
 
    if (answers != NULL) {
@@ -4515,7 +4524,7 @@ static void jgdi_qmod(JNIEnv *env, jobject jgdi, jobjectArray obj_array, jboolea
       }
       sge_gdi_set_thread_local_ctx(ctx);
 
-      alp = ctx->gdi(ctx, SGE_CQUEUE_LIST, SGE_GDI_TRIGGER, &ref_list, NULL, NULL);
+      alp = ctx->gdi(ctx, SGE_CQ_LIST, SGE_GDI_TRIGGER, &ref_list, NULL, NULL);
       lFreeList(&ref_list);
       
       if (answers != NULL) {
@@ -4600,13 +4609,13 @@ static void jgdi_detached_settings(JNIEnv *env, jobject jgdi, jobjectArray obj_a
 
    /* HGRP */
    hgrp_what = lWhat("%T(ALL)", HGRP_Type);
-   hgrp_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_RECORD, SGE_HGROUP_LIST,
+   hgrp_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_RECORD, SGE_HGRP_LIST,
                            SGE_GDI_GET, NULL, NULL, hgrp_what, &state, true);
    lFreeWhat(&hgrp_what);
 
    /* CQ */
    cqueue_what = lWhat("%T(ALL)", CQ_Type);
-   cq_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_SEND, SGE_CQUEUE_LIST,
+   cq_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_SEND, SGE_CQ_LIST,
                          SGE_GDI_GET, NULL, NULL, cqueue_what,
                          &state, true);
    ctx->gdi_wait(ctx, &alp, &multi_answer_list, &state);
@@ -4614,7 +4623,7 @@ static void jgdi_detached_settings(JNIEnv *env, jobject jgdi, jobjectArray obj_a
 
    /* HGRP */
    sge_gdi_extract_answer(&local_answer_list, SGE_GDI_GET,
-                   SGE_HGROUP_LIST, hgrp_id, multi_answer_list, &hgroup_list);
+                   SGE_HGRP_LIST, hgrp_id, multi_answer_list, &hgroup_list);
    if (local_answer_list != NULL) {
       lListElem *answer = lFirst(local_answer_list);
 
@@ -4627,7 +4636,7 @@ static void jgdi_detached_settings(JNIEnv *env, jobject jgdi, jobjectArray obj_a
    
    /* CQ */   
    sge_gdi_extract_answer(&local_answer_list, SGE_GDI_GET, 
-                SGE_CQUEUE_LIST, cq_id, multi_answer_list, &cqueue_list);
+                SGE_CQ_LIST, cq_id, multi_answer_list, &cqueue_list);
    if (local_answer_list != NULL) {
       lListElem *answer = lFirst(local_answer_list);
 
@@ -5195,7 +5204,7 @@ JNIEXPORT jstring JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeGetSched
    where = lWhere("%T(%I==%u))", EV_Type, EV_id, EV_ID_SCHEDD);
 
    /* get list */
-   alp = ctx->gdi(ctx, SGE_EVENT_LIST, SGE_GDI_GET, &lp, where, what);
+   alp = ctx->gdi(ctx, SGE_EV_LIST, SGE_GDI_GET, &lp, where, what);
    
    lFreeWhat(&what);
    lFreeWhere(&where);
@@ -5274,7 +5283,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeDeleteShare
 {
    DENTER(TOP_LAYER, "Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeDeleteShareTreeWithAnswer");
    
-   jgdi_delete(env, jgdi, NULL, "com/sun/grid/jgdi/configuration/ShareTree", SGE_SHARETREE_LIST, STN_Type, false, answers);
+   jgdi_delete(env, jgdi, NULL, "com/sun/grid/jgdi/configuration/ShareTree", SGE_STN_LIST, STN_Type, false, answers);
 
    DRETURN_VOID;
 }

@@ -66,7 +66,6 @@ static int cl_log_list_add_log(cl_raw_list_t* list_p, const char* thread_name, i
    char* mod_name_start = NULL;  
 
 
- 
    if (list_p == NULL || thread_name == NULL || function_name == NULL || module_name == NULL || message == NULL) {
       return CL_RETVAL_PARAMS;
    }
@@ -89,7 +88,9 @@ static int cl_log_list_add_log(cl_raw_list_t* list_p, const char* thread_name, i
 
    new_elem->log_message = strdup(message);    /* malloc */
    if (new_elem->log_message == NULL) {
-      free(new_elem->log_parameter);
+      if (new_elem->log_parameter != NULL) {
+         free(new_elem->log_parameter);
+      }
       free(new_elem);
       return CL_RETVAL_MALLOC;
    }
@@ -97,7 +98,9 @@ static int cl_log_list_add_log(cl_raw_list_t* list_p, const char* thread_name, i
    new_elem->log_thread_name = strdup(thread_name); /* malloc */
    if (new_elem->log_thread_name == NULL) {
       free(new_elem->log_message);
-      free(new_elem->log_parameter);
+      if (new_elem->log_parameter != NULL) {
+         free(new_elem->log_parameter);
+      }
       free(new_elem);
       return CL_RETVAL_MALLOC;
    }
@@ -117,7 +120,9 @@ static int cl_log_list_add_log(cl_raw_list_t* list_p, const char* thread_name, i
    if (new_elem->log_module_name == NULL) {
       free(new_elem->log_message);
       free(new_elem->log_thread_name);
-      free(new_elem->log_parameter);
+      if (new_elem->log_parameter != NULL) {
+         free(new_elem->log_parameter);
+      }
       free(new_elem);
       return CL_RETVAL_MALLOC;
    }
@@ -133,7 +138,9 @@ static int cl_log_list_add_log(cl_raw_list_t* list_p, const char* thread_name, i
    if ( new_elem->raw_elem == NULL) {
       free(new_elem->log_message);
       free(new_elem->log_thread_name);
-      free(new_elem->log_parameter);
+      if (new_elem->log_parameter != NULL) {
+         free(new_elem->log_parameter);
+      }
       free(new_elem->log_module_name);
       free(new_elem);
       return CL_RETVAL_MALLOC;

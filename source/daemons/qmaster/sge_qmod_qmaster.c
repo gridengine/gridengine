@@ -38,7 +38,7 @@
 #include "symbols.h"
 #include "sge_ja_task.h"
 #include "sge_str.h"
-#include "sge_idL.h"
+#include "sge_id.h"
 #include "sge_pe.h"
 #include "sge_signal.h"
 #include "sge_prog.h"
@@ -65,6 +65,7 @@
 #include "sge_qinstance_state.h"
 #include "sge_qinstance_qmaster.h"
 #include "sge_cqueue_qmaster.h"
+#include "sge_subordinate_qmaster.h"
 #include "sge_range.h"
 #include "sge_centry.h"
 #include "sge_calendar.h"
@@ -81,10 +82,11 @@
 
 
 /*-------------------------------------------------------------------------*/
-static void signal_slave_jobs_in_queue(sge_gdi_ctx_class_t *ctx, int how, lListElem *jep, monitoring_t *monitor);
+static void signal_slave_jobs_in_queue(sge_gdi_ctx_class_t *ctx, int how,
+      lListElem *jep, monitoring_t *monitor);
 
-static void signal_slave_tasks_of_job(sge_gdi_ctx_class_t *ctx, int how, lListElem *jep, lListElem *jatep,
-                                      monitoring_t *monitor);
+static void signal_slave_tasks_of_job(sge_gdi_ctx_class_t *ctx, int how,
+      lListElem *jep, lListElem *jatep, monitoring_t *monitor);
 
 static int sge_change_queue_state(sge_gdi_ctx_class_t *ctx,
                                   char *user, char *host, lListElem *qep,
@@ -208,9 +210,9 @@ sge_gdi_qmod(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_t
                      &alp, monitor);
                found = true;
             }
-      }
-      lFreeList(&qref_list);
-      lFreeList(&tmp_list);
+         }
+         lFreeList(&qref_list);
+         lFreeList(&tmp_list);
       }
       if (!found) {
          bool is_jobName_suport = false;
@@ -468,11 +470,25 @@ sge_change_queue_state(sge_gdi_ctx_class_t *ctx,
          break;
       default:
          INFO((SGE_EVENT, MSG_LOG_QUNKNOWNQMODCMD_U, sge_u32c(action)));
-         answer_list_add(answer, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
+         answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
          break;
    }
 
    switch (action) {
+      case QI_DO_SUSPEND:
+         /* When the queue gets suspended, the other queues can possibly unsuspend
+          * tasks that where suspended by slotwise subordination.
+          * Therefore we call the function with "false" (=unsuspend)
+          */
+         do_slotwise_x_on_subordinate_check(ctx, qep, false, true, monitor);
+         break;
+      case QI_DO_UNSUSPEND:
+         /* This queue gets unsuspended, possibly tasks in other queues have to
+          * be suspended because of slotwise subordination.
+          * Therefore we call the function with "true" (=suspend)
+          */
+         do_slotwise_x_on_subordinate_check(ctx, qep, true, true, monitor);
+         break;
       case QI_DO_CLEAN:
       case QI_DO_RESCHEDULE:
          cqueue_list_del_all_orphaned(ctx, *(object_type_get_master_list(SGE_TYPE_CQUEUE)), answer,
@@ -505,6 +521,7 @@ monitoring_t *monitor
 
    job_id = lGetUlong(jep, JB_job_number);
 
+   /* check the modifying users permissions */
    if (strcmp(user, lGetString(jep, JB_owner)) && !manop_is_operator(user)) {
       ERROR((SGE_EVENT, MSG_JOB_NOMODJOBPERMS_SU, user, sge_u32c(job_id)));
       answer_list_add(answer, SGE_EVENT, STATUS_ENOTOWNER, ANSWER_QUALITY_ERROR);
@@ -514,10 +531,11 @@ monitoring_t *monitor
 
    if (!jatep) {
       /* unenrolled tasks always are not-running pending/hold */
-      if (task_id)
+      if (task_id) {
          WARNING((SGE_EVENT, MSG_QMODJOB_NOTENROLLED_UU, sge_u32c(job_id), sge_u32c(task_id)));
-      else
+      } else {
          WARNING((SGE_EVENT, MSG_QMODJOB_NOTENROLLED_U, sge_u32c(job_id)));
+      }   
       answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
       DEXIT;
       return -1;
@@ -540,10 +558,12 @@ monitoring_t *monitor
 
       case JSUSPENDED:
          qmod_job_suspend(ctx, jep, jatep, queueep, force, answer, user, host, monitor);
+         do_slotwise_x_on_subordinate_check(ctx, queueep, false, true, monitor);
          break;
 
       case JRUNNING:
          qmod_job_unsuspend(ctx, jep, jatep, queueep, force, answer, user, host, monitor);
+         do_slotwise_x_on_subordinate_check(ctx, queueep, true, true, monitor);
          break;
 
       case QI_DO_CLEARERROR:
@@ -567,12 +587,12 @@ monitoring_t *monitor
                INFO((SGE_EVENT, MSG_JOB_NOERRORSTATEJOB_UU, sge_u32c(job_id)));
             }
          }
-         answer_list_add(answer, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
+         answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
          break;
 
       default:
          INFO((SGE_EVENT, MSG_LOG_JOBUNKNOWNQMODCMD_U, sge_u32c(action)));
-         answer_list_add(answer, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
+         answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
          break;
    }
 
@@ -860,7 +880,7 @@ monitoring_t *monitor
          } else {
             INFO((SGE_EVENT, MSG_JOB_RMADMSUSPENDJOB_SSU, user, host, sge_u32c(jobid)));
          }
-         answer_list_add(answer, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_ERROR);
+         answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
 
          state = lGetUlong(jatep, JAT_state);
          CLEARBIT(JSUSPENDED, state);
@@ -1301,8 +1321,8 @@ monitoring_t *monitor
    DRETURN_VOID;
 }
 
-static void signal_slave_tasks_of_job(sge_gdi_ctx_class_t *ctx, int how, lListElem *jep, lListElem *jatep,
-                                      monitoring_t *monitor)
+static void signal_slave_tasks_of_job(sge_gdi_ctx_class_t *ctx, int how,
+        lListElem *jep, lListElem *jatep, monitoring_t *monitor)
 {
    lList *gdil_lp;
    lListElem *mq, *pe, *gdil_ep;

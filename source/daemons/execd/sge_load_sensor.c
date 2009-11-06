@@ -37,7 +37,7 @@
 
 #include "sge_bootstrap.h"
 #include "sge_unistd.h"
-#include "sge_loadsensorL.h"
+#include "sge_loadsensor_LS_L.h"
 #include "sge_load_sensor.h"
 #include "sge_log.h"
 #include "sge_string.h"

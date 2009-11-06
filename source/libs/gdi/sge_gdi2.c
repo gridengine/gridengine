@@ -65,14 +65,13 @@
 #include "uti/sge_bootstrap.h"
 
 #include "sgeobj/sge_feature.h"
-#include "sgeobj/sge_multiL.h"
+#include "sgeobj/sge_multi_MA_L.h"
 #include "sgeobj/sge_answer.h"
-#include "sgeobj/sge_eventL.h"
-#include "sgeobj/sge_idL.h"
-#include "sgeobj/sge_hostL.h"
-#include "sgeobj/sge_confL.h"
+#include "sgeobj/sge_event.h"
+#include "sgeobj/sge_id.h"
 #include "sgeobj/sge_host.h"
-#include "sgeobj/sge_permissionL.h"
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_permission_PERM_L.h"
 #include "sgeobj/sge_conf.h"
 
 #include "gdi/qm_name.h"
@@ -114,26 +113,26 @@ static const char *target2string(u_long32 target)
    const char *ret = NULL;
 
    switch (target) {
-      case SGE_ADMINHOST_LIST:
-         ret = "SGE_ADMINHOST_LIST";
+      case SGE_AH_LIST:
+         ret = "SGE_AH_LIST";
          break;
-      case SGE_SUBMITHOST_LIST:
-         ret = "SGE_SUBMITHOST_LIST";
+      case SGE_SH_LIST:
+         ret = "SGE_SH_LIST";
          break;
-      case SGE_EXECHOST_LIST:
-         ret = "SGE_EXECHOST_LIST";
+      case SGE_EH_LIST:
+         ret = "SGE_EH_LIST";
          break;
-      case SGE_CQUEUE_LIST:
-         ret = "SGE_CQUEUE_LIST";
+      case SGE_CQ_LIST:
+         ret = "SGE_CQ_LIST";
          break;
-      case SGE_JOB_LIST:
-         ret = "SGE_JOB_LIST";
+      case SGE_JB_LIST:
+         ret = "SGE_JB_LIST";
          break;
-      case SGE_EVENT_LIST:
-         ret = "SGE_EVENT_LIST";
+      case SGE_EV_LIST:
+         ret = "SGE_EV_LIST";
          break;
-      case SGE_CENTRY_LIST:
-         ret = "SGE_CENTRY_LIST";
+      case SGE_CE_LIST:
+         ret = "SGE_CE_LIST";
          break;
       case SGE_ORDER_LIST:
          ret = "SGE_ORDER_LIST";
@@ -141,14 +140,14 @@ static const char *target2string(u_long32 target)
       case SGE_MASTER_EVENT:
          ret = "SGE_MASTER_EVENT";
          break;
-      case SGE_CONFIG_LIST:
-         ret = "SGE_CONFIG_LIST";
+      case SGE_CONF_LIST:
+         ret = "SGE_CONF_LIST";
          break;
-      case SGE_MANAGER_LIST:
-         ret = "SGE_MANAGER_LIST";
+      case SGE_UM_LIST:
+         ret = "SGE_UM_LIST";
          break;
-      case SGE_OPERATOR_LIST:
-         ret = "SGE_OPERATOR_LIST";
+      case SGE_UO_LIST:
+         ret = "SGE_UO_LIST";
          break;
       case SGE_PE_LIST:
          ret = "SGE_PE_LIST";
@@ -156,26 +155,26 @@ static const char *target2string(u_long32 target)
       case SGE_SC_LIST:
          ret = "SGE_SC_LIST";
          break;
-      case SGE_USER_LIST:
-         ret = "SGE_USER_LIST";
+      case SGE_UU_LIST:
+         ret = "SGE_UU_LIST";
          break;
-      case SGE_USERSET_LIST:
-         ret = "SGE_USERSET_LIST";
+      case SGE_US_LIST:
+         ret = "SGE_US_LIST";
          break;
-      case SGE_PROJECT_LIST:
-         ret = "SGE_PROJECT_LIST";
+      case SGE_PR_LIST:
+         ret = "SGE_PR_LIST";
          break;
-      case SGE_SHARETREE_LIST:
-         ret = "SGE_SHARETREE_LIST";
+      case SGE_STN_LIST:
+         ret = "SGE_STN_LIST";
          break;
-      case SGE_CKPT_LIST:
-         ret = "SGE_CKPT_LIST";
+      case SGE_CK_LIST:
+         ret = "SGE_CK_LIST";
          break;
-      case SGE_CALENDAR_LIST:
-         ret = "SGE_CALENDAR_LIST";
+      case SGE_CAL_LIST:
+         ret = "SGE_CAL_LIST";
          break;
-      case SGE_JOB_SCHEDD_INFO_LIST:
-         ret = "SGE_JOB_SCHEDD_INFO_LIST";
+      case SGE_SME_LIST:
+         ret = "SGE_SME_LIST";
          break;
       case SGE_ZOMBIE_LIST:
          ret = "SGE_ZOMBIE_LIST";
@@ -183,8 +182,8 @@ static const char *target2string(u_long32 target)
       case SGE_USER_MAPPING_LIST:
          ret = "SGE_USER_MAPPING_LIST";
          break;
-      case SGE_HGROUP_LIST:
-         ret = "SGE_HGROUP_LIST";
+      case SGE_HGRP_LIST:
+         ret = "SGE_HGRP_LIST";
          break;
       case SGE_RQS_LIST:
          ret = "SGE_RQS_LIST";
@@ -422,10 +421,10 @@ int sge_gdi2_multi(sge_gdi_ctx_class_t* ctx, lList **alpp,
 *        int job_request_id;
 *
 *        cqueue_request_id = ctx->gdi_multi(ctx, &local_answer_list, SGE_GDI_RECORD,
-*                                          SGE_CQUEUE_LIST, SGE_GDI_GET, NULL,
+*                                          SGE_CQ_LIST, SGE_GDI_GET, NULL,
 *                                          where_cqueue, what_cqueue, &state, true);
 *        job_request_id = ctx->gdi_multi(ctx, &local_answer_list, SGE_GDI_SEND,
-*                                        SGE_JOB_LIST, SGE_GDI_GET, NULL,
+*                                        SGE_JB_LIST, SGE_GDI_GET, NULL,
 *                                        where_job, what_job, &state, true);
 *        if (cqueue_request_id != -1 && job_request_id != -1 &&
 *            answer_list_has_error(&local_answer_list) == false) {
@@ -437,9 +436,9 @@ int sge_gdi2_multi(sge_gdi_ctx_class_t* ctx, lList **alpp,
 *           bool local_ret;
 *
 *           local_ret = ctx->gdi_wait(ctx, &local_answer_list, &multi_answer_list, &state);
-*           sge_gdi_extract_answer(&answer_cqueue, SGE_GDI_GET, SGE_CQUEUE_LIST,
+*           sge_gdi_extract_answer(&answer_cqueue, SGE_GDI_GET, SGE_CQ_LIST,
 *                                  cqueue_request_id, multi_answer_list, &list_cqueue);
-*           sge_gdi_extract_answer(&answer_job, SGE_GDI_GET, SGE_CQUEUE_LIST,
+*           sge_gdi_extract_answer(&answer_job, SGE_GDI_GET, SGE_CQ_LIST,
 *                                  job_request_id, multi_answer_list, &list_job);
 *
 *           if (local_ret == false || answer_list_has_error(&answer_cqueue) || 
@@ -883,7 +882,7 @@ lList *gdi2_kill(sge_gdi_ctx_class_t *thiz, lList *id_list, const char *cell,
       id_list = lCreateList("kill scheduler", ID_Type);
       id_list_created = true;
       lAddElemStr(&id_list, ID_str, buffer, ID_Type);
-      tmpalp = thiz->gdi(thiz, SGE_EVENT_LIST, SGE_GDI_TRIGGER, &id_list, NULL, NULL);
+      tmpalp = thiz->gdi(thiz, SGE_EV_LIST, SGE_GDI_TRIGGER, &id_list, NULL, NULL);
       lAddList(alp, &tmpalp);  
    }
 
@@ -900,7 +899,7 @@ lList *gdi2_kill(sge_gdi_ctx_class_t *thiz, lList *id_list, const char *cell,
          id_list_created = true;
          lAddElemStr(&id_list, ID_str, buffer, ID_Type);
       }
-      tmpalp = thiz->gdi(thiz, SGE_EVENT_LIST, SGE_GDI_TRIGGER, &id_list, NULL, NULL);
+      tmpalp = thiz->gdi(thiz, SGE_EV_LIST, SGE_GDI_TRIGGER, &id_list, NULL, NULL);
       lAddList(alp, &tmpalp);  
    }
 
@@ -923,7 +922,7 @@ lList *gdi2_kill(sge_gdi_ctx_class_t *thiz, lList *id_list, const char *cell,
          lSetUlong(hlep, ID_force, (action_flag & JOB_KILL)?1:0);
          lAppendElem(hlp, hlep);
       }
-      tmpalp = thiz->gdi(thiz, SGE_EXECHOST_LIST, SGE_GDI_TRIGGER, &hlp, NULL, NULL);
+      tmpalp = thiz->gdi(thiz, SGE_EH_LIST, SGE_GDI_TRIGGER, &hlp, NULL, NULL);
       lAddList(alp, &tmpalp);
       lFreeList(&hlp);
    }
@@ -1464,7 +1463,7 @@ lListElem **lepp
       DPRINTF(("requesting global and %s\n", lGetHost(hep, EH_name)));
    }
    what = lWhat("%T(ALL)", CONF_Type);
-   alp = ctx->gdi(ctx, SGE_CONFIG_LIST, SGE_GDI_GET, &lp, where, what);
+   alp = ctx->gdi(ctx, SGE_CONF_LIST, SGE_GDI_GET, &lp, where, what);
 
    lFreeWhat(&what);
    lFreeWhere(&where);

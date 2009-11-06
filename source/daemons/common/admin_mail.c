@@ -35,7 +35,7 @@
 
 #include "sge.h"
 #include "sge_conf.h"
-#include "sge_usageL.h"
+#include "sge_usage.h"
 #include "sge_time.h"
 #include "execution_states.h"
 #include "sge_mailrec.h"

@@ -53,7 +53,6 @@
 #include "cull_lerrnoP.h"
 #include "pack.h"
 #include "cull_pack.h"
-#include "cull_packL.h"
 #include "msg_gdilib.h"
 
 static lCondition *read_val(lDescr *dp, cull_parse_state *state, va_list *app);
@@ -410,51 +409,6 @@ static void lWriteWhereTo_(const lCondition *cp, int depth, FILE *fp)
 
    DRETURN_VOID;
 }
-
-lListElem *lWhereToElem(const lCondition *where){
-   lListElem *whereElem = NULL;
-   sge_pack_buffer pb;
-   DENTER(CULL_LAYER, "lWhereToElem");
-   
-   if (init_packbuffer(&pb, 1024, 0) == PACK_SUCCESS) {
-      if (cull_pack_cond(&pb, where) == PACK_SUCCESS) {
-         whereElem = lCreateElem(PACK_Type);
-         lSetUlong(whereElem, PACK_id, SGE_WHERE);
-         setByteArray( (char*)pb.head_ptr, pb.bytes_used, whereElem, PACK_string);
-      }
-   }
-   clear_packbuffer(&pb); 
-
-   DRETURN(whereElem);
-}
-
-lCondition *lWhereFromElem(const lListElem *where){
-   lCondition *cond = NULL;
-   sge_pack_buffer pb;
-   int size=0;
-   char *buffer;
-   int ret=0;
-   DENTER(CULL_LAYER, "lWhereFromCull");
-
-   if (lGetUlong(where, PACK_id) == SGE_WHERE) {
-      size = getByteArray(&buffer, where, PACK_string);
-      if (size <= 0){
-         ERROR((SGE_EVENT, MSG_PACK_INVALIDPACKDATA ));
-      } else if ((ret = init_packbuffer_from_buffer(&pb, buffer, size)) == PACK_SUCCESS) {
-         cull_unpack_cond(&pb, &cond);
-         clear_packbuffer(&pb); 
-      }
-      else {
-         FREE(buffer);
-         ERROR((SGE_EVENT, MSG_PACK_ERRORUNPACKING_S, cull_pack_strerror(ret)));
-      }
-   }
-   else {
-      ERROR((SGE_EVENT, MSG_PACK_WRONGPACKTYPE_UI, sge_u32c(lGetUlong(where, PACK_id)), SGE_WHERE));
-   }
-   DRETURN(cond);
-}
-
 
 /****** cull/where/lWhere() ***************************************************
 *  NAME

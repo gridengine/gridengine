@@ -195,6 +195,8 @@
 #define MSG_QCONF_NOXDEFINED_S                    _MESSAGE(23167, _("no "SFN" defined"))
 #define MSG_TABLE_HOST                            "HOST"
 #define MSG_TABLE_PROCESSORS                      "PROCESSORS"
+#define MSG_TABLE_SOCKETS                         "NSOC"
+#define MSG_TABLE_CORES                           "NCOR"
 #define MSG_TABLE_ARCH                            "ARCH"
 #define MSG_TABLE_SUM_F                           "SUM"
 #define MSG_TABLE_EV_ID                           "ID"
@@ -272,6 +274,9 @@
  * usage.c
  */
 #define MSG_GDI_ARGUMENTSYNTAX_OA_ACCOUNT_STRING       "account_string          account_name"
+#define MSG_GDI_ARGUMENTSYNTAX_QA_BINDING_STRATEGY_EXP "exp                     explicit:<socket>,<core>[:...]"
+#define MSG_GDI_ARGUMENTSYNTAX_QA_BINDING_STRATEGY_LIN "lin                     linear:<amount>[:<socket>,<core>]"
+#define MSG_GDI_ARGUMENTSYNTAX_QA_BINDING_STRATEGY_STR "str                     striding:<amount>:<stepsize>[:<socket>,<core>]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_COMPLEX_LIST         "complex_list            complex[,complex,...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_CONTEXT_LIST         "context_list            variable[=value][,variable[=value],...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_CKPT_SEL             "ckpt_selector           `n' `s' `m' `x' <interval> "
@@ -331,7 +336,8 @@
 #define MSG_GDI_ARGUMENTSYNTAX_OA_WC_QUEUE             "wc_queue                wc_cqueue|wc_qdomain|wc_qinstance"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_WC_QUEUE_LIST        "wc_queue_list           wc_queue[,wc_queue,...]"
 #define MSG_GDI_ARGUMENTSYNTAX_OA_TIME                 "time                    hours:minutes:seconds | seconds"
-#define MSG_GDI_ARGUMENTSYNTAX_OA_THREAD_NAME          "thread_name             \"scheduler\"|\"jvm\"" 
+#define MSG_GDI_ARGUMENTSYNTAX_OA_THREAD_NAME          "thread_name             \"scheduler\"|\"jvm\""
+#define MSG_GDI_ARGUMENTSYNTAX_OA_TASK_CONCURRENCY     "max_running_tasks       maximum number of simultaneously running tasks"
 
 #define MSG_GDI_USAGE_a_OPT_DATE_TIME                    "[-a date_time]"
 #define MSG_GDI_UTEXT_a_OPT_DATE_TIME                    _MESSAGE(23290, _("request a start time"))
@@ -850,6 +856,9 @@
 #define MSG_GDI_USAGE_AT_OPT_FILE                        "[-@ file]"
 #define MSG_GDI_UTEXT_AT_OPT_FILE                        _MESSAGE(23463, _("read commandline input from file"))
 
+#define MSG_GDI_USAGE_tc_OPT                             "[-tc max_running_tasks]"
+#define MSG_GDI_UTEXT_tc_OPT                             _MESSAGE(23464, _("throttle the number of concurrent tasks (experimental)"))
+
 #define MSG_GDI_USAGE_noread_argfile_OPT                 "[-noread-argfile]"
 /* #define MSG_GDI_UTEXT_noread_argfile_OPT                 _message(23465, _("do not read \"qmaster_args\" file")) __TS Removed automatically from testsuite!! TS__*/
 
@@ -947,6 +956,9 @@
 #define MSG_GDI_USAGE_b_OPT_YN                           "[-b y[es]|n[o]]"
 #define MSG_GDI_UTEXT_b_OPT_YN                           _MESSAGE(23500, _("handle command as binary"))
 
+#define MSG_GDI_USAGE_binding_OPT_YN                     "[-binding [env|pe|set] exp|lin|str]"
+#define MSG_GDI_UTEXT_binding_OPT_YN                     _MESSAGE(23515, _("binds job to processor cores"))
+
 #define MSG_GDI_USAGE_Msconf_OPT                         "[-Msconf fname]"
 #define MSG_GDI_UTEXT_Msconf_OPT                         _MESSAGE(23502, _("modify scheduler configuration from file"))
 
@@ -992,6 +1004,7 @@
 /* general error messages */
 #define MSG_UNKNOWNREASON                 _MESSAGE(60000, _("<unknown reason>"))
 #define MSG_NOTYETIMPLEMENTED_S           _MESSAGE(60001, _("feature "SFQ" not yet implemented"))
+#define MSG_INVPARAMETER_S                _MESSAGE(60002, _("invalid parameter in function "SFN"()"))
 /* memory */
 #define MSG_UNABLETOALLOCATEBYTES_DS      _MESSAGE(60100, _("unable to allocate %d bytes of memory in function "SFQ))
 
@@ -1109,6 +1122,9 @@
 #define MSG_PARSE_INVALIDOPTIONARGUMENT   _MESSAGE(60712, _("ERROR! invalid option argument!"))
 #define MSG_CANTSPOOL_SS                  _MESSAGE(60713, _("unable to spool "SFN" "SFQ))
 
+#define MSG_PACK_ERRORUNPACKING_S      _MESSAGE(60714, _("error unpacking: "SFN))
+#define MSG_PACK_INVALIDPACKDATA       _MESSAGE(60715, _("the pack string contained invalid characters"))
+#define MSG_PACK_WRONGPACKTYPE_UI      _MESSAGE(60716, _("wrong pack type (got: "sge_U32CFormat" / expected %d"))
 
 /* =================================================
  * please do not enter new messages after this point,

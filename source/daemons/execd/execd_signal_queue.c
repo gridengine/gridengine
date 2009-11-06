@@ -55,7 +55,7 @@
 #include "sge_job.h"
 #include "sge_unistd.h"
 #include "sge_conf.h"
-#include "sge_usageL.h"
+#include "sge_usage.h"
 #include "mail.h"
 #include "get_path.h"
 #include "sge_qinstance.h"

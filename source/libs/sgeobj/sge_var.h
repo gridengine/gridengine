@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_varL.h"
+#include "sge_var_VA_L.h"
 
 #define VAR_PREFIX "__SGE_PREFIX__"
 #define VAR_PREFIX_NR "__SGE_PREFIX2__"
@@ -77,5 +77,7 @@ bool var_list_verify(const lList *lp, lList **answer_list);
 
 int var_list_parse_from_string(lList **lpp, const char *variable_str,
                                int check_environment);
+
+void getenv_and_set(lListElem *ep, char *variable);
 
 #endif /* __SGE_VAR_H */

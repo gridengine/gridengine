@@ -36,28 +36,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <ctype.h>
 
-#include "sgermon.h"
-#include "symbols.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_dstring.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_string.h"
+
+
+#include "sched/sge_sched.h"
+
 #include "sge.h"
-#include "sge_time.h"
-#include "sge_log.h"
-#include "sge_unistd.h"
-#include "sge_dstring.h"
-#include "sge_prog.h"
-#include "sge_string.h"
 #include "sge_all_listsL.h"
-#include "sge_host.h"
-#include "sge_sched.h"
-#include "cull_sort.h"
-#include "usage.h"
-#include "parse.h"
-#include "sge_parse_num_par.h"
-#include "show_job.h"
 #include "sge_range.h"
-#include "sge_schedd_text.h"
 #include "sge_answer.h"
 
 #include "msg_sgeobjlib.h"

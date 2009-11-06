@@ -32,25 +32,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
-#include <fnmatch.h>
 
 #include "sge_unistd.h"
 #include "sgermon.h"
-#include "symbols.h"
 #include "sge.h"
 #include "sge_time.h"
-#include "sge_log.h"
 #include "sge_all_listsL.h"
 #include "sge_host.h"
 #include "sge_sched.h"
-#include "cull_sort.h"
-#include "usage.h"
-#include "sge_feature.h"
 #include "parse.h"
 #include "sge_prog.h"
 #include "sge_parse_num_par.h"
-#include "sge_string.h"
 #include "show_job.h"
 #include "sge_dstring.h"
 #include "qstat_printing.h"
@@ -58,17 +50,11 @@
 #include "sig_handlers.h"
 #include "msg_clients_common.h"
 #include "sge_job.h"
-#include "get_path.h"
-#include "sge_var.h"
-#include "sge_answer.h"
 #include "sge_qinstance.h"
-#include "sge_qinstance_state.h"
-#include "sge_qinstance_type.h"
 #include "sge_urgency.h"
 #include "sge_pe.h"
 #include "sge_ulong.h"
-#include "sge_ja_task.h"
-#include "sge_qstat.h"
+#include "sgeobj/sge_usage.h"
 
 static int sge_print_job(lListElem *job, lListElem *jatep, lListElem *qep, int print_jobid, 
                          char *master, dstring *task_str, u_long32 full_listing, int
@@ -235,8 +221,10 @@ lList **alpp
             DRETURN(1);
          }
 
-         if ((jstate & JSUSPENDED_ON_SUBORDINATE))
+         if (ISSET(jstate, JSUSPENDED_ON_SUBORDINATE) ||
+             ISSET(jstate, JSUSPENDED_ON_SLOTWISE_SUBORDINATE)) {
             lSetUlong(jatep, JAT_state, jstate & ~JRUNNING);
+         }
 
          gdilep = lGetElemStr(lGetList(jatep, JAT_granted_destin_identifier_list), JG_qname, qnm);
          if (gdilep != NULL) {
@@ -316,9 +304,10 @@ lList **alpp
                         already_printed = 1;
                      }
                      if (!already_printed && (full_listing & QSTAT_DISPLAY_SUSPENDED) &&
-                        ((lGetUlong(jatep, JAT_state)&JSUSPENDED) ||
-                        (lGetUlong(jatep, JAT_state)&JSUSPENDED_ON_THRESHOLD) ||
-                         (lGetUlong(jatep, JAT_state)&JSUSPENDED_ON_SUBORDINATE))) {
+                         ((lGetUlong(jatep, JAT_state)&JSUSPENDED) ||
+                         (lGetUlong(jatep, JAT_state)&JSUSPENDED_ON_THRESHOLD) ||
+                         (lGetUlong(jatep, JAT_state)&JSUSPENDED_ON_SUBORDINATE) ||
+                         (lGetUlong(jatep, JAT_state)&JSUSPENDED_ON_SLOTWISE_SUBORDINATE))) {
                         sge_print_job(jlep, jatep, qep, print_jobid,
                            (master && different && (i==0))?"MASTER":"SLAVE", &dyn_task_str, full_listing,
                            slots_in_queue+slot_adjust, i, ehl, centry_list, pe_list, indent, 

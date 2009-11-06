@@ -59,6 +59,7 @@ exec lint \
     $INC_FLAGS \
     $ADDITIONAL_INCLUDES \
     $C_FLAGS \
+    -Nlevel=3 \
     -errtags=yes \
     -errsecurity=$ERRSECLEVEL \
     $ERRIGNORE \

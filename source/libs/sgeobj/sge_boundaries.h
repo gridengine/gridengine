@@ -590,9 +590,21 @@ enum NameSpaceBoundaries {
    JSV_UPPERBOUND = JSV_LOWERBOUND + 1 * BASIC_UNIT - 1,
 
    RTIC_LOWERBOUND = JSV_UPPERBOUND + 1,
-   RTIC_UPPERBOUND = RTIC_LOWERBOUND + 1 * BASIC_UNIT - 1
+   RTIC_UPPERBOUND = RTIC_LOWERBOUND + 1 * BASIC_UNIT - 1,
 
-#  define LAST_UPPERBOUND RTIC_UPPERBOUND
+   /* list for all running processes under Linux */
+   PRO_LOWERBOUND = RTIC_UPPERBOUND + 1,
+   PRO_UPPERBOUND = PRO_LOWERBOUND + 1 * BASIC_UNIT - 1,
+
+   /* list for process groups */
+   GR_LOWERBOUND = PRO_UPPERBOUND + 1,
+   GR_UPPERBOUND = GR_LOWERBOUND + 1 * BASIC_UNIT - 1, 
+
+   /* list with information about processor binding */ 
+   BN_LOWERBOUND = GR_UPPERBOUND + 1, 
+   BN_UPPERBOUND = BN_LOWERBOUND + 1 * BASIC_UNIT - 1
+
+#  define LAST_UPPERBOUND BN_UPPERBOUND
 
 };
 

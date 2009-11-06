@@ -35,6 +35,7 @@
 #include "rmon/sgermon.h"
 
 #include "uti/sge_log.h"
+#include "uti/sge_sl.h"
 
 #include "gdi/sge_gdi2.h"
 #include "gdi/sge_gdi_ctx.h"
@@ -45,11 +46,27 @@
 
 #include "msg_common.h"
 
-gdi_request_queue_t Master_Request_Queue = {
-   NULL,
-   NULL,
-   NULL 
-};
+gdi_request_queue_t Master_Request_Queue; 
+
+bool
+schedd_order_initialize(void) {
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "schedd_order_initialize");
+   Master_Request_Queue.order_list = NULL;
+   ret &= sge_sl_create(&Master_Request_Queue.request_list);
+   DRETURN(ret);
+}
+
+bool
+schedd_order_destroy(void) {
+   bool ret = true;
+
+   DENTER(TOP_LAYER, "schedd_order_initialize");   
+   ret &= sge_sl_destroy(&Master_Request_Queue.request_list, NULL);
+   DRETURN(ret);
+}
+
 
 bool
 sge_schedd_send_orders(sge_gdi_ctx_class_t *ctx, order_t *orders, lList **order_list, lList **answer_list, const char *name)
@@ -98,15 +115,10 @@ sge_schedd_add_gdi_order_request(sge_gdi_ctx_class_t *ctx, order_t *orders, lLis
                                 order_list, NULL, NULL, state, false);
 
       if (order_id != -1) {
-         if (Master_Request_Queue.first == NULL) {
-            state->next = NULL;
-            Master_Request_Queue.first = state;
-            Master_Request_Queue.last = state;
-         } else {
-            state->next = NULL;
-            Master_Request_Queue.last->next = state;
-            Master_Request_Queue.last = state;
-         }
+         sge_sl_insert(Master_Request_Queue.request_list, state, SGE_SL_BACKWARD);
+         
+         /* EB: TODO: Why is this needed? */
+         state->next = NULL;
       } else {
          answer_list_log(answer_list, false, false);
          ret = false;
@@ -123,35 +135,25 @@ sge_schedd_block_until_orders_processed(sge_gdi_ctx_class_t *ctx,
                                         lList **answer_list)
 {
    bool ret = true;
-   state_gdi_multi *current_state = NULL;
-   state_gdi_multi *next_state = NULL; 
+   sge_sl_elem_t *next_elem = NULL;
+   sge_sl_elem_t *current_elem = NULL;
 
    DENTER(TOP_LAYER, "sge_schedd_block_until_orders_processed");
-
 
    /*
     * wait till all GDI order requests are finished
     */
-   next_state = Master_Request_Queue.first;
-   while ((current_state = next_state) != NULL) {
+   sge_sl_elem_next(Master_Request_Queue.request_list, &next_elem, SGE_SL_FORWARD); 
+   while ((current_elem = next_elem) != NULL) {
+      state_gdi_multi *current_state = sge_sl_elem_data(current_elem);
       lList *request_answer_list = NULL;
       lList *multi_answer_list = NULL;
       int order_id;
 
-      /* 
-       * get next element no so that we can destray the current one later 
-       */
-      next_state = current_state->next;
-
-      /* 
-       * remove first element from the list 
-       */
-      if (Master_Request_Queue.first == Master_Request_Queue.last) {
-         Master_Request_Queue.first = NULL;
-         Master_Request_Queue.last = NULL;
-      } else { 
-         Master_Request_Queue.first = current_state->next;
-      }
+      /* get next element, dechain current and destroy it */
+      sge_sl_elem_next(Master_Request_Queue.request_list, &next_elem, SGE_SL_FORWARD); 
+      sge_sl_dechain(Master_Request_Queue.request_list, current_elem);
+      sge_sl_elem_destroy(&current_elem, NULL);
 
       /* 
        * wait for answer. this call might block if the request

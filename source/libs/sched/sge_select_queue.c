@@ -38,63 +38,76 @@
 #include <dlfcn.h>
 #endif
 
-#include "msg_common.h"
-#include "basis_types.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_parse_num_par.h"
+#include "uti/sge_string.h"
+#include "uti/sge_hostname.h"
+#include "uti/sge_time.h"
+
+#include "cull/cull.h"
+
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_order.h"
+#include "sgeobj/sge_pe.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_str.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_attr.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_qinstance_type.h"
+#include "sgeobj/sge_userprj.h"
+#include "sgeobj/sge_ckpt.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_qinstance_state.h"
+#include "sgeobj/sge_schedd_conf.h"
+#include "sgeobj/sge_subordinate.h"
+#include "sgeobj/sge_qref.h"
+#include "sgeobj/sge_advance_reservation.h"
+#include "sgeobj/sge_userset.h"
+#include "sgeobj/sge_hgroup.h"
+#include "sgeobj/sge_calendar.h"
+
 #include "sge.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "cull.h"
+#include "basis_types.h"
 #include "sge_select_queue.h"
-#include "sge_select_queueL.h"
-#include "sge_parse_num_par.h"
 #include "sge_complex_schedd.h"
+#include "sge_resource_utilization.h"
 #include "valid_queue_user.h"
 #include "subordinate_schedd.h"
 #include "sge_range_schedd.h"
 #include "sge_pe_schedd.h"
-#include "sge_range.h"
 #include "sge_qeti.h"
-
-#include "sge_orderL.h"
-#include "sge_pe.h"
-#include "sge_ctL.h"
-#include "sge_qinstanceL.h"
-#include "sge_strL.h"
-#ifdef SGE_PQS_API
-#include "sge_varL.h"
-#endif
 #include "sort_hosts.h"
 #include "schedd_monitor.h"
 #include "schedd_message.h"
-#include "msg_schedd.h"
 #include "sge_schedd_text.h"
-#include "sge_ja_task.h"
-#include "sge_string.h"
-#include "sge_hostname.h"
-#include "sge_host.h"
-#include "sge_job.h"
-#include "sge_cqueue.h"
-#include "sge_qinstance.h"
-#include "sge_qinstance_type.h"
-#include "sge_userprj.h"
-#include "sge_ckpt.h"
-#include "sge_centry.h"
-#include "sge_object.h"
-#include "sge_resource_utilization.h"
-#include "sge_qinstance_state.h"
-#include "sge_schedd_conf.h"
-#include "sge_subordinate.h"
-#include "sge_qref.h"
+#include "sge_resource_quota_schedd.h"
 #ifdef SGE_PQS_API
 #include "sge_pqs_api.h"
 #endif
-#include "sge_calendarL.h"
-#include "sge_attrL.h"
-#include "sched/sge_resource_quota_schedd.h"
-#include "sgeobj/sge_advance_reservation.h"
-#include "sgeobj/sge_userset.h"
-#include "sgeobj/sge_hgroup.h"
-#include "uti/sge_time.h"
+
+#include "sge_resource_utilization_RUE_L.h"
+#include "sge_select_queue_LDR_L.h"
+#include "sge_select_queue_QRL_L.h"
+#include "sge_ct_SCT_L.h"
+#include "sge_ct_REF_L.h"
+#include "sge_ct_CT_L.h"
+#include "sge_ct_CCT_L.h"
+#include "sge_ct_CTI_L.h"
+#include "sge_message_SME_L.h"
+#include "sge_message_MES_L.h"
+#ifdef SGE_PQS_API
+#include "sge_varL.h"
+#endif
+
+#include "msg_common.h"
+#include "msg_schedd.h"
 
 /* -- these implement helpers for the category optimization -------- */
 
@@ -2308,7 +2321,7 @@ sge_load_alarm(char *reason, lListElem *qep, lList *threshold,
       limit_value = lGetString(tep, CE_stringval);
       type = lGetUlong(cep, CE_valtype);
 
-      if(load_check_alarm(reason, name, load_value, limit_value, relop, 
+      if (load_check_alarm(reason, name, load_value, limit_value, relop, 
                               type, hep, hlep, lc_host, lc_global, 
                               load_adjustments, load_is_value)) {
          if (need_free_cep) {
@@ -4973,6 +4986,8 @@ parallel_assignment(sge_assignment_t *a, category_use_t *use_category, int *avai
    } else {
       sconf_set_last_dispatch_type(DISPATCH_TYPE_PE);
    }
+
+   /* DG TODO here ok to create the rankfile list if neccessary? */
 
 #ifdef SGE_PQS_API
    /* if dynamic qsort function was supplied, call it */

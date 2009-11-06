@@ -72,6 +72,7 @@ public class Issues extends TestCase {
         String homeDir = Settings.get(Settings.HOME_DIR);
         String catname1 = hostname + pid + "cat1";
         String catname2 = hostname + pid + "cat2";
+        String jobName = "TEST" + System.getProperty("user.name") + pid;
         File qtask = new File(homeDir, ".qtask");
         File script = new File("/tmp", "script" + hostname + pid + ".sh");
         File output1 = new File("/tmp", "1770" + hostname + pid);
@@ -120,10 +121,8 @@ public class Issues extends TestCase {
             s.init("");
             
             LockBox lock = new LockBox();
-            Thread1770 t1 = new Thread1770(s, script.getAbsolutePath(), catname1,
-                    hostname, lock);
-            Thread1770 t2 = new Thread1770(s, script.getAbsolutePath(), catname2,
-                    hostname, lock);
+            Thread1770 t1 = new Thread1770(s, script.getAbsolutePath(), catname1, hostname, jobName, lock);
+            Thread1770 t2 = new Thread1770(s, script.getAbsolutePath(), catname2, hostname, jobName, lock);
             
             t1.start();
             t2.start();
@@ -157,7 +156,7 @@ public class Issues extends TestCase {
             
             assertEquals(catname1, line);
             
-            output2 = new File("/tmp/TEST.o" + t2.jobId);
+            output2 = new File("/tmp/" + jobName + ".o" + t2.jobId);
             
             // Atempt to read the output from the default output file
             try {
@@ -169,7 +168,6 @@ public class Issues extends TestCase {
                         output2.getAbsolutePath() + ")");
                 return;
             }
-            
             assertEquals(catname2, line);
         } finally {
             // Clean up
@@ -189,16 +187,18 @@ public class Issues extends TestCase {
         private String script = null;
         private String catname = null;
         private String hostname = null;
+        private String jobname = null;
         String jobId = null;
         LockBox lock = null;
         DrmaaException e = null;
         
-        Thread1770(Session s, String script, String catname, String hostname, LockBox lock) {
+        Thread1770(Session s, String script, String catname, String hostname, String jobName, LockBox lock) {
             super("Thread1770");
             this.s = s;
             this.script = script;
             this.catname = catname;
             this.hostname = hostname;
+            this.jobname = jobName;
             this.lock = lock;
             this.setDaemon(true);
         }
@@ -211,7 +211,7 @@ public class Issues extends TestCase {
                 jt.setRemoteCommand(script);
             /* We're running the test on the local machine so that it's easier
              * to find the output files. */
-                jt.setNativeSpecification("-N TEST -q all.q@" + hostname);
+                jt.setNativeSpecification("-N " + jobname + " -q all.q@" + hostname);
                 jt.setJobCategory(catname);
                 jt.setWorkingDirectory("/tmp");
                 jt.setArgs(Collections.singletonList(catname));
@@ -223,7 +223,7 @@ public class Issues extends TestCase {
                 JobInfo ji = s.wait(jobId, Session.TIMEOUT_WAIT_FOREVER);
                 
                 if (!ji.hasExited()) {
-                    fail("Unable to run script job");
+                    fail("Unable to run script job " + ji.getJobId());
                     return;
                 }
                 

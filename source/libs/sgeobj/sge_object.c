@@ -1,4 +1,4 @@
-#/*___INFO__MARK_BEGIN__*/
+/*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  *
  *  The Contents of this file are made available subject to the terms of
@@ -34,51 +34,34 @@
 #include <sys/types.h>
 #include <pthread.h>
 #include <stdio.h>
-#include <errno.h>
-#include <signal.h>
 #include <string.h>
 
-#include "sgermon.h"
-#include "sge_log.h"
+#include "rmon/sgermon.h"
 
-#include "sge_stdlib.h"
-#include "sge_string.h"
+#include "uti/sge_log.h"
+#include "uti/sge_stdlib.h"
+#include "uti/sge_string.h"
+#include "uti/sge_hostname.h"
+#include "uti/sge_parse_num_par.h"
+
+#include "gdi/sge_gdi.h"
+
 #include "sge_all_listsL.h"
-#include "sge_calendar.h"
-#include "sge_ckpt.h"
-#include "sge_conf.h"
-#include "sge_host.h"
-#include "sge_hgroup.h"
-#include "sge_job.h"
-#include "sge_ja_task.h"
-#include "sge_pe_task.h"
-#include "sge_manop.h"
 #include "sge_pe.h"
-#include "sge_qinstance.h"
 #include "sge_qinstance_type.h"
 #include "sge_schedd_conf.h"
-#include "sge_sharetree.h"
-#include "sge_cuser.h"
 #include "sge_userprj.h"
 #include "sge_userset.h"
-#include "sge_hostname.h"
 #include "sge_answer.h"
 #include "sge_range.h"
 #include "sge_object.h"
 #include "sge_centry.h"
-#include "sge_cqueue.h"
-#include "sge_qref.h"
 #include "sge_str.h"
 #include "sge_subordinate.h"
-#include "sge_parse_num_par.h"
 #include "sge_utility.h"
 #include "cull_parse_util.h"
 #include "parse.h"
 #include "sge_eval_expression.h"
-
-#include "gdi/sge_gdi.h"
-
-#include "sgeobj/sge_suser.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"
@@ -404,7 +387,7 @@ object_has_type(const lListElem *object, const lDescr *descr)
     * --> make sure that your object is handled in object_get_primary_key() 
     */
    if (object != NULL && descr != NULL &&
-       lGetPosInDescr(object->descr, object_get_primary_key(descr)) != -1) {
+       _lGetPosInDescr(object->descr, object_get_primary_key(descr)) != -1) {
       ret = true;
    }
 
@@ -1808,38 +1791,140 @@ object_parse_solist_from_string(lListElem *this_elem, lList **answer_list,
       lListElem *tmp_elem = NULL;
       int pos = lGetPosViaElem(this_elem, name, SGE_NO_ABORT);
 
-      lString2List(string, &tmp_list, SO_Type, SO_name, ", \t");
-      if (tmp_list != NULL) {
-         if (!strcasecmp("NONE", lGetString(lFirst(tmp_list), SO_name))) {
-            lFreeList(&tmp_list);
-         } else {
-            for_each(tmp_elem, tmp_list) {
-               const char *queue_value = lGetString(tmp_elem, SO_name);
-               const char *queuename = sge_strtok(queue_value, ":=");
-               const char *value_str = sge_strtok(NULL, ":=");
+      if (strncasecmp("slots", string, 5) == 0) {
+         /*
+          * slot-wise suspend on subordinate
+          */
+         char *ptr;
+         char *slots_sum;
+         char *first_subordinated_queue;
+         struct saved_vars_s *last = NULL;
+         char *endptr = NULL;
+         lUlong slots_sum_value;
 
+         /*
+          * format of string: slots=8(queue1.q:3:sr, queue2.q:2:lr)
+          */
+         sge_strtok_r(string, "=", &last);  /* skip "slots" keyword */
+         slots_sum                = sge_strtok_r(NULL, "(", &last);
+         slots_sum_value          = strtol(slots_sum, &endptr, 10);
+         if (*endptr != '\0') {
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+               ANSWER_QUALITY_ERROR, MSG_ERRORPARSINGVALUEFORNM_S, string);
+            ret = false;
+         }
+
+         first_subordinated_queue = sge_strtok_r(NULL, ",)", &last);
+         ptr = strstr(string, first_subordinated_queue);
+
+         lString2List(ptr, &tmp_list, SO_Type, SO_name, ",) \t");
+         for_each(tmp_elem, tmp_list) {
+            const char *queue_value = lGetString(tmp_elem, SO_name);
+            char *queuename   = sge_strtok(queue_value, ":");
+            char *value_str   = sge_strtok(NULL, ":");
+            char *action_str  = sge_strtok(NULL, ":");
+
+            sge_strip_blanks(queuename);
+            sge_strip_blanks(value_str);
+            sge_strip_blanks(action_str);
+
+            if (queuename != NULL) {
                lSetString(tmp_elem, SO_name, queuename);
-               if (value_str != NULL) {
-                  char *endptr = NULL;
-                  u_long32 value = strtol(value_str, &endptr, 10);
+            } else {
+               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                  ANSWER_QUALITY_ERROR, MSG_ERRORPARSINGVALUEFORNM_S, string);
+               lFreeList(&tmp_list);
+               ret = false;
+               break;
+            }
 
-                  if (*endptr == '\0') {
-                     lSetUlong(tmp_elem, SO_threshold, value);
-                  } else {
-                     answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
-                                       ANSWER_QUALITY_ERROR,
-                                       MSG_ERRORPARSINGVALUEFORNM_S, string);
-                     ret = false;
-                     break;
-                  }
+            if (slots_sum_value > 0) {
+               lSetUlong(tmp_elem, SO_slots_sum, slots_sum_value);
+            } else {
+               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                  ANSWER_QUALITY_ERROR, MSG_ERRORPARSINGVALUEFORNM_S, string);
+               lFreeList(&tmp_list);
+               ret = false;
+               break;
+            }
+
+            if (value_str != NULL) {
+               char     *endptr = NULL;
+               u_long32 value   = strtol(value_str, &endptr, 10);
+
+               if (*endptr == '\0') {
+                  lSetUlong(tmp_elem, SO_seq_no, value); 
                } else {
-                  /*
-                   * No value is explicitely allowed
-                   */
+                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                     ANSWER_QUALITY_ERROR, MSG_ERRORPARSINGVALUEFORNM_S, string);
+                  lFreeList(&tmp_list);
+                  ret = false;
+                  break;
+               }
+            } else {
+               lSetUlong(tmp_elem, SO_seq_no, 0);
+            }
+
+            if (action_str != NULL) {
+               if (strcmp(action_str, "lr") == 0) {
+                  lSetUlong(tmp_elem, SO_action, SO_ACTION_LR);
+               } else if (strcmp(action_str, "sr") == 0) {
+                  lSetUlong(tmp_elem, SO_action, SO_ACTION_SR);
+               } else {
+                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                     ANSWER_QUALITY_ERROR, MSG_ERRORPARSINGVALUEFORNM_S, string);
+                  lFreeList(&tmp_list);
+                  ret = false;
+                  break;
+               }
+            } else {
+               /* default is "sr" */
+               lSetUlong(tmp_elem, SO_action, SO_ACTION_SR);
+            }
+         } 
+         if (ret) {
+            lSetPosList(this_elem, pos, tmp_list);
+         }
+
+         sge_free_saved_vars(last);
+      } else {
+         lString2List(string, &tmp_list, SO_Type, SO_name, ", \t");
+         if (tmp_list != NULL) {
+            if (!strcasecmp("NONE", lGetString(lFirst(tmp_list), SO_name))) {
+               lFreeList(&tmp_list);
+            } else {
+               /* 
+                * queue instance-wise suspend on subordinate
+                */
+               for_each(tmp_elem, tmp_list) {
+                  const char *queue_value = lGetString(tmp_elem, SO_name);
+                  const char *queuename = sge_strtok(queue_value, ":=");
+                  const char *value_str = sge_strtok(NULL, ":=");
+
+                  lSetString(tmp_elem, SO_name, queuename);
+                  if (value_str != NULL) {
+                     char *endptr = NULL;
+                     u_long32 value = strtol(value_str, &endptr, 10);
+
+                     if (*endptr == '\0') {
+                        lSetUlong(tmp_elem, SO_threshold, value);
+                     } else {
+                        answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                                          ANSWER_QUALITY_ERROR,
+                                          MSG_ERRORPARSINGVALUEFORNM_S, string);
+                        lFreeList(&tmp_list);
+                        ret = false;
+                        break;
+                     }
+                  } else {
+                     /*
+                      * No value is explicitely allowed
+                      */
+                  } 
                } 
-            } 
-            if (ret) {
-               lSetPosList(this_elem, pos, tmp_list);
+               if (ret) {
+                  lSetPosList(this_elem, pos, tmp_list);
+               }
             }
          }
       }

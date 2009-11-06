@@ -33,6 +33,9 @@
 /*___INFO__MARK_END__*/
 
 #include "sgeobj/sge_resource_quota.h"
+#include "sge_select_queue.h"
+#include "sge_resource_utilization_RUE_L.h"
+#include "sge_resource_utilization_RDE_L.h"
 
 bool rqs_set_dynamical_limit(lListElem *limit, lListElem *global_host, lListElem *exec_host, lList *centry);
 

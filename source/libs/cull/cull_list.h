@@ -67,7 +67,7 @@ typedef char lChar;
 typedef char lBool;
 typedef int lInt;
 typedef char *lString;
-typedef char *lHost;      /* CR - hostname change */
+typedef char *lHost;
 typedef lListElem *lObject;
 typedef void*  lRef;
 
@@ -85,12 +85,13 @@ enum _enum_lMultiType {
    lListT,
    lObjectT,
    lRefT,
-   lHostT             /* CR - hostname change */
+   lHostT
 };
 
 /* flags for the field definition 
-** reserve 8 bit for data types (currently only 4 bit in use)
-*/
+ * reserve 8 bit for data types (currently only 4 bit in use)
+ * see doc header cull/list/-Field_Attributes in cull_list.c for details
+ */
 #define CULL_DEFAULT       0x00000000
 #define CULL_PRIMARY_KEY   0x00000100
 #define CULL_HASH          0x00000200
@@ -103,6 +104,7 @@ enum _enum_lMultiType {
 #define CULL_SPOOL_USER    0x00040000
 #define CULL_JGDI_RO       0x00080000
 #define CULL_JGDI_CONF     0x00100000
+#define CULL_IS_REDUCED    0x00200000
 
 /*
 ** JGDI specific defines
@@ -153,8 +155,8 @@ enum _enum_lMultiType {
 #define SGE_ULONG_D(name,flags,def)       { name, lUlongT  | flags, NULL },
 #define SGE_BOOL_D(name,flags,def)        { name, lBoolT   | flags, NULL },
 #define SGE_LIST_D(name,type,flags,def)   { name, lListT   | flags, NULL },
-#define SGE_MAP_D(name,type,flags,defkey,keyvalue,jgdi_keyname,jgdi_valuename)   { name, lListT   | flags, NULL },
-#define SGE_MAPLIST_D(name,type,flags,defkey,defvalue,jgdi_keyname,jgdi_valuename)   { name, lListT   | flags, NULL },
+#define SGE_MAP_D(name,type,flags,defkey,keyvalue,jgdi_keyname,jgdi_valuename)   { name, lListT   | flags, NULL},
+#define SGE_MAPLIST_D(name,type,flags,defkey,defvalue,jgdi_keyname,jgdi_valuename)   { name, lListT   | flags, NULL},
 #define SGE_OBJECT_D(name,type,flags,def) { name, lObjectT | flags, NULL },
 #define SGE_REF_D(name,type,flags,def)    { name, lRefT    | flags, NULL },
 

@@ -161,7 +161,7 @@ int main(int argc, char **argv) {
          The jobid's in our request list get printed before
          show_job()
       */
-      cull_show_job(lFirst(request_list), FLG_QALTER);
+      cull_show_job(lFirst(request_list), FLG_QALTER, false);
       sge_prof_cleanup();
       SGE_EXIT((void**)&ctx, 0);
    }
@@ -190,7 +190,7 @@ int main(int argc, char **argv) {
    if (all_users)
       gdi_cmd |= SGE_GDI_ALL_USERS;
 
-   alp = ctx->gdi(ctx, SGE_JOB_LIST, gdi_cmd, &request_list, NULL, NULL); 
+   alp = ctx->gdi(ctx, SGE_JB_LIST, gdi_cmd, &request_list, NULL, NULL); 
    for_each (aep, alp) {
       printf("%s\n", lGetString(aep, AN_text));
       if (ret == STATUS_OK) {
@@ -320,6 +320,12 @@ int *all_users
          lSetUlong(job, JB_ar, lGetUlong(ep, SPA_argval_lUlongT));
          lRemoveElem(cmdline, &ep);
          nm_set(job_field, JB_ar);
+      }
+
+      while ((ep = lGetElemStr(cmdline, SPA_switch, "-binding"))) {
+         lSwapList(ep, SPA_argval_lListT, job, JB_binding);
+         lRemoveElem(cmdline, &ep);
+         nm_set(job_field, JB_binding);
       }
   
       while ((ep = lGetElemStr(cmdline, SPA_switch, "-cwd"))) {
@@ -618,6 +624,11 @@ int *all_users
          nm_set(job_field, JB_qs_args);
       }
 
+      while ((ep = lGetElemStr(cmdline, SPA_switch, "-tc"))) {
+         lSetUlong(job, JB_ja_task_concurrency, lGetUlong(ep, SPA_argval_lUlongT));
+         lRemoveElem(cmdline, &ep);
+         nm_set(job_field, JB_ja_task_concurrency);
+      }
 
       if ((ep = lGetElemStr(cmdline, SPA_switch, "--"))) {
          lRemoveElem(cmdline, &ep);
@@ -731,9 +742,9 @@ int *all_users
       lList *task_list = NULL;
       lListElem *task;
       lDescr task_descr[] = { 
-            {JAT_task_number, lUlongT},
-            {JAT_hold, lUlongT},
-            {NoName, lEndT}
+            {JAT_task_number, lUlongT | CULL_IS_REDUCED, NULL},
+            {JAT_hold, lUlongT | CULL_IS_REDUCED, NULL},
+            {NoName, lEndT | CULL_IS_REDUCED, NULL}
       };
 
       jobid = atol(lGetString(ep, ID_str));
@@ -846,6 +857,7 @@ int *all_users
             JB_restart,
             JB_verify_suitable_queues,
             JB_ar,
+            JB_ja_task_concurrency,
             NoName
          };
          static int bool_nm[] = {
@@ -875,6 +887,7 @@ int *all_users
             JB_ja_structure,
             JB_user_list,
             JB_master_hard_queue_list,
+            JB_binding,
             NoName
          };
 

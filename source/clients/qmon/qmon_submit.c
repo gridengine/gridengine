@@ -95,6 +95,7 @@
 #include "uti/sge_string.h"
 #include "gdi/sge_gdi_ctx.h"
 #include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_binding.h"
 #include "sgeobj/sge_ja_task.h"
 #include "sgeobj/sge_jsv.h"
 #include "sgeobj/sge_job.h"
@@ -118,6 +119,7 @@ typedef struct _tSMEntry {
    String   account_string;
    String   wd_path;
    String   jsv_url;
+   String   binding;
    String   pe;
    lList    *task_range;            /* RN_Type */
    lList    *job_args;              /* ST_Type */
@@ -151,6 +153,7 @@ typedef struct _tSMEntry {
    int      checkpoint_interval;
    int      verify_mode;
    int      ar_id;
+   int      task_concurrency;
 } tSMEntry;
 
    
@@ -208,6 +211,11 @@ XtResource sm_resources[] = {
    { "jsv_url", "jsv_url", XtRString,
       sizeof(String),
       XtOffsetOf(tSMEntry, jsv_url),
+      XtRImmediate, NULL },
+
+   { "binding", "binding", XtRString,
+      sizeof(String),
+      XtOffsetOf(tSMEntry, binding),
       XtRImmediate, NULL },
 
    { "priority", "priority", XtRInt,
@@ -324,6 +332,10 @@ XtResource sm_resources[] = {
 
    { "verify_mode", "verify_mode", XtRInt,
       sizeof(int), XtOffsetOf(tSMEntry, verify_mode),
+      XtRImmediate, NULL },
+
+   { "task_concurrency", "task_concurrency", XtRInt,
+      sizeof(int), XtOffsetOf(tSMEntry, task_concurrency),
       XtRImmediate, NULL },
 
 };
@@ -444,6 +456,7 @@ static Widget submit_script = 0;
 static Widget submit_scriptPB = 0;
 static Widget submit_jsv_urlPB = 0;
 static Widget submit_jsv_url = 0;
+static Widget submit_binding = 0;
 static Widget submit_name = 0;
 static Widget submit_job_args = 0;
 static Widget submit_execution_time = 0;
@@ -619,7 +632,7 @@ void qmonSubmitPopup(Widget w, XtPointer cld, XtPointer cad)
          DEXIT;
          return;
       }
-      job_to_set = job_list_locate(qmonMirrorList(SGE_JOB_LIST), 
+      job_to_set = job_list_locate(qmonMirrorList(SGE_JB_LIST), 
                                    submit_mode_data.job_id);
       /*
       ** is it an interactive job ?
@@ -783,6 +796,7 @@ Widget parent
                           "submit_script", &submit_script,
                           "submit_jsv_urlPB", &submit_jsv_urlPB,
                           "submit_jsv_url", &submit_jsv_url,
+                          "submit_binding", &submit_binding,
                           "submit_shellPB", &submit_shellPB,
                           "submit_stdoutputPB", &submit_stdoutputPB,
                           "submit_stdinputPB", &submit_stdinputPB,
@@ -916,7 +930,6 @@ Widget parent
                      qmonSubmitGreyOut, NULL);
    XtAddCallback(submit_jsv_urlPB, XmNactivateCallback, 
                      qmonSubmitGetJSVScript, NULL);
-
 
    XtAddEventHandler(XtParent(submit_layout), StructureNotifyMask, False, 
                         SetMinShellSize, NULL);
@@ -1073,7 +1086,7 @@ int submode
    /*
    ** set sensitivity of deadline field
    */
-   if (userset_is_deadline_user(qmonMirrorList(SGE_USERSET_LIST),
+   if (userset_is_deadline_user(qmonMirrorList(SGE_US_LIST),
             username)) {
       if (sensitive) {      
          XtSetSensitive(submit_deadline, sensitive2);
@@ -1433,7 +1446,7 @@ static void qmonSubmitJobSubmit(Widget w, XtPointer cld, XtPointer cad)
                       lGetUlong(lFirst(lp), JB_verify_suitable_queues) == POKE_VERIFY);
 
       what = lWhat("%T(ALL)", JB_Type);
-      alp = qmonAddList(SGE_JOB_LIST, qmonMirrorListRef(SGE_JOB_LIST), 
+      alp = qmonAddList(SGE_JB_LIST, qmonMirrorListRef(SGE_JB_LIST), 
                         JB_job_number, &lp, NULL, what);
 
       if (lFirst(alp) && (lGetUlong(lFirst(alp), AN_status) == STATUS_OK
@@ -1515,6 +1528,7 @@ static void qmonSubmitJobSubmit(Widget w, XtPointer cld, XtPointer cad)
          JB_env_list,
          JB_verify_suitable_queues,
          JB_type,
+         JB_ja_task_concurrency,
          NoName
       };
       int qalter_fields[100];
@@ -1544,7 +1558,7 @@ static void qmonSubmitJobSubmit(Widget w, XtPointer cld, XtPointer cad)
          return;
       }
 
-      if (userset_is_deadline_user(qmonMirrorList(SGE_USERSET_LIST),
+      if (userset_is_deadline_user(qmonMirrorList(SGE_US_LIST),
             username)) 
          nm_set((int*)qalter_fields, JB_deadline);
 
@@ -1584,7 +1598,7 @@ static void qmonSubmitJobSubmit(Widget w, XtPointer cld, XtPointer cad)
          printf("________________________________________\n");
       }
 
-      alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
+      alp = ctx->gdi(ctx, SGE_JB_LIST, SGE_GDI_MOD, &lp, NULL, NULL);
       if (!qmonMessageBox(w, alp, 0)) {
          updateJobListCB(w, NULL, NULL);
          XmtMsgLinePrintf(submit_message, "Job %d altered", 
@@ -1874,6 +1888,11 @@ tSMEntry *data
       data->jsv_url = NULL;
    }   
 
+   if (data->binding) {
+      XtFree((char*)data->binding);
+      data->binding = NULL;
+   }   
+
    if (data->pe) {
       XtFree((char*)data->pe);
       data->pe = NULL;
@@ -2013,6 +2032,8 @@ char *prefix
 
    data->jsv_url = NULL;
 
+   data->binding = NULL;
+
    data->shell_list = lCopyUniqNullNone(lGetList(jep, JB_shell_list), PN_host);
    
    data->mail_list = lCopyList("JB_mail_list", lGetList(jep, JB_mail_list));
@@ -2044,6 +2065,7 @@ char *prefix
    data->merge_output = lGetBool(jep, JB_merge_stderr);
 /*    data->reserve = lGetBool(jep, JB_reserve); */
    data->priority = lGetUlong(jep, JB_priority) - BASE_PRIORITY;
+   data->task_concurrency = lGetUlong(jep, JB_ja_task_concurrency);
    data->jobshare = lGetUlong(jep, JB_jobshare);
    data->execution_time = lGetUlong(jep, JB_execution_time);
    data->deadline = lGetUlong(jep, JB_deadline);
@@ -2216,6 +2238,10 @@ int save
 
       if (!reduced_job) {
          job_initialize_id_lists(jep, NULL);      
+      } else {
+          lList *jat_list = NULL;
+          lAddElemUlong(&jat_list, JAT_task_number, 0, JAT_Type);
+          lSetList(jep, JB_ja_tasks, jat_list);
       }
    }
    else {   
@@ -2285,6 +2311,7 @@ int save
     * process the resources from dialog
     */ 
    lSetUlong(jep, JB_priority, data->priority + (u_long32)BASE_PRIORITY);
+   lSetUlong(jep, JB_ja_task_concurrency, data->task_concurrency);
    lSetUlong(jep, JB_jobshare, data->jobshare);
    lSetUlong(jep, JB_execution_time, data->execution_time);
    lSetBool(jep, JB_merge_stderr, data->merge_output);
@@ -2320,6 +2347,7 @@ int save
    }   
    lFreeList(&path_alias);
 
+   /* job submition verifier */
    if (data->jsv_url) {
       char *jsv_script = qmon_trim(data->jsv_url);
       if (jsv_script[0] != '\0') {
@@ -2328,6 +2356,21 @@ int save
          jsv_list_remove(name, JSV_CONTEXT_CLIENT);
          jsv_list_add(name, JSV_CONTEXT_CLIENT, &alp, jsv_script);
       }   
+   }
+
+   /* core binding parameters */
+   if (data->binding) {
+      lListElem *binding_elem = lCreateElem(BN_Type);
+      dstring binding_string = DSTRING_INIT;
+
+      sge_dstring_append(&binding_string, qmon_trim(data->binding));
+      if (binding_parse_from_string(binding_elem, &alp, &binding_string)) {
+         lList *binding_list = lCreateList("", BN_Type);
+
+         lAppendElem(binding_list, binding_elem);
+         lSetList(jep, JB_binding, binding_list);
+      }
+      sge_dstring_free(&binding_string);
    }
 
    lSetString(jep, JB_account, data->account_string);
@@ -2965,7 +3008,7 @@ static void qmonSubmitAskForCkpt(Widget w, XtPointer cld, XtPointer cad)
       DEXIT;
       return;
    }
-   ckptl = qmonMirrorList(SGE_CKPT_LIST);
+   ckptl = qmonMirrorList(SGE_CK_LIST);
    n = lGetNumberOfElem(ckptl);
    if (n>0) {
       strs = (StringConst*)XtMalloc(sizeof(String)*n); 
@@ -3017,7 +3060,7 @@ static void qmonSubmitAskForProject(Widget w, XtPointer cld, XtPointer cad)
       DEXIT;
       return;
    }
-   pl = qmonMirrorList(SGE_PROJECT_LIST);
+   pl = qmonMirrorList(SGE_PR_LIST);
    n = lGetNumberOfElem(pl);
    if (n>0) {
       strs = (StringConst*)XtMalloc(sizeof(String)*n); 

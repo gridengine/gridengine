@@ -126,7 +126,7 @@ GetCell()
                if [ $sel_ret = 0 -a $with_bdb = 0 ]; then
                   $INFOTEXT "Deleting bootstrap and cluster_name files!"
                   ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL_VAL/common/bootstrap
-                  ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL_VAL/common/cluster_name                  
+                  ExecuteAsAdmin rm -f $SGE_ROOT/$SGE_CELL_VAL/common/cluster_name
                elif [ $sel_ret -ne 0 ]; then
                   $INFOTEXT "Deleting directory \"%s\" now!" $SGE_ROOT/$SGE_CELL_VAL
                   Removedir $SGE_ROOT/$SGE_CELL_VAL
@@ -169,8 +169,19 @@ GetCell()
 GetQmasterSpoolDir()
 {
    if [ $AUTO = true ]; then
-      QMDIR=$QMASTER_SPOOL_DIR
+      QMDIR="$QMASTER_SPOOL_DIR"
       $INFOTEXT -log "Using >%s< as QMASTER_SPOOL_DIR." "$QMDIR"
+      #If directory exists and has files, we exit the auto installation
+      if [ -d "$QMDIR" ]; then
+         if [ `ls -1 "$QMDIR" | wc -l` -gt 0 ]; then
+            $INFOTEXT -log "Specified qmaster spool directory \"$QMDIR\" is not empty!"
+            $INFOTEXT -log "Maybe different system is using it. Check this directory"
+            $INFOTEXT -log "and remove it, or use any other qmaster spool directory."
+            $INFOTEXT -log "Exiting installation now!"
+            MoveLog
+            exit 1
+         fi
+      fi
    else
    euid=$1
 
@@ -198,22 +209,23 @@ GetQmasterSpoolDir()
                    "the qmaster daemon on other hosts (see the corresponding section in the\n" \
                    "Grid Engine Installation and Administration Manual for details) the account\n" \
                    "on the shadow master hosts also needs read/write access to this directory.\n\n" \
-                   "The following directory\n\n [%s]\n\n will be used as qmaster spool directory by default!\n" \
-                   $SGE_ROOT_VAL/$SGE_CELL_VAL/spool/qmaster
-                   QMDIR=$SGE_ROOT_VAL/$SGE_CELL_VAL/spool/qmaster
-
-      $INFOTEXT -auto $AUTO -ask "y" "n" -def "n" -n \
-                "Do you want to select another qmaster spool directory (y/n) [n] >> "
-
-      if [ $? = 1 ]; then
-         done=true
-      else
-         $INFOTEXT -n "Please enter a qmaster spool directory now! >>"
-         QMDIR=`Enter $SGE_ROOT_VAL/$SGE_CELL_VAL/spool/qmaster`
-         done=true
+                   "Enter a qmaster spool directory [%s] >> " "$SGE_ROOT_VAL/$SGE_CELL_VAL/spool/qmaster"
+      QMDIR=`Enter "$SGE_ROOT_VAL/$SGE_CELL_VAL/spool/qmaster"`
+      done=true
+      #If directory is not empty need now require a new one
+      if [ -d "$QMDIR" ]; then
+         if [ `ls -1 "$QMDIR" | wc -l` -gt 0 ]; then
+            $INFOTEXT "Specified qmaster spool directory is not empty!"
+            $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
+               "Do you want to select another qmaster spool directory (y/n) [y] >> "
+            if [ $? = 0 ]; then
+               done=false
+            fi
+         fi
       fi
    done
    fi
+   $INFOTEXT -wait -auto $AUTO -n "\nUsing qmaster spool directory >%s<. \nHit <RETURN> to continue >> " "$QMDIR"
    export QMDIR
 }
 
@@ -578,7 +590,7 @@ SetSpoolingOptionsDynamic()
 
 #--------------------------------------------------------------------------
 # SetSpoolingOptions sets / queries options for the spooling framework
-# $1 - suggested spooling params form teh old bootstrap file
+# $1 - suggested spooling params from the old bootstrap file
 SetSpoolingOptions()
 {
    $INFOTEXT -u "\nSetup spooling"
@@ -783,7 +795,7 @@ AddConfiguration()
       #TruncCreateAndMakeWriteable $COMMONDIR/configuration
       #PrintConf >> $COMMONDIR/configuration
       #SetPerm $COMMONDIR/configuration
-      TMPC=/tmp/configuration_`date '+%Y-%m-%d_%H:%M:%S'`
+      TMPC=/tmp/configuration_`date '+%Y-%m-%d_%H:%M:%S'`.$$
       TOUCH=touch
       rm -f $TMPC
       ExecuteAsAdmin $TOUCH $TMPC
@@ -1103,10 +1115,10 @@ AddJMXFiles() {
                   -e "s#@@SGE_JMX_SSL@@#$SGE_JMX_SSL#g" \
                   -e "s#@@SGE_JMX_SSL_CLIENT@@#$SGE_JMX_SSL_CLIENT#g" \
                   -e "s#@@SGE_JMX_SSL_KEYSTORE@@#$SGE_JMX_SSL_KEYSTORE#g" \
-                  -e "s#@@SGE_JMX_SSL_KEYSTORE_PW@@#$SGE_JMX_SSL_KEYSTORE_PW#g" \
                   util/management.properties.template > /tmp/management.properties.$$
-      ExecuteAsAdmin mv /tmp/management.properties.$$ $jmx_dir/management.properties
-      ExecuteAsAdmin chmod $FILEPERM $jmx_dir/management.properties
+      ExecuteAsAdmin cp /tmp/management.properties.$$ $jmx_dir/management.properties
+      Execute rm -f /tmp/management.properties.$$
+      ExecuteAsAdmin chmod 644 $jmx_dir/management.properties
       $INFOTEXT "Adding >jmx/%s< jmx configuration" management.properties
       
    fi
@@ -1189,6 +1201,8 @@ InitSysKs()
          else
             ret=0
          fi
+         echo "com.sun.grid.jgdi.management.jmxremote.ssl.serverKeystorePassword=`cat /tmp/pwfile.$$`" > ${SGE_JMX_SSL_KEYSTORE}.password
+         chown $ADMINUSER ${SGE_JMX_SSL_KEYSTORE}.password
          rm /tmp/pwfile.$$
          if [ $ret = 1 ]; then
             MoveLog
@@ -1747,7 +1761,7 @@ SelectedPortOutput()
 EnterAndValidatePortNumber()
 {
    $INFOTEXT -u "\nGrid Engine TCP/IP service >%s<\n" $service_name
-   $INFOTEXT -n "\n" 
+   $INFOTEXT -n "\n"
 
    port_ok="false"
 
@@ -1777,7 +1791,9 @@ EnterAndValidatePortNumber()
    chars=`echo $INP | wc -c`
    chars=`expr $chars - 1`
    digits=`expr $INP : "[0-9][0-9]*"`
-   if [ "$chars" != "$digits" ]; then
+   if [ "$INP" = "" ]; then
+      $INFOTEXT "\nYou must enter an integer value."
+   elif [ "$chars" != "$digits" ]; then
       $INFOTEXT "\nInvalid input. Must be a number."
    elif [ $INP -le 1 -o $INP -ge $comm_port_max ]; then
       $INFOTEXT "\nInvalid port number. Must be in range [1..%s]." $comm_port_max
@@ -2114,18 +2130,33 @@ SetLibJvmPath() {
    jvm_lib_path=""
    if [ -n "$SGE_JVM_LIB_PATH" -a "$SGE_ARCH" != "win32-x86" ]; then
       #verify we got a correct platform library
-      $SGE_ROOT/utilbin/$SGE_ARCH/valid_jvmlib "$SGE_JVM_LIB_PATH" >/dev/null 2>&1 
+      $SGE_ROOT/utilbin/$SGE_ARCH/valid_jvmlib "$SGE_JVM_LIB_PATH" >/dev/null 2>&1
       if [ $? -ne 0 ]; then
          $INFOTEXT -log -n "Specified JVM library %s is not correct. Will try to find another one.\n" "$SGE_JVM_LIB_PATH"
          SGE_JVM_LIB_PATH=""         
       fi
    fi
-      
+   
+   if [ "$AUTO" = true -a -n "$SGE_JVM_LIB_PATH" ]; then
+      #Try to load the library and try to autodetect a correct one if this one cannot be loaded
+      $SGE_ROOT/utilbin/$SGE_ARCH/valid_jvmlib "$SGE_JVM_LIB_PATH" >/dev/null 2>&1
+      if [ $? -ne 0 ]; then
+          $INFOTEXT -log -n "Warning: Specified JVM library %s could not be loaded. Installer will now \n" \
+                            "try to detect a new suitable one!"
+          SGE_JVM_LIB_PATH=""
+      fi
+   fi
+   
    #Try to detect the library, if none specified via SGE_JVM_LIB_PATH
    if [ -z "$SGE_JVM_LIB_PATH" ]; then
       $INFOTEXT "Detecting suitable JAVA ..."
       $INFOTEXT -log "Detecting suitable JAVA ..."
       HaveSuitableJavaBin $MIN_JAVA_VERSION "jvm"
+      if [ $? -ne 0 ]; then
+         $INFOTEXT "Could not find any suitable JAVA"
+         $INFOTEXT -log "Could not find any suitable JAVA"
+         java_home=""
+      fi
    fi
    
    if [ "$AUTO" = "true" ]; then
@@ -2143,38 +2174,52 @@ SetLibJvmPath() {
    #In interactive mode we provide detected values as defaults
    # set JRE_HOME 
    isdone=false
-   #$CLEAR
+   first_java_home="$java_home"
    while [ $isdone != true ]; do
-      $INFOTEXT -n "Please enter JAVA_HOME or press enter [%s] >> " "$java_home"
+      $INFOTEXT -n "\nEnter JAVA_HOME (use \"none\" when none available) [%s] >> " "$first_java_home"
       INP=`Enter $java_home`
+      #Stop requesting and skip the JVM_LIB when user enters none
+      if [ x"`echo $INP | tr \"[A-Z]\" \"[a-z]\"`" = "xnone" ]; then
+         java_home=""
+         jvm_lib_path="jvm_missing"
+         SGE_JVM_LIB_PATH="$jvm_lib_path"
+         return 1
+      fi
+      
       if [ ! -x $INP/bin/java ]; then
          $INFOTEXT "\nInvalid input. Must be a valid JAVA_HOME path."
+         continue
       else
+         java_home=$INP
+         if [ -d $java_home/jre ]; then
+            java_home=$java_home/jre
+         fi
+      
+         JAVA_VERSION=`$java_home/bin/java -version 2>&1 | head -1`
+         JAVA_VERSION=`echo $JAVA_VERSION | awk '{if (NF > 2) print $3; else print ""}' | sed -e "s/\"//g"`
+         NUM_JAVA_VERSION=`JavaVersionString2Num $JAVA_VERSION`
+         
+         if [ $NUM_JAVA_VERSION -lt $NUM_MIN_JAVA_VERSION ]; then
+            $INFOTEXT "Warning: Invalid Java version (%s), we need %s or higher" $JAVA_VERSION $MIN_JAVA_VERSION
+            continue
+         fi
+   
+         GetJvmLib $java_home/bin/java
+         
+         if [ -z "$jvm_lib_path" -o ! -f "$jvm_lib_path" ]; then
+            $INFOTEXT "Warning: Cannot find JVM library for JAVA_HOME=%s" "$java_home"
+            continue
+         fi
+         #Try to load the library and demand a correct one
+         $SGE_ROOT/utilbin/$SGE_ARCH/valid_jvmlib "$jvm_lib_path" >/dev/null 2>&1
+         if [ $? -ne 0 ]; then
+            $INFOTEXT "Warning: Cannot load JVM library %s. Maybe you used a 32-bit Java library on a 64-bit system?" "$jvm_lib_path"
+            continue
+         fi
          java_home=$INP
          isdone=true
       fi
    done
-   
-   if [ -d $java_home/jre ]; then
-      java_home=$java_home/jre
-   fi
-
-   JAVA_VERSION=`$java_home/bin/java -version 2>&1 | head -1`
-   JAVA_VERSION=`echo $JAVA_VERSION | awk '{if (NF > 2) print $3; else print ""}' | sed -e "s/\"//g"`
-   NUM_JAVA_VERSION=`JavaVersionString2Num $JAVA_VERSION`
-   
-   if [ $NUM_JAVA_VERSION -lt $NUM_MIN_JAVA_VERSION ]; then
-      $INFOTEXT "Warning: Cannot start jvm thread: Invalid java version (%s)), we need %s or higher" $JAVA_VERSION $MIN_JAVA_VERSION
-      return 1
-   fi
-   
-   GetJvmLib $java_home/bin/java
-         
-   if [ -z "$jvm_lib_path" -o ! -f "$jvm_lib_path" ]; then
-      jvm_lib_path=""
-      return 1
-   fi
-   
    if [ "$JAVA_HOME" = "" ]; then
       JAVA_HOME=$java_home ; export JAVA_HOME
    fi
@@ -2192,7 +2237,8 @@ GetJMXPort() {
    $INFOTEXT -u "\nGrid Engine JMX MBean server"
    $INFOTEXT -n "\nIn order to use the SGE Inspect or the Service Domain Manager (SDM)\n" \
                 "SGE adapter you need to configure a JMX server in qmaster. Qmaster \n" \
-                "will then load a Java Virtual Machine through a shared library.\n\n"   
+                "will then load a Java Virtual Machine through a shared library.\n" \
+                "NOTE: Java 1.5 or later is required for the JMX MBean server.\n\n"
    #Shadowds keep qmaster setting, JMX for all or JMX for nobody
    if [ "$1" = "shadowd" ]; then
       default_value=`BootstrapGetValue $SGE_ROOT/$SGE_CELL/common "jvm_threads"`

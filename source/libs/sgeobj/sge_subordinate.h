@@ -34,7 +34,11 @@
 /*___INFO__MARK_END__*/
 
 #include "sge_dstring.h"
-#include "sge_subordinateL.h"
+#include "sge_subordinate_SO_L.h"
+
+/* SO_action defines */
+#define SO_ACTION_SR 0x00000001
+#define SO_ACTION_LR 0x00000010
 
 bool
 tst_sos(int used, int total, lListElem *so);
@@ -44,7 +48,7 @@ so_list_append_to_dstring(const lList *this_list, dstring *string);
 
 bool
 so_list_add(lList **this_list, lList **answer_list, const char *so_name,
-            u_long32 threshold);
+            u_long32 threshold, u_long32 slots_sum, u_long32 seq_no, u_long32 action);
 
 bool
 so_list_resolve(const lList *so_list, lList **answer_list,

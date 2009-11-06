@@ -210,7 +210,7 @@ int main(int argc, char **argv) {
                   }   
                }
             }
-            alp = ctx->gdi(ctx, SGE_JOB_LIST, SGE_GDI_DEL, &part_ref_list, NULL, NULL);
+            alp = ctx->gdi(ctx, SGE_JB_LIST, SGE_GDI_DEL, &part_ref_list, NULL, NULL);
 
             for_each(aep, alp) {
                status = lGetUlong(aep, AN_status);

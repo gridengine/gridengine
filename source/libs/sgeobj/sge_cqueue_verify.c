@@ -32,16 +32,18 @@
 
 #include <string.h>
 
-#include "sgermon.h"
-#include "sge_string.h"
-#include "sge_log.h"
-#include "sge_dstring.h"
-#include "cull_list.h"
-#include "symbols.h"
-#include "sge.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_string.h"
+#include "uti/sge_log.h"
+#include "uti/sge_dstring.h"
+
+#include "cull/cull_list.h"
 
 #include "gdi/sge_gdi.h"
 
+#include "symbols.h"
+#include "sge.h"
 #include "parse.h"
 #include "sge_answer.h"
 #include "sge_attr.h"
@@ -55,11 +57,11 @@
 #include "sge_subordinate.h"
 #include "sge_userprj.h"
 #include "sge_userset.h"
+#include "sge_cqueue_verify.h"
+#include "sge_path_alias.h"
 
 #include "msg_sgeobjlib.h"
 
-#include "sge_cqueue_verify.h"
-#include "sge_path_alias.h"
 
 #define CQUEUE_VERIFY_LAYER TOP_LAYER
 

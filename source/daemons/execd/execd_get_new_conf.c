@@ -136,8 +136,6 @@ int do_get_new_conf(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg)
 
    sge_ls_qidle(use_qidle);
    DPRINTF(("use_qidle: %d\n", use_qidle));
-   
-   execd_trash_load_report();
 
    FREE(old_spool);
    FREE(spool_dir);

@@ -400,7 +400,8 @@ cqueue_mod_hostlist(lListElem *cqueue, lList **answer_list,
 bool
 cqueue_mod_qinstances(sge_gdi_ctx_class_t *ctx,
                       lListElem *cqueue, lList **answer_list,
-                      lListElem *reduced_elem, bool refresh_all_values, bool is_startup, monitoring_t *monitor)
+                      lListElem *reduced_elem, bool refresh_all_values,
+                      bool is_startup, monitoring_t *monitor)
 {
    dstring buffer = DSTRING_INIT;
    bool ret = true;
@@ -921,7 +922,7 @@ int cqueue_del(sge_gdi_ctx_class_t *ctx, lListElem *this_elem, lList **answer_li
             dstring dir = DSTRING_INIT;
             bool do_del = true;
 
-
+/* TODO: HP: Trigger recalculation of ssos for all subqueues of this queue */
             /*
              * test if the CQ can be removed
              */

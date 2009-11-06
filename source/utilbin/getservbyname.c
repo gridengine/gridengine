@@ -34,7 +34,6 @@
 #include <netdb.h>
 #include <string.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
 #include <stdlib.h>
 #include "msg_utilbin.h"
 #include "basis_types.h"

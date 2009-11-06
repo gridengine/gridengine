@@ -45,7 +45,7 @@ enum {
 
 
 LISTDEF( HostT )
-   SGE_HOST     ( H_hostname, CULL_DEFAULT )      /* CR - hostname change */
+   SGE_HOST     ( H_hostname, CULL_DEFAULT )
    SGE_STRING   ( H_arch, CULL_DEFAULT )
    SGE_STRING   ( H_os, CULL_DEFAULT )
    SGE_ULONG    ( H_memsize, CULL_DEFAULT )

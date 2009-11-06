@@ -40,7 +40,6 @@ GDILIB_SRC = pack_job_delivery.c \
              sge_gdi_ctx.c \
              sge_gdi2.c \
              sge_gdi_packet.c \
-             sge_gdi_packet_queue.c \
              sge_gdi_packet_internal.c \
              sge_gdi_packet_pb_cull.c \
              sge_qexec.c \
@@ -97,9 +96,6 @@ sge_gdi2.o:	$(GDILIB_DIR)/sge_gdi2.c
 		
 sge_gdi_packet.o:	$(GDILIB_DIR)/sge_gdi_packet.c
 		$(CC) -o $@ $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_gdi_packet.c
-		
-sge_gdi_packet_queue.o:	$(GDILIB_DIR)/sge_gdi_packet_queue.c
-		$(CC) -o $@ $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_gdi_packet_queue.c
 		
 sge_gdi_packet_internal.o:	$(GDILIB_DIR)/sge_gdi_packet_internal.c
 		$(CC) -o $@ $(CFLAGS) $(SHARED_CFLAGS) -c $(GDILIB_DIR)/sge_gdi_packet_internal.c

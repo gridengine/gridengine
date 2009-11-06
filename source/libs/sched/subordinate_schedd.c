@@ -32,12 +32,15 @@
 
 #include <stdio.h>
 
-#include "cull.h"
+#include "rmon/sgermon.h"
+
+#include "cull/cull.h"
+
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_qinstance_state.h"
+#include "sgeobj/sge_subordinate.h"
+
 #include "subordinate_schedd.h"
-#include "sgermon.h"
-#include "sge_qinstance.h"
-#include "sge_qinstance_state.h"
-#include "sge_subordinate.h"
 
 /*
 qname: name of a queue that needs suspension on subordinate

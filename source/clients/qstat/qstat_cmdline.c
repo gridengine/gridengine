@@ -118,6 +118,10 @@ switch_list_qstat_parse_from_cmdline(lList **ppcmdline, lList **answer_list,
       if ((rp = parse_noopt(sp, "-help", NULL, ppcmdline, answer_list)) != sp)
          continue;
 
+      /* -cb */
+      if ((rp = parse_noopt(sp, "-cb", NULL, ppcmdline, answer_list)) != sp)
+         continue;
+
       /* -f option */
       if (!qselect_mode && (rp = parse_noopt(sp, "-f", NULL, ppcmdline, answer_list)) != sp)
          continue;
@@ -248,6 +252,9 @@ qstat_usage(int qselect_mode, FILE *fp, char *what)
    if(!what) {
       /* display full usage */
       fprintf(fp, "%s %s [options]\n", MSG_SRC_USAGE ,qselect_mode?"qselect":"qstat");
+      if (!qselect_mode) {
+         fprintf(fp, "        [-cb]                             %s\n",MSG_QSTAT_USAGE_VIEWALSOBINDINGATTRIBUTES);
+      }
       if (!qselect_mode) {
          fprintf(fp, "        [-ext]                            %s\n",MSG_QSTAT_USAGE_VIEWALSOSCHEDULINGATTRIBUTES);
       }

@@ -33,29 +33,36 @@
 #include <ctype.h>
 #include <string.h>
 #include <jni.h>
-#include "basis_types.h"
-#include "cull.h"
-#include "commlib.h"
-#include "sgermon.h"
-#include "sge_all_listsL.h"
-#include "sge_answer.h"
-#include "sge_prog.h"
-#include "sge_bootstrap.h"
+
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_error_class.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_bootstrap.h"
+
+#include "cull/cull.h"
+
+#include "comm/commlib.h"
 #include "cl_errors.h"
-#include "sge_log.h"
-#include "sge_error_class.h"
-#include "jgdi_common.h"
-#include "jgdi.h"
-#include "sge_qstat.h"
-#include "jgdi_wrapper.h"
-#include "jgdi_logging.h"
-#include "qstat_printing.h"
-#include "sge_qinstance_state.h"
-#include "parse.h"
+
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_qinstance_state.h"
 
 #include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi_ctx.h"
 #include "gdi/sge_gdi2.h"
+
+#include "basis_types.h"
+#include "sge_qstat.h"
+#include "qstat_printing.h"
+#include "parse.h"
+#include "jgdi_common.h"
+#include "jgdi.h"
+#include "jgdi_wrapper.h"
+#include "jgdi_logging.h"
+
 
 typedef struct {
    

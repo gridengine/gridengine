@@ -33,30 +33,35 @@
 #include <string.h>
 #include <limits.h>
 
-#include "sched/sge_select_queue.h"
-#include "sched/sge_resource_quota_schedd.h"
-#include "sched/sge_resource_utilizationL.h"
-#include "sgeobj/sge_centry.h"
-#include "sgeobj/sge_strL.h"
-#include "sgeobj/sge_jobL.h"
-#include "sgeobj/sge_ctL.h"
-#include "sgeobj/sge_cqueueL.h"
-#include "sgeobj/sge_qinstance.h"
+#include "rmon/sgermon.h"
 
+#include "uti/sge_hostname.h"
+#include "uti/sge_log.h"
+#include "uti/sge_parse_num_par.h"
+
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_str.h"
+#include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_job.h"
 #include "sgeobj/sge_resource_quota.h"
 #include "sgeobj/sge_object.h"
-#include "uti/sge_hostname.h"
-#include "sge_complex_schedd.h"
 #include "sgeobj/sge_job.h"
 #include "sgeobj/sge_pe.h"
 #include "sgeobj/sge_host.h"
-#include "sgermon.h"
-#include "sched/sort_hosts.h"
-#include "sge_log.h"
-#include "sched/sge_schedd_text.h"
-#include "sched/schedd_message.h"
-#include "uti/sge_parse_num_par.h"
 
+#include "sge_ct_SCT_L.h"
+#include "sge_ct_REF_L.h"
+#include "sge_ct_CT_L.h"
+#include "sge_ct_CCT_L.h"
+#include "sge_ct_CTI_L.h"
+
+#include "sge_complex_schedd.h"
+#include "sge_select_queue.h"
+#include "sge_resource_quota_schedd.h"
+#include "sort_hosts.h"
+#include "sge_schedd_text.h"
+#include "schedd_message.h"
 
 static void rqs_can_optimize(const lListElem *rule, bool *host, bool *queue, sge_assignment_t *a);
 
@@ -1306,13 +1311,11 @@ static dispatch_t rqs_limitation_reached(sge_assignment_t *a, const lListElem *r
 
    limit_list = lGetList(rule, RQR_limit);
    for_each(limit, limit_list) {
-      
+      bool       is_forced = false;
+      lList      *job_centry_list = NULL;
+      lListElem  *job_centry = NULL;
       const char *limit_name = lGetString(limit, RQRL_name);
-
-      lListElem *raw_centry = centry_list_locate(a->centry_list, limit_name);
-      bool is_forced = lGetUlong(raw_centry, CE_requestable) == REQU_FORCED ? true : false;
-      lList *job_centry_list = lGetList(a->job, JB_hard_resource_list);
-      lListElem *job_centry = centry_list_locate(job_centry_list, limit_name);
+      lListElem  *raw_centry = centry_list_locate(a->centry_list, limit_name);
 
       if (raw_centry == NULL) {
          DPRINTF(("ignoring limit %s because not defined", limit_name));
@@ -1320,6 +1323,10 @@ static dispatch_t rqs_limitation_reached(sge_assignment_t *a, const lListElem *r
       } else {
          DPRINTF(("checking limit %s\n", lGetString(raw_centry, CE_name)));
       }
+
+      is_forced = lGetUlong(raw_centry, CE_requestable) == REQU_FORCED ? true : false;
+      job_centry_list = lGetList(a->job, JB_hard_resource_list);
+      job_centry = centry_list_locate(job_centry_list, limit_name);
 
       /* check for implicit slot and default request */
       if (job_centry == NULL) {

@@ -91,6 +91,15 @@
 #include "sgeobj/sge_object.h"
 #include "uti/sge_stdio.h"
 #include "load_avg.h"
+#include "uti/sge_binding_hlp.h"
+#include "sge_binding.h"
+
+#if defined(SOLARISAMD64) || defined(SOLARIS86)
+#  include "uti/sge_uidgid.h"
+#  include <sys/processor.h>
+#  include <sys/types.h>
+#  include <sys/pset.h>
+#endif 
 
 #ifdef COMPILE_DC
 #  include "ptf.h"
@@ -107,6 +116,7 @@ static void build_derived_final_usage(lListElem *jr, u_long32 job_id, u_long32 j
 
 static void examine_job_task_from_file(sge_gdi_ctx_class_t *ctx, int startup, char *dir, lListElem *jep, lListElem *jatep, lListElem *petep, pid_t *pids, int npids);
 
+static void clean_up_binding(char* binding);
 
 /*****************************************************************************
  This code is used only by execd.
@@ -254,7 +264,11 @@ int sge_reap_children_execd(int max_count)
          if (!(jr=get_job_report(jobid, jataskid, petep != NULL ? lGetString(petep, PET_id) : NULL))) {
             ERROR((SGE_EVENT, MSG_JOB_MISSINGJOBXYINJOBREPORTFOREXITINGJOBADDINGIT_UU, 
                    sge_u32c(jobid), sge_u32c(jataskid)));
-            jr = add_job_report(jobid, jataskid, petep != NULL ? lGetString(petep, PET_id) : NULL, jep);
+            if (petep != NULL) {
+               jr = add_job_report(jobid, jataskid, lGetString(petep, PET_id), jep);
+            } else {
+               jr = add_job_report(jobid, jataskid, NULL, jep);
+            }
          }
 
          /* when restarting execd it happens that cleanup_old_jobs()
@@ -360,6 +374,7 @@ static void unregister_from_ptf(u_long32 job_id, u_long32 ja_task_id,
 static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status, 
                         int is_array, const lListElem *ja_task, const char* job_owner) 
 {
+   char* binding;
    dstring jobdir = DSTRING_INIT;
    dstring fname  = DSTRING_INIT;
 
@@ -443,7 +458,13 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
 
    DTRACE;
 
+   /* job to core binding: on Solaris the processor set have to be deleted 
+      and the cores have to be freed */ 
       
+   binding = get_conf_val("binding");
+   
+   clean_up_binding(binding);
+
    /*
     * look for exit status of shepherd This is the last file the shepherd
     * creates. So if we can find this shepherd terminated normal.
@@ -1311,7 +1332,7 @@ examine_job_task_from_file(sge_gdi_ctx_class_t *ctx, int startup, char *dir, lLi
    
    jobid = lGetUlong(jep, JB_job_number);
    jataskid = lGetUlong(jatep, JAT_task_number);
-   if(petep != NULL) {
+   if (petep != NULL) {
       pe_task_id_str = lGetString(petep, PET_id);
    }
 
@@ -1479,7 +1500,7 @@ read_dusage(lListElem *jr, const char *jobdir, u_long32 jobid, u_long32 jataskid
       sge_dstring_free(&buffer);
 
       add_usage(jr, "submission_time", get_conf_val("submission_time"), (double)0);
-      add_usage(jr, "priority",        get_conf_val("priority"),        (double)0);
+      add_usage(jr, "priority", get_conf_val("priority"),        (double)0);
    }
 
    /* read "usage" file */
@@ -2009,3 +2030,129 @@ void execd_slave_job_exit(u_long32 job_id, u_long32 ja_task_id)
       }
    }
 }
+
+/****** reaper_execd/clean_up_binding() ****************************************
+*  NAME
+*     clean_up_binding() -- Releases the resources used by a job for core binding. 
+*
+*  SYNOPSIS
+*     static void clean_up_binding(char* binding) 
+*
+*  FUNCTION
+*     Checks which cores the job was bound to and releases them (i.e. 
+*     the as used marked cores where marked as free so that other jobs 
+*     can be bound to any of these cores). 
+*
+*  INPUTS
+*     char* binding - Pointer to the "binding" line out of the config file. 
+*
+*  RESULT
+*     static void - void
+*
+*
+*  NOTES
+*     MT-NOTE: clean_up_binding() is not MT safe 
+*
+*  SEE ALSO
+*     ???/???
+*******************************************************************************/
+static void clean_up_binding(char* binding)
+{
+   DENTER(TOP_LAYER, "clean_up_binding");
+
+   if (binding == NULL || strcasecmp("NULL", binding) == 0 
+      || strcasecmp("no_job_binding", binding) == 0) {
+      /* no binding was instructed */
+      DRETURN_VOID;
+   }
+   
+#if defined(SOLARIS86) || defined(SOLARISAMD64)
+   if (strstr(binding, "psrset:") != NULL) {
+      /* we are on Solaris and a processor set was created -> deaccount it and delete it */
+      int processor_set_id = -1;
+
+      /* check if just the enviroment variable SGE_BINDING was set 
+         or the pe_hostfile was written */
+      if ((strstr(binding,"env_") != NULL) || (strstr(binding,"pe_") != NULL)) {
+
+         char* topo;
+         /* no processor set was created */
+         DPRINTF(("Environment variable or pe_hostfile was set for binding"));
+         /* do not delete processor set (because it was not created) 
+            but free resources */
+         if ((sge_strtok(binding, ":") != NULL) 
+             && (sge_strtok(NULL, ":") != NULL) 
+             && (topo = sge_strtok(NULL, ":")) != NULL) {
+            
+             /* update the string which represents the currently used cores 
+                on execution daemon host */
+             free_topology(topo, -1);
+         }
+
+      } else if (sge_strtok(binding, ":") != NULL) {
+         /* parse the psrset number right after "psrset:" */
+         /* parse the rest of the line */
+         char* pset_id;
+         /* topology used by job */ 
+         char* topo; 
+
+         if ((pset_id = sge_strtok(NULL, ":")) != NULL) {
+            /* finally get the processor set id */
+            processor_set_id = atoi(pset_id);
+            /* check if a processor set was created (is not the case 
+               when the job was using ALL available cores -> no 
+               processor set can be created because it is not allowed 
+               from OS) */
+            if (processor_set_id != -1) {
+
+               /* must be root in order to delete processor set */
+               sge_switch2start_user();
+            
+               if (pset_destroy((psetid_t)processor_set_id) != 0) {
+                  /* couldn't delete pset */
+                  INFO((SGE_EVENT, "Couldn't delete processor set"));
+               }
+
+               sge_switch2admin_user();
+
+               /* release the resources used by the job */
+               if ((topo = sge_strtok(NULL, ":")) != NULL) {
+                  /* update the string which represents the currently used cores 
+                     on execution daemon host */
+                  free_topology(topo, -1);
+               } else {
+                  WARNING((SGE_EVENT, "No resource string found in config entry binding"));
+               }
+            } else {
+               /* processor set id was -1 -> we don't have to delete it */
+               DPRINTF(("No processor set was generated for this job!"));
+            }
+         }
+      }
+
+   }
+#endif
+
+#if defined(PLPA_LINUX)
+   /* on Linux the used topology can be found just after the last ":" */
+   /* -> find the used topology and release it */
+   
+   if (strstr(binding, ":") != NULL) {
+      /* there was an order from execd to shepherd for binding */
+      /* seach the string after the last ":" -> this 
+         is the topology used by the job */
+      char* topo = NULL;   
+      topo = strrchr(binding, ':');
+      free_topology(++topo, -1);
+      INFO((SGE_EVENT, "topology used by job freed"));
+   } else {
+      /* couldn't find valid topology string in config file */
+      WARNING((SGE_EVENT, "No resource string found in config entry binding"));
+   }
+
+#endif
+
+   DRETURN_VOID;
+}
+
+

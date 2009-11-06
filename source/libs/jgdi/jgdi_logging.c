@@ -33,16 +33,16 @@
 #include <ctype.h>
 #include <string.h>
 #include "jni.h"
-#include "basis_types.h"
-#include "cull.h"
-#include "cull_list.h"
-#include "rmon.h"
+
+#include "rmon/rmon.h"
+
+#include "cull/cull.h"
+#include "cull/cull_list.h"
 #include "sge_all_listsL.h"
-#include "jni.h"
+#include "sgeobj/sge_answer.h"
+
+#include "basis_types.h"
 #include "jgdi_logging.h"
-#include "sge_answer.h"
-
-
 
 struct level_str {
    const char* name;

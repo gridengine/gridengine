@@ -32,7 +32,8 @@
 
 #include <string.h>
 
-#include "cull.h"
+#include "cull/cull.h"
+
 #include "sge_usage.h"
 #include "sge_host.h"
 
@@ -219,7 +220,6 @@ usage_list_sum(lList *usage_list, const lList *add_usage_list)
           strcmp(name, USAGE_ATTR_IO) == 0 ||
           strcmp(name, USAGE_ATTR_IOW) == 0 ||
           strcmp(name, USAGE_ATTR_VMEM) == 0 ||
-          strcmp(name, USAGE_ATTR_MAXVMEM) == 0 ||
           strcmp(name, USAGE_ATTR_MEM) == 0 || 
           strncmp(name, "ru_", 3) == 0) {
          lListElem *sum = lGetElemStr(usage_list, UA_name, name);

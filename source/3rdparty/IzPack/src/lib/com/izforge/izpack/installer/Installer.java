@@ -98,7 +98,7 @@ public class Installer
             else
             {
                 AutomatedInstaller ai = new AutomatedInstaller(inputFileName);
-                //ai.addExtraVariables(argValues);
+                ai.addExtraVariables(argValues);
                 // this method will also exit!
                 ai.doInstall();
             }

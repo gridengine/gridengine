@@ -78,7 +78,6 @@ import java.rmi.registry.LocateRegistry;
 public final class ConnectorBootstrap {
 
     private final static Logger log = Logger.getLogger(ConnectorBootstrap.class.getName());
-    
     static private Registry registry;
 
     /**
@@ -114,6 +113,7 @@ public final class ConnectorBootstrap {
         public static final String SSL_NEED_CLIENT_AUTH = "com.sun.grid.jgdi.management.jmxremote.ssl.need.client.auth";
         public static final String SSL_SERVER_KEYSTORE = "com.sun.grid.jgdi.management.jmxremote.ssl.serverKeystore";
         public static final String SSL_SERVER_KEYSTORE_PASSWORD = "com.sun.grid.jgdi.management.jmxremote.ssl.serverKeystorePassword";
+        public static final String SSL_SERVER_KEYSTORE_PASSWORD_FILE = "com.sun.grid.jgdi.management.jmxremote.ssl.serverKeystorePasswordFile";
     }
 
     /**
@@ -209,21 +209,21 @@ public final class ConnectorBootstrap {
             throw new SecurityException(
                     "Access denied! No entries found in the access file [" + accessFile + "] for any of the authenticated identities " + principalsStr);
         }
-
-        private static Properties propertiesFromFile(String fname)
-                throws IOException {
-            Properties p = new Properties();
-            if (fname == null) {
-                return p;
-            }
-            FileInputStream fin = new FileInputStream(fname);
-            p.load(fin);
-            fin.close();
-            return p;
-        }
         private final Map<String, Object> environment;
         private final Properties properties;
         private final String accessFile;
+    }
+
+    private static Properties propertiesFromFile(String fname)
+            throws IOException {
+        Properties p = new Properties();
+        if (fname == null) {
+            return p;
+        }
+        FileInputStream fin = new FileInputStream(fname);
+        p.load(fin);
+        fin.close();
+        return p;
     }
 
     /**
@@ -243,7 +243,7 @@ public final class ConnectorBootstrap {
 
         final String portStr = props.getProperty(PropertyNames.PORT);
 
-        // System.out.println("initializing: {port=" + portStr + ", 
+        // System.out.println("initializing: {port=" + portStr + ",
         //                     properties="+props+"}");
         return initialize(portStr, props);
     }
@@ -255,15 +255,15 @@ public final class ConnectorBootstrap {
     public static synchronized JMXConnectorServer initialize(
             String portStr, Properties props) {
 
-        // Get port number
-        final int port;
+        // Get serverPort number
+        final int serverPort;
         try {
-            port = Integer.parseInt(portStr);
+            serverPort = Integer.parseInt(portStr);
         } catch (NumberFormatException x) {
             throw new AgentConfigurationError(INVALID_JMXREMOTE_PORT,
                     x, portStr);
         }
-        if (port < 0) {
+        if (serverPort < 0) {
             throw new AgentConfigurationError(INVALID_JMXREMOTE_PORT,
                     portStr);
         }
@@ -316,9 +316,10 @@ public final class ConnectorBootstrap {
                 DefaultValues.SSL_NEED_CLIENT_AUTH);
         final boolean sslNeedClientAuth = Boolean.valueOf(
                 sslNeedClientAuthStr).booleanValue();
-
+        String serverKeystorePassword = null;
         String loginConfigName = null;
         String passwordFileName = null;
+        String keystorePasswordFileName = null;
         String accessFileName = null;
 
         // Initialize settings when authentication is active
@@ -343,21 +344,41 @@ public final class ConnectorBootstrap {
         }
 
         if (useSsl) {
+
+            // Get keystore password file
+            keystorePasswordFileName = props.getProperty(PropertyNames.SSL_SERVER_KEYSTORE_PASSWORD_FILE);
+
+            // get the keystore password from the keystore password file
+            // (/var/sgeCA/portNNNN/sge_cell/private/keystore.password)
+            // workaround for euid problem of libjvm under Linux otherwise jmxremote.password
+            // could have been used
+            try {
+                serverKeystorePassword = propertiesFromFile(keystorePasswordFileName).getProperty(PropertyNames.SSL_SERVER_KEYSTORE_PASSWORD);
+            } catch (IOException ex) {
+                throw new AgentConfigurationError(AGENT_EXCEPTION, ex, ex.getMessage());
+            }
+
             // setup SSLContext to use different TrustManager and KeyManager
             final String serverKeystore = props.getProperty(PropertyNames.SSL_SERVER_KEYSTORE);
-            final String serverKeystorePassword = props.getProperty(PropertyNames.SSL_SERVER_KEYSTORE_PASSWORD);
+
             File serverKeystoreFile = new File(serverKeystore);
             File caTop = JGDIAgent.getCaTop();
-            char[]pw = (serverKeystorePassword != null) ? serverKeystorePassword.toCharArray() : "".toCharArray();
+            String serverHost = "";
+            try {
+                serverHost = InetAddress.getLocalHost().getHostName();
+            } catch (UnknownHostException ex) {
+                throw new AgentConfigurationError(AGENT_EXCEPTION, ex, "Can't resolve local host");
+            }
+            char[] pw = (serverKeystorePassword != null) ? serverKeystorePassword.toCharArray() : "".toCharArray();
             log.log(Level.FINE, "SSLHelper.init: caTop = {0} serverKeystore = {1} serverKeystorePW = {2}",
-                    new Object[]{caTop, serverKeystore, (serverKeystorePassword != null) ? serverKeystorePassword : "-empty pw-" });
-            SSLHelper.getInstanceByCaTop(caTop).setKeystore(serverKeystoreFile, pw);
+                    new Object[]{caTop, serverKeystore, (serverKeystorePassword != null) ? serverKeystorePassword : "-empty pw-"});
+            SSLHelper.getInstanceByKey(serverHost, serverPort, caTop).setKeystore(serverKeystoreFile, pw);
         }
 
         if (log.isLoggable(Level.FINE)) {
             log.log(Level.FINE,
                     "initialize",
-                    Agent.getText("jmxremote.ConnectorBootstrap.initialize") + "\n\t" + PropertyNames.PORT + "=" + port + "\n\t" + PropertyNames.USE_SSL + "=" + useSsl + "\n\t" + PropertyNames.USE_REGISTRY_SSL + "=" + useRegistrySsl + "\n\t" + PropertyNames.SSL_ENABLED_CIPHER_SUITES + "=" + enabledCipherSuites + "\n\t" + PropertyNames.SSL_ENABLED_PROTOCOLS + "=" + enabledProtocols + "\n\t" + PropertyNames.SSL_NEED_CLIENT_AUTH + "=" + sslNeedClientAuth + "\n\t" + PropertyNames.USE_AUTHENTICATION + "=" + useAuthentication + (useAuthentication ? (loginConfigName == null ? ("\n\t" + PropertyNames.PASSWORD_FILE_NAME + "=" + passwordFileName)
+                    Agent.getText("jmxremote.ConnectorBootstrap.initialize") + "\n\t" + PropertyNames.PORT + "=" + serverPort + "\n\t" + PropertyNames.USE_SSL + "=" + useSsl + "\n\t" + PropertyNames.USE_REGISTRY_SSL + "=" + useRegistrySsl + "\n\t" + PropertyNames.SSL_ENABLED_CIPHER_SUITES + "=" + enabledCipherSuites + "\n\t" + PropertyNames.SSL_ENABLED_PROTOCOLS + "=" + enabledProtocols + "\n\t" + PropertyNames.SSL_NEED_CLIENT_AUTH + "=" + sslNeedClientAuth + "\n\t" + PropertyNames.USE_AUTHENTICATION + "=" + useAuthentication + (useAuthentication ? (loginConfigName == null ? ("\n\t" + PropertyNames.PASSWORD_FILE_NAME + "=" + passwordFileName)
                     : ("\n\t" + PropertyNames.LOGIN_CONFIG_NAME + "=" + loginConfigName))
                     : "\n\t" + Agent.getText("jmxremote.ConnectorBootstrap.initialize.noAuthentication")) + (useAuthentication ? ("\n\t" + PropertyNames.ACCESS_FILE_NAME + "=" + accessFileName)
                     : "") + "");
@@ -366,7 +387,7 @@ public final class ConnectorBootstrap {
         final MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
         JMXConnectorServer cs = null;
         try {
-            cs = exportMBeanServer(mbs, port, useSsl, useRegistrySsl,
+            cs = exportMBeanServer(mbs, serverPort, useSsl, useRegistrySsl,
                     enabledCipherSuitesList, enabledProtocolsList,
                     sslNeedClientAuth, useAuthentication,
                     loginConfigName, passwordFileName, accessFileName);
@@ -376,7 +397,7 @@ public final class ConnectorBootstrap {
                 log.log(Level.FINE, "initialize", Agent.getText(
                         "jmxremote.ConnectorBootstrap.initialize.ready",
                         new JMXServiceURL(url.getProtocol(), url.getHost(),
-                        url.getPort(), "/jndi/rmi://" + url.getHost() + ":" + port + "/" + "jmxrmi").toString()));
+                        url.getPort(), "/jndi/rmi://" + url.getHost() + ":" + serverPort + "/" + "jmxrmi").toString()));
             }
         } catch (Exception e) {
             throw new AgentConfigurationError(AGENT_EXCEPTION, e, e.toString());
@@ -486,7 +507,7 @@ public final class ConnectorBootstrap {
     }
 
     private static JMXConnectorServer exportMBeanServer(
-            MBeanServer mbs, int port, boolean useSsl,
+            MBeanServer mbs, int serverPort, boolean useSsl,
             boolean useRegistrySsl, String[] enabledCipherSuites,
             String[] enabledProtocols, boolean sslNeedClientAuth,
             boolean useAuthentication, String loginConfigName,
@@ -524,8 +545,8 @@ public final class ConnectorBootstrap {
         RMIServerSocketFactory ssf = null;
 
         if (useSsl || useRegistrySsl) {
-            csf = new JGDISslRMIClientSocketFactory(JGDIAgent.getCaTop());
-            ssf = new JGDISslRMIServerSocketFactory(JGDIAgent.getCaTop(), enabledCipherSuites,
+            csf = new JGDISslRMIClientSocketFactory(url.getHost(), serverPort, JGDIAgent.getCaTop());
+            ssf = new JGDISslRMIServerSocketFactory(url.getHost(), serverPort, JGDIAgent.getCaTop(), enabledCipherSuites,
                     enabledProtocols, sslNeedClientAuth);
         }
 
@@ -551,16 +572,18 @@ public final class ConnectorBootstrap {
                         CONNECTOR_SERVER_IO_ERROR, e, connServer.getAddress().toString());
             }
         }
-        
+
         if (useRegistrySsl) {
             if (registry == null) {
                 try {
-                    registry = LocateRegistry.createRegistry(port, csf, ssf);
+                    registry = LocateRegistry.createRegistry(serverPort, csf, ssf);
                     registry.bind("jmxrmi", exporter.firstExported);
                 } catch (RemoteException ex) {
-                    Logger.getLogger(ConnectorBootstrap.class.getName()).log(Level.SEVERE, null, ex);
-              } catch (AlreadyBoundException ex) {
-                    Logger.getLogger(ConnectorBootstrap.class.getName()).log(Level.SEVERE, null, ex);
+                   throw new AgentConfigurationError(
+                           CONNECTOR_SERVER_IO_ERROR, ex, ex.getMessage());
+                } catch (AlreadyBoundException ex) {
+                   throw new AgentConfigurationError(
+                           CONNECTOR_SERVER_IO_ERROR, ex, ex.getMessage());
                 }
             } else {
                 registry.rebind("jmxrmi", exporter.firstExported);
@@ -568,12 +591,14 @@ public final class ConnectorBootstrap {
         } else {
             if (registry == null) {
                 try {
-                    registry = LocateRegistry.createRegistry(port);
+                    registry = LocateRegistry.createRegistry(serverPort);
                     registry.bind("jmxrmi", exporter.firstExported);
                 } catch (RemoteException ex) {
-                    Logger.getLogger(ConnectorBootstrap.class.getName()).log(Level.SEVERE, null, ex);
+                   throw new AgentConfigurationError(
+                           CONNECTOR_SERVER_IO_ERROR, ex, ex.getMessage());
                 } catch (AlreadyBoundException ex) {
-                    Logger.getLogger(ConnectorBootstrap.class.getName()).log(Level.SEVERE, null, ex);
+                   throw new AgentConfigurationError(
+                           CONNECTOR_SERVER_IO_ERROR, ex, ex.getMessage());
                 }
             } else {
                 registry.rebind("jmxrmi", exporter.firstExported);
@@ -596,9 +621,11 @@ public final class ConnectorBootstrap {
             exporter.unexportObject(exporter.firstExported, true);
             ConnectorBootstrap.registry.unbind("jmxrmi");
         } catch (RemoteException ex) {
-            Logger.getLogger(ConnectorBootstrap.class.getName()).log(Level.SEVERE, null, ex);
+            throw new AgentConfigurationError(
+                           CONNECTOR_SERVER_IO_ERROR, ex, ex.getMessage());
         } catch (NotBoundException ex) {
-            Logger.getLogger(ConnectorBootstrap.class.getName()).log(Level.SEVERE, null, ex);
+            throw new AgentConfigurationError(
+                           CONNECTOR_SERVER_IO_ERROR, ex, ex.getMessage());
         }
     }
 

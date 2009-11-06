@@ -38,6 +38,10 @@
 
 #include "sge_orders.h"
 
+/* min number of jobs in a category to use
+ *    the skip host, queue and the soft violations */
+#define MIN_JOBS_IN_CATEGORY 1
+
 bool
 sge_select_queue(lList *requested_attr, lListElem *queue, lListElem *host, lList *exechost_list,
                  lList *centry_list, bool allow_non_requestable, int slots, lList *queue_user_list, 

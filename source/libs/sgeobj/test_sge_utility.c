@@ -36,9 +36,7 @@
 
 #include "basis_types.h"
 #include "sge_all_listsL.h"
-
 #include "sge_answer.h"
-
 #include "sge_utility.h"
 
 

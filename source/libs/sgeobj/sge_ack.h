@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_ackL.h"
+#include "sge_ack_ACK_L.h"
 #include "gdi/sge_gdi_ctx.h"
 
 enum {

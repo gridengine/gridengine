@@ -100,6 +100,8 @@
 #include "sge_qinstance_qmaster.h"
 #include "mail.h"
 #include "symbols.h"
+#include "sge_resource_utilization_RUE_L.h"
+#include "sge_resource_utilization_RDE_L.h"
 
 #include "sge_complex_schedd.h"
 

@@ -73,6 +73,7 @@
 #include "sge_uidgid.h"
 #include "sge_unistd.h"
 #include "sge_signal.h"
+#include "shepherd.h"
 
 #define RESPONSE_MSG_TIMEOUT 120
 
@@ -86,35 +87,14 @@
 #undef EXTENSIVE_TRACING
 /*#define EXTENSIVE_TRACING*/
 
-static int                  g_ptym                = -1;
-static int                  g_fd_pipe_in[2]       = {-1,-1};
-static int                  g_fd_pipe_out[2]      = {-1, -1};
-static int                  g_fd_pipe_err[2]      = {-1, -1};
-static int                  g_fd_pipe_to_child[2] = {-1, -1};
-static COMMUNICATION_HANDLE *g_comm_handle        = NULL;
-static THREAD_HANDLE        g_thread_main;
-static int                  g_raised_event        = 0;
-static int                  g_job_pid             = 0;
+static ijs_fds_t     *g_p_ijs_fds         = NULL;
+static COMM_HANDLE   *g_comm_handle       = NULL;
+static THREAD_HANDLE g_thread_main;
+static int           g_raised_event        = 0;
+static int           g_job_pid             = 0;
 
-char                        *g_hostname           = NULL;
-extern bool                 g_csp_mode;      /* defined in shepherd.c */
-extern int                  received_signal; /* defined in shepherd.c */
-
-/*
- * Forward declarations of functions from shepherd.c
- */
-int wait_my_child(
-int pid,                   /* pid of job */
-int ckpt_pid,              /* pid of restarted job or same as pid */
-int ckpt_type,             /* type of checkpointing */
-struct rusage *rusage,     /* accounting information */
-int timeout,               /* used for prolog/epilog script, 0 for job */
-int ckpt_interval,         /* action depend on ckpt_type */
-char *childname            /* "job", "pe_start", ...     */
-);
-
-void 
-shepherd_signal_job(pid_t pid, int sig);
+static char          *g_hostname           = NULL;
+extern int           received_signal; /* defined in shepherd.c */
 
 /*
  * static functions 
@@ -266,12 +246,12 @@ static int send_buf(char *pbuf, int buf_bytes, int message_type)
    if (comm_write_message(g_comm_handle, g_hostname, 
       COMM_SERVER, 1, (unsigned char*)pbuf, 
       (unsigned long)buf_bytes, message_type, &err_msg) != buf_bytes) {
-      shepherd_trace("couldn't write all data: %s\n",
+      shepherd_trace("couldn't write all data: %s",
                      sge_dstring_get_string(&err_msg));
       ret = 1;
    } else {
 #ifdef EXTENSIVE_TRACING
-      shepherd_trace("successfully wrote all data: %s\n", 
+      shepherd_trace("successfully wrote all data: %s", 
                      sge_dstring_get_string(&err_msg));
 #endif
    }
@@ -328,22 +308,24 @@ static void* pty_to_commlib(void *t_conf)
       /* Fill fd_set for select */
       FD_ZERO(&read_fds);
 
-      if (g_ptym != -1) {
-         FD_SET(g_ptym, &read_fds);
+      if (g_p_ijs_fds->pty_master != -1) {
+         FD_SET(g_p_ijs_fds->pty_master, &read_fds);
       }
-      if (g_fd_pipe_out[0] != -1) {
-         FD_SET(g_fd_pipe_out[0], &read_fds);
+      if (g_p_ijs_fds->pipe_out != -1) {
+         FD_SET(g_p_ijs_fds->pipe_out, &read_fds);
       }
-      if (g_fd_pipe_err[0] != -1) {
-         FD_SET(g_fd_pipe_err[0], &read_fds);
+      if (g_p_ijs_fds->pipe_err != -1) {
+         FD_SET(g_p_ijs_fds->pipe_err, &read_fds);
       }
-      fd_max = MAX(g_ptym, g_fd_pipe_out[0]);
-      fd_max = MAX(fd_max, g_fd_pipe_err[0]);
+      fd_max = MAX(g_p_ijs_fds->pty_master, g_p_ijs_fds->pipe_out);
+      fd_max = MAX(fd_max, g_p_ijs_fds->pipe_err);
 
 #ifdef EXTENSIVE_TRACING
-      shepherd_trace("pty_to_commlib: g_ptym = %d, g_fd_pipe_out[0] = %d, "
-                     "g_fd_pipe_err[0] = %d, fd_max = %d",
-                     g_ptym, g_fd_pipe_out[0], g_fd_pipe_err[0], fd_max);
+      shepherd_trace("pty_to_commlib: g_p_ijs_fds->pty_master = %d, "
+                     "g_p_ijs_fds->pipe_out = %d, "
+                     "g_p_ijs_fds->pipe_err = %d, fd_max = %d",
+                     g_p_ijs_fds->pty_master, g_p_ijs_fds->pipe_out,
+                     g_p_ijs_fds->pipe_err, fd_max);
 #endif
       /* Fill timeout struct for select */
       b_select_timeout = false;
@@ -418,39 +400,39 @@ static void* pty_to_commlib(void *t_conf)
          /* now we can be sure that our child has started the job,
           * we can close the pipe_to_child now
           */
-         if (g_fd_pipe_to_child[1] != -1) {
+         if (g_p_ijs_fds->pipe_to_child != -1) {
             shepherd_trace("pty_to_commlib: closing pipe to child");
-            close(g_fd_pipe_to_child[1]);
-            g_fd_pipe_to_child[1] = -1;
+            close(g_p_ijs_fds->pipe_to_child);
+            g_p_ijs_fds->pipe_to_child = -1;
          }
-         if (g_ptym != -1 && FD_ISSET(g_ptym, &read_fds)) {
+         if (g_p_ijs_fds->pty_master != -1 && FD_ISSET(g_p_ijs_fds->pty_master, &read_fds)) {
 #ifdef EXTENSIVE_TRACING
             shepherd_trace("pty_to_commlib: reading from ptym");
 #endif
-            ret = append_to_buf(g_ptym, stdout_buf, &stdout_bytes);
+            ret = append_to_buf(g_p_ijs_fds->pty_master, stdout_buf, &stdout_bytes);
 #ifdef EXTENSIVE_TRACING
             trace_buf(stdout_buf, ret, "pty_to_commlib: appended %d bytes, stdout_buf = ", 
                       ret, stdout_buf);
 #endif
          }
-         if (ret >= 0 && g_fd_pipe_out[0] != -1
-             && FD_ISSET(g_fd_pipe_out[0], &read_fds)) {
+         if (ret >= 0 && g_p_ijs_fds->pipe_out != -1
+             && FD_ISSET(g_p_ijs_fds->pipe_out, &read_fds)) {
 #ifdef EXTENSIVE_TRACING
             shepherd_trace("pty_to_commlib: reading from pipe_out");
 #endif
-            ret = append_to_buf(g_fd_pipe_out[0], stdout_buf, &stdout_bytes);
+            ret = append_to_buf(g_p_ijs_fds->pipe_out, stdout_buf, &stdout_bytes);
 
 #ifdef EXTENSIVE_TRACING
             trace_buf(stdout_buf, ret, "pty_to_commlib: appended %d bytes, stdout_buf = ",
                       ret, stdout_buf);
 #endif
          }
-         if (ret >= 0 && g_fd_pipe_err[0] != -1
-             && FD_ISSET(g_fd_pipe_err[0], &read_fds)) {
+         if (ret >= 0 && g_p_ijs_fds->pipe_err != -1
+             && FD_ISSET(g_p_ijs_fds->pipe_err, &read_fds)) {
 #ifdef EXTENSIVE_TRACING
             shepherd_trace("pty_to_commlib: reading from pipe_err");
 #endif
-            ret = append_to_buf(g_fd_pipe_err[0], stderr_buf, &stderr_bytes);
+            ret = append_to_buf(g_p_ijs_fds->pipe_err, stderr_buf, &stderr_bytes);
 #ifdef EXTENSIVE_TRACING
             trace_buf(stderr_buf, ret, "pty_to_commlib: appended %d bytes, stderr_buf = ",
                       ret, stderr_buf);
@@ -458,8 +440,7 @@ static void* pty_to_commlib(void *t_conf)
          }
          if (ret < 0) {
             /* A fd was closed, likely our child has exited, we can exit, too. */
-            shepherd_trace("pty_to_commlib: append_to_buf() returned %d, "
-                           "errno %d, %s -> exiting", ret, errno, strerror(errno));
+            shepherd_trace("pty_to_commlib: our child seems to have exited -> exiting");
             do_exit = 1;
          }
       }
@@ -503,6 +484,7 @@ static void* pty_to_commlib(void *t_conf)
    thread_func_cleanup(t_conf);
 
 /* TODO: This could cause race conditions in the main thread, replace with pthread_condition */
+/* HP: How can this cause race conditions? */
 #ifdef EXTENSIVE_TRACING
    shepherd_trace("pty_to_commlib: raising event for main thread");
 #endif
@@ -551,10 +533,10 @@ static void* commlib_to_pty(void *t_conf)
    /* report to thread lib that thread starts up now */
    thread_func_startup(t_conf);
 
-   if (g_ptym != -1) {
-      fd_write = g_ptym;
-   } else if (g_fd_pipe_in[1] != -1) {
-      fd_write = g_fd_pipe_in[1];
+   if (g_p_ijs_fds->pty_master != -1) {
+      fd_write = g_p_ijs_fds->pty_master;
+   } else if (g_p_ijs_fds->pipe_in != -1) {
+      fd_write = g_p_ijs_fds->pipe_in;
    } else {
       do_exit = 1;
       shepherd_trace("commlib_to_pty: no valid handle for stdin available. Exiting!");
@@ -611,7 +593,7 @@ static void* commlib_to_pty(void *t_conf)
                    * "noshell" may be 0 or 1, everything else indicates an error.
                    */
                   if (b_sent_to_child == false) {
-                     if (write(g_fd_pipe_to_child[1], "noshell = 9", 11) != 11) {
+                     if (write(g_p_ijs_fds->pipe_to_child, "noshell = 9", 11) != 11) {
                         shepherd_trace("commlib_to_pty: error in communicating "
                            "with child -> exiting");
                      } else {
@@ -638,7 +620,9 @@ static void* commlib_to_pty(void *t_conf)
                break;
             case COMM_CANT_RECEIVE_MESSAGE:
                if (check_client_alive(g_comm_handle, 
-                                      COMM_SERVER, &err_msg) != COMM_RETVAL_OK) {
+                                      COMM_SERVER,
+                                      g_hostname,
+                                      &err_msg) != COMM_RETVAL_OK) {
                   shepherd_trace("commlib_to_pty: not connected any more -> exiting.");
                   do_exit = 1;
                } else {
@@ -661,11 +645,18 @@ static void* commlib_to_pty(void *t_conf)
                /* shepherd_trace("commlib_to_pty: interrupted select"); */
                b_was_connected = 1;
                break;
+            case COMM_NO_MESSAGE_AVAILABLE:
+#ifdef EXTENSIVE_TRACING
+               shepherd_trace("commlib_to_pty: didn't receive a message within 1 s "
+                  "timeout -> trying again");
+#endif
+               b_was_connected = 1; 
+               break;
             default:
                /* Unknown error, just try again */
 #ifdef EXTENSIVE_TRACING
                shepherd_trace("commlib_to_pty: comm_recv_message() returned %d -> "
-                              "trying again\n", ret);
+                              "trying again", ret);
 #endif
                b_was_connected = 1;
                break;
@@ -695,19 +686,19 @@ static void* commlib_to_pty(void *t_conf)
                /* control message, set size of pty */
                shepherd_trace("commlib_to_pty: received window size message, "
                   "changing window size");
-               ioctl(g_ptym, TIOCSWINSZ, &(recv_mess.ws));
+               ioctl(g_p_ijs_fds->pty_master, TIOCSWINSZ, &(recv_mess.ws));
                b_was_connected = 1;
                break;
             case SETTINGS_CTRL_MSG:
                /* control message */
-               shepherd_trace("commlib_to_pty: recevied settings message\n");
+               shepherd_trace("commlib_to_pty: received settings message");
                /* Forward the settings to the child process.
                 * This is also tells the child process that it can start
                 * the job 'in' the pty now.
                 */
                shepherd_trace("commlib_to_pty: writing to child %d bytes: %s",
                               strlen(recv_mess.data), recv_mess.data);
-               if (write(g_fd_pipe_to_child[1], recv_mess.data, 
+               if (write(g_p_ijs_fds->pipe_to_child, recv_mess.data, 
                          strlen(recv_mess.data)) != strlen(recv_mess.data)) {
                   shepherd_trace("commlib_to_pty: error in communicating "
                      "with child -> exiting");
@@ -737,7 +728,7 @@ static void* commlib_to_pty(void *t_conf)
    sge_dstring_free(&err_msg);
 
 #ifdef EXTENSIVE_TRACING
-   shepherd_trace("commlib_to_pty: leaving commlib_to_pty function\n");
+   shepherd_trace("commlib_to_pty: leaving commlib_to_pty function");
 #endif
    thread_func_cleanup(t_conf);
 /* TODO: pthread_condition, see other thread*/
@@ -752,13 +743,11 @@ static void* commlib_to_pty(void *t_conf)
    return NULL;
 }
 
-int parent_loop(char *hostname, int port, int ptym, 
-                int *fd_pipe_in, int *fd_pipe_out, int *fd_pipe_err, 
-                int *fd_pipe_to_child, 
-                int ckpt_pid, int ckpt_type, int timeout, 
-                int ckpt_interval, char *childname,
-                char *user_name, int *exit_status, struct rusage *rusage,
-                int job_pid, dstring *err_msg)
+int
+parent_loop(int job_pid, const char *childname, int timeout, ckpt_info_t *p_ckpt_info,
+   ijs_fds_t *p_ijs_fds, const char *job_owner, const char *remote_host,
+   int remote_port, bool csp_mode, int *exit_status, struct rusage *rusage,
+   dstring *err_msg)
 {
    int               ret;
    THREAD_LIB_HANDLE *thread_lib_handle     = NULL;
@@ -766,19 +755,17 @@ int parent_loop(char *hostname, int port, int ptym,
    THREAD_HANDLE     *thread_commlib_to_pty = NULL;
    cl_raw_list_t     *cl_com_log_list = NULL;
 
-   shepherd_trace("main: starting parent_loop");
+   shepherd_trace("parent: starting parent loop with remote_host = %s, "
+                  "remote_port = %d, job_owner = %s, fd_pty_master = %d, "
+                  "fd_pipe_in = %d, fd_pipe_out = %d, "
+                  "fd_pipe_err = %d, fd_pipe_to_child = %d",
+                  remote_host, remote_port, job_owner, p_ijs_fds->pty_master,
+                  p_ijs_fds->pipe_in, p_ijs_fds->pipe_out, p_ijs_fds->pipe_err,
+                  p_ijs_fds->pipe_to_child);
 
-   g_hostname            = strdup(hostname);
-   g_ptym                = ptym;
-   g_fd_pipe_in[0]       = fd_pipe_in[0];
-   g_fd_pipe_in[1]       = fd_pipe_in[1];
-   g_fd_pipe_out[0]      = fd_pipe_out[0];
-   g_fd_pipe_out[1]      = fd_pipe_out[1];
-   g_fd_pipe_err[0]      = fd_pipe_err[0];
-   g_fd_pipe_err[1]      = fd_pipe_err[1];
-   g_fd_pipe_to_child[0] = fd_pipe_to_child[0];
-   g_fd_pipe_to_child[1] = fd_pipe_to_child[1];
-   g_job_pid             = job_pid;
+   g_hostname  = strdup(remote_host);
+   g_p_ijs_fds = p_ijs_fds;
+   g_job_pid   = job_pid;
 
    /*
     * Initialize err_msg, so it's never NULL.
@@ -787,7 +774,7 @@ int parent_loop(char *hostname, int port, int ptym,
 
    ret = comm_init_lib(err_msg);
    if (ret != COMM_RETVAL_OK) {
-      shepherd_trace("main: init comm lib failed: %d", ret);
+      shepherd_trace("parent: init comm lib failed: %d", ret);
       return 1;
    }
 
@@ -796,7 +783,7 @@ int parent_loop(char *hostname, int port, int ptym,
     */
    ret = thread_init_lib(&thread_lib_handle);
    if (ret != CL_RETVAL_OK) {
-      shepherd_trace("main: init thread lib thread failed: %d", ret);
+      shepherd_trace("parent: init thread lib thread failed: %d", ret);
       return 1;
    }
 
@@ -811,18 +798,19 @@ int parent_loop(char *hostname, int port, int ptym,
     */
    ret = register_thread(cl_com_log_list, &g_thread_main, "main thread");
    if (ret != CL_RETVAL_OK) {
-      shepherd_trace("main: registering main thread failed: %d", ret);
+      shepherd_trace("parent: registering main thread failed: %d", ret);
       return 1;
    }
 
    /*
     * Open the connection port so we can connect to our server
     */
-   shepherd_trace("main: opening connection to qrsh/qlogin client");
-   ret = comm_open_connection(false, g_csp_mode, COMM_CLIENT, port, COMM_SERVER,
-                              user_name, &g_comm_handle, err_msg);
+   shepherd_trace("parent: opening connection to qrsh/qlogin client");
+   ret = comm_open_connection(false, csp_mode, COMM_CLIENT, remote_port,
+                              COMM_SERVER, g_hostname, job_owner,
+                              &g_comm_handle, err_msg);
    if (ret != COMM_RETVAL_OK) {
-      shepherd_trace("main: can't open commlib stream, err_msg = %s", 
+      shepherd_trace("parent: can't open commlib stream, err_msg = %s", 
                      sge_dstring_get_string(err_msg));
       return 1;
    }
@@ -832,12 +820,12 @@ int parent_loop(char *hostname, int port, int ptym,
     * The answer of the server (a WINDOW_SIZE_CTRL_MSG) will be handled in the
     * commlib_to_pty thread.
     */
-   shepherd_trace("main: sending REGISTER_CTRL_MSG");
+   shepherd_trace("parent: sending REGISTER_CTRL_MSG to qrsh/qlogin client");
    ret = (int)comm_write_message(g_comm_handle, g_hostname, COMM_SERVER, 1, 
                       (unsigned char*)" ", 1, REGISTER_CTRL_MSG, err_msg);
    if (ret == 0) {
       /* No bytes written - error */
-      shepherd_trace("main: can't send REGISTER_CTRL_MSG, comm_write_message() "
+      shepherd_trace("parent: can't send REGISTER_CTRL_MSG, comm_write_message() "
                      "returned: %s", sge_dstring_get_string(err_msg));
    /* Don't exit here, the error handling is done in the commlib_to_tty-thread */
    /* Most likely, the qrsh client is not running, so it's not the shepherds fault,
@@ -848,7 +836,7 @@ int parent_loop(char *hostname, int port, int ptym,
    }
 #ifdef EXTENSIVE_TRACING
    else {
-      shepherd_trace("main: Sent %d bytes to qrsh client", ret);
+      shepherd_trace("parent: Sent %d bytes to qrsh client", ret);
    }
 #endif
 
@@ -856,6 +844,7 @@ int parent_loop(char *hostname, int port, int ptym,
       sigset_t old_sigmask;
       sge_thread_block_all_signals(&old_sigmask);
 
+      shepherd_trace("parent: creating pty_to_commlib thread");
       ret = create_thread(thread_lib_handle,
                           &thread_pty_to_commlib,
                           cl_com_log_list,
@@ -863,9 +852,10 @@ int parent_loop(char *hostname, int port, int ptym,
                           2,
                           pty_to_commlib);
       if (ret != CL_RETVAL_OK) {
-         shepherd_trace("main: creating pty_to_commlib thread failed: %d", ret);
+         shepherd_trace("parent: creating pty_to_commlib thread failed: %d", ret);
       }
 
+      shepherd_trace("parent: creating commlib_to_pty thread");
       ret = create_thread(thread_lib_handle,
                           &thread_commlib_to_pty,
                           cl_com_log_list,
@@ -877,7 +867,7 @@ int parent_loop(char *hostname, int port, int ptym,
    }
 
    if (ret != CL_RETVAL_OK) {
-      shepherd_trace("main: creating commlib_to_pty thread failed: %d", ret);
+      shepherd_trace("parent: creating commlib_to_pty thread failed: %d", ret);
    }
 
    /* From here on, the two worker threads are doing all the work.
@@ -890,17 +880,16 @@ int parent_loop(char *hostname, int port, int ptym,
     * a signal arrives. Therefore we have to check if it was a signal
     * or a event that awoke this thread.
     */
-   shepherd_trace("main: created both worker threads, now waiting jobs end");
+   shepherd_trace("parent: created both worker threads, now waiting for jobs end");
 
-   *exit_status = wait_my_child(job_pid, ckpt_pid, ckpt_type, rusage, timeout,
-                 ckpt_interval, childname);
+   *exit_status = wait_my_child(job_pid, childname, timeout, p_ckpt_info, rusage);
    alarm(0);
 
-   shepherd_trace("main: wait_my_child returned exit_status = %d", *exit_status);
-   shepherd_trace("main:            rusage.ru_stime.tv_sec  = %d", rusage->ru_stime.tv_sec);
-   shepherd_trace("main:            rusage.ru_stime.tv_usec = %d", rusage->ru_stime.tv_usec);
-   shepherd_trace("main:            rusage.ru_utime.tv_sec  = %d", rusage->ru_utime.tv_sec);
-   shepherd_trace("main:            rusage.ru_utime.tv_usec = %d", rusage->ru_utime.tv_usec);
+   shepherd_trace("parent: wait_my_child returned exit_status = %d", *exit_status);
+   shepherd_trace("parent:            rusage.ru_stime.tv_sec  = %d", rusage->ru_stime.tv_sec);
+   shepherd_trace("parent:            rusage.ru_stime.tv_usec = %d", rusage->ru_stime.tv_usec);
+   shepherd_trace("parent:            rusage.ru_utime.tv_sec  = %d", rusage->ru_utime.tv_sec);
+   shepherd_trace("parent:            rusage.ru_utime.tv_usec = %d", rusage->ru_utime.tv_usec);
 
    /*
     * We are sure the job exited when we get here, but there could still be
@@ -910,15 +899,11 @@ int parent_loop(char *hostname, int port, int ptym,
    while (g_raised_event == 0) {
       ret = thread_wait_for_event(&g_thread_main, 0, 0);
    }
-   shepherd_trace("main: received event %d, g_raised_event = %d\n", 
+   shepherd_trace("parent: received event %d, g_raised_event = %d", 
                   ret, g_raised_event);
 
    /* 
-    * One of the threads sent an event, so shut down both threads now
-    */
-   shepherd_trace("main: shutting down pty_to_commlib thread");
-
-   /* 
+    * One of the worker threads sent an event, so shut down both threads now.
     * Shutdown the threads thread_pty_to_commlib and thread_commlib_to_pty
     */
    cl_raw_list_lock(thread_lib_handle);
@@ -926,7 +911,9 @@ int parent_loop(char *hostname, int port, int ptym,
    cl_thread_list_delete_thread_from_list(thread_lib_handle, thread_commlib_to_pty);
    cl_raw_list_unlock(thread_lib_handle);
 
+   shepherd_trace("parent: shutting down pty_to_commlib thread");
    cl_thread_shutdown(thread_pty_to_commlib);
+   shepherd_trace("parent: shutting down commlib_to_pty thread");
    cl_thread_shutdown(thread_commlib_to_pty);
 
    /*
@@ -935,14 +922,11 @@ int parent_loop(char *hostname, int port, int ptym,
    cl_thread_trigger_thread_condition(g_comm_handle->app_condition, 1);
 
 
-   close(g_ptym);
+   close(g_p_ijs_fds->pty_master);
 
-   close(g_fd_pipe_in[0]);
-   close(g_fd_pipe_in[1]);
-   close(g_fd_pipe_out[0]);
-   close(g_fd_pipe_out[1]);
-   close(g_fd_pipe_err[0]);
-   close(g_fd_pipe_err[1]);
+   close(g_p_ijs_fds->pipe_in);
+   close(g_p_ijs_fds->pipe_out);
+   close(g_p_ijs_fds->pipe_err);
 
    /*
     * Wait until threads have shut down and call cleanup functions
@@ -962,12 +946,12 @@ shepherd_trace("+++++ timestamp: %d.%03d ++++", (int)ts.time, (int)ts.millitm);
 #endif
 
    /* From here on, only the main thread is running */
-   shepherd_trace("main: thread_cleanup_lib()");
+   shepherd_trace("parent: thread_cleanup_lib()");
    thread_cleanup_lib(&thread_lib_handle); 
 
    /* The communication will be freed in close_parent_loop() */
    sge_dstring_free(err_msg);
-   shepherd_trace("main: leaving main loop");
+   shepherd_trace("parent: leaving main loop. From here on, only the main thread is running.");
    return 0;
 }
 
@@ -1013,9 +997,11 @@ int close_parent_loop(int exit_status)
  *       occurs (60s), so we check if the server is running before
  *       we wait for the message.
  *       This has to be fixed in comm_recv_message() or the commlib.
+ * HP: I guess this was fixed in commlib, can't reproduce an 60 s timeout
+ *     any more.
  */
          if (check_client_alive(g_comm_handle, 
-                                COMM_SERVER, &err_msg) != COMM_RETVAL_OK) {
+                                COMM_SERVER, g_hostname, &err_msg) != COMM_RETVAL_OK) {
             shepherd_trace("Server already exited");
             break;
          }
@@ -1026,7 +1012,8 @@ int close_parent_loop(int exit_status)
             shepherd_trace("Received UNREGISTER_RESPONSE_CTRL_MSG");
             comm_free_message(&recv_mess, &err_msg);
             break;
-         } else if (ret == COMM_NO_MESSAGE_AVAILABLE) {
+         } else if (ret == COMM_NO_MESSAGE_AVAILABLE && count%10 == 0) {
+            /* trace this only every 10 loops (default: 1 loop = 1 s) */
             shepherd_trace("still waiting for UNREGISTER_RESPONSE_CTRL_MSG");
          } else if (ret == COMM_CONNECTION_NOT_FOUND) {
             shepherd_trace("client disconnected - break");
@@ -1044,7 +1031,7 @@ int close_parent_loop(int exit_status)
     * Tell the communication to shut down immediately, don't wait for 
     * the next timeout
     */
-   shepherd_trace("main: cl_com_ignore_timeouts");
+   shepherd_trace("parent: cl_com_ignore_timeouts");
    comm_ignore_timeouts(true, &err_msg);
 
    /*
@@ -1052,12 +1039,12 @@ int close_parent_loop(int exit_status)
     */
    ret = comm_cleanup_lib(&err_msg);
    if (ret != COMM_RETVAL_OK) {
-      shepherd_trace("main: error in comm_cleanup_lib(): %d", ret);
+      shepherd_trace("parent: error in comm_cleanup_lib(): %d", ret);
    }
 
    FREE(g_hostname);
    sge_dstring_free(&err_msg);
-   shepherd_trace("main: leaving closinge_parent_loop()");
+   shepherd_trace("parent: leaving closinge_parent_loop()");
    return 0;
 }
 

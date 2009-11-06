@@ -31,13 +31,15 @@
 /*___INFO__MARK_END__*/
 #include <stdio.h>
 
-#include "sge_ja_task.h"
-#include "sge_orderL.h"
+#include "rmon/sgermon.h"
+
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_order.h"
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_job.h"
+
 #include "sge_orders.h"
 #include "sge_interactive_sched.h"
-#include "sgermon.h"
-#include "sge_range.h"
-#include "sge_job.h"
 
 static void 
 order_remove_order_and_immediate(lListElem *job, lListElem *ja_task, 

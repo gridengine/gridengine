@@ -36,7 +36,7 @@
 
 #include "msg_common.h"
 #include "rmon/sgermon.h"
-#include "sched/sge_resource_utilizationL.h"
+#include "sge_resource_utilization_RUE_L.h"
 #include "spool/flatfile/sge_flatfile.h"
 #include "spool/flatfile/msg_spoollib_flatfile.h"
 #include "sgeobj/sge_answer.h"
@@ -63,9 +63,9 @@
 #include "sgeobj/sge_userprj.h"
 #include "sgeobj/sge_userset.h"
 #include "sgeobj/sge_advance_reservation.h"
-#include "sgeobj/sge_qrefL.h"
-#include "sgeobj/sge_jobL.h"
-#include "sgeobj/sge_mailrecL.h"
+#include "sgeobj/sge_qref.h"
+#include "sgeobj/sge_job.h"
+#include "sge_mailrec.h"
 #include "uti/sge_log.h"
 #include "uti/sge_string.h"
 
@@ -179,6 +179,9 @@ static spooling_field APRJLIST_sub_fields[] = {
 static spooling_field SO_sub_fields[] = {
    {  SO_name,            11, NULL, NULL, NULL, NULL, NULL},
    {  SO_threshold,       11, NULL, NULL, NULL, NULL, NULL},
+   {  SO_slots_sum,       11, NULL, NULL, NULL, NULL, NULL},
+   {  SO_seq_no,          11, NULL, NULL, NULL, NULL, NULL},
+   {  SO_action,          11, NULL, NULL, NULL, NULL, NULL},
    {  NoName,             11, NULL, NULL, NULL, NULL, NULL}
 };
 
@@ -1336,7 +1339,9 @@ static int read_CQ_solist_attr_list(lListElem *ep, int nm, const char *buffer,
 static int write_CQ_solist_attr_list(const lListElem *ep, int nm,
                                    dstring *buffer, lList **alp)
 {
-   solist_attr_list_append_to_dstring(lGetList (ep, nm), buffer);
+   lList *lp = lGetList(ep, nm);
+   
+   solist_attr_list_append_to_dstring(lp, buffer);
    
    return 1;
 }

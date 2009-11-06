@@ -55,7 +55,7 @@ SGEHELPERSERVICE_WINLFLAGS = /SUBSYSTEM:CONSOLE $(WINLFLAGS)
 sge_helper_service: $(SGEHELPERSERVICE_TARGETS)
 
 sge_helper_service_clean: 
-	$(RM) $(SGEHELPERSERVICE_TARGETS) $(SGEHELPERSERVICE_OBJS)
+	$(RM) $(SGEHELPERSERVICE_TARGETS) $(SGEHELPERSERVICE_OBJS) SGE_Starter.obj
 	$(RM) SGE_Helper_Service.ilk SGE_Helper_Service.pdb vc70.pdb vc70.idb
 
 sge_helper_service_depend:

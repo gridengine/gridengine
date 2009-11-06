@@ -83,7 +83,7 @@ setup_lists(lList **jobs, lList **hosts, lList **config, lList **centry)
     */
 
    what = lWhat("%T(ALL)", JB_Type);
-   alp=sge_gdi(SGE_JOB_LIST, SGE_GDI_GET, jobs, NULL, what);
+   alp=sge_gdi(SGE_JB_LIST, SGE_GDI_GET, jobs, NULL, what);
    lFreeWhat(what);
 
    aep = lFirst(alp);
@@ -104,7 +104,7 @@ setup_lists(lList **jobs, lList **hosts, lList **config, lList **centry)
     */
 
    what = lWhat("%T(ALL)", EH_Type);
-   alp=sge_gdi(SGE_EXECHOST_LIST, SGE_GDI_GET, hosts, NULL, what);
+   alp=sge_gdi(SGE_EH_LIST, SGE_GDI_GET, hosts, NULL, what);
    lFreeWhat(what);
 
    aep = lFirst(alp);
@@ -120,7 +120,7 @@ setup_lists(lList **jobs, lList **hosts, lList **config, lList **centry)
     */
 
    what = lWhat("%T(ALL)", CE_Type);
-   alp=sge_gdi(SGE_CENTRY_LIST, SGE_GDI_GET, centry, NULL, what);
+   alp=sge_gdi(SGE_CE_LIST, SGE_GDI_GET, centry, NULL, what);
    lFreeWhat(what);
 
    aep = lFirst(alp);

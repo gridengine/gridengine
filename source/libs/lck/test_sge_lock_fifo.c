@@ -140,9 +140,9 @@ int validate(int thread_count) {
    }
    mean = sum/thread_count;
 
-   /* every thread should got the same lock amount. We only accept a tolerance of 5% */
+   /* every thread should got the same lock amount. We accept a tolerance of 50% */
    for (i=0; i < thread_count; i++) {
-      if (is_in_tolerance(results[i], mean, 5) != 0) {
+      if (is_in_tolerance(results[i], mean, 50) != 0) {
          ret = 1;
          break;
       }
@@ -156,7 +156,7 @@ int validate(int thread_count) {
          maxlocks = mean;  
       } else {
          for (i=0; i < thread_count; i++) {
-            if (is_in_tolerance(results[i]*2, maxlocks, 5) != 0) {
+            if (is_in_tolerance(results[i]*2, maxlocks, 50) != 0) {
                #if !defined(DARWIN) && !defined(AIX)
                /* pthreads on darwin and aix scales very bad and this test fail */
                ret = 1;

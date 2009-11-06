@@ -62,6 +62,7 @@
 #include "uti/msg_utilib.h"
 #include "uti/sge_language.h"
 #include "uti/sge_spool.h"
+#include "uti/sge_time.h"
 
 #include "sgeobj/sge_answer.h"
 
@@ -118,6 +119,7 @@ typedef struct {
 
    bool is_qmaster_internal_client;
    bool is_setup;
+   u_long32 last_qmaster_file_read;
 } sge_gdi_ctx_t;
 
 static pthread_key_t  gdi_state_key;
@@ -1428,21 +1430,33 @@ static const char* get_master(sge_gdi_ctx_class_t *thiz, bool reread) {
    if (es->master == NULL || reread) {
       char err_str[SGE_PATH_MAX+128];
       char master_name[CL_MAXHOSTLEN];
+      u_long32 now = sge_get_gmt();
 
-      if (get_qm_name(master_name, path_state->get_act_qmaster_file(path_state), err_str) == -1) {         
-         if (eh != NULL && !error_already_logged) {
-            eh->error(eh, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, MSG_GDI_READMASTERNAMEFAILED_S, err_str);
-            error_already_logged = true;
-         }
-         DRETURN(NULL);
-      } 
-      error_already_logged = false;
-      DPRINTF(("(re-)reading act_qmaster file. Got master host \"%s\"\n", master_name));
-      /*
-      ** TODO: thread locking needed here ?
-      */ 
-      es->master = sge_strdup(es->master,master_name);
-   }   
+      /* fix system clock moved back situation */
+      if (es->last_qmaster_file_read > now) {
+         es->last_qmaster_file_read = 0;
+      }
+ 
+      if (es->master == NULL || now - es->last_qmaster_file_read >= 30) {
+         /* re-read act qmaster file (max. every 30 seconds) */
+         DPRINTF(("re-read actual qmaster file\n"));
+         es->last_qmaster_file_read = now;
+
+         if (get_qm_name(master_name, path_state->get_act_qmaster_file(path_state), err_str) == -1) {         
+            if (eh != NULL && !error_already_logged) {
+               eh->error(eh, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, MSG_GDI_READMASTERNAMEFAILED_S, err_str);
+               error_already_logged = true;
+            }
+            DRETURN(NULL);
+         } 
+         error_already_logged = false;
+         DPRINTF(("(re-)reading act_qmaster file. Got master host \"%s\"\n", master_name));
+         /*
+         ** TODO: thread locking needed here ?
+         */ 
+         es->master = sge_strdup(es->master,master_name);
+      }   
+   }
    DRETURN(es->master);
 }
 

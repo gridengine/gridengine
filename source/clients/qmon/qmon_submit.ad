@@ -117,6 +117,7 @@ Qmon*submit_general.xmtChildren: \
                      submit_now = now; \
    Spinbox           submit_priority = priority; \
    Spinbox           submit_jobshare = jobshare; \
+   Spinbox           submit_taskconcurrency = task_concurrency; \
    XmPushButton      submit_scriptPB, submit_resources, submit_stdoutputPB, \
                      submit_stdinputPB, submit_stderrorPB, submit_exec_timePB, \
                      submit_projectPB, submit_shellPB; \
@@ -138,6 +139,8 @@ Qmon*submit_general.layout: \
             Fixed Caption tl "@{Priority}" submit_priority \
             <> \
             Fixed Caption tl "@{Job Share}" submit_jobshare \
+            <> \
+            Fixed Caption tl "@{Max Tasks}" submit_taskconcurrency \
             <> \
          } \
          Row { \
@@ -235,6 +238,14 @@ Qmon*submit_layout*submit_jobshare.columns:         5
 Qmon*submit_layout*submit_jobshare.spinboxUseClosestValue:   True
 Qmon*submit_layout*submit_jobshare.value:           0
 
+Qmon*submit_layout*submit_taskconcurrency.minimum:         0
+Qmon*submit_layout*submit_taskconcurrency.incrementLarge:  10
+Qmon*submit_layout*submit_taskconcurrency.spinboxStyle:    SPINBOX_STACKED_RIGHT
+Qmon*submit_layout*submit_taskconcurrency.buttonSizeFixed: True
+Qmon*submit_layout*submit_taskconcurrency.columns:         5
+Qmon*submit_layout*submit_taskconcurrency.spinboxUseClosestValue:   True
+Qmon*submit_layout*submit_taskconcurrency.value:           0
+
 Qmon*submit_layout*submit_script.navigationType: TAB_GROUP
 Qmon*submit_layout*submit_scriptPB.navigationType: TAB_GROUP
 Qmon*submit_layout*submit_name.navigationType: TAB_GROUP
@@ -262,6 +273,7 @@ Qmon*submit_detail.xmtChildren: \
                      submit_pe = pe, \
                      submit_ar = ar_id, \
                      submit_jsv_url = jsv_url, \
+                     submit_binding = binding, \
                      submit_account = account_string; \
    TimeInput         submit_deadline = deadline; \
    StrListField      submit_mail_user = mail_list, \
@@ -313,6 +325,10 @@ Qmon*submit_detail.layout: \
             Caption tl "@{JSV URL}" Centered 30 em submit_jsv_url \
             <> \
             Fixed Centered submit_jsv_urlPB \
+         } \
+         Row { \
+            Caption tl "@{Binding}" Centered 30 em submit_binding \
+            <> \
          } \
          <> \
       } \

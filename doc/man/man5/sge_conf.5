@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2009/04/06 15:31:31 $     Revision: $Revision: 1.87 $
+.\" $RCSfile: sge_conf.5,v $     Last Update: $Date: 2009/08/25 19:39:34 $     Revision: $Revision: 1.89 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2009/04/06 15:31:31 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH xxQS_NAME_Sxx_CONF 5 "$Date: 2009/08/25 19:39:34 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 xxqs_name_sxx_conf \- xxQS_NAMExx configuration files
@@ -1183,9 +1183,22 @@ reason for gdi timeouts, this may show you some useful messages. The default val
 (e.g cl_ping=false)
 .PP
 .IP "\fISCHEDULER_TIMEOUT\fp
-Setting this parameter allows the scheduler GDI event acknowledge timeout to be manually configured to a 
-specific value. Currently the default value is set to 10 minutes. The \fISCHEDULER_TIMEOUT\fP value is 
-specified in seconds.
+Setting this parameter allows the scheduler GDI event acknowledge timeout to be manually configured to a
+specific value. Currently the default value is 10 minutes with the default scheduler configuration and limited
+between 600 and 1200 seconds. Value is limited only in case of default value. The default value depends
+on the current scheduler configuration. The \fISCHEDULER_TIMEOUT\fP value is specified in seconds.
+.PP
+.IP "\fIjsv_timeout\fp
+This parameter measures the response time of the server JSV. In the event that the response time of the JSV 
+is longer than the timeout value specified, this will cause the JSV to be re-started. The default value for the
+timeout is 10 seconds and if modified, must be greater than 0. If the timeout has been reach, the JSV will only
+try to re-start once, if the timeout is reached again an error will occur.
+.PP
+.IP "\fIjsv_threshold\fp
+The threshold of a JSV is measured as the time it takes to perform a server job verification. If this value is 
+greater than the user defined value, it will cause logging to appear in the qmaster messages file at the INFO 
+level. By setting this value to 0, all jobs will be logged in the qmaster messages file. This value is specified
+in milliseconds and has a default value of 5000.
 .PP
 Changing \fBqmaster_params\fP will take immediate effect, except gdi_timeout, gdi_retries, cl_ping, these
 will take effect only for new connections.

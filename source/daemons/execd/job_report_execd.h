@@ -43,7 +43,7 @@ void del_job_report(lListElem *jr);
 void cleanup_job_report(u_long32 jobid, u_long32 jataskid);
 void trace_jr(void);
 
-int add_usage(lListElem *jr, char *name, const char *uval_as_str, double val);
+int add_usage(lListElem *jr, const char *name, const char *uval_as_str, double val);
 
 #include "dispatcher.h"
 

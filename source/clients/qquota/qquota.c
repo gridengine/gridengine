@@ -31,10 +31,8 @@
 /*___INFO__MARK_END__*/
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <limits.h>
 #include <math.h>
-#include <float.h>
 #include <pwd.h>
 
 #include "basis_types.h"
@@ -51,16 +49,9 @@
 #include "sge_feature.h"
 #include "sge_unistd.h"
 #include "sge_stdlib.h"
-#include "cull_parse_util.h"
 #include "parse.h"
 #include "sge_host.h"
-#include "sge_complex_schedd.h"
-#include "sge_parse_num_par.h"
 #include "sge_select_queue.h"
-#include "qstat_printing.h"
-#include "sge_range.h"
-#include "load_correction.h"
-#include "sge_conf.h"
 #include "msg_common.h"
 #include "msg_clients_common.h"
 #include "msg_qquota.h"
@@ -68,10 +59,6 @@
 #include "sge_hostname.h"
 #include "sge_log.h"
 #include "sge_answer.h"
-#include "sge_qinstance.h"
-#include "sge_qinstance_state.h"
-#include "sge_qinstance_type.h"
-#include "sge_ulong.h"
 #include "sge_centry.h"
 #include "sgeobj/sge_schedd_conf.h"
 #include "sge_mt_init.h"
@@ -83,6 +70,7 @@
 #include "read_defaults.h"
 #include "uti/sge_io.h"
 #include "gdi/sge_gdi_ctx.h"
+#include "sgeobj/sge_cull_xml.h"
 
 static report_handler_t* create_xml_report_handler(lList **alpp);
 

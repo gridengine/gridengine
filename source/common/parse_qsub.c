@@ -32,36 +32,37 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <fnmatch.h>
 
-#include "symbols.h"
 #include "sge_all_listsL.h"
-#include "parse_qsubL.h"
+#include "sge_parse_SPA_L.h"
 #include "parse_job_cull.h"
 #include "sge_mailrec.h"
 #include "parse_qsub.h"
-#include "sge_feature.h"
-#include "sge_userset.h"
 #include "sge_parse_num_par.h"
 #include "parse.h"
 #include "sge_options.h"
-#include "sgermon.h"
-#include "sge_log.h"
 #include "cull_parse_util.h"
-#include "sge_string.h"
-#include "sge_stdlib.h"
-#include "sge_answer.h"
-#include "sge_range.h"
-#include "sge_ckpt.h"
-#include "sge_ulong.h"
+
+#include "rmon/sgermon.h"
 
 #include "uti/sge_dstring.h"
+#include "uti/sge_binding_hlp.h"
+#include "uti/sge_stdlib.h"
+#include "uti/sge_string.h"
+#include "uti/sge_log.h"
 
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_ckpt.h"
+#include "sgeobj/sge_ulong.h"
+#include "sgeobj/sge_binding.h"
 #include "sgeobj/sge_str.h"
 #include "sgeobj/sge_centry.h"
 #include "sgeobj/sge_job.h"
 #include "sgeobj/sge_var.h"
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_jsv.h"
+#include "sgeobj/sge_qref.h"
 
 #include "msg_common.h"
 
@@ -323,6 +324,53 @@ u_long32 flags
          continue;
       }
 
+/*----------------------------------------------------------------------------*/
+      /* "-binding [set|env|pe] linear:<amount>[:<socket>,<core>] 
+            | striding:<amount>:<stepsize>[:<socket>,<core>] 
+            | explicit:<socket>,<core>[:<socket>,<core>]* " */
+
+      if (!strcmp("-binding", *sp)) {
+         lListElem *binding_elem = lCreateElem(BN_Type);
+         dstring argument_string = DSTRING_INIT;
+         const char *switch_name = "-binding";
+         const char *switch_argument = NULL;
+
+         /* next field is [set|env|pe] "linear" or "striding" or "explicit" */
+         sp++;
+         if (*sp == NULL) {
+            answer_list_add_sprintf(&answer, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
+                                     MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S,"-binding");
+            DRETURN(answer);
+         }
+         if (strcmp(*sp, "set") == 0 || strcmp(*sp, "env") == 0 || strcmp(*sp, "pe") == 0) {
+
+            sge_dstring_append(&argument_string, *sp);
+            sge_dstring_append_char(&argument_string, ' ');
+            sp++;
+            if (*sp == NULL) {
+               answer_list_add_sprintf(&answer, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
+                                        MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S,"-binding");
+               DRETURN(answer);
+            }
+         }
+         sge_dstring_append(&argument_string, *sp);
+         switch_argument = sge_dstring_get_string(&argument_string);
+
+         if (binding_parse_from_string(binding_elem, &answer, &argument_string)) {
+            lList *binding_list = lCreateList("binding", BN_Type);
+
+            lAppendElem(binding_list, binding_elem);
+            ep_opt = sge_add_arg(pcmdline, binding_OPT, lListT, switch_name, switch_argument);
+            lSetList(ep_opt, SPA_argval_lListT, binding_list);
+         } else {
+            /* answer has ween written by binding_parse_from_string() */
+            DRETURN(answer);
+         }
+         sp++;
+         continue;
+      }
+
+/*-----------------------------------------------------------------------------*/
 
 /*-----------------------------------------------------------------------------*/
       /* "-c [op] interval */
@@ -1555,6 +1603,30 @@ DTRACE;
 
          ep_opt = sge_add_arg(pcmdline, t_OPT, lListT, *(sp - 1), *sp);
          lSetList(ep_opt, SPA_argval_lListT, task_id_range_list);
+
+         sp++;
+         continue;
+      }
+
+/*-----------------------------------------------------------------------------*/
+      /* "-tc number */
+
+      if (!strcmp("-tc", *sp)) {
+         int number;
+
+         sp++;
+         if (!*sp) {
+             answer_list_add_sprintf(&answer, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
+                       MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S, "-tc" );
+             DRETURN(answer);
+         }
+
+         if (ulong_parse_task_concurrency(&answer, &number, *sp) == false) {
+            DRETURN(answer);
+         }
+
+         ep_opt = sge_add_arg(pcmdline, tc_OPT, lUlongT, *(sp - 1), *sp);
+         lSetUlong(ep_opt, SPA_argval_lUlongT, number);
 
          sp++;
          continue;

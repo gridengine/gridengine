@@ -30,17 +30,17 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sgermon.h"
-#include "sge_log.h"
-#include "sge_usageL.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_time.h"
+
+#include "sge_usage.h"
 #include "sge_job.h"
 #include "sge_ja_task.h"
 #include "sge_pe_task.h"
 #include "sge_report.h"
-#include "sge_time.h"
-
 #include "execution_states.h"
-
 #include "msg_sgeobjlib.h"
 
 #if 0

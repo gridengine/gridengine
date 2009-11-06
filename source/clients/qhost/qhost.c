@@ -31,10 +31,8 @@
 /*___INFO__MARK_END__*/
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <limits.h>
 #include <math.h>
-#include <float.h>
 
 #include "basis_types.h"
 #include "sge.h"
@@ -49,36 +47,23 @@
 #include "sge_feature.h"
 #include "sge_unistd.h"
 #include "sge_stdlib.h"
-#include "cull_parse_util.h"
 #include "parse.h"
 #include "sge_host.h"
-#include "sge_complex_schedd.h"
-#include "sge_parse_num_par.h"
 #include "sge_select_queue.h"
 #include "qstat_printing.h"
 #include "sge_range.h"
-#include "load_correction.h"
-#include "sge_conf.h"
 #include "msg_common.h"
 #include "msg_clients_common.h"
 #include "msg_qhost.h"
-#include "sge_string.h"
 #include "sge_hostname.h"
 #include "sge_log.h"
 #include "sge_answer.h"
-#include "sge_qinstance.h"
-#include "sge_qinstance_state.h"
-#include "sge_qinstance_type.h"
-#include "sge_ulong.h"
 #include "sge_centry.h"
 #include "sge_profiling.h"
-#include "sgeobj/sge_schedd_conf.h"
-#include "sge_mt_init.h"
 #include "sge_qhost.h"
-#include "sge_object.h"
 #include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi_ctx.h"
-
+#include "sgeobj/sge_cull_xml.h"
 
 extern char **environ;
 
@@ -499,6 +484,7 @@ FILE *fp
 
    fprintf(fp,"%s qhost [options]\n", MSG_SRC_USAGE);
          
+   fprintf(fp, "  [-cq]                      %s\n", MSG_QHOST_cq_OPT_USAGE);
    fprintf(fp, "  [-help]                    %s\n", MSG_COMMON_help_OPT_USAGE);
    fprintf(fp, "  [-h hostlist]              %s\n", MSG_QHOST_h_OPT_USAGE);
    fprintf(fp, "  [-q]                       %s\n", MSG_QHOST_q_OPT_USAGE);
@@ -534,7 +520,11 @@ lList **alpp
       if ((rp = parse_noopt(sp, "-help", NULL, ppcmdline, alpp)) != sp)
          continue;
  
-      /* -q option */
+      /* -cb */
+      if ((rp = parse_noopt(sp, "-cb", NULL, ppcmdline, alpp)) != sp)
+         continue;
+
+      /* -q */
       if ((rp = parse_noopt(sp, "-q", NULL, ppcmdline, alpp)) != sp)
          continue;
 
@@ -587,6 +577,7 @@ static int sge_parse_qhost(lList **ppcmdline,
    u_long32 helpflag;
    bool usageshowed = false;
    u_long32 full = 0;
+   u_long32 binding = 0;
    char * argstr = NULL;
    lListElem *ep;
    int ret = 1;
@@ -622,6 +613,10 @@ static int sge_parse_qhost(lList **ppcmdline,
 
       if (parse_multi_stringlist(ppcmdline, "-F", alpp, ppFres, ST_Type, ST_name)) {
          (*show) |= QHOST_DISPLAY_RESOURCES;
+         continue;
+      }
+      if (parse_flag(ppcmdline, "-cb", alpp, &binding)) {
+         (*show) |= QHOST_DISPLAY_BINDING;
          continue;
       }
       if (parse_flag(ppcmdline, "-q", alpp, &full)) {

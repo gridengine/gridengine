@@ -33,13 +33,12 @@
 
 #include "sge.h"
 #include "sgermon.h"
-#include "sge_hostL.h"
-#include "sge_peL.h"
-#include "sge_qrefL.h"
-#include "sge_strL.h"
-#include "sge_userprjL.h"
+#include "sge_host.h"
+#include "sge_pe.h"
+#include "sge_qref.h"
+#include "sge_str.h"
 #include "sge_userprj.h"
-#include "sge_cqueueL.h"
+#include "sge_cqueue.h"
 #include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
 #include "sge_qinstance_type.h"
@@ -58,6 +57,7 @@
 #include "sge_parse_num_par.h"
 #include "sched/sge_resource_utilization.h"
 #include "uti/sge_time.h"
+#include "sge_resource_utilization_RUE_L.h"
 
 #include "msg_clients_common.h"
 

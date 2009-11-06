@@ -37,7 +37,7 @@
 
 #include "sge_object.h"
 
-#include "sge_eventL.h"
+#include "sge_event.h"
 #include "evc/sge_event_client.h"
 
 /****** Eventmirror/--Eventmirror ***************************************

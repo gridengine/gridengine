@@ -169,6 +169,10 @@ HostCompare()
       host2=`echo $host2 | cut -f 1 -d .`
    fi
 
+   #translate hostname to lower, because hostname are case insensitive
+   host1=`echo $host1 | tr "[A-Z]" "[a-z]"`
+   host2=`echo $host2 | tr "[A-Z]" "[a-z]"`
+   
    if [ "$host1" = "$host2" ]; then
       echo 0
    else

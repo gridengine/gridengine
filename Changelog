@@ -8,6 +8,11 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 -----------------+------------+-------------------------------------------------
+MD-2009-11-06-0: Bugfix:      added translation of hostname from capital letters
+               			      to small letters to fix the hostcompare.
+                 Belongs to:  JG-2009-11-06-0
+                 Review:      CR
+
 DG-2009-11-06-0: Bugfix:      loadsensor -loadval reported more than the selected
                               loadvalue
                  Bugster:     6896657

@@ -181,13 +181,25 @@ int main(int argc, char *argv[])
 
 #if defined(PLPA_LINUX) || defined(SOLARIS86) || defined(SOLARISAMD64)
    fill_socket_core_topology(&msocket, &mcore, &mtopology);
-   printf("m_socket        %s\n", sge_dstring_get_string(&msocket));
-   printf("m_core          %s\n", sge_dstring_get_string(&mcore));
-   printf("m_topology      %s\n", sge_dstring_get_string(&mtopology));
+   if ((pos && !strcmp("m_socket", argv[pos])) || !pos) {
+      printf("m_socket        %s\n", sge_dstring_get_string(&msocket));
+   }
+   if ((pos && !strcmp("m_core", argv[pos])) || !pos) {
+      printf("m_core          %s\n", sge_dstring_get_string(&mcore));
+   }
+   if ((pos && !strcmp("m_topology", argv[pos])) || !pos) {
+      printf("m_topology      %s\n", sge_dstring_get_string(&mtopology));
+   }   
 #else 
-   printf("m_socket        -\n");  
-   printf("m_core          -\n");  
-   printf("m_topology      -\n");  
+   if ((pos && !strcmp("m_socket", argv[pos])) || !pos) {
+      printf("m_socket        -\n");
+   }
+   if ((pos && !strcmp("m_core", argv[pos])) || !pos) {
+      printf("m_core          -\n");
+   }
+   if ((pos && !strcmp("m_topology", argv[pos])) || !pos) {
+      printf("m_topology      -\n");
+   }   
 #endif 
 
 #if defined(WINDOWS)

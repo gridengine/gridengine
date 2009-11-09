@@ -340,11 +340,6 @@ is divided into following sections:
         <!-- You can override this target in the ../build.xml file. -->
     </target>
     <target if="do.depend.true" name="-compile-depend">
-        <pathconvert property="build.generated.subdirs">
-            <dirset dir="${build.generated.sources.dir}" erroronmissingdir="false">
-                <include name="*"/>
-            </dirset>
-        </pathconvert>
         <j2seproject3:depend srcdir="${src.dir}:${build.generated.subdirs}"/>
     </target>
     <target depends="init,deps-jar,-pre-pre-compile,-pre-compile,-compile-depend" if="have.sources" name="-do-compile">

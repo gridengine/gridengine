@@ -6,7 +6,7 @@
     <property file="${sge.srcdir}/build_private.properties"/>
     <property file="${sge.srcdir}/build.properties"/>
     <property name="javac.source" value="${jjsv.javac.source}"/>
-    <property name="javac.target" value="${jjsv.sge.javac.target}"/>
+    <property name="javac.target" value="${jjsv.javac.target}"/>
 
     <import file="nbproject/build-impl.xml"/>
     <!--

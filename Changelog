@@ -8,6 +8,12 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 -----------------+------------+-------------------------------------------------
+MD-2009-11-09-2: CVS:		Created V62u5alpha2_TAG
+-------------------------------------------------------
+
+MD-2009-11-09-1: Bugfix:      o Fixed broken hadoop build.xml
+                 Enhancem:    o added version string
+
 MD-2009-11-09-0: Bugfix:      o Fixed broken JSV build
 
 DT-2009-11-08-1: Bugfix:      o Fixed broken JSV build

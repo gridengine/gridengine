@@ -91,6 +91,21 @@
     <target name="-pre-init" >
         <property file="../../build_testsuite.properties"/>
         <property file="../../build_private.properties"/>
+        <exec executable="hostname" outputproperty="hostname"/>
+        
+        <condition property="isJavaBuildHost">
+            <not>
+                <isset property="java.buildhost"/>
+            </not>
+        </condition>
+        
+        <condition property="isJavaBuildHost" >
+            <contains string="${java.buildhost}" substring="${hostname}" casesensitive="false"/>
+        </condition>
+        
+        <echo>isJavaBuildHost=${isJavaBuildHost}</echo>
+        <echo>java.buildhost=${java.buildhost}</echo>
+        <echo>hostname=${hostname}</echo>
         <property name="hadoop.dir" value="${hadoop.home}"/>
     </target>
 

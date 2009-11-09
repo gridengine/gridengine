@@ -107,6 +107,8 @@
         <echo>java.buildhost=${java.buildhost}</echo>
         <echo>hostname=${hostname}</echo>
         <property name="hadoop.dir" value="${hadoop.home}"/>
+        <property name="javac.source" value="${hadoop.javac.source}"/>
+        <property name="javac.target" value="${hadoop.javac.target}"/>
     </target>
 
     <target name="-post-init" depends="propsinit">

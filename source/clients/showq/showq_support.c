@@ -50,9 +50,12 @@
 #include "sgeobj/sge_ulong.h"
 #include "sgeobj/str2nm_converter.h"
 #include "sgeobj/sge_job.h"
+#include "sgeobj/sge_binding.h"
 #include "uti/sge_dstring.h"
 
 #include "showq_support.h"
+
+static void get_core_binding_string(lListElem *job,const int task_number, dstring* corebinding);
 
 struct sort_def{
    int sort_key[20];
@@ -76,7 +79,8 @@ enum {
    TACCDJ_wclimit,
    TACCDJ_queuetime,
    TACCDJ_remaining,
-   TACCDJ_starttime
+   TACCDJ_starttime,
+   TACCDJ_corebinding
 };
 
 LISTDEF(TACCDJ_Type)
@@ -92,6 +96,7 @@ LISTDEF(TACCDJ_Type)
    SGE_ULONG(TACCDJ_queuetime, CULL_DEFAULT)
    SGE_LONG(TACCDJ_remaining, CULL_DEFAULT)
    SGE_ULONG(TACCDJ_starttime, CULL_DEFAULT)
+   SGE_STRING(TACCDJ_corebinding, CULL_DEFAULT)
 LISTEND
 
 NAMEDEF(TACCDJN)
@@ -107,6 +112,7 @@ NAMEDEF(TACCDJN)
    NAME("queuetime")
    NAME("remaining")
    NAME("starttime")
+   NAME("corebinding")
 NAMEEND
 
 /* *INDENT-ON* */
@@ -364,6 +370,20 @@ int extract_dj_lists(lList *job_list, lList **active_jobs, lList **waiting_jobs,
                lSetDouble(tmp_dj_job, TACCDJ_priority,
                           lGetDouble(tmp_task, JAT_prio));
 
+               /* core binding */           
+               {
+                  dstring cb = DSTRING_INIT;
+                  get_core_binding_string(job, (int)lGetUlong(jatep, JAT_task_number), &cb);
+
+                  if (sge_dstring_get_string(&cb) != NULL) {
+                     lSetString(tmp_dj_job, TACCDJ_corebinding, 
+                                 sge_dstring_get_string(&cb));
+                  } else {
+                     lSetString(tmp_dj_job, TACCDJ_corebinding, "-");
+                  }
+
+                  sge_dstring_free(&cb);
+               }
                /* append this job to the active job list */
                /* printf("appending to active jobs\n"); */
                /*
@@ -451,9 +471,19 @@ int extract_dj_lists(lList *job_list, lList **active_jobs, lList **waiting_jobs,
          time_limit = lGetUlong(job, JB_submission_time);
          lSetUlong(tmp_dj_job, TACCDJ_queuetime, time_limit);
 
-
          lSetDouble(tmp_dj_job, TACCDJ_priority,
                     lGetDouble(tmp_task, JAT_prio));
+
+         /* core binding */
+         {
+            dstring cb = DSTRING_INIT;
+            get_core_binding_string(job, -1, &cb);
+            
+            lSetString(tmp_dj_job, TACCDJ_corebinding, 
+                           sge_dstring_get_string(&cb));
+            
+            sge_dstring_free(&cb);
+         }
 
          job_tag = 1;                /* make sure this job is marked as accounted
                                  * for */
@@ -527,6 +557,17 @@ int extract_dj_lists(lList *job_list, lList **active_jobs, lList **waiting_jobs,
          lSetDouble(tmp_dj_job, TACCDJ_priority,
                     lGetDouble(tmp_task, JAT_prio));
 
+         /* core binding */
+         {
+            dstring cb = DSTRING_INIT;
+            get_core_binding_string(job, -1, &cb);
+            
+            lSetString(tmp_dj_job, TACCDJ_corebinding, 
+                          sge_dstring_get_string(&cb));
+            
+            sge_dstring_free(&cb);
+         }
+
          lAppendElem(*unsched_jobs, tmp_dj_job);
 
       }
@@ -555,7 +596,7 @@ int sum_slots(lList *dj_list)
 
 }
 
-void show_active_jobs(lList *joblist, int flags)
+void show_active_jobs(lList *joblist, int flags, const bool binding)
 {
    time_t ultime;
    char truncated_jobname[256];
@@ -649,14 +690,23 @@ void show_active_jobs(lList *joblist, int flags)
          if (time_string != NULL) {
             char *truncated_time = strdup(time_string);
             truncated_time[20] = '\0';
-            printf("%20s\n", truncated_time);
+            printf("%20s", truncated_time);
             free(truncated_time);
          } else {
-            printf("%-20s\n", "");
+            printf("%-20s", "");
          }
       } else {
-         printf("%20s\n", "");
+         printf("%20s", "");
       }
+   
+      /* core binding */ 
+      if (binding) {
+         if ((lGetString(job, TACCDJ_corebinding) != NULL)) {
+            printf("%s", lGetString(job, TACCDJ_corebinding));
+         }
+      }   
+      
+      printf("\n");
    }
 }
 
@@ -749,3 +799,60 @@ void show_waiting_jobs(lList *joblist, int flags)
       }
    }
 }
+
+static void get_core_binding_string(lListElem *job, const int task_number, dstring* corebinding)
+{
+   lListElem *jatep;
+   bool binding_of_first_task_found = false;
+
+   if (corebinding == NULL || job == NULL) {
+      return;
+   } 
+
+   for_each (jatep, lGetList(job, JB_ja_tasks)) {
+      /* int first_task = 1; */
+      lListElem *usage_elem;
+      const char *binding_inuse = NULL; 
+      const char *binding_topo = NULL;
+
+      if (task_number > 0) {
+         if ((int)lGetUlong(jatep, JAT_task_number) != task_number) {
+            continue;
+         }
+      }
+
+      if (lGetUlong(jatep, JAT_status) != JRUNNING && lGetUlong(jatep, JAT_status) != JTRANSFERING) {
+         continue;
+      }
+
+      for_each (usage_elem, lGetList(jatep, JAT_scaled_usage_list)) {
+         const char *binding_name = "binding_inuse";
+         const char *usage_name = lGetString(usage_elem, UA_name);
+
+         if (strncmp(usage_name, binding_name, strlen(binding_name)) == 0) {
+            binding_inuse = strstr(usage_name, "="); 
+            if (binding_inuse != NULL) {
+               binding_inuse++;
+            }
+            break;
+         }
+      }
+
+      if (binding_inuse != NULL && strcmp(binding_inuse, "NULL") != 0) {  
+         binding_topo = binding_get_topology_for_job(binding_inuse);
+
+         if (binding_topo != NULL) {
+            sge_dstring_append(corebinding, binding_topo);
+            binding_of_first_task_found = true;
+            break;
+         }
+      }
+      
+   }
+   
+   if (binding_of_first_task_found == false) {
+      sge_dstring_append(corebinding, "-");
+   }
+
+}
+

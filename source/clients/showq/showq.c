@@ -56,10 +56,10 @@
 
 static bool sge_parse_showq_tacc(lList **alpp, lList ** ppcmdline,
                                  lList ** user_list, const char *username,
-                                 int *full, lList **, lList **);
+                                 int *full, bool *binding, lList **, lList **);
 
-static int showq_show_job_tacc(sge_gdi_ctx_class_t * ctx, lList * jid, int full,
-                               lList *, lList *);
+static int showq_show_job_tacc(sge_gdi_ctx_class_t * ctx, lList * jid, int full, 
+                                 const bool binding, lList *, lList *);
 
 /*-------------------------------------------------------------------------*/
 /*-------------------------------------------------------------------------*/
@@ -74,6 +74,7 @@ int main(int argc, char **argv)
    lList          *ref_list = NULL;
    sge_gdi_ctx_class_t *ctx = NULL;
    int             full = 0;
+   bool            binding = false;
    int             ret = 0;
 
    DENTER_MAIN(TOP_LAYER, "showq");
@@ -95,14 +96,15 @@ int main(int argc, char **argv)
       SGE_EXIT((void **) &ctx, 1);
    }
 
-   if (!sge_parse_showq_tacc(&alp, &pcmdline, &user_list, ctx->get_username(ctx), &full, &sfa_list, &sfw_list)) {
+   if (!sge_parse_showq_tacc(&alp, &pcmdline, &user_list, ctx->get_username(ctx), 
+                             &full, &binding, &sfa_list, &sfw_list)) {
       answer_list_output(&alp); 
       lFreeList(&pcmdline);
       lFreeList(&ref_list);
       lFreeList(&user_list);
       SGE_EXIT((void **) &ctx, 1);
    }
-   ret = showq_show_job_tacc(ctx, user_list, full, sfa_list, sfw_list);
+   ret = showq_show_job_tacc(ctx, user_list, full, binding, sfa_list, sfw_list);
 
    SGE_EXIT((void **) &ctx, ret);
    DRETURN(ret);
@@ -117,7 +119,7 @@ int main(int argc, char **argv)
  **** queue/res/user-arguments into the lists.
  ****/
 static bool sge_parse_showq_tacc(lList **alpp, lList **ppcmdline, lList **user_list,
-                  const char *username, int *full, lList **sfa_list,
+                  const char *username, int *full, bool *binding, lList **sfa_list,
                   lList **sfw_list)
 {
    bool ret = true;
@@ -125,6 +127,7 @@ static bool sge_parse_showq_tacc(lList **alpp, lList **ppcmdline, lList **user_l
    u_long32 helpflag;
    u_long32 full_sge = 0;
    u_long32 add_me = 0;
+   u_long32 bnd = 0;
 
    DENTER(TOP_LAYER, "sge_parse_showq_tacc");
 
@@ -140,6 +143,13 @@ static bool sge_parse_showq_tacc(lList **alpp, lList **ppcmdline, lList **user_l
       while (parse_flag(ppcmdline, "-l", alpp, &full_sge)) {
          if (full_sge) {
             *full = 1;
+         }
+         continue;
+      }
+
+      while (parse_flag(ppcmdline, "-cb", alpp, &bnd)) {
+         if (bnd) {
+            *binding = true;
          }
          continue;
       }
@@ -181,7 +191,7 @@ static bool sge_parse_showq_tacc(lList **alpp, lList **ppcmdline, lList **user_l
  * 
  * returns 0 on success, non-zero on failure
  */
-static int showq_show_job_tacc(sge_gdi_ctx_class_t * ctx, lList * user_list, int full,
+static int showq_show_job_tacc(sge_gdi_ctx_class_t * ctx, lList * user_list, int full, const bool binding,
                                lList * sfa_list, lList * sfw_list)
 {
    lListElem      *j_elem = 0;
@@ -247,15 +257,25 @@ static int showq_show_job_tacc(sge_gdi_ctx_class_t * ctx, lList * user_list, int
 
    printf("ACTIVE JOBS--------------------------\n");
    if (full) {
-      printf("JOBID     JOBNAME    USERNAME      STATE   CORE  HOST  QUEUE        REMAINING  STARTTIME\n");
-      printf("==================================================================================================\n");
+      if (binding == false) {
+         printf("JOBID     JOBNAME    USERNAME      STATE   CORE  HOST  QUEUE        REMAINING  STARTTIME\n");
+         printf("==================================================================================================\n");
+      } else {
+         printf("JOBID     JOBNAME    USERNAME      STATE   CORE  HOST  QUEUE        REMAINING  STARTTIME           CORE_BINDING\n");
+         printf("===============================================================================================================\n");
+      }
    } else {
-      printf("JOBID     JOBNAME    USERNAME      STATE   CORE  REMAINING  STARTTIME\n");
-      printf("================================================================================\n");
+      if (binding == false) {
+         printf("JOBID     JOBNAME    USERNAME      STATE   CORE  REMAINING  STARTTIME\n");
+         printf("================================================================================\n");
+      } else {
+         printf("JOBID     JOBNAME    USERNAME      STATE   CORE  REMAINING  STARTTIME           CORE_BINDING\n");
+         printf("============================================================================================\n");
+      }
    }
 
    /* print running jobs */
-   show_active_jobs(active_dj_list, full);
+   show_active_jobs(active_dj_list, full, binding);
 
    printf("\n");
    total_slot_count = 82 * 4 * 12 * 16;

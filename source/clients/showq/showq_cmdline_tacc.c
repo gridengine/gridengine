@@ -65,6 +65,8 @@ bool switch_list_showq_parse_from_cmdline_tacc(lList **ppcmdline,
          continue;
       if ((rp = parse_noopt(sp, "-l", NULL, ppcmdline, answer_list)) != sp)
          continue;
+      if ((rp = parse_noopt(sp, "-cb", NULL, ppcmdline, answer_list)) != sp)
+         continue;
       if ((rp = parse_until_next_opt(sp, "-U", NULL, ppcmdline, answer_list)) != sp)
          continue;
       if ((rp = parse_until_next_opt(sp, "-sfa", NULL, ppcmdline, answer_list)) != sp)
@@ -99,6 +101,7 @@ bool showq_usage(FILE *fp)
    fprintf(fp, "        [-l]                              %s\n","use long format");
    fprintf(fp, "        [-sfa {+|_}field{,{+|_}field}]    %s\n","sort active jobs by field list");
    fprintf(fp, "        [-sfw {+|_}field{,{+|_}field}]    %s\n","sort waiting jobs by field list");
+   fprintf(fp, "        [-cb]                             %s\n","show with core binding information");
    fprintf(fp, "        [--help]                          %s\n","show this message");
    fprintf(fp, "Example: showq -sfa _remaining,+core\n");
    fprintf(fp, "         sorts jobs by dec. remaining field, inc. core field\n");

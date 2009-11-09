@@ -39,7 +39,7 @@ extern "C" {
 int extract_dj_lists(lList * job_list, lList ** active_jobs, lList ** waiting_jobs,
                      lList ** dep_waiting_jobs, lList ** unsched_jobs);
 int sort_dj_list(lList *djobs, lList *field_list, bool sort_waiting);
-void show_active_jobs(lList *joblist, int flags);
+void show_active_jobs(lList *joblist, int flags, const bool binding);
 void show_waiting_jobs(lList *joblist,int flags);
 int sum_slots(lList *dj_list);
  

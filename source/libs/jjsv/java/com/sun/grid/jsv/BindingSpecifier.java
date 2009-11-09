@@ -23,7 +23,7 @@
  *
  *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
  *
- *   Copyright: 2001 by Sun Microsystems, Inc.
+ *   Copyright: 2009 by Sun Microsystems, Inc.
  *
  *   All Rights Reserved.
  *
@@ -205,7 +205,7 @@ public final class BindingSpecifier implements Cloneable, Serializable {
 
     /**
      * Set explicit binding strategy specifying socket/core map
-     * @param amount number of cores
+     * @param socketCore list of cores
      */
     public void setExplicitStrategy(List<CoreSpecifier> socketCore) {
         if (socketCore.size() == 0) {
@@ -319,7 +319,7 @@ public final class BindingSpecifier implements Cloneable, Serializable {
 
     /**
      * Sets the binding amount
-     * @return binding amount
+     * @param amount binding amount
      */
     public void setAmount(int amount) {
         this.amount = amount;
@@ -335,7 +335,7 @@ public final class BindingSpecifier implements Cloneable, Serializable {
 
     /**
      * Sets the binding socket
-     * @return binding socket
+     * @param socket binding socket
      */
     public void setSocket(int socket) {
         this.socket = socket;
@@ -351,7 +351,7 @@ public final class BindingSpecifier implements Cloneable, Serializable {
 
     /**
      * Sets the binding core
-     * @return binding core
+     * @param core binding core
      */
     public void setCore(int core) {
         this.core = core;
@@ -367,7 +367,7 @@ public final class BindingSpecifier implements Cloneable, Serializable {
 
     /**
      * Sets the binding step size
-     * @return binding step size
+     * @param step binding step size
      */
     public void setStep(int step) {
         this.step = step;

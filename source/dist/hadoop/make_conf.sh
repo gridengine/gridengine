@@ -40,7 +40,7 @@ export HADOOP_CONF_DIR
 
 if [  ! -d $HADOOP_CONF_DIR -a ! -f $HADOOP_CONF_DIR ]; then
   mkdir $HADOOP_CONF_DIR
-  cp $SGE_ROOT/hadoop/conf/* $HADOOP_CONF_DIR
+  cp $SGE_HADOOP/conf/* $HADOOP_CONF_DIR
 
   # Create the mapred-site.xml file
   echo '<?xml version="1.0"?>' > $HADOOP_CONF_DIR/mapred-site.xml

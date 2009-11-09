@@ -37,7 +37,9 @@
 while (@ARGV > 0) {
   $arg = shift @ARGV;
 
-  if ($arg eq "-u") {
+  if ($arg eq "-i") {
+    $do_install = 1;
+  } elsif ($arg eq "-u") {
     $do_uninstall = 1;
   } elsif ($arg eq "-c") {
     $do_complexes = 1;
@@ -48,11 +50,13 @@ while (@ARGV > 0) {
   } elsif ($arg eq "-x") {
     $no_unlink = 1;
   } else {
-    die "Usage: setup [-u] [-c] [-p] [-l] [-x]\n";
+    die "Unknown option: $arg\nUsage: setup [-u|-i] [-c] [-p] [-l] [-x]\n";
   }
 }
 
-if (!$do_complexes && !$do_pe && !$do_load_sensor) {
+if (!$do_install && !$do_uninstall) {
+  die "Usage: setup [-u|-i] [-c] [-p] [-l] [-x]\n";
+} elsif (!$do_complexes && !$do_pe && !$do_load_sensor) {
   $do_complexes = $do_pe = $do_load_sensor = 1;
 }
 
@@ -64,16 +68,16 @@ if ($ENV{SGE_ROOT} eq "") {
 }
 
 if ($do_uninstall) {
-  if ($do_complexes) {
-    do_complex_uninstall();
+  if ($do_load_sensor) {
+    do_load_sensor_uninstall();
   }
 
   if ($do_pe) {
     do_pe_uninstall();
   }
 
-  if ($do_load_sensor) {
-    do_load_sensor_uninstall();
+  if ($do_complexes) {
+    do_complex_uninstall();
   }
 } else {
   if ($do_complexes) {
@@ -107,38 +111,23 @@ sub do_complex_install {
 
   print `qconf -Mc /tmp/hadoop_complex_setup.$$`;
   unlink "/tmp/hadoop_complex_setup.$$" unless $no_unlink;
-
-#  print `qconf -aattr exechost complex_values hdfs_in=x global`;
-#  print `qconf -aattr exechost complex_values hdfs_R=x global`;
-#  print `qconf -aattr exechost complex_values hdfs_r=x global`;
-#
-#  for ($i = 0; $i < @hex; $i++) {
-#    for ($j = 0; $j < @hex; $j++) {
-#      print `qconf -aattr exechost complex_values hdfs_B$hex[$i]$hex[$j]=x global`;
-#    }
-#  }
-
   1;
 }
 
 sub do_complex_uninstall {
-#  print `qconf -dattr exechost complex_values hdfs_in=x global`;
-#  print `qconf -dattr exechost complex_values hdfs_R=x global`;
-#  print `qconf -dattr exechost complex_values hdfs_r=x global`;
-#
-#  for ($i = 0; $i < @hex; $i++) {
-#    for ($j = 0; $j < @hex; $j++) {
-#      print `qconf -dattr exechost complex_values hdfs_B$hex[$i]$hex[$j]=x global`;
-#    }
-#  }
-
   open FILE, ">/tmp/hadoop_complex_setup.$$";
 
   print FILE `qconf -sc | grep -v hdfs_`;
 
   close FILE;
 
-  print `qconf -Mc /tmp/hadoop_complex_setup.$$`;
+  do {
+    print "Waiting to allow the execds time to release the complex references\n";
+    sleep 30;
+
+    print `qconf -Mc /tmp/hadoop_complex_setup.$$`;
+  } while ($?);
+
   unlink "/tmp/hadoop_complex_setup.$$" unless $no_unlink;
   1;
 }
@@ -151,8 +140,8 @@ pe_name            hadoop
 slots              99999
 user_lists         NONE
 xuser_lists        NONE
-start_proc_args    $ENV{SGE_ROOT}/hadoop/pestart.sh
-stop_proc_args     $ENV{SGE_ROOT}/hadoop/pestop.sh
+start_proc_args    $ENV{PWD}/pestart.sh
+stop_proc_args     $ENV{PWD}/pestop.sh
 allocation_rule    1
 control_slaves     TRUE
 job_is_first_task  FALSE
@@ -183,7 +172,7 @@ sub do_load_sensor_install {
   mkdir "/tmp/hadoop_load_sensor_setup.$$";
   open FILE, ">/tmp/hadoop_load_sensor_setup.$$/global";
 
-  print FILE `qconf -sconf | awk '{ if (\$1 == "load_sensor") { print \$1, "$ENV{SGE_ROOT}/hadoop/load_sensor.sh" } else { print \$1, \$2 } }'`;
+  print FILE `qconf -sconf | awk '{ if (\$1 == "load_sensor") { print \$1, "$ENV{PWD}/load_sensor.sh" } else { print \$1, \$2 } }'`;
 
   close FILE;
 

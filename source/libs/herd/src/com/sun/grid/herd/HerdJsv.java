@@ -23,7 +23,7 @@
  *
  *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
  *
- *   Copyright: 2001 by Sun Microsystems, Inc.
+ *   Copyright: 2009 by Sun Microsystems, Inc.
  *
  *   All Rights Reserved.
  *
@@ -38,12 +38,14 @@ import com.sun.grid.jsv.JsvManager;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.Logger;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
@@ -58,8 +60,13 @@ import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
 /**
- *
- * @author dant
+ * The HerdJsv class is a JSV that translates hard resource requests for the
+ * hdfs_input resource into soft requests for the hdfs_primary_rack,
+ * hdfs_secondary_rack, and hdfs_blk* resources.  In order to do the
+ * conversion, this JSV must be able to contact the Namenode for the HDFS
+ * cluster.
+ * TODO: Make it possible to make the block and rack requests hard instead
+ * of soft.
  */
 public class HerdJsv extends Configured implements Tool, Jsv {
     private static final String BLOCK_KEY = "hdfs_B";
@@ -68,9 +75,15 @@ public class HerdJsv extends Configured implements Tool, Jsv {
     private static final String PRIMARY_RACK_KEY = "hdfs_R";
     private static final String SECONDARY_RACK_KEY = "hdfs_r";
     private static final String ZEROS = "0000000000000000";
-    private static final Logger log = Logger.getLogger(HerdJsv.class.getName());
+    private static final Logger log;
+
+    static {
+        log = Logger.getLogger(HerdJsv.class.getName());
+        log.setUseParentHandlers(false);
+    }
 
     /**
+     * The method to run the JSV.
      * @param args the command line arguments
      */
     public static void main(String[] args) {
@@ -86,8 +99,7 @@ public class HerdJsv extends Configured implements Tool, Jsv {
             }
 
             System.err.println("Error while running command: " + cause.getClass().getSimpleName() + " -- " + cause.getMessage());
-            e.printStackTrace();
-            exit = 13;
+            exit = 1;
         }
 
         System.exit(exit);
@@ -102,7 +114,7 @@ public class HerdJsv extends Configured implements Tool, Jsv {
     }
 
     public void onStart(JsvManager jsv) {
-        Logger.getLogger("com.sun.grid.Jsv").info("Starting HerdJsv");
+        log.info("Starting job verification");
     }
 
     public void onVerify(JsvManager jsv) {
@@ -120,7 +132,7 @@ public class HerdJsv extends Configured implements Tool, Jsv {
             Map<String,String> soft = job.getSoftResourceRequirements();
 
             try {
-                List<LocatedBlock> blocks = null;
+                Collection<LocatedBlock> blocks = null;
 
                 blocks = getBlocks(path, getConf());
 
@@ -138,23 +150,24 @@ public class HerdJsv extends Configured implements Tool, Jsv {
             } catch (IOException e) {
                 jsv.log(JsvManager.LogLevel.ERROR, "Unable to contact Namenode: " + StringUtils.stringifyException(e));
                 jsv.rejectWait("Unable to process Hadoop jobs at this time.");
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
                 jsv.log(JsvManager.LogLevel.ERROR, "Exception while trying to contact Namenode: " + StringUtils.stringifyException(e));
                 jsv.rejectWait("Unable to process Hadoop jobs at this time.");
             }
         }
     }
 
-    private static Map<String,String> buildBlockRequests(List<LocatedBlock> blocks) {
+    /**
+     * This method takes a list of HDFS data blocks and creates resources
+     * requests for the hdfs_blk* resources.
+     * @param blocks a list of HDFS data blocks
+     * @return a map of resource requests.  The key is the name
+     * of the requested resource, and the value is the requested value.
+     */
+    private static Map<String,String> buildBlockRequests(Collection<LocatedBlock> blocks) {
         Map<String,String> ret = new HashMap<String, String>();
         StringBuilder request = new StringBuilder();
         String previous = "";
-
-        Collections.sort(blocks, new Comparator<LocatedBlock>() {
-            public int compare(LocatedBlock o1, LocatedBlock o2) {
-                return o1.getBlock().compareTo(o2.getBlock());
-            }
-        });
 
         for (LocatedBlock block : blocks) {
             String idString = toIdString(block.getBlock().getBlockId());
@@ -181,6 +194,11 @@ public class HerdJsv extends Configured implements Tool, Jsv {
         return ret;
     }
 
+    /**
+     * Translate the given long into a 16-character hexidecimal string.
+     * @param id a long value
+     * @return a 16-character hexidecimal string
+     */
     private static String toIdString(long id) {
         String idString = Long.toHexString(id);
 
@@ -190,7 +208,14 @@ public class HerdJsv extends Configured implements Tool, Jsv {
         return idString;
     }
 
-    private static Map<String,String> buildRackRequests(List<LocatedBlock> blocks) {
+    /**
+     * This method translates a list of HDFS data blocks into a set of rack
+     * resource requests.
+     * @param blocks a list of HDFS data blocks
+     * @return a map of resource requests.  The key is the name of the
+     * requested resource, and the value is the requested value.
+     */
+    private static Map<String,String> buildRackRequests(Collection<LocatedBlock> blocks) {
         Map<String,String> ret = new HashMap<String, String>();
         StringBuilder primary = new StringBuilder();
         StringBuilder secondary = new StringBuilder();
@@ -221,7 +246,14 @@ public class HerdJsv extends Configured implements Tool, Jsv {
         return ret;
     }
 
-    private static Map<String,Integer> collateRacks(List<LocatedBlock> blocks) {
+    /**
+     * Take the list of HDFS data blocks and determine what racks house the
+     * blocks and how many blocks are in each rack.
+     * @param blocks a list of HDFS data blocks
+     * @return a map of racks, where the key is the rack name, and the value
+     * if the number of blocks in that rack
+     */
+    private static Map<String,Integer> collateRacks(Collection<LocatedBlock> blocks) {
         Map<String, Integer> racks = new HashMap<String, Integer>();
 
         for (LocatedBlock block : blocks) {
@@ -239,6 +271,13 @@ public class HerdJsv extends Configured implements Tool, Jsv {
         return racks;
     }
 
+    /**
+     * Take of map of the number of blocks in a set of racks and return the
+     * names of the racks sorted in descending order by the number of
+     * blocks.
+     * @param racks a map of the number of blocks in a set of racks
+     * @return a list of the rack names sorted by the number of blocks
+     */
     private static List<String> getSortedRacks(final Map<String,Integer> racks) {
         List<String> rackNames = new ArrayList<String>(racks.keySet());
 
@@ -251,18 +290,49 @@ public class HerdJsv extends Configured implements Tool, Jsv {
         return rackNames;
     }
 
-    private static List<LocatedBlock> getBlocks(String path, Configuration conf) throws IOException {
-        List<LocatedBlock> blocks = new LinkedList<LocatedBlock>();
+    /**
+     * Convert the given HDFS path into a list of HDFS data blocks.  If the
+     * path is a directory, it will be recursively processed to include the data
+     * blocks for all files contained under the directory path.
+     * @param path an HDFS path
+     * @param conf the Hadoop configuration
+     * @return a list of HDFS data blocks
+     * @throws IOException Thrown if there is an error while communcating
+     * with the HDFS Namenode
+     */
+    private static Collection<LocatedBlock> getBlocks(String path, Configuration conf) throws IOException {
+        Set<LocatedBlock> blocks = new TreeSet<LocatedBlock>(new Comparator<LocatedBlock>() {
+            public int compare(LocatedBlock o1, LocatedBlock o2) {
+                return o1.getBlock().compareTo(o2.getBlock());
+            }
+        });
 
-        FileStatus s = FileSystem.get(conf).getFileStatus(new Path(path));
         DFSClient dfs = new DFSClient(conf);
 
+        return getBlocks(path, conf, dfs, blocks);
+    }
+
+    /**
+     * Convert the given HDFS path into a list of HDFS data blocks.  If the
+     * path is a directory, it will be recursively processed to include the data
+     * blocks for all files contained under the directory path.
+     * @param path an HDFS path
+     * @param conf the Hadoop configuration
+     * @param dfs the DFSClient to use
+     * @param blocks the list to populate with blocks
+     * @return a list of HDFS data blocks
+     * @throws IOException Thrown if there is an error while communcating
+     * with the HDFS Namenode
+     */
+    private static Set<LocatedBlock> getBlocks(String path, Configuration conf, DFSClient dfs, Set<LocatedBlock> blocks) throws IOException {
+        FileStatus s = FileSystem.get(conf).getFileStatus(new Path(path));
+        
         if (!s.isDir()) {
             blocks.addAll(dfs.namenode.getBlockLocations(path, 0,
                     Long.MAX_VALUE).getLocatedBlocks());
         } else {
             for (FileStatus fs : dfs.listPaths(path)) {
-                blocks.addAll(getBlocks(fs.getPath().toString(), conf));
+                blocks.addAll(getBlocks(fs.getPath().toString(), conf, dfs, blocks));
             }
         }
         

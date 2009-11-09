@@ -91,6 +91,7 @@
     <target name="-pre-init" >
         <property file="../../build_testsuite.properties"/>
         <property file="../../build_private.properties"/>
+        <property name="hadoop.dir" value="${hadoop.home}"/>
     </target>
 
     <target name="-post-init" depends="propsinit">

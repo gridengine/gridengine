@@ -8,6 +8,18 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 -----------------+------------+-------------------------------------------------
+DT-2009-11-08-0: Enhancem.:   o Added JavaDocs for Herd
+                              o Addressed review comments
+                              o Fixed minor issues
+                              o Added README for hadoop
+                              o Added hadoop.home to build.properties
+                              o Moved JSV.jar into SGE_ROOT/lib
+                              o Moved DRMAA build to CLASSES/jdrmaa
+                              o Moved JSV build to CLASSES/jjsv
+                              o Moved Herd build to CLASSES/jjsv
+                              o Moved JSV JavaDoc build to JAVADOCS/jjsv
+                              o Grouped Java libraries in distinst
+
 MD-2009-11-06-0: Bugfix:      added translation of hostname from capital letters
                			      to small letters to fix the hostcompare.
                  Belongs to:  JG-2009-11-06-0
@@ -65,7 +77,7 @@ DT-2009-10-28-0: Enhancem.:   o Added Hadoop integration (Herd)
                               - Still needs (lots of) documentation
                               - Still needs unit tests
                  Bugster:     6882596
-                 Review:      pending
+                 Review:      TM, AS
 
 JF-2009-10-28-0: Bugfix:      allow users to limit concurrent array job task
                               execution jsv and qmon part

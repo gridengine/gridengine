@@ -75,12 +75,14 @@ DRMAA_SHARED_LIBRARIES="libdrmaa"
 # The last number listed here will be the verson linked from libdrmaa.so
 DRMAA_SHARED_LIB_VERSIONS="1.0"
 DRMAA_HEADER_FILES="libs/japi/drmaa.h"
-DRMAAJ_FILES="CLASSES/drmaa"
+DRMAAJ_FILES="CLASSES/jdrmaa/drmaa"
 
 JNI_SHARED_LIBRARIES="libdrmaa libjuti libjgdi"
 
 JUTIJ_FILES="CLASSES/juti/juti"
 JGDIJ_FILES="libs/jgdi/build/jgdi"
+JJSV_FILES="CLASSES/jjsv/JSV"
+JAVA_LIBRARIES="${DRMAAJ_FILES} ${JUTIJ_FILES} ${JGDIJ_FILES} ${JJSV_FILES}"
 
 PVMSOURCES="start_pvm.c stop_pvm.c slave.c master.c spmd.c Makefile"
 PVMSRCSCRIPTS="install.sh aimk"
@@ -412,6 +414,7 @@ instman=false
 instdoc=false
 instdtrace=false
 insttxtdoc=false
+instjava=false
 instjavadoc=false
 instpvm=false
 instmpi=false
@@ -710,8 +713,10 @@ for prog in $PROG; do
          instdtrace=true
          instexamples=true
          instiscript=true
+         instjava=true
          instmpi=true
          instpvm=true
+         insthadoop=true
          instqmon=true
          instutiltree=true
          case $prog in
@@ -744,6 +749,9 @@ for prog in $PROG; do
       iscript)
          instiscript=true
          instcommon=true
+         ;;
+      java)
+         instjava=true
          ;;
       jobs)   
          instjobs=true
@@ -842,9 +850,11 @@ if [ $instcommon = true ]; then
       fi
 
       # JSV Java language binding
-      Execute cp libs/jjsv/java/com/sun/grid/jsv/examples/SimpleJsv.java $DEST_SGE_ROOT/util/resources/jsv
-      if [ -f libs/jjsv/dist/JSV.jar ]; then
-         Execute cp libs/jjsv/dist/JSV.jar $DEST_SGE_ROOT/util/resources/jsv
+      if [ -f libs/jjsv/java/com/sun/grid/jsv/examples/SimpleJsv.java ]; then
+         Execute cp libs/jjsv/java/com/sun/grid/jsv/examples/SimpleJsv.java $DEST_SGE_ROOT/util/resources/jsv
+      elif [ $exit_on_error = true ]; then
+         echo "\"libs/jjsv/java/com/sun/grid/jsv/examples/SimpleJsv.java\" not found. Installation failed."
+         exit 1
       fi
 
       Cleanup util
@@ -974,7 +984,17 @@ if [ $instcommon = true ]; then
          Execute cp $f $DEST_SGE_ROOT/include
       done
 
-      for filename in $DRMAAJ_FILES $JUTIJ_FILES $JGDIJ_FILES; do
+      Cleanup include
+   fi
+
+   if [ $instjava = true -o $instdrmaa = true ]; then
+      if [ $instjava = true ]; then
+         JAVA_FILES=$JAVA_LIBRARIES
+      else
+         JAVA_FILES=$DRMAAJ_FILES
+      fi
+
+      for filename in $JAVA_FILES; do
          filename="${filename}.jar"
          if [ -f $filename ]; then
             echo Installing `basename $filename`
@@ -986,8 +1006,6 @@ if [ $instcommon = true ]; then
             exit 1
          fi
       done
-
-      Cleanup include
    fi
 
    if [ $instdtrace = true ]; then
@@ -1057,20 +1075,20 @@ if [ $instcommon = true ]; then
       MakeDir hadoop
 
       for f in $HADOOP_FILES; do
-         Execute cp dist/hadoop/$f $DEST_SGE_ROOT/hadoop
+         Execute cp dist/hadoop/$f $DEST_SGE_ROOT/hadoop/$f
          Execute chmod 644 $DEST_SGE_ROOT/hadoop/$f
       done
 
       for f in $HADOOP_SCRIPTS; do
-         Execute cp dist/hadoop/$f $DEST_SGE_ROOT/hadoop
+         Execute cp dist/hadoop/$f $DEST_SGE_ROOT/hadoop/$f
          Execute chmod 755 $DEST_SGE_ROOT/hadoop/$f
       done
 
-      HADOOPCONF=hadoop/conf
-      Execute mkdir -p $DEST_SGE_ROOT/$HADOOPCONF
-
-      if [ -f libs/herd/dist/herd.jar ]; then
-         Execute cp libs/herd/dist/herd.jar $DEST_SGE_ROOT/hadoop
+      if [ -f CLASSES/herd/herd.jar ]; then
+         Execute cp CLASSES/herd/herd.jar $DEST_SGE_ROOT/hadoop/herd.jar
+      elif [ $exit_on_error = true ]; then
+         echo "\"CLASSES/herd/herd.jar\" not found. Installation failed."
+         exit 1
       fi
    fi
 

@@ -23,7 +23,7 @@
  *
  *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
  *
- *   Copyright: 2001 by Sun Microsystems, Inc.
+ *   Copyright: 2009 by Sun Microsystems, Inc.
  *
  *   All Rights Reserved.
  *
@@ -43,12 +43,12 @@ import java.util.logging.Logger;
 /**
  * The JsvManager class is implements the JSV protocol.  A JSV can use the
  * JsvManager class either by instantiating an instance and passing in the
- * Jsv implementation instance, or my running the JsvManager class directly
+ * Jsv implementation instance or by running the JsvManager class directly
  * and passing as an arguement the name of the class to be run as the Jsv
  * implementation.
  *
  * Once started, the JsvManager instance reads the input from the JSV framework
- * from stdin and writes command to stdout.  The JSV protocol is completely
+ * from stdin and writes commands to stdout.  The JSV protocol is completely
  * encapsulated, however, allowing the Jsv implementation to work at the
  * level of JobDescription objects.
  *
@@ -200,7 +200,7 @@ public class JsvManager {
                 log.severe("Error while setting job parameters: " +
                         e.getMessage());
                 System.exit(8);
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
                 log.severe("Error while executing JSV: " +
                         e.getClass().getSimpleName() + " -- " + e.getMessage());
                 System.exit(8);
@@ -269,7 +269,7 @@ public class JsvManager {
                     if (jsv != null) {
                         try {
                             jsv.onStart(this);
-                        } catch (Exception e) {
+                        } catch (RuntimeException e) {
                             log.warning("jsv threw an exception while starting: " + e.getClass().getSimpleName() + " -- " + e.getMessage());
                         }
                     }
@@ -289,7 +289,7 @@ public class JsvManager {
                     if (jsv != null) {
                         try {
                             jsv.onVerify(this);
-                        } catch (Exception e) {
+                        } catch (RuntimeException e) {
                             log.warning("jsv threw an exception while verifying: " + e.getClass().getSimpleName() + " -- " + e.getMessage());
                         }
                     }

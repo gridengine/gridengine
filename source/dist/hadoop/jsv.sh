@@ -32,7 +32,15 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-. $SGE_ROOT/hadoop/env.sh
+SGE_HADOOP=`dirname $0`
+export SGE_HADOOP
+
+if [ -f $SGE_HADOOP/env.sh ]; then
+  . $SGE_HADOOP/env.sh
+else
+  echo Unable to locate env.sh file
+  exit 100
+fi
 
 if [ "$HADOOP_HOME" = "" ]; then
   echo Must specify \$HADOOP_HOME for jsv.sh
@@ -44,7 +52,7 @@ if [ "$JAVA_HOME" = "" ]; then
   exit 100
 fi
 
-HADOOP_CLASSPATH=$SGE_ROOT/util/resources/jsv/JSV.jar:$SGE_ROOT/hadoop/herd.jar
+HADOOP_CLASSPATH=$SGE_ROOT/lib/JSV.jar:$SGE_HADOOP/herd.jar
 export HADOOP_CLASSPATH
 
 "$HADOOP_HOME"/bin/hadoop --config $HADOOP_HOME/conf com.sun.grid.herd.HerdJsv

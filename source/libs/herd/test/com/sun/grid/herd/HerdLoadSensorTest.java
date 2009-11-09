@@ -30,17 +30,45 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-package com.sun.grid.loadsensor;
+package com.sun.grid.herd;
 
+import com.sun.grid.loadsensor.LoadSensor;
+import java.util.List;
 import java.util.Map;
+import junit.framework.TestCase;
 
 /**
  *
- * @author dant
  */
-public interface LoadSensor {
-    public static final int MEASURE_ON_DEMAND = 0;
-    public int getMeasurementInterval();
-    public void doMeasurement();
-    public Map<String,Map<String,String>> getLoadValues();
+public class HerdLoadSensorTest extends TestCase {
+    
+    public HerdLoadSensorTest(String testName) {
+        super(testName);
+    }
+
+    /**
+     * Test of getMeasurementInterval method, of class HerdLoadSensor.
+     */
+    public void testGetMeasurementInterval() {
+        System.out.println("getMeasurementInterval");
+        HerdLoadSensor instance = new HerdLoadSensor();
+        int expResult = LoadSensor.MEASURE_ON_DEMAND;
+        int result = instance.getMeasurementInterval();
+
+        assertEquals("The getMeasurementInterval() method did not return MEASURE_ON_DEMAND", expResult, result);
+    }
+
+    /**
+     * Test of buildBlockStrings method, of class HerdLoadSensor.
+     */
+    public void testBuildBlockStrings() {
+        System.out.println("buildBlockStrings");
+    }
+
+    /**
+     * Test of getLoadValues method, of class HerdLoadSensor.
+     */
+    public void testGetLoadValues() {
+        System.out.println("getLoadValues");
+    }
 }

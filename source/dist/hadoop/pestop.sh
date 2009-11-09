@@ -34,7 +34,15 @@
 
 echo "Stopping Hadoop PE"
 
-. $SGE_ROOT/hadoop/env.sh
+SGE_HADOOP=`dirname $0`
+export SGE_HADOOP
+
+if [ -f $SGE_HADOOP/env.sh ]; then
+  . $SGE_HADOOP/env.sh
+else
+  echo Unable to locate env.sh file
+  exit 100
+fi
 
 # Get the ssh wrapper out of the path -- comment out to use qrsh -inherit
 # instead of ssh for the shutdown

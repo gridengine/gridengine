@@ -51,13 +51,13 @@ if [ "$SGE_ROOT" = "" ]; then
    exit 1
 fi
 
-classpath=`ls $SGE_ROOT/util/resources/jsv/*.jar | tr "\n" ":"`
+classpath=`ls $SGE_ROOT/lib/*.jar | tr "\n" ":"`
 
 if [ "$CLASSPATH" != "" ]; then
    classpath="$classpath:$CLASSPATH"
 fi
 
-if [ "$0" = "-cp" -o "$1" = "-classpath" ]; then
+if [ "$1" = "-cp" -o "$1" = "-classpath" ]; then
    shift
    classpath="$classpath:$1"
    shift

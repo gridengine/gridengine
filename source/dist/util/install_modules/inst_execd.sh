@@ -314,7 +314,7 @@ CheckHostNameResolving()
             myname=`echo $myaname | cut -f1 -d. | tr "[A-Z]" "[a-z]"`
          else
             admin_host_list=`ExecuteAsAdmin $SGE_BIN/qconf -sh | tr "[A-Z]" "[a-z]"`
-            myname=$myaname
+            myname=`echo $myaname | tr "[A-Z]" "[a-z]"`
             if [ "$default_domain" != none ]; then
                hasdot=`echo $myname|grep '\.'`
                if [ "$hasdot" = "" ]; then
@@ -567,10 +567,29 @@ GetLocalExecdSpoolDir()
          fi
          LOCAL_EXECD_SPOOL="undef"
       else
+         spooldir_valid=1
          if [ "`echo $LOCAL_EXECD_SPOOL | tr -d \[:graph:\]`" != "" ]; then
             $INFOTEXT "execd spool directory [%s] is not a valid name, please try again!" $LOCAL_EXECD_SPOOL
             $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
-         else
+            spooldir_valid=0
+         fi
+         if [ "$SGE_ARCH" = "win32-x86" ]; then
+            #
+            # Special checks for interix: make sure that existing spool directory
+            # (if any) is owned by SGE admin user and mounted locally.
+            #
+            IsLocalDir $LOCAL_EXECD_SPOOL
+            if [ $? != 1 ]; then
+               $INFOTEXT \
+                  "execd spool directory [%s] is not a valid local spool directory, please try again!"  \
+                  $LOCAL_EXECD_SPOOL
+               $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+               spooldir_valid=0
+            else
+               spooldir_valid=1
+            fi
+         fi
+         if [ $spooldir_valid = 1 ]; then
             $INFOTEXT "Using execd spool directory [%s]" $LOCAL_EXECD_SPOOL
             $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
             MakeLocalSpoolDir
@@ -584,19 +603,114 @@ GetLocalExecdSpoolDir()
    #   :
    #fi
 
+   spooldir_valid=1
    if [ $AUTO = "true" -a -n "$EXECD_SPOOL_DIR_LOCAL" ]; then
       execd_spool_dir_local_exists=`echo $EXECD_SPOOL_DIR_LOCAL |  grep "^\/"`
-      if [ "$EXECD_SPOOL_DIR_LOCAL" != "" -a "$execd_spool_dir_local_exists" != "" ]; then
+      if [ "$SGE_ARCH" = "win32-x86" ]; then
+         #
+         # Extra checks required for interix platform (details see above!)
+         #
+         IsLocalDir $EXECD_SPOOL_DIR_LOCAL
+         if [ $? != 1 ]; then
+            #
+            # Indicate error.
+            #
+            spooldir_valid=0
+         fi
+      fi
+      if [ "$EXECD_SPOOL_DIR_LOCAL" != "" -a \
+           "$execd_spool_dir_local_exists" != "" -a \
+           "$spooldir_valid" = 1 ]; then
          LOCAL_EXECD_SPOOL=$EXECD_SPOOL_DIR_LOCAL
          $INFOTEXT -log "Using local execd spool directory [%s]" $LOCAL_EXECD_SPOOL
          MakeLocalSpoolDir
       fi
      
+      if [ "$spooldir_valid" != 1 ]; then
+         $INFOTEXT -log "Local execd spool directory [%s] is not a valid spool directory" $EXECD_SPOOL_DIR_LOCAL
+         ret=1
+      fi
       if [ "$execd_spool_dir_local_exists" = "" ]; then
-         $INFOTEXT -log "Local execd spool directory [%s] is not a valid path" $LOCAL_EXECD_SPOOL
+         $INFOTEXT -log "Local execd spool directory [%s] is not a valid path" $EXECD_SPOOL_DIR_LOCAL
          ret=1
       fi
    fi
+}
+
+#--------------------------------------------------------------------------
+# IsLocalDir
+#
+# FOR INTERIX ONLY: 
+#
+#
+# - Check for correct ownership of existing spool directories. This is a 
+#   vital check for Interix platforms because users do mix up local and
+#   fully qualified SGE admin user (i.e. sge_admin vs. MYDOMAIN+sge_admin).
+#   This mismatch will lead to permission conflicts during execd startup 
+#   and failure of the daemon.
+#
+#   
+# - Check for locally accessible spool directory. This is the plan: we first 
+#   convert Interix path name into Windows syntax and then check for drive 
+#   ID (first character followed by colon). If that works out OK, we 
+#   x-check with data from df output. If that drive appears in here as well,
+#   we are OK.
+#
+#   Otherwise, we re-iterate and extract the host name, again following the 
+#   Windows syntax.
+#
+#   In case of a relative path name the root directory of the current working 
+#   directory is evaluated.
+#
+# Input:
+#                 $1: local execd spool directory
+#
+# Return values:
+#                  1: Success
+#                  0: Failure; spool directory not locally accessible or
+#                              incorrect permissions of existing spool
+#                              directory
+#                 -1: Failure: nothing of above
+#
+#
+#
+IsLocalDir()
+{
+   spool_dir=$1
+   #
+   # Check for correct ownership of existing spool directory. 
+   #
+   if [ -d $spool_dir ]; then
+      spool_dir_owner=`$SGE_UTILBIN/filestat -owner $spool_dir`
+      if [ "$spool_dir_owner" != "$ADMINUSER" ]; then
+         $INFOTEXT -log "Existing spool directory [%s] not owned by [%s]" $spool_dir $ADMINUSER
+         return 0
+      fi
+   fi
+   #   
+   # Check for local spool directory.
+   #
+   spool_dir_drive=`unixpath2win $spool_dir | cut -f1 -d:`
+   local_drive=`df | awk '{print $7}' | cut -s -d"/" -f4 | grep -i $spool_dir_drive`
+   if [ "$local_drive" != "" ]; then
+      $INFOTEXT -log "Spool directory %s is mounted on local drive %s" $spool_dir $spool_dir_drive
+      #
+      # Indicate success.
+      #
+      return 1
+   fi
+   spool_dir_remote_host=`unixpath2win $spool_dir | cut -s -d'\' -f3`
+   if [ $spool_dir_remote_host != "" ]; then
+      $INFOTEXT -log "Spool directory %s is mounted on host %s" $spool_dir $spool_dir_remote_host
+      #
+      # Indicate failure.
+      #
+      return 0
+   fi 
+   #
+   # Indicate that something unexpected happened.
+   #
+   return -1
 }
 
 MakeHostSpoolDir()
@@ -692,7 +806,7 @@ CheckWinAdminUser()
    fi
 
    if [ "$win_admin_user" != "default" -a "$win_admin_user" != "root" -a "$win_admin_user" != "none" ]; then
-      WIN_HOST_NAME=`hostname | tr [a-z] [A-Z]`
+      WIN_HOST_NAME=`hostname | tr "[a-z]" "[A-Z]"`
       WIN_HOST_NAME=`echo $WIN_HOST_NAME | cut -d"." -f1`
 
       ADMINUSER=$WIN_HOST_NAME"+$win_admin_user"

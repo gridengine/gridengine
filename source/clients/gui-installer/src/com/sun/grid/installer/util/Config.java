@@ -87,6 +87,9 @@ public interface Config {
     public static final String VAR_GUI_SHELL_OPTIONS = "gui_shell_options";
     public static final String VAR_FIRST_TASK = "first_install_task";
     public static final String VAR_LAST_TASK = "last_install_task";
+    public static final String VAR_GID_RANGE = "cfg.gid.range";
+    public static final String VAR_ADMIN_MAIL = "cfg.admin.mail";
+    public static final String VAR_SGE_CLUSTER_NAME = "cfg.sge.cluster.name";
 
     public static final String VAR_AUTO_CONF_TEMP_FILE = "auto.conf.temp.file";
     public static final String VAR_SILENT_INSTALL_FILE = "silent.install.file";
@@ -104,6 +107,8 @@ public interface Config {
     public static final String VAR_README_FILE_NAME_2  = "readme.file.name.2";
     public static final String VAR_PROGRESS_TYPE = "mode";
     public static final String VAR_USER_NAME = "user.name";
+    public static final String VAR_ROOT_USER = "root.user";
+    public static final String VAR_CONNECT_USER = "connect_user";
     //public static final String VAR_USER_GROUP = "user.group";
     public static final String VAR_RESULT_INFO = "result.info";
     public static final String VAR_LOCALHOST_ARCH = "localhost.arch";
@@ -121,6 +126,7 @@ public interface Config {
     public static final String VAR_JMX_SSL_KEYSTORE = "cfg.sge.jmx.ssl.keystore";
     public static final String VAR_JMX_SSL_KEYSTORE_DEF = "add.sge.jmx.ssl.keystore.def";
     public static final String VAR_JMX_SSL_KEYSTORE_PWD = "cfg.sge.jmx.ssl.keystore.pw";
+    public static final String VAR_PRODUCT_MODE = "add.product.mode";
 
     public static final String VAR_QMASTER_HOST_FAILED = "add.qmaster.host.failed";
     public static final String VAR_EXEC_HOST_LIST_FAILED = "add.exec.host.list.failed";

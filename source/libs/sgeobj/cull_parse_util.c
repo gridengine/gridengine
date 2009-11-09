@@ -35,19 +35,23 @@
 #include <strings.h>
 #include <stdlib.h>
 
+#include "rmon/sgermon.h"
+
 #include "cull/cull.h"
 #include "cull_parse_util.h"
-#include "sgermon.h"
-#include "sge_resource_utilization.h"
 
 #include "uti/sge_stdio.h"
 #include "uti/sge_string.h"
 
-#include "sgeobj/sge_job.h"
-#include "sgeobj/sge_centry.h"
-#include "sgeobj/sge_range.h"
-#include "sgeobj/sge_str.h"
-#include "sgeobj/parse_qsubL.h"
+#include "sched/sge_resource_utilization.h"
+
+#include "sge_job.h"
+#include "sge_centry.h"
+#include "sge_range.h"
+#include "sge_str.h"
+
+#include "sge_parse_SPA_L.h"
+#include "sge_resource_utilization_RUE_L.h"
 
 static int fprint_name_value_list(FILE *fp, char *name, lList *thresholds, int print_slots,
      int nm_name, int nm_strval, int nm_doubleval);

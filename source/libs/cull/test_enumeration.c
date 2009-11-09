@@ -408,33 +408,6 @@ bool test_lIntVector2What(void)
    return ret;
 }
 
-bool test_lWhatXElem(void)
-{
-   bool ret = true;
-   lEnumeration *what1 = lWhat("%T(%I %I "
-                "%I -> %T(%I %I -> %T(%I %I)) "
-                "%I -> %T(NONE) "
-                "%I -> %T(ALL))",
-                TEST_Type, TEST_int, TEST_host,
-                TEST_list, TEST1_Type, TEST1_int, TEST1_object,
-                   TEST1_Type, TEST1_int, TEST1_host,
-                TEST_object, TEST1_Type,
-                TEST_ref, TEST1_Type);
-   lListElem *elem1 = NULL;
-   lEnumeration *what2 = NULL;
-
-   elem1 = lWhatToElem(what1);
-   what2 = lWhatFromElem(elem1);
-
-   ret &= (enumeration_compare(what1, what2) == 0);
-
-   lFreeElem(&elem1);
-   lFreeWhat(&what1);
-   lFreeWhat(&what2);
-
-   return ret;
-}
-
 bool test_lWhat_lSelect(void)
 {
    bool ret = true;
@@ -538,8 +511,6 @@ int main(int argc, char *argv[])
           test_lCopyWhat() ? "Ok" : "Failed");
    printf("lIntVector2What() ... %s\n", 
           test_lIntVector2What() ? "Ok" : "Failed");
-   printf("lWhatToElem() and lWhatFromElem() ... %s\n", 
-          test_lWhatXElem() ? "Ok" : "Failed");
    printf("lSelect() ... %s\n", 
           test_lWhat_lSelect() ? "Ok" : "Failed");
 

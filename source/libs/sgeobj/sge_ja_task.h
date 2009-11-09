@@ -34,7 +34,7 @@
 
 #include "sge_dstring.h"
 
-#include "sge_ja_taskL.h"
+#include "sge_ja_task_JAT_L.h"
 
 lListElem *ja_task_search_pe_task(const lListElem *ja_task,
                                   const char *pe_task_id);

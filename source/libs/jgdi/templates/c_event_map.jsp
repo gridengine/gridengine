@@ -47,6 +47,7 @@
 #include "sgermon.h"
 #include "sge_all_listsL.h"
 #include "sge_answer.h"
+#include "sge_event.h"
 #include "jgdi_common.h"    
 #include "jgdi_wrapper_event.h"
 

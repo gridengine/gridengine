@@ -68,7 +68,6 @@ files=" \
        libs/spool/classic/spoolc_old_dependencies  \
        libs/spool/dynamic/spoold_dependencies  \
        libs/spool/flatfile/spoolc_dependencies  \
-       libs/spool/postgres/spoolp_dependencies  \
        libs/cull/cull_dependencies  \
        libs/sched/sched_dependencies  \
        libs/uti/uti_dependencies  \

@@ -210,7 +210,7 @@ public class JGDIGEObjectEditorTest extends BaseTestCase {
                 ",["+hg1.getName()+"="+prj1.getName()+" "+prj4.getName()+
                 "],[host1="+prj3.getName()+" "+prj1.getName()+" "+prj4.getName()+"]\n" +
                 " pe   make,["+hg1.getName()+"="+pe1.getName()+" "+pe2.getName()+"]\n"+
-                " load_thresholds np_load_avg=1.75,qname="+cq1.getName()+",rerun=true,s_rss=3k,h_rss=NONE \\\n" +"["+hg1.getName()+"=qname="+cq1.getName()+",swap_free=1G]\n");
+                " load_thresholds np_load_avg=1.75,qname="+cq1.getName()+",rerun=true,s_rss=3k,h_rss=NONE, \\\n" +"["+hg1.getName()+"=qname="+cq1.getName()+",swap_free=1G]\n");
         jgdi.updateClusterQueue(cq1);
         
         assertEquals("testQueue_1", jgdi.getClusterQueue(cq1.getName()).getName());

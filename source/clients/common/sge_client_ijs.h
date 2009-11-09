@@ -36,9 +36,15 @@
 void set_signal_handlers(void);
 void* tty_to_commlib(void *t_conf);
 void* commlib_to_tty(void *t_conf);
-int do_server_loop(u_long32 job_id, int nostdin, int noshell,
-                   int is_rsh, int is_qlogin, int force_pty,
-                   int *p_exit_status);
 
+int start_ijs_server(bool csp_mode,
+   const char *username, COMM_HANDLE **phandle, dstring *p_err_msg);
 
+int run_ijs_server(COMM_HANDLE *phandle, const char *remote_host,
+   u_long32 job_id, int nostdin, int noshell, int is_rsh, int is_qlogin,
+   ternary_t force_pty, int *p_exit_status, dstring *p_err_msg);
 
+int stop_ijs_server(COMM_HANDLE **phandle, dstring *p_err_msg);
+
+int force_ijs_server_shutdown(COMM_HANDLE **phandle,
+   const char *this_component, dstring *err_msg);

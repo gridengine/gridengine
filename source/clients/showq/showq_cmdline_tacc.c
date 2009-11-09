@@ -31,34 +31,19 @@
 /*___INFO__MARK_END__*/
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <fnmatch.h>
-#include <ctype.h>
 #include <pwd.h>
 
 #include "sgermon.h"
-#include "symbols.h"
 #include "sge.h"
 #include "sge_gdi.h"
-#include "sge_time.h"
-#include "sge_log.h"
 #include "cull_list.h"
 #include "parse.h"
-#include "sge_unistd.h"
-#include "sge_io.h"
-#include "read_defaults.h"
 #include "setup_path.h"
-#include "sge_prog.h"
 
-#include "sge_uidgid.h"
-#include "sge_string.h"
 #include "sge_answer.h"
-#include "sge_feature.h"
 #include "showq_cmdline_tacc.h"
 
 #include "msg_common.h"
-#include "msg_qstat.h"
-#include "msg_clients_common.h"
 
 
 bool switch_list_showq_parse_from_cmdline_tacc(lList **ppcmdline,

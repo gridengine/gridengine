@@ -31,6 +31,7 @@ while [ "$GENERAL_ARGS" = "true" -a $# -gt 0 ]; do
     -c) CONNECT=1;;
     -pw) PW=1; POST_ARGS="$POST_ARGS -pw";;
     -ks) KW=1; POST_ARGS="$POST_ARGS -ks -catop $SGE_ROOT/$SGE_CELL/common/sgeCA -keystore $SGE_KEYSTORE";;
+    -catop) POST_ARGS="$POST_ARGS -catop $SGE_ROOT/$SGE_CELL/common/sgeCA";; 
 #    *)  echo "Unkonwn option $1"; exit 1;;
   esac
   shift

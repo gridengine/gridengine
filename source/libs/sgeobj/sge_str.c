@@ -34,11 +34,13 @@
 #include <string.h>
 #include <errno.h>
 
-#include "sge_string.h"
-#include "sge_uidgid.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "cull_list.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_string.h"
+#include "uti/sge_uidgid.h"
+#include "uti/sge_log.h"
+
+#include "cull/cull_list.h"
 
 #include "sge_answer.h"
 #include "sge_str.h"

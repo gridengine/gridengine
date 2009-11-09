@@ -35,36 +35,40 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "sgermon.h"
-#include "commlib.h"
-#include "sge_time.h"
-#include "sge_event_master.h"
+#include "rmon/sgermon.h"
+
+#include "lck/sge_mtutil.h"
+#include "lck/sge_lock.h"
+
+#include "uti/sge_time.h"
+#include "uti/sge_log.h"
+#include "uti/sge_string.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_bootstrap.h"
+
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_ack.h"
+
+#include "gdi/sge_security.h"
+#include "gdi/sge_gdi_packet_pb_cull.h"
+#include "gdi/sge_gdi_packet_internal.h"
+
+#include "comm/commlib.h"
+
+#include "spool/sge_spooling.h"
+
+#include "evm/sge_event_master.h"
+
 #include "sig_handlers.h"
-#include "sge_log.h"
-#include "sge_string.h"
 #include "sge_c_gdi.h"
 #include "sge_c_report.h"
 #include "sge_qmaster_main.h"
-#include "sgeobj/sge_answer.h"
-#include "sge_prog.h"
-#include "sge_mtutil.h"
-#include "sge_conf.h"
-#include "sge_bootstrap.h"
-#include "sge_security.h"
-#include "sge_ja_taskL.h"
-#include "sge_job.h"
-#include "sge_qinstance.h"
-#include "sge_cqueue.h"
-#include "sge_lock.h"
-#include "spool/sge_spooling.h"
-#include "sgeobj/sge_ack.h"
-
-#include "gdi/sge_gdi_packet_pb_cull.h"
-#include "gdi/sge_gdi_packet_queue.h"
-#include "gdi/sge_gdi_packet_internal.h"
-
 #include "sge_thread_worker.h"
-
 #include "msg_qmaster.h"
 #include "msg_common.h"
 
@@ -253,10 +257,9 @@ do_gdi_packet(sge_gdi_ctx_class_t *ctx, lList **answer_list,
 #endif
 
       /*
-       * Put the packet into the packet queue so that workers can handle it
-       * and then wait until the packet is handled
+       * Put the packet into the queue so that a worker can handle it
        */
-      sge_gdi_packet_queue_store_notify(&Master_Packet_Queue, packet, NULL);
+      sge_tq_store_notify(Master_Task_Queue, SGE_TQ_GDI_PACKET, packet);
 
 #ifdef SEND_ANSWER_IN_LISTENER
       sge_gdi_packet_wait_till_handled(packet);
@@ -345,9 +348,9 @@ do_report_request(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, monitoring_t *mo
    sge_gdi_packet_append_task(packet, NULL, 0, 0, &rep, NULL, NULL, NULL, false, false);
 
    /*
-    * Put the packet into the packet queue so that workers can handle it
+    * Put the packet into the task queue so that workers can handle it
     */
-   sge_gdi_packet_queue_store_notify(&Master_Packet_Queue, packet, NULL);
+   sge_tq_store_notify(Master_Task_Queue, SGE_TQ_GDI_PACKET, packet);
 
    DRETURN_VOID;
 } /* do_report_request */

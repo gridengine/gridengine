@@ -192,7 +192,7 @@ qrstat_filter_add_ar_where(qrstat_env_t *qrstat_env)
    DENTER(TOP_LAYER, "qrstat_filter_add_ar_where");
    for_each(elem, qrstat_env->ar_id_list) {
       lCondition *tmp_where = NULL;
-      u_long32 value = lGetUlong(elem, ULNG);
+      u_long32 value = lGetUlong(elem, ULNG_value);
 
       tmp_where = lWhere("%T(%I == %u)", AR_Type, AR_id, value);
       if (tmp_where != NULL) {

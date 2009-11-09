@@ -66,7 +66,7 @@
 #include "gdi/sge_gdi_packet_pb_cull.h"
 
 #include "sgeobj/sge_answer.h"
-#include "sgeobj/sge_eventL.h"
+#include "sgeobj/sge_event.h"
 #include "sgeobj/sge_object.h"
 
 #include "msg_common.h"

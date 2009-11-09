@@ -54,17 +54,16 @@
 #include "uti/sge_string.h"
 #include "uti/sge_thread_ctrl.h"
 
-#include "gdi/sge_gdi2.h"
-#include "gdi/sge_gdiP.h"
-#include "gdi/sge_gdi_packet.h"
-#include "gdi/sge_gdi_packet_queue.h"
-#include "gdi/sge_gdi_packet_pb_cull.h"
-#include "gdi/version.h"
-#include "gdi/sge_security.h"
-
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_feature.h"
-#include "sgeobj/sge_multiL.h"
+#include "sgeobj/sge_multi_MA_L.h"
+
+#include "sge_gdi2.h"
+#include "sge_gdiP.h"
+#include "sge_gdi_packet.h"
+#include "sge_gdi_packet_pb_cull.h"
+#include "version.h"
+#include "sge_security.h"
 
 #include "msg_common.h"
 #include "msg_gdilib.h"
@@ -245,7 +244,7 @@ sge_gdi_task_verify(sge_gdi_task_class_t * task, lList **answer_list)
        && !(operation == SGE_GDI_PERMCHECK || operation == SGE_GDI_GET
             || operation == SGE_GDI_TRIGGER || (operation == SGE_GDI_DEL
                                                 && target ==
-                                                SGE_SHARETREE_LIST))
+                                                SGE_STN_LIST))
       ) {
       answer_list_add_sprintf(answer_list, STATUS_ESEMANTIC,
                  ANSWER_QUALITY_ERROR, MSG_GDI_GDI_VERIFY_REQUEST_FAILED);

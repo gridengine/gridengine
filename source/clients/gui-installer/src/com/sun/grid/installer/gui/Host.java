@@ -332,9 +332,11 @@ public class Host implements Config {
         // Split up the arguments
         String[] args = instance.split(SEPARATOR);
 
-        if (args.length > 8) {
-            throw new IllegalArgumentException("Too many arguments: " + args.length);
-        }
+        // The length of the argum list is unimportan as we are searching for specific
+        // named arguments
+//        if (args.length > 8) {
+//            throw new IllegalArgumentException("Too many arguments: " + args.length);
+//        }
 
         boolean isQmaster = false;
         boolean isExecd = false;
@@ -358,17 +360,17 @@ public class Host implements Config {
         for (int i = 1; i < args.length; i++) {
             arg = args[i].trim();
 
-            if (arg.equals(Util.SgeComponents.qmaster.toString())) {
+            if (arg.equalsIgnoreCase(Util.SgeComponents.qmaster.toString())) {
                 isQmaster = true;
-            } else if (arg.equals(Util.SgeComponents.execd.toString())) {
+            } else if (arg.equalsIgnoreCase(Util.SgeComponents.execd.toString())) {
                 isExecd = true;
-            } else if (arg.equals(Util.SgeComponents.shadow.toString())) {
+            } else if (arg.equalsIgnoreCase(Util.SgeComponents.shadow.toString())) {
                 isShadow = true;
-            } else if (arg.equals(Util.SgeComponents.bdb.toString())) {
+            } else if (arg.equalsIgnoreCase(Util.SgeComponents.bdb.toString())) {
                 isBDB = true;
-            } else if (arg.equals(Util.SgeComponents.submit.toString())) {
+            } else if (arg.equalsIgnoreCase(Util.SgeComponents.submit.toString())) {
                 isSubmit = true;
-            } else if (arg.equals(Util.SgeComponents.admin.toString())) {
+            } else if (arg.equalsIgnoreCase(Util.SgeComponents.admin.toString())) {
                 isAdmin = true;
             } else if (arg.startsWith(ARG_SPOOLDIR)) {
                 if (arg.indexOf("=") > -1 && arg.indexOf("=") < arg.length()) {

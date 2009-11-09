@@ -118,7 +118,7 @@ int lDumpDescr(FILE *fp, const lDescr *dp, int indent)
    ret = fprintf(fp, "%s/* NUMBER OF DESCR FIELDS */ %d\n", space, 
                  lCountDescr(dp));
 
-   for (i = 0; dp[i].mt != lEndT && ret != EOF; i++) {
+   for (i = 0; mt_get_type(dp[i].mt) != lEndT && ret != EOF; i++) {
       ret = fprintf(fp, "%s/* %-20.20s */ { %d, %d }\n", space, 
                     lNm2Str(dp[i].nm), dp[i].nm, dp[i].mt);
    }

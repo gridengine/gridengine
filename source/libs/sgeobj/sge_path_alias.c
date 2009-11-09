@@ -35,24 +35,25 @@
 #include <errno.h>
 #include <sys/types.h>
 
-#include "uti/sge_stdio.h"
-#include "sgermon.h"
-#include "sgeobj/sge_path_alias.h"
-#include "sge_log.h"
-#include "sge_host.h"
-#include "setup_path.h"
-#include "sge_string.h" 
-#include "sge_uidgid.h"
-#include "sge_unistd.h"
-#include "sge_hostname.h"
-#include "sgeobj/sge_answer.h"
-#include "sgeobj/sge_job.h"
-#include "sgeobj/sge_utility.h"
+#include "rmon/sgermon.h"
 
+#include "uti/sge_stdio.h"
+#include "uti/sge_log.h"
+#include "uti/setup_path.h"
+#include "uti/sge_string.h" 
+#include "uti/sge_uidgid.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_hostname.h"
+
+#include "cl_errors.h"
+#include "sge_host.h"
+#include "sge_answer.h"
+#include "sge_job.h"
+#include "sge_utility.h"
+#include "sge_path_alias.h"
 #include "msg_common.h"
 #include "msg_daemons_common.h"
-#include "sgeobj/msg_sgeobjlib.h"
-#include "cl_errors.h"
+#include "msg_sgeobjlib.h"
 
 /****** sgeobj/path_alias/-PathAlias *******************************************
 *  NAME

@@ -34,7 +34,7 @@
 
 #include "basis_types.h"
 
-#include "sgeobj/sge_eventL.h"
+#include "sgeobj/sge_event.h"
 
 #include "gdi/sge_gdi_ctx.h"
 

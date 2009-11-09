@@ -32,7 +32,74 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_centryL.h"
+#include "sge_centry_CE_L.h"
+#include "sge_ct_SCT_L.h"
+#include "sge_ct_REF_L.h"
+#include "sge_ct_CT_L.h"
+#include "sge_ct_CCT_L.h"
+#include "sge_ct_CTI_L.h"
+
+/* 
+ * This is the list type we use to hold the complex list in qmaster.
+ *
+ * We also use it for the queue information which administrator defined 
+ * complexes aply to this queue. In this case CX_entries is unused. 
+ * At the moment this applies only for the gdi. Internal the old list is
+ * used.  
+ */
+
+/* relops in CE_relop */
+enum {
+   CMPLXEQ_OP = 1, /* == */
+   CMPLXGE_OP,     /* >= */
+   CMPLXGT_OP,     /* > */
+   CMPLXLT_OP,     /* < */
+   CMPLXLE_OP,     /* <= */
+   CMPLXNE_OP,     /* != */
+   CMPLXEXCL_OP    /* EXCL */
+};
+
+enum {
+   REQU_NO = 1,
+   REQU_YES,
+   REQU_FORCED
+};
+
+enum {
+   CONSUMABLE_NO = 0,
+   CONSUMABLE_YES,
+   CONSUMABLE_JOB
+};
+
+/* bit mask for CE_dominant */
+enum {
+   DOMINANT_LAYER_GLOBAL = 0x0001,
+   DOMINANT_LAYER_HOST = 0x0002,
+   DOMINANT_LAYER_QUEUE = 0x0004,
+   DOMINANT_LAYER_RQS = 0x0008,
+   DOMINANT_LAYER_MASK = 0x00ff,        /* all layers */
+
+   DOMINANT_TYPE_VALUE = 0x0100,        /* value from complex template */
+   DOMINANT_TYPE_FIXED = 0x0200,        /* fixed value from object
+                                         * configuration */
+   DOMINANT_TYPE_LOAD = 0x0400,         /* load value */
+   DOMINANT_TYPE_CLOAD = 0x0800,        /* corrected load value */
+   DOMINANT_TYPE_CONSUMABLE = 0x1000,   /* consumable */
+   DOMINANT_TYPE_MASK = 0xff00          /* all types */
+};
+
+/* tag level*/
+enum{
+   NO_TAG = 0,
+   QUEUE_TAG,
+   HOST_TAG,
+   GLOBAL_TAG,
+   PE_TAG,     /* not really used as a tag */
+   RQS_TAG,    /* not really used as a tag */
+   MAX_TAG
+};
+
+#define CENTRY_LEVEL_TO_CHAR(level) "NQHGPLM"[level]
 
 /* Mapping list for generating a complex out of a queue */
 struct queue2cmplx {

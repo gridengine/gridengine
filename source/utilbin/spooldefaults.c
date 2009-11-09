@@ -39,8 +39,6 @@
 #include "sge_log.h"
 #include "sge_unistd.h"
 #include "sge_dstring.h"
-#include "sge_spool.h"
-#include "sge_uidgid.h"
 #include "setup_path.h"
 #include "sge_prog.h"
 #include "sge_feature.h"
@@ -51,8 +49,6 @@
 #include "sge_centry.h"
 #include "sge_userset.h"
 #include "sge_all_listsL.h"
-#include "sge_conf.h"
-#include "sge_mt_init.h"
 #include "sge.h"
 #include "spool/sge_spooling.h"
 #include "spool/loader/sge_spooling_loader.h"
@@ -63,7 +59,6 @@
 #include "msg_utilbin.h"
 #include "sge_profiling.h"
 #include "gdi/sge_gdi_ctx.h"
-#include "spool/msg_spoollib.h"
 
 static int spool_object_list(const char *directory,
                              const spooling_field *fields, 
@@ -352,24 +347,22 @@ static int spool_object_list(const char *directory,
    DENTER(TOP_LAYER, "spool_object_list");
 
    direntries = sge_get_dirents(directory);
-   if (direntries) {
-      for_each(direntry, direntries) {
-         name = lGetString(direntry, ST_name);
-         if (name[0] != '.') {
-            sge_dstring_sprintf(&file, "%s/%s", directory, name);
-            ep = spool_flatfile_read_object(&answer_list, descr, NULL,
-                                            fields, NULL, true, instr,
-                                            SP_FORM_ASCII, NULL, sge_dstring_get_string(&file));
-            
-            if (ep != NULL && !spool_write_object(&answer_list, spool_get_default_context(), ep, 
-                                    name, obj_type, true)) {
-               /* error output has been done in spooling function */
-               ret = EXIT_FAILURE;
-               answer_list_output(&answer_list);
-               break;
-            }
-            lFreeElem(&ep);
+   for_each(direntry, direntries) {
+      name = lGetString(direntry, ST_name);
+      if (name[0] != '.') {
+         sge_dstring_sprintf(&file, "%s/%s", directory, name);
+         ep = spool_flatfile_read_object(&answer_list, descr, NULL,
+                                         fields, NULL, true, instr,
+                                         SP_FORM_ASCII, NULL, sge_dstring_get_string(&file));
+         
+         if (ep != NULL && !spool_write_object(&answer_list, spool_get_default_context(), ep, 
+                                 name, obj_type, true)) {
+            /* error output has been done in spooling function */
+            ret = EXIT_FAILURE;
+            answer_list_output(&answer_list);
+            break;
          }
+         lFreeElem(&ep);
       }
    }
    lFreeList(&direntries);

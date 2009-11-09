@@ -50,8 +50,8 @@
 #include "sge_time.h"
 #include "sge_manop.h"
 #include "gdi/sge_gdi.h"
-#include "sge_usageL.h"
-#include "sge_attrL.h"
+#include "sge_usage.h"
+#include "sge_attr.h"
 #include "sge_userprj_qmaster.h"
 #include "sge_userset_qmaster.h"
 #include "sge_sharetree_qmaster.h"
@@ -96,7 +96,7 @@ const char *rhost,
 gdi_object_t *object,
 int sub_command, monitoring_t *monitor 
 ) {
-   int user_flag = (object->target==SGE_USER_LIST)?1:0;
+   int user_flag = (object->target==SGE_UU_LIST)?1:0;
    int pos;
    const char *userprj;
    u_long32 uval;
@@ -240,7 +240,7 @@ Error:
 
 int userprj_success(sge_gdi_ctx_class_t *ctx, lListElem *ep, lListElem *old_ep, gdi_object_t *object, lList **ppList, monitoring_t *monitor) 
 {
-   int user_flag = (object->target==SGE_USER_LIST)?1:0;
+   int user_flag = (object->target==SGE_UU_LIST)?1:0;
    lListElem *rqs;
    
    DENTER(TOP_LAYER, "userprj_success");
@@ -270,7 +270,7 @@ gdi_object_t *object
 ) {
    lList *answer_list = NULL;
    bool dbret;
-   int user_flag = (object->target==SGE_USER_LIST)?1:0;
+   int user_flag = (object->target==SGE_UU_LIST)?1:0;
    bool job_spooling = ctx->get_job_spooling(ctx);
 
    DENTER(TOP_LAYER, "userprj_spool");
@@ -506,7 +506,7 @@ sge_automatic_user_cleanup_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent,
          next = lNext(user);
 
          /* 
-          * For non auto users, delete_time = 0. 
+          * For non auto users, delete_time = 0.
           * Never delete them automatically 
           */
          if (delete_time > 0) {
@@ -608,7 +608,7 @@ sge_add_auto_user(sge_gdi_ctx_class_t *ctx, const char *user, lList **alpp, moni
 
 /****** qmaster/sge_userprj_qmaster/do_add_auto_user() *************************
 *  NAME
-*     do_add_auto_user() -- add auto user to SGE_USER_LIST
+*     do_add_auto_user() -- add auto user to SGE_UU_LIST
 *
 *  SYNOPSIS
 *     static int do_add_auto_user(lListElem*, lList**) 
@@ -628,7 +628,7 @@ static int do_add_auto_user(sge_gdi_ctx_class_t *ctx, lListElem* anUser, lList**
 
    DENTER(TOP_LAYER, "do_add_auto_user");
 
-   userList = get_gdi_object(SGE_USER_LIST);
+   userList = get_gdi_object(SGE_UU_LIST);
 
    /* 
     * Add anUser to the user list.

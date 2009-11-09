@@ -41,7 +41,6 @@ CULLLIB_SRC 	= cull_list.c \
                 cull_where.c \
                 cull_parse.c \
                 cull_what.c \
-                cull_what_elem.c \
                 cull_what_print.c \
                 cull_multitype.c \
                 cull_db.c \
@@ -52,8 +51,6 @@ CULLLIB_SRC 	= cull_list.c \
                 cull_tree.c \
                 cull_file.c \
                 cull_state.c \
-                cull_xml.c \
-                cull_packL.c\
                 pack.c
 
 CULLTEST_SRC   = example1.c example2.c \
@@ -114,9 +111,6 @@ cull_where.o: $(CULLLIB_DIR)/cull_where.c
 cull_what.o: 	$(CULLLIB_DIR)/cull_what.c
 	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(CULLLIB_DIR)/cull_what.c
 
-cull_what_elem.o: 	$(CULLLIB_DIR)/cull_what_elem.c
-	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(CULLLIB_DIR)/cull_what_elem.c
-
 cull_what_print.o: 	$(CULLLIB_DIR)/cull_what_print.c
 	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(CULLLIB_DIR)/cull_what_print.c
 
@@ -141,10 +135,6 @@ cull_lerrno.o: $(CULLLIB_DIR)/cull_lerrno.c
 cull_pack.o: $(CULLLIB_DIR)/cull_pack.c
 	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(CULLLIB_DIR)/cull_pack.c
 
-cull_packL.o: $(CULLLIB_DIR)/cull_packL.c
-	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(CULLLIB_DIR)/cull_packL.c
-
-
 cull_tree.o:  $(CULLLIB_DIR)/cull_tree.c
 	$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(CULLLIB_DIR)/cull_tree.c
 
@@ -153,9 +143,6 @@ cull_file.o:   $(CULLLIB_DIR)/cull_file.c
 
 cull_state.o:   $(CULLLIB_DIR)/cull_state.c
 	$(CC) $(CFLAGS) $(MEMCFLAG) $(SHARED_CFLAGS) -c $(CULLLIB_DIR)/cull_state.c
-   
-cull_xml.o:   $(CULLLIB_DIR)/cull_xml.c
-	$(CC) $(CFLAGS) $(MEMCFLAG) $(SHARED_CFLAGS) -c $(CULLLIB_DIR)/cull_xml.c
    
 pack.o:		$(CULLLIB_DIR)/pack.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(CULLLIB_DIR)/pack.c

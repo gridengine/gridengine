@@ -31,18 +31,14 @@
 /*___INFO__MARK_END__*/
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <unistd.h>
-#include <errno.h>
 #include <time.h>
 
 #include "sge_ja_task.h"
 #include "sge_pe_task.h"
-#include "sge_usageL.h"
-#include "sge_strL.h"
-#include "sge_job_refL.h"
+#include "sge_usage.h"
+#include "sge_str.h"
 #include "sge_report.h"
-#include "sge_time_eventL.h"
 
 #include "basis_types.h"
 #include "sgermon.h"
@@ -51,29 +47,20 @@
 #include "sge_stdlib.h"
 #include "sge.h"
 #include "sge_conf.h"
-#include "commlib.h"
 #include "pack_job_delivery.h"
 #include "sge_subordinate_qmaster.h" 
-#include "sge_complex_schedd.h" 
 #include "sge_ckpt_qmaster.h"
 #include "sge_job_qmaster.h" 
-#include "job_exit.h" 
 #include "sge_give_jobs.h"
 #include "sge_host_qmaster.h"
 #include "sge_host.h"
-#include "sge_pe_qmaster.h"
 #include "sge_event_master.h"
 #include "sge_queue_event_master.h"
 #include "sge_cqueue_qmaster.h"
 #include "sge_prog.h"
 #include "sge_select_queue.h"
-#include "sort_hosts.h"
-#include "sge_afsutil.h"
 #include "setup_path.h"
-#include "execution_states.h"
 #include "sge_parse_num_par.h"
-#include "symbols.h"
-#include "mail.h"
 #include "reschedule.h"
 #include "sge_security.h"
 #include "sge_pe.h"
@@ -81,17 +68,12 @@
 #include "msg_qmaster.h"
 #include "sge_range.h"
 #include "sge_job.h"
-#include "sge_string.h"
 #include "sge_suser.h"
-#include "sge_io.h"
 #include "sge_hostname.h"
-#include "sge_schedd_conf.h"
 #include "sge_answer.h"
 #include "sge_qinstance.h"
 #include "sge_qinstance_state.h"
 #include "sge_ckpt.h"
-#include "sge_hgroup.h"
-#include "sge_cuser.h"
 #include "sge_centry.h"
 #include "sge_cqueue.h"
 #include "sge_lock.h"
@@ -167,6 +149,7 @@ static int queue_field[] = { QU_qhostname,
                              QU_epilog,
                              QU_starter_method,
                              QU_suspend_method,
+                             QU_processors,
                              QU_resume_method,
                              QU_terminate_method,
                              QU_min_cpu_interval,
@@ -307,7 +290,7 @@ send_slave_jobs(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep, lLis
    /* add all queues referenced in gdil to qlp 
     * (necessary for availability of ALL resource limits and tempdir in queue) 
     * AND
-    * copy all JG_processors from all queues to the JG_processors in tmpgdil
+    * copy all JG_processors from all queues to the JG_processors in gdil
     * (so the execd can decide on which processors (-sets) the job will be run).
     */
    what = lIntVector2What(QU_Type, queue_field);
@@ -318,7 +301,7 @@ send_slave_jobs(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep, lLis
       const char *src_qname = lGetString(gdil_ep, JG_qname);
       lListElem *src_qep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), src_qname);
 
-      /* copy all JG_processors from all queues to tmpgdil (which will be
+      /* copy all JG_processors from all queues to gdil (which will be
        * sent to the execd).
        */
       lSetString(gdil_ep, JG_processors, lGetString(src_qep, QU_processors));
@@ -519,7 +502,7 @@ send_job(sge_gdi_ctx_class_t *ctx,
    int failed;
    u_long32 now;
    sge_pack_buffer pb;
-   lListElem *tmpjep, *qep, *tmpjatep, *tmpgdil_ep=NULL;
+   lListElem *tmpjep, *qep, *tmpjatep = NULL;
    lListElem *gdil_ep;
    unsigned long last_heard_from;
    lList *master_centry_list = *object_type_get_master_list(SGE_TYPE_CENTRY);
@@ -573,7 +556,7 @@ send_job(sge_gdi_ctx_class_t *ctx,
    /* add all queues referenced in gdil to qlp 
     * (necessary for availability of ALL resource limits and tempdir in queue) 
     * AND
-    * copy all JG_processors from all queues to the JG_processors in tmpgdil
+    * copy all JG_processors from all queues to the JG_processors in gdil
     * (so the execd can decide on which processors (-sets) the job will be run).
     */
    what = lIntVector2What(QU_Type, queue_field);
@@ -583,10 +566,10 @@ send_job(sge_gdi_ctx_class_t *ctx,
       const char *src_qname = lGetString(gdil_ep, JG_qname);
       lListElem *src_qep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), src_qname);
 
-      /* copy all JG_processors from all queues to tmpgdil (which will be
+      /* copy all JG_processors from all queues to gdil (which will be
        * sent to the execd).
        */
-      lSetString(tmpgdil_ep, JG_processors, lGetString(src_qep, QU_processors));
+      lSetString(gdil_ep, JG_processors, lGetString(src_qep, QU_processors));
 
       qep = lSelectElemDPack(src_qep, NULL, rdp, what, false, NULL, NULL);
 
@@ -1357,7 +1340,7 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
          const char *session = lGetString (jep, JB_session);
          sge_event_spool(ctx, &answer_list, now, sgeE_JATASK_MOD, 
                          jobid, jataskid, NULL, NULL, session,
-                         jep, jatep, NULL, true, true);
+                         jep, jatep, NULL, true, false);
          answer_list_output(&answer_list);
       }
       break;

@@ -143,7 +143,7 @@ void qmonPopupCplxConfig(Widget w, XtPointer cld, XtPointer cad)
       DEXIT;
       return;
    }
-   entries = qmonMirrorList(SGE_CENTRY_LIST);
+   entries = qmonMirrorList(SGE_CE_LIST);
 
    if (!qmon_cplx) {
       shell = XmtGetTopLevelShell(w);
@@ -277,7 +277,7 @@ static void qmonCplxOk(Widget w, XtPointer cld, XtPointer cad)
       what = lWhat("%T(ALL)", CE_Type);
 
    entries = qmonGetCE_Type(attr_mx);
-   old_entries = lCopyList("", qmonMirrorList(SGE_CENTRY_LIST));
+   old_entries = lCopyList("", qmonMirrorList(SGE_CE_LIST));
    /* centry_list_add_del_mod_via_gdi free entries and old_entries */
    centry_list_add_del_mod_via_gdi(ctx, &entries, &alp, &old_entries);                     
    lFreeList(&old_entries);

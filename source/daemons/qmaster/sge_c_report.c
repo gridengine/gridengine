@@ -40,7 +40,7 @@
 #include "sge_log.h"
 #include "msg_qmaster.h"
 #include "sge_host.h"
-#include "sge_reportL.h"
+#include "sge_report.h"
 #include "sge_c_gdi.h"
 #include "sge_host_qmaster.h"
 #include "configuration_qmaster.h"
@@ -52,7 +52,8 @@
 #include "sge_lock.h"
 #include "sge_event_master.h"
 #include "sgeobj/sge_ack.h"
-#include "sgeobj/sge_centryL.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_report.h"
 #include "reschedule.h"
 
 static int update_license_data(sge_gdi_ctx_class_t *ctx, lListElem *hep, lList *lp_lic); 
@@ -150,7 +151,6 @@ void sge_c_report(sge_gdi_ctx_class_t *ctx, char *rhost, char *commproc, int id,
    ** and a configuration version report
    */
    for_each(report, report_list) {
-
       rep_type = lGetUlong(report, REP_type);
 
       switch (rep_type) {
@@ -188,7 +188,7 @@ void sge_c_report(sge_gdi_ctx_class_t *ctx, char *rhost, char *commproc, int id,
                               lSetHost(clp, LR_host, sim_host);
                            }
                         }
-                        sge_update_load_values(ctx, sim_host, lGetList(report,REP_list));
+                        sge_update_load_values(ctx, sim_host, lGetList(report, REP_list));
                      }
                   }
                }

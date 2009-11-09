@@ -135,7 +135,7 @@ void updateProjectList(void)
    
    DENTER(GUI_LAYER, "updateProjectList");
 
-   cl = qmonMirrorList(SGE_PROJECT_LIST);
+   cl = qmonMirrorList(SGE_PR_LIST);
    lPSortList(cl, "%I+", PR_name);
    UpdateXmListFromCull(project_names, XmFONTLIST_DEFAULT_TAG, cl, PR_name);
 
@@ -246,7 +246,7 @@ static void qmonSelectProject(Widget w, XtPointer cld, XtPointer cad)
       return;
    }
 
-   ep = prj_list_locate(qmonMirrorList(SGE_PROJECT_LIST), prjname);
+   ep = prj_list_locate(qmonMirrorList(SGE_PR_LIST), prjname);
 
    XtFree((char*) prjname);
 
@@ -345,7 +345,7 @@ static void qmonProjectAskForUsers(Widget w, XtPointer cld, XtPointer cad)
 
    DENTER(GUI_LAYER, "qmonProjectAskForUsers");
    
-   ql_in = qmonMirrorList(SGE_USERSET_LIST);
+   ql_in = qmonMirrorList(SGE_US_LIST);
    lPSortList(ql_in, "%I+", US_name);
    ql_out = XmStringToCull(list, US_Type, US_name, ALL_ITEMS);
 
@@ -403,7 +403,7 @@ static void qmonProjectModify(Widget w, XtPointer cld, XtPointer cad)
       XtVaSetValues( project_name_w,
                      XmNeditable, False,
                      NULL);
-      prjp = prj_list_locate(qmonMirrorList(SGE_PROJECT_LIST), prjstr);
+      prjp = prj_list_locate(qmonMirrorList(SGE_PR_LIST), prjstr);
       XtFree((char*)prjstr);
       if (prjp) {
          add_mode = 0;
@@ -456,8 +456,8 @@ static void qmonProjectOk(Widget w, XtPointer cld, XtPointer cad)
          
          if (add_mode) {
             lAppendElem(prjl, lCopyElem(prep));
-            alp = qmonAddList(SGE_PROJECT_LIST, 
-                              qmonMirrorListRef(SGE_PROJECT_LIST),
+            alp = qmonAddList(SGE_PR_LIST, 
+                              qmonMirrorListRef(SGE_PR_LIST),
                               PR_name, &prjl, NULL, what);
          }
          else {
@@ -474,13 +474,13 @@ static void qmonProjectOk(Widget w, XtPointer cld, XtPointer cad)
                return;
             }
                
-            new_prep = lCopyElem(lGetElemStr(qmonMirrorList(SGE_PROJECT_LIST), 
+            new_prep = lCopyElem(lGetElemStr(qmonMirrorList(SGE_PR_LIST), 
                                     PR_name, prjname));
             lSwapList(new_prep, PR_acl, prep, PR_acl); 
             lSwapList(new_prep, PR_xacl, prep, PR_xacl); 
             lAppendElem(prjl, new_prep);
-            alp = qmonModList(SGE_PROJECT_LIST, 
-                              qmonMirrorListRef(SGE_PROJECT_LIST),
+            alp = qmonModList(SGE_PR_LIST, 
+                              qmonMirrorListRef(SGE_PR_LIST),
                               PR_name, &prjl, NULL, what);
          }
 
@@ -544,8 +544,8 @@ static void qmonProjectDelete(Widget w, XtPointer cld, XtPointer cad)
                      False, &answer, NULL);
       if (answer) { 
          what = lWhat("%T(ALL)", PR_Type);
-         alp = qmonDelList(SGE_PROJECT_LIST, 
-                           qmonMirrorListRef(SGE_PROJECT_LIST),
+         alp = qmonDelList(SGE_PR_LIST, 
+                           qmonMirrorListRef(SGE_PR_LIST),
                            PR_name, &lp, NULL, what);
 
          qmonMessageBox(w, alp, 0);

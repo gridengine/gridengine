@@ -394,7 +394,7 @@ int lCountDescr(const lDescr *dp)
    }
 
    p = &dp[0];
-   while (p->mt != lEndT)
+   while (mt_get_type(p->mt) != lEndT)
       p++;
 
    DEXIT;
@@ -442,7 +442,7 @@ lDescr *lCopyDescr(const lDescr *dp)
    memcpy(new, dp, sizeof(lDescr) * (i + 1));
 
    /* copy hashing information */
-   for(i = 0; dp[i].mt != lEndT; i++) {
+   for(i = 0; mt_get_type(dp[i].mt) != lEndT; i++) {
       new[i].ht = NULL;
    }
 
@@ -481,7 +481,7 @@ void lWriteDescrTo(const lDescr *dp, FILE *fp)
       return;
    }
 
-   for (i = 0; dp[i].mt != lEndT; i++) {
+   for (i = 0; mt_get_type(dp[i].mt) != lEndT; i++) {
       const char *format = "nm: %d(%-20.20s) mt: %d %c%c\n";
       int do_hash = ' ';
       int is_hash = ' ';
@@ -496,13 +496,53 @@ void lWriteDescrTo(const lDescr *dp, FILE *fp)
          is_hash = '+';
       }
 
-      if (!fp)
+      if (!fp) {
          DPRINTF((format, dp[i].nm, lNm2Str(dp[i].nm), dp[i].mt, do_hash, is_hash));
-      else
+      } else {
          fprintf(fp, format, dp[i].nm, lNm2Str(dp[i].nm), dp[i].mt, do_hash, is_hash);
+      }
    }
 
    DEXIT;
+}
+
+/****** cull/multitype/_lGetPosInDescr() ***************************************
+*  NAME
+*     _lGetPosInDescr() -- Returns position of a name in a descriptor 
+*
+*  SYNOPSIS
+*     int _lGetPosInDescr(const lDescr *dp, int name) 
+*
+*  FUNCTION
+*     Returns position of a name in a descriptor array. Does a full search
+*     in the descriptor even if the element is not a reduced element.
+*
+*  INPUTS
+*     const lDescr *dp - descriptor 
+*     int name         - namse 
+*
+*  RESULT
+*     int - position or -1 if not found 
+******************************************************************************/
+int _lGetPosInDescr(const lDescr *dp, int name) 
+{
+   const lDescr *ldp;
+
+   if (!dp) {
+      LERROR(LEDESCRNULL);
+      return -1;
+   }
+
+   for (ldp = dp; ldp->nm != name && ldp->nm != NoName; ldp++) {
+      ;
+   }
+
+   if (ldp->nm == NoName) {
+      LERROR(LENAMENOT);
+      return -1;
+   }
+
+   return ldp - dp;
 }
 
 /****** cull/multitype/lGetPosInDescr() ***************************************
@@ -522,13 +562,21 @@ void lWriteDescrTo(const lDescr *dp, FILE *fp)
 *  RESULT
 *     int - position or -1 if not found 
 ******************************************************************************/
-int lGetPosInDescr(const lDescr *dp, int name) 
-{
+int lGetPosInDescr(const lDescr *dp, int name) {
    const lDescr *ldp;
 
    if (!dp) {
       LERROR(LEDESCRNULL);
       return -1;
+   }
+
+   if ((dp->mt & CULL_IS_REDUCED) == 0) {
+      long pos = name - dp->nm;
+
+      if (pos < 0 || pos > MAX_DESCR_SIZE) {
+         pos = -1;
+      }
+      return pos; 
    }
 
    for (ldp = dp; ldp->nm != name && ldp->nm != NoName; ldp++) {
@@ -887,7 +935,6 @@ const char *lGetString(const lListElem *ep, int name)
    }
 
    DEXIT;
-
    return (lString) ep->cont[pos].str;
 }
 
@@ -1054,11 +1101,11 @@ lList* lGetList(const lListElem *ep, int name)
 
    pos = lGetPosViaElem(ep, name, SGE_DO_ABORT);
 
-   if (mt_get_type(ep->descr[pos].mt) != lListT)
+   if (mt_get_type(ep->descr[pos].mt) != lListT) {
       incompatibleType2(MSG_CULL_GETLIST_WRONGTYPEFORFIELDXY_SS ,
                         lNm2Str(name), multitypes[mt_get_type(ep->descr[pos].mt)]);
-   DEXIT;
-   return (lList *) ep->cont[pos].glp;
+   }
+   DRETURN((lList *) ep->cont[pos].glp);
 }
 
 /****** cull/multitype/lGetOrCreateList() **************************************
@@ -3520,7 +3567,7 @@ lListElem *lAddElemStr(lList **lpp, int nm, const char *str, const lDescr *dp)
 {
    lListElem *sep;
    int pos;
-   int dataType;
+   int data_type;
 
    DENTER(CULL_LAYER, "lAddElemStr");
 
@@ -3539,8 +3586,8 @@ lListElem *lAddElemStr(lList **lpp, int nm, const char *str, const lDescr *dp)
       DEXIT;
       return NULL;
    }
-   dataType = lGetPosType(dp , pos);
-   if (dataType != lStringT) {
+   data_type = lGetPosType(dp , pos);
+   if (data_type != lStringT) {
       DPRINTF(("error: lAddElemStr called to field which is no lStringT type\n"));
       CRITICAL((SGE_EVENT, MSG_CULL_ADDELEMSTRERRORXRUNTIMETYPE_S , lNm2Str(nm)));
       DEXIT;
@@ -3585,7 +3632,7 @@ lListElem *lAddElemHost(lList **lpp, int nm, const char *str, const lDescr *dp)
 {
    lListElem *sep;
    int pos;
-   int dataType;
+   int data_type;
 
    DENTER(CULL_LAYER, "lAddElemHost");
 
@@ -3604,8 +3651,8 @@ lListElem *lAddElemHost(lList **lpp, int nm, const char *str, const lDescr *dp)
       DEXIT;
       return NULL;
    }
-   dataType = lGetPosType(dp , pos);
-   if (dataType != lHostT) {
+   data_type = lGetPosType(dp , pos);
+   if (data_type != lHostT) {
       DPRINTF(("error: lAddElemHost called to field which is no lHostT type\n"));
       CRITICAL((SGE_EVENT, MSG_CULL_ADDELEMHOSTERRORXRUNTIMETYPE_S , lNm2Str(nm)));
       DEXIT;
@@ -3690,9 +3737,6 @@ int lDelSubStr(lListElem *ep, int nm, const char *str, int snm)
 int lDelElemStr(lList **lpp, int nm, const char *str) 
 {
    lListElem *ep;
-   int pos;
-   int dataType;
-   const lDescr *listDescriptor;
 
    DENTER(CULL_LAYER, "lDelElemStr");
 
@@ -3706,25 +3750,6 @@ int lDelElemStr(lList **lpp, int nm, const char *str)
    if (!*lpp) {
       DEXIT;
       return 1; 
-   }
-
-   listDescriptor = lGetListDescr(*lpp);
-   /* get position of nm in dp */
-   pos = lGetPosInDescr(listDescriptor, nm);
-
-   /* run time type checking */
-   if (pos < 0) {
-      CRITICAL((SGE_EVENT, MSG_CULL_DELELEMSTRERRORXRUNTIMETYPEERROR_S , lNm2Str(nm)));
-      DEXIT;
-      abort();
-   }
-
-   dataType = lGetPosType(listDescriptor,pos);
-   if (dataType != lStringT) {
-      DPRINTF(("error: lDelElemStr called to field which is no lStringT type\n"));
-      CRITICAL((SGE_EVENT, MSG_CULL_DELELEMSTRERRORXRUNTIMETYPEERROR_S , lNm2Str(nm)));
-      DEXIT;
-      return 0;
    }
 
    /* seek element */
@@ -3843,7 +3868,7 @@ lListElem *lGetElemStrFirst(const lList *lp, int nm, const char *str,
 {
    lListElem *ep;
    int pos; 
-   int dataType;
+   int data_type;
    const lDescr *listDescriptor;
 
 
@@ -3870,8 +3895,8 @@ lListElem *lGetElemStrFirst(const lList *lp, int nm, const char *str,
       DRETURN(NULL);
    }
 
-   dataType = lGetPosType(listDescriptor,pos);
-   if (dataType != lStringT) {
+   data_type = lGetPosType(listDescriptor,pos);
+   if (data_type != lStringT) {
       DPRINTF(("error: lGetElemStrFirst called to field which is no lStringT type\n"));
       CRITICAL((SGE_EVENT, MSG_CULL_GETELEMSTRERRORXRUNTIMETYPE_S , lNm2Str(nm)));
       DRETURN(NULL);
@@ -3931,8 +3956,7 @@ lListElem *lGetElemStrNext(const lList *lp, int nm, const char *str,
                            const void **iterator)
 {
    lListElem *ep;
-   int pos;
-   int dataType;
+   int pos, data_type;
    const lDescr *listDescriptor;
 
 
@@ -3964,13 +3988,12 @@ lListElem *lGetElemStrNext(const lList *lp, int nm, const char *str,
       DEXIT;
       return NULL;
    }
-   dataType = lGetPosType(listDescriptor,pos);
-   if (dataType != lStringT) {
+   data_type = lGetPosType(listDescriptor,pos);
+   if (data_type != lStringT) {
       DPRINTF(("error: lGetElemStrNext called to field which is no lStringT type\n"));
       DEXIT;
       return NULL;
    }
-
 
    if(lp->descr[pos].ht != NULL) {
       /* hash access */
@@ -4021,7 +4044,7 @@ lListElem *lGetElemStrLike(const lList *lp, int nm, const char *str)
    lListElem *ep;
    int pos;
    const char *s;
-   int dataType;
+   int data_type;
    size_t str_pos = 0;
    const lDescr *listDescriptor;
 
@@ -4048,8 +4071,8 @@ lListElem *lGetElemStrLike(const lList *lp, int nm, const char *str)
       DEXIT;
       return NULL;
    }
-   dataType = lGetPosType(listDescriptor,pos);
-   if (dataType != lStringT) {
+   data_type = lGetPosType(listDescriptor,pos);
+   if (data_type != lStringT) {
       DPRINTF(("error: lGetElemStrLike called to field which is no lStringT type\n"));
       CRITICAL((SGE_EVENT, MSG_CULL_GETELEMSTRERRORXRUNTIMETYPE_S , lNm2Str(nm)));
       DEXIT;
@@ -4260,7 +4283,6 @@ int lDelSubUlong(lListElem *ep, int nm, lUlong val, int snm)
 int lDelElemUlong(lList **lpp, int nm, lUlong val) 
 {
    lListElem *ep;
-   int pos;
 
    DENTER(CULL_LAYER, "lDelElemUlong");
 
@@ -4274,16 +4296,6 @@ int lDelElemUlong(lList **lpp, int nm, lUlong val)
    if (!*lpp) {
       DEXIT;
       return 1;
-   }
-
-   /* get position of nm in dp */
-   pos = lGetPosInDescr(lGetListDescr(*lpp), nm);
-
-   /* run time type checking */
-   if (pos < 0) {
-      CRITICAL((SGE_EVENT, MSG_CULL_DELELEMULONGERRORXRUNTIMETYPE_S , lNm2Str(nm)));
-      DEXIT;
-      abort();
    }
 
    /* seek element */
@@ -4474,7 +4486,7 @@ lListElem *lGetElemUlongNext(const lList *lp, int nm, lUlong val,
    if(*iterator == NULL) {
       return NULL;
    }
-   
+  
    /* get position of nm in sdp */
    pos = lGetPosInDescr(lGetListDescr(lp), nm);
 
@@ -4575,9 +4587,6 @@ int lDelSubCaseStr(lListElem *ep, int nm, const char *str, int snm)
 int lDelElemCaseStr(lList **lpp, int nm, const char *str) 
 {
    lListElem *ep;
-   int pos;
-   int dataType;
-   const lDescr *listDescriptor;
 
    DENTER(CULL_LAYER, "lDelElemCaseStr");
 
@@ -4591,21 +4600,6 @@ int lDelElemCaseStr(lList **lpp, int nm, const char *str)
    if (!*lpp) {
       DEXIT;
       return 1; 
-   }
-
-   /* get position of nm in dp */
-   listDescriptor = lGetListDescr(*lpp);
-   pos = lGetPosInDescr(listDescriptor, nm);
-   /* run time type checking */
-   if (pos < 0) {
-      CRITICAL((SGE_EVENT, MSG_CULL_DELELEMCASESTRERRORXRUNTIMETYPE_S , lNm2Str(nm)));
-      DEXIT;
-      abort();
-   }
-   dataType = lGetPosType(listDescriptor,pos);
-   if (dataType != lStringT) {
-      DPRINTF(("error: lDelElemCaseStr called to field which is no lStringT type\n"));
-      CRITICAL((SGE_EVENT, MSG_CULL_DELELEMCASESTRERRORXRUNTIMETYPE_S , lNm2Str(nm)));
    }
 
    /* seek elemtent */
@@ -4689,7 +4683,7 @@ lListElem *lGetElemCaseStr(const lList *lp, int nm, const char *str)
    lListElem *ep;
    int pos;
    const char *s;
-   int dataType;
+   int data_type;
    const lDescr *listDescriptor;
 
    DENTER(CULL_LAYER, "lGetElemCaseStr");
@@ -4707,8 +4701,6 @@ lListElem *lGetElemCaseStr(const lList *lp, int nm, const char *str)
 
    listDescriptor = lGetListDescr(lp);
 
-
-
    /* get position of nm in sdp */
    pos = lGetPosInDescr(listDescriptor, nm);
 
@@ -4719,8 +4711,8 @@ lListElem *lGetElemCaseStr(const lList *lp, int nm, const char *str)
       return NULL;
    }
 
-   dataType = lGetPosType(listDescriptor, pos);
-   if (dataType != lStringT) {
+   data_type = lGetPosType(listDescriptor, pos);
+   if (data_type != lStringT) {
       DPRINTF((":::::::::::::::: lGetElemCaseStr - data type is not lStringT !!! :::::::"));
       CRITICAL((SGE_EVENT, MSG_CULL_GETELEMCASESTRERRORXRUNTIMETYPE_S , lNm2Str(nm)));
       DEXIT;
@@ -4790,7 +4782,7 @@ lListElem *lGetElemHostFirst(const lList *lp, int nm, const char *str,
                              const void **iterator) {
 
    int pos;
-   int dataType;
+   int data_type;
    lListElem *ep = NULL;
    const lDescr *listDescriptor = NULL;
    char uhost[CL_MAXHOSTLEN+1];
@@ -4809,9 +4801,9 @@ lListElem *lGetElemHostFirst(const lList *lp, int nm, const char *str,
    /* run time type checking */
    listDescriptor = lGetListDescr(lp);
    pos = lGetPosInDescr(listDescriptor, nm);
-   dataType = lGetPosType(listDescriptor, pos);
-   if ( (pos < 0) || (dataType != lHostT) ) {
-      if (dataType != lHostT) {
+   data_type = lGetPosType(listDescriptor, pos);
+   if ( (pos < 0) || (data_type != lHostT) ) {
+      if (data_type != lHostT) {
          DPRINTF((":::::::::::::::: lGetElemHostFirst - data type is not lHostT !!! :::::::\n"));
       }
       CRITICAL((SGE_EVENT, MSG_CULL_GETELEMHOSTERRORXRUNTIMETYPE_S , lNm2Str(nm)));
@@ -4880,7 +4872,6 @@ lListElem *lGetElemHostNext(const lList *lp, int nm, const char *str,
 {
    
    int pos;
-   int dataType;
    lListElem *ep = NULL;
    const lDescr *listDescriptor = NULL;
    char uhost[CL_MAXHOSTLEN+1];
@@ -4896,15 +4887,11 @@ lListElem *lGetElemHostNext(const lList *lp, int nm, const char *str,
       DEXIT;
       return NULL;
    }
-   
+  
    /* run time type checking */
    listDescriptor = lGetListDescr(lp);
    pos = lGetPosInDescr(listDescriptor, nm);
-   dataType = lGetPosType(listDescriptor, pos);
-   if ( (pos < 0) || (dataType != lHostT) ) {
-      if (dataType != lHostT) {
-         DPRINTF((":::::::::::::::: lGetElemHostNext - data type is not lHostT !!! :::::::\n"));
-      }
+   if (pos < 0) {
       CRITICAL((SGE_EVENT, MSG_CULL_GETELEMHOSTERRORXRUNTIMETYPE_S , lNm2Str(nm)));
       DEXIT;
       return NULL;
@@ -5002,9 +4989,6 @@ lListElem *lGetSubHost(const lListElem *ep, int nm, const char *str, int snm)
 int lDelElemHost(lList **lpp, int nm, const char *str) 
 {
    lListElem *ep;
-   int pos;
-   const lDescr *listDescriptor = NULL;
-   int dataType;
 
    DENTER(CULL_LAYER, "lDelElemHost");
 
@@ -5019,25 +5003,6 @@ int lDelElemHost(lList **lpp, int nm, const char *str)
       DEXIT;
       return 1;
    }
-
-   /* get position of nm in dp */
-   listDescriptor = lGetListDescr(*lpp);
-   pos = lGetPosInDescr(listDescriptor, nm);
-
-   /* run time type checking */
-   if (pos < 0) {
-      CRITICAL((SGE_EVENT, MSG_CULL_DELELEMHOSTERRORXRUNTIMETYPE_S , lNm2Str(nm)));
-      DEXIT;
-      abort();
-   }
-   dataType = lGetPosType(listDescriptor,pos);
-   if (dataType != lHostT) {
-      DPRINTF(("error: lDelElemHost called to field which is no lHostT type\n"));
-      CRITICAL((SGE_EVENT, MSG_CULL_DELELEMHOSTERRORXRUNTIMETYPE_S , lNm2Str(nm)));
-      DEXIT;
-      return 0;
-   }
-
 
    /* seek elemtent */
    ep = lGetElemHost(*lpp, nm, str);

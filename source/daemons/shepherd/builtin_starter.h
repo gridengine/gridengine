@@ -33,7 +33,7 @@
 /*___INFO__MARK_END__*/
 
 
-void son(char *, char *, int);
+void son(const char *childname, char *script_file, int truncate_stderr_out);
 int sge_set_environment(void);
 char** sge_get_environment(void);
 int sge_set_env_value(const char *, const char *);

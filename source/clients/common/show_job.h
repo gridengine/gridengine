@@ -35,7 +35,7 @@
 #include "sge_boundaries.h"
 #include "cull.h"
 
-void cull_show_job(lListElem *job, int flags);
+void cull_show_job(lListElem *job, int flags, bool show_binding);
 
 void sge_show_ce_type_list(lList *reqlist);
 

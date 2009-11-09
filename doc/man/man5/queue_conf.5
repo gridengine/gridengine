@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2009/03/12 14:13:23 $     Revision: $Revision: 1.33 $
+.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2009/11/05 10:44:42 $     Revision: $Revision: 1.35 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QUEUE_CONF 5 "$Date: 2009/03/12 14:13:23 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH QUEUE_CONF 5 "$Date: 2009/11/05 10:44:42 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 queue_conf \- xxQS_NAMExx queue configuration file format
@@ -148,7 +148,12 @@ A list of load thresholds with the same semantics as that of the
 parameter (see above) except that exceeding one of the denoted
 thresholds initiates suspension of one of multiple jobs in the queue.
 See the \fBnsuspend\fP parameter below for details on the number of
-jobs which are suspended.
+jobs which are suspended. There is an important relationship between the
+\fsuspend_threshold\fP and the \fscheduler_interval\fP. If you have for example
+a suspend threshold on the np_load_avg, and the load exceeds the threshold,
+this does not have immediate effect. Jobs continue running until the next
+scheduling run, where the scheduler detects the threshold has been exceeded and
+sends an order to qmaster to suspend the job. The same applies for unsuspending.
 .SS "\fBnsuspend\fP"
 The number of jobs which are suspended/enabled
 per time interval if at least one of
@@ -566,8 +571,12 @@ projects are denied access other than those denied access based on the
 \fBprojects\fP and \fBxprojects\fP parameters, the project is denied
 access to the queue.
 .SS "\fBsubordinate_list\fP"
+There are two different types of subordination:
+.PP
+.B 1. Queuewise subordination
+.PP
 A list of xxQS_NAMExx queue names as defined for \fIqueue_name\fP in
-.M sge_types 1 . 
+.M sge_types 1 .
 Subordinate relationships are in effect
 only between queue instances residing at the same host. 
 The relationship does not apply and is ignored when jobs are 
@@ -584,6 +593,111 @@ On nodes which
 host more than one queue, you might wish to accord better service to certain
 classes of jobs (e.g., queues that are dedicated to parallel processing might
 need priority over low priority production queues; default: NONE).
+.PP
+.B 2. Slotwise preemption
+.PP
+The slotwise preemption provides a means to ensure that high priority jobs
+get the resources they need, while at the same time low priority jobs on
+the same host are not unnecessarily suspended, maximizing the host utilization.
+This slotwise preemption is implemented by a slotwise suspend on subordinate.
+This means there is a subordination relationship defined between queues, but
+if the suspend threshold is exceeded, not the whole subordinated queue is suspended,
+there are only single slots suspended.
+.PP
+Like with queuewise subordination, the subordination relationships are in effect only
+between queue instances residing at the same host. The relationship does not apply
+and is ignored when jobs are running in queue instances on other hosts.
+.PP
+The syntax of the definition is:
+.PP
+slots=<threshold>(<queue_list>)
+.PP
+where
+.nf
+<threshold> =a positive integer number
+<queue_list>=<queue_def>[,<queue_list>]
+<queue_def> =<queue>[:<seq_no>][:<action>]
+<queue>     =a xxQS_NAMExx queue name as defined for
+.fi
+             \fIqueue_name\fP in
+.M sge_types 1 .
+.nf
+<seq_no>    =sequence number among all subordinated queues
+             of the same depth in the tree. The higher the
+             sequence number, the lower is the priority of
+             the queue.
+             Default is 0, which is the highest priority.
+<action>    =the action to be taken if the threshold is
+             exceeded. Supported is:
+             "sr": Suspend the task with the shortest run
+                   time.
+             "lr": Suspend the task with the longest run
+                   time.
+.fi
+.PP
+E.g.:
+.br
+slots=4(B.q:1:sr, C.q:2:lr)
+.PP
+defines a subordination relationship between this queue (let's call it queue A.q)
+and the queues B.q and C.q. If there are running more than 4 tasks in the queue
+instances of queue A.q, B.q and C.q on the same host, a task in either B.q or
+C.q is to be suspended. The sequence numbers define that first a task to be
+suspended is searched in C.q (because 2 is higher than 1, and higher sequence
+numbers define lower priorities). If there is no suitable task, a task in B.q
+is searched. Then the  action defines which task in the queue is to be suspended.
+In C.q it would be the task with the longest run time (i.e. the longest time
+since it was started), in B.q. it would be the task with the shortest run time.
+.PP
+With this definition, it's possible to define a subordination tree. It's not allowed
+to define loops or mutual subordinations. In such a subordination tree, always
+the queues in the lowest layer are searched first for tasks to suspend. Such a tree
+could look like this:
+.PP
+.nf
+       A.q
+      /   \\\\
+    B.q   C.q
+   /     /   \\\\
+ D.q    E.q  F.q
+                \\\\
+                 G.q 
+.fi
+.PP
+Whenever a task is started in a queue instance, a task running in a queue instance
+finishes or is deleted, a queue instance is suspended, unsuspended, modifid, added to
+this tree or removed from this tree, the whole tree is recalculated and tasks are
+suspended or unsuspended accordingly.
+.PP
+This calculation always starts at the queue instance that is modified, except when it
+is a leaf node (like D.q, E.q and G.q in this example), then the calculation starts at
+the parent queue instance (B.q, C.q or F.q in the example). From there, first all
+running tasks in the whole subtree of this queue instance are counted. If the sum exceeds
+the threshold configured in the subordinate_list, in this subtree a task is searched
+to be suspended. Then the alogrithm proceeds to the parent of this queue instance,
+counts all running tasks in the whole subtree below the parent and checks if
+the number exceeds the threshold configured at the parent's subordinate_list. If so,
+it searches for a task to suspend in the whole subtree below the parent. And so on,
+until it did this calculation for the root node of the tree.
+.PP
+For example, if in A.q a threshold of 4 is defined, and in B.q a threshold of 2
+is defined, then when a task is started in D.q, first the number of tasks running
+in B.q and D.q is counted. Let's say this is 3 now including the new task. Then
+a task in D.q is to be suspended. The algorithm stops here, because there is one
+new task and one suspended task, so everything is in balance again.
+.PP
+If the number of running tasks in B.q and D.q is just 2 including the new task,
+there is no task to be suspended in D.q. Then the alogrithm proceeds to A.q and
+counts all running tasks below A.q. Let's say this is 5 now including the new
+task. Then the algorithm searches for the running task in the lowest queue
+instance in the whole tree. If there is a task running in G.q, this would be
+suspended. If there is no task running in G.q, the algorithm will suspend a
+task in D.q, E.q or F.q. Which queue is searched first depends on the sequence
+number that is defined for each queue instance. If all queues have the same
+sequence number, the oldest or youngest task is searched over all queues.
+Therefore the behaviour is undefined if queues of the same depth have the same
+sequence number, but different actions defined.
+
 .SS "\fBcomplex_values\fP"
 .B complex_values
 defines quotas for resource attributes managed via this 

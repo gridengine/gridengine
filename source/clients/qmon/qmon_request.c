@@ -62,6 +62,7 @@
 #include "AskForTime.h"
 #include "IconList.h"
 #include "uti/sge_string.h"
+#include "sge_centry.h"
 
 
 
@@ -160,7 +161,7 @@ void qmonRequestPopup(Widget w, XtPointer cld, XtPointer cad)
       DEXIT;
       return;
    }
-   rll = qmonGetResources(qmonMirrorList(SGE_CENTRY_LIST), 
+   rll = qmonGetResources(qmonMirrorList(SGE_CE_LIST), 
                                        REQUESTABLE_RESOURCES);
 
    hrl = qmonSubmitHR();
@@ -486,7 +487,7 @@ static void qmonRequestEditResource(Widget w, XtPointer cld, XtPointer cad)
 
    DENTER(GUI_LAYER, "qmonRequestEditResource");
 
-   rll = qmonGetResources(qmonMirrorList(SGE_CENTRY_LIST), 
+   rll = qmonGetResources(qmonMirrorList(SGE_CE_LIST), 
                                        REQUESTABLE_RESOURCES); 
 
    if (!how) {

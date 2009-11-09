@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
 
 /*    lWriteElemTo(queue, stdout); */
 
-   for(i = 0; descr[i].mt != lEndT; i++) {
+   for(i = 0; mt_get_type(descr[i].mt) != lEndT; i++) {
       int nm;
       const char *name;
       const char *value, *reread_value;

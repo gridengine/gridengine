@@ -41,7 +41,7 @@ extern "C" {
 
 enum {
    O_owner = O_LOWERBOUND,    /* THIS IS VERY IMPORTANT */
-        O_group
+   O_group
 };
 
 

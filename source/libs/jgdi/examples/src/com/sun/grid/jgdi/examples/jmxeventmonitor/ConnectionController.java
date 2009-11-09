@@ -63,6 +63,8 @@ public class ConnectionController {
     private JGDIProxy jgdiProxy;
     private boolean useSSL = false;
     private File caTop;
+    private String serverHostname;
+    private int serverPort;
 
     private final EventListener shutdownListener = new EventListener() {
 
@@ -233,7 +235,7 @@ public class ConnectionController {
                 if (jgdiProxy != null) {
                     jgdiProxy.close();
                     if (useSSL) {
-                        JGDIProxy.resetSSL(caTop);
+                        JGDIProxy.resetSSL(serverHostname, serverPort, caTop);
                     }
                 }
             } catch (Exception ex) {
@@ -249,15 +251,13 @@ public class ConnectionController {
 
     private class ConnectAction implements Runnable {
 
-        private final String host;
-        private final int port;
         private final Object credentials;
         private final File keyStore;
         private final char[] pw;
 
-        public ConnectAction(String host, int port, Object credentials, String caTopPath, String keyStorePath, char[] pw) {
-            this.host = host;
-            this.port = port;
+        public ConnectAction(String myhost, int myport, Object credentials, String caTopPath, String keyStorePath, char[] pw) {
+            serverHostname = myhost;
+            serverPort = myport;
             this.credentials = credentials;
             if (caTopPath != null) {
                 useSSL = true;
@@ -275,15 +275,15 @@ public class ConnectionController {
         public void run() {
             try {
                 if (useSSL) {
-                    JGDIProxy.setupSSL(caTop, keyStore, pw);
+                    JGDIProxy.setupSSL(serverHostname, serverPort, caTop, keyStore, pw);
                 }
-                jgdiProxy = JGDIFactory.newJMXInstance(host, port, credentials);
+                jgdiProxy = JGDIFactory.newJMXInstance(serverHostname, serverPort, credentials);
                 for (EventListener lis : eventListeners) {
                     jgdiProxy.addEventListener(lis);
                 }
                 Set<EventTypeEnum> subscription = jgdiProxy.getProxy().getSubscription();
                 for (Listener lis : getListeners()) {
-                    lis.connected(host, port, subscription);
+                    lis.connected(serverHostname, serverPort, subscription);
                 }
             } catch (Throwable ex) {
                 for (Listener lis : getListeners()) {

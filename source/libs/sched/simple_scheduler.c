@@ -34,34 +34,37 @@
 #include <stdlib.h>
 #include <strings.h>
 
-#include "sge_time.h"
-#include "sge_unistd.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_time.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_log.h"
+#include "uti/sge_dstring.h"
+
+#include "comm/commlib.h"
+
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_pe.h"
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_str.h"
+#include "sgeobj/sge_order.h"
+#include "sgeobj/sge_event.h"
+
+#include "mir/sge_mirror.h"
+
+#include "evc/sge_event_client.h"
+
 #include "sig_handlers.h"
-#include "commlib.h"
-#include "sge_prog.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "sge_dstring.h"
-
-#include "sge_object.h"
-#include "sge_host.h"
-#include "sge_job.h"
-#include "sge_ja_task.h"
-#include "sge_pe.h"
-#include "sge_range.h"
-#include "sge_answer.h"
-#include "sge_strL.h"
-#include "sge_orderL.h"
-
 #include "sge_ssi.h"
 #include "sge_orders.h"
 #include "sge_job_schedd.h"
 
 #include "msg_clients_common.h"
-
-#include "sge_mirror.h"
-#include "sge_event_client.h"
-#include "sge_event.h"
 
 /* examples for retrieving information from SGE's master lists */
 static void print_load_value(lListElem *host, const char *name, const char *format);

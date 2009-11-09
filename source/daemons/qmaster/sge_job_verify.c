@@ -67,6 +67,7 @@
 #include "sgeobj/sge_suser.h"
 #include "sgeobj/sge_userprj.h"
 #include "sgeobj/sge_userset.h"
+#include "sgeobj/sge_binding.h"
 
 /* qmaster */
 #include "sge_userprj_qmaster.h"
@@ -86,7 +87,7 @@ int
 sge_job_verify_adjust(sge_gdi_ctx_class_t *ctx, lListElem *jep, lList **alpp, 
                       lList **lpp, char *ruser, char *rhost, uid_t uid, gid_t gid, char *group, 
                       sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task,
-                      monitoring_t *monitor) 
+                      monitoring_t *monitor)
 {
    object_description *object_base = object_type_get_object_description();
    int ret = STATUS_OK;
@@ -189,6 +190,18 @@ sge_job_verify_adjust(sge_gdi_ctx_class_t *ctx, lListElem *jep, lList **alpp,
          lAddSubUlong(jep, JAT_task_number, 0, JB_ja_template, JAT_Type);
       }
    } 
+
+   if (ret == STATUS_OK) {
+      lListElem *binding_elem = lFirst(lGetList(jep, JB_binding));
+               
+      if (binding_elem == NULL) {
+         bool lret = job_init_binding_elem(jep);
+
+         if (lret == false) {
+            ret = STATUS_EUNKNOWN;
+         }
+      }
+   }
 
    /* verify or set the account string */
    if (ret == STATUS_OK) {
@@ -638,7 +651,7 @@ sge_job_verify_adjust(sge_gdi_ctx_class_t *ctx, lListElem *jep, lList **alpp,
 
    job_suc_pre_ad(jep);
 
-   DRETURN(ret); 
-} 
+   DRETURN(ret);
+}
 
 

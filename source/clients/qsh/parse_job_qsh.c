@@ -37,7 +37,7 @@
 #include "symbols.h"
 #include "sge_string.h"
 #include "sge_time.h"
-#include "parse_qsubL.h"
+#include "parse.h"
 #include "sge_str.h"
 #include "dispatcher.h"
 #include "parse_job_cull.h"
@@ -49,7 +49,6 @@
 #include "sge_host.h"
 #include "sge_path_alias.h"
 #include "msg_common.h"
-#include "sge_job_refL.h"
 #include "sge_job.h"
 #include "sge_stdlib.h"
 #include "sge_prog.h"
@@ -143,6 +142,15 @@ lList *cull_parse_qsh_parameter(u_long32 prog_number, u_long32 uid, const char *
 
       JOB_TYPE_SET_IMMEDIATE(type);
       lSetUlong(*pjob, JB_type, type);
+   }
+
+   /* -binding */
+   while ((ep = lGetElemStr(cmdline, SPA_switch, "-binding"))) {
+      lList *binding_list = lGetList(ep, SPA_argval_lListT);
+      lList *new_binding_list = lCopyList("binding",  binding_list);
+
+      lSetList(*pjob, JB_binding, new_binding_list);
+      lRemoveElem(cmdline, &ep);
    }
 
    /*

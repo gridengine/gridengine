@@ -134,11 +134,19 @@ public class SessionImplTest extends TestCase {
 
     /** Removes the appended build number if necessary */
     private String getVersionWithoutBuildNumber(final String version) {
+        String fullVersion = "";
         int index = version.lastIndexOf("(");
         if (index > 0) {
-            return version.substring(0, index - 1);
+            fullVersion = version.substring(0, index - 1);
         } else {
-            return version;
+            fullVersion = version;
+        }
+        // Removes the product name from version string
+        index = fullVersion.lastIndexOf(" ");
+        if (index > 0) {
+           return fullVersion.substring(index + 1);
+        } else {
+           return fullVersion;
         }
     }
     

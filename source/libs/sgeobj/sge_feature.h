@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_featureL.h"
+#include "sge_feature_FES_L.h"
 
 #ifdef  __cplusplus
 extern "C" {

@@ -419,7 +419,7 @@ static void qmonPEAskForUsers(Widget w, XtPointer cld, XtPointer cad)
 
    DENTER(GUI_LAYER, "qmonPEAskForUsers");
    
-   ql_in = qmonMirrorList(SGE_USERSET_LIST);
+   ql_in = qmonMirrorList(SGE_US_LIST);
    ql_out = XmStringToCull(list, US_Type, US_name, ALL_ITEMS);
 
    status = XmtAskForItems(w, NULL, NULL, "@{Select Access Lists}", ql_in, US_name,

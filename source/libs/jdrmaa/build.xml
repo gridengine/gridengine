@@ -52,11 +52,12 @@ ___INFO__MARK_END__-->
          <contains string="${java.buildhost}" substring="${hostname}" casesensitive="false"/>
       </condition>
 
-      <property location="${sge.srcdir}/CLASSES" name="classes.dir"/>
-      <property location="${sge.srcdir}/CLASSES/test" name="classes.dir.test"/>
+      <property location="${sge.srcdir}/CLASSES/jdrmaa" name="classes.dir"/>
+      <property location="${sge.srcdir}/CLASSES/jdrmaa/test" name="classes.dir.test"/>
       <property location="." name="src.dir"/>
       <property location="${src.dir}/src" name="src.dir.src"/>
       <property location="${src.dir}/test" name="src.dir.test"/>
+      <!-- This should really be location="${sge.srcdir}/JAVADOCS/jdrmaa" -->
       <property location="${sge.srcdir}/JAVADOCS" name="javadoc.dir"/>
       <property name="project.name" value="${ant.project.name}"/>
       <property location="${classes.dir}/${project.name}.jar" name="jar"/>

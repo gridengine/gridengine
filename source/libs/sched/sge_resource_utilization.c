@@ -32,26 +32,21 @@
 
 #include <string.h>
 
-#include "sge.h"
-#include "sgermon.h"
-#include "cull.h"
-#include "sge_ulong.h"
-#include "msg_common.h"
+#include "rmon/sgermon.h"
 
-#include "sge_pe.h"
-#include "sge_log.h"
-#include "sge_job.h"
-#include "sge_host.h"
-#include "sge_qinstance.h"
-#include "sge_centry.h"
-#include "sge_hostname.h"
-#include "sge_select_queue.h"
-#include "sge_resource_utilization.h"
-#include "sge_schedd_conf.h"
-#include "sge_serf.h"
-#include "sched/debit.h"
-#include "sched/sge_job_schedd.h"
+#include "uti/sge_log.h"
+#include "uti/sge_hostname.h"
+#include "uti/sge_time.h"
 
+#include "cull/cull.h"
+
+#include "sgeobj/sge_ulong.h"
+#include "sgeobj/sge_pe.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_schedd_conf.h"
 #include "sgeobj/sge_resource_quota.h"
 #include "sgeobj/sge_ja_task.h"
 #include "sgeobj/sge_qinstance_state.h"
@@ -60,8 +55,17 @@
 #include "sgeobj/sge_advance_reservation.h"
 #include "sgeobj/sge_object.h"
 
-#include "uti/sge_time.h"
+#include "sge.h"
+#include "sge_select_queue.h"
+#include "sge_resource_utilization.h"
+#include "sge_serf.h"
+#include "debit.h"
+#include "sge_job_schedd.h"
 
+#include "sge_resource_utilization_RUE_L.h"
+#include "sge_resource_utilization_RDE_L.h"
+
+#include "msg_common.h"
 #include "msg_qmaster.h"
 #include "msg_schedd.h"
 
@@ -566,7 +570,7 @@ double utilization_max(const lListElem *cr, u_long32 start_time, u_long32 durati
    }
    
    if (for_excl_request) {
-     double max_nonexclusive = 0.0;
+      double max_nonexclusive = 0.0;
       utilization_find_time_or_prevstart_or_prev(lGetList(cr, RUE_utilized_nonexclusive), start_time, 
             &start, &prev);
 

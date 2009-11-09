@@ -55,8 +55,8 @@
 #define MSG_OBJ_UNABLE2FINDPE_S       _MESSAGE(33021, _("unable to find pe "SFQ))
 #define MSG_OBJ_NOQNAME               _MESSAGE(33022, _("can't get q_name"))
 
-#define MSG_ORD_QVERSION_SUU          _MESSAGE(33023, _("scheduler send a order for a changed queue "SFQ" (version: old "sge_U32CFormat" new "sge_U32CFormat))
-#define MSG_ORD_USRPRJVERSION_SUU     _MESSAGE(33024, _("scheduler send a order for a changed user/project "SFQ" (version: old "sge_U32CFormat") new "sge_U32CFormat))
+#define MSG_ORD_QVERSION_SUU          _MESSAGE(33023, _("scheduler sent an order for a changed queue "SFQ" (version: old "sge_U32CFormat" new "sge_U32CFormat))
+#define MSG_ORD_USRPRJVERSION_SUU     _MESSAGE(33024, _("scheduler sent an order for a changed user/project "SFQ" (version: old "sge_U32CFormat") new "sge_U32CFormat))
 
 
 #define MSG_JOB_JOBACCESSQ_US         _MESSAGE(33025, _("job "sge_U32CFormat" has no access to queue "SFQ))
@@ -362,7 +362,6 @@
 #define MSG_JOB_STDERRPATHLIST        _MESSAGE(33274, _("stderr path list"))
 #define MSG_JOB_STDOUTPATHLIST        _MESSAGE(33275, _("stdout path list"))
 #define MSG_JOB_HOLDLISTMOD_USS       _MESSAGE(33276, _("modified job id hold list of job "sge_U32CFormat"\n   blocking jobs: "SFN"\n   exited jobs:   "SFN))
-#define MSG_JOB_HOLDARRAYLISTMOD_USS  _MESSAGE(33285, _("modified job id hold array list of job "sge_U32CFormat"\n   blocking jobs: "SFN"\n   exited jobs:   "SFN))
 #define MSG_JOB_MERGEOUTPUT           _MESSAGE(33277, _("output merge behaviour"))
 #define MSG_JOB_RESERVE               _MESSAGE(33699, _("reservation behaviour"))
 #define MSG_JOB_HARDRESOURCELIST      _MESSAGE(33278, _("hard resource list"))
@@ -372,6 +371,7 @@
 #define MSG_JOB_JOBNAME               _MESSAGE(33282, _("job name"))
 #define MSG_JOB_NOTIFYBEHAVIOUR       _MESSAGE(33283, _("notify behaviour"))
 #define MSG_JOB_SLOTRANGE             _MESSAGE(33284, _("slot range"))
+#define MSG_JOB_HOLDARRAYLISTMOD_USS  _MESSAGE(33285, _("modified job id hold array list of job "sge_U32CFormat"\n   blocking jobs: "SFN"\n   exited jobs:   "SFN))
 #define MSG_JOB_HARDQLIST             _MESSAGE(33286, _("hard queue list"))
 #define MSG_JOB_SOFTQLIST             _MESSAGE(33287, _("soft queue list"))
 #define MSG_JOB_MASTERHARDQLIST       _MESSAGE(33288, _("master hard queue list"))
@@ -381,6 +381,7 @@
 #define MSG_JOB_QSARGS                _MESSAGE(33292, _("qs args"))
 #define MSG_JOB_SCRIPTARGS            _MESSAGE(33293, _("script arguments"))
 #define MSG_JOB_CONTEXT               _MESSAGE(33294, _("context"))
+#define MSG_JOB_TASK_CONCURRENCY      _MESSAGE(33295, _("task concurrency"))
 
 #define MSG_NOSEQNRREAD_SSS           _MESSAGE(33296, _("can't read "SFN" sequence number in file "SFQ": "SFN))
 #define MSG_NOSEQFILEOPEN_SSS         _MESSAGE(33297, _("can't open "SFN" sequence number file "SFQ": for reading: "SFN" -- guessing next number"))
@@ -391,7 +392,8 @@
 #define MSG_JOB_VERIFYVERIFY          _MESSAGE(33302, _("verification"))
 #define MSG_JOB_VERIFYFOUNDQ          _MESSAGE(33303, _("verification: found suitable queue(s)"))
 #define MSG_JOB_VERIFYFOUNDSLOTS_I    _MESSAGE(33304, _("verification: found possible assignment with %d slots"))
-#define MSG_NOSEQFILECLOSE_SSS     _MESSAGE(33305, _("can't close "SFN" sequence number file "SFQ": for reading: "SFN))
+#define MSG_JOB_VERIFYRUNNING         _MESSAGE(33305, _("verification: job is already running"))
+#define MSG_NOSEQFILECLOSE_SSS     _MESSAGE(33306, _("can't close "SFN" sequence number file "SFQ": for reading: "SFN))
 #define MSG_JOB_MOD_SOFTREQCONSUMABLE_S  _MESSAGE(33307, _("denied: soft requests on consumables like "SFQ" are not supported"))
 #define MSG_JOB_MOD_MISSINGRUNNINGJOBCONSUMABLE_S     _MESSAGE(33308, _("denied: former resource request on consumable "SFQ" of running job lacks in new resource request"))
 #define MSG_JOB_MOD_ADDEDRUNNINGJOBCONSUMABLE_S       _MESSAGE(33309, _("denied: resource request on consumable "SFQ" of running job was not contained former resource request"))
@@ -426,6 +428,7 @@
 #define MSG_SGETEXT_DEL_JOB_SS                        _MESSAGE(33340, _("The job "SFN" of user(s) "SFN" does not exist"))
 #define MSG_SGETEXT_DOESNOTEXISTTASK_SU               _MESSAGE(33341, _("job \""SFN"\" task \"" sge_U32CFormat "\" does not exist"))
 #define MSG_SGETEXT_DOESNOTEXISTTASKRANGE_SUUU        _MESSAGE(33342, _("job \""SFN"\" task id range \"" sge_U32CFormat "-" sge_U32CFormat ":" sge_U32CFormat "\" comprises no tasks"))
+#define MSG_JSV_THRESHOLD_UU                            _MESSAGE(33343, _("JSV for job "sge_U32CFormat" took "sge_U32CFormat" ms"))
 /*
 ** sge_manop.c
 */
@@ -796,6 +799,7 @@
 #define MSG_JOB_ADDJOBTRIGGER_UUUU    _MESSAGE(33955, _("added trigger to terminate job "sge_U32CFormat"."sge_U32CFormat" when runtime limit is reached ("sge_U32CFormat" + "sge_U32CFormat")"))
 #define MSG_JOB_DELJOBTRIGGER_UU      _MESSAGE(33956, _("removing trigger to terminate job "sge_U32CFormat"."sge_U32CFormat))
 #define MSG_JOB_CHGFORCED_UU          _MESSAGE(33957, _("changed non-forced request to forced request for job "sge_U32CFormat"."sge_U32CFormat"because host can't be contacted"))
+#define MSG_JOB_BINDING              _MESSAGE(33958, _("binding"))
 
 
 #endif

@@ -249,20 +249,19 @@ static void cull_state_destroy(void* theState)
 *******************************************************************************/
 static cull_state_t* cull_state_getspecific(pthread_key_t aKey)
 {
-   cull_state_t *cull_state = NULL;
-   int res = EINVAL;
+   cull_state_t *cull_state = pthread_getspecific(aKey);
 
-   if ((cull_state = pthread_getspecific(aKey)) != NULL) { return cull_state; }
+   if (cull_state == NULL) { 
+      int res = EINVAL;
 
-   cull_state = (cull_state_t*)sge_malloc(sizeof(cull_state_t));
+      cull_state = (cull_state_t*)sge_malloc(sizeof(cull_state_t));
+      cull_state_init(cull_state);
+      res = pthread_setspecific(cull_state_key, (const void*)cull_state);
 
-   cull_state_init(cull_state);
-
-   res = pthread_setspecific(cull_state_key, (const void*)cull_state);
-
-   if (0 != res) {
-      fprintf(stderr, "pthread_set_specific(%s) failed: %s\n", "cull_state_getspecific", strerror(res));
-      abort();
+      if (0 != res) {
+         fprintf(stderr, "pthread_set_specific(%s) failed: %s\n", "cull_state_getspecific", strerror(res));
+         abort();
+      }
    }
    
    return cull_state;

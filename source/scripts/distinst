@@ -36,7 +36,7 @@
 umask 022
 
 TOPFILES="3rd_party bin catman ckpt doc examples include inst_sge \
-          install_execd install_qmaster lib man mpi pvm qmon util utilbin"
+          install_execd install_qmaster lib man mpi pvm hadoop qmon util utilbin"
 
 HASARCHDIR="bin lib examples/jobsbin utilbin"
 
@@ -75,12 +75,14 @@ DRMAA_SHARED_LIBRARIES="libdrmaa"
 # The last number listed here will be the verson linked from libdrmaa.so
 DRMAA_SHARED_LIB_VERSIONS="1.0"
 DRMAA_HEADER_FILES="libs/japi/drmaa.h"
-DRMAAJ_FILES="CLASSES/drmaa"
+DRMAAJ_FILES="CLASSES/jdrmaa/drmaa"
 
 JNI_SHARED_LIBRARIES="libdrmaa libjuti libjgdi"
 
 JUTIJ_FILES="CLASSES/juti/juti"
 JGDIJ_FILES="libs/jgdi/build/jgdi"
+JJSV_FILES="CLASSES/jjsv/JSV"
+JAVA_LIBRARIES="${DRMAAJ_FILES} ${JUTIJ_FILES} ${JGDIJ_FILES} ${JJSV_FILES}"
 
 PVMSOURCES="start_pvm.c stop_pvm.c slave.c master.c spmd.c Makefile"
 PVMSRCSCRIPTS="install.sh aimk"
@@ -88,6 +90,9 @@ PVMSCRIPTS="startpvm.sh stoppvm.sh pvm.sh pvm_nogs.sh README pvm.template"
 
 MPI_FILES="README README.atm mpi.template mpich.template"
 MPI_SCRIPTS="hostname  mpi.sh mpi_cpi.sh rsh startmpi.sh stopmpi.sh"
+
+HADOOP_FILES="logging.properties"
+HADOOP_SCRIPTS="env.sh jsv.sh load_sensor.sh make_conf.sh pestart.sh pestop.sh setup.pl ssh wait.sh"
 
 DTRACE_FILES="README-dtrace.txt monitor.d"
 DTRACE_SCRIPTS="monitor.sh"
@@ -155,6 +160,7 @@ ErrUsage()
    echo "       \"man\"        = manual pages"
    echo "       \"mpi\"        = MPI scripts"
    echo "       \"pvm\"        = PVM source files and scripts"
+   echo "       \"hadoop\"        = Hadoop scripts and libraries"
    echo "       \"qmontree\"   = PIXMAPS, resource-, help-, copyright files"
    echo "       \"sec\"        = DCE/Kerberos security modules"
    echo "       \"secbin\"     = DCE/Kerberos security binaries"
@@ -408,9 +414,11 @@ instman=false
 instdoc=false
 instdtrace=false
 insttxtdoc=false
+instjava=false
 instjavadoc=false
 instpvm=false
 instmpi=false
+insthadoop=false
 instqmon=false
 instcommon=false
 instutilbin=false
@@ -694,7 +702,7 @@ for prog in $PROG; do
       arco)
          instarco=true
          ;;
-      sgeinspect)         
+      sgeinspect)
          instsgeinspect=true
          ;;
       common|distcommon) 
@@ -705,8 +713,10 @@ for prog in $PROG; do
          instdtrace=true
          instexamples=true
          instiscript=true
+         instjava=true
          instmpi=true
          instpvm=true
+         insthadoop=true
          instqmon=true
          instutiltree=true
          case $prog in
@@ -740,6 +750,9 @@ for prog in $PROG; do
          instiscript=true
          instcommon=true
          ;;
+      java)
+         instjava=true
+         ;;
       jobs)   
          instjobs=true
          ;;
@@ -754,6 +767,9 @@ for prog in $PROG; do
       mpi)    
          instmpi=true
          instcommon=true
+         ;;
+      hadoop)
+         insthadoop=true
          ;;
       qmontree)
          instqmon=true
@@ -827,10 +843,20 @@ if [ $instcommon = true ]; then
          Execute sed -e "s/#ENFORCE_SHLIBPATH#//" dist/util/rctemplates/sgebdb_template > $DEST_SGE_ROOT/util/rctemplates/sgebdb_template
          Execute sed -e "s/#ENFORCE_SHLIBPATH#//" dist/util/install_modules/inst_common.sh > $DEST_SGE_ROOT/util/install_modules/inst_common.sh
       fi
+
       # DetectJvmLibrary
       if [ -f dist/DetectJvmLibrary/build/jar/DetectJvmLibrary.jar ]; then
          Execute cp dist/DetectJvmLibrary/build/jar/DetectJvmLibrary.jar $DEST_SGE_ROOT/util
       fi
+
+      # JSV Java language binding
+      if [ -f libs/jjsv/java/com/sun/grid/jsv/examples/SimpleJsv.java ]; then
+         Execute cp libs/jjsv/java/com/sun/grid/jsv/examples/SimpleJsv.java $DEST_SGE_ROOT/util/resources/jsv
+      elif [ $exit_on_error = true ]; then
+         echo "\"libs/jjsv/java/com/sun/grid/jsv/examples/SimpleJsv.java\" not found. Installation failed."
+         exit 1
+      fi
+
       Cleanup util
 
       # Not available in Beta
@@ -878,6 +904,11 @@ if [ $instcommon = true ]; then
                         $DEST_SGE_ROOT/util/resources/pe/* \
                         $DEST_SGE_ROOT/util/resources/schemas/*/* \
                         $DEST_SGE_ROOT/util/resources/usersets/*
+
+      Execute chmod 755 $DEST_SGE_ROOT/util/resources/jsv/jsv.sh \
+                        $DEST_SGE_ROOT/util/resources/jsv/jjsv.sh \
+                        $DEST_SGE_ROOT/util/resources/jsv/jsv.pl \
+                        $DEST_SGE_ROOT/util/resources/jsv/jsv.tcl
    fi
    
    if [ $instexamples = true ]; then
@@ -953,7 +984,17 @@ if [ $instcommon = true ]; then
          Execute cp $f $DEST_SGE_ROOT/include
       done
 
-      for filename in $DRMAAJ_FILES $JUTIJ_FILES $JGDIJ_FILES; do
+      Cleanup include
+   fi
+
+   if [ $instjava = true -o $instdrmaa = true ]; then
+      if [ $instjava = true ]; then
+         JAVA_FILES=$JAVA_LIBRARIES
+      else
+         JAVA_FILES=$DRMAAJ_FILES
+      fi
+
+      for filename in $JAVA_FILES; do
          filename="${filename}.jar"
          if [ -f $filename ]; then
             echo Installing `basename $filename`
@@ -965,8 +1006,6 @@ if [ $instcommon = true ]; then
             exit 1
          fi
       done
-
-      Cleanup include
    fi
 
    if [ $instdtrace = true ]; then
@@ -1028,6 +1067,29 @@ if [ $instcommon = true ]; then
       done
 
       Cleanup mpi
+   fi
+
+   if [ $insthadoop = true ]; then
+      echo Installing \"hadoop/\"
+      rm -rf $DEST_SGE_ROOT/hadoop
+      MakeDir hadoop
+
+      for f in $HADOOP_FILES; do
+         Execute cp dist/hadoop/$f $DEST_SGE_ROOT/hadoop/$f
+         Execute chmod 644 $DEST_SGE_ROOT/hadoop/$f
+      done
+
+      for f in $HADOOP_SCRIPTS; do
+         Execute cp dist/hadoop/$f $DEST_SGE_ROOT/hadoop/$f
+         Execute chmod 755 $DEST_SGE_ROOT/hadoop/$f
+      done
+
+      if [ -f CLASSES/herd/herd.jar ]; then
+         Execute cp CLASSES/herd/herd.jar $DEST_SGE_ROOT/hadoop/herd.jar
+      elif [ $exit_on_error = true ]; then
+         echo "\"CLASSES/herd/herd.jar\" not found. Installation failed."
+         exit 1
+      fi
    fi
 
    if [ $instman = true ]; then
@@ -1225,7 +1287,7 @@ for i in $ARCH; do
 
       for prog in $PROG; do
          case $prog in
-            jobs|ckpt|doc|inst_sge|utiltree|examples|man|mpi|pvm|qmontree|common|distcommon|utilbin|arco)
+            jobs|ckpt|doc|inst_sge|utiltree|examples|man|mpi|pvm|hadoop|qmontree|common|distcommon|utilbin|arco)
                : 
                ;;
             qmake)

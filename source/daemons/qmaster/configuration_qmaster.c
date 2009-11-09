@@ -344,7 +344,7 @@ int sge_mod_configuration(sge_gdi_ctx_class_t *ctx, lListElem *aConf, lList **an
       answer_list_add(anAnswer, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
    }
    
-   if (!strcmp(SGE_GLOBAL_NAME, unique_name)) {
+   if (strcmp(SGE_GLOBAL_NAME, unique_name) == 0) {
       sge_add_event(0, sgeE_GLOBAL_CONFIG, 0, 0, NULL, NULL, NULL, NULL);
    }
 
@@ -352,7 +352,7 @@ int sge_mod_configuration(sge_gdi_ctx_class_t *ctx, lListElem *aConf, lList **an
    ** is the configuration change relevant for the qmaster itsself?
    ** if so, initialise conf struct anew
    */
-   if (!strcmp(unique_name, SGE_GLOBAL_NAME) || !sge_hostcmp(unique_name, qualified_hostname)) {
+   if (strcmp(unique_name, SGE_GLOBAL_NAME) == 0 || sge_hostcmp(unique_name, qualified_hostname) == 0) {
       lListElem *local = NULL;
       lListElem *global = NULL;
       lList *answer_list = NULL;
@@ -388,10 +388,10 @@ int sge_mod_configuration(sge_gdi_ctx_class_t *ctx, lListElem *aConf, lList **an
       /* 'max_unheard' may have changed */
       cl_commlib_set_connection_param(cl_com_get_handle("qmaster", 1), HEARD_FROM_TIMEOUT, mconf_get_max_unheard());
 
-      /*fetching qmaster_params and begin to parse*/
+      /* fetching qmaster_params and begin to parse */
       qmaster_params = mconf_get_qmaster_params();
 
-      /*updateing the commlib paramterlist and gdi_timeout with new or changed parameters*/
+      /* updating the commlib paramterlist and gdi_timeout with new or changed parameters */
       cl_com_update_parameter_list(qmaster_params);
 
       FREE(qmaster_params);
@@ -731,7 +731,6 @@ static u_long32 sge_get_config_version_for_host(const char* aName)
 
    DENTER(TOP_LAYER, "sge_get_configuration_for_host");
 
-
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
   
    conf = lGetElemHost(config_list, CONF_name, aName);
@@ -911,7 +910,7 @@ static lListElem* is_reprioritize_missing(lList *theOldConfEntries, lList *theNe
    lListElem *new_reprio = NULL;
    lListElem *res = NULL;
 
-   DENTER(TOP_LAYER, "veify_reprioritize");
+   DENTER(TOP_LAYER, "is_reprioritize_missing");
 
    old_reprio = lGetElemStr(theOldConfEntries, CF_name, REPRIORITIZE);
    new_reprio = lGetElemStr(theNewConfEntries, CF_name, REPRIORITIZE);
@@ -936,7 +935,7 @@ static int exchange_conf_by_name(sge_gdi_ctx_class_t *ctx, char *aConfName, lLis
    object_description *object_base = object_type_get_object_description();
    lList *config_list = *(object_base[SGE_TYPE_CONFIG].list);
    
-   DENTER(TOP_LAYER, "remove_conf_by_name");
+   DENTER(TOP_LAYER, "exchange_conf_by_name");
 
    old_version = lGetUlong(anOldConf, CONF_version);
    

@@ -33,8 +33,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "sgermon.h"
-#include "cull.h"
+#include "rmon/sgermon.h"
+
+#include "cull/cull.h"
+
 #include "sge_all_listsL.h"
 #include "sge_href.h"
 #include "sge_hgroup.h"

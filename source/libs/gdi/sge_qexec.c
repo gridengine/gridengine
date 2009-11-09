@@ -49,15 +49,14 @@
 #include "uti/sge_uidgid.h"
 #include "uti/sge_time.h"
 
-#include "sgeobj/sge_qexecL.h"
 #include "sgeobj/sge_ja_task.h"
 #include "sgeobj/sge_pe_task.h"
 #include "sgeobj/sge_str.h"
 #include "sgeobj/sge_var.h"
 
+#include "gdi/sge_qexec.h"
 #include "gdi/sge_security.h"
 #include "gdi/sge_gdi.h"
-#include "gdi/sge_qexec.h"
 
 #include "pack_job_delivery.h"   
 

@@ -40,6 +40,7 @@
 #endif
 
 #include "sgermon.h"
+#include "sge_unistd.h"
 
 #include "sge_profiling.h"
 
@@ -284,10 +285,88 @@ lDescr **dpp
          return ret;
       }
       dp[i].mt = temp;
-
       dp[i].ht = NULL;
    }
 
+   /* 
+    * above we made the assumption that the unpacked descriptor was reduced
+    * now we have to check that the assumption is correct 
+    */
+   {
+      const lNameSpace *ns = cull_state_get_name_space();
+      int i = 0;
+
+      /* at first we assume the element is reduced */
+      bool is_reduced = true;
+
+
+      /*
+       * EB: TODO: I don't know why but when this function is executed within drmma
+       * functionality then the namespace is sometimes NULL. 
+       * If this happens, then I assume that the element is reduced. 
+       */
+      if (ns == NULL) {
+         is_reduced = true;
+      } else {
+         /* 
+          * check if the descriptor is really reduced.
+          * this in done by iterating over the whole namespace
+          * we try to find the element and all field for an entry in the 
+          * namespace 
+          */
+         while (ns[i].lower != 0 && ns[i].size != 0 && ns[i].namev) {
+            /* 
+             * check if the first element in the descriptor is 
+             * equivalent with the current entry in the namespace (first nm id) 
+             */ 
+            if (dp[0].nm == ns[i].lower) {
+               int nm, k;
+
+               /* we change the initial assumption */
+               is_reduced = false;
+
+               /* 
+                * check if all other entries are also in the descriptor 
+                * as soon as a element is missing we can break: the element is then reduced
+                */
+               for (nm = ns[i].lower, k = 0; nm < ns[i].lower + ns[i].size; nm++, k++) {
+                  if (dp[k].nm != nm) {
+                     is_reduced = true;
+                     break;
+                  }
+               }
+            
+               /* 
+                * if we did not skip the loop above but the field in the
+                * descriptor are more that thet in the namespace then
+                * we have also to set the is_reduced flag. (this should never happen)
+                */
+               if (k != n) {
+                  is_reduced = true;
+                  break;
+               }
+
+               break;
+            } 
+
+            /* move to next element */
+            i++;
+         }
+      }
+
+      /* 
+       * we only have to correct the is_reduced flag if the check above 
+       * found all names in the descriptor
+       */
+      {
+         int l;
+
+         for (l = 0; l <= n; l++) {
+            dp[l].mt |= (is_reduced == true) ? CULL_IS_REDUCED : 0; 
+         }
+      }
+   }
+   
    *dpp = dp;
 
    DEXIT;
@@ -316,7 +395,7 @@ static int cull_pack_descr(sge_pack_buffer *pb, const lDescr *dp)
       return ret;
    }
    /* pack the lDescr fields */
-   for (i = 0; dp[i].nm != NoName && dp[i].mt != lEndT; i++) {
+   for (i = 0; mt_get_type(dp[i].nm) != NoName && mt_get_type(dp[i].mt) != lEndT; i++) {
       if ((ret = packint(pb, dp[i].nm))) {
          DEXIT;
          return ret;
@@ -1117,7 +1196,7 @@ const lEnumeration *enp
          goto error;
 
       /* pack the lEnumeration fields */
-      for (i = 0; enp[i].nm != NoName && enp[i].mt != lEndT; i++) {
+      for (i = 0; mt_get_type(enp[i].nm) != NoName && mt_get_type(enp[i].mt) != lEndT; i++) {
          if ((ret = packint(pb, enp[i].pos)))
             goto error;
          if ((ret = packint(pb, enp[i].mt)))

@@ -46,10 +46,14 @@
 #include <strings.h>
 #include <stdlib.h>
 #include <string.h>
-#include "sge_time.h"
-#include "sgermon.h"
-#include "sge_bootstrap.h"
-#include "sge_feature.h"
+
+#include "rmon/sgermon.h"
+
+#include "uti/sge_time.h"
+#include "uti/sge_bootstrap.h"
+
+#include "sgeobj/sge_feature.h"
+
 #include "sge_complex_schedd.h"
 
 #define T 0

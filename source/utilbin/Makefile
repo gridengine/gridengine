@@ -187,11 +187,11 @@ signals.o:	$(UTILBIN_DIR)/signals.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/signals.c
 
 #---------------------------------------------------------------------
-loadcheck:	loadcheck.o version.o $(WINGRIDLIB_DEP) $(UTILIB) $(RMONLIB) $(COMMLISTSLIB) $(LCKLIB)
-		$(CC) -o $@ $(LFLAGS) loadcheck.o version.o -luti $(WINGRIDLIB) -llck -lrmon $(COMMLISTSLIB) $(LOADAVGLIBS) $(LIBS)
+loadcheck: loadcheck.o version.o $(WINGRIDLIB_DEP) $(UTILIB) $(RMONLIB) $(COMMLISTSLIB) $(LCKLIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB)
+	$(CC) -o $@ $(LFLAGS) loadcheck.o version.o -lsgeobj -lsgeobjd -lcull -luti $(WINGRIDLIB) -llck -lrmon $(COMMLISTSLIB) $(LOADAVGLIBS) $(LIBS)
 
-loadcheck.o:	$(UTILBIN_DIR)/loadcheck.c 
-		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/loadcheck.c
+loadcheck.o: $(UTILBIN_DIR)/loadcheck.c
+	$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/loadcheck.c
 
 LOADCHECK_WINLFLAGS = /SUBSYSTEM:CONSOLE $(WINLFLAGS)
 

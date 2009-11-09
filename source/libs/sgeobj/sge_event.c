@@ -31,22 +31,25 @@
 /*___INFO__MARK_END__*/
 #include <stdio.h>
 
-#include "sgermon.h"
-#include "sge_log.h"
+#include "rmon/sgermon.h"
 
-#include "comm/cl_communication.h" /* CL_DEFINE_CLIENT_CONNECTION_LIFETIME */
-#include "cull/cull.h"
+#include "uti/sge_log.h"
 #include "uti/sge_prog.h"
 #include "uti/sge_string.h"
-#include "sgeobj/sge_job.h"
-#include "sgeobj/sge_sharetree.h"
-#include "sgeobj/sge_event.h"
-#include "sgeobj/sge_answer.h"
-#include "sgeobj/sge_object.h"
-#include "sgeobj/sge_utility.h"
 
+#include "comm/cl_communication.h" 
+
+#include "cull/cull.h"
+
+#include "sge_job.h"
+#include "sge_sharetree.h"
+#include "sge_event.h"
+#include "sge_answer.h"
+#include "sge_object.h"
+#include "sge_utility.h"
+
+#include "msg_sgeobjlib.h"
 #include "msg_common.h"
-#include "sgeobj/msg_sgeobjlib.h"
 
 /* documentation see libs/evc/sge_event_client.c */
 const char *event_text(const lListElem *event, dstring *buffer) 

@@ -6054,7 +6054,7 @@ inline size_t
 moz_malloc_usable_size(const void *ptr)
 #else
 size_t
-malloc_usable_size(const void *ptr)
+sge_malloc_usable_size(const void *ptr)
 #endif
 {
 
@@ -6108,7 +6108,7 @@ size_t
 _msize(const void *ptr)
 {
 
-	return malloc_usable_size(ptr);
+	return sge_malloc_usable_size(ptr);
 }
 #endif
 
@@ -6336,4 +6336,28 @@ jemalloc_darwin_init(void)
 		sizeof(malloc_zone_t *) * (malloc_num_zones - 1));
 	malloc_zones[0] = &zone;
 }
+#endif
+
+#include <dlfcn.h>
+#include <malloc.h>
+/*
+ * glibc provides the RTLD_DEEPBIND flag for dlopen which can make it possible
+ * to inconsistently reference libc's malloc(3)-compatible functions
+ */
+#ifdef RTLD_DEEPBIND
+#  if defined(__GLIBC__) && !defined(__UCLIBC__)
+
+/*
+ * These interpose hooks in glibc.
+ */
+static void sge_init_hook(void){
+   __malloc_hook = malloc;
+   __realloc_hook = realloc;
+   __memalign_hook = memalign;
+}
+
+void (*__malloc_initialize_hook) (void) = sge_init_hook;
+#  elif !defined(malloc)
+#    error "Interposing malloc is unsafe on this system without libc malloc hooks."
+#  endif
 #endif

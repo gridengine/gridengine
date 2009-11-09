@@ -33,15 +33,17 @@
 #include <fnmatch.h>
 #include <string.h>
 
-#include "sgermon.h"
-#include "sge_string.h"
-#include "sge_log.h"
-#include "cull_list.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_string.h"
+#include "uti/sge_log.h"
+#include "uti/sge_dstring.h"
+#include "uti/sge_signal.h"
+
+#include "cull/cull_list.h"
+#include "sge_all_listsL.h"
+
 #include "sge.h"
-
-#include "sge_dstring.h"
-#include "sge_signal.h"
-
 #include "sge_answer.h"
 #include "sge_object.h"
 #include "sge_cqueue.h"
@@ -50,6 +52,8 @@
 #include "sge_qinstance_state.h"
 #include "sge_qref.h"
 #include "sge_subordinate.h"
+#include "sge_sl.h"
+#include "sge_job.h"
 
 #include "msg_sgeobjlib.h"
 
@@ -72,34 +76,36 @@
 
 */
 /*
-int used,      umber of slots actually used in queue B    
+int used,      number of slots actually used in queue B
 int total,     total number of slots in queue B              
-lListElem *so  SO_Type referencing to a queue C              
+lListElem *so  SO_Type referencing to a queue C
+Return value: true if queue C is to be suspended,
+              false else.
 */
 bool
 tst_sos(int used, int total, lListElem *so)
 {
    u_long32 threshold;
+   bool     ret = false;
 
    DENTER(TOP_LAYER, "tst_sos");
 
    /*
-      then check if B's usage meets the threshold
-      for suspension of the subordinated queue C
-   */
-   if (!(threshold=lGetUlong(so, SO_threshold))) {
+    * then check if B's usage meets the threshold
+    * for suspension of the subordinated queue C
+    */
+   if ((threshold=lGetUlong(so, SO_threshold)) == 0) {
       /* queue must be full for suspend of queue C */
       DPRINTF(("TSTSOS: %sfull -> %ssuspended\n", (used>=total)?"":"not ",
                (used>=total)?"":"not "));
-      DEXIT;
-      return (used>=total) ? true : false;
+      ret = (bool)(used >= total);
+   } else {
+      /* used slots greater or equal threshold */
+      DPRINTF(("TSTSOS: "sge_u32" slots used (limit "sge_u32") -> %ssuspended\n",
+            used, threshold, ((u_long32)(used) >= threshold)?"":"not "));
+      ret = (bool)((u_long32)used >= threshold);
    }
-
-   /* used slots greater or equal threshold */
-   DPRINTF(("TSTSOS: "sge_u32" slots used (limit "sge_u32") -> %ssuspended\n",
-            used, threshold, ( (u_long32)(used) >= threshold)?"":"not "));
-   DEXIT;
-   return ((u_long32)used) >= threshold ? true : false;
+   DRETURN(ret);
 }
 
 const char *
@@ -111,19 +117,51 @@ so_list_append_to_dstring(const lList *this_list, dstring *string)
    if (string != NULL) {
       lListElem *elem = NULL;
       bool printed = false;
+      lListElem *so = NULL;
+      u_long32 slots_sum = 0;
 
-      for_each(elem, this_list) {
-         if (printed) {
-            sge_dstring_append (string, " ");
+      if (this_list != NULL && (so = lFirst(this_list)) != NULL) {
+         slots_sum = lGetUlong(so, SO_slots_sum);
+
+         if (slots_sum > 0) {
+            /*
+             * slot-wise suspend on subordinate
+             */
+            sge_dstring_sprintf_append(string, "slots="sge_u32"(", slots_sum);
+
+            for_each(elem, this_list) {
+               char *action_str = "sr";
+
+               if (lGetUlong(elem, SO_action) == SO_ACTION_LR) {
+                  action_str = "lr";
+               }
+
+               sge_dstring_sprintf_append(string, "%s:"sge_u32":%s%s",
+                  lGetString(elem, SO_name),
+                  lGetUlong(elem, SO_seq_no),
+                  action_str,
+                  lNext(elem) ? ", " : "");
+            }
+            sge_dstring_sprintf_append(string, ")");
+            printed = true;
+         } else {
+            /*
+             * queue instance-wise suspend on subordinate
+             */
+            for_each(elem, this_list) {
+               if (printed) {
+                  sge_dstring_append (string, " ");
+               }
+               
+               sge_dstring_append(string, lGetString(elem, SO_name));
+               if (lGetUlong(elem, SO_threshold)) {
+                  sge_dstring_sprintf_append(string, "="sge_u32"%s",
+                                             lGetUlong(elem, SO_threshold),
+                                             lNext(elem) ? "," : "");
+               }
+               printed = true;
+            }
          }
-         
-         sge_dstring_append(string, lGetString(elem, SO_name));
-         if (lGetUlong(elem, SO_threshold)) {
-            sge_dstring_sprintf_append(string, "="sge_u32"%s",
-                                       lGetUlong(elem, SO_threshold),
-                                       lNext(elem) ? "," : "");
-         }
-         printed = true;
       }
       if (!printed) {
          sge_dstring_append(string, "NONE");
@@ -140,7 +178,8 @@ so_list_append_to_dstring(const lList *this_list, dstring *string)
 */
 bool
 so_list_add(lList **this_list, lList **answer_list, const char *so_name,
-            u_long32 threshold)
+            u_long32 threshold, u_long32 slots_sum, u_long32 seq_no,
+            u_long32 action)
 {
    DENTER(TOP_LAYER, "so_list_add");
 
@@ -149,16 +188,38 @@ so_list_add(lList **this_list, lList **answer_list, const char *so_name,
    
       if (elem != NULL) {
          u_long32 current_threshold = lGetUlong(elem, SO_threshold);
+         u_long32 current_slots_sum = lGetUlong(elem, SO_slots_sum);
+         u_long32 current_seq_no    = lGetUlong(elem, SO_seq_no);
+         u_long32 current_action    = lGetUlong(elem, SO_action);
 
          if (threshold != 0 && threshold < current_threshold) {
-            DPRINTF (("Replacing entry with higher threshold: %d => %d\n",
-                      current_threshold, threshold));
+            DPRINTF(("Replacing entry with higher threshold: %d => %d\n",
+                     current_threshold, threshold));
             lSetUlong(elem, SO_threshold, threshold);
          }
+         if (slots_sum != 0 && slots_sum < current_slots_sum) {
+            DPRINTF(("Replacing entry with higher slots_sum: %d => %d\n",
+                     current_slots_sum, slots_sum));
+            lSetUlong(elem, SO_slots_sum, slots_sum);
+         }
+         if (seq_no != 0 && seq_no > current_seq_no) {
+            DPRINTF(("Replacing entry with lower seq_no: %d => %d\n",
+                     current_seq_no, seq_no));
+            lSetUlong(elem, SO_seq_no, seq_no);
+         }
+         if (action != current_action) {
+            DPRINTF(("Replacing entry with different action: %d => %d\n",
+                     current_action, action));
+            lSetUlong(elem, SO_action, action);
+         }
       } else {
-         DPRINTF (("Adding new entry with threshold: %d\n", threshold));
+         DPRINTF (("Adding new entry with threshold: %d, slots_sum: %d, seq_no: %d\n",
+                  threshold, slots_sum, seq_no));
          elem = lAddElemStr(this_list, SO_name, so_name, SO_Type);
          lSetUlong(elem, SO_threshold, threshold);
+         lSetUlong(elem, SO_slots_sum, slots_sum);
+         lSetUlong(elem, SO_seq_no,    seq_no);
+         lSetUlong(elem, SO_action, action);
       }
    }
    
@@ -214,7 +275,7 @@ so_list_resolve(const lList *so_list, lList **answer_list,
          DPRINTF(("Finding subordinates on host %s\n", hostname));
       }
       
-      /* Get the list of resolved qinstances for each subsordinate. */
+      /* Get the list of resolved qinstances for each subordinate. */
       for_each (so, so_list) {
          const char *qinstance_name = NULL;
          const char *cq_name_str = lGetString (so, SO_name);
@@ -227,17 +288,27 @@ so_list_resolve(const lList *so_list, lList **answer_list,
             /* If this cqueue doesn't have a qinstance on this host,
              * just skip it. */
             if (qinstance != NULL) {
-               qinstance_name = lGetString(qinstance, QU_full_name);
+               lUlong threshold   = lGetUlong(so, SO_threshold);
+               lUlong slots_sum   = lGetUlong(so, SO_slots_sum);
+               lUlong seq_no      = lGetUlong(so, SO_seq_no);
+               lUlong action      = lGetUlong(so, SO_action);
+               qinstance_name     = lGetString(qinstance, QU_full_name);
 
-               so_list_add(resolved_so_list, answer_list, qinstance_name, lGetUlong(so, SO_threshold));
+               so_list_add(resolved_so_list, answer_list, qinstance_name,
+                           threshold, slots_sum, seq_no, action);
                continue;
             }
          }
          if (cq_name && strcmp(cq_name, cq_name_str) == 0){
             dstring buffer = DSTRING_INIT;
+            lUlong threshold     = lGetUlong(so, SO_threshold);
+            lUlong slots_sum     = lGetUlong(so, SO_slots_sum);
+            lUlong seq_no        = lGetUlong(so, SO_seq_no);
+            lUlong action        = lGetUlong(so, SO_action);
             
             qinstance_name = sge_dstring_sprintf(&buffer, "%s@%s", cq_name, hostname);
-            so_list_add(resolved_so_list, answer_list, qinstance_name, lGetUlong(so, SO_threshold));
+            so_list_add(resolved_so_list, answer_list, qinstance_name, threshold,
+                        slots_sum, seq_no, action);
             sge_dstring_free(&buffer);
          }
       }

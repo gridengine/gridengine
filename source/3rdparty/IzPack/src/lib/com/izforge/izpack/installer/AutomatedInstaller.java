@@ -314,6 +314,14 @@ public class AutomatedInstaller extends InstallerBase
     }
 
     /**
+     * Puts variables to the global InstallData instance
+     * @param extraData The values to be added
+     */
+    public void addExtraVariables(Properties extraData) {
+        idata.getVariables().putAll(extraData);
+    }
+
+    /**
      * Runs the automated installation logic for each panel in turn.
      *
      * @throws Exception

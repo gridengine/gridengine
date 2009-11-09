@@ -144,13 +144,19 @@ typedef enum {
 *     SPOOL_IGNORE_TASK_INSTANCES - Dont't handle array tasks.
 *
 *     SPOOL_HANDLE_PARALLEL_TASKS - Spool pe tasks individually.
+*     
+*     SPOOL_ONLY_JATASK - spool only the ja_task, neither job nor pe_tasks
+*
+*     SPOOL_ONLY_PETASK - spool only the pe_task, neither job nor ja_task
 ******************************************************************************/
 typedef enum {
    SPOOL_DEFAULT               = 0x0000,
    SPOOL_HANDLE_AS_ZOMBIE      = 0x0001,
    SPOOL_WITHIN_EXECD          = 0x0002,
    SPOOL_IGNORE_TASK_INSTANCES = 0x0004,
-   SPOOL_HANDLE_PARALLEL_TASKS = 0x0008
+   SPOOL_HANDLE_PARALLEL_TASKS = 0x0008,
+   SPOOL_ONLY_JATASK           = 0x0010,
+   SPOOL_ONLY_PETASK           = 0x0020
 } sge_spool_flags_t; 
 
 /****** uti/spool/sge_file_path_format_t **************************************
@@ -245,5 +251,9 @@ int sge_silent_get(void);
 
 int sge_get_management_entry(const char *fname, int n, int nmissing, bootstrap_entry_t name[],
                           char value[][SGE_PATH_MAX], dstring *error_dstring);
+
+/* get path to active_jobs directory (just for execd and shepherd) */
+const char *sge_get_active_job_file_path(dstring *buffer, u_long32 job_id, 
+   u_long32 ja_task_id, const char *pe_task_id, const char *filename);
 
 #endif /* _SGE_FILE_PATH_H_ */

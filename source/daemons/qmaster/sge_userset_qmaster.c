@@ -50,7 +50,7 @@
 #include "sge_host.h"
 #include "sge_utility.h"
 #include "sge_cqueue.h"
-#include "sge_attrL.h"
+#include "sge_attr.h"
 #include "sgeobj/sge_resource_quota.h"
 #include "sgeobj/sge_advance_reservation.h"
 #include "sgeobj/sge_str.h"

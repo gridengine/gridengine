@@ -30,44 +30,29 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 #include <string.h>
-#include <errno.h>
 #include <stdlib.h>
 
 #include "sge.h"
 #include "sge_ja_task.h"
-#include "sge_job_refL.h"
 #include "sge_job_qmaster.h"
 #include "sge_pe_qmaster.h"
 #include "sge_host.h"
-#include "job_exit.h"
 #include "sge_give_jobs.h"
-#include "sge_event_master.h"
-#include "sge_queue_event_master.h"
-#include "sge_cqueue_qmaster.h"
-#include "sge_subordinate_qmaster.h"
 #include "execution_states.h"
-#include "sge_feature.h"
-#include "sge_rusage.h"
 #include "sge_prog.h"
 #include "sgermon.h"
 #include "sge_log.h"
 #include "symbols.h"
-#include "category.h"
 #include "setup_path.h"
 #include "msg_common.h"
-#include "msg_daemons_common.h"
 #include "msg_qmaster.h"
-#include "sge_string.h"
 #include "sge_unistd.h"
 #include "sge_time.h"
-#include "sge_spool.h"
 #include "sge_hostname.h"
 #include "sgeobj/sge_qinstance.h"
 #include "sgeobj/sge_qinstance_state.h"
 #include "sge_job.h"
 #include "sge_report.h"
-#include "sge_report_execd.h"
-#include "sge_userset.h"
 #include "sge_cqueue.h"
 #include "sge_answer.h"
 
@@ -78,7 +63,6 @@
 #include "sge_persistence_qmaster.h"
 #include "sge_job_enforce_limit.h"
 
-#include "spool/sge_spooling.h"
 
 /************************************************************************
  Master routine for job exit

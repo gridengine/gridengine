@@ -33,7 +33,7 @@
 #include <strings.h>
 
 #include "sge.h"
-#include "sge_usageL.h"
+#include "sge_usage.h"
 #include "commlib.h"
 #include "job_report_execd.h"
 #include "sge_host.h"

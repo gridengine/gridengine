@@ -38,13 +38,7 @@
 #include <Xm/ToggleB.h>
 
 #include <Xmt/Xmt.h>
-#include <Xmt/Dialog.h>
 #include <Xmt/Create.h>
-#include <Xmt/Layout.h>
-#include <Xmt/Converters.h>
-#include <Xmt/Procedures.h>
-#include <Xmt/WidgetType.h>
-#include <Xmt/Include.h>
 #include <Xmt/InputField.h>
 
 #include "Matrix.h" 
@@ -55,35 +49,29 @@
 #include "qmon_util.h"
 #include "qmon_request.h"
 #include "qmon_comm.h"
-#include "qmon_appres.h"
 #include "qmon_widgets.h"
-#include "qmon_matrix.h"
 #include "sge.h"
 #include "symbols.h"
 #include "sge_sched.h"      
-#include "commlib.h"
 #include "sge_time.h"
 #include "sge_all_listsL.h"
 #include "IconList.h"
-#include "sge_feature.h"
 #include "sge_htable.h"
 #include "sge_range.h"
 #include "qmon_preferences.h"
 #include "qmon_message.h"
 #include "sge_range.h"
 #include "sge_job.h"
-#include "sge_host.h"
-#include "sge_parse_num_par.h"
 #include "sge_object.h"
 #include "sge_ulong.h"
 #include "sge_centry.h"
 #include "sge_cqueue.h"
 #include "sge_qinstance.h"
-#include "sge_qinstance_state.h"
 #include "qstat_printing.h"
 #include "sge_cqueue_qstat.h"
 #include "sge_ja_task.h"
 #include "uti/sge_string.h"
+#include "sgeobj/sge_usage.h"
 
 /*-------------------------------------------------------------------------*/
 /* Prototypes */
@@ -1080,7 +1068,8 @@ int nm
 
       /* check suspension of queue */
       if (n>0) {
-         if ((tstate & JSUSPENDED_ON_SUBORDINATE)) {
+         if ((tstate & JSUSPENDED_ON_SUBORDINATE) ||
+             (tstate & JSUSPENDED_ON_SLOTWISE_SUBORDINATE)) {
             tstate &= ~JRUNNING;
             lSetUlong(jat, JAT_state, tstate);
          }
@@ -1859,7 +1848,7 @@ static void qmonJobFilterSet(Widget w, XtPointer cld, XtPointer cad)
 
    DENTER(GUI_LAYER, "qmonJobFilterSet");
 
-   arl = qmonGetResources(qmonMirrorList(SGE_CENTRY_LIST), ALL_RESOURCES);
+   arl = qmonGetResources(qmonMirrorList(SGE_CE_LIST), ALL_RESOURCES);
 
    for_each (ep, jobfilter_resources) {
       rp = lGetElemStr(arl, CE_name, lGetString(ep, CE_name));
@@ -1900,7 +1889,7 @@ static void qmonJobFilterEditResource(Widget w, XtPointer cld, XtPointer cad)
 
    DENTER(GUI_LAYER, "qmonJobFilterEditResource");
 
-   arl = qmonGetResources(qmonMirrorList(SGE_CENTRY_LIST), ALL_RESOURCES);
+   arl = qmonGetResources(qmonMirrorList(SGE_CE_LIST), ALL_RESOURCES);
 
 
    if (!how) {

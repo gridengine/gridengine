@@ -31,9 +31,11 @@
 /*___INFO__MARK_END__*/
 #include <stdio.h>
 
-#include "sge_range.h"
+#include "rmon/sgermon.h"
+
+#include "sgeobj/sge_range.h"
+
 #include "sge_range_schedd.h"
-#include "sgermon.h"
 
 /* ---------------------------------------
 

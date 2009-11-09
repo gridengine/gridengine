@@ -31,26 +31,30 @@
 /*___INFO__MARK_END__*/
 #include <stdio.h>
 
-#include "cull.h"
-#include "sge_select_queue.h" 
-#include "debit.h"
-#include "sort_hosts.h"
-#include "sge_pe.h"
-#include "sge_job.h"
-#include "sge_centry.h"
-#include "sgermon.h"
-#include "sge_resource_utilization.h"
+#include "rmon/sgermon.h"
 
-#include "sge_qinstance.h"
-#include "subordinate_schedd.h"
-#include "sge_subordinate.h"
-#include "sge_orderL.h"
-#include "sge_log.h"
-#include "msg_schedd.h"
-#include "sched/sge_resource_quota_schedd.h"
+#include "uti/sge_log.h"
+
+#include "cull/cull.h"
+
+#include "sgeobj/sge_pe.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_subordinate.h"
+#include "sgeobj/sge_order.h"
 #include "sgeobj/sge_schedd_conf.h"
 #include "sgeobj/sge_host.h"
 #include "sgeobj/sge_advance_reservation.h"
+#include "sgeobj/sge_sharetree.h"
+
+#include "sge_resource_quota_schedd.h"
+#include "sge_resource_utilization.h"
+#include "subordinate_schedd.h"
+#include "sge_select_queue.h" 
+#include "debit.h"
+#include "sort_hosts.h"
+#include "msg_schedd.h"
 
 static int 
 debit_job_from_queues(lListElem *job, lList *selected_queue_list, lList *global_queue_list, 

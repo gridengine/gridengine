@@ -455,8 +455,8 @@ ResolveResult()
             ;;
             'denied: the path given for'*)
                #FlatFile ${resFile}
-               ReplaceLineWithMatch "$resFile" 'qlogin_daemon.*' 'qlogin_daemon   /usr/sbin/in.telnetd'
-               ReplaceLineWithMatch "$resFile" 'rlogin_daemon.*' 'rlogin_daemon   /usr/sbin/in.rlogind'
+               ReplaceLineWithMatch "$resFile" 'qlogin_daemon.*' 'qlogin_daemon   builtin'
+               ReplaceLineWithMatch "$resFile" 'rlogin_daemon.*' 'rlogin_daemon   builtin'
                LogIt "I" "wrong path corrected, trying again"
                LoadConfigFile "$resFile" "$resOpt"
                ret=$?

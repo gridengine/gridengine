@@ -1,5 +1,6 @@
-#ifndef __SGE_SCHEDD_CONF_H
-#define __SGE_SCHEDD_CONF_H
+#ifndef __SGE_SCHEDCONFL_H
+#define __SGE_SCHEDCONFL_H
+
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -32,10 +33,26 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_schedd_confL.h"
+#include "sge_boundaries.h"
+#include "cull.h"
+
+#ifdef  __cplusplus
+extern "C" {
+#endif
+
+#include "sge_schedd_conf_PARA_L.h"
+#include "sge_schedd_conf_SC_L.h"
+
+/* 
+ * valid values for SC_queue_sort_method 
+ */
+enum {
+   QSM_LOAD = 0,
+   QSM_SEQNUM = 1
+};
 
 /* defines the last dispatched job */
-enum { 
+enum {
     DISPATCH_TYPE_NONE = 0,      /* did not dispatch a job */
     DISPATCH_TYPE_FAST,          /* dispatched a sequential job */
     DISPATCH_TYPE_FAST_SOFT_REQ, /* dispatch a sequential job with soft requests */
@@ -77,9 +94,9 @@ typedef enum {
 typedef struct {
    policy_type_t policy;
    int dependent;
-} policy_hierarchy_t;  
+} policy_hierarchy_t;
 
-void sc_mt_init(void); 
+void sc_mt_init(void);
 
 void sconf_ph_fill_array(policy_hierarchy_t array[]);
 
@@ -101,11 +118,11 @@ bool sconf_validate_config(lList **answer_list, lList *config);
 
 bool sconf_validate_config_(lList **answer_list);
 
-lListElem *sconf_get_config(void); 
+lListElem *sconf_get_config(void);
 
-lList *sconf_get_config_list(void); 
+lList *sconf_get_config_list(void);
 
-bool sconf_is_new_config(void); 
+bool sconf_is_new_config(void);
 void sconf_reset_new_config(void);
 
 bool sconf_is(void);
@@ -161,9 +178,9 @@ bool sconf_get_report_pjob_tickets(void);
 bool sconf_is_job_category_filtering(void);
 
 u_long32 sconf_get_flush_submit_sec(void);
-   
+
 u_long32 sconf_get_flush_finish_sec(void);
-   
+
 u_long32 sconf_get_max_functional_jobs_to_schedule(void);
 
 u_long32 sconf_get_max_pending_tasks_per_job(void);
@@ -211,10 +228,10 @@ schedd_pe_algorithm sconf_best_pe_alg(void);
 void sconf_update_pe_alg(int runs, int current, int max);
 int  sconf_get_pe_alg_value(schedd_pe_algorithm alg);
 
-void sconf_inc_fast_jobs(void); 
-int sconf_get_fast_jobs(void); 
-   
-void sconf_inc_pe_jobs(void); 
+void sconf_inc_fast_jobs(void);
+int sconf_get_fast_jobs(void);
+
+void sconf_inc_pe_jobs(void);
 int sconf_get_pe_jobs(void);
 
 void sconf_set_decay_constant(double decay);
@@ -236,4 +253,7 @@ void sconf_reset_jobs(void);
 
 void sconf_get_weight_ticket_urgency_priority(double *ticket, double *urgency, double *priority);
 
-#endif /* __SGE_SCHEDD_CONF_H */
+#ifdef  __cplusplus
+}
+#endif
+#endif                          /* __SGE_SCHEDCONFL_H */

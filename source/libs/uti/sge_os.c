@@ -735,26 +735,6 @@ int sge_occupy_first_three(void)
    DRETURN(ret);
 }  
 
-/****** uti/os/sge_close_all_fds() ********************************************
-*  NAME
-*     sge_close_all_fds() -- close (all) file descriptors
-*
-*  SYNOPSIS
-*     void sge_close_all_fds(fd_set *keep_open)
-*
-*  FUNCTION
-*     Close all filedescriptors but ignore those mentioned
-*     in 'keep_open'.
-*
-*  INPUTS
-*     fd_set *keep_open - bitmask
-*
-*  NOTES
-*     MT-NOTE: sge_close_all_fds() is MT safe
-*
-*  SEE ALSO
-*     uti/os/sge_occupy_first_three()
-******************************************************************************/
 #ifdef __INSURE__
 extern int _insure_is_internal_fd(int);
 #endif

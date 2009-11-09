@@ -32,19 +32,23 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "sgermon.h"
-#include "sge_log.h"
-#include "cull.h"
-#include "valid_queue_user.h"
-#include "sge_string.h"
-#include "sge_answer.h"
-#include "sge_qinstance.h"
-#include "sge_userset.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_string.h"
+#include "uti/sge_hostname.h"
+
+#include "cull/cull.h"
+
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_userset.h"
 #include "sgeobj/sge_advance_reservation.h"
 #include "sgeobj/sge_hgroup.h"
-#include "sge_hostname.h"
-#include "msg_qmaster.h"
+#include "sgeobj/sge_all_listsL.h"
 
+#include "valid_queue_user.h"
+#include "msg_qmaster.h"
 #include "msg_schedd.h"
 
 /* - -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -

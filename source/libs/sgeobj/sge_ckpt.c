@@ -33,23 +33,25 @@
 #include <strings.h>
 #include <ctype.h>
 
-#include "sgermon.h"
-#include "sge_log.h"
-#include "cull_list.h"
+#include "rmon/sgermon.h"
 
-#include "config_file.h"
-#include "sge_signal.h"
+#include "uti/sge_log.h"
+#include "uti/config_file.h"
+#include "uti/sge_signal.h"
+
+#include "cull/cull_list.h"
+
+#include "sgeobj/sge_object.h"
 
 #include "sge_answer.h"
 #include "sge_job.h"
 #include "sge_cqueue.h"
-#include "sge_attrL.h"
+#include "sge_attr.h"
 #include "sge_qinstance.h"
 #include "sge_utility.h"
 #include "sge_ckpt.h"
 #include "symbols.h"
 #include "sge_str.h"
-#include "sgeobj/sge_object.h"
 
 #include "msg_common.h"
 #include "msg_sgeobjlib.h"

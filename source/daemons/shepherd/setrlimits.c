@@ -129,17 +129,44 @@ static int sge_parse_limit(sge_rlim_t *rlvalp, char *s, char *error_str,
 }
 
 void setrlimits(int trace_rlimit) {
-   sge_rlim_t s_cpu, h_cpu, s_core, h_core, s_data, h_data, 
-      s_fsize, h_fsize, s_stack, h_stack, s_vmem, h_vmem,
-      s_descriptors, h_descriptors, s_maxproc, h_maxproc,
-      s_memorylocked, h_memorylocked, s_locks, h_locks;
+   sge_rlim_t s_cpu, s_cpu_is_consumable_job;
+   sge_rlim_t h_cpu, h_cpu_is_consumable_job;
+
+   sge_rlim_t s_data, s_data_is_consumable_job;
+   sge_rlim_t h_data, h_data_is_consumable_job;
+
+   sge_rlim_t s_stack, s_stack_is_consumable_job;
+   sge_rlim_t h_stack, h_stack_is_consumable_job;
+
+   sge_rlim_t s_vmem, s_vmem_is_consumable_job;
+   sge_rlim_t h_vmem, h_vmem_is_consumable_job;
+
+   sge_rlim_t s_fsize;
+   sge_rlim_t h_fsize;
+
+   sge_rlim_t s_core;
+   sge_rlim_t h_core;
+
+   sge_rlim_t s_descriptors;
+   sge_rlim_t h_descriptors;
+
+   sge_rlim_t s_maxproc;
+   sge_rlim_t h_maxproc;
+
+   sge_rlim_t s_memorylocked;
+   sge_rlim_t h_memorylocked;
+
+   sge_rlim_t s_locks;
+   sge_rlim_t h_locks;
+
 #if defined(NECSX4) || defined(NECSX5)
    sge_rlim_t s_tmpf, h_tmpf, s_mtdev, h_mtdev, s_nofile, h_nofile,
       s_proc, h_proc, s_rlg0, h_rlg0, s_rlg1, h_rlg1, s_rlg2, h_rlg2,
       s_rlg3, h_rlg3, s_cpurestm, h_cpurestm;
 #endif  
 #ifndef SINIX
-   sge_rlim_t s_rss, h_rss; 
+   sge_rlim_t s_rss; 
+   sge_rlim_t h_rss; 
 #endif
 
    int host_slots, priority;
@@ -162,21 +189,41 @@ void setrlimits(int trace_rlimit) {
    } else { \
       sge_parse_limit(dstp, s, error_str, sizeof(error_str)); \
    }
+   /*
+    * Process complex values with attribute consumble that
+    * are subject to scaling by slots.
+    */
+   PARSE_IT(&h_vmem, "h_vmem");
+   PARSE_IT(&h_vmem_is_consumable_job, "h_vmem_is_consumable_job");
+   PARSE_IT(&s_vmem, "s_vmem");
+   PARSE_IT(&s_vmem_is_consumable_job, "s_vmem_is_consumable_job");
 
    PARSE_IT(&s_cpu, "s_cpu");
+   PARSE_IT(&s_cpu_is_consumable_job, "s_cpu_is_consumable_job");
    PARSE_IT(&h_cpu, "h_cpu");
+   PARSE_IT(&h_cpu_is_consumable_job, "h_cpu_is_consumable_job");
+
+   PARSE_IT(&s_data, "s_data");
+   PARSE_IT(&s_data_is_consumable_job, "s_data_is_consumable_job");
+   PARSE_IT(&h_data, "h_data");
+   PARSE_IT(&h_data_is_consumable_job, "h_data_is_consumable_job");
+
+   PARSE_IT(&s_stack, "s_stack");
+   PARSE_IT(&s_stack_is_consumable_job, "s_stack_is_consumable_job");
+   PARSE_IT(&h_stack, "h_stack");
+   PARSE_IT(&h_stack_is_consumable_job, "h_stack_is_consumable_job");
+   /*
+    * Process regular complex values.
+    */
    PARSE_IT(&s_core, "s_core");
    PARSE_IT(&h_core, "h_core");
-   PARSE_IT(&s_data, "s_data");
-   PARSE_IT(&h_data, "h_data");
-   PARSE_IT(&s_stack, "s_stack");
-   PARSE_IT(&h_stack, "h_stack");
+
    PARSE_IT(&s_rss, "s_rss");
    PARSE_IT(&h_rss, "h_rss");
+
    PARSE_IT(&s_fsize, "s_fsize");
    PARSE_IT(&h_fsize, "h_fsize");
-   PARSE_IT(&s_vmem, "s_vmem");
-   PARSE_IT(&h_vmem, "h_vmem");
+
    PARSE_IT_UNDEF(&s_descriptors, "s_descriptors");
    PARSE_IT_UNDEF(&h_descriptors, "h_descriptors");
    PARSE_IT_UNDEF(&s_maxproc,     "s_maxproc");
@@ -278,14 +325,24 @@ void setrlimits(int trace_rlimit) {
 
    /* for multithreaded jobs the per process limit
       must be available for each thread */
-   s_cpu = mul_infinity(s_cpu, host_slots);
-   h_cpu = mul_infinity(h_cpu, host_slots);
-   s_vmem = mul_infinity(s_vmem, host_slots);
-   h_vmem = mul_infinity(h_vmem, host_slots);
-   s_data = mul_infinity(s_data, host_slots);
-   h_data = mul_infinity(h_data, host_slots);
-   s_stack = mul_infinity(s_stack, host_slots);
-   h_stack = mul_infinity(h_stack, host_slots);
+   /*
+    * Scale resource by slots for type other than CONSUMABLE_JOB.
+    */
+#define CHECK_FOR_CONSUMABLE_JOB(A) \
+   (A##_is_consumable_job) ? (A=mul_infinity(A,1)):(A=mul_infinity(A, host_slots));
+
+   CHECK_FOR_CONSUMABLE_JOB(h_cpu);
+   CHECK_FOR_CONSUMABLE_JOB(s_cpu);
+
+   CHECK_FOR_CONSUMABLE_JOB(h_vmem);
+   CHECK_FOR_CONSUMABLE_JOB(s_vmem);
+
+   CHECK_FOR_CONSUMABLE_JOB(h_data);
+   CHECK_FOR_CONSUMABLE_JOB(s_data);
+
+   CHECK_FOR_CONSUMABLE_JOB(h_stack);
+   CHECK_FOR_CONSUMABLE_JOB(s_stack);
+
    if (s_descriptors != RLIMIT_UNDEFINED) {
       s_descriptors = mul_infinity(s_descriptors, host_slots);
    }

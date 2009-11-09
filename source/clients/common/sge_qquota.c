@@ -31,35 +31,23 @@
 /*___INFO__MARK_END__*/
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <limits.h>
 #include <math.h>
-#include <float.h>
 #include <fnmatch.h>
 
 #include "rmon/sgermon.h"
 
-#include "comm/commlib.h"
 
-#include "uti/sge_profiling.h"
 #include "uti/setup_path.h"
-#include "uti/sge_string.h"
 #include "uti/sge_hostname.h"
-#include "uti/sge_log.h"
-#include "uti/sge_unistd.h"
-#include "uti/sge_stdlib.h"
 #include "uti/sge_prog.h"
 #include "uti/sge_bootstrap.h"
-#include "uti/sge_parse_num_par.h"
 
 #include "sched/sort_hosts.h"
-#include "sched/load_correction.h"
-#include "sched/sge_complex_schedd.h"
 #include "sched/sge_select_queue.h"
 
 #include "sgeobj/parse.h"
 #include "sgeobj/sge_schedd_conf.h"
-#include "sgeobj/cull_parse_util.h"
 #include "sgeobj/sge_conf.h"
 #include "sgeobj/sge_range.h"
 #include "sgeobj/sge_resource_quota.h"
@@ -68,8 +56,6 @@
 #include "sgeobj/sge_host.h"
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_qinstance.h"
-#include "sgeobj/sge_qinstance_state.h"
-#include "sgeobj/sge_qinstance_type.h"
 #include "sgeobj/sge_ulong.h"
 #include "sgeobj/sge_centry.h"
 #include "sgeobj/sge_feature.h"
@@ -79,14 +65,10 @@
 #include "gdi/sge_gdi_ctx.h"
 
 #include "basis_types.h"
-#include "sig_handlers.h"
-#include "qstat_printing.h"
-#include "sge_mt_init.h"
 #include "sge_qstat.h"
 #include "sge_qquota.h"
 #include "sge.h"
 
-#include "msg_common.h"
 #include "msg_clients_common.h"
 
 #define HEAD_FORMAT "%-18s %-20.20s %s\n"
@@ -443,7 +425,7 @@ get_all_lists(sge_gdi_ctx_class_t *ctx, lList **rqs_l, lList **centry_l, lList *
    */
    what = lWhat("%T(ALL)", CE_Type);
    ce_id = ctx->gdi_multi(ctx, 
-                          alpp, SGE_GDI_RECORD, SGE_CENTRY_LIST, SGE_GDI_GET, 
+                          alpp, SGE_GDI_RECORD, SGE_CE_LIST, SGE_GDI_GET, 
                           NULL, NULL, what, &state, true);
    lFreeWhat(&what);
 
@@ -455,7 +437,7 @@ get_all_lists(sge_gdi_ctx_class_t *ctx, lList **rqs_l, lList **centry_l, lList *
    */
    what = lWhat("%T(ALL)", US_Type);
    userset_id = ctx->gdi_multi(ctx, 
-                          alpp, SGE_GDI_RECORD, SGE_USERSET_LIST, SGE_GDI_GET, 
+                          alpp, SGE_GDI_RECORD, SGE_US_LIST, SGE_GDI_GET, 
                           NULL, NULL, what, &state, true);
    lFreeWhat(&what);
 
@@ -467,7 +449,7 @@ get_all_lists(sge_gdi_ctx_class_t *ctx, lList **rqs_l, lList **centry_l, lList *
    */
    what = lWhat("%T(ALL)", HGRP_Type);
    hgroup_id = ctx->gdi_multi(ctx, 
-                          alpp, SGE_GDI_RECORD, SGE_HGROUP_LIST, SGE_GDI_GET, 
+                          alpp, SGE_GDI_RECORD, SGE_HGRP_LIST, SGE_GDI_GET, 
                           NULL, NULL, what, &state, true);
    lFreeWhat(&what);
    /*
@@ -493,7 +475,7 @@ get_all_lists(sge_gdi_ctx_class_t *ctx, lList **rqs_l, lList **centry_l, lList *
       where = nw;
 
    what = lWhat("%T(%I %I %I %I)", EH_Type, EH_name, EH_load_list, EH_consumable_config_list, EH_resource_utilization);
-   eh_id = ctx->gdi_multi(ctx, alpp, SGE_GDI_SEND, SGE_EXECHOST_LIST, SGE_GDI_GET, 
+   eh_id = ctx->gdi_multi(ctx, alpp, SGE_GDI_SEND, SGE_EH_LIST, SGE_GDI_GET, 
                           NULL, where, what, &state, true);
    ctx->gdi_wait(ctx, alpp, &mal, &state);
    lFreeWhat(&what);
@@ -514,7 +496,7 @@ get_all_lists(sge_gdi_ctx_class_t *ctx, lList **rqs_l, lList **centry_l, lList *
 
    /* --- complex attribute */
    lFreeList(alpp);
-   sge_gdi_extract_answer(alpp, SGE_GDI_GET, SGE_CENTRY_LIST, ce_id,
+   sge_gdi_extract_answer(alpp, SGE_GDI_GET, SGE_CE_LIST, ce_id,
                                  mal, centry_l);
    if (answer_list_has_error(alpp)) {
       lFreeList(&mal);
@@ -522,7 +504,7 @@ get_all_lists(sge_gdi_ctx_class_t *ctx, lList **rqs_l, lList **centry_l, lList *
    }
    /* --- usersets */
    lFreeList(alpp);
-   sge_gdi_extract_answer(alpp, SGE_GDI_GET, SGE_USERSET_LIST, userset_id,
+   sge_gdi_extract_answer(alpp, SGE_GDI_GET, SGE_US_LIST, userset_id,
                                  mal, userset_l);
    if (answer_list_has_error(alpp)) {
       lFreeList(&mal);
@@ -530,7 +512,7 @@ get_all_lists(sge_gdi_ctx_class_t *ctx, lList **rqs_l, lList **centry_l, lList *
    }
    /* --- hostgroups */
    lFreeList(alpp);
-   sge_gdi_extract_answer(alpp, SGE_GDI_GET, SGE_HGROUP_LIST, hgroup_id,
+   sge_gdi_extract_answer(alpp, SGE_GDI_GET, SGE_HGRP_LIST, hgroup_id,
                                  mal, hgroup_l);
    if (answer_list_has_error(alpp)) {
       lFreeList(&mal);
@@ -538,7 +520,7 @@ get_all_lists(sge_gdi_ctx_class_t *ctx, lList **rqs_l, lList **centry_l, lList *
    }
    /* --- exec hosts*/
    lFreeList(alpp);
-   sge_gdi_extract_answer(alpp, SGE_GDI_GET, SGE_EXECHOST_LIST, eh_id,
+   sge_gdi_extract_answer(alpp, SGE_GDI_GET, SGE_EH_LIST, eh_id,
                                  mal, exechost_l);
 
    lFreeList(&mal);

@@ -32,10 +32,12 @@
 
 #include <stdio.h>
 
-#include "sgeobj/sge_centry.h"
-#include "sched/sge_resource_utilization.h"
 #include "rmon/sgermon.h"
-#include "sge_all_listsL.h"
+
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_all_listsL.h"
+
+#include "sge_resource_utilization.h"
 #include "sge_mt_init.h"
 
 #include "sge_qeti.h"

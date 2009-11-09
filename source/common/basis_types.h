@@ -60,7 +60,7 @@
 #endif
 
 #if !defined(__cplusplus) 
-#  if defined(DARWIN9)
+#  if defined(DARWIN9) || defined(DARWIN10)
 #     include <stdbool.h>
 #  else
 typedef enum {
@@ -253,5 +253,11 @@ typedef char stringT[MAX_STRING_SIZE];
 
 #define HAS_LOCALTIME_R
 #define HAS_CTIME_R
+
+typedef enum {
+   NO    = 0,
+   YES   = 1,
+   UNSET = 2
+} ternary_t;
 
 #endif /* __BASIS_TYPES_H */

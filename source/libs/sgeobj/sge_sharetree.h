@@ -32,7 +32,14 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_sharetreeL.h"
+#include "sge_sharetree_STN_L.h"
+
+/*
+ *  * This is the list type we use to hold the 
+ *   * nodes of a share tree.
+ *    */
+#define STT_USER    0
+#define STT_PROJECT 1
 
 typedef struct {
    int depth;

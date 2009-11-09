@@ -30,10 +30,12 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "cull.h"
+#include "rmon/sgermon.h"
+
+#include "cull/cull.h"
+
 #include "sge_manop.h"
 #include "sge_object.h"
-#include "sgermon.h"
 
 /****** sgeobj/manop/manop_is_manager() ***************************************
 *  NAME

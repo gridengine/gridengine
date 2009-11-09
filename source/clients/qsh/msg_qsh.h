@@ -70,7 +70,11 @@
 #define MSG_QSH_CLEANINGUPAFTERABNORMALEXITOF_S _MESSAGE(17032, _("cleaning up after abnormal exit of "SFN))
 #define MSG_QSH_READINGEXITCODEFROMSHEPHERD  _MESSAGE(17033, _("reading exit code from shepherd ... "))
 #define MSG_QSH_CREATINGCOMMLIBSERVER_S _MESSAGE(17034, _("creating a commlib server: "SFQ))
-#define MSG_QSH_GOTNOCONNECTIONWITHINSECONDS_I _MESSAGE(1735, _("got no connection within %d seconds"))
+#define MSG_QSH_GOTNOCONNECTIONWITHINSECONDS_IS _MESSAGE(17035, _("got no connection within %d seconds. "SFQ))
+#define MSG_QSH_SETTINGCONNECTIONPARAMS_S _MESSAGE(17036, _("setting connection parameters: "SFQ))
+#define MSG_QSH_UNMATCHED_C _MESSAGE(17037, _("unmatched quote %c."))
+#define MSG_QSH_ERRORRUNNINGIJSSERVER_S _MESSAGE(17038, _("error running IJS server: "SFQ))
+#define MSG_QSH_ERRORWHILEWAITINGFORBUILTINIJSCONNECTION_S _MESSAGE(17039, _("error while waiting for builtin IJS connection: "SFQ))
 
 #endif /* __MSG_QSH_H */
 

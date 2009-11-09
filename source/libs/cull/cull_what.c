@@ -51,7 +51,6 @@
 
 #include "pack.h"
 #include "cull_pack.h"
-#include "cull_packL.h"
 #include "msg_gdilib.h"
 
 static lEnumeration *subscope_lWhat(cull_parse_state* state, va_list *app);
@@ -560,7 +559,7 @@ void lFreeWhat(lEnumeration **ep)
    if (ep == NULL || *ep == NULL) {
       DRETURN_VOID;
    }
-   for (i = 0; (*ep)[i].mt != lEndT; i++) {
+   for (i = 0; mt_get_type((*ep)[i].mt) != lEndT; i++) {
       if ((*ep)[i].ep != NULL) {
          lFreeWhat(&((*ep)[i].ep));
       }
@@ -646,7 +645,7 @@ lEnumeration *lCopyWhat(const lEnumeration *ep)
       DRETURN(NULL);
    }
 
-   for (n = 0; ep[n].mt != lEndT; n++);
+   for (n = 0; mt_get_type(ep[n].mt) != lEndT; n++);
 
    if (!(copy = (lEnumeration *) malloc(sizeof(lEnumeration) * (n + 1)))) {
       LERROR(LEMALLOC);
@@ -732,7 +731,7 @@ int lMergeWhat(lEnumeration **what1, lEnumeration **what2)
       /*
        * Add all elements of what1 
        */
-      for (i = 0; (*what1)[i].mt != lEndT; i++) { 
+      for (i = 0; mt_get_type((*what1)[i].mt) != lEndT; i++) { 
          tmp_result[next_id].pos = (*what1)[i].pos;
          tmp_result[next_id].mt = (*what1)[i].mt;
          tmp_result[next_id].nm = (*what1)[i].nm;
@@ -751,10 +750,10 @@ int lMergeWhat(lEnumeration **what1, lEnumeration **what2)
        * Add only those of what2 which are not already contained in what1
        * honour subwhat's
        */
-      for (i = 0; (*what2)[i].mt != lEndT; i++) {
+      for (i = 0; mt_get_type((*what2)[i].mt) != lEndT; i++) {
          bool skip = false;
 
-         for (j = 0; tmp_result[j].mt != lEndT; j++) {
+         for (j = 0; mt_get_type(tmp_result[j].mt) != lEndT; j++) {
             if (tmp_result[j].mt == (*what2)[i].mt &&
                 tmp_result[j].nm == (*what2)[i].nm &&
                 tmp_result[j].pos == (*what2)[i].pos) {
@@ -824,7 +823,7 @@ int lWhatSetSubWhat(lEnumeration *what1, int nm, lEnumeration **what2)
 
    DENTER(CULL_LAYER, "lWhatSetSubWhat");
    if (what1 != NULL && what2 != NULL) {
-      for (i = 0; what1[i].mt != lEndT; i++) {
+      for (i = 0; mt_get_type(what1[i].mt) != lEndT; i++) {
          if (what1[i].nm == nm) {
             if (what1[i].ep != NULL) {
                lFreeWhat(&(what1[i].ep));

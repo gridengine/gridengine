@@ -48,7 +48,7 @@
 #include "sge_job.h"
 #include "sge.h"
 #include "sge_string.h"
-
+#include "sge_spool.h"
 
 static int getHomeDir(char *exp_path, const char *user);
 
@@ -273,72 +273,6 @@ const char *user
    DEXIT;
    return 1;
 }
-
-/****** execd/fileio/sge_get_active_job_file_path() ********************************
-*  NAME
-*     sge_get_active_job_file_path() -- Create paths in active_jobs dir
-*
-*  SYNOPSIS
-*     const char* sge_get_active_job_file_path(dstring *buffer, 
-*        u_long32 job_id, u_long32 ja_task_id, const char *pe_task_id, 
-*        const char *filename) 
-*
-*  FUNCTION
-*     Creates paths in the execd's active_jobs directory.
-*     Both directory and file paths can be created.
-*     The result is placed in a buffer provided by the caller.
-*
-*  INPUTS
-*     dstring *buffer        - buffer to hold the generated path
-*     u_long32 job_id        - job id 
-*     u_long32 ja_task_id    - array task id
-*     const char *pe_task_id - optional pe task id
-*     const char *filename   - optional file name
-*
-*  RESULT
-*     const char* - pointer to the string buffer on success, else NULL
-*
-*  EXAMPLE
-*     To create the relative path to a jobs/tasks environment file, the 
-*     following call would be used:
-*
-*     char buffer[SGE_PATH_MAX]
-*     sge_get_active_job_file_path(buffer, SGE_PATH_MAX, 
-*                                  job_id, ja_task_id, pe_task_id,
-*                                  "environment");
-*     
-*
-*  NOTES
-*     JG: TODO: The function might be converted to or might use a more 
-*     general path creating function (utilib).
-*
-*  SEE ALSO
-*     execd/fileio/sge_make_ja_task_active_dir()
-*     execd/fileio/sge_make_pe_task_active_dir()
-*******************************************************************************/
-const char *sge_get_active_job_file_path(dstring *buffer, u_long32 job_id, u_long32 ja_task_id, const char *pe_task_id, const char *filename) 
-{
-   DENTER(TOP_LAYER, "sge_get_active_job_file_path");
-
-   if (buffer == NULL) {
-      DRETURN(NULL);
-   }
-
-   sge_dstring_sprintf(buffer, "%s/"sge_u32"."sge_u32, ACTIVE_DIR, job_id, ja_task_id);
-
-   if (pe_task_id != NULL) {
-      sge_dstring_append_char(buffer, '/');
-      sge_dstring_append(buffer, pe_task_id);
-   }
-
-   if (filename != NULL) {
-      sge_dstring_append_char(buffer, '/');
-      sge_dstring_append(buffer, filename);
-   }
-
-   DRETURN(sge_dstring_get_string(buffer));
-}
-
 
 /****** execd/fileio/sge_make_ja_task_active_dir() *********************************
 *  NAME

@@ -32,61 +32,25 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <fnmatch.h>
-#include <ctype.h>
-
 
 #include "sgermon.h"
 #include "symbols.h"
 #include "sge.h"
 #include "gdi/sge_gdi.h"
 #include "sge_time.h"
-#include "sge_log.h"
 #include "sge_stdlib.h"
 #include "sge_all_listsL.h"
-#include "commlib.h"
-#include "sge_host.h"
-#include "sig_handlers.h"
 #include "sge_sched.h"
-#include "cull_sort.h"
-#include "usage.h"
 #include "sge_dstring.h"
-#include "sge_feature.h"
 #include "parse.h"
 #include "sge_prog.h"
-#include "sge_parse_num_par.h"
-#include "sge_string.h"
-#include "show_job.h"
 #include "qstat_printing.h"
-#include "sge_range.h"
 #include "sge_schedd_text.h"
-#include "qm_name.h"
-#include "load_correction.h"
-#include "msg_common.h"
-#include "msg_clients_common.h"
-#include "msg_qstat.h"
-#include "sge_conf.h" 
 #include "sgeee.h" 
-#include "sge_support.h"
-#include "sge_unistd.h"
 #include "sge_answer.h"
-#include "sge_pe.h"
-#include "sge_ckpt.h"
-#include "sge_qinstance.h"
-#include "sge_qinstance_state.h"
-#include "sge_qinstance_type.h"
-#include "sge_centry.h"
-#include "sge_schedd_conf.h"
-#include "sge_cqueue.h"
-#include "sge_qref.h"
-#include "sge_ja_task.h"
 
-#include "sge_job.h"
-#include "sge_urgency.h"
-#include "sge_ulong.h"
-
-#include "sge_mt_init.h"
 #include "sge_qstat.h"
+#include "sge_cull_xml.h"
 
 /* ----------------------- qselect xml handler ------------------------------ */
 
@@ -158,7 +122,7 @@ static int cqueue_summary_xml_report_finished(cqueue_summary_handler_t *handler,
     
       xml_elem = xml_getHead("job_info", (lList*)handler->ctx, NULL);
       handler->ctx = NULL;
-      lWriteElemXMLTo(xml_elem, stdout);  
+      lWriteElemXMLTo(xml_elem, stdout, -1);  
       lFreeElem(&xml_elem);
    }
    return 0;
@@ -231,6 +195,7 @@ static int qstat_xml_job_master_hard_requested_queue(job_handler_t* handler, con
 static int qstat_xml_job_predecessor_requested(job_handler_t* handler, const char* name, lList **alpp);
 static int qstat_xml_job_predecessor(job_handler_t* handler, u_long32 jid, lList **alpp);
 static int qstat_xml_job_ad_predecessor_requested(job_handler_t* handler, const char* name, lList **alpp);
+static int qstat_xml_job_binding(job_handler_t* handler, const char* name, lList **alpp);
 static int qstat_xml_job_ad_predecessor(job_handler_t* handler, u_long32 jid, lList **alpp);
 
 static int qstat_xml_job_finished(job_handler_t* handler, u_long32 jid, lList **alpp);
@@ -345,6 +310,10 @@ int qstat_xml_handler_init(qstat_handler_t* handler, lList **alpp) {
    handler->job_handler.report_ad_predecessor = qstat_xml_job_ad_predecessor;
    handler->job_handler.report_ad_predecessors_finished = qstat_xml_dummy_finished;
 
+   handler->job_handler.report_binding_started = qstat_xml_dummy_started;
+   handler->job_handler.report_binding = qstat_xml_job_binding;
+   handler->job_handler.report_binding_finished = qstat_xml_dummy_finished;
+
    handler->job_handler.report_job_finished = qstat_xml_job_finished;
 
    handler->report_queue_jobs_started = qstat_xml_queue_jobs_started;
@@ -408,7 +377,7 @@ static int qstat_xml_finished(qstat_handler_t* handler, lList** alpp) {
    
    xml_elem = xml_getHead("job_info", XML_out, NULL);
    /*lWriteListTo(XML_out, stdout);*/
-   lWriteElemXMLTo(xml_elem, stdout);
+   lWriteElemXMLTo(xml_elem, stdout, -1);
    lFreeElem(&xml_elem);
 
    DEXIT;
@@ -781,6 +750,18 @@ static int qstat_xml_job_ad_predecessor(job_handler_t* handler, u_long32 jid, lL
    return 0;
 }
 
+static int qstat_xml_job_binding(job_handler_t* handler, const char *binding, lList **alpp) {
+   qstat_xml_ctx_t *ctx = (qstat_xml_ctx_t*)handler->ctx;
+   lList *attribute_list = lGetList(ctx->job_elem, XMLE_List);
+
+   DENTER(TOP_LAYER, "qstat_xml_job_binding");
+
+   xml_append_Attr_S(attribute_list, "binding", binding);
+   
+   DEXIT;
+   return 0;
+}
+
 static int qstat_xml_create_job_list(qstat_handler_t *handler, lList **alpp) {
    qstat_xml_ctx_t *ctx = (qstat_xml_ctx_t*)handler->ctx;
    
@@ -1011,7 +992,7 @@ static int qstat_xml_queue_started(qstat_handler_t* handler, const char* qname, 
    if (qstat_env->full_listing & QSTAT_DISPLAY_FULL) {
       
       if (ctx->queue_elem != NULL) {
-         DPRINTF(("Ilegal state: ctx->queue_elem has to be NULL"));
+         DPRINTF(("Illegal state: ctx->queue_elem has to be NULL"));
          abort();
       }
       
@@ -1133,7 +1114,7 @@ static int qstat_xml_queue_resource(qstat_handler_t* handler, const char* dom, c
 
 
 
-void xml_qstat_show_job_info(lList **list, lList **answer_list) {
+void xml_qstat_show_job_info(lList **list, lList **answer_list, qstat_env_t *qstat_env) {
    lListElem *answer = NULL;
    lListElem *xml_elem = NULL;
    bool error = false;
@@ -1152,7 +1133,8 @@ void xml_qstat_show_job_info(lList **list, lList **answer_list) {
 
    if (error) {
       xml_elem = xml_getHead("comunication_error", *answer_list, NULL);
-      lWriteElemXMLTo(xml_elem, stdout);
+      lWriteElemXMLTo(xml_elem, stdout, 
+         (qstat_env->full_listing & QSTAT_DISPLAY_BINDING) == QSTAT_DISPLAY_BINDING ? -1 : JB_binding);
       lFreeElem(&xml_elem);
    }
    else {
@@ -1163,7 +1145,7 @@ void xml_qstat_show_job_info(lList **list, lList **answer_list) {
          mlp = lGetList(sme, SME_message_list);         
       }      
       for_each(mes, mlp) {
-         lPSortList (lGetList(mes, MES_job_number_list), "I+", ULNG);
+         lPSortList (lGetList(mes, MES_job_number_list), "I+", ULNG_value);
 
          for_each(jid_ulng, lGetList(mes, MES_job_number_list)) {
             u_long32 mid;            
@@ -1177,7 +1159,8 @@ void xml_qstat_show_job_info(lList **list, lList **answer_list) {
       /* print out xml info from list */
       
       xml_elem = xml_getHead("message", *list, NULL);
-      lWriteElemXMLTo(xml_elem, stdout);
+      lWriteElemXMLTo(xml_elem, stdout, 
+         (qstat_env->full_listing & QSTAT_DISPLAY_BINDING) == QSTAT_DISPLAY_BINDING ? -1 : JB_binding);
       lFreeElem(&xml_elem);
       *list = NULL;
    }
@@ -1188,10 +1171,11 @@ void xml_qstat_show_job_info(lList **list, lList **answer_list) {
    return;
 }
 
-void xml_qstat_show_job(lList **job_list, lList **msg_list, lList **answer_list, lList **id_list){
+void xml_qstat_show_job(lList **job_list, lList **msg_list, lList **answer_list, lList **id_list, qstat_env_t *qstat_env){
    lListElem *answer = NULL;
    lListElem *xml_elem = NULL;
    bool error = false;
+   bool suppress_binding_data = (qstat_env->full_listing & QSTAT_DISPLAY_BINDING) == QSTAT_DISPLAY_BINDING ? false : true;
 
    DENTER(TOP_LAYER, "xml_qstat_show_job");
    
@@ -1201,20 +1185,22 @@ void xml_qstat_show_job(lList **job_list, lList **msg_list, lList **answer_list,
          break;
       }
    }
-   
+
+   if (suppress_binding_data) {
+      DPRINTF(("Data concerning binding will not ne shown\n"));
+   }
+
    if (error) {
       xml_elem = xml_getHead("comunication_error", *answer_list, NULL);
-      lWriteElemXMLTo(xml_elem, stdout);
+      lWriteElemXMLTo(xml_elem, stdout, suppress_binding_data ? JB_binding : -1); 
       lFreeElem(&xml_elem);
-   }
-   else {
+   } else {
       if (lGetNumberOfElem(*job_list) == 0) {
          xml_elem = xml_getHead("unknown_jobs", *id_list, NULL);
-         lWriteElemXMLTo(xml_elem, stdout);
+         lWriteElemXMLTo(xml_elem, stdout, suppress_binding_data ? JB_binding : -1);
          lFreeElem(&xml_elem);
          *id_list = NULL;
-      }
-      else {
+      } else {
          lList *XML_out = lCreateList("detailed_job_info", XMLE_Type);
          lListElem *xmlElem = NULL;
          lListElem *attrElem = NULL;
@@ -1237,20 +1223,15 @@ void xml_qstat_show_job(lList **job_list, lList **msg_list, lList **answer_list,
          lSetList(xmlElem, XMLE_List, *msg_list);
          lAppendElem(XML_out, xmlElem);
          
-         
          xml_elem = xml_getHead("detailed_job_info", XML_out, NULL);
-
-         lWriteElemXMLTo(xml_elem, stdout);
-
+         lWriteElemXMLTo(xml_elem, stdout, suppress_binding_data ? JB_binding : -1);
          lFreeElem(&xml_elem);
          *job_list = NULL;
          *msg_list = NULL;
-         
       }
    }
 
    lFreeList(answer_list);
-
    DEXIT;
    return;
 }

@@ -78,27 +78,36 @@ static void lWriteElem_(const lListElem *lp, dstring *buffer, int nesting_level)
 *        SGE_STRING(QU_qname, CULL_HASH | CULL_UNIQUE)
 *
 *     The following attributes can be given to a field:
-*        CULL_DEFAULT       
+*        CULL_DEFAULT
 *           no special settings - default behaviour
-*        CULL_PRIMARY_KEY   
+*        CULL_PRIMARY_KEY
 *           the field is part of the primary key
-*           not yet implemented
+*           does *not* imply uniqueness or hashing
 *        CULL_HASH          
 *           a hash table will be created on the field for lists of the 
-*           object type
+*           object type (non unique, unless explicitly specified by CULL_UNIQUE)
 *        CULL_UNIQUE        
 *           the field value has to be unique for all objects in a list
 *           currently only used for the definition of hash tables,
 *           but it could be used for general consistency checks.
-*        CULL_SHOW          
-*           the field shall be shown in object output functions
-*           not yet implemented
+*        CULL_JGDI_HIDDEN
 *        CULL_CONFIGURE     
 *           the field can be changed by configuration functions
 *           not yet implemented
 *        CULL_SPOOL         
-*           the field shall be spooled
-*           not yet implemented
+*           the field is spooled
+*        CULL_SUBLIST
+*           the field is spooled when the type is used as subtype in another
+*           type, but less fields shall be spooled, e.g. in the CE_TYPE:
+*           all fields are spooled if the complex variable definition is spooled,
+*           but only CE_name and CE_stringval are spooled when used as subtype,
+*           like in the complex_values of exec host or queue
+*        CULL_SPOOL_PROJECT
+*           deprecated?
+*        CULL_SPOOL_USER
+*           deprecated?
+*        CULL_JGDI_RO
+*        CULL_JGDI_CONF
 *
 *  NOTES
 *     Further attributes can be introduced as necessary, e.g.
@@ -268,7 +277,7 @@ lCopyElemPartialPack(lListElem *dst, int *jp, const lListElem *src,
    case WHAT_ALL:               /* all fields of element src is copied */
       if (pb == NULL) {
          for (i = 0; src->descr[i].nm != NoName; i++, (*jp)++) {
-            if (lCopySwitchPack(src, dst, i, *jp, isHash, enp[0].ep, pb) != 0) {
+            if (lCopySwitchPack(src, dst, i, *jp, isHash, enp[0].ep, NULL) != 0) {
                LERROR(LECOPYSWITCH);
                DRETURN(-1);
             }
@@ -298,7 +307,7 @@ lCopyElemPartialPack(lListElem *dst, int *jp, const lListElem *src,
                DRETURN(-1);
             }
 
-            if (lCopySwitchPack(src, dst, enp[i].pos, *jp, isHash, enp[i].ep, pb) != 0) {
+            if (lCopySwitchPack(src, dst, enp[i].pos, *jp, isHash, enp[i].ep, NULL) != 0) {
                LERROR(LECOPYSWITCH);
                DRETURN(-1);
             }
@@ -697,8 +706,7 @@ static void lWriteElem_(const lListElem *ep, dstring *buffer, int nesting_level)
 DTRACE;
    sge_dstring_sprintf_append(buffer, "%s-------------------------------\n", space);
 
-   for (i = 0; ep->descr[i].mt != lEndT; i++)
-   {
+   for (i = 0; mt_get_type(ep->descr[i].mt) != lEndT; i++) {
       bool changed = sge_bitfield_get(&(ep->changed), i);
       const char *name = ((lNm2Str(ep->descr[i].nm) != NULL) ? lNm2Str(ep->descr[i].nm) : "(null)");
 
@@ -890,7 +898,9 @@ lListElem *lCreateElem(const lDescr *dp)
       DRETURN(NULL);
    }
 
-   if (!(ep = (lListElem *) malloc(sizeof(lListElem)))) {
+   ep = (lListElem *) malloc(sizeof(lListElem));
+
+   if (ep == NULL) {
       LERROR(LEMALLOC);
       DRETURN(NULL);
    }
@@ -909,6 +919,7 @@ lListElem *lCreateElem(const lDescr *dp)
    /* new descr has no htables yet */
    for (i = 0; i <= n; i++) {
       ep->descr[i].ht = NULL;
+      ep->descr[i].mt |= (dp->mt & CULL_IS_REDUCED);
    }
                   
    ep->status = FREE_ELEM;
@@ -984,7 +995,7 @@ lList *lCreateListHash(const char *listname, const lDescr *descr, bool hash)
       listname = "No list name specified";
    }
 
-   if (!descr || descr[0].mt == lEndT) {
+   if (!descr || mt_get_type(descr[0].mt) == lEndT) {
       LERROR(LEDESCRNULL);
       DRETURN(NULL);
    }
@@ -1026,6 +1037,7 @@ lList *lCreateListHash(const char *listname, const lDescr *descr, bool hash)
       } else {
          lp->descr[i].ht = NULL;
       }
+      lp->descr[i].mt |= (descr[i].mt & CULL_IS_REDUCED);
    }
 
    lp->changed = false;
@@ -1113,7 +1125,7 @@ void lFreeElem(lListElem **ep1)
       abort();
    }
 
-   for (i = 0; ep->descr[i].mt != lEndT; i++) {
+   for (i = 0; mt_get_type(ep->descr[i].mt) != lEndT; i++) {
       /* remove element from hash tables */
       if(ep->descr[i].ht != NULL) {
          cull_hash_remove(ep, i);
@@ -1941,7 +1953,7 @@ lListElem *lDechainElem(lList *lp, lListElem *ep)
    }   
 
    /* remove hash entries */
-   for(i = 0; ep->descr[i].mt != lEndT; i++) {
+   for(i = 0; mt_get_type(ep->descr[i].mt) != lEndT; i++) {
       if(ep->descr[i].ht != NULL) {
          cull_hash_remove(ep, i);
       }

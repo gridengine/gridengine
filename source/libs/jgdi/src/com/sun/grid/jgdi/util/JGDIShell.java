@@ -580,8 +580,9 @@ public class JGDIShell implements Runnable, Shell {
                     logger.warning(msg);
                 }
             }
-
-            logger.info("connect to host(" + args[0] + ":" + args[1] + ")");
+            String host = args[0];
+            int port = Integer.parseInt(args[1]);
+            logger.info("connect to host(" + host + ":" + port + ")");
             NameCallback ncb = new NameCallback("user:");
             PasswordCallback pwcb = new PasswordCallback("password:", false);
             Callback[] callbacks = {ncb, pwcb};
@@ -596,12 +597,10 @@ public class JGDIShell implements Runnable, Shell {
                 cb.handle(kcallbacks);
                 File caTop = new File(caTopPath);
                 File keyStore = new File(keystorePath);
-                JGDIProxy.setupSSL(caTop, keyStore, kspw.getPassword());
+                JGDIProxy.setupSSL(host, port, caTop, keyStore, kspw.getPassword());
                 kspw.clearPassword();
                 kspw = null;
             }
-            String host = args[0];
-            int port = Integer.parseInt(args[1]);
             Object credentials = new String[]{username, userpw};
             JGDIProxy jgdiProxy = JGDIFactory.newJMXInstance(host, port, credentials);
 

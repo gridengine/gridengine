@@ -4,7 +4,7 @@
    <shortcut>${name}</shortcut>
    <valtype>1</valtype>
    <relop>5</relop>
-   <consumable>true</consumable>
+   <consumable>1</consumable>
    <default>1</default>
    <requestable>2</requestable>
    <urgencyWeight>1000</urgencyWeight>

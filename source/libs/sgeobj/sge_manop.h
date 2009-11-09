@@ -32,7 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_manopL.h"
+#include "sge_manop_UM_L.h"
+#include "sge_manop_UO_L.h"
 
 bool manop_is_manager(const char *user_name);
 bool manop_is_operator(const char *cp);

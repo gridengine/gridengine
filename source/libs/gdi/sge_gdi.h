@@ -58,14 +58,14 @@ enum {
 
    /* SUB COMMAND  ----------- */
 
-   /* for SGE_JOB_LIST => SGE_GDI_ADD */
+   /* for SGE_JB_LIST => SGE_GDI_ADD */
    SGE_GDI_RETURN_NEW_VERSION = (1<<8),
 
-   /* for SGE_JOB_LIST => SGE_GDI_DEL, SGE_GDI_MOD */
+   /* for SGE_JB_LIST => SGE_GDI_DEL, SGE_GDI_MOD */
    SGE_GDI_ALL_JOBS  = (1<<9),
    SGE_GDI_ALL_USERS = (1<<10),
 
-   /* for SGE_QUEUE_LIST, SGE_EXECHOST_LIST => SGE_GDI_MOD */
+   /* for SGE_QUEUE_LIST, SGE_EH_LIST => SGE_GDI_MOD */
    SGE_GDI_SET     = 0,        /* overwrite the sublist with given values */
    SGE_GDI_CHANGE  = (1<<11),  /* change the given elements */
    SGE_GDI_APPEND  = (1<<12),  /* add some elements into a sublist */
@@ -90,30 +90,30 @@ enum {
  * (see sge_gdi_packet_class_t and sge_gdi_task_class_t
  */
 enum {
-   SGE_ADMINHOST_LIST = 1,
-   SGE_SUBMITHOST_LIST,
-   SGE_EXECHOST_LIST,
-   SGE_CQUEUE_LIST,
-   SGE_JOB_LIST,
-   SGE_EVENT_LIST,
-   SGE_CENTRY_LIST,
+   SGE_AH_LIST = 1,
+   SGE_SH_LIST,
+   SGE_EH_LIST,
+   SGE_CQ_LIST,
+   SGE_JB_LIST,
+   SGE_EV_LIST,
+   SGE_CE_LIST,
    SGE_ORDER_LIST,
    SGE_MASTER_EVENT,
-   SGE_CONFIG_LIST,
-   SGE_MANAGER_LIST,
-   SGE_OPERATOR_LIST,
+   SGE_CONF_LIST,
+   SGE_UM_LIST,
+   SGE_UO_LIST,
    SGE_PE_LIST,
    SGE_SC_LIST,          /* schedconf list */
-   SGE_USER_LIST,
-   SGE_USERSET_LIST,
-   SGE_PROJECT_LIST,
-   SGE_SHARETREE_LIST,
-   SGE_CKPT_LIST,
-   SGE_CALENDAR_LIST,
-   SGE_JOB_SCHEDD_INFO_LIST,
+   SGE_UU_LIST,
+   SGE_US_LIST,
+   SGE_PR_LIST,
+   SGE_STN_LIST,
+   SGE_CK_LIST,
+   SGE_CAL_LIST,
+   SGE_SME_LIST,
    SGE_ZOMBIE_LIST,
    SGE_USER_MAPPING_LIST,
-   SGE_HGROUP_LIST,
+   SGE_HGRP_LIST,
    SGE_RQS_LIST,
    SGE_AR_LIST,
    SGE_DUMMY_LIST

@@ -133,6 +133,12 @@ void sge_monitor_free(monitoring_t *monitor)
 {
    DENTER(GDI_LAYER, "sge_monitor_free");
   
+   sge_dstring_free(monitor->output_line1);
+   sge_dstring_free(monitor->output_line2);
+   FREE(monitor->output_line1);
+   FREE(monitor->output_line2);
+   FREE(monitor->ext_data);
+
    if(monitor->pos != -1) {
       sge_mutex_lock("sge_monitor_init", SGE_FUNC, __LINE__, &(Output[monitor->pos].Output_Mutex));
 
@@ -145,11 +151,11 @@ void sge_monitor_free(monitoring_t *monitor)
    }
 
    
-   sge_dstring_free(monitor->output_line1);
+/*   sge_dstring_free(monitor->output_line1);
    sge_dstring_free(monitor->output_line2);
    FREE(monitor->output_line1);
    FREE(monitor->output_line2);
-   FREE(monitor->ext_data);
+   FREE(monitor->ext_data);*/
 
    monitor->ext_data_size = 0;
    monitor->ext_output = NULL;

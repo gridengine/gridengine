@@ -141,7 +141,7 @@ void updateCalendarList(void)
    
    DENTER(GUI_LAYER, "updateCalendarList");
 
-   cl = qmonMirrorList(SGE_CALENDAR_LIST);
+   cl = qmonMirrorList(SGE_CAL_LIST);
    lPSortList(cl, "%I+", CAL_name);
    UpdateXmListFromCull(cal_names, XmFONTLIST_DEFAULT_TAG, cl, CAL_name);
 
@@ -229,7 +229,7 @@ static void qmonSelectCalendar(Widget w, XtPointer cld, XtPointer cad)
       return;
    }
 
-   ep = calendar_list_locate(qmonMirrorList(SGE_CALENDAR_LIST), calname);
+   ep = calendar_list_locate(qmonMirrorList(SGE_CAL_LIST), calname);
 
    XtFree((char*) calname);
 
@@ -351,7 +351,7 @@ static void qmonCalendarModify(Widget w, XtPointer cld, XtPointer cad)
       XtVaSetValues( cal_name_w,
                      XmNeditable, False,
                      NULL);
-      calp = calendar_list_locate(qmonMirrorList(SGE_CALENDAR_LIST), calstr);
+      calp = calendar_list_locate(qmonMirrorList(SGE_CAL_LIST), calstr);
       XtFree((char*)calstr);
       if (calp) {
          add_mode = 0;
@@ -392,13 +392,13 @@ static void qmonCalendarOk(Widget w, XtPointer cld, XtPointer cad)
          what = lWhat("%T(ALL)", CAL_Type);
          
          if (add_mode) {
-            alp = qmonAddList(SGE_CALENDAR_LIST, 
-                              qmonMirrorListRef(SGE_CALENDAR_LIST),
+            alp = qmonAddList(SGE_CAL_LIST, 
+                              qmonMirrorListRef(SGE_CAL_LIST),
                               CAL_name, &cal, NULL, what);
          }
          else {
-            alp = qmonModList(SGE_CALENDAR_LIST, 
-                              qmonMirrorListRef(SGE_CALENDAR_LIST),
+            alp = qmonModList(SGE_CAL_LIST, 
+                              qmonMirrorListRef(SGE_CAL_LIST),
                               CAL_name, &cal, NULL, what);
          }
 
@@ -459,8 +459,8 @@ static void qmonCalendarDelete(Widget w, XtPointer cld, XtPointer cad)
                      False, &answer, NULL);
       if (answer) { 
          what = lWhat("%T(ALL)", CAL_Type);
-         alp = qmonDelList(SGE_CALENDAR_LIST, 
-                           qmonMirrorListRef(SGE_CALENDAR_LIST),
+         alp = qmonDelList(SGE_CAL_LIST, 
+                           qmonMirrorListRef(SGE_CAL_LIST),
                                  CAL_name, &lp, NULL, what);
 
          qmonMessageBox(w, alp, 0);

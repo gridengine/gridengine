@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2009/01/13 10:15:29 $     Revision: $Revision: 1.38 $
+.\" $RCSfile: sched_conf.5,v $     Last Update: $Date: 2009/07/08 14:42:40 $     Revision: $Revision: 1.39 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SCHED_CONF 5 "$Date: 2009/01/13 10:15:29 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH SCHED_CONF 5 "$Date: 2009/07/08 14:42:40 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 sched_conf \- xxQS_NAMExx default scheduler configuration file
@@ -408,6 +408,13 @@ The default for \fBparams\fP is none.
 Interval (HH:MM:SS) to reprioritize jobs on the execution hosts based on the 
 current ticket amount for the running jobs. If the interval is set to 
 00:00:00 the reprioritization is turned off. The default value is 00:00:00.
+The reprioritization tickets are calculated by the scheduler and update events
+for running jobs are only sent after the scheduler calculated new values. How often
+the schedule should calculate the tickets is defined by the reprioritize_interval.
+Because the scheduler is only triggered in a specific interval (scheduler_interval)
+this means the reprioritize_interval has only a meaning if set greater than the scheduler_interval.
+For example, if the scheduler_interval is 2 minutes and reprioritize_interval is set
+to 10 seconds, this means the jobs get re-prioritized every 2 minutes.
 .\"
 .SS "\fBreport_pjob_tickets\fP"
 This parameter allows to tune the system's scheduling run time. It is used

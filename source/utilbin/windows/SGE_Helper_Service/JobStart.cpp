@@ -1355,7 +1355,14 @@ static HANDLE WINAPI GetInteractiveUserToken()
    HANDLE hToken        = NULL;
    HANDLE hPrimaryToken = NULL;
 
+   // WTSEnumerateSessions() might be a solution here
+   // TODO: return after first error. This means here return if
+   //       dwSessionID is invalid !!!
    dwSessionID = WTSGetActiveConsoleSessionId();
+
+   // TODO: WTSQueryUserToken() will fail when no user is logged into the
+   //       system for vista hosts. This means starting a GUI job without
+   //       any user logged into the system will fail.
 
    // try to get the token of the user of the interactive console session
    // from the Windows Terminal Services

@@ -102,7 +102,8 @@ static bool get_ids_from_matrix(const int** matrix, const int length,
                const int which_ID, int** ids, int* amount);
 
 /* DG TODO this function is not MT -> introduce context */
-static int is_different_id(const int id);
+static int is_new_id(const int id);
+static int is_new_id_pair(const int id, const int id2);
 
 static int get_amount_of_core_or_threads_from_matrix(const int** matrix, 
                const int length, int core, int** core_or_threads, int* size);
@@ -1461,6 +1462,7 @@ static bool get_topology_solaris(char** topology, int* length)
    
    /* matrix with the kstat values */
    int** matrix = NULL;
+   int matrix_length = 0;
 
    /* vector with the amount of cores per socket */
    int* cores_per_socket = NULL;
@@ -1487,17 +1489,17 @@ static bool get_topology_solaris(char** topology, int* length)
    (*length) = 0;
 
    /* generate matrix with socket_id and core_id */
-   if (generate_chipID_coreID_matrix(&matrix, length)) {
+   if (generate_chipID_coreID_matrix(&matrix, &matrix_length)) {
 
       /* clear topology string */ 
       sge_dstring_clear(&d_topology);
       
       /* get cores per socket array */
-      get_amount_of_core_or_threads_from_matrix((const int**)matrix, *length, 1, 
+      get_amount_of_core_or_threads_from_matrix((const int**)matrix, matrix_length, 1, 
          &cores_per_socket, &cores_per_socket_length);
       
       /* get threads per core array */
-      get_amount_of_core_or_threads_from_matrix((const int**)matrix, *length, 0, 
+      get_amount_of_core_or_threads_from_matrix((const int**)matrix, matrix_length, 0, 
          &threads_per_core, &threads_per_core_length);
 
       /* go through all sockets */
@@ -1513,8 +1515,9 @@ static bool get_topology_solaris(char** topology, int* length)
             sge_dstring_append_char(&d_topology, *C);
             (*length)++;
 
-            /* append the amount of threads if > 1 */ 
-            if (threads_per_core[all_cores + core] > 1) {
+            /* append the amount of threads if > 1 */
+            if (threads_per_core_length > (all_cores + core) 
+                  && threads_per_core[all_cores + core] > 1) {
                int t;
                for (t = 0; t < threads_per_core[all_cores + core]; t++) {
                   /* append "T" */
@@ -1925,33 +1928,33 @@ static int get_amount_of_threads_from_matrix(const int** matrix, const int lengt
 
 /****** sge_binding/get_amount_of_core_or_threads_from_matrix() ********************
 *  NAME
-*     get_amount_of_core_or_threads_from_matrix() -- ??? 
+*     get_amount_of_core_or_threads_from_matrix() -- gets the amounf of cores or threads  
 *
 *  SYNOPSIS
 *     int get_amount_of_core_or_threads_from_matrix(const int** matrix, const 
 *     int length, int core, int** core_or_threads, int* size) 
 *
 *  FUNCTION
-*     ??? 
+*     Gets the amount of cores per socket out of the topology matrix when 
+*     'core' input value is 1. Otherwise (when 'core' input value is 0) 
+*     it stores the amount of threads per core in the 'core_or_threads' array.
+*     Hence the size of the output array is either the amount of sockets or 
+*     the amount of cores. 
 *
 *  INPUTS
-*     const int** matrix    - ??? 
-*     const int length      - ??? 
-*     int core              - ??? 
-*     int** core_or_threads - ??? 
-*     int* size             - ??? 
+*     const int** matrix    - the topology matrix 
+*     const int length      - the size of the topology matrix 
+*     int core              - report amount of cores per socket when 1 otherwise threads per core 
+* 
+*  OUTPUTS
+*     int** core_or_threads - the array containing the amount of cores or threads
+*     int* size             - the size of the core_or_threads array 
 *
 *  RESULT
 *     int - 
 *
-*  EXAMPLE
-*     ??? 
-*
 *  NOTES
 *     MT-NOTE: get_amount_of_core_or_threads_from_matrix() is not MT safe 
-*
-*  BUGS
-*     ??? 
 *
 *  SEE ALSO
 *     ???/???
@@ -2004,23 +2007,31 @@ static int get_amount_of_core_or_threads_from_matrix(const int** matrix, const i
       amount = 1;
 
       /* reset the ID counter function */
-      is_different_id(-1);
+      is_new_id(-1);
+      is_new_id_pair(-1, -1);
 
       /* go through the matrix */
       for (j = 0; j < length; j++) {
          if (core == 1) {
-            /* counting cores per socket (amount of *same* socket_ids) */
-            if (matrix[j][0] == ids[i]) { 
-               /* count only *same* socket_ids */
-               if (is_different_id(matrix[j][0]) == 0) {
-                  amount++;
-               }   
+            /* counting cores per socket (amount of *same* chip_ids with different core_ids) */
+            if (matrix[j][0] == ids[i]) {
+
+               /* store pair of chip_id and core id and check if it is already known */
+               int is_different = is_new_id_pair(matrix[j][0], matrix[j][1]);
+
+               /* count only *same* chip_ids */
+               if (is_new_id(matrix[j][0]) == 0) {
+                  /* this combination of chip_id and core_id is new */
+                  if (is_different == 1) {
+                     amount++;
+                  }
+               } 
             }
          } else {
             /* counting threads per core (amount of *same* core_ids) */
             if (matrix[j][1] == ids[i]) { 
-               /* count only *same* core_ids */
-               if (is_different_id(matrix[j][1]) == 0) {
+               /* count only *same* core_ids together with chip_ids */
+               if (is_new_id_pair(matrix[j][0], matrix[j][1]) == 0) {
                   amount++;
                }   
             }
@@ -2034,7 +2045,8 @@ static int get_amount_of_core_or_threads_from_matrix(const int** matrix, const i
    FREE(ids);
    
    /* reset the ID counter function */
-   is_different_id(-1);
+   is_new_id(-1);
+   is_new_id_pair(-1, -1);
 
    /* return the amount of sockets or cores we have found (size of array)*/
    return ids_length;
@@ -2078,12 +2090,12 @@ static int get_amount_of_cores_from_matrix(const int** matrix, const int length,
 }
 
 
-/****** sge_binding/is_different_id() **********************************************
+/****** sge_binding/is_new_id() **********************************************
 *  NAME
-*     is_different_id() -- ??? 
+*     is_new_id() -- ??? 
 *
 *  SYNOPSIS
-*     int is_different_id(const int id) 
+*     int is_new_id(const int id) 
 *
 *  FUNCTION
 *     Checks if an ID is unique or not. For that it stores all 
@@ -2103,12 +2115,12 @@ static int get_amount_of_cores_from_matrix(const int** matrix, const int length,
 *     int - 1 in case the parameter was a new ID otherwise 0.
 *
 *  NOTES
-*     MT-NOTE: is_different_id() is not MT safe 
+*     MT-NOTE: is_new_id() is not MT safe 
 *
 *  SEE ALSO
 *     ???/???
 *******************************************************************************/
-static int is_different_id(const int id) 
+static int is_new_id(const int id) 
 {
 
    /* if ID is not available, add it otherwise return 1 */
@@ -2125,10 +2137,7 @@ static int is_different_id(const int id)
    if (id < 0) {
       /* reset everything */
       different_ids = 0;
-      if (different_id_vector != NULL) {
-         free(different_id_vector);
-         different_id_vector = NULL;
-      }
+      FREE(different_id_vector);
       return 1;
    } 
 
@@ -2155,6 +2164,64 @@ static int is_different_id(const int id)
    } else {
       return 0;
    }
+}
+
+static int is_new_id_pair(const int id, const int id2)
+{
+   /* if ID is not available, add it otherwise return 1 */
+   /* different_ids, different_id_vector are static */
+   /* if id < 0 : delete all ids collected so far */
+   const  int MAX_ID_SIZE            = 10;
+   static int different_ids          = 0;
+   static int* different_id_vector_1 = NULL;
+   static int* different_id_vector_2 = NULL;
+
+   /* counter */
+   int i = 0;
+   /* do we have the id already? */
+   int found = 0;
+
+   if (id < 0) {
+      /* reset everything */
+      different_ids = 0;
+      if (different_id_vector_1 != NULL) {
+         free(different_id_vector_1);
+         different_id_vector_1 = NULL;
+      }
+      if (different_id_vector_2 != NULL) {
+         free(different_id_vector_2);
+         different_id_vector_2 = NULL;
+      }
+      return 1;
+   } 
+
+   /* allocate memory for the ids if necessary */
+   if (different_id_vector_1 == NULL || different_id_vector_2 == NULL 
+         || (different_ids % (MAX_ID_SIZE-1) == 0)) {
+      /* allocate a chunk of memory for the new ids */
+      different_id_vector_1 = (int *) realloc(different_id_vector_1,
+         (different_ids + MAX_ID_SIZE) * sizeof(int));
+      different_id_vector_2 = (int *) realloc(different_id_vector_2,
+         (different_ids + MAX_ID_SIZE) * sizeof(int));
+   }
+   
+   /* search the ID vector for the id */
+   for (i = 0; i < different_ids; i++) {
+      if (different_id_vector_1[i] == id && different_id_vector_2[i] == id2) {
+         found = 1;
+         break;
+      }
+   }
+
+   /* when the id is new, add it */
+   if (found == 0) {
+      different_id_vector_1[different_ids] = id;
+      different_id_vector_2[different_ids] = id2;
+      different_ids++;
+      return 1;
+   } else {
+      return 0;
+  } 
 }
 
 
@@ -2398,7 +2465,7 @@ static bool get_processor_ids_solaris(const int** matrix, const int length, cons
 *
 *  NOTES
 *     MT-NOTE: get_chip_id_from_logical_socket_number_solaris() is not MT safe 
-*              (because of is_different_id)
+*              (because of is_new_id)
 *  SEE ALSO
 *     ???/???
 *******************************************************************************/
@@ -2412,17 +2479,17 @@ static int get_chip_id_from_logical_socket_number_solaris(const int** matrix,
    int socket_number = 0;
    
    /* be sure that no ids are left */
-   is_different_id(-1);
+   is_new_id(-1);
 
    /* go through the resource matrix and get the 'logical_socket_number'th chip_id */
    for (i = 0; i < length; i++) {
-      if (is_different_id(matrix[i][0]) == 1) {
+      if (is_new_id(matrix[i][0]) == 1) {
          /* detected a chip_id not seen before */
          socket_number++;
       }
       if ((socket_number-1) == logical_socket_number) {
          /* free memory allocated in sub-function */
-         is_different_id(-1);
+         is_new_id(-1);
          /* return the chip_id */
          return matrix[i][0];
       }
@@ -2460,7 +2527,7 @@ static int get_chip_id_from_logical_socket_number_solaris(const int** matrix,
 *
 *  NOTES
 *     MT-NOTE: get_core_id_from_logical_core_number_solaris() is not MT safe 
-*              (because of is_different_id())
+*              (because of is_new_id())
 *
 *  SEE ALSO
 *     ???/???
@@ -2485,20 +2552,20 @@ static int get_core_id_from_logical_core_number_solaris(const int** matrix,
    }
    
    /* be sure that no ids are left */
-   is_different_id(-1);
+   is_new_id(-1);
 
    for (i = 0; i < length; i++) {
       /* check if this entry is on the same chip */
       if (matrix[i][0] == chip_id) {
 
          /* check how many different core_ids we found so far */
-         if (is_different_id(matrix[i][1]) == 1) {
+         if (is_new_id(matrix[i][1]) == 1) {
             core_number++;
          }
          if ((core_number-1) == logical_core_number) {
             /* free allocated memory in su:1083
             b-function */
-            is_different_id(-1);
+            is_new_id(-1);
             /* report the core_id */
             return matrix[i][1];
          }

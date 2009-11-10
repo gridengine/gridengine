@@ -229,32 +229,34 @@ public class HerdLoadSensor extends Configured implements Tool, LoadSensor {
         StringBuilder blk = new StringBuilder();
         String previous = "";
 
-        Collections.sort(blockIds);
+        if (blockIds != null) {
+            Collections.sort(blockIds);
 
-        for (Long id : blockIds) {
-            String idString = Long.toHexString(id);
+            for (Long id : blockIds) {
+                String idString = Long.toHexString(id);
 
-            // Zero-pad if needed
-            idString = ZEROS.substring(idString.length()) + idString;
+                // Zero-pad if needed
+                idString = ZEROS.substring(idString.length()) + idString;
 
-            if (!idString.substring(0, 2).equals(previous)) {
-                if (!previous.equals("")) {
-                    blk.append('/');
-                    ret.put(BLOCK_KEY + previous, blk.toString());
+                if (!idString.substring(0, 2).equals(previous)) {
+                    if (!previous.equals("")) {
+                        blk.append('/');
+                        ret.put(BLOCK_KEY + previous, blk.toString());
+                    }
+
+                    previous = idString.substring(0, 2);
+                    blk.setLength(0);
                 }
-                
-                previous = idString.substring(0, 2);
-                blk.setLength(0);
-            }
-            
-            blk.append('/');
-            blk.append(idString.substring(2));
-        }
 
-        // Clean up last block
-        if (!previous.equals("")) {
-            blk.append("/");
-            ret.put(BLOCK_KEY + previous, blk.toString());
+                blk.append('/');
+                blk.append(idString.substring(2));
+            }
+
+            // Clean up last block
+            if (!previous.equals("")) {
+                blk.append("/");
+                ret.put(BLOCK_KEY + previous, blk.toString());
+            }
         }
 
         return ret;
@@ -263,10 +265,23 @@ public class HerdLoadSensor extends Configured implements Tool, LoadSensor {
     public Map<String, Map<String, String>> getLoadValues() {
         Map<String, Map<String, String>> ret = null;
         Map<String,String> loadValues = new HashMap<String, String>();
+        String hostName = this.hostName;
+        String rackName = this.rackName;
+
+        if (hostName == null) {
+            hostName = "localhost";
+        }
+
+        if (rackName == null) {
+            rackName = "/default-rack";
+        }
 
         loadValues.put(RACK_KEY1, rackName);
         loadValues.put(RACK_KEY2, rackName);
-        loadValues.putAll(blockStrings);
+
+        if (blockStrings != null) {
+            loadValues.putAll(blockStrings);
+        }
 
         ret = Collections.singletonMap(hostName, loadValues);
 

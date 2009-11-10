@@ -129,32 +129,52 @@ public class HerdJsv extends Configured implements Tool, Jsv {
         }
 
         if (path != null) {
-            Map<String,String> soft = job.getSoftResourceRequirements();
+            if (verifyPath(path)) {
+                Map<String,String> soft = job.getSoftResourceRequirements();
 
-            try {
-                Collection<LocatedBlock> blocks = null;
+                try {
+                    Collection<LocatedBlock> blocks = null;
 
-                blocks = getBlocks(path, getConf());
+                    blocks = getBlocks(path, getConf());
 
-                // Add new requests
-                soft.putAll(buildRackRequests(blocks));
-                soft.putAll(buildBlockRequests(blocks));
-                job.setSoftResourceRequirements(soft);
+                    // Add new requests
+                    soft.putAll(buildRackRequests(blocks));
+                    soft.putAll(buildBlockRequests(blocks));
+                    job.setSoftResourceRequirements(soft);
 
-                // Remove old request
-                res.remove(PATH_KEY);
-                res.remove(PATH_KEY_SHORT);
-                job.setHardResourceRequirements(res);
-            } catch (FileNotFoundException e) {
-                jsv.reject("The requested data path does not exist: " + path);
-            } catch (IOException e) {
-                jsv.log(JsvManager.LogLevel.ERROR, "Unable to contact Namenode: " + StringUtils.stringifyException(e));
-                jsv.rejectWait("Unable to process Hadoop jobs at this time.");
-            } catch (RuntimeException e) {
-                jsv.log(JsvManager.LogLevel.ERROR, "Exception while trying to contact Namenode: " + StringUtils.stringifyException(e));
-                jsv.rejectWait("Unable to process Hadoop jobs at this time.");
+                    // Remove old request
+                    res.remove(PATH_KEY);
+                    res.remove(PATH_KEY_SHORT);
+                    job.setHardResourceRequirements(res);
+                } catch (FileNotFoundException e) {
+                    jsv.reject("The requested data path does not exist: " + path);
+                } catch (IOException e) {
+                    jsv.log(JsvManager.LogLevel.ERROR, "Unable to contact Namenode: " + StringUtils.stringifyException(e));
+                    jsv.rejectWait("Unable to process Hadoop jobs at this time.");
+                } catch (RuntimeException e) {
+                    jsv.log(JsvManager.LogLevel.ERROR, "Exception while trying to contact Namenode: " + StringUtils.stringifyException(e));
+                    jsv.rejectWait("Unable to process Hadoop jobs at this time.");
+                }
+            } else {
+                jsv.reject("The requested data path must start with a '/'");
             }
         }
+    }
+
+    /**
+     * Verify that the given path is valid according to the apparent rules
+     * imposed by the namenode, i.e. it must start with a /.
+     * @param path the path to test
+     * @return whether the path is valid
+     */
+    private static boolean verifyPath(String path) {
+        boolean valid = false;
+
+        if ((path != null) && (path.length() > 0)) {
+            valid = path.charAt(0) == '/';
+        }
+
+        return valid;
     }
 
     /**
@@ -169,21 +189,25 @@ public class HerdJsv extends Configured implements Tool, Jsv {
         StringBuilder request = new StringBuilder();
         String previous = "";
 
-        for (LocatedBlock block : blocks) {
-            String idString = toIdString(block.getBlock().getBlockId());
+        if (blocks != null) {
+            for (LocatedBlock block : blocks) {
+                if (block.getBlock() != null) {
+                    String idString = toIdString(block.getBlock().getBlockId());
 
-            if (!idString.substring(0, 2).equals(previous)) {
-                if (!previous.equals("")) {
-                    request.append("*");
-                    ret.put(BLOCK_KEY + previous, request.toString());
+                    if (!idString.substring(0, 2).equals(previous)) {
+                        if (!previous.equals("")) {
+                            request.append("*");
+                            ret.put(BLOCK_KEY + previous, request.toString());
+                        }
+
+                        previous = idString.substring(0, 2);
+                        request.setLength(0);
+                    }
+
+                    request.append('*');
+                    request.append(idString.substring(2));
                 }
-                
-                previous = idString.substring(0, 2);
-                request.setLength(0);
             }
-
-            request.append('*');
-            request.append(idString.substring(2));
         }
 
         if (!previous.equals("")) {
@@ -240,8 +264,13 @@ public class HerdJsv extends Configured implements Tool, Jsv {
             count++;
         }
 
-        ret.put(PRIMARY_RACK_KEY, primary.toString().substring(1));
-        ret.put(SECONDARY_RACK_KEY, secondary.toString().substring(1));
+        if (primary.length() > 1) {
+            ret.put(PRIMARY_RACK_KEY, primary.toString().substring(1));
+        }
+
+        if (secondary.length() > 1) {
+            ret.put(SECONDARY_RACK_KEY, secondary.toString().substring(1));
+        }
 
         return ret;
     }
@@ -256,14 +285,16 @@ public class HerdJsv extends Configured implements Tool, Jsv {
     private static Map<String,Integer> collateRacks(Collection<LocatedBlock> blocks) {
         Map<String, Integer> racks = new HashMap<String, Integer>();
 
-        for (LocatedBlock block : blocks) {
-            for (DatanodeInfo node : block.getLocations()) {
-                String loc = node.getNetworkLocation();
+        if (blocks != null) {
+            for (LocatedBlock block : blocks) {
+                for (DatanodeInfo node : block.getLocations()) {
+                    String loc = node.getNetworkLocation();
 
-                if (racks.containsKey(loc)) {
-                    racks.put(loc, racks.get(loc) + 1);
-                } else {
-                    racks.put(loc, 1);
+                    if (racks.containsKey(loc)) {
+                        racks.put(loc, racks.get(loc) + 1);
+                    } else {
+                        racks.put(loc, 1);
+                    }
                 }
             }
         }
@@ -279,13 +310,23 @@ public class HerdJsv extends Configured implements Tool, Jsv {
      * @return a list of the rack names sorted by the number of blocks
      */
     private static List<String> getSortedRacks(final Map<String,Integer> racks) {
-        List<String> rackNames = new ArrayList<String>(racks.keySet());
+        List<String> rackNames = Collections.EMPTY_LIST;
 
-        Collections.sort(rackNames, new Comparator<String>() {
-            public int compare(String o1, String o2) {
-                return racks.get(o1).compareTo(racks.get(o2));
-            }
-        });
+        if (racks != null) {
+            rackNames = new ArrayList<String>(racks.keySet());
+
+            Collections.sort(rackNames, new Comparator<String>() {
+                public int compare(String o1, String o2) {
+                    int ret = racks.get(o2).compareTo(racks.get(o1));
+
+                    if (ret == 0) {
+                        ret = o1.compareTo(o2);
+                    }
+
+                    return ret;
+                }
+            });
+        }
 
         return rackNames;
     }

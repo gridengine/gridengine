@@ -93,7 +93,7 @@ context:                    hdfs_jobtracker=slave:9001,hdfs_jobtracker_admin=htt
 18) Connect to the jobtracker admin URL in a web browser to see the state of the Map/Reduce cluster.  Watch the progress of the job.
 
 19) After the job has completed, check the results.
-  % $HADOOP_HOME/bin fs -cat output/part-0000
+  % $HADOOP_HOME/bin fs -cat output/part-00000
 
 Assuming all of the above steps worked, the integration was successful.  If any of the above steps did not produce the expected output or results, there may be a problem with the integration.
 

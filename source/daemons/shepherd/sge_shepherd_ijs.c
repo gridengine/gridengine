@@ -85,7 +85,9 @@
  * the two worker threads.
  */
 #undef EXTENSIVE_TRACING
-/*#define EXTENSIVE_TRACING*/
+#if 0
+#define EXTENSIVE_TRACING
+#endif
 
 static ijs_fds_t     *g_p_ijs_fds         = NULL;
 static COMM_HANDLE   *g_comm_handle       = NULL;
@@ -396,15 +398,10 @@ static void* pty_to_commlib(void *t_conf)
          b_select_timeout = true;
       } else {
          /* at least one fd is ready to read from */
-         ret = 1;
+         ret = 0;
          /* now we can be sure that our child has started the job,
           * we can close the pipe_to_child now
           */
-         if (g_p_ijs_fds->pipe_to_child != -1) {
-            shepherd_trace("pty_to_commlib: closing pipe to child");
-            close(g_p_ijs_fds->pipe_to_child);
-            g_p_ijs_fds->pipe_to_child = -1;
-         }
          if (g_p_ijs_fds->pty_master != -1 && FD_ISSET(g_p_ijs_fds->pty_master, &read_fds)) {
 #ifdef EXTENSIVE_TRACING
             shepherd_trace("pty_to_commlib: reading from ptym");
@@ -442,6 +439,12 @@ static void* pty_to_commlib(void *t_conf)
             /* A fd was closed, likely our child has exited, we can exit, too. */
             shepherd_trace("pty_to_commlib: our child seems to have exited -> exiting");
             do_exit = 1;
+         } else if (ret > 0) {
+            if (g_p_ijs_fds->pipe_to_child != -1) {
+               shepherd_trace("pty_to_commlib: closing pipe to child");
+               close(g_p_ijs_fds->pipe_to_child);
+               g_p_ijs_fds->pipe_to_child = -1;
+            }
          }
       }
       /* Always send stderr buffer immediately */

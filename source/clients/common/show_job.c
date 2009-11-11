@@ -586,10 +586,10 @@ void cull_show_job(lListElem *job, int flags, bool show_binding)
             continue;
 
          if (first_task) {
-            printf("usage %4d:               ", (int)lGetUlong(jatep, JAT_task_number));
+            printf("usage %4d:                 ", (int)lGetUlong(jatep, JAT_task_number));
             first_task = 0;
          } else
-            printf("      %4d:               ", (int)lGetUlong(jatep, JAT_task_number));
+            printf("      %4d:                 ", (int)lGetUlong(jatep, JAT_task_number));
 
          cpu = mem = io = vmem = maxvmem = 0.0;
 
@@ -632,7 +632,7 @@ void cull_show_job(lListElem *job, int flags, bool show_binding)
       }
    }
 
-   if (lGetPosViaElem(job, JB_ja_tasks, SGE_NO_ABORT) >= 0) {
+   if (lGetPosViaElem(job, JB_ja_tasks, SGE_NO_ABORT) >= 0 && show_binding) {
       lListElem *jatep;
 
       for_each (jatep, lGetList(job, JB_ja_tasks)) {

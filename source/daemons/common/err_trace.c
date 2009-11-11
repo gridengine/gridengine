@@ -472,9 +472,13 @@ void shepherd_error_ptr(const char *text)
 void shepherd_write_exit_status(const char *exit_status)
 {
 	struct stat statbuf;
+#if 1
 	int old_euid = SGE_SUPERUSER_UID;
+#endif
 
 	if (exit_status != NULL) {
+
+#if 1 /* on filesystems where root is mapped to nobody this will not work */
 		/* set euid=0. Local files: root can write to every file.
 		 * NFS files: everyone is allowed to write to exit_status file.
 		 */
@@ -482,6 +486,7 @@ void shepherd_write_exit_status(const char *exit_status)
          old_euid = geteuid();
          seteuid(SGE_SUPERUSER_UID);
       }
+#endif
 		/* File was closed (e.g. by an exec()) but fp was not set to NULL */
 		if (shepherd_exit_status_fp 
 	    	 && fstat(fileno(shepherd_exit_status_fp), &statbuf) == -1
@@ -496,9 +501,11 @@ void shepherd_write_exit_status(const char *exit_status)
 		} else {
          shepherd_trace("could not write exit_status file\n");
       }
+#if 1
 		if (old_euid != SGE_SUPERUSER_UID) {
 			seteuid(old_euid);
 		}
+#endif
       /* There are cases where we have to open and close the files 
        * for every write.
        */

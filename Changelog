@@ -8,6 +8,17 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 -----------------+-----------+--------------------------------------------------
+CR-2009-11-11-0: Bugfix:      o Fixed qmaster startup script which started 
+                                scheduler without waiting for qmaster startup
+                              o Merged fix for CR 6896663 to this branch
+                 Bugfix:      SGE distinguish between short host name and full
+                              name with the domain
+                 Bugster:     6896663
+                 Issue:       3176
+                 Merged from: maintrunk
+                 Belongs to:  LP-2009-06-29-0
+                 Review:      SH
+
 LP-2009-10-27-0: Bugfix:      Shadowd startup scripts do not work
                  Bugster:     6892804
                  Issue:       3163

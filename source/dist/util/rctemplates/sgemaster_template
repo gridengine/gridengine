@@ -150,6 +150,42 @@ QmasterSpoolDir()
 }
 
 #---------------------------------------------------------------------------
+#  HostCompare
+#   Compares to hosts given in $1 and $2
+#   It depends on ignore_fqdn settings in bootstrap file
+#
+HostCompare()
+{
+   host1=$1
+   host2=$2
+
+   ignore_fqdn=true
+   if [ -f $SGE_ROOT/$SGE_CELL/common/bootstrap ]; then
+      ignore_fqdn_txt=`grep ignore_fqdn $SGE_ROOT/$SGE_CELL/common/bootstrap | awk '{print $2}'`
+      case "$ignore_fqdn_txt" in
+         [fF][aA][lL][sS][eE])
+            ignore_fqdn=false
+            ;;
+      esac
+   fi
+   
+   if [ "$ignore_fqdn" = true ]; then
+      host1=`echo $host1 | cut -f 1 -d .`
+      host2=`echo $host2 | cut -f 1 -d .`
+   fi
+
+   #translate hostname to lower, because hostname are case insensitive
+   host1=`echo $host1 | tr "[A-Z]" "[a-z]"`
+   host2=`echo $host2 | tr "[A-Z]" "[a-z]"`
+   
+   if [ "$host1" = "$host2" ]; then
+      echo 0
+   else
+      echo 1
+   fi
+}
+
+#---------------------------------------------------------------------------
 # CheckIfQmasterHost
 #    If our hostname given in $1 is the same as in the "act_qmaster" file
 #    echo "true" else echo "false"
@@ -157,8 +193,8 @@ QmasterSpoolDir()
 CheckIfQmasterHost()
 {
    host=$1
-
-   if [ "$host" = "`cat $SGE_ROOT/$SGE_CELL/common/act_qmaster`" ]; then
+   act_qmaster=`cat $SGE_ROOT/$SGE_CELL/common/act_qmaster`
+   if [ `HostCompare $host $act_qmaster` -eq 0 ]; then
       echo true
    else
       echo false
@@ -178,7 +214,8 @@ CheckIfPrimaryQmasterHost()
    fname=$SGE_ROOT/$SGE_CELL/common/primary_qmaster
 
    if [ -f $fname ]; then
-      if [ "$host" = "`cat $fname`" ]; then
+      primary_qmaster=`cat $fname`
+      if [ `HostCompare $host $primary_qmaster` -eq 0 ]; then
          echo true
       else
          echo false
@@ -288,8 +325,6 @@ GetPathToUtilbin()
 #
 CheckRunningQmaster()
 {
-   masterhost=`cat $SGE_ROOT/$SGE_CELL/common/act_qmaster`
-
    if [ "$SGE_QMASTER_PORT" = "" ]; then
       ping_port=`$utilbin_dir/getservbyname -number sge_qmaster`
    else
@@ -309,6 +344,7 @@ CheckRunningQmaster()
    # we also require that the qmaster created a PID file before returning
    
    while [ $retries -le 30 ]; do
+      masterhost=`cat $SGE_ROOT/$SGE_CELL/common/act_qmaster`
       $bin_dir/qping -info $masterhost $ping_port qmaster 1 > /dev/null 2>&1
       if [ $? -eq 0 ]; then
          running=true
@@ -326,7 +362,6 @@ CheckRunningQmaster()
             break
          fi
          sleep 2
-         masterhost=`cat $SGE_ROOT/$SGE_CELL/common/act_qmaster`
          retries=`expr $retries + 1`
       fi
    done
@@ -529,10 +564,10 @@ if [ "$startup" = true ]; then
          echo "   starting sge_qmaster"
          $bin_dir/sge_qmaster
          [ $? -eq 0 -a -d /var/lock/subsys ] && touch /var/lock/subsys/sgemaster >/dev/null 2>&1
-         echo "   starting sge_schedd"
-         $bin_dir/sge_schedd
          CheckRunningQmaster
          exit_val=$?
+         echo "   starting sge_schedd"
+         $bin_dir/sge_schedd
       fi
    fi
 

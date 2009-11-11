@@ -67,6 +67,7 @@ DG-2009-11-06-0: Bugfix:      loadsensor -loadval reported more than the selecte
 JG-2009-11-06-0: Bugfix:      SGE distinguish between short host name and full
                               name with the domain
                  Bugster:     6896663
+                 Issue:       3176
                  Review:      MD
 
 DG-2009-11-05-0: Bugfix:      - Fixed dependencies in Makefile

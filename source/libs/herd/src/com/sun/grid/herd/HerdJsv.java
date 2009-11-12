@@ -98,7 +98,7 @@ public class HerdJsv extends Configured implements Tool, Jsv {
                 cause = e.getCause();
             }
 
-            System.err.println("Error while running command: " + cause.getClass().getSimpleName() + " -- " + cause.getMessage());
+            log.warning("Error while running command: " + cause.getClass().getSimpleName() + " -- " + cause.getMessage());
             exit = 1;
         }
 
@@ -118,6 +118,9 @@ public class HerdJsv extends Configured implements Tool, Jsv {
     }
 
     public void onVerify(JsvManager jsv) {
+        jsv.log(JsvManager.LogLevel.INFO, getConf().toString());
+        jsv.log(JsvManager.LogLevel.INFO, FileSystem.getDefaultUri(getConf()).toString());
+        jsv.log(JsvManager.LogLevel.INFO, FileSystem.getDefaultUri(getConf()).getAuthority());
         JobDescription job = jsv.getJobDescription();
         Map<String,String> res = job.getHardResourceRequirements();
         String path = null;
@@ -149,10 +152,12 @@ public class HerdJsv extends Configured implements Tool, Jsv {
                 } catch (FileNotFoundException e) {
                     jsv.reject("The requested data path does not exist: " + path);
                 } catch (IOException e) {
-                    jsv.log(JsvManager.LogLevel.ERROR, "Unable to contact Namenode: " + StringUtils.stringifyException(e));
+                    log.warning("Unable to contact Namenode: " + StringUtils.stringifyException(e));
+                    jsv.log(JsvManager.LogLevel.ERROR, "Unable to contact Namenode: " + e.getMessage());
                     jsv.rejectWait("Unable to process Hadoop jobs at this time.");
                 } catch (RuntimeException e) {
-                    jsv.log(JsvManager.LogLevel.ERROR, "Exception while trying to contact Namenode: " + StringUtils.stringifyException(e));
+                    log.warning("Exception while trying to contact Namenode: " + StringUtils.stringifyException(e));
+                    jsv.log(JsvManager.LogLevel.ERROR, "Exception while trying to contact Namenode: " + e.getClass().getSimpleName() + " -- " + e.getMessage());
                     jsv.rejectWait("Unable to process Hadoop jobs at this time.");
                 }
             } else {

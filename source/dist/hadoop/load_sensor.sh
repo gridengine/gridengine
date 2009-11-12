@@ -52,7 +52,7 @@ if [ "$JAVA_HOME" = "" ]; then
   exit 100
 fi
 
-HADOOP_CLASSPATH=$SGE_ROOT/hadoop/herd.jar
+HADOOP_CLASSPATH=$SGE_ROOT/lib/herd.jar
 export HADOOP_CLASSPATH
 
 HADOOP_OPTS=-Djava.util.logging.config.file=$SGE_ROOT/hadoop/logging.properties

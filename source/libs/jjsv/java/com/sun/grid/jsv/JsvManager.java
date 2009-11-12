@@ -474,8 +474,10 @@ public class JsvManager {
         if (command == null) {
             log.warning("ignoring command with null command");
         } else {
-            log.fine("<<< " + command);
-            out.println(command);
+            String toSend = command.replaceAll("[\\n\\r]", " ").trim();
+
+            log.fine("<<< " + toSend);
+            out.println(toSend);
         }
     }
 

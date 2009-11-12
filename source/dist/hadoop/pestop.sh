@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 ##########################################################################
 #___INFO__MARK_BEGIN__
 ##########################################################################
@@ -44,15 +44,23 @@ else
   exit 100
 fi
 
-# Get the ssh wrapper out of the path -- comment out to use qrsh -inherit
-# instead of ssh for the shutdown
-mv $TMP/ssh $TMP/.ssh
-
 if [ "$HADOOP_HOME" = "" ]; then
   echo Must specify \$HADOOP_HOME for pestop.sh
   exit 100
 fi
 
-$HADOOP_HOME/bin/stop-mapred.sh
+HADOOP_CONF_DIR=$TMP/conf
+export HADOOP_CONF_DIR
+
+# Source the settings so we get the log dir right
+if [ -f "$HADOOP_CONF_DIR/hadoop-env.sh" ]; then
+  . $HADOOP_CONF_DIR/hadoop-env.sh
+fi
+
+# Get the ssh wrapper out of the path -- comment out to use qrsh -inherit
+# instead of ssh for the shutdown
+mv $TMP/ssh $TMP/.ssh
+
+$HADOOP_HOME/bin/stop-mapred.sh --config $HADOOP_CONF_DIR
 
 exit 0

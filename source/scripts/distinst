@@ -1085,7 +1085,7 @@ if [ $instcommon = true ]; then
       done
 
       if [ -f CLASSES/herd/herd.jar ]; then
-         Execute cp CLASSES/herd/herd.jar $DEST_SGE_ROOT/hadoop/herd.jar
+         Execute cp CLASSES/herd/herd.jar $DEST_SGE_ROOT/lib/herd.jar
       elif [ $exit_on_error = true ]; then
          echo "\"CLASSES/herd/herd.jar\" not found. Installation failed."
          exit 1

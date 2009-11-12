@@ -32,27 +32,45 @@
 ##########################################################################
 #___INFO__MARK_END__
 
+# Phrase error messages in a way that the JSV framework can understand
+error()
+{
+  read input
+  echo STARTED
+  while [ "$input" != "BEGIN" ]; do
+    read input
+  done
+  echo RESULT STATE REJECT $1
+  exit 100
+}
+
 SGE_HADOOP=`dirname $0`
 export SGE_HADOOP
 
 if [ -f $SGE_HADOOP/env.sh ]; then
   . $SGE_HADOOP/env.sh
 else
-  echo Unable to locate env.sh file
-  exit 100
+  error "Unable to locate env.sh file"
 fi
 
 if [ "$HADOOP_HOME" = "" ]; then
-  echo Must specify \$HADOOP_HOME for jsv.sh
-  exit 100
+  error "Must specify \$HADOOP_HOME for jsv.sh"
 fi
 
 if [ "$JAVA_HOME" = "" ]; then
-  echo Must specify \$JAVA_HOME for jsv.sh
-  exit 100
+  error "Must specify \$JAVA_HOME for jsv.sh"
 fi
 
-HADOOP_CLASSPATH=$SGE_ROOT/lib/JSV.jar:$SGE_HADOOP/herd.jar
+if [ "$HADOOP_CONF_DIR" = "" ]; then
+  HADOOP_CONF_DIR=$HADOOP_HOME/conf
+  export HADOOP_CONF_DIR
+fi
+
+HADOOP_CLASSPATH=$SGE_ROOT/lib/JSV.jar:$SGE_ROOT/lib/herd.jar
 export HADOOP_CLASSPATH
 
-"$HADOOP_HOME"/bin/hadoop --config $HADOOP_HOME/conf com.sun.grid.herd.HerdJsv
+# Important for "soft link" work-around to Hadoop Issue 6272
+PATH="$HADOOP_HOME/bin":$PATH
+export PATH
+
+hadoop --config $HADOOP_CONF_DIR com.sun.grid.herd.HerdJsv

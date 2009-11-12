@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 ##########################################################################
 #___INFO__MARK_BEGIN__
 ##########################################################################
@@ -32,8 +32,8 @@
 ##########################################################################
 #___INFO__MARK_END__
 
-SGE_HADOOP=`dirname $0`
-export SGE_HADOOP
+export HADOOP_CONF_DIR=$1
+export SGE_HADOOP=`dirname $0`
 
 if [ -f $SGE_HADOOP/env.sh ]; then
   . $SGE_HADOOP/env.sh
@@ -58,7 +58,7 @@ else
   pidfile="/tmp/$pidfile"
 fi
 
-logfile="hadoop-$LOGNAME-sge-$hostname.log"
+logfile="hadoop-$LOGNAME-sge-$hostname.out"
 
 if [ "$HADOOP_LOG_DIR" != "" ]; then
   logfile="$HADOOP_LOG_DIR/$logfile"

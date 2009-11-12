@@ -317,6 +317,16 @@ public class JsvManagerTest extends TestCase {
 
         bao.reset();
         handler.messages.clear();
+        expected = "test1 test2 test3";
+
+        callPrivateMethod(instance, JsvManager.class, "sendCommand", new Class[]{String.class}, new Object[]{"test1\ntest2\rtest3\n\r"});
+        assertEquals("sendCommand() did not send the expected value: ", expected + "\n", bao.toString());
+        assertEquals("sendCommand() did not log an appropriate log message: ", 1, handler.messages.size());
+        assertEquals("sendCommand() did not log an appropriate log message: ", Level.FINE, handler.messages.get(0).getLevel());
+        assertEquals("sendCommand() did not log an appropriate log message: ", "<<< " + expected, handler.messages.get(0).getMessage());
+
+        bao.reset();
+        handler.messages.clear();
 
         callPrivateMethod(instance, JsvManager.class, "sendCommand", new Class[]{String.class}, new Object[]{null});
         assertEquals("sendCommand() sent output even though it recieved a null command: ", "", bao.toString());

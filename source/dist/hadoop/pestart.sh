@@ -89,7 +89,7 @@ bin=$HADOOP_HOME/bin
 # We start the job tracker seperately because we need to override the
 # task tracker startup behvaior to be qrsh-friendly
 "$bin"/hadoop-daemon.sh --config $HADOOP_CONF_DIR start jobtracker
-nohup "$bin"/slaves.sh --config $HADOOP_CONF_DIR "$SGE_HADOOP/make_conf.sh" $hostname \; "$bin/hadoop-daemon.sh" --config $HADOOP_CONF_DIR start tasktracker \; "$SGE_HADOOP/wait.sh" >> $logfile 2>&1 < /dev/null &
+nohup "$bin"/slaves.sh --config $HADOOP_CONF_DIR "$SGE_HADOOP/make_conf.sh" $hostname \; "$bin/hadoop-daemon.sh" --config $HADOOP_CONF_DIR start tasktracker \; "$SGE_HADOOP/wait.sh" $HADOOP_CONF_DIR >> $logfile 2>&1 < /dev/null &
 
 # Add the JobTracker URI to the job's context
 . $SGE_ROOT/$SGE_CELL/common/settings.sh

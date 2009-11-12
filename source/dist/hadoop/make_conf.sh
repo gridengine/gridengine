@@ -34,6 +34,9 @@
 
 hostname=$1
 
+SGE_HADOOP=`dirname $0`
+export SGE_HADOOP
+
 # Create a conf directory for this cluster
 HADOOP_CONF_DIR=$TMP/conf
 export HADOOP_CONF_DIR

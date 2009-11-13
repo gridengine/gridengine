@@ -82,181 +82,185 @@ int sig
 #define __CL_FUNCTION__ "main()"
 extern int main(int argc, char** argv)
 {
-  struct sigaction sa;
+   struct sigaction sa;
   
-  struct timeval now;
-  time_t shutdown_time = 0;
-  time_t last_time = 0;
-  int no_output = 0;
-  int reconnect = 0;
+   struct timeval now;
+   time_t shutdown_time = 0;
+   time_t last_time = 0;
+   int no_output = 0;
+   int reconnect = 0;
 #ifndef PACKAGE_COUNTER
-  char data[DATA_SIZE] = "gdi request";
+   char data[DATA_SIZE] = "gdi request";
 #endif
 
-  cl_xml_ack_type_t ack_type = CL_MIH_MAT_NAK;
-  cl_bool_t synchron = CL_FALSE;
+   cl_xml_ack_type_t ack_type = CL_MIH_MAT_NAK;
+   cl_bool_t synchron = CL_FALSE;
 
-  prof_mt_init();
+   prof_mt_init();
 
-  if (argc < 5) {
+   if (argc < 5) {
       printf("syntax: debug_level vmaster_port vmaster_host reconnect [no_output]\n");
       exit(1);
-  }
+   }
 
-  if (argc >= 6) {
-     if (strcmp(argv[5],"no_output") == 0) {
-        no_output = 1;
-        printf("virtual gdi client: no_output option set\n");
-     }
-  }
+   if (argc >= 6) {
+      if (strcmp(argv[5],"no_output") == 0) {
+         no_output = 1;
+         printf("virtual gdi client: no_output option set\n");
+      }
+   }
 
-  reconnect = atoi(argv[4]);
+   reconnect = atoi(argv[4]);
 
-  if (reconnect == 1) {
-   /* do all stuff synchron */
+   if (reconnect == 1) {
+      /* do all stuff synchron */
       ack_type = CL_MIH_MAT_ACK;
       synchron = CL_TRUE; 
-  }
+   }
 
-  /* setup signalhandling */
-  memset(&sa, 0, sizeof(sa));
-  sa.sa_handler = sighandler_client;  /* one handler for all signals */
-  sigemptyset(&sa.sa_mask);
-  sigaction(SIGINT, &sa, NULL);
-  sigaction(SIGTERM, &sa, NULL);
-  sigaction(SIGHUP, &sa, NULL);
-  sigaction(SIGPIPE, &sa, NULL);
+   /* setup signalhandling */
+   memset(&sa, 0, sizeof(sa));
+   sa.sa_handler = sighandler_client;  /* one handler for all signals */
+   sigemptyset(&sa.sa_mask);
+   sigaction(SIGINT, &sa, NULL);
+   sigaction(SIGTERM, &sa, NULL);
+   sigaction(SIGHUP, &sa, NULL);
+   sigaction(SIGPIPE, &sa, NULL);
 
-  gettimeofday(&now, NULL);
-  shutdown_time = now.tv_sec + SGE_TEST_VIRTUAL_CLIENT_SHUTDOWN_TIMEOUT;
+   gettimeofday(&now, NULL);
+   shutdown_time = now.tv_sec + SGE_TEST_VIRTUAL_CLIENT_SHUTDOWN_TIMEOUT;
 
-  printf("virtual gdi client is connecting to the virtual qmaster for each request.\n"); 
+   printf("virtual gdi client is connecting to the virtual qmaster for each request.\n"); 
 
-  cl_com_setup_commlib(CL_NO_THREAD , (cl_log_t)atoi(argv[1]), NULL );
+   cl_com_setup_commlib(CL_NO_THREAD , (cl_log_t)atoi(argv[1]), NULL );
 
-  while (do_shutdown == 0) {
-     char *snd_data = NULL;
-     gettimeofday(&now, NULL);
+   while (do_shutdown == 0) {
+      char *snd_data = NULL;
+      gettimeofday(&now, NULL);
 
-     if (now.tv_sec > shutdown_time ) {
-        printf("shutting down test - timeout\n");
-        do_shutdown = 1;
-     }
+      if (now.tv_sec > shutdown_time ) {
+         printf("shutting down test - timeout\n");
+         do_shutdown = 1;
+      }
 
-     cl_com_setup_commlib(CL_NO_THREAD , (cl_log_t)atoi(argv[1]), NULL);
-   
-     handle = cl_com_create_handle(NULL, CL_CT_TCP, CL_CM_CT_MESSAGE, CL_FALSE, atoi(argv[2]), CL_TCP_DEFAULT, "virtual_gdi_client", 0, 1, 0);
-     if (handle == NULL) {
-        printf("could not get handle\n");
-        exit(1);
-     }
+      cl_com_setup_commlib(CL_NO_THREAD , (cl_log_t)atoi(argv[1]), NULL);
+
+      handle = cl_com_create_handle(NULL, CL_CT_TCP, CL_CM_CT_MESSAGE, CL_FALSE, atoi(argv[2]), CL_TCP_DEFAULT, "virtual_gdi_client", 0, 1, 0);
+      if (handle == NULL) {
+         printf("could not get handle\n");
+         exit(1);
+      }
 
 #if 0
-     printf("local hostname is \"%s\"\n", handle->local->comp_host);
-     printf("local component is \"%s\"\n", handle->local->comp_name);
-     printf("local component id is \"%ld\"\n", handle->local->comp_id);
+      printf("local hostname is \"%s\"\n", handle->local->comp_host);
+      printf("local component is \"%s\"\n", handle->local->comp_name);
+      printf("local component id is \"%ld\"\n", handle->local->comp_id);
 #endif
    
 #if 0
-     {
-        int i;
-        cl_com_get_connect_port(handle, &i);
-        printf("connecting to port \"%d\" on host \"%s\"\n", i, argv[3]);
-     }
+      {
+         int i;
+         cl_com_get_connect_port(handle, &i);
+         printf("connecting to port \"%d\" on host \"%s\"\n", i, argv[3]);
+      }
 #endif
-   
-     while (do_shutdown == 0) {
-        int                retval  = 0;
-        cl_com_message_t*  message = NULL;
-        cl_com_endpoint_t* sender  = NULL;
-        if (snd_data == NULL) {
-           snd_data = malloc(DATA_SIZE);
+ 
+      while (do_shutdown == 0) {
+         int                retval  = 0;
+         cl_com_message_t*  message = NULL;
+         cl_com_endpoint_t* sender  = NULL;
+         if (snd_data == NULL) {
+            snd_data = malloc(DATA_SIZE);
 #ifdef PACKAGE_COUNTER
-           sprintf(snd_data, "%d\n", snd_messages);
+            sprintf(snd_data, "%d\n", snd_messages);
 #else
-           memcpy(snd_data, data, DATA_SIZE);
+            memcpy(snd_data, data, DATA_SIZE);
 #endif
-        }
+         }
 #ifdef PACKAGE_COUNTER
-        else {
-           sprintf(snd_data, "%d\n", snd_messages);
-        }
+         else {
+            sprintf(snd_data, "%d\n", snd_messages);
+         }
 #endif
    
-        gettimeofday(&now,NULL);
-        if (now.tv_sec > shutdown_time ) {
-           printf("shutting down test - timeout\n");
-           do_shutdown = 1;
-        }
+         gettimeofday(&now, NULL);
+         if (now.tv_sec > shutdown_time ) {
+            printf("shutting down test - timeout\n");
+            do_shutdown = 1;
+         }
 
-        retval = cl_commlib_send_message(handle, argv[3], "virtual_master", 1,
-                                         ack_type,
-                                         (cl_byte_t**)(&snd_data), DATA_SIZE,
-                                         NULL, 0, 0, CL_FALSE, synchron);
-        if (retval == CL_RETVAL_OK) {
-           snd_messages++;
-           retval = cl_commlib_receive_message(handle, NULL, NULL, 0,  /* handle, comp_host, comp_name , comp_id, */
-                                               CL_TRUE, 0,                   /* syncron, response_mid */
-                                               &message, &sender);
-           if (retval == CL_RETVAL_OK) {
-                 gettimeofday(&now,NULL);
-                 shutdown_time = now.tv_sec + SGE_TEST_VIRTUAL_CLIENT_SHUTDOWN_TIMEOUT;
+         retval = cl_commlib_send_message(handle, argv[3], "virtual_master", 1,
+                                          ack_type,
+                                          (cl_byte_t**)(&snd_data), DATA_SIZE,
+                                          NULL, 0, 0, CL_FALSE, synchron);
+         if (retval == CL_RETVAL_OK) {
+            snd_data = NULL;
+            snd_messages++;
+            retval = cl_commlib_receive_message(handle, NULL, NULL, 0,  /* handle, comp_host, comp_name ,comp_id, */
+                                                CL_TRUE, 0,                   /* syncron, response_mid */
+                                                &message, &sender);
+            if (retval == CL_RETVAL_OK) {
+               gettimeofday(&now, NULL);
+               shutdown_time = now.tv_sec + SGE_TEST_VIRTUAL_CLIENT_SHUTDOWN_TIMEOUT;
 
-                 snd_data = (char*)message->message;
-                 message->message = NULL;
+               snd_data = (char*)message->message;
+               message->message = NULL;
 
 #ifdef PACKAGE_COUNTER
-                 if (rcv_messages == 0) {
-                    /*
-                     * We don't know which message got through in this scenario because send_message
-                     * might get a cannot connect error and the message is deleted. We have to take
-                     * the id from the first received message and start counting with this id
-                     */
-                    rcv_messages = atoi(snd_data);
-                    if (rcv_messages != 0) {
-                       printf("virtual gdi client lost %d messages, seems to take a long time to connect to virtual qmaster ...\n", rcv_messages);
-                    }
-                 }
-                 if (atoi(snd_data) != rcv_messages) {
-                    printf("!!!! %d. message was lost, got %s\n", rcv_messages, snd_data);
-                    do_shutdown = 1;
-                 }
+               if (rcv_messages == 0) {
+                  /*
+                   * We don't know which message got through in this scenario because send_message
+                   * might get a cannot connect error and the message is deleted. We have to take
+                   * the id from the first received message and start counting with this id
+                   */
+                  rcv_messages = atoi(snd_data);
+                  if (rcv_messages != 0) {
+                     printf("virtual gdi client lost %d messages, seems to take a long time to connect to virtual qmaster ...\n", rcv_messages);
+                  }
+               }
+               if (atoi(snd_data) != rcv_messages) {
+                  printf("!!!! %d. message was lost, got %s\n", rcv_messages, snd_data);
+                  do_shutdown = 1;
+               }
 #endif
 
-                 if (now.tv_sec != last_time && !no_output) {
-                    printf("virtual gdi client message count[received |%d| / sent |%d|]...\n", rcv_messages, snd_messages);
-                    last_time = now.tv_sec;
-                 }
-                 
-                 rcv_messages++;
-                 cl_com_free_message(&message);
-                 cl_com_free_endpoint(&sender);
-           } else {
-              /* shutdown when virtual qmaster is not running anymore */
-              if (rcv_messages > 0) {
-                 printf("cl_commlib_receive_message returned: %s\n", cl_get_error_text(retval));
-                 do_shutdown = 1;
-              }
-           }
-        } else {
-           /* shutdown when virtual qmaster is not running anymore */
-           if (rcv_messages > 0) {
-              printf("cl_commlib_send_message returned: %s\n", cl_get_error_text(retval));
-              do_shutdown = 1;
-           } else {
-              printf("Waiting for connection to virtual_qmaster ...\n");
-              cl_commlib_trigger(handle, 1);
-           }
-        }
-        if (reconnect == 1) {
+               if (now.tv_sec != last_time && !no_output) {
+                  printf("virtual gdi client message count[received |%d| / sent |%d|]...\n", rcv_messages, snd_messages);
+                  last_time = now.tv_sec;
+               }
+
+               rcv_messages++;
+               cl_com_free_message(&message);
+               cl_com_free_endpoint(&sender);
+            } else {
+               /* shutdown when virtual qmaster is not running anymore */
+               if (rcv_messages > 0) {
+                  printf("cl_commlib_receive_message returned: %s\n", cl_get_error_text(retval));
+                  do_shutdown = 1;
+               }
+            }
+         } else {
+            /* shutdown when virtual qmaster is not running anymore */
+            if (rcv_messages > 0) {
+               printf("cl_commlib_send_message returned: %s\n", cl_get_error_text(retval));
+               do_shutdown = 1;
+            } else {
+               printf("Waiting for connection to virtual_qmaster ...\n");
+               cl_commlib_trigger(handle, 1);
+            }
+         }
+         if (reconnect == 1) {
             break;
-        }
-     }
-     cl_commlib_shutdown_handle(handle, CL_FALSE);
-  }
-  cl_com_cleanup_commlib();
-  
-  printf("main done\n");
-  return 0;
+         }
+      } /* (do_shutdown == 0) */
+
+      FREE(snd_data);
+
+      cl_commlib_shutdown_handle(handle, CL_FALSE);
+   }
+   cl_com_cleanup_commlib();
+
+   printf("main done\n");
+   return 0;
 }
 

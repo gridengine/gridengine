@@ -392,6 +392,7 @@ test_dechain_before_after(void) {
    /* dechain */
    if (ret) {
       ret &= sge_sl_dechain(list, elem);
+      sge_sl_elem_destroy(&elem, test_destroy_test);
    }
 
    /* test links forward and backward */
@@ -405,6 +406,7 @@ test_dechain_before_after(void) {
       elem = NULL;
       ret &= sge_sl_elem_next(list, &elem, SGE_SL_FORWARD);
       ret &= sge_sl_dechain(list, elem);
+      sge_sl_elem_destroy(&elem, test_destroy_test);
    }
 
    /* test links forward and backward */
@@ -418,6 +420,7 @@ test_dechain_before_after(void) {
       elem = NULL;
       ret &= sge_sl_elem_next(list, &elem, SGE_SL_BACKWARD);
       ret &= sge_sl_dechain(list, elem);
+      sge_sl_elem_destroy(&elem, test_destroy_test);
    }
 
    /* test links forward and backward */

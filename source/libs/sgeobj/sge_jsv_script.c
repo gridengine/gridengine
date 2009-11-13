@@ -1016,6 +1016,7 @@ jsv_handle_param_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answe
                              sge_dstring_get_string(&socket_core_string));
                   sge_dstring_free(&socket_core_string);
                }
+
                FREE(socket_array);
                FREE(core_array);
             }
@@ -2030,6 +2031,9 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
                sge_dstring_sprintf(&buffer, "%s binding_exp_core%d %d", prefix, i, core_array[i]);
                jsv_send_command(jsv, answer_list, sge_dstring_get_string(&buffer));
             }
+
+            FREE(socket_array);
+            FREE(core_array);
          }
       }
    }

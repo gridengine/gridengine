@@ -1530,7 +1530,7 @@ static void update_used_cores(const char* path_to_config, lListElem** jr)
          
             if (jobtopo != NULL) {
                /* usage in job report */
-               dstring pseudo_usage = DSTRING_INIT;
+               dstring pseudo_usage = DSTRING_INIT; 
 
                /* account the used cores on execd global */
                DPRINTF(("account cores used by job: %s\n", jobtopo));
@@ -1540,7 +1540,7 @@ static void update_used_cores(const char* path_to_config, lListElem** jr)
                sge_dstring_sprintf(&pseudo_usage, "binding_inuse=%s\n", jobtopo); 
                
                add_usage(*jr, sge_dstring_get_string(&pseudo_usage), NULL, 0);
-               sge_dstring_free(&pseudo_usage);
+               sge_dstring_free(&pseudo_usage); 
 
             } else {
                DPRINTF(("topology not found\n"));

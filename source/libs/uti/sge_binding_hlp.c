@@ -470,9 +470,146 @@ int get_processor_id(int socket_number, int core_number)
 
 }
 
+/****** sge_binding_hlp/get_processor_ids_linux() ******************************
+*  NAME
+*     get_processor_ids_linux() -- Get internal processor ids for a specific core.
+*
+*  SYNOPSIS
+*     bool get_processor_ids_linux(int socket_number, int core_number, int** 
+*     proc_ids, int* amount) 
+*
+*  FUNCTION
+*     Get the Linux internal processor ids for a given core (specified by a socket, 
+*     core pair). 
+*
+*  INPUTS
+*     int socket_number - Logical socket number (starting at 0 without holes) 
+*     int core_number   - Logical core number on the socket (starting at 0 without holes) 
+*
+*  OUTPUTS
+*     int** proc_ids    - Array of Linux internal processor ids.
+*     int* amount       - Size of the proc_ids array.
+*
+*  RESULT
+*     bool - Returns true when processor ids where found otherwise false.
+*
+*  NOTES
+*     MT-NOTE: get_processor_ids_linux() is MT safe 
+*
+*  SEE ALSO
+*     ???/???
+*******************************************************************************/
+bool get_processor_ids_linux(int socket_number, int core_number, int** proc_ids, int* amount)
+{
+   int retval = true;
+
+
+   if (proc_ids == NULL || (*proc_ids) != NULL || amount == NULL) {
+      retval = false;
+   } else if (has_core_binding() && _has_topology_information()) {
+
+      /* OS internal socket id and core id of 'socket_number' and 'core_number' */
+      int input_core_id   = -1;
+      int input_socket_id = -1;
+
+      /* tmp socket and core id of a processor id */
+      int core_id   = -1; 
+      int socket_id = -1;
+
+      /* the max. Linux processor ID */
+      int max_proc_id    = -1;
+      /* the number of processors    */
+      int num_processors = -1;
+
+      (*amount) = 0;
+
+      /* convert logical socket number into internal socket id */
+      if (retval && plpa_get_socket_id(socket_number, &input_socket_id) != 0) {
+         /* unable to retrieve Linux logical socket id */
+         retval = false;
+      }
+
+      /* convert logical core number into internal core id */
+      if (retval && plpa_get_core_id(input_socket_id, core_number, &input_core_id) != 0) {
+         /* unable to retrieve Linux logical core id  */
+         retval = false;
+      }
+
+      /* get the max. processor id */
+      if (retval && plpa_get_processor_data(PLPA_COUNT_ONLINE, &num_processors, 
+                                    &max_proc_id) == 0) {
+
+         /* a possible OS internal processor id */ 
+         int proc_cntr;
+
+         /* for all possible processor ids, check if they map to the 
+            socket and core id we are searching for */
+         for (proc_cntr = 0; proc_cntr <= max_proc_id; proc_cntr++) {
+
+            /* check if processor id is on socket, core */
+            if (plpa_map_to_socket_core(proc_cntr, &socket_id, &core_id) != 0) {
+               /* not a valid processor id */
+               continue;
+            }
+
+            if (socket_id == input_socket_id && core_id == input_core_id) {
+               /* this OS internal proc id (proc_cntr) points to a 
+                  socket, core we are searching for -> in case of hyperthreading 
+                  there can be more than one:
+                  -> add to the output array */
+               (*amount)++;   /* increment the output array size */
+               (*proc_ids) = (int *) realloc((*proc_ids), (*amount) * sizeof(int));
+
+               if (*proc_ids == NULL) {
+                  /* out of memory */
+                  retval = false;
+                  (*amount) = 0;
+                  break;
+               }   
+               /* store the processor id as last element in output array */
+               (*proc_ids)[(*amount)-1] = proc_cntr;
+            }
+
+         }
+         
+      }
+   }
+
+   if ((*amount) > 0) {
+      return true;
+   }
+
+   return false;
+}
+
+/****** sge_binding_hlp/get_topology_linux() ***********************************
+*  NAME
+*     get_topology_linux() -- Creates the topology string for the current host. 
+*
+*  SYNOPSIS
+*     bool get_topology_linux(char** topology, int* length) 
+*
+*  FUNCTION
+*     Creates the topology string for the current host. When it was created 
+*     it has top be freed from outside.
+*
+*  INPUTS
+*     char** topology - The topology string for the current host. 
+*     int* length     - The length of the topology string.  
+*
+*  RESULT
+*     bool - when true the topology string could be generated (and memory 
+*            is allocated otherwise false
+*
+*  NOTES
+*     MT-NOTE: get_topology_linux() is MT safe 
+*
+*  SEE ALSO
+*     ???/???
+*******************************************************************************/
 bool get_topology_linux(char** topology, int* length)
 {
-   bool success = true;
+   bool success = false;
 
    /* initialize length of topology string */
    (*length) = 0;
@@ -486,56 +623,63 @@ bool get_topology_linux(char** topology, int* length)
       /* topology string */
       dstring d_topology = DSTRING_INIT;
 
-      /* the topology string */ 
-      sge_dstring_clear(&d_topology);
-
       /* build the topology string */
-
       if (plpa_get_socket_info(&num_sockets, &max_socket_id) == 0) {
-            int num_cores, max_core_id, ctr_cores, ctr_sockets;
+         int num_cores, max_core_id, ctr_cores, ctr_sockets, ctr_threads;
          char* s = "S"; /* socket */
          char* c = "C"; /* core   */
+         char* t = "T"; /* thread */
 
-         for (ctr_sockets = 0; ctr_sockets <= max_socket_id; ctr_sockets++) {
+         for (ctr_sockets = 0; ctr_sockets < num_sockets; ctr_sockets++) {
+            int socket_id; /* internal socket id */
+
             /* append new socket */
             sge_dstring_append_char(&d_topology, *s);
             (*length)++;
 
             /* for each socket get the number of cores */ 
-            if (plpa_get_core_info(ctr_sockets, &num_cores, &max_core_id) == 0) {
-                     
-               for (ctr_cores = 0; ctr_cores <= max_core_id; ctr_cores++) {
+            if (plpa_get_socket_id(ctr_sockets, &socket_id) != 0) {
+               /* error while getting the internal socket id out of the logical */
+               continue;
+            } 
+
+            /* get information about this socket */
+            if (plpa_get_core_info(socket_id, &num_cores, &max_core_id) == 0) {
+               /* for thread counting */
+               int* proc_ids = NULL;
+               int amount_of_threads = 0;
+
+               /* check each core */
+               for (ctr_cores = 0; ctr_cores < num_cores; ctr_cores++) {
                   sge_dstring_append_char(&d_topology, *c);
                   (*length)++;
+                  /* check if the core has threads */
+                  if (get_processor_ids_linux(ctr_sockets, ctr_cores, &proc_ids, &amount_of_threads) 
+                        && amount_of_threads > 1) {
+                     /* print the threads */
+                     for (ctr_threads = 0; ctr_threads < amount_of_threads; ctr_threads++) { 
+                        sge_dstring_append_char(&d_topology, *t);
+                        (*length)++;
+                     }
+                  }
+                  FREE(proc_ids);
                }
             }
          } /* for each socket */
             
-         if ((*length) == 0) {
-             (*topology) = sge_strdup(NULL, "warning: couldn't count cores sockets");
-             success = false;
-         } else {
+         if ((*length) != 0) {
             /* convert d_topolgy into topology */
             (*length)++; /* we need `\0` at the end */
-            /* copy element */ 
-
-            (*topology) = (char *) calloc((*length), sizeof(char));
-            memcpy((*topology), (char*) sge_dstring_get_string(&d_topology), 
-                  (*length) * sizeof(char));
-            }
             
-            sge_dstring_free(&d_topology);
+            /* copy element */ 
+            (*topology) = sge_strdup(NULL, sge_dstring_get_string(&d_topology));
+            success = true;      
+         }
+            
+         sge_dstring_free(&d_topology);
+      } 
 
-         } /* when socket information is available */ 
-      else { 
-         (*topology) = sge_strdup(NULL, "warning: socket information not available!");
-         success = false;
-      }
-
-   } else {
-      (*topology) = sge_strdup(NULL, "warning: host has no topology");
-      success = false;
-  }
+   } 
 
    return success;
 }
@@ -795,7 +939,6 @@ bool binding_explicit_has_correct_syntax(const char* parameter)
             }   
 
          } 
-   
       } while (socket != NULL);  /* we try to continue with the next socket if possible */ 
 
    } else {

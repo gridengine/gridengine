@@ -75,6 +75,7 @@ bool _has_topology_information(void);
 bool _has_core_binding(dstring* error);
 bool get_topology_linux(char** topology, int* length);
 int get_processor_id(int socket_number, int core_number);
+bool get_processor_ids_linux(int socket_number, int core_number, int** proc_ids, int* amount);
 int get_amount_of_cores(int socket_number);
 int get_total_amount_of_cores(void);
 int get_amount_of_sockets(void);

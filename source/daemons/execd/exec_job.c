@@ -453,14 +453,12 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
 
             /* add to job report */
             jr = add_job_report(job_id, ja_task_id, pe_task_id, jep);
-
+            
             sge_dstring_sprintf(&pseudo_usage, "binding_inuse=%s", 
                            sge_dstring_get_string(&core_binding_strategy_string));
             
             add_usage(jr, sge_dstring_get_string(&pseudo_usage), NULL, 0);
             
-            sge_dstring_free(&pseudo_usage);
-         
             /* send job report   */
             flush_job_report(jr);
          }

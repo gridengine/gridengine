@@ -362,10 +362,22 @@ void test_linux_plpa()
       printf("Mapping of logical socket and core numbers to internal\n");
 
       /* for each socket,core pair get the internal processor number */
+      /* try multi-mapping */
       for (s = 0; s < get_amount_of_sockets(); s++) {
          for (c = 0; c < get_amount_of_cores(s); c++) {
-            printf("Internal processor id for socket %d core %d: %d\n", s, c, 
-                     get_processor_id(s, c));
+            int* proc_ids  = NULL;
+            int amount     = 0;
+            if (get_processor_ids_linux(s, c, &proc_ids, &amount)) {
+               int i = 0;
+               printf("Internal processor ids for socket %5d core %5d: ", s , c);
+               for (i = 0; i < amount; i++) {
+                  printf(" %5d", proc_ids[i]);
+               }
+               printf("\n");
+               FREE(proc_ids);
+            } else {
+               printf("Couldn't get processor ids for socket %5d core %5d\n", s, c);
+            }
          }
       }
    }   
@@ -425,7 +437,7 @@ void test_solaris_binding()
 
       printf("Dumping internal (kstat) matrix:\n");
       for (s = 0; s < mlength; s++) {
-         printf("chip_id: \t%d core_id: \t%d processor_id: \t%d\n", 
+         printf("chip_id: %5d core_id: %5d processor_id: %5d\n", 
                   (matrix[s])[0], (matrix[s])[1], (matrix[s])[2]);
       }
       free_matrix(matrix, mlength);

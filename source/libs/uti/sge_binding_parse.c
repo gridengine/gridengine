@@ -101,7 +101,7 @@ binding_type_to_string(binding_type_t type, dstring *string) {
 *     int - Returns the step size or -1 when it could not been parsed. 
 *
 *  NOTES
-*     MT-NOTE: binding_striding_parse_step_size() is MT safe 
+*     MT-NOTE: binding_striding_parse_step_size() is NOT MT safe 
 *
 *  SEE ALSO
 *     ???/???

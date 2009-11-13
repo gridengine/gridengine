@@ -79,6 +79,8 @@ static int account_cores_on_socket(char** topology, const int topology_length,
 static bool get_socket_with_most_free_cores(const char* topology, const int topology_length, 
                int* socket_number);
 
+static bool account_all_threads_after_core(char** topology, const int core_pos);
+
 #endif
 
 #if defined(SOLARISAMD64) || defined(SOLARIS86)
@@ -123,7 +125,8 @@ static int get_total_amount_of_sockets_solaris(void);
 /* for processor sets */
 static bool get_processor_ids_solaris(const int** matrix, const int length, const int logical_socket_number,
       const int logical_core_number, processorid_t** pr_ids, int* pr_length);
-   /* this could be used later on */
+
+/* this could be used later on */
 static int get_processor_id_solaris(const int** matrix, const int length, const int logical_socket_number, 
       const int logical_core_number, const int logical_thread_number, processorid_t* prid);
 
@@ -294,15 +297,12 @@ bool get_execd_topology_in_use(char** topology)
 
    if (logical_used_topology_length > 0) {
       /* copy the string */
-      (*topology) = (char *) calloc(logical_used_topology_length+1, sizeof(char));
-      memcpy((*topology), logical_used_topology, sizeof(char)*(logical_used_topology_length));
+      (*topology) = sge_strdup(NULL, logical_used_topology);
       retval = true;
    } 
       
    return retval;   
 }
-
-
 
 #if defined(PLPA_LINUX) || defined(SOLARISAMD64) || defined(SOLARIS86) 
 /* gets the positions in the topology string from a given <socket>,<core> pair */
@@ -312,11 +312,6 @@ static int get_position_in_topology(const int socket, const int core, const char
 /* accounts all occupied resources given by a topology string into another one */
 static bool account_job_on_topology(char** topology, const int topology_length, 
    const char* job, const int job_length);  
-
-#if 0
-static int getMaxThreadsFromTopologyString(const char* topology); 
-static int getMaxCoresFromTopologyString(const char* topology);
-#endif
 
 /* DG TODO length should be an output */
 static bool is_starting_point(const char* topo, const int length, const int pos, 
@@ -1200,7 +1195,7 @@ static bool account_job_on_topology(char** topology, const int topology_length,
    }
 
    /* go through topology and account */
-   for (i = 0; i < job_length; i++) {
+   for (i = 0; i < job_length && job[i] != '\0'; i++) {
       if (job[i] == 'c') {
          (*topology)[i] = 'c';
       } else if (job[i] == 's') {
@@ -1293,6 +1288,8 @@ bool binding_explicit_check_and_account(const int* list_of_sockets, const int sa
       if (logical_used_topology[pos] == 'C') {
          /* do temporarily account it */
          (*topo_used_by_job)[pos] = 'c';
+         /* thread binding: account threads here */
+         account_all_threads_after_core(topo_used_by_job, pos);
       } else {
          /* core not usable -> early abort */
          possible = false;
@@ -2722,6 +2719,34 @@ static bool get_socket_with_most_free_cores(const char* topology, const int topo
    }
 }
 
+static bool account_all_threads_after_core(char** topology, const int core_pos)
+{
+   /* we need the position after the C in the topology string (example: "SCTTSCTT"
+      or "SCCSCC") */
+   int next_pos = core_pos + 1;
+
+   /* check correctness of input values */
+   if (topology == NULL || (*topology) == NULL || core_pos < 0 || strlen(*topology) <= core_pos) {
+      return false;
+   }
+   
+   /* check if we are at the last core of the string without T's at the end */
+   if (next_pos >= strlen(*topology)) {
+      /* there is no thread on the last core to account: thats a success anyway */
+      return true;
+   } else {
+      /* set all T's at the current position */
+      while ((*topology)[next_pos] == 'T' || (*topology)[next_pos] == 't') {
+         /* account the thread */
+         (*topology)[next_pos] = 't';
+         next_pos++;
+      } 
+   }
+
+   return true;
+}
+
+
 static int account_cores_on_socket(char** topology, const int topology_length,
                const int socket_number, const int cores_needed, int** list_of_sockets,
                int* list_of_sockets_size, int** list_of_cores, int* list_of_cores_size)
@@ -2780,6 +2805,9 @@ static int account_cores_on_socket(char** topology, const int topology_length,
             core_counter++;
             /* do accounting */
             (*topology)[i] = 'c';
+            /* thread binding: accounting is done here */
+            account_all_threads_after_core(topology, i);
+
          } else if ((*topology)[i] == 'c') {
             /* this core is already in use */
             /* move forward to the next core */
@@ -3081,30 +3109,32 @@ static bool create_topology_used_per_job(char** accounted_topology, int* account
 
 /****** sge_binding/is_starting_point() ****************************************
 *  NAME
-*     is_starting_point() -- Checks if 'pos' is a valid first core for striding. 
+*     is_starting_point() -- Checks if 'pos' is a valid first core for striding.
 *
 *  SYNOPSIS
-*     bool is_starting_point(const char* topo, const int length, const int pos, 
+*     bool is_starting_point(const char* topo, const int length, const int pos,
 *     const int amount, const int stepsize) 
 *
 *  FUNCTION
-*     Checks if 'pos' is a starting point for binding the 'amount' of cores 
-*     in a striding manner on the host. The topo string contains 'C's for unused 
+*     Checks if 'pos' is a starting point for binding the 'amount' of cores
+*     in a striding manner on the host. The topo string contains 'C's for unused
 *     cores and 'c's for cores in use.
 *
 *  INPUTS
-*     const char* topo   - String representing the topology currently in use. 
-*     const int length   - Length of topology string. 
-*     const int pos      - Position within the topology string.  
-*     const int amount   - Amount of cores to bind to. 
-*     const int stepsize - Step size when binding in a striding manner. 
+*     const char* topo   - String representing the topology currently in use.
+*     const int length   - Length of topology string.
+*     const int pos      - Position within the topology string.
+*     const int amount   - Amount of cores to bind to.
+*     const int stepsize - Step size when binding in a striding manner.
+*
+*  OUTPUTS
 *     char* topo_account - Here the accounting is done on.
 *
 *  RESULT
-*     bool - true if striding with the given parameters is possible. 
+*     bool - true if striding with the given parameters is possible.
 *
 *  NOTES
-*     MT-NOTE: is_starting_point() is not MT safe 
+*     MT-NOTE: is_starting_point() is not MT safe
 *
 *  SEE ALSO
 *     ???/???
@@ -3150,13 +3180,14 @@ static bool is_starting_point(const char* topo, const int length, const int pos,
    accounted_cores++;
    /* this core is used */
    (*topo_account)[pos] = 'c';
-   
+   /* thread binding: account following threads */
+   account_all_threads_after_core(topo_account, pos); 
+
    if (accounted_cores == amount) {
       /* we have all cores and we are still within the string */
       is_possible = true;
       return is_possible;
    }
-   
 
    /* go to the remaining topology which is in use */ 
    for (i = pos + 1; i < length && topo[i] != '\0'; i++) {
@@ -3170,6 +3201,9 @@ static bool is_starting_point(const char* topo, const int length, const int pos,
             accounted_cores++;
             /* this core is used */
             (*topo_account)[i] = 'c';
+            /* thread binding: bind following threads */
+            account_all_threads_after_core(topo_account, i); 
+
          } else if (found_cores < stepsize) {
             /* this core we don't need */
             found_cores++;

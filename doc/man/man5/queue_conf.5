@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2009/11/05 10:44:42 $     Revision: $Revision: 1.35 $
+.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2009/11/13 14:26:06 $     Revision: $Revision: 1.36 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QUEUE_CONF 5 "$Date: 2009/11/05 10:44:42 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH QUEUE_CONF 5 "$Date: 2009/11/13 14:26:06 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 queue_conf \- xxQS_NAMExx queue configuration file format
@@ -665,7 +665,7 @@ could look like this:
 .fi
 .PP
 Whenever a task is started in a queue instance, a task running in a queue instance
-finishes or is deleted, a queue instance is suspended, unsuspended, modifid, added to
+finishes or is deleted, a queue instance is suspended, unsuspended, modified, added to
 this tree or removed from this tree, the whole tree is recalculated and tasks are
 suspended or unsuspended accordingly.
 .PP
@@ -674,7 +674,7 @@ is a leaf node (like D.q, E.q and G.q in this example), then the calculation sta
 the parent queue instance (B.q, C.q or F.q in the example). From there, first all
 running tasks in the whole subtree of this queue instance are counted. If the sum exceeds
 the threshold configured in the subordinate_list, in this subtree a task is searched
-to be suspended. Then the alogrithm proceeds to the parent of this queue instance,
+to be suspended. Then the algorithm proceeds to the parent of this queue instance,
 counts all running tasks in the whole subtree below the parent and checks if
 the number exceeds the threshold configured at the parent's subordinate_list. If so,
 it searches for a task to suspend in the whole subtree below the parent. And so on,

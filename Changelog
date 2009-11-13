@@ -8,6 +8,12 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+RN-2009-11-13-1: Bugfix:      qsub -sync does not return correct exit status
+							  during qmaster failover
+                 Bugster:     6888406
+                 Issue:       3178
+                 Review:      CR
+
 JG-2009-11-13-0: Bugfix:      Fixed memory leaks in test programs and in 
                               jsv script
                  Review:      CR, EB

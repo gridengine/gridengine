@@ -34,7 +34,7 @@
 
 #include "gdi/sge_gdi_ctx.h"
 
-int do_ck_to_do(sge_gdi_ctx_class_t *ctx);
+int do_ck_to_do(sge_gdi_ctx_class_t *ctx, bool is_qmaster_down);
 int register_at_ptf(lListElem *jep, lListElem *jatep, lListElem *petep);
 
 #endif /* __EXECD_CK_TO_DO_H */

@@ -59,7 +59,8 @@ enum {
    JR_osjobid,
    JR_wait_status,
    JR_flush,
-   JR_no_send
+   JR_no_send,
+   JR_delay_report
 };
 
 LISTDEF(JR_Type)
@@ -81,6 +82,7 @@ LISTDEF(JR_Type)
    SGE_ULONG(JR_wait_status, CULL_DEFAULT)  /* japi_wait() 'status' information  */
    SGE_BOOL(JR_flush, CULL_DEFAULT)
    SGE_BOOL(JR_no_send, CULL_DEFAULT)       /* do not send this job report - used for pe tasks & accounting_summary */
+   SGE_BOOL(JR_delay_report, CULL_DEFAULT)       /* do not send this job report - used for qsub -sync/DRMAA jobs while a qmaster failover*/
 LISTEND
 
 NAMEDEF(JRN)
@@ -99,6 +101,7 @@ NAMEDEF(JRN)
    NAME("JR_wait_status")
    NAME("JR_flush")
    NAME("JR_no_send")
+   NAME("JR_delay_report")
 NAMEEND
 
 #define JRS sizeof(JRN)/sizeof(char*)

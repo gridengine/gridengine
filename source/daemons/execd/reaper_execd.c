@@ -121,6 +121,7 @@ static void update_used_cores(const char* path_to_config, lListElem** jr);
 #endif
 
 static void clean_up_binding(char* binding);
+static const char *JAPI_SINGLE_SESSION_KEY = "JAPI_SSK";
 
 /*****************************************************************************
  This code is used only by execd.
@@ -135,8 +136,13 @@ static void clean_up_binding(char* binding);
  "pid"-file    pid of shepherd; can be used to look into the process table
 
  If everything is done we can remove the job directory.
+ We also enable or disable delayed reporting for a job here. (Ref CR6888406 for why).
+ It is enabled for jobs which:
+  - have been started via qsub -sync/DRMAA and
+  - submission time is before the qmaster restarted or if qmaster is currently down
+  
  ****************************************************************************/
-int sge_reap_children_execd(int max_count)
+int sge_reap_children_execd(int max_count, bool is_qmaster_down)
 {
    int pid = 999;
    int exit_status, child_signal, core_dumped, failed;
@@ -291,6 +297,21 @@ int sge_reap_children_execd(int max_count)
          }
 
          clean_up_job(jr, failed, exit_status, job_is_array(jep), jatep, lGetString(jep, JB_owner));
+
+         /* set JR_delay_report true if the job is a JAPI/DRMAA job ... 
+          * -sync/DRMAA jobs have unique session key, qsub jobs have JAPI_SSK
+          *  and other clients have null keys as they are not set anywhere
+          * We also check if the sync client was started before the qmaster
+          * recovered or qmaster is down now, which means the qsub -sync/DRMAA client needs to yet
+          * collect the exit status!
+          */
+         if (lGetString(jep, JB_session) && strncmp(lGetString(jep, JB_session), JAPI_SINGLE_SESSION_KEY, 8) != 0 && 
+               (is_qmaster_down || lGetUlong(jep, JB_submission_time) < sge_get_qmrestart_time())) {
+            lSetBool(jr, JR_delay_report, true);
+            INFO((SGE_EVENT, " Enabling delay job reporting for "sge_U32CFormat"\n", jobid));
+         } else {
+            lSetBool(jr, JR_delay_report, false);
+         }
 
          flush_job_report(jr);
 

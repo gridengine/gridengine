@@ -34,7 +34,7 @@
 
 #include "gdi/sge_gdi_ctx.h"
 
-int sge_reap_children_execd(int max_count);
+int sge_reap_children_execd(int max_count, bool is_qmaster_down);
 lListElem *execd_job_start_failure(lListElem *jep, lListElem *jatep, lListElem *petep, const char *error_string, int general);
 lListElem *execd_job_run_failure(lListElem *jep, lListElem *jatep, lListElem *petep, const char *error_string, int general);
 void job_unknown(u_long32 jobid, u_long32 jataskid, char *qname);

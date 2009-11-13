@@ -347,7 +347,7 @@ execd_get_wallclock_limit(const char *qualified_hostname, lList *gdil_list, int 
 #define SIGNAL_RESEND_INTERVAL 1
 #define OLD_JOB_INTERVAL 60
 
-int do_ck_to_do(sge_gdi_ctx_class_t *ctx) {
+int do_ck_to_do(sge_gdi_ctx_class_t *ctx, bool is_qmaster_down) {
    u_long32 now;
    static u_long next_pdc = 0;
    static u_long next_signal = 0;
@@ -407,7 +407,7 @@ int do_ck_to_do(sge_gdi_ctx_class_t *ctx) {
       /* SIGCHILD signal is blocked from dispatcher(), so
        * we can be sure that sge_sig_handler_dead_children is untouched here
        */
-      sge_sig_handler_dead_children = sge_reap_children_execd(10);
+      sge_sig_handler_dead_children = sge_reap_children_execd(10, is_qmaster_down);
    }
 
    if (next_signal <= now) {

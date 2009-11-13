@@ -109,6 +109,8 @@ report_source execd_report_sources[] = {
 };
 
 lUlong sge_execd_report_seqno = 0;
+u_long32 qmrestart_time = 0;
+static bool delay_job_reports = false;
 static bool send_all = true;
 static lListElem *last_lr = NULL;
 static lList *lr_list = NULL;
@@ -116,6 +118,27 @@ static lList *lr_list = NULL;
 extern lList *jr_list;
 
 static bool flush_lr = false;
+
+u_long32 sge_get_qmrestart_time()
+{
+   return qmrestart_time;
+}
+
+/* record qmaster restart time, need for use in delayed_reporting */
+void sge_set_qmrestart_time(u_long32 qmr)
+{
+   qmrestart_time = qmr;
+}
+
+bool sge_get_delay_job_reports_flag(void)
+{
+   return delay_job_reports;
+}
+
+void sge_set_delay_job_reports_flag(bool new_val)
+{
+   delay_job_reports = new_val;
+}
 
 bool sge_get_flush_lr_flag(void)
 {
@@ -335,9 +358,11 @@ execd_add_job_report(sge_gdi_ctx_class_t *ctx, lList *report_list, u_long32 now,
    static u_long32 last_send = 0;
    const char* qualified_hostname = ctx->get_qualified_hostname(ctx);
 
+   DENTER(TOP_LAYER, "execd_add_job_report");
+
    /* return if no job reports are in the list */
    if (lGetNumberOfElem(jr_list) == 0) {
-      return 0;
+      DRETURN(0);
    }
 
    /* if report interval expired: send all reports */
@@ -374,12 +399,17 @@ execd_add_job_report(sge_gdi_ctx_class_t *ctx, lList *report_list, u_long32 now,
       job_report_list = lCreateList("jr", JR_Type);
       lSetList(job_report, REP_list, job_report_list);
 
-      /* copy reports (all or only to flush) */
+      /* copy reports (all or only to flush) 
+       * We keep job reports where the job is started via JAPI (qsub -sync or
+       * DRMAA). This is done only when we reconnect after a qmaster failover
+       */
       for_each (jr, jr_list) {
-         if ((!only_flush || lGetBool(jr, JR_flush)) && !lGetBool(jr, JR_no_send)) {
+         if ((!only_flush || lGetBool(jr, JR_flush)) &&
+               !lGetBool(jr, JR_no_send) &&
+               !(sge_get_delay_job_reports_flag() && lGetBool(jr, JR_delay_report))) {
             lAppendElem(job_report_list, lCopyElem(jr));
             lSetBool(jr, JR_flush, false);
-         }
+         } /* else not sending report for this job */
       }
      
       /* append this new job report to the report list */
@@ -389,7 +419,7 @@ execd_add_job_report(sge_gdi_ctx_class_t *ctx, lList *report_list, u_long32 now,
       sge_set_flush_jr_flag(false);
    }
 
-   return 0;
+   DRETURN(0);
 }
 
 lList *sge_build_load_report(const char* qualified_hostname, const char* binary_path)

@@ -299,12 +299,19 @@ public class JsvManager {
 
                     // End verify phase
                     sendResult();
-                } else if ((tokens.length == 3) && tokens[0].equals("ENV")) {
-                    // Log the env for the SHOW command
-                    envLog.put(tokens[1], tokens[2]);
+                } else if (((tokens.length == 3) || (tokens.length == 4))
+                           && tokens[0].equals("ENV") && tokens[1].equals("ADD")) {
+                    tokens[3] = tokens[3].replaceAll("\\\\b", "\b");
+                    tokens[3] = tokens[3].replaceAll("\\\\f", "\f");
+                    tokens[3] = tokens[3].replaceAll("\\\\n", "\n");
+                    tokens[3] = tokens[3].replaceAll("\\\\r", "\r");
+                    tokens[3] = tokens[3].replaceAll("\\\\t", "\t");
+                    tokens[3] = tokens[3].replaceAll("\\\\", "\\");
 
+                    // Log the env for the SHOW command
+                    envLog.put(tokens[2], tokens[3]);
                     // Add env to the master environment
-                    environment.put(tokens[1], tokens[2]);
+                    environment.put(tokens[2], tokens[3]);
                 } else if ((tokens.length == 3) && tokens[0].equals("PARAM")) {
                     // Log the param for the SHOW command
                     paramLog.put(tokens[1], tokens[2]);
@@ -372,10 +379,14 @@ public class JsvManager {
                 modified = true;
             }
 
+            // EB: Following code is NOT correct. If JSV says ACCEPT
+            // although there are modifications then these modifications
+            // should be trashed!
+            
             // If the job was modified, the result must be MODIFY
-            if (modified && (result == Result.ACCEPT)) {
-                result = Result.MODIFY;
-            }
+            // if (modified && (result == Result.ACCEPT)) {
+            //    result = Result.MODIFY;
+            //}
         }
     }
 
@@ -432,10 +443,11 @@ public class JsvManager {
             log.warning("ignoring environment command with null environment variable operation");
         } else if (var == null) {
             log.warning("ignoring environment command with null environment variable");
-        } else if (value == null) {
-            log.warning("ignoring environment command with null environment variable value");
-        } else {
+        } 
+        if (op == Operation.ADD || op == Operation.MOD) {
             sendCommand("ENV " + op + " " + var + " " + value);
+        } else if (op == Operation.DEL) {
+            sendCommand("ENV " + op + " " + var );
         }
     }
 
@@ -462,7 +474,7 @@ public class JsvManager {
         if (resultMessage != null) {
             sendCommand("RESULT STATE " + result.toString() + " " + resultMessage);
         } else {
-            sendCommand("RESULT STATE " + result.toString());
+            sendCommand("RESULT STATE " + result.toString() + " ");
         }
     }
 

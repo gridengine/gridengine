@@ -68,7 +68,7 @@ classpath="$classpath:."
 if [ $# -eq 0 ]; then
    jsv_impl="com.sun.grid.jsv.examples.SimpleJsv"
 else
-   jsv_impl=$* 
+   jsv_impl=$1 
 fi
 
 exec $java -Djava.util.logging.config.file=$SGE_ROOT/util/resources/jsv/logging.properties -cp $classpath com.sun.grid.jsv.JsvManager $jsv_impl

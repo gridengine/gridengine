@@ -3087,15 +3087,18 @@ public final class JobDescription implements Cloneable, Serializable {
 
             if (map != null) {
                 for (String key : map.keySet()) {
-                    if (map.get(key) != null) {
+                    String val = map.get(key);
+
+                    if (val != null) {
                         appendComma(value);
 
                         if (key != null) {
                             value.append(key);
-                            value.append('=');
                         }
-
-                        value.append(map.get(key));
+                        if (val.length() != 0) {
+                            value.append('=');
+                            value.append(val);
+                        }
                     }
                 }
             }
@@ -3216,9 +3219,19 @@ public final class JobDescription implements Cloneable, Serializable {
             Matcher m = mapPattern.matcher(element);
 
             if (m.matches()) {
-                map.put(m.group(1), m.group(2));
+                String key = m.group(1);
+
+                if (key.length() > 0) {
+                    map.put(key, m.group(2));
+                } else {
+                    log.warning("Ignoring malformed key with length 0: " + key);
+                }
             } else {
-                log.warning("Ignoring malformed key=value pair: " + element);
+                if (element.length() > 0  && !element.contains("=")) {
+                    map.put(element, "");
+                } else {
+                    log.warning("Ignoring malformed key=value pair: " + element);
+                }
             }
         }
 

@@ -8,6 +8,10 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+DT-2009-11-13-0: Bugfix:      o Fixed problems found during additional Herd
+                                manual testing
+                              o Added hadoop to setfileperm.sh
+
 MP-2009-11-13-1: Bugfix:      shadowd uninstallation does not remove local 
                               host configuration
                  Bugster:     6828316
@@ -31,7 +35,7 @@ JG-2009-11-13-0: Bugfix:      Fixed memory leaks in test programs and in
                               jsv script
                  Review:      CR, EB
 
-DT-2009-11-12-0: Bugfix:      o Fixed problems found during manual testing
+DT-2009-11-12-0: Bugfix:      o Fixed problems found during Herd manual testing
                               - Will rerun tests tomorrow
 
 EB-2009-11-11-0: Bugfix:      o fixed qstat -j output that caused

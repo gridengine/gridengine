@@ -51,7 +51,7 @@ PATH=/bin:/usr/bin:/usr/sbin
 FILELIST="3rd_party bin ckpt dtrace examples inst_sge install_execd install_qmaster \
           lib mpi pvm qmon util utilbin start_gui_installer"
 
-OPTFILES="catman doc include man"
+OPTFILES="catman doc include man hadoop"
 
 SUIDFILES="utilbin/*/rsh utilbin/*/rlogin utilbin/*/testsuidroot bin/*/sgepasswd utilbin/*/authuser"
 

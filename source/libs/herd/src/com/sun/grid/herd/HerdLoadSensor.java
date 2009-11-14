@@ -77,6 +77,10 @@ import org.apache.hadoop.util.ToolRunner;
 public class HerdLoadSensor extends Configured implements Tool, LoadSensor {
     // The prefix for the block resources
     private static final String BLOCK_KEY = "hdfs_blk";
+    // The host name if none is specified
+    private static final String DEFAULT_HOST = "localhost";
+    // The rack name if none is specified
+    private static final String DEFAULT_RACK = "/default-rack";
     // The primary rack resource
     private static final String RACK_KEY1 = "hdfs_primary_rack";
     // The secondary rack resource
@@ -112,11 +116,11 @@ public class HerdLoadSensor extends Configured implements Tool, LoadSensor {
         } catch (Exception e) {
             Throwable cause = e;
 
-            while (e.getCause() != null) {
-                cause = e.getCause();
+            while (cause.getCause() != null) {
+                cause = cause.getCause();
             }
 
-            System.err.println("Error while running command: " + cause.getClass().getSimpleName() + " -- " + cause.getMessage());
+            log.warning("Error while running command: " + StringUtils.stringifyException(cause));
             exit = 1;
         }
 
@@ -125,7 +129,7 @@ public class HerdLoadSensor extends Configured implements Tool, LoadSensor {
 
     public int run(String[] args) throws Exception {
         log.info("Started Herd load sensor");
-        
+
         conf = getConf();
         client = new DFSClient(conf);
         namenode = createNamenode(conf);
@@ -265,25 +269,25 @@ public class HerdLoadSensor extends Configured implements Tool, LoadSensor {
     public Map<String, Map<String, String>> getLoadValues() {
         Map<String, Map<String, String>> ret = null;
         Map<String,String> loadValues = new HashMap<String, String>();
-        String hostName = this.hostName;
-        String rackName = this.rackName;
+        String loadHostName = this.hostName;
+        String loadRackName = this.rackName;
 
-        if (hostName == null) {
-            hostName = "localhost";
+        if (loadHostName == null) {
+            loadHostName = DEFAULT_HOST;
         }
 
-        if (rackName == null) {
-            rackName = "/default-rack";
+        if (loadRackName == null) {
+            loadRackName = DEFAULT_RACK;
         }
 
-        loadValues.put(RACK_KEY1, rackName);
-        loadValues.put(RACK_KEY2, rackName);
+        loadValues.put(RACK_KEY1, loadRackName);
+        loadValues.put(RACK_KEY2, loadRackName);
 
         if (blockStrings != null) {
             loadValues.putAll(blockStrings);
         }
 
-        ret = Collections.singletonMap(hostName, loadValues);
+        ret = Collections.singletonMap(loadHostName, loadValues);
 
         log.fine("Returning load values: " + ret);
 

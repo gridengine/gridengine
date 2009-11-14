@@ -69,6 +69,9 @@ fi
 HADOOP_CLASSPATH=$SGE_ROOT/lib/JSV.jar:$SGE_ROOT/lib/herd.jar
 export HADOOP_CLASSPATH
 
+HADOOP_OPTS=-Djava.util.logging.config.file=$SGE_HADOOP/logging.properties
+export HADOOP_OPTS
+
 # Important for "soft link" work-around to Hadoop Issue 6272
 PATH="$HADOOP_HOME/bin":$PATH
 export PATH

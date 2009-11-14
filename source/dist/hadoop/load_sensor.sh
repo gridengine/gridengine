@@ -38,24 +38,33 @@ export SGE_HADOOP
 if [ -f $SGE_HADOOP/env.sh ]; then
   . $SGE_HADOOP/env.sh
 else
-  echo Unable to locate env.sh file
+  echo "Unable to locate env.sh file" >> /tmp/sge_hadoop_loadsensor.out
   exit 100
 fi
 
 if [ "$HADOOP_HOME" = "" ]; then
-  echo Must specify \$HADOOP_HOME for load_sensor.sh
+  echo "Must specify \$HADOOP_HOME for load_sensor.sh" >> /tmp/sge_hadoop_loadsensor.out
   exit 100
 fi
 
 if [ "$JAVA_HOME" = "" ]; then
-  echo Must specify \$JAVA_HOME for load_sensor.sh
+  echo "Must specify \$JAVA_HOME for load_sensor.sh" >> /tmp/sge_hadoop_loadsensor.out
   exit 100
+fi
+
+if [ "$HADOOP_CONF_DIR" = "" ]; then
+  HADOOP_CONF_DIR=$HADOOP_HOME/conf
+  export HADOOP_CONF_DIR
 fi
 
 HADOOP_CLASSPATH=$SGE_ROOT/lib/herd.jar
 export HADOOP_CLASSPATH
 
-HADOOP_OPTS=-Djava.util.logging.config.file=$SGE_ROOT/hadoop/logging.properties
+HADOOP_OPTS=-Djava.util.logging.config.file=$SGE_HADOOP/logging.properties
 export HADOOP_OPTS
 
-"$HADOOP_HOME"/bin/hadoop --config $HADOOP_HOME/conf com.sun.grid.herd.HerdLoadSensor `hostname`
+# Important for "soft link" work-around to Hadoop Issue 6272
+PATH="$HADOOP_HOME/bin":$PATH
+export PATH
+
+hadoop --config $HADOOP_CONF_DIR com.sun.grid.herd.HerdLoadSensor `hostname`

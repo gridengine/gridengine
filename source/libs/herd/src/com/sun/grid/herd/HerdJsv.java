@@ -98,7 +98,7 @@ public class HerdJsv extends Configured implements Tool, Jsv {
                 cause = e.getCause();
             }
 
-            log.warning("Error while running command: " + cause.getClass().getSimpleName() + " -- " + cause.getMessage());
+            log.warning("Error while running command: " + StringUtils.stringifyException(cause));
             exit = 1;
         }
 
@@ -118,9 +118,6 @@ public class HerdJsv extends Configured implements Tool, Jsv {
     }
 
     public void onVerify(JsvManager jsv) {
-        jsv.log(JsvManager.LogLevel.INFO, getConf().toString());
-        jsv.log(JsvManager.LogLevel.INFO, FileSystem.getDefaultUri(getConf()).toString());
-        jsv.log(JsvManager.LogLevel.INFO, FileSystem.getDefaultUri(getConf()).getAuthority());
         JobDescription job = jsv.getJobDescription();
         Map<String,String> res = job.getHardResourceRequirements();
         String path = null;

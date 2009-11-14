@@ -35,6 +35,10 @@
 #HADOOP_HOME=/export/share/hadoop-0.20.1
 #export HADOOP_HOME
 
+# The location of the Hadoop configuration directory
+#HADOOP_CONF_DIR=$HADOOP_HOME/conf
+#export HADOOP_CONF_DIR
+
 # The location of the Java installation
 #JAVA_HOME=/usr/jdk/latest
 #export JAVA_HOME

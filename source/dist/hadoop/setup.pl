@@ -177,7 +177,9 @@ sub do_load_sensor_install {
   close FILE;
 
   print `qconf -Mconf /tmp/hadoop_load_sensor_setup.$$/global`;
-  unlink "/tmp/hadoop_load_sensor_setup.$$" unless $no_unlink;
+  unlink "/tmp/hadoop_load_sensor_setup.$$/global" unless $no_unlink;
+  rmdir "/tmp/hadoop_load_sensor_setup.$$" unless $no_unlink;
+
   1;
 }
 
@@ -191,7 +193,8 @@ sub do_load_sensor_uninstall {
   close FILE;
 
   print `qconf -Mconf /tmp/hadoop_load_sensor_setup.$$/global`;
-  unlink "/tmp/hadoop_load_sensor_setup.$$" unless $no_unlink;
+  unlink "/tmp/hadoop_load_sensor_setup.$$/global" unless $no_unlink;
+  rmdir "/tmp/hadoop_load_sensor_setup.$$" unless $no_unlink;
   1;
 }
 

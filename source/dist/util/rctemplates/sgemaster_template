@@ -107,6 +107,14 @@ case $ARCH in
    ;;
 esac
 
+#Include SMF if available
+NO_SMF=1
+if [ -f /lib/svc/share/smf_include.sh ]; then
+   . /lib/svc/share/smf_include.sh
+   smf_present
+   NO_SMF=$?
+fi
+
 #---------------------------------------------------------------------------
 # Shutdown
 # Send SIGTERM to process name $1 with pid in file $2
@@ -392,17 +400,7 @@ DetectSMFService()
    name=$1
    service=""
 
-   if [ "$noSMF" = true ]; then
-      return
-   fi
-   #Otherwise we try is it's available of the system
-   if [ -f /lib/svc/share/smf_include.sh ]; then
-      . /lib/svc/share/smf_include.sh
-      smf_present
-      if [ $? -ne 0 ]; then
-         return
-      fi
-   else
+   if [ "$noSMF" = true -o $NO_SMF -ne 0 ]; then
       return
    fi
 
@@ -585,9 +583,28 @@ if [ "$startup" = true ]; then
        fi
 
        qmaster_host=true
+       #If we use SMF, we need to notify the SMF service
+       DetectSMFService qmaster
+       if [ -n "$service" ]; then
+          svccfg -s $service setenv MIGRATE_SMF_STEP true
+          if [ $? -ne 0 ]; then
+             echo "Migration failed!"
+             echo "It seems you do not have permission to modify the $service SMF service."
+             exit 1
+          else
+             svcadm refresh $service
+          fi
+       fi
    fi
 
    exit_val=0
+   
+   #Need to check if this is a SMF migration
+   DetectSMFService qmaster
+   if [ -n "$SMF_FMRI" -a "$SMF_FMRI" = "$service" -a "$MIGRATE_SMF_STEP" = true ]; then
+      qmaster_host=true
+   fi
+
    if [ $qmaster = true -a $qmaster_host = false ]; then
       echo
       echo "sge_qmaster didn't start!"
@@ -613,7 +630,6 @@ if [ "$startup" = true ]; then
          echo "sge_qmaster with PID $daemon_pid is already running"
          echo
       else
-         DetectSMFService qmaster
          #We want to use smf
          if [ \( -z "$SMF_FMRI" -o "$SMF_FMRI" != "$service" \) -a -n "$service" ]; then
             echo "   starting sge_qmaster"
@@ -626,6 +642,22 @@ if [ "$startup" = true ]; then
             [ $? -eq 0 -a -d /var/lock/subsys ] && touch /var/lock/subsys/sgemaster >/dev/null 2>&1
             CheckRunningQmaster
             exit_val=$?
+            if [ $exit_val -eq 0 -a -n "$SMF_FMRI" -a "$SMF_FMRI" = "$service" -a "$MIGRATE_SMF_STEP" = true ]; then
+               svccfg -s $service unsetenv MIGRATE_SMF_STEP
+               if [ $? -ne 0 ]; then
+                  echo "Warning: SMF migration cleanup step failed!"
+                  echo "It seems you do not have permission to modify the $service SMF service."
+                  echo
+                  echo "Run following commands manually as root or appropriate user:"
+                  echo "svccfg -s $service unsetenv MIGRATE_SMF_STEP"
+                  echo "svcadm refresh $service"
+               else
+                  svcadm refresh $service
+               fi
+            fi
+         fi
+         if [ $exit_val -ne 0 ]; then
+            echo "sge_qmaster didn't start!"
          fi
       fi
    fi

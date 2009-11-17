@@ -78,6 +78,8 @@ void sge_strip_blanks(char *str);
 
 void sge_strip_white_space_at_eol(char *str);
 
+void sge_strip_slash_at_eol(char *str);
+
 void sge_strtoupper(char *buffer, int max_len);
 
 void sge_strtolower(char *buffer, int max_len);

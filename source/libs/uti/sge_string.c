@@ -594,6 +594,41 @@ void sge_strip_white_space_at_eol(char *str)
    DRETURN_VOID;
 }
 
+/****** uti/string/sge_strip_slash_at_eol() ******************************
+*  NAME
+*     sge_strip_slash_at_eol() -- truncate slash at EOL 
+*
+*  SYNOPSIS
+*     void sge_strip_slash_at_eol(char *str) 
+*
+*  FUNCTION
+*     Truncate slash from the end of the string 
+*
+*  INPUTS
+*     char *str - string to be modified 
+*
+*  RESULT
+*     void - NONE
+*
+*  NOTES
+*     MT-NOTE: sge_strip_slash_at_eol() is MT safe 
+*******************************************************************************/
+void sge_strip_slash_at_eol(char *str) 
+{
+   DENTER(BASIS_LAYER, "sge_strip_slash_at_eol");
+
+   if (str != NULL) {
+      size_t length = strlen(str);
+
+      while (str[length - 1] == '/') {
+         str[length - 1] = '\0';
+         length--;
+      }
+   }
+   DRETURN_VOID;
+}
+
+
 /****** uti/string/sge_delim_str() *******************************************
 *  NAME
 *     sge_delim_str() -- Trunc. a str according to a delimiter set 

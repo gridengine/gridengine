@@ -39,6 +39,7 @@
 #  include <sys/mount.h>
 #elif defined(LINUX)
 #  include <sys/vfs.h>
+#  include "sge_string.h"
 #else
 #  include <sys/types.h>
 #  include <sys/statvfs.h>
@@ -54,6 +55,8 @@
 #  include "wingrid.h"
 #endif
 
+#define BUF_SIZE 8 * 1024
+
 int main(int argc, char *argv[]) {
 
    int ret=1;
@@ -61,8 +64,13 @@ int main(int argc, char *argv[]) {
    if (argc < 2) {
       printf("Usage: fstype <directory>\n");
       return 1;
-   } else {  
-#if defined(LINUX) || defined(DARWIN) || defined(FREEBSD) || (defined(NETBSD) && !defined(ST_RDONLY))
+   } else { 
+#if defined(LINUX) 
+   struct statfs buf;
+   FILE *fd = NULL;
+   char buffer[BUF_SIZE];
+   ret = statfs(argv[1], &buf);
+#elif defined(DARWIN) || defined(FREEBSD) || (defined(NETBSD) && !defined(ST_RDONLY))
    struct statfs buf;
    ret = statfs(argv[1], &buf);
 #elif defined(INTERIX)
@@ -97,7 +105,7 @@ int main(int argc, char *argv[]) {
                   printf("error\n");
                   return 2;
                }
-               if ( fsid  == ksp->ks_instance) {
+               if (fsid  == ksp->ks_instance) {
                   if ( mnt_info.mik_vers >= 4 ) {
                      sprintf(buf.f_basetype, "%s%i", buf.f_basetype, mnt_info.mik_vers);
                   }
@@ -119,10 +127,62 @@ int main(int argc, char *argv[]) {
 #if defined (DARWIN) || defined(FREEBSD) || defined(NETBSD)
    printf("%s\n", buf.f_fstypename);
 #elif defined(LINUX)
-   if (buf.f_type == 0x6969)
-      printf("nfs\n");
-   else   
-      printf("%lx\n", (long unsigned int)buf.f_type);
+   if (buf.f_type == 0x6969) {
+      /* Linux is not able to detect the right nfs version form the statfs struct.
+         f_type always returns nfs, even when it's a nfs4. We are looking into 
+         the /etc/mtab file until we found a better solution to do this */
+      fd = fopen("/etc/mtab", "r");
+      if (fd == NULL) {
+         fprintf(stderr, "file system type could not be detected\n");
+         printf("unknown fs\n");
+         return 1;
+      } else {
+         bool found_line = false;
+         sge_strip_white_space_at_eol(argv[1]);
+         sge_strip_slash_at_eol(argv[1]);
+         while (fgets(buffer, sizeof(buffer), fd) != NULL) {
+            char* export = NULL; /* where is the nfs exported*/
+            char* mountpoint = NULL; /*where is it mounted to */
+            char* fstype = NULL; /*type of exported file system */
+             
+            export = sge_strtok(buffer, " \t"); 
+            mountpoint = sge_strtok(NULL, " \t");
+            fstype = sge_strtok(NULL, " \t");
+            /*if mtab fstype = nfs4 we found a nfs4 entry*/
+            if (fstype != NULL && strcmp(fstype, "nfs4") == 0 && mountpoint != NULL) {
+               char* tmp_argv = argv[1];
+               char* tmp2_argv = tmp_argv;
+
+               while (tmp_argv != NULL) {
+                  if (strcmp(mountpoint, tmp_argv) == 0) {  /*if argument and moint point are equal*/
+                     found_line = true;                     /*the argv is type nfs4*/
+                     printf ("%s\n", fstype);
+                     break;
+                  } else {
+                     tmp2_argv = strrchr(tmp_argv, '/');
+                     if (tmp_argv != NULL && tmp2_argv != NULL) { /*if not, stripping argv from the end*/
+                        /*by setting last / to \0 and compare again with mountpoint*/
+                        tmp_argv[strlen(tmp_argv) - strlen(tmp2_argv)] = '\0'; 
+                     } else {
+                        break;
+                     }
+                  }
+               }
+               break;   
+            }
+         } 
+         fclose(fd);
+         if (found_line == false) { /*if type could not be detected via /etc/mtab, then we have to print out "nfs"*/
+            printf("nfs\n");
+         }
+      }
+   } else {
+      if (buf.f_type == 0x52654973) {
+         printf("reiserfs\n");
+      } else {  
+         printf("%lx\n", (long unsigned int)buf.f_type);
+      }
+   }
 #elif defined(INTERIX)
    printf("%s\n", buf.f_fstypename);
 #else

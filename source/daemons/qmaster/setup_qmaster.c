@@ -1026,15 +1026,70 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
     *    - suspend_on_subordinate
     */
    for_each(tmpqep, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
-      lList *qinstance_list = lGetList(tmpqep, CQ_qinstances);
-      lListElem *qinstance;
+      lList     *qinstance_list = lGetList(tmpqep, CQ_qinstances);
+      lListElem *qinstance = NULL;
+      lList     *aso_list = NULL;
+      lListElem *aso = NULL;
 
+      /*
+       * Update cluster queue configuration from pre-6.2u5 to 6.2u5, i.e. from
+       * cluster queues without slotwise suspend on subordinate to such with 
+       * slotwise ssos.
+       */
+      aso_list = lGetList(tmpqep, CQ_subordinate_list);
+      if (aso_list != NULL) {
+         /* This cluster queue has a list of subordinate lists (possibly one
+          * for each host).*/
+         for_each (aso, aso_list) {
+            lListElem *elem;
+            int   pos;
+            lList *so_list = lGetList(aso, ASOLIST_value);
+            
+            /* Every element of the ASOLIST should have a SOLIST, but we
+             * check it to be sure.
+             */
+            if (so_list != NULL) {
+               /* In each subordinate list, all elements must have the same
+                * SO_slots_sum value, so it's enough to look in the first
+                * element.
+                */
+               elem = lFirst(so_list);
+               pos = lGetPosViaElem(elem, SO_slots_sum, SGE_NO_ABORT);
+               if (pos == -1) {
+                  /* In the subordinate list of the cluster queue there is no
+                   * SO_slots_sum field yet, so we have to create a new
+                   * subordinate list, copy the values from the old one and
+                   * initialize the new fields, remove the old subordinate list
+                   * from the cluster queue and add the new one instead.
+                   */
+                  lList      *new_so_list = NULL;
+                  lListElem  *so = NULL;
+                  lListElem  *new_so = NULL;
+                  const char *so_list_name = NULL;
+
+                  so_list_name = lGetListName(so_list);
+                  new_so_list = lCreateList(so_list_name, SO_Type);
+
+                  for_each (so, so_list) {
+                     new_so = lCreateElem(SO_Type);
+                     lSetString(new_so, SO_name, lGetString(so, SO_name));
+                     lSetUlong(new_so, SO_threshold, lGetUlong(so, SO_threshold));
+                     lSetUlong(new_so, SO_slots_sum, 0);
+                     lSetUlong(new_so, SO_seq_no, 0);
+                     lSetUlong(new_so, SO_action, 0);
+                     lAppendElem(new_so_list, new_so);
+                  }
+                  lSetList(aso, ASOLIST_value, new_so_list);
+               }
+            }
+         }
+      }
       for_each(qinstance, qinstance_list) {
          qinstance_set_full_name(qinstance);
          sge_qmaster_qinstance_state_set_susp_on_sub(qinstance, false);
       }
    }
-   
+
    DPRINTF(("pe_list---------------------------------\n"));
    spool_read_list(&answer_list, spooling_context, object_base[SGE_TYPE_PE].list, SGE_TYPE_PE);
    answer_list_output(&answer_list);

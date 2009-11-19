@@ -8,6 +8,10 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+CR-2009-11-19-0: Cleanup:     o Introduced message macros for INFO loggings
+                 Belongs To:  RN-2009-11-13-1
+                 Review:      RN,MD
+
 EB-2009-11-19-0: Bugfix:      o core binding is not reported via qstat -j XY 
                                 -cb after execd shutdown and restart
                               o when using core binding execd messages file 
@@ -85,7 +89,7 @@ DG-2009-11-13-0: Enhancem.:   - Added threads in topology string in case of hype
                  Review:      SH, EB
 
 RN-2009-11-13-1: Bugfix:      qsub -sync does not return correct exit status
-							  during qmaster failover
+                              during qmaster failover
                  Bugster:     6888406
                  Issue:       3178
                  Review:      CR

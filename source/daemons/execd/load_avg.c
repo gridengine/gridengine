@@ -119,7 +119,7 @@ extern lList *jr_list;
 
 static bool flush_lr = false;
 
-u_long32 sge_get_qmrestart_time()
+u_long32 sge_get_qmrestart_time(void)
 {
    return qmrestart_time;
 }

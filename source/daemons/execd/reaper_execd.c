@@ -121,6 +121,7 @@ static void update_used_cores(const char* path_to_config, lListElem** jr);
 #endif
 
 static void clean_up_binding(char* binding);
+/* TODO: global c file with #define JAPI_SINGLE_SESSION_KEY "JAPI_SSK" */
 static const char *JAPI_SINGLE_SESSION_KEY = "JAPI_SSK";
 
 /*****************************************************************************
@@ -308,7 +309,7 @@ int sge_reap_children_execd(int max_count, bool is_qmaster_down)
          if (lGetString(jep, JB_session) && strncmp(lGetString(jep, JB_session), JAPI_SINGLE_SESSION_KEY, 8) != 0 && 
                (is_qmaster_down || lGetUlong(jep, JB_submission_time) < sge_get_qmrestart_time())) {
             lSetBool(jr, JR_delay_report, true);
-            INFO((SGE_EVENT, " Enabling delay job reporting for "sge_U32CFormat"\n", jobid));
+            INFO((SGE_EVENT, MSG_EXECD_ENABLEDELEAYDREPORTINGFORJOB_U, sge_u32c(jobid)));
          } else {
             lSetBool(jr, JR_delay_report, false);
          }

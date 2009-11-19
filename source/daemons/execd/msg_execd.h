@@ -282,10 +282,9 @@
 #define MSG_EXECD_INVALIDJOBREQUEST_SS    _MESSAGE(29188, _("invalid job start order from commproc "SFQ" on host"SFQ))
 #define MSG_EXECD_INVALIDTASKREQUEST_SS    _MESSAGE(29189, _("invalid pe task start order from commproc "SFQ" on host"SFQ))
 
-/*
- *
- */
-/* #define MSG_EXECD_CMDNEXISTS          _message(29190, _("The given command does not exist")) __TS Removed automatically from testsuite!! TS__*/
+#define MSG_EXECD_ENABLEDELEAYDJOBREPORTING   _MESSAGE(29190,    _("Reconnected to qmaster - enabled delayed job reporting period"))
+#define MSG_EXECD_DISABLEDELEAYDJOBREPORTING  _MESSAGE(29191,    _("Delayed job reporting period finished"))
+#define MSG_EXECD_ENABLEDELEAYDREPORTINGFORJOB_U _MESSAGE(29192, _("Enable delayed job reporting for job "sge_U32CFormat""))
 
 #endif /* __MSG_EXECD_H */
 

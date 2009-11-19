@@ -110,7 +110,7 @@ else if ( $MANMODE == "sge" ) then
    set xxQS_NAMExx = "Sun Grid Engine"
    set xxQS_NAME_Sxx = "SGE"
    set xxqs_name_sxx = "sge"
-   set xxRELxx = "SGE 6.2u5beta1"
+   set xxRELxx = "SGE 6.2u5beta2"
 else
    echo error wrong MANMODE=$MANMODE. Exit
    exit 1

@@ -639,7 +639,6 @@ void cull_show_job(lListElem *job, int flags, bool show_binding)
          int first_task = 1;
          lListElem *usage_elem;
          const char *binding_inuse = NULL; 
-         const char *binding_topo = NULL;
 
          if (lGetUlong(jatep, JAT_status) != JRUNNING && lGetUlong(jatep, JAT_status) != JTRANSFERING) {
             continue;
@@ -656,11 +655,8 @@ void cull_show_job(lListElem *job, int flags, bool show_binding)
                break;
             }
          }
-         if (binding_inuse != NULL && strcmp(binding_inuse, "NULL") != 0) {  
-            binding_topo = binding_get_topology_for_job(binding_inuse);
-         }
          printf("%s %4d:               %s\n", first_task ? "binding" : "       ", 
-            (int)lGetUlong(jatep, JAT_task_number), binding_topo != NULL ? binding_topo : "NONE");
+            (int)lGetUlong(jatep, JAT_task_number), binding_inuse != NULL ? binding_inuse : "NONE");
          if (first_task) {
             first_task = 0;
          } 

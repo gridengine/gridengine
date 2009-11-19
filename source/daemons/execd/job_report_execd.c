@@ -114,6 +114,7 @@ lListElem *add_job_report(u_long32 jobid, u_long32 jataskid, const char *petaski
    }
 
    lAppendElem(jr_list, jr);
+   DPRINTF(("adding job report for "sge_U32CFormat"."sge_U32CFormat"\n", sge_u32c(jobid), sge_u32c(jataskid)));
 
    if (jep != NULL) {
       jatep = job_search_task(jep, NULL, jataskid);
@@ -205,7 +206,7 @@ int add_usage(lListElem *jr, const char *name, const char *val_as_str, double va
 {
    lListElem *usage;
 
-   DENTER(CULL_LAYER, "add_usage");
+   DENTER(TOP_LAYER, "add_usage");
 
    if (!jr || !name) {
       DEXIT;

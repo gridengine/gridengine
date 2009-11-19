@@ -1663,7 +1663,7 @@ ProcessSGERoot()
                       "on a NFS mounted filesystem).\n" \
                       "Please check your permissions. You may cancel the installation now\n" \
                       "and restart it or continue and try again.\n" $SGE_ROOT_VAL
-            unset $SGE_ROOT
+            unset SGE_ROOT
             $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
             $CLEAR
          elif [ ! -f tst$$ ]; then
@@ -1671,7 +1671,7 @@ ProcessSGERoot()
             $INFOTEXT "Your \$SGE_ROOT environment variable\n\n   \$SGE_ROOT = %s\n\n" \
                         "doesn't match the current directory.\n" $SGE_ROOT_VAL
             ExecuteAsAdmin $RM -f $SGE_ROOT_VAL/tst$$
-            unset $SGE_ROOT
+            unset SGE_ROOT
             $INFOTEXT -wait -n "Hit <RETURN> to continue >> "
          else
             ExecuteAsAdmin $RM -f $SGE_ROOT_VAL/tst$$

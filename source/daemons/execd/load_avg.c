@@ -244,6 +244,7 @@ execd_add_load_report(sge_gdi_ctx_class_t *ctx, lList *report_list, u_long32 now
             while ((ep = next_ep)) {
                next_ep = lGetElemStrNext(tmp_lr_list, LR_name, name, &iterator);
 
+               DPRINTF(("handling %s in execd_add_load_report\n", name));
                if (sge_hostcmp(lGetHost(ep, LR_host), hostname) == 0) {
                   /* we found the same load value in the temp list */
                   found = true;
@@ -290,6 +291,7 @@ execd_add_conf_report(sge_gdi_ctx_class_t *ctx, lList *report_list, u_long32 now
 {
    const char* qualified_hostname = ctx->get_qualified_hostname(ctx);
 
+   DENTER(TOP_LAYER, "execd_add_conf_report");
    if (*next_send <= now) {
       lListElem *report;
 
@@ -308,14 +310,15 @@ execd_add_conf_report(sge_gdi_ctx_class_t *ctx, lList *report_list, u_long32 now
       lSetList(report, REP_list, 
          lCopyList("execd config list copy", Execd_Config_List));
       lAppendElem(report_list, report);
+      DPRINTF(("handling conf report in execd_add_conf_report\n"));
    }
-
-   return 0;
+   DRETURN(0);
 }
 
 static int 
 execd_add_license_report(sge_gdi_ctx_class_t *ctx, lList *report_list, u_long32 now, u_long32 *next_send) 
 {
+   DENTER(TOP_LAYER, "execd_add_license_report");
    if (*next_send == 0) {
       const char* qualified_hostname = ctx->get_qualified_hostname(ctx);
       lListElem *report;
@@ -345,9 +348,9 @@ execd_add_license_report(sge_gdi_ctx_class_t *ctx, lList *report_list, u_long32 
          lSetList(report, REP_list, lp_lic);
       }
       lAppendElem(report_list, report);
+      DPRINTF(("handling license report in execd_add_license_report\n"));
    }
-
-   return 0;
+   DRETURN(0);
 }
 
 static int 
@@ -418,7 +421,6 @@ execd_add_job_report(sge_gdi_ctx_class_t *ctx, lList *report_list, u_long32 now,
       /* now all is sent, reset flush_jr */
       sge_set_flush_jr_flag(false);
    }
-
    DRETURN(0);
 }
 

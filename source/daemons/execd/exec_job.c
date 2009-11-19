@@ -486,7 +486,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
                && strcmp(sge_dstring_get_string(&core_binding_strategy_string), "NULL") != 0) {
             
             sge_dstring_sprintf(&pseudo_usage, "binding_inuse=%s", 
-                           binding_get_topology_for_job((sge_dstring_get_string(&core_binding_strategy_string)));
+                           binding_get_topology_for_job((sge_dstring_get_string(&core_binding_strategy_string))));
 
             jr = get_job_report(job_id, ja_task_id, pe_task_id);
             

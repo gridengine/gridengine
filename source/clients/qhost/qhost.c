@@ -484,7 +484,7 @@ FILE *fp
 
    fprintf(fp,"%s qhost [options]\n", MSG_SRC_USAGE);
          
-   fprintf(fp, "  [-cq]                      %s\n", MSG_QHOST_cq_OPT_USAGE);
+   fprintf(fp, "  [-cb]                      %s\n", MSG_QHOST_cb_OPT_USAGE);
    fprintf(fp, "  [-help]                    %s\n", MSG_COMMON_help_OPT_USAGE);
    fprintf(fp, "  [-h hostlist]              %s\n", MSG_QHOST_h_OPT_USAGE);
    fprintf(fp, "  [-q]                       %s\n", MSG_QHOST_q_OPT_USAGE);

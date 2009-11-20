@@ -53,7 +53,7 @@
 #define MSG_QHOST_l_OPT_USAGE        _MESSAGE(9004, _("request the given resources"))
 #define MSG_QHOST_F_OPT_USAGE        _MESSAGE(9005, _("show (selected) resources"))
 #define MSG_QHOST_u_OPT_USAGE        _MESSAGE(9006, _("show only jobs for user"))
-#define MSG_QHOST_cq_OPT_USAGE       _MESSAGE(9007, _("show topology based information (socket/core)"))
+#define MSG_QHOST_cb_OPT_USAGE       _MESSAGE(9007, _("show topology based information (socket/core)"))
 
 #endif /* __MSG_QHOST_H */
 

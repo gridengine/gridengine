@@ -355,7 +355,14 @@ static int _lStr2Nm(const lNameSpace *nsp, const char *str)
 *******************************************************************************/
 void lInit(const lNameSpace *namev) 
 {
-   DENTER(CULL_LAYER, "lInit");
+   int i;
+   int max = namev->size;
+   DENTER(TOP_LAYER, "lInit");
+
+   for (i = 0; i < max; i++) {
+      DPRINTF(("LOWERBOUND=%d SIZE=%d NAME=%s\n", namev->lower, namev->size, namev->namev[0]));
+      namev++;
+   }
 
    cull_state_set_name_space(namev);
 

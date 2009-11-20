@@ -8,16 +8,21 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
-DG-2009-11-20-1: Bugfix:     upgrade from 6.1 to 62u5 fails because of missing 
-                             newly introduced complexes
-                 Bugster:    6902891
-                 Review:     CR
+EB_2009-11-20-1: Bugfix:      o Updating to 6.2u4 causes already running jobs 
+                                to be "lost
+                 Bugster:     6902905
+                 Review:      SH
 
-DG-2009-11-20-0: Bugfix:     wrong qhost help output regarding topology based
-                             information switch
-                 Bugster:    6901956
-                 Issue:      3183
-                 Review:     SH
+DG-2009-11-20-1: Bugfix:      upgrade from 6.1 to 62u5 fails because of missing 
+                              newly introduced complexes
+                 Bugster:     6902891
+                 Review:      CR
+
+DG-2009-11-20-0: Bugfix:      wrong qhost help output regarding topology based
+                              information switch
+                 Bugster:     6901956
+                 Issue:       3183
+                 Review:      SH
 
 MD-2009-11-19-1: CVS:		Created V62u5beta2_TAG
 -------------------------------------------------------

@@ -529,14 +529,15 @@ lMultiType **mpp,
 const lDescr *dp,
 int flags
 ) {
-   int i, n, ret;
-
+   int i, n, ret, lret;
+   bool only_at_bufferend = true;
+   bool format_error = false;
+   int last_error = PACK_SUCCESS;
    lMultiType *cp = NULL;
 
    DENTER(CULL_LAYER, "cull_unpack_cont");
 
    *mpp = NULL;
-
    n = lCountDescr(dp);
    if ((cp = (lMultiType *) calloc(1, sizeof(lMultiType) * (n + 1))) == NULL) {
       LERROR(LEMALLOC);
@@ -547,18 +548,52 @@ int flags
    for (i = 0; i < n; i++) {
       /* if flags are given, unpack only fields matching flags, e.g. CULL_SPOOL */
       if (flags == 0 || (dp[i].mt & flags) != 0) {
-         if ((ret = cull_unpack_switch(pb, &(cp[i]), mt_get_type(dp[i].mt), flags))) {
-            free(cp);
-            DEXIT;
-            return ret;
+         if ((lret = cull_unpack_switch(pb, &(cp[i]), mt_get_type(dp[i].mt), flags))) {
+            if (lret == PACK_FORMAT) {
+               format_error = true;
+               last_error = lret;
+            } else if (lret != PACK_FORMAT) {
+               last_error = lret;
+               only_at_bufferend = false;
+               break;
+            }
          }
       }
    }
 
+   if (format_error && only_at_bufferend) {
+      /*
+       * We catch all format errors that occur during unparsing attributes 
+       * from the end of a descriptos. Format errors mean that
+       * these attributes where not contained at the end of the packbuffer
+       * This is the case after an update release has been installed.
+       * The new master finds old objects. Due to the fact that during the 
+       * process reading in all objects a full (new) descriptor is used
+       * these errors can be skipped. 
+       *
+       * Missing attributes will contain 0 values. If there is a need to
+       * initialize them then this has to happen some layers above.
+       * (setup_qmaster)
+       */
+      ret = PACK_SUCCESS;
+   } else if (last_error != PACK_SUCCESS || only_at_bufferend == false) {
+      /*
+       * If we are here then an error != PACK_FORMAT happened or
+       * or a PACK_FORMAT occured but after it occured either
+       * a different error happended or an operation succeeded. 
+       * Format errors should only be catched if they ocure at the en of 
+       * the descriptor.
+       */
+      free(cp);
+      ret = (last_error != PACK_SUCCESS) ? last_error : PACK_FORMAT;
+   } else {
+      /*
+       * This is hopefully the default case
+       */
+      ret = PACK_SUCCESS;
+   }
    *mpp = cp;
-
-   DEXIT;
-   return PACK_SUCCESS;
+   DRETURN(ret);
 }
 
 /* ================================================================ */

@@ -827,12 +827,12 @@ static int contracts_post_fork(int ctfd, int pid, char *err_str, int err_length)
    /* Parent has to explicitly abandon the new contract */
    if ((cfd = open64(CTFS_ROOT "/process/latest", O_RDONLY)) == -1) {
        snprintf(err_str,err_length, MSG_SMF_CONTRACT_CREATE_FAILED_S, 
-                *strerror(errno));
+                strerror(errno));
       return -2;
    }
    if ((errno = shared_contract_func__ct_status_read(cfd, CTD_COMMON, &st)) != 0) {
        snprintf(err_str, err_length, MSG_SMF_CONTRACT_CREATE_FAILED_S, 
-                *strerror(errno));
+                strerror(errno));
        close(cfd);
       return -2;
    }
@@ -842,17 +842,17 @@ static int contracts_post_fork(int ctfd, int pid, char *err_str, int err_length)
    n = snprintf(path, PATH_MAX, CTFS_ROOT "/all/%ld/ctl", latest);
    if (n >= PATH_MAX) {
       snprintf(err_str, err_length, MSG_SMF_CONTRACT_CONTROL_OPEN_FAILED_S,
-               *strerror(ENAMETOOLONG));
+               strerror(ENAMETOOLONG));
       return -2;
    }
    if ((cfd = open64(path, O_WRONLY)) == -1) {
       snprintf(err_str, err_length, MSG_SMF_CONTRACT_CONTROL_OPEN_FAILED_S,
-               *strerror(errno));
+               strerror(errno));
       return -2;
    }
    if (shared_contract_func__ct_ctl_abandon(cfd)) {
       snprintf(err_str, err_length, MSG_SMF_CONTRACT_ABANDON_FAILED_US,
-               cfd, *strerror(errno));
+               cfd, strerror(errno));
       (void) close(cfd);
       return -2;
    }

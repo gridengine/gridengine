@@ -162,6 +162,13 @@ const char *buf
 #if defined(SOLARIS)
    char err_str[256];
    i = sge_smf_contract_fork(err_str, 256);
+   /* 
+    * -2 and lower is SMF contract failure, 
+    * -1 is fork() failure and will be handled later 
+    */
+   if (i < -1){
+      ERROR((SGE_EVENT, MSG_SMF_MAIL_FORK_FAILED_S, err_str));
+   }
 #else
    i = fork();
 #endif
@@ -170,14 +177,12 @@ const char *buf
       DEXIT;
       return;
    }
-   /* We just log that fork was not succesful */
-   else if (i<0) {
-#if defined(SOLARIS)
-       ERROR((SGE_EVENT, MSG_SMF_MAIL_FORK_FAILED_S, err_str));
-#else
-       ERROR((SGE_EVENT, MSG_MAIL_NOFORK));
-#endif
-   }
+   /* log fork() failure */
+   else if (i == -1) { /* still in parent */
+      ERROR((SGE_EVENT, MSG_MAIL_NOFORK_S, strerror(errno)));
+      DEXIT;
+      return;
+   } /* else in child */
 
    DPRINTF(("CHILD CONTINUES\n"));
    SETPGRP;
@@ -190,12 +195,12 @@ const char *buf
       and leave_commd() unregisters the commproc
    */
    if (pipe(pipefds) < 0) {
-      ERROR((SGE_EVENT, MSG_MAIL_NOPIPE));
+      ERROR((SGE_EVENT, MSG_MAIL_NOPIPE_S, strerror(errno)));
       exit(1);
    }
    /* Don't need to start in new contract on Solaris - already in new one */
    if ((pid = fork()) < 0) {
-      ERROR((SGE_EVENT, MSG_MAIL_NOFORK));
+      ERROR((SGE_EVENT, MSG_MAIL_NOFORK_S, strerror(errno)));
       exit(1);
    }
    if (!pid) {
@@ -205,7 +210,7 @@ const char *buf
          sprintf(user_str, "%s", user);
 
       if (dup2(pipefds[0], 0) < 0) {
-         CRITICAL((SGE_EVENT, MSG_MAIL_NODUP));
+         CRITICAL((SGE_EVENT, MSG_MAIL_NODUP_S, strerror(errno)));
          exit(1);
       }
 
@@ -219,7 +224,7 @@ const char *buf
          DPRINTF(("%s mail %s", mailer, user_str));  
          execl(mailer, "mail", user_str, NULL);
       }
-      CRITICAL((SGE_EVENT, MSG_MAIL_NOEXEC_S, mailer));
+      CRITICAL((SGE_EVENT, MSG_MAIL_NOEXEC_SS, mailer, strerror(errno)));
       exit(1);
    }
 

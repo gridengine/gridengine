@@ -360,21 +360,27 @@ cqueue_create(lList **answer_list, const char *name)
 *  SYNOPSIS
 *     bool 
 *     cqueue_is_href_referenced(const lListElem *this_elem, 
-*                               const lListElem *href) 
+*                               const lListElem *href, bool only_hostlist) 
 *
 *  FUNCTION
 *     Is the given "href" (host or hostgroup referenece) used in the
-*     definition of the cluster queue "this_elem"?
+*     definition of the cluster queue "this_elem"? If "only_hostlist" 
+*     is true then only the hostlist will be tested and all
+*     parameter lists will be ignored. 
+*
 *
 *  INPUTS
 *     const lListElem *this_elem - CQ_Type 
 *     const lListElem *href      - HR_Type 
+*     bool    only_hostlist      - check only hostlist and ignore 
+*                                  all parameter lists
 *
 *  RESULT
 *     bool - true if it is referenced
 *******************************************************************************/
 bool 
-cqueue_is_href_referenced(const lListElem *this_elem, const lListElem *href)
+cqueue_is_href_referenced(const lListElem *this_elem, 
+                          const lListElem *href, bool only_hostlist)
 {
    bool ret = false;
 
@@ -384,7 +390,6 @@ cqueue_is_href_referenced(const lListElem *this_elem, const lListElem *href)
       if (href_name != NULL) {
          lList *href_list = lGetList(this_elem, CQ_hostlist);
          lListElem *tmp_href = lGetElemHost(href_list, HR_name, href_name);
-         int index;
 
          /*
           * Is the host group part of the hostlist definition ...
@@ -392,20 +397,24 @@ cqueue_is_href_referenced(const lListElem *this_elem, const lListElem *href)
          if (tmp_href != NULL) {
             ret = true;
          }
+
          /*
           * ... or is it contained on one of the attribute lists
           */
-         index = 0;
-         while (cqueue_attribute_array[index].cqueue_attr != NoName && !ret) {
-            lList *attr_list = lGetList(this_elem,
-                                    cqueue_attribute_array[index].cqueue_attr);
-            lListElem *attr_elem = lGetElemHost(attr_list,
-                           cqueue_attribute_array[index].href_attr, href_name);
-                                                                                
-            if (attr_elem != NULL) {
-               ret = true;
+         if (!only_hostlist) {
+            int index = 0;
+
+            while (cqueue_attribute_array[index].cqueue_attr != NoName && !ret) {
+               lList *attr_list = lGetList(this_elem,
+                                       cqueue_attribute_array[index].cqueue_attr);
+               lListElem *attr_elem = lGetElemHost(attr_list,
+                              cqueue_attribute_array[index].href_attr, href_name);
+                                                                                   
+               if (attr_elem != NULL) {
+                  ret = true;
+               }
+               index++;
             }
-            index++;
          }
       }
    }
@@ -479,21 +488,27 @@ cqueue_is_hgroup_referenced(const lListElem *this_elem, const lListElem *hgroup)
 *  SYNOPSIS
 *     bool 
 *     cqueue_is_a_href_referenced(const lListElem *this_elem, 
-*                                 const lList *href_list) 
+*                                 const lList *href_list, 
+*                                 bool only_hostlist) 
 *
 *  FUNCTION
-*     Is at least one host reference contained in "href_list" referenced
-*     in the cluster queue "this_elem" 
+*     Returns true if at least one host contained in "href_list" is
+*     referenced in the cluster queue "this_elem". If "only_hostlist" 
+*     is true then only the hostlist will be tested and all
+*     parameter lists will be ignored. 
 *
 *  INPUTS
 *     const lListElem *this_elem - CQ_Type object
 *     const lList *href_list     - HR_Type list 
+*     bool only_hostlist         - check only hostlist and ignore 
+*                                  all parameter lists
 *
 *  RESULT
 *     bool - at least one object is referenced
 *******************************************************************************/
 bool 
-cqueue_is_a_href_referenced(const lListElem *this_elem, const lList *href_list)
+cqueue_is_a_href_referenced(const lListElem *this_elem, 
+                            const lList *href_list, bool only_hostlist)
 {
    bool ret = false;
   
@@ -501,7 +516,7 @@ cqueue_is_a_href_referenced(const lListElem *this_elem, const lList *href_list)
       lListElem *href;
 
       for_each(href, href_list) {
-         if (cqueue_is_href_referenced(this_elem, href)) {
+         if (cqueue_is_href_referenced(this_elem, href, only_hostlist)) {
             ret = true;
             break;
          }

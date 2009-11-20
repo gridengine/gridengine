@@ -303,7 +303,7 @@ hgroup_mod(sge_gdi_ctx_class_t *ctx,
             lListElem *cqueue;
 
             for_each (cqueue, cqueue_master_list) {
-               if (cqueue_is_a_href_referenced(cqueue, occupant_groups)) {
+               if (cqueue_is_a_href_referenced(cqueue, occupant_groups, true)) {
                   lListElem *new_cqueue = NULL;
                   lList *real_add_hosts = NULL;
                   lList *real_rem_hosts = NULL;

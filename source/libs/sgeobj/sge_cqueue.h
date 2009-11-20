@@ -86,10 +86,12 @@ lListElem *
 cqueue_create(lList **answer_list, const char *name);
 
 bool 
-cqueue_is_href_referenced(const lListElem *this_elem, const lListElem *href);
+cqueue_is_href_referenced(const lListElem *this_elem, 
+                          const lListElem *href, bool only_hostlist);
 
 bool
-cqueue_is_a_href_referenced(const lListElem *this_elem, const lList *href_list);
+cqueue_is_a_href_referenced(const lListElem *this_elem, 
+                            const lList *href_list, bool only_hostlist);
 
 bool
 cqueue_list_add_cqueue(lList *this_list, lListElem *queue);

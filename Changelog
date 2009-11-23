@@ -8,6 +8,12 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+SH-2009-11-23-0: Bugfix:      CPU time in accounting file is wrong for PE jobs
+                              with accouting_summary set to TRUE
+                 Bugster:     6901697
+                 Issue:       3179
+                 Review:      EB
+
 CR-2009-11-20-0: Bugfix:      upgrade problems with max_advance_reservations
                               parameter when upgradeing from 61 to 62
                  Bugster:     6885690

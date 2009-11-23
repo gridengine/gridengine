@@ -182,6 +182,9 @@ UpdateConfiguration()
          ReplaceOrAddLine ${modFile} 'rsh_command.*'    "rsh_command                  builtin"
          ReplaceOrAddLine ${modFile} 'rsh_daemon.*'     "rsh_daemon                   builtin"
       fi
+
+      ReplaceOrAddLine ${modFile} 'max_advance_reservations.*'    "max_advance_reservations     0"
+
    else
       #LOCAL configurations
       if [ "$newIJS" = true ]; then # new IJS settings

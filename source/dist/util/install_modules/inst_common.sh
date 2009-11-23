@@ -1611,9 +1611,9 @@ ProcessSGERoot()
 {
    export SGE_ROOT
 
-   done=false
+   check_done=false
 
-   while [ $done = false ]; do
+   while [ $check_done = false ]; do
       if [ "$SGE_ROOT" = "" ]; then
          while [ "$SGE_ROOT" = "" ]; do
             $CLEAR
@@ -1675,11 +1675,20 @@ ProcessSGERoot()
             $INFOTEXT -wait -n "Hit <RETURN> to continue >> "
          else
             ExecuteAsAdmin $RM -f $SGE_ROOT_VAL/tst$$
-            done=true
+            check_done=true
          fi
       else
-         done=true
+         check_done=true
       fi
+      if [ "$AUTO" = "true" ]; then
+         if [ "$ADMINUSER" != default ]; then
+            output_username=$ADMINUSER
+         else
+            output_username="root"
+         fi
+         $INFOTEXT -log "Your selected \$SGE_ROOT directory: %s\n is not read/writeable for user: %s" $SGE_ROOT_VAL $output_username
+         exit 2
+      fi  
    done
 
    CheckPath

@@ -211,10 +211,35 @@ RestoreJMX()
 	      ExecuteAsAdmin chmod 644 "$SGE_ROOT/$SGE_CELL/common/jmx/logging.properties"
 	      ExecuteAsAdmin chmod 644 "$SGE_ROOT/$SGE_CELL/common/jmx/java.policy"
 	      ExecuteAsAdmin chmod 644 "$SGE_ROOT/$SGE_CELL/common/jmx/jaas.config"
-	      ExecuteAsAdmin chmod 600 "$SGE_ROOT/$SGE_CELL/common/jmx/management.properties"
+	      # ExecuteAsAdmin chmod 600 "$SGE_ROOT/$SGE_CELL/common/jmx/management.properties"
+         ReplaceKeystorePassword "$SGE_ROOT/$SGE_CELL/common/jmx/management.properties"
+
 	      SGE_SKIP_JMX_SETTING=true
       fi
    fi
+}
+
+#-------------------------------------------------------------------------------
+# ReplaceKeystorePassword: replace the com.sun.grid.jgdi.management.jmxremote.ssl.serverKeystorePassword
+# $1 - management.properties 
+ReplaceKeystorePassword()
+{
+   MANAGEMENTPROPERTIES=$1
+   # if the management.properties file still contains the serverKeystorePassword move it to keystore.password file and remove it
+   # from management.properties
+   grep 'com.sun.grid.jgdi.management.jmxremote.ssl.serverKeystorePassword=' $MANAGEMENTPROPERTIES >& /dev/null
+   if [ $? -eq 0 ]; then 
+      mv $MANAGEMENTPROPERTIES ${MANAGEMENTPROPERTIES}.saved
+      SERVERKEYSTOREFILE=` grep 'com.sun.grid.jgdi.management.jmxremote.ssl.serverKeystore=' ${MANAGEMENTPROPERTIES}.saved | sed 's/com.sun.grid.jgdi.management.jmxremote.ssl.serverKeystore=//' `
+      OLDPW=` grep 'com.sun.grid.jgdi.management.jmxremote.ssl.serverKeystorePassword=' ${MANAGEMENTPROPERTIES}.saved | sed 's/com.sun.grid.jgdi.management.jmxremote.ssl.serverKeystorePassword=//' `
+      sed  "s#^com.sun.grid.jgdi.management.jmxremote.ssl.serverKeystorePassword=.*#com.sun.grid.jgdi.management.jmxremote.ssl.serverKeystorePasswordFile=${SERVERKEYSTOREFILE}.password#" ${MANAGEMENTPROPERTIES}.saved > $MANAGEMENTPROPERTIES
+      echo '# moved into $CALOCALTOP/private/keystore.password' >> $MANAGEMENTPROPERTIES
+      echo "com.sun.grid.jgdi.management.jmxremote.ssl.serverKeystorePassword=$OLDPW" > ${SERVERKEYSTOREFILE}.password
+      chown $ADMINUSER ${SERVERKEYSTOREFILE}.password
+	   ExecuteAsAdmin chmod 600 "${SERVERKEYSTOREFILE}.password"
+      chown $ADMINUSER $MANAGEMENTPROPERTIES 
+   fi
+	ExecuteAsAdmin chmod 644 "$MANAGEMENTPROPERTIES"
 }
 
 #-------------------------------------------------------------------------------

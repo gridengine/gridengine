@@ -8,19 +8,24 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
-RN_2009-11-20-3: Bugfix:      Adding host to hostgroup causes extra slot-only
+DG-2009-11-23-0: Bugfix:      reporting of core binding after execd restart 
+                              contains an additional new line
+                 Bugster:     6902868
+                 Review:      EB
+
+RN-2009-11-20-3: Bugfix:      Adding host to hostgroup causes extra slot-only
                               queue instances
                  Bugster:     6903526
                  Issue:       3184
                  Review:      EB
 
-RN_2009-11-20-2: Bugfix:      sge_qmaster crashes without a coredump
+RN-2009-11-20-2: Bugfix:      sge_qmaster crashes without a coredump
                               with message from sge_smf_contract_fork()
                  Bugster:     6900836
                  Issue:       3189
                  Review:      HP
 
-EB_2009-11-20-1: Bugfix:      o Updating to 6.2u4 causes already running jobs 
+EB-2009-11-20-1: Bugfix:      o Updating to 6.2u4 causes already running jobs 
                                 to be "lost
                  Bugster:     6902905
                  Review:      SH

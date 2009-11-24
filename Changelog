@@ -8,6 +8,9 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 -----------------+-----------+--------------------------------------------------
+MD-2009-11-24-0: CVS:       Created V61u7_TAG.
+----------------------------------------------
+
 CR-2009-11-11-0: Bugfix:      o Fixed qmaster startup script which started 
                                 scheduler without waiting for qmaster startup
                               o Merged fix for CR 6896663 to this branch

@@ -1787,37 +1787,53 @@ object_parse_solist_from_string(lListElem *this_elem, lList **answer_list,
 
    DENTER(OBJECT_LAYER, "object_parse_solist_from_string");
    if (this_elem != NULL && string != NULL) {
-      lList *tmp_list = NULL;
-      lListElem *tmp_elem = NULL;
-      int pos = lGetPosViaElem(this_elem, name, SGE_NO_ABORT);
+      lList               *tmp_list = NULL;
+      lListElem           *tmp_elem = NULL;
+      struct saved_vars_s *last = NULL;
+      char                *slots_text = NULL;
+      int                 pos = -1;
+      
+      pos = lGetPosViaElem(this_elem, name, SGE_NO_ABORT);
 
-      if (strncasecmp("slots", string, 5) == 0) {
+      /*
+       * The queue wise subordinate is defined like this:
+       * subordinate_list  A.q=3,B.q=4
+       * The slotwise subordinate is defined like this:
+       * subordinate_list slots=4(A.q:1:lr, B.q:2:sr)
+       * If the value of the "subordinate_list" key begins with
+       * "slots=", it's slotwise subordinate, otherwise it's
+       * queue wise subordinate.
+       *
+       * TODO: HP: This parser could be improved, now a queue wise subordinate
+       * that begins with a queue called "slots" will be interpreted as
+       * slotwise subordinate and therefore lead to an error.
+       */
+      slots_text = sge_strtok_r(string, "=", &last);
+      if (strncasecmp("slots", slots_text, 5) == 0) {
          /*
           * slot-wise suspend on subordinate
           */
-         char *ptr;
-         char *slots_sum;
-         char *first_subordinated_queue;
-         struct saved_vars_s *last = NULL;
+         char *sub_queues_text = NULL;
+         char *slots_sum_text = NULL;
          char *endptr = NULL;
-         lUlong slots_sum_value;
+         lUlong slots_sum_value = 0;
 
          /*
           * format of string: slots=8(queue1.q:3:sr, queue2.q:2:lr)
           */
-         sge_strtok_r(string, "=", &last);  /* skip "slots" keyword */
-         slots_sum                = sge_strtok_r(NULL, "(", &last);
-         slots_sum_value          = strtol(slots_sum, &endptr, 10);
+         /* the "slots=" was already skipped in the first sge_strtok_r() */
+         /* parse the "8" in our example above */
+         slots_sum_text           = sge_strtok_r(NULL, "(", &last);
+         slots_sum_value          = strtol(slots_sum_text, &endptr, 10);
          if (*endptr != '\0') {
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                ANSWER_QUALITY_ERROR, MSG_ERRORPARSINGVALUEFORNM_S, string);
             ret = false;
          }
-
-         first_subordinated_queue = sge_strtok_r(NULL, ",)", &last);
-         ptr = strstr(string, first_subordinated_queue);
-
-         lString2List(ptr, &tmp_list, SO_Type, SO_name, ",) \t");
+         /* point the "sub_queues_text" to the start of the sub queue list */
+         sub_queues_text = sge_strtok_r(NULL, ")", &last);
+         /* split up the original string from the first subordinated queue on */
+         lString2List(sub_queues_text, &tmp_list, SO_Type, SO_name, ",) \t");
          for_each(tmp_elem, tmp_list) {
             const char *queue_value = lGetString(tmp_elem, SO_name);
             char *queuename   = sge_strtok(queue_value, ":");
@@ -1885,8 +1901,6 @@ object_parse_solist_from_string(lListElem *this_elem, lList **answer_list,
          if (ret) {
             lSetPosList(this_elem, pos, tmp_list);
          }
-
-         sge_free_saved_vars(last);
       } else {
          lString2List(string, &tmp_list, SO_Type, SO_name, ", \t");
          if (tmp_list != NULL) {
@@ -1928,6 +1942,7 @@ object_parse_solist_from_string(lListElem *this_elem, lList **answer_list,
             }
          }
       }
+      sge_free_saved_vars(last);
    } else {
       answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                               ANSWER_QUALITY_ERROR,

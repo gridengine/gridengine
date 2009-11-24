@@ -78,8 +78,8 @@ qinstance_x_on_subordinate(sge_gdi_ctx_class_t *ctx,
 *                            be retrieved.
 *
 *  RESULT
-*     static u_long32 - The "threshold" value. 0 if no slotwise suspend on
-*                       subordinate is defined.
+*     u_long32 - The "threshold" value. 0 if no slotwise suspend on
+*                subordinate is defined.
 *
 *  NOTES
 *     MT-NOTE: get_slotwise_sos_threshold() is MT safe 
@@ -365,7 +365,7 @@ get_slotwise_sos_super_qinstance(lListElem *qinstance)
 }
 
 typedef struct {
-   u_long32    job_id;
+   u_long32  job_id;
    lListElem *task; /* JAT_Type */
 } ssos_task_t;
 
@@ -375,7 +375,7 @@ typedef struct {
    u_long32      action;     /* from the parents QU_subordinate_list */
    lListElem     *qinstance; /* QU_Type */
    lListElem     *parent;    /* QU_Type */
-   sge_sl_list_t *tasks;     /* JAT_Type? */
+   sge_sl_list_t *tasks;
 } ssos_qinstance_t;
 
 /****** sge_subordinate_qmaster/destroy_slotwise_sos_task_elem() ***************
@@ -393,8 +393,7 @@ typedef struct {
 *     ssos_task_t **ssos_task - The ssos_task_t element to destroy
 *
 *  RESULT
-*     static bool -  Always true to continue the destruction of all list
-*                    elements.
+*     bool -  Always true to continue the destruction of all list elements.
 *
 *  NOTES
 *     MT-NOTE: destroy_slotwise_sos_task_elem() is MT safe 
@@ -431,8 +430,7 @@ destroy_slotwise_sos_task_elem(ssos_task_t **ssos_task)
 *                                         destroy
 *
 *  RESULT
-*     static bool - Always true to continue the destruction of all list
-*                   elements.
+*     bool - Always true to continue the destruction of all list elements.
 *
 *  NOTES
 *     MT-NOTE: destroy_slotwise_sos_tree_elem() is MT safe 
@@ -453,6 +451,115 @@ destroy_slotwise_sos_tree_elem(ssos_qinstance_t **ssos_qinstance)
    return true;
 }
 
+/****** sge_subordinate_qmaster/is_ssos() **************************************
+*  NAME
+*     is_ssos() -- Checks if a task is suspended by slotwise subordination
+*                  and not suspended otherwise, too.
+*
+*  SYNOPSIS
+*     static bool is_ssos(bool only_ssos, lListElem *task) 
+*
+*  FUNCTION
+*     If only_ssos is true, this function checks if a task is suspended by
+*     slotwise subordination and not suspended otherwise at the same time, too.
+*     If only_ssos is false, this function checks if a task is suspended by
+*     slotwise subordination. This task may additionally be suspended by
+*     another suspend method.
+*     A task that is suspended by slotwise subordination could also be suspended
+*     manually, or by threshold, or by queue wise subordination or by calendar,
+*     too.
+*
+*  INPUTS
+*     bool only_ssos  - If true, checks if task is only suspended by slotwise
+*                       suspend on subordinate,
+*                       if false, checks if task is suspended by slotwise
+*                       suspend on subordinate, but it might be also
+*                       suspended by some other suspend method at the same time.
+*     lListElem *task - The task to check. CULL type "JAT_Type". 
+*
+*  RESULT
+*     bool - true if the task is (only) suspended by slotwise suspend
+*            on subordinate.
+*            false else.
+*
+*  NOTES
+*     MT-NOTE: is_ssos() is MT safe 
+*******************************************************************************/
+static bool
+is_ssos(bool only_ssos, lListElem *task)
+{
+   bool     ret = false;
+   u_long32 state = 0;
+
+   if (task != NULL) {
+      state = lGetUlong(task, JAT_state);
+      if (only_ssos == true) {
+         ret = (bool)(ISSET(state, JSUSPENDED) == false &&
+               ISSET(state, JSUSPENDED_ON_THRESHOLD) == false &&
+               ISSET(state, JSUSPENDED_ON_SUBORDINATE) == false &&
+               ISSET(state, JSUSPENDED_ON_SLOTWISE_SUBORDINATE) == true);
+      } else {
+         ret = (bool)ISSET(state, JSUSPENDED_ON_SLOTWISE_SUBORDINATE);
+      }
+   }
+   return ret; 
+}
+
+/****** sge_subordinate_qmaster/has_ssos_task() ********************************
+*  NAME
+*     has_ssos_task() -- Checks if a qinstance has tasks that are suspended
+*                        by slotwise suspend on subordinate (only).
+*
+*  SYNOPSIS
+*     static bool has_ssos_task(bool only_ssos_task, ssos_qinstance_t 
+*     *ssos_qinstance) 
+*
+*  FUNCTION
+*     If only_ssos is true, this function checks if this queue has at least one
+*     task that is suspended by slotwise subordination and not suspended
+*     otherwise at the same time, too.
+*     If only_ssos is false, this function checks if this queue has at least one
+*     task that is suspended by slotwise subordination. This task may
+*     additionally by suspended by some other suspend method.
+*     A task that is suspended by slotwise subordination could also be suspended
+*     manually, or by threshold, or by queue wise subordination or by calendar,
+*     too.
+*
+*  INPUTS
+*     bool only_ssos  - If true, checks if task is only suspended by ssos,
+*                       if false, checks if task is suspended by ssos, but
+*                       it might also be suspended by other methods at the
+*                       same time.
+*     ssos_qinstance_t *ssos_qinstance - The qinstance to check.
+*
+*  RESULT
+*     bool - true if the qinstance has at least one task that is
+*            suspended by slotwise suspend on subordinate (only).
+*            false if there is no such task.
+*
+*  NOTES
+*     MT-NOTE: has_ssos_task() is MT safe 
+*
+*  SEE ALSO
+*     sge_subordinate_qmaster/is_ssos()
+*******************************************************************************/
+static bool
+has_ssos_task(bool only_ssos_task, ssos_qinstance_t *ssos_qinstance)
+{
+   bool          ret = false;
+   sge_sl_elem_t *ssos_task_elem = NULL;
+   ssos_task_t   *ssos_task = NULL;
+
+   for_each_sl(ssos_task_elem, ssos_qinstance->tasks) {
+      ssos_task = sge_sl_elem_data(ssos_task_elem);
+      ret = is_ssos(only_ssos_task, ssos_task->task);
+      if (ret == true) {
+         break;
+      }
+   }
+   return ret;
+}
+
 /****** sge_subordinate_qmaster/get_task_to_x_in_depth() ***********************
 *  NAME
 *     get_task_to_x_in_depth() -- Searches the slotwise subordinate tree in a
@@ -460,8 +567,9 @@ destroy_slotwise_sos_tree_elem(ssos_qinstance_t **ssos_qinstance)
 *
 *  SYNOPSIS
 *     static void get_task_to_x_in_depth(sge_sl_list_t 
-*     *slotwise_sos_tree_qinstances, u_long32 depth, bool running, bool suspend, 
-*     ssos_qinstance_t **ssos_qinstance_to_x, ssos_task_t **ssos_task_to_x) 
+*     *slotwise_sos_tree_qinstances, u_long32 depth, bool suspend,
+*     bool only_slotwise_suspended, ssos_qinstance_t **ssos_qinstance_to_x,
+*     ssos_task_t **ssos_task_to_x) 
 *
 *  FUNCTION
 *     Searches in the provided slotwise subordination tree in a specific depth
@@ -472,16 +580,22 @@ destroy_slotwise_sos_tree_elem(ssos_qinstance_t **ssos_qinstance)
 *                                                   subordinate tree as a list
 *     u_long32 depth                              - The depth in this tree where
 *                                                   the task is to be searched
-*     bool running                                - Are we looking for running
-*                                                   tasks or for suspended tasks?
 *     bool suspend                                - Are we going to suspend or
 *                                                   unsuspend a task?
+*     bool only_slotwise_suspended                - Are we looking for tasks to
+*                                                   unsuspend that are only
+*                                                   slotwise suspended, or are
+*                                                   we looking for tasks that are
+*                                                   also suspended manually, by
+*                                                   threshold or by queue wise
+*                                                   subordination?
+*                                                   Ignored if suspend == true.
 *     ssos_qinstance_t **ssos_qinstance_to_x      - The queue instance where
 *                                                   the found task is running
 *     ssos_task_t **ssos_task_to_x                - The task we found
 *
 *  RESULT
-*     static void - none
+*     void - none
 *
 *  NOTES
 *     MT-NOTE: get_task_to_x_in_depth() is MT safe 
@@ -491,11 +605,11 @@ destroy_slotwise_sos_tree_elem(ssos_qinstance_t **ssos_qinstance)
 *******************************************************************************/
 static void
 get_task_to_x_in_depth(sge_sl_list_t *slotwise_sos_tree_qinstances,
-      u_long32 depth, bool running, bool suspend,
+      u_long32 depth, bool suspend, bool only_slotwise_suspended,
       ssos_qinstance_t **ssos_qinstance_to_x, ssos_task_t **ssos_task_to_x)
 {
    sge_sl_elem_t *ssos_tree_elem = NULL;
-   u_long32      extreme_seq_no     = running==true ? 0 : (u_long32)-1;
+   u_long32      extreme_seq_no     = (suspend==true) ? 0 : (u_long32)-1;
    u_long32      oldest_start_time = (u_long32)-1;
    u_long32      youngest_start_time = 0;
 
@@ -507,8 +621,9 @@ get_task_to_x_in_depth(sge_sl_list_t *slotwise_sos_tree_qinstances,
        */
       if (ssos_qinstance->depth == depth &&
           ssos_qinstance->tasks != NULL &&
-          ((running == true && ssos_qinstance->seq_no > extreme_seq_no) ||
-           (running == false && ssos_qinstance->seq_no < extreme_seq_no))) {
+          ((suspend == true && ssos_qinstance->seq_no > extreme_seq_no) ||
+           (suspend == false && ssos_qinstance->seq_no < extreme_seq_no &&
+            has_ssos_task(only_slotwise_suspended, ssos_qinstance)))) {
          extreme_seq_no = ssos_qinstance->seq_no;
       }
    }
@@ -523,7 +638,7 @@ get_task_to_x_in_depth(sge_sl_list_t *slotwise_sos_tree_qinstances,
       if (ssos_qinstance->depth == depth &&
           ssos_qinstance->seq_no == extreme_seq_no) {
          sge_sl_elem_t *ssos_task_elem = NULL;
-         bool oldest = ssos_qinstance->action == SO_ACTION_LR ? true : false;
+         bool oldest = (bool)(ssos_qinstance->action == SO_ACTION_LR);
 
          /* If we have to unsuspend and if we would look for the youngest job
           * for suspend, we have to look for the oldest job to unsuspend.
@@ -535,17 +650,21 @@ get_task_to_x_in_depth(sge_sl_list_t *slotwise_sos_tree_qinstances,
          for_each_sl(ssos_task_elem, ssos_qinstance->tasks) {
             u_long32    start_time = 0;
             ssos_task_t *ssos_task = sge_sl_elem_data(ssos_task_elem);
-
-            start_time = lGetUlong(ssos_task->task, JAT_start_time);
-            if (oldest == true && start_time < oldest_start_time) {
-               oldest_start_time = start_time;
-               *ssos_task_to_x = ssos_task;
-               *ssos_qinstance_to_x = ssos_qinstance;
-            }
-            if (oldest == false && start_time > youngest_start_time) {
-               youngest_start_time = start_time;
-               *ssos_task_to_x = ssos_task;
-               *ssos_qinstance_to_x = ssos_qinstance;
+           
+            if (suspend == true ||
+                (suspend == false &&
+                 is_ssos(only_slotwise_suspended, ssos_task->task) == true)) {
+               start_time = lGetUlong(ssos_task->task, JAT_start_time);
+               if (oldest == true && start_time < oldest_start_time) {
+                  oldest_start_time = start_time;
+                  *ssos_task_to_x = ssos_task;
+                  *ssos_qinstance_to_x = ssos_qinstance;
+               }
+               if (oldest == false && start_time > youngest_start_time) {
+                  youngest_start_time = start_time;
+                  *ssos_task_to_x = ssos_task;
+                  *ssos_qinstance_to_x = ssos_qinstance;
+               }
             }
          }
       }
@@ -573,7 +692,7 @@ get_task_to_x_in_depth(sge_sl_list_t *slotwise_sos_tree_qinstances,
 *     u_long32 task_id                            - The task ID of the task
 *
 *  RESULT
-*     static void - nonne 
+*     void - none 
 *
 *  NOTES
 *     MT-NOTE: remove_task_from_slotwise_sos_tree() is not MT safe 
@@ -631,14 +750,32 @@ x_most_extreme_task(sge_gdi_ctx_class_t *ctx, sge_sl_list_t *slotwise_sos_tree_q
        */
       for (i=depth; i>0 && ssos_task==NULL; i--) {
          /* find youngest running task to suspend */
-         get_task_to_x_in_depth(slotwise_sos_tree_qinstances, i, true, suspend,
+         get_task_to_x_in_depth(slotwise_sos_tree_qinstances, i, suspend, true,
                &ssos_qinstance, &ssos_task);
       }
    } else {
+      /* First we look for the best task to unsuspend that is only slotwise
+       * suspended and not manually, by threshold or by queue wise subordination.
+       * If there is no such task, we look for the best task that is also
+       * otherwise suspended to remove the JSUSPENDED_ON_SLOTWISE_SUBORDINATE
+       * flag from this task, so it might be unsuspended as soon as the other
+       * suspends are removed.
+       */
+/* TODO: HP: Optimize this: The first loop could also detect and store a
+ *           candidate for the second case, so the second loop could be
+ *           removed.
+ */
       for (i=1; i<=depth && ssos_task==NULL; i++) {
-         /* find oldest suspended task to unsuspend */
-         get_task_to_x_in_depth(slotwise_sos_tree_qinstances, i, false, suspend,
+         /* find oldest only slotwise suspended task to unsuspend */
+         get_task_to_x_in_depth(slotwise_sos_tree_qinstances, i, suspend, true,
                &ssos_qinstance, &ssos_task);
+      }
+      if (ssos_task == NULL) {
+         for (i=1; i<=depth && ssos_task==NULL; i++) {
+            /* find oldest also otherwise suspended task to unsuspend */
+            get_task_to_x_in_depth(slotwise_sos_tree_qinstances, i, suspend, false,
+                  &ssos_qinstance, &ssos_task);
+         }
       }
    }
 
@@ -808,13 +945,18 @@ count_running_jobs_in_slotwise_sos_tree(sge_sl_list_t *qinstances_in_slotwise_so
                         }
                      }
                   }
-               } else if (ISSET(state, JSUSPENDED_ON_SLOTWISE_SUBORDINATE) == true &&
-                          ISSET(state, JSUSPENDED) == false &&
-                          ISSET(state, JSUSPENDED_ON_THRESHOLD) == false &&
-                          ISSET(state, JSUSPENDED_ON_SUBORDINATE) == false &&
-                          suspend == false) {
-                  /* Check if the qinstance name where the task is slotwise suspended is
-                   * in the list of qinstances in the slotwise sos tree.
+               } else if (suspend == false &&
+                          ISSET(state, JSUSPENDED_ON_SLOTWISE_SUBORDINATE) == true) {
+
+                  /* We have to remember all tasks that are slotwise suspended,
+                   * even if they are also manually or by threshold or queue
+                   * wise subordination suspended, because it might be that
+                   * we don't find a task to unsuspend but can remove the
+                   * JSUSPENDED_ON_SLOTWISE_SUBORDINATE flag from a doubly
+                   * suspended task.
+                   */
+                  /* Check if the qinstance where the task is slotwise suspended is
+                   * in the slotwise sos tree list.
                    */
                   task_gdi_qname = lGetString(task_gdi, JG_qname);
                   for_each_sl(sl_elem, qinstances_in_slotwise_sos_tree) {

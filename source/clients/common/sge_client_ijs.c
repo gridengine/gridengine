@@ -915,8 +915,6 @@ int force_ijs_server_shutdown(COMM_HANDLE **phandle,
    if (ret != COMM_RETVAL_OK) {
       DPRINTF(("comm_shutdown_connection() failed: %s (%d)\n",
                sge_dstring_get_string(p_err_msg), ret));
-      sge_dstring_sprintf(p_err_msg, "error shutting down the connection: %s",
-                          cl_get_error_text(ret));
       ret = 2;
    } else {
       DPRINTF(("successfully shut down the connection\n"));

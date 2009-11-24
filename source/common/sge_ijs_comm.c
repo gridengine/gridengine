@@ -679,7 +679,8 @@ int comm_shutdown_connection(COMM_HANDLE *handle, const char *component_name,
    ret = cl_com_set_error_func(NULL);
    ret = cl_commlib_close_connection(handle, remote_host, 
                                      (char*)component_name, 1, CL_FALSE);
-   if (ret != CL_RETVAL_OK) {
+   if (ret != CL_RETVAL_OK && ret != CL_RETVAL_UNKNOWN_ENDPOINT) {
+      /* shutting down the endpoint returned commlib error */
       sge_dstring_sprintf(err_msg, cl_get_error_text(ret));
       DPRINTF(("cl_commlib_close_connection() failed: %s (%d)\n",
                sge_dstring_get_string(err_msg), ret));

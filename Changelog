@@ -1,12 +1,18 @@
 ################################################################################
 # This is the Changelog for Grid Engine source code changes.                   #
 # Possible keywords: "Bugfix", "Belongs to", "Review", "Enhancem.",            #
-#                    "Merged from", "Cleanup", "Issue"                         #
+#                    "Merged from", "Cleanup", "Issue", "Bugster"              #
 #                                                                              #
 #                ===== PLEASE DO NOT DELETE THIS HEADER ====                   #
 ################################################################################
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
+
+CR-2009-11-24-0: Bugfix:      Interactive jobs get superfluous error message
+                              when they can't be scheduled
+                 Bugster:     6903978
+                 Issue:       3185
+                 Review:      SH
 
 HP-2009-11-24-0: Bugfix:      o with slotwise preemption, doubly suspended tasks
                                 are not always unsuspended correctly

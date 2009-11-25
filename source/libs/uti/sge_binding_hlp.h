@@ -64,9 +64,6 @@ int binding_striding_parse_first_core(const char* parameter);
 int binding_striding_parse_first_socket(const char* parameter);
 int binding_striding_parse_step_size(const char* parameter);
 
-bool binding_explicit_extract_sockets_cores(const char* parameter,
-   int** list_of_sockets, int* samount, int** list_of_cores, int* camount);
-
 bool binding_explicit_has_correct_syntax(const char* parameter);
 
 #if defined(PLPA_LINUX)

@@ -36,8 +36,6 @@
 #include <unistd.h>
 #include "drmaa.h"
 
-#define FREE(x) if (x) free (x)
-
 /*
  * This test validates the required DRMAA functionality for the -hold_jid_ad option.
  */
@@ -261,12 +259,16 @@ validate_jobs(drmaa_job_ids_t *jobids_a, int chunks_a, drmaa_job_ids_t *jobids_b
    }
    state_monitor(ids_a, chunks_a, ids_b, chunks_b);
 
-   for (j = 0; j < BULK_SIZE/chunks_a; j++)
-      FREE(ids_a[j]);
+   for (j = 0; j < BULK_SIZE/chunks_a; j++) {
+      free(ids_a[j]);
+      ids_a[j] = NULL;
+   }   
    free(ids_a);
 
-   for (j = 0; j < BULK_SIZE/chunks_b; j++)
-      FREE(ids_b[j]);
+   for (j = 0; j < BULK_SIZE/chunks_b; j++) {
+      free(ids_b[j]);
+      ids_b[j] = NULL;
+   }   
    free(ids_b);
 }
 

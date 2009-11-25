@@ -135,9 +135,8 @@ static bool binding_set_linear_solaris(const int first_socket, const int first_c
    const binding_type_t type, char** env);
 
 /* processor set related */
-/* DG TODO do not const  */
-static bool create_pset(const processorid_t* const plist, const int length, 
-   psetid_t* const pset_id);
+static bool create_pset(const processorid_t* plist, const int length, 
+   psetid_t* pset_id);
 
 static bool delete_pset(psetid_t pset_id);
 
@@ -391,15 +390,15 @@ static bool binding_set_linear_solaris(const int first_socket, const int first_c
    /* counter */
    int i = 0;
 
-   /* first get the topology of the host into a topology matrix */ 
-   if (generate_chipID_coreID_matrix(&matrix, &mlength) != true) {
-      /* couldn't generate topology matrix */
-      return false;
-   }
-
    /* check parameter */
    if (psetid == NULL) {
       /* no memory location of output parameter */
+      return false;
+   }
+
+   /* first get the topology of the host into a topology matrix */ 
+   if (generate_chipID_coreID_matrix(&matrix, &mlength) != true) {
+      /* couldn't generate topology matrix */
       return false;
    }
 
@@ -424,22 +423,18 @@ static bool binding_set_linear_solaris(const int first_socket, const int first_c
          /* we are out of range already - do nothing - abort */
          /* free memory */
          free_matrix(matrix, mlength);
-         free(cores);
-         cores = NULL;
+         FREE(cores);
          return false;
       }
    }
 
    /* we have the first current_socket and current_core */
    /* hence we get the processor_ids (more in case of chip multithreading) */
-   get_processor_ids_solaris((const int**) matrix, mlength, current_socket,
-      current_core, &tmp_pid_list, &tmp_pid_list_length);
-   
-   if (tmp_pid_list_length < 1) {
+   if (get_processor_ids_solaris((const int**) matrix, mlength, current_socket,
+      current_core, &tmp_pid_list, &tmp_pid_list_length) == false) {
       /* we got no Solaris processor id - abort */
       free_matrix(matrix, mlength);
-      free(cores);
-      cores = NULL;
+      FREE(cores);
       return false;
    }
 
@@ -471,16 +466,22 @@ static bool binding_set_linear_solaris(const int first_socket, const int first_c
             /* we are out of range already - do nothing - abort */
             /* free memory */
             free_matrix(matrix, mlength);
-            free(cores);
-            free(pid_list);
-            cores = NULL;
+            FREE(cores);
+            FREE(pid_list);
+            FREE(tmp_pid_list);
             return false;
          }
       } /* end while getting the correct current_socket number */
       
       /* collect the processor_ids (more in case of chip multithreading) */
-      get_processor_ids_solaris((const int**) matrix, mlength, current_socket,
-         current_core, &tmp_pid_list, &tmp_pid_list_length);
+      if (get_processor_ids_solaris((const int**) matrix, mlength, current_socket,
+         current_core, &tmp_pid_list, &tmp_pid_list_length) == false) {
+         /* got no internal processor ids */
+         free_matrix(matrix, mlength);
+         FREE(cores);
+         FREE(pid_list);
+         return false;
+      }
 
       /* grow allocated memory for processor ids */
       pid_list = (processorid_t *) realloc(pid_list, (pid_list_length 
@@ -489,8 +490,8 @@ static bool binding_set_linear_solaris(const int first_socket, const int first_c
       if (pid_list == NULL) {
          /* out of memory */ 
          free_matrix(matrix, mlength);
-         free(cores);
-         cores = NULL;
+         FREE(cores);
+         FREE(tmp_pid_list);
          return false;
       }
 
@@ -503,6 +504,8 @@ static bool binding_set_linear_solaris(const int first_socket, const int first_c
 
       /* update global pid list length */
       pid_list_length += tmp_pid_list_length;
+
+      FREE(tmp_pid_list);
    }
 
      /* check what we've todo with the processor id list: 
@@ -529,9 +532,9 @@ static bool binding_set_linear_solaris(const int first_socket, const int first_c
 
    /* free memory in any case */ 
    free_matrix(matrix, mlength);
-   free(cores);
-   cores = NULL;
-  
+   FREE(cores);
+   FREE(pid_list);
+
    return retval;
 }
 
@@ -592,14 +595,12 @@ int create_processor_set_explicit_solaris(const int* list_of_sockets,
    
    /* assert that both lists have the same length */
    if (samount != camount) {
-      free_matrix(matrix, length);
       return -1;
    }   
 
    /* first get the topology of the host into a topology matrix */ 
    if (generate_chipID_coreID_matrix(&matrix, &length) != true) {
       /* couldn't generate topology matrix */
-      free_matrix(matrix, length);
       return -1;
    }
 
@@ -610,13 +611,11 @@ int create_processor_set_explicit_solaris(const int* list_of_sockets,
    for (i = 0; i < samount; i++) {
       
       /* get the processor ids for the given socket and core */
-      get_processor_ids_solaris((const int**) matrix, length, list_of_sockets[i],
-         list_of_cores[i], &tmp_pid_list, &tmp_pid_list_length);
-
-      /* check if we really got at least one processor ID */
-      if (tmp_pid_list_length < 1) {
+      if (get_processor_ids_solaris((const int**) matrix, length, list_of_sockets[i],
+         list_of_cores[i], &tmp_pid_list, &tmp_pid_list_length) == false) {
          /* we got no Solaris processor ID - abort */
          free_matrix(matrix, length);
+         FREE(pid_list);
          return -1;
       }
      
@@ -631,6 +630,7 @@ int create_processor_set_explicit_solaris(const int* list_of_sockets,
       /* update size of processor ID list */
       pid_list_length += tmp_pid_list_length;
 
+      FREE(tmp_pid_list);
    }
 
    /* check what we've todo with the processor id list: 
@@ -645,15 +645,17 @@ int create_processor_set_explicit_solaris(const int* list_of_sockets,
       psetid = 0; 
    } else {
       /* create processor set */
-      if (create_pset(pid_list, samount, &psetid) != true) {
+      if (create_pset(pid_list, pid_list_length, &psetid) != true) {
          /* error while doing this... */
          free_matrix(matrix, length);
+         FREE(pid_list);
          return -1;
       }
    }   
 
    /* free topology matrix */ 
    free_matrix(matrix, length);
+   FREE(pid_list);
 
    return (int) psetid;
 }
@@ -805,22 +807,18 @@ int create_processor_set_striding_solaris(const int first_socket,
          /* we are out of range already - do nothing - abort */
          /* free memory */
          free_matrix(matrix, mlength);
-         free(cores);
-         cores = NULL;
+         FREE(cores);
          return -2;
       }
    }
 
    /* we have the first current_socket and current_core */
    /* hence we get the processor_ids (more in case of chip multithreading) */
-   get_processor_ids_solaris((const int**) matrix, mlength, current_socket,
-      current_core, &tmp_pid_list, &tmp_pid_list_length);
-   
-   if (tmp_pid_list_length < 1) {
+   if (get_processor_ids_solaris((const int**) matrix, mlength, current_socket,
+         current_core, &tmp_pid_list, &tmp_pid_list_length) == false) {
       /* we got no Solaris processor id - abort */
       free_matrix(matrix, mlength);
-      free(cores);
-      cores = NULL;
+      FREE(cores);
       return -3;
    }
 
@@ -834,11 +832,13 @@ int create_processor_set_striding_solaris(const int first_socket,
    /* update length of array */
    pid_list_length = tmp_pid_list_length;
 
+   FREE(tmp_pid_list);
+
    /* try to get the processor_ids from socket and core position (could be 
       more than one because of CMT */
    for (i = 1; i < amount; i++) { 
       
-      /* LINEAR strategy: go just to the next core (step_size = 1) */
+      /* strategy: go just to the next core (step_size = 1) */
       current_core += step_size;
 
       /* check if 'current_core' is on current_socket */
@@ -852,16 +852,21 @@ int create_processor_set_striding_solaris(const int first_socket,
             /* we are out of range already - do nothing - abort */
             /* free memory */
             free_matrix(matrix, mlength);
-            free(cores);
-            free(pid_list);
-            cores = NULL;
+            FREE(cores);
+            FREE(pid_list);
             return -4;
          }
       } /* end while getting the correct current_socket number */
       
       /* collect the processor_ids (more in case of chip multithreading) */
-      get_processor_ids_solaris((const int**) matrix, mlength, current_socket,
-         current_core, &tmp_pid_list, &tmp_pid_list_length);
+      if (get_processor_ids_solaris((const int**) matrix, mlength, current_socket,
+         current_core, &tmp_pid_list, &tmp_pid_list_length) == false) {
+         /* we got no Solaris processor id - abort */
+         free_matrix(matrix, mlength);
+         FREE(cores);
+         FREE(pid_list)
+         return -3; 
+      }   
 
       /* grow allocated memory for processor ids */
       pid_list = (processorid_t *) realloc(pid_list, (pid_list_length 
@@ -870,8 +875,9 @@ int create_processor_set_striding_solaris(const int first_socket,
       if (pid_list == NULL) {
          /* out of memory */ 
          free_matrix(matrix, mlength);
-         free(cores);
-         cores = NULL;
+         FREE(cores);
+         FREE(pid_list);
+         FREE(tmp_pid_list);
          return -5;
       }
 
@@ -881,6 +887,8 @@ int create_processor_set_striding_solaris(const int first_socket,
          /* copy processor id from the temporary list to the global list */
          pid_list[pid_list_length + prid_cntr] = tmp_pid_list[prid_cntr];
       }
+
+      FREE(tmp_pid_list);
 
       /* update global pid list length */
       pid_list_length += tmp_pid_list_length;
@@ -910,9 +918,9 @@ int create_processor_set_striding_solaris(const int first_socket,
    
    /* free memory in any case */ 
    free_matrix(matrix, mlength);
-   free(cores);
-   cores = NULL;
-  
+   FREE(cores);
+   FREE(pid_list);
+
    return retval;
 }
 
@@ -980,9 +988,11 @@ void free_matrix(int** matrix, const int length)
 *     - and plist must not be NULL and have to contain at least one element
 *
 *  INPUTS
-*     const processorid_t* const plist - in: Processor id list.  
-*     const int length                 - in: Length of the processor id list. 
-*     psetid_t* const pset_id          - out: Pointer to the fixed location for id. 
+*     const processorid_t* const plist - Processor id list.  
+*     const int length                 - Length of the processor id list.
+*
+*  OUTPUTS
+*     psetid_t* const pset_id          - Pointer to the fixed location for id. 
 *
 *  RESULT
 *     bool - true in case the pset was created and all processors from the list 
@@ -994,8 +1004,8 @@ void free_matrix(int** matrix, const int length)
 *  SEE ALSO
 *     ???/???
 *******************************************************************************/
-static bool create_pset(const processorid_t* const plist, const int length, 
-   psetid_t* const pset_id)
+static bool create_pset(const processorid_t* plist, const int length, 
+   psetid_t* pset_id)
 {
    /* counter for the processor id list */
    int i;
@@ -1527,7 +1537,13 @@ static bool get_topology_solaris(char** topology, int* length)
          /* go one socket further */ 
          all_cores += cores_per_socket[socket];
       } /* all sockets */
-   } 
+
+
+      /* free resources allocated in subfunctions */
+      free_matrix(matrix, matrix_length);
+      FREE(threads_per_core);
+      FREE(cores_per_socket);
+   }
    
    if ((*length) == 0) {
       /* we couldn't get the kernel kstat values therefore we have no topology */
@@ -1545,6 +1561,8 @@ static bool get_topology_solaris(char** topology, int* length)
 
       sge_dstring_free(&d_topology);
    }   
+
+   
 
    return retval;
 }
@@ -2011,13 +2029,13 @@ static int get_amount_of_core_or_threads_from_matrix(const int** matrix, const i
       for (j = 0; j < length; j++) {
          if (core == 1) {
             /* counting cores per socket (amount of *same* chip_ids with different core_ids) */
-            if (matrix[j][0] == ids[i]) {
+            if ((matrix[j])[0] == ids[i]) {
 
                /* store pair of chip_id and core id and check if it is already known */
-               int is_different = is_new_id_pair(matrix[j][0], matrix[j][1]);
+               int is_different = is_new_id_pair((matrix[j])[0], (matrix[j])[1]);
 
                /* count only *same* chip_ids */
-               if (is_new_id(matrix[j][0]) == 0) {
+               if (is_new_id((matrix[j])[0]) == 0) {
                   /* this combination of chip_id and core_id is new */
                   if (is_different == 1) {
                      amount++;
@@ -2026,9 +2044,9 @@ static int get_amount_of_core_or_threads_from_matrix(const int** matrix, const i
             }
          } else {
             /* counting threads per core (amount of *same* core_ids) */
-            if (matrix[j][1] == ids[i]) { 
+            if ((matrix[j])[1] == ids[i]) { 
                /* count only *same* core_ids together with chip_ids */
-               if (is_new_id_pair(matrix[j][0], matrix[j][1]) == 0) {
+               if (is_new_id_pair((matrix[j])[0], (matrix[j])[1]) == 0) {
                   amount++;
                }   
             }
@@ -2123,7 +2141,7 @@ static int is_new_id(const int id)
    /* if ID is not available, add it otherwise return 1 */
    /* different_ids, different_id_vector are static */
    /* if id < 0 : delete all ids collected so far */
-   const int MAX_ID_SIZE = 10;
+   const int MAX_ID_SIZE = 11;
    static int different_ids = 0;
    static int* different_id_vector = NULL;
    /* counter */
@@ -2274,13 +2292,8 @@ static int get_total_amount_of_cores_solaris()
       } 
       
       /* delete vector and matrix */
-      free(cores);
-      for (i = 0; i < length; i++) {
-         free(matrix[i]);
-         matrix[i] = NULL;
-      }
-      free(matrix);
-      matrix = NULL;
+      FREE(cores);
+      free_matrix(matrix, length);
    }
 
    if (cores_total <= 0) {
@@ -2339,13 +2352,8 @@ static int get_total_amount_of_sockets_solaris()
       get_amount_of_cores_from_matrix((const int**)matrix, length, &cores, &sockets_total);
       
       /* delete vector and matrix */
-      free(cores);
-      for (i = 0; i < length; i++) {
-         free(matrix[i]);
-         matrix[i] = NULL;
-      }
-      free(matrix);
-      matrix = NULL;
+      FREE(cores);
+      free_matrix(matrix, length);
    }
 
    if (sockets_total <= 0) {
@@ -2359,7 +2367,7 @@ static int get_total_amount_of_sockets_solaris()
 
 /****** sge_binding/get_processor_ids_solaris() ********************************
 *  NAME
-*     get_processor_ids_solaris() -- ??? 
+*     get_processor_ids_solaris() -- Returns the OS internal processor ids for a core. 
 *
 *  SYNOPSIS
 *     static bool get_processor_ids_solaris(const int** matrix, const int 
@@ -2367,27 +2375,29 @@ static int get_total_amount_of_sockets_solaris()
 *     int** pr_ids, int* pr_length) 
 *
 *  FUNCTION
-*     ??? 
+*     Returns the operating system internal processor ids for a specific core on 
+*     a specific socket. The socket and core numbers are logical, that means that 
+*     they start at 0 and have no holes.
+*
+*     In case of hyperthreading or core multi threading it will return an 
+*     array with more than one element. Each OS internal processor id which 
+*     does run on the specific core is reported. 
 *
 *  INPUTS
-*     const int** matrix              - ??? 
-*     const int length                - ??? 
-*     const int logical_socket_number - ??? 
-*     const int logical_core_number   - ??? 
-*     int** pr_ids                    - ??? 
-*     int* pr_length                  - ??? 
+*     const int** matrix              - Topology matrix (from internal kstat) 
+*     const int length                - Size of topology matrix. 
+*     const int logical_socket_number - Logical socket number on which the core is. 
+*     const int logical_core_number   - Logical core number.
+*
+*  OUTPUTS
+*     int** pr_ids                    - Processor ids which are representing the core. 
+*     int* pr_length                  - The amount of processor ids. 
 *
 *  RESULT
-*     static bool - 
-*
-*  EXAMPLE
-*     ??? 
+*     static bool - true when no problems occurs.
 *
 *  NOTES
 *     MT-NOTE: get_processor_ids_solaris() is not MT safe 
-*
-*  BUGS
-*     ??? 
 *
 *  SEE ALSO
 *     ???/???
@@ -2395,7 +2405,6 @@ static int get_total_amount_of_sockets_solaris()
 static bool get_processor_ids_solaris(const int** matrix, const int length, const int logical_socket_number,
       const int logical_core_number, int** pr_ids, int* pr_length)
 {
-
    /* the collected core ids */ 
    int core_ids[length];
    /* the actual amount of found core ids */
@@ -2406,7 +2415,7 @@ static bool get_processor_ids_solaris(const int** matrix, const int length, cons
    /* counter */
    int i;
 
-   if (matrix == NULL || length == 0) {
+   if (matrix == NULL || length == 0 || pr_ids == NULL || (*pr_ids) != NULL || pr_length == NULL) {
       return false;
    }
 
@@ -2415,25 +2424,28 @@ static bool get_processor_ids_solaris(const int** matrix, const int length, cons
    core_id = get_core_id_from_logical_core_number_solaris(matrix, length, chip_id, logical_core_number);
 
    /* get all processor ids with the same chip_ids */ 
-   
    for (i = 0; i < length; i++) {
       /* matrix is: chip_id core_id processor_id */
-      if (matrix[i][0] == chip_id && matrix[i][1] == core_id) {
+      if ((matrix[i])[0] == chip_id && (matrix[i])[1] == core_id) {
          /* the third entry should be the processor id */
-         core_ids[amount_of_core_ids] = matrix[i][2];
+         core_ids[amount_of_core_ids] = (matrix[i])[2];
          amount_of_core_ids++;
       }
    }
  
-   /* return the array the with core ids */
-   /* TODO DG free? */
-   (*pr_ids) = (int*) calloc(amount_of_core_ids, sizeof(int));
-   for (i = 0; i < amount_of_core_ids; i++) {
-      (*pr_ids)[i] = core_ids[i];
-   }
-   *pr_length = amount_of_core_ids;
-
-   return true;
+   if (amount_of_core_ids <= 0) {
+      return false;
+   } else {  
+      
+      /* return the array with core ids */
+      (*pr_ids) = (int*) calloc(amount_of_core_ids, sizeof(int));
+      for (i = 0; i < amount_of_core_ids; i++) {
+         (*pr_ids)[i] = core_ids[i];
+      }
+      *pr_length = amount_of_core_ids;
+      
+      return true;
+   }   
 }
 
 
@@ -2480,7 +2492,7 @@ static int get_chip_id_from_logical_socket_number_solaris(const int** matrix,
 
    /* go through the resource matrix and get the 'logical_socket_number'th chip_id */
    for (i = 0; i < length; i++) {
-      if (is_new_id(matrix[i][0]) == 1) {
+      if (is_new_id((matrix[i])[0]) == 1) {
          /* detected a chip_id not seen before */
          socket_number++;
       }
@@ -2488,10 +2500,13 @@ static int get_chip_id_from_logical_socket_number_solaris(const int** matrix,
          /* free memory allocated in sub-function */
          is_new_id(-1);
          /* return the chip_id */
-         return matrix[i][0];
+         return (matrix[i])[0];
       }
    }
-   
+  
+   /* free memory */
+   is_new_id(-1);
+
    /* logical socket number was too high */
    return -1;
 }
@@ -2540,12 +2555,12 @@ static int get_core_id_from_logical_core_number_solaris(const int** matrix,
 
    if (matrix == NULL || *matrix == NULL) {
       /* this is not a matrix */ 
-      return -2;
+      return -1;
    }
 
    if (length == 0 || chip_id < 0 || logical_core_number < 0) {
       /* input parameters are not correct */
-      return -3;
+      return -1;
    }
    
    /* be sure that no ids are left */
@@ -2553,21 +2568,23 @@ static int get_core_id_from_logical_core_number_solaris(const int** matrix,
 
    for (i = 0; i < length; i++) {
       /* check if this entry is on the same chip */
-      if (matrix[i][0] == chip_id) {
+      if ((matrix[i])[0] == chip_id) {
 
          /* check how many different core_ids we found so far */
-         if (is_new_id(matrix[i][1]) == 1) {
+         if (is_new_id((matrix[i])[1]) == 1) {
             core_number++;
          }
          if ((core_number-1) == logical_core_number) {
-            /* free allocated memory in su:1083
-            b-function */
+            /* free allocated memory in sub-function */
             is_new_id(-1);
             /* report the core_id */
-            return matrix[i][1];
+            return (matrix[i])[1];
          }
       }
    }
+
+   /* free memory */
+   is_new_id(-1);
 
    /* logical core number was too high or chip_id was wrong */
    return -1;

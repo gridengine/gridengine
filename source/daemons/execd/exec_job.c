@@ -93,6 +93,7 @@
 #include "sgeobj/sge_object.h"
 #include "uti/sge_stdio.h"
 #include "uti/sge_binding_hlp.h"
+#include "uti/sge_binding_parse.h"
 #include "sge_binding.h"
 #include "sge_binding_BN_L.h"
 #include "job_report_execd.h"
@@ -480,7 +481,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
             this is done from shepherd itself) */
          if (sge_binding_environment != NULL) {
             INFO((SGE_EVENT, "SGE_BINDING variable set: %s", sge_binding_environment));
-         } 
+         }
          
          if (sge_dstring_get_string(&core_binding_strategy_string) != NULL 
                && strcmp(sge_dstring_get_string(&core_binding_strategy_string), "NULL") != 0) {
@@ -2101,11 +2102,11 @@ static bool create_binding_strategy_string_linux(dstring* result, lListElem *jep
            sge_dstring_append_dstring(result, &tmp_result);
         }
       } else {
-         WARNING((SGE_EVENT, "Core binding: No CULL sublist for binding found!"));
+         INFO((SGE_EVENT, "Core binding: No CULL sublist for binding found!"));
          retval = false;
       }
    } else {
-      WARNING((SGE_EVENT, "Core binding: Couldn't get binding sublist"));
+      INFO((SGE_EVENT, "Core binding: Couldn't get binding sublist"));
       retval = false;
    }
 
@@ -2299,7 +2300,7 @@ static bool explicit_linux(dstring* result, lListElem* binding_elem)
    request = (char*) lGetString(binding_elem, BN_parameter_explicit);
 
    /* get the socket and core number lists */ 
-   if (binding_explicit_exctract_sockets_cores(request, &socket_list, 
+   if (binding_explicit_extract_sockets_cores(request, &socket_list, 
       &socket_list_length, &core_list, &core_list_length) == false) {
       /* problems while parsing the binding request */ 
       INFO((SGE_EVENT, "Couldn't extract socket and core lists out of string"));
@@ -2614,7 +2615,7 @@ static bool explicit_solaris(dstring* result, lListElem* binding_elem, char* err
 
    INFO((SGE_EVENT, "request: %s", request));
 
-   if (binding_explicit_exctract_sockets_cores(request, &socket_list, 
+   if (binding_explicit_extract_sockets_cores(request, &socket_list, 
             &socket_list_length, &core_list, &core_list_length) == false) {
       /* problems while parsing the binding request */ 
       snprintf(err_str, err_length, "binding: couldn't parse explicit parameter");
@@ -2665,12 +2666,14 @@ static bool explicit_solaris(dstring* result, lListElem* binding_elem, char* err
          }
 
       } else {
-         /* "binding explicit" with the given cores is not possible */ 
+         /* "binding explicit" with the given cores is not possible */
          snprintf(err_str, err_length, "binding: strategy does not fit on execution host");
          INFO((SGE_EVENT, "Binding strategy does not fit on execution host"));
          retval = false;
       }
 
+      FREE(core_list);
+      FREE(socket_list);
       FREE(topo_by_job);
    }
 

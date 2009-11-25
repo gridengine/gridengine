@@ -119,7 +119,8 @@ bool binding_explicit_extract_sockets_cores(const char* parameter,
    *samount = 0;
    *camount = 0;
 
-   if (*list_of_sockets != NULL || *list_of_cores != NULL) {
+   if (list_of_sockets == NULL || list_of_cores == NULL || *list_of_sockets != NULL 
+         || *list_of_cores != NULL) {
       /* we expect NULL pointers because we allocate memory within the function */
       return false;
    }
@@ -157,6 +158,8 @@ bool binding_explicit_extract_sockets_cores(const char* parameter,
          /* we have a socket therefore we need a core number */
          if ((core = sge_strtok(NULL, ":")) == NULL || (isdigit(*core) == 0)) {
             /* missing core number */
+            FREE(*list_of_sockets);
+            FREE(*list_of_cores);
             return false;
          }
 

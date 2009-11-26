@@ -879,6 +879,8 @@ void remove_acked_job_exit(sge_gdi_ctx_class_t *ctx, u_long32 job_id, u_long32 j
 
          if (lGetUlong(jr, JR_state) != JEXITING) {
             WARNING((SGE_EVENT, MSG_EXECD_GOTACKFORPETASKBUTISNOTINSTATEEXITING_S, pe_task_id_str));
+            /* job report has to be deleted */
+            del_job_report(jr);
             DRETURN_VOID;
          }
 
@@ -998,9 +1000,12 @@ void remove_acked_job_exit(sge_gdi_ctx_class_t *ctx, u_long32 job_id, u_long32 j
             lRemoveElem(*(object_type_get_master_list(SGE_TYPE_JOB)), &jep);
          }
       }
+
+      /* delete the job report */
       del_job_report(jr);
 
-   } else { /* must be an ack of an ask job request from qmaster */
+   } else {
+      /* must be an ack of an ask job request from qmaster */
       DPRINTF(("REMOVING WITHOUT jep && jatep\n"));
       /* clean up active jobs entry */
       if (pe_task_id_str == NULL) {

@@ -2176,6 +2176,10 @@ static bool linear_linux(dstring* result, lListElem* binding_elem,
          /* finally add the topology */
          sge_dstring_append(result, topo_job);
 
+         /* free lists */
+         FREE(list_of_sockets);
+         FREE(list_of_cores);
+
          retval = true;
 
       } else {
@@ -2213,8 +2217,7 @@ static bool linear_linux(dstring* result, lListElem* binding_elem,
    }   
    
    /* free topology string */
-   if (topo_job != NULL)
-      free(topo_job);
+   FREE(topo_job);
 
    DRETURN(retval);
 }

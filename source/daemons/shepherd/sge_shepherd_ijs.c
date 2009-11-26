@@ -1030,12 +1030,6 @@ int close_parent_loop(int exit_status)
    }
    /* Now we are completely logged of from the server and can shut down */
 
-   /* 
-    * Tell the communication to shut down immediately, don't wait for 
-    * the next timeout
-    */
-   shepherd_trace("parent: cl_com_ignore_timeouts");
-   comm_ignore_timeouts(true, &err_msg);
 
    /*
     * Do cleanup

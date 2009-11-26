@@ -8,6 +8,11 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+CR-2009-11-26-1: Bugfix:      qrsh hostname: commlib error on linux
+                 Bugster:     6899641
+                 Issue:       3190
+                 Review:      JG
+
 CR-2009-11-26-0: Bugfix:      execd cannot get rid of not existing task which
                               results in qmaster <-> execd protocol loop
                  Bugster:     6858356

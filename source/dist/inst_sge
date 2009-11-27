@@ -662,6 +662,11 @@ if [ "$UPDATE" = true ]; then
 
    if [ "$UPGRADE_MODE" = upgrade ]; then
       SelectNewSpooling `BootstrapGetValue "${UPGRADE_BACKUP_DIR}/cell" "spooling_method"`
+      if [ "$SGE_ENABLE_JMX" = "true" ]; then
+         ReplaceLineWithMatch "$SGE_ROOT/$SGE_CELL/common/bootstrap" 644 'jvm_threads.*' "jvm_threads             1"
+      else
+         ReplaceLineWithMatch "$SGE_ROOT/$SGE_CELL/common/bootstrap" 644 'jvm_threads.*' "jvm_threads             0"
+      fi 
    else
       SetSpoolingOptions `BootstrapGetValue "${UPGRADE_BACKUP_DIR}/cell" "spooling_method"`
       ReplaceLineWithMatch "$SGE_ROOT/$SGE_CELL/common/bootstrap" 644 'spooling_method.*' "spooling_method         $SPOOLING_METHOD"
@@ -732,6 +737,11 @@ if [ "$UPDATE" = true ]; then
 	  "        E.g.: (sh, bash) export SGE_WIN_ADMIN=Administrator \n" \
 	  "              (csh,tcsh) setenv SGE_WIN_ADMIN Administrator \n"
       fi
+      $INFOTEXT -n "WARNING:\n" \
+      "   If you have configured shadowd hosts and enabled JMX during upgrading\n" \
+      "   you have to verify and probably adjust the local host configuration parameters\n" \
+      "   libjvm_path and additional_jvm_args to reflect your host specific jvm\n" \
+      "   settings.\n"
       $INFOTEXT -n "OPTIONAL:\n" \
       "inst_sge -upd-rc\n" \
       "   This command creates new autostart scripts for the new cluster\n" \

@@ -183,6 +183,13 @@ UpdateConfiguration()
          ReplaceOrAddLine ${modFile} 'rsh_daemon.*'     "rsh_daemon                   builtin"
       fi
 
+      if [ "$SGE_ENABLE_JMX" = "true" -a "$SGE_JVM_LIB_PATH" != "" ]; then
+         ReplaceOrAddLine ${modFile} 'libjvm_path.*'            "libjvm_path                  $SGE_JVM_LIB_PATH"
+      fi
+      if [ "$SGE_ENABLE_JMX" = "true" -a "$SGE_ADDITIONAL_JVM_ARGS" != "" ]; then
+         ReplaceOrAddLine ${modFile} 'additional_jvm_args.*'    "additional_jvm_args          $SGE_ADDITIONAL_JVM_ARGS"
+      fi
+
       ReplaceOrAddLine ${modFile} 'max_advance_reservations.*'    "max_advance_reservations     0"
 
    else
@@ -201,18 +208,18 @@ UpdateConfiguration()
       if [ "$mode" = copy ]; then
          local_dir=`grep execd_spool_dir ${modFile} 2>/dev/null | awk '{print $2}'`
          if [ -n "$local_dir" ]; then
-	    local_dir=`dirname $local_dir 2>/dev/null`
-	    if [ -n "$local_dir" ]; then
-	       if [ -n "$SGE_CLUSTER_NAME" ]; then
-	          local_dir="${local_dir}/${SGE_CLUSTER_NAME}"
-	       elif [ -n "$SGE_QMASTER_PORT" ]; then
-	          local_dir="${local_dir}/${SGE_QMASTER_PORT}"
-	       else
-	          local_dir="${local_dir}/${SGE_CELL}"
-	       fi
-	       ReplaceOrAddLine ${modFile} 'execd_spool_dir.*'  "execd_spool_dir                $local_dir"
-	    fi
-	 fi
+            local_dir=`dirname $local_dir 2>/dev/null`
+            if [ -n "$local_dir" ]; then
+               if [ -n "$SGE_CLUSTER_NAME" ]; then
+                  local_dir="${local_dir}/${SGE_CLUSTER_NAME}"
+               elif [ -n "$SGE_QMASTER_PORT" ]; then
+                  local_dir="${local_dir}/${SGE_QMASTER_PORT}"
+               else
+                  local_dir="${local_dir}/${SGE_CELL}"
+               fi
+               ReplaceOrAddLine ${modFile} 'execd_spool_dir.*'  "execd_spool_dir                $local_dir"
+            fi
+	      fi
       fi
    fi
 }

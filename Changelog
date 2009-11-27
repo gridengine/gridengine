@@ -8,6 +8,12 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+CR-2009-11-27-0: Bugfix:      upgrade problems with jvm thread when upgradeing
+                              from 61 to 62    
+                 Bugster:     6885673
+                 Issue:       3139
+                 Review:      DG
+
 SH-2009-11-27-0: Bugfix:      older clients get no error message when trying to
                               connect to qmaster with an higher GDI-version
                  Bugster:     6905290

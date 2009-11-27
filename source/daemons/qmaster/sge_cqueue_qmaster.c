@@ -739,6 +739,10 @@ int cqueue_success(sge_gdi_ctx_class_t *ctx,
    qinstances = lGetList(cqueue, CQ_qinstances);
 
    for_each(qinstance, qinstances) {
+      /* check slotwise subordinate suspends for new qinstance config */
+      do_slotwise_x_on_subordinate_check(ctx, qinstance, false, false, monitor);
+      do_slotwise_x_on_subordinate_check(ctx, qinstance, true, false, monitor);
+
       if (lGetUlong(qinstance, QU_gdi_do_later) == GDI_DO_LATER) {
          bool is_qinstance_mod = false;
          const char *full_name = lGetString(qinstance, QU_full_name);
@@ -750,7 +754,7 @@ int cqueue_success(sge_gdi_ctx_class_t *ctx,
          /* in case the thresholds are set to none, we have to unsuspend all jobs because
             the scheduler is not able to do that. If the suspend threshold is still set; 
             just changed, the scheduler can easily deal with it.*/
-         if (lGetList(qinstance, QU_suspend_thresholds) == NULL) { 
+         if (lGetList(qinstance, QU_suspend_thresholds) == NULL) {
             for_each(job, master_job_list) {
                lList *ja_tasks = lGetList(job, JB_ja_tasks);
                lListElem *ja_task;

@@ -8,6 +8,11 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+HP-2009-11-17-0: Bugfix:      changing the definition of slotwise preemption
+                              relationships doesn't update all previous members
+                 Bugster:     6904315
+                 Review:      MD
+
 CR-2009-11-27-0: Bugfix:      upgrade problems with jvm thread when upgradeing
                               from 61 to 62    
                  Bugster:     6885673

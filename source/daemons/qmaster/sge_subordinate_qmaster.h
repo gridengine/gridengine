@@ -56,22 +56,13 @@ qinstance_initialize_sos_attr(sge_gdi_ctx_class_t *ctx, lListElem *this_elem, mo
 
 bool
 do_slotwise_x_on_subordinate_check(sge_gdi_ctx_class_t *ctx, lListElem *queue_instance,
-      bool suspend, bool called_by_qmod, monitoring_t *monitor);
+      bool suspend, bool check_subtree_only, monitoring_t *monitor);
 
-int count_suspended_on_subordinate(lListElem *queueep); 
+void unsuspend_all_tasks_in_slotwise_sub_tree(sge_gdi_ctx_class_t *ctx,
+                                 lListElem *qinstance, monitoring_t *monitor);
 
-/* parameters for check_subordinate_list(how) */
-enum { CHECK4ADD, CHECK4MOD, CHECK4SETUP }; 
-int check_subordinate_list(lList **alpp, const char *qname, const char *host, 
-                           u_long32 slots, lList *sol, int how);
-
-int copy_suspended(lList **sol_out, lList *sol_in, int unused, int total, int suspended_on_subordinate);
-
-bool 
-suspend_all(lList *sl, bool recompute_cache); 
-
-bool 
-unsuspend_all(lList *sl, bool recompute_cache); 
+void slotwise_unsuspend_all_tasks(sge_gdi_ctx_class_t *ctx, lList *so_list,
+                   const char *hostname, bool trigger, monitoring_t *monitor);
 
 #endif /* __SUBORDINATE_QMASTER_H */
 

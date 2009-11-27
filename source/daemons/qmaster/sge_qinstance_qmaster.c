@@ -490,10 +490,10 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
             break;
          case CQ_subordinate_list:
             {
-               lList *old_value = lGetList(this_elem, attribute_name);
-               lList *new_value = NULL;
-               lListElem *this_elem_copy = NULL;
+               lList *old_value = NULL;          /* SO_Type list */
+               lList *new_value = NULL;          /* SO_Type list */
 
+               old_value = lGetList(this_elem, attribute_name);
                solist_attr_list_find_value(attr_list, answer_list,
                                            hostname, &new_value, 
                                            matching_host_or_group,
@@ -501,24 +501,85 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                if (object_list_has_differences(old_value, answer_list, new_value, false)) {
 
                   lList *master_list = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
-                  lList *unsuspended_so = NULL;
-                  lList *suspended_so = NULL;
-      
+                  lList *unsuspended_so = NULL;  /* SO_Type list */
+                  lList *suspended_so = NULL;    /* SO_Type list */
+                  lListElem *first_old_elem = NULL;
+                  lListElem *first_new_elem = NULL;
+                  const char *hostname = NULL;
+
                   /*
                    * check slotwise subordinations
                    */
-                  /* TODO: HP: Is it possible to do this more efficient,
-                   * i.e. call do_slotwise_x_on_subordinate() only once?
+                  /*
+                   * Detect queues that are no longer subordinated to this queue and
+                   * trigger recalculation for them.
                    */
-                  /* Copy the queue instance and set the new subordinate list
-                   * for checking the slotwise subordinations
-                   */
-                  this_elem_copy = lCopyElem(this_elem);
-                  lSetList(this_elem_copy, attribute_name, lCopyList("", new_value));
+                  hostname = lGetHost(this_elem, QU_qhostname);
+                  first_old_elem = lFirst(old_value);
+                  first_new_elem = lFirst(new_value);
 
-                  do_slotwise_x_on_subordinate_check(ctx, this_elem_copy, true, true,  monitor);
-                  do_slotwise_x_on_subordinate_check(ctx, this_elem_copy, false, true,  monitor);
-                  lFreeElem(&this_elem_copy);
+                  if (first_old_elem != NULL && lGetUlong(first_old_elem, SO_slots_sum) > 0 &&
+                      first_new_elem != NULL && lGetUlong(first_new_elem, SO_slots_sum) == 0) {
+                      /*
+                       * If there was slotwise preemption configured before and there is
+                       * either no subordination or queue wise subordination configured
+                       * now, unsuspend all tasks. Queue wise subordination will be
+                       * calculated in the "classic"  section below.
+                       */
+                      slotwise_unsuspend_all_tasks(ctx, old_value, hostname, false, monitor);
+                  } else if (first_old_elem != NULL && lGetUlong(first_old_elem, SO_slots_sum) > 0  &&
+                             first_new_elem != NULL && lGetUlong(first_new_elem, SO_slots_sum) > 0) {
+                     /*
+                      * If there was slotwise preemption configured and is still slotwise
+                      * preemption configured, unsuspend all task in the dechained queues.
+                      * New suspension will be calculated in cqueue_success().
+                      */
+                     lList *old_value_copy = NULL;  /* SO_Type list */
+                     lList *new_value_copy = NULL;  /* SO_Type list */
+
+                     old_value_copy = lCopyList("copy_old", old_value);
+                     new_value_copy = lCopyList("copy_new", new_value);
+
+                     /*
+                      * Find all queues that were slotwise subordinated before
+                      * and are no longer subordinated now and trigger them.
+                      */
+                     lDiffListStr(SO_name, &old_value_copy, &new_value_copy);
+                     slotwise_unsuspend_all_tasks(ctx, old_value_copy, hostname, true, monitor);
+
+                     lFreeList(&old_value_copy);
+                     lFreeList(&new_value_copy);
+
+                     old_value_copy = lCopyList("copy_old", old_value);
+                     new_value_copy = lCopyList("copy_new", new_value);
+
+                     /*
+                      * Find all queues that were slotwise subordinated before,
+                      * are still slotwise subordinated but have different
+                      * seq_no now.
+                      * TODO: HP: Make sure these two lDiffListUlong() always
+                      *           return the results we expect!
+                      */
+                     lDiffListUlong(SO_seq_no, &old_value_copy, &new_value_copy);
+                     slotwise_unsuspend_all_tasks(ctx, old_value_copy, hostname, true, monitor);
+
+                     lFreeList(&old_value_copy);
+                     lFreeList(&new_value_copy);
+
+                     old_value_copy = lCopyList("copy_old", old_value);
+                     new_value_copy = lCopyList("copy_new", new_value);
+
+                     /*
+                      * Find all queues that were slotwise subordinated before,
+                      * are still slotwise subordinated but have different
+                      * action now.
+                      */
+                     lDiffListUlong(SO_action, &old_value_copy, &new_value_copy);
+                     slotwise_unsuspend_all_tasks(ctx, old_value_copy, hostname, true, monitor);
+
+                     lFreeList(&old_value_copy);
+                     lFreeList(&new_value_copy);
+                  }
 
                   /*
                    * check "classic" queuewise subordinations

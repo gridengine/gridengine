@@ -480,14 +480,14 @@ sge_change_queue_state(sge_gdi_ctx_class_t *ctx,
           * tasks that where suspended by slotwise subordination.
           * Therefore we call the function with "false" (=unsuspend)
           */
-         do_slotwise_x_on_subordinate_check(ctx, qep, false, true, monitor);
+         do_slotwise_x_on_subordinate_check(ctx, qep, false, false, monitor);
          break;
       case QI_DO_UNSUSPEND:
          /* This queue gets unsuspended, possibly tasks in other queues have to
           * be suspended because of slotwise subordination.
           * Therefore we call the function with "true" (=suspend)
           */
-         do_slotwise_x_on_subordinate_check(ctx, qep, true, true, monitor);
+         do_slotwise_x_on_subordinate_check(ctx, qep, true, false, monitor);
          break;
       case QI_DO_CLEAN:
       case QI_DO_RESCHEDULE:
@@ -558,12 +558,12 @@ monitoring_t *monitor
 
       case JSUSPENDED:
          qmod_job_suspend(ctx, jep, jatep, queueep, force, answer, user, host, monitor);
-         do_slotwise_x_on_subordinate_check(ctx, queueep, false, true, monitor);
+         do_slotwise_x_on_subordinate_check(ctx, queueep, false, false, monitor);
          break;
 
       case JRUNNING:
          qmod_job_unsuspend(ctx, jep, jatep, queueep, force, answer, user, host, monitor);
-         do_slotwise_x_on_subordinate_check(ctx, queueep, true, true, monitor);
+         do_slotwise_x_on_subordinate_check(ctx, queueep, true, false, monitor);
          break;
 
       case QI_DO_CLEARERROR:

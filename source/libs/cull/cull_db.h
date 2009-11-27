@@ -75,6 +75,7 @@ int lString2List(const char *s, lList **lpp, const lDescr *dp, int nm, const cha
 int lString2ListNone(const char *s, lList **lpp, const lDescr *dp, int nm, const char *delimitor);
 
 int lDiffListStr(int nm, lList **lpp1, lList **lpp2);
+int lDiffListUlong(int nm, lList **lpp1, lList **lpp2);
 
 #ifdef  __cplusplus
 }

@@ -1353,3 +1353,33 @@ int lDiffListStr(int nm, lList **lpp1, lList **lpp2)
 
    DRETURN(0);
 }
+
+int lDiffListUlong(int nm, lList **lpp1, lList **lpp2)
+{
+   u_long32 key;
+   lListElem *ep, *to_check;
+
+   DENTER(CULL_LAYER, "lDiffListUlong");
+
+   if (!lpp1 || !lpp2) {
+      DRETURN(-1);
+   }
+
+   if (!*lpp1 || !*lpp2) {
+      DRETURN(0);
+   }
+
+   ep = lFirst(*lpp1);
+   while (ep) {
+      to_check = ep;
+      key = lGetUlong(to_check, nm);
+
+      ep = lNext(ep);
+
+      if (lGetElemUlong(*lpp2, nm, key) != NULL) {
+         lDelElemUlong(lpp2, nm, key);
+         lDelElemUlong(lpp1, nm, key);
+      }
+   }
+   DRETURN(0);
+}

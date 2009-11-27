@@ -224,7 +224,6 @@ do_gdi_packet(sge_gdi_ctx_class_t *ctx, lList **answer_list,
                    packet->commproc, (int)packet->commproc_id));
          answer_list_add(&(packet->first_task->answer_list), SGE_EVENT, 
                          STATUS_ENOSUCHUSER, ANSWER_QUALITY_ERROR); 
-         local_ret = false;
       }
    }
 
@@ -236,56 +235,52 @@ do_gdi_packet(sge_gdi_ctx_class_t *ctx, lList **answer_list,
     * This can only be done if it is not neccessary anymore to pass a 
     * packbuffer to a worker thread.
     */
-   ;
 
    /* 
     * handle GDI packet and send response 
     */
-   if (local_ret) {
+  
 #ifdef SEND_ANSWER_IN_LISTENER
-      /*
-       * Due to the GDI-GET optimization it is neccessary to initialize a pb
-       * that is passed to and filled by the worker thread
-       *
-       * EB: TODO: CLEANUP: Don't pass packbuffer to worker thread.
-       * 
-       * Better solution would be that the packbuffer is only used here
-       * by the listener thread. This would be possible if GDI get
-       * requests would be handled by read-only threads.
-       */
-      init_packbuffer(&(packet->pb), 0, 0);
+   /*
+    * Due to the GDI-GET optimization it is neccessary to initialize a pb
+    * that is passed to and filled by the worker thread
+    *
+    * EB: TODO: CLEANUP: Don't pass packbuffer to worker thread.
+    * 
+    * Better solution would be that the packbuffer is only used here
+    * by the listener thread. This would be possible if GDI get
+    * requests would be handled by read-only threads.
+    */
+   init_packbuffer(&(packet->pb), 0, 0);
 #endif
 
-      /*
-       * Put the packet into the queue so that a worker can handle it
-       */
-      sge_tq_store_notify(Master_Task_Queue, SGE_TQ_GDI_PACKET, packet);
+   /*
+    * Put the packet into the queue so that a worker can handle it
+    */
+   sge_tq_store_notify(Master_Task_Queue, SGE_TQ_GDI_PACKET, packet);
 
 #ifdef SEND_ANSWER_IN_LISTENER
-      sge_gdi_packet_wait_till_handled(packet);
+   sge_gdi_packet_wait_till_handled(packet);
 
-      /*
-       * Send the answer to the client
-       */
-      MONITOR_MESSAGES_OUT(monitor);
-      sge_gdi2_send_any_request(ctx, 0, NULL,
-                                aMsg->snd_host, aMsg->snd_name, aMsg->snd_id, &(packet->pb),
-                                TAG_GDI_REQUEST, aMsg->request_mid, answer_list);
+   /*
+    * Send the answer to the client
+    */
+   MONITOR_MESSAGES_OUT(monitor);
+   sge_gdi2_send_any_request(ctx, 0, NULL,
+                             aMsg->snd_host, aMsg->snd_name, aMsg->snd_id, &(packet->pb),
+                             TAG_GDI_REQUEST, aMsg->request_mid, answer_list);
 
-      /*
-       * Cleanup
-       */
-      clear_packbuffer(&(packet->pb));
-      sge_gdi_packet_free(&packet);
+   /*
+    * Cleanup
+    */
+   clear_packbuffer(&(packet->pb));
+   sge_gdi_packet_free(&packet);
 #else
 #  ifdef BLOCK_LISTENER
-      sge_gdi_packet_wait_till_handled(packet);
-      sge_gdi_packet_free(&packet);
+   sge_gdi_packet_wait_till_handled(packet);
+   sge_gdi_packet_free(&packet);
 #  endif
 #endif
-   } else {
-      sge_gdi_packet_free(&packet);
-   }
 
    DRETURN_VOID;
 }

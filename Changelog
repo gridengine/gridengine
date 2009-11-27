@@ -8,6 +8,12 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+SH-2009-11-27-0: Bugfix:      older clients get no error message when trying to
+                              connect to qmaster with an higher GDI-version
+                 Bugster:     6905290
+                 Issue:       3197
+                 Review:      EB
+
 EB-2009-11-27-0: Bugfix:      o fixed abort of qmaster if global configuration
                                 is not available after update.
                               o fixed spooling/parsing problem in qmaster after 

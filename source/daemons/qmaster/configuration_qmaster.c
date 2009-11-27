@@ -121,13 +121,16 @@ int sge_read_configuration(sge_gdi_ctx_class_t *ctx, lListElem *aSpoolContext, l
     */
    {
       lListElem *global = lGetElemHost(*config_list, CONF_name, "global");
-      lList *entries = lGetList(global, CONF_entries);
-      lListElem *jsv_url = lGetElemStr(entries, CF_name, "jsv_url");
 
-      if (jsv_url == NULL) {
-         jsv_url = lAddSubStr(global, CF_name, "jsv_url", CONF_entries, CF_Type);
-         if (jsv_url != NULL) { 
-            lSetString(jsv_url, CF_value, "none");
+      if (global != NULL) {
+         lList *entries = lGetList(global, CONF_entries);
+         lListElem *jsv_url = lGetElemStr(entries, CF_name, "jsv_url");
+
+         if (jsv_url == NULL) {
+            jsv_url = lAddSubStr(global, CF_name, "jsv_url", CONF_entries, CF_Type);
+            if (jsv_url != NULL) { 
+               lSetString(jsv_url, CF_value, "none");
+            }
          }
       }
    }
@@ -140,13 +143,16 @@ int sge_read_configuration(sge_gdi_ctx_class_t *ctx, lListElem *aSpoolContext, l
     */
    {
       lListElem *global = lGetElemHost(*config_list, CONF_name, "global");
-      lList *entries = lGetList(global, CONF_entries);
-      lListElem *jsv_url = lGetElemStr(entries, CF_name, "jsv_allowed_mod");
 
-      if (jsv_url == NULL) {
-         jsv_url = lAddSubStr(global, CF_name, "jsv_allowed_mod", CONF_entries, CF_Type);
-         if (jsv_url != NULL) { 
-            lSetString(jsv_url, CF_value, "ac,h,i,e,o,j,M,N,p,w");
+      if (global != NULL) {
+         lList *entries = lGetList(global, CONF_entries);
+         lListElem *jsv_url = lGetElemStr(entries, CF_name, "jsv_allowed_mod");
+
+         if (jsv_url == NULL) {
+            jsv_url = lAddSubStr(global, CF_name, "jsv_allowed_mod", CONF_entries, CF_Type);
+            if (jsv_url != NULL) { 
+               lSetString(jsv_url, CF_value, "ac,h,i,e,o,j,M,N,p,w");
+            }
          }
       }
    }

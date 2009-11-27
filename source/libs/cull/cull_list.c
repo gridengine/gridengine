@@ -703,7 +703,6 @@ static void lWriteElem_(const lListElem *ep, dstring *buffer, int nesting_level)
    }
    space[i] = '\0';
 
-DTRACE;
    sge_dstring_sprintf_append(buffer, "%s-------------------------------\n", space);
 
    for (i = 0; mt_get_type(ep->descr[i].mt) != lEndT; i++) {
@@ -712,25 +711,20 @@ DTRACE;
 
       switch (mt_get_type(ep->descr[i].mt)) {
       case lIntT:
-DTRACE;
          sge_dstring_sprintf_append(buffer, "%s%-20.20s (Integer) %c = %d\n", space, name, changed ? '*' : ' ', lGetPosInt(ep, i));
          break;
       case lUlongT:
-DTRACE;
          sge_dstring_sprintf_append(buffer, "%s%-20.20s (Ulong)   %c = " sge_u32"\n", space, name, changed ? '*' : ' ', lGetPosUlong(ep, i));
          break;
       case lStringT:
-DTRACE;
          str = lGetPosString(ep, i);
          sge_dstring_sprintf_append(buffer, "%s%-20.20s (String)  %c = %s\n", space, name, changed ? '*' : ' ', str ? str : "(null)");
          break;
       case lHostT:
-DTRACE;
          str = lGetPosHost(ep, i);
          sge_dstring_sprintf_append(buffer, "%s%-20.20s (Host)    %c = %s\n", space, name, changed ? '*' : ' ', str ? str : "(null)");
          break;
       case lListT:
-DTRACE;
          tlp = lGetPosList(ep, i);
          sge_dstring_sprintf_append(buffer, "%s%-20.20s (List)    %c = %s\n", space, name, changed ? '*' : ' ', tlp ? "full {" : "empty");
          if (tlp) {
@@ -739,7 +733,6 @@ DTRACE;
          }
          break;
       case lObjectT:
-DTRACE;
          tep = lGetPosObject(ep, i);
          sge_dstring_sprintf_append(buffer, "%s%-20.20s (Object)  %c = %s\n", space, name, changed ? '*' : ' ', tep ? "object {" : "none");
          if (tep) {

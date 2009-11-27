@@ -39,7 +39,7 @@
 #define MSG_FLATFILE_NODATATOSPOOL           _MESSAGE(62000, _("no data available for spooling"))
 #define MSG_FILE_ERRORCLOSEINGX_S            _MESSAGE(62001, _("error closing "SFN))
 #define MSG_FILE_ERROROPENINGX_S             _MESSAGE(62002, _("error opening "SFN))
-#define MSG_UNKNOWNATTRIBUTENAME_S           _MESSAGE(62003,  _("unknown attribute name "SFQ))
+#define MSG_UNKNOWNATTRIBUTENAME_S           _MESSAGE(62003, _("unknown attribute name "SFQ))
 #define MSG_DONTKNOWHOWTOHANDLELIST_S        _MESSAGE(62004, _("don't know how to handle sublist "SFQ))
 #define MSG_FLATFILE_ATTRIBISMISSING_S       _MESSAGE(62005, _("required attribute "SFQ" is missing"))
 #define MSG_FLATFILE_DUPLICATEATTRIB_S       _MESSAGE(62006, _("attribute "SFQ" appears more than once"))

@@ -529,10 +529,14 @@ lMultiType **mpp,
 const lDescr *dp,
 int flags
 ) {
-   int i, n, ret, lret;
-   bool only_at_bufferend = true;
-   bool format_error = false;
-   int last_error = PACK_SUCCESS;
+   int i, n, ret;
+   bool only_at_bufferend = true;   /* Everything had PACK_SUCCESS or
+                                     * PACK_FORMAT error happend but only at the
+                                     * end of the descriptor */
+   bool format_error = false;       /* set to true when at least one PACK_FORMAT 
+                                     * error happens */
+   int last_error = PACK_SUCCESS;   /* error happend in last iteration 
+                                     * or PACK_SUCCESS */
    lMultiType *cp = NULL;
 
    DENTER(CULL_LAYER, "cull_unpack_cont");
@@ -548,15 +552,14 @@ int flags
    for (i = 0; i < n; i++) {
       /* if flags are given, unpack only fields matching flags, e.g. CULL_SPOOL */
       if (flags == 0 || (dp[i].mt & flags) != 0) {
-         if ((lret = cull_unpack_switch(pb, &(cp[i]), mt_get_type(dp[i].mt), flags))) {
-            if (lret == PACK_FORMAT) {
-               format_error = true;
-               last_error = lret;
-            } else if (lret != PACK_FORMAT) {
-               last_error = lret;
-               only_at_bufferend = false;
-               break;
-            }
+         int lret = cull_unpack_switch(pb, &(cp[i]), mt_get_type(dp[i].mt), flags);
+
+         last_error = lret;
+         if (lret == PACK_FORMAT) {
+            format_error = true;
+         } else if (lret != PACK_SUCCESS) {
+            only_at_bufferend = false;
+            break;
          }
       }
    }
@@ -719,6 +722,7 @@ int cull_unpack_elem_partial(sge_pack_buffer *pb, lListElem **epp, const lDescr 
 {
    int ret;
    lListElem *ep = NULL;
+   bool forced_to_use_given_descr = false;
 
    DENTER(CULL_LAYER, "cull_unpack_elem_partial");
 
@@ -738,6 +742,27 @@ int cull_unpack_elem_partial(sge_pack_buffer *pb, lListElem **epp, const lDescr 
       return ret;
    }
 
+   /*
+    * Special handling for feature update releses where the job has been changed.
+    * In all cases where we got an descriptor from outside and where the descriptor
+    * is one that contains JB_job_number as first entry we will use this 
+    * descriptor and not that one that is stored in a packbuffer.
+    *
+    * As a result we are able to read "old" JB_Type objects from a previous
+    * GridEngine version although the JB_Type object has been incresed in the new
+    * version.
+    *
+    * Note: Only JB_type objects will be handled correctly and only in the case 
+    * if JB_Type contains ALL attributes of the old descriptor and new elements
+    * AT THE END of the new descriptor.
+    *
+    * 50 is JB_job_number. I did not use the enum value here because it is defined
+    * in sgeobj header file and not cull.
+    */   
+   if (dp != NULL && dp[0].nm == 50) {
+      forced_to_use_given_descr = true;
+   }
+
    if(ep->status == FREE_ELEM) {
       if((ret = cull_unpack_descr(pb, &(ep->descr))) != PACK_SUCCESS) {
          free(ep);
@@ -751,6 +776,17 @@ int cull_unpack_elem_partial(sge_pack_buffer *pb, lListElem **epp, const lDescr 
          a descriptor from outside 
        */
       if((ep->descr = (lDescr *) dp) == NULL) {
+         free(ep);
+         PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
+         DEXIT;
+         return PACK_BADARG;
+      }
+   }
+   if (forced_to_use_given_descr) {
+      if (ep->status == FREE_ELEM) {
+         cull_hash_free_descr(ep->descr); 
+      }
+      if((ep->descr = lCopyDescr((lDescr *) dp)) == NULL) {
          free(ep);
          PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
          DEXIT;

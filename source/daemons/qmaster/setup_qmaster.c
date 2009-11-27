@@ -856,10 +856,10 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
   * with only a view owners is solved.
   */
 #if 0
-   if (*(object_base[SGE_TYPE_JOB].list == NULL) {
-      *(object_base[SGE_TYPE_JOB].list) = lCreateList("Master_Job_List", JB_Type);
-   }
-   cull_hash_new(*(object_base[SGE_TYPE_JOB].list), JB_owner, 0);
+    if (*(object_base[SGE_TYPE_JOB].list) == NULL) {
+       *(object_base[SGE_TYPE_JOB].list) = lCreateList("Master_Job_List", JB_Type);
+    }
+    cull_hash_new(*(object_base[SGE_TYPE_JOB].list), JB_owner, 0);
 #endif
 
    if (!sge_initialize_persistence(ctx, &answer_list)) {

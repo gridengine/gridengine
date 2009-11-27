@@ -8,6 +8,17 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+EB-2009-11-27-0: Bugfix:      o fixed abort of qmaster if global configuration
+                                is not available after update.
+                              o fixed spooling/parsing problem in qmaster after 
+                                update. as a result all pending/running jobs of
+                                previous GE version were ignored.
+                              o fixed problem with CULL namespace if objects
+                                should be dumped with lWrite*(). This problem
+                                has been introduced with EB-2009-11-20-1
+                 Bugster:     6902905
+                 Review:      JG
+
 DG-2009-11-26-0: Bugfix:      Fixed memory leak when using core binding on 
                               Linux. 
                  Review:      HP

@@ -722,7 +722,6 @@ int cull_unpack_elem_partial(sge_pack_buffer *pb, lListElem **epp, const lDescr 
 {
    int ret;
    lListElem *ep = NULL;
-   bool forced_to_use_given_descr = false;
 
    DENTER(CULL_LAYER, "cull_unpack_elem_partial");
 
@@ -742,27 +741,6 @@ int cull_unpack_elem_partial(sge_pack_buffer *pb, lListElem **epp, const lDescr 
       return ret;
    }
 
-   /*
-    * Special handling for feature update releses where the job has been changed.
-    * In all cases where we got an descriptor from outside and where the descriptor
-    * is one that contains JB_job_number as first entry we will use this 
-    * descriptor and not that one that is stored in a packbuffer.
-    *
-    * As a result we are able to read "old" JB_Type objects from a previous
-    * GridEngine version although the JB_Type object has been incresed in the new
-    * version.
-    *
-    * Note: Only JB_type objects will be handled correctly and only in the case 
-    * if JB_Type contains ALL attributes of the old descriptor and new elements
-    * AT THE END of the new descriptor.
-    *
-    * 50 is JB_job_number. I did not use the enum value here because it is defined
-    * in sgeobj header file and not cull.
-    */   
-   if (dp != NULL && dp[0].nm == 50) {
-      forced_to_use_given_descr = true;
-   }
-
    if(ep->status == FREE_ELEM) {
       if((ret = cull_unpack_descr(pb, &(ep->descr))) != PACK_SUCCESS) {
          free(ep);
@@ -770,23 +748,39 @@ int cull_unpack_elem_partial(sge_pack_buffer *pb, lListElem **epp, const lDescr 
          DEXIT;
          return ret;
       }
+
+      /*
+       * Special handling for feature update releses where the job has been changed.
+       * In all cases where we got an descriptor from outside and where the descriptor
+       * is one that contains JB_job_number as first entry we will use this 
+       * descriptor and not that one that is stored in a packbuffer.
+       *
+       * As a result we are able to read "old" JB_Type objects from a previous
+       * GridEngine version although the JB_Type object has been incresed in the new
+       * version.
+       *
+       * Note: Only JB_type objects will be handled correctly and only in the case 
+       * if JB_Type contains ALL attributes of the old descriptor and new elements
+       * AT THE END of the new descriptor.
+       *
+       * 50 is JB_job_number. I did not use the enum value here because it is defined
+       * in sgeobj header file and not cull.
+       */   
+      if (dp != NULL && dp[0].nm == 50) {
+         cull_hash_free_descr(ep->descr); 
+         if((ep->descr = lCopyDescr((lDescr *) dp)) == NULL) {
+            free(ep);
+            PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
+            DEXIT;
+            return PACK_BADARG;
+         }
+      }
    } else {
       /* 
          if it is not a free element we need 
          a descriptor from outside 
        */
       if((ep->descr = (lDescr *) dp) == NULL) {
-         free(ep);
-         PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
-         DEXIT;
-         return PACK_BADARG;
-      }
-   }
-   if (forced_to_use_given_descr) {
-      if (ep->status == FREE_ELEM) {
-         cull_hash_free_descr(ep->descr); 
-      }
-      if((ep->descr = lCopyDescr((lDescr *) dp)) == NULL) {
          free(ep);
          PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
          DEXIT;

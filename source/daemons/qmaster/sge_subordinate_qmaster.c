@@ -1104,6 +1104,127 @@ slotwise_unsuspend_all_tasks(sge_gdi_ctx_class_t *ctx, lList *so_list,
    }
 }
 
+/****** sge_subordinate_qmaster/check_new_slotwise_subordinate_tree() **********
+*  NAME
+*     check_new_slotwise_subordinate_tree() -- checks if the new slotwise
+*        preemption configuration is valid
+*
+*  SYNOPSIS
+*     bool check_new_slotwise_subordinate_tree(lListElem *qinstance, lList 
+*     *new_so_list, lList **answer_list) 
+*
+*  FUNCTION
+*     Checks if the slotwise preemption configuration would still be valid if
+*     a specific change would be made.
+*
+*  INPUTS
+*     lListElem *qinstance - For this qinstance, the "subordinate_list"
+*                            configuration value is to be changed.
+*     lList *new_so_list   - These configuration will be added to the existing
+*                            one.
+*     lList **answer_list  - answer list for errors.
+*
+*  RESULT
+*     bool - true if the new config will be valid, false otherwise.
+*
+*  NOTES
+*     MT-NOTE: check_new_slotwise_subordinate_tree() is MT safe 
+*******************************************************************************/
+bool
+check_new_slotwise_subordinate_tree(lListElem *qinstance, lList *new_so_list, lList **answer_list)
+{
+   bool          success = true;
+   lListElem     *root_qinstance = NULL; /* QU_Type */
+
+   DENTER(TOP_LAYER, "check_new_slotwise_subordinate_tree");
+   /*
+    * Check if the queues that will be added to the "subordinate_list" are
+    * already in the subordinate tree. If they are, there is a loop in the
+    * tree, which is not allowed.
+    */
+   root_qinstance = get_slotwise_sos_tree_root(qinstance);
+   if (root_qinstance != NULL) {
+      u_long32      slots_sum = 0;
+
+      slots_sum = get_slotwise_sos_threshold(root_qinstance);
+      if (slots_sum > 0) {
+         sge_sl_list_t    *qinstances_in_slotwise_sos_tree = NULL;
+         sge_sl_elem_t    *ssos_qinstance_elem = NULL;
+         ssos_qinstance_t *ssos_qinstance = NULL;
+         const char       *cqueue_name = NULL;
+         lListElem        *new_so = NULL; /* SO_Type */
+
+         /* get the slotwise sos tree as a list */
+         get_slotwise_sos_sub_tree_qinstances(root_qinstance,
+            &qinstances_in_slotwise_sos_tree, 0);
+
+         for_each(new_so, new_so_list) {
+            const char *new_so_name = NULL;
+
+            new_so_name = lGetString(new_so, SO_name);
+            if (new_so_name != NULL) {
+               for_each_sl(ssos_qinstance_elem, qinstances_in_slotwise_sos_tree) {
+                  ssos_qinstance = sge_sl_elem_data(ssos_qinstance_elem);
+                  cqueue_name = lGetString(ssos_qinstance->qinstance, QU_qname);
+
+                  if (strcmp(cqueue_name, new_so_name) == 0) {
+                     /*
+                      * If this queue will be subordinated to "qinstance",
+                      * there will be a loop in the tree -> error!
+                      */
+                     ERROR((SGE_EVENT, MSG_PARSE_LOOP_IN_SSOS_TREE_SS,
+                        new_so_name, lGetString(qinstance, QU_qname)));
+                     answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX,
+                        ANSWER_QUALITY_ERROR);
+                     success = false;
+                     break;
+                  }
+               }
+            }
+            if (success == false) {
+               break;
+            }
+         }
+         sge_sl_destroy(&qinstances_in_slotwise_sos_tree,
+            (sge_sl_destroy_f)destroy_slotwise_sos_tree_elem);
+      }
+   }
+   DRETURN(success);
+}
+
+/****** sge_subordinate_qmaster/do_slotwise_x_on_subordinate_check() ***********
+*  NAME
+*     do_slotwise_x_on_subordinate_check() -- 'calculates' and executes all
+*        suspends and unsuspends for the slotwise subordination tree where the
+*        provided qinstance is member of
+*                                               
+*
+*  SYNOPSIS
+*     bool do_slotwise_x_on_subordinate_check(sge_gdi_ctx_class_t *ctx, 
+*     lListElem *qinstance, bool suspend, bool check_subtree_only, monitoring_t 
+*     *monitor) 
+*
+*  FUNCTION
+*     Calculates and executes all suspends and unsuspends for the tasks in the
+*     qinstances on the same host as the provided qinstance for the slotwise
+*     subordination tree where the provided qinstance is member of.
+*
+*  INPUTS
+*     sge_gdi_ctx_class_t *ctx - context
+*     lListElem *qinstance     - start from this qinstance doing this check
+*     bool suspend             - calculate for suspend or for unsuspend?
+*     bool check_subtree_only  - check only the subtree of the provided
+*                                qinstance, not the whole slotwise subordinate
+*                                tree the provided qinstance is member of
+*     monitoring_t *monitor    - monitor
+*
+*  RESULT
+*     bool - true if the provided qinstance is member of a slotwise subordinate
+*            tree, false if it is not.
+*
+*  NOTES
+*     MT-NOTE: do_slotwise_x_on_subordinate_check() is MT safe 
+*******************************************************************************/
 bool
 do_slotwise_x_on_subordinate_check(sge_gdi_ctx_class_t *ctx, lListElem *qinstance,
       bool suspend, bool check_subtree_only, monitoring_t *monitor)

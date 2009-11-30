@@ -64,5 +64,7 @@ void unsuspend_all_tasks_in_slotwise_sub_tree(sge_gdi_ctx_class_t *ctx,
 void slotwise_unsuspend_all_tasks(sge_gdi_ctx_class_t *ctx, lList *so_list,
                    const char *hostname, bool trigger, monitoring_t *monitor);
 
+bool check_new_slotwise_subordinate_tree(lListElem *qinstance, lList *new_so_list,
+                                         lList **answer_list);
 #endif /* __SUBORDINATE_QMASTER_H */
 

@@ -499,17 +499,42 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                                            matching_host_or_group,
                                            matching_group, is_ambiguous);
                if (object_list_has_differences(old_value, answer_list, new_value, false)) {
-
                   lList *master_list = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
                   lList *unsuspended_so = NULL;  /* SO_Type list */
                   lList *suspended_so = NULL;    /* SO_Type list */
                   lListElem *first_old_elem = NULL;
                   lListElem *first_new_elem = NULL;
                   const char *hostname = NULL;
+                  bool valid_config = false;
 
                   /*
                    * check slotwise subordinations
                    */
+                  /*
+                   * Check if there are loops in the slotwise subordination tree.
+                   */
+                  lList *old_value_copy = NULL;  /* SO_Type list */
+                  lList *new_value_copy = NULL;  /* SO_Type list */
+
+                  old_value_copy = lCopyList("copy_old", old_value);
+                  new_value_copy = lCopyList("copy_new", new_value);
+
+                  /*
+                   * Find all queues that were slotwise subordinated before
+                   * and are no longer subordinated now and trigger them.
+                   */
+                  lDiffListStr(SO_name, &old_value_copy, &new_value_copy);
+                  valid_config = check_new_slotwise_subordinate_tree(this_elem,
+                                                    new_value_copy, answer_list);
+
+                  lFreeList(&old_value_copy);
+                  lFreeList(&new_value_copy);
+
+                  if (valid_config == false) {
+                     ret = false;
+                     break;
+                  }
+
                   /*
                    * Detect queues that are no longer subordinated to this queue and
                    * trigger recalculation for them.
@@ -527,8 +552,7 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                        * calculated in the "classic"  section below.
                        */
                       slotwise_unsuspend_all_tasks(ctx, old_value, hostname, false, monitor);
-                  } else if (first_old_elem != NULL && lGetUlong(first_old_elem, SO_slots_sum) > 0  &&
-                             first_new_elem != NULL && lGetUlong(first_new_elem, SO_slots_sum) > 0) {
+                  } else {
                      /*
                       * If there was slotwise preemption configured and is still slotwise
                       * preemption configured, unsuspend all task in the dechained queues.

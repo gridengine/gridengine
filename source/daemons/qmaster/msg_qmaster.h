@@ -801,5 +801,6 @@
 #define MSG_JOB_CHGFORCED_UU          _MESSAGE(33957, _("changed non-forced request to forced request for job "sge_U32CFormat"."sge_U32CFormat"because host can't be contacted"))
 #define MSG_JOB_BINDING              _MESSAGE(33958, _("binding"))
 
+#define MSG_PARSE_LOOP_IN_SSOS_TREE_SS      _MESSAGE(33959, _("denied: adding "SFQ" to the subordinate_list of "SFQ" would create a loop in the slotwise preemption configuration!"))
 
 #endif

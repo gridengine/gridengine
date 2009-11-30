@@ -2026,6 +2026,34 @@ lList *gdil_orig  /* JG_Type */
 
 /* creates binding string for config file */
 #if defined(PLPA_LINUX)
+/****** exec_job/create_binding_strategy_string_linux() ************************
+*  NAME
+*     create_binding_strategy_string_linux() -- Creates the core binding strategy string. 
+*
+*  SYNOPSIS
+*     static bool create_binding_strategy_string_linux(dstring* result, 
+*     lListElem *jep, char** rankfileinput) 
+*
+*  FUNCTION
+*     Creates the core binding strategy string depending on the given request in
+*     the CULL list. This string is written in the config file in order to
+*     tell the shepherd which binding has to be performed.
+*     
+*
+*  INPUTS
+*     lListElem *jep       - CULL list with the core binding request 
+*
+*  OUTPUTS
+*     dstring* result      - Contains the string which is written in config file. 
+*     char** rankfileinput - String which is written in the pe_hostfile when requested. 
+*
+*  RESULT
+*     static bool - returns true in case of success otherwise false
+*
+*  NOTES
+*     MT-NOTE: create_binding_strategy_string_linux() is not MT safe 
+*
+*******************************************************************************/
 static bool create_binding_strategy_string_linux(dstring* result, lListElem *jep, 
                                                    char** rankfileinput)
 {
@@ -2120,6 +2148,44 @@ static bool create_binding_strategy_string_linux(dstring* result, lListElem *jep
    DRETURN(retval);
 }
 
+/****** exec_job/linear_linux() ************************************************
+*  NAME
+*     linear_linux() -- Creates a binding request string from request (CULL list). 
+*
+*  SYNOPSIS
+*     static bool linear_linux(dstring* result, lListElem* binding_elem, const 
+*     bool automatic) 
+*
+*  FUNCTION
+*     Tries to allocate processor cores according the request in the binding_elem.
+*     If this is possible the cores are listed in the result string and true 
+*     is returned.
+*
+*     Linear means that the job is tried to be accomodated on a single socket, 
+*     if this is not possible than the remaining cores are taken from another 
+*     free socket (or afterwards from that socket with the most free cores). 
+*
+*     Linear with automatic=false means that the same algorithms as for striding
+*     with automatic=false is applied. Both have a core requested to be the 
+*     first core. This core is taken and his successors if this is possible 
+*     otherwise no binding is done at all.
+*
+*     In case of success the cores were marked internally as beeing bound.
+*
+*  INPUTS
+*     lListElem* binding_elem - List containing the binding request.
+*     const bool automatic    - If the start core to allocate is given or not. 
+*
+*  OUTPUTS
+*     dstring* result         - String containing the requested cores if possible.
+*
+*  RESULT
+*     static bool - True in case core binding was possible.
+*
+*  NOTES
+*     MT-NOTE: linear_linux() is not MT safe 
+*
+*******************************************************************************/
 static bool linear_linux(dstring* result, lListElem* binding_elem, 
                            const bool automatic)
 {
@@ -2223,6 +2289,39 @@ static bool linear_linux(dstring* result, lListElem* binding_elem,
 }
 
 
+/****** exec_job/striding_linux() **********************************************
+*  NAME
+*     striding_linux() -- Creates a binding request string from request (CULL list).
+*
+*  SYNOPSIS
+*     static bool striding_linux(dstring* result, lListElem* binding_elem, 
+*     const bool automatic) 
+*
+*  FUNCTION
+*     Tries to allocate processor cores according the request in the binding_elem.
+*     If this is possible the cores are listed in the result string and true 
+*     is returned.
+*     Striding means that cores with a specific distance (the step size) are 
+*     tried to be used. In case of automatic=false the first core to allocate 
+*     is given in the CULL list (binding_elem). If the request could not be 
+*     fulfilled the function returns false.
+*
+*     In case of success the cores were marked internally as beeing bound.
+*
+*  INPUTS
+*     lListElem* binding_elem - The CULL list with the request. 
+*     const bool automatic    - True when the first core have to be searched. 
+*
+*  OUTPUTS
+*     dstring* result         - Contains the requested cores is case of success. 
+*
+*  RESULT
+*     static bool - true in case of success otherwise false
+*
+*  NOTES
+*     MT-NOTE: striding_linux() is not MT safe 
+*
+*******************************************************************************/
 static bool striding_linux(dstring* result, lListElem* binding_elem, 
                                     const bool automatic) 
 {
@@ -2283,6 +2382,38 @@ static bool striding_linux(dstring* result, lListElem* binding_elem,
 }
 
 
+/****** exec_job/explicit_linux() **********************************************
+*  NAME
+*     explicit_linux() -- Creates a binding request string from request (CULL list).
+*
+*  SYNOPSIS
+*     static bool explicit_linux(dstring* result, lListElem* binding_elem) 
+*
+*  FUNCTION
+*     Tries to allocate processor cores according the request in the binding_elem.
+*     If this is possible the cores are listed in the result string and true 
+*     is returned.
+* 
+*     Explicit means that specific cores (as socket, core list) are requested
+*     on submission time. If one of these cores can not be allocated (because 
+*     it is not available on the exution host or it is currently bound) than
+*     no binding will be done.
+* 
+*     In case of success the cores were marked internally as beeing bound.
+*
+*  INPUTS
+*     lListElem* binding_elem - List containing the binding request.
+*
+*  OUTPUTS
+*     dstring* result         - String containing the requested cores if possible.
+*
+*  RESULT
+*     static bool - true in case of success otherwise false
+*
+*  NOTES
+*     MT-NOTE: explicit_linux() is not MT safe 
+*
+*******************************************************************************/
 static bool explicit_linux(dstring* result, lListElem* binding_elem) 
 {
    /* pointer to string which contains the <socket>,<core> pairs */
@@ -2342,6 +2473,41 @@ static bool explicit_linux(dstring* result, lListElem* binding_elem)
 #endif
 
 #if defined(SOLARIS86) || defined(SOLARISAMD64)
+/****** exec_job/create_binding_strategy_string_solaris() **********************
+*  NAME
+*     create_binding_strategy_string_solaris() --  Creates a binding request string from request (CULL list).
+*
+*  SYNOPSIS
+*     static bool create_binding_strategy_string_solaris(dstring* result, 
+*     lListElem *jep, char* err_str, int err_length, char** env, char** 
+*     rankfileinput) 
+*
+*  FUNCTION
+*     Tries to allocate processor cores according the request in the binding_elem.
+*     If this is possible the cores are listed in the result string and true 
+*     is returned. 
+*
+*     This function dispatches the task to the appropriate helper functions.
+* 
+*     TODO DG: eliminate err_str and err_length.
+*
+*  INPUTS
+*     lListElem *jep       -  The CULL list with the request.
+*
+*  OUTPUTS 
+*     dstring* result      - Contains the requested cores is case of success.
+*     char* err_str        - Contains error messages in case of errors. 
+*     int err_length       - Length of the error messages 
+*     char** env           - Contains the SGE_BINDING content in case of 'env'. 
+*     char** rankfileinput - Contains the selected cores for pe_hostfile in case of 'pe'. 
+*
+*  RESULT
+*     static bool - true in case of success otherwise false.
+*
+*  NOTES
+*     MT-NOTE: create_binding_strategy_string_solaris() is not MT safe 
+*
+*******************************************************************************/
 static bool create_binding_strategy_string_solaris(dstring* result, 
                lListElem *jep, char* err_str, int err_length, char** env, 
                char** rankfileinput)
@@ -2411,6 +2577,31 @@ static bool create_binding_strategy_string_solaris(dstring* result,
 }
 
 
+/****** exec_job/linear_automatic_solaris() ************************************
+*  NAME
+*     linear_automatic_solaris() -- Creates core binding string.  
+*
+*  SYNOPSIS
+*     static bool linear_automatic_solaris(dstring* result, lListElem* 
+*     binding_elem, char** env) 
+*
+*  FUNCTION
+*    Tries to allocate cores in a "linear" (successive) manner. It beginns with 
+*    the first free socket on the system. If there are still cores left 
+*    to be allocated or there is no free socket on the system, the socket 
+*    with the most free cores is taken. And so on.
+*
+*  INPUTS
+*     lListElem* binding_elem - Cull list containing the core binding request. 
+*     
+*  OUTPUTS
+*     dstring* result         - String with the allocated cores. 
+*     char** env              - String with the SGE_BINDING content if neccessary. 
+*
+*  RESULT
+*     static bool - true in case of success otherwise false 
+*
+*******************************************************************************/
 static bool linear_automatic_solaris(dstring* result, lListElem* binding_elem, 
                                        char** env)
 {
@@ -2483,6 +2674,42 @@ static bool linear_automatic_solaris(dstring* result, lListElem* binding_elem,
    DRETURN(retval);
 }
 
+/****** exec_job/striding_solaris() ********************************************
+*  NAME
+*     striding_solaris() -- Creates binding request string. 
+*
+*  SYNOPSIS
+*     static bool striding_solaris(dstring* result, lListElem* binding_elem, 
+*     const bool automatic, const bool do_linear, char* err_str, int 
+*     err_length, char** env) 
+*
+*  FUNCTION
+*     Tries to allocate processor cores according the request in the binding_elem.
+*     If this is possible the cores are listed in the result string and true 
+*     is returned.
+*     Striding means that cores with a specific distance (the step size) are 
+*     tried to be used. In case of automatic=false the first core to allocate 
+*     is given in the CULL list (binding_elem). If the request could not be 
+*     fulfilled the function returns false.
+*  
+*  INPUTS
+*     lListElem* binding_elem - CULL list containing the request. 
+*     const bool automatic    - Finds first core automatically. 
+*     const bool do_linear    - In case of linear request. 
+*
+*  OUTPUTS
+*     dstring* result         - String with core binding request. 
+*     char* err_str           - String containing errors in case of. 
+*     int err_length          - Length of the error string. 
+*     char** env              - Content of SGE_BINDING env var when requested. 
+*    
+*  RESULT
+*     static bool - true in case of success false otherwise
+*
+*  NOTES
+*     MT-NOTE: striding_solaris() is not MT safe 
+*
+*******************************************************************************/
 static bool striding_solaris(dstring* result, lListElem* binding_elem, const bool automatic, 
    const bool do_linear, char* err_str, int err_length, char** env)
 {
@@ -2594,6 +2821,34 @@ static bool striding_solaris(dstring* result, lListElem* binding_elem, const boo
    DRETURN(retval);
 }
 
+/****** exec_job/explicit_solaris() ********************************************
+*  NAME
+*     explicit_solaris() -- Creates a binding request string from request (CULL list). 
+*
+*  SYNOPSIS
+*     static bool explicit_solaris(dstring* result, lListElem* binding_elem, 
+*     char* err_str, int err_length, char** env) 
+*
+*  FUNCTION
+*     Creates a binding request string out of the explicit core binding request. 
+*
+*  INPUTS
+*     lListElem* binding_elem - List containing the binding request.
+*
+*  OUTPUTS
+*     dstring* result         - String containing the core bindin request. 
+*     char* err_str           - String containing possible errors. 
+*     int err_length          - Length of the error string. 
+*     char** env              - String containing the SGE_BINDING env var content 
+*                               when requested. 
+*
+*  RESULT
+*     static bool - true in case the request could be fulfilled otherwise false 
+*
+*  NOTES
+*     MT-NOTE: explicit_solaris() is not MT safe 
+*
+*******************************************************************************/
 static bool explicit_solaris(dstring* result, lListElem* binding_elem, char* err_str, 
                                        int err_length, char** env)
 {
@@ -2687,6 +2942,31 @@ static bool explicit_solaris(dstring* result, lListElem* binding_elem, char* err
 
 
 #if defined(SOLARIS86) || defined(SOLARISAMD64) || defined(PLPA_LINUX)
+/****** exec_job/parse_job_accounting_and_create_logical_list() ****************
+*  NAME
+*     parse_job_accounting_and_create_logical_list() -- Creates the core list out of accounting string. 
+*
+*  SYNOPSIS
+*     static bool parse_job_accounting_and_create_logical_list(const char* 
+*     binding_string, char** rankfileinput) 
+*
+*  FUNCTION
+*     Creates the input for the rankfile out of the core binding string 
+*     which is written in the config file in the active_jobs directory.
+*
+*  INPUTS
+*     const char* binding_string - Pointer to the core binding string. 
+*
+*  OUTPUTS
+*     char** rankfileinput       - String with logical socket,core list. 
+*
+*  RESULT
+*     static bool - true when string with socket,core list was created
+*
+*  NOTES
+*     MT-NOTE: parse_job_accounting_and_create_logical_list() is MT safe 
+*
+*******************************************************************************/
 static bool parse_job_accounting_and_create_logical_list(const char* binding_string,
                                                          char** rankfileinput)
 {

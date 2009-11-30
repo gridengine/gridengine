@@ -8,6 +8,8 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+DG-2009-11-30-0: Cleanup:     Missing comments (adoc header) added.
+
 HP-2009-11-30-0: Bugfix:      o configuration of forbidden slotwise preemption
                                 relationship structures is not detected
 					  Bugster:     6904437

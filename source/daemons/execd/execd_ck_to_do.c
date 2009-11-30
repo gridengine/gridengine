@@ -187,81 +187,90 @@ static void notify_ptf()
 /* force job resource limits */
 static void force_job_rlimit(const char* qualified_hostname)
 {
-   lList *usage_list;
-   lListElem *q=NULL, *jep, *cpu_ep, *vmem_ep, *gdil_ep, *jatep;
-   double cpu_val, vmem_val;
-   double s_cpu, h_cpu;
-   double s_vmem, h_vmem;
-   u_long32 jobid;
-   int cpu_exceeded;
-   char err_str[128];
+   lListElem *jep;
 
    DENTER(TOP_LAYER, "force_job_rlimit");
 
    for_each (jep, *(object_type_get_master_list(SGE_TYPE_JOB))) {
+      lListElem *jatep;
+
       for_each (jatep, lGetList(jep, JB_ja_tasks)) {
-         u_long32 jataskid;
-         int nslots=0;
+         lListElem *q=NULL, *cpu_ep, *vmem_ep, *gdil_ep;
+         double cpu_val, vmem_val;
+         double s_cpu, h_cpu;
+         double s_vmem, h_vmem;
+         int cpu_exceeded;
+         lList *usage_list;
+         u_long32 jobid, jataskid;
 
          jobid = lGetUlong(jep, JB_job_number);
          jataskid = lGetUlong(jatep, JAT_task_number);
 
          cpu_val = vmem_val = s_cpu = h_cpu = s_vmem = h_vmem = 0;
 
-         if (!(usage_list = ptf_get_job_usage(jobid, jataskid, "*")))
+         /* retrieve cpu and vmem usage */
+         usage_list = ptf_get_job_usage(jobid, jataskid, "*");
+         if (usage_list == NULL) {
             continue;
+         }
 
-         if ((cpu_ep = lGetElemStr(usage_list, UA_name, USAGE_ATTR_CPU)))
+         if ((cpu_ep = lGetElemStr(usage_list, UA_name, USAGE_ATTR_CPU))) {
             cpu_val = lGetDouble(cpu_ep, UA_value);
+         }
 
-         if ((vmem_ep = lGetElemStr(usage_list, UA_name, USAGE_ATTR_VMEM)))
+         if ((vmem_ep = lGetElemStr(usage_list, UA_name, USAGE_ATTR_VMEM))) {
             vmem_val = lGetDouble(vmem_ep, UA_value);
+         }
             
-         for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
-            double lim;
+         DPRINTF(("JOB "sge_u32" %s %10.5f %s %10.5f\n", jobid,
+            cpu_ep != NULL ? USAGE_ATTR_CPU : "("USAGE_ATTR_CPU")", cpu_val,
+            vmem_ep != NULL ? USAGE_ATTR_VMEM : "("USAGE_ATTR_VMEM")", vmem_val));
 
-            if (sge_hostcmp(qualified_hostname, lGetHost(gdil_ep, JG_qhostname)) 
-                || !(q = lGetObject(gdil_ep, JG_queue)))
+         /* free no longer needed usage_list */
+         lFreeList(&usage_list);
+         cpu_ep = vmem_ep = NULL;
+
+         for_each (gdil_ep, lGetList(jatep, JAT_granted_destin_identifier_list)) {
+            int nslots=0;
+            double lim;
+            char err_str[128];
+            size_t err_size = sizeof(err_str) - 1;
+
+            if (sge_hostcmp(qualified_hostname, lGetHost(gdil_ep, JG_qhostname))
+                || !(q = lGetObject(gdil_ep, JG_queue))) {
                continue;
+            }
 
             nslots = lGetUlong(gdil_ep, JG_slots);
 
-            parse_ulong_val(&lim, NULL, TYPE_TIM, lGetString(q, QU_s_cpu), 
-                              err_str, sizeof(err_str)-1);
-            if (lim == DBL_MAX) 
+            parse_ulong_val(&lim, NULL, TYPE_TIM, lGetString(q, QU_s_cpu), err_str, err_size);
+            if (lim == DBL_MAX) {
                s_cpu = DBL_MAX;
-            else
+            } else {
                s_cpu += lim * nslots; 
+            }
 
-            parse_ulong_val(&lim, NULL, TYPE_TIM, lGetString(q, QU_h_cpu), 
-                              err_str, sizeof(err_str)-1);
-            if (lim == DBL_MAX) 
+            parse_ulong_val(&lim, NULL, TYPE_TIM, lGetString(q, QU_h_cpu), err_str, err_size);
+            if (lim == DBL_MAX) {
                h_cpu = DBL_MAX;
-            else
+            } else {
                h_cpu += lim * nslots; 
+            }
 
-            parse_ulong_val(&lim, NULL, TYPE_TIM, lGetString(q, QU_s_vmem), 
-                              err_str, sizeof(err_str)-1);
-            if (lim == DBL_MAX) 
+            parse_ulong_val(&lim, NULL, TYPE_TIM, lGetString(q, QU_s_vmem), err_str, err_size);
+            if (lim == DBL_MAX) {
                s_vmem = DBL_MAX;
-            else
+            } else {
                s_vmem += lim * nslots; 
+            }
 
-            parse_ulong_val(&lim, NULL, TYPE_TIM, lGetString(q, QU_h_vmem), 
-                              err_str, sizeof(err_str)-1);
-            if (lim == DBL_MAX) 
+            parse_ulong_val(&lim, NULL, TYPE_TIM, lGetString(q, QU_h_vmem), err_str, err_size);
+            if (lim == DBL_MAX) {
                h_vmem = DBL_MAX;
-            else
+            } else {
                h_vmem += lim * nslots; 
-
-         }
-
-         DPRINTF(("JOB "sge_u32" %s %10.5f %s %10.5f\n", 
-            jobid,
-            cpu_ep?USAGE_ATTR_CPU:"("USAGE_ATTR_CPU")",  
-            cpu_val, 
-            vmem_ep?USAGE_ATTR_VMEM:"("USAGE_ATTR_VMEM")",  
-            vmem_val));
+            }
+         } /* foreach gdil_ep */
 
          if (h_cpu < cpu_val || h_vmem < vmem_val) {
             cpu_exceeded = (h_cpu < cpu_val);
@@ -285,12 +294,10 @@ static void force_job_rlimit(const char* qualified_hostname)
             signal_job(jobid, jataskid, SGE_SIGXCPU);
             continue;
          }
+      } /* foreach jatep */
+   } /* foreach jep */
 
-         lFreeList(&usage_list);
-      }
-   }
-
-   DEXIT;
+   DRETURN_VOID;
 }
 #endif
 

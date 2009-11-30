@@ -694,7 +694,7 @@ test_thread1_main(void *arg) {
                int location = random() % 2;
 
                sge_sl_elem_create(&new_elem, (void *)"3");
-               switch(location) { 
+               switch (location) { 
                   case 0:
                      sge_sl_insert_before(global->list, new_elem, elem);
                      break;

@@ -8,7 +8,7 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
-HP-2009-11-30-0: Bugfix:       o Deleting several simple sleeper jobs with qdel
+HP-2009-11-30-1: Bugfix:       o Deleting several simple sleeper jobs with qdel
                                  can cause queues going to ERROR or corrupt BDB
                                  server
                               This bug was fixed be GH, I just check it in.

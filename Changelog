@@ -10,18 +10,18 @@
 
 HP-2009-11-30-0: Bugfix:       o Deleting several simple sleeper jobs with qdel
                                  can cause queues going to ERROR or corrupt BDB
-											server
-								      This bug was fixed be GH, I just check it in.
-					  Bugster:     6894171
-					  Issue:       3198
-					  Review:      HP
+                                 server
+                              This bug was fixed be GH, I just check it in.
+                 Bugster:     6894171
+                 Issue:       3198
+                 Review:      HP
 
 DG-2009-11-30-0: Cleanup:     Missing comments (adoc header) added.
 
 HP-2009-11-30-0: Bugfix:      o configuration of forbidden slotwise preemption
                                 relationship structures is not detected
-					  Bugster:     6904437
-					  Review:      MD
+                 Bugster:     6904437
+                 Review:      MD
 
 JG-2009-11-30-0: Bugfix:      fixed memory leak in sge_execd
                  Review:      EB

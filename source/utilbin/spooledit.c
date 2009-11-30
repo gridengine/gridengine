@@ -172,39 +172,68 @@ static int
 list_objects(bdb_info info, const char *key) 
 {
    int ret = EXIT_SUCCESS;
-   bool dbret;
+   bool  dbret = false;
    lList *answer_list = NULL;
+   lList *stu_list = NULL;
    bdb_database database;
 
    DENTER(TOP_LAYER, "list_objects");
 
    database = get_database_from_key(key);
 
-   {
-      /* read the list */
-      lList *list = NULL;
+   /* 
+    * Start transaction to sync with other transaction-protected
+    * cursor operations possibly launched from qmaster and friends. 
+    */ 
+   dbret = spool_berkeleydb_start_transaction(&answer_list, info);
+   if (dbret) {
+      /*
+       * Transaction started; read the list
+       */
       dbret = spool_berkeleydb_read_keys(&answer_list, info, database,
-                                         &list, key);
-      if (dbret) {
-         /* if no key was given, read the job database as well */
-         if (strlen(key) == 0) {
-            dbret = spool_berkeleydb_read_keys(&answer_list, info, BDB_JOB_DB,
-                                               &list, key);
-         }
-      }
-
-      if (dbret) {
-         const lListElem *elem;
-         for_each(elem, list) {
-            fprintf(stdout, "%s\n", lGetString(elem, STU_name));
-         }
-      } else {
-         answer_list_output(&answer_list);
-         ret = EXIT_FAILURE;
-      }
-
-      lFreeList(&list);
+                                         &stu_list, key);
+   } else {
+      answer_list_output(&answer_list);
+      ret = EXIT_FAILURE;
    }
+
+   if (dbret) {
+      if (strlen(key) == 0) {
+         /* 
+          * If no key was given, read the job database either.
+          */
+         dbret = spool_berkeleydb_read_keys(&answer_list, info, BDB_JOB_DB,
+                                            &stu_list, key);
+      }
+   } else {
+      answer_list_output(&answer_list);
+      ret = EXIT_FAILURE;
+   }
+
+   if (dbret) {
+      /*
+       * Sucess: print out data.
+       */
+      const lListElem *stu_elem = NULL;
+      for_each(stu_elem, stu_list) {
+         fprintf(stdout, "%s\n", lGetString(stu_elem, STU_name));
+      }
+   } else {
+      answer_list_output(&answer_list);
+      ret = EXIT_FAILURE;
+   }
+
+   /*
+    * Done. Close transaction.
+    */
+   dbret = spool_berkeleydb_end_transaction(&answer_list, info,
+                                            (bool)(ret == EXIT_SUCCESS));
+   if (!dbret) {
+      answer_list_output(&answer_list);
+      ret = EXIT_FAILURE;
+   }
+
+   lFreeList(&stu_list);
 
    DRETURN(ret);
 }
@@ -366,7 +395,7 @@ main(int argc, char *argv[])
    lList *answer_list = NULL;
    sge_gdi_ctx_class_t *ctx = NULL;
 
-   DENTER_MAIN(TOP_LAYER, "test_sge_mirror");
+   DENTER_MAIN(TOP_LAYER, "spooledit");
 
    if (sge_setup2(&ctx, SPOOLDEFAULTS, &answer_list) != AE_OK) {
       answer_list_output(&answer_list);

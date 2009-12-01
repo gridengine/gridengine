@@ -1567,3 +1567,93 @@ bool sge_str_is_number(const char *string)
    return (*end == '\0') ? true : false;
 }
 
+/****** uti/string/sge_replace_substring() *****************************************
+*  NAME
+*     sge_replace_substring - replace sub strings in a string
+*
+*  SYNOPSIS
+*     const char *sge_replace_substring(const char *input, char *old, char *new)
+*
+*  FUNCTION
+*     Replaces all occurences of old with new.
+*     If old is part of the given string input, a new string is returned
+*     where the replacement is done.
+*
+*  INPUTS
+*     const char *input - the input string
+*     const char *old   - the string to replace
+*     const char *new   - the replacement string
+*
+*  RESULT
+*     NULL, if the input string didn't contain the pattern,
+*     else a newly allocated string containing the input string with replacements.
+*
+*  NOTES
+*     MT-NOTE: sge_str_is_number() is MT safe 
+*     It is the responsibility of the caller to free the returned string!
+*
+*******************************************************************************/
+const char *sge_replace_substring(const char *input, const char *old, const char *new)
+{
+   int to_replace = 0;
+   int change, new_len;
+   char *new_string = NULL;
+   char *return_string = NULL;
+   char *source = NULL;
+   char *source_string = NULL;
+   char *tail = NULL;
+   char *current_tail = NULL;
+
+   /*
+    * Basic sanity checks first.
+    */
+   if (input == NULL || old == NULL || new == NULL) {
+      return NULL;
+   }
+   /*
+    * Determine number for of substrings to replace. We are
+    * careful NOT to overrun source string.
+    */
+   source = source_string = (char *)input;
+   tail = source_string + strlen(source_string) - 1;
+   while (source <= tail) {
+      current_tail = source + strlen(old) - 1;
+      if (current_tail > tail) {
+         break;
+      }
+      if (memcmp(old, source, strlen(old)) == 0) {
+         to_replace++;
+      }
+      source++;
+   }
+   if (to_replace == 0) {
+      return NULL;
+   }
+   /*
+    * Calculate size of new string based on number of substrings to replace.
+    */
+   change = to_replace * (strlen(new) - strlen(old));
+   new_len = strlen(source_string) + change + 1;
+   /*
+    * Allocate new string and re-shuffle original string.
+    */
+   return_string = new_string = malloc(new_len);
+   if (new_string == NULL) {
+      return NULL;
+   }
+   memset(new_string, 0x0, new_len);
+   source = source_string;
+   while (source <= tail) {
+      current_tail = source + strlen(old) - 1;
+      if (current_tail <= tail && memcmp(old, source, strlen(old)) == 0) {
+         memcpy(new_string, new, strlen(new));
+         new_string += strlen(new);
+         source += strlen(old);
+      } else {
+         *new_string = *source;
+         source++;
+         new_string++;
+      }
+   }
+   return return_string;
+}

@@ -111,6 +111,8 @@ const char *sge_strerror(int errnum, dstring *buffer);
 
 bool sge_str_is_number(const char *string);
 
+const char *sge_replace_substring(const char *input, const char *old, const char *new);
+
 #ifndef WIN32NATIVE
 #define SGE_STRCASECMP(a, b) strcasecmp(a, b)
 #else

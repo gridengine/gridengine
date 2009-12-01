@@ -970,6 +970,7 @@ int sge_set_environment()
    int jobid;
 #endif
 #endif
+   const char *new_value = NULL;
 
    setup_environment();
    
@@ -1005,10 +1006,17 @@ int sge_set_environment()
       }
 
       value = strtok(NULL, "\n");
-      if (value == NULL)
+      if (value == NULL) {
          value = "";
+      }
 
-      sge_set_env_value(name, value);
+      new_value = sge_replace_substring(value, "\\n", "\n");
+      if (new_value == NULL) {
+         sge_set_env_value(name, value);
+      } else {
+         sge_set_env_value(name, new_value);
+         free((void *)new_value);
+      }
    }
 
    FCLOSE(fp);

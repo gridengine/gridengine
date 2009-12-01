@@ -247,8 +247,16 @@ static char *setEnvironment(const char *jobdir, char **wrapper)
             strcpy(*wrapper, line + 13);
          }
       } else {
+         const char *new_line = sge_replace_substring(line, "\\n", "\n");
+         int put_ret;
          /* set variable */
-         if (!sge_putenv(line)) {
+         if (new_line != NULL) {
+            put_ret = sge_putenv(new_line);
+            FREE(new_line);
+         } else {
+            put_ret = sge_putenv(line);
+         }
+         if (put_ret == 0) {
             FREE(line);
             FCLOSE(envFile); 
             return NULL;

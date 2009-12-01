@@ -353,13 +353,25 @@ void var_list_dump_to_file(const lList *varl, FILE *file)
 {
    lListElem *elem;
 
-   if(varl == NULL || file == NULL) {
+   if (varl == NULL || file == NULL) {
       return;
    }
 
    for_each(elem, varl) {
-      fprintf(file, "%s=%s\n", lGetString(elem, VA_variable), 
-              lGetString(elem, VA_value));
+      /*
+       * Replace <LF> by \n sequence for multiline environment
+       * variable support.
+       */
+      const char *env_name = lGetString(elem, VA_variable);
+      const char *env_value = lGetString(elem, VA_value);
+      const char *new_env_value = sge_replace_substring(env_value, "\n", "\\n");
+
+      if (new_env_value == NULL) {
+         fprintf(file, "%s=%s\n", env_name, env_value);
+      } else {
+         fprintf(file, "%s=%s\n", env_name, new_env_value);
+         free((void *)new_env_value);
+      }
    }
 }
 
@@ -858,13 +870,8 @@ int var_list_parse_from_string(lList **lpp, const char *variable_str,
        */
       if (val_str[var_len] == '=') {
           lSetString(ep, VA_value, &val_str[var_len+1]);
-      } else if(check_environment) {
-         /*
-          * Support for multi-line environment variables:
-          * remove newline characters to avoid confusion
-          * with environment file.
-          */
-         getenv_and_set(ep, variable);
+      } else if (check_environment) {
+         lSetString(ep, VA_value, sge_getenv(variable));
       } else {
          lSetString(ep, VA_value, NULL);
       }

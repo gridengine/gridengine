@@ -70,6 +70,35 @@ static bool add_proc_ids_linux(int socket, int core, int** proc_id, int* proc_id
 #endif
 
 #if defined(PLPA_LINUX)
+/****** shepherd_binding/do_core_binding() *************************************
+*  NAME
+*     do_core_binding() -- Performs the core binding task for the Linux OS. 
+*
+*  SYNOPSIS
+*     int do_core_binding(void) 
+*
+*  FUNCTION
+*     Performs core binding on shepherd side. All information required for  
+*     the binding is communicated from execd to shepherd in the config 
+*     file value "binding". If there is "NULL" no core binding is done. 
+* 
+*     This function is Linux specific.
+*
+*     If there is any instruction the bookkeeping for these cores is already 
+*     done. In case of Solaris the processor set is already created by 
+*     execution daemon. Hence shepherd has just to add itself to it.
+*     In case of Linux the whole binding is done by shepherd. In each case 
+*     the binding is inherited from shepherd to the job it starts.
+*
+*     DG TODO change return value to bool
+* 
+*  RESULT
+*     int - Returns 0 in case of success and a negative value in case of problems. 
+*
+*  NOTES
+*     MT-NOTE: do_core_binding() is not MT safe 
+*
+*******************************************************************************/
 int do_core_binding(void) 
 {
    /* Check if "binding" parameter in 'config' file 
@@ -219,9 +248,7 @@ int do_core_binding(void)
                shepherd_trace("do_core_binding: explicit: no core binding done");
             }
          }
-         /* we are freeing these arrays allocated from the 
-            bindingExplicitExctractSocketsCores() function 
-         */      
+         
          FREE(sockets);
          FREE(cores);
 
@@ -250,6 +277,29 @@ int do_core_binding(void)
 #endif 
 
 #if defined(SOLARIS86) || defined(SOLARISAMD64)
+/****** shepherd_binding/do_core_binding() *************************************
+*  NAME
+*     do_core_binding() -- Performs the core binding task for the Solaris OS. 
+*
+*  SYNOPSIS
+*     int do_core_binding(void) 
+*
+*  FUNCTION
+*     Performs core binding on shepherd side. All information required for  
+*     the binding is communicated from execd to shepherd in the config 
+*     file value "binding". If there is "NULL" no core binding is done. 
+*
+*     This function is Solaris specific.
+*
+*     DG TODO change return value to bool
+*
+*  RESULT
+*     int - Returns 0 in case of success and a negative value in case of problems.  
+*
+*  NOTES
+*     MT-NOTE: do_core_binding() is not MT safe 
+*
+*******************************************************************************/
 int do_core_binding(void)
 {
    int retval = 0; 
@@ -324,31 +374,23 @@ int do_core_binding(void)
 
 /****** shepherd_binding/bind_shepherd_to_pset() *******************************
 *  NAME
-*     bind_shepherd_to_pset() -- ??? 
+*     bind_shepherd_to_pset() -- Binds the current process to a processor set. 
 *
 *  SYNOPSIS
 *     static bool bind_shepherd_to_pset(int pset_id) 
 *
 *  FUNCTION
-*     ??? 
+*     Binds the current shepherd process to an existing processor set. 
 *
 *  INPUTS
-*     int pset_id - ??? 
+*     int pset_id - Existing processor set id. 
 *
 *  RESULT
-*     static bool - 
-*
-*  EXAMPLE
-*     ??? 
+*     static bool - true in case the process was bound false otherwise 
 *
 *  NOTES
-*     MT-NOTE: bind_shepherd_to_pset() is not MT safe 
+*     MT-NOTE: bind_shepherd_to_pset() is MT safe 
 *
-*  BUGS
-*     ??? 
-*
-*  SEE ALSO
-*     ???/???
 *******************************************************************************/
 static bool bind_shepherd_to_pset(int pset_id) 
 {
@@ -361,10 +403,6 @@ static bool bind_shepherd_to_pset(int pset_id)
    /* successfully bound current process to processor set */
    return true;
 }
-
-
-
-
 #endif 
 
 
@@ -401,8 +439,6 @@ static bool bind_shepherd_to_pset(int pset_id)
 *  NOTES
 *     MT-NOTE: add_proc_ids_linux() is MT safe 
 *
-*  SEE ALSO
-*     ???/???
 *******************************************************************************/
 static bool add_proc_ids_linux(int socket, int core, int** proc_id, int* proc_id_size)
 {
@@ -783,24 +819,27 @@ bool binding_set_striding_linux(int first_socket, int first_core, int amount_of_
 
 /****** shepherd_binding/set_processor_binding_mask() *******************************
 *  NAME
-*     set_processor_binding_mask() -- ??? 
+*     set_processor_binding_mask() -- Sets the processor binding mask with processor ids. 
 *
 *  SYNOPSIS
 *     static bool set_processor_binding_mask(plpa_cpu_set_t* cpuset, const int* 
-*     processor_ids) 
+*     processor_ids)
 *
 *  FUNCTION
-*     ??? 
+*     Turns on all given processors on a processor id mask.
 *
 *  INPUTS
-*     plpa_cpu_set_t* cpuset   - ??? 
-*     const int* processor_ids - ??? 
+*     const int* processor_ids - An array with all processor ids to turn on.
+*     const int no_of_ids)     - The length of the array.
+*
+*  OUTPUTS
+*     plpa_cpu_set_t* cpuset   - The processor id mask 
 *
 *  RESULT
-*     static bool - 
+*     static bool - false when errors occured otherwise true
 *
 *  NOTES
-*     MT-NOTE: set_processor_binding_mask() is not MT safe 
+*     MT-NOTE: set_processor_binding_mask() is MT safe 
 *
 *  SEE ALSO
 *     ???/???
@@ -983,6 +1022,29 @@ static bool binding_explicit(const int* list_of_sockets, const int samount,
    return bound;
 }
 
+/****** shepherd_binding/create_binding_env_linux() ****************************
+*  NAME
+*     create_binding_env_linux() -- Creates SGE_BINDING env variable. 
+*
+*  SYNOPSIS
+*     bool create_binding_env_linux(const int* proc_id, const int amount) 
+*
+*  FUNCTION
+*     Creates the SGE_BINDING environment variable on Linux operating system. 
+*     This environment variable contains a space separated list of Linux 
+*     internal processor ids given as input parameter.
+*
+*  INPUTS
+*     const int* proc_id - List of processor ids. 
+*     const int amount   - Length of processor id list. 
+*
+*  RESULT
+*     bool - true when SGE_BINDING env var could be generated false if not
+*
+*  NOTES
+*     MT-NOTE: create_binding_env_linux() is MT safe 
+*
+*******************************************************************************/
 bool create_binding_env_linux(const int* proc_id, const int amount)
 {
    bool retval          = true;

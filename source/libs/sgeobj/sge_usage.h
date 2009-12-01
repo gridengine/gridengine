@@ -55,7 +55,7 @@
 #define USAGE_ATTR_IOW_ACCT "acct_iow"
 #define USAGE_ATTR_MAXVMEM_ACCT "acct_maxvmem"
 
-/* actual amount of used memory */
+/* current amount of used memory */
 #define USAGE_ATTR_VMEM "vmem"
 
 /* max. vmem */

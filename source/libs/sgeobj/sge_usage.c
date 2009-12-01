@@ -221,6 +221,7 @@ usage_list_sum(lList *usage_list, const lList *add_usage_list)
           strcmp(name, USAGE_ATTR_IOW) == 0 ||
           strcmp(name, USAGE_ATTR_VMEM) == 0 ||
           strcmp(name, USAGE_ATTR_MEM) == 0 || 
+          strncmp(name, "acct_", 5) == 0 ||
           strncmp(name, "ru_", 3) == 0) {
          lListElem *sum = lGetElemStr(usage_list, UA_name, name);
          if (sum == NULL) {
@@ -228,7 +229,7 @@ usage_list_sum(lList *usage_list, const lList *add_usage_list)
          } else {
             lAddDouble(sum, UA_value, lGetDouble(usage, UA_value));
          }
-      }   
+      }
    }
 }
 

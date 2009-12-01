@@ -105,7 +105,7 @@
 #define MSG_SCHEDD_INFO_JOBDEPEND_                    _MESSAGE(47076, _("job dropped because of job dependencies") )     
 #define MSG_SCHEDD_INFO_NOMESSAGE_                    _MESSAGE(47077, _("there are no messages available") ) 
 #define MSG_SCHEDD_INFO_QUEUEFULL_                    _MESSAGE(47078, _("queue instance "SFQ" dropped because it is full") )   
-#define MSG_SCHEDD_INFO_QUEUESUSP_                    _MESSAGE(47079, _("queue instance "SFQ" dropped becasue it is suspended") )   
+#define MSG_SCHEDD_INFO_QUEUESUSP_                    _MESSAGE(47079, _("queue instance "SFQ" dropped because it is suspended") )   
 #define MSG_SCHEDD_INFO_QUEUEDISABLED_                _MESSAGE(47080, _("queue instance "SFQ" dropped because it is disabled") )    
 #define MSG_SCHEDD_INFO_QUEUENOTAVAIL_                _MESSAGE(47081, _("queue instance "SFQ" dropped because it is temporarily not available") ) 
 #define MSG_SCHEDD_INFO_INSUFFICIENTSLOTS_            _MESSAGE(47082, _("parallel job requires more slots than available"))

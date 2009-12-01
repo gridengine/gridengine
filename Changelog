@@ -8,6 +8,14 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+CR-2009-12-01-1: Bugfix:      qrsh hostname: commlib error on linux
+                              - introduced long running shepherds with first fix
+                 Belongs to:  CR-2009-11-26-1
+                 Belongs to:  HP-2009-07-10-0
+                 Bugster:     6899641
+                 Issue:       3190
+                 Review:      SH
+
 JG-2009-12-01-1: Bugfix:      Updated fix for: CPU time in accounting file is 
                               wrong for PE jobs with accounting_summary set to
                               TRUE

@@ -1015,9 +1015,11 @@ int close_parent_loop(int exit_status)
             shepherd_trace("Received UNREGISTER_RESPONSE_CTRL_MSG");
             comm_free_message(&recv_mess, &err_msg);
             break;
-         } else if (ret == COMM_NO_MESSAGE_AVAILABLE && count%10 == 0) {
+         } else if (ret == COMM_NO_MESSAGE_AVAILABLE) {
             /* trace this only every 10 loops (default: 1 loop = 1 s) */
-            shepherd_trace("still waiting for UNREGISTER_RESPONSE_CTRL_MSG");
+            if (count%10 == 0) {
+               shepherd_trace("still waiting for UNREGISTER_RESPONSE_CTRL_MSG");
+            }
          } else if (ret == COMM_CONNECTION_NOT_FOUND) {
             shepherd_trace("client disconnected - break");
             break;
@@ -1030,6 +1032,12 @@ int close_parent_loop(int exit_status)
    }
    /* Now we are completely logged of from the server and can shut down */
 
+   /*
+    * Tell the communication to shut down immediately, don't wait for
+    * the next timeout
+    */
+   shepherd_trace("parent: cl_com_ignore_timeouts");
+   comm_ignore_timeouts(true, &err_msg); 
 
    /*
     * Do cleanup

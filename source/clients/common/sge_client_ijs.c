@@ -567,7 +567,12 @@ void* commlib_to_tty(void *t_conf)
 
                DPRINTF(("commlib_to_tty: received exit_status from shepherd: %d\n", 
                         g_exit_status));
+               comm_flush_write_messages(g_comm_handle, &err_msg);
                do_exit = 1;
+#if 0
+               cl_log_list_set_log_level(cl_com_get_log_list(), CL_LOG_OFF);
+               cl_com_set_error_func(NULL);
+#endif
                break;
          }
       }
@@ -848,6 +853,9 @@ int stop_ijs_server(COMM_HANDLE **phandle, dstring *p_err_msg)
       ret = 1;
    } else if (*phandle != NULL) {
       cl_com_set_error_func(NULL);
+#if 0
+      cl_log_list_set_log_level(cl_com_get_log_list(), CL_LOG_OFF);
+#endif
       cl_com_ignore_timeouts(CL_TRUE);
       DPRINTF(("shut down the connection from our side\n"));
       ret = cl_commlib_shutdown_handle(*phandle, CL_FALSE);

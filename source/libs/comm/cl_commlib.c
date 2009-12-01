@@ -7066,6 +7066,72 @@ int cl_commlib_get_last_message_time(cl_com_handle_t* handle,
    return return_value;
 }
 
+#ifdef __CL_FUNCTION__
+#undef __CL_FUNCTION__
+#endif
+#define __CL_FUNCTION__ "cl_commlib_get_connect_time()"
+int cl_commlib_get_connect_time(cl_com_handle_t* handle, 
+                                const char* un_resolved_hostname, const char* component_name, unsigned long component_id, 
+                                unsigned long* connect_time) {
+
+   char* unique_hostname = NULL;
+   struct in_addr in_addr;
+   int return_value = CL_RETVAL_UNKNOWN;
+   cl_com_endpoint_t receiver;
+   cl_com_connection_t* connection = NULL;
+   cl_connection_list_elem_t* elem = NULL;
+
+   if (handle == NULL || un_resolved_hostname == NULL || component_name == NULL || connect_time == NULL) {
+      return CL_RETVAL_PARAMS;
+   }
+   
+   /* set time to 0 if endpoint not found */
+   *connect_time = 0;
+
+   if (component_id == 0) {
+      CL_LOG(CL_LOG_ERROR,"component id 0 is not allowed");
+      return CL_RETVAL_PARAMS;
+   }
+
+   /* resolve hostname */
+   return_value = cl_com_cached_gethostbyname(un_resolved_hostname, &unique_hostname, &in_addr, NULL, NULL);
+   if (return_value != CL_RETVAL_OK) {
+      return return_value;
+   }
+
+   /* setup endpoint */
+   receiver.comp_host = unique_hostname;
+   receiver.comp_name = (char *)component_name;
+   receiver.comp_id   = component_id;
+   receiver.addr.s_addr = in_addr.s_addr;
+   receiver.hash_id = cl_create_endpoint_string(&receiver);
+   if (receiver.hash_id == NULL) {
+      free(unique_hostname);
+      return CL_RETVAL_MALLOC;
+   }
+
+   pthread_mutex_lock(handle->connection_list_mutex);
+   cl_raw_list_lock(handle->connection_list);
+   connection = NULL;
+   elem = cl_connection_list_get_elem_endpoint(handle->connection_list, &receiver);
+   if (elem != NULL) {
+      connection = elem->connection;
+      if (connection->connection_state     == CL_CONNECTED && 
+          connection->connection_sub_state == CL_COM_WORK) {
+         *connect_time = (unsigned long) (connection->connection_connect_time).tv_sec;
+         return_value = CL_RETVAL_OK;
+      }
+   }
+   cl_raw_list_unlock(handle->connection_list);
+   pthread_mutex_unlock(handle->connection_list_mutex);
+
+   free(unique_hostname);
+   free(receiver.hash_id);
+
+   return return_value;
+}
+
+
 
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__

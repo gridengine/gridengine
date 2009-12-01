@@ -98,6 +98,12 @@ static lList *sge_parse_cmdline_execd(char **argv, lList **ppcmdline);
 static lList *sge_parse_execd(lList **ppcmdline, lList **ppreflist, u_long32 *help);
 
 int main(int argc, char *argv[]);
+static u_long32 last_qmaster_registration_time = 0;
+
+
+u_long32 get_last_qmaster_register_time(void) {
+   return last_qmaster_registration_time;
+}
 
 /****** execd/sge_execd_application_status() ***********************************
 *  NAME
@@ -353,7 +359,8 @@ int main(int argc, char **argv)
 
    /* clean up jobs hanging around (look in active_dir) */
    clean_up_old_jobs(ctx, 1);
-   sge_send_all_reports(ctx, 0, NUM_REP_REPORT_JOB, execd_report_sources);
+   execd_trash_load_report();
+   sge_set_flush_lr_flag(true);
 
    sge_sig_handler_in_main_loop = 1;
 
@@ -518,6 +525,7 @@ int sge_execd_register_at_qmaster(sge_gdi_ctx_class_t *ctx, bool is_restart) {
    if (return_value == 0) {
       sge_last_register_error_flag = 0;
       INFO((SGE_EVENT, MSG_EXECD_REGISTERED_AT_QMASTER_S, master_host?master_host:""));
+      last_qmaster_registration_time = sge_get_gmt();
    }
    lFreeList(&alp);
    DRETURN(return_value);

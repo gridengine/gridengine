@@ -35,6 +35,7 @@
 #include "sge.h"
 #include "sge_usage.h"
 #include "commlib.h"
+#include "execd.h"
 #include "job_report_execd.h"
 #include "sge_host.h"
 #include "load_avg.h"
@@ -65,39 +66,47 @@ extern lUlong sge_execd_report_seqno;
 int sge_send_all_reports(sge_gdi_ctx_class_t *ctx, u_long32 now, int which,
                          report_source *report_sources)
 {
-   int ret = -1;
+   int ret = 0;
+   unsigned long connect_time = 0;
    DENTER(TOP_LAYER, "sge_send_all_reports");
 
    /*
     * Send reports only if there is not a communication error.
     * Don't reset stored communication errors. 
     */
-   if (sge_get_com_error_flag(EXECD, SGE_COM_WAS_COMMUNICATION_ERROR, false) == false) {
-      const char *master_host = NULL;
-      lList *report_list = NULL;
-      int i = 0;
 
-      master_host = ctx->get_master(ctx, false);
-      DPRINTF(("SENDING LOAD AND REPORTS\n"));
-      report_list = lCreateList("report list", REP_Type);
-      for (i = 0; report_sources[i].type; i++) {
-         if (!which || which == report_sources[i].type) {
-            DPRINTF(("%s\n", report_types[report_sources[i].type - 1]));
-            report_sources[i].func(ctx, report_list, now, &(report_sources[i].next_send));
-         }
-      }
+   cl_commlib_get_connect_time(ctx->get_com_handle(ctx),
+                               (char *)ctx->get_master(ctx, true), (char*)prognames[QMASTER], 1,
+                               &connect_time);
 
-      /* send load report asynchron to qmaster */
-      if (lGetNumberOfElem(report_list) > 0) {
-         /* wrap around */
-         if (++sge_execd_report_seqno == 10000) {
-            sge_execd_report_seqno = 0;
+   if (get_last_qmaster_register_time() >= connect_time && connect_time != 0) {
+      if (sge_get_com_error_flag(EXECD, SGE_COM_WAS_COMMUNICATION_ERROR, false) == false) {
+         const char *master_host = NULL;
+         lList *report_list = NULL;
+         int i = 0;
+
+         master_host = ctx->get_master(ctx, false);
+         DPRINTF(("SENDING LOAD AND REPORTS\n"));
+         report_list = lCreateList("report list", REP_Type);
+         for (i = 0; report_sources[i].type; i++) {
+            if (!which || which == report_sources[i].type) {
+               DPRINTF(("%s\n", report_types[report_sources[i].type - 1]));
+               report_sources[i].func(ctx, report_list, now, &(report_sources[i].next_send));
+            }
          }
-         ret = report_list_send(ctx, report_list, master_host, prognames[QMASTER], 1, 0);
-      } else {
-         ret = CL_RETVAL_OK;
+
+         /* send load report asynchron to qmaster */
+         if (lGetNumberOfElem(report_list) > 0) {
+            /* wrap around */
+            if (++sge_execd_report_seqno == 10000) {
+               sge_execd_report_seqno = 0;
+            }
+            report_list_send(ctx, report_list, master_host, prognames[QMASTER], 1, 0);
+         }
+         lFreeList(&report_list);
       }
-      lFreeList(&report_list);
+   } else {
+      ret = 1;
    }
    DRETURN(ret);
 }

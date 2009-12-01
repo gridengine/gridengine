@@ -797,6 +797,7 @@ int cl_com_create_connection(cl_com_connection_t** connection) {
    (*connection)->data_format_type = CL_CM_DF_UNDEFINED;
 
    gettimeofday(&((*connection)->last_transfer_time),NULL);
+   memset(&((*connection)->connection_connect_time), 0, sizeof(struct timeval));
    memset(&((*connection)->connection_close_time), 0, sizeof(struct timeval));
 
    (*connection)->data_read_buffer  = (cl_byte_t*) malloc (sizeof(cl_byte_t) * ((*connection)->data_buffer_size) );
@@ -4496,6 +4497,7 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
             if (connection->crm_state == CL_CRM_CS_CONNECTED) {
                connection->connection_state = CL_CONNECTED;  /* That was it! */
                connection->connection_sub_state = CL_COM_WORK;
+               gettimeofday(&(connection->connection_connect_time), NULL);
 #if CL_DO_COMMUNICATION_DEBUG
                cl_dump_connection(connection);
 #endif
@@ -4675,6 +4677,7 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
          if (crm_message->cs_condition == CL_CRM_CS_CONNECTED) {
             connection->connection_state = CL_CONNECTED;  /* That was it */
             connection->connection_sub_state = CL_COM_WORK;
+            gettimeofday(&(connection->connection_connect_time), NULL);
 #if CL_DO_COMMUNICATION_DEBUG
             cl_dump_connection(connection);
 #endif

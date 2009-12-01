@@ -516,6 +516,7 @@ struct cl_com_connection_type {
  
    struct timeval last_transfer_time;           /* time when last message arived/was sent */
    struct timeval connection_close_time;        /* time when connection was closed ( received CCRM ) */
+   struct timeval connection_connect_time;      /* time when connection was established (received CM/CRM) */
    long           shutdown_timeout;             /* used for shutdown of connection */
  
    /* connection specific */

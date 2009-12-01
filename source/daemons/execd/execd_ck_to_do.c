@@ -347,6 +347,7 @@ execd_get_wallclock_limit(const char *qualified_hostname, lList *gdil_list, int 
    as all dispatcher called function returns
    -  0 on success (currently the only value is 0)
    -  1 if we want to quit the dispacher loop
+   -  2 if we want to reconnect to qmaster
    
  do cyclic jobs
  ******************************************************/
@@ -552,7 +553,9 @@ int do_ck_to_do(sge_gdi_ctx_class_t *ctx, bool is_qmaster_down) {
          update_job_usage(qualified_hostname);
 
          /* send all reports */
-         sge_send_all_reports(ctx, now, 0, execd_report_sources);
+         if (sge_send_all_reports(ctx, now, 0, execd_report_sources) == 1) {
+            return_value = 2;
+         }
       }
    }
 
@@ -560,7 +563,6 @@ int do_ck_to_do(sge_gdi_ctx_class_t *ctx, bool is_qmaster_down) {
    if (shut_me_down != 0) {
       return_value = 1;
    }
-
    DRETURN(return_value);
 }
 

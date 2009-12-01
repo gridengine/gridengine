@@ -329,9 +329,13 @@ int sge_execd_process_messages(sge_gdi_ctx_class_t *ctx)
 
       /* do cyclic stuff */
       if (!terminate) {
-         if (do_ck_to_do(ctx, do_reconnect) == 1) {
+         int to_do_return_value = do_ck_to_do(ctx, do_reconnect);
+         if (to_do_return_value == 1) {
             terminate = true;
             ret = 0;
+         }
+         if (to_do_return_value == 2) {
+            do_reconnect = true;
          }
       }
    }

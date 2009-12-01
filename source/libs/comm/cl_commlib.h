@@ -184,12 +184,14 @@ int cl_commlib_check_for_ack      (cl_com_handle_t* handle,
 int cl_commlib_get_endpoint_status(cl_com_handle_t* handle,
                                    char* un_resolved_hostname, char* component_name, unsigned long component_id,
                                    cl_com_SIRM_t** status);
-                                   
 
 int cl_commlib_search_endpoint    (cl_com_handle_t* handle,
                                    char* un_resolved_hostname, char* component_name, unsigned long component_id, 
                                    cl_bool_t only_connected,
                                    cl_raw_list_t** endpoint_list);
+
+
+int cl_commlib_get_connect_time(cl_com_handle_t* handle, const char* un_resolved_hostname, const char* component_name, unsigned long component_id, unsigned long* msg_time);
 
 /* defines from old commlib */
 

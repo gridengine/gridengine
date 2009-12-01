@@ -767,7 +767,7 @@ int cull_unpack_elem_partial(sge_pack_buffer *pb, lListElem **epp, const lDescr 
        * in sgeobj header file and not cull.
        */   
       if (dp != NULL && dp[0].nm == 50) {
-         cull_hash_free_descr(ep->descr); 
+         free(ep->descr);
          if((ep->descr = lCopyDescr((lDescr *) dp)) == NULL) {
             free(ep);
             PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);

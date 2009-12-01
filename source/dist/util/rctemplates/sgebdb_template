@@ -108,18 +108,48 @@ esac
 #
 Shutdown()
 {
-  DetectSMFService bdb
-  if [ -n "$service" ]; then
-     /usr/sbin/svcadm disable -st $service
-     exit $?
-  fi
-  #CR 6646780 - sgebdb stop does not work
-  if [ -f SPOOLING_DIR/bdb_messages ]; then
-     db_pid=`cat SPOOLING_DIR/bdb_messages | cut -d" " -f2`
-  fi
-  if [ "$db_pid" != "" ]; then
-     kill -TERM $db_pid 
-  fi
+   DetectSMFService bdb
+   if [ -n "$service" ]; then
+      /usr/sbin/svcadm disable -st $service
+      exit $?
+   fi
+
+   case "$arch" in
+   darwin*)
+      PS_CMD="ps -auwwx"
+   ;;
+
+   *)
+      PS_CMD="ps -efa"
+   ;;
+   esac
+  
+   if [ -f SPOOLING_DIR/bdb_messages ]; then
+      db_pid=`cat SPOOLING_DIR/bdb_messages | cut -d" " -f2`
+   fi
+
+   if [ "$db_pid" != "" ]; then
+      $PS_CMD | grep "$db_pid" | grep "berkeley_db_svc" >/dev/null 2>&1
+      if [ "$?" = 0 ]; then
+         kill -TERM $db_pid
+         ret=$?
+      fi
+      if [ "$ret" != 0 ]; then
+        db_pid=`$PS_CMD | grep "berkeley_db_svc" | grep -v "grep" | awk '{ print $2 }'`
+        if [ "$db_pid" != "" ]; then
+           kill -TERM $db_pid
+           ret=$?
+        else
+           echo "no running Berkeley DB server found!"
+           exit 1
+        fi
+      fi
+
+      if [ "$ret" != 0 ]; then
+        echo "can't stop Berkeley DB Server!"
+        exit 1
+      fi
+   fi
 }
 
 #---------------------------------------------------------------------------

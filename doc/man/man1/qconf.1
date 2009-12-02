@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2009/11/13 14:26:05 $     Revision: $Revision: 1.42 $
+.\" $RCSfile: qconf.1,v $     Last Update: $Date: 2009/12/02 13:47:56 $     Revision: $Revision: 1.43 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QCONF 1 "$Date: 2009/11/13 14:26:05 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH QCONF 1 "$Date: 2009/12/02 13:47:56 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 qconf \- xxQS_NAMExx Queue Configuration
 .SH SYNTAX
@@ -1101,14 +1101,11 @@ whether this value represents sockets, cores or supported threads.
 .sp
 If this option is used in combination with \fB\-cb\fP  parameter then two
 additional columns will be shown in the output for the number of sockets
-and number of cores. In the case this information cannot
-be retrieved then the fields will contain the '-' character but the
-processors field will still contain the number of virtual processors.
-.sp
-The two additional columns will contain values if corresponding
-operation system on the execution host is running under 
-Linux with kernel >= 2.6.16 or Solaris 10. Additional operating systems or
-versions might be supported with future update releases.
+and number of cores. Currently SGE will enlist these values only
+if the corresponding operating system of execution host is Linux under
+kernel >= 2.6.16, or Solaris 10. Other operating systems or versions might
+be supported with the future update releases. In case these values won't
+be retrieved, '0' character will be displayed.
 .\"
 .IP "\fB\-sh\fP	\fI<show administrative hosts>\fP"
 Displays the xxQS_NAMExx administrative host list.

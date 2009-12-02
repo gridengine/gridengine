@@ -2566,7 +2566,9 @@ static bool create_binding_strategy_string_solaris(dstring* result,
    } else {
       /* in case of -binding PE the string with the socket,core pairs 
          must be returned */
-      if (strstr(sge_dstring_get_string(result), "pe_") != NULL) {   
+         
+      if (result != NULL && sge_dstring_get_string(result) != NULL && 
+            strstr(sge_dstring_get_string(result), "pe_") != NULL) {   
          retval = parse_job_accounting_and_create_logical_list(
                sge_dstring_get_string(result), rankfileinput); 
       }
@@ -2619,7 +2621,7 @@ static bool linear_automatic_solaris(dstring* result, lListElem* binding_elem,
    int topo_by_job_length  = 0;
 
    /* return value */
-   bool retval;
+   bool retval = false;
 
    DENTER(TOP_LAYER, "linear_automatic_solaris");
 
@@ -2727,7 +2729,7 @@ static bool striding_solaris(dstring* result, lListElem* binding_elem, const boo
    int topo_by_job_length  = 0;
 
    /* return value */
-   bool retval;
+   bool retval = false;
    
    DENTER(TOP_LAYER, "striding_solaris");
 
@@ -2862,7 +2864,7 @@ static bool explicit_solaris(dstring* result, lListElem* binding_elem, char* err
    
    int processor_set = 0;
    binding_type_t type;
-   bool retval;
+   bool retval = false;
 
    DENTER(TOP_LAYER, "explicit_solaris");
 

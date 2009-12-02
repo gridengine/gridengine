@@ -1680,7 +1680,7 @@ ProcessSGERoot()
       else
          check_done=true
       fi
-      if [ "$AUTO" = "true" ]; then
+      if [ "$AUTO" = "true" -a "$check_done" = "false" ]; then
          if [ "$ADMINUSER" != default ]; then
             output_username=$ADMINUSER
          else

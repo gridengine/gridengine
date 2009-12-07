@@ -8,6 +8,16 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+LP-2009-12-07-0: Bugfix:      Qmaster autoinstallation might never exit if
+                              installation template contains invalid SGE_ROOT
+                 Bugster:     6907931
+                 Issue:       3205
+                 Enhancem.:   Added a header when entering admin_user keystore
+                              password
+                 Enhancem.:   Addedd -nost flag to the inst_sge that allows to
+                              disable Sun Service Tags
+                 Review:      AS, JG
+
 SH-2009-12-07-1: Bugfix:      xsd-files refered to a wrong URL or URL was not
                               there at all (part 2).
                  Belongs to:  SH-2009-12-07-0

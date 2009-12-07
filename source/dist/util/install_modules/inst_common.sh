@@ -498,7 +498,7 @@ ErrUsage()
              "       -copycerts <host|hostlist>|-v|-upd|-upd-execd|-upd-rc|-upd-win| \n" \
              "       -post_upd|-start-all|-rccreate|[-host <hostname>] [-resport] [-rsh] \n" \
              "       [-auto <filename>] [-nr] [-winupdate] [-winsvc] [-uwinsvc] [-csp] \n" \
-             "       [-jmx] [-add-jmx] [-oldijs] [-afs] [-noremote] [-nosmf]\n" \
+             "       [-jmx] [-add-jmx] [-oldijs] [-afs] [-noremote] [-nosmf] [-nost]\n" \
              "   -m         install qmaster host\n" \
              "   -um        uninstall qmaster host\n" \
              "   -x         install execution host\n" \
@@ -533,11 +533,12 @@ ErrUsage()
              "   -csp       install system with security framework protocol\n" \
              "              functionality\n" \
              "   -jmx       install qmaster with JMX server thread enabled (default)\n" \
-             "   -add-jmx  install and enable JMX server thread for existing qmaster\n" \
+             "   -add-jmx   install and enable JMX server thread for existing qmaster\n" \
              "   -oldijs    configure old interactive job support\n" \
              "   -afs       install system with AFS functionality\n" \
              "   -noremote  supress remote installation during autoinstall\n" \
              "   -nosmf     disable SMF for Solaris 10+ machines (RC scripts are used)\n" \
+             "   -nost      do not use Sun Service Tags\n" \
              "   -help      show this help text\n\n" \
              "   Examples:\n" \
              "   inst_sge -m -x   or   inst_sge -m -jmx -x\n" \
@@ -776,7 +777,7 @@ AddChangedHost()
 CheckConfigFile()
 {
    CONFIG_FILE=$1
-   KNOWN_CONFIG_FILE_ENTRIES_INSTALL="SGE_ROOT SGE_QMASTER_PORT SGE_EXECD_PORT CELL_NAME ADMIN_USER QMASTER_SPOOL_DIR EXECD_SPOOL_DIR GID_RANGE SPOOLING_METHOD DB_SPOOLING_SERVER DB_SPOOLING_DIR PAR_EXECD_INST_COUNT ADMIN_HOST_LIST SUBMIT_HOST_LIST EXEC_HOST_LIST EXECD_SPOOL_DIR_LOCAL HOSTNAME_RESOLVING SHELL_NAME COPY_COMMAND DEFAULT_DOMAIN ADMIN_MAIL ADD_TO_RC SET_FILE_PERMS RESCHEDULE_JOBS SCHEDD_CONF SHADOW_HOST EXEC_HOST_LIST_RM REMOVE_RC WINDOWS_SUPPORT WIN_ADMIN_NAME WIN_DOMAIN_ACCESS CSP_RECREATE CSP_COPY_CERTS CSP_COUNTRY_CODE CSP_STATE CSP_LOCATION CSP_ORGA CSP_ORGA_UNIT CSP_MAIL_ADDRESS SERVICE_TAGS SGE_ENABLE_SMF SGE_CLUSTER_NAME SGE_ENABLE_JMX SGE_JMX_PORT SGE_JVM_LIB_PATH SGE_ADDITIONAL_JVM_ARGS SGE_JMX_SSL SGE_JMX_SSL_CLIENT SGE_JMX_SSL_KEYSTORE SGE_JMX_SSL_KEYSTORE_PW"
+   KNOWN_CONFIG_FILE_ENTRIES_INSTALL="SGE_ROOT SGE_QMASTER_PORT SGE_EXECD_PORT CELL_NAME ADMIN_USER QMASTER_SPOOL_DIR EXECD_SPOOL_DIR GID_RANGE SPOOLING_METHOD DB_SPOOLING_SERVER DB_SPOOLING_DIR PAR_EXECD_INST_COUNT ADMIN_HOST_LIST SUBMIT_HOST_LIST EXEC_HOST_LIST EXECD_SPOOL_DIR_LOCAL HOSTNAME_RESOLVING SHELL_NAME COPY_COMMAND DEFAULT_DOMAIN ADMIN_MAIL ADD_TO_RC SET_FILE_PERMS RESCHEDULE_JOBS SCHEDD_CONF SHADOW_HOST EXEC_HOST_LIST_RM REMOVE_RC WINDOWS_SUPPORT WIN_ADMIN_NAME WIN_DOMAIN_ACCESS CSP_RECREATE CSP_COPY_CERTS CSP_COUNTRY_CODE CSP_STATE CSP_LOCATION CSP_ORGA CSP_ORGA_UNIT CSP_MAIL_ADDRESS SERVICE_TAGS SGE_ENABLE_SMF SGE_ENABLE_ST SGE_CLUSTER_NAME SGE_ENABLE_JMX SGE_JMX_PORT SGE_JVM_LIB_PATH SGE_ADDITIONAL_JVM_ARGS SGE_JMX_SSL SGE_JMX_SSL_CLIENT SGE_JMX_SSL_KEYSTORE SGE_JMX_SSL_KEYSTORE_PW"
    KNOWN_CONFIG_FILE_ENTRIES_BACKUP="SGE_ROOT SGE_CELL BACKUP_DIR TAR BACKUP_FILE"
    MAX_GID=2147483647 #unsigned int = 32bit - 1
    MIN_GID=100        #from 0 - 100 may be reserved GIDs
@@ -1028,6 +1029,18 @@ CheckConfigFile()
          $INFOTEXT -e "Your >HOSTNAME_RESOLVING< flag is wrong! Valid values are: 0, 1, true, false"
          $INFOTEXT -log "Your >HOSTNAME_RESOLVING< flag is wrong! Valid values are: 0, 1, true, false"
          is_valid="false"
+      fi
+      
+      if [ "$SGE_ENABLE_ST" = "1" ]; then
+         SGE_ENABLE_ST="true"
+      elif [ "$SGE_ENABLE_ST" = "0" ]; then
+         SGE_ENABLE_ST="false"
+      fi
+      SGE_ENABLE_ST=`echo "$SGE_ENABLE_ST" | tr "[A-Z]" "[a-z]"`
+      if [ "$SGE_ENABLE_ST" != "true" -a "$SGE_ENABLE_ST" != "false" ]; then
+         $INFOTEXT -e "Your >SGE_ENABLE_ST< flag is wrong! Valid values are:0,1,true,false,TRUE,FALSE"
+         $INFOTEXT -log "Your >SGE_ENABLE_ST< flag is wrong! Valid values are:0,1,true,false,TRUE,FALSE"
+         is_valid="false" 
       fi
 
       if [ -z "$SGE_ENABLE_JMX" ]; then
@@ -1658,20 +1671,35 @@ ProcessSGERoot()
          # check if we have write permission
          if [ $ret != 0 ]; then
             $CLEAR
-            $INFOTEXT "Can't create a temporary file in the directory\n\n   %s\n\n" \
+            $INFOTEXT "Can't create a temporary file in the SGE_ROOT directory\n\n   %s\n\n" \
+                      "This may be a permission problem (e.g. no read/write permission\n" \
+                      "on a NFS mounted filesystem).\n" \
+                      "Please check your permissions. You may cancel the installation now\n" \
+                      "and restart it or continue and try again.\n" $SGE_ROOT_VAL            
+            $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+            unset SGE_ROOT
+            if [ "$AUTO" = true ]; then
+               RestoreStdout
+               $INFOTEXT "Can't create a temporary file in the SGE_ROOT directory\n\n   %s\n\n" \
                       "This may be a permission problem (e.g. no read/write permission\n" \
                       "on a NFS mounted filesystem).\n" \
                       "Please check your permissions. You may cancel the installation now\n" \
                       "and restart it or continue and try again.\n" $SGE_ROOT_VAL
-            unset SGE_ROOT
-            $INFOTEXT -wait -auto $AUTO -n "Hit <RETURN> to continue >> "
+               exit 2
+            fi            
             $CLEAR
          elif [ ! -f tst$$ ]; then
             # check if SGE_ROOT points to current directory
+            if [ $AUTO = true ]; then
+               RestoreStdout
+            fi
             $INFOTEXT "Your \$SGE_ROOT environment variable\n\n   \$SGE_ROOT = %s\n\n" \
                         "doesn't match the current directory.\n" $SGE_ROOT_VAL
             ExecuteAsAdmin $RM -f $SGE_ROOT_VAL/tst$$
             unset SGE_ROOT
+            if [ "$AUTO" = true ]; then
+               exit 2
+            fi
             $INFOTEXT -wait -n "Hit <RETURN> to continue >> "
          else
             ExecuteAsAdmin $RM -f $SGE_ROOT_VAL/tst$$
@@ -3999,6 +4027,7 @@ MakeUserKs()
       ExecuteAsAdmin touch $tmp_file
       ExecuteAsAdmin chmod 600 $tmp_file
       if [ "$AUTO" != "true" ]; then
+         $INFOTEXT -u "Choosing password for the administrative user of SGE daemons"
          STTY_ORGMODE=`stty -g`
          done=false
          keystore_pw=""

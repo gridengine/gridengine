@@ -43,6 +43,10 @@
 #
 ServiceTagsSupport()
 {
+   if [ "$SGE_ENABLE_ST" = false ]; then
+       return
+   fi
+
    SGE_ST_CMD=util/sgeST/sge_st
 
    if [ "$QMASTER" = "install" ]; then

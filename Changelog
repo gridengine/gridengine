@@ -8,6 +8,12 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+SH-2009-12-07-0: Bugfix:      xsd-files refered to a wrong URL or URL was not
+                              there at all (part 1).
+                 Bugster:     6885532
+                 Issue:       3145
+                 Review:      JG
+
 HP-2009-12-07-0: Bugfix:      Fixed update bugs in slotwise preemption
                  Review:      SH
 

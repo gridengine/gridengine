@@ -30,7 +30,10 @@
  * 
  ************************************************************************/
 ___INFO__MARK_END__-->
-    <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+    <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+               targetNamespace="http://gridengine.sunsource.net/source/browse/*checkout*/gridengine/source/dist/util/resources/schemas/qstat/detailed_job_info.xsd?revision=1.7"
+               xmlns="http://gridengine.sunsource.net/source/browse/*checkout*/gridengine/source/dist/util/resources/schemas/qstat/detailed_job_info.xsd?revision=1.7"
+               elementFormDefault="qualified">
 	<xs:element name="detailed_job_info">
 		<xs:complexType>
 			<xs:annotation>

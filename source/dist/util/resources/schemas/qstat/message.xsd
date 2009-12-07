@@ -33,9 +33,8 @@
 ___INFO__MARK_END__-->
 
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" 
-            targetNamespace="http://www.sun.com/gridengine" 
-            xmlns="http://www.sun.com/gridengine">
-
+            targetNamespace="http://gridengine.sunsource.net/source/browse/*checkout*/gridengine/source/dist/util/resources/schemas/qstat/message.xsd?revision=1.4" 
+            xmlns="http://gridengine.sunsource.net/source/browse/*checkout*/gridengine/source/dist/util/resources/schemas/qstat/message.xsd?revision=1.4">
    <xs:element name="message">
       <xs:complexType>
          <xs:annotation>

@@ -31,6 +31,8 @@
  ************************************************************************/
 ___INFO__MARK_END__-->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+ targetNamespace="http://gridengine.sunsource.net/source/browse/*checkout*/gridengine/source/dist/util/resources/schemas/qstat/qstat_cb.xsd?revision=1.2"
+            xmlns="http://gridengine.sunsource.net/source/browse/*checkout*/gridengine/source/dist/util/resources/schemas/qstat/qstat_cb.xsd?revision=1.2"
            elementFormDefault="qualified">
 	<xs:element name="job_info">
 		<xs:complexType>
@@ -147,8 +149,8 @@ ___INFO__MARK_END__-->
 			<xs:element name="slots" type="xs:unsignedInt"/>
 			<xs:element name="tasks" type="xs:string" minOccurs="0"/>
 
-			<xs:element name="requested_PE" type="requested_PE_t" minOccurs="0"/>
-			<xs:element name="granted_PE" type="granted_PE_t" minOccurs="0"/>
+			<xs:element name="requested_pe" type="requested_pe_t" minOccurs="0"/>
+			<xs:element name="granted_pe" type="granted_pe_t" minOccurs="0"/>
 			<xs:element name="JB_checkpoint_name" type="xs:string" minOccurs="0"/>
 			<xs:element name="hard_request" type="request_t" minOccurs="0" maxOccurs="unbounded"/>
 			<xs:element name="def_hard_request" type="request_t" minOccurs="0" maxOccurs="unbounded"/>
@@ -172,11 +174,11 @@ ___INFO__MARK_END__-->
 		<xs:attribute name="resource_contribution" type="xs:float"/>
 	</xs:complexType>
 
-	<xs:complexType name="granted_PE_t">
+	<xs:complexType name="granted_pe_t">
 		<xs:attribute name="name" type="xs:string" use="required"/>
 	</xs:complexType>
 
-	<xs:complexType name="requested_PE_t">
+	<xs:complexType name="requested_pe_t">
 		<xs:attribute name="name" type="xs:string" use="required"/>
 	</xs:complexType>
 

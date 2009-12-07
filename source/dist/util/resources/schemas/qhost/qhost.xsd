@@ -31,8 +31,8 @@
  ************************************************************************/
 ___INFO__MARK_END__-->
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-            targetNamespace="http://gridengine.sunsource.net/61/qhost"
-            xmlns="http://gridengine.sunsource.net/61/qhost"
+            targetNamespace="http://gridengine.sunsource.net/source/browse/*checkout*/gridengine/source/dist/util/resources/schemas/qhost/qhost.xsd?revision=1.2"
+            xmlns="http://gridengine.sunsource.net/source/browse/*checkout*/gridengine/source/dist/util/resources/schemas/qhost/qhost.xsd?revision=1.2"
             elementFormDefault="qualified">
     
     <xsd:element name="qhost" type="QHostType"/>

@@ -4,7 +4,7 @@
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
 .\"___INFO__MARK_END__
-.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2009/11/13 14:26:06 $     Revision: $Revision: 1.36 $
+.\" $RCSfile: queue_conf.5,v $     Last Update: $Date: 2009/12/07 19:09:27 $     Revision: $Revision: 1.37 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -29,7 +29,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH QUEUE_CONF 5 "$Date: 2009/11/13 14:26:06 $" "xxRELxx" "xxQS_NAMExx File Formats"
+.TH QUEUE_CONF 5 "$Date: 2009/12/07 19:09:27 $" "xxRELxx" "xxQS_NAMExx File Formats"
 .\"
 .SH NAME
 queue_conf \- xxQS_NAMExx queue configuration file format
@@ -598,17 +598,19 @@ need priority over low priority production queues; default: NONE).
 .PP
 The slotwise preemption provides a means to ensure that high priority jobs
 get the resources they need, while at the same time low priority jobs on
-the same host are not unnecessarily suspended, maximizing the host utilization.
-This slotwise preemption is implemented by a slotwise suspend on subordinate.
-This means there is a subordination relationship defined between queues, but
-if the suspend threshold is exceeded, not the whole subordinated queue is suspended,
-there are only single slots suspended.
+the same host are not unnecessarily preempted, maximizing the host utilization.
+The slotwise preemption is designed to provide different preemption actions,
+but with the current implementation only suspension is provided.
+This means there is a subordination relationship defined between queues similar
+to the queuewise subordination, but if the suspend threshold is exceeded, not
+the whole subordinated queue is suspended, there are only single tasks running
+in single slots suspended.
 .PP
 Like with queuewise subordination, the subordination relationships are in effect only
 between queue instances residing at the same host. The relationship does not apply
-and is ignored when jobs are running in queue instances on other hosts.
+and is ignored when jobs and tasks are running in queue instances on other hosts.
 .PP
-The syntax of the definition is:
+The syntax is:
 .PP
 slots=<threshold>(<queue_list>)
 .PP
@@ -633,70 +635,121 @@ where
                    time.
              "lr": Suspend the task with the longest run
                    time.
+             Default is "sr".
 .fi
 .PP
-E.g.:
+Some examples of possible configurations and their functionalities:
+.PP
+a) The simplest configuration
+.PP
+subordinate_list   slots=2(B.q)
+.PP
+which means the queue "B.q" is subordinated to the current queue (let's call
+it "A.q"), the suspend threshold for all tasks running in "A.q" and "B.q" on
+the current host is two, the sequence number of "B.q" is "0" and the action
+is "suspend task with shortest run time first". This subordination relationship
+looks like this:
+.PP
+.nf
+      A.q
+       |
+      B.q
+.fi
+.PP
+This could be a typical configuration for a host with a dual core CPU. This
+subordination configuration ensures that tasks that are scheduled to "A.q"
+always get a CPU core for themselves, while jobs in "B.q" are not preempted
+as long as there are no jobs running in "A.q".
+.PP
+If there is no task running in "A.q", two tasks are running in "B.q" and a new
+task is scheduled to "A.q", the sum of tasks running in "A.q" and "B.q" is
+three. Three is greater than two, this triggers the defined action. This causes
+the task with the shortest run time in the subordinated queue "B.q" to be
+suspended. After suspension, there is one task running in "A.q", on task running
+in "B.q" and one task suspended in "B.q".
+.PP
+b) A simple tree
+.PP
+subordinate_list   slots=2(B.q:1, C.q:2)
+.PP
+This defines a small tree that looks like this:
+.PP
+.nf
+      A.q
+     /   \\
+   B.q   C.q
+.fi
+.PP
+A use case for this configuration could be a host with a dual core CPU and
+queue "B.q" and "C.q" for jobs with different requirements, e.g. "B.q" for
+interactive jobs, "C.q" for batch jobs.
+Again, the tasks in "A.q" always get a CPU core, while tasks in "B.q" and "C.q"
+are suspended only if the threshold of running tasks is exceeded.
+Here the sequence number among the queues of the same depth comes into play.
+Tasks scheduled to "B.q" can't directly trigger the suspension of tasks in
+"C.q", but if there is a task to be suspended, first "C.q" will be searched for
+a suitable task.
+.PP
+If there is one task running in "A.q", one in "C.q" and a new task is scheduled
+to "B.q", the threshold of "2" in "A.q", "B.q" and "C.q" is exceeded. This
+triggers the suspension of one task in either "B.q" or "C.q". The sequence
+number gives "B.q" a higher priority than "C.q", therefore the task in "C.q"
+is suspended. After suspension, there is one task running in "A.q", one task
+running in "B.q" and one task suspended in "C.q".
+.PP
+c) More than two levels
+.PP
+Configuration of A.q: subordinate_list   slots=2(B.q)
 .br
-slots=4(B.q:1:sr, C.q:2:lr)
+Configuration of B.q: subordinate_list   slots=2(C.q)
 .PP
-defines a subordination relationship between this queue (let's call it queue A.q)
-and the queues B.q and C.q. If there are running more than 4 tasks in the queue
-instances of queue A.q, B.q and C.q on the same host, a task in either B.q or
-C.q is to be suspended. The sequence numbers define that first a task to be
-suspended is searched in C.q (because 2 is higher than 1, and higher sequence
-numbers define lower priorities). If there is no suitable task, a task in B.q
-is searched. Then the  action defines which task in the queue is to be suspended.
-In C.q it would be the task with the longest run time (i.e. the longest time
-since it was started), in B.q. it would be the task with the shortest run time.
+looks like this:
 .PP
-With this definition, it's possible to define a subordination tree. It's not allowed
-to define loops or mutual subordinations. In such a subordination tree, always
-the queues in the lowest layer are searched first for tasks to suspend. Such a tree
-could look like this:
+.nf
+      A.q
+       |
+      B.q
+       |
+      C.q
+.fi
+.PP
+These are three queues with high, medium and low priority. 
+If a task is scheduled to "C.q", first the subtree consisting of "B.q" and
+"C.q" is checked, the number of tasks running there is counted. If the
+threshold which is defined in "B.q" is exceeded, the job in "C.q" is
+suspended. Then the whole tree is checked, if the number of tasks running
+in "A.q", "B.q" and "C.q" exceeds the threshold defined in "A.q" the task in
+"C.q" is suspended. This means, the effective threshold of any subtree is not
+higher than the threshold of the root node of the tree.
+If in this example a task is scheduled to "A.q", immediately the number of tasks
+running in "A.q", "B.q" and "C.q" is checked against the threshold defined in
+"A.q".
+.PP
+d) Any tree
 .PP
 .nf
        A.q
-      /   \\\\
+      /   \\
     B.q   C.q
-   /     /   \\\\
+   /     /   \\
  D.q    E.q  F.q
-                \\\\
+                \\
                  G.q 
 .fi
 .PP
-Whenever a task is started in a queue instance, a task running in a queue instance
-finishes or is deleted, a queue instance is suspended, unsuspended, modified, added to
-this tree or removed from this tree, the whole tree is recalculated and tasks are
-suspended or unsuspended accordingly.
-.PP
-This calculation always starts at the queue instance that is modified, except when it
-is a leaf node (like D.q, E.q and G.q in this example), then the calculation starts at
-the parent queue instance (B.q, C.q or F.q in the example). From there, first all
-running tasks in the whole subtree of this queue instance are counted. If the sum exceeds
-the threshold configured in the subordinate_list, in this subtree a task is searched
+The computation of the tasks that are to be (un)suspended always starts at the
+queue instance that is modified, i.e. a task is scheduled to, a task ends at,
+the configuration is modified, a manual or other automatic (un)suspend is 
+issued, except when it is a leaf node, like "D.q", "E.q" and "G.q" in this
+example. Then the computation starts at its parent queue instance (like "B.q",
+"C.q" or "F.q" in this example). From there first all running tasks in the
+whole subtree of this queue instance are counted. If the sum exceeds the
+threshold configured in the subordinate_list, in this subtree a task is searched
 to be suspended. Then the algorithm proceeds to the parent of this queue instance,
 counts all running tasks in the whole subtree below the parent and checks if
 the number exceeds the threshold configured at the parent's subordinate_list. If so,
 it searches for a task to suspend in the whole subtree below the parent. And so on,
-until it did this calculation for the root node of the tree.
-.PP
-For example, if in A.q a threshold of 4 is defined, and in B.q a threshold of 2
-is defined, then when a task is started in D.q, first the number of tasks running
-in B.q and D.q is counted. Let's say this is 3 now including the new task. Then
-a task in D.q is to be suspended. The algorithm stops here, because there is one
-new task and one suspended task, so everything is in balance again.
-.PP
-If the number of running tasks in B.q and D.q is just 2 including the new task,
-there is no task to be suspended in D.q. Then the alogrithm proceeds to A.q and
-counts all running tasks below A.q. Let's say this is 5 now including the new
-task. Then the algorithm searches for the running task in the lowest queue
-instance in the whole tree. If there is a task running in G.q, this would be
-suspended. If there is no task running in G.q, the algorithm will suspend a
-task in D.q, E.q or F.q. Which queue is searched first depends on the sequence
-number that is defined for each queue instance. If all queues have the same
-sequence number, the oldest or youngest task is searched over all queues.
-Therefore the behaviour is undefined if queues of the same depth have the same
-sequence number, but different actions defined.
+until it did this computation for the root node of the tree.
 
 .SS "\fBcomplex_values\fP"
 .B complex_values

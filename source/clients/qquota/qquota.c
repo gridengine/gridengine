@@ -85,7 +85,7 @@ static int destroy_xml_report_handler(report_handler_t** handler, lList **alpp);
 
 static int xml_report_started(report_handler_t* handler, lList **alpp) {
    printf("<?xml version='1.0'?>\n");
-   printf("<qquota_result xmlns=\"http://gridengine.sunsource.net/61/qquota\">\n");
+   printf("<qquota_result xmlns=\"http://gridengine.sunsource.net/source/browse/*checkout*/gridengine/source/dist/util/resources/schemas/qquota/qquota.xsd?revision=1.3\">\n");
    return QQUOTA_SUCCESS;
 }
 

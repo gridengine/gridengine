@@ -477,13 +477,15 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
             they where not decreased bevore. */
 
          ERROR((SGE_EVENT, MSG_JOB_JOBDELIVER_UU,
-                sge_u32c(lGetUlong(jep, JB_job_number)), sge_u32c(lGetUlong(jatp, JAT_task_number))));
+                sge_u32c(lGetUlong(jep, JB_job_number)),
+                sge_u32c(lGetUlong(jatp, JAT_task_number))));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DRETURN(-3);
       }
 
       /* job is now sent and goes into transfering state */
-      sge_commit_job(ctx, jep, jatp, NULL, COMMIT_ST_SENT, COMMIT_DEFAULT, monitor);   /* mode==0 -> really accept when execd acks */
+      /* mode == COMMIT_ST_SENT -> really accept when execd acks */
+      sge_commit_job(ctx, jep, jatp, NULL, COMMIT_ST_SENT, COMMIT_DEFAULT, monitor);
 
       /* now send events and spool the job */
       {
@@ -512,7 +514,8 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
 
       /* now after successfully (we hope) sent the job to execd 
          suspend all subordinated queues that need suspension */
-      cqueue_list_x_on_subordinate_gdil(ctx, *object_base[SGE_TYPE_CQUEUE].list, true, gdil, monitor);
+      cqueue_list_x_on_subordinate_gdil(ctx, *object_base[SGE_TYPE_CQUEUE].list,
+                                        true, gdil, monitor);
    }    
    break;
 

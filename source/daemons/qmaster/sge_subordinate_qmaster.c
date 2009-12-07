@@ -85,7 +85,7 @@ qinstance_x_on_subordinate(sge_gdi_ctx_class_t *ctx,
 *     MT-NOTE: get_slotwise_sos_threshold() is MT safe 
 *******************************************************************************/
 static u_long32
-get_slotwise_sos_threshold(lListElem *qinstance)
+get_slotwise_sos_threshold(const lListElem *qinstance)
 {
    u_long32  slots_sum = 0;
    lList     *so_list = NULL;
@@ -1048,62 +1048,6 @@ unsuspend_all_tasks_in_slotwise_sub_tree(sge_gdi_ctx_class_t *ctx,
    }
 }
 
-/****** sge_subordinate_qmaster/slotwise_unsuspend_all_tasks() *****************
-*  NAME
-*     slotwise_unsuspend_all_tasks() -- Unsuspend all tasks that were suspended
-*                                       by slotwise preemption
-*
-*  SYNOPSIS
-*     void slotwise_unsuspend_all_tasks(sge_gdi_ctx_class_t *ctx, lList 
-*     *so_list, const char *hostname, monitoring_t *monitor) 
-*
-*  FUNCTION
-*     Unsuspends all tasks in all queues listed in a subordinate list (SO_Type)
-*     that were suspended by slotwise preemption.
-*
-*  INPUTS
-*     sge_gdi_ctx_class_t *ctx - context class.
-*     lList *so_list           - A SO_type list containing the names of the
-*                                queues that are to be checked.
-*     const char *hostname     - The name of the host where the tasks are
-*                                suspended.
-*     monitoring_t *monitor    - monitor.
-*
-*  RESULT
-*     void - none.
-*
-*  NOTES
-*     MT-NOTE: slotwise_unsuspend_all_tasks() is MT safe 
-*******************************************************************************/
-void
-slotwise_unsuspend_all_tasks(sge_gdi_ctx_class_t *ctx, lList *so_list,
-                             const char *hostname, bool trigger, monitoring_t *monitor)
-{
-   const char *qi_name     = NULL;
-   lListElem  *qinstance   = NULL; /* QU_Type elem */
-   lListElem  *old_so      = NULL; /* SO_Type elem */
-   lList      *resolved_so_list = NULL;
-   lList      *master_list = *(object_type_get_master_list(SGE_TYPE_CQUEUE));
-
-   if (so_list != NULL && lGetNumberOfElem(so_list) > 0) {
-      /*
-       * Unsuspend all tasks in the qinstances on this host that are listed
-       * in the subordinate list.
-       */
-      so_list_resolve(so_list, NULL, &resolved_so_list, NULL, hostname);
-      for_each(old_so, resolved_so_list) {
-         qi_name = lGetString(old_so, SO_name);
-         qinstance = cqueue_list_locate_qinstance(master_list, qi_name);
-
-         unsuspend_all_tasks_in_slotwise_sub_tree(ctx, qinstance, monitor);
-         if (trigger == true) {
-            do_slotwise_x_on_subordinate_check(ctx, qinstance, true, true, monitor);
-         }
-      }
-      lFreeList(&resolved_so_list);
-   }
-}
-
 /****** sge_subordinate_qmaster/check_new_slotwise_subordinate_tree() **********
 *  NAME
 *     check_new_slotwise_subordinate_tree() -- checks if the new slotwise
@@ -1299,6 +1243,73 @@ do_slotwise_x_on_subordinate_check(sge_gdi_ctx_class_t *ctx, lListElem *qinstanc
    return true;
 }
 
+/****** sge_subordinate_qmaster/do_slotwise_subordinate_lists_differ() *********
+*  NAME
+*     do_slotwise_subordinate_lists_differ() -- checks if the old and the new
+*                                         subordinate list of this queue differ
+*
+*  SYNOPSIS
+*     bool do_slotwise_subordinate_lists_differ(const lList* old_so_list, const 
+*     lList *new_so_list) 
+*
+*  FUNCTION
+*     Compares the old and the new subordinate list configured in a queue and
+*     returnes true if they differ. The order of subordinates doesn't matter.
+*
+*  INPUTS
+*     const lList* old_so_list - The old subordinate list. SO_Type list.
+*     const lList *new_so_list - The new subordinate list. SO_Type list.
+*
+*  RESULT
+*     bool - true if the lists differ, false if they are identical. If just the
+*            order of subordinates is changed, the lists are considered as
+*            identical.
+*
+*  NOTES
+*     MT-NOTE: do_slotwise_subordinate_lists_differ() is MT safe 
+*******************************************************************************/
+bool do_slotwise_subordinate_lists_differ(const lList* old_so_list, const lList *new_so_list)
+{
+   bool      ret = false;
+   lListElem *old_so = NULL; /* SO_Type */
+   lListElem *new_so = NULL; /* SO_Type */
+
+   for_each(old_so, old_so_list) {
+      new_so = lGetElemStr(new_so_list, SO_name, lGetString(old_so, SO_name));
+      /* find all queues that are in the old list but not in the new list */
+      if (new_so == NULL) {
+         ret = true;
+         break;
+      } else {
+         /*
+          * find all queues that are both in the old and in the new list,
+          * but whose values were changed
+          */
+         u_long32 new_seq_no = lGetUlong(new_so, SO_seq_no);
+         u_long32 new_action = lGetUlong(new_so, SO_action);
+         u_long32 old_seq_no = lGetUlong(old_so, SO_seq_no);
+         u_long32 old_action = lGetUlong(old_so, SO_action);
+
+         if (old_seq_no != new_seq_no || old_action != new_action) {
+            ret = true;
+            break;
+         }
+      }
+   }
+
+   /* find all queues that are in the new list but weren't in the old list */
+   if (ret == false) {
+      for_each(new_so, new_so_list) {
+         old_so = lGetElemStr(old_so_list, SO_name, lGetString(new_so, SO_name));
+         if (old_so == NULL) {
+            ret = true;
+            break;
+         }
+      }
+   }
+   return ret;
+}
+
 /*
    (un)suspend on subordinate using granted_destination_identifier_list
 
@@ -1360,9 +1371,9 @@ cqueue_list_x_on_subordinate_gdil(sge_gdi_ctx_class_t *ctx,
                 *    no sos after job gone from this queue AND
                 *    sos since job is on this queue
                 */
-               if (!tst_sos(slots_used - slots_granted, slots, so) &&
-                   tst_sos(slots_used, slots, so)) {
-                  lListElem *so_queue =               
+               if (tst_sos(slots_used - slots_granted, slots, so) == false &&
+                   tst_sos(slots_used, slots, so) == true) {
+                  lListElem *so_queue =
                             cqueue_list_locate_qinstance(this_list, so_queue_name);
 
                   if (so_queue != NULL) {
@@ -1499,51 +1510,55 @@ cqueue_list_x_on_subordinate_so(sge_gdi_ctx_class_t *ctx,
    DRETURN(ret);
 }
 
-bool
+void
 qinstance_find_suspended_subordinates(const lListElem *this_elem,
                                       lList **answer_list,
                                       lList **resolved_so_list)
 {
-   /* Return value */
-   bool ret = true;
-
    DENTER(TOP_LAYER, "qinstance_find_suspended_subordinates");
    
    if (this_elem != NULL && resolved_so_list != NULL) {
       /* Temporary storage for subordinates */
-      lList *so_list = lGetList(this_elem, QU_subordinate_list);
+      lList *so_list = NULL;
       lListElem *so = NULL;
       lListElem *next_so = NULL;
-      const char *hostname = lGetHost(this_elem, QU_qhostname);
+      const char *hostname = NULL;
       /* Slots calculations */
-      u_long32 slots = lGetUlong(this_elem, QU_job_slots);
-      u_long32 slots_used = qinstance_slots_used(this_elem);
-      /*
-       * Resolve cluster queue names into qinstance names
-       */
-      so_list_resolve(so_list, answer_list, resolved_so_list, NULL,
-                      hostname);
-      /* 
-       * If the number of used slots on this qinstance is greater than a
-       * subordinate's threshold (if it has one), this subordinate should
-       * be suspended.
-       *
-       * Remove all subordinated queues from "resolved_so_list" which
-       * are not actually suspended by "this_elem" 
-       */
-      DTRACE;
-      next_so = lFirst(*resolved_so_list);
-      while ((so = next_so) != NULL) {
-         next_so = lNext(so);
-         if (!tst_sos(slots_used, slots, so)) {
-            DPRINTF (("Removing %s because it's not suspended\n",
-                      lGetString (so, SO_name)));
-            lRemoveElem(*resolved_so_list, &so);
+      u_long32 slots = 0;
+      u_long32 slots_used = 0;
+
+      if (get_slotwise_sos_threshold(this_elem) == 0) {
+         so_list = lGetList(this_elem, QU_subordinate_list);
+         hostname = lGetHost(this_elem, QU_qhostname);
+         slots = lGetUlong(this_elem, QU_job_slots);
+         slots_used = qinstance_slots_used(this_elem);
+         /*
+          * Resolve cluster queue names into qinstance names
+          */
+         so_list_resolve(so_list, answer_list, resolved_so_list, NULL,
+                         hostname);
+         /* 
+          * If the number of used slots on this qinstance is greater than a
+          * subordinate's threshold (if it has one), this subordinate should
+          * be suspended.
+          *
+          * Remove all subordinated queues from "resolved_so_list" which
+          * are not actually suspended by "this_elem" 
+          */
+         DTRACE;
+         next_so = lFirst(*resolved_so_list);
+         while ((so = next_so) != NULL) {
+            next_so = lNext(so);
+            if (!tst_sos(slots_used, slots, so)) {
+               DPRINTF (("Removing %s because it's not suspended\n",
+                         lGetString (so, SO_name)));
+               lRemoveElem(*resolved_so_list, &so);
+            }
          }
       }
    }
 
-   DRETURN(ret);
+   DRETURN_VOID;
 }
 
 bool

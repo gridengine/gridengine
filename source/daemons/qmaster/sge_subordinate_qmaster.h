@@ -46,7 +46,7 @@ cqueue_list_x_on_subordinate_so(sge_gdi_ctx_class_t *ctx,
                                 bool suspend, const lList *resolved_so_list,
                                 monitoring_t *monitor);
 
-bool
+void
 qinstance_find_suspended_subordinates(const lListElem *this_elem,
                                       lList **answer_list,
                                       lList **resolved_so_list);
@@ -58,13 +58,16 @@ bool
 do_slotwise_x_on_subordinate_check(sge_gdi_ctx_class_t *ctx, lListElem *queue_instance,
       bool suspend, bool check_subtree_only, monitoring_t *monitor);
 
-void unsuspend_all_tasks_in_slotwise_sub_tree(sge_gdi_ctx_class_t *ctx,
-                                 lListElem *qinstance, monitoring_t *monitor);
+void
+unsuspend_all_tasks_in_slotwise_sub_tree(sge_gdi_ctx_class_t *ctx,
+      lListElem *qinstance, monitoring_t *monitor);
 
-void slotwise_unsuspend_all_tasks(sge_gdi_ctx_class_t *ctx, lList *so_list,
-                   const char *hostname, bool trigger, monitoring_t *monitor);
+bool
+check_new_slotwise_subordinate_tree(lListElem *qinstance,
+      lList *new_so_list, lList **answer_list);
 
-bool check_new_slotwise_subordinate_tree(lListElem *qinstance, lList *new_so_list,
-                                         lList **answer_list);
+bool do_slotwise_subordinate_lists_differ(const lList *old_so_list,
+      const lList *new_so_list);
+
 #endif /* __SUBORDINATE_QMASTER_H */
 

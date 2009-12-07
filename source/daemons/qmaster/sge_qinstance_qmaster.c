@@ -504,7 +504,6 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                   lList *suspended_so = NULL;    /* SO_Type list */
                   lListElem *first_old_elem = NULL;
                   lListElem *first_new_elem = NULL;
-                  const char *hostname = NULL;
                   bool valid_config = false;
 
                   /*
@@ -551,31 +550,13 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                        * now, unsuspend all tasks. Queue wise subordination will be
                        * calculated in the "classic"  section below.
                        */
-                      slotwise_unsuspend_all_tasks(ctx, old_value, hostname, false, monitor);
+                      unsuspend_all_tasks_in_slotwise_sub_tree(ctx, this_elem, monitor);
                   } else {
                      /*
                       * If there was slotwise preemption configured and is still slotwise
                       * preemption configured, unsuspend all task in the dechained queues.
                       * New suspension will be calculated in cqueue_success().
                       */
-                     lList *old_value_copy = NULL;  /* SO_Type list */
-                     lList *new_value_copy = NULL;  /* SO_Type list */
-
-                     old_value_copy = lCopyList("copy_old", old_value);
-                     new_value_copy = lCopyList("copy_new", new_value);
-
-                     /*
-                      * Find all queues that were slotwise subordinated before
-                      * and are no longer subordinated now and trigger them.
-                      */
-                     lDiffListStr(SO_name, &old_value_copy, &new_value_copy);
-                     slotwise_unsuspend_all_tasks(ctx, old_value_copy, hostname, true, monitor);
-
-                     lFreeList(&old_value_copy);
-                     lFreeList(&new_value_copy);
-
-                     old_value_copy = lCopyList("copy_old", old_value);
-                     new_value_copy = lCopyList("copy_new", new_value);
 
                      /*
                       * Find all queues that were slotwise subordinated before,
@@ -584,25 +565,13 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                       * TODO: HP: Make sure these two lDiffListUlong() always
                       *           return the results we expect!
                       */
-                     lDiffListUlong(SO_seq_no, &old_value_copy, &new_value_copy);
-                     slotwise_unsuspend_all_tasks(ctx, old_value_copy, hostname, true, monitor);
-
-                     lFreeList(&old_value_copy);
-                     lFreeList(&new_value_copy);
-
-                     old_value_copy = lCopyList("copy_old", old_value);
-                     new_value_copy = lCopyList("copy_new", new_value);
-
-                     /*
-                      * Find all queues that were slotwise subordinated before,
-                      * are still slotwise subordinated but have different
-                      * action now.
-                      */
-                     lDiffListUlong(SO_action, &old_value_copy, &new_value_copy);
-                     slotwise_unsuspend_all_tasks(ctx, old_value_copy, hostname, true, monitor);
-
-                     lFreeList(&old_value_copy);
-                     lFreeList(&new_value_copy);
+                     if (do_slotwise_subordinate_lists_differ(old_value, new_value) == true) { 
+                        /*
+                         * unsuspend all tasks in the whole subtree, new suspends will
+                         * be calculated in cqueue_success().
+                         */
+                        unsuspend_all_tasks_in_slotwise_sub_tree(ctx, this_elem, monitor);
+                     }
                   }
 
                   /*
@@ -619,9 +588,9 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                    * subordinate anything if the queue was freshly added
                    */
                   if (initial_modify == false) {
-                     ret &= qinstance_find_suspended_subordinates(this_elem,
-                                                                  answer_list,
-                                                                  &unsuspended_so);
+                     qinstance_find_suspended_subordinates(this_elem,
+                                                           answer_list,
+                                                           &unsuspended_so);
                   }
 
                   /*
@@ -635,7 +604,7 @@ qinstance_modify_attribute(sge_gdi_ctx_class_t *ctx,
                       * Find list of subordinates that have to be suspended after
                       * the modification of CQ_subordinate_list-sublist 
                       */
-                     ret &= qinstance_find_suspended_subordinates(this_elem,
+                     qinstance_find_suspended_subordinates(this_elem,
                                                                   answer_list,
                                                                   &suspended_so);
 

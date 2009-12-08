@@ -8,6 +8,8 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+MD-2009-12-08-0: Bugfix:      Added a missing MoveLog in autoinstall
+
 HP-2009-12-07-1: Enhancem.:   Improved slotwise preemption description in 
                               queue_conf man page
                  Review:      TBD

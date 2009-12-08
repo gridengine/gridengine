@@ -1715,6 +1715,7 @@ ProcessSGERoot()
             output_username="root"
          fi
          $INFOTEXT -log "Your selected \$SGE_ROOT directory: %s\n is not read/writeable for user: %s" $SGE_ROOT_VAL $output_username
+         MoveLog
          exit 2
       fi  
    done

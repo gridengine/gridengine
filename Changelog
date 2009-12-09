@@ -8,6 +8,11 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+LP-2009-12-09-0: Enhancem.:   Added missing modified autoinstall template for
+                              new -nost option
+                 Belongs to:  LP-2009-12-07-0
+                 Review:      AS
+
 MD-2009-12-08-0: Bugfix:      Added a missing MoveLog in autoinstall
 
 HP-2009-12-07-1: Enhancem.:   Improved slotwise preemption description in 

@@ -8,6 +8,9 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+MD-2009-12-11-0: CVS:		Created V62u5_TAG
+-------------------------------------------------------
+
 LP-2009-12-09-0: Enhancem.:   Added missing modified autoinstall template for
                               new -nost option
                  Belongs to:  LP-2009-12-07-0

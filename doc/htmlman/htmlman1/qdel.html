@@ -20,18 +20,18 @@ DESCRIPTION
      delete  only  the jobs of the calling user by default.  <I>Qdel</I>
      deletes jobs in the order in which their job identifiers are
      presented.    Find    additional    information   concerning
-     <I>wc</I>_<I>user</I>_<I>list</I> and <I>wc</I>_<I>job</I>_<I>list</I> in <B><A HREF="../htmlman1/sge_types.html?pathrev=V62u3_TAG">sge_types(1)</A></B>.
+     <I>wc</I>_<I>user</I>_<I>list</I> and <I>wc</I>_<I>job</I>_<I>list</I> in <B><A HREF="../htmlman1/sge_types.html?pathrev=V62u5_TAG">sge_types(1)</A></B>.
 
 OPTIONS
      -f   Force deletion of job(s). The job(s) are  deleted  from
-          the  list  of jobs registered at <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u3_TAG">sge_qmaster(8)</A></B> even if
-          the  <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u3_TAG">sge_execd(8)</A></B>  controlling  the  job(s)  does   not
-          respond to the delete request sent by <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u3_TAG">sge_qmaster(8)</A></B>.
+          the  list  of jobs registered at <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u5_TAG">sge_qmaster(8)</A></B> even if
+          the  <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u5_TAG">sge_execd(8)</A></B>  controlling  the  job(s)  does   not
+          respond to the delete request sent by <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u5_TAG">sge_qmaster(8)</A></B>.
 
           Users which are neither Sun Grid  Engine  managers  nor
           operators  can  only  use  the -f option (for their own
           jobs) if the cluster configuration entry qmaster_params
-          contains the flag ENABLE_FORCED_QDEL (see <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62u3_TAG">sge_conf(5)</A></B>).
+          contains the flag ENABLE_FORCED_QDEL (see <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62u5_TAG">sge_conf(5)</A></B>).
           However,   behavior   for   administrative   and   non-
           administrative users differs. Jobs are deleted from the
           Sun  Grid  Engine  database  immediately  in  case   of
@@ -42,7 +42,7 @@ OPTIONS
           Additionally regular qdel  requests  can  result  in  a
           forced       deletion       of       a      job      if
           ENABLE_FORCED_QDEL_IF_UNKNOWN    is    set    in    the
-          qmaster_params (see <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62u3_TAG">sge_conf(5)</A></B>)
+          qmaster_params (see <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62u5_TAG">sge_conf(5)</A></B>)
 
      -help
           Prints a listing of all options.
@@ -90,7 +90,7 @@ ENVIRONMENTAL VARIABLES
 
      SGE_QMASTER_PORT
                     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u3_TAG">sge_qmaster(8)</A></B> is expected to listen for com-
+                    <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u5_TAG">sge_qmaster(8)</A></B> is expected to listen for com-
                     munication requests.  Most installations will
                     use  a  services  map  entry  for the service
                     "sge_qmaster" instead to define that port.
@@ -100,11 +100,11 @@ FILES
                      Sun Grid Engine master host file
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u3_TAG">sge_intro(1)</A></B>,     <B><A HREF="../htmlman1/qstat.html?pathrev=V62u3_TAG">qstat(1)</A></B>,     <B><A HREF="../htmlman1/qsub.html?pathrev=V62u3_TAG">qsub(1)</A></B>,     <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u3_TAG">sge_qmaster(8)</A></B>,
-     <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u3_TAG">sge_execd(8)</A></B>.
+     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u5_TAG">sge_intro(1)</A></B>,     <B><A HREF="../htmlman1/qstat.html?pathrev=V62u5_TAG">qstat(1)</A></B>,     <B><A HREF="../htmlman1/qsub.html?pathrev=V62u5_TAG">qsub(1)</A></B>,     <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u5_TAG">sge_qmaster(8)</A></B>,
+     <B><A HREF="../htmlman8/sge_execd.html?pathrev=V62u5_TAG">sge_execd(8)</A></B>.
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u3_TAG">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u5_TAG">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
 
 </PRE>

@@ -54,8 +54,8 @@ CONFIGURATION
      the job is accepted or rejected.
 
 
-     Find more information how to use Client JSVs in <B><A HREF="../htmlman1/qsub.html?pathrev=V62u3_TAG">qsub(1)</A></B>  and
-     for Server JSVs in <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62u3_TAG">sge_conf(5)</A></B>
+     Find more information how to use Client JSVs in <B><A HREF="../htmlman1/qsub.html?pathrev=V62u5_TAG">qsub(1)</A></B>  and
+     for Server JSVs in <B><A HREF="../htmlman5/sge_conf.html?pathrev=V62u5_TAG">sge_conf(5)</A></B>
 
 LIFETIME
      A Client or Server JSV is started as own UNIX process.  This
@@ -75,6 +75,29 @@ LIFETIME
      long as the master is running, the underlying JSV configura-
      tion is not changed and no error occurs.
 
+TIMEOUT
+     The timeout is a modifiable  value  that  will  measure  the
+     response  time  of  either  the client or server JSV. In the
+     event that the response time  of  the  JSV  is  longer  than
+     timeout  value  specified, this will result in the JSV being
+     re-started.  The  server  JSV  timeout  value  is  specified
+     through  the  qmaster  parameter jsv_timeout. The client JSV
+     timeout  value  is  set  through  the  environment  variable
+     SGE_JSV_TIMEOUT.  The  default value is 10 seconds, and this
+     value must be greater than 0. If the timeout has been reach,
+     the  JSV  will  only try to re-start once, if the timeout is
+     reached again an error will occur.
+
+THRESHOLD
+     The threshold  value  is  defined  as  a  qmaster  parameter
+     jsv_threshold. This value measures the time for a server job
+     verification. If this time  exceeds  the  defined  threshold
+     then  additional  logging  will appear in the master message
+     file at the INFO level. This  value  is  specified  in  mil-
+     liseconds  and  has a default value of 5000. If a value of 0
+     is defined then this means all jobs will be  logged  in  the
+     message file.
+
 PROTOCOL
      After a JSV script or binary is started it will get commands
      through  its stdin stream and it has to respond with certain
@@ -83,7 +106,6 @@ PROTOCOL
      which is send to/by a JSV script has to be terminated  by  a
      new  line  character  ('\n') whereas new line characters are
      not allowed in the whole command string itself.
-
      In general commands which are exchanged between  a  JSV  and
      client/qmaster have following format. Commands and arguments
      are case sensitive. Find the EBNF command description below.
@@ -132,7 +154,7 @@ PROTOCOL (JSV side)
           The param_command has two  additional  arguments  which
           are  separated  by space characters. The first argument
           is either a submit_parameter  as  it  is  specified  in
-          <B><A HREF="../htmlman1/qsub.html?pathrev=V62u3_TAG">qsub(1)</A></B>  or  it  is  a  pseudo_parameters as documented
+          <B><A HREF="../htmlman1/qsub.html?pathrev=V62u5_TAG">qsub(1)</A></B>  or  it  is  a  pseudo_parameters as documented
           below.  The  second  parameter  is  the  value  of  the
           corresponding param_parameter.
 
@@ -144,7 +166,7 @@ PROTOCOL (JSV side)
           submit_parameters are for example  b  (similar  to  the
           qsub  -b  switch)  or masterq (similar to qsub -masterq
           switch). Find a complete list of  submit_parameters  in
-          the <B><A HREF="../htmlman1/qsub.html?pathrev=V62u3_TAG">qsub(1)</A></B> man page. Please note that not in all cases
+          the <B><A HREF="../htmlman1/qsub.html?pathrev=V62u5_TAG">qsub(1)</A></B> man page. Please note that not in all cases
           the param_parameter name and  the  corresponding  value
           format  is equivalent with the qsub switch name and its
           argument format.  E.g. the qsub -pe parameters will  by
@@ -152,7 +174,7 @@ PROTOCOL (JSV side)
           pe_min, pe_max or the switch combination -soft -l  will
           be  passed  to  JSV  scripts  as  l_soft parameter. For
           details concerning this differences  consult  also  the
-          <B><A HREF="../htmlman1/qsub.html?pathrev=V62u3_TAG">qsub(1)</A></B> man page.
+          <B><A HREF="../htmlman1/qsub.html?pathrev=V62u5_TAG">qsub(1)</A></B> man page.
 
      start_command := 'START' ;
           The start_command has  no  additional  arguments.  This
@@ -348,12 +370,41 @@ EXAMPLE
 
 
 SEE ALSO
-     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u3_TAG">sge_intro(1)</A></B>,  <B><A HREF="../htmlman1/qalter.html?pathrev=V62u3_TAG">qalter(1)</A></B>,  <B><A HREF="../htmlman1/qlogin.html?pathrev=V62u3_TAG">qlogin(1)</A></B>,   <B><A HREF="../htmlman1/qmake.html?pathrev=V62u3_TAG">qmake(1)</A></B>,   <B><A HREF="../htmlman1/qrsh.html?pathrev=V62u3_TAG">qrsh(1)</A></B>,
-     <B><A HREF="../htmlman1/qsh.html?pathrev=V62u3_TAG">qsh(1)</A></B>, <B><A HREF="../htmlman1/qsub.html?pathrev=V62u3_TAG">qsub(1)</A></B>, <B><A HREF="../htmlman1/qtcsh.html?pathrev=V62u3_TAG">qtcsh(1)</A></B>,
+     <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u5_TAG">sge_intro(1)</A></B>,  <B><A HREF="../htmlman1/qalter.html?pathrev=V62u5_TAG">qalter(1)</A></B>,  <B><A HREF="../htmlman1/qlogin.html?pathrev=V62u5_TAG">qlogin(1)</A></B>,   <B><A HREF="../htmlman1/qmake.html?pathrev=V62u5_TAG">qmake(1)</A></B>,   <B><A HREF="../htmlman1/qrsh.html?pathrev=V62u5_TAG">qrsh(1)</A></B>,
+     <B><A HREF="../htmlman1/qsh.html?pathrev=V62u5_TAG">qsh(1)</A></B>, <B><A HREF="../htmlman1/qsub.html?pathrev=V62u5_TAG">qsub(1)</A></B>, <B><A HREF="../htmlman1/qtcsh.html?pathrev=V62u5_TAG">qtcsh(1)</A></B>,
 
 COPYRIGHT
-     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u3_TAG">sge_intro(1)</A></B> for a full statement of rights and  permis-
+     See <B><A HREF="../htmlman1/sge_intro.html?pathrev=V62u5_TAG">sge_intro(1)</A></B> for a full statement of rights and  permis-
      sions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

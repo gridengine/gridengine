@@ -93,14 +93,14 @@ DESCRIPTION
 
      The <I>dispose</I> parameter specifies how to treat reaping  infor-
      mation.  If  '0'  is  passed  to  this parameter, job finish
-     information will still be available  when  <B><A HREF="../htmlman3/drmaa_wait.html?pathrev=V62u3_TAG">drmaa_wait(3)</A></B>  is
-     used.  If  '1'  is  passed,  <B><A HREF="../htmlman3/drmaa_wait.html?pathrev=V62u3_TAG">drmaa_wait(3)</A></B> will be unable to
+     information will still be available  when  <B><A HREF="../htmlman3/drmaa_wait.html?pathrev=V62u5_TAG">drmaa_wait(3)</A></B>  is
+     used.  If  '1'  is  passed,  <B><A HREF="../htmlman3/drmaa_wait.html?pathrev=V62u5_TAG">drmaa_wait(3)</A></B> will be unable to
      access this job's finish information.
 
   drmaa_wait()
      The drmaa_wait() function blocks the calling thread until  a
      job fails or finishes execution.  This routine is modeled on
-     the   <B><A HREF="../htmlman3/wait4.html?pathrev=V62u3_TAG">wait4(3)</A></B>    routine.    If    the    special    string
+     the   <B><A HREF="../htmlman3/wait4.html?pathrev=V62u5_TAG">wait4(3)</A></B>    routine.    If    the    special    string
      'DRMAA_JOB_IDS_SESSION_ANY'  is  passed as <I>job</I>_<I>id</I>, this rou-
      tine will wait for any job from the session.  Otherwise  the
      <I>job</I>_<I>id</I> must be the job identifier of a job or array job task
@@ -117,36 +117,36 @@ DESCRIPTION
      the return code is DRMAA_ERRNO_EXIT_TIMEOUT.
 
      The routine reaps jobs on a successful call, so  any  subse-
-     quent   calls   to   <B><A HREF="../htmlman3/drmaa_wait.html?pathrev=V62u3_TAG">drmaa_wait(3)</A></B>  will  fail  returning  a
+     quent   calls   to   <B><A HREF="../htmlman3/drmaa_wait.html?pathrev=V62u5_TAG">drmaa_wait(3)</A></B>  will  fail  returning  a
      DRMAA_ERRNO_INVALID_JOB error,  meaning  that  the  job  has
      already  been  reaped.  This error is the same as if the job
      were unknown. Returning due to  an  elapsed  timeout  or  an
      interrupt  does  not cause the job information to be reaped.
      This means that, in this  case,  it  is  possible  to  issue
-     <B><A HREF="../htmlman3/drmaa_wait.html?pathrev=V62u3_TAG">drmaa_wait(3)</A></B> multiple times for the same <I>job</I>_<I>id</I>.
+     <B><A HREF="../htmlman3/drmaa_wait.html?pathrev=V62u5_TAG">drmaa_wait(3)</A></B> multiple times for the same <I>job</I>_<I>id</I>.
 
      If <I>job</I>_<I>id</I>_<I>out</I> is not a null pointer, then on return  from  a
-     successful  <B><A HREF="../htmlman3/drmaa_wait.html?pathrev=V62u3_TAG">drmaa_wait(3)</A></B> call, up to <I>job</I>_<I>id</I>_<I>out</I>_<I>len</I> charac-
+     successful  <B><A HREF="../htmlman3/drmaa_wait.html?pathrev=V62u5_TAG">drmaa_wait(3)</A></B> call, up to <I>job</I>_<I>id</I>_<I>out</I>_<I>len</I> charac-
      ters from the job id of  the  failed  or  finished  job  are
      returned.
 
      If <I>stat</I> is not a null pointer, then on return  from  a  suc-
-     cessful  <B><A HREF="../htmlman3/drmaa_wait.html?pathrev=V62u3_TAG">drmaa_wait(3)</A></B> call, the status of the job is stored
+     cessful  <B><A HREF="../htmlman3/drmaa_wait.html?pathrev=V62u5_TAG">drmaa_wait(3)</A></B> call, the status of the job is stored
      in the integer pointed to by <I>stat</I>.  <I>stat</I>  indicates  whether
      job  failed  or finished and other information. The informa-
      tion encoded in  the  integer  value  can  be  accessed  via
-     <B><A HREF="../htmlman3/drmaa_wifaborted.html?pathrev=V62u3_TAG">drmaa_wifaborted(3)</A></B>  <B><A HREF="../htmlman3/drmaa_wifexited.html?pathrev=V62u3_TAG">drmaa_wifexited(3)</A></B> <B><A HREF="../htmlman3/drmaa_wifsignaled.html?pathrev=V62u3_TAG">drmaa_wifsignaled(3)</A></B>
-     <B><A HREF="../htmlman3/drmaa_wcoredump.html?pathrev=V62u3_TAG">drmaa_wcoredump(3)</A></B> <B><A HREF="../htmlman3/drmaa_wexitstatus.html?pathrev=V62u3_TAG">drmaa_wexitstatus(3)</A></B> <B><A HREF="../htmlman3/drmaa_wtermsig.html?pathrev=V62u3_TAG">drmaa_wtermsig(3)</A></B>.
+     <B><A HREF="../htmlman3/drmaa_wifaborted.html?pathrev=V62u5_TAG">drmaa_wifaborted(3)</A></B>  <B><A HREF="../htmlman3/drmaa_wifexited.html?pathrev=V62u5_TAG">drmaa_wifexited(3)</A></B> <B><A HREF="../htmlman3/drmaa_wifsignaled.html?pathrev=V62u5_TAG">drmaa_wifsignaled(3)</A></B>
+     <B><A HREF="../htmlman3/drmaa_wcoredump.html?pathrev=V62u5_TAG">drmaa_wcoredump(3)</A></B> <B><A HREF="../htmlman3/drmaa_wexitstatus.html?pathrev=V62u5_TAG">drmaa_wexitstatus(3)</A></B> <B><A HREF="../htmlman3/drmaa_wtermsig.html?pathrev=V62u5_TAG">drmaa_wtermsig(3)</A></B>.
 
      If <I>rusage</I> is not a null pointer, then on return from a  suc-
-     cessful <B><A HREF="../htmlman3/drmaa_wait.html?pathrev=V62u3_TAG">drmaa_wait(3)</A></B> call, a summary of the  resources used
+     cessful <B><A HREF="../htmlman3/drmaa_wait.html?pathrev=V62u5_TAG">drmaa_wait(3)</A></B> call, a summary of the  resources used
      by the terminated job is returned in form of a DRMAA  values
      string   vector. The entries in the DRMAA values string vec-
-     tor can  be  extracted  using  <B><A HREF="../htmlman3/drmaa_get_next_attr_value.html?pathrev=V62u3_TAG">drmaa_get_next_attr_value(3)</A></B>.
-     Each string returned by <B><A HREF="../htmlman3/drmaa_get_next_attr_value.html?pathrev=V62u3_TAG">drmaa_get_next_attr_value(3)</A></B> will be
+     tor can  be  extracted  using  <B><A HREF="../htmlman3/drmaa_get_next_attr_value.html?pathrev=V62u5_TAG">drmaa_get_next_attr_value(3)</A></B>.
+     Each string returned by <B><A HREF="../htmlman3/drmaa_get_next_attr_value.html?pathrev=V62u5_TAG">drmaa_get_next_attr_value(3)</A></B> will be
      of the  format  &lt;name&gt;=&lt;value&gt;,  where  &lt;name&gt;  and  &lt;value&gt;
      specify  name  and  amount of resources consumed by the job,
-     respectively.  See <B><A HREF="../htmlman5/accounting.html?pathrev=V62u3_TAG">accounting(5)</A></B> for an explanation  of  the
+     respectively.  See <B><A HREF="../htmlman5/accounting.html?pathrev=V62u5_TAG">accounting(5)</A></B> for an explanation  of  the
      resource information.
 
   drmaa_wifaborted()
@@ -161,11 +161,11 @@ DESCRIPTION
      indicate  that  although the job has terminated normally, an
      exit status is not  available,  or  that  it  is  not  known
      whether   the   job   terminated  normally.  In  both  cases
-     <B><A HREF="../htmlman3/drmaa_wexitstatus.html?pathrev=V62u3_TAG">drmaa_wexitstatus(3)</A></B> will not provide exit  status  informa-
+     <B><A HREF="../htmlman3/drmaa_wexitstatus.html?pathrev=V62u5_TAG">drmaa_wexitstatus(3)</A></B> will not provide exit  status  informa-
      tion.  A  non-zero  value  returned in <I>exited</I> indicates more
      detailed   diagnosis   can   be   provided   by   means   of
-     <B><A HREF="../htmlman3/drmaa_wifsignaled.html?pathrev=V62u3_TAG">drmaa_wifsignaled(3)</A></B>,          <B><A HREF="../htmlman3/drmaa_wtermsig.html?pathrev=V62u3_TAG">drmaa_wtermsig(3)</A></B>         and
-     <B><A HREF="../htmlman3/drmaa_wcoredump.html?pathrev=V62u3_TAG">drmaa_wcoredump(3)</A></B>.
+     <B><A HREF="../htmlman3/drmaa_wifsignaled.html?pathrev=V62u5_TAG">drmaa_wifsignaled(3)</A></B>,          <B><A HREF="../htmlman3/drmaa_wtermsig.html?pathrev=V62u5_TAG">drmaa_wtermsig(3)</A></B>         and
+     <B><A HREF="../htmlman3/drmaa_wcoredump.html?pathrev=V62u5_TAG">drmaa_wcoredump(3)</A></B>.
 
   drmaa_wifsignaled()
      The drmaa_wifsignaled() function evaluates into the  integer
@@ -174,26 +174,26 @@ DESCRIPTION
      zero  value can also indicate that although the job has ter-
      minated due to the receipt of a signal, the  signal  is  not
      available, or it is not known whether the job terminated due
-     to the receipt of a signal. In both cases  <B><A HREF="../htmlman3/drmaa_wtermsig.html?pathrev=V62u3_TAG">drmaa_wtermsig(3)</A></B>
+     to the receipt of a signal. In both cases  <B><A HREF="../htmlman3/drmaa_wtermsig.html?pathrev=V62u5_TAG">drmaa_wtermsig(3)</A></B>
      will  not  provide  signal  information.  A  non-zero  value
      returned in <I>signaled</I> indicates  signal  information  can  be
-     retrieved by means of <B><A HREF="../htmlman3/drmaa_wtermsig.html?pathrev=V62u3_TAG">drmaa_wtermsig(3)</A></B>.
+     retrieved by means of <B><A HREF="../htmlman3/drmaa_wtermsig.html?pathrev=V62u5_TAG">drmaa_wtermsig(3)</A></B>.
 
   drmaa_wcoredump()
-     If <B><A HREF="../htmlman3/drmaa_wifsignaled.html?pathrev=V62u3_TAG">drmaa_wifsignaled(3)</A></B> returned a  non-zero  value  in  the
+     If <B><A HREF="../htmlman3/drmaa_wifsignaled.html?pathrev=V62u5_TAG">drmaa_wifsignaled(3)</A></B> returned a  non-zero  value  in  the
      <I>signaled</I> parameter, the drmaa_wcoredump() function evaluates
      into the integer pointed to by <I>core</I>_<I>dumped</I> a non-zero  value
      if a core image of the terminated job was created.
 
   drmaa_wexitstatus()
-     If <B><A HREF="../htmlman3/drmaa_wifexited.html?pathrev=V62u3_TAG">drmaa_wifexited(3)</A></B>  returned  a  non-zero  value  in  the
+     If <B><A HREF="../htmlman3/drmaa_wifexited.html?pathrev=V62u5_TAG">drmaa_wifexited(3)</A></B>  returned  a  non-zero  value  in  the
      <I>exited</I> parameter, the drmaa_wexitstatus() function evaluates
      into the integer pointed to by <I>exit</I>_<I>code</I> the exit code  that
-     the  job  passed to <B><A HREF="../htmlman2/exit.html?pathrev=V62u3_TAG">exit(2)</A></B> or the value that the child pro-
+     the  job  passed to <B><A HREF="../htmlman2/exit.html?pathrev=V62u5_TAG">exit(2)</A></B> or the value that the child pro-
      cess returned from main.
 
   drmaa_wtermsig()
-     If <B><A HREF="../htmlman3/drmaa_wifsignaled.html?pathrev=V62u3_TAG">drmaa_wifsignaled(3)</A></B> returned a  non-zero  value  in  the
+     If <B><A HREF="../htmlman3/drmaa_wifsignaled.html?pathrev=V62u5_TAG">drmaa_wifsignaled(3)</A></B> returned a  non-zero  value  in  the
      <I>signaled</I>  parameter, the drmaa_wtermsig() function evaluates
      into  <I>signal</I>  up  to  <I>signal</I>_<I>len</I>  characters  of  a   string
      representation  of the signal that caused the termination of
@@ -226,7 +226,7 @@ ENVIRONMENTAL VARIABLES
 
      SGE_QMASTER_PORT
                     If set,  specifies  the  tcp  port  on  which
-                    <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u3_TAG">sge_qmaster(8)</A></B> is expected to listen for com-
+                    <B><A HREF="../htmlman8/sge_qmaster.html?pathrev=V62u5_TAG">sge_qmaster(8)</A></B> is expected to listen for com-
                     munication requests.  Most installations will
                     use  a  services  map entry instead to define
                     that port.
@@ -278,7 +278,7 @@ ERRORS
      finished but no rusage and stat data could be provided.
 
 SEE ALSO
-     <B><A HREF="../htmlman3/drmaa_submit.html?pathrev=V62u3_TAG">drmaa_submit(3)</A></B>.
+     <B><A HREF="../htmlman3/drmaa_submit.html?pathrev=V62u5_TAG">drmaa_submit(3)</A></B>.
 
 
 

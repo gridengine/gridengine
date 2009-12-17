@@ -2420,10 +2420,22 @@ GetJMXPort() {
                   sge_jmx_ssl_keystore="$INP"
    
                   # set SGE_JMX_SSL_KEYSTORE_PW
-                  EnterSecurePassword "" "Enter JMX SSL server keystore password (at least 6 characters) >> " \
-                                      "Retype the password >> " 6
-                  sge_jmx_ssl_keystore_pw="$secure_pw1"
-                  secure_pw1=""
+                  sge_jmx_ssl_keystore_pw=""
+                  STTY_ORGMODE=`stty -g`
+                  done=false
+                  while [ $done != true ]; do 
+                     $INFOTEXT -n "Enter JMX SSL server keystore pw (at least 6 characters) >> "
+                     stty -echo
+                     INP=`Enter "$sge_jmx_ssl_keystore_pw"`
+                     sge_jmx_ssl_keystore_pw="$INP"
+                     len=`echo $sge_jmx_ssl_keystore_pw | awk '{ print length($0) }'`
+                     stty "$STTY_ORGMODE"
+                     if [ $len -ge 6 ]; then
+                        done=true
+                     else
+                        $INFOTEXT -n "\nPassword only %s characters long. Try again.\n" "$len" 
+                     fi
+                  done
                fi
             fi
 

@@ -1714,8 +1714,8 @@ ProcessSGERoot()
          else
             output_username="root"
          fi
-         RestoreStdout
-         $INFOTEXT "Your selected \$SGE_ROOT directory: %s\n is not readable/writeable for user: %s" $SGE_ROOT_VAL $output_username
+         $INFOTEXT -log "Your selected \$SGE_ROOT directory: %s\n is not read/writeable for user: %s" $SGE_ROOT_VAL $output_username
+         MoveLog
          exit 2
       fi  
    done
@@ -4028,11 +4028,23 @@ MakeUserKs()
       ExecuteAsAdmin touch $tmp_file
       ExecuteAsAdmin chmod 600 $tmp_file
       if [ "$AUTO" != "true" ]; then
-         EnterSecurePassword "Choosing password for the administrative user of SGE daemons" \
-                             "Enter password for $ADMINUSER's keystore (at least 6 characters) >> " \
-                             "Retype the password >> " 6 "true"
-         keystore_pw="$secure_pw1"
-         secure_pw1=""
+         $INFOTEXT -u "Choosing password for the administrative user of SGE daemons"
+         STTY_ORGMODE=`stty -g`
+         done=false
+         keystore_pw=""
+         while [ $done != true ]; do 
+            $INFOTEXT -n "Enter pw for $ADMINUSER's keystore (at least 6 characters) >> "
+            stty -echo
+            keystore_pw=`Enter`
+            len=`echo $keystore_pw | awk '{ print length($0) }'`
+            stty "$STTY_ORGMODE"
+            if [ $len -ge 6 ]; then
+                done=true
+            else
+                keystore_pw=""
+                $INFOTEXT -n "\nPassword only %s characters long. Try again.\n" "$len" 
+            fi
+         done
       else
          keystore_pw="changeit"
       fi
@@ -4044,57 +4056,6 @@ MakeUserKs()
   fi
 }
 
-#-------------------------------------------------------------------------
-# EnterSecurePassword - Asks twice for a password
-# $1 - Header, can be empty "" (nothing will be printed)
-# $2 - Question string to display
-# $3 - Verify string to display
-# $4 - Min password length, default 6
-# $5 - clear screen when entered, if "true" clear will be called first time
-#      this is entered, invalid passwords do clear automatically
-#
-EnterSecurePassword()
-{
-   min_length=${4:-6}
-   STTY_ORGMODE=`stty -g`
-   step_done=false
-   secure_pw1="X"
-   secure_pw2="Y"
-   do_clear="$5"
-   while [ "$secure_pw1" != "$secure_pw2" ]; do
-      #Print header if specified
-      if [ "$do_clear" = "true" ]; then
-         $CLEAR         
-      fi
-      do_clear="true"
-      if [ -n "$1" ]; then
-         $INFOTEXT -u "$1"
-      fi
-      $INFOTEXT -n "$2"
-      stty -echo
-      secure_pw1=`Enter`
-      len=`echo $secure_pw1 | awk '{ print length($0) }'`
-      stty "$STTY_ORGMODE"
-      if [ $len -lt $min_length ]; then
-         secure_pw1="X"
-         $INFOTEXT -n "\n\nPassword only %s characters long." "$len"
-         $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to try again >> "
-         continue
-      fi      
-      #verify the password, just ask once
-      $INFOTEXT -n "\n$3"
-      stty -echo
-      secure_pw2=`Enter`
-      stty "$STTY_ORGMODE"
-      if [ "$secure_pw1" != "$secure_pw2" ]; then
-         secure_pw2="Y"
-         step_done=false
-         $INFOTEXT -n "\n\nPasswords do not match!"
-         $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to try again >> "
-      fi
-   done
-   secure_pw2=""
-}
 
 #-------------------------------------------------------------------------
 # GetAdminUser

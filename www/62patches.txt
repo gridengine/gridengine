@@ -1,3 +1,60 @@
+Bugs fixed in SGE 6.2u5 since release 6.2u4
+-------------------------------------------
+-    6849311 sgeinspect for windows cannot connect in SSL mode 
+-    6876914 SGE_EXECD_PORT number is wrong in sgeinspect 
+-    6878215 sgeinspect's example port 54322 is confusing
+N/A  6902868 reporting of core binding after execd restart contains an additional new line 
+n/a  6896657 error parsing unsigned long value from string "..." 
+n/a  6902891 upgrade from 6.1 to 62u5 fails because of missing newly introduced complexes 
+n/a  6903987 with slotwise preemption, doubly suspended tasks are not always unsuspended correctly 
+n/a  6904315 changing the definition of slotwise preemption relationships doesn't update all previous members 
+n/a  6904437 configuration of forbidden slotwise preemption relationship structures is not detected
+26   6883585 click on certain host -> java.lang.NullPointerException 
+35   6538365 a more flexible suspend on subordinate scheme 
+41,27 6883583 job list does not update automatically 
+2987 6827877 sgemaster script might return 0 on failure 
+2989 6828316 shadowd uninstallation does not remove local host configuration 
+3086 6860857 add ability to commlib to wait for data on external file descriptors 
+3120 6876446 JMX part of qmaster installation should verify JVM is 32-bit or 64-bit 
+3129 6880212 modifying the global configuration triggers spooling of all exec hosts 
+3139 6885673 upgrade problems with jvm thread when upgradeing from 61 to 62 
+3140 6885690 upgrade problems with max_advance_reservations parameter when upgradeing from 61 to 62 
+3145 6885532 qstat/qhost xml's xsd links are obsolete 
+3149 6882596 need to include Hadoop integration 
+3150 6882592 need Java binding for JSV 
+3151 6883285 JSV.pm does not recognize -A option when used with qsub 
+3152 6883957 qmaster aborts when submitting a job depending on a just finishing tightly integrated parallel job 
+3154 6882142 binding jobs to processor cores (job2core binding) 
+3163 6892804 shadowd startup scripts do not work 
+3164 6892908 shadowd might be started on host which hostname is a prefix on real shadow host 
+3167 6895073 possible race condition in drmaa implementation when event clients report errors 
+3168 6895510 Windows execd installation does not create proper certificates 
+3170 6858356 execd cannot get rid of not existing task which results in qmaster <-> execd protocol loop 
+3172 6854020 fstype returns NFS instead of NFSv4 on non-solaris hosts 
+3173 6894239 cannot install dbwriter as root when $SGE_ROOT/dbwriter is owned by root and admin_user!=root 
+3176 6896663 SGE distinguish between short host name and full name with the domain 
+3178 6888406 qsub -sync does not return correct exit status during qmaster failover 
+3179 6901597 cpu time in accounting file is wrong for PE jobs with accounting_summary set to TRUE 
+3181 6901594 sgemaster -migrate does not work if host is using SMF qmaster service 
+3182 6901591 sgemaster script does not print error message when sge_qmaster fails with not zero-exit code 
+3183 6901956 wrong qhost help output regarding topology based information switch 
+3184 6903526 adding host to hostgroup causes extra slot-only queue instances 
+3185 6903978 interactive jobs get superfluous error message when they can't be scheduled 
+3186 6902905 updating to 6.2u4 causes already running jobs to be "lost" 
+3187 6902920 dbwriter.conf can not be read during upgrading dbwriter 
+3189 6900836 sge_qmaster crashes without a coredump with message from sge_smf_contract_fork() 
+3190 6899641 qrsh hostname: commlib error on linux 
+3191 6903984 auto installation results in endless loop with wrong SGE_ROOT 
+3193 6840703 sge_shepherd fails with SIGSEV on SLES 11Recently , so does sge_execd on shutdown 
+3196 6902923 dbwriter installer shows error message if SGE_ROOT is not set 
+3197 6905290 older clients get no error message when trying to connect to a newer qmaster 
+3198 6894171 using spooledit list while sge_qmaster is running can corrupt BDB server 
+3199 6646780 sgebdb stop does not work 
+3200 6869159 SGE can't handle multi-line environment variables 
+3204 6904690 qsub -sync does not return correct exit status when qmaster is shutdown and restarted fast 
+3205 6907931 qmaster autoinstallation might never exit if installation template contains invalid SGE_ROOT
+
+
 Bugs fixed in SGE 6.2u4 since release 6.2u3
 -------------------------------------------
 -    6851151 Application needs to prompt for keystore or user password after restart 

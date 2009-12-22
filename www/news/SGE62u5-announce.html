@@ -1,0 +1,139 @@
+<!DOCTYPE html PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="GENERATOR" content="Mozilla/4.79C-CCK-MCD  [en] (X11; U; SunOS 5.9 sun4u) [Netscape]">
+</head>
+<body>
+
+<center>
+<h1>Announcing Sun Grid Engine 6.2 Update 5</h1>
+Regensburg, Germany -- December 23, 2009
+</center>
+
+<div style="margin-left: 20px;">
+<p>
+We are announcing the availability of the Sun Grid Engine 6.2 Update 5
+release.
+
+Sun Grid Engine 6.2u5 is a feature update release. We are delivering cloud
+connectivity functionality, initial power saving support, add a few much
+demanded features and complete the Microsoft Vista support.
+</p>
+</div>
+<div style="margin-left: 40px;">
+<br>
+<h1>What's New</h1>
+
+<p><h3>Enhanced Inspect</h3>
+Sun Grid Engine Inspect is a monitoring and configuration tool that provides
+ a flexible interface for viewing current and historical data about your 
+Sun Grid Engine cluster(s) and the Service Domain Manager. Inspect now provides 
+a new configuration wizard for the Sun Grid Engine Parallel Environment and for 
+the Service Domain Manger Cloud Service (EC2) Adapter.
+</p><br>
+
+<p><h3>SDM Cloud Service Adapter supports multiple AWS EC2 machine images</h3>
+The Cloud Service Adapter provides the ability to expand the cluster size to 
+execute jobs on additional cloud hosts provided by the 
+Amazon Elastic Compute Cloud (EC2).
+It is now possible to extend the local cluster with virtual nodes based on 
+different Amazon EC2 AMIs. Furthermore, the user feedback on the actions 
+executed on the cloud resources has been improved.
+</p><br>
+
+<p><h3>Support for Machine Readable Table Output in SDM</h3>
+SDM command line commands now support a machine readable output format. 
+This simplifies and eases the integration of SDM and the use of sdmadm commands 
+in scripts. See Options for Formatting Table Output for further information.
+</p><br>
+
+<p><h3>Slotwise Preemption</h3>
+The slotwise preemption allows to configure queue subordinate relationships 
+that affect only single slots and not whole queue instances in the subordinated 
+queues. Thus, the slotwise preemption provides a means to ensure that high 
+priority jobs get the resources they need, while at the same time low priority 
+jobs on the same host are not unnecessarily preempted, maximizing the host utilization.
+</p><br>
+
+<p><h3>Apache Hadoop support</h3>
+This feature allows users to efficiently run Hadoop Map-Reduce jobs in a SGE
+cluster. The SGE qmaster is made aware of HDFS data locality and of the data
+needs of jobs and will schedule the Hadoop jobs accordingly. After being
+assigned to a node by SGE, the actual processing of the job is handed over
+to the Hadoop framework.
+</p><br>
+
+<p><h3>Topology-aware Scheduling (Job2Core Binding)</h3>
+Serial, threaded and parallel jobs can be bound to CPU sockets and cores to
+achieve maximum application performance when running under SGE. The new CLI
+submission parameter, "-binding", supports a range of binding strategies. The
+CPU topology, numbers of sockets, cores and threads available on a machine and
+used by jobs is reported as SGE load metrics. This feature is available for
+Solaris 10 and OpenSolaris (x64, x86) and Linux (x64, x86) operating systems
+which support the CPU core affinity setting and reporting.
+</p><br>
+
+<p><h3>Job Submission Verifiers Java[TM] Language Binding (JJSV)</h3>
+The server and client side job submission verifier (JSV) has been enhanced
+to support JSVs written in the Java programming language.
+</p><br>
+
+<p><h3>Array Job Throttling</h3>
+Array job throttling enables a user to set a self-imposed limit on the
+maximum number of concurrently running tasks per job when submitting jobs
+with the new "-tc" CLI submission option. This limit can be altered for
+previously submitted jobs. 
+</p><br>
+
+
+<p><h3>Licensing</h3>
+For users without a Sun Grid Engine license, a 90 day evaluation use is
+offered. The courtesy binaries based on the Grid Engine open source
+project will be made available soon.  They will continue to allow unlimited use
+but will not include the Amazon EC2 and power saving adapters, the SGE
+Inspect module or the Hadoop integration.
+</p><br>
+
+<p><h3>Relevant Links</h3>
+<table border="0">
+   <tr>
+      <td>Download:</td>
+   </tr>
+   <tr>
+      <td><a href="http://www.sun.com/software/sge">http://www.sun.com/software/sge</a></td>
+   </tr>
+   <tr>
+      <td>Documentation:</td>
+   </tr>
+   <tr>
+      <td><a href="http://wikis.sun.com/display/gridengine62u5">http://wikis.sun.com/display/gridengine62u5</a></td>           
+   </tr>
+   <tr>
+      <td>Release Notes and detailed information on new features:</td>
+   </tr>
+   <tr>
+      <td><a href="http://wikis.sun.com/display/gridengine62u5/Release+Notes">http://wikis.sun.com/display/gridengine62u5/Release+Notes</a></td>           
+   </tr>
+   <tr>
+      <td>Patch Matrix:</td>
+   </tr>
+   <tr>
+      <td><a href="http://wikis.sun.com/display/gridengine62u5/Patch+Matrix">http://wikis.sun.com/display/gridengine62u5/Patch+Matrix</a></td>           
+   </tr>
+   <tr>
+      <td>Man Pages Online:</td>
+   </tr>
+   <tr>
+      <td><a href="http://gridengine.sunsource.net/manpages.html">http://gridengine.sunsource.net/manpages.html</a></td>           
+   </tr>
+   <tr>
+      <td>List of fixed bugs:</td>
+   </tr>
+   <tr>
+      <td><a href="http://gridengine.sunsource.net/project/gridengine/62patches.txt">http://gridengine.sunsource.net/project/gridengine/62patches.txt</a></td>           
+   </tr>
+<br>
+</table>
+</body>
+</html>

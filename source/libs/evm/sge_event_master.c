@@ -186,13 +186,13 @@ typedef struct {
  *  sub-list in question.
  *
  * SOURCE_LIST:
- *  Contains the sub-scription events for the sub-list, which als
+ *  Contains the sub-scription events for the sub-list, which also
  *  contains the filter for the sub-list.
  *
  *
  * This construct and its functions are limited to one sub-scribable
  * sub-list per main list. If multiple sub-lists can be subsribed, the
- * construct has to be exetended.
+ * construct has to be extended.
  *
  * ISSUES:
  *  1416: the sgeE_PETASK_* list events are not handled correctly during
@@ -2926,7 +2926,7 @@ static void total_update_event(lListElem *event_client, ev_event type, object_de
 
 /****** evm/sge_event_master/list_select() *************************************
 *  NAME
-*     list_select() -- makes a reduced job list dublication 
+*     list_select() -- makes a reduced job list duplication 
 *
 *  SYNOPSIS
 *     static bool list_select(subscription_t *subscription, int type, lList 
@@ -2952,7 +2952,6 @@ static void total_update_event(lListElem *event_client, ev_event type, object_de
 *
 *  RESULT
 *     static bool - true, if it was a job event 
-*
 *******************************************************************************/
 static bool list_select(subscription_t *subscription, int type,
                         lList **reduced_lp, lList *lp,
@@ -3077,13 +3076,13 @@ static lListElem *elem_select(subscription_t *subscription, lListElem *element,
       memset(sub_list, 0 , ids_size * sizeof(lList*));
 
       /* remove the sub-lists from the main element */
-      for(counter = 0; counter < ids_size; counter ++) {
+      for (counter = 0; counter < ids_size; counter ++) {
          lXchgList(element, ids[counter], &(sub_list[counter]));
       }
 
       /* get descriptor for reduced sub-lists */
       if (!sub_descr) {
-         for(counter = 0; counter < ids_size; counter ++) {
+         for (counter = 0; counter < ids_size; counter ++) {
             if (sub_list[counter]) {
                sub_descr = getDescriptorL(subscription, sub_list[counter], sub_type);
                break;

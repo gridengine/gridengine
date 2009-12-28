@@ -1759,6 +1759,7 @@ int lAppendElem(lList *lp, lListElem *ep)
 int lRemoveElem(lList *lp, lListElem **ep1) 
 {
    lListElem *ep = NULL;
+
    DENTER(CULL_LAYER, "lRemoveElem");
 
    if (lp == NULL || ep1 == NULL || *ep1 == NULL) {
@@ -1766,7 +1767,7 @@ int lRemoveElem(lList *lp, lListElem **ep1)
    }
 
    ep = *ep1;
-   
+
    if (lp->descr != ep->descr) {
       CRITICAL((SGE_EVENT, "Removing element from other list !!!\n"));
       DEXIT;
@@ -1775,15 +1776,13 @@ int lRemoveElem(lList *lp, lListElem **ep1)
 
    if (ep->prev) {
       ep->prev->next = ep->next;
-   }
-   else {
+   } else {
       lp->first = ep->next;
    }
 
    if (ep->next) {
       ep->next->prev = ep->prev;
-   }
-   else {
+   } else {
       lp->last = ep->prev;
    }
 

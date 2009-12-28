@@ -147,7 +147,13 @@ int subscribe_scheduler(sge_evc_class_t *evc, sge_where_what_t *where_what)
    sge_mirror_subscribe(evc, SGE_TYPE_JOB,            sge_process_job_event_before, sge_process_job_event_after, NULL, where_what->where_job, where_what->what_job);
    sge_mirror_subscribe(evc, SGE_TYPE_JATASK,         NULL, sge_process_ja_task_event_after, NULL, where_what->where_jat, where_what->what_jat);
    sge_mirror_subscribe(evc, SGE_TYPE_PE,             NULL, NULL, NULL, NULL, where_what->what_pe);
-   sge_mirror_subscribe(evc, SGE_TYPE_PETASK,         NULL, NULL, NULL, NULL, where_what->what_pet);
+   
+   /* we do *not* subscribe reduced elements for TYPE_PETASK:
+    * event master currently cannot handle this, see IZ 3216
+    * sge_mirror_subscribe(evc, SGE_TYPE_PETASK,         NULL, NULL, NULL, NULL, where_what->what_pet);
+    */
+   sge_mirror_subscribe(evc, SGE_TYPE_PETASK,         NULL, NULL, NULL, NULL, NULL);
+
    sge_mirror_subscribe(evc, SGE_TYPE_PROJECT,        sge_process_project_event_before, NULL, NULL, NULL, NULL);
    sge_mirror_subscribe(evc, SGE_TYPE_QINSTANCE,      NULL, NULL, NULL, where_what->where_all_queue, where_what->what_queue);
    sge_mirror_subscribe(evc, SGE_TYPE_RQS,            NULL, NULL, NULL, NULL, NULL);

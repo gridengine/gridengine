@@ -2235,30 +2235,21 @@ static int is_new_id_pair(const int id, const int id2)
 
 /****** sge_binding/get_total_amount_of_cores_solaris() ************************
 *  NAME
-*     get_total_amount_of_cores_solaris() -- ??? 
+*     get_total_amount_of_cores_solaris() -- Returns the amount of cores of host. 
 *
 *  SYNOPSIS
 *     static int get_total_amount_of_cores_solaris() 
 *
 *  FUNCTION
-*     ??? 
-*
-*  INPUTS
+*     Calculates the amount of cores out of the kstat information.
+*     If no information is found 0 is returned.
 *
 *  RESULT
-*     static int - 
-*
-*  EXAMPLE
-*     ??? 
+*     static int - Amount of cores of the host. 
 *
 *  NOTES
-*     MT-NOTE: get_total_amount_of_cores_solaris() is not MT safe 
+*     MT-NOTE: get_total_amount_of_cores_solaris() is MT safe 
 *
-*  BUGS
-*     ??? 
-*
-*  SEE ALSO
-*     ???/???
 *******************************************************************************/
 static int get_total_amount_of_cores_solaris()
 {
@@ -2288,8 +2279,8 @@ static int get_total_amount_of_cores_solaris()
    }
 
    if (cores_total <= 0) {
-      /* default case: we have one core */
-      cores_total = 1;
+      /* default case: we have zero cores */
+      cores_total = 0;
    }
 
    return cores_total;
@@ -2297,30 +2288,21 @@ static int get_total_amount_of_cores_solaris()
 
 /****** sge_binding/get_total_amount_of_sockets_solaris() **********************
 *  NAME
-*     get_total_amount_of_sockets_solaris() -- ??? 
+*     get_total_amount_of_sockets_solaris() -- Returns the amount of sockets. 
 *
 *  SYNOPSIS
 *     static int get_total_amount_of_sockets_solaris() 
 *
 *  FUNCTION
-*     ??? 
-*
-*  INPUTS
+*     Calculates the amount of sockets (processor packages) out of kstat. 
+*     If no information is found 0 is returned.
 *
 *  RESULT
-*     static int - 
-*
-*  EXAMPLE
-*     ??? 
+*     static int - Returns the amount of sockets of the current host. 
 *
 *  NOTES
-*     MT-NOTE: get_total_amount_of_sockets_solaris() is not MT safe 
+*     MT-NOTE: get_total_amount_of_sockets_solaris() is MT safe 
 *
-*  BUGS
-*     ??? 
-*
-*  SEE ALSO
-*     ???/???
 *******************************************************************************/
 static int get_total_amount_of_sockets_solaris()
 {
@@ -2348,8 +2330,8 @@ static int get_total_amount_of_sockets_solaris()
    }
 
    if (sockets_total <= 0) {
-      /* default case: we have one socket */
-      sockets_total = 1;
+      /* default case: we have 0 sockets */
+      sockets_total = 0;
    }
 
    return sockets_total;

@@ -37,7 +37,7 @@
 #include "sge_string.h"
 #include "err_trace.h"
 
-#if defined(SOLARISAMD64) || defined(SOLARIS86)
+#if defined(BINDING_SOLARIS)
 #  include "sge_uidgid.h"
 #  include <sys/pset.h>
 #endif
@@ -65,7 +65,7 @@ static bool add_proc_ids_linux(int socket, int core, int** proc_id, int* proc_id
 
 #endif
 
-#if defined(SOLARISAMD64) || defined(SOLARIS86)
+#if defined(BINDING_SOLARIS)
    static bool bind_shepherd_to_pset(int pset_id); 
 #endif
 
@@ -276,7 +276,7 @@ int do_core_binding(void)
 
 #endif 
 
-#if defined(SOLARIS86) || defined(SOLARISAMD64)
+#if defined(BINDING_SOLARIS)
 /****** shepherd_binding/do_core_binding() *************************************
 *  NAME
 *     do_core_binding() -- Performs the core binding task for the Solaris OS. 

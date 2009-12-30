@@ -339,11 +339,13 @@ same set of cores. (In Linux OS child-processes are allowed to re-define the
 core affinity or even use all cores).
 
 The optional [env|pe|set] defines what is performed on execution side. 'env' 
-means an envirnonment variable containing the logical core numbers the system 
-determined is set. This is usually used from OpenMP applications in order to 
-determine on which cores the application is allowed to run. As an example for 
-Sun OpenMP applications the $SUNW_MP_PROCBIND environment variable can be 
-directly set with the content.
+means an envirnonment variable containing the OS internal core numbers from 
+the system. 
+ 
+determined is set. This variable is named SGE_BINDING and This is usually 
+used from OpenMP applications in order to determine on which cores the application 
+is allowed to run. As an example for Sun OpenMP applications the $SUNW_MP_PROCBIND 
+environment variable can be directly set with the content.
 
 For OpenMPI jobs scattered on different hosts and using them exclusively the 
 input for a 'rankfile' could be produced by Sun Grid Engine. The 'rankfile' 
@@ -441,6 +443,11 @@ Release notes (NEW)
               then it is strongly advised to rename them before you
               apply the update to 6.2u5.
 
+   The "loadcheck" binary was updated in order to show additionally the values for 
+   these three complex entries (m_topology, m_socket, and m_core). Also 
+   a new loadcheck "-cb" switch was introduced in order to check a machine of 
+   the core binding and reporting capabilities. 
+ 
    Additionally the XML Schema for qstat has been enhanced. As a result the
    XML output will contain additional entries if the -xml switch is used in
    combination with the new -cb command-line switch. 
@@ -919,12 +926,7 @@ outside of the set.
 8. TODOs 
 --------
 
-- Execd have to check (and mark cores as used when neccessary) when starting 
-  up for running jobs (with core binding enabled)
-
 - Adding testsuite test 
-
-- Modification of showq client for the open source community. 
 
  
 

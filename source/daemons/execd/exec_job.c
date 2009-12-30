@@ -133,7 +133,7 @@ static bool striding_linux(dstring* result, lListElem* binding_elem,
 static bool explicit_linux(dstring* result, lListElem* binding_elem); 
 #endif 
 
-#if defined(SOLARIS86) || defined(SOLARISAMD64)
+#if defined(BINDING_SOLARIS)
 /* creates string with processor set id created here which is then written 
    to "config" file */
 static bool create_binding_strategy_string_solaris(dstring* result,
@@ -154,7 +154,7 @@ static bool explicit_solaris(dstring* result, lListElem* binding_elem,
                               char* err_str, int err_length, char** env);
 #endif 
 
-#if defined(SOLARIS86) || defined(SOLARISAMD64) || defined(PLPA_LINUX) 
+#if defined(BINDING_SOLARIS) || defined(PLPA_LINUX) 
 static bool parse_job_accounting_and_create_logical_list(const char* binding_string,
                                                          char** rankfileinput);
 #endif
@@ -464,7 +464,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
          }
 
          sge_dstring_free(&pseudo_usage);
-#elif defined(SOLARIS86) || defined(SOLARISAMD64) 
+#elif defined(BINDING_SOLARIS)
       
       /* try to create processor set according to binding strategy 
          and write processor set id to "binding" element in 
@@ -2472,7 +2472,7 @@ static bool explicit_linux(dstring* result, lListElem* binding_elem)
 
 #endif
 
-#if defined(SOLARIS86) || defined(SOLARISAMD64)
+#if defined(BINDING_SOLARIS)
 /****** exec_job/create_binding_strategy_string_solaris() **********************
 *  NAME
 *     create_binding_strategy_string_solaris() --  Creates a binding request string from request (CULL list).
@@ -2943,7 +2943,7 @@ static bool explicit_solaris(dstring* result, lListElem* binding_elem, char* err
 #endif
 
 
-#if defined(SOLARIS86) || defined(SOLARISAMD64) || defined(PLPA_LINUX)
+#if defined(BINDING_SOLARIS) || defined(PLPA_LINUX)
 /****** exec_job/parse_job_accounting_and_create_logical_list() ****************
 *  NAME
 *     parse_job_accounting_and_create_logical_list() -- Creates the core list out of accounting string. 

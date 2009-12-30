@@ -42,7 +42,7 @@
 #include "sge_log.h"
 #include "uti/sge_binding_hlp.h"
 
-#if defined(SOLARISAMD64) || defined(SOLARIS86)
+#if defined(BINDING_SOLARIS)
 #  include <sys/processor.h>
 #  include <sys/types.h>
 #  include <sys/pset.h>

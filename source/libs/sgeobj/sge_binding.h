@@ -72,7 +72,7 @@ bool get_execd_topology(char** topology, int* length);
 /* get the topology string where all cores currently in use are marked */
 bool get_execd_topology_in_use(char** topology);
 
-#if defined(PLPA_LINUX) || defined(SOLARISAMD64) || defined(SOLARIS86)
+#if defined(PLPA_LINUX) || defined(BINDING_SOLARIS)
 bool account_job(const char* job_topology);
  
 bool binding_set_striding(int first_socket, int first_core, int amount_of_cores,
@@ -126,7 +126,7 @@ bool free_topology(const char* topology, const int topology_length);
 
 #endif
 
-#if defined(SOLARISAMD64) || defined(SOLARIS86)
+#if defined(BINDING_SOLARIS)
 
 int create_processor_set_striding_solaris(const int first_socket,
    const int first_core, const int amount, const int step_size, 

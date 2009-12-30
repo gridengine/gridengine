@@ -61,7 +61,7 @@ void usage(void);
 void print_mem_load(char *, char *, int, double, char*);
 void check_core_binding(void);
 
-#if defined(SOLARIS86) || defined(SOLARISAMD64)
+#if defined(BINDING_SOLARIS)
 void test_solaris_binding(void);
 #endif 
 
@@ -69,10 +69,9 @@ void test_solaris_binding(void);
 void test_linux_plpa(void);
 #endif 
 
-#if defined(SOLARIS86) || defined(SOLARISAMD64) || defined(PLPA_LINUX)
+#if defined(BINDING_SOLARIS) || defined(PLPA_LINUX)
 void fill_socket_core_topology(dstring* msocket, dstring* mcore, dstring* mtopology);
 #endif
-
 
 void usage()
 {
@@ -88,7 +87,7 @@ int main(int argc, char *argv[])
    double avg[3];
    int loads;
    char *name = NULL;
-#if defined(PLPA_LINUX) || defined(SOLARIS86) || defined(SOLARISAMD64)
+#if defined(PLPA_LINUX) || defined(BINDING_SOLARIS)
    dstring msocket   = DSTRING_INIT;
    dstring mcore     = DSTRING_INIT;
    dstring mtopology = DSTRING_INIT;
@@ -179,7 +178,7 @@ int main(int argc, char *argv[])
 #endif
    }
 
-#if defined(PLPA_LINUX) || defined(SOLARIS86) || defined(SOLARISAMD64)
+#if defined(PLPA_LINUX) || defined(BINDING_SOLARIS)
    fill_socket_core_topology(&msocket, &mcore, &mtopology);
    if ((pos && !strcmp("m_socket", argv[pos])) || !pos) {
       printf("m_socket        %s\n", sge_dstring_get_string(&msocket));
@@ -230,7 +229,7 @@ int main(int argc, char *argv[])
 #ifndef WINDOWS
       DEXIT;
 #endif
-#if defined(PLPA_LINUX) || defined(SOLARIS86) || defined(SOLARISAMD64)
+#if defined(PLPA_LINUX) || defined(BINDING_SOLARIS)
       sge_dstring_free(&mcore);
       sge_dstring_free(&msocket);
       sge_dstring_free(&mtopology);
@@ -267,7 +266,7 @@ int main(int argc, char *argv[])
 #ifndef WINDOWS
    DEXIT;
 #endif
-#if defined(PLPA_LINUX) || defined(SOLARIS86) || defined(SOLARISAMD64)
+#if defined(PLPA_LINUX) || defined(BINDING_SOLARIS)
    sge_dstring_free(&mcore);
    sge_dstring_free(&msocket);
    sge_dstring_free(&mtopology);
@@ -318,7 +317,7 @@ void check_core_binding()
 
    #elif defined(SOLARIS)
 
-      #if defined(SOLARIS86) || defined(SOLARISAMD64)
+      #if defined(BINDING_SOLARIS)
       printf("Your SGE Solaris version has built-in core binding functionality!\n");
       test_solaris_binding();
       #else
@@ -388,7 +387,7 @@ void test_linux_plpa()
 }
 #endif
 
-#if defined(SOLARIS86) || defined(SOLARISAMD64)
+#if defined(BINDING_SOLARIS)
 /****** loadcheck/test_solaris_binding() ***************************************
 *  NAME
 *     test_solaris_binding() -- Tests Solaris binding and topology information. 
@@ -448,7 +447,7 @@ void test_solaris_binding()
 }
 #endif
 
-#if defined(PLPA_LINUX) || defined(SOLARIS86) || defined(SOLARISAMD64)
+#if defined(PLPA_LINUX) || defined(BINDING_SOLARIS)
 /****** loadcheck/fill_socket_core_topology() **********************************
 *  NAME
 *     fill_socket_core_topology() -- Get load values regarding processor topology. 

@@ -795,7 +795,7 @@ int main(int argc, char **argv)
     */ 
 #if defined(PLPA_LINUX)
    do_core_binding();
-#elif defined(SOLARIS86) || defined(SOLARISAMD64)
+#elif defined(BINDING_SOLARIS)
    /*switch later to startuser */
    do_core_binding();
 #endif    

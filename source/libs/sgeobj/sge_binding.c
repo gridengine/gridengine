@@ -35,7 +35,7 @@
 
 #include "uti/sge_binding_hlp.h"
 
-#if defined(SOLARISAMD64) || defined(SOLARIS86)
+#if defined(BINDING_SOLARIS)
 #  include <sys/processor.h>
 #  include <sys/types.h>
 #  include <sys/pset.h>
@@ -62,7 +62,7 @@ static char* logical_used_topology = NULL;
 
 static int logical_used_topology_length = 0;
 
-#if defined(PLPA_LINUX) || defined(SOLARIS86) || defined(SOLARISAMD64)  
+#if defined(PLPA_LINUX) || defined(BINDING_SOLARIS)
 
 /* creates a string with the topology used from a single job */
 static bool create_topology_used_per_job(char** accounted_topology, 
@@ -83,7 +83,7 @@ static bool account_all_threads_after_core(char** topology, const int core_pos);
 
 #endif
 
-#if defined(SOLARISAMD64) || defined(SOLARIS86)
+#if defined(BINDING_SOLARIS)
 static bool get_topology_solaris(char** topology, int* length);
 
 static int get_amount_of_sockets_from_matrix(const int** matrix, const int length);
@@ -172,7 +172,7 @@ int get_execd_amount_of_cores()
 {
 #if defined(PLPA_LINUX) 
       return get_total_amount_of_cores();
-#elif defined(SOLARISAMD64) || defined(SOLARIS86) 
+#elif defined(BINDING_SOLARIS) 
       return get_total_amount_of_cores_solaris();
 #else   
       return 0;
@@ -204,7 +204,7 @@ int get_execd_amount_of_sockets()
 {
 #if defined(PLPA_LINUX) 
    return get_amount_of_sockets();
-#elif defined(SOLARISAMD64) || defined(SOLARIS86) 
+#elif defined(BINDING_SOLARIS) 
    return get_total_amount_of_sockets_solaris();
 #else
    return 0;
@@ -224,7 +224,7 @@ bool get_execd_topology(char** topology, int* length)
       } else {
          success = false;
       }   
-#elif defined(SOLARISAMD64) || defined(SOLARIS86) 
+#elif defined(BINDING_SOLARIS) 
       if (get_topology_solaris(topology, length) == true) {
          success = true;
       } else {
@@ -262,17 +262,8 @@ bool get_execd_topology(char** topology, int* length)
 *  RESULT
 *     bool - true if the "topology in use" string could be created 
 *
-*  EXAMPLE
-*     ??? 
-*
 *  NOTES
 *     MT-NOTE: getExecdTopologyInUse() is not MT safe 
-*
-*  BUGS
-*     ??? 
-*
-*  SEE ALSO
-*     ???/???
 *******************************************************************************/
 bool get_execd_topology_in_use(char** topology)
 {
@@ -288,7 +279,7 @@ bool get_execd_topology_in_use(char** topology)
       /* initialize without any usage */
       get_topology_linux(&logical_used_topology, 
               &logical_used_topology_length); 
-#elif defined(SOLARISAMD64) || defined(SOLARIS86) 
+#elif defined(BINDING_SOLARIS) 
       get_topology_solaris(&logical_used_topology, 
                &logical_used_topology_length);
 #endif
@@ -303,7 +294,7 @@ bool get_execd_topology_in_use(char** topology)
    return retval;   
 }
 
-#if defined(PLPA_LINUX) || defined(SOLARISAMD64) || defined(SOLARIS86) 
+#if defined(PLPA_LINUX) || defined(BINDING_SOLARIS) 
 /* gets the positions in the topology string from a given <socket>,<core> pair */
 static int get_position_in_topology(const int socket, const int core, const char* topology, 
    const int topology_length);
@@ -323,7 +314,7 @@ static bool go_to_next_core(const char* topology, const int pos, int* new_pos);
 #endif
 
 
-#if defined(SOLARISAMD64) || defined(SOLARIS86)
+#if defined(BINDING_SOLARIS)
 /****** sge_binding/binding_set_linear_solaris() *******************************
 *  NAME
 *     binding_set_linear_solaris() -- Binds current process to some cores. 
@@ -1120,7 +1111,7 @@ static bool bind_current_process_to_pset(psetid_t pset_id)
 
 #endif 
 
-#if defined(PLPA_LINUX) || defined(SOLARIS86) || defined(SOLARISAMD64)  
+#if defined(PLPA_LINUX) || defined(BINDING_SOLARIS)  
 
 
 /****** sge_binding/account_job() **********************************************
@@ -1154,7 +1145,7 @@ bool account_job(const char* job_topology)
       /* initialize without any usage */
       get_topology_linux(&logical_used_topology, 
               &logical_used_topology_length); 
-#elif defined(SOLARISAMD64) || defined(SOLARIS86) 
+#elif defined(BINDING_SOLARIS) 
       get_topology_solaris(&logical_used_topology, 
                &logical_used_topology_length);
 #endif
@@ -1413,7 +1404,7 @@ bool free_topology(const char* topology, const int topology_length)
 /* ---------------------------------------------------------------------------*/
 
 
-#if defined(SOLARISAMD64) || defined(SOLARIS86)
+#if defined(BINDING_SOLARIS)
 
 /****** sge_binding/get_topology_solaris() *************************************
 *  NAME
@@ -2590,8 +2581,6 @@ static int get_core_id_from_logical_core_number_solaris(const int** matrix,
    return -1;
 }
 
-
-
 #endif 
 
 /* ---------------------------------------------------------------------------*/
@@ -2604,7 +2593,7 @@ static int get_core_id_from_logical_core_number_solaris(const int** matrix,
 /* ---------------------------------------------------------------------------*/
 /*                   Bookkeeping of cores in use by SGE                       */ 
 /* ---------------------------------------------------------------------------*/
-#if defined(PLPA_LINUX) || defined(SOLARIS86) || defined(SOLARISAMD64)
+#if defined(PLPA_LINUX) || defined(BINDING_SOLARIS)
 
 bool get_linear_automatic_socket_core_list_and_account(const int amount, 
       int** list_of_sockets, int* samount, int** list_of_cores, int* camount, 

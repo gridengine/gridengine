@@ -94,7 +94,7 @@
 #include "uti/sge_binding_hlp.h"
 #include "sgeobj/sge_binding.h"
 
-#if defined(SOLARISAMD64) || defined(SOLARIS86)
+#if defined(BINDING_SOLARIS)
 #  include "uti/sge_uidgid.h"
 #  include <sys/processor.h>
 #  include <sys/types.h>
@@ -116,7 +116,7 @@ static void build_derived_final_usage(lListElem *jr, u_long32 job_id, u_long32 j
 
 static void examine_job_task_from_file(sge_gdi_ctx_class_t *ctx, int startup, char *dir, lListElem *jep, lListElem *jatep, lListElem *petep, pid_t *pids, int npids);
 
-#if defined(PLPA_LINUX) || defined(SOLARISAMD64) || defined(SOLARIS86)
+#if defined(PLPA_LINUX) || defined(BINDING_SOLARIS)
 static void update_used_cores(const char* path_to_config, lListElem** jr);
 #endif
 
@@ -1456,7 +1456,7 @@ examine_job_task_from_file(sge_gdi_ctx_class_t *ctx, int startup, char *dir, lLi
             /* here we will call a ptf function to get */
             /* the first usage data after restart      */
 
-#if defined(PLPA_LINUX) || defined(SOLARISAMD64) || defined(SOLARIS86)
+#if defined(PLPA_LINUX) || defined(BINDING_SOLARIS)
             {
                /* do accounting of bound cores */ 
                dstring fconfig = DSTRING_INIT;
@@ -1511,7 +1511,7 @@ examine_job_task_from_file(sge_gdi_ctx_class_t *ctx, int startup, char *dir, lLi
    DRETURN_VOID;
 }
 
-#if defined(PLPA_LINUX) || defined(SOLARISAMD64) || defined(SOLARIS86)
+#if defined(PLPA_LINUX) || defined(BINDING_SOLARIS)
 static void update_used_cores(const char* path_to_config, lListElem** jr)
 {
    const char* binding_cfg;
@@ -2173,7 +2173,7 @@ static void clean_up_binding(char* binding)
       DRETURN_VOID;
    }
    
-#if defined(SOLARIS86) || defined(SOLARISAMD64)
+#if defined(BINDING_SOLARIS)
    if (strstr(binding, "psrset:") != NULL) {
       /* we are on Solaris and a processor set was created -> deaccount it and delete it */
       int processor_set_id = -1;

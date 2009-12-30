@@ -39,6 +39,10 @@
 #  define PLPA_LINUX
 #endif
 
+#if defined(SOLARIS86) || defined(SOLARISAMD64) || defined(SOLARIS64)
+#   define BINDING_SOLARIS
+#endif 
+
 #include "uti/sge_dstring.h"
 #include "uti/sge_binding_parse.h"
 

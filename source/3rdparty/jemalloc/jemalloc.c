@@ -6354,6 +6354,7 @@ static void sge_init_hook(void){
    __malloc_hook = malloc;
    __realloc_hook = realloc;
    __memalign_hook = memalign;
+   __free_hook = free;
 }
 
 void (*__malloc_initialize_hook) (void) = sge_init_hook;

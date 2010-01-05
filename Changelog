@@ -8,6 +8,12 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+SH-2010-01-05-1: Bugfix:      free()-hook for glibc is also needed in our 
+                              jemalloc library. 
+                 Bugster:     6909608
+                 Belongs to:  SH-2009-10-29-0
+                 Review:      CR
+
 DG-2009-12-30-1: Bugfix:      Number of cores and sockets of unsupported
                               Solaris hosts has to be 0 (like on Linux). 
                  Belongs to:  DG-2009-12-30-0

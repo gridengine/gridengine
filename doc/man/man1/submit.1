@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2009/12/01 12:24:06 $     Revision: $Revision: 1.101 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2010/01/07 13:40:28 $     Revision: $Revision: 1.102 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2009/12/01 12:24:06 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2010/01/07 13:40:28 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -1314,6 +1314,8 @@ not at all. The command returns 0 on success, or 1 on failure (also if
 the job could not be scheduled immediately).  For array jobs submitted with the
 \fB-now\fP option, if all tasks cannot be immediately scheduled, no tasks are
 scheduled.
+.sp 1
+Jobs submitted with \fB\-now y\fP option, can ONLY run on INTERACTIVE queues.
 \fB\-now y\fP is default for \fIqsh\fP, \fIqlogin\fP and \fIqrsh\fP
 .sp 1
 With the \fB\-now n\fP option, the job will be put into the pending queue if it

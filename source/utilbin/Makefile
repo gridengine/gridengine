@@ -235,8 +235,8 @@ spoolinit.o: $(UTILBIN_DIR)/spoolinit.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/spoolinit.c
 
 #---------------------------------------------------------------------
-testsuidroot:   testsuidroot.o version.o $(WINGRIDLIB_DEP)
-		$(CC) -o $@ $(LFLAGS) testsuidroot.o version.o $(WINGRIDLIB) $(LIBS)
+testsuidroot:   testsuidroot.o version.o $(WINGRIDLIB_DEP)  $(UTILIB) $(RMONLIB) $(LCKLIB) $(COMMLISTSLIB)
+		$(CC) -o $@ $(LFLAGS) testsuidroot.o version.o -luti $(COMMLISTSLIB) $(WINGRIDLIB) -llck -lrmon $(LIBS)
 
 testsuidroot.o: $(UTILBIN_DIR)/testsuidroot.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/testsuidroot.c

@@ -8,6 +8,16 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+RN-2010-01-07-1: Bugfix:      testsuidroot messages not i18n'd
+                 Bugster:     6587196
+                 Review:      JG
+
+RN-2010-01-07-0: Bugfix:      BATCH and IMMEDIATE QUEUES concept need to be
+                              clarified in man pages
+                 Bugster:     6871606
+                 Issue:       3147
+                 Review:      JG, DT
+
 DT-2010-01-05-0: Bugfix:      o Checked in missing JJSV javadocs
                  Belongs to:  DT-2009-10-28-0
 

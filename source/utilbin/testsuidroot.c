@@ -38,6 +38,7 @@
 #include <netdb.h>
 #include <string.h>
 
+#include "msg_utilbin.h"
 #include "sge_uidgid.h"
 
 /****** testsuidroot ***************************************
@@ -95,20 +96,23 @@ int main(int argc, char *argv[]) {
    }
    if(getuid() == SGE_SUPERUSER_UID) {
       if(!quiet) {
-         fprintf(stderr, "%s: must be started with uid != 0\n", argv[0]);
+         fprintf(stderr, MSG_SUIDROOT_START_BY_NONROOT, argv[0]);
+         fprintf(stderr, "\n");
       }
       return 1;
    }
    if(geteuid() != SGE_SUPERUSER_UID) {
       if(!quiet) {
-         fprintf(stderr, "%s: effective uid should be 0\n", argv[0]);
+         fprintf(stderr, MSG_SUIDROOT_EFFECTIVE_USER_ROOT, argv[0]);
+         fprintf(stderr, "\n");
       }
       return 2;
    }
 
    if((sock = rresvport(&res_port)) == -1) {
       if(!quiet) {
-         fprintf(stderr, "%s: binding a privileged socket fails\n", argv[0]);
+         fprintf(stderr, MSG_SUIDROOT_BIND_PRIV_SOCK_FAILED, argv[0]);
+         fprintf(stderr, "\n");
       }
       return 3;
    }

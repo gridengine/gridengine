@@ -226,4 +226,11 @@
 #define MSG_AUTHUSER_WRONG_USER_OR_PASSWORD   _MESSAGE(213107, _("Wrong user or password"))
 #define MSG_AUTHUSER_ONLY_ROOT_S          _MESSAGE(213108, _(SFN": effective user id is not root, please check file permissions"))
 
+/*
+ * utilbin/testsuidroot
+ */
+#define MSG_SUIDROOT_START_BY_NONROOT       _MESSAGE(213109, _(SFN": must be started with uid != 0"))
+#define MSG_SUIDROOT_EFFECTIVE_USER_ROOT    _MESSAGE(213110, _(SFN": effective uid should be 0"))
+#define MSG_SUIDROOT_BIND_PRIV_SOCK_FAILED  _MESSAGE(213111, _(SFN": binding a privileged socket fails"))
+
 #endif /* __MSG_UTILBIN_H */

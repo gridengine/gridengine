@@ -85,6 +85,10 @@ int rcmd(char **, u_short, char *, char *, char *, int *);
 #include <values.h>
 #endif
 
+#if defined(DARWIN6)
+#   define sigignore(x) signal(x,SIG_IGN)
+#endif
+
 #ifndef MAX 
 #define MAX(a,b) ((a)<(b)?(b):(a))
 #endif

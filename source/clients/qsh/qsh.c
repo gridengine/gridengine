@@ -110,6 +110,10 @@
 #include "sgeobj/cull_parse_util.h"
 #include "sgeobj/sge_jsv.h"
 
+#if defined(DARWIN6)
+#   define sigignore(x) signal(x,SIG_IGN)
+#endif
+
 /* global variables */
 sge_gdi_ctx_class_t *ctx = NULL;
 

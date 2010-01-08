@@ -38,6 +38,11 @@
 #include <sys/param.h>
 #include <sys/time.h>
 #include <unistd.h>
+
+#ifdef DARWIN6
+#include <netinet/in.h>
+#endif
+
 #include "cl_lists.h"
 #include "cl_xml_parsing.h"
 

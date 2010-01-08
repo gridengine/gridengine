@@ -137,7 +137,7 @@ struct rusage {
 pid_t wait3(int *, int, struct rusage *);
 #endif
 
-#if defined(FREEBSD)
+#if defined(FREEBSD) || defined(DARWIN6)
 #   define sigignore(x) signal(x,SIG_IGN)
 #endif
 

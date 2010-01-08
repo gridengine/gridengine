@@ -35,6 +35,7 @@
 #
 switch($buildarch)
    case "aix43":
+   case "darwin":
    case "lx22-alpha":
    case "win32-x86":
       set argv = ( -no-jni -no-java $* )

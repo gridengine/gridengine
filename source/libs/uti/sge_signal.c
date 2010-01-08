@@ -35,6 +35,7 @@
 #include <string.h>
 #include <signal.h>
 #include <errno.h>
+#include <pthread.h>
 
 #include "sge_signal.h"
 #include "sge_string.h"

@@ -35,6 +35,10 @@
 #include <signal.h>
 #include <unistd.h>  
 #include <time.h>
+
+#ifdef DARWIN6
+#include <sys/time.h>
+#endif
 #include <sys/resource.h>
 
 #include "rmon/sgermon.h"

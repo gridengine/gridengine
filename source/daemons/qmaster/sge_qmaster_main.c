@@ -32,6 +32,10 @@
 
 #include <signal.h>
 #include <fcntl.h>
+
+#ifdef DARWIN6
+#include <sys/time.h>
+#endif
 #include <sys/resource.h>
 
 #include "basis_types.h"

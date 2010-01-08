@@ -222,7 +222,7 @@ case $ARCH in
    ROOTGROUP=wheel
    LOADSENSOR_COMMAND=undef
    ;;
- darwin-*)
+ darwin*)
    AWK=/usr/bin/awk
    ECHO=/bin/echo
    RC_FILE=SGE

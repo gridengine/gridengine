@@ -119,7 +119,12 @@ Darwin)
          darwin_machine=unsupported
          ;;
    esac
-   ARCH=darwin-$darwin_machine
+   osversion=`echo $osrelease | cut -f 1 -d .`
+   if [ $osversion -lt 8 ]; then
+      ARCH=darwin
+   else
+      ARCH=darwin-$darwin_machine
+   fi
    ;;
 FreeBSD|DragonFly)
    ARCH=fbsd-$osmachine

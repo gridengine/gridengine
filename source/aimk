@@ -1065,6 +1065,7 @@ case ALPHA5:
    set JAVA_ARCH = "alpha"
    breaksw
 
+case DARWIN:
 case DARWIN_X86:
 case DARWIN_PPC:
    set MAKEWINGRIDLIB   = 0

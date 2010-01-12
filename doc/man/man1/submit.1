@@ -5,7 +5,7 @@
 .\"
 .\"___INFO__MARK_END__
 .\"
-.\" $RCSfile: submit.1,v $     Last Update: $Date: 2010/01/07 13:40:28 $     Revision: $Revision: 1.102 $
+.\" $RCSfile: submit.1,v $     Last Update: $Date: 2010/01/12 14:41:02 $     Revision: $Revision: 1.103 $
 .\"
 .\"
 .\" Some handy macro definitions [from Tom Christensen's man(1) manual page].
@@ -30,7 +30,7 @@
 .de M		\" man page reference
 \\fI\\$1\\fR\\|(\\$2)\\$3
 ..
-.TH SUBMIT 1 "$Date: 2010/01/07 13:40:28 $" "xxRELxx" "xxQS_NAMExx User Commands"
+.TH SUBMIT 1 "$Date: 2010/01/12 14:41:02 $" "xxRELxx" "xxQS_NAMExx User Commands"
 .SH NAME
 .IP "qsub   \-" 1i
 submit a batch job to xxQS_NAMExx.
@@ -1822,11 +1822,11 @@ with the name \fBt_min\fP, \fBt_max\fP and \fBt_step\fP
 .SH
 .\"
 .IP "\fB\-tc max_running_tasks\fP"
--allow users to limit concurrent array job task execution. Parameter
-max_running_tasks specifies maximum number of simultaneously running tasks.
-For example we have running SGE with 10 free slots. We call qsub -t 1-100 -tc 2
-jobscript. Then only 2 tasks will be scheduled to run even when 8 slots are
-free.
+Available for \fIqsub\fP and \fIqalter\fP only.
+.sp 1
+-Can be used in conjunction with array jobs (see -t option) to set a
+self-imposed limit on the maximum number of concurrently running tasks
+per job.
 .\"
 .IP "\fB\-terse\fP"
 Available for \fIqsub\fP only.

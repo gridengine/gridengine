@@ -1166,7 +1166,7 @@ gdi2_send_message(sge_gdi_ctx_class_t *sge_ctx, int synchron, const char *tocomp
     *       to a cl_com_handle_t* handle and use this handle to
     *       send/receive messages to the correct endpoint.
     */
-   if ( tocomproc[0] == '\0') {
+   if (tocomproc[0] == '\0') {
       DEBUG((SGE_EVENT,"tocomproc is empty string\n"));
    }
    switch (progid) {
@@ -1273,13 +1273,14 @@ gdi2_receive_message(sge_gdi_ctx_class_t *sge_ctx, char *fromcommproc, u_short *
          use_execd_handle = 0;
          break;
       default:
-         if (strcmp(fromcommproc,prognames[QMASTER]) == 0) {
+         if (strcmp(fromcommproc, prognames[QMASTER]) == 0) {
             use_execd_handle = 0;
          } else {
             if (fromcommproc != NULL && fromcommproc[0] != '\0') {
                use_execd_handle = 1;
             }
          }
+         break;
    }
 
    if (use_execd_handle == 0) {
@@ -1292,7 +1293,7 @@ gdi2_receive_message(sge_gdi_ctx_class_t *sge_ctx, char *fromcommproc, u_short *
       handle = cl_com_get_handle("execd_handle", 0);
       if (handle == NULL) {
          int commlib_error = CL_RETVAL_OK;
-         cl_framework_t  communication_framework = CL_CT_TCP;
+         cl_framework_t communication_framework = CL_CT_TCP;
          DEBUG((SGE_EVENT,"creating handle to \"%s\"\n", fromcommproc));
          if (feature_is_enabled(FEATURE_CSP_SECURITY)) {
             DPRINTF(("using communication lib with SSL framework (execd_handle)\n"));
@@ -1304,8 +1305,8 @@ gdi2_receive_message(sge_gdi_ctx_class_t *sge_ctx, char *fromcommproc, u_short *
                               "execd_handle" , 0 , 1 , 0 );
          handle = cl_com_get_handle("execd_handle", 0);
          if (handle == NULL) {
-            ERROR((SGE_EVENT,MSG_GDI_CANT_CREATE_HANDLE_TOEXECD_S, fromcommproc));
-            ERROR((SGE_EVENT,cl_get_error_text(commlib_error)));
+            ERROR((SGE_EVENT, MSG_GDI_CANT_CREATE_HANDLE_TOEXECD_S, fromcommproc));
+            ERROR((SGE_EVENT, cl_get_error_text(commlib_error)));
          }
       }
    } 
@@ -1315,14 +1316,14 @@ gdi2_receive_message(sge_gdi_ctx_class_t *sge_ctx, char *fromcommproc, u_short *
    if (ret == CL_RETVAL_CONNECTION_NOT_FOUND) {
       if (fromcommproc[0] != '\0' && fromhost[0] != '\0') {
           /* The connection was closed, reopen it */
-          ret = cl_commlib_open_connection(handle,fromhost,fromcommproc, *fromid);
-          INFO((SGE_EVENT,"reopen connection to %s,%s,"sge_U32CFormat" (1)\n", fromhost , fromcommproc , sge_u32c(*fromid)));
+          ret = cl_commlib_open_connection(handle, fromhost, fromcommproc, *fromid);
+          INFO((SGE_EVENT, "reopen connection to %s,%s,"sge_U32CFormat" (1)\n", fromhost, fromcommproc, sge_u32c(*fromid)));
           if (ret == CL_RETVAL_OK) {
-             INFO((SGE_EVENT,"reconnected successfully\n"));
+             INFO((SGE_EVENT, "reconnected successfully\n"));
              ret = cl_commlib_receive_message(handle, fromhost, fromcommproc, *fromid, (cl_bool_t) synchron, 0, &message, &sender);
           } 
       } else {
-         DEBUG((SGE_EVENT,"can't reopen a connection to unspecified host or commproc (1)\n"));
+         DEBUG((SGE_EVENT, "can't reopen a connection to unspecified host or commproc (1)\n"));
       }
    }
 
@@ -1335,7 +1336,7 @@ gdi2_receive_message(sge_gdi_ctx_class_t *sge_ctx, char *fromcommproc, u_short *
       }
 
       if (sender != NULL) {
-         DEBUG((SGE_EVENT,"received from: %s,"sge_U32CFormat"\n",sender->comp_host, sge_u32c(sender->comp_id)));
+         DEBUG((SGE_EVENT, "received from: %s,"sge_U32CFormat"\n", sender->comp_host, sge_u32c(sender->comp_id)));
          if (fromcommproc != NULL && fromcommproc[0] == '\0') {
             strcpy(fromcommproc, sender->comp_name);
          }
@@ -1347,11 +1348,11 @@ gdi2_receive_message(sge_gdi_ctx_class_t *sge_ctx, char *fromcommproc, u_short *
          }
       }
    }
+
    cl_com_free_message(&message);
    cl_com_free_endpoint(&sender);
 
    DRETURN(ret);
-   
 }
 
 

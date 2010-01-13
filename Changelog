@@ -8,6 +8,12 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+JG-2010-01-13-0: Bugfix:      execd does not verify the pe task start user in
+                              non CSP mode
+                 Bugster:     6916492
+                 Issue:       3223
+                 Review:      EB
+
 JF-2010-01-12-0: Bugfix:      qsub -tc man page needs better wording
                  Bugster:     6916055
                  Review:      MP

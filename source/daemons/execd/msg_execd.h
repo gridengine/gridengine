@@ -235,6 +235,7 @@
 #define MSG_JOB_NOFREEQ_USSS          _MESSAGE(29145, _("no free queue for job "sge_U32CFormat" of user "SFN"@"SFN" (localhost = "SFN")"))
 #define MSG_JOB_INVALIDJATASK_REQUEST _MESSAGE(29146, _("invalid task list in job start request"))
 #define MSG_JOB_SAMEPATHSFORINPUTANDOUTPUT_SSS   _MESSAGE(29147, _("same paths given for stdin ("SFQ") and "SFN" ("SFQ")"))
+#define MSG_DENIED_PETASKREQUEST_WRONG_USER_SS   _MESSAGE(29148, _("denied request of user "SFQ" to start a pe task in job of user "SFQ))
 /*
 ** execd_kill_execd.c
 */

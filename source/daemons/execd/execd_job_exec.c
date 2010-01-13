@@ -673,9 +673,20 @@ static int handle_task(sge_gdi_ctx_class_t *ctx, lListElem *petrep, char *commpr
       goto Error;
    }
 
+/*
+ * Verify that it is actually the job owner starting a pe task:
+ * - in CSP mode, we can check against the user certificate
+ * - in general we can compare the pe task request owner against the job owner
+ */
    if (!sge_security_verify_unique_identifier(false, 
                                          lGetString(jep, JB_owner), progname, 0,
                                          host, commproc, id)) {
+      /* Error message is generated in sge_security_verify_unique_identifier */
+      goto Error;
+   }
+   if (strcmp(lGetString(jep, JB_owner), lGetString(petrep, PETR_owner)) != 0) {
+      WARNING((SGE_EVENT, MSG_DENIED_PETASKREQUEST_WRONG_USER_SS,
+              lGetString(petrep, PETR_owner), lGetString(jep, JB_owner)));
       goto Error;
    }
 

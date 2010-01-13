@@ -8,6 +8,10 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+JG-2010-01-13-1: Bugfix:      do not link against libmtmalloc on platform
+                              usol-sparc64 (Solaris <= 7).
+                 Review:      EB
+
 JG-2010-01-13-0: Bugfix:      execd does not verify the pe task start user in
                               non CSP mode
                  Bugster:     6916492

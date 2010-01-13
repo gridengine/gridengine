@@ -1913,6 +1913,10 @@ case SOLARISAMD64:
 #      set MAKEJEMALLOCLIB = 1
 #   endif
 
+   if ( $COMPILE_ARCH == "USOLARIS64" ) then
+      set MAKEMTMALLOCLIB = 0
+   endif
+
    set LFLAGS   = "$LFLAGS $DEBUG_FLAG"
    set LIBRARY_LIBS = "$LIBS"
    if ( $MAKEJEMALLOCLIB == 1 ) then

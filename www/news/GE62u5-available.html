@@ -1,0 +1,105 @@
+<!DOCTYPE html PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="GENERATOR" content="Mozilla/4.79C-CCK-MCD  [en] (X11; U; SunOS 5.9 sun4u) [Netscape]">
+</head>
+<body>
+
+<center>
+<h1>Announcing Grid Engine 6.2 Update 5 Courtesy Binaries</h1>
+Regensburg, Germany -- January 15, 2010
+</center>
+
+<div style="margin-left: 20px;">
+<p>
+We are announcing the availability of the Grid Engine 6.2 Update 5 Courtesy Binaries.
+
+Grid Engine 6.2u5 is a feature update release.
+
+</p>
+</div>
+<div style="margin-left: 40px;">
+<br>
+<h1>What's New</h1>
+
+<p><h3>Support for Machine Readable Table Output in SDM</h3>
+SDM command line commands now support a machine readable output format. 
+This simplifies and eases the integration of SDM and the use of sdmadm commands 
+in scripts.
+</p><br>
+
+<p><h3>Slotwise Preemption</h3>
+The slotwise preemption allows to configure queue subordinate relationships 
+that affect only single slots and not whole queue instances in the subordinated 
+queues. Thus, the slotwise preemption provides a means to ensure that high 
+priority jobs get the resources they need, while at the same time low priority 
+jobs on the same host are not unnecessarily preempted, maximizing the host utilization.
+</p><br>
+
+<p><h3>Topology-aware Scheduling (Job2Core Binding)</h3>
+Serial, threaded and parallel jobs can be bound to CPU sockets and cores to
+achieve maximum application performance when running under SGE. The new CLI
+submission parameter, "-binding", supports a range of binding strategies. The
+CPU topology, numbers of sockets, cores and threads available on a machine and
+used by jobs is reported as SGE load metrics. This feature is available for
+Solaris 10 and OpenSolaris (x64, x86) and Linux (x64, x86) operating systems
+which support the CPU core affinity setting and reporting.
+</p><br>
+
+<p><h3>Job Submission Verifiers Java[TM] Language Binding (JJSV)</h3>
+The server and client side job submission verifier (JSV) has been enhanced
+to support JSVs written in the Java programming language.
+</p><br>
+
+<p><h3>Array Job Throttling</h3>
+Array job throttling enables a user to set a self-imposed limit on the
+maximum number of concurrently running tasks per job when submitting jobs
+with the new "-tc" CLI submission option. This limit can be altered for
+previously submitted jobs. 
+</p><br>
+
+<p>
+The courtesy binaries based on the Grid Engine open source project do not
+contain all functionality which are available in the commercial version of
+the Sun Grid Engine product. Please go to the <a href="http:/www.sun.com/sge">"Sun Grid Engine"</a>
+product pages and get a free 90-day trial version.
+</p><br>
+
+The courtesy binaries are available at:<br>
+<br>
+<div style="margin-left: 40px;"><a
+ href="http://gridengine.sunsource.net/downloads/latest.html">http://gridengine.sunsource.net/downloads/latest.html</a><br>
+</div>
+<br>
+A list of fixed problems in Grid Engine 6.2 is available at<br>
+<br>
+<div style="margin-left: 40px;"><a
+ href="http://gridengine.sunsource.net/project/gridengine/62patches.txt">http://gridengine.sunsource.net/project/gridengine/62patches.txt</a><br>
+</div>
+<br>
+The patch installation notes are available at<br>
+<br>
+<div style="margin-left: 40px;"><a
+ href="http://gridengine.sunsource.net/project/gridengine/install62patch.txt">http://gridengine.sunsource.net/project/gridengine/install62patch.txt</a><br>
+</div>
+<br>
+Please send support questions and feedback to the "users" mailing list of
+the Grid Engine open source project.<br>
+<br>
+
+The corresponding source code tag in the CVS repository has the name<br>
+&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <span style="font-weight: bold;">V62u5_TAG</span> (Grid Engine, ARCo, SGE Inspect, Hedeby)
+<br><br>
+A snapshot of the sources is available at the <a href="http://gridengine.sunsource.net/servlets/ProjectDownloadList">Documents &amp; Files</a> page<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;<a href="http://gridengine.sunsource.net/files/documents/7/216/arco-V62u5_TAG-src.tar.gz">arco-V62u5_TAG-src.tar.gz</a><br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;<a href="http://gridengine.sunsource.net/files/documents/7/215/ge-V62u5_TAG-src.tar.gz">ge-V62u5_TAG-src.tar.gz</a><br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;<a href="http://gridengine.sunsource.net/files/documents/7/217/inspect-V62u5_TAG-src.tar.gz">inspect-V62u5_TAG-src.tar.gz</a><br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;<a href="http://gridengine.sunsource.net/files/documents/7/218/hedeby-source_V10_U5_RELEASE_TAG.tar.gz">hedeby-source_V10_U5_RELEASE_TAG.tar.gz</a><br>
+<br>
+The documentation and release notes are available at<br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <a href="http://wikis.sun.com/display/gridengine62u5">http://wikis.sun.com/display/gridengine62u5</a><br>
+&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; <br>
+
+</body>
+</html>

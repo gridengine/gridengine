@@ -7,7 +7,7 @@
 4) Shutting down the Grid Engine qmaster, scheduler and execution daemons
 5) Installing the patch and restarting the software
 6) Restarting the software
-7) New functionality delivered with Grid Engine 6.2 Update 4 release
+7) New functionality delivered with Grid Engine 6.2 Update 5 release
    
 
 
@@ -19,7 +19,7 @@
 
    If you make a new installation of Grid Engine 6.2 or a newer update
    release please follow the directions in the Sun Grid Engine manuals which
-   can be found at http://wikis.sun.com/display/gridengine62u3/Home
+   can be found at http://wikis.sun.com/display/gridengine62u5/Home
 
    The terms "update release", "patch", "patch release", and "distribution"
    in this document are used interchangeably and refer to the most recent
@@ -125,13 +125,10 @@
    finished.
 
 
-7. New functionality delivered with Grid Engine 6.2 Update 4 release
+7. New functionality delivered with Grid Engine 6.2 Update 5 release
 --------------------------------------------------------------------
-
-   Grid Engine 6.2 Update 4 is a bugfix release and delivers no
-   new feature.
 
    For more information and last minute changes have a look into
    the Sun Grid Engine manuals which can be found at:
 
-   http://wikis.sun.com/display/gridengine62u3/Home
+   http://wikis.sun.com/display/gridengine62u5/Home

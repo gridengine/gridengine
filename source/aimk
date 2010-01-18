@@ -1067,6 +1067,7 @@ case ALPHA5:
 
 case DARWIN:
 case DARWIN_X86:
+case DARWIN_X64:
 case DARWIN_PPC:
    set MAKEWINGRIDLIB   = 0
    set MAKEWINGRIDAPP   = 0
@@ -1110,9 +1111,10 @@ case DARWIN_PPC:
       set CFLAGS = "$OFLAG -no-cpp-precomp -flat_namespace -Wall -Werror -Wstrict-prototypes -DFD_SETSIZE=8192 -DDARWIN -DDARWIN9 -D$BUILDARCH -DGETHOSTBYNAME -DGETHOSTBYADDR_M $DEBUG_FLAG $CFLAGS"
       breaksw
    case "10.*":
-      set CFLAGS = "$OFLAG -no-cpp-precomp -flat_namespace -arch i386 -Wall -Wno-format -Wstrict-prototypes -DFD_SETSIZE=8192 -DDARWIN -DDARWIN10 -D$BUILDARCH -DGETHOSTBYNAME -DGETHOSTBYADDR_M $DEBUG_FLAG $CFLAGS"
-      set SHARED_LFLAGS = "$SHARED_LFLAGS -arch i386"
-      set LFLAGS = "$LFLAGS -arch i386"
+      set CFLAGS = "$OFLAG -no-cpp-precomp -flat_namespace -arch x86_64 -Wall -Wno-format -Wstrict-prototypes -DFD_SETSIZE=8192 -DDARWIN -DDARWIN10 -D$BUILDARCH -DGETHOSTBYNAME -DGETHOSTBYADDR_M $DEBUG_FLAG $CFLAGS"
+      set SHARED_CFLAGS = "$SHARED_CFLAGS -arch x86_64"
+      set SHARED_LFLAGS = "$SHARED_LFLAGS -arch x86_64"
+      set LFLAGS = "$LFLAGS -arch x86_64"
       breaksw
    default:
       echo DARWIN release \"$REL\" not supported!
@@ -2063,7 +2065,7 @@ if ( $JNI == 1 ) then
    #
    if ( $buildarch == aix51 ) then
      set JAVA_LFLAGS="-L$JAVA_HOME/jre/bin/classic"
-   else if ( $buildarch == darwin-x86 || $buildarch == darwin-ppc ) then
+   else if ( $buildarch == darwin-x86 || $buildarch == darwin-x64 || $buildarch == darwin-ppc ) then
      set JAVA_LFLAGS="-L$JAVA_HOME/../Libraries"
    else if ( $buildarch == irix65 ) then
      set JAVA_LFLAGS="-L$JAVA_HOME/jre/lib32/mips"

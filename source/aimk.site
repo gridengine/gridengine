@@ -192,3 +192,12 @@ switch($buildarch)
       breaksw
 endsw
 
+switch($buildarch)
+   case "darwin-x64":
+      set MOTIFHOME = "/opt/local/"
+      breaksw
+   default:
+      breaksw
+endsw
+
+

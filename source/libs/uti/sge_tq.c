@@ -262,7 +262,7 @@ sge_tq_destroy(sge_tq_queue_t **queue) {
    DENTER(TQ_LAYER, "sge_tq_destroy");
    if (queue != NULL && *queue != NULL) {
       pthread_cond_destroy(&(*queue)->cond);
-      sge_sl_destroy(&(*queue)->list, NULL);
+      sge_sl_destroy(&(*queue)->list, (sge_sl_destroy_f)sge_tq_task_destroy);
       FREE(*queue); 
    }
    DRETURN(ret);

@@ -116,6 +116,9 @@ sge_worker_initialize(sge_gdi_ctx_class_t *ctx)
 
    DENTER(TOP_LAYER, "sge_worker_initialize");
 
+   /*
+    * TODO: EB: corresponding destroy function is missing during shutdown
+    */
    sge_tq_create(&Master_Task_Queue);
 
    sge_init_job_number();

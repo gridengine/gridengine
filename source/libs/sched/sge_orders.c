@@ -340,39 +340,23 @@ sge_send_orders2master(sge_evc_class_t *evc, lList **orders)
    lList *alp = NULL;
    lList *malp = NULL;
 
-   int set_busy, order_id = 0;
+   int order_id = 0;
    state_gdi_multi state = STATE_GDI_MULTI_INIT;
    sge_gdi_ctx_class_t *ctx = evc->get_gdi_ctx(evc);
 
    DENTER(TOP_LAYER, "sge_send_orders2master");
 
-   /* do we have to set event client to "not busy"? */
-   set_busy = (evc->ec_get_busy_handling(evc) == EV_BUSY_UNTIL_RELEASED);
-
    if (*orders != NULL) {
       DPRINTF(("SENDING %d ORDERS TO QMASTER\n", lGetNumberOfElem(*orders)));
-      if(set_busy) {
-         order_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_RECORD, SGE_ORDER_LIST, SGE_GDI_ADD,
-                                  orders, NULL, NULL, &state, false);
-      } else {
-         order_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_SEND, SGE_ORDER_LIST, SGE_GDI_ADD,
-                                  orders, NULL, NULL, &state, false);
-         ctx->gdi_wait(ctx, &alp, &malp, &state);
-      }
+      order_id = ctx->gdi_multi(ctx, &alp, SGE_GDI_SEND, SGE_ORDER_LIST, SGE_GDI_ADD,
+                               orders, NULL, NULL, &state, false);
+      ctx->gdi_wait(ctx, &alp, &malp, &state);
 
       if (alp != NULL) {
          ret = answer_list_handle_request_answer_list(&alp, stderr);
-         DEXIT;
-         return ret;
+         DRETURN(ret);
       }
    }   
-
-   /* if necessary, set busy state to "not busy" */
-   if (set_busy) {
-      DPRINTF(("RESETTING BUSY STATE OF EVENT CLIENT\n"));
-      evc->ec_set_busy(evc, 0);
-      evc->ec_commit_multi(evc, &malp, &state);
-   }
 
    /* check result of orders */
    if(order_id > 0) {
@@ -382,8 +366,7 @@ sge_send_orders2master(sge_evc_class_t *evc, lList **orders)
    }
 
    lFreeList(&malp);
-   DEXIT;
-   return ret;
+   DRETURN(ret);
 }
 
 

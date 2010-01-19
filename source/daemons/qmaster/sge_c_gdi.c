@@ -257,6 +257,7 @@ sge_c_gdi(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet,
    const char *target_name = NULL;
    const char *operation_name = NULL;
    int sub_command = 0;
+   int operation   = 0;
    gdi_object_t *ao;
    sge_pack_buffer *pb = &(packet->pb);
 
@@ -271,14 +272,14 @@ sge_c_gdi(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet,
    }
 
    sub_command = SGE_GDI_GET_SUBCOMMAND(task->command);
-   task->command = SGE_GDI_GET_OPERATION(task->command);
+   operation = SGE_GDI_GET_OPERATION(task->command);
    operation_name = sge_gdi_task_get_operation_name(task);
 
    DPRINTF(("GDI %s %s (%s/%s/%d) (%s/%d/%s/%d)\n",
             operation_name, target_name, packet->host, packet->commproc,
             (int)task->id, packet->user, (int)packet->uid, packet->group, (int)packet->gid));
 
-   switch (task->command) {
+   switch (operation) {
       case SGE_GDI_GET:
          MONITOR_GDI_GET(monitor);
          sge_c_gdi_get(ao, packet, task, monitor);
@@ -1253,7 +1254,7 @@ trigger_scheduler_monitoring(sge_gdi_packet_class_t *packet, sge_gdi_task_class_
 /*
  * MT-NOTE: sge_c_gdi_mod() is MT safe
  */
-void sge_c_gdi_mod(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao,
+static void sge_c_gdi_mod(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao,
                    sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task, int sub_command,
                    monitoring_t *monitor)
 {

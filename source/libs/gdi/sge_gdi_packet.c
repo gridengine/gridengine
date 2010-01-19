@@ -628,8 +628,9 @@ const char *
 sge_gdi_task_get_operation_name(sge_gdi_task_class_t *task)
 {
    const char *ret = NULL;
+   int operation = SGE_GDI_GET_OPERATION(task->command);
 
-   switch (task->command) {
+   switch (operation) {
       case SGE_GDI_GET:
          ret = "GET";
          break;

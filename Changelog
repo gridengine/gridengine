@@ -8,6 +8,12 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+DG-2010-01-20-0: Bugfix:      binding parameters parsing does not check number 
+                              values completely
+                 Bugster:     6903955
+                 Issue:       3226
+                 Review:      SH
+
 JG-2010-01-19-0: Bugfix:      o internal GDI clients couldn't issue GDI_ADD
                                 with sub command SGE_GDI_RETURN_NEW_VERSION
                               o scheduler thread reset busy state twice per

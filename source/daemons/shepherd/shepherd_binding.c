@@ -188,13 +188,13 @@ int do_core_binding(void)
       }
       
       first_socket = binding_striding_parse_first_socket(binding);
-      if (first_core == -1) {
+      if (first_socket < 0) {
          shepherd_trace("do_core_binding: error parsing <socket>");
          return -1;
       }
       
       first_core   = binding_striding_parse_first_core(binding);
-      if (first_socket == -1) {
+      if (first_core < 0) {
          shepherd_trace("do_core_binding: error parsing <core>");
          return -1;
       }

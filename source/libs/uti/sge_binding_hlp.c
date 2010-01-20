@@ -53,6 +53,7 @@
 /* local handle for daemon in order to access PLPA library */
 #endif 
 
+static bool is_digit(const char* position, const char stopchar);
 
 /****** sge_binding_hlp/parse_binding_parameter_string() ***********************
 *  NAME
@@ -86,11 +87,6 @@
 *  NOTES
 *     MT-NOTE: parse_binding_parameter_string() is MT safe 
 *
-*  BUGS
-*     ??? 
-*
-*  SEE ALSO
-*     ???/???
 *******************************************************************************/
 bool parse_binding_parameter_string(const char* parameter, binding_type_t* type, 
       dstring* strategy, int* amount, int* stepsize, int* firstsocket, 
@@ -123,9 +119,25 @@ bool parse_binding_parameter_string(const char* parameter, binding_type_t* type,
       }
 
       *firstsocket = binding_linear_parse_socket_offset(parameter);
-      *firstcore   = binding_linear_parse_core_offset(parameter);
-      
-      if (*firstsocket < 0 || *firstcore < 0) {
+
+      if (*firstsocket == -2) {
+         sge_dstring_sprintf(error, "couldn't parse socket number (linear)");
+         return false;     
+      }
+
+      if (*firstsocket < 0) {
+         /* no socket number given, hence we don't scan for the core number */
+         *firstcore = *firstsocket;
+      } else { 
+         *firstcore   = binding_linear_parse_core_offset(parameter);
+         if (*firstcore < 0) {
+            /* there was an error during parsing the core number */
+            sge_dstring_sprintf(error, "couldn't parse core number (linear)");
+            return false;
+         }
+      }
+
+      if (*firstsocket < 0 && *firstcore < 0) {
          /* couldn't find start <socket,core> -> must be determined 
             automatically */
          sge_dstring_sprintf(strategy, "linear_automatic");
@@ -153,13 +165,33 @@ bool parse_binding_parameter_string(const char* parameter, binding_type_t* type,
       *stepsize = binding_striding_parse_step_size(parameter);
 
       if (*stepsize < 0) {
+         /* no given stepsize does lead to stepsize 0 which will 
+            be extended on the execution host to <amount of cores per socket>. 
+            When using a start socket,core the stepsize 0 has to be 
+            included (binding striding:<amount>:0:<socket>,<core>.*/
+         /* *stepsize = 0; */
          sge_dstring_sprintf(error, "couldn't parse stepsize (striding)");
          return false;
       }
 
       *firstsocket = binding_striding_parse_first_socket(parameter);
-      *firstcore = binding_striding_parse_first_core(parameter);
-   
+
+      if (*firstsocket == -2) {
+         sge_dstring_sprintf(error, "couldn't parse socket number (striding)");
+         return false;
+      }
+
+      if (*firstsocket == -1) {
+         *firstcore = -1;
+      } else {
+         /* we need to parse the core number since a socket number is given */
+         *firstcore = binding_striding_parse_first_core(parameter);
+         if (*firstcore < 0) {
+            sge_dstring_sprintf(error, "couldn't parse core number (striding)");
+            return false;
+         }
+      }
+
       if (*firstsocket < 0 || *firstcore < 0) {
          sge_dstring_sprintf(strategy, "striding_automatic");   
 
@@ -217,8 +249,6 @@ bool parse_binding_parameter_string(const char* parameter, binding_type_t* type,
 *  NOTES
 *     MT-NOTE: has_topology_information() is not MT safe 
 *
-*  SEE ALSO
-*     ???/???
 *******************************************************************************/
 bool _has_topology_information() 
 {
@@ -271,8 +301,6 @@ bool has_core_binding()
 *  NOTES
 *     MT-NOTE: has_core_binding() is not MT safe 
 *
-*  SEE ALSO
-*     ???/???
 *******************************************************************************/
 bool _has_core_binding(dstring* error) 
 {
@@ -296,21 +324,14 @@ bool _has_core_binding(dstring* error)
 *     int get_total_amount_of_cores() 
 *
 *  FUNCTION
-*     ??? 
-*
-*  INPUTS
+*     Returns the total amount of cores per socket. 
 *
 *  RESULT
 *     int - Total amount of cores installed on the system. 
 *
-*  EXAMPLE
-*     ??? 
-*
 *  NOTES
 *     MT-NOTE: get_total_amount_of_cores() is MT safe 
 *
-*  SEE ALSO
-*     ???/???
 *******************************************************************************/
 int get_total_amount_of_cores() 
 {
@@ -335,25 +356,23 @@ int get_total_amount_of_cores()
 
 /****** sge_binding_hlp/get_amount_of_cores() **************************************
 *  NAME
-*     get_amount_of_cores() -- ??? 
+*     get_amount_of_cores() -- Get amount of cores per socket. 
 *
 *  SYNOPSIS
 *     int get_amount_of_cores(int socket_number) 
 *
 *  FUNCTION
-*     ??? 
+*     Returns the amount of cores for a specific socket. 
 *
 *  INPUTS
 *     int socket_number - Physical socket number starting at 0. 
 *
 *  RESULT
-*     int - 
+*     int - Amount of cores for the given socket or 0.
 *
 *  NOTES
-*     MT-NOTE: get_amount_of_cores() is not MT safe 
+*     MT-NOTE: get_amount_of_cores() is MT safe 
 *
-*  SEE ALSO
-*     ???/???
 *******************************************************************************/
 int get_amount_of_cores(int socket_number) 
 {
@@ -400,8 +419,6 @@ int get_amount_of_cores(int socket_number)
 *  NOTES
 *     MT-NOTE: get_amount_of_sockets() is not MT safe 
 *
-*  SEE ALSO
-*     ???/???
 *******************************************************************************/
 int get_amount_of_sockets() 
 {
@@ -442,8 +459,6 @@ int get_amount_of_sockets()
 *  NOTES
 *     MT-NOTE: get_processor_id() is MT safe 
 *
-*  SEE ALSO
-*     ???/???
 *******************************************************************************/
 int get_processor_id(int socket_number, int core_number) 
 {
@@ -496,8 +511,6 @@ int get_processor_id(int socket_number, int core_number)
 *  NOTES
 *     MT-NOTE: get_processor_ids_linux() is MT safe 
 *
-*  SEE ALSO
-*     ???/???
 *******************************************************************************/
 bool get_processor_ids_linux(int socket_number, int core_number, int** proc_ids, int* amount)
 {
@@ -604,8 +617,6 @@ bool get_processor_ids_linux(int socket_number, int core_number, int** proc_ids,
 *  NOTES
 *     MT-NOTE: get_topology_linux() is MT safe 
 *
-*  SEE ALSO
-*     ???/???
 *******************************************************************************/
 bool get_topology_linux(char** topology, int* length)
 {
@@ -690,7 +701,7 @@ bool get_topology_linux(char** topology, int* length)
 /*                Beginning of generic parsing functions                      */ 
 /* ---------------------------------------------------------------------------*/
 
-/****** sge_binding_hlp/binding_linear_parse_amount() ******************************
+/****** sge_binding_hlp/binding_linear_parse_amount() **************************
 *  NAME
 *    binding_linear_parse_amount() -- Parse the amount of cores to occupy. 
 *
@@ -700,7 +711,7 @@ bool get_topology_linux(char** topology, int* length)
 *  FUNCTION
 *    Parses a string in order to get the amount of cores requested. 
 * 
-*    The string has following format: "linear:<amount>:[<socket>,<core>]" 
+*    The string has following format: "linear:<amount>[:<socket>,<core>]" 
 *
 *  INPUTS
 *     const char* parameter - The first character of the string  
@@ -712,8 +723,6 @@ bool get_topology_linux(char** topology, int* length)
 *  NOTES
 *     MT-NOTE: binding_linear_parse_amount() is MT safe 
 *
-*  SEE ALSO
-*     ???/???
 *******************************************************************************/
 int binding_linear_parse_amount(const char* parameter) 
 {
@@ -726,11 +735,17 @@ int binding_linear_parse_amount(const char* parameter)
       /* get number after linear: and before \0 or : */ 
       if (sge_strtok(parameter, ":") != NULL) {
          char* n = sge_strtok(NULL, ":");
-         if (n != NULL) {
-            return atoi(n);
-         } 
-      }   
-   } 
+         /* check if amount is given and it is a digit */
+         if (is_digit(n, ':')) {
+            /* check when something follows after an additional ":" 
+               if it is also a digit (the socket number) */
+            char* socket = sge_strtok(NULL, ":");
+            if (socket == NULL || is_digit(socket, ',')) {   
+               return atoi(n);
+            }
+         }
+      }
+   }
 
    /* parsing error */
    return retval;
@@ -738,31 +753,25 @@ int binding_linear_parse_amount(const char* parameter)
 
 /****** sge_binding_hlp/bindingLinearParseSocketOffset() ***************************
 *  NAME
-*     bindingLinearParseSocketOffset() -- ??? 
+*     bindingLinearParseSocketOffset() -- Get socket number of linear request. 
 *
 *  SYNOPSIS
 *     int bindingLinearParseSocketOffset(const char* parameter) 
 *
 *  FUNCTION
-*     ??? 
+*     In a request like "-binding linear:<amount>:<socketnr>,<corenr>" it 
+*     parses the socket number. 
 *
 *  INPUTS
-*     const char* parameter - ??? 
+*     const char* parameter - pointer to the binding request 
 *
 *  RESULT
-*     int - 
-*
-*  EXAMPLE
-*     ??? 
+*     int - if a value >= 0 then this reflects the socket number
+*           if a value < 0 then there was a parsing error or no socket number was given
 *
 *  NOTES
 *     MT-NOTE: bindingLinearParseSocketOffset() is not MT safe 
 *
-*  BUGS
-*     ??? 
-*
-*  SEE ALSO
-*     ???/???
 *******************************************************************************/
 int binding_linear_parse_socket_offset(const char* parameter)
 {
@@ -774,9 +783,14 @@ int binding_linear_parse_socket_offset(const char* parameter)
          if (sge_strtok(NULL, ":") != NULL) {
             char* offset = sge_strtok(NULL, ",");
             if (offset != NULL) { 
-               /* offset points to <socket> */
-               return atoi(offset);
-            } 
+               if (is_digit(offset, ',')) {
+                  /* offset points to <socket> */
+                  return atoi(offset);
+               } else {
+                  /* there is something but no a number */
+                  return -2;
+               }
+            }
          }
       }
    }
@@ -787,31 +801,25 @@ int binding_linear_parse_socket_offset(const char* parameter)
 
 /****** sge_binding_hlp/bindingLinearParseCoreOffset() *****************************
 *  NAME
-*     bindingLinearParseCoreOffset() -- ??? 
+*     bindingLinearParseCoreOffset() -- Get core number of linear request.
 *
 *  SYNOPSIS
 *     int bindingLinearParseCoreOffset(const char* parameter) 
 *
 *  FUNCTION
-*     ??? 
+*     In a request like "-binding linear:<amount>:<socketnr>,<corenr>" it 
+*     parses the core number. 
 *
 *  INPUTS
-*     const char* parameter - ??? 
+*     const char* parameter - pointer to the binding request 
 *
 *  RESULT
-*     int - 
-*
-*  EXAMPLE
-*     ??? 
+*     int - if a value >= 0 then this reflects the core number 
+*           if a value < 0 then there was a parsing error or no core number was given
 *
 *  NOTES
 *     MT-NOTE: bindingLinearParseCoreOffset() is not MT safe 
 *
-*  BUGS
-*     ??? 
-*
-*  SEE ALSO
-*     ???/???
 *******************************************************************************/
 int binding_linear_parse_core_offset(const char* parameter)
 {
@@ -822,8 +830,13 @@ int binding_linear_parse_core_offset(const char* parameter)
          /* fetch first number (if any) */
          if (sge_strtok(NULL, ":") != NULL) {
             char* offset = sge_strtok(NULL, ",");
-            if (offset != NULL && 
+            if (offset != NULL &&
                   (offset = sge_strtok(NULL, ":")) != NULL) {
+               /* check if something follows, what is not a number */
+               if (!is_digit(offset, ' ')) {
+                  /* core offset contains junk */
+                  return -1;
+               }
                /* offset points to <core> */
                return atoi(offset);
             }
@@ -859,8 +872,6 @@ int binding_linear_parse_core_offset(const char* parameter)
 *  NOTES
 *     MT-NOTE: binding_parse_type() is MT safe 
 *
-*  SEE ALSO
-*     ???/???
 *******************************************************************************/
 binding_type_t binding_parse_type(const char* parameter)
 {
@@ -899,10 +910,8 @@ binding_type_t binding_parse_type(const char* parameter)
 *     bool - True if the parameter has the expected syntax.
 *
 *  NOTES
-*     MT-NOTE: binding_explicit_has_correct_syntax() is MT safe 
+*     MT-NOTE: binding_explicit_has_correct_syntax() is not MT safe 
 *
-*  SEE ALSO
-*     ???/???
 *******************************************************************************/
 bool binding_explicit_has_correct_syntax(const char* parameter) 
 {
@@ -916,29 +925,48 @@ bool binding_explicit_has_correct_syntax(const char* parameter)
 
    if (sge_strtok(parameter, ":") != NULL) {
       char* socket = NULL;
+      char* core   = NULL;
 
       /* first socket,core is mandatory */ 
       if ((socket = sge_strtok(NULL, ",")) == NULL) {
          /* we have no first socket number */
          return false;
       }
+      /* check if <socket> begins with a digit */
+      if (!is_digit(socket, ',')) {
+         return false;
+      }
+
       /* check for core */
-      if (sge_strtok(NULL, ":") == NULL) {
+      if ((core = sge_strtok(NULL, ":")) == NULL) {
          /* we have no first core number */
          return false;
       }
-     
+      /* check if <core> begins with a digit */
+      if (!is_digit(core, ':')) {
+         return false;
+      }
+
       do {
          /* get socket number */ 
          if ((socket = sge_strtok(NULL, ",")) != NULL) {
+            /* check if <socket> begins with a digit */
+            if (!is_digit(socket, ',')) {
+               return false;
+            }
 
             /* we have a socket therefore we need a core number */
-            if (sge_strtok(NULL, ":") == NULL) {
+            if ((core = sge_strtok(NULL, ":")) == NULL) {
                /* no core found */
                return false;
-            }   
+            }
+            
+            /* check if <core> is a number */
+            if (!is_digit(core, ':')) {
+               return false;
+            }
 
-         } 
+         } /* end if <socket> */ 
       } while (socket != NULL);  /* we try to continue with the next socket if possible */ 
 
    } else {
@@ -970,10 +998,8 @@ bool binding_explicit_has_correct_syntax(const char* parameter)
 *           >= 0 in case the core number could parsed successfully.
 *
 *  NOTES
-*     MT-NOTE: binding_striding_parse_first_core() is MT safe 
+*     MT-NOTE: binding_striding_parse_first_core() is not MT safe 
 *
-*  SEE ALSO
-*     ???/???
 *******************************************************************************/
 int binding_striding_parse_first_core(const char* parameter)
 {
@@ -989,8 +1015,9 @@ int binding_striding_parse_first_core(const char* parameter)
                if (sge_strtok(NULL, ",") != NULL) {
                   /* fetch first <core> */ 
                   char* first_core = NULL;
-                  /* end usually with line end */
-                  if ((first_core = sge_strtok(NULL, ";")) != NULL) {
+                  /* end usually with line end (":" in case of config file) */
+                  if ((first_core = sge_strtok(NULL, ":")) != NULL 
+                        && is_digit(first_core, ' ')) {
                      return atoi(first_core);
                   } 
                }
@@ -1024,10 +1051,8 @@ int binding_striding_parse_first_core(const char* parameter)
 *     int - Returns the socket number in case it could be parsed otherwise -1
 *
 *  NOTES
-*     MT-NOTE: binding_striding_parse_first_socket() is MT safe 
+*     MT-NOTE: binding_striding_parse_first_socket() is not MT safe 
 *
-*  SEE ALSO
-*     ???/???
 *******************************************************************************/
 int binding_striding_parse_first_socket(const char* parameter)
 {
@@ -1041,8 +1066,13 @@ int binding_striding_parse_first_socket(const char* parameter)
             if (sge_strtok(NULL, ":") != NULL) {
                /* fetch first socket */ 
                char* first_socket = NULL;
-               if ((first_socket = sge_strtok(NULL, ",")) != NULL) {
-                  return atoi(first_socket);
+               if ((first_socket = sge_strtok(NULL, ",")) != NULL) { 
+                  if (is_digit(first_socket, ',')) {
+                     return atoi(first_socket);
+                  } else {
+                     /* socket number is given but is not a number */
+                     return -2;
+                  }
                } 
             }
          }
@@ -1074,10 +1104,8 @@ int binding_striding_parse_first_socket(const char* parameter)
 *     int - Returns the amount of cores to bind to otherwise -1.
 *
 *  NOTES
-*     MT-NOTE: binding_striding_parse_amount() is MT safe 
+*     MT-NOTE: binding_striding_parse_amount() is not MT safe 
 *
-*  SEE ALSO
-*     ???/???
 *******************************************************************************/
 int binding_striding_parse_amount(const char* parameter)
 {
@@ -1089,11 +1117,15 @@ int binding_striding_parse_amount(const char* parameter)
       if (sge_strtok(parameter, ":") != NULL) {
          char* amount = NULL;
 
-         if ((amount = sge_strtok(NULL, ":")) != NULL) {
-            /* get the number from amount */
-            /* DG TODO check if this is really a number */
-            return atoi(amount);
-         }      
+         if ((amount = sge_strtok(NULL, ":")) != NULL 
+               && is_digit(amount, ':')) {
+            /* check if step size if given */ 
+            char* stepsize = sge_strtok(NULL, ":");
+            if (is_digit(stepsize, ':')) {
+               /* get the number from amount */
+               return atoi(amount);
+            }
+         }
       }
    }
 
@@ -1123,10 +1155,8 @@ int binding_striding_parse_amount(const char* parameter)
 *     int - Returns the step size or -1 when it could not been parsed. 
 *
 *  NOTES
-*     MT-NOTE: binding_striding_parse_step_size() is MT safe 
+*     MT-NOTE: binding_striding_parse_step_size() is not MT safe 
 *
-*  SEE ALSO
-*     ???/???
 *******************************************************************************/
 int binding_striding_parse_step_size(const char* parameter)
 {
@@ -1137,14 +1167,12 @@ int binding_striding_parse_step_size(const char* parameter)
          if (sge_strtok(NULL, ":") != NULL) {
             /* fetch step size */
             char* stepsize = NULL;
-            if ((stepsize = sge_strtok(NULL, ":")) != NULL) {
-               /* the step size must be followed by " " or ":" or "\0" 
-                  in order to avoid garbage like "striding:2:0,0" */
-               if ((stepsize+1) == NULL || *(stepsize+1) == ' ' || 
-                     *(stepsize+1) == ':' || *(stepsize+1) == '\0') {
+            if ((stepsize = sge_strtok(NULL, ":")) != NULL 
+                  && is_digit(stepsize, ':')) {
+                  /* the step size must be followed by " " or ":" or "\0" 
+                     in order to avoid garbage like "striding:2:0,0" */
                   /* return step size */
                   return atoi(stepsize);
-               }     
             }
          }
       }
@@ -1181,7 +1209,7 @@ int binding_striding_parse_step_size(const char* parameter)
 *     const char * - topology string like "SCc"
 *******************************************************************************/
 const char *
-binding_get_topology_for_job(const char *binding_result) {
+binding_get_topology_for_job(const char* binding_result) {
    const char *topology_result = NULL;
 
    if (binding_result != NULL) {
@@ -1222,8 +1250,6 @@ binding_get_topology_for_job(const char *binding_result) {
 *  NOTES
 *     MT-NOTE: topology_string_to_socket_core_lists() is MT safe 
 *
-*  SEE ALSO
-*     ???/???
 *******************************************************************************/
 bool
 topology_string_to_socket_core_lists(const char* topology, int** sockets, 
@@ -1266,4 +1292,45 @@ topology_string_to_socket_core_lists(const char* topology, int** sockets,
    return retval;
 }
 
+/****** sge_binding_hlp/is_digit() *********************************************
+*  NAME
+*     is_digit() -- Checks if char array consists of digits. 
+*
+*  SYNOPSIS
+*     static bool is_digit(const char* position, const char stopchar) 
+*
+*  FUNCTION
+*     Checks if the character array contains only digits till the end of the 
+*     array or to a given stop character. If there is no digit found or 
+*     the input pointer is a null pointer 'false' is returned. 
+*     The input pointer have to point to the first digit of a number.
+*
+*  INPUTS
+*     const char* position - pointer to the character array 
+*     const char stopchar  - stop scanning at this parameter 
+*
+*  RESULT
+*     static bool - true if a number is found false if not  
+*
+*  NOTES
+*     MT-NOTE: is_digit() is MT safe 
+*
+*******************************************************************************/
+static bool is_digit(const char* position, const char stopchar) {
+   
+   if (position == NULL || *position == '\0' || !isdigit(*position)) {
+      return false;
+   }
+   
+   position++;
+
+   while (position != NULL && *position != '\0' && *position != stopchar) {
+      if (!isdigit(*position)) {
+         return false;
+      }
+      position++;
+   }
+
+   return true;
+}
 

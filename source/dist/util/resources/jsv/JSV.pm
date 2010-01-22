@@ -66,7 +66,7 @@ use FindBin;
 ##########################################################################
 # global variables
 my %config = (
-   log_file        => '/tmp/jsv.log',
+   log_file        => '/tmp/jsv_'.getppid().'.log',
    logging_enabled => 0,
    head_incoming   => '>>>',
    head_outgoing   => '<<<',

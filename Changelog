@@ -8,6 +8,12 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+MP-2010-01-22-0: Bugfix:      jsv logging does not work when multiple users 
+                              submit jobs on same submit host
+                 Bugster:     6899014
+                 Issue:       3228
+                 Review:      EB
+
 DG-2010-01-22-0: Cleanup:     Checked in results of plpa configure run in order
                               to avoid build problems.
                  Review:      SH

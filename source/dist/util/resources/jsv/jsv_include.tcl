@@ -32,7 +32,7 @@
 #___INFO__MARK_END__
 
 set logging_enabled "false"
-set logfile "/tmp/jsv.log"
+set logfile "/tmp/jsv_[pid].log"
 
 # Current state of the script
 # Might be "initialized", "started" or "verifying"

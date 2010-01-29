@@ -362,21 +362,11 @@ sge_c_gdi_get(gdi_object_t *ao, sge_gdi_packet_class_t *packet, sge_gdi_task_cla
          answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_END);
          DEXIT;
          return;
-      case SGE_CONF_LIST: {
-#if 0 /* EB: TODO PACKING */
-         do_gdi_get_config_list(request, answer, before, after);
-#else
-         lList *conf = NULL;
-
-         conf = sge_get_configuration();
-
-         task->data_list = lSelectHashPack("", conf, task->condition, task->enumeration, false, NULL);
+      case SGE_CONF_LIST:
+         task->data_list = sge_get_configuration(task->condition, task->enumeration);
          task->do_select_pack_simultaneous = false;
          sprintf(SGE_EVENT, MSG_GDI_OKNL);
          answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_END);
-         lFreeList(&conf);
-      }
-#endif
          DEXIT;
          return;
       case SGE_SC_LIST: /* TODO EB: move this into the scheduler configuration,

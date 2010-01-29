@@ -37,7 +37,7 @@
 
 int sge_read_configuration(sge_gdi_ctx_class_t *ctx, lListElem *aSpoolContext, lList** config_list, lList *anAnswer);
 
-lList*     sge_get_configuration(void);
+lList*     sge_get_configuration(const lCondition *condition, const lEnumeration *enumeration);
 lListElem* sge_get_configuration_for_host(const char* aName);
 lListElem* sge_get_configuration_entry_by_name(const char *aHost, const char *anEntryName);
 

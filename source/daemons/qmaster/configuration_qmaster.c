@@ -709,7 +709,7 @@ static lListElem *get_entry_from_conf(lListElem *aConf, const char *anEntryName)
 /*
  * Return a *COPY* of the master configuration.
  */
-lList* sge_get_configuration()
+lList* sge_get_configuration(const lCondition *condition, const lEnumeration *enumeration)
 {
    lList *conf = NULL;
    object_description *object_base = object_type_get_object_description();
@@ -719,7 +719,7 @@ lList* sge_get_configuration()
 
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
    
-   conf = lCopyListHash(lGetListName(config_list), config_list, false);
+   conf = lSelectHashPack("", config_list, condition, enumeration, false, NULL);
 
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
    

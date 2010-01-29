@@ -8,7 +8,14 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
-JG-2010-01-29-0: Bugfix:      modifying the global configuration makes sge_qmaster unresponsive in a huge cluster
+JG-2010-01-29-1: Bugfix:      exec host object gets spooled whenever an execd
+                              connects to qmaster
+                 Bugster:     6920597
+                 Issue:       3236
+                 Review:      SH
+
+JG-2010-01-29-0: Bugfix:      modifying the global configuration makes
+                              sge_qmaster unresponsive in a huge cluster
                  Bugster:     6920592
                  Issue:       3235
                  Review:      SH

@@ -87,6 +87,8 @@
 #include "sched/debit.h"
 #include "sched/valid_queue_user.h"
 
+#include "uti/sge_string.h"
+
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
@@ -732,7 +734,6 @@ void sge_update_load_values(sge_gdi_ctx_class_t *ctx, const char *rhost, lList *
    host_ep = NULL;
    /* loop over all received load values */
    for_each(ep, lp) {
-
       /* get name, value and other info */
       const char *name = lGetString(ep, LR_name);
       const char *value = lGetString(ep, LR_value);
@@ -754,7 +755,6 @@ void sge_update_load_values(sge_gdi_ctx_class_t *ctx, const char *rhost, lList *
 
       /* update load value list of reported host */
       if (*hepp == NULL || sge_hostcmp(host, lGetHost(*hepp, EH_name)) != 0) {
-   
          if (*hepp != NULL) {
             /* we have a host change, send events for the previous one */
             sge_event_spool(ctx, &answer_list, 0, sgeE_EXECHOST_MOD, 
@@ -778,17 +778,22 @@ void sge_update_load_values(sge_gdi_ctx_class_t *ctx, const char *rhost, lList *
 
          lRemoveElem(lGetList(*hepp, EH_load_list), &lep);
       } else {
-         /* replace old load value or add a new one */
-         if (is_static == 1) {
-            statics_changed = true;
-         }
-
+         /* add a new load value */
          lep = lGetSubStr(*hepp, HL_name, name, EH_load_list);  
          if (lep == NULL) {
             lep = lAddSubStr(*hepp, HL_name, name, EH_load_list, HL_Type);
-            DPRINTF(("%s: adding load value: "SFQ" = "SFQ"\n", 
-                  host, name, value));
-         } 
+            DPRINTF(("%s: adding load value: "SFQ" = "SFQ"\n", host, name, value));
+            if (is_static == 1) {
+               statics_changed = true;
+            }
+         } else {
+            /* replace an existing load value */
+            if (is_static == 1) {
+               if (sge_strnullcmp(value, lGetString(lep, HL_value)) != 0) {
+                  statics_changed = true;
+               }
+            }
+         }
 
          /* copy value */
          lSetString(lep, HL_value, value); 

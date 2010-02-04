@@ -92,6 +92,7 @@
 #include "sge_reporting_qmaster.h"
 #include "sge_job_qmaster.h"
 #include "sge_job_verify.h"
+#include "sge_ack.h"
 
 #include "cull/cull_list.h"
 
@@ -632,6 +633,61 @@ void tag_all_host_gdil(lListElem *jatep)
       const lListElem *first_at_host = lGetElemHost(gdil, JG_qhostname, host);
       if (gdil_ep == first_at_host) {
          lSetUlong(gdil_ep, JG_tag_slave_job, 1);
+      }
+   }
+}
+
+/****** sge_job_qmaster/ack_all_slaves() ***************************************
+*  NAME
+*     ack_all_slaves() -- send an ACK to all slave hosts
+*
+*  SYNOPSIS
+*     void 
+*     ack_all_slaves(sge_gdi_ctx_class_t *ctx,
+*                    u_long32 job_id, u_long32 ja_task_id,
+*                    const lListElem *ja_task, u_long32 type) 
+*
+*  FUNCTION
+*     Sends an acknowledge message for a tighly integrated job to all
+*     slave exec hosts.
+*
+*  INPUTS
+*     sge_gdi_ctx_class_t *ctx - gdi context
+*     u_long32 job_id          - job id
+*     u_long32 ja_task_id      - job array task id
+*     const lListElem *ja_task - the job array task
+*     u_long32 type            - which ACK to send, e.g. ACK_SIGNAL_SLAVE
+*
+*  NOTES
+*     MT-NOTE: ack_all_slaves() is MT safe 
+*******************************************************************************/
+void
+ack_all_slaves(sge_gdi_ctx_class_t *ctx, u_long32 job_id, u_long32 ja_task_id,
+               const lListElem *ja_task, u_long32 type)
+{
+   const lList *gdil = lGetList(ja_task, JAT_granted_destin_identifier_list);
+   const lListElem *gdil_ep;
+
+   for_each (gdil_ep, gdil) {
+      const char *host = lGetHost(gdil_ep, JG_qhostname);
+      /* we only signal a slave host once
+       * if the pe job spawns multiple queues there might be multiple entries per host
+       */
+      const lListElem *first_at_host = lGetElemHost(gdil, JG_qhostname, host);
+      if (gdil_ep == first_at_host) {
+         u_long32 dummymid = 0;
+         sge_pack_buffer pb;
+
+         init_packbuffer(&pb, 256, 0); /* this is more than sufficient */
+         pack_ack(&pb, type, job_id, ja_task_id, NULL);
+         /*
+          * Send the ack to slave exec host. No special error handling done.
+          * In a huge parallel job, it is not unusual for a slave host being
+          * down, we don't want to see tons of error messages in the messages
+          * file. The caller of this functions has to handle this situation.
+          */
+         gdi2_send_message_pb(ctx, 0, prognames[EXECD], 1, host, TAG_ACK_REQUEST, &pb, &dummymid);
+         clear_packbuffer(&pb);
       }
    }
 }

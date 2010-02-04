@@ -8,6 +8,11 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+JG-2010-02-04-0: Bugfix:      finishing a tightly integrated job takes too long
+                 Bugster:     6921246
+                 Issue:       3237
+                 Review:      HP, SH
+
 JG-2010-01-29-1: Bugfix:      exec host object gets spooled whenever an execd
                               connects to qmaster
                  Bugster:     6920597

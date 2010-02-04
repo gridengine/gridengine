@@ -602,9 +602,10 @@
 #define MSG_JOB_DIEDTHROUGHSIG_SSUUS   _MESSAGE(33580, _("task "SFN" at "SFN" of job "sge_U32CFormat"."sge_U32CFormat" died through signal "SFN))
 #define MSG_JOB_TASKFAILED_SSUUU       _MESSAGE(33581, _("task "SFN" at "SFN" of job "sge_U32CFormat"."sge_U32CFormat" failed "sge_U32CFormat))
 #define MSG_JOB_TASKFINISHED_SSUU      _MESSAGE(33582, _("task "SFN" at "SFN" of job "sge_U32CFormat"."sge_U32CFormat" finished"))
-#define MSG_JOB_JOBTASKFAILED_S       _MESSAGE(33583, _("tightly integrated parallel task "SFN" failed - killing job"))
+#define MSG_JOB_JOBTASKFAILED_S        _MESSAGE(33583, _("tightly integrated parallel task "SFN" failed - killing job"))
 #define MSG_OBJ_NOTRUNNING             _MESSAGE(33584, _("<not running>"))
 #define MSG_EXECD_UNKNOWNJ_SUUSUS      _MESSAGE(33585, _("execd "SFN" reports unknown job ("sge_U32CFormat"."sge_U32CFormat"/"SFN") with unknown state "sge_U32CFormat" in queue "SFQ))
+#define MSG_JOB_NOTALLSLAVEEND_S       _MESSAGE(33586, _("not all slave execds belonging to tightly integrated parallel job "SFN" reported job end"))
 
 
 /*

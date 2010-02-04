@@ -73,7 +73,7 @@
  * Do not wait forever, but only n report intervals.
  * Could be made configurable in qmaster_params.
  */
-#define MAX_MASTER_TASK_FINISH_BEFORE_EXIT 5
+#define MAX_MASTER_TASK_FINISH_BEFORE_EXIT 20
 
 static char *status2str(u_long32 status);
 
@@ -105,25 +105,69 @@ u_long32 status
    return s;
 }
 
-/* ----------------------------------------
+/*
+ * Protocol between qmaster and execd for tightly integrated parallel jobs:
+ * ========================================================================
+ * 
+ * Job delivery: 
+ *    - all slave hosts are notified about the job
+ *    - once all slave hosts acknowledged having got the job,
+ *      the master task is delivered
+ *
+ * During job runtime
+ *    - master host reports master task usage
+ *    - slave tasks get started, slave exec hosts report usage
+ *      and slave task exit
+ *
+ * Job finish:
+ *    - master tasks reports finish
+ *    - all slave hosts are tagged (in ja_task gdil)
+ *    - all slave hosts are notified about job finish (ACK_SIGNAL_SLAVE)
+ *      triggeres kill of still running tasks and sending of a final report
+ *    - master task report is acknowledged with ACK_JOB_REPORT_RESEND,
+ *      triggering flushed resend of the master task finish report
+ *    - if slave hosts still report the job running, resend the ACK_SIGNAL_SLAVE
+ *    - when slave host sends final report, it is untagged (in ja_task gdil)
+ *    - when qmaster gets resent master task final report
+ *      - and all slaves are done, treat the job as finished
+ *      - not all slaves are done, again trigger resend of master task report
+ *    - waiting for all slave hosts to finish is terminated when the master task 
+ *      report got received more than MAX_MASTER_TASK_FINISH_BEFORE_EXIT times.
+ *      In this case (which happens for example when a slave host is down),
+ *      the job is treated as finished.
+ */
 
-NAME 
-   process_job_report
-
-DESCR
-   Process 'report' containing a job report list from 
-   'commproc' at 'rhost'.
-
-   The 'pb' may get used to collect requests that will be 
-   generated in this process. The caller should reply it
-   to the sender of this job report list if 'pb' remains
-   not empty.
-
-RETURN
-   void  because all necessary state changings are done 
-         in the apropriate objects
-
-   ---------------------------------------- */
+/****** job_report_qmaster/process_job_report() ********************************
+*  NAME
+*     process_job_report() -- process a job report from execd
+*
+*  SYNOPSIS
+*     void 
+*     process_job_report(sge_gdi_ctx_class_t *ctx, lListElem *report,
+*                        lListElem *hep, char *rhost, char *commproc,
+*                        sge_pack_buffer *pb, monitoring_t *monitor) 
+*
+*  FUNCTION
+*     Process 'report' containing a job report list from 
+*     'commproc' at 'rhost'.
+*  
+*     The 'pb' may get used to collect requests that will be 
+*     generated in this process. The caller should reply it
+*     to the sender of this job report list if 'pb' remains
+*     not empty.
+*
+*  INPUTS
+*     sge_gdi_ctx_class_t *ctx - gdi context
+*     lListElem *report        - the job report
+*     lListElem *hep           - the host for which we got the job report
+*     char *rhost              - name of the remote host having sent the report
+*     char *commproc           - the commproc name
+*     sge_pack_buffer *pb      - pack buffer for sending answers (ACK)
+*     monitoring_t *monitor    - monitor
+*
+*  NOTES
+*     MT-NOTE: process_job_report() is MT safe 
+*******************************************************************************/
 void process_job_report(sge_gdi_ctx_class_t *ctx, lListElem *report,
                        lListElem *hep, char *rhost, char *commproc,
                        sge_pack_buffer *pb, monitoring_t *monitor)
@@ -440,26 +484,27 @@ void process_job_report(sge_gdi_ctx_class_t *ctx, lListElem *report,
                 */
                if (lGetUlong(jatep, JAT_status) == JTRANSFERING) {
                   /* if tag is still 1, this is the ACK for slave notification */
-               if (lGetUlong(first_at_host, JG_tag_slave_job) != 0) {
+                  if (lGetUlong(first_at_host, JG_tag_slave_job) != 0) {
                      DPRINTF(("slave job "SFN" arrived on host %s\n", job_id_string, rhost));
-                  lSetUlong(first_at_host, JG_tag_slave_job, 0);
+                     lSetUlong(first_at_host, JG_tag_slave_job, 0);
 
-                  /* should trigger a fast delivery of the job to master execd 
-                     script but only when all other slaves have also arrived */ 
-                  if (is_pe_master_task_send(jatep)) {
-                     /* triggers direct job delivery to master execd */
-                     lSetString(jatep, JAT_master_queue, lGetString(lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)), JG_qname));
+                     /* should trigger a fast delivery of the job to master execd 
+                      * script but only when all other slaves have also arrived
+                      */ 
+                     if (is_pe_master_task_send(jatep)) {
+                        /* triggers direct job delivery to master execd */
+                        lSetString(jatep, JAT_master_queue, lGetString(lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)), JG_qname));
 
-                     DPRINTF(("trigger retry of job delivery to master execd\n"));
-                     lSetUlong(jatep, JAT_start_time, 0);
-                     cancel_job_resend(jobid, jataskid);
-                     trigger_job_resend(sge_get_gmt(), NULL, jobid, jataskid, 0);
+                        DPRINTF(("trigger retry of job delivery to master execd\n"));
+                        lSetUlong(jatep, JAT_start_time, 0);
+                        cancel_job_resend(jobid, jataskid);
+                        trigger_job_resend(sge_get_gmt(), NULL, jobid, jataskid, 0);
+                     }
                   }
-               }
-            } else {
+               } else {
                   /* This is a slave execd report while the job is running.
                    * When the master task has finished, the hosts gdil is tagged ==> we send a ACK_SIGNAL_SLAVE
-                   * When whe slave report contains JR_usage with exit_status, we are done, untag gdil, pack_job_exit
+                   * When the slave report contains JR_usage with exit_status, we are done, untag gdil, pack_job_exit
                    */
                   if (lGetUlong(first_at_host, JG_tag_slave_job) != 0) {
                      if (lGetElemStr(lGetList(jr, JR_usage), UA_name, "exit_status") != NULL) {
@@ -522,8 +567,10 @@ void process_job_report(sge_gdi_ctx_class_t *ctx, lListElem *report,
                    */
                   u_long32 master_tag = lGetUlong(lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)), JG_tag_slave_job);
                   if (master_tag == 0) {
+                     ack_all_slaves(ctx, jobid, jataskid, jatep, ACK_SIGNAL_SLAVE);
                      tag_all_host_gdil(jatep);
                      skip_job_exit = 1;
+                     pack_ack(pb, ACK_JOB_REPORT_RESEND, jobid, jataskid, pe_task_id_str);
                   } else {
                      /* 
                       * skip sge_job_exit() and pack_job_exit() in case there
@@ -535,7 +582,10 @@ void process_job_report(sge_gdi_ctx_class_t *ctx, lListElem *report,
                            skip_job_exit = 1;
                            master_tag++;
                            lSetUlong(lFirst(lGetList(jatep, JAT_granted_destin_identifier_list)), JG_tag_slave_job, master_tag);
+                           pack_ack(pb, ACK_JOB_REPORT_RESEND, jobid, jataskid, pe_task_id_str);
                         }
+                     } else {
+                        WARNING((SGE_EVENT, MSG_JOB_NOTALLSLAVEEND_S, job_id_string));
                      }
                   }
                }

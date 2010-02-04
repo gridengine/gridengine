@@ -307,6 +307,26 @@ int do_ack(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg)
 
             break;
  
+         case ACK_JOB_REPORT_RESEND:
+/*
+**          sent by qmaster instead of ACK_JOB_EXIT to make execd
+**          resend the job report
+*/
+            jobid = lGetUlong(ack, ACK_id);
+            jataskid = lGetUlong(ack, ACK_id2);
+            pe_task_id_str = lGetString(ack, ACK_str);
+
+            DPRINTF(("resending report for exiting job "sge_u32"/"sge_u32"/%s\n", 
+                    jobid, jataskid, pe_task_id_str?pe_task_id_str:""));
+
+            if ((jr = get_job_report(jobid, jataskid, pe_task_id_str))) {
+               flush_job_report(jr);
+            } else {
+               DPRINTF(("job requested to resend "sge_u32"."sge_u32" not found\n", jobid, jataskid));
+            }
+
+            break;
+ 
          case ACK_SIGNAL_JOB:
 /*
 **          This is the answer of qmaster

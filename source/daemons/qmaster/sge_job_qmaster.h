@@ -64,6 +64,8 @@ bool job_has_valid_account_string(const char *name, lList **answer_list);
 bool is_pe_master_task_send(lListElem *jatep); 
 bool all_slave_jobs_finished(lListElem *jatep);
 void tag_all_host_gdil(lListElem *jatep);
+void ack_all_slaves(sge_gdi_ctx_class_t *ctx, u_long32 job_id, u_long32 ja_task_id,
+                    const lListElem *ja_task, u_long32 type);
 
 void sge_add_jatask_event(ev_event type, lListElem *jep, lListElem *jatask);
 

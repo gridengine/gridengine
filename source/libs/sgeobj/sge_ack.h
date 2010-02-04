@@ -43,7 +43,8 @@ enum {
    ACK_SIGJOB,           /* send back by execd, when qmaster signals job      */
    ACK_SIGQUEUE,         /* send back by execd, when qmaster signals queue    */
    ACK_LOAD_REPORT,      /* send back by qmaster, when execd sends a load report */
-   ACK_SIGNAL_SLAVE      /* sent to slave execds when master task finished    */
+   ACK_SIGNAL_SLAVE,     /* sent to slave execds when master task finished    */
+   ACK_JOB_REPORT_RESEND /* sent to master execd to resend master task finish as trigger */
 };
 
 int pack_ack(sge_pack_buffer *pb, u_long32 type, u_long32 id, u_long32 id2, const char *str);

@@ -8,6 +8,12 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+DG-2010-02-05-0: Bugfix:      consistency of JSV binding information is not 
+                              checked completely
+                 Bugster:     6903956
+                 Issue:       3238
+                 Review:      SH
+
 JG-2010-02-04-0: Bugfix:      finishing a tightly integrated job takes too long
                  Bugster:     6921246
                  Issue:       3237

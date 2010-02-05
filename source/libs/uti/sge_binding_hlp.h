@@ -69,6 +69,8 @@ int binding_striding_parse_first_socket(const char* parameter);
 int binding_striding_parse_step_size(const char* parameter);
 
 bool binding_explicit_has_correct_syntax(const char* parameter);
+int get_explicit_amount(const char* expl);
+bool check_explicit_binding_string(const char* expl, const int amount);
 
 #if defined(PLPA_LINUX)
 

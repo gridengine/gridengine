@@ -48,11 +48,6 @@
 #  include <sys/pset.h>
 #endif 
 
-#if defined(PLPA_LINUX)
-/* module global variables */
-/* local handle for daemon in order to access PLPA library */
-#endif 
-
 static bool is_digit(const char* position, const char stopchar);
 
 /****** sge_binding_hlp/parse_binding_parameter_string() ***********************
@@ -974,6 +969,13 @@ bool binding_explicit_has_correct_syntax(const char* parameter)
       return false;
    }
 
+   /* check if there are <socket,core> pairs requested multiple times */
+   int amount = get_explicit_amount(parameter);
+   
+   if (check_explicit_binding_string(parameter, amount) == false) {
+      return false;
+   }
+
    return true;
 }
 
@@ -1290,6 +1292,141 @@ topology_string_to_socket_core_lists(const char* topology, int** sockets,
    }
 
    return retval;
+}
+
+/****** sge_binding_hlp/get_explicit_amount() **********************************
+*  NAME
+*     get_explicit_amount() -- Counts the amount of <socket,core> pairs.
+*
+*  SYNOPSIS
+*     int get_explicit_amount(const char* expl) 
+*
+*  FUNCTION
+*     Counts the amount of <socket,core> pairs in the binding explicit request.
+*
+*  INPUTS
+*     const char* expl - pointer to explicit binding request string
+*
+*  RESULT
+*     int - amount of <socket,core> pairs in explicit binding request string
+*
+*  NOTES
+*     MT-NOTE: get_explicit_amount() is MT safe
+*
+*  SEE ALSO
+*     sge_binding_hlp/check_explicit_binding_string()
+*******************************************************************************/
+int
+get_explicit_amount(const char* expl) {
+
+   int amount = 0;
+   char* pair = NULL;
+   struct saved_vars_s* context = NULL;
+
+   if (expl == NULL) {
+      return amount;
+   }   
+
+   pair = sge_strtok_r(expl, ":", &context);
+
+   if (pair == NULL) {
+      sge_free_saved_vars(context);
+      return amount;
+   }   
+   amount++;
+
+   while (sge_strtok_r(NULL, ":", &context) != NULL) {
+      amount++;
+   }
+
+   sge_free_saved_vars(context);
+
+   return amount;
+}
+
+/****** sge_binding_hlp/check_explicit_binding_string() ************************
+*  NAME
+*     check_explicit_binding_string() -- Checks binding string for duplicate pairs.
+*
+*  SYNOPSIS
+*     bool check_explicit_binding_string(const char* expl, const int amount)
+*
+*  FUNCTION
+*     Checks binding string for duplicate <socket,core> pairs. Works 
+*     also when the first pair is the "explicit" string.
+*
+*  INPUTS
+*     const char* expl - pointer to the explicit binding request
+*     const int amount - expected amount of pairs
+*
+*  RESULT
+*     bool - true if the explicit binding request is duplicate free
+*
+*  NOTES
+*     MT-NOTE: check_explicit_binding_string() is MT safe
+*
+*  SEE ALSO
+*     sge_binding_hlp/get_explicit_amount()
+*******************************************************************************/
+bool
+check_explicit_binding_string(const char* expl, const int amount)
+{
+   bool success = true;
+   struct saved_vars_s* context = NULL;
+   
+   /* pointer to the first position of all <socket,core> pairs */
+   int pair_number = 0;
+   char* pairs[amount];
+   char* pair = NULL;
+   
+   if (expl == NULL || amount == 0) {
+      return false;
+   }
+   
+   /* get pointer to first pair */
+   pair = sge_strtok_r(expl, ":", &context);
+   
+   if (pair == NULL) {
+      success = false;
+   } else {
+      /* store pointer to first <socket,core> pair */
+      pairs[pair_number] = pair;
+      pair_number++;
+   }
+
+   /* split string in <socket,core> pairs and store them */
+   while ((success == true) && (pair = sge_strtok_r(NULL, ":", &context)) != NULL) {
+      if (pair_number > amount) {
+         /* found more pairs than expected */
+         success = false;
+         break;
+      }
+      /* save string and check if it is unique */
+      pairs[pair_number] = pair;
+      pair_number++;
+   }
+   /* check if amount of pairs did match */
+   if (success == true && pair_number != amount) {
+      success = false;
+   }
+
+   /* check if there is a duplicate <socket,core> pair */
+   if (success == true) {
+      int i,j;
+      for (i = 0; i < amount && success == true; i++) {
+         for (j = i+1; j < amount; j++) {
+            if (strcmp(pairs[i], pairs[j]) == 0) {
+               /* identical <socket,core> pair found -> illegal */
+               success = false;
+               break;
+            }
+         }
+      }
+   }
+
+   sge_free_saved_vars(context);
+
+   return success;
 }
 
 /****** sge_binding_hlp/is_digit() *********************************************

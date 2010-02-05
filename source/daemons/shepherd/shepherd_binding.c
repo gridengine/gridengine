@@ -277,7 +277,8 @@ int do_core_binding(void)
 #endif 
 
 #if defined(BINDING_SOLARIS)
-/****** shepherd_binding/do_core_binding() *************************************
+/****** shepherd_binding/do_core_binding() ******************
+*******************
 *  NAME
 *     do_core_binding() -- Performs the core binding task for the Solaris OS. 
 *
@@ -513,8 +514,6 @@ static bool add_proc_ids_linux(int socket, int core, int** proc_id, int* proc_id
 *  NOTES
 *     MT-NOTE: binding_set_linear() is not MT safe 
 *
-*  SEE ALSO
-*     ???/???
 *******************************************************************************/
 static bool binding_set_linear_linux(int first_socket, int first_core, 
                int amount_of_cores, int offset, const binding_type_t type)
@@ -681,8 +680,6 @@ static bool binding_set_linear_linux(int first_socket, int first_core,
 *  NOTES
 *     MT-NOTE: binding_set_striding() is MT safe 
 *
-*  SEE ALSO
-*     ???/???
 *******************************************************************************/
 bool binding_set_striding_linux(int first_socket, int first_core, int amount_of_cores,
                           int offset, int stepsize, const binding_type_t type)
@@ -841,8 +838,6 @@ bool binding_set_striding_linux(int first_socket, int first_core, int amount_of_
 *  NOTES
 *     MT-NOTE: set_processor_binding_mask() is MT safe 
 *
-*  SEE ALSO
-*     ???/???
 *******************************************************************************/
 static bool set_processor_binding_mask(plpa_cpu_set_t* cpuset, const int processor_ids[], 
                   const int no_of_ids)
@@ -864,27 +859,25 @@ static bool set_processor_binding_mask(plpa_cpu_set_t* cpuset, const int process
 
 /****** shepherd_binding/bind_process_to_mask() *************************************
 *  NAME
-*     bind_process_to_mask() -- ??? 
+*     bind_process_to_mask() -- Binds a process to a given cpuset (mask). 
 *
 *  SYNOPSIS
 *     static bool bind_process_to_mask(const pid_t pid, const plpa_cpu_set_t 
 *     cpuset) 
 *
 *  FUNCTION
-*     ??? 
+*     Binds a process to a given cpuset. 
 *
 *  INPUTS
-*     const pid_t pid             - ??? 
-*     const plpa_cpu_set_t cpuset - ??? 
+*     const pid_t pid             - Process to bind 
+*     const plpa_cpu_set_t cpuset - Processors to bind processes to 
 *
 *  RESULT
-*     static bool - 
+*     static bool - true if successful, false otherwise
 *
 *  NOTES
 *     MT-NOTE: bind_process_to_mask() is not MT safe 
 *
-*  SEE ALSO
-*     ???/???
 *******************************************************************************/
 static bool bind_process_to_mask(const pid_t pid, const plpa_cpu_set_t cpuset)
 {
@@ -933,8 +926,6 @@ static bool bind_process_to_mask(const pid_t pid, const plpa_cpu_set_t cpuset)
 *  NOTES
 *     MT-NOTE: binding_explicit() is not MT safe 
 *
-*  SEE ALSO
-*     ???/???
 *******************************************************************************/
 static bool binding_explicit(const int* list_of_sockets, const int samount, 
    const int* list_of_cores, const int camount, const binding_type_t type)

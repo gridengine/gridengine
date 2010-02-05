@@ -43,6 +43,7 @@
 #include "uti/sge_stdlib.h"
 #include "uti/sge_stdio.h"
 #include "uti/sge_time.h"
+#include "uti/sge_binding_hlp.h"
 
 #include "gdi/sge_gdi_ctx.h"
 #include "gdi/sge_gdi_packet.h"
@@ -82,6 +83,8 @@
 #include "msg_common.h"
 #include "msg_qmaster.h"
 #include "msg_daemons_common.h"
+
+static bool check_binding_param_consistency(lListElem* binding_elem);
 
 int
 sge_job_verify_adjust(sge_gdi_ctx_class_t *ctx, lListElem *jep, lList **alpp, 
@@ -200,6 +203,12 @@ sge_job_verify_adjust(sge_gdi_ctx_class_t *ctx, lListElem *jep, lList **alpp,
          if (lret == false) {
             ret = STATUS_EUNKNOWN;
          }
+      } else {
+         /* verify if binding parameters are consistent (bugster 6903956) */ 
+         if (check_binding_param_consistency(binding_elem) == false) {
+            ERROR((SGE_EVENT, MSG_JSV_BINDING_REJECTED));
+            ret = STATUS_EUNKNOWN;
+         } 
       }
    }
 
@@ -654,4 +663,132 @@ sge_job_verify_adjust(sge_gdi_ctx_class_t *ctx, lListElem *jep, lList **alpp,
    DRETURN(ret);
 }
 
+             
+/****** sge_job_verify/check_binding_param_consistency() ***********************
+*  NAME
+*     check_binding_param_consistency() -- Semantic check of JSV binding parameter change.
+*
+*  SYNOPSIS
+*     static bool check_binding_param_consistency(lListElem* binding_elem) 
+*
+*  FUNCTION
+*     Checks the JSV parameter change of the binding parater for semantical 
+*     correctness. In case there is some missconfiguration found in the 
+*     binding CULL sublist an error is thrown and the job is rejected. 
+* 
+*     This function is introduced in order to fix bugster 6903956
+*
+*  INPUTS
+*     lListElem* binding_elem - CULL sublist for core binding 
+*
+*  RESULT
+*     static bool - true if semantic is correct - false if not
+*
+*  NOTES
+*     MT-NOTE: check_binding_param_consistency() is MT safe 
+*
+*******************************************************************************/
+static bool check_binding_param_consistency(lListElem* binding_elem)
+{
+   const char* strategy;
+
+   if (binding_elem == NULL) {
+      return false;
+   }
+
+   if ((strategy = lGetString(binding_elem, BN_strategy)) == NULL) {
+      /* no binding strategy set */
+      return false;
+   }
+
+   /* check according strategy linear */
+   if ((strcmp(strategy, "linear") == 0)
+         || (strcmp(strategy, "linear_automatic") == 0)) {
+      
+      /* amount must be > 0 */
+      if (lGetUlong(binding_elem, BN_parameter_n) == 0) {
+         return false;
+      }
+
+      /* socket and core values are implicitly 0 */
+      
+      /* check if step_size > 0 */
+      if (lGetUlong(binding_elem, BN_parameter_striding_step_size) > 0) {
+         return false;
+      }
+
+      /* check if explicit value is set */
+      if (lGetString(binding_elem, BN_parameter_explicit) != NULL) {
+         return false;
+      }
+
+      /* in case of linear_automatic the core and socket number 
+         must not be > 0 */
+      if (strcmp(strategy, "linear_automatic") == 0) {
+         if (lGetUlong(binding_elem, BN_parameter_socket_offset) > 0) {
+            return false;
+         }
+         if (lGetUlong(binding_elem, BN_parameter_core_offset) > 0) {
+            return false;
+         }
+      }
+   }
+   
+   /* check according strategy striding */
+   if ((strcmp(strategy, "striding") == 0)
+         || (strcmp(strategy, "striding_automatic") == 0)) {
+
+      /* the amount of cores requested must be > 0 */
+      if (lGetUlong(binding_elem, BN_parameter_n) == 0) {
+         return false;
+      }
+      
+      /* socket and core values are implicitly 0 */
+
+      /* check explicit socket core list */
+      if (lGetString(binding_elem, BN_parameter_explicit) != NULL) {
+         return false;
+      }
+
+   }
+
+   /* check according strategy explicit */
+   if (strcmp(strategy, "explicit") == 0) {
+      
+      /* the explicit parameter must be set */
+      if (lGetString(binding_elem, BN_parameter_explicit) == NULL) {
+         return false;
+      }
+      
+      /* amount makes no sense */
+      if (lGetUlong(binding_elem, BN_parameter_n) > 0) {
+         return false;
+      }
+
+      /* step size makes no sense */
+      if (lGetUlong(binding_elem, BN_parameter_striding_step_size) > 0) {
+         return false;
+      }
+     
+      /* check if socket offset was set */
+      if (lGetUlong(binding_elem, BN_parameter_socket_offset) > 0) {
+         return false;
+      }
+
+      /* check if core offset was set */
+      if (lGetUlong(binding_elem, BN_parameter_core_offset) > 0) {
+         return false;
+      }
+
+      const char* expl = lGetString(binding_elem, BN_parameter_explicit);
+      int amount = get_explicit_amount(expl);
+
+      if (check_explicit_binding_string(expl, amount) == false) {
+         return false;
+      }
+
+   }
+
+   return true;
+}
 

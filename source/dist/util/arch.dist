@@ -204,6 +204,12 @@ Linux)
    mips64)
       lxmachine=mips64
       ;;
+   s390)
+      lxmachine=s390
+      ;;
+   s390x)
+      lxmachine=s390x
+      ;;
    *)
       unsupported="UNSUPPORTED-"
       lxmachine=$osmachine

@@ -1,0 +1,268 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <meta http-equiv="content-type"
+ content="text/html; charset=ISO-8859-1">
+<!--This file created 26.04.2005 19:30 Uhr by Claris Home Page version 3.0-->
+  <title>Hostbased authentication for passphraseless SSH communication</title>
+  <meta name="GENERATOR" content="Claris Home Page 3.0">
+</head>
+<body style="background-color: rgb(255, 255, 255);">
+<p><font size="+1"><b>Topic:</b></font></p>
+<p>Setting up hostbased authentication for passphraseless SSH
+communication.<br>
+</p>
+<p><font size="+1"><b>Author:</b></font></p>
+<p>Reuti, <a href="mailto:reuti__at__staff.uni-marburg.de">reuti__at__staff.uni-marburg.de</a>;
+Philipps-University
+of
+Marburg,
+Germany</p>
+<p><font size="+1"><b>Version:</b></font></p>
+<p>1.1 -- 2010-04-15 Initial release, comments and corrections are
+welcome<br>
+</p>
+<p><font size="+1"><b>Contents:</b></font></p>
+<ul>
+  <li>Prerequisites</li>
+  <li>Necessary settings on the source machine<br>
+  </li>
+  <li>Necessary settings on the target machine<br>
+  </li>
+  <li>Further discussion<br>
+  </li>
+</ul>
+<p>
+</p>
+<hr><br>
+<font size="+1"><b>Prerequisites</b></font>
+<blockquote><b>Motivation</b>
+  <p>To copy files inside a cluster either between nodes or for some
+kind of file staging it is often set up by use of a passwordless SSH by
+an
+SSH-keypair without a passphrase (hence the correct description would
+be passphraseless SSH, although the name passwordless SSH is also used
+often) and putting the public part of the key in each user&#8217;s <code>~/.ssh/authorized_keys</code>
+file. This might give the user
+the idea to copy
+the private part of the key also to some of their workstations in
+addition, and so gain passwordless login to the headnode of the
+cluster. While this is convenient for the user at the first glance, it
+lacks any security once the private part of the SSH-keypair was in the
+wild. Setting up a hostbased passphraseless SSH can avoid this, as it
+will work without putting any SSH keys in each user&#8217;s <code>~/.ssh</code>
+directory.<br>
+  </p>
+  <p><b>General Setup<br>
+  </b></p>
+  <p>The Howto targets only the hostbased authentication and not the
+SSH setup in general. Hence before applying all outlined settings here,
+an <code>ssh</code> login secured by password or passphrase must be
+working already. It could later be disabled of course, when the
+hostbased authentication is working.<br>
+  </p>
+  <p><b>Features</b></p>
+  <p>This Howto will show you how to setup a hostbased authentication
+inside the cluster, which will avoid the necessity to create any SSH
+keys for the user at all, and also avoids that the user&#8217;s <code>~/.ssh/known_hosts</code>
+file will have to contain any of the
+machines in the
+cluster.<br>
+  </p>
+</blockquote>
+<p>
+</p>
+<hr><br>
+<font size="+1"><b>Necessary settings on the source machine</b></font>
+<blockquote>Adjustments to <code>ssh</code> and <code>sshd</code>
+have to be done at two locations. First
+the source machine setup will be described:
+  <ul>
+    <li>The file <code>/etc/ssh/ssh_config</code> must contain the
+following two lines:<br>
+      <br>
+      <code>HostbasedAuthentication yes<br>
+EnableSSHKeysign yes</code><code><br>
+      <br>
+      </code></li>
+    <li>The file <code>/etc/ssh/ssh_known_hosts</code> needs to
+include a line for each machine you want to connect to to avoid that
+the user&#8217;s personal <code>~/.ssh/known_hosts</code> file will be
+created at all. This entry is
+usually entered automatically in the user&#8217;s <code>~/.ssh/known_hosts
+file</code> and looks like:<br>
+      <br>
+      <code>node01,192.168.0.1 ssh-rsa AAAAB3NzaC1yc2EAAA...</code><br>
+      <br>
+Both entries (the hostname which you use to connect, and its TCP/IP
+address) must be recorded there as these are cross-checked by SSH&#8217;s
+protocol. In case that you installed your cluster with an identical
+image on all nodes, you can also use wildcards like <code>node*</code>
+or <code>192.168.0.*</code> there, so that all nodes in the cluster
+can be represented by a single line.<br>
+      <br>
+In case that each node has an unique entry, all the keys can be
+collected by the command <code>ssh-keyscan</code>, which you can use
+in a loop across the complete cluster.<br>
+      <br>
+      <span style="font-style: italic;"></span></li>
+    <li><span style="font-style: italic;"></span>One file needs to run
+as root, but it isn&#8217;t installed by default on Linux to include the SUID
+bit in some distributions, so you have to execute:<br>
+      <br>
+      <code>$ chmod u+s /usr/lib64/ssh/ssh-keysign</code><br>
+      <br>
+The location of the file may vary on your system.<br>
+      <br>
+    </li>
+  </ul>
+</blockquote>
+<p>
+</p>
+<hr><br>
+<font size="+1"><b>Necessary settings on the target machine</b></font>
+<blockquote>Several files exit in the directory <code>/etc</code>
+to define the machines which are eligible to connect to this one,
+depending on the protocol used for the connection:
+  <ul>
+    <li>In case you want to allow RSH connection with <code>qrsh</code>
+from the headnode of the cluster, the name of the headnode can be added
+to <code>/etc/hosts.equiv</code>&nbsp;<code></code><span
+ style="font-family: monospace;">on all nodes.</span> This is not
+directly
+necessary for the hostbased SSH setup, as it will use a different list,
+but as this list is also honored by <code>sshd</code> while looking
+for
+allowed hosts, it&#8217;s mentioned here. Often only the name of the headnode
+is in this list.<code><br>
+      <br>
+      </code></li>
+    <li>The file <code>/etc/ssh/shosts.equiv</code> needs to
+include a line for each machine you want to allow connections from. For
+hostbased SSH authentication inside the cluster this file should
+contain all hostnames of the nodes and exist on all nodes.<br>
+      <br>
+    </li>
+    <li>The hostbased authentication must be enabled for the sshd
+running on the target machine by an entry in <code>/etc/ssh/sshd_conf</code>:<br>
+      <br>
+      <code>HostbasedAuthentication yes</code><br>
+      <br>
+It is necessary to reload/restart the <code>sshd</code> after these
+changes, to make him aware of the changed configuration. It&#8217;s also
+possible to disable the password based login at this time.<span
+ style="font-family: monospace;"></span><code><br>
+      </code><br>
+    </li>
+    <li>The file <code>/etc/ssh/ssh/known_hosts</code> needs to
+include a line for each machine you want to allow connections from. As
+already discribed for the setup of the source machine, its entries look
+like:<code><br>
+      <br>
+node01,192.168.0.1 ssh-rsa AAAAB3NzaC1yc2EAAA...</code><br>
+      <br>
+This is not coincidence, that this is the same file which is also used
+on the source machine. I.e. one and the same file is used at two
+locations. On the source machine it will check whether the target
+machine is already known (which each user usually notice as and added
+hostkey to his personal <code>~/.ssh/known_hosts</code> otherwise as <code>ssh</code>
+will check whether it was changed and/or a man-in-the-middle-attack
+happens), and on the target machine it is used to contain entries for
+the allowed source machines.<br>
+      <br>
+As the <code>sshd</code> on the target machine will try to perform a
+reverse name resolution (i.e. get the TCP/IP address out of the name
+and then the FQDN out of the TCP/IP address), it&#8217;s necessary that each
+record contains all three entries: hostname, FQDN, TCP/IP address. If a
+FQDN is not defined like in a private cluster where you define only
+hostnames without a domain in <code>/etc/hosts</code>, it is
+sufficient
+to put only hostname and TCP/IP address therein though.<br>
+      <br>
+Newer versions of openSSH also allow the use of wildcards in the
+hostname
+and TCP/IP address. In a uniform cluster where all nodes are replicated
+and have the same hostkey in <code>/etc/ssh</code> it is this way
+sufficient to have
+only one entry there like:<br>
+      <br>
+      <code>node*,192.168.1.* ssh-rsa AAAAB3NzaC1yc2EAAA...</code></li>
+  </ul>
+If you want to allow hostbased authentication also for the account of
+the <code><span style="font-style: italic;">root</span></code> user,
+it is necessary to put the <code><span style="font-style: italic;">hostname</span></code>
+of&nbsp; all allowed hosts in a file called <code>/root/.shosts</code>
+on
+all machines. As root&#8217;s home is usually not shared in a cluster, this
+must be copied to each machine.<br>
+  <ul>
+    <br>
+  </ul>
+</blockquote>
+<p>
+</p>
+<p></p>
+<hr><br>
+<font size="+1"><b>Side notes</b></font>
+<blockquote>Often it is suggested, to keep the entries in <span
+ style="font-family: monospace;">~/.ssh/known_hosts </span>hashed
+(this can be done once by <span style="font-family: monospace;">ssh-keygen
+-H</span> [or automatically for each new entry]; further access for
+manipulation of this file can then be achived by commands like <span
+ style="font-family: monospace;">ssh-keygen -F <span
+ style="font-style: italic;">hostname</span> </span>or <span
+ style="font-family: monospace;">ssh-keygen -R </span><span
+ style="font-style: italic; font-family: monospace;">hostname</span><span
+ style="font-family: monospace;"></span>), so that an intruder wouldn't
+know the machines to which you connect to usually. But as these
+logins
+are also recorded most likely in the <span
+ style="font-family: monospace;">~/.bash_history</span>, it would imply
+to disable the recording of such commands like <span
+ style="font-family: monospace;">ssh</span> and <span
+ style="font-family: monospace;">scp</span> by a line like:<br>
+  <br>
+  <code>export HISTIGNORE="ssh*:scp*"</code><br>
+  <br>
+in your setup in one of the files the Bash sources during
+startup. Having done so, there is another pitfall: the file <span
+ style="font-family: monospace;">~/.ssh/config</span>. This is often
+used in case you want to use abbrevations to your
+login destinations, while also using an alternative port and/or login
+name for certain destinations can be defined there. The file may look
+like:<br>
+  <br>
+  <code>Host fast<br>
+&nbsp;&nbsp;&nbsp; User my_surname<br>
+&nbsp;&nbsp;&nbsp; Port 455<br>
+&nbsp;&nbsp;&nbsp; Hostname fast.server.site.demo<br>
+  <br>
+Host default<br>
+&nbsp;&nbsp;&nbsp; Hostname machine.local.demo<br>
+  <br>
+Host node*<br>
+&nbsp;&nbsp;&nbsp; ForwardX11 no<br>
+&nbsp;&nbsp;&nbsp; ForwardX11Trusted no<br>
+  <br>
+Host *<br>
+&nbsp;&nbsp;&nbsp; ForwardAgent yes<br>
+&nbsp;&nbsp;&nbsp; ForwardX11 yes<br>
+&nbsp;&nbsp;&nbsp; ForwardX11Trusted yes<br>
+&nbsp;&nbsp;&nbsp; Compression yes<br>
+&nbsp;&nbsp;&nbsp; NoHostAuthenticationForLocalhost yes<br>
+&nbsp;&nbsp;&nbsp; ServerAliveInterval 900</code> <br>
+  <br>
+When you decide to use such a handy setup, there seems to be no way to
+hide this information from an intruder. If you want to use this in a
+cluster as general setup, at least the last two blocks could better be
+placed in the common <span style="font-family: monospace;">/etc/ssh/ssh_config</span>
+where they will be honored by all users by default<br>
+  <br>
+Although it&#8217;s not in the range of this Howto, the use of an ssh-agent
+running on your local machine may ease the connection to several remote
+clusters and even allow copying between two remote clusters without the
+need of entering any authentication credentials. A&nbsp; good
+explanation of the underlying machanism can be found at <a
+ href="http://unixwiz.net/techtips/ssh-agent-forwarding.html">http://unixwiz.net/techtips/ssh-agent-forwarding.html</a></blockquote>
+</body>
+</html>

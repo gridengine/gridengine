@@ -105,8 +105,8 @@ In case that each node has an unique entry, all the keys can be
 collected by the command <code>ssh-keyscan</code>, which you can use
 in a loop across the complete cluster.<br>
       <br>
-      <span style="font-style: italic;"></span></li>
-    <li><span style="font-style: italic;"></span>One file needs to run
+    </li>
+    <li>One file needs to run
 as root, but it isn&#8217;t installed by default on Linux to include the SUID
 bit in some distributions, so you have to execute:<br>
       <br>
@@ -127,8 +127,7 @@ depending on the protocol used for the connection:
   <ul>
     <li>In case you want to allow RSH connection with <code>qrsh</code>
 from the headnode of the cluster, the name of the headnode can be added
-to <code>/etc/hosts.equiv</code>&nbsp;<code></code><span
- style="font-family: monospace;">on all nodes.</span> This is not
+to <code>/etc/hosts.equiv</code>. This is not
 directly
 necessary for the hostbased SSH setup, as it will use a different list,
 but as this list is also honored by <code>sshd</code> while looking
@@ -150,9 +149,8 @@ running on the target machine by an entry in <code>/etc/ssh/sshd_conf</code>:<br
       <br>
 It is necessary to reload/restart the <code>sshd</code> after these
 changes, to make him aware of the changed configuration. It&#8217;s also
-possible to disable the password based login at this time.<span
- style="font-family: monospace;"></span><code><br>
-      </code><br>
+possible to disable the password based login at this time.<br>
+      <br>
     </li>
     <li>The file <code>/etc/ssh/ssh/known_hosts</code> needs to
 include a line for each machine you want to allow connections from. As
@@ -189,8 +187,8 @@ only one entry there like:<br>
       <code>node*,192.168.1.* ssh-rsa AAAAB3NzaC1yc2EAAA...</code></li>
   </ul>
 If you want to allow hostbased authentication also for the account of
-the <code><span style="font-style: italic;">root</span></code> user,
-it is necessary to put the <code><span style="font-style: italic;">hostname</span></code>
+the <code><i>root</i></code> user,
+it is necessary to put the <code><i>hostname</i></code>
 of&nbsp; all allowed hosts in a file called <code>/root/.shosts</code>
 on
 all machines. As root&#8217;s home is usually not shared in a cluster, this
@@ -201,32 +199,29 @@ must be copied to each machine.<br>
 </blockquote>
 <p>
 </p>
-<p></p>
 <hr><br>
 <font size="+1"><b>Side notes</b></font>
-<blockquote>Often it is suggested, to keep the entries in <span
- style="font-family: monospace;">~/.ssh/known_hosts </span>hashed
-(this can be done once by <span style="font-family: monospace;">ssh-keygen
--H</span> [or automatically for each new entry]; further access for
-manipulation of this file can then be achived by commands like <span
- style="font-family: monospace;">ssh-keygen -F <span
- style="font-style: italic;">hostname</span> </span>or <span
- style="font-family: monospace;">ssh-keygen -R </span><span
- style="font-style: italic; font-family: monospace;">hostname</span><span
- style="font-family: monospace;"></span>), so that an intruder wouldn't
-know the machines to which you connect to usually. But as these
-logins
-are also recorded most likely in the <span
- style="font-family: monospace;">~/.bash_history</span>, it would imply
-to disable the recording of such commands like <span
- style="font-family: monospace;">ssh</span> and <span
- style="font-family: monospace;">scp</span> by a line like:<br>
+<blockquote>Often it is suggested, to keep the entries in <code>~/.ssh/known_hosts</code>
+hashed
+(this can be done once by <code>ssh-keygen
+-H</code> [or automatically for each new entry]; further access
+for
+manipulation of this file can then be achived by commands like <code>ssh-keygen
+-F
+  <i>hostname</i></code> or <code>ssh-keygen -R <i>hostname</i></code>),
+so that an intruder
+wouldn't
+know the machines to which you connect to usually. But as these logins
+are also recorded most likely in the <code>~/.bash_history</code>, it
+would imply
+to disable the recording of such commands like <code>ssh</code> and <code>scp</code>
+by a line like:<br>
   <br>
   <code>export HISTIGNORE="ssh*:scp*"</code><br>
   <br>
 in your setup in one of the files the Bash sources during
-startup. Having done so, there is another pitfall: the file <span
- style="font-family: monospace;">~/.ssh/config</span>. This is often
+startup. Having done so, there is another pitfall: the file <code>~/.ssh/config</code>.
+This is often
 used in case you want to use abbrevations to your
 login destinations, while also using an alternative port and/or login
 name for certain destinations can be defined there. The file may look
@@ -255,7 +250,7 @@ Host *<br>
 When you decide to use such a handy setup, there seems to be no way to
 hide this information from an intruder. If you want to use this in a
 cluster as general setup, at least the last two blocks could better be
-placed in the common <span style="font-family: monospace;">/etc/ssh/ssh_config</span>
+placed in the common <code>/etc/ssh/ssh_config</code>
 where they will be honored by all users by default<br>
   <br>
 Although it&#8217;s not in the range of this Howto, the use of an ssh-agent

@@ -1,3 +1,79 @@
+Bugs fixed in SGE 6.2u6 since release 6.2u5
+-------------------------------------------
+-    6727419 net continue SGE_Helper_Service.exe STOPS the service 
+-    6642653 no accounting information for Windows GUI jobs 
+-    6690798 BDB server uninstallation does not work correctly 
+-    6847566 jobs get scheduled but are not started after global host changed 
+-    6855837 qmod -rj should reschedule a job only when run with root/sgeadmin privileges 
+-    6874076 speed up scheduler times for multiple large reservations requesting identical resources 
+-    6891450 adding a resource request via jsv_sub_add_param will change the default of a BOOL attribute to false 
+-    6902958 intermittendly, interactive jobs die 
+-    6916648 h_vmem JOB consumable fails only in the IBM platform 
+-    6921115 qconf segfaults on bad subordination string 
+-    6934109 high cpu load of qrsh -inherit when using builtin interactive job support 
+-    6941569 ENABLE_RESCHEDULE_SLAVE=1 causes also other jobs to be rescheduled 
+-    6941838 qmon has segmentation fault when submitting a job with a jsv url 
+-    6946781 gui-installer: NPE is thrown after "Browse" button is pressed 
+-    6947548 AR handling is wrong in interaction with parallel environments 
+-    6949505 jobs get not killed when attached adavance reservations expire 
+-    6951371 ENABLE_RESCHEDULE_SLAVE=1 doesn't work anymore 
+-    6951469 rerun of a parallel job when execd and job dies is not triggered 
+-    6952525 execd sends signals to shepherd pid even if shepherd is no longer running 
+N/A  6904099 qmaster crashes with the error message in cqueue_list_locate_qinstance 
+N/A  6937272 remove experimental comment from qsub -tc help output 
+N/A  6945450 new slotwise subordination (preemption) disabled state needs to be reflected in man pages 
+N/A  6953013 slotwise preemption does not take amount of slots of pe tasks into account when unsuspend/suspend 
+N/A  6932534 slotwise suspend on subordinate with parallel jobs does not signal newly started parallel jobs 
+N/A  6945793 slotwise preemption / slotwise subordination scheduler threshold is ignored for parallel jobs 
+N/A  6910082 make new interactive job support not use threads 
+N/A  6934948 java DRMAA Error: Can't send response for this message id - protocol error 
+N/A  6935186 pe_min value is not correct in JSV if multiple slots ranges are requested 
+N/A  6587196 gridengine/i18n testsuidroot messages not i18n'd 
+N/A  6743005 SMF - qmaster service should be used on failover back to qmaster host 
+N/A  6862147 scheduler "categories" should use normalized values for "memory" resource requests 
+N/A  6874648 On Windows Vista Enterprise, sgeexecd can fail to start up at boot time 
+N/A  6921362 slotwise subordination allows jobs to be scheduled to a "suspended" queue 
+N/A  6934090 wrong vmem reporting of qstat and qacct on Linux 
+N/A  6942107 unexpected default masterq with alloc_rule=$fill_up in some cases 
+N/A  6944132 gui-installer: can not add list of ip addresses to the table 
+N/A  6944216 shadowd SMF service fails to start qmaster on reboot 
+N/A  6945468 on Windows hosts reporting their full qualified hostname, certificates got wrong names 
+N/A  6946262 Saving incorrect complex value on host level leads to qmaster segmentation fault 
+N/A  6948008 if spool directory already exists, installation fails to detect that it is on a local drive 
+N/A  6951479 old execution daemon tries to communicate with new qmaster each second 
+N/A  6951505 using old client binaries on a new qmaster does not lead to abortion 
+N/A  6952957 insufficient user name parameter checking for Certificate Authority related commands in juti lib 
+N/A  6953633 is_alive() check always returns CL_RETVAL_OK, even if component is not running 
+N/A  6954671 on Windows Vista, the 2nd fork of the daemonizing execd sometimes fails at boot time 
+N/A  6955445 Requesting any memory limit for a job on linux doesn't work 
+N/A  6956905 on csh, %CTRL-Z doesn't properly suspend the "qrsh -pty yes <command>" client 
+N/A  6958504 qrsh <command> with prolog and epilog configured may fail with invalid stdin/out/err path 
+1949 6906466 non well-formed XML output from "qstat -xml" 
+2962 6909608 authuser fails on SuSE Enterprise Linux 11 
+3002 6831553 keystore password should be asked for twice to avoid typos 
+3019 6837493 gui-installer: use gethostbyname and gethostbyaddr binaries instead of Java InetAddress class 
+3061 6852173 improve Ctrl-Z handling in builtin interactive jobs with "-pty yes" option set 
+3069 6855673 discrepancy between man page and behaviour of "qconf -dq $QUEUE" 
+3072 6856170 gui jobs on windows vista only starting when there is a user logged into the system 
+3095 6867807 add "-pty <yes|no>" switch to qsub 
+3100 6871013 in interactive jobs, tty or pty handles Ctrl-Z wrongly 
+3132 6883606 when using options "-w e" with qsub, job fails to run when exclusive scheduling is configured 
+3146 6738790 resource reservation is broken with SGE calendar 
+3147 6871606 BATCH and IMMEDIATE QUEUES concept need to be clarified in man pages 
+3148 6882584 parallel jobs do not always go to the least loaded host 
+3190 6899641 qrsh hostname: commlib error on linux 
+3193 6840703 sge_shepherd fails with SIGSEV on SLES 11Recently , so does sge_execd on shutdown 
+3216 6912529 rerun of a tightly integrated parallel job crashes qmaster after restart 
+3221 6916055 qsub "-tc" man page needs better wording 
+3223 6916492 execd does not verify the pe task start user in non CSP mode 
+3226 6903955 binding parameters parsing does not check number values completely 
+3228 6899014 jsv logging does not work when multiple users submit jobs on same submit host 
+3233 6920926 slotwise preemption fails to unsuspend one job per host 
+3235 6920592 modifying the global configuration make sge_qmaster unresponsive in a huge cluster 
+3236 6920597 exec host object gets spooled whenever an execd connects to qmaster 
+3237 6921246 finishing a tightly integrated job takes too long 
+3238 6903956 consistency of JSV binding information is not checked completely
+
 Bugs fixed in SGE 6.2u5 since release 6.2u4
 -------------------------------------------
 -    6849311 sgeinspect for windows cannot connect in SSL mode 

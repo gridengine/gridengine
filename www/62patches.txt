@@ -74,6 +74,7 @@ N/A  6958504 qrsh <command> with prolog and epilog configured may fail with inva
 3237 6921246 finishing a tightly integrated job takes too long 
 3238 6903956 consistency of JSV binding information is not checked completely
 
+
 Bugs fixed in SGE 6.2u5 since release 6.2u4
 -------------------------------------------
 -    6849311 sgeinspect for windows cannot connect in SSL mode 

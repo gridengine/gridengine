@@ -19,35 +19,35 @@ Bugs fixed in SGE 6.2u6 since release 6.2u5
 -    6951371 ENABLE_RESCHEDULE_SLAVE=1 doesn't work anymore 
 -    6951469 rerun of a parallel job when execd and job dies is not triggered 
 -    6952525 execd sends signals to shepherd pid even if shepherd is no longer running 
-N/A  6904099 qmaster crashes with the error message in cqueue_list_locate_qinstance 
-N/A  6937272 remove experimental comment from qsub -tc help output 
-N/A  6945450 new slotwise subordination (preemption) disabled state needs to be reflected in man pages 
-N/A  6953013 slotwise preemption does not take amount of slots of pe tasks into account when unsuspend/suspend 
-N/A  6932534 slotwise suspend on subordinate with parallel jobs does not signal newly started parallel jobs 
-N/A  6945793 slotwise preemption / slotwise subordination scheduler threshold is ignored for parallel jobs 
-N/A  6910082 make new interactive job support not use threads 
-N/A  6934948 java DRMAA Error: Can't send response for this message id - protocol error 
-N/A  6935186 pe_min value is not correct in JSV if multiple slots ranges are requested 
-N/A  6587196 gridengine/i18n testsuidroot messages not i18n'd 
-N/A  6743005 SMF - qmaster service should be used on failover back to qmaster host 
-N/A  6862147 scheduler "categories" should use normalized values for "memory" resource requests 
-N/A  6874648 On Windows Vista Enterprise, sgeexecd can fail to start up at boot time 
-N/A  6921362 slotwise subordination allows jobs to be scheduled to a "suspended" queue 
-N/A  6934090 wrong vmem reporting of qstat and qacct on Linux 
-N/A  6942107 unexpected default masterq with alloc_rule=$fill_up in some cases 
-N/A  6944132 gui-installer: can not add list of ip addresses to the table 
-N/A  6944216 shadowd SMF service fails to start qmaster on reboot 
-N/A  6945468 on Windows hosts reporting their full qualified hostname, certificates got wrong names 
-N/A  6946262 Saving incorrect complex value on host level leads to qmaster segmentation fault 
-N/A  6948008 if spool directory already exists, installation fails to detect that it is on a local drive 
-N/A  6951479 old execution daemon tries to communicate with new qmaster each second 
-N/A  6951505 using old client binaries on a new qmaster does not lead to abortion 
-N/A  6952957 insufficient user name parameter checking for Certificate Authority related commands in juti lib 
-N/A  6953633 is_alive() check always returns CL_RETVAL_OK, even if component is not running 
-N/A  6954671 on Windows Vista, the 2nd fork of the daemonizing execd sometimes fails at boot time 
-N/A  6955445 Requesting any memory limit for a job on linux doesn't work 
-N/A  6956905 on csh, %CTRL-Z doesn't properly suspend the "qrsh -pty yes <command>" client 
-N/A  6958504 qrsh <command> with prolog and epilog configured may fail with invalid stdin/out/err path 
+-    6904099 qmaster crashes with the error message in cqueue_list_locate_qinstance 
+-    6937272 remove experimental comment from qsub -tc help output 
+-    6945450 new slotwise subordination (preemption) disabled state needs to be reflected in man pages 
+-    6953013 slotwise preemption does not take amount of slots of pe tasks into account when unsuspend/suspend 
+-    6932534 slotwise suspend on subordinate with parallel jobs does not signal newly started parallel jobs 
+-    6945793 slotwise preemption / slotwise subordination scheduler threshold is ignored for parallel jobs 
+-    6910082 make new interactive job support not use threads 
+-    6934948 java DRMAA Error: Can't send response for this message id - protocol error 
+-    6935186 pe_min value is not correct in JSV if multiple slots ranges are requested 
+-    6587196 gridengine/i18n testsuidroot messages not i18n'd 
+-    6743005 SMF - qmaster service should be used on failover back to qmaster host 
+-    6862147 scheduler "categories" should use normalized values for "memory" resource requests 
+-    6874648 On Windows Vista Enterprise, sgeexecd can fail to start up at boot time 
+-    6921362 slotwise subordination allows jobs to be scheduled to a "suspended" queue 
+-    6934090 wrong vmem reporting of qstat and qacct on Linux 
+-    6942107 unexpected default masterq with alloc_rule=$fill_up in some cases 
+-    6944132 gui-installer: can not add list of ip addresses to the table 
+-    6944216 shadowd SMF service fails to start qmaster on reboot 
+-    6945468 on Windows hosts reporting their full qualified hostname, certificates got wrong names 
+-    6946262 Saving incorrect complex value on host level leads to qmaster segmentation fault 
+-    6948008 if spool directory already exists, installation fails to detect that it is on a local drive 
+-    6951479 old execution daemon tries to communicate with new qmaster each second 
+-    6951505 using old client binaries on a new qmaster does not lead to abortion 
+-    6952957 insufficient user name parameter checking for Certificate Authority related commands in juti lib 
+-    6953633 is_alive() check always returns CL_RETVAL_OK, even if component is not running 
+-    6954671 on Windows Vista, the 2nd fork of the daemonizing execd sometimes fails at boot time 
+-    6955445 Requesting any memory limit for a job on linux doesn't work 
+-    6956905 on csh, %CTRL-Z doesn't properly suspend the "qrsh -pty yes <command>" client 
+-    6958504 qrsh <command> with prolog and epilog configured may fail with invalid stdin/out/err path 
 1949 6906466 non well-formed XML output from "qstat -xml" 
 2962 6909608 authuser fails on SuSE Enterprise Linux 11 
 3002 6831553 keystore password should be asked for twice to avoid typos 
@@ -80,12 +80,12 @@ Bugs fixed in SGE 6.2u5 since release 6.2u4
 -    6849311 sgeinspect for windows cannot connect in SSL mode 
 -    6876914 SGE_EXECD_PORT number is wrong in sgeinspect 
 -    6878215 sgeinspect's example port 54322 is confusing
-N/A  6902868 reporting of core binding after execd restart contains an additional new line 
-n/a  6896657 error parsing unsigned long value from string "..." 
-n/a  6902891 upgrade from 6.1 to 62u5 fails because of missing newly introduced complexes 
-n/a  6903987 with slotwise preemption, doubly suspended tasks are not always unsuspended correctly 
-n/a  6904315 changing the definition of slotwise preemption relationships doesn't update all previous members 
-n/a  6904437 configuration of forbidden slotwise preemption relationship structures is not detected
+-    6902868 reporting of core binding after execd restart contains an additional new line 
+-    6896657 error parsing unsigned long value from string "..." 
+-    6902891 upgrade from 6.1 to 62u5 fails because of missing newly introduced complexes 
+-    6903987 with slotwise preemption, doubly suspended tasks are not always unsuspended correctly 
+-    6904315 changing the definition of slotwise preemption relationships doesn't update all previous members 
+-    6904437 configuration of forbidden slotwise preemption relationship structures is not detected
 26   6883585 click on certain host -> java.lang.NullPointerException 
 35   6538365 a more flexible suspend on subordinate scheme 
 41,27 6883583 job list does not update automatically 
@@ -137,7 +137,7 @@ Bugs fixed in SGE 6.2u4 since release 6.2u3
 -    6851151 Application needs to prompt for keystore or user password after restart 
 -    6876489 common package lacks 2 jar files for sdm and sge inspect 
 -    6889423 sgeinspect.sh script file delivered in common and sgeinspect package
-N/A  6872473 qmaster installation might fail when more than 1 qmaster is installed in parallel on the same host 
+-    6872473 qmaster installation might fail when more than 1 qmaster is installed in parallel on the same host 
 2942 6675570 qconf -ke[j] must return non-zero exit code on failure 
 2342 6590010 Original primary group vanishes after newgrp command (USE_QSUB_GID=true) 
 1314 6287864 online usage of maxvmem incorrect for tightly integrated parallel jobs 

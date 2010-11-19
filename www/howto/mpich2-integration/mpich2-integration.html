@@ -14,7 +14,8 @@
 <p>Reuti, <a href="mailto:reuti__at__staff.uni-marburg.de">reuti__at__staff.uni-marburg.de</a>;
 Philipps-University
 of
-Marburg, Germany</p>
+Marburg,
+Germany</p>
 <p><font size="+1"><b>Version:</b></font></p>
 <p>1.1 -- 2008-11-25 Updated release, comments and corrections are
 welcome<br>
@@ -36,8 +37,9 @@ supplied scripts (thx to Kenneth for mentioning this)<br>
 <p>
 </p>
 <hr>
-<div style="text-align: center;"><big style="color: rgb(255, 0, 0);"><big><big>!!!
-Warning !!!</big></big></big><br>
+<div style="text-align: center;"><br>
+<big><big style="color: rgb(255, 0, 0);"><big><big>!!!
+Warning !!!</big></big></big></big><br>
 <br>
 </div>
 With Version 1.3 of MPICH2, they moved to Hydra as default startup
@@ -137,7 +139,8 @@ a list of to be used nodes.<br>
 Due to limitations in <span style="font-style: italic;">mpdboot</span>,
 it
 must
-have a connection to the daemons on the nodes via stdin/stdout,
+have
+a connection to the daemons on the nodes via stdin/stdout,
 until the <span style="font-style: italic;">mpd</span>
 fork into daemonland. Therefore this Howto will instead launch the <span
  style="font-style: italic;">mpd</span> in a script
@@ -173,10 +176,12 @@ each of them. They are not interchangeable! Hence, once you installed <i>mpd</i>
 and compiled a program to run in the <i>ring</i>, you <b>can&#8217;t </b>switch
 to
 
+
   <i>smpd</i> simply by using a different <i>mpirun</i> or <i>mpiexec</i>.
 Instead
 you
-have to recompile (or at least relink) your program with
+have
+to recompile (or at least relink) your program with
 the intended libraries to be used with this specific startup method.
 This means, that you have to plan carefully your set $PATH during
 compilation and execution of the parallel program, to get a correct
@@ -272,7 +277,8 @@ was selected by the first started <span style="font-style: italic;">mpd</span>.
 The
 following
 loop
-will start the daemons on all remaining slave nodes, and
+will
+start the daemons on all remaining slave nodes, and
 waits until all are up and running. After the startmpich2.sh the <span
  style="font-style: italic;">mpd</span> processes are available, and
 the user program started by an <span style="font-style: italic;">mpiexec</span>
@@ -349,7 +355,8 @@ method</b></font>
 be configured (after a <span style="font-style: italic;">make distclean</span>,
 in
 case
-you just walked
+you
+just walked
 through the <span style="font-style: italic;">mpd</span> startup
 method before):
   <blockquote>
@@ -519,7 +526,8 @@ Documents</b></font>
 all the scripts used in this Howto: <a href="mpich2-62.tgz">mpich2-62.tgz</a>.
 It
 should
-be installed in your $SGE_ROOT.<br>
+be
+installed in your $SGE_ROOT.<br>
   </p>
   <p><a name="[2] Archive mpi_hello"></a>[2] Archive with a small
 MPICH2 program to check the correct distribution of all the tasks: <a

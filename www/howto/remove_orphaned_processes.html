@@ -1,0 +1,84 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <meta http-equiv="content-type"
+ content="text/html; charset=ISO-8859-1">
+<!--This file created 25.12.2004 22:19 Uhr by Claris Home Page version 3.0-->
+  <title>Removal of orphaned processes</title>
+  <meta name="GENERATOR" content="Claris Home Page 3.0">
+  <x-claris-window top="47" bottom="749" left="12" right="931"></x-claris-window>
+  <x-claris-tagview mode="minimal"></x-claris-tagview>
+  <meta content="Reuti" name="author">
+</head>
+<body bgcolor="#ffffff">
+<p><font size="+1"><b>Topic:</b></font></p>
+<p>Setup a terminate_method in a queue configuration, to kill orphaned
+processes on master and slave nodes.</p>
+<p><font size="+1"><b>Author:</b></font></p>
+<p>Reuti, <a href="mailto:reuti__at__staff.uni-marburg.de">reuti__at__staff.uni-marburg.de;</a>
+Philipps-University of Marburg, Germany</p>
+<p><font size="+1"><b>Version:</b></font></p>
+<p>1.0 -- 2005-11-22 Initial Release</p>
+<p><font size="+1"><b>Contents:</b></font></p>
+<ul>
+  <li>Symptom of this behavior</li>
+  <li>Explanation</li>
+  <li>Solutions</li>
+</ul>
+<p><font size="+1"><b>Note:</b></font></p>
+<p>This HOWTO should <span style="font-weight: bold;">only</span> be
+applied, when no other means was able to remove orphaned processes on
+slave nodes for a parallel job.</p>
+<p>
+</p>
+<hr><font size="+1"><b><br>
+Symptom of this behaviour</b></font>
+<p></p>
+<blockquote>When using e.g. MPICH2 with the <span
+ style="font-style: italic;">mpd</span> startup method, it is reported
+that under certain circumstances, some processes will not be removed by
+a <span style="font-style: italic;">qdel</span> issued for this job.</blockquote>
+<p>
+</p>
+<hr><br>
+<font size="+1"><b>Explanation</b></font>
+<p></p>
+<blockquote>Each<span style="font-style: italic;"></span> task on a
+slave node is a child of the started <span style="font-style: italic;">mpd</span>,
+which is unique for a job and user. Whether there are processes left
+which weren't removed by SGE, can be checked with the command:
+  <pre style="margin-left: 40px;">$ ps f -eo pid,uid,gid,user,pgrp,command --cols=120</pre>
+  <p>This might happen as a result of a race condition, where the <span
+ style="font-style: italic;">mpd</span> already left the nodes, and as
+a result the <span style="font-style: italic;">sge_shepherd</span> for
+this jobs thinks that all was shut down in a proper way. Instead some
+processes might be left over and are now bound to the init process as
+parent. Dispite the fact, that these processes have in the additional
+group ID attached in the correct way, SGE never tries to remove them
+even when the SGE configuration has a setting of:<br>
+  </p>
+  <pre style="margin-left: 40px;">$ qconf -sconf<br>...<br>execd_params                 ENABLE_ADDGRP_KILL=TRUE<br></pre>
+</blockquote>
+<p>
+</p>
+<hr><br>
+<font size="+1"><b>Solution</b></font>
+<p></p>
+<blockquote>To get a list of eligible processes, the removal of the <span
+ style="font-style: italic;">mpd</span> needs to be delayed on all
+nodes, so that the below defined routine can read the information about
+the additional group ID, and then send them all a <span
+ style="font-style: italic;">kill</span> signal:
+  <pre style="margin-left: 40px;">#!/bin/sh<br>#<br># Argument $1 must be the process id (i.e. $job_pid)<br>#<br><br>#<br># Define a routine to get all kids for this job<br># Argument $1 must be the process id (i.e. $job_pid)<br>#<br>function getkids()<br>{<br>    group=`cat $SGE_JOB_SPOOL_DIR/addgrpid`<br>    for process in /proc/[0-9]*; do awk '/^Groups/ { for (i=2;i&lt;=NF;i++) if<br>        ($i==group) { print process }}' process=${process##*/} group=$group $process/status; done<br>}<br><br>#<br># Main call<br>#<br><br>sleep 5<br>getkids $1 | xargs kill -9<br>exit 0<br></pre>
+  <p>When such a routine is stored e.g. in /usr/sge/cluster, ist can be
+defined for a particular queue with:<br>
+  </p>
+  <pre style="margin-left: 40px;">$ qconf -sq all.q<br>...<br>terminate_method /usr/sge/cluster/killkids.sh $job_pid</pre>
+  <p>and will be invoked for all jobs in this queue. As the default <span
+ style="font-style: italic;">terminate_method</span> is overridden,
+this routine is now solely responsible for the removal of all processes
+of this job on its own.<br>
+  </p>
+</blockquote>
+</body>
+</html>

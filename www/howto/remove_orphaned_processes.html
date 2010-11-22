@@ -32,7 +32,7 @@ slave nodes for a parallel job.</p>
 <p>
 </p>
 <hr><font size="+1"><b><br>
-Symptom of this behaviour</b></font>
+Symptom of this behavior</b></font>
 <p></p>
 <blockquote>When using e.g. MPICH2 with the <span
  style="font-style: italic;">mpd</span> startup method, it is reported
@@ -65,7 +65,10 @@ even when the SGE configuration has a setting of:<br>
 <hr><br>
 <font size="+1"><b>Solution</b></font>
 <p></p>
-<blockquote>To get a list of eligible processes, the removal of the <span
+<blockquote>This Howto targets only Linux like platforms. For other
+operating system, a corresponding script must be implemented.<br>
+  <br>
+To get a list of eligible processes, the removal of the <span
  style="font-style: italic;">mpd</span> needs to be delayed on all
 nodes, so that the below defined routine can read the information about
 the additional group ID, and then send them all a <span

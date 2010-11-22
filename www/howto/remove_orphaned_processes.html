@@ -37,7 +37,8 @@ Symptom of this behaviour</b></font>
 <blockquote>When using e.g. MPICH2 with the <span
  style="font-style: italic;">mpd</span> startup method, it is reported
 that under certain circumstances, some processes will not be removed by
-a <span style="font-style: italic;">qdel</span> issued for this job.</blockquote>
+a <span style="font-style: italic;">qdel</span> issued for a job.<br>
+</blockquote>
 <p>
 </p>
 <hr><br>
@@ -47,13 +48,13 @@ a <span style="font-style: italic;">qdel</span> issued for this job.</blockquote
 slave node is a child of the started <span style="font-style: italic;">mpd</span>,
 which is unique for a job and user. Whether there are processes left
 which weren't removed by SGE, can be checked with the command:
-  <pre style="margin-left: 40px;">$ ps f -eo pid,uid,gid,user,pgrp,command --cols=120</pre>
+  <pre style="margin-left: 40px;">$ ps f -eo pid,uid,gid,user,pgrp,command</pre>
   <p>This might happen as a result of a race condition, where the <span
  style="font-style: italic;">mpd</span> already left the nodes, and as
 a result the <span style="font-style: italic;">sge_shepherd</span> for
 this jobs thinks that all was shut down in a proper way. Instead some
 processes might be left over and are now bound to the init process as
-parent. Dispite the fact, that these processes have in the additional
+parent. Dispite the fact, that these processes have the additional
 group ID attached in the correct way, SGE never tries to remove them
 even when the SGE configuration has a setting of:<br>
   </p>
@@ -69,11 +70,11 @@ even when the SGE configuration has a setting of:<br>
 nodes, so that the below defined routine can read the information about
 the additional group ID, and then send them all a <span
  style="font-style: italic;">kill</span> signal:
-  <pre style="margin-left: 40px;">#!/bin/sh<br>#<br># Argument $1 must be the process id (i.e. $job_pid)<br>#<br><br>#<br># Define a routine to get all kids for this job<br># Argument $1 must be the process id (i.e. $job_pid)<br>#<br>function getkids()<br>{<br>    group=`cat $SGE_JOB_SPOOL_DIR/addgrpid`<br>    for process in /proc/[0-9]*; do awk '/^Groups/ { for (i=2;i&lt;=NF;i++) if<br>        ($i==group) { print process }}' process=${process##*/} group=$group $process/status; done<br>}<br><br>#<br># Main call<br>#<br><br>sleep 5<br>getkids $1 | xargs kill -9<br>exit 0<br></pre>
+  <pre style="margin-left: 40px;">#!/bin/sh<br>#<br># Define a routine to get all kids for this job<br>#<br>function getkids()<br>{<br>    group=`cat $SGE_JOB_SPOOL_DIR/addgrpid`<br>    for process in /proc/[0-9]*; do awk '/^Groups/ { for (i=2;i&lt;=NF;i++) if<br>        ($i==group) { print process }}' process=${process##*/} group=$group $process/status; done<br>}<br><br>#<br># Main call<br>#<br><br>sleep 5<br>getkids | xargs kill -9<br>exit 0<br></pre>
   <p>When such a routine is stored e.g. in /usr/sge/cluster, ist can be
 defined for a particular queue with:<br>
   </p>
-  <pre style="margin-left: 40px;">$ qconf -sq all.q<br>...<br>terminate_method /usr/sge/cluster/killkids.sh $job_pid</pre>
+  <pre style="margin-left: 40px;">$ qconf -sq all.q<br>...<br>terminate_method /usr/sge/cluster/killkids.sh</pre>
   <p>and will be invoked for all jobs in this queue. As the default <span
  style="font-style: italic;">terminate_method</span> is overridden,
 this routine is now solely responsible for the removal of all processes

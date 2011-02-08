@@ -1510,8 +1510,8 @@ case LINUXSPARC64:
       if ( ( $BUILDARCH == LINUXAMD64 || \
          $BUILDARCH == LINUX86 ) && \
          $COMPILE_ARCH != "ULINUX86_24" && $COMPILE_ARCH != "ULINUXAMD64_24" ) then
-         set CORE_INCLUDE = "$CORE_INCLUDE -I$SOURCE/3rdparty/plpa/plpa-1.3.1/src/libplpa"
-         set LIBS = "$SOURCE/3rdparty/plpa/plpa-1.3.1/$COMPILE_ARCH/src/libplpa/.libs/libplpa.a $LIBS"
+         set CORE_INCLUDE = "$CORE_INCLUDE -I$SOURCE/3rdparty/plpa/plpa-1.3.2/src/libplpa"
+         set LIBS = "$SOURCE/3rdparty/plpa/plpa-1.3.2/$COMPILE_ARCH/src/libplpa/.libs/libplpa.a $LIBS"
       endif 
    endif
 
@@ -2431,11 +2431,18 @@ endif
 if ( "$PLPA" == 1 ) then
    echo _________3_r_d_p_a_r_t_y__P_L_P_A_______
 
-   if ( ( $BUILDARCH == LINUXAMD64 || \
+   if ( "$argv" != depend && ( $BUILDARCH == LINUXAMD64 || \
       $BUILDARCH == LINUX86 ) && \
       $COMPILE_ARCH != "ULINUX86_24" && $COMPILE_ARCH != "ULINUXAMD64_24" ) then
       
-      cd $SOURCE/3rdparty/plpa/plpa-1.3.1/$COMPILE_ARCH
+      if ( ! -d $SOURCE/3rdparty/plpa/plpa-1.3.2/$COMPILE_ARCH || \
+	      ! -r $SOURCE/3rdparty/plpa/plpa-1.3.2/$COMPILE_ARCH/Makefile ) then
+         mkdir -p $SOURCE/3rdparty/plpa/plpa-1.3.2/$COMPILE_ARCH
+         cd $SOURCE/3rdparty/plpa/plpa-1.3.2/$COMPILE_ARCH
+         env -u LD_LIBRARY_PATH -u CPP ../configure --enable-static --disable-shared --with-pic
+      endif
+
+      cd $SOURCE/3rdparty/plpa/plpa-1.3.2/$COMPILE_ARCH
 
       $MAKE $MAKEOPT -f Makefile "MAKE=$MAKE" "COMPILE_ARCH=$COMPILE_ARCH" $argv
 

@@ -214,8 +214,8 @@ void procfs_kill_addgrpid(gid_t add_grp_id, int sig,
 #elif defined(LINUX)
    FILE *fp;
    char buffer[1024];
-   uid_t uids[4];
-   gid_t gids[4];
+   uid_t uids[4] = {0,0,0,0};
+   gid_t gids[4] = {0,0,0,0};
 #endif
 
    DENTER(TOP_LAYER, "procfs_kill_addgrpid");

@@ -1,5 +1,17 @@
+*.o
 libcore.so
 aimk.private
 *.swp
 source/3rdparty/sge_depend/LINUX*
+source/3rdparty/qmake/LINUX*
+source/3rdparty/qmon/LINUX*
+source/3rdparty/qtcsh/LINUX*
+source/3rdparty/remote/LINUX*
+source/dist/qmon/Qmon
 *dependencies
+source/3rdparty/plpa/plpa-1.3.2/LINUX*
+source/3rdparty/plpa/plpa-1.3.2/autom4te.cache
+source/CLASSES*
+source/LINUX*
+source/dist/DetectJvmLibrary/build*
+source/3rdparty/plpa/plpa-1.3.2/src/libplpa/plpa_config.h.in~

@@ -136,7 +136,7 @@ char         *realloc();
 #if NeedFunctionPrototypes
 char *copy( char *str);
 char *base_name(char *file, int strip);
-char *getline(struct filepointer *filep);
+char *sge_getline(struct filepointer *filep);
 struct filepointer *getfile(char *file);
 struct inclist *newinclude(char *newfile, char *incstring);
 struct inclist *inc_path(char	*file, char *include, boolean	dot);
@@ -155,7 +155,7 @@ struct symtab **isdefined( char *symbol,
 #else
 char *copy();
 char *base_name();
-char *getline();
+char *sge_getline();
 struct filepointer *getfile();
 struct inclist *newinclude();
 struct inclist *inc_path();

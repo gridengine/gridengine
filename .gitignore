@@ -1,0 +1,5 @@
+libcore.so
+aimk.private
+*.swp
+source/3rdparty/sge_depend/LINUX*
+*dependencies

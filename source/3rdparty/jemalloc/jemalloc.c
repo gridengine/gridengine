@@ -6350,11 +6350,41 @@ jemalloc_darwin_init(void)
 /*
  * These interpose hooks in glibc.
  */
+static void *sge_malloc_hook (size_t size, const void *caller) {
+	void *result;
+
+	result = malloc(size);
+
+	return result;
+}
+
+static void *sge_realloc_hook (void *ptr, size_t size, const void *caller) {
+	void *result;
+
+	result = realloc(ptr, size);
+
+	return result;
+}
+
+static void *sge_memalign_hook (size_t alignment, size_t size, const void *caller) {
+	void *result;
+
+	result = memalign(alignment, size);
+
+	return result;
+}
+
+static void sge_free_hook (void *ptr, const void *caller) {
+
+	free(ptr);
+
+}
+
 static void sge_init_hook(void){
-   __malloc_hook = malloc;
-   __realloc_hook = realloc;
-   __memalign_hook = memalign;
-   __free_hook = free;
+   __malloc_hook = sge_malloc_hook;
+   __realloc_hook = sge_realloc_hook;
+   __memalign_hook = sge_memalign_hook;
+   __free_hook = sge_free_hook;
 }
 
 void (*__malloc_initialize_hook) (void) = sge_init_hook;

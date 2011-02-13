@@ -111,11 +111,14 @@ Darwin)
    case $osmachine in
       i386)
          case $osrelease in
-            10.2.*)
+            10.1.*)
+               darwin_machine=x86
+               ;;
+            10.[2-6].*)
                darwin_machine=x64
                ;;
             *)
-               darwin_machine=x86
+               darwin_machine=unknown
                ;;
             esac
          ;;

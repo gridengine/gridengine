@@ -1511,7 +1511,7 @@ case LINUXSPARC64:
          $BUILDARCH == LINUX86 ) && \
          $COMPILE_ARCH != "ULINUX86_24" && $COMPILE_ARCH != "ULINUXAMD64_24" ) then
          set CORE_INCLUDE = "$CORE_INCLUDE -I$PLPA_HOME/include"
-         set LIBS = "$PLPA_HOME/Lib/libplpa.a $LIBS"
+         set LIBS = "$PLPA_HOME/lib/libplpa.a $LIBS"
       endif 
    endif
 

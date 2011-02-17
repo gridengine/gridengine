@@ -66,7 +66,7 @@
 
 #if defined(IRIX65) || defined(AIX43) || defined(HP1164) || defined(INTERIX) || defined(ALPHA5) || defined(WINDOWS)
 #define JUTI_NO_PAM
-#elif defined(DARWIN)
+#elif defined(DARWIN) && !defined(DARWIN_X64)
 #include <pam/pam_appl.h>
 #else
 #include <security/pam_appl.h>

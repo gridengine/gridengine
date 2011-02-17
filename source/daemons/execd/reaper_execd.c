@@ -1543,7 +1543,7 @@ static void update_used_cores(const char* path_to_config, lListElem** jr)
                account_job(jobtopo);
 
                /* add to job report (for qstat -j x -cb) */
-               sge_dstring_sprintf(&pseudo_usage, "binding_inuse=%s", jobtopo); 
+               sge_dstring_sprintf(&pseudo_usage, "binding_inuse!%s", jobtopo); 
                
                add_usage(*jr, sge_dstring_get_string(&pseudo_usage), NULL, 0);
                sge_dstring_free(&pseudo_usage); 

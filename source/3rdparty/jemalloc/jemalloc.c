@@ -6336,29 +6336,31 @@ jemalloc_darwin_init(void)
 		sizeof(malloc_zone_t *) * (malloc_num_zones - 1));
 	malloc_zones[0] = &zone;
 }
+
+#ifdef HAVE_LIBDL
+#  include <dlfcn.h>
 #endif
 
-#include <dlfcn.h>
-#include <malloc.h>
+#elif defined(__GLIBC__) && !defined(__UCLIBC__)
 /*
  * glibc provides the RTLD_DEEPBIND flag for dlopen which can make it possible
  * to inconsistently reference libc's malloc(3)-compatible functions
+ * (Mozilla bug 493541).
+ *
+ * These definitions interpose hooks in glibc.  The functions are actually
+ * passed an extra argument for the caller return address, which will be
+ * ignored.
  */
-#ifdef RTLD_DEEPBIND
-#  if defined(__GLIBC__) && !defined(__UCLIBC__)
+void (*__free_hook)(void *ptr) = free;
+void *(*__malloc_hook)(size_t size) = malloc;
+void *(*__realloc_hook)(void *ptr, size_t size) = realloc;
+void *(*__memalign_hook)(size_t alignment, size_t size) = memalign;
 
-/*
- * These interpose hooks in glibc.
- */
-static void sge_init_hook(void){
-   __malloc_hook = malloc;
-   __realloc_hook = realloc;
-   __memalign_hook = memalign;
-   __free_hook = free;
-}
-
-void (*__malloc_initialize_hook) (void) = sge_init_hook;
-#  elif !defined(malloc)
-#    error "Interposing malloc is unsafe on this system without libc malloc hooks."
-#  endif
+#elif defined(RTLD_DEEPBIND)
+	/*
+	 * XXX On systems that support RTLD_GROUP or DF_1_GROUP, do their
+	 * implementations permit similar inconsistencies?  Should STV_SINGLETON
+	 * visibility be used for interposition where available?
+	 */
+#  error "Interposing malloc is unsafe on this system without libc malloc hooks."
 #endif

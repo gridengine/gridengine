@@ -47,20 +47,20 @@
 #include <pthread.h>
 #endif
 
-#include "sge_bootstrap.h"
-#include "sge_hostname.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "sge_language.h"
-#include "sge_time.h" 
-#include "sge_unistd.h"
-#include "sge_string.h"
-#include "sge_prog.h"
-#include "sge_uidgid.h"
+#include "rmon/sgermon.h"
 
+#include "uti/sge_bootstrap.h"
+#include "uti/sge_hostname.h"
+#include "uti/sge_log.h"
+#include "uti/sge_language.h"
+#include "uti/sge_time.h" 
+#include "uti/sge_unistd.h"
+#include "uti/sge_string.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_uidgid.h"
+#include "uti/msg_utilib.h"
 
-#include "msg_utilib.h"
-#include "sge_mtutil.h"
+#include "lck/sge_mtutil.h"
 
 #define ALIAS_DELIMITER "\n\t ,;"
 #define SGE_MAXNISRETRY 5

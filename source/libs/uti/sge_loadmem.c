@@ -37,12 +37,13 @@
 #include <errno.h>
 #endif
 
+#include "rmon/sgermon.h"
+
 #include "uti/sge_stdio.h"
 #include "uti/sge_os.h"
-#include "sge_loadmem.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "msg_utilib.h"
+#include "uti/sge_loadmem.h"
+#include "uti/sge_log.h"
+#include "uti/msg_utilib.h"
 
 #if !defined(LINUX) && !defined(CRAY) && !defined(DARWIN) && !defined(FREEBSD) && !defined(NETBSD)
 

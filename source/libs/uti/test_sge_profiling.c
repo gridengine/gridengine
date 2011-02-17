@@ -37,7 +37,7 @@
 #include <pthread.h>
 #include <string.h>
 
-#include "sge_profiling.h"
+#include "uti/sge_profiling.h"
 
 int   do_test (void);
 int   test_params (void);

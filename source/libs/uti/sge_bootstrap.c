@@ -34,19 +34,22 @@
 #include <errno.h>
 #include <pthread.h>
 
-#include "sgermon.h"
 #include "basis_types.h"
-#include "sge_log.h"
-#include "sge_string.h"
-#include "sge_dstring.h"
-#include "sge_parse_num_par.h"
-#include "sge_hostname.h"
-#include "sge_spool.h"
-#include "setup_path.h"
-#include "sge_answer.h"
-#include "msg_utilib.h"
-#include "sge_error_class.h"
-#include "sge_bootstrap.h"
+
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_string.h"
+#include "uti/sge_dstring.h"
+#include "uti/sge_parse_num_par.h"
+#include "uti/sge_hostname.h"
+#include "uti/sge_spool.h"
+#include "uti/setup_path.h"
+#include "uti/msg_utilib.h"
+#include "uti/sge_error_class.h"
+#include "uti/sge_bootstrap.h"
+
+#include "sgeobj/sge_answer.h"
 
 typedef struct {
     char* admin_user;      

@@ -34,14 +34,16 @@
 #include <string.h>
 #include <ctype.h>
 
+#include "rmon/sgermon.h"
+
 #include "uti/sge_string.h"
 #include "uti/sge_stdio.h"
-#include "sgermon.h"
-#include "sge_log.h"
+#include "uti/sge_log.h"
+#include "uti/sge_parse_num_par.h"
+#include "uti/config_file.h"
+
 #include "basis_types.h"
 #include "err_trace.h"
-#include "sge_parse_num_par.h"
-#include "config_file.h"
 
 #include "msg_daemons_common.h"
 

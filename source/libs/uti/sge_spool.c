@@ -39,14 +39,16 @@
 #include <sys/types.h>
 #include <sys/stat.h>  
 
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_spool.h"
+#include "uti/sge_stdio.h" 
+#include "uti/sge_unistd.h"
+#include "uti/sge_string.h"
+#include "uti/msg_utilib.h"
+
 #include "sge.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "sge_spool.h"
-#include "sge_stdio.h" 
-#include "sge_unistd.h"
-#include "sge_string.h"
-#include "msg_utilib.h"
 
 #define MAX_JA_TASKS_PER_DIR  (4096l)
 #define MAX_JA_TASKS_PER_FILE (1l)  

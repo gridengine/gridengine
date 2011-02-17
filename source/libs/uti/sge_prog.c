@@ -40,18 +40,21 @@
 #include <sys/types.h>
 #include <sys/socket.h>  
 
+#include "rmon/sgermon.h"
+
+#include "uti/sge_hostname.h"
+#include "uti/sge_log.h"
+#include "uti/sge_stdlib.h"
+#include "uti/sge_string.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_error_class.h"
+#include "uti/sge_uidgid.h"
+#include "uti/msg_utilib.h"
+
+#include "sgeobj/sge_answer.h"
+
 #include "sge.h"
-#include "sgermon.h"
-#include "sge_hostname.h"
-#include "sge_log.h"
-#include "sge_stdlib.h"
-#include "sge_string.h"
-#include "sge_unistd.h"
-#include "sge_prog.h"
-#include "sge_answer.h"
-#include "sge_error_class.h"
-#include "sge_uidgid.h"
-#include "msg_utilib.h"
 
 /* Must match Qxxx defines in sge_prog.h */
 const char *prognames[] =

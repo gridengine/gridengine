@@ -59,16 +59,18 @@
 #   include <sys/select.h>
 #endif    
 
-#include "sgermon.h"
-#include "sge_unistd.h"
-#include "sge_stdio.h"
-#include "sge_os.h"
-#include "sge_prog.h"  
-#include "sge_log.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_unistd.h"
+#include "uti/sge_stdio.h"
+#include "uti/sge_os.h"
+#include "uti/sge_prog.h"  
+#include "uti/sge_log.h"
+#include "uti/msg_utilib.h"
+
 #include "sig_handlers.h"
 
 #include "msg_common.h"
-#include "msg_utilib.h"
 
 
 /* pipe for sge_daemonize_prepare() and sge_daemonize_finalize() */

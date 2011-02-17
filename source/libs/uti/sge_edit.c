@@ -35,14 +35,17 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-#include "sge_prog.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_prog.h"
+#include "uti/sge_log.h"
+#include "uti/sge_signal.h"
+#include "uti/sge_edit.h"
+#include "uti/sge_unistd.h"
+
 #include "sge.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "sge_signal.h"
+
 #include "msg_common.h"
-#include "sge_edit.h"
-#include "sge_unistd.h"
 
 int sge_edit(const char *fname, uid_t myuid, gid_t mygid)
 {

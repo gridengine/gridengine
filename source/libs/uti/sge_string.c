@@ -36,11 +36,12 @@
 #include <pthread.h>
 #include <fnmatch.h>
 
-#include "sgermon.h"
-#include "sge_stdlib.h"
-#include "sge_string.h"
-#include "sge_log.h"
-#include "msg_utilib.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_stdlib.h"
+#include "uti/sge_string.h"
+#include "uti/sge_log.h"
+#include "uti/msg_utilib.h"
 
 #define IS_DELIMITOR(c,delimitor) \
    (delimitor?(strchr(delimitor, c)?1:0):isspace(c))

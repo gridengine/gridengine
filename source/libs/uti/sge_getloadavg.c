@@ -38,12 +38,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_getloadavg.h"
+#include "uti/sge_stdlib.h"
 
 #include "sge.h"
-#include "sge_log.h"
-#include "sgermon.h"
-#include "sge_getloadavg.h"
-#include "sge_stdlib.h"
 
 #if defined(SOLARIS) 
 #  include <nlist.h> 

@@ -34,16 +34,19 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "sge_stdlib.h"
-#include "sgermon.h"
-#include "rmon.h"
-#include "sge_log.h"
+#include "rmon/sgermon.h"
+#include "rmon/rmon.h"
+
+#include "uti/sge_stdlib.h"
+#include "uti/sge_log.h"
+#include "uti/msg_utilib.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_arch.h"
+#include "uti/sge_string.h"
+
 #include "sge.h"
-#include "msg_utilib.h"
+
 #include "msg_common.h"
-#include "sge_unistd.h"
-#include "sge_arch.h"
-#include "sge_string.h"
 
 /****** uti/prog/sge_get_arch() ************************************************
 *  NAME

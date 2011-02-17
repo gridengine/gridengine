@@ -41,10 +41,10 @@
 #endif
 
 #include "sge.h"
-#include "sgermon.h"
-#include "sge_string.h"
-#include "sge_dstring.h"
-#include "sge_varargs.h"
+#include "rmon/sgermon.h"
+#include "uti/sge_string.h"
+#include "uti/sge_dstring.h"
+#include "uti/sge_varargs.h"
 #include "symbols.h"
 
 #define REALLOC_CHUNK   1024

@@ -32,11 +32,15 @@
 
 #include <string.h>
 #include <stdio.h>
+
+#include "rmon/sgermon.h"
+
+#include "uti/sge_error_class.h"
+#include "uti/sge_string.h"
+
+#include "sgeobj/sge_answer.h"
+
 #include "sge.h"
-#include "sgermon.h"
-#include "sge_error_class.h"
-#include "sge_string.h"
-#include "sge_answer.h"
 
 typedef struct sge_error_message_str sge_error_message_t;
 

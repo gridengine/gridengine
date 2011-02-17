@@ -43,16 +43,18 @@
 #include <signal.h>
 #include <fcntl.h>
  
+#include "rmon/sgermon.h"
+
 #include "uti/sge_unistd.h"
 #include "uti/sge_stdio.h"
 #include "uti/sge_uidgid.h"
-#include "sgermon.h"
+#include "uti/sge_log.h"
+#include "uti/sge_os.h"
+#include "uti/msg_utilib.h"
+
 #include "basis_types.h"
-#include "sge_log.h"
-#include "sge_os.h"
 
 #include "msg_common.h"
-#include "msg_utilib.h"
 
 #if defined(SOLARIS)
 #   include "sge_smf.h"

@@ -34,7 +34,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "sge_bitfield.h"
+#include "uti/sge_bitfield.h"
 
 /****** uti/bitfield/--Bitfield ****************************************
 *  NAME

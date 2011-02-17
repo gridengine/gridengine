@@ -42,7 +42,7 @@
 
 #include "lck/sge_mtutil.h"
 
-#include "sge_thread_ctrl.h"
+#include "uti/sge_thread_ctrl.h"
 
 #define THREAD_CONTROL_MUTEX "thread_control_mutex"
 

@@ -37,14 +37,16 @@
 #include <math.h>
 #include <float.h>
 
-#include "sgermon.h"
-#include "sge_answer.h"
-#include "sge_log.h"
-#include "sge_string.h"
-#include "sge_parse_num_par.h"
-#include "symbols.h"
+#include "rmon/sgermon.h"
 
-#include "msg_utilib.h"
+#include "uti/sge_log.h"
+#include "uti/sge_string.h"
+#include "uti/sge_parse_num_par.h"
+#include "uti/msg_utilib.h"
+
+#include "sgeobj/sge_answer.h"
+
+#include "symbols.h"
 
 
 #if defined(IRIX)

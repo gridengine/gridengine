@@ -33,17 +33,18 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "sge_stdio.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_stdio.h"
+#include "uti/sge_prog.h"
+
+#include "sgeobj/sge_feature.h"
+
+#include "gdi/msg_gdilib.h"
 
 #include "usage.h"
-#include "sge_feature.h"
-
-#include "sgermon.h"
-#include "sge_prog.h"
 #include "sge_options.h"
-
 #include "msg_common.h"
-#include "msg_gdilib.h"
 
 static void print_marked(u_long32 prog_number, FILE *fp);
 static char* get_argument_syntax(u_long32 prog_number, int nr);

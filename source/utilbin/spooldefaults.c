@@ -34,31 +34,36 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "sge_bootstrap.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "sge_unistd.h"
-#include "sge_dstring.h"
-#include "setup_path.h"
-#include "sge_prog.h"
-#include "sge_feature.h"
-#include "sge_answer.h"
-#include "sge_manop.h"
-#include "sge_object.h"
-#include "sge_pe.h"
-#include "sge_centry.h"
-#include "sge_userset.h"
-#include "sge_all_listsL.h"
-#include "sge.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_bootstrap.h"
+#include "uti/sge_profiling.h"
+#include "uti/sge_log.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_dstring.h"
+#include "uti/setup_path.h"
+#include "uti/sge_prog.h"
+
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_manop.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_pe.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_userset.h"
+#include "sgeobj/sge_all_listsL.h"
+
 #include "spool/sge_spooling.h"
 #include "spool/loader/sge_spooling_loader.h"
 #include "spool/flatfile/sge_spooling_flatfile.h"
 #include "spool/flatfile/sge_flatfile_obj.h"
 #include "spool/flatfile/sge_flatfile.h"
 #include "spool/sge_dirent.h"
-#include "msg_utilbin.h"
-#include "sge_profiling.h"
+
 #include "gdi/sge_gdi_ctx.h"
+
+#include "sge.h"
+#include "msg_utilbin.h"
 
 static int spool_object_list(const char *directory,
                              const spooling_field *fields, 

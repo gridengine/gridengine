@@ -37,13 +37,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "basis_types.h"
+#include "uti/sge_string.h"
+#include "uti/sge_arch.h"
+#include "uti/sge_hostname.h"
+#include "comm/cl_commlib.h"
+#include "gdi/version.h"
 #include "msg_utilbin.h"
-#include "sge_string.h"
-#include "sge_arch.h"
-#include "sge_hostname.h"
-#include "cl_commlib.h"
-#include "version.h"
 
 int usage(void)
 {

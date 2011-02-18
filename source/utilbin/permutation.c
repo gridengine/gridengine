@@ -35,7 +35,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "msg_utilbin.h"
-#include "sge_language.h"
+#include "uti/sge_language.h"
 
 int should_sleep = 0;
 

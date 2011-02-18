@@ -35,8 +35,12 @@
 #include <string.h>
 #include <time.h>
 
+#include "rmon/sgermon.h"
+
 #include "uti/sge_dstring.h"
 #include "uti/sge_stdio.h"
+#include "uti/sge_language.h"
+#include "uti/sge_profiling.h"
 
 #include "gdi/sge_gdi_ctx.h"
 #include "gdi/sge_gdi.h"
@@ -46,13 +50,10 @@
 #include "sgeobj/sge_object.h"
 #include "sgeobj/sge_userprj.h"
 #include "sgeobj/sge_usage.h"
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_schedd_conf.h"
 
-#include "sge_sharetree_printing.h"
-#include "sgermon.h"
-#include "sge_all_listsL.h"
-#include "sge_language.h"
-#include "sge_schedd_conf.h"
-#include "sge_profiling.h"
+#include "sched/sge_sharetree_printing.h"
 
 #include "msg_smon.h"
 

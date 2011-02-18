@@ -34,24 +34,20 @@
 #include <unistd.h>
 #include <fnmatch.h>
 
-#include "sge_all_listsL.h"
-#include "sge_parse_SPA_L.h"
-#include "parse_job_cull.h"
-#include "sge_mailrec.h"
-#include "parse_qsub.h"
-#include "sge_parse_num_par.h"
-#include "parse.h"
-#include "sge_options.h"
-#include "cull_parse_util.h"
-
 #include "rmon/sgermon.h"
 
+#include "uti/sge_parse_num_par.h"
 #include "uti/sge_dstring.h"
 #include "uti/sge_binding_hlp.h"
 #include "uti/sge_stdlib.h"
 #include "uti/sge_string.h"
 #include "uti/sge_log.h"
 
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/cull_parse_util.h"
+#include "sgeobj/sge_mailrec.h"
+#include "sgeobj/parse.h"
+#include "sgeobj/sge_parse_SPA_L.h"
 #include "sgeobj/sge_range.h"
 #include "sgeobj/sge_ckpt.h"
 #include "sgeobj/sge_ulong.h"
@@ -64,6 +60,9 @@
 #include "sgeobj/sge_jsv.h"
 #include "sgeobj/sge_qref.h"
 
+#include "parse_job_cull.h"
+#include "parse_qsub.h"
+#include "sge_options.h"
 #include "msg_common.h"
 
 static int var_list_parse_from_environment(lList **lpp, char **envp);

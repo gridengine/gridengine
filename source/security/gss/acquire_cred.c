@@ -49,7 +49,7 @@
 #endif
 #include "sge_gsslib.h"
 #include "msg_gss.h"
-/* #include "sge_language.h" */
+/* #include "uti/sge_language.h" */
 void
 usage(char *progname)
 {

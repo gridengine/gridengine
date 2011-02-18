@@ -37,14 +37,18 @@
 #include <stdlib.h>
 #include <fcntl.h>
 
-#include "sge_time.h"
-#include "sgermon.h"
-#include "sge_afsutil.h"
-#include "sge_language.h"
-#include "sge_feature.h"
-#include "sge_unistd.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_time.h"
+#include "uti/sge_afsutil.h"
+#include "uti/sge_language.h"
+#include "uti/sge_unistd.h"
+
+#include "sgeobj/sge_feature.h"
+
+#include "gdi/version.h"
+
 #include "msg_common.h"
-#include "version.h"
 
 static void show_coshepherd_version(void) {
 

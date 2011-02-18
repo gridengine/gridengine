@@ -39,7 +39,7 @@
 #include <string.h>
 
 #include "msg_utilbin.h"
-#include "sge_uidgid.h"
+#include "uti/sge_uidgid.h"
 
 /****** testsuidroot ***************************************
 *

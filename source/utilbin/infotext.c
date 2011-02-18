@@ -40,12 +40,15 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "sgermon.h" 
-#include "basis_types.h"
-#include "sge_language.h"
+#include "rmon/sgermon.h" 
+
+#include "uti/sge_language.h"
+#include "uti/sge_dstring.h"
+
+#include "gdi/version.h"
+
 #include "msg_utilbin.h"
-#include "sge_dstring.h"
-#include "version.h"
+#include "basis_types.h"
 
 typedef struct sge_infotext_opt {
       int e;     /* print to stderr */

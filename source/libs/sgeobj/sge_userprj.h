@@ -32,10 +32,10 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_userprj_PR_L.h"
-#include "sge_userprj_UU_L.h"
-#include "sge_userprj_UPU_L.h"
-#include "sge_userprj_UPP_L.h"
+#include "sgeobj/sge_userprj_PR_L.h"
+#include "sgeobj/sge_userprj_UU_L.h"
+#include "sgeobj/sge_userprj_UPU_L.h"
+#include "sgeobj/sge_userprj_UPP_L.h"
 
 lListElem *prj_list_locate(const lList *prj_list,
                            const char *prj_name);

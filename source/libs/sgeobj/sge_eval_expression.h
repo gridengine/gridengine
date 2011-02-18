@@ -40,9 +40,9 @@
 #ifndef _sge_eval_expression_H
 #define	_sge_eval_expression_H
 #include "basis_types.h"
-#include "cull.h"
-#include "cull_list.h"
-#include "sge_dstring.h"
+#include "cull/cull.h"
+#include "cull/cull_list.h"
+#include "uti/sge_dstring.h"
 
 #ifdef	__cplusplus
 extern "C" {

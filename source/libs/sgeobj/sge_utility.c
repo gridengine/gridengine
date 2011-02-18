@@ -42,15 +42,15 @@
 #include "uti/sge_log.h"
 #include "uti/sge_string.h"
 
-#include "parse.h"
-#include "sge_str.h"
-#include "sge_id.h"
-#include "sge_answer.h"
-#include "sge_utility.h"
+#include "sgeobj/parse.h"
+#include "sgeobj/sge_str.h"
+#include "sgeobj/sge_id.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_utility.h"
+#include "sgeobj/msg_sgeobjlib.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
-#include "msg_sgeobjlib.h"
 
 
 

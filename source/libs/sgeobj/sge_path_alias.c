@@ -29,6 +29,7 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
 #include <string.h>
 #include <stdlib.h>
 #include <pwd.h>
@@ -45,15 +46,17 @@
 #include "uti/sge_unistd.h"
 #include "uti/sge_hostname.h"
 
-#include "cl_errors.h"
-#include "sge_host.h"
-#include "sge_answer.h"
-#include "sge_job.h"
-#include "sge_utility.h"
-#include "sge_path_alias.h"
+#include "comm/lists/cl_errors.h"
+
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_utility.h"
+#include "sgeobj/sge_path_alias.h"
+#include "sgeobj/msg_sgeobjlib.h"
+
 #include "msg_common.h"
 #include "msg_daemons_common.h"
-#include "msg_sgeobjlib.h"
 
 /****** sgeobj/path_alias/-PathAlias *******************************************
 *  NAME

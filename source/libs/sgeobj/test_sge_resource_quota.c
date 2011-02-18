@@ -34,11 +34,11 @@
 
 #include "uti/sge_bootstrap.h"
 
-#include "sge_all_listsL.h"
-#include "sge_hgroup.h"
-#include "sge_href.h"
-#include "sge_userset.h"
-#include "sge_resource_quota.h"
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_hgroup.h"
+#include "sgeobj/sge_href.h"
+#include "sgeobj/sge_userset.h"
+#include "sgeobj/sge_resource_quota.h"
 
 typedef struct {
    const char* users;

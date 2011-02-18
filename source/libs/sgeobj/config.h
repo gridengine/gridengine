@@ -32,8 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "cull.h"
-#include "cull_parse_util.h"
+#include "cull/cull.h"
+#include "sgeobj/cull_parse_util.h"
 
 enum {
    MODE_RELATIVE,

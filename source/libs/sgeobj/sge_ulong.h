@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_ulong_ULNG_L.h"
+#include "sgeobj/sge_ulong_ULNG_L.h"
 
 bool 
 double_print_infinity_to_dstring(double value, dstring *string);

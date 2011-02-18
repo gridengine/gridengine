@@ -44,16 +44,15 @@
 #include "uti/sge_string.h"
 #include "uti/sge_log.h"
 
-#include "config.h"
-#include "sge_answer.h"
-#include "sge_conf.h"
-#include "parse.h"
-#include "sge_attr.h"
-#include "sge_object.h"
-#include "sge_ulong.h"
-#include "sge_centry.h"
-
-#include "msg_sgeobjlib.h"
+#include "sgeobj/config.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/parse.h"
+#include "sgeobj/sge_attr.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_ulong.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/msg_sgeobjlib.h"
 
 /* 
 **

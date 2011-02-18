@@ -46,7 +46,7 @@
 #include "cull/cull_list.h"
 #include "cull/msg_cull.h"
 
-#include "sge_cull_xml.h"
+#include "sgeobj/sge_cull_xml.h"
 
 static void lWriteElemXML_(const lListElem *ep, int nesting_level, FILE *fp, int ignore_cull_name); 
 static void lWriteListXML_(const lList *lp, int nesting_level, FILE *fp, int ignore_cull_name); 

@@ -58,12 +58,12 @@
 #include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi_ctx.h"
 
-#include "sge_answer.h"
-#include "sge_job.h"
-#include "sge_jsv.h"
-#include "sge_jsv_script.h"
-#include "sge_str.h"
-#include "msg_sgeobjlib.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_jsv.h"
+#include "sgeobj/sge_jsv_script.h"
+#include "sgeobj/sge_str.h"
+#include "sgeobj/msg_sgeobjlib.h"
 
 /*
  * defines the timeout between the soft shutdown signal and the kill

@@ -32,12 +32,12 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "cull_list.h"
-#include "sge_dstring.h"
+#include "cull/cull_list.h"
+#include "uti/sge_dstring.h"
 
-#include "sge_event_EV_L.h"
-#include "sge_event_EVS_L.h"
-#include "sge_event_ET_L.h"
+#include "sgeobj/sge_event_EV_L.h"
+#include "sgeobj/sge_event_EVS_L.h"
+#include "sgeobj/sge_event_ET_L.h"
 
 /* event master request types */
 typedef enum {

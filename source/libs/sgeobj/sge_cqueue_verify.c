@@ -42,26 +42,25 @@
 
 #include "gdi/sge_gdi.h"
 
+#include "sgeobj/parse.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_attr.h"
+#include "sgeobj/sge_calendar.h"
+#include "sgeobj/sge_ckpt.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_pe.h"
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_subordinate.h"
+#include "sgeobj/sge_userprj.h"
+#include "sgeobj/sge_userset.h"
+#include "sgeobj/sge_cqueue_verify.h"
+#include "sgeobj/sge_path_alias.h"
+#include "sgeobj/msg_sgeobjlib.h"
+
 #include "symbols.h"
 #include "sge.h"
-#include "parse.h"
-#include "sge_answer.h"
-#include "sge_attr.h"
-#include "sge_calendar.h"
-#include "sge_ckpt.h"
-#include "sge_centry.h"
-#include "sge_cqueue.h"
-#include "sge_object.h"
-#include "sge_pe.h"
-#include "sge_range.h"
-#include "sge_subordinate.h"
-#include "sge_userprj.h"
-#include "sge_userset.h"
-#include "sge_cqueue_verify.h"
-#include "sge_path_alias.h"
-
-#include "msg_sgeobjlib.h"
-
 
 #define CQUEUE_VERIFY_LAYER TOP_LAYER
 

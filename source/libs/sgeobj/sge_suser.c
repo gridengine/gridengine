@@ -35,15 +35,15 @@
 
 #include "uti/sge_log.h"
 
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_suser.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_suser.h"
+#include "sgeobj/sge_object.h"
+
 #include "sge.h"
 #include "basis_types.h"
-#include "sge_ja_task.h"
-#include "sge_answer.h"
-#include "sge_suser.h"
-#include "sge_job.h"
-#include "sge_suser.h"
-#include "sge_object.h"
-
 #include "msg_qmaster.h"
 
 /****** sgeobj/suser/Master_SUser_List ****************************************

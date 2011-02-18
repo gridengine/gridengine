@@ -34,13 +34,14 @@
 
 #include <stdio.h> 
 
-#include "basis_types.h"
-#include "sge_htable.h"
+#include "uti/sge_htable.h"
 
-#include "sge_cull_xml_XMLA_L.h"
-#include "sge_cull_xml_XMLS_L.h"
-#include "sge_cull_xml_XMLH_L.h"
-#include "sge_cull_xml_XMLE_L.h"
+#include "sgeobj/sge_cull_xml_XMLA_L.h"
+#include "sgeobj/sge_cull_xml_XMLS_L.h"
+#include "sgeobj/sge_cull_xml_XMLH_L.h"
+#include "sgeobj/sge_cull_xml_XMLE_L.h"
+
+#include "basis_types.h"
 
 #ifdef  __cplusplus
 extern "C" {

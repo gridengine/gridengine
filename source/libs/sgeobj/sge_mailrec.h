@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_mailrec_MR_L.h"
+#include "sgeobj/sge_mailrec_MR_L.h"
 
 int mailrec_parse(lList **lpp, const char *mail_str);
 

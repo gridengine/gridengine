@@ -32,8 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_conf_CONF_L.h"
-#include "sge_conf_CF_L.h"
+#include "sgeobj/sge_conf_CONF_L.h"
+#include "sgeobj/sge_conf_CF_L.h"
 
 /* The scheduler configuration changes this configuration element only. It is
    not spooled and is not shown in qconf -mconf */

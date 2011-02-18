@@ -37,14 +37,14 @@
 #include "uti/sge_string.h"
 #include "uti/sge_log.h"
 
-#include "basis_types.h"
-#include "sge_str.h"
-#include "sge_answer.h"
-#include "sge_host.h"
-#include "sge_load.h"
+#include "sgeobj/sge_str.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_load.h"
+#include "sgeobj/msg_sgeobjlib.h"
 
+#include "basis_types.h"
 #include "msg_common.h"
-#include "msg_sgeobjlib.h"
 
 bool 
 sge_is_static_load_value(const char *name) 

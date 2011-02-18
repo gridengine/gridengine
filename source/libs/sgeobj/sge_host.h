@@ -32,12 +32,12 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_host_EH_L.h"
-#include "sge_host_RU_L.h"
-#include "sge_host_AH_L.h"
-#include "sge_host_SH_L.h"
-#include "sge_host_HL_L.h"
-#include "sge_host_HS_L.h"
+#include "sgeobj/sge_host_EH_L.h"
+#include "sgeobj/sge_host_RU_L.h"
+#include "sgeobj/sge_host_AH_L.h"
+#include "sgeobj/sge_host_SH_L.h"
+#include "sgeobj/sge_host_HL_L.h"
+#include "sgeobj/sge_host_HS_L.h"
 
 /* 
  * sge standard load value names

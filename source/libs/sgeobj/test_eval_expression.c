@@ -52,8 +52,8 @@
 #include "uti/sge_bootstrap.h"
 #include "uti/sge_string.h"
 
-#include "sge_feature.h"
-#include "sge_eval_expression.h"
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_eval_expression.h"
 
 #define T 0
 #define F 1

@@ -33,8 +33,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_dstring.h"
-#include "sge_subordinate_SO_L.h"
+#include "uti/sge_dstring.h"
+#include "sgeobj/sge_subordinate_SO_L.h"
 
 /* SO_action defines */
 #define SO_ACTION_SR 0x00000001

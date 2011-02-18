@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_var_VA_L.h"
+#include "sgeobj/sge_var_VA_L.h"
 
 #define VAR_PREFIX "__SGE_PREFIX__"
 #define VAR_PREFIX_NR "__SGE_PREFIX2__"

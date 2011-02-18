@@ -37,9 +37,9 @@
 
 #include "cull/cull.h"
 
-#include "sge_all_listsL.h"
-#include "sge_object.h"
-#include "sge_job.h"
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_job.h"
 
 static int exit_code = EXIT_SUCCESS;
 

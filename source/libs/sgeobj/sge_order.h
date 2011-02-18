@@ -32,9 +32,9 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_order_OR_L.h"
-#include "sge_order_OQ_L.h"
-#include "sge_order_RTIC_L.h"
+#include "sgeobj/sge_order_OR_L.h"
+#include "sgeobj/sge_order_OQ_L.h"
+#include "sgeobj/sge_order_RTIC_L.h"
 
 /* 
  * valid values for OR_type 

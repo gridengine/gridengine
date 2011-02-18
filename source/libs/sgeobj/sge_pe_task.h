@@ -32,9 +32,9 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_pe_task_PET_L.h"
-#include "sge_pe_task_PETR_L.h"
-#include "sge_pe_task_FPET_L.h"
+#include "sgeobj/sge_pe_task_PET_L.h"
+#include "sgeobj/sge_pe_task_PETR_L.h"
+#include "sgeobj/sge_pe_task_FPET_L.h"
 
 #define PE_TASK_PAST_USAGE_CONTAINER "past_usage"
 

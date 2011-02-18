@@ -42,11 +42,11 @@
 
 #include "cull/cull_list.h"
 
-#include "sge_answer.h"
-#include "sge_str.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_str.h"
+#include "sgeobj/msg_sgeobjlib.h"
 
 #include "msg_common.h"
-#include "msg_sgeobjlib.h"
 
 #define STR_LAYER BASIS_LAYER
 

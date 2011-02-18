@@ -43,12 +43,13 @@
 
 #include "cull/cull.h"
 
+#include "sgeobj/sge_var.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/msg_sgeobjlib.h"
+
 #include "symbols.h"
-#include "sge_var.h"
 #include "sge.h"
-#include "sge_centry.h"
-#include "sge_answer.h"
-#include "msg_sgeobjlib.h"
 
 /****** sgeobj/var/-VariableList **********************************************
 *  NAME

@@ -35,8 +35,9 @@
 
 /*___INFO__MARK_END__*/
 
-#include "sge_dstring.h"
-#include "sge_range_RN_L.h"
+#include "uti/sge_dstring.h"
+
+#include "sgeobj/sge_range_RN_L.h"
 
 #define JUST_PARSE        true
 #define INF_ALLOWED       true

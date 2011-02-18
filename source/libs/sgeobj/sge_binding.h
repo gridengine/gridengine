@@ -39,16 +39,20 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+
 #include "basis_types.h"
-#include "sge_dstring.h"
+
+#include "cull/cull_list.h"
+
+#include "uti/sge_dstring.h"
+#include "uti/sge_string.h"
+#include "uti/sge_spool.h"
+#include "uti/sge_binding_hlp.h"
+
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_binding_BN_L.h"
+
 #include "err_trace.h"
-#include "sge_string.h"
-#include "err_trace.h"
-#include "cull_list.h"
-#include "sge_object.h"
-#include "sge_binding_BN_L.h"
-#include "sge_spool.h"
-#include "sge_binding_hlp.h"
 
 #if defined(LINUX)
 #  include <dlfcn.h>

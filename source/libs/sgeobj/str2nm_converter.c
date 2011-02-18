@@ -40,8 +40,8 @@
 
 #include "cull/cull.h"
 
-#include "sge_all_listsL.h"
-#include "str2nm_converter.h"
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/str2nm_converter.h"
 
 
 static int _lStr2Nm(const lNameSpace *nsp, const char *str) 

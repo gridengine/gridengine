@@ -36,7 +36,7 @@
 
 #include "gdi/sge_gdi2.h"
 
-#include "sge_ack.h"
+#include "sgeobj/sge_ack.h"
 
 int pack_ack(sge_pack_buffer *pb, u_long32 type, u_long32 id, u_long32 id2, const char *str)
 {

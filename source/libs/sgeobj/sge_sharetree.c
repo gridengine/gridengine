@@ -42,8 +42,9 @@
 
 #include "sched/sge_support.h"
 
-#include "sge_sharetree.h"
-#include "sge_answer.h"
+#include "sgeobj/sge_sharetree.h"
+#include "sgeobj/sge_answer.h"
+
 #include "msg_common.h"
 
 

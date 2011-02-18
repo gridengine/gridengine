@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/       
 
-#include "sge_procL.h"
+#include "sgeobj/sge_procL.h"
 
 lListElem *get_pr (int pid);
 void append_pr (lListElem *pr);

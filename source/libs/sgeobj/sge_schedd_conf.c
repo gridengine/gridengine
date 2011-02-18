@@ -47,16 +47,17 @@
 
 #include "sched/msg_schedd.h"
 
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_usage.h"
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_schedd_conf.h"
+#include "sgeobj/cull_parse_util.h"
+#include "sgeobj/msg_sgeobjlib.h"
+
 #include "sge.h"
-#include "sge_object.h"
-#include "sge_answer.h"
-#include "sge_centry.h"
-#include "sge_feature.h"
-#include "sge_usage.h"
-#include "sge_range.h"
-#include "sge_schedd_conf.h"
-#include "cull_parse_util.h"
-#include "msg_sgeobjlib.h"
 #include "msg_common.h"
 
 /******************************************************

@@ -42,19 +42,18 @@
 #include "cull/cull_list.h"
 
 #include "sgeobj/sge_object.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_attr.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_utility.h"
+#include "sgeobj/sge_ckpt.h"
+#include "sgeobj/sge_str.h"
+#include "sgeobj/msg_sgeobjlib.h"
 
-#include "sge_answer.h"
-#include "sge_job.h"
-#include "sge_cqueue.h"
-#include "sge_attr.h"
-#include "sge_qinstance.h"
-#include "sge_utility.h"
-#include "sge_ckpt.h"
 #include "symbols.h"
-#include "sge_str.h"
-
 #include "msg_common.h"
-#include "msg_sgeobjlib.h"
 
 /****** sgeobj/ckpt/ckpt_is_referenced() **************************************
 *  NAME

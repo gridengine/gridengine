@@ -44,11 +44,11 @@
 #include "uti/sge_log.h"
 #include "uti/sge_hostname.h"
 
-#include "sge_answer.h"
-#include "sge_eval_expression.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_eval_expression.h"
+#include "sgeobj/msg_sgeobjlib.h"
 
 #include "msg_common.h"
-#include "msg_sgeobjlib.h"
 
 /* Local variables and definitions  */
 typedef struct _s_token {

@@ -34,11 +34,11 @@
 
 #include <time.h>
 
-#include "sge_calendar_CAL_L.h"
-#include "sge_calendar_CA_L.h"
-#include "sge_calendar_CQU_L.h"
-#include "sge_calendar_TMR_L.h"
-#include "sge_calendar_TM_L.h"
+#include "sgeobj/sge_calendar_CAL_L.h"
+#include "sgeobj/sge_calendar_CA_L.h"
+#include "sgeobj/sge_calendar_CQU_L.h"
+#include "sgeobj/sge_calendar_TMR_L.h"
+#include "sgeobj/sge_calendar_TM_L.h"
 
 bool 
 calendar_parse_year(lListElem *this_elem, lList **answer_list);

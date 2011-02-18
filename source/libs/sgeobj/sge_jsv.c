@@ -515,7 +515,7 @@ bool jsv_url_parse(dstring *jsv_url, lList **answer_list, dstring *type,
                      size = get_pw_buffer_size();
                      buffer = sge_malloc(size);
                      pw = sge_getpwnam_r(u, &pw_struct, buffer, size);
-                     buffer = sge_free(buffer);
+                     sge_free(&buffer);
                      if (pw == NULL) {
                         answer_list_add_sprintf(answer_list, STATUS_EEXIST, ANSWER_QUALITY_ERROR,  
                                                  MSG_JSV_USER_EXIST_S, u);

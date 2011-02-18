@@ -404,7 +404,7 @@ ensure_valid_what_and_where(sge_where_what_t *where_what)
    /* cleanup tmp data */
    if (tmp_what_descr != NULL) {
       cull_hash_free_descr(tmp_what_descr);
-      tmp_what_descr = (lDescr *)sge_free((char *)tmp_what_descr);
+      sge_free(&tmp_what_descr);
    }
    DRETURN_VOID;
 }

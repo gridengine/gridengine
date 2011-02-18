@@ -314,7 +314,7 @@ void var_list_set_sharedlib_path(lList **varl)
          strcat(sharedlib_path, ":");
          strcat(sharedlib_path, old_value);
          lSetString(sharedlib_elem, VA_value, sharedlib_path);
-         sharedlib_path = sge_free(sharedlib_path);
+         sge_free(&sharedlib_path);
       } else {
          DPRINTF(("overwriting empty sharedlib path %s\n", 
                   sharedlib_path_name));
@@ -327,7 +327,7 @@ void var_list_set_sharedlib_path(lList **varl)
       lSetString(sharedlib_elem, VA_value, sge_sharedlib_path);
    }
 
-   sge_sharedlib_path = sge_free(sge_sharedlib_path);
+   sge_free(&sge_sharedlib_path);
    DEXIT;
 }
 
@@ -965,7 +965,7 @@ void getenv_and_set(lListElem *ep, char *variable)
    *a = '\0';
 
    lSetString(ep, VA_value, new_env_value);
-   sge_free(new_env_value);
+   sge_free(&new_env_value);
    return;
 
 }

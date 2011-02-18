@@ -747,7 +747,7 @@ int sge_gid2group(gid_t gid, char *dst, size_t sz, int retries)
        * We need to handle the case when the OS is unable to resolve the GID to
        * a name. [DT] */
       if (gr == NULL) {
-         sge_free(buf);
+         sge_free(&buf);
          DEXIT;
          return 1;
       }
@@ -756,7 +756,7 @@ int sge_gid2group(gid_t gid, char *dst, size_t sz, int retries)
       uidgid_state_set_last_groupname(gr->gr_name);
       uidgid_state_set_last_gid(gid);
 
-      sge_free(buf);
+      sge_free(&buf);
    }
    
    if (dst != NULL) {
@@ -796,7 +796,7 @@ int _sge_gid2group(gid_t gid, gid_t *last_gid, char **groupnamep, int retries)
 #endif
       {
          if (!retries--) {
-            sge_free(buf);
+            sge_free(&buf);
             
             DEXIT;
             return 1;
@@ -809,7 +809,7 @@ int _sge_gid2group(gid_t gid, gid_t *last_gid, char **groupnamep, int retries)
        * We need to handle the case when the OS is unable to resolve the GID to
        * a name. [DT] */
       if (gr == NULL) {
-         sge_free(buf);
+         sge_free(&buf);
          DEXIT;
          return 1;
       }
@@ -818,7 +818,7 @@ int _sge_gid2group(gid_t gid, gid_t *last_gid, char **groupnamep, int retries)
       *groupnamep = sge_strdup(*groupnamep, gr->gr_name);
       *last_gid = gid;
 
-      sge_free(buf);
+      sge_free(&buf);
    }
    
    DEXIT; 

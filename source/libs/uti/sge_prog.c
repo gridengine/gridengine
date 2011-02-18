@@ -666,7 +666,7 @@ static void prog_state_destroy(void *theState)
    FREE(s->unqualified_hostname);
    FREE(s->user_name);
    FREE(s->default_cell);
-   sge_free((char*)s);
+   sge_free(&s);
 }
 
 /****** uti/prog/prog_state_getspecific() **************************************

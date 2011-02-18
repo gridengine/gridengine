@@ -168,7 +168,7 @@ static void sge_env_state_destroy(void *theState)
 
    FREE(s->sge_root);
    FREE(s->sge_cell);
-   sge_free((char*)s);
+   sge_free(&s);
 
    DEXIT;
 }

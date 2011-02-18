@@ -135,13 +135,13 @@ void *sge_realloc(void *ptr, int size, int do_abort)
 *     sge_free() -- replacement for free 
 *
 *  SYNOPSIS
-*     char* sge_free(char *cp) 
+*     void sge_free(char **cp) 
 *
 *  FUNCTION
 *     Replacement for free(). Accepts NULL pointers.
 *
 *  INPUTS
-*     char *cp - pointer to a memory block 
+*     char **cp - pointer to a pointer of a memory block 
 *
 *  RESULT
 *     char* - NULL
@@ -149,12 +149,14 @@ void *sge_realloc(void *ptr, int size, int do_abort)
 *  NOTES
 *     MT-NOTE: sge_free() is MT safe
 ******************************************************************************/
-char *sge_free(char *cp) 
+void sge_free(void *cp) 
 {
-   if (cp != NULL) {
-      free(cp);
+   char **mem = (char **)cp;
+
+   if (mem != NULL && *mem != NULL) {
+      free(*mem);
+      *mem = NULL;
    }
-   return NULL;
 }  
 
 /****** uti/stdlib/sge_getenv() ***********************************************

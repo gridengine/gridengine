@@ -108,7 +108,7 @@ sge_dstring_vsprintf_copy_append(dstring *sb,
          }
          if (dyn_buffer != NULL) {
             ret = function(sb, dyn_buffer);
-            sge_free(dyn_buffer);
+            sge_free(&dyn_buffer);
          } else {
             /* error: no memory */
             ret = NULL;
@@ -123,7 +123,7 @@ sge_dstring_vsprintf_copy_append(dstring *sb,
             va_end(ap_copy);
 
             ret = function(sb, dyn_buffer);
-            sge_free(dyn_buffer);
+            sge_free(&dyn_buffer);
          } else {
             /* error: no memory */
             ret = NULL;

@@ -464,7 +464,7 @@ static void sge_csp_path_destroy(void *theState)
    FREE(s->reconnect_file);
    FREE(s->crl_file);
    FREE(s->password);
-   sge_free((char*)s);
+   sge_free(&s);
 
    DEXIT;
 }

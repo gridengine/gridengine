@@ -828,16 +828,16 @@ static void sge_gdi_ctx_destroy(void *theState)
    sge_path_state_class_destroy(&(s->sge_path_state_obj));
    sge_bootstrap_state_class_destroy(&(s->sge_bootstrap_state_obj));
    sge_csp_path_class_destroy(&(s->sge_csp_path_obj));
-   sge_free(s->master);
-   sge_free(s->username);
-   sge_free(s->groupname);
-   sge_free(s->component_name);
-   sge_free(s->thread_name);
-   sge_free(s->component_username);
-   sge_free(s->ssl_certificate);
-   sge_free(s->ssl_private_key);
+   sge_free(&(s->master));
+   sge_free(&(s->username));
+   sge_free(&(s->groupname));
+   sge_free(&(s->component_name));
+   sge_free(&(s->thread_name));
+   sge_free(&(s->component_username));
+   sge_free(&(s->ssl_certificate));
+   sge_free(&(s->ssl_private_key));
    sge_error_class_destroy(&(s->eh));
-   sge_free((char*)s);
+   sge_free(&s);
 
    DRETURN_VOID;
 }

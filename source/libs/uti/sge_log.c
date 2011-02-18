@@ -719,7 +719,7 @@ static void log_buffer_once_init(void)
 *******************************************************************************/
 static void log_buffer_destroy(void* theBuffer)
 {
-   sge_free((char*)theBuffer);
+   sge_free(&theBuffer);
 }
 
 /****** uti/log/log_buffer_getspecific() ****************************************
@@ -816,7 +816,7 @@ static void log_context_once_init(void)
 *******************************************************************************/
 static void log_context_destroy(void* theContext)
 {
-   sge_free((char*)theContext);
+   sge_free(&theContext);
 }
 
 /****** uti/log/log_context_getspecific() ****************************************

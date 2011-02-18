@@ -316,7 +316,7 @@ sge_gdi_packet_unpack(sge_gdi_packet_class_t **packet, lList **answer_list,
             auth_info = NULL;
             first = false;
          } else {
-            auth_info = (char *) sge_free((char *) auth_info);
+            sge_free(&auth_info);
          }
 
          /* EB: TODO: ST: cleanup - set last parameter to true */

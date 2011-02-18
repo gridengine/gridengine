@@ -370,7 +370,7 @@ sge_gdi_task_free(sge_gdi_task_class_t ** task)
       lFreeList(&((*task)->answer_list));
       lFreeWhat(&((*task)->enumeration));
       lFreeWhere(&((*task)->condition));
-      *task = (sge_gdi_task_class_t *) sge_free((char *) (*task));
+      sge_free(task);
    }
    DRETURN(ret);
 }
@@ -754,11 +754,10 @@ sge_gdi_packet_free(sge_gdi_packet_class_t ** packet)
       if (local_ret1 != 0 || local_ret2 != 0) {
          ret = false;
       }
-      (*packet)->host = sge_free((char *) (*packet)->host);
-      (*packet)->commproc = sge_free((char *) (*packet)->commproc);
-
-      (*packet)->auth_info = sge_free((char *) (*packet)->auth_info);
-      *packet = (sge_gdi_packet_class_t *)sge_free((char *) *packet);
+      sge_free(&((*packet)->host));
+      sge_free(&((*packet)->commproc));
+      sge_free(&((*packet)->auth_info));
+      sge_free(packet);
    }
    DRETURN(ret);
 }

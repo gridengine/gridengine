@@ -38,17 +38,18 @@
 #define NO_SGE_COMPILE_DEBUG
 #endif
 
-#include "sgermon.h"
-#include "sge_log.h"
-#include "msg_cull.h"
+#include "rmon/sgermon.h"
 
-#include "cull_list.h"
-#include "cull_hash.h"
-#include "cull_listP.h"
-#include "cull_multitypeP.h"
-#include "cull_multitype.h"
-#include "sge_string.h"
-#include "sge_hostname.h"
+#include "uti/sge_log.h"
+#include "uti/sge_string.h"
+#include "uti/sge_hostname.h"
+
+#include "cull/cull_list.h"
+#include "cull/cull_hash.h"
+#include "cull/cull_listP.h"
+#include "cull/cull_multitypeP.h"
+#include "cull/cull_multitype.h"
+#include "cull/msg_cull.h"
 
 /****** cull/hash/--CULL_Hashtable **********************************************
 *  NAME

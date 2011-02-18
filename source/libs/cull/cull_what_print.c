@@ -39,15 +39,17 @@
 #define NO_SGE_COMPILE_DEBUG
 #endif
 
-#include "sge_log.h"
-#include "sgermon.h"
-#include "cull_listP.h"
-#include "cull_list.h"
-#include "cull_db.h"
-#include "cull_parse.h"
-#include "cull_multitype.h"
-#include "cull_whatP.h"
-#include "cull_lerrnoP.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+
+#include "cull/cull_listP.h"
+#include "cull/cull_list.h"
+#include "cull/cull_db.h"
+#include "cull/cull_parse.h"
+#include "cull/cull_multitype.h"
+#include "cull/cull_whatP.h"
+#include "cull/cull_lerrnoP.h"
 
 static void _lWriteWhatTo(const lEnumeration *ep, dstring *buffer, int level);
 

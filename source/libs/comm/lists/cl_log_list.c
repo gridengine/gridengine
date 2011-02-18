@@ -1,14 +1,3 @@
-#include <stdio.h>
-#include <errno.h>
-#include <string.h>
-#include <sys/time.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <libgen.h>
-
-#include "cl_lists.h"
-#include "cl_util.h"
-
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  *
@@ -40,6 +29,17 @@
  *
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
+#include <stdio.h>
+#include <errno.h>
+#include <string.h>
+#include <sys/time.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <libgen.h>
+
+#include "comm/lists/cl_lists.h"
+#include "comm/lists/cl_util.h"
 
 static pthread_mutex_t global_cl_log_list_mutex = PTHREAD_MUTEX_INITIALIZER;
 static cl_raw_list_t* global_cl_log_list = NULL;

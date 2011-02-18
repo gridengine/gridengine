@@ -1,11 +1,3 @@
-#include <stdio.h>
-#include <errno.h>
-#include <string.h>
-#include <sys/time.h>
-#include <stdlib.h>
-#include "cl_util.h"
-
-
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  *
@@ -38,8 +30,15 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "cl_fd_list.h"
-#include "cl_commlib.h"
+#include <stdio.h>
+#include <errno.h>
+#include <string.h>
+#include <sys/time.h>
+#include <stdlib.h>
+
+#include "comm/lists/cl_util.h"
+#include "comm/cl_fd_list.h"
+#include "comm/cl_commlib.h"
 
 int cl_fd_list_setup(cl_raw_list_t** list_p, char* list_name) {
    return cl_raw_list_setup(list_p, list_name, 1);

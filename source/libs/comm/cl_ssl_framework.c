@@ -86,15 +86,15 @@
  #include <sys/poll.h>
 #endif
 
-#include "cl_errors.h"
-#include "cl_connection_list.h"
-#include "cl_fd_list.h"
-#include "cl_ssl_framework.h"
-#include "cl_communication.h"
-#include "cl_commlib.h"
-#include "msg_commlib.h"
-#include "sge_unistd.h"
-#include "sge_os.h"
+#include "comm/lists/cl_errors.h"
+#include "comm/cl_connection_list.h"
+#include "comm/cl_fd_list.h"
+#include "comm/cl_ssl_framework.h"
+#include "comm/cl_communication.h"
+#include "comm/cl_commlib.h"
+#include "comm/msg_commlib.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_os.h"
 
 #if (OPENSSL_VERSION_NUMBER < 0x0090700fL) 
 #define OPENSSL_CONST
@@ -5148,12 +5148,12 @@ static int cl_com_ssl_fill_private_from_peer_cert(cl_com_ssl_private_t *private,
 #include <arpa/inet.h>
 #include <limits.h>
 
-#include "cl_errors.h"
-#include "cl_connection_list.h"
-#include "cl_ssl_framework.h"
-#include "cl_communication.h"
-#include "cl_commlib.h"
-#include "msg_commlib.h"
+#include "comm/lists/cl_errors.h"
+#include "comm/cl_connection_list.h"
+#include "comm/cl_ssl_framework.h"
+#include "comm/cl_communication.h"
+#include "comm/cl_commlib.h"
+#include "comm/msg_commlib.h"
 
 
 /* dummy functions for compilation without openssl lib */

@@ -5,10 +5,10 @@
 
 #include <string.h>
 
+#include "uti/sge_profiling.h"
+
 #include "cull/cull.h"
 #include "cull/cull_whatP.h"
-
-#include "uti/sge_profiling.h"
 
 enum {
    TEST_int = 1,

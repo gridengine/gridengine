@@ -38,11 +38,12 @@
 #include <signal.h>
 #include <unistd.h>
 
-#include "cl_lists.h"
-#include "cl_commlib.h"
-#include "basis_types.h"
-
 #include "uti/sge_profiling.h"
+
+#include "comm/lists/cl_lists.h"
+#include "comm/cl_commlib.h"
+
+#include "basis_types.h"
 
 /* shutdown when test client can't connect for more than 15 min */
 #define SGE_TEST_VIRTUAL_CLIENT_SHUTDOWN_TIMEOUT 15*60

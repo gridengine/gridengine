@@ -36,9 +36,9 @@
 
 #include "basis_types.h"
 
-#include "cl_lists.h"
-#include "cl_data_types.h"
-#include "cl_communication.h"
+#include "comm/lists/cl_lists.h"
+#include "comm/cl_data_types.h"
+#include "comm/cl_communication.h"
 
 #define CL_COM_DEBUG_CLIENT_NAME "debug_client"
 

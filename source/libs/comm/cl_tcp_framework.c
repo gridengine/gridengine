@@ -1,32 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <netdb.h>
-#include <string.h>
-
-
-#include <netinet/tcp.h> 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/time.h>
-
-#include <netinet/in.h>
-
-#ifdef USE_POLL
- #include <sys/poll.h>
-#endif
-
-#include "cl_tcp_framework.h"
-#include "cl_communication.h"
-#include "cl_commlib.h"
-#include "cl_connection_list.h"
-#include "cl_fd_list.h"
-#include "msg_commlib.h"
-#include "sge_unistd.h"
-#include "sge_os.h"
-
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  *
@@ -58,6 +29,35 @@
  *
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <netdb.h>
+#include <string.h>
+
+#include <netinet/tcp.h> 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/time.h>
+
+#include <netinet/in.h>
+
+#ifdef USE_POLL
+ #include <sys/poll.h>
+#endif
+
+#include "comm/cl_tcp_framework.h"
+#include "comm/cl_communication.h"
+#include "comm/cl_commlib.h"
+#include "comm/cl_connection_list.h"
+#include "comm/cl_fd_list.h"
+#include "comm/msg_commlib.h"
+
+#include "uti/sge_unistd.h"
+#include "uti/sge_os.h"
 
 /* connection specific struct (not used from outside) */
 typedef struct cl_com_tcp_private_type {

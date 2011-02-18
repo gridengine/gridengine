@@ -50,18 +50,19 @@
 
 #include "uti/sge_hostname.h"
 #include "uti/sge_string.h"
-#include "cl_commlib.h"
-#include "cl_util.h"
-#include "cl_data_types.h"
-#include "cl_tcp_framework.h"
-#include "cl_ssl_framework.h"
-#include "cl_message_list.h"
-#include "cl_host_list.h"
-#include "cl_host_alias_list.h"
-#include "cl_connection_list.h"
-#include "cl_endpoint_list.h"
-#include "cl_communication.h"
-#include "msg_commlib.h"
+
+#include "comm/lists/cl_util.h"
+#include "comm/cl_commlib.h"
+#include "comm/cl_data_types.h"
+#include "comm/cl_tcp_framework.h"
+#include "comm/cl_ssl_framework.h"
+#include "comm/cl_message_list.h"
+#include "comm/cl_host_list.h"
+#include "comm/cl_host_alias_list.h"
+#include "comm/cl_connection_list.h"
+#include "comm/cl_endpoint_list.h"
+#include "comm/cl_communication.h"
+#include "comm/msg_commlib.h"
 
 #define CL_DO_COMMUNICATION_DEBUG 0
 

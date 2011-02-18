@@ -32,8 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "cull_list.h"
-#include "cull_multitype.h"
+#include "cull/cull_list.h"
+#include "cull/cull_multitype.h"
 
 union _lMultiType {
    lFloat fl;

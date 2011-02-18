@@ -42,7 +42,7 @@
 extern "C" {
 #endif
 
-#include "sge_bitfield.h"
+#include "uti/sge_bitfield.h"
 
 #define CHUNK  (1024*1024)
 

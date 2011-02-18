@@ -2,8 +2,8 @@
 #include <stdlib.h>
 
 #define __SGE_GDI_LIBRARY_HOME_OBJECT_FILE__
-#include "cull.h"
-#include "cull_list.h"
+#include "cull/cull.h"
+#include "cull/cull_list.h"
 
 enum {
    TEST_int = 1,

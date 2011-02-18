@@ -47,7 +47,7 @@
 #include "basis_types.h"
 
 #define __SGE_GDI_LIBRARY_HOME_OBJECT_FILE__
-#include "cull.h"
+#include "cull/cull.h"
 
 #include "uti/sge_profiling.h"
 

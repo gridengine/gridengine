@@ -40,22 +40,23 @@
 #define NO_SGE_COMPILE_DEBUG
 #endif
 
-#include "cull_list.h"
-#include "cull_lerrnoP.h"
-#include "cull_listP.h"
-#include "cull_multitypeP.h"
-#include "cull_whatP.h"
-#include "cull_whereP.h"
-#include "cull_pack.h"
-#include "cull_parse.h"
-#include "cull_file.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "sge_io.h"
-#include "sge_unistd.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_io.h"
+#include "uti/sge_unistd.h"
 #include "uti/sge_profiling.h"
 
-#include "msg_cull.h"
+#include "cull/cull_list.h"
+#include "cull/cull_lerrnoP.h"
+#include "cull/cull_listP.h"
+#include "cull/cull_multitypeP.h"
+#include "cull/cull_whatP.h"
+#include "cull/cull_whereP.h"
+#include "cull/cull_pack.h"
+#include "cull/cull_parse.h"
+#include "cull/cull_file.h"
+#include "cull/msg_cull.h"
 
 /****** cull/file/lWriteElemToDisk() ******************************************
 *  NAME

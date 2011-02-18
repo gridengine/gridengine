@@ -43,8 +43,8 @@
 #include <netinet/in.h>
 #endif
 
-#include "cl_lists.h"
-#include "cl_xml_parsing.h"
+#include "comm/lists/cl_lists.h"
+#include "comm/cl_xml_parsing.h"
 
 typedef enum cl_com_debug_message_tag_type {
    CL_DMT_MESSAGE = 1,  /* default */

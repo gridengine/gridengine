@@ -38,10 +38,11 @@
 #define NO_SGE_COMPILE_DEBUG
 #endif
 
-#include "sgermon.h"
-#include "cull_listP.h"
-#include "cull_parse.h"
-#include "cull_lerrnoP.h"
+#include "rmon/sgermon.h"
+
+#include "cull/cull_listP.h"
+#include "cull/cull_parse.h"
+#include "cull/cull_lerrnoP.h"
 
 /* ---------- static funcs --------------------------------- */
 static const char *eatws(const char *s);

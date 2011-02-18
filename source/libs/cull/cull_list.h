@@ -39,8 +39,8 @@
 
 #include "basis_types.h"
 #include "cull/cull_hashP.h"
-#include "pack.h"
-#include "sge_dstring.h"
+#include "cull/pack.h"
+#include "uti/sge_dstring.h"
 
 #ifdef  __cplusplus
 extern "C" {

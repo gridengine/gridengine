@@ -38,13 +38,13 @@
 /* this is the main header file for lib ngclists */
 #include <pthread.h>
 
-#include "cl_errors.h"
-#include "cl_list_types.h"
-#include "cl_raw_list.h"
-#include "cl_thread.h"
-#include "cl_thread_list.h"
-#include "cl_log_list.h"
-#include "cl_string_list.h"
+#include "comm/lists/cl_errors.h"
+#include "comm/lists/cl_list_types.h"
+#include "comm/lists/cl_raw_list.h"
+#include "comm/lists/cl_thread.h"
+#include "comm/lists/cl_thread_list.h"
+#include "comm/lists/cl_log_list.h"
+#include "comm/lists/cl_string_list.h"
 
 #else
 /* windows */

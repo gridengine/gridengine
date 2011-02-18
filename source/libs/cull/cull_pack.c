@@ -39,21 +39,21 @@
 #define NO_SGE_COMPILE_DEBUG
 #endif
 
-#include "sgermon.h"
-#include "sge_unistd.h"
+#include "rmon/sgermon.h"
 
-#include "sge_profiling.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_profiling.h"
 
-#include "cull_list.h"
-#include "cull_hash.h"
-#include "cull_lerrnoP.h"
-#include "cull_listP.h"
-#include "cull_multitypeP.h"
-#include "cull_whatP.h"
-#include "cull_whereP.h"
-#include "cull_pack.h"
-#include "cull_parse.h"
-#include "cull_what_print.h"
+#include "cull/cull_list.h"
+#include "cull/cull_hash.h"
+#include "cull/cull_lerrnoP.h"
+#include "cull/cull_listP.h"
+#include "cull/cull_multitypeP.h"
+#include "cull/cull_whatP.h"
+#include "cull/cull_whereP.h"
+#include "cull/cull_pack.h"
+#include "cull/cull_parse.h"
+#include "cull/cull_what_print.h"
 
 /* =========== implementation ================================= */
 

@@ -32,8 +32,9 @@
  *
  ************************************************************************/
 /*___INFO__MARK_END__*/
-#include "cl_lists.h"
-#include "cl_data_types.h"
+
+#include "comm/lists/cl_lists.h"
+#include "comm/cl_data_types.h"
 
 
 #define CL_COM_SSL_FRAMEWORK_MAX_INT      32767

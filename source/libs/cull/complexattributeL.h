@@ -32,8 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "boundaries.h"
-#include "cull.h"
+#include "cull/boundaries.h"
+#include "cull/cull.h"
 
 enum {
    A_name = A_LOWERBOUND,

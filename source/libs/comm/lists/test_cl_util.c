@@ -37,7 +37,8 @@
 #include <stdlib.h>
 
 #include <limits.h>
-#include "cl_util.h"
+
+#include "comm/lists/cl_util.h"
 
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__

@@ -34,11 +34,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
-#include "cl_commlib.h"
-
-
+#include "comm/cl_commlib.h"
 
 #endif /* __CL_DUMMYII_COMMLIB_H */
 

@@ -1,11 +1,3 @@
-#include <stdio.h>
-#include <errno.h>
-#include <string.h>
-#include <sys/time.h>
-#include <stdlib.h>
-
-#include "cl_lists.h"
-
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  *
@@ -38,10 +30,13 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include <stdio.h>
+#include <errno.h>
+#include <string.h>
+#include <sys/time.h>
+#include <stdlib.h>
 
-
-
-
+#include "comm/lists/cl_lists.h"
 
 /* setup raw list
 

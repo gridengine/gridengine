@@ -33,10 +33,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "basis_types.h"
-#include "cl_errors.h"
-#include "msg_commlistslib.h"
 
+#include "basis_types.h"
+
+#include "comm/lists/cl_errors.h"
+#include "comm/lists/msg_commlistslib.h"
 
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__

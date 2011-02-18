@@ -39,9 +39,9 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 
-#include "cl_commlib.h"
-#include "cl_log_list.h"
-#include "cl_endpoint_list.h"
+#include "comm/cl_commlib.h"
+#include "comm/lists/cl_log_list.h"
+#include "comm/cl_endpoint_list.h"
 #include "uti/sge_profiling.h"
 
 void sighandler_issue_tests(int sig);

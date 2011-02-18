@@ -42,21 +42,23 @@
 #define NO_SGE_COMPILE_DEBUG
 #endif
 
-#include "msg_cull.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "sge_string.h"
-#include "cull_db.h"
-#include "cull_sortP.h"
-#include "cull_where.h"
-#include "cull_listP.h"
-#include "cull_multitypeP.h"
-#include "cull_whatP.h"
-#include "cull_lerrnoP.h"
-#include "cull_hash.h"
-#include "cull_state.h"
-#include "pack.h"
-#include "cull_pack.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_string.h"
+
+#include "cull/msg_cull.h"
+#include "cull/cull_db.h"
+#include "cull/cull_sortP.h"
+#include "cull/cull_where.h"
+#include "cull/cull_listP.h"
+#include "cull/cull_multitypeP.h"
+#include "cull/cull_whatP.h"
+#include "cull/cull_lerrnoP.h"
+#include "cull/cull_hash.h"
+#include "cull/cull_state.h"
+#include "cull/pack.h"
+#include "cull/cull_pack.h"
 
 #define CULL_BASIS_LAYER CULL_LAYER
 

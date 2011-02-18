@@ -34,8 +34,8 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "cl_util.h"
-#include "cl_errors.h"
+#include "comm/lists/cl_util.h"
+#include "comm/lists/cl_errors.h"
 
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__

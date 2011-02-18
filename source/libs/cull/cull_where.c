@@ -29,6 +29,7 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -41,19 +42,21 @@
 #define NO_SGE_COMPILE_DEBUG
 #endif
 
-#include "msg_cull.h"
-#include "sge_string.h"
-#include "sge_hostname.h"
-#include "sge_log.h"
+#include "rmon/sgermon.h"
 
-#include "sgermon.h"
-#include "cull_listP.h"
-#include "cull_whereP.h"
-#include "cull_parse.h"
-#include "cull_lerrnoP.h"
-#include "pack.h"
-#include "cull_pack.h"
-#include "msg_gdilib.h"
+#include "uti/sge_string.h"
+#include "uti/sge_hostname.h"
+#include "uti/sge_log.h"
+
+#include "cull/msg_cull.h"
+#include "cull/cull_listP.h"
+#include "cull/cull_whereP.h"
+#include "cull/cull_parse.h"
+#include "cull/cull_lerrnoP.h"
+#include "cull/pack.h"
+#include "cull/cull_pack.h"
+
+#include "gdi/msg_gdilib.h"
 
 static lCondition *read_val(lDescr *dp, cull_parse_state *state, va_list *app);
 static lCondition *factor(lDescr *dp, cull_parse_state *state, va_list *app);

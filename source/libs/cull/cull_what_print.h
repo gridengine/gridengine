@@ -32,13 +32,13 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "cull_list.h"
+#include "cull/cull_list.h"
 
 #ifdef  __cplusplus
 extern "C" {
 #endif
 
-#include "sge_dstring.h"
+#include "uti/sge_dstring.h"
 
 void lWriteWhatTo(const lEnumeration *ep, FILE *fp);
 

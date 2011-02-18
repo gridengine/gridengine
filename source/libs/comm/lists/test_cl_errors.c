@@ -36,8 +36,7 @@
 #include <sys/time.h>
 #include <stdlib.h>
 
-
-#include "cl_lists.h"
+#include "comm/lists/cl_lists.h"
 
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__

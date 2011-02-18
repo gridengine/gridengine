@@ -32,8 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "cull_list.h"
-#include "sge_bitfield.h"
+#include "cull/cull_list.h"
+#include "uti/sge_bitfield.h"
 
 #ifdef  __cplusplus
 extern "C" {

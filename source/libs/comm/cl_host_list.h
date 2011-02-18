@@ -33,9 +33,9 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "cl_lists.h"
-#include "cl_data_types.h"
-#include "sge_htable.h"
+#include "comm/lists/cl_lists.h"
+#include "comm/cl_data_types.h"
+#include "uti/sge_htable.h"
 
 #define CL_HOST_LIST_DEFAULT_RERESOLVE_TIME  1  * 60       /*  1 min */
 #define CL_HOST_LIST_DEFAULT_UPDATE_TIME     2  * 60       /*  2 min */

@@ -34,22 +34,22 @@
 
 #ifndef JGDI_GENERATE
 
-#include "cull_listP.h"
-#include "cull_list.h"
-#include "cull_where.h"
-#include "cull_what.h"
-#include "cull_what_elem.h"
-#include "cull_what_print.h"
-#include "cull_db.h"
-#include "cull_multitype.h"
-#include "cull_dump_scan.h"
-#include "cull_lerrno.h"
-#include "cull_pack.h"
-#include "cull_sort.h"
-#include "cull_tree.h"
-#include "cull_hash.h"
-#include "cull_state.h"
-#include "pack.h"
+#include "cull/cull_listP.h"
+#include "cull/cull_list.h"
+#include "cull/cull_where.h"
+#include "cull/cull_what.h"
+#include "cull/cull_what_elem.h"
+#include "cull/cull_what_print.h"
+#include "cull/cull_db.h"
+#include "cull/cull_multitype.h"
+#include "cull/cull_dump_scan.h"
+#include "cull/cull_lerrno.h"
+#include "cull/cull_pack.h"
+#include "cull/cull_sort.h"
+#include "cull/cull_tree.h"
+#include "cull/cull_hash.h"
+#include "cull/cull_state.h"
+#include "cull/pack.h"
 
 #endif /* JGDI_GENERATE */
 

@@ -1,10 +1,3 @@
-#include <stdio.h>
-#include <errno.h>
-#include <string.h>
-#include <sys/time.h>
-#include <stdlib.h>
-
-
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  *
@@ -37,9 +30,15 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "cl_endpoint_list.h"
-#include "cl_connection_list.h"
-#include "cl_commlib.h"
+#include <stdio.h>
+#include <errno.h>
+#include <string.h>
+#include <sys/time.h>
+#include <stdlib.h>
+
+#include "comm/cl_endpoint_list.h"
+#include "comm/cl_connection_list.h"
+#include "comm/cl_commlib.h"
 
 
 #ifdef __CL_FUNCTION__

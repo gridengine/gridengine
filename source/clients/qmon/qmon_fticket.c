@@ -57,14 +57,14 @@
 #include "qmon_init.h"
 #include "qmon_project.h"
 #include "qmon_appres.h"
-#include "sge_all_listsL.h"
-#include "sge_answer.h"
-#include "sge_userset.h"
+#include "Matrix.h"
+
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_userset.h"
 
 #include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi_ctx.h"
-
-#include "Matrix.h"
 
 extern sge_gdi_ctx_class_t *ctx;
 

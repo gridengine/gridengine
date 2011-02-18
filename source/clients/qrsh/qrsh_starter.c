@@ -50,9 +50,11 @@
 #include <sys/types.h>
 
 #include "basis_types.h"
-#include "config_file.h"
+
+#include "uti/config_file.h"
 #include "uti/sge_stdlib.h"
 #include "uti/sge_string.h"
+
 #include "uti/sge_unistd.h"
 #include "uti/sge_uidgid.h"
 #include "uti/sge_stdio.h"

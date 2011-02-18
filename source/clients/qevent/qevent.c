@@ -46,31 +46,34 @@
 #include <sys/resource.h>
 #include <sys/wait.h>
 
-#include "sge_string.h"
-#include "sge_unistd.h"
-#include "sge_all_listsL.h"
-#include "usage.h"
-#include "sig_handlers.h"
-#include "commlib.h"
-#include "sge_prog.h"
-#include "sgermon.h"
-#include "sge_log.h"
+#include "rmon/sgermon.h"
 
-#include "msg_clients_common.h"
-#include "msg_common.h"
+#include "uti/sge_string.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_log.h"
+#include "uti/sge_profiling.h"
+#include "uti/sge_time.h"
+#include "uti/sge_spool.h"
 
-#include "sge_answer.h"
-#include "sge_mirror.h"
-#include "sge_event.h"
-#include "sge_time.h"
-#include "sge_feature.h"
-#include "sge_spool.h"
-#include "qevent.h"
-#include "sge_profiling.h"
-#include "sge_mt_init.h"
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_event.h"
+#include "sgeobj/sge_feature.h"
 #include "sgeobj/sge_job.h"
 
+#include "comm/commlib.h"
+
+#include "mir/sge_mirror.h"
+
 #include "gdi/sge_gdi_ctx.h"
+
+#include "qevent.h"
+#include "usage.h"
+#include "sge_mt_init.h"
+#include "sig_handlers.h"
+#include "msg_clients_common.h"
+#include "msg_common.h"
 
 #if defined(SOLARIS) || defined(ALPHA)
 /* ALPHA4 only has wait3() prototype if _XOPEN_SOURCE_EXTENDED is defined */

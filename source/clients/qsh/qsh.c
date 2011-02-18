@@ -47,45 +47,48 @@
 #include <arpa/inet.h>
 #endif
 
+#include "rmon/sgermon.h"
+
+#include "uti/sge_hostname.h"
+#include "uti/sge_sl.h"
+#include "uti/sge_profiling.h"
+#include "uti/sge_stdio.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_log.h"
+#include "uti/sge_string.h"
+#include "uti/setup_path.h" 
+#include "uti/sge_afsutil.h"
+#include "uti/sge_signal.h"
+#include "uti/sge_unistd.h"
+
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_var.h"
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_job.h"
+
+#include "gdi/sge_gdi_ctx.h"
+#include "gdi/sge_gdi2.h"
+#include "gdi/sge_gdi.h"
+#include "gdi/sge_security.h"
+#include "gdi/sge_qexec.h"
+#include "gdi/qm_name.h"
+
+#include "comm/commlib.h"
+
+#include "sig_handlers.h"
 #include "basis_types.h"
+#include "sge_mt_init.h"
 #include "symbols.h"
-#include "sge_all_listsL.h"
 #include "usage.h"
 #include "parse_qsub.h"
 #include "parse_job_cull.h"
 #include "parse_job_qsh.h"
 #include "read_defaults.h"
 #include "show_job.h"
-#include "commlib.h"
-#include "sig_handlers.h"
-#include "sge_prog.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "sge_string.h"
-#include "setup_path.h" 
-#include "sge_afsutil.h"
-#include "sge_conf.h"
-#include "sge_job.h"
-#include "sge_qexec.h"
-#include "qm_name.h"
-#include "sge_signal.h"
-#include "sge_unistd.h"
-#include "sge_security.h"
-#include "sge_answer.h"
-#include "sge_var.h"
-#include "gdi/sge_gdi.h"
-#include "sge_profiling.h"
-#include "sge_stdio.h"
-#include "sge_mt_init.h"
-
 #include "msg_clients_common.h"
 #include "msg_qsh.h"
 #include "msg_common.h"
-#include "sge_hostname.h"
-#include "sge_sl.h"
-
-#include "gdi/sge_gdi_ctx.h"
-#include "gdi/sge_gdi2.h"
 
 #if defined(DARWIN)
 #  include <termios.h>
@@ -102,11 +105,11 @@
 #  include <termio.h>
 #endif
 
-#include "sge_pty.h"
+#include "uti/sge_pty.h"
 #include "sge_ijs_comm.h"
 #include "sge_ijs_threads.h"
 #include "sge_client_ijs.h"
-#include "sge_parse_args.h"
+#include "uti/sge_parse_args.h"
 
 #include "sgeobj/cull_parse_util.h"
 #include "sgeobj/sge_jsv.h"

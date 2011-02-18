@@ -31,21 +31,24 @@
 
 #include <string.h>
  
-#include "sge_resource_quota_qconf.h"
-#include "msg_common.h"
-#include "msg_clients_common.h"
+#include "rmon/sgermon.h"
 
 #include "uti/sge_log.h"
 #include "uti/sge_edit.h"
-#include "rmon/sgermon.h"
-#include "gdi/sge_gdi.h"
 #include "uti/sge_prog.h"
+
+#include "gdi/sge_gdi.h"
 
 #include "sgeobj/sge_utility.h"
 #include "sgeobj/sge_resource_quota.h"
 #include "sgeobj/sge_answer.h"
+
 #include "spool/flatfile/sge_flatfile.h"
 #include "spool/flatfile/sge_flatfile_obj.h"
+
+#include "sge_resource_quota_qconf.h"
+#include "msg_common.h"
+#include "msg_clients_common.h"
 
 static bool rqs_provide_modify_context(sge_gdi_ctx_class_t *ctx,
                                   lList **rqs_list, lList **answer_list,

@@ -32,9 +32,7 @@
 
 #include <string.h>
 
-#include "basis_types.h"
-#include "sge.h"
-#include "sgermon.h"
+#include "rmon/sgermon.h"
 
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_advance_reservation.h"
@@ -42,6 +40,8 @@
 #include "qrstat_report_handler.h"
 #include "qrstat_report_handler_xml.h"
 
+#include "basis_types.h"
+#include "sge.h"
 #include "msg_common.h"
 
 static bool

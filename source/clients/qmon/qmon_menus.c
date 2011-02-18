@@ -69,10 +69,11 @@
 #include "qmon_project.h"
 #include "qmon_cplx.h"
 #include "qmon_calendar.h"
-#include "sge_feature.h"
 #include "qmon_resource_quota.h"
 #include "qmon_ar.h"
 #include "qmon_arsub.h"
+
+#include "sgeobj/sge_feature.h"
 
 /*-------------------------------------------------------------------------*/
 #ifdef QMON_DEBUG

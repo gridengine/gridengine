@@ -39,22 +39,6 @@
 #include <Xmt/InputField.h>
 #include <Xmt/Procedures.h>
 
-#include "sge_usage.h"
-
-#include "cull.h"
-#include "gdi/sge_gdi.h"
-#include "sge_parse_num_par.h"
-#include "sge_complex_schedd.h"
-#include "sge_range.h"
-#include "sge_answer.h"
-#include "sge_job.h"
-#include "sge_qinstance.h"
-#include "sge_subordinate.h"
-#include "sge_centry.h"
-#include "sge_var.h"
-#include "sge_host.h"
-#include "sge_mailrec.h"
-
 #include "qmon_rmon.h"
 #include "qmon_quarks.h"
 #include "qmon_matrix.h"
@@ -62,6 +46,24 @@
 #include "qmon_message.h"
 #include "qmon_util.h"
 
+#include "uti/sge_parse_num_par.h"
+
+#include "sgeobj/sge_usage.h"
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_subordinate.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_var.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_mailrec.h"
+
+#include "cull/cull.h"
+
+#include "gdi/sge_gdi.h"
+
+#include "sched/sge_complex_schedd.h"
 
 static Widget CreateMatrixSimple(Widget parent, String name, ArgList arglist, Cardinal argcount);
 static Widget CreateMatrix(Widget parent, String name, ArgList arglist, Cardinal argcount);

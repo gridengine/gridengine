@@ -35,25 +35,26 @@
 #include "basis_types.h"
 #include "sge.h"
 
-#include "sge_bootstrap.h"
+#include "rmon/sgermon.h"
+#include "uti/sge_bootstrap.h"
+#include "uti/sge_log.h"
+
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/parse.h"
+#include "sgeobj/sge_str.h"
 
 #include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi_ctx.h"
 #include "gdi/sge_gdi2.h"
-#include "sge_all_listsL.h"
 
-#include "sgermon.h"
-#include "sge_answer.h"
-#include "sge_log.h"
 #include "read_defaults.h"
-#include "parse.h"
 #include "parse_qsub.h"
 #include "parse_job_cull.h"
 #include "usage.h"
+#include "sig_handlers.h"
 #include "msg_common.h"
 #include "msg_clients_common.h"
-#include "sig_handlers.h"
-#include "sgeobj/sge_str.h"
 
 static bool sge_parse_cmdline_qrdel(char **argv, char **envp, lList **ppcmdline, lList **alpp);
 static bool sge_parse_qrdel(lList **ppcmdline, lList **ppid_list, lList **alpp);

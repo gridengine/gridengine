@@ -50,15 +50,6 @@
 #include <Xmt/InputField.h>
 #include <Xmt/Procedures.h>
 
-#include "Matrix.h"
-#include "sge_all_listsL.h"
-#include "commlib.h"
-#include "sge_complex_schedd.h"
-#include "sge_answer.h"
-#include "sge_centry.h"
-#include "sge_centry_qconf.h"
-#include "spool/flatfile/sge_flatfile.h"
-#include "spool/flatfile/sge_flatfile_obj.h"
 #include "qmon_proto.h"
 #include "qmon_rmon.h"
 #include "qmon_cull.h"
@@ -71,13 +62,27 @@
 #include "qmon_cplx.h"
 #include "qmon_globals.h"
 #include "AskForItems.h"
-#include "msg_qmaster.h"
-#include "msg_common.h"
+#include "Matrix.h"
+
+#include "uti/sge_io.h"
+
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_centry.h"
+
+#include "comm/commlib.h"
+
+#include "sched/sge_complex_schedd.h"
 
 #include "gdi/sge_gdi_ctx.h"
 #include "gdi/sge_gdi.h"
 
-#include "uti/sge_io.h"
+#include "spool/flatfile/sge_flatfile.h"
+#include "spool/flatfile/sge_flatfile_obj.h"
+
+#include "sge_centry_qconf.h"
+#include "msg_qmaster.h"
+#include "msg_common.h"
 
 extern sge_gdi_ctx_class_t *ctx;
 

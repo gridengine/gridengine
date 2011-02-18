@@ -35,22 +35,25 @@
 #include <pwd.h>
 #include <sys/types.h>
 
-#include "sgermon.h"
-#include "sge_answer.h"
-#include "setup_path.h"
-#include "sge_unistd.h"
-#include "msg_common.h"
-#include "msg_clients_common.h"
-#include "sge_feature.h"
-#include "sge_uidgid.h"
-#include "sge_io.h"
-#include "sge_prog.h"
+#include "rmon/sgermon.h"
+
+#include "uti/setup_path.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_uidgid.h"
+#include "uti/sge_io.h"
+#include "uti/sge_prog.h"
+
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/parse.h"
+
 #include "parse_job_cull.h"
 #include "parse_qsub.h"
 #include "read_defaults.h"
-#include "sgeobj/parse.h"
 #include "sge_options.h"
-#include "sgeobj/sge_job.h"
+#include "msg_common.h"
+#include "msg_clients_common.h"
 
 static char *get_cwd_defaults_file_path (lList **answer_list);
 static void append_opts_from_default_files (u_long32 prog_number,

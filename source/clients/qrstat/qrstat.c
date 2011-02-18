@@ -30,37 +30,33 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "basis_types.h"
-#include "sge.h"
-
-#include "sge_bootstrap.h"
+#include "rmon/sgermon.h"
+#include "uti/sge_bootstrap.h"
+#include "uti/sge_uidgid.h"
+#include "uti/sge_io.h"
+#include "uti/sge_string.h"
+#include "uti/sge_log.h"
 
 #include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi_ctx.h"
 #include "gdi/sge_gdi2.h"
 
-#include "sge_all_listsL.h"
-#include "sgermon.h"
-#include "sge_log.h"
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/parse.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_str.h"
+
+#include "basis_types.h"
+#include "sge.h"
 #include "read_defaults.h"
 #include "parse_qsub.h"
 #include "usage.h"
 #include "sig_handlers.h"
 #include "qrstat.h"
-#include "parse.h"
-
 #include "qrstat_report_handler.h"
 #include "qrstat_report_handler_xml.h"
 #include "qrstat_report_handler_stdout.h"
 #include "qrstat_filter.h"
-
-#include "sgeobj/sge_answer.h"
-#include "sgeobj/sge_str.h"
-
-#include "uti/sge_uidgid.h"
-#include "uti/sge_io.h"
-#include "uti/sge_string.h"
-
 #include "msg_common.h"
 
 extern char **environ;

@@ -37,24 +37,27 @@
 #include <Xmt/Xmt.h>
 #include <Xmt/Dialogs.h>
 
-#include "sge_unistd.h"
-#include "commlib.h"
-#include "sge_answer.h"
-#include "sge_utility.h"
-#include "sge_all_listsL.h"
-#include "sge_feature.h"
-#include "sge_time.h"
-#include "sge_job.h"
-#include "sge_id.h"
 #include "qmon_rmon.h"
 #include "qmon_cull.h"
 #include "qmon_comm.h"
 #include "qmon_timer.h"
 #include "qmon_appres.h"
 #include "qmon_globals.h"
-#include "qm_name.h"
 #include "qmon_init.h"
 
+#include "uti/sge_unistd.h"
+#include "uti/sge_time.h"
+
+#include "comm/commlib.h"
+
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_utility.h"
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_id.h"
+
+#include "gdi/qm_name.h"
 #include "gdi/sge_gdi_ctx.h"
 #include "gdi/sge_gdi.h"
 

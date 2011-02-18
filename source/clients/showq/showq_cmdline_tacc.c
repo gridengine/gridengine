@@ -33,16 +33,19 @@
 #include <stdlib.h>
 #include <pwd.h>
 
-#include "sgermon.h"
+#include "rmon/sgermon.h"
+
+#include "uti/setup_path.h"
+
+#include "cull/cull_list.h"
+
+#include "sgeobj/parse.h"
+#include "sgeobj/sge_answer.h"
+
+#include "gdi/sge_gdi.h"
+
 #include "sge.h"
-#include "sge_gdi.h"
-#include "cull_list.h"
-#include "parse.h"
-#include "setup_path.h"
-
-#include "sge_answer.h"
 #include "showq_cmdline_tacc.h"
-
 #include "msg_common.h"
 
 

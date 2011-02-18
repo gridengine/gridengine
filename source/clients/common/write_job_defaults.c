@@ -34,21 +34,22 @@
 #include <string.h>
 #include <errno.h>
 
-#include "uti/sge_stdio.h"
+#include "rmon/sgermon.h"                       
 
-#include "symbols.h"
-#include "sge_ja_task.h"
-#include "sge_answer.h"
-#include "sge_string.h"
-#include "sge_time.h"
+#include "uti/sge_stdio.h"
+#include "uti/sge_string.h"
+#include "uti/sge_time.h"
+
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/parse.h"
+#include "sgeobj/sge_str.h"
+#include "sgeobj/sge_id.h"
+
 #include "parse_qsub.h"
-#include "parse.h"
-#include "sge_str.h"
-#include "sge_id.h"
-#include "sgermon.h"                       
 #include "unparse_job_cull.h"
 #include "write_job_defaults.h"
-
+#include "symbols.h"
 #include "msg_common.h"
 
 static lList *write_defaults_file(lList *lp, char *filename, int flags);
@@ -235,7 +236,7 @@ FCLOSE_ERROR:
 
 
 #ifdef TEST
-#include "sge_all_listsL.h"
+#include "sgeobj/sge_all_listsL.h"
 int main(int argc, char **argv, char **envp);
 
 int main(
@@ -321,7 +322,7 @@ char **envp
 #endif
 
 #ifdef TEST
-#include "sge_all_listsL.h"
+#include "sgeobj/sge_all_listsL.h"
 int main(int argc, char **argv, char **envp);
 
 int main(

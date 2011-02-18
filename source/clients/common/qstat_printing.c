@@ -33,28 +33,32 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "sge_unistd.h"
-#include "sgermon.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_unistd.h"
+#include "uti/sge_time.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_parse_num_par.h"
+#include "uti/sge_dstring.h"
+
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/parse.h"
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_pe.h"
+#include "sgeobj/sge_ulong.h"
+#include "sgeobj/sge_usage.h"
+
+#include "sched/sge_sched.h"
+#include "sched/sge_urgency.h"
+
 #include "sge.h"
-#include "sge_time.h"
-#include "sge_all_listsL.h"
-#include "sge_host.h"
-#include "sge_sched.h"
-#include "parse.h"
-#include "sge_prog.h"
-#include "sge_parse_num_par.h"
 #include "show_job.h"
-#include "sge_dstring.h"
 #include "qstat_printing.h"
-#include "sge_range.h"
 #include "sig_handlers.h"
 #include "msg_clients_common.h"
-#include "sge_job.h"
-#include "sge_qinstance.h"
-#include "sge_urgency.h"
-#include "sge_pe.h"
-#include "sge_ulong.h"
-#include "sgeobj/sge_usage.h"
 
 static int sge_print_job(lListElem *job, lListElem *jatep, lListElem *qep, int print_jobid, 
                          char *master, dstring *task_str, u_long32 full_listing, int

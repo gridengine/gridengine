@@ -47,11 +47,6 @@
 #include <Xmt/MsgLine.h>
 #include <Xmt/InputField.h>
 
-#include "sge_all_listsL.h"
-#include "gdi/sge_gdi.h"
-#include "sge_answer.h"
-#include "sge_range.h"
-#include "commlib.h"
 #include "qmon_proto.h"
 #include "qmon_rmon.h"
 #include "qmon_cull.h"
@@ -67,9 +62,18 @@
 #include "qmon_matrix.h"
 #include "qmon_globals.h"
 #include "AskForTime.h"
-#include "sge_feature.h"
-#include "sge_sched.h"
-#include "sge_string.h"
+
+#include "uti/sge_string.h"
+
+#include "comm/commlib.h"
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_feature.h"
+
+#include "sched/sge_sched.h"
+
+#include "gdi/sge_gdi.h"
 
 /*-------------------------------------------------------------------------*/
 static Widget qmonCreateSchedConfig(Widget parent);

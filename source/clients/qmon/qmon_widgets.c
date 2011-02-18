@@ -47,17 +47,20 @@
 #include "ListTree.h"
 #include "Tab.h"
 
-#include "sge_all_listsL.h"
-#include "parse_qsub.h"
-#include "sge_ulong.h"
-#include "sge_time.h"
-#include "sge_mailrec.h"
-#include "sge_range.h"
-#include "sge_qinstance.h"
-#include "sge_str.h"
-#include "sge_string.h"
-#include "sge_parse_num_par.h"
-#include "sge_var.h"
+#include "uti/sge_time.h"
+#include "uti/sge_string.h"
+#include "uti/sge_parse_num_par.h"
+#include "uti/sge_string.h"
+
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_ulong.h"
+#include "sgeobj/sge_mailrec.h"
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_str.h"
+#include "sgeobj/cull_parse_util.h"
+#include "sgeobj/sge_var.h"
+
 #include "qmon_quarks.h"
 #include "qmon_widgets.h"
 #include "qmon_rmon.h"
@@ -66,8 +69,8 @@
 #include "qmon_submit.h"
 #include "qmon_message.h"
 #include "qmon_init.h"
-#include "uti/sge_string.h"
-#include "cull_parse_util.h"
+
+#include "parse_qsub.h"
 
 #if 0
 #include "Outline.h"

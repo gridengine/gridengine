@@ -34,31 +34,33 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-#include "sgermon.h"
-#include "sge_log.h"
-#include "usage.h"
-#include "sge_all_listsL.h"
-#include "commlib.h"
-#include "sge_prog.h"
-#include "sig_handlers.h"
-#include "parse.h"
-#include "sge_answer.h"
-#include "sge_feature.h"
-#include "sge_unistd.h"
-#include "sge_str.h"
+#include "rmon/sgermon.h"
 
-#include "msg_common.h"
-#include "msg_clients_common.h"
-#include "msg_qdel.h"
+#include "uti/sge_log.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_profiling.h"
+
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/parse.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_str.h"
+#include "sgeobj/sge_range.h"
 #include "sgeobj/msg_sgeobjlib.h"
-#include "sgeobj//sge_range.h"
-#include "sge_options.h"
-#include "sge_profiling.h"
 
 #include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi2.h"
 #include "gdi/sge_gdi_ctx.h"
 
+#include "comm/commlib.h"
+
+#include "sig_handlers.h"
+#include "usage.h"
+#include "sge_options.h"
+#include "msg_common.h"
+#include "msg_clients_common.h"
+#include "msg_qdel.h"
 
 static bool sge_parse_cmdline_qdel(char **argv, char **envp, lList **ppcmdline, lList **alpp);
 static bool sge_parse_qdel(lList **ppcmdline, lList **ppreflist, u_long32 *pforce, lList **ppuserlist, lList **alpp);

@@ -46,9 +46,6 @@
 #include <Xmt/Pixmap.h>
 #include <Xmt/Dialogs.h>
 
-#include "sge_all_listsL.h"
-#include "sge.h"
-#include "sge_sched.h"
 #include "qmon_rmon.h"
 #include "qmon_queue.h"
 #include "qmon_qaction.h"
@@ -62,12 +59,18 @@
 #include "qmon_message.h"
 #include "qmon_browser.h"
 #include "qmon_qcustom.h"
-#include "sge_qinstance.h"
-#include "sge_qinstance_state.h"
-#include "sge_host.h"
-#include "sge_complex_schedd.h"
 #include "Matrix.h"
-#include "load_correction.h"
+
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_qinstance_state.h"
+#include "sgeobj/sge_host.h"
+
+#include "sched/sge_sched.h"
+#include "sched/sge_complex_schedd.h"
+#include "sched/load_correction.h"
+
+#include "sge.h"
 
 /*-------------------------------------------------------------------------*/
 static void qmonBuildQBG(Widget parent, XtPointer cld, XtPointer cad);

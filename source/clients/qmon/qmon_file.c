@@ -35,18 +35,18 @@
 
 #include <Xm/Xm.h>
 
-#include "uti/sge_stdio.h"
-#include "uti/sge_unistd.h"
-
-#include "sgeobj/sge_answer.h"
-
 #include "qmon_rmon.h"
 #include "qmon_cull.h"
 #include "qmon_browser.h"
 #include "qmon_file.h"
 
+#include "uti/sge_stdio.h"
+#include "uti/sge_unistd.h"
+#include "uti/msg_utilib.h"
+
+#include "sgeobj/sge_answer.h"
+
 #include "msg_common.h"
-#include "msg_utilib.h"
 
 lList* qmonReadFile(const char *filename)
 {

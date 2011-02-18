@@ -43,9 +43,6 @@
 #include <Xmt/Dialogs.h>
 #include <Xmt/InputField.h>
 
-#include "sge_all_listsL.h"
-#include "sge_userset.h"
-#include "gdi/sge_gdi.h"
 #include "qmon_proto.h"
 #include "qmon_rmon.h"
 #include "qmon_cull.h"
@@ -58,9 +55,13 @@
 #include "qmon_message.h"
 #include "qmon_ticket.h"
 #include "qmon_matrix.h"
-#include "sge_feature.h"
-
 #include "Tab.h"
+
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_userset.h"
+#include "sgeobj/sge_feature.h"
+
+#include "gdi/sge_gdi.h"
 
 /*-------------------------------------------------------------------------*/
 static Widget qmonCreateManopConfig(Widget parent);

@@ -32,13 +32,6 @@
 #include <Xmt/Xmt.h>
 #include <Xmt/Dialogs.h>
 
-#include "commlib.h"
-#include "sge_all_listsL.h"
-#include "sge_answer.h"
-#include "sge_job.h"
-
-#include "gdi/sge_gdi_ctx.h"
-
 #include "qmon_rmon.h"
 #include "qmon_cull.h"
 #include "qmon_timer.h"
@@ -47,7 +40,15 @@
 #include "qmon_globals.h"
 #include "qmon_init.h"
 #include "qmon_message.h"
-#include "qm_name.h"
+
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_job.h"
+
+#include "comm/commlib.h"
+
+#include "gdi/sge_gdi_ctx.h"
+#include "gdi/qm_name.h"
 
 extern sge_gdi_ctx_class_t *ctx;
 

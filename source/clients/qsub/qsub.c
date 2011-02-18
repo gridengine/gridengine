@@ -33,31 +33,36 @@
 #include <sys/stat.h>
 #include <errno.h>
 
-#include "sge_all_listsL.h"
+#include "rmon/sgermon.h"
+
+#include "uti/setup_path.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_profiling.h"
+#include "uti/sge_prog.h"
+
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_job.h"
+
+#include "comm/commlib.h"
+
+#include "japi/japi.h"
+#include "japi/japiP.h"
+
+#include "lck/sge_mtutil.h"
+
+#include "gdi/sge_security.h"
+#include "gdi/sge_gdi_ctx.h"
+
+#include "sig_handlers.h"
+#include "basis_types.h"
 #include "usage.h"
 #include "parse_job_cull.h"
 #include "read_defaults.h"
 #include "show_job.h"
-#include "commlib.h"
-#include "sig_handlers.h"
-#include "sge_prog.h"
-#include "sgermon.h"
-#include "setup_path.h"
-#include "sge_unistd.h"
-#include "sge_security.h"
-#include "sge_answer.h"
-#include "sge_job.h"
-#include "japi.h"
-#include "japiP.h"
-#include "lck/sge_mtutil.h"
-#include "sge_profiling.h"
-#include "gdi/sge_gdi_ctx.h"
-
 #include "msg_clients_common.h"
 #include "msg_qsub.h"
 #include "msg_qmaster.h"
-#include "basis_types.h"
-
 
 extern sge_gdi_ctx_class_t *ctx;
 

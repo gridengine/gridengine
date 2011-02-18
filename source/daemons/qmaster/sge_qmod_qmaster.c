@@ -444,6 +444,11 @@ sge_change_queue_state(sge_gdi_ctx_class_t *ctx,
       return -1;
    }
 
+   if (qep == NULL) {
+      ERROR((SGE_EVENT, MSG_NULLELEMENTPASSEDTO_S, SGE_FUNC));
+      DRETURN(-1);
+   }
+
    switch (action) {
       case QI_DO_CLEARERROR:
       case QI_DO_ENABLE:
@@ -558,12 +563,16 @@ monitoring_t *monitor
 
       case JSUSPENDED:
          qmod_job_suspend(ctx, jep, jatep, queueep, force, answer, user, host, monitor);
-         do_slotwise_x_on_subordinate_check(ctx, queueep, false, false, monitor);
+         if (queueep != NULL) {
+            do_slotwise_x_on_subordinate_check(ctx, queueep, false, false, monitor);
+         }
          break;
 
       case JRUNNING:
          qmod_job_unsuspend(ctx, jep, jatep, queueep, force, answer, user, host, monitor);
-         do_slotwise_x_on_subordinate_check(ctx, queueep, true, false, monitor);
+         if (queueep != NULL) {
+            do_slotwise_x_on_subordinate_check(ctx, queueep, true, false, monitor);
+         }   
          break;
 
       case QI_DO_CLEARERROR:
@@ -1153,8 +1162,9 @@ monitoring_t *monitor
             (int)(jatep?lGetUlong(jatep,JAT_task_number):-1)
         ));
 
-   if (!jep && (how == SGE_SIGSTOP || how == SGE_SIGCONT))
+   if (!jep && (how == SGE_SIGSTOP || how == SGE_SIGCONT)) {
       sge_propagate_queue_suspension(lGetString(qep, QU_full_name), how);
+   }
 
    /* don't try to signal unheard queues */
    if (!qinstance_state_is_unknown(qep)) {

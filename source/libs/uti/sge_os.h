@@ -38,7 +38,6 @@
 #include "sge_loadmem.h"
 #include "sge_nprocs.h"
 #include "sge_nice.h"
-#include "gdi/sge_gdi_ctx.h"
  
 #ifdef WIN32NATIVE
  
@@ -86,14 +85,7 @@ void sge_close_all_fds(int* keep_open, unsigned long nr_of_fds);
 int sge_get_max_fd(void);
 int sge_dup_fd_above_stderr(int *fd);
  
-int sge_daemonize(int *keep_open, unsigned long nr_of_fds, sge_gdi_ctx_class_t *context);
-
 int sge_occupy_first_three(void);
 
-bool sge_daemonize_prepare(sge_gdi_ctx_class_t *context);
-bool sge_daemonize_finalize(sge_gdi_ctx_class_t *context);
-
-
- 
 #endif /* __SGE_PIDS_H */
 

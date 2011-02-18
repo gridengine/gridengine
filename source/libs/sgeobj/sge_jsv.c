@@ -55,6 +55,7 @@
 #include "uti/sge_time.h"
 #include "uti/sge_unistd.h"
 
+#include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi_ctx.h"
 
 #include "sge_answer.h"

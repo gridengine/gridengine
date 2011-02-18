@@ -72,6 +72,7 @@
 #include "sge_cqueue.h"
 #include "sge_qref.h"
 #include "sge_lock.h"
+#include "gdi/sge_gdi2.h"
 
 #include "sge_persistence_qmaster.h"
 #include "sge_reporting_qmaster.h"

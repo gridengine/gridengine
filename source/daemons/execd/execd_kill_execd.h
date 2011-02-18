@@ -32,6 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "gdi/sge_gdi2.h"
+
 int do_kill_execd(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg);
 
 #endif /* __EXECD_KILL_EXECD_H */

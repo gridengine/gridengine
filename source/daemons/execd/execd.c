@@ -37,6 +37,7 @@
 #include "sge_unistd.h"
 #include "sge.h"
 #include "gdi/sge_gdi.h"
+#include "gdi/sge_gdi2.h"
 
 #include "sge_all_listsL.h"
 #include "sge_load_sensor.h"
@@ -61,6 +62,7 @@
 #include "sgeobj/sge_object.h"
 #include "sgeobj/sge_job.h"
 #include "sgeobj/sge_report.h"
+#include "sgeobj/sge_conf.h"
 
 #include "msg_common.h"
 #include "msg_execd.h"

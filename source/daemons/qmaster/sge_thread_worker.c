@@ -63,6 +63,7 @@
 #include "gdi/qm_name.h"
 #include "gdi/sge_gdi_packet.h"
 #include "gdi/sge_gdi_packet_internal.h"
+#include "gdi/sge_gdi2.h"
 
 #include "evm/sge_event_master.h"
 

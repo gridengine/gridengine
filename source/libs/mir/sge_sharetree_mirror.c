@@ -30,16 +30,17 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+
+#include "sgeobj/sge_sharetree.h"
+
+#include "mir/msg_mirlib.h"
+#include "mir/sge_mirror.h"
+#include "mir/sge_sharetree_mirror.h"
+
 #include "sge.h"
-#include "sgermon.h"
-#include "sge_log.h"
-
-#include "sge_sharetree.h"
-
-#include "msg_mirlib.h"
-
-#include "sge_mirror.h"
-#include "sge_sharetree_mirror.h"
 
 /****** Eventmirror/sharetree/sharetree_update_master_list() *******************
 *  NAME

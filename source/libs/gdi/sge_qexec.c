@@ -49,19 +49,19 @@
 #include "uti/sge_uidgid.h"
 #include "uti/sge_time.h"
 
+#include "gdi/sge_security.h"
+#include "gdi/sge_gdi.h"
+#include "gdi/pack_job_delivery.h"   
+#include "gdi/sge_qexec.h"
+#include "gdi/sge_gdi2.h"
+#include "gdi/msg_gdilib.h"
+
 #include "sgeobj/sge_ja_task.h"
 #include "sgeobj/sge_pe_task.h"
 #include "sgeobj/sge_str.h"
 #include "sgeobj/sge_var.h"
 
-#include "gdi/sge_qexec.h"
-#include "gdi/sge_security.h"
-#include "gdi/sge_gdi.h"
-
-#include "pack_job_delivery.h"   
-
 #include "msg_common.h"
-#include "msg_gdilib.h"
 
 static lList *remote_task_list = 0;
 static char lasterror[1024];

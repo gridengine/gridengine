@@ -64,13 +64,13 @@
 
 #include "gdi/sge_gdi2.h"
 #include "gdi/sge_gdi_packet_pb_cull.h"
+#include "gdi/msg_gdilib.h"
 
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_event.h"
 #include "sgeobj/sge_object.h"
 
 #include "msg_common.h"
-#include "msg_gdilib.h"
 #include "msg_qmaster.h"
 
 static bool

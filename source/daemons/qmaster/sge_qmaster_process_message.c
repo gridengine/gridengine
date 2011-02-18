@@ -54,6 +54,7 @@
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_ack.h"
 
+#include "gdi/sge_gdi2.h"
 #include "gdi/sge_security.h"
 #include "gdi/sge_gdi_packet_pb_cull.h"
 #include "gdi/sge_gdi_packet_internal.h"

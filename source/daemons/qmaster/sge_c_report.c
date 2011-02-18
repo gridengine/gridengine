@@ -55,6 +55,7 @@
 #include "sgeobj/sge_centry.h"
 #include "sgeobj/sge_report.h"
 #include "reschedule.h"
+#include "gdi/sge_gdi2.h"
 
 static int update_license_data(sge_gdi_ctx_class_t *ctx, lListElem *hep, lList *lp_lic); 
 

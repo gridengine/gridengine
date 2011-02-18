@@ -93,6 +93,7 @@
 #include "sge_job_qmaster.h"
 #include "sge_job_verify.h"
 #include "sge_ack.h"
+#include "gdi/sge_gdi2.h"
 
 #include "cull/cull_list.h"
 

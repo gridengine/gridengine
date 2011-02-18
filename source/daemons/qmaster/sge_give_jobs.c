@@ -79,7 +79,7 @@
 #include "sge_lock.h"
 #include "sge_task_depend.h"
 #include "sge_qmaster_timed_event.h"
-
+#include "gdi/sge_gdi2.h"
 #include "sge_persistence_qmaster.h"
 #include "sge_reporting_qmaster.h"
 #include "spool/sge_spooling.h"

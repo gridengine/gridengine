@@ -38,6 +38,7 @@
 #include "sge_log.h"
 #include "commlib.h"
 #include "sge.h"
+#include "gdi/sge_gdi2.h"
 
 #include "msg_qmaster.h"
 

@@ -36,16 +36,31 @@
 #include <string.h>
 #include <errno.h>
 
-#include "sge.h"
-#include "cull/cull.h"
-#include "sgeobj/sge_feature.h"
+#include "rmon/sgermon.h"
+
 #include "uti/sge_time.h"
+#include "uti/sge_profiling.h"
+#include "uti/sge_spool.h"
+#include "uti/sge_thread_ctrl.h"
+#include "uti/sge_log.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_hostname.h"
+
+#include "lck/sge_mtutil.h"
+#include "lck/sge_lock.h"
+
+#include "cull/cull.h"
+
+#include "comm/lists/cl_thread.h"
+#include "comm/lists/cl_errors.h"
+#include "comm/cl_commlib.h"
+
+#include "gdi/sge_gdi_ctx.h"
+
+#include "sgeobj/sge_feature.h"
 #include "sgeobj/sge_host.h"
 #include "sgeobj/sge_event.h"
 #include "sgeobj/sge_all_listsL.h"
-#include "uti/sge_prog.h"
-#include "rmon/sgermon.h"
-#include "uti/sge_log.h"
 #include "sgeobj/sge_conf.h"
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_qinstance.h"
@@ -54,7 +69,6 @@
 #include "sgeobj/sge_pe.h"
 #include "sgeobj/sge_userprj.h"
 #include "sgeobj/sge_job.h"
-#include "uti/sge_hostname.h"
 #include "sgeobj/sge_userset.h"
 #include "sgeobj/sge_manop.h"
 #include "sgeobj/sge_calendar.h"
@@ -66,28 +80,16 @@
 #include "sgeobj/sge_object.h"
 #include "sgeobj/sge_range.h"
 #include "sgeobj/sge_schedd_conf.h"
-#include "lck/sge_mtutil.h"
-#include "configuration_qmaster.h"   /* bad dependency!! */
-#include "comm/lists/cl_errors.h"
-#include "comm/cl_commlib.h"
-#include "uti/sge_profiling.h"
-#include "uti/sge_spool.h"
-#include "sge_event_request_EVR_L.h"
+#include "sgeobj/sge_event_request_EVR_L.h"
+#include "sgeobj/msg_sgeobjlib.h"
 
-#include "lck/sge_lock.h"
-
-#include "comm/lists/cl_thread.h"
-
-#include "uti/sge_thread_ctrl.h"
-
-#include "gdi/sge_gdi_ctx.h"
+#include "configuration_qmaster.h"   /* TODO: bad dependency!! */
+#include "sge_event_master.h"
+#include "sge.h"
 
 #include "msg_common.h"
-#include "msg_sgeobjlib.h"
 #include "msg_evmlib.h"
 #include "msg_qmaster.h"
- 
-#include "sge_event_master.h"
 
 /*
  ***** transaction handling implementation ************

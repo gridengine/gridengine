@@ -43,6 +43,7 @@
 #include "uti/sge_time.h"
 #include "uti/sge_parse_num_par.h"
 
+#include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi_ctx.h"
 
 #include "cull_parse_util.h"
@@ -60,6 +61,7 @@
 #include "sge_ulong.h"
 #include "sge_var.h"
 #include "symbols.h"
+#include "sge_conf.h"
 
 #include "uti/sge_binding_parse.h"
 #include "sgeobj/sge_binding.h"

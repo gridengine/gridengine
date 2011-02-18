@@ -32,12 +32,13 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "cull.h"
-#include "sge_gdiP.h"
-#include "sge_qmaster_timed_event.h"
+#include "cull/cull.h"
+
+#include "gdi/sge_gdiP.h"
 #include "gdi/sge_gdi_ctx.h"
 #include "gdi/sge_gdi_packet.h"
 
+#include "sge_qmaster_timed_event.h"
 
 #ifdef KERBEROS
 #   include "krb_lib.h"

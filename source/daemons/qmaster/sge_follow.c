@@ -68,11 +68,8 @@
 #include "sge_userprj.h"
 #include "sge_cqueue.h"
 #include "sge_persistence_qmaster.h"
-
-
-
+#include "gdi/sge_gdi2.h"
 #include "sgeobj/sge_advance_reservation.h"
-
 
 #include "msg_common.h"
 #include "msg_qmaster.h"

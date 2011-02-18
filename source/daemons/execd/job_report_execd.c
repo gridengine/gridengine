@@ -52,6 +52,7 @@
 #include "load_avg.h"
 #include "sgeobj/sge_qinstance.h"
 #include "uti/sge_parse_num_par.h"
+#include "gdi/sge_gdi2.h"
 
 lList *jr_list = NULL;
 static bool flush_jr = false;

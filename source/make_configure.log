@@ -1,0 +1,1 @@
+./configure --prefix=/Users/ernst/Software/plpa-1.3.2/lx26-x86 --enable-static --disable-shared --with-pic

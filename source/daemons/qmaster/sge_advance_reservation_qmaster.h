@@ -32,12 +32,14 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "uti/sge_monitor.h"
+
 #include "sgeobj/sge_advance_reservation.h"
+
+#include "gdi/sge_gdi_ctx.h"
 
 #include "sge_qmaster_timed_event.h"
 #include "sge_c_gdi.h"
-#include "uti/sge_monitor.h"
-#include "gdi/sge_gdi_ctx.h"
 
 /* funtions called from within gdi framework in qmaster */
 int ar_mod(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *new_ar, lListElem *ar, 

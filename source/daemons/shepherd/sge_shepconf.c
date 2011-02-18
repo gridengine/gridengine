@@ -32,11 +32,12 @@
 #include <string.h>
 #include <signal.h>
 
-#include "sge_shepconf.h"
-#include "config_file.h"
+#include "uti/config_file.h"
+#include "uti/sge_signal.h"
+#include "uti/sge_string.h"
+
 #include "signal_queue.h"
-#include "sge_signal.h"
-#include "sge_string.h"
+#include "sge_shepconf.h"
 #include "err_trace.h"
 
 /****** shepherd/shepconf/shepconf_has_userdef_method() ************************

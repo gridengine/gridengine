@@ -31,6 +31,7 @@
 /*___INFO__MARK_END__*/
 
 #include "gdi/sge_gdi_ctx.h"
+#include "gdi/sge_gdi2.h"
 #include "sgermon.h"
 #include "sge_answer.h"
 #include "sge_log.h"

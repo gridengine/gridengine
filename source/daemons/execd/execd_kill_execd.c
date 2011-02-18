@@ -30,20 +30,24 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sgermon.h"
-#include "sge_parse_num_par.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_parse_num_par.h"
+#include "uti/sge_signal.h"
+#include "uti/sge_log.h"
+
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_object.h"
+
+#include "comm/commlib.h"
+
 #include "dispatcher.h"
 #include "reaper_execd.h"
-#include "sge_signal.h"
 #include "sge_load_sensor.h"
-#include "commlib.h"
 #include "execd_kill_execd.h"
 #include "execd_signal_queue.h"
-#include "sge_log.h"
 #include "symbols.h"
 #include "msg_execd.h"
-#include "sge_job.h"
-#include "sgeobj/sge_object.h"
 
 extern int shut_me_down;
 

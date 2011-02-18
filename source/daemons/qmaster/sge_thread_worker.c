@@ -58,6 +58,7 @@
 #include "sgeobj/sge_manop.h"
 #include "sgeobj/sge_conf.h"
 #include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_all_listsL.h"
 
 #include "gdi/sge_security.h"
 #include "gdi/qm_name.h"
@@ -70,7 +71,6 @@
 #include "comm/cl_commlib.h"
 
 #include "basis_types.h"
-#include "sge_all_listsL.h"
 #include "setup_qmaster.h"
 #include "sge_qmaster_process_message.h"
 #include "sge_mt_init.h"

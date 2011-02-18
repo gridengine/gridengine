@@ -38,31 +38,32 @@
 #include <errno.h>
 #include <limits.h>
 
+#include "rmon/sgermon.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_hostname.h"
+#include "uti/sge_log.h"
+#include "uti/sge_string.h"
+
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_str.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_utility.h"
+#include "sgeobj/sge_cuser.h"
+#include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_hgroup.h"
+#include "sgeobj/sge_href.h"
+
+#include "spool/sge_spooling.h"
+
 #include "sge.h"
-#include "sgermon.h"
-#include "sge_conf.h"
-#include "sge_log.h"
 #include "sge_c_gdi.h"
-#include "sge_str.h"
-#include "sge_string.h"
-#include "sge_answer.h"
-#include "sge_utility.h"
-#include "sge_cuser.h"
 #include "sge_hgroup_qmaster.h"
-#include "sge_unistd.h"
-#include "sge_cqueue.h"
-#include "sge_qinstance.h"
-#include "sge_hostname.h"
-#include "sge_hgroup.h"
-#include "sge_href.h"
 #include "sge_event_master.h"
 #include "sge_cqueue_qmaster.h"
 #include "sge_host_qmaster.h"
 #include "sge_utility_qmaster.h"
-
 #include "sge_persistence_qmaster.h"
-#include "spool/sge_spooling.h"
-
 #include "msg_common.h"
 #include "msg_qmaster.h"
 

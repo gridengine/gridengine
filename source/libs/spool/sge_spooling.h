@@ -34,13 +34,15 @@
 
 #include <time.h>
 
-#include "sge_mirror.h"
-#include "sge_spooling.h"
-#include "sge_spooling_SPC_L.h"
-#include "sge_spooling_SPR_L.h"
-#include "sge_spooling_SPT_L.h"
-#include "sge_spooling_SPTR_L.h"
-#include "sge_spooling_SPM_L.h"
+#include "mir/sge_mirror.h"
+
+#include "spool/sge_spooling.h"
+
+#include "sgeobj/sge_spooling_SPC_L.h"
+#include "sgeobj/sge_spooling_SPR_L.h"
+#include "sgeobj/sge_spooling_SPT_L.h"
+#include "sgeobj/sge_spooling_SPTR_L.h"
+#include "sgeobj/sge_spooling_SPM_L.h"
 
 /****** spool/--Spooling ***************************************
 *

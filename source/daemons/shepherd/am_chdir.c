@@ -30,7 +30,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_unistd.h"
+#include "uti/sge_unistd.h"
 #include "am_chdir.h"
 
 int sge_cwd_chdir(

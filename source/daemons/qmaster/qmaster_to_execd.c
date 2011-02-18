@@ -31,15 +31,19 @@
 /*___INFO__MARK_END__*/
 #include <string.h>
 
-#include "sge_all_listsL.h"
-#include "qmaster_to_execd.h"
-#include "sge_prog.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "commlib.h"
-#include "sge.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_prog.h"
+
+#include "sgeobj/sge_all_listsL.h"
+
+#include "comm/commlib.h"
+
 #include "gdi/sge_gdi2.h"
 
+#include "sge.h"
+#include "qmaster_to_execd.h"
 #include "msg_qmaster.h"
 
 

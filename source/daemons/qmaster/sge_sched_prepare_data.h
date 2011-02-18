@@ -32,10 +32,10 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_event_client.h"
+#include "evc/sge_event_client.h"
 #include "sgeobj/sge_object.h"
-#include "sge_mirror.h"
-#include "cull.h"
+#include "mir/sge_mirror.h"
+#include "cull/cull.h"
 
 typedef struct {
    lCondition *where_queue;

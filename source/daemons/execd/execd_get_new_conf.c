@@ -32,15 +32,12 @@
 
 #include <string.h>
 
-#include "sge_conf.h"
-#include "dispatcher.h"
-#include "execd_get_new_conf.h"
-#include "sge_load_sensor.h"
-#include "sgermon.h"
-#include "admin_mail.h"
-#include "sge_string.h"
-#include "sge_log.h"
-#include "load_avg.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_string.h"
+#include "uti/sge_log.h"
+
+#include "sgeobj/sge_conf.h"
 #include "sgeobj/sge_object.h"
 #include "sgeobj/sge_qinstance.h"
 #include "sgeobj/sge_pe_task.h"
@@ -48,6 +45,11 @@
 #include "sgeobj/sge_ja_task.h"
 #include "exec_job.h"
 
+#include "dispatcher.h"
+#include "execd_get_new_conf.h"
+#include "sge_load_sensor.h"
+#include "admin_mail.h"
+#include "load_avg.h"
 #include "msg_common.h"
 
 #ifdef COMPILE_DC

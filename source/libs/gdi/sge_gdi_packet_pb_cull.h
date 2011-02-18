@@ -33,6 +33,7 @@
 /*___INFO__MARK_END__*/
 
 #include "basis_types.h"
+#include "gdi/sge_gdi_packet_type.h"
 
 #ifdef  __cplusplus
 extern "C" {

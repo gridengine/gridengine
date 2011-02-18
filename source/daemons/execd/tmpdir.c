@@ -30,13 +30,15 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sgermon.h"
-#include "tmpdir.h"
-#include "sge_log.h"
-#include "sge_unistd.h"
-#include "sge_uidgid.h"
-#include "sge_qinstance.h"
+#include "rmon/sgermon.h"
 
+#include "uti/sge_log.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_uidgid.h"
+
+#include "sgeobj/sge_qinstance.h"
+
+#include "tmpdir.h"
 #include "msg_execd.h"
 
 /*******************************************************/

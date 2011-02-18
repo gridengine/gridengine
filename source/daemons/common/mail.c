@@ -38,18 +38,20 @@
 #include <sys/wait.h>
 #include <stdlib.h>
 
-#include "sge_conf.h"
-#include "mail.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "sig_handlers.h"
-#include "sge_unistd.h"
-#include "sge_prog.h"
-#include "sge_os.h"
-#include "sge_job.h"
-#include "sge_mailrec.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_os.h"
 #include "uti/sge_stdio.h"
 
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_mailrec.h"
+
+#include "mail.h"
+#include "sig_handlers.h"
 #include "msg_common.h"
 #include "msg_daemons_common.h"
 

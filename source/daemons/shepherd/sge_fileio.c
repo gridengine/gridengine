@@ -39,12 +39,13 @@
 #include <string.h>
 #include <errno.h>
 
-#include "basis_types.h"
-#include "config_file.h"
-#include "err_trace.h"
-#include "execution_states.h"
+#include "uti/config_file.h"
 #include "uti/sge_stdio.h"
 #include "uti/sge_uidgid.h"
+
+#include "basis_types.h"
+#include "err_trace.h"
+#include "execution_states.h"
 #include "msg_common.h"
 
 bool shepherd_write_pid_file(pid_t pid, dstring *errmsg)

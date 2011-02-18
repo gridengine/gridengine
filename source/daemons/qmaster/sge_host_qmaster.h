@@ -32,15 +32,16 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_gdiP.h"
-#include "sge_c_gdi.h"
-#include "sge_feature.h"
-#include "sge_qmaster_timed_event.h"
 #include "uti/sge_monitor.h"
 
+#include "gdi/sge_gdiP.h"
 #include "gdi/sge_gdi_ctx.h"
 #include "gdi/sge_gdi_packet.h"
 
+#include "sgeobj/sge_feature.h"
+
+#include "sge_c_gdi.h"
+#include "sge_qmaster_timed_event.h"
 
 /* funtions called via gdi and inside the qmaster */
 int sge_del_host(sge_gdi_ctx_class_t *context, lListElem *, lList **, char *, char *, u_long32, const lList* master_hGroup_List);

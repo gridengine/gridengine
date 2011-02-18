@@ -43,6 +43,26 @@
 #include <sys/socket.h>  
 #include <sys/ioctl.h>
 
+#if defined(DARWIN) || defined(INTERIX)
+#  include <termios.h>
+#  include <sys/ioctl.h>
+#  include <grp.h>
+#elif defined(HP1164) || defined(HP11)
+#  include <termios.h>
+#  include <stropts.h>
+#elif defined(SOLARIS64) || defined(SOLARIS86) || defined(SOLARISAMD64)
+#  include <stropts.h>
+#  include <termio.h>
+#elif defined(IRIX65)
+#  include <sys/ioctl.h>
+#  include <stropts.h>
+#  include <termio.h>
+#elif defined(FREEBSD) || defined(NETBSD)
+#  include <termios.h>
+#else
+#  include <termio.h>
+#endif
+
 #include "lck/sge_lock.h"
 
 #include "comm/commlib.h"

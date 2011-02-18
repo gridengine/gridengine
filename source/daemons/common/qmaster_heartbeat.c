@@ -35,12 +35,13 @@
 #include <string.h>
 #include <sys/time.h>
 
+#include "rmon/sgermon.h"
+
 #include "uti/sge_unistd.h"
 #include "uti/sge_stdio.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "qmaster_heartbeat.h"
+#include "uti/sge_log.h"
 
+#include "qmaster_heartbeat.h"
 #include "msg_daemons_common.h"
 
 static int sge_testmode_timeout_value = 0;

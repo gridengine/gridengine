@@ -71,20 +71,22 @@ int verydummyprocfs;
 
 #if defined(LINUX)
 #include <sys/param.h>          /* for HZ (jiffies -> seconds ) */
-#include "sge_proc.h"
+#include "sgeobj/sge_proc.h"
 #endif
+
+#include "rmon/sgermon.h"
 
 #include "uti/sge_stdio.h"
 #include "uti/sge_unistd.h"
+#include "uti/sge_log.h"
 
-#include "sge_log.h"
-#include "msg_sge.h"
-#include "sgermon.h"
+#include "cull/cull.h"
+
 #include "basis_types.h"
 #include "sgedefs.h"
 #include "exec_ifm.h"
 #include "pdc.h"
-#include "cull.h"
+#include "msg_sge.h"
 
 #if !defined(CRAY)
 #include "procfs.h"

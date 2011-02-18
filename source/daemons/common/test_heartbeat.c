@@ -35,12 +35,14 @@
 #include <string.h>
 #include <strings.h>
 
-#include "qmaster_heartbeat.h"
-#include "sgermon.h"
-#include "sge_bootstrap.h"
-#include "sge_feature.h"
-#include "sge_profiling.h"
+#include "rmon/sgermon.h"
 
+#include "uti/sge_bootstrap.h"
+#include "uti/sge_profiling.h"
+
+#include "sgeobj/sge_feature.h"
+
+#include "qmaster_heartbeat.h"
  
 
 /* 

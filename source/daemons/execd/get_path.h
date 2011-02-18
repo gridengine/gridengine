@@ -32,11 +32,11 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "uti/sge_dstring.h"
 
+#include "cull/cull.h"
 
 #include "basis_types.h"
-#include "cull.h"
-#include "sge_dstring.h"
 
 #define SGE_STDIN           0x00100000
 #define SGE_STDOUT          0x00200000

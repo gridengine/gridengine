@@ -31,43 +31,45 @@
 /*___INFO__MARK_END__*/
 #include <string.h>
 
-#include "basis_types.h"
-#include "sgermon.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_parse_num_par.h"
+#include "uti/sge_log.h"
+#include "uti/sge_time.h"
+#include "uti/sge_string.h"
+#include "uti/sge_hostname.h"
+#include "uti/sge_prog.h"
+
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_report.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_qinstance_state.h"
+#include "sgeobj/sge_ckpt.h"
+#include "sgeobj/sge_cqueue.h"
+
+#include "spool/sge_spooling.h"
+
+#include "lck/sge_lock.h"
+
 #include "sge.h"
-
-#include "sge_object.h"
-#include "sge_ja_task.h"
-#include "sge_report.h"
-
+#include "basis_types.h"
 #include "job_exit.h"
 #include "sge_event_master.h"
-#include "sge_host.h"
-#include "sge_log.h"
 #include "sge_ckpt_qmaster.h"
 #include "sge_host_qmaster.h"
-#include "sge_parse_num_par.h"
 #include "execution_states.h"
 #include "mail.h"
 #include "symbols.h"
-#include "sge_time.h"
 #include "reschedule.h"
-#include "msg_qmaster.h"
-#include "sge_conf.h"
-#include "sge_string.h"
-#include "sge_job.h"
-#include "sge_hostname.h"
-#include "sge_answer.h"
-#include "sge_qinstance.h"
-#include "sge_qinstance_state.h"
-#include "sge_ckpt.h"
-#include "sge_cqueue.h"
-#include "sge_lock.h"
-#include "sge_prog.h"
 #include "configuration_qmaster.h"
-
 #include "sge_persistence_qmaster.h"
-#include "spool/sge_spooling.h"
 #include "sge_give_jobs.h"
+#include "msg_qmaster.h"
 
 u_long32 add_time = 0;
 

@@ -34,28 +34,33 @@
 
 #include <string.h>
 
+#include "rmon/sgermon.h"
+
 #include "uti/sge_time.h"
-#include "sgermon.h"
-#include "sge_prog.h"
-#include "sge_log.h"
-#include "msg_qmaster.h"
-#include "sge_host.h"
-#include "sge_report.h"
-#include "sge_c_gdi.h"
-#include "sge_host_qmaster.h"
-#include "configuration_qmaster.h"
-#include "sge_conf.h"
-#include "qmaster_to_execd.h"
-#include "job_report_qmaster.h"
-#include "sge_persistence_qmaster.h"
-#include "sge_answer.h"
-#include "sge_lock.h"
-#include "sge_event_master.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_log.h"
+
 #include "sgeobj/sge_ack.h"
 #include "sgeobj/sge_centry.h"
 #include "sgeobj/sge_report.h"
-#include "reschedule.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_report.h"
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_answer.h"
+
+#include "lck/sge_lock.h"
+
 #include "gdi/sge_gdi2.h"
+
+#include "msg_qmaster.h"
+#include "sge_c_gdi.h"
+#include "sge_host_qmaster.h"
+#include "configuration_qmaster.h"
+#include "qmaster_to_execd.h"
+#include "job_report_qmaster.h"
+#include "sge_persistence_qmaster.h"
+#include "sge_event_master.h"
+#include "reschedule.h"
 
 static int update_license_data(sge_gdi_ctx_class_t *ctx, lListElem *hep, lList *lp_lic); 
 

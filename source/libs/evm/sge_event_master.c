@@ -56,6 +56,7 @@
 #include "comm/cl_commlib.h"
 
 #include "gdi/sge_gdi_ctx.h"
+#include "gdi/sge_gdi2.h"
 
 #include "sgeobj/sge_feature.h"
 #include "sgeobj/sge_host.h"

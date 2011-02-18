@@ -32,14 +32,11 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/       
 
-/* uti */
-#include "sge_dstring.h"
+#include "uti/sge_dstring.h"
 
-/* cull */
-#include "cull.h"
+#include "cull/cull.h"
 
-/* sgeobj */
-#include "sge_object.h"
+#include "sgeobj/sge_object.h"
 
 /****** spool/utilities/--Spooling-Utilities************************************
 *

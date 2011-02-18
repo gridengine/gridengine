@@ -37,43 +37,50 @@
 #include <stdlib.h>
 #include <fcntl.h>
 
-#include "sgermon.h"
-#include "sge.h"
-#include "sge_conf.h"
-#include "sge_ja_task.h"
-#include "sge_job.h"
-#include "sge_pe_task.h"
-#include "sge_pe.h"
-#include "sge_qinstance.h"
-#include "sge_log.h"
-#include "sge_time.h"
-#include "sge_usage.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_unistd.h"
+#include "uti/sge_hostname.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_log.h"
+#include "uti/sge_time.h"
+#include "uti/sge_parse_num_par.h"
+#include "uti/sge_signal.h"
+#include "uti/sge_string.h"
+#include "uti/sge_stdio.h"
+#include "uti/sge_uidgid.h"
+
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_pe_task.h"
+#include "sgeobj/sge_pe.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_usage.h"
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_report.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_str.h"
+
+#include "sched/sge_job_schedd.h"
+
+#include "gdi/sge_security.h"
+
+#include "spool/classic/read_write_job.h"
+
 #include "dispatcher.h"
-#include "sge_parse_num_par.h"
 #include "reaper_execd.h"
 #include "job_report_execd.h"
-#include "sge_job_schedd.h"
-#include "sge_signal.h"
 #include "load_avg.h"
 #include "execd_ck_to_do.h"
 #include "execd_signal_queue.h"
 #include "symbols.h"
 #include "exec_job.h"
-#include "spool/classic/read_write_job.h"
 #include "execution_states.h"
 #include "msg_execd.h"
-#include "uti/sge_string.h"
-#include "uti/sge_stdio.h"
-#include "sge_feature.h"
-#include "sge_uidgid.h"
-#include "sge_security.h"
-#include "sge_unistd.h"
-#include "sge_hostname.h"
-#include "sge_prog.h"
 #include "get_path.h"
-#include "sge_report.h"
-#include "sgeobj/sge_object.h"
 #include "sig_handlers.h"
+#include "sge.h"
 
 #ifdef COMPILE_DC
 #  include "ptf.h"
@@ -82,8 +89,6 @@
 #     include "exec_ifm.h"
 #  endif
 #endif
-
-#include "sge_str.h"
 
 extern volatile int waiting4osjid;
 

@@ -85,6 +85,7 @@
 #include "sge_sl.h"
 
 #include "gdi/sge_gdi_ctx.h"
+#include "gdi/sge_gdi2.h"
 
 #if defined(DARWIN)
 #  include <termios.h>

@@ -31,10 +31,10 @@
 /*___INFO__MARK_END__*/
 
 #include "uti/sge_binding_hlp.h"
-#include "shepherd_binding.h"
+#include "uti/sge_dstring.h"
+#include "uti/sge_string.h"
 
-#include "sge_dstring.h"
-#include "sge_string.h"
+#include "shepherd_binding.h"
 #include "err_trace.h"
 
 #if defined(BINDING_SOLARIS)

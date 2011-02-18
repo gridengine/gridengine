@@ -34,39 +34,43 @@
 #include <errno.h>
 #include <stdlib.h>
 
-#include "sge_unistd.h"
-#include "sge.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_unistd.h"
+#include "uti/sge_os.h"
+#include "uti/sge_stdlib.h"
+#include "uti/sge_log.h"
+#include "uti/sge_time.h"
+
 #include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi2.h"
 
-#include "sge_all_listsL.h"
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/parse.h"
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_report.h"
+#include "sgeobj/sge_conf.h"
+
+#include "spool/classic/read_write_job.h"
+
+#include "gdi/msg_gdilib.h"
+
 #include "sge_load_sensor.h"
-#include "sge_log.h"
-#include "sge_time.h"
-#include "sgermon.h"
 #include "dispatcher.h"
 #include "load_avg.h"
-#include "parse.h"
-#include "sge_feature.h"
 #include "reaper_execd.h"
 #include "setup_execd.h"
 #include "shutdown.h"
 #include "sig_handlers.h"
 #include "startprog.h"
 #include "usage.h"
-#include "spool/classic/read_write_job.h"
-#include "sge_os.h"
-#include "sge_stdlib.h"
-#include "sge_answer.h"
 #include "execd.h"
-#include "sgeobj/sge_object.h"
-#include "sgeobj/sge_job.h"
-#include "sgeobj/sge_report.h"
-#include "sgeobj/sge_conf.h"
-
+#include "sge.h"
 #include "msg_common.h"
 #include "msg_execd.h"
-#include "msg_gdilib.h"
 
 #ifdef COMPILE_DC
 #   include "ptf.h"

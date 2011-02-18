@@ -33,18 +33,21 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include "sge_ja_task.h"
-#include "sge_log.h"
-#include "sge_prog.h"
-#include "sgermon.h"
-#include "sge_event.h"
-#include "schedd_monitor.h"
-#include "sge_dstring.h"
-#include "sge_job.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_dstring.h"
+
+#include "sgeobj/sge_event.h"
+#include "sgeobj/sge_job.h"
 #include "sgeobj/sge_userprj.h"
-#include "sge_select_queue.h"
-#include "sge_resource_quota_schedd.h"
-#include "sge_qref.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_qref.h"
+
+#include "sched/schedd_monitor.h"
+#include "sched/sge_select_queue.h"
+#include "sched/sge_resource_quota_schedd.h"
 
 
 #if 0 /* TODO: EB: ST: should this be enabled again? */

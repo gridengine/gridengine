@@ -56,6 +56,7 @@
 #include "sge_profiling.h"
 
 #include "gdi/sge_gdi.h"
+#include "gdi/sge_gdi2.h"
 #include "gdi/sge_gdi_ctx.h"
 
 

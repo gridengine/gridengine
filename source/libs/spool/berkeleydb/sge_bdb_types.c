@@ -35,17 +35,14 @@
 #include <errno.h>
 #include <pthread.h>
 
-/* common */
-#include "basis_types.h"
-
-/* libs */
 #include "rmon/sgermon.h"
 #include "uti/sge_log.h"
 #include "lck/sge_mtutil.h"
 
-/* local */
 #include "spool/berkeleydb/msg_spoollib_berkeleydb.h"
 #include "spool/berkeleydb/sge_bdb_types.h"
+
+#include "basis_types.h"
 
 struct _bdb_info {
    pthread_mutex_t   mtx;                 /* lock access to this object */

@@ -69,17 +69,14 @@
 #include "sgeobj/sge_userprj.h"
 #include "sgeobj/sge_userset.h"
 #include "sgeobj/sge_binding.h"
+#include "sgeobj/sge_conf.h"
 
-/* qmaster */
+#include "sched/valid_queue_user.h"
+
 #include "sge_userprj_qmaster.h"
 #include "sge_userset_qmaster.h"
 #include "sge_job_qmaster.h"
 #include "symbols.h"
-
-/* schedd */
-#include "valid_queue_user.h"
-
-/* message files */
 #include "msg_common.h"
 #include "msg_qmaster.h"
 #include "msg_daemons_common.h"

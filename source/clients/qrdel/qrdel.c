@@ -39,6 +39,7 @@
 
 #include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi_ctx.h"
+#include "gdi/sge_gdi2.h"
 #include "sge_all_listsL.h"
 
 #include "sgermon.h"

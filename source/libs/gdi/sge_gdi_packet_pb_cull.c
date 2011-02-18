@@ -64,6 +64,7 @@
 
 #include "gdi/sge_gdi2.h"
 #include "gdi/sge_gdi_packet_pb_cull.h"
+#include "gdi/sge_gdi_packet.h"
 #include "gdi/msg_gdilib.h"
 
 #include "sgeobj/sge_answer.h"

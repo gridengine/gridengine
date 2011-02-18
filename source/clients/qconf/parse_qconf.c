@@ -95,6 +95,7 @@
 
 #include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi_ctx.h"
+#include "gdi/sge_gdi2.h"
 
 #include "msg_common.h"
 #include "msg_clients_common.h"

@@ -30,17 +30,18 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sgermon.h"
+#include "rmon/sgermon.h"
 
+#include "uti/sge_log.h"
 
-#include "dispatcher.h"
-#include "execd_ticket.h"
-#include "sge_log.h"
-#include "msg_execd.h"
-#include "sge_feature.h"
+#include "sgeobj/sge_feature.h"
 #include "sgeobj/sge_job.h"
 #include "sgeobj/sge_pe.h"
 #include "sgeobj/sge_ja_task.h"
+
+#include "dispatcher.h"
+#include "execd_ticket.h"
+#include "msg_execd.h"
 
 #ifdef COMPILE_DC
 #  include "ptf.h"

@@ -36,19 +36,39 @@
 #include <errno.h>
 #include <fcntl.h>
 
+#include "rmon/sgermon.h"
+
+#include "uti/sge_prog.h"
+#include "uti/sge_log.h"
+#include "uti/sge_unistd.h"
+
+#include "lck/sge_mtutil.h"
+#include "lck/sge_lock.h"
+
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_manop.h"
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_conf.h"
+
+#include "comm/cl_commlib.h"
+
+#include "uti/sge_time.h"
+#include "uti/sge_spool.h"
+#include "uti/sge_profiling.h"
+#include "uti/setup_path.h"
+#include "uti/sge_os.h"
+#include "uti/sge_thread_ctrl.h"
+#include "uti/sge_uidgid.h"
+#include "uti/sge_bootstrap.h"
+#include "uti/msg_utilib.h"  /* remove once 'sge_daemonize_qmaster' did become 'sge_daemonize' */
+
+#include "gdi/sge_security.h"
+#include "gdi/qm_name.h"
+#include "gdi/sge_gdi_packet.h"
+
 #include "basis_types.h"
-#include "sge_qmaster_threads.h"
-#include "sgermon.h"
-#include "sge_mt_init.h"
-#include "sge_prog.h"
-#include "sge_log.h"
-#include "sge_unistd.h"
-#include "sge_answer.h"
 #include "setup_qmaster.h"
-#include "sge_security.h"
-#include "sge_manop.h"
-#include "sge_mtutil.h"
-#include "sge_lock.h"
+#include "sge_calendar_qmaster.h"
 #include "sge_qmaster_process_message.h"
 #include "sge_event_master.h"
 #include "sge_persistence_qmaster.h"
@@ -57,37 +77,14 @@
 #include "sge_host_qmaster.h"
 #include "sge_userprj_qmaster.h"
 #include "sge_give_jobs.h"
-#include "sge_all_listsL.h"
-#include "sge_calendar_qmaster.h"
-#include "sge_time.h"
-#include "lock.h"
-#include "qmaster_heartbeat.h"
-#include "shutdown.h"
-#include "sge_spool.h"
-#include "cl_commlib.h"
-#include "sge_uidgid.h"
-#include "sge_bootstrap.h"
-#include "msg_common.h"
-#include "msg_qmaster.h"
-#include "msg_daemons_common.h"
-#include "msg_utilib.h"  /* remove once 'sge_daemonize_qmaster' did become 'sge_daemonize' */
-#include "sge.h"
-#include "sge_qmod_qmaster.h"
-#include "reschedule.h"
-#include "sge_job_qmaster.h"
-#include "sge_profiling.h"
-#include "sgeobj/sge_conf.h"
-#include "qm_name.h"
-#include "setup_path.h"
+#include "sge_qmaster_threads.h"
 #include "sge_advance_reservation_qmaster.h"
 #include "sge_sched_process_events.h"
 #include "sge_follow.h"
-
-#include "gdi/sge_gdi_packet.h"
-
-#include "uti/sge_os.h"
-#include "uti/sge_thread_ctrl.h"
-
+#include "sge_mt_init.h"
+#include "lock.h"
+#include "qmaster_heartbeat.h"
+#include "shutdown.h"
 #include "sge_host_qmaster.h"
 #include "sge_thread_main.h"
 #include "sge_thread_timer.h"
@@ -95,6 +92,13 @@
 #include "sge_qmaster_heartbeat.h"
 #include "sge_persistence_qmaster.h"
 #include "sge_job_enforce_limit.h"
+#include "sge.h"
+#include "sge_qmod_qmaster.h"
+#include "reschedule.h"
+#include "sge_job_qmaster.h"
+#include "msg_common.h"
+#include "msg_qmaster.h"
+#include "msg_daemons_common.h"
 
 static void
 sge_timer_cleanup_monitor(monitoring_t *monitor)

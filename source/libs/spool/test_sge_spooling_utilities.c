@@ -33,13 +33,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "sge_string.h"
-#include "sge_dstring.h"
+#include "uti/sge_string.h"
+#include "uti/sge_dstring.h"
 
-#include "cull.h"
+#include "cull/cull.h"
 
-#include "sge_all_listsL.h"
-#include "sge_object.h"
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_object.h"
 
 #include "spool/sge_spooling_utilities.h"
 

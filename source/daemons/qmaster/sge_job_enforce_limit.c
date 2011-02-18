@@ -56,6 +56,7 @@
 #include "sgeobj/sge_qinstance_state.h"
 #include "sgeobj/sge_report.h"
 #include "sgeobj/sge_schedd_conf.h"
+#include "sgeobj/sge_conf.h"
 
 #include "sge_qmaster_timed_event.h"
 #include "sge_job_enforce_limit.h"

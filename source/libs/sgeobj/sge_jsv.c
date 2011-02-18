@@ -58,6 +58,7 @@
 #include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi_ctx.h"
 
+#include "sgeobj/sge_conf.h"
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_job.h"
 #include "sgeobj/sge_jsv.h"

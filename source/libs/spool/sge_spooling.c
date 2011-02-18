@@ -30,21 +30,21 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/                                   
 
-#include "sgermon.h"
-#include "sge_log.h"
+#include "rmon/sgermon.h"
 
-#include "sge_answer.h"
-#include "sge_spooling_SPC_L.h"
-#include "sge_spooling_SPR_L.h"
-#include "sge_spooling_SPT_L.h"
-#include "sge_spooling_SPTR_L.h"
-#include "sge_spooling_SPM_L.h"
+#include "uti/sge_log.h"
+#include "uti/sge_profiling.h"
+#include "uti/sge_bootstrap.h"
+
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_spooling_SPC_L.h"
+#include "sgeobj/sge_spooling_SPR_L.h"
+#include "sgeobj/sge_spooling_SPT_L.h"
+#include "sgeobj/sge_spooling_SPTR_L.h"
+#include "sgeobj/sge_spooling_SPM_L.h"
 
 #include "spool/msg_spoollib.h"
 #include "spool/sge_spooling.h"
-
-#include "uti/sge_profiling.h"
-#include "uti/sge_bootstrap.h"
 
 static lListElem *Default_Spool_Context;
 

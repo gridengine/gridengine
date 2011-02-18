@@ -32,37 +32,40 @@
 #include <string.h>
 #include <sys/types.h>
 
-#include "sge.h"
-#include "sge_log.h"
-#include "sgermon.h"
-#include "sge_pe.h"
-#include "sge_event_master.h"
-#include "sge_userset.h"
-#include "sge_userset_qmaster.h"
-#include "sge_feature.h"
-#include "sge_conf.h"
-#include "valid_queue_user.h"
-#include "sge_unistd.h"
-#include "sge_answer.h"
-#include "sge_qinstance.h"
-#include "sge_job.h"
-#include "sge_userprj.h"
-#include "sge_host.h"
-#include "sge_utility.h"
-#include "sge_cqueue.h"
-#include "sge_attr.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_unistd.h"
+
+#include "sgeobj/sge_pe.h"
+#include "sgeobj/sge_userset.h"
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_userprj.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_utility.h"
+#include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_attr.h"
 #include "sgeobj/sge_resource_quota.h"
 #include "sgeobj/sge_advance_reservation.h"
 #include "sgeobj/sge_str.h"
-#include "sge_resource_quota_qmaster.h"
+#include "sgeobj/msg_sgeobjlib.h"
 
-#include "sge_persistence_qmaster.h"
-#include "sge_utility_qmaster.h"
 #include "spool/sge_spooling.h"
 
+#include "sched/valid_queue_user.h"
+
+#include "sge.h"
+#include "sge_event_master.h"
+#include "sge_userset_qmaster.h"
+#include "sge_persistence_qmaster.h"
+#include "sge_utility_qmaster.h"
+#include "sge_resource_quota_qmaster.h"
 #include "msg_common.h"
 #include "msg_qmaster.h"
-#include "msg_sgeobjlib.h"
 
 static void sge_change_queue_version_acl(sge_gdi_ctx_class_t *ctx, const char *acl_name);
 static lList* do_depts_conflict(lListElem *new, lListElem *old);

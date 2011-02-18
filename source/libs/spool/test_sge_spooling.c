@@ -37,39 +37,40 @@
 #include <errno.h>
 #include <time.h>
 
-#include "sge_unistd.h"
-#include "sge_all_listsL.h"
-#include "usage.h"
-#include "sig_handlers.h"
-#include "commlib.h"
-#include "sge_prog.h"
-#include "sgermon.h"
-#include "sge_log.h"
+#include "rmon/sgermon.h"
 
+#include "uti/sge_unistd.h"
+#include "uti/sge_log.h"
+#include "uti/sge_profiling.h"
+#include "uti/sge_prog.h"
 
-#include "sge_answer.h"
-#include "sge_profiling.h"
-#include "sge_host.h"
-#include "sge_calendar.h"
-#include "sge_ckpt.h"
-#include "sge_centry.h"
-#include "sge_conf.h"
-#include "sge_job.h"
-#include "sge_manop.h"
-#include "sge_sharetree.h"
-#include "sge_pe.h"
-#include "sge_schedd_conf.h"
-#include "sge_userprj.h"
-#include "sge_userset.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_calendar.h"
+#include "sgeobj/sge_ckpt.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_manop.h"
+#include "sgeobj/sge_sharetree.h"
+#include "sgeobj/sge_pe.h"
+#include "sgeobj/sge_schedd_conf.h"
+#include "sgeobj/sge_userprj.h"
+#include "sgeobj/sge_userset.h"
+#include "sgeobj/sge_hgroup.h"
+#include "sgeobj/sge_event.h"
 
-#include "sge_hgroup.h"
+#include "comm/commlib.h"
 
-#include "msg_clients_common.h"
+#include "mir/sge_mirror.h"
 
-#include "sge_mirror.h"
 #include "spool/sge_spooling.h"
 #include "spool/loader/sge_spooling_loader.h"
-#include "sge_event.h"
+
+#include "sig_handlers.h"
+#include "usage.h"
+#include "msg_clients_common.h"
 
 static lListElem* sge_get_configuration_for_host(const char* aName)
 {

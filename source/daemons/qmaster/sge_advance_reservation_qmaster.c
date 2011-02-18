@@ -35,30 +35,25 @@
 #include <errno.h>
 #include <pwd.h>
 
+#include "rmon/sgermon.h"
+
 #include "uti/sge_stdlib.h"
 #include "uti/sge_stdio.h"
-
-#include "sgeobj/sge_advance_reservation.h"
-#include "sge_advance_reservation_qmaster.h"
-
-#include "sge_persistence_qmaster.h"
-#include "rmon/sgermon.h"
-#include "uti/sge_log.h"
-#include "sge_answer.h"
-#include "spool/sge_spooling.h"
-#include "sgeobj/sge_conf.h"
-
-#include "msg_common.h"
-#include "msg_qmaster.h"
-#include "msg_daemons_common.h"
-
-#include "sge_lock.h"
-#include "sge_mtutil.h"
 #include "uti/sge_time.h"
 #include "uti/sge_uidgid.h"
 #include "uti/sge_string.h"
-#include "sge_utility.h"
-#include "sge_range.h"
+#include "uti/sge_log.h"
+
+#include "spool/sge_spooling.h"
+
+#include "lck/sge_lock.h"
+#include "lck/sge_mtutil.h"
+
+#include "sgeobj/sge_advance_reservation.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_utility.h"
+#include "sgeobj/sge_range.h"
 #include "sgeobj/msg_sgeobjlib.h"
 #include "sgeobj/sge_qinstance.h"
 #include "sgeobj/sge_hgroup.h"
@@ -78,6 +73,8 @@
 #include "sgeobj/sge_ulong.h"
 #include "sgeobj/sge_qref.h"
 #include "sgeobj/sge_pe.h"
+#include "sgeobj/sge_resource_utilization_RUE_L.h"
+#include "sgeobj/sge_resource_utilization_RDE_L.h"
 
 #include "sched/sge_resource_utilization.h"
 #include "sched/sge_select_queue.h"
@@ -85,25 +82,26 @@
 #include "sched/sge_job_schedd.h"
 #include "sched/sge_serf.h"
 #include "sched/valid_queue_user.h"
+#include "sched/sge_complex_schedd.h"
 
 #include "evm/sge_event_master.h"
 #include "evm/sge_queue_event_master.h"
+#include "evm/sge_event_master.h"
 
 #include "sge_utility_qmaster.h"
 #include "sge_host_qmaster.h"
 #include "sge_cqueue_qmaster.h"
 #include "sge_job_qmaster.h"
-
-#include "evm/sge_event_master.h"
 #include "sge_reporting_qmaster.h"
 #include "sge_give_jobs.h"
 #include "sge_qinstance_qmaster.h"
 #include "mail.h"
 #include "symbols.h"
-#include "sge_resource_utilization_RUE_L.h"
-#include "sge_resource_utilization_RDE_L.h"
-
-#include "sge_complex_schedd.h"
+#include "sge_advance_reservation_qmaster.h"
+#include "sge_persistence_qmaster.h"
+#include "msg_common.h"
+#include "msg_qmaster.h"
+#include "msg_daemons_common.h"
 
 typedef struct {
    u_long32 ar_id;

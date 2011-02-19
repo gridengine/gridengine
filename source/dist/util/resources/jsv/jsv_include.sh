@@ -1622,7 +1622,7 @@ jsv_main()
       # simple read can't be used here because it does backslash escaping
       # read -r (raw mode) is not available on all platforms
       # therefore we have to use our own implementation 
-      if [ "$ARCH" = "darwin-x86" ]; then
+      if [ "$ARCH" = "darwin-x86" -o "$ARCH" = "darwin-x64" ]; then
          read -r __jsv_input
       else
          __jsv_input=`$SGE_ROOT/utilbin/$ARCH/read_raw`

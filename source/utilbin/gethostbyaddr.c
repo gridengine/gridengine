@@ -173,8 +173,7 @@ int main(int argc, char *argv[])
 
         fprintf(stderr,"error resolving ip "SFQ": %s (%s)\n",ip_string, cl_get_error_text(retval), err_text); 
 
-        free(err_text); 
-        err_text = NULL;
+        sge_free(&err_text); 
      }
      exit(1);
   }
@@ -207,8 +206,7 @@ int main(int argc, char *argv[])
    
      if (resolved_name != NULL && all_option) {
         printf("SGE name: %s\n",resolved_name);
-        free(resolved_name);
-        resolved_name = NULL;
+        sge_free(&resolved_name);
      } 
    
      if (he != NULL) {
@@ -227,8 +225,7 @@ int main(int argc, char *argv[])
   }
   sge_free_hostent(&he);
   if (resolved_name != NULL) {
-     free(resolved_name);
-     resolved_name = NULL;
+     sge_free(&resolved_name);
   }
   retval = cl_com_cleanup_commlib();
   if (retval != CL_RETVAL_OK) {

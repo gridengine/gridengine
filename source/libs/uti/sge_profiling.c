@@ -1863,14 +1863,11 @@ void sge_prof_cleanup(void) {
                sge_dstring_free(&theInfo[c][i].info_string);
             }
          }
-         
-         FREE(theInfo[c]);
+         sge_free(&(theInfo[c]));
       }
-
-      FREE(theInfo);
+      sge_free(&theInfo);
    }
-
-   FREE(thrdInfo);
+   sge_free(&thrdInfo);
    
    sge_prof_array_initialized = 0;
    

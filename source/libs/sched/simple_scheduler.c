@@ -540,7 +540,7 @@ static void simple_scheduler(sge_evc_class_t *evc)
 
          sge_ssi_job_start(evc_context, id, pe_name, map);
 
-         free(map);
+         sge_free(&map);
       }   
    }
 

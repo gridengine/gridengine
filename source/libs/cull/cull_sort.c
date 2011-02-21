@@ -305,7 +305,7 @@ lSortOrder *lParseSortOrder(const lDescr *dp, const char *fmt, va_list ap)
          break;
 
          default:
-         free( sp );
+         sge_free(&sp);
          unknownType("lSortList");
          } 
        */

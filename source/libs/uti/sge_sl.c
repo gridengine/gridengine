@@ -142,7 +142,7 @@ sge_sl_elem_create(sge_sl_elem_t **elem, void *data) {
 *        destroy(void **data_ptr) {
 *           char *string = *(char **) data_ptr;
 *
-*           free(string);
+*           sge_free(&string);
 *           return true;
 *        }
 *
@@ -161,7 +161,7 @@ sge_sl_elem_destroy(sge_sl_elem_t **elem, sge_sl_destroy_f destroy) {
       if (destroy != NULL) {
          destroy(&(*elem)->data);
       }
-      FREE(*elem);
+      sge_free(elem);
    }
    DRETURN(ret);
 }
@@ -661,7 +661,7 @@ sge_sl_create(sge_sl_list_t **list) {
 *        destroy(void **data_ptr) {
 *           char *string = *(char **) data_ptr;
 *
-*           free(string);
+*           sge_free(&string);
 *           return true;
 *        }
 *
@@ -690,7 +690,7 @@ sge_sl_destroy(sge_sl_list_t **list, sge_sl_destroy_f destroy) {
 
       /* final destroy */
       pthread_mutex_destroy(&(*list)->mutex);
-      FREE(*list);
+      sge_free(list);
    }
    DRETURN(ret);
 }
@@ -1218,7 +1218,7 @@ sge_sl_sort(sge_sl_list_t *list, sge_sl_compare_f compare) {
          }
    
          /* cleanup */
-         FREE(pointer_array);
+         sge_free(&pointer_array);
       } else {
          sge_err_set(SGE_ERR_MEMORY, MSG_UNABLETOALLOCATEBYTES_DS, size, SGE_FUNC);
          ret = false;

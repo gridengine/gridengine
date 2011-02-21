@@ -1281,7 +1281,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
                print_usage = 1;
             }
 
-            free(buf);
+            sge_free(&buf);
          }
          lFreeList(&arglp);
 
@@ -5840,16 +5840,16 @@ static lListElem *edit_exechost(sge_gdi_ctx_class_t *ctx, lListElem *ep, uid_t u
 
    if (status < 0) {
       unlink(filename);
-      free(filename);
-      FREE(fields);
+      sge_free(&filename);
+      sge_free(&fields);
       if (sge_error_and_exit(ctx, MSG_PARSE_EDITFAILED))
          DRETURN(NULL);
    }
 
    if (status > 0) {
       unlink(filename);
-      free(filename);
-      FREE(fields);
+      sge_free(&filename);
+      sge_free(&fields);
       if (sge_error_and_exit(ctx, MSG_FILE_FILEUNCHANGED))
          DRETURN(NULL);
    }
@@ -5873,9 +5873,8 @@ static lListElem *edit_exechost(sge_gdi_ctx_class_t *ctx, lListElem *ep, uid_t u
    }
    
    unlink(filename);
-   free(filename);
-
-   FREE(fields);
+   sge_free(&filename);
+   sge_free(&fields);
    DRETURN(hep);
 }
 
@@ -7147,15 +7146,15 @@ static int qconf_modify_attribute(sge_gdi_ctx_class_t *ctx,
             }
          }
          
-         FREE(name);
-         FREE(value);
+         sge_free(&name);
+         sge_free(&value);
          sge_dstring_free(&delim);
          
          DRETURN(1);
       }
       
-      FREE(name);
-      FREE(value);
+      sge_free(&name);
+      sge_free(&value);
       sge_dstring_free(&delim);
    }
 

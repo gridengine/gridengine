@@ -385,7 +385,7 @@ int cl_com_set_parameter_list_value(const char* parameter, char* value) {
       if (strcmp(elem->parameter,parameter) == 0 ) {
          /* found matching element */
          if (elem->value != NULL) {
-            free(elem->value);
+            sge_free(&(elem->value));
          }
          elem->value = strdup(value);
          if (elem->value == NULL) {
@@ -596,8 +596,8 @@ static int cl_commlib_check_callback_functions(void) {
              CL_LOG(CL_LOG_WARNING,"can't trigger application error function: no function set");
           }
 
-          free(elem->cl_info);
-          free(elem);
+          sge_free(&(elem->cl_info));
+          sge_free(&elem);
           elem = NULL;
        }
        cl_raw_list_unlock(cl_com_application_error_list);
@@ -961,12 +961,10 @@ int cl_com_cleanup_commlib(void) {
    /* cleanup global cl_com_log_list */
    pthread_mutex_lock(&cl_com_log_list_mutex);
    if (cl_commlib_debug_resolvable_hosts != NULL) {
-      free(cl_commlib_debug_resolvable_hosts);
-      cl_commlib_debug_resolvable_hosts = NULL;
+      sge_free(&cl_commlib_debug_resolvable_hosts);
    }
    if (cl_commlib_debug_unresolvable_hosts != NULL) {
-      free(cl_commlib_debug_unresolvable_hosts);
-      cl_commlib_debug_unresolvable_hosts = NULL;
+      sge_free(&cl_commlib_debug_unresolvable_hosts);
    }
    cl_log_list_cleanup(&cl_com_log_list);
    pthread_mutex_unlock(&cl_com_log_list_mutex);
@@ -1161,7 +1159,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
 
    new_handle = (cl_com_handle_t*) malloc(sizeof(cl_com_handle_t));
    if (new_handle == NULL) {
-      free(local_hostname);
+      sge_free(&local_hostname);
       CL_LOG(CL_LOG_ERROR,"malloc() error");
       cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_MALLOC, NULL);
       cl_raw_list_unlock(cl_com_handle_list);
@@ -1184,8 +1182,8 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
          pthread_mutex_lock(&cl_com_ssl_setup_mutex);
          if (cl_com_ssl_setup_config == NULL) {
             CL_LOG(CL_LOG_ERROR,"use cl_com_specify_ssl_configuration() to specify a ssl configuration");
-            free(local_hostname);
-            free(new_handle);
+            sge_free(&local_hostname);
+            sge_free(&new_handle);
             cl_raw_list_unlock(cl_com_handle_list);
             if (commlib_error) {
                *commlib_error = CL_RETVAL_NO_FRAMEWORK_INIT;
@@ -1196,8 +1194,8 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
          }
         
          if ((return_value = cl_com_dup_ssl_setup(&(new_handle->ssl_setup), cl_com_ssl_setup_config)) != CL_RETVAL_OK) {
-            free(local_hostname);
-            free(new_handle);
+            sge_free(&local_hostname);
+            sge_free(&new_handle);
             cl_raw_list_unlock(cl_com_handle_list);
             if (commlib_error) {
                *commlib_error = return_value;
@@ -1224,8 +1222,8 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
    new_handle->debug_client_setup = NULL;
    if ((return_value = cl_com_create_debug_client_setup(&(new_handle->debug_client_setup),CL_DEBUG_CLIENT_OFF, CL_TRUE, 0)) != CL_RETVAL_OK) {
       CL_LOG(CL_LOG_ERROR,"can't setup debug client structure");
-      free(local_hostname);
-      free(new_handle);
+      sge_free(&local_hostname);
+      sge_free(&new_handle);
       cl_raw_list_unlock(cl_com_handle_list);
       if (commlib_error) {
          *commlib_error = CL_RETVAL_NO_FRAMEWORK_INIT;
@@ -1294,8 +1292,8 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
 
    if ( new_handle->max_open_connections < 32 ) {
       CL_LOG_INT(CL_LOG_ERROR, "to less file descriptors:", (int)new_handle->max_open_connections );
-      free(new_handle);
-      free(local_hostname);
+      sge_free(&new_handle);
+      sge_free(&local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
       if (commlib_error) {
          *commlib_error = CL_RETVAL_TO_LESS_FILEDESCRIPTORS;
@@ -1320,8 +1318,8 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
 
    new_handle->statistic = (cl_com_handle_statistic_t*)malloc(sizeof(cl_com_handle_statistic_t));
    if (new_handle->statistic == NULL) {
-      free(new_handle);
-      free(local_hostname);
+      sge_free(&new_handle);
+      sge_free(&local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
       if (commlib_error) {
          *commlib_error = CL_RETVAL_MALLOC;
@@ -1340,8 +1338,8 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
    new_handle->messages_ready_mutex = (pthread_mutex_t*)malloc(sizeof(pthread_mutex_t));
    if (new_handle->messages_ready_mutex == NULL) {
       cl_com_free_handle_statistic(&(new_handle->statistic));
-      free(new_handle);
-      free(local_hostname);
+      sge_free(&new_handle);
+      sge_free(&local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
       if (commlib_error) {
          *commlib_error = CL_RETVAL_MALLOC;
@@ -1352,10 +1350,10 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
 
    new_handle->connection_list_mutex = (pthread_mutex_t*)malloc(sizeof(pthread_mutex_t));
    if (new_handle->connection_list_mutex == NULL) {
-      free(new_handle->messages_ready_mutex);
+      sge_free(&(new_handle->messages_ready_mutex));
       cl_com_free_handle_statistic(&(new_handle->statistic));
-      free(new_handle);
-      free(local_hostname);
+      sge_free(&new_handle);
+      sge_free(&local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
       if (commlib_error) {
          *commlib_error = CL_RETVAL_MALLOC;
@@ -1368,12 +1366,12 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
    if (pthread_mutex_init(new_handle->messages_ready_mutex, NULL) != 0) {
       int mutex_ret_val = pthread_mutex_destroy(new_handle->messages_ready_mutex);
       if (mutex_ret_val != EBUSY) {
-         free(new_handle->messages_ready_mutex); 
+         sge_free(&(new_handle->messages_ready_mutex)); 
       }
-      free(new_handle->connection_list_mutex);
+      sge_free(&(new_handle->connection_list_mutex));
       cl_com_free_handle_statistic(&(new_handle->statistic));
-      free(new_handle);
-      free(local_hostname);
+      sge_free(&new_handle);
+      sge_free(&local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
       if (commlib_error) {
          *commlib_error = CL_RETVAL_MUTEX_ERROR;
@@ -1386,15 +1384,15 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
       int mutex_ret_val;
       mutex_ret_val = pthread_mutex_destroy(new_handle->connection_list_mutex);
       if (mutex_ret_val != EBUSY) {
-         free(new_handle->connection_list_mutex); 
+         sge_free(&(new_handle->connection_list_mutex)); 
       }
       mutex_ret_val = pthread_mutex_destroy(new_handle->messages_ready_mutex);
       if (mutex_ret_val != EBUSY) {
-         free(new_handle->messages_ready_mutex); 
+         sge_free(&(new_handle->messages_ready_mutex)); 
       }
       cl_com_free_handle_statistic(&(new_handle->statistic));
-      free(new_handle);
-      free(local_hostname);
+      sge_free(&new_handle);
+      sge_free(&local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
       if (commlib_error) {
          *commlib_error = CL_RETVAL_MUTEX_ERROR;
@@ -1408,15 +1406,15 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
       int mutex_ret_val;
       mutex_ret_val = pthread_mutex_destroy(new_handle->connection_list_mutex);
       if (mutex_ret_val != EBUSY) {
-         free(new_handle->connection_list_mutex); 
+         sge_free(&(new_handle->connection_list_mutex)); 
       }
       mutex_ret_val = pthread_mutex_destroy(new_handle->messages_ready_mutex);
       if (mutex_ret_val != EBUSY) {
-         free(new_handle->messages_ready_mutex); 
+         sge_free(&(new_handle->messages_ready_mutex)); 
       }
       cl_com_free_handle_statistic(&(new_handle->statistic));
-      free(new_handle);
-      free(local_hostname);
+      sge_free(&new_handle);
+      sge_free(&local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
       if (commlib_error) {
          *commlib_error = CL_RETVAL_MALLOC;
@@ -1432,15 +1430,15 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
       cl_com_free_endpoint(&(new_handle->local));
       mutex_ret_val = pthread_mutex_destroy(new_handle->connection_list_mutex);
       if (mutex_ret_val != EBUSY) {
-         free(new_handle->connection_list_mutex); 
+         sge_free(&(new_handle->connection_list_mutex)); 
       }
       mutex_ret_val = pthread_mutex_destroy(new_handle->messages_ready_mutex);
       if (mutex_ret_val != EBUSY) {
-         free(new_handle->messages_ready_mutex); 
+         sge_free(&(new_handle->messages_ready_mutex)); 
       }
       cl_com_free_handle_statistic(&(new_handle->statistic));
-      free(new_handle);
-      free(local_hostname);
+      sge_free(&new_handle);
+      sge_free(&local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
       if (commlib_error) {
          *commlib_error = return_value;
@@ -1455,15 +1453,15 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
       cl_com_free_endpoint(&(new_handle->local));
       mutex_ret_val = pthread_mutex_destroy(new_handle->connection_list_mutex);
       if (mutex_ret_val != EBUSY) {
-         free(new_handle->connection_list_mutex); 
+         sge_free(&(new_handle->connection_list_mutex)); 
       }
       mutex_ret_val = pthread_mutex_destroy(new_handle->messages_ready_mutex);
       if (mutex_ret_val != EBUSY) {
-         free(new_handle->messages_ready_mutex); 
+         sge_free(&(new_handle->messages_ready_mutex)); 
       }
       cl_com_free_handle_statistic(&(new_handle->statistic));
-      free(new_handle);
-      free(local_hostname);
+      sge_free(&new_handle);
+      sge_free(&local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
       if (commlib_error) {
          *commlib_error = return_value;
@@ -1480,15 +1478,15 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
       cl_com_free_endpoint(&(new_handle->local));
       mutex_ret_val = pthread_mutex_destroy(new_handle->connection_list_mutex);
       if (mutex_ret_val != EBUSY) {
-         free(new_handle->connection_list_mutex); 
+         sge_free(&(new_handle->connection_list_mutex)); 
       }
       mutex_ret_val = pthread_mutex_destroy(new_handle->messages_ready_mutex);
       if (mutex_ret_val != EBUSY) {
-         free(new_handle->messages_ready_mutex); 
+         sge_free(&(new_handle->messages_ready_mutex)); 
       }
       cl_com_free_handle_statistic(&(new_handle->statistic));
-      free(new_handle);
-      free(local_hostname);
+      sge_free(&new_handle);
+      sge_free(&local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
       if (commlib_error) {
          *commlib_error = return_value;
@@ -1507,15 +1505,15 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
       cl_com_free_endpoint(&(new_handle->local));
       mutex_ret_val = pthread_mutex_destroy(new_handle->connection_list_mutex);
       if (mutex_ret_val != EBUSY) {
-         free(new_handle->connection_list_mutex); 
+         sge_free(&(new_handle->connection_list_mutex)); 
       }
       mutex_ret_val = pthread_mutex_destroy(new_handle->messages_ready_mutex);
       if (mutex_ret_val != EBUSY) {
-         free(new_handle->messages_ready_mutex); 
+         sge_free(&(new_handle->messages_ready_mutex)); 
       }
       cl_com_free_handle_statistic(&(new_handle->statistic));
-      free(new_handle);
-      free(local_hostname);
+      sge_free(&new_handle);
+      sge_free(&local_hostname);
       cl_raw_list_unlock(cl_com_handle_list);
       if (commlib_error) {
          *commlib_error = return_value;
@@ -1525,8 +1523,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
    }
  
    /* local host name not needed anymore */
-   free(local_hostname);
-   local_hostname = NULL;
+   sge_free(&local_hostname);
 
    if (new_handle->service_provider == CL_TRUE) {
       /* create service */
@@ -1545,14 +1542,14 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
          cl_com_free_endpoint(&(new_handle->local));
          mutex_ret_val = pthread_mutex_destroy(new_handle->connection_list_mutex);
          if (mutex_ret_val != EBUSY) {
-            free(new_handle->connection_list_mutex); 
+            sge_free(&(new_handle->connection_list_mutex)); 
          }
          mutex_ret_val = pthread_mutex_destroy(new_handle->messages_ready_mutex);
          if (mutex_ret_val != EBUSY) {
-            free(new_handle->messages_ready_mutex); 
+            sge_free(&(new_handle->messages_ready_mutex)); 
          }
          cl_com_free_handle_statistic(&(new_handle->statistic));
-         free(new_handle);
+         sge_free(&new_handle);
          cl_raw_list_unlock(cl_com_handle_list);
          if (commlib_error) {
             *commlib_error = return_value;
@@ -1578,11 +1575,11 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
          cl_com_free_endpoint(&(new_handle->local));
          mutex_ret_val = pthread_mutex_destroy(new_handle->connection_list_mutex);
          if (mutex_ret_val != EBUSY) {
-            free(new_handle->connection_list_mutex); 
+            sge_free(&(new_handle->connection_list_mutex)); 
          }
          mutex_ret_val = pthread_mutex_destroy(new_handle->messages_ready_mutex);
          if (mutex_ret_val != EBUSY) {
-            free(new_handle->messages_ready_mutex); 
+            sge_free(&(new_handle->messages_ready_mutex)); 
          }
          cl_com_free_handle_statistic(&(new_handle->statistic));
 
@@ -1590,7 +1587,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
 
          cl_com_free_ssl_setup(&(new_handle->ssl_setup));
 
-         free(new_handle);
+         sge_free(&new_handle);
          cl_raw_list_unlock(cl_com_handle_list);
          if (commlib_error) {
             *commlib_error = return_value;
@@ -1678,7 +1675,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
                cl_com_poll_t* poll_handle = (cl_com_poll_t*) malloc(sizeof(cl_com_poll_t));
                if (poll_handle == NULL) {
                   return_value = CL_RETVAL_MALLOC;
-                  free(thread_data);
+                  sge_free(&thread_data);
                   thread_data = NULL;
                } else {
                   memset(poll_handle, 0, sizeof(cl_com_poll_t));
@@ -1721,7 +1718,7 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
                cl_com_poll_t* poll_handle = (cl_com_poll_t*) malloc(sizeof(cl_com_poll_t));
                if (poll_handle == NULL) {
                   return_value = CL_RETVAL_MALLOC;
-                  free(thread_data);
+                  sge_free(&thread_data);
                   thread_data = NULL;
                } else {
                   memset(poll_handle, 0, sizeof(cl_com_poll_t));
@@ -1769,14 +1766,14 @@ cl_com_handle_t* cl_com_create_handle(int* commlib_error,
       cl_com_free_endpoint(&(new_handle->local));
       mutex_ret_val = pthread_mutex_destroy(new_handle->connection_list_mutex);
       if (mutex_ret_val != EBUSY) {
-         free(new_handle->connection_list_mutex); 
+         sge_free(&(new_handle->connection_list_mutex)); 
       }
       mutex_ret_val = pthread_mutex_destroy(new_handle->messages_ready_mutex);
       if (mutex_ret_val != EBUSY) {
-         free(new_handle->messages_ready_mutex); 
+         sge_free(&(new_handle->messages_ready_mutex)); 
       }
       cl_com_free_handle_statistic(&(new_handle->statistic));
-      free(new_handle);
+      sge_free(&new_handle);
       cl_raw_list_unlock(cl_com_handle_list);
       if (commlib_error) {
          *commlib_error = return_value;
@@ -1842,10 +1839,10 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, cl_bool_t return_for_mes
       cl_raw_list_remove_elem(handle->send_message_queue, mq_elem->raw_elem);
       if (mq_return_value != CL_RETVAL_OK) {
          CL_LOG_STR(CL_LOG_ERROR,"can't send message:", cl_get_error_text(mq_return_value));
-         free(mq_elem->snd_data);
+         sge_free(&(mq_elem->snd_data));
       }
       cl_com_free_endpoint(&(mq_elem->snd_destination));
-      free(mq_elem);
+      sge_free(&mq_elem);
    }
    cl_raw_list_unlock(handle->send_message_queue);
 
@@ -2127,14 +2124,12 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, cl_bool_t return_for_mes
     
       if (handle->messages_ready_mutex != NULL) {
          if (pthread_mutex_destroy(handle->messages_ready_mutex) != EBUSY) {
-            free(handle->messages_ready_mutex); 
-            handle->messages_ready_mutex = NULL;
+            sge_free(&(handle->messages_ready_mutex)); 
          }
       }
       if (handle->connection_list_mutex != NULL) {
          if (pthread_mutex_destroy(handle->connection_list_mutex) != EBUSY) {
-            free(handle->connection_list_mutex); 
-            handle->connection_list_mutex = NULL;
+            sge_free(&(handle->connection_list_mutex)); 
          }
       }
       cl_com_free_handle_statistic(&(handle->statistic));
@@ -2145,7 +2140,7 @@ int cl_commlib_shutdown_handle(cl_com_handle_t* handle, cl_bool_t return_for_mes
 
       cl_fd_list_cleanup(&(handle->file_descriptor_list));
 
-      free(handle);
+      sge_free(&handle);
       return CL_RETVAL_OK;
    } 
    return ret_val;
@@ -2475,13 +2470,13 @@ cl_com_append_known_endpoint_from_name(char* unresolved_comp_host,
 
    endpoint = cl_com_create_endpoint(resolved_hostname, comp_name, comp_id, &in_addr);
    if (endpoint == NULL) {
-      free(resolved_hostname); 
+      sge_free(&resolved_hostname); 
       return CL_RETVAL_MALLOC;
    }
 
    retval = cl_com_append_known_endpoint(endpoint, comp_port, autoclose, is_static);
 
-   free(resolved_hostname); 
+   sge_free(&resolved_hostname); 
    cl_com_free_endpoint(&endpoint);
    
    return retval;
@@ -2546,13 +2541,13 @@ int cl_com_remove_known_endpoint_from_name(const char* unresolved_comp_host, con
 
    endpoint = cl_com_create_endpoint(resolved_hostname, comp_name, comp_id, &in_addr);
    if (endpoint == NULL) {
-      free(resolved_hostname); 
+      sge_free(&resolved_hostname); 
       return CL_RETVAL_MALLOC;
    }
 
    ret_val = cl_com_remove_known_endpoint(endpoint);
 
-   free(resolved_hostname); 
+   sge_free(&resolved_hostname); 
    cl_com_free_endpoint(&endpoint);
    
    return ret_val;
@@ -2582,13 +2577,13 @@ int cl_com_get_known_endpoint_autoclose_mode_from_name(char* unresolved_comp_hos
 
    endpoint = cl_com_create_endpoint(resolved_hostname,comp_name , comp_id, &in_addr);
    if (endpoint == NULL) {
-      free(resolved_hostname); 
+      sge_free(&resolved_hostname); 
       return CL_RETVAL_MALLOC;
    }
 
    retval = cl_com_get_known_endpoint_autoclose_mode(endpoint, auto_close_mode);
 
-   free(resolved_hostname); 
+   sge_free(&resolved_hostname); 
    cl_com_free_endpoint(&endpoint);
    
    return retval;
@@ -2618,13 +2613,13 @@ int cl_com_get_known_endpoint_port_from_name(char* unresolved_comp_host, char* c
 
    endpoint = cl_com_create_endpoint(resolved_hostname,comp_name , comp_id, &in_addr);
    if (endpoint == NULL) {
-      free(resolved_hostname); 
+      sge_free(&resolved_hostname); 
       return CL_RETVAL_MALLOC;
    }
 
    retval = cl_com_get_known_endpoint_port(endpoint,service_port);
 
-   free(resolved_hostname); 
+   sge_free(&resolved_hostname); 
    cl_com_free_endpoint(&endpoint);
    
    return retval ;
@@ -2712,8 +2707,7 @@ int cl_com_set_handle_fds(cl_com_handle_t* handle, int** fdArrayBack, unsigned l
 
    if (fdArrayIndex == 0) {
       if (fd_array != NULL) {
-         free(fd_array);
-         fd_array = NULL;
+         sge_free(&fd_array);
       }
       ret_val = CL_RETVAL_UNKNOWN;
    }
@@ -2801,8 +2795,7 @@ int cl_com_add_allowed_host(cl_com_handle_t* handle, char* hostname) {
       CL_LOG_STR(CL_LOG_ERROR,"could not resolve host",hostname);
       return retval;
    }
-   free(resolved_name);
-   resolved_name = NULL;
+   sge_free(&resolved_name);
    retval = cl_string_list_append_string(handle->allowed_host_list, hostname, 1);
    if (retval != CL_RETVAL_OK) {
       CL_LOG_STR(CL_LOG_WARNING,"could not add host to allowed host list:", hostname);
@@ -4213,7 +4206,7 @@ static int cl_commlib_handle_debug_clients(cl_com_handle_t* handle, cl_bool_t lo
          cl_raw_list_remove_elem(handle->debug_client_setup->dc_debug_list, string_elem->raw_elem);
          log_string = string_elem->string;
          had_data_to_flush = CL_TRUE;
-         free(string_elem);
+         sge_free(&string_elem);
       } else {
          list_empty = CL_TRUE;
       }
@@ -4252,7 +4245,7 @@ static int cl_commlib_handle_debug_clients(cl_com_handle_t* handle, cl_bool_t lo
             }
             elem = cl_connection_list_get_next_elem(elem);
          }
-         free(log_string);
+         sge_free(&log_string);
          log_string = NULL;
       }
    }
@@ -4553,8 +4546,7 @@ int cl_com_application_debug(cl_com_handle_t* handle, const char* message) {
          }
       }
       ret_val = cl_string_list_append_string(handle->debug_client_setup->dc_debug_list, dm_buffer , 1);
-      free(dm_buffer);
-      dm_buffer = NULL;
+      sge_free(&dm_buffer);
    }
 
    return ret_val;
@@ -4619,8 +4611,7 @@ static int cl_commlib_calculate_statistic(cl_com_handle_t* handle, cl_bool_t for
    handle->statistic->application_status = 99999;
    if (cl_com_application_status_func != NULL) {
       if ( handle->statistic->application_info != NULL ) {
-         free(handle->statistic->application_info);
-         handle->statistic->application_info = NULL;
+         sge_free(&(handle->statistic->application_info));
       }
       handle->statistic->application_status = cl_com_application_status_func(&(handle->statistic->application_info));
    } 
@@ -5444,8 +5435,7 @@ int cl_commlib_search_endpoint(cl_com_handle_t* handle,
 
    retval = cl_endpoint_list_setup(endpoint_list, "matching endpoints", 0, 0, CL_TRUE); 
    if (retval != CL_RETVAL_OK) {
-      free(resolved_hostname);
-      resolved_hostname = NULL;
+      sge_free(&resolved_hostname);
       cl_endpoint_list_cleanup(endpoint_list);
       return retval;
    }
@@ -5530,8 +5520,7 @@ int cl_commlib_search_endpoint(cl_com_handle_t* handle,
          cl_raw_list_unlock(global_endpoint_list);
       }
    }
-   free(resolved_hostname); 
-   resolved_hostname = NULL;
+   sge_free(&resolved_hostname); 
    return CL_RETVAL_OK;
 }
 
@@ -5687,8 +5676,7 @@ static int cl_commlib_send_sirm_message(cl_com_connection_t* connection,
    sirm_message_data = (cl_byte_t*)malloc(sirm_message_malloc_size);
    if (sirm_message_data == NULL) {
       if (xml_infotext != NULL) {
-         free(xml_infotext);
-         xml_infotext = NULL;
+         sge_free(&xml_infotext);
       }
       return CL_RETVAL_MALLOC;
    }
@@ -5704,8 +5692,7 @@ static int cl_commlib_send_sirm_message(cl_com_connection_t* connection,
            xml_infotext);
 
    if (xml_infotext != NULL) {
-      free(xml_infotext);
-      xml_infotext = NULL;
+      sge_free(&xml_infotext);
    }
 
    ret_val = cl_com_setup_message(&sirm_message, connection, sirm_message_data , sirm_message_size , CL_MIH_MAT_NAK , 0 ,0);
@@ -5806,7 +5793,7 @@ int cl_commlib_check_for_ack(cl_com_handle_t* handle, char* un_resolved_hostname
    receiver.addr.s_addr = in_addr.s_addr;
    receiver.hash_id = cl_create_endpoint_string(&receiver);
    if (receiver.hash_id == NULL) {
-      free(unique_hostname);
+      sge_free(&unique_hostname);
       return CL_RETVAL_MALLOC;
    }
 
@@ -5840,8 +5827,8 @@ int cl_commlib_check_for_ack(cl_com_handle_t* handle, char* un_resolved_hostname
                   }
 
                   cl_raw_list_unlock(handle->connection_list);
-                  free(unique_hostname);
-                  free(receiver.hash_id);
+                  sge_free(&unique_hostname);
+                  sge_free(&(receiver.hash_id));
                   CL_LOG_INT(CL_LOG_INFO,"got message acknowledge:",(int)mid);
                   if (message_added) {
                      switch(cl_com_create_threads) {
@@ -5868,16 +5855,16 @@ int cl_commlib_check_for_ack(cl_com_handle_t* handle, char* un_resolved_hostname
       } else {
          CL_LOG_STR(CL_LOG_ERROR,"can't find connection to:", receiver.comp_host);
          cl_raw_list_unlock(handle->connection_list);
-         free(unique_hostname);
-         free(receiver.hash_id);
+         sge_free(&unique_hostname);
+         sge_free(&(receiver.hash_id));
          return CL_RETVAL_CONNECTION_NOT_FOUND; 
       }
       cl_raw_list_unlock(handle->connection_list);
 
       if (found_message == 0) {
          CL_LOG_INT(CL_LOG_ERROR,"message not found or removed because of ack timeout", (int)mid);
-         free(unique_hostname);
-         free(receiver.hash_id);
+         sge_free(&unique_hostname);
+         sge_free(&(receiver.hash_id));
          return CL_RETVAL_MESSAGE_ACK_ERROR; /* message not found or removed because of ack timeout */
       }
 
@@ -5894,8 +5881,8 @@ int cl_commlib_check_for_ack(cl_com_handle_t* handle, char* un_resolved_hostname
                break;
          } /* switch */
       } else  {
-         free(unique_hostname);
-         free(receiver.hash_id);
+         sge_free(&unique_hostname);
+         sge_free(&(receiver.hash_id));
          return CL_RETVAL_MESSAGE_WAIT_FOR_ACK;
       }
    } /* while (1) */
@@ -5951,7 +5938,7 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
    receiver.addr.s_addr = in_addr.s_addr;
    receiver.hash_id = cl_create_endpoint_string(&receiver);
    if (receiver.hash_id == NULL) {
-      free(unique_hostname);
+      sge_free(&unique_hostname);
       return CL_RETVAL_MALLOC;
    }
 
@@ -6063,9 +6050,8 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
       }
 
       cl_raw_list_unlock(handle->connection_list);
-      free(unique_hostname);
-      free(receiver.hash_id);
-      unique_hostname = NULL;
+      sge_free(&unique_hostname);
+      sge_free(&(receiver.hash_id));
       receiver.comp_host = NULL;
       pthread_mutex_unlock(handle->connection_list_mutex);
       return ret_val;
@@ -6082,9 +6068,8 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
    if (ret_val != CL_RETVAL_OK) {
       CL_LOG(CL_LOG_ERROR,"could not setup connection");
       cl_com_close_connection(&new_con);
-      free(unique_hostname);
-      free(receiver.hash_id);
-      unique_hostname = NULL;
+      sge_free(&unique_hostname);
+      sge_free(&receiver.hash_id);
       receiver.comp_host = NULL;
       /* unlock connection list */
       pthread_mutex_unlock(handle->connection_list_mutex);
@@ -6106,9 +6091,8 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
    if (ret_val != CL_RETVAL_OK && ret_val != CL_RETVAL_UNCOMPLETE_WRITE ) {
       CL_LOG(CL_LOG_ERROR,"could not open connection");
       cl_com_close_connection(&new_con);
-      free(unique_hostname);
-      free(receiver.hash_id);
-      unique_hostname = NULL;
+      sge_free(&unique_hostname);
+      sge_free(&receiver.hash_id);
       receiver.comp_host = NULL;
 
       /* unlock connection list */
@@ -6135,9 +6119,8 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
 
          cl_raw_list_unlock(handle->connection_list);
          cl_com_close_connection(&new_con);
-         free(unique_hostname);
-         free(receiver.hash_id);
-         unique_hostname = NULL;
+         sge_free(&unique_hostname);
+         sge_free(&(receiver.hash_id));
          receiver.comp_host = NULL;
 
          /* unlock connection list */
@@ -6147,9 +6130,8 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
          CL_LOG(CL_LOG_ERROR,"client not unique error, can't add opened connection into connection list");
          cl_raw_list_unlock(handle->connection_list);
          cl_com_close_connection(&new_con);
-         free(unique_hostname);
-         free(receiver.hash_id);
-         unique_hostname = NULL;
+         sge_free(unique_hostname);
+         sge_free(&(receiver.hash_id));
          receiver.comp_host = NULL;
 
          /* unlock connection list */
@@ -6158,9 +6140,8 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
       }
    }
 
-   free(unique_hostname);
-   free(receiver.hash_id);
-   unique_hostname = NULL;
+   sge_free(&unique_hostname);
+   sge_free(&(receiver.hash_id));
    receiver.comp_host = NULL;
 
    CL_LOG(CL_LOG_INFO,"new connection created");
@@ -6223,7 +6204,7 @@ int cl_commlib_close_connection(cl_com_handle_t* handle,char* un_resolved_hostna
    receiver.addr.s_addr = in_addr.s_addr;
    receiver.hash_id = cl_create_endpoint_string(&receiver);
    if (receiver.hash_id == NULL) {
-      free(unique_hostname);
+      sge_free(&unique_hostname);
       return CL_RETVAL_MALLOC;
    }
 
@@ -6240,10 +6221,10 @@ int cl_commlib_close_connection(cl_com_handle_t* handle,char* un_resolved_hostna
       cl_raw_list_remove_elem(handle->send_message_queue, mq_elem->raw_elem);
       if (mq_return_value != CL_RETVAL_OK) {
          CL_LOG_STR(CL_LOG_ERROR,"can't send message:", cl_get_error_text(mq_return_value));
-         free(mq_elem->snd_data);
+         sge_free(&(mq_elem->snd_data));
       }
       cl_com_free_endpoint(&(mq_elem->snd_destination));
-      free(mq_elem);
+      sge_free(&mq_elem);
    }
    cl_raw_list_unlock(handle->send_message_queue);
 
@@ -6367,17 +6348,17 @@ int cl_commlib_close_connection(cl_com_handle_t* handle,char* un_resolved_hostna
             }
          }
          if (do_return_after_trigger == CL_TRUE) {
-            free(unique_hostname);
-            free(receiver.hash_id);
+            sge_free(&unique_hostname);
+            sge_free(&(receiver.hash_id));
             return CL_RETVAL_MESSAGE_IN_BUFFER;
          }
       }
-      free(unique_hostname);
-      free(receiver.hash_id);
+      sge_free(&unique_hostname);
+      sge_free(&(receiver.hash_id));
       return CL_RETVAL_OK;
    }
-   free(unique_hostname);
-   free(receiver.hash_id);
+   sge_free(&unique_hostname);
+   sge_free(&(receiver.hash_id));
    return CL_RETVAL_CONNECTION_NOT_FOUND;
 }
 
@@ -6438,15 +6419,15 @@ int cl_commlib_get_endpoint_status(cl_com_handle_t* handle, char* un_resolved_ho
    receiver.addr.s_addr = in_addr.s_addr;
    receiver.hash_id = cl_create_endpoint_string(&receiver);
    if (receiver.hash_id == NULL) {
-      free(unique_hostname);
+      sge_free(&unique_hostname);
       return CL_RETVAL_MALLOC;
    }
 
    return_value = cl_commlib_append_message_to_connection(handle, &receiver, CL_MIH_MAT_UNDEFINED, NULL, 0, 0, 0, &my_mid);
    /* we return as fast as possible with error */
    if (return_value != CL_RETVAL_OK) {
-      free(unique_hostname);
-      free(receiver.hash_id);
+      sge_free(&unique_hostname);
+      sge_free(&receiver.hash_id);
       return return_value;
    }
 
@@ -6494,8 +6475,8 @@ int cl_commlib_get_endpoint_status(cl_com_handle_t* handle, char* un_resolved_ho
                   }
 
                   cl_raw_list_unlock(handle->connection_list);
-                  free(unique_hostname);
-                  free(receiver.hash_id);
+                  sge_free(&unique_hostname);
+                  sge_free(&(receiver.hash_id));
                   CL_LOG_INT(CL_LOG_INFO, "got SIRM for SIM with id:",(int)my_mid);
                   if (new_message_added) {
                      switch(cl_com_create_threads) {
@@ -6538,21 +6519,21 @@ int cl_commlib_get_endpoint_status(cl_com_handle_t* handle, char* un_resolved_ho
       } else {
          CL_LOG(CL_LOG_ERROR,"no connection FOUND");
          cl_raw_list_unlock(handle->connection_list);
-         free(unique_hostname);
-         free(receiver.hash_id);
+         sge_free(&unique_hostname);
+         sge_free(&(receiver.hash_id));
          return CL_RETVAL_CONNECTION_NOT_FOUND; 
       }
       cl_raw_list_unlock(handle->connection_list);
 
       if (found_message == 0) {
          CL_LOG_INT(CL_LOG_ERROR, "SIM not found or removed because of SIRM ack timeout - msg_id was", (int)my_mid);
-         free(unique_hostname);
-         free(receiver.hash_id);
+         sge_free(&unique_hostname);
+         sge_free(&(receiver.hash_id));
          return CL_RETVAL_MESSAGE_ACK_ERROR; /* message not found or removed because of ack timeout */
       } else if (found_message == 2) {
          CL_LOG_INT(CL_LOG_ERROR, "cannot send SIM - ack timeout reached - msg_id was", (int)my_mid);
-         free(unique_hostname);
-         free(receiver.hash_id);
+         sge_free(&unique_hostname);
+         sge_free(&(receiver.hash_id));
          return CL_RETVAL_SEND_TIMEOUT;
       }
 
@@ -6904,7 +6885,7 @@ int cl_commlib_send_message(cl_com_handle_t*  handle,
    return_value = cl_com_cached_gethostbyname(un_resolved_hostname, &unique_hostname, &in_addr, NULL, NULL);
    if (return_value != CL_RETVAL_OK) {
       CL_LOG(CL_LOG_ERROR,cl_get_error_text(return_value));
-      free(help_data);
+      sge_free(&help_data);
       return return_value;
    }
 
@@ -6925,10 +6906,10 @@ int cl_commlib_send_message(cl_com_handle_t*  handle,
     
       /* create endpoint structure */
       destination_endpoint = cl_com_create_endpoint(unique_hostname, component_name, component_id, &in_addr);
-      free(unique_hostname);
+      sge_free(&unique_hostname);
       unique_hostname = NULL;
       if (destination_endpoint == NULL) {
-         free(help_data);
+         sge_free(&help_data);
          return CL_RETVAL_MALLOC;
       }
       return_value = cl_app_message_queue_append(handle->send_message_queue, NULL,
@@ -6936,7 +6917,7 @@ int cl_commlib_send_message(cl_com_handle_t*  handle,
                                                  help_data, size, response_mid, tag, 1);
       if (return_value != CL_RETVAL_OK) {
          CL_LOG(CL_LOG_ERROR,cl_get_error_text(return_value));
-         free(help_data);
+         sge_free(&help_data);
          return return_value;
       }
       /* trigger write thread. He can also add the messages to the send lists */
@@ -6951,17 +6932,17 @@ int cl_commlib_send_message(cl_com_handle_t*  handle,
       receiver.addr.s_addr = in_addr.s_addr;
       receiver.hash_id = cl_create_endpoint_string(&receiver);
       if (receiver.hash_id == NULL) {
-         free(unique_hostname);
-         free(help_data);
+         sge_free(&unique_hostname);
+         sge_free(&help_data);
          return CL_RETVAL_MALLOC;
       }
    
       return_value = cl_commlib_append_message_to_connection(handle, &receiver, ack_type, help_data, size, response_mid, tag, &my_mid);
       /* We return as fast as possible */
       if (return_value != CL_RETVAL_OK) {
-         free(unique_hostname);
-         free(receiver.hash_id);
-         free(help_data);
+         sge_free(&unique_hostname);
+         sge_free(&(receiver.hash_id));
+         sge_free(&help_data);
          return return_value;
       }
 
@@ -6982,21 +6963,21 @@ int cl_commlib_send_message(cl_com_handle_t*  handle,
       }  
 
       if (ack_type == CL_MIH_MAT_NAK) {
-         free(unique_hostname);
-         free(receiver.hash_id);
+         sge_free(&unique_hostname);
+         sge_free(&(receiver.hash_id));
          return CL_RETVAL_OK;
       }
    
       if (wait_for_ack == CL_FALSE) {
-         free(unique_hostname);
-         free(receiver.hash_id);
+         sge_free(&unique_hostname);
+         sge_free(&(receiver.hash_id));
          return CL_RETVAL_OK;
       }
    
       CL_LOG_INT(CL_LOG_INFO,"message acknowledge expected, waiting for ack", (int)my_mid);
       return_value = cl_commlib_check_for_ack(handle, receiver.comp_host, component_name, component_id, my_mid, CL_TRUE);
-      free(unique_hostname);
-      free(receiver.hash_id);
+      sge_free(&unique_hostname);
+      sge_free(&(receiver.hash_id));
 
    }
    return return_value;
@@ -7049,7 +7030,7 @@ int cl_commlib_get_last_message_time(cl_com_handle_t* handle,
    receiver.addr.s_addr = in_addr.s_addr;
    receiver.hash_id = cl_create_endpoint_string(&receiver);
    if (receiver.hash_id == NULL) {
-      free(unique_hostname);
+      sge_free(&unique_hostname);
       return CL_RETVAL_MALLOC;
    }
 
@@ -7060,8 +7041,8 @@ int cl_commlib_get_last_message_time(cl_com_handle_t* handle,
       CL_LOG_INT(CL_LOG_DEBUG,"last transfer time:", (int)*message_time);
    }
 
-   free(unique_hostname);
-   free(receiver.hash_id);
+   sge_free(&unique_hostname);
+   sge_free(&(receiver.hash_id));
 
    return return_value;
 }
@@ -7106,7 +7087,7 @@ int cl_commlib_get_connect_time(cl_com_handle_t* handle,
    receiver.addr.s_addr = in_addr.s_addr;
    receiver.hash_id = cl_create_endpoint_string(&receiver);
    if (receiver.hash_id == NULL) {
-      free(unique_hostname);
+      sge_free(&unique_hostname);
       return CL_RETVAL_MALLOC;
    }
 
@@ -7125,8 +7106,8 @@ int cl_commlib_get_connect_time(cl_com_handle_t* handle,
    cl_raw_list_unlock(handle->connection_list);
    pthread_mutex_unlock(handle->connection_list_mutex);
 
-   free(unique_hostname);
-   free(receiver.hash_id);
+   sge_free(&unique_hostname);
+   sge_free(&(receiver.hash_id));
 
    return return_value;
 }
@@ -7290,9 +7271,9 @@ static void cl_thread_read_write_thread_cleanup_function(cl_thread_settings_t* t
          thread_data = (cl_com_thread_data_t*) thread_config->thread_user_data;
          poll_handle = thread_data->poll_handle;
          cl_com_free_poll_array(poll_handle);
-         free(poll_handle);
+         sge_free(&poll_handle);
          /* no need to free thread_data->handle, it's freed when handle goes down */
-         free(thread_data);
+         sge_free(&thread_data);
          thread_config->thread_user_data = NULL;
       }
       CL_LOG(CL_LOG_INFO, "thread user data cleanup done");
@@ -7370,10 +7351,10 @@ static void *cl_com_handle_read_thread(void *t_conf) {
          cl_raw_list_remove_elem(handle->send_message_queue, mq_elem->raw_elem);
          if (mq_return_value != CL_RETVAL_OK) {
             CL_LOG_STR(CL_LOG_ERROR,"can't send message:", cl_get_error_text(mq_return_value));
-            free(mq_elem->snd_data);
+            sge_free(&(mq_elem->snd_data));
          }
          cl_com_free_endpoint(&(mq_elem->snd_destination));
-         free(mq_elem);
+         sge_free(&mq_elem);
       }
       cl_raw_list_unlock(handle->send_message_queue);
 
@@ -7755,10 +7736,10 @@ static void *cl_com_handle_write_thread(void *t_conf) {
          cl_raw_list_remove_elem(handle->send_message_queue, mq_elem->raw_elem);
          if (mq_return_value != CL_RETVAL_OK) {
             CL_LOG_STR(CL_LOG_ERROR,"can't send message:", cl_get_error_text(mq_return_value));
-            free(mq_elem->snd_data);
+            sge_free(&(mq_elem->snd_data));
          }
          cl_com_free_endpoint(&(mq_elem->snd_destination));
-         free(mq_elem);
+         sge_free(&mq_elem);
       }
       cl_raw_list_unlock(handle->send_message_queue);
 
@@ -8030,11 +8011,11 @@ int getuniquehostname(const char *hostin, char *hostout, int refresh_aliases) {
          snprintf(tmp_buffer, 1024, MSG_CL_COMMLIB_HOSTNAME_EXEEDS_MAX_HOSTNAME_LENGTH_SU,
                   resolved_host, sge_u32c(CL_MAXHOSTLEN));
          cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_HOSTNAME_LENGTH_ERROR, tmp_buffer);
-         free(resolved_host);
+         sge_free(&resolved_host);
          return CL_RETVAL_HOSTNAME_LENGTH_ERROR;
       }
       snprintf(hostout, CL_MAXHOSTLEN, "%s", resolved_host);
-      free(resolved_host);
+      sge_free(&resolved_host);
    }
    return ret_val;
 }

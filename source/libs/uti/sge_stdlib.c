@@ -112,18 +112,18 @@ void *sge_realloc(void *ptr, int size, int do_abort)
 
    /* if new size is 0, just free the currently allocated memory */
    if (size == 0) {
-      FREE(ptr);
-      DRETURN(NULL);
+      sge_free(&ptr);
+      DRETURN_(NULL);
    }
 
    cp = realloc(ptr, size);
    if (cp == NULL) {
       CRITICAL((SGE_EVENT, MSG_MEMORY_REALLOCFAILED));
       if (do_abort) {
-         DEXIT;
+         DEXIT_;
          abort();
       } else {
-         FREE(ptr);
+         sge_free(&ptr);
       }
    }
 
@@ -138,7 +138,7 @@ void *sge_realloc(void *ptr, int size, int do_abort)
 *     void sge_free(char **cp) 
 *
 *  FUNCTION
-*     Replacement for free(). Accepts NULL pointers.
+*     Replacement for free function. Accepts NULL pointers.
 *
 *  INPUTS
 *     char **cp - pointer to a pointer of a memory block 
@@ -329,7 +329,7 @@ void sge_unsetenv(const char* varName) {
             }
             environ[i] = NULL; 
          }
-         FREE(searchString);
+         sge_free(&searchString);
       }
    }
 #else

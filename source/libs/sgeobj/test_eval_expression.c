@@ -209,8 +209,8 @@ static int test_tolower(char *expression, char *value, int expected) {
    sge_strtolower(t1,255);
    sge_strtolower(t2,255);
    match = strcmp(t1,t2);
-   free(t1);
-   free(t2);
+   sge_free(&t1);
+   sge_free(&t2);
    if(match!=expected) {
       fprintf(stderr, "!!!UNEXPECTED RESULT!!!: %s => strcmp(sge_strtolower(%s),sge_strtolower(%s)), expected: %s \n",
       RESULT(match) , expression, value, RESULT(expected) );

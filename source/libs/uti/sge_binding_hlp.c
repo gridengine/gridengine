@@ -670,7 +670,7 @@ bool get_topology_linux(char** topology, int* length)
                         (*length)++;
                      }
                   }
-                  FREE(proc_ids);
+                  sge_free(&proc_ids);
                }
             }
          } /* for each socket */

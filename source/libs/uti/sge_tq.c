@@ -176,7 +176,7 @@ sge_tq_task_destroy(sge_tq_task_t **task) {
 
    DENTER(TQ_LAYER, "sge_tq_task_destroy");
    if (task != NULL && *task != NULL) {
-      FREE(*task);
+      sge_free(task);
    }
    DRETURN(ret);
 }
@@ -263,7 +263,7 @@ sge_tq_destroy(sge_tq_queue_t **queue) {
    if (queue != NULL && *queue != NULL) {
       pthread_cond_destroy(&(*queue)->cond);
       sge_sl_destroy(&(*queue)->list, (sge_sl_destroy_f)sge_tq_task_destroy);
-      FREE(*queue); 
+      sge_free(queue); 
    }
    DRETURN(ret);
 } 

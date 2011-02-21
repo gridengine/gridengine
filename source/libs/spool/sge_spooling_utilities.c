@@ -419,7 +419,7 @@ bool spool_default_validate_func(lList **answer_list,
                }
             }
 
-            free(old_name);
+            sge_free(&old_name);
 
             if (object_type == SGE_TYPE_EXECHOST && ret) {
                lListElem *load_value;
@@ -485,7 +485,7 @@ bool spool_default_validate_func(lList **answer_list,
                   }
                }
             }
-            free(old_name);
+            sge_free(&old_name);
          }
          break;
       case SGE_TYPE_USERSET:

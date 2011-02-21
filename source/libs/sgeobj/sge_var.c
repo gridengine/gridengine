@@ -370,7 +370,7 @@ void var_list_dump_to_file(const lList *varl, FILE *file)
          fprintf(file, "%s=%s\n", env_name, env_value);
       } else {
          fprintf(file, "%s=%s\n", env_name, new_env_value);
-         free((void *)new_env_value);
+         sge_free(&new_env_value);
       }
    }
 }

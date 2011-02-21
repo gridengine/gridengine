@@ -195,7 +195,7 @@ lDescr *lUndumpDescr(FILE *fp)
    /* read ket */
    if (fGetKet(fp)) {
       printf("ket is missing");
-      free(dp);
+      sge_free(&dp);
       LERROR(LESYNTAX);
       DEXIT;
       return NULL;
@@ -611,14 +611,14 @@ lListElem *lUndumpElemFp(FILE *fp, const lDescr *dp)
          ret = fGetString(fp, &str);
          if (ret == 0) {
             lSetPosString(ep, i, str);
-            free(str);             /* fGetString strdup's */
+            sge_free(&str);             /* fGetString strdup's */
          }
          break;
       case lHostT:
          ret = fGetHost(fp, &str);
          if (ret == 0) {
             lSetPosHost(ep, i, str);
-            free(str);             /* fGetHost strdup's */
+            sge_free(&str);             /* fGetHost strdup's */
          }
          break;
       case lFloatT:
@@ -722,19 +722,19 @@ lListElem *lUndumpObject(FILE *fp)
 
    if (lCountDescr(dp) <= 0) {
       LERROR(LECOUNTDESCR);
-      free(dp);
+      sge_free(&dp);
       DEXIT;
       return NULL;
    }
 
    if ((ep = lUndumpElemFp(fp, dp)) == NULL) {
       LERROR(LEUNDUMPELEM);
-      free(dp);
+      sge_free(&dp);
       DEXIT;
       return NULL;
    }
 
-   free(dp);
+   sge_free(&dp);
 
    /* read ket */
    if (fGetKet(fp)) {
@@ -831,7 +831,7 @@ lList *lUndumpList(FILE *fp, const char *name, const lDescr *dp)
       LERROR(LECREATELIST);
       DRETURN(NULL);
    }
-   free(oldname);               /* fGetString strdup's */
+   sge_free(&oldname);               /* fGetString strdup's */
 
    if ((n = lCountDescr(dp)) <= 0) {
       LERROR(LECOUNTDESCR);

@@ -733,7 +733,7 @@ static void qping_print_line(const char* buffer, int nonewline, int dump_tag, co
                      }
    
                      if (qname) {
-                        free(qname);
+                        sge_free(&qname);
                      }
                      clear_packbuffer(&buf);
                   }
@@ -772,7 +772,7 @@ static void qping_print_line(const char* buffer, int nonewline, int dump_tag, co
                      }
    
                      if (qname) {
-                        free(qname);
+                        sge_free(&qname);
                      }
                      clear_packbuffer(&buf);
                   }
@@ -1480,7 +1480,7 @@ int main(int argc, char *argv[]) {
    retval = cl_commlib_shutdown_handle(handle,CL_FALSE);
    if (retval != CL_RETVAL_OK) {
       fprintf(stderr,"%s\n",cl_get_error_text(retval));
-      free(resolved_comp_host);
+      sge_free(&resolved_comp_host);
       resolved_comp_host = NULL;
       cl_com_cleanup_commlib();
       exit(1);
@@ -1489,11 +1489,11 @@ int main(int argc, char *argv[]) {
    retval = cl_com_cleanup_commlib();
    if (retval != CL_RETVAL_OK) {
       fprintf(stderr,"%s\n",cl_get_error_text(retval));
-      free(resolved_comp_host);
+      sge_free(&resolved_comp_host);
       resolved_comp_host = NULL;
       exit(1);
    }
-   free(resolved_comp_host);
+   sge_free(&resolved_comp_host);
    resolved_comp_host = NULL;
    
    sge_prof_cleanup();

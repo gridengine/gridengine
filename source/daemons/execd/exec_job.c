@@ -1191,14 +1191,37 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
    {
       char *s;
 
-      mconf_get_s_descriptors(&s); fprintf(fp, "s_descriptors=%s\n", s); free(s);
-      mconf_get_h_descriptors(&s); fprintf(fp, "h_descriptors=%s\n", s); free(s);
-      mconf_get_s_maxproc(&s); fprintf(fp, "s_maxproc=%s\n", s); free(s);
-      mconf_get_h_maxproc(&s); fprintf(fp, "h_maxproc=%s\n", s); free(s);
-      mconf_get_s_memorylocked(&s); fprintf(fp, "s_memorylocked=%s\n", s); free(s);
-      mconf_get_h_memorylocked(&s); fprintf(fp, "h_memorylocked=%s\n", s); free(s);
-      mconf_get_s_locks(&s); fprintf(fp, "s_locks=%s\n", s); free(s);
-      mconf_get_h_locks(&s); fprintf(fp, "h_locks=%s\n", s); free(s);
+      mconf_get_s_descriptors(&s); 
+      fprintf(fp, "s_descriptors=%s\n", s); 
+      sge_free(&s);
+
+      mconf_get_h_descriptors(&s); 
+      fprintf(fp, "h_descriptors=%s\n", s); 
+      sge_free(&s);
+      
+      mconf_get_s_maxproc(&s); 
+      fprintf(fp, "s_maxproc=%s\n", s); 
+      sge_free(&s);
+
+      mconf_get_h_maxproc(&s); 
+      fprintf(fp, "h_maxproc=%s\n", s); 
+      sge_free(&s);
+
+      mconf_get_s_memorylocked(&s); 
+      fprintf(fp, "s_memorylocked=%s\n", s); 
+      sge_free(&s);
+
+      mconf_get_h_memorylocked(&s); 
+      fprintf(fp, "h_memorylocked=%s\n", s); 
+      sge_free(&s);
+   
+      mconf_get_s_locks(&s); 
+      fprintf(fp, "s_locks=%s\n", s); 
+      sge_free(&s);
+
+      mconf_get_h_locks(&s); 
+      fprintf(fp, "h_locks=%s\n", s); 
+      sge_free(&s);
    }
 
    fprintf(fp, "priority=%s\n", lGetString(master_q, QU_priority));
@@ -2283,7 +2306,7 @@ static bool linear_linux(dstring* result, lListElem* binding_elem,
    }   
    
    /* free topology string */
-   FREE(topo_job);
+   sge_free(&topo_job);
 
    DRETURN(retval);
 }
@@ -2374,8 +2397,9 @@ static bool striding_linux(dstring* result, lListElem* binding_elem,
    }
 
    /* free topology string */
-   if (topo_job != NULL)
-      free(topo_job);
+   if (topo_job != NULL) {
+      sge_free(&topo_job);
+   }
 
    /* return core binding string */
    DRETURN(retval);

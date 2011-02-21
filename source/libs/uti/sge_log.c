@@ -545,7 +545,7 @@ int sge_log(int log_level, const char *mesg, const char *file__, const char *fun
    const char *unqualified_hostname = NULL;
    int is_daemonized = 0; 
 
-   DENTER(BASIS_LAYER, "sge_log");
+   DENTER_(BASIS_LAYER, "sge_log");
    
    ctx = log_state_get_log_context();
    
@@ -569,11 +569,11 @@ int sge_log(int log_level, const char *mesg, const char *file__, const char *fun
 
    /* quick exit if nothing to log */
    if (log_level > MAX(log_state_get_log_level(), LOG_WARNING)) {
-      DRETURN(0);
+      DRETURN_(0);
    }
 
    if (!log_state_get_log_gui()) {
-      DRETURN(0);
+      DRETURN_(0);
    }
 
    switch(log_level) {
@@ -619,7 +619,7 @@ int sge_log(int log_level, const char *mesg, const char *file__, const char *fun
 
    sge_do_log(me, threadname, unqualified_hostname, levelchar, mesg);
 
-   DRETURN(0);
+   DRETURN_(0);
 } /* sge_log() */
 
 /****** uti/sge_log/sge_do_log() ***********************************************

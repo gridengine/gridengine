@@ -1878,11 +1878,7 @@ int lSetPosString(lListElem *ep, int pos, const char *value)
          str = NULL;               /* value is NULL */
 
       /* free old string value */
-      if (ep->cont[pos].str) {
-         free(ep->cont[pos].str);
-         ep->cont[pos].str = NULL;
-      }   
-
+      sge_free(&(ep->cont[pos].str));
       ep->cont[pos].str = str;
 
       /* create entry in hash table */
@@ -1979,11 +1975,7 @@ int lSetPosHost(lListElem *ep, int pos, const char *value)
          str = NULL;               /* value is NULL */
 
       /* free old string value */
-      if (ep->cont[pos].host != NULL) {
-         free(ep->cont[pos].host);
-         ep->cont[pos].host = NULL;
-      }   
-
+      sge_free(&(ep->cont[pos].host));
       ep->cont[pos].host = str;
 
       /* create entry in hash table */
@@ -2084,11 +2076,7 @@ int lSetString(lListElem *ep, int name, const char *value)
       }
 
       /* free old string value */
-      if (ep->cont[pos].str) {
-         free(ep->cont[pos].str);
-      }   
-
-
+      sge_free(&(ep->cont[pos].str));
       ep->cont[pos].str = str;
 
       /* create entry in hash table */
@@ -2188,11 +2176,7 @@ int lSetHost(lListElem *ep, int name, const char *value)
       } else {
          str = NULL;               /* value is NULL */
       }
-      /* free old string value */
-      if (ep->cont[pos].host) {
-         free(ep->cont[pos].host);
-      }   
-
+      sge_free(&(ep->cont[pos].host));
       ep->cont[pos].host = str;
 
       /* create entry in hash table */

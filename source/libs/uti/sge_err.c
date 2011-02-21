@@ -58,7 +58,7 @@ static pthread_key_t sge_err_key;
 static void 
 sge_err_destroy(void* state)
 {
-   free((struct sge_err_object_t *)state);
+   sge_free(&state);
 }
 
 /* init function that initializes the key that holds the pointer

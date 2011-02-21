@@ -31,10 +31,10 @@
 /*___INFO__MARK_END__*/
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include "uti/sge_bitfield.h"
+#include "uti/sge_stdlib.h"
 
 /****** uti/bitfield/--Bitfield ****************************************
 *  NAME
@@ -129,8 +129,7 @@ sge_bitfield_new(unsigned int size)
    if (bf != NULL) {
       /* initialize bitfield, on errors, free bitfield */
       if (!sge_bitfield_init(bf, size)) {
-         free(bf);
-         bf = NULL;
+         sge_free(&bf);
       }
    }
 
@@ -396,11 +395,10 @@ bitfield *sge_bitfield_free(bitfield *bf)
    if (bf != NULL) {
       if (bf->size > fixed_bits) {
          if (bf->bf.dyn != NULL) {
-            free(bf->bf.dyn);
+            sge_free(&(bf->bf.dyn));
          }
       }
-
-      free(bf);
+      sge_free(&bf);
    }
 
    return NULL;
@@ -437,8 +435,7 @@ sge_bitfield_free_data(bitfield *bf)
    } else {
       if (bf->size > fixed_bits) {
          if (bf->bf.dyn != NULL) {
-            free(bf->bf.dyn);
-            bf->bf.dyn = NULL;
+            sge_free(&(bf->bf.dyn));
          }
       }
    }

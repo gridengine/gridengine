@@ -2698,7 +2698,7 @@ static void qmonSubmitEdit(Widget w, XtPointer cld, XtPointer cad)
    if (script_name) {
       file = strdup(script_name);
       status = qmonForkEditor(file);
-      free(file);
+      sge_free(&file);
    }
    else
       status = qmonForkEditor(NULL);

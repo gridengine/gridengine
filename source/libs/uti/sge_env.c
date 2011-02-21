@@ -138,8 +138,7 @@ void sge_env_state_class_destroy(sge_env_state_class_t **pst)
       return;
    }   
    sge_env_state_destroy((*pst)->sge_env_state_handle);
-   FREE(*pst);
-   *pst = NULL;
+   sge_free(pst);
    DEXIT;
 }
 
@@ -165,11 +164,9 @@ static void sge_env_state_destroy(void *theState)
    sge_env_state_t *s = (sge_env_state_t *)theState;
 
    DENTER(TOP_LAYER, "sge_env_state_destroy");
-
-   FREE(s->sge_root);
-   FREE(s->sge_cell);
+   sge_free(&(s->sge_root));
+   sge_free(&(s->sge_cell));
    sge_free(&s);
-
    DEXIT;
 }
 

@@ -268,7 +268,7 @@ int sge_set_admin_username(const char *user, char *err_str)
             sprintf(err_str, MSG_SYSTEM_ADMINUSERNOTEXIST_S, user);
          ret = -1;
       }
-      FREE(buffer);
+      sge_free(&buffer);
    }
    DEXIT;
    return ret;
@@ -549,7 +549,7 @@ int sge_user2uid(const char *user, uid_t *puid, uid_t *pgid, int retries)
       DPRINTF(("name: %s retries: %d\n", user, retries));
 
       if (!retries--) {
-         FREE(buffer);
+         sge_free(&buffer);
          DEXIT;
          return 1;
       }
@@ -565,7 +565,7 @@ int sge_user2uid(const char *user, uid_t *puid, uid_t *pgid, int retries)
       *pgid = pw->pw_gid;
    }
 
-   FREE(buffer);
+   sge_free(&buffer);
    DEXIT; 
    return 0;
 } /* sge_user2uid() */
@@ -609,7 +609,7 @@ int sge_group2gid(const char *gname, gid_t *gidp, int retries)
 
    do {
       if (!retries--) {
-         FREE(buffer);
+         sge_free(&buffer);
          DEXIT;
          return 1;
       }
@@ -627,7 +627,7 @@ int sge_group2gid(const char *gname, gid_t *gidp, int retries)
       *gidp = gr->gr_gid;
    }
 
-   FREE(buffer);
+   sge_free(&buffer);
    DEXIT; 
    return 0;
 } /* sge_group2gid() */
@@ -679,7 +679,7 @@ int sge_uid2user(uid_t uid, char *dst, size_t sz, int retries)
          if (!retries--) {
             ERROR((SGE_EVENT, MSG_SYSTEM_GETPWUIDFAILED_US, 
                   sge_u32c(uid), strerror(errno)));
-            FREE(buffer);
+            sge_free(&buffer);
             DEXIT;
             return 1;
          }
@@ -689,7 +689,7 @@ int sge_uid2user(uid_t uid, char *dst, size_t sz, int retries)
       uidgid_state_set_last_username(pw->pw_name);
       uidgid_state_set_last_uid(uid);
 
-      FREE(buffer);
+      sge_free(&buffer);
    }
 
    if (dst) {
@@ -964,7 +964,7 @@ int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
                                  err_str, use_qsub_gid, qsub_gid,
                                  buffer, size);
 
-   FREE(buffer);
+   sge_free(&buffer);
    return ret;
 }
 
@@ -1101,18 +1101,18 @@ static int _sge_set_uid_gid_addgrp(const char *user, const char *intermediate_us
              * sge_set_uid_gid_addgrp() return value.
              */
             res++;
-            FREE(pass);
+            sge_free(&pass);
             return res;
          }
 
          if(wl_setuser(pw->pw_uid, pw->pw_gid, pass, err_str) != 0) {
-            FREE(pass);
+            sge_free(&pass);
             sprintf(buf, MSG_SYSTEM_SETUSERFAILED_UU, sge_u32c(pw->pw_uid),
                     sge_u32c(pw->pw_gid));
             strcat(err_str, buf);
             return 4;
          }
-         FREE(pass);
+         sge_free(&pass);
       }
       else
 #endif
@@ -1220,7 +1220,7 @@ int sge_add_group(gid_t add_grp_id, char *err_str)
          sprintf(err_str, MSG_SYSTEM_ADDGROUPIDFORSGEFAILED_UUS, sge_u32c(getuid()), 
                  sge_u32c(geteuid()), strerror(error));
       }
-      free(list);
+      sge_free(&list);
       return -1;
    }   
 #if !defined(INTERIX)
@@ -1234,7 +1234,7 @@ int sge_add_group(gid_t add_grp_id, char *err_str)
             sprintf(err_str, MSG_SYSTEM_ADDGROUPIDFORSGEFAILED_UUS, sge_u32c(getuid()), 
                     sge_u32c(geteuid()), strerror(error));
          }
-         free(list);
+         sge_free(&list);
          return -1;
       }
    } else {
@@ -1242,11 +1242,11 @@ int sge_add_group(gid_t add_grp_id, char *err_str)
          sprintf(err_str, MSG_SYSTEM_ADDGROUPIDFORSGEFAILED_UUS, sge_u32c(getuid()), 
                  sge_u32c(geteuid()), MSG_SYSTEM_USER_HAS_TOO_MANY_GIDS);
       }
-      free(list);
+      sge_free(&list);
       return -1;
    }                      
 #endif
-   free(list);
+   sge_free(&list);
    return 0;
 }  
 
@@ -1671,7 +1671,7 @@ static void uidgid_once_init(void)
 *******************************************************************************/
 static void uidgid_state_destroy(void* theState)
 {
-   free((struct uidgid_state_t *)theState);
+   sge_free(&theState);
 }
 
 /****** uti/uidgid/uidgid_state_init() *****************************************
@@ -1909,11 +1909,11 @@ password_read_file(char **users[], char**encryped_pwds[], const char *filename)
       }
       if (ret == 2) {
          for (j=0; j<i; j++) {
-            free((*users)[j]);
-            free((*encryped_pwds)[j]);
+            sge_free(&((*users)[j]));
+            sge_free(&((*encryped_pwds)[j]));
          }
-         free(*users);
-         free(*encryped_pwds);
+         sge_free(users);
+         sge_free(encryped_pwds);
          DPRINTF(("sgepasswd file is corrupted"));
       } else {
          (*users)[i] = NULL;
@@ -2007,7 +2007,7 @@ int uidgid_read_passwd(const char *user, char **pass, char *err_str)
              ret = 3; //password is not correct need to distinguish from passwd_file_error
          }
          *pass = buffer_decr; 
-         FREE(buffer_deco);
+         sge_free(&buffer_deco);
       }
    }
    return ret;

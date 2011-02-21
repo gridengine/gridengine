@@ -275,8 +275,7 @@ void sge_csp_path_class_destroy(sge_csp_path_class_t **pst)
       return;
    }   
    sge_csp_path_destroy((*pst)->sge_csp_path_handle);
-   FREE(*pst);
-   *pst = NULL;
+   sge_free(pst);
    DEXIT;
 }
 
@@ -372,7 +371,7 @@ static bool sge_csp_path_setup(sge_csp_path_class_t *thiz, sge_env_state_class_t
 
       if (!pw) {   
          eh->error(eh, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, MSG_SEC_USERNOTFOUND_S, username);
-         FREE(buffer);
+         sge_free(&buffer);
          DRETURN(false);
       }
       if (!is_from_services) {                     
@@ -382,7 +381,7 @@ static bool sge_csp_path_setup(sge_csp_path_class_t *thiz, sge_env_state_class_t
       }            
       user_dir = strdup(sge_dstring_get_string(&bw));
       user_local_dir = strdup(user_dir);
-      FREE(buffer);
+      sge_free(&buffer);
    }
 
    sge_dstring_sprintf(&bw, "%s/%s", get_ca_root(thiz), CaCert);   
@@ -439,8 +438,8 @@ static bool sge_csp_path_setup(sge_csp_path_class_t *thiz, sge_env_state_class_t
 
    thiz->set_verify_func(thiz, ssl_cert_verify_func);
 
-   FREE(user_dir);
-   FREE(user_local_dir);
+   sge_free(&user_dir);
+   sge_free(&user_local_dir);
 
 /*    thiz->dprintf(thiz); */
 
@@ -454,16 +453,16 @@ static void sge_csp_path_destroy(void *theState)
 
    DENTER(TOP_LAYER, "sge_csp_path_destroy");
 
-   FREE(s->ca_root);
-   FREE(s->ca_local_root);
-   FREE(s->CA_cert_file);
-   FREE(s->CA_key_file);
-   FREE(s->cert_file);
-   FREE(s->key_file);
-   FREE(s->rand_file);
-   FREE(s->reconnect_file);
-   FREE(s->crl_file);
-   FREE(s->password);
+   sge_free(&(s->ca_root));
+   sge_free(&(s->ca_local_root));
+   sge_free(&(s->CA_cert_file));
+   sge_free(&(s->CA_key_file));
+   sge_free(&(s->cert_file));
+   sge_free(&(s->key_file));
+   sge_free(&(s->rand_file));
+   sge_free(&(s->reconnect_file));
+   sge_free(&(s->crl_file));
+   sge_free(&(s->password));
    sge_free(&s);
 
    DEXIT;

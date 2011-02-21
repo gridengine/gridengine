@@ -621,7 +621,7 @@ buffer_encrypt(const char *buffer_in, size_t buffer_in_length,
                  ebuf, ebuflen);
 
    shared_ssl_func__EVP_PKEY_free(pubKey[0]);
-   free(ekey[0]);
+   sge_free(&(ekey[0]));
    DEXIT;
 }
 
@@ -826,8 +826,7 @@ buffer_encode_hex(unsigned char *input, size_t len, unsigned char **output)
          ret = snprintf(buffer, 3, "%02x", byte);
          if(ret != 2) {
             DPRINTF(("encode error: snprintf returned %d\n", ret));
-            free(*output);
-            *output=NULL;
+            sge_free(output);
             return NULL;
          }
          strcat((char*) *output, buffer);
@@ -918,7 +917,7 @@ password_add_or_replace_entry(char **users[], char **encryped_pwds[],
    DENTER(TOP_LAYER, "password_add_or_replace_entry");
    while ((*users)[i] != NULL) {
       if (!strcmp((*users)[i], user)) {
-         free((*encryped_pwds)[i]);
+         sge_free(&((*encryped_pwds)[i]));
          (*encryped_pwds)[i] = strdup(encryped_pwd);
          done = true;
       }
@@ -1033,10 +1032,10 @@ sge_passwd_show(const char *username)
          fprintf(stdout, "%s\n", buffer_decr);
 
          if (buffer_deco != NULL) {
-            free(buffer_deco);
+            sge_free(&buffer_deco);
          }
          if (buffer_decr != NULL) {
-            free(buffer_decr);
+            sge_free(&buffer_decr);
          }
    
       }
@@ -1126,10 +1125,10 @@ sge_passwd_add_change(const char *username, const char *domain, uid_t uid)
          DPRINTF(("verified old password\n"));
 
          if (buffer_deco != NULL) {
-            free(buffer_deco);
+            sge_free(&buffer_deco);
          }
          if (buffer_decr != NULL) {
-            free(buffer_decr);
+            sge_free(&buffer_decr);
          }
    
       }
@@ -1185,10 +1184,10 @@ sge_passwd_add_change(const char *username, const char *domain, uid_t uid)
       password_add_or_replace_entry(&users, &encryped_pwd, user, 
                                     (const char *)buffer_enco);
       if (buffer_encr != NULL) {
-         free(buffer_encr);
+         sge_free(&buffer_encr);
       }
       if (buffer_enco != NULL) {
-         free(buffer_enco);
+         sge_free(&buffer_enco);
       }
    }
 

@@ -6,6 +6,7 @@
 #include <unistd.h>
 
 #include "drmaa.h"
+#include "uti/sge_stdlib.h"
 
 #define JOB_MAX 100
 
@@ -30,10 +31,10 @@ static void usage(FILE* fp) {
 /* clear bookkeeping for a job */
 static void clear_job_info(int n)
 {
-   free(job[n].jid)           ; job[n].jid = NULL; 
-   free(job[n].name)          ; job[n].name = NULL; 
-   free(job[n].ns)            ; job[n].ns = NULL; 
-   free(job[n].output_file)   ; job[n].output_file = NULL; 
+   sge_free(&(job[n].jid)); 
+   sge_free(&(job[n].name)); 
+   sge_free(&(job[n].ns)); 
+   sge_free(&(job[n].output_file)); 
 }
 
 /* initialize bookkeeping */

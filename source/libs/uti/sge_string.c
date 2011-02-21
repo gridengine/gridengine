@@ -249,7 +249,7 @@ char *sge_strtok(const char *str, const char *delimitor)
       if (static_str) {
          if (n > alloc_len) {
             /* need more memory */
-            free(static_str);
+            sge_free(&static_str);
             static_str = malloc(n + 1);
             alloc_len = n;
          }
@@ -472,9 +472,9 @@ void sge_free_saved_vars(struct saved_vars_s *context)
 {
    if (context) {
       if (context->static_str) {
-         free(context->static_str);
+         sge_free(&(context->static_str));
       }
-      free(context);
+      sge_free(&context);
    }
 }
 
@@ -515,7 +515,7 @@ char *sge_strdup(char *old, const char *s)
    }
 
    /* free and NULL the old pointer */
-   FREE(old);
+   sge_free(&old);
 
    return ret;
 }
@@ -1047,9 +1047,10 @@ char **sge_stradup(char **cpp, int n)
  
       *cpp3 = (char *) malloc(len);
       if (!(*cpp3)) {
-         while ((--cpp3) >= cpp1)
-            free(*cpp3);
-         free(cpp1);
+         while ((--cpp3) >= cpp1) {
+            sge_free(cpp3);
+         }
+         sge_free(&cpp1);
          return NULL;
       }
  
@@ -1086,10 +1087,10 @@ void sge_strafree(char ***cpp)
       char **cpp1 = *cpp;
     
       while (*cpp1 != NULL) {
-         FREE(*cpp1);
+         sge_free(cpp1);
          cpp1++;
       }
-      FREE(*cpp);
+      sge_free(cpp);
    }
 }
 

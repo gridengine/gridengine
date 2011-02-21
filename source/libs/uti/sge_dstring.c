@@ -519,7 +519,7 @@ const char *sge_dstring_copy_dstring(dstring *sb1, const dstring *sb2)
 
 /****** uti/dstring/sge_dstring_free() ****************************************
 *  NAME
-*     sge_dstring_free() -- free() for dstring's 
+*     sge_dstring_free() -- sge_free() for dstring's 
 *
 *  SYNOPSIS
 *     void sge_dstring_free(dstring *sb) 
@@ -536,8 +536,7 @@ const char *sge_dstring_copy_dstring(dstring *sb1, const dstring *sb2)
 void sge_dstring_free(dstring *sb) 
 {
    if (sb != NULL && !sb->is_static && sb->s != NULL) {
-      free(sb->s);
-      sb->s = NULL;
+      sge_free(&(sb->s));
       sb->size = 0;
       sb->length = 0;
    }

@@ -217,14 +217,14 @@ int add_config_entry(const char *name, const char *value)
    }
    
    if ((new->name = strdup(name)) == NULL) {
-      free(new);
+      sge_free(&new);
       return 1;
    }
   
    if (value != NULL) {
       if ((new->value = strdup(value)) == NULL) {
-         free(new->name);
-         free(new);
+         sge_free(&(new->name));
+         sge_free(&(new));
          return 1;
       }
    } else {
@@ -289,7 +289,7 @@ void set_conf_val(const char* name, const char* value)
    if (pConfigEntry != NULL) {
       /* avoid overwriting by itself */
       if (pConfigEntry->value != value) {
-         FREE(pConfigEntry->value);
+         sge_free(&(pConfigEntry->value));
          pConfigEntry->value = strdup(value);
       }
    } else {
@@ -332,11 +332,13 @@ void delete_config()
 
    while (config_list) {
       next = config_list->next;
-      if (config_list->name)
-         free(config_list->name);
-      if (config_list->value)
-         free(config_list->value);
-      free(config_list);
+      if (config_list->name) {
+         sge_free(&(config_list->name));
+      }
+      if (config_list->value) {
+         sge_free(&(config_list->value));
+      }
+      sge_free(&config_list);
       config_list = next;
    }
 }

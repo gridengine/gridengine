@@ -520,7 +520,7 @@ void sge_getme(u_long32 program_number)
    uti_state_set_qualified_hostname(hent->h_name);
    s = sge_dirname(hent->h_name, '.');
    uti_state_set_unqualified_hostname(s);
-   FREE(s);
+   sge_free(&s);
 
    DTRACE;
  
@@ -536,7 +536,7 @@ void sge_getme(u_long32 program_number)
       uti_state_set_qualified_hostname(hent2->h_name);
       s = sge_dirname(hent2->h_name, '.');
       uti_state_set_unqualified_hostname(s);
-      FREE(s);
+      sge_free(&s);
       sge_free_hostent(&hent2);
    }
 
@@ -557,7 +557,7 @@ void sge_getme(u_long32 program_number)
       buffer = sge_malloc(size);
       SGE_ASSERT(getpwuid_r((uid_t)uti_state_get_uid(), &pwentry, buffer, size, &paswd) == 0)
       uti_state_set_user_name(paswd->pw_name);
-      FREE(buffer);
+      sge_free(&buffer);
    }
 
    uti_state_set_default_cell(sge_get_default_cell());
@@ -660,12 +660,12 @@ static void prog_state_destroy(void *theState)
 {
    prog_state_t *s = (prog_state_t *)theState;
 
-   FREE(s->sge_formal_prog_name);
-   FREE(s->sge_formal_prog_name);
-   FREE(s->qualified_hostname);
-   FREE(s->unqualified_hostname);
-   FREE(s->user_name);
-   FREE(s->default_cell);
+   sge_free(&(s->sge_formal_prog_name));
+   sge_free(&(s->sge_formal_prog_name));
+   sge_free(&(s->qualified_hostname));
+   sge_free(&(s->unqualified_hostname));
+   sge_free(&(s->user_name));
+   sge_free(&(s->default_cell));
    sge_free(&s);
 }
 
@@ -796,7 +796,7 @@ sge_prog_state_class_create(sge_env_state_class_t *sge_env,
    ret->sge_prog_state_handle = sge_malloc(sizeof(sge_prog_state_t));
    if (ret->sge_prog_state_handle == NULL) {
       eh->error(eh, STATUS_EMALLOC, ANSWER_QUALITY_ERROR, MSG_MEMORY_MALLOCFAILED);
-      FREE(ret);
+      sge_free(&ret);
       DEXIT;
       return NULL;
    }
@@ -821,9 +821,7 @@ void sge_prog_state_class_destroy(sge_prog_state_class_t **pst)
    }   
       
    prog_state_destroy((*pst)->sge_prog_state_handle);
-   FREE(*pst);
-   *pst = NULL;
-
+   sge_free(pst);
    DEXIT;
 }
 
@@ -861,7 +859,7 @@ static bool sge_prog_state_setup(sge_prog_state_class_t *thiz, sge_env_state_cla
                ret = false;
             } else {
                qualified_hostname = sge_strdup(NULL, hent2->h_name);
-               FREE(unqualified_hostname);
+               sge_free(&unqualified_hostname);
                unqualified_hostname = sge_dirname(hent2->h_name, '.');
                sge_free_hostent(&hent2);
             }
@@ -872,8 +870,8 @@ static bool sge_prog_state_setup(sge_prog_state_class_t *thiz, sge_env_state_cla
       }
       thiz->set_qualified_hostname(thiz, qualified_hostname);
       thiz->set_unqualified_hostname(thiz, unqualified_hostname);
-      FREE(unqualified_hostname);
-      FREE(qualified_hostname);
+      sge_free(&unqualified_hostname);
+      sge_free(&qualified_hostname);
    }
    
    if (ret) {

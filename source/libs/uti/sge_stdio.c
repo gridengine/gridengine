@@ -81,7 +81,7 @@ static void addenv(char *key, char *value)
    strcat(str, value);
 
    putenv(str);
-   /* there is intentionally no free(str) */
+   /* there is intentionally no sge_free(&str) */
    return;
 }
 
@@ -183,7 +183,7 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
             sprintf(err_str, MSG_SYSTEM_NOUSERFOUND_SS , user, strerror(errno));            
             sprintf(err_str, "\n");
             write(2, err_str, strlen(err_str));
-            FREE(buffer);
+            sge_free(&buffer);
             SGE_EXIT(NULL, 1);
          }
  
@@ -194,7 +194,7 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
             /* Only change user if we differ from the wanted user */
             if(myuid != SGE_SUPERUSER_UID) {
                write(2, not_root, sizeof(not_root));
-               FREE(buffer);
+               sge_free(&buffer);
                SGE_EXIT(NULL, 1);
             }                             
             sprintf(err_str, "%s %d\n", pw->pw_name, (int)pw->pw_gid);
@@ -211,7 +211,7 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
                      res, user, strerror(errno));
                sprintf(err_str, "\n");
                write(2, err_str, strlen(err_str));
-               FREE(buffer);
+               sge_free(&buffer);
                SGE_EXIT(NULL, 1);
             }
 #endif /* WIN32 */
@@ -221,7 +221,7 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
                      strerror(errno));
                sprintf(err_str, "\n");
                write(2, err_str, strlen(err_str));
-               FREE(buffer);
+               sge_free(&buffer);
                SGE_EXIT(NULL, 1);
             }
          }
@@ -232,7 +232,7 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
          addenv("LOGNAME", pw->pw_name);
          addenv("PATH", SGE_DEFAULT_PATH);
 
-         FREE(buffer);
+         sge_free(&buffer);
       }
  
       if (login_shell)
@@ -411,7 +411,7 @@ pid_t sge_peopen_r(const char *shell, int login_shell, const char *command,
          pw = sge_getpwnam_r(user, &pw_struct, buffer, size);
          if (pw == NULL) {
             ERROR((SGE_EVENT, MSG_SYSTEM_NOUSERFOUND_SS, user, strerror(errno)));
-            FREE(buffer);
+            sge_free(&buffer);
             if (sge_has_admin_user()) {
                sge_switch2admin_user();
             }
@@ -419,7 +419,7 @@ pid_t sge_peopen_r(const char *shell, int login_shell, const char *command,
          }
       } else {
          ERROR((SGE_EVENT, MSG_UTI_MEMPWNAM));
-         FREE(buffer);
+         sge_free(&buffer);
          if (sge_has_admin_user()) {
             sge_switch2admin_user();
          }
@@ -439,7 +439,7 @@ pid_t sge_peopen_r(const char *shell, int login_shell, const char *command,
          if (myuid != SGE_SUPERUSER_UID) {
             DPRINTF(("only root is allowed to switch to a different user\n"));
             ERROR((SGE_EVENT, MSG_SYSTEM_NOROOTRIGHTSTOSWITCHUSER));
-            FREE(buffer);
+            sge_free(&buffer);
             DRETURN(-2);
          }                             
 
@@ -454,7 +454,7 @@ pid_t sge_peopen_r(const char *shell, int login_shell, const char *command,
 #  endif
          {
             ERROR((SGE_EVENT, MSG_SYSTEM_INITGROUPSFORUSERFAILED_ISS, res, user, strerror(errno)));
-            FREE(buffer);
+            sge_free(&buffer);
             SGE_EXIT(NULL, 1);
          }
 
@@ -469,7 +469,7 @@ pid_t sge_peopen_r(const char *shell, int login_shell, const char *command,
          DPRINTF(("target uid = %d\n", (int)tuid));
       }
 
-      FREE(buffer);
+      sge_free(&buffer);
    }
 
    DPRINTF(("Now process will fork\n"));

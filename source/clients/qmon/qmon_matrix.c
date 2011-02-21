@@ -591,9 +591,8 @@ int num_fields,
       }
    }
 
-   free(field);
-   free(col);
-       
+   sge_free(&field);
+   sge_free(&col);
    DEXIT;
 }
 
@@ -661,8 +660,8 @@ int num_fields,
          continue;
    }
 
-   free(field);
-   free(col);
+   sge_free(&field);
+   sge_free(&col);
 
    DEXIT;
    return lp;

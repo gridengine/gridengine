@@ -65,7 +65,7 @@ static void *thread_function(void *anArg);
 
 static void state_destroy(void* state) 
 {
-   free(state);
+   sge_free(&state);
 }
 
 static void state_init(state_t* state) 

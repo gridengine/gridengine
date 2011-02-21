@@ -519,7 +519,9 @@ read_kernel_table(char *name, void **table, long *size, int *entries)
 
    tsize = tinfo.head + (tinfo.ent * tinfo.len);
    if (tsize > *size) {
-      if (*table) free(*table);
+      if (*table) {
+         sge_free(table);
+      }
       *table = malloc(tsize);
       if (*table == NULL) {
          return -1;
@@ -1428,7 +1430,7 @@ free_job(job_elem_t *job_elem)
 #endif
 
    /* free job element */
-   free(job_elem);
+   sge_free(&job_elem);
 }
 
 static int psRetrieveOSJobData(void) {
@@ -2112,7 +2114,7 @@ static int psRetrieveOSJobData(void) {
                LNK_DELETE(curra);
                if ((elem=find_arsess(&job_elem->arses, arse->ash))) {
                   LNK_DELETE(&elem->link);
-                  free(elem);
+                  sge_free(&elem);
                }
                LNK_ADD(job_elem->arses.prev, &arsess_elem->link);
 
@@ -2243,7 +2245,7 @@ static int psRetrieveOSJobData(void) {
                   if (ioctl(fd, PIOCPSINFO, &psinfo) < 0 ||
                       ioctl(fd, PIOCACINFO, &prinfo) < 0) {
                      close(fd);
-                     free(proc_elem);
+                     sge_free(&proc_elem);
                      pidlist[j] = -pidlist[j]; /* force report of old usage */
                      continue;
                   }
@@ -2344,7 +2346,7 @@ static int psRetrieveOSJobData(void) {
                      }
                   }
                   LNK_DELETE(currp);
-                  free(tproc_elem);
+                  sge_free(&tproc_elem);
                }
             }
          }
@@ -2413,7 +2415,7 @@ static int psRetrieveOSJobData(void) {
                      proc->pd_pid, job->jd_jid, proc->pd_utime, proc->pd_stime));
 #endif
                LNK_DELETE(currp);
-               free(proc_elem);
+               sge_free(&proc_elem);
             }
          }
          /* estimate high water memory mark */
@@ -2464,7 +2466,7 @@ static int psRetrieveOSJobData(void) {
                job->jd_proccount--;
                job->jd_srtime_c += proc_elem->qwtime; /* job srun-wait time */
                LNK_DELETE(currp);
-               free(proc_elem);
+               sge_free(&proc_elem);
             }
          }
 

@@ -1308,8 +1308,7 @@ bool binding_explicit_check_and_account(const int* list_of_sockets, const int sa
 
    /* free memory when unsuccessful */
    if (possible == false) {
-      free(*topo_used_by_job);
-      *topo_used_by_job = NULL;
+      sge_free(topo_used_by_job);
       *topo_used_by_job_length = 0;
    }
 
@@ -1689,10 +1688,10 @@ bool generate_chipID_coreID_matrix(int*** matrix, int* length)
       int i = 0;
       /* in case we are out of memory for calloc we have a memory leak 
          of one integer - this should only occur once */
-      for (;i < (*length) - 1; i++) 
-         free((*matrix)[i]);
-      free(*matrix);
-      *matrix = NULL;
+      for (;i < (*length) - 1; i++) {
+         sge_free(&((*matrix)[i]));
+      }
+      sge_free(matrix);
       (*length) = 0;
    }
 
@@ -2191,12 +2190,10 @@ static int is_new_id_pair(const int id, const int id2)
       /* reset everything */
       different_ids = 0;
       if (different_id_vector_1 != NULL) {
-         free(different_id_vector_1);
-         different_id_vector_1 = NULL;
+         sge_free(&different_id_vector_1);
       }
       if (different_id_vector_2 != NULL) {
-         free(different_id_vector_2);
-         different_id_vector_2 = NULL;
+         sge_free(&different_id_vector_2);
       }
       return 1;
    } 
@@ -2970,7 +2967,7 @@ bool get_striding_first_socket_first_core_and_account(const int amount, const in
       } else if (logical_used_topology[i] == '\0') {
          /* we couldn't find start socket start string */
          possible = false;
-         free(tmp_topo_busy);
+         sge_free(&tmp_topo_busy);
          return possible;
       }
       
@@ -2983,7 +2980,7 @@ bool get_striding_first_socket_first_core_and_account(const int amount, const in
    /* check if we found the socket and core we want to start searching */
    if (sc != start_at_socket || cc != start_at_core) {
       /* could't find the start socket and start core */
-      free(tmp_topo_busy);
+      sge_free(&tmp_topo_busy);
       return false;
    }
 
@@ -3036,7 +3033,7 @@ bool get_striding_first_socket_first_core_and_account(const int amount, const in
    
    } /* end go through the whole topology string */
    
-   free(tmp_topo_busy);
+   sge_free(&tmp_topo_busy);
    return possible;
 }
 

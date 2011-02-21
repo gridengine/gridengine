@@ -114,7 +114,7 @@ char** pargs /* The array to contain the parsed arguments */
          *d++ = *s++;                    /* copy one character */
       }
    } 
-   free(resreq);
+   sge_free(&resreq);
 
    DRETURN(count);
 }

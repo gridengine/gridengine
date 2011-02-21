@@ -69,7 +69,7 @@ if [ "$READLINE_LIB_PATH" ]; then
    fi
 fi
 
-if [ $ARCH = "darwin-x86" -o $ARCH = "darwin-ppc" ]; then
+if [ $ARCH = "darwin-x86" -o $ARCH = "darwin-ppc" -o $ARCH = "darwin-x64" ]; then
    PRE_ARGS="$PRE_ARGS -Djava.awt.headless=true"
    DYLD_LIBRARY_PATH=$LD_LIBRARY_PATH:$DYLD_LIBRARY_PATH
    export DYLD_LIBRARY_PATH

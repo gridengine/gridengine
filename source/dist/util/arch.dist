@@ -105,7 +105,17 @@ CRSOS)
 Darwin)
    case $osmachine in
       i386)
-         darwin_machine=x86
+         case $osrelease in
+            10.1.*)
+               darwin_machine=x86
+               ;;
+            10.[2-6].*)
+               darwin_machine=x64
+               ;;
+            *)
+               darwin_machine=unknown
+               ;;
+            esac
          ;;
       Power*)
          darwin_machine=ppc

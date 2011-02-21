@@ -1993,7 +1993,7 @@ static void start_qlogin_job(const char *shell_path)
    }
 
 
-#if defined(LINUX86) || defined(LINUXAMD64) || defined(LINUXIA64) || defined(LINUXPPC) || defined (LINUXSPARC) || defined(LINUXSPARC64) || defined(ALINUX) || defined(DARWIN_PPC) || defined(DARWIN_X86)
+#if defined(LINUX86) || defined(LINUXAMD64) || defined(LINUXIA64) || defined(LINUXPPC) || defined (LINUXSPARC) || defined(LINUXSPARC64) || defined(ALINUX) || defined(DARWIN_PPC) || defined(DARWIN_X86) || defined(DARWIN_X64)
    my_env[i++] = strcat(path, "/bin:/usr/bin");
 #else
    my_env[i++] = strcat(path, "/usr/bin");

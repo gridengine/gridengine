@@ -507,7 +507,7 @@ static bool filter_diff_usersets_or_projects_scope(lList *filter_scope, int filt
 
          lFreeList(scope_ref); 
          /* 
-          * that looks strange: list is simply free()'d 
+          * that looks strange: list is simply sge_free()'d 
           * however this is no bug since any entry contained 
           * in the old scope_ref list will be also in the new one 
           */

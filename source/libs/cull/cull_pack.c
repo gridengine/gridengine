@@ -273,14 +273,14 @@ lDescr **dpp
    /* read in n lDescr fields */
    for (i = 0; i < n; i++) {
       if ((ret = unpackint(pb, &temp))) {
-         free(dp);
+         sge_free(&dp);
          DEXIT;
          return ret;
       }
       dp[i].nm = temp;
 
       if ((ret = unpackint(pb, &temp))) {
-         free(dp);
+         sge_free(&dp);
          DEXIT;
          return ret;
       }
@@ -587,7 +587,7 @@ int flags
        * Format errors should only be catched if they ocure at the en of 
        * the descriptor.
        */
-      free(cp);
+      sge_free(&cp);
       ret = (last_error != PACK_SUCCESS) ? last_error : PACK_FORMAT;
    } else {
       /*
@@ -735,7 +735,7 @@ int cull_unpack_elem_partial(sge_pack_buffer *pb, lListElem **epp, const lDescr 
    }
 
    if((ret = unpackint(pb, &(ep->status))) != PACK_SUCCESS) {
-      free(ep);
+      sge_free(&ep);
       PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
       DEXIT;
       return ret;
@@ -743,7 +743,7 @@ int cull_unpack_elem_partial(sge_pack_buffer *pb, lListElem **epp, const lDescr 
 
    if(ep->status == FREE_ELEM) {
       if((ret = cull_unpack_descr(pb, &(ep->descr))) != PACK_SUCCESS) {
-         free(ep);
+         sge_free(&ep);
          PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
          DEXIT;
          return ret;
@@ -767,9 +767,9 @@ int cull_unpack_elem_partial(sge_pack_buffer *pb, lListElem **epp, const lDescr 
        * in sgeobj header file and not cull.
        */   
       if (dp != NULL && dp[0].nm == 50) {
-         free(ep->descr);
+         sge_free(&(ep->descr));
          if((ep->descr = lCopyDescr((lDescr *) dp)) == NULL) {
-            free(ep);
+            sge_free(&ep);
             PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
             DEXIT;
             return PACK_BADARG;
@@ -781,7 +781,7 @@ int cull_unpack_elem_partial(sge_pack_buffer *pb, lListElem **epp, const lDescr 
          a descriptor from outside 
        */
       if((ep->descr = (lDescr *) dp) == NULL) {
-         free(ep);
+         sge_free(&ep);
          PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
          DEXIT;
          return PACK_BADARG;
@@ -800,9 +800,9 @@ int cull_unpack_elem_partial(sge_pack_buffer *pb, lListElem **epp, const lDescr 
 
    if((ret = unpackbitfield(pb, &(ep->changed), lCountDescr(ep->descr))) != PACK_SUCCESS) {
       if(ep->status == FREE_ELEM || ep->status == OBJECT_ELEM) {
-         free(ep->descr);
+         sge_free(&(ep->descr));
       }
-      free(ep);
+      sge_free(&ep);
       PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
       DEXIT;
       return ret;
@@ -810,9 +810,9 @@ int cull_unpack_elem_partial(sge_pack_buffer *pb, lListElem **epp, const lDescr 
     
    if((ret = cull_unpack_cont(pb, &(ep->cont), ep->descr, flags))) {
       if(ep->status == FREE_ELEM || ep->status == OBJECT_ELEM) {
-         free(ep->descr);
+         sge_free(&(ep->descr));
       }   
-      free(ep);
+      sge_free(&ep);
       PROF_STOP_MEASUREMENT(SGE_PROF_PACKING);
       DEXIT;
       return ret;
@@ -1193,7 +1193,7 @@ int flags
 
    /* unpack each element */
    if((ret = cull_unpack_elem_partial(pb, &ep, descr, flags)) != PACK_SUCCESS) {
-      free(descr);
+      sge_free(&descr);
       DEXIT;
       return ret;
    }

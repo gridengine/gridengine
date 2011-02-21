@@ -98,8 +98,8 @@ int cl_application_error_list_cleanup(cl_raw_list_t** list_p) {
 
    while ( (elem = cl_application_error_list_get_first_elem(*list_p)) != NULL) {
       cl_raw_list_remove_elem(*list_p, elem->raw_elem);
-      free(elem->cl_info);
-      free(elem);
+      sge_free(&(elem->cl_info));
+      sge_free(&elem);
    }
    cl_raw_list_unlock(*list_p);
    ret_val = cl_raw_list_cleanup(list_p);
@@ -150,8 +150,8 @@ int cl_application_error_list_push_error(cl_raw_list_t* list_p, cl_log_t cl_err_
          if ( al_list_elem->cl_log_time.tv_sec + CL_DEFINE_MESSAGE_DUP_LOG_TIMEOUT <= now.tv_sec ) {
             CL_LOG_INT(CL_LOG_INFO,"removing error log from already logged list. linger time =", (int) (now.tv_sec - al_list_elem->cl_log_time.tv_sec));
             cl_raw_list_remove_elem(logged_error_list, al_list_elem->raw_elem);
-            free(al_list_elem->cl_info);
-            free(al_list_elem);
+            sge_free(&(al_list_elem->cl_info));
+            sge_free(&al_list_elem);
             al_list_elem = NULL;
          }
 
@@ -208,7 +208,7 @@ int cl_application_error_list_push_error(cl_raw_list_t* list_p, cl_log_t cl_err_
 
 
    if (new_elem->cl_info == NULL) {
-      free(new_elem);
+      sge_free(&new_elem);
       if (lock_list == 1) { 
          cl_raw_list_unlock(list_p);
       }
@@ -217,8 +217,8 @@ int cl_application_error_list_push_error(cl_raw_list_t* list_p, cl_log_t cl_err_
 
    new_elem->raw_elem = cl_raw_list_append_elem(list_p, (void*) new_elem);
    if ( new_elem->raw_elem == NULL) {
-      free(new_elem->cl_info);
-      free(new_elem);
+      sge_free(&(new_elem->cl_info));
+      sge_free(&new_elem);
       if (lock_list == 1) { 
          cl_raw_list_unlock(list_p);
       }

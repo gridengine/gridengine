@@ -191,7 +191,7 @@ static void sge_htable_resize(htable ht, int grow)
          *head = bucket;
       }
    }
-   free((char *) otable);
+   sge_free(&otable);
 
 #ifdef SGE_USE_PROFILING
    if(prof_is_active(SGE_PROF_HT_RESIZE) && log_state_get_log_level() >= LOG_DEBUG) {
@@ -267,17 +267,17 @@ void sge_htable_destroy(htable ht)
     int i;
     Bucket *bucket, *next;
 
-    for(i=0; i < ht->mask+1; i++) {
+    for (i = 0; i < ht->mask+1; i++) {
         for (bucket = ht->table[i]; bucket; bucket = next) {
             next = bucket->next;
             if(bucket->key != NULL) {
-               free((char *)bucket->key);
+               sge_free(&(bucket->key));
             }
-            free((char *)bucket);
+            sge_free(&bucket);
         }
     }
-    free((char *)ht->table);
-    free((char *)ht);
+    sge_free(&(ht->table));
+    sge_free(&ht);
 }
 
 /****** uti/htable/sge_htable_for_each() **************************************
@@ -421,10 +421,10 @@ void sge_htable_delete(htable table, const void* key)
          prev = &bucket->next) {
         if (table->compare_func(bucket->key, key) == 0) {
             *prev = bucket->next;
-            if(bucket->key != NULL) {
-               free((char *)bucket->key);
+            if (bucket->key != NULL) {
+               sge_free(&(bucket->key));
             }
-            free((char *)bucket);
+            sge_free(&bucket);
             table->numentries--;
             if (table->numentries < (table->mask >> HASH_RESIZE_DOWN_THRESHOLD))
                 sge_htable_resize(table, False);

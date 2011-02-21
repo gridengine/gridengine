@@ -553,7 +553,7 @@ static int get_remote_exit_code(int sock)
 *  EXAMPLE
 *     const char *quoted = quote_argument("test");
 *     printf("%s\n", quoted);
-*     free(quoted);
+*     sge_free(&quoted);
 *
 *  NOTES
 *     Function might be moved to some library, same code is used in other 

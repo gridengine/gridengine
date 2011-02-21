@@ -452,7 +452,7 @@ qref_cq_rejected(const char *qref_pattern, const char *cqname,
       wc_cqueue[ s - qref_pattern ] = '\0';
       /* reject the cluster queue expression support */
       boo = sge_eval_expression(TYPE_STR,wc_cqueue, cqname, NULL);
-      free(wc_cqueue);
+      sge_free(&wc_cqueue);
       if (!boo) {
          if (!hostname || !qref_list_host_rejected(&s[1], hostname, hgroup_list)) {
             DEXIT;

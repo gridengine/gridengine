@@ -231,7 +231,7 @@ static void mir_state_init(mir_state_t* state)
 
 static void mir_state_destroy(void* state)
 {
-   free(state);
+   sge_free(&state);
 }
 
 static void mir_mt_init(void)

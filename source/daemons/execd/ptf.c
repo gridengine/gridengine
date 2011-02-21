@@ -1099,7 +1099,7 @@ static void ptf_get_usage_from_data_collector(void)
             jobs = (struct psJob_s *) procs;
          }
       }
-      free(ojobs);
+      sge_free(&ojobs);
 
       for_each(job, ptf_jobs) {
          double usage_value, old_usage_value;

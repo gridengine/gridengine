@@ -399,7 +399,7 @@ void te_free_event(te_event_t *anEvent)
 
    SGE_ASSERT((anEvent != NULL));
    
-   sge_free((char*)(*anEvent)->str_key);
+   sge_free(&((*anEvent)->str_key));
    FREE(*anEvent);
 
    DRETURN_VOID;
@@ -877,7 +877,7 @@ void te_shutdown(void)
 {
    DENTER(EVENT_LAYER, "te_shutdown");
 
-   sge_free((char *)Handler_Tbl.list);
+   sge_free(&(Handler_Tbl.list));
 
    DEXIT;
    return;

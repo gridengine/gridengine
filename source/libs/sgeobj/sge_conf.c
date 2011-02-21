@@ -906,7 +906,7 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
             } else if (!strncasecmp(s, "NOTIFY_KILL=", sizeof("NOTIFY_KILL=")-1)){
                notify_kill_type = 0;
                if (notify_kill) {
-                  free(notify_kill);
+                  sge_free(&notify_kill);
                }
                notify_kill = sge_strdup(NULL, &(s[sizeof("NOTIFY_KILL")]));
             }
@@ -920,7 +920,7 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
             } else if (!strncasecmp(s, "NOTIFY_SUSP=", sizeof("NOTIFY_SUSP=")-1)){
                notify_susp_type = 0;
                if (notify_susp) {
-                  free(notify_susp);
+                  sge_free(&notify_susp);
                }
                notify_susp = sge_strdup(NULL, &(s[sizeof("NOTIFY_SUSP")]));
             }

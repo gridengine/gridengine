@@ -345,9 +345,9 @@ int main(int argc, char *argv[])
    if (out>=0)
       close(out);
    if (kmp)
-      free(kmp);
+      sge_free(&kmp);
    if (mmp)
-      free(mmp);
+      sge_free(&mmp);
 
    return 0;
 }

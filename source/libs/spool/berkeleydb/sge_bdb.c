@@ -1286,13 +1286,13 @@ spool_berkeleydb_delete_object(lList **answer_list, bdb_info info,
                                              delete_dbt.data,
                                              delete_ret, db_strerror(delete_ret));
                      ret = false;
-                     free(delete_dbt.data);
+                     sge_free(&(delete_dbt.data));
                      done = true;
                      break;
                   } else {
                      DEBUG((SGE_EVENT, "deleted record with key "SFQ, (char *)delete_dbt.data));
                   }
-                  free(delete_dbt.data);
+                  sge_free(&(delete_dbt.data));
                }
             }
             PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
@@ -1807,7 +1807,7 @@ spool_berkeleydb_read_object(lList **answer_list, bdb_info info,
           * object found and we have to free it.
           */
          if (data_dbt.data != NULL) {
-            FREE(data_dbt.data);
+            sge_free(&(data_dbt.data));
          }
       }
    }
@@ -1921,7 +1921,7 @@ spool_berkeleydb_clear_log(lList **answer_list, bdb_info info)
             }
          }
 
-         free(list);
+         sge_free(&list);
       }
    }
 

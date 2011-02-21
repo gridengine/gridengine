@@ -2000,7 +2000,7 @@ static void start_qlogin_job(const char *shell_path)
 #endif
    my_env[i] = NULL;
 
-   sge_free(buffer);
+   sge_free(&buffer);
   
    shepherd_trace("execle(%s, %s, NULL, env)", shell_path, minusname);
    execle(shell_path, minusname, NULL, my_env);

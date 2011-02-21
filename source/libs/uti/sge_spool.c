@@ -657,7 +657,7 @@ int sge_get_confval_array(const char *fname, int n, int nmissing, bootstrap_entr
       }
    }
    
-   FREE(is_found);
+   sge_free(&is_found);
    FCLOSE(fp);
    DEXIT;
    return nmissing;
@@ -922,7 +922,7 @@ int sge_get_management_entry(const char *fname, int n, int nmissing, bootstrap_e
       }
    }
    
-   FREE(is_found);
+   sge_free(&is_found);
    FCLOSE(fp);
    DEXIT;
    return nmissing;

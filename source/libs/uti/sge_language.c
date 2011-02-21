@@ -164,27 +164,11 @@ int sge_init_languagefunc(char *package, char *localeDir)
   while ( stop <= 2 ) {
 
      /* free memory for evt. second run */
-     if (packName != NULL) {
-        free(packName);
-        packName = NULL;
-     }
-     if (locDir   != NULL) {
-        free(locDir);
-        locDir = NULL;
-     }
-     if (language != NULL) {
-        free(language);
-        language = NULL;
-     }
-     if (language_var != NULL) {
-        free(language_var);
-        language_var = NULL;
-     }
-
-     if (pathName != NULL) {
-        free(pathName);
-        pathName = NULL;
-     }
+     sge_free(&packName);
+     sge_free(&locDir);
+     sge_free(&language);
+     sge_free(&language_var);
+     sge_free(&pathName);
 
      /* try to get the package name */
      if (package != NULL) {
@@ -232,8 +216,7 @@ int sge_init_languagefunc(char *package, char *localeDir)
             locDir = malloc(sizeof(char)*(strlen(root)+strlen(SGE_DEFAULT_LOCALEDIR) + 100));
             sprintf(locDir, "%s/%s", root, SGE_DEFAULT_LOCALEDIR);
         }
-        free(root);
-        root = NULL;
+        sge_free(&root);
      }
    
      /* try to get a language stylename (only for output of package path) */
@@ -267,8 +250,7 @@ int sge_init_languagefunc(char *package, char *localeDir)
               *slash_pos = 0;  /* cut off "_" */
               language = strdup(tmp_lang);
 
-              free(tmp_lang);
-
+              sge_free(&tmp_lang);
            } else {
               language = strdup(help1);
            }
@@ -336,16 +318,11 @@ int sge_init_languagefunc(char *package, char *localeDir)
      success = false;
   }
  
-  free(packName);
-  free(locDir);
-  free(language);
-  free(language_var);
-  free(pathName);
-  packName = NULL;
-  locDir   = NULL;
-  language = NULL; 
-  language_var = NULL;
-  pathName = NULL;
+  sge_free(&packName);
+  sge_free(&locDir);
+  sge_free(&language);
+  sge_free(&language_var);
+  sge_free(&pathName);
 
   if (success == true) {
      sge_enable_msg_id = 1;
@@ -786,9 +763,7 @@ const char *sge_gettext__(char *x)
 
 static void message_id_destroy(void* theState) 
 {
-   if (theState != NULL) {
-      free(theState);
-   }
+   sge_free(&theState);
 }
 
 static void message_id_once_init(void)

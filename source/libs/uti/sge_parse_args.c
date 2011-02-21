@@ -60,7 +60,7 @@ const char* args /* The argument string to count by whitespace tokens */
    for (s = sge_strtok_r(resreq, " \t", &context); s != NULL; s = sge_strtok_r(NULL, " \t", &context)) {
       num_args++;
    }
-   free(resreq);
+   sge_free(&resreq);
    sge_free_saved_vars(context);
    
    DRETURN(num_args);
@@ -114,7 +114,7 @@ char** pargs /* The array to contain the parsed arguments */
          *d++ = *s++;                    /* copy one character */
       }
    } 
-   free(resreq);
+   sge_free(&resreq);
 
    DRETURN(count);
 }

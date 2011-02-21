@@ -317,12 +317,12 @@ int *interpretation_rule
    }
    if (!strcasecmp("NONE", pstr[0]) || !strcasecmp("UNDEFINED", pstr[0])) {
       *lpp = NULL;
-      free(pstr);
+      sge_free(&pstr);
       DEXIT;
       return 0;
    }
    ret = cull_parse_string_list(pstr, name, descr, interpretation_rule, lpp);
-   free(pstr);
+   sge_free(&pstr);
    if (ret) {
       DEXIT;
       return -3;
@@ -690,14 +690,14 @@ int *interpretation_rule
    }
    if (!strcasecmp("NONE", pstr[0])) {
       *lpp = NULL;
-      free(pstr);
+      sge_free(&pstr);
       DPRINTF(("cull_parse_simple_list: String is NONE, no list, not an error\n"));
       DEXIT;
       return 0;
    }
    
    ret = cull_parse_string_list(pstr, name, descr, interpretation_rule, lpp);
-   free(pstr);
+   sge_free(&pstr);
    if (ret) {
       DPRINTF(("cull_parse_simple_list: cull_parse_string_list returns %d\n", ret));
       DEXIT;

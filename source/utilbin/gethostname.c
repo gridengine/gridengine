@@ -120,8 +120,7 @@ int main(int argc,char *argv[]) {
         }
      }
      fprintf(stderr,"error resolving local host: %s (%s)\n",cl_get_error_text(retval), err_text);
-     free(err_text); 
-     err_text = NULL;
+     sge_free(&err_text); 
      cl_com_cleanup_commlib();
      exit(1);
   }
@@ -164,7 +163,7 @@ int main(int argc,char *argv[]) {
         fprintf(stderr,"%s\n","could not get hostent struct");
      }
   }
-  free(resolved_name);
+  sge_free(&resolved_name);
   sge_free_hostent(&he);
 
   retval = cl_com_cleanup_commlib();

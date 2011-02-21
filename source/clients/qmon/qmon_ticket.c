@@ -545,8 +545,9 @@ static Boolean qmonTOVEntryReset(tTOVEntry *tov_data)
    tov_data->weight_urgency = 0.0;
    tov_data->weight_priority = 0.0;
    tov_data->weight_ticket = 0.0;
-   if (tov_data->policy_hierarchy)
-      free(tov_data->policy_hierarchy);
+   if (tov_data->policy_hierarchy) {
+      sge_free(&(tov_data->policy_hierarchy));
+   }
    tov_data->policy_hierarchy = NULL;
    
    DEXIT;

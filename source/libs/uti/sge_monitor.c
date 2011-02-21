@@ -134,9 +134,9 @@ void sge_monitor_free(monitoring_t *monitor)
   
    sge_dstring_free(monitor->output_line1);
    sge_dstring_free(monitor->output_line2);
-   FREE(monitor->output_line1);
-   FREE(monitor->output_line2);
-   FREE(monitor->ext_data);
+   sge_free(&(monitor->output_line1));
+   sge_free(&(monitor->output_line2));
+   sge_free(&(monitor->ext_data));
 
    if(monitor->pos != -1) {
       sge_mutex_lock("sge_monitor_init", SGE_FUNC, __LINE__, &(Output[monitor->pos].Output_Mutex));
@@ -148,14 +148,7 @@ void sge_monitor_free(monitoring_t *monitor)
    
       sge_mutex_unlock("sge_monitor_init", SGE_FUNC, __LINE__, &(Output[monitor->pos].Output_Mutex));
    }
-
    
-/*   sge_dstring_free(monitor->output_line1);
-   sge_dstring_free(monitor->output_line2);
-   FREE(monitor->output_line1);
-   FREE(monitor->output_line2);
-   FREE(monitor->ext_data);*/
-
    monitor->ext_data_size = 0;
    monitor->ext_output = NULL;
    monitor->ext_type = NONE_EXT;

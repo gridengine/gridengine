@@ -468,10 +468,10 @@ struct hostent *sge_gethostbyname(const char *name, int* system_error_retval)
           * exit this code block, we make a deep copy to return. */
          if (help_he != NULL) {
             struct hostent *new_he = sge_copy_hostent(he);
-            FREE(he);
+            sge_free(&he);
             he = new_he;
          } else {
-            FREE(he);
+            sge_free(&he);
          }
       }
    }
@@ -492,7 +492,7 @@ struct hostent *sge_gethostbyname(const char *name, int* system_error_retval)
          if (gethostbyname_r(name, he, &he_data) < 0) {
             /* If this function fails, free he so that we can test if it's NULL
              * later in the code. */
-            FREE(he);
+            sge_free(&he);
          }
          /* The location of the error code is actually undefined.  I'm just
           * assuming that it's in h_errno since that's where it is in the unsafe
@@ -506,7 +506,7 @@ struct hostent *sge_gethostbyname(const char *name, int* system_error_retval)
           * exit this code block, we make a deep copy to return. */
          if (he != NULL) {
             struct hostent *new_he = sge_copy_hostent(he);
-            FREE(he);
+            sge_free(&he);
             he = new_he;
          }
       }
@@ -744,11 +744,10 @@ struct hostent *sge_gethostbyaddr(const struct in_addr *addr, int* system_error_
           * exit this code block, we make a deep copy to return. */
          if (help_he != NULL) {
             struct hostent *new_he = sge_copy_hostent(help_he);
-            FREE(he);
+            sge_free(&he);
             he = new_he;
          } else {
-            FREE(he);
-            he = NULL;
+            sge_free(&he);
          }
       }
    }
@@ -769,8 +768,7 @@ struct hostent *sge_gethostbyaddr(const struct in_addr *addr, int* system_error_
          if (gethostbyaddr_r ((const char *)addr, 4, AF_INET, he, &he_data) < 0) {
             /* If this function fails, free he so that we can test if it's NULL
              * later in the code. */
-            FREE (he);
-            he = NULL;
+            sge_free(&he);
          }
          /* The location of the error code is actually undefined.  I'm just
           * assuming that it's in h_errno since that's where it is in the unsafe
@@ -784,7 +782,7 @@ struct hostent *sge_gethostbyaddr(const struct in_addr *addr, int* system_error_
           * exit this code block, we make a deep copy to return. */
          if (he != NULL) {
             struct hostent *new_he = sge_copy_hostent (he);
-            FREE (he);
+            sge_free(&he);
             he = new_he;
          }
       }
@@ -899,8 +897,7 @@ static void sge_host_delete(host *h)
    }
    sge_strafree(&(h->he.h_aliases));
    sge_strafree(&(h->he.h_addr_list));
-   free(h);
-
+   sge_free(&h);
    sge_host_delete(predalias);
    sge_host_delete(nextalias);
 }
@@ -1095,16 +1092,16 @@ void sge_free_hostent( struct hostent** he_to_del ) {
    he = *he_to_del;
 
    /* free unique host name */
-   free(he->h_name);
+   sge_free(&(he->h_name));
    he->h_name = NULL;
 
    /* free host aliases */  
    if (he->h_aliases != NULL) {
       help = he->h_aliases;
-      while(*help) {
+      while (*help != NULL) {
          free(*help++);
       }
-      free(he->h_aliases);
+      sge_free(&(he->h_aliases));
    }
    he->h_aliases = NULL;
 
@@ -1114,13 +1111,12 @@ void sge_free_hostent( struct hostent** he_to_del ) {
       while(*help) {
          free(*help++);
       }
-      free(he->h_addr_list);
+      sge_free(&(he->h_addr_list));
    }
    he->h_addr_list = NULL;
 
    /* free hostent struct */
-   free(*he_to_del);
-   *he_to_del = NULL;
+   sge_free(he_to_del);
 }
 
 

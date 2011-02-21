@@ -1081,8 +1081,7 @@ drmaa_attr_values_t *japi_allocate_string_vector(int type)
       iter->it.si.next_pos = NULL;
       break;
    default:
-      free(iter);
-      iter = NULL;
+      sge_free(&iter);
    }
 
    return iter;
@@ -1221,7 +1220,7 @@ void japi_delete_string_vector(drmaa_attr_values_t* iter )
    default:
       break;
    }
-   free(iter);
+   sge_free(&iter);
 
    return;
 }

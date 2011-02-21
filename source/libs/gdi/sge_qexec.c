@@ -340,9 +340,8 @@ static int rcv_from_execd(sge_gdi_ctx_class_t *ctx, int options, int tag)
       /* change state in exited task */
       if (!(rt_rcv = lGetElemStr(remote_task_list, RT_tid, 
             tid))) {
-         sprintf(lasterror, MSG_GDI_TASKNOTFOUND_S , 
-               tid);
-         free(tid);
+         sprintf(lasterror, MSG_GDI_TASKNOTFOUND_S, tid);
+         sge_free(&tid);
          DEXIT;
          return -1;
       }
@@ -365,8 +364,7 @@ static int rcv_from_execd(sge_gdi_ctx_class_t *ctx, int options, int tag)
       break;
    }
 
-   free(tid);
-
+   sge_free(&tid);
    DEXIT;
    return 0;
 }

@@ -189,7 +189,7 @@ static void sc_state_init(sc_state_t* state)
 
 static void sc_state_destroy(void* state) 
 {
-   free(state);
+   sge_free(&state);
 }
 
 static void 

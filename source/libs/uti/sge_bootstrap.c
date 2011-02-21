@@ -727,9 +727,7 @@ void sge_bootstrap_state_class_destroy(sge_bootstrap_state_class_t **pst)
       return;
    }   
    bootstrap_state_destroy((*pst)->sge_bootstrap_state_handle);
-   FREE(*pst);
-   *pst = NULL;
-
+   sge_free(pst);
    DEXIT;
 }
 
@@ -755,15 +753,15 @@ void sge_bootstrap_state_class_destroy(sge_bootstrap_state_class_t **pst)
 *******************************************************************************/
 static void bootstrap_state_destroy(sge_bootstrap_state_t* theState)
 {
-   FREE(theState->admin_user);
-   FREE(theState->default_domain);
-   FREE(theState->spooling_method);
-   FREE(theState->spooling_lib);
-   FREE(theState->spooling_params);
-   FREE(theState->binary_path);
-   FREE(theState->qmaster_spool_dir);
-   FREE(theState->security_mode);
-   free(theState);
+   sge_free(&(theState->admin_user));
+   sge_free(&(theState->default_domain));
+   sge_free(&(theState->spooling_method));
+   sge_free(&(theState->spooling_lib));
+   sge_free(&(theState->spooling_params));
+   sge_free(&(theState->binary_path));
+   sge_free(&(theState->qmaster_spool_dir));
+   sge_free(&(theState->security_mode));
+   sge_free(&theState);
 }
 
 static bool sge_bootstrap_state_setup(sge_bootstrap_state_class_t *thiz, sge_path_state_class_t *sge_paths, sge_error_class_t *eh)

@@ -1116,7 +1116,7 @@ spool_classic_default_write_func(lList **answer_list,
                ret = false;
             }
 
-            free(dup);
+            sge_free(&dup);
          }
          break;
       case SGE_TYPE_JOBSCRIPT:
@@ -1283,7 +1283,7 @@ spool_classic_default_delete_func(lList **answer_list,
                                       SPOOL_DEFAULT) != 0) {
                ret = false;
             }
-            free(dup);
+            sge_free(&dup);
          }
          break;
       case SGE_TYPE_JOBSCRIPT:

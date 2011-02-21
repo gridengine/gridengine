@@ -162,7 +162,7 @@ spool_berkeleydb_create_context(lList **answer_list, const char *args)
             server = NULL;
             path = strdup(dup);
          }
-         free(dup);
+         sge_free(&dup);
       }
 
       DPRINTF(("using %sRPC server %s, database %s\n", 

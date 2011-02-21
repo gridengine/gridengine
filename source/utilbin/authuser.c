@@ -82,6 +82,8 @@
 #include <userpw.h>
 #endif
 
+#include "uti/sge_stdlib.h"
+
 #include "msg_utilbin.h"
 #include "juti/juti.h"
 
@@ -284,15 +286,15 @@ int main(int argc, char** argv) {
             } else {
                fprintf(stdout, "%s("gid_t_fmt")", group_names[i], groups[i]);
             }
-            free(group_names[i]);
+            sge_free(&(group_names[i]));
          }
-         free(groups);
-         free(group_names);
+         sge_free(&groups);
+         sge_free(&group_names);
       }
 #else
       fprintf(stdout, "uid %s\n", *ppszUID);
       LocalFree(ppszUID[0]);
-      free(ppszUID);
+      sge_free(&ppszUID);
 
       fprintf(stdout, "gid ");
       
@@ -303,10 +305,10 @@ int main(int argc, char** argv) {
             fprintf(stdout, "%s(%s)", ppszGroupNames[i], ppszGID[i]);
          }
          LocalFree(ppszGID[i]);
-         free(ppszGroupNames[i]);
+         sge_free(&(ppszGroupNames[i]));
       }
-      free(ppszGID);
-      free(ppszGroupNames);
+      sge_free(&ppszGID);
+      sge_free(&ppszGroupNames);
 #endif
       fprintf(stdout, "\n");
    }
@@ -526,11 +528,11 @@ static int login_conv(int num_msg, const struct pam_message **msgm,
                             int i;
                             for (i = 0; i < num_msg; ++i) {
                                 if (reply[i].resp != NULL) {
-                                    free(reply[i].resp);
+                                    sge_free(&(reply[i].resp));
                                 }
                             }
                         }
-                        free(reply);
+                        sge_free(&reply);
                         *response = NULL;
                         return (PAM_BUF_ERR);
                     }
@@ -558,11 +560,11 @@ static int login_conv(int num_msg, const struct pam_message **msgm,
                     int i;
                     for (i = 0; i < num_msg; ++i) {
                         if (reply[i].resp != NULL) {
-                            free(reply[i].resp);
+                            sge_free(&(reply[i].resp));
                         }
                     }
                 }
-                free(reply);
+                sge_free(&reply);
                 *response = NULL;
                 /*
                  * Have to return error here since PAM can loop
@@ -583,7 +585,7 @@ static int login_conv(int num_msg, const struct pam_message **msgm,
          * So make sure it is freed if we didn't use it.
          */
         if (!reply_used) {
-            free(reply);
+            sge_free(&reply);
             reply = NULL;
         }
 	*response = reply;
@@ -712,13 +714,13 @@ error:
 
    if (ret != 0) {
       if (groups != NULL) {
-         free(groups);
+         sge_free(&groups);
       }
       for (i=0; i < ngroups; i++) {
-         free(group_names[i]);
+         sge_free(&(group_names[i]));
       }
       if (group_names != NULL) {
-         free(group_names);
+         sge_free(&group_names);
       }
    } else {
       *groups_res = groups;   
@@ -860,7 +862,7 @@ static auth_result_t do_windows_system_authentication(const char *username,
    CloseHandle(hToken);
 
 error:
-   free(userbuf);
+   sge_free(&userbuf);
    if(pbuf != NULL) {
       NetApiBufferFree(pbuf);
    }

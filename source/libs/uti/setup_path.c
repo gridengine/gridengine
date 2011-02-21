@@ -370,7 +370,7 @@ bool sge_setup_paths(u_long32 progid, const char *sge_cell, dstring *error_dstri
          } else {
             sge_dstring_sprintf(error_dstring, MSG_SGETEXT_NOSGECELL_S, 
                                 cell_root);
-            FREE(cell_root);
+            sge_free(&cell_root);
             DEXIT;
             return false;
          }
@@ -387,15 +387,15 @@ bool sge_setup_paths(u_long32 progid, const char *sge_cell, dstring *error_dstri
          } else {
             sge_dstring_sprintf(error_dstring, MSG_UTI_DIRECTORYNOTEXIST_S, 
                                 common_dir);
-            FREE(cell_root);
-            FREE(common_dir);
+            sge_free(&cell_root);
+            sge_free(&common_dir);
             DEXIT;
             return false;
          }
       }   
    }       
 
-   FREE(common_dir);
+   sge_free(&common_dir);
 
    path_state_set_sge_root(sge_root);
    path_state_set_cell_root(cell_root);
@@ -424,7 +424,7 @@ bool sge_setup_paths(u_long32 progid, const char *sge_cell, dstring *error_dstri
    sge_dstring_sprintf(&bw, "%s"PATH_SEPARATOR"%s"PATH_SEPARATOR"%s", cell_root, COMMON_DIR, SHADOW_MASTERS_FILE);
    path_state_set_shadow_masters_file(sge_dstring_get_string(&bw));
 
-   FREE(cell_root);
+   sge_free(&cell_root);
 
    DPRINTF(("sge_root            >%s<\n", path_state_get_sge_root()));
    DPRINTF(("cell_root           >%s<\n", path_state_get_cell_root()));
@@ -489,19 +489,20 @@ static void path_once_init(void)
 *******************************************************************************/
 static void path_state_destroy(void* theState)
 {
-   FREE((( path_state_t*)theState)->sge_root);
-   FREE((( path_state_t*)theState)->cell_root);
-   FREE((( path_state_t*)theState)->bootstrap_file);
-   FREE((( path_state_t*)theState)->conf_file);
-   FREE((( path_state_t*)theState)->sched_conf_file);
-   FREE((( path_state_t*)theState)->act_qmaster_file);
-   FREE((( path_state_t*)theState)->acct_file);
-   FREE((( path_state_t*)theState)->reporting_file);
-   FREE((( path_state_t*)theState)->local_conf_dir);
-   FREE((( path_state_t*)theState)->shadow_masters_file);
-   FREE((( path_state_t*)theState)->alias_file);
-   
-   free(theState);
+   path_state_t *state = (path_state_t *)theState;
+
+   sge_free(&(state->sge_root));
+   sge_free(&(state->cell_root));
+   sge_free(&(state->bootstrap_file));
+   sge_free(&(state->conf_file));
+   sge_free(&(state->sched_conf_file));
+   sge_free(&(state->act_qmaster_file));
+   sge_free(&(state->acct_file));
+   sge_free(&(state->reporting_file));
+   sge_free(&(state->local_conf_dir));
+   sge_free(&(state->shadow_masters_file));
+   sge_free(&(state->alias_file));
+   sge_free(&state);
 }
 
 /****** uti/path/path_state_init() *********************************************
@@ -572,7 +573,7 @@ sge_path_state_class_t *sge_path_state_class_create(sge_env_state_class_t *sge_e
    
    ret->sge_path_state_handle = sge_malloc(sizeof(sge_path_state_t));
    if (ret->sge_path_state_handle == NULL) {
-      FREE(ret);
+      sge_free(&ret);
       DEXIT;
       return NULL;
    }
@@ -599,9 +600,7 @@ void sge_path_state_class_destroy(sge_path_state_class_t **pst)
    }   
       
    path_state_destroy((*pst)->sge_path_state_handle);
-   FREE(*pst);
-   *pst = NULL;
-
+   sge_free(pst);
    DEXIT;
 }
 

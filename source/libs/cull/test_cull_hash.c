@@ -360,8 +360,7 @@ int main(int argc, char *argv[])
    
    /* free names */
    for (i = 0; i < num_names; i++) {
-      free((char *)names[i]);
-      names[i] = NULL;
+      sge_free(&(names[i]));
    }
 
    return EXIT_SUCCESS;

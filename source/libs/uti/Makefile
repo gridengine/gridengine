@@ -274,9 +274,8 @@ sge_binding_parse.o:	$(UTILIB_DIR)/sge_binding_parse.c
 ###############################################################################
 # test targets
 ###############################################################################
-test_sge_bitfield: test_sge_bitfield.o $(UTILIB) $(RMONLIB)
-#	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_bitfield $(LFLAGS) test_sge_bitfield.o $(UTILIB) $(RMONLIB) -lmalloc $(LIBS)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_bitfield $(LFLAGS) test_sge_bitfield.o $(UTILIB) $(RMONLIB) $(LIBS)
+test_sge_bitfield: test_sge_bitfield.o $(UTILIB) $(COMMLISTSLIB) $(LCKLIB) $(RMONLIB)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_bitfield $(LFLAGS) test_sge_bitfield.o $(UTILIB) $(COMMLISTSLIB) $(RMONLIB) $(LCKLIB) $(LIBS)
 
 test_sge_bitfield.o: $(UTILIB_DIR)/test_sge_bitfield.c
 	$(CC) $(CFLAGS) -c $(UTILIB_DIR)/test_sge_bitfield.c

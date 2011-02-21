@@ -331,7 +331,7 @@ char* actual_opt;
          lRemoveElem(*ppcmdline, &ep);
          ep = lGetElemStrLike(*ppcmdline, SPA_switch, actual_opt);
       }
-      free(actual_opt);
+      sge_free(&actual_opt);
       *pflag = 1;
       DEXIT;
       return true;

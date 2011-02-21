@@ -383,7 +383,7 @@ FCLOSE_ERROR:
       }
    }
    pt_close();
-   free(list);
+   sge_free(&list);
    DEXIT;
 }
 
@@ -705,7 +705,7 @@ time_t last_time
       break;
    } /* while */
 
-   free(list);
+   sge_free(&list);
 
    if (!dent) {/* visited all files in procfs */
 #if defined(LINUX)

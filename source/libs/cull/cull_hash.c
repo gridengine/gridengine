@@ -411,13 +411,13 @@ void cull_hash_remove(const lListElem *ep, const int pos)
                }
                
                sge_htable_delete(ht->nuht, &ep);
-               free(nuh.p); nuh.p = NULL; /* JG: TODO: use FREE */
+               sge_free(&(nuh.p)); 
             } else {
              /* JG: TODO: error output */
             }
 
             if (head.l->first == NULL && head.l->last == NULL) {
-               free(head.p); head.p = NULL;
+               sge_free(&head.p);
                sge_htable_delete(ht->ht, key);
             }
          }   
@@ -612,9 +612,9 @@ void cull_hash_delete_non_unique_chain(htable table, const void *key,
       while(nuh != NULL) {
          non_unique_hash *del = nuh;
          nuh = nuh->next;
-         free(del);
+         sge_free(&del);
       }
-      free(head);
+      sge_free(&head);
    }
 }
 
@@ -642,6 +642,7 @@ void cull_hash_free_descr(lDescr *descr)
    int i;
    for(i = 0; mt_get_type(descr[i].mt) != lEndT; i++) {
       cull_htable ht = descr[i].ht;
+
       if (ht != NULL) {
          if(!mt_is_unique(descr[i].mt)) {
             /* delete chain of non unique elements */
@@ -649,8 +650,7 @@ void cull_hash_free_descr(lDescr *descr)
             sge_htable_destroy(ht->nuht);
          }
          sge_htable_destroy(ht->ht);
-         free(ht);
-         descr[i].ht = NULL;
+         sge_free(&(descr[i].ht));
       }
    }
 }
@@ -867,7 +867,7 @@ void cull_hash_recreate_after_sort(lList *lp)
                sge_htable_for_each(ht->ht, cull_hash_delete_non_unique_chain);
                sge_htable_destroy(ht->nuht);
                sge_htable_destroy(ht->ht);
-               free(ht);
+               sge_free(&ht);
 
                /* recreate empty hash */
                descr[i].ht = cull_hash_create(&descr[i], size);

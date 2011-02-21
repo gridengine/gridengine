@@ -182,8 +182,7 @@ lList *acl_args
          cp = sge_strdup(cp, lGetString(lFirst(answers), AN_text));
          lFreeList(&answers);
          if (acl && lGetNumberOfElem(acl) > 0) {
-            free(cp);
-            cp = NULL;
+            sge_free(&cp);
             if (lGetSubStr(lFirst(acl), UE_name, user_name, US_entries)) {
                lDelSubStr(lFirst(acl), UE_name, user_name, US_entries);
                answers = ctx->gdi(ctx, SGE_US_LIST, SGE_GDI_MOD, &acl, NULL, NULL);
@@ -221,8 +220,7 @@ lList *acl_args
          lFreeList(&acl);
          
          if (cp) {
-            free(cp);
-            cp = NULL;
+            sge_free(&cp);
          }
          if (breakit)
             break;

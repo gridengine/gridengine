@@ -594,7 +594,7 @@ static JNIEnv* create_vm(const char *libjvm_path, int argc, char** argv)
       pthread_mutex_unlock(&myjvm_mutex);
 
    }
-   free(options);
+   sge_free(&options);
 	DRETURN(env);
 }
 
@@ -702,7 +702,7 @@ sge_run_jvm(sge_gdi_ctx_class_t *ctx, void *anArg, monitoring_t *monitor)
          WARNING((SGE_EVENT, "could not read keystore path %s\n", sge_dstring_get_string(&error_dstring)));
          sge_dstring_free(&error_dstring);
          sge_dstring_free(&ds);
-         FREE(libjvm_path);
+         sge_free(&libjvm_path);
          DRETURN(false);
       }
       sge_strlcpy(keystore_path, value[0], SGE_PATH_MAX);

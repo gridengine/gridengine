@@ -158,8 +158,8 @@ bool binding_explicit_extract_sockets_cores(const char* parameter,
          /* we have a socket therefore we need a core number */
          if ((core = sge_strtok(NULL, ":")) == NULL || (isdigit(*core) == 0)) {
             /* missing core number */
-            FREE(*list_of_sockets);
-            FREE(*list_of_cores);
+            sge_free(list_of_sockets);
+            sge_free(list_of_cores);
             return false;
          }
 

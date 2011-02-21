@@ -255,7 +255,7 @@ static int sge_ls_start_ls(const char *qualified_hostname, lListElem *this_ls)
                 &fp_in, &fp_out, &fp_err, true);
 
    if (envp) {
-      free(envp);
+      sge_free(&envp);
    }
    if (pid == -1) {
       return LS_CANT_PEOPEN;

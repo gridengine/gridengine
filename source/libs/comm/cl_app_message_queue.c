@@ -36,6 +36,8 @@
 #include <sys/time.h>
 #include <stdlib.h>
 
+#include "uti/sge_stdlib.h"
+
 #include "comm/cl_app_message_queue.h"
 
 #ifdef __CL_FUNCTION__
@@ -105,7 +107,7 @@ int cl_app_message_queue_append(cl_raw_list_t*        list_p,
       if (do_lock != 0) {
          cl_raw_list_unlock(list_p);
       }
-      free(new_elem);
+      sge_free(&new_elem);
       return CL_RETVAL_MALLOC;
    }
    
@@ -147,8 +149,7 @@ int cl_app_message_queue_remove(cl_raw_list_t* list_p, cl_com_connection_t* conn
       if (elem->rcv_connection == connection) {
          /* found matching element */
          cl_raw_list_remove_elem(list_p, elem->raw_elem);
-         free(elem);
-         elem = NULL;
+         sge_free(elem);
          function_return = CL_RETVAL_OK;
          if (remove_all_elements == CL_FALSE) {
              break; /* break here, we don't want to remove all elems */

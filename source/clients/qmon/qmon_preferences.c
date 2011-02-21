@@ -471,7 +471,7 @@ static lListElem* read_object( const char *dirname, const char *filename, int sp
    /* create List Element */
    if (!(ep = lCreateElem(args->objtype))) {
       FCLOSE(fp);
-      free(buf);
+      sge_free(&buf);
       ERROR((SGE_EVENT, MSG_SGETEXT_NOMEM));
       DEXIT;
       return NULL;
@@ -483,12 +483,12 @@ static lListElem* read_object( const char *dirname, const char *filename, int sp
       ERROR((SGE_EVENT, lGetString(lFirst(alp), AN_text)));
       lFreeList(&alp);
       FCLOSE(fp);
-      free(buf);
+      sge_free(&buf);
       DEXIT;
       return NULL;
    }
 
-   free(buf);
+   sge_free(&buf);
    FCLOSE(fp);
 
    /* well, let's do the work... */

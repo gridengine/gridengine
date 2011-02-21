@@ -2416,7 +2416,7 @@ const char *href
       sprintf(buf, "%d", data->priority);
       priority = strdup(buf); 
       str_attr_list_add_set_del(lGetListRef(qep, CQ_priority), &alp, href, &priority, !data->priority_tw);
-      free((char*)priority);
+      sge_free(&priority);
    }
 
    str_attr_list_add_set_del(lGetListRef(qep, CQ_processors), &alp, href, &(data->processors), !data->processors_tw);

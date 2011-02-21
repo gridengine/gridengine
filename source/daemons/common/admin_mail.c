@@ -310,8 +310,9 @@ void job_related_adminmail(u_long32 progid, lListElem *jr, int is_array, const c
       cull_mail(progid, lp_mail, sge_mail_subj, sge_mail_body_total, 
                 MSG_MAIL_TYPE_ADMIN);
 
-      if (sge_mail_body_total)
-         free((char*)sge_mail_body_total);
+      if (sge_mail_body_total) {
+         sge_free(&sge_mail_body_total);
+      }
    }
    lFreeList(&lp_mail);
    FREE(administrator_mail); 

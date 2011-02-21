@@ -604,7 +604,7 @@ static void free_jobids(const char *jobids[], int size)
    int i = 0;
    for (i = 0; i < size; i++) {
       if (jobids[i] != NULL) {
-         FREE(jobids[i]);
+         sge_free(&(jobids[i]));
       }
    }
 }
@@ -5737,9 +5737,7 @@ static int **job_run_sequence_parse(char *jrs_str)
    }
    sequence[i] = NULL;
    
-   free(jrs_str_cp);
-   jrs_str_cp = NULL;
-
+   sge_free(&jrs_str_cp);
    return sequence;
 }
 

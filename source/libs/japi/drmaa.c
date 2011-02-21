@@ -520,9 +520,7 @@ int drmaa_delete_job_template(drmaa_job_template_t *jt, char *error_diagnosis, s
 
    lFreeList(&(jt->strings));
    lFreeList(&(jt->string_vectors));
-   free(jt); 
-   jt = NULL;
-
+   sge_free(&jt); 
    DRETURN(DRMAA_ERRNO_SUCCESS);
 }
 
@@ -2397,7 +2395,7 @@ static int drmaa_path2path_opt(const lList *attrs, lList **args, int is_bulk,
          lSetList(ep, SPA_argval_lListT, path_list); 
          path_list = NULL; /* must not free it later */
          DPRINTF(("Freeing Path\n"));
-         FREE(new_path);
+         sge_free(&new_path);
       } else {
          drmaa_errno = DRMAA_ERRNO_SUCCESS;
       }

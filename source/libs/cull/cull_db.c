@@ -108,13 +108,13 @@ static lListElem *lJoinCopyElem(const lDescr *dp,
 
    i = 0;
    if (lCopyElemPartialPack(dst, &i, src0, enp0, true, NULL) == -1) {
-      free(dst);
+      sge_free(&dst);
       LERROR(LECOPYELEMPART);
       DEXIT;
       return NULL;
    }
    if (lCopyElemPartialPack(dst, &i, src1, enp1, true, NULL) == -1) {
-      free(dst);
+      sge_free(&dst);
       LERROR(LECOPYELEMPART);
       DEXIT;
       return NULL;
@@ -215,13 +215,13 @@ lList *lJoinSublist(const char *name, int nm0, const lList *lp,
       return NULL;
    }
    if (!(dlp = lCreateList(name, dp))) {
-      free(dp);
+      sge_free(&dp);
       LERROR(LECREATELIST);
       DEXIT;
       return NULL;
    }
    /* free dp it has been copied in lCreateList */
-   free(dp);
+   sge_free(&dp);
 
    /* create a temporary list to be used by lJoin */
    if (!(tlp = lCreateList("lJoinSublist: tlp", lGetListDescr(lp)))) {
@@ -362,12 +362,12 @@ lList *lJoin(const char *name, int nm0, const lList *lp0,
    }
    if (!(dlp = lCreateList(name, dp))) {
       LERROR(LECREATELIST);
-      free(dp);
+      sge_free(&dp);
       DEXIT;
       return NULL;
    }
    /* free dp it has been copied by lCreateList */
-   free(dp);
+   sge_free(&dp);
 
    for (i = 0, ep0 = lp0->first; i < lp0->nelem; i++, ep0 = ep0->next) {
       if (!lCompare(ep0, cp0))
@@ -606,7 +606,7 @@ lSelectElemPack(const lListElem *slp, const lCondition *cp,
       /* INITIALIZE THE INDEX IF YOU BUILD A NEW DESCRIPTOR */
       if (lPartialDescr(enp, slp->descr, dp, &index) < 0) {
          LERROR(LEPARTIALDESCR);
-         free(dp);
+         sge_free(&dp);
          DEXIT;
          return NULL;
       }
@@ -614,7 +614,7 @@ lSelectElemPack(const lListElem *slp, const lCondition *cp,
       new = lSelectElemDPack(slp, cp, dp, enp, isHash, pb, &elements);
       /* free the descriptor, it has been copied by lCreateList */
       cull_hash_free_descr(dp);
-      free(dp);
+      sge_free(&dp);
    } else {
       /* no enumeration => make a copy of element */
       new = lCopyElemHash(slp, isHash);
@@ -776,7 +776,7 @@ lList *lSelectHashPack(const char *name, const lList *slp,
          index = 0;
          if (lPartialDescr(enp, slp->descr, dp, &index) < 0) {
             LERROR(LEPARTIALDESCR);
-            free(dp);
+            sge_free(&dp);
             DEXIT;
             return NULL;
          }
@@ -784,7 +784,7 @@ lList *lSelectHashPack(const char *name, const lList *slp,
 
          /* free the descriptor, it has been copied by lCreateList */
          cull_hash_free_descr(dp);
-         free(dp);
+         sge_free(&dp);
       } else {
          u_long32 number_of_packed_elements = 0;
          size_t offset = 0;
@@ -1107,14 +1107,14 @@ lDescr *lJoinDescr(const lDescr *sdp0, const lDescr *sdp1,
    index = 0;
    if (lPartialDescr(ep0, sdp0, ddp, &index) < 0) {
       LERROR(LEPARTIALDESCR);
-      free(ddp);
+      sge_free(&ddp);
       DEXIT;
       return NULL;
    }
    /* This one is appended */
    if (lPartialDescr(ep1, sdp1, ddp, &index) < 0) {
       LERROR(LEPARTIALDESCR);
-      free(ddp);
+      sge_free(&ddp);
       DEXIT;
       return NULL;
    }

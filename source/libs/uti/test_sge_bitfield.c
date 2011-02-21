@@ -33,7 +33,6 @@
 #define XMALLINFO
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 #include <time.h>
@@ -44,6 +43,7 @@
 #endif
 
 #include "uti/sge_bitfield.h"
+#include "uti/sge_stdlib.h"
 
 const unsigned int test_bf_max_size = 100;
 unsigned int test_bf_loops    = 1000;
@@ -388,7 +388,7 @@ main(int argc, char *argv[])
    }
 
    /* free memory used for bitfields */
-   free(b1);
-   free(b2);
+   sge_free(&b1);
+   sge_free(&b2);
    return EXIT_SUCCESS;
 }

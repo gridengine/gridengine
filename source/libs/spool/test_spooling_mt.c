@@ -264,7 +264,7 @@ int main(int argc, char *argv[])
    spool_shutdown_context(&answer_list, spooling_context);
    answer_list_output(&answer_list);
 
-   free(t);
+   sge_free(&t);
 
    DEXIT;
    return EXIT_SUCCESS;

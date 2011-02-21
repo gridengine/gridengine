@@ -285,7 +285,7 @@ static void obj_state_destroy(void* st)
       lFreeList(&(state->lists[i])); 
    }
       
-   free(state);
+   sge_free(&state);
 }
 
 /****** sge_object/obj_mt_init() ***********************************************

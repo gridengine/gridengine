@@ -421,7 +421,7 @@ int sge_loadmem(sge_mem_info_t *mem_info)
    /* fill in the results */
    total = t;
    fr = f;
-   free(swt);
+   sge_free(&swt);
    mem_info->swap_total = page2M(total);
    mem_info->swap_free = page2M(fr);
 
@@ -757,7 +757,7 @@ static int read_kernel_table(char *name, void **table, long *size,
 
    tsize = tinfo.head + (tinfo.ent * tinfo.len);
    if (tsize > *size) {
-      if (*table) free(*table);
+      sge_free(table);
       *table = malloc(tsize);
       if (*table == NULL) {
 /*          fprintf(stderr, MSG_MEMORY_MALLOCFAILED_D, tsize); */

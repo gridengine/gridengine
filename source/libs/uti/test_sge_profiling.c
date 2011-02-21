@@ -411,7 +411,7 @@ void* do_malloc(void* p) {
 
    for (i = 0; i < count; i++) {
       text = strdup("malloc thread");
-      free(text);
+      sge_free(&text);
    }
    
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);

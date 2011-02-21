@@ -575,7 +575,7 @@ static void feature_state_destroy(void* theState)
    struct feature_state_t* state = (struct feature_state_t *)theState;
 
    lFreeList(&(state->Master_FeatureSet_List));
-   free(state);
+   sge_free(&state);
 }
 
 /****** sgeobj/feature/feature_state_init() ***********************************

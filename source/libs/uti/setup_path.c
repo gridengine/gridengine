@@ -37,19 +37,22 @@
 #include <pthread.h>
 #include <sys/types.h>
 
-#include "setup_path.h"
-#include "sgermon.h"
+#include "rmon/sgermon.h"
+
+#include "uti/setup_path.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_log.h"
+#include "uti/sge_string.h"
+#include "uti/sge_stdlib.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_dstring.h"
+#include "uti/msg_utilib.h"
+
+#include "sgeobj/sge_answer.h"
+
 #include "basis_types.h"
-#include "sge_prog.h"
-#include "sge_log.h"
-#include "sge_string.h"
-#include "sge_stdlib.h"
-#include "sge_unistd.h"
-#include "sge_answer.h"
-#include "sge_dstring.h"
-#include "msg_utilib.h"
-#include "msg_common.h"
 #include "sge.h"
+#include "msg_common.h"
 
 
 typedef struct {

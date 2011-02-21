@@ -36,27 +36,27 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <errno.h>
-#include "sge_string.h"
-#include "sge_signal.h"
 
+#include "uti/sge_string.h"
+#include "uti/sge_signal.h"
 
-#include "cl_commlib.h"
-#include "cl_handle_list.h"
-#include "cl_connection_list.h"
-#include "cl_app_message_queue.h"
-#include "cl_message_list.h"
-#include "cl_host_list.h"
-#include "cl_endpoint_list.h"
-#include "cl_application_error_list.h"
-#include "cl_host_alias_list.h"
-#include "cl_parameter_list.h"
-#include "cl_fd_list.h"
-#include "cl_communication.h"
-#include "cl_tcp_framework.h"
-#include "cl_ssl_framework.h"
-#include "cl_util.h"
+#include "comm/cl_commlib.h"
+#include "comm/cl_handle_list.h"
+#include "comm/cl_connection_list.h"
+#include "comm/cl_app_message_queue.h"
+#include "comm/cl_message_list.h"
+#include "comm/cl_host_list.h"
+#include "comm/cl_endpoint_list.h"
+#include "comm/cl_application_error_list.h"
+#include "comm/cl_host_alias_list.h"
+#include "comm/cl_fd_list.h"
+#include "comm/cl_communication.h"
+#include "comm/cl_tcp_framework.h"
+#include "comm/cl_ssl_framework.h"
+#include "comm/lists/cl_parameter_list.h"
+#include "comm/lists/cl_util.h"
 
-#include "msg_commlib.h"
+#include "comm/msg_commlib.h"
 
 /* enable more commlib logging by definening CL_DO_COMMLIB_DEBUG at compile time */
 

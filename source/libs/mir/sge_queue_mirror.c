@@ -31,18 +31,19 @@
 /*___INFO__MARK_END__*/
 
 #include "sge.h"
-#include "sgermon.h"
-#include "sge_log.h"
 
-#include "sge_object.h"
-#include "sge_cqueue.h"
-#include "sge_qinstance.h"
-#include "sge_qinstance_state.h"
+#include "rmon/sgermon.h"
 
-#include "msg_mirlib.h"
+#include "uti/sge_log.h"
 
-#include "sge_mirror.h"
-#include "sge_queue_mirror.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_qinstance_state.h"
+
+#include "mir/msg_mirlib.h"
+#include "mir/sge_mirror.h"
+#include "mir/sge_queue_mirror.h"
 
 sge_callback_result
 cqueue_update_master_list(sge_evc_class_t *evc, object_description *object_base, sge_object_type type, 

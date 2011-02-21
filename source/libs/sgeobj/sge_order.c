@@ -30,12 +30,12 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_conf.h"
-#include "sge.h"
-#include "sge_order.h"
-#include "sge_ja_task.h"
-#include "sge_job.h"
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_order.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_job.h"
 
+#include "sge.h"
 
 /****** sge_order/sge_free_cull_order_pos() ************************************
 *  NAME

@@ -38,8 +38,8 @@
 #include <signal.h>
 #include <sys/time.h>
 
-#include "cl_commlib.h"
-#include "cl_connection_list.h"
+#include "comm/cl_commlib.h"
+#include "comm/cl_connection_list.h"
 
 
 #define CL_DO_SLOW 1

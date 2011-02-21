@@ -30,8 +30,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "rmon.h"
-
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -39,8 +37,9 @@
 #include <pthread.h>
 #include <errno.h>
 
-#include "sge_mtutil.h"
-#include "msg_rmon.h"
+#include "rmon/rmon.h"
+#include "lck/sge_mtutil.h"
+#include "rmon/msg_rmon.h"
 
 #define DEBUG RMON_LOCAL
 

@@ -57,8 +57,7 @@
 
 #include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi_ctx.h"
-
-#include "sge_qtcsh.h"
+#include "gdi/sge_qtcsh.h"
 
 #include "msg_common.h"
 

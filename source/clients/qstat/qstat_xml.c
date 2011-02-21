@@ -33,24 +33,28 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "sgermon.h"
-#include "symbols.h"
-#include "sge.h"
-#include "gdi/sge_gdi.h"
-#include "sge_time.h"
-#include "sge_stdlib.h"
-#include "sge_all_listsL.h"
-#include "sge_sched.h"
-#include "sge_dstring.h"
-#include "parse.h"
-#include "sge_prog.h"
-#include "qstat_printing.h"
-#include "sge_schedd_text.h"
-#include "sgeee.h" 
-#include "sge_answer.h"
+#include "rmon/sgermon.h"
 
+#include "uti/sge_time.h"
+#include "uti/sge_stdlib.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_dstring.h"
+
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/parse.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_cull_xml.h"
+
+#include "gdi/sge_gdi.h"
+
+#include "sched/sgeee.h" 
+#include "sched/sge_sched.h"
+#include "sched/sge_schedd_text.h"
+
+#include "symbols.h"
+#include "qstat_printing.h"
+#include "sge.h"
 #include "sge_qstat.h"
-#include "sge_cull_xml.h"
 
 /* ----------------------- qselect xml handler ------------------------------ */
 

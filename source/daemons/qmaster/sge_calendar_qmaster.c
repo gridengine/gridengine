@@ -35,32 +35,33 @@
 #include <time.h>
 #include <sys/time.h>
 
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_time.h"
+#include "uti/sge_unistd.h"
+
+#include "lck/sge_lock.h"
+
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_qinstance_state.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_calendar.h"
+#include "sgeobj/sge_utility.h"
+
+#include "spool/sge_spooling.h"
+
 #include "sge.h"
-#include "sge_log.h"
-#include "sgermon.h"
 #include "sge_event_master.h"
 #include "sge_c_gdi.h"
 #include "sge_calendar_qmaster.h"
 #include "sge_qmod_qmaster.h"
 #include "sge_qinstance_qmaster.h"
-#include "sge_time.h"
-#include "sge_unistd.h"
-#include "sge_answer.h"
-#include "sge_cqueue.h"
-#include "sge_qinstance.h"
-#include "sge_calendar.h"
-#include "sge_utility.h"
 #include "sge_utility_qmaster.h"
-#include "sge_lock.h"
-#include "sge_qinstance_state.h"
 #include "sge_advance_reservation_qmaster.h"
-
 #include "sge_persistence_qmaster.h"
-
-#include "sgeobj/sge_object.h"
-
-#include "spool/sge_spooling.h"
-
 #include "msg_common.h"
 #include "msg_qmaster.h"
 

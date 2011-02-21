@@ -31,11 +31,11 @@
 /*___INFO__MARK_END__*/
 
 #include <stdlib.h>
+
 #include "rmon/sgermon.h"
 #include "uti/sge_hostname.h"
-
 #include "cull/cull_list.h"
-#include "sge_answer.h"
+#include "sgeobj/sge_answer.h"
 
 
 #define CUSER_LAYER TOP_LAYER

@@ -41,21 +41,21 @@
 #include "uti/sge_log.h"
 #include "uti/sge_parse_num_par.h"
 
-#include "sge_pe.h"
-#include "sge_str.h"
+#include "sgeobj/sge_pe.h"
+#include "sgeobj/sge_str.h"
+#include "sgeobj/parse.h"
+#include "sgeobj/sge_id.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/msg_sgeobjlib.h"
+
+#include "sge_options.h"
 #include "parse_qsub.h"
 #include "usage.h"
-#include "parse.h"
-#include "sge_options.h"
-#include "sge_id.h"
-#include "sge_answer.h"
-#include "sge_range.h"
-#include "sge_job.h"
-#include "sge_ja_task.h"
-#include "sge_job.h"
-
 #include "msg_common.h"
-#include "msg_sgeobjlib.h"
 
 /*-------------------------------------------------------------------------*/
 /* use cstring_list_parse_from_string() if you need a parsing function */

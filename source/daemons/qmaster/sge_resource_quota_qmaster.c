@@ -33,15 +33,14 @@
 #include <sys/types.h>
 #include <fnmatch.h>
 
-#include "sge_resource_quota_qmaster.h"
-#include "msg_common.h"
-#include "msg_qmaster.h"
-#include "msg_sgeobjlib.h"
-#include "sge_persistence_qmaster.h"
-#include "sge_utility_qmaster.h"
-#include "sge.h"
-#include "uti/sge_log.h"
 #include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_string.h"
+
+#include "sgeobj/sge_hgroup.h"
+#include "sgeobj/sge_userprj.h"
+#include "sgeobj/msg_sgeobjlib.h"
 #include "sgeobj/sge_resource_quota.h"
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_utility.h"
@@ -49,14 +48,20 @@
 #include "sgeobj/sge_ja_task.h"
 #include "sgeobj/sge_str.h"
 #include "sgeobj/sge_userset.h"
+
 #include "spool/sge_spooling.h"
-#include "sgeobj/sge_hgroup.h"
-#include "sgeobj/sge_userprj.h"
+
 #include "evm/sge_event_master.h"
+
 #include "sge_userprj_qmaster.h"
 #include "sge_userset_qmaster.h"
 #include "sge_host_qmaster.h"
-#include "uti/sge_string.h"
+#include "sge_persistence_qmaster.h"
+#include "sge_utility_qmaster.h"
+#include "sge.h"
+#include "sge_resource_quota_qmaster.h"
+#include "msg_common.h"
+#include "msg_qmaster.h"
 
 static bool
 rqs_reinit_consumable_actual_list(lListElem *rqs, lList **answer_list);

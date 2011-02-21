@@ -32,21 +32,25 @@
 #include <string.h>
 #include <strings.h>
 
-#include "sge.h"
-#include "sge_usage.h"
-#include "commlib.h"
-#include "execd.h"
-#include "job_report_execd.h"
-#include "sge_host.h"
-#include "load_avg.h"
-#include "sge_prog.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "qm_name.h"
-#include "sge_report_execd.h"
-#include "sge_report.h"
-#include "sge_load.h"
+#include "rmon/sgermon.h"
 
+#include "uti/sge_prog.h"
+#include "uti/sge_log.h"
+
+#include "sgeobj/sge_usage.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_report.h"
+#include "sgeobj/sge_load.h"
+
+#include "gdi/qm_name.h"
+
+#include "comm/commlib.h"
+
+#include "job_report_execd.h"
+#include "load_avg.h"
+#include "execd.h"
+#include "sge.h"
+#include "sge_report_execd.h"
 
 #ifndef NO_SGE_COMPILE_DEBUG
 static char* report_types[] = {

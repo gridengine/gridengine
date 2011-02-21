@@ -38,8 +38,9 @@
 #define NO_SGE_COMPILE_DEBUG
 #endif
 
-#include "cull.h"
-#include "sgermon.h"
+#include "rmon/sgermon.h"
+
+#include "cull/cull.h"
 
 /****** cull/tree/lGetNumberOfNodes() *****************************************
 *  NAME

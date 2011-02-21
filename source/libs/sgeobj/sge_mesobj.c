@@ -39,10 +39,11 @@
 
 #include "cull/cull_list.h"
 
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_mesobj.h"
+#include "sgeobj/msg_sgeobjlib.h"
+
 #include "sge.h"
-#include "sge_answer.h"
-#include "sge_mesobj.h"
-#include "msg_sgeobjlib.h"
 
 /* EB: ADOC: add commets */
 

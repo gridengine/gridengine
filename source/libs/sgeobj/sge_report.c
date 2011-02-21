@@ -35,13 +35,14 @@
 #include "uti/sge_log.h"
 #include "uti/sge_time.h"
 
-#include "sge_usage.h"
-#include "sge_job.h"
-#include "sge_ja_task.h"
-#include "sge_pe_task.h"
-#include "sge_report.h"
+#include "sgeobj/sge_usage.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_pe_task.h"
+#include "sgeobj/sge_report.h"
+#include "sgeobj/msg_sgeobjlib.h"
+
 #include "execution_states.h"
-#include "msg_sgeobjlib.h"
 
 #if 0
 /****** sgeobj/report/job_report_print_usage() *******************************

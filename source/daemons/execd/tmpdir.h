@@ -33,7 +33,7 @@
 /*___INFO__MARK_END__*/
 
 #include "basis_types.h"
-#include "cull.h"
+#include "cull/cull.h"
 
 char *sge_make_tmpdir(lListElem *qep, u_long32 jobid, u_long32 jataskid, 
                       uid_t uid, gid_t gid, char *tmpdir);

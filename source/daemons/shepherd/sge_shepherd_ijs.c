@@ -61,18 +61,19 @@
 #  include <termio.h>
 #endif
 
-#include "basis_types.h"
-#include "err_trace.h"
-#include "sge_stdlib.h"
-#include "sge_dstring.h"
-#include "sge_pty.h"
+#include "uti/sge_stdlib.h"
+#include "uti/sge_dstring.h"
+#include "uti/sge_pty.h"
+#include "uti/sge_io.h"
+#include "uti/sge_uidgid.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_signal.h"
+
 #include "sge_ijs_comm.h"
 #include "sge_ijs_threads.h"
-#include "sge_io.h"
 #include "sge_fileio.h"
-#include "sge_uidgid.h"
-#include "sge_unistd.h"
-#include "sge_signal.h"
+#include "basis_types.h"
+#include "err_trace.h"
 #include "shepherd.h"
 
 #define RESPONSE_MSG_TIMEOUT 120

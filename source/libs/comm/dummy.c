@@ -33,7 +33,7 @@
 
 #include <stdio.h>
 
-#include "dummy.h"
+#include "comm/dummy.h"
 
 int dummy(char *str)
 {

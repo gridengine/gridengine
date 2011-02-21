@@ -58,17 +58,21 @@
 #include "qmon_message.h"
 #include "qmon_init.h"
 #include "qmon_util.h"
-#include "basis_types.h"
-#include "sge_all_listsL.h"
-#include "sge_answer.h"
 #include "qmon_matrix.h"
-#include "sge_dstring.h"
-#include "sgeee.h"
-#include "sge_range.h"
-#include "sge_object.h"
-#include "sge_advance_reservation.h"
+
+#include "uti/sge_dstring.h"
+
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_advance_reservation.h"
+
+#include "sched/sgeee.h"
 
 #include "gdi/sge_gdi_ctx.h"
+
+#include "basis_types.h"
 
 extern sge_gdi_ctx_class_t *ctx;
 

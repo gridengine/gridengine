@@ -45,20 +45,20 @@
 #include "uti/sge_time.h"
 #include "uti/sge_unistd.h"
 
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_utility.h"
+#include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_attr.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_qinstance_state.h"
+#include "sgeobj/sge_calendar.h"
+#include "sgeobj/msg_sgeobjlib.h"
+
 #include "sge.h"
 #include "sge_c_gdi.h"
 #include "sge_calendar_qmaster.h"
 #include "sge_qmod_qmaster.h"
-#include "sge_answer.h"
-#include "sge_utility.h"
-#include "sge_cqueue.h"
-#include "sge_attr.h"
-#include "sge_qinstance.h"
-#include "sge_qinstance_state.h"
-#include "sge_calendar.h"
-
 #include "msg_common.h"
-#include "msg_sgeobjlib.h"
 #include "msg_qmaster.h"
 
 

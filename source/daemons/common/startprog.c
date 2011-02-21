@@ -40,13 +40,15 @@
 #include <fcntl.h> 
 #include <errno.h>
 
-#include "sge_unistd.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_unistd.h"
+#include "uti/sge_log.h"
+#include "uti/sge_time.h"
+#include "uti/sge_prog.h"
+
 #include "basis_types.h"
 #include "startprog.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "sge_time.h"
-#include "sge_prog.h"
 #include "msg_daemons_common.h"
 
 #if defined(SOLARIS)

@@ -54,7 +54,7 @@
 #include "qmon_rmon.h"
 #include "Spinbox.h"
 #include "AskForTime.h"
-#include "sge_parse_num_par.h"
+#include "uti/sge_parse_num_par.h"
 
 
 typedef struct _tTimeStruct {

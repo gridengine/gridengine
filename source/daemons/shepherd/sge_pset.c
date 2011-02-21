@@ -50,14 +50,15 @@
 #   include <dlfcn.h>
 #endif
 
-#include "sge_uidgid.h"
-#include "sge_nprocs.h"
+#include "uti/sge_uidgid.h"
+#include "uti/sge_nprocs.h"
+#include "uti/config_file.h"
+#include "uti/sge_stdio.h"
+
 #include "sge_pset.h"
 #include "basis_types.h"
-#include "config_file.h"
 #include "execution_states.h"
 #include "err_trace.h"
-#include "sge_stdio.h"
 
 #define PROC_SET_OK            0
 #define PROC_SET_WARNING       1

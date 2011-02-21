@@ -42,9 +42,9 @@ int verydummypdc;
 #   if defined(MODULE_TEST) || defined(PDC_STANDALONE)
 #include <stdio.h>
 #include "basis_types.h"
-#include "sge_language.h"
-#include "sge_os.h"
-#include "sge_log.h"
+#include "uti/sge_language.h"
+#include "uti/sge_os.h"
+#include "uti/sge_log.h"
 
 int main(int argc,char *argv[])
 {
@@ -115,7 +115,7 @@ int main(int argc,char *argv[])
 #include <sys/acct.h>
 #include <sys/stat.h>
 #include <sys/machcons.h>
-#include "sge_unistd.h"
+#include "uti/sge_unistd.h"
 #endif
 
 #if defined(AIX)
@@ -151,7 +151,7 @@ int main(int argc,char *argv[])
 
 #if defined(LINUX) || defined(ALPHA) || defined(IRIX) || defined(SOLARIS) || defined(DARWIN) || defined (FREEBSD) || defined(NETBSD) || defined(HP1164) || defined(AIX)
 
-#include "sge_os.h"
+#include "uti/sge_os.h"
 #endif
 
 #if defined(IRIX)
@@ -183,12 +183,12 @@ int getpagesize(void);
 #include "pdc.h"
 #include "procfs.h"
 #include "basis_types.h"
-#include "cull.h"
+#include "cull/cull.h"
 #include "ptf.h"
-#include "sge_feature.h"
-#include "sge_language.h"
-#include "sgermon.h"
-#include "sge_uidgid.h"
+#include "sgeobj/sge_feature.h"
+#include "uti/sge_language.h"
+#include "rmon/sgermon.h"
+#include "uti/sge_uidgid.h"
 
 #if defined(PDC_STANDALONE)
 #  include "sge_log.h"

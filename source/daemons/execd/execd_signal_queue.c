@@ -33,45 +33,48 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "sgermon.h"
-#include "sge.h"
-#include "sge_ja_task.h"
-#include "sge_pe_task.h"
-#include "sge_parse_num_par.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_prog.h"
+#include "uti/sge_stdio.h"
+#include "uti/sge_parse_num_par.h"
+#include "uti/sge_log.h"
+#include "uti/sge_signal.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_time.h"
+#if defined(DARWIN)
+#  include "uti/sge_uidgid.h"
+#endif
+
+#include "spool/classic/read_write_job.h"
+
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_pe_task.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_usage.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_qinstance_state.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_ack.h"
+#include "sgeobj/sge_report.h"
+
+#include "comm/commlib.h"
+
+#include "symbols.h"
+#include "job_report_execd.h"
+#include "execd_signal_queue.h"
+#include "sig_handlers.h"
 #include "execd.h"
 #include "dispatcher.h"
 #include "reaper_execd.h"
-#include "sge_log.h"
 #include "admin_mail.h"
-#include "sge_signal.h"
-#include "commlib.h"
-#include "execd_signal_queue.h"
-#include "sig_handlers.h"
-#include "spool/classic/read_write_job.h"
-#include "sge_prog.h"
-#include "symbols.h"
-#include "sge_time.h"
-#include "job_report_execd.h"
-#include "sge_job.h"
-#include "sge_unistd.h"
-#include "sge_conf.h"
-#include "sge_usage.h"
+#include "sge_report_execd.h"
 #include "mail.h"
 #include "get_path.h"
-#include "sge_qinstance.h"
-#include "sge_qinstance_state.h"
-#include "sge_report_execd.h"
-#include "sge_report.h"
-#include "uti/sge_stdio.h"
-
-#if defined(DARWIN)
-#include "sge_uidgid.h"
-#endif
-
+#include "sge.h"
 #include "msg_execd.h"
 #include "msg_daemons_common.h"
-#include "sgeobj/sge_object.h"
-#include "sgeobj/sge_ack.h"
 
 #if defined(CRAY) && !defined(SIGXCPU)
 #   define SIGXCPU SIGCPULIM

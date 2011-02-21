@@ -32,19 +32,19 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_attr_ASTR_L.h"
-#include "sge_attr_AULNG_L.h"
-#include "sge_attr_ABOOL_L.h"
-#include "sge_attr_ATIME_L.h"
-#include "sge_attr_AMEM_L.h"
-#include "sge_attr_AINTER_L.h"
-#include "sge_attr_ASTRING_L.h"
-#include "sge_attr_ASTRLIST_L.h"
-#include "sge_attr_AUSRLIST_L.h"
-#include "sge_attr_APRJLIST_L.h"
-#include "sge_attr_ACELIST_L.h"
-#include "sge_attr_ASOLIST_L.h"
-#include "sge_attr_AQTLIST_L.h"
+#include "sgeobj/sge_attr_ASTR_L.h"
+#include "sgeobj/sge_attr_AULNG_L.h"
+#include "sgeobj/sge_attr_ABOOL_L.h"
+#include "sgeobj/sge_attr_ATIME_L.h"
+#include "sgeobj/sge_attr_AMEM_L.h"
+#include "sgeobj/sge_attr_AINTER_L.h"
+#include "sgeobj/sge_attr_ASTRING_L.h"
+#include "sgeobj/sge_attr_ASTRLIST_L.h"
+#include "sgeobj/sge_attr_AUSRLIST_L.h"
+#include "sgeobj/sge_attr_APRJLIST_L.h"
+#include "sgeobj/sge_attr_ACELIST_L.h"
+#include "sgeobj/sge_attr_ASOLIST_L.h"
+#include "sgeobj/sge_attr_AQTLIST_L.h"
 
 #define HOSTATTR_DEFAULT            0x0000
 #define HOSTATTR_ALLOW_AMBIGUITY    0x0001

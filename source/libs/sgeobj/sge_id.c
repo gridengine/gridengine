@@ -37,14 +37,13 @@
 
 #include "cull/cull_list.h"
 
-#include "parse.h"
-#include "sge_answer.h"
-#include "sge_id.h"
-#include "sge_str.h"
-#include "sge_qinstance_state.h"
-#include "sge_ja_task.h"
-
-#include "msg_sgeobjlib.h"
+#include "sgeobj/parse.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_id.h"
+#include "sgeobj/sge_str.h"
+#include "sgeobj/sge_qinstance_state.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/msg_sgeobjlib.h"
 
 #define ID_LAYER BASIS_LAYER
 

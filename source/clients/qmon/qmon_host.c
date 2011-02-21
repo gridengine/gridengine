@@ -49,23 +49,6 @@
 #include <Xmt/InputField.h>
 #include <Xmt/Procedures.h>
 
-#include "sge_all_listsL.h"
-#include "commlib.h"
-#include "sge.h"
-#include "sge_complex_schedd.h"
-#include "sge_answer.h"
-#include "sge_feature.h"
-#include "sge_host.h"
-#include "load_correction.h"
-#include "sge_prog.h"
-#include "sge_host.h"
-#include "sge_hgroup.h"
-#include "sge_hgroup_qconf.h"
-#include "sge_usage.h"
-
-#include "gdi/sge_gdi.h"
-#include "gdi/sge_gdi_ctx.h"
-
 #include "qmon_proto.h"
 #include "qmon_rmon.h"
 #include "qmon_cull.h"
@@ -85,6 +68,27 @@
 #include "qmon_queue.h"
 #include "Matrix.h"
 #include "Tab.h"
+
+#include "uti/sge_prog.h"
+
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_hgroup.h"
+#include "sgeobj/sge_usage.h"
+
+#include "comm/commlib.h"
+
+#include "sched/sge_complex_schedd.h"
+#include "sched/load_correction.h"
+
+#include "gdi/sge_gdi.h"
+#include "gdi/sge_gdi_ctx.h"
+
+#include "sge.h"
+#include "sge_hgroup_qconf.h"
 
 extern sge_gdi_ctx_class_t *ctx;
 

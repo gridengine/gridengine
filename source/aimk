@@ -191,6 +191,7 @@ usage:
    echo "-no-secure        -> disable ssl security (enabled by default)"
    echo "-no-jemalloc      -> disable jemalloc (enabled by default on Linux hosts)"
    echo "-no-mtmalloc      -> disable mtmalloc (this is needed for dbx debugging)"
+   echo "-no-plpa          -> disable plpa support (enabled by default on Linux hosts)"
    echo "-only-core        -> build only the core system"
    echo "-only-depend      -> only compile 3rdparty/sge_depend"
    echo "-only-java        -> only compile Java[TM] class files"

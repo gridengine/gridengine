@@ -33,8 +33,8 @@
 /*___INFO__MARK_END__*/
 
 
-#include "cull_where.h"
-#include "cull_multitypeP.h"
+#include "cull/cull_where.h"
+#include "cull/cull_multitypeP.h"
 
 struct _lCondition {
    int op;                      /* operator of the condition                 */

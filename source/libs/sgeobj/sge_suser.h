@@ -36,7 +36,7 @@
 #   include "sge_gdiP.h"
 #endif             
 
-#include "sge_suser_SU_L.h"
+#include "sgeobj/sge_suser_SU_L.h"
 
 lListElem *suser_list_add(lList **suser_list, lList **answer_list,
                           const char *suser_name);

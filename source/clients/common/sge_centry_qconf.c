@@ -38,29 +38,26 @@
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_centry.h"
 #include "sgeobj/sge_object.h"
+#include "sgeobj/msg_sgeobjlib.h"
 
 #include "uti/sge_log.h"
 #include "uti/sge_unistd.h"
 #include "uti/sge_io.h"
 #include "uti/sge_edit.h"
 #include "uti/sge_prog.h"
+#include "uti/sge_parse_num_par.h"
 
 #include "gdi/sge_gdi.h"
 
 #include "spool/flatfile/sge_flatfile.h"
 #include "spool/flatfile/sge_flatfile_obj.h"
+#include "spool/flatfile/sge_flatfile.h"
+#include "spool/flatfile/sge_flatfile_obj.h"
 
 #include "sge.h"
 #include "sge_centry_qconf.h"
-
 #include "msg_common.h"
 #include "msg_clients_common.h"
-
-#include "spool/flatfile/sge_flatfile.h"
-#include "spool/flatfile/sge_flatfile_obj.h"
-#include "sgeobj/msg_sgeobjlib.h"
-#include "sge_parse_num_par.h"
-
 
 static bool 
 centry_provide_modify_context(sge_gdi_ctx_class_t *ctx, lListElem **this_elem, lList **answer_list);

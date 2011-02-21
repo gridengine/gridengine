@@ -43,11 +43,11 @@
 
 #include "uti/sge_hostname.h"
 #include "uti/sge_language.h"
+#include "uti/sge_arch.h"
 
-#include "sge_arch.h"
-#include "version.h"
+#include "gdi/version.h"
+
 #include "basis_types.h"
-
 #include "msg_utilbin.h"
 
 void usage(void)

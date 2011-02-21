@@ -34,20 +34,24 @@
 #include <errno.h>
 #include <pthread.h>
 
-#include "sge_qmaster_timed_event.h"
-#include "cull.h"
-#include "sge_all_listsL.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "sge_mtutil.h"
-#include "sge_prog.h"
-#include "setup_qmaster.h"
-#include "sge_profiling.h"
-#include "msg_common.h"
-#include "msg_qmaster.h"
-#include "sge_time.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_profiling.h"
+#include "uti/sge_time.h"
+
+#include "cull/cull.h"
+
+#include "lck/sge_mtutil.h"
 
 #include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_all_listsL.h"
+
+#include "sge_qmaster_timed_event.h"
+#include "setup_qmaster.h"
+#include "msg_common.h"
+#include "msg_qmaster.h"
 
 #define EVENT_LAYER CULL_LAYER
 

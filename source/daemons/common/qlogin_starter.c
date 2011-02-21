@@ -50,13 +50,12 @@
 
 #include "uti/sge_stdio.h"
 #include "uti/sge_uidgid.h"
+#include "uti/sge_prog.h"
+#include "uti/config_file.h"
 
-#include "basis_types.h"
-#include "sge_prog.h"
-#include "config_file.h"
 #include "err_trace.h"
 #include "qlogin_starter.h"
-
+#include "basis_types.h"
 #include "msg_common.h"
 
 #if defined(INTERIX)

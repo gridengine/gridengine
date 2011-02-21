@@ -32,9 +32,9 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_event_client.h"
+#include "evc/sge_event_client.h"
+#include "mir/sge_mirror.h"
 #include "sge_sched_prepare_data.h"
-#include "sge_mirror.h"
 #include "sge_sched_thread.h"
 
 void st_start_scheduler_thread(pthread_t *thread, const char* name); 

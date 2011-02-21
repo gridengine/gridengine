@@ -36,11 +36,12 @@
 #include <limits.h>
 #include <unistd.h>
 
-#include "sge_stdlib.h"
-#include "sge_dstring.h"
-#include "sgermon.h"
-#include "sge_log.h" 
-#include "msg_utilib.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_stdlib.h"
+#include "uti/sge_dstring.h"
+#include "uti/sge_log.h" 
+#include "uti/msg_utilib.h"
 
 /****** uti/stdlib/sge_malloc() ***********************************************
 *  NAME

@@ -37,7 +37,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "cl_message_list.h"
+#include "comm/cl_message_list.h"
 
 
 int cl_message_list_setup(cl_raw_list_t** list_p, char* list_name) {  /* CR check */

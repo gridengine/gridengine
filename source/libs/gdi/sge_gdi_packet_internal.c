@@ -48,17 +48,17 @@
 #include "uti/sge_log.h"
 #include "uti/sge_tq.h"
 
+#include "gdi/sge_gdi2.h"
+#include "gdi/sge_gdi_packet_pb_cull.h"
+#include "gdi/sge_security.h"
+#include "gdi/sge_gdi_packet.h"
+#include "gdi/msg_gdilib.h"
+
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_multi_MA_L.h"
 #include "sgeobj/sge_jsv.h"
 
-#include "sge_gdi2.h"
-#include "sge_gdi_packet_pb_cull.h"
-#include "sge_security.h"
-#include "sge_gdi_packet.h"
-
 #include "msg_common.h"
-#include "msg_gdilib.h"
 
 #define CLIENT_WAIT_TIME_S 1
 

@@ -37,32 +37,34 @@
 #include <time.h>
 #include <sys/time.h>
 
-#include "sge_all_listsL.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_time.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_log.h"
+
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_calendar.h"
+#include "sgeobj/sge_utility.h"
+#include "sgeobj/sge_qinstance_state.h"
+
+#include "lck/sge_lock.h"
+
+#include "spool/sge_spooling.h"
+
 #include "sge.h"
-#include "sge_log.h"
-#include "sgermon.h"
+#include "sge_utility_qmaster.h"
+#include "sge_persistence_qmaster.h"
 #include "sge_event_master.h"
 #include "sge_c_gdi.h"
 #include "sge_calendar_qmaster.h"
 #include "sge_qmod_qmaster.h"
 #include "sge_qinstance_qmaster.h"
-#include "sge_time.h"
-#include "sge_unistd.h"
-#include "sge_answer.h"
-#include "sge_cqueue.h"
-#include "sge_qinstance.h"
-#include "sge_calendar.h"
-#include "sge_utility.h"
-#include "sge_utility_qmaster.h"
-#include "sge_lock.h"
-#include "sge_qinstance_state.h"
-
-#include "sge_persistence_qmaster.h"
-#include "spool/sge_spooling.h"
-
 #include "msg_common.h"
 #include "msg_qmaster.h"
-#include "sgermon.h"
 
 /* new data types */
 

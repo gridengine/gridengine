@@ -33,22 +33,25 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "sge_unistd.h"
-#include "sge_all_listsL.h"
-#include "usage.h"
-#include "sig_handlers.h"
-#include "commlib.h"
-#include "sge_prog.h"
-#include "sgermon.h"
-#include "sge_log.h"
+#include "rmon/sgermon.h"
 
-#include "msg_clients_common.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_log.h"
 
-#include "sge_mirror.h"
-#include "sge_event.h"
-#include "sge_answer.h"
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_event.h"
+#include "sgeobj/sge_answer.h"
+
+#include "comm/commlib.h"
+
+#include "mir/sge_mirror.h"
 
 #include "gdi/sge_gdiP.h"
+
+#include "usage.h"
+#include "sig_handlers.h"
+#include "msg_clients_common.h"
 
 int events;
 u_long32 events_size;

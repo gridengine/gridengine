@@ -33,8 +33,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_dstring.h"
-#include "cull.h"
+#include "cull/cull.h"
+#include "uti/sge_dstring.h"
 
 /*
  * QI states

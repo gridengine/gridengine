@@ -54,12 +54,11 @@
 #include "uti/sge_spool.h"
 #include "uti/setup_path.h"
 #include "uti/config_file.h"
+#include "uti/sge_time.h"
 
 #include "evm/sge_event_master.h"
 
 #include "spool/sge_spooling.h"
-
-#include "gdi/qm_name.h"
 
 #include "sgeobj/parse.h"
 #include "sgeobj/sge_all_listsL.h"
@@ -76,8 +75,14 @@
 #include "sgeobj/sge_centry.h"
 #include "sgeobj/sge_userset.h"
 #include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_resource_quota.h"
+
+#include "gdi/qm_name.h"
+#include "gdi/sge_gdi2.h"
 
 #include "sched/sge_sched.h"
+
+#include "spool/sge_spooling.h"
 
 #include "sge.h"
 #include "sge_resource_quota_qmaster.h"
@@ -97,16 +102,13 @@
 #include "usage.h"
 #include "shutdown.h"
 #include "sge_give_jobs.h"
+#include "sge_resource_quota_qmaster.h"
+#include "sge_advance_reservation_qmaster.h"
+#include "sge_qinstance_qmaster.h"
 
 #include "msg_daemons_common.h"
 #include "msg_qmaster.h"
 #include "msg_common.h"
-#include "spool/sge_spooling.h"
-#include "sgeobj/sge_resource_quota.h"
-#include "sge_resource_quota_qmaster.h"
-#include "sge_advance_reservation_qmaster.h"
-#include "sge_qinstance_qmaster.h"
-#include "uti/sge_time.h"
    
 struct cmplx_tmp {
    char *name;

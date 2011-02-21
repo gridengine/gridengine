@@ -35,11 +35,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "cl_commlib.h"
-#include "cl_lists.h"
-#include "cl_errors.h"
-#include "cl_util.h"
-#include "cl_xml_parsing.h"
+#include "comm/cl_commlib.h"
+#include "comm/lists/cl_lists.h"
+#include "comm/lists/cl_errors.h"
+#include "comm/lists/cl_util.h"
+#include "comm/cl_xml_parsing.h"
 
 #include "basis_types.h"
 

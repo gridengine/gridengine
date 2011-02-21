@@ -30,7 +30,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_uidgid.h"
+#include "uti/sge_uidgid.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -40,19 +40,23 @@
 #include <grp.h>
 #include <pthread.h>
 
+#include "rmon/sgermon.h"
+
+#include "lck/sge_mtutil.h"
+
+#include "uti/sge_stdio.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_log.h"
+#include "uti/sge_arch.h"
+#include "uti/sge_string.h"
+#include "uti/msg_utilib.h"
+#include "uti/sge_string.h"
+#include "uti/sge_stdio.h"
+#include "uti/sge_bootstrap.h"
+
 #include "basis_types.h"
-#include "sge_stdio.h"
-#include "sgermon.h"
-#include "sge_unistd.h"
-#include "sge_log.h"
-#include "sge_arch.h"
-#include "sge_string.h"
-#include "sge_mtutil.h"
+
 #include "msg_common.h"
-#include "msg_utilib.h"
-#include "sge_string.h"
-#include "sge_stdio.h"
-#include "sge_bootstrap.h"
 
 #if defined( INTERIX )
 #   include "wingrid.h"

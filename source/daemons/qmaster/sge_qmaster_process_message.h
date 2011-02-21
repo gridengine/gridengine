@@ -33,7 +33,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_monitor.h"
+#include "uti/sge_monitor.h"
 
 #include "gdi/sge_gdi_ctx.h"
 #include "gdi/sge_gdi_packet.h"

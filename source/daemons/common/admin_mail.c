@@ -33,22 +33,23 @@
 #include <string.h>
 #include <errno.h>
 
-#include "sge.h"
-#include "sge_conf.h"
-#include "sge_usage.h"
-#include "sge_time.h"
-#include "execution_states.h"
-#include "sge_mailrec.h"
-#include "admin_mail.h"
-#include "mail.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "sge_feature.h"
-#include "sge_report.h"
+#include "rmon/sgermon.h"
 
 #include "uti/sge_unistd.h"
 #include "uti/sge_stdio.h"
+#include "uti/sge_log.h"
+#include "uti/sge_time.h"
 
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_usage.h"
+#include "sgeobj/sge_mailrec.h"
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_report.h"
+
+#include "execution_states.h"
+#include "admin_mail.h"
+#include "mail.h"
+#include "sge.h"
 #include "msg_common.h"
 #include "msg_daemons_common.h"
 

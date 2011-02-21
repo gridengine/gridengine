@@ -35,25 +35,30 @@
 #include <string.h>
 #include <signal.h>
 
-#include "basis_types.h"
-#include "commlib.h"
-#include "dispatcher.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "msg_execd.h"
-#include "sge_string.h"
-#include "sge_hostname.h"
-#include "sge_security.h"
-#include "sig_handlers.h"
-#include "sge_profiling.h"
-#include "sge_time.h"
-#include "qm_name.h"
-#include "execd.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_string.h"
+#include "uti/sge_hostname.h"
+#include "uti/sge_profiling.h"
+#include "uti/sge_time.h"
 #include "uti/sge_monitor.h"
-#include "sge_bootstrap.h"
-#include "sge_prog.h"
-#include "sgeobj/sge_ack.h"
+#include "uti/sge_bootstrap.h"
+#include "uti/sge_prog.h"
+
 #include "gdi/sge_gdi2.h"
+#include "gdi/sge_security.h"
+#include "gdi/qm_name.h"
+
+#include "sgeobj/sge_ack.h"
+
+#include "comm/commlib.h"
+
+#include "basis_types.h"
+#include "dispatcher.h"
+#include "msg_execd.h"
+#include "sig_handlers.h"
+#include "execd.h"
 #include "execd_job_exec.h"
 #include "execd_ticket.h"
 #include "job_report_execd.h"

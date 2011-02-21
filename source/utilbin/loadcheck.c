@@ -37,15 +37,18 @@
 #ifndef WINDOWS
 #include <unistd.h>
 
-#include "basis_types.h"
-#include "sge_os.h"
-#include "msg_utilbin.h"
-#include "sge_language.h"
-#include "sge_prog.h"
-#include "sge_host.h"
-#include "sgermon.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_os.h"
+#include "uti/sge_language.h"
+#include "uti/sge_prog.h"
 #include "uti/sge_binding_hlp.h"
+
+#include "sgeobj/sge_host.h"
 #include "sgeobj/sge_binding.h"
+
+#include "basis_types.h"
+#include "msg_utilbin.h"
 #else
 #include "msg_utilbin.h"
 #include <windows.h>

@@ -35,7 +35,7 @@
 #include <time.h>
 #include <sys/time.h>
 
-#include "sge_dstring.h"
+#include "uti/sge_dstring.h"
 
 #define STATIC_SIZE 20
 

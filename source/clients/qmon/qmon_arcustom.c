@@ -47,17 +47,21 @@
 #include "qmon_util.h"
 #include "qmon_comm.h"
 #include "qmon_widgets.h"
-#include "sge.h"
-#include "symbols.h"
-#include "sge_sched.h"      
-#include "sge_time.h"
-#include "sge_all_listsL.h"
-#include "sge_htable.h"
-#include "sge_range.h"
 #include "qmon_preferences.h"
 #include "qmon_message.h"
-#include "sge_range.h"
+
+#include "uti/sge_htable.h"
+#include "uti/sge_time.h"
+
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_range.h"
 #include "sgeobj/sge_advance_reservation.h"
+
+#include "sched/sge_sched.h"      
+
+#include "sge.h"
+#include "symbols.h"
 
 /*-------------------------------------------------------------------------*/
 /* Prototypes */

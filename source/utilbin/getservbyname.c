@@ -35,9 +35,11 @@
 #include <string.h>
 #include <netinet/in.h>
 #include <stdlib.h>
+
 #include "msg_utilbin.h"
 #include "basis_types.h"
-#include "version.h"
+
+#include "gdi/version.h"
 
 #if defined(INTERIX)
 #include <arpa/inet.h>

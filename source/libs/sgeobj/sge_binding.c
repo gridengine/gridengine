@@ -30,9 +30,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_binding.h" 
-#include "sgermon.h"
-
 #include "uti/sge_binding_hlp.h"
 
 #if defined(BINDING_SOLARIS)
@@ -45,9 +42,11 @@
 
 #include <pthread.h>
 
-#include "uti/sge_log.h"
-#include "uti/sge_binding_hlp.h"
+#include "rmon/sgermon.h"
 
+#include "uti/sge_log.h"
+
+#include "sgeobj/sge_binding.h" 
 #include "sgeobj/sge_answer.h"
 
 #include "msg_common.h"

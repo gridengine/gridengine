@@ -37,11 +37,11 @@
 
 #include "lck/sge_mtutil.h"
 
-#include "sge_err.h"
-#include "sge_sl.h"
-#include "sge_stdlib.h"
-#include "sge_tq.h"
-#include "sge_thread_ctrl.h"
+#include "uti/sge_err.h"
+#include "uti/sge_sl.h"
+#include "uti/sge_stdlib.h"
+#include "uti/sge_tq.h"
+#include "uti/sge_thread_ctrl.h"
 
 #include "msg_common.h"
 

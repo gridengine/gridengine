@@ -38,32 +38,38 @@
 #include <errno.h>
 #include <fcntl.h>
 
+#include "rmon/sgermon.h"
+
+#include "uti/sge_prog.h"
+#include "uti/sge_log.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_uidgid.h"
+#include "uti/sge_bootstrap.h"
+#include "uti/msg_utilib.h"  /* remove once 'sge_daemonize_qmaster' did become 'sge_daemonize' */
+#include "uti/setup_path.h"
+#include "uti/sge_os.h"
+#include "uti/sge_string.h"
+
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_manop.h"
+#include "sgeobj/sge_answer.h"
+
+#include "gdi/sge_security.h"
+#include "gdi/sge_gdi2.h"
+
+#include "comm/cl_commlib.h"
+
 #include "basis_types.h"
 #include "sge_qmaster_threads.h"
-#include "sgermon.h"
-#include "sge_prog.h"
-#include "sge_log.h"
-#include "sge_unistd.h"
-#include "sge_answer.h"
-#include "sge_security.h"
-#include "sge_manop.h"
+#include "sge_thread_main.h"
 #include "sge_event_master.h"
 #include "sge_reporting_qmaster.h"
 #include "sge_qmaster_timed_event.h"
 #include "sge_host_qmaster.h"
-#include "cl_commlib.h"
-#include "sge_uidgid.h"
-#include "sge_bootstrap.h"
+#include "sge_advance_reservation_qmaster.h"
 #include "msg_common.h"
 #include "msg_qmaster.h"
 #include "msg_daemons_common.h"
-#include "msg_utilib.h"  /* remove once 'sge_daemonize_qmaster' did become 'sge_daemonize' */
-#include "sgeobj/sge_conf.h"
-#include "setup_path.h"
-#include "sge_thread_main.h"
-#include "uti/sge_os.h"
-#include "sge_advance_reservation_qmaster.h"
-#include "uti/sge_string.h"
 
 /****** qmaster/sge_qmaster_main/sge_gdi_kill_master() *************************
 *  NAME

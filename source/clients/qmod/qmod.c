@@ -32,32 +32,35 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "sge_all_listsL.h"
-#include "sig_handlers.h"
-#include "parse_qsub.h"
-#include "parse.h"
-#include "usage.h"
-#include "sge_prog.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "sge_feature.h"
-#include "sge_language.h"
-#include "sge_unistd.h"
-#include "sge_answer.h"
-#include "sge_id.h"
-#include "sge_qinstance_state.h"
+#include "rmon/sgermon.h"
 
-#include "msg_common.h"
-#include "msg_clients_common.h"
-#include "msg_qmod.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_log.h"
+#include "uti/sge_language.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_profiling.h"
 
 #include "sgeobj/sge_str.h"
 #include "sgeobj/msg_sgeobjlib.h"
 #include "sgeobj//sge_range.h"
-#include "sge_options.h"
-#include "sge_profiling.h"
+#include "sgeobj/parse.h"
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_id.h"
+#include "sgeobj/sge_qinstance_state.h"
+
 #include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi_ctx.h"
+
+#include "sge_options.h"
+#include "usage.h"
+#include "sig_handlers.h"
+#include "parse_qsub.h"
+#include "msg_common.h"
+#include "msg_clients_common.h"
+#include "msg_qmod.h"
+
 
 static lList *sge_parse_cmdline_qmod(char **argv, char **envp, lList **ppcmdline);
 static lList *sge_parse_qmod(lList **ppcmdline, lList **ppreflist, u_long32 *pforce);

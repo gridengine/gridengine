@@ -54,10 +54,13 @@
 
 #include <sys/timeb.h>
 
-#include "sgermon.h"
-#include "sge_io.h"
-#include "sge_utility.h"
-#include "sge_pty.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_io.h"
+#include "uti/sge_pty.h"
+
+#include "sgeobj/sge_utility.h"
+
 #include "sge_ijs_comm.h"
 #include "sge_ijs_threads.h"
 #include "sge_client_ijs.h"

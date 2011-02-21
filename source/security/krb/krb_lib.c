@@ -41,22 +41,22 @@
 #include <netinet/in.h>
 #include <netdb.h>
 
-#include "sge_all_listsL.h"
-#include "commlib.h"
-#include "sge_string.h"
+#include "rmon/sgermon.h"
+#include "uti/sge_string.h"
+#include "uti/sge_log.h"
+#include "uti/sge_time.h"
+#include "uti/sge_hostname.h"
+#include "uti/sge_stdlib.h"
+#include "uti/sge_prog.h"
+
+#include "sgeobj/sge_all_listsL.h"
+
+#include "comm/commlib.h"
 
 #include "sge.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "sge_time.h"
-#include "sge_hostname.h"
 
-#include "uti/sge_stdlib.h"
-
-/* #include "sgermon.h" */
 /* #include "basis_types.h" */
 
-#include "sge_prog.h"
 #include "msg_krb.h"
 
 #include "sge_krbL.h"

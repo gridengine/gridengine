@@ -37,10 +37,10 @@
 #include <stdio.h>
 #include <ctype.h>
 
+#include "uti/sge_signal.h"
+
 #include "signal_queue.h"
 #include "err_trace.h"
-#include "sge_signal.h"
-
 
 #define SGE_MAXSIG 100
 

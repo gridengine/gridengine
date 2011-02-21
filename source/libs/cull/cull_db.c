@@ -38,17 +38,19 @@
 #define NO_SGE_COMPILE_DEBUG
 #endif
 
-#include "sgermon.h"
-#include "cull_db.h"
-#include "cull_where.h"
-#include "cull_listP.h"
-#include "cull_whatP.h"
-#include "cull_multitypeP.h"
-#include "cull_lerrnoP.h"
-#include "cull_hash.h"
-#include "sge_string.h"
-#include "cull_pack.h"
-#include "pack.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_string.h"
+
+#include "cull/cull_db.h"
+#include "cull/cull_where.h"
+#include "cull/cull_listP.h"
+#include "cull/cull_whatP.h"
+#include "cull/cull_multitypeP.h"
+#include "cull/cull_lerrnoP.h"
+#include "cull/cull_hash.h"
+#include "cull/cull_pack.h"
+#include "cull/pack.h"
 
 static lListElem *lJoinCopyElem(const lDescr *dp, 
                                 const lListElem *sep0, 

@@ -37,11 +37,11 @@
 #include <stdlib.h>
 #include <arpa/inet.h>
 
-#include "cl_connection_list.h"
-#include "cl_app_message_queue.h"
-#include "cl_message_list.h"
-#include "cl_communication.h"
-#include "cl_util.h"
+#include "comm/cl_connection_list.h"
+#include "comm/cl_app_message_queue.h"
+#include "comm/cl_message_list.h"
+#include "comm/cl_communication.h"
+#include "comm/lists/cl_util.h"
 
 
 #ifdef __CL_FUNCTION__

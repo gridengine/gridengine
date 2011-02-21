@@ -31,8 +31,9 @@
 /*___INFO__MARK_END__*/
 
 #define __SGE_GDI_LIBRARY_HOME_OBJECT_FILE__
-#include "cull_list.h"
-#include "cull_packL.h"
+
+#include "cull/cull_list.h"
+#include "cull/cull_packL.h"
 
 /* this is not an empty module - even if it appeares to be empty.
  * The define __SGE_GDI_LIBRARY_HOME_OBJECT_FILE__ makes all list descriptors 

@@ -36,29 +36,33 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "basis_types.h"
-#include "sge_time.h"
-#include "cl_commlib.h"
-#include "cl_util.h"
-#include "sge_arch.h"
-#include "version.h"
-#include "sge_profiling.h"
-#include "sge_uidgid.h"
-#include "sge_signal.h"
-#include "setup_path.h"
-#include "sge_bootstrap.h"
-#include "sge_feature.h"
-#include "sge_prog.h"
-#include "sge_security.h"
-#include "sge_all_listsL.h"
-#include "msg_utilbin.h"
+#include "uti/sge_time.h"
+#include "uti/sge_arch.h"
+#include "uti/sge_profiling.h"
+#include "uti/sge_uidgid.h"
+#include "uti/sge_signal.h"
+#include "uti/setup_path.h"
+#include "uti/sge_bootstrap.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_string.h"
 
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_all_listsL.h"
+
+#include "gdi/sge_security.h"
+#include "gdi/version.h"
 #include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi_ctx.h"
 #include "gdi/sge_gdi_packet.h"
 #include "gdi/sge_gdi_packet_pb_cull.h"
 
-#include "uti/sge_string.h"
+#include "comm/cl_commlib.h"
+#include "comm/lists/cl_util.h"
+
+#include "basis_types.h"
+#include "msg_utilbin.h"
+
+
 
 #include "msg_clients_common.h"
 

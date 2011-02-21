@@ -33,11 +33,15 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#include "rmon/sgermon.h"
+
 #include "sge_qmaster_timed_event.h"
-#include "sgermon.h"
-#include "sge_bootstrap.h"
-#include "sge_feature.h"
-#include "sge_profiling.h"
+
+#include "uti/sge_bootstrap.h"
+#include "uti/sge_profiling.h"
+
+#include "sgeobj/sge_feature.h"
+
 #include "gdi/sge_gdi_ctx.h"
 
  

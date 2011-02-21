@@ -30,8 +30,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_log.h"
-
 #include <fcntl.h>
 #include <string.h>
 #include <stdio.h>
@@ -39,17 +37,21 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include "sge.h"
-#include "sge_time.h"
-#include "sge_dstring.h"
-#include "sgermon.h"
-#include "sge_prog.h"
-#include "sge_uidgid.h"
-#include "sge_mtutil.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_time.h"
+#include "uti/sge_dstring.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_uidgid.h"
+
+#include "lck/sge_mtutil.h"
+
 #include "gdi/sge_gdi_ctx.h"
 
-#include "msg_utilib.h"
+#include "uti/msg_utilib.h"
 
+#include "sge.h"
 
 typedef struct {
    pthread_mutex_t  mutex;

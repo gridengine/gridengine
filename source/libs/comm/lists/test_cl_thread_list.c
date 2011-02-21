@@ -36,8 +36,7 @@
 #include <sys/time.h>
 #include <stdlib.h>
 
-
-#include "cl_lists.h"
+#include "comm/lists/cl_lists.h"
 
 cl_raw_list_t* thread_list = NULL;
 

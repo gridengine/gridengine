@@ -30,23 +30,27 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_unistd.h"
-#include "sge_all_listsL.h"
-#include "usage.h"
-#include "parse_qconf.h"
-#include "sig_handlers.h"
-#include "commlib.h"
-#include "sge_prog.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "msg_clients_common.h"
-#include "msg_common.h"
-#include "sge_answer.h"
-#include "sge_mt_init.h"
-#include "sge_feature.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_unistd.h"
+#include "uti/sge_log.h"
+#include "uti/sge_prog.h"
+
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_feature.h"
+
 #include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi_ctx.h"
 
+#include "comm/commlib.h"
+
+#include "usage.h"
+#include "parse_qconf.h"
+#include "sig_handlers.h"
+#include "sge_mt_init.h"
+#include "msg_clients_common.h"
+#include "msg_common.h"
 
 extern char **environ;
 

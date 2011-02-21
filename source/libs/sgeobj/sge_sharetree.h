@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_sharetree_STN_L.h"
+#include "sgeobj/sge_sharetree_STN_L.h"
 
 /*
  *  * This is the list type we use to hold the 

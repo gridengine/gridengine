@@ -40,29 +40,31 @@
 #include "basis_types.h" 
 #include "sge.h"
 
-/* daemons/qmaster/ */
-#include "setup_qmaster.h"
-#include "sge_sched_process_events.h"
-
 /* lib/ */
 #include "rmon/sgermon.h"
+
+#include "uti/sge_unistd.h"
+
 #include "sgeobj/sge_conf.h"
 #include "sgeobj/sge_report.h"
 #include "sgeobj/sge_schedd_conf.h"
 #include "sgeobj/sge_centry.h"
+
+#include "sched/sge_orders.h"
+#include "sched/schedd_message.h"
+
 #include "lck/sge_mtutil.h"
 #include "mir/sge_mirror.h"
 #include "evc/sge_event_client.h"
 
-#include "uti/sge_unistd.h"
+#include "gdi/sge_gdi2.h"
 
-#include "sge_sched_prepare_data.h"
-#include "sge_sched_job_category.h"
-
-#include "sge_orders.h"
-#include "schedd_message.h"
 #include "sge_follow.h"
 #include "sge_qmaster_threads.h"
+#include "setup_qmaster.h"
+#include "sge_sched_process_events.h"
+#include "sge_sched_prepare_data.h"
+#include "sge_sched_job_category.h"
 
 /****** qmaster/sge_thread_scheduler/event_update_func() **************************
 *  NAME

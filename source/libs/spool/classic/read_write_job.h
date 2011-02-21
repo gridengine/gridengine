@@ -32,8 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_spool.h"
-#include "sge_htable.h"
+#include "uti/sge_spool.h"
+#include "uti/sge_htable.h"
 
 int job_write_spool_file(lListElem *jep, u_long32 ja_taskid, 
                          const char *pe_task_id,

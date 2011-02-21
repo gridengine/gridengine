@@ -60,9 +60,10 @@
 #  include <termio.h>
 #endif
 
-#include "sgermon.h"
-#include "sge_unistd.h"
-#include "sge_uidgid.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_unistd.h"
+#include "uti/sge_uidgid.h"
 
 extern char *ptsname(int); /* prototype not in any system header */
 

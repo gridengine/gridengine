@@ -50,9 +50,6 @@
 
 
 /*----------------------------------------------------------------------------*/
-#include "sge_all_listsL.h"
-#include "Matrix.h"
-#include "commlib.h"
 #include "qmon_proto.h"
 #include "qmon_rmon.h"
 #include "qmon_util.h"
@@ -69,14 +66,20 @@
 #include "qmon_globals.h"
 #include "qmon_project.h"
 #include "AskForTime.h"
-#include "sge_answer.h"
-#include "sge_cqueue.h"
-#include "sge_attr.h"
-#include "sge_cqueue_qconf.h"
+#include "Matrix.h"
 
 #include "uti/sge_string.h"
 
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_attr.h"
+
+#include "comm/commlib.h"
+
 #include "gdi/sge_gdi_ctx.h"
+
+#include "sge_cqueue_qconf.h"
 
 extern sge_gdi_ctx_class_t *ctx;
 

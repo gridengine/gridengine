@@ -36,8 +36,8 @@
 #include <sys/time.h>
 #include <stdlib.h>
 
-#include "cl_commlib.h"
-#include "cl_parameter_list.h"
+#include "comm/cl_commlib.h"
+#include "comm/lists/cl_parameter_list.h"
 
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__

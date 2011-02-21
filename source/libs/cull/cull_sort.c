@@ -38,13 +38,15 @@
 #define NO_SGE_COMPILE_DEBUG
 #endif
 
-#include "sgermon.h"
-#include "cull_listP.h"
-#include "cull_parse.h"
-#include "cull_multitype.h"
-#include "cull_sortP.h"
-#include "cull_lerrnoP.h"
-#include "sge_string.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_string.h"
+
+#include "cull/cull_listP.h"
+#include "cull/cull_parse.h"
+#include "cull/cull_multitype.h"
+#include "cull/cull_sortP.h"
+#include "cull/cull_lerrnoP.h"
 
 /* ------------------------------------------------------------ 
 

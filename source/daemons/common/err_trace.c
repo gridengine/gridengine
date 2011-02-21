@@ -58,14 +58,14 @@
 #include "uti/sge_dstring.h"
 #include "uti/sge_stdio.h"
 #include "uti/sge_unistd.h"
+#include "uti/sge_time.h"
+#include "uti/sge_uidgid.h"
+#include "uti/config_file.h"
+#include "uti/sge_string.h"
 
 #include "basis_types.h"
 #include "err_trace.h"
-#include "sge_time.h"
-#include "sge_uidgid.h"
-#include "config_file.h"
 #include "qlogin_starter.h"
-#include "sge_string.h"
 
 #if defined(INTERIX)
 #  include "wingrid.h"

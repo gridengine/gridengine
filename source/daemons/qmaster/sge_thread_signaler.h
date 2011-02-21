@@ -32,10 +32,12 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_thread_jvm.h"
 #include <pthread.h>
+
 #include "gdi/sge_gdi_ctx.h"
 #include "gdi/sge_gdi_packet.h"
+
+#include "sge_thread_jvm.h"
 
 void
 sge_signaler_initialize(sge_gdi_ctx_class_t *ctx);

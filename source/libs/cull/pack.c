@@ -30,7 +30,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "pack.h"
+#include "cull/pack.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -42,7 +42,7 @@
 
 #if defined(INTERIX)
 #include <arpa/inet.h>
-#include "wingrid.h"
+#include "wingrid/wingrid.h"
 #endif
 
 #ifdef HPUX
@@ -54,14 +54,17 @@
 #define NO_SGE_COMPILE_DEBUG
 #endif
 
-#include "basis_types.h"
-#include "sgermon.h"
-#include "cull_listP.h"
-#include "sge_log.h"
-#include "msg_cull.h"
-#include "cull_state.h"
+#include "rmon/sgermon.h"
 
 #include "uti/sge_stdlib.h"
+#include "uti/sge_log.h"
+
+#include "cull/cull_listP.h"
+#include "cull/msg_cull.h"
+#include "cull/cull_state.h"
+
+
+#include "basis_types.h"
 
 #if 0
 #   undef PACK_LAYER

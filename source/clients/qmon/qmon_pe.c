@@ -47,10 +47,7 @@
 #include <Xmt/InputField.h>
 
 #include "Spinbox.h"
-#include "sge_all_listsL.h"
-#include "gdi/sge_gdi.h"
-#include "sge_answer.h"
-#include "commlib.h"
+
 #include "qmon_proto.h"
 #include "qmon_rmon.h"
 #include "qmon_cull.h"
@@ -63,8 +60,16 @@
 #include "qmon_pe.h"
 #include "qmon_globals.h"
 #include "AskForItems.h"
-#include "sge_dstring.h"
-#include "sge_pe.h"
+
+#include "uti/sge_dstring.h"
+
+#include "gdi/sge_gdi.h"
+
+#include "comm/commlib.h"
+
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_pe.h"
 
 
 static Widget qmon_pe = 0;

@@ -39,7 +39,9 @@
 #endif
 
 #include "uti/sge_monitor.h"
-#include "cull.h"
+
+#include "cull/cull.h"
+
 #include "sgeobj/sge_object.h"
 
 #include "gdi/sge_gdi_ctx.h"

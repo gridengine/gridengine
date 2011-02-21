@@ -36,10 +36,12 @@
 #   include "sge_gdiP.h"
 #endif
 
-#include "sge_qmaster_timed_event.h"
 #include "uti/sge_monitor.h"
+
 #include "gdi/sge_gdi_ctx.h"
 #include "gdi/sge_gdi_packet.h"
+
+#include "sge_qmaster_timed_event.h"
 
 
 void resend_signal_event(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitoring_t *monitor);

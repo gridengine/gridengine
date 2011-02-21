@@ -54,39 +54,30 @@
 #include <ctype.h>
 #include <unistd.h>
 
-/* rmon */
-#include "sgermon.h"
+#include "rmon/sgermon.h"
 
-/* uti */
-#include "sge_log.h"
-#include "sge_stdio.h"
-#include "sge_string.h"
-#include "sge_tmpnam.h"
-
-/* sgeobj */
-#include "config.h"
-#include "sge_answer.h"
-#include "sge_utility.h"
-#include "sgeobj/sge_feature.h"
-#include "sgeobj/sge_sharetree.h"
-
-/* spool */
-#include "spool/sge_spooling_utilities.h"
-
-/* messages */
-#include "msg_common.h"
-#include "spool/msg_spoollib.h"
-#include "spool/flatfile/msg_spoollib_flatfile.h"
-
-/* local */
-#include "spool/flatfile/sge_spooling_flatfile_scanner.h"
-#include "spool/flatfile/sge_flatfile.h"
-
-/* uti */
+#include "uti/sge_log.h"
+#include "uti/sge_stdio.h"
+#include "uti/sge_string.h"
+#include "uti/sge_tmpnam.h"
 #include "uti/sge_spool.h"
 #include "uti/sge_unistd.h"
 #include "uti/sge_profiling.h"
-#include "sge_all_listsL.h"
+
+#include "sgeobj/config.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_utility.h"
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_sharetree.h"
+#include "sgeobj/sge_all_listsL.h"
+
+#include "spool/sge_spooling_utilities.h"
+#include "spool/msg_spoollib.h"
+#include "spool/flatfile/msg_spoollib_flatfile.h"
+#include "spool/flatfile/sge_spooling_flatfile_scanner.h"
+#include "spool/flatfile/sge_flatfile.h"
+
+#include "msg_common.h"
 
 const spool_flatfile_instr qconf_sub_name_value_space_sfi = 
 {

@@ -59,15 +59,16 @@
 #include "sgeobj/sge_pe_task.h"
 #include "sgeobj/sge_qinstance.h"
 #include "sgeobj/sge_suser.h"
+#include "sgeobj/sge_conf.h"
 
 #include "spool/sge_spooling_utilities.h"
-
-#include "msg_common.h"
 #include "spool/msg_spoollib.h"
-#include "spool/berkeleydb/msg_spoollib_berkeleydb.h"
 
+#include "spool/berkeleydb/msg_spoollib_berkeleydb.h"
 #include "spool/berkeleydb/sge_bdb.h"
 #include "spool/berkeleydb/sge_spooling_berkeleydb.h"
+
+#include "msg_common.h"
 
 static const char *spooling_method = "berkeleydb";
 

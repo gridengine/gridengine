@@ -1,11 +1,3 @@
-#include <stdio.h>
-#include <errno.h>
-#include <string.h>
-#include <sys/time.h>
-#include <stdlib.h>
-#include "cl_util.h"
-
-
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  *
@@ -38,9 +30,16 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "cl_host_list.h"
-#include "cl_host_alias_list.h"
-#include "cl_commlib.h"
+#include <stdio.h>
+#include <errno.h>
+#include <string.h>
+#include <sys/time.h>
+#include <stdlib.h>
+
+#include "comm/lists/cl_util.h"
+#include "comm/cl_host_list.h"
+#include "comm/cl_host_alias_list.h"
+#include "comm/cl_commlib.h"
 #include "uti/sge_hostname.h"
 
 static struct in_addr*   cl_com_copy_in_addr(struct in_addr *in_addr);

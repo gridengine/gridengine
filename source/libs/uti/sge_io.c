@@ -38,14 +38,15 @@
 #include <fcntl.h>
 #include <errno.h>
 
+#include "rmon/sgermon.h"
+
 #include "uti/sge_io.h"
 #include "uti/sge_stdio.h"
 #include "uti/sge_stdlib.h"
 #include "uti/sge_unistd.h"
-#include "sgermon.h"
-#include "sge_log.h"
+#include "uti/sge_log.h"
 
-#include "msg_utilib.h"  
+#include "uti/msg_utilib.h"  
 
 #define BUFFER     4096
 #define FILE_CHUNK (100*1024)  

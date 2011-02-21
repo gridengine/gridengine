@@ -32,9 +32,10 @@
 
 #include <ctype.h>
 
-#include "sge_string.h"
-#include "sge_sl.h"
-#include "sgermon.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_string.h"
+#include "uti/sge_sl.h"
 
 /* This method counts the number of arguments in the string using a quick and
  * dirty algorithm.  The algorithm may incorrectly report the number of arguments

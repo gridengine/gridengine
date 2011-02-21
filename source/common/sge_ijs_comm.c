@@ -41,21 +41,26 @@
 #include <sys/ioctl.h>  /* 44BSD requires this too */
 #endif
 
+#include "rmon/sgermon.h"
+
 #include "uti/sge_arch.h"
 #include "uti/config_file.h"
 #include "uti/sge_string.h"
+#include "uti/sge_log.h"
 
-#include "cl_data_types.h"
-#include "cl_commlib.h"
-#include "cl_endpoint_list.h"
-#include "sgermon.h"
-#include "sge_utility.h"
-#include "sge_security.h"
+#include "lck/sge_mtutil.h"
+
+#include "gdi/sge_security.h"
+#include "gdi/msg_gdilib.h"
+
+#include "sgeobj/sge_utility.h"
+
+#include "comm/cl_data_types.h"
+#include "comm/cl_commlib.h"
+#include "comm/cl_endpoint_list.h"
+#include "comm/lists/msg_commlistslib.h"
+
 #include "sge_ijs_comm.h"
-#include "sge_mtutil.h"
-#include "msg_commlistslib.h"
-#include "sge_log.h"
-#include "msg_gdilib.h"
 
 extern sig_atomic_t received_signal;
 

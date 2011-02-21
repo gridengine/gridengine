@@ -38,7 +38,7 @@
 #include <errno.h>
 
 #include "basis_types.h"
-#include "config_file.h"
+#include "uti/config_file.h"
 
 int do_core_binding(void);
 

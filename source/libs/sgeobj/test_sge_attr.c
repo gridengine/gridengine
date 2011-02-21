@@ -37,10 +37,10 @@
 
 #include "cull/cull.h"
 
-#include "sge_all_listsL.h"
-#include "sge_href.h"
-#include "sge_hgroup.h"
-#include "sge_attr.h"
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_href.h"
+#include "sgeobj/sge_hgroup.h"
+#include "sgeobj/sge_attr.h"
 
 bool check_attr_str_list_find_value(void) 
 {

@@ -32,10 +32,9 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_gdi.h"
-#include "sge_gdi_ctx.h"
-#include "sge_event.h"
 #include "uti/sge_monitor.h"
+
+#include "sgeobj/sge_event.h"
 #include "gdi/sge_gdi_ctx.h"
 
 /* 

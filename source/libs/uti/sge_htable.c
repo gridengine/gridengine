@@ -42,10 +42,10 @@
 #include <unistd.h>
 #include <sys/times.h>
 
-#include "sge_htable.h"
-#include "sgermon.h"
-#include "sge_log.h"
+#include "rmon/sgermon.h"
 
+#include "uti/sge_htable.h"
+#include "uti/sge_log.h"
 
 #ifdef SGE_USE_PROFILING
 #include "uti/sge_profiling.h"

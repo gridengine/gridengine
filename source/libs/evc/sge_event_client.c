@@ -32,35 +32,38 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-
 #include <string.h>
 #include <strings.h>
 
-#include "sge_unistd.h"
-#include "commlib.h"
-#include "commproc.h"
-#include "sge_prog.h"
-#include "sgermon.h"
-#include "sge_profiling.h"
-#include "qm_name.h"
-#include "sge_log.h"
-#include "sge_time.h"
-#include "sge_answer.h"
-#include "sge_report.h"
-#include "sge_conf.h"
-#include "sge_error_class.h"
+#include "rmon/sgermon.h"
 
-#include "sge_mtutil.h"
-#include "evc/sge_event_client.h"
-#include "sgeobj/sge_ack.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_profiling.h"
+#include "uti/sge_log.h"
+#include "uti/sge_time.h"
+#include "uti/sge_error_class.h"
 
+#include "lck/sge_mtutil.h"
+
+#include "comm/commlib.h"
+#include "comm/commproc.h"
+
+#include "gdi/qm_name.h"
 #include "gdi/sge_gdi2.h"
+#include "gdi/msg_gdilib.h"
+
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_report.h"
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_ack.h"
 
 #include "sgeobj/sge_event.h"
 
-#include "msg_evclib.h"
+#include "evc/sge_event_client.h"
+#include "evc/msg_evclib.h"
+
 #include "msg_common.h"
-#include "msg_gdilib.h"
 
 #define EVC_LAYER TOP_LAYER
 
@@ -815,7 +818,7 @@ static void sge_evc_destroy(sge_evc_t **sge_evc)
 *     ec_prepare_registration() -- prepare registration at server
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     bool 
 *     ec_prepare_registration(ev_registration_id id, const char *name) 
@@ -985,7 +988,7 @@ static lListElem* ec2_get_event_client(sge_evc_class_t *thiz)
 *     ec_mark4registration() -- new registration is required
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     void 
 *     ec_mark4registration(void) 
@@ -1026,7 +1029,7 @@ static void ec2_mark4registration(sge_evc_class_t *thiz)
 *     ec_need_new_registration() -- is a reregistration neccessary?
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     bool ec_need_new_registration(void) 
 *
@@ -1051,7 +1054,7 @@ static bool ec2_need_new_registration(sge_evc_class_t *thiz)
 *     ec_set_edtime() -- set the event delivery interval
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     int 
 *     ec_set_edtime(int interval) 
@@ -1103,7 +1106,7 @@ static int ec2_set_edtime(sge_evc_class_t *thiz, int interval)
 *     ec_get_edtime() -- get the current event delivery interval
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     int 
 *     ec_get_edtime(void) 
@@ -1138,7 +1141,7 @@ static int ec2_get_edtime(sge_evc_class_t *thiz)
 *     ec_set_flush_delay() -- set flush delay parameter
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     bool 
 *     ec_set_flush_delay(u_long32 flush_delay) 
@@ -1185,7 +1188,7 @@ static bool ec2_set_flush_delay(sge_evc_class_t *thiz, int flush_delay)
 *     ec_get_flush_delay() -- get configured flush delay paramter
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     int 
 *     ec_get_flush_delay(void) 
@@ -1222,7 +1225,7 @@ static int ec2_get_flush_delay(sge_evc_class_t *thiz)
 *     ec_set_edtime() -- set the event client busy handling
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     bool 
 *     ec_set_busy_handling(ev_busy_handling handling) 
@@ -1277,7 +1280,7 @@ static bool ec2_set_busy_handling(sge_evc_class_t *thiz, ev_busy_handling handli
 *     ec_get_busy_handling() -- get configured busy handling policy
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     ev_busy_handling 
 *     ec_get_busy_handling(void) 
@@ -1463,7 +1466,7 @@ ec2_register_local(sge_evc_class_t *thiz, bool exit_on_qmaster_down, lList** alp
 *     ec_register() -- register at the event server
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     bool 
 *     ec_register(void) 
@@ -1620,7 +1623,7 @@ static bool ec2_register(sge_evc_class_t *thiz, bool exit_on_qmaster_down, lList
 *     ec_deregister() -- deregister from the event server
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     int 
 *     ec_deregister(void) 
@@ -1693,7 +1696,7 @@ static bool ec2_deregister(sge_evc_class_t *thiz)
 *     ec_subscribe() -- Subscribe an event
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     bool 
 *     ec_subscribe(ev_event event) 
@@ -1906,7 +1909,7 @@ static void ec2_remove_subscriptionElement(sge_evc_class_t *thiz, ev_event event
 *     ec_subscribe_all() -- subscribe all events
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     bool 
 *     ec_subscribe_all(void) 
@@ -1940,7 +1943,7 @@ static bool ec2_subscribe_all(sge_evc_class_t *thiz)
 *     ec_unsubscribe() -- unsubscribe an event
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     bool 
 *     ec_unsubscribe(ev_event event) 
@@ -2018,7 +2021,7 @@ static bool ec2_unsubscribe(sge_evc_class_t *thiz, ev_event event)
 *     ec_unsubscribe_all() -- unsubscribe all events
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     bool 
 *     ec_unsubscribe_all(void) 
@@ -2051,7 +2054,7 @@ static bool ec2_unsubscribe_all(sge_evc_class_t *thiz)
 *     ec_get_flush() -- get flushing information for an event
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     int 
 *     ec_get_flush(ev_event event) 
@@ -2107,7 +2110,7 @@ static int ec2_get_flush(sge_evc_class_t *thiz, ev_event event)
 *     ec_set_flush() -- set flushing information for an event
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     bool 
 *     ec_set_flush(ev_event event, int flush) 
@@ -2181,7 +2184,7 @@ static bool ec2_set_flush(sge_evc_class_t *thiz, ev_event event, bool flush, int
 *     ec_unset_flush() -- unset flushing information
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     bool 
 *     ec_unset_flush(ev_event event) 
@@ -2241,7 +2244,7 @@ static bool ec2_unset_flush(sge_evc_class_t *thiz, ev_event event)
 *     ec_subscribe_flush() -- subscribe an event and set flushing
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     bool 
 *     ec_subscribe_flush(ev_event event, int flush) 
@@ -2476,7 +2479,7 @@ static ev_registration_id ec2_get_id(sge_evc_class_t *thiz)
 *     ec_config_changed() -- tell system the config has changed
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     static void 
 *     ec_config_changed(void) 
@@ -2571,7 +2574,7 @@ static bool ec2_ack(sge_evc_class_t *thiz)
 *     ec_commit() -- commit configuration changes
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     bool 
 *     ec_commit(void) 
@@ -2653,7 +2656,7 @@ static bool ec2_commit(sge_evc_class_t *thiz, lList **alpp)
 *     ec_commit() -- commit configuration changes via gdi multi request
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     int 
 *     ec_commit_multi(lList **malpp) 
@@ -2744,7 +2747,7 @@ static bool ec2_commit_multi(sge_evc_class_t *thiz, lList **malpp, state_gdi_mul
 *     ec_get() -- look for new events
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     bool 
 *     ec_get(lList **event_list) 
@@ -2978,7 +2981,7 @@ static bool ec2_get(sge_evc_class_t *thiz, lList **event_list, bool exit_on_qmas
 *     ck_event_number() -- test event numbers
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     static bool 
 *     ck_event_number(lList *lp, u_long32 *waiting_for, 

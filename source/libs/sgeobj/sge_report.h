@@ -32,12 +32,12 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "cull.h"
+#include "cull/cull.h"
 
-#include "sge_report_REP_L.h"
-#include "sge_report_JR_L.h"
-#include "sge_report_LIC_L.h"
-#include "sge_report_LR_L.h"
+#include "sgeobj/sge_report_REP_L.h"
+#include "sgeobj/sge_report_JR_L.h"
+#include "sgeobj/sge_report_LIC_L.h"
+#include "sgeobj/sge_report_LR_L.h"
 
 /* 
  * ** valid values for REP_type 

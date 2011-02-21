@@ -45,15 +45,14 @@
 #include "uti/sge_prog.h"
 #include "uti/sge_string.h"
 
-
 #include "sched/sge_sched.h"
 
-#include "sge.h"
-#include "sge_all_listsL.h"
-#include "sge_range.h"
-#include "sge_answer.h"
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/msg_sgeobjlib.h"
 
-#include "msg_sgeobjlib.h"
+#include "sge.h"
 
 #define RANGE_SEPARATOR_CHARS ","
 #define RANGE_LAYER BASIS_LAYER

@@ -1,9 +1,3 @@
-#include <stdio.h>
-#include <errno.h>
-#include <string.h>
-#include <stdlib.h>
-
-
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  *
@@ -36,8 +30,12 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "cl_string_list.h"
+#include <stdio.h>
+#include <errno.h>
+#include <string.h>
+#include <stdlib.h>
 
+#include "comm/lists/cl_string_list.h"
 
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__

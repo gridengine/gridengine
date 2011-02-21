@@ -36,12 +36,15 @@
 #include <unistd.h>
 #include <pthread.h>
 
-#include "sge_mtutil.h"
+#include "rmon/sgermon.h"
+
+#include "lck/sge_mtutil.h"
+
+#include "uti/sge_language.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_htable.h"
+
 #include "basis_types.h"
-#include "sge_language.h"
-#include "sgermon.h"
-#include "sge_prog.h"
-#include "sge_htable.h"
 
 #ifdef __SGE_COMPILE_WITH_GETTEXT__ 
 

@@ -32,12 +32,12 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_centry_CE_L.h"
-#include "sge_ct_SCT_L.h"
-#include "sge_ct_REF_L.h"
-#include "sge_ct_CT_L.h"
-#include "sge_ct_CCT_L.h"
-#include "sge_ct_CTI_L.h"
+#include "sgeobj/sge_centry_CE_L.h"
+#include "sgeobj/sge_ct_SCT_L.h"
+#include "sgeobj/sge_ct_REF_L.h"
+#include "sgeobj/sge_ct_CT_L.h"
+#include "sgeobj/sge_ct_CCT_L.h"
+#include "sgeobj/sge_ct_CTI_L.h"
 
 /* 
  * This is the list type we use to hold the complex list in qmaster.

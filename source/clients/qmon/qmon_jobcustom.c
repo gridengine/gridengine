@@ -41,7 +41,6 @@
 #include <Xmt/Create.h>
 #include <Xmt/InputField.h>
 
-#include "Matrix.h" 
 #include "qmon_rmon.h"
 #include "qmon_cull.h"
 #include "qmon_jobcustom.h"
@@ -50,28 +49,33 @@
 #include "qmon_request.h"
 #include "qmon_comm.h"
 #include "qmon_widgets.h"
-#include "sge.h"
-#include "symbols.h"
-#include "sge_sched.h"      
-#include "sge_time.h"
-#include "sge_all_listsL.h"
-#include "IconList.h"
-#include "sge_htable.h"
-#include "sge_range.h"
 #include "qmon_preferences.h"
 #include "qmon_message.h"
-#include "sge_range.h"
-#include "sge_job.h"
-#include "sge_object.h"
-#include "sge_ulong.h"
-#include "sge_centry.h"
-#include "sge_cqueue.h"
-#include "sge_qinstance.h"
+#include "Matrix.h" 
+#include "IconList.h"
+
+#include "uti/sge_time.h"
+#include "uti/sge_string.h"
+#include "uti/sge_htable.h"
+
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_ulong.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_usage.h"
+
+#include "sched/sge_sched.h"      
+
+#include "sge.h"
+#include "symbols.h"
 #include "qstat_printing.h"
 #include "sge_cqueue_qstat.h"
-#include "sge_ja_task.h"
-#include "uti/sge_string.h"
-#include "sgeobj/sge_usage.h"
 
 /*-------------------------------------------------------------------------*/
 /* Prototypes */

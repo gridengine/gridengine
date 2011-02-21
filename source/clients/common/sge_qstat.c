@@ -36,7 +36,6 @@
 
 #include "rmon/sgermon.h"
 
-
 #include "cull/cull_sort.h"
 
 #include "uti/sge_dstring.h"

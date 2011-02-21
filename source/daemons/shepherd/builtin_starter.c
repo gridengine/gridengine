@@ -46,6 +46,9 @@
 #include "uti/sge_signal.h"
 #include "uti/sge_unistd.h"
 #include "uti/sge_arch.h"
+#include "uti/config_file.h"
+#include "uti/sge_uidgid.h"
+
 #include "setosjobid.h"
 #include "sge_fileio.h"
 
@@ -87,8 +90,6 @@ struct rusage {
 #include "basis_types.h"
 #include "execution_states.h"
 #include "qlogin_starter.h"
-#include "config_file.h"
-#include "sge_uidgid.h"
 
 /* The maximum number of env variables we can export. */
 #define MAX_NUMBER_OF_ENV_VARS 1023

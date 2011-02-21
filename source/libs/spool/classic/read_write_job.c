@@ -35,32 +35,35 @@
 #include <unistd.h>
 #include <errno.h>
 
-#include "basis_types.h"
-#include "sge.h"
-#include "sge_log.h"
-#include "sge_ja_task.h"
-#include "sgermon.h"
-#include "cull_file.h"
-#include "cull_list.h"
-#include "sge_spool.h"
-#include "spool/sge_dirent.h"
-#include "sge_str.h"
-#include "sge_job_qmaster.h"
-#include "sge_job.h"
-#include "sge_answer.h"
-#include "sge_suser.h"
-#include "sge_conf.h"
-#include "sge_unistd.h"
-#include "sge_pe_task.h"
-#include "sge_pe.h"
-#include "sge_time.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_time.h"
+#include "uti/sge_spool.h"
 #include "uti/sge_profiling.h"
+#include "uti/sge_unistd.h"
+
+#include "cull/cull_file.h"
+#include "cull/cull_list.h"
+
+#include "sgeobj/sge_str.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_suser.h"
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_pe_task.h"
+#include "sgeobj/sge_pe.h"
 #include "sgeobj/sge_object.h"
 
+#include "spool/sge_dirent.h"
+
+#include "basis_types.h"
+#include "sge.h"
+#include "sge_job_qmaster.h"
+#include "read_write_job.h"
 #include "msg_common.h"
 #include "msg_spoollib_classic.h"
-
-#include "read_write_job.h"
 
 static lList *ja_task_list_create_from_file(u_long32 job_id, 
                                             u_long32 ja_task_id,

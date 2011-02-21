@@ -33,15 +33,15 @@
 /*___INFO__MARK_END__*/
 /* \begin{verbatim} */
 
-#include "cull_list.h"
+#include "cull/cull_list.h"
 
 /* Definition of new names */
-#include "queueL.h"
-#include "complexnameL.h"
-#include "complexL.h"
-#include "complexattributeL.h"
-#include "jobL.h"
-#include "jobrequestL.h"
+#include "cull/queueL.h"
+#include "cull/complexnameL.h"
+#include "cull/complexL.h"
+#include "cull/complexattributeL.h"
+#include "cull/jobL.h"
+#include "cull/jobrequestL.h"
 
 lNameSpace nmv[] =
 {

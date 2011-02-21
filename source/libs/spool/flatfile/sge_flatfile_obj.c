@@ -34,11 +34,12 @@
 #include <strings.h>
 #include <ctype.h>
 
-#include "msg_common.h"
 #include "rmon/sgermon.h"
-#include "sge_resource_utilization_RUE_L.h"
-#include "spool/flatfile/sge_flatfile.h"
-#include "spool/flatfile/msg_spoollib_flatfile.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_string.h"
+
+#include "sgeobj/sge_resource_utilization_RUE_L.h"
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_attr.h"
 #include "sgeobj/sge_calendar.h"
@@ -65,9 +66,12 @@
 #include "sgeobj/sge_advance_reservation.h"
 #include "sgeobj/sge_qref.h"
 #include "sgeobj/sge_job.h"
-#include "sge_mailrec.h"
-#include "uti/sge_log.h"
-#include "uti/sge_string.h"
+#include "sgeobj/sge_mailrec.h"
+
+#include "spool/flatfile/sge_flatfile.h"
+#include "spool/flatfile/msg_spoollib_flatfile.h"
+
+#include "msg_common.h"
 
 /* This file defines variables and functions that are used to create field
  * lists to pass to the flatfile spooling framework.  The reason that some

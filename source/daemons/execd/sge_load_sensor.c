@@ -35,18 +35,21 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "sge_bootstrap.h"
-#include "sge_unistd.h"
-#include "sge_loadsensor_LS_L.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_bootstrap.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_log.h"
+#include "uti/sge_string.h"
+#include "uti/sge_stdio.h"
+#include "uti/sge_prog.h"
+
+#include "sgeobj/sge_loadsensor_LS_L.h"
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_report.h"
+
 #include "sge_load_sensor.h"
-#include "sge_log.h"
-#include "sge_string.h"
-#include "sgermon.h"
-#include "sge_conf.h"
-#include "sge_stdio.h"
-#include "sge_prog.h"
 #include "sge_report_execd.h"
-#include "sge_report.h"
 
 #ifdef INTERIX
 #  include "wingrid.h"

@@ -37,6 +37,6 @@ extern "C" {
 #endif
 
 #include "basis_types.h"
-#include "sge_gdi_ctx.h"
+#include "gdi/sge_gdi_ctx.h"
 
 #endif /* __SGE_QRSTAT_H */

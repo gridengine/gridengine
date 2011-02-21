@@ -36,7 +36,7 @@
 extern "C" {
 #endif
 
-#include "sge_gdi_ctx.h"
+#include "gdi/sge_gdi_ctx.h"
 
 typedef struct qstat_env_str qstat_env_t;
 

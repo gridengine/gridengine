@@ -69,46 +69,32 @@ struct rusage {
 #   include <sys/times.h>
 #endif
 
-#include "basis_types.h"
-#include "config_file.h"
+#include "uti/config_file.h"
 #include "uti/sge_dstring.h"
 #include "uti/sge_stdlib.h"
 #include "uti/sge_stdio.h"
 #include "uti/sge_uidgid.h"
-#include "err_trace.h"
-#include "setrlimits.h"
-#include "signal_queue.h"
-#include "execution_states.h"
-#include "sge_signal.h"
-#include "sge_time.h"
-#include "sge_parse_num_par.h"
-#include "sgedefs.h"
-#include "exec_ifm.h"
-#include "pdc.h"
-#include "procfs.h"
-#include "builtin_starter.h"
-#include "sge_afsutil.h"
-#include "qlogin_starter.h"
-#include "sge_feature.h"
-#include "sge_os.h"
-#include "sge_pset.h"
-#include "sge_shepconf.h"
-#include "sge_mt_init.h"
-#include "msg_common.h"
-#include "version.h"
-#include "sge_fileio.h"
-#include "sge_stdio.h"
-#include "sge_job.h"
+#include "uti/sge_stdio.h"
+#include "uti/sge_signal.h"
+#include "uti/sge_time.h"
+#include "uti/sge_parse_num_par.h"
+#include "uti/sge_afsutil.h"
+#include "uti/sge_os.h"
+#include "uti/sge_pty.h"
 
-#include "sge_report.h"
+#include "gdi/version.h"
+
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_report.h"
+#include "sgeobj/sge_feature.h"
 
 #if defined(IRIX)
-#include "sge_processes_irix.h"
+#  include "sge_processes_irix.h"
 #endif
 
 #if defined(INTERIX)
 #include "../../../utilbin/sge_passwd.h"
-#include "windows_gui.h"
+#include "wingrid/windows_gui.h"
 #endif
 
 #if defined(DARWIN)
@@ -126,11 +112,26 @@ struct rusage {
 #  include <termio.h>
 #endif
 
-#include "sge_pty.h"
 #include "sge_ijs_threads.h"
 #include "sge_ijs_comm.h"
 #include "sge_shepherd_ijs.h"
 #include "shepherd.h"
+#include "sge_pset.h"
+#include "sge_shepconf.h"
+#include "sge_mt_init.h"
+#include "sge_fileio.h"
+#include "basis_types.h"
+#include "qlogin_starter.h"
+#include "sgedefs.h"
+#include "exec_ifm.h"
+#include "pdc.h"
+#include "procfs.h"
+#include "builtin_starter.h"
+#include "err_trace.h"
+#include "setrlimits.h"
+#include "signal_queue.h"
+#include "execution_states.h"
+#include "msg_common.h"
 
 #if defined(SOLARIS) || defined(ALPHA)
 /* ALPHA4 only has wait3() prototype if _XOPEN_SOURCE_EXTENDED is defined */

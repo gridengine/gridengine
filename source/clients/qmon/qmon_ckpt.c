@@ -45,10 +45,6 @@
 #include <Xmt/MsgLine.h>
 #include <Xmt/InputField.h>
 
-#include "sge_all_listsL.h"
-#include "sge_answer.h"
-#include "sge_ckpt.h"
-#include "commlib.h"
 #include "qmon_proto.h"
 #include "qmon_rmon.h"
 #include "qmon_cull.h"
@@ -61,6 +57,12 @@
 #include "qmon_ckpt.h"
 #include "qmon_globals.h"
 #include "AskForItems.h"
+
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_ckpt.h"
+
+#include "comm/commlib.h"
 
 #include "gdi/sge_gdi.h"
 

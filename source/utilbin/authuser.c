@@ -83,7 +83,7 @@
 #endif
 
 #include "msg_utilbin.h"
-#include "juti.h"
+#include "juti/juti.h"
 
 #if 0
 #define DEBUG 1

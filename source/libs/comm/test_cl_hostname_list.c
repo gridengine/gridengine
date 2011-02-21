@@ -41,11 +41,8 @@
 #include <arpa/inet.h>  /* for inet_makeaddr() */
 #include <netinet/in.h>
 
-#include "cl_commlib.h"
-#include "cl_host_list.h"
-
-
-
+#include "comm/cl_commlib.h"
+#include "comm/cl_host_list.h"
 
 extern int
 main(int argc, char** argv)

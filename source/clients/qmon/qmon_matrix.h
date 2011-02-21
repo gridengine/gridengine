@@ -33,6 +33,7 @@
 /*___INFO__MARK_END__*/
 
 #include "Matrix.h"
+#include "cull/cull_list.h"
 
 #define CE_TYPE_REDUCED       0
 #define CE_TYPE_FULL          1

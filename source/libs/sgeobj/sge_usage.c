@@ -34,8 +34,8 @@
 
 #include "cull/cull.h"
 
-#include "sge_usage.h"
-#include "sge_host.h"
+#include "sgeobj/sge_usage.h"
+#include "sgeobj/sge_host.h"
 
 /****** sgeobj/usage/usage_list_get_ulong_usage() *****************************
 *  NAME

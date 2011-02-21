@@ -34,23 +34,26 @@
 #include <string.h>
 #include <errno.h>
 
-#include "sgermon.h"
-#include "sge_schedd_conf.h"
-#include "sge_usage.h"
-#include "sge_conf.h"
-#include "sched_conf_qmaster.h"
-#include "sge_event_master.h"
-#include "sge_sched.h"
-#include "sge_log.h"
-#include "setup_path.h"
-#include "sge_answer.h"
-#include "sge_centry.h"
-#include "sge_conf.h"
-#include "configuration_qmaster.h"
+#include "rmon/sgermon.h"
 
-#include "sge_persistence_qmaster.h"
+#include "uti/sge_log.h"
+#include "uti/setup_path.h"
+
+#include "sgeobj/sge_schedd_conf.h"
+#include "sgeobj/sge_usage.h"
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_conf.h"
+
+#include "sched/sge_sched.h"
+
 #include "spool/sge_spooling.h"
 
+#include "sched_conf_qmaster.h"
+#include "sge_event_master.h"
+#include "configuration_qmaster.h"
+#include "sge_persistence_qmaster.h"
 #include "msg_qmaster.h"
 #include "msg_common.h"
 

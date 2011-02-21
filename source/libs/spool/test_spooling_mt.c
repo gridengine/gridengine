@@ -36,25 +36,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-/* lck */
-#include "sge_lock.h"
+#include "lck/sge_lock.h"
 
-/* rmon */
-#include "sgermon.h"
+#include "rmon/sgermon.h"
 
-/* uti */
-#include "sge_log.h"
-#include "sge_unistd.h"
-#include "sge_dstring.h"
+#include "uti/sge_log.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_dstring.h"
 
-/* cull */
-#include "cull.h"
+#include "cull/cull.h"
 
-/* sgeobj */
-#include "sge_answer.h"
-#include "sge_job.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_job.h"
 
-/* spool */
 #include "spool/sge_spooling.h"
 #include "spool/loader/sge_spooling_loader.h"
 

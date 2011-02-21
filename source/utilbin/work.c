@@ -45,6 +45,8 @@
 #include "uti/sge_os.h"
 #include "uti/sge_unistd.h"
 
+#include "gdi/sge_gdi2.h"
+
 volatile int should_stop = 0;
 
 /* cpu load profile */

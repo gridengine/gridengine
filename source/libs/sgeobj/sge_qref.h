@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_qref_QR_L.h"
+#include "sgeobj/sge_qref_QR_L.h"
 
 bool
 qref_list_add(lList **this_list, lList **answer_list, 

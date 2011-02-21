@@ -1,8 +1,3 @@
-#include <stdio.h>
-#include <errno.h>
-#include <stdlib.h>
-
-#include "cl_handle_list.h"
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  *
@@ -35,7 +30,11 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include <stdio.h>
+#include <errno.h>
+#include <stdlib.h>
 
+#include "comm/cl_handle_list.h"
 
 int cl_handle_list_setup(cl_raw_list_t** list_p, char* list_name) {  /* CR check */
    return cl_raw_list_setup(list_p,list_name, 1); /* enable list locking */

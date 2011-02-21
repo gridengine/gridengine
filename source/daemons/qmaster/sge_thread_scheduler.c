@@ -36,8 +36,6 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#include "basis_types.h"
-
 #include "comm/cl_commlib.h"
 
 #include "rmon/sgermon.h"
@@ -61,22 +59,20 @@
 #include "sgeobj/sge_schedd_conf.h"
 
 #include "gdi/sge_security.h"
-
-#include "sched/sge_serf.h"
-
-#include "sge_advance_reservation_qmaster.h"
-#include "sge_sched_process_events.h"
-
 #include "gdi/sge_gdi_packet.h"
 
+#include "sched/sge_serf.h"
+#include "sched/schedd_monitor.h"
+
+#include "basis_types.h"
 #include "sge_sched_job_category.h"
 #include "sge_sched_order.h"
-
 #include "sge_thread_main.h"
 #include "sge_thread_scheduler.h"
 #include "setup_qmaster.h"
 #include "sge_qmaster_timed_event.h"
-#include "schedd_monitor.h"
+#include "sge_advance_reservation_qmaster.h"
+#include "sge_sched_process_events.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"

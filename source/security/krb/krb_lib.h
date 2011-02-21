@@ -35,7 +35,7 @@
 #include <sys/types.h>
 #include <krb5.h>
 
-#include "cull_list.h"
+#include "cull/cull_list.h"
 
 #define krb5_xfree(val) free((char FAR *)(val))
 

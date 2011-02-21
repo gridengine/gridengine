@@ -39,7 +39,7 @@
 
 #include "basis_types.h"
 #include "msg_utilbin.h"
-#include "sge_uidgid.h"
+#include "uti/sge_uidgid.h"
 
 
 void usage(void)

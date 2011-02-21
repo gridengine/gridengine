@@ -40,8 +40,8 @@
 
 #include "uti/sge_language.h"
 
-#include "cl_lists.h"
-#include "cl_commlib.h"
+#include "comm/lists/cl_lists.h"
+#include "comm/cl_commlib.h"
 
 void sighandler_client(int sig);
 static int do_shutdown = 0;

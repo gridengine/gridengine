@@ -32,12 +32,13 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "cull.h"
-#include "sge_gdi.h"
+#include "cull/cull.h"
 
-#include "sge_object.h"
+#include "gdi/sge_gdi.h"
 
-#include "sge_event.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_event.h"
+
 #include "evc/sge_event_client.h"
 
 /****** Eventmirror/--Eventmirror ***************************************

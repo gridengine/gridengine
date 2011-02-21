@@ -41,7 +41,6 @@
 #include <Xmt/Chooser.h>
 #include <Xmt/InputField.h>
 
-
 #include "qmon_rmon.h"
 #include "qmon_cull.h"
 #include "qmon_qcustom.h"
@@ -49,14 +48,17 @@
 #include "qmon_util.h"
 #include "qmon_request.h"
 #include "qmon_comm.h"
-#include "sge_sched.h"      
-#include "sge_all_listsL.h"
-#include "IconList.h"
 #include "qmon_preferences.h"
 #include "qmon_message.h"
-#include "sge_bitfield.h"
-#include "sge_qinstance_state.h"
+#include "IconList.h"
+
+#include "uti/sge_bitfield.h"
 #include "uti/sge_string.h"
+
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_qinstance_state.h"
+
+#include "sched/sge_sched.h"      
 
 /*-------------------------------------------------------------------------*/
 /* Prototypes */

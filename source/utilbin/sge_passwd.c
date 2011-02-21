@@ -65,12 +65,12 @@
 #include "uti/sge_string.h"
 #include "uti/sge_stdlib.h"
 #if defined(DEFINE_SGE_PASSWD_MAIN)
-#include "sgermon.h"
+#include "rmon/sgermon.h"
 #endif
 
 #include "sge_passwd.h"
 #include "msg_utilbin.h"
-#include "msg_gdilib.h"
+#include "gdi/msg_gdilib.h"
 
 #if !defined(DEFINE_SGE_PASSWD_MAIN)
 #define DENTER(x,y)

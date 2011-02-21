@@ -29,21 +29,22 @@
  *
  ************************************************************************/
 
-#include "sge.h"
-#include "sgermon.h"
-#include "sge_conf.h"
-#include "sge_log.h"
-#include "sge_unistd.h"
+#include "rmon/sgermon.h"
 
-#include "sge_answer.h"
-#include "sge_cuser.h"
-#include "sge_cuser_qconf.h"
-#include "parse_qconf.h"
-#include "sge_edit.h"
+#include "uti/sge_log.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_edit.h"
+
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_cuser.h"
+#include "sgeobj/sge_conf.h"
 
 #include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi_ctx.h"
 
+#include "sge.h"
+#include "sge_cuser_qconf.h"
+#include "parse_qconf.h"
 #include "msg_common.h"
 #include "msg_qconf.h"
 

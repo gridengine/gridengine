@@ -51,7 +51,6 @@
 
 #include "sge.h"
 #include "sge_hgroup_qconf.h"
-
 #include "msg_common.h"
 #include "msg_clients_common.h"
 

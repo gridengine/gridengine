@@ -67,12 +67,12 @@
 #include "gdi/qm_name.h"
 #include "gdi/sge_gdiP.h"
 #include "gdi/sge_security.h"
+#include "gdi/msg_gdilib.h"
 
 #include "execution_states.h"
 #include "dispatcher.h"
 
 #include "msg_common.h"
-#include "msg_gdilib.h"
 #include "msg_qmaster.h"
 
 #ifdef CRYPTO
@@ -80,7 +80,7 @@
 #endif
 
 #ifdef INTERIX
-#include "wingrid.h"
+#include "wingrid/wingrid.h"
 #endif
 
 #define ENCODE_TO_STRING   1

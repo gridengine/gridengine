@@ -35,7 +35,7 @@
  Structures for architecture depended data
  ****************************************************************/
 
-#include "sge_dstring.h"
+#include "uti/sge_dstring.h"
 
 struct all_drsuage {
    char        *arch;

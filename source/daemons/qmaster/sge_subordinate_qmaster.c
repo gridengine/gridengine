@@ -31,29 +31,33 @@
 /*___INFO__MARK_END__*/
 #include <string.h>
 
-#include "sgermon.h"
-#include "sge_log.h"
-#include "sge_time.h"
-#include "sge_conf.h"
-#include "sge_sched.h"
-#include "sge_signal.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_time.h"
+#include "uti/sge_signal.h"
+#include "uti/sge_string.h"
+#include "uti/sge_hostname.h"
+#include "uti/sge_sl.h"
+
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_qinstance_state.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_subordinate.h"
+#include "sgeobj/sge_qref.h"
+#include "sgeobj/sge_ja_task_JAT_L.h"
+
+#include "sched/sge_sched.h"
+
 #include "sge_event_master.h"
 #include "sge_qmod_qmaster.h"
 #include "sge_qinstance_qmaster.h"
 #include "sge_subordinate_qmaster.h"
 #include "msg_qmaster.h"
-#include "sge_string.h"
-#include "sge_hostname.h"
-#include "sge_answer.h"
-#include "sge_qinstance.h"
-#include "sge_qinstance_state.h"
-#include "sge_job.h"
-#include "sge_cqueue.h"
-#include "sge_object.h"
-#include "sge_subordinate.h"
-#include "sge_qref.h"
-#include "sge_ja_task_JAT_L.h"
-#include "sge_sl.h"
 
 static bool
 qinstance_x_on_subordinate(sge_gdi_ctx_class_t *ctx,

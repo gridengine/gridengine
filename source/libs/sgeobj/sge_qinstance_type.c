@@ -35,13 +35,14 @@
 #include "uti/sge_log.h"
 
 #include "cull/cull.h"
-#include "cull_parse_util.h"
 
-#include "parse.h"
-#include "sge_answer.h"
-#include "sge_qinstance.h"
-#include "sge_qinstance_type.h"
-#include "sge_utility.h"
+#include "sgeobj/cull_parse_util.h"
+#include "sgeobj/parse.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_qinstance_type.h"
+#include "sgeobj/sge_utility.h"
+
 #include "msg_common.h"
 
 #define QINSTANCE_TYPE_LAYER TOP_LAYER

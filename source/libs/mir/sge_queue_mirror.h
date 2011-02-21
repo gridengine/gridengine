@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_object.h"
+#include "sgeobj/sge_object.h"
 
 sge_callback_result
 cqueue_update_master_list(sge_evc_class_t *evc, object_description *object_base, sge_object_type type, 

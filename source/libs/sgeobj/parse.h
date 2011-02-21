@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_parse_SPA_L.h"
+#include "sgeobj/sge_parse_SPA_L.h"
 
 /* Group Option Constants */
 #define GROUP_DEFAULT            0x00000000

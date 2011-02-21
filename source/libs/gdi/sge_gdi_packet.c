@@ -58,15 +58,15 @@
 #include "sgeobj/sge_feature.h"
 #include "sgeobj/sge_multi_MA_L.h"
 
-#include "sge_gdi2.h"
-#include "sge_gdiP.h"
-#include "sge_gdi_packet.h"
-#include "sge_gdi_packet_pb_cull.h"
-#include "version.h"
-#include "sge_security.h"
+#include "gdi/sge_gdi2.h"
+#include "gdi/sge_gdiP.h"
+#include "gdi/sge_gdi_packet.h"
+#include "gdi/sge_gdi_packet_pb_cull.h"
+#include "gdi/version.h"
+#include "gdi/sge_security.h"
+#include "gdi/msg_gdilib.h"
 
 #include "msg_common.h"
-#include "msg_gdilib.h"
 #include "msg_qmaster.h"
 
 /****** gdi/request_internal/--Packets_and_Taks() *****************************

@@ -32,9 +32,10 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_gdi.h"
 #include "qmon_proto.h"
 #include "qmon_cull.h"
+
+#include "gdi/sge_gdi.h"
 
 #define ADMINHOST_T           (1<<0)
 #define SUBMITHOST_T          (1<<1)

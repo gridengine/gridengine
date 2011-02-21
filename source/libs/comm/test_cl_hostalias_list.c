@@ -37,11 +37,8 @@
 #include <unistd.h>
 #include <signal.h>
 
-#include "cl_commlib.h"
-#include "cl_host_alias_list.h"
-
-
-
+#include "comm/cl_commlib.h"
+#include "comm/cl_host_alias_list.h"
 
 extern int
 main(int argc, char** argv)

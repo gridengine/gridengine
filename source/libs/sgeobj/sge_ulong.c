@@ -44,11 +44,12 @@
 #include "uti/sge_dstring.h"
 #include "uti/sge_parse_num_par.h"
 
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_ulong.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/msg_sgeobjlib.h"
+
 #include "basis_types.h"
-#include "sge_answer.h"
-#include "sge_ulong.h"
-#include "sge_centry.h"
-#include "msg_sgeobjlib.h"
 
 #define ULONG_LAYER TOP_LAYER
 

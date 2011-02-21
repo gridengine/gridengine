@@ -39,19 +39,21 @@
 #define NO_SGE_COMPILE_DEBUG
 #endif
 
-#include "sge_log.h"
-#include "sgermon.h"
-#include "cull_listP.h"
-#include "cull_list.h"
-#include "cull_db.h"
-#include "cull_parse.h"
-#include "cull_multitype.h"
-#include "cull_whatP.h"
-#include "cull_lerrnoP.h"
+#include "rmon/sgermon.h"
 
-#include "pack.h"
-#include "cull_pack.h"
-#include "msg_gdilib.h"
+#include "uti/sge_log.h"
+
+#include "cull/cull_listP.h"
+#include "cull/cull_list.h"
+#include "cull/cull_db.h"
+#include "cull/cull_parse.h"
+#include "cull/cull_multitype.h"
+#include "cull/cull_whatP.h"
+#include "cull/cull_lerrnoP.h"
+#include "cull/pack.h"
+#include "cull/cull_pack.h"
+
+#include "gdi/msg_gdilib.h"
 
 static lEnumeration *subscope_lWhat(cull_parse_state* state, va_list *app);
 

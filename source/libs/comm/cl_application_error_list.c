@@ -1,8 +1,3 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-
-
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  *
@@ -35,8 +30,12 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "cl_application_error_list.h"
-#include "cl_commlib.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+#include "comm/cl_application_error_list.h"
+#include "comm/cl_commlib.h"
 
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__

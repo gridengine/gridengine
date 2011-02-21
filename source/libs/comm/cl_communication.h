@@ -33,10 +33,10 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "cl_data_types.h"
-#include "cl_list_types.h"
-#include "cl_xml_parsing.h"
-#include "cl_connection_list.h"
+#include "comm/lists/cl_list_types.h"
+#include "comm/cl_data_types.h"
+#include "comm/cl_xml_parsing.h"
+#include "comm/cl_connection_list.h"
 
 #define CL_DEFINE_READ_TIMEOUT                       30
 #define CL_DEFINE_WRITE_TIMEOUT                      30

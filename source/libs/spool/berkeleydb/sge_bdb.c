@@ -40,8 +40,8 @@
 #include <string.h>
 
 #include "rmon/sgermon.h"
-#include "uti/sge_log.h"
 
+#include "uti/sge_log.h"
 #include "uti/sge_profiling.h"
 #include "uti/sge_string.h"
 #include "uti/sge_unistd.h"
@@ -55,11 +55,10 @@
 #include "sgeobj/sge_object.h"
 #include "sgeobj/sge_str.h"
 
-/* local */
-#include "msg_common.h"
 #include "spool/berkeleydb/msg_spoollib_berkeleydb.h"
-
 #include "spool/berkeleydb/sge_bdb.h"
+
+#include "msg_common.h"
 
 #if 1
 static const int pack_part = CULL_SPOOL | CULL_SUBLIST | CULL_SPOOL_PROJECT | 

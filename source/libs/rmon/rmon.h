@@ -35,8 +35,8 @@
 #include <stdarg.h>
 #include <sys/types.h>
 
-#include "rmon_monitoring_level.h"
-#include "cl_commlib.h"
+#include "rmon/rmon_monitoring_level.h"
+#include "comm/cl_commlib.h"
 
 typedef void              (*rmon_print_callback_func_t) (const char *message, unsigned long traceid, unsigned long pid, unsigned long thread_id);
 

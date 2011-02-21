@@ -36,26 +36,29 @@
 #include <errno.h>
 
 #include "rmon/sgermon.h"
+
 #include "uti/sge_string.h"
 #include "uti/sge_stdio.h"
-#include "sge_all_listsL.h"
-#include "sge_bootstrap.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "sge_unistd.h"
-#include "sge_dstring.h"
-#include "sge_spool.h"
-#include "sge_uidgid.h"
-#include "setup_path.h"
-#include "sge_prog.h"
-#include "sge_feature.h"
-#include "sge_answer.h"
-#include "sge_mt_init.h"
+#include "uti/sge_bootstrap.h"
+#include "uti/sge_log.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_dstring.h"
+#include "uti/sge_spool.h"
+#include "uti/sge_uidgid.h"
+#include "uti/setup_path.h"
+#include "uti/sge_prog.h"
+
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_answer.h"
+
 #include "spool/sge_spooling.h"
 #include "spool/loader/sge_spooling_loader.h"
 #include "spool/berkeleydb/sge_bdb.h"
+
 #include "gdi/sge_gdi_ctx.h"
 
+#include "sge_mt_init.h"
 #include "msg_common.h"
 #include "msg_utilbin.h"
 

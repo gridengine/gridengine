@@ -41,12 +41,13 @@
 #include <dlfcn.h>
 #include <pthread.h>
 
-#include "sge_smf.h"
-#include "sge_string.h"
-#include "sge_log.h"
-#include "sgermon.h"
-#include "sge_uidgid.h"
-#include "msg_utilib.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_smf.h"
+#include "uti/sge_string.h"
+#include "uti/sge_log.h"
+#include "uti/sge_uidgid.h"
+#include "uti/msg_utilib.h"
 
 #if defined(__SunOS_5_7) || defined(__SunOS_5_8) || defined(__SunOS_5_9)
    /* Redefinitions from S10+ sys/types.h */

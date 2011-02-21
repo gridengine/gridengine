@@ -39,23 +39,23 @@
 #include "uti/sge_log.h"
 #include "uti/sge_dstring.h"
 #include "uti/sge_signal.h"
+#include "uti/sge_sl.h"
 
 #include "cull/cull_list.h"
-#include "sge_all_listsL.h"
+
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_event.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_qinstance_state.h"
+#include "sgeobj/sge_qref.h"
+#include "sgeobj/sge_subordinate.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/msg_sgeobjlib.h"
 
 #include "sge.h"
-#include "sge_answer.h"
-#include "sge_object.h"
-#include "sge_cqueue.h"
-#include "sge_event.h"
-#include "sge_qinstance.h"
-#include "sge_qinstance_state.h"
-#include "sge_qref.h"
-#include "sge_subordinate.h"
-#include "sge_sl.h"
-#include "sge_job.h"
-
-#include "msg_sgeobjlib.h"
 
 /* -----------------------------------------------
 

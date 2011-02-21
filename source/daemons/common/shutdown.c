@@ -31,14 +31,16 @@
 /*___INFO__MARK_END__*/
 #include <stdio.h>
 
-#include "sge_unistd.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "sge_feature.h"
-#include "shutdown.h"
-#include "setup_path.h"
-#include "sge_arch.h"
+#include "rmon/sgermon.h"
 
+#include "uti/sge_unistd.h"
+#include "uti/sge_log.h"
+#include "uti/setup_path.h"
+#include "uti/sge_arch.h"
+
+#include "sgeobj/sge_feature.h"
+
+#include "shutdown.h"
 #include "msg_daemons_common.h"
 
 void starting_up()

@@ -30,7 +30,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_tmpnam.h"
+#include "uti/sge_tmpnam.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -41,12 +41,14 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 
+#include "rmon/sgermon.h"
+
+#include "uti/sge_dstring.h"
+#include "uti/sge_string.h"
+#include "uti/sge_unistd.h"
+#include "uti/msg_utilib.h"
+
 #include "basis_types.h"
-#include "sge_dstring.h"
-#include "sge_string.h"
-#include "sgermon.h"
-#include "sge_unistd.h"
-#include "msg_utilib.h"
 
 static int elect_path(dstring *aBuffer);
 static int spawn_file(dstring *aBuffer, dstring *error_message);

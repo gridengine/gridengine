@@ -34,7 +34,7 @@
 
 #include "sgeobj/sge_feature.h"
 
-#include "pack_job_delivery.h"
+#include "gdi/pack_job_delivery.h"
 
 /****** pack_job_delivery/pack_job_delivery() **********************************
 *  NAME

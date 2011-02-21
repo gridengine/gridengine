@@ -71,12 +71,13 @@ struct rusage {
 #  define NEC_UNDEF_VALUE (-999)
 #endif 
 
-#include "basis_types.h"
-#include "config_file.h"
-#include "err_trace.h"
-#include "setosjobid.h"
+#include "uti/config_file.h"
 #include "uti/sge_uidgid.h"
 #include "uti/sge_stdio.h"
+
+#include "basis_types.h"
+#include "err_trace.h"
+#include "setosjobid.h"
 
 #if defined(NECSX4) || defined(NECSX5)
 static void print_scheduling_parameters(dispset2_t attr);

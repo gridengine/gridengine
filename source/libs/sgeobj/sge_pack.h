@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_pack_PACK_L.h"
+#include "sgeobj/sge_pack_PACK_L.h"
 
 enum {
    SGE_WHAT=1,

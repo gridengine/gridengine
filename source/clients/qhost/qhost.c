@@ -34,36 +34,40 @@
 #include <limits.h>
 #include <math.h>
 
-#include "basis_types.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_bootstrap.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_stdlib.h"
+#include "uti/sge_hostname.h"
+#include "uti/sge_log.h"
+#include "uti/sge_profiling.h"
+
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/parse.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_cull_xml.h"
+
+#include "gdi/sge_gdi.h"
+#include "gdi/sge_gdi_ctx.h"
+
+#include "sched/sge_select_queue.h"
+
+#include "comm/commlib.h"
+
 #include "sge.h"
-
-#include "sge_bootstrap.h"
-
-#include "sge_all_listsL.h"
-#include "commlib.h"
+#include "basis_types.h"
 #include "sig_handlers.h"
-#include "sge_prog.h"
-#include "sgermon.h"
-#include "sge_feature.h"
-#include "sge_unistd.h"
-#include "sge_stdlib.h"
-#include "parse.h"
-#include "sge_host.h"
-#include "sge_select_queue.h"
 #include "qstat_printing.h"
-#include "sge_range.h"
+#include "sge_qhost.h"
 #include "msg_common.h"
 #include "msg_clients_common.h"
 #include "msg_qhost.h"
-#include "sge_hostname.h"
-#include "sge_log.h"
-#include "sge_answer.h"
-#include "sge_centry.h"
-#include "sge_profiling.h"
-#include "sge_qhost.h"
-#include "gdi/sge_gdi.h"
-#include "gdi/sge_gdi_ctx.h"
-#include "sgeobj/sge_cull_xml.h"
 
 extern char **environ;
 

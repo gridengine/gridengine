@@ -32,7 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "msg_utilbin.h"
-#include "sge_language.h"
+#include "uti/sge_language.h"
 
 void usage(void)
 {

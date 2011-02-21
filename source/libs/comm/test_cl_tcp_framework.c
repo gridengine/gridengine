@@ -39,10 +39,10 @@
 #include <stdlib.h>
 #include <sys/time.h>
 
-#include "cl_lists.h"
-#include "cl_tcp_framework.h"
-#include "cl_communication.h"
-#include "cl_connection_list.h"
+#include "comm/lists/cl_lists.h"
+#include "comm/cl_tcp_framework.h"
+#include "comm/cl_communication.h"
+#include "comm/cl_connection_list.h"
 
 
 void sighandler(int sig);

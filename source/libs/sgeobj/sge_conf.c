@@ -61,17 +61,17 @@
 #include "gdi/sge_gdi.h"
 
 #include "sgeobj/msg_sgeobjlib.h"
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_usage.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_userprj.h"
+#include "sgeobj/sge_userset.h"
 
 #include "sge.h"
 #include "basis_types.h"
-#include "sge_conf.h"
-#include "sge_feature.h"
-#include "sge_usage.h"
 #include "sge_userset_qmaster.h"
-#include "sge_host.h"
-#include "sge_answer.h"
-#include "sge_userprj.h"
-#include "sge_userset.h"
 
 #define SGE_BIN "bin"
 #define STREESPOOLTIMEDEF 240

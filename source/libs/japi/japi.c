@@ -80,6 +80,7 @@
 #include "gdi/sge_gdi.h"
 #include "gdi/sge_gdiP.h"
 #include "gdi/sge_security.h"
+#include "gdi/sge_gdi2.h"
 
 /* SGEOBJ */
 #include "sgeobj/sge_cqueue.h"

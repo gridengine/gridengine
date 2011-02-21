@@ -41,15 +41,15 @@
 #include "uti/sge_hostname.h"
 #include "uti/sge_string.h"
 
-#include "sge_answer.h"
-#include "parse.h"
-#include "sge_utility.h"
-#include "sge_hgroup.h"
-#include "sge_userset.h"
-#include "sge_object.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/parse.h"
+#include "sgeobj/sge_utility.h"
+#include "sgeobj/sge_hgroup.h"
+#include "sgeobj/sge_userset.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/msg_sgeobjlib.h"
 
 #include "msg_common.h"
-#include "msg_sgeobjlib.h"
 
 const char* userset_types[] = {
    "ACL",   /* US_ACL   */

@@ -6069,7 +6069,7 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
       CL_LOG(CL_LOG_ERROR,"could not setup connection");
       cl_com_close_connection(&new_con);
       sge_free(&unique_hostname);
-      sge_free(&receiver.hash_id);
+      sge_free(&(receiver.hash_id));
       receiver.comp_host = NULL;
       /* unlock connection list */
       pthread_mutex_unlock(handle->connection_list_mutex);
@@ -6092,7 +6092,7 @@ int cl_commlib_open_connection(cl_com_handle_t* handle, char* un_resolved_hostna
       CL_LOG(CL_LOG_ERROR,"could not open connection");
       cl_com_close_connection(&new_con);
       sge_free(&unique_hostname);
-      sge_free(&receiver.hash_id);
+      sge_free(&(receiver.hash_id));
       receiver.comp_host = NULL;
 
       /* unlock connection list */
@@ -6427,7 +6427,7 @@ int cl_commlib_get_endpoint_status(cl_com_handle_t* handle, char* un_resolved_ho
    /* we return as fast as possible with error */
    if (return_value != CL_RETVAL_OK) {
       sge_free(&unique_hostname);
-      sge_free(&receiver.hash_id);
+      sge_free(&(receiver.hash_id));
       return return_value;
    }
 

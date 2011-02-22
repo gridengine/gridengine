@@ -305,7 +305,7 @@ sge_sub_object_cpp.o: $(SGEOBJLIB_DIR)/sge_sub_object_cpp.c
 		touch sge_sub_object_cpp.o
 
 sge_sub_object.c: sge_sub_object_cpp.o $(SGEOBJLIB_DIR)/sge_sub_object_cpp.c ../scripts/gen_subtype_info.sh
-		$(CC) $(CFLAGS) -E -c $(SGEOBJLIB_DIR)/sge_sub_object_cpp.c | grep __SUBTYPE_MAPPING__ | ../scripts/gen_subtype_info.sh sge_sub_object.c
+		$(CC) $(CFLAGS) -E $(SGEOBJLIB_DIR)/sge_sub_object_cpp.c | grep __SUBTYPE_MAPPING__ | ../scripts/gen_subtype_info.sh sge_sub_object.c
 
 sge_sub_object.o: sge_sub_object.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c sge_sub_object.c

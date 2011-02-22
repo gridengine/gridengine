@@ -149,7 +149,7 @@ int cl_app_message_queue_remove(cl_raw_list_t* list_p, cl_com_connection_t* conn
       if (elem->rcv_connection == connection) {
          /* found matching element */
          cl_raw_list_remove_elem(list_p, elem->raw_elem);
-         sge_free(elem);
+         sge_free(&elem);
          function_return = CL_RETVAL_OK;
          if (remove_all_elements == CL_FALSE) {
              break; /* break here, we don't want to remove all elems */

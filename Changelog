@@ -8,7 +8,7 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
-EB-2011-02-21-0: Enhancem:    - changed arch script so that Snow Leopard will be 
+EB-2011-02-22-0: Enhancem:    - changed arch script so that Snow Leopard will be 
                                 recognized as darwin-x64 when latest path is 
                                 installed
                               - changed JSV script so that it does not fork 
@@ -18,7 +18,9 @@ EB-2011-02-21-0: Enhancem:    - changed arch script so that Snow Leopard will be
                               - changed distinst so that correct shared library 
                                 extension will be used
                               - fixed include paths
-                 Issue:       GE-3355 
+                              - fixed free partially
+                              - fixed compile problem on Open Indiana
+                 Issue:       GE-3355 GE-3346 GE-3356
                  Review:      TBD
 
 DG-2011-02-18-0: Cleanup:     Avoid qmaster core dump after getting un-

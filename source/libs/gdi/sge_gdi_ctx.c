@@ -2100,12 +2100,12 @@ bool sge_daemonize_prepare(sge_gdi_ctx_class_t *ctx) {
 
    /* create pipe */
    if ( pipe(fd_pipe) < 0) {
-      CRITICAL((SGE_EVENT, MSG_UTI_DAEMONIZE_CANT_PIPE));
+      CRITICAL((SGE_EVENT, SFNMAX, MSG_UTI_DAEMONIZE_CANT_PIPE));
       DRETURN(false);
    }
 
    if ( fcntl(fd_pipe[0], F_SETFL, O_NONBLOCK) != 0) {
-      CRITICAL((SGE_EVENT, MSG_UTI_DAEMONIZE_CANT_FCNTL_PIPE));
+      CRITICAL((SGE_EVENT, SFNMAX, MSG_UTI_DAEMONIZE_CANT_FCNTL_PIPE));
       DRETURN(false);
    }
 
@@ -2166,13 +2166,13 @@ bool sge_daemonize_prepare(sge_gdi_ctx_class_t *ctx) {
 
       switch(exit_status) {
          case SGE_DEAMONIZE_OK:
-            INFO((SGE_EVENT, MSG_UTI_DAEMONIZE_OK));
+            INFO((SGE_EVENT, SFNMAX, MSG_UTI_DAEMONIZE_OK));
             break;
          case SGE_DAEMONIZE_DEAD_CHILD:
-            WARNING((SGE_EVENT, MSG_UTI_DAEMONIZE_DEAD_CHILD));
+            WARNING((SGE_EVENT, SFNMAX, MSG_UTI_DAEMONIZE_DEAD_CHILD));
             break;
          case SGE_DAEMONIZE_TIMEOUT:
-            WARNING((SGE_EVENT, MSG_UTI_DAEMONIZE_TIMEOUT));
+            WARNING((SGE_EVENT, SFNMAX, MSG_UTI_DAEMONIZE_TIMEOUT));
             break;
       }
       /* close read pipe */
@@ -2296,6 +2296,10 @@ bool sge_daemonize_finalize(sge_gdi_ctx_class_t *ctx)
    DRETURN(true);
 }
 
+
+
+
+
 /****** uti/os/sge_daemonize() ************************************************
 *  NAME
 *     sge_daemonize() -- Daemonize the current application
@@ -2398,4 +2402,3 @@ int sge_daemonize(int *keep_open, unsigned long nr_of_fds, sge_gdi_ctx_class_t *
  
    DRETURN(1);
 }
-

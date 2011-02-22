@@ -28,6 +28,8 @@
  *   Copyright: 2001 by Sun Microsystems, Inc.
  * 
  *   All Rights Reserved.
+ *
+ *   Portions of this code are Copyright 2011 Univa Inc.
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
@@ -203,6 +205,7 @@
 #define MSG_TABLE_EV_NAME                         "NAME"
 #define MSG_QCONF_NOEXECUTIONHOSTSDEFINED         _MESSAGE(23168, _("no execution hosts defined"))
 #define MSG_QCONF_NOEVENTCLIENTSREGISTERED        _MESSAGE(23169, _("no event clients registered"))
+#define MSG_PARSE_XOPTIONWRONGARGUMENT_SS         _MESSAGE(23170, _("ERROR! "SFN" option contains errors: "SFN))
 #define MSG_ANSWER_COMPLEXXALREADYEXISTS_SS       _MESSAGE(23172, _("complex with name "SFN" or shortcut "SFN" already exists"))
 #define MSG_FILE_ERRORWRITINGUSERSETTOFILE        _MESSAGE(23196, _("error writing userset to file"))
 #define MSG_FILE_ERRORREADINGUSERSETFROMFILE_S    _MESSAGE(23197, _("error reading userset from file "SFN))

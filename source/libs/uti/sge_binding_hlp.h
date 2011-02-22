@@ -31,6 +31,8 @@
  * 
  *   All Rights Reserved.
  * 
+ *   Portions of this code are Copyright 2011 Univa Inc.
+ *
  ************************************************************************/
 
 /*___INFO__MARK_END__*/
@@ -68,9 +70,9 @@ int binding_striding_parse_first_core(const char* parameter);
 int binding_striding_parse_first_socket(const char* parameter);
 int binding_striding_parse_step_size(const char* parameter);
 
-bool binding_explicit_has_correct_syntax(const char* parameter);
-int get_explicit_amount(const char* expl);
-bool check_explicit_binding_string(const char* expl, const int amount);
+bool binding_explicit_has_correct_syntax(const char* parameter, dstring* error);
+int get_explicit_amount(const char* expl, const bool with_explicit_prefix);
+bool check_explicit_binding_string(const char* expl, const int amount, const bool with_explicit_prefix);
 
 #if defined(PLPA_LINUX)
 

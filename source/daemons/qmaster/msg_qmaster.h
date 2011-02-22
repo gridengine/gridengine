@@ -29,6 +29,8 @@
  *
  *  All Rights Reserved.
  *
+ *  Portions of this code are Copyright 2011 Univa Inc.
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
@@ -430,6 +432,7 @@
 #define MSG_SGETEXT_DOESNOTEXISTTASKRANGE_SUUU        _MESSAGE(33342, _("job \""SFN"\" task id range \"" sge_U32CFormat "-" sge_U32CFormat ":" sge_U32CFormat "\" comprises no tasks"))
 #define MSG_JSV_THRESHOLD_UU                          _MESSAGE(33343, _("JSV for job "sge_U32CFormat" took "sge_U32CFormat" ms"))
 #define MSG_JSV_BINDING_REJECTED                      _MESSAGE(33344, _("job rejected: binding parameters not consistent with strategy"))
+#define MSG_JSV_BINDING_REJECTED_SS                   _MESSAGE(33345, _("job rejected: binding parameter not consistent with strategy ("SFN" is "SFN")"))
 /*
 ** sge_manop.c
 */

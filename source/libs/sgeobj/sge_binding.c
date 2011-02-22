@@ -27,6 +27,8 @@
  * 
  *   All Rights Reserved.
  * 
+ *   Portions of this code are Copyright 2011 Univa Inc.
+ * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
@@ -3348,11 +3350,10 @@ binding_parse_from_string(lListElem *this_elem, lList **answer_list, dstring *st
                &socketcorelist, &error) != true) {
          dstring parse_binding_error = DSTRING_INIT;
 
-         sge_dstring_sprintf(&parse_binding_error, "-binding: ");
          sge_dstring_append_dstring(&parse_binding_error, &error);
 
          answer_list_add_sprintf(answer_list, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
-                                 MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S, 
+                                 MSG_PARSE_XOPTIONWRONGARGUMENT_SS, "-binding",  
                                  sge_dstring_get_string(&parse_binding_error));
 
          sge_dstring_free(&parse_binding_error);

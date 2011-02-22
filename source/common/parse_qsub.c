@@ -114,7 +114,7 @@ u_long32 flags
 ) {
    char **sp;
    lList *answer = NULL;
-   char str[1024 + 1];
+   char str[MAX_STRING_SIZE];
    lListElem *ep_opt;
    int i_ret;
    u_long32 is_qalter = flags & FLG_QALTER;
@@ -786,9 +786,7 @@ u_long32 flags
 
       if(!strcmp("-he", *sp)) {
          if (lGetElemStr(*pcmdline, SPA_switch, *sp)) {
-            sprintf(str,
-               MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S,
-               *sp);
+            snprintf(str, sizeof(str), MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S, *sp);
             answer_list_add(&answer, str, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
          }
          /* next field is yes/no switch */
@@ -1281,8 +1279,7 @@ u_long32 flags
       if (!strcmp("-P", *sp)) {
 
          if (lGetElemStr(*pcmdline, SPA_switch, *sp)) {
-            sprintf(str, MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S,
-               *sp);
+            snprintf(str, sizeof(str), MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S, *sp);
             answer_list_add(&answer, str, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
          }
 
@@ -1813,7 +1810,7 @@ DTRACE;
 
          sp++;
          if (!*sp) {
-             sprintf(str, MSG_PARSE_ATSIGNOPTIONMUSTHAVEFILEARGUMENT);
+             snprintf(str, sizeof(str), SFNMAX, MSG_PARSE_ATSIGNOPTIONMUSTHAVEFILEARGUMENT);
              answer_list_add(&answer, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;

@@ -1550,7 +1550,7 @@ void range_parse_from_string(lListElem **range,
    char *dptr;
    u_long32 rmin, rmax, ldummy, step = 1;
    lListElem *r;
-   char msg[BUFSIZ];
+   char msg[MAX_STRING_SIZE];
 
    DENTER(TOP_LAYER, "range_parse_from_string");
 
@@ -1693,7 +1693,7 @@ void range_parse_from_string(lListElem **range,
                      DRETURN_VOID;
                   }
                   else {
-                     sprintf( msg, MSG_GDI_NEGATIVSTEP );
+                     sprintf(msg, SFNMAX, MSG_GDI_NEGATIVSTEP );
                      answer_list_add(answer_list, msg, STATUS_ESYNTAX,
                                      ANSWER_QUALITY_ERROR);
                      lFreeElem(&r);
@@ -1768,7 +1768,7 @@ range_list_parse_from_string(lList **this_list, lList **answer_list,
         s; s = sge_strtok_r(NULL, RANGE_SEPARATOR_CHARS, &context)) {
       if (!first && undefined) {
          /* first was undefined - no more ranges allowed */
-         ERROR((SGE_EVENT, MSG_GDI_UNEXPECTEDRANGEFOLLOWINGUNDEFINED));
+         ERROR((SGE_EVENT, SFNMAX, MSG_GDI_UNEXPECTEDRANGEFOLLOWINGUNDEFINED));
          sge_free_saved_vars(context);
          answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX,
                          ANSWER_QUALITY_ERROR);
@@ -1784,7 +1784,7 @@ range_list_parse_from_string(lList **this_list, lList **answer_list,
             undefined = true;
          } else {
             /* second range may not be undefined ! */
-            ERROR((SGE_EVENT, MSG_GDI_UNEXPECTEDUNDEFINEDFOLLOWINGRANGE));
+            ERROR((SGE_EVENT, SFNMAX, MSG_GDI_UNEXPECTEDUNDEFINEDFOLLOWINGRANGE));
             sge_free_saved_vars(context);
             answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX,
                             ANSWER_QUALITY_ERROR);

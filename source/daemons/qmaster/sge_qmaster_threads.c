@@ -110,7 +110,7 @@ void sge_gdi_kill_master(sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *t
 
    if (sge_gdi_packet_parse_auth_info(packet, &(task->answer_list), &uid, username, sizeof(username), 
                                   &gid, groupname, sizeof(groupname)) == -1) {
-      ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));
+      ERROR((SGE_EVENT, SFNMAX, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));
       answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
       DEXIT;
       return;
@@ -119,7 +119,7 @@ void sge_gdi_kill_master(sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *t
    DPRINTF(("uid/username = %d/%s, gid/groupname = %d/%s\n", (int) uid, username, (int) gid, groupname));
 
    if (!manop_is_manager(username)) {
-      ERROR((SGE_EVENT, MSG_SHUTDOWN_SHUTTINGDOWNQMASTERREQUIRESMANAGERPRIVILEGES));
+      ERROR((SGE_EVENT, SFNMAX, MSG_SHUTDOWN_SHUTTINGDOWNQMASTERREQUIRESMANAGERPRIVILEGES));
       answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
       DEXIT;
       return;
@@ -250,17 +250,17 @@ bool sge_daemonize_qmaster()
 *******************************************************************************/
 void sge_become_admin_user(const char *admin_user)
 {
-   char str[1024];
+   char str[MAX_STRING_SIZE];
 
    DENTER(TOP_LAYER, "sge_become_admin_user");
 
    if (sge_set_admin_username(admin_user, str) == -1) {
-      CRITICAL((SGE_EVENT, str));
+      CRITICAL((SGE_EVENT, SFNMAX, str));
       SGE_EXIT(NULL, 1);
    }
 
    if (sge_switch2admin_user()) {
-      CRITICAL((SGE_EVENT, MSG_ERROR_CANTSWITCHTOADMINUSER));
+      CRITICAL((SGE_EVENT, SFNMAX, MSG_ERROR_CANTSWITCHTOADMINUSER));
       SGE_EXIT(NULL, 1);
    }
 

@@ -3877,14 +3877,14 @@ static char *drmaa_time2sge_time(const char *drmaa_time, dstring *diag)
 static char *drmaa_expand_wd_path(const char*username, const char *path, lList **answer_list)
 {
    char *file = NULL;
-   char str[256 + 1];
+   char str[MAX_STRING_SIZE];
    
    DENTER(TOP_LAYER, "drmaa_expand_wd_path");
    DPRINTF(("Expanding \"%s\"\n", path));
 
    /* First look for the job index placeholder.  It is illegal. */
    if (strstr(path, "$TASK_ID") != NULL) {
-         sprintf(str, MSG_DRMAA_INC_NOT_ALLOWED);
+         snprintf(str, sizeof(str), SFNMAX, MSG_DRMAA_INC_NOT_ALLOWED);
          answer_list_add(answer_list, str, STATUS_ENOSUCHUSER, 
                          ANSWER_QUALITY_ERROR);
          DRETURN(NULL);
@@ -3943,7 +3943,7 @@ static char *drmaa_expand_wd_path(const char*username, const char *path, lList *
 static char *drmaa_get_home_directory(const char* username, lList **answer_list)
 {
    struct passwd *pwd = NULL;
-   char str[256 + 1];
+   char str[MAX_STRING_SIZE];
    struct passwd pw_struct;
    char *buffer;
    int size;
@@ -3955,15 +3955,14 @@ static char *drmaa_get_home_directory(const char* username, lList **answer_list)
    pwd = sge_getpwnam_r(username, &pw_struct, buffer, size);
 
    if (!pwd) {
-      sprintf(str, MSG_USER_INVALIDNAMEX_S, username);
-      answer_list_add(answer_list, str, STATUS_ENOSUCHUSER, 
-                      ANSWER_QUALITY_ERROR);
+      snprintf(str, sizeof(str), MSG_USER_INVALIDNAMEX_S, username);
+      answer_list_add(answer_list, str, STATUS_ENOSUCHUSER, ANSWER_QUALITY_ERROR);
       FREE(buffer);
       DRETURN(NULL);
    }
 
    if (!pwd->pw_dir) {
-      sprintf(str, MSG_USER_NOHOMEDIRFORUSERX_S, username);
+      snprintf(str, sizeof(str), MSG_USER_NOHOMEDIRFORUSERX_S, username);
       answer_list_add(answer_list, str, STATUS_EDISK, ANSWER_QUALITY_ERROR);
       DRETURN(NULL);
    }
@@ -4007,7 +4006,7 @@ static int drmaa_set_bulk_range(lList **opts, int start, int end, int step,
 
    DENTER(TOP_LAYER, "drmaa_set_bulk_range");
    
-   sprintf(str, "%d-%d:%d", start, end, step);
+   snprintf(str, sizeof(str), "%d-%d:%d", start, end, step);
 
    range_list_parse_from_string(&task_id_range_list, alp, str,
                                    false, true, INF_NOT_ALLOWED);

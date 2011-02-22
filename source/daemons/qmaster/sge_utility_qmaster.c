@@ -554,7 +554,7 @@ bool attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
                }
 
                if (rstring == NULL || fstring == NULL) {
-                  ERROR((SGE_EVENT, MSG_OBJECT_VALUEMISSING));
+                  ERROR((SGE_EVENT, SFNMAX, MSG_OBJECT_VALUEMISSING));
                   answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC,
                                   ANSWER_QUALITY_ERROR);
                   ret = false;
@@ -625,7 +625,7 @@ bool attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
                }
 
                if (rstring == NULL) {
-                  ERROR((SGE_EVENT, MSG_OBJECT_VALUEMISSING));
+                  ERROR((SGE_EVENT, SFNMAX, MSG_OBJECT_VALUEMISSING));
                   answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC,
                                   ANSWER_QUALITY_ERROR);
                   ret = false;

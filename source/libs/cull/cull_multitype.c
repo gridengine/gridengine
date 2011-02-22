@@ -97,14 +97,14 @@ int incompatibleType(const char *str)
 int incompatibleType2(const char *fmt,...)
 {
    va_list ap;
-   char buf[BUFSIZ];
+   char buf[MAX_STRING_SIZE];
 
    DENTER(TOP_LAYER, "incompatibleType2");
    va_start(ap, fmt);
-   vsprintf(buf, fmt, ap);
+   vsnprintf(buf, sizeof(buf), fmt, ap);
 
-   CRITICAL((SGE_EVENT, buf));
-   fprintf(stderr, buf);
+   CRITICAL((SGE_EVENT, SFNMAX, buf));
+   fprintf(stderr, SFNMAX, buf);
 
    abort();
    DEXIT;
@@ -112,7 +112,7 @@ int incompatibleType2(const char *fmt,...)
 }
 
 /* ------------------------------------------------------------ */
-int unknownType(const char *str) 
+int unknownType(const char *str)
 {
    DENTER(CULL_LAYER, "unknownType");
 
@@ -751,7 +751,7 @@ lUlong lGetPosUlong(const lListElem *ep, int pos)
    if (pos < 0) {
       /* someone has called lGetPosUlong() */
       /* makro with an invalid nm        */
-      CRITICAL((SGE_EVENT, MSG_CULL_GETPOSULONG_GOTINVALIDPOSITION ));
+      CRITICAL((SGE_EVENT, SFNMAX, MSG_CULL_GETPOSULONG_GOTINVALIDPOSITION ));
       DEXIT;
       abort();
    }
@@ -994,7 +994,7 @@ lListElem *lGetPosObject(const lListElem *ep, int pos)
    if (pos < 0) {
       /* someone has called lGetPosUlong() */
       /* makro with an invalid nm        */
-      CRITICAL((SGE_EVENT, MSG_CULL_GETPOSOBJECT_GOTANINVALIDPOS ));
+      CRITICAL((SGE_EVENT, SFNMAX, MSG_CULL_GETPOSOBJECT_GOTANINVALIDPOS));
       DEXIT;
       abort();
    }
@@ -1031,7 +1031,7 @@ lList *lGetPosList(const lListElem *ep, int pos)
    if (pos < 0) {
       /* someone has called lGetPosUlong() */
       /* makro with an invalid nm        */
-      CRITICAL((SGE_EVENT, MSG_CULL_GETPOSLIST_GOTANINVALIDPOS ));
+      CRITICAL((SGE_EVENT, SFNMAX, MSG_CULL_GETPOSLIST_GOTANINVALIDPOS));
       DEXIT;
       abort();
    }

@@ -77,7 +77,7 @@ static char execd_messages_file[SGE_PATH_MAX];
 /*-------------------------------------------------------------------*/
 void sge_setup_sge_execd(sge_gdi_ctx_class_t *ctx, const char* tmp_err_file_name)
 {
-   char err_str[1024];
+   char err_str[MAX_STRING_SIZE];
    int allowed_get_conf_errors     = 5;
    char* spool_dir = NULL;
    const char *unqualified_hostname = ctx->get_unqualified_hostname(ctx);
@@ -91,20 +91,20 @@ void sge_setup_sge_execd(sge_gdi_ctx_class_t *ctx, const char* tmp_err_file_name
    ** switch to admin user
    */
    if (sge_set_admin_username(admin_user, err_str)) {
-      CRITICAL((SGE_EVENT, err_str));
+      CRITICAL((SGE_EVENT, SFNMAX, err_str));
       /* TODO: remove */
       SGE_EXIT(NULL, 1);
    }
 
    if (sge_switch2admin_user()) {
-      CRITICAL((SGE_EVENT, MSG_ERROR_CANTSWITCHTOADMINUSER));
+      CRITICAL((SGE_EVENT, SFNMAX, MSG_ERROR_CANTSWITCHTOADMINUSER));
       /* TODO: remove */
       SGE_EXIT(NULL, 1);
    }
 
    while (gdi2_wait_for_conf(ctx, &Execd_Config_List)) {
       if (allowed_get_conf_errors-- <= 0) {
-         CRITICAL((SGE_EVENT, MSG_EXECD_CANT_GET_CONFIGURATION_EXIT));
+         CRITICAL((SGE_EVENT, SFNMAX, MSG_EXECD_CANT_GET_CONFIGURATION_EXIT));
          /* TODO: remove */
          SGE_EXIT(NULL, 1);
       }

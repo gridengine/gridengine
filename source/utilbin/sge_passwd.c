@@ -1205,7 +1205,7 @@ sge_passwd_add_change(const char *username, const char *domain, uid_t uid)
 static void 
 passwd_become_admin_user(const char *admin_user)
 {
-   char str[1024];
+   char str[MAX_STRING_SIZE];
 
    DENTER(TOP_LAYER, "passwd_become_admin_user");
 

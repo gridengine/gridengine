@@ -363,7 +363,7 @@ int sge_del_host(sge_gdi_ctx_class_t *ctx, lListElem *hep, lList **alpp,
    }
 
    if (target==SGE_EH_LIST && !strcasecmp(unique, "global")) {
-      ERROR((SGE_EVENT, MSG_OBJ_DELGLOBALHOST));
+      ERROR((SGE_EVENT, SFNMAX, MSG_OBJ_DELGLOBALHOST));
       answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_ESEMANTIC;
@@ -1004,7 +1004,7 @@ void sge_gdi_kill_exechost(sge_gdi_ctx_class_t *ctx,
    DENTER(GDI_LAYER, "sge_gdi_kill_exechost");
 
    if (!manop_is_manager(packet->user)) {
-      ERROR((SGE_EVENT, MSG_OBJ_SHUTDOWNPERMS)); 
+      ERROR((SGE_EVENT, SFNMAX, MSG_OBJ_SHUTDOWNPERMS));
       answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_ENOMGR, 
                       ANSWER_QUALITY_ERROR);
       DEXIT;
@@ -1053,7 +1053,7 @@ sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *
       if (lGetNumberOfElem(task->answer_list) == 0) {
          /* no exechosts have been killed */
          DPRINTF((MSG_SGETEXT_NOEXECHOSTS));
-         INFO((SGE_EVENT, MSG_SGETEXT_NOEXECHOSTS));
+         INFO((SGE_EVENT, SFNMAX, MSG_SGETEXT_NOEXECHOSTS));
          answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
       }
    } else {

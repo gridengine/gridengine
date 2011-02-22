@@ -1700,9 +1700,7 @@ static int qstat_stdout_queue_summary(qstat_handler_t* handler, const char* qnam
 static int qstat_stdout_queue_load_alarm(qstat_handler_t* handler, const char* qname, const char* reason, lList **alpp) 
 {
    DENTER(TOP_LAYER, "qstat_stdout_queue_load_alarm");
-   printf("\t");
-   printf(reason);
-   printf("\n");
+   printf("\t%s\n", reason != NULL ? reason : "no alarm reason given");
    DEXIT;
    return 0;
 }
@@ -1710,9 +1708,7 @@ static int qstat_stdout_queue_load_alarm(qstat_handler_t* handler, const char* q
 static int qstat_stdout_queue_suspend_alarm(qstat_handler_t* handler, const char* qname, const char* reason, lList **alpp) 
 {
    DENTER(TOP_LAYER, "qstat_stdout_queue_suspend_alarm");
-   printf("\t");
-   printf(reason);
-   printf("\n");
+   printf("\t%s\n", reason != NULL ? reason : "no alarm reason given");
    DEXIT;
    return 0;
 }
@@ -1720,9 +1716,7 @@ static int qstat_stdout_queue_suspend_alarm(qstat_handler_t* handler, const char
 static int qstat_stdout_queue_message(qstat_handler_t* handler, const char* qname, const char *message, lList **alpp) 
 {
    DENTER(TOP_LAYER, "qstat_stdout_queue_message");
-   printf("\t");
-   printf(message);
-   printf("\n");
+   printf("\t%s\n", message != NULL ? message : "no queue message given");
    DEXIT;
    return 0;
 }

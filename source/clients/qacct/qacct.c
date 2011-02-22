@@ -461,8 +461,7 @@ int main(int argc, char **argv)
                options.arflag = 1;
             } else {
                if (sscanf(argv[++ii], sge_u32, &options.ar_number) != 1) {
-                  fprintf(stderr, MSG_PARSE_INVALID_AR_MUSTBEUINT);
-                  fprintf(stderr, "\n");
+                  fprintf(stderr, "%s\n", MSG_PARSE_INVALID_AR_MUSTBEUINT);
                   qacct_usage(&ctx, stderr);
                   DRETURN(1); 
                }
@@ -695,7 +694,7 @@ int main(int argc, char **argv)
                                          QAJ_arid);
       summary_view = true;
       if (sorted_list == NULL || sort_order == NULL) {
-         ERROR((SGE_EVENT, MSG_HISTORY_NOTENOUGTHMEMORYTOCREATELIST));
+         ERROR((SGE_EVENT, SFNMAX, MSG_HISTORY_NOTENOUGTHMEMORYTOCREATELIST));
          goto QACCT_EXIT;
       }
    }
@@ -892,7 +891,7 @@ int main(int argc, char **argv)
          SGE_EXIT((void**)&ctx, 0);
       }
    } else if (options.taskstart && options.taskend && options.taskstep) {
-      ERROR((SGE_EVENT, MSG_HISTORY_TOPTIONREQUIRESJOPTION ));
+      ERROR((SGE_EVENT, SFNMAX, MSG_HISTORY_TOPTIONREQUIRESJOPTION));
       qacct_usage(&ctx, stderr);
       free_qacct_lists(&centry_list, &queue_list, &exechost_list, &hgrp_list);
       SGE_EXIT((void**)&ctx, 0); 

@@ -69,7 +69,7 @@ lCondition *lWhereFromElem(const lListElem *where){
    if (lGetUlong(where, PACK_id) == SGE_WHERE) {
       size = getByteArray(&buffer, where, PACK_string);
       if (size <= 0){
-         ERROR((SGE_EVENT, MSG_PACK_INVALIDPACKDATA ));
+         ERROR((SGE_EVENT, SFNMAX, MSG_PACK_INVALIDPACKDATA));
       } else if ((ret = init_packbuffer_from_buffer(&pb, buffer, size)) == PACK_SUCCESS) {
          cull_unpack_cond(&pb, &cond);
          clear_packbuffer(&pb);
@@ -117,7 +117,7 @@ lEnumeration *lWhatFromElem(const lListElem *what){
    if (lGetUlong(what, PACK_id) == SGE_WHAT) {
       size = getByteArray(&buffer, what, PACK_string);
       if (size <= 0){
-         ERROR((SGE_EVENT, MSG_PACK_INVALIDPACKDATA ));
+         ERROR((SGE_EVENT, SFNMAX, MSG_PACK_INVALIDPACKDATA));
       } else if ((ret = init_packbuffer_from_buffer(&pb, buffer, size)) == PACK_SUCCESS) {
          cull_unpack_enum(&pb, &cond);
          clear_packbuffer(&pb);

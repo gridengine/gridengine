@@ -461,7 +461,7 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
 
    /* check event client object structure */
    if (lCompListDescr(lGetElemDescr(clio), EV_Type) != 0) {
-      ERROR((SGE_EVENT, MSG_EVE_INCOMPLETEEVENTCLIENT));
+      ERROR((SGE_EVENT, SFNMAX, MSG_EVE_INCOMPLETEEVENTCLIENT));
       answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DRETURN(STATUS_DENIED);
    }
@@ -474,7 +474,7 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
    }
 
    if (lGetBool(clio, EV_changed) && lGetList(clio, EV_subscribed) == NULL) {
-      ERROR((SGE_EVENT, MSG_EVE_INVALIDSUBSCRIPTION));
+      ERROR((SGE_EVENT, SFNMAX, MSG_EVE_INVALIDSUBSCRIPTION));
       answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DRETURN(STATUS_ESEMANTIC);
    }
@@ -484,7 +484,7 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
 
    if (Event_Master_Control.is_prepare_shutdown) {
       sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Event_Master_Control.mutex);
-      ERROR((SGE_EVENT, MSG_EVE_QMASTERISGOINGDOWN));
+      ERROR((SGE_EVENT, SFNMAX, MSG_EVE_QMASTERISGOINGDOWN));
       answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);      
       DRETURN(STATUS_ESEMANTIC);
    }
@@ -528,7 +528,7 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
       */
       if (update_func == NULL && !manop_is_manager(ruser)) {
          sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Event_Master_Control.mutex);
-         ERROR((SGE_EVENT, MSG_WRONG_USER_FORFIXEDID ));
+         ERROR((SGE_EVENT, SFNMAX, MSG_WRONG_USER_FORFIXEDID));
          answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
          DRETURN(STATUS_ESEMANTIC);
       }
@@ -731,7 +731,7 @@ sge_event_master_process_mod_event_client(lListElem *request, monitoring_t *moni
    if (lGetBool(clio, EV_changed) && lGetList(clio, EV_subscribed) == NULL) {
       sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Event_Master_Control.mutex);
       SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
-      ERROR((SGE_EVENT, MSG_EVE_INVALIDSUBSCRIPTION));
+      ERROR((SGE_EVENT, SFNMAX, MSG_EVE_INVALIDSUBSCRIPTION));
       DRETURN_VOID;
    }
 
@@ -1145,7 +1145,7 @@ int sge_shutdown_event_client(u_long32 event_client_id, const char* anUser,
 
       /* Print out a message about the event. */
       if (event_client_id == EV_ID_SCHEDD) {
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_COM_KILLED_SCHEDULER));
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_COM_KILLED_SCHEDULER));
       } else {
          SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_COM_SHUTDOWNNOTIFICATION_SUS,
                         lGetString(client, EV_name),

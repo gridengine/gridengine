@@ -261,7 +261,7 @@ qrstat_report_finish(qrstat_report_handler_t* handler, lList **alpp)
    DENTER(TOP_LAYER, "qrstat_report_finish");
   
    sge_dstring_append(buffer, "</qrstat>\n");
-   printf(sge_dstring_get_string((dstring *)handler->ctx));
+   printf("%s", sge_dstring_get_string((dstring *)handler->ctx));
 
    DRETURN(ret); 
 }

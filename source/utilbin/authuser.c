@@ -160,7 +160,7 @@ static void usage(void) {
 static void print_error(const char* format, ...) {
    va_list ap;
    va_start(ap, format);
-   fprintf(stderr, MSG_AUTHUSER_ERROR);
+   fprintf(stderr, "%s", MSG_AUTHUSER_ERROR);
    vfprintf(stderr, format, ap);
    fprintf(stderr, "\n");
    va_end(ap);

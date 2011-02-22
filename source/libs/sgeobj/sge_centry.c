@@ -881,7 +881,7 @@ centry_list_parse_from_string(lList *complex_attributes,
    /* allocate space for attribute list if no list is passed */
    if (complex_attributes == NULL) {
       if ((complex_attributes = lCreateList("qstat_l_requests", CE_Type)) == NULL) {
-         ERROR((SGE_EVENT, MSG_PARSE_NOALLOCATTRLIST));
+         ERROR((SGE_EVENT, SFNMAX, MSG_PARSE_NOALLOCATTRLIST));
          DRETURN(NULL);
       }
    }
@@ -919,7 +919,7 @@ centry_list_parse_from_string(lList *complex_attributes,
    /* create new element, fill in the values and append it */
       if ( (complex_attribute= lGetElemStr(complex_attributes, CE_name, attr)) == NULL) {
          if ((complex_attribute = lCreateElem(CE_Type)) == NULL) {
-            ERROR((SGE_EVENT, MSG_PARSE_NOALLOCATTRELEM));
+            ERROR((SGE_EVENT, SFNMAX, MSG_PARSE_NOALLOCATTRELEM));
             lFreeList(&complex_attributes);
             sge_free_saved_vars(context);
             DRETURN(NULL);

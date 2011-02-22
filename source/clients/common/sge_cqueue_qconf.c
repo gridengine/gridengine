@@ -767,7 +767,7 @@ cqueue_show(sge_gdi_ctx_class_t *ctx, lList **answer_list, const lList *qref_pat
    DRETURN(ret);
 }
 
-bool 
+bool
 cqueue_list_sick(sge_gdi_ctx_class_t *ctx, lList **answer_list)
 {
    bool ret = true;
@@ -787,8 +787,9 @@ cqueue_list_sick(sge_gdi_ctx_class_t *ctx, lList **answer_list)
          cqueue_sick(cqueue, answer_list, hgroup_list, &ds);
       }
 
-      if (sge_dstring_get_string(&ds)) {
-         printf(sge_dstring_get_string(&ds));
+      if (sge_dstring_get_string(&ds) != NULL) {
+         /* JG: TODO: shouldn't we better use INFO or WARNING? */
+         printf("%s", sge_dstring_get_string(&ds));
          ret = false;
       }
 

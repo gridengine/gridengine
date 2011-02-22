@@ -173,7 +173,7 @@ int rqs_mod(sge_gdi_ctx_class_t *ctx,
                attr_mod_sub_list(alpp, new_rule, RQR_limit, RQRL_name, rule,
                                  sub_command, SGE_ATTR_RQSRULES, SGE_OBJ_RQS, 0);
             } else {
-               ERROR((SGE_EVENT, MSG_RESOURCEQUOTA_NORULEDEFINED));
+               ERROR((SGE_EVENT, SFNMAX, MSG_RESOURCEQUOTA_NORULEDEFINED));
                answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC,
                                ANSWER_QUALITY_ERROR);
                goto ERROR;                 

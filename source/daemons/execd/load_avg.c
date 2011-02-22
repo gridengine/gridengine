@@ -717,7 +717,7 @@ static int sge_get_loadavg(const char* qualified_hostname, lList **lpp)
 
       now = sge_get_gmt();
       if (now >= next_log) {
-         WARNING((SGE_EVENT, MSG_SGETEXT_NO_LOAD));     
+         WARNING((SGE_EVENT, SFNMAX, MSG_SGETEXT_NO_LOAD));
          next_log = now + 7200;
       }
    } else if (loads == -2) {
@@ -772,7 +772,7 @@ static int sge_get_loadavg(const char* qualified_hostname, lList **lpp)
    if (sge_loadmem(&mem_info)) {
       static int mem_fail = 0;
       if (!mem_fail) {
-         ERROR((SGE_EVENT, MSG_LOAD_NOMEMINDICES));
+         ERROR((SGE_EVENT, SFNMAX, MSG_LOAD_NOMEMINDICES));
          mem_fail =1;
       }
       DRETURN(1);
@@ -913,7 +913,7 @@ static int sge_get_loadavg(const char* qualified_hostname, lList **lpp)
 
          u_long32 now = sge_get_gmt();
          if (now >= next_log2) {
-            WARNING((SGE_EVENT, MSG_SGETEXT_NO_LOAD));
+            WARNING((SGE_EVENT, SFNMAX, MSG_SGETEXT_NO_LOAD));
             next_log2 = now + 7200;
          }
       }

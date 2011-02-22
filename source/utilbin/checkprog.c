@@ -57,9 +57,7 @@ int i
 /*----------------------------------------------------------------------*/
 void usage_checkprog(void)
 {
-   fprintf(stderr, "\n");
-   fprintf(stderr, MSG_COMMAND_USAGECHECKPROG);
-   fprintf(stderr, "\n");
+   fprintf(stderr, "\n%s\n", MSG_COMMAND_USAGECHECKPROG);
    /*fprintf(stderr, "check the first 8 letters of process basename\n\n");
    fprintf(stderr, "exit status: 0 if process was found\n");
    fprintf(stderr, "             1 if process was not found\n");
@@ -70,9 +68,7 @@ void usage_checkprog(void)
 /*----------------------------------------------------------------------*/
 void usage_getprogs(void)
 {
-   fprintf(stderr, "\n");
-   fprintf(stderr,MSG_COMMAND_USAGEGETPROGS );
-   fprintf(stderr, "\n");
+   fprintf(stderr, "\n%s\n", MSG_COMMAND_USAGEGETPROGS );
    /*
    fprintf(stderr, "check and list pids of \"processname\"\n\n");
    fprintf(stderr, "exit status: 0 if process(es) were found\n");
@@ -104,8 +100,7 @@ int main(int argc, char *argv[])
    else if (!strcmp(ptr, "getprogs"))
       checkit = 0;
    else {
-      fprintf(stderr, MSG_COMMAND_CALLCHECKPROGORGETPROGS );
-      fprintf(stderr, "\n");
+      fprintf(stderr, "%s\n", MSG_COMMAND_CALLCHECKPROGORGETPROGS);
       exit(1);
    } 
       
@@ -172,7 +167,7 @@ int main(int argc, char *argv[])
 			else if (res == 0)
 				printf(MSG_PROC_PIDISRUNNINGWITHNAME_IS , (int) pid, argv[2]);
 			else if (res == -1)
-				 printf(MSG_COMMAND_SPANPSFAILED );
+				 printf("%s", MSG_COMMAND_SPANPSFAILED);
 				 
 			if (res == -1)
 				res = 2;

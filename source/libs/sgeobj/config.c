@@ -748,7 +748,7 @@ bool set_conf_enum(lList **alpp, lList **clpp, int fields[], const char *key,
    }
    
    if(!uval) {
-      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_CONFIGINVALIDQUEUESPECIFIED ));
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_GDI_CONFIGINVALIDQUEUESPECIFIED ));
       answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       DEXIT;
       return false;

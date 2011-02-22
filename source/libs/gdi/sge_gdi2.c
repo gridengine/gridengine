@@ -662,7 +662,7 @@ sge_gdi2_get_any_request(sge_gdi_ctx_class_t *ctx, char *rhost,
    }   
 
    if (!rhost) {
-      ERROR((SGE_EVENT, MSG_GDI_RHOSTISNULLFORGETANYREQUEST ));
+      ERROR((SGE_EVENT, SFNMAX, MSG_GDI_RHOSTISNULLFORGETANYREQUEST));
       PROF_STOP_MEASUREMENT(SGE_PROF_GDI);
       DRETURN(-1);
    }
@@ -1206,8 +1206,8 @@ gdi2_send_message(sge_gdi_ctx_class_t *sge_ctx, int synchron, const char *tocomp
                               "execd_handle" , 0 , 1 , 0 );
          handle = cl_com_get_handle("execd_handle", 0);
          if (handle == NULL) {
-            ERROR((SGE_EVENT,MSG_GDI_CANT_CREATE_HANDLE_TOEXECD_S, tocomproc));
-            ERROR((SGE_EVENT,cl_get_error_text(commlib_error)));
+            ERROR((SGE_EVENT, MSG_GDI_CANT_CREATE_HANDLE_TOEXECD_S, tocomproc));
+            ERROR((SGE_EVENT, SFNMAX, cl_get_error_text(commlib_error)));
          }
       }
    }
@@ -1306,7 +1306,7 @@ gdi2_receive_message(sge_gdi_ctx_class_t *sge_ctx, char *fromcommproc, u_short *
          handle = cl_com_get_handle("execd_handle", 0);
          if (handle == NULL) {
             ERROR((SGE_EVENT, MSG_GDI_CANT_CREATE_HANDLE_TOEXECD_S, fromcommproc));
-            ERROR((SGE_EVENT, cl_get_error_text(commlib_error)));
+            ERROR((SGE_EVENT, SFNMAX, cl_get_error_text(commlib_error)));
          }
       }
    } 
@@ -1447,7 +1447,7 @@ lListElem **lepp
    }
 
    if (!is_global_requested && !lepp) {
-      ERROR((SGE_EVENT, MSG_NULLPOINTER));
+      ERROR((SGE_EVENT, SFNMAX, MSG_NULLPOINTER));
       lFreeElem(&hep);
       DRETURN(-3);
    }
@@ -1488,7 +1488,7 @@ lListElem **lepp
    }
 
    if (!(*gepp = lGetElemHost(lp, CONF_name, SGE_GLOBAL_NAME))) {
-      ERROR((SGE_EVENT, MSG_CONF_NOGLOBAL));
+      ERROR((SGE_EVENT, SFNMAX, MSG_CONF_NOGLOBAL));
       lFreeList(&lp);
       lFreeElem(&hep);
       DRETURN(-5);
@@ -1729,12 +1729,12 @@ int report_list_send(sge_gdi_ctx_class_t *ctx,
       DRETURN(-2);
 
    case PACK_FORMAT:
-      ERROR((SGE_EVENT, MSG_GDI_REPORTFORMATERROR));
+      ERROR((SGE_EVENT, SFNMAX, MSG_GDI_REPORTFORMATERROR));
       clear_packbuffer(&pb);
       DRETURN(-3);
 
    default:
-      ERROR((SGE_EVENT, MSG_GDI_REPORTUNKNOWERROR));
+      ERROR((SGE_EVENT, SFNMAX, MSG_GDI_REPORTUNKNOWERROR));
       clear_packbuffer(&pb);
       DRETURN(-1);
    }

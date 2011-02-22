@@ -951,10 +951,10 @@ static sge_mirror_error _sge_mirror_unsubscribe(sge_evc_class_t *evc, sge_object
          evc->ec_unsubscribe(evc, sgeE_SCHEDDMONITOR);
          break;
       case SGE_TYPE_SHUTDOWN:
-         ERROR((SGE_EVENT, MSG_EVENT_HAVETOHANDLEEVENTS));
+         ERROR((SGE_EVENT, SFNMAX, MSG_EVENT_HAVETOHANDLEEVENTS));
          break;
       case SGE_TYPE_MARK_4_REGISTRATION:
-         ERROR((SGE_EVENT, MSG_EVENT_HAVETOHANDLEEVENTS));
+         ERROR((SGE_EVENT, SFNMAX, MSG_EVENT_HAVETOHANDLEEVENTS));
          break;
       case SGE_TYPE_SUBMITHOST:
          evc->ec_unsubscribe(evc, sgeE_SUBMITHOST_LIST);
@@ -1060,7 +1060,7 @@ sge_mirror_error sge_mirror_process_events(sge_evc_class_t *evc)
          lFreeList(&event_list);
       }
    } else {
-      WARNING((SGE_EVENT, MSG_MIRROR_QMASTERALIVETIMEOUTEXPIRED));
+      WARNING((SGE_EVENT, SFNMAX, MSG_MIRROR_QMASTERALIVETIMEOUTEXPIRED));
       evc->ec_mark4registration(evc);
       ret = SGE_EM_TIMEOUT;
    }
@@ -1069,7 +1069,7 @@ sge_mirror_error sge_mirror_process_events(sge_evc_class_t *evc)
       test_debug++;
       if (test_debug > 3) {
          test_debug = 0;
-         WARNING((SGE_EVENT, MSG_MIRROR_QMASTERALIVETIMEOUTEXPIRED));
+         WARNING((SGE_EVENT, SFNMAX, MSG_MIRROR_QMASTERALIVETIMEOUTEXPIRED));
          evc->ec_mark4registration(evc);
          ret = SGE_EM_TIMEOUT;
       }

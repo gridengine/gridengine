@@ -418,7 +418,7 @@ pid_t sge_peopen_r(const char *shell, int login_shell, const char *command,
             DRETURN(-1);
          }
       } else {
-         ERROR((SGE_EVENT, MSG_UTI_MEMPWNAM));
+         ERROR((SGE_EVENT, SFNMAX, MSG_UTI_MEMPWNAM));
          sge_free(&buffer);
          if (sge_has_admin_user()) {
             sge_switch2admin_user();
@@ -438,7 +438,7 @@ pid_t sge_peopen_r(const char *shell, int login_shell, const char *command,
 
          if (myuid != SGE_SUPERUSER_UID) {
             DPRINTF(("only root is allowed to switch to a different user\n"));
-            ERROR((SGE_EVENT, MSG_SYSTEM_NOROOTRIGHTSTOSWITCHUSER));
+            ERROR((SGE_EVENT, SFNMAX, MSG_SYSTEM_NOROOTRIGHTSTOSWITCHUSER));
             sge_free(&buffer);
             DRETURN(-2);
          }                             

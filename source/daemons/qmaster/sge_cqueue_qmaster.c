@@ -643,7 +643,7 @@ int cqueue_mod(sge_gdi_ctx_class_t *ctx,
             const char *old_name = lGetString(cqueue, CQ_name);
 
             if (strcmp(old_name, name)) {
-               ERROR((SGE_EVENT, MSG_CQUEUE_NONAMECHANGE));
+               ERROR((SGE_EVENT, SFNMAX, MSG_CQUEUE_NONAMECHANGE));
                answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX,
                                ANSWER_QUALITY_ERROR);
                ret = false;
@@ -935,7 +935,7 @@ int cqueue_del(sge_gdi_ctx_class_t *ctx, lListElem *this_elem, lList **answer_li
              */
             for_each(qinstance, qinstances) {
                if (qinstance_slots_used(qinstance) > 0 || qinstance_slots_reserved(qinstance) > 0) {
-                  ERROR((SGE_EVENT, MSG_QINSTANCE_STILLJOBS)); 
+                  ERROR((SGE_EVENT, SFNMAX, MSG_QINSTANCE_STILLJOBS));
                   answer_list_add(answer_list, SGE_EVENT, STATUS_EEXIST,
                                   ANSWER_QUALITY_ERROR);
                   do_del = false;

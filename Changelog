@@ -23,6 +23,15 @@ EB-2011-02-22-0: Enhancem:    - changed arch script so that Snow Leopard will be
                  Issue:       GE-3355 GE-3346 GE-3356
                  Review:      TBD
 
+JG-2011-02-22-0: Bugfix:      Fixing build on Ubuntu 10.04 and higher.
+                              Part 1/2: calls to sprintf without format string.
+                 Issue:       GE-3348 (GE-3347)
+                 Review:      EB
+
+DG-2011-02-21-0: Cleanup:     Fixed arch.dist for Ubuntu Server 10.10
+                 Belongs to:  DG-2011-02-10-0
+                 Review:      JG
+
 DG-2011-02-18-0: Cleanup:     Avoid qmaster core dump after getting un-
                               discoverable qinstance.
                  Review:      EB, JG
@@ -35,7 +44,7 @@ DG-2011-02-17-1: Cleanup:     Fixed broken aimk
                  Review:      EB
 
 DG-2011-02-17-0: Bugfix:      Fixed broken project spooling, which causes lost
-                              of project when restarting master. This appears 
+                              of project when restarting master. This appears
                               only when using core binding.
 					  Review:      EB
 

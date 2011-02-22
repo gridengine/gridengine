@@ -1245,10 +1245,8 @@ cqueue_xattr_pre_gdi(lList *this_list, lList **answer_list)
                                        cqueue_attribute_array[index].href_attr);
 
                      if (strcmp(HOSTREF_DEFAULT, attr_hostname)) {
-                        SGE_ADD_MSG_ID(sprintf(SGE_EVENT,
-                                       MSG_CQUEUE_NONDEFNOTALLOWED));
-                        answer_list_add(answer_list, SGE_EVENT,
-                                        STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR); 
+                        SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_CQUEUE_NONDEFNOTALLOWED));
+                        answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
                         ret = false;
                      } else {
                         lSetHost(elem, cqueue_attribute_array[index].href_attr,
@@ -1501,7 +1499,7 @@ cqueue_list_locate_qinstance_msg(lList *cqueue_list, const char *full_name, bool
       sge_dstring_free(&host_domain_buffer);
    } else {
       if (raise_error) {
-         ERROR((SGE_EVENT, MSG_CQUEUE_FULLNAMEISNULL));
+         ERROR((SGE_EVENT, SFNMAX, MSG_CQUEUE_FULLNAMEISNULL));
       }
    }
    DRETURN(ret);

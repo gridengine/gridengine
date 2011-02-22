@@ -170,7 +170,7 @@ sge_job_verify_adjust(sge_gdi_ctx_class_t *ctx, lListElem *jep, lList **alpp,
    if (ret == STATUS_OK) {
       if ((!JOB_TYPE_IS_BINARY(lGetUlong(jep, JB_type)) &&
           !lGetString(jep, JB_script_ptr) && lGetString(jep, JB_script_file))) {
-         ERROR((SGE_EVENT, MSG_JOB_NOSCRIPT));
+         ERROR((SGE_EVENT, SFNMAX, MSG_JOB_NOSCRIPT));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          ret = STATUS_EUNKNOWN;
       }
@@ -203,7 +203,7 @@ sge_job_verify_adjust(sge_gdi_ctx_class_t *ctx, lListElem *jep, lList **alpp,
       } else {
          /* verify if binding parameters are consistent (bugster 6903956) */ 
          if (check_binding_param_consistency(binding_elem) == false) {
-            ERROR((SGE_EVENT, MSG_JSV_BINDING_REJECTED));
+            ERROR((SGE_EVENT, SFNMAX, MSG_JSV_BINDING_REJECTED));
             ret = STATUS_EUNKNOWN;
          } 
       }
@@ -624,7 +624,7 @@ sge_job_verify_adjust(sge_gdi_ctx_class_t *ctx, lListElem *jep, lList **alpp,
     * jobs with higher priority than 0 (=BASE_PRIORITY)
     */
    if (lGetUlong(jep, JB_priority) > BASE_PRIORITY && !manop_is_operator(ruser)) {
-      ERROR((SGE_EVENT, MSG_JOB_NONADMINPRIO));
+      ERROR((SGE_EVENT, SFNMAX, MSG_JOB_NONADMINPRIO));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DRETURN(STATUS_EUNKNOWN);
    }

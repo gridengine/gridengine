@@ -414,7 +414,7 @@ attr_list_add(lList **this_list, lList **answer_list, lListElem **attr,
          if (ambiguous_href_list != NULL &&
                lGetNumberOfElem(*ambiguous_href_list) >= 1 &&
                !(flags & HOSTATTR_ALLOW_AMBIGUITY)) {
-            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTR_RESULTUNAMBIGUOUS_S));
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_ATTR_RESULTAMBIGUOUS));
             answer_list_add(answer_list, SGE_EVENT,
                             STATUS_ERROR1, ANSWER_QUALITY_ERROR);
          } else {
@@ -583,7 +583,7 @@ attr_list_find_value(const lList *this_list, lList **answer_list,
                /*
                 * Should never happen.
                 */
-               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTR_NOCONFVALUE));
+               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_ATTR_NOCONFVALUE));
                answer_list_add(answer_list, SGE_EVENT,
                                STATUS_ERROR1, ANSWER_QUALITY_ERROR);            
             }
@@ -640,7 +640,7 @@ attr_list_find_value_href(const lList *this_list, lList **answer_list,
             /*
              * Should never happen.
              */
-            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTR_NOCONFVALUE));
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_ATTR_NOCONFVALUE));
             answer_list_add(answer_list, SGE_EVENT,
                             STATUS_ERROR1, ANSWER_QUALITY_ERROR);            
          }
@@ -852,7 +852,7 @@ attr_list_parse_from_string(lList **this_list, lList **answer_list,
                      value[0] = '\0';
                      value++;
                   } else {
-                     SGE_ADD_MSG_ID(sprintf(SGE_EVENT, 
+                     SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX,
                                             MSG_ATTR_EQUALSIGNEXPRECTED));
                      answer_list_add(answer_list, SGE_EVENT,
                                      STATUS_ERROR1, ANSWER_QUALITY_ERROR);
@@ -895,7 +895,7 @@ attr_list_parse_from_string(lList **this_list, lList **answer_list,
                }
             }
          } else {
-            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTR_NOVALUEGIVEN));
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_ATTR_NOVALUEGIVEN));
             answer_list_add(answer_list, SGE_EVENT,
                             STATUS_ERROR1, ANSWER_QUALITY_ERROR);
             ret = false;

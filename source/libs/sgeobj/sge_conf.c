@@ -1050,7 +1050,7 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
    lFreeList(&mlist);
 
    if (!global) {
-      WARNING((SGE_EVENT, MSG_CONF_NOCONFIGFROMMASTER));
+      WARNING((SGE_EVENT, SFNMAX, MSG_CONF_NOCONFIGFROMMASTER));
       DRETURN(-2);
    }
 

@@ -220,13 +220,13 @@ bool get_user_home_file_path(dstring *absolut_filename, const char *filename, co
 static char *get_cwd_defaults_file_path(lList **answer_list)
 {
    char cwd[SGE_PATH_MAX + 1];
-   char str[256 + 1];   
+   char str[MAX_STRING_SIZE];
    char *file = NULL;
    
    DENTER (TOP_LAYER, "get_cwd_defaults_file_name");
 
    if (!getcwd(cwd, sizeof(cwd))) {
-      sprintf(str, MSG_FILE_CANTREADCURRENTWORKINGDIR);
+      snprintf(str, sizeof(str), SFNMAX, MSG_FILE_CANTREADCURRENTWORKINGDIR);
       answer_list_add(answer_list, str, STATUS_EDISK, ANSWER_QUALITY_ERROR);
    }
    

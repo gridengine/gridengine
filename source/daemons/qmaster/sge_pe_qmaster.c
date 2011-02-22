@@ -214,7 +214,7 @@ int pe_mod(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *new_pe, lListElem 
    /* -------- PE_resource_utilization */
    if (add) {
       if (pe_set_slots_used(new_pe, 0)) {
-         ERROR((SGE_EVENT, MSG_MEM_MALLOC));
+         ERROR((SGE_EVENT, SFNMAX, MSG_MEM_MALLOC));
          answer_list_add(alpp, SGE_EVENT, STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_EMALLOC;

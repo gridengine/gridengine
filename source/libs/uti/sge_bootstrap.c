@@ -472,7 +472,7 @@ bool sge_bootstrap(const char *bootstrap_file, dstring *error_dstring)
    /* get filepath of bootstrap file */
    if (bootstrap_file == NULL) {
       if (error_dstring == NULL) {
-         CRITICAL((SGE_EVENT, MSG_UTI_CANNOTRESOLVEBOOTSTRAPFILE));
+         CRITICAL((SGE_EVENT, SFNMAX, MSG_UTI_CANNOTRESOLVEBOOTSTRAPFILE));
       } else {
          sge_dstring_sprintf(error_dstring, MSG_UTI_CANNOTRESOLVEBOOTSTRAPFILE);
       }

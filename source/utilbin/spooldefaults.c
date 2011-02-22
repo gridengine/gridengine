@@ -118,13 +118,13 @@ static int init_framework(sge_gdi_ctx_class_t *ctx)
                                                    spooling_params);
    answer_list_output(&answer_list);
    if (spooling_context == NULL) {
-      CRITICAL((SGE_EVENT, MSG_SPOOLDEFAULTS_CANNOTCREATECONTEXT));
+      CRITICAL((SGE_EVENT, SFNMAX, MSG_SPOOLDEFAULTS_CANNOTCREATECONTEXT));
    } else {
       spool_set_default_context(spooling_context);
 
       /* initialize spooling context */
       if (!spool_startup_context(&answer_list, spooling_context, true)) {
-         CRITICAL((SGE_EVENT, MSG_SPOOLDEFAULTS_CANNOTSTARTUPCONTEXT));
+         CRITICAL((SGE_EVENT, SFNMAX, MSG_SPOOLDEFAULTS_CANNOTSTARTUPCONTEXT));
       } else {
          ret = EXIT_SUCCESS;
       }

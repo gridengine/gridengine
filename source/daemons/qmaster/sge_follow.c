@@ -197,7 +197,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
 
       job_number=lGetUlong(ep, OR_job_number);
       if (!job_number) {
-         ERROR((SGE_EVENT, MSG_JOB_NOJOBID));
+         ERROR((SGE_EVENT, SFNMAX, MSG_JOB_NOJOBID));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DRETURN(-2);
       }
@@ -306,7 +306,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
           *  find and check queue 
           */
          if (!q_name) {
-            ERROR((SGE_EVENT, MSG_OBJ_NOQNAME));
+            ERROR((SGE_EVENT, SFNMAX, MSG_OBJ_NOQNAME));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             lFreeList(&gdil);
             lSetString(jatp, JAT_granted_pe, NULL);
@@ -535,7 +535,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
 
          job_number = lGetUlong(ep, OR_job_number);
          if (job_number == 0) {
-            ERROR((SGE_EVENT, MSG_JOB_NOJOBID));
+            ERROR((SGE_EVENT, SFNMAX, MSG_JOB_NOJOBID));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DRETURN(-2);
          }
@@ -640,7 +640,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
 
          job_number=lGetUlong(ep, OR_job_number);
          if (!job_number) {
-            ERROR((SGE_EVENT, MSG_JOB_NOJOBID));
+            ERROR((SGE_EVENT, SFNMAX, MSG_JOB_NOJOBID));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DRETURN(-2);
          }
@@ -760,7 +760,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
 
          job_number=lGetUlong(ep, OR_job_number);
          if(!job_number) {
-            ERROR((SGE_EVENT, MSG_JOB_NOJOBID));
+            ERROR((SGE_EVENT, SFNMAX, MSG_JOB_NOJOBID));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
             return -2;
@@ -962,7 +962,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
 
       job_number=lGetUlong(ep, OR_job_number);
       if(!job_number) {
-         ERROR((SGE_EVENT, MSG_JOB_NOJOBID));
+         ERROR((SGE_EVENT, SFNMAX, MSG_JOB_NOJOBID));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return -2;

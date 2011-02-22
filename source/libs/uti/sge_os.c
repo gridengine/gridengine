@@ -283,7 +283,6 @@ int sge_checkprog(pid_t pid, const char *name, const char *pscommand)
    DRETURN(notfound);
 }
 
-
 /****** uti/os/redirect_to_dev_null() ******************************************
 *  NAME
 *     redirect_to_dev_null() -- redirect a channel to /dev/null

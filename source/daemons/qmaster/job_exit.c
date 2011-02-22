@@ -328,7 +328,7 @@ void sge_job_exit(sge_gdi_ctx_class_t *ctx, lListElem *jr, lListElem *jep, lList
 
                   sge_dstring_sprintf(&error, MSG_LOG_QERRORBYJOBHOST_SUS, lGetString(qinstance, QU_qname), sge_u32c(jobid), host);
                   qinstance_message_add(qinstance, QI_ERROR, sge_dstring_get_string(&error)); 
-                  ERROR((SGE_EVENT, sge_dstring_get_string(&error)));
+                  ERROR((SGE_EVENT, SFNMAX, sge_dstring_get_string(&error)));
                   sge_event_spool(ctx, &answer_list, 0, sgeE_QINSTANCE_MOD, 
                                   0, 0, lGetString(qinstance, QU_qname), 
                                   lGetHost(qinstance, QU_qhostname), NULL,
@@ -352,7 +352,7 @@ void sge_job_exit(sge_gdi_ctx_class_t *ctx, lListElem *jr, lListElem *jep, lList
          /* general error -> this queue cant run any job */
          sge_qmaster_qinstance_state_set_error(queueep, true);
          qinstance_message_add(queueep, QI_ERROR, sge_dstring_get_string(&error));
-         ERROR((SGE_EVENT, sge_dstring_get_string(&error)));      
+         ERROR((SGE_EVENT, SFNMAX, sge_dstring_get_string(&error)));
          sge_event_spool(ctx, &answer_list, 0, sgeE_QINSTANCE_MOD, 
                          0, 0, lGetString(queueep, QU_qname), 
                          lGetHost(queueep, QU_qhostname), NULL,

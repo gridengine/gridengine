@@ -109,7 +109,7 @@ lListElem *add_job_report(u_long32 jobid, u_long32 jataskid, const char *petaski
       jr_list = lCreateList("job report list", JR_Type);
   
    if (jr_list == NULL || (jr=lCreateElem(JR_Type)) == NULL) {
-      ERROR((SGE_EVENT, MSG_JOB_TYPEMALLOC));  
+      ERROR((SGE_EVENT, SFNMAX, MSG_JOB_TYPEMALLOC));
       DRETURN(NULL);
    }
 
@@ -284,7 +284,7 @@ int do_ack(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg)
    while (pb_unused(&(aMsg->buf)) > 0) {
 
       if (cull_unpack_elem(&(aMsg->buf), &ack, NULL)) {
-         ERROR((SGE_EVENT, MSG_COM_UNPACKJOB));
+         ERROR((SGE_EVENT, SFNMAX, MSG_COM_UNPACKJOB));
          DRETURN(0);
       }
 
@@ -381,7 +381,7 @@ int do_ack(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg)
             break;
 
          default:
-            ERROR((SGE_EVENT, MSG_COM_ACK_UNKNOWN1));
+            ERROR((SGE_EVENT, SFNMAX, MSG_COM_ACK_UNKNOWN1));
             break;
       }
 

@@ -91,7 +91,7 @@ int lWriteElemToDisk(const lListElem *ep, const char *prefix, const char *name,
    DENTER(TOP_LAYER, "lWriteElemToDisk");
 
    if (!prefix && !name) {
-      ERROR((SGE_EVENT, MSG_CULL_NOPREFIXANDNOFILENAMEINWRITEELMTODISK ));
+      ERROR((SGE_EVENT, SFNMAX, MSG_CULL_NOPREFIXANDNOFILENAMEINWRITEELMTODISK));
       DEXIT;
       return 1;
    }
@@ -109,7 +109,7 @@ int lWriteElemToDisk(const lListElem *ep, const char *prefix, const char *name,
       break;
 
    case PACK_ENOMEM:
-      ERROR((SGE_EVENT, MSG_CULL_NOTENOUGHMEMORYFORPACKINGXY_SS ,
+      ERROR((SGE_EVENT, MSG_CULL_NOTENOUGHMEMORYFORPACKINGXY_SS,
              obj_name, name ? name : "null"));
       clear_packbuffer(&pb);
       DEXIT;
@@ -207,7 +207,7 @@ lListElem *lReadElemFromDisk(const char *prefix, const char *name,
    DENTER(TOP_LAYER, "lReadElemFromDisk");
 
    if (!prefix && !name) {
-      ERROR((SGE_EVENT,  MSG_CULL_NOPREFIXANDNOFILENAMEINREADELEMFROMDISK ));
+      ERROR((SGE_EVENT, SFNMAX, MSG_CULL_NOPREFIXANDNOFILENAMEINREADELEMFROMDISK));
       DEXIT;
       return NULL;
    }
@@ -237,7 +237,7 @@ lListElem *lReadElemFromDisk(const char *prefix, const char *name,
    size = statbuf.st_size;
    if (((SGE_OFF_T)size != statbuf.st_size)
        || !(buf = malloc(statbuf.st_size))) {
-      CRITICAL((SGE_EVENT, MSG_CULL_LEMALLOC));
+      CRITICAL((SGE_EVENT, SFNMAX, MSG_CULL_LEMALLOC));
       clear_packbuffer(&pb);
       DEXIT;
       return NULL;

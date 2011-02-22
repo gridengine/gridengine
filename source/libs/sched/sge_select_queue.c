@@ -343,7 +343,7 @@ find_best_result(dispatch_t r1, dispatch_t r2)
       DRETURN(DISPATCH_MISSING_ATTR);
    }
 
-   CRITICAL((SGE_EVENT, MSG_JOBMATCHINGUNEXPECTEDRESULT));
+   CRITICAL((SGE_EVENT, SFNMAX, MSG_JOBMATCHINGUNEXPECTEDRESULT));
    DRETURN(DISPATCH_NEVER);
 }
 
@@ -897,7 +897,7 @@ parallel_maximize_slots_pe(sge_assignment_t *best, int *available_slots)
    /* --- prepare the posible slots for the binary search */
    max_slotsp = (max_slots - min_slots+1);
    if (!add_pe_slots_to_category(&use_category, &max_slotsp, pe, min_slots, max_slots, pe_range)) {
-      ERROR((SGE_EVENT, MSG_SGETEXT_NOMEM));
+      ERROR((SGE_EVENT, SFNMAX, MSG_SGETEXT_NOMEM));
       DRETURN(DISPATCH_NEVER_CAT);
    }
    if (max_slotsp == 0) {
@@ -6380,7 +6380,7 @@ void sge_create_load_list(const lList *queue_list, const lList *host_list,
 
 error:
    DPRINTF(("error in sge_create_load_list!"));
-   ERROR((SGE_EVENT, MSG_SGETEXT_CONSUMABLE_AS_LOAD));
+   ERROR((SGE_EVENT, SFNMAX, MSG_SGETEXT_CONSUMABLE_AS_LOAD));
    sge_free_load_list(load_list);
    DRETURN_VOID;
 

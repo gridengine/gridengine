@@ -227,8 +227,7 @@ int main(int argc, char *argv[])
    /* memory load report */
    memset(&mem_info, 0, sizeof(sge_mem_info_t));
    if (sge_loadmem(&mem_info)) {
-      fprintf(stderr, MSG_SYSTEM_RETMEMORYINDICESFAILED );
-      fprintf(stderr, "\n");
+      fprintf(stderr, "%s\n", MSG_SYSTEM_RETMEMORYINDICESFAILED);
 #ifndef WINDOWS
       DEXIT;
 #endif

@@ -160,7 +160,7 @@ bool sge_unlink(const char *prefix, const char *suffix)
    DENTER(TOP_LAYER, "sge_unlink");
  
    if (!suffix) {
-      ERROR((SGE_EVENT, MSG_POINTER_SUFFIXISNULLINSGEUNLINK ));
+      ERROR((SGE_EVENT, SFNMAX, MSG_POINTER_SUFFIXISNULLINSGEUNLINK));
       DEXIT;
       return false;
    }
@@ -175,7 +175,7 @@ bool sge_unlink(const char *prefix, const char *suffix)
    status = unlink(str);
  
    if (status) {
-      ERROR((SGE_EVENT, "ERROR: unlinking "SFQ": "SFN"\n", str, strerror(errno)));
+      ERROR((SGE_EVENT, MSG_FILE_UNLINKFAILED_SS, str, strerror(errno)));
       DEXIT;
       return false;
    } else {
@@ -352,11 +352,11 @@ int sge_mkdir(const char *path, int fmode, int exit_on_error, int may_not_exist)
    DENTER(TOP_LAYER, "sge_mkdir");
    if (!path) {
       if (exit_on_error) {
-         CRITICAL((SGE_EVENT,MSG_VAR_PATHISNULLINSGEMKDIR ));
+         CRITICAL((SGE_EVENT, SFNMAX, MSG_VAR_PATHISNULLINSGEMKDIR));
          DCLOSE;
          SGE_EXIT(NULL, 1);
       } else {
-         ERROR((SGE_EVENT, MSG_VAR_PATHISNULLINSGEMKDIR ));
+         ERROR((SGE_EVENT, SFNMAX, MSG_VAR_PATHISNULLINSGEMKDIR));
          DEXIT;
          return -1;
       }
@@ -397,11 +397,11 @@ int sge_mkdir2(const char *base_dir, const char *name, int fmode,
    
    if (base_dir == NULL || name == NULL) {
       if (exit_on_error) {
-         CRITICAL((SGE_EVENT,MSG_VAR_PATHISNULLINSGEMKDIR ));
+         CRITICAL((SGE_EVENT, SFNMAX, MSG_VAR_PATHISNULLINSGEMKDIR));
          DCLOSE;
          SGE_EXIT(NULL, 1);
       } else {
-         ERROR((SGE_EVENT, MSG_VAR_PATHISNULLINSGEMKDIR ));
+         ERROR((SGE_EVENT, SFNMAX, MSG_VAR_PATHISNULLINSGEMKDIR));
          DRETURN(-1);
       }
    }

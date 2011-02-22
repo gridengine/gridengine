@@ -375,10 +375,9 @@ error:
  ****/
 static lList *sge_parse_qmod(lList **ppcmdline, lList **ppreflist, u_long32 *pforce)
 {
-stringT str;
-lList *alp = NULL;
-u_long32 helpflag;
-int usageshowed = 0;
+   lList *alp = NULL;
+   u_long32 helpflag;
+   int usageshowed = 0;
 
    DENTER(TOP_LAYER, "sge_parse_qmod");
 
@@ -466,24 +465,23 @@ int usageshowed = 0;
 
       /* we get to this point, than there are -t options without job names. We have to write an error message */
       if ((ep = lGetElemStr(*ppcmdline, SPA_switch, "-t")) != NULL) {
-         sprintf(str, MSG_JOB_LONELY_TOPTION_S, lGetString(ep, SPA_switch_arg));
-         answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+         answer_list_add_sprintf(&alp, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
+                                 MSG_JOB_LONELY_TOPTION_S, lGetString(ep, SPA_switch_arg));
 
          break;
       }
 
    }
 
-   if(lGetNumberOfElem(*ppcmdline)) {
-     sprintf(str, MSG_PARSE_TOOMANYOPTIONS);
-     if(!usageshowed)
-        qmod_usage(stderr, NULL);
-     answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
-     DEXIT;
-     return alp;
+   if (lGetNumberOfElem(*ppcmdline)) {
+      if (!usageshowed) {
+         qmod_usage(stderr, NULL);
+      }
+      answer_list_add_sprintf(&alp, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
+                              MSG_PARSE_TOOMANYOPTIONS);
    }
-   DEXIT;
-   return alp;
+
+   DRETURN(alp);
 }
 
 /****

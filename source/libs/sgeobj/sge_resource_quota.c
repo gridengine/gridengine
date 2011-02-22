@@ -107,7 +107,7 @@ bool rqs_parse_filter_from_string(lListElem **filter, const char* buffer, lList 
       /* We have a expanded list */
       lSetBool(tmp_filter, RQRF_expand, true);
       if (buffer[strlen(buffer)-1] != '}') {
-         ERROR((SGE_EVENT, MSG_RESOURCEQUOTA_NOVALIDEXPANDEDLIST));
+         ERROR((SGE_EVENT, SFNMAX, MSG_RESOURCEQUOTA_NOVALIDEXPANDEDLIST));
          answer_list_add(alp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          DRETURN(false);
       }

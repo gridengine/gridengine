@@ -424,7 +424,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
    sge_dstring_init(&id_dstring, id_buffer, MAX_STRING_SIZE);
 
    if (!jr) {
-      CRITICAL((SGE_EVENT, MSG_JOB_CLEANUPJOBCALLEDWITHINVALIDPARAMETERS));
+      CRITICAL((SGE_EVENT, SFNMAX, MSG_JOB_CLEANUPJOBCALLEDWITHINVALIDPARAMETERS));
       DEXIT;
       return -1;
    }
@@ -508,14 +508,15 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
        * otherwise we assume it died before starting the job (if died through signal or
        * job_dir was found during execd startup)
        */
-      if (failed == ESSTATE_SHEPHERD_EXIT)
-         failed = shepherd_exit_status;   
-      else 
+      if (failed == ESSTATE_SHEPHERD_EXIT) {
+         failed = shepherd_exit_status;
+      } else {
          failed = SSTATE_BEFORE_PROLOG;
-     
+      }
+
       sprintf(error, MSG_STATUS_ABNORMALTERMINATIONOFSHEPHERDFORJOBXY_S,
               job_get_id_string(job_id, ja_task_id, pe_task_id, &id_dstring));
-      ERROR((SGE_EVENT, error));    
+      ERROR((SGE_EVENT, SFNMAX, error));
  
       /* 
        * failed = ESSTATE_SHEPHERD_EXIT or exit status of shepherd if we are
@@ -529,7 +530,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
       if (fscanf_count != 1) {
          sprintf(error, MSG_STATUS_ABNORMALTERMINATIONFOSHEPHERDFORJOBXYEXITSTATEFILEISEMPTY_S,
                  job_get_id_string(job_id, ja_task_id, pe_task_id, &id_dstring));
-         ERROR((SGE_EVENT, error));
+         ERROR((SGE_EVENT, SFNMAX, error));
          /* 
           * If shepherd died through signal assume job was started, else
           * trust exit status
@@ -557,9 +558,9 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
 
    if (failed) {
       if (failed == ESSTATE_DIED_THRU_SIGNAL)
-         sprintf(error, MSG_SHEPHERD_DIEDTHROUGHSIGNAL);
+         sprintf(error, SFNMAX, MSG_SHEPHERD_DIEDTHROUGHSIGNAL);
       else if (failed == ESSTATE_NO_PID)
-         sprintf(error, MSG_SHEPHERD_NOPIDFILE);
+         sprintf(error, SFNMAX, MSG_SHEPHERD_NOPIDFILE);
       else
          sprintf(error, MSG_SHEPHERD_EXITEDWISSTATUS_IS, failed, 
                  get_sstate_description(failed));
@@ -609,7 +610,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
             job_get_id_string(job_id, ja_task_id, pe_task_id, &id_dstring));
       }
       
-      ERROR((SGE_EVENT, error));
+      ERROR((SGE_EVENT, SFNMAX, error));
       
       if (!failed) {
          failed = SSTATE_FAILURE_AFTER_JOB;
@@ -644,7 +645,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
          if (!failed) {
             failed = SSTATE_FAILURE_AFTER_JOB;
             if (!*error)
-               sprintf(error, MSG_JOB_CANTREADUSEDRESOURCESFORJOB);
+               sprintf(error, SFNMAX, MSG_JOB_CANTREADUSEDRESOURCESFORJOB);
          }
       }
    }
@@ -1222,7 +1223,7 @@ int clean_up_old_jobs(sge_gdi_ctx_class_t *ctx, int startup)
    DENTER(TOP_LAYER, "clean_up_old_jobs");
 
    if (startup) {
-      INFO((SGE_EVENT, MSG_SHEPHERD_CKECKINGFOROLDJOBS));
+      INFO((SGE_EVENT, SFNMAX, MSG_SHEPHERD_CKECKINGFOROLDJOBS));
    }
 
    /* 
@@ -1247,9 +1248,9 @@ int clean_up_old_jobs(sge_gdi_ctx_class_t *ctx, int startup)
        !lost_children) {
       if (lost_children) {
          if (startup) {
-            INFO((SGE_EVENT, MSG_SHEPHERD_NOOLDJOBSATSTARTUP));
+            INFO((SGE_EVENT, SFNMAX, MSG_SHEPHERD_NOOLDJOBSATSTARTUP));
          } else {
-            INFO((SGE_EVENT, MSG_SHEPHERD_NOMOREOLDJOBSAFTERSTARTUP));
+            INFO((SGE_EVENT, SFNMAX, MSG_SHEPHERD_NOMOREOLDJOBSAFTERSTARTUP));
          }
          /* 
           * Now setting lost_children to 0 which disables further pid checking
@@ -1265,7 +1266,7 @@ int clean_up_old_jobs(sge_gdi_ctx_class_t *ctx, int startup)
    /* Get pids of running jobs. So we can look for running shepherds. */
    npids = sge_get_pids(pids, 10000, SGE_SHEPHERD, PSCMD);
    if (npids == -1) {
-      ERROR((SGE_EVENT, MSG_SHEPHERD_CANTGETPROCESSESFROMPSCOMMAND));
+      ERROR((SGE_EVENT, SFNMAX, MSG_SHEPHERD_CANTGETPROCESSESFROMPSCOMMAND));
       DEXIT;
       return -1;
    }
@@ -1441,7 +1442,7 @@ examine_job_task_from_file(sge_gdi_ctx_class_t *ctx, int startup, char *dir, lLi
       sprintf(err_str, MSG_SHEPHERD_SHEPHERDFORJOBXHASPIDYANDISNOTALIVE_SU, dir, sge_u32c(pid));
    }
    if (startup) {
-      INFO((SGE_EVENT, err_str));
+      INFO((SGE_EVENT, SFNMAX, err_str));
       modify_queue_limits_flag_for_job(ctx->get_qualified_hostname(ctx), jep, true);
    } else {
       DPRINTF((err_str));

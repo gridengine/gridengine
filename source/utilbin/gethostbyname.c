@@ -156,13 +156,13 @@ int main(int argc, char *argv[]) {
            printf("SGE name: %s\n",resolved_name);
         }
 
-        printf(MSG_SYSTEM_ALIASES );
+        printf("%s", MSG_SYSTEM_ALIASES);
 
         for (tp = he->h_aliases; *tp; tp++)
            printf("%s ", *tp);
         printf("\n");
   
-        printf(MSG_SYSTEM_ADDRESSES );
+        printf("%s", MSG_SYSTEM_ADDRESSES);
         for (tp2 = he->h_addr_list; *tp2; tp2++)
            printf("%s ", inet_ntoa(* (struct in_addr *) *tp2));  /* inet_ntoa() is not MT save */
         printf("\n");  

@@ -351,7 +351,7 @@ bool sge_setup_paths(u_long32 progid, const char *sge_cell, dstring *error_dstri
    cell_root = sge_malloc(strlen(sge_root) + strlen(sge_cell) + 2);
    if (cell_root == NULL) {
       if (error_dstring == NULL) {
-         CRITICAL((SGE_EVENT, MSG_SGETEXT_NOMEM));
+         CRITICAL((SGE_EVENT, SFNMAX, MSG_SGETEXT_NOMEM));
          SGE_EXIT(NULL, 1);
       } else {
          sge_dstring_copy_string(error_dstring, MSG_SGETEXT_NOMEM);

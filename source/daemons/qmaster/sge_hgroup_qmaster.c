@@ -257,7 +257,7 @@ hgroup_mod(sge_gdi_ctx_class_t *ctx,
          } else {
             lListElem *aep;
             for_each(aep, *answer_list) {
-               ERROR((SGE_EVENT, lGetString(aep, AN_text)));
+               ERROR((SGE_EVENT, SFNMAX, lGetString(aep, AN_text)));
             }
             ret = false;
          }
@@ -267,7 +267,7 @@ hgroup_mod(sge_gdi_ctx_class_t *ctx,
 
          /* Reject modify requests which try to change the groupname */
          if (sge_hostcmp(old_name, name)) {
-            ERROR((SGE_EVENT, MSG_HGRP_NONAMECHANGE));
+            ERROR((SGE_EVENT, SFNMAX, MSG_HGRP_NONAMECHANGE));
             answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX,
                             ANSWER_QUALITY_ERROR);
             ret = false;

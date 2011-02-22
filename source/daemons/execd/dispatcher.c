@@ -252,7 +252,7 @@ int sge_execd_process_messages(sge_gdi_ctx_class_t *ctx)
                    */ 
                   sge_set_qmrestart_time(now);
                   sge_set_delay_job_reports_flag(true);
-                  INFO((SGE_EVENT, MSG_EXECD_ENABLEDELEAYDJOBREPORTING));
+                  INFO((SGE_EVENT, SFNMAX, MSG_EXECD_ENABLEDELEAYDJOBREPORTING));
 
                   /* after a reconnect, we want to send a full load report - immediately */
                   execd_trash_load_report();
@@ -277,7 +277,7 @@ int sge_execd_process_messages(sge_gdi_ctx_class_t *ctx)
             if (sge_get_delay_job_reports_flag() && (now - sge_get_qmrestart_time() >= DELAYED_FINISHED_JOB_REPORTING_INTERVAL)) {
                   sge_set_delay_job_reports_flag(false);
                   sge_set_qmrestart_time(0);
-                  INFO((SGE_EVENT, MSG_EXECD_DISABLEDELEAYDJOBREPORTING));
+                  INFO((SGE_EVENT, SFNMAX, MSG_EXECD_DISABLEDELEAYDJOBREPORTING));
             }
 
             if (now - last_alive_check >= alive_check_interval) {

@@ -129,7 +129,7 @@ static int shadowd_is_old_master_enrolled(int sge_test_heartbeat, int sge_qmaste
 
    handle=cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE, CL_FALSE, sge_qmaster_port, CL_TCP_DEFAULT,(char*)prognames[SHADOWD] , 0, 1,0 );
    if (handle == NULL) {
-      CRITICAL((SGE_EVENT,cl_get_error_text(commlib_error)));
+      CRITICAL((SGE_EVENT, SFNMAX, cl_get_error_text(commlib_error)));
       DRETURN(is_up_and_running);
    }
 
@@ -165,7 +165,7 @@ main(int argc, char **argv)
    int delay            = 0;
    time_t now, last;
 /*    const char *cp; */
-   char err_str[1024];
+   char err_str[MAX_STRING_SIZE];
    char shadowd_pidfile[SGE_PATH_MAX];
    dstring ds;
    char buffer[256];
@@ -288,12 +288,12 @@ char qmaster_out_file[SGE_PATH_MAX];
    }
 
    if (sge_set_admin_username(ctx->get_admin_user(ctx), err_str)) {
-      CRITICAL((SGE_EVENT, err_str));
+      CRITICAL((SGE_EVENT, SFNMAX, err_str));
       SGE_EXIT((void**)&ctx, 1);
    }
 
    if (sge_switch2admin_user()) {
-      CRITICAL((SGE_EVENT, MSG_SHADOWD_CANTSWITCHTOADMIN_USER));
+      CRITICAL((SGE_EVENT, SFNMAX, MSG_SHADOWD_CANTSWITCHTOADMIN_USER));
       SGE_EXIT((void**)&ctx, 1);
    }
 
@@ -369,7 +369,7 @@ char qmaster_out_file[SGE_PATH_MAX];
                if (ret == 0) {
                   /* we can start a qmaster on this host */
                   if (qmaster_lock(QMASTER_LOCK_FILE)) {
-                     ERROR((SGE_EVENT, MSG_SHADOWD_FAILEDTOLOCKQMASTERSOMBODYWASFASTER));
+                     ERROR((SGE_EVENT, SFNMAX, MSG_SHADOWD_FAILEDTOLOCKQMASTERSOMBODYWASFASTER));
                   } else {
                      int out, err;
 
@@ -406,7 +406,7 @@ char qmaster_out_file[SGE_PATH_MAX];
                         ret = startprog(out, err, NULL, binpath, qmaster_name, NULL);
                         sge_switch2admin_user();
                         if (ret) {
-                           ERROR((SGE_EVENT, MSG_SHADOWD_CANTSTARTQMASTER));
+                           ERROR((SGE_EVENT, SFNMAX, MSG_SHADOWD_CANTSTARTQMASTER));
                         }
                         close(out);
                      } else {
@@ -537,8 +537,8 @@ static int check_if_valid_shadow(char *binpath,
       DRETURN(-1);
    }
 
-   sprintf(binpath, binary_path); /* copy global configuration path */
-   DPRINTF((""SFQ"\n", binpath));   
+   sge_strlcpy(binpath, binary_path, SGE_PATH_MAX); /* copy global configuration path */
+   DPRINTF((""SFQ"\n", binpath));
    DPRINTF(("we are a candidate for shadow master\n"));
 
    DRETURN(0);

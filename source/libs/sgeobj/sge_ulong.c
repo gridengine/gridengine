@@ -273,7 +273,7 @@ ulong_parse_date_time_from_string(u_long32 *this_ulong,
    memset(tmp_str, 0, sizeof(tmp_str));
 
    if (!string || string[0] == '\0') {
-      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_PARSE_NODATE));
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_PARSE_NODATE));
       if (answer_list) {
          answer_list_add(answer_list, SGE_EVENT, 
                          STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -286,7 +286,7 @@ ulong_parse_date_time_from_string(u_long32 *this_ulong,
    }
 
    if (strlen(string) > sizeof(stringT)) {
-      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_PARSE_STARTTIMETOOLONG));
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_PARSE_STARTTIMETOOLONG));
       if (answer_list) {
          answer_list_add(answer_list, SGE_EVENT, 
                          STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -310,7 +310,7 @@ ulong_parse_date_time_from_string(u_long32 *this_ulong,
 
    if ((i != 0) && (i != 2)) {
       sge_free_saved_vars(context);
-      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_PARSE_INVALIDSECONDS));
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_PARSE_INVALIDSECONDS));
       if (answer_list) {
          answer_list_add(answer_list, SGE_EVENT, 
                          STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -326,7 +326,7 @@ ulong_parse_date_time_from_string(u_long32 *this_ulong,
 
    if ((i != 8) && (i != 10) && (i != 12)) {
       sge_free_saved_vars(context);
-      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_PARSE_INVALIDHOURMIN));
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_PARSE_INVALIDHOURMIN));
       if (answer_list) {
          answer_list_add(answer_list, SGE_EVENT, 
                          STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -370,7 +370,7 @@ ulong_parse_date_time_from_string(u_long32 *this_ulong,
    timeptr.tm_mon=atoi(tmp_str)-1;/* 00==Jan, we don't like that do we */
    if ((timeptr.tm_mon>11)||(timeptr.tm_mon<0)) {
       sge_free_saved_vars(context);
-      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_PARSE_INVALIDMONTH));
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_PARSE_INVALIDMONTH));
       if (answer_list) {
          answer_list_add(answer_list, SGE_EVENT, 
                          STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -393,7 +393,7 @@ ulong_parse_date_time_from_string(u_long32 *this_ulong,
    if ((timeptr.tm_mday > 31) || (timeptr.tm_mday < 1)) {
       /* actually mktime() should frigging do it */
       sge_free_saved_vars(context);
-      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_PARSE_INVALIDDAY));
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_PARSE_INVALIDDAY));
       if (answer_list) {
          answer_list_add(answer_list, SGE_EVENT, 
                          STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -411,7 +411,7 @@ ulong_parse_date_time_from_string(u_long32 *this_ulong,
    non_seconds+=2;
 
    if ((timeptr.tm_hour > 23) || (timeptr.tm_hour < 0)) {
-      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_PARSE_INVALIDHOUR));
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_PARSE_INVALIDHOUR));
       if (answer_list) {
          answer_list_add(answer_list, SGE_EVENT, 
                          STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -429,7 +429,7 @@ ulong_parse_date_time_from_string(u_long32 *this_ulong,
 
    if ((timeptr.tm_min > 59)||(timeptr.tm_min < 0)) {
       sge_free_saved_vars(context);
-      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_PARSE_INVALIDMINUTE));
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_PARSE_INVALIDMINUTE));
       if (answer_list) {
          answer_list_add(answer_list, SGE_EVENT, 
                          STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -446,7 +446,7 @@ ulong_parse_date_time_from_string(u_long32 *this_ulong,
    }
    if ((timeptr.tm_sec>59)||(timeptr.tm_mday<0)) {
       sge_free_saved_vars(context);
-      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_PARSE_INVALIDSECOND));
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_PARSE_INVALIDSECOND));
       if (answer_list) {
          answer_list_add(answer_list, SGE_EVENT, 
                          STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -469,7 +469,7 @@ ulong_parse_date_time_from_string(u_long32 *this_ulong,
 
    if (gmt_secs < 0) {
       sge_free_saved_vars(context);
-      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_PARSE_NODATEFROMINPUT));
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_PARSE_NODATEFROMINPUT));
       if (answer_list) {
          answer_list_add(answer_list, SGE_EVENT, 
                          STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
@@ -611,7 +611,7 @@ ulong_parse_value_from_string(u_long32 *this_ulong,
    
    *this_ulong = strtol(string, &s, 10);
    if (string == s) {
-      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ULNG_INVALID_VALUE));
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_ULNG_INVALID_VALUE));
       answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       ret = false;
    }

@@ -170,7 +170,7 @@ int sge_read_configuration(sge_gdi_ctx_class_t *ctx, lListElem *aSpoolContext, l
    }
 
    if ((global = sge_get_configuration_for_host(SGE_GLOBAL_NAME)) == NULL) {
-      ERROR((SGE_EVENT, MSG_CONFIG_NOGLOBAL));
+      ERROR((SGE_EVENT, SFNMAX, MSG_CONFIG_NOGLOBAL));
       DRETURN(-1);
    }
 
@@ -373,7 +373,7 @@ int sge_mod_configuration(sge_gdi_ctx_class_t *ctx, lListElem *aConf, lList **an
       }
       
       if ((global = sge_get_configuration_for_host(SGE_GLOBAL_NAME)) == NULL) {
-         ERROR((SGE_EVENT, MSG_CONFIG_NOGLOBAL));
+         ERROR((SGE_EVENT, SFNMAX, MSG_CONFIG_NOGLOBAL));
       }
             
       if (merge_configuration(&answer_list, progid, cell_root, global, local, NULL) != 0) {

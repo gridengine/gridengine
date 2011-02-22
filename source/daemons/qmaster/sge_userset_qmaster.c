@@ -290,13 +290,13 @@ static int dept_is_valid_defaultdepartment(lListElem *dept,
    if (dept != NULL) {
       /* test 'type' */
       if (!(lGetUlong(dept, US_type) & US_DEPT)) {
-         ERROR((SGE_EVENT, MSG_QMASTER_DEPTFORDEFDEPARTMENT));
+         ERROR((SGE_EVENT, SFNMAX, MSG_QMASTER_DEPTFORDEFDEPARTMENT));
          answer_list_add(answer_list, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
          ret = 0;
       }
       /* test user list */
       if (lGetNumberOfElem(lGetList(dept, US_entries)) > 0 ) {
-         ERROR((SGE_EVENT, MSG_QMASTER_AUTODEFDEPARTMENT));
+         ERROR((SGE_EVENT, SFNMAX, MSG_QMASTER_AUTODEFDEPARTMENT));
          answer_list_add(answer_list, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
          ret = 0;
       }
@@ -330,12 +330,12 @@ static int acl_is_valid_acl(lListElem *acl,
    if (acl != NULL) {
       if (!(lGetUlong(acl, US_type) & US_DEPT)) {
          if (lGetUlong(acl, US_fshare) > 0) {
-            ERROR((SGE_EVENT, MSG_QMASTER_ACLNOSHARE));
+            ERROR((SGE_EVENT, SFNMAX, MSG_QMASTER_ACLNOSHARE));
             answer_list_add(answer_list, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
             ret = 0;
          }
          if (lGetUlong(acl, US_oticket) > 0) {
-            ERROR((SGE_EVENT, MSG_QMASTER_ACLNOTICKET));
+            ERROR((SGE_EVENT, SFNMAX, MSG_QMASTER_ACLNOTICKET));
             answer_list_add(answer_list, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
             ret = 0;
          }

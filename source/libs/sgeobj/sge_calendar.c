@@ -94,7 +94,7 @@ static char old_error[1000];
 static char store[1000];
 static int number;
 static int token_is_valid = 0;
-static char parse_error[1000];
+static char parse_error[MAX_STRING_SIZE];
 
 /* parsing */
 static int 
@@ -475,7 +475,7 @@ static u_long32 is_week_entry_active(lListElem *tm, lListElem *week_entry, time_
             state = is_week_entry_active(new_tm, week_entry, limit, next_state, rec_count++); 
          }
          else {
-            ERROR((SGE_EVENT, MSG_CALENDAR_CALCTERMINATED));
+            ERROR((SGE_EVENT, SFNMAX, MSG_CALENDAR_CALCTERMINATED));
          }
 
          lFreeElem(&new_tm);
@@ -1293,7 +1293,7 @@ static int disabled_year_entry(lListElem **cal) {
          DRETURN(-1);
       }
    } else {
-      sprintf(parse_error, MSG_ANSWER_GOTEQUALWITHOUTDAYTIMERANGEORSTATE );
+      sprintf(parse_error, SFNMAX, MSG_ANSWER_GOTEQUALWITHOUTDAYTIMERANGEORSTATE );
       goto ERROR;
    }
 
@@ -1402,7 +1402,7 @@ static int year_day_range(lListElem **tmr) {
          DRETURN(-1);
       }   
       if (tm_yday_cmp(t1, t2)>0) {
-         sprintf(parse_error, MSG_ANSWER_FIRSTYESTERDAYINRANGEMUSTBEBEFORESECONDYESTERDAY);
+         sprintf(parse_error, SFNMAX, MSG_ANSWER_FIRSTYESTERDAYINRANGEMUSTBEBEFORESECONDYESTERDAY);
          lFreeElem(&t1);
          DRETURN(-1);   
       }
@@ -1442,7 +1442,7 @@ static int year_day(lListElem **tm) {
    }
 
    if (scan(NULL, NULL)!=DOT) {   
-      sprintf(parse_error, MSG_PARSE_MISSINGPOINTAFTERDAY);
+      sprintf(parse_error, SFNMAX, MSG_PARSE_MISSINGPOINTAFTERDAY);
       DRETURN(-1);
    }
    eat_token();
@@ -1452,7 +1452,7 @@ static int year_day(lListElem **tm) {
    }
 
    if (scan(NULL, NULL)!=DOT) {   
-      sprintf(parse_error, MSG_PARSE_MISSINGPOINTAFTERMONTH );
+      sprintf(parse_error, SFNMAX, MSG_PARSE_MISSINGPOINTAFTERMONTH );
       DRETURN(-1);
    }
    eat_token();
@@ -1634,7 +1634,7 @@ static int daytime_range(lListElem **tmr) {
       goto ERROR;
    }
    if (scan(NULL, NULL)!=MINUS) {
-      sprintf(parse_error, MSG_PARSE_MISSINGDASHINDAYTIMERANGE);   
+      sprintf(parse_error, SFNMAX, MSG_PARSE_MISSINGDASHINDAYTIMERANGE);
       goto ERROR;
    }
    eat_token();
@@ -1642,7 +1642,7 @@ static int daytime_range(lListElem **tmr) {
       goto ERROR;
    }
    if (!tm_daytime_cmp(t1, t2)) {
-      sprintf(parse_error, MSG_PARSE_RANGEBEGISEQUALTOEND);   
+      sprintf(parse_error, SFNMAX, MSG_PARSE_RANGEBEGISEQUALTOEND);
       goto ERROR;
    }
 
@@ -1703,7 +1703,7 @@ static int daytime(lListElem **tm) {
 SUCCESS:
    if (h==24) {
       if (m || s) {
-         sprintf(parse_error, MSG_PARSE_DAYTIMESBEYOND24HNOTALLOWED);
+         sprintf(parse_error, SFNMAX, MSG_PARSE_DAYTIMESBEYOND24HNOTALLOWED);
          DRETURN(-1);
       }
    }
@@ -1804,7 +1804,7 @@ static int disabled_week_list(lList **alpp, const char *s, lList **cal, const ch
 
    /* complain about still unused tokens */
    if (scan(NULL, NULL)!=NO_TOKEN) {
-      sprintf(parse_error, MSG_PARSE_UNRECOGNIZEDTOKENATEND);
+      sprintf(parse_error, SFNMAX, MSG_PARSE_UNRECOGNIZEDTOKENATEND);
       goto ERROR;
    }
 
@@ -1857,7 +1857,7 @@ static int disabled_week_entry(lListElem **cal) {
          goto ERROR;
       }   
    } else {
-      sprintf(parse_error, MSG_ANSWER_GOTEQUALWITHOUTDAYTIMERANGEORSTATE);
+      sprintf(parse_error, SFNMAX, MSG_ANSWER_GOTEQUALWITHOUTDAYTIMERANGEORSTATE);
       goto ERROR;
    }
 
@@ -2153,7 +2153,7 @@ static int week_day_range(lListElem **tmr) {
          goto ERROR;
 
       if (tm_wday_cmp(t1, t2)==0) {
-         sprintf(parse_error, MSG_PARSE_FOUNDUSELESSWEEKDAYRANGE);
+         sprintf(parse_error, SFNMAX, MSG_PARSE_FOUNDUSELESSWEEKDAYRANGE);
          goto ERROR;
       }
    }
@@ -2204,7 +2204,7 @@ static int week_day(lListElem **tm) {
    DENTER(TOP_LAYER, "week_day");
 
    if (scan(NULL, NULL)!=STRING) {
-      sprintf(parse_error, MSG_PARSE_EXPECTEDSTRINGFORWEEKDAY);
+      sprintf(parse_error, SFNMAX, MSG_PARSE_EXPECTEDSTRINGFORWEEKDAY);
       DRETURN(-1);
    }
    s = get_string();
@@ -2286,7 +2286,7 @@ static int scan(const char *s, token_set_t token_set[]) {
                      for (j=0; t[j] && isdigit((int) t[j]); j++) {
                         number =  old_number * 10 + (t[j]-'0');
                         if (number<old_number) {
-                           ERROR((SGE_EVENT, MSG_PARSE_OVERFLOWERRORWHILEPARSING));
+                           ERROR((SGE_EVENT, SFNMAX, MSG_PARSE_OVERFLOWERRORWHILEPARSING));
                            token = ERR_TOKEN;
                            token_is_valid = 1;
                            DRETURN(token);

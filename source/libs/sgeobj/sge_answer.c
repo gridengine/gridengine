@@ -1015,19 +1015,19 @@ static bool answer_log(lListElem *answer, bool show_info) {
 
    switch (lGetUlong(answer, AN_quality)) {
       case ANSWER_QUALITY_CRITICAL:
-         CRITICAL((SGE_EVENT, lGetString(answer, AN_text)));
+         CRITICAL((SGE_EVENT, SFNMAX, lGetString(answer, AN_text)));
          ret = true;
          break;
       case ANSWER_QUALITY_ERROR:
-         ERROR((SGE_EVENT, lGetString(answer, AN_text)));
+         ERROR((SGE_EVENT, SFNMAX, lGetString(answer, AN_text)));
          ret = true;
          break;
       case ANSWER_QUALITY_WARNING:
-         WARNING((SGE_EVENT, lGetString(answer, AN_text)));
+         WARNING((SGE_EVENT, SFNMAX, lGetString(answer, AN_text)));
          break;
       case ANSWER_QUALITY_INFO:
          if (show_info) {
-            INFO((SGE_EVENT, lGetString(answer, AN_text)));
+            INFO((SGE_EVENT, SFNMAX, lGetString(answer, AN_text)));
          }
          break;
       default:

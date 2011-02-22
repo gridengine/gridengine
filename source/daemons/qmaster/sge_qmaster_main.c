@@ -334,7 +334,7 @@ int main(int argc, char* argv[])
       max_enroll_tries--;
       if (max_enroll_tries <= 0) {
          /* exit after 30 seconds */
-         CRITICAL((SGE_EVENT, MSG_QMASTER_COMMUNICATION_ERRORS ));
+         CRITICAL((SGE_EVENT, SFNMAX, MSG_QMASTER_COMMUNICATION_ERRORS));
          SGE_EXIT((void**)&ctx, 1);
       }
       if (cl_com_get_handle(prognames[QMASTER],1) == NULL) {
@@ -350,7 +350,7 @@ int main(int argc, char* argv[])
     */
    ret_val = cl_com_set_status_func(sge_qmaster_application_status);
    if (ret_val != CL_RETVAL_OK) {
-      ERROR((SGE_EVENT, cl_get_error_text(ret_val)));
+      ERROR((SGE_EVENT, SFNMAX, cl_get_error_text(ret_val)));
    }
 
    /* 

@@ -102,7 +102,7 @@ int do_job_exec(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, sge_pack_buffer *a
 
    /* ------- featureset */
    if (unpackint(&(aMsg->buf), &feature_set)) {
-      ERROR((SGE_EVENT, MSG_COM_UNPACKFEATURESET));
+      ERROR((SGE_EVENT, SFNMAX, MSG_COM_UNPACKFEATURESET));
       DRETURN(0);
    }
 
@@ -120,7 +120,7 @@ int do_job_exec(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, sge_pack_buffer *a
        
       if (!object_unpack_elem_verify(&answer_list, &(aMsg->buf), &job, JB_Type)) {
          answer_list_output(&answer_list);
-         ERROR((SGE_EVENT, MSG_COM_UNPACKJOB));
+         ERROR((SGE_EVENT, SFNMAX, MSG_COM_UNPACKJOB));
          DRETURN(0);
       }
 
@@ -164,7 +164,7 @@ int do_job_exec(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, sge_pack_buffer *a
 
       if (!object_unpack_elem_verify(&answer_list, &(aMsg->buf), &petrep, PETR_Type)) {
          answer_list_output(&answer_list);
-         ERROR((SGE_EVENT, MSG_COM_UNPACKJOB));
+         ERROR((SGE_EVENT, SFNMAX, MSG_COM_UNPACKJOB));
          DRETURN(0);
       }
 
@@ -201,7 +201,7 @@ int do_job_slave(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg)
 
    /* ------- featureset */
    if (unpackint(&(aMsg->buf), &feature_set)) {
-      ERROR((SGE_EVENT, MSG_COM_UNPACKFEATURESET));
+      ERROR((SGE_EVENT, SFNMAX, MSG_COM_UNPACKFEATURESET));
       DRETURN(0);
    }
 
@@ -214,7 +214,7 @@ int do_job_slave(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg)
    /* ------- job */
    if (!object_unpack_elem_verify(&answer_list, &(aMsg->buf), &jelem, JB_Type)) {
       answer_list_output(&answer_list);
-      ERROR((SGE_EVENT, MSG_COM_UNPACKJOB));
+      ERROR((SGE_EVENT, SFNMAX, MSG_COM_UNPACKJOB));
       DRETURN(0);
    }
    lFreeList(&answer_list);

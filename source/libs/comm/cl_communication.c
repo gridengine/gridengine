@@ -2862,14 +2862,14 @@ int cl_com_endpoint_list_refresh(cl_raw_list_t* list_p) {
 static int cl_com_get_ip_string(struct in_addr *addr, char **ipstr) {
    char tmp_buffer[256];
    unsigned long ip,A,B,C,D;
-   /* 
+   /*
     * This function is NOT using inet_ntoa() because on some platforms this
     * function is NOT threadsave.
     *
     * WARNING: Currently only used for error case. Might be not performant for general
     * use!
     */
-   if (addr == NULL || ipstr == NULL) { 
+   if (addr == NULL || ipstr == NULL) {
       CL_LOG(CL_LOG_ERROR, "one of the parameters is NULL");
       return CL_RETVAL_PARAMS;
    }
@@ -2879,13 +2879,13 @@ static int cl_com_get_ip_string(struct in_addr *addr, char **ipstr) {
    }
 
    ip = (unsigned long) ntohl(addr->s_addr);
-   
+
    A =  ip / (256*256*256);
    B = (ip - (A * 256*256*256)) / (256 * 256);
    C = (ip - (A * 256*256*256) - (B*256*256)) / 256;
    D =  ip - (A * 256*256*256) - (B*256*256) - (C*256);
 
-   snprintf(tmp_buffer, 256, "%ld.%ld.%ld.%ld", A, B, C, D);
+   snprintf(tmp_buffer, sizeof(tmp_buffer), "%ld.%ld.%ld.%ld", A, B, C, D);
    *ipstr = strdup(tmp_buffer);
    if (*ipstr == NULL) {
       return CL_RETVAL_MALLOC;
@@ -3576,7 +3576,7 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
    struct in_addr tmp_addr;
    int do_read_select = 0;
    int do_write_select = 0;
-   char tmp_buffer[256];
+   char tmp_buffer[MAX_STRING_SIZE];
    cl_com_connection_t* connection = NULL;
    cl_connection_list_data_t* ldata = NULL;
 
@@ -3727,11 +3727,11 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
  
          if ( (retval=cl_com_cached_gethostbyname(cm_message->dst->comp_host, &unique_host, &tmp_addr, NULL, NULL)) != CL_RETVAL_OK) {
             if ( cm_message->dst->comp_host != NULL ) {
-               snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_CANT_RESOLVE_DESTINATION_HOST_S, cm_message->dst->comp_host  );
+               snprintf(tmp_buffer, sizeof(tmp_buffer), MSG_CL_TCP_FW_CANT_RESOLVE_DESTINATION_HOST_S, cm_message->dst->comp_host);
             } else {
-               snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_EMPTY_DESTINATION_HOST );
+               snprintf(tmp_buffer, sizeof(tmp_buffer), SFNMAX, MSG_CL_TCP_FW_EMPTY_DESTINATION_HOST);
             }
-            cl_commlib_push_application_error(CL_LOG_ERROR, retval , tmp_buffer );
+            cl_commlib_push_application_error(CL_LOG_ERROR, retval, tmp_buffer);
             unique_host = strdup("(HOST_NOT_RESOLVABLE)");
          }
 
@@ -3744,11 +3744,11 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
             CL_LOG_STR(CL_LOG_ERROR,"local resolving of remote host name  :", unique_host);
 
             if ( cm_message->dst->comp_host != NULL && unique_host != NULL ) {
-               snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_REMOTE_DESTINATION_HOSTNAME_X_NOT_Y_SS, cm_message->dst->comp_host, unique_host);
+               snprintf(tmp_buffer, sizeof(tmp_buffer), MSG_CL_TCP_FW_REMOTE_DESTINATION_HOSTNAME_X_NOT_Y_SS, cm_message->dst->comp_host, unique_host);
             } else {
-               snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_EMPTY_DESTINATION_HOST );
+               snprintf(tmp_buffer, sizeof(tmp_buffer), SFNMAX, MSG_CL_TCP_FW_EMPTY_DESTINATION_HOST);
             }
-            cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_LOCAL_HOSTNAME_ERROR, tmp_buffer );
+            cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_LOCAL_HOSTNAME_ERROR, tmp_buffer);
 
 
             /* deny access to connected client */
@@ -3788,11 +3788,11 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
          if (cm_message->rdata != NULL) {
             if ( (retval=cl_com_cached_gethostbyname(cm_message->rdata->comp_host, &unique_host, &tmp_addr, NULL, NULL)) != CL_RETVAL_OK) {
                if (cm_message->rdata->comp_host != NULL) {
-                  snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_CANT_RESOLVE_RDATA_HOST_S , cm_message->rdata->comp_host);
+                  snprintf(tmp_buffer, sizeof(tmp_buffer), MSG_CL_TCP_FW_CANT_RESOLVE_RDATA_HOST_S , cm_message->rdata->comp_host);
                } else {
-                  snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_EMPTY_RDATA_HOST);
+                  snprintf(tmp_buffer, sizeof(tmp_buffer), SFNMAX, MSG_CL_TCP_FW_EMPTY_RDATA_HOST);
                }
-               cl_commlib_push_application_error(CL_LOG_ERROR, retval , tmp_buffer );
+               cl_commlib_push_application_error(CL_LOG_ERROR, retval, tmp_buffer);
                unique_host = strdup("(HOST_NOT_RESOLVABLE)");
             }
             connection->remote   = cl_com_create_endpoint(unique_host,
@@ -3809,11 +3809,11 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
                CL_LOG_STR(CL_LOG_ERROR,"local resolving of remote host name  :", unique_host);
 
                if ( cm_message->rdata->comp_host != NULL && unique_host != NULL ) {
-                  snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_REMOTE_RDATA_HOSTNAME_X_NOT_Y_SS, cm_message->rdata->comp_host, unique_host);
+                  snprintf(tmp_buffer, sizeof(tmp_buffer), MSG_CL_TCP_FW_REMOTE_RDATA_HOSTNAME_X_NOT_Y_SS, cm_message->rdata->comp_host, unique_host);
                } else {
-                  snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_EMPTY_RDATA_HOST );
+                  snprintf(tmp_buffer, sizeof(tmp_buffer), SFNMAX, MSG_CL_TCP_FW_EMPTY_RDATA_HOST);
                }
-               cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_LOCAL_HOSTNAME_ERROR, tmp_buffer );
+               cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_LOCAL_HOSTNAME_ERROR, tmp_buffer);
 
 
                /* deny access to connected client */
@@ -3947,15 +3947,15 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
             CL_LOG_STR(CL_LOG_ERROR,"resolved hostname from client:",connection->remote->comp_host  );
 
             if (connection->client_host_name != NULL && connection->remote->comp_host != NULL) {
-               snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_IP_ADDRESS_RESOLVING_X_NOT_Y_SS, connection->client_host_name, connection->remote->comp_host );
+               snprintf(tmp_buffer, sizeof(tmp_buffer), MSG_CL_TCP_FW_IP_ADDRESS_RESOLVING_X_NOT_Y_SS, connection->client_host_name, connection->remote->comp_host);
             } else {
                if (connection->client_host_name == NULL) {
-                  snprintf(tmp_buffer,256, MSG_CL_TCP_FW_CANT_RESOLVE_CLIENT_IP );
+                  snprintf(tmp_buffer, sizeof(tmp_buffer), SFNMAX, MSG_CL_TCP_FW_CANT_RESOLVE_CLIENT_IP);
                } else {
-                  snprintf(tmp_buffer,256, MSG_CL_TCP_FW_EMPTY_REMOTE_HOST );
+                  snprintf(tmp_buffer, sizeof(tmp_buffer), SFNMAX, MSG_CL_TCP_FW_EMPTY_REMOTE_HOST);
                }
             }
-            cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_LOCAL_HOSTNAME_ERROR, tmp_buffer );
+            cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_LOCAL_HOSTNAME_ERROR, tmp_buffer);
 
 
             /* deny access to connected client */
@@ -4074,9 +4074,8 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
             if ( strcmp(connection->local->comp_name, connection->client_dst->comp_name) != 0 || 
                  connection->local->comp_id != connection->client_dst->comp_id ) {
 
-               snprintf(tmp_buffer,
-                        256, 
-                        MSG_CL_TCP_FW_ENDPOINT_X_DOESNT_MATCH_Y_SSUSSU, 
+               snprintf(tmp_buffer, sizeof(tmp_buffer),
+                        MSG_CL_TCP_FW_ENDPOINT_X_DOESNT_MATCH_Y_SSUSSU,
                         connection->local->comp_host,
                         connection->local->comp_name,
                         sge_u32c(connection->local->comp_id),
@@ -4084,7 +4083,7 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
                         connection->client_dst->comp_name,
                         sge_u32c(connection->client_dst->comp_id));
 
-               cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_ACCESS_DENIED, tmp_buffer );
+               cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_ACCESS_DENIED, tmp_buffer);
 
                connection->crm_state = CL_CRM_CS_DENIED;
                connection_status = CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_DENIED;
@@ -4126,14 +4125,13 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
                      free(connection->remote->hash_id);
                      connection->remote->hash_id = NULL;
                   }
-                  snprintf(tmp_buffer,
-                           256, 
+                  snprintf(tmp_buffer, sizeof(tmp_buffer),
                            MSG_CL_TCP_FW_ENDPOINT_X_ALREADY_CONNECTED_SSU,
                            connection->remote->comp_host,
                            connection->remote->comp_name,
                            sge_u32c(connection->remote->comp_id));
 
-                  cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_ENDPOINT_NOT_UNIQUE, tmp_buffer );
+                  cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_ENDPOINT_NOT_UNIQUE, tmp_buffer);
 
                   connection->crm_state = CL_CRM_CS_ENDPOINT_NOT_UNIQUE; /* CL_CRM_CS_DENIED; */
                   connection_status = CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_NOT_UNIQUE;
@@ -4192,14 +4190,13 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
                   if (in_port <= 0 || in_port >= IPPORT_RESERVED) {
                      CL_LOG(CL_LOG_ERROR,"new debug client connection is not from a reserved port");
                      client_ok = CL_FALSE;
-                     snprintf(tmp_buffer,
-                           256, 
+                     snprintf(tmp_buffer, sizeof(tmp_buffer),
                            MSG_CL_TCP_FW_ENDPOINT_X_NOT_FROM_RESERVED_PORT_SSU,
                            connection->remote->comp_host,
                            connection->remote->comp_name,
                            sge_u32c(connection->remote->comp_id));
 
-                     cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_NO_RESERVED_PORT_CONNECTION, tmp_buffer );
+                     cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_NO_RESERVED_PORT_CONNECTION, tmp_buffer);
 
                      connection->crm_state = CL_CRM_CS_DENIED;
                      connection_status = CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_DENIED;
@@ -4226,15 +4223,14 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
                      CL_LOG(CL_LOG_ERROR,"new debug client connection is not from local host");
                      client_ok = CL_FALSE;
 
-                     snprintf(tmp_buffer,
-                           256, 
+                     snprintf(tmp_buffer, sizeof(tmp_buffer),
                            MSG_CL_TCP_FW_ENDPOINT_X_NOT_FROM_LOCAL_HOST_SSUS,
                            connection->remote->comp_host,
                            connection->remote->comp_name,
                            sge_u32c(connection->remote->comp_id),
                            connection->local->comp_host);
 
-                     cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_NO_LOCAL_HOST_CONNECTION, tmp_buffer );
+                     cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_NO_LOCAL_HOST_CONNECTION, tmp_buffer);
 
                      connection->crm_state = CL_CRM_CS_DENIED;
                      connection_status = CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_DENIED;
@@ -4287,13 +4283,12 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
                      CL_LOG(CL_LOG_ERROR,"new debug client connection is not from a reserved port");
                      CL_LOG_INT(CL_LOG_ERROR,"client port =", in_port);
 
-                     snprintf(tmp_buffer,
-                              256, 
+                     snprintf(tmp_buffer, sizeof(tmp_buffer),
                               MSG_CL_TCP_FW_STANDARD_ENDPOINT_X_NOT_FROM_RESERVED_PORT_SSU,
                               connection->remote->comp_host,
                               connection->remote->comp_name,
                               sge_u32c(connection->remote->comp_id));
-                     cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_NO_RESERVED_PORT_CONNECTION, tmp_buffer );
+                     cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_NO_RESERVED_PORT_CONNECTION, tmp_buffer);
                      connection->crm_state = CL_CRM_CS_DENIED;
                      connection_status = CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_DENIED;
                      /* overwrite and free last error */
@@ -4356,8 +4351,8 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
                   if (is_ok != 1) {
                      connection_status_text = MSG_CL_TCP_FW_CONNECTION_STATUS_TEXT_CLIENT_NOT_IN_ALLOWED_HOST_LIST;
 
-                     snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_HOST_X_NOT_IN_ALOWED_HOST_LIST_S, connection->client_host_name); 
-                     cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_ACCESS_DENIED,tmp_buffer);
+                     snprintf(tmp_buffer, sizeof(tmp_buffer), MSG_CL_TCP_FW_HOST_X_NOT_IN_ALOWED_HOST_LIST_S, connection->client_host_name); 
+                     cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_ACCESS_DENIED, tmp_buffer);
 
                      connection->crm_state = CL_CRM_CS_DENIED;
                      connection_status = CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_DENIED;

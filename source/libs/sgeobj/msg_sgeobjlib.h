@@ -150,7 +150,7 @@
 
 #define MSG_ATTR_VALUEMULDEFINED_S     _MESSAGE(64218, _("Value for "SFQ" is multiply defined"))
 #define MSG_ATTR_NONEWATTRSETTING_S    _MESSAGE(64219, _("Cannot create new attribute setting for host "SFQ))
-#define MSG_ATTR_RESULTUNAMBIGUOUS_S   _MESSAGE(64220, _("Modification would result in ambiguous configuration"))
+#define MSG_ATTR_RESULTAMBIGUOUS       _MESSAGE(64220, _("Modification would result in ambiguous configuration"))
 #define MSG_ATTR_NOCONFVALUE           _MESSAGE(64221, _("No default/hostgroup/host value found"))
 #define MSG_ATTR_MISSINGCOMMA_S        _MESSAGE(64222, _("All list elements must be separated by commas: "SFQ))
 #define MSG_ATTR_MISSINGBRACKET_S      _MESSAGE(64223, _("The last character of each list item must be enclosed in brackets: "SFQ))

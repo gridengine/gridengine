@@ -670,7 +670,7 @@ monitoring_t *monitor
    DPRINTF(("cleaning queue >%s<\n", qname ));
 
    if (!manop_is_manager(user)) {
-      ERROR((SGE_EVENT, MSG_QUEUE_NOCLEANQPERMS));
+      ERROR((SGE_EVENT, SFNMAX, MSG_QUEUE_NOCLEANQPERMS));
       answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return -1;

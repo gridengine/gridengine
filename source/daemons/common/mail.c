@@ -103,7 +103,7 @@ void cull_mail(u_long32 progid, lList *user_list, const char *subj, const char *
          user = lGetString(ep, MR_user);
          host = lGetHost(ep, MR_host);
          if (!user && !host) {
-            ERROR((SGE_EVENT, MSG_MAIL_EMPTYUSERHOST));
+            ERROR((SGE_EVENT, SFNMAX, MSG_MAIL_EMPTYUSERHOST));
             FREE(mailer);
             DRETURN_VOID;
          } else if (!host) {
@@ -252,13 +252,13 @@ const char *buf
       alarm(0);
       if (pid2 == 0) {          /* how could this happen? */
          kill(pid, SIGKILL);
-         ERROR((SGE_EVENT, MSG_MAIL_NOMAIL1));
+         ERROR((SGE_EVENT, SFNMAX, MSG_MAIL_NOMAIL1));
          exit(1);
       }
 
       if (pid2 == -1) {         /* alarm must have went off */
          kill(pid, SIGKILL);
-         ERROR((SGE_EVENT, MSG_MAIL_NOMAIL2));
+         ERROR((SGE_EVENT, SFNMAX, MSG_MAIL_NOMAIL2));
          exit(1);
       }
 

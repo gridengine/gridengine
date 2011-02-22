@@ -32,7 +32,7 @@ static char start_dir[MAXPATHLEN] = "";
 
 int sgessh_readconfig(void)
 {
-  char err_str[1024];
+  char err_str[2048];
 
   read_config("config");
 

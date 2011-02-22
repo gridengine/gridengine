@@ -322,7 +322,7 @@ do_report_request(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, monitoring_t *mo
     }
 
    if (cull_unpack_list(&(aMsg->buf), &rep)) {
-      ERROR((SGE_EVENT,MSG_CULL_FAILEDINCULLUNPACKLISTREPORT));
+      ERROR((SGE_EVENT, SFNMAX, MSG_CULL_FAILEDINCULLUNPACKLISTREPORT));
       DRETURN_VOID;
    }
 
@@ -572,7 +572,7 @@ static void sge_c_job_ack(sge_gdi_ctx_class_t *ctx, const char *host, const char
       }
 
    default:
-      ERROR((SGE_EVENT, MSG_COM_ACK_UNKNOWN));
+      ERROR((SGE_EVENT, SFNMAX, MSG_COM_ACK_UNKNOWN));
    }
    DRETURN_VOID;
 }

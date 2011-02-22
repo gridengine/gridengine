@@ -368,9 +368,8 @@ main(int argc, char **argv)
       }
       printf("\n");
    } else {
-      printf(MSG_JOB_VERIFYFOUNDQ);
-      printf("\n");
-   }   
+      printf("%s\n", MSG_JOB_VERIFYFOUNDQ);
+   }
 
    if ((wait_for_job || is_immediate) && !just_verify) {
       int event;
@@ -709,5 +708,5 @@ static int report_exit_status(int stat, const char *jobid)
 *******************************************************************************/
 static void error_handler(const char *message)
 {
-   fprintf(stderr, message);
+   fprintf(stderr, "%s", message != NULL ? message : "NULL japi message");
 }

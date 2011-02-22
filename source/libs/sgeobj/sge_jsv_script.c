@@ -2901,7 +2901,7 @@ jsv_is_modify_rejected(sge_gdi_ctx_class_t *context, lList **answer_list, lListE
             /*
              * JSV is active but no modification allowed
              */
-            ERROR((SGE_EVENT, MSG_JSV_ALLOWED));
+            ERROR((SGE_EVENT, SFNMAX, MSG_JSV_ALLOWED));
             answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             ret = true;
          }

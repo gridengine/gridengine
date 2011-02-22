@@ -144,7 +144,7 @@ static int path_alias_read_from_file(lList **path_alias_list, lList **alpp,
 {
    FILE *fd;
    char buf[10000];
-   char err[BUFSIZ];
+   char err[MAX_STRING_SIZE];
    char origin[SGE_PATH_MAX];
    char submit_host[SGE_PATH_MAX];
    char exec_host[SGE_PATH_MAX];
@@ -288,7 +288,7 @@ int path_alias_list_initialize(lList **path_alias_list,
                                const char *host) 
 {
    char filename[2][SGE_PATH_MAX];
-   char err[BUFSIZ];
+   char err[MAX_STRING_SIZE];
    DENTER(TOP_LAYER, "path_alias_list_initialize");
 
    /* 

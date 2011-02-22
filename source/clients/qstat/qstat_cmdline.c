@@ -303,7 +303,7 @@ qstat_usage(int qselect_mode, FILE *fp, char *what)
       }   
       
       if (getenv("MORE_INFO")) {
-         fprintf(fp, MSG_QSTAT_USAGE_ADDITIONALDEBUGGINGOPTIONS);
+         fprintf(fp, SFNMAX, MSG_QSTAT_USAGE_ADDITIONALDEBUGGINGOPTIONS);
          fprintf(fp, "        [-dj]                             %s\n",MSG_QSTAT_USAGE_DUMPCOMPLETEJOBLISTTOSTDOUT);
          fprintf(fp, "        [-dq]                             %s\n",MSG_QSTAT_USAGE_DUMPCOMPLETEQUEUELISTTOSTDOUT);
       }

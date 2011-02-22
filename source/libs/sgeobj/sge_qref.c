@@ -815,7 +815,7 @@ qref_list_is_valid(const lList *this_list, lList **answer_list)
             }
          }
       } else {
-         ERROR((SGE_EVENT, MSG_QREF_QNOTREQUESTABLE));
+         ERROR((SGE_EVENT, SFNMAX, MSG_QREF_QNOTREQUESTABLE));
          answer_list_add(answer_list, SGE_EVENT,
                          STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          ret = false;

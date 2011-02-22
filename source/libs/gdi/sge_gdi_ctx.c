@@ -923,7 +923,7 @@ static int sge_gdi_ctx_class_prepare_enroll(sge_gdi_ctx_class_t *thiz) {
          case SCHEDD:
          case EXECD:
             {
-               INFO((SGE_EVENT,MSG_GDI_MULTI_THREADED_STARTUP));
+               INFO((SGE_EVENT, SFNMAX, MSG_GDI_MULTI_THREADED_STARTUP));
                /* if SGE_DEBUG_LEVEL environment is set we use gdi log flush function */
                /* you can set commlib debug level with env SGE_COMMLIB_DEBUG */
                if (env_sge_commlib_debug != NULL) {
@@ -936,7 +936,7 @@ static int sge_gdi_ctx_class_prepare_enroll(sge_gdi_ctx_class_t *thiz) {
             break;
          default:
             {
-               INFO((SGE_EVENT,MSG_GDI_SINGLE_THREADED_STARTUP));
+               INFO((SGE_EVENT, SFNMAX, MSG_GDI_SINGLE_THREADED_STARTUP));
                if (env_sge_commlib_debug != NULL) {
                   cl_ret = cl_com_setup_commlib(CL_NO_THREAD, CL_LOG_OFF, sge_gdi_ctx_log_flush_func);
                } else {
@@ -1196,7 +1196,7 @@ static int sge_gdi_ctx_class_prepare_enroll(sge_gdi_ctx_class_t *thiz) {
                      alive_back = thiz->is_alive(thiz);
                      cl_ret = cl_com_set_error_func(general_communication_error);
                      if (cl_ret != CL_RETVAL_OK) {
-                        ERROR((SGE_EVENT, cl_get_error_text(cl_ret)) );
+                        ERROR((SGE_EVENT, SFNMAX, cl_get_error_text(cl_ret)));
                      }
 
                      if (alive_back == CL_RETVAL_OK && getenv("SGE_TEST_HEARTBEAT_TIMEOUT") == NULL ) {
@@ -1325,7 +1325,7 @@ static int sge_gdi_ctx_class_is_alive(sge_gdi_ctx_class_t *thiz)
       sge_gdi_ctx_class_error(thiz, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
                 "cl_commlib_get_endpoint_status failed: "SFQ, cl_get_error_text(cl_ret));
    } else {
-      DEBUG((SGE_EVENT,MSG_GDI_QMASTER_STILL_RUNNING));   
+      DEBUG((SGE_EVENT, SFNMAX, MSG_GDI_QMASTER_STILL_RUNNING));
    }
 
    if (status != NULL) {
@@ -1995,7 +1995,7 @@ int sge_gdi2_setup(sge_gdi_ctx_class_t **context_ref, u_long32 progid, u_long32 
 
    if (context_ref && sge_gdi_ctx_is_setup(*context_ref)) {
       if (alpp_was_null) {
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_GDI_ALREADY_SETUP));
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_GDI_GDI_ALREADY_SETUP));
       } else {
          answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_WARNING,
                                  MSG_GDI_GDI_ALREADY_SETUP);

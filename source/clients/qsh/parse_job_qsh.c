@@ -286,11 +286,9 @@ lList *cull_parse_qsh_parameter(u_long32 prog_number, u_long32 uid, const char *
    }
 
    if ((ep = lGetElemStr(cmdline, SPA_switch, "-help"))) {
-      char str[1024];
-
       lRemoveElem(cmdline, &ep);
-      sprintf(str, MSG_ANSWER_HELPNOTALLOWEDINCONTEXT);
-      answer_list_add(&answer, str, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
+      answer_list_add_sprintf(&answer, STATUS_ENOIMP, ANSWER_QUALITY_ERROR,
+                              MSG_ANSWER_HELPNOTALLOWEDINCONTEXT);
       lFreeList(&path_alias);
       DEXIT;
       return answer;

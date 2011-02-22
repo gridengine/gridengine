@@ -713,7 +713,7 @@ u_long32 step
    DENTER(TOP_LAYER, "empty_job_list_filter");
 
    if (all_users_flag) {
-      ERROR((SGE_EVENT, MSG_SGETEXT_THEREARENOJOBS));
+      ERROR((SGE_EVENT, SFNMAX, MSG_SGETEXT_THEREARENOJOBS));
    } else if (user_list_flag) {
       dstring user_list_string = DSTRING_INIT;
       
@@ -770,12 +770,11 @@ u_long32 step
                    jobid, sge_u32c(start), sge_u32c(end), sge_u32c(step)));
          }
       } else {
-         ERROR((SGE_EVENT,MSG_SGETEXT_DOESNOTEXIST_SS, SGE_OBJ_JOB, jobid));
+         ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, SGE_OBJ_JOB, jobid));
       }      
    } else {
       /* Should not be possible */
-      ERROR((SGE_EVENT,
-             was_modify?MSG_SGETEXT_NOJOBSMODIFIED:MSG_SGETEXT_NOJOBSDELETED));
+      ERROR((SGE_EVENT, SFNMAX, was_modify ? MSG_SGETEXT_NOJOBSMODIFIED : MSG_SGETEXT_NOJOBSDELETED));
    }
 
    answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
@@ -892,14 +891,14 @@ char *ruser
    /* case 9 */
    
    if (all_users_flag && user_list_flag) {
-      ERROR((SGE_EVENT, MSG_SGETEXT_SPECIFYONEORALLUSER));
+      ERROR((SGE_EVENT, SFNMAX, MSG_SGETEXT_SPECIFYONEORALLUSER));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DRETURN(STATUS_EUNKNOWN);
    }
 
    /* case 2,5 */
 /*   if ((all_users_flag || user_list_flag) && jid_flag) {
-      ERROR((SGE_EVENT, MSG_SGETEXT_NOTALLOWEDTOSPECUSERANDJID));
+      ERROR((SGE_EVENT, SFNMAX, MSG_SGETEXT_NOTALLOWEDTOSPECUSERANDJID));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DRETURN(STATUS_EUNKNOWN);
    } */                           
@@ -2582,7 +2581,7 @@ int *trigger
 
       /* reject PE ranges change requests for jobs without PE request */
       if (!(pe_name=lGetString(new_job, JB_pe))) {
-         ERROR((SGE_EVENT, MSG_JOB_PERANGE_ONLY_FOR_PARALLEL));
+         ERROR((SGE_EVENT, SFNMAX, MSG_JOB_PERANGE_ONLY_FOR_PARALLEL));
          answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
          DRETURN(STATUS_EUNKNOWN);
       }
@@ -2926,7 +2925,7 @@ int job_verify_predecessors(lListElem *job, lList **alpp)
    predecessors_req = lGetList(job, JB_jid_request_list);
    predecessors_id = lCreateList("job_predecessors", JRE_Type);
    if (!predecessors_id) {
-      ERROR((SGE_EVENT, MSG_JOB_MOD_JOBDEPENDENCY_MEMORY ));
+      ERROR((SGE_EVENT, SFNMAX, MSG_JOB_MOD_JOBDEPENDENCY_MEMORY));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DRETURN(STATUS_EUNKNOWN);
    }
@@ -3031,7 +3030,7 @@ int job_verify_predecessors_ad(lListElem *job, lList **alpp)
    predecessors_req = lGetList(job, JB_ja_ad_request_list);
    predecessors_id = lCreateList("job_predecessors_ad", JRE_Type);
    if (!predecessors_id) {
-      ERROR((SGE_EVENT, MSG_JOB_MOD_JOBDEPENDENCY_MEMORY ));
+      ERROR((SGE_EVENT, SFNMAX, MSG_JOB_MOD_JOBDEPENDENCY_MEMORY));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DRETURN(STATUS_EUNKNOWN);
    }
@@ -3042,7 +3041,7 @@ int job_verify_predecessors_ad(lListElem *job, lList **alpp)
       if (!job_is_array(job)) {
          lFreeList(&predecessors_id);   
          DPRINTF(("could not create array dependence for non-array job\n"));
-         ERROR((SGE_EVENT, MSG_JOB_MOD_CANONLYSPECIFYHOLDJIDADWITHADOPT));
+         ERROR((SGE_EVENT, SFNMAX, MSG_JOB_MOD_CANONLYSPECIFYHOLDJIDADWITHADOPT));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DRETURN(STATUS_EUNKNOWN);
       }
@@ -3119,7 +3118,7 @@ int job_verify_predecessors_ad(lListElem *job, lList **alpp)
       if (!job_is_array(pred_job)) {
          lFreeList(&predecessors_id);
          DPRINTF(("could not create array dependence on non-array job\n"));
-         ERROR((SGE_EVENT, MSG_JOB_MOD_CANONLYSPECIFYHOLDJIDADWITHADOPT));
+         ERROR((SGE_EVENT, SFNMAX, MSG_JOB_MOD_CANONLYSPECIFYHOLDJIDADWITHADOPT));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DRETURN(STATUS_EUNKNOWN);
       }
@@ -3127,7 +3126,7 @@ int job_verify_predecessors_ad(lListElem *job, lList **alpp)
       if (!sge_task_depend_is_same_range(pred_job, job)) {
          lFreeList(&predecessors_id);
          DPRINTF(("could not create array dependence for jobs with different sub-task range\n"));
-         ERROR((SGE_EVENT, MSG_JOB_MOD_ARRAYJOBMUSTHAVESAMERANGEWITHADOPT));
+         ERROR((SGE_EVENT, SFNMAX, MSG_JOB_MOD_ARRAYJOBMUSTHAVESAMERANGEWITHADOPT));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DRETURN(STATUS_EUNKNOWN);
       }
@@ -3491,11 +3490,10 @@ int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bool is_m
             *trigger |= VERIFY_EVENT;
          }
          if (!a.pe) {
-            sprintf(SGE_EVENT, MSG_JOB_VERIFYFOUNDQ); 
+            answer_list_add(alpp, MSG_JOB_VERIFYFOUNDQ, STATUS_OK, ANSWER_QUALITY_INFO);
          } else {
-            sprintf(SGE_EVENT, MSG_JOB_VERIFYFOUNDSLOTS_I, a.slots);
+            answer_list_add_sprintf(alpp, STATUS_OK, ANSWER_QUALITY_INFO, MSG_JOB_VERIFYFOUNDSLOTS_I, a.slots);
          }
-         answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
          assignment_release(&a);
          DRETURN(STATUS_ESEMANTIC);
       }
@@ -4256,7 +4254,7 @@ job_verify_project(const lListElem *job, lList **alpp,
        * every job *must* request a project
        */
       if (lGetNumberOfElem(projects) > 0) {
-         ERROR((SGE_EVENT, MSG_JOB_PRJREQUIRED)); 
+         ERROR((SGE_EVENT, SFNMAX, MSG_JOB_PRJREQUIRED));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          ret = STATUS_EUNKNOWN;
       }
@@ -4265,7 +4263,7 @@ job_verify_project(const lListElem *job, lList **alpp,
          char* enforce_project = mconf_get_enforce_project();
 
          if (enforce_project != NULL && strcasecmp(enforce_project, "true") == 0) {
-            ERROR((SGE_EVENT, MSG_SGETEXT_NO_PROJECT));
+            ERROR((SGE_EVENT, SFNMAX, MSG_SGETEXT_NO_PROJECT));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             ret = STATUS_EUNKNOWN;
          }

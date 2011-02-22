@@ -100,9 +100,9 @@ init_framework(sge_gdi_ctx_class_t *ctx, bdb_info *info)
                                                    spooling_params);
    answer_list_output(&answer_list);
    if (!strcmp(bootstrap_get_spooling_method(),"classic")) {
-      CRITICAL((SGE_EVENT, MSG_SPOOLDEFAULTS_CANTHANDLECLASSICSPOOLING));
+      CRITICAL((SGE_EVENT, SFNMAX, MSG_SPOOLDEFAULTS_CANTHANDLECLASSICSPOOLING));
    } else if (spooling_context == NULL) {
-      CRITICAL((SGE_EVENT, MSG_SPOOLDEFAULTS_CANNOTCREATECONTEXT));
+      CRITICAL((SGE_EVENT, SFNMAX, MSG_SPOOLDEFAULTS_CANNOTCREATECONTEXT));
    } else {
       spool_set_default_context(spooling_context);
       spool_set_option(&answer_list, spooling_context, "recover=false");
@@ -110,7 +110,7 @@ init_framework(sge_gdi_ctx_class_t *ctx, bdb_info *info)
 
       /* initialize spooling context */
       if (!spool_startup_context(&answer_list, spooling_context, true)) {
-         CRITICAL((SGE_EVENT, MSG_SPOOLDEFAULTS_CANNOTSTARTUPCONTEXT));
+         CRITICAL((SGE_EVENT, SFNMAX, MSG_SPOOLDEFAULTS_CANNOTSTARTUPCONTEXT));
       } else {
          /* search the berkeley db info - take it from any object type, 
           * berkeleydb spools all objects using the same rule.
@@ -267,7 +267,8 @@ dump_object(bdb_info info, const char *key)
             answer_list_output(&answer_list);
             ret = EXIT_FAILURE;
          } else {
-            printf(job_script);
+            /* dump job script with a trailing linefeed, it might be missing in the script */
+            printf("%s\n", job_script != NULL ? job_script : "no job script");
             FREE(job_script);
          }
       } else {

@@ -237,8 +237,7 @@ static char *setEnvironment(const char *jobdir, char **wrapper)
          strcpy(command, line + 13);
       } else if (strncmp(line, "QRSH_WRAPPER=", 13) == 0) {
          if (*(line + 13) == 0) {
-            fprintf(stderr, MSG_QRSH_STARTER_EMPTY_WRAPPER);
-            fprintf(stderr, "\n");
+            fprintf(stderr, "%s\n", MSG_QRSH_STARTER_EMPTY_WRAPPER);
          } else {
             if ((*wrapper = (char *)malloc(strlen(line) - 13 + 1)) == NULL) {
                qrsh_error(MSG_QRSH_STARTER_MALLOCFAILED_S, strerror(errno));

@@ -67,7 +67,7 @@ int do_ticket(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg)
 
       if (unpackint(&(aMsg->buf), &jobid) || unpackint(&(aMsg->buf), &jataskid)
           || unpackdouble(&(aMsg->buf), &ticket)) {
-         ERROR((SGE_EVENT, MSG_JOB_TICKETFORMAT));
+         ERROR((SGE_EVENT, SFNMAX, MSG_JOB_TICKETFORMAT));
          DRETURN(0);
       }
       DPRINTF(("got %lf new tickets for job "sge_u32"."sge_u32"\n", ticket, jobid, jataskid));

@@ -118,25 +118,25 @@ int do_test () {
 /*   if (thread_prof_active_by_id(pthread_self()) == true ) {*/
 
       if(!prof_start(SGE_PROF_OTHER, &error)) {
-         fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+         fprintf(stderr, SFNMAX, sge_dstring_get_string(&error)); fflush(stderr);
          fprintf(stderr, "\n");
          sge_dstring_clear(&error);
       }
 
       if(!prof_start(SGE_PROF_CUSTOM1, &error)) {
-         fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+         fprintf(stderr, SFNMAX, sge_dstring_get_string(&error)); fflush(stderr);
          fprintf(stderr, "\n");
          sge_dstring_clear(&error);
       }
 
       if(!prof_set_level_name(SGE_PROF_CUSTOM1, "Main Loop", &error)) {
-         fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+         fprintf(stderr, SFNMAX, sge_dstring_get_string(&error)); fflush(stderr);
          fprintf(stderr, "\n");
          sge_dstring_clear(&error);
       }
 
       if(!prof_set_level_name(SGE_PROF_OTHER, "other", &error)) {
-         fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+         fprintf(stderr, SFNMAX, sge_dstring_get_string(&error)); fflush(stderr);
          fprintf(stderr, "\n");
          sge_dstring_clear(&error);
       }
@@ -180,7 +180,7 @@ int do_test () {
    printf("%s\n", prof_get_info_string(SGE_PROF_ALL, false, &error));
 
    if(!prof_reset(SGE_PROF_CUSTOM1, &error)) {
-      fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+      fprintf(stderr, SFNMAX, sge_dstring_get_string(&error)); fflush(stderr);
       fprintf(stderr, "\n");
       sge_dstring_clear(&error);
    }
@@ -189,13 +189,13 @@ int do_test () {
    printf("%s\n", prof_get_info_string(SGE_PROF_CUSTOM1, false, &error));
 
    if(!prof_stop(SGE_PROF_CUSTOM1, &error)) {
-      fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+      fprintf(stderr, SFNMAX, sge_dstring_get_string(&error)); fflush(stderr);
       fprintf(stderr, "\n");
       sge_dstring_clear(&error);
    }
 
    if(!prof_stop(SGE_PROF_OTHER, &error)) {
-      fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+      fprintf(stderr, SFNMAX, sge_dstring_get_string(&error)); fflush(stderr);
       fprintf(stderr, "\n");
       sge_dstring_clear(&error);
    }
@@ -214,31 +214,31 @@ void* do_sleep(void* p) {
 /*   if (thread_prof_active_by_id(pthread_self()) == true ) {*/
 
       if(!prof_start(SGE_PROF_OTHER, &error)) {
-         fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+         fprintf(stderr, SFNMAX, sge_dstring_get_string(&error)); fflush(stderr);
          fprintf(stderr, "\n");
          sge_dstring_clear(&error);
       }
 
       if(!prof_start(SGE_PROF_CUSTOM1, &error)) {
-         fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+         fprintf(stderr, SFNMAX, sge_dstring_get_string(&error)); fflush(stderr);
          fprintf(stderr, "\n");
          sge_dstring_clear(&error);
       }
 
       if(!prof_start(SGE_PROF_CUSTOM2, &error)) {
-         fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+         fprintf(stderr, SFNMAX, sge_dstring_get_string(&error)); fflush(stderr);
          fprintf(stderr, "\n");
          sge_dstring_clear(&error);
       }
 
       if(!prof_set_level_name(SGE_PROF_CUSTOM1, "sleep thread", &error)) {
-         fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+         fprintf(stderr, SFNMAX, sge_dstring_get_string(&error)); fflush(stderr);
          fprintf(stderr, "\n");
          sge_dstring_clear(&error);
       }
 
       if(!prof_set_level_name(SGE_PROF_CUSTOM2, "sleep_thread_printf", &error)) {
-         fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+         fprintf(stderr, SFNMAX, sge_dstring_get_string(&error)); fflush(stderr);
          fprintf(stderr, "\n");
          sge_dstring_clear(&error);
       }  
@@ -261,19 +261,19 @@ void* do_sleep(void* p) {
 
    /*if (thread_prof_active_by_id(pthread_self()) == true ) {*/
       if(!prof_stop(SGE_PROF_CUSTOM1, &error)) {
-         fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+         fprintf(stderr, SFNMAX, sge_dstring_get_string(&error)); fflush(stderr);
          fprintf(stderr, "\n");
          sge_dstring_clear(&error);
       }
 
       if(!prof_stop(SGE_PROF_CUSTOM2, &error)) {
-         fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+         fprintf(stderr, SFNMAX, sge_dstring_get_string(&error)); fflush(stderr);
          fprintf(stderr, "\n");
          sge_dstring_clear(&error);
       }
 
       if(!prof_stop(SGE_PROF_OTHER, &error)) {
-         fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+         fprintf(stderr, SFNMAX, sge_dstring_get_string(&error)); fflush(stderr);
          fprintf(stderr, "\n");
          sge_dstring_clear(&error);
       }
@@ -293,13 +293,13 @@ void* do_calc(void* p) {
 
    /*if (thread_prof_active_by_id(pthread_self()) == true ) {   */
       if(!prof_start(SGE_PROF_CUSTOM1, &error)) {
-         fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+         fprintf(stderr, SFNMAX, sge_dstring_get_string(&error)); fflush(stderr);
          fprintf(stderr, "\n");
          sge_dstring_clear(&error);
       }
 
       if(!prof_set_level_name(SGE_PROF_CUSTOM1, "calc thread", &error)) {
-         fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+         fprintf(stderr, SFNMAX, sge_dstring_get_string(&error)); fflush(stderr);
          fprintf(stderr, "\n");
          sge_dstring_clear(&error);
       }
@@ -327,7 +327,7 @@ void* do_calc(void* p) {
    printf("%s\n", prof_get_info_string(SGE_PROF_ALL, false, &error));
 
       if(!prof_stop(SGE_PROF_CUSTOM1, &error)) {
-         fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+         fprintf(stderr, SFNMAX, sge_dstring_get_string(&error)); fflush(stderr);
          fprintf(stderr, "\n");
          sge_dstring_clear(&error);
       }
@@ -348,13 +348,13 @@ void* do_calc2(void* p) {
 
    /*if (thread_prof_active_by_id(pthread_self()) == true ) {*/
       if(!prof_start(SGE_PROF_CUSTOM1, &error)) {
-         fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+         fprintf(stderr, SFNMAX, sge_dstring_get_string(&error)); fflush(stderr);
          fprintf(stderr, "\n");
          sge_dstring_clear(&error);
       }
 
       if(!prof_set_level_name(SGE_PROF_CUSTOM1, "calc2 thread", &error)) {
-         fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+         fprintf(stderr, SFNMAX, sge_dstring_get_string(&error)); fflush(stderr);
          fprintf(stderr, "\n");
          sge_dstring_clear(&error);
       }
@@ -373,7 +373,7 @@ void* do_calc2(void* p) {
    printf("%s\n", prof_get_info_string(SGE_PROF_ALL, false, &error));
 
       if(!prof_stop(SGE_PROF_CUSTOM1, &error)) {
-         fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+         fprintf(stderr, SFNMAX, sge_dstring_get_string(&error)); fflush(stderr);
          fprintf(stderr, "\n");
          sge_dstring_clear(&error);
       }
@@ -395,13 +395,13 @@ void* do_malloc(void* p) {
 
    /*if (thread_prof_active_by_id(pthread_self()) == true ) {*/
       if(!prof_start(SGE_PROF_CUSTOM1, &error)) {
-         fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+         fprintf(stderr, SFNMAX, sge_dstring_get_string(&error)); fflush(stderr);
          fprintf(stderr, "\n");
          sge_dstring_clear(&error);
       }
 
       if(!prof_set_level_name(SGE_PROF_CUSTOM1, "malloc thread", &error)) {
-         fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+         fprintf(stderr, SFNMAX, sge_dstring_get_string(&error)); fflush(stderr);
          fprintf(stderr, "\n");
          sge_dstring_clear(&error);
       }   
@@ -419,7 +419,7 @@ void* do_malloc(void* p) {
    printf("%s\n", prof_get_info_string(SGE_PROF_ALL, false, &error));
 
       if(!prof_stop(SGE_PROF_CUSTOM1, &error)) {
-         fprintf(stderr, sge_dstring_get_string(&error)); fflush(stderr);
+         fprintf(stderr, SFNMAX, sge_dstring_get_string(&error)); fflush(stderr);
          fprintf(stderr, "\n");
          sge_dstring_clear(&error);
       }

@@ -80,6 +80,11 @@ setenv TMPDIR /tmp
 set OPENSSL_SOVERSION = 0.9.8h
 set OPENSSL_HOME = /off_home/gridengine/openssl-0.9.8h-origin/$buildarch
 
+#
+# PLPA_HOME
+#
+set PLPA_HOME = /TODO/plpa-1.3.2/$buildarch
+
 # 
 # BERKELEYDB_HOME the directory where the include and lib directory of
 # Berkeley DB is installed

@@ -104,7 +104,9 @@ ___INFO__MARK_END__-->
     </target>
 
     <target name="propsinit.unix" depends="propsinit.base" unless="isWindows">
+        <property file="../../build_private.properties"/>
         <property file="../../build.properties"/>
+        <property file="../../build_testsuite.properties"/>
     </target>
 
     <target name="propsinit.win" depends="propsinit.base" if="isWindows">
@@ -114,8 +116,9 @@ ___INFO__MARK_END__-->
     <target name="propsinit" depends="propsinit.win, propsinit.unix"/>
 
     <target name="-pre-init" >
-        <property file="../../build_testsuite.properties"/>
         <property file="../../build_private.properties"/>
+        <property file="../../build.properties"/>
+        <property file="../../build_testsuite.properties"/>
         <exec executable="hostname" outputproperty="hostname"/>
         
         <condition property="isJavaBuildHost">
@@ -134,6 +137,9 @@ ___INFO__MARK_END__-->
         <property name="hadoop.dir" value="${hadoop.home}"/>
         <property name="javac.source" value="${hadoop.javac.source}"/>
         <property name="javac.target" value="${hadoop.javac.target}"/>
+        <echo>javac.target=${hadoop.javac.target}</echo>
+        <echo>javac.source=${hadoop.javac.source}</echo>
+        <echo>hadoop.dir=${hadoop.home}</echo>
     </target>
 
     <target name="-post-init" depends="propsinit">

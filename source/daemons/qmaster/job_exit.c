@@ -250,7 +250,7 @@ void sge_job_exit(sge_gdi_ctx_class_t *ctx, lListElem *jr, lListElem *jep, lList
               failed == ESSTATE_DIED_THRU_SIGNAL) &&
             ((lGetUlong(jep, JB_restart) == 1 || 
              (lGetUlong(jep, JB_checkpoint_attr) & ~NO_CHECKPOINT)) ||
-             (!lGetUlong(jep, JB_restart) && lGetBool(queueep, QU_rerun)))) {
+             (!lGetUlong(jep, JB_restart) && (queueep != NULL && lGetBool(queueep, QU_rerun))))) {
       DTRACE;
       lSetUlong(jatep, JAT_job_restarted, 
                   MAX(lGetUlong(jatep, JAT_job_restarted), 

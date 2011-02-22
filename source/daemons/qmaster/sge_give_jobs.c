@@ -301,6 +301,10 @@ send_slave_jobs(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep, lLis
       const char *src_qname = lGetString(gdil_ep, JG_qname);
       lListElem *src_qep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), src_qname);
 
+      if (src_qep == NULL) {
+         DRETURN(-1);
+      }  
+
       /* copy all JG_processors from all queues to gdil (which will be
        * sent to the execd).
        */
@@ -565,6 +569,10 @@ send_job(sge_gdi_ctx_class_t *ctx,
    for_each(gdil_ep, lGetList(tmpjatep, JAT_granted_destin_identifier_list)) {
       const char *src_qname = lGetString(gdil_ep, JG_qname);
       lListElem *src_qep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), src_qname);
+
+      if (src_qep == NULL) {
+         DRETURN(-1);
+      }  
 
       /* copy all JG_processors from all queues to gdil (which will be
        * sent to the execd).

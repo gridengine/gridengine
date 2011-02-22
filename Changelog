@@ -13,6 +13,38 @@ JG-2011-02-22-0: Bugfix:      Fixing build on Ubuntu 10.04 and higher.
                  Issue:       GE-3348 (GE-3347)
                  Review:      EB
 
+DG-2011-02-21-0: Cleanup:     Fixed arch.dist for Ubuntu Server 10.10
+                 Belongs to:  DG-2011-02-10-0
+                 Review:      JG
+
+DG-2011-02-18-0: Cleanup:     Avoid qmaster core dump after getting un-
+                              discoverable qinstance.
+                 Review:      EB, JG
+
+DG-2011-02-17-2: Cleanup:     Fixed broken changlog
+                 Belongs to:  DG-2011-02-17-2
+
+DG-2011-02-17-1: Cleanup:     Fixed broken aimk
+                 Belongs to:  EB-2011-02-17-0
+                 Review:      EB
+
+DG-2011-02-17-0: Bugfix:      Fixed broken project spooling, which causes lost
+                              of project when restarting master. This appears
+                              only when using core binding.
+					  Review:      EB
+
+EB-2011-02-17-0: Bugfix:      removed PLPA configure/build from aimk
+                              fixed darwin-x64 build
+                              fixed .gitignore file
+                 Review:      DG
+
+SH-2011-02-15-0: Bugfix:      fixed jemalloc-lib
+                 Belongs to:	SH-2011-02-11-0
+                 Review:      TBD
+
+SH-2011-02-11-0: Bugfix:      fixed jemalloc-lib
+                 Review:      TBD
+
 DG-2011-02-10-0: Cleanup:     fixed arch script
                  Review:      SH
 

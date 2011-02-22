@@ -480,7 +480,7 @@ int reschedule_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep, l
                            *(object_type_get_master_list(SGE_TYPE_CQUEUE)),
                            lGetString(first_granted_queue, JG_qname));
          }
-         if (!lGetBool(queue, QU_rerun)) {
+         if (queue == NULL || !lGetBool(queue, QU_rerun)) {
             if (mconf_get_enable_reschedule_kill()) {
                INFO((SGE_EVENT, MSG_RU_REAPING_NOT_RESTARTABLE_SS, 
                      mail_type, mail_ids));
@@ -490,7 +490,7 @@ int reschedule_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep, l
 
             } else {
                INFO((SGE_EVENT, MSG_RU_NORERUNQUEUE_SSS, mail_type, mail_ids, 
-                  lGetString(queue, QU_full_name)));
+                  queue?"none":lGetString(queue, QU_full_name)));
                answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, 
                   ANSWER_QUALITY_WARNING);
                continue;

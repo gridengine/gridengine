@@ -209,6 +209,8 @@ typedef char stringT[MAX_STRING_SIZE];
 /* save string format non-quoted */
 #define SFN  "%-.100s"
 #define SFN2 "%-.200s"
+#define SFNMAX "%-.2047s"  /* write to buffer of size MAX_STRING_SIZE */
+#define PFNMAX "%-.1023s"  /* write to buffer of size SGE_PATH_MAX */
 /* non-quoted string not limited intentionally */
 #define SN_UNLIMITED  "%s"
 

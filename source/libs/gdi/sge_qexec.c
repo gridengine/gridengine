@@ -190,7 +190,7 @@ sge_tid_t sge_qexecve(sge_gdi_ctx_class_t *ctx,
 
    if (init_packbuffer(&pb, 1024, 0) != PACK_SUCCESS) {
       lFreeElem(&petrep);
-      sprintf(lasterror, MSG_GDI_OUTOFMEMORY);
+      sprintf(lasterror, SFNMAX, MSG_GDI_OUTOFMEMORY);
       DRETURN(NULL);
    }
 

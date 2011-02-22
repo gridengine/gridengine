@@ -48,6 +48,7 @@
 
 #include "uti/sge_unistd.h"
 #include "uti/sge_stdio.h"
+#include "uti/sge_string.h"
 
 #include "msg_common.h"
 #include "msg_daemons_common.h"
@@ -105,7 +106,7 @@ void job_related_adminmail(u_long32 progid, lListElem *jr, int is_array, const c
    char sge_mail_body[2048];
    char sge_mail_start[128];
    char sge_mail_end[128];
-   char str_general[512] = "";
+   char str_general[MAX_STRING_SIZE] = "";
    u_long32 jobid, jataskid, failed, general;
    const char *q;
    lListElem *ep;
@@ -225,29 +226,29 @@ void job_related_adminmail(u_long32 progid, lListElem *jr, int is_array, const c
       if (lGetString(jr, JR_pe_task_id_str) == NULL) {
           /* This is a regular job */
           if (general == GFSTATE_QUEUE) {
-             sprintf(str_general, MSG_GFSTATE_QUEUE_S, q);
+             snprintf(str_general, sizeof(str_general), MSG_GFSTATE_QUEUE_S, q);
           }
           else if (general == GFSTATE_HOST) {
              const char *s = strchr(q, '@');
              if (s != NULL) {
                s++;
-               sprintf(str_general, MSG_GFSTATE_HOST_S, s);
+               snprintf(str_general, sizeof(str_general), MSG_GFSTATE_HOST_S, s);
              } else {
-               sprintf(str_general, MSG_GFSTATE_HOST_S, MSG_MAIL_UNKNOWN_NAME);
+               snprintf(str_general, sizeof(str_general), MSG_GFSTATE_HOST_S, MSG_MAIL_UNKNOWN_NAME);
              }
           }
           else if (general == GFSTATE_JOB) {
              if (is_array)
-                sprintf(str_general, MSG_GFSTATE_JOB_UU, sge_u32c(jobid), sge_u32c(jataskid));
+                snprintf(str_general, sizeof(str_general), MSG_GFSTATE_JOB_UU, sge_u32c(jobid), sge_u32c(jataskid));
              else
-                sprintf(str_general, MSG_GFSTATE_JOB_U, sge_u32c(jobid));
+                snprintf(str_general, sizeof(str_general), MSG_GFSTATE_JOB_U, sge_u32c(jobid));
           }
           else {
-             sprintf(str_general, MSG_NONE);
+             sge_strlcpy(str_general, MSG_NONE, sizeof(str_general));
           }
       } else {
           /* This is a pe task */
-          sprintf(str_general, MSG_GFSTATE_PEJOB_U, sge_u32c(jobid));
+          snprintf(str_general, sizeof(str_general), MSG_GFSTATE_PEJOB_U, sge_u32c(jobid));
       }
 
       if (is_array)
@@ -256,7 +257,7 @@ void job_related_adminmail(u_long32 progid, lListElem *jr, int is_array, const c
       else
          sprintf(sge_mail_subj, MSG_MAIL_SUBJECT_SU, 
                  feature_get_product_name(FS_SHORT_VERSION, &ds), sge_u32c(jobid));
-      sprintf(sge_mail_body,
+      snprintf(sge_mail_body, sizeof(sge_mail_body),
               MSG_MAIL_BODY_USSSSSSS,
               sge_u32c(jobid),
               str_general,

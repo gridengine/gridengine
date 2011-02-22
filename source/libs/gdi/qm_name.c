@@ -74,7 +74,7 @@ char *err_str
    if (!master_host || !master_file) {
       if (err_str) {
          if (master_host) {
-            sprintf(err_str, MSG_GDI_NULLPOINTERPASSED );
+            sprintf(err_str, SFNMAX, MSG_GDI_NULLPOINTERPASSED );
          }
       }   
       DRETURN(-1);

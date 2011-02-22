@@ -94,6 +94,7 @@
 #include "cl_commlib.h"
 #include "msg_commlib.h"
 #include "sge_unistd.h"
+#include "uti/sge_string.h"
 #include "sge_os.h"
 
 #if (OPENSSL_VERSION_NUMBER < 0x0090700fL) 
@@ -2012,7 +2013,7 @@ static int cl_com_ssl_transform_ssl_error(unsigned long ssl_error, char* buffer,
    if (buffer_copy == NULL) {
       return CL_RETVAL_MALLOC;
    }
-   snprintf(buffer_copy, buflen, buffer);
+   sge_strlcpy(buffer_copy, buffer, buflen);
 
    help = strtok_r(buffer_copy, ":", &lasts);
    if (help != NULL) {
@@ -2058,7 +2059,7 @@ static int cl_com_ssl_transform_ssl_error(unsigned long ssl_error, char* buffer,
          free(module);
          return CL_RETVAL_MALLOC;
       }
-      snprintf(error_text, buflen, buffer);
+      sge_strlcpy(error_text, buffer, buflen);
    }  
 
 
@@ -2145,11 +2146,11 @@ static int cl_com_ssl_log_ssl_errors(const char* function_name) {
       ret_val = cl_com_ssl_transform_ssl_error(ssl_error,buffer,512, &transformed_ssl_error);
 
       if (transformed_ssl_error != NULL) {
-         snprintf(help_buf, 1024, transformed_ssl_error);
+         sge_strlcpy(help_buf, transformed_ssl_error, 1024);
          free(transformed_ssl_error);
          transformed_ssl_error = NULL;
       } else {
-         snprintf(help_buf, 1024, buffer);
+         sge_strlcpy(help_buf, buffer, 1024);
       }
 
       if (ret_val != CL_RETVAL_DO_IGNORE) {
@@ -3079,7 +3080,7 @@ int cl_com_ssl_connection_complete_accept(cl_com_connection_t*  connection,
                   if (connection->client_host_name != NULL) {
                      snprintf(tmp_buffer,1024, MSG_CL_COMMLIB_SSL_ACCEPT_TIMEOUT_ERROR_S, connection->client_host_name);
                   } else {
-                     snprintf(tmp_buffer,1024, MSG_CL_COMMLIB_SSL_ACCEPT_TIMEOUT_ERROR);
+                     sge_strlcpy(tmp_buffer,MSG_CL_COMMLIB_SSL_ACCEPT_TIMEOUT_ERROR, 1024);
                   }
 
                   cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_ACCEPT_HANDSHAKE_TIMEOUT, tmp_buffer);
@@ -3092,9 +3093,9 @@ int cl_com_ssl_connection_complete_accept(cl_com_connection_t*  connection,
             default: {
                CL_LOG(CL_LOG_ERROR,"SSL handshake not successful and no clear cleanup");
                if (connection->client_host_name != NULL) {
-                  snprintf(tmp_buffer,1024, MSG_CL_COMMLIB_SSL_ACCEPT_ERROR_S, connection->client_host_name);
+                  snprintf(tmp_buffer, 1024, MSG_CL_COMMLIB_SSL_ACCEPT_ERROR_S, connection->client_host_name);
                } else {
-                  snprintf(tmp_buffer,1024, MSG_CL_COMMLIB_SSL_ACCEPT_ERROR);
+                  sge_strlcpy(tmp_buffer, MSG_CL_COMMLIB_SSL_ACCEPT_ERROR, 1024);
                }
 
                cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_ACCEPT_ERROR, tmp_buffer);

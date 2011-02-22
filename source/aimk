@@ -1452,7 +1452,7 @@ case LINUXSPARC64:
    endif
 
    if ($buildarch == "lx24-x86" || $buildarch == "lx26-amd64" || $buildarch == "lx26-x86" || $buildarch == "lx26-sparc" || $buildarch == "lx26-mips" || $buildarch == "lx26-mips64" || $buildarch == "lx26-s390" || $buildarch == "lx26-s390x") then
-      set CFLAGS = "$CFLAGS -Wno-strict-aliasing"
+      set CFLAGS = "$CFLAGS -Wno-strict-aliasing -U_FORTIFY_SOURCE"
    endif
 
    set CFLAGS = "$OFLAG -Wall -Werror -Wstrict-prototypes -DUSE_POLL -DLINUX -D$BUILDARCH -D$COMPILE_ARCH -D_GNU_SOURCE -DGETHOSTBYNAME_R6 -DGETHOSTBYADDR_R8 $DEBUG_FLAG $CFLAGS"

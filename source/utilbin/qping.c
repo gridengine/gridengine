@@ -364,8 +364,8 @@ static void qping_print_line(const char* buffer, int nonewline, int dump_tag, co
    
             help[0]=0;
             if (help2) {
-               snprintf(help_buffer,1024,"%s%s", cl_values[1], help2);
-               snprintf(cl_values[1],1024, help_buffer);
+               snprintf(help_buffer, 1024,"%s%s", cl_values[1], help2);
+               snprintf(cl_values[1], 1024, "%s", help_buffer);
             }
          }
    
@@ -375,8 +375,8 @@ static void qping_print_line(const char* buffer, int nonewline, int dump_tag, co
    
             help[0]=0;
             if (help2) {
-               snprintf(help_buffer,1024,"%s%s", cl_values[3], help2);
-               snprintf(cl_values[3],1024, help_buffer);
+               snprintf(help_buffer,1024, "%s%s", cl_values[3], help2);
+               snprintf(cl_values[3], 1024, "%s", help_buffer);
             }
          }
    

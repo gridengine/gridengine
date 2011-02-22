@@ -245,7 +245,7 @@ doit(fromp)
 	char hostnamebuf[2 * MAXHOSTNAMELEN + 1];
    /* char active_jobs_dir[SGE_PATH_MAX]; */
    char *s_qsub_gid = NULL;
-   char err_str[1024];
+   char err_str[2048];
 
 
 	(void) signal(SIGINT, SIG_DFL);

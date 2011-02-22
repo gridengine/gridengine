@@ -202,7 +202,7 @@ bool sge_ssi_job_start(sge_evc_class_t *evc, const char *job_identifier, const c
       lListElem *queue, *granted_queue;
 
       if(tasks[i].host_name == NULL) {
-         ERROR((SGE_EVENT, MSG_SSI_MISSINGHOSTNAMEINTASKLIST));
+         ERROR((SGE_EVENT, SFNMAX, MSG_SSI_MISSINGHOSTNAMEINTASKLIST));
          DRETURN(false);
       }
 

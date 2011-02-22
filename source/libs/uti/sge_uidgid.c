@@ -242,7 +242,7 @@ int sge_set_admin_username(const char *user, char *err_str)
    }
    if (!user || user[0] == '\0') {
       if (err_str) {
-         sprintf(err_str, MSG_POINTER_SETADMINUSERNAMEFAILED);
+         sprintf(err_str, SFNMAX, MSG_POINTER_SETADMINUSERNAMEFAILED);
       }
       DEXIT;
       return -1;
@@ -353,7 +353,7 @@ int sge_switch2admin_user(void)
    DENTER(UIDGID_LAYER, "sge_switch2admin_user");
  
    if (get_admin_user(&uid, &gid) == ESRCH) {
-      CRITICAL((SGE_EVENT, MSG_SWITCH_USER_NOT_INITIALIZED));
+      CRITICAL((SGE_EVENT, SFNMAX, MSG_SWITCH_USER_NOT_INITIALIZED));
       abort();
    }
 
@@ -425,7 +425,7 @@ int sge_switch2start_user(void)
    DENTER(UIDGID_LAYER, "sge_switch2start_user");
  
    if (get_admin_user(&uid, &gid) == ESRCH) {
-      CRITICAL((SGE_EVENT, MSG_SWITCH_USER_NOT_INITIALIZED));
+      CRITICAL((SGE_EVENT, SFNMAX, MSG_SWITCH_USER_NOT_INITIALIZED));
       abort();
    }
 
@@ -979,7 +979,7 @@ static int _sge_set_uid_gid_addgrp(const char *user, const char *intermediate_us
    sge_switch2start_user();
  
    if (!sge_is_start_user_superuser()) {
-      sprintf(err_str, MSG_SYSTEM_CHANGEUIDORGIDFAILED );
+      sprintf(err_str, SFNMAX, MSG_SYSTEM_CHANGEUIDORGIDFAILED );
       return -1;
    }
  

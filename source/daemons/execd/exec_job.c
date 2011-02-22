@@ -401,20 +401,20 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
       if (!(used_slots=qinstance_slots_used(master_q))) {
          if (!(sge_make_tmpdir(master_q, job_id, ja_task_id, 
              pw->pw_uid, pw->pw_gid, tmpdir))) {
-            snprintf(err_str, err_length, MSG_SYSTEM_CANTMAKETMPDIR);
+            snprintf(err_str, err_length, SFNMAX, MSG_SYSTEM_CANTMAKETMPDIR);
             DEXIT;
             return -2;
          }
       } else {
          SGE_STRUCT_STAT statbuf;
          if(!(sge_get_tmpdir(master_q, job_id, ja_task_id, tmpdir))) {
-            snprintf(err_str, err_length, MSG_SYSTEM_CANTGETTMPDIR);
+            snprintf(err_str, err_length, SFNMAX, MSG_SYSTEM_CANTGETTMPDIR);
             DEXIT;
             return -2;
          }
 
          if (SGE_STAT(tmpdir, &statbuf)) {
-            sprintf(err_str, "can't open tmpdir %s", tmpdir);
+            sprintf(err_str, MSG_SYSTEM_CANTOPENTMPDIR_S, tmpdir);
             DEXIT;
             return -2;
          }
@@ -980,7 +980,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
 
          if (!sup_groups_in_proc()) {
             lFreeList(&environmentList);
-            snprintf(err_str, err_length, MSG_EXECD_NOSGID); 
+            snprintf(err_str, err_length, SFNMAX, MSG_EXECD_NOSGID);
             FCLOSE(fp);
             DEXIT;
             return(-2);
@@ -996,7 +996,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
          FREE(gid_range);
          if (rlp == NULL) {
              lFreeList(&alp);
-             snprintf(err_str, err_length, MSG_EXECD_NOPARSEGIDRANGE);
+             snprintf(err_str, err_length, SFNMAX, MSG_EXECD_NOPARSEGIDRANGE);
              lFreeList(&environmentList);
              FCLOSE(fp);
              DEXIT;
@@ -1009,7 +1009,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
          while (addgrpid_already_in_use(last_addgrpid)) {
             last_addgrpid = get_next_addgrpid (rlp, last_addgrpid);
             if (temp_id == last_addgrpid) {
-               snprintf(err_str, err_length, MSG_EXECD_NOADDGID);
+               snprintf(err_str, err_length, SFNMAX, MSG_EXECD_NOADDGID);
                lFreeList(&environmentList);
                FCLOSE(fp);
                DEXIT;
@@ -1383,7 +1383,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
             fprintf(fp, "exec_file=%s\n", xterm);
             DPRINTF(("exec_file=%s\n", xterm));
          } else {
-            snprintf(err_str, err_length, MSG_EXECD_NOXTERM);
+            snprintf(err_str, err_length, SFNMAX, MSG_EXECD_NOXTERM);
             FCLOSE(fp);
             lFreeList(&environmentList);
             sge_dstring_free(&core_binding_strategy_string);
@@ -1455,7 +1455,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
              */
             const char *error_string = lGetString(lFirst(answer_list), AN_text);
             if(error_string != NULL) {
-               snprintf(err_str, err_length, error_string);
+               snprintf(err_str, err_length, SFNMAX, error_string);
             }
             lFreeList(&answer_list);
             lFreeList(&environmentList);
@@ -1704,7 +1704,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
       set_token_cmd = mconf_get_set_token_cmd();
       if (!set_token_cmd ||
           !strlen(set_token_cmd) || !mconf_get_token_extend_time()) {
-         snprintf(err_str, err_length, MSG_EXECD_AFSCONFINCOMPLETE);
+         snprintf(err_str, err_length, SFNMAX, MSG_EXECD_AFSCONFINCOMPLETE);
          FREE(pag_cmd);
          FREE(shepherd_cmd);
          DEXIT;
@@ -1724,7 +1724,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
       
       cp = lGetString(jep, JB_tgt);
       if (!cp || !(len = strlen(cp))) {
-         snprintf(err_str, err_length, MSG_EXECD_TOKENZERO);
+         snprintf(err_str, err_length, SFNMAX, MSG_EXECD_TOKENZERO);
          FREE(pag_cmd);
          FREE(shepherd_cmd);
          DEXIT;
@@ -1947,7 +1947,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
    }
 
 FCLOSE_ERROR:
-   CRITICAL((SGE_EVENT, MSG_EXECD_NOSTARTSHEPHERD));
+   CRITICAL((SGE_EVENT, SFNMAX, MSG_EXECD_NOSTARTSHEPHERD));
 
    exit(1);
 

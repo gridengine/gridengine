@@ -454,7 +454,7 @@ static char *read_from_qrsh_socket(int msgsock)
          return NULL;
       } else {
          if (rval == 0) {
-            ERROR((SGE_EVENT, MSG_QSH_ERRORENDINGCONNECTION));
+            ERROR((SGE_EVENT, SFNMAX, MSG_QSH_ERRORENDINGCONNECTION));
             DEXIT;
             return NULL; 
          } 
@@ -505,7 +505,7 @@ static int get_remote_exit_code(int sock)
 
    DENTER(TOP_LAYER, "get_remote_exit_code");
    
-   VERBOSE_LOG((stderr, MSG_QSH_READINGEXITCODEFROMSHEPHERD));
+   VERBOSE_LOG((stderr, SFNMAX, MSG_QSH_READINGEXITCODEFROMSHEPHERD));
 
    msgsock = wait_for_qrsh_socket(sock, QSH_SOCKET_FINAL_TIMEOUT);
    if (msgsock != -1) {
@@ -522,7 +522,7 @@ static int get_remote_exit_code(int sock)
       }
    }
 
-   ERROR((SGE_EVENT, MSG_QSH_ERRORREADINGRETURNCODEOFREMOTECOMMAND));
+   ERROR((SGE_EVENT, SFNMAX, MSG_QSH_ERRORREADINGRETURNCODEOFREMOTECOMMAND));
    DEXIT;
    return -1;
 }
@@ -571,7 +571,7 @@ static const char *quote_argument(const char *arg) {
    new_arg = malloc(strlen(arg) + 3);
 
    if (new_arg == NULL) {
-      ERROR((SGE_EVENT, MSG_QSH_MALLOCFAILED));
+      ERROR((SGE_EVENT, SFNMAX, MSG_QSH_MALLOCFAILED));
       DEXIT;
       return NULL;
    }
@@ -766,7 +766,7 @@ static int start_client_program(const char *client_name,
 
       /* create an argument list */
       if (!sge_sl_create(&sl_args)) {
-         ERROR((SGE_EVENT, MSG_SGETEXT_NOMEM));
+         ERROR((SGE_EVENT, SFNMAX, MSG_SGETEXT_NOMEM));
          exit(EXIT_FAILURE);
       }
 
@@ -1024,7 +1024,7 @@ get_client_name(sge_gdi_ctx_class_t *ctx, int is_rsh, int is_rlogin, int inherit
    /* get configuration from qmaster */
    if (gdi2_get_configuration(ctx, qualified_hostname, &global, &local) ||
       merge_configuration(NULL, progid, cell_root, global, local, &conf_list)) {
-      ERROR((SGE_EVENT, MSG_CONFIG_CANTGETCONFIGURATIONFROMQMASTER));
+      ERROR((SGE_EVENT, SFNMAX, MSG_CONFIG_CANTGETCONFIGURATIONFROMQMASTER));
       lFreeList(&conf_list);
       lFreeElem(&global);
       lFreeElem(&local);
@@ -1035,7 +1035,7 @@ get_client_name(sge_gdi_ctx_class_t *ctx, int is_rsh, int is_rlogin, int inherit
    /* search for config entry */
    qlogin_cmd_elem = lGetElemStr(conf_list, CF_name, config_name);
    if (qlogin_cmd_elem == NULL) {
-      ERROR((SGE_EVENT, MSG_CONFIG_CANTGETCONFIGURATIONFROMQMASTER));
+      ERROR((SGE_EVENT, SFNMAX, MSG_CONFIG_CANTGETCONFIGURATIONFROMQMASTER));
       lFreeList(&conf_list);
       lFreeElem(&global);
       lFreeElem(&local);
@@ -2008,7 +2008,7 @@ int main(int argc, char **argv)
          }
       }
       
-      VERBOSE_LOG((stderr, MSG_QSH_WAITINGFORINTERACTIVEJOBTOBESCHEDULED));
+      VERBOSE_LOG((stderr, SFNMAX, MSG_QSH_WAITINGFORINTERACTIVEJOBTOBESCHEDULED));
 
       DPRINTF(("R E A D I N G    J O B ! ! ! ! ! ! ! ! ! ! !\n"));
       DPRINTF(("============================================\n"));
@@ -2190,7 +2190,7 @@ int main(int argc, char **argv)
    
          do_shut = shut_me_down;
          if (do_shut || do_exit) {
-            WARNING((SGE_EVENT, MSG_QSH_REQUESTFORINTERACTIVEJOBHASBEENCANCELED));
+            WARNING((SGE_EVENT, SFNMAX, MSG_QSH_REQUESTFORINTERACTIVEJOBHASBEENCANCELED));
             delete_job(ctx, job_id, lp_jobs);
             lFreeList(&lp_poll);
             do_exit = 1;
@@ -2263,7 +2263,7 @@ int main(int argc, char **argv)
                 * so exit qrsh/qlogin with real exit_status.
                 */
                if (g_new_interactive_job_support == false) {
-                  WARNING((SGE_EVENT, MSG_QSH_CANTSTARTINTERACTIVEJOB));
+                  WARNING((SGE_EVENT, SFNMAX, MSG_QSH_CANTSTARTINTERACTIVEJOB));
                   do_exit = 1;
                   exit_status = 1;
                } else {

@@ -111,7 +111,7 @@ lList *cull_parse_job_parameter(u_long32 uid, const char *username, const char *
    lListElem *ep;
    lList *answer = NULL;
    lList *path_alias = NULL;
-   char error_string[1024 + 1];
+   char error_string[MAX_STRING_SIZE];
 
    DENTER(TOP_LAYER, "cull_parse_job_parameter"); 
 
@@ -361,9 +361,8 @@ lList *cull_parse_job_parameter(u_long32 uid, const char *username, const char *
 
    if ((ep = lGetElemStr(cmdline, SPA_switch, "-help"))) {
       lRemoveElem(cmdline, &ep);
-      sprintf(error_string, MSG_ANSWER_HELPNOTALLOWEDINCONTEXT);
-      answer_list_add(&answer, error_string, 
-                      STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
+      answer_list_add_sprintf(&answer, STATUS_ENOIMP, ANSWER_QUALITY_ERROR,
+                              MSG_ANSWER_HELPNOTALLOWEDINCONTEXT);
       DRETURN(answer);
    }
 
@@ -627,7 +626,7 @@ lList *cull_parse_job_parameter(u_long32 uid, const char *username, const char *
    }
    
    for_each(ep, cmdline) {
-      sprintf(error_string, MSG_ANSWER_UNKOWNOPTIONX_S, 
+      sprintf(error_string, MSG_ANSWER_UNKOWNOPTIONX_S,
          lGetString(ep, SPA_switch));
       cp = lGetString(ep, SPA_switch_arg);
       if (cp) {
@@ -635,7 +634,7 @@ lList *cull_parse_job_parameter(u_long32 uid, const char *username, const char *
          strcat(error_string, cp);
       }
       strcat(error_string, "\n");
-      answer_list_add(&answer, error_string, 
+      answer_list_add(&answer, error_string,
                       STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
    } 
 
@@ -764,10 +763,9 @@ u_long32 flags
       if (script_file && strcmp(script_file, "-")) {
          /* are we able to access this file? */
          if ((fp = fopen(script_file, "r")) == NULL) {
-            snprintf(error_string, MAX_STRING_SIZE, 
+            snprintf(error_string, sizeof(error_string),
                      MSG_FILE_ERROROPENINGXY_SS, script_file, strerror(errno));
-            answer_list_add(&answer, error_string, 
-                            STATUS_EDISK, ANSWER_QUALITY_ERROR);
+            answer_list_add(&answer, error_string, STATUS_EDISK, ANSWER_QUALITY_ERROR);
             DRETURN(answer);
          }
          
@@ -777,9 +775,9 @@ u_long32 flags
          filestrptr = sge_file2string(script_file, &script_len);
 
          if (filestrptr == NULL) {
-            snprintf(error_string, MAX_STRING_SIZE, 
+            snprintf(error_string, sizeof(error_string),
                      MSG_ANSWER_ERRORREADINGFROMFILEX_S, script_file);
-            answer_list_add(&answer, error_string, 
+            answer_list_add(&answer, error_string,
                             STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DRETURN(answer);
          }
@@ -1031,7 +1029,7 @@ u_long32 flags
 
    DRETURN(answer);
 FCLOSE_ERROR:
-   snprintf(error_string, MAX_STRING_SIZE,
+   snprintf(error_string, sizeof(error_string),
             MSG_FILE_ERRORCLOSEINGXY_SS, script_file, strerror(errno));
    answer_list_add(&answer, error_string,
                    STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);

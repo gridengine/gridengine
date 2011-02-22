@@ -8,6 +8,11 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+JG-2011-02-22-0: Bugfix:      Fixing build on Ubuntu 10.04 and higher.
+                              Part 1/2: calls to sprintf without format string.
+                 Issue:       GE-3348 (GE-3347)
+                 Review:      EB
+
 DG-2011-02-10-0: Cleanup:     fixed arch script
                  Review:      SH
 

@@ -209,7 +209,8 @@
 #define MSG_EXECD_NOSTARTSHEPHERD     _MESSAGE(29120, _("unable to start shepherd process"))
 #define MSG_SYSTEM_CANTMAKETMPDIR     _MESSAGE(29122, _("can't make tmpdir"))
 #define MSG_SYSTEM_CANTGETTMPDIR      _MESSAGE(29123, _("can't get tmpdir"))
-#define MSG_EXECD_UNABLETOFINDSCRIPTFILE_SS  _MESSAGE(29124, _("unable to find script file "SFN": "SFN))
+#define MSG_SYSTEM_CANTOPENTMPDIR_S   _MESSAGE(29124, _("can't open tmpdir "SFN))
+#define MSG_EXECD_UNABLETOFINDSCRIPTFILE_SS  _MESSAGE(29125, _("unable to find script file "SFN": "SFN))
 
 /*
 ** execd_ck_to_do.c

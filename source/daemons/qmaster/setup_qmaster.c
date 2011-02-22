@@ -183,7 +183,7 @@ int sge_setup_qmaster(sge_gdi_ctx_class_t *ctx, char* anArgv[])
 
    process_cmdline(anArgv);
 
-   INFO((SGE_EVENT, MSG_STARTUP_BEGINWITHSTARTUP));
+   INFO((SGE_EVENT, SFNMAX, MSG_STARTUP_BEGINWITHSTARTUP));
 
    qmaster_unlock(QMASTER_LOCK_FILE);
 
@@ -246,15 +246,15 @@ sge_qmaster_thread_init(sge_gdi_ctx_class_t **ctx_ref, u_long32 prog_id,
    DEBUG((SGE_EVENT,"%s: qualified hostname \"%s\"\n", SGE_FUNC, ctx->get_qualified_hostname(ctx)));
    admin_user = ctx->get_admin_user(ctx);
   
-   if (switch_to_admin_user == true) {   
-      char str[1024];
+   if (switch_to_admin_user == true) {
+      char str[MAX_STRING_SIZE];
       if (sge_set_admin_username(admin_user, str) == -1) {
-         CRITICAL((SGE_EVENT, str));
+         CRITICAL((SGE_EVENT, SFNMAX, str));
          SGE_EXIT((void**)ctx_ref, 1);
       }
 
       if (sge_switch2admin_user()) {
-         CRITICAL((SGE_EVENT, MSG_ERROR_CANTSWITCHTOADMINUSER));
+         CRITICAL((SGE_EVENT, SFNMAX, MSG_ERROR_CANTSWITCHTOADMINUSER));
          SGE_EXIT((void**)ctx_ref, 1);
       }
    }
@@ -504,7 +504,6 @@ static lList *parse_cmdline_qmaster(char **argv, lList **ppcmdline )
 *******************************************************************************/
 static lList *parse_qmaster(lList **ppcmdline, u_long32 *help )
 {
-   stringT str;
    lList *alp = NULL;
    int usageshowed = 0;
 
@@ -524,10 +523,10 @@ static lList *parse_qmaster(lList **ppcmdline, u_long32 *help )
    }
 
    if(lGetNumberOfElem(*ppcmdline)) {
-      sprintf(str, MSG_PARSE_TOOMANYOPTIONS);
-      if(!usageshowed)
+      if(!usageshowed) {
          sge_usage(QMASTER, stderr);
-      answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+      }
+      answer_list_add(&alp, MSG_PARSE_TOOMANYOPTIONS, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return alp;
    }
@@ -561,7 +560,7 @@ static void qmaster_init(sge_gdi_ctx_class_t *ctx, char **anArgv)
    DENTER(TOP_LAYER, "qmaster_init");
 
    if (setup_qmaster(ctx)) {
-      CRITICAL((SGE_EVENT, MSG_STARTUP_SETUPFAILED));
+      CRITICAL((SGE_EVENT, SFNMAX, MSG_STARTUP_SETUPFAILED));
       SGE_EXIT(NULL, 1);
    }
 
@@ -813,7 +812,7 @@ static void qmaster_lock_and_shutdown(void **ctx_ref, int anExitValue)
    
    if (anExitValue == 0) {
       if (qmaster_lock(QMASTER_LOCK_FILE) == -1) {
-         CRITICAL((SGE_EVENT, MSG_QMASTER_LOCKFILE_ALREADY_EXISTS));
+         CRITICAL((SGE_EVENT, SFNMAX, MSG_QMASTER_LOCKFILE_ALREADY_EXISTS));
       }
    }
    sge_gdi2_shutdown(ctx_ref);
@@ -841,7 +840,7 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
    if (first) {
       first = false;
    } else {
-      CRITICAL((SGE_EVENT, MSG_SETUP_SETUPMAYBECALLEDONLYATSTARTUP));
+      CRITICAL((SGE_EVENT, SFNMAX, MSG_SETUP_SETUPMAYBECALLEDONLYATSTARTUP));
       DEXIT;
       return -1;
    }   
@@ -946,14 +945,14 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
    if (!host_list_locate(*object_base[SGE_TYPE_EXECHOST].list, SGE_TEMPLATE_NAME)) {
       /* add an exec host "template" */
       if (sge_add_host_of_type(ctx, SGE_TEMPLATE_NAME, SGE_EH_LIST, &monitor))
-         ERROR((SGE_EVENT, MSG_CONFIG_ADDINGHOSTTEMPLATETOEXECHOSTLIST));
+         ERROR((SGE_EVENT, SFNMAX, MSG_CONFIG_ADDINGHOSTTEMPLATETOEXECHOSTLIST));
    }
 
    /* add host "global" to Master_Exechost_List as an exec host */
    if (!host_list_locate(*object_base[SGE_TYPE_EXECHOST].list, SGE_GLOBAL_NAME)) {
       /* add an exec host "global" */
       if (sge_add_host_of_type(ctx, SGE_GLOBAL_NAME, SGE_EH_LIST, &monitor))
-         ERROR((SGE_EVENT, MSG_CONFIG_ADDINGHOSTGLOBALTOEXECHOSTLIST));
+         ERROR((SGE_EVENT, SFNMAX, MSG_CONFIG_ADDINGHOSTGLOBALTOEXECHOSTLIST));
    }
 
    /* add qmaster host to Master_Adminhost_List as an administrativ host */
@@ -971,7 +970,7 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
 
       if (!spool_write_object(&answer_list, spooling_context, ep, "root", SGE_TYPE_MANAGER, job_spooling)) {
          answer_list_output(&answer_list);
-         CRITICAL((SGE_EVENT, MSG_CONFIG_CANTWRITEMANAGERLIST)); 
+         CRITICAL((SGE_EVENT, SFNMAX, MSG_CONFIG_CANTWRITEMANAGERLIST));
          DRETURN(-1);
       }
    }
@@ -991,7 +990,7 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
 
       if (!spool_write_object(&answer_list, spooling_context, ep, "root", SGE_TYPE_OPERATOR, job_spooling)) {
          answer_list_output(&answer_list);
-         CRITICAL((SGE_EVENT, MSG_CONFIG_CANTWRITEOPERATORLIST)); 
+         CRITICAL((SGE_EVENT, SFNMAX, MSG_CONFIG_CANTWRITEOPERATORLIST));
          DEXIT;
          return -1;
       }

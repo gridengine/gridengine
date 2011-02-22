@@ -829,7 +829,7 @@ static lListElem *ptf_get_job_os(lList *job_list, osjobid_t os_job_id,
 #endif
 
    if (!where) {
-      CRITICAL((SGE_EVENT, MSG_WHERE_FAILEDTOBUILDWHERECONDITION));
+      CRITICAL((SGE_EVENT, SFNMAX, MSG_WHERE_FAILEDTOBUILDWHERECONDITION));
       DRETURN(NULL);
    }
 

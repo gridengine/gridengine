@@ -537,7 +537,7 @@ sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
                                       cl_get_error_text(commlib_error))); 
             }
          } else {
-            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_SENDINGGDIREQUESTFAILED));
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_GDI_SENDINGGDIREQUESTFAILED));
          }
          answer_list_add(answer_list, SGE_EVENT, STATUS_NOQMASTER, ANSWER_QUALITY_ERROR);
          ret = false;
@@ -689,7 +689,7 @@ sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
       }
       if (gdi_mismatch) {
          /* For unusual errors, give more detail */
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_MISMATCH_SEND_RECEIVE));
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_GDI_MISMATCH_SEND_RECEIVE));
          answer_list_add(answer_list, SGE_EVENT, STATUS_NOQMASTER, ANSWER_QUALITY_ERROR);
          ret = false;
       }

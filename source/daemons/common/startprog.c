@@ -210,7 +210,7 @@ pid_t pid
    else if (WIFSIGNALED(status))
       exit_status = 8;
    else {
-      ERROR((SGE_EVENT, MSG_PROC_WAITPIDRETURNEDUNKNOWNSTATUS));
+      ERROR((SGE_EVENT, SFNMAX, MSG_PROC_WAITPIDRETURNEDUNKNOWNSTATUS));
       exit_status = 8;
    }
  

@@ -173,7 +173,7 @@ int sge_ssl_setup_security_path(const char *progname, const char *user) {
    DENTER(TOP_LAYER, "sge_ssl_setup_security_path");
 
    if (progname == NULL) {
-      CRITICAL((SGE_EVENT, MSG_GDI_NO_VALID_PROGRAMM_NAME));
+      CRITICAL((SGE_EVENT, SFNMAX, MSG_GDI_NO_VALID_PROGRAMM_NAME));
       FREE(user_name);
       DRETURN(-1);
    }
@@ -473,7 +473,7 @@ static cl_bool_t ssl_cert_verify_func(cl_ssl_verify_mode_t mode, cl_bool_t servi
 
    if (value == NULL) {
       /* This should never happen */
-      CRITICAL((SGE_EVENT, MSG_SEC_CERT_VERIFY_FUNC_NO_VAL));
+      CRITICAL((SGE_EVENT, SFNMAX, MSG_SEC_CERT_VERIFY_FUNC_NO_VAL));
       DRETURN(CL_FALSE);
    }
 
@@ -1379,23 +1379,23 @@ sge_gdi_packet_parse_auth_info(sge_gdi_packet_class_t *packet, lList **answer_li
                DPRINTF(("uid/username = %d/%s, gid/groupname = %d/%s\n", (int)*uid, user, (int)*gid, group));
                ret = true;
             } else {
-               CRITICAL((SGE_EVENT, MSG_GDI_NULL_IN_GDI_SSS, 
-                        (strlen(user) == 0) ? MSG_OBJ_USER : "", 
-                        (strlen(group) == 0) ? MSG_OBJ_GROUP : "", packet->host)); 
+               CRITICAL((SGE_EVENT, MSG_GDI_NULL_IN_GDI_SSS,
+                        (strlen(user) == 0) ? MSG_OBJ_USER : "",
+                        (strlen(group) == 0) ? MSG_OBJ_GROUP : "", packet->host));
                answer_list_add(answer_list, SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
             }
          } else {
-            ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));      
+            ERROR((SGE_EVENT, SFNMAX, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));
             answer_list_add(answer_list, SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
          }
       } else {
-         ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));      
+         ERROR((SGE_EVENT, SFNMAX, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));
          answer_list_add(answer_list, SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
       }
-   } else { 
-      ERROR((SGE_EVENT, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));      
+   } else {
+      ERROR((SGE_EVENT, SFNMAX, MSG_GDI_FAILEDTOEXTRACTAUTHINFO));
       answer_list_add(answer_list, SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_ERROR);
-   } 
+   }
    DRETURN(ret);
 }
 

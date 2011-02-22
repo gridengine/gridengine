@@ -46,7 +46,7 @@
 #include "msg_daemons_common.h"
 
 
-char err_msg[1000] = { '0' };
+char err_msg[MAX_STRING_SIZE] = { '0' };
 
 void set_error(const char *err_str) 
 {
@@ -252,14 +252,13 @@ static config_entry *find_conf_entry(const char *name, config_entry *ptr)
 char *get_conf_val(const char *name)
 {
    config_entry *ptr = config_list;
-   char err_str[10000];
+   char err_str[MAX_STRING_SIZE];
    
    ptr = find_conf_entry(name, config_list);
    if (ptr)
       return ptr->value;
    
-   sprintf(err_str, MSG_CONF_NOCONFVALUE_S,
-           name);
+   sprintf(err_str, MSG_CONF_NOCONFVALUE_S, name);
    if (config_errfunc)
       config_errfunc(err_str);
    return NULL;
@@ -391,7 +390,7 @@ char *dst,
 int dst_len,
 char **allowed  
 ) {
-   char err_str[4096];
+   char err_str[MAX_STRING_SIZE];
    char name[256];
    int name_len;
    const char *sp;
@@ -440,7 +439,7 @@ char **allowed
          }
 
          if (name_len==0) {
-            sprintf(err_str, MSG_CONF_ATLEASTONECHAR);
+            sprintf(err_str, SFNMAX, MSG_CONF_ATLEASTONECHAR);
             if (config_errfunc)
                config_errfunc(err_str);
             return 1;

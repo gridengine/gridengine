@@ -1099,7 +1099,6 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
 
             lFreeList(&lp);
          } else { /* -Astree */
-            char errstr[1024];
             spooling_field *fields = sge_build_STN_field_list(false, true);
             
             spp = sge_parser_get_next(ctx, spp);
@@ -1127,8 +1126,6 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
             }
                
             if (ep == NULL) {
-               fprintf(stderr, "%s\n", errstr);
-               
                if (sge_error_and_exit(ctx, MSG_FILE_ERRORREADINGINFILE)) {
                   continue;
                }
@@ -3082,7 +3079,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
    /* parse command line arguments */
    attr = sge_strdup(NULL, *spp);
    if (attr == NULL) {
-      ERROR((SGE_EVENT, MSG_QCONF_NOATTRIBUTEGIVEN));
+      ERROR((SGE_EVENT, SFNMAX, MSG_QCONF_NOATTRIBUTEGIVEN));
       DRETURN(1);
    }
    spp = sge_parser_get_next(ctx, spp);
@@ -3299,7 +3296,6 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
 
             lFreeList(&lp);
          } else {
-            char errstr[1024];
             spooling_field *fields = sge_build_STN_field_list(false, true);
 
             spp = sge_parser_get_next(ctx, spp);
@@ -3327,7 +3323,6 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
             }
                
             if (ep == NULL) {
-               fprintf(stderr, errstr);
                if (sge_error_and_exit(ctx, MSG_FILE_ERRORREADINGINFILE))
                   continue;
             }
@@ -4174,8 +4169,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
             lFreeElem(&hep);
          }
          else {
-            fprintf(stderr, MSG_ANSWER_NEEDHOSTNAMETODELLOCALCONFIG);
-            fprintf(stderr, "\n");
+            fprintf(stderr, "%s\n", MSG_ANSWER_NEEDHOSTNAMETODELLOCALCONFIG);
             sge_parse_return = 1;
          }
 
@@ -6121,7 +6115,6 @@ static lListElem *edit_sharetree(sge_gdi_ctx_class_t *ctx, lListElem *ep, uid_t 
    int status;
    lListElem *newep = NULL;
    const char *filename = NULL;
-   char errstr[1024];
    lList *alp = NULL;
    spooling_field *fields = NULL;
    int fields_out[MAX_NUM_FIELDS];
@@ -6201,7 +6194,10 @@ static lListElem *edit_sharetree(sge_gdi_ctx_class_t *ctx, lListElem *ep, uid_t 
    FREE(filename);
 
    if (newep == NULL) {
-      fprintf(stderr, MSG_QCONF_CANTREADSHARETREEX_S, errstr);
+      /* JG: TODO: do we need the following output?
+       * Isn't an error message already written by spool_flatfile_read_object?
+       */
+      fprintf(stderr, MSG_QCONF_CANTREADSHARETREEX_S, "");
       fprintf(stderr, "\n");
       SGE_EXIT((void **)&ctx, 1);
    }
@@ -6324,8 +6320,7 @@ static int show_eventclients(sge_gdi_ctx_class_t *ctx)
       }
    }
    else {
-      fprintf(stderr,  MSG_QCONF_NOEVENTCLIENTSREGISTERED); 
-      fprintf(stderr, "\n");
+      fprintf(stderr, "%s\n", MSG_QCONF_NOEVENTCLIENTSREGISTERED);
    }
    lFreeList(&alp);
    lFreeList(&lp);
@@ -6430,10 +6425,8 @@ static int show_processors(sge_gdi_ctx_class_t *ctx, bool has_binding_param)
          }
       }
       printf("\n");
-   }
-   else {
-      fprintf(stderr,  MSG_QCONF_NOEXECUTIONHOSTSDEFINED );
-      fprintf(stderr, "\n");
+   } else {
+      fprintf(stderr,  "%s\n", MSG_QCONF_NOEXECUTIONHOSTSDEFINED);
    }
    
    lFreeList(&alp);
@@ -7093,7 +7086,7 @@ static int qconf_modify_attribute(sge_gdi_ctx_class_t *ctx,
          DRETURN(1);
       }
       if (*epp == NULL){
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_FILE_ERRORREADINGINFILE));
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_FILE_ERRORREADINGINFILE));
          answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          DRETURN(1);
       }
@@ -7231,7 +7224,7 @@ static int qconf_modify_attribute(sge_gdi_ctx_class_t *ctx,
       lList *lp = lGetList(*epp, fields[0]);
       
       if (lp == NULL || lGetNumberOfElem(lp) == 0) {
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_QCONF_CANT_MODIFY_NONE));
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_QCONF_CANT_MODIFY_NONE));
          answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          lFreeElem(epp);
          lFreeWhat(&what);
@@ -7249,7 +7242,7 @@ static int qconf_modify_attribute(sge_gdi_ctx_class_t *ctx,
          for (nm = ep->descr[0].nm; nm != NoName; nm = ep->descr[count++].nm) {            
             if (lGetType(ep->descr, nm) == lListT) {
                if (lGetList(ep, nm) == NULL) {
-                  SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_QCONF_CANT_MODIFY_NONE));
+                  SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_QCONF_CANT_MODIFY_NONE));
                   answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
                   lFreeElem(epp);
                   lFreeWhat(&what);

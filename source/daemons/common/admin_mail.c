@@ -135,7 +135,7 @@ void job_related_adminmail(u_long32 progid, lListElem *jr, int is_array, const c
 
    DPRINTF(("sizeof(admail_times) : %d\n", sizeof(admail_times)));
    if (first) {
-      memset(admail_times, sizeof(admail_times), 0);
+      memset(admail_times, 0, sizeof(admail_times));
       first = 0;
    }
 
@@ -323,9 +323,8 @@ FCLOSE_ERROR:
    return;
 }
 
-int adm_mail_reset(
-int state 
-) {
+int adm_mail_reset(int state)
+{
    int i;
 
    DENTER(TOP_LAYER, "adm_mail_reset");
@@ -333,8 +332,8 @@ int state
    /*
    ** let 0 be a reset all
    */
-   if (!state) {
-      memset(admail_times, sizeof(admail_times), 0);
+   if (state == 0) {
+      memset(admail_times, 0, sizeof(admail_times));
       return 0;
    }
 

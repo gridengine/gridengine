@@ -43,6 +43,7 @@
 #include <sys/resource.h>
 #include <sys/wait.h>
 #include "uti/sge_binding_hlp.h"
+#include "uti/sge_string.h"
 #include "shepherd_binding.h"
 
 #if defined(LINUX)
@@ -273,7 +274,9 @@ static int map_signal(int sig)
       FILE *signal_file = fopen("signal", "r");
 
       if (signal_file != NULL) {
-         fscanf(signal_file, "%d", &ret);
+         if (fscanf(signal_file, "%d", &ret) != 1) {
+            shepherd_trace("error reading signal file");
+         }
          FCLOSE(signal_file);
       } 
    } else if (sig == SIGTTOU) {
@@ -2900,16 +2903,22 @@ static int notify_tasker(u_long32 exit_status)
       char *buffer;
       int size;
 
-      /* sig_info_file has to be removed by tasker 
-         and tasker runs in user mode */
+      /* sig_info_file has to be removed by tasker
+       * and tasker runs in user mode
+       */
       job_owner = get_conf_val("job_owner");
       size = get_pw_buffer_size();
       buffer = sge_malloc(size);
       pw = sge_getpwnam_r(job_owner, &pw_struct, buffer, size);
-      if (!pw) {
+      if (pw == NULL) {
          shepherd_error(1, "can't get password entry for user \"%s\"", job_owner);
       }
-      chown(sig_info_file, pw->pw_uid, -1);
+      if (chown(sig_info_file, pw->pw_uid, -1) != 0) {
+         dstring ds = DSTRING_INIT;
+         shepherd_error(1, "can't chown sig_info_file %s to user %s: %s",
+                        sig_info_file, job_owner, sge_strerror(errno, &ds));
+         /* no sge_dstring_free needed - shepherd_error exited */
+      }
       FREE(buffer);
    }
 

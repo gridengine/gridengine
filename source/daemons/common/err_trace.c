@@ -729,8 +729,12 @@ static FILE* shepherd_trace_init_intern(st_shepherd_file_t shepherd_file)
   	 *  after changing into the jobs cwd we need an 
   	 *  absolute path to the error/trace file 
   	 */
-	if (called == false) { 
-      getcwd(path, sizeof(path)); 
+	if (called == false) {
+      if (getcwd(path, sizeof(path)) == NULL) {
+         sge_dstring_init(&ds, buffer, sizeof(buffer));
+         sge_dstring_sprintf(&ds, "getcwd() failed: %s", strerror(errno));
+         shepherd_panic(buffer);
+	   }
 		called=true;
 	}
 

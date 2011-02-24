@@ -343,7 +343,7 @@ size_t sge_strlcat(char *dst, const char *src, size_t dstsize) {
    }
 
    /* find end of dst */
-   for (dst_idx = 0; dst[dst_idx] != '\0'; dst_idx++) {
+   for (dst_idx = 0; (dst[dst_idx] != '\0') && (dst_idx < dstsize - 1); dst_idx++) {
       ;
    }
 

@@ -96,7 +96,7 @@ switch_list_qstat_parse_from_file(lList **switch_list, lList **answer_list,
                                                        mode, token);
             sge_strafree(&token);
          }
-         FREE(file_as_string);
+         sge_free(&file_as_string);
       }
    }  
    DRETURN(ret); 

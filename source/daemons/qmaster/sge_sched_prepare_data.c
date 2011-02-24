@@ -463,7 +463,7 @@ sge_process_schedd_conf_event_before(sge_evc_class_t *evc, object_description *o
                lSetString(new, SC_load_formula, copy);
             }
 
-            FREE(copy);
+            sge_free(&copy);
          }
       }
       lFreeElem(&old);

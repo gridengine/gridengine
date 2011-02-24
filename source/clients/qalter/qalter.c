@@ -767,7 +767,7 @@ int *all_users
             answer_list_add(&answer, MSG_ANSWER_ALLANDJOBIDSARENOTVALID, 
                             STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             lFreeElem(&job);
-            FREE(rdp);
+            sge_free(&rdp);
             DRETURN(answer);
          } else if (!strcmp(lGetString(ep, ID_str), "dummy")) {
             /* we will add a dummy-object to send parameters to qmaster */ 
@@ -775,7 +775,7 @@ int *all_users
             answer_list_add(&answer, MSG_ANSWER_0ISNOTAVALIDJOBID,
                             STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             lFreeElem(&job);
-            FREE(rdp);
+            sge_free(&rdp);
             DRETURN(answer);
          }
       }
@@ -800,14 +800,14 @@ int *all_users
          /* format: <delimiter>old_name<delimiter>new_name */
          snprintf(name, size, "%s%s%s%s", JOB_NAME_DEL, lGetString(ep, ID_str), JOB_NAME_DEL, job_name?job_name:"");
          rep = lAddElemStr(prequestlist, JB_job_name, name, rdp);
-         FREE(name);
+         sge_free(&name);
       }   
 
       if (!rep) {   
          answer_list_add_sprintf(&answer, STATUS_EMALLOC, ANSWER_QUALITY_ERROR,
                                  MSG_MEM_MEMORYALLOCFAILED_S, SGE_FUNC);
          lFreeElem(&job);
-         FREE(rdp);
+         sge_free(&rdp);
          DRETURN(answer);
       }
 
@@ -833,7 +833,7 @@ int *all_users
          answer_list_add_sprintf(&answer, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
                                  MSG_OPTIONWORKSONLYONJOB);
          lFreeElem(&job);
-         FREE(rdp);
+         sge_free(&rdp);
          DRETURN(answer);
       }
       lSetList(job, JB_ja_tasks, task_list);
@@ -918,6 +918,6 @@ int *all_users
    }
 
    lFreeElem(&job);
-   FREE(rdp);
+   sge_free(&rdp);
    DRETURN(answer);
 }

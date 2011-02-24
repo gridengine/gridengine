@@ -566,7 +566,7 @@ void lFreeWhat(lEnumeration **ep)
          lFreeWhat(&((*ep)[i].ep));
       }
    }
-   FREE(*ep);
+   sge_free(ep);
    DRETURN_VOID;
 }
 

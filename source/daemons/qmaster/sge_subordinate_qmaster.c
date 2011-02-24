@@ -409,7 +409,7 @@ static bool
 destroy_slotwise_sos_task_elem(ssos_task_t **ssos_task)
 {
    if (ssos_task != NULL && *ssos_task != NULL) {
-      FREE(*ssos_task);
+      sge_free(ssos_task);
    }
    return true;
 }
@@ -449,7 +449,7 @@ destroy_slotwise_sos_tree_elem(ssos_qinstance_t **ssos_qinstance)
       if ((*ssos_qinstance)->tasks != NULL) {
          sge_sl_destroy(&((*ssos_qinstance)->tasks), (sge_sl_destroy_f)destroy_slotwise_sos_task_elem);
       }
-      FREE(*ssos_qinstance);
+      sge_free(ssos_qinstance);
    }
    
    return true;

@@ -176,7 +176,7 @@ static void qmonRQSSetText(Widget tw, lList *rqs_list, lList **alpp)
                                            filename, false);
       text = qmonReadText(filename, alpp);
       unlink(filename);
-      FREE(filename);
+      sge_free(&filename);
       if (text != NULL) {
          XmTextSetString(tw, text);
          XtFree(text);

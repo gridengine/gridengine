@@ -772,7 +772,7 @@ buffer_decrypt(const char *buffer_in, size_t buffer_in_length,
                  buf, buflen);
 
    shared_ssl_func__EVP_PKEY_free(privateKey);
-   free(encryptKey);
+   sge_free(&encryptKey);
    error_code = shared_ssl_func__ERR_get_error();
    if(error_code > 0) {
       shared_ssl_func__ERR_error_string(error_code, err_msg);

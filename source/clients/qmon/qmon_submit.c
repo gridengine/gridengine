@@ -1580,12 +1580,12 @@ static void qmonSubmitJobSubmit(Widget w, XtPointer cld, XtPointer cad)
       lFreeWhat(&what);
       
       if (!(lp = lCreateElemList("JobSubmitList", rdp, 1))) {
-         FREE(rdp);
+         sge_free(&rdp);
          DPRINTF(("lCreateElemList failure\n"));
          sprintf(buf, "Job submission failed\n");
          goto error;
       }
-      FREE(rdp);
+      sge_free(&rdp);
 
       lSetUlong(lFirst(lp), JB_job_number, submit_mode_data.job_id);
       

@@ -267,7 +267,7 @@ int sge_delete_job_category(lListElem *job)
 
          for_each(cache, cache_list) {
             int *range = lGetRef(cache, CCT_pe_job_slots);
-            FREE(range); 
+            sge_free(&range); 
          }
 
          lRemoveElem(CATEGORY_LIST, &cat);
@@ -473,7 +473,7 @@ int sge_reset_job_category()
 
       for_each(cache, lGetList(cat, CT_cache)) {
          int *range = lGetRef(cache, CCT_pe_job_slots);
-         FREE(range); 
+         sge_free(&range); 
       }
       
       lSetUlong(cat, CT_rejected, 0);

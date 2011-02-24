@@ -1000,15 +1000,15 @@ lList *lCreateListHash(const char *listname, const lDescr *descr, bool hash)
       DRETURN(NULL);
    }
    if (!(lp->listname = strdup(listname))) {
-      FREE(lp);
+      sge_free(&lp);
       LERROR(LESTRDUP);
       DRETURN(NULL);
    }
 
    lp->nelem = 0;
    if ((n = lCountDescr(descr)) <= 0) {
-      FREE(lp->listname);
-      FREE(lp);
+      sge_free(&(lp->listname));
+      sge_free(&lp);
       LERROR(LECOUNTDESCR);
       DRETURN(NULL);
    }
@@ -1016,8 +1016,8 @@ lList *lCreateListHash(const char *listname, const lDescr *descr, bool hash)
    lp->first = NULL;
    lp->last = NULL;
    if (!(lp->descr = (lDescr *) malloc(sizeof(lDescr) * (n + 1)))) {
-      FREE(lp->listname);
-      FREE(lp);
+      sge_free(&(lp->listname));
+      sge_free(&lp);
       LERROR(LEMALLOC);
       DRETURN(NULL);
    }
@@ -1180,7 +1180,7 @@ void lFreeElem(lListElem **ep1)
 
    sge_bitfield_free_data(&(ep->changed));
 
-   FREE(*ep1);
+   sge_free(ep1);
    DRETURN_VOID;
 }
 

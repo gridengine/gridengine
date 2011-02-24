@@ -100,7 +100,7 @@ int do_signal_queue(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, sge_pack_buffe
        unpackint(&(aMsg->buf), &jataskid) != 0 ||
        unpackstr(&(aMsg->buf), &qname) != 0 || /* mallocs qname !! */
        unpackint(&(aMsg->buf), &signal)) {     /* signal don't need to be packed Ü*/
-      FREE(qname); 
+      sge_free(&qname); 
       DRETURN(1);    
    }
 
@@ -191,7 +191,7 @@ int do_signal_queue(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, sge_pack_buffe
       job_unknown(jobid, jataskid, qname);
    }
 
-   FREE(qname);
+   sge_free(&qname);
 
    DRETURN(0);
 }

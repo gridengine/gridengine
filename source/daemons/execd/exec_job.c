@@ -518,7 +518,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
          fp = fopen(hostfilename, "w");
          if (!fp) {
             snprintf(err_str, err_length, MSG_FILE_NOOPEN_SS,  hostfilename, strerror(errno));
-            FREE(rankfileinput);
+            sge_free(&rankfileinput);
             DEXIT;
             return -2;
          }
@@ -577,7 +577,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
          }
 
          FCLOSE(fp);
-         FREE(rankfileinput);
+         sge_free(&rankfileinput);
       }
       /*************************** finished writing sge hostfile  ********/
 
@@ -654,7 +654,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
 
       if (sge_binding_environment != NULL) {
          var_list_set_string(&environmentList, "SGE_BINDING", sge_binding_environment);
-         FREE(sge_binding_environment);
+         sge_free(&sge_binding_environment);
       }   
 
       /*
@@ -872,21 +872,21 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
                sge_dstring_sprintf(&default_dstring, "%s/utilbin/%s/rsh", sge_root, arch);
                var_list_set_string(&environmentList, "SGE_RSH_COMMAND", sge_dstring_get_string(&default_dstring));
             }   
-            FREE(mconf_string);
+            sge_free(&mconf_string);
 
             /* transport the notify kill and susp signals to qrsh -inherit */
             if (mconf_get_notify_kill_type() == 0) {
                mconf_string = mconf_get_notify_kill();
                if (mconf_string != NULL) {
                   var_list_set_string(&environmentList, "SGE_NOTIFY_KILL_SIGNAL", mconf_string);
-                  FREE(mconf_string);
+                  sge_free(&mconf_string);
                }
             }
             if (mconf_get_notify_susp_type() == 0) {
                mconf_string = mconf_get_notify_susp();
                if (mconf_string != NULL) {
                   var_list_set_string(&environmentList, "SGE_NOTIFY_SUSP_SIGNAL", mconf_string);
-                  FREE(mconf_string);
+                  sge_free(&mconf_string);
                }
             }
          }
@@ -996,7 +996,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
          DPRINTF(("gid_range = %s\n", gid_range));
          range_list_parse_from_string(&rlp, &alp, gid_range,
                                       0, 0, INF_NOT_ALLOWED);
-         FREE(gid_range);
+         sge_free(&gid_range);
          if (rlp == NULL) {
              lFreeList(&alp);
              snprintf(err_str, err_length, SFNMAX, MSG_EXECD_NOPARSEGIDRANGE);
@@ -1264,8 +1264,8 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
       fprintf(fp, "epilog=%s\n", 
               ((cp=lGetString(master_q, QU_epilog)) && strcasecmp(cp, "none"))?
               cp: epilog);
-      FREE(prolog);
-      FREE(epilog);
+      sge_free(&prolog);
+      sge_free(&epilog);
    } else {
       fprintf(fp, "prolog=%s\n", "none");
       fprintf(fp, "epilog=%s\n", "none");
@@ -1324,7 +1324,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
    shell_start_mode = mconf_get_shell_start_mode(); 
    fprintf(fp, "shell_start_mode=%s\n", 
          job_get_shell_start_mode(jep, master_q, shell_start_mode));
-   FREE(shell_start_mode);
+   sge_free(&shell_start_mode);
    /* we need the basename for loginshell test */
    shell = strrchr(shell_path, '/');
    if (!shell)
@@ -1419,7 +1419,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
             ** this causes a general failure
             */
          }
-         FREE(xterm);
+         sge_free(&xterm);
       }
    }
 
@@ -1504,12 +1504,12 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
       fprintf(fp, "coshepherd=%s\n", coshepherd_path);
       set_token_cmd = mconf_get_set_token_cmd();
       fprintf(fp, "set_token_cmd=%s\n", set_token_cmd ? set_token_cmd : "none");
-      FREE(set_token_cmd);
+      sge_free(&set_token_cmd);
       fprintf(fp, "token_extend_time=%d\n", (int) mconf_get_token_extend_time());
    } else {
       fprintf(fp, "use_afs=0\n");
    }
-   FREE(pag_cmd);
+   sge_free(&pag_cmd);
 
    fprintf(fp, "admin_user=%s\n", admin_user);
 
@@ -1517,11 +1517,11 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
    fprintf(fp, "notify_kill_type=%d\n", mconf_get_notify_kill_type());
    notify_kill = mconf_get_notify_kill();
    fprintf(fp, "notify_kill=%s\n", notify_kill?notify_kill:"default");
-   FREE(notify_kill);
+   sge_free(&notify_kill);
    fprintf(fp, "notify_susp_type=%d\n", mconf_get_notify_susp_type());
    notify_susp = mconf_get_notify_susp();
    fprintf(fp, "notify_susp=%s\n", notify_susp?notify_susp:"default");   
-   FREE(notify_susp);
+   sge_free(&notify_susp);
    if (mconf_get_use_qsub_gid()) {
       fprintf(fp, "qsub_gid="sge_u32"\n", lGetUlong(jep, JB_gid));
    } else {
@@ -1565,7 +1565,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
          if(JOB_TYPE_IS_QLOGIN(jb_now)) {
             char* qlogin_daemon = mconf_get_qlogin_daemon();
             fprintf(fp, "qlogin_daemon=%s\n", qlogin_daemon);
-            FREE(qlogin_daemon);
+            sge_free(&qlogin_daemon);
          } else {
             if(JOB_TYPE_IS_QRSH(jb_now)) {
                char* rsh_daemon = mconf_get_rsh_daemon();
@@ -1580,7 +1580,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
                      write_osjob_id = 0; /* will be done by our rshd */
                   }
                }
-               FREE(rsh_daemon);
+               sge_free(&rsh_daemon);
 
                fprintf(fp, "qrsh_tmpdir=%s\n", tmpdir);
 
@@ -1603,7 +1603,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
                         write_osjob_id = 0; /* will be done by our rlogind */
                      }
                   }   
-                  FREE(rlogin_daemon);
+                  sge_free(&rlogin_daemon);
                }
             }
          }   
@@ -1694,8 +1694,8 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
        strcasecmp(shepherd_cmd, "none")) {
       if (SGE_STAT(shepherd_cmd, &buf)) {
          snprintf(err_str, err_length, MSG_EXECD_NOSHEPHERDWRAP_SS, shepherd_cmd, strerror(errno));
-         FREE(pag_cmd);
-         FREE(shepherd_cmd);
+         sge_free(&pag_cmd);
+         sge_free(&shepherd_cmd);
          DEXIT;
          return -2;
       }
@@ -1705,8 +1705,8 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
               sge_root, arch);
       if (SGE_STAT(dce_wrapper_cmd, &buf)) {
          snprintf(err_str, err_length, MSG_DCE_NOSHEPHERDWRAP_SS, dce_wrapper_cmd, strerror(errno));
-         FREE(pag_cmd);
-         FREE(shepherd_cmd);
+         sge_free(&pag_cmd);
+         sge_free(&shepherd_cmd);
          DEXIT;
          return -2;
       }
@@ -1721,8 +1721,8 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
          sprintf(coshepherd_path, "%s/%s", binary_path, shepherd_name);
          if (SGE_STAT(coshepherd_path, &buf)) {
             snprintf(err_str, err_length, MSG_EXECD_NOCOSHEPHERD_SSS, arch, coshepherd_path, strerror(errno));
-            FREE(pag_cmd);
-            FREE(shepherd_cmd);
+            sge_free(&pag_cmd);
+            sge_free(&shepherd_cmd);
             DEXIT;
             return -2;
          }
@@ -1731,19 +1731,19 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
       if (!set_token_cmd ||
           !strlen(set_token_cmd) || !mconf_get_token_extend_time()) {
          snprintf(err_str, err_length, SFNMAX, MSG_EXECD_AFSCONFINCOMPLETE);
-         FREE(pag_cmd);
-         FREE(shepherd_cmd);
+         sge_free(&pag_cmd);
+         sge_free(&shepherd_cmd);
          DEXIT;
          return -2;
       }
-      FREE(set_token_cmd);
+      sge_free(&set_token_cmd);
 
    /* JG: TODO (254) use function sge_get_active_job.... */
       sprintf(fname, "%s/%s", active_dir_buffer, TOKEN_FILE);
       if ((fd = SGE_OPEN3(fname, O_RDWR | O_CREAT | O_TRUNC, 0600)) == -1) {
          snprintf(err_str, err_length, MSG_EXECD_NOCREATETOKENFILE_S, strerror(errno));
-         FREE(pag_cmd);
-         FREE(shepherd_cmd);
+         sge_free(&pag_cmd);
+         sge_free(&shepherd_cmd);
          DEXIT;
          return -2;
       }   
@@ -1751,22 +1751,22 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
       cp = lGetString(jep, JB_tgt);
       if (!cp || !(len = strlen(cp))) {
          snprintf(err_str, err_length, SFNMAX, MSG_EXECD_TOKENZERO);
-         FREE(pag_cmd);
-         FREE(shepherd_cmd);
+         sge_free(&pag_cmd);
+         sge_free(&shepherd_cmd);
          DEXIT;
          return -3; /* problem of this user */
       }
       if (write(fd, cp, len) != len) {
          snprintf(err_str, err_length, MSG_EXECD_NOWRITETOKEN_S, strerror(errno));
-         FREE(pag_cmd);
-         FREE(shepherd_cmd);
+         sge_free(&pag_cmd);
+         sge_free(&shepherd_cmd);
          DEXIT;
          return -2;
       }
       close(fd);
    }
-   FREE(pag_cmd);
-   FREE(shepherd_cmd);
+   sge_free(&pag_cmd);
+   sge_free(&shepherd_cmd);
 
    /* send mail to users if requested */
    if(petep == NULL) {
@@ -1953,8 +1953,8 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
 
       execlp(pag_cmd, pag_cmd, "-c", commandline, NULL);
    }
-   FREE(pag_cmd);
-   FREE(shepherd_cmd);
+   sge_free(&pag_cmd);
+   sge_free(&shepherd_cmd);
 
 
    /*---------------------------------------------------*/
@@ -2013,7 +2013,7 @@ char *shell
       DPRINTF(("strncmp(\"%s\", \"%s\", %d) = %d\n",
               cp, shell, strlen(shell), ret));
       if (!ret) {
-         FREE(login_shells);
+         sge_free(&login_shells);
          DEXIT;  
          return 1;
       }
@@ -2023,7 +2023,7 @@ char *shell
           cp++;
       }
    }
-  FREE(login_shells);
+  sge_free(&login_shells);
   DEXIT;
   return 0;
 }
@@ -2269,8 +2269,8 @@ static bool linear_linux(dstring* result, lListElem* binding_elem,
          sge_dstring_append(result, topo_job);
 
          /* free lists */
-         FREE(list_of_sockets);
-         FREE(list_of_cores);
+         sge_free(&list_of_sockets);
+         sge_free(&list_of_cores);
 
          retval = true;
 
@@ -2490,9 +2490,9 @@ static bool explicit_linux(dstring* result, lListElem* binding_elem)
    } 
 
    /* free resources */
-   FREE(topo_by_job);
-   FREE(socket_list);
-   FREE(core_list);
+   sge_free(&topo_by_job);
+   sge_free(&socket_list);
+   sge_free(&core_list);
 
    DRETURN(retval); 
 }
@@ -2696,9 +2696,9 @@ static bool linear_automatic_solaris(dstring* result, lListElem* binding_elem,
 
    }
    
-   FREE(list_of_cores);
-   FREE(list_of_sockets);
-   FREE(topo_by_job);
+   sge_free(&list_of_cores);
+   sge_free(&list_of_sockets);
+   sge_free(&topo_by_job);
 
    DRETURN(retval);
 }
@@ -2845,7 +2845,7 @@ static bool striding_solaris(dstring* result, lListElem* binding_elem, const boo
       retval = false; 
    }
 
-   FREE(topo_by_job);
+   sge_free(&topo_by_job);
 
    DRETURN(retval);
 }
@@ -2959,9 +2959,9 @@ static bool explicit_solaris(dstring* result, lListElem* binding_elem, char* err
          retval = false;
       }
 
-      FREE(core_list);
-      FREE(socket_list);
-      FREE(topo_by_job);
+      sge_free(&core_list);
+      sge_free(&socket_list);
+      sge_free(&topo_by_job);
    }
 
    DRETURN(retval);
@@ -3049,8 +3049,8 @@ static bool parse_job_accounting_and_create_logical_list(const char* binding_str
       sge_dstring_free(&pair);
       sge_dstring_free(&full);
 
-      FREE(sockets);
-      FREE(cores);
+      sge_free(&sockets);
+      sge_free(&cores);
 
    } else {
       /* no cores used */

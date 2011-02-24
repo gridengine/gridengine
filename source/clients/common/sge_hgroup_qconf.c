@@ -166,7 +166,7 @@ static bool hgroup_provide_modify_context(sge_gdi_ctx_class_t *ctx, lListElem **
       if (answer_list_has_error(answer_list)) {
          if (filename != NULL) {
             unlink(filename);
-            FREE(filename);
+            sge_free(&filename);
          }
          DRETURN(false);
       }
@@ -215,7 +215,7 @@ static bool hgroup_provide_modify_context(sge_gdi_ctx_class_t *ctx, lListElem **
                          STATUS_ERROR1, ANSWER_QUALITY_ERROR);
       }
       unlink(filename);
-      FREE(filename);
+      sge_free(&filename);
    } 
    DRETURN(ret);
 }
@@ -408,7 +408,7 @@ bool hgroup_show(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *name
                                      &qconf_sfi, SP_DEST_STDOUT,
                                      SP_FORM_ASCII, NULL, false);
       
-         FREE(filename);
+         sge_free(&filename);
          lFreeElem(&hgroup);
 
          if (answer_list_has_error(answer_list)) {

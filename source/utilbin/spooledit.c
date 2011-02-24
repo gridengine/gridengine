@@ -269,7 +269,7 @@ dump_object(bdb_info info, const char *key)
          } else {
             /* dump job script with a trailing linefeed, it might be missing in the script */
             printf("%s\n", job_script != NULL ? job_script : "no job script");
-            FREE(job_script);
+            sge_free(&job_script);
          }
       } else {
          /* read object */

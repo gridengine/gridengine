@@ -291,7 +291,7 @@ void pdc_kill_addgrpid(gid_t add_grp_id, int sig,
       return;
    }
    if (sysctl(mib, 4, procs, &bufSize, NULL, 0) < 0) {
-      FREE(procs);
+      sge_free(&procs);
       return;
    }
    procs_begin = procs;
@@ -317,7 +317,7 @@ void pdc_kill_addgrpid(gid_t add_grp_id, int sig,
          }
       }
    }
-   FREE(procs_begin)
+   sge_free(&procs_begin);
 #endif
 }
 #endif
@@ -519,9 +519,7 @@ read_kernel_table(char *name, void **table, long *size, int *entries)
 
    tsize = tinfo.head + (tinfo.ent * tinfo.len);
    if (tsize > *size) {
-      if (*table) {
-         sge_free(table);
-      }
+      sge_free(table);
       *table = malloc(tsize);
       if (*table == NULL) {
          return -1;
@@ -1369,8 +1367,11 @@ free_arsess_list(lnk_link_t *arsess_list)
 {
    lnk_link_t *curra;
    while((curra=arsess_list->next) != arsess_list) {
+      arsess_elem_t *ptr;
+
       LNK_DELETE(curra);
-      free(LNK_DATA(curra, arsess_elem_t, link));
+      ptr = LNK_DATA(curra, arsess_elem_t, link);
+      sge_free(&ptr);
    }
 }
 
@@ -1407,8 +1408,11 @@ free_process_list(job_elem_t *job_elem)
 
    /* free process list */
    while((currp=job_elem->procs.next) != &job_elem->procs) {
+      proc_elem_t *ptr;
+
       LNK_DELETE(currp);
-      free(LNK_DATA(currp, proc_elem_t, link));
+      ptr = LNK_DATA(currp, proc_elem_t, link);
+      sge_free(&ptr);
    }
 }
 
@@ -1424,8 +1428,11 @@ free_job(job_elem_t *job_elem)
 #ifdef IRIX
    /* free arse list */
    while((currp=job_elem->arses.next) != &job_elem->arses) {
+      arsess_elem_t *ptr;
+   
       LNK_DELETE(currp);
-      free(LNK_DATA(currp, arsess_elem_t, link));
+      ptr = LNK_DATA(currp, arsess_elem_t, link);
+      sge_free(&ptr);
    }
 #endif
 
@@ -1739,7 +1746,7 @@ static int psRetrieveOSJobData(void) {
       }
       if (sysctl(mib, 4, procs, &bufSize, NULL, 0) < 0) {
          DPRINTF(("sysctl() failed(2)\n"));
-         FREE(procs);
+         sge_free(&procs);
          DRETURN(-1);
       }
       procs_begin = procs;
@@ -1768,7 +1775,7 @@ static int psRetrieveOSJobData(void) {
                   if (newprocess) {
                      proc_elem = malloc(sizeof(proc_elem_t));
                      if (proc_elem == NULL) {
-                        FREE(procs_begin);
+                        sge_free(&procs_begin);
                         DRETURN(0);
                      }
 
@@ -1829,7 +1836,7 @@ static int psRetrieveOSJobData(void) {
             }
          }
       }
-      FREE(procs_begin);
+      sge_free(&procs_begin);
    }
 #elif defined(NECSX4) || defined(NECSX5)
    {
@@ -3184,7 +3191,7 @@ main(int argc, char **argv)
                         print_process_data(pp);
                      INCPROCPTR(pp, pp->pd_length);
                   }
-                  free(ojp);
+                  sge_free(&ojp);
                } 
 
             } else if (verbose && !killjob)
@@ -3243,10 +3250,15 @@ main(int argc, char **argv)
          fflush(stdout);
       }
 
-      if (ojob) free(ojob);
-      if (stat) free(stat);
-      if (sys) free(sys);
-
+      if (ojob) {
+         sge_free(&ojob);
+      }
+      if (stat) {
+         sge_free(&stat);
+      }
+      if (sys) {
+         sge_free(&sys);
+      }
       if (killjob && (!forcekill || activeprocs == 0))
          break;
 

@@ -1100,12 +1100,12 @@ void lFreeWhere(lCondition **cp)
    case HOSTNAMECMP:
       if (mt_get_type((*cp)->operand.cmp.mt) == lStringT) {
          if ((*cp)->operand.cmp.val.str) {
-            FREE((*cp)->operand.cmp.val.str);
+            sge_free(&((*cp)->operand.cmp.val.str));
          }
       }
       if (mt_get_type((*cp)->operand.cmp.mt) == lHostT) {
          if ((*cp)->operand.cmp.val.host) {
-            FREE((*cp)->operand.cmp.val.host);
+            sge_free(&((*cp)->operand.cmp.val.host));
          }
       }
       if (mt_get_type((*cp)->operand.cmp.mt) == lListT) {
@@ -1130,7 +1130,7 @@ void lFreeWhere(lCondition **cp)
       LERROR(LEOPUNKNOWN);
    }
 
-   FREE(*cp);
+   sge_free(cp);
    DRETURN_VOID;
 }
 

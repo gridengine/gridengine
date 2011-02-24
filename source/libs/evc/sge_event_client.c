@@ -781,9 +781,7 @@ void sge_evc_class_destroy(sge_evc_class_t **pst)
    }   
       
    sge_evc_destroy((sge_evc_t **)&((*pst)->sge_evc_handle));
-   FREE(*pst);
-   *pst = NULL;
-
+   sge_free(pst);
    DRETURN_VOID;
 }
 
@@ -807,8 +805,7 @@ static void sge_evc_destroy(sge_evc_t **sge_evc)
    lFreeList(&((*sge_evc)->event_control.new_events));
 
    lFreeElem(&((*sge_evc)->ec));
-   FREE(*sge_evc);
-   *sge_evc = NULL;
+   sge_free(sge_evc);
    
    DRETURN_VOID;
 }

@@ -666,7 +666,7 @@ static void qmonCplxSaveAttr(Widget matrix)
       }
       qmonMessageBox(matrix, alp, 0);
       unlink(file_tmp);
-      FREE(file_tmp);
+      sge_free(&file_tmp);
       lFreeList(&alp);
       lFreeList(&entries);
    }

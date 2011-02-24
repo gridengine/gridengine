@@ -715,11 +715,11 @@ XtPointer cad
 
 static void qmonSchedFreeData()
 {
-   FREE(data.algorithm);
-   FREE(data.schedule_interval);
-   FREE(data.sc_params);
-   FREE(data.load_adjustment_decay_time);
-   FREE(data.load_formula);
-   FREE(data.reprioritize_interval);
-   FREE(data.default_duration);
+   sge_free(&(data.algorithm));
+   sge_free(&(data.schedule_interval));
+   sge_free(&(data.sc_params));
+   sge_free(&(data.load_adjustment_decay_time));
+   sge_free(&(data.load_formula));
+   sge_free(&(data.reprioritize_interval));
+   sge_free(&(data.default_duration));
 }

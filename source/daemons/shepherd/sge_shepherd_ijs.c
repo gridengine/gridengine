@@ -483,8 +483,8 @@ static void* pty_to_commlib(void *t_conf)
 #ifdef EXTENSIVE_TRACING
    shepherd_trace("pty_to_commlib: shutting down thread");
 #endif
-   FREE(stdout_buf);
-   FREE(stderr_buf);
+   sge_free(&stdout_buf);
+   sge_free(&stderr_buf);
    thread_func_cleanup(t_conf);
 
 /* TODO: This could cause race conditions in the main thread, replace with pthread_condition */
@@ -1048,7 +1048,7 @@ int close_parent_loop(int exit_status)
       shepherd_trace("parent: error in comm_cleanup_lib(): %d", ret);
    }
 
-   FREE(g_hostname);
+   sge_free(&g_hostname);
    sge_dstring_free(&err_msg);
    shepherd_trace("parent: leaving closinge_parent_loop()");
    return 0;

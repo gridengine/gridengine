@@ -502,7 +502,7 @@ sge_job_verify_adjust(sge_gdi_ctx_class_t *ctx, lListElem *jep, lList **alpp,
          int status = sge_add_auto_user(ctx, ruser, alpp, monitor);
 
          if (status != STATUS_OK) {
-            FREE(enforce_user);
+            sge_free(&enforce_user);
             DRETURN(status);
          }
       }
@@ -512,10 +512,10 @@ sge_job_verify_adjust(sge_gdi_ctx_class_t *ctx, lListElem *jep, lList **alpp,
                !user_list_locate(*object_base[SGE_TYPE_USER].list, ruser)) {
          ERROR((SGE_EVENT, MSG_JOB_USRUNKNOWN_S, ruser));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         FREE(enforce_user);
+         sge_free(&enforce_user);
          DRETURN(STATUS_EUNKNOWN);
       }
-      FREE(enforce_user);
+      sge_free(&enforce_user);
    }
 
    /* set default project */

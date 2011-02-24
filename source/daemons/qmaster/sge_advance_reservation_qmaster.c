@@ -1763,12 +1763,12 @@ void ar_initialize_reserved_queue_list(lListElem *ar)
          }
       }
 
-      FREE(cqueue_name);
+      sge_free(&cqueue_name);
       is_master_queue = false;
    }
    lSetList(ar, AR_reserved_queues, queue_list);
 
-   FREE(rdp);
+   sge_free(&rdp);
    sge_dstring_free(&buffer);
 
    DRETURN_VOID; 

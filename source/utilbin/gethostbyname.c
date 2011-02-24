@@ -111,7 +111,7 @@ int main(int argc, char *argv[]) {
   if (sge_aliasing ) {
      const char *alias_path = sge_get_alias_path();
      cl_com_set_alias_file(alias_path);
-     FREE(alias_path);
+     sge_free(&alias_path);
   }
 
   retval = cl_com_cached_gethostbyname(unresolved_name, &resolved_name, NULL, &he, &system_error);

@@ -140,7 +140,7 @@ centry_provide_modify_context(sge_gdi_ctx_class_t *ctx, lListElem **this_elem, l
       if (answer_list_output(&alp)) {
          if (filename != NULL) {
             unlink(filename);
-            FREE(filename);
+            sge_free(&filename);
          }
          DRETURN(false);
       }
@@ -180,7 +180,7 @@ centry_provide_modify_context(sge_gdi_ctx_class_t *ctx, lListElem **this_elem, l
                          STATUS_ERROR1, ANSWER_QUALITY_ERROR);
       }
       unlink(filename);
-      FREE(filename);
+      sge_free(&filename);
    } 
    
    lFreeList(&alp);
@@ -355,7 +355,7 @@ centry_show(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *name)
          filename = spool_flatfile_write_object(answer_list, centry, false, CE_fields,
                                      &qconf_ce_sfi, SP_DEST_STDOUT, SP_FORM_ASCII,
                                      NULL, false);
-         FREE(filename);
+         sge_free(&filename);
          lFreeElem(&centry);
          if (answer_list_has_error(answer_list)) {
             DRETURN(false);
@@ -386,7 +386,7 @@ centry_list_show(sge_gdi_ctx_class_t *ctx, lList **answer_list)
                                            &qconf_ce_list_sfi, SP_DEST_STDOUT, SP_FORM_ASCII, 
                                            NULL, false);
      
-      FREE(filename);
+      sge_free(&filename);
       lFreeList(&centry_list);
 
       if (answer_list_has_error(answer_list)) {
@@ -773,7 +773,7 @@ centry_list_provide_modify_context(sge_gdi_ctx_class_t *ctx,
       if (answer_list_output(answer_list)) {
          if (filename != NULL) {
             unlink(filename);
-            FREE(filename);
+            sge_free(&filename);
          }
          DRETURN(false);
       }
@@ -803,7 +803,7 @@ centry_list_provide_modify_context(sge_gdi_ctx_class_t *ctx,
                          STATUS_ERROR1, ANSWER_QUALITY_ERROR);
       }
       unlink(filename);
-      FREE(filename);
+      sge_free(&filename);
    } 
    DRETURN(ret);
 }

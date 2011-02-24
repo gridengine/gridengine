@@ -363,7 +363,7 @@ int comm_init_lib(dstring *err_msg)
          DPRINTF(("cl_com_set_alias_file() failed: %s (%d)\n", sge_dstring_get_string(err_msg), ret));
          ret_val = COMM_CANT_SETUP_COMMLIB;
       }
-      FREE(alias_path);
+      sge_free(&alias_path);
 
       if (ret_val == COMM_RETVAL_OK) {
          cl_host_resolve_method_t resolve_method = CL_SHORT;
@@ -897,7 +897,7 @@ int comm_wait_for_connection(COMM_HANDLE *handle,
       /* A client connected to us, get it's hostname */
       if (endpoint_list->elem_count > 0) {
          endpoint = cl_endpoint_list_get_first_elem(endpoint_list);
-         FREE(*host);
+         sge_free(host);
          *host = strdup(endpoint->endpoint->comp_host);
          DPRINTF(("A client from host %s has connected\n", *host));
       }

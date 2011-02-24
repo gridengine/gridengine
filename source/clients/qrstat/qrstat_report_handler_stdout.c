@@ -230,7 +230,7 @@ qrstat_destroy_report_handler_stdout(qrstat_report_handler_t** handler, lList **
    DENTER(TOP_LAYER, "qrstat_destroy_report_handler");
 
    if (handler != NULL && *handler != NULL ) {
-      FREE(*handler);
+      sge_free(handler);
    }
 
    DRETURN(ret);

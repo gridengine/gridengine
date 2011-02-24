@@ -400,7 +400,7 @@ void te_free_event(te_event_t *anEvent)
    SGE_ASSERT((anEvent != NULL));
    
    sge_free(&((*anEvent)->str_key));
-   FREE(*anEvent);
+   sge_free(anEvent);
 
    DRETURN_VOID;
 } /* te_free_event() */

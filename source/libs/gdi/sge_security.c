@@ -174,7 +174,7 @@ int sge_ssl_setup_security_path(const char *progname, const char *user) {
 
    if (progname == NULL) {
       CRITICAL((SGE_EVENT, SFNMAX, MSG_GDI_NO_VALID_PROGRAMM_NAME));
-      FREE(user_name);
+      sge_free(&user_name);
       DRETURN(-1);
    }
 
@@ -189,7 +189,7 @@ int sge_ssl_setup_security_path(const char *progname, const char *user) {
    sge_dstring_sprintf(&ca_root, "%s/%s/%s", sge_get_root_dir(1, NULL, 0, 1), sge_get_default_cell(), CA_DIR);
    if (SGE_STAT(sge_dstring_get_string(&ca_root), &sbuf)) { 
       CRITICAL((SGE_EVENT, MSG_SEC_CAROOTNOTFOUND_S, sge_dstring_get_string(&ca_root)));
-      FREE(user_name);
+      sge_free(&user_name);
       sge_dstring_free(&userdir);
       sge_dstring_free(&user_local_dir);
       sge_dstring_free(&ca_root);
@@ -233,7 +233,7 @@ int sge_ssl_setup_security_path(const char *progname, const char *user) {
       }   
       if (is_daemon(progname) && SGE_STAT(sge_dstring_get_string(&ca_local_root), &sbuf)) { 
          CRITICAL((SGE_EVENT, MSG_SEC_CALOCALROOTNOTFOUND_S, sge_dstring_get_string(&ca_local_root)));
-         FREE(user_name);
+         sge_free(&user_name);
          sge_dstring_free(&userdir);
          sge_dstring_free(&user_local_dir);
          sge_dstring_free(&ca_root);
@@ -252,7 +252,7 @@ int sge_ssl_setup_security_path(const char *progname, const char *user) {
 
    if (is_master(progname) && SGE_STAT(sge_dstring_get_string(&ca_key_file), &sbuf)) { 
       CRITICAL((SGE_EVENT, MSG_SEC_CAKEYFILENOTFOUND_S, sge_dstring_get_string(&ca_key_file)));
-      FREE(user_name);
+      sge_free(&user_name);
       sge_dstring_free(&user_local_dir);
       sge_dstring_free(&ca_root);
       sge_dstring_free(&ca_local_root);
@@ -271,7 +271,7 @@ int sge_ssl_setup_security_path(const char *progname, const char *user) {
 
    if (SGE_STAT(sge_dstring_get_string(&ca_cert_file), &sbuf)) { 
       CRITICAL((SGE_EVENT, MSG_SEC_CACERTFILENOTFOUND_S, sge_dstring_get_string(&ca_cert_file)));
-      FREE(user_name);
+      sge_free(&user_name);
       sge_dstring_free(&user_local_dir);
       sge_dstring_free(&ca_root);
       sge_dstring_free(&ca_local_root);
@@ -311,8 +311,8 @@ int sge_ssl_setup_security_path(const char *progname, const char *user) {
       pw = sge_getpwnam_r(user_name, &pw_struct, buffer, size);
       if (!pw) {
          CRITICAL((SGE_EVENT, MSG_SEC_USERNOTFOUND_S, user_name));
-         FREE(user_name);
-         FREE(buffer);
+         sge_free(&user_name);
+         sge_free(&buffer);
          sge_dstring_free(&user_local_dir);
          sge_dstring_free(&ca_root);
          sge_dstring_free(&ca_local_root);
@@ -331,7 +331,7 @@ int sge_ssl_setup_security_path(const char *progname, const char *user) {
          sge_dstring_sprintf(&userdir, "%s/%s/%s/%s", pw->pw_dir, SGESecPath, SGE_COMMD_SERVICE, sge_get_default_cell());
       }
       sge_dstring_copy_dstring(&user_local_dir, &userdir);
-      FREE(buffer);
+      sge_free(&buffer);
    }
 
    if ((sge_keyfile = getenv("SGE_KEYFILE"))) {
@@ -351,7 +351,7 @@ int sge_ssl_setup_security_path(const char *progname, const char *user) {
 
    if (SGE_STAT(sge_dstring_get_string(&key_file), &sbuf)) { 
       CRITICAL((SGE_EVENT, MSG_SEC_KEYFILENOTFOUND_S, sge_dstring_get_string(&key_file)));
-      FREE(user_name);
+      sge_free(&user_name);
       sge_dstring_free(&user_local_dir);
       sge_dstring_free(&ca_root);
       sge_dstring_free(&ca_local_root);
@@ -384,7 +384,7 @@ int sge_ssl_setup_security_path(const char *progname, const char *user) {
 
    if (SGE_STAT(sge_dstring_get_string(&cert_file), &sbuf)) { 
       CRITICAL((SGE_EVENT, MSG_SEC_CERTFILENOTFOUND_S, sge_dstring_get_string(&cert_file)));
-      FREE(user_name);
+      sge_free(&user_name);
       sge_dstring_free(&user_local_dir);
       sge_dstring_free(&ca_root);
       sge_dstring_free(&ca_local_root);
@@ -448,7 +448,7 @@ int sge_ssl_setup_security_path(const char *progname, const char *user) {
    sge_dstring_free(&cert_file); 
    sge_dstring_free(&reconnect_file);
    sge_dstring_free(&crl_file);
-   FREE(user_name);
+   sge_free(&user_name);
 
    DRETURN(return_value);
 }
@@ -1668,19 +1668,19 @@ bool sge_security_verify_unique_identifier(bool check_admin_user, const char* us
             && sge_is_user_superuser(unique_identifier) == false) { 
             DPRINTF((MSG_ADMIN_REQUEST_DENIED_FOR_USER_S, user ? user: "NULL"));
             WARNING((SGE_EVENT, MSG_ADMIN_REQUEST_DENIED_FOR_USER_S, user ? user: "NULL"));
-            FREE(unique_identifier);
+            sge_free(&unique_identifier);
             DRETURN(false);
          }     
       } else {
          if (strcmp(unique_identifier, user) != 0) {
             DPRINTF((MSG_REQUEST_DENIED_FOR_USER_S, user ? user: "NULL"));
             WARNING((SGE_EVENT, MSG_REQUEST_DENIED_FOR_USER_S, user ? user: "NULL"));
-            FREE(unique_identifier);
+            sge_free(&unique_identifier);
             DRETURN(false);
          }
       }
       
-      FREE(unique_identifier);
+      sge_free(&unique_identifier);
    }
 #endif
    DRETURN(true);

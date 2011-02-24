@@ -1719,7 +1719,7 @@ void setByteArray(const char *byteArray, int size, lListElem *elem, int name){
    }
    z_stream_str[y++] = '\0';
    lSetString(elem, name, z_stream_str);
-   FREE(z_stream_str);    
+   sge_free(&z_stream_str);    
 } 
 
 /****** cull_pack/getByteArray() ***********************************************

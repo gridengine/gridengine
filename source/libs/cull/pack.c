@@ -259,7 +259,7 @@ init_packbuffer_from_buffer(sge_pack_buffer *pb, char *buf, u_long32 buflen)
 /* MT-NOTE: clear_packbuffer() is MT safe */
 void clear_packbuffer(sge_pack_buffer *pb) {
    if (pb != NULL) {
-      FREE(pb->head_ptr);
+      sge_free(&(pb->head_ptr));
    }
    return;
 }
@@ -855,7 +855,7 @@ int unpackbitfield(sge_pack_buffer *pb, bitfield *bitfield, int descr_size)
    memcpy(sge_bitfield_get_buffer(bitfield), buffer, char_size);
 
    /* free unpacked bitfield buffer */
-   FREE(buffer);
+   sge_free(&buffer);
 
    DEXIT;
    return PACK_SUCCESS;

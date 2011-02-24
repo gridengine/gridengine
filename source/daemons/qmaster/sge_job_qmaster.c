@@ -1286,7 +1286,7 @@ int sub_command
          ERROR((SGE_EVENT, MSG_SGETEXT_MUST_BE_JOB_OWN_TO_SUS, ruser, sge_u32c(jobid), MSG_JOB_CHANGEATTR));  
          answer_list_add(alpp, SGE_EVENT, STATUS_ENOTOWNER, ANSWER_QUALITY_ERROR);
          lFreeWhere(&job_where);
-         FREE(job_mod_name);
+         sge_free(&job_mod_name);
          DRETURN(STATUS_ENOTOWNER);   
       }
     
@@ -1300,7 +1300,7 @@ int sub_command
          lAddList(*alpp, &tmp_alp);
          lFreeElem(&new_job);
          lFreeWhere(&job_where);
-         FREE(job_mod_name); 
+         sge_free(&job_mod_name); 
          DRETURN(STATUS_EUNKNOWN);
       }
 
@@ -1326,7 +1326,7 @@ int sub_command
             lFreeList(&tmp_alp);
             lFreeElem(&new_job);
             lFreeWhere(&job_where);
-            FREE(job_mod_name);
+            sge_free(&job_mod_name);
             DRETURN(STATUS_EDISK);
          }
 
@@ -1425,11 +1425,11 @@ int sub_command
             user_list_flag?lGetPosList(jep, user_list_pos):NULL,
             jid_flag, jid_flag?job_id_str:"0",
             all_users_flag, all_jobs_flag, ruser, 0, 0, 0, 0);
-      FREE(job_mod_name);            
+      sge_free(&job_mod_name);            
       DRETURN(STATUS_EEXIST);
    }   
 
-   FREE(job_mod_name); 
+   sge_free(&job_mod_name); 
    DRETURN(STATUS_OK);
 }
 
@@ -4097,7 +4097,7 @@ static int sge_delete_all_tasks_of_job(sge_gdi_ctx_class_t *ctx, lList **alpp, c
                         sge_u32c(job_number), sge_u32c(task_number)));
                   answer_list_add(alpp, SGE_EVENT, STATUS_OK_DOAGAIN, ANSWER_QUALITY_INFO);
                   *deletion_time_reached = true;
-                  FREE(dupped_session);
+                  sge_free(&dupped_session);
                   lFreeList(&range_list);
                   DRETURN(njobs);
                }
@@ -4154,7 +4154,7 @@ static int sge_delete_all_tasks_of_job(sge_gdi_ctx_class_t *ctx, lList **alpp, c
                sge_u32c(job_number)));
          answer_list_add(alpp, SGE_EVENT, STATUS_OK_DOAGAIN, ANSWER_QUALITY_INFO); 
          *deletion_time_reached = true;
-         FREE(dupped_session);
+         sge_free(&dupped_session);
          lFreeList(&range_list);
          DRETURN(njobs);
       }
@@ -4164,7 +4164,7 @@ static int sge_delete_all_tasks_of_job(sge_gdi_ctx_class_t *ctx, lList **alpp, c
 
    /* free task id range list of this iteration */
    lFreeList(&range_list);
-   FREE(dupped_session);
+   sge_free(&dupped_session);
 
    DRETURN(njobs);
 }
@@ -4267,7 +4267,7 @@ job_verify_project(const lListElem *job, lList **alpp,
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             ret = STATUS_EUNKNOWN;
          }
-         FREE(enforce_project);
+         sge_free(&enforce_project);
       }
    }
 

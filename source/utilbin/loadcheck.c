@@ -359,7 +359,7 @@ void test_linux_plpa()
       /* get topology */
       get_topology_linux(&topology, &length);
       printf("Topology:\t\t\t%s\n", topology);
-      FREE(topology); 
+      sge_free(&topology); 
       printf("Mapping of logical socket and core numbers to internal\n");
 
       /* for each socket,core pair get the internal processor number */
@@ -375,7 +375,7 @@ void test_linux_plpa()
                   printf(" %5d", proc_ids[i]);
                }
                printf("\n");
-               FREE(proc_ids);
+               sge_free(&proc_ids);
             } else {
                printf("Couldn't get processor ids for socket %5d core %5d\n", s, c);
             }
@@ -432,7 +432,7 @@ void test_solaris_binding()
       
       if (!generate_chipID_coreID_matrix(&matrix, &mlength)) {
          printf("Couldn't get valid information from kstat cpu_info!\n");
-         FREE(topology);
+         sge_free(&topology);
          return;
       }
 
@@ -484,7 +484,7 @@ void fill_socket_core_topology(dstring* msocket, dstring* mcore, dstring* mtopol
    sge_dstring_sprintf(msocket, "%d", ms);
    sge_dstring_sprintf(mcore, "%d", mc);
    sge_dstring_append(mtopology, topo);
-   FREE(topo);
+   sge_free(&topo);
 }
 
 #endif

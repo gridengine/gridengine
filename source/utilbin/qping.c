@@ -1203,7 +1203,7 @@ int main(int argc, char *argv[]) {
          if (retval != CL_RETVAL_OK) {
             fprintf(stderr,"%s\n",cl_get_error_text(retval));
          }
-         FREE(alias_path);
+         sge_free(&alias_path);
       }
    }
 

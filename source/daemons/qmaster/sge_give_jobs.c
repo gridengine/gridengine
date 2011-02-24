@@ -340,7 +340,7 @@ send_slave_jobs(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep, lLis
    }
 
    lFreeWhat(&what);
-   FREE(rdp);
+   sge_free(&rdp);
 
    if (pe) {
       lSetObject(tmpjatep, JAT_pe_object, lCopyElem(pe));
@@ -609,7 +609,7 @@ send_job(sge_gdi_ctx_class_t *ctx,
    }
 
    lFreeWhat(&what);
-   FREE(rdp);
+   sge_free(&rdp);
 
    if (pe) {
       lSetObject(tmpjatep, JAT_pe_object, lCopyElem(pe));

@@ -589,7 +589,7 @@ lList *cull_parse_job_parameter(u_long32 uid, const char *username, const char *
       lSetList(*pjob, JB_path_aliases, lCopyList("PathAliases", path_alias));
 
       if (is_cwd) {
-         FREE(path);
+         sge_free(&path);
       }
    }
 
@@ -794,7 +794,7 @@ u_long32 flags
          else if (filestrptr[0] == '\0') {
             answer_list_add(&answer, MSG_ANSWER_NOINPUT, 
                             STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            FREE(filestrptr);
+            sge_free(&filestrptr);
             DRETURN(answer);
          }
       }
@@ -966,13 +966,13 @@ u_long32 flags
                                   quality);
                } /* for_each (aep in alp) */
 
-               FREE(str_table);
+               sge_free(&str_table);
                lFreeList(&alp);
-               FREE(free_me);
+               sge_free(&free_me);
                parameters = NULL;
                
                if (do_exit) {
-                  FREE(filestrptr);
+                  sge_free(&filestrptr);
                   DRETURN(answer);
                }
 
@@ -984,7 +984,7 @@ u_long32 flags
                }
             } /* if (parameters is not empty) */
             else {
-               FREE (free_me);
+               sge_free(&free_me);
                parameters = NULL;
             }
          } /* while (*s != '\0') */
@@ -1011,7 +1011,7 @@ u_long32 flags
    }
 
    if (!lp_new_opts) {
-      FREE(filestrptr);
+      sge_free(&filestrptr);
       DRETURN(answer);
    }
 
@@ -1027,7 +1027,7 @@ u_long32 flags
       }
    }
 
-   FREE(filestrptr);
+   sge_free(&filestrptr);
 
    DRETURN(answer);
 FCLOSE_ERROR:

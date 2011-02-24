@@ -1006,7 +1006,7 @@ parallel_maximize_slots_pe(sge_assignment_t *best, int *available_slots)
    
    /* --- we are done --- */
    if (!use_category.is_pe_slots_rev) {
-      FREE(use_category.posible_pe_slots);
+      sge_free(&(use_category.posible_pe_slots));
    }
 
    assignment_release(&tmp);   
@@ -3037,10 +3037,10 @@ dispatch_t cqueue_match_static(const char *cqname, sge_assignment_t *a)
 
             if (strcmp(cqname, ar_cqueue) == 0) {
                /* found queue */
-               FREE(ar_cqueue);
+               sge_free(&ar_cqueue);
                break;
             }
-            FREE(ar_cqueue);
+            sge_free(&ar_cqueue);
          }
 
          if (gep == NULL) {
@@ -6734,16 +6734,16 @@ sge_dlib(const char *key, const char *lib_name, const char *fn_name,
    /* If we're replacing the old function, just delete it */
    if (replace) {
       dlclose(cache->lib_handle);
-      FREE(cache->key);
-      FREE(cache->lib_name);
-      FREE(cache->fn_name);
+      sge_free(&(cache->key));
+      sge_free(&(cache->lib_name));
+      sge_free(&(cache->fn_name));
       if (prev == NULL) {
          *cache_list = cache->next;
       }   
       else {
          prev->next = cache->next;
       }   
-      FREE(cache);
+      sge_free(&cache);
    }
 
    /* cache the new function address */
@@ -6933,7 +6933,7 @@ sge_call_pe_qsort(sge_assignment_t *a, const char *qsort_args)
          }
       }
 
-      FREE(pqs_params.qlist);
+      sge_free(&(pqs_params.qlist));
    } 
    else {
       ERROR((SGE_EVENT, "Unable to dynamically load PE qsort_args %s\n", qsort_args));

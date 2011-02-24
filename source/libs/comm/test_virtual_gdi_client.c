@@ -254,7 +254,7 @@ extern int main(int argc, char** argv)
          }
       } /* (do_shutdown == 0) */
 
-      FREE(snd_data);
+      sge_free(&snd_data);
 
       cl_commlib_shutdown_handle(handle, CL_FALSE);
    }

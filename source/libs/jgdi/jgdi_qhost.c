@@ -113,7 +113,7 @@ static qhost_report_handler_t* jgdi_report_handler_create(JNIEnv *env, jobject q
    if (ret == NULL) {
       answer_list_add(alpp, "malloc of qhost_report_handler_t failed",
                             STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
-      FREE(jgdi_handler);  
+      sge_free(&jgdi_handler);  
       DRETURN(NULL);
    }
    
@@ -165,7 +165,7 @@ static int jgdi_destroy_report_handler(qhost_report_handler_t** handler, lList *
       }
       
       /* Free the internal context */
-      FREE((*handler)->ctx);
+      sge_free(&((*handler)->ctx));
    }
 
    DRETURN(QHOST_SUCCESS);
@@ -693,7 +693,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeExecQHost
          if (report_handler->destroy != NULL) {
             report_handler->destroy(&report_handler, &alp);
          }         
-         FREE(report_handler);
+         sge_free(&report_handler);
       } else {
          ret = JGDI_ILLEGAL_STATE;
       }

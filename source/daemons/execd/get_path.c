@@ -258,20 +258,20 @@ const char *user
    pwd = sge_getpwnam_r(user, &pw_struct, buffer, size);
    if (!pwd) {
       ERROR((SGE_EVENT, MSG_EXECD_INVALIDUSERNAME_S, user));
-      FREE(buffer);
+      sge_free(&buffer);
       DEXIT;
       return 0;
    }
    if (!pwd->pw_dir) {
       ERROR((SGE_EVENT, MSG_EXECD_NOHOMEDIR_S, user));
-      FREE(buffer);
+      sge_free(&buffer);
       DEXIT;
       return 0;
 
    }
    strcat(exp_path, pwd->pw_dir);
 
-   FREE(buffer);
+   sge_free(&buffer);
    DEXIT;
    return 1;
 }

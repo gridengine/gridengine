@@ -453,7 +453,7 @@ main(int argc, char **argv)
    }
 
 Error:
-   FREE(jobid_string);
+   sge_free(&jobid_string);
    lFreeList(&alp);
    lFreeList(&opts_all);
    
@@ -526,7 +526,7 @@ static char *get_bulk_jobid_string(long job_id, int start, int end, int step)
    
    sprintf(jobid_str, "%ld.%d-%d:%d", job_id, start, end, step);
    ret_str = strdup(jobid_str);
-   FREE(jobid_str);
+   sge_free(&jobid_str);
    
    return ret_str;
 }

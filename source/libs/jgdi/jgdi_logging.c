@@ -604,7 +604,7 @@ static void jgdi_rmon_mprintf(rmon_ctx_t* ctx, int debug_class, const char* fmt,
 void jgdi_destroy_rmon_ctx(rmon_ctx_t *rmon_ctx)
 {
    if (rmon_ctx->ctx) {
-      FREE(rmon_ctx->ctx);
+      sge_free(&(rmon_ctx->ctx));
       rmon_ctx->ctx = NULL;
    }
 }

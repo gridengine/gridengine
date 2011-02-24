@@ -473,7 +473,7 @@ sge_parse_qstat(sge_gdi_ctx_class_t *ctx, lList **ppcmdline, qstat_env_t *qstat_
                lFreeList(ppljid);
             }
             str_list_parse_from_string(ppljid, argstr, ",");
-            FREE(argstr);
+            sge_free(&argstr);
          }
          continue;
       }
@@ -521,11 +521,11 @@ sge_parse_qstat(sge_gdi_ctx_class_t *ctx, lList **ppcmdline, qstat_env_t *qstat_
                if (!usageshowed) {
                   qstat_usage(qstat_env->qselect_mode, stderr, NULL);
                }
-               FREE(argstr);
+               sge_free(&argstr);
                DEXIT;
                return alp;
             }
-            FREE(argstr);
+            sge_free(&argstr);
          }
          continue;
       }
@@ -535,7 +535,7 @@ sge_parse_qstat(sge_gdi_ctx_class_t *ctx, lList **ppcmdline, qstat_env_t *qstat_
          qstat_env->explain_bits = qinstance_state_from_string(argstr, &alp, filter);
          qstat_env->full_listing |= QSTAT_DISPLAY_FULL;
          qstat_env->need_queues = true;
-         FREE(argstr);
+         sge_free(&argstr);
          continue;
       }
        
@@ -547,7 +547,7 @@ sge_parse_qstat(sge_gdi_ctx_class_t *ctx, lList **ppcmdline, qstat_env_t *qstat_
                lFreeList(&(qstat_env->qresource_list));
             }
             qstat_env->qresource_list = centry_list_parse_from_string(qstat_env->qresource_list, argstr, false);
-            FREE(argstr);
+            sge_free(&argstr);
          }
          continue;
       }
@@ -607,7 +607,7 @@ sge_parse_qstat(sge_gdi_ctx_class_t *ctx, lList **ppcmdline, qstat_env_t *qstat_
          u_long32 filter = 0xFFFFFFFF;
          qstat_env->queue_state = qinstance_state_from_string(argstr, &alp, filter);
          qstat_env->need_queues = true;
-         FREE(argstr);
+         sge_free(&argstr);
          continue;
       }
 
@@ -615,7 +615,7 @@ sge_parse_qstat(sge_gdi_ctx_class_t *ctx, lList **ppcmdline, qstat_env_t *qstat_
          qstat_filter_add_l_attributes(qstat_env);
          qstat_env->resource_list = centry_list_parse_from_string(qstat_env->resource_list, argstr, false);
          qstat_env->need_queues = true;
-         FREE(argstr);
+         sge_free(&argstr);
          continue;
       }
 
@@ -711,7 +711,7 @@ static int qstat_stdout_init(qstat_handler_t *handler, lList **alpp)
 error:
    if (ret != 0 ) {
       if(ctx != NULL) {
-         FREE(ctx);
+         sge_free(&ctx);
       }
    }
    DEXIT;
@@ -724,7 +724,7 @@ static int qstat_stdout_destroy(qstat_handler_t *handler)
 
    if (handler->ctx) {
       sge_dstring_free(&(((qstat_stdout_ctx_t*)(handler->ctx))->last_queue_name));
-      FREE(handler->ctx);
+      sge_free(&(handler->ctx));
    }
 
    DEXIT;
@@ -916,8 +916,8 @@ static int job_stdout_job(job_handler_t* handler, u_long32 jid, job_summary_t *s
             sge_urg ? jhul5 : "",
             sge_pri ? jhul6 : "");
             
-      FREE(part6);
-      FREE(seperator);               
+      sge_free(&part6);
+      sge_free(&seperator);               
    }
    
    if (summary->is_zombie) {

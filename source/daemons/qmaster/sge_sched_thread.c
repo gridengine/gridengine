@@ -835,7 +835,7 @@ static int dispatch_jobs(sge_evc_class_t *evc, scheduler_all_data_t *lists, orde
                                                    &user_list,
                                                    owner,
                                                    maxujobs);
-               FREE(owner);
+               sge_free(&owner);
 
                /* do not send job start orders inbetween, if we have an immediate array
                   job. */

@@ -758,7 +758,7 @@ int japi_enable_job_wait(const char *username, const char *unqualified_hostname,
       }
 
       /* We know that japi_session_key is a copy of a string at this point. */
-      FREE(japi_session_key);
+      sge_free(&japi_session_key);
 
       /* return error context from event client thread if there is such */
       JAPI_LOCK_EC_ALP(japi_ec_alp_struct);
@@ -1020,7 +1020,7 @@ int japi_exit(int flag, dstring *diag)
     * The same goes for the communications socket. */
    JAPI_LOCK_SESSION();
    if (japi_session_key != JAPI_SINGLE_SESSION_KEY) {
-      FREE(japi_session_key);
+      sge_free(&japi_session_key);
    }
    else {
       japi_session_key = NULL;
@@ -2315,7 +2315,7 @@ int japi_synchronize(const char *job_ids[], signed long timeout, bool dispose, d
              * don't have to free the individual elements of the
              * sync_job_ids. */
             lFreeList(&sync_list);
-            FREE (sync_job_ids);
+            sge_free(&sync_job_ids);
          }
          
          DRETURN(DRMAA_ERRNO_EXIT_TIMEOUT);
@@ -2349,7 +2349,7 @@ int japi_synchronize(const char *job_ids[], signed long timeout, bool dispose, d
        * sync_list.  That means that if we free the sync_list, we don't have to
        * free the individual elements of the sync_job_ids. */
       lFreeList(&sync_list);
-      FREE (sync_job_ids);
+      sge_free(&sync_job_ids);
    }
    
    DRETURN(drmaa_errno);

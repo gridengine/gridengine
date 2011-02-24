@@ -215,7 +215,7 @@ static char *setEnvironment(const char *jobdir, char **wrapper)
    /* open sge environment file */
    if ((envFile = fopen(envFileName, "r")) == NULL) {
       qrsh_error(MSG_QRSH_STARTER_CANNOTOPENFILE_SS, envFileName, strerror(errno));
-      FREE(line);
+      sge_free(&line);
       return NULL;
    }
 
@@ -235,7 +235,7 @@ static char *setEnvironment(const char *jobdir, char **wrapper)
       if (strncmp(line, "QRSH_COMMAND=", 13) == 0) {
          if ((command = (char *)malloc(strlen(line) - 13 + 1)) == NULL) {
             qrsh_error(MSG_QRSH_STARTER_MALLOCFAILED_S, strerror(errno));
-            FREE(line);
+            sge_free(&line);
             FCLOSE(envFile);
             return NULL;
          }
@@ -246,7 +246,7 @@ static char *setEnvironment(const char *jobdir, char **wrapper)
          } else {
             if ((*wrapper = (char *)malloc(strlen(line) - 13 + 1)) == NULL) {
                qrsh_error(MSG_QRSH_STARTER_MALLOCFAILED_S, strerror(errno));
-               FREE(line);
+               sge_free(&line);
                FCLOSE(envFile); 
                return NULL;
             }
@@ -258,19 +258,19 @@ static char *setEnvironment(const char *jobdir, char **wrapper)
          /* set variable */
          if (new_line != NULL) {
             put_ret = sge_putenv(new_line);
-            FREE(new_line);
+            sge_free(&new_line);
          } else {
             put_ret = sge_putenv(line);
          }
          if (put_ret == 0) {
-            FREE(line);
+            sge_free(&line);
             FCLOSE(envFile); 
             return NULL;
          }
       }
    }
 
-   FREE(line);
+   sge_free(&line);
    FCLOSE(envFile); 
 
    /* 

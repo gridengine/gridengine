@@ -109,7 +109,7 @@ int main(int argc, char *argv[])
          break;
       }
    }
-   FREE(t);
+   sge_free(&t);
 
    DEXIT;
    return ret;

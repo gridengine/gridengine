@@ -528,8 +528,8 @@ lList **alpp
                   sge_urg ? jhul5 : "",
                   sge_pri ? jhul6 : "");
                   
-            FREE(part6);
-            FREE(seperator);               
+            sge_free(&part6);
+            sge_free(&seperator);               
          }
       }
 

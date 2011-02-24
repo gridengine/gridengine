@@ -767,8 +767,8 @@ sge_run_jvm(sge_gdi_ctx_class_t *ctx, void *anArg, monitoring_t *monitor)
       jvm_argv[fixed_jvm_argc + i] = strdup(additional_jvm_argv[i]);
       additional_jvm_argv[i] = NULL;
    }
-   FREE(additional_jvm_argv);
-   FREE(additional_jvm_args);
+   sge_free(&additional_jvm_argv);
+   sge_free(&additional_jvm_args);
 
    /*
    ** process arguments of main method
@@ -791,7 +791,7 @@ sge_run_jvm(sge_gdi_ctx_class_t *ctx, void *anArg, monitoring_t *monitor)
    }  
 
    env = create_vm(libjvm_path, jvm_argc, jvm_argv);
-   FREE(libjvm_path);
+   sge_free(&libjvm_path);
 
    if (env != NULL) {
       main_class = (*env)->FindClass(env, main_class_name);
@@ -813,14 +813,14 @@ sge_run_jvm(sge_gdi_ctx_class_t *ctx, void *anArg, monitoring_t *monitor)
    ** free allocated jvm args
    */
    for (i=0; i<jvm_argc; i++) {
-      FREE(jvm_argv[i]);
+      sge_free(&(jvm_argv[i]));
    }  
-   FREE(jvm_argv);
+   sge_free(&jvm_argv);
 
    /*
    ** free main_argv[0] argument
    */
-   FREE(main_argv[0]);
+   sge_free(&(main_argv[0]));
 
    DRETURN(ret);
 }

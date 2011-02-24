@@ -772,7 +772,7 @@ int add_job_utilization(const sge_assignment_t *a, const char *type, bool for_jo
             }
          }
 
-         FREE(queue);
+         sge_free(&queue);
          is_master_task = false;
       }
 

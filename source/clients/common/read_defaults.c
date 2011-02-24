@@ -561,7 +561,7 @@ void opt_list_append_opts_from_script_path(u_long32 prog_number,
    *answer_list = parse_script_file(prog_number, scriptpath, prefix, opts_scriptfile, 
                                     envp, FLG_DONT_ADD_SCRIPT);
    
-   FREE (scriptpath);
+   sge_free(&scriptpath);
 }
 
 /****** sge/opt/opt_list_merge_command_lines() ********************************
@@ -793,7 +793,7 @@ bool get_user_home(dstring *home_dir, const char *user, lList **answer_list)
       if (ret) {
          sge_dstring_copy_string(home_dir, pwd->pw_dir);
       }
-      FREE(buffer);
+      sge_free(&buffer);
    } else {
       /* should never happen */
       ret = false;

@@ -320,7 +320,7 @@ int *sort_hostlist
 
       lResortElem(so, hep, host_list);
    }
-   FREE(load_formula);
+   sge_free(&load_formula);
 
    lFreeSortOrder(&so);
    lFreeList(&job_load_adjustments);

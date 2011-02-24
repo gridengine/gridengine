@@ -1294,7 +1294,7 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
                return 1;
             }
             printf("waited job \"%s\"\n", all_jobids[pos]);
-            FREE(all_jobids[pos]);
+            sge_free(&(all_jobids[pos]));
          }
 
          free_jobids(all_jobids, size_all_jobids);
@@ -1512,7 +1512,7 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
                return 1;
             }
             printf("waited job \"%s\"\n", all_jobids[pos]);
-            FREE(all_jobids[pos]);
+            sge_free(&(all_jobids[pos]));
          }
          free_jobids(all_jobids, size_all_jobids);
 
@@ -2091,7 +2091,7 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
                NULL, 1, local_host_name)!=DRMAA_ERRNO_SUCCESS) {
             return 1;
          }
-         FREE(local_host_name);
+         sge_free(local_host_name);
 
          if (wait_n_jobs(1) != DRMAA_ERRNO_SUCCESS) {
             return 1;
@@ -5503,10 +5503,10 @@ static void free_order(int **order)
 {
    int i = 0;
    while (order[i] != NULL) {
-      FREE(order[i]);
+      sge_free(&(order[i]));
       i++;
    }
-   FREE(order);
+   sge_free(&order);
 }
 
 static int test_dispatch_order_njobs(int njobs, test_job_t job[], char *jsr_str)
@@ -5613,7 +5613,7 @@ static int test_dispatch_order_njobs(int njobs, test_job_t job[], char *jsr_str)
          }
 
          /* NULL-ify finished ones */
-         FREE(all_jobids[pos]);
+         sge_free(&(all_jobids[pos]));
 
          if (--nwait == 0) {
             printf("waited for last job\n");

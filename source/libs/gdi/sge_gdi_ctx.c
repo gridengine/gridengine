@@ -499,8 +499,7 @@ void sge_gdi_ctx_class_destroy(sge_gdi_ctx_class_t **pst)
       
    /* free internal context structure */   
    sge_gdi_ctx_destroy((*pst)->sge_gdi_ctx_handle);
-   FREE(*pst);
-   *pst = NULL;
+   sge_free(pst);
 
    DRETURN_VOID;
 }
@@ -666,7 +665,7 @@ sge_gdi_ctx_setup(sge_gdi_ctx_class_t *thiz, int prog_number, const char* compon
 
       if (!pwd) {
          eh->error(eh, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, "sge_getpwnam_r failed for username %s", username);
-         FREE(buffer);
+         sge_free(&buffer);
          DRETURN(false);
       }
       es->uid = pwd->pw_uid;
@@ -674,7 +673,7 @@ sge_gdi_ctx_setup(sge_gdi_ctx_class_t *thiz, int prog_number, const char* compon
          gid_t gid;
          if (sge_group2gid(groupname, &gid, MAX_NIS_RETRIES) == 1) {
             eh->error(eh, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, "sge_group2gid failed for groupname %s", groupname);
-            FREE(buffer);
+            sge_free(&buffer);
             DRETURN(false);
          }
          es->gid = gid;
@@ -682,7 +681,7 @@ sge_gdi_ctx_setup(sge_gdi_ctx_class_t *thiz, int prog_number, const char* compon
          es->gid = pwd->pw_gid;
       }
 
-      FREE(buffer);
+      sge_free(&buffer);
    }
    
    es->username = strdup(username);
@@ -725,10 +724,10 @@ sge_gdi_ctx_setup(sge_gdi_ctx_class_t *thiz, int prog_number, const char* compon
       buffer = sge_malloc(size);
       if (getpwuid_r((uid_t)getuid(), &pwentry, buffer, size, &pwd) == 0) {
          es->component_username = sge_strdup(es->component_username, pwd->pw_name);
-         FREE(buffer);
+         sge_free(&buffer);
       } else {
          eh->error(eh, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, "getpwuid_r failed");
-         FREE(buffer);
+         sge_free(&buffer);
          DRETURN(false);
       }
 #if 0
@@ -1656,8 +1655,8 @@ static void set_private_key(sge_gdi_ctx_class_t *thiz, const char *pkey) {
    
    DENTER(BASIS_LAYER, "sge_gdi_ctx_class->set_private_key");
 
-   if ( es->ssl_private_key != NULL ) {
-      FREE(es->ssl_private_key);
+   if (es->ssl_private_key != NULL) {
+      sge_free(&(es->ssl_private_key));
    }
    es->ssl_private_key = pkey ? strdup(pkey): NULL;
 
@@ -1680,7 +1679,7 @@ static void set_certificate(sge_gdi_ctx_class_t *thiz, const char *cert) {
    DENTER(BASIS_LAYER, "sge_gdi_ctx_class->set_certificate");
 
    if (es->ssl_certificate != NULL) {
-      FREE(es->ssl_certificate);
+      sge_free(&(es->ssl_certificate));
    }
    es->ssl_certificate = cert ? strdup(cert) : NULL;
 

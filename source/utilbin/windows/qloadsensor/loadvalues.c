@@ -606,8 +606,7 @@ loadvalue_update_load(t_loadvalues *loadvalue, t_pdhquery *query,
                }
             }
          }
-         free(is_done);
-         is_done = NULL;
+         sge_free(&is_done);
 #if 0
          for (j = 0; j < 8; j++) {
             fprintf(stderr, "state %d: %d\n", j, state[j]);

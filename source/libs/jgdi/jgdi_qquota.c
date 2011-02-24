@@ -100,7 +100,7 @@ static report_handler_t* jgdi_report_handler_create(JNIEnv *env, jobject qquota_
    if (ret == NULL ) {
       answer_list_add(alpp, "malloc of report_handler_t failed",
                             STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
-      FREE(jgdi_handler);  
+      sge_free(&jgdi_handler);  
       DRETURN(NULL);
    }
    
@@ -136,7 +136,7 @@ static int jgdi_destroy_report_handler(report_handler_t** handler, lList **alpp)
       }
       
       /* Free the internal context */
-      FREE((*handler)->ctx);
+      sge_free(&((*handler)->ctx));
    }
    DRETURN(QQUOTA_SUCCESS);
 }
@@ -435,7 +435,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_getQQuota
          if (report_handler->destroy != NULL) {
             report_handler->destroy(&report_handler, &alp);
          }         
-         FREE(report_handler);
+         sge_free(&report_handler);
       } else {
          ret = JGDI_ILLEGAL_STATE;
       }

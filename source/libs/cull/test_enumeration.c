@@ -316,9 +316,9 @@ bool test_lReduceDescr(void)
    lFreeWhat(&what2);
    lFreeWhat(&what3);
 
-   FREE(dst_descriptor1);
-   FREE(dst_descriptor2);
-   FREE(dst_descriptor3);
+   sge_free(&dst_descriptor1);
+   sge_free(&dst_descriptor2);
+   sge_free(&dst_descriptor3);
 
    return ret;
 }

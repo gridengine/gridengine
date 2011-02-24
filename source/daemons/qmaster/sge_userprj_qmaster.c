@@ -602,7 +602,7 @@ sge_add_auto_user(sge_gdi_ctx_class_t *ctx, const char *user, lList **alpp, moni
       /* add the auto user via GDI request */
       status = do_add_auto_user(ctx, uep, alpp, monitor); 
       lFreeElem(&uep);
-      FREE(auto_user_default_project);
+      sge_free(&auto_user_default_project);
    }
 
    DEXIT;

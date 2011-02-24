@@ -414,7 +414,7 @@ void* tty_to_commlib(void *t_conf)
    } /* while (do_exit == 0) */
 
    /* clean up */
-   FREE(pbuf);
+   sge_free(&pbuf);
    thread_func_cleanup(t_conf);
    
    sge_dstring_free(&err_msg);
@@ -922,7 +922,7 @@ int force_ijs_server_shutdown(COMM_HANDLE **phandle,
 
    /* This will remove the handle */
    ret = comm_shutdown_connection(*phandle, COMM_CLIENT, g_hostname, p_err_msg);
-   FREE(g_hostname);
+   sge_free(&g_hostname);
    if (ret != COMM_RETVAL_OK) {
       DPRINTF(("comm_shutdown_connection() failed: %s (%d)\n",
                sge_dstring_get_string(p_err_msg), ret));

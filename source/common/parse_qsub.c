@@ -1663,8 +1663,8 @@ DTRACE;
             tmp = sge_strdup(NULL, *sp);
             dest = string_list(tmp, ",", NULL);
             cull_parse_string_list(dest, "user_list", ARA_Type, rule, &user_list);
-            FREE(tmp);
-            FREE(dest);
+            sge_free(&tmp);
+            sge_free(&dest);
          } else {
             str_list_parse_from_string(&user_list, *sp, ",");
          }
@@ -2093,7 +2093,7 @@ static int var_list_parse_from_environment(lList **lpp, char **envp)
       env_description = sge_strtok_r((char *) 0, "\n", &context);
       if (env_description)
          lSetString(ep, VA_value, env_description);
-      FREE(env_entry);
+      sge_free(&env_entry);
       sge_free_saved_vars(context);
    }
 

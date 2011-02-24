@@ -37,6 +37,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "uti/sge_stdlib.h"
+
 #include "comm/lists/cl_lists.h"
 
 cl_raw_list_t* thread_list = NULL;
@@ -170,7 +172,7 @@ extern int main(int argc, char** argv)
   cl_thread_shutdown(log_thread);
   cl_thread_join(log_thread);
   cl_thread_cleanup(log_thread);
-  free(log_thread);
+  sge_free(&log_thread);
 
   /* cleanup log list */
   CL_LOG( CL_LOG_INFO,  "cleaning up log list");

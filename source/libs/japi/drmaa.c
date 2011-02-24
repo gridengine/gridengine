@@ -298,7 +298,7 @@ int drmaa_init(const char *contact, char *error_diagnosis,
    ret = japi_init(contact, session_key_in, &session_key_out, DRMAA, true, NULL,
                    diagp);
 
-   FREE(session_key_in)
+   sge_free(&session_key_in);
    
    if (ret != DRMAA_ERRNO_SUCCESS) {
       /* diag was set in japi_init() */
@@ -2273,7 +2273,7 @@ static int drmaa_path2wd_opt(const lList *attrs, lList **args, int is_bulk,
 
          ep = sge_add_arg(args, wd_OPT, lStringT, "-wd", value);
          lSetString(ep, SPA_argval_lStringT, new_path);
-         FREE(new_path);
+         sge_free(&new_path);
       }
       else {
          drmaa_errno = DRMAA_ERRNO_SUCCESS;
@@ -2379,7 +2379,7 @@ static int drmaa_path2path_opt(const lList *attrs, lList **args, int is_bulk,
          if( cell ) {
             DPRINTF(( "PN_file_host = \"%s\"\n", cell ));
             lSetHost( ep, PN_file_host, cell );
-            FREE( cell );
+            sge_free(&cell);
          } else {
             /* No host was given, so we use this host we are running on.*/
             lSetHost( ep, PN_file_host, unqualified_hostname);
@@ -2659,12 +2659,12 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
  
      /* Free the args. */
      while (num_args >= 0) {
-         FREE(args[num_args]);
+         sge_free(&(args[num_args]));
          num_args--;
       }
 
       /* Free the args array. */
-      FREE(args);
+      sge_free(&args);
    }
    
    lFreeList(&alp);
@@ -2733,7 +2733,7 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
          DPRINTF(("Using \"%s\" for the working directory.\n", path));
          opt_list_append_opts_from_script_path(prog_number, &opts_scriptfile, path, &alp,
                                                 opts_drmaa, environ);
-         FREE(path);
+         sge_free(&path);
       } else {
          DPRINTF(("Using current directory for the working directory.\n"));
          opt_list_append_opts_from_script(prog_number, &opts_scriptfile, &alp, opts_drmaa,
@@ -2824,7 +2824,7 @@ static int drmaa_job2sge_job(lListElem **jtp, const drmaa_job_template_t *drmaa_
       }
       lFreeList(&alp);
 
-      FREE(job_cat);
+      sge_free(&job_cat);
       
       if (args != NULL) {
          opt_list_append_opts_from_qsub_cmdline(prog_number, &opts_job_cat, &alp,
@@ -3840,7 +3840,7 @@ static char *drmaa_time2sge_time(const char *drmaa_time, dstring *diag)
    sprintf(sge_time, "%.4d%.2d%.2d%.2d%.2d.%.2d", year, month, day, hour,
                                                    minute, second);
 
-   FREE(start);
+   sge_free(&start);
 
    DRETURN(strdup(sge_time));
 }
@@ -3908,7 +3908,7 @@ static char *drmaa_expand_wd_path(const char*username, const char *path, lList *
       strcpy(file, homedir);
       file = strcat(file, path + 5);
       
-      FREE(homedir);
+      sge_free(&homedir);
    }
    else {
       file = (char *)malloc(sizeof(char) * (strlen(path) + 1));
@@ -3957,7 +3957,7 @@ static char *drmaa_get_home_directory(const char* username, lList **answer_list)
    if (!pwd) {
       snprintf(str, sizeof(str), MSG_USER_INVALIDNAMEX_S, username);
       answer_list_add(answer_list, str, STATUS_ENOSUCHUSER, ANSWER_QUALITY_ERROR);
-      FREE(buffer);
+      sge_free(&buffer);
       DRETURN(NULL);
    }
 
@@ -3967,7 +3967,7 @@ static char *drmaa_get_home_directory(const char* username, lList **answer_list)
       DRETURN(NULL);
    }
 
-   FREE(buffer);
+   sge_free(&buffer);
    DRETURN(strdup(pwd->pw_dir));
 }
 

@@ -937,7 +937,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
 
                }
                lFreeWhat(&what);
-               FREE(rdp);
+               sge_free(&rdp);
             }
          }
       }

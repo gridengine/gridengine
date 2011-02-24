@@ -572,10 +572,10 @@ const char *file
          if (resolved_host) {
             if (!sge_hostcmp(host, resolved_host )) {
                FCLOSE(fp);
-               FREE(resolved_host);
+               sge_free(&resolved_host);
                DRETURN(0);
             }
-            FREE(resolved_host);
+            sge_free(&resolved_host);
          }
       }      
    }

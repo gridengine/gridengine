@@ -148,7 +148,7 @@ void job_related_adminmail(u_long32 progid, lListElem *jr, int is_array, const c
    }
 
    if (!strcasecmp(administrator_mail, "none")) {
-      FREE(administrator_mail);
+      sge_free(&administrator_mail);
       DEXIT;
       return;
    }
@@ -183,14 +183,14 @@ void job_related_adminmail(u_long32 progid, lListElem *jr, int is_array, const c
          */
          if ((admail_states[failed] & BIT_ADM_NEVER)) {
             DPRINTF(("NEVER SENDING ADMIN MAIL for state %d\n", failed));
-            FREE(administrator_mail);
+            sge_free(&administrator_mail);
             DEXIT;
             return;
          }
          if ((admail_states[failed] & BIT_ADM_NEW_CONF)) {
             if (admail_times[failed]) {
                DPRINTF(("NOT SENDING ADMIN MAIL AGAIN for state %d, again on conf\n", failed));
-               FREE(administrator_mail);
+               sge_free(&administrator_mail);
                DEXIT;
                return;
             }
@@ -198,7 +198,7 @@ void job_related_adminmail(u_long32 progid, lListElem *jr, int is_array, const c
          if ((admail_states[failed] & BIT_ADM_QCHANGE)) {
             if (admail_times[failed]) {
                DPRINTF(("NOT SENDING ADMIN MAIL AGAIN for state %d, again on qchange\n", failed));
-               FREE(administrator_mail);
+               sge_free(&administrator_mail);
                DEXIT;
                return;
             }
@@ -206,7 +206,7 @@ void job_related_adminmail(u_long32 progid, lListElem *jr, int is_array, const c
          if ((admail_states[failed] & BIT_ADM_HOUR)) {
             if ((now - admail_times[failed] < 3600))
                DPRINTF(("NOT SENDING ADMIN MAIL AGAIN for state %d, again next hour\n", failed));
-               FREE(administrator_mail);
+               sge_free(&administrator_mail);
                DEXIT;
                return;
          }
@@ -219,7 +219,7 @@ void job_related_adminmail(u_long32 progid, lListElem *jr, int is_array, const c
       if (ret) {
          ERROR((SGE_EVENT, MSG_MAIL_PARSE_S,
             (administrator_mail ? administrator_mail : MSG_NULL)));
-         FREE(administrator_mail);
+         sge_free(&administrator_mail);
          DEXIT;
          return;
       }
@@ -316,7 +316,7 @@ void job_related_adminmail(u_long32 progid, lListElem *jr, int is_array, const c
       }
    }
    lFreeList(&lp_mail);
-   FREE(administrator_mail); 
+   sge_free(&administrator_mail); 
    DEXIT;
    return;
 FCLOSE_ERROR:

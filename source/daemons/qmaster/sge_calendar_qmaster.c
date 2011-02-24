@@ -282,7 +282,7 @@ void sge_calendar_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, mo
    SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
 
    lFreeList(&ppList);
-   FREE(cal_name);
+   sge_free(&cal_name);
 
    DRETURN_VOID;
 } /* sge_calendar_event_handler() */

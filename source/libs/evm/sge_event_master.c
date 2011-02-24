@@ -2021,11 +2021,11 @@ static void remove_event_client(lListElem **client, int event_client_id, bool lo
 
          if (old_sub[i].descr) {
             cull_hash_free_descr(old_sub[i].descr);
-            FREE(old_sub[i].descr);
+            sge_free(&(old_sub[i].descr));
          }
       }
 
-      FREE(old_sub);
+      sge_free(&old_sub);
       lSetRef(*client, EV_sub_array, NULL);
    }
 
@@ -3121,7 +3121,7 @@ static lListElem *elem_select(subscription_t *subscription, lListElem *element,
          lXchgList(element, ids[counter], &(sub_list[counter]));
       }
 
-      FREE(sub_list);
+      sge_free(&sub_list);
    } else {
       DPRINTF(("no sub filter specified\n"));
       el = lSelectElemDPack(element, selection, dp, fields, false, NULL, NULL);

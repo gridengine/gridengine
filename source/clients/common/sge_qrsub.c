@@ -149,12 +149,12 @@ bool sge_parse_qrsub(sge_gdi_ctx_class_t *ctx, lList *pcmdline, lList **alpp, lL
          
          if (pw == NULL) {
            answer_list_add_sprintf(alpp, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, MSG_USER_XISNOKNOWNUSER_S, name);
-           FREE(buffer);
+           sge_free(&buffer);
            DRETURN(false);
          }
          sge_gid2group(pw->pw_gid, group, MAX_STRING_SIZE, MAX_NIS_RETRIES);
          lSetString(ep, ARA_group, group);
-         FREE(buffer);
+         sge_free(&buffer);
       }
 
       if (is_xacl) {

@@ -829,7 +829,7 @@ lList *lUndumpList(FILE *fp, const char *name, const lDescr *dp)
 
    /* use old name (from file) if name is NULL */
    if (!(lp = lCreateList((name) ? name : oldname, dp))) {
-      FREE(fdp);
+      sge_free(&fdp);
       LERROR(LECREATELIST);
       DRETURN(NULL);
    }
@@ -837,14 +837,14 @@ lList *lUndumpList(FILE *fp, const char *name, const lDescr *dp)
 
    if ((n = lCountDescr(dp)) <= 0) {
       LERROR(LECOUNTDESCR);
-      FREE(fdp);
+      sge_free(&fdp);
       lFreeList(&lp);
       DRETURN(NULL);
    }
 
    if (!(found = (int *) malloc(sizeof(int) * n))) {
       LERROR(LEMALLOC);
-      FREE(fdp);
+      sge_free(&fdp);
       lFreeList(&lp);
       DRETURN(NULL);
    }
@@ -878,15 +878,15 @@ lList *lUndumpList(FILE *fp, const char *name, const lDescr *dp)
       if (!(fep = lUndumpElemFp(fp, fdp))) {
          LERROR(LEUNDUMPELEM);
          lFreeList(&lp);
-         FREE(found);
-         FREE(fdp);
+         sge_free(&found);
+         sge_free(&fdp);
          DRETURN(NULL);
       }
 
       if (!(ep = lCreateElem(dp))) {
          lFreeList(&lp);
-         FREE(found);
-         FREE(fdp);
+         sge_free(&found);
+         sge_free(&fdp);
          LERROR(LECREATEELEM);
          DRETURN(NULL);
       }
@@ -897,8 +897,8 @@ lList *lUndumpList(FILE *fp, const char *name, const lDescr *dp)
          } else if (lCopySwitchPack(fep, ep, found[i], i, true, NULL, NULL) == -1) {
             lFreeList(&lp);
             lFreeElem(&ep);
-            FREE(found);
-            FREE(fdp);
+            sge_free(&found);
+            sge_free(&fdp);
             LERROR(LECOPYSWITCH);
             DRETURN(NULL);
          }
@@ -907,8 +907,8 @@ lList *lUndumpList(FILE *fp, const char *name, const lDescr *dp)
       if (lAppendElem(lp, ep) == -1) {
          lFreeList(&lp);
          lFreeElem(&ep);
-         FREE(found);
-         FREE(fdp);
+         sge_free(&found);
+         sge_free(&fdp);
          LERROR(LEAPPENDELEM);
          DRETURN(NULL);
       }
@@ -922,8 +922,8 @@ lList *lUndumpList(FILE *fp, const char *name, const lDescr *dp)
       LERROR(LESYNTAX);
    }
 
-   FREE(found);
-   FREE(fdp);
+   sge_free(&found);
+   sge_free(&fdp);
    DRETURN(lp);
 }
 

@@ -1140,7 +1140,7 @@ lDescr *lGetReducedDescr(const lDescr *type, const lEnumeration *what) {
       return NULL;
    }
    if (lPartialDescr(what, type, new, &index) != 0){
-      FREE(new);
+      sge_free(&new);
       DEXIT;
       return NULL;      
    }

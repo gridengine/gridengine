@@ -8,6 +8,11 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+SD-2011-02-24-0: Bugfix:      Slotwise preemption fails to unsuspend one job
+                              per host
+                 Issue:       GE-3233
+					  Review:      DG
+
 JG-2011-02-24-0: Bugfix:      Fixing build on Ubuntu 10.04 and higher.
                               Part 2/2: check exit code of system calls where
                               required.

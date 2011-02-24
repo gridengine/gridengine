@@ -801,10 +801,10 @@ sge_event_master_process_mod_event_client(lListElem *request, monitoring_t *moni
             lFreeWhat(&(old_sub[i].what));
             if (old_sub[i].descr){
                cull_hash_free_descr(old_sub[i].descr);
-               free(old_sub[i].descr);
+               sge_free(&(old_sub[i].descr));
             }
          } 
-         FREE(old_sub);
+         sge_free(&old_sub);
       }
    }
 
@@ -2455,10 +2455,10 @@ static void build_subscription(lListElem *event_el)
          lFreeWhat(&(old_sub_array[i].what));
          if (old_sub_array[i].descr){
             cull_hash_free_descr(old_sub_array[i].descr);
-            free(old_sub_array[i].descr);
+            sge_free(&(old_sub_array[i].descr));
          }
       }
-      free(old_sub_array);
+      sge_free(&old_sub_array);
    }
 
    lSetRef(event_el, EV_sub_array, sub_array);

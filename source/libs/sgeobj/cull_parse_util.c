@@ -1394,14 +1394,16 @@ int cull_parse_path_list(lList **lpp, const char *path_str)
          lSetString(ep, PN_path, path);
         if (cell) {
             lSetHost(ep, PN_host, cell);
-            FREE(cell);
+            sge_free(&cell);
          }
       }
    }
-   if(path_string)
-      FREE(path_string);
-   if(str_str)
-      FREE(str_str);
+   if (path_string) {
+      sge_free(&path_string);
+   }
+   if (str_str) {
+      sge_free(&str_str);
+   }
    DRETURN(ret_error? 1 : 0);
 }
 
@@ -1449,21 +1451,21 @@ cull_parse_jid_hold_list(lList **lpp, const char *str)
    str_str = string_list(s, ",", NULL);
    if (!str_str || !*str_str) {
       *lpp = NULL;
-      FREE(s);
+      sge_free(&s);
       DEXIT;
       return 2;
    }
    i_ret = cull_parse_string_list(str_str, "jid_hold list", ST_Type, rule, lpp);
    
    if (i_ret) {
-      FREE(s);
-      FREE(str_str);
+      sge_free(&s);
+      sge_free(&str_str);
       DEXIT;
       return 3;
    }
 
-   FREE(s);
-   FREE(str_str);
+   sge_free(&s);
+   sge_free(&str_str);
    DEXIT;
    return 0;
 }

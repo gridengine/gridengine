@@ -311,8 +311,7 @@ char qmaster_out_file[SGE_PATH_MAX];
       if (cl_com_set_handle_fds(cl_com_get_handle(prognames[SHADOWD] ,0), &tmp_fd_array, &tmp_fd_count) == CL_RETVAL_OK) {
          sge_daemonize(tmp_fd_array, tmp_fd_count, ctx);
          if (tmp_fd_array != NULL) {
-            free(tmp_fd_array);
-            tmp_fd_array = NULL;
+            sge_free(&tmp_fd_array);
          }
       } else {
          sge_daemonize(NULL, 0, ctx);

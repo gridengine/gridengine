@@ -75,7 +75,7 @@ lCondition *lWhereFromElem(const lListElem *where){
          clear_packbuffer(&pb);
       }
       else {
-         FREE(buffer);
+         sge_free(&buffer);
          ERROR((SGE_EVENT, MSG_PACK_ERRORUNPACKING_S, cull_pack_strerror(ret)));
       }
    }
@@ -122,7 +122,7 @@ lEnumeration *lWhatFromElem(const lListElem *what){
          cull_unpack_enum(&pb, &cond);
          clear_packbuffer(&pb);
       } else {
-         FREE(buffer);
+         sge_free(&buffer);
          ERROR((SGE_EVENT, MSG_PACK_ERRORUNPACKING_S, cull_pack_strerror(ret)));
       }
    }

@@ -44,6 +44,8 @@
 #include "comm/cl_commlib.h"
 #include "comm/cl_host_list.h"
 
+#include "uti/sge_stdlib.h"
+
 extern int
 main(int argc, char** argv)
 {
@@ -82,8 +84,7 @@ main(int argc, char** argv)
    
         if (rhost != NULL) {
            printf(" -> host resolved as \"%s\"\n", rhost );
-           free(rhost);
-           rhost = NULL;
+           sge_free(&rhost);
         }
    
         printf("cl_com_gethostbyaddr ... %s\n", inet_ntoa(addr)); /* inet_ntoa() is not MT save */
@@ -94,7 +95,7 @@ main(int argc, char** argv)
         if (retval == CL_RETVAL_OK) {
            printf(" -> host name is \"%s\"\n", rhost);
         }
-        free(rhost);
+        sge_free(&rhost);
         rhost = NULL;
    
         printf("cl_com_gethostbyaddr ... %s\n",inet_ntoa(addr2) ); /* inet_ntoa() is not MT save */
@@ -106,7 +107,7 @@ main(int argc, char** argv)
         if (retval == CL_RETVAL_OK) {
            printf(" -> host name is \"%s\"\n", rhost);
         }
-        free(rhost);
+        sge_free(&rhost);
         rhost = NULL;
    
         printf("***********************************************************\n");

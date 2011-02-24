@@ -1018,8 +1018,8 @@ jsv_handle_param_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answe
                   sge_dstring_free(&socket_core_string);
                }
 
-               FREE(socket_array);
-               FREE(core_array);
+               sge_free(&socket_array);
+               sge_free(&core_array);
             }
          }
       }
@@ -2033,8 +2033,8 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
                jsv_send_command(jsv, answer_list, sge_dstring_get_string(&buffer));
             }
 
-            FREE(socket_array);
-            FREE(core_array);
+            sge_free(&socket_array);
+            sge_free(&core_array);
          }
       }
    }
@@ -2906,8 +2906,8 @@ jsv_is_modify_rejected(sge_gdi_ctx_class_t *context, lList **answer_list, lListE
             ret = true;
          }
       }
-      FREE(jsv_allowed_mod);
-      FREE(jsv_url);
+      sge_free(&jsv_allowed_mod);
+      sge_free(&jsv_url);
    }
    DRETURN(ret);
 }

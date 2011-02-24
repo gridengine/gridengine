@@ -4,6 +4,7 @@
 #include <sys/time.h>
 #include <stdlib.h>
 
+#include "uti/sge_stdlib.h"
 
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
@@ -68,14 +69,14 @@ int cl_message_list_append_message(cl_raw_list_t* list_p, cl_com_message_t* mess
    /* lock the list */
    if (lock_list == 1) {
       if (  ( ret_val = cl_raw_list_lock(list_p)) != CL_RETVAL_OK) {
-         free(new_elem);
+         sge_free(&new_elem);
          return ret_val;
       }
    }
 
    new_elem->raw_elem = cl_raw_list_append_elem(list_p, (void*) new_elem);
    if ( new_elem->raw_elem == NULL) {
-      free(new_elem);
+      sge_free(&new_elem);
       if (lock_list == 1) { 
          cl_raw_list_unlock(list_p);
       }
@@ -118,8 +119,7 @@ int cl_message_list_remove_message(cl_raw_list_t* list_p, cl_com_message_t* mess
 
          function_return = CL_RETVAL_OK;
          cl_raw_list_remove_elem(list_p, elem->raw_elem);
-         free(elem);
-         elem = NULL;
+         sge_free(&elem);
          break;
       }
       elem = cl_message_list_get_next_elem(elem);

@@ -1535,7 +1535,7 @@ sge_object_type object_name_get_type(const char *name)
       }
    }
 
-   FREE(type_name);
+   sge_free(&type_name);
    DRETURN(ret);
 }
 

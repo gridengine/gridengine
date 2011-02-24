@@ -326,10 +326,10 @@ spool_free_spooling_fields(spooling_field *fields)
          }
 
          if (fields[i].name != NULL) {
-            FREE(fields[i].name);
+            sge_free(&(fields[i].name));
          }
       }
-      FREE(fields);
+      sge_free(&fields);
    }
 
    return NULL;

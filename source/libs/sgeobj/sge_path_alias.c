@@ -309,19 +309,19 @@ int path_alias_list_initialize(lList **path_alias_list,
       if (!pwd) {
          sprintf(err, MSG_USER_INVALIDNAMEX_S, user);
          answer_list_add(alpp, err, STATUS_ENOSUCHUSER, ANSWER_QUALITY_ERROR);
-         FREE(buffer);
+         sge_free(&buffer);
          DRETURN(-1);
       }
       if (!pwd->pw_dir) {
          sprintf(err, MSG_USER_NOHOMEDIRFORUSERX_S, user);
          answer_list_add(alpp, err, STATUS_EDISK, ANSWER_QUALITY_ERROR);
-         FREE(buffer);
+         sge_free(&buffer);
          DRETURN(-1);
       }
       sprintf(filename[0], "%s/%s", cell_root, PATH_ALIAS_COMMON_FILE);
       sprintf(filename[1], "%s/%s", pwd->pw_dir, PATH_ALIAS_HOME_FILE);
 
-      FREE(buffer);
+      sge_free(&buffer);
    }
 
    /*

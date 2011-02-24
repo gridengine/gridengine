@@ -371,7 +371,7 @@ static int state_at(time_t now, const lList *ycal, const lList *wcal, time_t *ne
          }
       } while(isOverlapping);
 
-      FREE(visited);
+      sge_free(&visited);
    }  
 
    if (next_event != NULL) {

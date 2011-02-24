@@ -273,8 +273,7 @@ void *server_thread(void *t_conf) {
 
    cl_com_gethostname(&local_hostname, &in_addr, NULL, NULL);
    local_host = cl_com_create_endpoint(local_hostname, "server", 1, &in_addr);
-   free(local_hostname);
-   local_hostname = NULL;
+   sge_free(&local_hostname);
 
    retval = cl_com_tcp_setup_connection(&con, 5000, 5000,CL_CM_CT_STREAM, CL_CM_AC_DISABLED, CL_CT_TCP, CL_CM_DF_BIN, CL_TCP_DEFAULT );
    CL_LOG_STR(CL_LOG_INFO, "cl_com_setup_tcp_connection() returned ", cl_get_error_text(retval) );
@@ -436,8 +435,7 @@ void *client_thread(void *t_conf) {
    cl_com_gethostname(&local_hostname, &local_addr ,NULL, NULL);
    local_host    = cl_com_create_endpoint(local_hostname, thread_config->thread_name, 0, &local_addr);
    remote_host   = cl_com_create_endpoint(local_hostname, "server", 1, &local_addr);
-   free(local_hostname);
-   local_hostname = NULL;
+   sge_free(&local_hostname);
 
    /* thread init done, trigger startup conditon variable*/
    cl_thread_func_startup(thread_config);

@@ -925,19 +925,19 @@ cull_parse_destination_identifier_list(lList **lpp, const char *dest_str)
    str_str = string_list(s, ",", NULL);
    if (str_str == NULL || *str_str == NULL) {
       *lpp = NULL;
-      FREE(s);
+      sge_free(&s);
       DRETURN(2);
    }
 
    i_ret = cull_parse_string_list(str_str, "destin_ident_list", QR_Type, rule, lpp);
    if (i_ret) {
-      FREE(s);
-      FREE(str_str);
+      sge_free(&s);
+      sge_free(&str_str);
       DRETURN(3);
    }
 
-   FREE(s);
-   FREE(str_str);
+   sge_free(&s);
+   sge_free(&str_str);
    DRETURN(0);
 }
 

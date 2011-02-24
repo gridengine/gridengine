@@ -834,7 +834,7 @@ rqs_debit_consumable(lListElem *rqs, lListElem *job, lListElem *granted, const c
       sge_dstring_free(&rue_name);
    }
    
-   FREE(qname);
+   sge_free(&qname);
 
    DRETURN(mods); 
 }

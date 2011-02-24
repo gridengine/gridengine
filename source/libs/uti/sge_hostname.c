@@ -1099,7 +1099,8 @@ void sge_free_hostent( struct hostent** he_to_del ) {
    if (he->h_aliases != NULL) {
       help = he->h_aliases;
       while (*help != NULL) {
-         free(*help++);
+         sge_free(help);
+         help++;
       }
       sge_free(&(he->h_aliases));
    }
@@ -1109,7 +1110,8 @@ void sge_free_hostent( struct hostent** he_to_del ) {
    if (he->h_addr_list != NULL) {
       help = he->h_addr_list;
       while(*help) {
-         free(*help++);
+         sge_free(help);
+         help++;
       }
       sge_free(&(he->h_addr_list));
    }

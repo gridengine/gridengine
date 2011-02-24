@@ -31,6 +31,7 @@
 /*___INFO__MARK_END__*/
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #include "rmon/sgermon.h"
 
@@ -238,13 +239,9 @@ int main(int argc, char **argv) {
 **      gdi requests for each using the options from 
 **      dummy job and put them into the prequestlist
 */
-static lList *qalter_parse_job_parameter(
-u_long32 me_who,
-lList *cmdline,
-lList **prequestlist,
-int *all_jobs,
-int *all_users 
-) {
+static lList *qalter_parse_job_parameter(u_long32 me_who, lList *cmdline, lList **prequestlist,
+                                         int *all_jobs, int *all_users)
+{
    lListElem *ep  = NULL;
    lListElem *job = NULL;
    lListElem *rep = NULL;
@@ -336,23 +333,31 @@ int *all_users
          char tmp_str2[SGE_PATH_MAX + 1];
          char tmp_str3[SGE_PATH_MAX + 1];
          const char *sge_o_home = job_get_env_string(job, VAR_PREFIX "O_HOME");
- 
+
          if (!getcwd(tmp_str, sizeof(tmp_str))) {
-            answer_list_add(&answer, MSG_ANSWER_GETCWDFAILED, 
+            answer_list_add(&answer, MSG_ANSWER_GETCWDFAILED,
                             STATUS_EDISK, ANSWER_QUALITY_ERROR);
             lFreeElem(&job);
             DRETURN(answer);
          }
-         
-         if (sge_o_home && !chdir(sge_o_home)) {
-            if (!getcwd(tmp_str2, sizeof(tmp_str2))) {
-               answer_list_add(&answer, MSG_ANSWER_GETCWDFAILED, 
+
+         if (sge_o_home && chdir(sge_o_home) == 0) {
+            if (getcwd(tmp_str2, sizeof(tmp_str2)) == NULL) {
+               answer_list_add(&answer, MSG_ANSWER_GETCWDFAILED,
                                STATUS_EDISK, ANSWER_QUALITY_ERROR);
                lFreeElem(&job);
                DRETURN(answer);
             }
 
-            chdir(tmp_str);
+            if (chdir(tmp_str) != 0) {
+               dstring ds = DSTRING_INIT;
+               answer_list_add_sprintf(&answer, STATUS_EDISK, ANSWER_QUALITY_ERROR,
+                                       MSG_FILE_CHDIR_SS, tmp_str, sge_strerror(errno, &ds));
+               sge_dstring_free(&ds);
+               lFreeElem(&job);
+               DRETURN(answer);
+            }
+
             if (!strncmp(tmp_str2, tmp_str, strlen(tmp_str2))) {
                sprintf(tmp_str3, "%s%s", sge_o_home, (char *) tmp_str + strlen(tmp_str2));
                strcpy(tmp_str, tmp_str3);

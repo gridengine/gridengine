@@ -445,7 +445,7 @@ static const char *output_delimiter(const char c)
    return ret;
 }
 
-static char *get_end_token(char *buffer, int size, const char *end_token, 
+static char *get_end_token(char *buffer, int size, const char *end_token,
                            const char new_end_token)
 {
    char new_buffer[2] = { '\0', '\0' };
@@ -460,7 +460,7 @@ static char *get_end_token(char *buffer, int size, const char *end_token,
       new_buffer[0] = new_end_token;
    }
 
-   strncat(buffer, new_buffer, size);
+   sge_strlcat(buffer, new_buffer, size);
 
    return buffer;
 }

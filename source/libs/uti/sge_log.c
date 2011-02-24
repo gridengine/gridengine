@@ -34,6 +34,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <pthread.h>
+#include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
@@ -48,6 +49,7 @@
 #include "lck/sge_mtutil.h"
 
 #include "gdi/sge_gdi_ctx.h"
+#include "uti/sge_string.h"
 
 #include "uti/msg_utilib.h"
 
@@ -644,7 +646,7 @@ int sge_log(int log_level, const char *mesg, const char *file__, const char *fun
 *
 *******************************************************************************/
 static void sge_do_log(u_long32 me, const char* progname, const char* unqualified_hostname,
-                       int aLevel, const char *aMessage) 
+                       int aLevel, const char *aMessage)
 {
    int fd;
 
@@ -652,10 +654,11 @@ static void sge_do_log(u_long32 me, const char* progname, const char* unqualifie
       if ((fd = SGE_OPEN3(log_state_get_log_file(), O_WRONLY | O_APPEND | O_CREAT, 0666)) >= 0) {
          char msg2log[4*MAX_STRING_SIZE];
          dstring msg;
-         
+         int len;
+
          sge_dstring_init(&msg, msg2log, sizeof(msg2log));
 
-         append_time((time_t)sge_get_gmt(), &msg, false); 
+         append_time((time_t)sge_get_gmt(), &msg, false);
 
          sge_dstring_sprintf_append(&msg, "|%6.6s|%s|%c|%s\n",
                  progname,
@@ -663,10 +666,16 @@ static void sge_do_log(u_long32 me, const char* progname, const char* unqualifie
                  aLevel,
                  aMessage);
 
-         write(fd, msg2log, strlen(msg2log));
+         len = strlen(msg2log);
+         if (write(fd, msg2log, len) != len) {
+            /* we are in error logging here - the only chance to log this problem
+             * might be to write it to stderr
+             */
+            fprintf(stderr, "can't log to file %s: %s\n", log_state_get_log_file(), sge_strerror(errno, &msg));
+         }
          close(fd);
       }
-   }   
+   }
 
    return;
 } /* sge_do_log() */

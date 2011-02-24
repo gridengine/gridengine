@@ -114,6 +114,7 @@
 #define MSG_SHEPHERD_CANTOPENPIDFILEXFORJOBYZ_SUU    _MESSAGE(29060, _("can't open pid file "SFQ" for job "sge_U32CFormat"."sge_U32CFormat))
 #define MSG_SHEPHERD_CANTOPENUSAGEFILEXFORJOBYZX_SUUS    _MESSAGE(29061, _("can't open usage file "SFQ" for job "sge_U32CFormat"."sge_U32CFormat": "SFN))
 #define MSG_SHEPHERD_EXECDWENTDOWNDURINGJOBSTART _MESSAGE(29062, _("execd went down during job start"))
+#define MSG_EXECD_ERRORREADINGPIDOFJOB_UU       _MESSAGE(29063, _("error reading pid for job "sge_U32CFormat"."sge_U32CFormat))
 #define MSG_JR_ERRSTR_EXECDDONTKNOWJOB _MESSAGE(29068, _("execd doesn't know this job"))
 #define MSG_EXECD_GOTACKFORPETASKBUTISNOTINSTATEEXITING_S _MESSAGE(29069, _("get exit ack for pe task "SFN" but task is not in state exiting"))
 
@@ -204,7 +205,6 @@
 #define MSG_MAIL_STARTSUBJECT_US      "Job "sge_U32CFormat" ("SFN") Started"
 
 #define MSG_MAIL_STARTBODY_USSSSS     _MESSAGE(29117, _("Job "sge_U32CFormat" ("SFN") Started\n User       = "SFN"\n Queue      = "SFN"\n Host       = "SFN"\n Start Time = "SFN) ) 
-#define MSG_FILE_CHDIR_SS             _MESSAGE(29118, _("can't change dir to "SFN": "SFN))
 #define MSG_EXECD_NOFORK_S            _MESSAGE(29119, _("fork failed: "SFN))
 #define MSG_EXECD_NOSTARTSHEPHERD     _MESSAGE(29120, _("unable to start shepherd process"))
 #define MSG_SYSTEM_CANTMAKETMPDIR     _MESSAGE(29122, _("can't make tmpdir"))

@@ -2101,7 +2101,11 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
             fprintf(stderr, "fopen(%s) failed: %s\n", output_path, strerror(errno));
             return 1;
          }
-         fscanf(fp, "%s", buffer);
+         if (fscanf(fp, "%s", buffer) != 1) {
+            fprintf(stderr, "fscanf error\n");
+            return 1;
+         }
+
          if (strcmp(buffer, mirror_text)) {
             fprintf(stderr, "wrong output file: %s\n", buffer);
             return 1;
@@ -3059,7 +3063,12 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
                continue;
             }
 
-            fscanf(fp, "%s", buffer);
+            if (fscanf(fp, "%s", buffer) != 1) {
+               fprintf(stderr, "fscanf error\n");
+               failed_test = 1;
+               continue;
+            }
+               
             if (strcmp(buffer, mirror_text)) {
                fprintf(stderr, "Wrong output file: %s\n", buffer);
                failed_test = 1;
@@ -3143,7 +3152,10 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
                continue;
             }
 
-            fscanf(fp, "%10c", buffer);
+            if (fscanf(fp, "%10c", buffer) != 1) {
+               fprintf(stderr, "wrong output file: %s\n", buffer);
+               failed_test = 1;
+            }
             buffer[10] = '\0';
             if (strcmp("Usage: tar", buffer) != 0) {
                fprintf(stderr, "wrong output file: %s\n", buffer);
@@ -3155,7 +3167,7 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
          } while (do_while_end);
 
          if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
-         
+
          if (failed_test) test_failed = 1;
          failed_test = 0;
          printf("=====================\n");
@@ -3297,14 +3309,20 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
                continue;
             }
 
-            fscanf(fp, "%14c%*[^\n]\n", buffer);
+            if (fscanf(fp, "%14c%*[^\n]\n", buffer) != 1) {
+               fprintf(stderr, "fscanf error\n");
+               failed_test = 1;
+            }
             buffer[14] = '\0';
             if (strcmp("tar: blocksize", buffer) != 0) {
                fprintf(stderr, "missing stderr from output file: %s\n", buffer);
                failed_test = 1;
             }
 
-            fscanf(fp, "%4c\n", buffer);
+            if (fscanf(fp, "%4c\n", buffer) != 1) {
+               fprintf(stderr, "fscanf error\n");
+               failed_test = 1;
+            }
             buffer[4] = '\0';
             if (strcmp("-rw-", buffer) != 0) {
                fprintf(stderr, "missing stdout from output file: %s\n", buffer);
@@ -3956,7 +3974,10 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
                continue;
             }
 
-            fscanf(fp, "%s", buffer);
+            if (fscanf(fp, "%s", buffer) != 1) {
+               fprintf(stderr, "fscanf error\n");
+               failed_test = 1;
+            }
             if (strcmp(buffer, "MyOnlySunshine")) {
                fprintf(stderr, "Wrong output file: %s\n", buffer);
                failed_test = 1;

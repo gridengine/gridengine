@@ -1453,7 +1453,7 @@ case LINUXSPARC64:
    endif
 
    if ($buildarch == "lx24-x86" || $buildarch == "lx26-amd64" || $buildarch == "lx26-x86" || $buildarch == "lx26-sparc" || $buildarch == "lx26-mips" || $buildarch == "lx26-mips64" || $buildarch == "lx26-s390" || $buildarch == "lx26-s390x") then
-      set CFLAGS = "$CFLAGS -Wno-strict-aliasing -U_FORTIFY_SOURCE"
+      set CFLAGS = "$CFLAGS -Wno-strict-aliasing"
    endif
 
    set CFLAGS = "$OFLAG -Wall -Werror -Wstrict-prototypes -DUSE_POLL -DLINUX -D$BUILDARCH -D$COMPILE_ARCH -D_GNU_SOURCE -DGETHOSTBYNAME_R6 -DGETHOSTBYADDR_R8 $DEBUG_FLAG $CFLAGS"
@@ -2749,7 +2749,7 @@ if ( "$REMOTE" == 1) then
    if ( $COMPILE_ARCH == "NECSX5" ) then
       set CFLAGS_REMOTE = "$CFLAGS_NOOPT"
    else
-      set CFLAGS_REMOTE = "$CFLAGS $ERR_WARN_NONE"
+      set CFLAGS_REMOTE = "$CFLAGS $ERR_WARN_NONE -U_FORTIFY_SOURCE"
    endif
 
    set REMOTE_LFLAGS = "$LFLAGS -L$SOURCE/$COMPILE_ARCH"

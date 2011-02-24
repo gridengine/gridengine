@@ -30,33 +30,31 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include <errno.h>
+
 #include "rmon/sgermon.h"
 
 #include "uti/sge_log.h"
 #include "uti/sge_unistd.h"
 #include "uti/sge_uidgid.h"
+#include "uti/sge_string.h"
 
 #include "sgeobj/sge_qinstance.h"
 
 #include "tmpdir.h"
+#include "msg_common.h"
 #include "msg_execd.h"
 
 /*******************************************************/
-char *sge_make_tmpdir(
-lListElem *qep,
-u_long32 jobid,
-u_long32 jataskid,
-uid_t uid,
-gid_t gid,
-char *tmpdir 
-) {
+char *sge_make_tmpdir(lListElem *qep, u_long32 jobid, u_long32 jataskid, uid_t uid, gid_t gid, char *tmpdir)
+{
    const char *t;
 
    DENTER(TOP_LAYER, "sge_make_tmpdir");
 
-   if (!(t=lGetString(qep, QU_tmpdir))) {
-      DEXIT;
-      return NULL;
+   t = lGetString(qep, QU_tmpdir);
+   if (t == NULL) {
+      DRETURN(NULL);
    }
 
    /* Note could have multiple instantiations of same job, */
@@ -75,11 +73,17 @@ char *tmpdir
     * Make flawfinder ignore it
     */
    /* Flawfinder: ignore */
-   chown(tmpdir, uid, gid);
+   if (chown(tmpdir, uid, gid) != 0) {
+      dstring ds = DSTRING_INIT;
+      ERROR((SGE_EVENT, MSG_FILE_NOCHOWN_SS, tmpdir, sge_strerror(errno, &ds)));
+      sge_dstring_free(&ds);
+      unlink(tmpdir);
+      DRETURN(NULL);
+   }
+
    sge_switch2admin_user();
 
-   DEXIT;
-   return tmpdir;
+   DRETURN(tmpdir);
 }
 
 /************************************************************************/

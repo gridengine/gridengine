@@ -2267,7 +2267,11 @@ bool sge_daemonize_finalize(sge_gdi_ctx_class_t *ctx)
 
    /* The response id has 4 byte, send it to father process */
    snprintf(tmp_buffer, 4, "%3d", SGE_DEAMONIZE_OK );
-   write(fd_pipe[1], tmp_buffer, 4);
+   if (write(fd_pipe[1], tmp_buffer, 4) != 4) {
+      dstring ds = DSTRING_INIT;
+      CRITICAL((SGE_EVENT, MSG_FILE_CANNOT_WRITE_SS, "fd_pipe[1]", sge_strerror(errno, &ds)));
+      sge_dstring_free(&ds);
+   }
 
    sleep(2); /* give father time to read the status */
 

@@ -2038,7 +2038,6 @@ static void start_qrsh_job(void)
    const char *arch = NULL;
    char *command = NULL;
    char *buf = NULL;
-   char cwd[SGE_PATH_MAX+1];
    char *args[9];
    int  nargs;
    int  i=0;
@@ -2053,8 +2052,6 @@ static void start_qrsh_job(void)
 
       sge_root = sge_get_root_dir(0, NULL, 0, 1);
       arch = sge_get_arch();
-      getcwd(cwd, SGE_PATH_MAX);
-      
       if (sge_root == NULL || arch == NULL) {
          shepherd_trace("reading environment SGE_ROOT and ARC failed");
          return;

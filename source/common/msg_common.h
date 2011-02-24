@@ -49,11 +49,14 @@
 #define MSG_NULL                   _MESSAGE(23005, _("(NULL)"))
 #define MSG_SMALLNULL                       _MESSAGE(23006, _("(null)"))
 
+
+#define MSG_FILE_CHDIR_SS                                      _MESSAGE(23011, _("can't change dir to "SFN": "SFN))
+#define MSG_FILE_NOCHOWN_SS                                    _MESSAGE(23012, _("can't chown file or directory "SFN": "SFN))
 #define MSG_FILE_NOCLOSE_SS                                    _MESSAGE(23013, _("can't close file "SFN": "SFN))
 #define MSG_FILE_CANTOPENDIRECTORYX_SS                         _MESSAGE(23014, _("can't open directory "SFQ": "SFN))
 #define MSG_SGETEXT_CANTRESOLVEHOST_S                          _MESSAGE(23015, _("can't resolve hostname "SFQ))
 #define MSG_SGETEXT_CANTRESOLVEHOST_SS                         _MESSAGE(23016, _("can't resolve hostname "SFQ": "SFN))
-#define MSG_NULLPOINTER                                        _MESSAGE(23017, _("NULL pointer received") )    
+#define MSG_NULLPOINTER                                        _MESSAGE(23017, _("NULL pointer received"))
 #define MSG_FILE_NOOPEN_SS                                     _MESSAGE(23018, _("can't open file "SFN": "SFN))
 #define MSG_ERROR_COULDNOTOPENSTDOUTASFILE                     _MESSAGE(23019, _("Could not open stdout as file"))
 #define MSG_ERROR_UNABLETODUMPJOBLIST                          _MESSAGE(23020, _("Unable to dump job list"))

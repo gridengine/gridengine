@@ -60,7 +60,7 @@ static int do_wait(pid_t);
 /*-----------------------------------------------------------------------
  * startprog
  * Start Sge program and wait until it exits. 
- * Usaually it will be only useful for daemons, since it blocks the caller
+ * Usually it will be only useful for daemons, since it blocks the caller
  * until the child exits
  * Use "argv0" or "path" to build path to program
  * Note:  conf-struct may be uninitialized at this point
@@ -116,23 +116,21 @@ int startprog(int out, int err,
                prog_path, strerror(errno)));
           DRETURN(-2);
        }
-   }   
-   else
+   } else {
       strcpy(prog_path, name);
- }
- else {
+   }
+ } else {
     if (!path) {
        DRETURN(-2);
-    }   
+    }
     sprintf(prog_path, "%s/%s/%s", path, sge_get_arch(), name);
     if (SGE_STAT(prog_path, &sb)) {
        sprintf(prog_path, "%s/%s", path, name);
        if (SGE_STAT(prog_path, &sb)) {
-          ERROR((SGE_EVENT, MSG_FILE_STATFAILED_SS, 
-               prog_path, strerror(errno)));
+          ERROR((SGE_EVENT, MSG_FILE_STATFAILED_SS, prog_path, strerror(errno)));
           DRETURN(-2);
-       }   
-    }   
+       }
+    }
  }
 
  argv[0] = prog_path;
@@ -155,14 +153,22 @@ int startprog(int out, int err,
    /* child */
    if (getenv("SGE_DEBUG_LEVEL")) {
       putenv("SGE_DEBUG_LEVEL=0 0 0 0 0 0 0 0");
-   }   
+   }
    if (out != 1) {
       close(1);
-      dup(out);
+      if (dup(out) == -1) {
+         /* exit with special exit code 8 being treated as error */
+         DEXIT;
+         exit(8);
+      }
    }
    if (err != 2) {
       close(2);
-      dup(err);
+      if (dup(err) == -1) {
+         /* exit with special exit code 8 being treated as error */
+         DEXIT;
+         exit(8);
+      }
       fprintf(stderr, "######################\n");
       fprintf(stderr, " %s\n", sge_ctime(0, &ds));
       fprintf(stderr, "######################\n");

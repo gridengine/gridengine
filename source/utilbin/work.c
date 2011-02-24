@@ -43,6 +43,7 @@
 #include <sys/resource.h>
 
 #include "uti/sge_os.h"
+#include "uti/sge_string.h"
 #include "uti/sge_unistd.h"
 
 #include "gdi/sge_gdi2.h"
@@ -352,11 +353,9 @@ int main(int argc, char *argv[])
    return 0;
 }
 
-void work(
-char *mmp 
-) {
+void work(char *mmp) {
    float a, b = 0.1;
-   char c; 
+   char c;
    char *miter = NULL, *miter_max = NULL;
    char buffer[2];
 
@@ -366,7 +365,7 @@ char *mmp
    }
 
    while (!should_stop) {
-      a += b; 
+      a += b;
       if (mmp) {
          c = *miter + 1;
          *miter = c;
@@ -374,10 +373,22 @@ char *mmp
          if (miter>miter_max)
          miter =  mmp;
       }
-      if (in) 
-         read(in, buffer, 1);
-      if (out) 
-         write(out, buffer, 1);
+      if (in >= 0) {
+         if (read(in, buffer, 1) == -1) {
+            dstring ds = DSTRING_INIT;
+            fprintf(stderr, "error reading from file: %s\n", sge_strerror(errno, &ds));
+            sge_dstring_free(&ds);
+            close(in); in = -1;
+         }
+      }
+      if (out >= 0) {
+         if (write(out, buffer, 1) != 1) {
+            dstring ds = DSTRING_INIT;
+            fprintf(stderr, "error writing to file: %s\n", sge_strerror(errno, &ds));
+            sge_dstring_free(&ds);
+            close(out); out = -1;
+         }
+      }
    }
 }
 

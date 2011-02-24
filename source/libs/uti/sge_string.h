@@ -92,7 +92,7 @@ void sge_strafree(char ***cpp);
 
 char **sge_stramemncpy(const char *cp, char **cpp, int n);
 
-
+size_t sge_strlcat(char *dst, const char *src, size_t dstsize);
 size_t sge_strlcpy(char *dst, const char *src, size_t dstsize);
 
 char **sge_stracasecmp(const char *cp, char **cpp);

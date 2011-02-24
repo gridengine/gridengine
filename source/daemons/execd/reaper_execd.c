@@ -1592,8 +1592,11 @@ read_dusage(lListElem *jr, const char *jobdir, u_long32 jobid, u_long32 jataskid
 
    if (failed != ESSTATE_NO_PID) {
       fp = fopen(pid_file, "r");
-      if (fp) {
-         fscanf(fp, sge_u32 , &pid);
+      if (fp != NULL) {
+         if (fscanf(fp, sge_u32 , &pid) != 1) {
+            ERROR((SGE_EVENT, MSG_EXECD_ERRORREADINGPIDOFJOB_UU,
+                   sge_u32c(jobid), sge_u32c(jataskid)));
+         }
          FCLOSE(fp);
       } else {
          ERROR((SGE_EVENT, MSG_SHEPHERD_CANTOPENPIDFILEXFORJOBYZ_SUU,

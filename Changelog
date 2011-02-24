@@ -8,19 +8,25 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
-DG-2011-02-24-0: Bugfix:      Fixed -binding parsing bug and introduced MSG_ 
+JG-2011-02-24-0: Bugfix:      Fixing build on Ubuntu 10.04 and higher.
+                              Part 2/2: check exit code of system calls where
+                              required.
+                 Issue:       GE-3349 (GE-3347)
+                 Review:      SH (GE-1)
+
+DG-2011-02-24-0: Bugfix:      Fixed -binding parsing bug and introduced MSG_
                               makros for finer grained error reporting.
-                 Issue:       GE-3358				
+                 Issue:       GE-3358
                  Review:      JG
 
-EB-2011-02-22-0: Enhancem:    - changed arch script so that Snow Leopard will be 
-                                recognized as darwin-x64 when latest path is 
+EB-2011-02-22-0: Enhancem:    - changed arch script so that Snow Leopard will be
+                                recognized as darwin-x64 when latest path is
                                 installed
-                              - changed JSV script so that it does not fork 
+                              - changed JSV script so that it does not fork
                                 processes for parsing related things
-                              - changed installation and JGDI related things so 
+                              - changed installation and JGDI related things so
                                 that correct shared library paths will be set
-                              - changed distinst so that correct shared library 
+                              - changed distinst so that correct shared library
                                 extension will be used
                               - fixed include paths
                               - fixed free partially

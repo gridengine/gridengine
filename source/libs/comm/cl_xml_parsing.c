@@ -197,7 +197,7 @@ int cl_com_transformXML2String(const char* input, char** output) {
 *
 *  FUNCTION
 *     This function will parse the input char string and replace the character
-*     by escape sequences in the output string. The user has to free() the 
+*     by escape sequences in the output string. The user has to sge_free() the 
 *     output string.
 *
 *  INPUTS
@@ -331,8 +331,7 @@ int cl_com_free_gmsh_header(cl_com_GMSH_t** header) {
    if (header == NULL || *header == NULL) {
       return CL_RETVAL_PARAMS;
    }
-   free(*header);
-   *header = NULL;
+   sge_free(header);
    return CL_RETVAL_OK;
 }
 
@@ -345,13 +344,12 @@ int cl_com_free_cm_message(cl_com_CM_t** message) {   /* CR check */
       return CL_RETVAL_PARAMS;
    }
    if ((*message)->version != NULL) {
-      free((*message)->version);
+      sge_free(&((*message)->version));
    }
    cl_com_free_endpoint(&((*message)->rdata));
    cl_com_free_endpoint(&((*message)->dst));
 
-   free(*message);
-   *message = NULL;
+   sge_free(message);
    return CL_RETVAL_OK;
 }
 
@@ -359,9 +357,8 @@ int cl_com_free_mih_message(cl_com_MIH_t** message) {   /* CR check */
    if (message == NULL || *message == NULL) {
       return CL_RETVAL_PARAMS;
    }
-   free( (*message)->version );
-   free(*message);
-   *message = NULL;
+   sge_free(&((*message)->version));
+   sge_free(message);
    return CL_RETVAL_OK;
 }
 
@@ -369,9 +366,8 @@ int cl_com_free_am_message(cl_com_AM_t** message) {   /* CR check */
    if (message == NULL || *message == NULL) {
       return CL_RETVAL_PARAMS;
    }
-   free( (*message)->version );
-   free(*message);
-   *message = NULL;
+   sge_free(&((*message)->version));
+   sge_free(message);
    return CL_RETVAL_OK;
 }
 
@@ -379,9 +375,8 @@ int cl_com_free_sim_message(cl_com_SIM_t** message) {
    if (message == NULL || *message == NULL) {
       return CL_RETVAL_PARAMS;
    }
-   free( (*message)->version );
-   free(*message);
-   *message = NULL;
+   sge_free(&((*message)->version));
+   sge_free(message);
    return CL_RETVAL_OK;
 }
 
@@ -389,22 +384,18 @@ int cl_com_free_sirm_message(cl_com_SIRM_t** message) {
    if (message == NULL || *message == NULL) {
       return CL_RETVAL_PARAMS;
    }
-   free( (*message)->version );
-   free( (*message)->info    );
-   free(*message);
-   *message = NULL;
+   sge_free(&((*message)->version));
+   sge_free(&((*message)->info));
+   sge_free(message);
    return CL_RETVAL_OK;
 }
-
-
 
 int cl_com_free_ccm_message(cl_com_CCM_t** message) {   /* CR check */
    if (message == NULL || *message == NULL) {
       return CL_RETVAL_PARAMS;
    }
-   free( (*message)->version );
-   free(*message);
-   *message = NULL;
+   sge_free(&((*message)->version));
+   sge_free(message);
    return CL_RETVAL_OK;
 }
 
@@ -416,9 +407,8 @@ int cl_com_free_ccrm_message(cl_com_CCRM_t** message) {   /* CR check */
    if (message == NULL || *message == NULL) {
       return CL_RETVAL_PARAMS;
    }
-   free( (*message)->version );
-   free(*message);
-   *message = NULL;
+   sge_free(&((*message)->version));
+   sge_free(message);
    return CL_RETVAL_OK;
 }
 
@@ -431,13 +421,12 @@ int cl_com_free_crm_message(cl_com_CRM_t** message) {   /* CR check */
    if (message == NULL || *message == NULL) {
       return CL_RETVAL_PARAMS;
    }
-   free((*message)->version);
-   free((*message)->cs_text);
-   free((*message)->formats);
+   sge_free(&((*message)->version));
+   sge_free(&((*message)->cs_text));
+   sge_free(&((*message)->formats));
    cl_com_free_endpoint(&((*message)->rdata));
-   free((*message)->params);
-   free(*message);
-   *message = NULL;
+   sge_free(&((*message)->params));
+   sge_free(message);
    return CL_RETVAL_OK;
 }
 
@@ -1847,16 +1836,15 @@ int cl_com_free_endpoint(cl_com_endpoint_t** endpoint) { /* CR check */
       return CL_RETVAL_PARAMS;
    }
    if ((*endpoint)->comp_host != NULL) {
-      free((*endpoint)->comp_host);
+      sge_free(&((*endpoint)->comp_host));
    }
    if ((*endpoint)->comp_name != NULL) {
-      free((*endpoint)->comp_name);
+      sge_free(&((*endpoint)->comp_name));
    }
    if ((*endpoint)->hash_id != NULL) {
-      free((*endpoint)->hash_id);
+      sge_free(&((*endpoint)->hash_id));
    }
-   free(*endpoint);
-   *endpoint = NULL;
+   sge_free(endpoint);
    return CL_RETVAL_OK;
 }
 

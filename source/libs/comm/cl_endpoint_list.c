@@ -80,7 +80,7 @@ int cl_endpoint_list_setup(cl_raw_list_t** list_p,
 
    ret_val = cl_raw_list_setup(list_p,list_name, 1);
    if (ret_val != CL_RETVAL_OK) {
-      free(ldata);
+      sge_free(&ldata);
       return ret_val;
    }
 
@@ -89,7 +89,7 @@ int cl_endpoint_list_setup(cl_raw_list_t** list_p,
       ldata->ht = sge_htable_create(4, dup_func_string, hash_func_string, hash_compare_string);
       if (ldata->ht == NULL) {
          cl_raw_list_cleanup(list_p);
-         free(ldata);
+         sge_free(&ldata);
          return CL_RETVAL_MALLOC;
       }
       CL_LOG_INT(CL_LOG_INFO,"created hash table with size =", 4);
@@ -174,7 +174,7 @@ int cl_endpoint_list_cleanup(cl_raw_list_t** list_p) {
    while ( (elem = cl_endpoint_list_get_first_elem(*list_p)) != NULL) {
       cl_raw_list_remove_elem(*list_p, elem->raw_elem);
       cl_com_free_endpoint(&(elem->endpoint));
-      free(elem);
+      sge_free(&elem);
    }
    cl_raw_list_unlock(*list_p);
 
@@ -184,7 +184,7 @@ int cl_endpoint_list_cleanup(cl_raw_list_t** list_p) {
       if (ldata->ht != NULL) {
          sge_htable_destroy(ldata->ht);
       }
-      free(ldata);
+      sge_free(&ldata);
    }
    (*list_p)->list_data = NULL;
 
@@ -266,7 +266,7 @@ int cl_endpoint_list_define_endpoint(cl_raw_list_t* list_p, cl_com_endpoint_t* e
    if ( new_elem->raw_elem == NULL) {
       cl_raw_list_unlock(list_p);
       cl_com_free_endpoint(&dup_endpoint);
-      free(new_elem);
+      sge_free(&new_elem);
       return CL_RETVAL_MALLOC;
    } else {
       cl_endpoint_list_data_t* ldata = list_p->list_data;
@@ -422,8 +422,7 @@ int cl_endpoint_list_undefine_endpoint(cl_raw_list_t* list_p, cl_com_endpoint_t*
 
       cl_raw_list_remove_elem(list_p, elem->raw_elem);
       cl_com_free_endpoint(&(elem->endpoint));
-      free(elem);
-      elem = NULL;
+      sge_free(&elem);
 
       ldata = list_p->list_data;
       if (ldata->ht != NULL) {

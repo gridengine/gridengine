@@ -160,8 +160,7 @@ extern int main(int argc, char** argv)
      char* resolved_server_host = NULL;
      cl_com_cached_gethostbyname(server_host, &resolved_server_host, NULL, NULL, NULL);
      printf("server will connect to server on host \"%s\" bound to port \"%d\"\n", resolved_server_host , server_port);
-     free(resolved_server_host);
-     resolved_server_host = NULL;
+     sge_free(&resolved_server_host);
   }
 
 

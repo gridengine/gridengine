@@ -413,7 +413,7 @@ static bool binding_set_linear_solaris(const int first_socket, const int first_c
          /* we are out of range already - do nothing - abort */
          /* free memory */
          free_matrix(matrix, mlength);
-         FREE(cores);
+         sge_free(&cores);
          return false;
       }
    }
@@ -424,7 +424,7 @@ static bool binding_set_linear_solaris(const int first_socket, const int first_c
       current_core, &tmp_pid_list, &tmp_pid_list_length) == false) {
       /* we got no Solaris processor id - abort */
       free_matrix(matrix, mlength);
-      FREE(cores);
+      sge_free(&cores);
       return false;
    }
 
@@ -456,9 +456,9 @@ static bool binding_set_linear_solaris(const int first_socket, const int first_c
             /* we are out of range already - do nothing - abort */
             /* free memory */
             free_matrix(matrix, mlength);
-            FREE(cores);
-            FREE(pid_list);
-            FREE(tmp_pid_list);
+            sge_free(&cores);
+            sge_free(&pid_list);
+            sge_free(&tmp_pid_list);
             return false;
          }
       } /* end while getting the correct current_socket number */
@@ -468,8 +468,8 @@ static bool binding_set_linear_solaris(const int first_socket, const int first_c
          current_core, &tmp_pid_list, &tmp_pid_list_length) == false) {
          /* got no internal processor ids */
          free_matrix(matrix, mlength);
-         FREE(cores);
-         FREE(pid_list);
+         sge_free(&cores);
+         sge_free(&pid_list);
          return false;
       }
 
@@ -480,8 +480,8 @@ static bool binding_set_linear_solaris(const int first_socket, const int first_c
       if (pid_list == NULL) {
          /* out of memory */ 
          free_matrix(matrix, mlength);
-         FREE(cores);
-         FREE(tmp_pid_list);
+         sge_free(&cores);
+         sge_free(&tmp_pid_list);
          return false;
       }
 
@@ -495,7 +495,7 @@ static bool binding_set_linear_solaris(const int first_socket, const int first_c
       /* update global pid list length */
       pid_list_length += tmp_pid_list_length;
 
-      FREE(tmp_pid_list);
+      sge_free(&tmp_pid_list);
    }
 
      /* check what we've todo with the processor id list: 
@@ -522,8 +522,8 @@ static bool binding_set_linear_solaris(const int first_socket, const int first_c
 
    /* free memory in any case */ 
    free_matrix(matrix, mlength);
-   FREE(cores);
-   FREE(pid_list);
+   sge_free(&cores);
+   sge_free(&pid_list);
 
    return retval;
 }
@@ -605,7 +605,7 @@ int create_processor_set_explicit_solaris(const int* list_of_sockets,
          list_of_cores[i], &tmp_pid_list, &tmp_pid_list_length) == false) {
          /* we got no Solaris processor ID - abort */
          free_matrix(matrix, length);
-         FREE(pid_list);
+         sge_free(&pid_list);
          return -1;
       }
      
@@ -620,7 +620,7 @@ int create_processor_set_explicit_solaris(const int* list_of_sockets,
       /* update size of processor ID list */
       pid_list_length += tmp_pid_list_length;
 
-      FREE(tmp_pid_list);
+      sge_free(&tmp_pid_list);
    }
 
    /* check what we've todo with the processor id list: 
@@ -638,14 +638,14 @@ int create_processor_set_explicit_solaris(const int* list_of_sockets,
       if (create_pset(pid_list, pid_list_length, &psetid) != true) {
          /* error while doing this... */
          free_matrix(matrix, length);
-         FREE(pid_list);
+         sge_free(&pid_list);
          return -1;
       }
    }   
 
    /* free topology matrix */ 
    free_matrix(matrix, length);
-   FREE(pid_list);
+   sge_free(&pid_list);
 
    return (int) psetid;
 }
@@ -797,7 +797,7 @@ int create_processor_set_striding_solaris(const int first_socket,
          /* we are out of range already - do nothing - abort */
          /* free memory */
          free_matrix(matrix, mlength);
-         FREE(cores);
+         sge_free(&cores);
          return -2;
       }
    }
@@ -808,7 +808,7 @@ int create_processor_set_striding_solaris(const int first_socket,
          current_core, &tmp_pid_list, &tmp_pid_list_length) == false) {
       /* we got no Solaris processor id - abort */
       free_matrix(matrix, mlength);
-      FREE(cores);
+      sge_free(&cores);
       return -3;
    }
 
@@ -822,7 +822,7 @@ int create_processor_set_striding_solaris(const int first_socket,
    /* update length of array */
    pid_list_length = tmp_pid_list_length;
 
-   FREE(tmp_pid_list);
+   sge_free(&tmp_pid_list);
 
    /* try to get the processor_ids from socket and core position (could be 
       more than one because of CMT */
@@ -842,8 +842,8 @@ int create_processor_set_striding_solaris(const int first_socket,
             /* we are out of range already - do nothing - abort */
             /* free memory */
             free_matrix(matrix, mlength);
-            FREE(cores);
-            FREE(pid_list);
+            sge_free(&cores);
+            sge_free(&pid_list);
             return -4;
          }
       } /* end while getting the correct current_socket number */
@@ -853,8 +853,8 @@ int create_processor_set_striding_solaris(const int first_socket,
          current_core, &tmp_pid_list, &tmp_pid_list_length) == false) {
          /* we got no Solaris processor id - abort */
          free_matrix(matrix, mlength);
-         FREE(cores);
-         FREE(pid_list)
+         sge_free(&cores);
+         sge_free(&pid_list);
          return -3; 
       }   
 
@@ -865,9 +865,9 @@ int create_processor_set_striding_solaris(const int first_socket,
       if (pid_list == NULL) {
          /* out of memory */ 
          free_matrix(matrix, mlength);
-         FREE(cores);
-         FREE(pid_list);
-         FREE(tmp_pid_list);
+         sge_free(&cores);
+         sge_free(&pid_list);
+         sge_free(&tmp_pid_list);
          return -5;
       }
 
@@ -878,7 +878,7 @@ int create_processor_set_striding_solaris(const int first_socket,
          pid_list[pid_list_length + prid_cntr] = tmp_pid_list[prid_cntr];
       }
 
-      FREE(tmp_pid_list);
+      sge_free(&tmp_pid_list);
 
       /* update global pid list length */
       pid_list_length += tmp_pid_list_length;
@@ -908,8 +908,8 @@ int create_processor_set_striding_solaris(const int first_socket,
    
    /* free memory in any case */ 
    free_matrix(matrix, mlength);
-   FREE(cores);
-   FREE(pid_list);
+   sge_free(&cores);
+   sge_free(&pid_list);
 
    return retval;
 }
@@ -950,9 +950,9 @@ void free_matrix(int** matrix, const int length)
       return;
    }
    for (i = 0; i < length; i++) {
-      FREE(matrix[i]);
+      sge_free(&(matrix[i]));
    }
-   FREE(matrix);
+   sge_free(&matrix);
 }
 
 /* -----------------------------------------------------------------------------
@@ -1530,8 +1530,8 @@ static bool get_topology_solaris(char** topology, int* length)
 
       /* free resources allocated in subfunctions */
       free_matrix(matrix, matrix_length);
-      FREE(threads_per_core);
-      FREE(cores_per_socket);
+      sge_free(&threads_per_core);
+      sge_free(&cores_per_socket);
    }
    
    if ((*length) == 0) {
@@ -1734,7 +1734,7 @@ static int get_amount_of_sockets_from_matrix(const int** matrix, const int lengt
 
    /* we don't care about the actual chip_ids here */
    if (get_chip_ids_from_matrix(matrix, length, &chip_ids, &amount) == true) {
-      FREE(chip_ids);
+      sge_free(&chip_ids);
    } else {
       amount = 0;
    }
@@ -1995,7 +1995,7 @@ static int get_amount_of_core_or_threads_from_matrix(const int** matrix, const i
    /* check if we got at least one chip_id (at least one socket) */
    if (ids_length == 0) {
       *size = 0;
-      FREE(ids);
+      sge_free(&ids);
       return -2;
    }
 
@@ -2046,7 +2046,7 @@ static int get_amount_of_core_or_threads_from_matrix(const int** matrix, const i
    }
    
    /* free in subfunction allocated memory */
-   FREE(ids);
+   sge_free(&ids);
    
    /* reset the ID counter function */
    is_new_id(-1);
@@ -2141,7 +2141,7 @@ static int is_new_id(const int id)
    if (id < 0) {
       /* reset everything */
       different_ids = 0;
-      FREE(different_id_vector);
+      sge_free(&different_id_vector);
       return 1;
    } 
 
@@ -2270,7 +2270,7 @@ static int get_total_amount_of_cores_solaris()
       } 
       
       /* delete vector and matrix */
-      FREE(cores);
+      sge_free(&cores);
       free_matrix(matrix, length);
    }
 
@@ -2321,7 +2321,7 @@ static int get_total_amount_of_sockets_solaris()
       get_amount_of_cores_from_matrix((const int**)matrix, length, &cores, &sockets_total);
       
       /* delete vector and matrix */
-      FREE(cores);
+      sge_free(&cores);
       free_matrix(matrix, length);
    }
 
@@ -2609,7 +2609,7 @@ bool get_linear_automatic_socket_core_list_and_account(const int amount,
                            list_of_cores, camount);
       }
 
-      FREE(sockets);
+      sge_free(&sockets);
    }
 
    /* 2. If not all cores fit there - fill up the rest of the sockets */
@@ -2656,7 +2656,7 @@ bool get_linear_automatic_socket_core_list_and_account(const int amount,
       memcpy(logical_used_topology, tmp_topo_busy, logical_used_topology_length*sizeof(char));
    } 
      
-   FREE(tmp_topo_busy);
+   sge_free(&tmp_topo_busy);
 
    return possible;
 }

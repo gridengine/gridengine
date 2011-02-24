@@ -55,6 +55,8 @@
 #include "sge_bootstrap.h"
 #include "wingrid.h"
 
+#include "uti/sge_stdlib.h"
+
 static bool wl_enable_windomacc = false;
 
 /* ============================================================================
@@ -471,7 +473,7 @@ char *wl_strip_hostname(char *user_name)
          ret = strdup(token);
       }
    }
-   free(user_name);
+   sge_free(&user_name);
    return ret;
 }
 

@@ -339,16 +339,15 @@ static void append_opts_from_default_files(u_long32 prog_number,
       lFreeList(&alp);
 
       if (do_exit) {
-         for (pstr = def_files; *pstr; free(*pstr++)) {
-            ;
+         for (pstr = def_files; *pstr; pstr++) {
+            sge_free(pstr);
          }
-         
          DRETURN_VOID;
       }
    }
 
-   for (pstr = def_files; *pstr; free(*pstr++)) {
-      ;
+   for (pstr = def_files; *pstr; pstr++) {
+      sge_free(pstr);
    }
    
    DRETURN_VOID;

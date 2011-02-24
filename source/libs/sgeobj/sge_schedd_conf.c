@@ -2994,9 +2994,9 @@ bool sconf_validate_config_(lList **answer_list)
                ep = lAddElemStr(&halflife_decay_list, UA_name, s2, UA_Type);
                lSetDouble(ep, UA_value, value);
             }
-            FREE(sv2);
+            sge_free(&sv2);
          }
-         FREE(sv1);
+         sge_free(&sv1);
         
          if (lGetNumberOfElem(halflife_decay_list) == 0) {
             answer_list_add(answer_list, MSG_GDI_INVALIDHALFLIFE_DECAY, STATUS_ESYNTAX, 

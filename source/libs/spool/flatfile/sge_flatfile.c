@@ -1252,7 +1252,7 @@ spool_flatfile_write_data(lList **answer_list, const void *data, int data_len,
                               result, strerror(errno));
       spool_flatfile_close_file(answer_list, fd, result, destination);
       unlink(filepath);
-      FREE(result);
+      sge_free(&result);
       PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
       DRETURN(NULL);
    }
@@ -1261,7 +1261,7 @@ spool_flatfile_write_data(lList **answer_list, const void *data, int data_len,
    if (!spool_flatfile_close_file(answer_list, fd, result, destination)) {
       /* message generated in spool_flatfile_close_file */
       unlink(filepath);
-      FREE(result);
+      sge_free(&result);
       PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
       DRETURN(NULL);
    }
@@ -1546,7 +1546,7 @@ spool_flatfile_write_list_fields(lList **answer_list, const lList *list,
             }
          }
       }
-      FREE(my_fields);
+      sge_free(&my_fields);
    }
    
    DRETURN(ret);
@@ -1725,7 +1725,7 @@ _spool_flatfile_read_object(lList **answer_list, const lDescr *descr,
    }
 
    if (fields_out == NULL) {
-      FREE (my_fields_out);
+      sge_free(&my_fields_out);
    }
    
    return object;
@@ -2580,7 +2580,7 @@ static void spool_flatfile_add_line_breaks(dstring *buffer)
          first_line = true;
          
          if (indent_str != NULL) {
-            FREE (indent_str);
+            sge_free(&indent_str);
             word = 0;
          }
          
@@ -2715,7 +2715,7 @@ static void spool_flatfile_add_line_breaks(dstring *buffer)
 
             /* Release the indent string because each line may have different
              * indentation */
-            FREE(indent_str);
+            sge_free(&indent_str);
             continue;
          } else if (isspace (strp[index])) {
             strncpy(str_buf, strp, index);
@@ -2755,10 +2755,10 @@ static void spool_flatfile_add_line_breaks(dstring *buffer)
    sge_dstring_append(buffer, strp);
    
    if (indent_str != NULL) {
-      FREE(indent_str);
+      sge_free(&indent_str);
    }
    
-   FREE(orig);
+   sge_free(&orig);
    
    return;
 }

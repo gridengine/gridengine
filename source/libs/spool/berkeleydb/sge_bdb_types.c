@@ -174,7 +174,7 @@ bdb_destroy_connection(void *connection)
    }
 
    if (con->db != NULL) {
-      FREE(con->db);
+      sge_free(&(con->db));
       /* error */
    }
 

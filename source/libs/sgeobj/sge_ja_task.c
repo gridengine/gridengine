@@ -375,7 +375,7 @@ int sge_parse_jobtasks(lList **ipp, lListElem **idp, const char *str_jobtask,
    /*
    ** free the dupped string
    */
-   FREE(job_str); 
+   sge_free(&job_str); 
    DRETURN(ret);
 }
 

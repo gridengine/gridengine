@@ -364,13 +364,6 @@ is divided into following sections:
     </target>
     <target depends="init,-deps-jar-init" name="deps-jar" unless="no.deps">
         <mkdir dir="${build.dir}"/>
-        <touch file="${built-jar.properties}" verbose="false"/>
-        <property file="${built-jar.properties}" prefix="already.built.jar."/>
-        <fail message="Cycle detected: Herd was already built">
-            <condition>
-                <isset property="already.built.jar.${basedir}"/>
-            </condition>
-        </fail>
         <propertyfile file="${built-jar.properties}">
             <entry key="${basedir}" value=""/>
         </propertyfile>

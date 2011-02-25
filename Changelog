@@ -8,6 +8,11 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+EB-2011-02-25-0: Enhancem:    - replaced remaining free/FREE calls by sge_free
+                              - fixed build issue for herd
+                 Issue:       GE-3346
+                 Review:      TBD
+
 EB-2011-02-22-0: Enhancem:    - changed arch script so that Snow Leopard will be 
                                 recognized as darwin-x64 when latest path is 
                                 installed

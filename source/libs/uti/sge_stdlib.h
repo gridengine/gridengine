@@ -34,33 +34,6 @@
 
 #include <stdlib.h>
 
-/****** uti/stdlib/FREE() *****************************************************
-*  NAME
-*     FREE() -- replacement for sge_free()
-*
-*  SYNOPSIS
-*     #define FREE(x)
-*     void FREE(char *cp) 
-*
-*  FUNCTION
-*     Replacement for sge_free(). Accepts NULL pointers.
-*     After a call of this macro "cp" will be NULL.
-*
-*  INPUTS
-*     char *cp - pointer to a memory block 
-*
-*  RESULT
-*     char* - NULL
-*
-*  SEE ALSO
-*     uti/stdlib/sge_free()
-******************************************************************************/
-#define FREE(x) \
-   if (x != NULL) { \
-      free((char *)x); \
-      x = NULL; \
-   }
-
 char *sge_malloc(int size);
 
 void *sge_realloc(void *ptr, int size, int do_abort);

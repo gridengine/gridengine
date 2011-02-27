@@ -586,7 +586,7 @@ int reschedule_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep, l
                     lGetString(first_granted_queue, JG_qname));
          sge_job_exit(ctx, pseudo_jr, jep, this_jatep, monitor);
          lFreeElem(&pseudo_jr);
-   }
+      }
    }
 
    DRETURN(ret);

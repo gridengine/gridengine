@@ -638,7 +638,7 @@ if (ret == false) {
    if (ret) {
       u_long32 busy = lGetUlong(event_client, EV_busy_handling);
       if (busy != EV_BUSY_NO_HANDLING && busy != EV_BUSY_UNTIL_ACK &&
-          busy != EV_BUSY_UNTIL_RELEASED && busy != EV_THROTTLE_FLUSH) {
+          busy != EV_BUSY_UNTIL_RELEASED) {
          answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
                                  MSG_EVENT_INVALIDBUSYHANDLING);
          ret = false;

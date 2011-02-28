@@ -273,15 +273,7 @@
 *                                 It will stay in the busy state until it
 *                                 is explicitly released by the client 
 *                                 (calling ec_set_busy(0)) 
-*        EV_THROTTLE_FLUSH      - when delivering events qmaster sends
-*                                 events in the regular event delivery 
-*                                 intervals. Each time events are sent the 
-*                                 busy counter (EV_busy) is increased. 
-*                                 The busy counter is set to 0 only when events 
-*                                 are acknowledged by the event client. Event 
-*                                 flushing is delayed depending on the busy 
-*                                 counter the more event flushing is delayed.
-*                                 
+*
 *  NOTES
 *
 *  SEE ALSO

@@ -4096,7 +4096,7 @@ static void *japi_implementation_thread(void * a_user_data_pointer)
    }   
    
    evc->ec_set_edtime(evc, ed_time); 
-   evc->ec_set_busy_handling(evc, EV_THROTTLE_FLUSH); 
+   evc->ec_set_busy_handling(evc, EV_BUSY_UNTIL_ACK);
    evc->ec_set_flush_delay(evc, flush_delay_rate); 
    evc->ec_set_session(evc, japi_session_key);
 

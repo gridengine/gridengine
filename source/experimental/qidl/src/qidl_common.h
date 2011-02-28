@@ -67,7 +67,7 @@ using namespace std;
 
 extern "C"
 {
-#include "sgermon.h"
+#include "sge_rmon.h"
 #include "cull.h"
 }
 

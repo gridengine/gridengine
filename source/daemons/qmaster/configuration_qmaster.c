@@ -37,8 +37,7 @@
 #include <limits.h>
 #include <pwd.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_log.h"
 #include "uti/config_file.h"
 #include "uti/sge_parse_num_par.h"

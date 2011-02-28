@@ -36,13 +36,12 @@
 #include <ctype.h>
 #include <stdlib.h>
 
-#include "rmon/sgermon.h"
-
-#include "cull/cull.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_parse_num_par.h"
 #include "uti/sge_string.h"
 #include "uti/sge_log.h"
+
+#include "cull/cull.h"
 
 #include "sgeobj/config.h"
 #include "sgeobj/sge_answer.h"

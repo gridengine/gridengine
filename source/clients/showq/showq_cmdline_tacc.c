@@ -33,8 +33,7 @@
 #include <stdlib.h>
 #include <pwd.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/setup_path.h"
 
 #include "cull/cull_list.h"

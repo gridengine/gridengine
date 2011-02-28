@@ -43,15 +43,19 @@
 #endif
 
 #define __SGE_GDI_LIBRARY_HOME_OBJECT_FILE__
+
+#include "uti/sge_rmon.h"
+#include "uti/sge_dstring.h"
+
 #include "cull/cull.h"
-#include "sge_all_listsL.h"
-#include "sgermon.h"
-#include "sgeee.h"
+
+#include "sgeobj/sge_all_listsL.h"
 #include "sgeobj/sge_ulong.h"
 #include "sgeobj/str2nm_converter.h"
 #include "sgeobj/sge_job.h"
 #include "sgeobj/sge_binding.h"
-#include "uti/sge_dstring.h"
+
+#include "sched/sgeee.h"
 
 #include "showq_support.h"
 

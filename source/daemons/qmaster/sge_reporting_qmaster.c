@@ -36,10 +36,7 @@
 #include <pthread.h>
 #include <time.h>
 
-/* rmon */
-#include "rmon/sgermon.h"
-
-/* uti */
+#include "uti/sge_rmon.h"
 #include "uti/setup_path.h"
 #include "uti/sge_dstring.h"
 #include "uti/sge_log.h"

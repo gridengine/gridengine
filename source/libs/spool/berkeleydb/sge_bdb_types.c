@@ -35,7 +35,7 @@
 #include <errno.h>
 #include <pthread.h>
 
-#include "rmon/sgermon.h"
+#include "uti/sge_rmon.h"
 #include "uti/sge_log.h"
 #include "lck/sge_mtutil.h"
 

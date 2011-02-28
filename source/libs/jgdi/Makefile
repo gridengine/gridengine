@@ -73,8 +73,8 @@ $(JGDI_LIB): $(JGDI_OBJS) $(JGDI_ADD_OBJS)
 	../scripts/link_jnilib.sh libjgdi  $(SHAREDEXT) $(JAVA_SHAREDEXT)
 
 
-jgdi_test: jgdi_test.o $(UTILIB) $(COMMLISTSLIB) $(RMONLIB) $(LCKLIB) 
-	$(CC) -o jgdi_test $(LFLAGS) $(JAVA_LFLAGS)  jgdi_test.o -ljvm $(UTILIB) $(COMMLISTSLIB) $(RMONLIB) $(LCKLIB) $(LIBS)  
+jgdi_test: jgdi_test.o $(UTILIB) $(COMMLISTSLIB) $(LCKLIB) 
+	$(CC) -o jgdi_test $(LFLAGS) $(JAVA_LFLAGS)  jgdi_test.o -ljvm $(UTILIB) $(COMMLISTSLIB) $(LCKLIB) $(LIBS)  
 	
 
 jgdi_test.o: $(JGDI_DIR)/jgdi_test.c

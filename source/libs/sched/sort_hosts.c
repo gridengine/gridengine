@@ -38,10 +38,7 @@
 #   include <malloc.h>
 #endif
 
-#include "rmon/sgermon.h"
-
-#include "sge.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_string.h"
 #include "uti/sge_parse_num_par.h"
 
@@ -49,6 +46,7 @@
 #include "sgeobj/sge_centry.h"
 #include "sgeobj/sge_schedd_conf.h"
 
+#include "sge.h"
 #include "sort_hosts.h"
 #include "sge_sched.h"
 

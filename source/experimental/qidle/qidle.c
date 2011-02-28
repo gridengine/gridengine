@@ -49,7 +49,7 @@
 
 #include "cull.h"
 #include "sge_load_sensor.h"
-#include "sgermon.h"
+#include "sge_rmon.h"
 #include "sge_prog.h"
 #include "sge_bootstrap.h"
 #include "sge_reportL.h"

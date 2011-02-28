@@ -32,7 +32,7 @@
 
 #include <string.h>
 
-#include "rmon/sgermon.h"
+#include "uti/sge_rmon.h"
 
 #include "cull/cull.h"
 

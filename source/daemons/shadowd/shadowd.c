@@ -39,8 +39,7 @@
 #include <netdb.h>
 #include <fcntl.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_bootstrap.h"
 #include "uti/sge_stdio.h"
 #include "uti/sge_unistd.h"

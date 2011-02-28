@@ -36,8 +36,7 @@
 #include <pthread.h>
 #include <fnmatch.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_stdlib.h"
 #include "uti/sge_string.h"
 #include "uti/sge_log.h"

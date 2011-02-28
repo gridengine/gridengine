@@ -36,8 +36,7 @@
 #include <limits.h>
 #include <unistd.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_stdlib.h"
 #include "uti/sge_dstring.h"
 #include "uti/sge_log.h" 

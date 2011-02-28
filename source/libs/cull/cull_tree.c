@@ -38,7 +38,7 @@
 #define NO_SGE_COMPILE_DEBUG
 #endif
 
-#include "rmon/sgermon.h"
+#include "uti/sge_rmon.h"
 
 #include "cull/cull.h"
 

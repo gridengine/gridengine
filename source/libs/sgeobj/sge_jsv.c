@@ -42,11 +42,10 @@
 
 #include "sge.h"
 
-#include "rmon/sgermon.h"
-
 #include "lck/sge_mtutil.h"
 #include "lck/sge_lock.h"
 
+#include "uti/sge_rmon.h"
 #include "uti/sge_dstring.h"
 #include "uti/sge_log.h"
 #include "uti/sge_stdio.h"

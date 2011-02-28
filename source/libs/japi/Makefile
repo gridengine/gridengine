@@ -50,7 +50,7 @@ DRMAALIB_10_OBJS = $(DRMAALIB_10_$(JNI_TARGET))
 DRMAALIB_OBJS    = $(DRMAALIB_10_OBJS)
 DRMAA_OBJS       = $(EVCLIB_OBJS) $(GDILIB_OBJS) \
                    $(SGEOBJLIB_OBJS) $(SGEOBJDLIB_OBJS) \
-                   $(CULLLIB_OBJS) $(RMONLIB_OBJS) $(COMMLIB_OBJS) \
+                   $(CULLLIB_OBJS) $(COMMLIB_OBJS) \
                    $(COMMLISTSLIB_OBJS) $(UTILIB_DRMAA_OBJS) $(LCKLIB_OBJS)
 
 JAPI_ADD_SRC = parse_job_cull.c parse_qsub.c read_defaults.c sge_options.c

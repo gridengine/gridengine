@@ -41,8 +41,7 @@
 #include <sys/ioctl.h>  /* 44BSD requires this too */
 #endif
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_arch.h"
 #include "uti/config_file.h"
 #include "uti/sge_string.h"

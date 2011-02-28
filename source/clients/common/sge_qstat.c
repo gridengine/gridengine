@@ -34,16 +34,15 @@
 #include <string.h>
 #include <fnmatch.h>
 
-#include "rmon/sgermon.h"
-
-#include "cull/cull_sort.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_dstring.h"
 #include "uti/sge_prog.h"
 #include "uti/sge_parse_num_par.h"
 #include "uti/setup_path.h"
 #include "uti/sge_time.h"
 #include "uti/sge_stdlib.h"
+
+#include "cull/cull_sort.h"
 
 #include "sgeobj/sge_all_listsL.h"
 #include "sgeobj/sge_host.h"

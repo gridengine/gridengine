@@ -53,6 +53,9 @@
 #include <openssl/ssl.h>
 #include <openssl/rand.h>
 
+#if defined(DEFINE_SGE_PASSWD_MAIN)
+#  include "uti/sge_rmon.h"
+#endif
 #include "uti/sge_arch.h"
 #include "uti/sge_log.h"
 #include "uti/sge_unistd.h"
@@ -64,9 +67,6 @@
 #include "uti/sge_stdio.h"
 #include "uti/sge_string.h"
 #include "uti/sge_stdlib.h"
-#if defined(DEFINE_SGE_PASSWD_MAIN)
-#include "rmon/sgermon.h"
-#endif
 
 #include "sge_passwd.h"
 #include "msg_utilbin.h"

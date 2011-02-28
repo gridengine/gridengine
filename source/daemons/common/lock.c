@@ -33,8 +33,7 @@
 #include <fcntl.h>
 #include <sys/types.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_unistd.h"
 
 #include "lock.h"

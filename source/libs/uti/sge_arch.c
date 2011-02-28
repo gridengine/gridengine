@@ -34,9 +34,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "rmon/sgermon.h"
-#include "rmon/rmon.h"
-
+#include "uti/sge_rmon.h"
+#include "uti/rmon.h"
 #include "uti/sge_stdlib.h"
 #include "uti/sge_log.h"
 #include "uti/msg_utilib.h"

@@ -37,8 +37,7 @@
 #include <stdlib.h>
 #include <fcntl.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_time.h"
 #include "uti/sge_afsutil.h"
 #include "uti/sge_language.h"

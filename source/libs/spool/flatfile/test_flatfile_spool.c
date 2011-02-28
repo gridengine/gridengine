@@ -37,14 +37,19 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-#include "sge_unistd.h"
-#include "sge_gdi.h"
-#include "commlib.h"
-#include "sge_answer.h"
-#include "sge_mt_init.h"
+#include "uti/sge_rmon.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_prog.h"
+
 #include "cull/cull_multitype.h"
 #include "cull/cull_list.h"
-#include "rmon/sgermon.h"
+
+#include "comm/commlib.h"
+
+#include "gdi/sge_gdi.h"
+
+#include "sgeobj/sge_answer.h"
+
 #include "sgeobj/sge_all_listsL.h"
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_centry.h"
@@ -52,7 +57,8 @@
 #include "spool/flatfile/sge_flatfile.h"
 #include "spool/flatfile/sge_flatfile_obj.h"
 #include "spool/flatfile/sge_spooling_flatfile_scanner.h"
-#include "uti/sge_prog.h"
+
+#include "sge_mt_init.h"
 
 #define allow_delete_time_modification
 

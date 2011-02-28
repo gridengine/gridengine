@@ -41,8 +41,7 @@
 
 #include "lck/sge_mtutil.h"
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/setup_path.h"
 #include "uti/sge_log.h"
 #include "uti/sge_uidgid.h"

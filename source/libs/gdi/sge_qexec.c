@@ -41,10 +41,9 @@
 #include "comm/commlib.h"
 #include "comm/commd_message_flags.h"
 
-#include "rmon/sgermon.h"
-
 #include "cull/cull.h"
 
+#include "uti/sge_rmon.h"
 #include "uti/sge_prog.h"
 #include "uti/sge_uidgid.h"
 #include "uti/sge_time.h"

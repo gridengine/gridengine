@@ -37,7 +37,6 @@ QIDLE      = qidle
 # CODGDI      = libgdi.a
 # CODUTI      = libuti.a
 # CULLLIB     = libcull.a
-# RMONLIB     = librmon.a
 # COMLIB      = libcom.a
 
 # GDILIBDIR = ../gdilib
@@ -70,9 +69,8 @@ QIDLESRC =  qidle.c
 QIDLEOBJS = $(QIDLESRC:.c=.o) 
             
 ALLQIDLEOBJS = $(QIDLEOBJS) sge_conf.o sge_load_sensor.o sge_report_execd.o 
-QIDLE_LIB_DEPEND = $(SCHEDLIB) $(GDILIB) $(KRBLIBS) $(CULLLIB) $(COMMLIB) \
-                   $(UTILIB) $(RMONLIB)
-QIDLE_ADD_LIBS = -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti $(WINGRIDLIB) -llck -lrmon
+QIDLE_LIB_DEPEND = $(SCHEDLIB) $(GDILIB) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(UTILIB) 
+QIDLE_ADD_LIBS = -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti $(WINGRIDLIB) -llck 
 
   
 $(QIDLE):  $(ALLQIDLEOBJS) $(QIDLE_LIB_DEPEND)

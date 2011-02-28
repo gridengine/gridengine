@@ -40,10 +40,9 @@
 #include <grp.h>
 #include <pthread.h>
 
-#include "rmon/sgermon.h"
-
 #include "lck/sge_mtutil.h"
 
+#include "uti/sge_rmon.h"
 #include "uti/sge_stdio.h"
 #include "uti/sge_unistd.h"
 #include "uti/sge_log.h"

@@ -34,8 +34,7 @@
 
 #include "gdi/qm_name.h"
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_log.h"
 
 #include "qmaster_heartbeat.h"

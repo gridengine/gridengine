@@ -36,10 +36,9 @@
 #include <unistd.h>
 #include <pthread.h>
 
-#include "rmon/sgermon.h"
-
 #include "lck/sge_mtutil.h"
 
+#include "uti/sge_rmon.h"
 #include "uti/sge_language.h"
 #include "uti/sge_prog.h"
 #include "uti/sge_htable.h"

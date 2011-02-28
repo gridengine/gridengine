@@ -35,7 +35,7 @@
 
 #ifndef NO_SGE_COMPILE_DEBUG
 
-#include "sgermon.h"
+#include "uti/sge_rmon.h"
 
 #endif /* SGE_COMPILE_DEBUG */
 

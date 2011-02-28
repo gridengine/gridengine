@@ -35,11 +35,10 @@
 #include <strings.h>
 #include <stdlib.h>
 
-#include "rmon/sgermon.h"
-
 #include "cull/cull.h"
 #include "cull/cull_list.h"
 
+#include "uti/sge_rmon.h"
 #include "uti/sge_stdio.h"
 #include "uti/sge_string.h"
 

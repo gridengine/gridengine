@@ -33,15 +33,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "rmon/sgermon.h"
-
-#include "lck/sge_mtutil.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_err.h"
 #include "uti/sge_sl.h"
 #include "uti/sge_stdlib.h"
 #include "uti/sge_tq.h"
 #include "uti/sge_thread_ctrl.h"
+
+#include "lck/sge_mtutil.h"
 
 #include "msg_common.h"
 

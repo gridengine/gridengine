@@ -55,9 +55,9 @@ QLIMIT_OBJS = $(QLIMIT_SRC:.c=.o)
 
 QLIMIT_ADD_OBJS = $(QLIMIT_ADD_SRC:.c=.o)
 
-QLIMIT_ADD_LIBS = sge_mt_init.o -lsched -lgdi -lsgeobjd -lsgeobj $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti $(WINGRIDLIB) -llck -lrmon $(DLLIB)
+QLIMIT_ADD_LIBS = sge_mt_init.o -lsched -lgdi -lsgeobjd -lsgeobj $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti $(WINGRIDLIB) -llck $(DLLIB)
 
-QLIMIT_LIB_DEPENDS = sge_mt_init.o $(GDILIB) $(SCHEDLIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(WINGRIDLIB_DEP) $(UTILIB) $(LCKLIB) $(RMONLIB) $(TPLIB)
+QLIMIT_LIB_DEPENDS = sge_mt_init.o $(GDILIB) $(SCHEDLIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(WINGRIDLIB_DEP) $(UTILIB) $(LCKLIB) $(TPLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages

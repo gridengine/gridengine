@@ -48,6 +48,7 @@ include $(SDIR)/libs/spool/Makefile
 include $(SDIR)/libs/japi/Makefile
 include $(SDIR)/libs/juti/Makefile
 include $(SDIR)/libs/jgdi/Makefile
+include $(LIBS_DIR)/libs/ijs/Makefile
 
 ###############################################################################
 # Variable definitions for targets to build
@@ -57,14 +58,14 @@ SGELIB      = libsge$(LIBEXT)
 ###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
-libs: sgeobjlib gdilib evclib evmlib mirlib spoollib culllib_all rmonlib schedlib_all utilib lcklib drmaa_all comm_all $(JUTI_ALL) $(SGELIB)
+libs: sgeobjlib gdilib evclib evmlib mirlib spoollib culllib_all rmonlib schedlib_all utilib lcklib drmaa_all comm_all ijslib $(JUTI_ALL) $(SGELIB)
 
-libs_clean: gdilib_clean sgeobjlib_clean evclib_clean evmlib_clean mirlib_clean spoollib_clean commlib_clean commlistslib_clean culllib_clean rmonlib_clean schedlib_clean utilib_clean lcklib_clean drmaa_clean $(JUTI_CLEAN) $(SGELIB)_clean
+libs_clean: gdilib_clean sgeobjlib_clean evclib_clean evmlib_clean mirlib_clean spoollib_clean commlib_clean commlistslib_clean culllib_clean rmonlib_clean schedlib_clean utilib_clean lcklib_clean drmaa_clean ijslib_clean $(JUTI_CLEAN) $(SGELIB)_clean
 
 $(SGELIB)_clean: 
 	$(RM) libsge.a libsge$(SHAREDEXT)
 
-libs_depend: gdilib_depend sgeobjlib_depend evclib_depend evmlib_depend mirlib_depend spoollib_depend culllib_depend rmonlib_depend schedlib_depend utilib_depend lcklib_depend drmaa_depend commlib_depend commlistslib_depend $(JUTI_DEPEND)
+libs_depend: gdilib_depend sgeobjlib_depend evclib_depend evmlib_depend mirlib_depend spoollib_depend culllib_depend rmonlib_depend schedlib_depend utilib_depend lcklib_depend drmaa_depend commlib_depend commlistslib_depend ijslib_depend $(JUTI_DEPEND)
 
 libs_messages: gdilib_messages sgeobjlib_messages evclib_messages evmlib_messages mirlib_messages spoollib_messages commlib_messages cull_messages schedlib_messages utilib_messages rmonlib_messages lcklib_messages drmaa_messages $(JUTI_MESSAGES)
 

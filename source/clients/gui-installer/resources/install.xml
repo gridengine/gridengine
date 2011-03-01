@@ -28,6 +28,8 @@
  *
  *  All Rights Reserved.
  *
+ *  Portions of this code are Copyright 2011 Univa Inc.
+ *
  ************************************************************************/
 ___INFO__MARK_END__-->
 <installation version="1.0">
@@ -35,7 +37,7 @@ ___INFO__MARK_END__-->
         <appname>@PRODUCT_NAME@</appname>
         <appversion>@SGE_VERSION@</appversion>
         <authors>
-            <author name="Sun Microsystems, Inc." email="www.sun.com"/>
+           <author name="Sun Microsystems, Inc." email="www.sun.com"/>
         </authors>
         <url>http://gridengine.sunsource.net/</url>
         <uninstaller write="no" />
@@ -213,7 +215,7 @@ ___INFO__MARK_END__-->
         <variable name="cfg.qmaster.spool.dir" value="${cfg.sge.root}/${cfg.cell.name}/spool/qmaster"/>
         <variable name="cfg.execd.spool.dir" value="${cfg.sge.root}/${cfg.cell.name}/spool"/>
         <variable name="cfg.sge.cluster.name" value="p${cfg.sge.qmaster.port}"/>
-        <variable name="add.sge.jmx" value="true"/>
+        <variable name="add.sge.jmx" value="false"/>
         <variable name="cfg.sge.jmx.port" value="6446"/>
         <variable name="cfg.sge.jmx.ssl" value="true"/>
         <variable name="cfg.sge.jmx.ssl.client" value="true"/>

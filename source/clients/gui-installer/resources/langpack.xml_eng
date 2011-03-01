@@ -28,6 +28,8 @@
  *
  *  All Rights Reserved.
  *
+ *  Portions of this code are Copyright 2011 Univa Inc.
+ *
  ************************************************************************/
 ___INFO__MARK_END__-->
 <langpack>
@@ -131,10 +133,10 @@ ___INFO__MARK_END__-->
     <str id="state.perm_qmaster_spool_dir.tooltip" txt="<html>No permission to create qmaster spool directory:<br>${cfg.qmaster.spool.dir}${tooltip.hint}</html>"/>
     <str id="state.perm_execd_spool_dir.tooltip.global" txt="<html>No permission to create execd spool directory:<br>${cfg.execd.spool.dir}${tooltip.hint}</html>"/>
     <str id="state.perm_execd_spool_dir.tooltip.local" txt="<html>No permission to create execd spool directory.</html>"/>
-    <str id="state.perm_bdb_spool_dir.tooltip" txt="<html>No permission to create Berkeley db spool directory:<br>${cfg.db.spooling.dir}${tooltip.hint}</html>"/>
-    <str id="state.bdb_spool_dir_wrong_fstype.tooltip" txt="<html>Berkeley db spool directory has wrong file system type:<br>${cfg.db.spooling.dir}${tooltip.hint}</html>"/>
+    <str id="state.perm_bdb_spool_dir.tooltip" txt="<html>No permission to create Berkeley DB spool directory:<br>${cfg.db.spooling.dir}${tooltip.hint}</html>"/>
+    <str id="state.bdb_spool_dir_wrong_fstype.tooltip" txt="<html>Berkeley DB spool directory has wrong file system type:<br>${cfg.db.spooling.dir}${tooltip.hint}</html>"/>
     <str id="state.perm_jmx_keystore.tooltip" txt="<html>No permission to create JMX keystore directory:<br>${cfg.sge.jmx.ssl.keystore}${tooltip.hint}</html>"/>
-    <str id="state.bdb_spool_dir_exists.tooltip" txt="<html>Berkeley db spool directory exists:<br>${cfg.db.spooling.dir}${tooltip.hint}</html>"/>
+    <str id="state.bdb_spool_dir_exists.tooltip" txt="<html>Berkeley DB spool directory exists:<br>${cfg.db.spooling.dir}${tooltip.hint}</html>"/>
     <str id="state.admin_user_not_known.tooltip" txt="<html>Admin user '${cfg.admin.user}' does not exist on this host!</html>"/>
     <str id="state.used_qmaster_port.tooltip" txt="<html>Qmaster port '${cfg.sge.qmaster.port}' could not be bound.</html>"/>
     <str id="state.used_execd_port.tooltip" txt="<html>Execd port '${cfg.sge.execd.port}' is in use.</html>"/>
@@ -159,27 +161,29 @@ ___INFO__MARK_END__-->
         <str id="install.qmaster.label"  txt="Qmaster host" />
         <str id="install.execd.label" txt="Execution host(s)" />
         <str id="install.shadowd.label" txt="Shadow host(s)" />
-        <str id="install.bdb.label" txt="Berkeley db host" />
+        <str id="install.bdb.label" txt="Berkeley DB host" />
         <str id="install.mode.express.label" txt="Express installation" />
         <str id="install.mode.custom.label" txt="Custom installation" />
         <str id="add.remove.existing.components.label" txt="Overwrite existing installations" />
         <!-- Tooltips -->
-        <str id="install.qmaster.label.tooltip" txt="<html><b>Install qmaster deamon</b><br><br>
+        <str id="install.qmaster.label.tooltip" txt="<html><b>Install qmaster daemon</b><br><br>
         The master host is central to the overall cluster activity. The master host<br>
         runs the master daemon <code>sge_qmaster</code>. This daemon controls all<br>
         Grid Engine system scheduling and components, such as queues and jobs.<br>
         The daemon maintains tables about the status of the components, <br>
         user access permissions, and the like. By default, the master host <br>
         is also an administration host and a submit host.</html>"/>
-        <str id="install.execd.label.tooltip" txt="<html><b>Install execution deamon</b><br><br>
+        <str id="install.execd.label.tooltip" txt="<html><b>Install execution daemon</b><br><br>
         Execution hosts are systems that have permission to execute jobs.<br>
         Therefore, queue instances are attached to the execution hosts.<br>
         Execution hosts run the execution daemon <code>sge_execd</code>.</html>"/>
-        <str id="install.shadowd.label.tooltip" txt="<html><b>Install shadow host</b><br><br>
-        These hosts back up the functionality of sge_qmaster in case<br>
-        the master host or the master daemon fails.</html>"/>
+        <str id="install.shadowd.label.tooltip" txt="<html><b>Install shadow daemon</b><br><br>
+        These hosts replacing the functionality of sge_qmaster in case<br>
+        the master host or the master daemon fails. Note: When doing an<br>
+        express (or Berkeley DB) installation you must have configured a<br>
+        NFS4 shared directory!</html>"/>
         <str id="install.bdb.label.tooltip" txt="<html><b>Install Berkeley DB</b><br><br>
-        Selecting it implies a Berkeley db host spooling option.<br>
+        Selecting it implies a Berkeley DB host spooling option.<br>
         The Grid Engine than spools data to a remote server.</html>"/>
         <str id="install.mode.express.label.tooltip" txt="<html><b>Express installation</b><br><br>
         Express installation of the selected components</html>"/>
@@ -347,10 +351,10 @@ ___INFO__MARK_END__-->
         <str id="cfg.execd.spool.dir.label" txt="Global execd spool directory" />
         <str id="spooling.method.statictext" txt="Spooling method" />
         <str id="cfg.spooling.method.classic.label" txt="Classic" />
-        <str id="cfg.spooling.method.bdb.label" txt="Berkeley db" />
-        <str id="cfg.spooling.method.bdbserver.label" txt="Berkeley db spooling server" />
-        <str id="cfg.db.spooling.server.label" txt="Berkeley db host" />
-        <str id="cfg.db.spooling.dir.label" txt="Db directory" />
+        <str id="cfg.spooling.method.bdb.label" txt="Berkeley DB" />
+        <str id="cfg.spooling.method.bdbserver.label" txt="Berkeley DB spooling server" />
+        <str id="cfg.db.spooling.server.label" txt="Berkeley DB host" />
+        <str id="cfg.db.spooling.dir.label" txt="DB directory" />
         <!-- Tooltips -->
         <str id="cfg.qmaster.spool.dir.label.tooltip" txt="<html><b>Qmaster spool directory</b><br><br>
         The qmaster spool directory is the place where the qmaster daemon stores<br>
@@ -368,12 +372,12 @@ ___INFO__MARK_END__-->
         <str id="cfg.spooling.method.classic.label.tooltip" txt="<html><b>Classic</b><br><br>
         Spooling is done in human readable format.<br>
         <b>Variable: </b><code>$SPOOLING_METHOD</code></html>" />
-        <str id="cfg.spooling.method.bdb.label.tooltip" txt="<html><b>Berkeley db spooling</b><br><br>
+        <str id="cfg.spooling.method.bdb.label.tooltip" txt="<html><b>Berkeley DB spooling</b><br><br>
         The Berkeley DB spools into a local directory on this host (qmaster host).<br>
         This setup is faster, but you can't setup a shadow master host.<br><br>
         <b>Variable: </b><code>$SPOOLING_METHOD</code></html>" />
-        <str id="cfg.spooling.method.bdbserver.label.tooltip" txt="<html><b>Berkeley db spooling server</b><br><br>
-        Spooling separatly on a Berkeley db spooling server which has configured<br>
+        <str id="cfg.spooling.method.bdbserver.label.tooltip" txt="<html><b>Berkeley DB spooling server</b><br><br>
+        Spooling separatly on a Berkeley DB spooling server which has configured<br>
         RPC service. The qmaster host connects via RPC to the Berkeley DB. <br>
         This setup is more failsafe, but results in a clear potential security hole.<br>
         RPC communication (as used by Berkeley DB) can be easily compromised.<br>
@@ -383,7 +387,7 @@ ___INFO__MARK_END__-->
         failsafety without compromising security.<br><br>
         <b>Variable: </b><code>$SPOOLING_METHOD</code></html>" />
         <str id="cfg.db.spooling.server.label.tooltip" txt="<html><b>Spooling server host</b><br><br>
-        Host of the Berkeley db spooling server.<br><br><b>
+        Host of the Berkeley DB spooling server.<br><br><b>
         Variable: </b><code>$DB_SPOOLING_SERVER</code></html>" />
         <str id="cfg.db.spooling.dir.label.tooltip" txt="<html><b>Database directory</b><br><br>
         The location for the spooling directory.<br>
@@ -394,7 +398,7 @@ ___INFO__MARK_END__-->
         <str id="cfg.qmaster.spool.dir.permissionvalidator" txt="No write permission on the qmaster spool directory!" />
         <str id="cfg.execd.spool.dir.notemptyvalidator" txt="Global execd spool directory is mandatory!" />
         <str id="cfg.execd.spool.dir.permissionvalidator" txt="No write permission on the execd spool directory!" />
-        <str id="cfg.db.spooling.server.notemptyvalidator" txt="Berkeley db spooling server is mandatory!" />
+        <str id="cfg.db.spooling.server.notemptyvalidator" txt="Berkeley DB spooling server is mandatory!" />
         <str id="cfg.db.spooling.dir.notemptyvalidator" txt="Spooling db directory is mandatory!" />
         <str id="add.db.spooling.dir.bdb.filesystemtypevalidator" txt="NFS type spooling directory is not supported!" />
         <str id="cfg.db.spooling.dir.permissionvalidator" txt="No write permission on the spooling directory!" />
@@ -448,7 +452,7 @@ ___INFO__MARK_END__-->
         <str id="component.shadow.host.label" txt="Shadow host" />
         <str id="component.admin.host.label" txt="Admin host" />
         <str id="component.submit.host.label" txt="Submit host" />
-        <str id="component.bdb.host.label" txt="Berkeley db host" />
+        <str id="component.bdb.host.label" txt="Berkeley DB host" />
         <str id="button.add.label" txt="Add" />
         <str id="button.cancel.label" txt="Cancel" />
         <str id="column.hostname.label" txt="Hostname" />
@@ -505,7 +509,7 @@ ___INFO__MARK_END__-->
         <str id="component.shadow.host.label.tooltip" txt="Shadow host" />
         <str id="component.admin.host.label.tooltip" txt="Admin host" />
         <str id="component.submit.host.label.tooltip" txt="Submit host" />
-        <str id="component.bdb.host.label.tooltip" txt="Berkeley db host" />
+        <str id="component.bdb.host.label.tooltip" txt="Berkeley DB host" />
         <str id="button.add.label.tooltip" txt="Resolve the specified host(s) and add to the table" />
         <str id="button.cancel.label.tooltip" txt="Cancel running action(s)" />
         <str id="column.hostname.label.tooltip" txt="Name of the remote host" />
@@ -517,7 +521,7 @@ ___INFO__MARK_END__-->
         <str id="column.exec.spool.dir.label.tooltip" txt="Execution spool directory" />
         <str id="column.admin.label.tooltip" txt="Admin host" />
         <str id="column.submit.label.tooltip" txt="Submit host" />
-        <str id="column.bdb.label.tooltip" txt="Berkeley db host" />
+        <str id="column.bdb.label.tooltip" txt="Berkeley DB host" />
         <str id="column.state.label.tooltip" txt="State of the remote host" />
         <str id="column.component.label.tooltip" txt="Component to be installed" />
         <str id="column.progress.label.tooltip" txt="Installation progress " />
@@ -542,7 +546,7 @@ ___INFO__MARK_END__-->
         <str id="menu.save.all.tooltip" txt="Save all hosts into file"/>
         <!-- Messages -->
         <str id="warning.qmaster.arch.unsupported.message" txt="Architecture '${param1}' is not supported for qmaster installation!"/>
-        <str id="warning.bdbserver.arch.unsupported.message" txt="Architecture '${param1}' is not supported for Berkeley db server installation!"/>
+        <str id="warning.bdbserver.arch.unsupported.message" txt="Architecture '${param1}' is not supported for Berkeley DB server installation!"/>
         <str id="warning.no.components.to.install.message" txt="Cannot start installation. No components are selected!"/>
         <str id="warning.only.admin.submit.to.install.message" txt="<html>No components were selected.<br><br>Do you want to add only the additional admin/submit hosts?</html>"/>
         <str id="warning.comp.selected.but.no.host" txt="<html>${component} component was selected to be installed but none of the hosts is marked as ${host.type} host!<br><br>Do you want to continue the installation?</html>"/>

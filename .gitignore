@@ -15,6 +15,15 @@ source/3rdparty/qmake/[DARWIN_|LINUX86_|SOLARIS|FREEBSD]*
 source/3rdparty/qtcsh/[DARWIN_|LINUX86_|SOLARIS|FREEBSD]*
 source/3rdparty/sge_depend/[DARWIN_|LINUX86_|SOLARIS|FREEBSD]*
 source/3rdparty/remote/[DARWIN_|LINUX86_|SOLARIS|FREEBSD]*
+source/[DARWIN_|LINUX86_|SOLARIS*]*
+source/3rdparty/qmon/[DARWIN_|LINUX86_|SOLARIS*]*
+source/3rdparty/qmake/[DARWIN_|LINUX86_|SOLARIS*]*
+source/3rdparty/qtcsh/[DARWIN_|LINUX86_|SOLARIS*]*
+source/3rdparty/sge_depend/[DARWIN_|LINUX86_|SOLARIS*]*
+source/3rdparty/remote/[DARWIN_|LINUX86_|SOLARIS*]*
+
+# man build directories
+source/*MANSBUILD*
 
 # java build directories and generated code
 source/CLASSES/*

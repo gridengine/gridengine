@@ -43,6 +43,7 @@
 #include "comm/lists/cl_log_list.h"
 #include "comm/cl_endpoint_list.h"
 #include "uti/sge_profiling.h"
+#include "uti/sge_uidgid.h"
 #define CL_DO_SLOW 0
 
 void sighandler_server(int sig);
@@ -97,9 +98,16 @@ unsigned long my_application_status(char** info_message) {
 static cl_bool_t my_ssl_verify_func(cl_ssl_verify_mode_t mode, cl_bool_t service_mode, const char* value) {
    char* user_name = NULL;
    struct passwd *paswd = NULL;
+   struct passwd pw_struct;
+   char *pw_buffer;
+   int pw_buffer_size;
 
-   paswd = getpwuid(getuid());
-   if (paswd) {
+   pw_buffer_size = get_pw_buffer_size();
+   pw_buffer = sge_malloc(pw_buffer_size);
+   if(getpwuid_r(getuid(), &pw_struct, pw_buffer, pw_buffer_size, &paswd) != 0) {
+      CL_LOG(CL_LOG_ERROR, "getpwuid_r failed");
+   }
+   if (paswd != NULL) {
       user_name = paswd->pw_name;
    }
    if (user_name == NULL) {

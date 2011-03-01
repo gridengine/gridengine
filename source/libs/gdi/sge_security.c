@@ -1126,7 +1126,8 @@ struct dispatch_entry *de
    if (krb_get_tgt(de->host, de->commproc, de->id, lGetUlong(jelem, JB_job_number), &tgt_creds) == 0) {
       struct passwd *pw;
       struct passwd pw_struct;
-      char buffer[2048];
+      char *pw_buffer;
+      size_t pw_buffer_size;
 
       if ((rc = krb_encrypt_tgt_creds(tgt_creds, &outbuf))) {
          ERROR((SGE_EVENT, MSG_SEC_KRBENCRYPTTGTUSER_SUS, lGetString(jelem, JB_owner),
@@ -1139,7 +1140,9 @@ struct dispatch_entry *de
       if (outbuf.length)
          krb5_xfree(outbuf.data);
 
-      pw = sge_getpwnam_r(lGetString(jelem, JB_owner), &pw_struct, buffer, sizeof(buffer));
+      pw_buffer_size = get_pw_buffer_size();
+      pw_buffer = sge_malloc(pw_buffer_size);
+      pw = sge_getpwnam_r(lGetString(jelem, JB_owner), &pw_struct, pw_buffer, pw_buffer_size);
 
       if (pw) {
          if (krb_store_forwarded_tgt(pw->pw_uid,
@@ -1159,8 +1162,10 @@ struct dispatch_entry *de
 
       /* clear TGT out of client entry (this frees the TGT credentials) */
       krb_put_tgt(de->host, de->commproc, de->id, lGetUlong(jelem, JB_job_number), NULL);
+
+      sge_free(&pw_buffer);
    }
-   
+
    DRETURN(0);
 }
 #endif

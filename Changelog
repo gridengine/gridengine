@@ -11,7 +11,7 @@
 DG-2011-03-01-0: Bugfix:      - removed BDB RPC installation from GUI installer
                               - turned JMX per default off
                  Issue:       GE-3352
-					  Review:      TBD
+                 Review:      EB (GE-4)
 
 JG-2011-03-01-0: Bugfix:      remove the THROTTLE_FLUSH event client busy
                               handling

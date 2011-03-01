@@ -8,6 +8,11 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+DG-2011-03-01-0: Bugfix:      - removed BDB RPC installation from GUI installer
+                              - turned JMX per default off
+                 Issue:       GE-3352
+					  Review:      TBD
+
 JG-2011-03-01-0: Bugfix:      remove the THROTTLE_FLUSH event client busy
                               handling
                  Issue:       GE-3372

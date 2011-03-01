@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_hgroup_HGRP_L.h"
+#include "sgeobj/sge_hgroup_HGRP_L.h"
 
 bool hgroup_check_name(lList **answer_list, const char* name);
 

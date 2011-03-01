@@ -34,11 +34,12 @@
 #include <strings.h>
 #include <ctype.h>
 
-#include "msg_common.h"
 #include "rmon/sgermon.h"
-#include "sge_resource_utilization_RUE_L.h"
-#include "spool/flatfile/sge_flatfile.h"
-#include "spool/flatfile/msg_spoollib_flatfile.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_string.h"
+
+#include "sgeobj/sge_resource_utilization_RUE_L.h"
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_attr.h"
 #include "sgeobj/sge_calendar.h"
@@ -65,9 +66,12 @@
 #include "sgeobj/sge_advance_reservation.h"
 #include "sgeobj/sge_qref.h"
 #include "sgeobj/sge_job.h"
-#include "sge_mailrec.h"
-#include "uti/sge_log.h"
-#include "uti/sge_string.h"
+#include "sgeobj/sge_mailrec.h"
+
+#include "spool/flatfile/sge_flatfile.h"
+#include "spool/flatfile/msg_spoollib_flatfile.h"
+
+#include "msg_common.h"
 
 /* This file defines variables and functions that are used to create field
  * lists to pass to the flatfile spooling framework.  The reason that some
@@ -828,7 +832,7 @@ static int read_CF_value(lListElem *ep, int nm, const char *buf,
                         name, value));
    
                sge_free_saved_vars(context);
-               FREE(buffer);
+               sge_free(&buffer);
                DRETURN(0);
             } else {
                lListElem *rep;
@@ -841,7 +845,7 @@ static int read_CF_value(lListElem *ep, int nm, const char *buf,
                      WARNING((SGE_EVENT, MSG_CONFIG_CONF_GIDRANGELESSTHANNOTALLOWED_I, GID_RANGE_NOT_ALLOWED_ID));
    
                      sge_free_saved_vars(context);
-                     FREE(buffer);
+                     sge_free(&buffer);
                      lFreeList(&rlp);
                      DRETURN(0);
                   }                  
@@ -861,7 +865,7 @@ static int read_CF_value(lListElem *ep, int nm, const char *buf,
          WARNING((SGE_EVENT, MSG_CONFIG_CONF_NOVALUEFORCONFIGATTRIB_S, name));
    
          sge_free_saved_vars(context);
-         FREE(buffer);
+         sge_free(&buffer);
          DRETURN(0);
       }
    } else if (!strcmp(name, "user_lists") || 
@@ -891,7 +895,7 @@ static int read_CF_value(lListElem *ep, int nm, const char *buf,
          WARNING((SGE_EVENT, MSG_CONFIG_CONF_NOVALUEFORCONFIGATTRIB_S, name));
    
          sge_free_saved_vars(context);
-         FREE(buffer);
+         sge_free(&buffer);
          DRETURN(0);
       }
       /* skip leading delimitors */
@@ -904,7 +908,7 @@ static int read_CF_value(lListElem *ep, int nm, const char *buf,
          WARNING((SGE_EVENT, MSG_CONFIG_CONF_NOVALUEFORCONFIGATTRIB_S, name));
    
          sge_free_saved_vars(context);
-         FREE(buffer);
+         sge_free(&buffer);
          DRETURN(0);
       }
       if (strcmp(name, "auto_user_oticket") == 0 || 
@@ -929,13 +933,13 @@ static int read_CF_value(lListElem *ep, int nm, const char *buf,
                   name));
    
          sge_free_saved_vars(context);
-         FREE(buffer);
+         sge_free(&buffer);
          DRETURN(0);
       }
    }
 
    sge_free_saved_vars(context);
-   FREE(buffer);
+   sge_free(&buffer);
    DRETURN(1);
 }
 

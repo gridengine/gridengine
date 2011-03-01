@@ -47,10 +47,6 @@
 #include <Xmt/LayoutG.h>
 
 #include "qmon_rmon.h"
-#include "commlib.h"
-#include "gdi/sge_gdi.h"
-#include "sge_host.h"
-#include "sge_all_listsL.h"
 #include "qmon_cull.h"
 #include "qmon_request.h"
 #include "qmon_submit.h"
@@ -61,8 +57,16 @@
 #include "qmon_message.h"
 #include "AskForTime.h"
 #include "IconList.h"
+
 #include "uti/sge_string.h"
-#include "sge_centry.h"
+
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_centry.h"
+
+#include "gdi/sge_gdi.h"
+
+#include "comm/commlib.h"
 
 
 

@@ -39,9 +39,9 @@
 #include <sys/time.h>
 #include <pwd.h>
 
-#include "cl_commlib.h"
-#include "cl_log_list.h"
-#include "cl_endpoint_list.h"
+#include "comm/cl_commlib.h"
+#include "comm/lists/cl_log_list.h"
+#include "comm/cl_endpoint_list.h"
 #include "uti/sge_profiling.h"
 
 void sighandler_server(int sig);
@@ -160,8 +160,7 @@ extern int main(int argc, char** argv)
      char* resolved_server_host = NULL;
      cl_com_cached_gethostbyname(server_host, &resolved_server_host, NULL, NULL, NULL);
      printf("server will connect to server on host \"%s\" bound to port \"%d\"\n", resolved_server_host , server_port);
-     free(resolved_server_host);
-     resolved_server_host = NULL;
+     sge_free(&resolved_server_host);
   }
 
 

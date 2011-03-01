@@ -38,8 +38,8 @@
 #include <signal.h>
 #include <unistd.h>
 
-#include "cl_lists.h"
-#include "cl_commlib.h"
+#include "comm/lists/cl_lists.h"
+#include "comm/cl_commlib.h"
 #include "basis_types.h"
 
 void sighandler_client(int sig);

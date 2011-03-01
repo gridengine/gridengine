@@ -43,25 +43,24 @@
 
 #include "comm/commd_message_flags.h"
 
-#include "sgeobj/sge_resource_quota.h"
-
 #include "sched/msg_schedd.h"
 
-#include "sge.h"
-#include "sge_answer.h"
-#include "sge_schedd_conf.h"
-#include "sge_host.h"
-#include "sge_cqueue.h"
-#include "sge_attr.h"
-#include "sge_qinstance.h"
-#include "sge_ulong.h"
-#include "sge_centry.h"
-#include "sge_object.h"
-#include "sge_eval_expression.h"
-#include "cull_parse_util.h"
+#include "sgeobj/sge_resource_quota.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_schedd_conf.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_attr.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_ulong.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_eval_expression.h"
+#include "sgeobj/cull_parse_util.h"
+#include "sgeobj/msg_sgeobjlib.h"
 
+#include "sge.h"
 #include "msg_common.h"
-#include "msg_sgeobjlib.h"
 
 #define CENTRY_LAYER BASIS_LAYER
 
@@ -882,7 +881,7 @@ centry_list_parse_from_string(lList *complex_attributes,
    /* allocate space for attribute list if no list is passed */
    if (complex_attributes == NULL) {
       if ((complex_attributes = lCreateList("qstat_l_requests", CE_Type)) == NULL) {
-         ERROR((SGE_EVENT, MSG_PARSE_NOALLOCATTRLIST));
+         ERROR((SGE_EVENT, SFNMAX, MSG_PARSE_NOALLOCATTRLIST));
          DRETURN(NULL);
       }
    }
@@ -920,7 +919,7 @@ centry_list_parse_from_string(lList *complex_attributes,
    /* create new element, fill in the values and append it */
       if ( (complex_attribute= lGetElemStr(complex_attributes, CE_name, attr)) == NULL) {
          if ((complex_attribute = lCreateElem(CE_Type)) == NULL) {
-            ERROR((SGE_EVENT, MSG_PARSE_NOALLOCATTRELEM));
+            ERROR((SGE_EVENT, SFNMAX, MSG_PARSE_NOALLOCATTRELEM));
             lFreeList(&complex_attributes);
             sge_free_saved_vars(context);
             DRETURN(NULL);

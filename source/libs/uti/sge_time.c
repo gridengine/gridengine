@@ -42,10 +42,10 @@
 #	include <winsock2.h>
 #endif 
 
-#include "sge_dstring.h"
-#include "sge_time.h"
-#include "sge_unistd.h"
-#include "sge_log.h"
+#include "uti/sge_dstring.h"
+#include "uti/sge_time.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_log.h"
 
 #ifdef WIN32
 int gettimeofday(struct timeval *tz, struct timezone *tzp);

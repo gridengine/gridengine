@@ -33,31 +33,36 @@
 #include <sys/stat.h>
 #include <errno.h>
 
-#include "sge_all_listsL.h"
+#include "rmon/sgermon.h"
+
+#include "uti/setup_path.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_profiling.h"
+#include "uti/sge_prog.h"
+
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_job.h"
+
+#include "comm/commlib.h"
+
+#include "japi/japi.h"
+#include "japi/japiP.h"
+
+#include "lck/sge_mtutil.h"
+
+#include "gdi/sge_security.h"
+#include "gdi/sge_gdi_ctx.h"
+
+#include "sig_handlers.h"
+#include "basis_types.h"
 #include "usage.h"
 #include "parse_job_cull.h"
 #include "read_defaults.h"
 #include "show_job.h"
-#include "commlib.h"
-#include "sig_handlers.h"
-#include "sge_prog.h"
-#include "sgermon.h"
-#include "setup_path.h"
-#include "sge_unistd.h"
-#include "sge_security.h"
-#include "sge_answer.h"
-#include "sge_job.h"
-#include "japi.h"
-#include "japiP.h"
-#include "lck/sge_mtutil.h"
-#include "sge_profiling.h"
-#include "gdi/sge_gdi_ctx.h"
-
 #include "msg_clients_common.h"
 #include "msg_qsub.h"
 #include "msg_qmaster.h"
-#include "basis_types.h"
-
 
 extern sge_gdi_ctx_class_t *ctx;
 
@@ -363,9 +368,8 @@ main(int argc, char **argv)
       }
       printf("\n");
    } else {
-      printf(MSG_JOB_VERIFYFOUNDQ);
-      printf("\n");
-   }   
+      printf("%s\n", MSG_JOB_VERIFYFOUNDQ);
+   }
 
    if ((wait_for_job || is_immediate) && !just_verify) {
       int event;
@@ -449,7 +453,7 @@ main(int argc, char **argv)
    }
 
 Error:
-   FREE(jobid_string);
+   sge_free(&jobid_string);
    lFreeList(&alp);
    lFreeList(&opts_all);
    
@@ -522,7 +526,7 @@ static char *get_bulk_jobid_string(long job_id, int start, int end, int step)
    
    sprintf(jobid_str, "%ld.%d-%d:%d", job_id, start, end, step);
    ret_str = strdup(jobid_str);
-   FREE(jobid_str);
+   sge_free(&jobid_str);
    
    return ret_str;
 }
@@ -704,5 +708,5 @@ static int report_exit_status(int stat, const char *jobid)
 *******************************************************************************/
 static void error_handler(const char *message)
 {
-   fprintf(stderr, message);
+   fprintf(stderr, "%s", message != NULL ? message : "NULL japi message");
 }

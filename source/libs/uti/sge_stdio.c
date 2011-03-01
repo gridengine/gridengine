@@ -43,16 +43,18 @@
 #include <signal.h>
 #include <fcntl.h>
  
+#include "rmon/sgermon.h"
+
 #include "uti/sge_unistd.h"
 #include "uti/sge_stdio.h"
 #include "uti/sge_uidgid.h"
-#include "sgermon.h"
+#include "uti/sge_log.h"
+#include "uti/sge_os.h"
+#include "uti/msg_utilib.h"
+
 #include "basis_types.h"
-#include "sge_log.h"
-#include "sge_os.h"
 
 #include "msg_common.h"
-#include "msg_utilib.h"
 
 #if defined(SOLARIS)
 #   include "sge_smf.h"
@@ -79,7 +81,7 @@ static void addenv(char *key, char *value)
    strcat(str, value);
 
    putenv(str);
-   /* there is intentionally no free(str) */
+   /* there is intentionally no sge_free(&str) */
    return;
 }
 
@@ -144,31 +146,41 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
          /* open /dev/null */
          int fd = open("/dev/null", O_WRONLY);
          if (fd == -1) {
-            sprintf(err_str, MSG_ERROROPENINGFILEFORWRITING_SS, "/dev/null", 
-                    strerror(errno));
+            sprintf(err_str, MSG_ERROROPENINGFILEFORWRITING_SS, "/dev/null", strerror(errno));
             sprintf(err_str, "\n");
-            write(2, err_str, strlen(err_str));
+            if (write(2, err_str, strlen(err_str)) != strlen(err_str)) {
+               /* nothing we can do here - we are anyway about to exit */
+            }
             SGE_EXIT(NULL, 1);
          }
 
          /* set stderr to /dev/null */
          close(2);
-         dup(fd);
+         if (dup(fd) == -1) {
+            /* we have a serious problem here - nothing we can do but exit */
+            SGE_EXIT(NULL, 1);
+         }
 
          /* we don't need the stderr the pipe - close it */
          close(pipefds[2][1]);
       } else {
          /* redirect stderr to the pipe */
          close(2);
-         dup(pipefds[2][1]);
+         if (dup(pipefds[2][1]) == -1) {
+            /* we have a serious problem here - nothing we can do but exit */
+            SGE_EXIT(NULL, 1);
+         }
       }
 
       /* redirect stdin and stdout to the pipes */
       close(0);
       close(1);
-      dup(pipefds[0][0]);
-      dup(pipefds[1][1]);
- 
+      if (dup(pipefds[0][0]) == -1 ||
+          dup(pipefds[1][1]) == -1) {
+         /* we have a serious problem here - nothing we can do but exit */
+         SGE_EXIT(NULL, 1);
+      }
+
       if (user) {
          struct passwd *pw;
          struct passwd pw_struct;
@@ -178,27 +190,31 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
          size = get_pw_buffer_size();
          buffer = sge_malloc(size);
          if (!(pw=sge_getpwnam_r(user, &pw_struct, buffer, size))) {
-            sprintf(err_str, MSG_SYSTEM_NOUSERFOUND_SS , user, strerror(errno));            
+            sprintf(err_str, MSG_SYSTEM_NOUSERFOUND_SS , user, strerror(errno));
             sprintf(err_str, "\n");
-            write(2, err_str, strlen(err_str));
-            FREE(buffer);
+            if (write(2, err_str, strlen(err_str)) != strlen(err_str)) {
+               /* nothing we can do here - we are anyway about to exit */
+            }
+            sge_free(&buffer);
             SGE_EXIT(NULL, 1);
          }
- 
+
          myuid = geteuid();
- 
          if (myuid != pw->pw_uid) {
- 
             /* Only change user if we differ from the wanted user */
             if(myuid != SGE_SUPERUSER_UID) {
-               write(2, not_root, sizeof(not_root));
-               FREE(buffer);
+               if (write(2, not_root, sizeof(not_root)) != sizeof(not_root)) {
+                  /* nothing we can do here - we are anyway about to exit */
+               }
+               sge_free(&buffer);
                SGE_EXIT(NULL, 1);
-            }                             
+            }
             sprintf(err_str, "%s %d\n", pw->pw_name, (int)pw->pw_gid);
-            write(2, err_str, strlen(err_str));
+            if (write(2, err_str, strlen(err_str)) != strlen(err_str)) {
+               /* TODO: required protocol step? If sending fails, exit? */
+            }
 #if !(defined(WIN32) || defined(INTERIX))  /* initgroups not called */
-            res = initgroups(pw->pw_name,pw->pw_gid);
+            res = initgroups(pw->pw_name, pw->pw_gid);
 #  if defined(SVR3) || defined(sun)
             if (res < 0)
 #  else
@@ -208,8 +224,10 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
                sprintf(err_str, MSG_SYSTEM_INITGROUPSFORUSERFAILED_ISS ,
                      res, user, strerror(errno));
                sprintf(err_str, "\n");
-               write(2, err_str, strlen(err_str));
-               FREE(buffer);
+               if (write(2, err_str, strlen(err_str)) != strlen(err_str)) {
+                  /* nothing we can do here - we are anyway about to exit */
+               }
+               sge_free(&buffer);
                SGE_EXIT(NULL, 1);
             }
 #endif /* WIN32 */
@@ -218,8 +236,10 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
                sprintf(err_str, MSG_SYSTEM_SWITCHTOUSERFAILED_SS , user,
                      strerror(errno));
                sprintf(err_str, "\n");
-               write(2, err_str, strlen(err_str));
-               FREE(buffer);
+               if (write(2, err_str, strlen(err_str)) != strlen(err_str)) {
+                  /* nothing we can do here - we are anyway about to exit */
+               }
+               sge_free(&buffer);
                SGE_EXIT(NULL, 1);
             }
          }
@@ -230,24 +250,29 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
          addenv("LOGNAME", pw->pw_name);
          addenv("PATH", SGE_DEFAULT_PATH);
 
-         FREE(buffer);
+         sge_free(&buffer);
       }
  
-      if (login_shell)
+      if (login_shell) {
          strcpy(arg0, "-");
-      else
+      } else {
          strcpy(arg0, "");
+      }
       strcat(arg0, shell);
  
-      if (env)
-         for(; *env; env++)
+      if (env) {
+         for(; *env; env++) {
             putenv(*env);
+         }
+      }
  
       execlp(shell, arg0, "-c", command, NULL);
  
-      write(2, could_not, sizeof(could_not));
+      if (write(2, could_not, sizeof(could_not)) != sizeof(could_not)) {
+         /* nothing we can do here - we are anyway about to exit */
+      }
       SGE_EXIT(NULL, 1);
-   }
+   } /* end child */
  
    if (pid < 0) {
       for (i=0; i<3; i++) {
@@ -261,8 +286,7 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
 #endif
       /* fork could have failed, report it */
       ERROR((SGE_EVENT, MSG_SMF_FORK_FAILED_SS, "sge_peopen()", strerror(errno)));
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
  
    /* close the childs ends of the pipes */
@@ -284,8 +308,7 @@ pid_t sge_peopen(const char *shell, int login_shell, const char *command,
       *fp_err = fdopen(pipefds[2][0], "r");
    }
 
-   DEXIT;
-   return pid;
+   DRETURN(pid);
 }
 
 /****** uti/stdio/sge_peopen() ************************************************
@@ -409,15 +432,15 @@ pid_t sge_peopen_r(const char *shell, int login_shell, const char *command,
          pw = sge_getpwnam_r(user, &pw_struct, buffer, size);
          if (pw == NULL) {
             ERROR((SGE_EVENT, MSG_SYSTEM_NOUSERFOUND_SS, user, strerror(errno)));
-            FREE(buffer);
+            sge_free(&buffer);
             if (sge_has_admin_user()) {
                sge_switch2admin_user();
             }
             DRETURN(-1);
          }
       } else {
-         ERROR((SGE_EVENT, MSG_UTI_MEMPWNAM));
-         FREE(buffer);
+         ERROR((SGE_EVENT, SFNMAX, MSG_UTI_MEMPWNAM));
+         sge_free(&buffer);
          if (sge_has_admin_user()) {
             sge_switch2admin_user();
          }
@@ -436,8 +459,8 @@ pid_t sge_peopen_r(const char *shell, int login_shell, const char *command,
 
          if (myuid != SGE_SUPERUSER_UID) {
             DPRINTF(("only root is allowed to switch to a different user\n"));
-            ERROR((SGE_EVENT, MSG_SYSTEM_NOROOTRIGHTSTOSWITCHUSER));
-            FREE(buffer);
+            ERROR((SGE_EVENT, SFNMAX, MSG_SYSTEM_NOROOTRIGHTSTOSWITCHUSER));
+            sge_free(&buffer);
             DRETURN(-2);
          }                             
 
@@ -452,7 +475,7 @@ pid_t sge_peopen_r(const char *shell, int login_shell, const char *command,
 #  endif
          {
             ERROR((SGE_EVENT, MSG_SYSTEM_INITGROUPSFORUSERFAILED_ISS, res, user, strerror(errno)));
-            FREE(buffer);
+            sge_free(&buffer);
             SGE_EXIT(NULL, 1);
          }
 
@@ -467,7 +490,7 @@ pid_t sge_peopen_r(const char *shell, int login_shell, const char *command,
          DPRINTF(("target uid = %d\n", (int)tuid));
       }
 
-      FREE(buffer);
+      sge_free(&buffer);
    }
 
    DPRINTF(("Now process will fork\n"));
@@ -507,14 +530,18 @@ pid_t sge_peopen_r(const char *shell, int login_shell, const char *command,
 
          if (fd != -1) {
             close(2);
-            dup(fd);
+            if (dup(fd) == -1) {
+               SGE_EXIT(NULL, 1);
+            }
             close(pipefds[2][1]);
          } else {
             SGE_EXIT(NULL, 1);
          }
       } else {
          close(2);
-         dup(pipefds[2][1]);
+         if (dup(pipefds[2][1]) == -1) {
+            SGE_EXIT(NULL, 1);
+         }
       }
 
       /* 
@@ -522,8 +549,10 @@ pid_t sge_peopen_r(const char *shell, int login_shell, const char *command,
        */
       close(0);
       close(1);
-      dup(pipefds[0][0]);
-      dup(pipefds[1][1]);
+      if (dup(pipefds[0][0]) == -1 ||
+          dup(pipefds[1][1]) == -1) {
+         SGE_EXIT(NULL, 1);
+      }
 
       if (pw != NULL) {
          int lret = setuid(tuid);

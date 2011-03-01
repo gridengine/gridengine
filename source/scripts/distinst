@@ -235,7 +235,8 @@ ArchTable()
    echo "sx                    NECSX 5.x"
    echo "necsx6                NECSX 6.x"
    echo "darwin-ppc            MacOS 10.x PowerPC"
-   echo "darwin-x86            MacOS 10.x x86"
+   echo "darwin-x86            MacOS 10.x x86 32bit"
+   echo "darwin-x64            MacOS 10.x x86 64bit"
    echo "fbsd-alpha            Alpha FreeBSD"
    echo "fbsd-amd64            AMD64 FreeBSD"
    echo "fbsd-i386             x86 FreeBSD"
@@ -1540,7 +1541,7 @@ for i in $ARCH; do
 
                if [ $DSTARCH = tru64 ]; then
                   libname="$lib.$shlibext"
-               elif [ $DSTARCH = darwin-ppc -o $DSTARCH = darwin-x86 ];  then
+               elif [ $DSTARCH = darwin-ppc -o $DSTARCH = darwin-x86 -o $DSTARCH = darwin-x64 ];  then
                   libname="$lib.$OPENSSLSOVERSION.$shlibext"
                else
                   libname="$lib.$shlibext.$OPENSSLSOVERSION"
@@ -1556,7 +1557,7 @@ for i in $ARCH; do
                   InstallProg $libname
                   if [ $DSTARCH = tru64 ]; then
                      :
-                  elif [ $DSTARCH = darwin-ppc -o $DSTARCH = darwin-x86 ]; then
+                  elif [ $DSTARCH = darwin-ppc -o $DSTARCH = darwin-x86 -o $DSTARCH = darwin-x64 ]; then
                      (cd $DEST_SGE_ROOT/${UTILPREFIX}/$DSTARCH; \
                       ln -s $lib.$OPENSSLSOVERSION.$shlibext $lib.$shlibext)
                   else

@@ -31,41 +31,43 @@
 /*___INFO__MARK_END__*/
 #include <string.h>
 
-#include "sgermon.h"
-#include "sge_log.h"
-#include "sge.h"
-#include "sge_answer.h"
-#include "sge_pe.h"
-#include "sge_ja_task.h"
-#include "sge_pe_task.h"
-#include "sge_usage.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_time.h"
+#include "uti/sge_string.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_signal.h"
+
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_pe.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_pe_task.h"
+#include "sgeobj/sge_usage.h"
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_usage.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_var.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_report.h"
+#include "sgeobj/sge_ack.h"
+
+#include "spool/sge_spooling.h"
+
 #include "sge_report_execd.h"
-#include "sge_usage.h"
-#include "sge_prog.h"
 #include "execution_states.h"
-#include "sge_feature.h"
 #include "job_report_qmaster.h"
 #include "job_exit.h"
-#include "sge_signal.h"
 #include "sge_event_master.h"
 #include "sge_job_qmaster.h"
-#include "sge_host.h"
 #include "sge_give_jobs.h"
 #include "sge_pe_qmaster.h"
-#include "sge_time.h"
 #include "reschedule.h"
+#include "sge.h"
+#include "sge_reporting_qmaster.h"
+#include "sge_persistence_qmaster.h"
 #include "msg_daemons_common.h"
 #include "msg_qmaster.h"
-#include "sge_string.h"
-#include "sge_var.h"
-#include "sge_job.h"
-#include "sge_report.h"
-
-#include "sge_reporting_qmaster.h"
-
-#include "sge_persistence_qmaster.h"
-#include "spool/sge_spooling.h"
-#include "sgeobj/sge_ack.h"
 
 /*
  * When the master task of a tightly integrated job exits

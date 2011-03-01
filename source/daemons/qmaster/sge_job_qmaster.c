@@ -35,79 +35,82 @@
 #include <limits.h>
 #include <ctype.h>
 
+#include "rmon/sgermon.h"
+
 #include "uti/sge_stdlib.h"
 #include "uti/sge_stdio.h"
-
-#include "sgermon.h"
-#include "sge_time.h"
-#include "sge_log.h"
-#include "sge.h"
-#include "symbols.h"
-#include "sge_conf.h"
-#include "sge_str.h"
-#include "sge_sched.h"
-#include "sge_object.h"
-#include "sge_manop.h"
-#include "mail.h"
-#include "sge_ja_task.h"
-#include "sge_pe.h"
-#include "sge_host.h"
-#include "sge_job_qmaster.h"
-#include "sge_cqueue_qmaster.h"
-#include "sge_give_jobs.h"
-#include "sge_qmod_qmaster.h"
-#include "sge_event_master.h"
-#include "sge_signal.h"
-#include "sge_advance_reservation.h"
-#include "sge_userset.h"
-#include "sge_prog.h"
-#include "cull_parse_util.h"
-#include "sge_message_SME_L.h"
-#include "sge_message_MES_L.h"
-#include "sge_id.h"
-#include "sge_ulong.h"
-#include "setup_path.h"
-#include "sge_string.h"
-#include "sge_range.h"
-#include "sge_job.h"
-#include "sge_job_schedd.h"
-#include "sge_qmaster_main.h"
-#include "sge_suser.h"
-#include "sge_var.h"
-#include "sge_answer.h"
-#include "sge_schedd_conf.h"
-#include "sge_qinstance.h"
-#include "sge_ckpt.h"
-#include "sge_userprj.h"
-#include "sge_centry.h"
-#include "sge_cqueue.h"
-#include "sge_qref.h"
-#include "sge_utility.h"
-#include "sge_lock.h"
-#include "sge_mtutil.h"
-#include "sge_task_depend.h"
-#include "schedd_message.h"
-#include "sge_schedd_text.h"
-#include "sge_persistence_qmaster.h"
-#include "sge_reporting_qmaster.h"
-#include "sge_job_qmaster.h"
-#include "sge_job_verify.h"
-#include "sge_ack.h"
-
-#include "cull/cull_list.h"
-
-#include "spool/sge_spooling.h"
-
+#include "uti/sge_time.h"
+#include "uti/sge_log.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_signal.h"
+#include "uti/setup_path.h"
+#include "uti/sge_string.h"
 #include "uti/sge_profiling.h"
 #include "uti/sge_bootstrap.h"
 #include "uti/sge_string.h"
 
+#include "sgeobj/sge_str.h"
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_manop.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_pe.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_advance_reservation.h"
+#include "sgeobj/sge_userset.h"
+#include "sgeobj/cull_parse_util.h"
+#include "sgeobj/sge_message_SME_L.h"
+#include "sgeobj/sge_message_MES_L.h"
+#include "sgeobj/sge_id.h"
+#include "sgeobj/sge_ulong.h"
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_suser.h"
+#include "sgeobj/sge_var.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_schedd_conf.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_ckpt.h"
+#include "sgeobj/sge_userprj.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_qref.h"
+#include "sgeobj/sge_utility.h"
 #include "sgeobj/sge_pe_task.h"
 #include "sgeobj/sge_report.h"
 #include "sgeobj/sge_qinstance_state.h"
 #include "sgeobj/sge_jsv.h"
 #include "sgeobj/sge_jsv_script.h"
+#include "sgeobj/sge_ack.h"
 
+#include "sched/sge_sched.h"
+#include "sched/sge_job_schedd.h"
+#include "sched/schedd_message.h"
+#include "sched/sge_schedd_text.h"
+
+#include "lck/sge_lock.h"
+#include "lck/sge_mtutil.h"
+
+#include "gdi/sge_gdi2.h"
+
+#include "cull/cull_list.h"
+
+#include "spool/sge_spooling.h"
+
+#include "sge.h"
+#include "sge_task_depend.h"
+#include "sge_persistence_qmaster.h"
+#include "sge_reporting_qmaster.h"
+#include "sge_job_qmaster.h"
+#include "sge_job_verify.h"
+#include "sge_qmaster_main.h"
+#include "symbols.h"
+#include "mail.h"
+#include "sge_job_qmaster.h"
+#include "sge_cqueue_qmaster.h"
+#include "sge_give_jobs.h"
+#include "sge_qmod_qmaster.h"
+#include "sge_event_master.h"
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
@@ -710,7 +713,7 @@ u_long32 step
    DENTER(TOP_LAYER, "empty_job_list_filter");
 
    if (all_users_flag) {
-      ERROR((SGE_EVENT, MSG_SGETEXT_THEREARENOJOBS));
+      ERROR((SGE_EVENT, SFNMAX, MSG_SGETEXT_THEREARENOJOBS));
    } else if (user_list_flag) {
       dstring user_list_string = DSTRING_INIT;
       
@@ -767,12 +770,11 @@ u_long32 step
                    jobid, sge_u32c(start), sge_u32c(end), sge_u32c(step)));
          }
       } else {
-         ERROR((SGE_EVENT,MSG_SGETEXT_DOESNOTEXIST_SS, SGE_OBJ_JOB, jobid));
+         ERROR((SGE_EVENT, MSG_SGETEXT_DOESNOTEXIST_SS, SGE_OBJ_JOB, jobid));
       }      
    } else {
       /* Should not be possible */
-      ERROR((SGE_EVENT,
-             was_modify?MSG_SGETEXT_NOJOBSMODIFIED:MSG_SGETEXT_NOJOBSDELETED));
+      ERROR((SGE_EVENT, SFNMAX, was_modify ? MSG_SGETEXT_NOJOBSMODIFIED : MSG_SGETEXT_NOJOBSDELETED));
    }
 
    answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
@@ -889,14 +891,14 @@ char *ruser
    /* case 9 */
    
    if (all_users_flag && user_list_flag) {
-      ERROR((SGE_EVENT, MSG_SGETEXT_SPECIFYONEORALLUSER));
+      ERROR((SGE_EVENT, SFNMAX, MSG_SGETEXT_SPECIFYONEORALLUSER));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DRETURN(STATUS_EUNKNOWN);
    }
 
    /* case 2,5 */
 /*   if ((all_users_flag || user_list_flag) && jid_flag) {
-      ERROR((SGE_EVENT, MSG_SGETEXT_NOTALLOWEDTOSPECUSERANDJID));
+      ERROR((SGE_EVENT, SFNMAX, MSG_SGETEXT_NOTALLOWEDTOSPECUSERANDJID));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DRETURN(STATUS_EUNKNOWN);
    } */                           
@@ -1284,7 +1286,7 @@ int sub_command
          ERROR((SGE_EVENT, MSG_SGETEXT_MUST_BE_JOB_OWN_TO_SUS, ruser, sge_u32c(jobid), MSG_JOB_CHANGEATTR));  
          answer_list_add(alpp, SGE_EVENT, STATUS_ENOTOWNER, ANSWER_QUALITY_ERROR);
          lFreeWhere(&job_where);
-         FREE(job_mod_name);
+         sge_free(&job_mod_name);
          DRETURN(STATUS_ENOTOWNER);   
       }
     
@@ -1298,7 +1300,7 @@ int sub_command
          lAddList(*alpp, &tmp_alp);
          lFreeElem(&new_job);
          lFreeWhere(&job_where);
-         FREE(job_mod_name); 
+         sge_free(&job_mod_name); 
          DRETURN(STATUS_EUNKNOWN);
       }
 
@@ -1324,7 +1326,7 @@ int sub_command
             lFreeList(&tmp_alp);
             lFreeElem(&new_job);
             lFreeWhere(&job_where);
-            FREE(job_mod_name);
+            sge_free(&job_mod_name);
             DRETURN(STATUS_EDISK);
          }
 
@@ -1423,11 +1425,11 @@ int sub_command
             user_list_flag?lGetPosList(jep, user_list_pos):NULL,
             jid_flag, jid_flag?job_id_str:"0",
             all_users_flag, all_jobs_flag, ruser, 0, 0, 0, 0);
-      FREE(job_mod_name);            
+      sge_free(&job_mod_name);            
       DRETURN(STATUS_EEXIST);
    }   
 
-   FREE(job_mod_name); 
+   sge_free(&job_mod_name); 
    DRETURN(STATUS_OK);
 }
 
@@ -2579,7 +2581,7 @@ int *trigger
 
       /* reject PE ranges change requests for jobs without PE request */
       if (!(pe_name=lGetString(new_job, JB_pe))) {
-         ERROR((SGE_EVENT, MSG_JOB_PERANGE_ONLY_FOR_PARALLEL));
+         ERROR((SGE_EVENT, SFNMAX, MSG_JOB_PERANGE_ONLY_FOR_PARALLEL));
          answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
          DRETURN(STATUS_EUNKNOWN);
       }
@@ -2923,7 +2925,7 @@ int job_verify_predecessors(lListElem *job, lList **alpp)
    predecessors_req = lGetList(job, JB_jid_request_list);
    predecessors_id = lCreateList("job_predecessors", JRE_Type);
    if (!predecessors_id) {
-      ERROR((SGE_EVENT, MSG_JOB_MOD_JOBDEPENDENCY_MEMORY ));
+      ERROR((SGE_EVENT, SFNMAX, MSG_JOB_MOD_JOBDEPENDENCY_MEMORY));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DRETURN(STATUS_EUNKNOWN);
    }
@@ -3028,7 +3030,7 @@ int job_verify_predecessors_ad(lListElem *job, lList **alpp)
    predecessors_req = lGetList(job, JB_ja_ad_request_list);
    predecessors_id = lCreateList("job_predecessors_ad", JRE_Type);
    if (!predecessors_id) {
-      ERROR((SGE_EVENT, MSG_JOB_MOD_JOBDEPENDENCY_MEMORY ));
+      ERROR((SGE_EVENT, SFNMAX, MSG_JOB_MOD_JOBDEPENDENCY_MEMORY));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DRETURN(STATUS_EUNKNOWN);
    }
@@ -3039,7 +3041,7 @@ int job_verify_predecessors_ad(lListElem *job, lList **alpp)
       if (!job_is_array(job)) {
          lFreeList(&predecessors_id);   
          DPRINTF(("could not create array dependence for non-array job\n"));
-         ERROR((SGE_EVENT, MSG_JOB_MOD_CANONLYSPECIFYHOLDJIDADWITHADOPT));
+         ERROR((SGE_EVENT, SFNMAX, MSG_JOB_MOD_CANONLYSPECIFYHOLDJIDADWITHADOPT));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DRETURN(STATUS_EUNKNOWN);
       }
@@ -3116,7 +3118,7 @@ int job_verify_predecessors_ad(lListElem *job, lList **alpp)
       if (!job_is_array(pred_job)) {
          lFreeList(&predecessors_id);
          DPRINTF(("could not create array dependence on non-array job\n"));
-         ERROR((SGE_EVENT, MSG_JOB_MOD_CANONLYSPECIFYHOLDJIDADWITHADOPT));
+         ERROR((SGE_EVENT, SFNMAX, MSG_JOB_MOD_CANONLYSPECIFYHOLDJIDADWITHADOPT));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DRETURN(STATUS_EUNKNOWN);
       }
@@ -3124,7 +3126,7 @@ int job_verify_predecessors_ad(lListElem *job, lList **alpp)
       if (!sge_task_depend_is_same_range(pred_job, job)) {
          lFreeList(&predecessors_id);
          DPRINTF(("could not create array dependence for jobs with different sub-task range\n"));
-         ERROR((SGE_EVENT, MSG_JOB_MOD_ARRAYJOBMUSTHAVESAMERANGEWITHADOPT));
+         ERROR((SGE_EVENT, SFNMAX, MSG_JOB_MOD_ARRAYJOBMUSTHAVESAMERANGEWITHADOPT));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DRETURN(STATUS_EUNKNOWN);
       }
@@ -3488,11 +3490,10 @@ int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bool is_m
             *trigger |= VERIFY_EVENT;
          }
          if (!a.pe) {
-            sprintf(SGE_EVENT, MSG_JOB_VERIFYFOUNDQ); 
+            answer_list_add(alpp, MSG_JOB_VERIFYFOUNDQ, STATUS_OK, ANSWER_QUALITY_INFO);
          } else {
-            sprintf(SGE_EVENT, MSG_JOB_VERIFYFOUNDSLOTS_I, a.slots);
+            answer_list_add_sprintf(alpp, STATUS_OK, ANSWER_QUALITY_INFO, MSG_JOB_VERIFYFOUNDSLOTS_I, a.slots);
          }
-         answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
          assignment_release(&a);
          DRETURN(STATUS_ESEMANTIC);
       }
@@ -4096,7 +4097,7 @@ static int sge_delete_all_tasks_of_job(sge_gdi_ctx_class_t *ctx, lList **alpp, c
                         sge_u32c(job_number), sge_u32c(task_number)));
                   answer_list_add(alpp, SGE_EVENT, STATUS_OK_DOAGAIN, ANSWER_QUALITY_INFO);
                   *deletion_time_reached = true;
-                  FREE(dupped_session);
+                  sge_free(&dupped_session);
                   lFreeList(&range_list);
                   DRETURN(njobs);
                }
@@ -4153,7 +4154,7 @@ static int sge_delete_all_tasks_of_job(sge_gdi_ctx_class_t *ctx, lList **alpp, c
                sge_u32c(job_number)));
          answer_list_add(alpp, SGE_EVENT, STATUS_OK_DOAGAIN, ANSWER_QUALITY_INFO); 
          *deletion_time_reached = true;
-         FREE(dupped_session);
+         sge_free(&dupped_session);
          lFreeList(&range_list);
          DRETURN(njobs);
       }
@@ -4163,7 +4164,7 @@ static int sge_delete_all_tasks_of_job(sge_gdi_ctx_class_t *ctx, lList **alpp, c
 
    /* free task id range list of this iteration */
    lFreeList(&range_list);
-   FREE(dupped_session);
+   sge_free(&dupped_session);
 
    DRETURN(njobs);
 }
@@ -4253,7 +4254,7 @@ job_verify_project(const lListElem *job, lList **alpp,
        * every job *must* request a project
        */
       if (lGetNumberOfElem(projects) > 0) {
-         ERROR((SGE_EVENT, MSG_JOB_PRJREQUIRED)); 
+         ERROR((SGE_EVENT, SFNMAX, MSG_JOB_PRJREQUIRED));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          ret = STATUS_EUNKNOWN;
       }
@@ -4262,11 +4263,11 @@ job_verify_project(const lListElem *job, lList **alpp,
          char* enforce_project = mconf_get_enforce_project();
 
          if (enforce_project != NULL && strcasecmp(enforce_project, "true") == 0) {
-            ERROR((SGE_EVENT, MSG_SGETEXT_NO_PROJECT));
+            ERROR((SGE_EVENT, SFNMAX, MSG_SGETEXT_NO_PROJECT));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             ret = STATUS_EUNKNOWN;
          }
-         FREE(enforce_project);
+         sge_free(&enforce_project);
       }
    }
 

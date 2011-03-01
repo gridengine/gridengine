@@ -33,7 +33,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_cqueue_CQ_L.h"
+#include "sgeobj/sge_cqueue_CQ_L.h"
 
 enum {
    SGE_QI_TAG_DEFAULT = 0,

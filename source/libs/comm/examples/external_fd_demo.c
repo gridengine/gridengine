@@ -185,7 +185,7 @@ int fd_out_cb(int fd, cl_bool_t read_ready, cl_bool_t write_ready, void* user_da
       return CL_RETVAL_UNKNOWN;
    }
    CL_LOG(CL_LOG_WARNING, "std_out entered");
-   if(write_ready == CL_TRUE){
+   if (write_ready == CL_TRUE) {
       char* buffer = NULL;
       CL_LOG(CL_LOG_WARNING, "std_out data_ready");
       buffer = user_data;
@@ -195,7 +195,9 @@ int fd_out_cb(int fd, cl_bool_t read_ready, cl_bool_t write_ready, void* user_da
          pthread_mutex_unlock(&data_mutex);
          return CL_RETVAL_UNKNOWN;
       }
-      write(fd, (char*)user_data, strlen((char*)user_data));
+      if (write(fd, (char*)user_data, strlen((char*)user_data)) != strlen((char *)user_data)) {
+         CL_LOG(CL_LOG_WARNING, "didn't write full buffer");
+      }
       if(strcmp((char*)user_data, "SIGTERM") == 0){
          do_shutdown = 1;
       }

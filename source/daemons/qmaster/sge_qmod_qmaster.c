@@ -34,52 +34,57 @@
 #include <limits.h>
 #include <fnmatch.h>
 
+#include "rmon/sgermon.h"
+
+#include "uti/sge_signal.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_log.h"
+#include "uti/sge_time.h"
+#include "uti/sge_hostname.h"
+#include "uti/sge_parse_num_par.h"
+#include "uti/sge_string.h"
+
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_str.h"
+#include "sgeobj/sge_id.h"
+#include "sgeobj/sge_pe.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_manop.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_qinstance_state.h"
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_calendar.h"
+#include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_qref.h"
+
+#include "gdi/sge_security.h"
+#include "gdi/sge_gdi2.h"
+
+#include "comm/commlib.h"
+
+#include "lck/sge_lock.h"
+
+#include "spool/sge_spooling.h"
+
 #include "sge.h"
-#include "symbols.h"
-#include "sge_ja_task.h"
-#include "sge_str.h"
-#include "sge_id.h"
-#include "sge_pe.h"
-#include "sge_signal.h"
-#include "sge_prog.h"
+#include "sge_pe_qmaster.h"
 #include "sge_queue_event_master.h"
 #include "sge_qmod_qmaster.h"
 #include "sge_job_qmaster.h"
 #include "sge_give_jobs.h"
-#include "sge_host.h"
-#include "sge_parse_num_par.h"
-#include "sge_pe_qmaster.h"
-#include "sge_string.h"
-#include "commlib.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "sge_time.h"
+#include "symbols.h"
 #include "reschedule.h"
-#include "sge_security.h"
-#include "sge_job.h"
-#include "sge_answer.h"
-#include "sge_conf.h"
-#include "sge_hostname.h"
-#include "sge_manop.h"
-#include "sge_qinstance.h"
-#include "sge_qinstance_state.h"
 #include "sge_qinstance_qmaster.h"
 #include "sge_cqueue_qmaster.h"
 #include "sge_subordinate_qmaster.h"
-#include "sge_range.h"
-#include "sge_centry.h"
-#include "sge_calendar.h"
-#include "sge_cqueue.h"
-#include "sge_qref.h"
-#include "sge_lock.h"
-
 #include "sge_persistence_qmaster.h"
 #include "sge_reporting_qmaster.h"
-#include "spool/sge_spooling.h"
-
 #include "msg_common.h"
 #include "msg_qmaster.h"
-
 
 /*-------------------------------------------------------------------------*/
 static void signal_slave_jobs_in_queue(sge_gdi_ctx_class_t *ctx, int how,
@@ -444,6 +449,11 @@ sge_change_queue_state(sge_gdi_ctx_class_t *ctx,
       return -1;
    }
 
+   if (qep == NULL) {
+      ERROR((SGE_EVENT, MSG_NULLELEMENTPASSEDTO_S, SGE_FUNC));
+      DRETURN(-1);
+   }
+
    switch (action) {
       case QI_DO_CLEARERROR:
       case QI_DO_ENABLE:
@@ -558,12 +568,16 @@ monitoring_t *monitor
 
       case JSUSPENDED:
          qmod_job_suspend(ctx, jep, jatep, queueep, force, answer, user, host, monitor);
-         do_slotwise_x_on_subordinate_check(ctx, queueep, false, false, monitor);
+         if (queueep != NULL) {
+            do_slotwise_x_on_subordinate_check(ctx, queueep, false, false, monitor);
+         }
          break;
 
       case JRUNNING:
          qmod_job_unsuspend(ctx, jep, jatep, queueep, force, answer, user, host, monitor);
-         do_slotwise_x_on_subordinate_check(ctx, queueep, true, false, monitor);
+         if (queueep != NULL) {
+            do_slotwise_x_on_subordinate_check(ctx, queueep, true, false, monitor);
+         }   
          break;
 
       case QI_DO_CLEARERROR:
@@ -656,7 +670,7 @@ monitoring_t *monitor
    DPRINTF(("cleaning queue >%s<\n", qname ));
 
    if (!manop_is_manager(user)) {
-      ERROR((SGE_EVENT, MSG_QUEUE_NOCLEANQPERMS));
+      ERROR((SGE_EVENT, SFNMAX, MSG_QUEUE_NOCLEANQPERMS));
       answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return -1;
@@ -1083,7 +1097,7 @@ void resend_signal_event(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitorin
       if (!(qep = cqueue_list_locate_qinstance(*(object_type_get_master_list(SGE_TYPE_CQUEUE)), queue))) {
          ERROR((SGE_EVENT, MSG_EVE_RESENTSIGNALQ_S, queue));
          SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-         sge_free((char *)queue);
+         sge_free(&queue);
          DEXIT;
          return;
       }
@@ -1091,7 +1105,7 @@ void resend_signal_event(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitorin
       sge_signal_queue(ctx, lGetUlong(qep, QU_pending_signal), qep, NULL, NULL, monitor);
    }
 
-   sge_free((char *)queue);
+   sge_free(&queue);
 
    SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
 
@@ -1153,8 +1167,9 @@ monitoring_t *monitor
             (int)(jatep?lGetUlong(jatep,JAT_task_number):-1)
         ));
 
-   if (!jep && (how == SGE_SIGSTOP || how == SGE_SIGCONT))
+   if (!jep && (how == SGE_SIGSTOP || how == SGE_SIGCONT)) {
       sge_propagate_queue_suspension(lGetString(qep, QU_full_name), how);
+   }
 
    /* don't try to signal unheard queues */
    if (!qinstance_state_is_unknown(qep)) {

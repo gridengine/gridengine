@@ -58,14 +58,14 @@
 #include "uti/sge_dstring.h"
 #include "uti/sge_stdio.h"
 #include "uti/sge_unistd.h"
+#include "uti/sge_time.h"
+#include "uti/sge_uidgid.h"
+#include "uti/config_file.h"
+#include "uti/sge_string.h"
 
 #include "basis_types.h"
 #include "err_trace.h"
-#include "sge_time.h"
-#include "sge_uidgid.h"
-#include "config_file.h"
 #include "qlogin_starter.h"
-#include "sge_string.h"
 
 #if defined(INTERIX)
 #  include "wingrid.h"
@@ -729,8 +729,12 @@ static FILE* shepherd_trace_init_intern(st_shepherd_file_t shepherd_file)
   	 *  after changing into the jobs cwd we need an 
   	 *  absolute path to the error/trace file 
   	 */
-	if (called == false) { 
-      getcwd(path, sizeof(path)); 
+	if (called == false) {
+      if (getcwd(path, sizeof(path)) == NULL) {
+         sge_dstring_init(&ds, buffer, sizeof(buffer));
+         sge_dstring_sprintf(&ds, "getcwd() failed: %s", strerror(errno));
+         shepherd_panic(buffer);
+	   }
 		called=true;
 	}
 

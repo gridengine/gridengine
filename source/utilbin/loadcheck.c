@@ -37,15 +37,18 @@
 #ifndef WINDOWS
 #include <unistd.h>
 
-#include "basis_types.h"
-#include "sge_os.h"
-#include "msg_utilbin.h"
-#include "sge_language.h"
-#include "sge_prog.h"
-#include "sge_host.h"
-#include "sgermon.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_os.h"
+#include "uti/sge_language.h"
+#include "uti/sge_prog.h"
 #include "uti/sge_binding_hlp.h"
+
+#include "sgeobj/sge_host.h"
 #include "sgeobj/sge_binding.h"
+
+#include "basis_types.h"
+#include "msg_utilbin.h"
 #else
 #include "msg_utilbin.h"
 #include <windows.h>
@@ -224,8 +227,7 @@ int main(int argc, char *argv[])
    /* memory load report */
    memset(&mem_info, 0, sizeof(sge_mem_info_t));
    if (sge_loadmem(&mem_info)) {
-      fprintf(stderr, MSG_SYSTEM_RETMEMORYINDICESFAILED );
-      fprintf(stderr, "\n");
+      fprintf(stderr, "%s\n", MSG_SYSTEM_RETMEMORYINDICESFAILED);
 #ifndef WINDOWS
       DEXIT;
 #endif
@@ -357,7 +359,7 @@ void test_linux_plpa()
       /* get topology */
       get_topology_linux(&topology, &length);
       printf("Topology:\t\t\t%s\n", topology);
-      FREE(topology); 
+      sge_free(&topology); 
       printf("Mapping of logical socket and core numbers to internal\n");
 
       /* for each socket,core pair get the internal processor number */
@@ -373,7 +375,7 @@ void test_linux_plpa()
                   printf(" %5d", proc_ids[i]);
                }
                printf("\n");
-               FREE(proc_ids);
+               sge_free(&proc_ids);
             } else {
                printf("Couldn't get processor ids for socket %5d core %5d\n", s, c);
             }
@@ -430,7 +432,7 @@ void test_solaris_binding()
       
       if (!generate_chipID_coreID_matrix(&matrix, &mlength)) {
          printf("Couldn't get valid information from kstat cpu_info!\n");
-         FREE(topology);
+         sge_free(&topology);
          return;
       }
 
@@ -482,7 +484,7 @@ void fill_socket_core_topology(dstring* msocket, dstring* mcore, dstring* mtopol
    sge_dstring_sprintf(msocket, "%d", ms);
    sge_dstring_sprintf(mcore, "%d", mc);
    sge_dstring_append(mtopology, topo);
-   FREE(topo);
+   sge_free(&topo);
 }
 
 #endif

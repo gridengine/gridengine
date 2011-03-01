@@ -45,10 +45,6 @@
 
 #include "qmon_proto.h"
 #include "qmon_rmon.h"
-
-#include "sge.h"
-#include "basis_types.h"
-#include "sge_prog.h"
 #include "qmon_util.h"
 #include "qmon_browser.h"
 #include "qmon_globals.h"
@@ -56,8 +52,13 @@
 #include "qmon_file.h"
 #include "qmon_message.h"
 
+#include "uti/sge_prog.h"
+
 #include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi_ctx.h"
+
+#include "sge.h"
+#include "basis_types.h"
 
 extern sge_gdi_ctx_class_t *ctx;
 

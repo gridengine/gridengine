@@ -38,50 +38,48 @@
 #include <signal.h>
 #include <string.h>
 
-#include "sge_time.h"
-#include "sge_profiling.h"
+#include "rmon/sgermon.h"
+#include "uti/sge_time.h"
+#include "uti/sge_profiling.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_log.h"
+
+#include "cull/cull_list.h"
+
+#include "sgeobj/sge_event.h"
+#include "sgeobj/sge_calendar.h"
+#include "sgeobj/sge_ckpt.h"
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_hgroup.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_pe_task.h"
+#include "sgeobj/sge_manop.h"
+#include "sgeobj/sge_pe.h"
+#include "sgeobj/sge_schedd_conf.h"
+#include "sgeobj/sge_sharetree.h"
+#include "sgeobj/sge_cuser.h"
+#include "sgeobj/sge_userprj.h"
+#include "sgeobj/sge_userset.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_hgroup.h"
+#include "sgeobj/sge_host.h"
+
+#include "evc/msg_evclib.h"
+#include "mir/msg_mirlib.h"
+#include "mir/sge_host_mirror.h"
+#include "mir/sge_queue_mirror.h"
+#include "mir/sge_job_mirror.h"
+#include "mir/sge_ja_task_mirror.h"
+#include "mir/sge_pe_task_mirror.h"
+#include "mir/sge_sharetree_mirror.h"
+#include "mir/sge_sched_conf_mirror.h"
+#include "mir/sge_mirror.h"
+
+#include "gdi/sge_gdi_ctx.h"
 
 #include "sig_handlers.h"
-
-#include "sge_event.h"
-
-#include "sge_calendar.h"
-#include "sge_ckpt.h"
-#include "sge_conf.h"
-#include "sge_host.h"
-#include "sge_hgroup.h"
-#include "sge_job.h"
-#include "sge_ja_task.h"
-#include "sge_pe_task.h"
-#include "sge_manop.h"
-#include "sge_pe.h"
-#include "sge_schedd_conf.h"
-#include "sge_sharetree.h"
-#include "sge_cuser.h"
-#include "sge_userprj.h"
-#include "sge_userset.h"
-#include "sge_answer.h"
-#include "cull_list.h"
-
-#include "sge_unistd.h"
-#include "sgermon.h"
-#include "sge_log.h"
-
-#include "msg_evclib.h"
-#include "msg_mirlib.h"
-
-#include "sge_host_mirror.h"
-#include "sge_queue_mirror.h"
-#include "sge_job_mirror.h"
-#include "sge_ja_task_mirror.h"
-#include "sge_pe_task_mirror.h"
-#include "sge_sharetree_mirror.h"
-#include "sge_sched_conf_mirror.h"
-#include "sge_hgroup.h"
-#include "sge_host.h"
-
-#include "mir/sge_mirror.h"
-#include "gdi/sge_gdi_ctx.h"
 
 /* Datastructure for internal storage of subscription information
  * and callbacks.
@@ -233,7 +231,7 @@ static void mir_state_init(mir_state_t* state)
 
 static void mir_state_destroy(void* state)
 {
-   free(state);
+   sge_free(&state);
 }
 
 static void mir_mt_init(void)
@@ -953,10 +951,10 @@ static sge_mirror_error _sge_mirror_unsubscribe(sge_evc_class_t *evc, sge_object
          evc->ec_unsubscribe(evc, sgeE_SCHEDDMONITOR);
          break;
       case SGE_TYPE_SHUTDOWN:
-         ERROR((SGE_EVENT, MSG_EVENT_HAVETOHANDLEEVENTS));
+         ERROR((SGE_EVENT, SFNMAX, MSG_EVENT_HAVETOHANDLEEVENTS));
          break;
       case SGE_TYPE_MARK_4_REGISTRATION:
-         ERROR((SGE_EVENT, MSG_EVENT_HAVETOHANDLEEVENTS));
+         ERROR((SGE_EVENT, SFNMAX, MSG_EVENT_HAVETOHANDLEEVENTS));
          break;
       case SGE_TYPE_SUBMITHOST:
          evc->ec_unsubscribe(evc, sgeE_SUBMITHOST_LIST);
@@ -1062,7 +1060,7 @@ sge_mirror_error sge_mirror_process_events(sge_evc_class_t *evc)
          lFreeList(&event_list);
       }
    } else {
-      WARNING((SGE_EVENT, MSG_MIRROR_QMASTERALIVETIMEOUTEXPIRED));
+      WARNING((SGE_EVENT, SFNMAX, MSG_MIRROR_QMASTERALIVETIMEOUTEXPIRED));
       evc->ec_mark4registration(evc);
       ret = SGE_EM_TIMEOUT;
    }
@@ -1071,7 +1069,7 @@ sge_mirror_error sge_mirror_process_events(sge_evc_class_t *evc)
       test_debug++;
       if (test_debug > 3) {
          test_debug = 0;
-         WARNING((SGE_EVENT, MSG_MIRROR_QMASTERALIVETIMEOUTEXPIRED));
+         WARNING((SGE_EVENT, SFNMAX, MSG_MIRROR_QMASTERALIVETIMEOUTEXPIRED));
          evc->ec_mark4registration(evc);
          ret = SGE_EM_TIMEOUT;
       }

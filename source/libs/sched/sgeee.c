@@ -282,7 +282,7 @@ static void task_ref_initialize_table(u_long32 number_of_tasks)
 static void task_ref_destroy_table(void) 
 {
    if (task_ref_table != NULL) {
-      FREE(task_ref_table);
+      sge_free(&task_ref_table);
       task_ref_entries = 0;
    }
 }
@@ -1941,7 +1941,7 @@ static void free_fcategories(lList **fcategories, sge_ref_list_t **ref_array) {
    }
 
    lFreeList(fcategories);
-   FREE(*ref_array);
+   sge_free(ref_array);
 
 }
 
@@ -3100,8 +3100,8 @@ sge_calc_tickets( scheduler_all_data_t *lists,
             if(sort_list == NULL){
                /* error message to come */
                
-               FREE(sort_list);
-               FREE(job_ref);
+               sge_free(&sort_list);
+               sge_free(&job_ref);
                lFreeList(&decay_list);
 
                if (fcategories != NULL) {
@@ -3226,7 +3226,7 @@ sge_calc_tickets( scheduler_all_data_t *lists,
          }
 
          /* free the allocated memory */
-         FREE(sort_list);
+         sge_free(&sort_list);
          free_fcategories(&fcategories, &ref_array);
 
       }
@@ -3371,7 +3371,7 @@ sge_calc_tickets( scheduler_all_data_t *lists,
       }
    }
 
-   FREE(job_ref);
+   sge_free(&job_ref);
    lFreeList(&decay_list);
 
    if (prof_is_active(SGE_PROF_SCHEDLIB4)){
@@ -4417,7 +4417,7 @@ static void calculate_pending_shared_override_tickets(sge_ref_t *job_ref, int nu
             if (sort_list == NULL) {
                /* error message to come */
                
-               FREE(sort_list);            
+               sge_free(&sort_list);            
                
                if (fcategories != NULL) {
                   free_fcategories(&fcategories, &ref_array);
@@ -4488,7 +4488,7 @@ static void calculate_pending_shared_override_tickets(sge_ref_t *job_ref, int nu
             for(job_ndx=0; job_ndx < max; job_ndx++) {
                sge_unset_job_cnts(sort_list[job_ndx], 0); 
             }
-            FREE(sort_list);           
+            sge_free(&sort_list);           
          }
          /* free the allocated memory */
 

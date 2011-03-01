@@ -54,10 +54,6 @@
 #include "lck/sge_lock.h"
 #include "lck/sge_mtutil.h"
 
-/* daemons/common */
-#include "category.h"
-
-/* sgeobj */
 #include "sgeobj/sge_advance_reservation.h"
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_feature.h"
@@ -77,18 +73,15 @@
 #include "sgeobj/sge_userprj.h"
 #include "sgeobj/sge_userset.h"
 #include "sgeobj/sge_cqueue.h"
-#include "sge_resource_utilization_RUE_L.h"
+#include "sgeobj/sge_resource_utilization_RUE_L.h"
 
-/* sched */
 #include "sched/sge_resource_utilization.h"
 #include "sched/sge_sharetree_printing.h"
 
-/* local */
 #include "sge_rusage.h"
 #include "sge_reporting_qmaster.h"
 
-
-/* messages */
+#include "category.h"
 #include "msg_common.h"
 #include "msg_qmaster.h"
 

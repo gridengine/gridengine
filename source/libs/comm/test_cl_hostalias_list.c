@@ -37,11 +37,8 @@
 #include <unistd.h>
 #include <signal.h>
 
-#include "cl_commlib.h"
-#include "cl_host_alias_list.h"
-
-
-
+#include "comm/cl_commlib.h"
+#include "comm/cl_host_alias_list.h"
 
 extern int
 main(int argc, char** argv)
@@ -117,7 +114,7 @@ main(int argc, char** argv)
   printf("%s\n", cl_get_error_text(ret_val));
   if (ret_val == CL_RETVAL_OK) {
      printf("alias name is \"%s\"\n", help);
-     free(help);
+     sge_free(&help);
   }
 
   printf("list cleanup ... ");

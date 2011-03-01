@@ -30,8 +30,6 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_feature.h"         
-
 #include <string.h>
 #include <errno.h>
 #include <pthread.h>
@@ -46,14 +44,14 @@
 
 #include "gdi/version.h"
 
+#include "sgeobj/sge_feature.h"         
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_utility.h"
+#include "sgeobj/msg_sgeobjlib.h"
+
 #include "sge.h"
 #include "basis_types.h"
-#include "sge_answer.h"
-#include "sge_utility.h"
-
 #include "msg_common.h"
-#include "msg_sgeobjlib.h"
-
 
 #define FEATURESET_DEFAULT FEATURESET_SGE
 
@@ -577,7 +575,7 @@ static void feature_state_destroy(void* theState)
    struct feature_state_t* state = (struct feature_state_t *)theState;
 
    lFreeList(&(state->Master_FeatureSet_List));
-   free(state);
+   sge_free(&state);
 }
 
 /****** sgeobj/feature/feature_state_init() ***********************************

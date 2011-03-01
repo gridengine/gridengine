@@ -34,8 +34,8 @@
 
 #include "cull/cull.h"
 
-#include "sge_manop.h"
-#include "sge_object.h"
+#include "sgeobj/sge_manop.h"
+#include "sgeobj/sge_object.h"
 
 /****** sgeobj/manop/manop_is_manager() ***************************************
 *  NAME

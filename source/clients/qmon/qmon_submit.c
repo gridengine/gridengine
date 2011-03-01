@@ -52,22 +52,6 @@
 #include <Xmt/MsgLine.h>
 
 /*----------------------------------------------------------------------------*/
-#include "msg_common.h"
-#include "msg_clients_common.h"
-#include "msg_qmon.h"
-
-#include "sge_unistd.h"
-#include "sge_prog.h"
-#include "sge_all_listsL.h"
-#include "sge_userset.h"
-#include "Matrix.h"
-#include "symbols.h"
-#include "parse_qsub.h"
-#include "sge_time.h"
-#include "parse_job_cull.h"
-#include "unparse_job_cull.h"
-#include "read_defaults.h"
-#include "write_job_defaults.h"
 #include "qmon_proto.h"
 #include "qmon_rmon.h"
 #include "qmon_appres.h"
@@ -83,17 +67,22 @@
 #include "qmon_message.h"
 #include "qmon_job.h"
 #include "qmon_init.h"
-#include "sge_feature.h"
-#include "sge_afsutil.h"
-#include "sge_range.h"
-#include "sge_path_alias.h"
-#include "qm_name.h"
-#include "sge_security.h" 
+#include "Matrix.h"
+
+#include "uti/sge_unistd.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_afsutil.h"
 #include "uti/setup_path.h"
 #include "uti/sge_io.h"
 #include "uti/sge_stdlib.h"
 #include "uti/sge_string.h"
-#include "gdi/sge_gdi_ctx.h"
+#include "uti/sge_time.h"
+
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_userset.h"
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_path_alias.h"
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_binding.h"
 #include "sgeobj/sge_ja_task.h"
@@ -101,6 +90,20 @@
 #include "sgeobj/sge_job.h"
 #include "sgeobj/sge_ulong.h"
 #include "sgeobj/sge_var.h"
+
+#include "gdi/qm_name.h"
+#include "gdi/sge_security.h" 
+#include "gdi/sge_gdi_ctx.h"
+
+#include "symbols.h"
+#include "parse_qsub.h"
+#include "parse_job_cull.h"
+#include "unparse_job_cull.h"
+#include "read_defaults.h"
+#include "write_job_defaults.h"
+#include "msg_common.h"
+#include "msg_clients_common.h"
+#include "msg_qmon.h"
 
 extern sge_gdi_ctx_class_t *ctx;
 
@@ -1577,12 +1580,12 @@ static void qmonSubmitJobSubmit(Widget w, XtPointer cld, XtPointer cad)
       lFreeWhat(&what);
       
       if (!(lp = lCreateElemList("JobSubmitList", rdp, 1))) {
-         FREE(rdp);
+         sge_free(&rdp);
          DPRINTF(("lCreateElemList failure\n"));
          sprintf(buf, "Job submission failed\n");
          goto error;
       }
-      FREE(rdp);
+      sge_free(&rdp);
 
       lSetUlong(lFirst(lp), JB_job_number, submit_mode_data.job_id);
       
@@ -2698,7 +2701,7 @@ static void qmonSubmitEdit(Widget w, XtPointer cld, XtPointer cad)
    if (script_name) {
       file = strdup(script_name);
       status = qmonForkEditor(file);
-      free(file);
+      sge_free(&file);
    }
    else
       status = qmonForkEditor(NULL);

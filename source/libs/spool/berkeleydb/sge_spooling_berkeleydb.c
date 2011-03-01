@@ -59,15 +59,16 @@
 #include "sgeobj/sge_pe_task.h"
 #include "sgeobj/sge_qinstance.h"
 #include "sgeobj/sge_suser.h"
+#include "sgeobj/sge_conf.h"
 
 #include "spool/sge_spooling_utilities.h"
-
-#include "msg_common.h"
 #include "spool/msg_spoollib.h"
-#include "spool/berkeleydb/msg_spoollib_berkeleydb.h"
 
+#include "spool/berkeleydb/msg_spoollib_berkeleydb.h"
 #include "spool/berkeleydb/sge_bdb.h"
 #include "spool/berkeleydb/sge_spooling_berkeleydb.h"
+
+#include "msg_common.h"
 
 static const char *spooling_method = "berkeleydb";
 
@@ -161,7 +162,7 @@ spool_berkeleydb_create_context(lList **answer_list, const char *args)
             server = NULL;
             path = strdup(dup);
          }
-         free(dup);
+         sge_free(&dup);
       }
 
       DPRINTF(("using %sRPC server %s, database %s\n", 
@@ -822,7 +823,7 @@ spool_berkeleydb_default_read_func(lList **answer_list,
                } else {
                   ret = false;
                }
-               FREE(dup);
+               sge_free(&dup);
             }
             break;
          case SGE_TYPE_JATASK:
@@ -959,7 +960,7 @@ spool_berkeleydb_default_write_func(lList **answer_list,
                      ret = spool_berkeleydb_write_job(answer_list, info, object,
                                                       job_id, ja_task_id, only_job);
                   }
-                  FREE(dup);
+                  sge_free(&dup);
                }
                break;
             case SGE_TYPE_JOBSCRIPT:
@@ -972,7 +973,7 @@ spool_berkeleydb_default_write_func(lList **answer_list,
                   ret = spool_berkeleydb_write_string(answer_list, info, 
                                                       BDB_JOB_DB,
                                                       db_key, script); 
-                  FREE(dup);
+                  sge_free(&dup);
                }
                break;
             case SGE_TYPE_CQUEUE:
@@ -1119,7 +1120,7 @@ spool_berkeleydb_default_delete_func(lList **answer_list,
                      ret = spool_berkeleydb_delete_job(answer_list, info, 
                                                        dbkey, false);
                   }
-                  FREE(dup);
+                  sge_free(&dup);
                }
                break;
             case SGE_TYPE_JOBSCRIPT:
@@ -1131,7 +1132,7 @@ spool_berkeleydb_default_delete_func(lList **answer_list,
                                                     BDB_JOB_DB, 
                                                     db_key, 
                                                     false); 
-                  FREE(dup);
+                  sge_free(&dup);
                }                            
                break;               
             default:

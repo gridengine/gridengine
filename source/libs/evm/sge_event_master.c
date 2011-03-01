@@ -36,16 +36,32 @@
 #include <string.h>
 #include <errno.h>
 
-#include "sge.h"
-#include "cull/cull.h"
-#include "sgeobj/sge_feature.h"
+#include "rmon/sgermon.h"
+
 #include "uti/sge_time.h"
+#include "uti/sge_profiling.h"
+#include "uti/sge_spool.h"
+#include "uti/sge_thread_ctrl.h"
+#include "uti/sge_log.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_hostname.h"
+
+#include "lck/sge_mtutil.h"
+#include "lck/sge_lock.h"
+
+#include "cull/cull.h"
+
+#include "comm/lists/cl_thread.h"
+#include "comm/lists/cl_errors.h"
+#include "comm/cl_commlib.h"
+
+#include "gdi/sge_gdi_ctx.h"
+#include "gdi/sge_gdi2.h"
+
+#include "sgeobj/sge_feature.h"
 #include "sgeobj/sge_host.h"
 #include "sgeobj/sge_event.h"
 #include "sgeobj/sge_all_listsL.h"
-#include "uti/sge_prog.h"
-#include "rmon/sgermon.h"
-#include "uti/sge_log.h"
 #include "sgeobj/sge_conf.h"
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_qinstance.h"
@@ -54,7 +70,6 @@
 #include "sgeobj/sge_pe.h"
 #include "sgeobj/sge_userprj.h"
 #include "sgeobj/sge_job.h"
-#include "uti/sge_hostname.h"
 #include "sgeobj/sge_userset.h"
 #include "sgeobj/sge_manop.h"
 #include "sgeobj/sge_calendar.h"
@@ -66,28 +81,16 @@
 #include "sgeobj/sge_object.h"
 #include "sgeobj/sge_range.h"
 #include "sgeobj/sge_schedd_conf.h"
-#include "lck/sge_mtutil.h"
-#include "configuration_qmaster.h"   /* bad dependency!! */
-#include "comm/lists/cl_errors.h"
-#include "comm/cl_commlib.h"
-#include "uti/sge_profiling.h"
-#include "uti/sge_spool.h"
-#include "sge_event_request_EVR_L.h"
+#include "sgeobj/sge_event_request_EVR_L.h"
+#include "sgeobj/msg_sgeobjlib.h"
 
-#include "lck/sge_lock.h"
-
-#include "comm/lists/cl_thread.h"
-
-#include "uti/sge_thread_ctrl.h"
-
-#include "gdi/sge_gdi_ctx.h"
+#include "configuration_qmaster.h"   /* TODO: bad dependency!! */
+#include "sge_event_master.h"
+#include "sge.h"
 
 #include "msg_common.h"
-#include "msg_sgeobjlib.h"
 #include "msg_evmlib.h"
 #include "msg_qmaster.h"
- 
-#include "sge_event_master.h"
 
 /*
  ***** transaction handling implementation ************
@@ -458,7 +461,7 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
 
    /* check event client object structure */
    if (lCompListDescr(lGetElemDescr(clio), EV_Type) != 0) {
-      ERROR((SGE_EVENT, MSG_EVE_INCOMPLETEEVENTCLIENT));
+      ERROR((SGE_EVENT, SFNMAX, MSG_EVE_INCOMPLETEEVENTCLIENT));
       answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DRETURN(STATUS_DENIED);
    }
@@ -471,7 +474,7 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
    }
 
    if (lGetBool(clio, EV_changed) && lGetList(clio, EV_subscribed) == NULL) {
-      ERROR((SGE_EVENT, MSG_EVE_INVALIDSUBSCRIPTION));
+      ERROR((SGE_EVENT, SFNMAX, MSG_EVE_INVALIDSUBSCRIPTION));
       answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DRETURN(STATUS_ESEMANTIC);
    }
@@ -481,7 +484,7 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
 
    if (Event_Master_Control.is_prepare_shutdown) {
       sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Event_Master_Control.mutex);
-      ERROR((SGE_EVENT, MSG_EVE_QMASTERISGOINGDOWN));
+      ERROR((SGE_EVENT, SFNMAX, MSG_EVE_QMASTERISGOINGDOWN));
       answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);      
       DRETURN(STATUS_ESEMANTIC);
    }
@@ -525,7 +528,7 @@ int sge_add_event_client(lListElem *clio, lList **alpp, lList **eclpp, char *rus
       */
       if (update_func == NULL && !manop_is_manager(ruser)) {
          sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Event_Master_Control.mutex);
-         ERROR((SGE_EVENT, MSG_WRONG_USER_FORFIXEDID ));
+         ERROR((SGE_EVENT, SFNMAX, MSG_WRONG_USER_FORFIXEDID));
          answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
          DRETURN(STATUS_ESEMANTIC);
       }
@@ -728,7 +731,7 @@ sge_event_master_process_mod_event_client(lListElem *request, monitoring_t *moni
    if (lGetBool(clio, EV_changed) && lGetList(clio, EV_subscribed) == NULL) {
       sge_mutex_unlock("event_master_mutex", SGE_FUNC, __LINE__, &Event_Master_Control.mutex);
       SGE_UNLOCK(LOCK_GLOBAL, LOCK_READ);
-      ERROR((SGE_EVENT, MSG_EVE_INVALIDSUBSCRIPTION));
+      ERROR((SGE_EVENT, SFNMAX, MSG_EVE_INVALIDSUBSCRIPTION));
       DRETURN_VOID;
    }
 
@@ -798,10 +801,10 @@ sge_event_master_process_mod_event_client(lListElem *request, monitoring_t *moni
             lFreeWhat(&(old_sub[i].what));
             if (old_sub[i].descr){
                cull_hash_free_descr(old_sub[i].descr);
-               free(old_sub[i].descr);
+               sge_free(&(old_sub[i].descr));
             }
          } 
-         FREE(old_sub);
+         sge_free(&old_sub);
       }
    }
 
@@ -1142,7 +1145,7 @@ int sge_shutdown_event_client(u_long32 event_client_id, const char* anUser,
 
       /* Print out a message about the event. */
       if (event_client_id == EV_ID_SCHEDD) {
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_COM_KILLED_SCHEDULER));
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_COM_KILLED_SCHEDULER));
       } else {
          SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_COM_SHUTDOWNNOTIFICATION_SUS,
                         lGetString(client, EV_name),
@@ -1749,7 +1752,6 @@ static void sge_event_master_process_ack(lListElem *request, monitoring_t *monit
 
       switch (lGetUlong(client, EV_busy_handling)) {
          case EV_BUSY_UNTIL_ACK:
-         case EV_THROTTLE_FLUSH:
             lSetUlong(client, EV_busy, 0); /* clear busy state */
             break;
          default:
@@ -2018,11 +2020,11 @@ static void remove_event_client(lListElem **client, int event_client_id, bool lo
 
          if (old_sub[i].descr) {
             cull_hash_free_descr(old_sub[i].descr);
-            FREE(old_sub[i].descr);
+            sge_free(&(old_sub[i].descr));
          }
       }
 
-      FREE(old_sub);
+      sge_free(&old_sub);
       lSetRef(*client, EV_sub_array, NULL);
    }
 
@@ -2192,9 +2194,7 @@ void sge_event_master_send_events(sge_gdi_ctx_class_t *ctx, lListElem *report, l
 
       /* do we have to deliver events ? */
       if (now >= lGetUlong(event_client, EV_next_send_time)) {
-         if (( busy_handling == EV_THROTTLE_FLUSH) ||
-              !lGetUlong(event_client, EV_busy)    ||
-               do_remove == true) {
+         if (!lGetUlong(event_client, EV_busy) || do_remove == true) {
             lList *lp = NULL;
 
             /* put only pointer in report - dont copy */
@@ -2214,10 +2214,6 @@ void sge_event_master_send_events(sge_gdi_ctx_class_t *ctx, lListElem *report, l
                now = (time_t)sge_get_gmt();
 
                switch (busy_handling) {
-                  case EV_THROTTLE_FLUSH:
-                     /* increase busy counter */
-                     lSetUlong(event_client, EV_busy, lGetUlong(event_client, EV_busy) + 1);
-                     break;
                   case EV_BUSY_UNTIL_RELEASED:
                   case EV_BUSY_UNTIL_ACK:
                      lSetUlong(event_client, EV_busy, 1);
@@ -2262,7 +2258,6 @@ void sge_event_master_send_events(sge_gdi_ctx_class_t *ctx, lListElem *report, l
 static void flush_events(lListElem *event_client, int interval)
 {
    u_long32 next_send = 0;
-   u_long32 flush_delay = 0;
    int now = sge_get_gmt();
 
    DENTER(TOP_LAYER, "flush_events");
@@ -2271,26 +2266,6 @@ static void flush_events(lListElem *event_client, int interval)
 
    next_send = lGetUlong(event_client, EV_next_send_time);
    next_send = MIN(next_send, now + interval);
-
-   /* never send out two event packages in the very same second */
-   if (lGetUlong(event_client, EV_busy_handling) == EV_THROTTLE_FLUSH) {
-      u_long32 busy_counter = lGetUlong(event_client, EV_busy);
-      u_long32 ed_time = lGetUlong(event_client, EV_d_time);
-      u_long32 flush_delay_rate = MAX(lGetUlong(event_client, EV_flush_delay), 1);
-
-      if (busy_counter >= flush_delay_rate) {
-         /* busy counters larger than flush delay cause events being
-            sent out in regular event delivery interval for alive protocol
-            purposes with event client */
-         flush_delay = MAX(flush_delay, ed_time);
-      } else {
-         /* for smaller busy counters event delivery interval is scaled
-            down with the busy counter */
-         flush_delay = MAX(flush_delay, ed_time * busy_counter / flush_delay_rate);
-      }
-
-      next_send = MAX(next_send, lGetUlong(event_client, EV_last_send_time) + flush_delay);
-   }
 
    lSetUlong(event_client, EV_next_send_time, next_send);
 
@@ -2452,10 +2427,10 @@ static void build_subscription(lListElem *event_el)
          lFreeWhat(&(old_sub_array[i].what));
          if (old_sub_array[i].descr){
             cull_hash_free_descr(old_sub_array[i].descr);
-            free(old_sub_array[i].descr);
+            sge_free(&(old_sub_array[i].descr));
          }
       }
-      free(old_sub_array);
+      sge_free(&old_sub_array);
    }
 
    lSetRef(event_el, EV_sub_array, sub_array);
@@ -3118,7 +3093,7 @@ static lListElem *elem_select(subscription_t *subscription, lListElem *element,
          lXchgList(element, ids[counter], &(sub_list[counter]));
       }
 
-      FREE(sub_list);
+      sge_free(&sub_list);
    } else {
       DPRINTF(("no sub filter specified\n"));
       el = lSelectElemDPack(element, selection, dp, fields, false, NULL, NULL);

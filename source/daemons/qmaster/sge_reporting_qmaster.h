@@ -32,13 +32,18 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "cull.h"
-#include "sge_dstring.h"
-#include "sge_object.h"
-#include "sge_qmaster_timed_event.h"
+#include "uti/sge_dstring.h"
 #include "uti/sge_monitor.h"
-#include "gdi/sge_gdi_ctx.h"
+
+#include "cull/cull.h"
+
+#include "sgeobj/sge_object.h"
 #include "sgeobj/sge_advance_reservation.h"
+
+#include "gdi/sge_gdi_ctx.h"
+
+#include "sge_qmaster_timed_event.h"
+
 
 typedef enum {
    JL_UNKNOWN = 0,   /* job is in unknown state - should never be seen */

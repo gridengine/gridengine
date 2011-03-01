@@ -42,24 +42,48 @@
 #include <sys/wait.h>
 #include <grp.h>
 
-#include "sgermon.h"
-#include "sge.h"
-#include "symbols.h"
-#include "config.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_string.h"
+#include "uti/sge_afsutil.h"
+#include "uti/sge_parse_num_par.h"
+#include "uti/setup_path.h"
+#include "uti/sge_spool.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_uidgid.h"
+#include "uti/sge_binding_hlp.h"
+#include "uti/sge_os.h"
+#include "uti/sge_log.h"
+#include "uti/config_file.h"
+#include "uti/sge_signal.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_time.h"
+#include "uti/sge_stdio.h"
+
+#include "sgeobj/config.h"
 #include "sgeobj/sge_job.h"
 #include "sgeobj/sge_ja_task.h"
 #include "sgeobj/sge_pe_task.h"
 #include "sgeobj/sge_pe.h"
-#include "sge_qinstance.h"
-#include "sge_os.h"
-#include "sge_log.h"
-#include "sge_usage.h"
-#include "sge_time.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_usage.h"
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_var.h"
+#include "sgeobj/sge_report.h"
+#include "sgeobj/sge_ulong.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_binding.h"
+
+#include "gdi/sge_qexec.h"
+#include "gdi/sge_security.h" 
+
+#include "spool/classic/read_write_job.h"
+
+#include "sge.h"
+#include "symbols.h"
 #include "admin_mail.h"
 #include "mail.h"
 #include "exec_job.h"
-#include "config_file.h"
-#include "sge_signal.h"
 #include "dispatcher.h"
 #include "tmpdir.h"
 #include "sge_job_qmaster.h"
@@ -69,30 +93,11 @@
 #include "reaper_execd.h"
 #include "execd_signal_queue.h"
 #include "job_report_execd.h"
-#include "sge_prog.h"
-#include "sge_qexec.h"
-#include "sge_string.h"
-#include "sge_afsutil.h"
-#include "sge_parse_num_par.h"
-#include "setup_path.h"
 #include "get_path.h"
+#include "load_avg.h"
 #include "msg_common.h"
 #include "msg_daemons_common.h"
 #include "msg_execd.h"
-#include "sge_security.h" 
-#include "sge_feature.h"
-#include "sge_spool.h"
-#include "spool/classic/read_write_job.h"
-#include "sge_unistd.h"
-#include "sge_uidgid.h"
-#include "sge_var.h"
-#include "sge_report.h"
-#include "sge_ulong.h"
-#include "sgeobj/sge_object.h"
-#include "uti/sge_stdio.h"
-#include "load_avg.h"
-#include "uti/sge_binding_hlp.h"
-#include "sgeobj/sge_binding.h"
 
 #if defined(BINDING_SOLARIS)
 #  include "uti/sge_uidgid.h"
@@ -419,7 +424,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
    sge_dstring_init(&id_dstring, id_buffer, MAX_STRING_SIZE);
 
    if (!jr) {
-      CRITICAL((SGE_EVENT, MSG_JOB_CLEANUPJOBCALLEDWITHINVALIDPARAMETERS));
+      CRITICAL((SGE_EVENT, SFNMAX, MSG_JOB_CLEANUPJOBCALLEDWITHINVALIDPARAMETERS));
       DEXIT;
       return -1;
    }
@@ -503,14 +508,15 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
        * otherwise we assume it died before starting the job (if died through signal or
        * job_dir was found during execd startup)
        */
-      if (failed == ESSTATE_SHEPHERD_EXIT)
-         failed = shepherd_exit_status;   
-      else 
+      if (failed == ESSTATE_SHEPHERD_EXIT) {
+         failed = shepherd_exit_status;
+      } else {
          failed = SSTATE_BEFORE_PROLOG;
-     
+      }
+
       sprintf(error, MSG_STATUS_ABNORMALTERMINATIONOFSHEPHERDFORJOBXY_S,
               job_get_id_string(job_id, ja_task_id, pe_task_id, &id_dstring));
-      ERROR((SGE_EVENT, error));    
+      ERROR((SGE_EVENT, SFNMAX, error));
  
       /* 
        * failed = ESSTATE_SHEPHERD_EXIT or exit status of shepherd if we are
@@ -524,7 +530,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
       if (fscanf_count != 1) {
          sprintf(error, MSG_STATUS_ABNORMALTERMINATIONFOSHEPHERDFORJOBXYEXITSTATEFILEISEMPTY_S,
                  job_get_id_string(job_id, ja_task_id, pe_task_id, &id_dstring));
-         ERROR((SGE_EVENT, error));
+         ERROR((SGE_EVENT, SFNMAX, error));
          /* 
           * If shepherd died through signal assume job was started, else
           * trust exit status
@@ -552,9 +558,9 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
 
    if (failed) {
       if (failed == ESSTATE_DIED_THRU_SIGNAL)
-         sprintf(error, MSG_SHEPHERD_DIEDTHROUGHSIGNAL);
+         sprintf(error, SFNMAX, MSG_SHEPHERD_DIEDTHROUGHSIGNAL);
       else if (failed == ESSTATE_NO_PID)
-         sprintf(error, MSG_SHEPHERD_NOPIDFILE);
+         sprintf(error, SFNMAX, MSG_SHEPHERD_NOPIDFILE);
       else
          sprintf(error, MSG_SHEPHERD_EXITEDWISSTATUS_IS, failed, 
                  get_sstate_description(failed));
@@ -604,7 +610,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
             job_get_id_string(job_id, ja_task_id, pe_task_id, &id_dstring));
       }
       
-      ERROR((SGE_EVENT, error));
+      ERROR((SGE_EVENT, SFNMAX, error));
       
       if (!failed) {
          failed = SSTATE_FAILURE_AFTER_JOB;
@@ -639,7 +645,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
          if (!failed) {
             failed = SSTATE_FAILURE_AFTER_JOB;
             if (!*error)
-               sprintf(error, MSG_JOB_CANTREADUSEDRESOURCESFORJOB);
+               sprintf(error, SFNMAX, MSG_JOB_CANTREADUSEDRESOURCESFORJOB);
          }
       }
    }
@@ -755,7 +761,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
             char* shell_start_mode = mconf_get_shell_start_mode();
             const char *mode = job_get_shell_start_mode(job, master_queue, 
                                                    shell_start_mode);
-            FREE(shell_start_mode);
+            sge_free(&shell_start_mode);
 
             if (!strcmp(mode, "unix_behavior") != 0) {
                job_caused_failure = 1;
@@ -1217,7 +1223,7 @@ int clean_up_old_jobs(sge_gdi_ctx_class_t *ctx, int startup)
    DENTER(TOP_LAYER, "clean_up_old_jobs");
 
    if (startup) {
-      INFO((SGE_EVENT, MSG_SHEPHERD_CKECKINGFOROLDJOBS));
+      INFO((SGE_EVENT, SFNMAX, MSG_SHEPHERD_CKECKINGFOROLDJOBS));
    }
 
    /* 
@@ -1242,9 +1248,9 @@ int clean_up_old_jobs(sge_gdi_ctx_class_t *ctx, int startup)
        !lost_children) {
       if (lost_children) {
          if (startup) {
-            INFO((SGE_EVENT, MSG_SHEPHERD_NOOLDJOBSATSTARTUP));
+            INFO((SGE_EVENT, SFNMAX, MSG_SHEPHERD_NOOLDJOBSATSTARTUP));
          } else {
-            INFO((SGE_EVENT, MSG_SHEPHERD_NOMOREOLDJOBSAFTERSTARTUP));
+            INFO((SGE_EVENT, SFNMAX, MSG_SHEPHERD_NOMOREOLDJOBSAFTERSTARTUP));
          }
          /* 
           * Now setting lost_children to 0 which disables further pid checking
@@ -1260,7 +1266,7 @@ int clean_up_old_jobs(sge_gdi_ctx_class_t *ctx, int startup)
    /* Get pids of running jobs. So we can look for running shepherds. */
    npids = sge_get_pids(pids, 10000, SGE_SHEPHERD, PSCMD);
    if (npids == -1) {
-      ERROR((SGE_EVENT, MSG_SHEPHERD_CANTGETPROCESSESFROMPSCOMMAND));
+      ERROR((SGE_EVENT, SFNMAX, MSG_SHEPHERD_CANTGETPROCESSESFROMPSCOMMAND));
       DEXIT;
       return -1;
    }
@@ -1436,7 +1442,7 @@ examine_job_task_from_file(sge_gdi_ctx_class_t *ctx, int startup, char *dir, lLi
       sprintf(err_str, MSG_SHEPHERD_SHEPHERDFORJOBXHASPIDYANDISNOTALIVE_SU, dir, sge_u32c(pid));
    }
    if (startup) {
-      INFO((SGE_EVENT, err_str));
+      INFO((SGE_EVENT, SFNMAX, err_str));
       modify_queue_limits_flag_for_job(ctx->get_qualified_hostname(ctx), jep, true);
    } else {
       DPRINTF((err_str));
@@ -1543,7 +1549,7 @@ static void update_used_cores(const char* path_to_config, lListElem** jr)
                account_job(jobtopo);
 
                /* add to job report (for qstat -j x -cb) */
-               sge_dstring_sprintf(&pseudo_usage, "binding_inuse=%s", jobtopo); 
+               sge_dstring_sprintf(&pseudo_usage, "binding_inuse!%s", jobtopo); 
                
                add_usage(*jr, sge_dstring_get_string(&pseudo_usage), NULL, 0);
                sge_dstring_free(&pseudo_usage); 
@@ -1586,8 +1592,11 @@ read_dusage(lListElem *jr, const char *jobdir, u_long32 jobid, u_long32 jataskid
 
    if (failed != ESSTATE_NO_PID) {
       fp = fopen(pid_file, "r");
-      if (fp) {
-         fscanf(fp, sge_u32 , &pid);
+      if (fp != NULL) {
+         if (fscanf(fp, sge_u32 , &pid) != 1) {
+            ERROR((SGE_EVENT, MSG_EXECD_ERRORREADINGPIDOFJOB_UU,
+                   sge_u32c(jobid), sge_u32c(jataskid)));
+         }
          FCLOSE(fp);
       } else {
          ERROR((SGE_EVENT, MSG_SHEPHERD_CANTOPENPIDFILEXFORJOBYZ_SUU,

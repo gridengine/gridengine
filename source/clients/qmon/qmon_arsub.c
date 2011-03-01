@@ -49,19 +49,6 @@
 #include <Xmt/MsgLine.h>
 
 /*----------------------------------------------------------------------------*/
-#include "msg_common.h"
-
-#include "sge_unistd.h"
-#include "sge_prog.h"
-#include "sge_all_listsL.h"
-#include "AskForTime.h"
-#include "AskForItems.h"
-#include "IconList.h"
-#include "symbols.h"
-#include "sge_time.h"
-#include "parse_job_cull.h"
-#include "unparse_job_cull.h"
-#include "read_defaults.h"
 #include "qmon_proto.h"
 #include "qmon_rmon.h"
 #include "qmon_appres.h"
@@ -76,19 +63,32 @@
 #include "qmon_message.h"
 #include "qmon_ar.h"
 #include "qmon_init.h"
-#include "sge_range.h"
-#include "sge_job.h"
-#include "sge_answer.h"
-#include "sge_ulong.h"
-#include "sge_string.h"
-#include "sge_qrsub.h"
+#include "AskForTime.h"
+#include "AskForItems.h"
+#include "IconList.h"
+
+#include "uti/sge_unistd.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_string.h"
+#include "uti/setup_path.h"
+#include "uti/sge_string.h"
+#include "uti/sge_time.h"
+
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_advance_reservation.h"
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_ulong.h"
 
 #include "gdi/sge_gdi_ctx.h"
 
-#include "uti/sge_string.h"
-#include "uti/setup_path.h"
-
-#include "sgeobj/sge_advance_reservation.h"
+#include "symbols.h"
+#include "parse_job_cull.h"
+#include "unparse_job_cull.h"
+#include "read_defaults.h"
+#include "sge_qrsub.h"
+#include "msg_common.h"
 
 
 

@@ -39,8 +39,8 @@
 #include <signal.h>
 
 
-#include "cl_commlib.h"
-#include "cl_endpoint_list.h"
+#include "comm/cl_commlib.h"
+#include "comm/cl_endpoint_list.h"
 
 #include "uti/sge_profiling.h"
 

@@ -34,19 +34,22 @@
 #include <errno.h>
 #include <pthread.h>
 
-#include "sgermon.h"
 #include "basis_types.h"
-#include "sge_log.h"
-#include "sge_string.h"
-#include "sge_dstring.h"
-#include "sge_parse_num_par.h"
-#include "sge_hostname.h"
-#include "sge_spool.h"
-#include "setup_path.h"
-#include "sge_answer.h"
-#include "msg_utilib.h"
-#include "sge_error_class.h"
-#include "sge_bootstrap.h"
+
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_string.h"
+#include "uti/sge_dstring.h"
+#include "uti/sge_parse_num_par.h"
+#include "uti/sge_hostname.h"
+#include "uti/sge_spool.h"
+#include "uti/setup_path.h"
+#include "uti/msg_utilib.h"
+#include "uti/sge_error_class.h"
+#include "uti/sge_bootstrap.h"
+
+#include "sgeobj/sge_answer.h"
 
 typedef struct {
     char* admin_user;      
@@ -469,7 +472,7 @@ bool sge_bootstrap(const char *bootstrap_file, dstring *error_dstring)
    /* get filepath of bootstrap file */
    if (bootstrap_file == NULL) {
       if (error_dstring == NULL) {
-         CRITICAL((SGE_EVENT, MSG_UTI_CANNOTRESOLVEBOOTSTRAPFILE));
+         CRITICAL((SGE_EVENT, SFNMAX, MSG_UTI_CANNOTRESOLVEBOOTSTRAPFILE));
       } else {
          sge_dstring_sprintf(error_dstring, MSG_UTI_CANNOTRESOLVEBOOTSTRAPFILE);
       }
@@ -724,9 +727,7 @@ void sge_bootstrap_state_class_destroy(sge_bootstrap_state_class_t **pst)
       return;
    }   
    bootstrap_state_destroy((*pst)->sge_bootstrap_state_handle);
-   FREE(*pst);
-   *pst = NULL;
-
+   sge_free(pst);
    DEXIT;
 }
 
@@ -752,15 +753,15 @@ void sge_bootstrap_state_class_destroy(sge_bootstrap_state_class_t **pst)
 *******************************************************************************/
 static void bootstrap_state_destroy(sge_bootstrap_state_t* theState)
 {
-   FREE(theState->admin_user);
-   FREE(theState->default_domain);
-   FREE(theState->spooling_method);
-   FREE(theState->spooling_lib);
-   FREE(theState->spooling_params);
-   FREE(theState->binary_path);
-   FREE(theState->qmaster_spool_dir);
-   FREE(theState->security_mode);
-   free(theState);
+   sge_free(&(theState->admin_user));
+   sge_free(&(theState->default_domain));
+   sge_free(&(theState->spooling_method));
+   sge_free(&(theState->spooling_lib));
+   sge_free(&(theState->spooling_params));
+   sge_free(&(theState->binary_path));
+   sge_free(&(theState->qmaster_spool_dir));
+   sge_free(&(theState->security_mode));
+   sge_free(&theState);
 }
 
 static bool sge_bootstrap_state_setup(sge_bootstrap_state_class_t *thiz, sge_path_state_class_t *sge_paths, sge_error_class_t *eh)

@@ -34,8 +34,8 @@
 /*___INFO__MARK_END__*/
 
 #include <netinet/in.h>
-#include "cl_lists.h"
-#include "cl_data_types.h"
+#include "comm/lists/cl_lists.h"
+#include "comm/cl_data_types.h"
 
 int cl_com_tcp_get_fd(cl_com_connection_t* connection, int* fd);
 int cl_com_tcp_get_service_port(cl_com_connection_t* connection, int* port);

@@ -34,42 +34,46 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "basis_types.h"
-#include "sgermon.h"
-#include "sge.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_time.h"
+#include "uti/sge_log.h"
+#include "uti/sge_stdlib.h"
+#include "uti/setup_path.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_string.h"
+#include "uti/sge_dstring.h"
+#include "uti/sge_unistd.h"
+
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/parse.h"
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_str.h"
+#include "sgeobj/sge_qinstance_state.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_usage.h"
+#include "sgeobj/sge_ulong.h"
+
+#include "sched/sge_sched.h"
+#include "sched/sge_schedd_text.h"
+
 #include "gdi/sge_gdi.h"
-#include "sge_time.h"
-#include "sge_log.h"
-#include "sge_stdlib.h"
-#include "sge_all_listsL.h"
-#include "sge_host.h"
+#include "gdi/sge_gdi_ctx.h"
+
 #include "sig_handlers.h"
-#include "sge_sched.h"
-#include "sge_dstring.h"
-#include "parse.h"
-#include "sge_prog.h"
-#include "sge_string.h"
 #include "show_job.h"
 #include "qstat_printing.h"
-#include "sge_range.h"
-#include "sge_schedd_text.h"
-#include "msg_common.h"
-#include "msg_clients_common.h"
-#include "msg_qstat.h"
-#include "sge_unistd.h"
-#include "sge_answer.h"
-#include "sge_str.h"
-#include "sge_qinstance_state.h"
-#include "sge_centry.h"
-
+#include "sge.h"
+#include "basis_types.h"
 #include "read_defaults.h"
-#include "setup_path.h"
-#include "sgeobj/sge_ulong.h"
-#include "gdi/sge_gdi_ctx.h"
 #include "sge_qstat.h"
 #include "qstat_xml.h"
 #include "qstat_cmdline.h"
-#include "sgeobj/sge_usage.h"
+#include "msg_common.h"
+#include "msg_clients_common.h"
+#include "msg_qstat.h"
 
 
 #define FORMAT_I_20 "%I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I %I "
@@ -469,7 +473,7 @@ sge_parse_qstat(sge_gdi_ctx_class_t *ctx, lList **ppcmdline, qstat_env_t *qstat_
                lFreeList(ppljid);
             }
             str_list_parse_from_string(ppljid, argstr, ",");
-            FREE(argstr);
+            sge_free(&argstr);
          }
          continue;
       }
@@ -517,11 +521,11 @@ sge_parse_qstat(sge_gdi_ctx_class_t *ctx, lList **ppcmdline, qstat_env_t *qstat_
                if (!usageshowed) {
                   qstat_usage(qstat_env->qselect_mode, stderr, NULL);
                }
-               FREE(argstr);
+               sge_free(&argstr);
                DEXIT;
                return alp;
             }
-            FREE(argstr);
+            sge_free(&argstr);
          }
          continue;
       }
@@ -531,7 +535,7 @@ sge_parse_qstat(sge_gdi_ctx_class_t *ctx, lList **ppcmdline, qstat_env_t *qstat_
          qstat_env->explain_bits = qinstance_state_from_string(argstr, &alp, filter);
          qstat_env->full_listing |= QSTAT_DISPLAY_FULL;
          qstat_env->need_queues = true;
-         FREE(argstr);
+         sge_free(&argstr);
          continue;
       }
        
@@ -543,7 +547,7 @@ sge_parse_qstat(sge_gdi_ctx_class_t *ctx, lList **ppcmdline, qstat_env_t *qstat_
                lFreeList(&(qstat_env->qresource_list));
             }
             qstat_env->qresource_list = centry_list_parse_from_string(qstat_env->qresource_list, argstr, false);
-            FREE(argstr);
+            sge_free(&argstr);
          }
          continue;
       }
@@ -603,7 +607,7 @@ sge_parse_qstat(sge_gdi_ctx_class_t *ctx, lList **ppcmdline, qstat_env_t *qstat_
          u_long32 filter = 0xFFFFFFFF;
          qstat_env->queue_state = qinstance_state_from_string(argstr, &alp, filter);
          qstat_env->need_queues = true;
-         FREE(argstr);
+         sge_free(&argstr);
          continue;
       }
 
@@ -611,7 +615,7 @@ sge_parse_qstat(sge_gdi_ctx_class_t *ctx, lList **ppcmdline, qstat_env_t *qstat_
          qstat_filter_add_l_attributes(qstat_env);
          qstat_env->resource_list = centry_list_parse_from_string(qstat_env->resource_list, argstr, false);
          qstat_env->need_queues = true;
-         FREE(argstr);
+         sge_free(&argstr);
          continue;
       }
 
@@ -707,7 +711,7 @@ static int qstat_stdout_init(qstat_handler_t *handler, lList **alpp)
 error:
    if (ret != 0 ) {
       if(ctx != NULL) {
-         FREE(ctx);
+         sge_free(&ctx);
       }
    }
    DEXIT;
@@ -720,7 +724,7 @@ static int qstat_stdout_destroy(qstat_handler_t *handler)
 
    if (handler->ctx) {
       sge_dstring_free(&(((qstat_stdout_ctx_t*)(handler->ctx))->last_queue_name));
-      FREE(handler->ctx);
+      sge_free(&(handler->ctx));
    }
 
    DEXIT;
@@ -912,8 +916,8 @@ static int job_stdout_job(job_handler_t* handler, u_long32 jid, job_summary_t *s
             sge_urg ? jhul5 : "",
             sge_pri ? jhul6 : "");
             
-      FREE(part6);
-      FREE(seperator);               
+      sge_free(&part6);
+      sge_free(&seperator);               
    }
    
    if (summary->is_zombie) {
@@ -1696,9 +1700,7 @@ static int qstat_stdout_queue_summary(qstat_handler_t* handler, const char* qnam
 static int qstat_stdout_queue_load_alarm(qstat_handler_t* handler, const char* qname, const char* reason, lList **alpp) 
 {
    DENTER(TOP_LAYER, "qstat_stdout_queue_load_alarm");
-   printf("\t");
-   printf(reason);
-   printf("\n");
+   printf("\t%s\n", reason != NULL ? reason : "no alarm reason given");
    DEXIT;
    return 0;
 }
@@ -1706,9 +1708,7 @@ static int qstat_stdout_queue_load_alarm(qstat_handler_t* handler, const char* q
 static int qstat_stdout_queue_suspend_alarm(qstat_handler_t* handler, const char* qname, const char* reason, lList **alpp) 
 {
    DENTER(TOP_LAYER, "qstat_stdout_queue_suspend_alarm");
-   printf("\t");
-   printf(reason);
-   printf("\n");
+   printf("\t%s\n", reason != NULL ? reason : "no alarm reason given");
    DEXIT;
    return 0;
 }
@@ -1716,9 +1716,7 @@ static int qstat_stdout_queue_suspend_alarm(qstat_handler_t* handler, const char
 static int qstat_stdout_queue_message(qstat_handler_t* handler, const char* qname, const char *message, lList **alpp) 
 {
    DENTER(TOP_LAYER, "qstat_stdout_queue_message");
-   printf("\t");
-   printf(message);
-   printf("\n");
+   printf("\t%s\n", message != NULL ? message : "no queue message given");
    DEXIT;
    return 0;
 }

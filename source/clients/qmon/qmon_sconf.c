@@ -47,11 +47,6 @@
 #include <Xmt/MsgLine.h>
 #include <Xmt/InputField.h>
 
-#include "sge_all_listsL.h"
-#include "gdi/sge_gdi.h"
-#include "sge_answer.h"
-#include "sge_range.h"
-#include "commlib.h"
 #include "qmon_proto.h"
 #include "qmon_rmon.h"
 #include "qmon_cull.h"
@@ -67,9 +62,18 @@
 #include "qmon_matrix.h"
 #include "qmon_globals.h"
 #include "AskForTime.h"
-#include "sge_feature.h"
-#include "sge_sched.h"
-#include "sge_string.h"
+
+#include "uti/sge_string.h"
+
+#include "comm/commlib.h"
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_feature.h"
+
+#include "sched/sge_sched.h"
+
+#include "gdi/sge_gdi.h"
 
 /*-------------------------------------------------------------------------*/
 static Widget qmonCreateSchedConfig(Widget parent);
@@ -711,11 +715,11 @@ XtPointer cad
 
 static void qmonSchedFreeData()
 {
-   FREE(data.algorithm);
-   FREE(data.schedule_interval);
-   FREE(data.sc_params);
-   FREE(data.load_adjustment_decay_time);
-   FREE(data.load_formula);
-   FREE(data.reprioritize_interval);
-   FREE(data.default_duration);
+   sge_free(&(data.algorithm));
+   sge_free(&(data.schedule_interval));
+   sge_free(&(data.sc_params));
+   sge_free(&(data.load_adjustment_decay_time));
+   sge_free(&(data.load_formula));
+   sge_free(&(data.reprioritize_interval));
+   sge_free(&(data.default_duration));
 }

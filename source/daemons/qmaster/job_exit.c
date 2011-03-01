@@ -32,36 +32,37 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "sge.h"
-#include "sge_ja_task.h"
-#include "sge_job_qmaster.h"
-#include "sge_pe_qmaster.h"
-#include "sge_host.h"
-#include "sge_give_jobs.h"
-#include "execution_states.h"
-#include "sge_prog.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "symbols.h"
-#include "setup_path.h"
-#include "msg_common.h"
-#include "msg_qmaster.h"
-#include "sge_unistd.h"
-#include "sge_time.h"
-#include "sge_hostname.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_prog.h"
+#include "uti/sge_log.h"
+#include "uti/setup_path.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_time.h"
+#include "uti/sge_hostname.h"
+
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_ja_task.h"
 #include "sgeobj/sge_qinstance.h"
 #include "sgeobj/sge_qinstance_state.h"
-#include "sge_job.h"
-#include "sge_report.h"
-#include "sge_cqueue.h"
-#include "sge_answer.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_report.h"
+#include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_answer.h"
 
+#include "sge.h"
+#include "sge_job_qmaster.h"
+#include "sge_pe_qmaster.h"
+#include "sge_give_jobs.h"
+#include "execution_states.h"
+#include "symbols.h"
 #include "sge_reporting_qmaster.h"
 #include "sge_advance_reservation_qmaster.h"
 #include "sge_qinstance_qmaster.h"
-
 #include "sge_persistence_qmaster.h"
 #include "sge_job_enforce_limit.h"
+#include "msg_common.h"
+#include "msg_qmaster.h"
 
 
 /************************************************************************
@@ -250,7 +251,7 @@ void sge_job_exit(sge_gdi_ctx_class_t *ctx, lListElem *jr, lListElem *jep, lList
               failed == ESSTATE_DIED_THRU_SIGNAL) &&
             ((lGetUlong(jep, JB_restart) == 1 || 
              (lGetUlong(jep, JB_checkpoint_attr) & ~NO_CHECKPOINT)) ||
-             (!lGetUlong(jep, JB_restart) && lGetBool(queueep, QU_rerun)))) {
+             (!lGetUlong(jep, JB_restart) && (queueep != NULL && lGetBool(queueep, QU_rerun))))) {
       DTRACE;
       lSetUlong(jatep, JAT_job_restarted, 
                   MAX(lGetUlong(jatep, JAT_job_restarted), 
@@ -327,7 +328,7 @@ void sge_job_exit(sge_gdi_ctx_class_t *ctx, lListElem *jr, lListElem *jep, lList
 
                   sge_dstring_sprintf(&error, MSG_LOG_QERRORBYJOBHOST_SUS, lGetString(qinstance, QU_qname), sge_u32c(jobid), host);
                   qinstance_message_add(qinstance, QI_ERROR, sge_dstring_get_string(&error)); 
-                  ERROR((SGE_EVENT, sge_dstring_get_string(&error)));
+                  ERROR((SGE_EVENT, SFNMAX, sge_dstring_get_string(&error)));
                   sge_event_spool(ctx, &answer_list, 0, sgeE_QINSTANCE_MOD, 
                                   0, 0, lGetString(qinstance, QU_qname), 
                                   lGetHost(qinstance, QU_qhostname), NULL,
@@ -351,7 +352,7 @@ void sge_job_exit(sge_gdi_ctx_class_t *ctx, lListElem *jr, lListElem *jep, lList
          /* general error -> this queue cant run any job */
          sge_qmaster_qinstance_state_set_error(queueep, true);
          qinstance_message_add(queueep, QI_ERROR, sge_dstring_get_string(&error));
-         ERROR((SGE_EVENT, sge_dstring_get_string(&error)));      
+         ERROR((SGE_EVENT, SFNMAX, sge_dstring_get_string(&error)));
          sge_event_spool(ctx, &answer_list, 0, sgeE_QINSTANCE_MOD, 
                          0, 0, lGetString(queueep, QU_qname), 
                          lGetHost(queueep, QU_qhostname), NULL,

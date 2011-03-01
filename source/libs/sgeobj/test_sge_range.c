@@ -35,8 +35,8 @@
 
 #include "cull/cull.h"
 
-#include "sge_all_listsL.h"
-#include "sge_range.h"
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_range.h"
 
 bool check_range_get_all_ids(void)
 {

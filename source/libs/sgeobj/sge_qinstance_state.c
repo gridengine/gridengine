@@ -39,12 +39,13 @@
 
 #include "cull/cull_list.h"
 
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_qinstance_state.h"
+#include "sgeobj/msg_sgeobjlib.h"
+
 #include "sge.h"
-#include "sge_conf.h"
-#include "sge_answer.h"
-#include "sge_qinstance.h"
-#include "sge_qinstance_state.h"
-#include "msg_sgeobjlib.h"
 
 /****** sgeobj/qinstance_state/--State_Chart() ********************************
 *

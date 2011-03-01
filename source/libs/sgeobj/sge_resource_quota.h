@@ -32,11 +32,11 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_resource_quota_RQS_L.h"
-#include "sge_resource_quota_RQR_L.h"
-#include "sge_resource_quota_RQRF_L.h"
-#include "sge_resource_quota_RQRL_L.h"
-#include "sge_resource_quota_RQL_L.h"
+#include "sgeobj/sge_resource_quota_RQS_L.h"
+#include "sgeobj/sge_resource_quota_RQR_L.h"
+#include "sgeobj/sge_resource_quota_RQRF_L.h"
+#include "sgeobj/sge_resource_quota_RQRL_L.h"
+#include "sgeobj/sge_resource_quota_RQL_L.h"
 
 enum {
    FILTER_USERS = 0,

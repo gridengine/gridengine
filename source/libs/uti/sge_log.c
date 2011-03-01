@@ -30,26 +30,30 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_log.h"
-
 #include <fcntl.h>
 #include <string.h>
 #include <stdio.h>
 #include <pthread.h>
+#include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include "sge.h"
-#include "sge_time.h"
-#include "sge_dstring.h"
-#include "sgermon.h"
-#include "sge_prog.h"
-#include "sge_uidgid.h"
-#include "sge_mtutil.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_time.h"
+#include "uti/sge_dstring.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_uidgid.h"
+
+#include "lck/sge_mtutil.h"
+
 #include "gdi/sge_gdi_ctx.h"
+#include "uti/sge_string.h"
 
-#include "msg_utilib.h"
+#include "uti/msg_utilib.h"
 
+#include "sge.h"
 
 typedef struct {
    pthread_mutex_t  mutex;
@@ -543,7 +547,7 @@ int sge_log(int log_level, const char *mesg, const char *file__, const char *fun
    const char *unqualified_hostname = NULL;
    int is_daemonized = 0; 
 
-   DENTER(BASIS_LAYER, "sge_log");
+   DENTER_(BASIS_LAYER, "sge_log");
    
    ctx = log_state_get_log_context();
    
@@ -567,11 +571,11 @@ int sge_log(int log_level, const char *mesg, const char *file__, const char *fun
 
    /* quick exit if nothing to log */
    if (log_level > MAX(log_state_get_log_level(), LOG_WARNING)) {
-      DRETURN(0);
+      DRETURN_(0);
    }
 
    if (!log_state_get_log_gui()) {
-      DRETURN(0);
+      DRETURN_(0);
    }
 
    switch(log_level) {
@@ -617,7 +621,7 @@ int sge_log(int log_level, const char *mesg, const char *file__, const char *fun
 
    sge_do_log(me, threadname, unqualified_hostname, levelchar, mesg);
 
-   DRETURN(0);
+   DRETURN_(0);
 } /* sge_log() */
 
 /****** uti/sge_log/sge_do_log() ***********************************************
@@ -642,7 +646,7 @@ int sge_log(int log_level, const char *mesg, const char *file__, const char *fun
 *
 *******************************************************************************/
 static void sge_do_log(u_long32 me, const char* progname, const char* unqualified_hostname,
-                       int aLevel, const char *aMessage) 
+                       int aLevel, const char *aMessage)
 {
    int fd;
 
@@ -650,10 +654,11 @@ static void sge_do_log(u_long32 me, const char* progname, const char* unqualifie
       if ((fd = SGE_OPEN3(log_state_get_log_file(), O_WRONLY | O_APPEND | O_CREAT, 0666)) >= 0) {
          char msg2log[4*MAX_STRING_SIZE];
          dstring msg;
-         
+         int len;
+
          sge_dstring_init(&msg, msg2log, sizeof(msg2log));
 
-         append_time((time_t)sge_get_gmt(), &msg, false); 
+         append_time((time_t)sge_get_gmt(), &msg, false);
 
          sge_dstring_sprintf_append(&msg, "|%6.6s|%s|%c|%s\n",
                  progname,
@@ -661,10 +666,16 @@ static void sge_do_log(u_long32 me, const char* progname, const char* unqualifie
                  aLevel,
                  aMessage);
 
-         write(fd, msg2log, strlen(msg2log));
+         len = strlen(msg2log);
+         if (write(fd, msg2log, len) != len) {
+            /* we are in error logging here - the only chance to log this problem
+             * might be to write it to stderr
+             */
+            fprintf(stderr, "can't log to file %s: %s\n", log_state_get_log_file(), sge_strerror(errno, &msg));
+         }
          close(fd);
       }
-   }   
+   }
 
    return;
 } /* sge_do_log() */
@@ -717,7 +728,7 @@ static void log_buffer_once_init(void)
 *******************************************************************************/
 static void log_buffer_destroy(void* theBuffer)
 {
-   sge_free((char*)theBuffer);
+   sge_free(&theBuffer);
 }
 
 /****** uti/log/log_buffer_getspecific() ****************************************
@@ -814,7 +825,7 @@ static void log_context_once_init(void)
 *******************************************************************************/
 static void log_context_destroy(void* theContext)
 {
-   sge_free((char*)theContext);
+   sge_free(&theContext);
 }
 
 /****** uti/log/log_context_getspecific() ****************************************

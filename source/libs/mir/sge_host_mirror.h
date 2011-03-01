@@ -32,9 +32,11 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "cull.h"
-#include "sge_object.h"
-#include "sge_mirror.h"
+#include "cull/cull.h"
+
+#include "sgeobj/sge_object.h"
+
+#include "mir/sge_mirror.h"
 
 sge_callback_result 
 host_update_master_list(sge_evc_class_t *evc, object_description *object_base, sge_object_type type, 

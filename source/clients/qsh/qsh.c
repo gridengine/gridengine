@@ -47,44 +47,48 @@
 #include <arpa/inet.h>
 #endif
 
+#include "rmon/sgermon.h"
+
+#include "uti/sge_hostname.h"
+#include "uti/sge_sl.h"
+#include "uti/sge_profiling.h"
+#include "uti/sge_stdio.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_log.h"
+#include "uti/sge_string.h"
+#include "uti/setup_path.h" 
+#include "uti/sge_afsutil.h"
+#include "uti/sge_signal.h"
+#include "uti/sge_unistd.h"
+
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_var.h"
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_job.h"
+
+#include "gdi/sge_gdi_ctx.h"
+#include "gdi/sge_gdi2.h"
+#include "gdi/sge_gdi.h"
+#include "gdi/sge_security.h"
+#include "gdi/sge_qexec.h"
+#include "gdi/qm_name.h"
+
+#include "comm/commlib.h"
+
+#include "sig_handlers.h"
 #include "basis_types.h"
+#include "sge_mt_init.h"
 #include "symbols.h"
-#include "sge_all_listsL.h"
 #include "usage.h"
 #include "parse_qsub.h"
 #include "parse_job_cull.h"
 #include "parse_job_qsh.h"
 #include "read_defaults.h"
 #include "show_job.h"
-#include "commlib.h"
-#include "sig_handlers.h"
-#include "sge_prog.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "sge_string.h"
-#include "setup_path.h" 
-#include "sge_afsutil.h"
-#include "sge_conf.h"
-#include "sge_job.h"
-#include "sge_qexec.h"
-#include "qm_name.h"
-#include "sge_signal.h"
-#include "sge_unistd.h"
-#include "sge_security.h"
-#include "sge_answer.h"
-#include "sge_var.h"
-#include "gdi/sge_gdi.h"
-#include "sge_profiling.h"
-#include "sge_stdio.h"
-#include "sge_mt_init.h"
-
 #include "msg_clients_common.h"
 #include "msg_qsh.h"
 #include "msg_common.h"
-#include "sge_hostname.h"
-#include "sge_sl.h"
-
-#include "gdi/sge_gdi_ctx.h"
 
 #if defined(DARWIN)
 #  include <termios.h>
@@ -101,11 +105,11 @@
 #  include <termio.h>
 #endif
 
-#include "sge_pty.h"
+#include "uti/sge_pty.h"
 #include "sge_ijs_comm.h"
 #include "sge_ijs_threads.h"
 #include "sge_client_ijs.h"
-#include "sge_parse_args.h"
+#include "uti/sge_parse_args.h"
 
 #include "sgeobj/cull_parse_util.h"
 #include "sgeobj/sge_jsv.h"
@@ -454,7 +458,7 @@ static char *read_from_qrsh_socket(int msgsock)
          return NULL;
       } else {
          if (rval == 0) {
-            ERROR((SGE_EVENT, MSG_QSH_ERRORENDINGCONNECTION));
+            ERROR((SGE_EVENT, SFNMAX, MSG_QSH_ERRORENDINGCONNECTION));
             DEXIT;
             return NULL; 
          } 
@@ -505,7 +509,7 @@ static int get_remote_exit_code(int sock)
 
    DENTER(TOP_LAYER, "get_remote_exit_code");
    
-   VERBOSE_LOG((stderr, MSG_QSH_READINGEXITCODEFROMSHEPHERD));
+   VERBOSE_LOG((stderr, SFNMAX, MSG_QSH_READINGEXITCODEFROMSHEPHERD));
 
    msgsock = wait_for_qrsh_socket(sock, QSH_SOCKET_FINAL_TIMEOUT);
    if (msgsock != -1) {
@@ -522,7 +526,7 @@ static int get_remote_exit_code(int sock)
       }
    }
 
-   ERROR((SGE_EVENT, MSG_QSH_ERRORREADINGRETURNCODEOFREMOTECOMMAND));
+   ERROR((SGE_EVENT, SFNMAX, MSG_QSH_ERRORREADINGRETURNCODEOFREMOTECOMMAND));
    DEXIT;
    return -1;
 }
@@ -549,7 +553,7 @@ static int get_remote_exit_code(int sock)
 *  EXAMPLE
 *     const char *quoted = quote_argument("test");
 *     printf("%s\n", quoted);
-*     free(quoted);
+*     sge_free(&quoted);
 *
 *  NOTES
 *     Function might be moved to some library, same code is used in other 
@@ -571,7 +575,7 @@ static const char *quote_argument(const char *arg) {
    new_arg = malloc(strlen(arg) + 3);
 
    if (new_arg == NULL) {
-      ERROR((SGE_EVENT, MSG_QSH_MALLOCFAILED));
+      ERROR((SGE_EVENT, SFNMAX, MSG_QSH_MALLOCFAILED));
       DEXIT;
       return NULL;
    }
@@ -766,7 +770,7 @@ static int start_client_program(const char *client_name,
 
       /* create an argument list */
       if (!sge_sl_create(&sl_args)) {
-         ERROR((SGE_EVENT, MSG_SGETEXT_NOMEM));
+         ERROR((SGE_EVENT, SFNMAX, MSG_SGETEXT_NOMEM));
          exit(EXIT_FAILURE);
       }
 
@@ -1024,7 +1028,7 @@ get_client_name(sge_gdi_ctx_class_t *ctx, int is_rsh, int is_rlogin, int inherit
    /* get configuration from qmaster */
    if (gdi2_get_configuration(ctx, qualified_hostname, &global, &local) ||
       merge_configuration(NULL, progid, cell_root, global, local, &conf_list)) {
-      ERROR((SGE_EVENT, MSG_CONFIG_CANTGETCONFIGURATIONFROMQMASTER));
+      ERROR((SGE_EVENT, SFNMAX, MSG_CONFIG_CANTGETCONFIGURATIONFROMQMASTER));
       lFreeList(&conf_list);
       lFreeElem(&global);
       lFreeElem(&local);
@@ -1035,7 +1039,7 @@ get_client_name(sge_gdi_ctx_class_t *ctx, int is_rsh, int is_rlogin, int inherit
    /* search for config entry */
    qlogin_cmd_elem = lGetElemStr(conf_list, CF_name, config_name);
    if (qlogin_cmd_elem == NULL) {
-      ERROR((SGE_EVENT, MSG_CONFIG_CANTGETCONFIGURATIONFROMQMASTER));
+      ERROR((SGE_EVENT, SFNMAX, MSG_CONFIG_CANTGETCONFIGURATIONFROMQMASTER));
       lFreeList(&conf_list);
       lFreeElem(&global);
       lFreeElem(&local);
@@ -1857,7 +1861,7 @@ int main(int argc, char **argv)
             SGE_EXIT((void **)&ctx, EXIT_FAILURE);
          }
       
-         FREE(host);
+         sge_free(&host);
          /* get host and port of rshd, job_dir and utilbin_dir over connection */
          if (!get_client_server_context(msgsock, &port, &job_dir, &utilbin_dir, &host)) {
             sge_prof_cleanup();
@@ -2008,7 +2012,7 @@ int main(int argc, char **argv)
          }
       }
       
-      VERBOSE_LOG((stderr, MSG_QSH_WAITINGFORINTERACTIVEJOBTOBESCHEDULED));
+      VERBOSE_LOG((stderr, SFNMAX, MSG_QSH_WAITINGFORINTERACTIVEJOBTOBESCHEDULED));
 
       DPRINTF(("R E A D I N G    J O B ! ! ! ! ! ! ! ! ! ! !\n"));
       DPRINTF(("============================================\n"));
@@ -2190,7 +2194,7 @@ int main(int argc, char **argv)
    
          do_shut = shut_me_down;
          if (do_shut || do_exit) {
-            WARNING((SGE_EVENT, MSG_QSH_REQUESTFORINTERACTIVEJOBHASBEENCANCELED));
+            WARNING((SGE_EVENT, SFNMAX, MSG_QSH_REQUESTFORINTERACTIVEJOBHASBEENCANCELED));
             delete_job(ctx, job_id, lp_jobs);
             lFreeList(&lp_poll);
             do_exit = 1;
@@ -2263,7 +2267,7 @@ int main(int argc, char **argv)
                 * so exit qrsh/qlogin with real exit_status.
                 */
                if (g_new_interactive_job_support == false) {
-                  WARNING((SGE_EVENT, MSG_QSH_CANTSTARTINTERACTIVEJOB));
+                  WARNING((SGE_EVENT, SFNMAX, MSG_QSH_CANTSTARTINTERACTIVEJOB));
                   do_exit = 1;
                   exit_status = 1;
                } else {
@@ -2296,7 +2300,7 @@ int main(int argc, char **argv)
       sge_dstring_free(&id_dstring);
    }
 
-   FREE(client_name);
+   sge_free(&client_name);
    sge_prof_cleanup();
    SGE_EXIT((void **)&ctx, exit_status);
    DEXIT;

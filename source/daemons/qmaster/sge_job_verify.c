@@ -27,6 +27,8 @@
  *
  *  All Rights Reserved.
  *
+ *  Portions of this code are Copyright 2011 Univa Inc.
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
@@ -69,17 +71,14 @@
 #include "sgeobj/sge_userprj.h"
 #include "sgeobj/sge_userset.h"
 #include "sgeobj/sge_binding.h"
+#include "sgeobj/sge_conf.h"
 
-/* qmaster */
+#include "sched/valid_queue_user.h"
+
 #include "sge_userprj_qmaster.h"
 #include "sge_userset_qmaster.h"
 #include "sge_job_qmaster.h"
 #include "symbols.h"
-
-/* schedd */
-#include "valid_queue_user.h"
-
-/* message files */
 #include "msg_common.h"
 #include "msg_qmaster.h"
 #include "msg_daemons_common.h"
@@ -173,7 +172,7 @@ sge_job_verify_adjust(sge_gdi_ctx_class_t *ctx, lListElem *jep, lList **alpp,
    if (ret == STATUS_OK) {
       if ((!JOB_TYPE_IS_BINARY(lGetUlong(jep, JB_type)) &&
           !lGetString(jep, JB_script_ptr) && lGetString(jep, JB_script_file))) {
-         ERROR((SGE_EVENT, MSG_JOB_NOSCRIPT));
+         ERROR((SGE_EVENT, SFNMAX, MSG_JOB_NOSCRIPT));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          ret = STATUS_EUNKNOWN;
       }
@@ -206,7 +205,8 @@ sge_job_verify_adjust(sge_gdi_ctx_class_t *ctx, lListElem *jep, lList **alpp,
       } else {
          /* verify if binding parameters are consistent (bugster 6903956) */ 
          if (check_binding_param_consistency(binding_elem) == false) {
-            ERROR((SGE_EVENT, MSG_JSV_BINDING_REJECTED));
+            /* TODO add to answer list */
+            answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             ret = STATUS_EUNKNOWN;
          } 
       }
@@ -505,7 +505,7 @@ sge_job_verify_adjust(sge_gdi_ctx_class_t *ctx, lListElem *jep, lList **alpp,
          int status = sge_add_auto_user(ctx, ruser, alpp, monitor);
 
          if (status != STATUS_OK) {
-            FREE(enforce_user);
+            sge_free(&enforce_user);
             DRETURN(status);
          }
       }
@@ -515,10 +515,10 @@ sge_job_verify_adjust(sge_gdi_ctx_class_t *ctx, lListElem *jep, lList **alpp,
                !user_list_locate(*object_base[SGE_TYPE_USER].list, ruser)) {
          ERROR((SGE_EVENT, MSG_JOB_USRUNKNOWN_S, ruser));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         FREE(enforce_user);
+         sge_free(&enforce_user);
          DRETURN(STATUS_EUNKNOWN);
       }
-      FREE(enforce_user);
+      sge_free(&enforce_user);
    }
 
    /* set default project */
@@ -627,7 +627,7 @@ sge_job_verify_adjust(sge_gdi_ctx_class_t *ctx, lListElem *jep, lList **alpp,
     * jobs with higher priority than 0 (=BASE_PRIORITY)
     */
    if (lGetUlong(jep, JB_priority) > BASE_PRIORITY && !manop_is_operator(ruser)) {
-      ERROR((SGE_EVENT, MSG_JOB_NONADMINPRIO));
+      ERROR((SGE_EVENT, SFNMAX, MSG_JOB_NONADMINPRIO));
       answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       DRETURN(STATUS_EUNKNOWN);
    }
@@ -691,14 +691,17 @@ sge_job_verify_adjust(sge_gdi_ctx_class_t *ctx, lListElem *jep, lList **alpp,
 static bool check_binding_param_consistency(lListElem* binding_elem)
 {
    const char* strategy;
+   
+   DENTER(TOP_LAYER, "check_binding_param_consistency");
 
    if (binding_elem == NULL) {
-      return false;
+      DRETURN(false);
    }
 
    if ((strategy = lGetString(binding_elem, BN_strategy)) == NULL) {
       /* no binding strategy set */
-      return false;
+      ERROR((SGE_EVENT, MSG_JSV_BINDING_REJECTED_SS, "BN_strategy", "NULL"));
+      DRETURN(false);
    }
 
    /* check according strategy linear */
@@ -707,29 +710,34 @@ static bool check_binding_param_consistency(lListElem* binding_elem)
       
       /* amount must be > 0 */
       if (lGetUlong(binding_elem, BN_parameter_n) == 0) {
-         return false;
+         ERROR((SGE_EVENT, MSG_JSV_BINDING_REJECTED_SS, "BN_parameter", "n"));
+         DRETURN(false);
       }
 
       /* socket and core values are implicitly 0 */
       
       /* check if step_size > 0 */
       if (lGetUlong(binding_elem, BN_parameter_striding_step_size) > 0) {
-         return false;
+         ERROR((SGE_EVENT, MSG_JSV_BINDING_REJECTED_SS, "BN_parameter_striding_step_size", "> 0"));
+         DRETURN(false);
       }
 
       /* check if explicit value is set */
       if (lGetString(binding_elem, BN_parameter_explicit) != NULL) {
-         return false;
+         ERROR((SGE_EVENT, MSG_JSV_BINDING_REJECTED_SS, "BN_parameter_explicit", "!= NULL"));
+         DRETURN(false);
       }
 
       /* in case of linear_automatic the core and socket number 
          must not be > 0 */
       if (strcmp(strategy, "linear_automatic") == 0) {
          if (lGetUlong(binding_elem, BN_parameter_socket_offset) > 0) {
-            return false;
+            ERROR((SGE_EVENT, MSG_JSV_BINDING_REJECTED_SS, "BN_parameter_socket_offset", "> 0"));
+            DRETURN(false);
          }
          if (lGetUlong(binding_elem, BN_parameter_core_offset) > 0) {
-            return false;
+            ERROR((SGE_EVENT, MSG_JSV_BINDING_REJECTED_SS, "BN_parameter_core_offset", "> 0"));
+            DRETURN(false);
          }
       }
    }
@@ -740,51 +748,60 @@ static bool check_binding_param_consistency(lListElem* binding_elem)
 
       /* the amount of cores requested must be > 0 */
       if (lGetUlong(binding_elem, BN_parameter_n) == 0) {
-         return false;
+         ERROR((SGE_EVENT, MSG_JSV_BINDING_REJECTED_SS, "BN_parameter_n", "0"));
+         DRETURN(false);
       }
       
       /* socket and core values are implicitly 0 */
 
       /* check explicit socket core list */
       if (lGetString(binding_elem, BN_parameter_explicit) != NULL) {
-         return false;
+         ERROR((SGE_EVENT, MSG_JSV_BINDING_REJECTED_SS, "BN_parameter_explicit", "!= NULL"));
+         DRETURN(false);
       }
 
    }
 
    /* check according strategy explicit */
    if (strcmp(strategy, "explicit") == 0) {
-      
+      const char* expl;
+      int amount;
+
       /* the explicit parameter must be set */
       if (lGetString(binding_elem, BN_parameter_explicit) == NULL) {
-         return false;
+         ERROR((SGE_EVENT, MSG_JSV_BINDING_REJECTED_SS, "BN_parameter_explicit", "== NULL"));
+         DRETURN(false);
       }
       
       /* amount makes no sense */
       if (lGetUlong(binding_elem, BN_parameter_n) > 0) {
-         return false;
+         ERROR((SGE_EVENT, MSG_JSV_BINDING_REJECTED_SS, "BN_parameter_n", "> 0"));
+         DRETURN(false);
       }
 
       /* step size makes no sense */
       if (lGetUlong(binding_elem, BN_parameter_striding_step_size) > 0) {
-         return false;
+         ERROR((SGE_EVENT, MSG_JSV_BINDING_REJECTED_SS, "BN_parameter_striding_step_size", "> 0"));
+         DRETURN(false);
       }
      
       /* check if socket offset was set */
       if (lGetUlong(binding_elem, BN_parameter_socket_offset) > 0) {
-         return false;
+         ERROR((SGE_EVENT, MSG_JSV_BINDING_REJECTED_SS, "BN_parameter_socket_offset", "> 0"));
+         DRETURN(false);
       }
 
       /* check if core offset was set */
       if (lGetUlong(binding_elem, BN_parameter_core_offset) > 0) {
-         return false;
+         ERROR((SGE_EVENT, MSG_JSV_BINDING_REJECTED_SS, "BN_parameter_core_offset", "> 0"));
+         DRETURN(false);
       }
 
-      const char* expl = lGetString(binding_elem, BN_parameter_explicit);
-      int amount = get_explicit_amount(expl);
+      expl = lGetString(binding_elem, BN_parameter_explicit);
+      amount = get_explicit_amount(expl, false);
 
-      if (check_explicit_binding_string(expl, amount) == false) {
-         return false;
+      if (check_explicit_binding_string(expl, amount, false) == false) {
+         DRETURN(false);
       }
 
    }

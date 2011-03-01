@@ -33,16 +33,20 @@
 #include <string.h>
 #include <errno.h>
 
-#include "sge_conf.h"
-#include "sgermon.h"
-#include "cull.h"
-#include "sge_str.h"
-#include "sge_log.h"
-#include "sge_unistd.h"
-#include "msg_common.h"
-#include "msg_utilib.h"
+#include "rmon/sgermon.h"
 
-#include "sge_dirent.h"
+#include "cull/cull.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_unistd.h"
+#include "uti/msg_utilib.h"
+
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_str.h"
+
+#include "spool/sge_dirent.h"
+
+#include "msg_common.h"
 
 /****
  **** sge_get_dirents

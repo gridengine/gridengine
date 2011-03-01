@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "cull.h"
+#include "cull/cull.h"
 #include "gdi/sge_gdi_ctx.h"
 
 int sge_add_manop(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **alpp, char *ruser, char *rhost, u_long32 target);

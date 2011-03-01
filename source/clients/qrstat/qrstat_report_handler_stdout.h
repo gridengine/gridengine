@@ -36,9 +36,9 @@
 extern "C" {
 #endif
 
-#include "basis_types.h"
-#include "sge_gdi_ctx.h"
+#include "gdi/sge_gdi_ctx.h"
 
+#include "basis_types.h"
 #include "qrstat_filter.h"
       
 qrstat_report_handler_t *

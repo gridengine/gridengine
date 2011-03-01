@@ -39,14 +39,14 @@
 
 #include "comm/commlib.h"
 
-#include "basis_types.h"
-#include "sge_answer.h"
-#include "sge_str.h"
-#include "sge_href.h"
-#include "sge_hgroup.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_str.h"
+#include "sgeobj/sge_href.h"
+#include "sgeobj/sge_hgroup.h"
+#include "sgeobj/msg_sgeobjlib.h"
 
+#include "basis_types.h"
 #include "msg_common.h"
-#include "msg_sgeobjlib.h"
 
 #define HOSTREF_LAYER BASIS_LAYER
 

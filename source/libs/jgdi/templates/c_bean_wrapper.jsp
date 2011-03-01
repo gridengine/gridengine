@@ -320,7 +320,7 @@ jgdi_result_t <%=classname%>_static_<%=methodName%>(JNIEnv *env <%
                   }
                   (*env)-><%=ch.getReleaseArrayElementsMethod(realType)%>(env, (<%=realCType%>Array)temp, tmpArray, JNI_ABORT);
                   if (test_jni_error(env, "release the array elements of the result failed", alpp)) {
-                     free(array);
+                     sge_free(&array);
                   } else {
                      *result = array;
                      *len = arrayLen;
@@ -331,7 +331,7 @@ jgdi_result_t <%=classname%>_static_<%=methodName%>(JNIEnv *env <%
                for(i = 0; i < arrayLen; i++) {
                   array[i] = (*env)->GetObjectArrayElement(env, (jobjectArray)temp, i); 
                   if (test_jni_error(env, "Can not get object from array", alpp)) {
-                     free(array);
+                     sge_free(&array);
                      array = NULL;
                      break;
                   }
@@ -496,7 +496,7 @@ jgdi_result_t <%=classname%>_<%=methodName%>(JNIEnv *env, <%=ch.getCType(beanCla
                   }
                   (*env)-><%=ch.getReleaseArrayElementsMethod(realType)%>(env, (<%=realCType%>Array)temp, tmpArray, JNI_ABORT);
                   if (test_jni_error(env, "release the array elements of the result failed", alpp)) {
-                     free(array);
+                     sge_free(&array);
                   } else {
                      *result = array;
                      *len = arrayLen;
@@ -507,7 +507,7 @@ jgdi_result_t <%=classname%>_<%=methodName%>(JNIEnv *env, <%=ch.getCType(beanCla
                for(i = 0; i < arrayLen; i++) {
                   array[i] = (*env)->GetObjectArrayElement(env, (jobjectArray)temp, i); 
                   if (test_jni_error(env, "Can not get object from array", alpp)) {
-                     free(array);
+                     sge_free(&array);
                      array = NULL;
                      break;
                   }

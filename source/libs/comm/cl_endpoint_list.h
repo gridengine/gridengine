@@ -33,9 +33,10 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "cl_lists.h"
-#include "cl_data_types.h"
-#include "sge_htable.h"
+#include "uti/sge_htable.h"
+
+#include "comm/lists/cl_lists.h"
+#include "comm/cl_data_types.h"
 
 #define CL_ENDPOINT_LIST_DEFAULT_LIFE_TIME     60 * 60 * 24  /* 24 h   (without hearing anything from and endpoint) */
 #define CL_ENDPOINT_LIST_DEFAULT_REFRESH_TIME  10            /*   1 s   (refresh list every 10 seconds */

@@ -39,38 +39,42 @@
 #include <netdb.h>
 #include <fcntl.h>
 
-#include "sge_bootstrap.h"
-#include "sge_stdio.h"
-#include "sge_unistd.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_bootstrap.h"
+#include "uti/sge_stdio.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_prog.h"
+#include "uti/setup_path.h"
+#include "uti/sge_os.h"
+#include "uti/sge_uidgid.h"
+#include "uti/sge_language.h"
+#include "uti/sge_string.h"
+#include "uti/sge_io.h"
+#include "uti/sge_spool.h"
+#include "uti/sge_log.h"
+#include "uti/sge_time.h"
+#include "uti/sge_hostname.h"
+
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_answer.h"
+
+#include "gdi/qm_name.h"
+#include "gdi/sge_gdi_ctx.h"
+#include "gdi/msg_gdilib.h"
+
+#include "comm/commlib.h"
+
 #include "sge.h"
-#include "sge_prog.h"
-#include "qm_name.h"
 #include "sig_handlers.h"
 #include "qmaster_heartbeat.h"
 #include "lock.h"
 #include "startprog.h"
-#include "sge_hostname.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "sge_time.h"
-#include "commlib.h"
-#include "sge_all_listsL.h"
-#include "sge_feature.h"
-#include "setup_path.h"
-#include "sge_os.h"
-#include "shutdown.h"
-#include "sge_uidgid.h"
-#include "sge_language.h"
-#include "sge_string.h"
-#include "usage.h"
-#include "sge_io.h"
-#include "sge_spool.h"
 #include "sge_mt_init.h"
-#include "sge_answer.h"
-#include "gdi/sge_gdi_ctx.h"
-
+#include "shutdown.h"
+#include "usage.h"
 #include "msg_common.h"
-#include "msg_gdilib.h"
 #include "msg_daemons_common.h"
 #include "msg_shadowd.h"
 
@@ -125,7 +129,7 @@ static int shadowd_is_old_master_enrolled(int sge_test_heartbeat, int sge_qmaste
 
    handle=cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE, CL_FALSE, sge_qmaster_port, CL_TCP_DEFAULT,(char*)prognames[SHADOWD] , 0, 1,0 );
    if (handle == NULL) {
-      CRITICAL((SGE_EVENT,cl_get_error_text(commlib_error)));
+      CRITICAL((SGE_EVENT, SFNMAX, cl_get_error_text(commlib_error)));
       DRETURN(is_up_and_running);
    }
 
@@ -161,7 +165,7 @@ main(int argc, char **argv)
    int delay            = 0;
    time_t now, last;
 /*    const char *cp; */
-   char err_str[1024];
+   char err_str[MAX_STRING_SIZE];
    char shadowd_pidfile[SGE_PATH_MAX];
    dstring ds;
    char buffer[256];
@@ -284,12 +288,12 @@ char qmaster_out_file[SGE_PATH_MAX];
    }
 
    if (sge_set_admin_username(ctx->get_admin_user(ctx), err_str)) {
-      CRITICAL((SGE_EVENT, err_str));
+      CRITICAL((SGE_EVENT, SFNMAX, err_str));
       SGE_EXIT((void**)&ctx, 1);
    }
 
    if (sge_switch2admin_user()) {
-      CRITICAL((SGE_EVENT, MSG_SHADOWD_CANTSWITCHTOADMIN_USER));
+      CRITICAL((SGE_EVENT, SFNMAX, MSG_SHADOWD_CANTSWITCHTOADMIN_USER));
       SGE_EXIT((void**)&ctx, 1);
    }
 
@@ -307,8 +311,7 @@ char qmaster_out_file[SGE_PATH_MAX];
       if (cl_com_set_handle_fds(cl_com_get_handle(prognames[SHADOWD] ,0), &tmp_fd_array, &tmp_fd_count) == CL_RETVAL_OK) {
          sge_daemonize(tmp_fd_array, tmp_fd_count, ctx);
          if (tmp_fd_array != NULL) {
-            free(tmp_fd_array);
-            tmp_fd_array = NULL;
+            sge_free(&tmp_fd_array);
          }
       } else {
          sge_daemonize(NULL, 0, ctx);
@@ -365,7 +368,7 @@ char qmaster_out_file[SGE_PATH_MAX];
                if (ret == 0) {
                   /* we can start a qmaster on this host */
                   if (qmaster_lock(QMASTER_LOCK_FILE)) {
-                     ERROR((SGE_EVENT, MSG_SHADOWD_FAILEDTOLOCKQMASTERSOMBODYWASFASTER));
+                     ERROR((SGE_EVENT, SFNMAX, MSG_SHADOWD_FAILEDTOLOCKQMASTERSOMBODYWASFASTER));
                   } else {
                      int out, err;
 
@@ -402,7 +405,7 @@ char qmaster_out_file[SGE_PATH_MAX];
                         ret = startprog(out, err, NULL, binpath, qmaster_name, NULL);
                         sge_switch2admin_user();
                         if (ret) {
-                           ERROR((SGE_EVENT, MSG_SHADOWD_CANTSTARTQMASTER));
+                           ERROR((SGE_EVENT, SFNMAX, MSG_SHADOWD_CANTSTARTQMASTER));
                         }
                         close(out);
                      } else {
@@ -533,8 +536,8 @@ static int check_if_valid_shadow(char *binpath,
       DRETURN(-1);
    }
 
-   sprintf(binpath, binary_path); /* copy global configuration path */
-   DPRINTF((""SFQ"\n", binpath));   
+   sge_strlcpy(binpath, binary_path, SGE_PATH_MAX); /* copy global configuration path */
+   DPRINTF((""SFQ"\n", binpath));
    DPRINTF(("we are a candidate for shadow master\n"));
 
    DRETURN(0);
@@ -569,10 +572,10 @@ const char *file
          if (resolved_host) {
             if (!sge_hostcmp(host, resolved_host )) {
                FCLOSE(fp);
-               FREE(resolved_host);
+               sge_free(&resolved_host);
                DRETURN(0);
             }
-            FREE(resolved_host);
+            sge_free(&resolved_host);
          }
       }      
    }

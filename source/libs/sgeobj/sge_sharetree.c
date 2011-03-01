@@ -42,8 +42,9 @@
 
 #include "sched/sge_support.h"
 
-#include "sge_sharetree.h"
-#include "sge_answer.h"
+#include "sgeobj/sge_sharetree.h"
+#include "sgeobj/sge_answer.h"
+
 #include "msg_common.h"
 
 
@@ -240,8 +241,7 @@ lListElem *search_named_node( lListElem *ep,  /* root of the tree */
 void free_ancestors( ancestors_t *ancestors )
 {
    if (ancestors && ancestors->nodes) {
-      free(ancestors->nodes);
-      ancestors->nodes = NULL;
+      sge_free(&(ancestors->nodes));
    }
 }
 
@@ -299,7 +299,9 @@ search_by_path( lListElem *ep,  /* root of the [sub]tree */
 
    if (ret && ancestors && ancestors->nodes && depth > 0)
       ancestors->nodes[depth-1] = ep;
-   if (buf) free(buf);
+   if (buf) {
+      sge_free(&buf);
+   }
    return ret;
 }
 

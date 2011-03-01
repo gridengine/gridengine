@@ -36,11 +36,12 @@
 #include <limits.h>
 #include <unistd.h>
 
-#include "sge_stdlib.h"
-#include "sge_dstring.h"
-#include "sgermon.h"
-#include "sge_log.h" 
-#include "msg_utilib.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_stdlib.h"
+#include "uti/sge_dstring.h"
+#include "uti/sge_log.h" 
+#include "uti/msg_utilib.h"
 
 /****** uti/stdlib/sge_malloc() ***********************************************
 *  NAME
@@ -74,7 +75,7 @@ char *sge_malloc(int size)
 
    cp = (char *) malloc(size);
    if (!cp) {
-      CRITICAL((SGE_EVENT, MSG_MEMORY_MALLOCFAILED));
+      CRITICAL((SGE_EVENT, SFNMAX, MSG_MEMORY_MALLOCFAILED));
       DEXIT_;
       abort();
    }
@@ -111,18 +112,18 @@ void *sge_realloc(void *ptr, int size, int do_abort)
 
    /* if new size is 0, just free the currently allocated memory */
    if (size == 0) {
-      FREE(ptr);
-      DRETURN(NULL);
+      sge_free(&ptr);
+      DRETURN_(NULL);
    }
 
    cp = realloc(ptr, size);
    if (cp == NULL) {
-      CRITICAL((SGE_EVENT, MSG_MEMORY_REALLOCFAILED));
+      CRITICAL((SGE_EVENT, SFNMAX, MSG_MEMORY_REALLOCFAILED));
       if (do_abort) {
-         DEXIT;
+         DEXIT_;
          abort();
       } else {
-         FREE(ptr);
+         sge_free(&ptr);
       }
    }
 
@@ -134,13 +135,13 @@ void *sge_realloc(void *ptr, int size, int do_abort)
 *     sge_free() -- replacement for free 
 *
 *  SYNOPSIS
-*     char* sge_free(char *cp) 
+*     void sge_free(char **cp) 
 *
 *  FUNCTION
-*     Replacement for free(). Accepts NULL pointers.
+*     Replacement for free function. Accepts NULL pointers.
 *
 *  INPUTS
-*     char *cp - pointer to a memory block 
+*     char **cp - pointer to a pointer of a memory block 
 *
 *  RESULT
 *     char* - NULL
@@ -148,12 +149,14 @@ void *sge_realloc(void *ptr, int size, int do_abort)
 *  NOTES
 *     MT-NOTE: sge_free() is MT safe
 ******************************************************************************/
-char *sge_free(char *cp) 
+void sge_free(void *cp) 
 {
-   if (cp != NULL) {
-      free(cp);
+   char **mem = (char **)cp;
+
+   if (mem != NULL && *mem != NULL) {
+      free(*mem);
+      *mem = NULL;
    }
-   return NULL;
 }  
 
 /****** uti/stdlib/sge_getenv() ***********************************************
@@ -326,7 +329,7 @@ void sge_unsetenv(const char* varName) {
             }
             environ[i] = NULL; 
          }
-         FREE(searchString);
+         sge_free(&searchString);
       }
    }
 #else

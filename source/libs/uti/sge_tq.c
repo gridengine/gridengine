@@ -37,11 +37,11 @@
 
 #include "lck/sge_mtutil.h"
 
-#include "sge_err.h"
-#include "sge_sl.h"
-#include "sge_stdlib.h"
-#include "sge_tq.h"
-#include "sge_thread_ctrl.h"
+#include "uti/sge_err.h"
+#include "uti/sge_sl.h"
+#include "uti/sge_stdlib.h"
+#include "uti/sge_tq.h"
+#include "uti/sge_thread_ctrl.h"
 
 #include "msg_common.h"
 
@@ -176,7 +176,7 @@ sge_tq_task_destroy(sge_tq_task_t **task) {
 
    DENTER(TQ_LAYER, "sge_tq_task_destroy");
    if (task != NULL && *task != NULL) {
-      FREE(*task);
+      sge_free(task);
    }
    DRETURN(ret);
 }
@@ -263,7 +263,7 @@ sge_tq_destroy(sge_tq_queue_t **queue) {
    if (queue != NULL && *queue != NULL) {
       pthread_cond_destroy(&(*queue)->cond);
       sge_sl_destroy(&(*queue)->list, (sge_sl_destroy_f)sge_tq_task_destroy);
-      FREE(*queue); 
+      sge_free(queue); 
    }
    DRETURN(ret);
 } 

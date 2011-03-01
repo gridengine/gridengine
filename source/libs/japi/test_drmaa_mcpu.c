@@ -80,7 +80,7 @@ void *run(void *arg) {
     int running = 0;
     int status = -1;
     
-    free(arg);
+    sge_free(&arg);
     
     ret = drmaa_allocate_job_template(&jt, error, DRMAA_ERROR_STRING_BUFFER);
     if (handle_code(ret, error, run, thread) == 1) {

@@ -34,39 +34,44 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "sge_ja_task.h"
-#include "sge_job_schedd.h"
-#include "sge_job.h"
-#include "sge_log.h"
-#include "sge_pe.h"
-#include "sge_prog.h"
-#include "sge_ct_SCT_L.h"
-#include "sge_ct_REF_L.h"
-#include "sge_ct_CT_L.h"
-#include "sge_ct_CCT_L.h"
-#include "sge_ct_CTI_L.h"
-#include "sge_schedd_conf.h"
-#include "sge_time.h"
-#include "sgermon.h"
-#include "commlib.h"
-#include "cull_sort.h"
-#include "sge_event.h"
-#include "schedd_monitor.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_time.h"
+#include "uti/sge_dstring.h"
+
+#include "cull/cull_sort.h"
+
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_pe.h"
+#include "sgeobj/sge_event.h"
+#include "sgeobj/sge_parse_SPA_L.h"
+#include "sgeobj/parse.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_qinstance_state.h"
+#include "sgeobj/sge_order.h"
+#include "sgeobj/sge_ct_SCT_L.h"
+#include "sgeobj/sge_ct_REF_L.h"
+#include "sgeobj/sge_ct_CT_L.h"
+#include "sgeobj/sge_ct_CCT_L.h"
+#include "sgeobj/sge_ct_CTI_L.h"
+#include "sgeobj/sge_schedd_conf.h"
+#include "sgeobj/sge_ja_task.h"
+
+#include "comm/commlib.h"
+
+#include "sched/sge_job_schedd.h"
+#include "sched/schedd_monitor.h"
+#include "sched/schedd_message.h"
+#include "sched/sge_schedd_text.h"
+#include "sched/sge_orders.h"
+#include "sched/msg_schedd.h"
+
 #include "unparse_job_cull.h"
-#include "sge_dstring.h"
-#include "sge_parse_SPA_L.h"
-#include "parse.h"
 #include "sge_sched_job_category.h"
 #include "category.h"
-#include "sge_qinstance.h"
-#include "sge_range.h"
-#include "sge_qinstance_state.h"
-#include "schedd_message.h"
-#include "sge_schedd_text.h"
-#include "sge_orders.h"
-#include "sge_order.h"
-
-#include "msg_schedd.h"
 
 /******************************************************
  *
@@ -262,7 +267,7 @@ int sge_delete_job_category(lListElem *job)
 
          for_each(cache, cache_list) {
             int *range = lGetRef(cache, CCT_pe_job_slots);
-            FREE(range); 
+            sge_free(&range); 
          }
 
          lRemoveElem(CATEGORY_LIST, &cat);
@@ -468,7 +473,7 @@ int sge_reset_job_category()
 
       for_each(cache, lGetList(cat, CT_cache)) {
          int *range = lGetRef(cache, CCT_pe_job_slots);
-         FREE(range); 
+         sge_free(&range); 
       }
       
       lSetUlong(cat, CT_rejected, 0);

@@ -50,18 +50,19 @@
 
 #include "uti/sge_hostname.h"
 #include "uti/sge_string.h"
-#include "cl_commlib.h"
-#include "cl_util.h"
-#include "cl_data_types.h"
-#include "cl_tcp_framework.h"
-#include "cl_ssl_framework.h"
-#include "cl_message_list.h"
-#include "cl_host_list.h"
-#include "cl_host_alias_list.h"
-#include "cl_connection_list.h"
-#include "cl_endpoint_list.h"
-#include "cl_communication.h"
-#include "msg_commlib.h"
+
+#include "comm/lists/cl_util.h"
+#include "comm/cl_commlib.h"
+#include "comm/cl_data_types.h"
+#include "comm/cl_tcp_framework.h"
+#include "comm/cl_ssl_framework.h"
+#include "comm/cl_message_list.h"
+#include "comm/cl_host_list.h"
+#include "comm/cl_host_alias_list.h"
+#include "comm/cl_connection_list.h"
+#include "comm/cl_endpoint_list.h"
+#include "comm/cl_communication.h"
+#include "comm/msg_commlib.h"
 
 #define CL_DO_COMMUNICATION_DEBUG 0
 
@@ -170,10 +171,9 @@ int cl_com_free_message(cl_com_message_t** message) {   /* CR check */
       cl_com_free_sirm_message(&((*message)->message_sirm));
    }
    if ((*message)->message != NULL) {
-      free((*message)->message);
+      sge_free(&((*message)->message));
    }   
-   free(*message);
-   *message = NULL;
+   sge_free(message);
    return CL_RETVAL_OK;
 }
 
@@ -377,12 +377,10 @@ int cl_com_add_debug_message(cl_com_connection_t* connection, const char* messag
       
       ret_val = cl_string_list_append_string(handle->debug_client_setup->dc_debug_list, dm_buffer , 1);
 
-      free(dm_buffer);
-      dm_buffer = NULL;
+      sge_free(&dm_buffer);
    }
    if (xml_msg_buffer != NULL) {
-      free(xml_msg_buffer);
-      xml_msg_buffer = NULL;
+      sge_free(&xml_msg_buffer);
    }
 
    return ret_val;
@@ -448,8 +446,7 @@ int cl_com_free_debug_client_setup(cl_debug_client_setup_t** dc_setup) {
    }
 
 
-   free(*dc_setup);
-   dc_setup = NULL;
+   sge_free(dc_setup);
 
    return ret_val;
 }
@@ -635,35 +632,34 @@ int cl_com_free_ssl_setup(cl_ssl_setup_t** del_setup) {
 
    /* free structure members */
    if ((*del_setup)->ssl_CA_cert_pem_file != NULL) {
-      free((*del_setup)->ssl_CA_cert_pem_file);
+      sge_free(&((*del_setup)->ssl_CA_cert_pem_file));
    }
    if ((*del_setup)->ssl_CA_key_pem_file != NULL) {
-      free((*del_setup)->ssl_CA_key_pem_file);
+      sge_free(&((*del_setup)->ssl_CA_key_pem_file));
    }
    if ((*del_setup)->ssl_cert_pem_file != NULL) {
-      free((*del_setup)->ssl_cert_pem_file);
+      sge_free(&((*del_setup)->ssl_cert_pem_file));
    }
    if ((*del_setup)->ssl_key_pem_file != NULL) {
-      free((*del_setup)->ssl_key_pem_file);
+      sge_free(&((*del_setup)->ssl_key_pem_file));
    }
    if ((*del_setup)->ssl_rand_file != NULL) {
-      free((*del_setup)->ssl_rand_file);
+      sge_free(&((*del_setup)->ssl_rand_file));
    }
    if ((*del_setup)->ssl_reconnect_file != NULL) {
-      free((*del_setup)->ssl_reconnect_file);
+      sge_free(&((*del_setup)->ssl_reconnect_file));
    }
    
    if ((*del_setup)->ssl_crl_file != NULL) {
-      free((*del_setup)->ssl_crl_file);
+      sge_free(&((*del_setup)->ssl_crl_file));
    }
    
    if ((*del_setup)->ssl_password != NULL) {
-      free((*del_setup)->ssl_password);
+      sge_free(&((*del_setup)->ssl_password));
    }
 
    /* free structure itself */
-   free(*del_setup);
-   *del_setup = NULL;
+   sge_free(del_setup);
 
    return CL_RETVAL_OK;
 }
@@ -1491,8 +1487,7 @@ int cl_com_close_connection(cl_com_connection_t** connection) {
          CL_LOG(CL_LOG_ERROR,"deleting message");
 
          cl_raw_list_remove_elem((*connection)->received_message_list , elem2->raw_elem);
-         free(elem2);
-         elem2 = NULL;
+         sge_free(&elem2);
          cl_com_free_message(&message);
       }
  
@@ -1512,8 +1507,7 @@ int cl_com_close_connection(cl_com_connection_t** connection) {
          /* delete elem */
          CL_LOG(CL_LOG_ERROR,"deleting message");
          cl_raw_list_remove_elem( (*connection)->send_message_list , elem2->raw_elem );
-         free(elem2);
-         elem2 = NULL;
+         sge_free(&elem2);
          cl_com_free_message(&message);
       }
       cl_raw_list_unlock( (*connection)->send_message_list );      
@@ -1523,23 +1517,14 @@ int cl_com_close_connection(cl_com_connection_t** connection) {
       cl_com_free_endpoint(&((*connection)->local));
       cl_com_free_endpoint(&((*connection)->client_dst));
 
-      free( (*connection)->data_read_buffer);
-      (*connection)->data_read_buffer = NULL;
-      free( (*connection)->data_write_buffer);
-      (*connection)->data_write_buffer = NULL;
-      free( (*connection)->read_gmsh_header);
-      (*connection)->read_gmsh_header = NULL;
+      sge_free(&((*connection)->data_read_buffer));
+      sge_free(&((*connection)->data_write_buffer));
+      sge_free(&((*connection)->read_gmsh_header));
       (*connection)->data_flow_type = CL_CM_CT_UNDEFINED;
-
-      free( (*connection)->client_host_name);
-      (*connection)->client_host_name = NULL;
-
-
-      free( (*connection)->crm_state_error);
-      (*connection)->crm_state_error = NULL;
-
-      free( (*connection)->statistic );
-      (*connection)->statistic = NULL;
+      
+      sge_free(&((*connection)->client_host_name));
+      sge_free(&((*connection)->crm_state_error));
+      sge_free(&((*connection)->statistic));
 
       switch((*connection)->framework_type) {
          case CL_CT_TCP: {
@@ -1557,8 +1542,7 @@ int cl_com_close_connection(cl_com_connection_t** connection) {
       }
       (*connection)->handler = NULL;
       /* com_private is set to NULL by cl_com_tcp_close_connection() or cl_com_ssl_close_connection() */
-      free(*connection);
-      *connection = NULL;
+      sge_free(connection);
       return retval;
    } else {
       CL_LOG(CL_LOG_ERROR,"connection pointer is NULL");
@@ -1700,11 +1684,9 @@ int cl_com_free_handle_statistic(cl_com_handle_statistic_t** statistic) {
    }
 
    if ((*statistic)->application_info != NULL ) {
-      free( (*statistic)->application_info);
-      (*statistic)->application_info = NULL;
+      sge_free(&((*statistic)->application_info));
    }
-   free(*statistic);
-   *statistic = NULL;
+   sge_free(statistic);
    return CL_RETVAL_OK;
 
 }
@@ -1724,8 +1706,7 @@ int cl_com_free_hostent(cl_com_hostent_t **hostent_p) {  /* CR check */
    sge_free_hostent(&((*hostent_p)->he) );
 
    /* finally free the struct */
-   free(*hostent_p);
-   *hostent_p = NULL;
+   sge_free(hostent_p);
    return CL_RETVAL_OK;
 }
 
@@ -1743,11 +1724,10 @@ int cl_com_free_hostspec(cl_com_host_spec_t **hostspec) {
       CL_LOG(CL_LOG_ERROR,"could not free hostent structure");
    }
 
-   free((*hostspec)->unresolved_name );
-   free((*hostspec)->resolved_name );
-   free((*hostspec)->in_addr);
-   free(*hostspec);
-   *hostspec = NULL;
+   sge_free(&((*hostspec)->unresolved_name));
+   sge_free(&((*hostspec)->resolved_name));
+   sge_free(&((*hostspec)->in_addr));
+   sge_free(hostspec);
    return CL_RETVAL_OK;
 }
 
@@ -1830,8 +1810,7 @@ static int cl_com_gethostbyname(const char *hostname_unresolved, cl_com_hostent_
       }
       if (ret_val != CL_RETVAL_OK) {
          if (hostname != NULL) {
-            free(hostname);
-            hostname = NULL;
+            sge_free(&hostname);
          }
          return ret_val;
       }
@@ -1852,8 +1831,7 @@ static int cl_com_gethostbyname(const char *hostname_unresolved, cl_com_hostent_
    if (hostent_p == NULL) {
       CL_LOG(CL_LOG_ERROR, cl_get_error_text(CL_RETVAL_MALLOC));
       if (do_free_host == CL_TRUE) {
-         free(hostname);
-         hostname = NULL;
+         sge_free(&hostname);
       }
       return CL_RETVAL_MALLOC;          /* could not get memory */ 
    }
@@ -1865,8 +1843,7 @@ static int cl_com_gethostbyname(const char *hostname_unresolved, cl_com_hostent_
       CL_LOG( CL_LOG_ERROR, cl_get_error_text(CL_RETVAL_UNKOWN_HOST_ERROR));
       cl_com_free_hostent(&hostent_p);       /* could not find host */
       if (do_free_host == CL_TRUE) {
-         free(hostname);
-         hostname = NULL;
+         sge_free(&hostname);
       }
       return CL_RETVAL_UNKOWN_HOST_ERROR;
    } else {
@@ -1876,8 +1853,7 @@ static int cl_com_gethostbyname(const char *hostname_unresolved, cl_com_hostent_
    if (hostent_p->he->h_addr == NULL) {
       cl_com_free_hostent(&hostent_p);
       if (do_free_host == CL_TRUE) {
-         free(hostname);
-         hostname = NULL;
+         sge_free(&hostname);
       }
       return CL_RETVAL_IP_NOT_RESOLVED_ERROR;
    }
@@ -1887,8 +1863,7 @@ static int cl_com_gethostbyname(const char *hostname_unresolved, cl_com_hostent_
    cl_com_print_host_info(hostent_p);
 #endif
    if (do_free_host == CL_TRUE) {
-      free(hostname);
-      hostname = NULL;
+      sge_free(&hostname);
    }
    return CL_RETVAL_OK;
 }
@@ -2069,14 +2044,13 @@ int cl_com_set_resolve_method(cl_host_resolve_method_t method, char* local_domai
       }
       /* free old local domain */
       if (host_list_data->local_domain_name != NULL) {
-         free(host_list_data->local_domain_name);
+         sge_free(&(host_list_data->local_domain_name));
       }
       host_list_data->local_domain_name = new_domain;
    } else {
       /* free old local domain */
       if (host_list_data->local_domain_name != NULL) {
-         free(host_list_data->local_domain_name);
-         host_list_data->local_domain_name = NULL;
+         sge_free(&(host_list_data->local_domain_name));
       }
    }
 
@@ -2157,14 +2131,14 @@ int cl_com_compare_hosts(const char* host1, const char* host2) {
     if (domain_length + strlen(host1) + 2 < CL_COM_COMPARE_HOSTS_STATIC_BUFFER_SIZE) {
        malloc_hostbuf1 = fixed_host_buffer1;
        if ( (retval = cl_com_dup_host(&malloc_hostbuf1, host1, resolve_method, local_domain_name)) != CL_RETVAL_OK) {
-          free(local_domain_name);
+          sge_free(&local_domain_name);
           return retval;
        }
        malloc_hostbuf1 = NULL;
        hostbuf1 = fixed_host_buffer1;
     } else {
        if ( (retval = cl_com_dup_host(&malloc_hostbuf1, host1, resolve_method, local_domain_name)) != CL_RETVAL_OK) {
-          free(local_domain_name);
+          sge_free(&local_domain_name);
           return retval;
        }
        hostbuf1 = malloc_hostbuf1;
@@ -2175,10 +2149,9 @@ int cl_com_compare_hosts(const char* host1, const char* host2) {
        malloc_hostbuf2 = fixed_host_buffer2;
        if ( ( retval = cl_com_dup_host(&malloc_hostbuf2, host2, resolve_method, local_domain_name)) != CL_RETVAL_OK) {
           if (malloc_hostbuf1) {
-             free(malloc_hostbuf1);
-             malloc_hostbuf1 = NULL;
+             sge_free(&malloc_hostbuf1);
           }
-          free(local_domain_name);
+          sge_free(&local_domain_name);
           return retval;
        }
        malloc_hostbuf2 = NULL;
@@ -2186,18 +2159,16 @@ int cl_com_compare_hosts(const char* host1, const char* host2) {
     } else {
        if ( ( retval = cl_com_dup_host(&malloc_hostbuf2, host2, resolve_method, local_domain_name)) != CL_RETVAL_OK) {
           if (malloc_hostbuf1) {
-             free(malloc_hostbuf1);
-             malloc_hostbuf1 = NULL;
+             sge_free(&malloc_hostbuf1);
           }
-          free(local_domain_name);
+          sge_free(&local_domain_name);
           return retval;
        }
        hostbuf2 = malloc_hostbuf2;
     }
 
     if (local_domain_name) {
-       free(local_domain_name);
-       local_domain_name = NULL;
+       sge_free(&local_domain_name);
     }
 
 #if CL_DO_COMMUNICATION_DEBUG
@@ -2217,10 +2188,10 @@ int cl_com_compare_hosts(const char* host1, const char* host2) {
     }
     
     if (malloc_hostbuf1) {
-       free(malloc_hostbuf1);
+       sge_free(&malloc_hostbuf1);
     }
     if (malloc_hostbuf2) {
-       free(malloc_hostbuf2);
+       sge_free(&malloc_hostbuf2);
     }
     return retval;  
 }
@@ -2375,8 +2346,7 @@ int cl_com_cached_gethostbyname(const char *unresolved_host, char **unique_hostn
       elem_host = elem->host_spec;
 
       if (alias_name != NULL) {
-         free(alias_name);
-         alias_name = NULL;
+         sge_free(&alias_name);
       }
 #if CL_DO_COMMUNICATION_DEBUG
       CL_LOG_STR(CL_LOG_DEBUG,"found host in cache, unresolved name:", unresolved_host );
@@ -2489,7 +2459,7 @@ int cl_com_cached_gethostbyname(const char *unresolved_host, char **unique_hostn
 #if CL_DO_COMMUNICATION_DEBUG
       CL_LOG_STR(CL_LOG_DEBUG,"resolved name aliased to", alias_name);
 #endif
-      free(*unique_hostname);
+      sge_free(unique_hostname);
       *unique_hostname = alias_name;
    }
 
@@ -2586,8 +2556,7 @@ int cl_com_read_alias_file(cl_raw_list_t* hostlist) {
                CL_LOG(CL_LOG_INFO,printbuf);
             }
          }
-         free(main_name);
-         main_name = NULL;
+         sge_free(&main_name);
       }
    }
    if ( fclose(fp) != 0) {
@@ -2665,8 +2634,7 @@ int cl_com_host_list_refresh(cl_raw_list_t* list_p) {
 
          /* remove element from hash table */
          cl_com_free_hostspec(&elem_host);
-         free(act_elem);
-         act_elem = NULL;
+         sge_free(&act_elem);
          continue; /* removed entry, continue with next */
       }
 
@@ -2730,8 +2698,7 @@ int cl_com_host_list_refresh(cl_raw_list_t* list_p) {
 
                /* free old entries */
                cl_com_free_hostent(&(elem_host->hostent));
-               free(elem_host->resolved_name);
-               elem_host->resolved_name = NULL;
+               sge_free(&(elem_host->resolved_name));
                elem_host->hostent = hostent;
                elem_host->resolve_error = resolve_error;
                elem_host->last_resolve_time = now.tv_sec;
@@ -2740,7 +2707,7 @@ int cl_com_host_list_refresh(cl_raw_list_t* list_p) {
                   if (elem_host->resolved_name == NULL) {
                      cl_raw_list_remove_elem(host_list_copy, act_elem->raw_elem);
                      cl_com_free_hostspec(&elem_host);
-                     free(act_elem);
+                     sge_free(&act_elem);
                      CL_LOG(CL_LOG_ERROR,"malloc() error");
                      continue;
                   }
@@ -2841,8 +2808,7 @@ int cl_com_endpoint_list_refresh(cl_raw_list_t* list_p) {
                sge_htable_delete(ldata->ht, act_elem->endpoint->hash_id);
             }
             cl_com_free_endpoint(&(act_elem->endpoint));
-            free(act_elem);
-            act_elem = NULL;
+            sge_free(&act_elem);
             continue;
          }
       } else {
@@ -2861,14 +2827,14 @@ int cl_com_endpoint_list_refresh(cl_raw_list_t* list_p) {
 static int cl_com_get_ip_string(struct in_addr *addr, char **ipstr) {
    char tmp_buffer[256];
    unsigned long ip,A,B,C,D;
-   /* 
+   /*
     * This function is NOT using inet_ntoa() because on some platforms this
     * function is NOT threadsave.
     *
     * WARNING: Currently only used for error case. Might be not performant for general
     * use!
     */
-   if (addr == NULL || ipstr == NULL) { 
+   if (addr == NULL || ipstr == NULL) {
       CL_LOG(CL_LOG_ERROR, "one of the parameters is NULL");
       return CL_RETVAL_PARAMS;
    }
@@ -2878,13 +2844,13 @@ static int cl_com_get_ip_string(struct in_addr *addr, char **ipstr) {
    }
 
    ip = (unsigned long) ntohl(addr->s_addr);
-   
+
    A =  ip / (256*256*256);
    B = (ip - (A * 256*256*256)) / (256 * 256);
    C = (ip - (A * 256*256*256) - (B*256*256)) / 256;
    D =  ip - (A * 256*256*256) - (B*256*256) - (C*256);
 
-   snprintf(tmp_buffer, 256, "%ld.%ld.%ld.%ld", A, B, C, D);
+   snprintf(tmp_buffer, sizeof(tmp_buffer), "%ld.%ld.%ld.%ld", A, B, C, D);
    *ipstr = strdup(tmp_buffer);
    if (*ipstr == NULL) {
       return CL_RETVAL_MALLOC;
@@ -3039,8 +3005,7 @@ int cl_com_cached_gethostbyaddr(struct in_addr *addr, char **unique_hostname, st
             if (cl_com_compare_hosts(hostname, alias_name) != CL_RETVAL_OK) {
                resolve_name_ok = 0;
             }
-            free(alias_name);
-            alias_name = NULL;
+            sge_free(&alias_name);
          } else {
             if (cl_com_compare_hosts(hostname, hostent->he->h_name) != CL_RETVAL_OK &&
                 strcasecmp(hostent->he->h_name, "localhost") != 0 ) {
@@ -3063,8 +3028,7 @@ int cl_com_cached_gethostbyaddr(struct in_addr *addr, char **unique_hostname, st
                      hostent->he->h_name);
 
             if (help != NULL) {
-               free(help);
-               help = NULL;
+               sge_free(&help);
             }
             cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_GETHOSTADDR_ERROR, error_tmp_string);
             hostspec->resolve_error = CL_RETVAL_GETHOSTADDR_ERROR;
@@ -3102,7 +3066,7 @@ int cl_com_cached_gethostbyaddr(struct in_addr *addr, char **unique_hostname, st
    ret_val = cl_host_alias_list_get_alias_name(ldata->host_alias_list, *unique_hostname, &alias_name );
    if (ret_val == CL_RETVAL_OK) {
       CL_LOG_STR(CL_LOG_DEBUG,"resolved name aliased to", alias_name);
-      free(*unique_hostname);
+      sge_free(unique_hostname);
       *unique_hostname = alias_name;
    }
    return CL_RETVAL_OK;
@@ -3505,10 +3469,10 @@ int cl_com_free_poll_array(cl_com_poll_t* poll_handle) {
       return CL_RETVAL_PARAMS;
    }
    if (poll_handle->poll_array != NULL) {
-      free(poll_handle->poll_array);
+      sge_free(&(poll_handle->poll_array));
    }
    if (poll_handle->poll_con != NULL) {
-      free(poll_handle->poll_con);
+      sge_free(&(poll_handle->poll_con));
    }
    poll_handle->poll_array = NULL;
    poll_handle->poll_con = NULL;
@@ -3575,7 +3539,7 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
    struct in_addr tmp_addr;
    int do_read_select = 0;
    int do_write_select = 0;
-   char tmp_buffer[256];
+   char tmp_buffer[MAX_STRING_SIZE];
    cl_com_connection_t* connection = NULL;
    cl_connection_list_data_t* ldata = NULL;
 
@@ -3714,7 +3678,7 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
          if (retval != CL_RETVAL_OK) {
             cl_com_free_cm_message(&cm_message);
             if (tmp_connect_message_buffer != NULL) {
-               free(tmp_connect_message_buffer);
+               sge_free(&tmp_connect_message_buffer);
             }
             return retval;
          }
@@ -3726,11 +3690,11 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
  
          if ( (retval=cl_com_cached_gethostbyname(cm_message->dst->comp_host, &unique_host, &tmp_addr, NULL, NULL)) != CL_RETVAL_OK) {
             if ( cm_message->dst->comp_host != NULL ) {
-               snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_CANT_RESOLVE_DESTINATION_HOST_S, cm_message->dst->comp_host  );
+               snprintf(tmp_buffer, sizeof(tmp_buffer), MSG_CL_TCP_FW_CANT_RESOLVE_DESTINATION_HOST_S, cm_message->dst->comp_host);
             } else {
-               snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_EMPTY_DESTINATION_HOST );
+               snprintf(tmp_buffer, sizeof(tmp_buffer), SFNMAX, MSG_CL_TCP_FW_EMPTY_DESTINATION_HOST);
             }
-            cl_commlib_push_application_error(CL_LOG_ERROR, retval , tmp_buffer );
+            cl_commlib_push_application_error(CL_LOG_ERROR, retval, tmp_buffer);
             unique_host = strdup("(HOST_NOT_RESOLVABLE)");
          }
 
@@ -3743,11 +3707,11 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
             CL_LOG_STR(CL_LOG_ERROR,"local resolving of remote host name  :", unique_host);
 
             if ( cm_message->dst->comp_host != NULL && unique_host != NULL ) {
-               snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_REMOTE_DESTINATION_HOSTNAME_X_NOT_Y_SS, cm_message->dst->comp_host, unique_host);
+               snprintf(tmp_buffer, sizeof(tmp_buffer), MSG_CL_TCP_FW_REMOTE_DESTINATION_HOSTNAME_X_NOT_Y_SS, cm_message->dst->comp_host, unique_host);
             } else {
-               snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_EMPTY_DESTINATION_HOST );
+               snprintf(tmp_buffer, sizeof(tmp_buffer), SFNMAX, MSG_CL_TCP_FW_EMPTY_DESTINATION_HOST);
             }
-            cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_LOCAL_HOSTNAME_ERROR, tmp_buffer );
+            cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_LOCAL_HOSTNAME_ERROR, tmp_buffer);
 
 
             /* deny access to connected client */
@@ -3755,8 +3719,7 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
 
             /* overwrite and free last error */
             if ( connection->crm_state_error != NULL) {
-               free( connection->crm_state_error );
-               connection->crm_state_error = NULL;     
+               sge_free(&(connection->crm_state_error));
             }
            
             /* calculate string size */
@@ -3781,17 +3744,16 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
             }
          }
          connection->client_dst =  cl_com_create_endpoint(unique_host ,cm_message->dst->comp_name,cm_message->dst->comp_id, &tmp_addr);
-         free(unique_host);
-         unique_host = NULL;
+         sge_free(&unique_host);
    
          if (cm_message->rdata != NULL) {
             if ( (retval=cl_com_cached_gethostbyname(cm_message->rdata->comp_host, &unique_host, &tmp_addr, NULL, NULL)) != CL_RETVAL_OK) {
                if (cm_message->rdata->comp_host != NULL) {
-                  snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_CANT_RESOLVE_RDATA_HOST_S , cm_message->rdata->comp_host);
+                  snprintf(tmp_buffer, sizeof(tmp_buffer), MSG_CL_TCP_FW_CANT_RESOLVE_RDATA_HOST_S , cm_message->rdata->comp_host);
                } else {
-                  snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_EMPTY_RDATA_HOST);
+                  snprintf(tmp_buffer, sizeof(tmp_buffer), SFNMAX, MSG_CL_TCP_FW_EMPTY_RDATA_HOST);
                }
-               cl_commlib_push_application_error(CL_LOG_ERROR, retval , tmp_buffer );
+               cl_commlib_push_application_error(CL_LOG_ERROR, retval, tmp_buffer);
                unique_host = strdup("(HOST_NOT_RESOLVABLE)");
             }
             connection->remote   = cl_com_create_endpoint(unique_host,
@@ -3808,11 +3770,11 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
                CL_LOG_STR(CL_LOG_ERROR,"local resolving of remote host name  :", unique_host);
 
                if ( cm_message->rdata->comp_host != NULL && unique_host != NULL ) {
-                  snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_REMOTE_RDATA_HOSTNAME_X_NOT_Y_SS, cm_message->rdata->comp_host, unique_host);
+                  snprintf(tmp_buffer, sizeof(tmp_buffer), MSG_CL_TCP_FW_REMOTE_RDATA_HOSTNAME_X_NOT_Y_SS, cm_message->rdata->comp_host, unique_host);
                } else {
-                  snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_EMPTY_RDATA_HOST );
+                  snprintf(tmp_buffer, sizeof(tmp_buffer), SFNMAX, MSG_CL_TCP_FW_EMPTY_RDATA_HOST);
                }
-               cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_LOCAL_HOSTNAME_ERROR, tmp_buffer );
+               cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_LOCAL_HOSTNAME_ERROR, tmp_buffer);
 
 
                /* deny access to connected client */
@@ -3820,8 +3782,7 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
 
                /* overwrite and free last error */            
                if ( connection->crm_state_error != NULL) {
-                  free(connection->crm_state_error);
-                  connection->crm_state_error = NULL;     
+                  sge_free(&(connection->crm_state_error));
                }
       
                /* calculate string size */
@@ -3845,8 +3806,7 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
                   }
                }
             }
-            free(unique_host);
-            unique_host = NULL;
+            sge_free(&unique_host);
          } 
 
          connection->data_flow_type = cm_message->ct;
@@ -3872,7 +3832,7 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
             cl_com_free_endpoint(&(connection->client_dst));
             cl_com_free_cm_message(&cm_message);
             if (tmp_connect_message_buffer != NULL) {
-               free(tmp_connect_message_buffer);
+               sge_free(&tmp_connect_message_buffer);
             }
             return CL_RETVAL_MALLOC;
          }
@@ -3881,7 +3841,7 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
             cl_com_free_endpoint(&(connection->remote));
             cl_com_free_cm_message(&cm_message);
             if (tmp_connect_message_buffer != NULL) {
-               free(tmp_connect_message_buffer);
+               sge_free(&tmp_connect_message_buffer);
             }
             return CL_RETVAL_MALLOC;
          }
@@ -3890,7 +3850,7 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
             cl_com_free_endpoint(&(connection->remote));
             cl_com_free_cm_message(&cm_message);
             if (tmp_connect_message_buffer != NULL) {
-               free(tmp_connect_message_buffer);
+               sge_free(&tmp_connect_message_buffer);
             }
             return retval;
          }
@@ -3900,7 +3860,7 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
             cl_com_free_endpoint(&(connection->remote));
             cl_com_free_cm_message(&cm_message);
             if (tmp_connect_message_buffer != NULL) {
-               free(tmp_connect_message_buffer);
+               sge_free(&tmp_connect_message_buffer);
             }
             return retval;
          }
@@ -3932,7 +3892,7 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
             }
          }
          if (tmp_connect_message_buffer != NULL) {
-            free(tmp_connect_message_buffer);
+            sge_free(&tmp_connect_message_buffer);
          }
 
          cl_com_free_cm_message(&cm_message);
@@ -3946,15 +3906,15 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
             CL_LOG_STR(CL_LOG_ERROR,"resolved hostname from client:",connection->remote->comp_host  );
 
             if (connection->client_host_name != NULL && connection->remote->comp_host != NULL) {
-               snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_IP_ADDRESS_RESOLVING_X_NOT_Y_SS, connection->client_host_name, connection->remote->comp_host );
+               snprintf(tmp_buffer, sizeof(tmp_buffer), MSG_CL_TCP_FW_IP_ADDRESS_RESOLVING_X_NOT_Y_SS, connection->client_host_name, connection->remote->comp_host);
             } else {
                if (connection->client_host_name == NULL) {
-                  snprintf(tmp_buffer,256, MSG_CL_TCP_FW_CANT_RESOLVE_CLIENT_IP );
+                  snprintf(tmp_buffer, sizeof(tmp_buffer), SFNMAX, MSG_CL_TCP_FW_CANT_RESOLVE_CLIENT_IP);
                } else {
-                  snprintf(tmp_buffer,256, MSG_CL_TCP_FW_EMPTY_REMOTE_HOST );
+                  snprintf(tmp_buffer, sizeof(tmp_buffer), SFNMAX, MSG_CL_TCP_FW_EMPTY_REMOTE_HOST);
                }
             }
-            cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_LOCAL_HOSTNAME_ERROR, tmp_buffer );
+            cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_LOCAL_HOSTNAME_ERROR, tmp_buffer);
 
 
             /* deny access to connected client */
@@ -3962,7 +3922,7 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
 
             /* overwrite and free last error */            
             if ( connection->crm_state_error != NULL) {
-               free(connection->crm_state_error);
+               sge_free(&(connection->crm_state_error));
                connection->crm_state_error = NULL;     
             }
 
@@ -4001,7 +3961,7 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
                ************************************/
                /* connection list is locked by calling function , so we do not need to lock the connection list */
                connection->remote->comp_id = handle->next_free_client_id;
-               free(connection->remote->hash_id);
+               sge_free(&(connection->remote->hash_id));
                connection->remote->hash_id = cl_create_endpoint_string(connection->remote);
                if (connection->remote->hash_id == NULL) {
                   return CL_RETVAL_MALLOC;
@@ -4021,7 +3981,7 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
                      handle->next_free_client_id++;
                   }
                   connection->remote->comp_id = handle->next_free_client_id;
-                  free(connection->remote->hash_id);
+                  sge_free(&(connection->remote->hash_id));
                   connection->remote->hash_id = cl_create_endpoint_string(connection->remote);
                   if (connection->remote->hash_id == NULL) {
                      return CL_RETVAL_MALLOC;
@@ -4073,9 +4033,8 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
             if ( strcmp(connection->local->comp_name, connection->client_dst->comp_name) != 0 || 
                  connection->local->comp_id != connection->client_dst->comp_id ) {
 
-               snprintf(tmp_buffer,
-                        256, 
-                        MSG_CL_TCP_FW_ENDPOINT_X_DOESNT_MATCH_Y_SSUSSU, 
+               snprintf(tmp_buffer, sizeof(tmp_buffer),
+                        MSG_CL_TCP_FW_ENDPOINT_X_DOESNT_MATCH_Y_SSUSSU,
                         connection->local->comp_host,
                         connection->local->comp_name,
                         sge_u32c(connection->local->comp_id),
@@ -4083,15 +4042,14 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
                         connection->client_dst->comp_name,
                         sge_u32c(connection->client_dst->comp_id));
 
-               cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_ACCESS_DENIED, tmp_buffer );
+               cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_ACCESS_DENIED, tmp_buffer);
 
                connection->crm_state = CL_CRM_CS_DENIED;
                connection_status = CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_DENIED;
 
                /* overwrite and free last error */            
                if ( connection->crm_state_error != NULL) {
-                  free(connection->crm_state_error);
-                  connection->crm_state_error = NULL;     
+                  sge_free(&(connection->crm_state_error));
                }
 
                connection->crm_state_error = strdup(tmp_buffer);
@@ -4122,25 +4080,22 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
                    * current one would not have a hash key anymore
                    */
                   if (connection->remote != NULL && connection->remote->hash_id != NULL) {
-                     free(connection->remote->hash_id);
-                     connection->remote->hash_id = NULL;
+                     sge_free(&(connection->remote->hash_id));
                   }
-                  snprintf(tmp_buffer,
-                           256, 
+                  snprintf(tmp_buffer, sizeof(tmp_buffer),
                            MSG_CL_TCP_FW_ENDPOINT_X_ALREADY_CONNECTED_SSU,
                            connection->remote->comp_host,
                            connection->remote->comp_name,
                            sge_u32c(connection->remote->comp_id));
 
-                  cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_ENDPOINT_NOT_UNIQUE, tmp_buffer );
+                  cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_ENDPOINT_NOT_UNIQUE, tmp_buffer);
 
                   connection->crm_state = CL_CRM_CS_ENDPOINT_NOT_UNIQUE; /* CL_CRM_CS_DENIED; */
                   connection_status = CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_NOT_UNIQUE;
  
                   /* overwrite and free last error             */
                   if ( connection->crm_state_error != NULL) {
-                     free(connection->crm_state_error);
-                     connection->crm_state_error = NULL;     
+                     sge_free(&(connection->crm_state_error));
                   }
 
                   connection->crm_state_error = strdup(tmp_buffer);
@@ -4191,22 +4146,20 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
                   if (in_port <= 0 || in_port >= IPPORT_RESERVED) {
                      CL_LOG(CL_LOG_ERROR,"new debug client connection is not from a reserved port");
                      client_ok = CL_FALSE;
-                     snprintf(tmp_buffer,
-                           256, 
+                     snprintf(tmp_buffer, sizeof(tmp_buffer),
                            MSG_CL_TCP_FW_ENDPOINT_X_NOT_FROM_RESERVED_PORT_SSU,
                            connection->remote->comp_host,
                            connection->remote->comp_name,
                            sge_u32c(connection->remote->comp_id));
 
-                     cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_NO_RESERVED_PORT_CONNECTION, tmp_buffer );
+                     cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_NO_RESERVED_PORT_CONNECTION, tmp_buffer);
 
                      connection->crm_state = CL_CRM_CS_DENIED;
                      connection_status = CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_DENIED;
 
                      /* overwrite and free last error */
                      if ( connection->crm_state_error != NULL) {
-                        free(connection->crm_state_error);
-                        connection->crm_state_error = NULL;     
+                        sge_free(&(connection->crm_state_error));
                      }
 
                      connection->crm_state_error = strdup(tmp_buffer);
@@ -4225,23 +4178,21 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
                      CL_LOG(CL_LOG_ERROR,"new debug client connection is not from local host");
                      client_ok = CL_FALSE;
 
-                     snprintf(tmp_buffer,
-                           256, 
+                     snprintf(tmp_buffer, sizeof(tmp_buffer),
                            MSG_CL_TCP_FW_ENDPOINT_X_NOT_FROM_LOCAL_HOST_SSUS,
                            connection->remote->comp_host,
                            connection->remote->comp_name,
                            sge_u32c(connection->remote->comp_id),
                            connection->local->comp_host);
 
-                     cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_NO_LOCAL_HOST_CONNECTION, tmp_buffer );
+                     cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_NO_LOCAL_HOST_CONNECTION, tmp_buffer);
 
                      connection->crm_state = CL_CRM_CS_DENIED;
                      connection_status = CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_DENIED;
 
                      /* overwrite and free last error */
                      if ( connection->crm_state_error != NULL) {
-                        free(connection->crm_state_error);
-                        connection->crm_state_error = NULL;     
+                        sge_free(&(connection->crm_state_error));
                      }
 
                      connection->crm_state_error = strdup(tmp_buffer);
@@ -4286,19 +4237,17 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
                      CL_LOG(CL_LOG_ERROR,"new debug client connection is not from a reserved port");
                      CL_LOG_INT(CL_LOG_ERROR,"client port =", in_port);
 
-                     snprintf(tmp_buffer,
-                              256, 
+                     snprintf(tmp_buffer, sizeof(tmp_buffer),
                               MSG_CL_TCP_FW_STANDARD_ENDPOINT_X_NOT_FROM_RESERVED_PORT_SSU,
                               connection->remote->comp_host,
                               connection->remote->comp_name,
                               sge_u32c(connection->remote->comp_id));
-                     cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_NO_RESERVED_PORT_CONNECTION, tmp_buffer );
+                     cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_NO_RESERVED_PORT_CONNECTION, tmp_buffer);
                      connection->crm_state = CL_CRM_CS_DENIED;
                      connection_status = CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_DENIED;
                      /* overwrite and free last error */
                      if ( connection->crm_state_error != NULL) {
-                        free(connection->crm_state_error);
-                        connection->crm_state_error = NULL;     
+                        sge_free(&(connection->crm_state_error));
                      }
                      connection->crm_state_error = strdup(tmp_buffer);
                      if (connection->crm_state_error == NULL) {
@@ -4339,12 +4288,11 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
                         if (retval == CL_RETVAL_OK && resolved_host != NULL) {
                            if(cl_com_compare_hosts(resolved_host, connection->client_host_name) == CL_RETVAL_OK) {
                               is_ok = 1;
-                              free(resolved_host);
+                              sge_free(&resolved_host);
                               break;
                            }
                         }
-                        free(resolved_host);
-                        resolved_host = NULL;
+                        sge_free(&resolved_host);
                      }
                      cl_raw_list_unlock(connection->handler->allowed_host_list);
                   } else {
@@ -4355,16 +4303,15 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
                   if (is_ok != 1) {
                      connection_status_text = MSG_CL_TCP_FW_CONNECTION_STATUS_TEXT_CLIENT_NOT_IN_ALLOWED_HOST_LIST;
 
-                     snprintf(tmp_buffer, 256, MSG_CL_TCP_FW_HOST_X_NOT_IN_ALOWED_HOST_LIST_S, connection->client_host_name); 
-                     cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_ACCESS_DENIED,tmp_buffer);
+                     snprintf(tmp_buffer, sizeof(tmp_buffer), MSG_CL_TCP_FW_HOST_X_NOT_IN_ALOWED_HOST_LIST_S, connection->client_host_name); 
+                     cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_ACCESS_DENIED, tmp_buffer);
 
                      connection->crm_state = CL_CRM_CS_DENIED;
                      connection_status = CL_CONNECT_RESPONSE_MESSAGE_CONNECTION_STATUS_DENIED;
 
                      /* overwrite and free last error */            
                      if ( connection->crm_state_error != NULL) {
-                        free(connection->crm_state_error);
-                        connection->crm_state_error = NULL;     
+                        sge_free(&(connection->crm_state_error));
                      }
 
                      connection->crm_state_error = strdup(tmp_buffer);
@@ -4387,7 +4334,7 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
                return tmp_retval;
             }
             cl_com_transformString2XML(tmp_str, &params);
-            free(tmp_str);
+            sge_free(&tmp_str);
          }
 
          connect_response_message_size = CL_CONNECT_RESPONSE_MESSAGE_SIZE;
@@ -4406,7 +4353,7 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
    
          if (connection->data_buffer_size < (gmsh_message_size + connect_response_message_size + 1) ) {
             if (params != NULL) {
-               free(params);
+               sge_free(&params);
             }
             return CL_RETVAL_STREAM_BUFFER_OVERFLOW;
          }
@@ -4429,7 +4376,7 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
          connection->data_write_flag = CL_COM_DATA_READY;
          connection->connection_sub_state = CL_COM_READ_SEND_CRM;
          if (params != NULL) {
-            free(params);
+            sge_free(&params);
          }
       }
    }
@@ -4747,7 +4694,7 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
             if (gdi_timeout != NULL) {
                int timeout = atoi(gdi_timeout);
                cl_com_set_synchron_receive_timeout(connection->handler, timeout);
-               free(gdi_timeout);
+               sge_free(&gdi_timeout);
             }
          }
  

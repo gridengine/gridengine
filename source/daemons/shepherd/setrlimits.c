@@ -29,6 +29,7 @@
  *
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -71,6 +72,7 @@
 #include "setjoblimit.h"
 #include "sge_uidgid.h"
 #include "sge_os.h"
+#include "sgeobj/sge_conf.h"
 
 #ifndef CRAY
 static void pushlimit(int, struct RLIMIT_STRUCT_TAG *, int trace_rlimit);

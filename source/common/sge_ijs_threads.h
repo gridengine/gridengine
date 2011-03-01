@@ -31,8 +31,8 @@
 /*___INFO__MARK_END__*/
 
 
-#include "cl_data_types.h"
-#include "cl_thread.h"
+#include "comm/cl_data_types.h"
+#include "comm/lists/cl_thread.h"
 
 #define THREAD_LIB_HANDLE cl_raw_list_t
 #define THREAD_HANDLE     cl_thread_settings_t

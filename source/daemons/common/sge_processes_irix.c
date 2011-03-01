@@ -235,7 +235,7 @@ int kill_ash(ash_t ash, int sig, int until_vanished)
          sleep(1);
       } while (until_vanished);
 
-      free(jp);
+      sge_free(&jp);
       psIgnoreJob(ash);
    }
 

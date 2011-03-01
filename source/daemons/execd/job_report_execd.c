@@ -33,25 +33,31 @@
 #include <stdlib.h>
 #include <float.h>
 
-#include "cull.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_string.h"
+#include "uti/sge_signal.h"
+#include "uti/sge_parse_num_par.h"
+
+#include "cull/cull.h"
+
+#include "gdi/sge_gdi2.h"
+
+#include "sgeobj/sge_usage.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_pe.h"
+#include "sgeobj/sge_report.h"
+#include "sgeobj/sge_ack.h"
+#include "sgeobj/sge_qinstance.h"
+
 #include "sge_report_execd.h"
-#include "sge_usage.h"
 #include "job_report_execd.h"
 #include "reaper_execd.h"
-#include "sge_signal.h"
 #include "execd_signal_queue.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "sge_string.h"
 #include "msg_execd.h"
-#include "sge_job.h"
-#include "sge_ja_task.h"
-#include "sge_pe.h"
-#include "sge_report.h"
-#include "sgeobj/sge_ack.h"
 #include "load_avg.h"
-#include "sgeobj/sge_qinstance.h"
-#include "uti/sge_parse_num_par.h"
 
 lList *jr_list = NULL;
 static bool flush_jr = false;
@@ -103,7 +109,7 @@ lListElem *add_job_report(u_long32 jobid, u_long32 jataskid, const char *petaski
       jr_list = lCreateList("job report list", JR_Type);
   
    if (jr_list == NULL || (jr=lCreateElem(JR_Type)) == NULL) {
-      ERROR((SGE_EVENT, MSG_JOB_TYPEMALLOC));  
+      ERROR((SGE_EVENT, SFNMAX, MSG_JOB_TYPEMALLOC));
       DRETURN(NULL);
    }
 
@@ -278,7 +284,7 @@ int do_ack(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg)
    while (pb_unused(&(aMsg->buf)) > 0) {
 
       if (cull_unpack_elem(&(aMsg->buf), &ack, NULL)) {
-         ERROR((SGE_EVENT, MSG_COM_UNPACKJOB));
+         ERROR((SGE_EVENT, SFNMAX, MSG_COM_UNPACKJOB));
          DRETURN(0);
       }
 
@@ -375,7 +381,7 @@ int do_ack(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg)
             break;
 
          default:
-            ERROR((SGE_EVENT, MSG_COM_ACK_UNKNOWN1));
+            ERROR((SGE_EVENT, SFNMAX, MSG_COM_ACK_UNKNOWN1));
             break;
       }
 

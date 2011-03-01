@@ -46,6 +46,9 @@
 #include "uti/sge_signal.h"
 #include "uti/sge_unistd.h"
 #include "uti/sge_arch.h"
+#include "uti/config_file.h"
+#include "uti/sge_uidgid.h"
+
 #include "setosjobid.h"
 #include "sge_fileio.h"
 
@@ -87,8 +90,6 @@ struct rusage {
 #include "basis_types.h"
 #include "execution_states.h"
 #include "qlogin_starter.h"
-#include "config_file.h"
-#include "sge_uidgid.h"
 
 /* The maximum number of env variables we can export. */
 #define MAX_NUMBER_OF_ENV_VARS 1023
@@ -404,7 +405,7 @@ void son(const char *childname, char *script_file, int truncate_stderr_out)
 
                if(res == 0) {
                   strlcpy(user_passwd, pass, MAX_STRING_SIZE);
-                  FREE(pass);
+                  sge_free(&pass);
                   if (strlen(user_passwd) == 0) {
                      shepherd_trace("uidgid_read_passwd() returned empty password string!");
                   }
@@ -931,7 +932,7 @@ void son(const char *childname, char *script_file, int truncate_stderr_out)
                  is_interactive, is_qlogin, is_rsh, is_rlogin, str_title, 
                  use_starter_method);
 
-   FREE(buffer);
+   sge_free(&buffer);
    return;
 }
 
@@ -1015,7 +1016,7 @@ int sge_set_environment()
          sge_set_env_value(name, value);
       } else {
          sge_set_env_value(name, new_value);
-         free((void *)new_value);
+         sge_free(&new_value);
       }
    }
 
@@ -1053,7 +1054,7 @@ static void setup_environment()
          int index = 0;
 
          while (shepherd_env[index] != NULL) {
-            FREE(shepherd_env[index]);
+            sge_free(&(shepherd_env[index]));
             shepherd_env[index] = NULL;
             index++;
          }
@@ -1992,14 +1993,14 @@ static void start_qlogin_job(const char *shell_path)
    }
 
 
-#if defined(LINUX86) || defined(LINUXAMD64) || defined(LINUXIA64) || defined(LINUXPPC) || defined (LINUXSPARC) || defined(LINUXSPARC64) || defined(ALINUX) || defined(DARWIN_PPC) || defined(DARWIN_X86)
+#if defined(LINUX86) || defined(LINUXAMD64) || defined(LINUXIA64) || defined(LINUXPPC) || defined (LINUXSPARC) || defined(LINUXSPARC64) || defined(ALINUX) || defined(DARWIN_PPC) || defined(DARWIN_X86) || defined(DARWIN_X64)
    my_env[i++] = strcat(path, "/bin:/usr/bin");
 #else
    my_env[i++] = strcat(path, "/usr/bin");
 #endif
    my_env[i] = NULL;
 
-   sge_free(buffer);
+   sge_free(&buffer);
   
    shepherd_trace("execle(%s, %s, NULL, env)", shell_path, minusname);
    execle(shell_path, minusname, NULL, my_env);
@@ -2037,7 +2038,6 @@ static void start_qrsh_job(void)
    const char *arch = NULL;
    char *command = NULL;
    char *buf = NULL;
-   char cwd[SGE_PATH_MAX+1];
    char *args[9];
    int  nargs;
    int  i=0;
@@ -2052,8 +2052,6 @@ static void start_qrsh_job(void)
 
       sge_root = sge_get_root_dir(0, NULL, 0, 1);
       arch = sge_get_arch();
-      getcwd(cwd, SGE_PATH_MAX);
-      
       if (sge_root == NULL || arch == NULL) {
          shepherd_trace("reading environment SGE_ROOT and ARC failed");
          return;

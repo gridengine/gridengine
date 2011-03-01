@@ -32,6 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "gdi/sge_gdi2.h"
+
 void sge_set_flush_jr_flag(bool value);
 bool sge_get_flush_jr_flag(void);
 void flush_job_report(lListElem *jr);

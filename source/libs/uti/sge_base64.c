@@ -34,7 +34,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "sge_base64.h"
+#include "uti/sge_base64.h"
 
 
 unsigned char *

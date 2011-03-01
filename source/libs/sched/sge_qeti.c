@@ -560,5 +560,5 @@ void sge_qeti_release(sge_qeti_t **qeti)
    lFreeList(&((*qeti)->cr_refs_global));
    lFreeList(&((*qeti)->cr_refs_host));
    lFreeList(&((*qeti)->cr_refs_queue));
-   FREE(*qeti);
+   sge_free(qeti);
 }

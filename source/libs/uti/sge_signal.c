@@ -37,10 +37,10 @@
 #include <errno.h>
 #include <pthread.h>
 
-#include "sge_signal.h"
-#include "sge_string.h"
+#include "uti/sge_signal.h"
+#include "uti/sge_string.h"
 
-#include "msg_utilib.h"
+#include "uti/msg_utilib.h"
 
 #ifdef WIN32
 #   define SIGIOT 6

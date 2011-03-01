@@ -29,6 +29,7 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
 #include <string.h>
 #include <stdlib.h>
 #include <pwd.h>
@@ -45,15 +46,17 @@
 #include "uti/sge_unistd.h"
 #include "uti/sge_hostname.h"
 
-#include "cl_errors.h"
-#include "sge_host.h"
-#include "sge_answer.h"
-#include "sge_job.h"
-#include "sge_utility.h"
-#include "sge_path_alias.h"
+#include "comm/lists/cl_errors.h"
+
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_utility.h"
+#include "sgeobj/sge_path_alias.h"
+#include "sgeobj/msg_sgeobjlib.h"
+
 #include "msg_common.h"
 #include "msg_daemons_common.h"
-#include "msg_sgeobjlib.h"
 
 /****** sgeobj/path_alias/-PathAlias *******************************************
 *  NAME
@@ -141,7 +144,7 @@ static int path_alias_read_from_file(lList **path_alias_list, lList **alpp,
 {
    FILE *fd;
    char buf[10000];
-   char err[BUFSIZ];
+   char err[MAX_STRING_SIZE];
    char origin[SGE_PATH_MAX];
    char submit_host[SGE_PATH_MAX];
    char exec_host[SGE_PATH_MAX];
@@ -285,7 +288,7 @@ int path_alias_list_initialize(lList **path_alias_list,
                                const char *host) 
 {
    char filename[2][SGE_PATH_MAX];
-   char err[BUFSIZ];
+   char err[MAX_STRING_SIZE];
    DENTER(TOP_LAYER, "path_alias_list_initialize");
 
    /* 
@@ -306,19 +309,19 @@ int path_alias_list_initialize(lList **path_alias_list,
       if (!pwd) {
          sprintf(err, MSG_USER_INVALIDNAMEX_S, user);
          answer_list_add(alpp, err, STATUS_ENOSUCHUSER, ANSWER_QUALITY_ERROR);
-         FREE(buffer);
+         sge_free(&buffer);
          DRETURN(-1);
       }
       if (!pwd->pw_dir) {
          sprintf(err, MSG_USER_NOHOMEDIRFORUSERX_S, user);
          answer_list_add(alpp, err, STATUS_EDISK, ANSWER_QUALITY_ERROR);
-         FREE(buffer);
+         sge_free(&buffer);
          DRETURN(-1);
       }
       sprintf(filename[0], "%s/%s", cell_root, PATH_ALIAS_COMMON_FILE);
       sprintf(filename[1], "%s/%s", pwd->pw_dir, PATH_ALIAS_HOME_FILE);
 
-      FREE(buffer);
+      sge_free(&buffer);
    }
 
    /*

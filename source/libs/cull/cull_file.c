@@ -40,22 +40,23 @@
 #define NO_SGE_COMPILE_DEBUG
 #endif
 
-#include "cull_list.h"
-#include "cull_lerrnoP.h"
-#include "cull_listP.h"
-#include "cull_multitypeP.h"
-#include "cull_whatP.h"
-#include "cull_whereP.h"
-#include "cull_pack.h"
-#include "cull_parse.h"
-#include "cull_file.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "sge_io.h"
-#include "sge_unistd.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_io.h"
+#include "uti/sge_unistd.h"
 #include "uti/sge_profiling.h"
 
-#include "msg_cull.h"
+#include "cull/cull_list.h"
+#include "cull/cull_lerrnoP.h"
+#include "cull/cull_listP.h"
+#include "cull/cull_multitypeP.h"
+#include "cull/cull_whatP.h"
+#include "cull/cull_whereP.h"
+#include "cull/cull_pack.h"
+#include "cull/cull_parse.h"
+#include "cull/cull_file.h"
+#include "cull/msg_cull.h"
 
 /****** cull/file/lWriteElemToDisk() ******************************************
 *  NAME
@@ -90,7 +91,7 @@ int lWriteElemToDisk(const lListElem *ep, const char *prefix, const char *name,
    DENTER(TOP_LAYER, "lWriteElemToDisk");
 
    if (!prefix && !name) {
-      ERROR((SGE_EVENT, MSG_CULL_NOPREFIXANDNOFILENAMEINWRITEELMTODISK ));
+      ERROR((SGE_EVENT, SFNMAX, MSG_CULL_NOPREFIXANDNOFILENAMEINWRITEELMTODISK));
       DEXIT;
       return 1;
    }
@@ -108,7 +109,7 @@ int lWriteElemToDisk(const lListElem *ep, const char *prefix, const char *name,
       break;
 
    case PACK_ENOMEM:
-      ERROR((SGE_EVENT, MSG_CULL_NOTENOUGHMEMORYFORPACKINGXY_SS ,
+      ERROR((SGE_EVENT, MSG_CULL_NOTENOUGHMEMORYFORPACKINGXY_SS,
              obj_name, name ? name : "null"));
       clear_packbuffer(&pb);
       DEXIT;
@@ -206,7 +207,7 @@ lListElem *lReadElemFromDisk(const char *prefix, const char *name,
    DENTER(TOP_LAYER, "lReadElemFromDisk");
 
    if (!prefix && !name) {
-      ERROR((SGE_EVENT,  MSG_CULL_NOPREFIXANDNOFILENAMEINREADELEMFROMDISK ));
+      ERROR((SGE_EVENT, SFNMAX, MSG_CULL_NOPREFIXANDNOFILENAMEINREADELEMFROMDISK));
       DEXIT;
       return NULL;
    }
@@ -236,7 +237,7 @@ lListElem *lReadElemFromDisk(const char *prefix, const char *name,
    size = statbuf.st_size;
    if (((SGE_OFF_T)size != statbuf.st_size)
        || !(buf = malloc(statbuf.st_size))) {
-      CRITICAL((SGE_EVENT, MSG_CULL_LEMALLOC));
+      CRITICAL((SGE_EVENT, SFNMAX, MSG_CULL_LEMALLOC));
       clear_packbuffer(&pb);
       DEXIT;
       return NULL;

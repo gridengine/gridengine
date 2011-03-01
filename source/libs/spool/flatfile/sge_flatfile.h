@@ -62,7 +62,7 @@
 ****************************************************************************
 */
 
-#include "cull.h"
+#include "cull/cull.h"
 
 #include "spool/sge_spooling_utilities.h"
 

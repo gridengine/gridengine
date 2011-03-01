@@ -1,7 +1,6 @@
 #ifndef __CL_DUMMYIV_COMMLIB_H
 #define __CL_DUMMYIV_COMMLIB_H
 
-
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  *
@@ -34,11 +33,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-
-
-#include "cl_commlib.h"
-
-
+#include "comm/cl_commlib.h"
 
 #endif /* __CL_DUMMYIV_COMMLIB_H */
 

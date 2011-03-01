@@ -31,10 +31,12 @@
 /*___INFO__MARK_END__*/
 #include <stdio.h>
 #include <stdlib.h>
-#include "sgermon.h" 
+
+#include "rmon/sgermon.h" 
+
+#include "uti/sge_language.h"
 
 #include "basis_types.h"
-#include "sge_language.h"
 
 #define TESTSTRING "Hello!"
 #define TESTSTRING2 "I'm %s, and you?\n"

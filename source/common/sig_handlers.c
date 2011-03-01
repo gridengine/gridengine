@@ -33,10 +33,10 @@
 #include <signal.h>
 #include <stdlib.h>
 
-#include "commlib.h"
-#include "sgermon.h"
+#include "comm/commlib.h"
+#include "rmon/sgermon.h"
 #include "sig_handlers.h"
-#include "sge_prog.h"
+#include "uti/sge_prog.h"
 
 #if defined(SOLARIS)
 #   include "sge_smf.h"

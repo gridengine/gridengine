@@ -32,7 +32,7 @@
  *
  ************************************************************************/
 
-#include "cull.h"
+#include "cull/cull.h"
 #include "gdi/sge_gdi_ctx.h"
 
 bool rqs_show(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *name);

@@ -495,7 +495,7 @@ void job_lists_split_with_reference_to_max_running(bool monitor_next_run, lList 
         
                   if (pos >= 0) {
                      if (descr[pos].ht != NULL)  {
-                        FREE(descr[pos].ht);
+                        sge_free(&(descr[pos].ht));
                      }
                   }
                   *(job_lists[SPLIT_PENDING_EXCLUDED]) =

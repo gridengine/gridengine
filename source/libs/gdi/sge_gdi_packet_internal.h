@@ -33,12 +33,11 @@
 /*___INFO__MARK_END__*/
 
 #include "basis_types.h"
+#include "uti/sge_tq.h"
 
 #ifdef  __cplusplus
 extern "C" {
 #endif
-
-#include "uti/sge_tq.h"
 
 extern sge_tq_queue_t *Master_Task_Queue;
 

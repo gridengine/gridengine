@@ -46,36 +46,36 @@
 
 #include "gdi/sge_gdi.h"
 
+#include "sgeobj/parse.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_attr.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_cqueue_verify.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_qinstance_state.h"
+#include "sgeobj/sge_qinstance_type.h"
+#include "sgeobj/sge_str.h"
+#include "sgeobj/sge_userprj.h"
+#include "sgeobj/sge_userset.h"
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_href.h"
+#include "sgeobj/sge_hgroup.h"
+#include "sgeobj/sge_pe.h"
+#include "sgeobj/sge_calendar.h"
+#include "sgeobj/sge_ckpt.h"
+#include "sgeobj/sge_qref.h"
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_subordinate.h"
+#include "sgeobj/sge_eval_expression.h"
+#include "sgeobj/msg_sgeobjlib.h"
+
 #include "symbols.h"
 #include "sge.h"
-#include "parse.h"
-#include "sge_object.h"
-#include "sge_answer.h"
-#include "sge_attr.h"
-#include "sge_centry.h"
-#include "sge_cqueue.h"
-#include "sge_cqueue_verify.h"
-#include "sge_qinstance.h"
-#include "sge_qinstance_state.h"
-#include "sge_qinstance_type.h"
 #include "sge_utility_qmaster.h"
-#include "sge_str.h"
-#include "sge_userprj.h"
-#include "sge_userset.h"
-#include "sge_feature.h"
-#include "sge_href.h"
-#include "sge_hgroup.h"
-#include "sge_pe.h"
-#include "sge_calendar.h"
-#include "sge_ckpt.h"
-#include "sge_qref.h"
-#include "sge_range.h"
-#include "sge_subordinate.h"
-#include "sge_eval_expression.h"
-
 #include "msg_common.h"
 #include "msg_clients_common.h"
-#include "msg_sgeobjlib.h"
 
 #define CQUEUE_LAYER TOP_LAYER
 
@@ -1245,10 +1245,8 @@ cqueue_xattr_pre_gdi(lList *this_list, lList **answer_list)
                                        cqueue_attribute_array[index].href_attr);
 
                      if (strcmp(HOSTREF_DEFAULT, attr_hostname)) {
-                        SGE_ADD_MSG_ID(sprintf(SGE_EVENT,
-                                       MSG_CQUEUE_NONDEFNOTALLOWED));
-                        answer_list_add(answer_list, SGE_EVENT,
-                                        STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR); 
+                        SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_CQUEUE_NONDEFNOTALLOWED));
+                        answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
                         ret = false;
                      } else {
                         lSetHost(elem, cqueue_attribute_array[index].href_attr,
@@ -1501,7 +1499,7 @@ cqueue_list_locate_qinstance_msg(lList *cqueue_list, const char *full_name, bool
       sge_dstring_free(&host_domain_buffer);
    } else {
       if (raise_error) {
-         ERROR((SGE_EVENT, MSG_CQUEUE_FULLNAMEISNULL));
+         ERROR((SGE_EVENT, SFNMAX, MSG_CQUEUE_FULLNAMEISNULL));
       }
    }
    DRETURN(ret);

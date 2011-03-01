@@ -30,21 +30,25 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "basis_types.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "cull.h"
-#include "sge_bootstrap.h"
-#include "sge_answer.h"
-#include "sge_event.h"
-#include "sge_object.h"
-#include "sge_job.h"
-#include "sge_event_master.h"
-#include "spool/sge_spooling.h"
-#include "spool/loader/sge_spooling_loader.h"
-#include "sge_persistence_qmaster.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_bootstrap.h"
+
+#include "cull/cull.h"
+
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_event.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_job.h"
 #include "sgeobj/sge_host.h"
 
+#include "spool/sge_spooling.h"
+#include "spool/loader/sge_spooling_loader.h"
+
+#include "basis_types.h"
+#include "sge_event_master.h"
+#include "sge_persistence_qmaster.h"
 #include "msg_qmaster.h"
 
 static unsigned long spooling_wait_time = 0;

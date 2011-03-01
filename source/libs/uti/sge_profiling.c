@@ -41,16 +41,14 @@
 
 #include "basis_types.h"
 
-#include "sge_dstring.h"
-#include "sge_log.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_dstring.h"
+#include "uti/sge_log.h"
 #include "uti/sge_time.h"
 #include "uti/sge_string.h"
-
-#include "sgermon.h"
-
-#include "msg_utilib.h"
-
-#include "sge_profiling.h"
+#include "uti/msg_utilib.h"
+#include "uti/sge_profiling.h"
 
 /****** uti/profiling/--Profiling ****************************************
 *  NAME
@@ -1865,14 +1863,11 @@ void sge_prof_cleanup(void) {
                sge_dstring_free(&theInfo[c][i].info_string);
             }
          }
-         
-         FREE(theInfo[c]);
+         sge_free(&(theInfo[c]));
       }
-
-      FREE(theInfo);
+      sge_free(&theInfo);
    }
-
-   FREE(thrdInfo);
+   sge_free(&thrdInfo);
    
    sge_prof_array_initialized = 0;
    

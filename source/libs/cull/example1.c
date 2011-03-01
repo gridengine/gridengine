@@ -39,18 +39,18 @@
 
 /* REMOTE MONITORING SUPPORT ? */
 /* #define SGE_COMPILE_DEBUG */
-#include "sgermon.h"
+#include "rmon/sgermon.h"
 
 /* THIS ARE ALL PUBLIC LIST LIB HEADERS, YOU'LL NEED IT */
-#include "cull.h"
+#include "cull/cull.h"
 
 /* include cull_whereP.h for WhereArg mechanism, example 7 */
-#include "cull_whereP.h"
+#include "cull/cull_whereP.h"
 
 /* THIS ARE THE LIST STRUCTURE DEFINITIONS AND THE NAMESPACES */
-#include "example1.h"
+#include "cull/example1.h"
 
-#include "sge_stdio.h"
+#include "uti/sge_stdio.h"
 
 /* DIRECTORY CONTAINING DATA FILES */
 #define DATA_DIR "./"

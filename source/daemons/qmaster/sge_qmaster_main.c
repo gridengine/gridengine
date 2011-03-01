@@ -38,37 +38,28 @@
 #endif
 #include <sys/resource.h>
 
-#include "basis_types.h"
-#include "gdi/sge_gdi_ctx.h"
-#include "sgermon.h"
-#include "sge_prog.h"
-#include "sge_log.h"
-#include "sge_unistd.h"
-#include "sge_answer.h"
-#include "setup_qmaster.h"
-#include "sge_manop.h"
-#include "sge_qmaster_process_message.h"
-#include "sge_event_master.h"
-#include "sge_persistence_qmaster.h"
-#include "sge_reporting_qmaster.h"
-#include "sge_qmaster_timed_event.h"
-#include "sge_host_qmaster.h"
-#include "qmaster_heartbeat.h"
-#include "shutdown.h"
-#include "cl_commlib.h"
-#include "sge_bootstrap.h"
-#include "msg_qmaster.h"
-#include "sge.h"
-#include "sge_qmaster_threads.h"
-#include "sge_profiling.h"
-#include "sge_conf.h"
-#include "uti/sge_time.h"
+#include "rmon/sgermon.h"
 
+#include "uti/sge_prog.h"
+#include "uti/sge_log.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_profiling.h"
+#include "uti/sge_time.h"
 #include "uti/sge_monitor.h"
+#include "uti/sge_bootstrap.h"
+#include "uti/sge_thread_ctrl.h"
+
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_manop.h"
+
+#include "comm/cl_commlib.h"
+
+#include "gdi/sge_gdi_ctx.h"
 
 #include "sge_thread_main.h"
-#include "sge_thread_ctrl.h"
 
+#include "basis_types.h"
 #include "sge_qmaster_heartbeat.h"
 #include "sge_thread_jvm.h"
 #include "sge_thread_listener.h"
@@ -77,6 +68,18 @@
 #include "sge_thread_timer.h"
 #include "sge_thread_worker.h"
 #include "sge_thread_event_master.h"
+#include "setup_qmaster.h"
+#include "sge_qmaster_process_message.h"
+#include "sge_event_master.h"
+#include "sge_persistence_qmaster.h"
+#include "sge_reporting_qmaster.h"
+#include "sge_qmaster_timed_event.h"
+#include "sge_host_qmaster.h"
+#include "qmaster_heartbeat.h"
+#include "shutdown.h"
+#include "sge.h"
+#include "sge_qmaster_threads.h"
+#include "msg_qmaster.h"
 
 #if defined(SOLARIS)
 #   include "sge_smf.h"
@@ -331,7 +334,7 @@ int main(int argc, char* argv[])
       max_enroll_tries--;
       if (max_enroll_tries <= 0) {
          /* exit after 30 seconds */
-         CRITICAL((SGE_EVENT, MSG_QMASTER_COMMUNICATION_ERRORS ));
+         CRITICAL((SGE_EVENT, SFNMAX, MSG_QMASTER_COMMUNICATION_ERRORS));
          SGE_EXIT((void**)&ctx, 1);
       }
       if (cl_com_get_handle(prognames[QMASTER],1) == NULL) {
@@ -347,7 +350,7 @@ int main(int argc, char* argv[])
     */
    ret_val = cl_com_set_status_func(sge_qmaster_application_status);
    if (ret_val != CL_RETVAL_OK) {
-      ERROR((SGE_EVENT, cl_get_error_text(ret_val)));
+      ERROR((SGE_EVENT, SFNMAX, cl_get_error_text(ret_val)));
    }
 
    /* 

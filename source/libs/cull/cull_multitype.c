@@ -39,16 +39,18 @@
 #define NO_SGE_COMPILE_DEBUG
 #endif
 
-#include "msg_cull.h"
-#include "sge_log.h"
-#include "sgermon.h"
-#include "cull_multitypeP.h"
-#include "cull_listP.h"
-#include "cull_whatP.h"
-#include "cull_lerrnoP.h"
-#include "cull_hash.h"
-#include "sge_string.h"
-#include "sge_hostname.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_string.h"
+#include "uti/sge_hostname.h"
+
+#include "cull/msg_cull.h"
+#include "cull/cull_multitypeP.h"
+#include "cull/cull_listP.h"
+#include "cull/cull_whatP.h"
+#include "cull/cull_lerrnoP.h"
+#include "cull/cull_hash.h"
 
 #define CULL_BASIS_LAYER CULL_LAYER
 
@@ -95,14 +97,14 @@ int incompatibleType(const char *str)
 int incompatibleType2(const char *fmt,...)
 {
    va_list ap;
-   char buf[BUFSIZ];
+   char buf[MAX_STRING_SIZE];
 
    DENTER(TOP_LAYER, "incompatibleType2");
    va_start(ap, fmt);
-   vsprintf(buf, fmt, ap);
+   vsnprintf(buf, sizeof(buf), fmt, ap);
 
-   CRITICAL((SGE_EVENT, buf));
-   fprintf(stderr, buf);
+   CRITICAL((SGE_EVENT, SFNMAX, buf));
+   fprintf(stderr, SFNMAX, buf);
 
    abort();
    DEXIT;
@@ -110,7 +112,7 @@ int incompatibleType2(const char *fmt,...)
 }
 
 /* ------------------------------------------------------------ */
-int unknownType(const char *str) 
+int unknownType(const char *str)
 {
    DENTER(CULL_LAYER, "unknownType");
 
@@ -749,7 +751,7 @@ lUlong lGetPosUlong(const lListElem *ep, int pos)
    if (pos < 0) {
       /* someone has called lGetPosUlong() */
       /* makro with an invalid nm        */
-      CRITICAL((SGE_EVENT, MSG_CULL_GETPOSULONG_GOTINVALIDPOSITION ));
+      CRITICAL((SGE_EVENT, SFNMAX, MSG_CULL_GETPOSULONG_GOTINVALIDPOSITION ));
       DEXIT;
       abort();
    }
@@ -992,7 +994,7 @@ lListElem *lGetPosObject(const lListElem *ep, int pos)
    if (pos < 0) {
       /* someone has called lGetPosUlong() */
       /* makro with an invalid nm        */
-      CRITICAL((SGE_EVENT, MSG_CULL_GETPOSOBJECT_GOTANINVALIDPOS ));
+      CRITICAL((SGE_EVENT, SFNMAX, MSG_CULL_GETPOSOBJECT_GOTANINVALIDPOS));
       DEXIT;
       abort();
    }
@@ -1029,7 +1031,7 @@ lList *lGetPosList(const lListElem *ep, int pos)
    if (pos < 0) {
       /* someone has called lGetPosUlong() */
       /* makro with an invalid nm        */
-      CRITICAL((SGE_EVENT, MSG_CULL_GETPOSLIST_GOTANINVALIDPOS ));
+      CRITICAL((SGE_EVENT, SFNMAX, MSG_CULL_GETPOSLIST_GOTANINVALIDPOS));
       DEXIT;
       abort();
    }
@@ -1878,11 +1880,7 @@ int lSetPosString(lListElem *ep, int pos, const char *value)
          str = NULL;               /* value is NULL */
 
       /* free old string value */
-      if (ep->cont[pos].str) {
-         free(ep->cont[pos].str);
-         ep->cont[pos].str = NULL;
-      }   
-
+      sge_free(&(ep->cont[pos].str));
       ep->cont[pos].str = str;
 
       /* create entry in hash table */
@@ -1979,11 +1977,7 @@ int lSetPosHost(lListElem *ep, int pos, const char *value)
          str = NULL;               /* value is NULL */
 
       /* free old string value */
-      if (ep->cont[pos].host != NULL) {
-         free(ep->cont[pos].host);
-         ep->cont[pos].host = NULL;
-      }   
-
+      sge_free(&(ep->cont[pos].host));
       ep->cont[pos].host = str;
 
       /* create entry in hash table */
@@ -2084,11 +2078,7 @@ int lSetString(lListElem *ep, int name, const char *value)
       }
 
       /* free old string value */
-      if (ep->cont[pos].str) {
-         free(ep->cont[pos].str);
-      }   
-
-
+      sge_free(&(ep->cont[pos].str));
       ep->cont[pos].str = str;
 
       /* create entry in hash table */
@@ -2188,11 +2178,7 @@ int lSetHost(lListElem *ep, int name, const char *value)
       } else {
          str = NULL;               /* value is NULL */
       }
-      /* free old string value */
-      if (ep->cont[pos].host) {
-         free(ep->cont[pos].host);
-      }   
-
+      sge_free(&(ep->cont[pos].host));
       ep->cont[pos].host = str;
 
       /* create entry in hash table */

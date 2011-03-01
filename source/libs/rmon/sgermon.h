@@ -35,7 +35,7 @@
 #ifndef NO_SGE_COMPILE_DEBUG
 
 #include <string.h>
-#include "rmon.h"
+#include "rmon/rmon.h"
 
 #if defined(SOLARIS)
 #  include <note.h>

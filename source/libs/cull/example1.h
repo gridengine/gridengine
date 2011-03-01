@@ -33,12 +33,12 @@
 /*___INFO__MARK_END__*/
 /* \begin{verbatim} */
 
-#include "cull_list.h"
+#include "cull/cull_list.h"
 
 /* Definition of new names */
-#include "ownerL.h"
-#include "hostL.h"
-#include "queueL.h"
+#include "cull/ownerL.h"
+#include "cull/hostL.h"
+#include "cull/queueL.h"
 
 lNameSpace nmv[] =
 {

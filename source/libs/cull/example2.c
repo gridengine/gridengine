@@ -39,11 +39,11 @@
 #define DATA_DIR "./"
 
 #define SGE_COMPILE_DEBUG
-#include "sgermon.h"
+#include "rmon/sgermon.h"
 
 
 #define __SGE_GDI_LIBRARY_HOME_OBJECT_FILE__
-#include "example2.h"
+#include "cull/example2.h"
 
 lList *readComplexFile(char *complexname);
 int matchRequest(lList *complexnamelist, lList *requestlist);

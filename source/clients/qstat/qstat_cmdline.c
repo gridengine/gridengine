@@ -36,27 +36,28 @@
 #include <ctype.h>
 #include <pwd.h>
 
-#include "sgermon.h"
-#include "symbols.h"
-#include "sge.h"
-#include "sge_time.h"
-#include "sge_log.h"
-#include "cull_list.h"
-#include "parse.h"
-#include "sge_unistd.h"
-#include "sge_io.h"
-#include "read_defaults.h"
-#include "setup_path.h"
-#include "sge_prog.h"
+#include "rmon/sgermon.h"
+#include "uti/sge_time.h"
+#include "uti/sge_log.h"
+#include "uti/sge_uidgid.h"
+#include "uti/sge_string.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_io.h"
+#include "uti/setup_path.h"
+#include "uti/sge_prog.h"
 
-#include "sge_uidgid.h"
-#include "sge_string.h"
-#include "sge_answer.h"
-#include "sge_feature.h"
-#include "qstat_cmdline.h"
+#include "cull/cull_list.h"
+
+#include "sgeobj/parse.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_feature.h"
 
 #include "gdi/sge_gdi.h"
 
+#include "qstat_cmdline.h"
+#include "read_defaults.h"
+#include "symbols.h"
+#include "sge.h"
 #include "msg_common.h"
 #include "msg_qstat.h"
 #include "msg_clients_common.h"
@@ -95,7 +96,7 @@ switch_list_qstat_parse_from_file(lList **switch_list, lList **answer_list,
                                                        mode, token);
             sge_strafree(&token);
          }
-         FREE(file_as_string);
+         sge_free(&file_as_string);
       }
    }  
    DRETURN(ret); 
@@ -302,7 +303,7 @@ qstat_usage(int qselect_mode, FILE *fp, char *what)
       }   
       
       if (getenv("MORE_INFO")) {
-         fprintf(fp, MSG_QSTAT_USAGE_ADDITIONALDEBUGGINGOPTIONS);
+         fprintf(fp, SFNMAX, MSG_QSTAT_USAGE_ADDITIONALDEBUGGINGOPTIONS);
          fprintf(fp, "        [-dj]                             %s\n",MSG_QSTAT_USAGE_DUMPCOMPLETEJOBLISTTOSTDOUT);
          fprintf(fp, "        [-dq]                             %s\n",MSG_QSTAT_USAGE_DUMPCOMPLETEQUEUELISTTOSTDOUT);
       }

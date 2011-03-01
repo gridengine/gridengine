@@ -29,23 +29,25 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "cull.h"
-#include "sge_client_access.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "sge_string.h"
-#include "sge_answer.h"
-#include "sge_userset.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_string.h"
+
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_userset.h"
 
 #include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi_ctx.h"
 
+#include "cull/cull.h"
+
+#include "sge_client_access.h"
 #include "msg_qconf.h"
-
-
 
 /* - -- -- -- -- -- -- -- -- -- -- -- -- -- -
 
@@ -180,8 +182,7 @@ lList *acl_args
          cp = sge_strdup(cp, lGetString(lFirst(answers), AN_text));
          lFreeList(&answers);
          if (acl && lGetNumberOfElem(acl) > 0) {
-            free(cp);
-            cp = NULL;
+            sge_free(&cp);
             if (lGetSubStr(lFirst(acl), UE_name, user_name, US_entries)) {
                lDelSubStr(lFirst(acl), UE_name, user_name, US_entries);
                answers = ctx->gdi(ctx, SGE_US_LIST, SGE_GDI_MOD, &acl, NULL, NULL);
@@ -219,8 +220,7 @@ lList *acl_args
          lFreeList(&acl);
          
          if (cp) {
-            free(cp);
-            cp = NULL;
+            sge_free(&cp);
          }
          if (breakit)
             break;

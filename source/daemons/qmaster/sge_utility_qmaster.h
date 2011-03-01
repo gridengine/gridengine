@@ -33,9 +33,9 @@
 /*___INFO__MARK_END__*/
 
 
-#include "cull.h"
-#include "sge_answer.h"
-#include "sge_gdi_ctx.h"
+#include "cull/cull.h"
+#include "sgeobj/sge_answer.h"
+#include "gdi/sge_gdi_ctx.h"
 
 int attr_mod_procedure(lList **alpp, lListElem *qep, lListElem *new_queue, int nm, char *attr_name, char *variables[]);
 

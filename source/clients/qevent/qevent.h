@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_dstring.h"
+#include "uti/sge_dstring.h"
 
 
 #define MAX_TRIGGER_SCRIPTS 10

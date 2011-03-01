@@ -36,9 +36,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "cl_commlib.h"
-
-
+#include "comm/cl_commlib.h"
 
 int main(int argc, char** argv)
 {

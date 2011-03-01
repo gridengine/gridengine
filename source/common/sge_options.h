@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_prog.h" 
+#include "uti/sge_prog.h" 
 
 enum {
    NO_OPT = 0,

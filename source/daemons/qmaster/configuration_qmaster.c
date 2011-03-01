@@ -37,41 +37,44 @@
 #include <limits.h>
 #include <pwd.h>
 
-#include "sge.h"
-#include "sge_log.h"
-#include "sgermon.h"
-#include "commlib.h"
-#include "sge_conf.h"
-#include "configuration_qmaster.h"
-#include "cull.h"
-#include "config_file.h"
-#include "sge_userset_qmaster.h"
-#include "sge_answer.h"
-#include "sge_utility.h"
-#include "sge_userprj_qmaster.h"
-#include "sge_parse_num_par.h"
-#include "setup_path.h"
-#include "sge_event_master.h"
-#include "sge_string.h"
-#include "reschedule.h"
-#include "sge_unistd.h"
-#include "sge_hostname.h"
-#include "sge_host.h"
-#include "sge_prog.h"
-#include "sge_uidgid.h" 
-#include "sge_spool.h"
-#include "sge_userprj.h"
-#include "sge_userset.h"
-#include "sge_persistence_qmaster.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/config_file.h"
+#include "uti/sge_parse_num_par.h"
+#include "uti/setup_path.h"
+#include "uti/sge_string.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_hostname.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_uidgid.h" 
+#include "uti/sge_spool.h"
+
+#include "cull/cull.h"
+
+#include "comm/commlib.h"
 
 #include "lck/sge_lock.h"
 #include "lck/sge_mtutil.h"
 
 #include "spool/sge_spooling.h"
 
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_utility.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_userprj.h"
+#include "sgeobj/sge_userset.h"
 #include "sgeobj/sge_path_alias.h"
 #include "sgeobj/sge_jsv.h"
 
+#include "configuration_qmaster.h"
+#include "sge.h"
+#include "sge_persistence_qmaster.h"
+#include "sge_userset_qmaster.h"
+#include "sge_userprj_qmaster.h"
+#include "sge_event_master.h"
+#include "reschedule.h"
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
@@ -167,7 +170,7 @@ int sge_read_configuration(sge_gdi_ctx_class_t *ctx, lListElem *aSpoolContext, l
    }
 
    if ((global = sge_get_configuration_for_host(SGE_GLOBAL_NAME)) == NULL) {
-      ERROR((SGE_EVENT, MSG_CONFIG_NOGLOBAL));
+      ERROR((SGE_EVENT, SFNMAX, MSG_CONFIG_NOGLOBAL));
       DRETURN(-1);
    }
 
@@ -370,7 +373,7 @@ int sge_mod_configuration(sge_gdi_ctx_class_t *ctx, lListElem *aConf, lList **an
       }
       
       if ((global = sge_get_configuration_for_host(SGE_GLOBAL_NAME)) == NULL) {
-         ERROR((SGE_EVENT, MSG_CONFIG_NOGLOBAL));
+         ERROR((SGE_EVENT, SFNMAX, MSG_CONFIG_NOGLOBAL));
       }
             
       if (merge_configuration(&answer_list, progid, cell_root, global, local, NULL) != 0) {
@@ -400,7 +403,7 @@ int sge_mod_configuration(sge_gdi_ctx_class_t *ctx, lListElem *aConf, lList **an
       /* updating the commlib paramterlist and gdi_timeout with new or changed parameters */
       cl_com_update_parameter_list(qmaster_params);
 
-      FREE(qmaster_params);
+      sge_free(&qmaster_params);
    }
     
    /* invalidate configuration cache */
@@ -500,10 +503,10 @@ static int check_config(lList **alpp, lListElem *conf)
          if (strcasecmp(value, "none") && !sge_getpwnam_r(value, &pw_struct, buffer, size)) {
             ERROR((SGE_EVENT, MSG_CONF_GOTINVALIDVALUEXASADMINUSER_S, value));
             answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-            FREE(buffer);
+            sge_free(&buffer);
             DRETURN(STATUS_EEXIST);
          }
-         FREE(buffer);
+         sge_free(&buffer);
       } else if (!strcmp(name, "user_lists")||!strcmp(name, "xuser_lists")) {
          lList *tmp = NULL;
          int ok;

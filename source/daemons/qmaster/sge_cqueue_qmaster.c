@@ -39,53 +39,56 @@
 #include <limits.h>
 #include <pthread.h>
 
+#include "rmon/sgermon.h"
+
+#include "uti/sge_time.h"
+#include "uti/sge_signal.h"
+#include "uti/sge_log.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_string.h"
+
+#include "sgeobj/sge_hgroup.h"
+#include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_qinstance_state.h"
+#include "sgeobj/sge_userset.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_href.h"
+#include "sgeobj/sge_str.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_utility.h"
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_attr.h"
+#include "sgeobj/sge_userprj.h"
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_load.h"
+#include "sgeobj/sge_advance_reservation.h"
+#include "sgeobj/msg_sgeobjlib.h"
+
+#include "sched/sge_select_queue.h"
+#include "sched/valid_queue_user.h"
+
+#include "lck/sge_mtutil.h"
+
+#include "spool/sge_spooling.h"
+
 #include "sge.h"
-#include "sgermon.h"
-#include "sge_time.h"
-#include "sge_conf.h"
-#include "sge_log.h"
 #include "sge_c_gdi.h"
-#include "sge_string.h"
-#include "sge_answer.h"
-#include "sge_utility.h"
 #include "sge_utility_qmaster.h"
-#include "sge_unistd.h"
-#include "sge_hgroup.h"
-#include "sge_cqueue.h"
-#include "sge_job.h"
-#include "sge_ja_task.h"
-#include "sge_qinstance.h"
-#include "sge_qinstance_state.h"
-#include "sge_userset.h"
-#include "sge_host.h"
-#include "sge_href.h"
-#include "sge_str.h"
-#include "sge_event_master.h"
-#include "sge_persistence_qmaster.h"
-#include "sge_attr.h"
-#include "sge_userprj.h"
-#include "sge_feature.h"
 #include "sge_cqueue_qmaster.h"
 #include "sge_qinstance_qmaster.h"
 #include "sge_host_qmaster.h"
 #include "sge_qmod_qmaster.h"
 #include "sge_subordinate_qmaster.h"
-#include "sched/sge_select_queue.h"
-#include "sched/valid_queue_user.h"
 #include "sge_queue_event_master.h"
-#include "sge_signal.h"
-#include "sge_mtutil.h"
-#include "sgeobj/sge_load.h"
-#include "sgeobj/sge_advance_reservation.h"
-
+#include "sge_event_master.h"
+#include "sge_persistence_qmaster.h"
 #include "sge_userprj_qmaster.h"
 #include "sge_userset_qmaster.h"
-
-#include "spool/sge_spooling.h"
-
 #include "msg_common.h"
 #include "msg_qmaster.h"
-#include "msg_sgeobjlib.h"
 
 
 static bool
@@ -640,7 +643,7 @@ int cqueue_mod(sge_gdi_ctx_class_t *ctx,
             const char *old_name = lGetString(cqueue, CQ_name);
 
             if (strcmp(old_name, name)) {
-               ERROR((SGE_EVENT, MSG_CQUEUE_NONAMECHANGE));
+               ERROR((SGE_EVENT, SFNMAX, MSG_CQUEUE_NONAMECHANGE));
                answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX,
                                ANSWER_QUALITY_ERROR);
                ret = false;
@@ -932,7 +935,7 @@ int cqueue_del(sge_gdi_ctx_class_t *ctx, lListElem *this_elem, lList **answer_li
              */
             for_each(qinstance, qinstances) {
                if (qinstance_slots_used(qinstance) > 0 || qinstance_slots_reserved(qinstance) > 0) {
-                  ERROR((SGE_EVENT, MSG_QINSTANCE_STILLJOBS)); 
+                  ERROR((SGE_EVENT, SFNMAX, MSG_QINSTANCE_STILLJOBS));
                   answer_list_add(answer_list, SGE_EVENT, STATUS_EEXIST,
                                   ANSWER_QUALITY_ERROR);
                   do_del = false;

@@ -32,37 +32,40 @@
 #include <string.h>
 #include <sys/types.h>
 
-#include "sge.h"
-#include "sge_log.h"
-#include "sgermon.h"
-#include "sge_pe.h"
-#include "sge_event_master.h"
-#include "sge_userset.h"
-#include "sge_userset_qmaster.h"
-#include "sge_feature.h"
-#include "sge_conf.h"
-#include "valid_queue_user.h"
-#include "sge_unistd.h"
-#include "sge_answer.h"
-#include "sge_qinstance.h"
-#include "sge_job.h"
-#include "sge_userprj.h"
-#include "sge_host.h"
-#include "sge_utility.h"
-#include "sge_cqueue.h"
-#include "sge_attr.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_unistd.h"
+
+#include "sgeobj/sge_pe.h"
+#include "sgeobj/sge_userset.h"
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_userprj.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_utility.h"
+#include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_attr.h"
 #include "sgeobj/sge_resource_quota.h"
 #include "sgeobj/sge_advance_reservation.h"
 #include "sgeobj/sge_str.h"
-#include "sge_resource_quota_qmaster.h"
+#include "sgeobj/msg_sgeobjlib.h"
 
-#include "sge_persistence_qmaster.h"
-#include "sge_utility_qmaster.h"
 #include "spool/sge_spooling.h"
 
+#include "sched/valid_queue_user.h"
+
+#include "sge.h"
+#include "sge_event_master.h"
+#include "sge_userset_qmaster.h"
+#include "sge_persistence_qmaster.h"
+#include "sge_utility_qmaster.h"
+#include "sge_resource_quota_qmaster.h"
 #include "msg_common.h"
 #include "msg_qmaster.h"
-#include "msg_sgeobjlib.h"
 
 static void sge_change_queue_version_acl(sge_gdi_ctx_class_t *ctx, const char *acl_name);
 static lList* do_depts_conflict(lListElem *new, lListElem *old);
@@ -287,13 +290,13 @@ static int dept_is_valid_defaultdepartment(lListElem *dept,
    if (dept != NULL) {
       /* test 'type' */
       if (!(lGetUlong(dept, US_type) & US_DEPT)) {
-         ERROR((SGE_EVENT, MSG_QMASTER_DEPTFORDEFDEPARTMENT));
+         ERROR((SGE_EVENT, SFNMAX, MSG_QMASTER_DEPTFORDEFDEPARTMENT));
          answer_list_add(answer_list, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
          ret = 0;
       }
       /* test user list */
       if (lGetNumberOfElem(lGetList(dept, US_entries)) > 0 ) {
-         ERROR((SGE_EVENT, MSG_QMASTER_AUTODEFDEPARTMENT));
+         ERROR((SGE_EVENT, SFNMAX, MSG_QMASTER_AUTODEFDEPARTMENT));
          answer_list_add(answer_list, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
          ret = 0;
       }
@@ -327,12 +330,12 @@ static int acl_is_valid_acl(lListElem *acl,
    if (acl != NULL) {
       if (!(lGetUlong(acl, US_type) & US_DEPT)) {
          if (lGetUlong(acl, US_fshare) > 0) {
-            ERROR((SGE_EVENT, MSG_QMASTER_ACLNOSHARE));
+            ERROR((SGE_EVENT, SFNMAX, MSG_QMASTER_ACLNOSHARE));
             answer_list_add(answer_list, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
             ret = 0;
          }
          if (lGetUlong(acl, US_oticket) > 0) {
-            ERROR((SGE_EVENT, MSG_QMASTER_ACLNOTICKET));
+            ERROR((SGE_EVENT, SFNMAX, MSG_QMASTER_ACLNOTICKET));
             answer_list_add(answer_list, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
             ret = 0;
          }

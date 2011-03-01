@@ -41,61 +41,63 @@
 #include <ctype.h>
 #include <fnmatch.h>
 
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
 #include "uti/sge_stdio.h"
 #include "uti/sge_unistd.h"
+#include "uti/sge_dstring.h"
+#include "uti/sge_string.h"
+#include "uti/sge_stdlib.h"
+#include "uti/sge_spool.h"
+#include "uti/sge_io.h"
+#include "uti/sge_edit.h"
 
-#include "sge.h"
-#include "sge_options.h"
-#include "sge_pe.h"
-#include "sge_dstring.h"
-#include "sge_string.h"
-#include "sge_event.h"
-#include "sge_id.h"
-#include "sge_answer.h"
-#include "usage.h"
-#include "commlib.h"
-#include "config.h"
-#include "sge_client_access.h"
-#include "parse_qconf.h"
-#include "sge_host.h"
-#include "sge_sharetree.h"
-#include "sge_userset.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "sge_str.h"
-#include "sge_stdlib.h"
-#include "sge_spool.h"
-#include "sge_io.h"
-#include "sge_schedd_conf.h"
-#include "sge_userprj.h"
-#include "sge_manop.h"
+#include "sgeobj/sge_pe.h"
+#include "sgeobj/sge_event.h"
+#include "sgeobj/sge_id.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/config.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_sharetree.h"
+#include "sgeobj/sge_userset.h"
+#include "sgeobj/sge_str.h"
+#include "sgeobj/sge_schedd_conf.h"
+#include "sgeobj/sge_userprj.h"
+#include "sgeobj/sge_manop.h"
 #include "sgeobj/sge_calendar.h"
-#include "sge_hgroup.h"
-#include "sge_conf.h"
-#include "sge_ckpt.h"
-#include "sge_hgroup_qconf.h"
-#include "sge_centry_qconf.h"
-#include "sge_cqueue_qconf.h"
-#include "sge_resource_quota_qconf.h"
-#include "sge_edit.h"
-#include "sge_cqueue.h"
-#include "sge_resource_quota.h"
-#include "sge_href.h"
-#include "sge_qref.h"
-#include "sge_centry.h"
-#include "sge_attr.h"
-#include "sge_qinstance_state.h"
-
-#include "spool/flatfile/sge_flatfile.h"
-#include "spool/flatfile/sge_flatfile_obj.h"
-
+#include "sgeobj/sge_hgroup.h"
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_ckpt.h"
+#include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_resource_quota.h"
+#include "sgeobj/sge_href.h"
+#include "sgeobj/sge_qref.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_attr.h"
+#include "sgeobj/sge_qinstance_state.h"
 #include "sgeobj/sge_userprj.h"
 #include "sgeobj/sge_cqueue.h"
 #include "sgeobj/sge_utility.h"
 
+#include "spool/flatfile/sge_flatfile.h"
+#include "spool/flatfile/sge_flatfile_obj.h"
+
 #include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi_ctx.h"
+#include "gdi/sge_gdi2.h"
 
+#include "comm/commlib.h"
+
+#include "sge.h"
+#include "sge_options.h"
+#include "usage.h"
+#include "sge_client_access.h"
+#include "parse_qconf.h"
+#include "sge_hgroup_qconf.h"
+#include "sge_centry_qconf.h"
+#include "sge_cqueue_qconf.h"
+#include "sge_resource_quota_qconf.h"
 #include "msg_common.h"
 #include "msg_clients_common.h"
 #include "msg_qconf.h"
@@ -228,7 +230,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
             if (answer_list_output(&alp)) {
                if (filename != NULL) {
                   unlink(filename);
-                  FREE(filename);
+                  sge_free(&filename);
                }
                sge_error_and_exit(ctx, NULL);
             }
@@ -237,7 +239,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
             status = sge_edit(filename, uid, gid);
             if (status < 0) {
                unlink(filename);
-               FREE(filename);
+               sge_free(&filename);
                if (sge_error_and_exit(ctx, MSG_PARSE_EDITFAILED)) {
                   continue;
                }
@@ -245,7 +247,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
 
             if (status > 0) {
                unlink(filename);
-               FREE(filename);
+               sge_free(&filename);
                if (sge_error_and_exit(ctx, MSG_FILE_FILEUNCHANGED)) {
                   continue;
                }
@@ -257,7 +259,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
                                             CAL_fields, fields_out, true, &qconf_sfi,
                                             SP_FORM_ASCII, NULL, filename);
             unlink(filename);
-            FREE(filename);
+            sge_free(&filename);
             
             if (answer_list_output(&alp)) {
                lFreeElem(&ep);
@@ -340,7 +342,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
             if (answer_list_output(&alp)) {
                if (filename != NULL) {
                   unlink(filename);
-                  FREE(filename);
+                  sge_free(&filename);
                }
                sge_error_and_exit(ctx, NULL);
             }
@@ -351,14 +353,14 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
             status = sge_edit(filename, uid, gid);
             if (status < 0) {
                unlink(filename);
-               FREE(filename);
+               sge_free(&filename);
                if (sge_error_and_exit(ctx, MSG_PARSE_EDITFAILED))
                   continue;
             }
 
             if (status > 0) {
                unlink(filename);
-               FREE(filename);
+               sge_free(&filename);
                if (sge_error_and_exit(ctx, MSG_FILE_FILEUNCHANGED))
                   continue;
             }
@@ -369,7 +371,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
                                             CK_fields, fields_out, true, &qconf_sfi,
                                             SP_FORM_ASCII, NULL, filename);
             unlink(filename);
-            FREE(filename);
+            sge_free(&filename);
             
             if (answer_list_output(&alp)) {
                lFreeElem(&ep);
@@ -489,7 +491,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s\n", lGetString(aep, AN_text));
-            FREE(host);
+            sge_free(&host);
             lFreeList(&alp);
             spp++;
             sge_parse_return = 1;
@@ -499,7 +501,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
          if (arglp == NULL || lGetNumberOfElem(arglp) == 0) {
             fprintf(stderr, MSG_EXEC_XISNOEXECHOST_S, host);   
             fprintf(stderr, "\n");
-            FREE(host);
+            sge_free(&host);
             lFreeList(&alp);
             lFreeList(&arglp);
             spp++;
@@ -507,7 +509,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
             continue;
          }
 
-         FREE(host);
+         sge_free(&host);
          lFreeList(&alp);
          
          /* edit the template */
@@ -542,7 +544,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
          answer_exit_if_not_recoverable(aep);
          if (answer_get_status(aep) != STATUS_OK) {
             fprintf(stderr, "%s\n", lGetString(aep, AN_text));
-            FREE(host);
+            sge_free(&host);
             spp++;
             sge_parse_return = 1;
             continue;
@@ -557,7 +559,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
          }
          fprintf(stderr, "\n");
       
-         FREE(host);
+         sge_free(&host);
          lFreeList(&alp);
          spp++;
          continue;
@@ -585,7 +587,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
             missing_field = spool_get_unprocessed_field(fields, fields_out, &alp);
          }
 
-         FREE(fields);
+         sge_free(&fields);
             
          if (missing_field != NoName) {
             lFreeElem(&ep);
@@ -754,7 +756,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
             if (answer_list_output(&alp)) {
                if (filename != NULL) {
                   unlink(filename);
-                  FREE(filename);
+                  sge_free(&filename);
                }
                sge_error_and_exit(ctx, NULL);
             }
@@ -763,7 +765,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
             status = sge_edit(filename, uid, gid);
             if (status < 0) {
                unlink(filename);
-               FREE(filename);
+               sge_free(&filename);
                if (sge_error_and_exit(ctx, MSG_PARSE_EDITFAILED)) {
                   continue;
                }
@@ -771,7 +773,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
 
             if (status > 0) {
                unlink(filename);
-               FREE(filename);
+               sge_free(&filename);
                if (sge_error_and_exit(ctx, MSG_FILE_FILEUNCHANGED)) {
                   continue;
                }
@@ -783,7 +785,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
                                             PE_fields, fields_out,  true, &qconf_sfi,
                                             SP_FORM_ASCII, NULL, filename);
             unlink(filename);
-            FREE(filename);
+            sge_free(&filename);
             
             if (answer_list_output(&alp)) {
                lFreeElem(&ep);
@@ -955,7 +957,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
             missing_field = spool_get_unprocessed_field(fields, fields_out, &alp);
          }
 
-         FREE(fields);
+         sge_free(&fields);
          
          if (missing_field != NoName) {
             lFreeElem(&ep);
@@ -1023,7 +1025,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
             missing_field = spool_get_unprocessed_field(fields, fields_out, &alp);
          }
 
-         FREE(fields);
+         sge_free(&fields);
          
          if (missing_field != NoName) {
             lFreeElem(&ep);
@@ -1099,7 +1101,6 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
 
             lFreeList(&lp);
          } else { /* -Astree */
-            char errstr[1024];
             spooling_field *fields = sge_build_STN_field_list(false, true);
             
             spp = sge_parser_get_next(ctx, spp);
@@ -1118,7 +1119,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
                missing_field = spool_get_unprocessed_field(fields, fields_out, &alp);
             }
 
-            FREE(fields);
+            sge_free(&fields);
             
             if (missing_field != NoName) {
                lFreeElem(&ep);
@@ -1127,8 +1128,6 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
             }
                
             if (ep == NULL) {
-               fprintf(stderr, "%s\n", errstr);
-               
                if (sge_error_and_exit(ctx, MSG_FILE_ERRORREADINGINFILE)) {
                   continue;
                }
@@ -1281,7 +1280,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
                print_usage = 1;
             }
 
-            free(buf);
+            sge_free(&buf);
          }
          lFreeList(&arglp);
 
@@ -1980,7 +1979,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
             if (answer_list_output(&alp)) {
                if (filename != NULL) {
                   unlink(filename);
-                  FREE(filename);
+                  sge_free(&filename);
                }
                sge_error_and_exit(ctx, NULL);
             }
@@ -1991,14 +1990,14 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
             status = sge_edit(filename, uid, gid);
             if (status < 0) {
                unlink(filename);
-               FREE(filename);
+               sge_free(&filename);
                if (sge_error_and_exit(ctx, MSG_PARSE_EDITFAILED))
                   continue;
             }
 
             if (status > 0) {
                unlink(filename);
-               FREE(filename);
+               sge_free(&filename);
                if (sge_error_and_exit(ctx, MSG_FILE_FILEUNCHANGED))
                   continue;
             }
@@ -2009,7 +2008,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
                                             CAL_fields, fields_out, true, &qconf_sfi,
                                             SP_FORM_ASCII, NULL, filename);
             unlink(filename);
-            FREE(filename);
+            sge_free(&filename);
             
             if (answer_list_output(&alp)) {
                lFreeElem(&ep);
@@ -2137,7 +2136,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
             if (answer_list_output(&alp)) {
                if (filename != NULL) {
                   unlink(filename);
-                  FREE(filename);
+                  sge_free(&filename);
                }
                sge_error_and_exit(ctx, NULL);
             }
@@ -2148,14 +2147,14 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
             status = sge_edit(filename, uid, gid);
             if (status < 0) {
                unlink(filename);
-               FREE(filename);
+               sge_free(&filename);
                if (sge_error_and_exit(ctx, MSG_PARSE_EDITFAILED))
                   continue;
             }
 
             if (status > 0) {
                unlink(filename);
-               FREE(filename);
+               sge_free(&filename);
                if (sge_error_and_exit(ctx, MSG_FILE_FILEUNCHANGED))
                   continue;
             }
@@ -2166,7 +2165,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
                                             CK_fields, fields_out, true, &qconf_sfi,
                                             SP_FORM_ASCII, NULL, filename);
             unlink(filename);
-            FREE(filename);
+            sge_free(&filename);
             
             if (answer_list_output(&alp)) {
                lFreeElem(&ep);
@@ -2265,7 +2264,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
             missing_field = spool_get_unprocessed_field(fields, fields_out, &alp);
          }
 
-         FREE(fields);
+         sge_free(&fields);
          
          if (missing_field != NoName) {
             lFreeElem(&ep);
@@ -2456,7 +2455,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
             if (answer_list_output(&alp)) {
                if (filename != NULL) {
                   unlink(filename);
-                  FREE(filename);
+                  sge_free(&filename);
                }
                sge_error_and_exit(ctx, NULL);
             }
@@ -2466,7 +2465,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
             if (status < 0) {
                unlink(filename);
                if (sge_error_and_exit(ctx, MSG_PARSE_EDITFAILED)) {
-                  FREE(filename);
+                  sge_free(&filename);
                   continue;
                }
             }
@@ -2474,7 +2473,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
             if (status > 0) {
                unlink(filename);
                if (sge_error_and_exit(ctx, MSG_FILE_FILEUNCHANGED)) {
-                  FREE(filename);
+                  sge_free(&filename);
                   continue;
                }
             }
@@ -2485,7 +2484,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
                                             SP_FORM_ASCII, NULL, filename);
             
             unlink(filename);
-            FREE(filename);
+            sge_free(&filename);
             
             if (answer_list_output(&alp)) {
                lFreeElem(&ep);
@@ -3001,7 +3000,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
 
       if (!info_entry[index].object_name) {
          fprintf(stderr, "Modification of object "SFQ" not supported\n", *spp);
-         FREE(info_entry[1].fields);
+         sge_free(&(info_entry[1].fields));
          DRETURN(1);
       } 
 
@@ -3028,12 +3027,12 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
          }
          lFreeList(&alp);   
          if (exit) {
-            FREE(info_entry[1].fields);
+            sge_free(&(info_entry[1].fields));
             DRETURN(1);
          }
       }
       
-      FREE(info_entry[1].fields);
+      sge_free(&(info_entry[1].fields));
       
       continue;
    }
@@ -3082,7 +3081,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
    /* parse command line arguments */
    attr = sge_strdup(NULL, *spp);
    if (attr == NULL) {
-      ERROR((SGE_EVENT, MSG_QCONF_NOATTRIBUTEGIVEN));
+      ERROR((SGE_EVENT, SFNMAX, MSG_QCONF_NOATTRIBUTEGIVEN));
       DRETURN(1);
    }
    spp = sge_parser_get_next(ctx, spp);
@@ -3096,20 +3095,20 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
    
    if (object == NULL || hgroup_or_hostname == NULL) {
       ERROR((SGE_EVENT, MSG_QCONF_GIVENOBJECTINSTANCEINCOMPLETE_S, object_instance));
-      FREE(attr);
-      FREE(object_instance);
-      FREE(object);
+      sge_free(&attr);
+      sge_free(&object_instance);
+      sge_free(&object);
       DRETURN(1);
    }
      
    /* queue_instance no longer neede */
-   FREE(object_instance);
+   sge_free(&object_instance);
 
    if (strcmp("@/", hgroup_or_hostname) == 0) {
       ERROR((SGE_EVENT, MSG_QCONF_MODIFICATIONOFHOSTNOTSUPPORTED_S, hgroup_or_hostname));
-      FREE(attr);
-      FREE(object);
-      FREE(hgroup_or_hostname);
+      sge_free(&attr);
+      sge_free(&object);
+      sge_free(&hgroup_or_hostname);
       DRETURN(1);
    }
 
@@ -3122,9 +3121,9 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
 
       if (cqueue == NULL) {
          ERROR((SGE_EVENT, MSG_CQUEUE_DOESNOTEXIST_S, object));  
-         FREE(attr); 
-         FREE(object);
-         FREE(hgroup_or_hostname);
+         sge_free(&attr); 
+         sge_free(&object);
+         sge_free(&hgroup_or_hostname);
          DRETURN(1);
       }
 
@@ -3158,9 +3157,9 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
          lFreeElem(&cqueue);
       }
 
-      FREE(attr); 
-      FREE(object);
-      FREE(hgroup_or_hostname);
+      sge_free(&attr); 
+      sge_free(&object);
+      sge_free(&hgroup_or_hostname);
       spp++;
       continue;
    }
@@ -3299,7 +3298,6 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
 
             lFreeList(&lp);
          } else {
-            char errstr[1024];
             spooling_field *fields = sge_build_STN_field_list(false, true);
 
             spp = sge_parser_get_next(ctx, spp);
@@ -3318,7 +3316,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
                missing_field = spool_get_unprocessed_field(fields, fields_out, &alp);
             }
 
-            FREE(fields);
+            sge_free(&fields);
             
             if (missing_field != NoName) {
                lFreeElem(&ep);
@@ -3327,7 +3325,6 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
             }
                
             if (ep == NULL) {
-               fprintf(stderr, errstr);
                if (sge_error_and_exit(ctx, MSG_FILE_ERRORREADINGINFILE))
                   continue;
             }
@@ -3725,7 +3722,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
             missing_field = spool_get_unprocessed_field(fields, fields_out, &alp);
          }
 
-         FREE(fields);
+         sge_free(&fields);
          
          if (missing_field != NoName) {
             lFreeElem(&newep);
@@ -3827,7 +3824,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
             missing_field = spool_get_unprocessed_field(fields, fields_out, &alp);
          }
 
-         FREE(fields);
+         sge_free(&fields);
          
          if (missing_field != NoName) {
             lFreeElem(&newep);
@@ -3933,7 +3930,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
                                               CAL_fields, &qconf_sfi,
                                               SP_DEST_STDOUT, SP_FORM_ASCII,
                                               NULL, false);
-         FREE(filename_stdout);
+         sge_free(&filename_stdout);
          lFreeList(&lp);
          if (answer_list_output(&alp)) {
             sge_error_and_exit(ctx, NULL);
@@ -4057,7 +4054,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
 
          } /* end for */
          
-         FREE(host_list);
+         sge_free(&host_list);
          lFreeElem(&hep);
 
          spp++;
@@ -4100,7 +4097,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
                                              CK_fields, &qconf_sfi,
                                              SP_DEST_STDOUT, SP_FORM_ASCII,
                                              NULL, false);
-         FREE(filename_stdout);
+         sge_free(&filename_stdout);
          lFreeList(&lp);
          if (answer_list_output(&alp)) {
             sge_error_and_exit(ctx, NULL);
@@ -4170,12 +4167,11 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
                }
             } /* end for */
 
-            FREE(host_list);
+            sge_free(&host_list);
             lFreeElem(&hep);
          }
          else {
-            fprintf(stderr, MSG_ANSWER_NEEDHOSTNAMETODELLOCALCONFIG);
-            fprintf(stderr, "\n");
+            fprintf(stderr, "%s\n", MSG_ANSWER_NEEDHOSTNAMETODELLOCALCONFIG);
             sge_parse_return = 1;
          }
 
@@ -4243,8 +4239,8 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
                                         SP_DEST_STDOUT, SP_FORM_ASCII, NULL,
                                         false);
             lFreeList(&lp);
-            FREE(fields);
-            FREE(filename_stdout);
+            sge_free(&fields);
+            sge_free(&filename_stdout);
             
             if (answer_list_output(&alp)) {
                sge_parse_return = 1; 
@@ -4366,7 +4362,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
                                                  SP_DEST_STDOUT, SP_FORM_ASCII,
                                                  NULL, false);
             lFreeList(&lp);
-            FREE(filename_stdout);
+            sge_free(&filename_stdout);
             
             if (answer_list_output(&alp)) {
                sge_error_and_exit(ctx, NULL);
@@ -4420,7 +4416,7 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
                                      &qconf_comma_sfi, SP_DEST_STDOUT,
                                      SP_FORM_ASCII, NULL, false);
         
-         FREE(filename_stdout);
+         sge_free(&filename_stdout);
          if (answer_list_output(&alp)) {
             fprintf(stderr, "%s\n", MSG_SCHEDCONF_CANTCREATESCHEDULERCONFIGURATION);
             sge_parse_return = 1; 
@@ -4569,8 +4565,8 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
                                      &qconf_name_value_list_sfi,
                                      SP_DEST_STDOUT, SP_FORM_ASCII, 
                                      NULL, false);
-         FREE(fields);
-         FREE(filename_stdout);
+         sge_free(&fields);
+         sge_free(&filename_stdout);
          sge_parse_return |= show_answer_list(alp);
          if (sge_parse_return) {
             sge_error_and_exit(ctx, NULL);
@@ -5466,8 +5462,8 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
                                                  NULL, false);
             lFreeList(&lp);
             lFreeList(&alp);
-            FREE(filename_stdout);
-            FREE(fields);
+            sge_free(&filename_stdout);
+            sge_free(&fields);
          }
 
          lFreeList(&uList);
@@ -5520,8 +5516,8 @@ int sge_parse_qconf(sge_gdi_ctx_class_t *ctx, char *argv[])
                                               NULL, false);
          lFreeList(&alp);
          lFreeList(&lp);
-         FREE(filename_stdout);
-         FREE(fields);
+         sge_free(&filename_stdout);
+         sge_free(&fields);
 
          spp++;
          continue;
@@ -5829,9 +5825,9 @@ static lListElem *edit_exechost(sge_gdi_ctx_class_t *ctx, lListElem *ep, uid_t u
    if (answer_list_output(&alp)) {
       if (filename != NULL) {
          unlink(filename);
-         FREE(filename);
+         sge_free(&filename);
       }
-      FREE(fields);
+      sge_free(&fields);
       sge_error_and_exit(ctx, NULL);
    }
 
@@ -5840,16 +5836,16 @@ static lListElem *edit_exechost(sge_gdi_ctx_class_t *ctx, lListElem *ep, uid_t u
 
    if (status < 0) {
       unlink(filename);
-      free(filename);
-      FREE(fields);
+      sge_free(&filename);
+      sge_free(&fields);
       if (sge_error_and_exit(ctx, MSG_PARSE_EDITFAILED))
          DRETURN(NULL);
    }
 
    if (status > 0) {
       unlink(filename);
-      free(filename);
-      FREE(fields);
+      sge_free(&filename);
+      sge_free(&fields);
       if (sge_error_and_exit(ctx, MSG_FILE_FILEUNCHANGED))
          DRETURN(NULL);
    }
@@ -5873,9 +5869,8 @@ static lListElem *edit_exechost(sge_gdi_ctx_class_t *ctx, lListElem *ep, uid_t u
    }
    
    unlink(filename);
-   free(filename);
-
-   FREE(fields);
+   sge_free(&filename);
+   sge_free(&fields);
    DRETURN(hep);
 }
 
@@ -5898,7 +5893,7 @@ static lList* edit_sched_conf(sge_gdi_ctx_class_t *ctx, lList *confl, uid_t uid,
                                        fname, false);
    if (answer_list_output(&alp)) {
       fprintf(stderr, "%s\n", MSG_SCHEDCONF_CANTCREATESCHEDULERCONFIGURATION);
-      FREE(fname);
+      sge_free(&fname);
       SGE_EXIT((void **)&ctx, 1);
    }
 
@@ -5906,7 +5901,7 @@ static lList* edit_sched_conf(sge_gdi_ctx_class_t *ctx, lList *confl, uid_t uid,
 
    if (status < 0) {
       unlink(fname);
-      FREE(fname);
+      sge_free(&fname);
       
       if (sge_error_and_exit(ctx, MSG_PARSE_EDITFAILED))
          DRETURN(NULL);
@@ -5914,7 +5909,7 @@ static lList* edit_sched_conf(sge_gdi_ctx_class_t *ctx, lList *confl, uid_t uid,
 
    if (status > 0) {
       unlink(fname);
-      FREE(fname);
+      sge_free(&fname);
       
       if (sge_error_and_exit(ctx, MSG_FILE_FILEUNCHANGED)) {
          DRETURN(NULL);
@@ -5953,13 +5948,13 @@ static lList* edit_sched_conf(sge_gdi_ctx_class_t *ctx, lList *confl, uid_t uid,
       fprintf(stderr, MSG_QCONF_CANTREADCONFIG_S, "can't parse config");
       fprintf(stderr, "\n");
       unlink(fname);
-      FREE(fname);
+      sge_free(&fname);
       SGE_EXIT((void **)&ctx, 1);
    }
    lFreeList(&alp);
    
    unlink(fname);
-   FREE(fname);
+   sge_free(&fname);
 
    DRETURN(newconfl);
 }
@@ -5984,9 +5979,9 @@ static lListElem *edit_user(sge_gdi_ctx_class_t *ctx, lListElem *ep, uid_t uid, 
    if (answer_list_output(&alp)) {
       if (filename != NULL) {
          unlink(filename);
-         FREE(filename);
+         sge_free(&filename);
       }
-      FREE(fields);
+      sge_free(&fields);
       sge_error_and_exit(ctx, NULL);
    }
 
@@ -5995,14 +5990,14 @@ static lListElem *edit_user(sge_gdi_ctx_class_t *ctx, lListElem *ep, uid_t uid, 
    status = sge_edit(filename, uid, gid);
 
    if (status < 0) {
-      FREE(fields);
+      sge_free(&fields);
       unlink(filename);
       if (sge_error_and_exit(ctx, MSG_PARSE_EDITFAILED))
          DRETURN(NULL);
    }
 
    if (status > 0) {
-      FREE(fields);
+      sge_free(&fields);
       unlink(filename);
       if (sge_error_and_exit(ctx, MSG_FILE_FILEUNCHANGED))
          DRETURN(NULL);
@@ -6021,7 +6016,7 @@ static lListElem *edit_user(sge_gdi_ctx_class_t *ctx, lListElem *ep, uid_t uid, 
       missing_field = spool_get_unprocessed_field(fields, fields_out, &alp);
    }
 
-   FREE(fields);
+   sge_free(&fields);
    
    if (missing_field != NoName) {
       lFreeElem(&newep);
@@ -6029,7 +6024,7 @@ static lListElem *edit_user(sge_gdi_ctx_class_t *ctx, lListElem *ep, uid_t uid, 
    }
    
    unlink(filename);
-   FREE(filename);
+   sge_free(&filename);
    
    if (!newep) {
       fprintf(stderr, MSG_QCONF_CANTREADX_S, MSG_OBJ_USER);
@@ -6059,9 +6054,9 @@ static lListElem *edit_project(sge_gdi_ctx_class_t *ctx, lListElem *ep, uid_t ui
    if (answer_list_output(&alp)) {
       if (filename != NULL) {
          unlink(filename);
-         FREE(filename);
+         sge_free(&filename);
       }
-      FREE(fields);
+      sge_free(&fields);
       sge_error_and_exit(ctx, NULL);
    }
 
@@ -6070,14 +6065,14 @@ static lListElem *edit_project(sge_gdi_ctx_class_t *ctx, lListElem *ep, uid_t ui
    status = sge_edit(filename, uid, gid);
 
    if (status < 0) {
-      FREE(fields);
+      sge_free(&fields);
       unlink(filename);
       if (sge_error_and_exit(ctx, MSG_PARSE_EDITFAILED))
          DRETURN(NULL);
    }
 
    if (status > 0) {
-      FREE(fields);
+      sge_free(&fields);
       unlink(filename);
       if (sge_error_and_exit(ctx, MSG_FILE_FILEUNCHANGED))
          DRETURN(NULL);
@@ -6096,7 +6091,7 @@ static lListElem *edit_project(sge_gdi_ctx_class_t *ctx, lListElem *ep, uid_t ui
       missing_field = spool_get_unprocessed_field(fields, fields_out, &alp);
    }
 
-   FREE(fields);
+   sge_free(&fields);
    
    if (missing_field != NoName) {
       lFreeElem(&newep);
@@ -6104,7 +6099,7 @@ static lListElem *edit_project(sge_gdi_ctx_class_t *ctx, lListElem *ep, uid_t ui
    }
    
    unlink(filename);
-   FREE(filename);
+   sge_free(&filename);
    
    if (!newep) {
       fprintf(stderr, MSG_QCONF_CANTREADX_S, MSG_JOB_PROJECT);
@@ -6121,7 +6116,6 @@ static lListElem *edit_sharetree(sge_gdi_ctx_class_t *ctx, lListElem *ep, uid_t 
    int status;
    lListElem *newep = NULL;
    const char *filename = NULL;
-   char errstr[1024];
    lList *alp = NULL;
    spooling_field *fields = NULL;
    int fields_out[MAX_NUM_FIELDS];
@@ -6150,9 +6144,9 @@ static lListElem *edit_sharetree(sge_gdi_ctx_class_t *ctx, lListElem *ep, uid_t 
    if (answer_list_output(&alp)) {
       if (filename != NULL) {
          unlink(filename);
-         FREE(filename);
+         sge_free(&filename);
       }
-      FREE(fields);
+      sge_free(&fields);
       sge_error_and_exit(ctx, NULL);
    }
 
@@ -6161,17 +6155,17 @@ static lListElem *edit_sharetree(sge_gdi_ctx_class_t *ctx, lListElem *ep, uid_t 
    status = sge_edit(filename, uid, gid);
 
    if (status < 0) {
-      FREE(fields);
+      sge_free(&fields);
       unlink(filename);
-      FREE(filename);
+      sge_free(&filename);
       if (sge_error_and_exit(ctx, MSG_PARSE_EDITFAILED))
          DRETURN(NULL);
    }
 
    if (status > 0) {
-      FREE(fields);
+      sge_free(&fields);
       unlink(filename);
-      FREE(filename);
+      sge_free(&filename);
       if (sge_error_and_exit(ctx, MSG_FILE_FILEUNCHANGED))
          DRETURN(NULL);
    }
@@ -6190,7 +6184,7 @@ static lListElem *edit_sharetree(sge_gdi_ctx_class_t *ctx, lListElem *ep, uid_t 
       missing_field = spool_get_unprocessed_field(fields, fields_out, &alp);
    }
 
-   FREE(fields);
+   sge_free(&fields);
    
    if (missing_field != NoName) {
       lFreeElem(&newep);
@@ -6198,10 +6192,13 @@ static lListElem *edit_sharetree(sge_gdi_ctx_class_t *ctx, lListElem *ep, uid_t 
    }
 
    unlink(filename);
-   FREE(filename);
+   sge_free(&filename);
 
    if (newep == NULL) {
-      fprintf(stderr, MSG_QCONF_CANTREADSHARETREEX_S, errstr);
+      /* JG: TODO: do we need the following output?
+       * Isn't an error message already written by spool_flatfile_read_object?
+       */
+      fprintf(stderr, MSG_QCONF_CANTREADSHARETREEX_S, "");
       fprintf(stderr, "\n");
       SGE_EXIT((void **)&ctx, 1);
    }
@@ -6324,8 +6321,7 @@ static int show_eventclients(sge_gdi_ctx_class_t *ctx)
       }
    }
    else {
-      fprintf(stderr,  MSG_QCONF_NOEVENTCLIENTSREGISTERED); 
-      fprintf(stderr, "\n");
+      fprintf(stderr, "%s\n", MSG_QCONF_NOEVENTCLIENTSREGISTERED);
    }
    lFreeList(&alp);
    lFreeList(&lp);
@@ -6430,10 +6426,8 @@ static int show_processors(sge_gdi_ctx_class_t *ctx, bool has_binding_param)
          }
       }
       printf("\n");
-   }
-   else {
-      fprintf(stderr,  MSG_QCONF_NOEXECUTIONHOSTSDEFINED );
-      fprintf(stderr, "\n");
+   } else {
+      fprintf(stderr,  "%s\n", MSG_QCONF_NOEXECUTIONHOSTSDEFINED);
    }
    
    lFreeList(&alp);
@@ -6491,7 +6485,7 @@ lList *arglp
                                      SP_DEST_STDOUT, SP_FORM_ASCII, NULL,
                                      false);
          lFreeList(&alp);
-         FREE(filename_stdout);
+         sge_free(&filename_stdout);
       }
    }
    lFreeList(&acls);
@@ -6606,7 +6600,7 @@ static int edit_usersets(sge_gdi_ctx_class_t *ctx, lList *arglp)
    }
 
    lFreeList(&usersets);
-   FREE(fname);
+   sge_free(&fname);
    DRETURN(0);
 }
 
@@ -6660,8 +6654,8 @@ const char *config_name
       fields = sge_build_CONF_field_list(false);
       filename_stdout = spool_flatfile_write_object(&alp, ep, false, fields, &qconf_sfi,
                                   SP_DEST_STDOUT, SP_FORM_ASCII, NULL, false);
-      FREE(fields);
-      FREE(filename_stdout);
+      sge_free(&fields);
+      sge_free(&filename_stdout);
       
       if (answer_list_output(&alp)) {
          sge_error_and_exit(ctx, NULL);
@@ -6777,17 +6771,17 @@ static int add_modify_config(sge_gdi_ctx_class_t *ctx, const char *cfn, const ch
       if (status != 0) {
          unlink(tmpname);
          failed = true;
-         FREE(fields);
-         FREE(tmpname);
+         sge_free(&fields);
+         sge_free(&tmpname);
       }
       if (status < 0) {
          fprintf(stderr, "%s\n", MSG_PARSE_EDITFAILED);
-         FREE(fields);
+         sge_free(&fields);
          DRETURN(failed);
       }
       else if (status > 0) {
          fprintf(stderr, "%s\n", MSG_ANSWER_CONFIGUNCHANGED);
-         FREE(fields);
+         sge_free(&fields);
          DRETURN(failed);
       }
 
@@ -6805,7 +6799,7 @@ static int add_modify_config(sge_gdi_ctx_class_t *ctx, const char *cfn, const ch
          missing_field = spool_get_unprocessed_field(fields, fields_out, &alp);
       }
 
-      FREE(fields);
+      sge_free(&fields);
 
       if (missing_field != NoName) {
          lFreeElem(&ep);
@@ -6823,12 +6817,12 @@ static int add_modify_config(sge_gdi_ctx_class_t *ctx, const char *cfn, const ch
       } else {
          fprintf(stderr, "%s\n", MSG_ANSWER_ERRORREADINGTEMPFILE);
          unlink(tmpname);
-         FREE(tmpname);
+         sge_free(&tmpname);
          failed = true;
          DRETURN(failed);
       }
       unlink(tmpname);
-      FREE(tmpname);
+      sge_free(&tmpname);
    } else {
       lFreeElem(&ep);
 
@@ -6846,7 +6840,7 @@ static int add_modify_config(sge_gdi_ctx_class_t *ctx, const char *cfn, const ch
          missing_field = spool_get_unprocessed_field(fields, fields_out, &alp);
       }
 
-      FREE(fields);
+      sge_free(&fields);
 
       if (missing_field != NoName) {
          lFreeElem(&ep);
@@ -7093,7 +7087,7 @@ static int qconf_modify_attribute(sge_gdi_ctx_class_t *ctx,
          DRETURN(1);
       }
       if (*epp == NULL){
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_FILE_ERRORREADINGINFILE));
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_FILE_ERRORREADINGINFILE));
          answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          DRETURN(1);
       }
@@ -7125,7 +7119,7 @@ static int qconf_modify_attribute(sge_gdi_ctx_class_t *ctx,
                                       info_entry->fields, fields, true, info_entry->instr,
                                       SP_FORM_ASCII, NULL, filename);
             unlink(filename);
-            FREE(filename);
+            sge_free(&filename);
          }
          sge_dstring_free(&write_attr_tmp_file_error);
       }
@@ -7147,15 +7141,15 @@ static int qconf_modify_attribute(sge_gdi_ctx_class_t *ctx,
             }
          }
          
-         FREE(name);
-         FREE(value);
+         sge_free(&name);
+         sge_free(&value);
          sge_dstring_free(&delim);
          
          DRETURN(1);
       }
       
-      FREE(name);
-      FREE(value);
+      sge_free(&name);
+      sge_free(&value);
       sge_dstring_free(&delim);
    }
 
@@ -7231,7 +7225,7 @@ static int qconf_modify_attribute(sge_gdi_ctx_class_t *ctx,
       lList *lp = lGetList(*epp, fields[0]);
       
       if (lp == NULL || lGetNumberOfElem(lp) == 0) {
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_QCONF_CANT_MODIFY_NONE));
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_QCONF_CANT_MODIFY_NONE));
          answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
          lFreeElem(epp);
          lFreeWhat(&what);
@@ -7249,7 +7243,7 @@ static int qconf_modify_attribute(sge_gdi_ctx_class_t *ctx,
          for (nm = ep->descr[0].nm; nm != NoName; nm = ep->descr[count++].nm) {            
             if (lGetType(ep->descr, nm) == lListT) {
                if (lGetList(ep, nm) == NULL) {
-                  SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_QCONF_CANT_MODIFY_NONE));
+                  SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_QCONF_CANT_MODIFY_NONE));
                   answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
                   lFreeElem(epp);
                   lFreeWhat(&what);

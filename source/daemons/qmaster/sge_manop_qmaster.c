@@ -32,19 +32,23 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "commlib.h"
-#include "cull.h"
-#include "sgermon.h"
-#include "sge_manop_qmaster.h"
-#include "sge_event_master.h"
-#include "sge_log.h"
-#include "sge_uidgid.h"
-#include "sge_answer.h"
-#include "sge_manop.h"
+#include "rmon/sgermon.h"
 
-#include "sge_persistence_qmaster.h"
+#include "uti/sge_log.h"
+#include "uti/sge_uidgid.h"
+
+#include "comm/commlib.h"
+
+#include "cull/cull.h"
+
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_manop.h"
+
 #include "spool/sge_spooling.h"
 
+#include "sge_persistence_qmaster.h"
+#include "sge_manop_qmaster.h"
+#include "sge_event_master.h"
 #include "msg_common.h"
 #include "msg_qmaster.h"
 

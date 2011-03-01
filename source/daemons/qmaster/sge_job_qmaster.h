@@ -36,12 +36,15 @@
 #   include "sge_gdiP.h"
 #endif
 
-#include "sge_event.h"
-#include "sge_qmaster_timed_event.h"
 #include "uti/sge_monitor.h"
+
+#include "sgeobj/sge_event.h"
+#include "sgeobj/sge_event.h"
+
 #include "gdi/sge_gdi_ctx.h"
 #include "gdi/sge_gdi_packet.h"
-#include "sgeobj/sge_event.h"
+
+#include "sge_qmaster_timed_event.h"
 
 int sge_gdi_add_job(sge_gdi_ctx_class_t *ctx,
                     lListElem **jep, lList **alpp, lList **lpp, char *ruser,

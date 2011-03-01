@@ -33,7 +33,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_dstring.h"
+#include "uti/sge_dstring.h"
 
 int shepconf_has_userdef_method(const char *method_name, dstring *method);
 

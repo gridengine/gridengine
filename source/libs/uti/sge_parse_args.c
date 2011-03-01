@@ -32,9 +32,10 @@
 
 #include <ctype.h>
 
-#include "sge_string.h"
-#include "sge_sl.h"
-#include "sgermon.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_string.h"
+#include "uti/sge_sl.h"
 
 /* This method counts the number of arguments in the string using a quick and
  * dirty algorithm.  The algorithm may incorrectly report the number of arguments
@@ -59,7 +60,7 @@ const char* args /* The argument string to count by whitespace tokens */
    for (s = sge_strtok_r(resreq, " \t", &context); s != NULL; s = sge_strtok_r(NULL, " \t", &context)) {
       num_args++;
    }
-   free(resreq);
+   sge_free(&resreq);
    sge_free_saved_vars(context);
    
    DRETURN(num_args);
@@ -113,7 +114,7 @@ char** pargs /* The array to contain the parsed arguments */
          *d++ = *s++;                    /* copy one character */
       }
    } 
-   free(resreq);
+   sge_free(&resreq);
 
    DRETURN(count);
 }

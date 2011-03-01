@@ -37,7 +37,7 @@ extern "C" {
 #endif
 
 #include "basis_types.h"
-#include "sge_gdi_ctx.h"
+#include "gdi/sge_gdi_ctx.h"
 
 typedef struct qrstat_env_str qrstat_env_t;
 

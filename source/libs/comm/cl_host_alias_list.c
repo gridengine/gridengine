@@ -1,8 +1,3 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-
-
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  *
@@ -35,8 +30,12 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "cl_host_alias_list.h"
-#include "cl_commlib.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+#include "comm/cl_host_alias_list.h"
+#include "comm/cl_commlib.h"
 
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
@@ -72,9 +71,9 @@ int cl_host_alias_list_cleanup(cl_raw_list_t** list_p) {
    cl_raw_list_lock(*list_p);
    while ( (elem = cl_host_alias_list_get_first_elem(*list_p)) != NULL) {
       cl_raw_list_remove_elem(*list_p, elem->raw_elem);
-      free(elem->local_resolved_hostname);
-      free(elem->alias_name);
-      free(elem);
+      sge_free(&(elem->local_resolved_hostname));
+      sge_free(&(elem->alias_name));
+      sge_free(&elem);
    }
    cl_raw_list_unlock(*list_p);
    ret_val = cl_raw_list_cleanup(list_p);
@@ -99,7 +98,7 @@ int cl_host_alias_list_append_host(cl_raw_list_t* list_p, char* local_resolved_n
  
    if ( cl_host_alias_list_get_alias_name(list_p, local_resolved_name, &help ) == CL_RETVAL_OK) {
       CL_LOG_STR(CL_LOG_ERROR,"alias for host exists already:", help);
-      free(help);
+      sge_free(&help);
       return CL_RETVAL_ALIAS_EXISTS;
    }
 
@@ -114,7 +113,7 @@ int cl_host_alias_list_append_host(cl_raw_list_t* list_p, char* local_resolved_n
 
    if ( cl_host_alias_list_get_local_resolved_name(list_p, alias_name, &help ) == CL_RETVAL_OK) {
       CL_LOG_STR(CL_LOG_ERROR,"hostname for alias exists already:", help);
-      free(help);
+      sge_free(&help);
       return CL_RETVAL_ALIAS_EXISTS;
    }
 #endif
@@ -137,7 +136,7 @@ int cl_host_alias_list_append_host(cl_raw_list_t* list_p, char* local_resolved_n
 
    new_elem->local_resolved_hostname = strdup(local_resolved_name);
    if (new_elem->local_resolved_hostname == NULL) {
-      free(new_elem);
+      sge_free(&new_elem);
       if (lock_list == 1) { 
          cl_raw_list_unlock(list_p);
       }
@@ -146,8 +145,8 @@ int cl_host_alias_list_append_host(cl_raw_list_t* list_p, char* local_resolved_n
 
    new_elem->alias_name = strdup(alias_name);
    if (new_elem->alias_name == NULL) {
-      free(new_elem->local_resolved_hostname);
-      free(new_elem);
+      sge_free(&(new_elem->local_resolved_hostname));
+      sge_free(&new_elem);
       if (lock_list == 1) { 
          cl_raw_list_unlock(list_p);
       }
@@ -156,9 +155,9 @@ int cl_host_alias_list_append_host(cl_raw_list_t* list_p, char* local_resolved_n
 
    new_elem->raw_elem = cl_raw_list_append_elem(list_p, (void*) new_elem);
    if ( new_elem->raw_elem == NULL) {
-      free(new_elem->local_resolved_hostname);
-      free(new_elem->alias_name);
-      free(new_elem);
+      sge_free(&(new_elem->local_resolved_hostname));
+      sge_free(&(new_elem->alias_name));
+      sge_free(&new_elem);
       if (lock_list == 1) { 
          cl_raw_list_unlock(list_p);
       }
@@ -202,9 +201,9 @@ int cl_host_alias_list_remove_host(cl_raw_list_t* list_p, cl_host_alias_list_ele
          /* found matching element */
          cl_raw_list_remove_elem(list_p, elem->raw_elem);
          function_return = CL_RETVAL_OK;
-         free(elem->local_resolved_hostname);
-         free(elem->alias_name);
-         free(elem);
+         sge_free(&(elem->local_resolved_hostname));
+         sge_free(&(elem->alias_name));
+         sge_free(&elem);
          elem = NULL;
          break;
       }
@@ -245,8 +244,7 @@ int cl_host_alias_list_get_local_resolved_name(cl_raw_list_t* list_p, char* alia
       if ( strcasecmp(alias_name,elem->alias_name) == 0) {
          *local_resolved_name = strdup(elem->local_resolved_hostname);
          if ( (ret_val = cl_raw_list_unlock(list_p)) != CL_RETVAL_OK) {
-            free(*local_resolved_name);
-            *local_resolved_name = NULL;
+            sge_free(local_resolved_name);
             return ret_val;
          }
          if (*local_resolved_name == NULL) {
@@ -287,8 +285,7 @@ int cl_host_alias_list_get_alias_name(cl_raw_list_t* list_p, char* local_resolve
       if ( strcasecmp(local_resolved_name,elem->local_resolved_hostname) == 0) {
          *alias_name = strdup(elem->alias_name);
          if ( (ret_val = cl_raw_list_unlock(list_p)) != CL_RETVAL_OK) {
-            free(*alias_name);
-            *alias_name = NULL;
+            sge_free(alias_name);
             return ret_val;
          }
          if (*alias_name == NULL) {

@@ -38,22 +38,24 @@
 #include <errno.h>
 #include <limits.h>
 
-#include "sge.h"
-#include "sgermon.h"
-#include "sge_conf.h"
-#include "sge_log.h"
-#include "sge_c_gdi.h"
-#include "sge_string.h"
-#include "sge_answer.h"
-#include "sge_utility.h"
-#include "sge_unistd.h"
-#include "sge_hgroup.h"
-#include "sge_cuser.h"
-#include "sge_event_master.h"
-#include "sge_persistence_qmaster.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_string.h"
+
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_utility.h"
+#include "sgeobj/sge_hgroup.h"
+#include "sgeobj/sge_cuser.h"
 
 #include "spool/sge_spooling.h"
 
+#include "sge.h"
+#include "sge_c_gdi.h"
+#include "sge_event_master.h"
+#include "sge_persistence_qmaster.h"
 #include "msg_common.h"
 #include "msg_qmaster.h"
 

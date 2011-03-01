@@ -58,15 +58,15 @@
 #include "sgeobj/sge_feature.h"
 #include "sgeobj/sge_multi_MA_L.h"
 
-#include "sge_gdi2.h"
-#include "sge_gdiP.h"
-#include "sge_gdi_packet.h"
-#include "sge_gdi_packet_pb_cull.h"
-#include "version.h"
-#include "sge_security.h"
+#include "gdi/sge_gdi2.h"
+#include "gdi/sge_gdiP.h"
+#include "gdi/sge_gdi_packet.h"
+#include "gdi/sge_gdi_packet_pb_cull.h"
+#include "gdi/version.h"
+#include "gdi/sge_security.h"
+#include "gdi/msg_gdilib.h"
 
 #include "msg_common.h"
-#include "msg_gdilib.h"
 #include "msg_qmaster.h"
 
 /****** gdi/request_internal/--Packets_and_Taks() *****************************
@@ -370,7 +370,7 @@ sge_gdi_task_free(sge_gdi_task_class_t ** task)
       lFreeList(&((*task)->answer_list));
       lFreeWhat(&((*task)->enumeration));
       lFreeWhere(&((*task)->condition));
-      *task = (sge_gdi_task_class_t *) sge_free((char *) (*task));
+      sge_free(task);
    }
    DRETURN(ret);
 }
@@ -754,11 +754,10 @@ sge_gdi_packet_free(sge_gdi_packet_class_t ** packet)
       if (local_ret1 != 0 || local_ret2 != 0) {
          ret = false;
       }
-      (*packet)->host = sge_free((char *) (*packet)->host);
-      (*packet)->commproc = sge_free((char *) (*packet)->commproc);
-
-      (*packet)->auth_info = sge_free((char *) (*packet)->auth_info);
-      *packet = (sge_gdi_packet_class_t *)sge_free((char *) *packet);
+      sge_free(&((*packet)->host));
+      sge_free(&((*packet)->commproc));
+      sge_free(&((*packet)->auth_info));
+      sge_free(packet);
    }
    DRETURN(ret);
 }

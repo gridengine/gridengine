@@ -33,15 +33,15 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_boundaries.h"
-#include "cull.h"
+#include "cull/cull.h"
+
+#include "sgeobj/sge_boundaries.h"
+#include "sgeobj/sge_schedd_conf_PARA_L.h"
+#include "sgeobj/sge_schedd_conf_SC_L.h"
 
 #ifdef  __cplusplus
 extern "C" {
 #endif
-
-#include "sge_schedd_conf_PARA_L.h"
-#include "sge_schedd_conf_SC_L.h"
 
 /* 
  * valid values for SC_queue_sort_method 

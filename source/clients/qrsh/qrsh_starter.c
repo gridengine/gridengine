@@ -50,9 +50,11 @@
 #include <sys/types.h>
 
 #include "basis_types.h"
-#include "config_file.h"
+
+#include "uti/config_file.h"
 #include "uti/sge_stdlib.h"
 #include "uti/sge_string.h"
+
 #include "uti/sge_unistd.h"
 #include "uti/sge_uidgid.h"
 #include "uti/sge_stdio.h"
@@ -124,7 +126,12 @@ static void qrsh_error(const char *fmt, ...)
       return;
    }
 
-   write(file, message, strlen(message));
+   if (write(file, message, strlen(message)) != strlen(message)) {
+      dstring ds = DSTRING_INIT;
+      fprintf(stderr, MSG_FILE_CANNOT_WRITE_SS, fileName, sge_strerror(errno, &ds));
+      sge_dstring_free(&ds);
+   }
+
    close(file);
 }
 
@@ -208,7 +215,7 @@ static char *setEnvironment(const char *jobdir, char **wrapper)
    /* open sge environment file */
    if ((envFile = fopen(envFileName, "r")) == NULL) {
       qrsh_error(MSG_QRSH_STARTER_CANNOTOPENFILE_SS, envFileName, strerror(errno));
-      FREE(line);
+      sge_free(&line);
       return NULL;
    }
 
@@ -228,19 +235,18 @@ static char *setEnvironment(const char *jobdir, char **wrapper)
       if (strncmp(line, "QRSH_COMMAND=", 13) == 0) {
          if ((command = (char *)malloc(strlen(line) - 13 + 1)) == NULL) {
             qrsh_error(MSG_QRSH_STARTER_MALLOCFAILED_S, strerror(errno));
-            FREE(line);
+            sge_free(&line);
             FCLOSE(envFile);
             return NULL;
          }
          strcpy(command, line + 13);
       } else if (strncmp(line, "QRSH_WRAPPER=", 13) == 0) {
          if (*(line + 13) == 0) {
-            fprintf(stderr, MSG_QRSH_STARTER_EMPTY_WRAPPER);
-            fprintf(stderr, "\n");
+            fprintf(stderr, "%s\n", MSG_QRSH_STARTER_EMPTY_WRAPPER);
          } else {
             if ((*wrapper = (char *)malloc(strlen(line) - 13 + 1)) == NULL) {
                qrsh_error(MSG_QRSH_STARTER_MALLOCFAILED_S, strerror(errno));
-               FREE(line);
+               sge_free(&line);
                FCLOSE(envFile); 
                return NULL;
             }
@@ -252,19 +258,19 @@ static char *setEnvironment(const char *jobdir, char **wrapper)
          /* set variable */
          if (new_line != NULL) {
             put_ret = sge_putenv(new_line);
-            FREE(new_line);
+            sge_free(&new_line);
          } else {
             put_ret = sge_putenv(line);
          }
          if (put_ret == 0) {
-            FREE(line);
+            sge_free(&line);
             FCLOSE(envFile); 
             return NULL;
          }
       }
    }
 
-   FREE(line);
+   sge_free(&line);
    FCLOSE(envFile); 
 
    /* 
@@ -399,13 +405,20 @@ static int write_pid_file(pid_t pid)
    }
 
    if((pid_file = SGE_OPEN3(pid_file_name, O_WRONLY | O_APPEND | O_CREAT, 00744)) == -1) {
-      qrsh_error(MSG_QRSH_STARTER_CANNOTWRITEPID_SS, pid_file_name, strerror(errno));
+      dstring ds = DSTRING_INIT;
+      qrsh_error(MSG_QRSH_STARTER_CANNOTWRITEPID_SS, pid_file_name, sge_strerror(errno, &ds));
+      sge_dstring_free(&ds);
       return 0;
    }
 
    snprintf(pid_str, 20, pid_t_fmt, pid);
 
-   write(pid_file, pid_str, strlen(pid_str));
+   if (write(pid_file, pid_str, strlen(pid_str)) != strlen(pid_str)) {
+      dstring ds = DSTRING_INIT;
+      qrsh_error(MSG_FILE_CANNOT_WRITE_SS, pid_file_name, sge_strerror(errno, &ds));
+      sge_dstring_free(&ds);
+   }
+
    SGE_CLOSE(pid_file);
    return 1;
 }
@@ -800,12 +813,18 @@ static int writeExitCode(int myExitCode, int programExitCode)
    }
 
    if((file = SGE_OPEN3(fileName, O_WRONLY | O_APPEND | O_CREAT, 00744)) == -1) {
-      qrsh_error(MSG_QRSH_STARTER_CANNOTOPENFILE_SS, fileName, strerror(errno));
+      dstring ds = DSTRING_INIT;
+      qrsh_error(MSG_QRSH_STARTER_CANNOTOPENFILE_SS, fileName, sge_strerror(errno, &ds));
+      sge_dstring_free(&ds);
       return EXIT_FAILURE;
    }
  
    snprintf(exitCode_str, 20, "%d", exitCode);
-   write(file, exitCode_str, strlen(exitCode_str));
+   if (write(file, exitCode_str, strlen(exitCode_str)) != strlen(exitCode_str)) {
+      dstring ds = DSTRING_INIT;
+      qrsh_error(MSG_FILE_CANNOT_WRITE_SS, fileName, sge_strerror(errno, &ds));
+      sge_dstring_free(&ds);
+   }
    SGE_CLOSE(file);
    
    return EXIT_SUCCESS;

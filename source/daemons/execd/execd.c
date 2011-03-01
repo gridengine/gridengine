@@ -34,37 +34,43 @@
 #include <errno.h>
 #include <stdlib.h>
 
-#include "sge_unistd.h"
-#include "sge.h"
-#include "gdi/sge_gdi.h"
+#include "rmon/sgermon.h"
 
-#include "sge_all_listsL.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_os.h"
+#include "uti/sge_stdlib.h"
+#include "uti/sge_log.h"
+#include "uti/sge_time.h"
+
+#include "gdi/sge_gdi.h"
+#include "gdi/sge_gdi2.h"
+
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/parse.h"
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_report.h"
+#include "sgeobj/sge_conf.h"
+
+#include "spool/classic/read_write_job.h"
+
+#include "gdi/msg_gdilib.h"
+
 #include "sge_load_sensor.h"
-#include "sge_log.h"
-#include "sge_time.h"
-#include "sgermon.h"
 #include "dispatcher.h"
 #include "load_avg.h"
-#include "parse.h"
-#include "sge_feature.h"
 #include "reaper_execd.h"
 #include "setup_execd.h"
 #include "shutdown.h"
 #include "sig_handlers.h"
 #include "startprog.h"
 #include "usage.h"
-#include "spool/classic/read_write_job.h"
-#include "sge_os.h"
-#include "sge_stdlib.h"
-#include "sge_answer.h"
 #include "execd.h"
-#include "sgeobj/sge_object.h"
-#include "sgeobj/sge_job.h"
-#include "sgeobj/sge_report.h"
-
+#include "sge.h"
 #include "msg_common.h"
 #include "msg_execd.h"
-#include "msg_gdilib.h"
 
 #ifdef COMPILE_DC
 #   include "ptf.h"
@@ -237,7 +243,7 @@ int main(int argc, char **argv)
          if (printed_points != 0) {
             printf("\n");
          }
-         CRITICAL((SGE_EVENT, MSG_COM_ERROR));
+         CRITICAL((SGE_EVENT, SFNMAX, MSG_COM_ERROR));
          SGE_EXIT((void**)&ctx, 1);
       }
       if (cl_com_get_handle(prognames[EXECD],1) == NULL) {
@@ -262,7 +268,7 @@ int main(int argc, char **argv)
     */
    ret_val = cl_com_set_status_func(sge_execd_application_status);
    if (ret_val != CL_RETVAL_OK) {
-      ERROR((SGE_EVENT, cl_get_error_text(ret_val)) );
+      ERROR((SGE_EVENT, SFNMAX, cl_get_error_text(ret_val)));
    }
 
    /* test connection */
@@ -272,8 +278,8 @@ int main(int argc, char **argv)
                                                (char *)ctx->get_master(ctx, true),
                                                (char*)prognames[QMASTER], 1, &status);
       if (ret_val != CL_RETVAL_OK) {
-         ERROR((SGE_EVENT, cl_get_error_text(ret_val)));
-         ERROR((SGE_EVENT, MSG_CONF_NOCONFBG));
+         ERROR((SGE_EVENT, SFNMAX, cl_get_error_text(ret_val)));
+         ERROR((SGE_EVENT, SFNMAX, MSG_CONF_NOCONFBG));
       }
       cl_com_free_sirm_message(&status);
    }
@@ -339,15 +345,15 @@ int main(int argc, char **argv)
     * Log a warning message if execd hasn't been started by a superuser
     */
    if (!sge_is_start_user_superuser()) {
-      WARNING((SGE_EVENT, MSG_SWITCH_USER_NOT_ROOT));
+      WARNING((SGE_EVENT, SFNMAX, MSG_SWITCH_USER_NOT_ROOT));
    }   
 
 #ifdef COMPILE_DC
    if (ptf_init()) {
-      CRITICAL((SGE_EVENT, MSG_EXECD_NOSTARTPTF));
+      CRITICAL((SGE_EVENT, SFNMAX, MSG_EXECD_NOSTARTPTF));
       SGE_EXIT((void**)&ctx, 1);
    }
-   INFO((SGE_EVENT, MSG_EXECD_STARTPDCANDPTF));
+   INFO((SGE_EVENT, SFNMAX, MSG_EXECD_STARTPDCANDPTF));
 #endif
 
    master_job_list = object_type_get_master_list(SGE_TYPE_JOB);
@@ -631,7 +637,6 @@ lList *alp = NULL;
 static lList *sge_parse_execd(lList **ppcmdline, lList **ppreflist, 
                               u_long32 *help) 
 {
-   stringT str;
    lList *alp = NULL;
    int usageshowed = 0;
 
@@ -650,10 +655,10 @@ static lList *sge_parse_execd(lList **ppcmdline, lList **ppreflist,
    }
    
    if(lGetNumberOfElem(*ppcmdline)) {
-      sprintf(str, MSG_PARSE_TOOMANYARGS);
-      if(!usageshowed)
+      if(!usageshowed) {
          sge_usage(EXECD, stderr);
-      answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+      }
+      answer_list_add(&alp, MSG_PARSE_TOOMANYARGS, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return alp;
    }

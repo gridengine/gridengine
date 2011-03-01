@@ -37,45 +37,50 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "sgermon.h"
-#include "sge.h"
-#include "sge_pe.h"
-#include "sge_ja_task.h"
-#include "sge_pe_task.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_unistd.h"
+#include "uti/sge_hostname.h"
+#include "uti/sge_bootstrap.h"
+#include "uti/sge_string.h"
+#include "uti/sge_parse_num_par.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_log.h"
+#include "uti/sge_io.h"
+#include "uti/sge_afsutil.h"
+#include "uti/setup_path.h"
+
+#include "sgeobj/sge_pe.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_pe_task.h"
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_var.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_ckpt.h"
+#include "sgeobj/sge_report.h"
+
+#include "gdi/msg_gdilib.h"
+#include "gdi/sge_security.h"
+
+#include "spool/classic/read_write_job.h"
+
 #include "dispatcher.h"
-#include "sge_string.h"
-#include "sge_parse_num_par.h"
 #include "execd.h"
 #include "reaper_execd.h"
 #include "job_report_execd.h"
 #include "execd_job_exec.h"
-#include "spool/classic/read_write_job.h"
-#include "sge_feature.h"
-#include "sge_conf.h"
-#include "sge_prog.h"
-#include "sge_log.h"
-#include "sge_io.h"
 #include "execution_states.h"
-#include "sge_afsutil.h"
-#include "setup_path.h"
-#include "sge_security.h"
-#include "sge_job.h"
-#include "sge_unistd.h"
-#include "sge_hostname.h"
-#include "sge_var.h"
-#include "sge_qinstance.h"
 #include "get_path.h"
-#include "sgeobj/sge_object.h"
-#include "sge_bootstrap.h"
-#include "sge_answer.h"
-#include "sge_ckpt.h"
-#include "sgeobj/sge_report.h"
-
+#include "sge.h"
 #include "msg_common.h"
 #include "msg_execd.h"
-#include "msg_gdilib.h"
+
 #if defined(INTERIX)
-   #include "wingrid.h"
+   #include "wingrid/wingrid.h"
 #endif
 
 
@@ -97,7 +102,7 @@ int do_job_exec(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, sge_pack_buffer *a
 
    /* ------- featureset */
    if (unpackint(&(aMsg->buf), &feature_set)) {
-      ERROR((SGE_EVENT, MSG_COM_UNPACKFEATURESET));
+      ERROR((SGE_EVENT, SFNMAX, MSG_COM_UNPACKFEATURESET));
       DRETURN(0);
    }
 
@@ -115,7 +120,7 @@ int do_job_exec(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, sge_pack_buffer *a
        
       if (!object_unpack_elem_verify(&answer_list, &(aMsg->buf), &job, JB_Type)) {
          answer_list_output(&answer_list);
-         ERROR((SGE_EVENT, MSG_COM_UNPACKJOB));
+         ERROR((SGE_EVENT, SFNMAX, MSG_COM_UNPACKJOB));
          DRETURN(0);
       }
 
@@ -159,7 +164,7 @@ int do_job_exec(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, sge_pack_buffer *a
 
       if (!object_unpack_elem_verify(&answer_list, &(aMsg->buf), &petrep, PETR_Type)) {
          answer_list_output(&answer_list);
-         ERROR((SGE_EVENT, MSG_COM_UNPACKJOB));
+         ERROR((SGE_EVENT, SFNMAX, MSG_COM_UNPACKJOB));
          DRETURN(0);
       }
 
@@ -196,7 +201,7 @@ int do_job_slave(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg)
 
    /* ------- featureset */
    if (unpackint(&(aMsg->buf), &feature_set)) {
-      ERROR((SGE_EVENT, MSG_COM_UNPACKFEATURESET));
+      ERROR((SGE_EVENT, SFNMAX, MSG_COM_UNPACKFEATURESET));
       DRETURN(0);
    }
 
@@ -209,7 +214,7 @@ int do_job_slave(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg)
    /* ------- job */
    if (!object_unpack_elem_verify(&answer_list, &(aMsg->buf), &jelem, JB_Type)) {
       answer_list_output(&answer_list);
-      ERROR((SGE_EVENT, MSG_COM_UNPACKJOB));
+      ERROR((SGE_EVENT, SFNMAX, MSG_COM_UNPACKJOB));
       DRETURN(0);
    }
    lFreeList(&answer_list);

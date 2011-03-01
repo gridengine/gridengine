@@ -45,18 +45,23 @@
 #include "qmon_message.h"
 #include "qmon_file.h"
 #include "qmon_appres.h"
-#include "sge_answer.h"
 #include "qmon_comm.h"
 #include "qmon_timer.h"
 #include "qmon_util.h"
-#include "sge_resource_quota_qconf.h"
-#include "sge_resource_quota.h"
-#include "sge_io.h"
+
+#include "uti/sge_io.h"
+#include "uti/msg_utilib.h"
+
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_resource_quota.h"
+
 #include "spool/flatfile/sge_flatfile.h"
 #include "spool/flatfile/sge_flatfile_obj.h"
-#include "msg_common.h"
-#include "msg_utilib.h"
+
 #include "gdi/sge_gdi_ctx.h"
+
+#include "sge_resource_quota_qconf.h"
+#include "msg_common.h"
 
 extern sge_gdi_ctx_class_t *ctx;
 
@@ -171,7 +176,7 @@ static void qmonRQSSetText(Widget tw, lList *rqs_list, lList **alpp)
                                            filename, false);
       text = qmonReadText(filename, alpp);
       unlink(filename);
-      FREE(filename);
+      sge_free(&filename);
       if (text != NULL) {
          XmTextSetString(tw, text);
          XtFree(text);

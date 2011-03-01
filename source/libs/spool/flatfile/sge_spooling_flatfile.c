@@ -894,7 +894,7 @@ spool_classic_default_read_func(lList **answer_list,
                   lXchgString(ep, STU_name, &str);
                }
             }
-            FREE(dup);
+            sge_free(&dup);
          }
          break;      
       case SGE_TYPE_JOB:
@@ -1035,7 +1035,7 @@ spool_classic_default_write_func(lList **answer_list,
          filename  = key;
          break;
       case SGE_TYPE_QINSTANCE:
-         FREE(directory);
+         sge_free(&directory);
          directory = sge_dstring_sprintf(&tmp, "%s/%s", QINSTANCES_DIR, lGetString(object, QU_qname));
          filename = lGetHost(object, QU_qhostname);
          break;
@@ -1116,7 +1116,7 @@ spool_classic_default_write_func(lList **answer_list,
                ret = false;
             }
 
-            free(dup);
+            sge_free(&dup);
          }
          break;
       case SGE_TYPE_JOBSCRIPT:
@@ -1179,7 +1179,7 @@ spool_classic_default_write_func(lList **answer_list,
          }
       }
 
-      FREE(tmpfilepath);
+      sge_free(&tmpfilepath);
       sge_dstring_free(&filepath_buffer);
    }
    sge_dstring_free(&tmp);
@@ -1283,7 +1283,7 @@ spool_classic_default_delete_func(lList **answer_list,
                                       SPOOL_DEFAULT) != 0) {
                ret = false;
             }
-            free(dup);
+            sge_free(&dup);
          }
          break;
       case SGE_TYPE_JOBSCRIPT:
@@ -1292,7 +1292,7 @@ spool_classic_default_delete_func(lList **answer_list,
             char *dup = strdup(key);
             jobscript_parse_key(dup, &exec_file);
             ret = (unlink(exec_file) != 0) ? false: true;
-            FREE(dup);
+            sge_free(&dup);
          }
          break;
       case SGE_TYPE_MANAGER:

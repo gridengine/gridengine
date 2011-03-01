@@ -33,16 +33,17 @@
 #include <Xmt/InputField.h>
 #include <Xmt/Dialogs.h>
 
-#include "gdi/sge_gdi.h"
-#include "sge_str.h"
-#include "sge_centry.h"
-
 #include "qmon_rmon.h"
 #include "qmon_matrix.h"
 #include "qmon_load.h"
 #include "qmon_comm.h"
 #include "qmon_message.h"
 #include "qmon_util.h"
+
+#include "sgeobj/sge_str.h"
+#include "sgeobj/sge_centry.h"
+
+#include "gdi/sge_gdi.h"
 
 typedef struct _tFFM {
    Widget matrix;

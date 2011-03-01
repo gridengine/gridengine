@@ -37,8 +37,8 @@
 #	include "win32nativetypes.h"
 #endif
 
-#include "cull.h"
-#include "sge_gdi.h"
+#include "cull/cull.h"
+#include "gdi/sge_gdi.h"
 
 #ifdef  __cplusplus
 extern "C" {

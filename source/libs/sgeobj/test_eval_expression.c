@@ -52,8 +52,8 @@
 #include "uti/sge_bootstrap.h"
 #include "uti/sge_string.h"
 
-#include "sge_feature.h"
-#include "sge_eval_expression.h"
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_eval_expression.h"
 
 #define T 0
 #define F 1
@@ -209,8 +209,8 @@ static int test_tolower(char *expression, char *value, int expected) {
    sge_strtolower(t1,255);
    sge_strtolower(t2,255);
    match = strcmp(t1,t2);
-   free(t1);
-   free(t2);
+   sge_free(&t1);
+   sge_free(&t2);
    if(match!=expected) {
       fprintf(stderr, "!!!UNEXPECTED RESULT!!!: %s => strcmp(sge_strtolower(%s),sge_strtolower(%s)), expected: %s \n",
       RESULT(match) , expression, value, RESULT(expected) );

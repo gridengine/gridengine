@@ -61,6 +61,7 @@
 #include "rmon_monitoring_level.h"
 #include "sgermon.h"
 #include "gdi/sge_gdi_ctx.h"
+#include "gdi/sge_gdi2.h"
 
 #include "msg_common.h"
 
@@ -603,7 +604,7 @@ static void free_jobids(const char *jobids[], int size)
    int i = 0;
    for (i = 0; i < size; i++) {
       if (jobids[i] != NULL) {
-         FREE(jobids[i]);
+         sge_free(&(jobids[i]));
       }
    }
 }
@@ -1293,7 +1294,7 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
                return 1;
             }
             printf("waited job \"%s\"\n", all_jobids[pos]);
-            FREE(all_jobids[pos]);
+            sge_free(&(all_jobids[pos]));
          }
 
          free_jobids(all_jobids, size_all_jobids);
@@ -1511,7 +1512,7 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
                return 1;
             }
             printf("waited job \"%s\"\n", all_jobids[pos]);
-            FREE(all_jobids[pos]);
+            sge_free(&(all_jobids[pos]));
          }
          free_jobids(all_jobids, size_all_jobids);
 
@@ -2090,7 +2091,7 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
                NULL, 1, local_host_name)!=DRMAA_ERRNO_SUCCESS) {
             return 1;
          }
-         FREE(local_host_name);
+         sge_free(local_host_name);
 
          if (wait_n_jobs(1) != DRMAA_ERRNO_SUCCESS) {
             return 1;
@@ -2100,7 +2101,11 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
             fprintf(stderr, "fopen(%s) failed: %s\n", output_path, strerror(errno));
             return 1;
          }
-         fscanf(fp, "%s", buffer);
+         if (fscanf(fp, "%s", buffer) != 1) {
+            fprintf(stderr, "fscanf error\n");
+            return 1;
+         }
+
          if (strcmp(buffer, mirror_text)) {
             fprintf(stderr, "wrong output file: %s\n", buffer);
             return 1;
@@ -3058,7 +3063,12 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
                continue;
             }
 
-            fscanf(fp, "%s", buffer);
+            if (fscanf(fp, "%s", buffer) != 1) {
+               fprintf(stderr, "fscanf error\n");
+               failed_test = 1;
+               continue;
+            }
+               
             if (strcmp(buffer, mirror_text)) {
                fprintf(stderr, "Wrong output file: %s\n", buffer);
                failed_test = 1;
@@ -3142,7 +3152,10 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
                continue;
             }
 
-            fscanf(fp, "%10c", buffer);
+            if (fscanf(fp, "%10c", buffer) != 1) {
+               fprintf(stderr, "wrong output file: %s\n", buffer);
+               failed_test = 1;
+            }
             buffer[10] = '\0';
             if (strcmp("Usage: tar", buffer) != 0) {
                fprintf(stderr, "wrong output file: %s\n", buffer);
@@ -3154,7 +3167,7 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
          } while (do_while_end);
 
          if (jt != NULL) { drmaa_delete_job_template(jt, NULL, 0); jt = NULL; }
-         
+
          if (failed_test) test_failed = 1;
          failed_test = 0;
          printf("=====================\n");
@@ -3296,14 +3309,20 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
                continue;
             }
 
-            fscanf(fp, "%14c%*[^\n]\n", buffer);
+            if (fscanf(fp, "%14c%*[^\n]\n", buffer) != 1) {
+               fprintf(stderr, "fscanf error\n");
+               failed_test = 1;
+            }
             buffer[14] = '\0';
             if (strcmp("tar: blocksize", buffer) != 0) {
                fprintf(stderr, "missing stderr from output file: %s\n", buffer);
                failed_test = 1;
             }
 
-            fscanf(fp, "%4c\n", buffer);
+            if (fscanf(fp, "%4c\n", buffer) != 1) {
+               fprintf(stderr, "fscanf error\n");
+               failed_test = 1;
+            }
             buffer[4] = '\0';
             if (strcmp("-rw-", buffer) != 0) {
                fprintf(stderr, "missing stdout from output file: %s\n", buffer);
@@ -3955,7 +3974,10 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
                continue;
             }
 
-            fscanf(fp, "%s", buffer);
+            if (fscanf(fp, "%s", buffer) != 1) {
+               fprintf(stderr, "fscanf error\n");
+               failed_test = 1;
+            }
             if (strcmp(buffer, "MyOnlySunshine")) {
                fprintf(stderr, "Wrong output file: %s\n", buffer);
                failed_test = 1;
@@ -5481,10 +5503,10 @@ static void free_order(int **order)
 {
    int i = 0;
    while (order[i] != NULL) {
-      FREE(order[i]);
+      sge_free(&(order[i]));
       i++;
    }
-   FREE(order);
+   sge_free(&order);
 }
 
 static int test_dispatch_order_njobs(int njobs, test_job_t job[], char *jsr_str)
@@ -5591,7 +5613,7 @@ static int test_dispatch_order_njobs(int njobs, test_job_t job[], char *jsr_str)
          }
 
          /* NULL-ify finished ones */
-         FREE(all_jobids[pos]);
+         sge_free(&(all_jobids[pos]));
 
          if (--nwait == 0) {
             printf("waited for last job\n");
@@ -5736,9 +5758,7 @@ static int **job_run_sequence_parse(char *jrs_str)
    }
    sequence[i] = NULL;
    
-   free(jrs_str_cp);
-   jrs_str_cp = NULL;
-
+   sge_free(&jrs_str_cp);
    return sequence;
 }
 

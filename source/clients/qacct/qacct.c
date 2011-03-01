@@ -37,6 +37,7 @@
 #include <fnmatch.h>
 #include <errno.h>
 
+#include "rmon/sgermon.h"
 #include "uti/sge_dstring.h"
 #include "uti/sge_stdio.h"
 #include "uti/sge_string.h"
@@ -44,37 +45,37 @@
 #include "uti/sge_spool.h"
 #include "uti/sge_unistd.h"
 #include "uti/sge_uidgid.h"
+#include "uti/sge_profiling.h"
+#include "uti/sge_log.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_time.h"
+#include "uti/sge_parse_num_par.h"
+#include "uti/sge_hostname.h"
 
 #include "sgeobj/sge_schedd_conf.h"
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_ulong.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_qref.h"
 
-#include "sge.h"
-#include "sge_all_listsL.h"
-#include "sge_sched.h"
-#include "commlib.h"
-#include "sig_handlers.h"
-#include "execution_states.h"
-#include "sge_feature.h"
-#include "sge_rusage.h"
-#include "sge_prog.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "qm_name.h"
-#include "basis_types.h"
-#include "sge_time.h"
-#include "sge_parse_num_par.h"
-#include "sge_hostname.h"
-#include "sge_answer.h"
-#include "sge_range.h"
-#include "sge_ulong.h"
-#include "sge_centry.h"
-#include "sge_qinstance.h"
-#include "sge_cqueue.h"
-#include "sge_profiling.h"
-#include "sge_qref.h"
+#include "comm/commlib.h"
 
+#include "sched/sge_sched.h"
+
+#include "gdi/qm_name.h"
 #include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi_ctx.h"
 
+#include "sge.h"
+#include "sig_handlers.h"
+#include "execution_states.h"
+#include "sge_rusage.h"
+#include "basis_types.h"
 #include "msg_common.h"
 #include "msg_history.h"
 #include "msg_clients_common.h"
@@ -460,8 +461,7 @@ int main(int argc, char **argv)
                options.arflag = 1;
             } else {
                if (sscanf(argv[++ii], sge_u32, &options.ar_number) != 1) {
-                  fprintf(stderr, MSG_PARSE_INVALID_AR_MUSTBEUINT);
-                  fprintf(stderr, "\n");
+                  fprintf(stderr, "%s\n", MSG_PARSE_INVALID_AR_MUSTBEUINT);
                   qacct_usage(&ctx, stderr);
                   DRETURN(1); 
                }
@@ -694,7 +694,7 @@ int main(int argc, char **argv)
                                          QAJ_arid);
       summary_view = true;
       if (sorted_list == NULL || sort_order == NULL) {
-         ERROR((SGE_EVENT, MSG_HISTORY_NOTENOUGTHMEMORYTOCREATELIST));
+         ERROR((SGE_EVENT, SFNMAX, MSG_HISTORY_NOTENOUGTHMEMORYTOCREATELIST));
          goto QACCT_EXIT;
       }
    }
@@ -891,7 +891,7 @@ int main(int argc, char **argv)
          SGE_EXIT((void**)&ctx, 0);
       }
    } else if (options.taskstart && options.taskend && options.taskstep) {
-      ERROR((SGE_EVENT, MSG_HISTORY_TOPTIONREQUIRESJOPTION ));
+      ERROR((SGE_EVENT, SFNMAX, MSG_HISTORY_TOPTIONREQUIRESJOPTION));
       qacct_usage(&ctx, stderr);
       free_qacct_lists(&centry_list, &queue_list, &exechost_list, &hgrp_list);
       SGE_EXIT((void**)&ctx, 0); 
@@ -1105,8 +1105,8 @@ int main(int argc, char **argv)
    ** problem: other clients evaluate some status here
    */
    sge_prof_cleanup();
-   FREE(options.group);
-   FREE(options.host);
+   sge_free(&(options.group));
+   sge_free(&(options.host));
    free_qacct_lists(&centry_list, &queue_list, &exechost_list, &hgrp_list);
    SGE_EXIT((void**)&ctx, 0);
    DRETURN(0);
@@ -1117,8 +1117,8 @@ QACCT_EXIT:
    sge_prof_cleanup();
    lFreeList(&sorted_list);
    lFreeSortOrder(&sort_order);
-   FREE(options.group);
-   FREE(options.host);
+   sge_free(&(options.group));
+   sge_free(&(options.host));
    free_qacct_lists(&centry_list, &queue_list, &exechost_list, &hgrp_list);
    SGE_EXIT((void**)&ctx, 1);
    DRETURN(1);

@@ -32,10 +32,10 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/       
 
-#include "cull.h"
-#include "cull_list.h"
+#include "uti/sge_dstring.h"
 
-#include "sge_dstring.h"
+#include "cull/cull.h"
+#include "cull/cull_list.h"
 
 /****** sgeobj/object/--Object-Handling ***************************************
 *

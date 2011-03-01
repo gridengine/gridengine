@@ -43,6 +43,7 @@
 #include <sys/resource.h>
 #include <sys/wait.h>
 #include "uti/sge_binding_hlp.h"
+#include "uti/sge_string.h"
 #include "shepherd_binding.h"
 
 #if defined(LINUX)
@@ -69,46 +70,32 @@ struct rusage {
 #   include <sys/times.h>
 #endif
 
-#include "basis_types.h"
-#include "config_file.h"
+#include "uti/config_file.h"
 #include "uti/sge_dstring.h"
 #include "uti/sge_stdlib.h"
 #include "uti/sge_stdio.h"
 #include "uti/sge_uidgid.h"
-#include "err_trace.h"
-#include "setrlimits.h"
-#include "signal_queue.h"
-#include "execution_states.h"
-#include "sge_signal.h"
-#include "sge_time.h"
-#include "sge_parse_num_par.h"
-#include "sgedefs.h"
-#include "exec_ifm.h"
-#include "pdc.h"
-#include "procfs.h"
-#include "builtin_starter.h"
-#include "sge_afsutil.h"
-#include "qlogin_starter.h"
-#include "sge_feature.h"
-#include "sge_os.h"
-#include "sge_pset.h"
-#include "sge_shepconf.h"
-#include "sge_mt_init.h"
-#include "msg_common.h"
-#include "version.h"
-#include "sge_fileio.h"
-#include "sge_stdio.h"
-#include "sge_job.h"
+#include "uti/sge_stdio.h"
+#include "uti/sge_signal.h"
+#include "uti/sge_time.h"
+#include "uti/sge_parse_num_par.h"
+#include "uti/sge_afsutil.h"
+#include "uti/sge_os.h"
+#include "uti/sge_pty.h"
 
-#include "sge_report.h"
+#include "gdi/version.h"
+
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_report.h"
+#include "sgeobj/sge_feature.h"
 
 #if defined(IRIX)
-#include "sge_processes_irix.h"
+#  include "sge_processes_irix.h"
 #endif
 
 #if defined(INTERIX)
 #include "../../../utilbin/sge_passwd.h"
-#include "windows_gui.h"
+#include "wingrid/windows_gui.h"
 #endif
 
 #if defined(DARWIN)
@@ -126,11 +113,26 @@ struct rusage {
 #  include <termio.h>
 #endif
 
-#include "sge_pty.h"
 #include "sge_ijs_threads.h"
 #include "sge_ijs_comm.h"
 #include "sge_shepherd_ijs.h"
 #include "shepherd.h"
+#include "sge_pset.h"
+#include "sge_shepconf.h"
+#include "sge_mt_init.h"
+#include "sge_fileio.h"
+#include "basis_types.h"
+#include "qlogin_starter.h"
+#include "sgedefs.h"
+#include "exec_ifm.h"
+#include "pdc.h"
+#include "procfs.h"
+#include "builtin_starter.h"
+#include "err_trace.h"
+#include "setrlimits.h"
+#include "signal_queue.h"
+#include "execution_states.h"
+#include "msg_common.h"
 
 #if defined(SOLARIS) || defined(ALPHA)
 /* ALPHA4 only has wait3() prototype if _XOPEN_SOURCE_EXTENDED is defined */
@@ -273,7 +275,9 @@ static int map_signal(int sig)
       FILE *signal_file = fopen("signal", "r");
 
       if (signal_file != NULL) {
-         fscanf(signal_file, "%d", &ret);
+         if (fscanf(signal_file, "%d", &ret) != 1) {
+            shepherd_trace("error reading signal file");
+         }
          FCLOSE(signal_file);
       } 
    } else if (sig == SIGTTOU) {
@@ -831,7 +835,7 @@ int main(int argc, char **argv)
       shepherd_trace("sucessfully set AFS token");
          
       memset(tokenbuf, 0, strlen(tokenbuf));
-      free(tokenbuf);
+      sge_free(&tokenbuf);
 
 
       if ((coshepherd_pid = start_token_cmd(0, coshepherd, set_token_cmd,
@@ -1336,7 +1340,7 @@ int ckpt_type
                qrsh_error = get_error_of_qrsh_starter();
                if (qrsh_error != NULL) {
                   shepherd_error(1, "startup of qrsh job failed: "SFN, qrsh_error);
-                  FREE(qrsh_error);
+                  sge_free(&qrsh_error);
                } else {
                   shepherd_trace("job exited normally, exit code is %d", exit_status);
                }
@@ -1438,7 +1442,7 @@ dstring *err_msg)
    if (separator == NULL) {
       sge_dstring_sprintf(err_msg, "illegal value for qrsh_control_port: "
                         "\"%s\". Should be host:port", address);
-      FREE(address);
+      sge_free(&address);
       return 3;
    }
      
@@ -1523,7 +1527,7 @@ dstring       *err_msg       /* OUT: error message - if any */
 
    ret = parent_loop(pid, childname, timeout, p_ckpt_info, p_ijs_fds, job_owner,
             remote_host, remote_port, csp_mode, &exit_status, rusage, err_msg);
-   FREE(remote_host);
+   sge_free(&remote_host);
    if (ret != 0) {
       shepherd_error(1, "startup of qrsh job failed: "SFN"",
                      sge_dstring_get_string(err_msg));
@@ -2587,7 +2591,7 @@ static int start_async_command(const char *descr, char *cmd)
                      get_conf_val("job_owner"));
    }
    /* the getpwnam is only a verification - the result is not used - free it */
-   FREE(buffer);
+   sge_free(&buffer);
 
 	/* Create "error" and "exit_status" files here */
 	shepherd_error_init();
@@ -2900,17 +2904,23 @@ static int notify_tasker(u_long32 exit_status)
       char *buffer;
       int size;
 
-      /* sig_info_file has to be removed by tasker 
-         and tasker runs in user mode */
+      /* sig_info_file has to be removed by tasker
+       * and tasker runs in user mode
+       */
       job_owner = get_conf_val("job_owner");
       size = get_pw_buffer_size();
       buffer = sge_malloc(size);
       pw = sge_getpwnam_r(job_owner, &pw_struct, buffer, size);
-      if (!pw) {
+      if (pw == NULL) {
          shepherd_error(1, "can't get password entry for user \"%s\"", job_owner);
       }
-      chown(sig_info_file, pw->pw_uid, -1);
-      FREE(buffer);
+      if (chown(sig_info_file, pw->pw_uid, -1) != 0) {
+         dstring ds = DSTRING_INIT;
+         shepherd_error(1, "can't chown sig_info_file %s to user %s: %s",
+                        sig_info_file, job_owner, sge_strerror(errno, &ds));
+         /* no sge_dstring_free needed - shepherd_error exited */
+      }
+      sge_free(&buffer);
    }
 
    shepherd_trace("signalling tasker with pid #"pid_t_fmt, tasker_pid);

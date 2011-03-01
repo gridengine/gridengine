@@ -1,7 +1,6 @@
 #ifndef __CL_HANDLE_LIST_H
 #define __CL_HANDLE_LIST_H
 
-
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  *
@@ -35,7 +34,7 @@
 /*___INFO__MARK_END__*/
 
 
-#include "cl_data_types.h"
+#include "comm/cl_data_types.h"
 
 typedef struct cl_handle_list_elem {
    cl_com_handle_t* handle;   /* data */

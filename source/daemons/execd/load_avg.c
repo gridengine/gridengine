@@ -34,45 +34,44 @@
 #include <string.h>
 #include <float.h>
 
-#include "sge_ja_task.h"
-#include "sge_pe_task.h"
-#include "sge_usage.h"
-#include "sge_time.h"
-#include "sge_prog.h"
-#include "commlib.h"
+#include "rmon/sgermon.h"
+#include "uti/sge_time.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_bootstrap.h"
+#include "uti/sge_binding_hlp.h"
+#include "uti/sge_log.h"
+#include "uti/sge_string.h"
+#include "uti/sge_uidgid.h"
+#include "uti/sge_hostname.h"
+#include "uti/sge_os.h"
+#include "uti/sge_parse_num_par.h"
 
-#include "job_report_execd.h"
-#include "sge_host.h"
-#include "sge_load_sensor.h"
-#include "load_avg.h"
-#include "execd_ck_to_do.h"
-#include "sge_report_execd.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "sge_conf.h"
-#include "sge_parse_num_par.h"
-#include "msg_execd.h"
-#include "sge_string.h"
-#include "sge_feature.h"
-#include "sge_uidgid.h"
-#include "sge_hostname.h"
-#include "sge_os.h"
-#include "sge_job.h"
-#include "sge_qinstance.h"
-#include "sge_pe.h"
-#include "sge_report.h"
+#include "comm/commlib.h"
 
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_pe.h"
+#include "sgeobj/sge_report.h"
+#include "sgeobj/sge_binding.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_pe_task.h"
+#include "sgeobj/sge_usage.h"
 #include "sgeobj/sge_object.h"
 #include "sgeobj/sge_usage.h"
-
-#include "uti/sge_bootstrap.h"
 
 #include "gdi/version.h"
 #include "gdi/sge_gdi_ctx.h"
 #include "gdi/sge_gdiP.h"
 
-#include "uti/sge_binding_hlp.h"
-#include "sgeobj/sge_binding.h"
+#include "job_report_execd.h"
+#include "sge_load_sensor.h"
+#include "load_avg.h"
+#include "execd_ck_to_do.h"
+#include "sge_report_execd.h"
+#include "msg_execd.h"
 
 #ifdef COMPILE_DC
 #  include "ptf.h"
@@ -664,7 +663,7 @@ static int sge_get_topology(const char* qualified_hostname, lList **lpp) {
       sge_add_str2load_report(lpp, LOAD_ATTR_TOPOLOGY, "NONE", qualified_hostname);
    }
 
-   FREE(topology);
+   sge_free(&topology);
 
    DRETURN(0);
 }
@@ -690,7 +689,7 @@ static int sge_get_topology_inuse(const char* qualified_hostname, lList **lpp) {
       sge_add_str2load_report(lpp, LOAD_ATTR_TOPOLOGY_INUSE, "NONE", qualified_hostname);
    }
 
-   FREE(topology);
+   sge_free(&topology);
    
    DRETURN(0);
 }
@@ -718,7 +717,7 @@ static int sge_get_loadavg(const char* qualified_hostname, lList **lpp)
 
       now = sge_get_gmt();
       if (now >= next_log) {
-         WARNING((SGE_EVENT, MSG_SGETEXT_NO_LOAD));     
+         WARNING((SGE_EVENT, SFNMAX, MSG_SGETEXT_NO_LOAD));
          next_log = now + 7200;
       }
    } else if (loads == -2) {
@@ -773,7 +772,7 @@ static int sge_get_loadavg(const char* qualified_hostname, lList **lpp)
    if (sge_loadmem(&mem_info)) {
       static int mem_fail = 0;
       if (!mem_fail) {
-         ERROR((SGE_EVENT, MSG_LOAD_NOMEMINDICES));
+         ERROR((SGE_EVENT, SFNMAX, MSG_LOAD_NOMEMINDICES));
          mem_fail =1;
       }
       DRETURN(1);
@@ -914,7 +913,7 @@ static int sge_get_loadavg(const char* qualified_hostname, lList **lpp)
 
          u_long32 now = sge_get_gmt();
          if (now >= next_log2) {
-            WARNING((SGE_EVENT, MSG_SGETEXT_NO_LOAD));
+            WARNING((SGE_EVENT, SFNMAX, MSG_SGETEXT_NO_LOAD));
             next_log2 = now + 7200;
          }
       }

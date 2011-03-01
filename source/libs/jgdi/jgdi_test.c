@@ -35,6 +35,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "uti/sge_stdlib.h"
+
 #ifdef DARWIN
 int JNI_CreateJavaVM_Impl(JavaVM **pvm, void **penv, void *args);
 #endif
@@ -90,7 +92,7 @@ JNIEnv* create_vm(int argc, char** argv) {
       env = NULL;
    }
    
-   free(options);
+   sge_free(&options);
 	return env;
 }
 /*-------------------------------------------------------------------------*
@@ -229,7 +231,7 @@ int main(int argc, char **argv) {
             int len = strlen(tmp) + strlen(argv[i]) + 2;
             jvm_argv[classpath_index] = (char*)malloc(len);
             sprintf(jvm_argv[classpath_index],"%s:%s", tmp, argv[i]);
-            free(tmp);
+            sge_free(&tmp);
          }
       } else {
          if(main_class_name == NULL) {

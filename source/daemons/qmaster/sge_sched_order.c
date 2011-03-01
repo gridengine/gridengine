@@ -177,7 +177,7 @@ sge_schedd_block_until_orders_processed(sge_gdi_ctx_class_t *ctx,
        */
       lFreeList(&request_answer_list);
       lFreeList(&multi_answer_list);
-      current_state = (state_gdi_multi*)sge_free((char*)current_state);
+      sge_free(&current_state);
    }
    DRETURN(ret);
 }

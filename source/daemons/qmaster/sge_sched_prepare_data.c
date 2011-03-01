@@ -35,34 +35,40 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "sge_profiling.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_profiling.h"
+#include "uti/sge_string.h"
+#include "uti/sge_log.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_dstring.h"
+
+#include "sgeobj/sge_schedd_conf.h"
+#include "sgeobj/sge_event.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_pe_task.h"
+#include "sgeobj/sge_pe.h"
+#include "sgeobj/parse.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_userprj.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_userset.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_qinstance_state.h"
+
+#include "comm/commlib.h"
+
+#include "sched/msg_schedd.h"
+#include "sched/sgeee.h"
+
+#include "evc/sge_event_client.h"
+
 #include "sge.h"
-#include "sge_string.h"
-#include "sge_event_client.h"
-#include "sge_ja_task.h"
-#include "sge_pe_task.h"
-#include "sge_log.h"
-#include "sge_pe.h"
-#include "sge_prog.h"
-#include "sge_schedd_conf.h"
-#include "sgermon.h"
-#include "commlib.h"
-#include "sge_event.h"
-#include "sge_dstring.h"
 #include "sge_sched_job_category.h"
-#include "parse.h"
-#include "msg_schedd.h"
-#include "sge_job.h"
-#include "sge_conf.h"
-#include "sge_userprj.h"
-#include "sge_host.h"
-#include "sge_userset.h"
-#include "sge_centry.h"
-#include "sge_cqueue.h"
-#include "sge_qinstance.h"
-#include "sge_answer.h"
-#include "sge_qinstance_state.h"
-#include "sgeee.h"
 #include "sge_sched_prepare_data.h"
 #include "sge_sched_process_events.h"
 
@@ -399,12 +405,12 @@ ensure_valid_what_and_where(sge_where_what_t *where_what)
        where_what->what_queue == NULL || where_what->where_queue2 == NULL ||
        where_what->what_queue2 == NULL || where_what->where_all_queue == NULL ||
        where_what->what_pe == NULL) {
-      CRITICAL((SGE_EVENT, MSG_SCHEDD_UNABLE_TO_SETUP_FILTER));
+      CRITICAL((SGE_EVENT, SFNMAX, MSG_SCHEDD_UNABLE_TO_SETUP_FILTER));
    }
    /* cleanup tmp data */
    if (tmp_what_descr != NULL) {
       cull_hash_free_descr(tmp_what_descr);
-      tmp_what_descr = (lDescr *)sge_free((char *)tmp_what_descr);
+      sge_free(&tmp_what_descr);
    }
    DRETURN_VOID;
 }
@@ -457,7 +463,7 @@ sge_process_schedd_conf_event_before(sge_evc_class_t *evc, object_description *o
                lSetString(new, SC_load_formula, copy);
             }
 
-            FREE(copy);
+            sge_free(&copy);
          }
       }
       lFreeElem(&old);

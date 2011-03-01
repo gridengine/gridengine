@@ -32,8 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_boundaries.h"
-#include "cull.h"
+#include "sgeobj/sge_boundaries.h"
+#include "cull/cull.h"
 
 #ifdef  __cplusplus
 extern "C" {

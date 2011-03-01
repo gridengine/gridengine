@@ -39,12 +39,11 @@
 #  include <malloc.h>
 #endif
 
-#include "uti/sge_monitor.h"
-
 #include "rmon/sgermon.h"
 
 #include "lck/sge_mtutil.h"
 
+#include "uti/sge_monitor.h"
 #include "uti/sge_dstring.h"
 #include "uti/sge_time.h"
 #include "uti/sge_log.h"
@@ -135,9 +134,9 @@ void sge_monitor_free(monitoring_t *monitor)
   
    sge_dstring_free(monitor->output_line1);
    sge_dstring_free(monitor->output_line2);
-   FREE(monitor->output_line1);
-   FREE(monitor->output_line2);
-   FREE(monitor->ext_data);
+   sge_free(&(monitor->output_line1));
+   sge_free(&(monitor->output_line2));
+   sge_free(&(monitor->ext_data));
 
    if(monitor->pos != -1) {
       sge_mutex_lock("sge_monitor_init", SGE_FUNC, __LINE__, &(Output[monitor->pos].Output_Mutex));
@@ -149,14 +148,7 @@ void sge_monitor_free(monitoring_t *monitor)
    
       sge_mutex_unlock("sge_monitor_init", SGE_FUNC, __LINE__, &(Output[monitor->pos].Output_Mutex));
    }
-
    
-/*   sge_dstring_free(monitor->output_line1);
-   sge_dstring_free(monitor->output_line2);
-   FREE(monitor->output_line1);
-   FREE(monitor->output_line2);
-   FREE(monitor->ext_data);*/
-
    monitor->ext_data_size = 0;
    monitor->ext_output = NULL;
    monitor->ext_type = NONE_EXT;
@@ -236,7 +228,7 @@ sge_monitor_init(monitoring_t *monitor, const char *thread_name, extension_t ext
    monitor->output_line2 = (dstring*) malloc(sizeof(dstring));
    
    if (monitor->output_line1 == NULL || monitor->output_line2 == NULL) {
-      CRITICAL((SGE_EVENT, MSG_UTI_MONITOR_MEMERROR)); 
+      CRITICAL((SGE_EVENT, SFNMAX, MSG_UTI_MONITOR_MEMERROR));
       exit(1);
    } 
 
@@ -257,7 +249,7 @@ sge_monitor_init(monitoring_t *monitor, const char *thread_name, extension_t ext
                monitor->ext_output = &ext_sch_output;
             } else {
                monitor->ext_type = NONE_EXT;
-               ERROR((SGE_EVENT, MSG_UTI_MONITOR_MEMERROREXT));
+               ERROR((SGE_EVENT, SFNMAX, MSG_UTI_MONITOR_MEMERROREXT));
             }
          break;
 
@@ -269,7 +261,7 @@ sge_monitor_init(monitoring_t *monitor, const char *thread_name, extension_t ext
                monitor->ext_output = &ext_gdi_output;
             } else {
                monitor->ext_type = NONE_EXT;
-               ERROR((SGE_EVENT, MSG_UTI_MONITOR_MEMERROREXT));
+               ERROR((SGE_EVENT, SFNMAX, MSG_UTI_MONITOR_MEMERROREXT));
             }
          break;
 
@@ -281,7 +273,7 @@ sge_monitor_init(monitoring_t *monitor, const char *thread_name, extension_t ext
                monitor->ext_output = &ext_lis_output;
             } else {
                monitor->ext_type = NONE_EXT;
-               ERROR((SGE_EVENT, MSG_UTI_MONITOR_MEMERROREXT));
+               ERROR((SGE_EVENT, SFNMAX, MSG_UTI_MONITOR_MEMERROREXT));
             }
          break;
          
@@ -293,7 +285,7 @@ sge_monitor_init(monitoring_t *monitor, const char *thread_name, extension_t ext
                monitor->ext_output = &ext_edt_output;
             } else {
                monitor->ext_type = NONE_EXT;
-               ERROR((SGE_EVENT, MSG_UTI_MONITOR_MEMERROREXT));
+               ERROR((SGE_EVENT, SFNMAX, MSG_UTI_MONITOR_MEMERROREXT));
             }
          break;
        
@@ -305,7 +297,7 @@ sge_monitor_init(monitoring_t *monitor, const char *thread_name, extension_t ext
                monitor->ext_output = &ext_tet_output;
             } else {
                monitor->ext_type = NONE_EXT;
-               ERROR((SGE_EVENT, MSG_UTI_MONITOR_MEMERROREXT));
+               ERROR((SGE_EVENT, SFNMAX, MSG_UTI_MONITOR_MEMERROREXT));
             }
          break;
          

@@ -30,12 +30,12 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_conf.h"
-#include "sge.h"
-#include "sge_order.h"
-#include "sge_ja_task.h"
-#include "sge_job.h"
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_order.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_job.h"
 
+#include "sge.h"
 
 /****** sge_order/sge_free_cull_order_pos() ************************************
 *  NAME
@@ -58,7 +58,7 @@
 void
 sge_free_cull_order_pos(order_pos_t **cull_order_pos)
 {
-   FREE(*cull_order_pos);
+   sge_free(cull_order_pos);
 }
 
 /****** sge_order/sge_create_cull_order_pos() **********************************
@@ -93,7 +93,7 @@ sge_create_cull_order_pos(order_pos_t **cull_order_pos, lListElem *jep, lListEle
    job_pos_t   *order_job_pos; 
 
    if (*cull_order_pos != NULL) {
-      FREE(cull_order_pos);
+      sge_free(&cull_order_pos);
    }
 
    *cull_order_pos = malloc(sizeof(order_pos_t));

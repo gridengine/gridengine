@@ -37,10 +37,13 @@
 #include <time.h>
 #include <sys/time.h>
 
+#include "uti/sge_profiling.h"
+
 #include "cull/cull_multitype.h"
+
 #include "sgeobj/sge_all_listsL.h"
 #include "sgeobj/sge_range.h"
-#include "uti/sge_profiling.h"
+
 #include "category.h"
 
 typedef struct {
@@ -179,8 +182,7 @@ static lList *test_create_access(void)
             }
          }
          if (access_cp != NULL) {
-            free(access_cp);
-            access_cp = NULL;
+            sge_free(&access_cp);
          }
       }
    }
@@ -296,15 +298,13 @@ static lList *test_create_request(const char *requestStr, int count)
             lAppendElem(requests, request); 
           }
          if (request_cp != NULL) { 
-            free(request_cp);
-            request_cp = NULL;
+            sge_free(&request_cp);
          }
        }
    }
 end:
    if (request_cp != NULL) {
-      free(request_cp);
-      request_cp = NULL;
+      sge_free(&request_cp);
    }
    return requests;
 }
@@ -356,15 +356,13 @@ static lList *test_create_queue(const char *queueStr, int count)
             lAppendElem(queues, queue); 
           }
           if (queue_cp != NULL) {
-            free(queue_cp);
-            queue_cp = NULL;
+            sge_free(&queue_cp);
           }
        }
    }
 end:
    if (queue_cp != NULL) {
-      free(queue_cp); 
-      queue_cp = NULL;
+      sge_free(&queue_cp); 
    }
    return queues;
 }
@@ -408,8 +406,7 @@ static void test_create_pe(const char *peStr, lListElem *job_elem)
 
     }
    if (pe_cp != NULL) {
-      free(pe_cp); 
-      pe_cp = NULL;
+      sge_free(&pe_cp); 
    }
 }
 

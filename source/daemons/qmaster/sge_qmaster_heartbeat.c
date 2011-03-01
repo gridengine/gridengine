@@ -153,9 +153,9 @@ increment_heartbeat(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, monitoring_t *
          if ( getuniquehostname(act_qmaster_name, act_resolved_qmaster_name, 0) == CL_RETVAL_OK &&
               sge_hostcmp(act_resolved_qmaster_name, qualified_hostname) != 0      ) {
             /* act_qmaster file has been changed */
-            WARNING((SGE_EVENT, MSG_HEART_ACT_QMASTER_FILE_CHANGED));
+            WARNING((SGE_EVENT, SFNMAX, MSG_HEART_ACT_QMASTER_FILE_CHANGED));
             if (sge_qmaster_shutdown_via_signal_thread(100) != 0) {
-               ERROR((SGE_EVENT, MSG_HEART_CANT_SIGNAL));
+               ERROR((SGE_EVENT, SFNMAX, MSG_HEART_CANT_SIGNAL));
                /* TODO: here the ctx reference is not transported back
                **       event_handler functions should use &ctx instead
                */

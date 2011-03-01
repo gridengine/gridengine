@@ -38,13 +38,15 @@
 #define NO_SGE_COMPILE_DEBUG
 #endif
 
-#include "sgermon.h"
-#include "cull_listP.h"
-#include "cull_parse.h"
-#include "cull_multitype.h"
-#include "cull_sortP.h"
-#include "cull_lerrnoP.h"
-#include "sge_string.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_string.h"
+
+#include "cull/cull_listP.h"
+#include "cull/cull_parse.h"
+#include "cull/cull_multitype.h"
+#include "cull/cull_sortP.h"
+#include "cull/cull_lerrnoP.h"
 
 /* ------------------------------------------------------------ 
 
@@ -253,7 +255,7 @@ lSortOrder *lParseSortOrder(const lDescr *dp, const char *fmt, va_list ap)
    for (i = 0; i < n; i++) {
       sp[i].nm = va_arg(ap, int);
       if ((sp[i].pos = lGetPosInDescr(dp, sp[i].nm)) < 0) {
-         FREE(sp);
+         sge_free(&sp);
          LERROR(LENAMENOT);
          DRETURN(NULL);
       }
@@ -261,7 +263,7 @@ lSortOrder *lParseSortOrder(const lDescr *dp, const char *fmt, va_list ap)
 
       /* next token */
       if (scan(NULL, &state) != FIELD) {
-         FREE(sp);
+         sge_free(&sp);
          LERROR(LESYNTAX);
          DRETURN(NULL);
       }
@@ -305,7 +307,7 @@ lSortOrder *lParseSortOrder(const lDescr *dp, const char *fmt, va_list ap)
          break;
 
          default:
-         free( sp );
+         sge_free(&sp);
          unknownType("lSortList");
          } 
        */
@@ -319,7 +321,7 @@ lSortOrder *lParseSortOrder(const lDescr *dp, const char *fmt, va_list ap)
          break;
       default:
          /* +/- is missing */
-         FREE(sp);
+         sge_free(&sp);
          LERROR(LESYNTAX);
          DRETURN(NULL);
       }
@@ -333,7 +335,7 @@ lSortOrder *lParseSortOrder(const lDescr *dp, const char *fmt, va_list ap)
 
 void lFreeSortOrder(lSortOrder **so) 
 {
-   FREE(*so);
+   sge_free(so);
 }
 
 

@@ -34,31 +34,36 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "sge_bootstrap.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "sge_unistd.h"
-#include "sge_dstring.h"
-#include "setup_path.h"
-#include "sge_prog.h"
-#include "sge_feature.h"
-#include "sge_answer.h"
-#include "sge_manop.h"
-#include "sge_object.h"
-#include "sge_pe.h"
-#include "sge_centry.h"
-#include "sge_userset.h"
-#include "sge_all_listsL.h"
-#include "sge.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_bootstrap.h"
+#include "uti/sge_profiling.h"
+#include "uti/sge_log.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_dstring.h"
+#include "uti/setup_path.h"
+#include "uti/sge_prog.h"
+
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_manop.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_pe.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_userset.h"
+#include "sgeobj/sge_all_listsL.h"
+
 #include "spool/sge_spooling.h"
 #include "spool/loader/sge_spooling_loader.h"
 #include "spool/flatfile/sge_spooling_flatfile.h"
 #include "spool/flatfile/sge_flatfile_obj.h"
 #include "spool/flatfile/sge_flatfile.h"
 #include "spool/sge_dirent.h"
-#include "msg_utilbin.h"
-#include "sge_profiling.h"
+
 #include "gdi/sge_gdi_ctx.h"
+
+#include "sge.h"
+#include "msg_utilbin.h"
 
 static int spool_object_list(const char *directory,
                              const spooling_field *fields, 
@@ -113,13 +118,13 @@ static int init_framework(sge_gdi_ctx_class_t *ctx)
                                                    spooling_params);
    answer_list_output(&answer_list);
    if (spooling_context == NULL) {
-      CRITICAL((SGE_EVENT, MSG_SPOOLDEFAULTS_CANNOTCREATECONTEXT));
+      CRITICAL((SGE_EVENT, SFNMAX, MSG_SPOOLDEFAULTS_CANNOTCREATECONTEXT));
    } else {
       spool_set_default_context(spooling_context);
 
       /* initialize spooling context */
       if (!spool_startup_context(&answer_list, spooling_context, true)) {
-         CRITICAL((SGE_EVENT, MSG_SPOOLDEFAULTS_CANNOTSTARTUPCONTEXT));
+         CRITICAL((SGE_EVENT, SFNMAX, MSG_SPOOLDEFAULTS_CANNOTSTARTUPCONTEXT));
       } else {
          ret = EXIT_SUCCESS;
       }
@@ -171,7 +176,7 @@ static int spool_configuration(int argc, char *argv[])
    conf = spool_flatfile_read_object(&answer_list, CONF_Type, NULL,
                                    fields, NULL, false, &qconf_sfi,
                                    SP_FORM_ASCII, NULL, argv[2]);
-   FREE(fields);
+   sge_free(&fields);
    if (conf == NULL) {
       ERROR((SGE_EVENT, MSG_SPOOLDEFAULTS_CANTREADGLOBALCONF_S, argv[2]));
       ret = EXIT_FAILURE;
@@ -207,7 +212,7 @@ static int spool_local_conf(int argc, char *argv[])
       conf = spool_flatfile_read_object(&answer_list, CONF_Type, NULL,
                                    fields, NULL, false, &qconf_sfi,
                                    SP_FORM_ASCII, NULL, argv[2]);
-      FREE(fields);
+      sge_free(&fields);
 
       if (conf == NULL) {
          ERROR((SGE_EVENT, MSG_SPOOLDEFAULTS_CANTREADLOCALCONF_S, argv[2]));
@@ -241,9 +246,9 @@ static int spool_sharetree(int argc, char *argv[])
    int ret; 
 
    ret = spool_object_list(argv[2], fields, &qconf_sfi, STN_Type, SGE_TYPE_SHARETREE);
-   FREE(fields);
+   sge_free(&fields);
    return ret;
-   }
+}
 
 static int spool_complexes(int argc, char *argv[])
 {
@@ -291,7 +296,7 @@ static int spool_exechosts(int argc, char *argv[])
    answer_list_output(&answer_list);
 
    ret = spool_object_list(argv[2], fields, &qconf_sfi, EH_Type, SGE_TYPE_EXECHOST);
-   FREE(fields);
+   sge_free(&fields);
    return ret;
 }
 
@@ -301,7 +306,7 @@ static int spool_projects(int argc, char *argv[])
    int ret; 
 
    ret = spool_object_list(argv[2], fields, &qconf_sfi, PR_Type, SGE_TYPE_PROJECT);
-   FREE(fields);
+   sge_free(&fields);
    return ret;
 }
 
@@ -316,7 +321,7 @@ static int spool_users(int argc, char *argv[])
    int ret; 
 
    ret = spool_object_list(argv[2], fields, &qconf_sfi, UU_Type, SGE_TYPE_PROJECT);
-   FREE(fields);
+   sge_free(&fields);
    return ret;
 }
 

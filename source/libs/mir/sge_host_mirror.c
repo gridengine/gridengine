@@ -31,14 +31,16 @@
 /*___INFO__MARK_END__*/
 
 #include "sge.h"
-#include "sgermon.h"
-#include "sge_log.h"
 
-#include "sge_host.h"
-#include "sge_hgroup.h" 
+#include "rmon/sgermon.h"
 
-#include "sge_mirror.h"
-#include "sge_host_mirror.h"
+#include "uti/sge_log.h"
+
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_hgroup.h" 
+
+#include "mir/sge_mirror.h"
+#include "mir/sge_host_mirror.h"
 
 /****** Eventmirror/host/host_update_master_list() *****************************
 *  NAME

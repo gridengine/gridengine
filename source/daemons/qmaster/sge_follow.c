@@ -32,26 +32,39 @@
 #include <string.h>
 #include <pthread.h>
 
-#include "sge_conf.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_time.h"
+#include "uti/sge_log.h"
+#include "uti/sge_signal.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_hostname.h"
+
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_pe.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_qinstance_state.h"
+#include "sgeobj/sge_order.h"
+#include "sgeobj/sge_order.h"
+#include "sgeobj/sge_usage.h"
+#include "sgeobj/sge_schedd_conf.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_message_SME_L.h"
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_userprj.h"
+#include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_advance_reservation.h"
+
+#include "sched/sge_sched.h"
+#include "sched/sgeee.h"
+#include "sched/sge_support.h"
+
+#include "gdi/sge_gdi2.h"
+
 #include "sge.h"
-#include "sge_pe.h"
-#include "sge_ja_task.h"
-#include "sge_qinstance.h"
-#include "sge_qinstance_state.h"
-#include "sge_time.h"
-#include "sge_log.h"
-#include "sge_order.h"
-#include "sge_order.h"
-#include "sge_usage.h"
-#include "sge_schedd_conf.h"
-#include "sgermon.h"
-#include "sge_host.h"
-#include "sge_signal.h"
-#include "sge_job_qmaster.h"
-#include "sge_follow.h"
-#include "sge_sched.h"
-#include "sgeee.h"
-#include "sge_support.h"
 #include "sge_userprj_qmaster.h"
 #include "sge_qmod_qmaster.h"
 #include "sge_subordinate_qmaster.h"
@@ -59,24 +72,12 @@
 #include "sge_give_jobs.h"
 #include "sge_event_master.h"
 #include "sge_queue_event_master.h"
-#include "sge_prog.h"
-#include "sge_message_SME_L.h"
-#include "sge_range.h"
-#include "sge_job.h"
-#include "sge_hostname.h"
-#include "sge_answer.h"
-#include "sge_userprj.h"
-#include "sge_cqueue.h"
 #include "sge_persistence_qmaster.h"
-
-
-
-#include "sgeobj/sge_advance_reservation.h"
-
-
+#include "sge_job_qmaster.h"
+#include "sge_follow.h"
 #include "msg_common.h"
 #include "msg_qmaster.h"
-#include "sge_mtutil.h"
+#include "lck/sge_mtutil.h"
 
 typedef enum {
    NOT_DEFINED = 0,
@@ -196,7 +197,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
 
       job_number=lGetUlong(ep, OR_job_number);
       if (!job_number) {
-         ERROR((SGE_EVENT, MSG_JOB_NOJOBID));
+         ERROR((SGE_EVENT, SFNMAX, MSG_JOB_NOJOBID));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DRETURN(-2);
       }
@@ -305,7 +306,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
           *  find and check queue 
           */
          if (!q_name) {
-            ERROR((SGE_EVENT, MSG_OBJ_NOQNAME));
+            ERROR((SGE_EVENT, SFNMAX, MSG_OBJ_NOQNAME));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             lFreeList(&gdil);
             lSetString(jatp, JAT_granted_pe, NULL);
@@ -534,7 +535,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
 
          job_number = lGetUlong(ep, OR_job_number);
          if (job_number == 0) {
-            ERROR((SGE_EVENT, MSG_JOB_NOJOBID));
+            ERROR((SGE_EVENT, SFNMAX, MSG_JOB_NOJOBID));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DRETURN(-2);
          }
@@ -639,7 +640,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
 
          job_number=lGetUlong(ep, OR_job_number);
          if (!job_number) {
-            ERROR((SGE_EVENT, MSG_JOB_NOJOBID));
+            ERROR((SGE_EVENT, SFNMAX, MSG_JOB_NOJOBID));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DRETURN(-2);
          }
@@ -759,7 +760,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
 
          job_number=lGetUlong(ep, OR_job_number);
          if(!job_number) {
-            ERROR((SGE_EVENT, MSG_JOB_NOJOBID));
+            ERROR((SGE_EVENT, SFNMAX, MSG_JOB_NOJOBID));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DEXIT;
             return -2;
@@ -936,7 +937,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
 
                }
                lFreeWhat(&what);
-               FREE(rdp);
+               sge_free(&rdp);
             }
          }
       }
@@ -961,7 +962,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
 
       job_number=lGetUlong(ep, OR_job_number);
       if(!job_number) {
-         ERROR((SGE_EVENT, MSG_JOB_NOJOBID));
+         ERROR((SGE_EVENT, SFNMAX, MSG_JOB_NOJOBID));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DEXIT;
          return -2;

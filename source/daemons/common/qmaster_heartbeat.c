@@ -35,12 +35,13 @@
 #include <string.h>
 #include <sys/time.h>
 
+#include "rmon/sgermon.h"
+
 #include "uti/sge_unistd.h"
 #include "uti/sge_stdio.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "qmaster_heartbeat.h"
+#include "uti/sge_log.h"
 
+#include "qmaster_heartbeat.h"
 #include "msg_daemons_common.h"
 
 static int sge_testmode_timeout_value = 0;
@@ -65,7 +66,7 @@ int get_qmaster_heartbeat( char *file, int read_timeout ) {
    DENTER(TOP_LAYER, "get_qmaster_heartbeat");
 
    if (file == NULL) {
-      ERROR((SGE_EVENT, MSG_HEART_NO_FILENAME)); 
+      ERROR((SGE_EVENT, SFNMAX, MSG_HEART_NO_FILENAME));
       DEXIT;
       return -1;
    }
@@ -138,7 +139,7 @@ int inc_qmaster_heartbeat(char *file, int write_timeout , int* beat_value) {
    DENTER(TOP_LAYER, "inc_qmaster_heartbeat");
 
    if (file == NULL) {
-      ERROR((SGE_EVENT, MSG_HEART_NO_FILENAME)); 
+      ERROR((SGE_EVENT, SFNMAX, MSG_HEART_NO_FILENAME));
       DEXIT;
       return -1;
    }

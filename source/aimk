@@ -191,6 +191,7 @@ usage:
    echo "-no-secure        -> disable ssl security (enabled by default)"
    echo "-no-jemalloc      -> disable jemalloc (enabled by default on Linux hosts)"
    echo "-no-mtmalloc      -> disable mtmalloc (this is needed for dbx debugging)"
+   echo "-no-plpa          -> disable plpa support (enabled by default on Linux hosts)"
    echo "-only-core        -> build only the core system"
    echo "-only-depend      -> only compile 3rdparty/sge_depend"
    echo "-only-java        -> only compile Java[TM] class files"
@@ -1511,7 +1512,7 @@ case LINUXSPARC64:
          $BUILDARCH == LINUX86 ) && \
          $COMPILE_ARCH != "ULINUX86_24" && $COMPILE_ARCH != "ULINUXAMD64_24" ) then
          set CORE_INCLUDE = "$CORE_INCLUDE -I$PLPA_HOME/include"
-         set LIBS = "$PLPA_HOME/Lib/libplpa.a $LIBS"
+         set LIBS = "$PLPA_HOME/lib/libplpa.a $LIBS"
       endif 
    endif
 
@@ -2748,7 +2749,7 @@ if ( "$REMOTE" == 1) then
    if ( $COMPILE_ARCH == "NECSX5" ) then
       set CFLAGS_REMOTE = "$CFLAGS_NOOPT"
    else
-      set CFLAGS_REMOTE = "$CFLAGS $ERR_WARN_NONE"
+      set CFLAGS_REMOTE = "$CFLAGS $ERR_WARN_NONE -U_FORTIFY_SOURCE"
    endif
 
    set REMOTE_LFLAGS = "$LFLAGS -L$SOURCE/$COMPILE_ARCH"

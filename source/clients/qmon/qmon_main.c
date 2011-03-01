@@ -61,12 +61,15 @@
 #include "qmon_menus.h"
 #include "qmon_appres.h"
 #include "qmon_preferences.h"
-#include "sge_feature.h"
-#include "sge_prog.h"
-#include "sge_mt_init.h"
+
+#include "uti/sge_prog.h"
+
+#include "sgeobj/sge_feature.h"
 
 #include "gdi/version.h"
 #include "gdi/sge_gdi_ctx.h"
+
+#include "sge_mt_init.h"
 
 sge_gdi_ctx_class_t *ctx = NULL;
 

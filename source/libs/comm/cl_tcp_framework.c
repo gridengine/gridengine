@@ -1,32 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <netdb.h>
-#include <string.h>
-
-
-#include <netinet/tcp.h> 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/time.h>
-
-#include <netinet/in.h>
-
-#ifdef USE_POLL
- #include <sys/poll.h>
-#endif
-
-#include "cl_tcp_framework.h"
-#include "cl_communication.h"
-#include "cl_commlib.h"
-#include "cl_connection_list.h"
-#include "cl_fd_list.h"
-#include "msg_commlib.h"
-#include "sge_unistd.h"
-#include "sge_os.h"
-
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  *
@@ -58,6 +29,35 @@
  *
  ************************************************************************/
 /*___INFO__MARK_END__*/
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <netdb.h>
+#include <string.h>
+
+#include <netinet/tcp.h> 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/time.h>
+
+#include <netinet/in.h>
+
+#ifdef USE_POLL
+ #include <sys/poll.h>
+#endif
+
+#include "comm/cl_tcp_framework.h"
+#include "comm/cl_communication.h"
+#include "comm/cl_commlib.h"
+#include "comm/cl_connection_list.h"
+#include "comm/cl_fd_list.h"
+#include "comm/msg_commlib.h"
+
+#include "uti/sge_unistd.h"
+#include "uti/sge_os.h"
 
 /* connection specific struct (not used from outside) */
 typedef struct cl_com_tcp_private_type {
@@ -335,7 +335,7 @@ int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout) {
    
          shutdown(private->sockfd, 2);
          close(private->sockfd);
-         free(unique_host);
+         sge_free(&unique_host);
          CL_LOG(CL_LOG_ERROR,"could not get hostname");
          private->sockfd = -1;
          
@@ -347,7 +347,7 @@ int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout) {
          cl_commlib_push_application_error(CL_LOG_ERROR, tmp_error, tmp_buffer);
          return tmp_error; 
       } 
-      free(unique_host);
+      sge_free(&unique_host);
 
       /* connect */
       gettimeofday(&now,NULL);
@@ -612,7 +612,7 @@ static int cl_com_tcp_free_com_private(cl_com_connection_t* connection) {
    }
 
    /* free struct cl_com_tcp_private_t */
-   free(connection->com_private);
+   sge_free(&(connection->com_private));
    connection->com_private = NULL;
    return CL_RETVAL_OK;
 }
@@ -1279,7 +1279,7 @@ int cl_com_tcp_connection_request_handler(cl_com_connection_t* connection, cl_co
                                                connection->tcp_connect_mode)) != CL_RETVAL_OK) {
          cl_com_tcp_close_connection(&tmp_connection); 
          if (resolved_host_name != NULL) {
-            free(resolved_host_name);
+            sge_free(&resolved_host_name);
          }
          shutdown(new_sfd, 2);
          close(new_sfd);

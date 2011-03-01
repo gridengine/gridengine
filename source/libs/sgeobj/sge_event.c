@@ -41,14 +41,14 @@
 
 #include "cull/cull.h"
 
-#include "sge_job.h"
-#include "sge_sharetree.h"
-#include "sge_event.h"
-#include "sge_answer.h"
-#include "sge_object.h"
-#include "sge_utility.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_sharetree.h"
+#include "sgeobj/sge_event.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_utility.h"
+#include "sgeobj/msg_sgeobjlib.h"
 
-#include "msg_sgeobjlib.h"
 #include "msg_common.h"
 
 /* documentation see libs/evc/sge_event_client.c */
@@ -638,7 +638,7 @@ if (ret == false) {
    if (ret) {
       u_long32 busy = lGetUlong(event_client, EV_busy_handling);
       if (busy != EV_BUSY_NO_HANDLING && busy != EV_BUSY_UNTIL_ACK &&
-          busy != EV_BUSY_UNTIL_RELEASED && busy != EV_THROTTLE_FLUSH) {
+          busy != EV_BUSY_UNTIL_RELEASED) {
          answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR, 
                                  MSG_EVENT_INVALIDBUSYHANDLING);
          ret = false;

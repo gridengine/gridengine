@@ -1,11 +1,3 @@
-#include <stdio.h>
-#include <errno.h>
-#include <string.h>
-#include <sys/time.h>
-#include <stdlib.h>
-#include "cl_util.h"
-
-
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  *
@@ -38,8 +30,15 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "cl_fd_list.h"
-#include "cl_commlib.h"
+#include <stdio.h>
+#include <errno.h>
+#include <string.h>
+#include <sys/time.h>
+#include <stdlib.h>
+
+#include "comm/lists/cl_util.h"
+#include "comm/cl_fd_list.h"
+#include "comm/cl_commlib.h"
 
 int cl_fd_list_setup(cl_raw_list_t** list_p, char* list_name) {
    return cl_raw_list_setup(list_p, list_name, 1);
@@ -89,7 +88,7 @@ int cl_fd_list_register_fd(cl_raw_list_t* list_p, cl_com_fd_data_t* fd, int lock
    new_elem->data = fd;
    new_elem->raw_elem = cl_raw_list_append_elem(list_p, (void*) new_elem);
    if (new_elem->raw_elem == NULL) {
-      free(new_elem);
+      sge_free(&new_elem);
       if (lock_list == 1) {
          cl_raw_list_unlock(list_p);
       }
@@ -120,9 +119,8 @@ int cl_fd_list_unregister_fd(cl_raw_list_t* list_p, cl_fd_list_elem_t* elem, int
    }
 
    cl_raw_list_remove_elem(list_p, elem->raw_elem);
-   free(elem->data);
-   free(elem);
-   elem = NULL;
+   sge_free(&(elem->data));
+   sge_free(&elem);
 
    if (lock_list != 0) {
       /* unlock list */

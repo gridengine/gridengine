@@ -37,24 +37,27 @@
 #include <Xmt/Xmt.h>
 #include <Xmt/Util.h>
 
+#include "qmon_preferences.h"
+
+#include "rmon/sgermon.h"
+
 #include "uti/sge_string.h"
 #include "uti/sge_stdio.h"
 #include "uti/sge_unistd.h"
+#include "uti/sge_log.h"
 
-#include "sge.h"
-#include "sge_pref_PREF_L.h"
-#include "sge_qref.h"
-#include "sge_str.h"
-#include "qmon_preferences.h"
-#include "config.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "version.h"
-#include "sge_feature.h"
-#include "sge_answer.h"
+#include "sgeobj/sge_pref_PREF_L.h"
+#include "sgeobj/sge_qref.h"
+#include "sgeobj/sge_str.h"
+#include "sgeobj/config.h"
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_centry.h"
 #include "sgeobj/sge_conf.h"
 
+#include "gdi/version.h"
+
+#include "sge.h"
 #include "msg_common.h"
 #include "msg_qmon.h"
 
@@ -468,7 +471,7 @@ static lListElem* read_object( const char *dirname, const char *filename, int sp
    /* create List Element */
    if (!(ep = lCreateElem(args->objtype))) {
       FCLOSE(fp);
-      free(buf);
+      sge_free(&buf);
       ERROR((SGE_EVENT, MSG_SGETEXT_NOMEM));
       DEXIT;
       return NULL;
@@ -480,12 +483,12 @@ static lListElem* read_object( const char *dirname, const char *filename, int sp
       ERROR((SGE_EVENT, lGetString(lFirst(alp), AN_text)));
       lFreeList(&alp);
       FCLOSE(fp);
-      free(buf);
+      sge_free(&buf);
       DEXIT;
       return NULL;
    }
 
-   free(buf);
+   sge_free(&buf);
    FCLOSE(fp);
 
    /* well, let's do the work... */

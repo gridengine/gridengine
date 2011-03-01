@@ -37,10 +37,10 @@
 
 #include "cull/cull_list.h"
 
-#include "sge_answer.h"
-#include "sge_userprj.h"
-#include "sge_object.h"
-#include "msg_sgeobjlib.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_userprj.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/msg_sgeobjlib.h"
 
 /****** sgeobj/userprj/prj_list_locate() **********************************
 *  NAME

@@ -50,8 +50,8 @@
 
 #include "sched/sge_job_schedd.h"
 
-#include "msg_qmaster.h"
 #include "sge_rusage.h"
+#include "msg_qmaster.h"
 
 #ifdef NEC_ACCOUNTING_ENTRIES
 #define ARCH_COLUMN "%c%s"
@@ -661,8 +661,8 @@ sge_write_rusage(dstring *buffer,
 #endif 
              );
 
-   FREE(qname);
-   FREE(hostname);
+   sge_free(&qname);
+   sge_free(&hostname);
 
    DRETURN(ret);
 }

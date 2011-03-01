@@ -38,14 +38,15 @@
 #include <fcntl.h>
 #include <errno.h>
 
+#include "rmon/sgermon.h"
+
 #include "uti/sge_io.h"
 #include "uti/sge_stdio.h"
 #include "uti/sge_stdlib.h"
 #include "uti/sge_unistd.h"
-#include "sgermon.h"
-#include "sge_log.h"
+#include "uti/sge_log.h"
 
-#include "msg_utilib.h"  
+#include "uti/msg_utilib.h"  
 
 #define BUFFER     4096
 #define FILE_CHUNK (100*1024)  
@@ -422,7 +423,7 @@ char *sge_bin2string(FILE *fp, int size)
    }
 
    if (error) {
-      free(dstbuf);
+      sge_free(&dstbuf);
       return NULL;
    }
    else {
@@ -572,7 +573,7 @@ char *sge_file2string(const char *fname, int *len)
 #ifdef WIN32 /* fread call and evaluation of return value is different */
       i = fread(str, 1, size, fp);
       if (i == 0) {
-         free(str);
+         sge_free(&str);
          FCLOSE(fp);
          DEXIT;
          return NULL;
@@ -585,7 +586,7 @@ char *sge_file2string(const char *fname, int *len)
       i = fread(str, size, 1, fp);
       if (i != 1) {
          ERROR((SGE_EVENT, MSG_FILE_FREADFAILED_SS, fname, strerror(errno)));
-         free(str);
+         sge_free(&str);
          FCLOSE(fp);
          DEXIT;
          return NULL;

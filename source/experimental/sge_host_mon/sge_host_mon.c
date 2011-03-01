@@ -35,17 +35,23 @@
 #include <unistd.h>
 #include <string.h>
 #include <time.h>
+
+#include "rmon/sgermon.h"
+
+#include "uti/sge_time.h"
+#include "uti/sge_language.h"
+#include "uti/sge_stdlib.h"
+
 #include "gdi/sge_gdi.h"
 
-#include "sge_all_listsL.h"
-#include "sgermon.h"
-#include "sge_time.h"
-#include "sort_hosts.h"
-#include "sgeee.h"
-#include "sge_schedd_conf.h"
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_schedd_conf.h"
+#include "sgeobj/sge_ja_task.h"
+
+#include "sched/sort_hosts.h"
+#include "sched/sgeee.h"
+
 #include "sge_usageL.h"
-#include "sge_ja_task.h"
-#include "sge_language.h"
 
 #define HOST_USAGE_ATTR_CPU     "cpu"
 #define HOST_USAGE_ATTR_MEM     "mem"
@@ -708,10 +714,11 @@ print_host_field(FILE *out, item_t *item, format_t *format)
            time_t t = *(lUlong *)item->val;
            if (t && format->format_times) {
               char *tc = strdup(ctime(&t));
-              if (tc && *tc)
-                 tc[strlen(tc)-1] = 0;
-              fprintf(out, format->str_format, tc);
-              if (tc) free(tc);
+              if (tc && *tc) {
+                  tc[strlen(tc)-1] = 0;
+                  fprintf(out, format->str_format, tc);
+                  sge_free(&tc);
+               }
            } else {
               fprintf(out, sge_u32, (u_long32) t);
            }
@@ -747,7 +754,7 @@ print_host_hdr(FILE *out, format_t *format)
          }
          field = strtok(NULL, ",");
       }
-      free(fields);
+      sge_free(&fields);
    } else {
       for (i=0; i<items; i++)
          fprintf(out, "%s%s", item[i].name, format->delim);
@@ -828,7 +835,7 @@ print_host(FILE *out, lListElem *host, char **names, format_t *format)
          }
          field = strtok(NULL, ",");
       }
-      free(fields);
+      sge_free(&fields);
    } else {
       for (i=0; i<items; i++)
          print_host_field(out, &item[i], format);

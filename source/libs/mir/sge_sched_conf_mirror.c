@@ -30,17 +30,18 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+
+#include "sgeobj/sge_schedd_conf.h"
+#include "sgeobj/sge_answer.h"
+
+#include "mir/msg_mirlib.h"
+#include "mir/sge_mirror.h"
+#include "mir/sge_sched_conf_mirror.h"
+
 #include "sge.h"
-#include "sgermon.h"
-#include "sge_log.h"
-
-#include "sge_schedd_conf.h"
-
-#include "msg_mirlib.h"
-
-#include "sge_mirror.h"
-#include "sge_sched_conf_mirror.h"
-#include "sge_answer.h"
 
 /****** Eventmirror/schedd_conf/schedd_conf_update_master_list() ***************
 *  NAME

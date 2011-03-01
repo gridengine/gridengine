@@ -33,15 +33,14 @@
 #include <sys/types.h>
 #include <fnmatch.h>
 
-#include "sge_resource_quota_qmaster.h"
-#include "msg_common.h"
-#include "msg_qmaster.h"
-#include "msg_sgeobjlib.h"
-#include "sge_persistence_qmaster.h"
-#include "sge_utility_qmaster.h"
-#include "sge.h"
-#include "uti/sge_log.h"
 #include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_string.h"
+
+#include "sgeobj/sge_hgroup.h"
+#include "sgeobj/sge_userprj.h"
+#include "sgeobj/msg_sgeobjlib.h"
 #include "sgeobj/sge_resource_quota.h"
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_utility.h"
@@ -49,14 +48,20 @@
 #include "sgeobj/sge_ja_task.h"
 #include "sgeobj/sge_str.h"
 #include "sgeobj/sge_userset.h"
+
 #include "spool/sge_spooling.h"
-#include "sgeobj/sge_hgroup.h"
-#include "sgeobj/sge_userprj.h"
+
 #include "evm/sge_event_master.h"
+
 #include "sge_userprj_qmaster.h"
 #include "sge_userset_qmaster.h"
 #include "sge_host_qmaster.h"
-#include "uti/sge_string.h"
+#include "sge_persistence_qmaster.h"
+#include "sge_utility_qmaster.h"
+#include "sge.h"
+#include "sge_resource_quota_qmaster.h"
+#include "msg_common.h"
+#include "msg_qmaster.h"
 
 static bool
 rqs_reinit_consumable_actual_list(lListElem *rqs, lList **answer_list);
@@ -168,7 +173,7 @@ int rqs_mod(sge_gdi_ctx_class_t *ctx,
                attr_mod_sub_list(alpp, new_rule, RQR_limit, RQRL_name, rule,
                                  sub_command, SGE_ATTR_RQSRULES, SGE_OBJ_RQS, 0);
             } else {
-               ERROR((SGE_EVENT, MSG_RESOURCEQUOTA_NORULEDEFINED));
+               ERROR((SGE_EVENT, SFNMAX, MSG_RESOURCEQUOTA_NORULEDEFINED));
                answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC,
                                ANSWER_QUALITY_ERROR);
                goto ERROR;                 
@@ -502,7 +507,7 @@ static bool filter_diff_usersets_or_projects_scope(lList *filter_scope, int filt
 
          lFreeList(scope_ref); 
          /* 
-          * that looks strange: list is simply free()'d 
+          * that looks strange: list is simply sge_free()'d 
           * however this is no bug since any entry contained 
           * in the old scope_ref list will be also in the new one 
           */

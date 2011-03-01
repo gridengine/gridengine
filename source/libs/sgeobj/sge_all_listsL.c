@@ -34,7 +34,7 @@
 
 #include "cull/cull_list.h"
 
-#include "sge_all_listsL.h"
+#include "sgeobj/sge_all_listsL.h"
 
 /* this is not an empty module - even if it appeares to be empty.
  * The define __SGE_GDI_LIBRARY_HOME_OBJECT_FILE__ makes all list descriptors 

@@ -36,43 +36,44 @@
 
 #include "sge.h"
 
-#include "sgermon.h"
-#include "sge_log.h"
+#include "rmon/sgermon.h"
 
-#include "sge_stdlib.h"
-#include "sge_string.h"
+#include "uti/sge_log.h"
+#include "uti/sge_stdlib.h"
+#include "uti/sge_string.h"
 
-#include "commlib.h"
+#include "comm/commlib.h"
 
-#include "sge_answer.h"
-#include "sge_object.h"
-#include "sge_utility.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_utility.h"
 
-#include "sge_ckpt.h"
-#include "sge_centry.h"
-#include "sge_cqueue.h"
-#include "sge_conf.h"
-#include "sge_schedd_conf.h"
-#include "sge_host.h"
-#include "sge_pe.h"
+#include "sgeobj/sge_ckpt.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_schedd_conf.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_pe.h"
 #include "sgeobj/sge_qinstance.h"
 #include "sgeobj/sge_qinstance_state.h"
 #include "sgeobj/sge_userset.h"
 #include "sgeobj/sge_userprj.h"
 
-#include "sort_hosts.h"
-#include "sge_complex_schedd.h"
-#include "sge_select_queue.h"
+#include "sched/sort_hosts.h"
+#include "sched/sge_complex_schedd.h"
+#include "sched/sge_select_queue.h"
+#include "sched/debit.h"
 
-#include "sge_spooling.h"
+#include "spool/sge_spooling.h"
 #include "spool/sge_spooling_utilities.h"
-
-#include "msg_common.h"
 #include "spool/msg_spoollib.h"
 #include "spool/flatfile/msg_spoollib_flatfile.h"
+
 #include "sgeobj/sge_resource_quota.h"
 #include "sgeobj/sge_advance_reservation.h"
-#include "sched/debit.h"
+
+#include "msg_common.h"
 
 const spool_instr spool_config_subinstr = {
    CULL_SUBLIST,
@@ -325,10 +326,10 @@ spool_free_spooling_fields(spooling_field *fields)
          }
 
          if (fields[i].name != NULL) {
-            FREE(fields[i].name);
+            sge_free(&(fields[i].name));
          }
       }
-      FREE(fields);
+      sge_free(&fields);
    }
 
    return NULL;
@@ -419,7 +420,7 @@ bool spool_default_validate_func(lList **answer_list,
                }
             }
 
-            free(old_name);
+            sge_free(&old_name);
 
             if (object_type == SGE_TYPE_EXECHOST && ret) {
                lListElem *load_value;
@@ -485,7 +486,7 @@ bool spool_default_validate_func(lList **answer_list,
                   }
                }
             }
-            free(old_name);
+            sge_free(&old_name);
          }
          break;
       case SGE_TYPE_USERSET:

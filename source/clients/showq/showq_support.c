@@ -691,7 +691,7 @@ void show_active_jobs(lList *joblist, int flags, const bool binding)
             char *truncated_time = strdup(time_string);
             truncated_time[20] = '\0';
             printf("%20s", truncated_time);
-            free(truncated_time);
+            sge_free(&truncated_time);
          } else {
             printf("%-20s", "");
          }
@@ -790,7 +790,7 @@ void show_waiting_jobs(lList *joblist, int flags)
             char *truncated_time = strdup(time_string);
             truncated_time[20] = '\0';
             printf("%20s\n", truncated_time);
-            free(truncated_time);
+            sge_free(&truncated_time);
          } else {
             printf("%-20s\n", "");
          }
@@ -830,7 +830,7 @@ static void get_core_binding_string(lListElem *job, const int task_number, dstri
          const char *usage_name = lGetString(usage_elem, UA_name);
 
          if (strncmp(usage_name, binding_name, strlen(binding_name)) == 0) {
-            binding_inuse = strstr(usage_name, "="); 
+            binding_inuse = strstr(usage_name, "!"); 
             if (binding_inuse != NULL) {
                binding_inuse++;
             }

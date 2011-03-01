@@ -37,34 +37,39 @@
 
 #ifndef NO_JNI
 
+#include "rmon/sgermon.h"
+
+#include "uti/sge_prog.h"
+#include "uti/sge_log.h"
+#include "uti/sge_string.h"
+#include "uti/sge_thread_ctrl.h"
+#include "uti/sge_dstring.h"
+#include "uti/sge_spool.h"
+#include "uti/sge_bootstrap.h"
+#include "uti/sge_profiling.h"
+#include "uti/setup_path.h"
+
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_manop.h"
+
+#include "gdi/sge_security.h"
+
+#include "lck/sge_mtutil.h"
+
+#include "comm/cl_commlib.h"
+
 #include "basis_types.h"
-#include "sge_qmaster_threads.h"
-#include "sgermon.h"
-#include "sge_prog.h"
-#include "sge_log.h"
-#include "sge_answer.h"
 #include "setup_qmaster.h"
-#include "sge_security.h"
-#include "sge_manop.h"
-#include "sge_mtutil.h"
 #include "sge_event_master.h"
 #include "sge_reporting_qmaster.h"
 #include "sge_qmaster_timed_event.h"
 #include "sge_host_qmaster.h"
-#include "sge_spool.h"
-#include "cl_commlib.h"
-#include "sge_bootstrap.h"
-#include "msg_qmaster.h"
-#include "sge_profiling.h"
-#include "sgeobj/sge_conf.h"
-#include "setup_path.h"
 #include "configuration_qmaster.h"
 #include "sge_thread_main.h"
 #include "sge_thread_jvm.h"
-
-#include "uti/sge_string.h"
-#include "uti/sge_thread_ctrl.h"
-#include "uti/sge_dstring.h"
+#include "sge_qmaster_threads.h"
+#include "msg_qmaster.h"
 
 
 
@@ -589,7 +594,7 @@ static JNIEnv* create_vm(const char *libjvm_path, int argc, char** argv)
       pthread_mutex_unlock(&myjvm_mutex);
 
    }
-   free(options);
+   sge_free(&options);
 	DRETURN(env);
 }
 
@@ -697,7 +702,7 @@ sge_run_jvm(sge_gdi_ctx_class_t *ctx, void *anArg, monitoring_t *monitor)
          WARNING((SGE_EVENT, "could not read keystore path %s\n", sge_dstring_get_string(&error_dstring)));
          sge_dstring_free(&error_dstring);
          sge_dstring_free(&ds);
-         FREE(libjvm_path);
+         sge_free(&libjvm_path);
          DRETURN(false);
       }
       sge_strlcpy(keystore_path, value[0], SGE_PATH_MAX);
@@ -762,8 +767,8 @@ sge_run_jvm(sge_gdi_ctx_class_t *ctx, void *anArg, monitoring_t *monitor)
       jvm_argv[fixed_jvm_argc + i] = strdup(additional_jvm_argv[i]);
       additional_jvm_argv[i] = NULL;
    }
-   FREE(additional_jvm_argv);
-   FREE(additional_jvm_args);
+   sge_free(&additional_jvm_argv);
+   sge_free(&additional_jvm_args);
 
    /*
    ** process arguments of main method
@@ -786,7 +791,7 @@ sge_run_jvm(sge_gdi_ctx_class_t *ctx, void *anArg, monitoring_t *monitor)
    }  
 
    env = create_vm(libjvm_path, jvm_argc, jvm_argv);
-   FREE(libjvm_path);
+   sge_free(&libjvm_path);
 
    if (env != NULL) {
       main_class = (*env)->FindClass(env, main_class_name);
@@ -808,14 +813,14 @@ sge_run_jvm(sge_gdi_ctx_class_t *ctx, void *anArg, monitoring_t *monitor)
    ** free allocated jvm args
    */
    for (i=0; i<jvm_argc; i++) {
-      FREE(jvm_argv[i]);
+      sge_free(&(jvm_argv[i]));
    }  
-   FREE(jvm_argv);
+   sge_free(&jvm_argv);
 
    /*
    ** free main_argv[0] argument
    */
-   FREE(main_argv[0]);
+   sge_free(&(main_argv[0]));
 
    DRETURN(ret);
 }

@@ -33,8 +33,8 @@
 /*___INFO__MARK_END__*/
 
 /* may be this should be included by the gdi user */
-#include "cull.h"
-#include "sge_hostname.h"
+#include "cull/cull.h"
+#include "uti/sge_hostname.h"
 
 #ifdef  __cplusplus
 extern "C" {

@@ -8,6 +8,76 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+JG-2011-03-01-0: Bugfix:      remove the THROTTLE_FLUSH event client busy
+                              handling
+                 Issue:       GE-3372
+                 Review:      DG (GE-3)
+
+EB-2011-02-27-0: Cleanup:     - removed old review papers
+                              - removed FREE macro
+                 Review:      TBD
+
+EB-2011-02-25-0: Enhancem:    - replaced remaining free/FREE calls by sge_free
+                              - fixed build issue for herd
+                 Issue:       GE-3346
+                 Review:      TBD
+
+SD-2011-02-24-0: Bugfix:      Slotwise preemption fails to unsuspend one job
+                              per host
+                 Issue:       GE-3233
+					  Review:      DG
+
+JG-2011-02-24-0: Bugfix:      Fixing build on Ubuntu 10.04 and higher.
+                              Part 2/2: check exit code of system calls where
+                              required.
+                 Issue:       GE-3349 (GE-3347)
+                 Review:      SH (GE-1)
+
+DG-2011-02-24-0: Bugfix:      Fixed -binding parsing bug and introduced MSG_
+                              makros for finer grained error reporting.
+                 Issue:       GE-3358
+                 Review:      JG
+
+EB-2011-02-22-0: Enhancem:    - changed arch script so that Snow Leopard will be
+                                recognized as darwin-x64 when latest path is
+                                installed
+                              - changed JSV script so that it does not fork
+                                processes for parsing related things
+                              - changed installation and JGDI related things so
+                                that correct shared library paths will be set
+                              - changed distinst so that correct shared library
+                                extension will be used
+                              - fixed include paths
+                              - fixed free partially
+                              - fixed compile problem on Open Indiana
+                 Issue:       GE-3355 GE-3346 GE-3356
+                 Review:      TBD
+
+JG-2011-02-22-0: Bugfix:      Fixing build on Ubuntu 10.04 and higher.
+                              Part 1/2: calls to sprintf without format string.
+                 Issue:       GE-3348 (GE-3347)
+                 Review:      EB
+
+DG-2011-02-21-0: Cleanup:     Fixed arch.dist for Ubuntu Server 10.10
+                 Belongs to:  DG-2011-02-10-0
+                 Review:      JG
+
+DG-2011-02-18-0: Cleanup:     Avoid qmaster core dump after getting un-
+                              discoverable qinstance.
+                 Review:      EB, JG
+
+DG-2011-02-17-2: Cleanup:     Fixed broken changlog
+                 Belongs to:  DG-2011-02-17-2
+
+DG-2011-02-17-1: Cleanup:     Fixed broken aimk
+                 Belongs to:  EB-2011-02-17-0
+                 Review:      EB
+
+DG-2011-02-17-0: Bugfix:      Fixed broken project spooling, which causes lost
+                              of project when restarting master. This appears
+                              only when using core binding.
+					  Review:      EB
+
 EB-2011-02-17-0: Bugfix:      removed PLPA configure/build from aimk
                               fixed darwin-x64 build
                               fixed .gitignore file

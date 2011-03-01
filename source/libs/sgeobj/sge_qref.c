@@ -41,22 +41,22 @@
 
 #include "comm/commlib.h"
 
-#include "basis_types.h"
-#include "cull_parse_util.h"
-#include "sge_answer.h"
-#include "sge_centry.h"
-#include "sge_cqueue.h"
-#include "sge_eval_expression.h"
-#include "sge_href.h"
-#include "sge_hgroup.h"
-#include "sge_object.h"
-#include "sge_qinstance.h"
-#include "sge_qref.h"
-#include "sge_str.h"
+#include "sgeobj/cull_parse_util.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_eval_expression.h"
+#include "sgeobj/sge_href.h"
+#include "sgeobj/sge_hgroup.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_qref.h"
+#include "sgeobj/sge_str.h"
+#include "sgeobj/msg_sgeobjlib.h"
 
+#include "basis_types.h"
 #include "msg_common.h"
 #include "msg_clients_common.h"
-#include "msg_sgeobjlib.h"
 
 #define QREF_LAYER TOP_LAYER
 
@@ -452,7 +452,7 @@ qref_cq_rejected(const char *qref_pattern, const char *cqname,
       wc_cqueue[ s - qref_pattern ] = '\0';
       /* reject the cluster queue expression support */
       boo = sge_eval_expression(TYPE_STR,wc_cqueue, cqname, NULL);
-      free(wc_cqueue);
+      sge_free(&wc_cqueue);
       if (!boo) {
          if (!hostname || !qref_list_host_rejected(&s[1], hostname, hgroup_list)) {
             DEXIT;
@@ -815,7 +815,7 @@ qref_list_is_valid(const lList *this_list, lList **answer_list)
             }
          }
       } else {
-         ERROR((SGE_EVENT, MSG_QREF_QNOTREQUESTABLE));
+         ERROR((SGE_EVENT, SFNMAX, MSG_QREF_QNOTREQUESTABLE));
          answer_list_add(answer_list, SGE_EVENT,
                          STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          ret = false;
@@ -925,19 +925,19 @@ cull_parse_destination_identifier_list(lList **lpp, const char *dest_str)
    str_str = string_list(s, ",", NULL);
    if (str_str == NULL || *str_str == NULL) {
       *lpp = NULL;
-      FREE(s);
+      sge_free(&s);
       DRETURN(2);
    }
 
    i_ret = cull_parse_string_list(str_str, "destin_ident_list", QR_Type, rule, lpp);
    if (i_ret) {
-      FREE(s);
-      FREE(str_str);
+      sge_free(&s);
+      sge_free(&str_str);
       DRETURN(3);
    }
 
-   FREE(s);
-   FREE(str_str);
+   sge_free(&s);
+   sge_free(&str_str);
    DRETURN(0);
 }
 

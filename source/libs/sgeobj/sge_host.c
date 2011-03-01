@@ -38,21 +38,21 @@
 
 #include "comm/commlib.h"
 
-#include "sge_qinstance.h"
-#include "sge_answer.h"
-#include "sge_centry.h"
-#include "sge_load.h"
-#include "sge_str.h"
-#include "sge.h"
-#include "sge_object.h"
-#include "sge_conf.h"
-#include "sge_host.h"
-#include "sge_cqueue.h" 
-#include "sge_hgroup.h"
-#include "sge_href.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_load.h"
+#include "sgeobj/sge_str.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_cqueue.h" 
+#include "sgeobj/sge_hgroup.h"
+#include "sgeobj/sge_href.h"
+#include "sgeobj/msg_sgeobjlib.h"
 
+#include "sge.h"
 #include "msg_common.h"
-#include "msg_sgeobjlib.h"
 
 lListElem *
 host_list_locate(const lList *host_list, const char *hostname) 

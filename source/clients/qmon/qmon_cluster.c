@@ -47,15 +47,8 @@
 #include <Xmt/InputField.h>
 #include <Xmt/Procedures.h>
 
-/*****/
 #include <Xmt/LayoutP.h>
-/*****/
 
-
-#include "sge_all_listsL.h"
-#include "commlib.h"
-#include "sge_answer.h"
-#include "sge_range.h"
 #include "qmon_proto.h"
 #include "qmon_rmon.h"
 #include "qmon_cull.h"
@@ -68,14 +61,21 @@
 #include "qmon_message.h"
 #include "qmon_cluster.h"
 #include "qmon_globals.h"
-#include "sge_feature.h"
-#include "sge_host.h"
 #include "AskForItems.h"
 #include "AskForTime.h"
 
 #include "uti/sge_string.h"
-#include "gdi/sge_gdi.h"
+
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_all_listsL.h"
 #include "sgeobj/sge_conf.h"
+
+#include "comm/commlib.h"
+
+#include "gdi/sge_gdi.h"
 
 /*-------------------------------------------------------------------------*/
 typedef struct _tCClEntry {

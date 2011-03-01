@@ -34,12 +34,38 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#include "sge_all_listsL.h"
-#include "cull.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_prog.h"
+#include "uti/sge_log.h"
+#include "uti/sge_bootstrap.h"
+
+#include "cull/cull.h"
+
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_resource_quota.h"
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_event.h"
+#include "sgeobj/sge_utility.h"
+#include "sgeobj/sge_schedd_conf.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_userset.h"
+#include "sgeobj/sge_manop.h"
+
+#include "gdi/version.h"
+#include "gdi/sge_gdi_ctx.h"
+#include "gdi/sge_gdi_packet_pb_cull.h"
+#include "gdi/sge_gdi_packet.h"
+
 #include "sge.h"
 #include "sge_follow.h"
+#include "sge_advance_reservation_qmaster.h"
+#include "sge_thread_scheduler.h"
+#include "sge_thread_jvm.h"
 #include "sge_c_gdi.h"
-#include "sge_host.h"
 #include "sge_host_qmaster.h"
 #include "sge_job_qmaster.h"
 #include "sge_userset_qmaster.h"
@@ -49,8 +75,6 @@
 #include "sge_cqueue_qmaster.h"
 #include "sge_pe_qmaster.h"
 #include "sge_resource_quota_qmaster.h"
-#include "sge_resource_quota.h"
-#include "sge_conf.h"
 #include "configuration_qmaster.h"
 #include "sge_event_master.h"
 #include "sched_conf_qmaster.h"
@@ -58,30 +82,8 @@
 #include "sge_ckpt_qmaster.h"
 #include "sge_hgroup_qmaster.h"
 #include "sge_sharetree_qmaster.h"
-#include "sge_feature.h"
 #include "sge_qmod_qmaster.h"
-#include "sge_prog.h"
-#include "sgermon.h"
-#include "sge_log.h"
 #include "sge_qmaster_threads.h"
-#include "version.h"
-#include "sge_answer.h"
-#include "sge_job.h"
-#include "sge_userset.h"
-#include "sge_manop.h"
-#include "sge_advance_reservation_qmaster.h"
-#include "sge_thread_scheduler.h"
-#include "sge_thread_jvm.h"
-
-#include "uti/sge_bootstrap.h"
-
-#include "gdi/sge_gdi_packet_pb_cull.h"
-#include "gdi/sge_gdi_packet.h"
-
-#include "sgeobj/sge_event.h"
-#include "sgeobj/sge_utility.h"
-#include "sgeobj/sge_schedd_conf.h"
-
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
@@ -321,7 +323,7 @@ sge_c_gdi(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet,
          sge_gdi_packet_pack_task(packet, task, answer_list, pb);
          break;
       default:
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_UNKNOWNOP));
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_SGETEXT_UNKNOWNOP));
          answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_ENOIMP,
                          ANSWER_QUALITY_ERROR);
          sge_gdi_packet_pack_task(packet, task, answer_list, pb);
@@ -358,14 +360,14 @@ sge_c_gdi_get(gdi_object_t *ao, sge_gdi_packet_class_t *packet, sge_gdi_task_cla
       case SGE_EV_LIST:
          task->data_list = sge_select_event_clients("", task->condition, task->enumeration);
          task->do_select_pack_simultaneous = false;
-         sprintf(SGE_EVENT, MSG_GDI_OKNL);
+         sprintf(SGE_EVENT, SFNMAX, MSG_GDI_OKNL);
          answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_END);
          DEXIT;
          return;
       case SGE_CONF_LIST:
          task->data_list = sge_get_configuration(task->condition, task->enumeration);
          task->do_select_pack_simultaneous = false;
-         sprintf(SGE_EVENT, MSG_GDI_OKNL);
+         sprintf(SGE_EVENT, SFNMAX, MSG_GDI_OKNL);
          answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_END);
          DEXIT;
          return;
@@ -377,7 +379,7 @@ sge_c_gdi_get(gdi_object_t *ao, sge_gdi_packet_class_t *packet, sge_gdi_task_cla
          conf = sconf_get_config_list();
          task->data_list = lSelectHashPack("", conf, task->condition, task->enumeration, false, NULL);
          task->do_select_pack_simultaneous = false;
-         sprintf(SGE_EVENT, MSG_GDI_OKNL);
+         sprintf(SGE_EVENT, SFNMAX, MSG_GDI_OKNL);
          answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_END);
          lFreeList(&conf);
       }
@@ -395,7 +397,7 @@ sge_c_gdi_get(gdi_object_t *ao, sge_gdi_packet_class_t *packet, sge_gdi_task_cla
             answer_list_add(&(task->answer_list),MSG_SGETEXT_JOBINFOMESSAGESOUTDATED,
                             STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
          } else if (ao == NULL || ao->list_type == SGE_TYPE_NONE) {
-            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_SGETEXT_OPNOIMPFORTARGET));
             answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
          } else {
             lList *data_source = *object_type_get_master_list(ao->list_type);
@@ -411,7 +413,7 @@ sge_c_gdi_get(gdi_object_t *ao, sge_gdi_packet_class_t *packet, sge_gdi_task_cla
                 * 05/21/2007 qualitiy was ANSWER_QUALITY_INFO but this results in "ok"
                 * messages on qconf side
                 */
-               sprintf(SGE_EVENT, MSG_GDI_OKNL);
+               sprintf(SGE_EVENT, SFNMAX, MSG_GDI_OKNL);
                answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_END);
 
             } else {
@@ -558,7 +560,7 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_
 
                default:
                   if (!ao) {
-                     SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
+                     SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_SGETEXT_OPNOIMPFORTARGET));
                      answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
                      break;
                   }
@@ -647,7 +649,7 @@ sge_c_gdi_del(sge_gdi_ctx_class_t *ctx,
                               packet->user, packet->host);
             break;
          default:
-            SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
+            SGE_ADD_MSG_ID( sprintf(SGE_EVENT, SFNMAX, MSG_SGETEXT_OPNOIMPFORTARGET));
             answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
             break;
       }
@@ -724,7 +726,7 @@ sge_c_gdi_del(sge_gdi_ctx_class_t *ctx,
                ar_del(ctx, ep, &(task->answer_list), object_base[SGE_TYPE_AR].list, packet->user, packet->host, monitor);
                break;
             default:
-               SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
+               SGE_ADD_MSG_ID( sprintf(SGE_EVENT, SFNMAX, MSG_SGETEXT_OPNOIMPFORTARGET));
                answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
                break;
          } /* switch target */
@@ -779,7 +781,7 @@ static void sge_c_gdi_copy(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao,
             break;
 
          default:
-            SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_SGETEXT_OPNOIMPFORTARGET));
             answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
             break;
       }
@@ -867,8 +869,7 @@ static void sge_gdi_do_permcheck(sge_gdi_packet_class_t *packet, sge_gdi_task_cl
       }
    }
 
-  sprintf(SGE_EVENT, MSG_GDI_OKNL);
-  answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_END);
+  answer_list_add(&(task->answer_list), MSG_GDI_OKNL, STATUS_OK, ANSWER_QUALITY_END);
   DEXIT;
   return;
 }
@@ -886,7 +887,7 @@ sge_c_gdi_permcheck(sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task,
          sge_gdi_do_permcheck(packet, task);
          break;
       default:
-         WARNING((SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
+         WARNING((SGE_EVENT, SFNMAX, MSG_SGETEXT_OPNOIMPFORTARGET));
          answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
    }
    DRETURN_VOID;
@@ -932,7 +933,7 @@ void sge_c_gdi_replace(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao,
          }
          break;
       default:
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_SGETEXT_OPNOIMPFORTARGET));
          answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
          break;
    }
@@ -991,7 +992,7 @@ sge_c_gdi_trigger(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet,
        default:
             /* permissions should be checked in the functions. Here we don't
                know what is to do, so we don't know what permissions we need */
-            WARNING((SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
+            WARNING((SGE_EVENT, SFNMAX, MSG_SGETEXT_OPNOIMPFORTARGET));
             answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
          break;
    }
@@ -1222,13 +1223,13 @@ trigger_scheduler_monitoring(sge_gdi_packet_class_t *packet, sge_gdi_task_class_
    DENTER(GDI_LAYER, "trigger_scheduler_monitoring");
 
    if (!manop_is_manager(packet->user)) {
-      WARNING((SGE_EVENT, MSG_COM_NOSCHEDMONPERMS));
+      WARNING((SGE_EVENT, SFNMAX, MSG_COM_NOSCHEDMONPERMS));
       answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_ENOMGR, ANSWER_QUALITY_WARNING);
       DEXIT;
       return;
    }
    if (!sge_add_event_for_client(EV_ID_SCHEDD, 0, sgeE_SCHEDDMONITOR, 0, 0, NULL, NULL, NULL, NULL)) {
-      WARNING((SGE_EVENT, MSG_COM_NOSCHEDDREGMASTER));
+      WARNING((SGE_EVENT, SFNMAX, MSG_COM_NOSCHEDDREGMASTER));
       answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
       DEXIT;
       return;
@@ -1302,7 +1303,7 @@ static void sge_c_gdi_mod(sge_gdi_ctx_class_t *ctx, gdi_object_t *ao,
                break;
             default:
                if (ao == NULL) {
-                  SGE_ADD_MSG_ID( sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
+                  SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_SGETEXT_OPNOIMPFORTARGET));
                   answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
                   break;
                }
@@ -1413,7 +1414,7 @@ static int sge_chck_mod_perm_user(lList **alpp, u_long32 target, char *user, mon
       }
       break;
    default:
-      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_SGETEXT_OPNOIMPFORTARGET));
       answer_list_add(alpp, SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
       DRETURN(1);
    }
@@ -1517,7 +1518,7 @@ int sge_chck_mod_perm_host(lList **alpp, u_long32 target, char *host,
       }
       break;
    default:
-      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_SGETEXT_OPNOIMPFORTARGET));
       answer_list_add(alpp, SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
       DRETURN(1);
    }
@@ -1586,7 +1587,7 @@ sge_task_check_get_perm_host(sge_gdi_packet_class_t *packet, sge_gdi_task_class_
       }
       break;
    default:
-      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_SGETEXT_OPNOIMPFORTARGET));
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_SGETEXT_OPNOIMPFORTARGET));
       answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
       ret = false;
       return ret;
@@ -1702,7 +1703,7 @@ monitoring_t *monitor
    if (!(new_obj = (add
          ? lCreateElem(object->type)
          : lCopyElem(old_obj)))) {
-      ERROR((SGE_EVENT, MSG_MEM_MALLOC));
+      ERROR((SGE_EVENT, SFNMAX, MSG_MEM_MALLOC));
       answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
       DRETURN(STATUS_EEXIST);
    }

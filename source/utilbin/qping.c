@@ -36,29 +36,33 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "basis_types.h"
-#include "sge_time.h"
-#include "cl_commlib.h"
-#include "cl_util.h"
-#include "sge_arch.h"
-#include "version.h"
-#include "sge_profiling.h"
-#include "sge_uidgid.h"
-#include "sge_signal.h"
-#include "setup_path.h"
-#include "sge_bootstrap.h"
-#include "sge_feature.h"
-#include "sge_prog.h"
-#include "sge_security.h"
-#include "sge_all_listsL.h"
-#include "msg_utilbin.h"
+#include "uti/sge_time.h"
+#include "uti/sge_arch.h"
+#include "uti/sge_profiling.h"
+#include "uti/sge_uidgid.h"
+#include "uti/sge_signal.h"
+#include "uti/setup_path.h"
+#include "uti/sge_bootstrap.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_string.h"
 
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_all_listsL.h"
+
+#include "gdi/sge_security.h"
+#include "gdi/version.h"
 #include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi_ctx.h"
 #include "gdi/sge_gdi_packet.h"
 #include "gdi/sge_gdi_packet_pb_cull.h"
 
-#include "uti/sge_string.h"
+#include "comm/cl_commlib.h"
+#include "comm/lists/cl_util.h"
+
+#include "basis_types.h"
+#include "msg_utilbin.h"
+
+
 
 #include "msg_clients_common.h"
 
@@ -364,8 +368,8 @@ static void qping_print_line(const char* buffer, int nonewline, int dump_tag, co
    
             help[0]=0;
             if (help2) {
-               snprintf(help_buffer,1024,"%s%s", cl_values[1], help2);
-               snprintf(cl_values[1],1024, help_buffer);
+               snprintf(help_buffer, 1024,"%s%s", cl_values[1], help2);
+               snprintf(cl_values[1], 1024, "%s", help_buffer);
             }
          }
    
@@ -375,8 +379,8 @@ static void qping_print_line(const char* buffer, int nonewline, int dump_tag, co
    
             help[0]=0;
             if (help2) {
-               snprintf(help_buffer,1024,"%s%s", cl_values[3], help2);
-               snprintf(cl_values[3],1024, help_buffer);
+               snprintf(help_buffer,1024, "%s%s", cl_values[3], help2);
+               snprintf(cl_values[3], 1024, "%s", help_buffer);
             }
          }
    
@@ -733,7 +737,7 @@ static void qping_print_line(const char* buffer, int nonewline, int dump_tag, co
                      }
    
                      if (qname) {
-                        free(qname);
+                        sge_free(&qname);
                      }
                      clear_packbuffer(&buf);
                   }
@@ -772,7 +776,7 @@ static void qping_print_line(const char* buffer, int nonewline, int dump_tag, co
                      }
    
                      if (qname) {
-                        free(qname);
+                        sge_free(&qname);
                      }
                      clear_packbuffer(&buf);
                   }
@@ -1199,7 +1203,7 @@ int main(int argc, char *argv[]) {
          if (retval != CL_RETVAL_OK) {
             fprintf(stderr,"%s\n",cl_get_error_text(retval));
          }
-         FREE(alias_path);
+         sge_free(&alias_path);
       }
    }
 
@@ -1480,7 +1484,7 @@ int main(int argc, char *argv[]) {
    retval = cl_commlib_shutdown_handle(handle,CL_FALSE);
    if (retval != CL_RETVAL_OK) {
       fprintf(stderr,"%s\n",cl_get_error_text(retval));
-      free(resolved_comp_host);
+      sge_free(&resolved_comp_host);
       resolved_comp_host = NULL;
       cl_com_cleanup_commlib();
       exit(1);
@@ -1489,11 +1493,11 @@ int main(int argc, char *argv[]) {
    retval = cl_com_cleanup_commlib();
    if (retval != CL_RETVAL_OK) {
       fprintf(stderr,"%s\n",cl_get_error_text(retval));
-      free(resolved_comp_host);
+      sge_free(&resolved_comp_host);
       resolved_comp_host = NULL;
       exit(1);
    }
-   free(resolved_comp_host);
+   sge_free(&resolved_comp_host);
    resolved_comp_host = NULL;
    
    sge_prof_cleanup();

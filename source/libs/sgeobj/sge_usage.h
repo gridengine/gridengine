@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_usage_UA_L.h"
+#include "sgeobj/sge_usage_UA_L.h"
 
 /*
  * sge standard usage value names

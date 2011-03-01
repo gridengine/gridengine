@@ -34,34 +34,37 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "sge_bootstrap.h"
+#include "rmon/sgermon.h"
 
-#include "sgermon.h"
-#include "sge.h"
-#include "sge_conf.h"
-#include "sge_log.h"
-#include "sge_ja_task.h"
-#include "sge_pe_task.h"
-#include "sge_str.h"
+#include "uti/sge_bootstrap.h"
+#include "uti/sge_log.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_string.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_uidgid.h"
+#include "uti/sge_io.h"
+#include "uti/sge_os.h"
+#include "uti/sge_binding_hlp.h"
+
+#include "cull/cull_file.h"
+
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_pe_task.h"
+#include "sgeobj/sge_str.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_binding.h"
+
+#include "spool/classic/read_write_job.h"
+
 #include "job_report_execd.h"
 #include "execd_ck_to_do.h"
 #include "setup_execd.h"
 #include "sge_load_sensor.h"
-#include "cull_file.h"
-#include "sge_prog.h"
-#include "sge_string.h"
 #include "reaper_execd.h"
 #include "execution_states.h"
-#include "sge_feature.h"
-#include "spool/classic/read_write_job.h"
-#include "sge_unistd.h"
-#include "sge_uidgid.h"
-#include "sge_io.h"
-#include "sge_os.h"
-#include "sge_job.h"
-#include "uti/sge_binding_hlp.h"
-#include "sge_binding.h"
-
+#include "sge.h"
 #include "msg_common.h"
 #include "msg_daemons_common.h"
 #include "msg_execd.h"
@@ -74,7 +77,7 @@ static char execd_messages_file[SGE_PATH_MAX];
 /*-------------------------------------------------------------------*/
 void sge_setup_sge_execd(sge_gdi_ctx_class_t *ctx, const char* tmp_err_file_name)
 {
-   char err_str[1024];
+   char err_str[MAX_STRING_SIZE];
    int allowed_get_conf_errors     = 5;
    char* spool_dir = NULL;
    const char *unqualified_hostname = ctx->get_unqualified_hostname(ctx);
@@ -88,20 +91,20 @@ void sge_setup_sge_execd(sge_gdi_ctx_class_t *ctx, const char* tmp_err_file_name
    ** switch to admin user
    */
    if (sge_set_admin_username(admin_user, err_str)) {
-      CRITICAL((SGE_EVENT, err_str));
+      CRITICAL((SGE_EVENT, SFNMAX, err_str));
       /* TODO: remove */
       SGE_EXIT(NULL, 1);
    }
 
    if (sge_switch2admin_user()) {
-      CRITICAL((SGE_EVENT, MSG_ERROR_CANTSWITCHTOADMINUSER));
+      CRITICAL((SGE_EVENT, SFNMAX, MSG_ERROR_CANTSWITCHTOADMINUSER));
       /* TODO: remove */
       SGE_EXIT(NULL, 1);
    }
 
    while (gdi2_wait_for_conf(ctx, &Execd_Config_List)) {
       if (allowed_get_conf_errors-- <= 0) {
-         CRITICAL((SGE_EVENT, MSG_EXECD_CANT_GET_CONFIGURATION_EXIT));
+         CRITICAL((SGE_EVENT, SFNMAX, MSG_EXECD_CANT_GET_CONFIGURATION_EXIT));
          /* TODO: remove */
          SGE_EXIT(NULL, 1);
       }
@@ -156,7 +159,7 @@ void sge_setup_sge_execd(sge_gdi_ctx_class_t *ctx, const char* tmp_err_file_name
    }
 #endif
 
-   FREE(spool_dir);
+   sge_free(&spool_dir);
    DRETURN_VOID;
 }
 

@@ -27,11 +27,10 @@
  * 
  *   All Rights Reserved.
  * 
+ *   Portions of this code are Copyright 2011 Univa Inc.
+ * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-
-#include "sge_binding.h" 
-#include "sgermon.h"
 
 #include "uti/sge_binding_hlp.h"
 
@@ -45,9 +44,11 @@
 
 #include <pthread.h>
 
-#include "uti/sge_log.h"
-#include "uti/sge_binding_hlp.h"
+#include "rmon/sgermon.h"
 
+#include "uti/sge_log.h"
+
+#include "sgeobj/sge_binding.h" 
 #include "sgeobj/sge_answer.h"
 
 #include "msg_common.h"
@@ -414,7 +415,7 @@ static bool binding_set_linear_solaris(const int first_socket, const int first_c
          /* we are out of range already - do nothing - abort */
          /* free memory */
          free_matrix(matrix, mlength);
-         FREE(cores);
+         sge_free(&cores);
          return false;
       }
    }
@@ -425,7 +426,7 @@ static bool binding_set_linear_solaris(const int first_socket, const int first_c
       current_core, &tmp_pid_list, &tmp_pid_list_length) == false) {
       /* we got no Solaris processor id - abort */
       free_matrix(matrix, mlength);
-      FREE(cores);
+      sge_free(&cores);
       return false;
    }
 
@@ -457,9 +458,9 @@ static bool binding_set_linear_solaris(const int first_socket, const int first_c
             /* we are out of range already - do nothing - abort */
             /* free memory */
             free_matrix(matrix, mlength);
-            FREE(cores);
-            FREE(pid_list);
-            FREE(tmp_pid_list);
+            sge_free(&cores);
+            sge_free(&pid_list);
+            sge_free(&tmp_pid_list);
             return false;
          }
       } /* end while getting the correct current_socket number */
@@ -469,8 +470,8 @@ static bool binding_set_linear_solaris(const int first_socket, const int first_c
          current_core, &tmp_pid_list, &tmp_pid_list_length) == false) {
          /* got no internal processor ids */
          free_matrix(matrix, mlength);
-         FREE(cores);
-         FREE(pid_list);
+         sge_free(&cores);
+         sge_free(&pid_list);
          return false;
       }
 
@@ -481,8 +482,8 @@ static bool binding_set_linear_solaris(const int first_socket, const int first_c
       if (pid_list == NULL) {
          /* out of memory */ 
          free_matrix(matrix, mlength);
-         FREE(cores);
-         FREE(tmp_pid_list);
+         sge_free(&cores);
+         sge_free(&tmp_pid_list);
          return false;
       }
 
@@ -496,7 +497,7 @@ static bool binding_set_linear_solaris(const int first_socket, const int first_c
       /* update global pid list length */
       pid_list_length += tmp_pid_list_length;
 
-      FREE(tmp_pid_list);
+      sge_free(&tmp_pid_list);
    }
 
      /* check what we've todo with the processor id list: 
@@ -523,8 +524,8 @@ static bool binding_set_linear_solaris(const int first_socket, const int first_c
 
    /* free memory in any case */ 
    free_matrix(matrix, mlength);
-   FREE(cores);
-   FREE(pid_list);
+   sge_free(&cores);
+   sge_free(&pid_list);
 
    return retval;
 }
@@ -606,7 +607,7 @@ int create_processor_set_explicit_solaris(const int* list_of_sockets,
          list_of_cores[i], &tmp_pid_list, &tmp_pid_list_length) == false) {
          /* we got no Solaris processor ID - abort */
          free_matrix(matrix, length);
-         FREE(pid_list);
+         sge_free(&pid_list);
          return -1;
       }
      
@@ -621,7 +622,7 @@ int create_processor_set_explicit_solaris(const int* list_of_sockets,
       /* update size of processor ID list */
       pid_list_length += tmp_pid_list_length;
 
-      FREE(tmp_pid_list);
+      sge_free(&tmp_pid_list);
    }
 
    /* check what we've todo with the processor id list: 
@@ -639,14 +640,14 @@ int create_processor_set_explicit_solaris(const int* list_of_sockets,
       if (create_pset(pid_list, pid_list_length, &psetid) != true) {
          /* error while doing this... */
          free_matrix(matrix, length);
-         FREE(pid_list);
+         sge_free(&pid_list);
          return -1;
       }
    }   
 
    /* free topology matrix */ 
    free_matrix(matrix, length);
-   FREE(pid_list);
+   sge_free(&pid_list);
 
    return (int) psetid;
 }
@@ -798,7 +799,7 @@ int create_processor_set_striding_solaris(const int first_socket,
          /* we are out of range already - do nothing - abort */
          /* free memory */
          free_matrix(matrix, mlength);
-         FREE(cores);
+         sge_free(&cores);
          return -2;
       }
    }
@@ -809,7 +810,7 @@ int create_processor_set_striding_solaris(const int first_socket,
          current_core, &tmp_pid_list, &tmp_pid_list_length) == false) {
       /* we got no Solaris processor id - abort */
       free_matrix(matrix, mlength);
-      FREE(cores);
+      sge_free(&cores);
       return -3;
    }
 
@@ -823,7 +824,7 @@ int create_processor_set_striding_solaris(const int first_socket,
    /* update length of array */
    pid_list_length = tmp_pid_list_length;
 
-   FREE(tmp_pid_list);
+   sge_free(&tmp_pid_list);
 
    /* try to get the processor_ids from socket and core position (could be 
       more than one because of CMT */
@@ -843,8 +844,8 @@ int create_processor_set_striding_solaris(const int first_socket,
             /* we are out of range already - do nothing - abort */
             /* free memory */
             free_matrix(matrix, mlength);
-            FREE(cores);
-            FREE(pid_list);
+            sge_free(&cores);
+            sge_free(&pid_list);
             return -4;
          }
       } /* end while getting the correct current_socket number */
@@ -854,8 +855,8 @@ int create_processor_set_striding_solaris(const int first_socket,
          current_core, &tmp_pid_list, &tmp_pid_list_length) == false) {
          /* we got no Solaris processor id - abort */
          free_matrix(matrix, mlength);
-         FREE(cores);
-         FREE(pid_list)
+         sge_free(&cores);
+         sge_free(&pid_list);
          return -3; 
       }   
 
@@ -866,9 +867,9 @@ int create_processor_set_striding_solaris(const int first_socket,
       if (pid_list == NULL) {
          /* out of memory */ 
          free_matrix(matrix, mlength);
-         FREE(cores);
-         FREE(pid_list);
-         FREE(tmp_pid_list);
+         sge_free(&cores);
+         sge_free(&pid_list);
+         sge_free(&tmp_pid_list);
          return -5;
       }
 
@@ -879,7 +880,7 @@ int create_processor_set_striding_solaris(const int first_socket,
          pid_list[pid_list_length + prid_cntr] = tmp_pid_list[prid_cntr];
       }
 
-      FREE(tmp_pid_list);
+      sge_free(&tmp_pid_list);
 
       /* update global pid list length */
       pid_list_length += tmp_pid_list_length;
@@ -909,8 +910,8 @@ int create_processor_set_striding_solaris(const int first_socket,
    
    /* free memory in any case */ 
    free_matrix(matrix, mlength);
-   FREE(cores);
-   FREE(pid_list);
+   sge_free(&cores);
+   sge_free(&pid_list);
 
    return retval;
 }
@@ -951,9 +952,9 @@ void free_matrix(int** matrix, const int length)
       return;
    }
    for (i = 0; i < length; i++) {
-      FREE(matrix[i]);
+      sge_free(&(matrix[i]));
    }
-   FREE(matrix);
+   sge_free(&matrix);
 }
 
 /* -----------------------------------------------------------------------------
@@ -1308,8 +1309,7 @@ bool binding_explicit_check_and_account(const int* list_of_sockets, const int sa
 
    /* free memory when unsuccessful */
    if (possible == false) {
-      free(*topo_used_by_job);
-      *topo_used_by_job = NULL;
+      sge_free(topo_used_by_job);
       *topo_used_by_job_length = 0;
    }
 
@@ -1532,8 +1532,8 @@ static bool get_topology_solaris(char** topology, int* length)
 
       /* free resources allocated in subfunctions */
       free_matrix(matrix, matrix_length);
-      FREE(threads_per_core);
-      FREE(cores_per_socket);
+      sge_free(&threads_per_core);
+      sge_free(&cores_per_socket);
    }
    
    if ((*length) == 0) {
@@ -1689,10 +1689,10 @@ bool generate_chipID_coreID_matrix(int*** matrix, int* length)
       int i = 0;
       /* in case we are out of memory for calloc we have a memory leak 
          of one integer - this should only occur once */
-      for (;i < (*length) - 1; i++) 
-         free((*matrix)[i]);
-      free(*matrix);
-      *matrix = NULL;
+      for (;i < (*length) - 1; i++) {
+         sge_free(&((*matrix)[i]));
+      }
+      sge_free(matrix);
       (*length) = 0;
    }
 
@@ -1736,7 +1736,7 @@ static int get_amount_of_sockets_from_matrix(const int** matrix, const int lengt
 
    /* we don't care about the actual chip_ids here */
    if (get_chip_ids_from_matrix(matrix, length, &chip_ids, &amount) == true) {
-      FREE(chip_ids);
+      sge_free(&chip_ids);
    } else {
       amount = 0;
    }
@@ -1997,7 +1997,7 @@ static int get_amount_of_core_or_threads_from_matrix(const int** matrix, const i
    /* check if we got at least one chip_id (at least one socket) */
    if (ids_length == 0) {
       *size = 0;
-      FREE(ids);
+      sge_free(&ids);
       return -2;
    }
 
@@ -2048,7 +2048,7 @@ static int get_amount_of_core_or_threads_from_matrix(const int** matrix, const i
    }
    
    /* free in subfunction allocated memory */
-   FREE(ids);
+   sge_free(&ids);
    
    /* reset the ID counter function */
    is_new_id(-1);
@@ -2143,7 +2143,7 @@ static int is_new_id(const int id)
    if (id < 0) {
       /* reset everything */
       different_ids = 0;
-      FREE(different_id_vector);
+      sge_free(&different_id_vector);
       return 1;
    } 
 
@@ -2191,12 +2191,10 @@ static int is_new_id_pair(const int id, const int id2)
       /* reset everything */
       different_ids = 0;
       if (different_id_vector_1 != NULL) {
-         free(different_id_vector_1);
-         different_id_vector_1 = NULL;
+         sge_free(&different_id_vector_1);
       }
       if (different_id_vector_2 != NULL) {
-         free(different_id_vector_2);
-         different_id_vector_2 = NULL;
+         sge_free(&different_id_vector_2);
       }
       return 1;
    } 
@@ -2274,7 +2272,7 @@ static int get_total_amount_of_cores_solaris()
       } 
       
       /* delete vector and matrix */
-      FREE(cores);
+      sge_free(&cores);
       free_matrix(matrix, length);
    }
 
@@ -2325,7 +2323,7 @@ static int get_total_amount_of_sockets_solaris()
       get_amount_of_cores_from_matrix((const int**)matrix, length, &cores, &sockets_total);
       
       /* delete vector and matrix */
-      FREE(cores);
+      sge_free(&cores);
       free_matrix(matrix, length);
    }
 
@@ -2613,7 +2611,7 @@ bool get_linear_automatic_socket_core_list_and_account(const int amount,
                            list_of_cores, camount);
       }
 
-      FREE(sockets);
+      sge_free(&sockets);
    }
 
    /* 2. If not all cores fit there - fill up the rest of the sockets */
@@ -2660,7 +2658,7 @@ bool get_linear_automatic_socket_core_list_and_account(const int amount,
       memcpy(logical_used_topology, tmp_topo_busy, logical_used_topology_length*sizeof(char));
    } 
      
-   FREE(tmp_topo_busy);
+   sge_free(&tmp_topo_busy);
 
    return possible;
 }
@@ -2970,7 +2968,7 @@ bool get_striding_first_socket_first_core_and_account(const int amount, const in
       } else if (logical_used_topology[i] == '\0') {
          /* we couldn't find start socket start string */
          possible = false;
-         free(tmp_topo_busy);
+         sge_free(&tmp_topo_busy);
          return possible;
       }
       
@@ -2983,7 +2981,7 @@ bool get_striding_first_socket_first_core_and_account(const int amount, const in
    /* check if we found the socket and core we want to start searching */
    if (sc != start_at_socket || cc != start_at_core) {
       /* could't find the start socket and start core */
-      free(tmp_topo_busy);
+      sge_free(&tmp_topo_busy);
       return false;
    }
 
@@ -3036,7 +3034,7 @@ bool get_striding_first_socket_first_core_and_account(const int amount, const in
    
    } /* end go through the whole topology string */
    
-   free(tmp_topo_busy);
+   sge_free(&tmp_topo_busy);
    return possible;
 }
 
@@ -3352,11 +3350,10 @@ binding_parse_from_string(lListElem *this_elem, lList **answer_list, dstring *st
                &socketcorelist, &error) != true) {
          dstring parse_binding_error = DSTRING_INIT;
 
-         sge_dstring_sprintf(&parse_binding_error, "-binding: ");
          sge_dstring_append_dstring(&parse_binding_error, &error);
 
          answer_list_add_sprintf(answer_list, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
-                                 MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S, 
+                                 MSG_PARSE_XOPTIONWRONGARGUMENT_SS, "-binding",  
                                  sge_dstring_get_string(&parse_binding_error));
 
          sge_dstring_free(&parse_binding_error);

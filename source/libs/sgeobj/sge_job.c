@@ -52,31 +52,31 @@
 #include "gdi/sge_gdi.h"
 #include "gdi/msg_gdilib.h"
 
-#include "sge_ja_task.h"
-#include "sge_pe_task.h"
-#include "sge_manop.h"
-#include "sge_range.h"
-#include "sge_var.h"
-#include "sge_path_alias.h"
-#include "sge_answer.h"
-#include "sge_object.h"
-#include "sge_pe.h"
-#include "sge_ckpt.h"
-#include "sge_centry.h"
-#include "sge_qinstance.h"
-#include "sge_host.h"
-#include "symbols.h"
-#include "sge_mesobj_QIM_L.h"
-#include "sge_advance_reservation.h"
-#include "sge_userset.h"
-#include "sge_qref.h"
-#include "sge_utility.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_pe_task.h"
+#include "sgeobj/sge_manop.h"
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_var.h"
+#include "sgeobj/sge_path_alias.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_pe.h"
+#include "sgeobj/sge_ckpt.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_mesobj_QIM_L.h"
+#include "sgeobj/sge_advance_reservation.h"
+#include "sgeobj/sge_userset.h"
+#include "sgeobj/sge_qref.h"
+#include "sgeobj/sge_utility.h"
 #include "sgeobj/sge_binding.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/msg_sgeobjlib.h"
 
-#include "msg_sgeobjlib.h"
+#include "symbols.h"
 #include "msg_common.h"
 
-#include "sge_job.h"
   
 /****** sgeobj/job/job_get_ja_task_template_pending() *************************
 *  NAME
@@ -1166,11 +1166,11 @@ int job_list_add_job(lList **job_list, const char *name, lListElem *job,
    DENTER(TOP_LAYER, "job_list_add_job");
 
    if (!job_list) {
-      ERROR((SGE_EVENT, MSG_JOB_JLPPNULL));
+      ERROR((SGE_EVENT, SFNMAX, MSG_JOB_JLPPNULL));
       DRETURN(1);
    }
    if (!job) {
-      ERROR((SGE_EVENT, MSG_JOB_JEPNULL));
+      ERROR((SGE_EVENT, SFNMAX, MSG_JOB_JEPNULL));
       DRETURN(1);
    }
 
@@ -1909,7 +1909,7 @@ void job_check_correct_id_sublists(lListElem *job, lList **answer_list)
             if (field[i] != JB_ja_structure)
                range_correct_end(range);
             if (range_is_id_within(range, 0)) {
-               ERROR((SGE_EVENT, MSG_JOB_NULLNOTALLOWEDT));
+               ERROR((SGE_EVENT, SFNMAX, MSG_JOB_NULLNOTALLOWEDT));
                answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN,
                                ANSWER_QUALITY_ERROR);
                DRETURN_VOID;
@@ -1944,7 +1944,7 @@ void job_check_correct_id_sublists(lListElem *job, lList **answer_list)
       }
       has_structure = !range_list_is_empty(lGetList(job, JB_ja_structure));
       if (!has_structure) {
-         ERROR((SGE_EVENT, MSG_JOB_NOIDNOTALLOWED));
+         ERROR((SGE_EVENT, SFNMAX, MSG_JOB_NOIDNOTALLOWED));
          answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN,
                          ANSWER_QUALITY_ERROR);
          DRETURN_VOID;
@@ -2611,7 +2611,7 @@ int job_resolve_host_for_path_list(const lListElem *job, lList **answer_list,
             answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             ret_error=true;
          } else if (res != CL_RETVAL_PARAMS) {
-            ERROR((SGE_EVENT,MSG_PARSE_NULLPOINTERRECEIVED ));
+            ERROR((SGE_EVENT, SFNMAX, MSG_PARSE_NULLPOINTERRECEIVED));
             answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             ret_error=true;
          }
@@ -2628,13 +2628,13 @@ int job_resolve_host_for_path_list(const lListElem *job, lList **answer_list,
 
             if(hostname == NULL){
                if(temp_hostname == NULL){
-                  ERROR((SGE_EVENT, MSG_PARSE_DUPLICATEHOSTINFILESPEC));
+                  ERROR((SGE_EVENT, SFNMAX, MSG_PARSE_DUPLICATEHOSTINFILESPEC));
                   answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
                   ret_error=true;
                }
             } 
             else if( temp_hostname && strcmp(hostname, temp_hostname)==0){
-               ERROR((SGE_EVENT, MSG_PARSE_DUPLICATEHOSTINFILESPEC));
+               ERROR((SGE_EVENT, SFNMAX, MSG_PARSE_DUPLICATEHOSTINFILESPEC));
                answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
                ret_error=true;
             }

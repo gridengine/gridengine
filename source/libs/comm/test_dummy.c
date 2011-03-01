@@ -34,8 +34,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "dummy.h"
-#include "cl_lists.h"
+#include "comm/dummy.h"
+#include "comm/lists/cl_lists.h"
 
 
 #ifdef __CL_FUNCTION__

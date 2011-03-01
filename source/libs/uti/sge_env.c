@@ -40,16 +40,18 @@
 #include <sys/types.h>
 #include <sys/socket.h>  
 
-#include "sge.h"
-#include "sgermon.h"
-#include "sge_hostname.h"
-#include "sge_log.h"
-#include "sge_stdlib.h"
-#include "sge_string.h"
-#include "sge_unistd.h"
-#include "sge_answer.h"
+#include "rmon/sgermon.h"
 
-#include "sge_env.h"
+#include "uti/sge_hostname.h"
+#include "uti/sge_log.h"
+#include "uti/sge_stdlib.h"
+#include "uti/sge_string.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_env.h"
+
+#include "sgeobj/sge_answer.h"
+
+#include "sge.h"
 
 typedef struct {
    char*       sge_root;
@@ -136,8 +138,7 @@ void sge_env_state_class_destroy(sge_env_state_class_t **pst)
       return;
    }   
    sge_env_state_destroy((*pst)->sge_env_state_handle);
-   FREE(*pst);
-   *pst = NULL;
+   sge_free(pst);
    DEXIT;
 }
 
@@ -163,11 +164,9 @@ static void sge_env_state_destroy(void *theState)
    sge_env_state_t *s = (sge_env_state_t *)theState;
 
    DENTER(TOP_LAYER, "sge_env_state_destroy");
-
-   FREE(s->sge_root);
-   FREE(s->sge_cell);
-   sge_free((char*)s);
-
+   sge_free(&(s->sge_root));
+   sge_free(&(s->sge_cell));
+   sge_free(&s);
    DEXIT;
 }
 

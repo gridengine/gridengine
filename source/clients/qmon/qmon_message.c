@@ -45,7 +45,8 @@
 #include "qmon_message.h"
 #include "qmon_browser.h"
 #include "qmon_appres.h"
-#include "sge_answer.h"
+
+#include "sgeobj/sge_answer.h"
 
 static Widget qmon_msg_box = 0;
 static Widget msg_text_w = 0;

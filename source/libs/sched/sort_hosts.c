@@ -115,7 +115,7 @@ int sort_host_list(lList *hl, lList *centry_list)
          DPRINTF(("%s: %f\n", lGetHost(hlp, EH_name), load));
       }
    }
-   FREE(load_formula);
+   sge_free(&load_formula);
 
    if (lPSortList(hl,"%I+", EH_sort_value)) {
       DRETURN(-1);
@@ -189,12 +189,12 @@ double scaled_mixed_load(const char* load_formula, lListElem *global,
          /* it is not an integer ==> it's got to be a load value */
          if (!(par_name = sge_delim_str(cp, &ptr, load_ops)) ||
                get_load_value(&val, global, host, centry_list, par_name)) {
-            FREE(par_name);
-            FREE(tf);
+            sge_free(&par_name);
+            sge_free(&tf);
 
             DRETURN(ERROR_LOAD_VAL);
          }
-         FREE(par_name);
+         sge_free(&par_name);
       }
 
       /* ---------------------------------------- */
@@ -203,7 +203,7 @@ double scaled_mixed_load(const char* load_formula, lListElem *global,
       if (*ptr) {
          /* if the delimiter is not \0 it's got to be a operator -> find it */
          if (!(op_ptr=strchr(load_ops,(int) *ptr))) {
-            FREE(tf);
+            sge_free(&tf);
             DRETURN(ERROR_LOAD_VAL);
          }
          op_pos = (int) (op_ptr - load_ops);
@@ -216,11 +216,11 @@ double scaled_mixed_load(const char* load_formula, lListElem *global,
             /* it is not an integer ==> it's got to be a load value */
             if (!(par_name = sge_delim_str(ptr,NULL,load_ops)) ||
                get_load_value(&val2, global, host, centry_list, par_name)) {
-               FREE(par_name);
-               FREE(tf);
+               sge_free(&par_name);
+               sge_free(&tf);
                DRETURN(ERROR_LOAD_VAL);
             }
-            FREE(par_name);
+            sge_free(&par_name);
          }
 
          /* ------------------------------- */
@@ -283,7 +283,7 @@ double scaled_mixed_load(const char* load_formula, lListElem *global,
       }   
    }
 
-   FREE(tf);
+   sge_free(&tf);
 
    DRETURN(load);
 }

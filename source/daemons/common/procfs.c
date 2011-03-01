@@ -71,20 +71,22 @@ int verydummyprocfs;
 
 #if defined(LINUX)
 #include <sys/param.h>          /* for HZ (jiffies -> seconds ) */
-#include "sge_proc.h"
+#include "sgeobj/sge_proc.h"
 #endif
+
+#include "rmon/sgermon.h"
 
 #include "uti/sge_stdio.h"
 #include "uti/sge_unistd.h"
+#include "uti/sge_log.h"
 
-#include "sge_log.h"
-#include "msg_sge.h"
-#include "sgermon.h"
+#include "cull/cull.h"
+
 #include "basis_types.h"
 #include "sgedefs.h"
 #include "exec_ifm.h"
 #include "pdc.h"
-#include "cull.h"
+#include "msg_sge.h"
 
 #if !defined(CRAY)
 #include "procfs.h"
@@ -200,8 +202,7 @@ static void touch_time_stamp(const char *d_name, int time_stamp, lnk_link_t *job
    return;
 }
 
-void procfs_kill_addgrpid(gid_t add_grp_id, int sig,
-   tShepherd_trace shepherd_trace)
+void procfs_kill_addgrpid(gid_t add_grp_id, int sig, tShepherd_trace shepherd_trace)
 {
    char procnam[128];
    int i;
@@ -229,10 +230,7 @@ void procfs_kill_addgrpid(gid_t add_grp_id, int sig,
    max_groups = sge_sysconf(SGE_SYSCONF_NGROUPS_MAX);
    if (max_groups <= 0)
       if (shepherd_trace) {
-         char err_str[256];
-
-         sprintf(err_str, MSG_SGE_NGROUPS_MAXOSRECONFIGURATIONNECESSARY );
-         shepherd_trace(err_str);
+         shepherd_trace(MSG_SGE_NGROUPS_MAXOSRECONFIGURATIONNECESSARY);
       }
 /*
  * INSURE detects a WRITE_OVERFLOW when getgroups was invoked (LINUX).
@@ -245,10 +243,7 @@ void procfs_kill_addgrpid(gid_t add_grp_id, int sig,
 #endif
    if (list == NULL)
       if (shepherd_trace) {
-         char err_str[256];
-
-         sprintf(err_str, MSG_SGE_PROCFSKILLADDGRPIDMALLOCFAILED );
-         shepherd_trace(err_str);
+         shepherd_trace(MSG_SGE_PROCFSKILLADDGRPIDMALLOCFAILED);
       }
 
    pt_open();
@@ -381,7 +376,7 @@ FCLOSE_ERROR:
       }
    }
    pt_close();
-   free(list);
+   sge_free(&list);
    DEXIT;
 }
 
@@ -441,14 +436,14 @@ time_t last_time
 
    max_groups = sge_sysconf(SGE_SYSCONF_NGROUPS_MAX);
    if (max_groups <= 0) {
-      ERROR((SGE_EVENT, MSG_SGE_NGROUPS_MAXOSRECONFIGURATIONNECESSARY));
+      ERROR((SGE_EVENT, SFNMAX, MSG_SGE_NGROUPS_MAXOSRECONFIGURATIONNECESSARY));
       DEXIT;
       return 1;  
    }   
 
    list = (gid_t*) malloc(max_groups*sizeof(gid_t));
    if (list == NULL) {
-      ERROR((SGE_EVENT, MSG_SGE_PTDISPATCHPROCTOJOBMALLOCFAILED));
+      ERROR((SGE_EVENT, SFNMAX, MSG_SGE_PTDISPATCHPROCTOJOBMALLOCFAILED));
       DEXIT;
       return 1;
    }
@@ -703,7 +698,7 @@ time_t last_time
       break;
    } /* while */
 
-   free(list);
+   sge_free(&list);
 
    if (!dent) {/* visited all files in procfs */
 #if defined(LINUX)

@@ -648,7 +648,7 @@ void cull_show_job(lListElem *job, int flags, bool show_binding)
             const char *usage_name = lGetString(usage_elem, UA_name);
 
             if (strncmp(usage_name, binding_name, strlen(binding_name)) == 0) {
-               binding_inuse = strstr(usage_name, "="); 
+               binding_inuse = strstr(usage_name, "!"); 
                if (binding_inuse != NULL) {
                   binding_inuse++;
                }

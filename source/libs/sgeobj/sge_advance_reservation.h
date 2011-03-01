@@ -32,8 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_advance_reservation_AR_L.h"
-#include "sge_advance_reservation_ARA_L.h"
+#include "sgeobj/sge_advance_reservation_AR_L.h"
+#include "sgeobj/sge_advance_reservation_ARA_L.h"
 
 /* values for AR_verify */
 #define AR_OPTION_VERIFY_STR "ev"

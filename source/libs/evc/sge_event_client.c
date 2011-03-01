@@ -32,35 +32,38 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-
 #include <string.h>
 #include <strings.h>
 
-#include "sge_unistd.h"
-#include "commlib.h"
-#include "commproc.h"
-#include "sge_prog.h"
-#include "sgermon.h"
-#include "sge_profiling.h"
-#include "qm_name.h"
-#include "sge_log.h"
-#include "sge_time.h"
-#include "sge_answer.h"
-#include "sge_report.h"
-#include "sge_conf.h"
-#include "sge_error_class.h"
+#include "rmon/sgermon.h"
 
-#include "sge_mtutil.h"
-#include "evc/sge_event_client.h"
-#include "sgeobj/sge_ack.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_profiling.h"
+#include "uti/sge_log.h"
+#include "uti/sge_time.h"
+#include "uti/sge_error_class.h"
 
+#include "lck/sge_mtutil.h"
+
+#include "comm/commlib.h"
+#include "comm/commproc.h"
+
+#include "gdi/qm_name.h"
 #include "gdi/sge_gdi2.h"
+#include "gdi/msg_gdilib.h"
+
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_report.h"
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_ack.h"
 
 #include "sgeobj/sge_event.h"
 
-#include "msg_evclib.h"
+#include "evc/sge_event_client.h"
+#include "evc/msg_evclib.h"
+
 #include "msg_common.h"
-#include "msg_gdilib.h"
 
 #define EVC_LAYER TOP_LAYER
 
@@ -270,15 +273,7 @@
 *                                 It will stay in the busy state until it
 *                                 is explicitly released by the client 
 *                                 (calling ec_set_busy(0)) 
-*        EV_THROTTLE_FLUSH      - when delivering events qmaster sends
-*                                 events in the regular event delivery 
-*                                 intervals. Each time events are sent the 
-*                                 busy counter (EV_busy) is increased. 
-*                                 The busy counter is set to 0 only when events 
-*                                 are acknowledged by the event client. Event 
-*                                 flushing is delayed depending on the busy 
-*                                 counter the more event flushing is delayed.
-*                                 
+*
 *  NOTES
 *
 *  SEE ALSO
@@ -778,9 +773,7 @@ void sge_evc_class_destroy(sge_evc_class_t **pst)
    }   
       
    sge_evc_destroy((sge_evc_t **)&((*pst)->sge_evc_handle));
-   FREE(*pst);
-   *pst = NULL;
-
+   sge_free(pst);
    DRETURN_VOID;
 }
 
@@ -804,8 +797,7 @@ static void sge_evc_destroy(sge_evc_t **sge_evc)
    lFreeList(&((*sge_evc)->event_control.new_events));
 
    lFreeElem(&((*sge_evc)->ec));
-   FREE(*sge_evc);
-   *sge_evc = NULL;
+   sge_free(sge_evc);
    
    DRETURN_VOID;
 }
@@ -815,7 +807,7 @@ static void sge_evc_destroy(sge_evc_t **sge_evc)
 *     ec_prepare_registration() -- prepare registration at server
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     bool 
 *     ec_prepare_registration(ev_registration_id id, const char *name) 
@@ -985,7 +977,7 @@ static lListElem* ec2_get_event_client(sge_evc_class_t *thiz)
 *     ec_mark4registration() -- new registration is required
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     void 
 *     ec_mark4registration(void) 
@@ -1026,7 +1018,7 @@ static void ec2_mark4registration(sge_evc_class_t *thiz)
 *     ec_need_new_registration() -- is a reregistration neccessary?
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     bool ec_need_new_registration(void) 
 *
@@ -1051,7 +1043,7 @@ static bool ec2_need_new_registration(sge_evc_class_t *thiz)
 *     ec_set_edtime() -- set the event delivery interval
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     int 
 *     ec_set_edtime(int interval) 
@@ -1086,7 +1078,7 @@ static int ec2_set_edtime(sge_evc_class_t *thiz, int interval)
    DENTER(EVC_LAYER, "ec2_set_edtime");
    
    if (sge_evc->ec == NULL) {
-      ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
+      ERROR((SGE_EVENT, SFNMAX, MSG_EVENT_UNINITIALIZED_EC));
    } else {
       ret = (lGetUlong(sge_evc->ec, EV_d_time) != interval);
       if (ret > 0) {
@@ -1103,7 +1095,7 @@ static int ec2_set_edtime(sge_evc_class_t *thiz, int interval)
 *     ec_get_edtime() -- get the current event delivery interval
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     int 
 *     ec_get_edtime(void) 
@@ -1125,7 +1117,7 @@ static int ec2_get_edtime(sge_evc_class_t *thiz)
    DENTER(EVC_LAYER, "ec2_get_edtime");
 
    if (sge_evc->ec == NULL) {
-      ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
+      ERROR((SGE_EVENT, SFNMAX, MSG_EVENT_UNINITIALIZED_EC));
    } else {
       interval = lGetUlong(sge_evc->ec, EV_d_time);
    }
@@ -1138,7 +1130,7 @@ static int ec2_get_edtime(sge_evc_class_t *thiz)
 *     ec_set_flush_delay() -- set flush delay parameter
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     bool 
 *     ec_set_flush_delay(u_long32 flush_delay) 
@@ -1167,7 +1159,7 @@ static bool ec2_set_flush_delay(sge_evc_class_t *thiz, int flush_delay)
    DENTER(EVC_LAYER, "ec2_set_flush_delay");
    
    if (sge_evc->ec == NULL) {
-      ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
+      ERROR((SGE_EVENT, SFNMAX, MSG_EVENT_UNINITIALIZED_EC));
    } else {
       ret = (lGetUlong(sge_evc->ec, EV_flush_delay) != flush_delay) ? true : false;
 
@@ -1185,7 +1177,7 @@ static bool ec2_set_flush_delay(sge_evc_class_t *thiz, int flush_delay)
 *     ec_get_flush_delay() -- get configured flush delay paramter
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     int 
 *     ec_get_flush_delay(void) 
@@ -1208,7 +1200,7 @@ static int ec2_get_flush_delay(sge_evc_class_t *thiz)
    DENTER(EVC_LAYER, "ec2_get_flush_delay");
 
    if (sge_evc->ec == NULL) {
-      ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
+      ERROR((SGE_EVENT, SFNMAX, MSG_EVENT_UNINITIALIZED_EC));
    } else {
       flush_delay = lGetUlong(sge_evc->ec, EV_flush_delay);
    }
@@ -1222,7 +1214,7 @@ static int ec2_get_flush_delay(sge_evc_class_t *thiz)
 *     ec_set_edtime() -- set the event client busy handling
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     bool 
 *     ec_set_busy_handling(ev_busy_handling handling) 
@@ -1257,7 +1249,7 @@ static bool ec2_set_busy_handling(sge_evc_class_t *thiz, ev_busy_handling handli
    DENTER(EVC_LAYER, "ec2_set_busy_handling");
    
    if (sge_evc->ec == NULL) {
-      ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
+      ERROR((SGE_EVENT, SFNMAX, MSG_EVENT_UNINITIALIZED_EC));
    } else {
       DPRINTF(("EVC: change event client to "sge_U32CFormat"\n", (u_long32)handling));
 
@@ -1277,7 +1269,7 @@ static bool ec2_set_busy_handling(sge_evc_class_t *thiz, ev_busy_handling handli
 *     ec_get_busy_handling() -- get configured busy handling policy
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     ev_busy_handling 
 *     ec_get_busy_handling(void) 
@@ -1300,7 +1292,7 @@ static ev_busy_handling ec2_get_busy_handling(sge_evc_class_t *thiz)
    DENTER(EVC_LAYER, "ec2_get_busy_handling");
 
    if (sge_evc->ec == NULL) {
-      ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
+      ERROR((SGE_EVENT, SFNMAX, MSG_EVENT_UNINITIALIZED_EC));
    } else {
       handling = (ev_busy_handling)lGetUlong(sge_evc->ec, EV_busy_handling);
    }
@@ -1319,7 +1311,7 @@ static bool ec2_deregister_local(sge_evc_class_t *thiz)
 
    /* not yet initialized? Nothing to shutdown */
    if (sge_evc == NULL || sge_evc->ec == NULL) {
-      ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
+      ERROR((SGE_EVENT, SFNMAX, MSG_EVENT_UNINITIALIZED_EC));
    } else {
       local_t *evc_local = &(thiz->ec_local);
       u_long32 id = sge_evc->ec_reg_id;
@@ -1391,7 +1383,7 @@ ec2_register_local(sge_evc_class_t *thiz, bool exit_on_qmaster_down, lList** alp
    DPRINTF(("trying to register as internal client with preset %d (0 means EV_ID_ANY)\n", (int)sge_evc->ec_reg_id));
 
    if (sge_evc->ec == NULL) {
-      WARNING((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
+      WARNING((SGE_EVENT, SFNMAX, MSG_EVENT_UNINITIALIZED_EC));
       ret = false;
    } else {
       lList *alp = NULL;
@@ -1463,7 +1455,7 @@ ec2_register_local(sge_evc_class_t *thiz, bool exit_on_qmaster_down, lList** alp
 *     ec_register() -- register at the event server
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     bool 
 *     ec_register(void) 
@@ -1494,7 +1486,7 @@ static bool ec2_register(sge_evc_class_t *thiz, bool exit_on_qmaster_down, lList
    PROF_START_MEASUREMENT(SGE_PROF_EVENTCLIENT);
 
    if (sge_evc->ec == NULL) {
-      WARNING((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
+      WARNING((SGE_EVENT, SFNMAX, MSG_EVENT_UNINITIALIZED_EC));
    } else {
       lList *lp, *alp;
       lListElem *aep;
@@ -1620,7 +1612,7 @@ static bool ec2_register(sge_evc_class_t *thiz, bool exit_on_qmaster_down, lList
 *     ec_deregister() -- deregister from the event server
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     int 
 *     ec_deregister(void) 
@@ -1693,7 +1685,7 @@ static bool ec2_deregister(sge_evc_class_t *thiz)
 *     ec_subscribe() -- Subscribe an event
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     bool 
 *     ec_subscribe(ev_event event) 
@@ -1729,7 +1721,7 @@ static bool ec2_subscribe(sge_evc_class_t *thiz, ev_event event)
    PROF_START_MEASUREMENT(SGE_PROF_EVENTCLIENT);
 
    if (sge_evc->ec == NULL) {
-      ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
+      ERROR((SGE_EVENT, SFNMAX, MSG_EVENT_UNINITIALIZED_EC));
    } else if (event < sgeE_ALL_EVENTS || event >= sgeE_EVENTSIZE) {
       WARNING((SGE_EVENT, MSG_EVENT_ILLEGALEVENTID_I, event));
    } else {
@@ -1759,7 +1751,7 @@ static void ec2_add_subscriptionElement(sge_evc_class_t *thiz, ev_event event, b
    DENTER(EVC_LAYER, "ec2_add_subscriptionElement");
 
    if (sge_evc->ec == NULL) {
-      ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
+      ERROR((SGE_EVENT, SFNMAX, MSG_EVENT_UNINITIALIZED_EC));
    } else if (event < sgeE_ALL_EVENTS || event >= sgeE_EVENTSIZE) {
       WARNING((SGE_EVENT, MSG_EVENT_ILLEGALEVENTID_I, event));
    } else {
@@ -1797,7 +1789,7 @@ static void ec2_mod_subscription_flush(sge_evc_class_t *thiz, ev_event event, bo
    DENTER(EVC_LAYER, "ec2_mod_subscription_flush");
   
    if (sge_evc->ec == NULL) {
-      ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
+      ERROR((SGE_EVENT, SFNMAX, MSG_EVENT_UNINITIALIZED_EC));
    } else if (event < sgeE_ALL_EVENTS || event >= sgeE_EVENTSIZE) {
       WARNING((SGE_EVENT, MSG_EVENT_ILLEGALEVENTID_I, event));
    } else {
@@ -1852,7 +1844,7 @@ static bool ec2_mod_subscription_where(sge_evc_class_t *thiz, ev_event event, co
    DENTER(EVC_LAYER, "ec2_mod_subscription_where");
  
    if (sge_evc->ec == NULL) {
-      ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
+      ERROR((SGE_EVENT, SFNMAX, MSG_EVENT_UNINITIALIZED_EC));
    } else if (event <= sgeE_ALL_EVENTS || event >= sgeE_EVENTSIZE) {
       WARNING((SGE_EVENT, MSG_EVENT_ILLEGALEVENTID_I, event));
    } else {
@@ -1883,7 +1875,7 @@ static void ec2_remove_subscriptionElement(sge_evc_class_t *thiz, ev_event event
    DENTER(EVC_LAYER, "ec2_remove_subscriptionElement");
 
    if (sge_evc->ec == NULL) {
-      ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
+      ERROR((SGE_EVENT, SFNMAX, MSG_EVENT_UNINITIALIZED_EC));
    } else if (event < sgeE_ALL_EVENTS || event >= sgeE_EVENTSIZE) {
       WARNING((SGE_EVENT, MSG_EVENT_ILLEGALEVENTID_I, event));
    } else {
@@ -1906,7 +1898,7 @@ static void ec2_remove_subscriptionElement(sge_evc_class_t *thiz, ev_event event
 *     ec_subscribe_all() -- subscribe all events
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     bool 
 *     ec_subscribe_all(void) 
@@ -1940,7 +1932,7 @@ static bool ec2_subscribe_all(sge_evc_class_t *thiz)
 *     ec_unsubscribe() -- unsubscribe an event
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     bool 
 *     ec_unsubscribe(ev_event event) 
@@ -1982,7 +1974,7 @@ static bool ec2_unsubscribe(sge_evc_class_t *thiz, ev_event event)
    PROF_START_MEASUREMENT(SGE_PROF_EVENTCLIENT);
 
    if (sge_evc->ec == NULL) {
-      ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
+      ERROR((SGE_EVENT, SFNMAX, MSG_EVENT_UNINITIALIZED_EC));
    } else if (event < sgeE_ALL_EVENTS || event >= sgeE_EVENTSIZE) {
       WARNING((SGE_EVENT, MSG_EVENT_ILLEGALEVENTID_I, event ));
    } else {
@@ -1997,7 +1989,7 @@ static bool ec2_unsubscribe(sge_evc_class_t *thiz, ev_event event)
 
       } else {
          if (event == sgeE_QMASTER_GOES_DOWN || event == sgeE_SHUTDOWN || event == sgeE_ACK_TIMEOUT) {
-            ERROR((SGE_EVENT, MSG_EVENT_HAVETOHANDLEEVENTS));
+            ERROR((SGE_EVENT, SFNMAX, MSG_EVENT_HAVETOHANDLEEVENTS));
          } else {
             ec2_remove_subscriptionElement(thiz, event);
          }
@@ -2018,7 +2010,7 @@ static bool ec2_unsubscribe(sge_evc_class_t *thiz, ev_event event)
 *     ec_unsubscribe_all() -- unsubscribe all events
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     bool 
 *     ec_unsubscribe_all(void) 
@@ -2051,7 +2043,7 @@ static bool ec2_unsubscribe_all(sge_evc_class_t *thiz)
 *     ec_get_flush() -- get flushing information for an event
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     int 
 *     ec_get_flush(ev_event event) 
@@ -2084,14 +2076,14 @@ static int ec2_get_flush(sge_evc_class_t *thiz, ev_event event)
    PROF_START_MEASUREMENT(SGE_PROF_EVENTCLIENT);
 
    if (sge_evc->ec == NULL) {
-      ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
+      ERROR((SGE_EVENT, SFNMAX, MSG_EVENT_UNINITIALIZED_EC));
    } else if (event < sgeE_ALL_EVENTS || event >= sgeE_EVENTSIZE) {
       WARNING((SGE_EVENT, MSG_EVENT_ILLEGALEVENTID_I, event ));
    } else {
       lListElem *sub_event = lGetElemUlong(lGetList(sge_evc->ec, EV_subscribed), EVS_id, event);
 
       if (sub_event == NULL) {
-         ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
+         ERROR((SGE_EVENT, SFNMAX, MSG_EVENT_UNINITIALIZED_EC));
       } else if (lGetBool(sub_event, EVS_flush)) {
          ret = lGetUlong(sub_event, EVS_interval);
       }
@@ -2107,7 +2099,7 @@ static int ec2_get_flush(sge_evc_class_t *thiz, ev_event event)
 *     ec_set_flush() -- set flushing information for an event
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     bool 
 *     ec_set_flush(ev_event event, int flush) 
@@ -2145,7 +2137,7 @@ static bool ec2_set_flush(sge_evc_class_t *thiz, ev_event event, bool flush, int
    PROF_START_MEASUREMENT(SGE_PROF_EVENTCLIENT);
 
    if (sge_evc->ec == NULL) {
-      ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
+      ERROR((SGE_EVENT, SFNMAX, MSG_EVENT_UNINITIALIZED_EC));
    } else if (event < sgeE_ALL_EVENTS || event >= sgeE_EVENTSIZE) {
       WARNING((SGE_EVENT, MSG_EVENT_ILLEGALEVENTID_I, event ));
    } else {
@@ -2160,9 +2152,8 @@ static bool ec2_set_flush(sge_evc_class_t *thiz, ev_event event, bool flush, int
          lListElem *sub_event = lGetElemUlong(lGetList(sge_evc->ec, EV_subscribed), EVS_id, event);
 
          if (sub_event == NULL) {
-            ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
-         } 
-         else { 
+            ERROR((SGE_EVENT, SFNMAX, MSG_EVENT_UNINITIALIZED_EC));
+         } else {
             ec2_mod_subscription_flush(thiz, event, EV_FLUSHED, interval);
          }
          if (lGetBool(sge_evc->ec, EV_changed)) {
@@ -2181,7 +2172,7 @@ static bool ec2_set_flush(sge_evc_class_t *thiz, ev_event event, bool flush, int
 *     ec_unset_flush() -- unset flushing information
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     bool 
 *     ec_unset_flush(ev_event event) 
@@ -2213,18 +2204,17 @@ static bool ec2_unset_flush(sge_evc_class_t *thiz, ev_event event)
    PROF_START_MEASUREMENT(SGE_PROF_EVENTCLIENT);
 
    if (sge_evc->ec == NULL) {
-      ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
+      ERROR((SGE_EVENT, SFNMAX, MSG_EVENT_UNINITIALIZED_EC));
    } else if (event < sgeE_ALL_EVENTS || event >= sgeE_EVENTSIZE) {
-      WARNING((SGE_EVENT, MSG_EVENT_ILLEGALEVENTID_I, event ));
+      WARNING((SGE_EVENT, MSG_EVENT_ILLEGALEVENTID_I, event));
    } else {
       lListElem *sub_event = lGetElemUlong(lGetList(sge_evc->ec, EV_subscribed), EVS_id, event);
 
       if (sub_event == NULL) {
-         ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
-      } 
-      else { 
+         ERROR((SGE_EVENT, SFNMAX, MSG_EVENT_UNINITIALIZED_EC));
+      } else {
          ec2_mod_subscription_flush(thiz, event, EV_NOT_FLUSHED, EV_NO_FLUSH);
-      } 
+      }
 
       if (lGetBool(sge_evc->ec, EV_changed)) {
          ret = true;
@@ -2241,7 +2231,7 @@ static bool ec2_unset_flush(sge_evc_class_t *thiz, ev_event event)
 *     ec_subscribe_flush() -- subscribe an event and set flushing
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     bool 
 *     ec_subscribe_flush(ev_event event, int flush) 
@@ -2319,7 +2309,7 @@ static bool ec2_set_busy(sge_evc_class_t *thiz, int busy)
    DENTER(EVC_LAYER, "ec2_set_busy");
 
    if (sge_evc->ec == NULL) {
-      ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
+      ERROR((SGE_EVENT, SFNMAX, MSG_EVENT_UNINITIALIZED_EC));
    } else {
       lSetUlong(sge_evc->ec, EV_busy, busy);
       ret = true;
@@ -2361,7 +2351,7 @@ static bool ec2_get_busy(sge_evc_class_t *thiz)
    DENTER(EVC_LAYER, "ec2_get_busy");
 
    if (sge_evc->ec == NULL) {
-      ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
+      ERROR((SGE_EVENT, SFNMAX, MSG_EVENT_UNINITIALIZED_EC));
    } else {
       /* JG: TODO: EV_busy should be boolean datatype */
       ret = (lGetUlong(sge_evc->ec, EV_busy) > 0) ? true : false;
@@ -2399,7 +2389,7 @@ static bool ec2_set_session(sge_evc_class_t *thiz, const char *session)
    DENTER(EVC_LAYER, "ec2_set_session");
 
    if (sge_evc->ec == NULL) {
-      ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
+      ERROR((SGE_EVENT, SFNMAX, MSG_EVENT_UNINITIALIZED_EC));
    } else {
       lSetString(sge_evc->ec, EV_session, session);
 
@@ -2437,7 +2427,7 @@ static const char *ec2_get_session(sge_evc_class_t *thiz)
    DENTER(EVC_LAYER, "ec2_get_session");
 
    if (sge_evc->ec == NULL) {
-      ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
+      ERROR((SGE_EVENT, SFNMAX, MSG_EVENT_UNINITIALIZED_EC));
    } else {
       ret = lGetString(sge_evc->ec, EV_session);
    }
@@ -2464,7 +2454,7 @@ static ev_registration_id ec2_get_id(sge_evc_class_t *thiz)
 
    DENTER(EVC_LAYER, "ec2_get_id");
    if (sge_evc->ec == NULL) {
-      ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
+      ERROR((SGE_EVENT, SFNMAX, MSG_EVENT_UNINITIALIZED_EC));
       DRETURN(EV_ID_INVALID);
    }
    
@@ -2476,7 +2466,7 @@ static ev_registration_id ec2_get_id(sge_evc_class_t *thiz)
 *     ec_config_changed() -- tell system the config has changed
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     static void 
 *     ec_config_changed(void) 
@@ -2571,7 +2561,7 @@ static bool ec2_ack(sge_evc_class_t *thiz)
 *     ec_commit() -- commit configuration changes
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     bool 
 *     ec_commit(void) 
@@ -2653,7 +2643,7 @@ static bool ec2_commit(sge_evc_class_t *thiz, lList **alpp)
 *     ec_commit() -- commit configuration changes via gdi multi request
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     int 
 *     ec_commit_multi(lList **malpp) 
@@ -2744,7 +2734,7 @@ static bool ec2_commit_multi(sge_evc_class_t *thiz, lList **malpp, state_gdi_mul
 *     ec_get() -- look for new events
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     bool 
 *     ec_get(lList **event_list) 
@@ -2791,7 +2781,7 @@ static bool ec2_get(sge_evc_class_t *thiz, lList **event_list, bool exit_on_qmas
    PROF_START_MEASUREMENT(SGE_PROF_EVENTCLIENT);
 
    if (sge_evc->ec == NULL) {
-      ERROR((SGE_EVENT, MSG_EVENT_UNINITIALIZED_EC));
+      ERROR((SGE_EVENT, SFNMAX, MSG_EVENT_UNINITIALIZED_EC));
       ret = false;
    } else if (thiz->ec_need_new_registration(thiz)) {
       sge_evc->next_event = 1;
@@ -2938,10 +2928,9 @@ static bool ec2_get(sge_evc_class_t *thiz, lList **event_list, bool exit_on_qmas
                                      lGetUlong(sge_evc->ec, EV_id), NULL, &alp)
                                     != CL_RETVAL_OK) {
             answer_list_output(&alp);
-            WARNING((SGE_EVENT, MSG_COMMD_FAILEDTOSENDACKEVENTDELIVERY ));
+            WARNING((SGE_EVENT, SFNMAX, MSG_COMMD_FAILEDTOSENDACKEVENTDELIVERY));
          } else {
-            DPRINTF(("Sent ack for all events lower or equal %d\n", 
-                     (sge_evc->next_event - 1)));
+            DPRINTF(("Sent ack for all events lower or equal %d\n", (sge_evc->next_event - 1)));
          }
       }
    }
@@ -2978,7 +2967,7 @@ static bool ec2_get(sge_evc_class_t *thiz, lList **event_list, bool exit_on_qmas
 *     ck_event_number() -- test event numbers
 *
 *  SYNOPSIS
-*     #include "sge_event_client.h"
+*     #include "evc/sge_event_client.h"
 *
 *     static bool 
 *     ck_event_number(lList *lp, u_long32 *waiting_for, 
@@ -3076,7 +3065,7 @@ static bool ck_event_number(lList *lp, u_long32 *waiting_for, u_long32 *wrong_nu
                   do not change waiting_for because 
                   we still wait for this number 
                */
-               ERROR((SGE_EVENT, MSG_EVENT_EVENTSWITHNOINCREASINGNUMBERS ));
+               ERROR((SGE_EVENT, SFNMAX, MSG_EVENT_EVENTSWITHNOINCREASINGNUMBERS));
                if (wrong_number) {
                   *wrong_number = j;
                }   
@@ -3153,7 +3142,7 @@ static bool get_event_list(sge_evc_class_t *thiz, int sync, lList **report_list,
       ret = false;
    } else {
       if (cull_unpack_list(&pb, report_list)) {
-         ERROR((SGE_EVENT, MSG_LIST_FAILEDINCULLUNPACKREPORT ));
+         ERROR((SGE_EVENT, SFNMAX, MSG_LIST_FAILEDINCULLUNPACKREPORT));
          ret = false;
       }
       clear_packbuffer(&pb);

@@ -34,11 +34,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "basis_types.h"
-#include "sge_all_listsL.h"
-#include "sge_answer.h"
-#include "sge_utility.h"
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_utility.h"
 
+#include "basis_types.h"
 
 int main(int argc, char *argv[]) 
 {

@@ -36,32 +36,34 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#include "uti/sge_stdio.h"
-#include "symbols.h"
-#include "sge_string.h"
-#include "sge_str.h"
-#include "parse_qsub.h"
-#include "parse_job_cull.h"
-#include "sge_path_alias.h"
-#include "parse.h"
-#include "sgermon.h"
-#include "cull_parse_util.h"
-#include "unparse_job_cull.h"
-#include "sge_language.h"
-#include "sge_stdlib.h"
-#include "sge_io.h"
-#include "sge_prog.h"
-#include "setup_path.h"
-#include "sge_log.h"
-#include "sge_binding.h"
-#include "sge_binding_BN_L.h"
+#include "rmon/sgermon.h"
 
+#include "uti/sge_stdio.h"
+#include "uti/sge_string.h"
+#include "uti/sge_language.h"
+#include "uti/sge_stdlib.h"
+#include "uti/sge_io.h"
+#include "uti/sge_prog.h"
+#include "uti/setup_path.h"
+#include "uti/sge_log.h"
+
+#include "sgeobj/cull_parse_util.h"
+#include "sgeobj/sge_path_alias.h"
+#include "sgeobj/parse.h"
+#include "sgeobj/sge_str.h"
+#include "sgeobj/sge_binding.h"
+#include "sgeobj/sge_binding_BN_L.h"
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_centry.h"
 #include "sgeobj/sge_job.h"
 #include "sgeobj/sge_jsv.h"
 #include "sgeobj/sge_mailrec.h"
 #include "sgeobj/sge_var.h"
+
+#include "symbols.h"
+#include "parse_qsub.h"
+#include "parse_job_cull.h"
+#include "unparse_job_cull.h"
 
 #include "msg_common.h"
 
@@ -111,7 +113,7 @@ lList *cull_parse_job_parameter(u_long32 uid, const char *username, const char *
    lListElem *ep;
    lList *answer = NULL;
    lList *path_alias = NULL;
-   char error_string[1024 + 1];
+   char error_string[MAX_STRING_SIZE];
 
    DENTER(TOP_LAYER, "cull_parse_job_parameter"); 
 
@@ -361,9 +363,8 @@ lList *cull_parse_job_parameter(u_long32 uid, const char *username, const char *
 
    if ((ep = lGetElemStr(cmdline, SPA_switch, "-help"))) {
       lRemoveElem(cmdline, &ep);
-      sprintf(error_string, MSG_ANSWER_HELPNOTALLOWEDINCONTEXT);
-      answer_list_add(&answer, error_string, 
-                      STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
+      answer_list_add_sprintf(&answer, STATUS_ENOIMP, ANSWER_QUALITY_ERROR,
+                              MSG_ANSWER_HELPNOTALLOWEDINCONTEXT);
       DRETURN(answer);
    }
 
@@ -588,7 +589,7 @@ lList *cull_parse_job_parameter(u_long32 uid, const char *username, const char *
       lSetList(*pjob, JB_path_aliases, lCopyList("PathAliases", path_alias));
 
       if (is_cwd) {
-         FREE(path);
+         sge_free(&path);
       }
    }
 
@@ -627,7 +628,7 @@ lList *cull_parse_job_parameter(u_long32 uid, const char *username, const char *
    }
    
    for_each(ep, cmdline) {
-      sprintf(error_string, MSG_ANSWER_UNKOWNOPTIONX_S, 
+      sprintf(error_string, MSG_ANSWER_UNKOWNOPTIONX_S,
          lGetString(ep, SPA_switch));
       cp = lGetString(ep, SPA_switch_arg);
       if (cp) {
@@ -635,7 +636,7 @@ lList *cull_parse_job_parameter(u_long32 uid, const char *username, const char *
          strcat(error_string, cp);
       }
       strcat(error_string, "\n");
-      answer_list_add(&answer, error_string, 
+      answer_list_add(&answer, error_string,
                       STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
    } 
 
@@ -764,10 +765,9 @@ u_long32 flags
       if (script_file && strcmp(script_file, "-")) {
          /* are we able to access this file? */
          if ((fp = fopen(script_file, "r")) == NULL) {
-            snprintf(error_string, MAX_STRING_SIZE, 
+            snprintf(error_string, sizeof(error_string),
                      MSG_FILE_ERROROPENINGXY_SS, script_file, strerror(errno));
-            answer_list_add(&answer, error_string, 
-                            STATUS_EDISK, ANSWER_QUALITY_ERROR);
+            answer_list_add(&answer, error_string, STATUS_EDISK, ANSWER_QUALITY_ERROR);
             DRETURN(answer);
          }
          
@@ -777,9 +777,9 @@ u_long32 flags
          filestrptr = sge_file2string(script_file, &script_len);
 
          if (filestrptr == NULL) {
-            snprintf(error_string, MAX_STRING_SIZE, 
+            snprintf(error_string, sizeof(error_string),
                      MSG_ANSWER_ERRORREADINGFROMFILEX_S, script_file);
-            answer_list_add(&answer, error_string, 
+            answer_list_add(&answer, error_string,
                             STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DRETURN(answer);
          }
@@ -794,7 +794,7 @@ u_long32 flags
          else if (filestrptr[0] == '\0') {
             answer_list_add(&answer, MSG_ANSWER_NOINPUT, 
                             STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-            FREE(filestrptr);
+            sge_free(&filestrptr);
             DRETURN(answer);
          }
       }
@@ -966,13 +966,13 @@ u_long32 flags
                                   quality);
                } /* for_each (aep in alp) */
 
-               FREE(str_table);
+               sge_free(&str_table);
                lFreeList(&alp);
-               FREE(free_me);
+               sge_free(&free_me);
                parameters = NULL;
                
                if (do_exit) {
-                  FREE(filestrptr);
+                  sge_free(&filestrptr);
                   DRETURN(answer);
                }
 
@@ -984,7 +984,7 @@ u_long32 flags
                }
             } /* if (parameters is not empty) */
             else {
-               FREE (free_me);
+               sge_free(&free_me);
                parameters = NULL;
             }
          } /* while (*s != '\0') */
@@ -1011,7 +1011,7 @@ u_long32 flags
    }
 
    if (!lp_new_opts) {
-      FREE(filestrptr);
+      sge_free(&filestrptr);
       DRETURN(answer);
    }
 
@@ -1027,11 +1027,11 @@ u_long32 flags
       }
    }
 
-   FREE(filestrptr);
+   sge_free(&filestrptr);
 
    DRETURN(answer);
 FCLOSE_ERROR:
-   snprintf(error_string, MAX_STRING_SIZE,
+   snprintf(error_string, sizeof(error_string),
             MSG_FILE_ERRORCLOSEINGXY_SS, script_file, strerror(errno));
    answer_list_add(&answer, error_string,
                    STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);

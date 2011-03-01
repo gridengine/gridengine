@@ -35,25 +35,30 @@
 #include <string.h>
 #include <signal.h>
 
-#include "basis_types.h"
-#include "commlib.h"
-#include "dispatcher.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "msg_execd.h"
-#include "sge_string.h"
-#include "sge_hostname.h"
-#include "sge_security.h"
-#include "sig_handlers.h"
-#include "sge_profiling.h"
-#include "sge_time.h"
-#include "qm_name.h"
-#include "execd.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_string.h"
+#include "uti/sge_hostname.h"
+#include "uti/sge_profiling.h"
+#include "uti/sge_time.h"
 #include "uti/sge_monitor.h"
-#include "sge_bootstrap.h"
-#include "sge_prog.h"
-#include "sgeobj/sge_ack.h"
+#include "uti/sge_bootstrap.h"
+#include "uti/sge_prog.h"
+
 #include "gdi/sge_gdi2.h"
+#include "gdi/sge_security.h"
+#include "gdi/qm_name.h"
+
+#include "sgeobj/sge_ack.h"
+
+#include "comm/commlib.h"
+
+#include "basis_types.h"
+#include "dispatcher.h"
+#include "msg_execd.h"
+#include "sig_handlers.h"
+#include "execd.h"
 #include "execd_job_exec.h"
 #include "execd_ticket.h"
 #include "job_report_execd.h"
@@ -247,7 +252,7 @@ int sge_execd_process_messages(sge_gdi_ctx_class_t *ctx)
                    */ 
                   sge_set_qmrestart_time(now);
                   sge_set_delay_job_reports_flag(true);
-                  INFO((SGE_EVENT, MSG_EXECD_ENABLEDELEAYDJOBREPORTING));
+                  INFO((SGE_EVENT, SFNMAX, MSG_EXECD_ENABLEDELEAYDJOBREPORTING));
 
                   /* after a reconnect, we want to send a full load report - immediately */
                   execd_trash_load_report();
@@ -272,7 +277,7 @@ int sge_execd_process_messages(sge_gdi_ctx_class_t *ctx)
             if (sge_get_delay_job_reports_flag() && (now - sge_get_qmrestart_time() >= DELAYED_FINISHED_JOB_REPORTING_INTERVAL)) {
                   sge_set_delay_job_reports_flag(false);
                   sge_set_qmrestart_time(0);
-                  INFO((SGE_EVENT, MSG_EXECD_DISABLEDELEAYDJOBREPORTING));
+                  INFO((SGE_EVENT, SFNMAX, MSG_EXECD_DISABLEDELEAYDJOBREPORTING));
             }
 
             if (now - last_alive_check >= alive_check_interval) {

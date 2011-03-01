@@ -43,11 +43,11 @@
 
 #include "uti/sge_hostname.h"
 #include "uti/sge_language.h"
+#include "uti/sge_arch.h"
 
-#include "sge_arch.h"
-#include "version.h"
+#include "gdi/version.h"
+
 #include "basis_types.h"
-
 #include "msg_utilbin.h"
 
 void usage(void)
@@ -111,7 +111,7 @@ int main(int argc, char *argv[]) {
   if (sge_aliasing ) {
      const char *alias_path = sge_get_alias_path();
      cl_com_set_alias_file(alias_path);
-     FREE(alias_path);
+     sge_free(&alias_path);
   }
 
   retval = cl_com_cached_gethostbyname(unresolved_name, &resolved_name, NULL, &he, &system_error);
@@ -128,8 +128,7 @@ int main(int argc, char *argv[]) {
         unresolved_name = "NULL";
      }
      fprintf(stderr,"error resolving host "SFQ": %s (%s)\n",unresolved_name,cl_get_error_text(retval),err_text );
-     free(err_text); 
-     err_text = NULL;
+     sge_free(&err_text); 
      cl_com_cleanup_commlib();
      exit(1);
   }
@@ -157,13 +156,13 @@ int main(int argc, char *argv[]) {
            printf("SGE name: %s\n",resolved_name);
         }
 
-        printf(MSG_SYSTEM_ALIASES );
+        printf("%s", MSG_SYSTEM_ALIASES);
 
         for (tp = he->h_aliases; *tp; tp++)
            printf("%s ", *tp);
         printf("\n");
   
-        printf(MSG_SYSTEM_ADDRESSES );
+        printf("%s", MSG_SYSTEM_ADDRESSES);
         for (tp2 = he->h_addr_list; *tp2; tp2++)
            printf("%s ", inet_ntoa(* (struct in_addr *) *tp2));  /* inet_ntoa() is not MT save */
         printf("\n");  
@@ -171,7 +170,7 @@ int main(int argc, char *argv[]) {
         fprintf(stderr,"%s\n","could not get hostent struct");
      }
   }
-  free(resolved_name);
+  sge_free(&resolved_name);
   sge_free_hostent(&he);
 
   retval = cl_com_cleanup_commlib();

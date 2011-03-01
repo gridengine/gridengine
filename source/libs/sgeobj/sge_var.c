@@ -43,12 +43,13 @@
 
 #include "cull/cull.h"
 
+#include "sgeobj/sge_var.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/msg_sgeobjlib.h"
+
 #include "symbols.h"
-#include "sge_var.h"
 #include "sge.h"
-#include "sge_centry.h"
-#include "sge_answer.h"
-#include "msg_sgeobjlib.h"
 
 /****** sgeobj/var/-VariableList **********************************************
 *  NAME
@@ -314,7 +315,7 @@ void var_list_set_sharedlib_path(lList **varl)
          strcat(sharedlib_path, ":");
          strcat(sharedlib_path, old_value);
          lSetString(sharedlib_elem, VA_value, sharedlib_path);
-         sharedlib_path = sge_free(sharedlib_path);
+         sge_free(&sharedlib_path);
       } else {
          DPRINTF(("overwriting empty sharedlib path %s\n", 
                   sharedlib_path_name));
@@ -327,7 +328,7 @@ void var_list_set_sharedlib_path(lList **varl)
       lSetString(sharedlib_elem, VA_value, sge_sharedlib_path);
    }
 
-   sge_sharedlib_path = sge_free(sge_sharedlib_path);
+   sge_free(&sge_sharedlib_path);
    DEXIT;
 }
 
@@ -370,7 +371,7 @@ void var_list_dump_to_file(const lList *varl, FILE *file)
          fprintf(file, "%s=%s\n", env_name, env_value);
       } else {
          fprintf(file, "%s=%s\n", env_name, new_env_value);
-         free((void *)new_env_value);
+         sge_free(&new_env_value);
       }
    }
 }
@@ -832,7 +833,7 @@ int var_list_parse_from_string(lList **lpp, const char *variable_str,
    str_str = string_list(va_string, ",", NULL);
    if (!str_str || !*str_str) {
       *lpp = NULL;
-      FREE(va_string);
+      sge_free(&va_string);
       DEXIT;
       return 3;
    }
@@ -840,8 +841,8 @@ int var_list_parse_from_string(lList **lpp, const char *variable_str,
    if (!*lpp) {
       *lpp = lCreateList("variable list", VA_Type);
       if (!*lpp) {
-         FREE(va_string);
-         FREE(str_str);
+         sge_free(&va_string);
+         sge_free(&str_str);
          DEXIT;
          return 4;
       }
@@ -877,8 +878,8 @@ int var_list_parse_from_string(lList **lpp, const char *variable_str,
       }
       sge_free_saved_vars(context);
    }
-   FREE(va_string);
-   FREE(str_str);
+   sge_free(&va_string);
+   sge_free(&str_str);
    DRETURN(0);
 }
 
@@ -965,7 +966,7 @@ void getenv_and_set(lListElem *ep, char *variable)
    *a = '\0';
 
    lSetString(ep, VA_value, new_env_value);
-   sge_free(new_env_value);
+   sge_free(&new_env_value);
    return;
 
 }

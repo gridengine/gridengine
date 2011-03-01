@@ -33,10 +33,10 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "uti/sge_htable.h"
 
-#include "cl_lists.h"
-#include "cl_data_types.h"
-#include "sge_htable.h"
+#include "comm/lists/cl_lists.h"
+#include "comm/cl_data_types.h"
 
 typedef struct cl_connection_list_elem_t {
    cl_com_connection_t* connection;   /* data */

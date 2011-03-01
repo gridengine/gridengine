@@ -88,6 +88,7 @@ UTILIB_TEST_OBJS = \
          test_sge_profiling.o \
          test_sge_bitfield.o \
          test_sge_dstring.o \
+         test_sge_string.o \
          test_sge_uidgid.o \
          test_threads.o \
 			test_sge_sl.o \
@@ -98,6 +99,7 @@ UTILIB_TEST_PROGS = \
          test_sge_profiling \
          test_sge_bitfield \
          test_sge_dstring \
+         test_sge_string \
          test_sge_uidgid \
          test_threads \
 			test_sge_sl \
@@ -274,9 +276,8 @@ sge_binding_parse.o:	$(UTILIB_DIR)/sge_binding_parse.c
 ###############################################################################
 # test targets
 ###############################################################################
-test_sge_bitfield: test_sge_bitfield.o $(UTILIB) $(RMONLIB)
-#	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_bitfield $(LFLAGS) test_sge_bitfield.o $(UTILIB) $(RMONLIB) -lmalloc $(LIBS)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_bitfield $(LFLAGS) test_sge_bitfield.o $(UTILIB) $(RMONLIB) $(LIBS)
+test_sge_bitfield: test_sge_bitfield.o $(UTILIB) $(COMMLISTSLIB) $(LCKLIB) $(RMONLIB)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_bitfield $(LFLAGS) test_sge_bitfield.o $(UTILIB) $(COMMLISTSLIB) $(RMONLIB) $(LCKLIB) $(LIBS)
 
 test_sge_bitfield.o: $(UTILIB_DIR)/test_sge_bitfield.c
 	$(CC) $(CFLAGS) -c $(UTILIB_DIR)/test_sge_bitfield.c
@@ -286,6 +287,12 @@ test_sge_dstring: test_sge_dstring.o $(UTILIB) $(COMMLISTSLIB) $(LCKLIB) $(RMONL
 
 test_sge_dstring.o: $(UTILIB_DIR)/test_sge_dstring.c
 	$(CC) $(CFLAGS) -c $(UTILIB_DIR)/test_sge_dstring.c
+
+test_sge_string: test_sge_string.o $(UTILIB) $(COMMLISTSLIB) $(LCKLIB) $(RMONLIB)
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_string $(LFLAGS) test_sge_string.o -luti -lcommlists -llck -lrmon $(LIBS)
+
+test_sge_string.o: $(UTILIB_DIR)/test_sge_string.c
+	$(CC) $(CFLAGS) -c $(UTILIB_DIR)/test_sge_string.c
 
 test_sge_profiling: test_sge_profiling.o $(UTILIB) $(COMMLISTSLIB) $(LCKLIB) $(RMONLIB)
 	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_profiling $(LFLAGS) test_sge_profiling.o $(UTILIB) $(COMMLISTSLIB) $(LCKLIB) $(RMONLIB) $(LIBS)

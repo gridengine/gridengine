@@ -319,8 +319,8 @@ static int PE_test(void)
    
    unlink(file1);
    unlink(file2);
-   FREE(file1);
-   FREE(file2);
+   sge_free(&file1);
+   sge_free(&file2);
 
    answer_list_output(&alp);   
 
@@ -368,8 +368,8 @@ static int CAL_test(void)
    
    unlink(file1);
    unlink(file2);
-   FREE(file1);
-   FREE(file2);
+   sge_free(&file1);
+   sge_free(&file2);
    
    answer_list_output(&alp);   
    lFreeList(&alp);
@@ -425,8 +425,8 @@ static int CK_test(void)
    
    unlink(file1);
    unlink(file2);
-   FREE(file1);
-   FREE(file2);
+   sge_free(&file1);
+   sge_free(&file2);
    
    answer_list_output(&alp);   
 
@@ -533,10 +533,9 @@ static int STN_test() {
    
    unlink(file1);
    unlink(file2);
-   FREE(file1);
-   FREE(file2);
-
-   FREE(fields);
+   sge_free(&file1);
+   sge_free(&file2);
+   sge_free(&fields);
 
    answer_list_output(&alp);   
    
@@ -589,8 +588,8 @@ static int CE_test(void)
    
    unlink(file1);
    unlink(file2);
-   FREE(file1);
-   FREE(file2);
+   sge_free(&file1);
+   sge_free(&file2);
    
    answer_list_output(&alp);   
    
@@ -661,8 +660,8 @@ static int CEL_test(void)
    
    unlink(file1);
    unlink(file2);
-   FREE(file1);
-   FREE(file2);
+   sge_free(&file1);
+   sge_free(&file2);
    
    answer_list_output(&alp);   
    
@@ -698,7 +697,7 @@ static int diff(const char *file1, const char *file2)
       }
    }
    
-   FREE(argv);
+   sge_free(&argv);
    return ret;
 }
 
@@ -992,10 +991,9 @@ static int UU_test(void) {
    
    unlink(file1);
    unlink(file2);
-   FREE(file1);
-   FREE(file2);
-
-   FREE(fields);
+   sge_free(&file1);
+   sge_free(&file2);
+   sge_free(&fields);
    
    answer_list_output(&alp);   
    
@@ -1067,9 +1065,9 @@ static int PR_test(void) {
    
    unlink(file1);
    unlink(file2);
-   FREE(file1);
-   FREE(file2);
-   FREE(fields);
+   sge_free(&file1);
+   sge_free(&file2);
+   sge_free(&fields);
    
    answer_list_output(&alp);   
    
@@ -1136,8 +1134,8 @@ static int US_test(void)
    
    unlink(file1);
    unlink(file2);
-   FREE(file1);
-   FREE(file2);
+   sge_free(&file1);
+   sge_free(&file2);
    
    lFreeElem(&ep);
    
@@ -1371,9 +1369,9 @@ static int EH_test(void)
    
    unlink(file1);
    unlink(file2);   
-   FREE(file1);
-   FREE(file2);
-   FREE(fields);
+   sge_free(&file1);
+   sge_free(&file2);
+   sge_free(&fields);
 
    lFreeElem(&ep);
 
@@ -2186,8 +2184,8 @@ static int CQ_test(void) {
    
    unlink(file1);
    unlink(file2);
-   FREE(file1);
-   FREE(file2);
+   sge_free(&file1);
+   sge_free(&file2);
    
    answer_list_output(&alp);   
    
@@ -2310,8 +2308,8 @@ static int SC_test(void)
    
    unlink(file1);
    unlink(file2);
-   FREE(file1);
-   FREE(file2);
+   sge_free(&file1);
+   sge_free(&file2);
    
    answer_list_output(&alp);   
    
@@ -2366,10 +2364,9 @@ static int QU_test(void)
    
    unlink(file1);
    unlink(file2);
-   FREE(file1);
-   FREE(file2);
-
-   FREE(fields);
+   sge_free(&file1);
+   sge_free(&file2);
+   sge_free(&fields);
    
    answer_list_output(&alp);   
    
@@ -2419,8 +2416,8 @@ static int HGRP_test(void)
    
    unlink(file1);
    unlink(file2);
-   FREE(file1);
-   FREE(file2);
+   sge_free(&file1);
+   sge_free(&file2);
    
    answer_list_output(&alp);   
    
@@ -2554,8 +2551,8 @@ static int CU_test(void)
    
    unlink(file1);
    unlink(file2);
-   FREE(file1);
-   FREE(file2);
+   sge_free(&file1);
+   sge_free(&file2);
    
    
    answer_list_output(&alp);   
@@ -2650,10 +2647,9 @@ static int CONF_test(void) {
    
    unlink(file1);
    unlink(file2);
-   FREE(file1);
-   FREE(file2);
-   FREE(fields);
-   
+   sge_free(&file1);
+   sge_free(&file2);
+   sge_free(&fields);
    
    answer_list_output(&alp);   
    
@@ -2796,8 +2792,8 @@ static int RQS_test(void) {
    unlink(file1);
    unlink(file2);
 
-   FREE(file1);
-   FREE(file2);
+   sge_free(&file1);
+   sge_free(&file2);
 
    answer_list_output(&alp);
 
@@ -2896,8 +2892,8 @@ static int AR_test(void) {
   
    unlink(file1);
    unlink(file2);
-   FREE(file1);
-   FREE(file2);
+   sge_free(&file1);
+   sge_free(&file2);
    
    answer_list_output(&alp);   
    return ret;

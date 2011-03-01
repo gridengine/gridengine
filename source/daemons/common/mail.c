@@ -38,18 +38,20 @@
 #include <sys/wait.h>
 #include <stdlib.h>
 
-#include "sge_conf.h"
-#include "mail.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "sig_handlers.h"
-#include "sge_unistd.h"
-#include "sge_prog.h"
-#include "sge_os.h"
-#include "sge_job.h"
-#include "sge_mailrec.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_os.h"
 #include "uti/sge_stdio.h"
 
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_mailrec.h"
+
+#include "mail.h"
+#include "sig_handlers.h"
 #include "msg_common.h"
 #include "msg_daemons_common.h"
 
@@ -101,8 +103,8 @@ void cull_mail(u_long32 progid, lList *user_list, const char *subj, const char *
          user = lGetString(ep, MR_user);
          host = lGetHost(ep, MR_host);
          if (!user && !host) {
-            ERROR((SGE_EVENT, MSG_MAIL_EMPTYUSERHOST));
-            FREE(mailer);
+            ERROR((SGE_EVENT, SFNMAX, MSG_MAIL_EMPTYUSERHOST));
+            sge_free(&mailer);
             DRETURN_VOID;
          } else if (!host) {
             INFO((SGE_EVENT, MSG_MAIL_MAILUSER_SSSS, 
@@ -116,7 +118,7 @@ void cull_mail(u_long32 progid, lList *user_list, const char *subj, const char *
       }
    } 
 
-   FREE(mailer);
+   sge_free(&mailer);
    DRETURN_VOID;
 }
 
@@ -250,13 +252,13 @@ const char *buf
       alarm(0);
       if (pid2 == 0) {          /* how could this happen? */
          kill(pid, SIGKILL);
-         ERROR((SGE_EVENT, MSG_MAIL_NOMAIL1));
+         ERROR((SGE_EVENT, SFNMAX, MSG_MAIL_NOMAIL1));
          exit(1);
       }
 
       if (pid2 == -1) {         /* alarm must have went off */
          kill(pid, SIGKILL);
-         ERROR((SGE_EVENT, MSG_MAIL_NOMAIL2));
+         ERROR((SGE_EVENT, SFNMAX, MSG_MAIL_NOMAIL2));
          exit(1);
       }
 

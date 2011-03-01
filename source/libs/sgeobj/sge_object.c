@@ -46,25 +46,25 @@
 
 #include "gdi/sge_gdi.h"
 
-#include "sge_all_listsL.h"
-#include "sge_pe.h"
-#include "sge_qinstance_type.h"
-#include "sge_schedd_conf.h"
-#include "sge_userprj.h"
-#include "sge_userset.h"
-#include "sge_answer.h"
-#include "sge_range.h"
-#include "sge_object.h"
-#include "sge_centry.h"
-#include "sge_str.h"
-#include "sge_subordinate.h"
-#include "sge_utility.h"
-#include "cull_parse_util.h"
-#include "parse.h"
-#include "sge_eval_expression.h"
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_pe.h"
+#include "sgeobj/sge_qinstance_type.h"
+#include "sgeobj/sge_schedd_conf.h"
+#include "sgeobj/sge_userprj.h"
+#include "sgeobj/sge_userset.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_str.h"
+#include "sgeobj/sge_subordinate.h"
+#include "sgeobj/sge_utility.h"
+#include "sgeobj/cull_parse_util.h"
+#include "sgeobj/parse.h"
+#include "sgeobj/sge_eval_expression.h"
+#include "sgeobj/msg_sgeobjlib.h"
 
 #include "msg_common.h"
-#include "msg_sgeobjlib.h"
 
 #define OBJECT_LAYER BASIS_LAYER
 
@@ -285,7 +285,7 @@ static void obj_state_destroy(void* st)
       lFreeList(&(state->lists[i])); 
    }
       
-   free(state);
+   sge_free(&state);
 }
 
 /****** sge_object/obj_mt_init() ***********************************************
@@ -1535,7 +1535,7 @@ sge_object_type object_name_get_type(const char *name)
       }
    }
 
-   FREE(type_name);
+   sge_free(&type_name);
    DRETURN(ret);
 }
 

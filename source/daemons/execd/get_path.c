@@ -34,21 +34,23 @@
 #include <sys/stat.h>
 #include <errno.h>
 
-#include "sge_conf.h"
-#include "sge_ja_task.h"
-#include "sge_pe_task.h"
-#include "sgermon.h"
-#include "sge_log.h"
+#include "rmon/sgermon.h"
+#include "uti/sge_log.h"
+#include "uti/sge_uidgid.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_dstring.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_string.h"
+#include "uti/sge_spool.h"
+
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_pe_task.h"
+#include "sgeobj/sge_job.h"
+
 #include "get_path.h"
-#include "sge_uidgid.h"
-#include "sge_prog.h"
-#include "sge_dstring.h"
 #include "msg_execd.h"
-#include "sge_unistd.h"
-#include "sge_job.h"
 #include "sge.h"
-#include "sge_string.h"
-#include "sge_spool.h"
 
 static int getHomeDir(char *exp_path, const char *user);
 
@@ -256,20 +258,20 @@ const char *user
    pwd = sge_getpwnam_r(user, &pw_struct, buffer, size);
    if (!pwd) {
       ERROR((SGE_EVENT, MSG_EXECD_INVALIDUSERNAME_S, user));
-      FREE(buffer);
+      sge_free(&buffer);
       DEXIT;
       return 0;
    }
    if (!pwd->pw_dir) {
       ERROR((SGE_EVENT, MSG_EXECD_NOHOMEDIR_S, user));
-      FREE(buffer);
+      sge_free(&buffer);
       DEXIT;
       return 0;
 
    }
    strcat(exp_path, pwd->pw_dir);
 
-   FREE(buffer);
+   sge_free(&buffer);
    DEXIT;
    return 1;
 }

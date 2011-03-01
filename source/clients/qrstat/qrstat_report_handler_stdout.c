@@ -32,9 +32,7 @@
 
 #include <string.h>
 
-#include "basis_types.h"
-#include "sge.h"
-#include "sgermon.h"
+#include "rmon/sgermon.h"
 
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_advance_reservation.h"
@@ -42,7 +40,8 @@
 #include "qrstat_filter.h"
 #include "qrstat_report_handler.h"
 #include "qrstat_report_handler_xml.h"
-
+#include "basis_types.h"
+#include "sge.h"
 #include "msg_common.h"
 
 #define SFN_FIRST_COLUMN "%-30.30s"
@@ -231,7 +230,7 @@ qrstat_destroy_report_handler_stdout(qrstat_report_handler_t** handler, lList **
    DENTER(TOP_LAYER, "qrstat_destroy_report_handler");
 
    if (handler != NULL && *handler != NULL ) {
-      FREE(*handler);
+      sge_free(handler);
    }
 
    DRETURN(ret);

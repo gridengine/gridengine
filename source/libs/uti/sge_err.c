@@ -34,11 +34,11 @@
 #include <string.h>
 
 #include "rmon/sgermon.h"
+
 #include "uti/sge_dstring.h"
 #include "uti/sge_log.h"
-
-#include "sge_err.h"
-#include "sge_string.h"
+#include "uti/sge_err.h"
+#include "uti/sge_string.h"
 
 #define ERR_LAYER TOP_LAYER
 
@@ -58,7 +58,7 @@ static pthread_key_t sge_err_key;
 static void 
 sge_err_destroy(void* state)
 {
-   free((struct sge_err_object_t *)state);
+   sge_free(&state);
 }
 
 /* init function that initializes the key that holds the pointer

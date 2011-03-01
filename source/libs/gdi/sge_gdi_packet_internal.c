@@ -48,17 +48,17 @@
 #include "uti/sge_log.h"
 #include "uti/sge_tq.h"
 
+#include "gdi/sge_gdi2.h"
+#include "gdi/sge_gdi_packet_pb_cull.h"
+#include "gdi/sge_security.h"
+#include "gdi/sge_gdi_packet.h"
+#include "gdi/msg_gdilib.h"
+
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_multi_MA_L.h"
 #include "sgeobj/sge_jsv.h"
 
-#include "sge_gdi2.h"
-#include "sge_gdi_packet_pb_cull.h"
-#include "sge_security.h"
-#include "sge_gdi_packet.h"
-
 #include "msg_common.h"
-#include "msg_gdilib.h"
 
 #define CLIENT_WAIT_TIME_S 1
 
@@ -336,7 +336,7 @@ static int get_gdi_retries_value(void) {
    cl_com_get_parameter_list_value("gdi_retries", &gdi_retries);
    if (gdi_retries != NULL) {
       retries = atoi(gdi_retries);
-      FREE(gdi_retries);
+      sge_free(&gdi_retries);
    }
    return retries;
 }
@@ -373,7 +373,7 @@ static bool get_cl_ping_value(void) {
       if (strcasecmp(cl_ping, "true") == 0) {
          do_ping = true;
       }
-      FREE(cl_ping);
+      sge_free(&cl_ping);
    }
    return do_ping;
 }
@@ -537,7 +537,7 @@ sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
                                       cl_get_error_text(commlib_error))); 
             }
          } else {
-            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_SENDINGGDIREQUESTFAILED));
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_GDI_SENDINGGDIREQUESTFAILED));
          }
          answer_list_add(answer_list, SGE_EVENT, STATUS_NOQMASTER, ANSWER_QUALITY_ERROR);
          ret = false;
@@ -689,7 +689,7 @@ sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
       }
       if (gdi_mismatch) {
          /* For unusual errors, give more detail */
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_MISMATCH_SEND_RECEIVE));
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_GDI_MISMATCH_SEND_RECEIVE));
          answer_list_add(answer_list, SGE_EVENT, STATUS_NOQMASTER, ANSWER_QUALITY_ERROR);
          ret = false;
       }

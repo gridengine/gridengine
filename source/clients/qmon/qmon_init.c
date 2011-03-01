@@ -47,18 +47,6 @@
 #include <Xmt/WidgetType.h>
 #include <Xmt/Color.h>
 
-#include "commlib.h" 
-#include "sge_prog.h"
-#include "sge_all_listsL.h" 
-#include "sge_log.h"
-#include "sge_unistd.h"
-#include "qm_name.h"
-#include "sge_hostname.h"
-#include "sgeobj/sge_answer.h"
-#include "gdi/sge_gdi.h" 
-#include "gdi/sge_gdiP.h"
-#include "gdi/sge_gdi_ctx.h"
-
 #include "qmon_rmon.h"
 #include "qmon_init.h"
 #include "qmon_queue.h"
@@ -74,9 +62,24 @@
 #include "qmon_util.h"
 #include "qmon_signal.h"
 
+#include "uti/sge_prog.h"
+#include "uti/sge_hostname.h"
+#include "uti/sge_log.h"
+#include "uti/sge_unistd.h"
+
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_all_listsL.h" 
+
+#include "gdi/qm_name.h"
+#include "gdi/sge_gdi.h" 
+#include "gdi/sge_gdiP.h"
+#include "gdi/sge_gdi_ctx.h"
+#include "gdi/msg_gdilib.h"
+
+#include "comm/commlib.h" 
+
 #include "msg_clients_common.h"
 #include "msg_common.h"
-#include "msg_gdilib.h"
 
 extern sge_gdi_ctx_class_t *ctx;
 

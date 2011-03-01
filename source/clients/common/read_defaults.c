@@ -35,22 +35,25 @@
 #include <pwd.h>
 #include <sys/types.h>
 
-#include "sgermon.h"
-#include "sge_answer.h"
-#include "setup_path.h"
-#include "sge_unistd.h"
-#include "msg_common.h"
-#include "msg_clients_common.h"
-#include "sge_feature.h"
-#include "sge_uidgid.h"
-#include "sge_io.h"
-#include "sge_prog.h"
+#include "rmon/sgermon.h"
+
+#include "uti/setup_path.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_uidgid.h"
+#include "uti/sge_io.h"
+#include "uti/sge_prog.h"
+
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/parse.h"
+
 #include "parse_job_cull.h"
 #include "parse_qsub.h"
 #include "read_defaults.h"
-#include "sgeobj/parse.h"
 #include "sge_options.h"
-#include "sgeobj/sge_job.h"
+#include "msg_common.h"
+#include "msg_clients_common.h"
 
 static char *get_cwd_defaults_file_path (lList **answer_list);
 static void append_opts_from_default_files (u_long32 prog_number,
@@ -217,13 +220,13 @@ bool get_user_home_file_path(dstring *absolut_filename, const char *filename, co
 static char *get_cwd_defaults_file_path(lList **answer_list)
 {
    char cwd[SGE_PATH_MAX + 1];
-   char str[256 + 1];   
+   char str[MAX_STRING_SIZE];
    char *file = NULL;
    
    DENTER (TOP_LAYER, "get_cwd_defaults_file_name");
 
    if (!getcwd(cwd, sizeof(cwd))) {
-      sprintf(str, MSG_FILE_CANTREADCURRENTWORKINGDIR);
+      snprintf(str, sizeof(str), SFNMAX, MSG_FILE_CANTREADCURRENTWORKINGDIR);
       answer_list_add(answer_list, str, STATUS_EDISK, ANSWER_QUALITY_ERROR);
    }
    
@@ -336,16 +339,15 @@ static void append_opts_from_default_files(u_long32 prog_number,
       lFreeList(&alp);
 
       if (do_exit) {
-         for (pstr = def_files; *pstr; free(*pstr++)) {
-            ;
+         for (pstr = def_files; *pstr; pstr++) {
+            sge_free(pstr);
          }
-         
          DRETURN_VOID;
       }
    }
 
-   for (pstr = def_files; *pstr; free(*pstr++)) {
-      ;
+   for (pstr = def_files; *pstr; pstr++) {
+      sge_free(pstr);
    }
    
    DRETURN_VOID;
@@ -559,7 +561,7 @@ void opt_list_append_opts_from_script_path(u_long32 prog_number,
    *answer_list = parse_script_file(prog_number, scriptpath, prefix, opts_scriptfile, 
                                     envp, FLG_DONT_ADD_SCRIPT);
    
-   FREE (scriptpath);
+   sge_free(&scriptpath);
 }
 
 /****** sge/opt/opt_list_merge_command_lines() ********************************
@@ -791,7 +793,7 @@ bool get_user_home(dstring *home_dir, const char *user, lList **answer_list)
       if (ret) {
          sge_dstring_copy_string(home_dir, pwd->pw_dir);
       }
-      FREE(buffer);
+      sge_free(&buffer);
    } else {
       /* should never happen */
       ret = false;

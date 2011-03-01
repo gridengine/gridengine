@@ -33,12 +33,8 @@
 /*___INFO__MARK_END__*/       
 
 #include "cull/cull.h"
-
-/* common */
-#include "basis_types.h"
-
-/* local */
 #include "spool/berkeleydb/sge_bdb_types.h"
+#include "basis_types.h"
 
 bool
 spool_berkeleydb_check_version(lList **answer_list);

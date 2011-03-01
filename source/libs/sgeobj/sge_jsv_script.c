@@ -42,29 +42,30 @@
 #include "uti/sge_string.h"
 #include "uti/sge_time.h"
 #include "uti/sge_parse_num_par.h"
+#include "uti/sge_binding_parse.h"
 
+#include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi_ctx.h"
 
-#include "cull_parse_util.h"
-#include "sge_advance_reservation.h"
-#include "sge_answer.h"
-#include "sge_ckpt.h"
-#include "sge_centry.h"
-#include "sge_job.h"
-#include "sge_jsv.h"
-#include "sge_jsv_script.h"
-#include "sge_mailrec.h"
-#include "sge_qref.h"
-#include "sge_range.h"
-#include "sge_str.h"
-#include "sge_ulong.h"
-#include "sge_var.h"
-#include "symbols.h"
-
-#include "uti/sge_binding_parse.h"
+#include "sgeobj/cull_parse_util.h"
+#include "sgeobj/sge_advance_reservation.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_ckpt.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_jsv.h"
+#include "sgeobj/sge_jsv_script.h"
+#include "sgeobj/sge_mailrec.h"
+#include "sgeobj/sge_qref.h"
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_str.h"
+#include "sgeobj/sge_ulong.h"
+#include "sgeobj/sge_var.h"
+#include "sgeobj/sge_conf.h"
 #include "sgeobj/sge_binding.h"
+#include "sgeobj/msg_sgeobjlib.h"
 
-#include "msg_sgeobjlib.h"
+#include "symbols.h"
 #include "msg_common.h"
 
 /*
@@ -1017,8 +1018,8 @@ jsv_handle_param_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **answe
                   sge_dstring_free(&socket_core_string);
                }
 
-               FREE(socket_array);
-               FREE(core_array);
+               sge_free(&socket_array);
+               sge_free(&core_array);
             }
          }
       }
@@ -2032,8 +2033,8 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
                jsv_send_command(jsv, answer_list, sge_dstring_get_string(&buffer));
             }
 
-            FREE(socket_array);
-            FREE(core_array);
+            sge_free(&socket_array);
+            sge_free(&core_array);
          }
       }
    }
@@ -2900,13 +2901,13 @@ jsv_is_modify_rejected(sge_gdi_ctx_class_t *context, lList **answer_list, lListE
             /*
              * JSV is active but no modification allowed
              */
-            ERROR((SGE_EVENT, MSG_JSV_ALLOWED));
+            ERROR((SGE_EVENT, SFNMAX, MSG_JSV_ALLOWED));
             answer_list_add(answer_list, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             ret = true;
          }
       }
-      FREE(jsv_allowed_mod);
-      FREE(jsv_url);
+      sge_free(&jsv_allowed_mod);
+      sge_free(&jsv_url);
    }
    DRETURN(ret);
 }

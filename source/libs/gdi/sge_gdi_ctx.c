@@ -37,9 +37,31 @@
 #include <pwd.h>
 #include <grp.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <pthread.h>
 #include <sys/types.h>
 #include <sys/socket.h>  
+#include <sys/ioctl.h>
+
+#if defined(DARWIN) || defined(INTERIX)
+#  include <termios.h>
+#  include <sys/ioctl.h>
+#  include <grp.h>
+#elif defined(HP1164) || defined(HP11)
+#  include <termios.h>
+#  include <stropts.h>
+#elif defined(SOLARIS64) || defined(SOLARIS86) || defined(SOLARISAMD64)
+#  include <stropts.h>
+#  include <termio.h>
+#elif defined(IRIX65)
+#  include <sys/ioctl.h>
+#  include <stropts.h>
+#  include <termio.h>
+#elif defined(FREEBSD) || defined(NETBSD)
+#  include <termios.h>
+#else
+#  include <termio.h>
+#endif
 
 #include "lck/sge_lock.h"
 
@@ -63,23 +85,29 @@
 #include "uti/sge_language.h"
 #include "uti/sge_spool.h"
 #include "uti/sge_time.h"
+#include "uti/sge_csp_path.h"
+#include "uti/sge_os.h"
 
 #include "sgeobj/sge_answer.h"
 
 #include "gdi/qm_name.h"
+#include "gdi/msg_gdilib.h"
 
 #include "sgeobj/sge_feature.h"
 #include "sgeobj/sge_conf.h"
 #include "sgeobj/sge_object.h"
 
 #include "sge.h"
-#include "sge_csp_path.h"
-#include "msg_gdilib.h"
+
+#include "msg_common.h"
 
 /*
 ** need this for lInit(nmv)
 */
 extern lNameSpace nmv[];
+
+/* pipe for sge_daemonize_prepare() and sge_daemonize_finalize() */
+static int fd_pipe[2];
 
 #if  1
 /* TODO: throw this out asap */
@@ -132,7 +160,7 @@ typedef struct {
 } gdi_state_t;
 
 static void gdi_state_destroy(void* state) {
-   free(state);
+   sge_free(&state);
 }
 
 void gdi_once_init(void) {
@@ -207,7 +235,7 @@ static void sge_gdi_thread_local_ctx_once_init(void)
 static void sge_gdi_thread_local_ctx_destroy(void* theState) {
    sge_gdi_ctx_thread_local_t *tl = (sge_gdi_ctx_thread_local_t*)theState;
    tl->ctx = NULL;
-   free(theState);
+   sge_free(&theState);
 }
 
 static void sge_gdi_thread_local_ctx_init(sge_gdi_ctx_thread_local_t* theState)
@@ -471,8 +499,7 @@ void sge_gdi_ctx_class_destroy(sge_gdi_ctx_class_t **pst)
       
    /* free internal context structure */   
    sge_gdi_ctx_destroy((*pst)->sge_gdi_ctx_handle);
-   FREE(*pst);
-   *pst = NULL;
+   sge_free(pst);
 
    DRETURN_VOID;
 }
@@ -638,7 +665,7 @@ sge_gdi_ctx_setup(sge_gdi_ctx_class_t *thiz, int prog_number, const char* compon
 
       if (!pwd) {
          eh->error(eh, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, "sge_getpwnam_r failed for username %s", username);
-         FREE(buffer);
+         sge_free(&buffer);
          DRETURN(false);
       }
       es->uid = pwd->pw_uid;
@@ -646,7 +673,7 @@ sge_gdi_ctx_setup(sge_gdi_ctx_class_t *thiz, int prog_number, const char* compon
          gid_t gid;
          if (sge_group2gid(groupname, &gid, MAX_NIS_RETRIES) == 1) {
             eh->error(eh, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, "sge_group2gid failed for groupname %s", groupname);
-            FREE(buffer);
+            sge_free(&buffer);
             DRETURN(false);
          }
          es->gid = gid;
@@ -654,7 +681,7 @@ sge_gdi_ctx_setup(sge_gdi_ctx_class_t *thiz, int prog_number, const char* compon
          es->gid = pwd->pw_gid;
       }
 
-      FREE(buffer);
+      sge_free(&buffer);
    }
    
    es->username = strdup(username);
@@ -697,10 +724,10 @@ sge_gdi_ctx_setup(sge_gdi_ctx_class_t *thiz, int prog_number, const char* compon
       buffer = sge_malloc(size);
       if (getpwuid_r((uid_t)getuid(), &pwentry, buffer, size, &pwd) == 0) {
          es->component_username = sge_strdup(es->component_username, pwd->pw_name);
-         FREE(buffer);
+         sge_free(&buffer);
       } else {
          eh->error(eh, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, "getpwuid_r failed");
-         FREE(buffer);
+         sge_free(&buffer);
          DRETURN(false);
       }
 #if 0
@@ -828,16 +855,16 @@ static void sge_gdi_ctx_destroy(void *theState)
    sge_path_state_class_destroy(&(s->sge_path_state_obj));
    sge_bootstrap_state_class_destroy(&(s->sge_bootstrap_state_obj));
    sge_csp_path_class_destroy(&(s->sge_csp_path_obj));
-   sge_free(s->master);
-   sge_free(s->username);
-   sge_free(s->groupname);
-   sge_free(s->component_name);
-   sge_free(s->thread_name);
-   sge_free(s->component_username);
-   sge_free(s->ssl_certificate);
-   sge_free(s->ssl_private_key);
+   sge_free(&(s->master));
+   sge_free(&(s->username));
+   sge_free(&(s->groupname));
+   sge_free(&(s->component_name));
+   sge_free(&(s->thread_name));
+   sge_free(&(s->component_username));
+   sge_free(&(s->ssl_certificate));
+   sge_free(&(s->ssl_private_key));
    sge_error_class_destroy(&(s->eh));
-   sge_free((char*)s);
+   sge_free(&s);
 
    DRETURN_VOID;
 }
@@ -895,7 +922,7 @@ static int sge_gdi_ctx_class_prepare_enroll(sge_gdi_ctx_class_t *thiz) {
          case SCHEDD:
          case EXECD:
             {
-               INFO((SGE_EVENT,MSG_GDI_MULTI_THREADED_STARTUP));
+               INFO((SGE_EVENT, SFNMAX, MSG_GDI_MULTI_THREADED_STARTUP));
                /* if SGE_DEBUG_LEVEL environment is set we use gdi log flush function */
                /* you can set commlib debug level with env SGE_COMMLIB_DEBUG */
                if (env_sge_commlib_debug != NULL) {
@@ -908,7 +935,7 @@ static int sge_gdi_ctx_class_prepare_enroll(sge_gdi_ctx_class_t *thiz) {
             break;
          default:
             {
-               INFO((SGE_EVENT,MSG_GDI_SINGLE_THREADED_STARTUP));
+               INFO((SGE_EVENT, SFNMAX, MSG_GDI_SINGLE_THREADED_STARTUP));
                if (env_sge_commlib_debug != NULL) {
                   cl_ret = cl_com_setup_commlib(CL_NO_THREAD, CL_LOG_OFF, sge_gdi_ctx_log_flush_func);
                } else {
@@ -1168,7 +1195,7 @@ static int sge_gdi_ctx_class_prepare_enroll(sge_gdi_ctx_class_t *thiz) {
                      alive_back = thiz->is_alive(thiz);
                      cl_ret = cl_com_set_error_func(general_communication_error);
                      if (cl_ret != CL_RETVAL_OK) {
-                        ERROR((SGE_EVENT, cl_get_error_text(cl_ret)) );
+                        ERROR((SGE_EVENT, SFNMAX, cl_get_error_text(cl_ret)));
                      }
 
                      if (alive_back == CL_RETVAL_OK && getenv("SGE_TEST_HEARTBEAT_TIMEOUT") == NULL ) {
@@ -1297,7 +1324,7 @@ static int sge_gdi_ctx_class_is_alive(sge_gdi_ctx_class_t *thiz)
       sge_gdi_ctx_class_error(thiz, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
                 "cl_commlib_get_endpoint_status failed: "SFQ, cl_get_error_text(cl_ret));
    } else {
-      DEBUG((SGE_EVENT,MSG_GDI_QMASTER_STILL_RUNNING));   
+      DEBUG((SGE_EVENT, SFNMAX, MSG_GDI_QMASTER_STILL_RUNNING));
    }
 
    if (status != NULL) {
@@ -1628,8 +1655,8 @@ static void set_private_key(sge_gdi_ctx_class_t *thiz, const char *pkey) {
    
    DENTER(BASIS_LAYER, "sge_gdi_ctx_class->set_private_key");
 
-   if ( es->ssl_private_key != NULL ) {
-      FREE(es->ssl_private_key);
+   if (es->ssl_private_key != NULL) {
+      sge_free(&(es->ssl_private_key));
    }
    es->ssl_private_key = pkey ? strdup(pkey): NULL;
 
@@ -1652,7 +1679,7 @@ static void set_certificate(sge_gdi_ctx_class_t *thiz, const char *cert) {
    DENTER(BASIS_LAYER, "sge_gdi_ctx_class->set_certificate");
 
    if (es->ssl_certificate != NULL) {
-      FREE(es->ssl_certificate);
+      sge_free(&(es->ssl_certificate));
    }
    es->ssl_certificate = cert ? strdup(cert) : NULL;
 
@@ -1967,7 +1994,7 @@ int sge_gdi2_setup(sge_gdi_ctx_class_t **context_ref, u_long32 progid, u_long32 
 
    if (context_ref && sge_gdi_ctx_is_setup(*context_ref)) {
       if (alpp_was_null) {
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_GDI_ALREADY_SETUP));
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_GDI_GDI_ALREADY_SETUP));
       } else {
          answer_list_add_sprintf(alpp, STATUS_EEXIST, ANSWER_QUALITY_WARNING,
                                  MSG_GDI_GDI_ALREADY_SETUP);
@@ -2003,4 +2030,378 @@ static int reresolve_qualified_hostname(sge_gdi_ctx_class_t *thiz) {
    prog_state->set_qualified_hostname(prog_state, unique_hostname);
 
    DRETURN(ret);
+}
+
+/****** uti/os/sge_daemonize_prepare() *****************************************
+*  NAME
+*     sge_daemonize_prepare() -- prepare daemonize of process
+*
+*  SYNOPSIS
+*     int sge_daemonize_prepare(void) 
+*
+*  FUNCTION
+*     The parent process will wait for the child's successful daemonizing.
+*     The client process will report successful daemonizing by a call to
+*     sge_daemonize_finalize().
+*     The parent process will exit with one of the following exit states:
+*
+*     typedef enum uti_deamonize_state_type {
+*        SGE_DEAMONIZE_OK           = 0,  ok 
+*        SGE_DAEMONIZE_DEAD_CHILD   = 1,  child exited before sending state 
+*        SGE_DAEMONIZE_TIMEOUT      = 2   timeout whild waiting for state 
+*     } uti_deamonize_state_t;
+*
+*     Daemonize the current application. Throws ourself into the
+*     background and dissassociates from any controlling ttys.
+*     Don't close filedescriptors mentioned in 'keep_open'.
+*      
+*     sge_daemonize_prepare() and sge_daemonize_finalize() will replace
+*     sge_daemonize() for multithreaded applications.
+*     
+*     sge_daemonize_prepare() must be called before starting any thread. 
+*
+*
+*  INPUTS
+*     void - none
+*
+*  RESULT
+*     int - true on success, false on error
+*
+*  SEE ALSO
+*     uti/os/sge_daemonize_finalize()
+*******************************************************************************/
+bool sge_daemonize_prepare(sge_gdi_ctx_class_t *ctx) {
+   pid_t pid;
+#if !(defined(__hpux) || defined(CRAY) || defined(WIN32) || defined(SINIX) || defined(INTERIX))
+   int fd;
+#endif
+
+#if defined(__sgi) || defined(ALPHA) || defined(HP1164)
+#  if defined(ALPHA)
+   extern int getdomainname(char *, int);
+#  endif
+   char domname[256];
+#endif
+
+   int is_daemonized = ctx->is_daemonized(ctx);
+
+   DENTER(TOP_LAYER, "sge_daemonize_prepare");
+
+#ifndef NO_SGE_COMPILE_DEBUG
+   if (TRACEON) {
+      DRETURN(false);
+   }
+#endif
+
+   if (is_daemonized) {
+      DRETURN(true);
+   }
+
+   /* create pipe */
+   if ( pipe(fd_pipe) < 0) {
+      CRITICAL((SGE_EVENT, SFNMAX, MSG_UTI_DAEMONIZE_CANT_PIPE));
+      DRETURN(false);
+   }
+
+   if ( fcntl(fd_pipe[0], F_SETFL, O_NONBLOCK) != 0) {
+      CRITICAL((SGE_EVENT, SFNMAX, MSG_UTI_DAEMONIZE_CANT_FCNTL_PIPE));
+      DRETURN(false);
+   }
+
+   /* close all fd's except pipe and first 3 */
+   {
+      int keep_open[5];
+      keep_open[0] = 0;
+      keep_open[1] = 1;
+      keep_open[2] = 2;
+      keep_open[3] = fd_pipe[0];
+      keep_open[4] = fd_pipe[1];
+      sge_close_all_fds(keep_open, 5);
+   }
+
+   /* first fork */
+   pid=fork();
+   if (pid <0) {
+      CRITICAL((SGE_EVENT, MSG_PROC_FIRSTFORKFAILED_S , strerror(errno)));
+      DEXIT;
+      exit(1);
+   }
+
+   if (pid > 0) {
+      char line[256];
+      int line_p = 0;
+      int retries = 60;
+      int exit_status = SGE_DAEMONIZE_TIMEOUT;
+      int back;
+      int errno_value = 0;
+
+      /* close send pipe */
+      close(fd_pipe[1]);
+
+      /* check pipe for message from child */
+      while (line_p < 4 && retries-- > 0) {
+         errno = 0;
+         back = read(fd_pipe[0], &line[line_p], 1);
+         errno_value = errno;
+         if (back > 0) {
+            line_p++;
+         } else {
+            if (back != -1) {
+               if (errno_value != EAGAIN ) {
+                  retries=0;
+                  exit_status = SGE_DAEMONIZE_DEAD_CHILD;
+               }
+            }
+            DPRINTF(("back=%d errno=%d\n",back,errno_value));
+            sleep(1);
+         }
+      }
+         
+      if (line_p >= 4) {
+         line[3] = 0;
+         exit_status = atoi(line);
+         DPRINTF(("received: \"%d\"\n", exit_status));
+      }
+
+      switch(exit_status) {
+         case SGE_DEAMONIZE_OK:
+            INFO((SGE_EVENT, SFNMAX, MSG_UTI_DAEMONIZE_OK));
+            break;
+         case SGE_DAEMONIZE_DEAD_CHILD:
+            WARNING((SGE_EVENT, SFNMAX, MSG_UTI_DAEMONIZE_DEAD_CHILD));
+            break;
+         case SGE_DAEMONIZE_TIMEOUT:
+            WARNING((SGE_EVENT, SFNMAX, MSG_UTI_DAEMONIZE_TIMEOUT));
+            break;
+      }
+      /* close read pipe */
+      close(fd_pipe[0]);
+      DEXIT;
+      exit(exit_status); /* parent exit */
+   }
+
+   /* child */
+   SETPGRP;
+
+#if !(defined(__hpux) || defined(CRAY) || defined(WIN32) || defined(SINIX) || defined(INTERIX))
+   if ((fd = open("/dev/tty", O_RDWR)) >= 0) {
+      /* disassociate contolling tty */
+      ioctl(fd, TIOCNOTTY, (char *) NULL);
+      close(fd);
+   }
+#endif
+   
+
+   /* second fork */
+   pid=fork();
+   if (pid < 0) {
+      CRITICAL((SGE_EVENT, MSG_PROC_SECONDFORKFAILED_S , strerror(errno)));
+      DEXIT;
+      exit(1);
+   }
+   if ( pid > 0) {
+      /* close read and write pipe for second child and exit */
+      close(fd_pipe[0]);
+      close(fd_pipe[1]);
+      exit(0);
+   }
+
+   /* child of child */
+
+   /* close read pipe */
+   close(fd_pipe[0]);
+
+#if defined(__sgi) || defined(ALPHA) || defined(HP1164)
+   /* The yp library may have open sockets
+      when closing all fds also the socket fd of the yp library gets closed
+      when called again yp library functions are confused since they
+      assume fds are already open. Thus we shutdown the yp library regularly
+      before closing all sockets */
+   getdomainname(domname, sizeof(domname));
+   yp_unbind(domname);
+#endif
+
+   
+   DRETURN(true);
+}
+
+/****** uti/os/sge_daemonize_finalize() ****************************************
+*  NAME
+*     sge_daemonize_finalize() -- finalize daemonize process
+*
+*  SYNOPSIS
+*     int sge_daemonize_finalize(fd_set *keep_open) 
+*
+*  FUNCTION
+*     report successful daemonizing to the parent process and close
+*     all file descriptors. Set file descirptors 0, 1 and 2 to /dev/null 
+*
+*     sge_daemonize_prepare() and sge_daemonize_finalize() will replace
+*     sge_daemonize() for multithreades applications.
+*
+*     sge_daemonize_finalize() must be called by the thread who have called
+*     sge_daemonize_prepare().
+*
+*  INPUTS
+*     fd_set *keep_open - file descriptor set to keep open
+*
+*  RESULT
+*     int - true on success
+*
+*  SEE ALSO
+*     uti/os/sge_daemonize_prepare()
+*******************************************************************************/
+bool sge_daemonize_finalize(sge_gdi_ctx_class_t *ctx) 
+{
+   int failed_fd;
+   char tmp_buffer[4];
+   int is_daemonized = ctx->is_daemonized(ctx);
+
+   DENTER(TOP_LAYER, "sge_daemonize_finalize");
+
+   /* don't call this function twice */
+   if (is_daemonized) {
+      DRETURN(true);
+   }
+
+   /* The response id has 4 byte, send it to father process */
+   snprintf(tmp_buffer, 4, "%3d", SGE_DEAMONIZE_OK );
+   if (write(fd_pipe[1], tmp_buffer, 4) != 4) {
+      dstring ds = DSTRING_INIT;
+      CRITICAL((SGE_EVENT, MSG_FILE_CANNOT_WRITE_SS, "fd_pipe[1]", sge_strerror(errno, &ds)));
+      sge_dstring_free(&ds);
+   }
+
+   sleep(2); /* give father time to read the status */
+
+   /* close write pipe */
+   close(fd_pipe[1]);
+
+   /* close first three file descriptors */
+#ifndef __INSURE__
+   close(0);
+   close(1);
+   close(2);
+   
+   /* new descriptors acquired for stdin, stdout, stderr should be 0,1,2 */
+   failed_fd = sge_occupy_first_three();
+   if (failed_fd  != -1) {
+      CRITICAL((SGE_EVENT, MSG_CANNOT_REDIRECT_STDINOUTERR_I, failed_fd));
+      SGE_EXIT(NULL, 0);
+   }
+#endif
+
+   SETPGRP;
+
+   /* now have finished daemonizing */
+   ctx->set_daemonized(ctx, true);
+
+   DRETURN(true);
+}
+
+
+
+
+
+/****** uti/os/sge_daemonize() ************************************************
+*  NAME
+*     sge_daemonize() -- Daemonize the current application
+*
+*  SYNOPSIS
+*     int sge_daemonize(fd_set *keep_open)
+*
+*  FUNCTION
+*     Daemonize the current application. Throws ourself into the
+*     background and dissassociates from any controlling ttys.
+*     Don't close filedescriptors mentioned in 'keep_open'.
+*
+*  INPUTS
+*     fd_set *keep_open - bitmask
+*     args   optional args
+*
+*  RESULT
+*     int - Successfull?
+*         1 - Yes
+*         0 - No
+*
+*  NOTES
+*     MT-NOTES: sge_daemonize() is not MT safe
+******************************************************************************/
+int sge_daemonize(int *keep_open, unsigned long nr_of_fds, sge_gdi_ctx_class_t *ctx)
+{
+
+#if !(defined(__hpux) || defined(CRAY) || defined(WIN32) || defined(SINIX) || defined(INTERIX))
+   int fd;
+#endif
+ 
+#if defined(__sgi) || defined(ALPHA) || defined(HP1164)
+#  if defined(ALPHA)
+   extern int getdomainname(char *, int);
+#  endif
+   char domname[256];
+#endif
+   pid_t pid;
+   int failed_fd;
+ 
+   DENTER(TOP_LAYER, "sge_daemonize");
+ 
+#ifndef NO_SGE_COMPILE_DEBUG
+   if (TRACEON) {
+      DRETURN(0);
+   }
+#endif
+ 
+   if (ctx->is_daemonized(ctx)) {
+      DRETURN(1);
+   }
+ 
+   if ((pid=fork())!= 0) {             /* 1st child not pgrp leader */
+      if (pid<0) {
+         CRITICAL((SGE_EVENT, MSG_PROC_FIRSTFORKFAILED_S , strerror(errno)));
+      }
+      exit(0);
+   }
+ 
+   SETPGRP;                      
+ 
+#if !(defined(__hpux) || defined(CRAY) || defined(WIN32) || defined(SINIX) || defined(INTERIX))
+   if ((fd = open("/dev/tty", O_RDWR)) >= 0) {
+      /* disassociate contolling tty */
+      ioctl(fd, TIOCNOTTY, (char *) NULL);
+      close(fd);
+   }
+#endif
+ 
+   if ((pid=fork())!= 0) {
+      if (pid<0) {
+         CRITICAL((SGE_EVENT, MSG_PROC_SECONDFORKFAILED_S , strerror(errno)));
+      }
+      exit(0);
+   }
+ 
+#if defined(__sgi) || defined(ALPHA) || defined(HP1164)
+   /* The yp library may have open sockets
+      when closing all fds also the socket fd of the yp library gets closed
+      when called again yp library functions are confused since they
+      assume fds are already open. Thus we shutdown the yp library regularly
+      before closing all sockets */
+  getdomainname(domname, sizeof(domname));
+  yp_unbind(domname);
+#endif
+ 
+   /* close all file descriptors */
+   sge_close_all_fds(keep_open, nr_of_fds);
+ 
+   /* new descriptors acquired for stdin, stdout, stderr should be 0,1,2 */
+   failed_fd = sge_occupy_first_three();
+   if (failed_fd  != -1) {
+      CRITICAL((SGE_EVENT, MSG_CANNOT_REDIRECT_STDINOUTERR_I, failed_fd));
+      SGE_EXIT(NULL, 0);
+   }
+
+   SETPGRP;
+ 
+   ctx->set_daemonized(ctx, true);
+ 
+   DRETURN(1);
 }

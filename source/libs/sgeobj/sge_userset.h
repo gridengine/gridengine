@@ -32,9 +32,9 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_userset_US_L.h"
-#include "sge_userset_UE_L.h"
-#include "sge_userset_JC_L.h"
+#include "sgeobj/sge_userset_US_L.h"
+#include "sgeobj/sge_userset_UE_L.h"
+#include "sgeobj/sge_userset_JC_L.h"
 
 #define US_ACL       (1<<0)
 #define US_DEPT      (1<<1)

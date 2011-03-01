@@ -33,7 +33,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "cl_lists.h"
+#include "comm/lists/cl_lists.h"
 
 typedef struct cl_string_list_elem_t {
    char*   string;     /* data */

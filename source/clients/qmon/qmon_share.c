@@ -52,21 +52,25 @@
 #include "qmon_comm.h"
 #include "qmon_share.h"
 #include "qmon_appres.h"
-#include "sgeee.h"
 #include "qmon_message.h"
 #include "qmon_widgets.h"
 #include "qmon_manop.h"
 #include "qmon_project.h"
 #include "qmon_globals.h"
-#include "sge_all_listsL.h"
-#include "sge_support.h"
-#include "sge_answer.h"
-#include "sge_string.h"
-#include "gdi/sge_gdi.h"
-#include "gdi/sge_gdi_ctx.h"
+
+#include "uti/sge_string.h"
+
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_usage.h"
 #include "sgeobj/sge_sharetree.h"
 #include "sgeobj/sge_schedd_conf.h"
+
+#include "gdi/sge_gdi.h"
+#include "gdi/sge_gdi_ctx.h"
+
+#include "sched/sge_support.h"
+#include "sched/sgeee.h"
 
 extern sge_gdi_ctx_class_t *ctx;
 

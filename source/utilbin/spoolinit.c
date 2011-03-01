@@ -34,20 +34,24 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "sgermon.h"
-#include "sge_log.h"
-#include "sge_bootstrap.h"
-#include "sge_feature.h"
-#include "sge_dstring.h"
-#include "setup_path.h"
-#include "sge_prog.h"
-#include "sge_answer.h"
-#include "sge_all_listsL.h"
-#include "sge_mt_init.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_bootstrap.h"
+#include "uti/sge_dstring.h"
+#include "uti/setup_path.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_profiling.h"
+
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_all_listsL.h"
+
 #include "spool/sge_spooling.h"
 #include "spool/loader/sge_spooling_loader.h"
+
+#include "sge_mt_init.h"
 #include "msg_utilbin.h"
-#include "sge_profiling.h"
 
 
 static void usage(const char *argv0)
@@ -83,14 +87,14 @@ static int init_framework(const char *method, const char *shlib,
                                                    libargs);
    answer_list_output(&answer_list);
    if (spooling_context == NULL) {
-      CRITICAL((SGE_EVENT, MSG_SPOOLDEFAULTS_CANNOTCREATECONTEXT));
+      CRITICAL((SGE_EVENT, SFNMAX, MSG_SPOOLDEFAULTS_CANNOTCREATECONTEXT));
    } else {
       spool_set_default_context(spooling_context);
 
       /* initialize spooling context */
       if (!spool_startup_context(&answer_list, spooling_context, 
                                  check_context)) {
-         CRITICAL((SGE_EVENT, MSG_SPOOLDEFAULTS_CANNOTSTARTUPCONTEXT));
+         CRITICAL((SGE_EVENT, SFNMAX, MSG_SPOOLDEFAULTS_CANNOTSTARTUPCONTEXT));
       } else {
          ret = EXIT_SUCCESS;
       }

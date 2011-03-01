@@ -32,6 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "gdi/sge_gdi2.h"
+
 int do_signal_queue(sge_gdi_ctx_class_t *ctx, struct_msg_t *aMsg, sge_pack_buffer *apb);
 
 int signal_job(u_long32 jobid, u_long32 jataskid, u_long32 signal);

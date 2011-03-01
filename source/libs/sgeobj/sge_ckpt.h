@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_ckpt_CK_L.h"
+#include "sgeobj/sge_ckpt_CK_L.h"
 
 bool 
 ckpt_is_referenced(const lListElem *ckpt, lList **answer_list,

@@ -32,8 +32,8 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "cull_lerrno.h"
-#include "cull_state.h"
+#include "cull/cull_lerrno.h"
+#include "cull/cull_state.h"
 
 #define LERROR(x) cull_state_set_lerrno(x);
 

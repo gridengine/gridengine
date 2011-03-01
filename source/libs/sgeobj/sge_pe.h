@@ -32,7 +32,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_pe_PE_L.h"
+#include "sgeobj/sge_pe_PE_L.h"
 
 bool
 pe_name_is_matching(const char *pe_name, const char *wildcard);

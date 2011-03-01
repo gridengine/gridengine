@@ -38,39 +38,44 @@
 #include "basis_types.h"
 #include "sge.h"
 
-#include "sge_bootstrap.h"
+#include "rmon/sgermon.h"
 
-#include "gdi/sge_gdi.h"
-#include "sge_all_listsL.h"
-#include "commlib.h"
-#include "sig_handlers.h"
-#include "sge_prog.h"
-#include "sgermon.h"
-#include "sge_feature.h"
-#include "sge_unistd.h"
-#include "sge_stdlib.h"
-#include "parse.h"
-#include "sge_host.h"
-#include "sge_select_queue.h"
-#include "msg_common.h"
-#include "msg_clients_common.h"
-#include "msg_qquota.h"
-#include "sge_string.h"
-#include "sge_hostname.h"
-#include "sge_log.h"
-#include "sge_answer.h"
-#include "sge_centry.h"
-#include "sgeobj/sge_schedd_conf.h"
-#include "sge_mt_init.h"
-#include "sge_qquota.h"
-#include "sge_object.h"
+#include "uti/sge_bootstrap.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_stdlib.h"
 #include "uti/sge_profiling.h"
 #include "uti/sge_uidgid.h"
 #include "uti/setup_path.h"
-#include "read_defaults.h"
+#include "uti/sge_string.h"
+#include "uti/sge_hostname.h"
+#include "uti/sge_log.h"
 #include "uti/sge_io.h"
-#include "gdi/sge_gdi_ctx.h"
+
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/parse.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_schedd_conf.h"
+#include "sgeobj/sge_object.h"
 #include "sgeobj/sge_cull_xml.h"
+
+#include "gdi/sge_gdi_ctx.h"
+#include "gdi/sge_gdi.h"
+
+#include "comm/commlib.h"
+
+#include "sched/sge_select_queue.h"
+
+#include "sig_handlers.h"
+#include "sge_mt_init.h"
+#include "sge_qquota.h"
+#include "read_defaults.h"
+#include "msg_common.h"
+#include "msg_clients_common.h"
+#include "msg_qquota.h"
 
 static report_handler_t* create_xml_report_handler(lList **alpp);
 
@@ -124,8 +129,8 @@ static report_handler_t* create_xml_report_handler(lList **alpp) {
 static int destroy_xml_report_handler(report_handler_t** handler, lList **alpp) {
    if (*handler != NULL ) {
       sge_dstring_free((dstring*)(*handler)->ctx);
-      FREE((*handler)->ctx);
-      FREE(*handler);
+      sge_free(&((*handler)->ctx));
+      sge_free(handler);
       *handler = NULL;
    }
    return QQUOTA_SUCCESS;
@@ -564,7 +569,7 @@ sge_parse_qquota(lList **ppcmdline, lList **host_list, lList **resource_list,
 
       if (parse_string(ppcmdline, "-l", alpp, &argstr)) {
          *resource_list = centry_list_parse_from_string(*resource_list, argstr, false);
-         FREE(argstr);
+         sge_free(&argstr);
          continue;
       }
       if (parse_multi_stringlist(ppcmdline, "-u", alpp, user_list, ST_Type, ST_name)) {

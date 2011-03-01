@@ -54,39 +54,30 @@
 #include <ctype.h>
 #include <unistd.h>
 
-/* rmon */
-#include "sgermon.h"
+#include "rmon/sgermon.h"
 
-/* uti */
-#include "sge_log.h"
-#include "sge_stdio.h"
-#include "sge_string.h"
-#include "sge_tmpnam.h"
-
-/* sgeobj */
-#include "config.h"
-#include "sge_answer.h"
-#include "sge_utility.h"
-#include "sgeobj/sge_feature.h"
-#include "sgeobj/sge_sharetree.h"
-
-/* spool */
-#include "spool/sge_spooling_utilities.h"
-
-/* messages */
-#include "msg_common.h"
-#include "spool/msg_spoollib.h"
-#include "spool/flatfile/msg_spoollib_flatfile.h"
-
-/* local */
-#include "spool/flatfile/sge_spooling_flatfile_scanner.h"
-#include "spool/flatfile/sge_flatfile.h"
-
-/* uti */
+#include "uti/sge_log.h"
+#include "uti/sge_stdio.h"
+#include "uti/sge_string.h"
+#include "uti/sge_tmpnam.h"
 #include "uti/sge_spool.h"
 #include "uti/sge_unistd.h"
 #include "uti/sge_profiling.h"
-#include "sge_all_listsL.h"
+
+#include "sgeobj/config.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_utility.h"
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_sharetree.h"
+#include "sgeobj/sge_all_listsL.h"
+
+#include "spool/sge_spooling_utilities.h"
+#include "spool/msg_spoollib.h"
+#include "spool/flatfile/msg_spoollib_flatfile.h"
+#include "spool/flatfile/sge_spooling_flatfile_scanner.h"
+#include "spool/flatfile/sge_flatfile.h"
+
+#include "msg_common.h"
 
 const spool_flatfile_instr qconf_sub_name_value_space_sfi = 
 {
@@ -454,7 +445,7 @@ static const char *output_delimiter(const char c)
    return ret;
 }
 
-static char *get_end_token(char *buffer, int size, const char *end_token, 
+static char *get_end_token(char *buffer, int size, const char *end_token,
                            const char new_end_token)
 {
    char new_buffer[2] = { '\0', '\0' };
@@ -469,7 +460,7 @@ static char *get_end_token(char *buffer, int size, const char *end_token,
       new_buffer[0] = new_end_token;
    }
 
-   strncat(buffer, new_buffer, size);
+   sge_strlcat(buffer, new_buffer, size);
 
    return buffer;
 }
@@ -1261,7 +1252,7 @@ spool_flatfile_write_data(lList **answer_list, const void *data, int data_len,
                               result, strerror(errno));
       spool_flatfile_close_file(answer_list, fd, result, destination);
       unlink(filepath);
-      FREE(result);
+      sge_free(&result);
       PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
       DRETURN(NULL);
    }
@@ -1270,7 +1261,7 @@ spool_flatfile_write_data(lList **answer_list, const void *data, int data_len,
    if (!spool_flatfile_close_file(answer_list, fd, result, destination)) {
       /* message generated in spool_flatfile_close_file */
       unlink(filepath);
-      FREE(result);
+      sge_free(&result);
       PROF_STOP_MEASUREMENT(SGE_PROF_SPOOLINGIO);
       DRETURN(NULL);
    }
@@ -1555,7 +1546,7 @@ spool_flatfile_write_list_fields(lList **answer_list, const lList *list,
             }
          }
       }
-      FREE(my_fields);
+      sge_free(&my_fields);
    }
    
    DRETURN(ret);
@@ -1734,7 +1725,7 @@ _spool_flatfile_read_object(lList **answer_list, const lDescr *descr,
    }
 
    if (fields_out == NULL) {
-      FREE (my_fields_out);
+      sge_free(&my_fields_out);
    }
    
    return object;
@@ -2589,7 +2580,7 @@ static void spool_flatfile_add_line_breaks(dstring *buffer)
          first_line = true;
          
          if (indent_str != NULL) {
-            FREE (indent_str);
+            sge_free(&indent_str);
             word = 0;
          }
          
@@ -2724,7 +2715,7 @@ static void spool_flatfile_add_line_breaks(dstring *buffer)
 
             /* Release the indent string because each line may have different
              * indentation */
-            FREE(indent_str);
+            sge_free(&indent_str);
             continue;
          } else if (isspace (strp[index])) {
             strncpy(str_buf, strp, index);
@@ -2764,10 +2755,10 @@ static void spool_flatfile_add_line_breaks(dstring *buffer)
    sge_dstring_append(buffer, strp);
    
    if (indent_str != NULL) {
-      FREE(indent_str);
+      sge_free(&indent_str);
    }
    
-   FREE(orig);
+   sge_free(&orig);
    
    return;
 }

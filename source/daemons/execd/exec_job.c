@@ -43,61 +43,64 @@
 #   include <sys/schedctl.h>
 #endif
 
-#include "sge_bootstrap.h"
+#include "rmon/sgermon.h"
 
-#include "sge.h"
-#include "symbols.h"
-#include "sge_log.h"
-#include "sge_conf.h"
-#include "sge_time.h"
-#include "sge_pe.h"
-#include "sge_stdio.h"
-#include "sge_ja_task.h"
-#include "sge_pe_task.h"
-#include "sge_str.h"
-#include "sge_answer.h"
-#include "sge_range.h"
-#include "sge_qinstance.h"
-#include "parse.h"
+#include "uti/sge_bootstrap.h"
+#include "uti/sge_log.h"
+#include "uti/sge_time.h"
+#include "uti/sge_afsutil.h"
+#include "uti/sge_prog.h"
+#include "uti/setup_path.h"
+#include "uti/sge_string.h" 
+#include "uti/sge_stdlib.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_uidgid.h"
+#include "uti/sge_dstring.h"
+#include "uti/sge_hostname.h"
+#include "uti/sge_os.h"
+#include "uti/sge_stdio.h"
+#include "uti/sge_binding_hlp.h"
+#include "uti/sge_binding_parse.h"
+#include "uti/sge_stdio.h"
+#include "uti/sge_parse_num_par.h"
+
+#include "gdi/qm_name.h"
+
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_pe.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_pe_task.h"
+#include "sgeobj/sge_str.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/parse.h"
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_var.h"
+#include "sgeobj/sge_ckpt.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_binding.h"
+#include "sgeobj/sge_binding_BN_L.h"
+#include "sgeobj/sge_mailrec.h"
+#include "sgeobj/sge_path_alias.h"
+
+#include "comm/commlib.h"
+
 #include "get_path.h"
 #include "sge_job_qmaster.h"
 #include "tmpdir.h"
 #include "exec_job.h"
-#include "sge_path_alias.h"
-#include "sge_parse_num_par.h"
 #include "show_job.h"
 #include "mail.h"
-#include "sge_mailrec.h"
-#include "sgermon.h"
-#include "commlib.h"
 #include "basis_types.h"
 #include "sgedefs.h"
 #include "exec_ifm.h"
 #include "pdc.h"
-#include "sge_afsutil.h"
-#include "sge_prog.h"
-#include "setup_path.h"
-#include "qm_name.h"
-#include "sge_string.h" 
-#include "sge_feature.h"
-#include "sge_job.h"
-#include "sge_stdlib.h"
-#include "sge_unistd.h"
-#include "sge_uidgid.h"
-#include "sge_dstring.h"
-#include "sge_hostname.h"
-#include "sge_os.h"
-#include "sge_var.h"
-#include "sge_ckpt.h"
-#include "sge_centry.h"
-#include "sgeobj/sge_object.h"
-#include "uti/sge_stdio.h"
-#include "uti/sge_binding_hlp.h"
-#include "uti/sge_binding_parse.h"
-#include "sge_binding.h"
-#include "sge_binding_BN_L.h"
 #include "job_report_execd.h"
-
+#include "sge.h"
+#include "symbols.h"
 #include "msg_common.h"
 #include "msg_execd.h"
 #include "msg_daemons_common.h"
@@ -401,20 +404,20 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
       if (!(used_slots=qinstance_slots_used(master_q))) {
          if (!(sge_make_tmpdir(master_q, job_id, ja_task_id, 
              pw->pw_uid, pw->pw_gid, tmpdir))) {
-            snprintf(err_str, err_length, MSG_SYSTEM_CANTMAKETMPDIR);
+            snprintf(err_str, err_length, SFNMAX, MSG_SYSTEM_CANTMAKETMPDIR);
             DEXIT;
             return -2;
          }
       } else {
          SGE_STRUCT_STAT statbuf;
          if(!(sge_get_tmpdir(master_q, job_id, ja_task_id, tmpdir))) {
-            snprintf(err_str, err_length, MSG_SYSTEM_CANTGETTMPDIR);
+            snprintf(err_str, err_length, SFNMAX, MSG_SYSTEM_CANTGETTMPDIR);
             DEXIT;
             return -2;
          }
 
          if (SGE_STAT(tmpdir, &statbuf)) {
-            sprintf(err_str, "can't open tmpdir %s", tmpdir);
+            sprintf(err_str, MSG_SYSTEM_CANTOPENTMPDIR_S, tmpdir);
             DEXIT;
             return -2;
          }
@@ -454,7 +457,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
 
             /* add to job report */
             jr = get_job_report(job_id, ja_task_id, pe_task_id);
-            sge_dstring_sprintf(&pseudo_usage, "binding_inuse=%s", 
+            sge_dstring_sprintf(&pseudo_usage, "binding_inuse!%s", 
                            binding_get_topology_for_job(sge_dstring_get_string(&core_binding_strategy_string)));
             
             add_usage(jr, sge_dstring_get_string(&pseudo_usage), NULL, 0);
@@ -486,7 +489,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
          if (sge_dstring_get_string(&core_binding_strategy_string) != NULL 
                && strcmp(sge_dstring_get_string(&core_binding_strategy_string), "NULL") != 0) {
             
-            sge_dstring_sprintf(&pseudo_usage, "binding_inuse=%s", 
+            sge_dstring_sprintf(&pseudo_usage, "binding_inuse!%s", 
                            binding_get_topology_for_job((sge_dstring_get_string(&core_binding_strategy_string))));
 
             jr = get_job_report(job_id, ja_task_id, pe_task_id);
@@ -515,7 +518,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
          fp = fopen(hostfilename, "w");
          if (!fp) {
             snprintf(err_str, err_length, MSG_FILE_NOOPEN_SS,  hostfilename, strerror(errno));
-            FREE(rankfileinput);
+            sge_free(&rankfileinput);
             DEXIT;
             return -2;
          }
@@ -574,7 +577,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
          }
 
          FCLOSE(fp);
-         FREE(rankfileinput);
+         sge_free(&rankfileinput);
       }
       /*************************** finished writing sge hostfile  ********/
 
@@ -651,7 +654,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
 
       if (sge_binding_environment != NULL) {
          var_list_set_string(&environmentList, "SGE_BINDING", sge_binding_environment);
-         FREE(sge_binding_environment);
+         sge_free(&sge_binding_environment);
       }   
 
       /*
@@ -869,21 +872,21 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
                sge_dstring_sprintf(&default_dstring, "%s/utilbin/%s/rsh", sge_root, arch);
                var_list_set_string(&environmentList, "SGE_RSH_COMMAND", sge_dstring_get_string(&default_dstring));
             }   
-            FREE(mconf_string);
+            sge_free(&mconf_string);
 
             /* transport the notify kill and susp signals to qrsh -inherit */
             if (mconf_get_notify_kill_type() == 0) {
                mconf_string = mconf_get_notify_kill();
                if (mconf_string != NULL) {
                   var_list_set_string(&environmentList, "SGE_NOTIFY_KILL_SIGNAL", mconf_string);
-                  FREE(mconf_string);
+                  sge_free(&mconf_string);
                }
             }
             if (mconf_get_notify_susp_type() == 0) {
                mconf_string = mconf_get_notify_susp();
                if (mconf_string != NULL) {
                   var_list_set_string(&environmentList, "SGE_NOTIFY_SUSP_SIGNAL", mconf_string);
-                  FREE(mconf_string);
+                  sge_free(&mconf_string);
                }
             }
          }
@@ -980,7 +983,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
 
          if (!sup_groups_in_proc()) {
             lFreeList(&environmentList);
-            snprintf(err_str, err_length, MSG_EXECD_NOSGID); 
+            snprintf(err_str, err_length, SFNMAX, MSG_EXECD_NOSGID);
             FCLOSE(fp);
             DEXIT;
             return(-2);
@@ -993,10 +996,10 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
          DPRINTF(("gid_range = %s\n", gid_range));
          range_list_parse_from_string(&rlp, &alp, gid_range,
                                       0, 0, INF_NOT_ALLOWED);
-         FREE(gid_range);
+         sge_free(&gid_range);
          if (rlp == NULL) {
              lFreeList(&alp);
-             snprintf(err_str, err_length, MSG_EXECD_NOPARSEGIDRANGE);
+             snprintf(err_str, err_length, SFNMAX, MSG_EXECD_NOPARSEGIDRANGE);
              lFreeList(&environmentList);
              FCLOSE(fp);
              DEXIT;
@@ -1009,7 +1012,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
          while (addgrpid_already_in_use(last_addgrpid)) {
             last_addgrpid = get_next_addgrpid (rlp, last_addgrpid);
             if (temp_id == last_addgrpid) {
-               snprintf(err_str, err_length, MSG_EXECD_NOADDGID);
+               snprintf(err_str, err_length, SFNMAX, MSG_EXECD_NOADDGID);
                lFreeList(&environmentList);
                FCLOSE(fp);
                DEXIT;
@@ -1191,14 +1194,37 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
    {
       char *s;
 
-      mconf_get_s_descriptors(&s); fprintf(fp, "s_descriptors=%s\n", s); free(s);
-      mconf_get_h_descriptors(&s); fprintf(fp, "h_descriptors=%s\n", s); free(s);
-      mconf_get_s_maxproc(&s); fprintf(fp, "s_maxproc=%s\n", s); free(s);
-      mconf_get_h_maxproc(&s); fprintf(fp, "h_maxproc=%s\n", s); free(s);
-      mconf_get_s_memorylocked(&s); fprintf(fp, "s_memorylocked=%s\n", s); free(s);
-      mconf_get_h_memorylocked(&s); fprintf(fp, "h_memorylocked=%s\n", s); free(s);
-      mconf_get_s_locks(&s); fprintf(fp, "s_locks=%s\n", s); free(s);
-      mconf_get_h_locks(&s); fprintf(fp, "h_locks=%s\n", s); free(s);
+      mconf_get_s_descriptors(&s); 
+      fprintf(fp, "s_descriptors=%s\n", s); 
+      sge_free(&s);
+
+      mconf_get_h_descriptors(&s); 
+      fprintf(fp, "h_descriptors=%s\n", s); 
+      sge_free(&s);
+      
+      mconf_get_s_maxproc(&s); 
+      fprintf(fp, "s_maxproc=%s\n", s); 
+      sge_free(&s);
+
+      mconf_get_h_maxproc(&s); 
+      fprintf(fp, "h_maxproc=%s\n", s); 
+      sge_free(&s);
+
+      mconf_get_s_memorylocked(&s); 
+      fprintf(fp, "s_memorylocked=%s\n", s); 
+      sge_free(&s);
+
+      mconf_get_h_memorylocked(&s); 
+      fprintf(fp, "h_memorylocked=%s\n", s); 
+      sge_free(&s);
+   
+      mconf_get_s_locks(&s); 
+      fprintf(fp, "s_locks=%s\n", s); 
+      sge_free(&s);
+
+      mconf_get_h_locks(&s); 
+      fprintf(fp, "h_locks=%s\n", s); 
+      sge_free(&s);
    }
 
    fprintf(fp, "priority=%s\n", lGetString(master_q, QU_priority));
@@ -1238,8 +1264,8 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
       fprintf(fp, "epilog=%s\n", 
               ((cp=lGetString(master_q, QU_epilog)) && strcasecmp(cp, "none"))?
               cp: epilog);
-      FREE(prolog);
-      FREE(epilog);
+      sge_free(&prolog);
+      sge_free(&epilog);
    } else {
       fprintf(fp, "prolog=%s\n", "none");
       fprintf(fp, "epilog=%s\n", "none");
@@ -1298,7 +1324,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
    shell_start_mode = mconf_get_shell_start_mode(); 
    fprintf(fp, "shell_start_mode=%s\n", 
          job_get_shell_start_mode(jep, master_q, shell_start_mode));
-   FREE(shell_start_mode);
+   sge_free(&shell_start_mode);
    /* we need the basename for loginshell test */
    shell = strrchr(shell_path, '/');
    if (!shell)
@@ -1383,7 +1409,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
             fprintf(fp, "exec_file=%s\n", xterm);
             DPRINTF(("exec_file=%s\n", xterm));
          } else {
-            snprintf(err_str, err_length, MSG_EXECD_NOXTERM);
+            snprintf(err_str, err_length, SFNMAX, MSG_EXECD_NOXTERM);
             FCLOSE(fp);
             lFreeList(&environmentList);
             sge_dstring_free(&core_binding_strategy_string);
@@ -1393,7 +1419,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
             ** this causes a general failure
             */
          }
-         FREE(xterm);
+         sge_free(&xterm);
       }
    }
 
@@ -1455,7 +1481,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
              */
             const char *error_string = lGetString(lFirst(answer_list), AN_text);
             if(error_string != NULL) {
-               snprintf(err_str, err_length, error_string);
+               snprintf(err_str, err_length, SFNMAX, error_string);
             }
             lFreeList(&answer_list);
             lFreeList(&environmentList);
@@ -1478,12 +1504,12 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
       fprintf(fp, "coshepherd=%s\n", coshepherd_path);
       set_token_cmd = mconf_get_set_token_cmd();
       fprintf(fp, "set_token_cmd=%s\n", set_token_cmd ? set_token_cmd : "none");
-      FREE(set_token_cmd);
+      sge_free(&set_token_cmd);
       fprintf(fp, "token_extend_time=%d\n", (int) mconf_get_token_extend_time());
    } else {
       fprintf(fp, "use_afs=0\n");
    }
-   FREE(pag_cmd);
+   sge_free(&pag_cmd);
 
    fprintf(fp, "admin_user=%s\n", admin_user);
 
@@ -1491,11 +1517,11 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
    fprintf(fp, "notify_kill_type=%d\n", mconf_get_notify_kill_type());
    notify_kill = mconf_get_notify_kill();
    fprintf(fp, "notify_kill=%s\n", notify_kill?notify_kill:"default");
-   FREE(notify_kill);
+   sge_free(&notify_kill);
    fprintf(fp, "notify_susp_type=%d\n", mconf_get_notify_susp_type());
    notify_susp = mconf_get_notify_susp();
    fprintf(fp, "notify_susp=%s\n", notify_susp?notify_susp:"default");   
-   FREE(notify_susp);
+   sge_free(&notify_susp);
    if (mconf_get_use_qsub_gid()) {
       fprintf(fp, "qsub_gid="sge_u32"\n", lGetUlong(jep, JB_gid));
    } else {
@@ -1539,7 +1565,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
          if(JOB_TYPE_IS_QLOGIN(jb_now)) {
             char* qlogin_daemon = mconf_get_qlogin_daemon();
             fprintf(fp, "qlogin_daemon=%s\n", qlogin_daemon);
-            FREE(qlogin_daemon);
+            sge_free(&qlogin_daemon);
          } else {
             if(JOB_TYPE_IS_QRSH(jb_now)) {
                char* rsh_daemon = mconf_get_rsh_daemon();
@@ -1554,7 +1580,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
                      write_osjob_id = 0; /* will be done by our rshd */
                   }
                }
-               FREE(rsh_daemon);
+               sge_free(&rsh_daemon);
 
                fprintf(fp, "qrsh_tmpdir=%s\n", tmpdir);
 
@@ -1577,7 +1603,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
                         write_osjob_id = 0; /* will be done by our rlogind */
                      }
                   }   
-                  FREE(rlogin_daemon);
+                  sge_free(&rlogin_daemon);
                }
             }
          }   
@@ -1668,8 +1694,8 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
        strcasecmp(shepherd_cmd, "none")) {
       if (SGE_STAT(shepherd_cmd, &buf)) {
          snprintf(err_str, err_length, MSG_EXECD_NOSHEPHERDWRAP_SS, shepherd_cmd, strerror(errno));
-         FREE(pag_cmd);
-         FREE(shepherd_cmd);
+         sge_free(&pag_cmd);
+         sge_free(&shepherd_cmd);
          DEXIT;
          return -2;
       }
@@ -1679,8 +1705,8 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
               sge_root, arch);
       if (SGE_STAT(dce_wrapper_cmd, &buf)) {
          snprintf(err_str, err_length, MSG_DCE_NOSHEPHERDWRAP_SS, dce_wrapper_cmd, strerror(errno));
-         FREE(pag_cmd);
-         FREE(shepherd_cmd);
+         sge_free(&pag_cmd);
+         sge_free(&shepherd_cmd);
          DEXIT;
          return -2;
       }
@@ -1695,8 +1721,8 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
          sprintf(coshepherd_path, "%s/%s", binary_path, shepherd_name);
          if (SGE_STAT(coshepherd_path, &buf)) {
             snprintf(err_str, err_length, MSG_EXECD_NOCOSHEPHERD_SSS, arch, coshepherd_path, strerror(errno));
-            FREE(pag_cmd);
-            FREE(shepherd_cmd);
+            sge_free(&pag_cmd);
+            sge_free(&shepherd_cmd);
             DEXIT;
             return -2;
          }
@@ -1704,43 +1730,43 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
       set_token_cmd = mconf_get_set_token_cmd();
       if (!set_token_cmd ||
           !strlen(set_token_cmd) || !mconf_get_token_extend_time()) {
-         snprintf(err_str, err_length, MSG_EXECD_AFSCONFINCOMPLETE);
-         FREE(pag_cmd);
-         FREE(shepherd_cmd);
+         snprintf(err_str, err_length, SFNMAX, MSG_EXECD_AFSCONFINCOMPLETE);
+         sge_free(&pag_cmd);
+         sge_free(&shepherd_cmd);
          DEXIT;
          return -2;
       }
-      FREE(set_token_cmd);
+      sge_free(&set_token_cmd);
 
    /* JG: TODO (254) use function sge_get_active_job.... */
       sprintf(fname, "%s/%s", active_dir_buffer, TOKEN_FILE);
       if ((fd = SGE_OPEN3(fname, O_RDWR | O_CREAT | O_TRUNC, 0600)) == -1) {
          snprintf(err_str, err_length, MSG_EXECD_NOCREATETOKENFILE_S, strerror(errno));
-         FREE(pag_cmd);
-         FREE(shepherd_cmd);
+         sge_free(&pag_cmd);
+         sge_free(&shepherd_cmd);
          DEXIT;
          return -2;
       }   
       
       cp = lGetString(jep, JB_tgt);
       if (!cp || !(len = strlen(cp))) {
-         snprintf(err_str, err_length, MSG_EXECD_TOKENZERO);
-         FREE(pag_cmd);
-         FREE(shepherd_cmd);
+         snprintf(err_str, err_length, SFNMAX, MSG_EXECD_TOKENZERO);
+         sge_free(&pag_cmd);
+         sge_free(&shepherd_cmd);
          DEXIT;
          return -3; /* problem of this user */
       }
       if (write(fd, cp, len) != len) {
          snprintf(err_str, err_length, MSG_EXECD_NOWRITETOKEN_S, strerror(errno));
-         FREE(pag_cmd);
-         FREE(shepherd_cmd);
+         sge_free(&pag_cmd);
+         sge_free(&shepherd_cmd);
          DEXIT;
          return -2;
       }
       close(fd);
    }
-   FREE(pag_cmd);
-   FREE(shepherd_cmd);
+   sge_free(&pag_cmd);
+   sge_free(&shepherd_cmd);
 
    /* send mail to users if requested */
    if(petep == NULL) {
@@ -1927,8 +1953,8 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
 
       execlp(pag_cmd, pag_cmd, "-c", commandline, NULL);
    }
-   FREE(pag_cmd);
-   FREE(shepherd_cmd);
+   sge_free(&pag_cmd);
+   sge_free(&shepherd_cmd);
 
 
    /*---------------------------------------------------*/
@@ -1947,7 +1973,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
    }
 
 FCLOSE_ERROR:
-   CRITICAL((SGE_EVENT, MSG_EXECD_NOSTARTSHEPHERD));
+   CRITICAL((SGE_EVENT, SFNMAX, MSG_EXECD_NOSTARTSHEPHERD));
 
    exit(1);
 
@@ -1987,7 +2013,7 @@ char *shell
       DPRINTF(("strncmp(\"%s\", \"%s\", %d) = %d\n",
               cp, shell, strlen(shell), ret));
       if (!ret) {
-         FREE(login_shells);
+         sge_free(&login_shells);
          DEXIT;  
          return 1;
       }
@@ -1997,7 +2023,7 @@ char *shell
           cp++;
       }
    }
-  FREE(login_shells);
+  sge_free(&login_shells);
   DEXIT;
   return 0;
 }
@@ -2243,8 +2269,8 @@ static bool linear_linux(dstring* result, lListElem* binding_elem,
          sge_dstring_append(result, topo_job);
 
          /* free lists */
-         FREE(list_of_sockets);
-         FREE(list_of_cores);
+         sge_free(&list_of_sockets);
+         sge_free(&list_of_cores);
 
          retval = true;
 
@@ -2283,7 +2309,7 @@ static bool linear_linux(dstring* result, lListElem* binding_elem,
    }   
    
    /* free topology string */
-   FREE(topo_job);
+   sge_free(&topo_job);
 
    DRETURN(retval);
 }
@@ -2374,8 +2400,9 @@ static bool striding_linux(dstring* result, lListElem* binding_elem,
    }
 
    /* free topology string */
-   if (topo_job != NULL)
-      free(topo_job);
+   if (topo_job != NULL) {
+      sge_free(&topo_job);
+   }
 
    /* return core binding string */
    DRETURN(retval);
@@ -2463,9 +2490,9 @@ static bool explicit_linux(dstring* result, lListElem* binding_elem)
    } 
 
    /* free resources */
-   FREE(topo_by_job);
-   FREE(socket_list);
-   FREE(core_list);
+   sge_free(&topo_by_job);
+   sge_free(&socket_list);
+   sge_free(&core_list);
 
    DRETURN(retval); 
 }
@@ -2669,9 +2696,9 @@ static bool linear_automatic_solaris(dstring* result, lListElem* binding_elem,
 
    }
    
-   FREE(list_of_cores);
-   FREE(list_of_sockets);
-   FREE(topo_by_job);
+   sge_free(&list_of_cores);
+   sge_free(&list_of_sockets);
+   sge_free(&topo_by_job);
 
    DRETURN(retval);
 }
@@ -2818,7 +2845,7 @@ static bool striding_solaris(dstring* result, lListElem* binding_elem, const boo
       retval = false; 
    }
 
-   FREE(topo_by_job);
+   sge_free(&topo_by_job);
 
    DRETURN(retval);
 }
@@ -2932,9 +2959,9 @@ static bool explicit_solaris(dstring* result, lListElem* binding_elem, char* err
          retval = false;
       }
 
-      FREE(core_list);
-      FREE(socket_list);
-      FREE(topo_by_job);
+      sge_free(&core_list);
+      sge_free(&socket_list);
+      sge_free(&topo_by_job);
    }
 
    DRETURN(retval);
@@ -3022,8 +3049,8 @@ static bool parse_job_accounting_and_create_logical_list(const char* binding_str
       sge_dstring_free(&pair);
       sge_dstring_free(&full);
 
-      FREE(sockets);
-      FREE(cores);
+      sge_free(&sockets);
+      sge_free(&cores);
 
    } else {
       /* no cores used */

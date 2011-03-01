@@ -38,7 +38,7 @@
 #include <signal.h>
 #include <sys/time.h>
 
-#include "cl_commlib.h"
+#include "comm/cl_commlib.h"
 
 void sighandler_server(int sig);
 static int do_shutdown = 0;

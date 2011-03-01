@@ -30,19 +30,18 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_ja_task.h"
+
+#include "mir/sge_mirror.h"
+#include "mir/msg_mirlib.h"
+#include "mir/sge_ja_task_mirror.h"
+
 #include "sge.h"
-#include "sgermon.h"
-
-#include "sge_log.h"
-
-#include "sge_job.h"
-#include "sge_ja_task.h"
-
-#include "sge_mirror.h"
-
-#include "msg_mirlib.h"
-
-#include "sge_ja_task_mirror.h"
 
 /****** Eventmirror/ja_task/ja_task_update_master_list_usage() *****************
 *  NAME

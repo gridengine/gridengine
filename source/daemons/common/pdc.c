@@ -42,9 +42,9 @@ int verydummypdc;
 #   if defined(MODULE_TEST) || defined(PDC_STANDALONE)
 #include <stdio.h>
 #include "basis_types.h"
-#include "sge_language.h"
-#include "sge_os.h"
-#include "sge_log.h"
+#include "uti/sge_language.h"
+#include "uti/sge_os.h"
+#include "uti/sge_log.h"
 
 int main(int argc,char *argv[])
 {
@@ -115,7 +115,7 @@ int main(int argc,char *argv[])
 #include <sys/acct.h>
 #include <sys/stat.h>
 #include <sys/machcons.h>
-#include "sge_unistd.h"
+#include "uti/sge_unistd.h"
 #endif
 
 #if defined(AIX)
@@ -151,7 +151,7 @@ int main(int argc,char *argv[])
 
 #if defined(LINUX) || defined(ALPHA) || defined(IRIX) || defined(SOLARIS) || defined(DARWIN) || defined (FREEBSD) || defined(NETBSD) || defined(HP1164) || defined(AIX)
 
-#include "sge_os.h"
+#include "uti/sge_os.h"
 #endif
 
 #if defined(IRIX)
@@ -183,12 +183,12 @@ int getpagesize(void);
 #include "pdc.h"
 #include "procfs.h"
 #include "basis_types.h"
-#include "cull.h"
+#include "cull/cull.h"
 #include "ptf.h"
-#include "sge_feature.h"
-#include "sge_language.h"
-#include "sgermon.h"
-#include "sge_uidgid.h"
+#include "sgeobj/sge_feature.h"
+#include "uti/sge_language.h"
+#include "rmon/sgermon.h"
+#include "uti/sge_uidgid.h"
 
 #if defined(PDC_STANDALONE)
 #  include "sge_log.h"
@@ -291,7 +291,7 @@ void pdc_kill_addgrpid(gid_t add_grp_id, int sig,
       return;
    }
    if (sysctl(mib, 4, procs, &bufSize, NULL, 0) < 0) {
-      FREE(procs);
+      sge_free(&procs);
       return;
    }
    procs_begin = procs;
@@ -317,7 +317,7 @@ void pdc_kill_addgrpid(gid_t add_grp_id, int sig,
          }
       }
    }
-   FREE(procs_begin)
+   sge_free(&procs_begin);
 #endif
 }
 #endif
@@ -519,7 +519,7 @@ read_kernel_table(char *name, void **table, long *size, int *entries)
 
    tsize = tinfo.head + (tinfo.ent * tinfo.len);
    if (tsize > *size) {
-      if (*table) free(*table);
+      sge_free(table);
       *table = malloc(tsize);
       if (*table == NULL) {
          return -1;
@@ -1367,8 +1367,11 @@ free_arsess_list(lnk_link_t *arsess_list)
 {
    lnk_link_t *curra;
    while((curra=arsess_list->next) != arsess_list) {
+      arsess_elem_t *ptr;
+
       LNK_DELETE(curra);
-      free(LNK_DATA(curra, arsess_elem_t, link));
+      ptr = LNK_DATA(curra, arsess_elem_t, link);
+      sge_free(&ptr);
    }
 }
 
@@ -1405,8 +1408,11 @@ free_process_list(job_elem_t *job_elem)
 
    /* free process list */
    while((currp=job_elem->procs.next) != &job_elem->procs) {
+      proc_elem_t *ptr;
+
       LNK_DELETE(currp);
-      free(LNK_DATA(currp, proc_elem_t, link));
+      ptr = LNK_DATA(currp, proc_elem_t, link);
+      sge_free(&ptr);
    }
 }
 
@@ -1422,13 +1428,16 @@ free_job(job_elem_t *job_elem)
 #ifdef IRIX
    /* free arse list */
    while((currp=job_elem->arses.next) != &job_elem->arses) {
+      arsess_elem_t *ptr;
+   
       LNK_DELETE(currp);
-      free(LNK_DATA(currp, arsess_elem_t, link));
+      ptr = LNK_DATA(currp, arsess_elem_t, link);
+      sge_free(&ptr);
    }
 #endif
 
    /* free job element */
-   free(job_elem);
+   sge_free(&job_elem);
 }
 
 static int psRetrieveOSJobData(void) {
@@ -1737,7 +1746,7 @@ static int psRetrieveOSJobData(void) {
       }
       if (sysctl(mib, 4, procs, &bufSize, NULL, 0) < 0) {
          DPRINTF(("sysctl() failed(2)\n"));
-         FREE(procs);
+         sge_free(&procs);
          DRETURN(-1);
       }
       procs_begin = procs;
@@ -1766,7 +1775,7 @@ static int psRetrieveOSJobData(void) {
                   if (newprocess) {
                      proc_elem = malloc(sizeof(proc_elem_t));
                      if (proc_elem == NULL) {
-                        FREE(procs_begin);
+                        sge_free(&procs_begin);
                         DRETURN(0);
                      }
 
@@ -1827,7 +1836,7 @@ static int psRetrieveOSJobData(void) {
             }
          }
       }
-      FREE(procs_begin);
+      sge_free(&procs_begin);
    }
 #elif defined(NECSX4) || defined(NECSX5)
    {
@@ -2112,7 +2121,7 @@ static int psRetrieveOSJobData(void) {
                LNK_DELETE(curra);
                if ((elem=find_arsess(&job_elem->arses, arse->ash))) {
                   LNK_DELETE(&elem->link);
-                  free(elem);
+                  sge_free(&elem);
                }
                LNK_ADD(job_elem->arses.prev, &arsess_elem->link);
 
@@ -2243,7 +2252,7 @@ static int psRetrieveOSJobData(void) {
                   if (ioctl(fd, PIOCPSINFO, &psinfo) < 0 ||
                       ioctl(fd, PIOCACINFO, &prinfo) < 0) {
                      close(fd);
-                     free(proc_elem);
+                     sge_free(&proc_elem);
                      pidlist[j] = -pidlist[j]; /* force report of old usage */
                      continue;
                   }
@@ -2344,7 +2353,7 @@ static int psRetrieveOSJobData(void) {
                      }
                   }
                   LNK_DELETE(currp);
-                  free(tproc_elem);
+                  sge_free(&tproc_elem);
                }
             }
          }
@@ -2413,7 +2422,7 @@ static int psRetrieveOSJobData(void) {
                      proc->pd_pid, job->jd_jid, proc->pd_utime, proc->pd_stime));
 #endif
                LNK_DELETE(currp);
-               free(proc_elem);
+               sge_free(&proc_elem);
             }
          }
          /* estimate high water memory mark */
@@ -2464,7 +2473,7 @@ static int psRetrieveOSJobData(void) {
                job->jd_proccount--;
                job->jd_srtime_c += proc_elem->qwtime; /* job srun-wait time */
                LNK_DELETE(currp);
-               free(proc_elem);
+               sge_free(&proc_elem);
             }
          }
 
@@ -3182,7 +3191,7 @@ main(int argc, char **argv)
                         print_process_data(pp);
                      INCPROCPTR(pp, pp->pd_length);
                   }
-                  free(ojp);
+                  sge_free(&ojp);
                } 
 
             } else if (verbose && !killjob)
@@ -3241,10 +3250,15 @@ main(int argc, char **argv)
          fflush(stdout);
       }
 
-      if (ojob) free(ojob);
-      if (stat) free(stat);
-      if (sys) free(sys);
-
+      if (ojob) {
+         sge_free(&ojob);
+      }
+      if (stat) {
+         sge_free(&stat);
+      }
+      if (sys) {
+         sge_free(&sys);
+      }
       if (killjob && (!forcekill || activeprocs == 0))
          break;
 

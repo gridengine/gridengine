@@ -32,11 +32,9 @@
 
 #include <string.h>
 
-#include "basis_types.h"
-#include "sge.h"
-#include "sgermon.h"
-#include "sge_str.h"
+#include "rmon/sgermon.h"
 
+#include "sgeobj/sge_str.h"
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_advance_reservation.h"
 #include "sgeobj/sge_centry.h"
@@ -50,8 +48,9 @@
 #include "sgeobj/sge_mesobj.h"
 #include "sgeobj/cull_parse_util.h"
 
+#include "basis_types.h"
+#include "sge.h"
 #include "qrstat_report_handler.h"
-
 #include "msg_common.h"
 
 bool

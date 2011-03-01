@@ -31,15 +31,15 @@
 /*___INFO__MARK_END__*/
 
 
-#include "sge_uidgid.h"
-#include "setup_path.h"
-#include "sge_bootstrap.h"
-#include "sge_feature.h"
-#include "sge_profiling.h"
-#include "sge_err.h"
+#include "uti/sge_uidgid.h"
+#include "uti/setup_path.h"
+#include "uti/sge_bootstrap.h"
+#include "uti/sge_profiling.h"
+#include "uti/sge_err.h"
 
 #include "lck/sge_lock.h"
 
+#include "sgeobj/sge_feature.h"
 #include "sgeobj/sge_object.h"
 #include "sgeobj/sge_schedd_conf.h"
 

@@ -44,16 +44,15 @@
 #include "uti/sge_string.h"
 #include "uti/sge_log.h"
 
-#include "config.h"
-#include "sge_answer.h"
-#include "sge_conf.h"
-#include "parse.h"
-#include "sge_attr.h"
-#include "sge_object.h"
-#include "sge_ulong.h"
-#include "sge_centry.h"
-
-#include "msg_sgeobjlib.h"
+#include "sgeobj/config.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/parse.h"
+#include "sgeobj/sge_attr.h"
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_ulong.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/msg_sgeobjlib.h"
 
 /* 
 **
@@ -749,7 +748,7 @@ bool set_conf_enum(lList **alpp, lList **clpp, int fields[], const char *key,
    }
    
    if(!uval) {
-      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_CONFIGINVALIDQUEUESPECIFIED ));
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_GDI_CONFIGINVALIDQUEUESPECIFIED ));
       answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       DEXIT;
       return false;

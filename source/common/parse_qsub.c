@@ -34,24 +34,20 @@
 #include <unistd.h>
 #include <fnmatch.h>
 
-#include "sge_all_listsL.h"
-#include "sge_parse_SPA_L.h"
-#include "parse_job_cull.h"
-#include "sge_mailrec.h"
-#include "parse_qsub.h"
-#include "sge_parse_num_par.h"
-#include "parse.h"
-#include "sge_options.h"
-#include "cull_parse_util.h"
-
 #include "rmon/sgermon.h"
 
+#include "uti/sge_parse_num_par.h"
 #include "uti/sge_dstring.h"
 #include "uti/sge_binding_hlp.h"
 #include "uti/sge_stdlib.h"
 #include "uti/sge_string.h"
 #include "uti/sge_log.h"
 
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/cull_parse_util.h"
+#include "sgeobj/sge_mailrec.h"
+#include "sgeobj/parse.h"
+#include "sgeobj/sge_parse_SPA_L.h"
 #include "sgeobj/sge_range.h"
 #include "sgeobj/sge_ckpt.h"
 #include "sgeobj/sge_ulong.h"
@@ -64,6 +60,9 @@
 #include "sgeobj/sge_jsv.h"
 #include "sgeobj/sge_qref.h"
 
+#include "parse_job_cull.h"
+#include "parse_qsub.h"
+#include "sge_options.h"
 #include "msg_common.h"
 
 static int var_list_parse_from_environment(lList **lpp, char **envp);
@@ -115,7 +114,7 @@ u_long32 flags
 ) {
    char **sp;
    lList *answer = NULL;
-   char str[1024 + 1];
+   char str[MAX_STRING_SIZE];
    lListElem *ep_opt;
    int i_ret;
    u_long32 is_qalter = flags & FLG_QALTER;
@@ -787,9 +786,7 @@ u_long32 flags
 
       if(!strcmp("-he", *sp)) {
          if (lGetElemStr(*pcmdline, SPA_switch, *sp)) {
-            sprintf(str,
-               MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S,
-               *sp);
+            snprintf(str, sizeof(str), MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S, *sp);
             answer_list_add(&answer, str, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
          }
          /* next field is yes/no switch */
@@ -1282,8 +1279,7 @@ u_long32 flags
       if (!strcmp("-P", *sp)) {
 
          if (lGetElemStr(*pcmdline, SPA_switch, *sp)) {
-            sprintf(str, MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S,
-               *sp);
+            snprintf(str, sizeof(str), MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S, *sp);
             answer_list_add(&answer, str, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
          }
 
@@ -1667,8 +1663,8 @@ DTRACE;
             tmp = sge_strdup(NULL, *sp);
             dest = string_list(tmp, ",", NULL);
             cull_parse_string_list(dest, "user_list", ARA_Type, rule, &user_list);
-            FREE(tmp);
-            FREE(dest);
+            sge_free(&tmp);
+            sge_free(&dest);
          } else {
             str_list_parse_from_string(&user_list, *sp, ",");
          }
@@ -1814,7 +1810,7 @@ DTRACE;
 
          sp++;
          if (!*sp) {
-             sprintf(str, MSG_PARSE_ATSIGNOPTIONMUSTHAVEFILEARGUMENT);
+             snprintf(str, sizeof(str), SFNMAX, MSG_PARSE_ATSIGNOPTIONMUSTHAVEFILEARGUMENT);
              answer_list_add(&answer, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
              DEXIT;
              return answer;
@@ -2097,7 +2093,7 @@ static int var_list_parse_from_environment(lList **lpp, char **envp)
       env_description = sge_strtok_r((char *) 0, "\n", &context);
       if (env_description)
          lSetString(ep, VA_value, env_description);
-      FREE(env_entry);
+      sge_free(&env_entry);
       sge_free_saved_vars(context);
    }
 
@@ -2162,32 +2158,32 @@ char *reroot_path(lListElem* pjob, const char *path, lList **alpp) {
    char tmp_str[SGE_PATH_MAX + 1];
    char tmp_str2[SGE_PATH_MAX + 1];
    char tmp_str3[SGE_PATH_MAX + 1];
-   
+
    DENTER (TOP_LAYER, "reroot_path");
-   
+
    home = job_get_env_string(pjob, VAR_PREFIX "O_HOME");
-   strcpy (tmp_str, path);
-   
-   if (!chdir(home)) {
+   strcpy(tmp_str, path);
+
+   if (chdir(home) == 0) {
       /* If chdir() succeeds... */
-      if (!getcwd(tmp_str2, sizeof(tmp_str2))) {
+      if (getcwd(tmp_str2, sizeof(tmp_str2)) == NULL) {
          /* If getcwd() fails... */
-         answer_list_add(alpp, MSG_ANSWER_GETCWDFAILED, 
+         answer_list_add(alpp, MSG_ANSWER_GETCWDFAILED,
                          STATUS_EDISK, ANSWER_QUALITY_ERROR);
          DRETURN(NULL);
       }
 
-      chdir(tmp_str);
-
-      if (strncmp(tmp_str2, tmp_str, strlen(tmp_str2)) == 0) {
-         /* If they are equal, build a new CWD using the value of the HOME
-          * as the root instead of whatever that directory is called by
-          * the -(c)wd path. */
-         sprintf(tmp_str3, "%s%s", home, (char *) tmp_str + strlen(tmp_str2));
-         strcpy(tmp_str, tmp_str3);
+      if (chdir(tmp_str) == 0) {
+         if (strncmp(tmp_str2, tmp_str, strlen(tmp_str2)) == 0) {
+            /* If they are equal, build a new CWD using the value of the HOME
+             * as the root instead of whatever that directory is called by
+             * the -(c)wd path. */
+            sprintf(tmp_str3, "%s%s", home, (char *) tmp_str + strlen(tmp_str2));
+            strcpy(tmp_str, tmp_str3);
+         }
       }
    }
-   
+
    DRETURN(strdup(tmp_str));
 }
 

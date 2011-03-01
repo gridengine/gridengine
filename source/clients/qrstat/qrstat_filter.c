@@ -32,9 +32,7 @@
 
 #include <string.h>
 
-#include "basis_types.h"
-#include "sge.h"
-#include "sgermon.h"
+#include "rmon/sgermon.h"
 
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_advance_reservation.h"
@@ -42,6 +40,8 @@
 #include "sgeobj/sge_ulong.h"
 
 #include "qrstat_filter.h"
+#include "basis_types.h"
+#include "sge.h"
 
 void
 qrstat_filter_init(qrstat_env_t *qrstat_env)

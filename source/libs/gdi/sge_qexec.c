@@ -49,19 +49,19 @@
 #include "uti/sge_uidgid.h"
 #include "uti/sge_time.h"
 
+#include "gdi/sge_security.h"
+#include "gdi/sge_gdi.h"
+#include "gdi/pack_job_delivery.h"   
+#include "gdi/sge_qexec.h"
+#include "gdi/sge_gdi2.h"
+#include "gdi/msg_gdilib.h"
+
 #include "sgeobj/sge_ja_task.h"
 #include "sgeobj/sge_pe_task.h"
 #include "sgeobj/sge_str.h"
 #include "sgeobj/sge_var.h"
 
-#include "gdi/sge_qexec.h"
-#include "gdi/sge_security.h"
-#include "gdi/sge_gdi.h"
-
-#include "pack_job_delivery.h"   
-
 #include "msg_common.h"
-#include "msg_gdilib.h"
 
 static lList *remote_task_list = 0;
 static char lasterror[1024];
@@ -190,7 +190,7 @@ sge_tid_t sge_qexecve(sge_gdi_ctx_class_t *ctx,
 
    if (init_packbuffer(&pb, 1024, 0) != PACK_SUCCESS) {
       lFreeElem(&petrep);
-      sprintf(lasterror, MSG_GDI_OUTOFMEMORY);
+      sprintf(lasterror, SFNMAX, MSG_GDI_OUTOFMEMORY);
       DRETURN(NULL);
    }
 
@@ -340,9 +340,8 @@ static int rcv_from_execd(sge_gdi_ctx_class_t *ctx, int options, int tag)
       /* change state in exited task */
       if (!(rt_rcv = lGetElemStr(remote_task_list, RT_tid, 
             tid))) {
-         sprintf(lasterror, MSG_GDI_TASKNOTFOUND_S , 
-               tid);
-         free(tid);
+         sprintf(lasterror, MSG_GDI_TASKNOTFOUND_S, tid);
+         sge_free(&tid);
          DEXIT;
          return -1;
       }
@@ -365,8 +364,7 @@ static int rcv_from_execd(sge_gdi_ctx_class_t *ctx, int options, int tag)
       break;
    }
 
-   free(tid);
-
+   sge_free(&tid);
    DEXIT;
    return 0;
 }

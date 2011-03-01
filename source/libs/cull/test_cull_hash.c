@@ -47,7 +47,7 @@
 #include "basis_types.h"
 
 #define __SGE_GDI_LIBRARY_HOME_OBJECT_FILE__
-#include "cull.h"
+#include "cull/cull.h"
 
 #include "uti/sge_profiling.h"
 
@@ -360,8 +360,7 @@ int main(int argc, char *argv[])
    
    /* free names */
    for (i = 0; i < num_names; i++) {
-      free((char *)names[i]);
-      names[i] = NULL;
+      sge_free(&(names[i]));
    }
 
    return EXIT_SUCCESS;

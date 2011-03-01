@@ -30,10 +30,11 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "sge_dstring.h"
-#include "cl_data_types.h"
-#include "cl_commlib.h"
-#include "cl_connection_list.h"
+#include "uti/sge_dstring.h"
+
+#include "comm/cl_data_types.h"
+#include "comm/cl_commlib.h"
+#include "comm/cl_connection_list.h"
 
 #define BUFSIZE              64*1024
 #define COMM_HANDLE cl_com_handle_t

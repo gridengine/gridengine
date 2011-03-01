@@ -37,7 +37,9 @@
 #include <unistd.h>
 #include <signal.h>
 #include <pwd.h>
+
 #include "cl_commlib.h"
+#include "uti/sge_stdlib.h"
 
 /* 
  *  global signal flags 
@@ -298,8 +300,8 @@ extern int main(int argc, char** argv) {
       }
    }
    for(j = 0; j < i_ends; j++){
-      free(endpoints[j].comp_host);
-      free(endpoints[j].comp_name);
+      sge_free(&(endpoints[j].comp_host));
+      sge_free(&(endpoints[j].comp_name));
    }
  
    /* cleanup commlib */

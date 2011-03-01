@@ -31,68 +31,68 @@
 /*___INFO__MARK_END__*/
 #include <string.h>
 
-#include "sge.h"
-#include "sge_conf.h"
-#include "symbols.h"
-#include "sge_prog.h"
-#include "sge_time.h"
-#include "sge_feature.h"
-#include "sge_id.h"
-#include "sge_ja_task.h"
-#include "commlib.h"
-#include "sge_host.h"
-#include "sge_manop.h"
-#include "sge_host_qmaster.h"
-#include "sge_answer.h"
-#include "sge_event_master.h"
-#include "sge_job_schedd.h"
-#include "sge_c_gdi.h"
-#include "mail.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "sge_parse_num_par.h"
-#include "configuration_qmaster.h"
-#include "sge_cqueue_qmaster.h"
-#include "sge_userset_qmaster.h"
-#include "sge_userprj_qmaster.h"
-#include "reschedule.h"
-#include "sge_hostname.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_string.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_time.h"
+#include "uti/sge_log.h"
+#include "uti/sge_parse_num_par.h"
+#include "uti/sge_hostname.h"
+#include "uti/sge_bootstrap.h"
+
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_id.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_manop.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_report.h"
+#include "sgeobj/sge_userprj.h"
+#include "sgeobj/sge_userset.h"
 #include "sgeobj/sge_qinstance.h"
-#include "sge_qinstance_qmaster.h"
-#include "sge_job.h"
-#include "sge_report.h"
-#include "sge_userprj.h"
-#include "sge_userset.h"
-#include "sge_utility_qmaster.h"
-#include "qmaster_to_execd.h"
-#include "sge_centry.h"
-#include "sge_href.h"
-#include "sge_cqueue.h"
-#include "sge_str.h"
-#include "sge_lock.h"
-#include "configuration_qmaster.h"
-
-#include "sge_persistence_qmaster.h"
-#include "sge_reporting_qmaster.h"
-#include "sge_advance_reservation_qmaster.h"
-#include "sge_bootstrap.h"
-#include "sge_job_enforce_limit.h"
-
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_href.h"
+#include "sgeobj/sge_cqueue.h"
+#include "sgeobj/sge_str.h"
 #include "sgeobj/sge_object.h"
+#include "sgeobj/msg_sgeobjlib.h"
 
-#include "spool/sge_spooling.h"
+#include "comm/commlib.h"
 
+#include "lck/sge_lock.h"
+
+#include "sched/sge_job_schedd.h"
 #include "sched/sge_resource_utilization.h"
 #include "sched/sge_serf.h"
 #include "sched/debit.h"
 #include "sched/valid_queue_user.h"
 
-#include "uti/sge_string.h"
+#include "spool/sge_spooling.h"
 
+#include "sge.h"
+#include "symbols.h"
 #include "msg_common.h"
 #include "msg_qmaster.h"
-
-#include "sgeobj/msg_sgeobjlib.h"
+#include "sge_host_qmaster.h"
+#include "sge_event_master.h"
+#include "configuration_qmaster.h"
+#include "sge_c_gdi.h"
+#include "mail.h"
+#include "configuration_qmaster.h"
+#include "sge_cqueue_qmaster.h"
+#include "sge_userset_qmaster.h"
+#include "sge_userprj_qmaster.h"
+#include "reschedule.h"
+#include "sge_qinstance_qmaster.h"
+#include "sge_utility_qmaster.h"
+#include "qmaster_to_execd.h"
+#include "sge_persistence_qmaster.h"
+#include "sge_reporting_qmaster.h"
+#include "sge_advance_reservation_qmaster.h"
+#include "sge_job_enforce_limit.h"
 
 static void sge_change_queue_version_exechost(sge_gdi_ctx_class_t *ctx, const char *exechost_name);
 static void master_kill_execds(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task);
@@ -363,7 +363,7 @@ int sge_del_host(sge_gdi_ctx_class_t *ctx, lListElem *hep, lList **alpp,
    }
 
    if (target==SGE_EH_LIST && !strcasecmp(unique, "global")) {
-      ERROR((SGE_EVENT, MSG_OBJ_DELGLOBALHOST));
+      ERROR((SGE_EVENT, SFNMAX, MSG_OBJ_DELGLOBALHOST));
       answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
       DEXIT;
       return STATUS_ESEMANTIC;
@@ -1004,7 +1004,7 @@ void sge_gdi_kill_exechost(sge_gdi_ctx_class_t *ctx,
    DENTER(GDI_LAYER, "sge_gdi_kill_exechost");
 
    if (!manop_is_manager(packet->user)) {
-      ERROR((SGE_EVENT, MSG_OBJ_SHUTDOWNPERMS)); 
+      ERROR((SGE_EVENT, SFNMAX, MSG_OBJ_SHUTDOWNPERMS));
       answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_ENOMGR, 
                       ANSWER_QUALITY_ERROR);
       DEXIT;
@@ -1053,7 +1053,7 @@ sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *
       if (lGetNumberOfElem(task->answer_list) == 0) {
          /* no exechosts have been killed */
          DPRINTF((MSG_SGETEXT_NOEXECHOSTS));
-         INFO((SGE_EVENT, MSG_SGETEXT_NOEXECHOSTS));
+         INFO((SGE_EVENT, SFNMAX, MSG_SGETEXT_NOEXECHOSTS));
          answer_list_add(&(task->answer_list), SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
       }
    } else {

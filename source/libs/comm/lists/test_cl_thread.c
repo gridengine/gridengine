@@ -36,10 +36,7 @@
 #include <sys/time.h>
 #include <pthread.h>
 
-#include "cl_lists.h"
-
-
-
+#include "comm/lists/cl_lists.h"
 
 void *timeout_thread_main(void *t_conf);  /* thread_func for timeout thread implementation */
 

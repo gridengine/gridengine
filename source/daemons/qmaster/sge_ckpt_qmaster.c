@@ -33,37 +33,39 @@
 #include <string.h>
 #include <ctype.h>
 
+#include "rmon/sgermon.h"
+
+#include "uti/config_file.h"
+#include "uti/sge_signal.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_log.h"
+#include "uti/sge_stdlib.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_parse_num_par.h"
+
+#include "sgeobj/sge_pe.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_ckpt.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_utility.h"
+
+#include "sched/sge_job_schedd.h"
+
+#include "spool/sge_spooling.h"
+
 #include "sge.h"
-#include "sge_pe.h"
-#include "sge_ja_task.h"
+#include "sge_utility_qmaster.h"
 #include "sge_ckpt_qmaster.h"
 #include "sge_host_qmaster.h"
 #include "sge_event_master.h"
-#include "config_file.h"
-#include "sge_userset_qmaster.h"
-#include "sge_signal.h"
-#include "sge_prog.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "sge_job_schedd.h"
-#include "sge_stdlib.h"
-#include "sge_unistd.h"
-#include "sge_answer.h"
-#include "sge_ckpt.h"
-#include "sge_qinstance.h"
-#include "sge_job.h"
-#include "sge_utility.h"
-#include "sge_utility_qmaster.h"
 #include "symbols.h"
-
+#include "sge_userset_qmaster.h"
 #include "sge_persistence_qmaster.h"
-#include "spool/sge_spooling.h"
-#include "sge_parse_num_par.h"
 
 #include "msg_common.h"
 #include "msg_qmaster.h"
-
-
 
 /****** qmaster/ckpt/ckpt_mod() ***********************************************
 *  NAME

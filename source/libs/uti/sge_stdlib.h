@@ -65,7 +65,7 @@ char *sge_malloc(int size);
 
 void *sge_realloc(void *ptr, int size, int do_abort);
 
-char *sge_free(char *cp);        
+void sge_free(void *cp);        
 
 const char *sge_getenv(const char *env_str); 
 int sge_putenv(const char *var);

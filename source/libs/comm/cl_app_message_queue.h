@@ -34,8 +34,8 @@
 /*___INFO__MARK_END__*/
 
 
-#include "cl_lists.h"
-#include "cl_data_types.h"
+#include "comm/lists/cl_lists.h"
+#include "comm/cl_data_types.h"
 
 typedef struct cl_app_message_queue_elem_t {
 

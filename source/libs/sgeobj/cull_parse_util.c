@@ -38,20 +38,24 @@
 #include "rmon/sgermon.h"
 
 #include "cull/cull.h"
-#include "cull_parse_util.h"
+#include "cull/cull_list.h"
 
 #include "uti/sge_stdio.h"
 #include "uti/sge_string.h"
 
+#include "gdi/sge_gdi.h"
+#include "gdi/sge_gdi_packet_type.h"
+#include "gdi/sge_gdi_ctx.h"
+
 #include "sched/sge_resource_utilization.h"
 
-#include "sge_job.h"
-#include "sge_centry.h"
-#include "sge_range.h"
-#include "sge_str.h"
-
-#include "sge_parse_SPA_L.h"
-#include "sge_resource_utilization_RUE_L.h"
+#include "sgeobj/cull_parse_util.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_str.h"
+#include "sgeobj/sge_parse_SPA_L.h"
+#include "sgeobj/sge_resource_utilization_RUE_L.h"
 
 static int fprint_name_value_list(FILE *fp, char *name, lList *thresholds, int print_slots,
      int nm_name, int nm_strval, int nm_doubleval);
@@ -313,12 +317,12 @@ int *interpretation_rule
    }
    if (!strcasecmp("NONE", pstr[0]) || !strcasecmp("UNDEFINED", pstr[0])) {
       *lpp = NULL;
-      free(pstr);
+      sge_free(&pstr);
       DEXIT;
       return 0;
    }
    ret = cull_parse_string_list(pstr, name, descr, interpretation_rule, lpp);
-   free(pstr);
+   sge_free(&pstr);
    if (ret) {
       DEXIT;
       return -3;
@@ -686,14 +690,14 @@ int *interpretation_rule
    }
    if (!strcasecmp("NONE", pstr[0])) {
       *lpp = NULL;
-      free(pstr);
+      sge_free(&pstr);
       DPRINTF(("cull_parse_simple_list: String is NONE, no list, not an error\n"));
       DEXIT;
       return 0;
    }
    
    ret = cull_parse_string_list(pstr, name, descr, interpretation_rule, lpp);
-   free(pstr);
+   sge_free(&pstr);
    if (ret) {
       DPRINTF(("cull_parse_simple_list: cull_parse_string_list returns %d\n", ret));
       DEXIT;
@@ -1390,14 +1394,16 @@ int cull_parse_path_list(lList **lpp, const char *path_str)
          lSetString(ep, PN_path, path);
         if (cell) {
             lSetHost(ep, PN_host, cell);
-            FREE(cell);
+            sge_free(&cell);
          }
       }
    }
-   if(path_string)
-      FREE(path_string);
-   if(str_str)
-      FREE(str_str);
+   if (path_string) {
+      sge_free(&path_string);
+   }
+   if (str_str) {
+      sge_free(&str_str);
+   }
    DRETURN(ret_error? 1 : 0);
 }
 
@@ -1445,21 +1451,21 @@ cull_parse_jid_hold_list(lList **lpp, const char *str)
    str_str = string_list(s, ",", NULL);
    if (!str_str || !*str_str) {
       *lpp = NULL;
-      FREE(s);
+      sge_free(&s);
       DEXIT;
       return 2;
    }
    i_ret = cull_parse_string_list(str_str, "jid_hold list", ST_Type, rule, lpp);
    
    if (i_ret) {
-      FREE(s);
-      FREE(str_str);
+      sge_free(&s);
+      sge_free(&str_str);
       DEXIT;
       return 3;
    }
 
-   FREE(s);
-   FREE(str_str);
+   sge_free(&s);
+   sge_free(&str_str);
    DEXIT;
    return 0;
 }

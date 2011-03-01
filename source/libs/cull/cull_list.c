@@ -42,21 +42,23 @@
 #define NO_SGE_COMPILE_DEBUG
 #endif
 
-#include "msg_cull.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "sge_string.h"
-#include "cull_db.h"
-#include "cull_sortP.h"
-#include "cull_where.h"
-#include "cull_listP.h"
-#include "cull_multitypeP.h"
-#include "cull_whatP.h"
-#include "cull_lerrnoP.h"
-#include "cull_hash.h"
-#include "cull_state.h"
-#include "pack.h"
-#include "cull_pack.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_log.h"
+#include "uti/sge_string.h"
+
+#include "cull/msg_cull.h"
+#include "cull/cull_db.h"
+#include "cull/cull_sortP.h"
+#include "cull/cull_where.h"
+#include "cull/cull_listP.h"
+#include "cull/cull_multitypeP.h"
+#include "cull/cull_whatP.h"
+#include "cull/cull_lerrnoP.h"
+#include "cull/cull_hash.h"
+#include "cull/cull_state.h"
+#include "cull/pack.h"
+#include "cull/cull_pack.h"
 
 #define CULL_BASIS_LAYER CULL_LAYER
 
@@ -904,7 +906,7 @@ lListElem *lCreateElem(const lDescr *dp)
    ep->descr = (lDescr *) malloc(sizeof(lDescr) * (n + 1));
    if (!ep->descr) {
       LERROR(LEMALLOC);
-      free(ep);
+      sge_free(&ep);
       DRETURN(NULL);
    }
    memcpy(ep->descr, dp, sizeof(lDescr) * (n + 1));
@@ -918,16 +920,16 @@ lListElem *lCreateElem(const lDescr *dp)
    ep->status = FREE_ELEM;
    if (!(ep->cont = (lMultiType *) calloc(1, sizeof(lMultiType) * n))) {
       LERROR(LEMALLOC);
-      free(ep->descr);
-      free(ep);
+      sge_free(&(ep->descr));
+      sge_free(&ep);
       DRETURN(NULL);
    }
 
    if(!sge_bitfield_init(&(ep->changed), n)) {
       LERROR(LEMALLOC);
-      free(ep->cont);
-      free(ep->descr);
-      free(ep);
+      sge_free(&(ep->cont));
+      sge_free(&(ep->descr));
+      sge_free(&ep);
       DRETURN(NULL);
    }
 
@@ -998,15 +1000,15 @@ lList *lCreateListHash(const char *listname, const lDescr *descr, bool hash)
       DRETURN(NULL);
    }
    if (!(lp->listname = strdup(listname))) {
-      FREE(lp);
+      sge_free(&lp);
       LERROR(LESTRDUP);
       DRETURN(NULL);
    }
 
    lp->nelem = 0;
    if ((n = lCountDescr(descr)) <= 0) {
-      FREE(lp->listname);
-      FREE(lp);
+      sge_free(&(lp->listname));
+      sge_free(&lp);
       LERROR(LECOUNTDESCR);
       DRETURN(NULL);
    }
@@ -1014,8 +1016,8 @@ lList *lCreateListHash(const char *listname, const lDescr *descr, bool hash)
    lp->first = NULL;
    lp->last = NULL;
    if (!(lp->descr = (lDescr *) malloc(sizeof(lDescr) * (n + 1)))) {
-      FREE(lp->listname);
-      FREE(lp);
+      sge_free(&(lp->listname));
+      sge_free(&lp);
       LERROR(LEMALLOC);
       DRETURN(NULL);
    }
@@ -1138,13 +1140,13 @@ void lFreeElem(lListElem **ep1)
 
       case lStringT:
          if (ep->cont[i].str != NULL) {
-            free(ep->cont[i].str);
+            sge_free(&(ep->cont[i].str));
          }   
          break;
 
       case lHostT:
          if (ep->cont[i].host != NULL) {
-            free(ep->cont[i].host);
+            sge_free(&(ep->cont[i].host));
          }   
          break;
 
@@ -1169,16 +1171,16 @@ void lFreeElem(lListElem **ep1)
    /* lFreeElem is not responsible for list descriptor array */
    if(ep->status == FREE_ELEM || ep->status == OBJECT_ELEM) {
       cull_hash_free_descr(ep->descr); 
-      free(ep->descr);
+      sge_free(&(ep->descr));
    }   
 
    if(ep->cont != NULL) {
-      free(ep->cont);
+      sge_free(&(ep->cont));
    }   
 
    sge_bitfield_free_data(&(ep->changed));
 
-   FREE(*ep1);
+   sge_free(ep1);
    DRETURN_VOID;
 }
 
@@ -1223,16 +1225,13 @@ void lFreeList(lList **lp)
    }   
 
    if ((*lp)->descr) {
-      free((*lp)->descr);
+      sge_free(&((*lp)->descr));
    }   
 
    if ((*lp)->listname) {
-      free((*lp)->listname);
+      sge_free(&((*lp)->listname));
    }
-
-   free(*lp);
-   *lp = NULL;
-
+   sge_free(lp);
    DRETURN_VOID;
 }
 
@@ -1655,7 +1654,7 @@ int lInsertElem(lList *lp, lListElem *ep, lListElem *new)
 
    if (new->status == FREE_ELEM) {
       cull_hash_free_descr(new->descr);
-      free(new->descr);
+      sge_free(&(new->descr));
    }   
    new->status = BOUND_ELEM;
    new->descr = lp->descr;
@@ -1722,7 +1721,7 @@ int lAppendElem(lList *lp, lListElem *ep)
 
    if (ep->status == FREE_ELEM) {
       cull_hash_free_descr(ep->descr);
-      free(ep->descr);
+      sge_free(&(ep->descr));
    }
    ep->status = BOUND_ELEM;
    ep->descr = lp->descr;
@@ -2381,7 +2380,7 @@ int lSortList(lList *lp, const lSortOrder *sp)
       pointer[i]->next = pointer[i + 1];
    }
 
-   free(pointer);
+   sge_free(&pointer);
 
    cull_hash_recreate_after_sort(lp);
 

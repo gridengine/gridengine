@@ -47,16 +47,17 @@
 
 #include "sched/msg_schedd.h"
 
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_usage.h"
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_schedd_conf.h"
+#include "sgeobj/cull_parse_util.h"
+#include "sgeobj/msg_sgeobjlib.h"
+
 #include "sge.h"
-#include "sge_object.h"
-#include "sge_answer.h"
-#include "sge_centry.h"
-#include "sge_feature.h"
-#include "sge_usage.h"
-#include "sge_range.h"
-#include "sge_schedd_conf.h"
-#include "cull_parse_util.h"
-#include "msg_sgeobjlib.h"
 #include "msg_common.h"
 
 /******************************************************
@@ -188,7 +189,7 @@ static void sc_state_init(sc_state_t* state)
 
 static void sc_state_destroy(void* state) 
 {
-   free(state);
+   sge_free(&state);
 }
 
 static void 
@@ -571,7 +572,7 @@ bool sconf_set_config(lList **config, lList **answer_list)
       } else {
          *master_sconf_list = store;
          if (!*master_sconf_list) {
-            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_USE_DEFAULT_CONFIG)); 
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_USE_DEFAULT_CONFIG)); 
             answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_WARNING);
  
             *master_sconf_list = lCreateList("schedd config list", SC_Type);
@@ -2579,7 +2580,7 @@ void sconf_print_config(void){
    DENTER(TOP_LAYER, "sconf_print_config");
 
    if (!sconf_is()){
-      ERROR((SGE_EVENT, MSG_SCONF_NO_CONFIG));
+      ERROR((SGE_EVENT, SFNMAX, MSG_SCONF_NO_CONFIG));
       DRETURN_VOID;
    }
 
@@ -2815,7 +2816,7 @@ bool sconf_validate_config_(lList **answer_list)
    pos.new_config = true; 
    
    if (!calc_pos()){
-      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_INCOMPLETE_SCHEDD_CONFIG)); 
+      SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_INCOMPLETE_SCHEDD_CONFIG)); 
       answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
       ret = false; 
    }
@@ -2912,7 +2913,7 @@ bool sconf_validate_config_(lList **answer_list)
       const char *schedd_info = lGetString(lFirst(*(object_type_get_master_list(SGE_TYPE_SCHEDD_CONF))), SC_schedd_job_info);
 
       if (schedd_info == NULL){
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_SCHEDDJOBINFONOVALIDPARAM ));
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_ATTRIB_SCHEDDJOBINFONOVALIDPARAM ));
          answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);  
          ret = false;
       }
@@ -2928,7 +2929,7 @@ bool sconf_validate_config_(lList **answer_list)
          else if (!strcmp("job_list", key)) 
             ikey = SCHEDD_JOB_INFO_JOB_LIST;
          else {
-            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_SCHEDDJOBINFONOVALIDPARAM ));
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_ATTRIB_SCHEDDJOBINFONOVALIDPARAM ));
             answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             ret = false; 
          }
@@ -2939,7 +2940,7 @@ bool sconf_validate_config_(lList **answer_list)
                                          INF_NOT_ALLOWED);
             if (rlp == NULL) {
                lFreeList(&alp);
-               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_ATTRIB_SCHEDDJOBINFONOVALIDJOBLIST));
+               SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_ATTRIB_SCHEDDJOBINFONOVALIDJOBLIST));
                answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
                ret = false; 
             }   
@@ -2993,9 +2994,9 @@ bool sconf_validate_config_(lList **answer_list)
                ep = lAddElemStr(&halflife_decay_list, UA_name, s2, UA_Type);
                lSetDouble(ep, UA_value, value);
             }
-            FREE(sv2);
+            sge_free(&sv2);
          }
-         FREE(sv1);
+         sge_free(&sv1);
         
          if (lGetNumberOfElem(halflife_decay_list) == 0) {
             answer_list_add(answer_list, MSG_GDI_INVALIDHALFLIFE_DECAY, STATUS_ESYNTAX, 
@@ -3050,7 +3051,7 @@ bool sconf_validate_config_(lList **answer_list)
       else {
          /* ensure we get a non-zero/non-infinity duration default in reservation scheduling mode */
          if (max_reservation != 0 && uval == 0) {
-            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_RR_REQUIRES_DEFAULT_DURATION));    
+            SGE_ADD_MSG_ID(sprintf(SGE_EVENT, SFNMAX, MSG_RR_REQUIRES_DEFAULT_DURATION));    
             answer_list_add(answer_list, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);      
             ret = false; 
          }

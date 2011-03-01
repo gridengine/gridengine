@@ -65,7 +65,7 @@ static bool parse_job_identifier(const char *id, u_long32 *job_id, u_long32 *ja_
    copy = strdup(id);
    *job_id = atoi(strtok(copy, "."));
    *ja_task_id = atoi(strtok(NULL, "."));
-   FREE(copy);
+   sge_free(&copy);
 
    if(*job_id > 0 && *ja_task_id > 0) {
       DRETURN(true);
@@ -202,7 +202,7 @@ bool sge_ssi_job_start(sge_evc_class_t *evc, const char *job_identifier, const c
       lListElem *queue, *granted_queue;
 
       if(tasks[i].host_name == NULL) {
-         ERROR((SGE_EVENT, MSG_SSI_MISSINGHOSTNAMEINTASKLIST));
+         ERROR((SGE_EVENT, SFNMAX, MSG_SSI_MISSINGHOSTNAMEINTASKLIST));
          DRETURN(false);
       }
 

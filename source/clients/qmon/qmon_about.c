@@ -37,10 +37,13 @@
 
 #include "qmon_about.h"
 #include "qmon_appres.h"
-#include "sgermon.h"
-#include "sge_feature.h"
-#include "sge_dstring.h"
-#include "sge_prog.h"
+
+#include "rmon/sgermon.h"
+
+#include "uti/sge_dstring.h"
+#include "uti/sge_prog.h"
+
+#include "sgeobj/sge_feature.h"
 
 #include "gdi/version.h"
 #include "gdi/sge_gdi_ctx.h"

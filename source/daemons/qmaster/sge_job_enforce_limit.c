@@ -56,6 +56,7 @@
 #include "sgeobj/sge_qinstance_state.h"
 #include "sgeobj/sge_report.h"
 #include "sgeobj/sge_schedd_conf.h"
+#include "sgeobj/sge_conf.h"
 
 #include "sge_qmaster_timed_event.h"
 #include "sge_job_enforce_limit.h"
@@ -211,7 +212,7 @@ sge_host_add_remove_enforce_limit_trigger(const char *hostname, bool add)
 
                            for_each(gdil_ep, gdil) {
                               qinstance = cqueue_list_locate_qinstance(master_cqueue_list, lGetString(gdil_ep, JG_qname));
-                              if (qinstance_state_is_unknown(qinstance)) {
+                              if (qinstance != NULL && qinstance_state_is_unknown(qinstance)) {
                                  do_action = true;
                                  break;
                               }

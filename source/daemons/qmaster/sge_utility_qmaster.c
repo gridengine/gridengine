@@ -32,27 +32,34 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "cull.h"
-#include "sgermon.h"
-#include "sge_string.h"
-#include "sge_log.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_string.h"
+#include "uti/sge_log.h"
+#include "uti/sge_parse_num_par.h"
+#include "uti/config_file.h"
+
+#include "cull/cull.h"
+
 #include "gdi/sge_gdi.h"
-#include "sge_answer.h"
-#include "sge_utility.h"
-#include "sge_parse_num_par.h"
-#include "sge_complex_schedd.h"
-#include "msg_sgeobjlib.h"
-#include "sort_hosts.h"
-#include "config_file.h"
-#include "sge_host.h"
-#include "sge_userset.h"
-#include "sge_centry.h"
-#include "cl_errors.h"
-#include "cl_commlib.h"
-#include "sge_object.h"
+
+#include "sched/sge_complex_schedd.h"
+#include "sched/sort_hosts.h"
+
+#include "comm/lists/cl_errors.h"
+#include "comm/cl_commlib.h"
+
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_utility.h"
+#include "sgeobj/msg_sgeobjlib.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_userset.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_object.h"
+
+#include "sge_host_qmaster.h"
 #include "msg_common.h"
 #include "msg_qmaster.h"
-#include "sge_host_qmaster.h"
 
 #define CQUEUE_LAYER TOP_LAYER
 
@@ -547,7 +554,7 @@ bool attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
                }
 
                if (rstring == NULL || fstring == NULL) {
-                  ERROR((SGE_EVENT, MSG_OBJECT_VALUEMISSING));
+                  ERROR((SGE_EVENT, SFNMAX, MSG_OBJECT_VALUEMISSING));
                   answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC,
                                   ANSWER_QUALITY_ERROR);
                   ret = false;
@@ -618,7 +625,7 @@ bool attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
                }
 
                if (rstring == NULL) {
-                  ERROR((SGE_EVENT, MSG_OBJECT_VALUEMISSING));
+                  ERROR((SGE_EVENT, SFNMAX, MSG_OBJECT_VALUEMISSING));
                   answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC,
                                   ANSWER_QUALITY_ERROR);
                   ret = false;

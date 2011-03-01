@@ -32,32 +32,35 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "sge_all_listsL.h"
-#include "sig_handlers.h"
-#include "parse_qsub.h"
-#include "parse.h"
-#include "usage.h"
-#include "sge_prog.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "sge_feature.h"
-#include "sge_language.h"
-#include "sge_unistd.h"
-#include "sge_answer.h"
-#include "sge_id.h"
-#include "sge_qinstance_state.h"
+#include "rmon/sgermon.h"
 
-#include "msg_common.h"
-#include "msg_clients_common.h"
-#include "msg_qmod.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_log.h"
+#include "uti/sge_language.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_profiling.h"
 
 #include "sgeobj/sge_str.h"
 #include "sgeobj/msg_sgeobjlib.h"
 #include "sgeobj//sge_range.h"
-#include "sge_options.h"
-#include "sge_profiling.h"
+#include "sgeobj/parse.h"
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_id.h"
+#include "sgeobj/sge_qinstance_state.h"
+
 #include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi_ctx.h"
+
+#include "sge_options.h"
+#include "usage.h"
+#include "sig_handlers.h"
+#include "parse_qsub.h"
+#include "msg_common.h"
+#include "msg_clients_common.h"
+#include "msg_qmod.h"
+
 
 static lList *sge_parse_cmdline_qmod(char **argv, char **envp, lList **ppcmdline);
 static lList *sge_parse_qmod(lList **ppcmdline, lList **ppreflist, u_long32 *pforce);
@@ -372,10 +375,9 @@ error:
  ****/
 static lList *sge_parse_qmod(lList **ppcmdline, lList **ppreflist, u_long32 *pforce)
 {
-stringT str;
-lList *alp = NULL;
-u_long32 helpflag;
-int usageshowed = 0;
+   lList *alp = NULL;
+   u_long32 helpflag;
+   int usageshowed = 0;
 
    DENTER(TOP_LAYER, "sge_parse_qmod");
 
@@ -463,24 +465,23 @@ int usageshowed = 0;
 
       /* we get to this point, than there are -t options without job names. We have to write an error message */
       if ((ep = lGetElemStr(*ppcmdline, SPA_switch, "-t")) != NULL) {
-         sprintf(str, MSG_JOB_LONELY_TOPTION_S, lGetString(ep, SPA_switch_arg));
-         answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+         answer_list_add_sprintf(&alp, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
+                                 MSG_JOB_LONELY_TOPTION_S, lGetString(ep, SPA_switch_arg));
 
          break;
       }
 
    }
 
-   if(lGetNumberOfElem(*ppcmdline)) {
-     sprintf(str, MSG_PARSE_TOOMANYOPTIONS);
-     if(!usageshowed)
-        qmod_usage(stderr, NULL);
-     answer_list_add(&alp, str, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
-     DEXIT;
-     return alp;
+   if (lGetNumberOfElem(*ppcmdline)) {
+      if (!usageshowed) {
+         qmod_usage(stderr, NULL);
+      }
+      answer_list_add_sprintf(&alp, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
+                              MSG_PARSE_TOOMANYOPTIONS);
    }
-   DEXIT;
-   return alp;
+
+   DRETURN(alp);
 }
 
 /****

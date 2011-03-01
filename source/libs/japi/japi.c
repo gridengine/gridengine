@@ -80,6 +80,7 @@
 #include "gdi/sge_gdi.h"
 #include "gdi/sge_gdiP.h"
 #include "gdi/sge_security.h"
+#include "gdi/sge_gdi2.h"
 
 /* SGEOBJ */
 #include "sgeobj/sge_cqueue.h"
@@ -757,7 +758,7 @@ int japi_enable_job_wait(const char *username, const char *unqualified_hostname,
       }
 
       /* We know that japi_session_key is a copy of a string at this point. */
-      FREE(japi_session_key);
+      sge_free(&japi_session_key);
 
       /* return error context from event client thread if there is such */
       JAPI_LOCK_EC_ALP(japi_ec_alp_struct);
@@ -1019,7 +1020,7 @@ int japi_exit(int flag, dstring *diag)
     * The same goes for the communications socket. */
    JAPI_LOCK_SESSION();
    if (japi_session_key != JAPI_SINGLE_SESSION_KEY) {
-      FREE(japi_session_key);
+      sge_free(&japi_session_key);
    }
    else {
       japi_session_key = NULL;
@@ -1080,8 +1081,7 @@ drmaa_attr_values_t *japi_allocate_string_vector(int type)
       iter->it.si.next_pos = NULL;
       break;
    default:
-      free(iter);
-      iter = NULL;
+      sge_free(&iter);
    }
 
    return iter;
@@ -1220,7 +1220,7 @@ void japi_delete_string_vector(drmaa_attr_values_t* iter )
    default:
       break;
    }
-   free(iter);
+   sge_free(&iter);
 
    return;
 }
@@ -2315,7 +2315,7 @@ int japi_synchronize(const char *job_ids[], signed long timeout, bool dispose, d
              * don't have to free the individual elements of the
              * sync_job_ids. */
             lFreeList(&sync_list);
-            FREE (sync_job_ids);
+            sge_free(&sync_job_ids);
          }
          
          DRETURN(DRMAA_ERRNO_EXIT_TIMEOUT);
@@ -2349,7 +2349,7 @@ int japi_synchronize(const char *job_ids[], signed long timeout, bool dispose, d
        * sync_list.  That means that if we free the sync_list, we don't have to
        * free the individual elements of the sync_job_ids. */
       lFreeList(&sync_list);
-      FREE (sync_job_ids);
+      sge_free(&sync_job_ids);
    }
    
    DRETURN(drmaa_errno);
@@ -4096,7 +4096,7 @@ static void *japi_implementation_thread(void * a_user_data_pointer)
    }   
    
    evc->ec_set_edtime(evc, ed_time); 
-   evc->ec_set_busy_handling(evc, EV_THROTTLE_FLUSH); 
+   evc->ec_set_busy_handling(evc, EV_BUSY_UNTIL_ACK);
    evc->ec_set_flush_delay(evc, flush_delay_rate); 
    evc->ec_set_session(evc, japi_session_key);
 

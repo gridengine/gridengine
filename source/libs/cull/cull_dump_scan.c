@@ -39,16 +39,18 @@
 #define NO_SGE_COMPILE_DEBUG
 #endif
 
-#include "sgermon.h"
-#include "cull_dump_scan.h"
-#include "cull_listP.h"
-#include "cull_multitypeP.h"
-#include "cull_lerrnoP.h"
-#include "basis_types.h"
+#include "rmon/sgermon.h"
 
 #include "uti/sge_dstring.h"
 #include "uti/sge_stdio.h"
 #include "uti/sge_string.h"
+
+#include "cull/cull_dump_scan.h"
+#include "cull/cull_listP.h"
+#include "cull/cull_multitypeP.h"
+#include "cull/cull_lerrnoP.h"
+
+#include "basis_types.h"
 
 #define READ_LINE_LENGHT MAX_STRING_SIZE
 
@@ -195,7 +197,7 @@ lDescr *lUndumpDescr(FILE *fp)
    /* read ket */
    if (fGetKet(fp)) {
       printf("ket is missing");
-      free(dp);
+      sge_free(&dp);
       LERROR(LESYNTAX);
       DEXIT;
       return NULL;
@@ -611,14 +613,14 @@ lListElem *lUndumpElemFp(FILE *fp, const lDescr *dp)
          ret = fGetString(fp, &str);
          if (ret == 0) {
             lSetPosString(ep, i, str);
-            free(str);             /* fGetString strdup's */
+            sge_free(&str);             /* fGetString strdup's */
          }
          break;
       case lHostT:
          ret = fGetHost(fp, &str);
          if (ret == 0) {
             lSetPosHost(ep, i, str);
-            free(str);             /* fGetHost strdup's */
+            sge_free(&str);             /* fGetHost strdup's */
          }
          break;
       case lFloatT:
@@ -722,19 +724,19 @@ lListElem *lUndumpObject(FILE *fp)
 
    if (lCountDescr(dp) <= 0) {
       LERROR(LECOUNTDESCR);
-      free(dp);
+      sge_free(&dp);
       DEXIT;
       return NULL;
    }
 
    if ((ep = lUndumpElemFp(fp, dp)) == NULL) {
       LERROR(LEUNDUMPELEM);
-      free(dp);
+      sge_free(&dp);
       DEXIT;
       return NULL;
    }
 
-   free(dp);
+   sge_free(&dp);
 
    /* read ket */
    if (fGetKet(fp)) {
@@ -827,22 +829,22 @@ lList *lUndumpList(FILE *fp, const char *name, const lDescr *dp)
 
    /* use old name (from file) if name is NULL */
    if (!(lp = lCreateList((name) ? name : oldname, dp))) {
-      FREE(fdp);
+      sge_free(&fdp);
       LERROR(LECREATELIST);
       DRETURN(NULL);
    }
-   free(oldname);               /* fGetString strdup's */
+   sge_free(&oldname);               /* fGetString strdup's */
 
    if ((n = lCountDescr(dp)) <= 0) {
       LERROR(LECOUNTDESCR);
-      FREE(fdp);
+      sge_free(&fdp);
       lFreeList(&lp);
       DRETURN(NULL);
    }
 
    if (!(found = (int *) malloc(sizeof(int) * n))) {
       LERROR(LEMALLOC);
-      FREE(fdp);
+      sge_free(&fdp);
       lFreeList(&lp);
       DRETURN(NULL);
    }
@@ -876,15 +878,15 @@ lList *lUndumpList(FILE *fp, const char *name, const lDescr *dp)
       if (!(fep = lUndumpElemFp(fp, fdp))) {
          LERROR(LEUNDUMPELEM);
          lFreeList(&lp);
-         FREE(found);
-         FREE(fdp);
+         sge_free(&found);
+         sge_free(&fdp);
          DRETURN(NULL);
       }
 
       if (!(ep = lCreateElem(dp))) {
          lFreeList(&lp);
-         FREE(found);
-         FREE(fdp);
+         sge_free(&found);
+         sge_free(&fdp);
          LERROR(LECREATEELEM);
          DRETURN(NULL);
       }
@@ -895,8 +897,8 @@ lList *lUndumpList(FILE *fp, const char *name, const lDescr *dp)
          } else if (lCopySwitchPack(fep, ep, found[i], i, true, NULL, NULL) == -1) {
             lFreeList(&lp);
             lFreeElem(&ep);
-            FREE(found);
-            FREE(fdp);
+            sge_free(&found);
+            sge_free(&fdp);
             LERROR(LECOPYSWITCH);
             DRETURN(NULL);
          }
@@ -905,8 +907,8 @@ lList *lUndumpList(FILE *fp, const char *name, const lDescr *dp)
       if (lAppendElem(lp, ep) == -1) {
          lFreeList(&lp);
          lFreeElem(&ep);
-         FREE(found);
-         FREE(fdp);
+         sge_free(&found);
+         sge_free(&fdp);
          LERROR(LEAPPENDELEM);
          DRETURN(NULL);
       }
@@ -920,8 +922,8 @@ lList *lUndumpList(FILE *fp, const char *name, const lDescr *dp)
       LERROR(LESYNTAX);
    }
 
-   FREE(found);
-   FREE(fdp);
+   sge_free(&found);
+   sge_free(&fdp);
    DRETURN(lp);
 }
 

@@ -38,13 +38,14 @@
 #include <string.h>
 
 #include "basis_types.h"
-#include "sge_afsutil.h"
-#include "sgermon.h"
-#include "sge_io.h"
-#include "sge_unistd.h"
-#include "sge_stdio.h"
 
-#include "msg_utilib.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_afsutil.h"
+#include "uti/sge_io.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_stdio.h"
+#include "uti/msg_utilib.h"
 
 /****** uti/afsutil/sge_read_token() ******************************************
 *  NAME

@@ -1,12 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <string.h>
-#include <sys/time.h>
-
-#include "cl_lists.h"
-
-
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  *
@@ -45,8 +36,7 @@
 #include <string.h>
 #include <sys/time.h>
 
-#include "cl_lists.h"
-
+#include "comm/lists/cl_lists.h"
 
 /* this functions must lock / unlock the raw list manually */
 static int cl_thread_list_add_thread(cl_raw_list_t* list_p, cl_thread_settings_t* thread_config);  /* CR check */

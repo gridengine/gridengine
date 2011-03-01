@@ -55,14 +55,16 @@
 #include "uti/sge_time.h"
 #include "uti/sge_unistd.h"
 
+#include "gdi/sge_gdi.h"
 #include "gdi/sge_gdi_ctx.h"
 
-#include "sge_answer.h"
-#include "sge_job.h"
-#include "sge_jsv.h"
-#include "sge_jsv_script.h"
-#include "sge_str.h"
-#include "msg_sgeobjlib.h"
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_jsv.h"
+#include "sgeobj/sge_jsv_script.h"
+#include "sgeobj/sge_str.h"
+#include "sgeobj/msg_sgeobjlib.h"
 
 /*
  * defines the timeout between the soft shutdown signal and the kill
@@ -515,7 +517,7 @@ bool jsv_url_parse(dstring *jsv_url, lList **answer_list, dstring *type,
                      size = get_pw_buffer_size();
                      buffer = sge_malloc(size);
                      pw = sge_getpwnam_r(u, &pw_struct, buffer, size);
-                     buffer = sge_free(buffer);
+                     sge_free(&buffer);
                      if (pw == NULL) {
                         answer_list_add_sprintf(answer_list, STATUS_EEXIST, ANSWER_QUALITY_ERROR,  
                                                  MSG_JSV_USER_EXIST_S, u);
@@ -741,7 +743,7 @@ jsv_is_enabled(const char *context) {
 
    jsv_url = mconf_get_jsv_url();
    jsv_list_update("jsv", context, NULL, jsv_url);
-   FREE(jsv_url);
+   sge_free(&jsv_url);
    sge_mutex_lock("jsv_list", SGE_FUNC, __LINE__, &jsv_mutex);
    ret = (lGetNumberOfElem(jsv_list) > 0) ? true : false;
    sge_mutex_unlock("jsv_list", SGE_FUNC, __LINE__, &jsv_mutex);
@@ -1150,7 +1152,7 @@ jsv_do_verify(sge_gdi_ctx_class_t* ctx, const char *context, lListElem **job,
       if (holding_mutex) {
          sge_mutex_unlock("jsv_list", SGE_FUNC, __LINE__, &jsv_mutex);
       }
-      FREE(jsv_url);
+      sge_free(&jsv_url);
    }
    DRETURN(ret);
 }

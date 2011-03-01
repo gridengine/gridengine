@@ -35,32 +35,34 @@
 #include <string.h>
 #include <fcntl.h>
 
+#include "rmon/sgermon.h"
+
+#include "uti/sge_prog.h"
+#include "uti/sge_log.h"
+#include "uti/sge_thread_ctrl.h"
+#include "uti/sge_bootstrap.h"
+#include "uti/sge_profiling.h"
+#include "uti/setup_path.h"
+
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_report.h"
+
+#include "gdi/sge_security.h"
+
+#include "comm/cl_commlib.h"
+
+#include "gdi/sge_gdi_packet.h"
+
 #include "basis_types.h"
-#include "sge_qmaster_threads.h"
-#include "sgermon.h"
-#include "sge_prog.h"
-#include "sge_log.h"
-#include "sge_answer.h"
 #include "setup_qmaster.h"
-#include "sge_security.h"
-#include "sge_manop.h"
+#include "sgeobj/sge_manop.h"
 #include "sge_event_master.h"
 #include "sge_reporting_qmaster.h"
 #include "sge_qmaster_timed_event.h"
 #include "sge_host_qmaster.h"
 #include "sge_userprj_qmaster.h"
-#include "cl_commlib.h"
-#include "sge_bootstrap.h"
-#include "sge_profiling.h"
-#include "sgeobj/sge_conf.h"
-#include "setup_path.h"
-
-#include "gdi/sge_gdi_packet.h"
-
-#include "uti/sge_thread_ctrl.h"
-
-#include "sgeobj/sge_report.h"
-
+#include "sge_qmaster_threads.h"
 #include "sge_thread_main.h"
 #include "sge_thread_event_master.h"
 #include "sge_qmaster_timed_event.h"

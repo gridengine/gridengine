@@ -34,12 +34,12 @@
 
 /* this code is used by shepherd */
 #include <ctype.h>
-#include "sgermon.h"
-#include "sge_string.h"
-
 #include <pthread.h>
-#include "sge_mtutil.h"
-#include "sge_log.h"
+
+#include "rmon/sgermon.h"
+#include "lck/sge_mtutil.h"
+#include "uti/sge_string.h"
+#include "uti/sge_log.h"
 #include "uti/sge_binding_parse.h"
 
 binding_type_t binding_type_to_enum(const char* parameter)
@@ -158,8 +158,8 @@ bool binding_explicit_extract_sockets_cores(const char* parameter,
          /* we have a socket therefore we need a core number */
          if ((core = sge_strtok(NULL, ":")) == NULL || (isdigit(*core) == 0)) {
             /* missing core number */
-            FREE(*list_of_sockets);
-            FREE(*list_of_cores);
+            sge_free(list_of_sockets);
+            sge_free(list_of_cores);
             return false;
          }
 

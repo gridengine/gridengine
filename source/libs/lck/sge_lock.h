@@ -34,7 +34,7 @@
 /*___INFO__MARK_END__*/
 
 #include "basis_types.h"
-#include "sgermon.h"
+#include "rmon/sgermon.h"
 
 #if 0
 #define SGE_DEBUG_LOCK_TIME 

@@ -32,9 +32,7 @@
 
 #include <string.h>
 
-#include "basis_types.h"
-#include "sge.h"
-#include "sgermon.h"
+#include "rmon/sgermon.h"
 
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_advance_reservation.h"
@@ -42,6 +40,8 @@
 #include "qrstat_report_handler.h"
 #include "qrstat_report_handler_xml.h"
 
+#include "basis_types.h"
+#include "sge.h"
 #include "msg_common.h"
 
 static bool
@@ -231,8 +231,8 @@ qrstat_destroy_report_handler_xml(qrstat_report_handler_t** handler, lList **ans
 
    if (handler != NULL && *handler != NULL ) {
       sge_dstring_free((dstring*)(*handler)->ctx);
-      FREE((*handler)->ctx);
-      FREE(*handler);
+      sge_free(&((*handler)->ctx));
+      sge_free(handler);
    }
 
    DRETURN(ret);
@@ -261,7 +261,7 @@ qrstat_report_finish(qrstat_report_handler_t* handler, lList **alpp)
    DENTER(TOP_LAYER, "qrstat_report_finish");
   
    sge_dstring_append(buffer, "</qrstat>\n");
-   printf(sge_dstring_get_string((dstring *)handler->ctx));
+   printf("%s", sge_dstring_get_string((dstring *)handler->ctx));
 
    DRETURN(ret); 
 }

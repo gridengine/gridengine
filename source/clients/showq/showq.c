@@ -36,23 +36,28 @@
 #include <ctype.h>
 #include <math.h>
 
-#include "sgermon.h"
-#include "sge.h"
-#include "sge_gdi.h"
-#include "sge_log.h"
-#include "commlib.h"
-#include "sge_host.h"
-#include "sig_handlers.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_dstring.h"
+#include "uti/sge_log.h"
+
+#include "sgeobj/sge_host.h"
 #include "sgeobj/sge_str.h"
 #include "sgeobj/sge_job.h"
-#include "sge_sched.h"
-#include "uti/sge_dstring.h"
-#include "parse.h"
-#include "msg_common.h"
-#include "sge_answer.h"
+#include "sgeobj/parse.h"
+#include "sgeobj/sge_answer.h"
 
+#include "sched/sge_sched.h"
+
+#include "gdi/sge_gdi.h"
+
+#include "comm/commlib.h"
+
+#include "sge.h"
+#include "sig_handlers.h"
 #include "showq_cmdline_tacc.h"
 #include "showq_support.h"
+#include "msg_common.h"
 
 static bool sge_parse_showq_tacc(lList **alpp, lList ** ppcmdline,
                                  lList ** user_list, const char *username,

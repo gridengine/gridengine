@@ -34,32 +34,33 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#include "symbols.h"
-#include "sge_string.h"
-#include "sge_time.h"
-#include "parse.h"
-#include "sge_str.h"
+#include "rmon/sgermon.h"
+#include "uti/sge_log.h"
+#include "uti/sge_string.h"
+#include "uti/sge_time.h"
+#include "uti/sge_stdlib.h"
+#include "uti/sge_prog.h"
+#include "uti/setup_path.h"
+
+#include "sgeobj/cull_parse_util.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_path_alias.h"
+#include "sgeobj/parse.h"
+#include "sgeobj/sge_str.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_var.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_range.h"
+#include "sgeobj/sge_mailrec.h"
+#include "sgeobj/sge_centry.h"
+#include "sgeobj/sge_jsv.h"
+
 #include "dispatcher.h"
 #include "parse_job_cull.h"
 #include "parse_qsub.h"
 #include "parse_job_qsh.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "cull_parse_util.h"
-#include "sge_host.h"
-#include "sge_path_alias.h"
+#include "symbols.h"
 #include "msg_common.h"
-#include "sge_job.h"
-#include "sge_stdlib.h"
-#include "sge_prog.h"
-#include "setup_path.h"
-#include "sge_var.h"
-#include "sge_answer.h"
-#include "sge_range.h"
-#include "sge_mailrec.h"
-#include "sge_centry.h"
-
-#include "sgeobj/sge_jsv.h"
 
 /*
 ** NAME
@@ -285,11 +286,9 @@ lList *cull_parse_qsh_parameter(u_long32 prog_number, u_long32 uid, const char *
    }
 
    if ((ep = lGetElemStr(cmdline, SPA_switch, "-help"))) {
-      char str[1024];
-
       lRemoveElem(cmdline, &ep);
-      sprintf(str, MSG_ANSWER_HELPNOTALLOWEDINCONTEXT);
-      answer_list_add(&answer, str, STATUS_ENOIMP, ANSWER_QUALITY_ERROR);
+      answer_list_add_sprintf(&answer, STATUS_ENOIMP, ANSWER_QUALITY_ERROR,
+                              MSG_ANSWER_HELPNOTALLOWEDINCONTEXT);
       lFreeList(&path_alias);
       DEXIT;
       return answer;
@@ -470,7 +469,7 @@ lList *cull_parse_qsh_parameter(u_long32 prog_number, u_long32 uid, const char *
       lSetList(*pjob, JB_path_aliases, lCopyList("PathAliases", path_alias));
 
       if (is_cwd) {
-         FREE(path);
+         sge_free(&path);
       }
    }
 

@@ -41,21 +41,26 @@
 #include <sys/ioctl.h>  /* 44BSD requires this too */
 #endif
 
+#include "rmon/sgermon.h"
+
 #include "uti/sge_arch.h"
 #include "uti/config_file.h"
 #include "uti/sge_string.h"
+#include "uti/sge_log.h"
 
-#include "cl_data_types.h"
-#include "cl_commlib.h"
-#include "cl_endpoint_list.h"
-#include "sgermon.h"
-#include "sge_utility.h"
-#include "sge_security.h"
+#include "lck/sge_mtutil.h"
+
+#include "gdi/sge_security.h"
+#include "gdi/msg_gdilib.h"
+
+#include "sgeobj/sge_utility.h"
+
+#include "comm/cl_data_types.h"
+#include "comm/cl_commlib.h"
+#include "comm/cl_endpoint_list.h"
+#include "comm/lists/msg_commlistslib.h"
+
 #include "sge_ijs_comm.h"
-#include "sge_mtutil.h"
-#include "msg_commlistslib.h"
-#include "sge_log.h"
-#include "msg_gdilib.h"
 
 extern sig_atomic_t received_signal;
 
@@ -358,7 +363,7 @@ int comm_init_lib(dstring *err_msg)
          DPRINTF(("cl_com_set_alias_file() failed: %s (%d)\n", sge_dstring_get_string(err_msg), ret));
          ret_val = COMM_CANT_SETUP_COMMLIB;
       }
-      FREE(alias_path);
+      sge_free(&alias_path);
 
       if (ret_val == COMM_RETVAL_OK) {
          cl_host_resolve_method_t resolve_method = CL_SHORT;
@@ -892,7 +897,7 @@ int comm_wait_for_connection(COMM_HANDLE *handle,
       /* A client connected to us, get it's hostname */
       if (endpoint_list->elem_count > 0) {
          endpoint = cl_endpoint_list_get_first_elem(endpoint_list);
-         FREE(*host);
+         sge_free(host);
          *host = strdup(endpoint->endpoint->comp_host);
          DPRINTF(("A client from host %s has connected\n", *host));
       }

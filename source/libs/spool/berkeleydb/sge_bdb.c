@@ -40,8 +40,8 @@
 #include <string.h>
 
 #include "rmon/sgermon.h"
-#include "uti/sge_log.h"
 
+#include "uti/sge_log.h"
 #include "uti/sge_profiling.h"
 #include "uti/sge_string.h"
 #include "uti/sge_unistd.h"
@@ -55,11 +55,10 @@
 #include "sgeobj/sge_object.h"
 #include "sgeobj/sge_str.h"
 
-/* local */
-#include "msg_common.h"
 #include "spool/berkeleydb/msg_spoollib_berkeleydb.h"
-
 #include "spool/berkeleydb/sge_bdb.h"
+
+#include "msg_common.h"
 
 #if 1
 static const int pack_part = CULL_SPOOL | CULL_SUBLIST | CULL_SPOOL_PROJECT | 
@@ -1287,13 +1286,13 @@ spool_berkeleydb_delete_object(lList **answer_list, bdb_info info,
                                              delete_dbt.data,
                                              delete_ret, db_strerror(delete_ret));
                      ret = false;
-                     free(delete_dbt.data);
+                     sge_free(&(delete_dbt.data));
                      done = true;
                      break;
                   } else {
                      DEBUG((SGE_EVENT, "deleted record with key "SFQ, (char *)delete_dbt.data));
                   }
-                  free(delete_dbt.data);
+                  sge_free(&(delete_dbt.data));
                }
             }
             PROF_START_MEASUREMENT(SGE_PROF_SPOOLINGIO);
@@ -1808,7 +1807,7 @@ spool_berkeleydb_read_object(lList **answer_list, bdb_info info,
           * object found and we have to free it.
           */
          if (data_dbt.data != NULL) {
-            FREE(data_dbt.data);
+            sge_free(&(data_dbt.data));
          }
       }
    }
@@ -1922,7 +1921,7 @@ spool_berkeleydb_clear_log(lList **answer_list, bdb_info info)
             }
          }
 
-         free(list);
+         sge_free(&list);
       }
    }
 

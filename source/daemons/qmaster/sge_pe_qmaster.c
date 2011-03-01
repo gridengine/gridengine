@@ -33,34 +33,36 @@
 #include <string.h>
 #include <fnmatch.h>
 
-#include "sge.h"
-#include "sge_pe.h"
-#include "sge_ja_task.h"
-#include "sge_pe_qmaster.h"
-#include "sge_host_qmaster.h"
-#include "sge_event_master.h"
-#include "config_file.h"
-#include "sge_userset_qmaster.h"
-#include "sge_ckpt_qmaster.h"
-#include "sge_prog.h"
-#include "sgermon.h"
-#include "sge_log.h"
-#include "sge_job_schedd.h"
-#include "sge_unistd.h"
-#include "sge_answer.h"
-#include "sge_job.h"
-#include "sge_userset.h"
-#include "sge_utility.h"
-#include "sge_utility_qmaster.h"
-#include "sge_advance_reservation_qmaster.h"
-#include "sge_persistence_qmaster.h"
-#include "spool/sge_spooling.h"
+#include "rmon/sgermon.h"
 
+#include "uti/config_file.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_log.h"
+#include "uti/sge_unistd.h"
 #include "uti/sge_string.h"
 
+#include "sgeobj/sge_pe.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_userset.h"
+#include "sgeobj/sge_utility.h"
 #include "sgeobj/sge_advance_reservation.h"
 #include "sgeobj/sge_qinstance.h"
 
+#include "sched/sge_job_schedd.h"
+
+#include "spool/sge_spooling.h"
+
+#include "sge.h"
+#include "sge_pe_qmaster.h"
+#include "sge_host_qmaster.h"
+#include "sge_event_master.h"
+#include "sge_userset_qmaster.h"
+#include "sge_ckpt_qmaster.h"
+#include "sge_utility_qmaster.h"
+#include "sge_advance_reservation_qmaster.h"
+#include "sge_persistence_qmaster.h"
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
@@ -212,7 +214,7 @@ int pe_mod(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *new_pe, lListElem 
    /* -------- PE_resource_utilization */
    if (add) {
       if (pe_set_slots_used(new_pe, 0)) {
-         ERROR((SGE_EVENT, MSG_MEM_MALLOC));
+         ERROR((SGE_EVENT, SFNMAX, MSG_MEM_MALLOC));
          answer_list_add(alpp, SGE_EVENT, STATUS_EMALLOC, ANSWER_QUALITY_ERROR);
          DEXIT;
          return STATUS_EMALLOC;

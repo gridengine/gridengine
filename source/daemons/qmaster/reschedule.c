@@ -31,43 +31,45 @@
 /*___INFO__MARK_END__*/
 #include <string.h>
 
-#include "basis_types.h"
-#include "sgermon.h"
+#include "rmon/sgermon.h"
+
+#include "uti/sge_parse_num_par.h"
+#include "uti/sge_log.h"
+#include "uti/sge_time.h"
+#include "uti/sge_string.h"
+#include "uti/sge_hostname.h"
+#include "uti/sge_prog.h"
+
+#include "sgeobj/sge_object.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_report.h"
+#include "sgeobj/sge_host.h"
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_qinstance.h"
+#include "sgeobj/sge_qinstance_state.h"
+#include "sgeobj/sge_ckpt.h"
+#include "sgeobj/sge_cqueue.h"
+
+#include "spool/sge_spooling.h"
+
+#include "lck/sge_lock.h"
+
 #include "sge.h"
-
-#include "sge_object.h"
-#include "sge_ja_task.h"
-#include "sge_report.h"
-
+#include "basis_types.h"
 #include "job_exit.h"
 #include "sge_event_master.h"
-#include "sge_host.h"
-#include "sge_log.h"
 #include "sge_ckpt_qmaster.h"
 #include "sge_host_qmaster.h"
-#include "sge_parse_num_par.h"
 #include "execution_states.h"
 #include "mail.h"
 #include "symbols.h"
-#include "sge_time.h"
 #include "reschedule.h"
-#include "msg_qmaster.h"
-#include "sge_conf.h"
-#include "sge_string.h"
-#include "sge_job.h"
-#include "sge_hostname.h"
-#include "sge_answer.h"
-#include "sge_qinstance.h"
-#include "sge_qinstance_state.h"
-#include "sge_ckpt.h"
-#include "sge_cqueue.h"
-#include "sge_lock.h"
-#include "sge_prog.h"
 #include "configuration_qmaster.h"
-
 #include "sge_persistence_qmaster.h"
-#include "spool/sge_spooling.h"
 #include "sge_give_jobs.h"
+#include "msg_qmaster.h"
 
 u_long32 add_time = 0;
 
@@ -189,7 +191,7 @@ void reschedule_unknown_event(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, moni
    lFreeList(&answer_list);
    
 Error:
-   free(hostname);
+   sge_free(&hostname);
    
    SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
    DRETURN_VOID;
@@ -332,10 +334,10 @@ int reschedule_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep, l
       if (job_is_array(jep)) {
          sprintf(mail_ids, sge_U32CFormat"."sge_U32CFormat,
             sge_u32c(job_number), sge_u32c(task_number));
-         sprintf(mail_type, MSG_RU_TYPEJOBARRAY);
+         sge_strlcpy(mail_type, MSG_RU_TYPEJOBARRAY, sizeof(mail_type));
       } else {
-         sprintf(mail_ids, sge_U32CFormat, sge_u32c(job_number));
-         sprintf(mail_type, MSG_RU_TYPEJOB);
+         snprintf(mail_ids, sizeof(mail_ids), sge_U32CFormat, sge_u32c(job_number));
+         sge_strlcpy(mail_type, MSG_RU_TYPEJOB, sizeof(mail_type));
       }
 
       granted_qs = lGetList(this_jatep, JAT_granted_destin_identifier_list);
@@ -480,7 +482,7 @@ int reschedule_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep, l
                            *(object_type_get_master_list(SGE_TYPE_CQUEUE)),
                            lGetString(first_granted_queue, JG_qname));
          }
-         if (!lGetBool(queue, QU_rerun)) {
+         if (queue == NULL || !lGetBool(queue, QU_rerun)) {
             if (mconf_get_enable_reschedule_kill()) {
                INFO((SGE_EVENT, MSG_RU_REAPING_NOT_RESTARTABLE_SS, 
                      mail_type, mail_ids));
@@ -490,7 +492,7 @@ int reschedule_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep, l
 
             } else {
                INFO((SGE_EVENT, MSG_RU_NORERUNQUEUE_SSS, mail_type, mail_ids, 
-                  lGetString(queue, QU_full_name)));
+                  queue?"none":lGetString(queue, QU_full_name)));
                answer_list_add(answer, SGE_EVENT, STATUS_ESEMANTIC, 
                   ANSWER_QUALITY_WARNING);
                continue;
@@ -530,9 +532,9 @@ int reschedule_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep, l
 
          mail_options = lGetUlong(jep, JB_mail_options);
          if (force) {
-            sprintf(mail_action, MSG_RU_FORCEDR);
+            sge_strlcpy(mail_action, MSG_RU_FORCEDR, sizeof(mail_action));
          } else {
-            sprintf(mail_action, MSG_RU_PUSHEDR);
+            sge_strlcpy(mail_action, MSG_RU_PUSHEDR, sizeof(mail_action));
          }
          if (VALID(MAIL_AT_ABORT, mail_options)) {
             lList *mail_users;
@@ -546,10 +548,10 @@ int reschedule_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep, l
             cull_mail(QMASTER, mail_users, mail_subject, mail_body, MSG_RU_MAILTYPE);
          }
 
-         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_RU_MSGFILEINFO, mail_action, 
+         SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_RU_MSGFILEINFO, mail_action,
                                 mail_type, mail_ids, hostname));
 
-         answer_list_add(answer, SGE_EVENT, 
+         answer_list_add(answer, SGE_EVENT,
                          STATUS_ESEMANTIC, ANSWER_QUALITY_WARNING);
       }
 

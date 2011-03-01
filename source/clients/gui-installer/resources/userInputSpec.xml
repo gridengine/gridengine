@@ -28,6 +28,8 @@
  *
  *  All Rights Reserved.
  *
+ *  Portions of this code are Copyright 2011 Univa Inc.
+ *
  ************************************************************************/
 ___INFO__MARK_END__-->
 <userInput>
@@ -40,9 +42,6 @@ ___INFO__MARK_END__-->
         </field>
         <field type="check" variable="install.shadowd">
             <spec align="left" id="install.shadowd.label" true="true" false="false" />
-        </field>
-        <field type="check" variable="install.bdb">
-            <spec align="left" id="install.bdb.label" true="true" false="false" />
         </field>
         <field type="divider" conditionid="cond.mode.install"/>
         <field type="radio" variable="install.mode" ident="true">
@@ -253,13 +252,7 @@ ___INFO__MARK_END__-->
             <spec>
                 <choice id="cfg.spooling.method.classic.label" value="classic" revalidate="yes" />
                 <choice id="cfg.spooling.method.bdb.label" value="berkeleydb" revalidate="yes" />
-                <choice id="cfg.spooling.method.bdbserver.label" value="none" revalidate="yes" />
             </spec>
-        </field>
-        <field type="text" variable="cfg.db.spooling.server">
-            <spec id="cfg.db.spooling.server.label" size="35" />
-            <dependency type="enable" refid="cfg.spooling.method" value="none"/>
-            <validator id="cfg.db.spooling.server.notemptyvalidator" class="com.izforge.izpack.util.NotEmptyValidator" />
         </field>
         <field type="dir" align="left" variable="add.db.spooling.dir.bdb" conditionid="cond.qmaster.on.localhost+(cond.spooling.bdb|cond.spooling.classic)">
             <spec id="cfg.db.spooling.dir.label" size="35" />
@@ -272,11 +265,6 @@ ___INFO__MARK_END__-->
             </validator>
         </field>
         <field type="dir" align="left" variable="add.db.spooling.dir.bdb" conditionid="!(cond.qmaster.on.localhost)+(cond.spooling.bdb|cond.spooling.classic)">
-            <spec id="cfg.db.spooling.dir.label" size="35" />
-            <dependency type="disable" refid="cfg.spooling.method" value="classic"/>
-            <validator id="cfg.db.spooling.dir.notemptyvalidator" class="com.izforge.izpack.util.NotEmptyValidator" />
-        </field>
-        <field type="text" align="left" variable="add.db.spooling.dir.bdbserver" conditionid="cond.spooling.bdbserver">
             <spec id="cfg.db.spooling.dir.label" size="35" />
             <dependency type="disable" refid="cfg.spooling.method" value="classic"/>
             <validator id="cfg.db.spooling.dir.notemptyvalidator" class="com.izforge.izpack.util.NotEmptyValidator" />

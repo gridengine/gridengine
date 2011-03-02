@@ -129,6 +129,9 @@ while ($i <= $#argv)
    set i = `expr $i + 1`
 end
 
+# Initialize extern variables from aimk.*
+set UGE_LIBS         = 0   # Path to Univa Extensions
+
 # Source variables for definition of site dependent paths of software here
 #
 if ( -f aimk.site ) then
@@ -235,7 +238,7 @@ set MSDIR            = ""
 set MAKEFILE         = "${SDIR}/common/Makefile.global"
 set SOLARIS_ONLY_64  = 0
 set ONLY_PARAM_SPEC  = 0
-set LIBS_DIR         = ".."
+set LIBS_DIR         = "${SDIR}"
 
 # SGE_INPUT_CFLAGS will be taken from environment and added to CFLAGS
 if ( $?SGE_INPUT_CFLAGS ) then
@@ -310,7 +313,6 @@ set SLIBS            = ""
 set FLAGS_OUT        = "false"
 set DUMP             = 1
 set UGE_EXT          = 0   # Univa Extensions
-
 
 # Default settings for shared library creation
 set SHAREDLIBS       = 0
@@ -2004,11 +2006,11 @@ set DEPEND_FLAGS = "-D$ARCH_STRING $DEPEND_FLAGS"
 if ( $UGE_EXT == 1 ) then
   if ( -d $UGE_LIBS ) then
      set LFLAGS   = "$LFLAGS -L$UGE_EXT/$BUILDARCH/libs"
-     set LIBS_DIR = $UGE_EXT
+     set LIBS_DIR = "$UGE_LIBS"
   else
-     echo "error: couldn't find  $UGE_LIBS"
+     echo "error: couldn't find  UGE_LIBS"
      echo "error: please"
-     echo "error: (a )update UGE_LIBS in aimk.site or aimk.private accordingly"
+     echo "error: (a) update UGE_LIBS in aimk.site or aimk.private accordingly"
      echo "error: (b) do not use aimk option -uge-ext"
      exit 1
   endif

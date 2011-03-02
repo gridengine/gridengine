@@ -372,16 +372,15 @@ void* tty_to_commlib(void *t_conf)
       timeout.tv_sec  = 1;
       timeout.tv_usec = 0;
 
-			if (received_signal == SIGCONT) {
+      if (received_signal == SIGCONT) {
 				received_signal = 0;
         if (continue_handler (g_comm_handle, g_hostname) == 1) {
           do_exit = 1;
           continue;
         }
         if (g_raw_mode == 1) {
-          int ret = 0;
-          ret = terminal_enter_raw_mode ();
-          if (ret != 0) {
+          /* restore raw-mode after SIGCONT */
+          if (terminal_enter_raw_mode () != 0) {
 						 DPRINTF(("tty_to_commlib: couldn't enter raw mode for pty\n"));
              do_exit = 1;
              continue;
@@ -423,13 +422,13 @@ void* tty_to_commlib(void *t_conf)
          } else {
             DPRINTF(("tty_to_commlib: writing to commlib: %d bytes\n", nread));
             if (suspend_handler(g_comm_handle, g_hostname, g_is_rsh, g_pid, &dbuf) == 1) {
-              if (comm_write_message(g_comm_handle, g_hostname, 
-                 COMM_CLIENT, 1, (unsigned char*)pbuf, 
-                 (unsigned long)nread, STDIN_DATA_MSG, &err_msg) != nread) {
-                 DPRINTF(("tty_to_commlib: couldn't write all data\n"));
-              } else {
-                 DPRINTF(("tty_to_commlib: data successfully written\n"));
-              }
+                if (comm_write_message(g_comm_handle, g_hostname, 
+                    COMM_CLIENT, 1, (unsigned char*)pbuf, 
+                    (unsigned long)nread, STDIN_DATA_MSG, &err_msg) != nread) {
+                  DPRINTF(("tty_to_commlib: couldn't write all data\n"));
+                } else {
+                  DPRINTF(("tty_to_commlib: data successfully written\n"));
+                }
             }
             comm_flush_write_messages(g_comm_handle, &err_msg);
          }

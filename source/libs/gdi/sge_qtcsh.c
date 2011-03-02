@@ -116,6 +116,8 @@ print_func_t ostream
    lListElem *nxt, *cep_dest, *cep, *next;
    const char *task_name;
    struct passwd pw_struct;
+   char *pw_buffer;
+   size_t pw_buffer_size;
    const char* user_name = ctx->get_username(ctx);
    const char* cell_root = ctx->get_cell_root(ctx);
 
@@ -147,7 +149,9 @@ print_func_t ostream
 
    }
 
-   pwd = sge_getpwnam_r(user_name, &pw_struct, buffer, sizeof(buffer));
+   pw_buffer_size = get_pw_buffer_size();
+   pw_buffer = sge_malloc(pw_buffer_size);
+   pwd = sge_getpwnam_r(user_name, &pw_struct, pw_buffer, pw_buffer_size);
    
    /* user settings */
    if (pwd == NULL) {
@@ -254,12 +258,14 @@ print_func_t ostream
       (*ostream) ("info: empty task list\n");
 #endif
 
+   sge_free(&pw_buffer);
    return 0;
 
 FCLOSE_ERROR:
 Error:
    lFreeList(&clp_cluster);
    lFreeList(&clp_user);
+   sge_free(&pw_buffer);
    return -1;
 }
 

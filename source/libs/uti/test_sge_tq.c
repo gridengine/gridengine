@@ -38,8 +38,7 @@
 #include "uti/sge_tq.h"
 #include "uti/sge_err.h"
 #include "uti/sge_thread_ctrl.h"
-
-#include "lck/sge_mtutil.h"
+#include "uti/sge_mtutil.h"
 
 /*
  * Producer and consumer maximum should be a multiple of 2 and 3 

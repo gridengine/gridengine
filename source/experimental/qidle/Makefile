@@ -70,7 +70,7 @@ QIDLEOBJS = $(QIDLESRC:.c=.o)
             
 ALLQIDLEOBJS = $(QIDLEOBJS) sge_conf.o sge_load_sensor.o sge_report_execd.o 
 QIDLE_LIB_DEPEND = $(SCHEDLIB) $(GDILIB) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(UTILIB) 
-QIDLE_ADD_LIBS = -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti $(WINGRIDLIB) -llck 
+QIDLE_ADD_LIBS = -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti $(WINGRIDLIB) 
 
   
 $(QIDLE):  $(ALLQIDLEOBJS) $(QIDLE_LIB_DEPEND)

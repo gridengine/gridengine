@@ -49,12 +49,12 @@ SHOWQ_OBJS = $(SHOWQ_SRC:.c=.o)
 
 SHOWQ_ADD_OBJS = $(SHOWQ_ADD_SRC:.c=.o)
 
-SHOWQ_ADD_LIBS = -lsched -levc -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti $(WINGRIDLIB) -llck $(DLLIB)
+SHOWQ_ADD_LIBS = -lsched -levc -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti $(WINGRIDLIB) $(DLLIB)
 
 SHOWQ_LIB_DEPENDS = $(SCHEDLIB) $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) \
                     $(SECLIBS) $(KRBLIBS) \
 	                 $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(WINGRIDLIB_DEP) \
-                    $(UTILIB) $(LCKLIB) $(TPLIB)
+                    $(UTILIB) $(TPLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages

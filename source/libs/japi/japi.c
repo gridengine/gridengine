@@ -49,8 +49,7 @@
 #include "uti/sge_string.h"
 #include "uti/sge_bootstrap.h"
 #include "uti/sge_hostname.h"
-
-#include "lck/sge_mtutil.h"
+#include "uti/sge_mtutil.h"
 
 #include "japi/drmaa.h"
 #include "japi/japi.h"

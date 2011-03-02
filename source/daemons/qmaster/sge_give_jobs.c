@@ -44,6 +44,7 @@
 #include "uti/sge_hostname.h"
 #include "uti/sge_profiling.h"
 #include "uti/sge_bootstrap.h"
+#include "uti/sge_lock.h"
 
 #include "sgeobj/sge_ja_task.h"
 #include "sgeobj/sge_pe_task.h"
@@ -70,8 +71,6 @@
 #include "gdi/pack_job_delivery.h"
 #include "gdi/sge_security.h"
 #include "gdi/sge_gdi2.h"
-
-#include "lck/sge_lock.h"
 
 #include "spool/sge_spooling.h"
 

@@ -39,6 +39,7 @@
 #include "uti/sge_parse_num_par.h"
 #include "uti/sge_hostname.h"
 #include "uti/sge_bootstrap.h"
+#include "uti/sge_lock.h"
 
 #include "sgeobj/sge_conf.h"
 #include "sgeobj/sge_feature.h"
@@ -60,8 +61,6 @@
 #include "sgeobj/msg_sgeobjlib.h"
 
 #include "comm/commlib.h"
-
-#include "lck/sge_lock.h"
 
 #include "sched/sge_job_schedd.h"
 #include "sched/sge_resource_utilization.h"

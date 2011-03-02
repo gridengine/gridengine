@@ -39,8 +39,7 @@
 
 #include "uti/rmon.h"
 #include "uti/msg_rmon.h"
-
-#include "lck/sge_mtutil.h"
+#include "uti/sge_mtutil.h"
 
 #define DEBUG RMON_LOCAL
 

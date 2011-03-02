@@ -50,7 +50,7 @@ TRANSSRC   = culltrans_y.tab.cpp culltrans_lex.cpp \
 
 #---------------------------------------------------------------------
 TRANSOBJS  = $(TRANSSRC:.cpp=.o) 
-TRANSLIBS = -lsgeobj -lsgeobjd -lcull -lcomm -lcommlists -luti -llck $(DLLIB)
+TRANSLIBS = -lsgeobj -lsgeobjd -lcull -lcomm -lcommlists -luti $(DLLIB)
 #---------------------------------------------------------------------
 
 culltrans_depend:

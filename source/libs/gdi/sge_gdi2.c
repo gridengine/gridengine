@@ -44,10 +44,9 @@
 #endif
 #include <stdlib.h>
 
-#include "lck/sge_mtutil.h"
-
 #include "comm/commlib.h"
 
+#include "uti/sge_mtutil.h"
 #include "uti/sge_rmon.h"
 #include "uti/sge_stdlib.h"
 #include "uti/sge_prog.h"

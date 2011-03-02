@@ -39,8 +39,7 @@
 #include "uti/sge_stdlib.h"
 #include "uti/sge_time.h"
 #include "uti/sge_parse_num_par.h"
-
-#include "lck/sge_lock.h"
+#include "uti/sge_lock.h"
 
 #include "gdi/sge_gdi_ctx.h"
 

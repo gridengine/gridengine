@@ -36,8 +36,7 @@
 #include <unistd.h>
 #include <pthread.h>
 
-#include "lck/sge_mtutil.h"
-
+#include "uti/sge_mtutil.h"
 #include "uti/sge_rmon.h"
 #include "uti/sge_language.h"
 #include "uti/sge_prog.h"

@@ -41,13 +41,12 @@
 #include "uti/sge_log.h"
 #include "uti/sge_error_class.h"
 #include "uti/sge_time.h"
+#include "uti/sge_mtutil.h"
 
 #include "cull/cull.h"
 
 #include "commlib.h"
 #include "cl_errors.h"
-
-#include "lck/sge_mtutil.h"
 
 #include "gdi/sge_gdi2.h"
 #include "gdi/sge_gdi.h"

@@ -36,8 +36,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "lck/sge_lock.h"
-
+#include "uti/sge_lock.h"
 #include "uti/sge_rmon.h"
 #include "uti/sge_log.h"
 #include "uti/sge_unistd.h"

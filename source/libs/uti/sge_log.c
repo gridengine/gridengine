@@ -44,8 +44,7 @@
 #include "uti/sge_dstring.h"
 #include "uti/sge_prog.h"
 #include "uti/sge_uidgid.h"
-
-#include "lck/sge_mtutil.h"
+#include "uti/sge_mtutil.h"
 
 #include "gdi/sge_gdi_ctx.h"
 #include "uti/sge_string.h"

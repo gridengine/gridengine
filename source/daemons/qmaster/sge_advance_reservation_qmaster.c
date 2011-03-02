@@ -42,11 +42,10 @@
 #include "uti/sge_uidgid.h"
 #include "uti/sge_string.h"
 #include "uti/sge_log.h"
+#include "uti/sge_lock.h"
+#include "uti/sge_mtutil.h"
 
 #include "spool/sge_spooling.h"
-
-#include "lck/sge_lock.h"
-#include "lck/sge_mtutil.h"
 
 #include "sgeobj/sge_advance_reservation.h"
 #include "sgeobj/sge_answer.h"

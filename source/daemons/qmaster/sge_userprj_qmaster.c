@@ -48,6 +48,7 @@
 #include "uti/sge_time.h"
 #include "uti/sge_log.h"
 #include "uti/sge_bootstrap.h"
+#include "uti/sge_lock.h"
 
 #include "sgeobj/sge_manop.h"
 #include "sgeobj/sge_conf.h"
@@ -67,8 +68,6 @@
 #include "sgeobj/sge_resource_quota.h"
 
 #include "gdi/sge_gdi.h"
-
-#include "lck/sge_lock.h"
 
 #include "sge.h"
 #include "sge_utility_qmaster.h"

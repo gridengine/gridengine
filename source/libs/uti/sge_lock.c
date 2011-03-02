@@ -37,11 +37,10 @@
 #include <stdio.h>
 
 #include "uti/sge_rmon.h"
-
-#include "lck/sge_lock.h"
-#include "lck/sge_lock_fifo.h"
-#include "lck/sge_mtutil.h"
-#include "lck/msg_lcklib.h"
+#include "uti/sge_lock.h"
+#include "uti/sge_lock_fifo.h"
+#include "uti/sge_mtutil.h"
+#include "uti/msg_lcklib.h"
 
 
 #ifdef SGE_DEBUG_LOCK_TIME

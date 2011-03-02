@@ -36,7 +36,7 @@
 #include <ctype.h>
 #include <pthread.h>
 
-#include "lck/sge_mtutil.h"
+#include "uti/sge_mtutil.h"
 #include "uti/sge_rmon.h"
 #include "uti/sge_string.h"
 #include "uti/sge_log.h"

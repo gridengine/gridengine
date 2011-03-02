@@ -54,10 +54,9 @@
 
 #include "basis_types.h"
 
-#include "lck/sge_mtutil.h"
-
 #include "cull/pack.h"
 
+#include "uti/sge_mtutil.h"
 #include "uti/sge_rmon.h"
 #include "uti/sge_log.h"
 

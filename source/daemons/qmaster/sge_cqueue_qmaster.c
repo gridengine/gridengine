@@ -45,6 +45,7 @@
 #include "uti/sge_log.h"
 #include "uti/sge_unistd.h"
 #include "uti/sge_string.h"
+#include "uti/sge_mtutil.h"
 
 #include "sgeobj/sge_hgroup.h"
 #include "sgeobj/sge_cqueue.h"
@@ -68,8 +69,6 @@
 
 #include "sched/sge_select_queue.h"
 #include "sched/valid_queue_user.h"
-
-#include "lck/sge_mtutil.h"
 
 #include "spool/sge_spooling.h"
 

@@ -116,7 +116,7 @@ sge_sched_conf_mirror.o:	$(MIRLIB_DIR)/sge_sched_conf_mirror.c
 #---------------------------------------------------------------------
 # test programs
 test_sge_mirror: test_sge_mirror.o sig_handlers.o $(GDILIB) $(CULLLIB) $(UTILIB) $(COMMLIB) $(COMMLISTSLIB) $(WINGRIDLIB_DEP) $(SGEOBJLIB) $(SGEOBJDLIB) $(MIRLIB)
-	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_mirror $(LFLAGS) test_sge_mirror.o sig_handlers.o -lmir -levc -lgdi -lsgeobj -lsgeobjd -lcomm -lcommlists -lcull -luti $(WINGRIDLIB) -llck $(SECLIB) $(SLIBS) $(LIBS) $(DLLIB) -lc
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_sge_mirror $(LFLAGS) test_sge_mirror.o sig_handlers.o -lmir -levc -lgdi -lsgeobj -lsgeobjd -lcomm -lcommlists -lcull -luti $(WINGRIDLIB) $(SECLIB) $(SLIBS) $(LIBS) $(DLLIB) -lc
 
 test_sge_mirror.o: $(MIRLIB_DIR)/test_sge_mirror.c
 	$(CC) $(CFLAGS) -c $(MIRLIB_DIR)/test_sge_mirror.c

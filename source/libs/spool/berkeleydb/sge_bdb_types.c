@@ -37,7 +37,7 @@
 
 #include "uti/sge_rmon.h"
 #include "uti/sge_log.h"
-#include "lck/sge_mtutil.h"
+#include "uti/sge_mtutil.h"
 
 #include "spool/berkeleydb/msg_spoollib_berkeleydb.h"
 #include "spool/berkeleydb/sge_bdb_types.h"

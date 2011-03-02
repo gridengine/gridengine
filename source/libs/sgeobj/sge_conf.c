@@ -52,10 +52,9 @@
 #include "uti/sge_time.h"
 #include "uti/sge_profiling.h"
 #include "uti/config_file.h"
+#include "uti/sge_lock.h"
 
 #include "comm/commlib.h"
-
-#include "lck/sge_lock.h"
 
 #include "gdi/sge_gdi.h"
 

@@ -39,8 +39,7 @@
 #include "uti/sge_log.h"
 #include "uti/sge_time.h"
 #include "uti/sge_unistd.h"
-
-#include "lck/sge_lock.h"
+#include "uti/sge_lock.h"
 
 #include "sgeobj/sge_object.h"
 #include "sgeobj/sge_qinstance_state.h"

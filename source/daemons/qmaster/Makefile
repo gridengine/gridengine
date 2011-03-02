@@ -110,12 +110,12 @@ QMASTER_OBJS  = $(QMASTER_SRC:.c=.o)
 
 QMASTER_ADD_OBJS = $(QMASTER_ADD_SRC:.c=.o)
 
-QMASTER_ADD_LIBS = $(SPOOLING_LIBS) -lsched $(EVMLIB) -levc $(MIRLIB) -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti $(WINGRIDLIB) -llck $(DLLIB)
+QMASTER_ADD_LIBS = $(SPOOLING_LIBS) -lsched $(EVMLIB) -levc $(MIRLIB) -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti $(WINGRIDLIB) $(DLLIB)
 
 QMASTER_LIB_DEPENDS = $(SCHEDLIB) $(EVMLIB) $(EVCLIB) $(MIRLIB) \
                       $(GDILIB) $(SGEOBJLIB) $(SPOOLING_DEPS) $(SGEOBJDLIB) \
                       $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) \
-                      $(WINGRIDLIB_DEP) $(UTILIB) $(LCKLIB) $(TPLIB)
+                      $(WINGRIDLIB_DEP) $(UTILIB) $(TPLIB)
 
 QMASTER_TEST_OBJS = \
               test_sge_qmaster_timed_event.o \
@@ -127,8 +127,7 @@ QMASTER_TEST_PROGS = \
 
 QMASTER_TEST_ADD_LIBS = $(QMASTER_ADD_LIBS)
 
-QMASTER_TEST_LIB_DEPENDS = $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) \
-                           $(UTILIB) $(LCKLIB) 
+QMASTER_TEST_LIB_DEPENDS = $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB)  
 
 ###############################################################################
 # global rules: all, clean, depend, messages

@@ -38,6 +38,7 @@
 #include "uti/sge_time.h"
 #include "uti/sge_prog.h"
 #include "uti/sge_log.h"
+#include "uti/sge_lock.h"
 
 #include "sgeobj/sge_ack.h"
 #include "sgeobj/sge_centry.h"
@@ -46,8 +47,6 @@
 #include "sgeobj/sge_report.h"
 #include "sgeobj/sge_conf.h"
 #include "sgeobj/sge_answer.h"
-
-#include "lck/sge_lock.h"
 
 #include "gdi/sge_gdi2.h"
 

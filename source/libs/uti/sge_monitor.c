@@ -39,8 +39,7 @@
 #  include <malloc.h>
 #endif
 
-#include "lck/sge_mtutil.h"
-
+#include "uti/sge_mtutil.h"
 #include "uti/sge_rmon.h"
 #include "uti/sge_monitor.h"
 #include "uti/sge_dstring.h"

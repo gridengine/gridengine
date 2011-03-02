@@ -42,8 +42,7 @@
 #include "uti/sge_log.h"
 #include "uti/sge_time.h"
 #include "uti/sge_error_class.h"
-
-#include "lck/sge_mtutil.h"
+#include "uti/sge_mtutil.h"
 
 #include "comm/commlib.h"
 #include "comm/commproc.h"

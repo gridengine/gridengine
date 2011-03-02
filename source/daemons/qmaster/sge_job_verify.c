@@ -43,8 +43,7 @@
 #include "uti/sge_stdio.h"
 #include "uti/sge_time.h"
 #include "uti/sge_binding_hlp.h"
-
-#include "lck/sge_mtutil.h"
+#include "uti/sge_mtutil.h"
 
 #include "gdi/sge_gdi_ctx.h"
 #include "gdi/sge_gdi_packet.h"

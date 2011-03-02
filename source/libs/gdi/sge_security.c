@@ -35,13 +35,12 @@
 #include <pwd.h>
 #include <pthread.h>
 
-#include "lck/sge_mtutil.h"
-
 #include "comm/cl_commlib.h"
 #include "comm/cl_ssl_framework.h"
 
 #include "cull/cull.h"
 
+#include "uti/sge_mtutil.h"
 #include "uti/sge_rmon.h"
 #include "uti/sge_log.h"
 #include "uti/setup_path.h"

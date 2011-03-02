@@ -37,13 +37,12 @@
 #include "uti/sge_log.h"
 #include "uti/sge_time.h"
 #include "uti/sge_string.h"
+#include "uti/sge_mtutil.h"
 
 #include "sgeobj/sge_sharetree.h"
 #include "sgeobj/sge_userprj.h"
 #include "sgeobj/sge_schedd_conf.h"
 #include "sgeobj/sge_usage.h"
-
-#include "lck/sge_mtutil.h"
 
 #include "sge_support.h"
 #include "sge_sharetree_printing.h"

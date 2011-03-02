@@ -38,6 +38,7 @@
 #include "uti/sge_signal.h"
 #include "uti/sge_prog.h"
 #include "uti/sge_hostname.h"
+#include "uti/sge_mtutil.h"
 
 #include "sgeobj/sge_conf.h"
 #include "sgeobj/sge_pe.h"
@@ -76,7 +77,6 @@
 #include "sge_follow.h"
 #include "msg_common.h"
 #include "msg_qmaster.h"
-#include "lck/sge_mtutil.h"
 
 typedef enum {
    NOT_DEFINED = 0,

@@ -38,6 +38,7 @@
 #include "uti/sge_string.h"
 #include "uti/sge_hostname.h"
 #include "uti/sge_prog.h"
+#include "uti/sge_lock.h"
 
 #include "sgeobj/sge_object.h"
 #include "sgeobj/sge_ja_task.h"
@@ -52,8 +53,6 @@
 #include "sgeobj/sge_cqueue.h"
 
 #include "spool/sge_spooling.h"
-
-#include "lck/sge_lock.h"
 
 #include "sge.h"
 #include "basis_types.h"

@@ -48,13 +48,12 @@
 #include "uti/sge_prog.h"
 #include "uti/sge_uidgid.h" 
 #include "uti/sge_spool.h"
+#include "uti/sge_lock.h"
+#include "uti/sge_mtutil.h"
 
 #include "cull/cull.h"
 
 #include "comm/commlib.h"
-
-#include "lck/sge_lock.h"
-#include "lck/sge_mtutil.h"
 
 #include "spool/sge_spooling.h"
 

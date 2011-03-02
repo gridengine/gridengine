@@ -54,7 +54,6 @@ include $(SDIR)/daemons/common/Makefile
 include $(SDIR)/daemons/qmaster/Makefile   
 include $(SDIR)/libs/uti/Makefile
 include $(SDIR)/libs/cull/Makefile
-include $(SDIR)/libs/lck/Makefile
 include $(SDIR)/libs/comm/Makefile
 include $(SDIR)/libs/sgeobj/Makefile
 include $(SDIR)/libs/evc/Makefile
@@ -128,13 +127,13 @@ QMON_ADD_OBJS = $(QMON_ADD_SRC:.c=.o) libspoolc.a
 
 QMON_ADD_LIBS = -L../3rdparty/qmon/$(COMPILE_ARCH) -lXbae -lXmt -lXspin -lXicon -lXltree -lXtab \
                 -L. -lspool -lsched -levc -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull \
-                -lcomm -lcommlists -luti -llck $(DLLIB)
+                -lcomm -lcommlists -luti $(DLLIB)
 
 QMON_LIB_DEPENDS = $(XBAELIB) $(XMTLIB) $(XSPINLIB) $(XICONLIB) \
                    $(XLTREELIB) $(XTABLIB) $(SPOOLCLIB) $(SPOOLLIB) $(SPOOLFLIB) \
                    $(SCHEDLIB) $(EVCLIB) $(GDILIB) $(SGEOBJLIB) \
                    $(SGEOBJDLIB) $(KRBLIBS) $(CULLLIB) \
-                   $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(TPLIB)
+                   $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(TPLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages

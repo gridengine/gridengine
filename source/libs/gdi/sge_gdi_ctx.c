@@ -63,11 +63,10 @@
 #  include <termio.h>
 #endif
 
-#include "lck/sge_lock.h"
-
 #include "comm/commlib.h"
 #include "comm/lists/cl_util.h"
 
+#include "uti/sge_lock.h"
 #include "uti/sge_rmon.h"
 #include "uti/sge_hostname.h"
 #include "uti/sge_log.h"

@@ -43,8 +43,7 @@
 #include "uti/sge_profiling.h"
 #include "uti/sge_time.h"
 #include "uti/sge_thread_ctrl.h"
-
-#include "lck/sge_mtutil.h"
+#include "uti/sge_mtutil.h"
 
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_conf.h"

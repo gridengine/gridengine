@@ -39,8 +39,7 @@
 #include <errno.h>
 #include <pthread.h>
 
-#include "lck/sge_mtutil.h"
-
+#include "uti/sge_mtutil.h"
 #include "uti/sge_rmon.h"
 #include "uti/setup_path.h"
 #include "uti/sge_log.h"

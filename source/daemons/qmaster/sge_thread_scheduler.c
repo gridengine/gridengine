@@ -39,9 +39,7 @@
 #include "comm/cl_commlib.h"
 
 #include "uti/sge_rmon.h"
-
-#include "lck/sge_mtutil.h"
-
+#include "uti/sge_mtutil.h"
 #include "uti/sge_prog.h"
 #include "uti/sge_log.h"
 #include "uti/sge_time.h"

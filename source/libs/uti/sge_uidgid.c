@@ -40,8 +40,7 @@
 #include <grp.h>
 #include <pthread.h>
 
-#include "lck/sge_mtutil.h"
-
+#include "uti/sge_mtutil.h"
 #include "uti/sge_rmon.h"
 #include "uti/sge_stdio.h"
 #include "uti/sge_unistd.h"

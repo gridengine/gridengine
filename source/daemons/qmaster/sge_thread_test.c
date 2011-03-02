@@ -50,14 +50,13 @@
 #include "uti/sge_dstring.h"
 #include "uti/setup_path.h"
 #include "uti/sge_os.h"
+#include "uti/sge_mtutil.h"
+#include "uti/sge_lock.h"
 
 #include "sgeobj/sge_all_listsL.h"
 #include "sgeobj/sge_conf.h"
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_manop.h"
-
-#include "lck/sge_mtutil.h"
-#include "lck/sge_lock.h"
 
 #include "gdi/sge_security.h"
 #include "gdi/qm_name.h"

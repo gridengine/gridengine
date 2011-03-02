@@ -156,7 +156,6 @@ CULLSRC    = ../gdilib/sge_ckptL.h \
 # sub Makefiles (for core libraries)
 #---------------------------------------------------------------------
 include ../src/Makefile.master
-include ../rmon/src/Makefile
 include ../utilib/Makefile
 include ../commd/Makefile
 include ../cull/src/Makefile

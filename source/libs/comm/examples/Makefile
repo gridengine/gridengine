@@ -74,17 +74,17 @@ include $(COMM_EXAMPLES_DIR)/commexamples_dependencies
 ###############################################################################
 # rules to build object codes
 ###############################################################################
-server_demo: server_demo.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB_DEP) $(LCKLIB) 
-	$(CC) -o server_demo $(LFLAGS) server_demo.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(LCKLIB) $(DLLIB) $(LIBS)
+server_demo: server_demo.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB_DEP)  
+	$(CC) -o server_demo $(LFLAGS) server_demo.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(DLLIB) $(LIBS)
 
-client_demo: client_demo.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB_DEP) $(LCKLIB)
-	$(CC) -o client_demo $(LFLAGS) client_demo.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(LCKLIB) $(DLLIB) $(LIBS)
+client_demo: client_demo.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB_DEP) 
+	$(CC) -o client_demo $(LFLAGS) client_demo.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(DLLIB) $(LIBS)
 
-external_fd_server_demo: external_fd_server_demo.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB_DEP) $(LCKLIB)
-	$(CC) -o external_fd_server_demo $(LFLAGS) external_fd_server_demo.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(LCKLIB) $(DLLIB) $(LIBS)
+external_fd_server_demo: external_fd_server_demo.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB_DEP)
+	$(CC) -o external_fd_server_demo $(LFLAGS) external_fd_server_demo.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(DLLIB) $(LIBS)
 
-external_fd_demo: external_fd_demo.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB_DEP) $(LCKLIB)
-	$(CC) -o external_fd_demo $(LFLAGS) external_fd_demo.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(LCKLIB) $(DLLIB) $(LIBS)
+external_fd_demo: external_fd_demo.o $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB_DEP) 
+	$(CC) -o external_fd_demo $(LFLAGS) external_fd_demo.o $(SECLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(DLLIB) $(LIBS)
 
 server_demo.o: $(COMM_EXAMPLES_DIR)/server_demo.c
 	$(CC) $(CFLAGS) -c $(COMM_EXAMPLES_DIR)/server_demo.c

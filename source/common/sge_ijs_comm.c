@@ -46,8 +46,7 @@
 #include "uti/config_file.h"
 #include "uti/sge_string.h"
 #include "uti/sge_log.h"
-
-#include "lck/sge_mtutil.h"
+#include "uti/sge_mtutil.h"
 
 #include "gdi/sge_security.h"
 #include "gdi/msg_gdilib.h"

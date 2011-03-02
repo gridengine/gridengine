@@ -36,9 +36,8 @@
 #include <string.h>
 #include <float.h>
 
-#include "lck/sge_lock_fifo.h"
-#include "lck/msg_lcklib.h"
-
+#include "uti/sge_lock_fifo.h"
+#include "uti/msg_lcklib.h"
 #include "uti/sge_rmon.h"
 
 #define FIFO_LOCK_QUEUE_LENGTH 64 

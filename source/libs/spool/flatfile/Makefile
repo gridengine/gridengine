@@ -117,18 +117,18 @@ sge_spooling_flatfile_scanner.o: $(SPOOLCLIB_DIR)/sge_spooling_flatfile_scanner.
 
 #---------------------------------------------------------------------
 # test programs
-test_sge_spooling_flatfile: test_sge_spooling_flatfile.o sge_mt_init.o $(SPOOLLIB) $(GDILIB) $(SCHEDLIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(SGEOBJLIB) $(COMMLIB) $(LCKLIB) $(UTILIB) $(WINGRIDLIB_DEP)
-	$(CC) $(CFLAGS) -o test_sge_spooling_flatfile $(LFLAGS) test_sge_spooling_flatfile.o sge_mt_init.o $(SPOOLCLIB) $(SPOOLLIB) $(COMMLIB) $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(WINGRIDLIB) $(SECLIB) $(DLLIB) $(SLIBS) $(LIBS) 
+test_sge_spooling_flatfile: test_sge_spooling_flatfile.o sge_mt_init.o $(SPOOLLIB) $(GDILIB) $(SCHEDLIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(SGEOBJLIB) $(COMMLIB) $(UTILIB) $(WINGRIDLIB_DEP)
+	$(CC) $(CFLAGS) -o test_sge_spooling_flatfile $(LFLAGS) test_sge_spooling_flatfile.o sge_mt_init.o $(SPOOLCLIB) $(SPOOLLIB) $(COMMLIB) $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(SECLIB) $(DLLIB) $(SLIBS) $(LIBS) 
 
 test_sge_spooling_flatfile.o: $(SPOOLCLIB_DIR)/test_sge_spooling_flatfile.c
 	$(CC) $(CFLAGS) -c $(SPOOLCLIB_DIR)/test_sge_spooling_flatfile.c
 
 test_flatfile_spool: test_flatfile_spool.o sig_handlers.o sge_mt_init.o $(SPOOLLIB) $(SPOOLCLIB) $(SCHEDLIB) $(SGEOBJLIB) \
-                        $(SGEOBJDLIB) $(GDILIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB) \
+                        $(SGEOBJDLIB) $(GDILIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) \
                         $(UTILIB) $(WINGRIDLIB_DEP)
 	$(CC) $(CFLAGS) -o test_flatfile_spool $(LFLAGS) test_flatfile_spool.o sge_mt_init.o sig_handlers.o $(SPOOLCLIB) \
                          $(SPOOLLIB) $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) \
-                         $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(LCKLIB) \
+                         $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) \
                          $(UTILIB) $(WINGRIDLIB) $(LIBS) $(SECLIB) $(SLIBS) $(DLLIB) 
 
 test_flatfile_spool.o: $(SPOOLCLIB_DIR)/test_flatfile_spool.c

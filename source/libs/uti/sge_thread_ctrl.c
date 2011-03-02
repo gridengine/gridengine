@@ -38,8 +38,7 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#include "lck/sge_mtutil.h"
-
+#include "uti/sge_mtutil.h"
 #include "uti/sge_rmon.h"
 #include "uti/sge_thread_ctrl.h"
 

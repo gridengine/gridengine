@@ -36,9 +36,9 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#include "lck/test_sge_lock_main.h"
-#include "lck/sge_lock.h"
-#include "lck/sge_mtutil.h"
+#include "uti/test_sge_lock_main.h"
+#include "uti/sge_lock.h"
+#include "uti/sge_mtutil.h"
 #include "uti/sge_stdlib.h"
 #include "uti/sge_time.h"
 

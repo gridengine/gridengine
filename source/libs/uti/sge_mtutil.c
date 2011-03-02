@@ -43,8 +43,7 @@
 #include "uti/sge_rmon.h"
 #include "uti/sge_log.h"
 #include "uti/sge_time.h"
-
-#include "lck/msg_lcklib.h"
+#include "uti/msg_lcklib.h"
 
 /* enable or disable lock printing*/
 /* #define PRINT_LOCK */

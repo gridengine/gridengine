@@ -54,8 +54,7 @@
 
 #include <sys/timeb.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_io.h"
 #include "uti/sge_pty.h"
 

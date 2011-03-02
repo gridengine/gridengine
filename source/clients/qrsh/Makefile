@@ -44,9 +44,9 @@ QRSH_OBJS = $(QRSH_SRC:.c=.o)
 
 QRSH_ADD_OBJS = $(QRSH_ADD_SRC:.c=.o) 
 
-QRSH_ADD_LIBS = -luti $(WINGRIDLIB) $(COMMLISTSLIB) -llck -lrmon
+QRSH_ADD_LIBS = -luti $(WINGRIDLIB) $(COMMLISTSLIB) -llck 
 
-QRSH_LIB_DEPENDS = $(WINGRIDLIB_DEP) $(UTILIB) $(LCKLIB) $(RMONLIB) $(TPLIB)
+QRSH_LIB_DEPENDS = $(WINGRIDLIB_DEP) $(UTILIB) $(LCKLIB) $(TPLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages

@@ -41,8 +41,7 @@
 #include <ctype.h>
 #include <fnmatch.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_log.h"
 #include "uti/sge_stdio.h"
 #include "uti/sge_unistd.h"

@@ -177,18 +177,22 @@ int getpagesize(void);
 #endif
 
 #include <errno.h>
+
+#include "uti/sge_language.h"
+#include "uti/sge_rmon.h"
+#include "uti/sge_uidgid.h"
+
+#include "cull/cull.h"
+
+#include "sgeobj/sge_feature.h"
+
 #include "msg_sge.h"
 #include "sgedefs.h"
 #include "exec_ifm.h"
 #include "pdc.h"
+#include "ptf.h"
 #include "procfs.h"
 #include "basis_types.h"
-#include "cull/cull.h"
-#include "ptf.h"
-#include "sgeobj/sge_feature.h"
-#include "uti/sge_language.h"
-#include "rmon/sgermon.h"
-#include "uti/sge_uidgid.h"
 
 #if defined(PDC_STANDALONE)
 #  include "sge_log.h"

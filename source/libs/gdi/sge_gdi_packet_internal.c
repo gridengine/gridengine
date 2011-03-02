@@ -41,10 +41,9 @@
 
 #include "comm/commlib.h"
 
-#include "rmon/sgermon.h"
-
 #include "lck/sge_mtutil.h"
 
+#include "uti/sge_rmon.h"
 #include "uti/sge_log.h"
 #include "uti/sge_tq.h"
 

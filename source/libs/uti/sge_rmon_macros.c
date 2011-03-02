@@ -37,9 +37,10 @@
 #include <pthread.h>
 #include <errno.h>
 
-#include "rmon/rmon.h"
+#include "uti/rmon.h"
+#include "uti/msg_rmon.h"
+
 #include "lck/sge_mtutil.h"
-#include "rmon/msg_rmon.h"
 
 #define DEBUG RMON_LOCAL
 

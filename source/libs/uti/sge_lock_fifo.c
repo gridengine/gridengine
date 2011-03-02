@@ -39,7 +39,7 @@
 #include "lck/sge_lock_fifo.h"
 #include "lck/msg_lcklib.h"
 
-#include "rmon/sgermon.h"
+#include "uti/sge_rmon.h"
 
 #define FIFO_LOCK_QUEUE_LENGTH 64 
 

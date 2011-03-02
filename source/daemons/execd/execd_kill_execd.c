@@ -30,8 +30,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_parse_num_par.h"
 #include "uti/sge_signal.h"
 #include "uti/sge_log.h"

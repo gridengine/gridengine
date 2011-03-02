@@ -40,10 +40,9 @@
 #include "comm/cl_commlib.h"
 #include "comm/cl_ssl_framework.h"
 
-#include "rmon/sgermon.h"
-
 #include "cull/cull.h"
 
+#include "uti/sge_rmon.h"
 #include "uti/sge_log.h"
 #include "uti/setup_path.h"
 #include "uti/sge_string.h"

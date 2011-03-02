@@ -72,16 +72,16 @@ k5dcelogin.o:	$(GSS_SDIR)/k5dcelogin.c
 	$(CC) $(CFLAGS) -I$(SDIR) -c $?
 
 get_cred:        get_cred.o sge_gsslib.o
-	$(CC) -o $@ $(LFLAGS) get_cred.o sge_gsslib.o -luti -llck -lrmon $(LIBS) $(SLIBS)
+	$(CC) -o $@ $(LFLAGS) get_cred.o sge_gsslib.o -luti -llck $(LIBS) $(SLIBS)
 
 delete_cred:        delete_cred.o sge_gsslib.o
-	$(CC) -o $@ $(LFLAGS) delete_cred.o sge_gsslib.o -luti -llck -lrmon $(LIBS) $(SLIBS)
+	$(CC) -o $@ $(LFLAGS) delete_cred.o sge_gsslib.o -luti -llck $(LIBS) $(SLIBS)
 
 k5dcelogin:	k5dcelogin.o
 	$(CC) -o $@ $(LFLAGS) k5dcelogin.o $(LIBS) $(SLIBS)
 
 put_cred:        put_cred.o sge_gsslib.o
-	$(CC) -o $@ $(LFLAGS) put_cred.o sge_gsslib.o -luti -llck -lrmon $(LIBS) $(SLIBS)
+	$(CC) -o $@ $(LFLAGS) put_cred.o sge_gsslib.o -luti -llck $(LIBS) $(SLIBS)
 
 starter_cred:	$(GSS_SDIR)/starter_cred.ksh
 	cp $(GSS_SDIR)/starter_cred.ksh starter_cred

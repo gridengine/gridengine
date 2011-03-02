@@ -39,10 +39,9 @@
 #  include <malloc.h>
 #endif
 
-#include "rmon/sgermon.h"
-
 #include "lck/sge_mtutil.h"
 
+#include "uti/sge_rmon.h"
 #include "uti/sge_monitor.h"
 #include "uti/sge_dstring.h"
 #include "uti/sge_time.h"

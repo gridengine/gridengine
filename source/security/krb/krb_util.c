@@ -41,7 +41,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 
-#include "rmon/sgermon.h"
+#include "uti/sge_rmon.h"
 #include "uti/sge_log.h"
 #include "uti/sge_time.h"
 #include "uti/sge_uidgid.h"

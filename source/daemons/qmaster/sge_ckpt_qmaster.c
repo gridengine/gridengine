@@ -33,8 +33,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/config_file.h"
 #include "uti/sge_signal.h"
 #include "uti/sge_prog.h"

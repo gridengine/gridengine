@@ -46,7 +46,7 @@
 #include <interix/interix.h>
 #include <interix/security.h>
 
-#include "sgermon.h"
+#include "sge_rmon.h"
 #include "sge_log.h"
 #include "basis_types.h"
 #include "../../../utilbin/sge_passwd.h"

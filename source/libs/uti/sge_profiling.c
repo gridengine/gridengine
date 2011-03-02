@@ -41,8 +41,7 @@
 
 #include "basis_types.h"
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_dstring.h"
 #include "uti/sge_log.h"
 #include "uti/sge_time.h"

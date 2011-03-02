@@ -39,10 +39,9 @@
 #include <mcheck.h>
 #endif
 
-#include "rmon/sgermon.h"
-
 #include "cull/cull.h"
 
+#include "uti/sge_rmon.h"
 #include "uti/sge_stdlib.h"
 #include "uti/sge_parse_num_par.h"
 #include "uti/sge_log.h"

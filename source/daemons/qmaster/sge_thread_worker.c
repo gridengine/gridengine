@@ -36,7 +36,7 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#include "rmon/sgermon.h"
+#include "uti/sge_rmon.h"
 
 #include "lck/sge_mtutil.h"
 #include "lck/sge_lock.h"

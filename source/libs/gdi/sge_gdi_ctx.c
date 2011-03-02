@@ -68,8 +68,7 @@
 #include "comm/commlib.h"
 #include "comm/lists/cl_util.h"
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_hostname.h"
 #include "uti/sge_log.h"
 #include "uti/sge_stdlib.h"

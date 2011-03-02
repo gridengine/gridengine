@@ -40,10 +40,11 @@
 #define NO_SGE_COMPILE_DEBUG
 #endif
 
-#include "sgermon.h"
-#include "sge_log.h"
-#include "msg_lcklib.h"
-#include "sge_time.h"
+#include "uti/sge_rmon.h"
+#include "uti/sge_log.h"
+#include "uti/sge_time.h"
+
+#include "lck/msg_lcklib.h"
 
 /* enable or disable lock printing*/
 /* #define PRINT_LOCK */

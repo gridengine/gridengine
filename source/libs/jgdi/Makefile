@@ -72,10 +72,8 @@ $(JGDI_LIB): $(JGDI_OBJS) $(JGDI_ADD_OBJS)
 	$(SHAREDLD) $(SHARED_LFLAGS) $(NOERR_CFLAG) $(SGELIBPATH) -o libjgdi$(SHAREDEXT) $(JGDI_OBJS) $(JGDI_ADD_OBJS) $(SLIBS) $(LIBRARY_LIBS) -lc
 	../scripts/link_jnilib.sh libjgdi  $(SHAREDEXT) $(JAVA_SHAREDEXT)
 
-
-jgdi_test: jgdi_test.o $(UTILIB) $(COMMLISTSLIB) $(RMONLIB) $(LCKLIB) 
-	$(CC) -o jgdi_test $(LFLAGS) $(JAVA_LFLAGS)  jgdi_test.o -ljvm $(UTILIB) $(COMMLISTSLIB) $(RMONLIB) $(LCKLIB) $(LIBS)  
-	
+jgdi_test: jgdi_test.o $(UTILIB) $(COMMLISTSLIB) $(LCKLIB) 
+	$(CC) -o jgdi_test $(LFLAGS) $(JAVA_LFLAGS)  jgdi_test.o -ljvm $(UTILIB) $(COMMLISTSLIB) $(LCKLIB) $(LIBS)  
 
 jgdi_test.o: $(JGDI_DIR)/jgdi_test.c
 	$(CC) $(CCFLAGS) $(CFLAGS) $(NOERR_CFLAG) $(CCCDLFLAGS) $(JGDI_INCLUDES) $(JNI_INCLUDES) $(CORE_INCLUDE) $(SHARED_CFLAGS) -c $(JGDI_DIR)/jgdi_test.c

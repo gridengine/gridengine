@@ -38,10 +38,9 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#include "rmon/sgermon.h"
-
 #include "lck/sge_mtutil.h"
 
+#include "uti/sge_rmon.h"
 #include "uti/sge_thread_ctrl.h"
 
 #define THREAD_CONTROL_MUTEX "thread_control_mutex"

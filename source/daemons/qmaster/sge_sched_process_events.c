@@ -40,9 +40,7 @@
 #include "basis_types.h" 
 #include "sge.h"
 
-/* lib/ */
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_unistd.h"
 
 #include "sgeobj/sge_conf.h"

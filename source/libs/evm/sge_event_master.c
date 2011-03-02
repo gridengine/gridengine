@@ -36,8 +36,7 @@
 #include <string.h>
 #include <errno.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_time.h"
 #include "uti/sge_profiling.h"
 #include "uti/sge_spool.h"

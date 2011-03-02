@@ -31,8 +31,7 @@
 /*___INFO__MARK_END__*/
 #include <stdio.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_log.h"
 
 #include "cull/cull.h"

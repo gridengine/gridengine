@@ -34,7 +34,7 @@
 #include <string.h>
 #include "jni.h"
 
-#include "rmon/rmon.h"
+#include "uti/rmon.h"
 
 #include "cull/cull.h"
 #include "cull/cull_list.h"

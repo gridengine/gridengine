@@ -38,7 +38,7 @@
 
 #include "comm/cl_commlib.h"
 
-#include "rmon/sgermon.h"
+#include "uti/sge_rmon.h"
 
 #include "lck/sge_mtutil.h"
 

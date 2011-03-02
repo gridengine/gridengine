@@ -34,8 +34,7 @@
 #include <errno.h>
 #include <stdlib.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_unistd.h"
 #include "uti/sge_os.h"
 #include "uti/sge_stdlib.h"

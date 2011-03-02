@@ -54,8 +54,7 @@
 #define NO_SGE_COMPILE_DEBUG
 #endif
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_stdlib.h"
 #include "uti/sge_log.h"
 

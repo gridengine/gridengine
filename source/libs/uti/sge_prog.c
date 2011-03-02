@@ -40,8 +40,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>  
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_hostname.h"
 #include "uti/sge_log.h"
 #include "uti/sge_stdlib.h"

@@ -37,8 +37,7 @@
 #include <stdlib.h>
 #include <fcntl.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_unistd.h"
 #include "uti/sge_hostname.h"
 #include "uti/sge_prog.h"

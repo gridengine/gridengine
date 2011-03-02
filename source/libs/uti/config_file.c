@@ -34,8 +34,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_string.h"
 #include "uti/sge_stdio.h"
 #include "uti/sge_log.h"

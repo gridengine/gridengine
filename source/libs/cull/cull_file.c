@@ -40,8 +40,7 @@
 #define NO_SGE_COMPILE_DEBUG
 #endif
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_log.h"
 #include "uti/sge_io.h"
 #include "uti/sge_unistd.h"

@@ -36,16 +36,15 @@
 
 #include "sge.h"
 
-#include "rmon/sgermon.h"
-
-#include "lck/sge_mtutil.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_log.h"
 #include "uti/sge_monitor.h"
 #include "uti/sge_stdlib.h"
 #include "uti/sge_stdio.h"
 #include "uti/sge_time.h"
 #include "uti/sge_binding_hlp.h"
+
+#include "lck/sge_mtutil.h"
 
 #include "gdi/sge_gdi_ctx.h"
 #include "gdi/sge_gdi_packet.h"

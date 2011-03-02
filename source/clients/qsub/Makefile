@@ -48,13 +48,12 @@ QSUB_OBJS = $(QSUB_SRC:.c=.o)
 QSUB_ADD_OBJS = $(QSUB_ADD_SRC:.c=.o) japi.o
 
 QSUB_ADD_LIBS = -levc -lgdi -lsgeobj -lsgeobjd  \
-                -lcull -lcomm -lcommlists -luti $(WINGRIDLIB) -llck -lrmon \
+                -lcull -lcomm -lcommlists -luti $(WINGRIDLIB) -llck \
                 $(SECLIB) $(KRBLIB) $(DLLIB) 
 
 QSUB_LIB_DEPENDS = $(EVCLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) \
                    $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) \
-                   $(WINGRIDLIB_DEP) $(LCKLIB) $(UTILIB) $(RMONLIB) \
-                   $(TPLIB)
+                   $(WINGRIDLIB_DEP) $(LCKLIB) $(UTILIB) $(TPLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages

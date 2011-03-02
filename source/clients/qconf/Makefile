@@ -55,9 +55,9 @@ QCONF_OBJS = $(QCONF_SRC:.c=.o)
 
 QCONF_ADD_OBJS = $(QCONF_ADD_SRC:.c=.o) libspoolc.a
 
-QCONF_ADD_LIBS = -lspool -lsched -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti $(WINGRIDLIB) -llck -lrmon $(DLLIB)
+QCONF_ADD_LIBS = -lspool -lsched -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti $(WINGRIDLIB) -llck $(DLLIB)
 
-QCONF_LIB_DEPENDS = $(SPOOLFLIB) $(SPOOLCLIB) $(SPOOLLIB) $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(WINGRIDLIB_DEP) $(UTILIB) $(LCKLIB) $(RMONLIB) $(TPLIB)
+QCONF_LIB_DEPENDS = $(SPOOLFLIB) $(SPOOLCLIB) $(SPOOLLIB) $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(KRBLIBS) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(WINGRIDLIB_DEP) $(UTILIB) $(LCKLIB) $(TPLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages

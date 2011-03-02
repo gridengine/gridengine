@@ -36,8 +36,7 @@
 #  include <sys/stream.h>
 #endif  
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_unistd.h"
 #include "uti/sge_prog.h"
 #include "uti/sge_log.h"

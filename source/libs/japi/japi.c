@@ -38,51 +38,27 @@
 #include <pthread.h>
 #include <pwd.h>
 
-#include "sge_mtutil.h"
-#include "drmaa.h"
-#include "japi.h"
-#include "msg_japi.h"
-#include "sge.h"
-#include "sge_answer.h"
-#include "sge_profiling.h"
-#include "sge_conf.h"
-
-/* CULL */
-#include "cull_list.h"
-
-/* self */
-#include "japiP.h"
-
-/* RMON */
-#include "sgermon.h"
-
-/* UTI */
-#include "sge_prog.h"
-#include "sge_time.h"
-#include "sge_log.h"
-#include "sge_signal.h"
-#include "sge_uidgid.h"
-#include "sge_unistd.h"
-#include "sge_string.h"
-#include "sge_bootstrap.h"
+#include "uti/sge_rmon.h"
+#include "uti/sge_profiling.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_time.h"
+#include "uti/sge_log.h"
+#include "uti/sge_signal.h"
+#include "uti/sge_uidgid.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_string.h"
+#include "uti/sge_bootstrap.h"
 #include "uti/sge_hostname.h"
 
-/* COMMLIB */
-#include "commlib.h"
+#include "lck/sge_mtutil.h"
 
+#include "japi/drmaa.h"
+#include "japi/japi.h"
+#include "japi/msg_japi.h"
+#include "japi/japiP.h"
 
-/* EVC */
-#include "sge_event_client.h"
-
-/* EVM */
-#include "sge_event_master.h"
-
-#include "gdi/sge_gdi.h"
-#include "gdi/sge_gdiP.h"
-#include "gdi/sge_security.h"
-#include "gdi/sge_gdi2.h"
-
-/* SGEOBJ */
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_conf.h"
 #include "sgeobj/sge_cqueue.h"
 #include "sgeobj/sge_event.h"
 #include "sgeobj/sge_feature.h"
@@ -99,11 +75,22 @@
 #include "sgeobj/sge_report.h"
 #include "sgeobj/sge_usage.h"
 
-/* MSG */
-#include "msg_common.h"
+#include "cull/cull_list.h"
 
+#include "comm/commlib.h"
+
+#include "evc/sge_event_client.h"
 
 #include "gdi/sge_gdi_ctx.h"
+
+#include "gdi/sge_gdi.h"
+#include "gdi/sge_gdiP.h"
+#include "gdi/sge_security.h"
+#include "gdi/sge_gdi2.h"
+
+#include "sge.h"
+#include "sge_event_master.h"
+#include "msg_common.h"
 
 sge_gdi_ctx_class_t *ctx = NULL;
 

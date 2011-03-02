@@ -67,7 +67,7 @@
 #include "sge_profiling.h"
 
 /* RMON */
-#include "sgermon.h"
+#include "sge_rmon.h"
 
 /* SGEOBJ */
 #include "sge_path_alias.h"

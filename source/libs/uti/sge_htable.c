@@ -42,8 +42,7 @@
 #include <unistd.h>
 #include <sys/times.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_htable.h"
 #include "uti/sge_log.h"
 

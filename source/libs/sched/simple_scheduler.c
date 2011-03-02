@@ -34,8 +34,7 @@
 #include <stdlib.h>
 #include <strings.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_time.h"
 #include "uti/sge_unistd.h"
 #include "uti/sge_prog.h"

@@ -39,8 +39,7 @@
 
 #include "basis_types.h"
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_afsutil.h"
 #include "uti/sge_io.h"
 #include "uti/sge_unistd.h"

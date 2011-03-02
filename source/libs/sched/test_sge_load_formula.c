@@ -30,8 +30,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_bootstrap.h"
 
 #include "sgeobj/sge_centry.h"

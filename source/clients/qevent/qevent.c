@@ -46,8 +46,7 @@
 #include <sys/resource.h>
 #include <sys/wait.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_string.h"
 #include "uti/sge_unistd.h"
 #include "uti/sge_prog.h"

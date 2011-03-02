@@ -11,6 +11,10 @@
 EB-2011-03-02-0: Cleanup:     library cleanup
                  Issue:       GE-3361
 
+SH-2011-03-02-0: Bugfix:      Enabled UGE extension mechanism
+                              Added OS-stub code for qrsh suspension
+                 Review:      HP (GE-5)
+
 JG-2011-03-02-0: Bugfix:      system calls retrieving passwd information do not
                               always get called with a sufficiently large buffer
                  Issue:       GE-3367

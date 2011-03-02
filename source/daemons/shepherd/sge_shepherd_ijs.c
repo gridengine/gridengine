@@ -28,6 +28,7 @@
  *  All Rights Reserved.
  *
  ************************************************************************/
+/* Portions of this code are Copyright 2011 Univa Inc. */
 /*___INFO__MARK_END__*/
 
 #include <stdlib.h>
@@ -684,6 +685,18 @@ static void* commlib_to_pty(void *t_conf)
                                  "child: %d, %s", errno, strerror(errno));
                }
                b_was_connected = 1;
+               break;
+
+            case SUSPEND_CTRL_MSG:
+               shepherd_trace("commlib_to_pty: received suspend message, "
+                   "suspend the process");
+               shepherd_signal_job(g_job_pid, SIGTSTP);
+               break;
+
+            case UNSUSPEND_CTRL_MSG:
+               shepherd_trace("commlib_to_pty: received unsuspend message, "
+                   "awake the process");
+               shepherd_signal_job(g_job_pid, SIGCONT);
                break;
 
             case WINDOW_SIZE_CTRL_MSG:

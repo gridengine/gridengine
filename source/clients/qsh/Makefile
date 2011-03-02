@@ -47,7 +47,7 @@ QSH_OBJS = $(QSH_SRC:.c=.o) sge_ijs_comm.o sge_ijs_threads.o
 
 QSH_ADD_OBJS = $(QSH_ADD_SRC:.c=.o)
 
-QSH_ADD_LIBS = -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti $(WINGRIDLIB) $(DLLIB)
+QSH_ADD_LIBS = -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lcomm -lcommlists -luti $(WINGRIDLIB) $(DLLIB) -lijs
 
 QSH_LIB_DEPENDS = $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(KRBLIBS) $(WINGRIDLIB_DEP) $(UTILIB) $(TPLIB)
 

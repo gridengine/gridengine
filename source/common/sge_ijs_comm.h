@@ -28,6 +28,7 @@
  *   All Rights Reserved.
  *
  ************************************************************************/
+/* Portions of this code are Copyright 2011 Univa Inc. */
 /*___INFO__MARK_END__*/
 
 #include "uti/sge_dstring.h"
@@ -47,6 +48,8 @@
 #define UNREGISTER_CTRL_MSG          5
 #define UNREGISTER_RESPONSE_CTRL_MSG 6
 #define SETTINGS_CTRL_MSG            7
+#define SUSPEND_CTRL_MSG             8
+#define UNSUSPEND_CTRL_MSG           9
 
 #define COMM_RETVAL_OK                    0
 #define COMM_INVALID_PARAMETER            1

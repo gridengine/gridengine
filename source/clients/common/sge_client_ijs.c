@@ -63,12 +63,16 @@
 #include "sge_ijs_comm.h"
 #include "sge_ijs_threads.h"
 #include "sge_client_ijs.h"
+#include "ijs/sge_ijs_lib.h"
 
 /* module variables */
 static char *g_hostname  = NULL;
 static int  g_exit_status = 0; /* set by worker thread, read by main thread */
 static int  g_nostdin     = 0; /* set by main thread, read by worker thread */
 static int  g_noshell     = 0; /* set by main thread, read by worker thread */
+static int  g_is_rsh      = 0; /* set by main thread, read by worker thread */
+static unsigned int g_pid = 0; /* set by main thread, read by worker thread */
+static int  g_raw_mode_state = 0; /* set by main thread, read by worker thread */
 static COMM_HANDLE *g_comm_handle = NULL;
 
 /*
@@ -214,6 +218,14 @@ void set_signal_handlers(void)
       sigaction(SIGINT, &new_handler, NULL);
    }
 
+   sigaction(SIGCONT, NULL, &old_handler);
+   if (old_handler.sa_handler != SIG_IGN) {
+      new_handler.sa_handler = signal_handler;
+      sigaddset(&new_handler.sa_mask, SIGCONT);
+      new_handler.sa_flags = SA_RESTART;
+      sigaction(SIGCONT, &new_handler, NULL);
+   }
+
    sigaction(SIGQUIT, NULL, &old_handler);
    if (old_handler.sa_handler != SIG_IGN) {
       new_handler.sa_handler = signal_handler;
@@ -333,7 +345,9 @@ void* tty_to_commlib(void *t_conf)
    fd_set               read_fds;
    struct timeval       timeout;
    dstring              err_msg = DSTRING_INIT;
-   int                  ret, nread, do_exit = 0;
+   dstring              dbuf = DSTRING_INIT;
+   int                  do_exit = 0;
+   int                  ret, nread = 0;
 
    DENTER(TOP_LAYER, "tty_to_commlib");
    thread_func_startup(t_conf);
@@ -357,6 +371,22 @@ void* tty_to_commlib(void *t_conf)
       timeout.tv_sec  = 1;
       timeout.tv_usec = 0;
 
+      if (received_signal == SIGCONT) {
+				received_signal = 0;
+        if (continue_handler (g_comm_handle, g_hostname) == 1) {
+          do_exit = 1;
+          continue;
+        }
+        if (g_raw_mode_state == 1) {
+          /* restore raw-mode after SIGCONT */
+          if (terminal_enter_raw_mode () != 0) {
+						 DPRINTF(("tty_to_commlib: couldn't enter raw mode for pty\n"));
+             do_exit = 1;
+             continue;
+            }
+        }
+			}
+      
       DPRINTF(("tty_to_commlib: Waiting in select() for data\n"));
       ret = select(STDIN_FILENO+1, &read_fds, NULL, NULL, &timeout);
 
@@ -379,6 +409,8 @@ void* tty_to_commlib(void *t_conf)
          }
          DPRINTF(("tty_to_commlib: trying to read() from stdin\n"));
          nread = read(STDIN_FILENO, pbuf, BUFSIZE-1);
+         pbuf[nread] = '\0';
+         sge_dstring_append (&dbuf, pbuf);
          DPRINTF(("tty_to_commlib: nread = %d\n", nread));
 
          if (nread < 0 && (errno == EINTR || errno == EAGAIN)) {
@@ -388,12 +420,14 @@ void* tty_to_commlib(void *t_conf)
             do_exit = 1;
          } else {
             DPRINTF(("tty_to_commlib: writing to commlib: %d bytes\n", nread));
-            if (comm_write_message(g_comm_handle, g_hostname, 
-               COMM_CLIENT, 1, (unsigned char*)pbuf, 
-               (unsigned long)nread, STDIN_DATA_MSG, &err_msg) != nread) {
-               DPRINTF(("tty_to_commlib: couldn't write all data\n"));
-            } else {
-               DPRINTF(("tty_to_commlib: data successfully written\n"));
+            if (suspend_handler(g_comm_handle, g_hostname, g_is_rsh, g_pid, &dbuf) == 1) {
+                if (comm_write_message(g_comm_handle, g_hostname, 
+                    COMM_CLIENT, 1, (unsigned char*)pbuf, 
+                    (unsigned long)nread, STDIN_DATA_MSG, &err_msg) != nread) {
+                  DPRINTF(("tty_to_commlib: couldn't write all data\n"));
+                } else {
+                  DPRINTF(("tty_to_commlib: data successfully written\n"));
+                }
             }
             comm_flush_write_messages(g_comm_handle, &err_msg);
          }
@@ -413,6 +447,7 @@ void* tty_to_commlib(void *t_conf)
    } /* while (do_exit == 0) */
 
    /* clean up */
+   sge_dstring_free(&dbuf);
    sge_free(&pbuf);
    thread_func_cleanup(t_conf);
    
@@ -656,6 +691,8 @@ int run_ijs_server(COMM_HANDLE *handle, const char *remote_host,
 
    g_nostdin = nostdin;
    g_noshell = noshell;
+   g_pid = getpid();
+   g_is_rsh = is_rsh;
 
    /*
     * qrsh without command and qlogin both have is_rsh == 0 and is_qlogin == 1
@@ -675,6 +712,8 @@ int run_ijs_server(COMM_HANDLE *handle, const char *remote_host,
          sge_dstring_sprintf(p_err_msg, "can't set terminal to raw mode: %s (%d)",
             strerror(ret), ret);
          return 3;
+      } else {
+        g_raw_mode_state = 1;
       }
    }
 

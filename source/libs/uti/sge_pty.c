@@ -189,14 +189,22 @@ int ptym_open(char *pts_name)
 #if defined(DARWIN)
 int ptys_open(int fdm, char *pts_name)
 {
+   struct group gr_struct;
    struct group *grptr;
    int          gid, fds;
+   char *gr_buffer;
+   size_t gr_buffer_size;
 
-   if ((grptr = getgrnam("tty")) != NULL) {
+   gr_buffer_size = get_group_buffer_size();
+   gr_buffer = sge_malloc(gr_buffer_size);
+
+   if (getgrnam_r("tty", &gr_struct, gr_buffer, gr_buffer_size, &grptr) == 0) {
       gid = grptr->gr_gid;
    } else {
       gid = -1;      /* group tty is not in the group file */
    }
+
+   sge_free(&gr_buffer);
 
    /* following two functions don't work unless we're root */
    chown(pts_name, getuid(), gid);

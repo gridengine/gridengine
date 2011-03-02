@@ -58,7 +58,7 @@ SGELIB      = libsge$(LIBEXT)
 ###############################################################################
 libs: sgeobjlib gdilib evclib evmlib mirlib spoollib culllib_all schedlib_all utilib drmaa_all comm_all ijslib $(JUTI_ALL) $(SGELIB)
 
-libs_clean: gdilib_clean sgeobjlib_clean evclib_clean evmlib_clean mirlib_clean spoollib_clean commlib_clean commlistslib_clean culllib_clean rmonlib_clean schedlib_clean utilib_clean drmaa_clean ijslib_clean $(JUTI_CLEAN) $(SGELIB)_clean
+libs_clean: gdilib_clean sgeobjlib_clean evclib_clean evmlib_clean mirlib_clean spoollib_clean commlib_clean commlistslib_clean culllib_clean schedlib_clean utilib_clean drmaa_clean ijslib_clean $(JUTI_CLEAN) $(SGELIB)_clean
 
 $(SGELIB)_clean: 
 	$(RM) libsge.a libsge$(SHAREDEXT)

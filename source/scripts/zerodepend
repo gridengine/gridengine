@@ -73,11 +73,9 @@ files=" \
        libs/sched/sched_dependencies  \
        libs/uti/uti_dependencies  \
        libs/juti/juti_dependencies  \
-       libs/rmon/rmon_dependencies  \
        libs/comm/commlib_dependencies  \
        libs/comm/lists/commlistslib_dependencies \
        libs/comm/examples/commexamples_dependencies \
-       libs/lck/lck_dependencies  \
        libs/juti/juti_dependencies  \
        utilbin/utilbin_dependencies \
        security/coshepherd/coshepherd_dependencies \

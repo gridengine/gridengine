@@ -73,7 +73,7 @@ static int  g_nostdin     = 0; /* set by main thread, read by worker thread */
 static int  g_noshell     = 0; /* set by main thread, read by worker thread */
 static int  g_is_rsh      = 0; /* set by main thread, read by worker thread */
 static unsigned int g_pid = 0; /* set by main thread, read by worker thread */
-static int  g_raw_mode    = 0; /* set by main thread, read by worker thread */
+static int  g_raw_mode_state = 0; /* set by main thread, read by worker thread */
 static COMM_HANDLE *g_comm_handle = NULL;
 
 /*
@@ -378,7 +378,7 @@ void* tty_to_commlib(void *t_conf)
           do_exit = 1;
           continue;
         }
-        if (g_raw_mode == 1) {
+        if (g_raw_mode_state == 1) {
           /* restore raw-mode after SIGCONT */
           if (terminal_enter_raw_mode () != 0) {
 						 DPRINTF(("tty_to_commlib: couldn't enter raw mode for pty\n"));
@@ -714,7 +714,7 @@ int run_ijs_server(COMM_HANDLE *handle, const char *remote_host,
             strerror(ret), ret);
          return 3;
       } else {
-        g_raw_mode = 1;
+        g_raw_mode_state = 1;
       }
    }
 

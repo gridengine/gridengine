@@ -2005,7 +2005,7 @@ set DEPEND_FLAGS = "-D$ARCH_STRING $DEPEND_FLAGS"
 
 if ( $UGE_EXT == 1 ) then
   if ( -d $UGE_LIBS ) then
-     set LFLAGS   = "$LFLAGS -L$UGE_EXT/$BUILDARCH/libs"
+     set LFLAGS   = "$LFLAGS -L$UGE_LIBS/$BUILDARCH/libs"
      set LIBS_DIR = "$UGE_LIBS"
   else
      echo "error: couldn't find  UGE_LIBS"

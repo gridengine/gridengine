@@ -8,6 +8,11 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+JG-2011-03-02-0: Bugfix:      system calls retrieving passwd information do not
+                              always get called with a sufficiently large buffer
+                 Issue:       GE-3367
+                 Review:      EB (GE-6)
+
 DG-2011-03-01-0: Bugfix:      - removed BDB RPC installation from GUI installer
                               - turned JMX per default off
                  Issue:       GE-3352

@@ -91,6 +91,7 @@
 #include "sge_qmaster_timed_event.h"
 #include "sge_persistence_qmaster.h"
 #include "sge_reporting_qmaster.h"
+#include "sge_conf.h"
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
@@ -1123,6 +1124,7 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
       break;
 
    case COMMIT_ST_RESCHEDULED:
+   case COMMIT_ST_USER_RESCHEDULED:
    case COMMIT_ST_FAILED_AND_ERROR:
       WARNING((SGE_EVENT, MSG_JOB_RESCHEDULE_UU, sge_u32c(jobid), sge_u32c(jataskid)));
 
@@ -1162,20 +1164,23 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
          }
       }
 
-      lSetUlong(jatep, JAT_status, JIDLE);
       /*
        * Preserve any potential deferred startup request
        * in JAT_state across re-initialization.
        */
+      lSetUlong(jatep, JAT_status, JIDLE);
       state = lGetUlong(jatep, JAT_state);
       state &= JDEFERRED_REQ;
-      if (mode == COMMIT_ST_RESCHEDULED) {
+      if (mode == COMMIT_ST_RESCHEDULED || mode == COMMIT_ST_USER_RESCHEDULED) {
          state |= JQUEUED|JWAITING;
       } else {
          state |= JQUEUED|JWAITING|JERROR;
       }
       lSetUlong(jatep, JAT_state, state);
 
+      /*
+       * Prepare usage lists for the next run 
+       */
       lSetList(jatep, JAT_previous_usage_list, lCopyList("name", lGetList(jatep, JAT_scaled_usage_list)));
       lSetList(jatep, JAT_scaled_usage_list, NULL);
       lSetList(jatep, JAT_reported_usage_list, NULL);
@@ -1183,15 +1188,23 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
       /* 
        * Submit time will be set to the current timestamp in case a user 
        * reschedules his own jobs. This prevents users from "stealing" cpu
-       * resources. As a result of that the rescheduled job will end at the
-       * end of the pending job list instead of the top.
+       * resources. As a result of that the rescheduled job will be put 
+       * at the end of the pending job list instead of the top.
+       *
+       * Insert at the end of the pending job list can be disabled by
+       * two qmaster params. OLD_RESCHEDULE_BEHAVIOR disables it for non-array jobs
+       * whereas OLD_RESCHEDULE_BEHAVIOR_ARRAY_JOB disables it for array job tasks.
        */
-      {
-         lSetUlong(jep, JB_submission_time, now);
-         sge_event_spool(ctx, &answer_list, now, sgeE_JOB_MOD, jobid, jataskid, 
-                         NULL, NULL, session, jep, jatep, NULL, true, true);
-      }  
-
+      if (mode == COMMIT_ST_USER_RESCHEDULED) {
+         bool is_array_job = job_is_array(jep);
+   
+         if ((is_array_job == false && mconf_get_old_reschedule_behavior() == false) ||
+             (is_array_job == true && mconf_get_old_reschedule_behavior_array_job() == false)) {
+            lSetUlong(jep, JB_submission_time, now);
+            sge_event_spool(ctx, &answer_list, now, sgeE_JOB_MOD, jobid, jataskid, 
+                            NULL, NULL, session, jep, jatep, NULL, true, true);
+         }
+      }
 
       /* sum up the usage of all pe tasks not yet deleted (e.g. tasks from 
        * exec host in unknown state). Then remove all pe tasks except the 

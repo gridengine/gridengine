@@ -47,7 +47,6 @@
 #include "schedd_monitor.h"
 #include "msg_common.h"
 
-static char log_string[2048 + 1] = "invalid log_string";
 static char schedd_log_file[SGE_PATH_MAX + 1] = "";
 
 void schedd_set_schedd_log_file(sge_gdi_ctx_class_t *ctx)
@@ -65,27 +64,22 @@ void schedd_set_schedd_log_file(sge_gdi_ctx_class_t *ctx)
 }
 
 
-char* schedd_get_log_string(void)
-{
-   return log_string;
-}
-
-int schedd_log(const char *logstr, lList **monitor_alpp, bool monitor_next_run) 
+int schedd_log(const char *logstr, lList **monitor_alpp, bool monitor_next_run)
 {
    DENTER(TOP_LAYER, "schedd_log");
 
-   if (monitor_alpp) {
+   if (monitor_alpp != NULL) {
       /* add to answer list for verification (-w v) */
       answer_list_add(monitor_alpp, logstr, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
-   } 
-   
-   if (monitor_next_run){
+   }
+
+   if (monitor_next_run) {
       /* do logging (-tsm) */
       time_t now;
       FILE *fp = NULL;
       char *time_str = NULL;
       char str[128];
-   
+
       now = (time_t)sge_get_gmt();
       time_str =  ctime_r(&now, str);
       if (time_str[strlen(time_str) - 1] == '\n') {
@@ -95,8 +89,7 @@ int schedd_log(const char *logstr, lList **monitor_alpp, bool monitor_next_run)
       fp = fopen(schedd_log_file, "a");
       if (!fp) {
          DPRINTF(("could not open schedd_log_file "SFQ"\n", schedd_log_file));
-         DEXIT;
-         return -1;
+         DRETURN(-1);
       }
 
       fprintf(fp, "%s", time_str);
@@ -124,10 +117,9 @@ int schedd_log_list(lList **monitor_alpp, bool monitor_next_run, const char *log
 #ifndef WIN32NATIVE
 
    if (!monitor_next_run) {
-      DEXIT;
-      return 0;
+      DRETURN(0);
    }
-   
+
    fields[0] = nm;
 
    for_each(ep, lp) {
@@ -136,12 +128,14 @@ int schedd_log_list(lList **monitor_alpp, bool monitor_next_run, const char *log
       }
       lAppendElem(lp_part, lCopyElem(ep));
       if ((lGetNumberOfElem(lp_part) == NUM_ITEMS_ON_LINE) || !lNext(ep)) {
+         char log_string[2048];
+
          strcpy(log_string, logstr);
 #ifndef WIN32NATIVE
-         uni_print_list(NULL, 
-                        log_string + strlen(log_string), 
-                        sizeof(log_string) - strlen(log_string) - 1, 
-                        lp_part, 
+         uni_print_list(NULL,
+                        log_string + strlen(log_string),
+                        sizeof(log_string) - strlen(log_string) - 1,
+                        lp_part,
                         fields, delis, 0);
 #endif
          schedd_log(log_string, monitor_alpp, monitor_next_run);

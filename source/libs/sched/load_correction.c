@@ -33,8 +33,7 @@
 #include <string.h>
 #include <time.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_time.h"
 #include "uti/sge_parse_num_par.h"
 

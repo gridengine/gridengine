@@ -124,8 +124,7 @@ typedef void (*evm_remove_func_t) (
 typedef enum {
    EV_BUSY_NO_HANDLING = 0,
    EV_BUSY_UNTIL_ACK,
-   EV_BUSY_UNTIL_RELEASED,
-   EV_THROTTLE_FLUSH
+   EV_BUSY_UNTIL_RELEASED
 } ev_busy_handling;
 
 typedef enum {

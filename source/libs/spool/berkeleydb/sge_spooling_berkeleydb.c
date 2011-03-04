@@ -40,8 +40,7 @@
 #include <string.h>
 #include <time.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/config_file.h"
 #include "uti/sge_dstring.h"
 #include "uti/sge_log.h"
@@ -823,7 +822,7 @@ spool_berkeleydb_default_read_func(lList **answer_list,
                } else {
                   ret = false;
                }
-               FREE(dup);
+               sge_free(&dup);
             }
             break;
          case SGE_TYPE_JATASK:
@@ -960,7 +959,7 @@ spool_berkeleydb_default_write_func(lList **answer_list,
                      ret = spool_berkeleydb_write_job(answer_list, info, object,
                                                       job_id, ja_task_id, only_job);
                   }
-                  FREE(dup);
+                  sge_free(&dup);
                }
                break;
             case SGE_TYPE_JOBSCRIPT:
@@ -973,7 +972,7 @@ spool_berkeleydb_default_write_func(lList **answer_list,
                   ret = spool_berkeleydb_write_string(answer_list, info, 
                                                       BDB_JOB_DB,
                                                       db_key, script); 
-                  FREE(dup);
+                  sge_free(&dup);
                }
                break;
             case SGE_TYPE_CQUEUE:
@@ -1120,7 +1119,7 @@ spool_berkeleydb_default_delete_func(lList **answer_list,
                      ret = spool_berkeleydb_delete_job(answer_list, info, 
                                                        dbkey, false);
                   }
-                  FREE(dup);
+                  sge_free(&dup);
                }
                break;
             case SGE_TYPE_JOBSCRIPT:
@@ -1132,7 +1131,7 @@ spool_berkeleydb_default_delete_func(lList **answer_list,
                                                     BDB_JOB_DB, 
                                                     db_key, 
                                                     false); 
-                  FREE(dup);
+                  sge_free(&dup);
                }                            
                break;               
             default:

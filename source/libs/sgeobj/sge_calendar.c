@@ -36,10 +36,9 @@
 #include <time.h>
 #include <sys/time.h>
 
-#include "rmon/sgermon.h"
-
 #include "cull/cull_list.h"
 
+#include "uti/sge_rmon.h"
 #include "uti/sge_log.h"
 #include "uti/sge_string.h"
 #include "uti/sge_time.h"
@@ -371,7 +370,7 @@ static int state_at(time_t now, const lList *ycal, const lList *wcal, time_t *ne
          }
       } while(isOverlapping);
 
-      FREE(visited);
+      sge_free(&visited);
    }  
 
    if (next_event != NULL) {

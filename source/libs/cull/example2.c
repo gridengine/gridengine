@@ -39,7 +39,7 @@
 #define DATA_DIR "./"
 
 #define SGE_COMPILE_DEBUG
-#include "rmon/sgermon.h"
+#include "uti/sge_rmon.h"
 
 
 #define __SGE_GDI_LIBRARY_HOME_OBJECT_FILE__

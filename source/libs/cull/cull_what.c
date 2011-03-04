@@ -39,8 +39,7 @@
 #define NO_SGE_COMPILE_DEBUG
 #endif
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_log.h"
 
 #include "cull/cull_listP.h"
@@ -566,7 +565,7 @@ void lFreeWhat(lEnumeration **ep)
          lFreeWhat(&((*ep)[i].ep));
       }
    }
-   FREE(*ep);
+   sge_free(ep);
    DRETURN_VOID;
 }
 

@@ -38,8 +38,7 @@
 #include "basis_types.h"
 #include "sge.h"
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_bootstrap.h"
 #include "uti/sge_prog.h"
 #include "uti/sge_unistd.h"
@@ -129,8 +128,8 @@ static report_handler_t* create_xml_report_handler(lList **alpp) {
 static int destroy_xml_report_handler(report_handler_t** handler, lList **alpp) {
    if (*handler != NULL ) {
       sge_dstring_free((dstring*)(*handler)->ctx);
-      FREE((*handler)->ctx);
-      FREE(*handler);
+      sge_free(&((*handler)->ctx));
+      sge_free(handler);
       *handler = NULL;
    }
    return QQUOTA_SUCCESS;
@@ -569,7 +568,7 @@ sge_parse_qquota(lList **ppcmdline, lList **host_list, lList **resource_list,
 
       if (parse_string(ppcmdline, "-l", alpp, &argstr)) {
          *resource_list = centry_list_parse_from_string(*resource_list, argstr, false);
-         FREE(argstr);
+         sge_free(&argstr);
          continue;
       }
       if (parse_multi_stringlist(ppcmdline, "-u", alpp, user_list, ST_Type, ST_name)) {

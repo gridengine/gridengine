@@ -33,8 +33,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_time.h"
 #include "uti/sge_stdlib.h"
 #include "uti/sge_prog.h"
@@ -85,7 +84,7 @@ int qselect_xml_init(qselect_handler_t* handler, lList **alpp) {
 static int qselect_xml_destroy(qselect_handler_t *thiz, lList** alpp) {
    if (thiz != NULL ) {
       sge_dstring_free((dstring*)thiz->ctx);
-      FREE(thiz->ctx);
+      sge_free(&(thiz->ctx));
    }
    return 0;
 }

@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
                                           SP_DEST_STDOUT, SP_FORM_ASCII, NULL);
    if(filepath != NULL) {
       printf("\ndata successfully written to stdout\n");
-      FREE(filepath);
+      sge_free(&filepath);
    } else {
       answer_list_print_err_warn(&answer_list, NULL, NULL);
    }
@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
    if(filepath != NULL) {
       printf("temporary file %s successfully written\n", filepath);
       sge_unlink(NULL, filepath);
-      FREE(filepath);
+      sge_free(&filepath);
    } else {
       answer_list_print_err_warn(&answer_list, NULL, NULL);
    }
@@ -142,7 +142,7 @@ int main(int argc, char *argv[])
       }
      
       sge_unlink(NULL, filepath);
-      FREE(filepath);
+      sge_free(&filepath);
    } else {
       answer_list_print_err_warn(&answer_list, NULL, NULL);
    }
@@ -154,7 +154,7 @@ int main(int argc, char *argv[])
                                         NULL);
    if(filepath != NULL) {
       printf("\ndata successfully written to stdout\n");
-      FREE(filepath);
+      sge_free(&filepath);
    } else {
       answer_list_print_err_warn(&answer_list, NULL, NULL);
    }
@@ -177,7 +177,7 @@ int main(int argc, char *argv[])
          lFreeList(&reread_list);
       }
 /*       sge_unlink(NULL, filepath); */
-      FREE(filepath);
+      sge_free(&filepath);
    } else {
       answer_list_print_err_warn(&answer_list, NULL, NULL);
    }

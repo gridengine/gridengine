@@ -249,12 +249,12 @@ int do_core_binding(void)
             }
          }
          
-         FREE(sockets);
-         FREE(cores);
+         sge_free(&sockets);
+         sge_free(&cores);
 
       } else {
-         FREE(sockets);
-         FREE(cores);    
+         sge_free(&sockets);
+         sge_free(&cores);    
          shepherd_trace("do_core_binding: explicit: couldn't extract <socket>,<core> pair");
       }
 
@@ -476,7 +476,7 @@ static bool add_proc_ids_linux(int socket, int core, int** proc_id, int* proc_id
       retval = false;
    }
 
-   FREE(pids);
+   sge_free(&pids);
 
    return retval;
 }
@@ -584,7 +584,7 @@ static bool binding_set_linear_linux(int first_socket, int first_core,
                next_core = next_core - socket_amount_of_cores;
                if (next_socket >= max_amount_of_sockets) {
                   /* we are out of sockets - we do nothing */
-                  FREE(proc_id);
+                  sge_free(&proc_id);
                   return false;
                }
             }
@@ -615,12 +615,12 @@ static bool binding_set_linear_linux(int first_socket, int first_core,
              /* bind SET process to mask */ 
             if (bind_process_to_mask((pid_t) 0, cpuset) == false) {
                /* there was an error while binding */ 
-               FREE(proc_id);
+               sge_free(&proc_id);
                return false;
             }
          }
 
-         FREE(proc_id);
+         sge_free(&proc_id);
 
       } else {
             
@@ -747,7 +747,7 @@ bool binding_set_striding_linux(int first_socket, int first_core, int amount_of_
                /* check if we are already out of range */
                if (next_socket >= max_amount_of_sockets) {
                   shepherd_trace("binding_set_striding_linux: out of sockets");
-                  FREE(proc_id);
+                  sge_free(&proc_id);
                   return false;
                }   
 
@@ -759,7 +759,7 @@ bool binding_set_striding_linux(int first_socket, int first_core, int amount_of_
                   if (next_socket >= max_amount_of_sockets) {
                      /* we are out of sockets - we do nothing */
                      shepherd_trace("binding_set_striding_linux: out of sockets!");
-                     FREE(proc_id);
+                     sge_free(&proc_id);
                      return false;
                   }
                }    
@@ -794,7 +794,7 @@ bool binding_set_striding_linux(int first_socket, int first_core, int amount_of_
                }
             }
          
-            FREE(proc_id);
+            sge_free(&proc_id);
             
          } else {
             /* setting bitmask without topology information which could 
@@ -968,7 +968,7 @@ static bool binding_explicit(const int* list_of_sockets, const int samount,
             /* get the OS internal processor ids */ 
             if (add_proc_ids_linux(list_of_sockets[pr_id_ctr], list_of_cores[pr_id_ctr], 
                                     &proc_id, &proc_id_size) != true) {
-               FREE(proc_id);
+               sge_free(&proc_id);
                return false;
             }                       
 
@@ -998,7 +998,7 @@ static bool binding_explicit(const int* list_of_sockets, const int samount,
             }   
          }
 
-         FREE(proc_id);
+         sge_free(&proc_id);
           
       } else {
          /* has no topology information */

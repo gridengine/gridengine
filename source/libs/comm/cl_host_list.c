@@ -137,13 +137,13 @@ int cl_host_list_setup(cl_raw_list_t** list_p,
    }
 
    if (ldata->entry_life_time <= ldata->entry_update_time || ldata->entry_life_time <= ldata->entry_reresolve_time) {
-      free(ldata); 
+      sge_free(&ldata); 
       CL_LOG(CL_LOG_ERROR,"entry_life_time must be >= entry_update_time and >= entry_reresolve_time");
       cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_PARAMS, "SGE_COMMLIB_HOST_LIST_LIFE_TIME must be >= SGE_COMMLIB_HOST_LIST_UPDATE_TIME and >= SGE_COMMLIB_HOST_LIST_RERESOLVE_TIME");
       return CL_RETVAL_PARAMS;
    }
    if (ldata->entry_update_time <= ldata->entry_reresolve_time) {
-      free(ldata); 
+      sge_free(&ldata); 
       CL_LOG(CL_LOG_ERROR,"entry_update_time must be >= entry_reresolve_time");
       cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_PARAMS, "SGE_COMMLIB_HOST_LIST_UPDATE_TIME must be >= SGE_COMMLIB_HOST_LIST_RERESOLVE_TIME");
       return CL_RETVAL_PARAMS;
@@ -151,7 +151,7 @@ int cl_host_list_setup(cl_raw_list_t** list_p,
 
    ret_val = cl_host_alias_list_setup(&(ldata->host_alias_list), "host alias list");
    if (ret_val != CL_RETVAL_OK) {
-      free(ldata);
+      sge_free(&ldata);
       CL_LOG(CL_LOG_ERROR,"error setting up host alias list");
       return ret_val;
    }
@@ -160,7 +160,7 @@ int cl_host_list_setup(cl_raw_list_t** list_p,
       ldata->host_alias_file = strdup(host_alias_file);
       ldata->alias_file_changed = 1;
       if (ldata->host_alias_file == NULL) {
-         free(ldata);
+         sge_free(&ldata);
          return CL_RETVAL_MALLOC;
       }
    } else {
@@ -171,9 +171,9 @@ int cl_host_list_setup(cl_raw_list_t** list_p,
       ldata->local_domain_name = strdup(local_domain_name);
       if (ldata->local_domain_name == NULL) {
          if (ldata->host_alias_file != NULL) {
-            free(ldata->host_alias_file);
+            sge_free(&(ldata->host_alias_file));
          }
-         free(ldata);
+         sge_free(&ldata);
          return CL_RETVAL_MALLOC;
       }
    } else {
@@ -185,12 +185,12 @@ int cl_host_list_setup(cl_raw_list_t** list_p,
    ret_val = cl_raw_list_setup(list_p,list_name, 1);
    if (ret_val != CL_RETVAL_OK) {
       if (ldata->host_alias_file != NULL) {
-         free(ldata->host_alias_file);
+         sge_free(&(ldata->host_alias_file));
       }
       if (ldata->local_domain_name != NULL) {
-         free(ldata->local_domain_name);
+         sge_free(&(ldata->local_domain_name));
       }
-      free(ldata);
+      sge_free(&ldata);
       return ret_val;
    }
 
@@ -225,12 +225,12 @@ int cl_host_list_setup(cl_raw_list_t** list_p,
       if (ldata->ht == NULL) {
          cl_raw_list_cleanup(list_p);
          if (ldata->host_alias_file != NULL) {
-            free(ldata->host_alias_file);
+            sge_free(&(ldata->host_alias_file));
          }
          if (ldata->local_domain_name != NULL) {
-            free(ldata->local_domain_name);
+            sge_free(&(ldata->local_domain_name));
          }
-         free(ldata);
+         sge_free(&ldata);
          return CL_RETVAL_MALLOC;
       }
       CL_LOG_INT(CL_LOG_INFO,"created hash table with size =", 4);
@@ -473,7 +473,7 @@ int cl_host_list_set_alias_file(cl_raw_list_t* list_p, const char *host_alias_fi
    ldata = (cl_host_list_data_t*) list_p->list_data;
    if (ldata != NULL) {
       if (ldata->host_alias_file != NULL) {
-         free(ldata->host_alias_file);
+         sge_free(&(ldata->host_alias_file));
          ldata->host_alias_file = NULL;
       }
       ldata->host_alias_file = strdup(host_alias_file);
@@ -518,7 +518,7 @@ int cl_host_list_cleanup(cl_raw_list_t** list_p) {
    while ( (elem = cl_host_list_get_first_elem(*list_p)) != NULL) {
       cl_raw_list_remove_elem(*list_p, elem->raw_elem);
       cl_com_free_hostspec(&( elem->host_spec ));
-      free(elem);
+      sge_free(&elem);
    }
    cl_raw_list_unlock(*list_p);
 
@@ -530,12 +530,12 @@ int cl_host_list_cleanup(cl_raw_list_t** list_p) {
       }
       cl_host_alias_list_cleanup(&(ldata->host_alias_list));
       if (ldata->local_domain_name != NULL) {
-         free(ldata->local_domain_name);
+         sge_free(&(ldata->local_domain_name));
       }
       if (ldata->host_alias_file != NULL) {
-         free(ldata->host_alias_file);
+         sge_free(&(ldata->host_alias_file));
       }
-      free(ldata);
+      sge_free(&ldata);
    }
    (*list_p)->list_data = NULL;
 
@@ -575,7 +575,7 @@ int cl_host_list_append_host(cl_raw_list_t* list_p,cl_com_host_spec_t* host, int
    new_elem->host_spec = host;
    new_elem->raw_elem = cl_raw_list_append_elem(list_p, (void*) new_elem);
    if ( new_elem->raw_elem == NULL) {
-      free(new_elem);
+      sge_free(&new_elem);
       if (lock_list == 1) { 
          cl_raw_list_unlock(list_p);
       }
@@ -637,7 +637,7 @@ int cl_host_list_remove_host(cl_raw_list_t* list_p, cl_com_host_spec_t* host, in
          cl_raw_list_remove_elem(list_p, elem->raw_elem);
          function_return = CL_RETVAL_OK;
          cl_com_free_hostspec(&(elem->host_spec));
-         free(elem);
+         sge_free(&elem);
     }
 
    if (lock_list != 0) {
@@ -777,7 +777,7 @@ static cl_com_hostent_t* cl_com_copy_hostent(cl_com_hostent_t* hostent) {
          copy->he = sge_copy_hostent(hostent->he);
          if (copy->he == NULL ) {
             CL_LOG(CL_LOG_ERROR,"could not copy hostent structure");
-            free(copy);
+            sge_free(&copy);
             return NULL;
          }
       } 

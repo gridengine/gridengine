@@ -34,16 +34,14 @@
 #include <errno.h>
 #include <pthread.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_log.h"
 #include "uti/sge_prog.h"
 #include "uti/sge_profiling.h"
 #include "uti/sge_time.h"
+#include "uti/sge_mtutil.h"
 
 #include "cull/cull.h"
-
-#include "lck/sge_mtutil.h"
 
 #include "sgeobj/sge_conf.h"
 #include "sgeobj/sge_all_listsL.h"
@@ -400,7 +398,7 @@ void te_free_event(te_event_t *anEvent)
    SGE_ASSERT((anEvent != NULL));
    
    sge_free(&((*anEvent)->str_key));
-   FREE(*anEvent);
+   sge_free(anEvent);
 
    DRETURN_VOID;
 } /* te_free_event() */

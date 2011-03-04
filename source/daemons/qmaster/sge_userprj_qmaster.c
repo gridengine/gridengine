@@ -43,12 +43,12 @@
 #include <errno.h>
 #include <limits.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_prog.h"
 #include "uti/sge_time.h"
 #include "uti/sge_log.h"
 #include "uti/sge_bootstrap.h"
+#include "uti/sge_lock.h"
 
 #include "sgeobj/sge_manop.h"
 #include "sgeobj/sge_conf.h"
@@ -68,8 +68,6 @@
 #include "sgeobj/sge_resource_quota.h"
 
 #include "gdi/sge_gdi.h"
-
-#include "lck/sge_lock.h"
 
 #include "sge.h"
 #include "sge_utility_qmaster.h"
@@ -602,7 +600,7 @@ sge_add_auto_user(sge_gdi_ctx_class_t *ctx, const char *user, lList **alpp, moni
       /* add the auto user via GDI request */
       status = do_add_auto_user(ctx, uep, alpp, monitor); 
       lFreeElem(&uep);
-      FREE(auto_user_default_project);
+      sge_free(&auto_user_default_project);
    }
 
    DEXIT;

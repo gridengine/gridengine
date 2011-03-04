@@ -28,6 +28,8 @@
  * 
  *   All Rights Reserved.
  * 
+ *   Portions of this code are Copyright 2011 Univa Inc.
+ *
  ************************************************************************/
 
 /*___INFO__MARK_END__*/
@@ -36,13 +38,12 @@
 #include <ctype.h>
 #include <pthread.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_string.h"
 #include "uti/sge_log.h"
 #include "uti/sge_binding_hlp.h"
-
-#include "lck/sge_mtutil.h"
+#include "uti/msg_utilib.h" 
+#include "uti/sge_mtutil.h"
 
 #if defined(BINDING_SOLARIS)
 #  include <sys/processor.h>
@@ -201,22 +202,20 @@ bool parse_binding_parameter_string(const char* parameter, binding_type_t* type,
 
    } else if (strstr(parameter, "explicit") != NULL) {
 
-      if (binding_explicit_has_correct_syntax(parameter) == false) {
-         sge_dstring_sprintf(error, "couldn't parse <socket>,<core> list (explicit)");
+      if (binding_explicit_has_correct_syntax(parameter, error) == false) {
          retval = false;   
       } else {
-         sge_dstring_sprintf(strategy, "explicit");
-         /* explicit:<socket>,<core>:... */
          if (socketcorelist == NULL) {
-            sge_dstring_sprintf(error, "BUG detected: DSTRING NOT INITIALIZED");
+            sge_dstring_sprintf(error, MSG_SYNTAX_DSTRINGBUG);
             retval = false;  
          } else {
             char* pos = strstr(parameter, "explicit"); 
             sge_dstring_copy_string(socketcorelist, pos);
+            sge_dstring_sprintf(strategy, "explicit");
             pos = NULL;
-         }   
-      }   
-      
+         }
+      }
+
    } else {
       
       /* error: no valid strategy found */
@@ -249,9 +248,6 @@ bool parse_binding_parameter_string(const char* parameter, binding_type_t* type,
 *******************************************************************************/
 bool _has_topology_information() 
 {
-   dstring error = DSTRING_INIT;
-   sge_dstring_free(&error);
-
    int has_topology = 0;
    
    if (plpa_have_topology_information(&has_topology) == 0 && has_topology == 1) {
@@ -910,13 +906,13 @@ binding_type_t binding_parse_type(const char* parameter)
 *     MT-NOTE: binding_explicit_has_correct_syntax() is not MT safe 
 *
 *******************************************************************************/
-bool binding_explicit_has_correct_syntax(const char* parameter) 
+bool binding_explicit_has_correct_syntax(const char* parameter, dstring* error) 
 {
-   
-   /* DG TODO: introduce check if particles are numbers */
+   int amount;
 
    /* check if the head is correct */
    if (strstr(parameter, "explicit:") == NULL) {
+      sge_dstring_sprintf(error, MSG_SYN_EXPLICIT_NOTFOUND);
       return false;
    }
 
@@ -927,20 +923,24 @@ bool binding_explicit_has_correct_syntax(const char* parameter)
       /* first socket,core is mandatory */ 
       if ((socket = sge_strtok(NULL, ",")) == NULL) {
          /* we have no first socket number */
+         sge_dstring_sprintf(error, MSG_SYN_EXPLICIT_NOPAIR);
          return false;
       }
       /* check if <socket> begins with a digit */
       if (!is_digit(socket, ',')) {
+         sge_dstring_sprintf(error, MSG_SYN_EXPLICIT_FIRSTSOCKNONUMBER);
          return false;
       }
 
       /* check for core */
       if ((core = sge_strtok(NULL, ":")) == NULL) {
          /* we have no first core number */
+         sge_dstring_sprintf(error, MSG_SYN_EXPLICIT_MISSINGFIRSTCORE);
          return false;
       }
       /* check if <core> begins with a digit */
       if (!is_digit(core, ':')) {
+         sge_dstring_sprintf(error, MSG_SYN_EXPLICIT_FIRSTCORENONUMBER);
          return false;
       }
 
@@ -949,17 +949,20 @@ bool binding_explicit_has_correct_syntax(const char* parameter)
          if ((socket = sge_strtok(NULL, ",")) != NULL) {
             /* check if <socket> begins with a digit */
             if (!is_digit(socket, ',')) {
+               sge_dstring_sprintf(error, MSG_SYN_EXPLICIT_SOCKNONUMBER); 
                return false;
             }
 
             /* we have a socket therefore we need a core number */
             if ((core = sge_strtok(NULL, ":")) == NULL) {
                /* no core found */
+               sge_dstring_sprintf(error, MSG_SYN_EXPLICIT_NOCOREFORSOCKET);
                return false;
             }
             
             /* check if <core> is a number */
             if (!is_digit(core, ':')) {
+               sge_dstring_sprintf(error, MSG_SYN_EXPLICIT_COREISNONUMBER);
                return false;
             }
 
@@ -972,9 +975,10 @@ bool binding_explicit_has_correct_syntax(const char* parameter)
    }
 
    /* check if there are <socket,core> pairs requested multiple times */
-   int amount = get_explicit_amount(parameter);
-   
-   if (check_explicit_binding_string(parameter, amount) == false) {
+   amount = get_explicit_amount(parameter, true);
+  
+   if (check_explicit_binding_string(parameter, amount, true) == false) {
+      sge_dstring_sprintf(error, MSG_SYN_EXPLICIT_PAIRSNOTUNIQUE);
       return false;
    }
 
@@ -1308,6 +1312,7 @@ topology_string_to_socket_core_lists(const char* topology, int** sockets,
 *
 *  INPUTS
 *     const char* expl - pointer to explicit binding request string
+*     const bool with_explicit_prefix - does string start with "explicit:"?
 *
 *  RESULT
 *     int - amount of <socket,core> pairs in explicit binding request string
@@ -1319,7 +1324,7 @@ topology_string_to_socket_core_lists(const char* topology, int** sockets,
 *     sge_binding_hlp/check_explicit_binding_string()
 *******************************************************************************/
 int
-get_explicit_amount(const char* expl) {
+get_explicit_amount(const char* expl, const bool with_explicit_prefix) {
 
    int amount = 0;
    char* pair = NULL;
@@ -1334,9 +1339,13 @@ get_explicit_amount(const char* expl) {
    if (pair == NULL) {
       sge_free_saved_vars(context);
       return amount;
-   }   
-   amount++;
+   }
 
+   if (with_explicit_prefix == false) {
+      /* it begins with a pair */
+      amount++;
+   }   
+  
    while (sge_strtok_r(NULL, ":", &context) != NULL) {
       amount++;
    }
@@ -1360,6 +1369,7 @@ get_explicit_amount(const char* expl) {
 *  INPUTS
 *     const char* expl - pointer to the explicit binding request
 *     const int amount - expected amount of pairs
+*     const bool with_explicit_prefix - expl start with "excplicit:"
 *
 *  RESULT
 *     bool - true if the explicit binding request is duplicate free
@@ -1371,7 +1381,8 @@ get_explicit_amount(const char* expl) {
 *     sge_binding_hlp/get_explicit_amount()
 *******************************************************************************/
 bool
-check_explicit_binding_string(const char* expl, const int amount)
+check_explicit_binding_string(const char* expl, const int amount, 
+                              const bool with_explicit_prefix)
 {
    bool success = true;
    struct saved_vars_s* context = NULL;
@@ -1384,14 +1395,29 @@ check_explicit_binding_string(const char* expl, const int amount)
    if (expl == NULL || amount == 0) {
       return false;
    }
-   
+
+   /* skip "explicit:" */
+   if (with_explicit_prefix == true) {
+      pair = sge_strtok_r(expl, ":", &context);
+      if (pair == NULL) {
+         success = false;
+      }   
+   }
+
    /* get pointer to first pair */
-   pair = sge_strtok_r(expl, ":", &context);
-   
-   if (pair == NULL) {
-      success = false;
-   } else {
-      /* store pointer to first <socket,core> pair */
+   if (success == true) {
+      if (with_explicit_prefix == true) {  
+         pair = sge_strtok_r(NULL, ":", &context);
+      } else {
+         pair = sge_strtok_r(expl, ":", &context);
+      }
+      if (pair == NULL) {
+         success = false;
+      }   
+   }
+
+   /* store pointer to first <socket,core> pair */
+   if (success == true) {
       pairs[pair_number] = pair;
       pair_number++;
    }
@@ -1407,6 +1433,7 @@ check_explicit_binding_string(const char* expl, const int amount)
       pairs[pair_number] = pair;
       pair_number++;
    }
+
    /* check if amount of pairs did match */
    if (success == true && pair_number != amount) {
       success = false;

@@ -405,7 +405,7 @@ void son(const char *childname, char *script_file, int truncate_stderr_out)
 
                if(res == 0) {
                   strlcpy(user_passwd, pass, MAX_STRING_SIZE);
-                  FREE(pass);
+                  sge_free(&pass);
                   if (strlen(user_passwd) == 0) {
                      shepherd_trace("uidgid_read_passwd() returned empty password string!");
                   }
@@ -932,7 +932,7 @@ void son(const char *childname, char *script_file, int truncate_stderr_out)
                  is_interactive, is_qlogin, is_rsh, is_rlogin, str_title, 
                  use_starter_method);
 
-   FREE(buffer);
+   sge_free(&buffer);
    return;
 }
 
@@ -1016,7 +1016,7 @@ int sge_set_environment()
          sge_set_env_value(name, value);
       } else {
          sge_set_env_value(name, new_value);
-         free((void *)new_value);
+         sge_free(&new_value);
       }
    }
 
@@ -1054,7 +1054,7 @@ static void setup_environment()
          int index = 0;
 
          while (shepherd_env[index] != NULL) {
-            FREE(shepherd_env[index]);
+            sge_free(&(shepherd_env[index]));
             shepherd_env[index] = NULL;
             index++;
          }
@@ -2038,7 +2038,6 @@ static void start_qrsh_job(void)
    const char *arch = NULL;
    char *command = NULL;
    char *buf = NULL;
-   char cwd[SGE_PATH_MAX+1];
    char *args[9];
    int  nargs;
    int  i=0;
@@ -2053,8 +2052,6 @@ static void start_qrsh_job(void)
 
       sge_root = sge_get_root_dir(0, NULL, 0, 1);
       arch = sge_get_arch();
-      getcwd(cwd, SGE_PATH_MAX);
-      
       if (sge_root == NULL || arch == NULL) {
          shepherd_trace("reading environment SGE_ROOT and ARC failed");
          return;

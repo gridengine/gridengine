@@ -33,17 +33,16 @@
 #include <string.h>
 #include <pthread.h>
 
-#include "rmon/sgermon.h"
 #include "cull/cull.h"
 
+#include "uti/sge_rmon.h"
 #include "uti/sge_log.h"
 #include "uti/sge_stdio.h"
 #include "uti/sge_stdlib.h"
 #include "uti/sge_string.h"
 #include "uti/sge_parse_num_par.h"
-
-#include "lck/sge_lock.h"
-#include "lck/sge_mtutil.h"
+#include "uti/sge_lock.h"
+#include "uti/sge_mtutil.h"
 
 #include "sched/msg_schedd.h"
 
@@ -2994,9 +2993,9 @@ bool sconf_validate_config_(lList **answer_list)
                ep = lAddElemStr(&halflife_decay_list, UA_name, s2, UA_Type);
                lSetDouble(ep, UA_value, value);
             }
-            FREE(sv2);
+            sge_free(&sv2);
          }
-         FREE(sv1);
+         sge_free(&sv1);
         
          if (lGetNumberOfElem(halflife_decay_list) == 0) {
             answer_list_add(answer_list, MSG_GDI_INVALIDHALFLIFE_DECAY, STATUS_ESYNTAX, 

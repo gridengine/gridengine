@@ -32,8 +32,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_log.h"
 #include "uti/sge_string.h"
 #include "uti/sge_time.h"
@@ -661,8 +660,8 @@ sge_write_rusage(dstring *buffer,
 #endif 
              );
 
-   FREE(qname);
-   FREE(hostname);
+   sge_free(&qname);
+   sge_free(&hostname);
 
    DRETURN(ret);
 }

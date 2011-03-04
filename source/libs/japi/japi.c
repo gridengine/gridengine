@@ -38,51 +38,26 @@
 #include <pthread.h>
 #include <pwd.h>
 
-#include "sge_mtutil.h"
-#include "drmaa.h"
-#include "japi.h"
-#include "msg_japi.h"
-#include "sge.h"
-#include "sge_answer.h"
-#include "sge_profiling.h"
-#include "sge_conf.h"
-
-/* CULL */
-#include "cull_list.h"
-
-/* self */
-#include "japiP.h"
-
-/* RMON */
-#include "sgermon.h"
-
-/* UTI */
-#include "sge_prog.h"
-#include "sge_time.h"
-#include "sge_log.h"
-#include "sge_signal.h"
-#include "sge_uidgid.h"
-#include "sge_unistd.h"
-#include "sge_string.h"
-#include "sge_bootstrap.h"
+#include "uti/sge_rmon.h"
+#include "uti/sge_profiling.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_time.h"
+#include "uti/sge_log.h"
+#include "uti/sge_signal.h"
+#include "uti/sge_uidgid.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_string.h"
+#include "uti/sge_bootstrap.h"
 #include "uti/sge_hostname.h"
+#include "uti/sge_mtutil.h"
 
-/* COMMLIB */
-#include "commlib.h"
+#include "japi/drmaa.h"
+#include "japi/japi.h"
+#include "japi/msg_japi.h"
+#include "japi/japiP.h"
 
-
-/* EVC */
-#include "sge_event_client.h"
-
-/* EVM */
-#include "sge_event_master.h"
-
-#include "gdi/sge_gdi.h"
-#include "gdi/sge_gdiP.h"
-#include "gdi/sge_security.h"
-#include "gdi/sge_gdi2.h"
-
-/* SGEOBJ */
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_conf.h"
 #include "sgeobj/sge_cqueue.h"
 #include "sgeobj/sge_event.h"
 #include "sgeobj/sge_feature.h"
@@ -99,11 +74,22 @@
 #include "sgeobj/sge_report.h"
 #include "sgeobj/sge_usage.h"
 
-/* MSG */
-#include "msg_common.h"
+#include "cull/cull_list.h"
 
+#include "comm/commlib.h"
+
+#include "evc/sge_event_client.h"
 
 #include "gdi/sge_gdi_ctx.h"
+
+#include "gdi/sge_gdi.h"
+#include "gdi/sge_gdiP.h"
+#include "gdi/sge_security.h"
+#include "gdi/sge_gdi2.h"
+
+#include "sge.h"
+#include "sge_event_master.h"
+#include "msg_common.h"
 
 sge_gdi_ctx_class_t *ctx = NULL;
 
@@ -758,7 +744,7 @@ int japi_enable_job_wait(const char *username, const char *unqualified_hostname,
       }
 
       /* We know that japi_session_key is a copy of a string at this point. */
-      FREE(japi_session_key);
+      sge_free(&japi_session_key);
 
       /* return error context from event client thread if there is such */
       JAPI_LOCK_EC_ALP(japi_ec_alp_struct);
@@ -1020,7 +1006,7 @@ int japi_exit(int flag, dstring *diag)
     * The same goes for the communications socket. */
    JAPI_LOCK_SESSION();
    if (japi_session_key != JAPI_SINGLE_SESSION_KEY) {
-      FREE(japi_session_key);
+      sge_free(&japi_session_key);
    }
    else {
       japi_session_key = NULL;
@@ -2315,7 +2301,7 @@ int japi_synchronize(const char *job_ids[], signed long timeout, bool dispose, d
              * don't have to free the individual elements of the
              * sync_job_ids. */
             lFreeList(&sync_list);
-            FREE (sync_job_ids);
+            sge_free(&sync_job_ids);
          }
          
          DRETURN(DRMAA_ERRNO_EXIT_TIMEOUT);
@@ -2349,7 +2335,7 @@ int japi_synchronize(const char *job_ids[], signed long timeout, bool dispose, d
        * sync_list.  That means that if we free the sync_list, we don't have to
        * free the individual elements of the sync_job_ids. */
       lFreeList(&sync_list);
-      FREE (sync_job_ids);
+      sge_free(&sync_job_ids);
    }
    
    DRETURN(drmaa_errno);
@@ -4096,7 +4082,7 @@ static void *japi_implementation_thread(void * a_user_data_pointer)
    }   
    
    evc->ec_set_edtime(evc, ed_time); 
-   evc->ec_set_busy_handling(evc, EV_THROTTLE_FLUSH); 
+   evc->ec_set_busy_handling(evc, EV_BUSY_UNTIL_ACK);
    evc->ec_set_flush_delay(evc, flush_delay_rate); 
    evc->ec_set_session(evc, japi_session_key);
 

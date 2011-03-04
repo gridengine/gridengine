@@ -35,8 +35,7 @@
 #include <string.h>
 #include <fcntl.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_prog.h"
 #include "uti/sge_log.h"
 #include "uti/sge_thread_ctrl.h"

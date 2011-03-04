@@ -307,7 +307,7 @@ int main(int argc, char *argv[])
             if (failed) {
                char tail_cmd[1024];
                sprintf(tail_cmd, "tail -15 %s", path);
-               system(tail_cmd);
+               ret = system(tail_cmd);
             } else {
                if (unlink(path) != 0) {
                   fprintf(stderr, "couldn't unlink \"%s\" job output file %s: %s\n",

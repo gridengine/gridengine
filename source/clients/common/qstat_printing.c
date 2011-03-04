@@ -33,8 +33,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_unistd.h"
 #include "uti/sge_time.h"
 #include "uti/sge_prog.h"
@@ -528,8 +527,8 @@ lList **alpp
                   sge_urg ? jhul5 : "",
                   sge_pri ? jhul6 : "");
                   
-            FREE(part6);
-            FREE(seperator);               
+            sge_free(&part6);
+            sge_free(&seperator);               
          }
       }
 

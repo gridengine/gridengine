@@ -34,7 +34,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#include "rmon/sgermon.h"
+#include "uti/sge_rmon.h"
 #include "uti/sge_log.h"
 #include "uti/sge_string.h"
 #include "uti/sge_time.h"
@@ -469,7 +469,7 @@ lList *cull_parse_qsh_parameter(u_long32 prog_number, u_long32 uid, const char *
       lSetList(*pjob, JB_path_aliases, lCopyList("PathAliases", path_alias));
 
       if (is_cwd) {
-         FREE(path);
+         sge_free(&path);
       }
    }
 

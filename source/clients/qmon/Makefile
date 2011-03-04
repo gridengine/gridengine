@@ -52,10 +52,8 @@ include $(SDIR)/common/Makefile
 include $(SDIR)/clients/common/Makefile   
 include $(SDIR)/daemons/common/Makefile   
 include $(SDIR)/daemons/qmaster/Makefile   
-include $(SDIR)/libs/rmon/Makefile
 include $(SDIR)/libs/uti/Makefile
 include $(SDIR)/libs/cull/Makefile
-include $(SDIR)/libs/lck/Makefile
 include $(SDIR)/libs/comm/Makefile
 include $(SDIR)/libs/sgeobj/Makefile
 include $(SDIR)/libs/evc/Makefile
@@ -128,14 +126,14 @@ QMON_OBJS = $(QMON_SRC:.c=.o) qmon_diares.o
 QMON_ADD_OBJS = $(QMON_ADD_SRC:.c=.o) libspoolc.a
 
 QMON_ADD_LIBS = -L../3rdparty/qmon/$(COMPILE_ARCH) -lXbae -lXmt -lXspin -lXicon -lXltree -lXtab \
-                -L. -lspool -lsched -levc -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull -lrmon \
-                -lcomm -lcommlists -luti -llck $(DLLIB)
+                -L. -lspool -lsched -levc -lgdi -lsgeobj -lsgeobjd $(SECLIB) $(KRBLIB) -lcull \
+                -lcomm -lcommlists -luti $(DLLIB)
 
 QMON_LIB_DEPENDS = $(XBAELIB) $(XMTLIB) $(XSPINLIB) $(XICONLIB) \
                    $(XLTREELIB) $(XTABLIB) $(SPOOLCLIB) $(SPOOLLIB) $(SPOOLFLIB) \
                    $(SCHEDLIB) $(EVCLIB) $(GDILIB) $(SGEOBJLIB) \
                    $(SGEOBJDLIB) $(KRBLIBS) $(CULLLIB) \
-                   $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(LCKLIB) $(TPLIB)
+                   $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(TPLIB)
 
 ###############################################################################
 # global rules: all, clean, depend, messages
@@ -158,7 +156,7 @@ qmon:  $(QMON_OBJS) $(QMON_ADD_OBJS) $(QMON_LIB_DEPENDS)
 # ListTree Demo prog
 ############################################################################
 ALLDEMOOBJS =  tree_demo.o $(GDILIB) $(KRBLIBS) $(CULLLIB) $(UTILIB) \
-               $(RMONLIB) $(COMMLIB) $(COMMLISTSLIB) $(XLTREELIB) $(XMTLIB)
+               $(COMMLIB) $(COMMLISTSLIB) $(XLTREELIB) $(XMTLIB)
 
 tree_demo:  tree_demo.o $(XLTREELIB)
 	$(LD_WRAPPER) $(CC) -o $@ $(LFLAGS) $(ALLDEMOOBJS) $(LIBS) $(XLFLAGS) $(XLIBS)

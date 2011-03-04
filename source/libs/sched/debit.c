@@ -31,8 +31,7 @@
 /*___INFO__MARK_END__*/
 #include <stdio.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_log.h"
 
 #include "cull/cull.h"
@@ -320,7 +319,7 @@ int *sort_hostlist
 
       lResortElem(so, hep, host_list);
    }
-   FREE(load_formula);
+   sge_free(&load_formula);
 
    lFreeSortOrder(&so);
    lFreeList(&job_load_adjustments);

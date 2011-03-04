@@ -35,8 +35,7 @@
 #include <errno.h>
 #include <fnmatch.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_log.h"
 #include "uti/sge_hostname.h"
 #include "uti/sge_string.h"

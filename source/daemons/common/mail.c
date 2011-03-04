@@ -38,8 +38,7 @@
 #include <sys/wait.h>
 #include <stdlib.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_log.h"
 #include "uti/sge_unistd.h"
 #include "uti/sge_prog.h"
@@ -104,7 +103,7 @@ void cull_mail(u_long32 progid, lList *user_list, const char *subj, const char *
          host = lGetHost(ep, MR_host);
          if (!user && !host) {
             ERROR((SGE_EVENT, SFNMAX, MSG_MAIL_EMPTYUSERHOST));
-            FREE(mailer);
+            sge_free(&mailer);
             DRETURN_VOID;
          } else if (!host) {
             INFO((SGE_EVENT, MSG_MAIL_MAILUSER_SSSS, 
@@ -118,7 +117,7 @@ void cull_mail(u_long32 progid, lList *user_list, const char *subj, const char *
       }
    } 
 
-   FREE(mailer);
+   sge_free(&mailer);
    DRETURN_VOID;
 }
 

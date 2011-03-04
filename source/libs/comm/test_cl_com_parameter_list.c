@@ -39,6 +39,8 @@
 #include "comm/cl_commlib.h"
 #include "comm/lists/cl_parameter_list.h"
 
+#include "uti/sge_stdlib.h"
+
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif
@@ -87,8 +89,7 @@ extern int main(void)
    printf("parameter: %s\n", param3);
    printf("value: %s\n", ret_char);
 
-   free(ret_char);
-   ret_char = NULL;
+   sge_free(&ret_char);
 
    printf("\nappend parameter ...\n");
    retval = cl_com_set_parameter_list_value(param2, val2);
@@ -112,8 +113,7 @@ extern int main(void)
    printf("Print string got from commlib:\n");
    printf("Parameter string: %s\n", ret_char);
 
-   free(ret_char);
-
+   sge_free(&ret_char);
 
    printf("commlib cleanup ...\n");
    retval = cl_com_cleanup_commlib();

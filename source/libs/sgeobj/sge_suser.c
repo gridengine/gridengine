@@ -31,8 +31,7 @@
 /*___INFO__MARK_END__*/
 
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_log.h"
 
 #include "sgeobj/sge_ja_task.h"

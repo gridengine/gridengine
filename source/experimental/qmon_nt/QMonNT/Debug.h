@@ -41,7 +41,7 @@
 
 #include <fstream.h>
 
-#include "sgermon.h"
+#include "sge_rmon.h"
 #include "rmon_monitoring_level.h"
 
 typedef std::stack<int> CLayerStack;

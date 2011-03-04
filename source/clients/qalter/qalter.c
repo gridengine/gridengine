@@ -31,9 +31,9 @@
 /*___INFO__MARK_END__*/
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_log.h"
 #include "uti/sge_string.h"
 #include "uti/sge_unistd.h"
@@ -238,13 +238,9 @@ int main(int argc, char **argv) {
 **      gdi requests for each using the options from 
 **      dummy job and put them into the prequestlist
 */
-static lList *qalter_parse_job_parameter(
-u_long32 me_who,
-lList *cmdline,
-lList **prequestlist,
-int *all_jobs,
-int *all_users 
-) {
+static lList *qalter_parse_job_parameter(u_long32 me_who, lList *cmdline, lList **prequestlist,
+                                         int *all_jobs, int *all_users)
+{
    lListElem *ep  = NULL;
    lListElem *job = NULL;
    lListElem *rep = NULL;
@@ -336,23 +332,31 @@ int *all_users
          char tmp_str2[SGE_PATH_MAX + 1];
          char tmp_str3[SGE_PATH_MAX + 1];
          const char *sge_o_home = job_get_env_string(job, VAR_PREFIX "O_HOME");
- 
+
          if (!getcwd(tmp_str, sizeof(tmp_str))) {
-            answer_list_add(&answer, MSG_ANSWER_GETCWDFAILED, 
+            answer_list_add(&answer, MSG_ANSWER_GETCWDFAILED,
                             STATUS_EDISK, ANSWER_QUALITY_ERROR);
             lFreeElem(&job);
             DRETURN(answer);
          }
-         
-         if (sge_o_home && !chdir(sge_o_home)) {
-            if (!getcwd(tmp_str2, sizeof(tmp_str2))) {
-               answer_list_add(&answer, MSG_ANSWER_GETCWDFAILED, 
+
+         if (sge_o_home && chdir(sge_o_home) == 0) {
+            if (getcwd(tmp_str2, sizeof(tmp_str2)) == NULL) {
+               answer_list_add(&answer, MSG_ANSWER_GETCWDFAILED,
                                STATUS_EDISK, ANSWER_QUALITY_ERROR);
                lFreeElem(&job);
                DRETURN(answer);
             }
 
-            chdir(tmp_str);
+            if (chdir(tmp_str) != 0) {
+               dstring ds = DSTRING_INIT;
+               answer_list_add_sprintf(&answer, STATUS_EDISK, ANSWER_QUALITY_ERROR,
+                                       MSG_FILE_CHDIR_SS, tmp_str, sge_strerror(errno, &ds));
+               sge_dstring_free(&ds);
+               lFreeElem(&job);
+               DRETURN(answer);
+            }
+
             if (!strncmp(tmp_str2, tmp_str, strlen(tmp_str2))) {
                sprintf(tmp_str3, "%s%s", sge_o_home, (char *) tmp_str + strlen(tmp_str2));
                strcpy(tmp_str, tmp_str3);
@@ -767,7 +771,7 @@ int *all_users
             answer_list_add(&answer, MSG_ANSWER_ALLANDJOBIDSARENOTVALID, 
                             STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             lFreeElem(&job);
-            FREE(rdp);
+            sge_free(&rdp);
             DRETURN(answer);
          } else if (!strcmp(lGetString(ep, ID_str), "dummy")) {
             /* we will add a dummy-object to send parameters to qmaster */ 
@@ -775,7 +779,7 @@ int *all_users
             answer_list_add(&answer, MSG_ANSWER_0ISNOTAVALIDJOBID,
                             STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
             lFreeElem(&job);
-            FREE(rdp);
+            sge_free(&rdp);
             DRETURN(answer);
          }
       }
@@ -800,14 +804,14 @@ int *all_users
          /* format: <delimiter>old_name<delimiter>new_name */
          snprintf(name, size, "%s%s%s%s", JOB_NAME_DEL, lGetString(ep, ID_str), JOB_NAME_DEL, job_name?job_name:"");
          rep = lAddElemStr(prequestlist, JB_job_name, name, rdp);
-         FREE(name);
+         sge_free(&name);
       }   
 
       if (!rep) {   
          answer_list_add_sprintf(&answer, STATUS_EMALLOC, ANSWER_QUALITY_ERROR,
                                  MSG_MEM_MEMORYALLOCFAILED_S, SGE_FUNC);
          lFreeElem(&job);
-         FREE(rdp);
+         sge_free(&rdp);
          DRETURN(answer);
       }
 
@@ -833,7 +837,7 @@ int *all_users
          answer_list_add_sprintf(&answer, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
                                  MSG_OPTIONWORKSONLYONJOB);
          lFreeElem(&job);
-         FREE(rdp);
+         sge_free(&rdp);
          DRETURN(answer);
       }
       lSetList(job, JB_ja_tasks, task_list);
@@ -918,6 +922,6 @@ int *all_users
    }
 
    lFreeElem(&job);
-   FREE(rdp);
+   sge_free(&rdp);
    DRETURN(answer);
 }

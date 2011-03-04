@@ -33,8 +33,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_time.h"
 #include "uti/sge_log.h"
 #include "uti/sge_prog.h"
@@ -833,7 +832,7 @@ int var_list_parse_from_string(lList **lpp, const char *variable_str,
    str_str = string_list(va_string, ",", NULL);
    if (!str_str || !*str_str) {
       *lpp = NULL;
-      FREE(va_string);
+      sge_free(&va_string);
       DEXIT;
       return 3;
    }
@@ -841,8 +840,8 @@ int var_list_parse_from_string(lList **lpp, const char *variable_str,
    if (!*lpp) {
       *lpp = lCreateList("variable list", VA_Type);
       if (!*lpp) {
-         FREE(va_string);
-         FREE(str_str);
+         sge_free(&va_string);
+         sge_free(&str_str);
          DEXIT;
          return 4;
       }
@@ -878,8 +877,8 @@ int var_list_parse_from_string(lList **lpp, const char *variable_str,
       }
       sge_free_saved_vars(context);
    }
-   FREE(va_string);
-   FREE(str_str);
+   sge_free(&va_string);
+   sge_free(&str_str);
    DRETURN(0);
 }
 

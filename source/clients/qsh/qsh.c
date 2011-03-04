@@ -47,8 +47,7 @@
 #include <arpa/inet.h>
 #endif
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_hostname.h"
 #include "uti/sge_sl.h"
 #include "uti/sge_profiling.h"
@@ -1861,7 +1860,7 @@ int main(int argc, char **argv)
             SGE_EXIT((void **)&ctx, EXIT_FAILURE);
          }
       
-         FREE(host);
+         sge_free(&host);
          /* get host and port of rshd, job_dir and utilbin_dir over connection */
          if (!get_client_server_context(msgsock, &port, &job_dir, &utilbin_dir, &host)) {
             sge_prof_cleanup();
@@ -2300,7 +2299,7 @@ int main(int argc, char **argv)
       sge_dstring_free(&id_dstring);
    }
 
-   FREE(client_name);
+   sge_free(&client_name);
    sge_prof_cleanup();
    SGE_EXIT((void **)&ctx, exit_status);
    DEXIT;

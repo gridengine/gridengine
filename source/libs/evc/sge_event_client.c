@@ -35,16 +35,14 @@
 #include <string.h>
 #include <strings.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_unistd.h"
 #include "uti/sge_prog.h"
 #include "uti/sge_profiling.h"
 #include "uti/sge_log.h"
 #include "uti/sge_time.h"
 #include "uti/sge_error_class.h"
-
-#include "lck/sge_mtutil.h"
+#include "uti/sge_mtutil.h"
 
 #include "comm/commlib.h"
 #include "comm/commproc.h"
@@ -273,15 +271,7 @@
 *                                 It will stay in the busy state until it
 *                                 is explicitly released by the client 
 *                                 (calling ec_set_busy(0)) 
-*        EV_THROTTLE_FLUSH      - when delivering events qmaster sends
-*                                 events in the regular event delivery 
-*                                 intervals. Each time events are sent the 
-*                                 busy counter (EV_busy) is increased. 
-*                                 The busy counter is set to 0 only when events 
-*                                 are acknowledged by the event client. Event 
-*                                 flushing is delayed depending on the busy 
-*                                 counter the more event flushing is delayed.
-*                                 
+*
 *  NOTES
 *
 *  SEE ALSO
@@ -781,9 +771,7 @@ void sge_evc_class_destroy(sge_evc_class_t **pst)
    }   
       
    sge_evc_destroy((sge_evc_t **)&((*pst)->sge_evc_handle));
-   FREE(*pst);
-   *pst = NULL;
-
+   sge_free(pst);
    DRETURN_VOID;
 }
 
@@ -807,8 +795,7 @@ static void sge_evc_destroy(sge_evc_t **sge_evc)
    lFreeList(&((*sge_evc)->event_control.new_events));
 
    lFreeElem(&((*sge_evc)->ec));
-   FREE(*sge_evc);
-   *sge_evc = NULL;
+   sge_free(sge_evc);
    
    DRETURN_VOID;
 }

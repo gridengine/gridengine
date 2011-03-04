@@ -34,8 +34,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_log.h"
 #include "uti/sge_prog.h"
 #include "uti/sge_time.h"
@@ -267,7 +266,7 @@ int sge_delete_job_category(lListElem *job)
 
          for_each(cache, cache_list) {
             int *range = lGetRef(cache, CCT_pe_job_slots);
-            FREE(range); 
+            sge_free(&range); 
          }
 
          lRemoveElem(CATEGORY_LIST, &cat);
@@ -473,7 +472,7 @@ int sge_reset_job_category()
 
       for_each(cache, lGetList(cat, CT_cache)) {
          int *range = lGetRef(cache, CCT_pe_job_slots);
-         FREE(range); 
+         sge_free(&range); 
       }
       
       lSetUlong(cat, CT_rejected, 0);

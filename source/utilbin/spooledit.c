@@ -35,8 +35,7 @@
 #include <string.h>
 #include <errno.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_string.h"
 #include "uti/sge_stdio.h"
 #include "uti/sge_bootstrap.h"
@@ -269,7 +268,7 @@ dump_object(bdb_info info, const char *key)
          } else {
             /* dump job script with a trailing linefeed, it might be missing in the script */
             printf("%s\n", job_script != NULL ? job_script : "no job script");
-            FREE(job_script);
+            sge_free(&job_script);
          }
       } else {
          /* read object */

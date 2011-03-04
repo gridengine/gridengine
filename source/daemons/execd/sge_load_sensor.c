@@ -35,8 +35,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_bootstrap.h"
 #include "uti/sge_unistd.h"
 #include "uti/sge_log.h"
@@ -914,7 +913,7 @@ int sge_ls_get(const char *qualified_hostname, const char *binary_path, lList **
       }
    }
 
-   FREE(load_sensor);
+   sge_free(&load_sensor);
 
    DRETURN(0);
 }

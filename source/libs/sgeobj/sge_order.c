@@ -58,7 +58,7 @@
 void
 sge_free_cull_order_pos(order_pos_t **cull_order_pos)
 {
-   FREE(*cull_order_pos);
+   sge_free(cull_order_pos);
 }
 
 /****** sge_order/sge_create_cull_order_pos() **********************************
@@ -93,7 +93,7 @@ sge_create_cull_order_pos(order_pos_t **cull_order_pos, lListElem *jep, lListEle
    job_pos_t   *order_job_pos; 
 
    if (*cull_order_pos != NULL) {
-      FREE(cull_order_pos);
+      sge_free(&cull_order_pos);
    }
 
    *cull_order_pos = malloc(sizeof(order_pos_t));

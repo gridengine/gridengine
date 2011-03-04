@@ -31,8 +31,7 @@
 
 #include <string.h>
  
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_log.h"
 #include "uti/sge_edit.h"
 #include "uti/sge_prog.h"
@@ -101,7 +100,7 @@ bool rqs_show(sge_gdi_ctx_class_t *ctx, lList **answer_list, const char *name)
                                         &qconf_rqs_sfi,
                                         SP_DEST_STDOUT, SP_FORM_ASCII, NULL,
                                         false);
-      FREE(filename);
+      sge_free(&filename);
    }
    if (lGetNumberOfElem(rqs_list) == 0) {
       answer_list_add(answer_list, MSG_NORQSFOUND, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
@@ -415,7 +414,7 @@ static bool rqs_provide_modify_context(sge_gdi_ctx_class_t *ctx, lList **rqs_lis
    if (answer_list_has_error(answer_list)) {
       if (filename != NULL) {
          unlink(filename);
-         FREE(filename);
+         sge_free(&filename);
       }
       DRETURN(ret);
    }
@@ -455,7 +454,7 @@ static bool rqs_provide_modify_context(sge_gdi_ctx_class_t *ctx, lList **rqs_lis
    }
 
    unlink(filename);
-   FREE(filename);
+   sge_free(&filename);
    DRETURN(ret);
 }
 

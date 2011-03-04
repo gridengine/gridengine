@@ -42,11 +42,9 @@
 
 #include "sge.h"
 
-#include "rmon/sgermon.h"
-
-#include "lck/sge_mtutil.h"
-#include "lck/sge_lock.h"
-
+#include "uti/sge_mtutil.h"
+#include "uti/sge_lock.h"
+#include "uti/sge_rmon.h"
 #include "uti/sge_dstring.h"
 #include "uti/sge_log.h"
 #include "uti/sge_stdio.h"
@@ -743,7 +741,7 @@ jsv_is_enabled(const char *context) {
 
    jsv_url = mconf_get_jsv_url();
    jsv_list_update("jsv", context, NULL, jsv_url);
-   FREE(jsv_url);
+   sge_free(&jsv_url);
    sge_mutex_lock("jsv_list", SGE_FUNC, __LINE__, &jsv_mutex);
    ret = (lGetNumberOfElem(jsv_list) > 0) ? true : false;
    sge_mutex_unlock("jsv_list", SGE_FUNC, __LINE__, &jsv_mutex);
@@ -1152,7 +1150,7 @@ jsv_do_verify(sge_gdi_ctx_class_t* ctx, const char *context, lListElem **job,
       if (holding_mutex) {
          sge_mutex_unlock("jsv_list", SGE_FUNC, __LINE__, &jsv_mutex);
       }
-      FREE(jsv_url);
+      sge_free(&jsv_url);
    }
    DRETURN(ret);
 }

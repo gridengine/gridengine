@@ -26,8 +26,10 @@
  *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
  * 
  *   Copyright: 2001 by Sun Microsystems, Inc.
- * 
+ *
  *   All Rights Reserved.
+ *
+ *   Portions of this code are Copyright 2011 Univa Inc.
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
@@ -256,6 +258,19 @@
 #define MSG_TMPNAM_CANNOT_GET_TMP_PATH         _MESSAGE(59161, _("can't get temporary directory path"))
 #define MSG_TMPNAM_SGE_MAX_PATH_LENGTH_US      _MESSAGE(59162, _("reached max path length of "sge_U32CFormat" bytes for file "SFQ))
 #define MSG_TMPNAM_GOT_SYSTEM_ERROR_SS         _MESSAGE(59163, _("got system error "SFQ" while checking file in "SFQ))
+
+/* libs/uti/sge_binding_hlp.c */
+#define MSG_SYN_EXPLICIT_NOTFOUND              _MESSAGE(59200, _("'explicit:' not found in string!"))
+#define MSG_SYN_EXPLICIT_NOPAIR                _MESSAGE(59201, _("No <socket,core> pair given!"))
+#define MSG_SYN_EXPLICIT_FIRSTSOCKNONUMBER     _MESSAGE(59202, _("First socket is not a number!"))
+#define MSG_SYN_EXPLICIT_MISSINGFIRSTCORE      _MESSAGE(59203, _("Missing first core number!"))
+#define MSG_SYN_EXPLICIT_FIRSTCORENONUMBER     _MESSAGE(59204, _("First core is not a number!"))
+#define MSG_SYN_EXPLICIT_SOCKNONUMBER          _MESSAGE(59205, _("Socket is not a number!"))
+#define MSG_SYN_EXPLICIT_NOCOREFORSOCKET       _MESSAGE(59206, _("No core for a given socket!"))
+#define MSG_SYN_EXPLICIT_COREISNONUMBER        _MESSAGE(59207, _("Core is not a number!"))
+#define MSG_SYN_EXPLICIT_PAIRSNOTUNIQUE        _MESSAGE(59208, _("<socket,core> pairs are not unique!"))
+
+#define MSG_SYNTAX_DSTRINGBUG                  _MESSAGE(59210, _("BUG detected: dstring not initialized!"))
 
 #endif /* __MSG_UTILIB_H */
 

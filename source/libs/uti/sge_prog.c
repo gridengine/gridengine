@@ -40,8 +40,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>  
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_hostname.h"
 #include "uti/sge_log.h"
 #include "uti/sge_stdlib.h"
@@ -873,21 +872,27 @@ static bool sge_prog_state_setup(sge_prog_state_class_t *thiz, sge_env_state_cla
       sge_free(&unqualified_hostname);
       sge_free(&qualified_hostname);
    }
-   
+
    if (ret) {
       struct passwd *paswd = NULL;
-      char buffer[2048];
+      char *buffer;
+      size_t size;
       struct passwd pwentry;
+
       thiz->set_uid(thiz, getuid());
       thiz->set_gid(thiz, getgid());
-      if ((getpwuid_r((uid_t)getuid(), &pwentry, buffer, sizeof(buffer), &paswd)) != 0) {
+
+      size = get_pw_buffer_size();
+      buffer = sge_malloc(size);
+      if ((getpwuid_r((uid_t)getuid(), &pwentry, buffer, size, &paswd)) != 0) {
          eh->error(eh, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR, "getpwuid failed");
          ret = false;
       } else {
          thiz->set_user_name(thiz, paswd->pw_name);
       }
-   }   
- 
+      sge_free(&buffer);
+   }
+
    /*
    if (ret) {
       thiz->dprintf(thiz);

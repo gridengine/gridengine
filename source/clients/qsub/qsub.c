@@ -33,12 +33,12 @@
 #include <sys/stat.h>
 #include <errno.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/setup_path.h"
 #include "uti/sge_unistd.h"
 #include "uti/sge_profiling.h"
 #include "uti/sge_prog.h"
+#include "uti/sge_mtutil.h"
 
 #include "sgeobj/sge_all_listsL.h"
 #include "sgeobj/sge_answer.h"
@@ -48,8 +48,6 @@
 
 #include "japi/japi.h"
 #include "japi/japiP.h"
-
-#include "lck/sge_mtutil.h"
 
 #include "gdi/sge_security.h"
 #include "gdi/sge_gdi_ctx.h"
@@ -453,7 +451,7 @@ main(int argc, char **argv)
    }
 
 Error:
-   FREE(jobid_string);
+   sge_free(&jobid_string);
    lFreeList(&alp);
    lFreeList(&opts_all);
    
@@ -526,7 +524,7 @@ static char *get_bulk_jobid_string(long job_id, int start, int end, int step)
    
    sprintf(jobid_str, "%ld.%d-%d:%d", job_id, start, end, step);
    ret_str = strdup(jobid_str);
-   FREE(jobid_str);
+   sge_free(&jobid_str);
    
    return ret_str;
 }

@@ -38,7 +38,7 @@
 #include <signal.h>
 #include <string.h>
 
-#include "rmon/sgermon.h"
+#include "uti/sge_rmon.h"
 #include "uti/sge_time.h"
 #include "uti/sge_profiling.h"
 #include "uti/sge_unistd.h"

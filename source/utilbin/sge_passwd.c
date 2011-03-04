@@ -53,6 +53,9 @@
 #include <openssl/ssl.h>
 #include <openssl/rand.h>
 
+#if defined(DEFINE_SGE_PASSWD_MAIN)
+#  include "uti/sge_rmon.h"
+#endif
 #include "uti/sge_arch.h"
 #include "uti/sge_log.h"
 #include "uti/sge_unistd.h"
@@ -64,9 +67,6 @@
 #include "uti/sge_stdio.h"
 #include "uti/sge_string.h"
 #include "uti/sge_stdlib.h"
-#if defined(DEFINE_SGE_PASSWD_MAIN)
-#include "rmon/sgermon.h"
-#endif
 
 #include "sge_passwd.h"
 #include "msg_utilbin.h"
@@ -772,7 +772,7 @@ buffer_decrypt(const char *buffer_in, size_t buffer_in_length,
                  buf, buflen);
 
    shared_ssl_func__EVP_PKEY_free(privateKey);
-   free(encryptKey);
+   sge_free(&encryptKey);
    error_code = shared_ssl_func__ERR_get_error();
    if(error_code > 0) {
       shared_ssl_func__ERR_error_string(error_code, err_msg);

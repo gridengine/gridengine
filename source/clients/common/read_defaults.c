@@ -35,8 +35,7 @@
 #include <pwd.h>
 #include <sys/types.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/setup_path.h"
 #include "uti/sge_unistd.h"
 #include "uti/sge_uidgid.h"
@@ -339,16 +338,15 @@ static void append_opts_from_default_files(u_long32 prog_number,
       lFreeList(&alp);
 
       if (do_exit) {
-         for (pstr = def_files; *pstr; free(*pstr++)) {
-            ;
+         for (pstr = def_files; *pstr; pstr++) {
+            sge_free(pstr);
          }
-         
          DRETURN_VOID;
       }
    }
 
-   for (pstr = def_files; *pstr; free(*pstr++)) {
-      ;
+   for (pstr = def_files; *pstr; pstr++) {
+      sge_free(pstr);
    }
    
    DRETURN_VOID;
@@ -562,7 +560,7 @@ void opt_list_append_opts_from_script_path(u_long32 prog_number,
    *answer_list = parse_script_file(prog_number, scriptpath, prefix, opts_scriptfile, 
                                     envp, FLG_DONT_ADD_SCRIPT);
    
-   FREE (scriptpath);
+   sge_free(&scriptpath);
 }
 
 /****** sge/opt/opt_list_merge_command_lines() ********************************
@@ -794,7 +792,7 @@ bool get_user_home(dstring *home_dir, const char *user, lList **answer_list)
       if (ret) {
          sge_dstring_copy_string(home_dir, pwd->pw_dir);
       }
-      FREE(buffer);
+      sge_free(&buffer);
    } else {
       /* should never happen */
       ret = false;

@@ -28,6 +28,7 @@
  *  All Rights Reserved.
  *
  ************************************************************************/
+/* Portions of this code are Copyright 2011 Univa Inc. */
 /*___INFO__MARK_END__*/
 
 #include <stdlib.h>
@@ -483,8 +484,8 @@ static void* pty_to_commlib(void *t_conf)
 #ifdef EXTENSIVE_TRACING
    shepherd_trace("pty_to_commlib: shutting down thread");
 #endif
-   FREE(stdout_buf);
-   FREE(stderr_buf);
+   sge_free(&stdout_buf);
+   sge_free(&stderr_buf);
    thread_func_cleanup(t_conf);
 
 /* TODO: This could cause race conditions in the main thread, replace with pthread_condition */
@@ -684,6 +685,18 @@ static void* commlib_to_pty(void *t_conf)
                                  "child: %d, %s", errno, strerror(errno));
                }
                b_was_connected = 1;
+               break;
+
+            case SUSPEND_CTRL_MSG:
+               shepherd_trace("commlib_to_pty: received suspend message, "
+                   "suspend the process");
+               shepherd_signal_job(g_job_pid, SIGTSTP);
+               break;
+
+            case UNSUSPEND_CTRL_MSG:
+               shepherd_trace("commlib_to_pty: received unsuspend message, "
+                   "awake the process");
+               shepherd_signal_job(g_job_pid, SIGCONT);
                break;
 
             case WINDOW_SIZE_CTRL_MSG:
@@ -1048,7 +1061,7 @@ int close_parent_loop(int exit_status)
       shepherd_trace("parent: error in comm_cleanup_lib(): %d", ret);
    }
 
-   FREE(g_hostname);
+   sge_free(&g_hostname);
    sge_dstring_free(&err_msg);
    shepherd_trace("parent: leaving closinge_parent_loop()");
    return 0;

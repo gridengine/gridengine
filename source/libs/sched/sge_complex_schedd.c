@@ -38,8 +38,7 @@
    #include "win32nativetypes.h"
 #endif
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_log.h"
 #include "uti/sge_parse_num_par.h"
 #include "uti/sge_language.h"
@@ -1232,7 +1231,7 @@ lListElem *get_attribute_by_name(lListElem* global, lListElem *host, lListElem *
 #ifdef TEST
 /* 
 for testing purposes compile (on linux) with:
-gcc -Wall -DLINUX -DTEST -o complex complex.c ../LINUX/sge_parse_num_par.o ../LINUX/log.o ../LINUX/utility.o  ../LINUX/pack.o ../LINUX/free.o ../LINUX/io.o ../LINUX/libcull.a ../LINUX/librmon.a
+gcc -Wall -DLINUX -DTEST -o complex complex.c ../LINUX/sge_parse_num_par.o ../LINUX/log.o ../LINUX/utility.o  ../LINUX/pack.o ../LINUX/free.o ../LINUX/io.o ../LINUX/libcull.a 
 */
 
 int main(int argc, char *argv[], char *envp[])

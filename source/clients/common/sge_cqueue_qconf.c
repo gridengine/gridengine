@@ -31,8 +31,7 @@
 
 #include <string.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_log.h"
 #include "uti/sge_hostname.h"
 #include "uti/sge_edit.h"
@@ -325,7 +324,7 @@ cqueue_provide_modify_context(sge_gdi_ctx_class_t *ctx, lListElem **this_elem, l
       if (answer_list_output(answer_list)) {
          if (filename != NULL) { 
             unlink(filename);
-            FREE(filename);
+            sge_free(&filename);
          }
          DRETURN(false);
       }
@@ -375,7 +374,7 @@ cqueue_provide_modify_context(sge_gdi_ctx_class_t *ctx, lListElem **this_elem, l
       }
 
       unlink(filename);
-      FREE(filename);
+      sge_free(&filename);
    } 
    DRETURN(ret);
 }
@@ -630,8 +629,8 @@ cqueue_show(sge_gdi_ctx_class_t *ctx, lList **answer_list, const lList *qref_pat
                                                        SP_DEST_STDOUT,
                                                        SP_FORM_ASCII, NULL,
                                                        false);
-                           FREE(fields);
-                           FREE(filename_stdout);
+                           sge_free(&fields);
+                           sge_free(&filename_stdout);
                            
                            if (answer_list_output(answer_list)) {
                               lFreeList(&href_list);
@@ -689,8 +688,8 @@ cqueue_show(sge_gdi_ctx_class_t *ctx, lList **answer_list, const lList *qref_pat
                                                                   SP_DEST_STDOUT,
                                                                   SP_FORM_ASCII, NULL,
                                                                   false);
-                           FREE(fields);
-                           FREE(filename);
+                           sge_free(&fields);
+                           sge_free(&filename);
                            
                            if (answer_list_output(answer_list)) {
                               DRETURN(false);
@@ -722,7 +721,7 @@ cqueue_show(sge_gdi_ctx_class_t *ctx, lList **answer_list, const lList *qref_pat
                                                  false, CQ_fields, &qconf_sfi,
                                                  SP_DEST_STDOUT, SP_FORM_ASCII, 
                                                  NULL, false);
-                     FREE(outname);
+                     sge_free(&outname);
                            
                      if (answer_list_output(answer_list)) {
                         DRETURN(false);
@@ -756,7 +755,7 @@ cqueue_show(sge_gdi_ctx_class_t *ctx, lList **answer_list, const lList *qref_pat
                                              &qconf_sfi, SP_DEST_STDOUT, SP_FORM_ASCII,
                                              NULL, false);
                            
-      FREE(filename);
+      sge_free(&filename);
       lFreeElem(&cqueue);
 
       if (answer_list_output(answer_list)) {

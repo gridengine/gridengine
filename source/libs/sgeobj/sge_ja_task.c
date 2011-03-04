@@ -35,8 +35,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_string.h"
 #include "uti/sge_log.h"
 
@@ -375,7 +374,7 @@ int sge_parse_jobtasks(lList **ipp, lListElem **idp, const char *str_jobtask,
    /*
    ** free the dupped string
    */
-   FREE(job_str); 
+   sge_free(&job_str); 
    DRETURN(ret);
 }
 

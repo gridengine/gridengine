@@ -41,7 +41,7 @@
 # variables 
 #
 set noglob
-unsetenv buildarch BUILDARCH COMPILE_ARCH COMPILE_DIR LD_LIBRARY_PATH RMONLIB
+unsetenv buildarch BUILDARCH COMPILE_ARCH COMPILE_DIR LD_LIBRARY_PATH 
 unsetenv AIMK_INSURE AIMK_TARGET_BITS aimk_buildarch
 
 set COMPILE_ARCH = ""
@@ -129,6 +129,9 @@ while ($i <= $#argv)
    set i = `expr $i + 1`
 end
 
+# Initialize extern variables from aimk.*
+set UGE_LIBS         = 0   # Path to Univa Extensions
+
 # Source variables for definition of site dependent paths of software here
 #
 if ( -f aimk.site ) then
@@ -177,6 +180,7 @@ usage:
    echo "-mo               -> generate the message catalogues (Solaris only)"
    echo "-no-core          -> don't compile the core system"
    echo "-no-dump          -> build binaries without libcore.so (Linux only)"
+   echo "-uge-ext          -> build binaries with Univa Extensions"
    echo "-no-java          -> don't compile Java[TM] class files"
    echo "-no-gui-inst      -> don't compile Java[TM] GUI installer"
    echo "-no-jni           -> don't compile JNI library"
@@ -234,6 +238,7 @@ set MSDIR            = ""
 set MAKEFILE         = "${SDIR}/common/Makefile.global"
 set SOLARIS_ONLY_64  = 0
 set ONLY_PARAM_SPEC  = 0
+set LIBS_DIR         = "${SDIR}"
 
 # SGE_INPUT_CFLAGS will be taken from environment and added to CFLAGS
 if ( $?SGE_INPUT_CFLAGS ) then
@@ -274,7 +279,7 @@ set COMPILE_DC       = 0
 set CC               = cc
 set CXX              = CC
 set CFLAGS           = "-D$TARGET_BITS $INP_CFLAGS"
-set CORE_INCLUDE     = "-I../common -I../libs -I../libs/uti -I../libs/juti -I../libs/gdi -I../libs/japi -I../libs/sgeobj -I../libs/cull -I../libs/rmon -I../libs/comm -I../libs/comm/lists -I../libs/sched -I../libs/evc -I../libs/evm -I../libs/mir -I../libs/lck -I../daemons/common -I../daemons/qmaster -I../daemons/execd -I../daemons/schedd -I../clients/common -I."
+set CORE_INCLUDE     = "-I../common -I../libs -I../libs/uti -I../libs/juti -I../libs/gdi -I../libs/japi -I../libs/sgeobj -I../libs/cull -I../libs/comm -I../libs/comm/lists -I../libs/sched -I../libs/evc -I../libs/evm -I../libs/mir -I../libs/lck -I../daemons/common -I../daemons/qmaster -I../daemons/execd -I../daemons/schedd -I../clients/common -I."
 set DEBUG_FLAG       = ""
 set INSURE_FLAG      = ""
 set JEMALLOC_CFLAGS  = ""
@@ -307,7 +312,7 @@ set TPLIB            = ""  # 3rdparty libs
 set SLIBS            = ""
 set FLAGS_OUT        = "false"
 set DUMP             = 1
-
+set UGE_EXT          = 0   # Univa Extensions
 
 # Default settings for shared library creation
 set SHAREDLIBS       = 0
@@ -613,6 +618,9 @@ while ($#argv >= 1 && $?found)
    case "-no-dump":
       set DUMP = 0
       breaksw
+   case "-uge-ext":
+      set UGE_EXT = 1
+      breaksw
    case  "-no-java"
       set JAVA = 0
       breaksw
@@ -645,7 +653,6 @@ while ($#argv >= 1 && $?found)
       breaksw
    case "-no-rmon":
       set CFLAGS  = "-DNO_SGE_COMPILE_DEBUG $CFLAGS"
-      setenv RMONLIB  ""
       breaksw
    case "-no-secure":
       set SEC         = 0
@@ -1453,7 +1460,7 @@ case LINUXSPARC64:
    endif
 
    if ($buildarch == "lx24-x86" || $buildarch == "lx26-amd64" || $buildarch == "lx26-x86" || $buildarch == "lx26-sparc" || $buildarch == "lx26-mips" || $buildarch == "lx26-mips64" || $buildarch == "lx26-s390" || $buildarch == "lx26-s390x") then
-      set CFLAGS = "$CFLAGS -Wno-strict-aliasing -U_FORTIFY_SOURCE"
+      set CFLAGS = "$CFLAGS -Wno-strict-aliasing"
    endif
 
    set CFLAGS = "$OFLAG -Wall -Werror -Wstrict-prototypes -DUSE_POLL -DLINUX -D$BUILDARCH -D$COMPILE_ARCH -D_GNU_SOURCE -DGETHOSTBYNAME_R6 -DGETHOSTBYADDR_R8 $DEBUG_FLAG $CFLAGS"
@@ -1994,6 +2001,21 @@ set DEPEND_FLAGS = "`echo $DEPEND_FLAGS | sed -e 's/-[^DI][^ ]*//g'`"
 set ARCH_STRING  = SGE_ARCH_STRING='\"'${buildarch}'\"'
 set CFLAGS       = "-D$ARCH_STRING $CFLAGS"
 set DEPEND_FLAGS = "-D$ARCH_STRING $DEPEND_FLAGS"
+
+if ( $UGE_EXT == 1 ) then
+  if ( -d $UGE_LIBS ) then
+     set LFLAGS   = "$LFLAGS -L$UGE_LIBS/$BUILDARCH/libs"
+     set LIBS_DIR = "$UGE_LIBS"
+  else
+     echo "error: couldn't find  UGE_LIBS"
+     echo "error: please"
+     echo "error: (a) update UGE_LIBS in aimk.site or aimk.private accordingly"
+     echo "error: (b) do not use aimk option -uge-ext"
+     exit 1
+  endif
+else
+  set LIBS_DIR = ${SDIR}
+endif
 
 if ( $JNI == 1 ) then
    set CORE_INCLUDE = "$CORE_INCLUDE -I${JAVA_HOME}/${JAVA_INCL}"
@@ -2576,6 +2598,7 @@ if ( "$CORE" == 1 && "$JAVA" != 2 ) then
          "CORELIB=$CORELIB" \
          "DEPEND_FLAGS=$DEPEND_FLAGS $CORE_INCLUDE" \
          "SDIR=$SDIR" "SOURCE=$SOURCE" "COMPILE_ARCH=$COMPILE_ARCH" \
+         "LIBS_DIR=$LIBS_DIR" \
          "SECLIB=$SECLIB" \
          "SECLIBS_STATIC=$SECLIBS_STATIC" \
          "WINGRIDLIB=$WINGRIDLIB" "WINGRIDLIB_DEP=$WINGRIDLIB_DEP" \
@@ -2749,7 +2772,7 @@ if ( "$REMOTE" == 1) then
    if ( $COMPILE_ARCH == "NECSX5" ) then
       set CFLAGS_REMOTE = "$CFLAGS_NOOPT"
    else
-      set CFLAGS_REMOTE = "$CFLAGS $ERR_WARN_NONE"
+      set CFLAGS_REMOTE = "$CFLAGS $ERR_WARN_NONE -U_FORTIFY_SOURCE"
    endif
 
    set REMOTE_LFLAGS = "$LFLAGS -L$SOURCE/$COMPILE_ARCH"
@@ -2818,7 +2841,7 @@ if ( "$SGESSH" == 1) then
       ../configure --with-grd=${COMPILE_ARCH} --srcdir=.. \
          --with-cflags="${MEMCFLAG} ${NOERR_SSH} ${NOERR_PROTO} -DSGESSH_INTEGRATION" \
          --with-ldflags="${LFLAGS}" \
-         --with-libs="-L../../../${COMPILE_ARCH} -L../../../3rdparty/remote/${COMPILE_ARCH}/ -lsgeremote -luti -lcommlists -llck -lrmon ${LIBS} ${SLIBS}" \
+         --with-libs="-L../../../${COMPILE_ARCH} -L../../../3rdparty/remote/${COMPILE_ARCH}/ -lsgeremote -luti -lcommlists -llck ${LIBS} ${SLIBS}" \
          --with-ssl-dir=${OPENSSL_HOME}
    endif
 
@@ -2937,9 +2960,6 @@ if ( "$ADOC" == 1) then
 
    echo "Creating documentation for libs: libmir.texi"
    3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine Mirror Interface" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/mir/*.h libs/mir/*.c -o $COMPILE_ARCH/libmir.texi
-
-   echo "Creating documentation for libs: librmon.texi"
-   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine RMON Library" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/rmon/*.h libs/rmon/*.c -o $COMPILE_ARCH/librmon.texi
 
    echo "Creating documentation for libs: libsched.texi"
    3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine SCHED Library" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/sched/*.h libs/sched/*.c -o $COMPILE_ARCH/libsched.texi

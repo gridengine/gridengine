@@ -34,8 +34,7 @@
 #include <limits.h>
 #include <math.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_bootstrap.h"
 #include "uti/sge_prog.h"
 #include "uti/sge_unistd.h"
@@ -172,8 +171,8 @@ static int xml_report_handler_destroy(qhost_report_handler_t** handler, lList **
 
    if (handler != NULL && *handler != NULL ) {
       sge_dstring_free((dstring*)(*handler)->ctx);
-      FREE((*handler)->ctx);
-      FREE(*handler);
+      sge_free(&((*handler)->ctx));
+      sge_free(handler);
       *handler = NULL;
    }
 
@@ -640,7 +639,7 @@ static int sge_parse_qhost(lList **ppcmdline,
       }
       while (parse_string(ppcmdline, "-l", alpp, &argstr)) {
          *pplres = centry_list_parse_from_string(*pplres, argstr, false);
-         FREE(argstr);
+         sge_free(&argstr);
          continue;
       }
       

@@ -32,7 +32,7 @@
 
 #include <string.h>
 
-#include "rmon/sgermon.h"
+#include "uti/sge_rmon.h"
 
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_advance_reservation.h"
@@ -231,8 +231,8 @@ qrstat_destroy_report_handler_xml(qrstat_report_handler_t** handler, lList **ans
 
    if (handler != NULL && *handler != NULL ) {
       sge_dstring_free((dstring*)(*handler)->ctx);
-      FREE((*handler)->ctx);
-      FREE(*handler);
+      sge_free(&((*handler)->ctx));
+      sge_free(handler);
    }
 
    DRETURN(ret);

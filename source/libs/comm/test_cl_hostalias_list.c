@@ -114,7 +114,7 @@ main(int argc, char** argv)
   printf("%s\n", cl_get_error_text(ret_val));
   if (ret_val == CL_RETVAL_OK) {
      printf("alias name is \"%s\"\n", help);
-     free(help);
+     sge_free(&help);
   }
 
   printf("list cleanup ... ");

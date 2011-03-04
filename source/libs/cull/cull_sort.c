@@ -38,8 +38,7 @@
 #define NO_SGE_COMPILE_DEBUG
 #endif
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_string.h"
 
 #include "cull/cull_listP.h"
@@ -255,7 +254,7 @@ lSortOrder *lParseSortOrder(const lDescr *dp, const char *fmt, va_list ap)
    for (i = 0; i < n; i++) {
       sp[i].nm = va_arg(ap, int);
       if ((sp[i].pos = lGetPosInDescr(dp, sp[i].nm)) < 0) {
-         FREE(sp);
+         sge_free(&sp);
          LERROR(LENAMENOT);
          DRETURN(NULL);
       }
@@ -263,7 +262,7 @@ lSortOrder *lParseSortOrder(const lDescr *dp, const char *fmt, va_list ap)
 
       /* next token */
       if (scan(NULL, &state) != FIELD) {
-         FREE(sp);
+         sge_free(&sp);
          LERROR(LESYNTAX);
          DRETURN(NULL);
       }
@@ -321,7 +320,7 @@ lSortOrder *lParseSortOrder(const lDescr *dp, const char *fmt, va_list ap)
          break;
       default:
          /* +/- is missing */
-         FREE(sp);
+         sge_free(&sp);
          LERROR(LESYNTAX);
          DRETURN(NULL);
       }
@@ -335,7 +334,7 @@ lSortOrder *lParseSortOrder(const lDescr *dp, const char *fmt, va_list ap)
 
 void lFreeSortOrder(lSortOrder **so) 
 {
-   FREE(*so);
+   sge_free(so);
 }
 
 

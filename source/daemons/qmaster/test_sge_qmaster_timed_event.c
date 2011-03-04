@@ -33,10 +33,9 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include "rmon/sgermon.h"
-
 #include "sge_qmaster_timed_event.h"
 
+#include "uti/sge_rmon.h"
 #include "uti/sge_bootstrap.h"
 #include "uti/sge_profiling.h"
 

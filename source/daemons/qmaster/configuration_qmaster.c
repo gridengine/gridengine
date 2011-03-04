@@ -37,8 +37,7 @@
 #include <limits.h>
 #include <pwd.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_log.h"
 #include "uti/config_file.h"
 #include "uti/sge_parse_num_par.h"
@@ -49,13 +48,12 @@
 #include "uti/sge_prog.h"
 #include "uti/sge_uidgid.h" 
 #include "uti/sge_spool.h"
+#include "uti/sge_lock.h"
+#include "uti/sge_mtutil.h"
 
 #include "cull/cull.h"
 
 #include "comm/commlib.h"
-
-#include "lck/sge_lock.h"
-#include "lck/sge_mtutil.h"
 
 #include "spool/sge_spooling.h"
 
@@ -403,7 +401,7 @@ int sge_mod_configuration(sge_gdi_ctx_class_t *ctx, lListElem *aConf, lList **an
       /* updating the commlib paramterlist and gdi_timeout with new or changed parameters */
       cl_com_update_parameter_list(qmaster_params);
 
-      FREE(qmaster_params);
+      sge_free(&qmaster_params);
    }
     
    /* invalidate configuration cache */
@@ -503,10 +501,10 @@ static int check_config(lList **alpp, lListElem *conf)
          if (strcasecmp(value, "none") && !sge_getpwnam_r(value, &pw_struct, buffer, size)) {
             ERROR((SGE_EVENT, MSG_CONF_GOTINVALIDVALUEXASADMINUSER_S, value));
             answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
-            FREE(buffer);
+            sge_free(&buffer);
             DRETURN(STATUS_EEXIST);
          }
-         FREE(buffer);
+         sge_free(&buffer);
       } else if (!strcmp(name, "user_lists")||!strcmp(name, "xuser_lists")) {
          lList *tmp = NULL;
          int ok;

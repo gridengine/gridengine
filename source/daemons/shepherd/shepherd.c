@@ -42,7 +42,9 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <sys/wait.h>
+
 #include "uti/sge_binding_hlp.h"
+#include "uti/sge_string.h"
 #include "shepherd_binding.h"
 
 #if defined(LINUX)
@@ -274,7 +276,9 @@ static int map_signal(int sig)
       FILE *signal_file = fopen("signal", "r");
 
       if (signal_file != NULL) {
-         fscanf(signal_file, "%d", &ret);
+         if (fscanf(signal_file, "%d", &ret) != 1) {
+            shepherd_trace("error reading signal file");
+         }
          FCLOSE(signal_file);
       } 
    } else if (sig == SIGTTOU) {
@@ -832,7 +836,7 @@ int main(int argc, char **argv)
       shepherd_trace("sucessfully set AFS token");
          
       memset(tokenbuf, 0, strlen(tokenbuf));
-      free(tokenbuf);
+      sge_free(&tokenbuf);
 
 
       if ((coshepherd_pid = start_token_cmd(0, coshepherd, set_token_cmd,
@@ -1337,7 +1341,7 @@ int ckpt_type
                qrsh_error = get_error_of_qrsh_starter();
                if (qrsh_error != NULL) {
                   shepherd_error(1, "startup of qrsh job failed: "SFN, qrsh_error);
-                  FREE(qrsh_error);
+                  sge_free(&qrsh_error);
                } else {
                   shepherd_trace("job exited normally, exit code is %d", exit_status);
                }
@@ -1439,7 +1443,7 @@ dstring *err_msg)
    if (separator == NULL) {
       sge_dstring_sprintf(err_msg, "illegal value for qrsh_control_port: "
                         "\"%s\". Should be host:port", address);
-      FREE(address);
+      sge_free(&address);
       return 3;
    }
      
@@ -1524,7 +1528,7 @@ dstring       *err_msg       /* OUT: error message - if any */
 
    ret = parent_loop(pid, childname, timeout, p_ckpt_info, p_ijs_fds, job_owner,
             remote_host, remote_port, csp_mode, &exit_status, rusage, err_msg);
-   FREE(remote_host);
+   sge_free(&remote_host);
    if (ret != 0) {
       shepherd_error(1, "startup of qrsh job failed: "SFN"",
                      sge_dstring_get_string(err_msg));
@@ -2588,7 +2592,7 @@ static int start_async_command(const char *descr, char *cmd)
                      get_conf_val("job_owner"));
    }
    /* the getpwnam is only a verification - the result is not used - free it */
-   FREE(buffer);
+   sge_free(&buffer);
 
 	/* Create "error" and "exit_status" files here */
 	shepherd_error_init();
@@ -2901,17 +2905,23 @@ static int notify_tasker(u_long32 exit_status)
       char *buffer;
       int size;
 
-      /* sig_info_file has to be removed by tasker 
-         and tasker runs in user mode */
+      /* sig_info_file has to be removed by tasker
+       * and tasker runs in user mode
+       */
       job_owner = get_conf_val("job_owner");
       size = get_pw_buffer_size();
       buffer = sge_malloc(size);
       pw = sge_getpwnam_r(job_owner, &pw_struct, buffer, size);
-      if (!pw) {
+      if (pw == NULL) {
          shepherd_error(1, "can't get password entry for user \"%s\"", job_owner);
       }
-      chown(sig_info_file, pw->pw_uid, -1);
-      FREE(buffer);
+      if (chown(sig_info_file, pw->pw_uid, -1) != 0) {
+         dstring ds = DSTRING_INIT;
+         shepherd_error(1, "can't chown sig_info_file %s to user %s: %s",
+                        sig_info_file, job_owner, sge_strerror(errno, &ds));
+         /* no sge_dstring_free needed - shepherd_error exited */
+      }
+      sge_free(&buffer);
    }
 
    shepherd_trace("signalling tasker with pid #"pid_t_fmt, tasker_pid);

@@ -60,7 +60,7 @@ int cl_connection_list_setup(cl_raw_list_t** list_p, char* list_name, int enable
 
    ret_val = cl_raw_list_setup(list_p, list_name , enable_locking); 
    if ( ret_val != CL_RETVAL_OK) {
-      free(ldata);
+      sge_free(&ldata);
       return ret_val;
    }
 
@@ -69,7 +69,7 @@ int cl_connection_list_setup(cl_raw_list_t** list_p, char* list_name, int enable
       ldata->r_ht = sge_htable_create(4, dup_func_string, hash_func_string, hash_compare_string);
       if (ldata->r_ht == NULL) {
          cl_raw_list_cleanup(list_p);
-         free(ldata);
+         sge_free(&ldata);
          return CL_RETVAL_MALLOC;
       }
       CL_LOG_INT(CL_LOG_INFO,"created hash table with size =", 4);
@@ -102,8 +102,7 @@ int cl_connection_list_cleanup(cl_raw_list_t** list_p) {
       if (ldata->r_ht != NULL) {
          sge_htable_destroy(ldata->r_ht);
       }
-      free(ldata);
-      ldata = NULL;
+      sge_free(&ldata);
    }
 
    return cl_raw_list_cleanup(list_p);
@@ -159,7 +158,7 @@ int cl_connection_list_append_connection(cl_raw_list_t* list_p, cl_com_connectio
       if (do_lock != 0) {
          cl_raw_list_unlock(list_p);
       }
-      free(new_elem);
+      sge_free(&new_elem);
       return CL_RETVAL_MALLOC;
    }
 
@@ -238,16 +237,14 @@ int cl_connection_list_remove_connection(cl_raw_list_t* list_p, cl_com_connectio
    if (do_lock != 0) {
       if ((ret_val = cl_raw_list_unlock(list_p)) != CL_RETVAL_OK) {
          if ( is_do_free == 1 ) {
-            free(elem);
-            elem = NULL;
+            sge_free(&elem);
          }
          return ret_val;
       }
    }
 
    if (is_do_free == 1) {
-      free(elem);
-      elem = NULL;
+      sge_free(&elem);
    }
    
    return function_return;
@@ -472,7 +469,7 @@ int cl_connection_list_destroy_connections_to_close(cl_com_handle_t* handle) {
 #endif
    
             cl_raw_list_remove_elem(connection->received_message_list,  message_list_elem->raw_elem);
-            free(message_list_elem);
+            sge_free(&message_list_elem);
             cl_com_free_message(&message);
          }
          cl_raw_list_unlock(connection->received_message_list);
@@ -483,15 +480,15 @@ int cl_connection_list_destroy_connections_to_close(cl_com_handle_t* handle) {
             message = message_list_elem->message;
             CL_LOG(CL_LOG_ERROR,"deleting unsend message for connection");
             cl_raw_list_remove_elem( connection->send_message_list,  message_list_elem->raw_elem);
-            free(message_list_elem);
+            sge_free(&message_list_elem);
             cl_com_free_message(&message);
          }
          cl_raw_list_unlock(connection->send_message_list);
    
          /* remove elem from delete_connections list */
          cl_raw_list_remove_elem(delete_connections, elem->raw_elem);
-         free(elem);
-         elem = NULL;
+         sge_free(&elem);
+
          /* close connection and free stuff */
          if ((ret_val=cl_com_close_connection(&connection)) != CL_RETVAL_OK) {  
             CL_LOG(CL_LOG_ERROR, "error closing connection");

@@ -1,5 +1,4 @@
-/*___INFO__MARK_BEGIN__*/
-/*************************************************************************
+/*___INFO__MARK_BEGIN__*/ /************************************************************************
  *
  *  The Contents of this file are made available subject to the terms of
  *  the Sun Industry Standards Source License Version 1.2
@@ -26,13 +25,12 @@
  *  Copyright: 2001 by Sun Microsystems, Inc.
  *
  *  All Rights Reserved.
- *
+ *  
  ************************************************************************/
 /*___INFO__MARK_END__*/
 #include <string.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_log.h"
 #include "uti/sge_time.h"
 #include "uti/sge_signal.h"
@@ -409,7 +407,7 @@ static bool
 destroy_slotwise_sos_task_elem(ssos_task_t **ssos_task)
 {
    if (ssos_task != NULL && *ssos_task != NULL) {
-      FREE(*ssos_task);
+      sge_free(ssos_task);
    }
    return true;
 }
@@ -449,7 +447,7 @@ destroy_slotwise_sos_tree_elem(ssos_qinstance_t **ssos_qinstance)
       if ((*ssos_qinstance)->tasks != NULL) {
          sge_sl_destroy(&((*ssos_qinstance)->tasks), (sge_sl_destroy_f)destroy_slotwise_sos_task_elem);
       }
-      FREE(*ssos_qinstance);
+      sge_free(ssos_qinstance);
    }
    
    return true;
@@ -908,19 +906,23 @@ count_running_jobs_in_slotwise_sos_tree(sge_sl_list_t *qinstances_in_slotwise_so
              */
             task_gdi = lGetElemHostFirst(task_gdi_list, JG_qhostname, host_name, &iterator);
             while (task_gdi != NULL) {
-               const char *qinstance_name = NULL;
-               const char *task_gdi_qname = NULL;
+               const char    *qinstance_name = NULL;
+               const char    *task_gdi_qname = NULL;
+               u_long32       status = 0;
                sge_sl_elem_t *sl_elem = NULL;
 
                /* Count all tasks in state JRUNNING and store tasks to suspend. */
                state = lGetUlong(task, JAT_state);
+               status = lGetUlong(task, JAT_status);
+
                if (ISSET(state, JRUNNING) == true &&
                    ISSET(state, JSUSPENDED) == false &&
                    ISSET(state, JSUSPENDED_ON_THRESHOLD) == false &&
                    ISSET(state, JSUSPENDED_ON_SUBORDINATE) == false &&
                    ISSET(state, JSUSPENDED_ON_SLOTWISE_SUBORDINATE) == false &&
-                   ISSET(state, JEXITING) == false &&
-                   ISSET(state, JDELETED) == false) {
+                   ISSET(state, JDELETED) == false && 
+                   ISSET(status, JEXITING) == false &&
+                   ISSET(status, JFINISHED) == false) {
                   /* The current task is in state JRUNNING and not suspended in
                    * any way. 
                    * Check if the qinstance name where the current task is
@@ -955,8 +957,8 @@ count_running_jobs_in_slotwise_sos_tree(sge_sl_list_t *qinstances_in_slotwise_so
                   }
                } else if (suspend == false &&
                           ISSET(state, JSUSPENDED_ON_SLOTWISE_SUBORDINATE) == true &&
-                          ISSET(state, JEXITING) == false &&
-                          ISSET(state, JDELETED) == false) {
+                          ISSET(state, JDELETED) == false &&
+                          ISSET(status, JEXITING) == false) {
 
                   /* We have to remember all tasks that are slotwise suspended,
                    * even if they are also manually or by threshold or queue

@@ -32,8 +32,7 @@
 
 #include <string.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_log.h"
 #include "uti/sge_hostname.h"
 #include "uti/sge_time.h"
@@ -772,7 +771,7 @@ int add_job_utilization(const sge_assignment_t *a, const char *type, bool for_jo
             }
          }
 
-         FREE(queue);
+         sge_free(&queue);
          is_master_task = false;
       }
 

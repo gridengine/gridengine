@@ -30,18 +30,17 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/                                   
 
-#include "sgermon.h"
-#include "sge_log.h"
+#include "uti/sge_rmon.h"
+#include "uti/sge_log.h"
+#include "uti/sge_dstring.h"
 
-#include "sge_dstring.h"
+#include "sgeobj/sge_object.h"
 
-#include "sge_object.h"
-
-#include "msg_common.h"
 #include "spool/msg_spoollib.h"
 #include "spool/template/msg_spoollib_template.h"
-
 #include "spool/template/sge_spooling_template.h"
+
+#include "msg_common.h"
 
 static const char *spooling_method = "template";
 

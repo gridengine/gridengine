@@ -36,6 +36,8 @@
 
 #include "comm/cl_handle_list.h"
 
+#include "uti/sge_stdlib.h"
+
 int cl_handle_list_setup(cl_raw_list_t** list_p, char* list_name) {  /* CR check */
    return cl_raw_list_setup(list_p,list_name, 1); /* enable list locking */
 }
@@ -73,7 +75,7 @@ int cl_handle_list_append_handle(cl_raw_list_t* list_p,cl_com_handle_t* handle, 
    new_elem->handle = handle;
    new_elem->raw_elem = cl_raw_list_append_elem(list_p, (void*) new_elem);
    if ( new_elem->raw_elem == NULL) {
-      free(new_elem);
+      sge_free(&new_elem);
       if (do_lock != 0) {
          cl_raw_list_unlock(list_p);
       }
@@ -116,8 +118,7 @@ int cl_handle_list_remove_handle(cl_raw_list_t* list_p, cl_com_handle_t* handle,
             }
             return CL_RETVAL_HANDLE_NOT_FOUND;
          }
-         free(elem);
-         elem = NULL;
+         sge_free(&elem);
          ret_val2 = CL_RETVAL_OK;
          break;
       }

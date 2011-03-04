@@ -34,8 +34,7 @@
 #include <unistd.h>
 #include <fnmatch.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_parse_num_par.h"
 #include "uti/sge_dstring.h"
 #include "uti/sge_binding_hlp.h"
@@ -1663,8 +1662,8 @@ DTRACE;
             tmp = sge_strdup(NULL, *sp);
             dest = string_list(tmp, ",", NULL);
             cull_parse_string_list(dest, "user_list", ARA_Type, rule, &user_list);
-            FREE(tmp);
-            FREE(dest);
+            sge_free(&tmp);
+            sge_free(&dest);
          } else {
             str_list_parse_from_string(&user_list, *sp, ",");
          }
@@ -2093,7 +2092,7 @@ static int var_list_parse_from_environment(lList **lpp, char **envp)
       env_description = sge_strtok_r((char *) 0, "\n", &context);
       if (env_description)
          lSetString(ep, VA_value, env_description);
-      FREE(env_entry);
+      sge_free(&env_entry);
       sge_free_saved_vars(context);
    }
 
@@ -2158,32 +2157,32 @@ char *reroot_path(lListElem* pjob, const char *path, lList **alpp) {
    char tmp_str[SGE_PATH_MAX + 1];
    char tmp_str2[SGE_PATH_MAX + 1];
    char tmp_str3[SGE_PATH_MAX + 1];
-   
+
    DENTER (TOP_LAYER, "reroot_path");
-   
+
    home = job_get_env_string(pjob, VAR_PREFIX "O_HOME");
-   strcpy (tmp_str, path);
-   
-   if (!chdir(home)) {
+   strcpy(tmp_str, path);
+
+   if (chdir(home) == 0) {
       /* If chdir() succeeds... */
-      if (!getcwd(tmp_str2, sizeof(tmp_str2))) {
+      if (getcwd(tmp_str2, sizeof(tmp_str2)) == NULL) {
          /* If getcwd() fails... */
-         answer_list_add(alpp, MSG_ANSWER_GETCWDFAILED, 
+         answer_list_add(alpp, MSG_ANSWER_GETCWDFAILED,
                          STATUS_EDISK, ANSWER_QUALITY_ERROR);
          DRETURN(NULL);
       }
 
-      chdir(tmp_str);
-
-      if (strncmp(tmp_str2, tmp_str, strlen(tmp_str2)) == 0) {
-         /* If they are equal, build a new CWD using the value of the HOME
-          * as the root instead of whatever that directory is called by
-          * the -(c)wd path. */
-         sprintf(tmp_str3, "%s%s", home, (char *) tmp_str + strlen(tmp_str2));
-         strcpy(tmp_str, tmp_str3);
+      if (chdir(tmp_str) == 0) {
+         if (strncmp(tmp_str2, tmp_str, strlen(tmp_str2)) == 0) {
+            /* If they are equal, build a new CWD using the value of the HOME
+             * as the root instead of whatever that directory is called by
+             * the -(c)wd path. */
+            sprintf(tmp_str3, "%s%s", home, (char *) tmp_str + strlen(tmp_str2));
+            strcpy(tmp_str, tmp_str3);
+         }
       }
    }
-   
+
    DRETURN(strdup(tmp_str));
 }
 

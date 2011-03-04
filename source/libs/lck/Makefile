@@ -47,10 +47,10 @@ LCKLIB_SRC = \
 
 LCKLIB_OBJS = $(LCKLIB_SRC:.c=.o)
 
-LCKLIB_TEST_ADD_LIBS = $(COMMLISTSLIB) $(RMONLIB) $(UTILIB) $(WINGRIDLIB) $(LCKLIB) $(LIBS)
+LCKLIB_TEST_ADD_LIBS = $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(LCKLIB) $(LIBS)
 
 # defines does not work at this time
-LCKLIB_TEST_LIB_DEPENDS = liblck.a librmon.a libcommlists.a libuti.a
+LCKLIB_TEST_LIB_DEPENDS = liblck.a libcommlists.a libuti.a
 
 LCKLIB_TEST_OBJS = \
               test_sge_lock_main.o \
@@ -94,7 +94,7 @@ liblck.a:	$(LCKLIB_OBJS)
 	$(RANLIB) liblck.a
 
 # broken dependencies: we have to add libuti here
-liblck$(SHAREDEXT): $(LCKLIB_OBJS) $(RMONLIB)
+liblck$(SHAREDEXT): $(LCKLIB_OBJS)
 	$(SHAREDLD) $(SHARED_LFLAGS) -o liblck$(SHAREDEXT) $(LCKLIB_OBJS) $(LIBS) -lc
 
 ###############################################################################

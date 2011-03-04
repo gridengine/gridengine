@@ -41,18 +41,20 @@
 #include <sys/socket.h>  
 
 #include "sge.h"
-#include "sgermon.h"
-#include "sge_hostname.h"
-#include "sge_log.h"
-#include "sge_stdlib.h"
-#include "sge_string.h"
-#include "sge_unistd.h"
-#include "sge_uidgid.h"
-#include "sge_answer.h"
-#include "sge_prog.h"
-#include "msg_gdilib.h"
+#include "uti/sge_rmon.h"
+#include "uti/sge_hostname.h"
+#include "uti/sge_log.h"
+#include "uti/sge_stdlib.h"
+#include "uti/sge_string.h"
+#include "uti/sge_unistd.h"
+#include "uti/sge_uidgid.h"
+#include "uti/sge_prog.h"
+#include "uti/sge_csp_path.h"
 
-#include "sge_csp_path.h"
+#include "sgeobj/sge_answer.h"
+
+#include "gdi/msg_gdilib.h"
+
 
 #define SGE_QMASTER_PORT_ENVIRONMENT_NAME "SGE_QMASTER_PORT"
 #define SGE_COMMD_SERVICE "sge_qmaster"

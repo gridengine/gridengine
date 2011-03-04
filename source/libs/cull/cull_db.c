@@ -38,8 +38,7 @@
 #define NO_SGE_COMPILE_DEBUG
 #endif
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_string.h"
 
 #include "cull/cull_db.h"
@@ -1140,7 +1139,7 @@ lDescr *lGetReducedDescr(const lDescr *type, const lEnumeration *what) {
       return NULL;
    }
    if (lPartialDescr(what, type, new, &index) != 0){
-      FREE(new);
+      sge_free(&new);
       DEXIT;
       return NULL;      
    }

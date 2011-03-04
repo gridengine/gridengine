@@ -34,8 +34,7 @@
 #include <string.h>
 #include <strings.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_log.h"
 
 #include "cull/cull.h"
@@ -65,7 +64,7 @@ static bool parse_job_identifier(const char *id, u_long32 *job_id, u_long32 *ja_
    copy = strdup(id);
    *job_id = atoi(strtok(copy, "."));
    *ja_task_id = atoi(strtok(NULL, "."));
-   FREE(copy);
+   sge_free(&copy);
 
    if(*job_id > 0 && *ja_task_id > 0) {
       DRETURN(true);

@@ -35,13 +35,11 @@
 #include <time.h>
 #include <sys/time.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_log.h"
 #include "uti/sge_time.h"
 #include "uti/sge_unistd.h"
-
-#include "lck/sge_lock.h"
+#include "uti/sge_lock.h"
 
 #include "sgeobj/sge_object.h"
 #include "sgeobj/sge_qinstance_state.h"
@@ -282,7 +280,7 @@ void sge_calendar_event_handler(sge_gdi_ctx_class_t *ctx, te_event_t anEvent, mo
    SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
 
    lFreeList(&ppList);
-   FREE(cal_name);
+   sge_free(&cal_name);
 
    DRETURN_VOID;
 } /* sge_calendar_event_handler() */

@@ -34,8 +34,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_bootstrap.h"
 #include "uti/sge_profiling.h"
 #include "uti/sge_log.h"
@@ -176,7 +175,7 @@ static int spool_configuration(int argc, char *argv[])
    conf = spool_flatfile_read_object(&answer_list, CONF_Type, NULL,
                                    fields, NULL, false, &qconf_sfi,
                                    SP_FORM_ASCII, NULL, argv[2]);
-   FREE(fields);
+   sge_free(&fields);
    if (conf == NULL) {
       ERROR((SGE_EVENT, MSG_SPOOLDEFAULTS_CANTREADGLOBALCONF_S, argv[2]));
       ret = EXIT_FAILURE;
@@ -212,7 +211,7 @@ static int spool_local_conf(int argc, char *argv[])
       conf = spool_flatfile_read_object(&answer_list, CONF_Type, NULL,
                                    fields, NULL, false, &qconf_sfi,
                                    SP_FORM_ASCII, NULL, argv[2]);
-      FREE(fields);
+      sge_free(&fields);
 
       if (conf == NULL) {
          ERROR((SGE_EVENT, MSG_SPOOLDEFAULTS_CANTREADLOCALCONF_S, argv[2]));
@@ -246,9 +245,9 @@ static int spool_sharetree(int argc, char *argv[])
    int ret; 
 
    ret = spool_object_list(argv[2], fields, &qconf_sfi, STN_Type, SGE_TYPE_SHARETREE);
-   FREE(fields);
+   sge_free(&fields);
    return ret;
-   }
+}
 
 static int spool_complexes(int argc, char *argv[])
 {
@@ -296,7 +295,7 @@ static int spool_exechosts(int argc, char *argv[])
    answer_list_output(&answer_list);
 
    ret = spool_object_list(argv[2], fields, &qconf_sfi, EH_Type, SGE_TYPE_EXECHOST);
-   FREE(fields);
+   sge_free(&fields);
    return ret;
 }
 
@@ -306,7 +305,7 @@ static int spool_projects(int argc, char *argv[])
    int ret; 
 
    ret = spool_object_list(argv[2], fields, &qconf_sfi, PR_Type, SGE_TYPE_PROJECT);
-   FREE(fields);
+   sge_free(&fields);
    return ret;
 }
 
@@ -321,7 +320,7 @@ static int spool_users(int argc, char *argv[])
    int ret; 
 
    ret = spool_object_list(argv[2], fields, &qconf_sfi, UU_Type, SGE_TYPE_PROJECT);
-   FREE(fields);
+   sge_free(&fields);
    return ret;
 }
 

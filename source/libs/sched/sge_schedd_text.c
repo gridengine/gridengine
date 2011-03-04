@@ -33,11 +33,12 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "rmon/sgermon.h"
+#include "uti/sge_rmon.h"
+
+#include "sched/sge_schedd_text.h"
+#include "sched/msg_schedd.h"
 
 #include "basis_types.h"
-#include "sge_schedd_text.h"
-#include "msg_schedd.h"
 
 /*
 ** Prototype for internationalized messages

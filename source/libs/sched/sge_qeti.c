@@ -32,11 +32,10 @@
 
 #include <string.h>
 
-#include "rmon/sgermon.h"
+#include "uti/sge_rmon.h"
+#include "uti/sge_hostname.h"
 
 #include "cull/cull.h"
-
-#include "uti/sge_hostname.h"
 
 #include "sgeobj/sge_pe.h"
 #include "sgeobj/sge_job.h"
@@ -560,5 +559,5 @@ void sge_qeti_release(sge_qeti_t **qeti)
    lFreeList(&((*qeti)->cr_refs_global));
    lFreeList(&((*qeti)->cr_refs_host));
    lFreeList(&((*qeti)->cr_refs_queue));
-   FREE(*qeti);
+   sge_free(qeti);
 }

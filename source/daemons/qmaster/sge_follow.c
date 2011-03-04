@@ -32,13 +32,13 @@
 #include <string.h>
 #include <pthread.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_time.h"
 #include "uti/sge_log.h"
 #include "uti/sge_signal.h"
 #include "uti/sge_prog.h"
 #include "uti/sge_hostname.h"
+#include "uti/sge_mtutil.h"
 
 #include "sgeobj/sge_conf.h"
 #include "sgeobj/sge_pe.h"
@@ -77,7 +77,6 @@
 #include "sge_follow.h"
 #include "msg_common.h"
 #include "msg_qmaster.h"
-#include "lck/sge_mtutil.h"
 
 typedef enum {
    NOT_DEFINED = 0,
@@ -937,7 +936,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
 
                }
                lFreeWhat(&what);
-               FREE(rdp);
+               sge_free(&rdp);
             }
          }
       }

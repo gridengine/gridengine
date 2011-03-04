@@ -41,10 +41,8 @@
 
 #include "comm/commlib.h"
 
-#include "rmon/sgermon.h"
-
-#include "lck/sge_mtutil.h"
-
+#include "uti/sge_mtutil.h"
+#include "uti/sge_rmon.h"
 #include "uti/sge_log.h"
 #include "uti/sge_tq.h"
 
@@ -336,7 +334,7 @@ static int get_gdi_retries_value(void) {
    cl_com_get_parameter_list_value("gdi_retries", &gdi_retries);
    if (gdi_retries != NULL) {
       retries = atoi(gdi_retries);
-      FREE(gdi_retries);
+      sge_free(&gdi_retries);
    }
    return retries;
 }
@@ -373,7 +371,7 @@ static bool get_cl_ping_value(void) {
       if (strcasecmp(cl_ping, "true") == 0) {
          do_ping = true;
       }
-      FREE(cl_ping);
+      sge_free(&cl_ping);
    }
    return do_ping;
 }

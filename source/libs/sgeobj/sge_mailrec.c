@@ -30,8 +30,7 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_bitfield.h"
 #include "uti/sge_dstring.h"
 #include "uti/sge_stdlib.h"
@@ -99,7 +98,7 @@ int mailrec_parse(lList **lpp, const char *mail_str)
    str_str = string_list(mail, ",", NULL);
    if (!str_str || !*str_str) {
       *lpp = NULL;
-      FREE(mail);
+      sge_free(&mail);
       DEXIT;
       return 3;
    }
@@ -107,8 +106,8 @@ int mailrec_parse(lList **lpp, const char *mail_str)
    if (!*lpp) {
       *lpp = lCreateList("mail_list", MR_Type);
       if (!*lpp) {
-         FREE(mail);
-         FREE(str_str);
+         sge_free(&mail);
+         sge_free(&str_str);
          DEXIT;
          return 4;
       }
@@ -136,8 +135,8 @@ int mailrec_parse(lList **lpp, const char *mail_str)
       sge_free_saved_vars(context);
    }
 
-   FREE(mail);
-   FREE(str_str);
+   sge_free(&mail);
+   sge_free(&str_str);
    DEXIT;
    return 0;
 }

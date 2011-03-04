@@ -1129,7 +1129,7 @@ void get_ara_list(const char *str, lList **ret_list) {
       char **dest = string_list(tmp, ",", NULL);
       lFreeList(ret_list);
       cull_parse_string_list(dest, "user_list", ARA_Type, rule, ret_list); 
-      FREE(tmp);
-      FREE(dest);
+      sge_free(&tmp);
+      sge_free(&dest);
    }
 }

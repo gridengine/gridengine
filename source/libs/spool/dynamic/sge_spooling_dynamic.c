@@ -45,12 +45,12 @@
 #include <link.h>
 #endif
 
-#include "rmon/sgermon.h"
+#include "uti/sge_rmon.h"
 #include "uti/sge_log.h"
+
 #include "sgeobj/sge_answer.h"
 
 #include "spool/dynamic/msg_spoollib_dynamic.h"
-
 #include "spool/dynamic/sge_spooling_dynamic.h"
 
 static const char *spooling_method = "dynamic";

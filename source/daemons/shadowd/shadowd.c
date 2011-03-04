@@ -39,8 +39,7 @@
 #include <netdb.h>
 #include <fcntl.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_bootstrap.h"
 #include "uti/sge_stdio.h"
 #include "uti/sge_unistd.h"
@@ -311,8 +310,7 @@ char qmaster_out_file[SGE_PATH_MAX];
       if (cl_com_set_handle_fds(cl_com_get_handle(prognames[SHADOWD] ,0), &tmp_fd_array, &tmp_fd_count) == CL_RETVAL_OK) {
          sge_daemonize(tmp_fd_array, tmp_fd_count, ctx);
          if (tmp_fd_array != NULL) {
-            free(tmp_fd_array);
-            tmp_fd_array = NULL;
+            sge_free(&tmp_fd_array);
          }
       } else {
          sge_daemonize(NULL, 0, ctx);
@@ -573,10 +571,10 @@ const char *file
          if (resolved_host) {
             if (!sge_hostcmp(host, resolved_host )) {
                FCLOSE(fp);
-               FREE(resolved_host);
+               sge_free(&resolved_host);
                DRETURN(0);
             }
-            FREE(resolved_host);
+            sge_free(&resolved_host);
          }
       }      
    }

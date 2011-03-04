@@ -34,8 +34,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_bootstrap.h"
 #include "uti/sge_log.h"
 #include "uti/sge_prog.h"
@@ -159,7 +158,7 @@ void sge_setup_sge_execd(sge_gdi_ctx_class_t *ctx, const char* tmp_err_file_name
    }
 #endif
 
-   FREE(spool_dir);
+   sge_free(&spool_dir);
    DRETURN_VOID;
 }
 

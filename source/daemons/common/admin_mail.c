@@ -33,8 +33,7 @@
 #include <string.h>
 #include <errno.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_unistd.h"
 #include "uti/sge_stdio.h"
 #include "uti/sge_string.h"
@@ -136,7 +135,7 @@ void job_related_adminmail(u_long32 progid, lListElem *jr, int is_array, const c
 
    DPRINTF(("sizeof(admail_times) : %d\n", sizeof(admail_times)));
    if (first) {
-      memset(admail_times, sizeof(admail_times), 0);
+      memset(admail_times, 0, sizeof(admail_times));
       first = 0;
    }
 
@@ -148,7 +147,7 @@ void job_related_adminmail(u_long32 progid, lListElem *jr, int is_array, const c
    }
 
    if (!strcasecmp(administrator_mail, "none")) {
-      FREE(administrator_mail);
+      sge_free(&administrator_mail);
       DEXIT;
       return;
    }
@@ -183,14 +182,14 @@ void job_related_adminmail(u_long32 progid, lListElem *jr, int is_array, const c
          */
          if ((admail_states[failed] & BIT_ADM_NEVER)) {
             DPRINTF(("NEVER SENDING ADMIN MAIL for state %d\n", failed));
-            FREE(administrator_mail);
+            sge_free(&administrator_mail);
             DEXIT;
             return;
          }
          if ((admail_states[failed] & BIT_ADM_NEW_CONF)) {
             if (admail_times[failed]) {
                DPRINTF(("NOT SENDING ADMIN MAIL AGAIN for state %d, again on conf\n", failed));
-               FREE(administrator_mail);
+               sge_free(&administrator_mail);
                DEXIT;
                return;
             }
@@ -198,7 +197,7 @@ void job_related_adminmail(u_long32 progid, lListElem *jr, int is_array, const c
          if ((admail_states[failed] & BIT_ADM_QCHANGE)) {
             if (admail_times[failed]) {
                DPRINTF(("NOT SENDING ADMIN MAIL AGAIN for state %d, again on qchange\n", failed));
-               FREE(administrator_mail);
+               sge_free(&administrator_mail);
                DEXIT;
                return;
             }
@@ -206,7 +205,7 @@ void job_related_adminmail(u_long32 progid, lListElem *jr, int is_array, const c
          if ((admail_states[failed] & BIT_ADM_HOUR)) {
             if ((now - admail_times[failed] < 3600))
                DPRINTF(("NOT SENDING ADMIN MAIL AGAIN for state %d, again next hour\n", failed));
-               FREE(administrator_mail);
+               sge_free(&administrator_mail);
                DEXIT;
                return;
          }
@@ -219,7 +218,7 @@ void job_related_adminmail(u_long32 progid, lListElem *jr, int is_array, const c
       if (ret) {
          ERROR((SGE_EVENT, MSG_MAIL_PARSE_S,
             (administrator_mail ? administrator_mail : MSG_NULL)));
-         FREE(administrator_mail);
+         sge_free(&administrator_mail);
          DEXIT;
          return;
       }
@@ -316,7 +315,7 @@ void job_related_adminmail(u_long32 progid, lListElem *jr, int is_array, const c
       }
    }
    lFreeList(&lp_mail);
-   FREE(administrator_mail); 
+   sge_free(&administrator_mail); 
    DEXIT;
    return;
 FCLOSE_ERROR:
@@ -325,9 +324,8 @@ FCLOSE_ERROR:
    return;
 }
 
-int adm_mail_reset(
-int state 
-) {
+int adm_mail_reset(int state)
+{
    int i;
 
    DENTER(TOP_LAYER, "adm_mail_reset");
@@ -335,8 +333,8 @@ int state
    /*
    ** let 0 be a reset all
    */
-   if (!state) {
-      memset(admail_times, sizeof(admail_times), 0);
+   if (state == 0) {
+      memset(admail_times, 0, sizeof(admail_times));
       return 0;
    }
 

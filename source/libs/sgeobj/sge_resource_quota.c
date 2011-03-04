@@ -33,8 +33,7 @@
 #include <string.h>
 #include <fnmatch.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_log.h"
 #include "uti/sge_parse_num_par.h"
 #include "uti/sge_string.h"
@@ -834,7 +833,7 @@ rqs_debit_consumable(lListElem *rqs, lListElem *job, lListElem *granted, const c
       sge_dstring_free(&rue_name);
    }
    
-   FREE(qname);
+   sge_free(&qname);
 
    DRETURN(mods); 
 }

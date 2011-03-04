@@ -42,8 +42,7 @@
 #include <sys/wait.h>
 #include <grp.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_string.h"
 #include "uti/sge_afsutil.h"
 #include "uti/sge_parse_num_par.h"
@@ -761,7 +760,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
             char* shell_start_mode = mconf_get_shell_start_mode();
             const char *mode = job_get_shell_start_mode(job, master_queue, 
                                                    shell_start_mode);
-            FREE(shell_start_mode);
+            sge_free(&shell_start_mode);
 
             if (!strcmp(mode, "unix_behavior") != 0) {
                job_caused_failure = 1;
@@ -1592,8 +1591,11 @@ read_dusage(lListElem *jr, const char *jobdir, u_long32 jobid, u_long32 jataskid
 
    if (failed != ESSTATE_NO_PID) {
       fp = fopen(pid_file, "r");
-      if (fp) {
-         fscanf(fp, sge_u32 , &pid);
+      if (fp != NULL) {
+         if (fscanf(fp, sge_u32 , &pid) != 1) {
+            ERROR((SGE_EVENT, MSG_EXECD_ERRORREADINGPIDOFJOB_UU,
+                   sge_u32c(jobid), sge_u32c(jataskid)));
+         }
          FCLOSE(fp);
       } else {
          ERROR((SGE_EVENT, MSG_SHEPHERD_CANTOPENPIDFILEXFORJOBYZ_SUU,

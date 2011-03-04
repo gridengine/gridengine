@@ -40,8 +40,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "rmon/sgermon.h" 
-
+#include "uti/sge_rmon.h" 
 #include "uti/sge_language.h"
 #include "uti/sge_dstring.h"
 

@@ -34,8 +34,7 @@
 #include <strings.h>
 #include <ctype.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_log.h"
 #include "uti/sge_string.h"
 
@@ -832,7 +831,7 @@ static int read_CF_value(lListElem *ep, int nm, const char *buf,
                         name, value));
    
                sge_free_saved_vars(context);
-               FREE(buffer);
+               sge_free(&buffer);
                DRETURN(0);
             } else {
                lListElem *rep;
@@ -845,7 +844,7 @@ static int read_CF_value(lListElem *ep, int nm, const char *buf,
                      WARNING((SGE_EVENT, MSG_CONFIG_CONF_GIDRANGELESSTHANNOTALLOWED_I, GID_RANGE_NOT_ALLOWED_ID));
    
                      sge_free_saved_vars(context);
-                     FREE(buffer);
+                     sge_free(&buffer);
                      lFreeList(&rlp);
                      DRETURN(0);
                   }                  
@@ -865,7 +864,7 @@ static int read_CF_value(lListElem *ep, int nm, const char *buf,
          WARNING((SGE_EVENT, MSG_CONFIG_CONF_NOVALUEFORCONFIGATTRIB_S, name));
    
          sge_free_saved_vars(context);
-         FREE(buffer);
+         sge_free(&buffer);
          DRETURN(0);
       }
    } else if (!strcmp(name, "user_lists") || 
@@ -895,7 +894,7 @@ static int read_CF_value(lListElem *ep, int nm, const char *buf,
          WARNING((SGE_EVENT, MSG_CONFIG_CONF_NOVALUEFORCONFIGATTRIB_S, name));
    
          sge_free_saved_vars(context);
-         FREE(buffer);
+         sge_free(&buffer);
          DRETURN(0);
       }
       /* skip leading delimitors */
@@ -908,7 +907,7 @@ static int read_CF_value(lListElem *ep, int nm, const char *buf,
          WARNING((SGE_EVENT, MSG_CONFIG_CONF_NOVALUEFORCONFIGATTRIB_S, name));
    
          sge_free_saved_vars(context);
-         FREE(buffer);
+         sge_free(&buffer);
          DRETURN(0);
       }
       if (strcmp(name, "auto_user_oticket") == 0 || 
@@ -933,13 +932,13 @@ static int read_CF_value(lListElem *ep, int nm, const char *buf,
                   name));
    
          sge_free_saved_vars(context);
-         FREE(buffer);
+         sge_free(&buffer);
          DRETURN(0);
       }
    }
 
    sge_free_saved_vars(context);
-   FREE(buffer);
+   sge_free(&buffer);
    DRETURN(1);
 }
 

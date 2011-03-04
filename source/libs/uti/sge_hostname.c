@@ -47,8 +47,7 @@
 #include <pthread.h>
 #endif
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_bootstrap.h"
 #include "uti/sge_hostname.h"
 #include "uti/sge_log.h"
@@ -59,8 +58,7 @@
 #include "uti/sge_prog.h"
 #include "uti/sge_uidgid.h"
 #include "uti/msg_utilib.h"
-
-#include "lck/sge_mtutil.h"
+#include "uti/sge_mtutil.h"
 
 #define ALIAS_DELIMITER "\n\t ,;"
 #define SGE_MAXNISRETRY 5
@@ -1099,7 +1097,8 @@ void sge_free_hostent( struct hostent** he_to_del ) {
    if (he->h_aliases != NULL) {
       help = he->h_aliases;
       while (*help != NULL) {
-         free(*help++);
+         sge_free(help);
+         help++;
       }
       sge_free(&(he->h_aliases));
    }
@@ -1109,7 +1108,8 @@ void sge_free_hostent( struct hostent** he_to_del ) {
    if (he->h_addr_list != NULL) {
       help = he->h_addr_list;
       while(*help) {
-         free(*help++);
+         sge_free(help);
+         help++;
       }
       sge_free(&(he->h_addr_list));
    }

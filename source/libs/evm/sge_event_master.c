@@ -36,8 +36,7 @@
 #include <string.h>
 #include <errno.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_time.h"
 #include "uti/sge_profiling.h"
 #include "uti/sge_spool.h"
@@ -45,9 +44,8 @@
 #include "uti/sge_log.h"
 #include "uti/sge_prog.h"
 #include "uti/sge_hostname.h"
-
-#include "lck/sge_mtutil.h"
-#include "lck/sge_lock.h"
+#include "uti/sge_mtutil.h"
+#include "uti/sge_lock.h"
 
 #include "cull/cull.h"
 
@@ -801,10 +799,10 @@ sge_event_master_process_mod_event_client(lListElem *request, monitoring_t *moni
             lFreeWhat(&(old_sub[i].what));
             if (old_sub[i].descr){
                cull_hash_free_descr(old_sub[i].descr);
-               free(old_sub[i].descr);
+               sge_free(&(old_sub[i].descr));
             }
          } 
-         FREE(old_sub);
+         sge_free(&old_sub);
       }
    }
 
@@ -1752,7 +1750,6 @@ static void sge_event_master_process_ack(lListElem *request, monitoring_t *monit
 
       switch (lGetUlong(client, EV_busy_handling)) {
          case EV_BUSY_UNTIL_ACK:
-         case EV_THROTTLE_FLUSH:
             lSetUlong(client, EV_busy, 0); /* clear busy state */
             break;
          default:
@@ -2021,11 +2018,11 @@ static void remove_event_client(lListElem **client, int event_client_id, bool lo
 
          if (old_sub[i].descr) {
             cull_hash_free_descr(old_sub[i].descr);
-            FREE(old_sub[i].descr);
+            sge_free(&(old_sub[i].descr));
          }
       }
 
-      FREE(old_sub);
+      sge_free(&old_sub);
       lSetRef(*client, EV_sub_array, NULL);
    }
 
@@ -2195,9 +2192,7 @@ void sge_event_master_send_events(sge_gdi_ctx_class_t *ctx, lListElem *report, l
 
       /* do we have to deliver events ? */
       if (now >= lGetUlong(event_client, EV_next_send_time)) {
-         if (( busy_handling == EV_THROTTLE_FLUSH) ||
-              !lGetUlong(event_client, EV_busy)    ||
-               do_remove == true) {
+         if (!lGetUlong(event_client, EV_busy) || do_remove == true) {
             lList *lp = NULL;
 
             /* put only pointer in report - dont copy */
@@ -2217,10 +2212,6 @@ void sge_event_master_send_events(sge_gdi_ctx_class_t *ctx, lListElem *report, l
                now = (time_t)sge_get_gmt();
 
                switch (busy_handling) {
-                  case EV_THROTTLE_FLUSH:
-                     /* increase busy counter */
-                     lSetUlong(event_client, EV_busy, lGetUlong(event_client, EV_busy) + 1);
-                     break;
                   case EV_BUSY_UNTIL_RELEASED:
                   case EV_BUSY_UNTIL_ACK:
                      lSetUlong(event_client, EV_busy, 1);
@@ -2265,7 +2256,6 @@ void sge_event_master_send_events(sge_gdi_ctx_class_t *ctx, lListElem *report, l
 static void flush_events(lListElem *event_client, int interval)
 {
    u_long32 next_send = 0;
-   u_long32 flush_delay = 0;
    int now = sge_get_gmt();
 
    DENTER(TOP_LAYER, "flush_events");
@@ -2274,26 +2264,6 @@ static void flush_events(lListElem *event_client, int interval)
 
    next_send = lGetUlong(event_client, EV_next_send_time);
    next_send = MIN(next_send, now + interval);
-
-   /* never send out two event packages in the very same second */
-   if (lGetUlong(event_client, EV_busy_handling) == EV_THROTTLE_FLUSH) {
-      u_long32 busy_counter = lGetUlong(event_client, EV_busy);
-      u_long32 ed_time = lGetUlong(event_client, EV_d_time);
-      u_long32 flush_delay_rate = MAX(lGetUlong(event_client, EV_flush_delay), 1);
-
-      if (busy_counter >= flush_delay_rate) {
-         /* busy counters larger than flush delay cause events being
-            sent out in regular event delivery interval for alive protocol
-            purposes with event client */
-         flush_delay = MAX(flush_delay, ed_time);
-      } else {
-         /* for smaller busy counters event delivery interval is scaled
-            down with the busy counter */
-         flush_delay = MAX(flush_delay, ed_time * busy_counter / flush_delay_rate);
-      }
-
-      next_send = MAX(next_send, lGetUlong(event_client, EV_last_send_time) + flush_delay);
-   }
 
    lSetUlong(event_client, EV_next_send_time, next_send);
 
@@ -2455,10 +2425,10 @@ static void build_subscription(lListElem *event_el)
          lFreeWhat(&(old_sub_array[i].what));
          if (old_sub_array[i].descr){
             cull_hash_free_descr(old_sub_array[i].descr);
-            free(old_sub_array[i].descr);
+            sge_free(&(old_sub_array[i].descr));
          }
       }
-      free(old_sub_array);
+      sge_free(&old_sub_array);
    }
 
    lSetRef(event_el, EV_sub_array, sub_array);
@@ -3121,7 +3091,7 @@ static lListElem *elem_select(subscription_t *subscription, lListElem *element,
          lXchgList(element, ids[counter], &(sub_list[counter]));
       }
 
-      FREE(sub_list);
+      sge_free(&sub_list);
    } else {
       DPRINTF(("no sub filter specified\n"));
       el = lSelectElemDPack(element, selection, dp, fields, false, NULL, NULL);

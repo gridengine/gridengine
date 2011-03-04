@@ -34,8 +34,7 @@
 
 #include "jni.h"
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_prog.h"
 #include "uti/sge_bootstrap.h"
 #include "uti/sge_edit.h"
@@ -719,7 +718,7 @@ jgdi_result_t set_elem_attribute(JNIEnv* env, lListElem *ep, const lDescr* descr
             result = get_string(env, object_class, obj, property_name, &str, alpp);
             if (result == JGDI_SUCCESS)  {
                lSetPosString(ep, pos, str);
-               FREE(str);
+               sge_free(&str);
             } else {
                lSetPosString(ep, pos, NULL);
             }            
@@ -731,7 +730,7 @@ jgdi_result_t set_elem_attribute(JNIEnv* env, lListElem *ep, const lDescr* descr
             result = get_string(env, object_class, obj, property_name, &str, alpp);
             if (result == JGDI_SUCCESS)  {
                lSetPosHost(ep, pos, str);
-               FREE(str);
+               sge_free(&str);
             } else {
                lSetPosHost(ep, pos, NULL);
             }            
@@ -4780,7 +4779,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeKillEventCl
       DPRINTF(("ec: %s\n", buffer));
       lAddElemStr(&lp, ID_str, buffer, ID_Type);
    }
-   FREE(ibuf);
+   sge_free(&ibuf);
    jgdi_kill(env, jgdi, lp, EVENTCLIENT_KILL, answers);
    lFreeList(&lp);
 

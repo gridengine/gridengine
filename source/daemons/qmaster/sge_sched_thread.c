@@ -36,16 +36,14 @@
 #  include <sys/stream.h>
 #endif  
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_unistd.h"
 #include "uti/sge_prog.h"
 #include "uti/sge_log.h"
 #include "uti/sge_profiling.h"
 #include "uti/sge_time.h"
 #include "uti/sge_thread_ctrl.h"
-
-#include "lck/sge_mtutil.h"
+#include "uti/sge_mtutil.h"
 
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_conf.h"
@@ -835,7 +833,7 @@ static int dispatch_jobs(sge_evc_class_t *evc, scheduler_all_data_t *lists, orde
                                                    &user_list,
                                                    owner,
                                                    maxujobs);
-               FREE(owner);
+               sge_free(&owner);
 
                /* do not send job start orders inbetween, if we have an immediate array
                   job. */

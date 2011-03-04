@@ -37,11 +37,11 @@
 #include <time.h>
 #include <sys/time.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_time.h"
 #include "uti/sge_unistd.h"
 #include "uti/sge_log.h"
+#include "uti/sge_lock.h"
 
 #include "sgeobj/sge_all_listsL.h"
 #include "sgeobj/sge_answer.h"
@@ -50,8 +50,6 @@
 #include "sgeobj/sge_calendar.h"
 #include "sgeobj/sge_utility.h"
 #include "sgeobj/sge_qinstance_state.h"
-
-#include "lck/sge_lock.h"
 
 #include "spool/sge_spooling.h"
 

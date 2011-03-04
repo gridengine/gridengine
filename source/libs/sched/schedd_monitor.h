@@ -49,8 +49,6 @@ int schedd_log_list(lList **monitor_alpp, bool monitor_next_run, const char *log
 void schedd_set_monitor_next_run(bool set);
 bool schedd_is_monitor_next_run(void);
 
-char* schedd_get_log_string(void);
-
 void schedd_set_schedd_log_file(sge_gdi_ctx_class_t *ctx);
 
 #endif /* __SCHEDD_MONITOR_H */

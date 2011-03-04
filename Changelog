@@ -14,6 +14,11 @@ EB-2011-03-04-0: Bugfix:      - changed position in pending job list for
                  Issues:      GE-3307
                  Review:      JG (GE-9)
 
+JG-2011-03-04-0: Bugfix:      scheduler messages are generated even when they
+                              are not needed
+                 Issue:       GE-3368
+                 Review:      DG (GE-10)
+
 EB-2011-03-02-0: Cleanup:     library cleanup
                  Issue:       GE-3361
 

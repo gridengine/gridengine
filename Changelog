@@ -8,10 +8,14 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
-EB-2011-03-04-0: Bugfix:      - changed position in pending job list for 
+DG-2011-03-09-0: Enhancem.:   Added new complex m_thread.
+                 Issue:       GE-3381
+                 Review:      TBD
+
+EB-2011-03-04-0: Bugfix:      - changed position in pending job list for
                                 user rescheduled jobs (exit99, qmod -rj)
                               - added two new qmaster_params
-                 Issues:      GE-3307
+                 Issue:       GE-3307
                  Review       JG (GE-9)
 
 JG-2011-03-04-0: Bugfix:      scheduler messages are generated even when they

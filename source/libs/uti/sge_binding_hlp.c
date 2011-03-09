@@ -309,12 +309,45 @@ bool _has_core_binding(dstring* error)
    return false;
 }
 
-/****** sge_binding_hlp/get_total_amount_of_cores() ********************************
+/****** sge_binding_hlp/get_total_amount_of_plpa_threads() ***********************
 *  NAME
-*     get_total_amount_of_cores() -- Fetches the total amount of cores on system. 
+*     get_total_amount_of_plpa_threads() -- The total amount of hw supported threads.
 *
 *  SYNOPSIS
-*     int get_total_amount_of_cores() 
+*     int get_total_amount_of_plpa_threads()
+*
+*  FUNCTION
+*     Returns the total amount of threads all CPUs on the host do
+*     support.
+*
+*  RESULT
+*     int - Total amount of harware supported threads the system supports.
+*
+*  NOTES
+*     MT-NOTE: get_total_amount_of_plpa_cores() is MT safe
+*
+*******************************************************************************/
+int get_total_amount_of_plpa_threads() {
+   /* counts the amount of hardware supported threads on the system */
+   int sum_of_threads = 0;
+   int num_processors = 0;
+   int max_proc_id    = 0;
+
+   if (has_core_binding() && _has_topology_information() &&
+         plpa_get_processor_data(PLPA_COUNT_ONLINE, &num_processors,
+            &max_proc_id) == 0) {
+      sum_of_threads = num_processors;
+   }
+
+   return sum_of_threads;
+}
+
+/****** sge_binding_hlp/get_total_amount_of_plpa_cores() ********************************
+*  NAME
+*     get_total_amount_of_plpa_cores() -- Fetches the total amount of cores on system. 
+*
+*  SYNOPSIS
+*     int get_total_amount_of_plpa_cores() 
 *
 *  FUNCTION
 *     Returns the total amount of cores per socket. 
@@ -323,22 +356,22 @@ bool _has_core_binding(dstring* error)
 *     int - Total amount of cores installed on the system. 
 *
 *  NOTES
-*     MT-NOTE: get_total_amount_of_cores() is MT safe 
+*     MT-NOTE: get_total_amount_of_plpa_cores() is MT safe 
 *
 *******************************************************************************/
-int get_total_amount_of_cores() 
+int get_total_amount_of_plpa_cores() 
 {
    /* total amount of cores currently active on this system */
    int total_amount_of_cores = 0;
    
    if (has_core_binding() && _has_topology_information()) {
       /* plpa_handle just for an early pre check */ 
-      int nr_socket = get_amount_of_sockets();
+      int nr_socket = get_amount_of_plpa_sockets();
       int cntr;
       
       /* get for each socket the amount of cores */
       for (cntr = 0; cntr < nr_socket; cntr++) {
-         total_amount_of_cores += get_amount_of_cores(cntr);
+         total_amount_of_cores += get_amount_of_plpa_cores(cntr);
       }
    }
    
@@ -349,25 +382,25 @@ int get_total_amount_of_cores()
 
 /****** sge_binding_hlp/get_amount_of_cores() **************************************
 *  NAME
-*     get_amount_of_cores() -- Get amount of cores per socket. 
+*     get_amount_of_plpa_cores() -- Get amount of cores per socket.
 *
 *  SYNOPSIS
-*     int get_amount_of_cores(int socket_number) 
+*     int get_amount_of_plpa_cores(int socket_number)
 *
 *  FUNCTION
-*     Returns the amount of cores for a specific socket. 
+*     Returns the amount of cores for a specific socket.
 *
 *  INPUTS
-*     int socket_number - Physical socket number starting at 0. 
+*     int socket_number - Physical socket number starting at 0.
 *
 *  RESULT
 *     int - Amount of cores for the given socket or 0.
 *
 *  NOTES
-*     MT-NOTE: get_amount_of_cores() is MT safe 
+*     MT-NOTE: get_amount_of_plpa_cores() is MT safe
 *
 *******************************************************************************/
-int get_amount_of_cores(int socket_number) 
+int get_amount_of_plpa_cores(int socket_number)
 {
 
    if (has_core_binding() && _has_topology_information()) {
@@ -383,7 +416,7 @@ int get_amount_of_cores(int socket_number)
          } else {
             /* error when doing library call */
             return 0;
-         }   
+         }
 
       } else {
          /* error: we didn't get the linux socket id */
@@ -395,12 +428,48 @@ int get_amount_of_cores(int socket_number)
    return 0;
 }
 
-/****** sge_binding_hlp/get_amount_of_sockets() ************************************
+/****** sge_binding_hlp/get_amount_of_plpa_threads() **************************************
 *  NAME
-*     get_amount_of_sockets() -- Get the amount of available sockets.  
+*     get_amount_of_plpa_threads() -- Get amount of threads a specific core supports.
 *
 *  SYNOPSIS
-*     int get_amount_of_sockets() 
+*     int get_amount_of_plpa_threads(int socket_number, int core_number)
+*
+*  FUNCTION
+*     Returns the amount of threads a specific core supports.
+*
+*  INPUTS
+*     int socket_number - Physical socket number starting at 0.
+*     int core_number   - Physical core number on socket starting at 0.
+*
+*  RESULT
+*     int - Amount of threads a specific core supports.
+*
+*  NOTES
+*     MT-NOTE: get_amount_of_plpa_threads() is MT safe
+*
+*******************************************************************************/
+int get_amount_of_plpa_threads(int socket_number, int core_number) {
+   int amount = 0;
+   int *ids   = NULL;
+
+   /* get all processor ids on the system for a given core */
+   if (has_core_binding() && _has_topology_information()
+         && get_processor_ids_linux(socket_number, core_number, &ids, &amount)) {
+      sge_free(&ids);
+      return amount;
+   }
+
+   return 0;
+}
+
+
+/****** sge_binding_hlp/get_amount_of_plpa_sockets() ************************************
+*  NAME
+*     get_amount_of_plpa_sockets() -- Get the amount of available sockets.  
+*
+*  SYNOPSIS
+*     int get_amount_of_plpa_sockets() 
 *
 *  FUNCTION
 *     Returns the amount of sockets available on this system. 
@@ -410,15 +479,15 @@ int get_amount_of_cores(int socket_number)
 *                  of an error.
 *
 *  NOTES
-*     MT-NOTE: get_amount_of_sockets() is not MT safe 
+*     MT-NOTE: get_amount_of_plpa_sockets() is not MT safe 
 *
 *******************************************************************************/
-int get_amount_of_sockets() 
+int get_amount_of_plpa_sockets() 
 {
 
    if (has_core_binding() && _has_topology_information()) {
       int num_sockets, max_socket_id;
-      
+
       if (plpa_get_socket_info(&num_sockets, &max_socket_id) == 0) {
          return num_sockets;
       } else {
@@ -577,7 +646,6 @@ bool get_processor_ids_linux(int socket_number, int core_number, int** proc_ids,
             }
 
          }
-         
       }
    }
 
@@ -1294,7 +1362,7 @@ topology_string_to_socket_core_lists(const char* topology, int** sockets,
 
          topology++;
       }
-      
+
    }
 
    return retval;
@@ -1483,11 +1551,11 @@ check_explicit_binding_string(const char* expl, const int amount,
 *
 *******************************************************************************/
 static bool is_digit(const char* position, const char stopchar) {
-   
+
    if (position == NULL || *position == '\0' || !isdigit(*position)) {
       return false;
    }
-   
+
    position++;
 
    while (position != NULL && *position != '\0' && *position != stopchar) {

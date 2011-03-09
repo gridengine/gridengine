@@ -27,13 +27,15 @@
  *
  *  All Rights Reserved.
  *
+ *  Portions of this code are Copyright 2011 Univa Inc.
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
-#include <unistd.h>  
+#include <unistd.h>
 #include <time.h>
 
 #ifdef DARWIN6
@@ -904,6 +906,7 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
     */
    {
       struct cmplx_tmp new_complexes[] = {
+         {"m_thread", "thread", 1, CMPLXLE_OP, CONSUMABLE_NO, "0", REQU_YES, "0"},
          {"m_core", "core", 1, CMPLXLE_OP, CONSUMABLE_NO, "0", REQU_YES, "0"},
          {"m_socket", "socket", 1, CMPLXLE_OP, CONSUMABLE_NO, "0", REQU_YES, "0"},
          {"m_topology", "topo", 9, CMPLXEQ_OP, CONSUMABLE_NO, NULL, REQU_YES, "0"},

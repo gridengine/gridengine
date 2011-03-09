@@ -148,6 +148,36 @@ static void create_environment_string_solaris(const processorid_t* pid_list,
 #endif
 
 /* arch independent functions */
+
+/****** sge_binding/get_execd_amount_of_cores() ************************************
+*  NAME
+*     get_execd_amount_of_threads() -- Returns the amount of hw supported threads. 
+*
+*  SYNOPSIS
+*     int get_execd_amount_of_threads() 
+*
+*  FUNCTION
+*     Retrieves the amount of hardware supported threads 
+*     the current execution host offers.
+*
+*  RESULT
+*     int - The amount of threads the current host has. 
+*
+*  NOTES
+*     MT-NOTE: get_execd_amount_of_threads() is MT safe 
+*
+*******************************************************************************/
+int get_execd_amount_of_threads() {
+#if defined(PLPA_LINUX) 
+      return get_total_amount_of_plpa_threads();
+#elif defined(BINDING_SOLARIS) 
+      /* TODO implement this also for Solaris */
+      return get_total_amount_of_cores_solaris();
+#else   
+      return 0;
+#endif  
+}
+
 /****** sge_binding/get_execd_amount_of_cores() ************************************
 *  NAME
 *     get_execd_amount_of_cores() -- Returns the total amount of cores the host has. 
@@ -156,8 +186,7 @@ static void create_environment_string_solaris(const processorid_t* pid_list,
 *     int get_execd_amount_of_cores() 
 *
 *  FUNCTION
-*     Retrieves the total amount of cores (currently Linux only) 
-*     the current host have.
+*     Retrieves the total amount of cores the current host have.
 *
 *  RESULT
 *     int - The amount of cores the current host has. 
@@ -165,13 +194,11 @@ static void create_environment_string_solaris(const processorid_t* pid_list,
 *  NOTES
 *     MT-NOTE: get_execd_amount_of_cores() is MT safe 
 *
-*  SEE ALSO
-*     ???/???
 *******************************************************************************/
 int get_execd_amount_of_cores() 
 {
 #if defined(PLPA_LINUX) 
-      return get_total_amount_of_cores();
+      return get_total_amount_of_plpa_cores();
 #elif defined(BINDING_SOLARIS) 
       return get_total_amount_of_cores_solaris();
 #else   
@@ -197,13 +224,11 @@ int get_execd_amount_of_cores()
 *  NOTES
 *     MT-NOTE: get_execd_amount_of_sockets() is MT safe 
 *
-*  SEE ALSO
-*     ???/???
 *******************************************************************************/
 int get_execd_amount_of_sockets()
 {
 #if defined(PLPA_LINUX) 
-   return get_amount_of_sockets();
+   return get_amount_of_plpa_sockets();
 #elif defined(BINDING_SOLARIS) 
    return get_total_amount_of_sockets_solaris();
 #else

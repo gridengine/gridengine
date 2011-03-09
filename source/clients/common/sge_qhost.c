@@ -27,6 +27,8 @@
  * 
  *   All Rights Reserved.
  * 
+ *  Portions of this code are Copyright 2011 Univa Inc.
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 #include <stdlib.h>
@@ -295,9 +297,9 @@ sge_print_host(sge_gdi_ctx_class_t *gdi_ctx, lListElem *hep, lList *centry_list,
    lListElem *lep;
    char *s, host_print[CL_MAXHOSTLEN+1] = "";
    const char *host;
-   char load_avg[20], mem_total[20], mem_used[20], swap_total[20], 
-        swap_used[20], num_proc[20], socket[20], core[20], arch_string[80];
-   dstring rs = DSTRING_INIT;     
+   char load_avg[20], mem_total[20], mem_used[20], swap_total[20],
+        swap_used[20], num_proc[20], socket[20], core[20], arch_string[80], thread[20];
+   dstring rs = DSTRING_INIT;
    u_long32 dominant = 0;
    int ret = QHOST_SUCCESS;
    sge_bootstrap_state_class_t *bootstrap_state = gdi_ctx->get_sge_bootstrap_state(gdi_ctx);
@@ -350,12 +352,26 @@ sge_print_host(sge_gdi_ctx_class_t *gdi_ctx, lListElem *hep, lList *centry_list,
       lep=get_attribute_by_name(NULL, hep, NULL, "m_socket", centry_list, DISPATCH_TIME_NOW, 0);
       if (lep) {
          sge_strlcpy(socket, sge_get_dominant_stringval(lep, &dominant, &rs),
-                  sizeof(socket)); 
+                  sizeof(socket));
          sge_dstring_clear(&rs);
          lFreeElem(&lep);
       } else {
          strcpy(socket, "-");
       }
+
+      /*
+      ** nthr (threads)
+      */
+      lep=get_attribute_by_name(NULL, hep, NULL, "m_thread", centry_list, DISPATCH_TIME_NOW, 0);
+      if (lep) {
+         sge_strlcpy(thread, sge_get_dominant_stringval(lep, &dominant, &rs),
+                  sizeof(thread));
+         sge_dstring_clear(&rs);
+         lFreeElem(&lep);
+      } else {
+         strcpy(thread, "-");
+      }
+
 
       /*
       ** ncor (cores)

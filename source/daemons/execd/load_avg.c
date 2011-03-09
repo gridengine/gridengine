@@ -26,7 +26,9 @@
  *   Copyright: 2001 by Sun Microsystems, Inc.
  * 
  *   All Rights Reserved.
- * 
+ *
+ * Portions of this code are Copyright 2011 Univa Inc.
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 #include <stdio.h>
@@ -98,6 +100,7 @@ static int sge_get_topology(const char *qualified_hostname, lList **lpp);
 static int sge_get_topology_inuse(const char *qualified_hostname, lList **lpp);
 static int sge_get_sockets(const char *qualified_hostname, lList **lpp);
 static int sge_get_cores(const char *qualified_hostname, lList **lpp);
+static int sge_get_hwthreads(const char *qualified_hostname, lList **lpp);
 
 report_source execd_report_sources[] = {
    { NUM_REP_REPORT_LOAD, execd_add_load_report , 0 },
@@ -452,12 +455,13 @@ lList *sge_build_load_report(const char* qualified_hostname, const char* binary_
    sge_switch2start_user();
    sge_get_loadavg(qualified_hostname, &lp);
    sge_switch2admin_user(); 
-   
+
    /* report topology reporting */
    sge_get_topology(qualified_hostname, &lp);
-   sge_get_topology_inuse(qualified_hostname, &lp); 
+   sge_get_topology_inuse(qualified_hostname, &lp);
    sge_get_sockets(qualified_hostname, &lp);
    sge_get_cores(qualified_hostname, &lp);
+   sge_get_hwthreads(qualified_hostname, &lp);
 
    /* get load report from external load sensor */
    sge_ls_get(qualified_hostname, binary_path, &lp);
@@ -575,8 +579,6 @@ lList *sge_build_load_report(const char* qualified_hostname, const char* binary_
 *  NOTES
 *     MT-NOTE: sge_get_sockets() is MT safe 
 *
-*  SEE ALSO
-*     ???/???
 *******************************************************************************/
 static int sge_get_sockets(const char* qualified_hostname, lList **lpp) {
   
@@ -614,8 +616,6 @@ static int sge_get_sockets(const char* qualified_hostname, lList **lpp) {
 *  NOTES
 *     MT-NOTE: sge_get_cores() is MT safe 
 *
-*  SEE ALSO
-*     ???/???
 *******************************************************************************/
 static int sge_get_cores(const char* qualified_hostname, lList **lpp) {
    
@@ -632,6 +632,39 @@ static int sge_get_cores(const char* qualified_hostname, lList **lpp) {
    DRETURN(0);
 }
 
+/****** load_avg/sge_get_hwthreads() ***********************************************
+*  NAME
+*     sge_get_hwthreads() -- Sets the amount of threads.
+*
+*  SYNOPSIS
+*     static int sge_get_hwthreads(const char* qualified_hostname, lList **lpp)
+*
+*  FUNCTION
+*     Appends to the given list of load values the amount of threads.
+*
+*  INPUTS
+*     const char* qualified_hostname - name of the host
+*     lList **lpp                    - list with load values
+*
+*  RESULT
+*     static int - 0 per default
+*
+*  NOTES
+*     MT-NOTE: sge_get_hwthreads() is MT safe
+*
+*******************************************************************************/
+
+static int sge_get_hwthreads(const char* qualified_hostname, lList **lpp) {
+   int hwthreads = 0;
+   DENTER(TOP_LAYER, "sge_get_hwthreads");
+
+   /* get the total amount of cores */
+   hwthreads = get_execd_amount_of_threads();
+   /* append the amount of cores to the list */
+   sge_add_int2load_report(lpp, LOAD_ATTR_THREADS, hwthreads, qualified_hostname);
+
+   DRETURN(0);
+}
 
 static int sge_get_topology(const char* qualified_hostname, lList **lpp) {
 
@@ -667,7 +700,6 @@ static int sge_get_topology(const char* qualified_hostname, lList **lpp) {
 
    DRETURN(0);
 }
-
 
 static int sge_get_topology_inuse(const char* qualified_hostname, lList **lpp) {
    

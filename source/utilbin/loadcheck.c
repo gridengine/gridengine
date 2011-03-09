@@ -27,6 +27,8 @@
  * 
  *   All Rights Reserved.
  * 
+ *  Portions of this code are Copyright 2011 Univa Inc.
+ * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
@@ -352,9 +354,11 @@ void test_linux_plpa()
       printf("No topology information could by retrieved by PLPA!\n");
    } else {
       /* get amount of sockets */
-      printf("Amount of sockets:\t\t%d\n", get_amount_of_sockets());
+      printf("Amount of sockets:\t\t%d\n", get_amount_of_plpa_sockets());
       /* get amount of cores   */
-      printf("Amount of cores:\t\t%d\n", get_total_amount_of_cores());
+      printf("Amount of cores:\t\t%d\n", get_total_amount_of_plpa_cores());
+      /* the amount of threads must be shown as well */
+      printf("Amount of threads:\t\t%d\n", get_total_amount_of_plpa_threads());
       /* get topology */
       get_topology_linux(&topology, &length);
       printf("Topology:\t\t\t%s\n", topology);
@@ -363,8 +367,8 @@ void test_linux_plpa()
 
       /* for each socket,core pair get the internal processor number */
       /* try multi-mapping */
-      for (s = 0; s < get_amount_of_sockets(); s++) {
-         for (c = 0; c < get_amount_of_cores(s); c++) {
+      for (s = 0; s < get_amount_of_plpa_sockets(); s++) {
+         for (c = 0; c < get_amount_of_plpa_cores(s); c++) {
             int* proc_ids  = NULL;
             int amount     = 0;
             if (get_processor_ids_linux(s, c, &proc_ids, &amount)) {

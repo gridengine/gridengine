@@ -33,6 +33,8 @@
 #
 #  All Rights Reserved.
 #
+#  Portions of this code are Copyright 2011 Univa Inc.
+#
 ##########################################################################
 #___INFO__MARK_END__
 
@@ -284,6 +286,15 @@ if [ $? -ne 0 ]; then
 display_win_gui     dwg        BOOL        ==    YES         NO         0        0'  "$DEST_DIR/centry.bak" > "$DEST_DIR/centry" 
    rm -f "$DEST_DIR/centry.bak"
 fi
+#add m_thread if missing (new in 8.0.0)
+cat  "$DEST_DIR/centry" | grep "^m_thread " > /dev/null 2>&1
+if [ $? -ne 0 ]; then
+   cp "$DEST_DIR/centry" "$DEST_DIR/centry.bak"
+   sed '3i\
+m_thread            thread     INT         <=    YES         NO         0        0'  "$DEST_DIR/centry.bak" > "$DEST_DIR/centry" 
+   rm -f "$DEST_DIR/centry.bak"
+fi
+
 #add m_core if missing (new in 62u5)
 cat  "$DEST_DIR/centry" | grep "^m_core " > /dev/null 2>&1
 if [ $? -ne 0 ]; then

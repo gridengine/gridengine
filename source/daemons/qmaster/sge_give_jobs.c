@@ -34,8 +34,7 @@
 #include <unistd.h>
 #include <time.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_time.h"
 #include "uti/sge_log.h"
 #include "uti/sge_stdlib.h"
@@ -45,6 +44,7 @@
 #include "uti/sge_hostname.h"
 #include "uti/sge_profiling.h"
 #include "uti/sge_bootstrap.h"
+#include "uti/sge_lock.h"
 
 #include "sgeobj/sge_ja_task.h"
 #include "sgeobj/sge_pe_task.h"
@@ -72,8 +72,6 @@
 #include "gdi/sge_security.h"
 #include "gdi/sge_gdi2.h"
 
-#include "lck/sge_lock.h"
-
 #include "spool/sge_spooling.h"
 
 #include "sge.h"
@@ -91,6 +89,7 @@
 #include "sge_qmaster_timed_event.h"
 #include "sge_persistence_qmaster.h"
 #include "sge_reporting_qmaster.h"
+#include "sge_conf.h"
 #include "msg_common.h"
 #include "msg_qmaster.h"
 
@@ -1009,11 +1008,11 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
          
          if ((queue = cqueue_list_locate_qinstance(master_cqueue_list, queue_name)) == NULL) {
             ERROR((SGE_EVENT, MSG_CONFIG_CANTFINDQUEUEXREFERENCEDINJOBY_SU,  
-                      queue_name, sge_u32c(lGetUlong(jep, JB_job_number))));
+                      queue_name, sge_u32c(jobid)));
             master_task = false;
          } else if (ar_id != 0 && (ar = lGetElemUlong(master_ar_list, AR_id, ar_id)) == NULL) {
             ERROR((SGE_EVENT, MSG_CONFIG_CANTFINDARXREFERENCEDINJOBY_UU,
-                  sge_u32c(ar_id), sge_u32c(lGetUlong(jep, JB_job_number))));
+                  sge_u32c(ar_id), sge_u32c(jobid)));
             master_task = false;
          } else {
             const char *queue_hostname = lGetHost(queue, QU_qhostname);
@@ -1072,8 +1071,7 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
                   if (rqs_debit_consumable(rqs, jep, ep, lGetString(jatep, JAT_granted_pe), master_centry_list, 
                                             master_userset_list, master_hgroup_list, tmp_slot, master_task) > 0) {
                      /* this info is not spooled */
-                     sge_add_event(0, sgeE_RQS_MOD, 0, 0, 
-                                   lGetString(rqs, RQS_name), NULL, NULL, rqs);
+                     sge_add_event(0, sgeE_RQS_MOD, 0, 0, lGetString(rqs, RQS_name), NULL, NULL, rqs);
                      lListElem_clear_changed_info(rqs);
                   }
                }
@@ -1084,8 +1082,7 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
                   dstring buffer = DSTRING_INIT;
                   /* this info is not spooled */
                   sge_dstring_sprintf(&buffer, sge_U32CFormat, ar_id);
-                  sge_add_event(0, sgeE_AR_MOD, ar_id, 0, 
-                                sge_dstring_get_string(&buffer), NULL, NULL, ar);
+                  sge_add_event(0, sgeE_AR_MOD, ar_id, 0, sge_dstring_get_string(&buffer), NULL, NULL, ar);
                   lListElem_clear_changed_info(ar);
                   sge_dstring_free(&buffer);
                }
@@ -1103,22 +1100,21 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
        */
       lSetUlong(jatep, JAT_start_time, now);
       job_enroll(jep, NULL, jataskid);
-      sge_event_spool(ctx, &answer_list, now, sgeE_JATASK_MOD,
-                      jobid, jataskid, NULL, NULL, lGetString (jep, JB_session),
+      sge_event_spool(ctx, &answer_list, now, sgeE_JATASK_MOD, jobid, jataskid, NULL, NULL, session,
                       jep, jatep, NULL, true, true);
       answer_list_output(&answer_list);
       break;
    }
    case COMMIT_ST_ARRIVED:
       lSetUlong(jatep, JAT_status, JRUNNING);
-      reporting_create_job_log(NULL, now, JL_DELIVERED, MSG_QMASTER, qualified_hostname, jr, jep, jatep, NULL, MSG_LOG_DELIVERED);
+      reporting_create_job_log(NULL, now, JL_DELIVERED, MSG_QMASTER, qualified_hostname, 
+                               jr, jep, jatep, NULL, MSG_LOG_DELIVERED);
       job_enroll(jep, NULL, jataskid);
       {
          dstring buffer = DSTRING_INIT;
          /* JG: TODO: why don't we generate an event? */
          spool_write_object(&answer_list, spool_get_default_context(), jatep, 
-                            job_get_key(jobid, jataskid, NULL, &buffer), 
-                            SGE_TYPE_JATASK, job_spooling);
+                            job_get_key(jobid, jataskid, NULL, &buffer), SGE_TYPE_JATASK, job_spooling);
          answer_list_output(&answer_list);
          lListElem_clear_changed_info(jatep);
          sge_dstring_free(&buffer);
@@ -1126,75 +1122,87 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
       break;
 
    case COMMIT_ST_RESCHEDULED:
+   case COMMIT_ST_USER_RESCHEDULED:
    case COMMIT_ST_FAILED_AND_ERROR:
-      WARNING((SGE_EVENT, MSG_JOB_RESCHEDULE_UU,
-               sge_u32c(lGetUlong(jep, JB_job_number)), 
-               sge_u32c(lGetUlong(jatep, JAT_task_number))));
+      WARNING((SGE_EVENT, MSG_JOB_RESCHEDULE_UU, sge_u32c(jobid), sge_u32c(jataskid)));
 
       reporting_create_job_log(NULL, now, JL_RESTART, MSG_QMASTER, qualified_hostname, jr, jep, jatep, NULL, SGE_EVENT);
       /* JG: TODO: no accounting record created? Or somewhere else? */
       /* add a reschedule unknown list entry to all slave
          hosts where a part of that job ran */
       {
-         lListElem *granted_queue;
-         bool is_master = true;
-         lListElem *pe;
-         const char *pe_name;      
+         const char *pe_name = lGetString(jep, JB_pe);      
 
-         pe_name = lGetString(jep, JB_pe);
          if (pe_name) {
-            pe = pe_list_locate(*object_base[SGE_TYPE_PE].list, pe_name);
+            lListElem *pe = pe_list_locate(*object_base[SGE_TYPE_PE].list, pe_name);
+            lListElem *granted_queue;
+
             if (pe && lGetBool(pe, PE_control_slaves)) { 
+               bool is_master = true;
+
                for_each(granted_queue, lGetList(jatep, JAT_granted_destin_identifier_list)) { 
                   if (!is_master) {
                      lListElem *host = host_list_locate(master_exechost_list, lGetHost(granted_queue, JG_qhostname)); 
                      
-                     add_to_reschedule_unknown_list(ctx,
-                        host, 
-                        lGetUlong(jep, JB_job_number),
-                        lGetUlong(jatep, JAT_task_number),
-                        RESCHEDULE_HANDLE_JR_WAIT);
+                     add_to_reschedule_unknown_list(ctx, host, jobid, jataskid, RESCHEDULE_HANDLE_JR_WAIT);
 
-                     DPRINTF(("RU: sge_commit_job: granted_queue %s job "sge_u32"."sge_u32"\n",
-                        lGetString(granted_queue, JG_qname), 
-                        lGetUlong(jep, JB_job_number), 
-                        lGetUlong(jatep, JAT_task_number)));
+                     DPRINTF(("RU: sge_commit_job: granted_queue %s job "sge_u32"."sge_u32"\n", 
+                              lGetString(granted_queue, JG_qname), jobid, jataskid,
+                              lGetUlong(jatep, JAT_task_number)));
                   }
                   is_master = false;
                }
             }
          } else {
-            lList *granted_list = NULL;
-            lListElem *granted_queue = NULL;
-            lListElem *host = NULL;
+            lList *granted_list = lGetList(jatep, JAT_granted_destin_identifier_list);
+            lListElem *granted_queue = lFirst(granted_list);
+            lListElem *host = host_list_locate(master_exechost_list, lGetHost(granted_queue, JG_qhostname));
 
-            granted_list = lGetList(jatep, JAT_granted_destin_identifier_list);
-            granted_queue = lFirst(granted_list);
-            host = host_list_locate(master_exechost_list, lGetHost(granted_queue, JG_qhostname));
-            add_to_reschedule_unknown_list(ctx,
-                                           host, lGetUlong(jep, JB_job_number),
-                                           lGetUlong(jatep, JAT_task_number),
-                                           RESCHEDULE_SKIP_JR);
+            add_to_reschedule_unknown_list(ctx, host, jobid, jataskid, RESCHEDULE_SKIP_JR);
          }
       }
 
-      lSetUlong(jatep, JAT_status, JIDLE);
       /*
        * Preserve any potential deferred startup request
        * in JAT_state across re-initialization.
        */
+      lSetUlong(jatep, JAT_status, JIDLE);
       state = lGetUlong(jatep, JAT_state);
       state &= JDEFERRED_REQ;
-      if (mode == COMMIT_ST_RESCHEDULED) {
+      if (mode == COMMIT_ST_RESCHEDULED || mode == COMMIT_ST_USER_RESCHEDULED) {
          state |= JQUEUED|JWAITING;
       } else {
          state |= JQUEUED|JWAITING|JERROR;
       }
       lSetUlong(jatep, JAT_state, state);
 
+      /*
+       * Prepare usage lists for the next run 
+       */
       lSetList(jatep, JAT_previous_usage_list, lCopyList("name", lGetList(jatep, JAT_scaled_usage_list)));
       lSetList(jatep, JAT_scaled_usage_list, NULL);
       lSetList(jatep, JAT_reported_usage_list, NULL);
+
+      /* 
+       * Submit time will be set to the current timestamp in case a user 
+       * reschedules his own jobs. This prevents users from "stealing" cpu
+       * resources. As a result of that the rescheduled job will be put 
+       * at the end of the pending job list instead of the top.
+       *
+       * Insert at the end of the pending job list can be disabled by
+       * two qmaster params. OLD_RESCHEDULE_BEHAVIOR disables it for non-array jobs
+       * whereas OLD_RESCHEDULE_BEHAVIOR_ARRAY_JOB disables it for array job tasks.
+       */
+      if (mode == COMMIT_ST_USER_RESCHEDULED) {
+         bool is_array_job = job_is_array(jep);
+   
+         if ((is_array_job == false && mconf_get_old_reschedule_behavior() == false) ||
+             (is_array_job == true && mconf_get_old_reschedule_behavior_array_job() == false)) {
+            lSetUlong(jep, JB_submission_time, now);
+            sge_event_spool(ctx, &answer_list, now, sgeE_JOB_MOD, jobid, jataskid, 
+                            NULL, NULL, session, jep, jatep, NULL, true, true);
+         }
+      }
 
       /* sum up the usage of all pe tasks not yet deleted (e.g. tasks from 
        * exec host in unknown state). Then remove all pe tasks except the 
@@ -1204,25 +1212,19 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
          lList *pe_task_list = lGetList(jatep, JAT_task_list);
 
          if (pe_task_list != NULL) {
+            lListElem *existing_container = lGetElemStr(pe_task_list, PET_id, PE_TASK_PAST_USAGE_CONTAINER);
+            lListElem *container = pe_task_sum_past_usage_all(pe_task_list);
             lListElem *pe_task = NULL;
-            lListElem *container = NULL;
-            lListElem *existing_container = NULL;
             lListElem *next = NULL;
 
-            existing_container = lGetElemStr(pe_task_list, PET_id, PE_TASK_PAST_USAGE_CONTAINER); 
-            container = pe_task_sum_past_usage_all(pe_task_list);
+            /* the usage container is not spooled */
             if (existing_container == NULL) {
-               /* the usage container is not spooled */
-               sge_add_event( now, sgeE_PETASK_ADD, jobid, jataskid, 
-                             PE_TASK_PAST_USAGE_CONTAINER, NULL,
-                             session, container);
+               sge_add_event(now, sgeE_PETASK_ADD, jobid, jataskid, PE_TASK_PAST_USAGE_CONTAINER, 
+                             NULL, session, container);
                lListElem_clear_changed_info(container);
             } else {
-               /* the usage container is not spooled */
-               sge_add_list_event( now, sgeE_JOB_USAGE, jobid, jataskid, 
-                                  PE_TASK_PAST_USAGE_CONTAINER, NULL,
-                                  lGetString(jep, JB_session), 
-                                  lGetList(container, PET_scaled_usage));
+               sge_add_list_event(now, sgeE_JOB_USAGE, jobid, jataskid, PE_TASK_PAST_USAGE_CONTAINER, 
+                                  NULL, session, lGetList(container, PET_scaled_usage));
                lList_clear_changed_info(lGetList(container, PET_scaled_usage));
             }
 
@@ -1239,17 +1241,15 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
       sge_clear_granted_resources(ctx, jep, jatep, 1, monitor);
       ja_task_clear_finished_pe_tasks(jatep);
       job_enroll(jep, NULL, jataskid);
-      {
-         const char *session = lGetString (jep, JB_session);
-         sge_event_spool(ctx, &answer_list, now, sgeE_JATASK_MOD, 
-                         jobid, jataskid, NULL, NULL, session,
-                         jep, jatep, NULL, true, true);
-         answer_list_output(&answer_list);
-      }
+      sge_event_spool(ctx, &answer_list, now, sgeE_JATASK_MOD, jobid, jataskid, NULL, NULL, session,
+                      jep, jatep, NULL, true, true);
+      
+      answer_list_output(&answer_list);
       break;
 
    case COMMIT_ST_FINISHED_FAILED:
-      reporting_create_job_log(NULL, now, JL_FINISHED, MSG_QMASTER, qualified_hostname, jr, jep, jatep, NULL, MSG_LOG_EXITED);
+      reporting_create_job_log(NULL, now, JL_FINISHED, MSG_QMASTER, qualified_hostname, jr, jep, 
+                               jatep, NULL, MSG_LOG_EXITED);
       remove_from_reschedule_unknown_lists(ctx, jobid, jataskid);
       if (handle_zombies) {
          sge_to_zombies(jep, jatep);
@@ -1261,8 +1261,8 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
       sge_bury_job(job_spooling, sge_root, jep, jobid, jatep, spool_job, no_events);
       break;
    case COMMIT_ST_FINISHED_FAILED_EE:
-      jobid = lGetUlong(jep, JB_job_number);
-      reporting_create_job_log(NULL, now, JL_FINISHED, MSG_QMASTER, qualified_hostname, jr, jep, jatep, NULL, MSG_LOG_WAIT4SGEDEL);
+      reporting_create_job_log(NULL, now, JL_FINISHED, MSG_QMASTER, qualified_hostname, 
+                               jr, jep, jatep, NULL, MSG_LOG_WAIT4SGEDEL);
       remove_from_reschedule_unknown_lists(ctx, jobid, jataskid);
 
       lSetUlong(jatep, JAT_status, JFINISHED);
@@ -1280,27 +1280,19 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
       job_enroll(jep, NULL, jataskid);
       for_each(petask, lGetList(jatep, JAT_task_list)) {
          sge_add_list_event( now, sgeE_JOB_FINAL_USAGE, jobid,
-                            lGetUlong(jatep, JAT_task_number),
+                            jataskid,
                             lGetString(petask, PET_id), 
-                            NULL, lGetString(jep, JB_session),
+                            NULL, session,
                             lGetList(petask, PET_scaled_usage));
       }
 
-      {
-         u_long32 ja_task_id = lGetUlong(jatep, JAT_task_number);
-         const char *session = lGetString(jep, JB_session);
-         lList *usage_list = lGetList(jatep, JAT_scaled_usage_list);
-         sge_add_list_event(now, sgeE_JOB_FINAL_USAGE, jobid,
-                            ja_task_id,
-                            NULL, NULL, session, 
-                            usage_list);
-      }
+      sge_add_list_event(now, sgeE_JOB_FINAL_USAGE, jobid, jataskid,
+                            NULL, NULL, session, lGetList(jatep, JAT_scaled_usage_list));
 
       spool_transaction(&answer_list, spool_get_default_context(), STC_begin);
 
-      sge_event_spool(ctx, &answer_list, 0, sgeE_JATASK_MOD, 
-                      jobid, jataskid, NULL, NULL, session,
-                      jep, jatep, NULL, false, true);
+      sge_event_spool(ctx, &answer_list, 0, sgeE_JATASK_MOD, jobid, jataskid, NULL, NULL, 
+                      session, jep, jatep, NULL, false, true);
 
       if (job_get_not_enrolled_ja_tasks(jep)) {
          no_unlink = 1;
@@ -1318,7 +1310,7 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
          release_successor_jobs(jep);
          release_successor_jobs_ad(jep);
          if ((lGetString(jep, JB_exec_file) != NULL) && job_spooling && !JOB_TYPE_IS_BINARY(lGetUlong(jep, JB_type))) {
-            spool_delete_script(&answer_list, lGetUlong(jep, JB_job_number), jep);
+            spool_delete_script(&answer_list, jobid, jep);
          }
       }
       spool_transaction(&answer_list, spool_get_default_context(), STC_commit);
@@ -1327,10 +1319,8 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
 
    case COMMIT_ST_DEBITED_EE: /* triggered by ORT_remove_job */
    case COMMIT_ST_NO_RESOURCES: /* triggered by ORT_remove_immediate_job */
-      reporting_create_job_log(NULL, now, JL_DELETED, MSG_SCHEDD, qualified_hostname, jr, 
-                               jep, jatep, NULL, 
+      reporting_create_job_log(NULL, now, JL_DELETED, MSG_SCHEDD, qualified_hostname, jr, jep, jatep, NULL, 
                                (mode==COMMIT_ST_DEBITED_EE) ?  MSG_LOG_DELSGE : MSG_LOG_DELIMMEDIATE);
-      jobid = lGetUlong(jep, JB_job_number);
 
       if (mode == COMMIT_ST_NO_RESOURCES) {
          sge_job_finish_event(jep, jatep, jr, commit_flags, NULL); 
@@ -1339,24 +1329,16 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
       break;
    
    case COMMIT_ST_DELIVERY_FAILED: 
-             /*  The same as case COMMIT_ST_RESCHEDULED except 
-                 sge_clear_granted_resources() may not increase free slots. */
-      WARNING((SGE_EVENT, 
-               MSG_JOB_RESCHEDULE_UU, 
-               sge_u32c(lGetUlong(jep, JB_job_number)), 
-               sge_u32c(lGetUlong(jatep, JAT_task_number))));
+      /* The same as case COMMIT_ST_RESCHEDULED except sge_clear_granted_resources() may not increase free slots. */
+      WARNING((SGE_EVENT, MSG_JOB_RESCHEDULE_UU, sge_u32c(jobid), sge_u32c(jataskid)));
       reporting_create_job_log(NULL, now, JL_RESTART, MSG_QMASTER, qualified_hostname, jr, jep, jatep, NULL, SGE_EVENT);
       lSetUlong(jatep, JAT_status, JIDLE);
       lSetUlong(jatep, JAT_state, JQUEUED | JWAITING);
       sge_clear_granted_resources(ctx, jep, jatep, 0, monitor);
       job_enroll(jep, NULL, jataskid);
-      {
-         const char *session = lGetString (jep, JB_session);
-         sge_event_spool(ctx, &answer_list, now, sgeE_JATASK_MOD, 
-                         jobid, jataskid, NULL, NULL, session,
-                         jep, jatep, NULL, true, false);
-         answer_list_output(&answer_list);
-      }
+      sge_event_spool(ctx, &answer_list, now, sgeE_JATASK_MOD, jobid, jataskid, 
+                      NULL, NULL, session, jep, jatep, NULL, true, false);
+      answer_list_output(&answer_list);
       break;
    }
 

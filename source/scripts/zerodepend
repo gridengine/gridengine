@@ -59,6 +59,7 @@ files=" \
        libs/japi/japi_dependencies \
        libs/sgeobj/sgeobj_dependencies  \
        libs/gdi/gdi_dependencies  \
+       libs/ijs/ijs_dependencies  \
        libs/evc/evc_dependencies  \
        libs/evm/evm_dependencies  \
        libs/mir/mir_dependencies  \
@@ -72,11 +73,9 @@ files=" \
        libs/sched/sched_dependencies  \
        libs/uti/uti_dependencies  \
        libs/juti/juti_dependencies  \
-       libs/rmon/rmon_dependencies  \
        libs/comm/commlib_dependencies  \
        libs/comm/lists/commlistslib_dependencies \
        libs/comm/examples/commexamples_dependencies \
-       libs/lck/lck_dependencies  \
        libs/juti/juti_dependencies  \
        utilbin/utilbin_dependencies \
        security/coshepherd/coshepherd_dependencies \

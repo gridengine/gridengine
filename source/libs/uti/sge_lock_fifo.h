@@ -5,7 +5,7 @@
 
 #include "basis_types.h"
 
-#include "lck/sge_lock.h"
+#include "uti/sge_lock.h"
 
 typedef struct sge_fifo_elem_t__ {
    /*

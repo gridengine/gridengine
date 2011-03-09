@@ -35,7 +35,8 @@
 #include <stdio.h>
 
 #include "test_sge_lock_main.h"
-#include "lck/sge_lock.h"
+
+#include "uti/sge_lock.h"
 #include "uti/sge_time.h"
 
 #define THREAD_COUNT 8

@@ -36,8 +36,7 @@
 #include <string.h>
 #include <time.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_time.h"
 #include "uti/sge_language.h"
 #include "uti/sge_stdlib.h"

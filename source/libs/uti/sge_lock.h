@@ -1,3 +1,6 @@
+#ifndef _SGE_LOCK_H_
+#define _SGE_LOCK_H_
+
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
  * 
@@ -30,88 +33,65 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "lck/test_sge_lock_main.h"
+#include "basis_types.h"
+#include "uti/sge_rmon.h"
 
-#include <unistd.h>
-#include <stdio.h>
-#include "lck/sge_lock.h"
+#if 0
+#define SGE_DEBUG_LOCK_TIME 
+#endif
 
+#if 1
+#define SGE_USE_LOCK_FIFO
+#endif
 
-static void *thread_function_1(void *anArg);
-static void *thread_function_2(void *anArg);
-static void lock_recursive(void);
+#if defined(LINUX)
+#undef LOCK_READ
+#undef LOCK_WRITE
+#endif
 
+typedef enum {
+   LOCK_READ  = 1, /* shared  */
+   LOCK_WRITE = 2  /* exclusive */
+} sge_lockmode_t;
 
-int get_thrd_demand(void)
-{
-   long p = 2;  /* min num of threads */
+typedef u_long32 sge_locker_t;
 
-   return (int)p;
+typedef enum {
+   /* 
+    * global lock 
+    */
+   LOCK_GLOBAL  = 0, 
+
+   LOCK_MASTER_CONF = 1,
+
+   NUM_OF_LOCK_TYPES = 2
+} sge_locktype_t;
+
+void 
+sge_lock(sge_locktype_t aType, sge_lockmode_t aMode, const char *func, sge_locker_t anID);
+
+void 
+sge_unlock(sge_locktype_t aType, sge_lockmode_t aMode, const char *func, sge_locker_t anID);
+
+sge_locker_t 
+sge_locker_id(void);
+
+#if defined(SGE_LOCK)
+#error "SGE_LOCK already defined!"
+#endif
+
+#define SGE_LOCK(type, mode) \
+{ \
+   sge_lock(type, mode, SGE_FUNC, sge_locker_id()); \
 }
 
-void *(*get_thrd_func(void))(void *anArg)
-{
-   static int i = 0;
+#if defined(SGE_UNLOCK)
+#error "SGE_UNLOCK already defined!"
+#endif
 
-   return ((i++ % 2) ? thread_function_1 : thread_function_2) ;
+#define SGE_UNLOCK(type, mode) \
+{ \
+   sge_unlock(type, mode, SGE_FUNC, sge_locker_id()); \
 }
 
-void *get_thrd_func_arg(void)
-{
-   return NULL;
-}
-
-static void *thread_function_1(void *anArg)
-{
-   DENTER(TOP_LAYER, "thread_function_1");
-
-   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
-
-   sleep(3);
-
-   lock_recursive();
-
-   SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-
-   DEXIT;
-   return (void *)NULL;
-}
-
-static void lock_recursive(void)
-{
-   DENTER(TOP_LAYER, "lock_recursive");
-
-   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
-
-   sleep(15);
-
-   SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-
-   DEXIT;
-   return;
-}
-
-static void *thread_function_2(void *anArg)
-{
-   DENTER(TOP_LAYER, "thread_function_2");
-
-   sleep(6);
-
-   SGE_LOCK(LOCK_GLOBAL, LOCK_WRITE);
-
-   sleep(2);
-
-   SGE_UNLOCK(LOCK_GLOBAL, LOCK_WRITE);
-
-   DEXIT;
-   return (void *)NULL;
-} /* thread_function_2 */
-
-int validate(int thread_count) {
-   return 0;
-}
-
-void set_thread_count(int count) 
-{
-   return;
-}
+#endif /* _SGE_LOCK_H_ */

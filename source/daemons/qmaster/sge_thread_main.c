@@ -33,8 +33,7 @@
 #include <signal.h>
 #include <fcntl.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_prog.h"
 #include "uti/sge_log.h"
 #include "uti/setup_path.h"

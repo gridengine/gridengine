@@ -39,10 +39,9 @@
 #include <mcheck.h>
 #endif
 
-#include "rmon/sgermon.h"
-
 #include "cull/cull.h"
 
+#include "uti/sge_rmon.h"
 #include "uti/sge_stdlib.h"
 #include "uti/sge_parse_num_par.h"
 #include "uti/sge_log.h"
@@ -53,10 +52,9 @@
 #include "uti/sge_time.h"
 #include "uti/sge_profiling.h"
 #include "uti/config_file.h"
+#include "uti/sge_lock.h"
 
 #include "comm/commlib.h"
-
-#include "lck/sge_lock.h"
 
 #include "gdi/sge_gdi.h"
 
@@ -162,6 +160,8 @@ static bool prof_execd_thrd = false;
 static u_long32 monitor_time = 0;
 static bool enable_reschedule_kill = false;
 static bool enable_reschedule_slave = false;
+static bool old_reschedule_behavior = false;
+static bool old_reschedule_behavior_array_job = false;
 
 #ifdef LINUX
 static bool enable_mtrace = false;
@@ -676,6 +676,8 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
       max_job_deletion_time = 3;
       enable_reschedule_kill = false;
       enable_reschedule_slave = false;
+      old_reschedule_behavior = false;
+      old_reschedule_behavior_array_job = false;
       jsv_threshold = 5000;
       jsv_timeout= 10;
 
@@ -775,6 +777,12 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
             continue;
          }
          if (parse_bool_param(s, "ENABLE_RESCHEDULE_SLAVE", &enable_reschedule_slave)) {
+            continue;
+         }
+         if (parse_bool_param(s, "OLD_RESCHEDULE_BEHAVIOR", &old_reschedule_behavior)) {
+            continue;
+         }
+         if (parse_bool_param(s, "OLD_RESCHEDULE_BEHAVIOR_ARRAY_JOB", &old_reschedule_behavior_array_job)) {
             continue;
          }
          if (parse_int_param(s, "jsv_threshold", &jsv_threshold, TYPE_TIM)) {
@@ -2077,6 +2085,28 @@ bool mconf_get_enable_reschedule_slave(void) {
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
 
    ret = enable_reschedule_slave;
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+}
+
+bool mconf_get_old_reschedule_behavior(void) {
+   bool ret;
+
+   DENTER(BASIS_LAYER, "mconf_get_old_reschedule_behavior");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   ret = old_reschedule_behavior;
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+}
+
+bool mconf_get_old_reschedule_behavior_array_job(void) {
+   bool ret;
+
+   DENTER(BASIS_LAYER, "mconf_get_old_reschedule_behavior_array_job");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   ret = old_reschedule_behavior_array_job;
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
    DRETURN(ret);
 }

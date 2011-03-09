@@ -34,8 +34,7 @@
 #include <limits.h>
 #include <fnmatch.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_signal.h"
 #include "uti/sge_prog.h"
 #include "uti/sge_log.h"
@@ -43,6 +42,7 @@
 #include "uti/sge_hostname.h"
 #include "uti/sge_parse_num_par.h"
 #include "uti/sge_string.h"
+#include "uti/sge_lock.h"
 
 #include "sgeobj/sge_ja_task.h"
 #include "sgeobj/sge_str.h"
@@ -65,8 +65,6 @@
 #include "gdi/sge_gdi2.h"
 
 #include "comm/commlib.h"
-
-#include "lck/sge_lock.h"
 
 #include "spool/sge_spooling.h"
 

@@ -47,8 +47,7 @@
 #include <arpa/inet.h>
 #endif
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_hostname.h"
 #include "uti/sge_sl.h"
 #include "uti/sge_profiling.h"

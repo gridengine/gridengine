@@ -37,8 +37,7 @@
 
 #ifndef NO_JNI
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_prog.h"
 #include "uti/sge_log.h"
 #include "uti/sge_string.h"
@@ -48,14 +47,13 @@
 #include "uti/sge_bootstrap.h"
 #include "uti/sge_profiling.h"
 #include "uti/setup_path.h"
+#include "uti/sge_mtutil.h"
 
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_conf.h"
 #include "sgeobj/sge_manop.h"
 
 #include "gdi/sge_security.h"
-
-#include "lck/sge_mtutil.h"
 
 #include "comm/cl_commlib.h"
 

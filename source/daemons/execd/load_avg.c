@@ -34,7 +34,7 @@
 #include <string.h>
 #include <float.h>
 
-#include "rmon/sgermon.h"
+#include "uti/sge_rmon.h"
 #include "uti/sge_time.h"
 #include "uti/sge_prog.h"
 #include "uti/sge_bootstrap.h"

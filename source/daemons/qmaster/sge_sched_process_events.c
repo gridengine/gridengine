@@ -40,10 +40,9 @@
 #include "basis_types.h" 
 #include "sge.h"
 
-/* lib/ */
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_unistd.h"
+#include "uti/sge_mtutil.h"
 
 #include "sgeobj/sge_conf.h"
 #include "sgeobj/sge_report.h"
@@ -53,7 +52,6 @@
 #include "sched/sge_orders.h"
 #include "sched/schedd_message.h"
 
-#include "lck/sge_mtutil.h"
 #include "mir/sge_mirror.h"
 #include "evc/sge_event_client.h"
 

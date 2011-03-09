@@ -38,15 +38,13 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_log.h"
 #include "uti/sge_time.h"
 #include "uti/sge_dstring.h"
 #include "uti/sge_prog.h"
 #include "uti/sge_uidgid.h"
-
-#include "lck/sge_mtutil.h"
+#include "uti/sge_mtutil.h"
 
 #include "gdi/sge_gdi_ctx.h"
 #include "uti/sge_string.h"

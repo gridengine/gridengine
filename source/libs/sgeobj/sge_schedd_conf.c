@@ -33,17 +33,16 @@
 #include <string.h>
 #include <pthread.h>
 
-#include "rmon/sgermon.h"
 #include "cull/cull.h"
 
+#include "uti/sge_rmon.h"
 #include "uti/sge_log.h"
 #include "uti/sge_stdio.h"
 #include "uti/sge_stdlib.h"
 #include "uti/sge_string.h"
 #include "uti/sge_parse_num_par.h"
-
-#include "lck/sge_lock.h"
-#include "lck/sge_mtutil.h"
+#include "uti/sge_lock.h"
+#include "uti/sge_mtutil.h"
 
 #include "sched/msg_schedd.h"
 

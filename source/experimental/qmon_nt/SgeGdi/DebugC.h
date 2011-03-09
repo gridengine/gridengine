@@ -31,8 +31,8 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-#include "sgermon.h"
-#include "rmon_monitoring_level.h"
+#include "sge_rmon.h"
+#include "sge_rmon_monitoring_level.h"
 
 #ifdef __cplusplus
 extern "C" {

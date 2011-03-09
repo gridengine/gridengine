@@ -30,12 +30,11 @@
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include "rmon/sgermon.h"
-
-#include "sgeobj/sge_answer.h"
+#include "uti/sge_rmon.h"
 
 #include "gdi/sge_gdi2.h"
 
+#include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_ack.h"
 
 int pack_ack(sge_pack_buffer *pb, u_long32 type, u_long32 id, u_long32 id2, const char *str)

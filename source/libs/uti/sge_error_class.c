@@ -33,8 +33,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_error_class.h"
 #include "uti/sge_string.h"
 

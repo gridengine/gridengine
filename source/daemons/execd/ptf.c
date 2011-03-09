@@ -89,30 +89,31 @@
 #   include <sys/procfs.h>
 #endif
 
-#include "sge_all_listsL.h"
-#include "commlib.h"
-
-#include "ptf.h"
+#include "comm/commlib.h"
 
 #include "uti/sge_stdio.h"
-#include "sgermon.h"
-#include "sge_time.h"
-#include "sge_log.h"
+#include "uti/sge_rmon.h"
+#include "uti/sge_time.h"
+#include "uti/sge_log.h"
+#include "uti/sge_uidgid.h"
+#include "uti/sge_language.h"
+
+#include "sgeobj/sge_all_listsL.h"
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_job.h"
+#include "sgeobj/sge_pe_task.h"
+#include "sgeobj/sge_ja_task.h"
+#include "sgeobj/sge_usage.h"
+
+#include "ptf.h"
 #include "sge.h"
 #include "basis_types.h"
-#include "sge_language.h"
-#include "sge_conf.h"
 #include "msg_common.h"
 #include "msg_execd.h"
 #include "sgedefs.h"
 #include "exec_ifm.h"
 #include "pdc.h"
-#include "sge_feature.h"
-#include "sge_job.h"
-#include "sge_uidgid.h"
-#include "sge_pe_task.h"
-#include "sge_ja_task.h"
-#include "sgeobj/sge_usage.h"
 
 /*
  *

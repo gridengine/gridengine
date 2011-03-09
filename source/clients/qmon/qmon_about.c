@@ -38,8 +38,7 @@
 #include "qmon_about.h"
 #include "qmon_appres.h"
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_dstring.h"
 #include "uti/sge_prog.h"
 

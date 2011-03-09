@@ -33,12 +33,12 @@
 #include <sys/stat.h>
 #include <errno.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/setup_path.h"
 #include "uti/sge_unistd.h"
 #include "uti/sge_profiling.h"
 #include "uti/sge_prog.h"
+#include "uti/sge_mtutil.h"
 
 #include "sgeobj/sge_all_listsL.h"
 #include "sgeobj/sge_answer.h"
@@ -48,8 +48,6 @@
 
 #include "japi/japi.h"
 #include "japi/japiP.h"
-
-#include "lck/sge_mtutil.h"
 
 #include "gdi/sge_security.h"
 #include "gdi/sge_gdi_ctx.h"

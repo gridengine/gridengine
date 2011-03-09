@@ -36,16 +36,14 @@
 #  include <sys/stream.h>
 #endif  
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_unistd.h"
 #include "uti/sge_prog.h"
 #include "uti/sge_log.h"
 #include "uti/sge_profiling.h"
 #include "uti/sge_time.h"
 #include "uti/sge_thread_ctrl.h"
-
-#include "lck/sge_mtutil.h"
+#include "uti/sge_mtutil.h"
 
 #include "sgeobj/sge_answer.h"
 #include "sgeobj/sge_conf.h"

@@ -38,14 +38,12 @@
 #include <ctype.h>
 #include <pthread.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_string.h"
 #include "uti/sge_log.h"
 #include "uti/sge_binding_hlp.h"
 #include "uti/msg_utilib.h" 
-
-#include "lck/sge_mtutil.h"
+#include "uti/sge_mtutil.h"
 
 #if defined(BINDING_SOLARIS)
 #  include <sys/processor.h>

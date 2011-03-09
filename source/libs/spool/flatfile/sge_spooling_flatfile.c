@@ -34,38 +34,34 @@
 #include <errno.h>
 #include <string.h>
 
-#include "setup_path.h"
-#include "sgermon.h"
-#include "sge_log.h"
+#include "uti/setup_path.h"
+#include "uti/sge_rmon.h"
+#include "uti/sge_log.h"
+#include "uti/sge_stdio.h"
+#include "uti/sge_string.h"
+#include "uti/sge_dstring.h"
+#include "uti/sge_io.h"
 
-#include "sge_stdio.h"
-#include "sge_string.h"
-#include "sge_dstring.h"
-#include "spool/sge_dirent.h"
-#include "sge_feature.h"
-
-#include "sge_answer.h"
-
-#include "sge_conf.h"
-#include "sge_str.h"
-#include "sge_io.h"
-#include "sge_str.h"
-#include "sge_manop.h"
-
+#include "sgeobj/sge_feature.h"
+#include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_conf.h"
+#include "sgeobj/sge_str.h"
+#include "sgeobj/sge_str.h"
+#include "sgeobj/sge_manop.h"
 #include "sgeobj/sge_job.h"
 #include "sgeobj/sge_qinstance.h"
 #include "sgeobj/sge_cqueue.h"
 
 /* includes for old job spooling */
-#include "spool/classic/read_write_job.h"
-
-#include "msg_common.h"
+#include "spool/sge_dirent.h"
 #include "spool/msg_spoollib.h"
+#include "spool/classic/read_write_job.h"
 #include "spool/flatfile/msg_spoollib_flatfile.h"
-
 #include "spool/flatfile/sge_flatfile.h"
 #include "spool/flatfile/sge_spooling_flatfile.h"
 #include "spool/flatfile/sge_flatfile_obj.h"
+
+#include "msg_common.h"
 
 static const char *spooling_method = "classic";
 

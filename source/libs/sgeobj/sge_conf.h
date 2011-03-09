@@ -102,7 +102,8 @@ u_long32 mconf_get_auto_user_delete_time(void);
 char* mconf_get_delegated_file_staging(void);
 void mconf_set_new_config(bool new_config);
 bool mconf_is_new_config(void);
-
+bool mconf_get_old_reschedule_behavior(void);
+bool mconf_get_old_reschedule_behavior_array_job(void);
 
 /* params */
 bool mconf_is_monitor_message(void);

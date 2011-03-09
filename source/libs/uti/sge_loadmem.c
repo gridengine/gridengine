@@ -37,8 +37,7 @@
 #include <errno.h>
 #endif
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_stdio.h"
 #include "uti/sge_os.h"
 #include "uti/sge_loadmem.h"

@@ -41,14 +41,12 @@
 #include <sys/ioctl.h>  /* 44BSD requires this too */
 #endif
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_arch.h"
 #include "uti/config_file.h"
 #include "uti/sge_string.h"
 #include "uti/sge_log.h"
-
-#include "lck/sge_mtutil.h"
+#include "uti/sge_mtutil.h"
 
 #include "gdi/sge_security.h"
 #include "gdi/msg_gdilib.h"

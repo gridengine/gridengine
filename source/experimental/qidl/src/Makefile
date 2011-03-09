@@ -199,7 +199,7 @@ include $(QIDLSDIR)/object.rules
 
 #---------------------------------------------------------------------
 ALLLIBS     = $(SCHEDLIB) $(GDILIB) $(KRBLIBS) \
-              $(CULLLIB) $(COMMLIB) $(PWLIB) $(UTILIB) $(RMONLIB) 
+              $(CULLLIB) $(COMMLIB) $(PWLIB) $(UTILIB)
 QCMASTEROBJS= $(CORBASRC:.cpp=.o) $(QMASTERSRC:.c=.o) $(ALLLIBS)
 #---------------------------------------------------------------------
 # Targets of all: rule
@@ -327,7 +327,7 @@ client: client.o CosEventComm.o CosEventComm_skel.o \
                 CosEventChannelAdmin.o sge_io.o elem_codes.o \
                 basic_types.o $(OBJECTOBJ) \
                 Master.o $(OBLIB) \
-                $(CULLLIB) $(GDILIB) $(UTILIB) $(RMONLIB) $(LIBS) $(PTHRDSLIB)
+                $(CULLLIB) $(GDILIB) $(UTILIB) $(LIBS) $(PTHRDSLIB)
 
 registerClient: registerClient.o
 		$(CXX) -o $@ $(LFLAGS) registerClient.o $(OBLIB) $(LIBS)

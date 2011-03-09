@@ -41,7 +41,7 @@
 #endif
 
 #include "sge.h"
-#include "rmon/sgermon.h"
+#include "uti/sge_rmon.h"
 #include "uti/sge_string.h"
 #include "uti/sge_dstring.h"
 #include "uti/sge_varargs.h"
@@ -57,12 +57,6 @@
 typedef const char* (*sge_dstring_copy_append_f)(dstring *sb, const char *a);
 
 static const char*
-sge_dstring_vsprintf_copy_append(dstring *sb,
-                                 sge_dstring_copy_append_f function,
-                                 const char *format,
-                                 va_list ap);
-
-static const char* 
 sge_dstring_vsprintf_copy_append(dstring *sb,
                                  sge_dstring_copy_append_f function,
                                  const char *format,

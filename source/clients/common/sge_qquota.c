@@ -35,9 +35,7 @@
 #include <math.h>
 #include <fnmatch.h>
 
-#include "rmon/sgermon.h"
-
-
+#include "uti/sge_rmon.h"
 #include "uti/setup_path.h"
 #include "uti/sge_hostname.h"
 #include "uti/sge_prog.h"

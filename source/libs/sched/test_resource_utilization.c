@@ -32,7 +32,7 @@
 
 #include <stdio.h>
 
-#include "rmon/sgermon.h"
+#include "uti/sge_rmon.h"
 
 #include "sgeobj/sge_centry.h"
 #include "sgeobj/sge_all_listsL.h"

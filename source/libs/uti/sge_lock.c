@@ -34,14 +34,14 @@
 #include <pthread.h>
 #include <string.h>
 #include <float.h>
-
-#include "lck/sge_lock.h"
-#include "lck/sge_lock_fifo.h"
-#include "lck/sge_mtutil.h"
-#include "lck/msg_lcklib.h"
-
 #include <stdio.h>
-#include "sgermon.h"
+
+#include "uti/sge_rmon.h"
+#include "uti/sge_lock.h"
+#include "uti/sge_lock_fifo.h"
+#include "uti/sge_mtutil.h"
+#include "uti/msg_lcklib.h"
+
 
 #ifdef SGE_DEBUG_LOCK_TIME
 static double reader_min[NUM_OF_LOCK_TYPES] = {DBL_MAX, DBL_MAX};

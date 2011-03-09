@@ -43,8 +43,7 @@
 #   include <sys/schedctl.h>
 #endif
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_bootstrap.h"
 #include "uti/sge_log.h"
 #include "uti/sge_time.h"
@@ -333,7 +332,8 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
    bool csp_mode = false;
    sigset_t sigset, sigset_oset;
    struct passwd pw_struct;
-   char buffer[20480];
+   char *pw_buffer;
+   size_t pw_buffer_size;
 
    int write_osjob_id = 1;
 
@@ -386,11 +386,14 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
 
       master_q = responsible_queue(jep, jatep, petep);
       SGE_ASSERT((master_q));
-      pw = sge_getpwnam_r(lGetString(jep, JB_owner), &pw_struct, buffer, sizeof(buffer));
+
+      pw_buffer_size = get_pw_buffer_size();
+      pw_buffer = sge_malloc(pw_buffer_size);
+      pw = sge_getpwnam_r(lGetString(jep, JB_owner), &pw_struct, pw_buffer, pw_buffer_size);
       if (!pw) {
          snprintf(err_str, err_length, MSG_SYSTEM_GETPWNAMFAILED_S, lGetString(jep, JB_owner));
-         DEXIT;
-         return -3;        /* error only relevant for this user */
+         sge_free(&pw_buffer);
+         DRETURN(-3); /* error only relevant for this user */
       }
 
       sge_get_active_job_file_path(&active_dir, job_id, 
@@ -405,21 +408,21 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
          if (!(sge_make_tmpdir(master_q, job_id, ja_task_id, 
              pw->pw_uid, pw->pw_gid, tmpdir))) {
             snprintf(err_str, err_length, SFNMAX, MSG_SYSTEM_CANTMAKETMPDIR);
-            DEXIT;
-            return -2;
+            sge_free(&pw_buffer);
+            DRETURN(-2);
          }
       } else {
          SGE_STRUCT_STAT statbuf;
          if(!(sge_get_tmpdir(master_q, job_id, ja_task_id, tmpdir))) {
             snprintf(err_str, err_length, SFNMAX, MSG_SYSTEM_CANTGETTMPDIR);
-            DEXIT;
-            return -2;
+            sge_free(&pw_buffer);
+            DRETURN(-2);
          }
 
          if (SGE_STAT(tmpdir, &statbuf)) {
             sprintf(err_str, MSG_SYSTEM_CANTOPENTMPDIR_S, tmpdir);
-            DEXIT;
-            return -2;
+            sge_free(&pw_buffer);
+            DRETURN(-2);
          }
       }
 
@@ -519,8 +522,8 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
          if (!fp) {
             snprintf(err_str, err_length, MSG_FILE_NOOPEN_SS,  hostfilename, strerror(errno));
             sge_free(&rankfileinput);
-            DEXIT;
-            return -2;
+            sge_free(&pw_buffer);
+            DRETURN(-2);
          }
 
          /* 
@@ -586,8 +589,8 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
       fp = fopen(fname, "w");
       if (!fp) {
          snprintf(err_str, err_length, MSG_FILE_NOOPEN_SS, fname, strerror(errno));
-         DEXIT;
-         return -2;        /* general */
+         sge_free(&pw_buffer);
+         DRETURN(-2);
       }
       
 
@@ -634,9 +637,11 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
          cwd = sge_dstring_get_string(&cwd_out);
          var_list_set_string(&environmentList, "PWD", cwd);
       } else {
-      /* 4.) if cwd not set in job: take users home dir */
-         cwd = pw->pw_dir;
-      }   
+         /* 4.) if cwd not set in job: take users home dir
+          *     copy the string as we want to free the pw buffer later
+          */
+         cwd = sge_dstring_copy_string(&cwd_out, pw->pw_dir);
+      }
 
       {
          const char *reqname = petep == NULL ? lGetString(jep, JB_job_name) : lGetString(petep, PET_name);
@@ -651,6 +656,9 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
       var_list_set_string(&environmentList, "SHELL", pw->pw_shell);
       var_list_set_string(&environmentList, "USER", pw->pw_name);
       var_list_set_string(&environmentList, "LOGNAME", pw->pw_name);
+
+      /* do not access pw->* from here on! */
+      sge_free(&pw_buffer);
 
       if (sge_binding_environment != NULL) {
          var_list_set_string(&environmentList, "SGE_BINDING", sge_binding_environment);

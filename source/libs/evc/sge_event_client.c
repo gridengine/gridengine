@@ -35,16 +35,14 @@
 #include <string.h>
 #include <strings.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_unistd.h"
 #include "uti/sge_prog.h"
 #include "uti/sge_profiling.h"
 #include "uti/sge_log.h"
 #include "uti/sge_time.h"
 #include "uti/sge_error_class.h"
-
-#include "lck/sge_mtutil.h"
+#include "uti/sge_mtutil.h"
 
 #include "comm/commlib.h"
 #include "comm/commproc.h"

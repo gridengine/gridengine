@@ -40,8 +40,7 @@
 #include <string.h>
 #include <time.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/config_file.h"
 #include "uti/sge_dstring.h"
 #include "uti/sge_log.h"

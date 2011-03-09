@@ -1199,6 +1199,22 @@ The threshold of a JSV is measured as the time it takes to perform a server job 
 greater than the user defined value, it will cause logging to appear in the qmaster messages file at the INFO 
 level. By setting this value to 0, all jobs will be logged in the qmaster messages file. This value is specified
 in milliseconds and has a default value of 5000.
+.IP "\fIOLD_RESCHEDULE_BEHAVIOR\fp
+Beginning with version 8.0.0 of Univa Grid Engine the scheduling behavior changed
+for jobs that are rescheduled by users. Rescheduled jobs will not be put at the
+beginning of the pending job list anymore. The submit time of those jobs is set
+to the end time of the previous run. Due to that those rescheduled jobs will be 
+appended at the end of the pending job list as if a new job would have been 
+submitted. To achive the old behaviour the paramter \fIOLD_RESCHEDULE_BEHAVIOR\fP
+has to be set. Please note that this parameter is declared as deprecated.
+So it might be removed with next minor release.
+.IP "\fIOLD_RESCHEDULE_BEHAVIOR_ARRAY_JOB\fp
+Beginning with version 8.0.0 of Univa Grid Engine the scheduling behavior changed
+for array job tasks that are rescheduled by users. As soon as a array job task 
+gets scheduled all remaining pending tasks of that job will be put at the end of 
+the pending job list. To achive the old scheduling behavior the paramter 
+\fIOLD_RESCHEDULE_BEHAVIOR_ARRAY_JOB\fP has to be set. Please note that this 
+parameter is declared as deprecated. So it might be removed with next minor release.
 .PP
 Changing \fBqmaster_params\fP will take immediate effect, except gdi_timeout, gdi_retries, cl_ping, these
 will take effect only for new connections.

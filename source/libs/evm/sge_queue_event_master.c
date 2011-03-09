@@ -31,7 +31,8 @@
 /*___INFO__MARK_END__*/
 
 #include "sge.h"
-#include "rmon/sgermon.h"
+
+#include "uti/sge_rmon.h"
 
 #include "sgeobj/sge_cqueue.h"
 #include "sgeobj/sge_event.h"

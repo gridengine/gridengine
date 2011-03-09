@@ -39,7 +39,7 @@
 
 /* REMOTE MONITORING SUPPORT ? */
 /* #define SGE_COMPILE_DEBUG */
-#include "rmon/sgermon.h"
+#include "uti/sge_rmon.h"
 
 /* THIS ARE ALL PUBLIC LIST LIB HEADERS, YOU'LL NEED IT */
 #include "cull/cull.h"

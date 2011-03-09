@@ -31,14 +31,14 @@
 /*___INFO__MARK_END__*/
 #include <string.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_parse_num_par.h"
 #include "uti/sge_log.h"
 #include "uti/sge_time.h"
 #include "uti/sge_string.h"
 #include "uti/sge_hostname.h"
 #include "uti/sge_prog.h"
+#include "uti/sge_lock.h"
 
 #include "sgeobj/sge_object.h"
 #include "sgeobj/sge_ja_task.h"
@@ -53,8 +53,6 @@
 #include "sgeobj/sge_cqueue.h"
 
 #include "spool/sge_spooling.h"
-
-#include "lck/sge_lock.h"
 
 #include "sge.h"
 #include "basis_types.h"
@@ -586,7 +584,7 @@ int reschedule_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep, l
                     lGetString(first_granted_queue, JG_qname));
          sge_job_exit(ctx, pseudo_jr, jep, this_jatep, monitor);
          lFreeElem(&pseudo_jr);
-   }
+      }
    }
 
    DRETURN(ret);

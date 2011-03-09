@@ -32,11 +32,10 @@
 
 #include <string.h>
 
-#include "rmon/sgermon.h"
+#include "uti/sge_rmon.h"
+#include "uti/sge_hostname.h"
 
 #include "cull/cull.h"
-
-#include "uti/sge_hostname.h"
 
 #include "sgeobj/sge_pe.h"
 #include "sgeobj/sge_job.h"

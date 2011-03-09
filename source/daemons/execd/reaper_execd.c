@@ -42,8 +42,7 @@
 #include <sys/wait.h>
 #include <grp.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_string.h"
 #include "uti/sge_afsutil.h"
 #include "uti/sge_parse_num_par.h"

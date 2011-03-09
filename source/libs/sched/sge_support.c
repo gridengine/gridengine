@@ -43,12 +43,11 @@
 #   define NO_SGE_COMPILE_DEBUG
 #endif
 
-#include "rmon/sgermon.h"
-
-#include "comm/commlib.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_prog.h"
 #include "uti/sge_time.h"
+
+#include "comm/commlib.h"
 
 #include "sgeobj/sge_schedd_conf.h"
 #include "sgeobj/sge_usage.h"

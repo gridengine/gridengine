@@ -35,8 +35,7 @@
 #include <limits.h>
 #include <ctype.h>
 
-#include "rmon/sgermon.h"
-
+#include "uti/sge_rmon.h"
 #include "uti/sge_stdlib.h"
 #include "uti/sge_stdio.h"
 #include "uti/sge_time.h"
@@ -48,6 +47,8 @@
 #include "uti/sge_profiling.h"
 #include "uti/sge_bootstrap.h"
 #include "uti/sge_string.h"
+#include "uti/sge_lock.h"
+#include "uti/sge_mtutil.h"
 
 #include "sgeobj/sge_str.h"
 #include "sgeobj/sge_conf.h"
@@ -87,9 +88,6 @@
 #include "sched/sge_job_schedd.h"
 #include "sched/schedd_message.h"
 #include "sched/sge_schedd_text.h"
-
-#include "lck/sge_lock.h"
-#include "lck/sge_mtutil.h"
 
 #include "gdi/sge_gdi2.h"
 

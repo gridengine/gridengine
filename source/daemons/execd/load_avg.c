@@ -654,13 +654,14 @@ static int sge_get_cores(const char* qualified_hostname, lList **lpp) {
 *
 *******************************************************************************/
 
-static int sge_get_hwthreads(const char* qualified_hostname, lList **lpp) {
+static int sge_get_hwthreads(const char* qualified_hostname, lList **lpp)
+{
    int hwthreads = 0;
    DENTER(TOP_LAYER, "sge_get_hwthreads");
 
-   /* get the total amount of cores */
+   /* get the total amount of threads */
    hwthreads = get_execd_amount_of_threads();
-   /* append the amount of cores to the list */
+   /* append the amount of threads to the list */
    sge_add_int2load_report(lpp, LOAD_ATTR_THREADS, hwthreads, qualified_hostname);
 
    DRETURN(0);

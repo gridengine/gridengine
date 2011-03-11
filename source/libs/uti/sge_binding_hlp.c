@@ -324,7 +324,7 @@ bool _has_core_binding(dstring* error)
 *     int - Total amount of harware supported threads the system supports.
 *
 *  NOTES
-*     MT-NOTE: get_total_amount_of_plpa_cores() is MT safe
+*     MT-NOTE: get_total_amount_of_plpa_threads() is MT safe
 *
 *******************************************************************************/
 int get_total_amount_of_plpa_threads() {

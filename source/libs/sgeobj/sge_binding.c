@@ -186,7 +186,7 @@ int get_execd_amount_of_threads() {
 *     int get_execd_amount_of_cores() 
 *
 *  FUNCTION
-*     Retrieves the total amount of cores the current host have.
+*     Retrieves the total amount of cores the current host has.
 *
 *  RESULT
 *     int - The amount of cores the current host has. 

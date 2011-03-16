@@ -8,6 +8,11 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+EB-2011-03-16-0: Bugfix:      JSV changed default of boolean
+                              changed help output of qsub
+                 Issue:       GE-3311, GE-3323
+                 Review:      JG
+
 JG-2011-03-15-0: Enhancem.:   Updated version and branding of man pages.
                  Issue:       TS-355
                  Review:      DG
@@ -31,7 +36,7 @@ EB-2011-03-04-0: Bugfix:      - changed position in pending job list for
                                 user rescheduled jobs (exit99, qmod -rj)
                               - added two new qmaster_params
                  Issue:       GE-3307
-                 Review       JG (GE-9)
+                 Review:      JG (GE-9)
 
 JG-2011-03-04-0: Bugfix:      scheduler messages are generated even when they
                               are not needed
@@ -87,7 +92,6 @@ DG-2011-02-24-0: Bugfix:      Fixed -binding parsing bug and introduced MSG_
 
 EB-2011-02-22-0: Enhancem:    - changed arch script so that Snow Leopard will be
                                 recognized as darwin-x64 when latest path is
-
                                 installed
                               - changed JSV script so that it does not fork
                                 processes for parsing related things

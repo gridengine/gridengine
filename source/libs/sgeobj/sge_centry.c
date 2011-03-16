@@ -61,6 +61,7 @@
 #include "sgeobj/msg_sgeobjlib.h"
 
 #include "sge.h"
+#include "basis_types.h"
 #include "msg_common.h"
 
 #define CENTRY_LAYER BASIS_LAYER
@@ -828,9 +829,6 @@ centry_list_append_to_dstring(const lList *this_list, dstring *string)
          sge_dstring_sprintf_append(string, "%s=", lGetString(elem, CE_name));
          if (lGetString(elem, CE_stringval) != NULL) {
             sge_dstring_append(string, lGetString(elem, CE_stringval));
-         } else {
-            sge_dstring_sprintf_append(string, "%f", 
-                                       lGetDouble(elem, CE_doubleval));
          }
          printed = true;
       }
@@ -911,7 +909,12 @@ centry_list_parse_from_string(lList *complex_attributes,
          DRETURN(NULL);
       }
 
-      if ((check_value) && (value == NULL || *value == '\0')) {
+      /*
+       * If no default value was specified then use TRUE
+       */
+      if (check_value == false && value == NULL) {
+         value = TRUE_STR;
+      } else if (check_value == true && (value == NULL || *value == '\0')) {
          ERROR((SGE_EVENT, MSG_CPLX_VALUEMISSING_S, attr));
          lFreeList(&complex_attributes);
          sge_free_saved_vars(context);

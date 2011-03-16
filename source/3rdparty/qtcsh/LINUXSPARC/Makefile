@@ -225,7 +225,7 @@ LIBES= -lncurses -lcrypt 	 			 ## This is set by autoconf.
 
 
 EXTRAFLAGS =  $(AFSDEF) -I../../../libs/gdi
-EXTRALIBS =  $(AFSLIB) -L../../../LINUXSPARC -R/lib/lx26-sparc64 $(SGE_LIBS) 
+EXTRALIBS =  $(AFSLIB) -L../../../LINUXSPARC -R/lib/lx-sparc64 $(SGE_LIBS) 
 
 
 # The difficult choice of a c-compiler...

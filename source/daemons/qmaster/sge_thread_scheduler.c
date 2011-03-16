@@ -79,7 +79,8 @@
 #define SCHEDULER_TIMEOUT_N 0
 
 static char schedule_log_path[SGE_PATH_MAX + 1] = "";
-const char *schedule_log_file = "schedule";
+static const char *schedule_log_file = "schedule";
+static int SGE_TEST_DELAY_SCHEDULING = 0;
 
 master_scheduler_class_t Master_Scheduler = {
    PTHREAD_MUTEX_INITIALIZER,
@@ -256,8 +257,16 @@ sge_scheduler_initialize(sge_gdi_ctx_class_t *ctx, lList **answer_list)
 {
    DENTER(TOP_LAYER, "sge_scheduler_initialize");
 
+   /* initialize debugging instrumentation */
+   {
+      char *debug = getenv("SGE_TEST_DELAY_SCHEDULING");
+      if (debug != NULL) {
+         SGE_TEST_DELAY_SCHEDULING = atoi(debug);
+      }
+   }
+
    sge_mutex_lock("master scheduler struct", SGE_FUNC, __LINE__, &(Master_Scheduler.mutex));
-   
+
    if (Master_Scheduler.is_running == false) {
       bool start_thread = true;
 
@@ -674,6 +683,11 @@ sge_scheduler_main(void *arg)
             lList *master_pe_list = *object_type_get_master_list(SGE_TYPE_PE);
             lList *master_hgrp_list = *object_type_get_master_list(SGE_TYPE_HGROUP);
             lList *master_sharetree_list = *object_type_get_master_list(SGE_TYPE_SHARETREE);
+
+            /* delay scheduling for test purposes, see issue GE-3306 */
+            if (SGE_TEST_DELAY_SCHEDULING > 0) {
+               sleep(SGE_TEST_DELAY_SCHEDULING);
+            }
 
             PROF_START_MEASUREMENT(SGE_PROF_CUSTOM6);
             PROF_START_MEASUREMENT(SGE_PROF_CUSTOM7);

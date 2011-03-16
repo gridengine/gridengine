@@ -8,6 +8,11 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+JG-2011-03-16-0: Enhancem.:   unify linux arch strings (lx24-* and lx26-*)
+                              to lx-*
+                 Issue:       GE-3362
+                 Review:      TBD
+
 EB-2011-03-16-0: Bugfix:      JSV changed default of boolean
                               changed help output of qsub
                  Issue:       GE-3311, GE-3323

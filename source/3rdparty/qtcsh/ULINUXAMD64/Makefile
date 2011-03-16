@@ -1,4 +1,5 @@
-# $Id: Makefile,v 1.1 2006/09/19 13:45:16 joga Exp $
+# Generated automatically from Makefile.in by configure.
+# $Id: Makefile,v 1.2 2007/04/26 14:18:59 joga Exp $
 #	Makefile.in	4.3	6/11/83
 #
 # C Shell with process control; VM/UNIX VAX Makefile
@@ -25,11 +26,11 @@ CF=-c
 
 CPPFLAGS=-I. -I$(srcdir)
 
-LFLAGS= $(SGE_LOPTS)
+LFLAGS=$(SGE_LOPTS)
 #LFLAGS= -Zn10000		# hpux lint
 
 
-CFLAGS = -g -O2 -DPROG_NAME='"qtcsh"' -DLINUXSPARC_26		# This is set by autoconf.
+CFLAGS = $(SGE_COPTS) -g -O2 -DLINUXAMD64 -DPROG_NAME='"qtcsh"'		# This is set by autoconf.
 #CFLAGS= -g			# debug
 #CFLAGS= -O			# production
 #CFLAGS= 			# Broken optimizers....
@@ -142,7 +143,7 @@ DFLAGS = -D_PATH_TCSHELL='"${DESTBIN}/tcsh"'
 ################################################################
 ## LDFLAGS.  Define something here if you need to
 ################################################################
-LDFLAGS= $(SGE_LOPTS)		## This is set by autoconf.
+LDFLAGS=$(SGE_LOPTS) 		## This is set by autoconf.
 #LDFLAGS= 			## The simplest, suitable for all.
 #LDFLAGS= -s			## Stripped. Takes less space on disk.
 #LDFLAGS= -s -n			## Pure executable. Spares paging over
@@ -225,7 +226,7 @@ LIBES= -lncurses -lcrypt 	 			 ## This is set by autoconf.
 
 
 EXTRAFLAGS =  $(AFSDEF) -I../../../libs/gdi
-EXTRALIBS =  $(AFSLIB) -L../../../LINUXSPARC_26 -R/lib/lx26-sparc64 $(SGE_LIBS) 
+EXTRALIBS =  $(AFSLIB) -L../../../ULINUXAMD64 $(SGE_LIBS) -lm
 
 
 # The difficult choice of a c-compiler...
@@ -347,7 +348,7 @@ tcsh.exe: tcsh
 
 gethost:  gethost.c sh.err.h tc.const.h sh.h
 	rm -f gethost
-	${CC} -o gethost ${LDFLAGS} ${CFLAGS} ${CPPFLAGS} ${DFLAGS} ${EXTRAFLAGS} $(srcdir)/gethost.c ${LIBES} ${EXTRALIBS}
+	${CC} -o gethost ${LDFLAGS} ${CFLAGS} ${CPPFLAGS} ${DFLAGS} ${EXTRAFLAGS} $(srcdir)/gethost.c ${LIBES}
 
 tc.defs.c:	gethost host.defs
 	@rm -f $@
@@ -358,6 +359,9 @@ tcsh.ps: tcsh.man
 	rm -f tcsh.ps
 	-ptroff -t -man $(srcdir)/tcsh.man > tcsh.ps
 
+
+depend:
+	@echo No dependencies for 3rd_party qtcsh
 
 .c.${SUF}:
 	${CC} ${CF} ${CFLAGS} ${CPPFLAGS} ${DFLAGS} ${EXTRAFLAGS} $<
@@ -627,6 +631,3 @@ ${EDOBJS} ${EDDINC}: ed.defns.h
 
 # tc.defs.o
 tc.defs.${SUF}:	tc.defs.c sh.h
-
-depend:
-	@echo "No depends target for qtcsh yet"

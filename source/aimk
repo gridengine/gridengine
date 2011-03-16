@@ -810,7 +810,7 @@ while ($#argv >= 1 && $?found)
       set PERLGUI_CLEAN = "perlgui_clean"
       breaksw
    case  "-po"
-      if ( $buildarch == lx24-x86 ) then
+      if ( $buildarch == lx-x86 ) then
          scripts/msgmerge.csh merge
          echo ""
          echo "==========READY FOR TRANSLATION========="
@@ -823,9 +823,9 @@ while ($#argv >= 1 && $?found)
       breaksw
    case  "-pot"
       if ( $buildarch !=  ) then
-         echo "Must be done on lx24-86 architecture"
+         echo "Must be done on lx-86 architecture"
          exit 1
-      endif   
+      endif
       rm -f dist/locale/gridenginenotuniq.pot
       rm -f dist/locale/gridengine.pot
       $0 -intl -only-core messages
@@ -1459,7 +1459,7 @@ case LINUXSPARC64:
       endif
    endif
 
-   if ($buildarch == "lx24-x86" || $buildarch == "lx26-amd64" || $buildarch == "lx26-x86" || $buildarch == "lx26-sparc" || $buildarch == "lx26-mips" || $buildarch == "lx26-mips64" || $buildarch == "lx26-s390" || $buildarch == "lx26-s390x") then
+   if ($buildarch == "lx-x86" || $buildarch == "lx-amd64" || $buildarch == "lx-sparc" || $buildarch == "lx-mips" || $buildarch == "lx-mips64" || $buildarch == "lx-s390" || $buildarch == "lx-s390x") then
       set CFLAGS = "$CFLAGS -Wno-strict-aliasing"
    endif
 
@@ -2023,9 +2023,8 @@ if ( $JNI == 1 ) then
    if ("$JAVA_ARCH" != "") then
       set CORE_INCLUDE = "$CORE_INCLUDE -I${JAVA_HOME}/${JAVA_INCL}/${JAVA_ARCH}"
       switch ($buildarch)
-         case lx24-x86:
-         case ulx24-x86:
-         case lx26-x86:
+         case lx-x86:
+         case ulx-x86:
          case nbsd-i386:
          case sol-x86:
          case usol-x86:
@@ -2035,27 +2034,23 @@ if ( $JNI == 1 ) then
          case usol-sparc64:
              set JAVA_LIB_ARCH = sparcv9
              breaksw
-         case lx26-sparc:
+         case lx-sparc:
          case sol-sparc:
          case usol-sparc:
              set JAVA_LIB_ARCH = sparc
              breaksw
-         case lx24-amd64:
-         case ulx24-amd64:
-         case lx26-amd64:
+         case lx-amd64:
+         case ulx-amd64:
          case sol-amd64:
              set JAVA_LIB_ARCH = amd64
              breaksw
-         case lx24-ia64:
-         case lx26-ia64:
+         case lx-ia64:
              set JAVA_LIB_ARCH = ia64
              breaksw
-         case lx24-ppc:
-         case lx26-ppc:
+         case lx-ppc:
              set JAVA_LIB_ARCH = ppc
              breaksw
-         case lx24-ppc64:
-         case lx26-ppc64:
+         case lx-ppc64:
              set JAVA_LIB_ARCH = ppc64
              breaksw
          case hp11:
@@ -2065,19 +2060,19 @@ if ( $JNI == 1 ) then
              set JAVA_LIB_ARCH = PA_RISC2.0W
              breaksw
          case fbsd-i386:
-             set JAVA_LIB_ARCH = linux 
+             set JAVA_LIB_ARCH = linux
              breaksw
          case irix65:
-             set JAVA_LIB_ARCH = "" 
+             set JAVA_LIB_ARCH = ""
              breaksw
          case darwin-*:
-             set JAVA_LIB_ARCH = "" 
+             set JAVA_LIB_ARCH = ""
              breaksw
          case tru64:
-             set JAVA_LIB_ARCH = "" 
+             set JAVA_LIB_ARCH = ""
              breaksw
          case aix51:
-             set JAVA_LIB_ARCH = "" 
+             set JAVA_LIB_ARCH = ""
              breaksw
          default:
              set JAVA_LIB_ARCH = ""

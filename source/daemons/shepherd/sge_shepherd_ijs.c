@@ -590,7 +590,7 @@ static void* commlib_to_pty(void *t_conf)
                break;
             case COMM_CONNECTION_NOT_FOUND:
                if (b_was_connected == 0) {
-                  shepherd_trace("commlib_to_pty: our server is not running -> exiting");
+                  shepherd_trace("commlib_to_pty: our server is not running -> exiting. Error: %s", sge_dstring_get_string(&err_msg));
                   /*
                    * On some architectures (e.g. Darwin), the child doesn't recognize
                    * when the pipe gets closed, so we have to send the information

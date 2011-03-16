@@ -1412,6 +1412,8 @@ int comm_recv_message(COMM_HANDLE *handle, cl_bool_t b_synchron,
             case UNREGISTER_CTRL_MSG:
             case UNREGISTER_RESPONSE_CTRL_MSG:
             case SETTINGS_CTRL_MSG:
+            case SUSPEND_CTRL_MSG:
+            case UNSUSPEND_CTRL_MSG:
                DPRINTF(("length of message: %d\n", (int)message->message_length));
                /* data message */ 
                recv_mess->type = message->message[0];

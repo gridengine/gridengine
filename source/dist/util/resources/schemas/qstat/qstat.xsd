@@ -31,8 +31,8 @@
  ************************************************************************/
 ___INFO__MARK_END__-->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" 
-           targetNamespace="http://gridengine.sunsource.net/source/browse/*checkout*/gridengine/source/dist/util/resources/schemas/qstat/qstat.xsd?revision=1.11"
-           xmlns="http://gridengine.sunsource.net/source/browse/*checkout*/gridengine/source/dist/util/resources/schemas/qstat/qstat.xsd?revision=1.11"
+ targetNamespace="http://gridengine.sunsource.net/source/browse/*checkout*/gridengine/source/dist/util/resources/schemas/qstat/qstat_cb.xsd?revision=1.2"
+            xmlns="http://gridengine.sunsource.net/source/browse/*checkout*/gridengine/source/dist/util/resources/schemas/qstat/qstat_cb.xsd?revision=1.2"
            elementFormDefault="qualified">
 	<xs:element name="job_info">
 		<xs:complexType>
@@ -161,6 +161,8 @@ ___INFO__MARK_END__-->
 			<xs:element name="master_hard_req_queue" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
 			<xs:element name="predecessor_jobs_req" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
 			<xs:element name="predecessor_jobs" type="xs:unsignedInt" minOccurs="0" maxOccurs="unbounded"/>
+
+         <xs:element name="binding" type="xs:string" minOccurs="0"/>
 		</xs:sequence>
 		<xs:attribute name="state" type="xs:string" use="required"/>
 	</xs:complexType>

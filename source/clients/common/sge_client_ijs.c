@@ -645,6 +645,7 @@ void* commlib_to_tty(void *t_conf)
 *     int noshell        - The "-noshell" switch
 *     int is_rsh         - Is it a qrsh with commandline?
 *     int is_qlogin      - Is it a qlogin or qrsh without commandline?
+*     int suspend_remote - suspend_remote switch of qrsh
 *     int force_pty      - The user forced use of pty by the "-pty yes" switch
 *
 *  OUTPUTS

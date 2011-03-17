@@ -8,6 +8,10 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+DG-2011-03-17-2: Enhancem.:   Introduced new Univa GE version 8.0.0
+                 Issue:       GE-3389
+					  Review:      JG (GE-17)
+
 DG-2011-03-17-1: Enhancem.:   qstat shows now core binding related information
                               per default
                  Issue:       GE-3371

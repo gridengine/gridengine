@@ -28,6 +28,8 @@
  *
  *  All Rights Reserved.
  *
+ *  Portions of this code are Copyright 2011 Univa Inc.
+ *
  ************************************************************************/
 ___INFO__MARK_END__-->
 <project name="installer" default="do.jar" basedir=".">
@@ -104,7 +106,7 @@ ___INFO__MARK_END__-->
         </condition>
 
         <condition property="legal" value="COPYRIGHT">
-            <equals arg1="${env.AIMK_COPYRIGHT}" arg2="sun" trim="true"/>
+            <equals arg1="${env.AIMK_COPYRIGHT}" arg2="univa" trim="true"/>
         </condition>
         <condition property="legal" value="COPYRIGHT LICENSE">
             <equals arg1="${env.AIMK_COPYRIGHT}" arg2="courtesy" trim="true"/>
@@ -112,17 +114,17 @@ ___INFO__MARK_END__-->
         <property name="legal" value="NA"/>
         
         <condition property="sge.license" value="${legal.dir}/License/LICENSE.txt">
-            <equals arg1="${env.AIMK_COPYRIGHT}" arg2="sun" trim="true"/>
+            <equals arg1="${env.AIMK_COPYRIGHT}" arg2="univa" trim="true"/>
         </condition>
         <condition property="sun.copyright" value="true">
-            <equals arg1="${env.AIMK_COPYRIGHT}" arg2="sun" trim="true"/>
+            <equals arg1="${env.AIMK_COPYRIGHT}" arg2="univa" trim="true"/>
         </condition>
         <condition property="sge.license" value="${legal.dir}/LICENSE">
             <equals arg1="${env.AIMK_COPYRIGHT}" arg2="courtesy" trim="true"/>
         </condition>
         <!-- Set the product name correctly -->
-        <condition property="product.name" value="Sun Grid Engine">
-            <equals arg1="${env.AIMK_COPYRIGHT}" arg2="sun" trim="true"/>
+        <condition property="product.name" value="Univa Grid Engine">
+            <equals arg1="${env.AIMK_COPYRIGHT}" arg2="univa" trim="true"/>
         </condition>
         <condition property="product.name" value="Grid Engine">
             <not>

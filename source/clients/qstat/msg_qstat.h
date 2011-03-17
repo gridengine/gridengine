@@ -28,7 +28,9 @@
  *   Copyright: 2001 by Sun Microsystems, Inc.
  * 
  *   All Rights Reserved.
- * 
+ *
+ * Portions of this code are Copyright 2011 Univa Inc.
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
@@ -39,7 +41,7 @@
 #define MSG_QSTAT_USAGE_FULLOUTPUT                       _MESSAGE(19012, _("full output"))
 #define MSG_QSTAT_USAGE_FULLOUTPUTANDSHOWRESOURCESOFQUEUES    _MESSAGE(19013, _("full output and show (selected) resources of queue(s)"))
 #define MSG_QSTAT_USAGE_DISPLAYALLJOBARRAYTASKS    _MESSAGE(19014, _("display all job-array tasks (do not group)"))
-#define MSG_QSTAT_USAGE_VIEWALSOBINDINGATTRIBUTES  _MESSAGE(19015, _("view additional binding specific parameters"))
+#define MSG_QSTAT_USAGE_VIEWALSOBINDINGATTRIBUTES  _MESSAGE(19015, _("suppress additional binding specific parameters"))
 #define MSG_QSTAT_USAGE_SHOWSCHEDULERJOBINFO    _MESSAGE(19016, _("show scheduler job information"))
 #define MSG_QSTAT_USAGE_REQUESTTHEGIVENRESOURCES    _MESSAGE(19017, _("request the given resources"))
 #define MSG_QSTAT_USAGE_HIDEEMPTYQUEUES    _MESSAGE(19018, _("hide empty queues"))

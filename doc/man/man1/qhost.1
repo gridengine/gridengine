@@ -38,8 +38,6 @@ qhost \- show the status of xxQS_NAMExx hosts, queues, jobs
 .SH SYNTAX
 .B qhost
 [
-.B -cb
-] [
 \fB\-F\fP [\fBresource_name,...\fP]
 ] [
 .B -help
@@ -49,6 +47,8 @@ qhost \- show the status of xxQS_NAMExx hosts, queues, jobs
 .B -j
 ] [
 .B -l resource=val,...
+] [
+.B -ncb
 ] [
 .B -u user,...
 ] [
@@ -78,23 +78,6 @@ resource_name list. Please refer to the description of the
 \fBFull Format\fP in 
 section \fBOUTPUT FORMATS\fP below for further detail.
 .\"
-.IP "\fB\-cb\fP"
-This command line switch can be used since xxQS_NAMExx version 6.2u5 in combination
-with other 
-.M qhost 1
-command line switches. In that case the output
-of the corresponding command will contain information concerning the
-added job to core binding feature.
-.sp
-If this switch is not used then the command behaves as in version 6.2u4
-and previous versions. 
-.sp
-If this option is used then two additional columns will be shown for
-each displayed host in the output. The first is named NSOC and represents
-the number of available sockets on that host. The second additional column is
-named NCOR and it represents the number of cores that are available per
-socket on the corresponding machine.
-.\"
 .IP "\fB\-help\fP"
 Prints a listing of all options.
 .\"
@@ -115,6 +98,14 @@ load values (i.e. "arch", "num_proc", "mem_total", "swap_total" and
 If there are multiple -l resource requests they will be concatenated by
 a logical AND: a host needs to match all resources to be displayed.
 .\"
+.IP "\fB\-ncb\fP"
+This command line switch can be used in order to get 6.2u5 compatible
+output with other
+.M qhost 1
+command line switches. In that case the output
+of the corresponding command will suppress information concerning the
+execution host topology. Note that this option will be removed in the
+next major version.
 .\"
 .IP "\fB\-q\fP"
 Show information about the queues instances hosted by the displayed hosts.
@@ -127,17 +118,14 @@ being associated with the users from the given user list.
 This option can be used with all other options and changes the output to XML. The used
 schemas are referenced in the XML output. The output is printed to stdout.
 .sp
-If the \fB\-xml\fP parameter is combined with \fB\-cb\fP then the XML output will
-contain additional tags containing information about job to core binding.
-You can find schema files with the suffix "_cb" in the directory
-$SGE_ROOT/util/resources/schemas/qhost that describe that changes.
+If the \fB\-xml\fP parameter is combined with \fB\-ncb\fP then the XML output will
+contain 6.2u5 compatible output.
 .br
 .\"
 .\"
 .SH "OUTPUT FORMATS"
 Depending on the presence or absence of the \fB\-q\fP or \fB\-F\fP and
 \fB\-j\fP option three output formats need to be differentiated.
-PP
 .\"
 .SS "\fBDefault Format (without \-q, \-F and \-j)\fP"
 For each host one line is printed. The output consists of

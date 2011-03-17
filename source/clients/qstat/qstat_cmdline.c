@@ -27,6 +27,8 @@
  * 
  *   All Rights Reserved.
  * 
+ * Portions of this code are Copyright 2011 Univa Inc.
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 #include <stdio.h>
@@ -119,8 +121,8 @@ switch_list_qstat_parse_from_cmdline(lList **ppcmdline, lList **answer_list,
       if ((rp = parse_noopt(sp, "-help", NULL, ppcmdline, answer_list)) != sp)
          continue;
 
-      /* -cb */
-      if ((rp = parse_noopt(sp, "-cb", NULL, ppcmdline, answer_list)) != sp)
+      /* -ncb */
+      if ((rp = parse_noopt(sp, "-ncb", NULL, ppcmdline, answer_list)) != sp)
          continue;
 
       /* -f option */
@@ -254,9 +256,6 @@ qstat_usage(int qselect_mode, FILE *fp, char *what)
       /* display full usage */
       fprintf(fp, "%s %s [options]\n", MSG_SRC_USAGE ,qselect_mode?"qselect":"qstat");
       if (!qselect_mode) {
-         fprintf(fp, "        [-cb]                             %s\n",MSG_QSTAT_USAGE_VIEWALSOBINDINGATTRIBUTES);
-      }
-      if (!qselect_mode) {
          fprintf(fp, "        [-ext]                            %s\n",MSG_QSTAT_USAGE_VIEWALSOSCHEDULINGATTRIBUTES);
       }
       if (!qselect_mode) {
@@ -277,6 +276,9 @@ qstat_usage(int qselect_mode, FILE *fp, char *what)
       fprintf(fp, "        [-l resource_list]                %s\n",MSG_QSTAT_USAGE_REQUESTTHEGIVENRESOURCES);
       if (!qselect_mode) 
          fprintf(fp, "        [-ne]                             %s\n",MSG_QSTAT_USAGE_HIDEEMPTYQUEUES);
+      if (!qselect_mode) {
+         fprintf(fp, "        [-ncb]                            %s\n",MSG_QSTAT_USAGE_VIEWALSOBINDINGATTRIBUTES);
+      }
       fprintf(fp, "        [-pe pe_list]                     %s\n",MSG_QSTAT_USAGE_SELECTONLYQUEESWITHONOFTHESEPE);
       fprintf(fp, "        [-q wc_queue_list]                %s\n",MSG_QSTAT_USAGE_PRINTINFOONGIVENQUEUE);
       fprintf(fp, "        [-qs {a|c|d|o|s|u|A|C|D|E|S}]     %s\n",MSG_QSTAT_USAGE_PRINTINFOCQUEUESTATESEL);

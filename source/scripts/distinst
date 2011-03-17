@@ -203,21 +203,20 @@ ArchTable()
    echo "hp11                  HP-UX 11.x"
    echo "hp11-64               HP-UX 11.x 64bit"
    echo "irix65                Irix 6.5"
-   echo "lx24-alpha            Alpha Linux v2.4 kernel"
-   echo "lx26-alpha            Alpha Linux v2.6 kernel"
-   echo "lx24-amd64            AMD Linux v2.4 kernel"
-   echo "lx26-amd64            AMD Linux v2.6 kernel"
-   echo "lx24-ia64             IA64 Linux v2.4 kernel"
-   echo "lx26-ia64             IA64 Linux v2.6 kernel"
-   echo "lx26-ppc              PPC Linux v2.6 kernel"
-   echo "lx24-sparc            SPARC Linux v2.4 kernel"
-   echo "lx26-sparc            SPARC Linux v2.6 kernel"
-   echo "lx24-sparc64          SPARC 64bit Linux v2.4 kernel"
-   echo "lx26-sparc64          SPARC 64bit Linux v2.6 kernel"
-   echo "lx24-x86              x86 Linux v2.4 kernel"
-   echo "lx26-x86              x86 Linux v2.6 kernel"
-   echo "ulx24-x86             x86 Linux v2.4 kernel, libc < 2.3"
-   echo "ulx24-amd64           AMD Linux v2.4 kernel, libc < 2.3"
+   echo "lx-alpha              Alpha Linux"
+   echo "lx-amd64              AMD Linux"
+   echo "lx-ia64               IA64 Linux"
+   echo "lx-ppc                PPC Linux"
+   echo "lx-sparc              SPARC Linux"
+   echo "lx-sparc64            SPARC 64bit Linux"
+   echo "lx-x86                x86 Linux"
+   echo "ulx-alpha             Alpha Linux, libc < 2.3"
+   echo "ulx-amd64             AMD Linux, libc < 2.3"
+   echo "ulx-ia64              IA64 Linux, libc < 2.3"
+   echo "ulx-ppc               PPC Linux, libc < 2.3"
+   echo "ulx-sparc             SPARC Linux, libc < 2.3"
+   echo "ulx-sparc64           SPARC 64bit Linux, libc < 2.3"
+   echo "ulx-x86               x86 Linux, libc < 2.3"
    echo "osf4                  OSF 4.x"
    echo "tru64                 TRU64 UNIX"
    echo "sol-x86               Solaris x86"
@@ -863,10 +862,6 @@ if [ $instcommon = true ]; then
       # Not available in Beta
       Execute rm -rf $DEST_SGE_ROOT/util/update_commands
       Execute rm -f $DEST_SGE_ROOT/util/sge_update.sh
-
-      # Install arch.dist as arch for installation process
-      Execute rm -f $DEST_SGE_ROOT/util/arch
-      Execute mv $DEST_SGE_ROOT/util/arch.dist $DEST_SGE_ROOT/util/arch
 
       Execute chmod 755 $DEST_SGE_ROOT/util/install_modules \
 			$DEST_SGE_ROOT/util/upgrade_modules \

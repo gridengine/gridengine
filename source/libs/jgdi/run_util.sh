@@ -91,27 +91,15 @@ setup_env() {
                   JAVA_ARCH=i386
                   DEBUGGER=dbx
                   ;;
-        lx26-x86) SRC_ARCH=LINUX86_26
+          lx-x86) SRC_ARCH=LINUX86
                   JAVA_ARCH=i386
                   DEBUGGER=gdb
                   ;;
-        lx24-x86) SRC_ARCH=LINUX86_24
-                  JAVA_ARCH=i386
-                  DEBUGGER=gdb
-                  ;;
-      lx24-amd64) SRC_ARCH=LINUXAMD64_24
+        lx-amd64) SRC_ARCH=LINUXAMD64
                   JAVA_ARCH=amd64
                   DEBUGGER=gdb
                   ;;
-      ulx24-amd64) SRC_ARCH=ULINUXAMD64_24
-                  JAVA_ARCH=amd64
-                  DEBUGGER=gdb
-                  ;;
-      lx26-amd64) SRC_ARCH=LINUXAMD64_26
-                  JAVA_ARCH=amd64
-                  DEBUGGER=gdb
-                  ;;
-      ulx26-amd64) SRC_ARCH=ULINUXAMD64_26
+       ulx-amd64) SRC_ARCH=ULINUXAMD64
                   JAVA_ARCH=amd64
                   DEBUGGER=gdb
                   ;;

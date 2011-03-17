@@ -65,7 +65,7 @@
       <CE_Type>
          <name>arch</name>
          <valtype>0</valtype>
-         <stringval>lx26-x86</stringval>
+         <stringval>lx-x86</stringval>
          <relop>0</relop>
          <consumable>0</consumable>
          <requestable>0</requestable>

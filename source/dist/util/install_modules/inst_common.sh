@@ -2524,7 +2524,7 @@ InstallRcScript()
       # we already installed the script in level 3
       SGE_ARCH=`$SGE_UTIL/arch`
       case $SGE_ARCH in
-      lx2?-*)
+      lx-*)
          runlevel=`grep "^id:.:initdefault:"  /etc/inittab | cut -f2 -d:`
          if [ "$runlevel" = 2 -o  "$runlevel" = 5 ]; then
             $INFOTEXT "Installing startup script also in %s and %s" "$RC_PREFIX/rc${runlevel}.d/$S95NAME" "$RC_PREFIX/rc${runlevel}.d/$K03NAME"
@@ -3376,7 +3376,7 @@ RemoveRcScript()
       # we already installed the script in level 3
       SGE_ARCH=`$SGE_UTIL/arch`
       case $SGE_ARCH in
-      lx2?-*)
+      lx-*)
          runlevel=`grep "^id:.:initdefault:"  /etc/inittab | cut -f2 -d:`
          if [ "$runlevel" = 2 -o  "$runlevel" = 5 ]; then
             $INFOTEXT "Removing startup script %s and %s" "$RC_PREFIX/rc${runlevel}.d/$S95NAME" "$RC_PREFIX/rc${runlevel}.d/$K03NAME"

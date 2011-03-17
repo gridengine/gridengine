@@ -3036,8 +3036,9 @@ arena_chunk_alloc(arena_t *arena)
 		 */
 		memset(chunk->map, (CHUNK_MAP_LARGE | CHUNK_MAP_POS_MASK),
 		    arena_chunk_header_npages);
-#if 0 /* JG: this doesn't work in our lx24-amd64 build host:
+#if 1 /* JG: This doesn't work on older hosts - ulx-* might be affected:
        * ../3rdparty/jemalloc/jemalloc.c:3036:1: directives may not be used inside a macro argument
+       * Might be necessary to replace the #if 1 by #ifndef ULINUX or something similar.
        */
 		memset(&chunk->map[arena_chunk_header_npages],
 		    (CHUNK_MAP_UNTOUCHED
@@ -3051,7 +3052,7 @@ arena_chunk_alloc(arena_t *arena)
 		    (CHUNK_MAP_UNTOUCHED
 		    ), (chunk_npages -
 		    arena_chunk_header_npages));
-#endif 
+#endif
 
 		/* Initialize the tree of unused extent nodes. */
 		RB_INIT(&chunk->nodes);

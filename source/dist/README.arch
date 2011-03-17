@@ -45,9 +45,8 @@ Content
    hp11		HP11		HP HP-UX 11 32bit
    hp11-64	HP1164	        HP HP-UX 11.00 64bit
    irix65	IRIX65		SGI Irix 6.5,
-   lx22-axp	ALINUX		Linux for Alpha AXP, glibc
-   lx24-amd64   LINUXAMD64_24   Linux AMD64, 2.4 kernel
-   lx24-x86	LINUX86_24	Linux x86, 2.4 kernel
+   lx-amd64   LINUXAMD64_24   Linux AMD64
+   lx-x86	LINUX86_24	Linux x86
    necsx4	NECSX4		NEC SX4, SUPER-UX
    necsx5	NECSX5		NEC SX5, SUPER-UX
    sol-sparc	SOLARIS		Sun, Sparc Solaris 7, 8, 9 32bit

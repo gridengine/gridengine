@@ -29,7 +29,7 @@ LFLAGS= $(SGE_LOPTS)
 #LFLAGS= -Zn10000		# hpux lint
 
 
-CFLAGS = -g -O2 -DPROG_NAME='"qtcsh"' -DLINUXSPARC_26		# This is set by autoconf.
+CFLAGS = -g -O2 -DPROG_NAME='"qtcsh"' -DLINUXSPARC		# This is set by autoconf.
 #CFLAGS= -g			# debug
 #CFLAGS= -O			# production
 #CFLAGS= 			# Broken optimizers....
@@ -225,7 +225,7 @@ LIBES= -lncurses -lcrypt 	 			 ## This is set by autoconf.
 
 
 EXTRAFLAGS =  $(AFSDEF) -I../../../libs/gdi
-EXTRALIBS =  $(AFSLIB) -L../../../LINUXSPARC_26 -R/lib/lx26-sparc64 $(SGE_LIBS) 
+EXTRALIBS =  $(AFSLIB) -L../../../LINUXSPARC -R/lib/lx-sparc64 $(SGE_LIBS) 
 
 
 # The difficult choice of a c-compiler...

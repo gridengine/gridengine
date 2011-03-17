@@ -95,7 +95,7 @@ public class TestClusterQueueSummary extends com.sun.grid.jgdi.BaseTestCase {
         try {
             ClusterQueueSummaryOptions options = new ClusterQueueSummaryOptions();
             ResourceFilter rsf = new ResourceFilter();
-            rsf.addResource("NoAccessUsers", "lx26-x86");
+            rsf.addResource("NoAccessUsers", "lx-x86");
             options.setResourceFilter(rsf);
             List<ClusterQueueSummary> result = jgdi.getClusterQueueSummary(options);
             printResult(result);

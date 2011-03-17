@@ -74,13 +74,13 @@ void test_linux_plpa(void);
 #endif 
 
 #if defined(BINDING_SOLARIS) || defined(PLPA_LINUX)
-void fill_socket_core_topology(dstring* msocket, dstring* mcore, dstring* mtopology);
+void fill_socket_core_topology(dstring* msocket, dstring* mcore, dstring* mthread, dstring* mtopology);
 #endif
 
 void usage()
 {
    fprintf(stderr, "%s loadcheck [-cb] | [-int] [-loadval name]\n", MSG_UTILBIN_USAGE);
-   fprintf(stderr, "\t\t[-cb] \t\t\t\t Shows core binding and processor topology related information\n");
+   fprintf(stderr, "\t\t[-cb] \t\t\t\t Shows core binding and processor topology related information.\n");
    fprintf(stderr, "\t\t[-int]\t\t\t\t Print as integer\n");
    fprintf(stderr, "\t\t[-loadval]\t\t\t Select specific load value\n");
    exit(1);
@@ -94,6 +94,7 @@ int main(int argc, char *argv[])
 #if defined(PLPA_LINUX) || defined(BINDING_SOLARIS)
    dstring msocket   = DSTRING_INIT;
    dstring mcore     = DSTRING_INIT;
+   dstring mthread   = DSTRING_INIT;
    dstring mtopology = DSTRING_INIT;
 #endif
 
@@ -183,12 +184,15 @@ int main(int argc, char *argv[])
    }
 
 #if defined(PLPA_LINUX) || defined(BINDING_SOLARIS)
-   fill_socket_core_topology(&msocket, &mcore, &mtopology);
+   fill_socket_core_topology(&msocket, &mcore, &mthread, &mtopology);
    if ((pos && !strcmp("m_socket", argv[pos])) || !pos) {
       printf("m_socket        %s\n", sge_dstring_get_string(&msocket));
    }
    if ((pos && !strcmp("m_core", argv[pos])) || !pos) {
       printf("m_core          %s\n", sge_dstring_get_string(&mcore));
+   }
+   if ((pos && !strcmp("m_thread", argv[pos])) || !pos) {
+      printf("m_thread        %s\n", sge_dstring_get_string(&mthread));
    }
    if ((pos && !strcmp("m_topology", argv[pos])) || !pos) {
       printf("m_topology      %s\n", sge_dstring_get_string(&mtopology));
@@ -199,6 +203,9 @@ int main(int argc, char *argv[])
    }
    if ((pos && !strcmp("m_core", argv[pos])) || !pos) {
       printf("m_core          -\n");
+   }
+   if ((pos && !strcmp("m_thread", argv[pos])) || !pos) {
+      printf("m_thread        -\n");
    }
    if ((pos && !strcmp("m_topology", argv[pos])) || !pos) {
       printf("m_topology      -\n");
@@ -235,6 +242,7 @@ int main(int argc, char *argv[])
 #if defined(PLPA_LINUX) || defined(BINDING_SOLARIS)
       sge_dstring_free(&mcore);
       sge_dstring_free(&msocket);
+      sge_dstring_free(&mthread);
       sge_dstring_free(&mtopology);
 #endif
       return 1;
@@ -272,6 +280,7 @@ int main(int argc, char *argv[])
 #if defined(PLPA_LINUX) || defined(BINDING_SOLARIS)
    sge_dstring_free(&mcore);
    sge_dstring_free(&msocket);
+   sge_dstring_free(&mthread);
    sge_dstring_free(&mtopology);
 #endif
 	return 0;
@@ -312,23 +321,23 @@ void check_core_binding()
    #if defined(LINUX) 
    
       #if !defined(PLPA_LINUX)
-      printf("Your SGE Linux version has no built-in core binding functionality!\n");
+      printf("Your UGE Linux version has no built-in core binding functionality!\n");
       #else
-      printf("Your SGE Linux version has built-in core binding functionality!\n");   
+      printf("Your UGE Linux version has built-in core binding functionality!\n");   
       test_linux_plpa();
       #endif
 
    #elif defined(SOLARIS)
 
       #if defined(BINDING_SOLARIS)
-      printf("Your SGE Solaris version has built-in core binding functionality!\n");
+      printf("Your UGE Solaris version has built-in core binding functionality!\n");
       test_solaris_binding();
       #else
-      printf("Your SGE Solaris version has no built-in core binding functionality!\n");
+      printf("Your UGE Solaris version has no built-in core binding functionality!\n");
       #endif
 
    #else 
-      printf("Your SGE does currently not support core binding on this platform!\n");
+      printf("Your UGE does currently not support core binding on this platform!\n");
    #endif
 }
 
@@ -473,19 +482,21 @@ void test_solaris_binding()
 *     void - nothing 
 *
 *******************************************************************************/
-void fill_socket_core_topology(dstring* msocket, dstring* mcore, dstring* mtopology)
+void fill_socket_core_topology(dstring* msocket, dstring* mcore, dstring* mthread, dstring* mtopology)
 {
-   int ms, mc;
+   int ms, mc, mt;
    char* topo = NULL;
    int length = 0;
 
    ms = get_execd_amount_of_sockets();
    mc = get_execd_amount_of_cores();
+   mt = get_execd_amount_of_threads();
    if (!get_execd_topology(&topo, &length) || topo == NULL) {
       topo = sge_strdup(NULL, "-");
    }
    sge_dstring_sprintf(msocket, "%d", ms);
    sge_dstring_sprintf(mcore, "%d", mc);
+   sge_dstring_sprintf(mthread, "%d", mt);
    sge_dstring_append(mtopology, topo);
    sge_free(&topo);
 }

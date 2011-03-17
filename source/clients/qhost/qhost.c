@@ -27,6 +27,8 @@
  * 
  *   All Rights Reserved.
  * 
+ *  Portions of this code are Copyright 2011 Univa Inc.
+ * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
 #include <stdlib.h>
@@ -487,13 +489,13 @@ FILE *fp
 
    fprintf(fp,"%s qhost [options]\n", MSG_SRC_USAGE);
          
-   fprintf(fp, "  [-cb]                      %s\n", MSG_QHOST_cb_OPT_USAGE);
    fprintf(fp, "  [-help]                    %s\n", MSG_COMMON_help_OPT_USAGE);
    fprintf(fp, "  [-h hostlist]              %s\n", MSG_QHOST_h_OPT_USAGE);
-   fprintf(fp, "  [-q]                       %s\n", MSG_QHOST_q_OPT_USAGE);
-   fprintf(fp, "  [-j]                       %s\n", MSG_QHOST_j_OPT_USAGE);
-   fprintf(fp, "  [-l attr=val,...]          %s\n", MSG_QHOST_l_OPT_USAGE);
    fprintf(fp, "  [-F [resource_attribute]]  %s\n", MSG_QHOST_F_OPT_USAGE); 
+   fprintf(fp, "  [-j]                       %s\n", MSG_QHOST_j_OPT_USAGE);
+   fprintf(fp, "  [-ncb]                     %s\n", MSG_QHOST_ncb_OPT_USAGE);
+   fprintf(fp, "  [-q]                       %s\n", MSG_QHOST_q_OPT_USAGE);
+   fprintf(fp, "  [-l attr=val,...]          %s\n", MSG_QHOST_l_OPT_USAGE);
    fprintf(fp, "  [-u user[,user,...]]       %s\n", MSG_QHOST_u_OPT_USAGE); 
    fprintf(fp, "  [-xml]                     %s\n", MSG_COMMON_xml_OPT_USAGE);
 
@@ -523,8 +525,8 @@ lList **alpp
       if ((rp = parse_noopt(sp, "-help", NULL, ppcmdline, alpp)) != sp)
          continue;
  
-      /* -cb */
-      if ((rp = parse_noopt(sp, "-cb", NULL, ppcmdline, alpp)) != sp)
+      /* -ncb */
+      if ((rp = parse_noopt(sp, "-ncb", NULL, ppcmdline, alpp)) != sp)
          continue;
 
       /* -q */
@@ -590,6 +592,10 @@ static int sge_parse_qhost(lList **ppcmdline,
    /* Loop over all options. Only valid options can be in the
       ppcmdline list. 
    */
+
+   /* display topology related information per default */
+   (*show) |= QHOST_DISPLAY_BINDING;
+
    while (lGetNumberOfElem(*ppcmdline))
    {
       if (parse_flag(ppcmdline, "-help",  alpp, &helpflag)) {
@@ -618,8 +624,9 @@ static int sge_parse_qhost(lList **ppcmdline,
          (*show) |= QHOST_DISPLAY_RESOURCES;
          continue;
       }
-      if (parse_flag(ppcmdline, "-cb", alpp, &binding)) {
-         (*show) |= QHOST_DISPLAY_BINDING;
+      if (parse_flag(ppcmdline, "-ncb", alpp, &binding)) {
+         /* disable topology related information */
+         (*show) ^= QHOST_DISPLAY_BINDING;
          continue;
       }
       if (parse_flag(ppcmdline, "-q", alpp, &full)) {

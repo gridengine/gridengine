@@ -607,7 +607,7 @@ static void* commlib_to_pty(void *t_conf)
                   }
                } else {
                   shepherd_trace("commlib_to_pty: was connected and still have "
-                                 "selectors, but lost connection -> exiting");
+                                 "selectors, but lost connection -> exiting. Error: %s", sge_dstring_get_string(&err_msg));
                }
                do_exit = 1;
                break;

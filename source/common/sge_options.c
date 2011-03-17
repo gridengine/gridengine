@@ -28,6 +28,7 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
+/* Portions of this code are Copyright 2011 Univa Inc. */
 /*___INFO__MARK_END__*/
 #include "sge_options.h"
 
@@ -501,7 +502,9 @@ unsigned short sge_options[][ALL_OPT + 1] =
 /* tc_OPT */
  {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0},
 /* binding_OPT */
- {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0}
+ {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0},
+/* suspend_remote_OPT - qrsh */ 
+ {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}
 /*               
   n  q  q  q  q  q  q  q  q  q  q  q  q  q  q  e  q  q  q  q  n  A
   o  a  c  d  h  m  m  r  r  s  s  r  l  s  s  x  e  r  r  r  o  L

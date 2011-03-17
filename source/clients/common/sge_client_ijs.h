@@ -28,6 +28,7 @@
  *   All Rights Reserved.
  *
  ************************************************************************/
+/* Portions of this code are Copyright 2011 Univa Inc. */
 /*___INFO__MARK_END__*/
 
 #define COMM_SERVER "qrsh_ijs"
@@ -42,7 +43,8 @@ int start_ijs_server(bool csp_mode,
 
 int run_ijs_server(COMM_HANDLE *phandle, const char *remote_host,
    u_long32 job_id, int nostdin, int noshell, int is_rsh, int is_qlogin,
-   ternary_t force_pty, int *p_exit_status, dstring *p_err_msg);
+   ternary_t force_pty, ternary_t suspend_remote, int *p_exit_status,
+   dstring *p_err_msg);
 
 int stop_ijs_server(COMM_HANDLE **phandle, dstring *p_err_msg);
 

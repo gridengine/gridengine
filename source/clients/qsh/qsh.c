@@ -28,6 +28,7 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
+/* Portions of this code are Copyright 2011 Univa Inc. */
 /*___INFO__MARK_END__*/
 /*----------------------------------------------------
  * qsh.c
@@ -1404,6 +1405,7 @@ int main(int argc, char **argv)
    int nostdin = 0;
    int noshell = 0;
    ternary_t pty_option = UNSET;
+   ternary_t suspend_remote_option = UNSET;
 
    const char *host = NULL;
    char name[MAX_JOB_NAME + 1];
@@ -1540,6 +1542,15 @@ int main(int argc, char **argv)
    while ((ep = lGetElemStr(opts_cmdline, SPA_switch, "-noshell"))) {
       lRemoveElem(opts_cmdline, &ep);
       noshell = 1;
+   }
+
+   /* parse -suspend_remote <yes|no> */
+   if (opt_list_has_X(opts_cmdline, "-suspend_remote")) {
+      suspend_remote_option = (ternary_t)opt_list_is_X_true(opts_cmdline, "-suspend_remote");
+   }
+   /* remove the suspend_remote option from commandline before proceeding */
+   while ((ep = lGetElemStr(opts_cmdline, SPA_switch, "-suspend_remote"))) {
+      lRemoveElem(opts_cmdline, &ep);
    }
 
    /* parse -pty <yes|no> */
@@ -1898,7 +1909,7 @@ int main(int argc, char **argv)
          DPRINTF(("starting IJS server\n"));
          sge_dstring_sprintf(&err_msg, "<null>");
          ret = run_ijs_server(comm_handle, host, job_id, nostdin, noshell, 
-                              is_rsh, is_qlogin, pty_option,
+                              is_rsh, is_qlogin, pty_option, suspend_remote_option,
                               &exit_status, &err_msg);
          if (ret != 0) {
             ERROR((SGE_EVENT, MSG_QSH_ERRORRUNNINGIJSSERVER_S,
@@ -2151,7 +2162,7 @@ int main(int argc, char **argv)
                   /* run_ijs_server() loops until the client has disconnected */
                   sge_dstring_sprintf(&err_msg, "<null>");
                   ret = run_ijs_server(comm_handle, host, job_id, nostdin, noshell, 
-                                       is_rsh, is_qlogin, pty_option,
+                                       is_rsh, is_qlogin, pty_option, suspend_remote_option,
                                        &exit_status, &err_msg);
                   if (ret != 0) {
                      ERROR((SGE_EVENT, MSG_QSH_ERRORRUNNINGIJSSERVER_S,

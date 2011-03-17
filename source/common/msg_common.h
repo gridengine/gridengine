@@ -32,6 +32,7 @@
  *   Portions of this code are Copyright 2011 Univa Inc.
  * 
  ************************************************************************/
+/* Portions of this code are Copyright 2011 Univa Inc. */
 /*___INFO__MARK_END__*/
 
 
@@ -1000,6 +1001,9 @@
 
 #define MSG_GDI_USAGE_sst_OPT                         "[-sst]"
 #define MSG_GDI_UTEXT_sst_OPT                         _MESSAGE(23514, _("show a formated sharetree"))
+
+#define MSG_GDI_USAGE_suspend_remote_OPT                 "[-suspend_remote y[es]|n[o]]"
+#define MSG_GDI_UTEXT_suspend_remote_OPT                 _MESSAGE(23515, _("suspend qrsh client as also the process on execution host"))
 
 /* =================================================
  * global error messages 

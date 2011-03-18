@@ -32,13 +32,15 @@
 #
 #  All Rights Reserved.
 #
+#  Portions of this code are Copyright 2011 Univa Inc.
+#
 ##########################################################################
 #___INFO__MARK_END__
 #
 # set -x
 
-SCRIPT_VERSION="6"
-SGE_VERSION="6.2u5"
+SCRIPT_VERSION="8"
+SGE_VERSION="8.0.0"
 
 #Reset PATH to a safe value
 #

@@ -30,6 +30,8 @@
 #
 #  All Rights Reserved.
 #
+#  Portions of this code are Copyright 2011 Univa Inc.
+#
 ##########################################################################
 #___INFO__MARK_END__
 #
@@ -150,77 +152,77 @@ usage:
    echo "usage: aimk <OPTIONS>"
    echo "OPTIONS are: "
    echo ""
-   echo "-32               -> create 32 bit binaries (where supported)"
-   echo "-64               -> create 64 bit binaries (where supported)"
-   echo "-D*               -> include a macro definition in CFLAGS"
-   echo "-add-copyright    -> insert a special copyright string in each binary"
-   echo "-add-sun-copyright-> insert a Sun copyright string in each binary" 
-   echo "-adoc             -> create source code documentation in adoc format"
-   echo "-catman           -> generate man pages in catman format"
-   echo "-cc               -> use cc/CC to compile c/c++ code"
-   echo "-cov              -> complile for code coverage analysis"
-   echo "-dce              -> enable dce security"
-   echo "-debug            -> compile with debug information"
-   echo "-efence           -> compile in debug mode and detect memory leaks"
-   echo "-f                -> specify other Makefile instead of common/Makefile"
-   echo "-flags            -> print C_FLAGS and INCLUDE_FLAGS to stdout, used by gelint"
-   echo "-gcc              -> use gcc instead of system compiler (where supported)"
-   echo "-gettext          -> build the gettext libraries"
-   echo "-gprof            -> enable gprof profiling"
-   echo "-gss              -> enable gss security"
-   echo "-help             -> show this help"
-   echo "-htmlman          -> generate man and html pages"
-   echo "-htmlmankv        -> generate man and html pages checked out with '-kv' flag"
-   echo "-insure           -> compile in debug mode and detect memory leaks"
-   echo "-intl             -> compile with internationalization library (libintl)"
-   echo "-javadoc          -> create source code documentation in Javadoc[TM] tool format"
-   echo "-kerberos         -> enable kerberos authentication"
-   echo "-man              -> generate man pages"
-   echo "-mankv            -> generate man pages checked out with '-kv' flag"
-   echo "-mo               -> generate the message catalogues (Solaris only)"
-   echo "-no-core          -> don't compile the core system"
-   echo "-no-dump          -> build binaries without libcore.so (Linux only)"
-   echo "-uge-ext          -> build binaries with Univa Extensions"
-   echo "-no-java          -> don't compile Java[TM] class files"
-   echo "-no-gui-inst      -> don't compile Java[TM] GUI installer"
-   echo "-no-jni           -> don't compile JNI library"
-   echo "-no-intl          -> do not compile with internationalization library"
-   echo "-no-mk            -> only return the specific architecture string"
-   echo "-no-opt           -> compile with no optimization"
-   echo "-no-qmake         -> don't compile qmake"
-   echo "-no-qmon          -> don't compile qmon 3rdparty libs and qmon client"
-   echo "-no-qtcsh         -> don't compile qtcsh"
-   echo "-no-remote        -> don't compile 3rdparty remote module (rsh, rshd, rlogin)"
-   echo "-no-rmon          -> disable rmon debug output"
-   echo "-no-secure        -> disable ssl security (enabled by default)"
-   echo "-no-jemalloc      -> disable jemalloc (enabled by default on Linux hosts)"
-   echo "-no-mtmalloc      -> disable mtmalloc (this is needed for dbx debugging)"
-   echo "-no-plpa          -> disable plpa support (enabled by default on Linux hosts)"
-   echo "-only-core        -> build only the core system"
-   echo "-only-depend      -> only compile 3rdparty/sge_depend"
-   echo "-only-java        -> only compile Java[TM] class files"
-   echo "-only-gui-inst    -> only compile Java[TM] GUI installer"
-   echo "-only-jemalloc    -> build only the jemalloc library"
-   echo "-only-qmake       -> build only qmake"
-   echo "-only-qmon        -> build only qmon 3rdparty libs and qmon client"
-   echo "-only-qtcsh       -> build only qtcsh"
-   echo "-only-remote      -> build only 3rdparty remote module (rsh, rshd, rlogin)"
-   echo "-only-64          -> build only 64 bit shared libraries for SOLARIS64, don't build 32 bit shared libraries"
-   echo "-parallel n       -> spawn multiple make processes by passing option -j n to make"
-   echo "-perlgui          -> build the experimental perlgui"
-   echo "-po               -> merge gridengine .pot with translations (Linux)"
-   echo "-pot              -> extract message template to gridengine .pot file (Linux)"
-   echo "-protected        -> create complete class file documentation"
-   echo "-purify           -> instrument code with purify (implies -debug)"
-   echo "-qmake            -> use qmake instead of make"
-   echo "-shared-libs      -> create libraries as shared libs"
-   echo "-spool-berkeleydb -> use berkeleydb spooling"
-   echo "-spool-classic    -> use classic flatfile spooling"
-   echo "-spool-targets    -> only create qmaster, spooldefaults and spoolinit"
-   echo "-univaman         -> create man pages for Univa branded man pages (with -man[kv])"
-   echo "-tight-ssh        -> compile SSH daemon with tight SGE integration"
-   echo "-umap             -> compile with usermapping and hostgroup feature"
-   echo "-with-jemalloc    -> build SGE with the jemalloc library"
+   echo "-32                  -> create 32 bit binaries (where supported)"
+   echo "-64                  -> create 64 bit binaries (where supported)"
+   echo "-D*                  -> include a macro definition in CFLAGS"
+   echo "-add-copyright       -> insert a special copyright string in each binary"
+   echo "-add-univa-copyright -> insert a Univa copyright string in each binary"
+   echo "-adoc                -> create source code documentation in adoc format"
+   echo "-catman              -> generate man pages in catman format"
+   echo "-cc                  -> use cc/CC to compile c/c++ code"
+   echo "-cov                 -> complile for code coverage analysis"
+   echo "-dce                 -> enable dce security"
+   echo "-debug               -> compile with debug information"
+   echo "-efence              -> compile in debug mode and detect memory leaks"
+   echo "-f                   -> specify other Makefile instead of common/Makefile"
+   echo "-flags               -> print C_FLAGS and INCLUDE_FLAGS to stdout, used by gelint"
+   echo "-gcc                 -> use gcc instead of system compiler (where supported)"
+   echo "-gettext             -> build the gettext libraries"
+   echo "-gprof               -> enable gprof profiling"
+   echo "-gss                 -> enable gss security"
+   echo "-help                -> show this help"
+   echo "-htmlman             -> generate man and html pages"
+   echo "-htmlmankv           -> generate man and html pages checked out with '-kv' flag"
+   echo "-insure              -> compile in debug mode and detect memory leaks"
+   echo "-intl                -> compile with internationalization library (libintl)"
+   echo "-javadoc             -> create source code documentation in Javadoc[TM] tool format"
+   echo "-kerberos            -> enable kerberos authentication"
+   echo "-man                 -> generate man pages"
+   echo "-mankv               -> generate man pages checked out with '-kv' flag"
+   echo "-mo                  -> generate the message catalogues (Solaris only)"
+   echo "-no-core             -> don't compile the core system"
+   echo "-no-dump             -> build binaries without libcore.so (Linux only)"
+   echo "-uge-ext             -> build binaries with Univa Extensions"
+   echo "-no-java             -> don't compile Java[TM] class files"
+   echo "-no-gui-inst         -> don't compile Java[TM] GUI installer"
+   echo "-no-jni              -> don't compile JNI library"
+   echo "-no-intl             -> do not compile with internationalization library"
+   echo "-no-mk               -> only return the specific architecture string"
+   echo "-no-opt              -> compile with no optimization"
+   echo "-no-qmake            -> don't compile qmake"
+   echo "-no-qmon             -> don't compile qmon 3rdparty libs and qmon client"
+   echo "-no-qtcsh            -> don't compile qtcsh"
+   echo "-no-remote           -> don't compile 3rdparty remote module (rsh, rshd, rlogin)"
+   echo "-no-rmon             -> disable rmon debug output"
+   echo "-no-secure           -> disable ssl security (enabled by default)"
+   echo "-no-jemalloc         -> disable jemalloc (enabled by default on Linux hosts)"
+   echo "-no-mtmalloc         -> disable mtmalloc (this is needed for dbx debugging)"
+   echo "-no-plpa             -> disable plpa support (enabled by default on Linux hosts)"
+   echo "-only-core           -> build only the core system"
+   echo "-only-depend         -> only compile 3rdparty/sge_depend"
+   echo "-only-java           -> only compile Java[TM] class files"
+   echo "-only-gui-inst       -> only compile Java[TM] GUI installer"
+   echo "-only-jemalloc       -> build only the jemalloc library"
+   echo "-only-qmake          -> build only qmake"
+   echo "-only-qmon           -> build only qmon 3rdparty libs and qmon client"
+   echo "-only-qtcsh          -> build only qtcsh"
+   echo "-only-remote         -> build only 3rdparty remote module (rsh, rshd, rlogin)"
+   echo "-only-64             -> build only 64 bit shared libraries for SOLARIS64, don't build 32 bit shared libraries"
+   echo "-parallel n          -> spawn multiple make processes by passing option -j n to make"
+   echo "-perlgui             -> build the experimental perlgui"
+   echo "-po                  -> merge gridengine .pot with translations (Linux)"
+   echo "-pot                 -> extract message template to gridengine .pot file (Linux)"
+   echo "-protected           -> create complete class file documentation"
+   echo "-purify              -> instrument code with purify (implies -debug)"
+   echo "-qmake               -> use qmake instead of make"
+   echo "-shared-libs         -> create libraries as shared libs"
+   echo "-spool-berkeleydb    -> use berkeleydb spooling"
+   echo "-spool-classic       -> use classic flatfile spooling"
+   echo "-spool-targets       -> only create qmaster, spooldefaults and spoolinit"
+   echo "-univaman            -> create man pages for Univa branded man pages (with -man[kv])"
+   echo "-tight-ssh           -> compile SSH daemon with tight SGE integration"
+   echo "-umap                -> compile with usermapping and hostgroup feature"
+   echo "-with-jemalloc       -> build SGE with the jemalloc library"
   exit
 }
 
@@ -333,7 +335,7 @@ set BUILDHTMLMAN      = 0
 set BUILDJAVADOC      = 0
 set SGE_PRODUCT_MODE  = ge
 set ADD_COPYRIGHT     = 0
-set ADD_SUN_COPYRIGHT = 0
+set ADD_UNIVA_COPYRIGHT = 0
 set ADOC              = 0
 
 # Default name and command line flags for some build commands
@@ -473,8 +475,8 @@ while ($#argv >= 1 && $?found)
    case "-add-copyright"
       set ADD_COPYRIGHT = 1
       breaksw
-   case "-add-sun-copyright"
-      set ADD_SUN_COPYRIGHT = 1
+   case "-add-univa-copyright"
+      set ADD_UNIVA_COPYRIGHT = 1
       breaksw
    case "-adoc":
       set CORE   = 0
@@ -2204,9 +2206,9 @@ if ( "$JAVA_GUI_INST" == 2 ) then
    if ( "$ADD_COPYRIGHT" == 1 ) then
       setenv AIMK_COPYRIGHT_DIR "$COPYRIGHT_DIR"
       setenv AIMK_COPYRIGHT "courtesy"
-   else if ( "$ADD_SUN_COPYRIGHT" == 1 ) then
-      setenv AIMK_COPYRIGHT_DIR "$SUN_COPYRIGHT_DIR"
-      setenv AIMK_COPYRIGHT "sun"
+   else if ( "$ADD_UNIVA_COPYRIGHT" == 1 ) then
+      setenv AIMK_COPYRIGHT_DIR "$UNIVA_COPYRIGHT_DIR"
+      setenv AIMK_COPYRIGHT "univa"
    else
       setenv AIMK_COPYRIGHT_DIR ""
       setenv AIMK_COPYRIGHT ""
@@ -2537,8 +2539,8 @@ endif
 
 if ( "$ADD_COPYRIGHT" == 1 ) then
    set CFLAGS = "-DADD_COPYRIGHT -I$COPYRIGHT_DIR $CFLAGS"
-else if ( "$ADD_SUN_COPYRIGHT" == 1 ) then
-   set CFLAGS = "-DADD_COPYRIGHT -DADD_SUN_COPYRIGHT -I$SUN_COPYRIGHT_DIR $CFLAGS"
+else if ( "$ADD_UNIVA_COPYRIGHT" == 1 ) then
+   set CFLAGS = "-DADD_COPYRIGHT -DADD_UNIVA_COPYRIGHT -I$UNIVA_COPYRIGHT_DIR $CFLAGS"
 endif
 
 if ( "$CORE" == 1 && "$JAVA" != 2 ) then
@@ -2661,9 +2663,9 @@ if ( "$JAVA" > 0 ) then
    if ( "$ADD_COPYRIGHT" == 1 ) then
       setenv AIMK_COPYRIGHT_DIR "$COPYRIGHT_DIR"
       setenv AIMK_COPYRIGHT "courtesy"
-   else if ( "$ADD_SUN_COPYRIGHT" == 1 ) then
-      setenv AIMK_COPYRIGHT_DIR "$SUN_COPYRIGHT_DIR"
-      setenv AIMK_COPYRIGHT "sun"
+   else if ( "$ADD_UNIVA_COPYRIGHT" == 1 ) then
+      setenv AIMK_COPYRIGHT_DIR "$UNIVA_COPYRIGHT_DIR"
+      setenv AIMK_COPYRIGHT "univa"
    else
       setenv AIMK_COPYRIGHT_DIR ""
       setenv AIMK_COPYRIGHT ""
@@ -2942,31 +2944,31 @@ if ( "$ADOC" == 1) then
    set REVISION = `grep GDI_VERSION libs/gdi/version.* | cut -f 2 -d '"'`
 
    echo "Creating documentation for libs: libcomm.texi"
-   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine Communication Library" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/comm/*.h libs/comm/*.c -o $COMPILE_ARCH/libcomm.texi
+   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine Communication Library" -DEDITION "$EDITION" -DREVISION "UGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/comm/*.h libs/comm/*.c -o $COMPILE_ARCH/libcomm.texi
 
    echo "Creating documentation for libs: libcull.texi"
-   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine CULL Library" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/cull/*.h libs/cull/*.c -o $COMPILE_ARCH/libcull.texi
+   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine CULL Library" -DEDITION "$EDITION" -DREVISION "UGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/cull/*.h libs/cull/*.c -o $COMPILE_ARCH/libcull.texi
 
    echo "Creating documentation for libs: eventclient.texi"
-   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Event Client Interface" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/evc/*.h libs/evc/*.c libs/evm/*.h libs/evm/*.c -o $COMPILE_ARCH/eventclient.texi
+   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Event Client Interface" -DEDITION "$EDITION" -DREVISION "UGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/evc/*.h libs/evc/*.c libs/evm/*.h libs/evm/*.c -o $COMPILE_ARCH/eventclient.texi
 
    echo "Creating documentation for libs: libgdi.texi"
-   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine GDI Library" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/gdi/*.h libs/gdi/*.c -o $COMPILE_ARCH/libgdi.texi
+   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine GDI Library" -DEDITION "$EDITION" -DREVISION "UGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/gdi/*.h libs/gdi/*.c -o $COMPILE_ARCH/libgdi.texi
 
    echo "Creating documentation for libs: libmir.texi"
-   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine Mirror Interface" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/mir/*.h libs/mir/*.c -o $COMPILE_ARCH/libmir.texi
+   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine Mirror Interface" -DEDITION "$EDITION" -DREVISION "UGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/mir/*.h libs/mir/*.c -o $COMPILE_ARCH/libmir.texi
 
    echo "Creating documentation for libs: libsched.texi"
-   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine SCHED Library" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/sched/*.h libs/sched/*.c -o $COMPILE_ARCH/libsched.texi
+   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine SCHED Library" -DEDITION "$EDITION" -DREVISION "UGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/sched/*.h libs/sched/*.c -o $COMPILE_ARCH/libsched.texi
 
    echo "Creating documentation for libs: libsgeobj.texi"
-   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine SGEOBJ Library" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/sgeobj/*.h libs/sgeobj/*.c -o $COMPILE_ARCH/libsgeobj.texi
+   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine SGEOBJ Library" -DEDITION "$EDITION" -DREVISION "UGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/sgeobj/*.h libs/sgeobj/*.c -o $COMPILE_ARCH/libsgeobj.texi
 
    echo "Creating documentation for libs: libjapi.texi"
-   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine Job API Library" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/japi/japi.h libs/japi/japi.c -o $COMPILE_ARCH/libjapi.texi
+   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine Job API Library" -DEDITION "$EDITION" -DREVISION "UGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/japi/japi.h libs/japi/japi.c -o $COMPILE_ARCH/libjapi.texi
 
    echo "Creating documentation for libs: libuti.texi"
-   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine Utility Library" -DEDITION "$EDITION" -DREVISION "SGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/uti/*.h libs/uti/*.c -o $COMPILE_ARCH/libuti.texi
+   3rdparty/adoc/$COMPILE_ARCH/adoc --no-warnings -f -b -DPROJECT "Grid Engine Utility Library" -DEDITION "$EDITION" -DREVISION "UGE $REVISION" -DCOPYRIGHT "The Grid Engine Team" -DAUTHOR "The Grid Engine Team" -I -xon -xitemize -2 libs/uti/*.h libs/uti/*.c -o $COMPILE_ARCH/libuti.texi
 
    echo "Creating documentation for libs: libdrmaa.texi"
 endif

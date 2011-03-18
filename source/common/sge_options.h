@@ -30,6 +30,7 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
+/* Portions of this code are Copyright 2011 Univa Inc. */
 /*___INFO__MARK_END__*/
 
 #include "uti/sge_prog.h" 
@@ -291,7 +292,8 @@ enum {
    tc_OPT,        /* task concurrency */
 
    /* added for job to core binding */
-   binding_OPT    /* requests job binding strategy */
+   binding_OPT,   /* requests job binding strategy */
+   suspend_remote_OPT   /* parameter for qrsh to toggle the suspend behavior */
 };
 
 /* macros used in parsing */

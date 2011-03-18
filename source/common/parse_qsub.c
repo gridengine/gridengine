@@ -28,6 +28,7 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
+/* Portions of this code are Copyright 2011 Univa Inc. */
 /*___INFO__MARK_END__*/
 #include <string.h>
 #include <stdlib.h>
@@ -1869,6 +1870,27 @@ DTRACE;
          DPRINTF(("\"-pty %s\"\n", *sp));
 
          if (set_yn_option(pcmdline, pty_OPT, *(sp - 1), *sp, &answer) != STATUS_OK) {
+            DRETURN(answer);
+         }
+
+         sp++;
+         continue;
+      }
+/*-----------------------------------------------------------------------------*/
+      /* "-suspend_remote" - accept, but do nothing, must be handled by caller */
+
+      if(!strcmp("-suspend_remote", *sp)) {
+         /* next field is "y|n" */
+         sp++;
+         if (!*sp) {
+             answer_list_add_sprintf(&answer, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,
+                                     MSG_PARSE_XOPTIONMUSTHAVEARGUMENT_S,"-suspend_remote");
+             DRETURN(answer);
+         }
+
+         DPRINTF(("\"-suspend_remote %s\"\n", *sp));
+
+         if (set_yn_option(pcmdline, suspend_remote_OPT, *(sp - 1), *sp, &answer) != STATUS_OK) {
             DRETURN(answer);
          }
 

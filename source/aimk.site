@@ -78,18 +78,18 @@ setenv TMPDIR /tmp
 # is installed
 #
 set OPENSSL_SOVERSION = 0.9.8h
-set OPENSSL_HOME = /off_home/gridengine/openssl-0.9.8h-origin/$buildarch
+set OPENSSL_HOME = /tools/PKG/openssl-0.9.8q/$buildarch
 
 #
 # PLPA_HOME
 #
-set PLPA_HOME = /TODO/plpa-1.3.2/$buildarch
+set PLPA_HOME = /tools/PKG/plpa-1.3.2/$buildarch
 
 # 
 # BERKELEYDB_HOME the directory where the include and lib directory of
 # Berkeley DB is installed
 #
-set BERKELEYDB_HOME = /off_home/gridengine/db-4.4.20/$buildarch
+set BERKELEYDB_HOME = /tools/PKG/db-4.4.20/$buildarch
 set BDB_INCLUDE_SUBDIR =
 set BDB_LIB_SUBDIR =
 set BDB_LIB_SUFFIX =
@@ -97,7 +97,7 @@ set BDB_LIB_SUFFIX =
 # Directory where libcore.so's reside
 # Relevant for Linux only:
 # http://gridengine.sunsource.net/issues/show_bug.cgi?id=2552
-set CORE_HOME = /vol2/tools/SW/libcore/$buildarch
+set CORE_HOME = /tools/PKG/libcore/$buildarch
 
 # 
 # KRB_HOME the directory where the include and lib directory of kerberos is

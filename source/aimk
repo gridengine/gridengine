@@ -1833,9 +1833,9 @@ case SOLARISAMD64:
       set SHARED_CFLAGS = "-KPIC"
 
       if ( $BUILDARCH == SOLARIS64 ) then
-         set MEMFLAG = "-xarch=v9"
-         set LFLAGS = "-xarch=v9 $LFLAGS"
-         set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -G -xarch=v9"
+         set MEMFLAG = "-xarch=generic -m64"
+         set LFLAGS = "-xarch=generic -m64 $LFLAGS"
+         set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -G -xarch=generic -m64"
       else if ( $BUILDARCH == SOLARISAMD64 ) then
          set CFLAGS = "-D_LARGEFILE64_SOURCE=1 $CFLAGS"
          

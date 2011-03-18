@@ -8,6 +8,10 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+JG-2011-03-18-0: Cleanup:     adapt build default paths to univa environment
+                 Isssue:      GE-3350
+                 Review:      TBD
+
 DG-2011-03-18-0: Cleanup:     aimk help and qconf -help output
 
 SH-2011-03-17-0: Enhancem.:   Implemented the -suspend_remote parameter for qrsh

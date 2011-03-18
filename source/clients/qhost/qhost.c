@@ -489,13 +489,13 @@ FILE *fp
 
    fprintf(fp,"%s qhost [options]\n", MSG_SRC_USAGE);
          
-   fprintf(fp, "  [-help]                    %s\n", MSG_COMMON_help_OPT_USAGE);
-   fprintf(fp, "  [-h hostlist]              %s\n", MSG_QHOST_h_OPT_USAGE);
    fprintf(fp, "  [-F [resource_attribute]]  %s\n", MSG_QHOST_F_OPT_USAGE); 
+   fprintf(fp, "  [-h hostlist]              %s\n", MSG_QHOST_h_OPT_USAGE);
+   fprintf(fp, "  [-help]                    %s\n", MSG_COMMON_help_OPT_USAGE);
    fprintf(fp, "  [-j]                       %s\n", MSG_QHOST_j_OPT_USAGE);
+   fprintf(fp, "  [-l attr=val,...]          %s\n", MSG_QHOST_l_OPT_USAGE);
    fprintf(fp, "  [-ncb]                     %s\n", MSG_QHOST_ncb_OPT_USAGE);
    fprintf(fp, "  [-q]                       %s\n", MSG_QHOST_q_OPT_USAGE);
-   fprintf(fp, "  [-l attr=val,...]          %s\n", MSG_QHOST_l_OPT_USAGE);
    fprintf(fp, "  [-u user[,user,...]]       %s\n", MSG_QHOST_u_OPT_USAGE); 
    fprintf(fp, "  [-xml]                     %s\n", MSG_COMMON_xml_OPT_USAGE);
 

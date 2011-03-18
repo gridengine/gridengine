@@ -40,8 +40,6 @@ qstat \- show the status of xxQS_NAMExx jobs and queues
 [
 .B -ext
 ] [
-.B -cb
-] [
 .B -f
 ] [ \fB\-F\fP [\fBresource_name,...\fP]
 ] [
@@ -56,6 +54,8 @@ qstat \- show the status of xxQS_NAMExx jobs and queues
 .B -ne
 ] [
 .B -pe pe_name,...
+] [
+.B -ncb
 ] [
 .B -pri 
 ] [
@@ -102,17 +102,6 @@ the cluster global file.
 Command line can be used to override the flags contained in the files.
 .\"
 .SH OPTIONS
-.IP "\fB\-cb\fP"
-In combination with \fB\-cb\fP the output of this command will additionally
-contain the information of a requested binding and
-the changes that have been applied to the topology string (real
-binding) for the host where this job is running. This additional 
-information will appear in combination with the parameters 
-\fB\-r\fP and \fB\-j\fP.
-.sp
-Please note that this command line switch will be removed with
-the next major release.
-.\"
 .IP "\fB\-explain a|A|c|E\fP"
 \'c' displays the reason for the c(onfiguration ambiguous) state of a queue
 instance. 'a' shows the reason for the alarm state. Suspend alarm state
@@ -219,6 +208,17 @@ In combination with \fB\-f\fP the option suppresses the display of empty
 queues. This means all queues where actually no jobs are running are not
 displayed.
 .\"
+.IP "\fB\-ncb\fP"
+In combination with \fB\-ncb\fP the output of a command will
+suppress information of a requested binding and
+changes that have been applied to the topology string (real
+binding) for the host where the job is running.
+This information will disappear in combination with the parameters
+\fB\-r\fP and \fB\-j\fP.
+.sp
+Please note that this command line switch is intended to provide backward
+compatibility and will be removed in the next major release.
+.\"
 .IP "\fB\-pe pe_name,...\fP"
 Displays status information with respect to queues which are attached to 
 at least one of the parallel environments enlisted in the comma separated 
@@ -243,11 +243,6 @@ Allows for the filtering of queue instances according to state.
 .IP "\fB\-r\fP"
 Prints extended information about the resource requirements
 of the displayed jobs. 
-.sp
-In combination with \fB\-cb\fP the output of this command will contain
-additional information concerning the requested binding for a job.
-(see \fB\-binding\fP of
-.M qsub 1 ).
 .sp
 Please refer to the \fBOUTPUT FORMATS\fP
 sub-section \fBExpanded Format\fP below for detailed information.
@@ -321,9 +316,9 @@ schemas are referenced in the XML output. The output is printed to stdout.
 For more detailed information, the schemas for the qstat command can be found
 in $SGE_ROOT/util/resources/schemas/qstat.
 .sp
-If the \fB\-xml\fP parameter is combined with \fB\-cb\fP then the XML output will
-contain additional tags containing information about job to core binding.
-You can also find schema files with the suffix "_cb" in the directory 
+If the \fB\-xml\fP parameter is combined with \fB\-ncb\fP then the XML output does
+not contain tags with information about job to core binding.
+You can also find schema files with the suffix "_ncb" in the directory
 $SGE_ROOT/util/resources/schemas/qstat that describe that changes.
 .br
 .\"
@@ -713,8 +708,7 @@ The requested checkpointing environment of the job (see the
 In case of running jobs, the granted
 parallel environment with the granted number of queue slots.
 .IP "\(bu" 3n
-If \fB\-cb\fP was specified the requested job binding
-parameters.
+The requested job binding parameters.
 .\"
 .SS "\fBEnhanced Output (with \-ext)\fP"
 For each job the following additional items are displayed:

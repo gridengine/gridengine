@@ -319,9 +319,9 @@ if [ $makebin = true ]; then
       ARCH=`$VDIR/util/arch`
       if [ "`echo "$SELECTED_ARCHS" | grep $ARCH`" != "" ]; then
          ADIR="bin/$ARCH utilbin/$ARCH examples/jobsbin/$ARCH lib/$ARCH"
-         if [ $ARCH = lx24-x86 ]; then
+         if [ $ARCH = lx-x86 ]; then
             CreateRpm bin i586 $ADIR
-         elif [ $ARCH = lx24-amd64 ]; then
+         elif [ $ARCH = lx-amd64 ]; then
             CreateRpm bin x86_64 $ADIR
          else
             echo "RPM packages are not supported for your architecture $ARCH!"

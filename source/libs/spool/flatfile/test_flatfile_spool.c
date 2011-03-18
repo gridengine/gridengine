@@ -2724,7 +2724,7 @@ static int RQS_test(void) {
       limit_list = lCreateList("Limit_List", RQRL_Type);
       limit = lCreateElem(RQRL_Type);
       lSetString(limit, RQRL_name, "arch");
-      lSetString(limit, RQRL_value, "lx24-amd64");
+      lSetString(limit, RQRL_value, "lx-amd64");
       lAppendElem(limit_list, limit);
       lSetList(ep2, RQR_limit, limit_list);
    lAppendElem(lp1, ep2);

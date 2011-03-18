@@ -28,7 +28,9 @@
  *   Copyright: 2001 by Sun Microsystems, Inc.
  * 
  *   All Rights Reserved.
- * 
+ *
+ *  Portions of this code are Copyright 2011 Univa Inc.
+ *
  ************************************************************************/
 ___INFO__MARK_END__-->
 
@@ -72,7 +74,7 @@ ___INFO__MARK_END__-->
       </condition>
 
       <condition property="legal" value="COPYRIGHT">
-          <equals arg1="${env.AIMK_COPYRIGHT}" arg2="sun" trim="true"/>
+          <equals arg1="${env.AIMK_COPYRIGHT}" arg2="univa" trim="true"/>
       </condition>
       <condition property="legal" value="COPYRIGHT LICENSE">
           <equals arg1="${env.AIMK_COPYRIGHT}" arg2="courtesy" trim="true"/>
@@ -81,7 +83,7 @@ ___INFO__MARK_END__-->
          <not>
              <or>
                  <equals arg1="${dist.type}" arg2="courtesy" trim="true"/>
-                 <equals arg1="${dist.type}" arg2="sun" trim="true"/>
+                 <equals arg1="${dist.type}" arg2="univa" trim="true"/>
              </or>
          </not>
       </condition>
@@ -334,10 +336,8 @@ ___INFO__MARK_END__-->
                 <equals arg1="${sge.arch}" arg2="sol-sparc64"/>
                 <equals arg1="${sge.arch}" arg2="solaris64"/>
                 <equals arg1="${sge.arch}" arg2="sol-amd64"/>
-                <equals arg1="${sge.arch}" arg2="lx24-amd64"/>
-                <equals arg1="${sge.arch}" arg2="lx24-ia64"/>
-                <equals arg1="${sge.arch}" arg2="lx26-amd64"/>
-                <equals arg1="${sge.arch}" arg2="lx26-ia64"/>
+                <equals arg1="${sge.arch}" arg2="lx-amd64"/>
+                <equals arg1="${sge.arch}" arg2="lx-ia64"/>
                 <equals arg1="${sge.arch}" arg2="hp11-64"/>
                 <equals arg1="${sge.src.targetbits}" arg2="TARGET_64BIT"/>
             </or>   

@@ -272,10 +272,10 @@ if [ $createdist = true ]; then
       DSTARCH=$i
       SetArchBin $i
 
-      # Install arch.dist as arch for installation process
+      # Install arch script
       Execute rm -rf $SPOOLDIR/util
       Execute mkdir -p $SPOOLDIR/util
-      Execute cp dist/util/arch.dist $SPOOLDIR/util/arch
+      Execute cp dist/util/arch $SPOOLDIR/util/arch
 
       # Install this script
       sed '/\_\_\_CREATEDIST_MARK_START/,/\_\_\_CREATEDIST_MARK_END/d' scripts/test_spooling_performance.sh > $SPOOLDIR/test_spooling_performance.sh

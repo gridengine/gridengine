@@ -64,7 +64,7 @@ public class TestBedManager implements Config {
     public static int EXIT_VAL_SOMETHING = 666;
 
     public static final String[] ARCHITECTURES = new String[] {
-        "sol-amd64","sol-sparc64", "hp11", "hp11-64", "aix51", "lx24-ia64", "lx24-amd64", "darwin-ppc"
+        "sol-amd64","sol-sparc64", "hp11", "hp11-64", "aix51", "lx-ia64", "lx-amd64", "darwin-ppc"
     };
 
     public static final int[] DEF_RESOLVE_EXIT_VALUES = new int[]{

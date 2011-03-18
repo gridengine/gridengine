@@ -27,6 +27,8 @@
  * 
  *   All Rights Reserved.
  * 
+ *  Portions of this code are Copyright 2011 Univa Inc.
+ * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
 #include <stdio.h>
@@ -452,6 +454,10 @@ sge_parse_qstat(sge_gdi_ctx_class_t *ctx, lList **ppcmdline, qstat_env_t *qstat_
    /* Loop over all options. Only valid options can be in the
       ppcmdline list. 
    */
+
+   /* make core binding related output to default output */
+   qstat_env->full_listing |= QSTAT_DISPLAY_BINDING;
+
    while (lGetNumberOfElem(*ppcmdline)) {
       if (parse_flag(ppcmdline, "-help",  &alp, &helpflag)) {
          usageshowed = qstat_usage(qstat_env->qselect_mode, stdout, NULL);
@@ -460,8 +466,9 @@ sge_parse_qstat(sge_gdi_ctx_class_t *ctx, lList **ppcmdline, qstat_env_t *qstat_
          break;
       }
 
-      while (parse_flag(ppcmdline, "-cb", &alp, &(qstat_env->is_binding_format))) {
-         qstat_env->full_listing |= QSTAT_DISPLAY_BINDING;
+      while (parse_flag(ppcmdline, "-ncb", &alp, &(qstat_env->is_binding_format))) {
+         /* disable qstat binding output bit */
+         qstat_env->full_listing ^= QSTAT_DISPLAY_BINDING;
          continue;
       }
 

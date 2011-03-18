@@ -28,11 +28,13 @@
  * 
  *   All Rights Reserved.
  * 
+ *  Portions of this code are Copyright 2011 Univa Inc.
+ *
  ************************************************************************/
 ___INFO__MARK_END__-->
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-            targetNamespace="http://gridengine.sunsource.net/source/browse/*checkout*/gridengine/source/dist/util/resources/schemas/qhost/qhost.xsd?revision=1.2"
-            xmlns="http://gridengine.sunsource.net/source/browse/*checkout*/gridengine/source/dist/util/resources/schemas/qhost/qhost.xsd?revision=1.2"
+   targetNamespace="https://github.com/gridengine/gridengine/raw/master/source/dist/util/resources/schemas/qhost/qhost.xsd"
+            xmlns="https://github.com/gridengine/gridengine/raw/master/source/dist/util/resources/schemas/qhost/qhost.xsd"
             elementFormDefault="qualified">
     
     <xsd:element name="qhost" type="QHostType"/>

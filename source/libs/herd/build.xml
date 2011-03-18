@@ -29,6 +29,8 @@
  *
  *   All Rights Reserved.
  *
+ *  Portions of this code are Copyright 2011 Univa Inc.
+ *
  ************************************************************************/
 ___INFO__MARK_END__-->
 
@@ -171,7 +173,7 @@ ___INFO__MARK_END__-->
         </condition>
 
         <condition property="legal" value="COPYRIGHT">
-            <equals arg1="${env.AIMK_COPYRIGHT}" arg2="sun" trim="true"/>
+            <equals arg1="${env.AIMK_COPYRIGHT}" arg2="univa" trim="true"/>
         </condition>
         <condition property="legal" value="COPYRIGHT LICENSE">
             <equals arg1="${env.AIMK_COPYRIGHT}" arg2="courtesy" trim="true"/>
@@ -180,7 +182,7 @@ ___INFO__MARK_END__-->
            <not>
                <or>
                    <equals arg1="${dist.type}" arg2="courtesy" trim="true"/>
-                   <equals arg1="${dist.type}" arg2="sun" trim="true"/>
+                   <equals arg1="${dist.type}" arg2="univa" trim="true"/>
                </or>
            </not>
         </condition>

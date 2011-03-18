@@ -27,6 +27,8 @@
  *
  *  All Rights Reserved.
  *
+ *  Portions of this code are Copyright 2011 Univa Inc.
+ * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
@@ -551,18 +553,18 @@ static bool binding_set_linear_linux(int first_socket, int first_core,
          int proc_id_size = 0;
 
          /* maximal amount of sockets on this system */
-         int max_amount_of_sockets = get_amount_of_sockets();
+         int max_amount_of_sockets = get_amount_of_plpa_sockets();
 
          /* strategy: go to the first_socket and the first_core + offset and 
             fill up socket and go to the next one. */ 
                
          /* TODO maybe better to search for using a core exclusively? */
             
-         while (get_amount_of_cores(next_socket) <= next_core) {
+         while (get_amount_of_plpa_cores(next_socket) <= next_core) {
             /* TODO which kind of warning when first socket does not offer this? */
             /* move on to next socket - could be that we have to deal only with cores 
                instead of <socket><core> tuples */
-            next_core -= get_amount_of_cores(next_socket); 
+            next_core -= get_amount_of_plpa_cores(next_socket); 
             next_socket++;
             if (next_socket >= max_amount_of_sockets) {
                /* we are out of sockets - we do nothing */
@@ -578,7 +580,7 @@ static bool binding_set_linear_linux(int first_socket, int first_core,
             /* jump to next socket when it is needed */
             /* maybe the next socket could offer 0 cores (I can' see when, 
                but just to be sure) */
-            while ((socket_amount_of_cores = get_amount_of_cores(next_socket)) 
+            while ((socket_amount_of_cores = get_amount_of_plpa_cores(next_socket)) 
                         <= next_core) {
                next_socket++;
                next_core = next_core - socket_amount_of_cores;
@@ -715,7 +717,7 @@ bool binding_set_striding_linux(int first_socket, int first_core, int amount_of_
             int* proc_id = NULL; 
             int proc_id_size = 0;
             /* maximal amount of sockets on this system */
-            int max_amount_of_sockets = get_amount_of_sockets();
+            int max_amount_of_sockets = get_amount_of_plpa_sockets();
             
             /* check if we are already out of range */
             if (next_socket >= max_amount_of_sockets) {
@@ -723,10 +725,10 @@ bool binding_set_striding_linux(int first_socket, int first_core, int amount_of_
                return false;
             }   
 
-            while (get_amount_of_cores(next_socket) <= next_core) {
+            while (get_amount_of_plpa_cores(next_socket) <= next_core) {
                /* move on to next socket - could be that we have to deal only with cores 
                   instead of <socket><core> tuples */
-               next_core -= get_amount_of_cores(next_socket); 
+               next_core -= get_amount_of_plpa_cores(next_socket); 
                next_socket++;
                if (next_socket >= max_amount_of_sockets) {
                   /* we are out of sockets - we do nothing */
@@ -751,10 +753,10 @@ bool binding_set_striding_linux(int first_socket, int first_core, int amount_of_
                   return false;
                }   
 
-               while (get_amount_of_cores(next_socket) <= next_core) {
+               while (get_amount_of_plpa_cores(next_socket) <= next_core) {
                   /* move on to next socket - could be that we have to deal only with cores 
                      instead of <socket><core> tuples */
-                  next_core -= get_amount_of_cores(next_socket); 
+                  next_core -= get_amount_of_plpa_cores(next_socket); 
                   next_socket++;
                   if (next_socket >= max_amount_of_sockets) {
                      /* we are out of sockets - we do nothing */

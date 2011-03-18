@@ -29,7 +29,7 @@ int continue_handler (COMM_HANDLE *comm_handle, char *hostname) {
   return 0;
 }
 
-int suspend_handler (COMM_HANDLE *comm_handle, char *hostname, int b_is_rsh, unsigned int pid, dstring *dbuf) {
+int suspend_handler (COMM_HANDLE *comm_handle, char *hostname, int b_is_rsh, int b_suspend_remote, unsigned int pid, dstring *dbuf) {
   DENTER(TOP_LAYER, "ijs_suspend: suspend_handler");
   DEXIT;
   return 1;

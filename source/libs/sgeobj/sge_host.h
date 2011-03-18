@@ -28,7 +28,9 @@
  *   Copyright: 2001 by Sun Microsystems, Inc.
  * 
  *   All Rights Reserved.
- * 
+ *
+ * Portions of this code are Copyright 2011 Univa Inc.
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
@@ -75,6 +77,7 @@
 #define LOAD_ATTR_TOPOLOGY       "m_topology"
 #define LOAD_ATTR_SOCKETS        "m_socket"
 #define LOAD_ATTR_CORES          "m_core"
+#define LOAD_ATTR_THREADS        "m_thread"
 #define LOAD_ATTR_TOPOLOGY_INUSE "m_topology_inuse"
 
 bool host_is_referenced(const lListElem *host, lList **answer_list,

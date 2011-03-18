@@ -46,10 +46,6 @@
 # with the user's path instead of our "safe" one.  Thus we need to
 # save the old value of PATH for later restoration.
 #
-# This arch script is used from users building the source code for themselfs. 
-# 
-# PLEASE UPDATE CHANGES IN THE SCRIPT WHICH HAVE TO APPEAR IN THE DISTRIBUTION
-# ALSO IN THE arch.dist SCRIPT! 
 
 SAFE_PATH=/bin:/usr/bin:/usr/sbin
 OLD_PATH=$PATH
@@ -235,49 +231,48 @@ Linux)
       lxmachine=$osmachine
    esac
 
-   case $osrelease in
-   2.4.*)
-      lxrelease=24
+   if [ "$unsupported" != "UNSUPPORTED-" ]; then
+      case $osrelease in
+      2.4.*|2.6.*)
+         # verify the GNU C lib version
+         # For an alternative means to determine GNU C lib version see
+         # http://www.gnu.org/software/libc/FAQ.html#s-4.9
+         #
+         # we expect libc version to be
+         # >= 2.3 - this is our supported lx-* platform
+         # == 2.2 - unsupported but known to build and work: ulx-* platform
+         # <= 2.2 - not accepted as build or execution platform
+         case $lxmachine in
+         amd64)
+            libc_string=`strings /lib64/libc.so.6 | grep "GNU C Library"`
+            ;;
+         ia64)
+            libc_string=`strings /lib/libc.so.6.1 | grep "GNU C Library"`
+            ;;
+         *)
+            libc_string=`strings /lib/libc.so.6 | grep "GNU C Library"`
+            ;;
+         esac
 
-      # verify the GNU C lib version
-      # For an alternative means to determine GNU C lib version see
-      # http://www.gnu.org/software/libc/FAQ.html#s-4.9
-      case $lxmachine in
-      amd64)
-         libc_string=`strings /lib64/libc.so.6 | grep "GNU C Library"`
-         ;;
-      ia64)
-         libc_string=`strings /lib/libc.so.6.1 | grep "GNU C Library"`
-         ;;
-      *)
-         libc_string=`strings /lib/libc.so.6 | grep "GNU C Library"`
-         ;;
-      esac
-
-      # retrieving libc version failed
-      if [ $? -ne 0 ]; then
-         unsupported="UNSUPPORTED-"
-         lxrelease="24-GLIBC"
-      else
-         libc_version=`echo $libc_string | tr ' ,' '\n' | grep "2\." | head -1 | cut -f 2 -d "."`
-         if [ $libc_version -lt 2 ]; then
+         # retrieving libc version failed
+         if [ $? -ne 0 ]; then
             unsupported="UNSUPPORTED-"
-            lxrelease=24-GLIBC-2.${libc_version}
          else
-            if [ $libc_version -eq 2 ]; then
-               unsupported="u"
+            libc_version=`echo $libc_string | tr ' ,' '\n' | grep "2\." | head -1 | cut -f 2 -d "."`
+            if [ $libc_version -lt 2 ]; then
+               unsupported="UNSUPPORTED-GLIBC-2.${libc_version}"
+            else
+               if [ $libc_version -eq 2 ]; then
+                  unsupported="u"
+               fi
             fi
          fi
-      fi
-      ;;
-   2.6.*)
-      lxrelease=26
-      ;;
-   *)
-      unsupported="UNSUPPORTED-"
-      lxrelease=$osrelease
-   esac
-   ARCH=${unsupported}lx${lxrelease}-${lxmachine}
+         ;;
+      *)
+         unsupported="UNSUPPORTED-$osrelease"
+      esac
+   fi
+   ARCH=${unsupported}lx-${lxmachine}
    ;;
 OSF1)
    case $osrelease in

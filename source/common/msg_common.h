@@ -964,7 +964,7 @@
 #define MSG_GDI_UTEXT_b_OPT_YN                           _MESSAGE(23500, _("handle command as binary"))
 
 #define MSG_GDI_USAGE_binding_OPT_YN                     "[-binding [env|pe|set] exp|lin|str]"
-#define MSG_GDI_UTEXT_binding_OPT_YN                     _MESSAGE(23515, _("binds job to processor cores"))
+#define MSG_GDI_UTEXT_binding_OPT_YN                     _MESSAGE(23501, _("binds job to processor cores"))
 
 #define MSG_GDI_USAGE_Msconf_OPT                         "[-Msconf fname]"
 #define MSG_GDI_UTEXT_Msconf_OPT                         _MESSAGE(23502, _("modify scheduler configuration from file"))

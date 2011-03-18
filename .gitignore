@@ -1,6 +1,7 @@
 # private configuration files 
 aimk.private
 build_private.properties
+build_testsuite.properties
 distinst.private
 
 # dependencies files, tags and tmp-files

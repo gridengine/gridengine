@@ -7,6 +7,7 @@ distinst.private
 *_dependencies
 *.swp
 tags
+cvs_update.*
 
 # C build directories
 source/[DARWIN_|LINUX86_|SOLARIS|FREEBSD]*
@@ -15,15 +16,7 @@ source/3rdparty/qmake/[DARWIN_|LINUX86_|SOLARIS|FREEBSD]*
 source/3rdparty/qtcsh/[DARWIN_|LINUX86_|SOLARIS|FREEBSD]*
 source/3rdparty/sge_depend/[DARWIN_|LINUX86_|SOLARIS|FREEBSD]*
 source/3rdparty/remote/[DARWIN_|LINUX86_|SOLARIS|FREEBSD]*
-source/[DARWIN_|LINUX86_|SOLARIS*]*
-source/3rdparty/qmon/[DARWIN_|LINUX86_|SOLARIS*]*
-source/3rdparty/qmake/[DARWIN_|LINUX86_|SOLARIS*]*
-source/3rdparty/qtcsh/[DARWIN_|LINUX86_|SOLARIS*]*
-source/3rdparty/sge_depend/[DARWIN_|LINUX86_|SOLARIS*]*
-source/3rdparty/remote/[DARWIN_|LINUX86_|SOLARIS*]*
-
-# man build directories
-source/*MANSBUILD*
+source/3rdparty/adoc/[DARWIN_|LINUX86_|SOLARIS|FREEBSD]*
 
 # man build directories
 source/*MANSBUILD*

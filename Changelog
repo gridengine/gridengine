@@ -8,6 +8,10 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+EB-2010-03-18-0: Bugfix:      ENABLE_RESCHEDULE_SLAVE=1 doesn't work anymore
+                 Issues:      GE-3310
+                 Review:      TBD
+
 DG-2011-03-17-1: Enhancem.:   qstat shows now core binding related information
                               per default
                  Issue:       GE-3371

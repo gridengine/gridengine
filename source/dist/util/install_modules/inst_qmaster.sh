@@ -374,95 +374,58 @@ SetSpoolingOptionsBerkeleyDB()
       params_ok=$?
    fi
    if [ "$QMASTER" = "install" ]; then
-      $INFOTEXT -n "\nThe Berkeley DB spooling method provides two configurations!\n\n" \
-                   " Local spooling:\n" \
-                   " The Berkeley DB spools into a local directory on this host (qmaster host)\n" \
-                   " This setup is faster, but you can't setup a shadow master host\n\n"
-      $INFOTEXT -n " Berkeley DB Spooling Server:\n" \
-                   " If you want to setup a shadow master host, you need to use\nBerkeley DB Spooling Server!\n" \
-                   " In this case you have to choose a host with a configured RPC service.\nThe qmaster host" \
-                   " connects via RPC to the Berkeley DB. This setup is more\nfailsafe," \
-                   " but results in a clear potential security hole. RPC communication\n" \
-                   " (as used by Berkeley DB) can be easily compromised. Please only use this\n" \
-                   " alternative if your site is secure or if you are not concerned about\n" \
-                   " security. Check the installation guide for further advice on how to achieve\n" \
-                   " failsafety without compromising security.\n\n"
 
-      if [ "$AUTO" = "true" ]; then
-         if [ "$DB_SPOOLING_SERVER" = "none" ]; then
-            is_server="false"
-         else
-            is_server="true"
-         fi
-      else
-         $INFOTEXT -n -ask "y" "n" -def "n" "Do you want to use a Berkeley DB Spooling Server? (y/n) [n] >> "
-         if [ $? = 0 ]; then
-            $INFOTEXT -u "Berkeley DB Setup\n"
-            $INFOTEXT "Please, log in to your Berkeley DB spooling host and execute \"inst_sge -db\""
-            $INFOTEXT -auto $AUTO -wait -n "Please do not continue, before the Berkeley DB installation with\n" \
-                                        "\"inst_sge -db\" is completed, continue with <RETURN>"
-            is_server="true"
-         else
-            is_server="false"
-            $INFOTEXT -n -auto $AUTO -wait "\nHit <RETURN> to continue >> "
-            $CLEAR
-         fi
-      fi
+      is_server="false"
 
-      if [ $is_server = "true" ]; then
-         db_server_host=`echo "$1" | awk -F: '{print $1}'`
-         db_server_spool_dir=`echo "$1" | awk -F: '{print $2}'`
-         SpoolingQueryChange "$db_server_host" "$db_server_spool_dir"
-      else
-         done="false"
-         is_spool="false"
+      done="false"
+      is_spool="false"
 
-         while [ $is_spool = "false" ] && [ $done = "false" ]; do
-            $CLEAR
-            SpoolingQueryChange
-            if [ -d $SPOOLING_DIR ]; then
-               $INFOTEXT -n -ask "y" "n" -def "n" -auto $AUTO "The spooling directory already exists! Do you want to delete it? [n] >> "
-               ret=$?               
-               if [ $AUTO = true ]; then
-                  $INFOTEXT -log "The spooling directory already exists!\n Please remove it or choose any other spooling directory!"
-                  MoveLog
-                  exit 1
-               fi
+      while [ $is_spool = "false" ] && [ $done = "false" ]; do
+         $CLEAR
+         SpoolingQueryChange
+         if [ -d $SPOOLING_DIR ]; then
+            $INFOTEXT -n -ask "y" "n" -def "n" -auto $AUTO "The spooling directory already exists! Do you want to delete it? [n] >> "
+            ret=$?               
+            if [ $AUTO = true ]; then
+               $INFOTEXT -log "The spooling directory already exists!\n Please remove it or choose any other spooling directory!"
+               MoveLog
+               exit 1
+            fi
  
-               if [ $ret = 0 ]; then
-                     Removedir $SPOOLING_DIR
-                     if [ -d $SPOOLING_DIR ]; then
-                        $INFOTEXT "You are not the owner of this directory. You can't delete it!"
-                     else
-                        is_spool="true"
-                     fi
+            if [ $ret = 0 ]; then
+               Removedir $SPOOLING_DIR
+               if [ -d $SPOOLING_DIR ]; then
+                  $INFOTEXT "You are not the owner of this directory. You can't delete it!"
                else
-                  $INFOTEXT -wait "Please hit <ENTER>, to choose any other spooling directory!"
+                  is_spool="true"
                fi
-             else
-                is_spool="true"
-             fi
-
-            CheckLocalFilesystem $SPOOLING_DIR
-            ret=$?
-            if [ $ret -eq 0 -a "$AUTO" = "false" ]; then
-               $INFOTEXT "\nThe database directory\n\n" \
-                            "   %s\n\n" \
-                            "is not on a local filesystem. Please choose a local filesystem or\n" \
-                            "configure the RPC Client/Server mechanism." $SPOOLING_DIR
-               $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
             else
-               done="true" 
+               $INFOTEXT -wait "Please hit <ENTER>, to choose any other spooling directory!"
             fi
-            
-            if [ $is_spool = "false" ]; then
-               done="false"
-            elif [ $done = "false" ]; then
-               is_spool="false"
-            fi
+          else
+             is_spool="true"
+          fi
 
-         done
-       fi
+          CheckLocalFilesystem $SPOOLING_DIR
+          ret=$?
+          if [ $ret -eq 0 -a "$AUTO" = "false" ]; then
+             $INFOTEXT "\nThe database directory\n\n" \
+                       "   %s\n\n" \
+                       "is not on a local filesystem. Please choose a local filesystem or\n" \
+                       "configure the RPC Client/Server mechanism." $SPOOLING_DIR
+             $INFOTEXT -wait -auto $AUTO -n "\nHit <RETURN> to continue >> "
+          else
+             done="true" 
+          fi
+            
+          if [ $is_spool = "false" ]; then
+             done="false"
+          elif [ $done = "false" ]; then
+             is_spool="false"
+          fi
+
+      done
+       
    else
       if [ "$ARCH" = "darwin" ]; then
          ret=`ps ax | grep "berkeley_db_svc" | wc -l` 

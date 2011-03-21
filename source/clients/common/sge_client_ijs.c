@@ -28,6 +28,7 @@
  *   All Rights Reserved.
  *
  ************************************************************************/
+/* Portions of this code are Copyright 2011 Univa Inc. */
 /*___INFO__MARK_END__*/
 
 #include <stdlib.h>
@@ -73,6 +74,7 @@ static int  g_noshell     = 0; /* set by main thread, read by worker thread */
 static int  g_is_rsh      = 0; /* set by main thread, read by worker thread */
 static unsigned int g_pid = 0; /* set by main thread, read by worker thread */
 static int  g_raw_mode_state = 0; /* set by main thread, read by worker thread */
+static int  g_suspend_remote = 0; /* set by main thread, read by worker thread */
 static COMM_HANDLE *g_comm_handle = NULL;
 
 /*
@@ -420,7 +422,7 @@ void* tty_to_commlib(void *t_conf)
             do_exit = 1;
          } else {
             DPRINTF(("tty_to_commlib: writing to commlib: %d bytes\n", nread));
-            if (suspend_handler(g_comm_handle, g_hostname, g_is_rsh, g_pid, &dbuf) == 1) {
+            if (suspend_handler(g_comm_handle, g_hostname, g_is_rsh, g_suspend_remote, g_pid, &dbuf) == 1) {
                 if (comm_write_message(g_comm_handle, g_hostname, 
                     COMM_CLIENT, 1, (unsigned char*)pbuf, 
                     (unsigned long)nread, STDIN_DATA_MSG, &err_msg) != nread) {
@@ -643,6 +645,7 @@ void* commlib_to_tty(void *t_conf)
 *     int noshell        - The "-noshell" switch
 *     int is_rsh         - Is it a qrsh with commandline?
 *     int is_qlogin      - Is it a qlogin or qrsh without commandline?
+*     int suspend_remote - suspend_remote switch of qrsh
 *     int force_pty      - The user forced use of pty by the "-pty yes" switch
 *
 *  OUTPUTS
@@ -668,6 +671,7 @@ int run_ijs_server(COMM_HANDLE *handle, const char *remote_host,
                    u_long32 job_id,
                    int nostdin, int noshell,
                    int is_rsh, int is_qlogin, ternary_t force_pty,
+                   ternary_t suspend_remote,
                    int *p_exit_status, dstring *p_err_msg)
 {
    int               ret = 0, ret_val = 0;
@@ -693,6 +697,12 @@ int run_ijs_server(COMM_HANDLE *handle, const char *remote_host,
    g_noshell = noshell;
    g_pid = getpid();
    g_is_rsh = is_rsh;
+
+   if (suspend_remote == UNSET || suspend_remote == NO) {
+      g_suspend_remote = 0;
+   } else {
+      g_suspend_remote = 1;
+   }
 
    /*
     * qrsh without command and qlogin both have is_rsh == 0 and is_qlogin == 1

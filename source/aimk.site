@@ -36,7 +36,7 @@
 switch($buildarch)
    case "aix43":
    case "darwin":
-   case "lx22-alpha":
+   case "lx-alpha":
    case "win32-x86":
       set argv = ( -no-jni -no-java $* )
       breaksw
@@ -54,7 +54,7 @@ switch($buildarch)
    case "irix65":
    case "hp11":
    case "hp11-64":
-   case "lx24-ia64":
+   case "lx-ia64":
    case "aix51":
       if ( -f /vol2/resources/en_jdk14 ) then
          source /vol2/resources/en_jdk14 

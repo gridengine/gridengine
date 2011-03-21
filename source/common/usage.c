@@ -28,6 +28,7 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
+/* Portions of this code are Copyright 2011 Univa Inc. */
 /*___INFO__MARK_END__*/
 #include <stdio.h>
 #include <stdlib.h>
@@ -1348,6 +1349,10 @@ void sge_usage(u_long32 prog_number, FILE *fp) {
 
    if (VALID_OPT(pty_OPT, prog_number)) {
       PRINTITD(MSG_GDI_USAGE_pty_OPT, MSG_GDI_UTEXT_pty_OPT );
+   }
+
+   if (VALID_OPT(suspend_remote_OPT, prog_number)) {
+      PRINTITD(MSG_GDI_USAGE_suspend_remote_OPT, MSG_GDI_UTEXT_suspend_remote_OPT );
    }
 
    fprintf(fp, "\n");

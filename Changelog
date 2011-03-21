@@ -8,11 +8,67 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
-EB-2011-03-04-0: Bugfix:      - changed position in pending job list for 
+EB-2010-03-18-0: Bugfix:      ENABLE_RESCHEDULE_SLAVE=1 doesn't work anymore
+                 Issues:      GE-3310
+                 Review:      TBD
+
+DG-2011-03-18-0: Cleanup:     aimk help and qconf -help output
+
+SH-2011-03-17-0: Enhancem.:   Implemented the -suspend_remote parameter for qrsh
+                 Isssue:      GE-3393
+                 Review:      DG (GE-18)
+
+DG-2011-03-17-2: Enhancem.:   Introduced new Univa GE version 8.0.0
+                 Issue:       GE-3389
+					  Review:      JG (GE-17)
+
+DG-2011-03-17-1: Enhancem.:   qstat shows now core binding related information
+                              per default
+                 Issue:       GE-3371
+					  Review:      JG (GE-15)
+
+DG-2011-03-17-0: Enhancem.:   qhost shows now host topology per default
+                 Issue:       GE-3370
+					  Review:      JG (GE-14)
+
+JG-2011-03-16-1: Enhancem.:   unify linux arch strings ...
+                              Some additional code pieces found during review.
+                 Belongs to:  JG-2011-03-16-0
+
+JG-2011-03-16-0: Enhancem.:   unify linux arch strings (lx24-* and lx26-*)
+                              to lx-*
+                 Issue:       GE-3362
+                 Review:      EB
+
+EB-2011-03-16-0: Bugfix:      JSV changed default of boolean
+                              changed help output of qsub
+                 Issue:       GE-3311, GE-3323
+                 Review:      JG
+
+JG-2011-03-15-0: Enhancem.:   Updated version and branding of man pages.
+                 Issue:       TS-355
+                 Review:      DG
+
+JG-2011-03-14-0: Enhancem.:   Instrumentation for testing issue GE-3306: Delay
+                              scheduling run via environment variable
+                              SGE_TEST_DELAY_SCHEDULING.
+                 Review:      HP
+
+DG-2011-03-11-0: Cleanup:     fixed issues from review
+                 Belongs to:  DG-2011-03-09-0
+
+DG-2011-03-09-1: Cleanup:     fixed upgrade module
+                 Belongs to:  DG-2011-03-09-0
+
+DG-2011-03-09-0: Enhancem.:   Added new complex m_thread.
+                 Issue:       GE-3381
+                 Review:      HP (GE-13)
+
+EB-2011-03-04-0: Bugfix:      - changed position in pending job list for
                                 user rescheduled jobs (exit99, qmod -rj)
                               - added two new qmaster_params
-                 Issues:      GE-3307
-                 Review       JG (GE-9)
+                 Issue:       GE-3307
+                 Review:      JG (GE-9)
 
 JG-2011-03-04-0: Bugfix:      scheduler messages are generated even when they
                               are not needed
@@ -68,7 +124,6 @@ DG-2011-02-24-0: Bugfix:      Fixed -binding parsing bug and introduced MSG_
 
 EB-2011-02-22-0: Enhancem:    - changed arch script so that Snow Leopard will be
                                 recognized as darwin-x64 when latest path is
-
                                 installed
                               - changed JSV script so that it does not fork
                                 processes for parsing related things

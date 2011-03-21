@@ -327,19 +327,25 @@ int reschedule_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep, l
          next_jatep = lNext(this_jatep);
       }
 
+      granted_qs = lGetList(this_jatep, JAT_granted_destin_identifier_list);
+      first_granted_queue = lFirst(granted_qs);
+
+      /*
+       * Jobs which have no granted queue can not be rescheduled (skip pending jobs)
+       */
+      if (first_granted_queue == NULL) {
+         continue;
+      }              
+      
       task_number = lGetUlong(this_jatep, JAT_task_number);
 
       if (job_is_array(jep)) {
-         sprintf(mail_ids, sge_U32CFormat"."sge_U32CFormat,
-            sge_u32c(job_number), sge_u32c(task_number));
+         sprintf(mail_ids, sge_U32CFormat"."sge_U32CFormat, sge_u32c(job_number), sge_u32c(task_number));
          sge_strlcpy(mail_type, MSG_RU_TYPEJOBARRAY, sizeof(mail_type));
       } else {
          snprintf(mail_ids, sizeof(mail_ids), sge_U32CFormat, sge_u32c(job_number));
          sge_strlcpy(mail_type, MSG_RU_TYPEJOB, sizeof(mail_type));
       }
-
-      granted_qs = lGetList(this_jatep, JAT_granted_destin_identifier_list);
-      first_granted_queue = lFirst(granted_qs);
 
       /*
        * if ep is of type EH_Type than we will reschedule all tasks
@@ -362,28 +368,42 @@ int reschedule_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep, l
       }                        
 
       /*
-       * Jobs which have no granted queue can not be rescheduled
+       * We will skip current job if it is a
+       *    - non-PE job and it is not running in queue/host
+       *    - PE job where the master task is not running in queue/host (RESCHEDULE_SLAVE == false)
+       *    - PE job where none of the tasks is running in queue/host (RESCHEDULE_SLAVE == true)
        */
-      if (!first_granted_queue) {
-         /* Skip pendig jobs silently */
-         continue;
-      }              
+      {
+         const char *the_queuename = (qep != NULL ? lGetString(qep, QU_full_name) : NULL);
+         const char *the_hostname = (hep != NULL ? lGetHost(hep, EH_name) : NULL);
 
-      /*
-       * We will skip this job if we only reschedule jobs for a
-       * specific queue/host and the current task is not running
-       * on that queue/host
-       *
-       * PE-Jobs will only be rescheduled when the master task
-       * is running in that queue/host or RESCHEDULE_SLAVE is set
-       */
-      if (!mconf_get_enable_reschedule_slave() && first_granted_queue &&
-          ((qep && (strcmp(lGetString(first_granted_queue, JG_qname),
-              lGetString(qep, QU_full_name))))
-          || ((hep && sge_hostcmp(lGetHost(first_granted_queue, JG_qhostname),
-              lGetHost(hep, EH_name)))))) {
-         /* Skip jobs silently which are not intended to reschedule */
-         continue;
+         /*
+          * If RESCHEDULE_SLAVE is set then 
+          *    we have to check each granted queue because PE jobs should be 
+          *    rescheduled also if only one PE slave task is running in that queue/host
+          * otherwise
+          *    PE jobs will only be rescheduled when the master task is effected 
+          */
+         if (mconf_get_enable_reschedule_slave() == true) {
+            lListElem *granted_q;
+            bool one_matched = false;
+
+            for_each(granted_q, granted_qs) {
+               if ((qep != NULL && strcmp(lGetString(granted_q, JG_qname), the_queuename) == 0) ||
+                   (hep != NULL && sge_hostcmp(lGetHost(granted_q, JG_qhostname), the_hostname) == 0)) {
+                  one_matched = true; 
+                  break;
+               }
+            }
+            if (one_matched == false) {
+               continue;
+            }
+         } else {
+            if ((qep != NULL && strcmp(lGetString(first_granted_queue, JG_qname), the_queuename)) ||
+                (hep != NULL && sge_hostcmp(lGetHost(first_granted_queue, JG_qhostname), the_hostname))) {
+               continue;
+            }
+         }
       }
 
       /*

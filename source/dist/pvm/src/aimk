@@ -168,7 +168,7 @@ case hp11:
    set LIBS = "$LIBS"
    breaksw
 
-case lx24-x86:
+case lx-x86:
    set CC = gcc
    set CFLAGS = "-O -Wall -Werror -Wstrict-prototypes -DLINUX $DEBUG_FLAG $CFLAGS"
    set LFLAGS = "$DEBUG_FLAG $LFLAGS"

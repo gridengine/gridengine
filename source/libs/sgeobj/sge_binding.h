@@ -31,6 +31,8 @@
  * 
  *   All Rights Reserved.
  * 
+ *   Portions of this code are Copyright 2011 Univa Inc.
+ *
  ************************************************************************/
 
 /*___INFO__MARK_END__*/
@@ -69,6 +71,9 @@ int get_execd_amount_of_cores(void);
 
 /* get the amount of sockets of the execution host */
 int get_execd_amount_of_sockets(void);
+
+/* get the amount of hardware supported threads for the specific exec host */
+int get_execd_amount_of_threads(void);
 
 /* get the topology string with all cores installed on the system */
 bool get_execd_topology(char** topology, int* length);

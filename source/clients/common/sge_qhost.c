@@ -27,6 +27,8 @@
  * 
  *   All Rights Reserved.
  * 
+ *  Portions of this code are Copyright 2011 Univa Inc.
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 #include <stdlib.h>
@@ -108,8 +110,8 @@ int do_qhost(void *ctx, lList *host_list, lList *user_list, lList *resource_matc
    int print_header = 1;
    int ret = QHOST_SUCCESS;
    bool show_binding = ((show & QHOST_DISPLAY_BINDING) == QHOST_DISPLAY_BINDING) ? true : false;
-#define HEAD_FORMAT_BINDING "%-23s %-13.13s%4.4s %4.4s %4.4s %5.5s %7.7s %7.7s %7.7s %7.7s\n"
-#define HEAD_FORMAT "%-23s %-13.13s%4.4s %5.5s %7.7s %7.7s %7.7s %7.7s\n"
+#define HEAD_FORMAT "%-23s %-13.13s%4.4s %4.4s %4.4s %4.4s %5.5s %7.7s %7.7s %7.7s %7.7s\n"
+#define HEAD_FORMAT_OLD "%-23s %-13.13s%4.4s %5.5s %7.7s %7.7s %7.7s %7.7s\n"
    
    DENTER(TOP_LAYER, "do_qhost");
    
@@ -244,17 +246,17 @@ int do_qhost(void *ctx, lList *host_list, lList *user_list, lList *resource_matc
          if (print_header) {
             print_header = 0;
             if (show_binding) {
-               printf(HEAD_FORMAT_BINDING,  MSG_HEADER_HOSTNAME, MSG_HEADER_ARCH, MSG_HEADER_NPROC, 
-                  MSG_HEADER_NSOC, MSG_HEADER_NCOR, MSG_HEADER_LOAD, MSG_HEADER_MEMTOT, 
+               printf(HEAD_FORMAT,  MSG_HEADER_HOSTNAME, MSG_HEADER_ARCH, MSG_HEADER_NPROC,
+                  MSG_HEADER_NSOC, MSG_HEADER_NCOR, MSG_HEADER_NTHR, MSG_HEADER_LOAD, MSG_HEADER_MEMTOT,
                   MSG_HEADER_MEMUSE, MSG_HEADER_SWAPTO, MSG_HEADER_SWAPUS);
             } else {
-               printf(HEAD_FORMAT,  MSG_HEADER_HOSTNAME, MSG_HEADER_ARCH, MSG_HEADER_NPROC, 
+               printf(HEAD_FORMAT_OLD,  MSG_HEADER_HOSTNAME, MSG_HEADER_ARCH, MSG_HEADER_NPROC, 
                   MSG_HEADER_LOAD, MSG_HEADER_MEMTOT, MSG_HEADER_MEMUSE, MSG_HEADER_SWAPTO, 
                   MSG_HEADER_SWAPUS);
             }
             printf("-------------------------------------------------------------------------------");
             if (show_binding) {
-               printf("----------");
+               printf("---------------");
             } 
             printf("\n");
          }
@@ -295,9 +297,9 @@ sge_print_host(sge_gdi_ctx_class_t *gdi_ctx, lListElem *hep, lList *centry_list,
    lListElem *lep;
    char *s, host_print[CL_MAXHOSTLEN+1] = "";
    const char *host;
-   char load_avg[20], mem_total[20], mem_used[20], swap_total[20], 
-        swap_used[20], num_proc[20], socket[20], core[20], arch_string[80];
-   dstring rs = DSTRING_INIT;     
+   char load_avg[20], mem_total[20], mem_used[20], swap_total[20],
+        swap_used[20], num_proc[20], socket[20], core[20], arch_string[80], thread[20];
+   dstring rs = DSTRING_INIT;
    u_long32 dominant = 0;
    int ret = QHOST_SUCCESS;
    sge_bootstrap_state_class_t *bootstrap_state = gdi_ctx->get_sge_bootstrap_state(gdi_ctx);
@@ -350,12 +352,26 @@ sge_print_host(sge_gdi_ctx_class_t *gdi_ctx, lListElem *hep, lList *centry_list,
       lep=get_attribute_by_name(NULL, hep, NULL, "m_socket", centry_list, DISPATCH_TIME_NOW, 0);
       if (lep) {
          sge_strlcpy(socket, sge_get_dominant_stringval(lep, &dominant, &rs),
-                  sizeof(socket)); 
+                  sizeof(socket));
          sge_dstring_clear(&rs);
          lFreeElem(&lep);
       } else {
          strcpy(socket, "-");
       }
+
+      /*
+      ** nthr (threads)
+      */
+      lep=get_attribute_by_name(NULL, hep, NULL, "m_thread", centry_list, DISPATCH_TIME_NOW, 0);
+      if (lep) {
+         sge_strlcpy(thread, sge_get_dominant_stringval(lep, &dominant, &rs),
+                  sizeof(thread));
+         sge_dstring_clear(&rs);
+         lFreeElem(&lep);
+      } else {
+         strcpy(thread, "-");
+      }
+
 
       /*
       ** ncor (cores)
@@ -450,6 +466,10 @@ sge_print_host(sge_gdi_ctx_class_t *gdi_ctx, lListElem *hep, lList *centry_list,
          if( ret != QHOST_SUCCESS ) {
             DRETURN(ret);
          }
+         ret = report_handler->report_host_string_value(report_handler, "m_thread", thread, alpp);
+         if( ret != QHOST_SUCCESS ) {
+            DRETURN(ret);
+         }
       }
       ret = report_handler->report_host_string_value(report_handler, "load_avg", load_avg, alpp);
       if( ret != QHOST_SUCCESS ) {
@@ -473,10 +493,10 @@ sge_print_host(sge_gdi_ctx_class_t *gdi_ctx, lListElem *hep, lList *centry_list,
       }
    } else {
       if (show_binding) {
-         printf(HEAD_FORMAT_BINDING, host ? host_print: "-", arch_string, num_proc, socket, core,
+         printf(HEAD_FORMAT, host ? host_print: "-", arch_string, num_proc, socket, core, thread,
                 load_avg, mem_total, mem_used, swap_total, swap_used);
       } else {
-         printf(HEAD_FORMAT, host ? host_print: "-", arch_string, num_proc, load_avg, 
+         printf(HEAD_FORMAT_OLD, host ? host_print: "-", arch_string, num_proc, load_avg,
                         mem_total, mem_used, swap_total, swap_used);
       }
    }

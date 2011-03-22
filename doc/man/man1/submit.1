@@ -1490,8 +1490,21 @@ will be expanded as value 9999999 in JSV scripts and it represents the value inf
 .M jsv 1 )
 .
 .\"
+.IP "\fB\-suspend_remote y[es]|n[o]\fP"
+Available for \fIqrsh\fP with a command only.
+.sp 1
+-suspend_remote yes enforces to suspend the qrsh client as also the remote 
+process when CTRL-Z was pressed. If %CTRL-Z was pressed only the qrsh client 
+will be suspended.
+.sp 1
+-suspend_remote no enforces to suspend only the qrsh client when CTRL-Z was 
+pressed. If %CTRL-Z was pressed, both, the qrsh client as also the remote 
+process, will be suspended.
+.sp 1
+By default, suspend_remote is set to no.
+.\"
 .IP "\fB\-pty y[es]|n[o]\fP"
-Available for \fIqrsh\fP and \fIqlogin\fP only.
+Available for \fIqrsh\fP, \fIqsub\fP and \fIqlogin\fP only.
 .sp 1
 -pty yes enforces the job to be started in a pseudo terminal (pty). If no pty is 
 available, the job start fails.
@@ -1502,7 +1515,7 @@ By default,
 and
 .I qlogin
 start the job in a pty,
-.I qrsh with a command
+.I qrsh and qsub with a command
 starts the job without a pty.
 .sp 1
 This parameter is not available in the JSV context.

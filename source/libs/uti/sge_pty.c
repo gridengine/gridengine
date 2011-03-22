@@ -287,6 +287,7 @@ pid_t fork_pty(int *ptrfdm, int *fd_pipe_err, dstring *err_msg)
    int   fdm, fds;
    char  pts_name[20];
    int   old_euid;
+   struct termios tio;
 
    /* 
     * We run this either as root with euid="sge admin user" or as an unprivileged 
@@ -326,6 +327,16 @@ pid_t fork_pty(int *ptrfdm, int *fd_pipe_err, dstring *err_msg)
       }
       seteuid(old_euid);
       close(fdm);  fdm = -1;   /* all done with master in child */
+
+      /*
+       * Set the remote pty to break lines with NL, not CR NL. This ensures
+       * line breaks are not modified when e.g.  "cat file.txt" is run in
+       * the qrsh session.
+       */
+      if (tcgetattr(fds, &tio) == 0) {
+         tio.c_oflag &= ~ONLCR;
+         tcsetattr(fds, TCSANOW, &tio);
+      }
 
 #if   defined(TIOCSCTTY) && !defined(CIBAUD)
       /* 44BSD way to acquire controlling terminal */

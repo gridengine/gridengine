@@ -2603,6 +2603,7 @@ static int start_async_command(const char *descr, char *cmd)
       int use_qsub_gid;
       gid_t gid;
       char *tmp_str;
+      bool skip_silently = false;
       
       shepherd_trace("starting %s command: %s", descr, cmd);
       pid = getpid();
@@ -2618,8 +2619,12 @@ static int start_async_command(const char *descr, char *cmd)
          use_qsub_gid = 0;       
          gid = 0;
       }
+      tmp_str = search_conf_val("skip_ngroups_max_silently");
+      if (tmp_str && strcmp(tmp_str, "yes")) {
+         skip_silently = true;
+      }
       if (sge_set_uid_gid_addgrp(get_conf_val("job_owner"), NULL, 0, 0, 0, 
-                                 err_str, use_qsub_gid, gid) > 0) {
+                                 err_str, use_qsub_gid, gid, skip_silently) > 0) {
          shepherd_trace(err_str);
          exit(1);
       }   

@@ -1036,6 +1036,10 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
          } else {
             lSetString(petep, PET_osjobid, str_id);
          }
+
+         if (mconf_get_ignore_ngroups_max_limit() == true) {
+         	fprintf(fp, "skip_ngroups_max_silently=yes\n");
+         }
          
          lFreeList(&rlp);
          lFreeList(&alp);

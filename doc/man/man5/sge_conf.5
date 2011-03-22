@@ -1242,6 +1242,17 @@ are used on Windows hosts. These accounts require the use of
 If this parameter is set to false or is not set, local Windows accounts are used.
 On non-Windows hosts, this parameter is ignored.
 .PP
+.IP "\fIIGNORE_NGROUPS_MAX_LIMIT\fP"
+If a user is assigned to NGROUPS_MAX-1 supplementary groups 
+so that xxQS_NAMExx is not able to add an addition one for job tracking 
+then the job will go into error state when it is started.
+Administrators that want prevent the system doing so can set this parameter.
+In this case the NGROUPS_MAX limit is ignored and the additional group (see 
+\fIgid_range\fP) is not set. As a result for those jobs no online usage will be 
+available. Also the parameter \fIENABLE_ADDGRP_KILL\fP will have no effect.
+Please note that it is not recommended to use this parameters. Instead the group
+membership of the submit user should be reduced.
+.PP
 .IP "\fIKEEP_ACTIVE\fP"
 This value should only be set for debugging purposes. If set to true, the
 execution daemon will not remove the spool directory maintained by

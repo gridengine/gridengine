@@ -737,6 +737,7 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
       lSetUlong(jr, JR_general_failure, general_failure);
       job_related_adminmail(EXECD, jr, is_array, job_owner);
       break;
+   case SSTATE_ADD_GRP_SET_ERROR:
    case SSTATE_BEFORE_JOB:
    case SSTATE_NO_SHELL:
       {
@@ -768,6 +769,8 @@ static int clean_up_job(lListElem *jr, int failed, int shepherd_exit_status,
          } else if ((failed == SSTATE_BEFORE_JOB) && (job != NULL) &&
                   JOB_TYPE_IS_BINARY(lGetUlong(job, JB_type)) &&
                   !sge_is_file(lGetString(job, JB_script_file))) {
+            job_caused_failure = 1;
+         } else if (failed == SSTATE_ADD_GRP_SET_ERROR) {
             job_caused_failure = 1;
          }
 

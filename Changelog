@@ -15,6 +15,18 @@ EB-2010-03-22-0: Bugfix:      o When supplementary group id cannot be set the
                  Issues:      GE-3400 GE-3412
                  Review:      TBD
 
+SH-2010-03-22-0: Enhancem.:   Added qsub -pty switch
+                 Issue:       GE-3095
+                 Review:      HP (GE-24)
+
+DG-2010-03-22-1: Enhancem.:   Enabled core binding on Linux hosts per default.
+                 Issue:       GE-3351
+                 Review:      JG
+
+DG-2010-03-22-0: Enhancem.:   Removed BDB RPC from command line installer.
+                 Issue:       GE-3379
+                 Review:      JG (GE-23)
+
 EB-2010-03-21-0: Bugfix:      Perl JSV script does not allow comma in CMDNAME 
                               and CMDARGS 
                  Issues:      GE-3399

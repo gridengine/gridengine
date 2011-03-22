@@ -512,7 +512,8 @@ void son(const char *childname, char *script_file, int truncate_stderr_out)
        * stdout and stderr open, they are already connected to the pty 
        * and/or the pipes.
        */
-      if ((g_new_interactive_job_support == true && is_qlogin_starter) || (g_new_interactive_job_support == false && pty == 1)) {
+      if ((g_new_interactive_job_support == true && is_qlogin_starter)
+            || (g_new_interactive_job_support == false && pty == 1)) {
          i=3;
       } else {
          i=0;
@@ -730,7 +731,7 @@ void son(const char *childname, char *script_file, int truncate_stderr_out)
        * Opening a stdin file doesnt make sense for any interactive 
        * job (except qsh) and qsub -pty 
        */
-      if (!is_qlogin_starter || pty == 1) {
+      if (!is_qlogin_starter && pty == 0) {
          /* need to open a file as fd0 for qsub jobs */
          in = SGE_OPEN2(stdin_path, O_RDONLY); 
 
@@ -742,7 +743,7 @@ void son(const char *childname, char *script_file, int truncate_stderr_out)
       }
    }
 
-   if (in != 0 && pty == 0) {
+   if (in != 0) {
       shepherd_error(1, "error: fd for in is not 0");
    }
 
@@ -753,49 +754,51 @@ void son(const char *childname, char *script_file, int truncate_stderr_out)
          shepherd_error(1, "error: can't chdir to %s: %s", cwd, strerror(errno));
       }
    }
-   /* open stdout - not for interactive jobs or qsub -pty yes */
-   if ((!is_interactive && !is_qlogin) || pty != 1) {
-      if (truncate_stderr_out) {
-         out = SGE_OPEN3(stdout_path, O_WRONLY | O_CREAT | O_APPEND | O_TRUNC, 0644);
-      } else {
-         out = SGE_OPEN3(stdout_path, O_WRONLY | O_CREAT | O_APPEND, 0644);
-      }
-      
-      if (out==-1) {
-         shepherd_state = SSTATE_OPEN_OUTPUT;
-         shepherd_error(1, "error: can't open output file \"%s\": %s", 
-                        stdout_path, strerror(errno));
-      }
-      
-      if (out!=1 && pty == 0) {
-         shepherd_error(1, "error: fd out is not 1");
-      }   
-
-      /* open stderr */
-      if (merge_stderr) {
-         shepherd_trace("using stdout as stderr");
-         dup2(1, 2);
-      } else {
+   /* open stdout - not for interactive jobs */
+   if (!is_interactive && !is_qlogin) {
+      /* open stdout - not for qsub -pty yes */
+      if (pty == 0) {
          if (truncate_stderr_out) {
-            err = SGE_OPEN3(stderr_path, O_WRONLY | O_CREAT | O_TRUNC | O_APPEND, 0644);
+            out = SGE_OPEN3(stdout_path, O_WRONLY | O_CREAT | O_APPEND | O_TRUNC, 0644);
          } else {
-            err = SGE_OPEN3(stderr_path, O_WRONLY | O_CREAT | O_APPEND, 0644);
+            out = SGE_OPEN3(stdout_path, O_WRONLY | O_CREAT | O_APPEND, 0644);
          }
-
-         if (err == -1) {
+         
+         if (out==-1) {
             shepherd_state = SSTATE_OPEN_OUTPUT;
             shepherd_error(1, "error: can't open output file \"%s\": %s", 
-                           stderr_path, strerror(errno));
+                           stdout_path, strerror(errno));
          }
+         
+         if (out!=1) {
+            shepherd_error(1, "error: fd out is not 1");
+         }   
+
+         /* open stderr */
+         if (merge_stderr) {
+            shepherd_trace("using stdout as stderr");
+            dup2(1, 2);
+         } else {
+            if (truncate_stderr_out) {
+               err = SGE_OPEN3(stderr_path, O_WRONLY | O_CREAT | O_TRUNC | O_APPEND, 0644);
+            } else {
+               err = SGE_OPEN3(stderr_path, O_WRONLY | O_CREAT | O_APPEND, 0644);
+            }
+
+            if (err == -1) {
+               shepherd_state = SSTATE_OPEN_OUTPUT;
+               shepherd_error(1, "error: can't open output file \"%s\": %s", 
+                              stderr_path, strerror(errno));
+            }
 
 #ifndef __INSURE__
-         if (err!=2 && pty == 0) {
-            shepherd_trace("unexpected fd");
-            shepherd_error(1, "error: fd err is not 2");
-         }
+            if (err!=2) {
+               shepherd_trace("unexpected fd");
+               shepherd_error(1, "error: fd err is not 2");
+            }
 #endif
+         }
       }
-
    }
 
    /*

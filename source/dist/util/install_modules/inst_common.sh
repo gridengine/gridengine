@@ -33,6 +33,8 @@
 #
 #  All Rights Reserved.
 #
+#  Portions of this code are Copyright 2011 Univa Inc.
+#
 ##########################################################################
 #___INFO__MARK_END__
 
@@ -2257,7 +2259,7 @@ GiveHints()
 # $2 - "shadowd", optinal to include local conf libjvm attribute  
 PrintLocalConf()
 {
-
+   SGE_ARCH=`$SGE_UTIL/arch`
    arg=$1
    if [ $arg = 1 ]; then
       $ECHO "# Version: $SGE_VERSION"
@@ -2271,6 +2273,9 @@ PrintLocalConf()
       $ECHO "xterm                  none"
    else
       $ECHO "xterm                  $XTERM"
+   fi
+   if [ "$SGE_ARCH" = "lx-amd64" -o "$SGE_ARCH" = "lx-x86" ]; then
+      $ECHO "execd_params           ENABLE_BINDING=true"
    fi
    if [ "$QLOGIN_DAEMON" != "undef" -a "$QLOGIN_DAEMON" != "builtin" ]; then
       $ECHO "qlogin_daemon          $QLOGIN_DAEMON"

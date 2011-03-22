@@ -47,6 +47,8 @@
 #include "uti/sge_binding_hlp.h"
 #include "uti/sge_string.h"
 #include "shepherd_binding.h"
+/* TODO: (SH) get_path.h is a header-file of execd. We have to do a CLEANUP here. */
+#include "get_path.h"
 
 #if defined(LINUX)
 #  include <grp.h>
@@ -2331,9 +2333,9 @@ int fd_std_err             /* fd of stderr. -1 if not set */
    char* stdout_path = NULL;
    char* stderr_path = NULL;
    char* stdin_path = NULL;
-   int out = -1;
-   int err = -1;
-   int in = -1;
+   int fdout = -1;
+   int fderr = -1;
+   int fdin = -1;
    struct pollfd pty_fds[2];
 
 #if defined(HPUX) || defined(INTERIX)
@@ -2349,31 +2351,31 @@ int fd_std_err             /* fd of stderr. -1 if not set */
       wait_options |= WNOHANG;
 
       /* get and open the right output-files */
-      stdout_path = build_path(0x00200000);
-      stderr_path = build_path(0x00400000);
+      stdout_path = build_path(SGE_STDOUT);
+      stderr_path = build_path(SGE_STDERR);
       stdin_path = get_conf_val("stdin_path");
 
       /* open input file if set */
       if (strcasecmp(stdin_path, "/dev/null") != 0) {
-         in = SGE_OPEN2(stdin_path, O_RDONLY); 
-         if (in == -1) {
+         fdin = SGE_OPEN2(stdin_path, O_RDONLY); 
+         if (fdin == -1) {
             shepherd_error(1, "Cannot open %s. Error: %i", stdin_path, strerror(errno));
          }
       }
 
-      out = SGE_OPEN3(stdout_path, O_WRONLY | O_CREAT | O_APPEND, 0644);
-      if (out == -1) {
+      fdout = SGE_OPEN3(stdout_path, O_WRONLY | O_CREAT | O_APPEND, 0644);
+      if (fdout == -1) {
          shepherd_error(1, "Cannot open %s. Error: %i", stdout_path, strerror(errno));
       }
 
-      err = SGE_OPEN3(stderr_path, O_WRONLY | O_CREAT | O_APPEND, 0644);
-      if (err == -1) {
+      fderr = SGE_OPEN3(stderr_path, O_WRONLY | O_CREAT | O_APPEND, 0644);
+      if (fderr == -1) {
          shepherd_error(1, "Cannot open %s. Error: %i", stderr_path, strerror(errno));
       }
 
       /* register the necessary fds for the poll call */
       pty_fds[0].fd = fd_pty_master;
-      if (in != -1) {
+      if (fdin != -1) {
          pty_fds[0].events = POLLIN | POLLPRI | POLLOUT;
       } else {
          pty_fds[0].events = POLLIN | POLLPRI;
@@ -2489,7 +2491,7 @@ int fd_std_err             /* fd of stderr. -1 if not set */
 
             read_bytes = read(pty_fds[0].fd, buffer, MAX_STRING_SIZE-1);
             if (read_bytes > 0) {
-               write(out, buffer, read_bytes);
+               write(fdout, buffer, read_bytes);
             } else if (read_bytes == -1) {
                shepherd_error(1, "Could not read from pty_master fd. Error: %s", strerror(errno));
             }
@@ -2501,17 +2503,17 @@ int fd_std_err             /* fd of stderr. -1 if not set */
 
             read_bytes = read(pty_fds[1].fd, buffer, MAX_STRING_SIZE-1);
             if (read_bytes > 0) {
-               write(err, buffer, read_bytes);
+               write(fderr, buffer, read_bytes);
             } else if (read_bytes == -1) {
                shepherd_error(1, "Could not read from std_err fd. Error: %s", strerror(errno));
             }
          }
 
-         if (pty_fds[0].revents & POLLOUT && in != -1) {
+         if (pty_fds[0].revents & POLLOUT && fdin != -1) {
             char buffer[MAX_STRING_SIZE];
             int read_bytes = -1;
 
-            read_bytes = read(in, buffer, MAX_STRING_SIZE-1);
+            read_bytes = read(fdin, buffer, MAX_STRING_SIZE-1);
 
             if (read_bytes > 0) {
                write(pty_fds[0].fd, buffer, read_bytes);
@@ -2553,14 +2555,14 @@ int fd_std_err             /* fd of stderr. -1 if not set */
    rusage->ru_stime.tv_usec = rusage_hp10.ru_stime.tv_usec;
 #endif
 
-   if (out != -1) {
-      SGE_CLOSE(out);
+   if (fdout != -1) {
+      SGE_CLOSE(fdout);
    }
-   if (err != -1) {
-      SGE_CLOSE(err);
+   if (fderr != -1) {
+      SGE_CLOSE(fderr);
    }
-   if (in != -1) {
-      SGE_CLOSE(in);
+   if (fdin != -1) {
+      SGE_CLOSE(fdin);
    }
 
    return job_status;

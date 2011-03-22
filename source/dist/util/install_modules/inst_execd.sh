@@ -33,6 +33,8 @@
 #
 #  All Rights Reserved.
 #
+#  Portions of this code are Copyright 2011 Univa Inc.
+#
 ##########################################################################
 #___INFO__MARK_END__
 
@@ -51,7 +53,7 @@ WelcomeTheUserExecHost()
    $INFOTEXT -u "\nWelcome to the Grid Engine execution host installation"
    $INFOTEXT "\nIf you haven't installed the Grid Engine qmaster host yet, you must execute\n" \
              "this step (with >install_qmaster<) prior the execution host installation.\n\n" \
-             "For a sucessfull installation you need a running Grid Engine qmaster. It is\n" \
+             "For a sucessful installation you need a running Grid Engine qmaster. It is\n" \
              "also neccesary that this host is an administrative host.\n\n" \
              "You can verify your current list of administrative hosts with\n" \
              "the command:\n\n" \
@@ -77,7 +79,7 @@ WelcomeTheUserSubmitHost()
    $INFOTEXT -u "\nWelcome to the Grid Engine submit host installation"
    $INFOTEXT "\nIf you haven't installed the Grid Engine qmaster host yet, you must execute\n" \
              "this step (with >install_qmaster<) prior the submit host installation.\n\n" \
-             "For a sucessfull installation you need a running Grid Engine qmaster. It is\n" \
+             "For a sucessful installation you need a running Grid Engine qmaster. It is\n" \
              "also necessary that this host is an administrative host.\n\n" \
              "The script will check this in a later step or use the following command:\n\n" \
              "   # qconf -sh\n\n" \

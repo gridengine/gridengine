@@ -38,6 +38,7 @@
 #include <pwd.h>
 #include <limits.h>
 #include <errno.h>
+#include <poll.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/resource.h>
@@ -1077,7 +1078,12 @@ int ckpt_type
    }
    else { /* not job or job and not checkpointing */
       if (g_new_interactive_job_support == false || !is_interactive) {
-         pid = fork();
+         if (use_pty == YES) {
+            shepherd_trace("calling fork_pty()");
+            pid = fork_pty(&fd_pty_master, fd_pipe_err, &err_msg);
+         } else {
+            pid = fork();
+         }
       } else {
          /*
           * Create a pipe to tell child when communication to client is set up
@@ -1184,7 +1190,7 @@ int ckpt_type
 
    if (g_new_interactive_job_support == false || !is_interactive) {
       /* Wait until child finishes ----------------------------------------*/         
-      status = wait_my_child(pid, childname, timeout, &ckpt_info, &rusage);
+      status = wait_my_child(pid, childname, timeout, &ckpt_info, &rusage, fd_pty_master, fd_pipe_err[0]);
    } else { /* g_new_interactive_job_support == true && is_interactive */
       ijs_fds_t ijs_fds;
 
@@ -2311,7 +2317,9 @@ int pid,                   /* pid of job */
 const char *childname,     /* "job", "pe_start", ...     */
 int timeout,               /* used for prolog/epilog script, 0 for job */
 ckpt_info_t *p_ckpt_info,  /* infos used for checkpointing */
-struct rusage *rusage      /* accounting information */
+struct rusage *rusage,     /* accounting information */
+int fd_pty_master,         /* fd of the pty-master. -1 if not set */
+int fd_std_err             /* fd of stderr. -1 if not set */
 ) {
    int i, npid, status, job_status;
    int ckpt_cmd_pid, migr_cmd_pid;
@@ -2319,6 +2327,14 @@ struct rusage *rusage      /* accounting information */
    int inArena, inCkpt, kill_job_after_checkpoint, job_pid;
    int postponed_signal = 0; /* used for implementing SIGSTOP/SIGKILL notifiy mechanism */
    pid_t ctrl_pid[3];
+   int wait_options = 0;
+   char* stdout_path = NULL;
+   char* stderr_path = NULL;
+   char* stdin_path = NULL;
+   int out = -1;
+   int err = -1;
+   int in = -1;
+   struct pollfd pty_fds[2];
 
 #if defined(HPUX) || defined(INTERIX)
    struct rusage rusage_hp10;
@@ -2326,6 +2342,45 @@ struct rusage *rusage      /* accounting information */
 #if defined(CRAY) || defined(NECSX4) || defined(NECSX5)
    struct tms t1, t2;
 #endif
+
+   /* handle qsub -pty */
+   if (fd_pty_master != -1) {
+      /* in case auf qsub -pty, the wait call should not block until the job finishs */
+      wait_options |= WNOHANG;
+
+      /* get and open the right output-files */
+      stdout_path = build_path(0x00200000);
+      stderr_path = build_path(0x00400000);
+      stdin_path = get_conf_val("stdin_path");
+
+      /* open input file if set */
+      if (strcasecmp(stdin_path, "/dev/null") != 0) {
+         in = SGE_OPEN2(stdin_path, O_RDONLY); 
+         if (in == -1) {
+            shepherd_error(1, "Cannot open %s. Error: %i", stdin_path, strerror(errno));
+         }
+      }
+
+      out = SGE_OPEN3(stdout_path, O_WRONLY | O_CREAT | O_APPEND, 0644);
+      if (out == -1) {
+         shepherd_error(1, "Cannot open %s. Error: %i", stdout_path, strerror(errno));
+      }
+
+      err = SGE_OPEN3(stderr_path, O_WRONLY | O_CREAT | O_APPEND, 0644);
+      if (err == -1) {
+         shepherd_error(1, "Cannot open %s. Error: %i", stderr_path, strerror(errno));
+      }
+
+      /* register the necessary fds for the poll call */
+      pty_fds[0].fd = fd_pty_master;
+      if (in != -1) {
+         pty_fds[0].events = POLLIN | POLLPRI | POLLOUT;
+      } else {
+         pty_fds[0].events = POLLIN | POLLPRI;
+      }
+      pty_fds[1].fd = fd_std_err;
+      pty_fds[1].events = POLLIN | POLLPRI;
+   }
 
    memset(rusage, 0, sizeof(*rusage));
    kill_job_after_checkpoint = 0;
@@ -2357,9 +2412,9 @@ struct rusage *rusage      /* accounting information */
       }
 
 #if defined(CRAY) || defined(NECSX4) || defined(NECSX5) || defined(INTERIX)
-      npid = waitpid(-1, &status, 0);
+      npid = waitpid(-1, &status, wait_options);
 #else
-      npid = wait3(&status, 0, rusage);
+      npid = wait3(&status, wait_options, rusage);
 #endif
 
 #if defined(INTERIX)
@@ -2367,7 +2422,7 @@ struct rusage *rusage      /* accounting information */
       sge_set_environment();
       if (strcmp(childname, "job") == 0 &&
          wl_get_GUI_mode(get_conf_val("display_win_gui")) == true) {
-         if (npid != -1) {      
+         if (npid != -1 && npid != 0) {      
             char errormsg[MAX_STRING_SIZE];
 
             memset(&rusage_hp10, 0, sizeof(rusage_hp10));
@@ -2395,7 +2450,7 @@ struct rusage *rusage      /* accounting information */
             shepherd_trace("all childs have exited, quit wait3() loop.");
             break;
          }
-      } else {
+      } else if (npid != 0){
          shepherd_trace("wait3 returned %d (status: %d; WIFSIGNALED: %d, "
                         " WIFEXITED: %d, WEXITSTATUS: %d)", npid, status,
                         WIFSIGNALED(status), WIFEXITED(status),
@@ -2420,6 +2475,57 @@ struct rusage *rusage      /* accounting information */
          &job_status,
          &job_pid);
 
+   /* qsub -pty handling */
+   if (fd_pty_master != -1) {
+      int ret;
+
+      /* look for data to write */
+      ret = poll(pty_fds, 2, 0);
+      if (ret > 0) {
+         /* write the data from the job to the output-files */
+         if (pty_fds[0].revents & POLLIN || pty_fds[0].revents & POLLPRI) {
+            char buffer[MAX_STRING_SIZE];
+            int read_bytes = -1;
+
+            read_bytes = read(pty_fds[0].fd, buffer, MAX_STRING_SIZE-1);
+            if (read_bytes > 0) {
+               write(out, buffer, read_bytes);
+            } else if (read_bytes == -1) {
+               shepherd_error(1, "Could not read from pty_master fd. Error: %s", strerror(errno));
+            }
+         }
+
+         if (pty_fds[1].revents & POLLIN || pty_fds[1].revents & POLLPRI) {
+            char buffer[MAX_STRING_SIZE];
+            int read_bytes = -1;
+
+            read_bytes = read(pty_fds[1].fd, buffer, MAX_STRING_SIZE-1);
+            if (read_bytes > 0) {
+               write(err, buffer, read_bytes);
+            } else if (read_bytes == -1) {
+               shepherd_error(1, "Could not read from std_err fd. Error: %s", strerror(errno));
+            }
+         }
+
+         if (pty_fds[0].revents & POLLOUT && in != -1) {
+            char buffer[MAX_STRING_SIZE];
+            int read_bytes = -1;
+
+            read_bytes = read(in, buffer, MAX_STRING_SIZE-1);
+
+            if (read_bytes > 0) {
+               write(pty_fds[0].fd, buffer, read_bytes);
+            } else if (read_bytes == -1) {
+               shepherd_error(1, "Could not read from %s. Error: %s", stdin_path, strerror(errno));
+            } else if (read_bytes == 0) {
+               shepherd_trace("Reached end of %s", stdin_path);
+               pty_fds[0].events = POLLIN | POLLPRI;
+            }
+         }
+      } else if (ret == -1) {
+         shepherd_error(1, "Could not poll pty fds. Error: %s", strerror(errno));
+      }
+   }
       
    } while ((job_pid > 0) || (migr_cmd_pid > 0) || (ckpt_cmd_pid > 0) ||
             (ctrl_pid[0] > 0) || (ctrl_pid[1] > 0) || (ctrl_pid[2] > 0));
@@ -2446,6 +2552,16 @@ struct rusage *rusage      /* accounting information */
    rusage->ru_stime.tv_sec = rusage_hp10.ru_stime.tv_sec;
    rusage->ru_stime.tv_usec = rusage_hp10.ru_stime.tv_usec;
 #endif
+
+   if (out != -1) {
+      SGE_CLOSE(out);
+   }
+   if (err != -1) {
+      SGE_CLOSE(err);
+   }
+   if (in != -1) {
+      SGE_CLOSE(in);
+   }
 
    return job_status;
 }

@@ -899,7 +899,7 @@ parent_loop(int job_pid, const char *childname, int timeout, ckpt_info_t *p_ckpt
     */
    shepherd_trace("parent: created both worker threads, now waiting for jobs end");
 
-   *exit_status = wait_my_child(job_pid, childname, timeout, p_ckpt_info, rusage);
+   *exit_status = wait_my_child(job_pid, childname, timeout, p_ckpt_info, rusage, -1, -1);
    alarm(0);
 
    shepherd_trace("parent: wait_my_child returned exit_status = %d", *exit_status);

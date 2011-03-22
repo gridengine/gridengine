@@ -108,7 +108,6 @@ static int inherit_environ = -1;
 
 /* static functions */
 static char **read_job_args(char **args, int extra_args);
-static char *build_path(int type);
 static char *parse_script_params(char **script_file);
 static void setup_environment (void);
 static bool inherit_env(void);
@@ -201,6 +200,7 @@ void son(const char *childname, char *script_file, int truncate_stderr_out)
    struct passwd pw_struct;
    char *buffer;
    int size;
+   int pty;
 
 #if defined(INTERIX)
 #  define TARGET_USER_BUFFER_SIZE 1024
@@ -505,12 +505,14 @@ void son(const char *childname, char *script_file, int truncate_stderr_out)
 		 * due to the FD_CLOEXEC flag.
 		 */
       int fdmax = sysconf(_SC_OPEN_MAX);
+      pty = atoi(get_conf_val("pty"));
 
-      /* For batch jobs, also close stdin, stdout and stderr. For new
-       * interactive jobs, keep stdin, stdout and stderr open, they are
-       * already connected to the pty and/or the pipes.
+      /* For batch jobs with not pty, also close stdin, stdout and stderr.
+       * For new interactive jobs or batch jobs with pty, keep stdin, 
+       * stdout and stderr open, they are already connected to the pty 
+       * and/or the pipes.
        */
-      if (g_new_interactive_job_support == true && is_qlogin_starter) {
+      if ((g_new_interactive_job_support == true && is_qlogin_starter) || (g_new_interactive_job_support == false && pty == 1)) {
          i=3;
       } else {
          i=0;
@@ -726,9 +728,9 @@ void son(const char *childname, char *script_file, int truncate_stderr_out)
    } else {
       /* 
        * Opening a stdin file doesnt make sense for any interactive 
-       * job (except qsh) 
+       * job (except qsh) and qsub -pty 
        */
-      if (!is_qlogin_starter) {
+      if (!is_qlogin_starter || pty == 1) {
          /* need to open a file as fd0 for qsub jobs */
          in = SGE_OPEN2(stdin_path, O_RDONLY); 
 
@@ -740,7 +742,7 @@ void son(const char *childname, char *script_file, int truncate_stderr_out)
       }
    }
 
-   if (in != 0) {
+   if (in != 0 && pty == 0) {
       shepherd_error(1, "error: fd for in is not 0");
    }
 
@@ -751,8 +753,8 @@ void son(const char *childname, char *script_file, int truncate_stderr_out)
          shepherd_error(1, "error: can't chdir to %s: %s", cwd, strerror(errno));
       }
    }
-   /* open stdout - not for interactive jobs */
-   if (!is_interactive && !is_qlogin) {
+   /* open stdout - not for interactive jobs or qsub -pty yes */
+   if ((!is_interactive && !is_qlogin) || pty != 1) {
       if (truncate_stderr_out) {
          out = SGE_OPEN3(stdout_path, O_WRONLY | O_CREAT | O_APPEND | O_TRUNC, 0644);
       } else {
@@ -765,7 +767,7 @@ void son(const char *childname, char *script_file, int truncate_stderr_out)
                         stdout_path, strerror(errno));
       }
       
-      if (out!=1) {
+      if (out!=1 && pty == 0) {
          shepherd_error(1, "error: fd out is not 1");
       }   
 
@@ -787,12 +789,13 @@ void son(const char *childname, char *script_file, int truncate_stderr_out)
          }
 
 #ifndef __INSURE__
-         if (err!=2) {
+         if (err!=2 && pty == 0) {
             shepherd_trace("unexpected fd");
             shepherd_error(1, "error: fd err is not 2");
          }
 #endif
       }
+
    }
 
    /*
@@ -1716,7 +1719,7 @@ char *err_str
    return ret;
 }
 
-static char *build_path(
+char *build_path(
 int type 
 ) {
    SGE_STRUCT_STAT statbuf;

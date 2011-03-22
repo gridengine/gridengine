@@ -48,7 +48,7 @@ typedef struct {
 
 int
 wait_my_child(int pid, const char *childname, int timeout, ckpt_info_t *p_ckpt_info,
-              struct rusage *rusage);
+              struct rusage *rusage, int fd_pty_master, int fd_std_err);
 
 void 
 shepherd_signal_job(pid_t pid, int sig);

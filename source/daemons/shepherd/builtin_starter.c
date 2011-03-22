@@ -108,7 +108,6 @@ static int inherit_environ = -1;
 
 /* static functions */
 static char **read_job_args(char **args, int extra_args);
-static char *build_path(int type);
 static char *parse_script_params(char **script_file);
 static void setup_environment (void);
 static bool inherit_env(void);
@@ -201,6 +200,8 @@ void son(const char *childname, char *script_file, int truncate_stderr_out)
    struct passwd pw_struct;
    char *buffer;
    int size;
+   bool skip_silently = false;
+   int pty;
 
 #if defined(INTERIX)
 #  define TARGET_USER_BUFFER_SIZE 1024
@@ -440,17 +441,20 @@ void son(const char *childname, char *script_file, int truncate_stderr_out)
     ** Set uid and gid and
     ** (add additional group id), switches to start user (root) 
     **/
-    tmp_str = search_conf_val("qsub_gid");
-    if (strcmp(tmp_str, "no")) {
-       use_qsub_gid = 1;   
-       gid = atol(tmp_str);
-    }
-    else {
-       use_qsub_gid = 0;
-       gid = 0;
-    }
+   tmp_str = search_conf_val("qsub_gid");
+   if (tmp_str != NULL && strcmp(tmp_str, "no") == 0) {
+      use_qsub_gid = 1;   
+      gid = atol(tmp_str);
+   } else {
+      use_qsub_gid = 0;
+      gid = 0;
+   }
+   tmp_str = search_conf_val("skip_ngroups_max_silently");
+   if (tmp_str != NULL && strcmp(tmp_str, "yes") == 0) {
+      skip_silently = true;
+   }
 
-/* --- switch to intermediate user */
+   /* --- switch to intermediate user */
    shepherd_trace("switching to intermediate/target user");
    if(is_qlogin_starter && g_new_interactive_job_support == false) {
       /* 
@@ -460,7 +464,7 @@ void son(const char *childname, char *script_file, int truncate_stderr_out)
        * kill subprocesses.
        */
       ret = sge_set_uid_gid_addgrp(target_user, intermediate_user,
-               0, 0, 0, err_str, use_qsub_gid, gid);
+               0, 0, 0, err_str, use_qsub_gid, gid, skip_silently);
    } else { /* if (!is_qlogin_starter || g_new_interactive_job_support == true) */
       /*
        * In not-interactive jobs and in the new IJS we must set the 
@@ -468,7 +472,7 @@ void son(const char *childname, char *script_file, int truncate_stderr_out)
        * do this for us.
        */
       ret = sge_set_uid_gid_addgrp(target_user, intermediate_user,
-               min_gid, min_uid, add_grp_id, err_str, use_qsub_gid, gid);
+               min_gid, min_uid, add_grp_id, err_str, use_qsub_gid, gid, skip_silently);
    }
 
    if (ret < 0) {
@@ -481,6 +485,8 @@ void son(const char *childname, char *script_file, int truncate_stderr_out)
          shepherd_state = SSTATE_PASSWD_MISSING;
       } else if (ret == 4) {
          shepherd_state = SSTATE_PASSWD_WRONG;
+      } else if (ret == 5) {
+         shepherd_state = SSTATE_ADD_GRP_SET_ERROR;
       }
       /*
       ** violation of min_gid or min_uid
@@ -505,12 +511,15 @@ void son(const char *childname, char *script_file, int truncate_stderr_out)
 		 * due to the FD_CLOEXEC flag.
 		 */
       int fdmax = sysconf(_SC_OPEN_MAX);
+      pty = atoi(get_conf_val("pty"));
 
-      /* For batch jobs, also close stdin, stdout and stderr. For new
-       * interactive jobs, keep stdin, stdout and stderr open, they are
-       * already connected to the pty and/or the pipes.
+      /* For batch jobs with not pty, also close stdin, stdout and stderr.
+       * For new interactive jobs or batch jobs with pty, keep stdin, 
+       * stdout and stderr open, they are already connected to the pty 
+       * and/or the pipes.
        */
-      if (g_new_interactive_job_support == true && is_qlogin_starter) {
+      if ((g_new_interactive_job_support == true && is_qlogin_starter)
+            || (g_new_interactive_job_support == false && pty == 1)) {
          i=3;
       } else {
          i=0;
@@ -726,9 +735,9 @@ void son(const char *childname, char *script_file, int truncate_stderr_out)
    } else {
       /* 
        * Opening a stdin file doesnt make sense for any interactive 
-       * job (except qsh) 
+       * job (except qsh) and qsub -pty 
        */
-      if (!is_qlogin_starter) {
+      if (!is_qlogin_starter && pty == 0) {
          /* need to open a file as fd0 for qsub jobs */
          in = SGE_OPEN2(stdin_path, O_RDONLY); 
 
@@ -753,45 +762,48 @@ void son(const char *childname, char *script_file, int truncate_stderr_out)
    }
    /* open stdout - not for interactive jobs */
    if (!is_interactive && !is_qlogin) {
-      if (truncate_stderr_out) {
-         out = SGE_OPEN3(stdout_path, O_WRONLY | O_CREAT | O_APPEND | O_TRUNC, 0644);
-      } else {
-         out = SGE_OPEN3(stdout_path, O_WRONLY | O_CREAT | O_APPEND, 0644);
-      }
-      
-      if (out==-1) {
-         shepherd_state = SSTATE_OPEN_OUTPUT;
-         shepherd_error(1, "error: can't open output file \"%s\": %s", 
-                        stdout_path, strerror(errno));
-      }
-      
-      if (out!=1) {
-         shepherd_error(1, "error: fd out is not 1");
-      }   
-
-      /* open stderr */
-      if (merge_stderr) {
-         shepherd_trace("using stdout as stderr");
-         dup2(1, 2);
-      } else {
+      /* open stdout - not for qsub -pty yes */
+      if (pty == 0) {
          if (truncate_stderr_out) {
-            err = SGE_OPEN3(stderr_path, O_WRONLY | O_CREAT | O_TRUNC | O_APPEND, 0644);
+            out = SGE_OPEN3(stdout_path, O_WRONLY | O_CREAT | O_APPEND | O_TRUNC, 0644);
          } else {
-            err = SGE_OPEN3(stderr_path, O_WRONLY | O_CREAT | O_APPEND, 0644);
+            out = SGE_OPEN3(stdout_path, O_WRONLY | O_CREAT | O_APPEND, 0644);
          }
-
-         if (err == -1) {
+         
+         if (out==-1) {
             shepherd_state = SSTATE_OPEN_OUTPUT;
             shepherd_error(1, "error: can't open output file \"%s\": %s", 
-                           stderr_path, strerror(errno));
+                           stdout_path, strerror(errno));
          }
+         
+         if (out!=1) {
+            shepherd_error(1, "error: fd out is not 1");
+         }   
+
+         /* open stderr */
+         if (merge_stderr) {
+            shepherd_trace("using stdout as stderr");
+            dup2(1, 2);
+         } else {
+            if (truncate_stderr_out) {
+               err = SGE_OPEN3(stderr_path, O_WRONLY | O_CREAT | O_TRUNC | O_APPEND, 0644);
+            } else {
+               err = SGE_OPEN3(stderr_path, O_WRONLY | O_CREAT | O_APPEND, 0644);
+            }
+
+            if (err == -1) {
+               shepherd_state = SSTATE_OPEN_OUTPUT;
+               shepherd_error(1, "error: can't open output file \"%s\": %s", 
+                              stderr_path, strerror(errno));
+            }
 
 #ifndef __INSURE__
-         if (err!=2) {
-            shepherd_trace("unexpected fd");
-            shepherd_error(1, "error: fd err is not 2");
-         }
+            if (err!=2) {
+               shepherd_trace("unexpected fd");
+               shepherd_error(1, "error: fd err is not 2");
+            }
 #endif
+         }
       }
    }
 
@@ -870,25 +882,25 @@ void son(const char *childname, char *script_file, int truncate_stderr_out)
 #endif
 /* ---- switch to target user */
    if (intermediate_user) {
-      if(is_qlogin_starter) {
+      if (is_qlogin_starter) {
          ret = sge_set_uid_gid_addgrp(target_user, NULL, 0, 0, 0, 
-                                      err_str, use_qsub_gid, gid);
+                                      err_str, use_qsub_gid, gid, skip_silently);
       } else {
          ret = sge_set_uid_gid_addgrp(target_user, NULL, min_gid, min_uid, 
-                                      add_grp_id, err_str, use_qsub_gid, gid);
+                                      add_grp_id, err_str, use_qsub_gid, gid, skip_silently);
       }
       if (ret < 0) {
-        shepherd_trace(err_str);
-        shepherd_trace("try running further with uid=%d", (int)getuid());
+         shepherd_trace(err_str);
+         shepherd_trace("try running further with uid=%d", (int)getuid());
       } else if (ret > 0) {
-        if(ret == 2) {
-          shepherd_state = SSTATE_PASSWD_FILE_ERROR;
-        } else if (ret == 3) {
-          shepherd_state = SSTATE_PASSWD_MISSING;
-        } else if (ret == 4) {
-          shepherd_state = SSTATE_PASSWD_WRONG;
-        }
-        shepherd_error(1, err_str);
+         if(ret == 2) {
+            shepherd_state = SSTATE_PASSWD_FILE_ERROR;
+         } else if (ret == 3) {
+            shepherd_state = SSTATE_PASSWD_MISSING;
+         } else if (ret == 4) {
+            shepherd_state = SSTATE_PASSWD_WRONG;
+         }
+         shepherd_error(1, err_str);
       }
    }
    shepherd_trace("now running with uid="uid_t_fmt", euid="uid_t_fmt, 
@@ -1716,7 +1728,7 @@ char *err_str
    return ret;
 }
 
-static char *build_path(
+char *build_path(
 int type 
 ) {
    SGE_STRUCT_STAT statbuf;

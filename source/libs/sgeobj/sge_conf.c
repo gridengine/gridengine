@@ -145,6 +145,7 @@ static bool enable_forced_qdel = false;
 static bool enable_enforce_master_limit = false;
 static bool enable_test_sleep_after_request = false;
 static bool enable_forced_qdel_if_unknown = false;
+static bool ignore_ngroups_max_limit = false;
 static bool do_credentials = true;
 static bool do_authentication = true;
 static bool is_monitor_message = true;
@@ -656,6 +657,7 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
       enable_enforce_master_limit = false;
       enable_test_sleep_after_request = false;
       enable_forced_qdel_if_unknown = false;
+      ignore_ngroups_max_limit = false;
       do_credentials = true;
       do_authentication = true;
       is_monitor_message = true;
@@ -997,6 +999,9 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
             sge_strlcpy(h_locks, s+sizeof("H_LOCKS"), 100);
             continue;
          }
+         if (parse_bool_param(s, "IGNORE_NGROUPS_MAX_LIMIT", &ignore_ngroups_max_limit)) {
+            continue;
+         } 
       }
       SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_WRITE);
       sge_free_saved_vars(conf_context);
@@ -2458,7 +2463,17 @@ bool mconf_get_enable_forced_qdel_if_unknown(void) {
    ret = enable_forced_qdel_if_unknown;
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
    DRETURN(ret);
+}
 
+bool mconf_get_ignore_ngroups_max_limit(void) {
+   bool ret;
+
+   DENTER(BASIS_LAYER, "mconf_get_ignore_ngroups_max_limit");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+   ERROR((SGE_EVENT, "### param is %d", ignore_ngroups_max_limit));
+   ret = ignore_ngroups_max_limit;
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
 }
 
 int mconf_get_max_job_deletion_time(void) {

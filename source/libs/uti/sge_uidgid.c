@@ -922,6 +922,8 @@ int get_group_buffer_size(void)
 *     char *err_str                 - ???
 *     int use_qsub_gid              - ???
 *     gid_t qsub_gid                - ???
+*     bool skip_silently            - skip silently when add_grp could not 
+*                                     be added due to NGROUP_MAX limit
 *
 *  NOTES
 *     MT-NOTE: sge_set_uid_gid_addgrp() is MT safe
@@ -945,11 +947,11 @@ int get_group_buffer_size(void)
 static int _sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
                             int min_gid, int min_uid, int add_grp, char *err_str,
                             int use_qsub_gid, gid_t qsub_gid,
-                            char *buffer, int size);
+                            char *buffer, int size, bool skip_silently);
 
 int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
                            int min_gid, int min_uid, int add_grp, char *err_str,
-                           int use_qsub_gid, gid_t qsub_gid)
+                           int use_qsub_gid, gid_t qsub_gid, bool skip_silently)
 {
    int ret;
    char *buffer;
@@ -960,7 +962,7 @@ int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
 
    ret = _sge_set_uid_gid_addgrp(user, intermediate_user, min_gid, min_uid, add_grp, 
                                  err_str, use_qsub_gid, qsub_gid,
-                                 buffer, size);
+                                 buffer, size, skip_silently);
 
    sge_free(&buffer);
    return ret;
@@ -969,7 +971,7 @@ int sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
 static int _sge_set_uid_gid_addgrp(const char *user, const char *intermediate_user,
                             int min_gid, int min_uid, int add_grp, char *err_str,
                             int use_qsub_gid, gid_t qsub_gid,
-                            char *buffer, int size)
+                            char *buffer, int size, bool skip_silently)
 {
 #if !(defined(WIN32) || defined(INTERIX)) /* var not needed */
    int status;
@@ -1066,8 +1068,8 @@ static int _sge_set_uid_gid_addgrp(const char *user, const char *intermediate_us
 #if defined(SOLARIS) || defined(ALPHA) || defined(LINUX) || defined(FREEBSD) || defined(DARWIN)
    /* add Additional group id to current list of groups */
    if (add_grp) {
-      if (sge_add_group(add_grp, err_str) == -1) {
-         return 1;
+      if (sge_add_group(add_grp, err_str, skip_silently) == -1) {
+         return 5;
       }
    }
 #endif
@@ -1157,10 +1159,12 @@ static int _sge_set_uid_gid_addgrp(const char *user, const char *intermediate_us
 *     err_str.
 *
 *  INPUTS
-*     gid_t add_grp_id - new gid
-*     char *err_str    - if points to a valid string buffer
-*                        error descriptions 
-*                        will be written here
+*     gid_t add_grp_id   - new gid
+*     char *err_str      - if points to a valid string buffer
+*                          error descriptions 
+*                          will be written here
+*     bool skip_silently - skip silently if setting the group is skipped
+*                          because this would exceed the NGROUPS_MAX limit.
 *
 *  NOTE
 *     MT-NOTE: sge_add_group() is MT safe
@@ -1170,7 +1174,7 @@ static int _sge_set_uid_gid_addgrp(const char *user, const char *intermediate_us
 *         0 - Success
 *        -1 - Error
 ******************************************************************************/
-int sge_add_group(gid_t add_grp_id, char *err_str)
+int sge_add_group(gid_t add_grp_id, char *err_str, bool skip_silently)
 {
    u_long32 max_groups;
    gid_t *list;
@@ -1222,12 +1226,13 @@ int sge_add_group(gid_t add_grp_id, char *err_str)
       return -1;
    }   
 #if !defined(INTERIX)
+
    if (groups < max_groups) {
       list[groups] = add_grp_id;
       groups++;
       groups = setgroups(groups, list);
       if (groups == -1) {
-         if(err_str != NULL) {
+         if (err_str != NULL) {
             int error = errno;
             sprintf(err_str, MSG_SYSTEM_ADDGROUPIDFORSGEFAILED_UUS, sge_u32c(getuid()), 
                     sge_u32c(geteuid()), strerror(error));
@@ -1235,14 +1240,17 @@ int sge_add_group(gid_t add_grp_id, char *err_str)
          sge_free(&list);
          return -1;
       }
-   } else {
-      if(err_str != NULL) {
+   } else if (skip_silently == false) {
+      if (err_str != NULL) {
          sprintf(err_str, MSG_SYSTEM_ADDGROUPIDFORSGEFAILED_UUS, sge_u32c(getuid()), 
                  sge_u32c(geteuid()), MSG_SYSTEM_USER_HAS_TOO_MANY_GIDS);
       }
       sge_free(&list);
       return -1;
-   }                      
+   } else {
+      sge_free(&list);
+      return 0; 
+   } 
 #endif
    sge_free(&list);
    return 0;

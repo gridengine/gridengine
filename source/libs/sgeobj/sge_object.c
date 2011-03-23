@@ -1808,7 +1808,7 @@ object_parse_solist_from_string(lListElem *this_elem, lList **answer_list,
        * slotwise subordinate and therefore lead to an error.
        */
       slots_text = sge_strtok_r(string, "=", &last);
-      if (strncasecmp("slots", slots_text, 5) == 0) {
+      if (slots_text != NULL && strncasecmp("slots", slots_text, 5) == 0) {
          /*
           * slot-wise suspend on subordinate
           */
@@ -1822,82 +1822,88 @@ object_parse_solist_from_string(lListElem *this_elem, lList **answer_list,
           */
          /* the "slots=" was already skipped in the first sge_strtok_r() */
          /* parse the "8" in our example above */
-         slots_sum_text           = sge_strtok_r(NULL, "(", &last);
-         slots_sum_value          = strtol(slots_sum_text, &endptr, 10);
-         if (*endptr != '\0') {
+         slots_sum_text = sge_strtok_r(NULL, "(", &last);
+         if (slots_sum_text != NULL) {
+            slots_sum_value = strtol(slots_sum_text, &endptr, 10);
+         } else {
             answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
                ANSWER_QUALITY_ERROR, MSG_ERRORPARSINGVALUEFORNM_S, string);
             ret = false;
          }
-         /* point the "sub_queues_text" to the start of the sub queue list */
-         sub_queues_text = sge_strtok_r(NULL, ")", &last);
-         /* split up the original string from the first subordinated queue on */
-         lString2List(sub_queues_text, &tmp_list, SO_Type, SO_name, ",) \t");
-         for_each(tmp_elem, tmp_list) {
-            const char *queue_value = lGetString(tmp_elem, SO_name);
-            char *queuename   = sge_strtok(queue_value, ":");
-            char *value_str   = sge_strtok(NULL, ":");
-            char *action_str  = sge_strtok(NULL, ":");
-
-            sge_strip_blanks(queuename);
-            sge_strip_blanks(value_str);
-            sge_strip_blanks(action_str);
-
-            if (queuename != NULL) {
-               lSetString(tmp_elem, SO_name, queuename);
-            } else {
-               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
-                  ANSWER_QUALITY_ERROR, MSG_ERRORPARSINGVALUEFORNM_S, string);
-               lFreeList(&tmp_list);
-               ret = false;
-               break;
-            }
-
-            if (slots_sum_value > 0) {
-               lSetUlong(tmp_elem, SO_slots_sum, slots_sum_value);
-            } else {
-               answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
-                  ANSWER_QUALITY_ERROR, MSG_ERRORPARSINGVALUEFORNM_S, string);
-               lFreeList(&tmp_list);
-               ret = false;
-               break;
-            }
-
-            if (value_str != NULL) {
-               char     *endptr = NULL;
-               u_long32 value   = strtol(value_str, &endptr, 10);
-
-               if (*endptr == '\0') {
-                  lSetUlong(tmp_elem, SO_seq_no, value); 
-               } else {
-                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
-                     ANSWER_QUALITY_ERROR, MSG_ERRORPARSINGVALUEFORNM_S, string);
-                  lFreeList(&tmp_list);
-                  ret = false;
-                  break;
-               }
-            } else {
-               lSetUlong(tmp_elem, SO_seq_no, 0);
-            }
-
-            if (action_str != NULL) {
-               if (strcmp(action_str, "lr") == 0) {
-                  lSetUlong(tmp_elem, SO_action, SO_ACTION_LR);
-               } else if (strcmp(action_str, "sr") == 0) {
-                  lSetUlong(tmp_elem, SO_action, SO_ACTION_SR);
-               } else {
-                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
-                     ANSWER_QUALITY_ERROR, MSG_ERRORPARSINGVALUEFORNM_S, string);
-                  lFreeList(&tmp_list);
-                  ret = false;
-                  break;
-               }
-            } else {
-               /* default is "sr" */
-               lSetUlong(tmp_elem, SO_action, SO_ACTION_SR);
-            }
-         } 
+         if (endptr != NULL && *endptr != '\0') {
+            answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+               ANSWER_QUALITY_ERROR, MSG_ERRORPARSINGVALUEFORNM_S, string);
+            ret = false;
+         }
          if (ret) {
+            /* point the "sub_queues_text" to the start of the sub queue list */
+            sub_queues_text = sge_strtok_r(NULL, ")", &last);
+            /* split up the original string from the first subordinated queue on */
+            lString2List(sub_queues_text, &tmp_list, SO_Type, SO_name, ",) \t");
+            for_each(tmp_elem, tmp_list) {
+               const char *queue_value = lGetString(tmp_elem, SO_name);
+               char *queuename   = sge_strtok(queue_value, ":");
+               char *value_str   = sge_strtok(NULL, ":");
+               char *action_str  = sge_strtok(NULL, ":");
+
+               sge_strip_blanks(queuename);
+               sge_strip_blanks(value_str);
+               sge_strip_blanks(action_str);
+
+               if (queuename != NULL) {
+                  lSetString(tmp_elem, SO_name, queuename);
+               } else {
+                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                     ANSWER_QUALITY_ERROR, MSG_ERRORPARSINGVALUEFORNM_S, string);
+                  lFreeList(&tmp_list);
+                  ret = false;
+                  break;
+               }
+
+               if (slots_sum_value > 0) {
+                  lSetUlong(tmp_elem, SO_slots_sum, slots_sum_value);
+               } else {
+                  answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                     ANSWER_QUALITY_ERROR, MSG_ERRORPARSINGVALUEFORNM_S, string);
+                  lFreeList(&tmp_list);
+                  ret = false;
+                  break;
+               }
+
+               if (value_str != NULL) {
+                  char     *endptr = NULL;
+                  u_long32 value   = strtol(value_str, &endptr, 10);
+
+                  if (endptr != NULL && *endptr == '\0') {
+                     lSetUlong(tmp_elem, SO_seq_no, value); 
+                  } else {
+                     answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                        ANSWER_QUALITY_ERROR, MSG_ERRORPARSINGVALUEFORNM_S, string);
+                     lFreeList(&tmp_list);
+                     ret = false;
+                     break;
+                  }
+               } else {
+                  lSetUlong(tmp_elem, SO_seq_no, 0);
+               }
+
+               if (action_str != NULL) {
+                  if (strcmp(action_str, "lr") == 0) {
+                     lSetUlong(tmp_elem, SO_action, SO_ACTION_LR);
+                  } else if (strcmp(action_str, "sr") == 0) {
+                     lSetUlong(tmp_elem, SO_action, SO_ACTION_SR);
+                  } else {
+                     answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,
+                        ANSWER_QUALITY_ERROR, MSG_ERRORPARSINGVALUEFORNM_S, string);
+                     lFreeList(&tmp_list);
+                     ret = false;
+                     break;
+                  }
+               } else {
+                  /* default is "sr" */
+                  lSetUlong(tmp_elem, SO_action, SO_ACTION_SR);
+               }
+            } 
             lSetPosList(this_elem, pos, tmp_list);
          }
       } else {
@@ -1919,7 +1925,7 @@ object_parse_solist_from_string(lListElem *this_elem, lList **answer_list,
                      char *endptr = NULL;
                      u_long32 value = strtol(value_str, &endptr, 10);
 
-                     if (*endptr == '\0') {
+                     if (endptr != NULL && *endptr == '\0') {
                         lSetUlong(tmp_elem, SO_threshold, value);
                      } else {
                         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,

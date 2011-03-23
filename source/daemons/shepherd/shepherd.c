@@ -2477,57 +2477,57 @@ int fd_std_err             /* fd of stderr. -1 if not set */
          &job_status,
          &job_pid);
 
-   /* qsub -pty handling */
-   if (fd_pty_master != -1) {
-      int ret;
+      /* qsub -pty handling */
+      if (fd_pty_master != -1) {
+         int ret;
 
-      /* look for data to write */
-      ret = poll(pty_fds, 2, 0);
-      if (ret > 0) {
-         /* write the data from the job to the output-files */
-         if (pty_fds[0].revents & POLLIN || pty_fds[0].revents & POLLPRI) {
-            char buffer[MAX_STRING_SIZE];
-            int read_bytes = -1;
+         /* look for data to write */
+         ret = poll(pty_fds, 2, 0);
+         if (ret > 0) {
+            /* write the data from the job to the output-files */
+            if (pty_fds[0].revents & POLLIN || pty_fds[0].revents & POLLPRI) {
+               char buffer[MAX_STRING_SIZE];
+               int read_bytes = -1;
 
-            read_bytes = read(pty_fds[0].fd, buffer, MAX_STRING_SIZE-1);
-            if (read_bytes > 0) {
-               write(fdout, buffer, read_bytes);
-            } else if (read_bytes == -1) {
-               shepherd_error(1, "Could not read from pty_master fd. Error: %s", strerror(errno));
+               read_bytes = read(pty_fds[0].fd, buffer, MAX_STRING_SIZE-1);
+               if (read_bytes > 0) {
+                  write(fdout, buffer, read_bytes);
+               } else if (read_bytes == -1) {
+                  shepherd_error(1, "Could not read from pty_master fd. Error: %s", strerror(errno));
+               }
             }
-         }
 
-         if (pty_fds[1].revents & POLLIN || pty_fds[1].revents & POLLPRI) {
-            char buffer[MAX_STRING_SIZE];
-            int read_bytes = -1;
+            if (pty_fds[1].revents & POLLIN || pty_fds[1].revents & POLLPRI) {
+               char buffer[MAX_STRING_SIZE];
+               int read_bytes = -1;
 
-            read_bytes = read(pty_fds[1].fd, buffer, MAX_STRING_SIZE-1);
-            if (read_bytes > 0) {
-               write(fderr, buffer, read_bytes);
-            } else if (read_bytes == -1) {
-               shepherd_error(1, "Could not read from std_err fd. Error: %s", strerror(errno));
+               read_bytes = read(pty_fds[1].fd, buffer, MAX_STRING_SIZE-1);
+               if (read_bytes > 0) {
+                  write(fderr, buffer, read_bytes);
+               } else if (read_bytes == -1) {
+                  shepherd_error(1, "Could not read from std_err fd. Error: %s", strerror(errno));
+               }
             }
-         }
 
-         if (pty_fds[0].revents & POLLOUT && fdin != -1) {
-            char buffer[MAX_STRING_SIZE];
-            int read_bytes = -1;
+            if (pty_fds[0].revents & POLLOUT && fdin != -1) {
+               char buffer[MAX_STRING_SIZE];
+               int read_bytes = -1;
 
-            read_bytes = read(fdin, buffer, MAX_STRING_SIZE-1);
+               read_bytes = read(fdin, buffer, MAX_STRING_SIZE-1);
 
-            if (read_bytes > 0) {
-               write(pty_fds[0].fd, buffer, read_bytes);
-            } else if (read_bytes == -1) {
-               shepherd_error(1, "Could not read from %s. Error: %s", stdin_path, strerror(errno));
-            } else if (read_bytes == 0) {
-               shepherd_trace("Reached end of %s", stdin_path);
-               pty_fds[0].events = POLLIN | POLLPRI;
+               if (read_bytes > 0) {
+                  write(pty_fds[0].fd, buffer, read_bytes);
+               } else if (read_bytes == -1) {
+                  shepherd_error(1, "Could not read from %s. Error: %s", stdin_path, strerror(errno));
+               } else if (read_bytes == 0) {
+                  shepherd_trace("Reached end of %s", stdin_path);
+                  pty_fds[0].events = POLLIN | POLLPRI;
+               }
             }
+         } else if (ret == -1) {
+            shepherd_error(1, "Could not poll pty fds. Error: %s", strerror(errno));
          }
-      } else if (ret == -1) {
-         shepherd_error(1, "Could not poll pty fds. Error: %s", strerror(errno));
       }
-   }
       
    } while ((job_pid > 0) || (migr_cmd_pid > 0) || (ckpt_cmd_pid > 0) ||
             (ctrl_pid[0] > 0) || (ctrl_pid[1] > 0) || (ctrl_pid[2] > 0));

@@ -2491,7 +2491,15 @@ int fd_std_err             /* fd of stderr. -1 if not set */
 
                read_bytes = read(pty_fds[0].fd, buffer, MAX_STRING_SIZE-1);
                if (read_bytes > 0) {
-                  write(fdout, buffer, read_bytes);
+                  int written_bytes = 0;
+                  while (written_bytes != read_bytes) {
+                     int tmp_written = 0;
+                     tmp_written = write(fdout, buffer, read_bytes);
+                     if (tmp_written == -1) {
+                        shepherd_error(1, "Could not write to %s. Error: %s", stdout_path, strerror(errno));
+                     }
+                     written_bytes += tmp_written;
+                  }
                } else if (read_bytes == -1) {
                   shepherd_error(1, "Could not read from pty_master fd. Error: %s", strerror(errno));
                }
@@ -2503,7 +2511,15 @@ int fd_std_err             /* fd of stderr. -1 if not set */
 
                read_bytes = read(pty_fds[1].fd, buffer, MAX_STRING_SIZE-1);
                if (read_bytes > 0) {
-                  write(fderr, buffer, read_bytes);
+                  int written_bytes = 0;
+                  while (written_bytes != read_bytes) {
+                     int tmp_written = 0;
+                     tmp_written = write(fderr, buffer, read_bytes);
+                     if (tmp_written == -1) {
+                        shepherd_error(1, "Could not write to %s. Error: %s", stderr_path, strerror(errno));
+                     }
+                     written_bytes += tmp_written;
+                  }
                } else if (read_bytes == -1) {
                   shepherd_error(1, "Could not read from std_err fd. Error: %s", strerror(errno));
                }
@@ -2516,7 +2532,15 @@ int fd_std_err             /* fd of stderr. -1 if not set */
                read_bytes = read(fdin, buffer, MAX_STRING_SIZE-1);
 
                if (read_bytes > 0) {
-                  write(pty_fds[0].fd, buffer, read_bytes);
+                  int written_bytes = 0;
+                  while (written_bytes != read_bytes) {
+                     int tmp_written = 0;
+                     tmp_written = write(pty_fds[0].fd, buffer, read_bytes);
+                     if (tmp_written == -1) {
+                        shepherd_error(1, "Could not write to PTY. Error: %s", strerror(errno));
+                     }
+                     written_bytes += tmp_written;
+                  }
                } else if (read_bytes == -1) {
                   shepherd_error(1, "Could not read from %s. Error: %s", stdin_path, strerror(errno));
                } else if (read_bytes == 0) {

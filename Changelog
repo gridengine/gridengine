@@ -16,8 +16,10 @@ EB-2011-03-23-0: Cleanup:     Removed authuser
                  Issue:       GE-3345
                  Review:      TBD
 
-JG-2011-03-18-0: Cleanup:     adapt build default paths to univa environment
-                 Isssue:      GE-3350
+HP-2011-03-22-0: Bugfix:      qrsh -pty yes converts NL line breaks in CR NL
+                              line breaks, corrupting the output on Unix/Linux
+                 Issue:       GE-3382
+					  Review:      TBD
 
 EB-2011-03-22-0: Bugfix:      o When supplementary group id cannot be set the 
                                 queue is set into error state
@@ -42,6 +44,9 @@ EB-2011-03-21-0: Bugfix:      Perl JSV script does not allow comma in CMDNAME
                               and CMDARGS 
                  Issues:      GE-3399
                  Review:      DG 
+
+JG-2011-03-18-0: Cleanup:     adapt build default paths to univa environment
+                 Isssue:      GE-3350
 
 EB-2011-03-18-0: Bugfix:      ENABLE_RESCHEDULE_SLAVE=1 doesn't work anymore
                  Issues:      GE-3310

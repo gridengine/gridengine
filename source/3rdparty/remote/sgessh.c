@@ -82,12 +82,18 @@ int sgessh_do_setusercontext(struct passwd *pwd)
    initgroups(pwd->pw_name, pwd->pw_gid);
 #endif
 
-#if (SOLARIS || ALPHA || LINUX)
+#if (SOLARIS || ALPHA || LINUX || DARWIN)
    /* add Additional group id to current list of groups */
    if (add_grp_id) {
       char err_str[1024];
-      if (sge_add_group(add_grp_id, err_str) == -1) {
-                   perror(err_str);
+      bool skip_silently = false;
+      const char *tmp_str = search_conf_val("skip_ngroups_max_silently");
+
+      if (tmp_str != NULL && strcmp(tmp_str, "yes") == 0) {
+         skip_silently = true;
+      }
+      if (sge_add_group(add_grp_id, err_str, skip_silently) == -1) {
+         perror(err_str);
       }
    }
 #endif

@@ -2470,7 +2470,6 @@ bool mconf_get_ignore_ngroups_max_limit(void) {
 
    DENTER(BASIS_LAYER, "mconf_get_ignore_ngroups_max_limit");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
-   ERROR((SGE_EVENT, "### param is %d", ignore_ngroups_max_limit));
    ret = ignore_ngroups_max_limit;
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
    DRETURN(ret);

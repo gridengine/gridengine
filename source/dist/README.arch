@@ -35,24 +35,29 @@ Content
    Currently the 'arch' script returns the following strings. This list may
    be incomplete.
 
-   arch	compile arch		description
+   arch	      compile arch    description
    ----------------------------------------------------------------------
-   aix43	AIX43		IBM AIX 4.3.x, 32bit
-   aix51        AIX51 	        IBM AIX 5.1.x, 64bit kernel
-   cray		UNICOS		Cray Unicos 10.0.x XMP, YMP, J90, C90, SV1
-   crayts	UNICOS_TS	Cray Unicos 10.0.x T90
-   craytsieee	UNICOS_TS_IEEE	Cray Unicos 10.0.x T90 with IEEE hardware
-   hp11		HP11		HP HP-UX 11 32bit
-   hp11-64	HP1164	        HP HP-UX 11.00 64bit
-   irix65	IRIX65		SGI Irix 6.5,
-   lx-amd64   LINUXAMD64_24   Linux AMD64
-   lx-x86	LINUX86_24	Linux x86
-   necsx4	NECSX4		NEC SX4, SUPER-UX
-   necsx5	NECSX5		NEC SX5, SUPER-UX
-   sol-sparc	SOLARIS		Sun, Sparc Solaris 7, 8, 9 32bit
-   sol-sparc64	SOLARIS64       Sun, Sparc, Solaris 7, 8, 9 64bit
-   sol-x86	SOLARIS86       Sun, x86, Solaris 8, 9
-   tru64	ALPHA5          Compaq Tru64 Unix 5.0, 5.1
+   aix43	      AIX43           IBM AIX 4.3.x, 32bit
+   aix51       AIX51           IBM AIX 5.1.x, 64bit kernel
+   cray        UNICOS          Cray Unicos 10.0.x XMP, YMP, J90, C90, SV1
+   crayts      UNICOS_TS       Cray Unicos 10.0.x T90
+   craytsieee  UNICOS_TS_IEEE  Cray Unicos 10.0.x T90 with IEEE hardware
+   darwin-ppc  DARWIN_PPC      Mac OS PPC
+   darwin-x86  DARWIN_X86      Mac OS X, 32bit (Leopard)
+   darwin-x64  DARWIN_X64      Mac OS X, 64bit (Snow Leopard and newer)
+   hp11        HP11            HP HP-UX 11 32bit
+   hp11-64     HP1164          HP HP-UX 11.00 64bit
+   irix65      IRIX65          SGI Irix 6.5,
+   lx-amd64    LINUXAMD64      Linux AMD64
+   lx-x86      LINUX86         Linux x86
+   necsx4      NECSX4          NEC SX4, SUPER-UX
+   necsx5      NECSX5          NEC SX5, SUPER-UX
+   sol-sparc   SOLARIS         Sun, Sparc Solaris 7, 8, 9 32bit
+   sol-sparc64 SOLARIS64       Sun, Sparc, Solaris 7, 8, 9 64bit
+   sol-x86     SOLARIS86       Sun, x86, Solaris 8, 9, 10 32bit
+   sol-amd86   SOLARISAMD64    Sun, x86, Solaris 8, 9, 10 64bit
+   tru64       ALPHA5          Compaq Tru64 Unix 5.0, 5.1
+   win32-x86   WIN32_X86       Windows Interix/SFU 32bit
 
    Often a binary set compiled on an older operating system will run without
    any problems on a newer OS version. The reverse is almost never true.

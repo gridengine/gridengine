@@ -53,7 +53,7 @@ handlers = java.util.logging.FileHandler
 #com.sun.grid.jgdi.configuration.ClusterQueueTestCase.level = FINE
 #com.sun.grid.jgdi.management.level = FINER
 #com.sun.grid.jgdi.event.level = FINER
-# For authuser login module debugging
+# For login module debugging
 #com.sun.grid.security.login.level = FINER
 #com.sun.grid.util.expect.level = FINER
 

@@ -408,9 +408,7 @@ set JUTI_ALL  = juti_all
 set JUTI_CLEAN  = juti_clean
 set JUTI_DEPEND  = juti_depend
 
-set AUTHUSER_ALL  = authuser
 set LOADCHECK_ALL = loadcheck
-set AUTHUSER_OBJ  = authuser.o
 set LOADCHECK_OBJ = loadcheck.o
 set JUTI_OBJ      = 
 
@@ -1575,9 +1573,7 @@ case WIN32_X86:
    set JUTI_ALL         = ""
    set JUTI_DEPEND      = ""
    set JUTI_CLEAN       = ""
-   set AUTHUSER_ALL     = authuser.exe
    set LOADCHECK_ALL    = loadcheck.exe
-   set AUTHUSER_OBJ     = authuser.obj
    set LOADCHECK_OBJ    = loadcheck.obj
    set JUTI_OBJ         = juti.obj
    
@@ -2627,8 +2623,7 @@ if ( "$CORE" == 1 && "$JAVA" != 2 ) then
          "SONAME_LFLAG_DRMAA10=$SONAME_LFLAG_DRMAA10" \
          "SONAME_LFLAG_DRMAA95=$SONAME_LFLAG_DRMAA95" \
          "JUTI_ALL=$JUTI_ALL" "JUTI_CLEAN=$JUTI_CLEAN" "JUTI_DEPEND=$JUTI_DEPEND" \
-         "AUTHUSER_ALL=$AUTHUSER_ALL" "LOADCHECK_ALL=$LOADCHECK_ALL" \
-         "AUTHUSER_OBJ=$AUTHUSER_OBJ" "LOADCHECK_OBJ=$LOADCHECK_OBJ" \
+         "LOADCHECK_ALL=$LOADCHECK_ALL" "LOADCHECK_OBJ=$LOADCHECK_OBJ" \
          "JUTI_OBJ=$JUTI_OBJ" \
          "WINCC=$WINCC" "WINCFLAGS=$WINCFLAGS" "WINLFLAGS=$WINLFLAGS" \
          "WINLIBS=$WINLIBS" "LIBRARY_LIBS=$LIBRARY_LIBS" \

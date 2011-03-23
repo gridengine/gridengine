@@ -53,7 +53,7 @@ FILELIST="3rd_party bin ckpt dtrace examples inst_sge install_execd install_qmas
 
 OPTFILES="catman doc include man hadoop"
 
-SUIDFILES="utilbin/*/rsh utilbin/*/rlogin utilbin/*/testsuidroot bin/*/sgepasswd utilbin/*/authuser"
+SUIDFILES="utilbin/*/rsh utilbin/*/rlogin utilbin/*/testsuidroot bin/*/sgepasswd"
 
 umask 022
 
@@ -164,7 +164,6 @@ else
    $ECHO "   \$SGE_ROOT/utilbin/<arch>/rsh"
    $ECHO "   \$SGE_ROOT/utilbin/<arch>/testsuidroot"
    $ECHO "   \$SGE_ROOT/bin/<arch>/sgepasswd"
-   $ECHO "   \$SGE_ROOT/bin/<arch>/authuser"
    $ECHO
 
    TEXT="Do you want to set the file permissions (yes/no) [NO] >> \c"

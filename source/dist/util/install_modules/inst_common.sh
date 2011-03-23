@@ -386,11 +386,11 @@ CheckBinaries()
 
    UTILFILES="adminrun checkprog checkuser filestat gethostbyaddr gethostbyname \
               gethostname getservbyname loadcheck now qrsh_starter rlogin rsh rshd \
-              testsuidroot authuser uidgid infotext"
+              testsuidroot uidgid infotext"
 
    WINUTILFILES="SGE_Helper_Service.exe adminrun checkprog checkuser filestat \
                  gethostbyaddr gethostbyname gethostname getservbyname loadcheck.exe \
-                 now qrsh_starter rlogin rsh rshd testsuidroot authuser.exe uidgid \
+                 now qrsh_starter rlogin rsh rshd testsuidroot uidgid \
                  infotext SGE_Starter.exe"
 
    #SUIDFILES="rsh rlogin testsuidroot sgepasswd"
@@ -444,9 +444,9 @@ CheckBinaries()
          "qloadsensor.exe\n\n" \
          "and the binaries in >%s< should be:\n\n" \
          "adminrun        gethostbyaddr  loadcheck.exe  rlogin         uidgid\n" \
-         "authuser.exe    checkprog      gethostbyname  now            rsh\n" \
+         "testsuidroot    checkprog      gethostbyname  now            rsh\n" \
          "infotext        checkuser      gethostname    openssl        rshd\n" \
-         "filestat        getservbyname  qrsh_starter   testsuidroot   SGE_Helper_Service.exe\n" \
+         "filestat        getservbyname  qrsh_starter   SGE_Helper_Service.exe\n" \
          "SGE_Starter.exe\n\n" \
          "Installation failed. Exit.\n" $SGE_BIN $SGE_UTILBIN
       else
@@ -461,9 +461,9 @@ CheckBinaries()
          "qquota\n\n" \
          "and the binaries in >%s< should be:\n\n" \
          "adminrun       gethostbyaddr  loadcheck      rlogin         uidgid\n" \
-         "authuser       checkprog      gethostbyname  now            rsh\n" \
+         "testsuidroot   checkprog      gethostbyname  now            rsh\n" \
          "infotext       checkuser      gethostname    openssl        rshd\n" \
-         "filestat       getservbyname  qrsh_starter   testsuidroot\n\n" \
+         "filestat       getservbyname  qrsh_starter   \n\n" \
          "Installation failed. Exit.\n" $SGE_BIN $SGE_UTILBIN
       fi
 
@@ -478,9 +478,9 @@ CheckBinaries()
       "qquota\n\n" \
       "and the binaries in >%s< should be:\n\n" \
       "adminrun       gethostbyaddr  loadcheck      rlogin         uidgid\n" \
-      "authuser       checkprog      gethostbyname  now            rsh\n" \
+      "testsuidroot   checkprog      gethostbyname  now            rsh\n" \
       "infotext       checkuser      gethostname    openssl        rshd\n" \
-      "filestat       getservbyname  qrsh_starter   testsuidroot\n\n" \
+      "filestat       getservbyname  qrsh_starter\n\n" \
       "Installation failed. Exit.\n" $SGE_BIN $SGE_UTILBIN
 
       MoveLog

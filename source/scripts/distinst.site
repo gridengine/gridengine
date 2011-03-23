@@ -32,15 +32,15 @@
 
 # Base directory where the openssl binary and libraries reside
 OPENSSLSOVERSION=0.9.8
-OPENSSLBASE=/off_home/gridengine/openssl-0.9.8h-origin
+OPENSSLBASE=/tools/PKG/openssl-0.9.8q
 
 # Base directory where BDB resides
-BERKELEYDBBASE=/off_home/gridengine/db-4.4.20
+BERKELEYDBBASE=/tools/PKG/db-4.4.20
 
 # Base directory where libcore.so resides
 # Relevant for Linux only:
 # http://gridengine.sunsource.net/issues/show_bug.cgi?id=2552
-CORE_HOME=/vol2/tools/SW/libcore
+CORE_HOME=/tools/PKG/libcore
 
 # sgeinspect home
 SGE_INSPECT_SRC_DIR="../nbgui"

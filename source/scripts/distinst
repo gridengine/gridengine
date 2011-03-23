@@ -47,7 +47,7 @@ DEFAULTPROG="sge_qmaster sge_execd sge_shadowd \
 
 UTILITYBINARIES="uidgid gethostname gethostbyname gethostbyaddr \
                  getservbyname filestat checkprog loadcheck now checkuser \
-                 adminrun qrsh_starter testsuidroot authuser read_raw echo_raw \
+                 adminrun qrsh_starter testsuidroot read_raw echo_raw \
                  sge_share_mon infotext spooldefaults spooledit spoolinit \
                  fstype SGE_Helper_Service.exe SGE_Starter.exe valid_jvmlib"
 
@@ -1385,12 +1385,6 @@ for i in $ARCH; do
                fi
             elif [ $prog = testsuidroot ]; then
                   InstallProgSUID $prog
-            elif [ $prog = authuser ]; then
-               if [ "$DSTARCH" != "win32-x86" ]; then
-                  InstallProgSUID $prog
-               else
-                  InstallProg $prog.exe
-               fi
             elif [ $prog = loadcheck ]; then
                if [ "$DSTARCH" != "win32-x86" ]; then
                   InstallProg $prog

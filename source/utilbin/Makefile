@@ -41,20 +41,20 @@ UTILBIN_TARGETS = uidgid gethostname gethostbyname gethostbyaddr \
                  adminrun checkuser languagetest \
                  testsuidroot infotext spooldefaults spooledit spoolinit read_raw echo_raw \
                  tst_pthread_signals fstype qping sgepasswd sge_share_mon \
-                 valid_jvmlib $(AUTHUSER_ALL) $(LOADCHECK_ALL)
+                 valid_jvmlib $(LOADCHECK_ALL)
 
 UTILBIN_SRC =  uidgid.c gethostname.c gethostbyname.c gethostbyaddr.c \
                getservbyname.c filestat.c signals.c now.c \
                checkuser.c adminrun.c range.c  \
                languagetest.c infotext.c \
                spooldefaults.c spooledit.c spoolinit.c read_raw.o echo_raw.o \
-               tst_pthread_signals.c fstype.c qping.c authuser.c sge_share_mon.c \
+               tst_pthread_signals.c fstype.c qping.c sge_share_mon.c \
                valid_jvmlib.c
 
 UTILBIN_OBJS  = $(UTILBIN_SRC:.c=.o) 
 
 UTILBIN_TARGET_OBJS = checkprog.o loadcheck.o testsuidroot.o work.o \
-                      sge_passwd_main.o $(AUTHUSER_OBJ) $(LOADCHECK_OBJ) $(JUTI_OBJ)
+                      sge_passwd_main.o $(LOADCHECK_OBJ) $(JUTI_OBJ)
 
 ###############################################################################
 # global rules: all, clean, depend, messages
@@ -288,24 +288,4 @@ valid_jvmlib: valid_jvmlib.o
 
 valid_jvmlib.o:		$(UTILBIN_DIR)/valid_jvmlib.c
 		$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/valid_jvmlib.c
-
-#---------------------------------------------------------------------
-AUTHUSER_ADD_LIBS = -luti $(COMMLISTSLIB) $(DLLIB)
-
-authuser: authuser.o juti.o $(UTILIB) $(COMMLISTSLIB)
-	$(CC) -o authuser $(LFLAGS) authuser.o juti.o $(AUTHLIBS) $(AUTHUSER_ADD_LIBS) $(LIBS)
-
-authuser.o: $(UTILBIN_DIR)/authuser.c
-	$(CC) $(CFLAGS) -c $(UTILBIN_DIR)/authuser.c -o authuser.o
-
-AUTHUSER_WINLFLAGS = /SUBSYSTEM:CONSOLE $(WINLFLAGS)
-
-authuser.exe: authuser.obj juti.obj
-	$(WINCC) authuser.obj juti.obj /link /OUT:authuser.exe $(AUTHUSER_WINLFLAGS) $(WINLIBS) netapi32.lib
-
-authuser.obj: $(UTILBIN_DIR)/authuser.c
-	$(WINCC) $(WINCFLAGS) /c $(UTILBIN_DIR)/authuser.c
-
-juti.obj: $(SDIR)/libs/juti/juti.c
-	$(WINCC) $(WINCFLAGS) /c $(SDIR)/libs/juti/juti.c
 

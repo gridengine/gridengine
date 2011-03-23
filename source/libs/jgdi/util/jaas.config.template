@@ -44,13 +44,6 @@ GridwareConfig {
 
     /*
      *  Accepts all clients which has a valid username/password.
-     *
-     *  The username/password validation is done with the authuser binary (included
-     *  in the grid engine distribution, $SGE_ROOT/utilbin/$ARCH/authuser). 
-     *
-     *  ATTENTION: The authuser binary needs the suid bit. It does not work if grid
-     *  engine is installed on a nosuid file system.
-     *
      */
     com.sun.grid.security.login.UnixLoginModule requisite
         sge_root="${com.sun.grid.jgdi.sgeRoot}"

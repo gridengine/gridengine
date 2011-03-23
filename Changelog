@@ -8,31 +8,43 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
-EB-2010-03-22-0: Bugfix:      o When supplementary group id cannot be set the 
+EB-2011-03-23-0: Cleanup:     Removed authuser
+                 Issue:       GE-3345
+                 Review:      TBD
+
+HP-2011-03-22-0: Bugfix:      qrsh -pty yes converts NL line breaks in CR NL
+                              line breaks, corrupting the output on Unix/Linux
+                 Issue:       GE-3382
+					  Review:      TBD
+
+EB-2011-03-22-0: Bugfix:      o When supplementary group id cannot be set the 
                                 queue is set into error state
                               o Setting of supplementary group id might fail on 
                                 Mac OS X
                  Issues:      GE-3400 GE-3412
                  Review:      TBD
 
-SH-2010-03-22-0: Enhancem.:   Added qsub -pty switch
+SH-2011-03-22-0: Enhancem.:   Added qsub -pty switch
                  Issue:       GE-3095
                  Review:      HP (GE-24)
 
-DG-2010-03-22-1: Enhancem.:   Enabled core binding on Linux hosts per default.
+DG-2011-03-22-1: Enhancem.:   Enabled core binding on Linux hosts per default.
                  Issue:       GE-3351
                  Review:      JG
 
-DG-2010-03-22-0: Enhancem.:   Removed BDB RPC from command line installer.
+DG-2011-03-22-0: Enhancem.:   Removed BDB RPC from command line installer.
                  Issue:       GE-3379
                  Review:      JG (GE-23)
 
-EB-2010-03-21-0: Bugfix:      Perl JSV script does not allow comma in CMDNAME 
+EB-2011-03-21-0: Bugfix:      Perl JSV script does not allow comma in CMDNAME 
                               and CMDARGS 
                  Issues:      GE-3399
                  Review:      DG 
 
-EB-2010-03-18-0: Bugfix:      ENABLE_RESCHEDULE_SLAVE=1 doesn't work anymore
+JG-2011-03-18-0: Cleanup:     adapt build default paths to univa environment
+                 Isssue:      GE-3350
+
+EB-2011-03-18-0: Bugfix:      ENABLE_RESCHEDULE_SLAVE=1 doesn't work anymore
                  Issues:      GE-3310
                  Review:      DG 
 

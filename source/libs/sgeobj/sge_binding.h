@@ -61,7 +61,7 @@
 #endif
 
 #if defined(PLPA_LINUX) 
-#  include "plpa.h"
+#  include <plpa.h>
 #endif
  
 /* functions related to get load values for execd (see load_avg.c) */

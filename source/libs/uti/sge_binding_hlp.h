@@ -49,7 +49,7 @@
 #include "uti/sge_binding_parse.h"
 
 #if defined(PLPA_LINUX)
-#  include "plpa.h"
+#  include <plpa.h>
 #  include <dlfcn.h>
 #endif 
 

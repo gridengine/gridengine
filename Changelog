@@ -8,6 +8,8 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+DG-2011-03-24-0: Cleanup:     added grid engine logo
+
 EB-2011-03-23-2: Bugfix:      qconf segfaults on bad subordination string 
                  Issue:       GE-3326
                  Review:      TBD

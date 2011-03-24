@@ -2090,7 +2090,7 @@ static int test(sge_gdi_ctx_class_t *ctx, int *argc, char **argv[], int parse_ar
                NULL, 1, local_host_name)!=DRMAA_ERRNO_SUCCESS) {
             return 1;
          }
-         sge_free(local_host_name);
+         sge_free(&local_host_name);
 
          if (wait_n_jobs(1) != DRMAA_ERRNO_SUCCESS) {
             return 1;

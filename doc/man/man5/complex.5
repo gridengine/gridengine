@@ -256,10 +256,9 @@ manpage for \fBexpression\fP definition.
 .nf
 .RS
 Examples:
- -l arch="*x24*|sol*"  : 
-      results in "arch=lx24-x86" OR "arch=lx24-amd64" 
-         OR "arch=sol-sparc" OR "arch=sol-sparc64" 
-         OR "arch=sol-x86" OR ...
+ -l arch="*x*|sol*"  : 
+      results in "arch=lx-x86" OR "arch=lx-amd64" 
+         OR "arch=sol-amd64" OR ... 
  -l arch="sol-x??"  : 
       results in "arch=sol-x86" OR "arch=sol-x64" OR ...
  -l arch="lx2[246]-x86"  : 
@@ -271,10 +270,10 @@ Examples:
  -l arch="lx2[24-6]-x86"  : 
       results in "arch=lx22-x86" OR "arch=lx24-x86"  
          OR "arch=lx25-x86" OR "arch=lx26-x86"
- -l arch="!lx24-x86&!sol-sparc"  : 
-      results in NEITHER "arch=lx24-x86" NOR "arch=sol-sparc"
- -l arch="lx2[4|6]-x86"  : 
-      results in "arch=lx2[4" OR "arch=6"  
+ -l arch="!lx-x86&!sol-amd64"  : 
+      results in NEITHER "arch=lx-x86" NOR "arch=sol-amd64"
+ -l arch="lx2[4|6]-amd64"  : 
+      results in "arch=lx24-amd64" OR "arch=lx26-amd64"  
 .RE
 .fi
                                

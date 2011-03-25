@@ -47,7 +47,7 @@ It follows a list of possible commands and command options to give an overview w
 .IP "\fBsge_ca [-help]\fP"
 show usage
 .IP "\fBsge_ca -init [command options]\fP"
-create the infrastructure for a new xxQS_NAMExx Certificate Authority with its corresponding files and directories and a set of keys and certificates for SGE Daemon, root and admin user.
+create the infrastructure for a new xxQS_NAMExx Certificate Authority with its corresponding files and directories and a set of keys and certificates for SGE daemon, root and admin user.
 .IP "\fBsge_ca -req | -verify <cert> | -sign | -copy [command options]\fP"
 manipulate individual keys and certificates
 .IP "\fBsge_ca -print <cert> | -printkey <key> | -printcrl <crl>\fP"
@@ -59,19 +59,19 @@ are used for creation of certificates and keys for a bunch of users contained in
 .M hedeby_introduction 1
 )
 .IP "\fBsge_ca -pkcs12 <user> | -sdm_pkcs12 <g> | -sys_pkcs12 [command options]\fP"
-are used to export the certificate and key for user <user> or SDM daemon <g> in pkcs12 format and to export the SGE Daemon certificate and key in pkcs12 format.
+are used to export the certificate and key for user <user> or SDM daemon <g> in PKCS12 format and to export the SGE daemon certificate and key in PKCS12 format.
 .IP "\fBsge_ca -userks | -ks <user> | -sysks [command options]\fP"
-are used for creation of keystore for all users with a certificate and key, the keystore for a single user <user> and the keystore containing the SGE Daemon certificate and key.
+are used for creation of keystore for all users with a certificate and key, the keystore for a single user <user> and the keystore containing the SGE daemon certificate and key.
 .IP "\fBsge_ca -renew <user> | -renew_ca | -renew_sys | -renew_sdm <g> [command options]\fP" 
-are used to renew the corresponding certificates for user <user>, for the CA, for the SGE Daemon certificate and for the SDM daemon <g> certificate.
+are used to renew the corresponding certificates for user <user>, for the CA, for the SGE daemon certificate and for the SDM daemon <g> certificate.
 .PP
 where "\fB[command options]\fP" is a combination of the following options depending on the command. The COMMAND DETAILS section explains which options are usable for each command.
 .IP "\fB\-days <days>\fP"
 days of validity of the certificate
 .IP "\fB\-sha1\fP"
-use sha-1 instead of md5 as message digest
+use SHA-1 instead of MD5 as message digest
 .IP "\fB\-encryptkey\fP"
-use des to encrypt the generated private key with a passphrase. The passphrase is requested when a key is created or used.
+use DES to encrypt the generated private key with a passphrase. The passphrase is requested when a key is created or used.
 .IP "\fB\-outdir <dir>\fP"
 write to directory <dir>
 .IP "\fB\-cahost <host>\fP"
@@ -87,9 +87,9 @@ define a keystore password file that contains a password that is used to encrypt
 .IP "\fB\-ksout <file>\fP"
 define output file to write the keystore to
 .IP "\fB\-pkcs12pwf <file>\fP" 
-define a pkcs12 password file that contains a password that is used to encrypt the pkcs12 export file and the keys contained therein
+define a PKCS12 password file that contains a password that is used to encrypt the PKCS12 export file and the keys contained therein
 .IP "\fB\-pkcs12dir <dir>\fP"
-define the output directory <dir> to write the exported pkcs12 format file to. Otherwise the current working directory is used.
+define the output directory <dir> to write the exported PKCS12 format file to. Otherwise the current working directory is used.
 .\"
 .\"
 .br
@@ -104,9 +104,9 @@ If the options -adminuser, -cadir, -calocaltop, -catop and the xxQS_NAMExx envir
 .br $SGE_ROOT/$SGE_CELL/common/sgeCA  (can be overruled by -catop <dir> or -cadir <dir>)
 .br /var/sgeCA/{port$SGE_QMASTER_PORT|sge_qmaster}/$SGE_CELL  (can be overruled by -calocaltop <dir> or -cadir <dir>)
 .br The following information must be delivered for the site:
-two letter country code, state, location, e.g city or your buildingcode, organization (e.g. your company name), organizational unit, e.g. your department, email address of the CA administrator (you!)
+two letter country code, state, location, e.g city or your building-code, organization (e.g. your company name), organizational unit, e.g. your department, email address of the CA administrator (you!)
 
-Certificates and keys are generated for the CA itself, for SGE Daemon, for xxQS_NAME_Sxx install user (usually root) and finally for the xxQS_NAME_Sxx admin user. 
+Certificates and keys are generated for the CA itself, for SGE daemon, for xxQS_NAME_Sxx install user (usually root) and finally for the xxQS_NAME_Sxx admin user. 
 
 How and where the certificates and keys are created can be influenced additionally by:
 .br
@@ -114,7 +114,7 @@ How and where the certificates and keys are created can be influenced additional
 change the time of validity of the certificates to number of <days> instead of 365 days
 .br
 .I "\fB\-sha1\fP"
-change the message digest algorithm from md5 to sha-1
+change the message digest algorithm from MD5 to SHA-1
 .br
 .I "\fB\-encryptkey\fP"
 encrypt the generated keys with a passphrase
@@ -164,7 +164,7 @@ with -days <days>. If the value is negative the certificate becomes invalid.
 This command is usually run as user root on the qmaster host. $CATOP and $CALOCALTOP maybe overruled by -cadir, -catop and -calocaltop.
 .\"
 .IP "\fBsge_ca -renew_sys [-cadir <dir>] [-catop <dir>] [-calocaltop <dir>] [-adminuser <admin>] [-days <days>]\fP"
-Renew the SGE Daemon certificate. By default the certificate is extended for 365 days or by <days> specified
+Renew the SGE daemon certificate. By default the certificate is extended for 365 days or by <days> specified
 with -days <days>. If the value is negative the certificate becomes invalid.
 This command is usually run as user root on the qmaster host. $CATOP and $CALOCALTOP maybe overruled by -cadir, -catop and -calocaltop.
 .\"
@@ -175,13 +175,13 @@ This command is usually run as user root on the qmaster host. $CATOP and $CALOCA
 .br
 .br
 .IP "\fBsge_ca -pkcs12 <user> [-pkcs12pwf <file>] [-pkcs12dir <dir>] [-cadir <dir>] [-catop <dir>] [-calocaltop <dir>] [-adminuser <admin>]\fP"
-export certificate and key of user <user> 'the Unix user name' in pkcs12 format. This command is usually run as user root on the qmaster host. If -pkcs12pwf <file> is used the file and the corresponding key will be encrypted with the password in <file>. If -pkcs12dir <dir> is used the output file is written into <dir>/<user>.p12 instead of ./<user>.p12 . $CATOP and $CALOCALTOP maybe overruled by -cadir, -catop and -calocaltop.
+export certificate and key of user <user> 'the Unix user name' in PKCS12 format. This command is usually run as user root on the qmaster host. If -pkcs12pwf <file> is used the file and the corresponding key will be encrypted with the password in <file>. If -pkcs12dir <dir> is used the output file is written into <dir>/<user>.p12 instead of ./<user>.p12 . $CATOP and $CALOCALTOP maybe overruled by -cadir, -catop and -calocaltop.
 .\"
 .IP "\fBsge_ca -sys_pkcs12 [-pkcs12pwf <file>] [-pkcs12dir <dir>] [-cadir <dir>] [-catop <dir>] [-calocaltop <dir>] [-adminuser <admin>]\fP"
-export certificate and key of SGE Daemon in pkcs12 format. This command is usually run as user root on the qmaster host. If -pkcs12pwf <file> is used the file and the corresponding key will be encrypted with the password in <file>. If -pkcs12dir <dir> is used the output file is written into <dir>/<user>.p12 instead of ./<user>.p12 . $CATOP and $CALOCALTOP maybe overruled by -cadir, -catop and -calocaltop.
+export certificate and key of SGE daemon in PKCS12 format. This command is usually run as user root on the qmaster host. If -pkcs12pwf <file> is used the file and the corresponding key will be encrypted with the password in <file>. If -pkcs12dir <dir> is used the output file is written into <dir>/<user>.p12 instead of ./<user>.p12 . $CATOP and $CALOCALTOP maybe overruled by -cadir, -catop and -calocaltop.
 .\"
 .IP "\fBsge_ca -sdm_pkcs12 <g> [-pkcs12pwf <file>] [-pkcs12dir <dir>] [-cadir <dir>] [-catop <dir>] [-calocaltop <dir>] [-adminuser <admin>]\fP"
-export certificate and key of daemon <g> g='common name' in pkcs12 format. This command is usually run as user root on the qmaster host. If -pkcs12pwf <file> is used the file and the corresponding key will be encrypted with the password in <file>. If -pkcs12dir <dir> is used the output file is written into <dir>/<g>.p12 instead of ./<g>.p12 . $CATOP and $CALOCALTOP maybe overruled by -cadir, -catop and -calocaltop.
+export certificate and key of daemon <g> g='common name' in PKCS12 format. This command is usually run as user root on the qmaster host. If -pkcs12pwf <file> is used the file and the corresponding key will be encrypted with the password in <file>. If -pkcs12dir <dir> is used the output file is written into <dir>/<g>.p12 instead of ./<g>.p12 . $CATOP and $CALOCALTOP maybe overruled by -cadir, -catop and -calocaltop.
 .\"
 .br
 .br
@@ -195,7 +195,7 @@ If -kspwf <file> is used the keystore and the corresponding key will be encrypte
 The keystore files are created in $CALOCALTOP/userkeys/<user>/keystore. This command is run after user certificates and keys have been created with sge_ca -usercert <userfile> or if any of the certificates have been renewed. $CATOP and $CALOCALTOP maybe overruled by -cadir, -catop and -calocaltop.
 .\"
 .IP "\fBsge_ca -sysks [-kspwf <file>] [-cadir <dir>] [-catop <dir>] [-calocaltop <dir>] [-adminuser <admin>]\fP"
-generate a keystore containing the SGE Daemon certificate and key in JKS format.
+generate a keystore containing the SGE daemon certificate and key in JKS format.
 This command is usually run as user root on the qmaster host.
 If -kspwf <file> is used the keystore and the corresponding key will be encrypted with the password in <file>.
 The keystore file is created in $CALOCALTOP/private/keystore. $CATOP and $CALOCALTOP maybe overruled by -cadir, -catop and -calocaltop.
@@ -237,7 +237,7 @@ sge_ca \-copy is run by a user to copy the users certificate and key on the mast
 .br
 .SH EXAMPLES
 .IP "# sge_ca -init -cadir /tmp -sha1 -encryptkey -days 31"
-create a CA infrastructure in /tmp with a certificate validity of 31 days using sha-1 instead of md5 as message digest.The keys are encrypted and a passphrase has to be entered during the creation of the different keys or during signing a certificate with the created CA key.
+create a CA infrastructure in /tmp with a certificate validity of 31 days using SHA-1 instead of MD5 as message digest.The keys are encrypted and a passphrase has to be entered during the creation of the different keys or during signing a certificate with the created CA key.
 .IP "# sge_ca -usercert /tmp/myusers.txt -cadir /tmp"
 /tmp/myusers.txt contains user1:My User:user1@myorg.org and user1 is a valid Unix user account. Create a key and certificate for user1.
 .IP "# sge_ca -userks -cadir /tmp"

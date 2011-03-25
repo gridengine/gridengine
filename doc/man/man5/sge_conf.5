@@ -1752,9 +1752,9 @@ allowed for qalter.
 .SS "\fBlibjvm_path\fP"
 \fBlibjvm_path\fP is usually set during qmaster installation and points to the absolute path of libjvm.so.
 (or the corresponding library depending on your architecture - e.g. /usr/java/jre/lib/i386/server/libjvm.so) The referenced libjvm version must be at least 1.5.
-It is needed by the jvm qmaster thread only. If the java vm needs additional starting parameters they can be set in \fBadditional_jvm_args\fP. If the jvm thread is started at all can be defined in the 
+It is needed by the JVM qmaster thread only. If the Java VM needs additional starting parameters they can be set in \fBadditional_jvm_args\fP. If the JVM thread is started at all can be defined in the 
 .M bootstrap 5
-file. If libjvm_path is empty or an incorrect path the jvm thread fails to start.
+file. If libjvm_path is empty or an incorrect path the JVM thread fails to start.
 .sp 1
 The global configuration entry for this value may be overwritten by the
 execution host local configuration.
@@ -1762,7 +1762,7 @@ execution host local configuration.
 .\"
 .SS "\fBadditional_jvm_args\fP"
 \fBadditional_jvm_args\fP is usually set during qmaster installation.
-Details about possible values \fBadditional_jvm_args\fP can be found in the help output of the accompanying java command. This setting is normally not needed.
+Details about possible values \fBadditional_jvm_args\fP can be found in the help output of the accompanying Java command. This setting is normally not needed.
 .sp 1
 The global configuration entry for this value may be overwritten by the
 execution host local configuration.

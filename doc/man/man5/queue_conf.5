@@ -149,7 +149,7 @@ parameter (see above) except that exceeding one of the denoted
 thresholds initiates suspension of one of multiple jobs in the queue.
 See the \fBnsuspend\fP parameter below for details on the number of
 jobs which are suspended. There is an important relationship between the
-\fsuspend_threshold\fP and the \fscheduler_interval\fP. If you have for example
+\fBsuspend_threshold\fP and the \fBscheduler_interval\fP. If you have for example
 a suspend threshold on the np_load_avg, and the load exceeds the threshold,
 this does not have immediate effect. Jobs continue running until the next
 scheduling run, where the scheduler detects the threshold has been exceeded and

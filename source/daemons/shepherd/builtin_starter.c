@@ -442,7 +442,7 @@ void son(const char *childname, char *script_file, int truncate_stderr_out)
     ** (add additional group id), switches to start user (root) 
     **/
    tmp_str = search_conf_val("qsub_gid");
-   if (tmp_str != NULL && strcmp(tmp_str, "no") == 0) {
+   if (strcmp(tmp_str, "no") != 0) {
       use_qsub_gid = 1;   
       gid = atol(tmp_str);
    } else {

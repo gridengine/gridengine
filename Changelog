@@ -8,10 +8,14 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+EB-2011-03-28-0: Bugfix:      group ids for submitted jobs are incorrect
+                 Issue:       GE-3420
+                 Review:      DG
+
 DG-2011-03-28-0: Cleanup:     changed execd_param set in installation to 
                               compiled in parameter value
                  Belongs to:  DG-2011-03-22-1
-		 Review:      EB
+                 Review:      EB
 
 DG-2011-03-25-0: Cleanup:     fixed minor issues in man pages
 

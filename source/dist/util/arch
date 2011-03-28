@@ -110,7 +110,7 @@ Darwin)
             10.1.*)
                darwin_machine=x86
                ;;
-            10.[2-6].*)
+            10.[2-8].*)
                darwin_machine=x64
                ;;
             *)

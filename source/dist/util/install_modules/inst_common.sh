@@ -2274,9 +2274,6 @@ PrintLocalConf()
    else
       $ECHO "xterm                  $XTERM"
    fi
-   if [ "$SGE_ARCH" = "lx-amd64" -o "$SGE_ARCH" = "lx-x86" ]; then
-      $ECHO "execd_params           ENABLE_BINDING=true"
-   fi
    if [ "$QLOGIN_DAEMON" != "undef" -a "$QLOGIN_DAEMON" != "builtin" ]; then
       $ECHO "qlogin_daemon          $QLOGIN_DAEMON"
    fi

@@ -298,6 +298,7 @@
 #define MSG_JOB_GID2LOW_II            _MESSAGE(33206, _("job rejected: your group id %d is lower than minimum group id %d of cluster configuration"))
 #define MSG_JOB_ALLOWEDJOBSPERUSER_UU  _MESSAGE(33207, _("job rejected: Only "sge_U32CFormat" jobs are allowed per user (current job count: "sge_U32CFormat")"))
 #define MSG_JOB_ALLOWEDJOBSPERCLUSTER _MESSAGE(33208, _("job rejected: Only "sge_U32CFormat" jobs are allowed per cluster"))
+#define MSG_JOB_MQNONPE               _MESSAGE(33209, _("job rejected: specification of master queue is not allowed for non-parallel jobs"))
 #define MSG_JOB_NOSCRIPT              _MESSAGE(33211, _("job rejected: no script in your request"))
 #define MSG_JOB_PEUNKNOWN_S           _MESSAGE(33212, _("job rejected: the requested parallel environment "SFQ" does not exist"))
 #define MSG_JOB_CKPTUNKNOWN_S         _MESSAGE(33213, _("job rejected: the requested checkpointing environment "SFQ" does not exist"))

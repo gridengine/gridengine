@@ -131,6 +131,14 @@ sge_job_verify_adjust(sge_gdi_ctx_class_t *ctx, lListElem *jep, lList **alpp,
       }
    }
 
+   /* check for non-parallel job that define a master queue */
+   if (ret == STATUS_OK) {
+      if (lGetList(jep, JB_master_hard_queue_list) != NULL && lGetString(jep, JB_pe) == NULL) {
+         ERROR((SGE_EVENT, MSG_JOB_MQNONPE));
+         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+         ret = STATUS_EUNKNOWN;
+      }
+   }
 
    /* check for qsh without DISPLAY set */
    if (ret == STATUS_OK) {

@@ -8,6 +8,10 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+DG-2011-03-29-0: Bugfix:      removed Sun service tags
+                 Issue:       GE-3418
+                 Review:      JG
+
 EB-2011-03-29-0: Bugfix:      do not allow master switch for batch jobs
                  Issue:       GE-933
                  Review:      TBD

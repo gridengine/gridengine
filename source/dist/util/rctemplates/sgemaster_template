@@ -509,12 +509,6 @@ CheckIfShadowMasterHost $HOST
 
 if [ "$startup" = true ]; then
    
-   # if service tags are enabled
-   st_enabled=`sh $SGE_ROOT/util/sgeST/sge_st "enabled"`
-   if [ "$st_enabled" = "true" -a "$qmaster" = "true" ]; then
-      sh $SGE_ROOT/util/sgeST/sge_st "register" > /dev/null 2>&1 
-   fi
-
    # qmaster_host=true if qmaster was running on this host the last time
    #                   this host is an execution host
 

@@ -74,7 +74,7 @@ AUTOGUI=false
 RESCHEDULE=true
 RESPORT=false
 CSP=false
-SGE_ENABLE_JMX=true
+SGE_ENABLE_JMX=false
 AFS=false
 NOREMOTE=false
 START_RPC_SERVICE=false
@@ -304,7 +304,7 @@ while [ $ARGC != 0 ]; do
      CSP=true
      ;;
    -jmx)
-     :
+     SGE_ENABLE_JMX=true
      ;;
    -copycerts)
      if [ "$2" = "" ]; then

@@ -884,7 +884,6 @@ if [ $instcommon = true ]; then
                         $DEST_SGE_ROOT/util/*.sh \
                         $DEST_SGE_ROOT/util/sgeremoterun \
                         $DEST_SGE_ROOT/util/sgeCA/sge_ca \
-                        $DEST_SGE_ROOT/util/sgeST/sge_st \
                         $DEST_SGE_ROOT/util/sgeSMF/sge_smf.sh \
                         $DEST_SGE_ROOT/util/resources/loadsensors/* \
                         $DEST_SGE_ROOT/util/resources/starter_methods/*

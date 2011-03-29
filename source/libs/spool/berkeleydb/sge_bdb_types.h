@@ -35,7 +35,7 @@
 #include <time.h>
 #include <pthread.h>
 
-#include <db.h>
+#include "db.h"
 
 #include "uti/sge_dstring.h"
 

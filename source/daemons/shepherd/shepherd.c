@@ -1080,7 +1080,7 @@ int ckpt_type
    }
    else { /* not job or job and not checkpointing */
       if (g_new_interactive_job_support == false || !is_interactive) {
-         if (use_pty == YES) {
+         if (use_pty == YES && strcasecmp(script_file, JOB_TYPE_STR_QSH) != 0) {
             shepherd_trace("calling fork_pty()");
             pid = fork_pty(&fd_pty_master, fd_pipe_err, &err_msg);
          } else {

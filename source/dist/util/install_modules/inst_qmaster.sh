@@ -2208,8 +2208,8 @@ SetLibJvmPath() {
 GetJMXPort() {
    $CLEAR
    $INFOTEXT -u "\nGrid Engine JMX MBean server"
-   $INFOTEXT -n "\nIn order to use the SGE Inspect or the Service Domain Manager (SDM)\n" \
-                "SGE adapter you need to configure a JMX server in qmaster. Qmaster \n" \
+   $INFOTEXT -n "\nIn order to use the JGDI (currently unstable) interface \n" \
+                "you need to configure a JMX server in qmaster. Qmaster \n" \
                 "will then load a Java Virtual Machine through a shared library.\n" \
                 "NOTE: Java 1.5 or later is required for the JMX MBean server.\n\n"
    #Shadowds keep qmaster setting, JMX for all or JMX for nobody

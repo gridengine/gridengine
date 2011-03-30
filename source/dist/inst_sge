@@ -74,7 +74,7 @@ AUTOGUI=false
 RESCHEDULE=true
 RESPORT=false
 CSP=false
-SGE_ENABLE_JMX=true
+SGE_ENABLE_JMX=false
 AFS=false
 NOREMOTE=false
 START_RPC_SERVICE=false
@@ -86,6 +86,7 @@ UPDATE_WIN=false
 DEL_EXECD_SPOOL=false
 POST_UPDATE=false
 WIN_UPDATE=false
+SGE_SKIP_JMX_SETTING="true"
 COPY_CA="false"
 RECREATE_SETTINGS="false"
 USE_OLD_IJS="false"
@@ -304,7 +305,8 @@ while [ $ARGC != 0 ]; do
      CSP=true
      ;;
    -jmx)
-     :
+     SGE_ENABLE_JMX=true
+     SGE_SKIP_JMX_SETTING="false"
      ;;
    -copycerts)
      if [ "$2" = "" ]; then
@@ -892,7 +894,9 @@ if [ "$QMASTER" = "install" -a "$UPDATE" != "true" ]; then
  SetPermissions
  SelectHostNameResolving
  SetProductMode
- GetJMXPort
+ if [ "$SGE_SKIP_JMX_SETTING" != "true" ]; then
+    GetJMXPort
+ fi
  MakeDirsMaster
  SetSpoolingOptions
  AddBootstrap
@@ -904,7 +908,9 @@ if [ "$QMASTER" = "install" -a "$UPDATE" != "true" ]; then
  AddPEFiles
  AddDefaultUsersets
  AddCommonFiles
- AddJMXFiles
+ if [ "$SGE_SKIP_JMX_SETTING" != "true" ]; then
+    AddJMXFiles
+ fi
  CreateSGEStartUpScripts $euid true master
  CreateSGEStartUpScripts $euid true execd
  CreateSettingsFile
@@ -1361,9 +1367,11 @@ if [ $SHADOW = "install" ]; then
       else
          SHADOW_HOST=`$SGE_UTILBIN/gethostname -aname`
       fi
-      
-      #Detect if JMX needs to be setup
-      GetJMXPort "shadowd"
+     
+      if [ "$SGE_SKIP_JMX_SETTING" != "true" ]; then
+         #Detect if JMX needs to be setup
+         GetJMXPort "shadowd"
+      fi
       
       #check if spooling is supported!
       spooling_method=`cat $SGE_ROOT/$SGE_CELL/common/bootstrap 2>/dev/null | grep "spooling_method" | awk '{ print $2 }'`

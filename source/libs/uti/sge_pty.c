@@ -524,7 +524,7 @@ int terminal_enter_raw_mode(void)
    #ifdef IEXTEN
       tio.c_lflag &= ~IEXTEN;
    #endif
-      tio.c_oflag &= ~OPOST;
+      tio.c_oflag &= (OPOST | ONLCR);
       tio.c_cc[VMIN] = 1;
       tio.c_cc[VTIME] = 0;
 

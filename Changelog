@@ -8,6 +8,9 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+JG-2011-03-30-0: Enhancem.:   Fetch Univa copyright files from uge-extensions.
+                 Review:      HP
+
 SH-2011-03-30-2: Bugfix:      qrsh -pty yes converts NL line breaks in CR NL
                               line breaks, corrupting the output on Unix/Linux
                  Belongs to:  HP-2011-03-22-0

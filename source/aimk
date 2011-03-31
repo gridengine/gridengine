@@ -474,7 +474,12 @@ while ($#argv >= 1 && $?found)
       set ADD_COPYRIGHT = 1
       breaksw
    case "-add-univa-copyright"
-      set ADD_UNIVA_COPYRIGHT = 1
+      if ( "$UNIVA_COPYRIGHT_DIR" == "" ) then
+         echo "please set UNIVA_COPYRIGHT_DIR in your aimk.private"
+         exit 1
+      else
+         set ADD_UNIVA_COPYRIGHT = 1
+      endif
       breaksw
    case "-adoc":
       set CORE   = 0

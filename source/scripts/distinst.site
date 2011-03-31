@@ -42,4 +42,13 @@ BERKELEYDBBASE=/tools/PKG/db-4.4.20
 # http://gridengine.sunsource.net/issues/show_bug.cgi?id=2552
 CORE_HOME=/tools/PKG/libcore
 
+# Location of a license file
+LICENSE_FILE=""
+SRCDIR=`pwd`
+SRCDIR=`dirname $SRCDIR`
+SRCDIR=`dirname $SRCDIR`
+if [ -d $SRCDIR/uge-extensions ]; then
+   LICENSE_FILE="$SRCDIR/uge-extensions/copyright/License/LICENSE.txt"
+fi
+
 TAR=gtar

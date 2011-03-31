@@ -141,14 +141,13 @@ set COPYRIGHT_DIR = /off_home/codine/ge62u4-copyright
 # which is included in each binary part of Univa Grid Engine (the version
 # which Univa is releasing
 #
-set UNIVA_COPYRIGHT_DIR  = /scratch/univa/8.0.0-copyright
+set UNIVA_COPYRIGHT_DIR  = ""
 set BASEDIR = `pwd`
 set BASEDIR = `dirname $BASEDIR`
 set BASEDIR = `dirname $BASEDIR`
 if ( -d $BASEDIR/uge-extensions ) then
-   set UNIVA_COPYRIGHT_DIR = $BASEDIR/uge-extensions/copyright
-else
-   echo "please set UNIVA_COPYRIGHT_DIR in your aimk.private"
+   set UGE_LIBS = $BASEDIR/uge-extensions
+   set UNIVA_COPYRIGHT_DIR = $UGE_LIBS/copyright
 endif
 
 # for some platforms we cannot use dynamic loading of the spooling libraries.

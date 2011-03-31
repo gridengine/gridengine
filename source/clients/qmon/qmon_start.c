@@ -142,9 +142,9 @@ Widget parent
 #endif
 
    x = (DisplayWidth(XtDisplay(parent), DefaultScreen(XtDisplay(parent))) 
-         - 465)/2;
+         - 719)/2;
    y = (DisplayHeight(XtDisplay(parent), DefaultScreen(XtDisplay(parent)))
-         - 730)/2;
+         - 367)/2;
    StartupShell = XtVaCreateWidget( "StartupShell",
                                     xmMenuShellWidgetClass,
                                     parent,

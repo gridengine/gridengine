@@ -92,7 +92,7 @@ int sge_edit(const char *fname, uid_t myuid, gid_t mygid)
                   DRETURN(0);
                } else {
                   /* file is unchanged; inform caller */
-                  DRETURN(-1);
+                  DRETURN(1);
                }
             }
          }

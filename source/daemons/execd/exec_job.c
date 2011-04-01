@@ -2149,10 +2149,7 @@ static bool create_binding_strategy_string_linux(dstring* result, lListElem *jep
             retval = false;
          }
                   
-        if (retval == false) {
-           /* couldn't apply the binding strategy on job */
-           WARNING((SGE_EVENT, "Core binding: Couldn't determine core binding string for config file!"));
-        } else {
+        if (retval != false) {
            /* parse the topology used by the job out of the string (it is at the 
               end) and convert it to "<socket>,<core>:<socket>,<core>:..." but just 
               when config binding element has prefix "pe_" */

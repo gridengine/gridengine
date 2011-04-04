@@ -11,7 +11,7 @@
 EB.2011-04-01-0: Bugfix:      qconf reports error of command when tmp directory 
                               has 755 permissions
                  Issue:       GE-3430
-                 Review:      TBD
+                 Review:      DG 
 
 DG-2011-04-01-0: Cleanup:     Removed unnecessary warning, which appears on 
                               each job start.

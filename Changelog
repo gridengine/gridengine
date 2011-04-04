@@ -8,7 +8,11 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
-EB.2011-04-01-0: Bugfix:      qconf reports error of command when tmp directory 
+JG-2011-04-04-0: Bugfix:      JSV.jar is not copied into the common package
+                 Issue:       TS-372
+                 Review:      HP
+
+EB-2011-04-01-0: Bugfix:      qconf reports error of command when tmp directory 
                               has 755 permissions
                  Issue:       GE-3430
                  Review:      DG 

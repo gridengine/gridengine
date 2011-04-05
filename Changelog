@@ -8,6 +8,10 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+JG-2011-04-05-0: Bugfix:      fixed a memory leak in sge_qmaster when deleting
+                              host configurations (qconf -dconf <host>)
+                 Review:      DG
+
 JG-2011-04-04-0: Bugfix:      JSV.jar is not copied into the common package
                  Issue:       TS-372
                  Review:      HP

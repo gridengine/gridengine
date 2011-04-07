@@ -690,7 +690,7 @@ static void* commlib_to_pty(void *t_conf)
             case SUSPEND_CTRL_MSG:
                shepherd_trace("commlib_to_pty: received suspend message, "
                    "suspend the process");
-               shepherd_signal_job(g_job_pid, SIGTSTP);
+               shepherd_signal_job(g_job_pid, SIGSTOP);
                break;
 
             case UNSUSPEND_CTRL_MSG:

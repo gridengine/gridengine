@@ -8,6 +8,11 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+SH-2011-04-07-0: Bugfix:      Suspending of remote process on qrsh -pty yes 
+                              <cmd> does not work on Solaris hosts
+                 Issue:       GE-3434
+                 Review:      HP
+
 JG-2011-04-07-0: Cleanup:     remove no longer used package from
                               3rdparty/3rd_party_licscopyrights file
                  Issue:       GE-3416

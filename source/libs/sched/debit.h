@@ -28,14 +28,18 @@
  *   Copyright: 2001 by Sun Microsystems, Inc.
  * 
  *   All Rights Reserved.
- * 
+ *
+ *   Portions of this software are Copyright (c) 2011 Univa Corporation
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
 /* responsible for all debitations that have to be done */
-int debit_scheduled_job(const sge_assignment_t *a, int *sort_hostlist, order_t *orders, 
+int debit_scheduled_job(const sge_assignment_t *a, int *sort_hostlist, order_t *orders,
     bool now, const char *type, bool for_job_scheduling);
 
-int debit_host_consumable(lListElem *jep, lListElem *hep, lList *complex_list, int slots, bool is_master_task);
+int
+debit_host_consumable(lListElem *jep, lListElem *hep, lList *complex_list, int slots,
+                      bool is_master_task, bool *just_check);
 
 #endif /* __DEBIT_H */

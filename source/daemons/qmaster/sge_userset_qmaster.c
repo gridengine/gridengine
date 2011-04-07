@@ -740,8 +740,8 @@ int userset_mod(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *new_userset,
       }
    }
    /* ---- US_entries */
-   attr_mod_sub_list(alpp, new_userset, US_entries, 
-         UE_name, userset, sub_command, SGE_ATTR_USER_LISTS, object->object_name, 0);
+   attr_mod_sub_list(alpp, new_userset, US_entries,
+         UE_name, userset, sub_command, SGE_ATTR_USER_LISTS, object->object_name, 0, NULL);
    /* interpret user/group names */
    if (userset_validate_entries(new_userset, alpp, 0) != STATUS_OK) {
       goto ERROR;

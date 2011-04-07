@@ -27,7 +27,7 @@
  *
  *  All Rights Reserved.
  *
- *  Portions of this code are Copyright 2011 Univa Inc.
+ *  Portions of this software are Copyright (c) 2011 Univa Corporation
  *
  ************************************************************************/
 /*___INFO__MARK_END__*/
@@ -1368,11 +1368,11 @@ static int debit_all_jobs_from_qs()
                /* debit in all layers */
                lListElem *rqs = NULL;
                debit_host_consumable(jep, host_list_locate(*object_base[SGE_TYPE_EXECHOST].list,
-                                     "global"), master_centry_list, slots, master_task);
+                                     "global"), master_centry_list, slots, master_task, NULL);
                debit_host_consumable(jep, host_list_locate(
-                        *object_base[SGE_TYPE_EXECHOST].list, lGetHost(qep, QU_qhostname)), 
-                        master_centry_list, slots, master_task);
-               qinstance_debit_consumable(qep, jep, master_centry_list, slots, master_task);
+                        *object_base[SGE_TYPE_EXECHOST].list, lGetHost(qep, QU_qhostname)),
+                        master_centry_list, slots, master_task, NULL);
+               qinstance_debit_consumable(qep, jep, master_centry_list, slots, master_task, NULL);
                for_each (rqs, master_rqs_list) {
                   rqs_debit_consumable(rqs, jep, gdi, lGetString(jatep, JAT_granted_pe), master_centry_list, 
                                         *object_base[SGE_TYPE_USERSET].list, *object_base[SGE_TYPE_HGROUP].list, slots, master_task);
@@ -1380,7 +1380,7 @@ static int debit_all_jobs_from_qs()
                if (ar != NULL) {
                   lListElem *queue = lGetSubStr(ar, QU_full_name, lGetString(gdi, JG_qname), AR_reserved_queues);
                   if (queue != NULL) {
-                     qinstance_debit_consumable(queue, jep, master_centry_list, slots, master_task);
+                     qinstance_debit_consumable(queue, jep, master_centry_list, slots, master_task, NULL);
                   } else {
                      ERROR((SGE_EVENT, "job "sge_U32CFormat" runs in queue "SFQ" not reserved by AR "sge_U32CFormat,  
                             sge_u32c(lGetUlong(jep, JB_job_number)), lGetString(gdi, JG_qname), sge_u32c(ar_id)));

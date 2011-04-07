@@ -108,7 +108,7 @@ hgroup_mod_hostlist(lListElem *hgroup, lList **answer_list,
          if (ret) {
             attr_mod_sub_list(answer_list, hgroup, HGRP_host_list, HR_name,
                               reduced_elem, sub_command, SGE_ATTR_HOSTLIST,
-                              SGE_OBJ_HGROUP, 0);
+                              SGE_OBJ_HGROUP, 0, NULL);
             href_list = lGetList(hgroup, HGRP_host_list);
          }
          if (ret) {

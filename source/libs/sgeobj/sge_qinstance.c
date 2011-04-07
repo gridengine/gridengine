@@ -26,7 +26,9 @@
  *   Copyright: 2001 by Sun Microsystems, Inc.
  * 
  *   All Rights Reserved.
- * 
+ *
+ *   Portions of this software are Copyright (c) 2011 Univa Corporation
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
@@ -726,12 +728,12 @@ qinstance_set_slots_used(lListElem *this_elem, int new_slots)
 *******************************************************************************/
 int 
 qinstance_debit_consumable(lListElem *qep, lListElem *jep, lList *centry_list, 
-                           int slots, bool is_master_task)
+                           int slots, bool is_master_task, bool *just_check)
 {
    return rc_debit_consumable(jep, qep, centry_list, slots,
                               QU_consumable_config_list, 
                               QU_resource_utilization,
-                              lGetString(qep, QU_qname), is_master_task);
+                              lGetString(qep, QU_qname), is_master_task, just_check);
 }
 
 /****** sgeobj/qinstance/qinstance_message_add() *****************************
@@ -882,7 +884,7 @@ qinstance_validate(lListElem *this_elem, lList **answer_list, lList *master_exec
    qinstance_message_trash_all_of_type_X(this_elem, ~QI_ERROR);   
 
    /* setup actual list of queue */
-   qinstance_debit_consumable(this_elem, NULL, centry_master_list, 0, true);
+   qinstance_debit_consumable(this_elem, NULL, centry_master_list, 0, true, NULL);
 
    /* init double values of consumable configuration */
    if (centry_list_fill_request(lGetList(this_elem, QU_consumable_config_list), 
@@ -1007,10 +1009,11 @@ qinstance_list_validate(lList *this_list, lList **answer_list, lList *master_exe
 *     that actually took place is returned. If 0 is returned that means the
 *     consumable resources of the 'ep' object has not changed.
 ******************************************************************************/
-int 
-rc_debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list, 
-                    int slots, int config_nm, int actual_nm, 
-                    const char *obj_name, bool is_master_task) 
+int
+rc_debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list,
+                    int slots, int config_nm, int actual_nm,
+                    const char *obj_name, bool is_master_task,
+                    bool *just_check)
 {
    lListElem *cr, *cr_config, *dcep;
    double dval;
@@ -1019,8 +1022,13 @@ rc_debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list,
 
    DENTER(TOP_LAYER, "rc_debit_consumable");
 
-   if (!ep) {
+   if (ep == NULL) {
       DRETURN(0);
+   }
+
+   /* assume debiting would work */
+   if (just_check != NULL) {
+      *just_check = true;
    }
 
    for_each (cr_config, lGetList(ep, config_nm)) {
@@ -1029,7 +1037,7 @@ rc_debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list,
       name = lGetString(cr_config, CE_name);
       dval = 0;
 
-      /* search default request */  
+      /* search default request */
       if (!(dcep = centry_list_locate(centry_list, name))) {
          ERROR((SGE_EVENT, MSG_ATTRIB_MISSINGATTRIBUTEXINCOMPLEXES_S , name));
          DRETURN(-1);
@@ -1053,26 +1061,48 @@ rc_debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list,
       }
 
       /* ensure attribute is in actual list */
-      if (!(cr = lGetSubStr(ep, RUE_name, name, actual_nm))) {
+      cr = lGetSubStr(ep, RUE_name, name, actual_nm);
+      if (just_check == NULL && cr == NULL) {
          cr = lAddSubStr(ep, RUE_name, name, actual_nm, RUE_Type);
          /* RUE_utilized_now is implicitly set to zero */
       }
-   
+
       if (jep) {
          bool tmp_ret = job_get_contribution(jep, NULL, name, &dval, dcep);
-
          if (tmp_ret && dval != 0.0) {
-            DPRINTF(("debiting %f of %s on %s %s for %d slots\n", dval, name,
-                     (config_nm==QU_consumable_config_list)?"queue":"host",
-                     obj_name, debit_slots));
-            lAddDouble(cr, RUE_utilized_now, debit_slots * dval);
+            if (just_check == NULL) {
+               DPRINTF(("debiting %f of %s on %s %s for %d slots\n", dval, name,
+                        (config_nm==QU_consumable_config_list)?"queue":"host",
+                        obj_name, debit_slots));
+               lAddDouble(cr, RUE_utilized_now, debit_slots * dval);
+            } else {
+               double actual_value = cr == NULL ? 0 : lGetDouble(cr, RUE_utilized_now);
+               double config_value = lGetDouble(cr_config, CE_doubleval);
+               if ((config_value - actual_value - debit_slots * dval) < 0) {
+                  ERROR((SGE_EVENT, MSG_CAPACITYEXCEEDED_FSSSIF, dval, name,
+                        (config_nm==QU_consumable_config_list)?"queue":"host",
+                        obj_name, debit_slots, config_value - actual_value));
+                  *just_check = false;
+               }
+            }
             mods++;
          } else if (lGetUlong(dcep, CE_relop) == CMPLXEXCL_OP) {
+            /* the job doesn't request the exclusive complex, but it still has effect */
             dval = 1.0;
-            DPRINTF(("debiting (non-exclusive) %f of %s on %s %s for %d slots\n", dval, name,
-                     (config_nm==QU_consumable_config_list)?"queue":"host",
-                     obj_name, debit_slots));
-            lAddDouble(cr, RUE_utilized_now_nonexclusive, debit_slots * dval);
+            if (just_check == NULL) {
+               DPRINTF(("debiting (implicit exclusive) %f of %s on %s %s for %d slots\n", dval, name,
+                        (config_nm==QU_consumable_config_list)?"queue":"host",
+                        obj_name, debit_slots));
+               lAddDouble(cr, RUE_utilized_now_nonexclusive, debit_slots * dval);
+            } else {
+               double actual_value = cr == NULL ? 0 : lGetDouble(cr, RUE_utilized_now_nonexclusive);
+               if (actual_value > 0) {
+                  ERROR((SGE_EVENT, MSG_EXCLCAPACITYEXCEEDED_FSSSI, dval, name,
+                        (config_nm==QU_consumable_config_list)?"queue":"host",
+                        obj_name, debit_slots));
+                  *just_check = false;
+               }
+            }
             mods++;
          }
       }

@@ -27,6 +27,8 @@
  *
  *  All Rights Reserved.
  *
+ *  Portions of this software are Copyright (c) 2011 Univa Corporation
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 #include <string.h>
@@ -191,6 +193,9 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
       lList *gdil = NULL;
       lListElem *master_qep = NULL;
       lListElem *master_host = NULL;
+      lList *exec_host_list = *object_base[SGE_TYPE_EXECHOST].list;
+      lList *centry_list = *object_base[SGE_TYPE_CENTRY].list;
+      lListElem *global_host = host_list_locate(exec_host_list, SGE_GLOBAL_NAME);
 
       DPRINTF(("ORDER ORT_start_job\n"));
 
@@ -202,7 +207,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
       }
 
       task_number=lGetUlong(ep, OR_ja_task_number);
-      if (!task_number) { 
+      if (task_number == 0) {
          ERROR((SGE_EVENT, MSG_JOB_NOORDERTASK_US, sge_u32c(job_number), "ORT_start_job"));
          answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          DRETURN(-2);
@@ -216,11 +221,10 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
          DRETURN(-1);
       }
 
-      DPRINTF(("ORDER to start Job %ld Task %ld\n", (long) job_number, 
-               (long) task_number));      
+      DPRINTF(("ORDER to start Job %ld Task %ld\n", (long) job_number, (long) task_number));
 
       if (lGetUlong(jep, JB_version) != lGetUlong(ep, OR_job_version)) {
-         WARNING((SGE_EVENT, MSG_ORD_OLDVERSION_UUU, sge_u32c(job_number), 
+         WARNING((SGE_EVENT, MSG_ORD_OLDVERSION_UUU, sge_u32c(job_number),
                sge_u32c(task_number), sge_u32c(lGetUlong(ep, OR_job_version))));
          answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_WARNING);
          DRETURN(-1);
@@ -232,7 +236,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
          if (range_list_is_id_within(lGetList(jep, JB_ja_n_h_ids), task_number)) {
             jatp = job_create_task(jep, NULL, task_number);
             if (jatp == NULL) {
-               WARNING((SGE_EVENT, MSG_JOB_FINDJOBTASK_UU, sge_u32c(task_number), 
+               WARNING((SGE_EVENT, MSG_JOB_FINDJOBTASK_UU, sge_u32c(task_number),
                         sge_u32c(job_number)));
                DRETURN(-1);
             }
@@ -244,7 +248,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
              * roll back creation of the ja_task in every error situation
              * (delete the ja_task *and* rollback the range information).
              */
-            sge_add_event(0, sgeE_JATASK_ADD, job_number, task_number, 
+            sge_add_event(0, sgeE_JATASK_ADD, job_number, task_number,
                           NULL, NULL, lGetString(jep, JB_session), jatp);
          } else {
             INFO((SGE_EVENT, MSG_JOB_IGNORE_DELETED_TASK_UU,
@@ -254,15 +258,14 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
       }
 
       if (lGetUlong(jatp, JAT_status) != JIDLE) {
-         ERROR((SGE_EVENT, MSG_ORD_TWICE_UU, sge_u32c(job_number), 
-                sge_u32c(task_number)));
+         ERROR((SGE_EVENT, MSG_ORD_TWICE_UU, sge_u32c(job_number), sge_u32c(task_number)));
          answer_list_add(alpp, SGE_EVENT, STATUS_EEXIST, ANSWER_QUALITY_ERROR);
          DRETURN(-1);
       }
 
       if (or_pe) {
          pe = pe_list_locate(*object_base[SGE_TYPE_PE].list, or_pe);
-         if (!pe) {
+         if (pe == NULL) {
             ERROR((SGE_EVENT, MSG_OBJ_UNABLE2FINDPE_S, or_pe));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             DRETURN(-2);
@@ -272,7 +275,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
 
       if (lGetUlong(jep, JB_ar)) {
          lListElem *ar = ar_list_locate(*object_base[SGE_TYPE_AR].list, lGetUlong(jep, JB_ar));
-         if (!ar) {
+         if (ar == NULL) {
             ERROR((SGE_EVENT, MSG_CONFIG_CANTFINDARXREFERENCEDINJOBY_UU,
                    sge_u32c(lGetUlong(jep, JB_ar)),
                    sge_u32c(lGetUlong(jep, JB_job_number))));
@@ -301,8 +304,8 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
          q_version = lGetUlong(oep, OQ_dest_version);
          q_slots   = lGetUlong(oep, OQ_slots);
 
-         /* ---------------------- 
-          *  find and check queue 
+         /* ----------------------
+          *  find and check queue
           */
          if (!q_name) {
             ERROR((SGE_EVENT, SFNMAX, MSG_OBJ_NOQNAME));
@@ -313,12 +316,12 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
          }
 
          DPRINTF(("ORDER: start %d slots of job \"%d\" on"
-                  " queue \"%s\" v%d with "sge_U32CFormat" initial tickets\n", 
+                  " queue \"%s\" v%d with "sge_U32CFormat" initial tickets\n",
                q_slots, job_number, q_name, (int)q_version, sge_u32c((u_long32)lGetDouble(ep, OR_ticket))));
 
          qep = cqueue_list_locate_qinstance(*object_base[SGE_TYPE_CQUEUE].list, q_name);
          if (!qep) {
-            ERROR((SGE_EVENT, MSG_CONFIG_CANTFINDQUEUEXREFERENCEDINJOBY_SU,  
+            ERROR((SGE_EVENT, MSG_CONFIG_CANTFINDQUEUEXREFERENCEDINJOBY_SU,
                    q_name, sge_u32c(job_number)));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             lFreeList(&gdil);
@@ -329,7 +332,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
          /* check queue version */
          if (q_version != lGetUlong(qep, QU_version)) {
             WARNING((SGE_EVENT, MSG_ORD_QVERSION_SUU, q_name,
-                  sge_u32c(q_version), sge_u32c(lGetUlong(qep, QU_version)) ));
+                  sge_u32c(q_version), sge_u32c(lGetUlong(qep, QU_version))));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_WARNING);
 
             /* try to repair schedd data */
@@ -343,12 +346,12 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
          /* the first queue is the master queue */
          if (master_qep == NULL) {
             master_qep = qep;
-         }   
+         }
 
          DPRINTF(("Queue version: %d\n", q_version));
 
          /* ensure that the jobs owner has access to this queue */
-         if (!sge_has_access_(lGetString(jep, JB_owner), lGetString(jep, JB_group), 
+         if (!sge_has_access_(lGetString(jep, JB_owner), lGetString(jep, JB_group),
                                     lGetList(qep, QU_acl), lGetList(qep, QU_xacl),
                                     *object_base[SGE_TYPE_USERSET].list)) {
             ERROR((SGE_EVENT, MSG_JOB_JOBACCESSQ_US, sge_u32c(job_number), q_name));
@@ -360,41 +363,40 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
 
          /* ensure that this queue has enough free slots */
          if (lGetUlong(qep, QU_job_slots) - qinstance_slots_used(qep) < q_slots) {
-            ERROR((SGE_EVENT, MSG_JOB_FREESLOTS_USUU, sge_u32c(q_slots), q_name, 
+            ERROR((SGE_EVENT, MSG_JOB_FREESLOTS_USUU, sge_u32c(q_slots), q_name,
                   sge_u32c(job_number), sge_u32c(task_number)));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             lFreeList(&gdil);
             lSetString(jatp, JAT_granted_pe, NULL);
             DRETURN(-1);
-         }  
-            
+         }
+
          if (qinstance_state_is_error(qep)) {
             WARNING((SGE_EVENT, MSG_JOB_QMARKEDERROR_S, q_name));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_WARNING);
             lFreeList(&gdil);
             lSetString(jatp, JAT_granted_pe, NULL);
             DRETURN(-1);
-         }  
+         }
          if (qinstance_state_is_cal_suspended(qep)) {
             WARNING((SGE_EVENT, MSG_JOB_QSUSPCAL_S, q_name));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_WARNING);
             lFreeList(&gdil);
             lSetString(jatp, JAT_granted_pe, NULL);
             DRETURN(-1);
-         }  
+         }
          if (qinstance_state_is_cal_disabled(qep)) {
             WARNING((SGE_EVENT, MSG_JOB_QDISABLECAL_S, q_name));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_WARNING);
             lFreeList(&gdil);
             lSetString(jatp, JAT_granted_pe, NULL);
             DRETURN(-1);
-         }  
+         }
 
-         /* ---------------------- 
-          *  find and check host 
+         /* ----------------------
+          *  find and check host
           */
-         if (!(hep=host_list_locate(*object_base[SGE_TYPE_EXECHOST].list, 
-                     lGetHost(qep, QU_qhostname)))) {
+         if (!(hep=host_list_locate(exec_host_list, lGetHost(qep, QU_qhostname)))) {
             ERROR((SGE_EVENT, MSG_JOB_UNABLE2FINDHOST_S, lGetHost(qep, QU_qhostname)));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             lFreeList(&gdil);
@@ -402,7 +404,9 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
             DRETURN(-2);
          } else {
             lListElem *ruep;
+            bool consumables_ok;
 
+            /* host not yet clean after reschedule unknown? */
             for_each(ruep, lGetList(hep, EH_reschedule_unknown_list)) {
                if (job_number == lGetUlong(ruep, RU_job_number)
                    && task_number == lGetUlong(ruep, RU_task_number)) {
@@ -414,20 +418,40 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
                   DRETURN(-1);
                }
             }
+
+            /* check if consumables are still sufficient on the host and on global host */
+            debit_host_consumable(jep, hep, centry_list, q_slots,
+                                  qep == master_qep ? true : false, &consumables_ok);
+            if (!consumables_ok) {
+               ERROR((SGE_EVENT, MSG_JOB_RESOURCESNOLONGERAVAILABLE_SUU,
+                      lGetHost(hep, EH_name), sge_u32c(job_number), sge_u32c(task_number)));
+               lFreeList(&gdil);
+               lSetString(jatp, JAT_granted_pe, NULL);
+               DRETURN(0);
+            }
+            debit_host_consumable(jep, global_host, centry_list, q_slots,
+                                  qep == master_qep ? true : false, &consumables_ok);
+            if (!consumables_ok) {
+               ERROR((SGE_EVENT, MSG_JOB_RESOURCESNOLONGERAVAILABLE_SUU,
+                      SGE_GLOBAL_NAME, sge_u32c(job_number), sge_u32c(task_number)));
+               lFreeList(&gdil);
+               lSetString(jatp, JAT_granted_pe, NULL);
+               DRETURN(0);
+            }
          }
 
-         /* ------------------------------------------------ 
+         /* ------------------------------------------------
           *  build up granted_destin_identifier_list (gdil)
           */
          gdil_ep = lAddElemStr(&gdil, JG_qname, q_name, JG_Type); /* free me on error! */
          lSetHost(gdil_ep, JG_qhostname, lGetHost(qep, QU_qhostname));
          lSetUlong(gdil_ep, JG_slots, q_slots);
-         
+
          /* ------------------------------------------------
           *  tag each gdil entry of slave exec host
-          *  in case of sge controlled slaves 
+          *  in case of sge controlled slaves
           *  this triggers our retry for delivery of slave jobs
-          *  and gets untagged when ack has arrived 
+          *  and gets untagged when ack has arrived
           */
          if (pe && lGetBool(pe, PE_control_slaves)) {
             lSetDouble(gdil_ep, JG_ticket, lGetDouble(oep, OQ_ticket));
@@ -439,31 +463,31 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
             if (master_host != NULL && master_host != hep) {
                lListElem *first_at_host;
 
-               /* ensure each host gets tagged only one time 
+               /* ensure each host gets tagged only one time
                   we tag the first entry for a host in the existing gdil */
                first_at_host = lGetElemHost(gdil, JG_qhostname, lGetHost(hep, EH_name));
                if (!first_at_host) {
-                  ERROR((SGE_EVENT, MSG_JOB_HOSTNAMERESOLVE_US, 
-                           sge_u32c(lGetUlong(jep, JB_job_number)), 
+                  ERROR((SGE_EVENT, MSG_JOB_HOSTNAMERESOLVE_US,
+                           sge_u32c(lGetUlong(jep, JB_job_number)),
                            lGetHost(hep, EH_name)  ));
                } else {
-                  lSetUlong(first_at_host, JG_tag_slave_job, 1);   
+                  lSetUlong(first_at_host, JG_tag_slave_job, 1);
                }
             } else  {
                master_host = hep;
                DPRINTF(("master host %s\n", lGetHost(master_host, EH_name)));
-            }   
+            }
          } else {
             /* a sequential job only has one host */
             master_host = hep;
          }
-         
+
          /* in case of a pe job update free_slots on the pe */
-         if (pe) { 
+         if (pe) {
             pe_slots += q_slots;
-         }   
+         }
       }
-         
+
       /* fill in master_queue */
       lSetString(jatp, JAT_master_queue, lGetString(master_qep, QU_full_name));
       lSetList(jatp, JAT_granted_destin_identifier_list, gdil);
@@ -504,7 +528,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
       if (pe) {
          pe_debit_slots(pe, pe_slots, job_number);
          /* this info is not spooled */
-         sge_add_event(0, sgeE_PE_MOD, 0, 0, 
+         sge_add_event(0, sgeE_PE_MOD, 0, 0,
                        lGetString(jatp, JAT_granted_pe), NULL, NULL, pe);
          lListElem_clear_changed_info(pe);
       }
@@ -512,17 +536,17 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
       DPRINTF(("successfully handed off job \"" sge_u32 "\" to queue \"%s\"\n",
                lGetUlong(jep, JB_job_number), lGetString(jatp, JAT_master_queue)));
 
-      /* now after successfully (we hope) sent the job to execd 
+      /* now after successfully (we hope) sent the job to execd
          suspend all subordinated queues that need suspension */
       cqueue_list_x_on_subordinate_gdil(ctx, *object_base[SGE_TYPE_CQUEUE].list,
                                         true, gdil, monitor);
-   }    
+   }
    break;
 
- /* ----------------------------------------------------------------------- 
+ /* -----------------------------------------------------------------------
     * SET PRIORITY VALUES TO NULL
     *
-    * modifications performed on the job are not spooled 
+    * modifications performed on the job are not spooled
     * ----------------------------------------------------------------------- */
    case ORT_clear_pri_info:
 

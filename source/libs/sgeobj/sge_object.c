@@ -2492,10 +2492,10 @@ object_has_differences(const lListElem *this_elem, lList **answer_list,
       ret = true;
    }
 
-   DRETURN(ret);   
+   DRETURN(ret);
 }
-                   
-bool 
+
+bool
 object_list_has_differences(const lList *this_list, lList **answer_list,
                             const lList *old_list, bool modify_changed_flag)
 {
@@ -2514,7 +2514,7 @@ object_list_has_differences(const lList *this_list, lList **answer_list,
           new_elem = lNext(new_elem), old_elem = lNext(old_elem)) {
 
          ret = object_has_differences(new_elem, answer_list,
-                                      old_elem, modify_changed_flag); 
+                                      old_elem, modify_changed_flag);
          if (ret) {
             break;
          }

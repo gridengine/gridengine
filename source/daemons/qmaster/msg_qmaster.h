@@ -29,7 +29,7 @@
  *
  *  All Rights Reserved.
  *
- *  Portions of this code are Copyright 2011 Univa Inc.
+ *  Portions of this software are Copyright (c) 2011 Univa Corporation
  *
  ************************************************************************/
 /*___INFO__MARK_END__*/
@@ -808,5 +808,7 @@
 #define MSG_JOB_BINDING              _MESSAGE(33958, _("binding"))
 
 #define MSG_PARSE_LOOP_IN_SSOS_TREE_SS      _MESSAGE(33959, _("denied: adding "SFQ" to the subordinate_list of "SFQ" would create a loop in the slotwise preemption configuration!"))
+
+#define MSG_JOB_RESOURCESNOLONGERAVAILABLE_SUU   _MESSAGE(33960, _("resources on host "SFQ" no longer available for start of job "sge_U32CFormat"."sge_U32CFormat))
 
 #endif

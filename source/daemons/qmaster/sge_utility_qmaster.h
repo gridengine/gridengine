@@ -70,7 +70,7 @@ bool attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
                   int this_elem_primary_key, lListElem *delta_elem,
                   int sub_command, const char *sub_list_name,
                   const char *object_name,
-                  int no_info);
+                  int no_info, bool *changed);
 
 #endif /* __GDI_UTILITY_QMASTER_H  */
 

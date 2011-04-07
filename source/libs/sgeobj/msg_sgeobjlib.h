@@ -29,6 +29,8 @@
  *
  *   All Rights Reserved.
  *
+ *   Portions of this software are Copyright (c) 2011 Univa Corporation
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
@@ -354,5 +356,8 @@
 #define MSG_JSV_LOGMSG_S         _MESSAGE(64552, _("JSV stderr: %s"))
 #define MSG_JSV_STARTPERMISSION  _MESSAGE(64553, _("process has not the necessary permission to start JSV as different user"))
 #define MSG_JSV_MEMBINDING       _MESSAGE(64554, _("unable to allocate memory for binding during JSV execution"))
+
+#define MSG_CAPACITYEXCEEDED_FSSSIF    _MESSAGE(64555, _("debiting %f of "SFN" on "SFN" "SFN" for %d slots would exceed remaining capacity of %f"))
+#define MSG_EXCLCAPACITYEXCEEDED_FSSSI _MESSAGE(64556, _("debiting (implicit exclusive) %f of "SFN" on "SFN" "SFN" for %d slots would exceed capacity"))
 
 #endif /* __MSG_SGEOBJLIB_H */

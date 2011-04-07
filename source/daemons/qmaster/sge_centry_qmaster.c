@@ -27,6 +27,8 @@
  *
  *  All Rights Reserved.
  *
+ *   Portions of this software are Copyright (c) 2011 Univa Corporation
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 #include <sys/types.h>
@@ -73,10 +75,6 @@
 #include "sge_reporting_qmaster.h"
 #include "msg_common.h"
 #include "msg_qmaster.h"
-
-
-static void 
-sge_change_queue_version_centry(sge_gdi_ctx_class_t *ctx);
 
 
 /* ------------------------------------------------------------ */
@@ -460,8 +458,8 @@ int sge_del_centry(sge_gdi_ctx_class_t *ctx, lListElem *centry, lList **answer_l
    }
 }
 
-static void 
-sge_change_queue_version_centry(sge_gdi_ctx_class_t *ctx) 
+static void
+sge_change_queue_version_centry(sge_gdi_ctx_class_t *ctx)
 {
    lListElem *ep;
    lListElem *cqueue;
@@ -476,22 +474,21 @@ sge_change_queue_version_centry(sge_gdi_ctx_class_t *ctx)
 
       for_each(qinstance, qinstance_list) {
          qinstance_increase_qversion(qinstance);
-      
-         sge_event_spool(ctx, &answer_list, 0, sgeE_QINSTANCE_MOD, 
-                         0, 0, lGetString(qinstance, QU_qname), 
+
+         sge_event_spool(ctx, &answer_list, 0, sgeE_QINSTANCE_MOD,
+                         0, 0, lGetString(qinstance, QU_qname),
                          lGetHost(qinstance, QU_qhostname), NULL,
                          qinstance, NULL, NULL, true, false);
       }
    }
    for_each(ep, *object_base[SGE_TYPE_EXECHOST].list) {
-      sge_event_spool(ctx, &answer_list, 0, sgeE_EXECHOST_MOD, 
+      sge_event_spool(ctx, &answer_list, 0, sgeE_EXECHOST_MOD,
                       0, 0, lGetHost(ep, EH_name), NULL, NULL,
                       ep, NULL, NULL, true, false);
    }
    answer_list_output(&answer_list);
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 /****** sge_centry_qmaster/centry_redebit_consumables() ************************
@@ -536,12 +533,12 @@ void centry_redebit_consumables(sge_gdi_ctx_class_t *ctx, const lList *centries)
 
       for_each(qinstance, qinstance_list) {
          lSetList(qinstance, QU_resource_utilization, NULL);
-         qinstance_debit_consumable(qinstance, NULL, master_centry_list, 0, true);
+         qinstance_debit_consumable(qinstance, NULL, master_centry_list, 0, true, NULL);
       }
    }
    for_each (hep, *object_base[SGE_TYPE_EXECHOST].list) {
       lSetList(hep, EH_resource_utilization, NULL);
-      debit_host_consumable(NULL, hep, master_centry_list, 0, true);
+      debit_host_consumable(NULL, hep, master_centry_list, 0, true, NULL);
    }
 
    /* 
@@ -570,18 +567,18 @@ void centry_redebit_consumables(sge_gdi_ctx_class_t *ctx, const lList *centries)
 
             qslots = lGetUlong(gdil, JG_slots);
             debit_host_consumable(jep, host_list_locate(*object_base[SGE_TYPE_EXECHOST].list,
-                                  lGetHost(qep, QU_qhostname)), master_centry_list, qslots, master_task);
-            qinstance_debit_consumable(qep, jep, master_centry_list, qslots, master_task);
+                                  lGetHost(qep, QU_qhostname)), master_centry_list, qslots, master_task, NULL);
+            qinstance_debit_consumable(qep, jep, master_centry_list, qslots, master_task, NULL);
             slots += qslots;
             master_task = false;
          }
          debit_host_consumable(jep, host_list_locate(*object_base[SGE_TYPE_EXECHOST].list,
-                               "global"), master_centry_list, slots, true);
+                               "global"), master_centry_list, slots, true, NULL);
       }
    }
 
    sge_change_queue_version_centry(ctx);
- 
+
    /* changing complex attributes can change consumables.
     * dump queue and host consumables to reporting file.
     */

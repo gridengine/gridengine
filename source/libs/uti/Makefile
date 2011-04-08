@@ -95,6 +95,7 @@ UTILIB_TEST_OBJS = \
          test_sge_dstring.o \
          test_sge_string.o \
          test_sge_uidgid.o \
+         test_thread_local.o \
          test_threads.o \
 			test_sge_sl.o \
 			test_sge_tq.o \
@@ -115,6 +116,7 @@ UTILIB_TEST_PROGS = \
          test_sge_dstring \
          test_sge_string \
          test_sge_uidgid \
+         test_thread_local \
          test_threads \
 			test_sge_sl \
 			test_sge_tq \
@@ -340,6 +342,12 @@ test_sge_uidgid: test_sge_uidgid.o $(UTILIB) $(COMMLISTSLIB) $(WINGRIDLIB_DEP)
 
 test_sge_uidgid.o: $(UTILIB_DIR)/test_sge_uidgid.c
 	$(CC) $(CFLAGS) -c $(UTILIB_DIR)/test_sge_uidgid.c
+
+test_thread_local: test_thread_local.o
+	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_thread_local $(LFLAGS) test_thread_local.o $(LIBS)
+
+test_thread_local.o: $(UTILIB_DIR)/test_thread_local.c
+	$(CC) $(CFLAGS) -c $(UTILIB_DIR)/test_thread_local.c
 
 test_threads: test_threads.o
 	$(LD_WRAPPER) $(CC) $(CFLAGS) -o test_threads $(LFLAGS) test_threads.o $(LIBS)

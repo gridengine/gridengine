@@ -13,6 +13,23 @@ EB-2011-04-08-0: Bugfix:      Auto installation rejects ADMIN_MAIL parameter
                  Issue:       GE-3423
                  Review:      DG
 
+JG-2011-04-08-0: Bugfix:      fixed minor memory leaks / uninitialied variable
+                 Review:      EB
+
+SH-2011-04-07-0: Bugfix:      Suspending of remote process on qrsh -pty yes
+                              <cmd> does not work on Solaris hosts
+                 Issue:       GE-3434
+                 Review:      HP
+
+JG-2011-04-07-0: Cleanup:     remove no longer used package from
+                              3rdparty/3rd_party_licscopyrights file
+                 Issue:       GE-3416
+                 Review:      DG
+
+JG-2011-04-05-0: Bugfix:      fixed a memory leak in sge_qmaster when deleting
+                              host configurations (qconf -dconf <host>)
+                 Review:      DG
+
 EB-2011-04-04-1: Created alpha packages for Stoat 
 -------------------------------------------------
 
@@ -20,12 +37,12 @@ JG-2011-04-04-0: Bugfix:      JSV.jar is not copied into the common package
                  Issue:       TS-372
                  Review:      HP
 
-EB-2011-04-01-0: Bugfix:      qconf reports error of command when tmp directory 
+EB-2011-04-01-0: Bugfix:      qconf reports error of command when tmp directory
                               has 755 permissions
                  Issue:       GE-3430
-                 Review:      DG 
+                 Review:      DG
 
-DG-2011-04-01-0: Cleanup:     Removed unnecessary warning, which appears on 
+DG-2011-04-01-0: Cleanup:     Removed unnecessary warning, which appears on
                               each job start.
                  Review:      EB
 

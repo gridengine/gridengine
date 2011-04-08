@@ -60,8 +60,6 @@
 static bool range_is_overlapping(const lListElem *range1,
                                  const lListElem *range2);
 
-static void expand_range_list(lListElem *r, lList **rl);
-
 /* we keep a descending sorted list of non overlapping ranges */
 /* MT-NOTE: expand_range_list() is MT safe */
 static void expand_range_list(lListElem *r, lList **rl)

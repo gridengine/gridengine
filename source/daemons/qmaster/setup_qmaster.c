@@ -937,7 +937,7 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
             spool_write_object(NULL, spool_get_default_context(), new_centry,
                                lGetString(new_centry, CE_name), SGE_TYPE_CENTRY, false);
 
-         }         
+         }
       }
    }
 

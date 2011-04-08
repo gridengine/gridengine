@@ -354,7 +354,7 @@ int main(int argc, char *argv[])
 }
 
 void work(char *mmp) {
-   float a, b = 0.1;
+   float a = 0, b = 0.1;
    char c;
    char *miter = NULL, *miter_max = NULL;
    char buffer[2];

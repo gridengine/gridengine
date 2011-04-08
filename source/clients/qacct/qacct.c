@@ -321,29 +321,31 @@ int main(int argc, char **argv)
       */
       else if (!strcmp("-t", argv[ii])) {
          if (!argv[ii+1] || *(argv[ii+1])=='-') {
-            fprintf(stderr, "%s\n", MSG_HISTORY_TOPTIONMASTHAVELISTOFTASKIDRANGES ); 
+            fprintf(stderr, "%s\n", MSG_HISTORY_TOPTIONMUSTHAVELISTOFTASKIDRANGES ); 
             qacct_usage(&ctx, stderr);
             DRETURN(1);
          } else {
-            lList* task_id_range_list=NULL;
-            lList* answer=NULL;
+            lList* task_id_range_list = NULL;
+            lList* answer = NULL;
 
             ii++;
             range_list_parse_from_string(&task_id_range_list, &answer,
                                          argv[ii], false, true, INF_NOT_ALLOWED);
-            if (!task_id_range_list) {
+            if (task_id_range_list == NULL) {
                lFreeList(&answer);
                fprintf(stderr, MSG_HISTORY_INVALIDLISTOFTASKIDRANGES_S , argv[ii]);
                fprintf(stderr, "\n");
                qacct_usage(&ctx, stderr);
-               DRETURN(1); 
+               DRETURN(1);
             }
             options.taskstart = lGetUlong(lFirst(task_id_range_list), RN_min);
             options.taskend = lGetUlong(lFirst(task_id_range_list), RN_max);
             options.taskstep = lGetUlong(lFirst(task_id_range_list), RN_step);
-            if (!options.taskstep) {
+            if (options.taskstep == 0) {
                options.taskstep = 1;
             }
+
+            lFreeList(&task_id_range_list);
          }
       }
       /*

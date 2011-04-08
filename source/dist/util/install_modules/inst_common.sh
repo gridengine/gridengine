@@ -4177,11 +4177,9 @@ IsNumeric(){
 
 IsMailAdress() {
    case $1 in
-      [A-Za-z0-9.-]*@[a-zA-Z0-9-]*.[a-zA-z][a-zA-Z])  #valid
+      [A-Za-z0-9._-]*)  #valid
          return 0;; 
-      [A-Za-z0-9.-]*@[a-zA-Z0-9-]*.[a-zA-z][a-zA-Z][a-zA-Z]) #valid 
-         return 0;; 
-      [A-Za-z0-9.-]*@[a-zA-Z0-9-]*.[a-zA-z][a-zA-Z][a-zA-Z][a-zA-Z]) #valid 
+      [A-Za-z0-9._-]*@[a-zA-Z0-9._-]) #valid 
          return 0;;
       *)
          return 1;; 

@@ -3299,54 +3299,76 @@ bool initialize_topology() {
 #endif
 
 /* ---------------------------------------------------------------------------*/
-/*               End of bookkeeping of cores in use by SGE                    */ 
+/*               End of bookkeeping of cores in use by GE                     */
 /* ---------------------------------------------------------------------------*/
 
+/****** sge_binding/binding_print_to_string() **********************************
+*  NAME
+*     binding_print_to_string() -- Prints the content of a binding list to a string
+*
+*  SYNOPSIS
+*     bool binding_print_to_string(const lListElem *this_elem, dstring *string)
+*
+*  FUNCTION
+*     Prints the binding type and binding strategy of a binding list element 
+*     into a string.
+*
+*  INPUTS
+*     const lListElem* this_elem - Binding list element
+*
+*  OUTPUTS
+*     const dstring *string      - Output string which must be initialized.
+*
+*  RESULT
+*     bool - true in all cases
+*
+*  NOTES
+*     MT-NOTE: is_starting_point() is MT safe
+*
+*******************************************************************************/
 bool
 binding_print_to_string(const lListElem *this_elem, dstring *string) {
    bool ret = true;
 
    DENTER(BINDING_LAYER, "binding_print_to_string");
    if (this_elem != NULL && string != NULL) {
-      const char *const strategy = lGetString(this_elem, BN_strategy);   
+      const char *const strategy = lGetString(this_elem, BN_strategy);
       binding_type_t type = (binding_type_t)lGetUlong(this_elem, BN_type);
 
       switch (type) {
          case BINDING_TYPE_SET:
-            sge_dstring_append(string, "set "); 
-            break; 
+            sge_dstring_append(string, "set ");
+            break;
          case BINDING_TYPE_PE:
-            sge_dstring_append(string, "pe "); 
-            break; 
+            sge_dstring_append(string, "pe ");
+            break;
          case BINDING_TYPE_ENV:
-            sge_dstring_append(string, "env "); 
-            break; 
-         default:
-            sge_dstring_append(string, "unknown "); 
+            sge_dstring_append(string, "env ");
+            break;
+         case BINDING_TYPE_NONE:
+            sge_dstring_append(string, "NONE");
       }
 
       if (strcmp(strategy, "linear_automatic") == 0) {
-         sge_dstring_sprintf_append(string, "%s:"sge_U32CFormat, 
+         sge_dstring_sprintf_append(string, "%s:"sge_U32CFormat,
             "linear", sge_u32c(lGetUlong(this_elem, BN_parameter_n)));
       } else if (strcmp(strategy, "linear") == 0) {
-         sge_dstring_sprintf_append(string, "%s:"sge_U32CFormat":"sge_U32CFormat","sge_U32CFormat, 
-            "linear", sge_u32c(lGetUlong(this_elem, BN_parameter_n)), 
+         sge_dstring_sprintf_append(string, "%s:"sge_U32CFormat":"sge_U32CFormat","sge_U32CFormat,
+            "linear", sge_u32c(lGetUlong(this_elem, BN_parameter_n)),
             sge_u32c(lGetUlong(this_elem, BN_parameter_socket_offset)),
             sge_u32c(lGetUlong(this_elem, BN_parameter_core_offset)));
       } else if (strcmp(strategy, "striding_automatic") == 0) {
-         sge_dstring_sprintf_append(string, "%s:"sge_U32CFormat":"sge_U32CFormat, 
+         sge_dstring_sprintf_append(string, "%s:"sge_U32CFormat":"sge_U32CFormat,
             "striding", sge_u32c(lGetUlong(this_elem, BN_parameter_n)),
             sge_u32c(lGetUlong(this_elem, BN_parameter_striding_step_size)));
       } else if (strcmp(strategy, "striding") == 0) {
-         sge_dstring_sprintf_append(string, "%s:"sge_U32CFormat":"sge_U32CFormat":"sge_U32CFormat","sge_U32CFormat, 
+         sge_dstring_sprintf_append(string, "%s:"sge_U32CFormat":"sge_U32CFormat":"sge_U32CFormat","sge_U32CFormat,
             "striding", sge_u32c(lGetUlong(this_elem, BN_parameter_n)),
             sge_u32c(lGetUlong(this_elem, BN_parameter_striding_step_size)),
             sge_u32c(lGetUlong(this_elem, BN_parameter_socket_offset)),
             sge_u32c(lGetUlong(this_elem, BN_parameter_core_offset)));
       } else if (strcmp(strategy, "explicit") == 0) {
          sge_dstring_sprintf_append(string, "%s", lGetString(this_elem, BN_parameter_explicit));
-      } else {
-         sge_dstring_append(string, "unknown");
       }
    }
    DRETURN(ret);

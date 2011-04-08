@@ -157,7 +157,6 @@ usage:
    echo "-64                  -> create 64 bit binaries (where supported)"
    echo "-D*                  -> include a macro definition in CFLAGS"
    echo "-add-copyright       -> insert a special copyright string in each binary"
-   echo "-add-univa-copyright -> insert a Univa copyright string in each binary"
    echo "-adoc                -> create source code documentation in adoc format"
    echo "-catman              -> generate man pages in catman format"
    echo "-cc                  -> use cc/CC to compile c/c++ code"
@@ -471,14 +470,6 @@ while ($#argv >= 1 && $?found)
       breaksw
    case "-add-copyright"
       set ADD_COPYRIGHT = 1
-      breaksw
-   case "-add-univa-copyright"
-      if ( "$UNIVA_COPYRIGHT_DIR" == "" ) then
-         echo "please set UNIVA_COPYRIGHT_DIR in your aimk.private"
-         exit 1
-      else
-         set ADD_UNIVA_COPYRIGHT = 1
-      endif
       breaksw
    case "-adoc":
       set CORE   = 0
@@ -2002,18 +1993,24 @@ set CFLAGS       = "-D$ARCH_STRING $CFLAGS"
 set DEPEND_FLAGS = "-D$ARCH_STRING $DEPEND_FLAGS"
 
 if ( $UGE_EXT == 1 ) then
-  if ( -d $UGE_LIBS ) then
-     set LFLAGS   = "$LFLAGS -L$UGE_LIBS/$BUILDARCH/libs"
-     set LIBS_DIR = "$UGE_LIBS"
-  else
-     echo "error: couldn't find  UGE_LIBS"
-     echo "error: please"
-     echo "error: (a) update UGE_LIBS in aimk.site or aimk.private accordingly"
-     echo "error: (b) do not use aimk option -uge-ext"
-     exit 1
-  endif
+   if ( -d $UGE_LIBS ) then
+      set LFLAGS   = "$LFLAGS -L$UGE_LIBS/$BUILDARCH/libs"
+      set LIBS_DIR = "$UGE_LIBS"
+   else
+      echo "error: couldn't find  UGE_LIBS"
+      echo "error: please"
+      echo "error: (a) update UGE_LIBS in aimk.site or aimk.private accordingly"
+      echo "error: (b) do not set UGE_EXT in aimk.site or aimk.private"
+      exit 1
+   endif
+   if ( "$UNIVA_COPYRIGHT_DIR" == "" ) then
+      echo "please set UNIVA_COPYRIGHT_DIR in your aimk.private"
+      exit 1
+   else
+      set ADD_UNIVA_COPYRIGHT = 1
+   endif
 else
-  set LIBS_DIR = ${SDIR}
+   set LIBS_DIR = ${SDIR}
 endif
 
 if ( $JNI == 1 ) then

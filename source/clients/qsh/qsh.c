@@ -2142,6 +2142,7 @@ int main(int argc, char **argv)
 
                      do_exit = 1;
                      exit_status = 1;
+                     sge_dstring_free(&err_msg);
                      break;
                   } 
                } else { /* if (ret == COMM_RETVAL_OK) */

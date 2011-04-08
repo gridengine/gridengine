@@ -788,7 +788,7 @@ PrintConf()
    $ECHO "prolog                 none"
    $ECHO "epilog                 none"
    $ECHO "shell_start_mode       posix_compliant"
-   $ECHO "login_shells           sh,ksh,csh,tcsh"
+   $ECHO "login_shells           sh,bash,ksh,csh,tcsh"
    $ECHO "min_uid                0"
    $ECHO "min_gid                0"
    $ECHO "user_lists             none"

@@ -133,6 +133,7 @@ end
 
 # Initialize extern variables from aimk.*
 set UGE_LIBS         = 0   # Path to Univa Extensions
+set UGE_EXT          = 0   # Trigger if Univa Extensions should be built
 
 # Source variables for definition of site dependent paths of software here
 #
@@ -182,7 +183,6 @@ usage:
    echo "-mo                  -> generate the message catalogues (Solaris only)"
    echo "-no-core             -> don't compile the core system"
    echo "-no-dump             -> build binaries without libcore.so (Linux only)"
-   echo "-uge-ext             -> build binaries with Univa Extensions"
    echo "-no-java             -> don't compile Java[TM] class files"
    echo "-no-gui-inst         -> don't compile Java[TM] GUI installer"
    echo "-no-jni              -> don't compile JNI library"
@@ -314,7 +314,6 @@ set TPLIB            = ""  # 3rdparty libs
 set SLIBS            = ""
 set FLAGS_OUT        = "false"
 set DUMP             = 1
-set UGE_EXT          = 0   # Univa Extensions
 
 # Default settings for shared library creation
 set SHAREDLIBS       = 0
@@ -622,9 +621,6 @@ while ($#argv >= 1 && $?found)
       breaksw
    case "-no-dump":
       set DUMP = 0
-      breaksw
-   case "-uge-ext":
-      set UGE_EXT = 1
       breaksw
    case  "-no-java"
       set JAVA = 0

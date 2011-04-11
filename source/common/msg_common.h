@@ -103,6 +103,7 @@
 #define MSG_PARSE_XOPTIONALREADYSETOVERWRITINGSETING_S _MESSAGE(23063, _(SFQ" option has already been set, overriding previous setting"))
 #define MSG_SGETEXT_MUSTBEMANAGERORUSER_SS  _MESSAGE(23065, _("denied: "SFQ" must be manager or in userset "SFQ))
 #define MSG_FILE_ERRORCLOSEINGXY_SS         _MESSAGE(23066, _("error closeing "SFN": "SFN))
+#define MSG_PARSE_FEATURENOTSUPPORTEDOS_S   _MESSAGE(23516, _("Unsupported: "SFQ" is not supported in the open source version"))
 
 /*
 ** parse_qsub.c

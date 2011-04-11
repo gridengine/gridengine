@@ -1881,6 +1881,10 @@ DTRACE;
 
       if(!strcmp("-suspend_remote", *sp)) {
          /* next field is "y|n" */
+# if !defined(UGE)
+         answer_list_add_sprintf(&answer, STATUS_ENOIMP, ANSWER_QUALITY_WARNING,
+                                 MSG_PARSE_FEATURENOTSUPPORTEDOS_S, "-suspend_remote");
+# endif
          sp++;
          if (!*sp) {
              answer_list_add_sprintf(&answer, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR,

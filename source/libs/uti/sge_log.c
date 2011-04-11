@@ -613,7 +613,7 @@ int sge_log(int log_level, const char *mesg, const char *file__, const char *fun
 
    /* avoid double output in debug mode */
    if (!is_daemonized && !rmon_condition(TOP_LAYER, INFOPRINT) && 
-       (log_state_get_log_verbose() || log_level <= LOG_ERR)) {
+       (log_state_get_log_verbose() || log_level <= LOG_WARNING)) {
       fprintf(stderr, "%s%s\n", levelstring, mesg);
    }
 

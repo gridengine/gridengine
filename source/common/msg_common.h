@@ -1005,6 +1005,8 @@
 #define MSG_GDI_USAGE_suspend_remote_OPT                 "[-suspend_remote y[es]|n[o]]"
 #define MSG_GDI_UTEXT_suspend_remote_OPT                 _MESSAGE(23515, _("suspend qrsh client as also the process on execution host"))
 
+#define MSG_PARSE_FEATURENOTSUPPORTEDOS_S                _MESSAGE(23516, _("Unsupported: "SFQ" is not supported in the open source version"))
+
 /* =================================================
  * global error messages 
  * messages that have general meaning in all modules

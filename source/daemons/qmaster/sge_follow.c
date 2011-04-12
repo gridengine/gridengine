@@ -979,13 +979,19 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
          job_number, task_number));
       jep = job_list_locate(*object_base[SGE_TYPE_JOB].list, job_number);
       if (!jep) {
-         ERROR((SGE_EVENT, MSG_JOB_FINDJOB_U, sge_u32c(job_number)));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         /* try to repair schedd data - session is unknown here */
-         sge_add_event( 0, sgeE_JOB_DEL, job_number, task_number, 
-                       NULL, NULL, NULL, NULL);
-         DEXIT;
-         return -1;
+         if (or_type == ORT_remove_job) {
+            ERROR((SGE_EVENT, MSG_JOB_FINDJOB_U, sge_u32c(job_number)));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            /* try to repair schedd data - session is unknown here */
+            sge_add_event( 0, sgeE_JOB_DEL, job_number, task_number, 
+                          NULL, NULL, NULL, NULL);
+            DEXIT;
+            return -1;
+         } else {
+            /* in case of an immediate parallel job the job could be missing */
+            INFO((SGE_EVENT, MSG_JOB_FINDJOB_U, sge_u32c(job_number)));
+            DRETURN(0);
+         }
       }
       jatp = job_search_task(jep, NULL, task_number);
 
@@ -1047,7 +1053,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
                lGetString(jep, JB_owner)));
 
          /* remove it */
-         sge_commit_job(ctx, jep, jatp, NULL, COMMIT_ST_NO_RESOURCES, COMMIT_DEFAULT | COMMIT_NEVER_RAN, monitor);
+         sge_commit_job(ctx, jep, jatp, NULL, COMMIT_ST_NO_RESOURCES, COMMIT_DEFAULT | COMMIT_NEVER_RAN, monitor); 
       }
       break;
 

@@ -8,6 +8,11 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+SH-2011-04-13-0: Bugfix:      qsub -pty, improve handling of pty fd and wait in
+                              sge_shepherd
+                 Issue:       GE-3426
+                 Review:      DG
+
 DG-2011-04-12-0: Bugfix:      when an immediate parallel job is rejected through
                               missing resources the remaining job orders for the
                               scheduling run are refused

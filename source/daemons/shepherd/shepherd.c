@@ -2336,7 +2336,8 @@ int fd_std_err             /* fd of stderr. -1 if not set */
    int fdout = -1;
    int fderr = -1;
    int fdin = -1;
-   struct pollfd pty_fds[2];
+   int poll_size = 0;
+   struct pollfd* pty_fds = NULL;
 
 #if defined(HPUX) || defined(INTERIX)
    struct rusage rusage_hp10;
@@ -2359,29 +2360,41 @@ int fd_std_err             /* fd of stderr. -1 if not set */
       if (strcasecmp(stdin_path, "/dev/null") != 0) {
          fdin = SGE_OPEN2(stdin_path, O_RDONLY); 
          if (fdin == -1) {
-            shepherd_error(1, "Cannot open %s. Error: %i", stdin_path, strerror(errno));
+            shepherd_trace("Cannot open %s.", stdin_path);
+            shepherd_signal_job(-pid, SIGTERM);
          }
       }
 
       fdout = SGE_OPEN3(stdout_path, O_WRONLY | O_CREAT | O_APPEND, 0644);
       if (fdout == -1) {
-         shepherd_error(1, "Cannot open %s. Error: %i", stdout_path, strerror(errno));
+         shepherd_trace("Cannot open %s.", stdout_path);
+         shepherd_signal_job(-pid, SIGTERM);
       }
 
       fderr = SGE_OPEN3(stderr_path, O_WRONLY | O_CREAT | O_APPEND, 0644);
       if (fderr == -1) {
-         shepherd_error(1, "Cannot open %s. Error: %i", stderr_path, strerror(errno));
+         shepherd_trace("Cannot open %s.", stderr_path);
+         shepherd_signal_job(-pid, SIGTERM);
       }
 
       /* register the necessary fds for the poll call */
+      if (fd_std_err != -1) {
+         poll_size = 2;
+      } else {
+         poll_size = 1;
+      }
+      pty_fds = (struct pollfd*)sge_malloc(sizeof (struct pollfd) * poll_size);
+
       pty_fds[0].fd = fd_pty_master;
       if (fdin != -1) {
          pty_fds[0].events = POLLIN | POLLPRI | POLLOUT;
       } else {
          pty_fds[0].events = POLLIN | POLLPRI;
       }
-      pty_fds[1].fd = fd_std_err;
-      pty_fds[1].events = POLLIN | POLLPRI;
+      if (fd_std_err != -1) {
+         pty_fds[1].fd = fd_std_err;
+         pty_fds[1].events = POLLIN | POLLPRI;
+      }
    }
 
    memset(rusage, 0, sizeof(*rusage));
@@ -2459,6 +2472,145 @@ int fd_std_err             /* fd of stderr. -1 if not set */
                         WEXITSTATUS(status));
       }
 
+      /* qsub -pty handling */
+      if (fd_pty_master != -1) {
+         int ret;
+         int stop_job = 0;    /* This flag will be set if an error occured */
+         int stop_poll = 1;   /* This flag will be reset if polling is still necessary */
+
+         /* look for data to write */
+         ret = poll(pty_fds, poll_size, 10);
+         if (ret > 0) {
+            /* write the data from the job to the output-files */
+            if (pty_fds[0].revents & POLLIN || pty_fds[0].revents & POLLPRI) {
+               char buffer[MAX_STRING_SIZE];
+               int read_bytes = -1;
+
+               read_bytes = read(pty_fds[0].fd, buffer, MAX_STRING_SIZE-1);
+               if (read_bytes > 0) {
+                  int written_bytes = 0;
+                  while (written_bytes != read_bytes) {
+                     int tmp_written = 0;
+                     tmp_written = write(fdout, buffer, read_bytes);
+                     if (tmp_written == -1) {
+                        stop_job = 1;
+                        shepherd_trace("Could not write to %s. Error: %s", stdout_path, strerror(errno));
+                     }
+                     written_bytes += tmp_written;
+                  }
+               } else if (read_bytes == -1) {
+                  /* if read was interrupted by a signal we do not have to abort */
+                  if (errno != EINTR) {
+                     stop_job = 1;
+                     shepherd_trace("Could not read from pty_master fd. Error: %s", strerror(errno));
+                  }
+               }
+            }
+
+            if (fd_std_err != -1) {
+               if (pty_fds[1].revents & POLLIN || pty_fds[1].revents & POLLPRI) {
+                  char buffer[MAX_STRING_SIZE];
+                  int read_bytes = -1;
+
+                  read_bytes = read(pty_fds[1].fd, buffer, MAX_STRING_SIZE-1);
+                  if (read_bytes > 0) {
+                     int written_bytes = 0;
+                     while (written_bytes != read_bytes) {
+                        int tmp_written = 0;
+                        tmp_written = write(fderr, buffer, read_bytes);
+                        if (tmp_written == -1) {
+                           stop_job = 1;
+                           shepherd_trace("Could not write to %s. Error: %s", stderr_path, strerror(errno));
+                        }
+                        written_bytes += tmp_written;
+                     }
+                  } else if (read_bytes == -1) {
+                     /* if read was interrupted by a signal we do not have to abort */
+                     if (errno != EINTR) {
+                        stop_job = 1;
+                        shepherd_trace("Could not read from std_err fd. Error: %s", strerror(errno));
+                     }
+                  }
+               }
+            }
+
+            if (pty_fds[0].revents & POLLOUT && fdin != -1) {
+               char buffer[MAX_STRING_SIZE];
+               int read_bytes = -1;
+
+               read_bytes = read(fdin, buffer, MAX_STRING_SIZE-1);
+
+               if (read_bytes > 0) {
+                  int written_bytes = 0;
+                  while (written_bytes != read_bytes) {
+                     int tmp_written = 0;
+                     tmp_written = write(pty_fds[0].fd, &buffer[written_bytes], read_bytes - written_bytes);
+                     if (tmp_written == -1) {
+                        /* if write was interrupted by a signal we do not have to abort */
+                        if (errno != EINTR) {
+                           stop_job = 1;
+                           shepherd_trace("Could not write to PTY. Error: %s", strerror(errno));
+                        } else {
+                           tmp_written = 0;
+                        }
+                     }
+                     written_bytes += tmp_written;
+                  }
+               } else if (read_bytes == -1) {
+                  /* if read was interrupted by a signal we do not have to abort */
+                  if (errno != EINTR) {
+                     stop_job = 1;
+                     shepherd_trace("Could not read from %s. Error: %s", stdin_path, strerror(errno));
+                  }
+               } else if (read_bytes == 0) {
+                  shepherd_trace("Reached end of %s", stdin_path);
+                  pty_fds[0].events = POLLIN | POLLPRI;
+               }
+            }
+            /* Handle possible error-events of the poll call */
+
+            for (i = 0; i < poll_size; i++) {
+               if (pty_fds[i].revents & POLLHUP) {
+                  pty_fds[i].events = 0;
+                  shepherd_trace("Poll received POLLHUP (Hang up). Unregister the FD.");
+               }
+               if(pty_fds[i].revents & POLLERR || pty_fds[i].revents & POLLNVAL) {
+                  stop_job = 1;
+                  shepherd_trace("Poll received an error from pty. Exit!");
+               }
+               /* Check if there are still fds which has to be polled */
+               if (pty_fds[i].events != 0) {
+                  stop_poll = 0;
+               }
+            }
+
+            /* There is no fd which has to be polled. Reset poll and wait */
+            if (stop_poll == 1) {
+               /* Reset fd_pty_master as we do not have to poll again. */
+               fd_pty_master = -1;
+               /* Remove WNOHANG from wait-options as we just have to wait for the end of the job */
+               wait_options |= WNOHANG;
+            }
+         } else if (ret == -1) {
+            /* if read was interrupted by a signal we do not have to abort */
+            if (errno != EINTR) {
+               /* On all other errors we have to exit. */
+               stop_job = 1;
+               shepherd_trace("Could not poll pty fds. Error: %s", strerror(errno));
+            }
+         }
+
+         /* If an error occured we have to terminate the job. */
+         if (stop_job == 1) {
+            shepherd_trace("An error occured while executing the job. Job will be terminated.");
+            shepherd_signal_job(-pid, SIGTERM);
+            /* Reset fd_pty_master as we do not have to poll again. */
+            fd_pty_master = -1;
+            /* Remove WNOHANG from wait-options as we just have to wait for the end of the job */
+            wait_options |= WNOHANG;
+         }
+      }
+
       handle_signals_and_methods(
          npid,
          pid,
@@ -2477,81 +2629,6 @@ int fd_std_err             /* fd of stderr. -1 if not set */
          &job_status,
          &job_pid);
 
-      /* qsub -pty handling */
-      if (fd_pty_master != -1) {
-         int ret;
-
-         /* look for data to write */
-         ret = poll(pty_fds, 2, 0);
-         if (ret > 0) {
-            /* write the data from the job to the output-files */
-            if (pty_fds[0].revents & POLLIN || pty_fds[0].revents & POLLPRI) {
-               char buffer[MAX_STRING_SIZE];
-               int read_bytes = -1;
-
-               read_bytes = read(pty_fds[0].fd, buffer, MAX_STRING_SIZE-1);
-               if (read_bytes > 0) {
-                  int written_bytes = 0;
-                  while (written_bytes != read_bytes) {
-                     int tmp_written = 0;
-                     tmp_written = write(fdout, buffer, read_bytes);
-                     if (tmp_written == -1) {
-                        shepherd_error(1, "Could not write to %s. Error: %s", stdout_path, strerror(errno));
-                     }
-                     written_bytes += tmp_written;
-                  }
-               } else if (read_bytes == -1) {
-                  shepherd_error(1, "Could not read from pty_master fd. Error: %s", strerror(errno));
-               }
-            }
-
-            if (pty_fds[1].revents & POLLIN || pty_fds[1].revents & POLLPRI) {
-               char buffer[MAX_STRING_SIZE];
-               int read_bytes = -1;
-
-               read_bytes = read(pty_fds[1].fd, buffer, MAX_STRING_SIZE-1);
-               if (read_bytes > 0) {
-                  int written_bytes = 0;
-                  while (written_bytes != read_bytes) {
-                     int tmp_written = 0;
-                     tmp_written = write(fderr, buffer, read_bytes);
-                     if (tmp_written == -1) {
-                        shepherd_error(1, "Could not write to %s. Error: %s", stderr_path, strerror(errno));
-                     }
-                     written_bytes += tmp_written;
-                  }
-               } else if (read_bytes == -1) {
-                  shepherd_error(1, "Could not read from std_err fd. Error: %s", strerror(errno));
-               }
-            }
-
-            if (pty_fds[0].revents & POLLOUT && fdin != -1) {
-               char buffer[MAX_STRING_SIZE];
-               int read_bytes = -1;
-
-               read_bytes = read(fdin, buffer, MAX_STRING_SIZE-1);
-
-               if (read_bytes > 0) {
-                  int written_bytes = 0;
-                  while (written_bytes != read_bytes) {
-                     int tmp_written = 0;
-                     tmp_written = write(pty_fds[0].fd, buffer, read_bytes);
-                     if (tmp_written == -1) {
-                        shepherd_error(1, "Could not write to PTY. Error: %s", strerror(errno));
-                     }
-                     written_bytes += tmp_written;
-                  }
-               } else if (read_bytes == -1) {
-                  shepherd_error(1, "Could not read from %s. Error: %s", stdin_path, strerror(errno));
-               } else if (read_bytes == 0) {
-                  shepherd_trace("Reached end of %s", stdin_path);
-                  pty_fds[0].events = POLLIN | POLLPRI;
-               }
-            }
-         } else if (ret == -1) {
-            shepherd_error(1, "Could not poll pty fds. Error: %s", strerror(errno));
-         }
-      }
       
    } while ((job_pid > 0) || (migr_cmd_pid > 0) || (ckpt_cmd_pid > 0) ||
             (ctrl_pid[0] > 0) || (ctrl_pid[1] > 0) || (ctrl_pid[2] > 0));
@@ -2589,6 +2666,9 @@ int fd_std_err             /* fd of stderr. -1 if not set */
       SGE_CLOSE(fdin);
    }
 
+   if (pty_fds != NULL) {
+      FREE(pty_fds);
+   }
    return job_status;
 }
 

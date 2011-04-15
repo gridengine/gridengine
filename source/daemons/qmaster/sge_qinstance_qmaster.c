@@ -27,6 +27,8 @@
  *
  *  All Rights Reserved.
  *
+ *  Portions of this software are Copyright (c) 2011 Univa Corporation
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
@@ -1255,7 +1257,7 @@ qinstance_reinit_consumable_actual_list(lListElem *this_elem,
 
       lSetList(this_elem, QU_resource_utilization, NULL);
       qinstance_set_conf_slots_used(this_elem);
-      qinstance_debit_consumable(this_elem, NULL, centry_list, 0, true);
+      qinstance_debit_consumable(this_elem, NULL, centry_list, 0, true, NULL);
 
       for_each(ep, job_list) {
          lList *ja_task_list = lGetList(ep, JB_ja_tasks);
@@ -1274,7 +1276,7 @@ qinstance_reinit_consumable_actual_list(lListElem *this_elem,
                }
 
                if (slots > 0) {
-                  qinstance_debit_consumable(this_elem, ep, centry_list, slots, is_master_task);
+                  qinstance_debit_consumable(this_elem, ep, centry_list, slots, is_master_task, NULL);
                }
             }
          }

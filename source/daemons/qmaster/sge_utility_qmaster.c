@@ -497,6 +497,7 @@ int attr_mod_time_str(lList **alpp, lListElem *qep, lListElem *new_ep, int nm, c
 *     const char *sub_list_name - The sublist name
 *     const char *object_name   - The target object name
 *     int no_info               - Skip or add the info messages 
+*     bool *changed             - Report back if changes have been made (may be NULL)
 *
 *  RESULT
 *     bool - true, the success
@@ -507,11 +508,12 @@ int attr_mod_time_str(lList **alpp, lListElem *qep, lListElem *new_ep, int nm, c
 *******************************************************************************/
 bool attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
                   int this_elem_primary_key, lListElem *delta_elem,
-                  int sub_command, const char *sub_list_name, 
+                  int sub_command, const char *sub_list_name,
                   const char *object_name,
-                  int no_info) 
+                  int no_info, bool *changed)
 {
    bool ret = true;
+   bool did_changes = false;
 
    DENTER(TOP_LAYER, "attr_mod_sub_list");
    if (lGetPosViaElem(delta_elem, this_elem_name, SGE_NO_ABORT) >= 0) {
@@ -543,7 +545,7 @@ bool attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
                next_full_element = lNext(full_element);
 
                pos = lGetPosViaElem(reduced_element, this_elem_primary_key, SGE_NO_ABORT);
-               type = lGetPosType(lGetElemDescr(reduced_element), pos);            
+               type = lGetPosType(lGetElemDescr(reduced_element), pos);
                if (type == lStringT) {
                   rstring = lGetString(reduced_element, this_elem_primary_key);
                   fstring = lGetString(full_element, this_elem_primary_key);
@@ -554,40 +556,50 @@ bool attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
 
                if (rstring == NULL || fstring == NULL) {
                   ERROR((SGE_EVENT, SFNMAX, MSG_OBJECT_VALUEMISSING));
-                  answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC,
-                                  ANSWER_QUALITY_ERROR);
+                  answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
                   ret = false;
                }
 
-               if (ret && 
+               if (ret &&
                    (((type == lStringT) && strcmp(rstring, fstring) == 0) ||
                    ((type == lHostT) && sge_hostcmp(rstring, fstring) == 0))) {
                   lListElem *new_sub_elem;
                   lListElem *old_sub_elem;
 
+                  /* element already exists */
                   next_reduced_element = lNext(reduced_element);
-                  new_sub_elem =
-                     lDechainElem(reduced_sublist, reduced_element);
-                  old_sub_elem = lDechainElem(full_sublist, full_element);
-                  if (SGE_GDI_IS_SUBCOMMAND_SET(sub_command, SGE_GDI_CHANGE) ||
-                      SGE_GDI_IS_SUBCOMMAND_SET(sub_command, SGE_GDI_APPEND)) {
-
-                     if (!no_info && SGE_GDI_IS_SUBCOMMAND_SET(sub_command, SGE_GDI_APPEND)) {
-                        INFO((SGE_EVENT, MSG_OBJECT_ALREADYEXIN_SSS,
-                              rstring, sub_list_name, object_name));
-                        answer_list_add(alpp, SGE_EVENT, STATUS_OK, 
-                                        ANSWER_QUALITY_INFO);
-                        ret = false;
-                        /* break; No "break" here. It will follow below! */
+                  if (SGE_GDI_IS_SUBCOMMAND_SET(sub_command, SGE_GDI_CHANGE)) {
+                     if (object_has_differences(reduced_element, NULL, full_element, false)) {
+                        /* new object differs from old one - exchange them */
+                        did_changes = true;
+                        new_sub_elem = lDechainElem(reduced_sublist, reduced_element);
+                        old_sub_elem = lDechainElem(full_sublist, full_element);
+                        lFreeElem(&old_sub_elem);
+                        lAppendElem(full_sublist, new_sub_elem);
+                     } else {
+                        /* objects do not differ - delete the new one */
+                        new_sub_elem = lDechainElem(reduced_sublist, reduced_element);
+                        lFreeElem(&new_sub_elem);
                      }
 
-                     lFreeElem(&old_sub_elem);
-                     lAppendElem(full_sublist, new_sub_elem);
+                     restart_loop = 1;
+                     break;
+                  } else if (SGE_GDI_IS_SUBCOMMAND_SET(sub_command, SGE_GDI_APPEND)) {
+                     if (!no_info) {
+                        INFO((SGE_EVENT, MSG_OBJECT_ALREADYEXIN_SSS, rstring, sub_list_name, object_name));
+                        answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+                        ret = false;
+                     }
+
+                     new_sub_elem = lDechainElem(reduced_sublist, reduced_element);
+                     lFreeElem(&new_sub_elem);
 
                      restart_loop = 1;
                      break;
                   } else if (SGE_GDI_IS_SUBCOMMAND_SET(sub_command, SGE_GDI_REMOVE)) {
-
+                     did_changes = true;
+                     new_sub_elem = lDechainElem(reduced_sublist, reduced_element);
+                     old_sub_elem = lDechainElem(full_sublist, full_element);
                      lFreeElem(&old_sub_elem);
                      lFreeElem(&new_sub_elem);
 
@@ -603,6 +615,8 @@ bool attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
                next_reduced_element = lFirst(reduced_sublist);
             }
          }
+
+         /* now we process elements which have not been found in the first step above */
          if (ret && (SGE_GDI_IS_SUBCOMMAND_SET(sub_command, SGE_GDI_CHANGE) ||
              SGE_GDI_IS_SUBCOMMAND_SET(sub_command, SGE_GDI_APPEND) ||
              SGE_GDI_IS_SUBCOMMAND_SET(sub_command, SGE_GDI_REMOVE))) {
@@ -616,7 +630,7 @@ bool attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
                next_reduced_element = lNext(reduced_element);
 
                pos = lGetPosViaElem(reduced_element, this_elem_primary_key, SGE_NO_ABORT);
-               type = lGetPosType(lGetElemDescr(reduced_element), pos);            
+               type = lGetPosType(lGetElemDescr(reduced_element), pos);
                if (type == lStringT) {
                   rstring = lGetString(reduced_element, this_elem_primary_key);
                } else if (type == lHostT) {
@@ -638,43 +652,36 @@ bool attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
                   } else {
                      if (!full_sublist) {
                         if (!no_info && SGE_GDI_IS_SUBCOMMAND_SET(sub_command, SGE_GDI_CHANGE)) {
-                           INFO((SGE_EVENT, SFQ" of "SFQ" is empty - "
-                              "Adding new element(s).\n",
-                              sub_list_name, object_name));
-                           answer_list_add(alpp, SGE_EVENT, STATUS_OK, 
-                                           ANSWER_QUALITY_INFO);
+                           INFO((SGE_EVENT, SFQ" of "SFQ" is empty - Adding new element(s).\n",
+                                 sub_list_name, object_name));
+                           answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
                         }
-                        lSetList(this_elem, this_elem_name, lCopyList("",
-                           lGetList(delta_elem, this_elem_name)));
+                        lSetList(this_elem, this_elem_name, lCopyList("", lGetList(delta_elem, this_elem_name)));
                         full_sublist = lGetList(this_elem, this_elem_name);
+
+                        did_changes = true;
                         break;
                      } else {
                         if (!no_info && SGE_GDI_IS_SUBCOMMAND_SET(sub_command, SGE_GDI_CHANGE)) {
-                           INFO((SGE_EVENT, "Unable to find "SFQ" in "SFQ" of "SFQ
-                              " - Adding new element.\n", rstring,
-                              sub_list_name, object_name));
-                           answer_list_add(alpp, SGE_EVENT, STATUS_OK, 
-                                           ANSWER_QUALITY_INFO);
+                           INFO((SGE_EVENT, "Unable to find "SFQ" in "SFQ" of "SFQ" - Adding new element.\n",
+                                 rstring, sub_list_name, object_name));
+                           answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
                         }
-                        new_sub_elem =
-                           lDechainElem(reduced_sublist, reduced_element);
+                        new_sub_elem = lDechainElem(reduced_sublist, reduced_element);
                         lAppendElem(full_sublist, new_sub_elem);
+                        did_changes = true;
                      }
                   }
                }
             }
          }
       } else {
-         /*
-         ** Overwrite the complete list
-         */
-         lSetList(this_elem, this_elem_name, lCopyList("",
-            lGetList(delta_elem, this_elem_name)));
+         /* Overwrite the complete list */
+         lSetList(this_elem, this_elem_name, lCopyList("", lGetList(delta_elem, this_elem_name)));
+         did_changes = true;
       }
-      /*
-      ** If the list does not contain any elements, we will delete
-      ** the list itself
-      */
+
+      /* If the list does not contain any elements, we will delete the list itself */
       if (ret) {
          const lList *tmp_list = lGetList(this_elem, this_elem_name);
 
@@ -685,6 +692,11 @@ bool attr_mod_sub_list(lList **alpp, lListElem *this_elem, int this_elem_name,
    } else {
       ret = false;
    }
+
+   if (changed != NULL) {
+      *changed = did_changes;
+   }
+
    DRETURN(ret);
 }
 
@@ -832,18 +844,17 @@ cqueue_mod_sublist(lListElem *this_elem, lList **answer_list,
           */
          if (org_elem != NULL) {
             if (subsub_key != NoName) {
-               attr_mod_sub_list(answer_list, org_elem, sublist_value_name, 
-                                 subsub_key, mod_elem, sub_command, 
-                                 attribute_name_str, object_name_str, 0);
+               attr_mod_sub_list(answer_list, org_elem, sublist_value_name,
+                                 subsub_key, mod_elem, sub_command,
+                                 attribute_name_str, object_name_str, 0, NULL);
             } else {
                object_replace_any_type(org_elem, sublist_value_name, mod_elem);
             }
          }
       }
    }
- 
-   DEXIT;
-   return ret;
+
+   DRETURN(ret);
 }
 
 int multiple_occurances(

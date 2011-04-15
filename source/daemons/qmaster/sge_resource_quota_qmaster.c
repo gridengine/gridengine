@@ -155,8 +155,8 @@ int rqs_mod(sge_gdi_ctx_class_t *ctx,
       rules_changed = true;
       if (SGE_GDI_IS_SUBCOMMAND_SET(sub_command, SGE_GDI_SET_ALL)) {
          normalize_sublist(rqs, RQS_rule);
-         attr_mod_sub_list(alpp, new_rqs, RQS_rule,
-            RQS_name, rqs, sub_command, SGE_ATTR_RQSRULES, SGE_OBJ_RQS, 0);    
+         attr_mod_sub_list(alpp, new_rqs, RQS_rule, RQS_name, rqs, sub_command,
+                           SGE_ATTR_RQSRULES, SGE_OBJ_RQS, 0, NULL);
       } else {
          /* *attr cases */
          lList *rule_list = lGetList(rqs, RQS_rule);
@@ -170,7 +170,7 @@ int rqs_mod(sge_gdi_ctx_class_t *ctx,
             if (new_rule != NULL) {
                /* ---- RQR_limit */
                attr_mod_sub_list(alpp, new_rule, RQR_limit, RQRL_name, rule,
-                                 sub_command, SGE_ATTR_RQSRULES, SGE_OBJ_RQS, 0);
+                                 sub_command, SGE_ATTR_RQSRULES, SGE_OBJ_RQS, 0, NULL);
             } else {
                ERROR((SGE_EVENT, SFNMAX, MSG_RESOURCEQUOTA_NORULEDEFINED));
                answer_list_add(alpp, SGE_EVENT, STATUS_ESEMANTIC,

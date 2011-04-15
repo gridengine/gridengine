@@ -125,7 +125,7 @@ int pe_mod(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *new_pe, lListElem 
       }
 
       attr_mod_sub_list(alpp, new_pe, PE_user_list, US_name, pe, sub_command,
-                        SGE_ATTR_USER_LISTS, SGE_OBJ_PE, 0);
+                        SGE_ATTR_USER_LISTS, SGE_OBJ_PE, 0, NULL);
    }
 
    /* ---- PE_xuser_list */
@@ -137,7 +137,7 @@ int pe_mod(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *new_pe, lListElem 
          goto ERROR;
       }
       attr_mod_sub_list(alpp, new_pe, PE_xuser_list, US_name, pe, sub_command,
-                        SGE_ATTR_XUSER_LISTS, SGE_OBJ_PE, 0);
+                        SGE_ATTR_XUSER_LISTS, SGE_OBJ_PE, 0, NULL);
    }
 
    if (lGetPosViaElem(pe, PE_xuser_list, SGE_NO_ABORT) >= 0 ||

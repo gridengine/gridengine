@@ -12,6 +12,16 @@ EB-2011-04-15-0: Bugfix:      invalid load_formula value is not rejected
                  Issue:       GE-3451
                  Review:      DG
 
+SH-2011-04-15-0: Bugfix:      file descriptor -1 passed to system calls in 
+                              interactive job support
+                 Issue:       GE-3440
+                 Review:      JG
+
+JG-2011-04-15-0: Bugfix:      jobs get scheduled but are not started after
+                              global host changed
+                 Issue:       GE-3306
+                 Review:      SH
+
 SH-2011-04-13-0: Bugfix:      qsub -pty, improve handling of pty fd and wait in
                               sge_shepherd
                  Issue:       GE-3426

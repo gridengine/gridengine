@@ -27,6 +27,8 @@
  *
  *  All Rights Reserved.
  *
+ *  Portions of this software are Copyright (c) 2011 Univa Corporation
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
@@ -172,7 +174,7 @@ qinstance_create(sge_gdi_ctx_class_t *ctx,
    }
 
    qinstance_set_conf_slots_used(ret);
-   qinstance_debit_consumable(ret, NULL, centry_list, 0, true);
+   qinstance_debit_consumable(ret, NULL, centry_list, 0, true, NULL);
 
    /*
     * Change qinstance state
@@ -340,10 +342,10 @@ cqueue_mod_hostlist(lListElem *cqueue, lList **answer_list,
             ret &= href_list_resolve_hostnames(list, answer_list, true);
          }
          if (ret) {
-            ret = attr_mod_sub_list(answer_list, cqueue, CQ_hostlist, HR_name, 
-                                    reduced_elem, sub_command, 
+            ret = attr_mod_sub_list(answer_list, cqueue, CQ_hostlist, HR_name,
+                                    reduced_elem, sub_command,
                                     SGE_ATTR_HOST_LIST,
-                                    cqueue_name, 0);         
+                                    cqueue_name, 0, NULL);
             href_list = lGetList(cqueue, CQ_hostlist);
          }
          if (ret) {

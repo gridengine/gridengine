@@ -27,6 +27,8 @@
  *
  *  All Rights Reserved.
  *
+ *   Portions of this software are Copyright (c) 2011 Univa Corporation
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 #include <string.h>
@@ -92,14 +94,14 @@
 #include "sge_advance_reservation_qmaster.h"
 #include "sge_job_enforce_limit.h"
 
-static void sge_change_queue_version_exechost(sge_gdi_ctx_class_t *ctx, const char *exechost_name);
+static void exec_host_change_queue_version(sge_gdi_ctx_class_t *ctx, const char *exechost_name);
 static void master_kill_execds(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task);
 static void host_trash_nonstatic_load_values(lListElem *host);
 static void notify(sge_gdi_ctx_class_t *ctx, lListElem *lel, sge_gdi_packet_class_t *packet, sge_gdi_task_class_t *task, int kill_jobs, int force); 
 
 static int verify_scaling_list(lList **alpp, lListElem *host); 
 static void host_update_categories(const lListElem *new_hep, const lListElem *old_hep);
-static int attr_mod_threshold(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *qep, lListElem *new_ep,
+static int attr_mod_threshold(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *ep, lListElem *new_ep,
                               int sub_command, char *attr_name, char *object_name);
 
 void 
@@ -412,21 +414,17 @@ int sge_del_host(sge_gdi_ctx_class_t *ctx, lListElem *hep, lList **alpp,
 
 /* ------------------------------------------------------------ */
 
-int host_mod(
-sge_gdi_ctx_class_t *ctx,
-lList **alpp,
-lListElem *new_host,
-lListElem *ep,
-int add,
-const char *ruser,
-const char *rhost,
-gdi_object_t *object,
-int sub_command, monitoring_t *monitor
-) {
+int host_mod(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *new_host, lListElem *ep, int add,
+             const char *ruser, const char *rhost, gdi_object_t *object, int sub_command,
+             monitoring_t *monitor)
+{
    const char *host;
    int nm;
    int pos;
    int dataType;
+   bool changed = false;
+   bool update_qversion = false;
+
    object_description *object_base = object_type_get_object_description();
 
    DENTER(TOP_LAYER, "host_mod");
@@ -452,42 +450,51 @@ int sub_command, monitoring_t *monitor
       /* ---- EH_scaling_list */
       if (lGetPosViaElem(ep, EH_scaling_list, SGE_NO_ABORT)>=0) {
          attr_mod_sub_list(alpp, new_host, EH_scaling_list, HS_name, ep,
-                           sub_command, SGE_ATTR_LOAD_SCALING, SGE_OBJ_EXECHOST, 0);
+                           sub_command, SGE_ATTR_LOAD_SCALING, SGE_OBJ_EXECHOST, 0, &changed);
          if (verify_scaling_list(alpp, new_host)!=STATUS_OK) {
             goto ERROR;
-         }   
+         }
+         if (changed) {
+            update_qversion = true;
+         }
       }
 
       /* ---- EH_consumable_config_list */
       if (attr_mod_threshold(ctx, alpp, ep, new_host,
-                             sub_command, SGE_ATTR_COMPLEX_VALUES, 
-                             SGE_OBJ_EXECHOST)) { 
+                             sub_command, SGE_ATTR_COMPLEX_VALUES,
+                             SGE_OBJ_EXECHOST)) {
          goto ERROR;
       }
 
       /* ---- EH_acl */
       if (lGetPosViaElem(ep, EH_acl, SGE_NO_ABORT)>=0) {
          DPRINTF(("got new EH_acl\n"));
-         acl_changed = true;
          /* check acl list */
          if (userset_list_validate_acl_list(lGetList(ep, EH_acl), alpp) != STATUS_OK) {
             goto ERROR;
-         }   
+         }
          attr_mod_sub_list(alpp, new_host, EH_acl, US_name, ep,
-                           sub_command, SGE_ATTR_USER_LISTS, SGE_OBJ_EXECHOST, 0);
+                           sub_command, SGE_ATTR_USER_LISTS, SGE_OBJ_EXECHOST, 0, &changed);
+         if (changed) {
+            acl_changed = true;
+            update_qversion = true;
+         }
       }
 
       /* ---- EH_xacl */
       if (lGetPosViaElem(ep, EH_xacl, SGE_NO_ABORT)>=0) {
          DPRINTF(("got new EH_xacl\n"));
-         acl_changed = true;
          /* check xacl list */
          if (userset_list_validate_acl_list(lGetList(ep, EH_xacl), alpp) != STATUS_OK) {
             goto ERROR;
-         }   
+         }
          attr_mod_sub_list(alpp, new_host, EH_xacl, US_name, ep,
-                           sub_command, SGE_ATTR_XUSER_LISTS, 
-                           SGE_OBJ_EXECHOST, 0);
+                           sub_command, SGE_ATTR_XUSER_LISTS,
+                           SGE_OBJ_EXECHOST, 0, &changed);
+         if (changed) {
+            acl_changed = true;
+            update_qversion = true;
+         }
       }
 
 
@@ -499,39 +506,48 @@ int sub_command, monitoring_t *monitor
                   *object_base[SGE_TYPE_PROJECT].list, "projects",
                   object->object_name, host)!=STATUS_OK) {
             goto ERROR;
-         }   
+         }
          attr_mod_sub_list(alpp, new_host, EH_prj, PR_name, ep,
-                           sub_command, SGE_ATTR_PROJECTS, 
-                           SGE_OBJ_EXECHOST, 0);    
+                           sub_command, SGE_ATTR_PROJECTS,
+                           SGE_OBJ_EXECHOST, 0, &changed);
+         if (changed) {
+            update_qversion = true;
+         }
       }
 
       /* ---- EH_xprj */
       if (lGetPosViaElem(ep, EH_xprj, SGE_NO_ABORT)>=0) {
          DPRINTF(("got new EH_xprj\n"));
          /* check xprj list */
-         if (verify_project_list(alpp, lGetList(ep, EH_xprj), 
+         if (verify_project_list(alpp, lGetList(ep, EH_xprj),
                   *object_base[SGE_TYPE_PROJECT].list, "xprojects",
                   object->object_name, host)!=STATUS_OK) {
             goto ERROR;
-         }   
+         }
          attr_mod_sub_list(alpp, new_host, EH_xprj, PR_name, ep,
-                           sub_command, SGE_ATTR_XPROJECTS, 
-                           SGE_OBJ_EXECHOST, 0);   
+                           sub_command, SGE_ATTR_XPROJECTS,
+                           SGE_OBJ_EXECHOST, 0, &changed);
+         if (changed) {
+            update_qversion = true;
+         }
       }
 
       /* ---- EH_usage_scaling_list */
       if (lGetPosViaElem(ep, EH_usage_scaling_list, SGE_NO_ABORT)>=0) {
          attr_mod_sub_list(alpp, new_host, EH_usage_scaling_list, HS_name, ep,
-         sub_command, SGE_ATTR_USAGE_SCALING, SGE_OBJ_EXECHOST, 0); 
+         sub_command, SGE_ATTR_USAGE_SCALING, SGE_OBJ_EXECHOST, 0, &changed);
+         if (changed) {
+            update_qversion = true;
+         }
       }
 
       if (lGetPosViaElem(ep, EH_report_variables, SGE_NO_ABORT)>=0) {
          const lListElem *var;
 
          attr_mod_sub_list(alpp, new_host, EH_report_variables, STU_name, ep,
-                           sub_command, "report_variables", 
-                           SGE_OBJ_EXECHOST, 0);
-     
+                           sub_command, "report_variables",
+                           SGE_OBJ_EXECHOST, 0, NULL);
+
          /* check if all report_variables are valid complex variables */
          for_each(var, lGetList(ep, EH_report_variables)) {
             const char *name = lGetString(var, STU_name);
@@ -552,7 +568,7 @@ int sub_command, monitoring_t *monitor
                if (!sge_ar_have_users_access(NULL, ar, host, lGetList(ep, EH_acl),
                                              lGetList(ep, EH_xacl),
                                              master_userset_list)) {
-                  ERROR((SGE_EVENT, MSG_PARSE_MOD3_REJECTED_DUE_TO_AR_SU, 
+                  ERROR((SGE_EVENT, MSG_PARSE_MOD3_REJECTED_DUE_TO_AR_SU,
                          SGE_ATTR_USER_LISTS, sge_u32c(lGetUlong(ar, AR_id))));
                   answer_list_add(alpp, SGE_EVENT, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR);
                   goto ERROR;
@@ -560,6 +576,10 @@ int sub_command, monitoring_t *monitor
             }
          }
       }
+   }
+
+   if (update_qversion) {
+      exec_host_change_queue_version(ctx, host);
    }
 
    DRETURN(0);
@@ -622,20 +642,18 @@ int host_success(sge_gdi_ctx_class_t *ctx, lListElem *ep, lListElem *old_ep, gdi
          const char *host = lGetHost(ep, EH_name);
          int global_host = !strcmp(SGE_GLOBAL_NAME, host);
 
-         sge_change_queue_version_exechost(ctx, host);
-
          if (global_host) {
             host_list_merge(*object_type_get_master_list(SGE_TYPE_EXECHOST));
          } else {
             const lListElem *global_ep = NULL;
 
-            global_ep = lGetElemHost(*object_type_get_master_list(SGE_TYPE_EXECHOST), EH_name, 
+            global_ep = lGetElemHost(*object_type_get_master_list(SGE_TYPE_EXECHOST), EH_name,
                                      SGE_GLOBAL_NAME);
             host_merge(ep, global_ep);
          }
 
          host_update_categories(ep, old_ep);
-         sge_add_event( 0, old_ep?sgeE_EXECHOST_MOD:sgeE_EXECHOST_ADD, 
+         sge_add_event( 0, old_ep?sgeE_EXECHOST_MOD:sgeE_EXECHOST_ADD,
                        0, 0, host, NULL, NULL, ep);
          lListElem_clear_changed_info(ep);
       }
@@ -942,12 +960,12 @@ u_long32 load_report_interval(lListElem *hep)
    DRETURN(timeout);
 }
 
-static void sge_change_queue_version_exechost(sge_gdi_ctx_class_t *ctx, const char *exechost_name) 
+static void exec_host_change_queue_version(sge_gdi_ctx_class_t *ctx, const char *exechost_name)
 {
-   lListElem *cqueue = NULL; 
+   lListElem *cqueue = NULL;
    bool change_all = (strcasecmp(exechost_name, SGE_GLOBAL_NAME) == 0) ? true : false;
 
-   DENTER(TOP_LAYER, "sge_change_queue_version_exechost");
+   DENTER(TOP_LAYER, "exec_host_change_queue_version");
 
    for_each(cqueue, *(object_type_get_master_list(SGE_TYPE_CQUEUE))) {
       lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
@@ -958,7 +976,7 @@ static void sge_change_queue_version_exechost(sge_gdi_ctx_class_t *ctx, const ch
       if (change_all) {
          next_qinstance = lFirst(qinstance_list);
       } else {
-         next_qinstance = lGetElemHostFirst(qinstance_list, QU_qhostname, 
+         next_qinstance = lGetElemHostFirst(qinstance_list, QU_qhostname,
                                             exechost_name, &iterator);
       }
       while ((qinstance = next_qinstance)) {
@@ -969,23 +987,22 @@ static void sge_change_queue_version_exechost(sge_gdi_ctx_class_t *ctx, const ch
             next_qinstance = lNext(qinstance);
             name = SGE_GLOBAL_NAME;
          } else {
-            next_qinstance = lGetElemHostNext(qinstance_list, QU_qhostname, 
-                                              exechost_name, &iterator); 
+            next_qinstance = lGetElemHostNext(qinstance_list, QU_qhostname,
+                                              exechost_name, &iterator);
             name = exechost_name;
          }
          DPRINTF((SFQ" has changed. Increasing qversion of"SFQ"\n",
                   name, lGetString(qinstance, QU_full_name)));
          qinstance_increase_qversion(qinstance);
-         sge_event_spool(ctx, &answer_list, 0, sgeE_QINSTANCE_MOD, 
-                         0, 0, lGetString(qinstance, QU_qname), 
+         sge_event_spool(ctx, &answer_list, 0, sgeE_QINSTANCE_MOD,
+                         0, 0, lGetString(qinstance, QU_qname),
                          lGetHost(qinstance, QU_qhostname), NULL,
                          qinstance, NULL, NULL, true, false);
          answer_list_output(&answer_list);
       }
    }
 
-   DEXIT;
-   return;
+   DRETURN_VOID;
 }
 
 /****
@@ -1469,18 +1486,18 @@ static void host_update_categories(const lListElem *new_hep, const lListElem *ol
 *     attr_mod_threshold() -- modify the threshold configuration sublist 
 *
 *  SYNOPSIS
-*     int attr_mod_threshold(lList **alpp, lListElem *qep, lListElem *new_ep, 
+*     int attr_mod_threshold(lList **alpp, lListElem *ep, lListElem *new_ep, 
 *     int sub_command, char *attr_name, char 
 *     *object_name) 
 *
 *  FUNCTION
-*   Validation tries to find each element of the qep element in the threshold identified by nm.
-*   Elements which already existst here are copied into sublist of new_ep.   
+*   Validation tries to find each element of the ep element in the threshold identified by nm.
+*   Elements which already exist here are copied into sublist of new_ep.
 *
 *  INPUTS
 *     sge_gdi_ctx_class_t *ctx  - gdi context
 *     lList **alpp              - The answer list 
-*     lListElem *qep            - The source object element 
+*     lListElem *ep            - The source object element 
 *     lListElem *new_ep         - The target object element 
 *     int sub_command           - The add, modify, remove command 
 *     const char *attr_name     - The attribute name 
@@ -1493,26 +1510,28 @@ static void host_update_categories(const lListElem *new_hep, const lListElem *ol
 *     MT-NOTE: attr_mod_threshold() is MT safe 
 *
 *******************************************************************************/
-static int attr_mod_threshold(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *qep, lListElem *new_ep,
+static int attr_mod_threshold(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem *ep, lListElem *new_ep,
                               int sub_command, char *attr_name, char *object_name) {
 
    DENTER(TOP_LAYER, "attr_mod_threshold");
 
    /* ---- attribute EH_consumable_config_list */
-   if (lGetPosViaElem(qep, EH_consumable_config_list, SGE_NO_ABORT)>=0) {
+   if (lGetPosViaElem(ep, EH_consumable_config_list, SGE_NO_ABORT) >= 0) {
       lListElem *tmp_elem = NULL;
 
       DPRINTF(("got new %s\n", attr_name));
 
-      if (ensure_attrib_available(alpp, qep, EH_consumable_config_list)) {
+      /* check if corresponding complex attributes exist */
+      if (ensure_attrib_available(alpp, ep, EH_consumable_config_list)) {
          DRETURN(STATUS_EUNKNOWN);
       }
 
+      /* work on a temporary element to allow rollback on error */
       tmp_elem = lCopyElem(new_ep);
 
       /* the attr_mod_sub_list return boolean and there is stored in the int value, attention true=1 */
-      if (!attr_mod_sub_list(alpp, tmp_elem, EH_consumable_config_list, CE_name, qep,
-                              sub_command, attr_name, object_name, 0)) {
+      if (!attr_mod_sub_list(alpp, tmp_elem, EH_consumable_config_list, CE_name, ep,
+                              sub_command, attr_name, object_name, 0, NULL)) {
          lFreeElem(&tmp_elem);
          DRETURN(STATUS_EUNKNOWN);
       }
@@ -1531,7 +1550,7 @@ static int attr_mod_threshold(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem 
          lList *master_centry_list = *object_type_get_master_list(SGE_TYPE_CENTRY);
 
          lSetList(tmp_elem, EH_resource_utilization, NULL);
-         debit_host_consumable(NULL, tmp_elem, master_centry_list, 0, true);
+         debit_host_consumable(NULL, tmp_elem, master_centry_list, 0, true, NULL);
          for_each (jep, *(object_type_get_master_list(SGE_TYPE_JOB))) {
             lListElem *jatep = NULL;
 
@@ -1549,7 +1568,7 @@ static int attr_mod_threshold(sge_gdi_ctx_class_t *ctx, lList **alpp, lListElem 
                   global_host?NULL:host);
             
                if (slots > 0) {
-                  debit_host_consumable(jep, tmp_elem, master_centry_list, slots, is_master_task);
+                  debit_host_consumable(jep, tmp_elem, master_centry_list, slots, is_master_task, NULL);
                }
             }
          }

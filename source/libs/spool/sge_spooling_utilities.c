@@ -27,8 +27,10 @@
  *
  *   All Rights Reserved.
  *
+ *   Portions of this software are Copyright (c) 2011 Univa Corporation
+ *
  ************************************************************************/
-/*___INFO__MARK_END__*/                                   
+/*___INFO__MARK_END__*/
 
 #define NO_SGE_COMPILE_DEBUG
 
@@ -434,7 +436,7 @@ bool spool_default_validate_func(lList **answer_list,
                centry_list_fill_request(lGetList(object, EH_consumable_config_list), 
                      NULL, master_centry_list, true, false, true);
                /* necessary to setup actual list of exechost */
-               debit_host_consumable(NULL, object, master_centry_list, 0, true);
+               debit_host_consumable(NULL, object, master_centry_list, 0, true, NULL);
 
                if (ensure_attrib_available(NULL, object, 
                                            EH_consumable_config_list)) {

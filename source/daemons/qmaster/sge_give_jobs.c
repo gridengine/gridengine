@@ -27,6 +27,8 @@
  *
  *  All Rights Reserved.
  *
+ *  Portions of this software are Copyright (c) 2011 Univa Corporation
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 #include <stdlib.h>
@@ -1041,7 +1043,7 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
             }
 
             /* debit consumable resources */ 
-            if (debit_host_consumable(jep, global_host_ep, master_centry_list, tmp_slot, master_task) > 0) {
+            if (debit_host_consumable(jep, global_host_ep, master_centry_list, tmp_slot, master_task, NULL) > 0) {
                /* this info is not spooled */
                sge_add_event(0, sgeE_EXECHOST_MOD, 0, 0, 
                              "global", NULL, NULL, global_host_ep);
@@ -1050,7 +1052,7 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
                lListElem_clear_changed_info(global_host_ep);
             }
             host = host_list_locate(master_exechost_list, queue_hostname);
-            if (debit_host_consumable(jep, host, master_centry_list, tmp_slot, master_task) > 0) {
+            if (debit_host_consumable(jep, host, master_centry_list, tmp_slot, master_task, NULL) > 0) {
                /* this info is not spooled */
                sge_add_event(0, sgeE_EXECHOST_MOD, 0, 0, 
                              queue_hostname, NULL, NULL, host);
@@ -1058,7 +1060,7 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
                answer_list_output(&answer_list);
                lListElem_clear_changed_info(host);
             }
-            qinstance_debit_consumable(queue, jep, master_centry_list, tmp_slot, master_task);
+            qinstance_debit_consumable(queue, jep, master_centry_list, tmp_slot, master_task, NULL);
             reporting_create_queue_consumable_record(&answer_list, host, queue, jep, now);
             answer_list_output(&answer_list);
             /* this info is not spooled */
@@ -1078,7 +1080,7 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
             } else {
                /* debit in advance reservation */
                lListElem *queue = lGetSubStr(ar, QU_full_name, lGetString(ep, JG_qname), AR_reserved_queues);
-               if (qinstance_debit_consumable(queue, jep, master_centry_list, tmp_slot, master_task) > 0) {
+               if (qinstance_debit_consumable(queue, jep, master_centry_list, tmp_slot, master_task, NULL) > 0) {
                   dstring buffer = DSTRING_INIT;
                   /* this info is not spooled */
                   sge_dstring_sprintf(&buffer, sge_U32CFormat, ar_id);
@@ -1604,7 +1606,7 @@ static void sge_clear_granted_resources(sge_gdi_ctx_class_t *ctx,
             lListElem *host;
 
             /* undebit consumable resources */ 
-            if (debit_host_consumable(job, global_host_ep, master_centry_list, -tmp_slot, master_task) > 0) {
+            if (debit_host_consumable(job, global_host_ep, master_centry_list, -tmp_slot, master_task, NULL) > 0) {
                /* this info is not spooled */
                sge_add_event(0, sgeE_EXECHOST_MOD, 0, 0, 
                              "global", NULL, NULL, global_host_ep);
@@ -1613,7 +1615,7 @@ static void sge_clear_granted_resources(sge_gdi_ctx_class_t *ctx,
                lListElem_clear_changed_info(global_host_ep);
             }
             host = host_list_locate(master_exechost_list, queue_hostname);
-            if (debit_host_consumable(job, host, master_centry_list, -tmp_slot, master_task) > 0) {
+            if (debit_host_consumable(job, host, master_centry_list, -tmp_slot, master_task, NULL) > 0) {
                /* this info is not spooled */
                sge_add_event(0, sgeE_EXECHOST_MOD, 0, 0, 
                              queue_hostname, NULL, NULL, host);
@@ -1621,7 +1623,7 @@ static void sge_clear_granted_resources(sge_gdi_ctx_class_t *ctx,
                answer_list_output(&answer_list);
                lListElem_clear_changed_info(host);
             }
-            qinstance_debit_consumable(queue, job, master_centry_list, -tmp_slot, master_task);
+            qinstance_debit_consumable(queue, job, master_centry_list, -tmp_slot, master_task, NULL);
             reporting_create_queue_consumable_record(&answer_list, host, queue, job, now);
             /* this info is not spooled */
             qinstance_add_event(queue, sgeE_QINSTANCE_MOD);
@@ -1643,7 +1645,7 @@ static void sge_clear_granted_resources(sge_gdi_ctx_class_t *ctx,
             } else {
                /* undebit in advance reservation */
                lListElem *queue = lGetSubStr(ar, QU_full_name, lGetString(ep, JG_qname), AR_reserved_queues);
-               if (qinstance_debit_consumable(queue, job, master_centry_list, -tmp_slot, master_task) > 0) {
+               if (qinstance_debit_consumable(queue, job, master_centry_list, -tmp_slot, master_task, NULL) > 0) {
                   dstring buffer = DSTRING_INIT;
                   /* this info is not spooled */
                   sge_dstring_sprintf(&buffer, sge_U32CFormat, ar_id);

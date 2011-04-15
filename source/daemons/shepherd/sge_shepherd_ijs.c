@@ -703,7 +703,7 @@ static void* commlib_to_pty(void *t_conf)
                /* control message, set size of pty */
                shepherd_trace("commlib_to_pty: received window size message, "
                   "changing window size");
-               ioctl(g_p_ijs_fds->pty_master, TIOCSWINSZ, &(recv_mess.ws));
+               ioctl(fd_write, TIOCSWINSZ, &(recv_mess.ws));
                b_was_connected = 1;
                break;
             case SETTINGS_CTRL_MSG:

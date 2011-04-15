@@ -1645,6 +1645,9 @@ bool sge_str_is_number(const char *string)
    if (end == string) {
       /* no digits found */
       ret = false;
+   } else if (*end != '\0') {
+      /* additional characters after number found */
+      ret = false;
    }
 
    return ret;

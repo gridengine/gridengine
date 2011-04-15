@@ -8,6 +8,10 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+EB-2011-04-15-0: Bugfix:      invalid load_formula value is not rejected
+                 Issue:       GE-3451
+                 Review:      DG
+
 SH-2011-04-13-0: Bugfix:      qsub -pty, improve handling of pty fd and wait in
                               sge_shepherd
                  Issue:       GE-3426

@@ -26,7 +26,9 @@
  *   Copyright: 2001 by Sun Microsystems, Inc.
  * 
  *   All Rights Reserved.
- * 
+ *
+ *   Portions of this software are Copyright (c) 2011 Univa Corporation
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 #include <stdio.h>
@@ -248,7 +250,7 @@ debit_job_from_queues(lListElem *job, lList *granted, lList *global_queue_list,
 
          DPRINTF(("REDUCING SLOTS OF QUEUE %s BY %d\n", qname, tagged));
 
-         qinstance_debit_consumable(qep, job, centry_list, tagged, master_task);
+         qinstance_debit_consumable(qep, job, centry_list, tagged, master_task, NULL);
       }
       master_task = false;
    }
@@ -300,8 +302,8 @@ int *sort_hostlist
          lSetUlong(hep, EH_load_correction_factor, ulc_factor);
       }   
 
-      debit_host_consumable(job, host_list_locate(host_list, "global"), centry_list, slots, master_task);
-      debit_host_consumable(job, hep, centry_list, slots, master_task);
+      debit_host_consumable(job, host_list_locate(host_list, "global"), centry_list, slots, master_task, NULL);
+      debit_host_consumable(job, hep, centry_list, slots, master_task, NULL);
       master_task = false;
 
       /* compute new combined load for this host and put it into the host */
@@ -333,12 +335,13 @@ int *sort_hostlist
  * centry_list: CE_Type
  */
 int 
-debit_host_consumable(lListElem *jep, lListElem *hep, lList *centry_list, int slots, bool is_master_task) 
+debit_host_consumable(lListElem *jep, lListElem *hep, lList *centry_list, int slots,
+                      bool is_master_task, bool *just_check)
 {
    return rc_debit_consumable(jep, hep, centry_list, slots, 
                            EH_consumable_config_list, 
                            EH_resource_utilization, 
-                           lGetHost(hep, EH_name), is_master_task);
+                           lGetHost(hep, EH_name), is_master_task, just_check);
 }
 
 /****** sge_resource_quota_schedd/debit_job_from_rqs() **********************************
@@ -412,7 +415,7 @@ debit_job_from_ar(lListElem *job, lList *granted, lList *ar_list, lList *centry_
       
       if ((ar = lGetElemUlong(ar_list, AR_id, lGetUlong(job, JB_ar))) != NULL) {
          lListElem *queue = lGetSubStr(ar, QU_full_name, lGetString(gel, JG_qname), AR_reserved_queues);
-         qinstance_debit_consumable(queue, job, centry_list, slots, master_task);
+         qinstance_debit_consumable(queue, job, centry_list, slots, master_task, NULL);
       }
       master_task = false;
    }

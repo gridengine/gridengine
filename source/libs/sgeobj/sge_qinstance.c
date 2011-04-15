@@ -1004,6 +1004,9 @@ qinstance_list_validate(lList *this_list, lList **answer_list, lList *master_exe
 *     const char *obj_name - The name of the object we are debiting from. This
 *                            is only used for monitoring/diagnosis purposes.
 *
+*     bool *just_check     - do not do the actual debiting, but just check if
+*                            debiting would exceed resources
+*
 *  RESULT
 *     Returns -1 in case of an error. Otherwise the number of (un)debitations 
 *     that actually took place is returned. If 0 is returned that means the
@@ -1083,6 +1086,7 @@ rc_debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list,
                         (config_nm==QU_consumable_config_list)?"queue":"host",
                         obj_name, debit_slots, config_value - actual_value));
                   *just_check = false;
+                  break;
                }
             }
             mods++;
@@ -1101,6 +1105,7 @@ rc_debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list,
                         (config_nm==QU_consumable_config_list)?"queue":"host",
                         obj_name, debit_slots));
                   *just_check = false;
+                  break;
                }
             }
             mods++;

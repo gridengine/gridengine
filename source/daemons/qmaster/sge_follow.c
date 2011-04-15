@@ -194,8 +194,6 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
       lListElem *master_qep = NULL;
       lListElem *master_host = NULL;
       lList *exec_host_list = *object_base[SGE_TYPE_EXECHOST].list;
-      lList *centry_list = *object_base[SGE_TYPE_CENTRY].list;
-      lListElem *global_host = host_list_locate(exec_host_list, SGE_GLOBAL_NAME);
 
       DPRINTF(("ORDER ORT_start_job\n"));
 
@@ -396,7 +394,8 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
          /* ----------------------
           *  find and check host
           */
-         if (!(hep=host_list_locate(exec_host_list, lGetHost(qep, QU_qhostname)))) {
+         hep = host_list_locate(exec_host_list, lGetHost(qep, QU_qhostname));
+         if (hep == NULL) {
             ERROR((SGE_EVENT, MSG_JOB_UNABLE2FINDHOST_S, lGetHost(qep, QU_qhostname)));
             answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
             lFreeList(&gdil);
@@ -404,7 +403,6 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
             DRETURN(-2);
          } else {
             lListElem *ruep;
-            bool consumables_ok;
 
             /* host not yet clean after reschedule unknown? */
             for_each(ruep, lGetList(hep, EH_reschedule_unknown_list)) {
@@ -417,26 +415,6 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
                   lSetString(jatp, JAT_granted_pe, NULL);
                   DRETURN(-1);
                }
-            }
-
-            /* check if consumables are still sufficient on the host and on global host */
-            debit_host_consumable(jep, hep, centry_list, q_slots,
-                                  qep == master_qep ? true : false, &consumables_ok);
-            if (!consumables_ok) {
-               ERROR((SGE_EVENT, MSG_JOB_RESOURCESNOLONGERAVAILABLE_SUU,
-                      lGetHost(hep, EH_name), sge_u32c(job_number), sge_u32c(task_number)));
-               lFreeList(&gdil);
-               lSetString(jatp, JAT_granted_pe, NULL);
-               DRETURN(0);
-            }
-            debit_host_consumable(jep, global_host, centry_list, q_slots,
-                                  qep == master_qep ? true : false, &consumables_ok);
-            if (!consumables_ok) {
-               ERROR((SGE_EVENT, MSG_JOB_RESOURCESNOLONGERAVAILABLE_SUU,
-                      SGE_GLOBAL_NAME, sge_u32c(job_number), sge_u32c(task_number)));
-               lFreeList(&gdil);
-               lSetString(jatp, JAT_granted_pe, NULL);
-               DRETURN(0);
             }
          }
 
@@ -485,6 +463,66 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
          /* in case of a pe job update free_slots on the pe */
          if (pe) {
             pe_slots += q_slots;
+         }
+      }
+
+      /*
+       * check if consumables are still sufficient on the host and on global host
+       * - for each individual host with the number of slots on that host
+       *   - the first host is master host
+       * - for the global host with the total number of slots
+       *   - do the check as master host, to make sure global per job consumables are checked
+       */
+      {
+         bool is_master = true;
+         bool consumables_ok = true;
+         int host_slots = 0;
+         int total_slots = 0;
+         const char *host_name = NULL;
+         lListElem *gdil_ep;
+         lListElem *next_gdil_ep = lFirst(gdil);
+         lList *centry_list = *object_base[SGE_TYPE_CENTRY].list;
+
+         /* loop over gdil */
+         host_name = lGetHost(next_gdil_ep, JG_qhostname);
+         while ((gdil_ep = next_gdil_ep) != NULL) {
+            /* sum up slots */
+            u_long32 slots = lGetUlong(gdil_ep, JG_slots);
+            host_slots += slots;
+            total_slots += slots;
+
+            /* gdil end or switch to next host: check booking on the current host */
+            next_gdil_ep = lNext(gdil_ep);
+            if (next_gdil_ep == NULL || strcmp(host_name, lGetHost(next_gdil_ep, JG_qhostname)) != 0) {
+               hep = host_list_locate(exec_host_list, host_name);
+               debit_host_consumable(jep, hep, centry_list, host_slots, is_master, &consumables_ok);
+               if (!consumables_ok) {
+                  break;
+               }
+               /* if there is a next host, it is a slave host */
+               is_master = false;
+
+               /* there is a next host: get hostname and reset host slot counter */
+               if (next_gdil_ep != NULL) {
+                  host_name = lGetHost(next_gdil_ep, JG_qhostname);
+                  host_slots = 0;
+               }
+            }
+         }
+
+         /* Per host checks were OK? Then check global host. */
+         if (consumables_ok) {
+            lListElem *global_hep = host_list_locate(exec_host_list, SGE_GLOBAL_NAME);
+            debit_host_consumable(jep, global_hep, centry_list, total_slots, true, &consumables_ok);
+         }
+
+         /* Consumable check failed - we cannot start this job! */
+         if (!consumables_ok) {
+            ERROR((SGE_EVENT, MSG_JOB_RESOURCESNOLONGERAVAILABLE_UU,
+                   sge_u32c(job_number), sge_u32c(task_number)));
+            lFreeList(&gdil);
+            lSetString(jatp, JAT_granted_pe, NULL);
+            DRETURN(0);
          }
       }
 
@@ -1003,13 +1041,19 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
          job_number, task_number));
       jep = job_list_locate(*object_base[SGE_TYPE_JOB].list, job_number);
       if (!jep) {
-         ERROR((SGE_EVENT, MSG_JOB_FINDJOB_U, sge_u32c(job_number)));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
-         /* try to repair schedd data - session is unknown here */
-         sge_add_event( 0, sgeE_JOB_DEL, job_number, task_number, 
-                       NULL, NULL, NULL, NULL);
-         DEXIT;
-         return -1;
+         if (or_type == ORT_remove_job) {
+            ERROR((SGE_EVENT, MSG_JOB_FINDJOB_U, sge_u32c(job_number)));
+            answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
+            /* try to repair schedd data - session is unknown here */
+            sge_add_event( 0, sgeE_JOB_DEL, job_number, task_number, 
+                          NULL, NULL, NULL, NULL);
+            DEXIT;
+            return -1;
+         } else {
+            /* in case of an immediate parallel job the job could be missing */
+            INFO((SGE_EVENT, MSG_JOB_FINDJOB_U, sge_u32c(job_number)));
+            DRETURN(0);
+         }
       }
       jatp = job_search_task(jep, NULL, task_number);
 
@@ -1071,7 +1115,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
                lGetString(jep, JB_owner)));
 
          /* remove it */
-         sge_commit_job(ctx, jep, jatp, NULL, COMMIT_ST_NO_RESOURCES, COMMIT_DEFAULT | COMMIT_NEVER_RAN, monitor);
+         sge_commit_job(ctx, jep, jatp, NULL, COMMIT_ST_NO_RESOURCES, COMMIT_DEFAULT | COMMIT_NEVER_RAN, monitor); 
       }
       break;
 

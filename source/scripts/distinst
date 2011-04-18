@@ -51,7 +51,7 @@ UTILITYBINARIES="uidgid gethostname gethostbyname gethostbyaddr \
                  sge_share_mon infotext spooldefaults spooledit spoolinit \
                  fstype SGE_Helper_Service.exe SGE_Starter.exe valid_jvmlib"
 
-BDBUTILITYBINARIES="berkeley_db_svc db_archive db_checkpoint db_deadlock db_dump db_load db_printlog db_recover db_stat db_upgrade db_verify"
+BDBUTILITYBINARIES="db_deadlock db_dump db_load db_printlog db_recover db_stat db_upgrade db_verify"
 
 SSLUTILITYBINARIES="openssl"
 
@@ -428,6 +428,7 @@ inst3rdparty=false
 instclassictargets=false
 instopenssl=true
 instbdb=true
+instbdbdoc=false
 instarco=false
 instguiinst=true
 instsgeinspect=false
@@ -705,7 +706,7 @@ for prog in $PROG; do
       sgeinspect)
          instsgeinspect=true
          ;;
-      common|distcommon) 
+      common|distcommon)
          instdrmaa=true
          instcommon=true
          inst3rdparty=true
@@ -725,8 +726,9 @@ for prog in $PROG; do
             instdoc=true
             insttxtdoc=true
             instjavadoc=true
+            instbdbdoc=true
             ;;
-         esac    
+         esac
          ;;
       ckpt)
          instckpt=true
@@ -1158,6 +1160,15 @@ if [ $instcommon = true ]; then
       fi
    fi
 
+   if [ $instbdbdoc = true ]; then
+      if [ -d $BERKELEYDBBASE/docs/utility ]; then
+         echo "Installing Berkeley DB docs"
+         Execute rm -rf $DEST_SGE_ROOT/doc/berkeleydb
+         MakeDir doc/berkeleydb
+         Execute cp -R $BERKELEYDBBASE/docs/utility $DEST_SGE_ROOT/doc/berkeleydb
+      fi
+   fi
+
    if [ $instckpt = true ]; then
       echo Installing \"ckpt/\"
       Execute rm -rf $DEST_SGE_ROOT/ckpt
@@ -1394,8 +1405,7 @@ for i in $ARCH; do
                else
                   InstallProg $prog.exe
                fi
-            elif [ $prog = berkeley_db_svc -o $prog = db_archive \
-                   -o $prog = db_checkpoint -o $prog = db_deadlock \
+            elif [ -o $prog = db_deadlock \
                    -o $prog = db_dump -o $prog = db_load \
                    -o $prog = db_printlog -o $prog = db_recover \
                    -o $prog = db_stat -o $prog = db_upgrade \

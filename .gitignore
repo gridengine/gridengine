@@ -21,6 +21,7 @@ source/3rdparty/adoc/[DARWIN_|LINUX86_|SOLARIS|FREEBSD]*
 
 # man build directories
 source/*MANSBUILD*
+source/JAVADOCS
 
 # java build directories and generated code
 source/CLASSES/*

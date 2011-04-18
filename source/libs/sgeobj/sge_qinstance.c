@@ -1004,11 +1004,12 @@ qinstance_list_validate(lList *this_list, lList **answer_list, lList *master_exe
 *     const char *obj_name - The name of the object we are debiting from. This
 *                            is only used for monitoring/diagnosis purposes.
 *
-*     bool *just_check     - do not do the actual debiting, but just check if
-*                            debiting would exceed resources
+*     bool *just_check     - If != NULL do not do the actual debiting, but just
+*                            check if debiting would exceed resources.
+*                            Only makes sense for debiting (slots > 0).
 *
 *  RESULT
-*     Returns -1 in case of an error. Otherwise the number of (un)debitations 
+*     Returns -1 in case of an error. Otherwise the number of (un)debitations
 *     that actually took place is returned. If 0 is returned that means the
 *     consumable resources of the 'ep' object has not changed.
 ******************************************************************************/
@@ -1081,6 +1082,10 @@ rc_debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list,
             } else {
                double actual_value = cr == NULL ? 0 : lGetDouble(cr, RUE_utilized_now);
                double config_value = lGetDouble(cr_config, CE_doubleval);
+               /* for exclusive consumables ignore the number of slots */
+               if (lGetUlong(dcep, CE_relop) == CMPLXEXCL_OP) {
+                  debit_slots = 1;
+               }
                if ((config_value - actual_value - debit_slots * dval) < 0) {
                   ERROR((SGE_EVENT, MSG_CAPACITYEXCEEDED_FSSSIF, dval, name,
                         (config_nm==QU_consumable_config_list)?"queue":"host",
@@ -1091,7 +1096,16 @@ rc_debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list,
             }
             mods++;
          } else if (lGetUlong(dcep, CE_relop) == CMPLXEXCL_OP) {
-            /* the job doesn't request the exclusive complex, but it still has effect */
+            /*
+             * The job doesn't request the exclusive complex, but it still has effect:
+             * A job actually requesting to run exclusive will not be dispatched
+             * to this host - scheduler checks if there is a job running either
+             * requesting the exclusive resource or a job not requesting it is
+             * blocking the host.
+             *
+             * For the consumable check (just_check != NULL) this means that
+             * we check if the resource is actually in use (RU_utilized_now).
+             */
             dval = 1.0;
             if (just_check == NULL) {
                DPRINTF(("debiting (implicit exclusive) %f of %s on %s %s for %d slots\n", dval, name,
@@ -1099,7 +1113,7 @@ rc_debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list,
                         obj_name, debit_slots));
                lAddDouble(cr, RUE_utilized_now_nonexclusive, debit_slots * dval);
             } else {
-               double actual_value = cr == NULL ? 0 : lGetDouble(cr, RUE_utilized_now_nonexclusive);
+               double actual_value = cr == NULL ? 0 : lGetDouble(cr, RUE_utilized_now);
                if (actual_value > 0) {
                   ERROR((SGE_EVENT, MSG_EXCLCAPACITYEXCEEDED_FSSSI, dval, name,
                         (config_nm==QU_consumable_config_list)?"queue":"host",

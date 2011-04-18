@@ -30,6 +30,8 @@
  * 
  *   All Rights Reserved.
  * 
+ *   Portions of this software are Copyright (c) 2011 Univa Corporation
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
@@ -57,32 +59,34 @@ extern "C" {
 *     SGE_LIST(RUE_utilized)
 *        A resource diagram indicating future utilization
 *
-*     SGE_LIST(RUE_reservations) Not yet implemented
-*        The list of advance reservations that affect availability of
-*        this resource. There can be multiple advance reservations.
-*        A per reservation resource diagram contains information about
-*        the capacity reserved at any time for jobs.
+*     SGE_DOUBLE(RUE_utilized_now_nonexclusive)
+*        Currently used amount of implicitly used exclusive resources
+*
+*     SGE_LIST(RUE_utilized_nonexclusive)
+*        A resource diagram indicating future utilization of implicitly used
+*        exclusive resources
+*
 *
 *  FUNCTION
-*        A resource utilization entry contains all information 
-*        about utilization of a particular resouce at any time. 
+*        A resource utilization entry contains all information
+*        about utilization of a particular resouce at any time.
 *
-*        The resources managed with a rsource utilization entries are
-*        parallel environment slot resource, global resources, host 
+*        The resources managed with resource utilization entries are
+*        parallel environment slot resource, global resources, host
 *        resources and resources.
 *
-*        For a not looking ahead information about the amount 
-*        utilized now (RUE_utilized_now) is sufficient:  
-* 
+*        For a not looking ahead information about the amount
+*        utilized now (RUE_utilized_now) is sufficient:
+*
 *              A(0) = C - U(0)
-* 
-*        For resource reservation schedulers also information about future 
+*
+*        For resource reservation schedulers also information about future
 *        utilization over time is required (RUE_utilized):
 *
 *              A(t) = C - U(t)
 *
-*        For advance reservation additional information is needed for each 
-*        single reservation to reflect reserved resource amount over time 
+*        For advance reservation additional information is needed for each
+*        single reservation to reflect reserved resource amount over time
 *        (RUE_reservations). Based on this the resource amount available for
 *        a job can be determined depending on the advance reservation:
 *
@@ -116,7 +120,7 @@ LISTDEF(RUE_Type)
    SGE_LIST(RUE_utilized, RDE_Type, CULL_DEFAULT)
    SGE_DOUBLE(RUE_utilized_now_nonexclusive, CULL_DEFAULT)
    SGE_LIST(RUE_utilized_nonexclusive, RDE_Type, CULL_DEFAULT)
-LISTEND 
+LISTEND
 
 NAMEDEF(RUEN)
    NAME("RUE_name")

@@ -28,6 +28,7 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
+/* Portions of this code are Copyright (c) 2011 Univa Corporation. */
 /*___INFO__MARK_END__*/
 #include <stdio.h>
 #include <stdlib.h>
@@ -63,6 +64,7 @@ static int fGetKet(FILE *fp);
 static int fGetDescr(FILE *fp, lDescr *dp);
 static int fGetInt(FILE *fp, lInt *value);
 static int fGetUlong(FILE *fp, lUlong *value);
+static int fGetUlong64(FILE *fp, lUlong64 *value);
 static int fGetString(FILE *fp, lString *value);
 static int fGetHost(FILE *fp, lHost *value);
 static int fGetFloat(FILE *fp, lFloat *value);
@@ -309,6 +311,10 @@ int lDumpElemFp(FILE *fp, const lListElem *ep, int indent)
       case lUlongT:
          ret = fprintf(fp, "%s/* %-20.20s */ " sge_u32 "\n",
                    space, lNm2Str(ep->descr[i].nm), lGetPosUlong(ep, i));
+         break;
+      case lUlong64T:
+         ret = fprintf(fp, "%s/* %-20.20s */ " sge_u64 "\n",
+                   space, lNm2Str(ep->descr[i].nm), lGetPosUlong64(ep, i));
          break;
       case lStringT:
          str = lGetPosString(ep, i);
@@ -607,6 +613,9 @@ lListElem *lUndumpElemFp(FILE *fp, const lDescr *dp)
          break;
       case lUlongT:
          ret = fGetUlong(fp, &(ep->cont[i].ul));
+         break;
+      case lUlong64T:
+         ret = fGetUlong64(fp, &(ep->cont[i].ul64));
          break;
       case lStringT:
          ret = fGetString(fp, &str);
@@ -1099,6 +1108,34 @@ static int fGetUlong(FILE *fp, lUlong *up)
    }
 
    if (sscanf(s, sge_u32, up) != 1) {
+      LERROR(LESSCANF);
+      DEXIT;
+      return -1;
+   }
+
+   DEXIT;
+   return 0;
+}
+
+static int fGetUlong64(FILE *fp, lUlong64 *up) 
+{
+   char s[READ_LINE_LENGHT + 1];
+
+   DENTER(CULL_LAYER, "fGetUlong64");
+
+   if (!fp) {
+      LERROR(LEFILENULL);
+      DEXIT;
+      return -1;
+   }
+
+   if (fGetLine(fp, s, READ_LINE_LENGHT)) {
+      LERROR(LEFGETLINE);
+      DEXIT;
+      return -1;
+   }
+
+   if (sscanf(s, sge_u64, up) != 1) {
       LERROR(LESSCANF);
       DEXIT;
       return -1;

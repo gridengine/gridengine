@@ -28,6 +28,7 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
+/* Portions of this code are Copyright (c) 2011 Univa Corporation. */
 /*___INFO__MARK_END__*/
 #include <stdio.h>
 #include <stdlib.h>
@@ -110,6 +111,11 @@ int flags
       dst->ul = i;
       break;
 
+   case lUlong64T:
+      ret = unpackint(pb, &i);
+      dst->ul64 = i;
+      break;
+
    case lStringT:
       ret = unpackstr(pb, &(dst->str));
       break;
@@ -177,6 +183,10 @@ cull_pack_switch(sge_pack_buffer *pb, const lMultiType *src, lEnumeration *what,
 
    case lUlongT:
       ret = packint(pb, src->ul);
+      break;
+
+   case lUlong64T:
+      ret = packint(pb, src->ul64);
       break;
 
    case lStringT:

@@ -28,6 +28,7 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
+/* Portions of this code are Copyright (c) 2011 Univa Corporation. */
 /*___INFO__MARK_END__*/
 /*
  * Based on David Flanagan's Xmt libary's Hash.c
@@ -536,6 +537,18 @@ const void *dup_func_u_long32(const void *key)
    return dup_key;
 }
 
+const void *dup_func_u_long64(const void *key) 
+{
+   u_long64 *dup_key = NULL;
+   u_long64 *cast = (u_long64 *)key;
+
+   if((dup_key = (u_long64 *)malloc(sizeof(u_long64))) != NULL) {
+      *dup_key = *cast;
+   }
+
+   return dup_key;
+}
+
 const void *dup_func_long(const void *key)
 {
    long *dup_key  = NULL;
@@ -594,6 +607,12 @@ const void *dup_func_string(const void *key)
 int hash_func_u_long32(const void *key) 
 {
    u_long32 *cast = (u_long32 *)key;
+   return (int)*cast;
+}
+
+int hash_func_u_long64(const void *key) 
+{
+   u_long64 *cast = (u_long64 *)key;
    return (int)*cast;
 }
 
@@ -660,6 +679,13 @@ int hash_compare_u_long32(const void *a, const void *b)
 {
    u_long32 *cast_a = (u_long32 *)a;
    u_long32 *cast_b = (u_long32 *)b;
+   return *cast_a - *cast_b;
+}
+
+int hash_compare_u_long64(const void *a, const void *b)
+{
+   u_long64 *cast_a = (u_long64 *)a;
+   u_long64 *cast_b = (u_long64 *)b;
    return *cast_a - *cast_b;
 }
 

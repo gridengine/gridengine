@@ -30,6 +30,7 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
+/* Portions of this code are Copyright (c) 2011 Univa Corporation. */
 /*___INFO__MARK_END__*/
 
 #include "basis_types.h"
@@ -199,5 +200,15 @@
 #define MSG_CULL_XNOTFOUNDINELEMENT_S                      _MESSAGE(41068, _("!!!!!!!!!! "SFN" not found in element !!!!!!!!!!"))
 #define MSG_CULL_POINTER_NULLELEMENTFORX_S                 _MESSAGE(41069, _("!!!!!!!!!! got NULL element for "SFN" !!!!!!!!!!"))
 
+/*
+** Messages for lUlong64
+*/
 #endif /* __MSG_CULL_H */ 
-
+#define MSG_CULL_GETULONG64_WRONGTYPEFORFIELDXY_SS         _MESSAGE(41170, _("lGetUlong64: wrong type for field "SFN" ("SFN")"))
+#define MSG_CULL_SETULONG64_WRONGTYPEFORFIELDXY_SS         _MESSAGE(41171, _("lSetUlong64: wrong type for field "SFN" ("SFN")"))
+#define MSG_CULL_ADDSUBULONG64ERRORXRUNTIMETYPE_S          _MESSAGE(41172, _("error: lAddSubUlong64("SFN"): run time type error"))
+#define MSG_CULL_ADDELEMULONG64ERRORXRUNTIMETYPE_S         _MESSAGE(41173, _("error: lAddElemUlong64("SFN"): run time type error"))
+#define MSG_CULL_DELELEMULONG64ERRORXRUNTIMETYPE_S         _MESSAGE(41174, _("error: lDelElemUlong64("SFN"): run time type error"))
+#define MSG_CULL_GETELEMULONG64ERRORXRUNTIMETYPE_S         _MESSAGE(41175, _("error: lGetElemUlong64("SFN"): run time type error"))
+#define MSG_CULL_GETPOSULONG64_GOTINVALIDPOSITION          _MESSAGE(41176, _("!!!!!!!!!! lGetPosUlong64() got an invalid pos !!!!!!!!!!!!"))
+#define MSG_CULL_WHERE_SHOULDBEULONG64T                    _MESSAGE(41177, _("lWhere (should be a lUlong64T)"))

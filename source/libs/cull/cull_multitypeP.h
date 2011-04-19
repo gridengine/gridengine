@@ -30,6 +30,7 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
+/* Portions of this code are Copyright (c) 2011 Univa Corporation. */
 /*___INFO__MARK_END__*/
 
 #include "cull/cull_list.h"
@@ -39,6 +40,7 @@ union _lMultiType {
    lFloat fl;
    lDouble db;
    lUlong ul;
+   lUlong64 ul64;
    lLong l;
    lChar c;
    lBool b;

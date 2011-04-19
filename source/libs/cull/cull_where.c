@@ -28,6 +28,7 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
+/* Portions of this code are Copyright (c) 2011 Univa Corporation. */
 /*___INFO__MARK_END__*/
 
 #include <stdio.h>
@@ -271,6 +272,13 @@ static void lWriteWhereTo_(const lCondition *cp, int depth, FILE *fp)
             DPRINTF(("%s "sge_u32"\n", out, cp->operand.cmp.val.ul));
          } else {
             fprintf(fp, "%s "sge_u32"\n", out, cp->operand.cmp.val.ul);
+         }
+         break;
+      case lUlong64T:
+         if (!fp) {
+            DPRINTF(("%s "sge_u64"\n", out, cp->operand.cmp.val.ul64));
+         } else {
+            fprintf(fp, "%s "sge_u64"\n", out, cp->operand.cmp.val.ul64);
          }
          break;
       case lStringT:
@@ -705,6 +713,12 @@ static lCondition *read_val(lDescr *dp, cull_parse_state *state, va_list *app)
       cp->operand.cmp.val.ul = va_arg(*app, lUlong);
       break;
 
+   case ULONG64:
+      if (mt_get_type(cp->operand.cmp.mt) != lUlong64T)
+         incompatibleType(MSG_CULL_WHERE_SHOULDBEULONG64T);
+      cp->operand.cmp.val.ul64 = va_arg(*app, lUlong64);
+      break;
+
    case FLOAT:
       if (mt_get_type(cp->operand.cmp.mt) != lFloatT)
          incompatibleType(MSG_CULL_WHERE_SHOULDBEFLOATT);
@@ -998,6 +1012,13 @@ static lCondition *_read_val(lDescr *dp, cull_parse_state *state, WhereArgList *
       cp->operand.cmp.val.ul = (*wapp)++->value.ul;
       break;
 
+   case ULONG64:
+      if (mt_get_type(cp->operand.cmp.mt) != lUlong64T)
+         incompatibleType(MSG_CULL_WHERE_SHOULDBEULONG64T);
+/*       DPRINTF(("(*wapp)->value.ul64 = %ul\n", (*wapp)->value.ul64)); */
+      cp->operand.cmp.val.ul64 = (*wapp)++->value.ul64;
+      break;
+
    case FLOAT:
       if (mt_get_type(cp->operand.cmp.mt) != lFloatT)
          incompatibleType(MSG_CULL_WHERE_SHOULDBEFLOATT);
@@ -1053,7 +1074,8 @@ static lCondition *_read_val(lDescr *dp, cull_parse_state *state, WhereArgList *
       "p=" as operator is not allowed with other types than lStringT
       "h=" as operator is not allowed with other types than lStringT
     */
-   if ((cp->op == BITMASK && mt_get_type(cp->operand.cmp.mt)     != lUlongT )                                                                ||
+   if ((cp->op == BITMASK && mt_get_type(cp->operand.cmp.mt)     != lUlongT ) ||
+       ( cp->op == BITMASK && mt_get_type(cp->operand.cmp.mt)     != lUlong64T ) ||
        ( (cp->op == STRCASECMP && mt_get_type(cp->operand.cmp.mt)  != lStringT) && (cp->op == STRCASECMP && mt_get_type(cp->operand.cmp.mt)  != lHostT) ) ||
        ( (cp->op == HOSTNAMECMP && mt_get_type(cp->operand.cmp.mt) != lStringT) && (cp->op == HOSTNAMECMP && mt_get_type(cp->operand.cmp.mt) != lHostT) ) ||
        ( (cp->op == PATTERNCMP && mt_get_type(cp->operand.cmp.mt)  != lStringT) && (cp->op == PATTERNCMP && mt_get_type(cp->operand.cmp.mt)  != lHostT) ))
@@ -1214,6 +1236,10 @@ int lCompare(const lListElem *ep, const lCondition *cp)
       case lUlongT:
          result = ulongcmp(lGetPosUlong(ep, cp->operand.cmp.pos), 
                            cp->operand.cmp.val.ul);
+         break;
+      case lUlong64T:
+         result = ulong64cmp(lGetPosUlong64(ep, cp->operand.cmp.pos), 
+                           cp->operand.cmp.val.ul64);
          break;
       case lListT:
          result = (lFindFirst(lGetPosList(ep, cp->operand.cmp.pos), 
@@ -1430,6 +1456,9 @@ lCondition *lCopyWhere(const lCondition *cp)
          break;
       case lUlongT:
          new->operand.cmp.val.ul = cp->operand.cmp.val.ul;
+         break;
+      case lUlong64T:
+         new->operand.cmp.val.ul64 = cp->operand.cmp.val.ul64;
          break;
       case lStringT:
          new->operand.cmp.val.str = strdup(cp->operand.cmp.val.str);

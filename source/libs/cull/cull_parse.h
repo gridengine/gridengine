@@ -30,6 +30,7 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
+/* Portions of this code are Copyright (c) 2011 Univa Corporation. */
 /*___INFO__MARK_END__*/
 
 
@@ -63,6 +64,7 @@ enum {
    INT,
    STRING,
    ULONG,
+   ULONG64,
    SUBLIST,
    FLOAT,
    DOUBLE,

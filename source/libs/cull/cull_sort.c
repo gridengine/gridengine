@@ -28,6 +28,7 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
+/* Portions of this code are Copyright (c) 2011 Univa Corporation. */
 /*___INFO__MARK_END__*/
 #include <stdio.h>
 #include <stdlib.h>
@@ -158,6 +159,9 @@ const lSortOrder *sp
          break;
       case lUlongT:
          result = ulongcmp(lGetPosUlong(ep0, sp[i].pos), lGetPosUlong(ep1, sp[i].pos));
+         break;
+      case lUlong64T:
+         result = ulong64cmp(lGetPosUlong64(ep0, sp[i].pos), lGetPosUlong64(ep1, sp[i].pos));
          break;
       case lFloatT:
          result = floatcmp(lGetPosFloat(ep0, sp[i].pos), lGetPosFloat(ep1, sp[i].pos));

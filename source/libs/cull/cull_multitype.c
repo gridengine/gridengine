@@ -28,6 +28,7 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
+/* Portions of this code are Copyright (c) 2011 Univa Corporation. */
 /*___INFO__MARK_END__*/
 #include <stdarg.h>
 #include <stdio.h>
@@ -65,6 +66,7 @@ const char *multitypes[] =
    "lFloatT",
    "lDoubleT",
    "lUlongT",
+   "lUlong64T",
    "lLongT",
    "lCharT",
    "lBoolT",
@@ -793,6 +795,75 @@ lUlong lGetUlong(const lListElem *ep, int name)
 
    DEXIT;
    return (lUlong) ep->cont[pos].ul;
+}
+
+/****** cull/multitype/lGetPosUlong64() **************************************
+*  NAME
+*     lGetPosUlong64() -- Returns the ulong64 value at position pos 
+*
+*  SYNOPSIS
+*     lUlong64 lGetPosUlong64(const lListElem *ep, int pos) 
+*
+*  FUNCTION
+*     Returns the ulong64 value at position pos 
+*
+*  INPUTS
+*     const lListElem *ep - element 
+*     int pos             - pos value 
+*
+*  RESULT
+*     lUlong64 - ulong64
+******************************************************************************/
+lUlong64 lGetPosUlong64(const lListElem *ep, int pos) 
+{
+   DENTER(CULL_BASIS_LAYER, "lGetPosUlong64");
+
+   if (pos < 0) {
+      /* someone has called lGetPosUlong64() */
+      /* makro with an invalid nm        */
+      CRITICAL((SGE_EVENT, SFNMAX, MSG_CULL_GETPOSULONG64_GOTINVALIDPOSITION ));
+      DEXIT;
+      abort();
+   }
+
+   if (mt_get_type(ep->descr[pos].mt) != lUlong64T)
+      incompatibleType("lGetPosUlong64");
+   DEXIT;
+   return (lUlong64) ep->cont[pos].ul64;
+}
+
+/****** cull/multitype/lGetUlong64() ******************************************
+*  NAME
+*     lGetUlong64() -- Return 'u_long64' value for specified fieldname 
+*
+*  SYNOPSIS
+*     lUlong64 lGetUlong64(const lListElem *ep, int name) 
+*
+*  FUNCTION
+*     Return the content of the field specified by fieldname 'name' of 
+*     list element 'ep'. The type of the field 'name' has to be of
+*     type 'u_long64'.
+*
+*  INPUTS
+*     const lListElem *ep - Pointer to list element 
+*     int name            - field name 
+*
+*  RESULT
+*     lUlong64 - u_long64 value
+******************************************************************************/
+lUlong64 lGetUlong64(const lListElem *ep, int name) 
+{
+   int pos;
+   DENTER(CULL_BASIS_LAYER, "lGetUlong64");
+
+   pos = lGetPosViaElem(ep, name, SGE_DO_ABORT);
+
+   if (mt_get_type(ep->descr[pos].mt) != lUlong64T)
+      incompatibleType2(MSG_CULL_GETULONG64_WRONGTYPEFORFIELDXY_SS, 
+                        lNm2Str(name), multitypes[mt_get_type(ep->descr[pos].mt)]);
+
+   DEXIT;
+   return (lUlong64) ep->cont[pos].ul64;
 }
 
 /****** cull/multitype/lGetPosString() ****************************************
@@ -1795,6 +1866,209 @@ int lAddUlong(lListElem *ep, int name, lUlong offset)
       /* remember that field changed */
       sge_bitfield_set(&(ep->changed), pos);
    }
+
+   DEXIT;
+   return 0;
+}
+
+/****** cull/multitype/lSetUlong64() ******************************************
+*  NAME
+*     lSetUlong64() -- Set ulong value at the given field name id 
+*
+*  SYNOPSIS
+*     int lSetUlong64(lListElem *ep, int name, lUlong64 value) 
+*
+*  FUNCTION
+*     Set ulong64 value at the given field name id 
+*
+*  INPUTS
+*     lListElem *ep  - element 
+*     int name       - field name id 
+*     lUlong64 value - new value 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error
+******************************************************************************/
+int lSetUlong64(lListElem *ep, int name, lUlong64 value) 
+{
+   int pos;
+
+   DENTER(CULL_BASIS_LAYER, "lSetUlong64");
+
+   if (!ep) {
+      LERROR(LEELEMNULL);
+      DEXIT;
+      return -1;
+   }
+
+   pos = lGetPosViaElem(ep, name, SGE_NO_ABORT);
+   if (pos < 0) {
+      DPRINTF(("!!!!!!!!!! lSetUlong64(): %s not found in element !!!!!!!!!!\n",
+               lNm2Str(name)));
+      DEXIT;
+      return -1;
+   }
+
+   if (mt_get_type(ep->descr[pos].mt) != lUlong64T) {
+      incompatibleType2(MSG_CULL_SETULONG64_WRONGTYPEFORFIELDXY_SS , lNm2Str(name), multitypes[mt_get_type(ep->descr[pos].mt)]);
+      DEXIT;
+      return -1;
+   }
+
+   if(value != ep->cont[pos].ul64) {
+      /* remove old hash entry */
+      if(ep->descr[pos].ht != NULL) {
+         cull_hash_remove(ep, pos);
+      }
+      
+      ep->cont[pos].ul64 = value;
+
+      /* create entry in hash table */
+      if(ep->descr[pos].ht != NULL) {
+         cull_hash_insert(ep, (void *)&(ep->cont[pos].ul64), ep->descr[pos].ht, 
+                          mt_is_unique(ep->descr[pos].mt));
+      }
+
+      /* remember that field changed */
+      sge_bitfield_set(&(ep->changed), pos);
+   }
+
+   DEXIT;
+   return 0;
+}
+
+/****** cull_multitype/lAddUlong64() *******************************************
+*  NAME
+*     lAddUlong64() -- Adds a lUlong64 offset to the lUlong64 field
+*
+*  SYNOPSIS
+*     int lAddUlong64(lListElem *ep, int name, lUlong64 offset) 
+*
+*  FUNCTION
+*     The 'offset' is added to the lUlong64 field 'name' of
+*     the CULL element 'ep'.
+*
+*  INPUTS
+*     lListElem *ep   - element
+*     int name        - field name id
+*     lUlong64 offset - the offset
+*
+*  RESULT
+*     int - 
+*
+*  EXAMPLE
+*     int - error state
+*         0 - OK
+*        -1 - Error
+*******************************************************************************/
+int lAddUlong64(lListElem *ep, int name, lUlong64 offset) 
+{
+   int pos;
+
+   DENTER(CULL_BASIS_LAYER, "lAddUlong64");
+
+   if (!ep) {
+      LERROR(LEELEMNULL);
+      DEXIT;
+      return -1;
+   }
+
+   pos = lGetPosViaElem(ep, name, SGE_NO_ABORT);
+   if (pos < 0) {
+      DPRINTF(("!!!!!!!!!! lSetUlong64(): %s not found in element !!!!!!!!!!\n",
+               lNm2Str(name)));
+      DEXIT;
+      return -1;
+   }
+
+   if (mt_get_type(ep->descr[pos].mt) != lUlong64T) {
+      incompatibleType2(MSG_CULL_SETULONG64_WRONGTYPEFORFIELDXY_SS , lNm2Str(name), multitypes[mt_get_type(ep->descr[pos].mt)]);
+      DEXIT;
+      return -1;
+   }
+
+   if (offset != 0) {
+      /* remove old hash entry */
+      if(ep->descr[pos].ht != NULL) {
+         cull_hash_remove(ep, pos);
+      }
+      
+      ep->cont[pos].ul64 += offset;
+
+      /* create entry in hash table */
+      if(ep->descr[pos].ht != NULL) {
+         cull_hash_insert(ep, (void *)&(ep->cont[pos].ul64), ep->descr[pos].ht, 
+                          mt_is_unique(ep->descr[pos].mt));
+      }
+
+      /* remember that field changed */
+      sge_bitfield_set(&(ep->changed), pos);
+   }
+
+   DEXIT;
+   return 0;
+}
+
+/****** cull/multitype/lSetPosUlong64() ***************************************
+*  NAME
+*     lSetPosUlong64() -- Get ulong64 at a certain position 
+*
+*  SYNOPSIS
+*     int lSetPosUlong64(lListElem *ep, int pos, lUlong64 value) 
+*
+*  FUNCTION
+*     Get ulong64 at a certain position 
+*
+*  INPUTS
+*     lListElem *ep - element 
+*     int pos             - position 
+*     lUlong64 value      - new value 
+*
+*  RESULT
+*     int - error state
+*         0 - OK
+*        -1 - Error
+*******************************************************************************/
+int lSetPosUlong64(lListElem *ep, int pos, lUlong64 value) 
+{
+   DENTER(CULL_BASIS_LAYER, "lSetPosUlong64");
+   if (!ep) {
+      LERROR(LEELEMNULL);
+      DEXIT;
+      return -1;
+   }
+
+   if (pos < 0) {
+      LERROR(LENEGPOS);
+      DEXIT;
+      return -1;
+   }
+
+   if (mt_get_type(ep->descr[pos].mt) != lUlong64T) {
+      incompatibleType("lSetPosUlong64");
+      DEXIT;
+      return -1;
+   }
+
+   if(value != ep->cont[pos].ul64) {
+      /* remove old hash entry */
+      if(ep->descr[pos].ht != NULL) {
+         cull_hash_remove(ep, pos);
+      }
+      
+      ep->cont[pos].ul64 = value;
+
+      /* create entry in hash table */
+      if(ep->descr[pos].ht != NULL) {
+         cull_hash_insert(ep, (void *)&(ep->cont[pos].ul64), ep->descr[pos].ht, 
+                          mt_is_unique(ep->descr[pos].mt));
+      }
+
+      /* remember that field changed */
+      sge_bitfield_set(&(ep->changed), pos);
+   }   
 
    DEXIT;
    return 0;
@@ -3343,6 +3617,15 @@ int bitmaskcmp(lUlong bm0, lUlong bm1)
 }
 
 /* ------------------------------------------------------------ 
+   compares two ulong64 values u0 and u1 
+   return values like strcmp
+ */
+int ulong64cmp(lUlong64 u0, lUlong64 u1) 
+{
+   return u0 == u1 ? 0 : (u0 < u1 ? -1 : 1);
+}
+
+/* ------------------------------------------------------------ 
    compares two lFloat values f0 and f1 
    return values like strcmp
  */
@@ -4500,6 +4783,430 @@ lListElem *lGetElemUlongNext(const lList *lp, int nm, lUlong val,
    return NULL;
 }
 
+/****** cull/multitype/lAddSubUlong64() ***************************************
+*  NAME
+*     lAddSubUlong64() -- adds ulong64 to the ulong64 sublist of element ep 
+*
+*  SYNOPSIS
+*     lListElem* lAddSubUlong64(lListElem* ep, int nm, lUlong64 val, 
+*                             int snm, const lDescr* dp) 
+*
+*  FUNCTION
+*     This function adds a new element into the sublist snm of the 
+*     element ep. The field nm of the added element will get the 
+*     initial value val. 
+*
+*  INPUTS
+*     lListElem* ep       - element 
+*     int nm              - field which will get value val 
+*     lUlong64 val        - initial value for nm 
+*     int snm             - sublist within ep where the element 
+*                           will be added 
+*     const lDescr* dp    - Type of the new element (e.g. JB_Type) 
+*
+*  RESULT
+*     NULL in case of error
+*     or the pointer to the new element 
+******************************************************************************/
+lListElem *lAddSubUlong64(lListElem *ep, int nm, lUlong64 val, int snm, 
+                        const lDescr *dp) 
+{
+   lListElem *ret;
+   int sublist_pos;
+
+   DENTER(CULL_LAYER, "lAddSubUlong64");
+
+   if (!ep) {
+      DPRINTF(("error: NULL ptr passed to lAddSubUlong64\n"));
+      DEXIT;
+      return NULL;
+   }
+
+   if (!(ep->descr)) {
+      DPRINTF(("NULL descriptor in element not allowed !!!"));
+      DEXIT;
+      abort();
+   }
+
+   /* run time type checking */
+   if ((sublist_pos = lGetPosViaElem(ep, snm, SGE_NO_ABORT)) < 0) {
+      CRITICAL((SGE_EVENT, MSG_CULL_ADDSUBULONG64ERRORXRUNTIMETYPE_S , lNm2Str(snm)));
+      DEXIT;
+      return NULL;
+   }
+
+   ret = lAddElemUlong64(&(ep->cont[sublist_pos].glp), nm, val, dp);
+
+   /* remember that field changed */
+   if (ret != NULL) {
+      sge_bitfield_set(&(ep->changed), sublist_pos);
+   }
+
+   DEXIT;
+   return ret;
+}
+
+/****** cull/multitype/lAddElemUlong64() **************************************
+*  NAME
+*     lAddElemUlong64() -- adds a ulong64 to the ulong64 list 
+*
+*  SYNOPSIS
+*     lListElem* lAddElemUlong64(lList** lpp, int nm, lUlong64 val, 
+*                              const lDescr* dp) 
+*
+*  FUNCTION
+*     Adds an new element to a list lpp where one field nm within
+*     the new element gets an initial value val 
+*
+*  INPUTS
+*     lList** lpp       - list  
+*     int nm            - field in the new element which will get 
+*                         value val 
+*     lUlong64 val      - initial value for nm 
+*     const lDescr* dp  - type of the list (e.g. JB_Type) 
+*
+*  RESULT
+*     NULL on error
+*     or pointer to the added element 
+******************************************************************************/
+lListElem *lAddElemUlong64(lList **lpp, int nm, lUlong64 val, const lDescr *dp) 
+{
+   lListElem *sep;
+   int pos;
+
+   DENTER(CULL_LAYER, "lAddElemUlong64");
+
+   if (!lpp || !dp) {
+      DPRINTF(("error: NULL ptr passed to lAddElemUlong64\n"));
+      DEXIT;
+      return NULL;
+   }
+
+   /* get position of nm in sdp */
+   pos = lGetPosInDescr(dp, nm);
+
+   /* run time type checking */
+   if (pos < 0) {
+      CRITICAL((SGE_EVENT, MSG_CULL_ADDELEMULONG64ERRORXRUNTIMETYPE_S, 
+         lNm2Str(nm)));
+      DEXIT;
+      return NULL;
+   }
+
+   if (!*lpp) {
+      /* ensure existence of a val list in ep */
+      *lpp = lCreateList("ulong64_sublist", dp);
+   }
+
+   /* add new host val element to sublist */
+   sep = lCreateElem(dp);
+   lSetPosUlong64(sep, pos, val);
+   lAppendElem(*lpp, sep);
+
+   DEXIT;
+   return sep;
+}
+
+/****** cull/multitype/lDelSubUlong64() ***************************************
+*  NAME
+*     lDelSubUlong64() -- removes an element from a sublist 
+*
+*  SYNOPSIS
+*     int lDelSubUlong64(lListElem* ep, int nm, lUlong64 val, int snm) 
+*
+*  FUNCTION
+*     This function removes an element specified by a ulong field nm
+*     and the ulong64 val supposed to be in the sublist snm of the 
+*     element ep 
+*
+*  INPUTS
+*     lListElem* ep - element 
+*     int nm        - field id 
+*     lUlong64 val  - value 
+*     int snm       - field id of the sublist in ep 
+*
+*  RESULT
+*     1 element was found and removed
+*     0 in case of an error 
+******************************************************************************/
+int lDelSubUlong64(lListElem *ep, int nm, lUlong64 val, int snm) 
+{
+   int ret, sublist_pos;
+
+   DENTER(CULL_LAYER, "lDelSubUlong64");
+
+   /* get position of sublist in ep */
+   sublist_pos = lGetPosViaElem(ep, snm, SGE_DO_ABORT);
+
+   ret = lDelElemUlong64(&(ep->cont[sublist_pos].glp), nm, val);
+
+   /* remember that field changed */
+   if (ret == 1) {
+      sge_bitfield_set(&(ep->changed), sublist_pos);
+   }
+
+   DEXIT;
+   return ret;
+}
+
+/****** cull/multitype/lDelElemUlong64() **************************************
+*  NAME
+*     lDelElemUlong64() -- removes elem specified by a ulong64 field nm 
+*
+*  SYNOPSIS
+*     int lDelElemUlong64(lList** lpp, int nm, lUlong64 val) 
+*
+*  FUNCTION
+*     This function removes an element specified by a ulong64 field nm 
+*     with the value val from the list referenced by lpp. 
+*
+*  INPUTS
+*     lList** lpp    - reference to a list 
+*     int nm         - field id 
+*     lUlong64 val   - value if nm 
+*
+*  RESULT
+*     1 element was found and removed 
+*     0 an error occured
+******************************************************************************/
+int lDelElemUlong64(lList **lpp, int nm, lUlong64 val) 
+{
+   lListElem *ep;
+
+   DENTER(CULL_LAYER, "lDelElemUlong64");
+
+   if (!lpp || !val) {
+      DPRINTF(("error: NULL ptr passed to lDelElemUlong64\n"));
+      DEXIT;
+      return 0;
+   }
+
+   /* empty list ? */
+   if (!*lpp) {
+      DEXIT;
+      return 1;
+   }
+
+   /* seek element */
+   ep = lGetElemUlong64(*lpp, nm, val);
+   if (ep) {
+      lRemoveElem(*lpp, &ep);
+      if (lGetNumberOfElem(*lpp) == 0) {
+         lFreeList(lpp);
+      }
+   }
+
+   DEXIT;
+   return 1;
+}
+
+/****** cull/multitype/lGetSubUlong64() *****************************************
+*  NAME
+*     lGetSubUlong64() -- Element specified by a ulong64 field nm 
+*
+*  SYNOPSIS
+*     lListElem* lGetSubUlong64(const lListElem* ep, int nm, 
+*                             lUlong64 val, int snm) 
+*
+*  FUNCTION
+*     returns an element specified by a ulong64 field nm an the ulong64
+*     value val from the sublist snm of the element ep 
+*
+*  INPUTS
+*     const lListElem* ep - element pointer 
+*     int nm              - field id which is part of a sublist 
+*                           element of ep 
+*     lUlong64 val        - unsigned long value 
+*     int snm             - field id of a list which is part of ep 
+*
+*  RESULT
+*     NULL if element was not found or in case of an error
+*     otherwise pointer to the element 
+******************************************************************************/
+lListElem *lGetSubUlong64(const lListElem *ep, int nm, lUlong64 val, int snm) 
+{
+   int sublist_pos;
+   lListElem *ret;
+
+   DENTER(CULL_LAYER, "lGetSubUlong64");
+
+   /* get position of sublist in ep */
+   sublist_pos = lGetPosViaElem(ep, snm, SGE_DO_ABORT);
+
+   ret = lGetElemUlong64(ep->cont[sublist_pos].glp, nm, val);
+
+   DEXIT;
+   return ret;
+}
+
+/****** cull/multitype/lGetElemUlong64() **************************************
+*  NAME
+*     lGetElemUlong64() -- returns element specified by a ulong64 field nm 
+*
+*  SYNOPSIS
+*     lListElem* lGetElemUlong64(const lList* lp, int nm, lUlong64 val) 
+*
+*  FUNCTION
+*     returns an element specified by a ulong64 field nm an an ulong64 
+*     value val from list lp 
+*
+*  INPUTS
+*     const lList* lp  - list pointer 
+*     int nm     - field id 
+*     lUlong64 val - unsigned long value 
+*
+*  RESULT
+*    NULL if element was not found or an error occured
+*    otherwise pointer to element 
+******************************************************************************/
+lListElem *lGetElemUlong64(const lList *lp, int nm, lUlong64 val) 
+{
+   const void *iterator = NULL;
+   return lGetElemUlong64First(lp, nm, val, &iterator);
+}
+
+/****** cull/multitype/lGetElemUlong64First() *********************************
+*  NAME
+*     lGetElemUlong64First() -- Find first ulong64 within a list 
+*
+*  SYNOPSIS
+*     lListElem* lGetElemUlong64First(const lList *lp, 
+*                                   int nm, 
+*                                   lUlong64 val, 
+*                                   const void **iterator) 
+*
+*  FUNCTION
+*     Return the first element of list 'lp' where the attribute
+*     with field name id 'nm' is equivalent with 'val'. Context
+*     information will be stored in 'iterator'. 'iterator' might
+*     be used in lGetElemUlong64Next() to get the next element.
+*
+*  INPUTS
+*     const lList *lp       - list 
+*     int nm                - ulong64 field name id 
+*     lUlong64 val          - ulong64 value 
+*     const void **iterator - iterator 
+*
+*  RESULT
+*     lListElem* - element or NULL 
+******************************************************************************/
+lListElem *lGetElemUlong64First(const lList *lp, int nm, lUlong64 val, 
+                              const void **iterator)
+{
+   lListElem *ep = NULL;
+   int pos;
+
+   DENTER(CULL_LAYER, "lGetElemUlong64First");
+
+   /* empty list ? */
+   if (!lp) {
+      DEXIT;
+      return NULL;
+   }
+
+   /* get position of nm in sdp */
+   pos = lGetPosInDescr(lGetListDescr(lp), nm);
+
+   /* run time type checking */
+   if (pos < 0) {
+      CRITICAL((SGE_EVENT, MSG_CULL_GETELEMULONG64ERRORXRUNTIMETYPE_S, lNm2Str(nm)));
+      DEXIT;
+      return NULL;
+   }
+
+   *iterator = NULL;
+
+   if(lp->descr[pos].ht != NULL) {
+      /* hash access */
+      ep = cull_hash_first(lp->descr[pos].ht, &val, 
+                           mt_is_unique(lp->descr[pos].mt), iterator);
+      DEXIT;
+      return ep;
+   } else {
+      /* seek for element */
+      for_each(ep, lp) {
+         lUlong64 s = lGetPosUlong64(ep, pos);
+         if (s == val) {
+            *iterator = ep;
+            DEXIT;
+            return ep;
+         }
+      }
+   }
+
+   DEXIT;
+   return NULL;
+}
+
+/****** cull/multitype/lGetElemUlong64Next() **********************************
+*  NAME
+*     lGetElemUlong64Next() -- Find next ulong64 element within a list 
+*
+*  SYNOPSIS
+*     lListElem* lGetElemUlong64Next(const lList *lp, 
+*                                    int nm, 
+*                                    lUlong64 val, 
+*                                    const void **iterator) 
+*
+*  FUNCTION
+*     This function might be used after a call to lGetElemUlong64First().
+*     It expects 'iterator' to contain context information which
+*     makes it possible to find the next element within list 'lp'
+*     where the attribute with field name id 'nm' is equivalent with
+*     'val'. 
+*
+*  INPUTS
+*     const lList *lp       - list 
+*     int nm                - ulong64 field name id 
+*     lUlong64 val          - value 
+*     const void **iterator - iterator 
+*
+*  RESULT
+*     lListElem* - next element or NULL 
+******************************************************************************/
+lListElem *lGetElemUlong64Next(const lList *lp, int nm, lUlong64 val, 
+                             const void **iterator)
+{
+   lListElem *ep;
+   int pos;
+
+   DENTER(CULL_LAYER, "lGetElemUlong64Next");
+
+   if(*iterator == NULL) {
+      return NULL;
+   }
+  
+   /* get position of nm in sdp */
+   pos = lGetPosInDescr(lGetListDescr(lp), nm);
+
+   /* run time type checking */
+   if (pos < 0) {
+      CRITICAL((SGE_EVENT, MSG_CULL_GETELEMULONG64ERRORXRUNTIMETYPE_S, lNm2Str(nm)));
+      DEXIT;
+      return NULL;
+   }
+
+   if(lp->descr[pos].ht != NULL) {
+      /* hash access */
+      ep = cull_hash_next(lp->descr[pos].ht, iterator);
+      DEXIT;
+      return ep;
+   } else {
+      /* seek for element */
+      for (ep = ((lListElem *)*iterator)->next; ep; ep = ep->next) {
+         lUlong64 s = lGetPosUlong64(ep, pos);
+         if (s == val) {
+            *iterator = ep;
+            DEXIT;
+            return ep;
+         }
+      }
+   }
+
+   *iterator = NULL;
+   DEXIT;
+   return NULL;
+}
 /****** cull/multitype/lDelSubCaseStr() ***************************************
 *  NAME
 *     lDelSubCaseStr() -- removes elem specified by a string field nm 

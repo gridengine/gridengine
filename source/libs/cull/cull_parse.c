@@ -28,6 +28,7 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
+/* Portions of this code are Copyright (c) 2011 Univa Corporation. */
 /*___INFO__MARK_END__*/
 #include <stdio.h>
 #include <string.h>
@@ -102,6 +103,7 @@ cull_parse_state *state
       "%d",                     /* INT                     */
       "%s",                     /* STRING                  */
       "%u",                     /* ULONG                   */
+      "%lu",                    /* ULONG64                 */
       "%l",                     /* SUBLIST                 */
       "%f",                     /* FLOAT                   */
       "%g",                     /* DOUBLE                  */

@@ -33,6 +33,7 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
+/* Portions of this code are Copyright (c) 2011 Univa Corporation. */
 /*___INFO__MARK_END__*/
 
 #include <stdio.h> 
@@ -62,6 +63,7 @@ typedef struct _WhereArg WhereArg, *WhereArgList;
 typedef float lFloat;
 typedef double lDouble;
 typedef u_long32 lUlong;
+typedef u_long64 lUlong64;
 typedef long lLong;
 typedef char lChar;
 typedef char lBool;
@@ -77,6 +79,7 @@ enum _enum_lMultiType {
    lFloatT,
    lDoubleT,
    lUlongT,
+   lUlong64T,
    lLongT,
    lCharT,
    lBoolT,
@@ -135,6 +138,7 @@ enum _enum_lMultiType {
 #define SGE_CHAR(name,flags)        { name, lCharT   | flags, NULL },
 #define SGE_LONG(name,flags)        { name, lLongT   | flags, NULL },
 #define SGE_ULONG(name,flags)       { name, lUlongT  | flags, NULL },
+#define SGE_ULONG64(name,flags)     { name, lUlong64T  | flags, NULL },
 #define SGE_BOOL(name,flags)        { name, lBoolT   | flags, NULL },
 #define SGE_LIST(name,type,flags)   { name, lListT   | flags, NULL },
 #define SGE_MAP(name,type,flags)   { name, lListT   | flags, NULL },
@@ -153,6 +157,7 @@ enum _enum_lMultiType {
 #define SGE_CHAR_D(name,flags,def)        { name, lCharT   | flags, NULL },
 #define SGE_LONG_D(name,flags,def)        { name, lLongT   | flags, NULL },
 #define SGE_ULONG_D(name,flags,def)       { name, lUlongT  | flags, NULL },
+#define SGE_ULONG64_D(name,flags,def)     { name, lUlong64T  | flags, NULL },
 #define SGE_BOOL_D(name,flags,def)        { name, lBoolT   | flags, NULL },
 #define SGE_LIST_D(name,type,flags,def)   { name, lListT   | flags, NULL },
 #define SGE_MAP_D(name,type,flags,defkey,keyvalue,jgdi_keyname,jgdi_valuename)   { name, lListT   | flags, NULL},
@@ -191,6 +196,7 @@ enum _enum_lMultiType {
 #define SGE_CHAR(name,flags)
 #define SGE_LONG(name,flags)
 #define SGE_ULONG(name,flags)
+#define SGE_ULONG64(name,flags)
 #define SGE_BOOL(name,flags)
 #define SGE_LIST(name,type,flags) __SUBTYPE_MAPPING__ name type
 #define SGE_MAP(name,type,flags) __SUBTYPE_MAPPING__ name type
@@ -205,6 +211,7 @@ enum _enum_lMultiType {
 #define SGE_DOUBLE_D(name,flags,def)
 #define SGE_CHAR_D(name,flags,def)
 #define SGE_LONG_D(name,flags,def)
+#define SGE_LONG64_D(name,flags,def)
 #define SGE_ULONG_D(name,flags,def)
 #define SGE_BOOL_D(name,flags,def)
 #define SGE_LIST_D(name,type,flags,def)
@@ -233,6 +240,7 @@ enum _enum_lMultiType {
 #define SGE_CHAR(name,flags)
 #define SGE_LONG(name,flags)
 #define SGE_ULONG(name,flags)
+#define SGE_ULONG64(name,flags)
 #define SGE_BOOL(name,flags)
 #define SGE_LIST(name,type,flags)
 #define SGE_MAP(name,type,flags)
@@ -248,6 +256,7 @@ enum _enum_lMultiType {
 #define SGE_CHAR_D(name,flags,def)
 #define SGE_LONG_D(name,flags,def)
 #define SGE_ULONG_D(name,flags,def)
+#define SGE_ULONG64_D(name,flags,def)
 #define SGE_BOOL_D(name,flags,def)
 #define SGE_LIST_D(name,type,flags,def)
 #define SGE_MAP_D(name,type,flags,defkey,keyvalue,jgdi_keyname,jgdi_valuename)

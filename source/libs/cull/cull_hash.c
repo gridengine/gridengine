@@ -28,6 +28,7 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
+/* Portions of this code are Copyright (c) 2011 Univa Corporation. */
 /*___INFO__MARK_END__*/
 
 #include <stdio.h>
@@ -197,6 +198,10 @@ cull_htable cull_hash_create(const lDescr *descr, int size)
       case lUlongT:
          ht = sge_htable_create(size, dup_func_u_long32, 
                                 hash_func_u_long32, hash_compare_u_long32);
+         break;
+      case lUlong64T:
+         ht = sge_htable_create(size, dup_func_u_long64, 
+                                hash_func_u_long64, hash_compare_u_long64);
          break;
       default:
          unknownType("cull_create_hash");
@@ -802,6 +807,10 @@ void *cull_hash_key(const lListElem *ep, int pos, char *host_key)
    switch(mt_get_type(descr->mt)) {
       case lUlongT:
          key = (void *)&(ep->cont[pos].ul);
+         break;
+
+      case lUlong64T:
+         key = (void *)&(ep->cont[pos].ul64);
          break;
 
       case lStringT:

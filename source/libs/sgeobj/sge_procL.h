@@ -30,6 +30,7 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
+/* Portions of this code are Copyright (c) 2011 Univa Corporation. */
 /*___INFO__MARK_END__*/
 
 #include "cull/cull.h"
@@ -50,7 +51,7 @@ extern "C" {
 *        Number of jiffies that this process has been scheduled in user mode.
 *     SGE_ULONG (PRO_stime)
 *        Number of jiffies that this process has been scheduled in kernel mode.
-*     SGE_ULONG (PRO_vsize)
+*     SGE_ULONG64 (PRO_vsize)
 *        Virtual memory size in bytes.
 *     SGE_LIST (PRO_groups)
 *        GR_Type list with all groups associated with this process.
@@ -76,7 +77,7 @@ LISTDEF( PRO_Type )
    SGE_ULONG     ( PRO_pid, CULL_PRIMARY_KEY | CULL_HASH | CULL_UNIQUE )
    SGE_ULONG     ( PRO_utime, CULL_DEFAULT )
    SGE_ULONG     ( PRO_stime, CULL_DEFAULT )
-   SGE_ULONG     ( PRO_vsize, CULL_DEFAULT )
+   SGE_ULONG64   ( PRO_vsize, CULL_DEFAULT )
    SGE_LIST      ( PRO_groups, GR_Type, CULL_DEFAULT )
    SGE_BOOL      ( PRO_rel, CULL_DEFAULT )
    SGE_BOOL      ( PRO_run, CULL_DEFAULT )

@@ -30,6 +30,7 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
+/* Portions of this code are Copyright (c) 2011 Univa Corporation. */
 /*___INFO__MARK_END__*/
 
 #include <sys/types.h>
@@ -122,17 +123,29 @@ extern "C" {
 #  define u_long32 u_long
 #endif
 
+#if defined(TARGET_64BIT)
+#  define u_long64 u_long
+#elif defined(WIN32NATIVE)
+#  define u_long64 unsigned long long
+#elif defined(FREEBSD) || defined(NETBSD)
+#  define u_long64 uint64_t
+#else
+#  define u_long64 unsigned long long
+#endif
+
 #define U_LONG32_MAX 4294967295UL
 #define LONG32_MAX   2147483647
 
 /* set sge_u32 and sge_x32 for 64 or 32 bit machines */
 /* sge_uu32 for strictly unsigned, not nice, but did I use %d for an unsigned? */
 #if defined(TARGET_64BIT) || defined(FREEBSD) || defined(NETBSD)
+#  define sge_u64    "%ld"
 #  define sge_u32    "%d"
 #  define sge_uu32   "%u"
 #  define sge_x32    "%x"
 #  define sge_fu32   "d"
 #else
+#  define sge_u64    "%lld"
 #  define sge_u32    "%ld"
 #  define sge_uu32   "%lu"
 #  define sge_x32    "%lx"

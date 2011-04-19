@@ -28,6 +28,7 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
+/* Portions of this code are Copyright (c) 2011 Univa Corporation. */
 /*___INFO__MARK_END__*/
 #if !defined(COMPILE_DC)
 
@@ -555,7 +556,7 @@ time_t last_time
          
          lSetPosUlong(pr, pos_utime, utime);
          lSetPosUlong(pr, pos_stime, stime);
-         lSetPosUlong(pr, pos_vsize, vsize);
+         lSetPosUlong64(pr, pos_vsize, vsize);
          
          close(fd);
       }
@@ -769,7 +770,7 @@ time_t last_time
    proc_elem->proc.pd_utime  = ((double)lGetPosUlong(pr, pos_utime))/HZ;
    proc_elem->proc.pd_stime  = ((double)lGetPosUlong(pr, pos_stime))/HZ;
    /* could retrieve uid/gid using stat() on stat file */
-   proc_elem->vmem           = lGetPosUlong(pr, pos_vsize);
+   proc_elem->vmem           = lGetPosUlong64(pr, pos_vsize);
 
    /*
     * I/O accounting

@@ -28,6 +28,7 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
+/* Portions of this code are Copyright (c) 2011 Univa Corporation. */ 
 /*___INFO__MARK_END__*/
 #include <stdio.h>
 #include <stdlib.h>
@@ -382,6 +383,9 @@ lList *lJoin(const char *name, int nm0, const lList *lp0,
                break;
             case lUlongT:
                needed = (ep0->cont[lp0_pos].ul == ep1->cont[lp1_pos].ul);
+               break;
+            case lUlong64T:
+               needed = (ep0->cont[lp0_pos].ul64 == ep1->cont[lp1_pos].ul64);
                break;
             case lStringT:
                needed = !strcmp(ep0->cont[lp0_pos].str, ep1->cont[lp1_pos].str);

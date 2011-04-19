@@ -28,6 +28,7 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
+/* Portions of this code are Copyright (c) 2011 Univa Corporation. */
 /*___INFO__MARK_END__*/
 
 #include <stdio.h>
@@ -370,6 +371,9 @@ lCopySwitchPack(const lListElem *sep, lListElem *dep, int src_idx, int dst_idx,
    switch (mt_get_type(dep->descr[dst_idx].mt)) {
    case lUlongT:
       dep->cont[dst_idx].ul = sep->cont[src_idx].ul;
+      break;
+   case lUlong64T:
+      dep->cont[dst_idx].ul64 = sep->cont[src_idx].ul64;
       break;
    case lStringT:
       if (!sep->cont[src_idx].str)
@@ -716,6 +720,9 @@ static void lWriteElem_(const lListElem *ep, dstring *buffer, int nesting_level)
          break;
       case lUlongT:
          sge_dstring_sprintf_append(buffer, "%s%-20.20s (Ulong)   %c = " sge_u32"\n", space, name, changed ? '*' : ' ', lGetPosUlong(ep, i));
+         break;
+      case lUlong64T:
+         sge_dstring_sprintf_append(buffer, "%s%-20.20s (Ulong64)   %c = " sge_u64"\n", space, name, changed ? '*' : ' ', lGetPosUlong64(ep, i));
          break;
       case lStringT:
          str = lGetPosString(ep, i);
@@ -1129,6 +1136,7 @@ void lFreeElem(lListElem **ep1)
 
       case lIntT:
       case lUlongT:
+      case lUlong64T:
       case lFloatT:
       case lDoubleT:
       case lLongT:

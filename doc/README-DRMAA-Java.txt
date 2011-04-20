@@ -69,23 +69,23 @@ Content
 
    The first step is to look at the example program found at:
 
-      http://gridengine.sunsource.net/source/browse/gridengine/source/classes/DrmaaExample.java
+      https://github.com/gridengine/gridengine/raw/master/source/libs/jdrmaa/src/DrmaaExample.java
 
    The example program demonstrates a simple usage of the DRMAA library to
    submit several bulk jobs and several single jobs, wait for the jobs to
    finish, and then output the results.
 
    In the:
- 
-      http://gridengine.sunsource.net/source/browse/gridengine/source/classes/com/sun/grid/drmaa/howto/
+
+      https://github.com/gridengine/gridengine/tree/master/source/libs/jdrmaa/src/com/sun/grid/drmaa/howto
 
    directory you will find the example programs from the online tutorial at:
 
-      http://gridengine.sunsource.net/project/gridengine/howto/drmaa_java.html
+      http://arc.liv.ac.uk/SGE/howto/drmaa_java.html
 
    API documentation can be found at:
 
-      http://gridengine.sunsource.net/unbranded-source/browse/%7Echeckout%7E/gridengine/doc/javadocs/index.html?content-type=text/html
+      $SGE_ROOT/doc
 
    Once you're familiar with DRMAA, you're ready to begin development of your
    Java application.  When compiling your file, you will need to have
@@ -95,18 +95,19 @@ Content
 3. Getting Support
 ------------------
 
-   For commercial deployments SGE DRMAA is recommended.
+   For commercial deployments Univa Grid Engine DRMAA is recommended.
 
-   If you're having trouble with the DRMAA library delivered with Sun Grid
+   If you're having trouble with the DRMAA library delivered with Univa Grid
    Engine, please visit:
 
-      http://gridengine.sunsource.net/servlets/ProjectIssues
+      http://www.gridengine.org
+   or http://www.univa.com
 
    to see if the problem your having is a know problem.  Alternately or for
-   additional help you can send email to the dev@gridengine.sunsource.net
+   additional help you can send email to the dev@gridengine.org
    mailing list.  You can also browse archives of this mailing list at:
 
-      http://gridengine.sunsource.net/project/gridengine/maillist.html
+      http://gridengine.org/pipermail/dev
 
 
 4. Copyright
@@ -138,4 +139,6 @@ The Initial Developer of the Original Code is: Sun Microsystems, Inc.
 Copyright: 2001 by Sun Microsystems, Inc.
 
 All Rights Reserved.
+
+Portions of this text are Copyright 2011 Univa Corporation.
 ___INFO__MARK_END__

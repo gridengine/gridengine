@@ -80,7 +80,7 @@ Content
    Also in the $SGE_ROOT/examples/drmaa directory you will find the example
    programs from the online tutorial at:
 
-      http://gridengine.sunsource.net/project/gridengine/howto/drmaa.html
+      http://arc.liv.ac.uk/SGE/howto/drmaa.html
 
    Once you're familiar with the DRMAA API, you're ready to begin
    development of your application.  Every source file which will call
@@ -101,18 +101,19 @@ Content
 3. Getting Support
 ------------------
 
-   For commercial deployments SGE DRMAA is recommended.
+   For commercial deployments Univa Grid Engine DRMAA is recommended.
 
-   If you're having trouble with the DRMAA library delivered with Sun Grid
+   If you're having trouble with the DRMAA library delivered with Univa Grid
    Engine, please visit:
 
-      http://gridengine.sunsource.net/servlets/ProjectIssues
+      http://www.gridengine.org
+   or http://www.univa.com
 
    to see if the problem your having is a know problem.  Alternately or for
-   additional help you can send email to the dev@gridengine.sunsource.net
+   additional help you can send email to the dev@gridengine.org
    mailing list.  You can also browse archives of this mailing list at:
 
-      http://gridengine.sunsource.net/project/gridengine/maillist.html
+      http://gridengine.org/pipermail/dev
 
 
 4. Copyright
@@ -144,4 +145,6 @@ The Initial Developer of the Original Code is: Sun Microsystems, Inc.
 Copyright: 2001 by Sun Microsystems, Inc.
 
 All Rights Reserved.
+
+Portions of this text are Copyright 2011 Univa Corporation.
 ___INFO__MARK_END__

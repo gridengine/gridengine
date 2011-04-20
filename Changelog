@@ -8,6 +8,11 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+SH-2011-04-20-0: Bugfix:      wrong vmem reporting of qstat and qacct on Linux
+                 Issue:       GE-3303
+                 Enhancem.:   Intdroduced lUlong64 datatype
+                 Review:      EB
+
 DG-2011-04-20-0: Bugfix:      update DRMAA-README.txt files in doc directory
                               in order to reflect Univa
                  Issue:       GE-3453

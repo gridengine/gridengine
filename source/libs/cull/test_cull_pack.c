@@ -16,6 +16,7 @@ enum {
    TEST_string,
    TEST_double,
    TEST_ulong,
+   TEST_ulong64,
    TEST_bool,
    TEST_list,
    TEST_object,
@@ -27,6 +28,7 @@ LISTDEF(TEST_Type)
    SGE_STRING (TEST_string,            CULL_DEFAULT)
    SGE_DOUBLE (TEST_double,            CULL_DEFAULT)
    SGE_ULONG  (TEST_ulong,             CULL_DEFAULT)
+   SGE_ULONG64 (TEST_ulong64,          CULL_DEFAULT)
    SGE_BOOL   (TEST_bool,              CULL_DEFAULT)
    SGE_LIST   (TEST_list, TEST_Type,   CULL_DEFAULT | CULL_SPOOL)
    SGE_OBJECT (TEST_object, TEST_Type, CULL_DEFAULT | CULL_SPOOL)
@@ -38,6 +40,7 @@ NAMEDEF(TEST_Name)
    NAME("TEST_string")
    NAME("TEST_double")
    NAME("TEST_ulong")
+   NAME("TEST_ulong64")
    NAME("TEST_bool")
    NAME("TEST_list")
    NAME("TEST_object")
@@ -73,6 +76,7 @@ int main(int argc, char *argv[])
    lSetString(ep, TEST_string, "test_string");
    lSetDouble(ep, TEST_double, 3.1);
    lSetUlong(ep, TEST_ulong, 3);
+   lSetUlong64(ep, TEST_ulong64, 3);
    lSetBool(ep, TEST_bool, true);
 
    lSetHost(obj, TEST_host, "test sub host");

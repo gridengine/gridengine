@@ -19,6 +19,7 @@ enum {
    TEST_char,
    TEST_long,
    TEST_ulong,
+   TEST_ulong64,
    TEST_bool,
    TEST_list,
    TEST_object,
@@ -34,6 +35,7 @@ enum {
    TEST1_char,
    TEST1_long,
    TEST1_ulong,
+   TEST1_ulong64,
    TEST1_bool,
    TEST1_list,
    TEST1_object,
@@ -49,6 +51,7 @@ LISTDEF(TEST_Type)
    SGE_CHAR   (TEST_char,               CULL_DEFAULT)
    SGE_LONG   (TEST_long,               CULL_DEFAULT)
    SGE_ULONG  (TEST_ulong,              CULL_DEFAULT)
+   SGE_ULONG64 (TEST_ulong64,           CULL_DEFAULT)
    SGE_BOOL   (TEST_bool,               CULL_DEFAULT)
    SGE_LIST   (TEST_list, TEST1_Type,   CULL_DEFAULT)
    SGE_OBJECT (TEST_object, TEST1_Type, CULL_DEFAULT)
@@ -64,6 +67,7 @@ LISTDEF(TEST1_Type)
    SGE_CHAR   (TEST1_char,              CULL_DEFAULT)
    SGE_LONG   (TEST1_long,              CULL_DEFAULT)
    SGE_ULONG  (TEST1_ulong,             CULL_DEFAULT)
+   SGE_ULONG64 (TEST1_ulong64,          CULL_DEFAULT)
    SGE_BOOL   (TEST1_bool,              CULL_DEFAULT)
    SGE_LIST   (TEST1_list, TEST_Type,   CULL_DEFAULT)
    SGE_OBJECT (TEST1_object, TEST_Type, CULL_DEFAULT)
@@ -79,6 +83,7 @@ NAMEDEF(TEST_Name)
    NAME("TEST_char")
    NAME("TEST_long")
    NAME("TEST_ulong")
+   NAME("TEST_ulong64")
    NAME("TEST_bool")
    NAME("TEST_list")
    NAME("TEST_object")
@@ -94,6 +99,7 @@ NAMEDEF(TEST1_Name)
    NAME("TEST1_char")
    NAME("TEST1_long")
    NAME("TEST1_ulong")
+   NAME("TEST1_ulong64")
    NAME("TEST1_bool")
    NAME("TEST1_list")
    NAME("TEST1_object")
@@ -186,9 +192,9 @@ bool test_lWhat_simple(void)
    bool ret = true;
    lEnumeration *what = lWhat("%T(%I%I%I)", TEST_Type, TEST_int, 
                               TEST_host, TEST_object);
-   int result[] = {1, 7, 0, 0,
-                   2, 12, 1, 0,
-                   11, 10, 10, 0,
+   int result[] = {1, 8, 0, 0,
+                   2, 13, 1, 0,
+                   12, 11, 11, 0,
                    NoName, lEndT, 0, 0};
    const int max = 4;
    int pos_what = 0;
@@ -211,19 +217,19 @@ bool test_lWhat_complex(void)
                    TEST1_Type, TEST1_int, TEST1_host,
                 TEST_object, TEST1_Type,
                 TEST_object, TEST1_Type);
-   int result[] = {1, 7, 0, 0,
-                   2, 12, 1, 0,
-                   11, 10, 10, 3,
-                        51, 7, 0, 0,
-                        61, 10, 10, 3,
-                           51, 7, 0, 0,
-                           52, 12, 1, 0,
+   int result[] = {1, 8, 0, 0,
+                   2, 13, 1, 0,
+                   12, 11, 11, 3,
+                        51, 8, 0, 0,
+                        62, 11, 11, 3,
+                           51, 8, 0, 0,
+                           52, 13, 1, 0,
                            NoName, lEndT, 0, 0,
                         NoName, lEndT, 0, 0, 
-                   11, 10, 10, 2,
+                   12, 11, 11, 2,
                         -99, -99, -2, 0,
                         NoName, lEndT, 0, 0,
-                   11, 10, 10, 2,
+                   12, 11, 11, 2,
                         -99, -99, -1, 0,
                         NoName, lEndT, 0, 0,
                    NoName, lEndT, 0, 0};
@@ -303,8 +309,8 @@ bool test_lReduceDescr(void)
    fprintf(stderr, sge_u32"\n", lCountWhat(what3, TEST_Type));
 #endif
    
-   ret &= (lCountDescr(dst_descriptor1) == 12);
-   ret &= (12 == lCountWhat(what1, TEST_Type));
+   ret &= (lCountDescr(dst_descriptor1) == 13);
+   ret &= (13 == lCountWhat(what1, TEST_Type));
 
    ret &= (lCountDescr(dst_descriptor2) == -1);
    ret &= (0 == lCountWhat(what2, TEST_Type));
@@ -441,6 +447,7 @@ bool test_lWhat_lSelect(void)
    lSetChar(elem, TEST_char, 'z');
    lSetLong(elem, TEST_long, 0);
    lSetUlong(elem, TEST_ulong, 0);
+   lSetUlong64(elem, TEST_ulong64, 0);
    lSetBool(elem, TEST_bool, false);
 
    elem1 = lCreateElem(TEST1_Type); 
@@ -452,6 +459,7 @@ bool test_lWhat_lSelect(void)
    lSetChar(elem1, TEST1_char, 'o');
    lSetLong(elem1, TEST1_long, 1);
    lSetUlong(elem1, TEST1_ulong, 1);
+   lSetUlong64(elem1, TEST1_ulong64, 1);
    lSetBool(elem1, TEST1_bool, true);
 
    for (i = 0; i < 5; i++) {

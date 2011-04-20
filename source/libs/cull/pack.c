@@ -349,6 +349,34 @@ int repackint(sge_pack_buffer *pb, u_long32 i)
    return PACK_SUCCESS;
 }
 
+int packint64(sge_pack_buffer *pb, u_long64 i) 
+{
+   u_long64 J=0;
+
+   DENTER(PACK_LAYER, "packint64");
+
+   if (!pb->just_count) {
+      if (pb->bytes_used + (INTSIZE * 2) > pb->mem_size) {
+         DPRINTF(("realloc(%d + %d)\n", pb->mem_size, CHUNK));
+         pb->mem_size += CHUNK;
+         pb->head_ptr = sge_realloc(pb->head_ptr, pb->mem_size, 0);
+         if (!pb->head_ptr) {
+            DEXIT;
+            return PACK_ENOMEM;
+         }
+         pb->cur_ptr = &(pb->head_ptr[pb->bytes_used]);
+      }
+
+      /* copy in packing buffer */
+      J = htonl(i);
+      memcpy(pb->cur_ptr, (((char *) &J) + INTOFF), (INTSIZE * 2));
+      pb->cur_ptr = &(pb->cur_ptr[(INTSIZE * 2)]);
+   }
+   pb->bytes_used += (INTSIZE * 2);
+
+   DEXIT;
+   return PACK_SUCCESS;
+}
 #define DOUBLESIZE 8
 
 /*
@@ -630,6 +658,38 @@ int unpackint(sge_pack_buffer *pb, u_long32 *ip)
    /* update cur_ptr & bytes_unpacked */
    pb->cur_ptr = &(pb->cur_ptr[INTSIZE]);
    pb->bytes_used += INTSIZE;
+
+   DEXIT;
+   return PACK_SUCCESS;
+}
+
+/* ---------------------------------------------------------
+
+   return values:
+   PACK_SUCCESS
+   (PACK_ENOMEM)
+   PACK_FORMAT
+
+ */
+int unpackint64(sge_pack_buffer *pb, u_long64 *ip) 
+{
+   DENTER(PACK_LAYER, "unpackint64");
+
+   /* are there enough bytes ? */
+   if (pb->bytes_used + (INTSIZE *2) > pb->mem_size) {
+      *ip = 0;
+      DEXIT;
+      return PACK_FORMAT;
+   }
+
+   /* copy integer */
+   memset(ip, 0, sizeof(u_long64));
+   memcpy(((char *) ip) + INTOFF, pb->cur_ptr, (INTSIZE * 2));
+   *ip = ntohl(*ip);
+
+   /* update cur_ptr & bytes_unpacked */
+   pb->cur_ptr = &(pb->cur_ptr[(INTSIZE * 2)]);
+   pb->bytes_used += (INTSIZE * 2);
 
    DEXIT;
    return PACK_SUCCESS;

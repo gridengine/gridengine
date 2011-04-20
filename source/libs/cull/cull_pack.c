@@ -96,6 +96,7 @@ int flags
 ) {
    int ret;
    u_long32 i=0;
+   u_long64 i64=0;
 
    DENTER(CULL_LAYER, "cull_unpack_switch");
 
@@ -112,8 +113,8 @@ int flags
       break;
 
    case lUlong64T:
-      ret = unpackint(pb, &i);
-      dst->ul64 = i;
+      ret = unpackint64(pb, &i64);
+      dst->ul64 = i64;
       break;
 
    case lStringT:
@@ -186,7 +187,7 @@ cull_pack_switch(sge_pack_buffer *pb, const lMultiType *src, lEnumeration *what,
       break;
 
    case lUlong64T:
-      ret = packint(pb, src->ul64);
+      ret = packint64(pb, src->ul64);
       break;
 
    case lStringT:

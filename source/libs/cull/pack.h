@@ -30,6 +30,7 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
+/* Portions of this code are Copyright (c) 2011 Univa Corporation. */
 /*___INFO__MARK_END__*/
 
 
@@ -122,12 +123,14 @@ void pb_print_to(sge_pack_buffer *pb, bool only_header, FILE*);
 
 int repackint(register sge_pack_buffer *, register u_long32);
 int packint(register sge_pack_buffer *, register u_long32);
+int packint64(register sge_pack_buffer *, register u_long64);
 int packdouble(register sge_pack_buffer *, double);
 int packstr(register sge_pack_buffer *, register const char *);
 int packbuf(sge_pack_buffer *, const char *, u_long32);
 int packbitfield(sge_pack_buffer *, const bitfield *);
 
 int unpackint(register sge_pack_buffer *, register u_long32 *);
+int unpackint64(register sge_pack_buffer *, register u_long64 *);
 int unpackdouble(register sge_pack_buffer *, register double *);
 int unpackstr(register sge_pack_buffer *, register char **);
 int unpackbuf(sge_pack_buffer *, char **, int);

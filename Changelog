@@ -8,6 +8,11 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+DG-2011-04-20-0: Bugfix:      update DRMAA-README.txt files in doc directory
+                              in order to reflect Univa
+                 Issue:       GE-3453
+					  Review:      JG
+
 JG-2011-04-18-1: Bugfix:      final distribution must contain BDB documentation
                  Issue:       GE-3454
                  Review:      DG

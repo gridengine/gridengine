@@ -28,13 +28,15 @@
  *   Copyright: 2001 by Sun Microsystems, Inc.
  * 
  *   All Rights Reserved.
- * 
+ *
+ *  Portions of this code are Copyright 2011 Univa Corporation.
+ *
  ************************************************************************/
 ___INFO__MARK_END__-->
 
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" 
-            targetNamespace="http://gridengine.sunsource.net/source/browse/*checkout*/gridengine/source/dist/util/resources/schemas/qstat/message.xsd?revision=1.4" 
-            xmlns="http://gridengine.sunsource.net/source/browse/*checkout*/gridengine/source/dist/util/resources/schemas/qstat/message.xsd?revision=1.4">
+            targetNamespace="https://github.com/gridengine/gridengine/raw/master/source/dist/util/resources/schemas/qstat/message.xsd"
+            xmlns="https://github.com/gridengine/gridengine/raw/master/source/dist/util/resources/schemas/qstat/message.xsd">
    <xs:element name="message">
       <xs:complexType>
          <xs:annotation>

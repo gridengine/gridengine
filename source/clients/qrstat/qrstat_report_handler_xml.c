@@ -27,6 +27,8 @@
  * 
  *   All Rights Reserved.
  * 
+ *  Portions of this code are Copyright 2011 Univa Corporation.
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
@@ -247,7 +249,7 @@ qrstat_report_start(qrstat_report_handler_t* handler, lList **alpp)
    DENTER(TOP_LAYER, "qrstat_report_start");
 
    sge_dstring_append(buffer, "<?xml version='1.0'?>\n");
-   sge_dstring_append(buffer, "<qrstat xmlns:xsd=\"http://gridengine.sunsource.net/source/browse/*checkout*/gridengine/source/dist/util/resources/schemas/qrstat/qrstat.xsd?revision=1.2\">\n");
+   sge_dstring_append(buffer, "<qrstat xmlns:xsd=\"https://github.com/gridengine/gridengine/raw/master/source/dist/util/resources/schemas/qrstat/qrstat.xsd\">\n");
 
    DRETURN(ret); 
 }

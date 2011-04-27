@@ -8,6 +8,11 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+DG-2011-04-27-0: Bugfix:      XML output of client commands point to wrong
+                              namespace
+                 Issue:       GE-3458
+                 Review:      SH
+
 EB-2011-04-20-0: Bugfix:      qsub man page does not mention that tc job 
                               parameter can be changed via JSV                 
                  Issue:       GE-3457

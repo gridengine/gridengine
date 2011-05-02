@@ -311,7 +311,7 @@ Qmon*contextHelpFile:  qmon_help
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !! C O L O R S 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-Qmon*background:              #c2d0ec
+Qmon*background:              #9d986d
 Qmon*foreground:              black
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !! C O L O R S , symbolic colors are used ->$menu_bg, $menu_fg .... 
@@ -338,18 +338,18 @@ menu_fg="$fg", \
 matrix_odd_bg="-%+0/-10/-10", \
 matrix_even_bg="-%+0/-10/-20", \
 matrix_fg="$fg", \
-matrix_label="navy", \
+matrix_label="brown", \
 title_bg="red", \
 title_fg="$fg", \
-toggle_select="yellow", \
+toggle_select="beige", \
 msgline_bg="$bg", \
 msgline_fg="+%+30/+0/+0", \
 fg_gc_foreground="blue", \
-fg_gc_background="yellow", \
+fg_gc_background="beige", \
 qb_gc_foreground="$fg", \
 qb_gc_background="$bg", \
 traffic_green="green", \
-traffic_yellow="yellow", \
+traffic_yellow="beige", \
 traffic_red="red", \
 warning_color="red", \
 requestable_resources="$background", \
@@ -361,16 +361,16 @@ job_error_color="red", \
 q_running_color="seagreen", \
 q_alarm_color="red", \
 q_error_color="maroon", \
-q_suspend_color="yellow", \
+q_suspend_color="beige", \
 q_disable_color="orange", \
 q_caldisable_color="cyan", \
 q_calsuspend_color="pink", \
-q_selected_color="blue", \
+q_selected_color="brown", \
 stree_share="white", \
 stree_functional="white", \
 stree_deadline="white", \
 stree_override="white", \
-tooltip_fg="blue", \
+tooltip_fg="brown", \
 tooltip_bg="$bg"
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 

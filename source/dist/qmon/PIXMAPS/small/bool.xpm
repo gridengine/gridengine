@@ -30,24 +30,37 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-static char * bool2_xpm[] = {
-"16 16 3 1",
-" 	c gray",
-".	c blue",
-"X	c red",
-"            .   ",
-"           ..   ",
-"            .   ",
-"            .   ",
-"            .   ",
-"        ........",
-"        .       ",
-"   X    .       ",
-"  X X   .       ",
-"  X X   X       ",
-"  X X   X       ",
-"   X    X       ",
-"XXXXXXXXX       ",
-"                ",
-"                ",
-"                "};
+static char *bool[] = {
+/* columns rows colors chars-per-pixel */
+"16 16 13 1",
+"  c black",
+". c #555753",
+"X c #00FF0C",
+"o c #888A85",
+"O c #EFEFEF",
+"+ c #F6F6F6",
+"@ c #F8F8F8",
+"# c gray98",
+"$ c #FBFBFB",
+"% c gray99",
+"& c #FDFDFD",
+"* c gray100",
+"= s mask c None",
+/* pixels */
+".oooooooooooooo.",
+"o**************o",
+"o************ *o",
+"o**     ****  *o",
+"o**** *****   *o",
+"o**** ****    #o",
+"o**** ***     #o",
+"o**** **      #o",
+"o******  **** +o",
+"o*****   *    Oo",
+"o****    ***  Oo",
+"o***     *    Oo",
+"o**      *    Oo",
+"o*            Oo",
+"o**#*##*###+++Oo",
+"=oooooooooooooo="
+};

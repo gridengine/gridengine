@@ -8,6 +8,10 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+DG-2011-05-02-0: Enhacem.:    qmon icons are bad - new icons are from
+                              Alain Champenois and the Tango Desktop Project
+                 Issue:       GE-2623, GE-3438
+
 DG-2011-04-27-0: Bugfix:      XML output of client commands point to wrong
                               namespace
                  Issue:       GE-3458

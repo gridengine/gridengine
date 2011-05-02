@@ -30,30 +30,29 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-static char *mini-penv[] = {
-/* width height num_colors chars_per_pixel */
-"    16    16        5            1",
-/* colors */
-". c #000000",
-"# c #008080",
-"a c #808080",
-"b c #c0c0c0",
-"c c #b2c0dc",
+static char *penv[] = {
+/* columns rows colors chars-per-pixel */
+"16 16 5 1",
+"  c black",
+". c #2A368C",
+"X c #828CD6",
+"o c #99A1DF",
+"O s mask c None",
 /* pixels */
-"cccccccccccccccc",
-"cccccccccccccccc",
-"cccccccccccccccc",
-"cccccccccccccccc",
-"cccccccccccccccc",
-"cb...aaaaaa...cc",
-"aaccb.ccbbcc.ba.",
-"c.ccb.ccbbcc.ccb",
-"cbcccaccbbcabcc.",
-"cb.ccabbabcbbcb.",
-"cc#..aaaaaaba.ab",
-"ccbccccccccccbac",
-"cccccccccccccccc",
-"cccccccccccccccc",
-"cccccccccccccccc",
-"cccccccccccccccc"
+"OOOOOOOOOOOOOOOO",
+"OOOOOOOOoX.OOOOO",
+"OOOOOOOoX..OOOOO",
+"OOOOOOoX..OOOOOO",
+"OOOOOoX..OOOOOOO",
+"OOOOoX..OOOOoX.O",
+"OOOoX..OOOOoX..O",
+"OOoX..OOOOoX..OO",
+"OoX..OOOOoX..OOO",
+"OX..OOOOoX..OOOO",
+"O..OOOOoX..OOOOO",
+"OOOOOOoX..OOOOOO",
+"OOOOOoX..OOOOOOO",
+"OOOOOX..OOOOOOOO",
+"OOOOO..OOOOOOOOO",
+"OOOOOOOOOOOOOOOO"
 };

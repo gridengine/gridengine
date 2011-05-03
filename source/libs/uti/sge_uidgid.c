@@ -617,6 +617,11 @@ int sge_group2gid(const char *gname, gid_t *gidp, int retries)
       if (getgrnam_r(gname, &grentry, buffer, size, &gr) != 0)
 #endif
       {
+         if (errno == ERANGE) {
+             retries++;
+             size += 1024;
+             buffer = sge_realloc(buffer, size, 1);
+         }
          gr = NULL;
       }
    } while (gr == NULL);
@@ -1347,6 +1352,11 @@ struct group *sge_getgrgid_r(gid_t gid, struct group *pg,
       if (getgrgid_r(gid, pg, buffer, bufsize, &res) != 0) 
 #endif
       {
+         if (errno == ERANGE) {
+            retries++;
+            bufsize += 1024;
+            buffer = sge_realloc(buffer, bufsize, 1);
+         }
          res = NULL;
       }
    }

@@ -8,10 +8,21 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+EB-2011-05-03-1: Bugfix:      large entries in group DB might cause
+                              sge_group2gid() to fail
+                 Issue:       GE-3462
+                 Review:      DG
+                              
 EB-2011-05-03-0: Enhancem.:   Added new JSV that rejects all jobs.
                  Issue:       GE-3446
 
-DG-2011-05-02-0: Enhaincem.:  qmon icons are bad - new icons are from
+JG-2011-05-03-0: Bugfix:      default value of the sge_shadowd environment
+                              variable SGE_GET_ACTIVE_INTERVAL is not documented
+                              in the man page
+                 Issue:       GE-3459
+                 Review:      DG
+
+DG-2011-05-02-0: Enhacem.:    qmon icons are bad - new icons are from
                               Alain Champenois and the Tango Desktop Project
                  Issue:       GE-2623, GE-3438
 
@@ -20,8 +31,8 @@ DG-2011-04-27-0: Bugfix:      XML output of client commands point to wrong
                  Issue:       GE-3458
                  Review:      SH
 
-EB-2011-04-20-0: Bugfix:      qsub man page does not mention that tc job 
-                              parameter can be changed via JSV                 
+EB-2011-04-20-0: Bugfix:      qsub man page does not mention that tc job
+                              parameter can be changed via JSV
                  Issue:       GE-3457
 
 JG-2011-04-20-1: Created beta packages for Stoat

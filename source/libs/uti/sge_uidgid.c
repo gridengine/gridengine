@@ -33,7 +33,7 @@
 
 /*
  *   Parts of the code have been contributed by and are copyright of
- *   Tommy Karlsson X <tommy.karlsson@bolero.se>
+ *   Tommy Karlsson <tommy.karlsson@bolero.se>
  */
 
 #include "uti/sge_uidgid.h"

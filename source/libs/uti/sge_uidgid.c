@@ -28,7 +28,13 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
+/* Portions of this code are Copyright 2011 Univa Inc. */
 /*___INFO__MARK_END__*/
+
+/*
+ *   Parts of the code have been contributed by and are copyright of
+ *   Tommy Karlsson X <tommy.karlsson@bolero.se>
+ */
 
 #include "uti/sge_uidgid.h"
 

@@ -8,6 +8,10 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+JG-2011-05-05-1: Enhancem.:   set compiler options on sol-sparc64 depending on
+                              the compiler version
+                 Review:      HP
+
 JG-2011-05-05-0: Bugfix:      fixed a memory leak in sge_execd when pe task
                               requests got rejected
                  Enhancem.:   minor enhancements in build/distinst/mk_dist

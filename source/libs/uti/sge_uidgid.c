@@ -359,7 +359,16 @@ int sge_switch2admin_user(void)
    int ret = 0;
 
    DENTER(UIDGID_LAYER, "sge_switch2admin_user");
- 
+#if !defined(INTERIX)
+   /*
+    * On Windows Vista (and probably later versions) we can't set the effective
+    * user ID to somebody else during boot time, because the local Administrator
+    * doesn't have his primary group set before booting finished.
+    * This problem occurs solely when the execd is started by a RC script
+    * during boot time.
+    * But we don't need to switch to the UGE admin user anyway, as spooling
+    * always has to be done locally, so we can just skip it always.
+    */
    if (get_admin_user(&uid, &gid) == ESRCH) {
       CRITICAL((SGE_EVENT, SFNMAX, MSG_SWITCH_USER_NOT_INITIALIZED));
       abort();
@@ -388,6 +397,7 @@ int sge_switch2admin_user(void)
    }
 
 exit:
+#endif
    DPRINTF(("uid=%ld; gid=%ld; euid=%ld; egid=%ld auid=%ld; agid=%ld\n", 
             (long)getuid(), (long)getgid(), 
             (long)geteuid(), (long)getegid(),
@@ -431,6 +441,16 @@ int sge_switch2start_user(void)
    int ret = 0;
 
    DENTER(UIDGID_LAYER, "sge_switch2start_user");
+#if !defined(INTERIX)
+   /*
+    * On Windows Vista (and probably later versions) we can't set the effective
+    * user ID to somebody else during boot time, because the local Administrator
+    * doesn't have his primary group set before booting finished.
+    * This problem occurs solely when the execd is started by a RC script
+    * during boot time.
+    * But we don't need to switch to the UGE admin user anyway, as spooling
+    * always has to be done locally, so we can just skip it always.
+    */
  
    if (get_admin_user(&uid, &gid) == ESRCH) {
       CRITICAL((SGE_EVENT, SFNMAX, MSG_SWITCH_USER_NOT_INITIALIZED));
@@ -462,6 +482,7 @@ int sge_switch2start_user(void)
    }
 
 exit:
+#endif
    DPRINTF(("uid=%ld; gid=%ld; euid=%ld; egid=%ld auid=%ld; agid=%ld\n", 
             (long)getuid(), (long)getgid(), 
             (long)geteuid(), (long)getegid(),

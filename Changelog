@@ -8,6 +8,11 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+JG-2011-05-05-3: Bugfix:      install_execd prints error messages on 'install'
+                              of /etc/init.d script on Ubuntu
+                 Issue:       GE-3431
+                 Review:      DG
+
 JG-2011-05-05-2: Bugfix:      cannot install on Ubuntu 11.04
                  Issue:       GE-3466
                  Review:      DG

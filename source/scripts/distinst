@@ -1415,7 +1415,7 @@ for i in $ARCH; do
                else
                   InstallProg $prog.exe
                fi
-            elif [ -o $prog = db_deadlock \
+            elif [ $prog = db_deadlock \
                    -o $prog = db_dump -o $prog = db_load \
                    -o $prog = db_printlog -o $prog = db_recover \
                    -o $prog = db_stat -o $prog = db_upgrade \

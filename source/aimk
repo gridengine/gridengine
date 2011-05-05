@@ -393,9 +393,16 @@ set PERLGUI_CLEAN     = ""
 
 # SPOOLING - default method is dynamic spooling, 
 # spooling methods berkeleydb and classic
-set SPOOLING_METHOD = "dynamic"
-set SPOOLING_LIBS   = "-lspoolloader -lspoold -lspool"
-set SPOOLING_DEPS   = "spoolloaderlib spooldlib spoollib spoolclib spoolblib"
+# except on Windows, where the default is classic spooling.
+if ($BUILDARCH == WIN32_X86) then
+   set SPOOLING_METHOD = "classic"
+   set SPOOLING_LIBS   = "-lspoolloader -lspoolc -lspool"
+   set SPOOLING_DEPS   = "spoolloaderlib spoolclib spoollib"
+else
+   set SPOOLING_METHOD = "dynamic"
+   set SPOOLING_LIBS   = "-lspoolloader -lspoold -lspool"
+   set SPOOLING_DEPS   = "spoolloaderlib spooldlib spoollib spoolclib spoolblib"
+endif
 # we generate a berkeley db shared lib, so we need bdb include and lib path
 set CFLAGS            = "-I$BERKELEYDB_HOME/include/${BDB_INCLUDE_SUBDIR} $CFLAGS"
 set LFLAGS            = "-L$BERKELEYDB_HOME/lib/${BDB_LIB_SUBDIR} $LFLAGS"
@@ -1545,9 +1552,11 @@ case LINUXSPARC64:
    endif
 
    breaksw
-   
+ 
 case WIN32_X86:
-   setenv LD_LIBRARY_PATH /usr/lib/x86:/usr/local/lib
+   setenv LD_LIBRARY_PATH /usr/lib:/usr/local/lib
+   # For Windows Vista:
+   # setenv LD_LIBRARY_PATH /usr/lib/x86:/usr/local/lib
    set CC = gcc
    set WINCC = "env TMP=$WINTEMPDIR cl.exe"
    set RM = "rm -f"
@@ -1593,7 +1602,9 @@ case WIN32_X86:
          set CFLAGS = "-DINTERIX -DINTERIX52 $CFLAGS"
       endif
       set CFLAGS = "-D$COMPILE_ARCH -DGETHOSTBYNAME_M -DUSE_SGE_UNSETENV $CFLAGS" 
-      set CFLAGS = "-Wall -Werror -O0 -pipe $CFLAGS -rpath /usr/lib/x86"
+      set CFLAGS = "-Wall -Werror -O0 -pipe $CFLAGS -rpath /usr/lib"
+      # For Windows Vista:
+      #set CFLAGS = "-Wall -Werror -O0 -pipe $CFLAGS -rpath /usr/lib/x86"
       #set LFLAGS = "-Wl,-EL,-b=pe-i1386 $LFLAGS"
    else
       set CC  = cc
@@ -1644,7 +1655,7 @@ case WIN32_X86:
    set WINCFLAGS = "${WINCFLAGS} /nologo /c /EHsc"
    set WINCFLAGS = "${WINCFLAGS} -I'${WIN32_VS_I1}'"
    set WINCFLAGS = "${WINCFLAGS} -I'${WIN32_VS_I2}'"
-   set WINCFLAGS = "${WINCFLAGS} -I'${WIN32_VS_I3}'"
+   #set WINCFLAGS = "${WINCFLAGS} -I'${WIN32_VS_I3}'"
    set WINCFLAGS = "${WINCFLAGS} -I'..\\common'"
    set WINCFLAGS = "${WINCFLAGS} -I'..\\utilbin'"
    set WINCFLAGS = "${WINCFLAGS} -I'..\\libs\\juti'"
@@ -1658,7 +1669,7 @@ case WIN32_X86:
    set WINLFLAGS = "${WINLFLAGS} /MACHINE:X86"
    set WINLFLAGS = "${WINLFLAGS} /LIBPATH:'${WIN32_VS_L1}'"
    set WINLFLAGS = "${WINLFLAGS} /LIBPATH:'${WIN32_VS_L2}'"
-   set WINLFLAGS = "${WINLFLAGS} /LIBPATH:'${WIN32_VS_L3}'"
+   #set WINLFLAGS = "${WINLFLAGS} /LIBPATH:'${WIN32_VS_L3}'"
 
    set WINLIBS = "pdh.lib ws2_32.lib advapi32.lib user32.lib"
    breaksw

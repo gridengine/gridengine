@@ -8,6 +8,10 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+HP-2011-05-05-1: Bugfix:      Fixed several Windows related bugs in Makefiles,
+                              zerodepend script, inst_execd.sh file.
+                 Review:      DG
+
 HP-2011-05-05-0: Bugfix:      on Windows Vista, the 2nd fork of the daemonizing
                               execd sometimes fails at boot time
                  Issue:       GE-3328

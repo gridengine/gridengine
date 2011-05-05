@@ -683,8 +683,9 @@ IsLocalDir()
    # Check for correct ownership of existing spool directory. 
    #
    if [ -d $spool_dir ]; then
-      spool_dir_owner=`$SGE_UTILBIN/filestat -owner $spool_dir`
-      if [ "$spool_dir_owner" != "$ADMINUSER" ]; then
+      spool_dir_owner=`$SGE_UTILBIN/filestat -owner $spool_dir | tr "[a-z]" "[A-Z]"`
+      up_adminuser=`echo $ADMINUSER | tr "[a-z]" "[A-Z]"`
+      if [ "$spool_dir_owner" != "$up_adminuser" ]; then
          $INFOTEXT -log "Existing spool directory [%s] not owned by [%s]" $spool_dir $ADMINUSER
          return 0
       fi

@@ -145,7 +145,8 @@ int shepconf_has_notify_signal(const char *notify_name, int *signal)
     *    c) Notification mechanism is disabled
     */
    sge_dstring_sprintf(&param_name, "%s%s", notify_name, "_type");
-   conf_type = search_conf_val(sge_dstring_get_string(&param_name)); 
+   conf_type = search_conf_val(sge_dstring_get_string(&param_name));
+   sge_dstring_free(&param_name);
    if (conf_type != NULL) {
       conf_id = atol(conf_type);
    } else {

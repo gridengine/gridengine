@@ -20,6 +20,7 @@ Content
    IzPack (http://izpack.org)
    NanoXML
    Berkeley DB
+   Code contributions from individual developers
 
 
 %% The following software may be included in this product:  
@@ -1797,3 +1798,10 @@ freely, subject to the following restrictions:
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
+
+%% Individual Contributors have contributed code in mentioned code modules.
+
+Tommy Karlsson <tommy.karlsson@bolero.se>
+  source/libs/uti/sge_uidgid.c 
+
+

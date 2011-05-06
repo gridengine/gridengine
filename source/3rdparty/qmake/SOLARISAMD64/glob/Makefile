@@ -96,7 +96,7 @@ LDFLAGS =
 LIBS = -lkvm -lelf -lkstat -lposix4 
 libglob_a_LIBADD = 
 libglob_a_OBJECTS =  glob.o fnmatch.o
-CFLAGS = -g -xO3 -xarch=amd64
+CFLAGS = -fast -xchip=generic -xcache=generic -xarch=sse2 -m64
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@

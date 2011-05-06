@@ -21,13 +21,13 @@
  *  See the License for the specific provisions governing your rights and
  *  obligations concerning the Software.
  * 
- *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+ *  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
  * 
- *   Copyright: 2001 by Sun Microsystems, Inc.
+ *  Copyright: 2001 by Sun Microsystems, Inc.
  * 
- *   All Rights Reserved.
+ *  All Rights Reserved.
  *
- * Portions of this code are Copyright 2011 Univa Inc.
+ *  Portions of this software are Copyright (c) 2011 Univa Corporation
  *
  ************************************************************************/
 /*___INFO__MARK_END__*/
@@ -36,7 +36,7 @@
 
 #include "gdi/version.h"
 
-const char GDI_VERSION[] = "8.0.0 alpha";
+const char GDI_VERSION[] = "8.0.0";
 
 const gdi_ulong32 GRM_GDI_VERSION = 0x10003000;
 

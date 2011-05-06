@@ -26,9 +26,9 @@
  *   Copyright: 2001 by Sun Microsystems, Inc.
  * 
  *   All Rights Reserved.
- * 
- *  Portions of this code are Copyright 2011 Univa Inc.
- * 
+ *
+ *  Portions of this code are Copyright 2011 Univa Corporation.
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 #include <stdlib.h>
@@ -103,7 +103,7 @@ static int xml_report_started(qhost_report_handler_t* handler, lList **alpp)
    DENTER(TOP_LAYER, "xml_report_started");
 
    printf("<?xml version='1.0'?>\n");
-   printf("<qhost xmlns:xsd=\"http://gridengine.sunsource.net/source/browse/*checkout*/gridengine/source/dist/util/resources/schemas/qhost/qhost.xsd?revision=1.2\">\n");
+   printf("<qhost xmlns:xsd=\"https://github.com/gridengine/gridengine/raw/master/source/dist/util/resources/schemas/qhost/qhost.xsd\">\n");
    
    DRETURN(QHOST_SUCCESS);
 }

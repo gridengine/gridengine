@@ -175,8 +175,8 @@ int main(int argc, char *argv[])
       nprocs = system_info.dwNumberOfProcessors;
       sprintf(buf, "num_proc        %d", nprocs);
       fflush(stdout);
-      write(1, (const void*)buf, (unsigned int)strlen(buf));
-      write(1, (const void*)"\0x0a", (unsigned int)1);
+      _write(1, (const void*)buf, (unsigned int)strlen(buf));
+      _write(1, (const void*)"\0x0a", (unsigned int)1);
 #else
       nprocs = sge_nprocs();
       printf("num_proc        %d\n", nprocs);

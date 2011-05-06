@@ -103,3 +103,11 @@ if [ -d experimental/culltrans ]; then
    rm -f experimental/culltrans/culltrans_dependencies
    touch experimental/culltrans/culltrans_dependencies
 fi
+
+if [ -d utilbin/windows ]; then
+   rm -f utilbin/windows/qloadsensor/qloadsensor_dependencies
+   touch utilbin/windows/qloadsensor/qloadsensor_dependencies
+   
+   rm -f utilbin/windows/worker/worker_dependencies
+   touch utilbin/windows/worker/worker_dependencies
+fi

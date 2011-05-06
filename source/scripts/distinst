@@ -30,6 +30,8 @@
 #
 #  All Rights Reserved.
 #
+#  Portions of this code are Copyright 2011 Univa Corporation.
+#
 ##########################################################################
 #___INFO__MARK_END__
 
@@ -117,6 +119,8 @@ SECFILES="security/gss/get_cred.c security/gss/put_cred.c \
 
 SECURITYBINARIES="get_cred put_cred delete_cred renew_cred \
                   starter_cred get_cred.sh put_cred.sh k5dcelogin"
+
+EXCLUDE_MANPAGE="usermapping.5"
 
 GE_SOURCEDIR=`pwd`
 
@@ -1113,12 +1117,18 @@ if [ $instcommon = true ]; then
          done
       fi
 
+      for excluded_file in $EXCLUDE_MANPAGE; do
+         dir_num=`echo $excluded_file | cut -d"." -f2`
+         Execute rm -f $DEST_SGE_ROOT/catman/cat/cat$dir_num/$excluded_file
+         Execute rm -f $DEST_SGE_ROOT/man/man$dir_num/$excluded_file
+      done
+
       Execute find $DEST_SGE_ROOT/man -type d | xargs chmod 755
       Execute find $DEST_SGE_ROOT/man -type f | xargs chmod 644
 
       Execute find $DEST_SGE_ROOT/catman -type d | xargs chmod 755
       Execute find $DEST_SGE_ROOT/catman -type f | xargs chmod 644
-      
+
       Cleanup man catman
    fi
 
@@ -1405,7 +1415,7 @@ for i in $ARCH; do
                else
                   InstallProg $prog.exe
                fi
-            elif [ -o $prog = db_deadlock \
+            elif [ $prog = db_deadlock \
                    -o $prog = db_dump -o $prog = db_load \
                    -o $prog = db_printlog -o $prog = db_recover \
                    -o $prog = db_stat -o $prog = db_upgrade \

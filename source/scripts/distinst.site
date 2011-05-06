@@ -51,4 +51,9 @@ if [ -d $SRCDIR/uge-extensions ]; then
    LICENSE_FILE="$SRCDIR/uge-extensions/copyright/License/LICENSE.txt"
 fi
 
-TAR=gtar
+which gtar >/dev/null 2>&1
+if [ $? -eq 0 ]; then
+   TAR=gtar
+else
+   TAR=tar
+fi

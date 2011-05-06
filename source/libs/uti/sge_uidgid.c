@@ -28,7 +28,13 @@
  *   All Rights Reserved.
  * 
  ************************************************************************/
+/* Portions of this code are Copyright 2011 Univa Inc. */
 /*___INFO__MARK_END__*/
+
+/*
+ *   Parts of the code have been contributed by and are copyright of
+ *   Tommy Karlsson <tommy.karlsson@bolero.se>
+ */
 
 #include "uti/sge_uidgid.h"
 
@@ -353,7 +359,16 @@ int sge_switch2admin_user(void)
    int ret = 0;
 
    DENTER(UIDGID_LAYER, "sge_switch2admin_user");
- 
+#if !defined(INTERIX)
+   /*
+    * On Windows Vista (and probably later versions) we can't set the effective
+    * user ID to somebody else during boot time, because the local Administrator
+    * doesn't have his primary group set before booting finished.
+    * This problem occurs solely when the execd is started by a RC script
+    * during boot time.
+    * But we don't need to switch to the UGE admin user anyway, as spooling
+    * always has to be done locally, so we can just skip it always.
+    */
    if (get_admin_user(&uid, &gid) == ESRCH) {
       CRITICAL((SGE_EVENT, SFNMAX, MSG_SWITCH_USER_NOT_INITIALIZED));
       abort();
@@ -382,6 +397,7 @@ int sge_switch2admin_user(void)
    }
 
 exit:
+#endif
    DPRINTF(("uid=%ld; gid=%ld; euid=%ld; egid=%ld auid=%ld; agid=%ld\n", 
             (long)getuid(), (long)getgid(), 
             (long)geteuid(), (long)getegid(),
@@ -425,6 +441,16 @@ int sge_switch2start_user(void)
    int ret = 0;
 
    DENTER(UIDGID_LAYER, "sge_switch2start_user");
+#if !defined(INTERIX)
+   /*
+    * On Windows Vista (and probably later versions) we can't set the effective
+    * user ID to somebody else during boot time, because the local Administrator
+    * doesn't have his primary group set before booting finished.
+    * This problem occurs solely when the execd is started by a RC script
+    * during boot time.
+    * But we don't need to switch to the UGE admin user anyway, as spooling
+    * always has to be done locally, so we can just skip it always.
+    */
  
    if (get_admin_user(&uid, &gid) == ESRCH) {
       CRITICAL((SGE_EVENT, SFNMAX, MSG_SWITCH_USER_NOT_INITIALIZED));
@@ -456,6 +482,7 @@ int sge_switch2start_user(void)
    }
 
 exit:
+#endif
    DPRINTF(("uid=%ld; gid=%ld; euid=%ld; egid=%ld auid=%ld; agid=%ld\n", 
             (long)getuid(), (long)getgid(), 
             (long)geteuid(), (long)getegid(),
@@ -617,6 +644,11 @@ int sge_group2gid(const char *gname, gid_t *gidp, int retries)
       if (getgrnam_r(gname, &grentry, buffer, size, &gr) != 0)
 #endif
       {
+         if (errno == ERANGE) {
+             retries++;
+             size += 1024;
+             buffer = sge_realloc(buffer, size, 1);
+         }
          gr = NULL;
       }
    } while (gr == NULL);
@@ -1347,6 +1379,11 @@ struct group *sge_getgrgid_r(gid_t gid, struct group *pg,
       if (getgrgid_r(gid, pg, buffer, bufsize, &res) != 0) 
 #endif
       {
+         if (errno == ERANGE) {
+            retries++;
+            bufsize += 1024;
+            buffer = sge_realloc(buffer, bufsize, 1);
+         }
          res = NULL;
       }
    }

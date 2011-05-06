@@ -158,9 +158,6 @@ char *ctrl_method_variables[] = {
    NULL
 };
 
-
-static config_entry *find_conf_entry(const char *name, config_entry *ptr);
-
 void (*config_errfunc)(const char *) = NULL;
 
 /*****************************************************

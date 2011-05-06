@@ -30,30 +30,43 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-static char *mini-stderror[] = {
-/* width height num_colors chars_per_pixel */
-"    16    16        5            1",
-/* colors */
-". s mask c None",
-"# c #000000",
-"a c #ff0000",
-"b c #b03060",
-"c c #fa8072",
+static char *stderror[] = {
+/* columns rows colors chars-per-pixel */
+"16 16 19 1",
+"  c black",
+". c #FF2323",
+"X c #FF3131",
+"o c #FF3333",
+"O c #FE4242",
+"+ c #FE5050",
+"@ c #FE6060",
+"# c #FE7070",
+"$ c #818181",
+"% c #959595",
+"& c gray60",
+"* c #FE8080",
+"= c #FE9092",
+"- c #FE9290",
+"; c #FE9E9E",
+": c #FEB0AE",
+"> c #FDBFBF",
+", c gray100",
+"< s mask c None",
 /* pixels */
-".....#######....",
-".#aaaaaaaaaaaa#.",
-"#aaaaaaaabbbbbaa",
-"#aaaaaaaabbbbbba",
-"##aaaaaaabbbbbba",
-"#cc##a#aabbbbbba",
-"#bbcccccaaaaaaba",
-"#bbbbccccbbbbbaa",
-"#bbbbcccccbbbbba",
-"#bcbbccccccbbbba",
-"#cbbbcccccccbbba",
-"#bbbbccccccaaaba",
-"#cbbbccccc...#aa",
-".#ccccccc......#",
-"...##ccc........",
-"......#........."
+"&$$$$$$$$$$$$$<<",
+"$,,,,,,,,,,,,,$<",
+"$,   ,  ,,  ,,$<",
+"$, ,,, , , , ,$<",
+"$,   ,  ,,  ,,$<",
+"$, ,,, , , , ,$<",
+"$,   , , , , ,$<",
+"$,,,,,,,,,,,,,$<",
+"$,.oO+@#*=;:>,$<",
+"$,.oO+@#*=;:>,$<",
+"$,.oO+@#*=$$$$$<",
+"$,.oO+@#*=$,,,$<",
+"$,.oO+@#*=$,,$$<",
+"$,,,,,,,,,$,$<<<",
+"%$$$$$$$$$$$<<<<",
+"<<<<<<<<<<<<<<<<"
 };

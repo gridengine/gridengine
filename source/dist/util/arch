@@ -31,11 +31,13 @@
 #
 #  All Rights Reserved.
 #
+#  Portions of this software are Copyright (c) 2011 Univa Corporation
+#
 ##########################################################################
 #___INFO__MARK_END__
 #
 #  The original idea of "aimk" where this script is based on came from the
-#  PVM 3.x distribution, 22 Jul 1991 Robert Manchek manchek@CS.UTK.EDU. 
+#  PVM 3.x distribution, 22 Jul 1991 Robert Manchek manchek@CS.UTK.EDU.
 #
 #  call:   arch       (print SGEEE architecture string)
 #          arch -m    (print default MANPATH of system)
@@ -244,13 +246,21 @@ Linux)
          # <= 2.2 - not accepted as build or execution platform
          case $lxmachine in
          amd64)
-            libc_string=`strings /lib64/libc.so.6 | grep "GNU C Library"`
+            if [ -f /lib64/x86_64-linux-gnu/libc.so.6 ]; then
+               libc_string=`strings /lib64/x86_64-linux-gnu/libc.so.6 | grep "GNU C Library"`
+            else
+               libc_string=`strings /lib64/libc.so.6 | grep "GNU C Library"`
+            fi
             ;;
          ia64)
             libc_string=`strings /lib/libc.so.6.1 | grep "GNU C Library"`
             ;;
          *)
-            libc_string=`strings /lib/libc.so.6 | grep "GNU C Library"`
+            if [ -f /lib/i386-linux-gnu/libc.so.6 ]; then
+               libc_string=`strings /lib/i386-linux-gnu/libc.so.6 | grep "GNU C Library"`
+            else
+               libc_string=`strings /lib/libc.so.6 | grep "GNU C Library"`
+            fi
             ;;
          esac
 
@@ -258,7 +268,7 @@ Linux)
          if [ $? -ne 0 ]; then
             unsupported="UNSUPPORTED-"
          else
-            libc_version=`echo $libc_string | tr ' ,' '\n' | grep "2\." | head -1 | cut -f 2 -d "."`
+            libc_version=`echo $libc_string | tr ' ,' '\n' | grep "2\." | head -1 | cut -f 2 -d "." | cut -f 1 -d "-"`
             if [ $libc_version -lt 2 ]; then
                unsupported="UNSUPPORTED-GLIBC-2.${libc_version}"
             else

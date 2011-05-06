@@ -8,6 +8,77 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+JG-2011-05-06-0: Created final packages for Stoat
+-------------------------------------------------
+
+JG-2011-05-05-4: Bugfix:      GPL sources need to be available in common package
+                 Issue:       GE-3421
+
+HP-2011-05-05-1: Bugfix:      Fixed several Windows related bugs in Makefiles,
+                              zerodepend script, inst_execd.sh file.
+                 Review:      DG
+
+HP-2011-05-05-0: Bugfix:      on Windows Vista, the 2nd fork of the daemonizing
+                              execd sometimes fails at boot time
+                 Issue:       GE-3328
+                 Review:      DG
+
+JG-2011-05-05-3: Bugfix:      install_execd prints error messages on 'install'
+                              of /etc/init.d script on Ubuntu
+                 Issue:       GE-3431
+                 Review:      DG
+
+JG-2011-05-05-2: Bugfix:      cannot install on Ubuntu 11.04
+                 Issue:       GE-3466
+                 Review:      DG
+
+JG-2011-05-05-1: Enhancem.:   set compiler options on sol-sparc64 depending on
+                              the compiler version
+                 Review:      HP
+
+JG-2011-05-05-0: Bugfix:      fixed a memory leak in sge_execd when pe task
+                              requests got rejected
+                 Enhancem.:   minor enhancements in build/distinst/mk_dist
+                 Review:      HP
+
+EB-2011-05-03-1: Bugfix:      large entries in group DB might cause
+                              sge_group2gid() to fail
+                 Issue:       GE-3462
+                 Review:      DG
+
+EB-2011-05-03-0: Enhancem.:   Added new JSV that rejects all jobs.
+                 Issue:       GE-3446
+
+JG-2011-05-03-0: Bugfix:      default value of the sge_shadowd environment
+                              variable SGE_GET_ACTIVE_INTERVAL is not documented
+                              in the man page
+                 Issue:       GE-3459
+                 Review:      DG
+
+DG-2011-05-02-0: Enhacem.:    qmon icons are bad - new icons are from
+                              Alain Champenois and the Tango Desktop Project
+                 Issue:       GE-2623, GE-3438
+
+DG-2011-04-27-0: Bugfix:      XML output of client commands point to wrong
+                              namespace
+                 Issue:       GE-3458
+                 Review:      SH
+
+EB-2011-04-20-0: Bugfix:      qsub man page does not mention that tc job
+                              parameter can be changed via JSV
+                 Issue:       GE-3457
+
+JG-2011-04-20-1: Created beta packages for Stoat
+------------------------------------------------
+
+JG-2011-04-20-0: Bugfix:      fixed a minor memory leak
+                 Review:      DG
+
+DG-2011-04-20-1: Bugfix:      usermapping man page should not be contained in
+                              packages
+                 Issue:       GE-3417
+                 Review:      HP
+
 SH-2011-04-20-0: Bugfix:      wrong vmem reporting of qstat and qacct on Linux
                  Issue:       GE-3303
                  Enhancem.:   Intdroduced lUlong64 datatype
@@ -95,7 +166,7 @@ JG-2011-04-05-0: Bugfix:      fixed a memory leak in sge_qmaster when deleting
                               host configurations (qconf -dconf <host>)
                  Review:      DG
 
-EB-2011-04-04-1: Created alpha packages for Stoat 
+EB-2011-04-04-1: Created alpha packages for Stoat
 -------------------------------------------------
 
 JG-2011-04-04-0: Bugfix:      JSV.jar is not copied into the common package

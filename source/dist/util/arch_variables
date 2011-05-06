@@ -29,6 +29,8 @@
 #
 #  All Rights Reserved.
 #
+#  Portions of this software are Copyright (c) 2011 Univa Corporation
+#
 ##########################################################################
 #___INFO__MARK_END__
 #
@@ -80,17 +82,18 @@ case $ARCH in
    AWK=/usr/bin/gawk
    ECHO="/bin/echo -e"
    if [ -x /usr/lib/lsb/install_initd ]; then
+      # RedHat, CentOS etc.
       RC_FILE=lsb
-      RC_PREFIX=/etc/init.d
-      RC_DIR=unused
-   elif [ -x /sbin/insserv ]; then
-      # SuSe 7.1 and higher uses insserv to add the startup script
-      RC_FILE=insserv-linux
       RC_PREFIX=/etc/init.d
       RC_DIR=unused
    elif [ -x /usr/sbin/update-rc.d ]; then
       # Debian uses update-rc.d to add startup scripts
       RC_FILE=update-rc.d
+      RC_PREFIX=/etc/init.d
+      RC_DIR=unused
+   elif [ -x /sbin/insserv ]; then
+      # SuSe 7.1 and higher uses insserv to add the startup script
+      RC_FILE=insserv-linux
       RC_PREFIX=/etc/init.d
       RC_DIR=unused
    elif [ -x /sbin/rc-update ]; then

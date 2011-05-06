@@ -27,6 +27,8 @@
  * 
  *   All Rights Reserved.
  * 
+ * Portions of this code are Copyright 2011 Univa Corporation.
+ * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
@@ -64,7 +66,7 @@ lListElem* xml_getHead(const char *name, lList *list, lList *attributes) {
       lSetString(xml_head, XMLH_Name, name);
       lSetList(xml_head, XMLH_Attribute, attributes);
       lSetList(xml_head, XMLH_Element, list);
-      xml_addAttribute(xml_head, "xmlns:xsd", "http://gridengine.sunsource.net/source/browse/*checkout*/gridengine/source/dist/util/resources/schemas/qstat/qstat.xsd?revision=1.11");
+      xml_addAttribute(xml_head, "xmlns:xsd", "https://github.com/gridengine/gridengine/raw/master/source/dist/util/resources/schemas/qstat/qstat.xsd");
 
 /* we do not support stylesheets yet */
 /*    xml_addStylesheet(xml_head, "xmlns:xsl", "http://www.w3.org/1999/XSL/Transform", "1.0");*/

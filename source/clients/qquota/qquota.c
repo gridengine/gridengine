@@ -27,6 +27,8 @@
  * 
  *   All Rights Reserved.
  * 
+ *  Portions of this code are Copyright 2011 Univa Corporation.
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 #include <stdlib.h>
@@ -89,7 +91,7 @@ static int destroy_xml_report_handler(report_handler_t** handler, lList **alpp);
 
 static int xml_report_started(report_handler_t* handler, lList **alpp) {
    printf("<?xml version='1.0'?>\n");
-   printf("<qquota_result xmlns=\"http://gridengine.sunsource.net/source/browse/*checkout*/gridengine/source/dist/util/resources/schemas/qquota/qquota.xsd?revision=1.3\">\n");
+   printf("<qquota_result xmlns=\"https://github.com/gridengine/gridengine/raw/master/source/dist/util/resources/schemas/qquota/qquota.xsd\">\n");
    return QQUOTA_SUCCESS;
 }
 

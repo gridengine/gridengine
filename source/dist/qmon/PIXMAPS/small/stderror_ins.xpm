@@ -30,30 +30,41 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-static char *mini-stderror_ins[] = {
-/* width height num_colors chars_per_pixel */
-"    16    16        5            1",
-/* colors */
-". s mask c None",
-"# c #000000",
-"a c #7f7f7f",
-"b c #b03060",
-"c c #d3d3d3",
+static char *stderror_ins[] = {
+/* columns rows colors chars-per-pixel */
+"16 16 17 1",
+"  c black",
+". c gray44",
+"X c #727272",
+"o c #747474",
+"O c gray50",
+"+ c #818181",
+"@ c gray52",
+"# c #8B8B8B",
+"$ c gray55",
+"% c #939393",
+"& c #979797",
+"* c gray60",
+"= c gray62",
+"- c #A5A5A5",
+"; c gray67",
+": c #B9B9B9",
+"> s mask c None",
 /* pixels */
-".....#######....",
-".#aaaaaaaaaaaa#.",
-"#aaaaaaaabbbbbaa",
-"#aaaaaaaabbbbbba",
-"##aaaaaaabbbbbba",
-"#cc##a#aabbbbbba",
-"#bbcccccaaaaaaba",
-"#bbbbccccbbbbbaa",
-"#bbbbcccccbbbbba",
-"#bcbbccccccbbbba",
-"#cbbbcccccccbbba",
-"#bbbbccccccaaaba",
-"#cbbbccccc...#aa",
-".#ccccccc......#",
-"...##ccc........",
-"......#........."
+"*+++++++++++++>>",
+"+:::::::::::::+>",
+"+:   :  ::  ::+>",
+"+: ::: : : : :+>",
+"+:   :  ::  ::+>",
+"+: ::: : : : :+>",
+"+:   : : : : :+>",
+"+:::::::::::::+>",
+"+:Xoo+@$%*=-;:+>",
+"+:XXo+@$%*=-;:+>",
+"+:XXO+@$%*+++++>",
+"+:Xoo+@$%&+:::+>",
+"+:.Xo+@#%&+::++>",
+"+:::::::::+:+>>>",
+"&+++++++++++>>>>",
+">>>>>>>>>>>>>>>>"
 };

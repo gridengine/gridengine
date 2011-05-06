@@ -1824,9 +1824,14 @@ with the name \fBt_min\fP, \fBt_max\fP and \fBt_step\fP
 .IP "\fB\-tc max_running_tasks\fP"
 Available for \fIqsub\fP and \fIqalter\fP only.
 .sp 1
--Can be used in conjunction with array jobs (see -t option) to set a
+Can be used in conjunction with array jobs (see -t option) to set a
 self-imposed limit on the maximum number of concurrently running tasks
 per job.
+.sp 1
+If this option or a corresponding value in qmon is specified
+then  this  value will be passed to defined JSV instances as
+parameter with the name \fBtc\fP. (see \fB\-jsv\fP option above or find more information concerning JSV in
+.M jsv 1 )
 .\"
 .IP "\fB\-terse\fP"
 Available for \fIqsub\fP only.

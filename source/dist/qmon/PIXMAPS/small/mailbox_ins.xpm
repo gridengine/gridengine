@@ -30,30 +30,37 @@
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
-static char *mini-mailbox_ins[] = {
-/* width height num_colors chars_per_pixel */
-"    16    16        5            1",
-/* colors */
-". s mask c None",
-"# c #708090",
-"a c #d3d3d3",
-"b c #ffa500",
-"c c #2f4f4f",
+static char *mailbox_ins[] = {
+/* columns rows colors chars-per-pixel */
+"16 16 13 1",
+"  c black",
+". c #7C7C7C",
+"X c gray55",
+"o c #959595",
+"O c #979797",
+"+ c #989898",
+"@ c #9A9A9A",
+"# c #9B9B9B",
+"$ c #9D9D9D",
+"% c gray62",
+"& c #A0A0A0",
+"* c #A7A7A7",
+"= s mask c None",
 /* pixels */
-"........##......",
-".......aaaa.....",
-"......aaaaaa....",
-".....aaaaaaa#...",
-"....a#aaaaa#a...",
-"...aaaaaaa#aa.#.",
-"...aaaaaa#aaa##.",
-"...a#a#aaaaa###.",
-"...aaa###aa##.#.",
-"...aaaaa#a##a...",
-"...aaaaaa##a#...",
-"...aaaaaa#a#....",
-"...aaaaaaaa.....",
-"...##aaaaa#.....",
-"......####c.....",
-".......ccc#....."
+"================",
+"================",
+"================",
+"=              =",
+"=  %XXXXXXXXo  =",
+"= % %XXXXXXo @ =",
+"= %X %XXXX@ X@ =",
+"= %XX %@@@ XX@ =",
+"= %XXX    .XX@ =",
+"= %XX *... XXo =",
+"= @  *XXXXX  o =",
+"=  **XXXXXXXX  =",
+"=              =",
+"================",
+"================",
+"================"
 };

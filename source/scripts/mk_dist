@@ -34,6 +34,7 @@
 
 umask  022
 
+which gtar >/dev/null 2>&1
 if [ $? -eq 0 ]; then
    TAR=gtar
 else

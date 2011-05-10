@@ -525,20 +525,17 @@ static void sge_gdi_ctx_class_error(sge_gdi_ctx_class_t *thiz, int error_type, i
 
    DENTER(TOP_LAYER, "sge_gdi_ctx_class_error");
 
-   if (!thiz || !thiz->sge_gdi_ctx_handle) {
-      DRETURN_VOID;
-   }   
-   
-   gdi_ctx = (sge_gdi_ctx_t*)thiz->sge_gdi_ctx_handle;
-      
-   if (gdi_ctx->eh) {
-      if (fmt != NULL) {
+   if (thiz != NULL && thiz->sge_gdi_ctx_handle != NULL) {
+      gdi_ctx = (sge_gdi_ctx_t*)thiz->sge_gdi_ctx_handle;
+         
+      if (gdi_ctx->eh && fmt != NULL) {
          va_list arg_list;
+
          va_start(arg_list, fmt);
          gdi_ctx->eh->verror(gdi_ctx->eh, error_type, error_quality, fmt, arg_list);
-      }
-   }   
-
+         va_end(arg_list);
+      }   
+   }
    DRETURN_VOID;
 }
 

@@ -269,16 +269,14 @@ static void sge_error_verror(sge_error_class_t* thiz, int error_type, int error_
 
 static void sge_error_error(sge_error_class_t* thiz, int error_type, int error_quality, 
                             const char*format, ...) {
-   
-   va_list ap;
-   
    DENTER(TOP_LAYER, "sge_error_error");
-
    if (format != NULL) {
+      va_list ap;
+
       va_start(ap, format);
       sge_error_verror(thiz, error_type, error_quality, format, ap);
+      va_end(ap);
    }
-
    DEXIT;
 }
 

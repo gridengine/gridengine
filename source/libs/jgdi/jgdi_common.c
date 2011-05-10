@@ -2872,6 +2872,7 @@ void throw_error(JNIEnv *env, jgdi_result_t result, const char* message, ...) {
 
    va_start(ap, message);
    vsnprintf(buf, BUFSIZ-1, message, ap);
+   va_end(ap);
    clear_error(env);     
    switch(result) {
       case JGDI_ERROR:

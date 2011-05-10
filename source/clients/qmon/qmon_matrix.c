@@ -592,7 +592,8 @@ int num_fields,
             XbaeMatrixSetCell(w, row, i, col[i] ? (String)col[i] : "");
       }
    }
-
+  
+   va_end(ap);
    sge_free(&field);
    sge_free(&col);
    DEXIT;
@@ -661,7 +662,8 @@ int num_fields,
       else
          continue;
    }
-
+   
+   va_end(ap)
    sge_free(&field);
    sge_free(&col);
 

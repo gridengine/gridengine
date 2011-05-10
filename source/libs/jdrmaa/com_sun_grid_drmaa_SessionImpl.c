@@ -924,16 +924,16 @@ static void print_message_and_throw_exception(JNIEnv *env, int errnum,
                                               const char *format, ...)
 {
    char message[MAX_STRING_SIZE + 1];
-   va_list ap;
-
-   va_start(ap, format);
 
    if (format != NULL) {
+      va_list ap;
+
+      va_start(ap, format);
       vsnprintf(message, MAX_STRING_SIZE, format, ap);
-      throw_exception (env, errnum, message);
-   }
-   else {
-      throw_exception (env, errnum, NULL);
+      va_end(ap);
+      throw_exception(env, errnum, message);
+   } else {
+      throw_exception(env, errnum, NULL);
    }
 }
 

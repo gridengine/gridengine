@@ -1947,11 +1947,26 @@ sge_setup2(sge_gdi_ctx_class_t **context, u_long32 progid, u_long32 thread_id,
       DRETURN(AE_ERROR);
    }
 
+#if defined(INTERIX)
+   {
+      /*
+       * If we are at boot time on Windows Vista, the primary group ID of the
+       * local Administrator is not yet set correctly, so asking for it doesn't
+       * make sense. We build it on our own, which is possible as it's always
+       * built after the same scheme: hostname+None.
+       */
+      const char *group_none = "+None";
+
+      /* Read the hostname into the group string and add "+None" */
+      gethostname(group, sizeof(group)-strlen(group_none)-1);
+      strcat(group, group_none);
+   }
+#else
    if (sge_gid2group(getegid(), group, sizeof(group), MAX_NIS_RETRIES)) {
       answer_list_add_sprintf(alpp, STATUS_ESEMANTIC, ANSWER_QUALITY_CRITICAL, MSG_SYSTEM_RESOLVEGROUP);
       DRETURN(AE_ERROR);
    }
-
+#endif
    /* a dynamic eh handler is created */
    *context = sge_gdi_ctx_class_create(progid, prognames[progid], thread_id, 
                                        threadnames[thread_id], user, group,

@@ -8,11 +8,47 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+JG-2011-05-06-1: Bugfix:      fix for gtar detection in mk_dist
+                 Belongs to:  JG-2011-05-05-0
+
+JG-2011-05-06-0: Created final packages for Stoat
+-------------------------------------------------
+
+JG-2011-05-05-4: Bugfix:      GPL sources need to be available in common package
+                 Issue:       GE-3421
+
+HP-2011-05-05-1: Bugfix:      Fixed several Windows related bugs in Makefiles,
+                              zerodepend script, inst_execd.sh file.
+                 Review:      DG
+
+HP-2011-05-05-0: Bugfix:      on Windows Vista, the 2nd fork of the daemonizing
+                              execd sometimes fails at boot time
+                 Issue:       GE-3328
+                 Review:      DG
+
+JG-2011-05-05-3: Bugfix:      install_execd prints error messages on 'install'
+                              of /etc/init.d script on Ubuntu
+                 Issue:       GE-3431
+                 Review:      DG
+
+JG-2011-05-05-2: Bugfix:      cannot install on Ubuntu 11.04
+                 Issue:       GE-3466
+                 Review:      DG
+
+JG-2011-05-05-1: Enhancem.:   set compiler options on sol-sparc64 depending on
+                              the compiler version
+                 Review:      HP
+
+JG-2011-05-05-0: Bugfix:      fixed a memory leak in sge_execd when pe task
+                              requests got rejected
+                 Enhancem.:   minor enhancements in build/distinst/mk_dist
+                 Review:      HP
+
 EB-2011-05-03-1: Bugfix:      large entries in group DB might cause
                               sge_group2gid() to fail
                  Issue:       GE-3462
                  Review:      DG
-                              
+
 EB-2011-05-03-0: Enhancem.:   Added new JSV that rejects all jobs.
                  Issue:       GE-3446
 

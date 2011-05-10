@@ -33,7 +33,7 @@
 #
 #  All Rights Reserved.
 #
-#  Portions of this code are Copyright 2011 Univa Inc.
+#  Portions of this software are Copyright (c) 2011 Univa Corporation
 #
 ##########################################################################
 #___INFO__MARK_END__
@@ -1833,7 +1833,7 @@ SetupRcScriptNames()
 
 #-------------------------------------------------------------------------
 # CheckRCfiles: Check for presence RC scripts
-#               Requires SGE_ROOT and SGE_CELL to be set                   
+#               Requires SGE_ROOT and SGE_CELL to be set
 # $1 ... can be empty or "61" to detect darwin RC script on 61
 #
 CheckRCfiles()
@@ -1872,7 +1872,7 @@ CheckRCfiles()
 
 #-------------------------------------------------------------------------
 # CheckIfClusterNameAlreadyExists: Check for presence of SMF service and RC script
-#                                  Requires SGE_ROOT and SGE_CELL to be set                   
+#                                  Requires SGE_ROOT and SGE_CELL to be set
 # $1 ... compoment we are installing
 #
 CheckIfClusterNameAlreadyExists() 

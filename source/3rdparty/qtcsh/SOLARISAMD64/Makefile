@@ -30,7 +30,7 @@ LFLAGS=$(SGE_LOPTS)
 #LFLAGS= -Zn10000		# hpux lint
 
 
-CFLAGS = $(SGE_COPTS) -xarch=amd64 -DSOLARISAMD64 -DPROG_NAME='"qtcsh"'		# This is set by autoconf.
+CFLAGS = $(SGE_COPTS) -fast -xchip=generic -xcache=generic -xarch=sse2 -m64 -DSOLARISAMD64 -DPROG_NAME='"qtcsh"'		# This is set by autoconf.
 #CFLAGS= -g			# debug
 #CFLAGS= -O			# production
 #CFLAGS= 			# Broken optimizers....

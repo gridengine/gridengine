@@ -1515,7 +1515,7 @@ CheckWhoInstallsSGE()
 
    $INFOTEXT -auto $AUTO -ask "y" "n" -def "y" -n \
              "Do you want to install Grid Engine\n" \
-             "under an user id other than >root< (y/n) [y] >> "
+             "under an user ID other than >root< (y/n) [y] >> "
 
    if [ $? = 0 ]; then
       done=false

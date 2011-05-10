@@ -1412,15 +1412,6 @@ The parameter can be set
 to a time_specifier (see
 .M sge_types 5 )
 , to \fBPER_LOAD_REPORT\fP or to \fBNEVER\fP.
-.IP "\fIENABLE_BINDING\fP"
-If this parameter is set then xxQS_NAMExx enables the core binding module
-within the execution daemon to apply binding parameters that are specified
-during submission time of a job. This parameter is not set per default and 
-therefore all binding related information will be ignored.
-Find more information for job to core binding in the section \fI-binding\fP of
-.M qsub 1 .
-.PP
-.br
 If this parameter is set to \fBPER_LOAD_REPORT\fP the PDC is triggered in the
 same interval as \fBload_report_time\fP (see above). If this parameter is set
 to \fBNEVER\fP the PDC run is never triggered. The default is 1 second.
@@ -1431,6 +1422,13 @@ online usage can be incomplete or totally missing (for example online usage of v
 running jobs might be missing) and the resource limit enforcement is
 less accurate or would not happen if PDC is turned of completely.
 .PP
+.IP "\fIENABLE_BINDING\fP"
+If this parameter is set then xxQS_NAMExx enables the core binding module
+within the execution daemon to apply binding parameters that are specified
+during submission time of a job. This parameter is not set per default and 
+therefore all binding related information will be ignored.
+Find more information for job to core binding in the section \fI-binding\fP of
+.M qsub 1 .
 Changing \fBexecd_params\fP will take effect after it was propagated to the
 execution daemons. The propagation is done in one load report interval.
 The default for \fBexecd_params\fP is none.

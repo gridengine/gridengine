@@ -132,7 +132,7 @@ unsigned long comm_write_message(COMM_HANDLE *handle,
 int comm_flush_write_messages(COMM_HANDLE *handle, dstring *err_msg);
 
 int comm_recv_message(COMM_HANDLE *handle, 
-                 cl_bool_t b_synchron, 
+                 bool b_synchron, 
                  recv_message_t *recv_mess, 
                  dstring *err_msg);
 

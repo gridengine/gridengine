@@ -59,7 +59,7 @@ int sig
 
    /* shutdown all sockets */
    do_shutdown = 1;
-   cl_com_ignore_timeouts(CL_TRUE);
+   cl_com_ignore_timeouts(true);
 }
 
 
@@ -175,7 +175,7 @@ extern int main(int argc, char** argv)
 
 #ifdef CREATE_SERVICE
   cl_com_append_known_endpoint_from_name(argv[1], "server", 1,atoi(argv[2]),CL_CM_AC_DISABLED , 1);
-  handle=cl_com_create_handle(NULL,framework,CL_CM_CT_MESSAGE , CL_TRUE, 0 , CL_TCP_DEFAULT, "client", atoi(argv[3]),SELECT_TIMEOUT,0 );
+  handle=cl_com_create_handle(NULL,framework,CL_CM_CT_MESSAGE , true, 0 , CL_TCP_DEFAULT, "client", atoi(argv[3]),SELECT_TIMEOUT,0 );
   if (handle == NULL) {
      printf("could not get handle\n");
      exit(1);
@@ -185,7 +185,7 @@ extern int main(int argc, char** argv)
      printf("I'm reachable at port %d!\n", my_port);
   }
 #else
-  handle=cl_com_create_handle(NULL,framework,CL_CM_CT_MESSAGE , CL_FALSE, atoi(argv[2]) , CL_TCP_DEFAULT,"client", atoi(argv[3]),SELECT_TIMEOUT,0 );
+  handle=cl_com_create_handle(NULL,framework,CL_CM_CT_MESSAGE , false, atoi(argv[2]) , CL_TCP_DEFAULT,"client", atoi(argv[3]),SELECT_TIMEOUT,0 );
   if (handle == NULL) {
      printf("could not get handle\n");
      exit(1);
@@ -235,7 +235,7 @@ extern int main(int argc, char** argv)
 
 /*     CL_LOG(CL_LOG_ERROR,"sending ack message ..."); */
      
-     my_sent_error = cl_commlib_send_message(handle, argv[1], "server", 1, CL_MIH_MAT_ACK, (cl_byte_t**)&welcome_text , welcome_text_size, &mid ,0,0, CL_TRUE, CL_FALSE);
+     my_sent_error = cl_commlib_send_message(handle, argv[1], "server", 1, CL_MIH_MAT_ACK, (cl_byte_t**)&welcome_text , welcome_text_size, &mid ,0,0, true, false);
      if ( retval == CL_RETVAL_CONNECTION_NOT_FOUND ) {
         CL_LOG(CL_LOG_ERROR,"after new connection");
      }
@@ -270,7 +270,7 @@ extern int main(int argc, char** argv)
      while (retval != CL_RETVAL_OK ) {
 
 
-        while ( (retval=cl_commlib_receive_message(handle,NULL, NULL, 0, CL_FALSE, 0, &message, &sender)) == CL_RETVAL_OK) {
+        while ( (retval=cl_commlib_receive_message(handle,NULL, NULL, 0, false, 0, &message, &sender)) == CL_RETVAL_OK) {
           if (message != NULL) {
              cl_com_free_endpoint(&sender);
              cl_com_free_message(&message);
@@ -284,7 +284,7 @@ extern int main(int argc, char** argv)
            break;
         }
 
-        retval = cl_commlib_check_for_ack(handle, argv[1], "server", 1, mid, CL_TRUE );
+        retval = cl_commlib_check_for_ack(handle, argv[1], "server", 1, mid, true );
         if (retval != CL_RETVAL_MESSAGE_WAIT_FOR_ACK && retval != CL_RETVAL_OK) {
            printf("retval of cl_commlib_check_for_ack(%ld) is %s\n",mid,cl_get_error_text(retval)); 
            /* exit(1);  */
@@ -322,7 +322,7 @@ extern int main(int argc, char** argv)
 
 
         CL_LOG_INT(CL_LOG_INFO,"waiting for mid .... ", (int)mid); 
-        retval = cl_commlib_receive_message(handle,NULL, NULL, 0, CL_FALSE, mid, &message, &sender);
+        retval = cl_commlib_receive_message(handle,NULL, NULL, 0, false, mid, &message, &sender);
 
 
         CL_LOG_STR(CL_LOG_INFO,"waiting for bytes ...", cl_get_error_text(retval));
@@ -350,7 +350,7 @@ extern int main(int argc, char** argv)
            cl_com_free_message(&message);
         }
         
-        while ( (retval = cl_commlib_receive_message(handle,NULL, NULL, 0, CL_FALSE, 0, &message, &sender)) == CL_RETVAL_OK) {
+        while ( (retval = cl_commlib_receive_message(handle,NULL, NULL, 0, false, 0, &message, &sender)) == CL_RETVAL_OK) {
           if (message != NULL) {
              cl_com_free_endpoint(&sender);
              cl_com_free_message(&message);
@@ -409,10 +409,10 @@ extern int main(int argc, char** argv)
      }
      if (close_connection != 0) {
 
-        while (cl_commlib_shutdown_handle(handle, CL_TRUE) == CL_RETVAL_MESSAGE_IN_BUFFER) {
+        while (cl_commlib_shutdown_handle(handle, true) == CL_RETVAL_MESSAGE_IN_BUFFER) {
            printf("got message\n");
            message = NULL;
-           cl_commlib_receive_message(handle,NULL, NULL, 0, CL_FALSE, 0, &message, &sender);
+           cl_commlib_receive_message(handle,NULL, NULL, 0, false, 0, &message, &sender);
            if (message != NULL) {
               cl_com_free_endpoint(&sender);
               cl_com_free_message(&message);
@@ -423,7 +423,7 @@ extern int main(int argc, char** argv)
            }
         }  
 #ifdef CREATE_SERVICE
-        handle=cl_com_create_handle(NULL,framework,CL_CM_CT_MESSAGE , CL_TRUE, 0 , CL_TCP_DEFAULT, "client", atoi(argv[3]),SELECT_TIMEOUT,0 );
+        handle=cl_com_create_handle(NULL,framework,CL_CM_CT_MESSAGE , true, 0 , CL_TCP_DEFAULT, "client", atoi(argv[3]),SELECT_TIMEOUT,0 );
         if (handle == NULL) {
            printf("could not get handle\n");
            exit(-1);
@@ -433,7 +433,7 @@ extern int main(int argc, char** argv)
            printf("I'm reachable at port %d!\n", my_port);
         }
 #else
-        handle=cl_com_create_handle(NULL,framework,CL_CM_CT_MESSAGE , CL_FALSE, atoi(argv[2]) , CL_TCP_DEFAULT, "client", atoi(argv[3]), SELECT_TIMEOUT,0 );
+        handle=cl_com_create_handle(NULL,framework,CL_CM_CT_MESSAGE , false, atoi(argv[2]) , CL_TCP_DEFAULT, "client", atoi(argv[3]), SELECT_TIMEOUT,0 );
         if (handle == NULL) {
            printf("could not get handle\n");
            exit(-1);
@@ -452,11 +452,11 @@ extern int main(int argc, char** argv)
   }
   printf("do_shutdown received\n");
   fflush(stdout);
-  while (cl_commlib_shutdown_handle(handle, CL_TRUE) == CL_RETVAL_MESSAGE_IN_BUFFER) {
+  while (cl_commlib_shutdown_handle(handle, true) == CL_RETVAL_MESSAGE_IN_BUFFER) {
      printf("got message\n");
      message = NULL;
 
-     cl_commlib_receive_message(handle,NULL, NULL, 0, CL_FALSE, 0, &message, &sender);
+     cl_commlib_receive_message(handle,NULL, NULL, 0, false, 0, &message, &sender);
      if (message != NULL) {
         cl_com_free_endpoint(&sender);
         cl_com_free_message(&message);

@@ -169,7 +169,7 @@ static void ijs_general_communication_error(
     * now log the error if not already reported the 
     * least CL_DEFINE_MESSAGE_DUP_LOG_TIMEOUT seconds
     */
-   if (commlib_error->cl_already_logged == CL_FALSE && 
+   if (commlib_error->cl_already_logged == false && 
       ijs_communication_error.com_last_error != ijs_communication_error.com_error) {
 
       /*  never log the same messages again and again (commlib
@@ -578,13 +578,13 @@ int comm_open_connection(bool        b_server,
          if (b_server == false) {
             *handle = cl_com_create_handle(&commlib_error, 
                                           communication_framework, 
-                                          connection_type, CL_FALSE, port, 
+                                          connection_type, false, port, 
                                           connect_type, (char*)this_component,
                                           0, 1, 0);
          } else {
             *handle = cl_com_create_handle(&commlib_error, 
                                           communication_framework, 
-                                          connection_type, CL_TRUE, port, 
+                                          connection_type, true, port, 
                                           connect_type, (char*)this_component, 
                                           1, 1, 0);
          }
@@ -681,17 +681,17 @@ int comm_shutdown_connection(COMM_HANDLE *handle, const char *component_name,
     */
    ret = cl_com_set_error_func(NULL);
    ret = cl_commlib_close_connection(handle, remote_host, 
-                                     (char*)component_name, 1, CL_FALSE);
+                                     (char*)component_name, 1, false);
    if (ret != CL_RETVAL_OK && ret != CL_RETVAL_UNKNOWN_ENDPOINT) {
       /* shutting down the endpoint returned commlib error */
       sge_dstring_sprintf(err_msg, cl_get_error_text(ret));
       DPRINTF(("cl_commlib_close_connection() failed: %s (%d)\n",
                sge_dstring_get_string(err_msg), ret));
       ret_val = COMM_CANT_CLOSE_CONNECTION;
-      cl_com_ignore_timeouts(CL_TRUE);
-      cl_commlib_shutdown_handle(handle, CL_FALSE);
+      cl_com_ignore_timeouts(true);
+      cl_commlib_shutdown_handle(handle, false);
    } else {
-      ret = cl_commlib_shutdown_handle(handle, CL_FALSE);
+      ret = cl_commlib_shutdown_handle(handle, false);
       if (ret != CL_RETVAL_OK) {
          sge_dstring_sprintf(err_msg, cl_get_error_text(ret));
          DPRINTF(("cl_commlib_close_connection() failed: %s (%d)\n",
@@ -785,7 +785,7 @@ int comm_ignore_timeouts(bool b_ignore, dstring *err_msg)
 
    DENTER(TOP_LAYER, "comm_ignore_timeouts");
    
-   cl_com_ignore_timeouts(b_ignore==true ? CL_TRUE : CL_FALSE);
+   cl_com_ignore_timeouts(b_ignore==true ? true : false);
    if (ret != CL_RETVAL_OK) {
          sge_dstring_sprintf(err_msg, cl_get_error_text(ret));
          DPRINTF(("cl_com_ignore_timeouts() failed: %s (%d)\n",
@@ -864,7 +864,7 @@ int comm_wait_for_connection(COMM_HANDLE *handle,
     */
    while ((ret2=cl_commlib_trigger(handle, 0)) != 99 
           && (ret = cl_commlib_search_endpoint(handle, NULL,
-             (char*)component, 0, CL_TRUE, &endpoint_list)) == CL_RETVAL_OK
+             (char*)component, 0, true, &endpoint_list)) == CL_RETVAL_OK
           && endpoint_list != NULL
           && endpoint_list->elem_count == 0
           && waited_usec/1000000 < wait_secs) {
@@ -969,7 +969,7 @@ int comm_wait_for_no_connection(COMM_HANDLE *handle, const char *component,
       /* Let commlib update it's lists */
       ret2 = cl_commlib_trigger(handle, 0);
       /* Get list of all endpoints */
-      ret  = cl_commlib_search_endpoint(handle, NULL, (char*)component, 0, CL_TRUE, 
+      ret  = cl_commlib_search_endpoint(handle, NULL, (char*)component, 0, true, 
                                         &endpoint_list);
 
       if (ret == CL_RETVAL_OK
@@ -1198,10 +1198,10 @@ unsigned long comm_write_message(COMM_HANDLE *handle,
                            NULL,
                            0,
                            0,
-                           CL_FALSE,  /* don't copy the sendbuf */
-                           CL_FALSE); /* don't wait for ack */
+                           false,  /* don't copy the sendbuf */
+                           false); /* don't wait for ack */
 
-   /* TODO: change send_message to ACK, i.e. CL_MIH_MAT_ACK && CL_TRUE in
+   /* TODO: change send_message to ACK, i.e. CL_MIH_MAT_ACK && true in
     *       the last line. This ensures that the connection is open
     *       before the threads are created when this function is used by
     *       parent_loop(). Better solution: Move this to a function
@@ -1299,7 +1299,7 @@ int comm_flush_write_messages(COMM_HANDLE *handle, dstring *err_msg)
 *     comm_recv_message() -- Receives a message from the connection
 *
 *  SYNOPSIS
-*     int comm_recv_message(COMM_HANDLE *handle, cl_bool_t b_synchron, 
+*     int comm_recv_message(COMM_HANDLE *handle, bool b_synchron, 
 *     recv_message_t *recv_mess, dstring *err_msg) 
 *
 *  FUNCTION
@@ -1307,7 +1307,7 @@ int comm_flush_write_messages(COMM_HANDLE *handle, dstring *err_msg)
 *
 *  INPUTS
 *     COMM_HANDLE *handle          - Handle of the connection.
-*     cl_bool_t b_synchron         - true: Wait until a complete message was read
+*     bool b_synchron              - true: Wait until a complete message was read
 *                                    false: Get what's available and return.     
 *     recv_message_t *recv_mess    - The message gets filled into this struct.
 *                                    The caller has to free buffers.
@@ -1332,7 +1332,7 @@ int comm_flush_write_messages(COMM_HANDLE *handle, dstring *err_msg)
 *  SEE ALSO
 *     communication/comm_send_message, communication/comm_free_message
 *******************************************************************************/
-int comm_recv_message(COMM_HANDLE *handle, cl_bool_t b_synchron, 
+int comm_recv_message(COMM_HANDLE *handle, bool b_synchron, 
                       recv_message_t *recv_mess, dstring *err_msg)
 {
    int  ret_val = COMM_RETVAL_OK;
@@ -1359,7 +1359,7 @@ int comm_recv_message(COMM_HANDLE *handle, cl_bool_t b_synchron,
                                     NULL,       /* unresolved_hostname, */
                                     NULL,       /* component_name, */
                                     0,          /* component_id, */
-                                    CL_FALSE,
+                                    false,
                                     0,
                                     &message,
                                     &sender);

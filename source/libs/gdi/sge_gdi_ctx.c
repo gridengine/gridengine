@@ -907,7 +907,7 @@ static int sge_gdi_ctx_class_prepare_enroll(sge_gdi_ctx_class_t *thiz) {
    ** makes qsub hang
    */
    
-   if (cl_com_setup_commlib_complete() == CL_FALSE) {
+   if (cl_com_setup_commlib_complete() == false) {
       char* env_sge_commlib_debug = getenv("SGE_DEBUG_LEVEL");
       switch (thiz->get_who(thiz)) {
          case QMASTER:
@@ -1104,11 +1104,11 @@ static int sge_gdi_ctx_class_prepare_enroll(sge_gdi_ctx_class_t *thiz) {
                                                    1,
                                                    sge_qmaster_port,
                                                    CL_CM_AC_DISABLED,
-                                                   CL_TRUE);
+                                                   true);
             handle = cl_com_create_handle(&cl_ret, 
                                           communication_framework, 
                                           CL_CM_CT_MESSAGE, 
-                                          CL_TRUE,
+                                          true,
                                           sge_execd_port, 
                                           CL_TCP_DEFAULT,
                                           (char*)thiz->get_component_name(thiz),
@@ -1138,18 +1138,18 @@ static int sge_gdi_ctx_class_prepare_enroll(sge_gdi_ctx_class_t *thiz) {
                                                    1,
                                                    sge_qmaster_port,
                                                    CL_CM_AC_DISABLED ,
-                                                   CL_TRUE);
+                                                   true);
 
             /* do a later qmaster commlib listen before creating qmaster handle */
-            /* TODO: CL_COMMLIB_DELAYED_LISTEN is set to CL_FALSE, because
+            /* TODO: CL_COMMLIB_DELAYED_LISTEN is set to false, because
                      enabling it might cause problems with current shadowd and
                      startup qmaster implementation */
-            cl_commlib_set_global_param(CL_COMMLIB_DELAYED_LISTEN, CL_FALSE);
+            cl_commlib_set_global_param(CL_COMMLIB_DELAYED_LISTEN, false);
 
             handle = cl_com_create_handle(&cl_ret, 
                                           communication_framework, 
                                           CL_CM_CT_MESSAGE, /* message based tcp communication */
-                                          CL_TRUE, 
+                                          true, 
                                           sge_qmaster_port, /* create service on qmaster port */
                                           CL_TCP_DEFAULT,   /* use standard connect mode */
                                           (char*)thiz->get_component_name(thiz), 
@@ -1214,7 +1214,7 @@ static int sge_gdi_ctx_class_prepare_enroll(sge_gdi_ctx_class_t *thiz) {
             handle = cl_com_create_handle(&cl_ret, 
                                           communication_framework, 
                                           CL_CM_CT_MESSAGE, 
-                                          CL_FALSE, 
+                                          false, 
                                           sge_qmaster_port, 
                                           CL_TCP_DEFAULT,
                                           (char*)thiz->get_component_name(thiz), 
@@ -1240,7 +1240,7 @@ static int sge_gdi_ctx_class_prepare_enroll(sge_gdi_ctx_class_t *thiz) {
             handle = cl_com_create_handle(&cl_ret, 
                                           communication_framework, 
                                           CL_CM_CT_MESSAGE, 
-                                          CL_FALSE, 
+                                          false, 
                                           sge_qmaster_port, 
                                           CL_TCP_DEFAULT,
                                           (char*)thiz->get_component_name(thiz), 
@@ -1311,7 +1311,7 @@ static int sge_gdi_ctx_class_is_alive(sge_gdi_ctx_class_t *thiz)
     * qmaster could have changed due to migration
     */
    cl_com_append_known_endpoint_from_name((char*)comp_host, (char*)comp_name, comp_id, 
-                                          comp_port, CL_CM_AC_DISABLED, CL_TRUE);
+                                          comp_port, CL_CM_AC_DISABLED, true);
 
    DPRINTF(("to->comp_host, to->comp_name, to->comp_id: %s/%s/%d\n", comp_host?comp_host:"", comp_name?comp_name:"", comp_id));
    cl_ret = cl_commlib_get_endpoint_status(handle, (char*)comp_host, (char*)comp_name, comp_id, &status);

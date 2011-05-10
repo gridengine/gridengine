@@ -1842,7 +1842,7 @@ int main(int argc, char **argv)
       block_notification_signals();
 
       /* connection to qmaster is not needed any longer */
-      cl_commlib_shutdown_handle(cl_com_get_handle(progname, 0), CL_FALSE);
+      cl_commlib_shutdown_handle(cl_com_get_handle(progname, 0), false);
 
       /* start task in tightly integrated job */
       /* directly connect to commlib of exec daemon and submit task */
@@ -2045,7 +2045,7 @@ int main(int argc, char **argv)
          cl_commlib_close_connection(cl_com_get_handle(progname,0),
                                      (char*)mastername,
                                      (char*)prognames[QMASTER],
-                                     1, CL_FALSE);
+                                     1, false);
    
          if (is_qlogin) {
             if (g_new_interactive_job_support == false) {
@@ -2056,7 +2056,7 @@ int main(int argc, char **argv)
                if (msgsock >= 0) {
                   if (!get_client_server_context(msgsock, &port, &job_dir, 
                      &utilbin_dir, &host)) {
-                     cl_com_ignore_timeouts(CL_FALSE);
+                     cl_com_ignore_timeouts(false);
                      cl_commlib_open_connection(cl_com_get_handle(progname,0),
                                         (char*)mastername,
                                         (char*)prognames[QMASTER],
@@ -2088,7 +2088,7 @@ int main(int argc, char **argv)
                   if (exit_status < 0) {
                      WARNING((SGE_EVENT, MSG_QSH_CLEANINGUPAFTERABNORMALEXITOF_S, 
                         client_name));
-                     cl_com_ignore_timeouts(CL_FALSE);
+                     cl_com_ignore_timeouts(false);
                      cl_commlib_open_connection(cl_com_get_handle(progname,0),
                         (char*)mastername, (char*)prognames[QMASTER], 1);
                      DPRINTF(("deleting job\n"));
@@ -2132,7 +2132,7 @@ int main(int argc, char **argv)
                         sge_dstring_get_string(&err_msg)));
 
                      DPRINTF(("got error while waiting for connection\n"));
-                     cl_com_ignore_timeouts(CL_FALSE);
+                     cl_com_ignore_timeouts(false);
                      /* Tell the master to delete the job */
                      cl_commlib_open_connection(cl_com_get_handle(progname,0),
                                         (char*)mastername,
@@ -2186,7 +2186,7 @@ int main(int argc, char **argv)
             /* wait for qsh job to be scheduled */
             sleep(random_poll);
          }   
-         cl_com_ignore_timeouts(CL_FALSE);
+         cl_com_ignore_timeouts(false);
          cl_commlib_open_connection(cl_com_get_handle(progname,0),
                                     (char*)mastername,
                                     (char*)prognames[QMASTER],

@@ -88,7 +88,7 @@ int cl_com_print_host_info(cl_com_hostent_t *hostent_p );                 /* CR 
 
 int cl_com_create_debug_client_setup(cl_debug_client_setup_t** new_setup,
                                      cl_debug_client_t dc_mode,
-                                     cl_bool_t         dc_dump_flag,
+                                     bool         dc_dump_flag,
                                      int               dc_app_log_level);
 
 int cl_com_free_debug_client_setup(cl_debug_client_setup_t** new_setup);
@@ -120,8 +120,8 @@ const char* cl_com_get_connection_sub_state(cl_com_connection_t* connection);
 const char* cl_com_get_data_flow_type(cl_com_connection_t* connection);
 
 /* This can be called by an signal handler to trigger abort of communications */
-void cl_com_ignore_timeouts(cl_bool_t flag); 
-cl_bool_t cl_com_get_ignore_timeouts_flag(void);
+void cl_com_ignore_timeouts(bool flag); 
+bool cl_com_get_ignore_timeouts_flag(void);
 
 
 /* message functions */

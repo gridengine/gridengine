@@ -55,7 +55,7 @@ int cl_com_update_parameter_list(char* parameter);
 /* application log functions */
 int cl_commlib_push_application_error(cl_log_t cl_err_type, int cl_error, const char* cl_info);
 int cl_com_setup_commlib(cl_thread_mode_t t_mode, cl_log_t debug_level, cl_log_func_t flush_func);
-cl_bool_t cl_com_setup_commlib_complete(void);
+bool cl_com_setup_commlib_complete(void);
 int cl_com_cleanup_commlib(void);
 
 
@@ -63,7 +63,7 @@ int cl_com_cleanup_commlib(void);
 cl_com_handle_t* cl_com_create_handle(int*                      commlib_error,
                                       cl_framework_t            framework,
                                       cl_xml_connection_type_t  data_flow_type ,
-                                      cl_bool_t                 service_provider ,
+                                      bool                 service_provider ,
                                       int                       port,
                                       cl_tcp_connect_t          tcp_connect_mode,
                                       char*                     component_name, 
@@ -71,7 +71,7 @@ cl_com_handle_t* cl_com_create_handle(int*                      commlib_error,
                                       int                       select_sec_timeout, 
                                       int                       select_usec_timeout);
 
-int cl_commlib_shutdown_handle   (cl_com_handle_t* handle, cl_bool_t return_for_messages );
+int cl_commlib_shutdown_handle   (cl_com_handle_t* handle, bool return_for_messages );
 
 cl_com_handle_t* cl_com_get_handle(const char* component_name, 
                                    unsigned long component_id);  /* CR check */
@@ -93,12 +93,12 @@ int cl_com_remove_host_alias(char* alias_name);
 
 int cl_com_specify_ssl_configuration(cl_ssl_setup_t* new_config);
 
-int cl_com_append_known_endpoint_from_name(char* unresolved_comp_host, char* comp_name, unsigned long comp_id, int service_port, cl_xml_connection_autoclose_t autoclose, cl_bool_t is_static );
+int cl_com_append_known_endpoint_from_name(char* unresolved_comp_host, char* comp_name, unsigned long comp_id, int service_port, cl_xml_connection_autoclose_t autoclose, bool is_static );
 int cl_com_remove_known_endpoint_from_name(const char* unresolved_comp_host, const char* comp_name, unsigned long comp_id);
 int cl_com_get_known_endpoint_port_from_name(char* unresolved_comp_host, char* comp_name, unsigned long comp_id, int* service_port );
 int cl_com_get_known_endpoint_autoclose_mode_from_name(char* unresolved_comp_host, char* comp_name, unsigned long comp_id, cl_xml_connection_autoclose_t* auto_close_mode );
 
-int cl_com_append_known_endpoint(cl_com_endpoint_t* endpoint, int service_port, cl_xml_connection_autoclose_t autoclose, cl_bool_t is_static );
+int cl_com_append_known_endpoint(cl_com_endpoint_t* endpoint, int service_port, cl_xml_connection_autoclose_t autoclose, bool is_static );
 int cl_com_remove_known_endpoint(cl_com_endpoint_t* endpoint);
 int cl_com_get_known_endpoint_port(cl_com_endpoint_t* endpoint, int* service_port );
 int cl_com_get_known_endpoint_autoclose_mode(cl_com_endpoint_t* endpoint, cl_xml_connection_autoclose_t* auto_close_mode );
@@ -135,7 +135,7 @@ char* cl_com_get_unresolvable_hosts(void);
 
 unsigned long cl_com_messages_in_send_queue(cl_com_handle_t *handle);
 
-cl_bool_t cl_com_is_valid_fd (int fd);
+bool cl_com_is_valid_fd (int fd);
 
 cl_thread_mode_t cl_commlib_get_thread_state(void);
 
@@ -154,14 +154,14 @@ int cl_commlib_trigger           (cl_com_handle_t* handle, int synchron);
 
 int cl_commlib_close_connection  (cl_com_handle_t* handle, 
                                   char* un_resolved_hostname, char* component_name, unsigned long component_id,
-                                  cl_bool_t return_for_messages );
+                                  bool return_for_messages );
 int cl_commlib_open_connection   (cl_com_handle_t* handle,
                                   char* un_resolved_hostname, char* component_name, unsigned long component_id);
 
 
 int cl_commlib_receive_message   (cl_com_handle_t* handle, 
                                   char* un_resolved_hostname, char* component_name, unsigned long component_id, 
-                                  cl_bool_t synchron, 
+                                  bool synchron, 
                                   unsigned long response_mid, 
                                   cl_com_message_t** message, 
                                   cl_com_endpoint_t** sender );
@@ -173,13 +173,13 @@ int cl_commlib_send_message       (cl_com_handle_t* handle,
                                   unsigned long* mid , 
                                   unsigned long response_mid, 
                                   unsigned long tag, 
-                                  cl_bool_t copy_data, 
-                                  cl_bool_t wait_for_ack );
+                                  bool copy_data, 
+                                  bool wait_for_ack );
 
 int cl_commlib_check_for_ack      (cl_com_handle_t* handle, 
                                    char* un_resolved_hostname, char* component_name, unsigned long component_id, 
                                    unsigned long mid , 
-                                   cl_bool_t do_block);
+                                   bool do_block);
 
 int cl_commlib_get_endpoint_status(cl_com_handle_t* handle,
                                    char* un_resolved_hostname, char* component_name, unsigned long component_id,
@@ -187,7 +187,7 @@ int cl_commlib_get_endpoint_status(cl_com_handle_t* handle,
 
 int cl_commlib_search_endpoint    (cl_com_handle_t* handle,
                                    char* un_resolved_hostname, char* component_name, unsigned long component_id, 
-                                   cl_bool_t only_connected,
+                                   bool only_connected,
                                    cl_raw_list_t** endpoint_list);
 
 
@@ -198,8 +198,8 @@ int cl_commlib_get_connect_time(cl_com_handle_t* handle, const char* un_resolved
 #define HEARD_FROM_TIMEOUT 1  /* dummy parameter */
 int cl_commlib_set_connection_param(cl_com_handle_t* handle, int parameter, int value);
 int cl_commlib_get_connection_param(cl_com_handle_t* handle, int parameter, int* value);
-cl_bool_t cl_commlib_get_global_param(cl_global_settings_params_t parameter);
-int cl_commlib_set_global_param(cl_global_settings_params_t parameter, cl_bool_t value);
+bool cl_commlib_get_global_param(cl_global_settings_params_t parameter);
+int cl_commlib_set_global_param(cl_global_settings_params_t parameter, bool value);
 int cl_commlib_get_last_message_time(cl_com_handle_t* handle, const char* un_resolved_hostname, const char* component_name, unsigned long component_id, unsigned long* msg_time);
 
 

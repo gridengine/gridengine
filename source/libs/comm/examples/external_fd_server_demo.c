@@ -82,8 +82,8 @@ void setup_signal_handler(void) {
 }
 
 
-static cl_bool_t my_ssl_verify_func(cl_ssl_verify_mode_t mode, cl_bool_t service_mode, const char* value) {
-   return CL_TRUE;
+static bool my_ssl_verify_func(cl_ssl_verify_mode_t mode, bool service_mode, const char* value) {
+   return true;
 }
 
 
@@ -222,7 +222,7 @@ extern int main(int argc, char** argv) {
    handle=cl_com_create_handle(NULL, 
                                framework, 
                                CL_CM_CT_MESSAGE,
-                               CL_TRUE,
+                               true,
                                handle_port,
                                CL_TCP_DEFAULT,
                                "server", 1,
@@ -249,7 +249,7 @@ extern int main(int argc, char** argv) {
       cl_com_endpoint_t* sender = NULL;
       cl_commlib_trigger(handle, 1);
  
-      cl_commlib_receive_message(handle,NULL, NULL, 0, CL_FALSE, 0, &message, &sender);
+      cl_commlib_receive_message(handle,NULL, NULL, 0, false, 0, &message, &sender);
  
       if (message != NULL) {
          printf("%s@%s: %s\n", sender->comp_host, sender->comp_name, message->message);
@@ -273,7 +273,7 @@ extern int main(int argc, char** argv) {
                                        (cl_byte_t**)&message->message, 
                                        strlen((const char*)message->message)+1, 
                                        NULL, 0, 0, 
-                                       CL_TRUE,CL_FALSE);
+                                       true,false);
             }
          }
          cl_com_free_message(&message);
@@ -286,10 +286,10 @@ extern int main(int argc, char** argv) {
    printf("shutting down ...\n");
 
    /* here the application goes down - shutdown communication lib */
-   while ( cl_commlib_shutdown_handle(handle, CL_TRUE) == CL_RETVAL_MESSAGE_IN_BUFFER) {
+   while ( cl_commlib_shutdown_handle(handle, true) == CL_RETVAL_MESSAGE_IN_BUFFER) {
       cl_com_message_t*  message = NULL;
       cl_com_endpoint_t* sender = NULL;
-      cl_commlib_receive_message(handle,NULL, NULL, 0, CL_FALSE, 0, &message, &sender);
+      cl_commlib_receive_message(handle,NULL, NULL, 0, false, 0, &message, &sender);
  
       if (message != NULL) {
          printf("ignoring message from \"%s\"\n", sender->comp_host); 

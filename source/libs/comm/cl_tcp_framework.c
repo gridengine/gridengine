@@ -440,7 +440,7 @@ int cl_com_tcp_open_connection(cl_com_connection_t* connection, int timeout) {
 
          gettimeofday(&now,NULL);
          if (connection->write_buffer_timeout_time <= now.tv_sec || 
-             cl_com_get_ignore_timeouts_flag()     == CL_TRUE       ) {
+             cl_com_get_ignore_timeouts_flag()     == true       ) {
 
             /* we had an timeout */
             CL_LOG(CL_LOG_ERROR,"connect timeout error");
@@ -986,7 +986,7 @@ static int cl_com_tcp_connection_request_handler_setup_finalize(cl_com_connectio
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_tcp_connection_request_handler_setup()"
-int cl_com_tcp_connection_request_handler_setup(cl_com_connection_t* connection, cl_bool_t only_prepare_service) {
+int cl_com_tcp_connection_request_handler_setup(cl_com_connection_t* connection, bool only_prepare_service) {
    int sockfd = 0;
    struct sockaddr_in serv_addr;
    cl_com_tcp_private_t* private = NULL;
@@ -1081,7 +1081,7 @@ int cl_com_tcp_connection_request_handler_setup(cl_com_connection_t* connection,
    /* if only_prepare_service is enabled we don't want to set the port into
       listen mode now, we have to do it later */
    private->pre_sockfd = sockfd;
-   if (only_prepare_service == CL_TRUE) {
+   if (only_prepare_service == true) {
       CL_LOG_INT(CL_LOG_INFO,"service socket prepared for listen, using sockfd=", sockfd);
       return CL_RETVAL_OK;
    }
@@ -1518,7 +1518,7 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
          cl_raw_list_unlock(connection_list);
          return CL_RETVAL_NOT_SERVICE_HANDLER;
       }
-      service_connection->is_read_selected = CL_FALSE;
+      service_connection->is_read_selected = false;
       private = cl_com_tcp_get_private(service_connection);
       /* check if service is already in listen mode. This might happen
          when only_prepare_service was set to true at 
@@ -1546,7 +1546,7 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
 #else
       FD_SET(server_fd, &my_read_fds);
 #endif
-      service_connection->is_read_selected = CL_TRUE;
+      service_connection->is_read_selected = true;
       nr_of_descriptors++;
       service_connection->data_read_flag = CL_COM_DATA_NOT_READY;
    }
@@ -1562,10 +1562,10 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
          return CL_RETVAL_NO_FRAMEWORK_INIT;
       }
       if (do_read_select != 0) {
-         connection->is_read_selected = CL_FALSE;
+         connection->is_read_selected = false;
       }
       if (do_write_select != 0) {
-         connection->is_write_selected = CL_FALSE;
+         connection->is_write_selected = false;
       }
 
       if (con_private->sockfd >= 0) {
@@ -1582,7 +1582,7 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
 #else
                            FD_SET(con_private->sockfd,&my_read_fds);
 #endif
-                           connection->is_read_selected = CL_TRUE;
+                           connection->is_read_selected = true;
                            max_fd = MAX(max_fd,con_private->sockfd);
                            nr_of_descriptors++;
                            connection->data_read_flag = CL_COM_DATA_NOT_READY;
@@ -1596,7 +1596,7 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
 #else
                            FD_SET(con_private->sockfd,&my_write_fds);
 #endif
-                           connection->is_write_selected = CL_TRUE;
+                           connection->is_write_selected = true;
                            max_fd = MAX(max_fd, con_private->sockfd);
                            connection->fd_ready_for_write = CL_COM_DATA_NOT_READY;
                         }
@@ -1620,7 +1620,7 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
 #else
                            FD_SET(con_private->sockfd,&my_read_fds);
 #endif
-                           connection->is_read_selected = CL_TRUE;
+                           connection->is_read_selected = true;
                            max_fd = MAX(max_fd,con_private->sockfd);
                            nr_of_descriptors++;
                            connection->data_read_flag = CL_COM_DATA_NOT_READY;
@@ -1634,7 +1634,7 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
 #else
                            FD_SET(con_private->sockfd,&my_write_fds);
 #endif
-                           connection->is_write_selected = CL_TRUE;
+                           connection->is_write_selected = true;
                            max_fd = MAX(max_fd, con_private->sockfd);
                            connection->fd_ready_for_write = CL_COM_DATA_NOT_READY;
                         }
@@ -1657,7 +1657,7 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
 #else
                         FD_SET(con_private->sockfd,&my_read_fds);
 #endif
-                        connection->is_read_selected = CL_TRUE;
+                        connection->is_read_selected = true;
                         max_fd = MAX(max_fd,con_private->sockfd);
                         nr_of_descriptors++;
                         connection->data_read_flag = CL_COM_DATA_NOT_READY;
@@ -1671,7 +1671,7 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
 #else
                         FD_SET(con_private->sockfd,&my_write_fds);
 #endif
-                        connection->is_write_selected = CL_TRUE;
+                        connection->is_write_selected = true;
                         max_fd = MAX(max_fd, con_private->sockfd);
                         connection->fd_ready_for_write = CL_COM_DATA_NOT_READY;
                      }
@@ -1704,7 +1704,7 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
 #else
                               FD_SET(con_private->sockfd,&my_read_fds);
 #endif
-                              connection->is_read_selected = CL_TRUE;
+                              connection->is_read_selected = true;
                               max_fd = MAX(max_fd,con_private->sockfd);
                               nr_of_descriptors++;
                               connection->data_read_flag = CL_COM_DATA_NOT_READY;
@@ -1717,7 +1717,7 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
 #else
                               FD_SET(con_private->sockfd,&my_write_fds);
 #endif
-                              connection->is_write_selected = CL_TRUE;
+                              connection->is_write_selected = true;
                               max_fd = MAX(max_fd, con_private->sockfd);
                               connection->fd_ready_for_write = CL_COM_DATA_NOT_READY;
                               connection->data_write_flag = CL_COM_DATA_READY;
@@ -1771,7 +1771,7 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
 #endif
             }
             if(do_write_select == 1){
-               if (elem->data->ready_for_writing == CL_TRUE) {
+               if (elem->data->ready_for_writing == true) {
 #ifdef USE_POLL
                   ufds[ufds_index].events |= POLLOUT;
 #else
@@ -1989,13 +1989,13 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
                      if (ufds[fd_index].revents & (POLLIN|POLLPRI)) {
                         connection->data_read_flag = CL_COM_DATA_READY;
                      }
-                     connection->is_read_selected = CL_FALSE;
+                     connection->is_read_selected = false;
                   }
                   if (do_write_select != 0) {
                      if (ufds[fd_index].revents & POLLOUT) {
                         connection->fd_ready_for_write = CL_COM_DATA_READY;
                      }
-                     connection->is_write_selected = CL_FALSE;
+                     connection->is_write_selected = false;
                   }
 
                   /* Do we have poll errors ? */
@@ -2045,16 +2045,16 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
                      if (elem->data->fd == ufds[fd_index].fd) {
                         if(do_read_select == 1) {
                            if(ufds[fd_index].revents & (POLLIN|POLLPRI)){
-                              elem->data->read_ready = CL_TRUE;
+                              elem->data->read_ready = true;
                            }else{
-                              elem->data->read_ready = CL_FALSE;
+                              elem->data->read_ready = false;
                            }
                         }
                         if(do_write_select == 1) {
                            if(ufds[fd_index].revents & POLLOUT){
-                              elem->data->write_ready = CL_TRUE;
+                              elem->data->write_ready = true;
                            }else{
-                              elem->data->write_ready = CL_FALSE;
+                              elem->data->write_ready = false;
                            }
                         }
                      }
@@ -2081,7 +2081,7 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
                         connection->data_read_flag = CL_COM_DATA_READY;
                      }
                   }
-                  connection->is_read_selected = CL_FALSE;
+                  connection->is_read_selected = false;
                }
                if (do_write_select != 0) {
                   if (con_private->sockfd >= 0 && con_private->sockfd <= max_fd) {
@@ -2089,7 +2089,7 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
                         connection->fd_ready_for_write = CL_COM_DATA_READY;
                      }
                   }
-                  connection->is_write_selected = CL_FALSE;
+                  connection->is_write_selected = false;
                }
                con_elem = cl_connection_list_get_next_elem(con_elem);
             } /* while */
@@ -2100,7 +2100,7 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
                if (FD_ISSET(server_fd, &my_read_fds)) {
                   service_connection->data_read_flag = CL_COM_DATA_READY;
                }
-               service_connection->is_read_selected = CL_FALSE;
+               service_connection->is_read_selected = false;
             }
 
             /* look for ready external file descriptors and set their ready flags */
@@ -2110,14 +2110,14 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
 
                while(fd_elem) {
                   if (FD_ISSET(fd_elem->data->fd, &my_read_fds)) {
-                     fd_elem->data->read_ready = CL_TRUE;
+                     fd_elem->data->read_ready = true;
                   }else{
-                     fd_elem->data->read_ready = CL_FALSE;
+                     fd_elem->data->read_ready = false;
                   }
                   if (FD_ISSET(fd_elem->data->fd, &my_write_fds)) {
-                     fd_elem->data->write_ready = CL_TRUE;
+                     fd_elem->data->write_ready = true;
                   }else{
-                     fd_elem->data->write_ready = CL_FALSE;
+                     fd_elem->data->write_ready = false;
                   }
                   fd_elem = cl_fd_list_get_next_elem(fd_elem);
                }
@@ -2138,10 +2138,10 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
       connection = ufds_con[fd_index];
       if (connection != NULL) {
          if (do_read_select != 0) {
-            connection->is_read_selected = CL_FALSE;
+            connection->is_read_selected = false;
          }
          if (do_write_select != 0) {
-            connection->is_write_selected = CL_FALSE;
+            connection->is_write_selected = false;
          }
       }
    }
@@ -2152,17 +2152,17 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
    while(con_elem) {
       connection  = con_elem->connection;
       if (do_read_select != 0) {
-         connection->is_read_selected = CL_FALSE;
+         connection->is_read_selected = false;
       }
       if (do_write_select != 0) {
-         connection->is_write_selected = CL_FALSE;
+         connection->is_write_selected = false;
       }
       con_elem = cl_connection_list_get_next_elem(con_elem);
    }
    cl_raw_list_unlock(connection_list);
 
    if (server_fd != -1) {
-      service_connection->is_read_selected = CL_FALSE;
+      service_connection->is_read_selected = false;
    }
 #endif
    return retval;

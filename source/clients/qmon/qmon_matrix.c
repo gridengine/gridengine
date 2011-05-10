@@ -663,7 +663,7 @@ int num_fields,
          continue;
    }
    
-   va_end(ap)
+   va_end(ap);
    sge_free(&field);
    sge_free(&col);
 

@@ -222,7 +222,7 @@ sge_tid_t sge_qexecve(sge_gdi_ctx_class_t *ctx,
    }
 
    /* now close message to execd */
-   cl_commlib_shutdown_handle(cl_com_get_handle("execd_handle", 0), CL_FALSE);
+   cl_commlib_shutdown_handle(cl_com_get_handle("execd_handle", 0), false);
 
    DRETURN(tid);
 }

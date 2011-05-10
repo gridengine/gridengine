@@ -312,7 +312,7 @@ int sge_execd_process_messages(sge_gdi_ctx_class_t *ctx)
                   cl_com_free_sirm_message(&ep_status);
                   if (ret_val != CL_RETVAL_OK) {
                      /* There was an error, close connection and trigger reconnect */
-                     cl_commlib_close_connection(handle, (char*)master_host, (char*)prognames[QMASTER], 1, CL_FALSE);
+                     cl_commlib_close_connection(handle, (char*)master_host, (char*)prognames[QMASTER], 1, false);
                      do_reconnect = true;
                   }
                }

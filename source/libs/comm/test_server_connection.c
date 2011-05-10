@@ -97,7 +97,7 @@ extern int main(int argc, char** argv)
   cl_com_setup_commlib(CL_RW_THREAD, (cl_log_t)atoi(argv[1]), NULL);
 
   printf("setting up service on port %d\n", atoi(argv[2]) );
-  handle=cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , CL_TRUE, atoi(argv[2]) , CL_TCP_DEFAULT,"server", 1, 2, 0 );
+  handle=cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , true, atoi(argv[2]) , CL_TCP_DEFAULT,"server", 1, 2, 0 );
   if (handle == NULL) {
      printf("could not get handle\n");
      exit(-1);
@@ -127,7 +127,7 @@ extern int main(int argc, char** argv)
 
      gettimeofday(&now,NULL);
      cl_commlib_trigger(handle, 1);
-     ret_val = cl_commlib_receive_message(handle,NULL, NULL, 0, CL_FALSE, 0, &message, &sender);
+     ret_val = cl_commlib_receive_message(handle,NULL, NULL, 0, false, 0, &message, &sender);
      if (message != NULL ) {
         ret_val = cl_commlib_send_message(handle, 
                                 sender->comp_host, 
@@ -136,7 +136,7 @@ extern int main(int argc, char** argv)
                                 &message->message, 
                                 message->message_length, 
                                 &mid, message->message_id,0, 
-                                CL_FALSE, CL_FALSE);
+                                false, false);
         if (ret_val != CL_RETVAL_OK) {
 /*
            printf("cl_commlib_send_message() returned: %s\n",cl_get_error_text(ret_val));
@@ -153,7 +153,7 @@ extern int main(int argc, char** argv)
   }
 
 
-  cl_com_ignore_timeouts(CL_TRUE); 
+  cl_com_ignore_timeouts(true); 
   cl_com_get_ignore_timeouts_flag();
 
   printf("shutting down server ...\n");
@@ -165,9 +165,9 @@ extern int main(int argc, char** argv)
      printf("found handle\n");
   }
 
-  while ( cl_commlib_shutdown_handle(handle, CL_TRUE) == CL_RETVAL_MESSAGE_IN_BUFFER) {
+  while ( cl_commlib_shutdown_handle(handle, true) == CL_RETVAL_MESSAGE_IN_BUFFER) {
      message = NULL;
-     cl_commlib_receive_message(handle, NULL, NULL, 0, CL_FALSE, 0, &message, &sender);
+     cl_commlib_receive_message(handle, NULL, NULL, 0, false, 0, &message, &sender);
 
      if (message != NULL) {
         printf("ignoring message from \"%s\": size of message: %ld\n", sender->comp_host, message->message_length); 

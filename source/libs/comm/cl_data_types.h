@@ -43,6 +43,7 @@
 #include <netinet/in.h>
 #endif
 
+#include "basis_types.h"
 #include "comm/lists/cl_lists.h"
 #include "comm/cl_xml_parsing.h"
 
@@ -211,7 +212,7 @@ typedef enum cl_ssl_cert_mode_type {
 } cl_ssl_cert_mode_t;   
 
 /* callback for verify peer names */
-typedef cl_bool_t    (*cl_ssl_verify_func_t)  (cl_ssl_verify_mode_t mode, cl_bool_t service_mode, const char* value );
+typedef bool (*cl_ssl_verify_func_t)  (cl_ssl_verify_mode_t mode, bool service_mode, const char* value );
 
 typedef enum cl_debug_client_def {
    CL_DEBUG_CLIENT_OFF = 0,
@@ -232,7 +233,7 @@ typedef enum cl_debug_client_def {
 
 typedef struct cl_debug_client_setup_type {
    cl_debug_client_t dc_mode;            /* debug_client_mode */
-   cl_bool_t         dc_dump_flag;       /* flag for sending message data */
+   bool         dc_dump_flag;       /* flag for sending message data */
    int               dc_app_log_level;   /* application log level */
    cl_raw_list_t*    dc_debug_list;      /* debug list */
 } cl_debug_client_setup_t;
@@ -297,7 +298,7 @@ typedef struct cl_com_handle {
    cl_framework_t            framework;        /* framework type CL_CT_TCP, CL_CT_SSL */
    cl_tcp_connect_t          tcp_connect_mode; /* used for reserved port selection for tcp connect */
    cl_xml_connection_type_t  data_flow_type;   /* data_flow type CL_CM_CT_STREAM, CL_CM_CT_MESSAGE  */
-   cl_bool_t                 service_provider; /* if true this component will provide a service for clients (server port) */
+   bool                 service_provider; /* if true this component will provide a service for clients (server port) */
 
    /* connect_port OR service_port is always 0 !!! - CR */
    int connect_port;                /* used port number to connect to other service */
@@ -352,8 +353,8 @@ typedef struct cl_com_handle {
    
    /* service specific */
    int do_shutdown;                        /* set when this handle wants to shutdown */
-   cl_bool_t max_connection_count_reached;       /* set when max connection count is reached */
-   cl_bool_t max_connection_count_found_connection_to_close; /* set if we found a connection to close when max_connection_count_reached is set */
+   bool max_connection_count_reached;       /* set when max connection count is reached */
+   bool max_connection_count_found_connection_to_close; /* set if we found a connection to close when max_connection_count_reached is set */
    cl_com_connection_t* last_receive_message_connection;  /* this is the last connection from connection list, where cl_comlib_receive_message() was called */
    long shutdown_timeout;                   /* used when shutting down handle */
    cl_com_connection_t* service_handler;    /* service handler of this handle */
@@ -410,18 +411,18 @@ typedef struct cl_com_host_spec_type {
    the external file descriptor will be removed form the list.
 
    int fd                   the external file descriptor
-   cl_bool_t read_ready     states if the fd is ready for reading
-   cl_bool_t write_ready    states if the fd is ready for writing
+   bool read_ready     states if the fd is ready for reading
+   bool write_ready    states if the fd is ready for writing
    void* user_data          void pointer to some data of the application
    int err_val              states if an error occured while poll/select of the external fd
 */
-typedef int   (*cl_fd_func_t)   (int fd, cl_bool_t read_ready, cl_bool_t write_ready, void* user_data, int err_val);
+typedef int   (*cl_fd_func_t)   (int fd, bool read_ready, bool write_ready, void* user_data, int err_val);
 typedef struct cl_com_fd_data_type {
    int                  fd;
    cl_select_method_t   select_mode;         /* select mode of the fd (read, write, read/write) */
-   cl_bool_t            read_ready;          /* is fd ready for read, write, read/write */
-   cl_bool_t            write_ready;         /* is fd ready for read, write, read/write */
-   cl_bool_t            ready_for_writing;   /* the application has data to write */
+   bool            read_ready;          /* is fd ready for read, write, read/write */
+   bool            write_ready;         /* is fd ready for read, write, read/write */
+   bool            ready_for_writing;   /* the application has data to write */
    cl_fd_func_t         callback;
    void*                user_data;
 } cl_com_fd_data_t;
@@ -461,7 +462,7 @@ typedef struct cl_com_con_statistic_type {
 
 struct cl_com_connection_type {
 
-   cl_bool_t             check_endpoint_flag;  /* set when an endpoint should get a SIM to check availability of endpoint */
+   bool             check_endpoint_flag;  /* set when an endpoint should get a SIM to check availability of endpoint */
                                                /* (if CL_TRUE, there is already a sim/sirm check ongoing) */
    unsigned long         check_endpoint_mid;   /* contains the mid of the sim when sent */
 
@@ -493,8 +494,8 @@ struct cl_com_connection_type {
    cl_connection_state_t         connection_state;        /* CL_COM_DISCONNECTED,CL_COM_CLOSING ,CL_COM_CONNECTED ,CL_COM_CONNECTING */
    cl_connection_sub_state_type  connection_sub_state;    /* depends on connection_state */
 
-   cl_bool_t     was_accepted;            /* is set when this is a client connection (from accept() ) */
-   cl_bool_t     was_opened;              /* is set when this connection was opened (with open connection) by connect() */ 
+   bool     was_accepted;            /* is set when this is a client connection (from accept() ) */
+   bool     was_opened;              /* is set when this connection was opened (with open connection) by connect() */ 
    char*         client_host_name;        /* this is the resolved client host name */
    cl_xml_connection_status_t crm_state;  /* state of connection response message (if server) */
    char*         crm_state_error;         /* error text if crm_state is CL_CRM_CS_DENIED or larger */
@@ -527,8 +528,8 @@ struct cl_com_connection_type {
    /* connection specific */
    cl_com_con_statistic_t* statistic;
    cl_xml_connection_autoclose_t auto_close_type;       /* CL_CM_AC_ENABLED, CL_CM_AC_DISABLED */  
-   cl_bool_t     is_read_selected;                 /* if set to CL_TRUE this connection is not deleted */
-   cl_bool_t     is_write_selected;                /* if set to CL_TRUE this connection is not deleted */
+   bool     is_read_selected;                 /* if set to CL_TRUE this connection is not deleted */
+   bool     is_write_selected;                /* if set to CL_TRUE this connection is not deleted */
 
    void*         com_private;
 };

@@ -126,7 +126,7 @@ static int shadowd_is_old_master_enrolled(int sge_test_heartbeat, int sge_qmaste
       DRETURN(is_up_and_running);
    }
 
-   handle=cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE, CL_FALSE, sge_qmaster_port, CL_TCP_DEFAULT,(char*)prognames[SHADOWD] , 0, 1,0 );
+   handle=cl_com_create_handle(&commlib_error, CL_CT_TCP, CL_CM_CT_MESSAGE, false, sge_qmaster_port, CL_TCP_DEFAULT,(char*)prognames[SHADOWD] , 0, 1,0 );
    if (handle == NULL) {
       CRITICAL((SGE_EVENT, SFNMAX, cl_get_error_text(commlib_error)));
       DRETURN(is_up_and_running);
@@ -148,7 +148,7 @@ static int shadowd_is_old_master_enrolled(int sge_test_heartbeat, int sge_qmaste
       cl_com_free_sirm_message(&status);
    }
  
-   cl_commlib_shutdown_handle(handle,CL_FALSE);
+   cl_commlib_shutdown_handle(handle,false);
 
    DRETURN(is_up_and_running);
 }

@@ -63,7 +63,7 @@ void sighandler_server(int sig) {
       hup_signal = 1;
       return;
    }
-   cl_com_ignore_timeouts(CL_TRUE);
+   cl_com_ignore_timeouts(true);
 }
 
 
@@ -142,7 +142,7 @@ extern int main(int argc, char** argv)
   cl_com_setup_commlib(thread_mode, CL_LOG_OFF, NULL);
 
 
-  handle=cl_com_create_handle(NULL, CL_CT_TCP, CL_CM_CT_MESSAGE, CL_TRUE, handle_port, CL_TCP_DEFAULT, "client", 1, 1, 0 );
+  handle=cl_com_create_handle(NULL, CL_CT_TCP, CL_CM_CT_MESSAGE, true, handle_port, CL_TCP_DEFAULT, "client", 1, 1, 0 );
   if (handle == NULL) {
      printf("could not get handle\n");
      cl_com_cleanup_commlib();
@@ -164,7 +164,7 @@ extern int main(int argc, char** argv)
   }
 
 
-  cl_com_append_known_endpoint_from_name(server_host, "server", 1, server_port, CL_CM_AC_ENABLED, CL_TRUE); 
+  cl_com_append_known_endpoint_from_name(server_host, "server", 1, server_port, CL_CM_AC_ENABLED, true); 
 
   /* send 100 messages to server. Server will respond them all */
   printf("sending 10 messages to server ...\n");
@@ -174,7 +174,7 @@ extern int main(int argc, char** argv)
                                        CL_MIH_MAT_NAK,  
                                        &message_text_pointer, 5, 
                                        NULL, 0, 0, 
-                                       CL_TRUE, CL_FALSE);
+                                       true, false);
      if (ret_val != CL_RETVAL_OK) {
         exit_state = 1;
      }
@@ -183,7 +183,7 @@ extern int main(int argc, char** argv)
 
   printf("receiving one message from server ...\n");
   /* we receive first syncron message response from server */
-  ret_val = cl_commlib_receive_message(handle,NULL, NULL, 0, CL_TRUE, 1, &message, &sender);
+  ret_val = cl_commlib_receive_message(handle,NULL, NULL, 0, true, 1, &message, &sender);
   if (message != NULL) {
      printf("received message from \"%s/%s/%ld\" (%s)\n", sender->comp_host, sender->comp_name, sender->comp_id,  cl_get_error_text(ret_val));
      cl_com_free_message(&message);
@@ -203,7 +203,7 @@ extern int main(int argc, char** argv)
                                        CL_MIH_MAT_NAK,  
                                        &message_text_pointer, 5, 
                                        NULL, 0, 0, 
-                                       CL_TRUE, CL_FALSE);
+                                       true, false);
      if (ret_val != CL_RETVAL_OK) {
         exit_state = 1;
      }

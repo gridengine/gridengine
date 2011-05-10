@@ -36,6 +36,8 @@
 #include <sys/time.h>
 #include <pthread.h>
 
+#include "basis_types.h"
+
 #define CL_THREAD_LIST 1
 #define CL_LOG_LIST    2
 typedef struct cl_thread_settings_type  cl_thread_settings_t;
@@ -92,11 +94,6 @@ typedef enum cl_log_type {
    CL_LOG_DEBUG
 } cl_log_t;
 
-typedef enum cl_bool_def {
-   CL_FALSE = 0,
-   CL_TRUE
-} cl_bool_t;
-
 /***********************************************************************/
 /* LOG_LIST */
 /***********************************************************************/
@@ -118,7 +115,7 @@ typedef struct cl_application_error_list_elem_t {
                                               (use cl_get_error_text() to resolve error string) */
    char*                 cl_info;          /* additional error information */
    struct timeval        cl_log_time;      /* time when the message was added */
-   cl_bool_t             cl_already_logged;/* CL_TRUE when this error was logged the last 
+   bool                  cl_already_logged;/* CL_TRUE when this error was logged the last 
                                               CL_DEFINE_MESSAGE_DUP_LOG_TIMEOUT seconds */
    cl_log_t              cl_err_type;      /* commlib error message type */
 } cl_application_error_list_elem_t;

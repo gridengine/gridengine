@@ -48,7 +48,7 @@
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_connection_list_setup()"
-int cl_connection_list_setup(cl_raw_list_t** list_p, char* list_name, int enable_locking, cl_bool_t create_hash) {
+int cl_connection_list_setup(cl_raw_list_t** list_p, char* list_name, int enable_locking, bool create_hash) {
    cl_connection_list_data_t* ldata = NULL;
    int ret_val;
    ldata = (cl_connection_list_data_t*) malloc(sizeof(cl_connection_list_data_t));
@@ -65,7 +65,7 @@ int cl_connection_list_setup(cl_raw_list_t** list_p, char* list_name, int enable
    }
 
    /* create hashtable */
-   if (create_hash == CL_TRUE) {
+   if (create_hash == true) {
       ldata->r_ht = sge_htable_create(4, dup_func_string, hash_func_string, hash_compare_string);
       if (ldata->r_ht == NULL) {
          cl_raw_list_cleanup(list_p);
@@ -257,7 +257,7 @@ int cl_connection_list_remove_connection(cl_raw_list_t* list_p, cl_com_connectio
 #define __CL_FUNCTION__ "cl_connection_list_destroy_connections_to_close()"
 int cl_connection_list_destroy_connections_to_close(cl_com_handle_t* handle) {
    int ret_val = CL_RETVAL_OK;
-   cl_bool_t timeout_flag = cl_com_get_ignore_timeouts_flag();
+   bool timeout_flag = cl_com_get_ignore_timeouts_flag();
    cl_connection_list_elem_t* elem = NULL;
    cl_connection_list_elem_t* act_elem = NULL;
    cl_com_connection_t* connection = NULL;
@@ -304,7 +304,7 @@ int cl_connection_list_destroy_connections_to_close(cl_com_handle_t* handle) {
                  connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
                  CL_LOG(CL_LOG_INFO,"setting connection state to close this connection");
             } else {
-               if ( connection->connection_close_time.tv_sec <= now.tv_sec || timeout_flag == CL_TRUE) {
+               if ( connection->connection_close_time.tv_sec <= now.tv_sec || timeout_flag == true) {
                   CL_LOG(CL_LOG_ERROR,"close connection timeout - shutdown of connection");
                   connection->connection_state = CL_CLOSING;   
                   connection->connection_sub_state = CL_COM_DO_SHUTDOWN;
@@ -325,7 +325,7 @@ int cl_connection_list_destroy_connections_to_close(cl_com_handle_t* handle) {
                case CL_CM_CT_MESSAGE: {
                   CL_LOG(CL_LOG_WARNING,"got connection transfer timeout ...");
                   if (connection->connection_state == CL_CONNECTED) {
-                     if (connection->was_opened == CL_TRUE) {
+                     if (connection->was_opened == true) {
                         CL_LOG(CL_LOG_WARNING,"client connection ignores connection transfer timeout");
                      } else {
                         CL_LOG_STR_STR_INT(CL_LOG_WARNING, "connection timeout! Shutdown connection to:", 
@@ -382,7 +382,7 @@ int cl_connection_list_destroy_connections_to_close(cl_com_handle_t* handle) {
             ret_val=cl_com_connection_complete_shutdown(connection);
             if (ret_val != CL_RETVAL_OK) {
                if (connection->connection_close_time.tv_sec <= now.tv_sec ||
-                   timeout_flag == CL_TRUE) {
+                   timeout_flag == true) {
                   CL_LOG(CL_LOG_ERROR, "close connection timeout - skipping another connection shutdown");
                   connection->connection_sub_state = CL_COM_SHUTDOWN_DONE;
                } else {
@@ -396,7 +396,7 @@ int cl_connection_list_destroy_connections_to_close(cl_com_handle_t* handle) {
             connection->connection_sub_state = CL_COM_SHUTDOWN_DONE;
          }
 
-         if (connection->is_read_selected == CL_TRUE || connection->is_write_selected == CL_TRUE) {
+         if (connection->is_read_selected == true || connection->is_write_selected == true) {
             /* 
              * If a connection is in selected read/write mode we should not delete the
              * connection since some functions have a cached connection pointer to this 
@@ -408,7 +408,7 @@ int cl_connection_list_destroy_connections_to_close(cl_com_handle_t* handle) {
 
          /* We can remove and delete this connection */
          if (delete_connections == NULL) {
-            if (cl_connection_list_setup(&delete_connections, "delete_connections", 0, CL_FALSE) != CL_RETVAL_OK) {
+            if (cl_connection_list_setup(&delete_connections, "delete_connections", 0, false) != CL_RETVAL_OK) {
                continue; /* skip this connection this time */
             }
          }
@@ -453,7 +453,7 @@ int cl_connection_list_destroy_connections_to_close(cl_com_handle_t* handle) {
             if (message->message_state == CL_MS_READY) {
                /* decrease counter for ready messages */
                handle->messages_ready_for_read = handle->messages_ready_for_read - 1;
-               cl_app_message_queue_remove(handle->received_message_queue, connection, 0, CL_FALSE);
+               cl_app_message_queue_remove(handle->received_message_queue, connection, 0, false);
             }
             CL_LOG(CL_LOG_ERROR,"deleting unread message for connection");
 #if 0

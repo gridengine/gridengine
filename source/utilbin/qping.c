@@ -130,7 +130,7 @@ static void sighandler_ping(int sig) {
 #endif
       return;
    }
-   cl_com_ignore_timeouts(CL_TRUE);
+   cl_com_ignore_timeouts(true);
    do_shutdown = 1;
 }
 
@@ -228,7 +228,7 @@ static void qping_set_output_option(char* option_string) {
    
 }
 
-static void qping_convert_time(char* buffer, char* dest, cl_bool_t show_hour) {
+static void qping_convert_time(char* buffer, char* dest, bool show_hour) {
    time_t i;
    char* help;
    char* help2;
@@ -257,7 +257,7 @@ static void qping_convert_time(char* buffer, char* dest, cl_bool_t show_hour) {
 #else
       tm = (struct tm *)localtime_r(&i, &tm_buffer);
 #endif
-      if (show_hour == CL_TRUE) {
+      if (show_hour == true) {
          sprintf(dest, "%02d:%02d:%02d.%s", tm->tm_hour, tm->tm_min, tm->tm_sec, help2);
       } else {
          sprintf(dest, "%02d:%02d.%s", tm->tm_min, tm->tm_sec, help2);
@@ -268,7 +268,7 @@ static void qping_convert_time(char* buffer, char* dest, cl_bool_t show_hour) {
 
 static void qping_general_communication_error(const cl_application_error_list_elem_t* commlib_error) {
    if (commlib_error != NULL) {
-      if (commlib_error->cl_already_logged == CL_FALSE) {
+      if (commlib_error->cl_already_logged == false) {
          if (commlib_error->cl_info != NULL) {
             fprintf(stderr,"%s: %s\n", cl_get_error_text(commlib_error->cl_error), commlib_error->cl_info);
          } else {
@@ -348,13 +348,13 @@ static void qping_print_line(const char* buffer, int nonewline, int dump_tag, co
 
    if (debug_tag == CL_DMT_MESSAGE && (dump_tag == 1 || dump_tag == 3)) {
 
-      qping_convert_time(cl_values[0], time, CL_TRUE);
+      qping_convert_time(cl_values[0], time, true);
       cl_values[0] = time;
    
-      qping_convert_time(cl_values[10], msg_time, CL_TRUE);
+      qping_convert_time(cl_values[10], msg_time, true);
       cl_values[10] = msg_time;
  
-      qping_convert_time(cl_values[13], com_time, CL_FALSE);
+      qping_convert_time(cl_values[13], com_time, false);
       cl_values[13] = com_time;
    
       if (cl_short_host_name_option != 0) {
@@ -863,7 +863,7 @@ static void qping_print_line(const char* buffer, int nonewline, int dump_tag, co
    }  /* end of CL_DMT_MESSAGE tag */
 
    if (debug_tag == CL_DMT_APP_MESSAGE && (dump_tag == 1 || dump_tag == 2)) {
-      qping_convert_time(cl_values[0], time, CL_TRUE);
+      qping_convert_time(cl_values[0], time, true);
       
       if (nonewline != 0) {
 #if 0
@@ -1284,7 +1284,7 @@ int main(int argc, char *argv[]) {
    }
 
 
-   handle=cl_com_create_handle(&commlib_error, communication_framework, connection_type, CL_FALSE, comp_port, connect_type, client_name, 0, 1,0 );
+   handle=cl_com_create_handle(&commlib_error, communication_framework, connection_type, false, comp_port, connect_type, client_name, 0, 1,0 );
 
    if (handle == NULL) {
       fprintf(stderr, "could not create communication handle: %s\n", cl_get_error_text(commlib_error));
@@ -1374,7 +1374,7 @@ int main(int argc, char *argv[]) {
 
          cl_commlib_trigger(handle, 1);
          retval = cl_commlib_receive_message(handle, NULL, NULL, 0,      /* handle, comp_host, comp_name , comp_id, */
-                                             CL_FALSE, 0,                 /* syncron, response_mid */
+                                             false, 0,                 /* syncron, response_mid */
                                              &message, &sender );
          
          if ( retval != CL_RETVAL_OK) {
@@ -1411,7 +1411,7 @@ int main(int argc, char *argv[]) {
                                     resolved_comp_host, comp_name, comp_id,
                                     CL_MIH_MAT_NAK, 
                                     &reference, strlen(command_buffer)+1, 
-                                    NULL, 0, 0, CL_TRUE, CL_FALSE);
+                                    NULL, 0, 0, true, false);
 
                 /*
                  * set if we want the message dump 
@@ -1426,7 +1426,7 @@ int main(int argc, char *argv[]) {
                                     resolved_comp_host, comp_name, comp_id,
                                     CL_MIH_MAT_NAK, 
                                     &reference, strlen(command_buffer)+1, 
-                                    NULL, 0, 0, CL_TRUE, CL_FALSE);
+                                    NULL, 0, 0, true, false);
 
                             
                 /*
@@ -1463,7 +1463,7 @@ int main(int argc, char *argv[]) {
                                     resolved_comp_host, comp_name, comp_id,
                                     CL_MIH_MAT_NAK, 
                                     &reference, strlen(command_buffer)+1, 
-                                    NULL, 0, 0, CL_TRUE, CL_FALSE);
+                                    NULL, 0, 0, true, false);
             }
          } else {
             int i;
@@ -1481,7 +1481,7 @@ int main(int argc, char *argv[]) {
       }
       sge_dstring_free(&line_buffer);
    }
-   retval = cl_commlib_shutdown_handle(handle,CL_FALSE);
+   retval = cl_commlib_shutdown_handle(handle,false);
    if (retval != CL_RETVAL_OK) {
       fprintf(stderr,"%s\n",cl_get_error_text(retval));
       sge_free(&resolved_comp_host);

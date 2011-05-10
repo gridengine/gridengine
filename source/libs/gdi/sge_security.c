@@ -93,7 +93,7 @@ static cl_ssl_setup_t* sec_ssl_setup_config       = NULL;
 #define SEC_LOCK_SSL_SETUP()      sge_mutex_lock("ssl_setup_mutex", SGE_FUNC, __LINE__, &sec_ssl_setup_config_mutex)
 #define SEC_UNLOCK_SSL_SETUP()    sge_mutex_unlock("ssl_setup_mutex", SGE_FUNC, __LINE__, &sec_ssl_setup_config_mutex)
 
-static cl_bool_t ssl_cert_verify_func(cl_ssl_verify_mode_t mode, cl_bool_t service_mode, const char* value);
+static bool ssl_cert_verify_func(cl_ssl_verify_mode_t mode, bool service_mode, const char* value);
 static bool is_daemon(const char* progname);
 static bool is_master(const char* progname);
 
@@ -451,7 +451,7 @@ int sge_ssl_setup_security_path(const char *progname, const char *user) {
    DRETURN(return_value);
 }
 
-static cl_bool_t ssl_cert_verify_func(cl_ssl_verify_mode_t mode, cl_bool_t service_mode, const char* value) {
+static bool ssl_cert_verify_func(cl_ssl_verify_mode_t mode, bool service_mode, const char* value) {
 
    /*
     *   CR:
@@ -472,16 +472,16 @@ static cl_bool_t ssl_cert_verify_func(cl_ssl_verify_mode_t mode, cl_bool_t servi
    if (value == NULL) {
       /* This should never happen */
       CRITICAL((SGE_EVENT, SFNMAX, MSG_SEC_CERT_VERIFY_FUNC_NO_VAL));
-      DRETURN(CL_FALSE);
+      DRETURN(false);
    }
 
-   if (service_mode == CL_TRUE) {
+   if (service_mode == true) {
       switch(mode) {
          case CL_SSL_PEER_NAME: {
             DPRINTF(("local service got certificate from peer \"%s\"\n", value));
 #if 0
             if (strcmp(value,"SGE admin user") != 0) {
-               DRETURN(CL_FALSE);
+               DRETURN(false);
             }
 #endif
             break;
@@ -490,7 +490,7 @@ static cl_bool_t ssl_cert_verify_func(cl_ssl_verify_mode_t mode, cl_bool_t servi
             DPRINTF(("local service got certificate from user \"%s\"\n", value));
 #if 0
             if (strcmp(value,"") != 0) {
-               DRETURN(CL_FALSE);
+               DRETURN(false);
             }
 #endif
             break;
@@ -502,7 +502,7 @@ static cl_bool_t ssl_cert_verify_func(cl_ssl_verify_mode_t mode, cl_bool_t servi
             DPRINTF(("local client got certificate from peer \"%s\"\n", value));
 #if 0
             if (strcmp(value,"SGE admin user") != 0) {
-               DRETURN(CL_FALSE);
+               DRETURN(false);
             }
 #endif
             break;
@@ -511,14 +511,14 @@ static cl_bool_t ssl_cert_verify_func(cl_ssl_verify_mode_t mode, cl_bool_t servi
             DPRINTF(("local client got certificate from user \"%s\"\n", value));
 #if 0
             if (strcmp(value,"") != 0) {
-               DRETURN(CL_FALSE);
+               DRETURN(false);
             }
 #endif
             break;
          }
       }
    }
-   DRETURN(CL_TRUE);
+   DRETURN(true);
 }
 
 #endif

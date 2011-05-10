@@ -8,6 +8,14 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+HP-2011-05-10-0: Bugfix:      SGE_Helper_Service.exe sometimes crashes at job
+                              start
+                 Issue:       GE-3476
+                 Bugfix:      on Windows Vista, GUI jobs can't be started on
+                              a Remote Desktop session
+                 Issue:       GE-3477
+                 Review:      SH
+
 EB-2011-05-10-0: Bugfix:      man page sge_conf.5, execd_params, section 
                               ENABLE_BINDING is within section PDC_INTERVAL
                               Typos in interactive installation	

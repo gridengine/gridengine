@@ -30,6 +30,8 @@
 #
 #  All Rights Reserved.
 #
+# Portions of this software are Copyright (c) 2011 Univa Corporation
+#
 ##########################################################################
 #___INFO__MARK_END__
 
@@ -42,7 +44,8 @@ SGEHELPERSERVICE_SRC = Communication.cpp \
                     JobList.cpp \
                     JobStart.cpp \
                     SGE_Helper_Service.cpp \
-                    ServiceInstaller.cpp
+                    ServiceInstaller.cpp \
+                    Logging.cpp
 
 SGEHELPERSERVICE_OBJS = $(SGEHELPERSERVICE_SRC:.cpp=.obj)
 
@@ -94,4 +97,7 @@ SGE_Helper_Service.obj: $(SGEHELPERSERVICE_DIR)/SGE_Helper_Service.cpp
 
 ServiceInstaller.obj: $(SGEHELPERSERVICE_DIR)/ServiceInstaller.cpp
 	$(WINCC) $(WINCFLAGS) -c $(SGEHELPERSERVICE_DIR)/ServiceInstaller.cpp
+
+Logging.obj: $(SGEHELPERSERVICE_DIR)/Logging.cpp
+	$(WINCC) $(WINCFLAGS) -c $(SGEHELPERSERVICE_DIR)/Logging.cpp
 

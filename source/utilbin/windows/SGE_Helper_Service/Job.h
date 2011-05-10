@@ -27,6 +27,8 @@
  *
  *   All Rights Reserved.
  *
+ * Portions of this software are Copyright (c) 2011 Univa Corporation
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
@@ -47,19 +49,41 @@ enum en_JobStatus {
    js_Invalid           = -1
 };
 
+typedef struct s_MapElem {
+   char *szKey;
+   char *szValue;
+   s_MapElem *next;
+} t_MapElem;
+
+class C_MapStringToString {
+   public:
+      t_MapElem *m_pFirst;
+
+   public:
+      C_MapStringToString();
+      ~C_MapStringToString();
+
+      void SetAt(const char *szKey, const char *szValue);
+      char *Lookup(const char *szKey);
+      void Append(const C_MapStringToString &mapOther);
+      void RemoveKey(const char *szKey);
+
+      void DumpToLogFile();
+};
+
 class C_Job {
    private:
       void FreeAllocatedMembers();
-      void BuildSysEnvTable(CMapStringToString &mapSysEnv) const;
-      void BuildEnvironmentFromTable(const CMapStringToString &mapMergedEnv, 
+      void BuildSysEnvTable(C_MapStringToString &mapSysEnv) const;
+      void BuildEnvironmentFromTable(const C_MapStringToString &mapMergedEnv, 
                                      char *&pszEnv) const;
-      void MergeSysEnvTableWithJobEnvTable(CMapStringToString &mapSysEnv, 
-                                           CMapStringToString &mapMergedEnv) const;
-      void BuildTableFromJobEnv(CMapStringToString &mapJobEnv) const;
-      BOOL IsEnvAPath(const CString &strKey) const;
+      void MergeSysEnvTableWithJobEnvTable(C_MapStringToString &mapSysEnv, 
+                                           C_MapStringToString &mapMergedEnv) const;
+      void BuildTableFromJobEnv(C_MapStringToString &mapJobEnv) const;
+      BOOL IsEnvAPath(const char *szKey) const;
 
-      char* PathDelimiter(const CString &strPath) const;
- 
+      char* PathDelimiter(const char *szPath) const;
+
    public:
       C_Job();
       C_Job(const C_Job& otherJob);
@@ -75,6 +99,8 @@ class C_Job {
 
       int             StoreUsage();
       int             Terminate();
+
+      C_Job        *next;               // A job element is also a element of the C_JobList
 
       en_JobStatus m_JobStatus;
       DWORD        m_job_id;

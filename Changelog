@@ -8,6 +8,13 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+EB-2011-05-10-1: Cleanup:     commlib: replace cl_bool_t by the sge bool type 
+                 Issues:      GE-1592
+
+EB-2011-05-10-0: Bugfix:      va_end call missing after some va_start/va_copy 
+                              calls
+                 Issues:      GE-2143
+
 HP-2011-05-10-0: Bugfix:      SGE_Helper_Service.exe sometimes crashes at job
                               start
                  Issue:       GE-3476

@@ -47,7 +47,7 @@ typedef struct cl_endpoint_list_elem_type {
    /* endpoint specific data (use no malloced pointers here, expect endpoint ) */
    int                           service_port;
    cl_xml_connection_autoclose_t autoclose;
-   cl_bool_t                     is_static;
+   bool                     is_static;
    long                          last_used;
 
    /* list data */
@@ -68,12 +68,12 @@ int cl_endpoint_list_setup(cl_raw_list_t** list_p,
                            char* list_name, 
                            long entry_life_time,           /* max life time of an endpoint */
                            long refresh_interval,          /* check interval */
-                           cl_bool_t create_hash);         /* flag if hash table should be used */
+                           bool create_hash);         /* flag if hash table should be used */
 
 int cl_endpoint_list_cleanup(cl_raw_list_t** list_p);
 
 /* thread list functions that will lock the list */
-int cl_endpoint_list_define_endpoint(cl_raw_list_t* list_p, cl_com_endpoint_t* endpoint, int service_port, cl_xml_connection_autoclose_t autoclose ,cl_bool_t is_static);
+int cl_endpoint_list_define_endpoint(cl_raw_list_t* list_p, cl_com_endpoint_t* endpoint, int service_port, cl_xml_connection_autoclose_t autoclose ,bool is_static);
 int cl_endpoint_list_undefine_endpoint(cl_raw_list_t* list_p, cl_com_endpoint_t* endpoint);
 int cl_endpoint_list_get_last_touch_time(cl_raw_list_t* list_p, cl_com_endpoint_t* endpoint, unsigned long* touch_time);
 int cl_endpoint_list_get_service_port(cl_raw_list_t* list_p, cl_com_endpoint_t* endpoint, int* service_port);

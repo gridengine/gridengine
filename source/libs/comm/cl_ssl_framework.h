@@ -115,7 +115,7 @@ int cl_com_ssl_read_GMSH(cl_com_connection_t*        connection,
 
 
 /* create service, accept new connections */
-int cl_com_ssl_connection_request_handler_setup(cl_com_connection_t* connection, cl_bool_t only_prepare_service);
+int cl_com_ssl_connection_request_handler_setup(cl_com_connection_t* connection, bool only_prepare_service);
 
 int cl_com_ssl_connection_request_handler(cl_com_connection_t*   connection,
                                           cl_com_connection_t**  new_connection);

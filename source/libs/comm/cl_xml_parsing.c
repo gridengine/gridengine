@@ -73,7 +73,7 @@ static const cl_xml_sequence_t cl_com_sequence_array[CL_XML_SEQUENCE_ARRAY_SIZE]
 
 
 
-static cl_bool_t cl_xml_parse_is_version(const char* buffer, unsigned long start, unsigned long buffer_length);
+static bool cl_xml_parse_is_version(const char* buffer, unsigned long start, unsigned long buffer_length);
 
 static char *cl_xml_parse_version(char *charptr, unsigned long buffer_length)
 {
@@ -247,11 +247,11 @@ int cl_com_transformString2XML(const char* input, char** output) {
    malloced_size = input_length * 2;
    *output = (char*)malloc((sizeof(char) * (malloced_size + 1)));
    for (i=0; i < input_length; i++) {
-      cl_bool_t found = CL_FALSE;
+      bool found = false;
       int add_length = 1;
       for (s=0 ; s < CL_XML_SEQUENCE_ARRAY_SIZE; s++) {
          if (input[i] == cl_com_sequence_array[s].character) {
-            found = CL_TRUE;
+            found = true;
             add_length = cl_com_sequence_array[s].sequence_length;
             break;
          }
@@ -263,7 +263,7 @@ int cl_com_transformString2XML(const char* input, char** output) {
          *output = realloc(*output, malloced_size + 1);
       }
 
-      if (found == CL_FALSE) {
+      if (found == false) {
          (*output)[used] = input[i];
       } else {
          strncpy((char *)&(*output)[used], cl_com_sequence_array[s].sequence,
@@ -441,7 +441,7 @@ int cl_xml_parse_GMSH(unsigned char* buffer, unsigned long buffer_length, cl_com
    unsigned long tag_end = 0;
    unsigned long dl_begin = 0;
    unsigned long dl_end = 0;
-   cl_bool_t closing_tag;
+   bool closing_tag;
 
    if (header == NULL || buffer == NULL ) {
       return CL_RETVAL_PARAMS;
@@ -461,21 +461,21 @@ int cl_xml_parse_GMSH(unsigned char* buffer, unsigned long buffer_length, cl_com
                const char *charptr = (char*)&(buffer[tag_begin]);
                
                if (charptr[0] == '/') {
-                  closing_tag = CL_TRUE;
+                  closing_tag = true;
                   charptr++;
                } else {
-                  closing_tag = CL_FALSE;
+                  closing_tag = false;
                }
 
                buffer[buf_pointer] = '\0';
-               if (closing_tag == CL_TRUE && strcmp(charptr, "gmsh") == 0) {
+               if (closing_tag == true && strcmp(charptr, "gmsh") == 0) {
                   if (*used_buffer_length == 0) {
                      *used_buffer_length = buf_pointer+1;
                   }
                   buf_pointer++;
                   break;
                } else if (strcmp(charptr, "dl") == 0) {
-                  if (closing_tag == CL_FALSE) {
+                  if (closing_tag == false) {
                      dl_begin = buf_pointer + 1;
                   } else {
                      dl_end = buf_pointer - 1;
@@ -524,7 +524,7 @@ int cl_xml_parse_CM(unsigned char* buffer, unsigned long buffer_length, cl_com_C
    unsigned long port_end = 0;
    unsigned long autoclose_begin = 0;
    unsigned long autoclose_end = 0;
-   cl_bool_t closing_tag;
+   bool closing_tag;
   
    if (message == NULL || buffer == NULL || *message != NULL) {
       return CL_RETVAL_PARAMS;
@@ -547,7 +547,7 @@ int cl_xml_parse_CM(unsigned char* buffer, unsigned long buffer_length, cl_com_C
       switch(buffer[buf_pointer]) {
          case '=':
             if (in_tag == 1) {
-               if (version_begin == 0 && cl_xml_parse_is_version((const char *)buffer, tag_begin, buffer_length) == CL_TRUE) {
+               if (version_begin == 0 && cl_xml_parse_is_version((const char *)buffer, tag_begin, buffer_length) == true) {
                   version_begin = buf_pointer + 2;
                }
             }
@@ -563,39 +563,39 @@ int cl_xml_parse_CM(unsigned char* buffer, unsigned long buffer_length, cl_com_C
                const char *charptr = (char*)&(buffer[tag_begin]);
 
                if (charptr[0] == '/') {
-                  closing_tag = CL_TRUE;
+                  closing_tag = true;
                   charptr++;
                } else {
-                  closing_tag = CL_FALSE;
+                  closing_tag = false;
                }
                buffer[buf_pointer] = '\0';
 
                if (strncmp(charptr, "df", 2) == 0) {
-                  if (closing_tag == CL_FALSE) {
+                  if (closing_tag == false) {
                      df_begin = buf_pointer + 1;
                   } else {
                      df_end = buf_pointer - 4;
                   }
                } else if (strncmp(charptr, "ct", 2) == 0) {
-                  if (closing_tag == CL_FALSE) {
+                  if (closing_tag == false) {
                      ct_begin = buf_pointer + 1;
                   } else {
                      ct_end = buf_pointer - 4;
                   }
                } else if (strncmp(charptr, "port", 4) == 0) {
-                  if (closing_tag == CL_FALSE) {
+                  if (closing_tag == false) {
                      port_begin = buf_pointer + 1;
                   } else {
                      port_end = buf_pointer - 6;
                   }
                } else if (strncmp(charptr, "ac", 2) == 0) {
-                  if (closing_tag == CL_FALSE) {
+                  if (closing_tag == false) {
                      autoclose_begin = buf_pointer + 1;
                   } else {
                      autoclose_end = buf_pointer - 4;
                   }
                } else if (strncmp(charptr, "rdata", 5) == 0) {
-                  if (closing_tag == CL_FALSE) {
+                  if (closing_tag == false) {
                      if (rdata_begin == 0) {
                         rdata_begin = tag_begin;
                      }
@@ -603,7 +603,7 @@ int cl_xml_parse_CM(unsigned char* buffer, unsigned long buffer_length, cl_com_C
                      rdata_end = buf_pointer - 7;
                   }
                } else if (strncmp(charptr, "dst", 3) == 0) {
-                  if (closing_tag == CL_FALSE) {
+                  if (closing_tag == false) {
                      if (dst_begin == 0) {
                         dst_begin = tag_begin;
                      }
@@ -892,7 +892,7 @@ int cl_xml_parse_CRM(unsigned char* buffer, unsigned long buffer_length, cl_com_
 
    unsigned long rdata_begin = 0;
    unsigned long rdata_end = 0;
-   cl_bool_t closing_tag;
+   bool closing_tag;
 
    unsigned long params_begin = 0;
    unsigned long params_end = 0;
@@ -913,7 +913,7 @@ int cl_xml_parse_CRM(unsigned char* buffer, unsigned long buffer_length, cl_com_
       switch( buffer[buf_pointer] ) {
          case '=':
             if (in_tag == 1) {
-               if (version_begin == 0 && cl_xml_parse_is_version((const char *)buffer, tag_begin, buffer_length) == CL_TRUE) {
+               if (version_begin == 0 && cl_xml_parse_is_version((const char *)buffer, tag_begin, buffer_length) == true) {
                   version_begin = buf_pointer + 2;
                }
             }
@@ -929,17 +929,17 @@ int cl_xml_parse_CRM(unsigned char* buffer, unsigned long buffer_length, cl_com_
                const char *charptr = (char*)&(buffer[tag_begin]);
 
                if (charptr[0] == '/') {
-                  closing_tag = CL_TRUE;
+                  closing_tag = true;
                   charptr++;
                } else {
-                  closing_tag = CL_FALSE;
+                  closing_tag = false;
                }
 
                /* set string end to ">" position of tag */
                buffer[buf_pointer] = '\0';
 
                if (strncmp(charptr,"cs", 2) == 0) {
-                  if (closing_tag == CL_FALSE) {
+                  if (closing_tag == false) {
                      if (cs_begin == 0) {
                         cs_begin = tag_begin + 3;
                      }
@@ -947,7 +947,7 @@ int cl_xml_parse_CRM(unsigned char* buffer, unsigned long buffer_length, cl_com_
                      cs_end = buf_pointer - 5;
                   }
                } else if (strncmp(charptr, "rdata", 5) == 0) {
-                  if (closing_tag == CL_FALSE) {
+                  if (closing_tag == false) {
                      if (rdata_begin == 0) {
                         rdata_begin = tag_begin + 6;
                      }
@@ -955,7 +955,7 @@ int cl_xml_parse_CRM(unsigned char* buffer, unsigned long buffer_length, cl_com_
                      rdata_end = buf_pointer - 8;
                   }
                } else if (strncmp(charptr, "params", 6) == 0) {
-                  if (closing_tag == CL_FALSE) {
+                  if (closing_tag == false) {
                      if (params_begin == 0) {
                         params_begin = tag_begin + 7;
                      }
@@ -1119,15 +1119,15 @@ int cl_xml_parse_CRM(unsigned char* buffer, unsigned long buffer_length, cl_com_
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_xml_parse_is_version()"
-static cl_bool_t cl_xml_parse_is_version(const char* buffer, unsigned long start, unsigned long buffer_length) {
+static bool cl_xml_parse_is_version(const char* buffer, unsigned long start, unsigned long buffer_length) {
    unsigned long i = 0;
-   cl_bool_t found = CL_FALSE;
+   bool found = false;
 
    if (buffer != NULL) {
       for (i=start; ( i < buffer_length) && (buffer[i] != '>'); i++) {
          /* check for version string in tag */
          if (strncmp(&buffer[i],"version", 7) == 0) {
-            found = CL_TRUE;
+            found = true;
             break;
          }   
       }
@@ -1159,7 +1159,7 @@ int cl_xml_parse_MIH(unsigned char* buffer, unsigned long buffer_length, cl_com_
    unsigned long mtag_end = 0;  
    unsigned long rid_begin = 0;
    unsigned long rid_end = 0;
-   cl_bool_t closing_tag;
+   bool closing_tag;
 
    if (message == NULL || buffer == NULL || *message != NULL) {
       return CL_RETVAL_PARAMS;
@@ -1178,7 +1178,7 @@ int cl_xml_parse_MIH(unsigned char* buffer, unsigned long buffer_length, cl_com_
       switch( buffer[buf_pointer] ) {
          case '=':
             if (in_tag == 1) {
-               if (version_begin == 0 && cl_xml_parse_is_version((const char*)buffer, tag_begin, buffer_length) == CL_TRUE) {
+               if (version_begin == 0 && cl_xml_parse_is_version((const char*)buffer, tag_begin, buffer_length) == true) {
                   version_begin = buf_pointer + 2;
                }
             }
@@ -1194,46 +1194,46 @@ int cl_xml_parse_MIH(unsigned char* buffer, unsigned long buffer_length, cl_com_
                const char *charptr = (char*)&(buffer[tag_begin]);
                
                if (charptr[0] == '/') {
-                  closing_tag = CL_TRUE;
+                  closing_tag = true;
                   charptr++;
                } else {
-                  closing_tag = CL_FALSE;
+                  closing_tag = false;
                }
 
                buffer[buf_pointer] = '\0';
 
                if (strcmp(charptr,"mid") == 0 ) {
-                  if (closing_tag == CL_FALSE) {
+                  if (closing_tag == false) {
                      mid_begin = tag_end + 2;
                   } else {
                      mid_end = tag_begin - 1;
                   }
                } else if (strcmp(charptr,"dl") == 0 ) {
-                  if (closing_tag == CL_FALSE) {
+                  if (closing_tag == false) {
                      dl_begin = tag_end + 2;
                   } else {
                      dl_end = tag_begin - 1;
                   }
                } else if (strcmp(charptr,"df") == 0 ) {
-                  if (closing_tag == CL_FALSE) {
+                  if (closing_tag == false) {
                      df_begin = tag_end + 2;
                   } else {
                      df_end = tag_begin - 1;
                   }
                } else if (strcmp(charptr,"mat") == 0 ) {
-                  if (closing_tag == CL_FALSE) {
+                  if (closing_tag == false) {
                      mat_begin = tag_end + 2;
                   } else {
                      mat_end = tag_begin - 1;
                   }
                } else if (strcmp(charptr,"tag") == 0 ) {
-                  if (closing_tag == CL_FALSE) {
+                  if (closing_tag == false) {
                      mtag_begin = tag_end + 2;
                   } else {
                      mtag_end = tag_begin - 1;
                   }
                } else if (strcmp(charptr,"rid") == 0 ) {
-                  if (closing_tag == CL_FALSE) {
+                  if (closing_tag == false) {
                      rid_begin = tag_end + 2;
                   } else {
                      rid_end = tag_begin - 1;
@@ -1365,7 +1365,7 @@ int cl_xml_parse_SIRM(unsigned char* buffer, unsigned long buffer_length, cl_com
 
    unsigned long info_begin = 0;
    unsigned long info_end = 0;
-   cl_bool_t closing_tag;
+   bool closing_tag;
 
    if (message == NULL || buffer == NULL || *message != NULL) {
       return CL_RETVAL_PARAMS;
@@ -1381,7 +1381,7 @@ int cl_xml_parse_SIRM(unsigned char* buffer, unsigned long buffer_length, cl_com
       switch( buffer[buf_pointer] ) {
          case '=':
             if (in_tag == 1) {
-               if (version_begin == 0 && cl_xml_parse_is_version((const char *)buffer, tag_begin, buffer_length) == CL_TRUE) {
+               if (version_begin == 0 && cl_xml_parse_is_version((const char *)buffer, tag_begin, buffer_length) == true) {
                   version_begin = buf_pointer + 2;
                }
             }
@@ -1397,58 +1397,58 @@ int cl_xml_parse_SIRM(unsigned char* buffer, unsigned long buffer_length, cl_com
                const char *charptr = (char*)&(buffer[tag_begin]);
 
                if (charptr[0] == '/') {
-                  closing_tag = CL_TRUE;
+                  closing_tag = true;
                   charptr++;
                } else {
-                  closing_tag = CL_FALSE;
+                  closing_tag = false;
                }
               
                buffer[buf_pointer] = '\0';
                
                if (strcmp(charptr,"mid") == 0 ) {
-                  if (closing_tag == CL_FALSE) {
+                  if (closing_tag == false) {
                      mid_begin = tag_end + 2;
                   } else {
                      mid_end = tag_begin - 1;
                   }
                } else if (strcmp(charptr,"starttime") == 0 ) {
-                  if (closing_tag == CL_FALSE) {
+                  if (closing_tag == false) {
                      starttime_begin = tag_end + 2;
                   } else {
                      starttime_end = tag_begin - 1;
                   }
                } else if (strcmp(charptr,"runtime") == 0 ) {
-                  if (closing_tag == CL_FALSE) {
+                  if (closing_tag == false) {
                      runtime_begin = tag_end + 2;
                   } else {
                      runtime_end = tag_begin - 1;
                   }
                } else if (strcmp(charptr,"brm") == 0 ) {
-                  if (closing_tag == CL_FALSE) {
+                  if (closing_tag == false) {
                      application_messages_brm_begin = tag_end + 2;
                   } else {
                      application_messages_brm_end = tag_begin - 1;
                   }
                } else if (strcmp(charptr,"bwm") == 0 ) {
-                  if (closing_tag == CL_FALSE) {
+                  if (closing_tag == false) {
                      application_messages_bwm_begin = tag_end + 2;
                   } else {
                      application_messages_bwm_end = tag_begin - 1;
                   }
                } else if (strcmp(charptr,"noc") == 0 ) {
-                  if (closing_tag == CL_FALSE) {
+                  if (closing_tag == false) {
                      application_connections_noc_begin = tag_end + 2;
                   } else {
                      application_connections_noc_end = tag_begin - 1;
                   }
                } else if (strcmp(charptr,"status") == 0 ) {
-                  if (closing_tag == CL_FALSE) {
+                  if (closing_tag == false) {
                      application_status_begin = tag_end + 2;
                   } else {
                      application_status_end = tag_begin - 1;
                   }
                } else if (strcmp(charptr,"info") == 0 ) {
-                  if (closing_tag == CL_FALSE) {
+                  if (closing_tag == false) {
                      info_begin = tag_end + 2;
                   } else {
                      info_end = tag_begin - 1;
@@ -1541,7 +1541,7 @@ int cl_xml_parse_AM(unsigned char* buffer, unsigned long buffer_length, cl_com_A
  
    unsigned long mid_begin = 0;
    unsigned long mid_end = 0;
-   cl_bool_t closing_tag;
+   bool closing_tag;
 
    if (message == NULL || buffer == NULL || *message != NULL) {
       return CL_RETVAL_PARAMS;
@@ -1556,7 +1556,7 @@ int cl_xml_parse_AM(unsigned char* buffer, unsigned long buffer_length, cl_com_A
       switch( buffer[buf_pointer] ) {
          case '=':
             if (in_tag == 1) {
-               if (version_begin == 0 && cl_xml_parse_is_version((const char *)buffer, tag_begin, buffer_length) == CL_TRUE) {
+               if (version_begin == 0 && cl_xml_parse_is_version((const char *)buffer, tag_begin, buffer_length) == true) {
                   version_begin = buf_pointer + 2;
                }
             }
@@ -1572,16 +1572,16 @@ int cl_xml_parse_AM(unsigned char* buffer, unsigned long buffer_length, cl_com_A
                const char *charptr = (char*)&(buffer[tag_begin]);
                
                if (charptr[0] == '/') {
-                  closing_tag = CL_TRUE;
+                  closing_tag = true;
                   charptr++;
                } else {
-                  closing_tag = CL_FALSE;
+                  closing_tag = false;
                }
 
                buffer[buf_pointer] = '\0';
 
                if (strcmp(charptr,"mid") == 0 ) {
-                  if (closing_tag == CL_FALSE) {
+                  if (closing_tag == false) {
                      mid_begin = tag_end + 2;
                   } else {
                      mid_end = tag_begin - 2;
@@ -1644,7 +1644,7 @@ int cl_xml_parse_CCM(unsigned char* buffer, unsigned long buffer_length, cl_com_
       switch( buffer[buf_pointer] ) {
          case '=':
             if (in_tag == 1) {
-               if (version_begin == 0 && cl_xml_parse_is_version((const char *)buffer, tag_begin, buffer_length) == CL_TRUE) {
+               if (version_begin == 0 && cl_xml_parse_is_version((const char *)buffer, tag_begin, buffer_length) == true) {
                   version_begin = buf_pointer + 2;
                }
             }
@@ -1709,7 +1709,7 @@ int cl_xml_parse_CCRM(unsigned char* buffer, unsigned long buffer_length, cl_com
       switch( buffer[buf_pointer] ) {
          case '=':
             if (in_tag == 1) {
-               if (version_begin == 0 && cl_xml_parse_is_version((const char *)buffer, tag_begin, buffer_length) == CL_TRUE) {
+               if (version_begin == 0 && cl_xml_parse_is_version((const char *)buffer, tag_begin, buffer_length) == true) {
                   version_begin = buf_pointer + 2;
                }
             }
@@ -1776,7 +1776,7 @@ int cl_xml_parse_SIM(unsigned char* buffer, unsigned long buffer_length, cl_com_
       switch( buffer[buf_pointer] ) {
          case '=':
             if (in_tag == 1) {
-               if (version_begin == 0 && cl_xml_parse_is_version((const char *)buffer, tag_begin, buffer_length) == CL_TRUE) {
+               if (version_begin == 0 && cl_xml_parse_is_version((const char *)buffer, tag_begin, buffer_length) == true) {
                   version_begin = buf_pointer + 2;
                }
             }

@@ -94,7 +94,7 @@ extern int main(int argc, char** argv)
 #endif
 
    cl_xml_ack_type_t ack_type = CL_MIH_MAT_NAK;
-   cl_bool_t synchron = CL_FALSE;
+   bool synchron = false;
 
    prof_mt_init();
 
@@ -115,7 +115,7 @@ extern int main(int argc, char** argv)
    if (reconnect == 1) {
       /* do all stuff synchron */
       ack_type = CL_MIH_MAT_ACK;
-      synchron = CL_TRUE; 
+      synchron = true; 
    }
 
    /* setup signalhandling */
@@ -145,7 +145,7 @@ extern int main(int argc, char** argv)
 
       cl_com_setup_commlib(CL_NO_THREAD , (cl_log_t)atoi(argv[1]), NULL);
 
-      handle = cl_com_create_handle(NULL, CL_CT_TCP, CL_CM_CT_MESSAGE, CL_FALSE, atoi(argv[2]), CL_TCP_DEFAULT, "virtual_gdi_client", 0, 1, 0);
+      handle = cl_com_create_handle(NULL, CL_CT_TCP, CL_CM_CT_MESSAGE, false, atoi(argv[2]), CL_TCP_DEFAULT, "virtual_gdi_client", 0, 1, 0);
       if (handle == NULL) {
          printf("could not get handle\n");
          exit(1);
@@ -192,12 +192,12 @@ extern int main(int argc, char** argv)
          retval = cl_commlib_send_message(handle, argv[3], "virtual_master", 1,
                                           ack_type,
                                           (cl_byte_t**)(&snd_data), DATA_SIZE,
-                                          NULL, 0, 0, CL_FALSE, synchron);
+                                          NULL, 0, 0, false, synchron);
          if (retval == CL_RETVAL_OK) {
             snd_data = NULL;
             snd_messages++;
             retval = cl_commlib_receive_message(handle, NULL, NULL, 0,  /* handle, comp_host, comp_name ,comp_id, */
-                                                CL_TRUE, 0,                   /* syncron, response_mid */
+                                                true, 0,                   /* syncron, response_mid */
                                                 &message, &sender);
             if (retval == CL_RETVAL_OK) {
                gettimeofday(&now, NULL);
@@ -256,7 +256,7 @@ extern int main(int argc, char** argv)
 
       sge_free(&snd_data);
 
-      cl_commlib_shutdown_handle(handle, CL_FALSE);
+      cl_commlib_shutdown_handle(handle, false);
    }
    cl_com_cleanup_commlib();
 

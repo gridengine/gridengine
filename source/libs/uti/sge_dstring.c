@@ -350,8 +350,7 @@ const char* sge_dstring_sprintf(dstring *sb, const char *format, ...)
          va_list ap;
 
          va_start(ap, format);
-         ret = sge_dstring_vsprintf_copy_append(sb, sge_dstring_copy_string,
-                                                format, ap);
+         ret = sge_dstring_vsprintf_copy_append(sb, sge_dstring_copy_string, format, ap);
          va_end(ap);
       } else {
          ret = sb->s;
@@ -430,8 +429,7 @@ const char* sge_dstring_sprintf_append(dstring *sb, const char *format, ...)
          va_list ap;
 
          va_start(ap, format);
-         ret = sge_dstring_vsprintf_copy_append(sb, sge_dstring_append,
-                                                format, ap); 
+         ret = sge_dstring_vsprintf_copy_append(sb, sge_dstring_append, format, ap); 
          va_end(ap);
       } else {
          ret = sb->s;

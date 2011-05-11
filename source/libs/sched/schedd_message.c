@@ -376,9 +376,9 @@ void schedd_mes_add(lList **monitor_alpp, bool monitor_next_run, u_long32 job_id
 
       fmt = sge_schedd_text(message_number);
       va_start(args, message_number);
-
       sge_dstring_init(&msg_ds, msg, sizeof(msg));
       msg_str = sge_dstring_vsprintf(&msg_ds, fmt, args);
+      va_end(args);
 
       if (monitor_alpp || monitor_next_run) {
          char msg_log[MAXMSGLEN];
@@ -481,8 +481,8 @@ void schedd_mes_add_join(bool monitor_next_run, u_long32 job_number, u_long32 me
 
       fmt = sge_schedd_text(message_number);
       va_start(args, message_number);
-
       msg_str = sge_dstring_vsprintf(&msg_ds, fmt, args);
+      va_end(args);
 
       if (job_number && (schedd_job_info != SCHEDD_JOB_INFO_FALSE)) {
          if (sconf_get_mes_schedd_info()) {

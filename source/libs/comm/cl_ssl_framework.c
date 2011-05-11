@@ -319,7 +319,7 @@ typedef struct cl_com_ssl_global_type {
 /* 
  * global init bool  
  */
-   cl_bool_t          ssl_initialized;
+   bool          ssl_initialized;
 
 
 /* 
@@ -347,7 +347,7 @@ static void* cl_com_ssl_crypto_handle = NULL;
 /* static function declarations */
 static cl_com_ssl_private_t* cl_com_ssl_get_private(cl_com_connection_t* connection);
 static int                   cl_com_ssl_free_com_private(cl_com_connection_t* connection);
-static int                   cl_com_ssl_setup_context(cl_com_connection_t* connection, cl_bool_t is_server);
+static int                   cl_com_ssl_setup_context(cl_com_connection_t* connection, bool is_server);
 static int                   cl_com_ssl_transform_ssl_error(unsigned long ssl_error, char* buffer, unsigned long buflen, char** transformed_error);
 static int                   cl_com_ssl_log_ssl_errors(const char* function_name);
 static const char*           cl_com_ssl_get_error_text(int ssl_error);
@@ -361,7 +361,7 @@ static void                  cl_com_ssl_locking_callback(int mode, int type, con
 static int                   cl_com_ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx); /* callback for verify clients certificate */
 static int                   cl_com_ssl_set_default_mode(SSL_CTX *ctx, SSL *ssl);
 static void                  cl_com_ssl_log_mode_settings(long mode);
-static int                   cl_com_ssl_fill_private_from_peer_cert(cl_com_ssl_private_t *private, cl_bool_t is_server);
+static int                   cl_com_ssl_fill_private_from_peer_cert(cl_com_ssl_private_t *private, bool is_server);
 static int cl_com_ssl_connection_request_handler_setup_finalize(cl_com_connection_t* connection);
 
 
@@ -1999,7 +1999,7 @@ static int cl_com_ssl_transform_ssl_error(unsigned long ssl_error, char* buffer,
    char* buffer_copy = NULL;
    char* module = NULL;
    char* error_text = NULL;
-   cl_bool_t do_ignore = CL_FALSE;
+   bool do_ignore = false;
 
    if (buffer == NULL || transformed_error == NULL) {
       return CL_RETVAL_PARAMS;
@@ -2069,7 +2069,7 @@ static int cl_com_ssl_transform_ssl_error(unsigned long ssl_error, char* buffer,
       case 218595386:
       case 151470093:
       case 185090057: {
-         do_ignore = CL_TRUE;
+         do_ignore = true;
          break;
       }
       case 151441508: {
@@ -2102,7 +2102,7 @@ static int cl_com_ssl_transform_ssl_error(unsigned long ssl_error, char* buffer,
    sge_free(&module);
    sge_free(&error_text);
 
-   if (do_ignore == CL_TRUE) {
+   if (do_ignore == true) {
       CL_LOG_STR_STR_INT(CL_LOG_WARNING, "will not report ssl error text to application:", buffer, "ssl id", (int) ssl_error);
       return CL_RETVAL_DO_IGNORE;
    }
@@ -2124,7 +2124,7 @@ static int cl_com_ssl_log_ssl_errors(const char* function_name) {
    char* transformed_ssl_error = NULL;
    char buffer[512];
    char help_buf[1024];
-   cl_bool_t had_errors = CL_FALSE;
+   bool had_errors = false;
 
    if (function_name != NULL) {
       func_name = function_name;
@@ -2152,10 +2152,10 @@ static int cl_com_ssl_log_ssl_errors(const char* function_name) {
       if (ret_val != CL_RETVAL_DO_IGNORE) {
          cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_GET_SSL_ERROR, help_buf );
       }
-      had_errors = CL_TRUE;
+      had_errors = true;
    }
 
-   if (had_errors == CL_FALSE) {
+   if (had_errors == false) {
       CL_LOG(CL_LOG_INFO, "no SSL errors available");
    }
 
@@ -2249,7 +2249,7 @@ static int cl_com_ssl_free_com_private(cl_com_connection_t* connection) {
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_ssl_setup_context()"
-static int cl_com_ssl_setup_context(cl_com_connection_t* connection, cl_bool_t is_server) {
+static int cl_com_ssl_setup_context(cl_com_connection_t* connection, bool is_server) {
    cl_com_ssl_private_t* private = NULL;
    int ret_val = CL_RETVAL_OK;
    if (connection == NULL) {
@@ -2281,7 +2281,7 @@ static int cl_com_ssl_setup_context(cl_com_connection_t* connection, cl_bool_t i
 
    }
 
-   if (is_server == CL_FALSE) {
+   if (is_server == false) {
       CL_LOG(CL_LOG_INFO, "setting up context as client");
    } else {
       CL_LOG(CL_LOG_INFO, "setting up context as server");
@@ -2430,7 +2430,7 @@ int cl_com_ssl_framework_setup(void) {
       if (cl_com_ssl_global_config_object == NULL) {
          ret_val = CL_RETVAL_MALLOC;
       } else {
-         cl_com_ssl_global_config_object->ssl_initialized = CL_FALSE;
+         cl_com_ssl_global_config_object->ssl_initialized = false;
          cl_com_ssl_global_config_object->ssl_lib_lock_mutex_array = NULL;
          cl_com_ssl_global_config_object->ssl_lib_lock_num = 0;
       }
@@ -2449,7 +2449,7 @@ int cl_com_ssl_framework_cleanup(void) {
    int counter = 0;
    pthread_mutex_lock(&cl_com_ssl_global_config_mutex);
    if (cl_com_ssl_global_config_object != NULL) {
-      if (cl_com_ssl_global_config_object->ssl_initialized == CL_TRUE) {
+      if (cl_com_ssl_global_config_object->ssl_initialized == true) {
 
          CL_LOG(CL_LOG_INFO,"shutting down ssl framework ...");
          /* free error strings from ERR_load_crypto_strings() 
@@ -2726,7 +2726,7 @@ int cl_com_ssl_setup_connection(cl_com_connection_t**          connection,
       return CL_RETVAL_NO_FRAMEWORK_INIT;
    } else {
       /* check if we have already initalized the global ssl functionality */
-      if (cl_com_ssl_global_config_object->ssl_initialized == CL_FALSE) {
+      if (cl_com_ssl_global_config_object->ssl_initialized == false) {
          /* init ssl lib */
          CL_LOG(CL_LOG_INFO, "init ssl library ...");
          
@@ -2810,7 +2810,7 @@ int cl_com_ssl_setup_connection(cl_com_connection_t**          connection,
             CL_LOG(CL_LOG_INFO, "PRNG is seeded with enough data");
          }
 
-         cl_com_ssl_global_config_object->ssl_initialized = CL_TRUE;
+         cl_com_ssl_global_config_object->ssl_initialized = true;
 
          CL_LOG(CL_LOG_INFO, "init ssl library done");
       } else {
@@ -2983,7 +2983,7 @@ int cl_com_ssl_connection_complete_accept(cl_com_connection_t*  connection,
       return CL_RETVAL_PARAMS;
    }
 
-   if (connection->was_accepted != CL_TRUE) {
+   if (connection->was_accepted != true) {
       CL_LOG(CL_LOG_ERROR,"This is not an accepted connection from service (was_accepted flag is not set)");
       return CL_RETVAL_PARAMS;
    }
@@ -3063,7 +3063,7 @@ int cl_com_ssl_connection_complete_accept(cl_com_connection_t*  connection,
             {
                gettimeofday(&now,NULL);
                if (connection->write_buffer_timeout_time <= now.tv_sec || 
-                   cl_com_get_ignore_timeouts_flag()     == CL_TRUE       ) {
+                   cl_com_get_ignore_timeouts_flag()     == true       ) {
 
                   /* we had an timeout */
                   CL_LOG(CL_LOG_ERROR,"ssl accept timeout error");
@@ -3101,7 +3101,7 @@ int cl_com_ssl_connection_complete_accept(cl_com_connection_t*  connection,
       CL_LOG(CL_LOG_INFO,"SSL Accept successful");
       connection->write_buffer_timeout_time = 0;
 
-      return cl_com_ssl_fill_private_from_peer_cert(private, CL_TRUE);
+      return cl_com_ssl_fill_private_from_peer_cert(private, true);
    }
 
    return CL_RETVAL_UNKNOWN;
@@ -3152,7 +3152,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout) {
       CL_LOG(CL_LOG_DEBUG,"connection_sub_state is CL_COM_OPEN_INIT");
       private->sockfd = -1;
   
-      if( (tmp_error=cl_com_ssl_setup_context(connection, CL_FALSE)) != CL_RETVAL_OK) {
+      if( (tmp_error=cl_com_ssl_setup_context(connection, false)) != CL_RETVAL_OK) {
          return tmp_error;
       }
       
@@ -3252,7 +3252,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout) {
    if ( connection->connection_sub_state == CL_COM_OPEN_CONNECT) {
       int my_error;
       int i;
-      cl_bool_t connect_state = CL_FALSE;
+      bool connect_state = false;
 
       CL_LOG(CL_LOG_DEBUG,"connection_sub_state is CL_COM_OPEN_CONNECT");
 
@@ -3261,12 +3261,12 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout) {
       my_error = errno;
       if (i == 0) {
          /* we are connected */
-         connect_state = CL_TRUE;
+         connect_state = true;
       } else {
          switch(my_error) {
             case EISCONN: {
                CL_LOG(CL_LOG_INFO,"already connected");
-               connect_state = CL_TRUE;
+               connect_state = true;
                break;
             }
             case ECONNREFUSED: {
@@ -3303,7 +3303,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout) {
             }
          }
       } 
-      if (connect_state == CL_TRUE) {
+      if (connect_state == true) {
          connection->write_buffer_timeout_time = 0;
          connection->connection_sub_state = CL_COM_OPEN_CONNECTED;
       }
@@ -3343,7 +3343,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout) {
 
          gettimeofday(&now,NULL);
          if (connection->write_buffer_timeout_time <= now.tv_sec || 
-             cl_com_get_ignore_timeouts_flag()     == CL_TRUE       ) {
+             cl_com_get_ignore_timeouts_flag()     == true       ) {
 
             /* we had an timeout */
             CL_LOG(CL_LOG_ERROR,"connect timeout error");
@@ -3451,7 +3451,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout) {
             {
                gettimeofday(&now,NULL);
                if (connection->write_buffer_timeout_time <= now.tv_sec || 
-                   cl_com_get_ignore_timeouts_flag()     == CL_TRUE       ) {
+                   cl_com_get_ignore_timeouts_flag()     == true       ) {
 
                   /* we had an timeout */
                   CL_LOG(CL_LOG_ERROR,"ssl connect timeout error");
@@ -3474,7 +3474,7 @@ int cl_com_ssl_open_connection(cl_com_connection_t* connection, int timeout) {
       CL_LOG(CL_LOG_INFO,"SSL Connect successful");
       connection->write_buffer_timeout_time = 0;
 
-      return cl_com_ssl_fill_private_from_peer_cert(private, CL_FALSE);
+      return cl_com_ssl_fill_private_from_peer_cert(private, false);
 
    }
    return CL_RETVAL_UNKNOWN;
@@ -3614,7 +3614,7 @@ static int cl_com_ssl_connection_request_handler_setup_finalize(cl_com_connectio
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_ssl_connection_request_handler_setup()"
-int cl_com_ssl_connection_request_handler_setup(cl_com_connection_t* connection, cl_bool_t only_prepare_service) {
+int cl_com_ssl_connection_request_handler_setup(cl_com_connection_t* connection, bool only_prepare_service) {
    int ret;
    int sockfd = 0;
    struct sockaddr_in serv_addr;
@@ -3639,7 +3639,7 @@ int cl_com_ssl_connection_request_handler_setup(cl_com_connection_t* connection,
       return CL_RETVAL_NO_PORT_ERROR;
    }
 
-   if( (tmp_error=cl_com_ssl_setup_context(connection, CL_TRUE)) != CL_RETVAL_OK) {
+   if( (tmp_error=cl_com_ssl_setup_context(connection, true)) != CL_RETVAL_OK) {
       return tmp_error;
    }
 
@@ -3719,7 +3719,7 @@ int cl_com_ssl_connection_request_handler_setup(cl_com_connection_t* connection,
    /* if only_prepare_service is enabled we don't want to set the port into
       listen mode now, we have to do it later */
    private->pre_sockfd = sockfd;
-   if (only_prepare_service == CL_TRUE) {
+   if (only_prepare_service == true) {
       CL_LOG_INT(CL_LOG_INFO,"service socket prepared for listen, using sockfd=", sockfd);
       return CL_RETVAL_OK;
    }
@@ -4047,7 +4047,7 @@ int cl_com_ssl_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
 #else
       FD_SET(server_fd, &my_read_fds);
 #endif
-      service_connection->is_read_selected = CL_TRUE;
+      service_connection->is_read_selected = true;
       nr_of_descriptors++;
       service_connection->data_read_flag = CL_COM_DATA_NOT_READY;
    }
@@ -4065,10 +4065,10 @@ int cl_com_ssl_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
       }
 
       if (do_read_select != 0) {
-         connection->is_read_selected = CL_FALSE;
+         connection->is_read_selected = false;
       }
       if (do_write_select != 0) {
-         connection->is_write_selected = CL_FALSE;
+         connection->is_write_selected = false;
       }
 
       if (con_private->sockfd >= 0) {
@@ -4085,7 +4085,7 @@ int cl_com_ssl_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
 #else
                            FD_SET(con_private->sockfd,&my_read_fds);
 #endif
-                           connection->is_read_selected = CL_TRUE;
+                           connection->is_read_selected = true;
                            max_fd = MAX(max_fd,con_private->sockfd);
                            nr_of_descriptors++;
                            connection->data_read_flag = CL_COM_DATA_NOT_READY;
@@ -4100,7 +4100,7 @@ int cl_com_ssl_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
 #else
                               FD_SET(con_private->sockfd,&my_write_fds);
 #endif
-                              connection->is_write_selected = CL_TRUE;
+                              connection->is_write_selected = true;
                               max_fd = MAX(max_fd, con_private->sockfd);
                               connection->fd_ready_for_write = CL_COM_DATA_NOT_READY;
                            } 
@@ -4113,7 +4113,7 @@ int cl_com_ssl_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
 #else
                               FD_SET(con_private->sockfd,&my_write_fds);
 #endif
-                              connection->is_write_selected = CL_TRUE;
+                              connection->is_write_selected = true;
                               connection->fd_ready_for_write = CL_COM_DATA_NOT_READY;
                               connection->data_write_flag = CL_COM_DATA_READY;
                            }
@@ -4137,7 +4137,7 @@ int cl_com_ssl_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
 #else
                         FD_SET(con_private->sockfd,&my_read_fds);
 #endif
-                        connection->is_read_selected = CL_TRUE;
+                        connection->is_read_selected = true;
                         nr_of_descriptors++;
                         connection->data_read_flag = CL_COM_DATA_NOT_READY;
                      }
@@ -4152,7 +4152,7 @@ int cl_com_ssl_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
 #else
                            FD_SET(con_private->sockfd,&my_write_fds);
 #endif
-                           connection->is_write_selected = CL_TRUE;
+                           connection->is_write_selected = true;
                            connection->fd_ready_for_write = CL_COM_DATA_NOT_READY;
                         }
                         if (con_private->ssl_last_error == SSL_ERROR_WANT_WRITE) {
@@ -4164,7 +4164,7 @@ int cl_com_ssl_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
 #else
                            FD_SET(con_private->sockfd,&my_write_fds);
 #endif
-                           connection->is_write_selected = CL_TRUE;
+                           connection->is_write_selected = true;
                            connection->fd_ready_for_write = CL_COM_DATA_NOT_READY;
                            connection->data_write_flag = CL_COM_DATA_READY;
                         }
@@ -4192,7 +4192,7 @@ int cl_com_ssl_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
 #else
                               FD_SET(con_private->sockfd,&my_read_fds); 
 #endif
-                              connection->is_read_selected = CL_TRUE;
+                              connection->is_read_selected = true;
                               nr_of_descriptors++;
                               connection->data_read_flag = CL_COM_DATA_NOT_READY;
                            }
@@ -4222,7 +4222,7 @@ int cl_com_ssl_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
 #else
                               FD_SET(con_private->sockfd,&my_read_fds);
 #endif
-                              connection->is_read_selected = CL_TRUE;
+                              connection->is_read_selected = true;
                               nr_of_descriptors++;
                               connection->data_read_flag = CL_COM_DATA_NOT_READY;
                            }
@@ -4235,7 +4235,7 @@ int cl_com_ssl_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
 #else
                               FD_SET(con_private->sockfd,&my_write_fds);
 #endif
-                              connection->is_write_selected = CL_TRUE;
+                              connection->is_write_selected = true;
                               connection->fd_ready_for_write = CL_COM_DATA_NOT_READY;
                               connection->data_write_flag = CL_COM_DATA_READY;
                            }
@@ -4259,7 +4259,7 @@ int cl_com_ssl_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
 #else
                               FD_SET(con_private->sockfd,&my_read_fds);
 #endif
-                              connection->is_read_selected = CL_TRUE;
+                              connection->is_read_selected = true;
                               nr_of_descriptors++;
                               connection->data_read_flag = CL_COM_DATA_NOT_READY;
                            }
@@ -4274,7 +4274,7 @@ int cl_com_ssl_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
 #else
                                  FD_SET(con_private->sockfd,&my_write_fds);
 #endif
-                                 connection->is_write_selected = CL_TRUE;
+                                 connection->is_write_selected = true;
                                  connection->fd_ready_for_write = CL_COM_DATA_NOT_READY;
                                  connection->data_write_flag = CL_COM_DATA_READY;
                               }
@@ -4304,7 +4304,7 @@ int cl_com_ssl_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
 #else
                            FD_SET(con_private->sockfd,&my_read_fds);
 #endif
-                           connection->is_read_selected = CL_TRUE;
+                           connection->is_read_selected = true;
                            max_fd = MAX(max_fd,con_private->sockfd);
                            nr_of_descriptors++;
                            connection->data_read_flag = CL_COM_DATA_NOT_READY;
@@ -4318,7 +4318,7 @@ int cl_com_ssl_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
 #else
                            FD_SET(con_private->sockfd,&my_write_fds);
 #endif
-                           connection->is_write_selected = CL_TRUE;
+                           connection->is_write_selected = true;
                            max_fd = MAX(max_fd, con_private->sockfd);
                            connection->fd_ready_for_write = CL_COM_DATA_NOT_READY;
                         }
@@ -4363,7 +4363,7 @@ int cl_com_ssl_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
 #endif
             }
             if(do_write_select == 1){
-               if (elem->data->ready_for_writing == CL_TRUE) {
+               if (elem->data->ready_for_writing == true) {
 #ifdef USE_POLL
                   ufds[ufds_index].events |= POLLOUT;
 #else
@@ -4578,13 +4578,13 @@ int cl_com_ssl_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
                      if (ufds[fd_index].revents & (POLLIN|POLLPRI)) {
                         connection->data_read_flag = CL_COM_DATA_READY;
                      }
-                     connection->is_read_selected = CL_FALSE;
+                     connection->is_read_selected = false;
                   }
                   if (do_write_select != 0) {
                      if (ufds[fd_index].revents & POLLOUT) {
                         connection->fd_ready_for_write = CL_COM_DATA_READY;
                      }
-                     connection->is_write_selected = CL_FALSE;
+                     connection->is_write_selected = false;
                   }
 
                   /* Do we have poll errors ? */
@@ -4634,16 +4634,16 @@ int cl_com_ssl_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
                      if (elem->data->fd == ufds[fd_index].fd) {
                         if(do_read_select == 1) {
                            if(ufds[fd_index].revents & (POLLIN|POLLPRI)){
-                              elem->data->read_ready = CL_TRUE;
+                              elem->data->read_ready = true;
                            }else{
-                              elem->data->read_ready = CL_FALSE;
+                              elem->data->read_ready = false;
                            }
                         }
                         if(do_write_select == 1) {
                            if(ufds[fd_index].revents & POLLOUT){
-                              elem->data->write_ready = CL_TRUE;
+                              elem->data->write_ready = true;
                            }else{
-                              elem->data->write_ready = CL_FALSE;
+                              elem->data->write_ready = false;
                            }
                         }
                      }
@@ -4670,7 +4670,7 @@ int cl_com_ssl_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
                         connection->data_read_flag = CL_COM_DATA_READY;
                      }
                   }
-                  connection->is_read_selected = CL_FALSE;
+                  connection->is_read_selected = false;
                }
                if (do_write_select != 0) {
                   if (con_private->sockfd >= 0 && con_private->sockfd <= max_fd) {
@@ -4678,7 +4678,7 @@ int cl_com_ssl_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
                         connection->fd_ready_for_write = CL_COM_DATA_READY;
                      }
                   }
-                  connection->is_write_selected = CL_FALSE;
+                  connection->is_write_selected = false;
                }
                con_elem = cl_connection_list_get_next_elem(con_elem);
             } /* while */
@@ -4688,7 +4688,7 @@ int cl_com_ssl_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
                if (FD_ISSET(server_fd, &my_read_fds)) {
                   service_connection->data_read_flag = CL_COM_DATA_READY;
                }
-               service_connection->is_read_selected = CL_FALSE;
+               service_connection->is_read_selected = false;
             }
 
             /* look for ready external file descriptors and set their ready flags */
@@ -4698,14 +4698,14 @@ int cl_com_ssl_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
 
                while(fd_elem) {
                   if (FD_ISSET(fd_elem->data->fd, &my_read_fds)) {
-                     fd_elem->data->read_ready = CL_TRUE;
+                     fd_elem->data->read_ready = true;
                   }else{
-                     fd_elem->data->read_ready = CL_FALSE;
+                     fd_elem->data->read_ready = false;
                   }
                   if (FD_ISSET(fd_elem->data->fd, &my_write_fds)) {
-                     fd_elem->data->write_ready = CL_TRUE;
+                     fd_elem->data->write_ready = true;
                   }else{
-                     fd_elem->data->write_ready = CL_FALSE;
+                     fd_elem->data->write_ready = false;
                   }
                   fd_elem = cl_fd_list_get_next_elem(fd_elem);
                }
@@ -4725,10 +4725,10 @@ int cl_com_ssl_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
       connection = ufds_con[fd_index];
       if (connection != NULL) {
          if (do_read_select != 0) {
-            connection->is_read_selected = CL_FALSE;
+            connection->is_read_selected = false;
          }
          if (do_write_select != 0) {
-            connection->is_write_selected = CL_FALSE;
+            connection->is_write_selected = false;
          }
       }
    }
@@ -4739,17 +4739,17 @@ int cl_com_ssl_open_connection_request_handler(cl_com_handle_t* handle, cl_raw_l
    while(con_elem) {
       connection  = con_elem->connection;
       if (do_read_select != 0) {
-         connection->is_read_selected = CL_FALSE;
+         connection->is_read_selected = false;
       }
       if (do_write_select != 0) {
-         connection->is_write_selected = CL_FALSE;
+         connection->is_write_selected = false;
       }
       con_elem = cl_connection_list_get_next_elem(con_elem);
    }
    cl_raw_list_unlock(connection_list);
 
    if (server_fd != -1) {
-      service_connection->is_read_selected = CL_FALSE;
+      service_connection->is_read_selected = false;
    }
 #endif
    return retval;
@@ -5008,9 +5008,9 @@ int cl_com_ssl_get_unique_id(cl_com_handle_t* handle,
 }
 
 /* fill private structure */
-/* is_server = CL_TRUE  -> peer certificate comes from client */
-/* is_server = CL_FALSE -> peer certificate comes from server */
-static int cl_com_ssl_fill_private_from_peer_cert(cl_com_ssl_private_t *private, cl_bool_t is_server) {
+/* is_server = true  -> peer certificate comes from client */
+/* is_server = false -> peer certificate comes from server */
+static int cl_com_ssl_fill_private_from_peer_cert(cl_com_ssl_private_t *private, bool is_server) {
 
       X509* peer = NULL;
       char peer_CN[256];
@@ -5019,14 +5019,14 @@ static int cl_com_ssl_fill_private_from_peer_cert(cl_com_ssl_private_t *private,
         return CL_RETVAL_SSL_CERTIFICATE_ERROR;
       } 
 
-      if (is_server == CL_TRUE) {
+      if (is_server == true) {
         CL_LOG(CL_LOG_INFO, "Checking Client Authentication");
       } else {  
         CL_LOG(CL_LOG_INFO, "Checking Server Authentication");
       }  
       
       if (cl_com_ssl_func__SSL_get_verify_result(private->ssl_obj) != X509_V_OK) {
-         if (is_server == CL_TRUE) {
+         if (is_server == true) {
             CL_LOG(CL_LOG_ERROR,"client certificate doesn't verify");
             cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_CLIENT_CERTIFICATE_ERROR);
          } else {   
@@ -5050,7 +5050,7 @@ static int cl_com_ssl_fill_private_from_peer_cert(cl_com_ssl_private_t *private,
             CL_LOG_STR(CL_LOG_INFO,"calling ssl verify callback with peer name:",peer_CN);
             retval = private->ssl_setup->ssl_verify_func(CL_SSL_PEER_NAME, is_server, peer_CN);
 
-            if ( retval != CL_TRUE) {
+            if ( retval != true) {
                CL_LOG(CL_LOG_ERROR, "commlib ssl verify callback function failed in peer name check");
                cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_VERIFY_CALLBACK_FUNC_ERROR);
                cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
@@ -5074,7 +5074,7 @@ static int cl_com_ssl_fill_private_from_peer_cert(cl_com_ssl_private_t *private,
             if (uniqueIdentifier != NULL) {
                CL_LOG_STR(CL_LOG_INFO,"unique identifier:", uniqueIdentifier);
                CL_LOG_STR(CL_LOG_INFO,"calling ssl_verify_func with user name:",uniqueIdentifier);
-               if ( private->ssl_setup->ssl_verify_func(CL_SSL_USER_NAME, is_server, uniqueIdentifier) != CL_TRUE) {
+               if ( private->ssl_setup->ssl_verify_func(CL_SSL_USER_NAME, is_server, uniqueIdentifier) != true) {
                   CL_LOG(CL_LOG_ERROR, "commlib ssl verify callback function failed in user name check");
                   cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_USER_ID_VERIFY_ERROR);
                   cl_com_ssl_log_ssl_errors(__CL_FUNCTION__);
@@ -5111,7 +5111,7 @@ static int cl_com_ssl_fill_private_from_peer_cert(cl_com_ssl_private_t *private,
          cl_com_ssl_func__X509_free(peer);
          peer = NULL;
       } else {
-         if (is_server == CL_TRUE) {
+         if (is_server == true) {
             CL_LOG(CL_LOG_ERROR,"client did not send peer certificate");
             cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_PEER_CERTIFICATE_ERROR, MSG_CL_COMMLIB_SSL_CLIENT_CERT_NOT_SENT_ERROR);
          } else {
@@ -5273,7 +5273,7 @@ int cl_com_ssl_read_GMSH(cl_com_connection_t*        connection,
 
 
 /* create service, accept new connections */
-int cl_com_ssl_connection_request_handler_setup(cl_com_connection_t* connection, cl_bool_t only_prepare_service) {
+int cl_com_ssl_connection_request_handler_setup(cl_com_connection_t* connection, bool only_prepare_service) {
    cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_NOT_SUPPORTED, "");
    return CL_RETVAL_SSL_NOT_SUPPORTED;
 }

@@ -296,39 +296,40 @@ int shepherd_trace(const char *format, ...)
 {
    dstring     ds;
    dstring     message = DSTRING_INIT;
-   va_list     ap;
    char        buffer[128];
    char        header_str[256];
    int         ret=1;
    int         old_cancelstate;
-	struct stat statbuf;
+   struct stat statbuf;
 
    /* Protect the trace file pointer with a mutex */
    pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &old_cancelstate);
    pthread_mutex_lock(&g_trace_mutex);
 
-	/* File was closed (e.g. by an exec()) but fp was not set to NULL */
-	if (shepherd_trace_fp 
-	    && fstat(fileno(shepherd_trace_fp), &statbuf) == -1
-		 && errno == EBADF) {
-		shepherd_trace_fp = NULL;
-	}
-	
-	if (shepherd_trace_fp == NULL) {
-		shepherd_trace_fp = shepherd_trace_init_intern(st_trace);
-	}
+   /* File was closed (e.g. by an exec()) but fp was not set to NULL */
+   if (shepherd_trace_fp 
+       && fstat(fileno(shepherd_trace_fp), &statbuf) == -1	 
+       && errno == EBADF) {
+      shepherd_trace_fp = NULL;
+   }
 
-	if (shepherd_trace_fp != NULL) {
-   	sge_dstring_init(&ds, buffer, sizeof(buffer));
+   if (shepherd_trace_fp == NULL) {
+      shepherd_trace_fp = shepherd_trace_init_intern(st_trace);
+   }
 
-   	sprintf(header_str, "%s ["uid_t_fmt":"pid_t_fmt"]: ",
-			sge_ctime(0, &ds), geteuid(), getpid());
+   if (shepherd_trace_fp != NULL) {
+      sge_dstring_init(&ds, buffer, sizeof(buffer));
+
+      sprintf(header_str, "%s ["uid_t_fmt":"pid_t_fmt"]: ", sge_ctime(0, &ds), geteuid(), getpid());
      
       if (format != NULL) {
+         va_list     ap;
+
          va_start(ap, format);
          sge_dstring_vsprintf(&message, format, ap);
+         va_end(ap);
 
-   	   ret = sh_str2file(header_str, sge_dstring_get_string(&message), 
+   	 ret = sh_str2file(header_str, sge_dstring_get_string(&message), 
                            shepherd_trace_fp);
 
          if (foreground) {
@@ -343,8 +344,8 @@ int shepherd_trace(const char *format, ...)
       if (!g_keep_files_open) {
          shepherd_trace_exit();
       }
-		ret=0;	
-	}
+      ret=0;	
+   }
 
    pthread_mutex_unlock(&g_trace_mutex);
    pthread_setcancelstate(old_cancelstate, NULL);
@@ -374,14 +375,16 @@ void shepherd_error(int do_exit, const char *format, ...)
 {
    dstring     ds;
    dstring     message = DSTRING_INIT;
-   va_list     ap;
    char        buffer[128];
    char        header_str[256];
 	struct stat statbuf;
 
    if (format != NULL) {
+      va_list     ap;
+
       va_start(ap, format);
       sge_dstring_vsprintf(&message, format, ap);
+      va_end(ap);
    }
 
    shepherd_trace(sge_dstring_get_string(&message));

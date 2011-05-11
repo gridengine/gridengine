@@ -74,17 +74,17 @@ static void cl_dump_private(cl_com_connection_t* connection);
 static int cl_com_gethostbyname(const char *hostname, cl_com_hostent_t **hostent, int* system_error );
 static int cl_com_gethostbyaddr(struct in_addr *addr, cl_com_hostent_t **hostent, int* system_error_retval );
 static int cl_com_dup_host(char** host_dest, const char* source, cl_host_resolve_method_t method, const char* domain);
-static cl_bool_t cl_com_default_ssl_verify_func(cl_ssl_verify_mode_t mode, cl_bool_t service_mode, const char* value);
+static bool cl_com_default_ssl_verify_func(cl_ssl_verify_mode_t mode, bool service_mode, const char* value);
 
-static cl_bool_t cl_ingore_timeout = CL_FALSE;
-static cl_bool_t cl_com_is_ip_address_string(const char* hostname, struct in_addr* addr);
+static bool cl_ingore_timeout = false;
+static bool cl_com_is_ip_address_string(const char* hostname, struct in_addr* addr);
 
 
 #ifdef __CL_FUNCTION__
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_default_ssl_verify_func()"
-static cl_bool_t cl_com_default_ssl_verify_func(cl_ssl_verify_mode_t mode, cl_bool_t service_mode, const char* value) {
+static bool cl_com_default_ssl_verify_func(cl_ssl_verify_mode_t mode, bool service_mode, const char* value) {
    switch(mode) {
       case CL_SSL_PEER_NAME: {
          CL_LOG(CL_LOG_INFO,"checking peer name");
@@ -96,11 +96,11 @@ static cl_bool_t cl_com_default_ssl_verify_func(cl_ssl_verify_mode_t mode, cl_bo
       }
    }
    switch(service_mode) {
-      case CL_TRUE: {
+      case true: {
          CL_LOG(CL_LOG_INFO,"running in service mode");
          break;
       }
-      case CL_FALSE: {
+      case false: {
          CL_LOG(CL_LOG_INFO,"running in client mode");
          break;
       }
@@ -110,7 +110,7 @@ static cl_bool_t cl_com_default_ssl_verify_func(cl_ssl_verify_mode_t mode, cl_bo
    } else {
       CL_LOG(CL_LOG_ERROR,"compare value is not set");
    }
-   return CL_TRUE;
+   return true;
 }
 
 
@@ -208,7 +208,7 @@ int cl_com_add_debug_message(cl_com_connection_t* connection, const char* messag
    char*           rcv_host = "?";
    char*           rcv_comp = "?";
    unsigned long   rcv_id   = 0;
-   cl_bool_t       outgoing = CL_FALSE;
+   bool            outgoing = false;
    char*           direction = "<-";
    unsigned long   nr_of_connections = 0;
 
@@ -252,7 +252,7 @@ int cl_com_add_debug_message(cl_com_connection_t* connection, const char* messag
    gettimeofday(&now,NULL);
    time_now = now.tv_sec + (now.tv_usec / 1000000.0);
    if (ms->message_send_time.tv_sec != 0) {
-      outgoing = CL_TRUE;
+      outgoing = true;
       /* set message_time to message creation time */
       msg_time = ms->message_insert_time.tv_sec + (ms->message_insert_time.tv_usec / 1000000.0);
       snprintf(message_time,256,"%.6f", msg_time);
@@ -273,7 +273,7 @@ int cl_com_add_debug_message(cl_com_connection_t* connection, const char* messag
          snprintf(commlib_time,256,"%.6s", "-.-");
       }
    }
-   if (outgoing == CL_TRUE) {
+   if (outgoing == true) {
       direction = "->";
    }
    if (connection->local != NULL) {
@@ -306,7 +306,7 @@ int cl_com_add_debug_message(cl_com_connection_t* connection, const char* messag
       CL_LOG(CL_LOG_INFO,"no message tag function set");
    }
 
-   if (handle->debug_client_setup->dc_dump_flag == CL_TRUE) {
+   if (handle->debug_client_setup->dc_dump_flag == true) {
       switch(ms->message_df) {
          case CL_MIH_DF_UNDEFINED:
             break;
@@ -392,7 +392,7 @@ int cl_com_add_debug_message(cl_com_connection_t* connection, const char* messag
 #define __CL_FUNCTION__ "cl_com_create_debug_client_setup()"
 int cl_com_create_debug_client_setup(cl_debug_client_setup_t** new_setup,
                                      cl_debug_client_t dc_mode,             /* debug_client_mode */
-                                     cl_bool_t         dc_dump_flag,        /* flag for sending message data */
+                                     bool         dc_dump_flag,        /* flag for sending message data */
                                      int               dc_app_log_level) {  /* application log level */
 
    int return_value = CL_RETVAL_OK;
@@ -751,9 +751,9 @@ int cl_com_create_connection(cl_com_connection_t** connection) {
    }
   
    /* init connection struct */
-   (*connection)->check_endpoint_flag = CL_FALSE;
-   (*connection)->is_read_selected = CL_FALSE;
-   (*connection)->is_write_selected = CL_FALSE;
+   (*connection)->check_endpoint_flag = false;
+   (*connection)->is_read_selected = false;
+   (*connection)->is_write_selected = false;
    (*connection)->check_endpoint_mid  = 0;
    (*connection)->crm_state       = CL_CRM_CS_UNDEFINED;
    (*connection)->crm_state_error = NULL;
@@ -787,8 +787,8 @@ int cl_com_create_connection(cl_com_connection_t** connection) {
    (*connection)->connection_state = CL_DISCONNECTED;
    (*connection)->connection_sub_state = CL_COM_SUB_STATE_UNDEFINED;
    (*connection)->data_flow_type = CL_CM_CT_UNDEFINED;
-   (*connection)->was_accepted = CL_FALSE;
-   (*connection)->was_opened = CL_FALSE;
+   (*connection)->was_accepted = false;
+   (*connection)->was_opened = false;
    (*connection)->client_host_name = NULL;
    (*connection)->data_format_type = CL_CM_DF_UNDEFINED;
 
@@ -1212,7 +1212,7 @@ const char* cl_com_get_data_flow_type(cl_com_connection_t* connection) {  /* CR 
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_ignore_timeouts()"
-void cl_com_ignore_timeouts(cl_bool_t flag) {
+void cl_com_ignore_timeouts(bool flag) {
    /*
     * ATTENTION: This function must be signal handler save!!! 
     * DO NOT call functions which call lock functions !!!
@@ -1225,8 +1225,8 @@ void cl_com_ignore_timeouts(cl_bool_t flag) {
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_get_ignore_timeouts_flag()"
-cl_bool_t cl_com_get_ignore_timeouts_flag(void) {
-    if (cl_ingore_timeout == CL_TRUE) {
+bool cl_com_get_ignore_timeouts_flag(void) {
+    if (cl_ingore_timeout == true) {
        CL_LOG(CL_LOG_WARNING,"ignoring all communication timeouts");
     }
     return cl_ingore_timeout;
@@ -1329,7 +1329,7 @@ int cl_com_open_connection(cl_com_connection_t* connection, int timeout, cl_com_
 
       connection->connection_state = CL_OPENING;   
       connection->connection_sub_state = CL_COM_OPEN_INIT;
-      connection->was_opened = CL_TRUE;
+      connection->was_opened = true;
    }
 
    /* try to connect (open connection) */
@@ -1378,7 +1378,7 @@ int cl_com_open_connection(cl_com_connection_t* connection, int timeout, cl_com_
       
       /* check if connection count is reached */
       if ( connection->handler != NULL) {
-         if ( connection->handler->max_connection_count_reached == CL_TRUE ) {
+         if ( connection->handler->max_connection_count_reached == true ) {
             CL_LOG(CL_LOG_WARNING,cl_get_error_text(CL_RETVAL_MAX_CON_COUNT_REACHED));
             return CL_RETVAL_UNCOMPLETE_WRITE;  /* wait till connection count is ok */
          }
@@ -1788,7 +1788,7 @@ static int cl_com_gethostbyname(const char *hostname_unresolved, cl_com_hostent_
    char* hostname = NULL;
    cl_com_hostent_t *hostent_p = NULL;   
    int ret_val = CL_RETVAL_OK;
-   cl_bool_t do_free_host = CL_FALSE;
+   bool do_free_host = false;
 
    /* check parameters */
    if (hostent == NULL || *hostent != NULL || hostname_unresolved == NULL) {
@@ -1797,7 +1797,7 @@ static int cl_com_gethostbyname(const char *hostname_unresolved, cl_com_hostent_
    }
 
    /* check if the incoming hostname is an ip address string */
-   if (cl_com_is_ip_address_string(hostname_unresolved, &tmp_addr) == CL_TRUE) {
+   if (cl_com_is_ip_address_string(hostname_unresolved, &tmp_addr) == true) {
       cl_com_hostent_t* tmp_hostent = NULL;
       CL_LOG(CL_LOG_INFO,"got ip address string as host name argument");
       ret_val = cl_com_gethostbyaddr(&tmp_addr, &tmp_hostent, NULL);
@@ -1814,7 +1814,7 @@ static int cl_com_gethostbyname(const char *hostname_unresolved, cl_com_hostent_
          }
          return ret_val;
       }
-      do_free_host = CL_TRUE;
+      do_free_host = true;
       CL_LOG_STR(CL_LOG_INFO,"ip address string  :", hostname_unresolved);
       CL_LOG_STR(CL_LOG_INFO,"resulting host name:", hostname);
    } else {
@@ -1830,7 +1830,7 @@ static int cl_com_gethostbyname(const char *hostname_unresolved, cl_com_hostent_
    hostent_p = (cl_com_hostent_t*)malloc(sizeof(cl_com_hostent_t));
    if (hostent_p == NULL) {
       CL_LOG(CL_LOG_ERROR, cl_get_error_text(CL_RETVAL_MALLOC));
-      if (do_free_host == CL_TRUE) {
+      if (do_free_host == true) {
          sge_free(&hostname);
       }
       return CL_RETVAL_MALLOC;          /* could not get memory */ 
@@ -1842,7 +1842,7 @@ static int cl_com_gethostbyname(const char *hostname_unresolved, cl_com_hostent_
    if (he == NULL) {
       CL_LOG( CL_LOG_ERROR, cl_get_error_text(CL_RETVAL_UNKOWN_HOST_ERROR));
       cl_com_free_hostent(&hostent_p);       /* could not find host */
-      if (do_free_host == CL_TRUE) {
+      if (do_free_host == true) {
          sge_free(&hostname);
       }
       return CL_RETVAL_UNKOWN_HOST_ERROR;
@@ -1852,7 +1852,7 @@ static int cl_com_gethostbyname(const char *hostname_unresolved, cl_com_hostent_
 
    if (hostent_p->he->h_addr == NULL) {
       cl_com_free_hostent(&hostent_p);
-      if (do_free_host == CL_TRUE) {
+      if (do_free_host == true) {
          sge_free(&hostname);
       }
       return CL_RETVAL_IP_NOT_RESOLVED_ERROR;
@@ -1862,7 +1862,7 @@ static int cl_com_gethostbyname(const char *hostname_unresolved, cl_com_hostent_
 #if CL_DO_COMMUNICATION_DEBUG
    cl_com_print_host_info(hostent_p);
 #endif
-   if (do_free_host == CL_TRUE) {
+   if (do_free_host == true) {
       sge_free(&hostname);
    }
    return CL_RETVAL_OK;
@@ -1922,27 +1922,27 @@ static int cl_com_gethostbyaddr(struct in_addr *addr, cl_com_hostent_t **hostent
 static int cl_com_dup_host(char** host_dest, const char* source, cl_host_resolve_method_t method, const char* domain) {
 
    int retval = CL_RETVAL_OK;
-   cl_bool_t is_static_buffer = CL_FALSE;
+   bool is_static_buffer = false;
    char* the_dot = NULL;
 
    if (host_dest == NULL || source == NULL) {
       return CL_RETVAL_PARAMS;
    }
    if (*host_dest != NULL) {
-      is_static_buffer = CL_TRUE;
+      is_static_buffer = true;
    }
 
    switch(method) {
        case CL_SHORT:
           if ((the_dot = strchr(source, '.')) != NULL) {
             int size = the_dot - source;
-            if (is_static_buffer == CL_FALSE) {
+            if (is_static_buffer == false) {
                *host_dest = malloc(sizeof(char) * (size + 1));
             }
             *host_dest = strncpy(*host_dest, source, size);
             (*host_dest)[size] = '\0';
           } else {
-            if (is_static_buffer == CL_FALSE) {
+            if (is_static_buffer == false) {
                *host_dest = strdup(source);
             } else {
                *host_dest = strcpy(*host_dest, source);
@@ -1959,7 +1959,7 @@ static int cl_com_dup_host(char** host_dest, const char* source, cl_host_resolve
              if (domain == NULL) {
                 CL_LOG(CL_LOG_ERROR,"can't dup host with domain name without default domain");
                 /* error copy host without domain name , host is short */
-                if (is_static_buffer == CL_FALSE) {
+                if (is_static_buffer == false) {
                    *host_dest = (char*) malloc( sizeof(char) * (hostlen + 1) );
                    if (*host_dest == NULL) {
                       return CL_RETVAL_MALLOC;
@@ -1974,7 +1974,7 @@ static int cl_com_dup_host(char** host_dest, const char* source, cl_host_resolve
                 unsigned long domain_counter = 0;
                 unsigned long counter = 0;
                 /* we have a short hostname, add the default domain */
-                if (is_static_buffer == CL_FALSE) {
+                if (is_static_buffer == false) {
                    *host_dest = (char*) malloc( sizeof(char) * ( length + 1) );
                    if (*host_dest == NULL) { 
                       return CL_RETVAL_MALLOC;
@@ -1991,7 +1991,7 @@ static int cl_com_dup_host(char** host_dest, const char* source, cl_host_resolve
              }
           } else {
              /* we have a long hostname, return original name */
-             if (is_static_buffer == CL_FALSE) {
+             if (is_static_buffer == false) {
                 *host_dest = (char*) malloc( sizeof(char) * (hostlen + 1));
                 if (*host_dest == NULL) {
                    return CL_RETVAL_MALLOC;
@@ -2201,11 +2201,11 @@ int cl_com_compare_hosts(const char* host1, const char* host2) {
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_com_is_ip_address_string()"
-static cl_bool_t cl_com_is_ip_address_string(const char* resolve_hostname, struct in_addr* addr) {
+static bool cl_com_is_ip_address_string(const char* resolve_hostname, struct in_addr* addr) {
 
    if (resolve_hostname == NULL || addr == NULL) {
       CL_LOG(CL_LOG_ERROR,"got NULL pointer for hostname parameter");
-      return CL_FALSE;
+      return false;
    }
 
    addr->s_addr = inet_addr(resolve_hostname);
@@ -2223,11 +2223,11 @@ static cl_bool_t cl_com_is_ip_address_string(const char* resolve_hostname, struc
           v3 == 255 &&
           v4 == 255) {
          CL_LOG(CL_LOG_WARNING,"got ip address 255.255.255.255 as host name!");
-         return CL_TRUE;
+         return true;
       }
-      return CL_FALSE;
+      return false;
    }  
-   return CL_TRUE;
+   return true;
 }
 
 #ifdef __CL_FUNCTION__
@@ -2672,7 +2672,7 @@ int cl_com_host_list_refresh(cl_raw_list_t* list_p) {
       /* we have to resolve at least one host in this list. Make a copy of this list
          and resolve it, because we don't want to lock the list when hosts are resolved */ 
       CL_LOG(CL_LOG_WARNING,"do a list copy");
-      ret_val = cl_host_list_copy(&host_list_copy, list_p, CL_FALSE);
+      ret_val = cl_host_list_copy(&host_list_copy, list_p, false);
       if (ret_val == CL_RETVAL_OK ) {
          cl_host_list_elem_t* act_elem = NULL;
          cl_host_list_data_t* dummy_list_data_source = NULL;
@@ -2729,7 +2729,7 @@ int cl_com_host_list_refresh(cl_raw_list_t* list_p) {
                             dummy_list_data_source->entry_life_time,
                             dummy_list_data_source->entry_update_time,
                             dummy_list_data_source->entry_reresolve_time,
-                            CL_FALSE);
+                            false);
         
          /* first remove all entries from original list */
          while((elem = cl_host_list_get_first_elem(list_p)) ) {
@@ -3150,7 +3150,7 @@ int cl_com_print_host_info(cl_com_hostent_t *hostent_p ) {
 #define __CL_FUNCTION__ "cl_com_connection_request_handler_setup()"
 int cl_com_connection_request_handler_setup(cl_com_connection_t* connection, cl_com_endpoint_t* local_endpoint) {
    int retval = CL_RETVAL_OK;
-   cl_bool_t only_prepare_service = CL_FALSE;
+   bool only_prepare_service = false;
    if (connection != NULL) {
       if (connection->local    != NULL ||
           connection->remote   != NULL      ) {
@@ -3279,7 +3279,7 @@ int cl_com_connection_request_handler(cl_com_connection_t* connection, cl_com_co
             }
          }
          (*new_connection)->service_handler_flag = CL_COM_CONNECTION;
-         (*new_connection)->was_accepted = CL_TRUE;
+         (*new_connection)->was_accepted = true;
          (*new_connection)->local = cl_com_dup_endpoint(connection->local);
 
          if ( (*new_connection)->local == NULL ) {
@@ -3398,13 +3398,13 @@ int cl_com_open_connection_request_handler(cl_com_handle_t* handle, int timeout_
 
    /* as long as global CL_COMMLIB_DELAYED_LISTEN is enabled we don't want to
       do a select on the service connection */
-   if (cl_commlib_get_global_param(CL_COMMLIB_DELAYED_LISTEN) == CL_TRUE) {
+   if (cl_commlib_get_global_param(CL_COMMLIB_DELAYED_LISTEN) == true) {
       service_connection = NULL;
    } else {
       /* for read select calls we have to check if max. conneciton count is reached or
          handle is going down ... */
       if (select_mode == CL_RW_SELECT || select_mode == CL_R_SELECT) {
-         if (handle->do_shutdown != 0 || handle->max_connection_count_reached == CL_TRUE) {
+         if (handle->do_shutdown != 0 || handle->max_connection_count_reached == true) {
             service_connection = NULL;
          }
       }
@@ -4074,7 +4074,7 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
                if ((tmp_elem = cl_connection_list_get_elem_endpoint(connection_list, connection->remote)) != NULL) {
                   /* endpoint is not unique, check already connected endpoint */
                   cl_com_connection_t* tmp_con = tmp_elem->connection;
-                  tmp_con->check_endpoint_flag = CL_TRUE;
+                  tmp_con->check_endpoint_flag = true;
                   /*
                    * delete the hash_id of the connection, otherwise the 
                    * current one would not have a hash key anymore
@@ -4136,7 +4136,7 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
                if (strcmp(connection->remote->comp_name, CL_COM_DEBUG_CLIENT_NAME) == 0) {
                   int in_port = 0;
                   int ret = 0;
-                  cl_bool_t client_ok = CL_TRUE;
+                  bool client_ok = true;
                   if ( (ret=cl_com_connection_get_client_socket_in_port(connection, &in_port)) != CL_RETVAL_OK) {
                      CL_LOG_STR(CL_LOG_ERROR,"could not get client in socket connect port:", cl_get_error_text(ret));
                   }
@@ -4145,7 +4145,7 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
                   /* check debug client reserved port */
                   if (in_port <= 0 || in_port >= IPPORT_RESERVED) {
                      CL_LOG(CL_LOG_ERROR,"new debug client connection is not from a reserved port");
-                     client_ok = CL_FALSE;
+                     client_ok = false;
                      snprintf(tmp_buffer, sizeof(tmp_buffer),
                            MSG_CL_TCP_FW_ENDPOINT_X_NOT_FROM_RESERVED_PORT_SSU,
                            connection->remote->comp_host,
@@ -4176,7 +4176,7 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
                   /* check debug client host name */
                   if (cl_com_compare_hosts(connection->remote->comp_host, connection->local->comp_host) != CL_RETVAL_OK) {
                      CL_LOG(CL_LOG_ERROR,"new debug client connection is not from local host");
-                     client_ok = CL_FALSE;
+                     client_ok = false;
 
                      snprintf(tmp_buffer, sizeof(tmp_buffer),
                            MSG_CL_TCP_FW_ENDPOINT_X_NOT_FROM_LOCAL_HOST_SSUS,
@@ -4205,7 +4205,7 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
                      CL_LOG(CL_LOG_ERROR, connection_status_text );
                   }
 
-                  if (client_ok == CL_TRUE) {
+                  if (client_ok == true) {
                      cl_com_handle_t* handler = NULL;
 
                      /* enable debug message creation in handler */
@@ -4264,7 +4264,7 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
 #if 0
 /* This code is currently not used but should be used in the future, don't remove it */
          if (connection->crm_state == CL_CRM_CS_CONNECTED) {
-            if ( connection->handler != NULL && connection->was_accepted == CL_TRUE ) {
+            if ( connection->handler != NULL && connection->was_accepted == true ) {
                /* TODO */
                /* set check_allowed_host_list to 1 if the commlib should check the
                   allowed host list to enable cl_com_add_allowed_host() calls */
@@ -4706,7 +4706,7 @@ int cl_com_connection_complete_request(cl_raw_list_t* connection_list, cl_connec
             if ( handler->local->comp_id == 0  ) {
                handler->local->comp_id = connection->local->comp_id;
                CL_LOG_INT(CL_LOG_INFO,"setting handler comp_id to reported client id:", (int)handler->local->comp_id);
-               if ( handler->service_provider == CL_TRUE ) {
+               if ( handler->service_provider == true ) {
                   CL_LOG_INT(CL_LOG_INFO,"setting service handle comp_id to reported client id:", (int)connection->local->comp_id);
                   handler->service_handler->local->comp_id = connection->local->comp_id;
                }

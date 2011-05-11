@@ -359,12 +359,12 @@ lEnumeration *lWhat(const char *fmt, ...)
    cull_parse_state state;
 
    DENTER(CULL_LAYER, "lWhat");
-   va_start(ap, fmt);
 
    if (!fmt) {
       LERROR(LENOFORMATSTR);
       DRETURN(NULL);
    }
+
    /* 
       initialize scan function, the actual token is scanned again 
       in the subscope fuction. There we call eat_token to go ahead
@@ -373,7 +373,9 @@ lEnumeration *lWhat(const char *fmt, ...)
    scan(fmt, &state);
    
    /* parse */
+   va_start(ap, fmt);
    enumeration = subscope_lWhat(&state, &ap);
+   va_end(ap);
 
    if (!enumeration) {
       LERROR(LEPARSECOND);

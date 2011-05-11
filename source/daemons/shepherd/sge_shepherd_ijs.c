@@ -556,7 +556,7 @@ static void* commlib_to_pty(void *t_conf)
       sge_dstring_free(&err_msg);
       sge_dstring_sprintf(&err_msg, "");
 
-      ret = comm_recv_message(g_comm_handle, CL_TRUE, &recv_mess, &err_msg);
+      ret = comm_recv_message(g_comm_handle, true, &recv_mess, &err_msg);
 
       /* 
        * Check if the thread was cancelled. Exit thread if it was.
@@ -1023,7 +1023,7 @@ int close_parent_loop(int exit_status)
             break;
          }
 #endif
-         ret = comm_recv_message(g_comm_handle, CL_TRUE, &recv_mess, &err_msg);
+         ret = comm_recv_message(g_comm_handle, true, &recv_mess, &err_msg);
          count++;
          if (recv_mess.type == UNREGISTER_RESPONSE_CTRL_MSG) {
             shepherd_trace("Received UNREGISTER_RESPONSE_CTRL_MSG");

@@ -125,7 +125,7 @@ int cl_app_message_queue_append(cl_raw_list_t*        list_p,
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_app_message_queue_remove()"
-int cl_app_message_queue_remove(cl_raw_list_t* list_p, cl_com_connection_t* connection, int do_lock, cl_bool_t remove_all_elements ) {
+int cl_app_message_queue_remove(cl_raw_list_t* list_p, cl_com_connection_t* connection, int do_lock, bool remove_all_elements ) {
    int function_return = CL_RETVAL_CONNECTION_NOT_FOUND;
    int ret_val = CL_RETVAL_OK;
    cl_app_message_queue_elem_t* elem = NULL;
@@ -151,7 +151,7 @@ int cl_app_message_queue_remove(cl_raw_list_t* list_p, cl_com_connection_t* conn
          cl_raw_list_remove_elem(list_p, elem->raw_elem);
          sge_free(&elem);
          function_return = CL_RETVAL_OK;
-         if (remove_all_elements == CL_FALSE) {
+         if (remove_all_elements == false) {
              break; /* break here, we don't want to remove all elems */
          }
       }

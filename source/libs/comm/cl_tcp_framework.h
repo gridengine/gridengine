@@ -74,7 +74,7 @@ int cl_com_tcp_open_connection_request_handler(cl_com_handle_t*     handle,
 #endif
 
 
-int cl_com_tcp_connection_request_handler_setup(cl_com_connection_t* connection, cl_bool_t only_prepare_service);
+int cl_com_tcp_connection_request_handler_setup(cl_com_connection_t* connection, bool only_prepare_service);
 int cl_com_tcp_connection_request_handler(cl_com_connection_t* connection,cl_com_connection_t** new_connection);
 int cl_com_tcp_connection_request_handler_cleanup(cl_com_connection_t* connection); /* CR check */
 

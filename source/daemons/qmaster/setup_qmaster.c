@@ -690,7 +690,7 @@ static void communication_setup(sge_gdi_ctx_class_t *ctx)
    sge_free(&qmaster_params);
 
    /* now enable qmaster communication */
-   cl_commlib_set_global_param(CL_COMMLIB_DELAYED_LISTEN, CL_FALSE);
+   cl_commlib_set_global_param(CL_COMMLIB_DELAYED_LISTEN, false);
    
    DEXIT;
    return;

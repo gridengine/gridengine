@@ -57,7 +57,7 @@ int cl_host_list_setup(cl_raw_list_t** list_p,
                        unsigned long entry_life_time,
                        unsigned long entry_update_time,
                        unsigned long entry_reresolve_time,
-                       cl_bool_t create_hash) {
+                       bool create_hash) {
    int ret_val = CL_RETVAL_OK;
    cl_host_list_data_t* ldata = NULL;
 
@@ -220,7 +220,7 @@ int cl_host_list_setup(cl_raw_list_t** list_p,
    }
 
    /* create hashtable */
-   if (create_hash == CL_TRUE) {
+   if (create_hash == true) {
       ldata->ht = sge_htable_create(4, dup_func_string, hash_func_string, hash_compare_string);
       if (ldata->ht == NULL) {
          cl_raw_list_cleanup(list_p);
@@ -253,7 +253,7 @@ int cl_host_list_setup(cl_raw_list_t** list_p,
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_host_list_copy()"
-int cl_host_list_copy(cl_raw_list_t** destination, cl_raw_list_t* source, cl_bool_t create_hash) {
+int cl_host_list_copy(cl_raw_list_t** destination, cl_raw_list_t* source, bool create_hash) {
    int ret_val = CL_RETVAL_OK;
    cl_host_list_data_t* ldata_source = NULL;
    cl_host_list_data_t* ldata_dest = NULL;

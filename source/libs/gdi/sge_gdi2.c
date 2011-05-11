@@ -590,7 +590,7 @@ sge_gdi2_send_any_request(sge_gdi_ctx_class_t *ctx, int synchron, u_long32 *mid,
 
    if (strcmp(commproc, (char*)prognames[QMASTER]) == 0 && id == 1) {
       cl_com_append_known_endpoint_from_name((char*)rhost, (char*)commproc, id, 
-                                             to_port, CL_CM_AC_DISABLED ,CL_TRUE);
+                                             to_port, CL_CM_AC_DISABLED ,true);
    }
    
    if (synchron) {
@@ -604,8 +604,8 @@ sge_gdi2_send_any_request(sge_gdi_ctx_class_t *ctx, int synchron, u_long32 *mid,
    i = cl_commlib_send_message(handle, (char*) rhost, (char*) commproc, id,
                                ack_type, (cl_byte_t**)&pb->head_ptr, 
                                (unsigned long) pb->bytes_used,
-                               mid_pointer,  response_id,  tag, CL_FALSE, 
-                               (cl_bool_t)synchron);
+                               mid_pointer,  response_id,  tag, false, 
+                               (bool)synchron);
 
    dump_send_info(rhost, commproc, id, ack_type, tag, mid_pointer);
    
@@ -676,7 +676,7 @@ sge_gdi2_get_any_request(sge_gdi_ctx_class_t *ctx, char *rhost,
    }
    
    i = cl_commlib_receive_message(handle, rhost, commproc, usid, 
-                                  (cl_bool_t) synchron, for_request_mid, 
+                                  (bool) synchron, for_request_mid, 
                                   &message, &sender);
 
    if ( i == CL_RETVAL_CONNECTION_NOT_FOUND ) {
@@ -688,7 +688,7 @@ sge_gdi2_get_any_request(sge_gdi_ctx_class_t *ctx, char *rhost,
          if (i == CL_RETVAL_OK) {
             INFO((SGE_EVENT,"reconnected successfully\n"));
             i = cl_commlib_receive_message(handle, rhost, commproc, usid, 
-                                           (cl_bool_t) synchron, for_request_mid, 
+                                           (bool) synchron, for_request_mid, 
                                            &message, &sender);
          }
       } else {
@@ -1200,7 +1200,7 @@ gdi2_send_message(sge_gdi_ctx_class_t *sge_ctx, int synchron, const char *tocomp
             communication_framework = CL_CT_SSL;
          }
          cl_com_create_handle(&commlib_error, communication_framework, CL_CM_CT_MESSAGE,
-                              CL_FALSE, sge_get_execd_port(), CL_TCP_DEFAULT,
+                              false, sge_get_execd_port(), CL_TCP_DEFAULT,
                               "execd_handle" , 0 , 1 , 0 );
          handle = cl_com_get_handle("execd_handle", 0);
          if (handle == NULL) {
@@ -1219,7 +1219,7 @@ gdi2_send_message(sge_gdi_ctx_class_t *sge_ctx, int synchron, const char *tocomp
 
    ret = cl_commlib_send_message(handle, (char*)tohost ,(char*)tocomproc ,toid , 
                                  ack_type, (cl_byte_t**)buffer, (unsigned long)buflen,
-                                 mid_pointer, 0, tag, CL_FALSE, (cl_bool_t)synchron);
+                                 mid_pointer, 0, tag, false, (bool)synchron);
 
    if (mid != NULL) {
       *mid = dummy_mid;
@@ -1299,7 +1299,7 @@ gdi2_receive_message(sge_gdi_ctx_class_t *sge_ctx, char *fromcommproc, u_short *
          }
          
          cl_com_create_handle(&commlib_error, communication_framework, CL_CM_CT_MESSAGE,
-                              CL_FALSE, sge_execd_port, CL_TCP_DEFAULT, 
+                              false, sge_execd_port, CL_TCP_DEFAULT, 
                               "execd_handle" , 0 , 1 , 0 );
          handle = cl_com_get_handle("execd_handle", 0);
          if (handle == NULL) {
@@ -1309,7 +1309,7 @@ gdi2_receive_message(sge_gdi_ctx_class_t *sge_ctx, char *fromcommproc, u_short *
       }
    } 
 
-   ret = cl_commlib_receive_message(handle, fromhost, fromcommproc, *fromid, (cl_bool_t)synchron, 0, &message, &sender);
+   ret = cl_commlib_receive_message(handle, fromhost, fromcommproc, *fromid, (bool)synchron, 0, &message, &sender);
 
    if (ret == CL_RETVAL_CONNECTION_NOT_FOUND) {
       if (fromcommproc[0] != '\0' && fromhost[0] != '\0') {
@@ -1318,7 +1318,7 @@ gdi2_receive_message(sge_gdi_ctx_class_t *sge_ctx, char *fromcommproc, u_short *
           INFO((SGE_EVENT, "reopen connection to %s,%s,"sge_U32CFormat" (1)\n", fromhost, fromcommproc, sge_u32c(*fromid)));
           if (ret == CL_RETVAL_OK) {
              INFO((SGE_EVENT, "reconnected successfully\n"));
-             ret = cl_commlib_receive_message(handle, fromhost, fromcommproc, *fromid, (cl_bool_t) synchron, 0, &message, &sender);
+             ret = cl_commlib_receive_message(handle, fromhost, fromcommproc, *fromid, (bool) synchron, 0, &message, &sender);
           } 
       } else {
          DEBUG((SGE_EVENT, "can't reopen a connection to unspecified host or commproc (1)\n"));
@@ -2025,7 +2025,7 @@ general_communication_error(const cl_application_error_list_elem_t* commlib_erro
        * now log the error if not already reported the 
        * least CL_DEFINE_MESSAGE_DUP_LOG_TIMEOUT seconds
        */
-      if (commlib_error->cl_already_logged == CL_FALSE && 
+      if (commlib_error->cl_already_logged == false && 
          sge_gdi_communication_error.com_last_error != sge_gdi_communication_error.com_error) {
 
          /*  never log the same messages again and again (commlib

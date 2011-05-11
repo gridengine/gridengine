@@ -130,7 +130,7 @@ JNIEXPORT void JNICALL Java_com_sun_grid_jgdi_jni_JGDIBaseImpl_nativeClose(JNIEn
    pthread_mutex_unlock(&sge_gdi_ctx_mutex);
    if (ctx) {
       cl_com_handle_t *handle = cl_com_get_handle(ctx->get_component_name(ctx), 0);
-      cl_commlib_shutdown_handle(handle, CL_FALSE);
+      cl_commlib_shutdown_handle(handle, false);
       sge_gdi_ctx_class_destroy(&ctx);
    } else {
       THROW_ERROR((env, JGDI_ERROR, "ctx is NULL"));
@@ -2872,6 +2872,7 @@ void throw_error(JNIEnv *env, jgdi_result_t result, const char* message, ...) {
 
    va_start(ap, message);
    vsnprintf(buf, BUFSIZ-1, message, ap);
+   va_end(ap);
    clear_error(env);     
    switch(result) {
       case JGDI_ERROR:

@@ -136,7 +136,7 @@ extern int main(int argc, char** argv)
   cl_com_set_status_func(my_application_status); 
 
   printf("setting up service on port %d\n", atoi(argv[2]) );
-  handle=cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , CL_TRUE, atoi(argv[2]) , CL_TCP_DEFAULT,"virtual_master", 1 , 1,0 );
+  handle=cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , true, atoi(argv[2]) , CL_TCP_DEFAULT,"virtual_master", 1 , 1,0 );
   if (handle == NULL) {
      printf("could not get handle\n");
      exit(1);
@@ -220,7 +220,7 @@ extern int main(int argc, char** argv)
   }
   cl_thread_list_cleanup(&thread_list);
 
-  cl_com_ignore_timeouts(CL_TRUE);
+  cl_com_ignore_timeouts(true);
 
   printf("shutdown commlib ...\n");
   cl_com_cleanup_commlib();
@@ -269,7 +269,7 @@ void *my_message_thread(void *t_conf) {
 
       cl_commlib_trigger(handle, 1);
       ret_val = cl_commlib_receive_message(handle, NULL, NULL, 0,      /* handle, comp_host, comp_name , comp_id, */
-                                           CL_FALSE, 0,                       /* syncron, response_mid */
+                                           false, 0,                       /* syncron, response_mid */
                                            &message, &sender);
       if (ret_val == CL_RETVAL_OK) {
          rcv_messages++;
@@ -296,7 +296,7 @@ void *my_message_thread(void *t_conf) {
             ret_val = cl_commlib_send_message(handle, sender->comp_host, sender->comp_name, sender->comp_id,
                                       CL_MIH_MAT_NAK,
                                       &(message->message), message->message_length,
-                                      NULL, 0, 0 , CL_FALSE, CL_FALSE);
+                                      NULL, 0, 0 , false, false);
             if (ret_val == CL_RETVAL_OK) {
                snd_messages++;
             }
@@ -366,7 +366,7 @@ void *my_event_thread(void *t_conf) {
                reference = (cl_byte_t *)help;
                ret_val = cl_commlib_send_message(handle, client->comp_host, client->comp_name, client->comp_id,
                                                  CL_MIH_MAT_NAK, &reference, DATA_SIZE,
-                                                 NULL, 0, 0 , CL_TRUE, CL_FALSE);
+                                                 NULL, 0, 0 , true, false);
              
                if ( ret_val != CL_RETVAL_OK) {
                   cl_com_free_endpoint(&(event_client_array[i])); /* should be locked at this point */

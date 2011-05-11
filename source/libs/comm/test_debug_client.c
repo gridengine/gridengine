@@ -242,7 +242,7 @@ extern int main(int argc, char** argv)
   cl_com_setup_commlib(CL_NO_THREAD, (cl_log_t)atoi(argv[1]), NULL);
 
   printf("setting up handle for connect port %d\n", atoi(argv[2]) );
-  handle=cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_STREAM, CL_FALSE, atoi(argv[2]), /* CL_TCP_DEFAULT*/ CL_TCP_RESERVED_PORT ,"debug_client", 0, 1,0 );
+  handle=cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_STREAM, false, atoi(argv[2]), /* CL_TCP_DEFAULT*/ CL_TCP_RESERVED_PORT ,"debug_client", 0, 1,0 );
   if (handle == NULL) {
      printf("could not get handle\n");
      exit(1);
@@ -262,7 +262,7 @@ extern int main(int argc, char** argv)
 
      cl_commlib_trigger(handle, 1);
      retval = cl_commlib_receive_message(handle, NULL, NULL, 0,      /* handle, comp_host, comp_name , comp_id, */
-                                         CL_FALSE, 0,                 /* syncron, response_mid */
+                                         false, 0,                 /* syncron, response_mid */
                                          &message, &sender );
      if ( retval != CL_RETVAL_OK) {
         if ( retval == CL_RETVAL_CONNECTION_NOT_FOUND ) {

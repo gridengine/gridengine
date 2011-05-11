@@ -8,6 +8,13 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+HP-2011-05-10-0: Bugfix:      SGE_Helper_Service.exe sometimes crashes at job
+                              start
+                 Issue:       GE-3476
+                 Bugfix:      on Windows Vista, GUI jobs can't be started on
+                              a Remote Desktop session
+                 Issue:       GE-3477
+                 Review:      SH
 JG-2011-05-06-1: Bugfix:      fix for gtar detection in mk_dist
                  Belongs to:  JG-2011-05-05-0
 

@@ -27,20 +27,22 @@
  *
  *   All Rights Reserved.
  *
+ *  Portions of this software are Copyright (c) 2011 Univa Corporation
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include <afxtempl.h>
-#include <afxmt.h>
 #include <winsock2.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <stdio.h>
 
 #include "Job.h"
 #include "JobList.h"
 #include "JobStart.h"
 #include "Communication.h"
 #include "SGE_Helper_Service.h"
+#include "Logging.h"
 
 // defines
 #define COMMAND_SIZE 32*1024
@@ -208,42 +210,51 @@ int C_Communication::DoComm() const
    }
    ret = 0;
 
+   WriteToLogFile("Received new request, will parse it now.");
    request_type = Job.ParseCommand(command);
+   WriteToLogFile("Finished parsing the new request.");
 
    switch(request_type) {
       case req_job_start:
-         POSITION Pos;
-         HANDLE   hThread;
+         {
+            BOOL   bAlreadyInList = TRUE;
+            HANDLE hThread;
 
-         if(g_bAcceptJobs) {
-            Job.m_comm_sock = comm_sock;
+            WriteToLogFile("Got a job start request.");
 
-            sprintf(szMessage, "Starting job %lu.%lu %s", 
-               Job.m_job_id, Job.m_ja_task_id,
-               Job.m_pe_task_id ? Job.m_pe_task_id : "<null>");
-            WriteToLogFile(szMessage);
+            if(g_bAcceptJobs) {
+               Job.m_comm_sock = comm_sock;
 
-            // try to put job in job list
-            pJob = new C_Job(Job);
-            Pos = g_JobList.AddJobToList(pJob);
-         }
+               sprintf(szMessage, "Starting job %lu.%lu %s", 
+                  Job.m_job_id, Job.m_ja_task_id,
+                  Job.m_pe_task_id ? Job.m_pe_task_id : "<null>");
+               WriteToLogFile(szMessage);
 
-         if(Pos != NULL) {
-            // job is not already in job list, send ACK and start worker thread
-            hThread = CreateThread(NULL, 0, JobStarterThread, 0, 0, 0);
-            CloseHandle(hThread);
-         } else {
-            // job is already in job list, send NACK and delete job object
-            strcpy(szMessage, "NAK");
-            szMessage[strlen(szMessage)+1] = (char)EOF;
-            send(comm_sock, szMessage, (int)strlen(szMessage)+2, 0);
-            ShutdownSocket(&comm_sock);
-            delete pJob;
-            pJob = NULL;
+               // try to put job in job list
+               pJob = new C_Job(Job);
+               bAlreadyInList = g_JobList.AddJobToList(pJob);
+            }
+
+            if (bAlreadyInList == FALSE) {
+               WriteToLogFile("New job, starting thread");
+               // job is not already in job list, send ACK and start worker thread
+               hThread = CreateThread(NULL, 0, JobStarterThread, 0, 0, 0);
+               CloseHandle(hThread);
+            } else {
+               WriteToLogFile("Existing job, send NACK and delete job object");
+               // job is already in job list, send NACK and delete job object
+               strcpy(szMessage, "NAK");
+               szMessage[strlen(szMessage)+1] = (char)EOF;
+               send(comm_sock, szMessage, (int)strlen(szMessage)+2, 0);
+               ShutdownSocket(&comm_sock);
+               delete pJob;
+               pJob = NULL;
+            }
          }
          break;
 
       case req_send_job_usage:
+         WriteToLogFile("Got a send usage request.");
          pJob = g_JobList.RemoveJobFromList(Job);
          if(pJob) {
             pJob->m_comm_sock = comm_sock;
@@ -263,9 +274,9 @@ int C_Communication::DoComm() const
          break;
 
       case req_forward_signal:
+         WriteToLogFile("Got a forward signal request.");
          // lock access to job list
-         CSingleLock singleLock(&g_JobList.m_JobListMutex);
-         singleLock.Lock();
+         WaitForSingleObject(g_JobList.m_hJobListMutex, INFINITE);
          pJob = g_JobList.FindJobInList(Job);
          if(pJob
             && pJob->m_JobStatus != js_Finished
@@ -282,8 +293,8 @@ int C_Communication::DoComm() const
                   pJob->m_JobStatus = js_Deleted;
                }
             }
-            singleLock.Unlock();
-            
+            ReleaseMutex(g_JobList.m_hJobListMutex);
+
             sprintf(szAnswer, "%s", bRet ? "ACK" : "NAK");
             szAnswer[strlen(szAnswer)+1] = (char)EOF;
             sent = send(comm_sock, szAnswer, (int)strlen(szAnswer)+2, 0);
@@ -291,7 +302,7 @@ int C_Communication::DoComm() const
                ret = 0;
             }
          } else {
-            singleLock.Unlock();
+	         ReleaseMutex(g_JobList.m_hJobListMutex);
          }
          ShutdownSocket(&comm_sock);
          break;

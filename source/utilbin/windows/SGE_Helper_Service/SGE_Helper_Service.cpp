@@ -27,15 +27,13 @@
  *
  *   All Rights Reserved.
  *
+ * Portions of this software are Copyright (c) 2011 Univa Corporation
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include <afxtempl.h>
-#include <afxmt.h>
 #include <winsock2.h>
 #include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 
 #include "Job.h"
 #include "JobList.h"
@@ -43,6 +41,7 @@
 #include "SGE_Helper_Service.h"
 #include "ServiceInstaller.h"
 #include "Communication.h"
+#include "Logging.h"
 
 // constants
 // name, display name and description of the service in "Services" dialog
@@ -113,10 +112,14 @@ int main(int argc, char *argv[])
       {NULL,                   NULL}};
 
    if(argc==2) {
-      if(strnicmp(argv[1], "-install", 8)==0) {
+      /*
+       * Newer Microsoft compilers warn if "strnicmp" is used, you have to use "_strnicmp" to
+       * avoid this warning. This is for all libc functions.
+       */
+      if(_strnicmp(argv[1], "-install", 8)==0) {
          ret = InstallService(argv[0], g_szServiceName,
                               g_szServiceDisplayName, g_szServiceDescription);
-      } else if(strnicmp(argv[1], "-uninstall", 10)==0) {
+      } else if(_strnicmp(argv[1], "-uninstall", 10)==0) {
          ret = UninstallService(g_szServiceName);
       } else if((g_Port=atoi(argv[1]))!=0) {
          if(!StartServiceCtrlDispatcher(DispatchTable)) {
@@ -395,73 +398,4 @@ static void ServiceError()
    DWORD dwStatus = GetLastError(); 
    SvcDebugOut("[%s] SetServiceStatus error %ld\n", 
       g_szServiceDisplayName, dwStatus); 
-}
-
-/****** WriteToLogFile() *******************************************************
-*  NAME
-*     WriteToLogFile() -- writes a message to a log file
-*
-*  SYNOPSIS
-*     int WriteToLogFile(const char *szMessage, ...)
-*
-*  FUNCTION
-*     Writes a message to a log file. For debugging purposes only.
-*
-*  INPUTS
-*     const char *szMessage - the format string of the message
-*     ...                   - the parameters of the message (see printf())
-*
-*  RESULT
-*     int - 0 if message was written to log file, 1 else
-*           2 if logging is disabled
-*
-*  NOTES
-*******************************************************************************/
-int WriteToLogFile(const char *szMessage, ...)
-{
-   int         ret = 1;
-   FILE        *fp = NULL;
-   SYSTEMTIME  sysTime;
-   va_list     args;
-   char        Buffer[4096];
-   DWORD       dwLastError;
-   static BOOL g_bFirstTime = TRUE;
-   static char g_szTraceFile[5000];
-
-   if (g_bDoLogging == FALSE) {
-      return 2;
-   }
-   // We do not want to change LastError in here.
-   dwLastError = GetLastError();
-   GetLocalTime(&sysTime);
-
-   // If we don't have a trace file yet, create it's name.
-   if (g_bFirstTime == TRUE) {
-      g_bFirstTime = FALSE;
-      // The trace file name is $TEMP\SGE_Helper_Service.log
-      // e.g. "C:\Temp\SGE_Helper_Service.log"
-      strcpy(Buffer, "C:\\TEMP");
-      GetEnvironmentVariable("TEMP", Buffer, 4095);
-      _snprintf(g_szTraceFile, 4999, "%s\\SGE_Helper_Service.log", Buffer);
-   }
-  
-   fp = fopen(g_szTraceFile, "a+");
-   if (fp == NULL) {
-      // Create a "panic" trace file
-      sprintf(g_szTraceFile, "c:\\Temp\\SGE_Helper_Service.%02d%02d%02d.log", 
-         sysTime.wHour, sysTime.wMinute, sysTime.wSecond);
-      fp = fopen(g_szTraceFile, "a+");
-   }
-   if(fp != NULL) {
-      va_start(args, szMessage);
-      _vsnprintf(Buffer, 4095, szMessage, args);
-      fprintf(fp, "%02d:%02d:%02d [SGE_Helper_Service] %s\n",
-         sysTime.wHour, sysTime.wMinute, sysTime.wSecond, Buffer);
-      fflush(fp);
-      fclose(fp);
-      ret = 0;
-   }
-   SetLastError(dwLastError);
-
-   return ret;
 }

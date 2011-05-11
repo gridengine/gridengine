@@ -27,11 +27,11 @@
  *
  *   All Rights Reserved.
  *
+ * Portions of this software are Copyright (c) 2011 Univa Corporation
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include <afxtempl.h>
-#include <afxmt.h>
 #include <winsock2.h>
 #include <stdio.h>
 #include <fcntl.h>
@@ -46,6 +46,7 @@
 #include <AccCtrl.h>
 #include <Aclapi.h>
 #include <Sddl.h>
+#include <tchar.h>
 
 
 #include "Job.h"
@@ -53,6 +54,7 @@
 #include "JobStart.h"
 #include "SGE_Helper_Service.h"
 #include "Communication.h"
+#include "Logging.h"
 
 #define DESKTOP_ALL (DESKTOP_READOBJECTS | DESKTOP_CREATEWINDOW | \
 DESKTOP_CREATEMENU | DESKTOP_HOOKCONTROL | DESKTOP_JOURNALRECORD | \
@@ -87,6 +89,7 @@ static int BuildCommandLineForStarter(const C_Job &Job, const char *pszPipeName,
                                       const char *pszCmdLineArgs, char **pszStarterCmdLine);
 static int WritePasswordToPipe(const HANDLE &hPipe, const HANDLE &hProcess,
                                const char *szPassword, char *szError);
+static HANDLE WINAPI GetRemoteDesktopUserToken();
 
 // external variables
 extern C_JobList       g_JobList;
@@ -133,22 +136,28 @@ DWORD WINAPI JobStarterThread(LPVOID lpParameter)
    DWORD    ret = 1;
 
    // lock access to job list
-   CSingleLock singleLock(&g_JobList.m_JobListMutex);
-   singleLock.Lock();
+   WaitForSingleObject(g_JobList.m_hJobListMutex, INFINITE);
+
 
    // get job from job list that still is to be executed
    pJob = g_JobList.GetFirstJobInReceivedState();
    if(pJob != NULL) {
       pJob->m_JobStatus = js_ToBeStarted;
+   } else {
+      WriteToLogFile("Didn't find a job to be started in joblist!");
    }
 
    // unlock access to job list
-   singleLock.Unlock();
+   ReleaseMutex(g_JobList.m_hJobListMutex);
 
    if(pJob != NULL) {
+      WriteToLogFile("Going to start job %d", pJob->m_job_id);
+
       // start job
       ret = StartJob(*pJob);
-      
+
+      WriteToLogFile("StartJob() returned %d", ret);
+
       // send exit code to sge_shepherd
       g_Communication.SendExitStatus(*pJob);
       g_Communication.ShutdownSocket(&(pJob->m_comm_sock));
@@ -180,8 +189,8 @@ DWORD WINAPI JobStarterThread(LPVOID lpParameter)
 *******************************************************************************/
 DWORD StartJob(C_Job &Job)
 {
-   STARTUPINFO         si; 
-   PROCESS_INFORMATION pi; 
+   STARTUPINFO         si;
+   PROCESS_INFORMATION pi;
    DWORD               dwWait;
    HANDLE              hUserToken    = INVALID_HANDLE_VALUE;
    HANDLE              hSessionToken = INVALID_HANDLE_VALUE;
@@ -204,7 +213,6 @@ DWORD StartJob(C_Job &Job)
    const char          *pszCurDir  = NULL;
    DWORD               BytesRead   = 0;
    BOOL                bBackgndMode = FALSE;
-   CSingleLock         singleLock(&g_JobList.m_JobListMutex);
 
    if(GetJobStartModeFromConf(Job.conf, Job.nconf) == FALSE) {
       Job.m_JobStatus = js_Failed;
@@ -234,14 +242,14 @@ DWORD StartJob(C_Job &Job)
       WriteToLogFile("users password is empty!");
    }
 
-   // Log on the job user to get the file handles of the 
+   // Log on the job user to get the file handles of the
    // stdout and stderr file.
    if(!LogonUser(
          Job.user,
          Job.domain,
          Job.pass,
          LOGON32_LOGON_INTERACTIVE,
-         LOGON32_PROVIDER_DEFAULT, 
+         LOGON32_PROVIDER_DEFAULT,
          &hUserToken)) {
       sprintf(szErrorPart, "LogonUser failed:");
       goto Cleanup;
@@ -257,16 +265,16 @@ DWORD StartJob(C_Job &Job)
 
       // Get a handle to the interactive window station.
       hWinsta = OpenWindowStation(
-         "WinSta0",                   // the interactive window station 
+         "WinSta0",                   // the interactive window station
          FALSE,                       // handle is not inheritable
          READ_CONTROL | WRITE_DAC);   // rights to read/write the DACL
 
-      if(hWinsta == NULL) { 
+      if(hWinsta == NULL) {
          sprintf(szErrorPart, "OpenWindowStation failed:");
          goto Cleanup;
       }
 
-      // To get the correct default desktop, set the caller's 
+      // To get the correct default desktop, set the caller's
       // window station to the interactive window station.
       if(!SetProcessWindowStation(hWinsta)) {
          sprintf(szErrorPart, "SetProcessWindowStation(hWinsta) failed:");
@@ -328,14 +336,16 @@ DWORD StartJob(C_Job &Job)
    if (IsSystemWindowsVista() == TRUE) {
       RevertToSelf();
 
-      // Get a token of the user of the currently logged on session to redirect
-      // the GUI of the job to this window station and desktop.
-      hSessionToken = GetInteractiveUserToken();
+      hSessionToken = GetRemoteDesktopUserToken();
       if (hSessionToken == NULL) {
-         sprintf(szErrorPart, "Getting Logged On User Token failed: ");
-         goto Cleanup;
+         // Get a token of the user of the currently logged on session to redirect
+         // the GUI of the job to this window station and desktop.
+         hSessionToken = GetInteractiveUserToken();
+         if (hSessionToken == NULL) {
+            sprintf(szErrorPart, "Getting Logged On User Token failed: ");
+            goto Cleanup;
+         }
       }
-
       // Impersonate client to ensure access to executable file.
       if(!ImpersonateLoggedOnUser(hSessionToken))  {
          sprintf(szErrorPart, "ImpersonateLoggedOnUser (DesktopUser) failed:");
@@ -355,16 +365,16 @@ DWORD StartJob(C_Job &Job)
    // it (job may not get killed in the meanwhile, because list is locked),
    // but unlock before the blocking wait. After the job has been started,
    // killing it will not lead to unexpected resultst.
-   singleLock.Lock();
-   
+   WaitForSingleObject(g_JobList.m_hJobListMutex, INFINITE);
+
    if(Job.m_JobStatus == js_Deleted) {
-      singleLock.Unlock();
+      ReleaseMutex(g_JobList.m_hJobListMutex);
       goto Cleanup;
    }
 
    Job.m_hJobObject = CreateJobObject(NULL, NULL);
    if (Job.m_hJobObject == NULL) {
-      singleLock.Unlock();
+      ReleaseMutex(g_JobList.m_hJobListMutex);
       goto Cleanup;
    }
 
@@ -417,7 +427,7 @@ DWORD StartJob(C_Job &Job)
 
       RevertToSelf();
       sprintf(szErrorPart, "CreateProcessAsUser failed, Command is \"%s\":", pszCmdLine);
-      singleLock.Unlock();
+      ReleaseMutex(g_JobList.m_hJobListMutex);
 
       SetLastError(dwError);
       goto Cleanup;
@@ -433,7 +443,7 @@ DWORD StartJob(C_Job &Job)
    Job.m_hProcess  = pi.hProcess;
 
    // unlock access to job list
-   singleLock.Unlock();
+   ReleaseMutex(g_JobList.m_hJobListMutex);
 
    // Wait blocking for job end
    if (bResult && pi.hProcess != INVALID_HANDLE_VALUE) {
@@ -522,7 +532,7 @@ Cleanup:
          dwError);
       WriteToLogFile(szError);
 
-      Job.szError     = strdup(szError);
+      Job.szError     = _strdup(szError);
       Job.m_JobStatus = js_Failed;
    }
 
@@ -1347,6 +1357,70 @@ static DWORD GetShellProcessPidForSession(DWORD dwSessionID)
    return 0;
 }
 
+static DWORD GetRemoteDesktopSessionID()
+{
+   BOOL bRet = FALSE;
+   DWORD i = 0;
+   DWORD dwEntries = 0;
+   WTS_SESSION_INFO *pWTSSession = NULL;
+
+   bRet = WTSEnumerateSessions(WTS_CURRENT_SERVER_HANDLE, 0, 1, &pWTSSession, &dwEntries);
+   if (bRet == FALSE) {
+      return (DWORD)-1;
+   }
+
+   // Loop over all sessions to find a Remote Desktop
+   for (i=0; i<dwEntries; i++) {
+      DWORD dwOutBytes = 0;
+      LPTSTR szOutput = NULL;
+      USHORT SessionType = 0;
+
+      bRet = WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE,
+                                        pWTSSession[i].SessionId,
+                                        WTSClientProtocolType,
+                                        &szOutput,
+                                        &dwOutBytes);
+
+      if (szOutput != NULL) {
+         if (bRet == TRUE) {
+            SessionType = *((USHORT*)szOutput);
+            if (SessionType == 2) {
+               WTSFreeMemory((PVOID)szOutput);
+               return pWTSSession[i].SessionId;
+            }
+         }
+         WTSFreeMemory((PVOID)szOutput);
+      }
+   }
+   return (DWORD)-1;
+}
+
+static HANDLE WINAPI GetRemoteDesktopUserToken()
+{
+   BOOL   bRet = FALSE;
+   DWORD  dwSID = (DWORD)-1;
+   HANDLE hUserToken = NULL;
+   HANDLE hDuplicatedToken = NULL;
+
+   dwSID = GetRemoteDesktopSessionID();
+   if (dwSID == -1) {
+      return NULL;
+   }
+
+   bRet = WTSQueryUserToken(dwSID, &hUserToken);
+   if (bRet == FALSE) {
+      return NULL;
+   }
+
+   DuplicateTokenEx(hUserToken, TOKEN_ALL_ACCESS, NULL,
+                    SecurityImpersonation, TokenPrimary,
+                    &hDuplicatedToken);
+   CloseHandle(hUserToken);
+   hUserToken = NULL;
+
+   return hDuplicatedToken;
+}
+
 static HANDLE WINAPI GetInteractiveUserToken()
 {
    DWORD  dwSessionID;
@@ -1426,11 +1500,11 @@ static BOOL GetJobStartModeFromConf(char **conf, int nconf)
    BOOL            bFound = FALSE;
 
    for(i=0; i<nconf && bFound==FALSE; i++) {
-      tmp = strdup(conf[i]);
+      tmp = _strdup(conf[i]);
       ptr = strtok(tmp, "=");
-      if(ptr && stricmp(ptr, "display_win_gui")==0) {
+      if(ptr && _stricmp(ptr, "display_win_gui")==0) {
          ptr=strtok(NULL, "=");
-         if(ptr && stricmp(ptr, "1")==0) {
+         if(ptr && _stricmp(ptr, "1")==0) {
             bRet = TRUE;
             bFound = TRUE;
          } 
@@ -1471,11 +1545,11 @@ static BOOL GetModeFromEnv(const char *mode, char **env, int nenv)
    BOOL            bFound = FALSE;
 
    for(i=0; i<nenv && bFound==FALSE; i++) {
-      tmp = strdup(env[i]);
+      tmp = _strdup(env[i]);
       ptr = strtok(tmp, "=");
-      if(ptr && stricmp(ptr, mode)==0) {
+      if(ptr && _stricmp(ptr, mode)==0) {
          ptr=strtok(NULL, "=");
-         if(ptr && (stricmp(ptr, "TRUE")==0 || stricmp(ptr, "1")==0)) {
+         if(ptr && (_stricmp(ptr, "TRUE")==0 || _stricmp(ptr, "1")==0)) {
             bRet = TRUE;
             bFound = TRUE;
          } 

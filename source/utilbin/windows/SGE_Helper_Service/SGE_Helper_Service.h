@@ -27,9 +27,10 @@
  *
  *   All Rights Reserved.
  *
+ * Portions of this software are Copyright (c) 2011 Univa Corporation
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
 void SvcDebugOut(LPSTR String, ...);
-int  WriteToLogFile(const char *szMessage, ...);
 

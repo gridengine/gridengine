@@ -114,16 +114,16 @@ parallel environment correspondingly to its needs.
 An optional prefix "user@" specifies the user under which this 
 procedure is to be started.
 The standard output of the start-up
-procedure is redirected to the file \fIREQNAME\fP.po\fIJID\fP in the
+procedure is redirected to the file \fIREQUEST\fP.po\fIJID\fP in the
 job's working 
 directory (see
 .M qsub 1 ),
-with \fIREQNAME\fP being the name of the job as 
+with \fIREQUEST\fP being the name of the job as 
 displayed by
 .M qstat 1
 and \fIJID\fP being the job's identification number.
 Likewise, 
-the standard error output is redirected to \fIREQNAME\fP.pe\fIJID\fP
+the standard error output is redirected to \fIREQUEST\fP.pe\fIJID\fP
 .br
 The following special
 variables being expanded at runtime can be used (besides any other
@@ -171,16 +171,16 @@ systems.
 An optional prefix "user@" specifies the user under which this 
 procedure is to be started.
 The standard output of the stop
-procedure is also redirected to the file \fIREQNAME\fP.po\fIJID\fP in the
+procedure is also redirected to the file \fIREQUEST\fP.po\fIJID\fP in the
 job's working 
 directory (see
 .M qsub 1 ),
-with \fIREQNAME\fP being the name of the job as 
+with \fIREQUEST\fP being the name of the job as 
 displayed by
 .M qstat 1
 and \fIJID\fP being the job's identification number.
 Likewise, 
-the standard error output is redirected to \fIREQNAME\fP.pe\fIJID\fP
+the standard error output is redirected to \fIREQUEST\fP.pe\fIJID\fP
 .br
 The same special variables as for \fBstart_proc_args\fP
 can be used to constitute a command line.

@@ -407,7 +407,7 @@ static int job_write_as_single_file(lListElem *job, u_long32 ja_task_id,
 
    sge_get_file_path(job_dir_third, JOB_SPOOL_DIR, FORMAT_THIRD_PART,
                      flags, job_id, ja_task_id, NULL);
-   sge_mkdir(job_dir_third, 0755, 0, 0);
+   sge_mkdir(job_dir_third, 0755, false, false);
    sge_get_file_path(spool_file, JOB_SPOOL_DIR_AS_FILE, FORMAT_DEFAULT,
                      flags, job_id, ja_task_id, NULL);
    sge_get_file_path(tmp_spool_file, JOB_SPOOL_DIR_AS_FILE, FORMAT_DOT_FILENAME,
@@ -475,7 +475,7 @@ int job_write_common_part(lListElem *job, u_long32 ja_task_id,
    job_id = lGetUlong(job, JB_job_number);
    sge_get_file_path(spool_dir, JOB_SPOOL_DIR, FORMAT_DEFAULT,
                      flags, job_id, ja_task_id, NULL);
-   sge_mkdir(spool_dir, 0755, 0, 0);
+   sge_mkdir(spool_dir, 0755, false, false);
    sge_get_file_path(spoolpath_common, JOB_SPOOL_FILE, FORMAT_DEFAULT,
                      flags, job_id, ja_task_id, NULL);
    sge_get_file_path(tmp_spoolpath_common, JOB_SPOOL_FILE,
@@ -526,7 +526,7 @@ static int ja_task_write_to_disk(lListElem *ja_task, u_long32 job_id,
       if ((flags & SPOOL_WITHIN_EXECD) || 
           strcmp(old_task_spool_dir, task_spool_dir)) {
          strcpy(old_task_spool_dir, task_spool_dir);
-         sge_mkdir(task_spool_dir, 0755, 0, 0);
+         sge_mkdir(task_spool_dir, 0755, false, false);
       }
 
       /* spool ja_task */
@@ -602,7 +602,7 @@ static int ja_task_write_to_disk(lListElem *ja_task, u_long32 job_id,
       if ((flags & SPOOL_WITHIN_EXECD) ||
           strcmp(old_task_spool_dir, task_spool_dir)) {
          strcpy(old_task_spool_dir, task_spool_dir);
-         sge_mkdir(task_spool_dir, 0755, 0, 0);
+         sge_mkdir(task_spool_dir, 0755, false, false);
       }
 
       /* spool ja_task to temporary file */

@@ -2082,24 +2082,24 @@ exported to the job via the \fB\-v\fP or the \fB\-V\fP option
 add the following variables with the indicated values to the variable
 list:
 .sp 1
-.IP "\fBxxQS_NAME_Sxx_O_HOME\fP" 1.5i
+.IP "\fBSGE_O_HOME\fP" 1.5i
 the home directory of the submitting client.
-.IP "\fBxxQS_NAME_Sxx_O_HOST\fP" 1.5i
+.IP "\fBSGE_O_HOST\fP" 1.5i
 the name of the host on which
 the submitting client
 is running.
-.IP "\fBxxQS_NAME_Sxx_O_LOGNAME\fP" 1.5i
+.IP "\fBSGE_O_LOGNAME\fP" 1.5i
 the LOGNAME of the submitting client.
-.IP "\fBxxQS_NAME_Sxx_O_MAIL\fP" 1.5i
+.IP "\fBSGE_O_MAIL\fP" 1.5i
 the MAIL of the submitting client. This is 
 the mail directory of the submitting client.
-.IP "\fBxxQS_NAME_Sxx_O_PATH\fP" 1.5i
+.IP "\fBSGE_O_PATH\fP" 1.5i
 the executable search path of the submitting client.
-.IP "\fBxxQS_NAME_Sxx_O_SHELL\fP" 1.5i
+.IP "\fBSGE_O_SHELL\fP" 1.5i
 the SHELL of the submitting client.
-.IP "\fBxxQS_NAME_Sxx_O_TZ\fP" 1.5i
+.IP "\fBSGE_O_TZ\fP" 1.5i
 the time zone of the submitting client.
-.IP "\fBxxQS_NAME_Sxx_O_WORKDIR\fP" 1.5i
+.IP "\fBSGE_O_WORKDIR\fP" 1.5i
 the absolute path of the current working directory of the
 submitting client.
 .PP
@@ -2111,51 +2111,59 @@ The xxQS_NAMExx architecture name of the node on which the job is
 running. The name is compiled-in into the
 .M xxqs_name_sxx_execd 8
 binary.
-.IP xxQS_NAME_Sxx_CKPT_ENV 1.5i
+.IP "SGE_BINDING" 1.5i
+This variable contains the selected
+operating system internal processor numbers.  They might be  more  than
+selected  cores  in  presence  of SMT or CMT because each core could be
+represented by multiple processor identifiers.  The  processor  numbers
+are space separated.
+.IP SGE_CKPT_ENV 1.5i
 Specifies the checkpointing environment (as selected with the \fB\-ckpt\fP
 option) under which a checkpointing job executes. Only set for checkpointing
 jobs.
-.IP "xxQS_NAME_Sxx_CKPT_DIR" 1.5i
+.IP "SGE_CKPT_DIR" 1.5i
 Only set for checkpointing jobs. Contains path \fIckpt_dir\fP
 (see
 .M checkpoint 5
 ) of the checkpoint interface.
-.IP xxQS_NAME_Sxx_STDERR_PATH 1.5i
+.IP SGE_CWD_PATH 1.5i
+Specifies the current working directory where the job was started.
+.IP SGE_STDERR_PATH 1.5i
 the pathname of the file to which the standard error stream of the job is
 diverted. Commonly used for enhancing the output with error messages
 from prolog, epilog, parallel environment start/stop or checkpointing
 scripts.
-.IP xxQS_NAME_Sxx_STDOUT_PATH 1.5i
+.IP SGE_STDOUT_PATH 1.5i
 the pathname of the file to which the standard output stream of the job is
 diverted. Commonly used for enhancing the output with messages from
 prolog, epilog, parallel environment start/stop or checkpointing scripts.
-.IP xxQS_NAME_Sxx_STDIN_PATH 1.5i
+.IP SGE_STDIN_PATH 1.5i
 the pathname of the file from which the standard input stream of the job
 is taken. This variable might be used in combination with xxQS_NAME_Sxx_O_HOST
 in prolog/epilog scripts to transfer the input file from the submit
 to the execution host.
-.IP xxQS_NAME_Sxx_JOB_SPOOL_DIR 1.5i
+.IP SGE_JOB_SPOOL_DIR 1.5i
 The directory used by
 .M xxqs_name_sxx_shepherd 8
 to store job related data during job
 execution. This directory is owned by root or by a xxQS_NAMExx administrative
 account and commonly is not open for read or write access to regular users.
-.IP xxQS_NAME_Sxx_TASK_ID 1.5i
+.IP SGE_TASK_ID 1.5i
 The index number of the current array job task (see \fB\-t\fP option
 above). This is an unique number in each array job and can be used to
 reference different input data records, for example. This environment
 variable is set to "undefined" for non-array jobs. It is possible to
 change the predefined value of this variable with \fB\-v\fP or \fB\-V\fP
 (see options above).
-.IP xxQS_NAME_Sxx_TASK_FIRST 1.5i
+.IP SGE_TASK_FIRST 1.5i
 The index number of the first array job task (see \fB\-t\fP option
 above). It is possible to change the predefined value of this variable with
 \fB\-v\fP or \fB\-V\fP (see options above).
-.IP xxQS_NAME_Sxx_TASK_LAST 1.5i
+.IP SGE_TASK_LAST 1.5i
 The index number of the last array job task (see \fB\-t\fP option
 above). It is possible to change the predefined value of this variable with
 \fB\-v\fP or \fB\-V\fP (see options above).
-.IP xxQS_NAME_Sxx_TASK_STEPSIZE 1.5i
+.IP SGE_TASK_STEPSIZE 1.5i
 The step size of the array job specification (see \fB\-t\fP option
 above). It is possible to change the predefined value of this variable with
 \fB\-v\fP or \fB\-V\fP (see options above).

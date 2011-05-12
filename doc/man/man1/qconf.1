@@ -93,11 +93,11 @@ Add the checkpointing environment as defined in \fBfname\fP (see
 to the list of supported checkpointing environments. 
 Requires root or manager privileges.
 .\"
-.IP "\fB\-Aconf file_list\fP	\fI<add configurations>\fP"
+.IP "\fB\-Aconf fname_list\fP	\fI<add configurations>\fP"
 Add the configurations (see
 .M xxqs_name_sxx_conf 5 )
 specified in the files
-enlisted in the comma separated \fBfile_list\fP. The configuration
+enlisted in the comma separated \fBfname_list\fP. The configuration
 is added for the host that is identical to the file name.
 .br
 Requires root or manager privileges.
@@ -109,14 +109,14 @@ specification is described in
 .M host_conf 5 .
 Requires root or manager privileges.
 .\"
-.IP "\fB\-Ahgrp file\fP		\fI<add host group config>\fP"
-Add the host group configuration defined in \fBfile\fP. 
-The file format of \fBfile\fP must comply
+.IP "\fB\-Ahgrp fname\fP		\fI<add host group configuration>\fP"
+Add the host group configuration defined in \fBfname\fP. 
+The file format of \fBfname\fP must comply
 to the format specified in 
 .M hostgroup 5 .
 Requires root or manager privileges. 
 .\"
-.IP "\fB\-Arqs fname\fP \fI<add RQS configuration>\fP"
+.IP "\fB\-Arqs fname\fP		\fI<add RQS configuration>\fP"
 Add the resource quota set (RQS) defined in the
 file named \fBfname\fP to the xxQS_NAMExx
 cluster. Requires root or manager privileges.
@@ -133,9 +133,9 @@ to the list of registered projects (see
 Requires root or manager privileges.
 .\"
 .\" usermapping start
-.\" .IP "\fB\-Aumap mapfile\fP   \fI<add user mapping configuration>\fP"
-.\" Add the user mapping configuration defined in \fBmapfile\fP.
-.\" The file format of \fBmapfile\fP must comply
+.\" .IP "\fB\-Aumap fname\fP   \fI<add user mapping configuration>\fP"
+.\" Add the user mapping configuration defined in \fBfname\fP.
+.\" The file format of \fBfname\fP must comply
 .\" to the format specified in 
 .\" .M usermapping 5 .
 .\" Requires root or manager privileges. 
@@ -213,11 +213,11 @@ Overwrite an existing checkpointing environment with the definitions in
 The name attribute in \fBfname\fP has to match an 
 existing checkpointing environment. Requires root or manager privileges.
 .\"
-.IP "\fB\-Mconf file_list\fP	\fI<modify configurations>\fP"
+.IP "\fB\-Mconf fname_list\fP	\fI<modify configurations>\fP"
 Modify the configurations (see
 .M xxqs_name_sxx_conf 5 )
 specified in the files
-enlisted in the comma separated \fBfile_list\fP. The configuration
+enlisted in the comma separated \fBfname_list\fP. The configuration
 is modified for the host that is identical to the file name.
 .br
 Requires root or manager privileges.
@@ -229,13 +229,13 @@ comply to the format defines in
 .M host_conf 5 .
 Requires root or manager privilege.
 .\"
-.IP "\fB\-Mhgrp file\fP		\fI<modify host group config.>\fP"
+.IP "\fB\-Mhgrp fname\fP		\fI<modify host group configuration>\fP"
 Allows changing of host group configuration with a single command. 
 All host group configuration entries contained in
-.B file
+.B fname
 will be applied. Configuration entries not contained in
-.B file
-will be deleted. The file format of \fBfile\fP must comply
+.B fname
+will be deleted. The file format of \fBfname\fP must comply
 to the format specified in 
 .M hostgroup 5 . Requires root or manager privilege.
 .\" 
@@ -263,7 +263,7 @@ Refer to
 for details on the PE configuration format.
 Requires root or manager privilege.
 .\"
-.IP "\fB\-Mprj fname\fP	\fI<modify project config.>\fP"
+.IP "\fB\-Mprj fname\fP	\fI<modify project configuration>\fP"
 Same as \fB\-mprj\fP (see below) but
 instead of invoking an editor to modify the
 project configuration the file \fBfname\fP
@@ -306,13 +306,13 @@ for information on the ACL configuration format. Requires root or
 manager privilege.
 .\"
 .\" usermapping start
-.\" .IP "\fB\-Mumap mapfile\fP   \fI<modify user mapping configuration>\fP"
+.\" .IP "\fB\-Mumap fname\fP   \fI<modify user mapping configuration>\fP"
 .\" Allows changing of mapping configuration with a single command. 
 .\" All mapping configuration entries contained in
-.\" .B mapfile
+.\" .B fname
 .\" will be applied. Configuration entries not contained in
-.\" .B mapfile
-.\" will be deleted. The file format of \fBmapfile\fP must comply
+.\" .B fname
+.\" will be deleted. The file format of \fBfname\fP must comply
 .\" to the format specified in 
 .\" .M usermapping 5 . Requires root or manager privilege.
 .\" usermapping end
@@ -341,7 +341,7 @@ Requires root/manager privileges.
 .\"
 .IP "\fB\-aattr obj_spec attr_name val obj_instance,...\fP"
 .ta 2.3i
-   \fI<add to object attributes>\fP
+	\fI<add to object attributes>\fP
 .ta 3i
 .br
 Allows adding specifications to a single
@@ -442,7 +442,7 @@ Requires root/manager privileges.
 Successively adds configurations (see
 .M xxqs_name_sxx_conf 5 )
 For the hosts in the
-comma separated \fIfile_list\fP.
+comma separated \fIfname_list\fP.
 For each host, an editor ($EDITOR indicated or
 .M vi 1 )
 is invoked and the configuration for the host
@@ -496,7 +496,7 @@ usually add all designated execution hosts
 to the xxQS_NAMExx trusted host list automatically.
 Requires root or manager privileges.
 .\"
-.IP "\fB\-ahgrp group\fP		\fI<add host group config.>\fP"
+.IP "\fB\-ahgrp group\fP		\fI<add host group configuration>\fP"
 Adds a new host group with the name specified in 
 .B group.
 This command invokes an editor (either
@@ -695,7 +695,7 @@ Deletes hosts from the xxQS_NAMExx trusted host list.  The host on which
 is currently running cannot be removed from the list of administrative hosts.
 Requires root or manager privileges.
 .\"
-.IP "\fB\-dhgrp group\fP  \fI<delete host group configuration>\fP"
+.IP "\fB\-dhgrp group\fP	\fI<delete host group configuration>\fP"
 Deletes host group configuration with the name specified in
 .B group.
 Requires root or manager privileges.
@@ -882,7 +882,7 @@ The format of the execution host configuration is described in
 .M host_conf 5 .
 Requires root or manager privilege.
 .\"
-.IP "\fB\-mhgrp group\fP \fI<modify host group configuration>\fP"
+.IP "\fB\-mhgrp group\fP	\fI<modify host group configuration>\fP"
 The host group entries for the host group specified in
 .B group
 are retrieved and an editor (either 
@@ -1003,7 +1003,7 @@ modified data is registered. Requires root or manager privileges.
 .\"
 .IP "\fB\-purge queue attr_nm,... obj_spec\fP"
 .ta 2.3i
-   \fI<purge divergent attribute settings>\fP
+	\fI<purge divergent attribute settings>\fP
 .ta 3i
 .br
 Delete the values of the attributes defined in \fBattr_nm\fP from the 
@@ -1117,10 +1117,10 @@ Displays the host group entries for the group specified in
 Displays a name list of all currently defined host groups
 which have a valid host group configuration.
 .\" 
-.IP "\fB\-shgrp_tree group\fP     \fI<show host group tree>\fP"
+.IP "\fB\-shgrp_tree group\fP	\fI<show host group tree>\fP"
 Shows a tree like structure of host group.
 .\" 
-.IP "\fB\-shgrp_resolved group\fP       \fI<show host group hosts>\fP"
+.IP "\fB\-shgrp_resolved group\fP	\fI<show host group hosts>\fP"
 Shows a list of all hosts which are part of the definition of
 host group. If the host group definition contains sub host groups
 than also these groups are resolved and the hostnames are printed.

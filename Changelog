@@ -8,6 +8,9 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+EB-2011-05-11-0: Bugfix:      uninitialized memory due to incorrect use of memset
+                 Issues:      GE-3112
+
 EB-2011-05-12-0: Bugfix:      Fixes in various man pages
                  Issues:      GE-2820, GE-2379, GE-2766, GE-2765, GE-3277
                               GE-3294, GE-3243

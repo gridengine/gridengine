@@ -2336,7 +2336,7 @@ tCClEntry *clen
 ) {
    DENTER(GUI_LAYER, "qmonInitCClEntry");
 
-   memset((void*)clen, sizeof(tCClEntry), 0);
+   memset((void*)clen, 0, sizeof(tCClEntry));
 
    DEXIT; 
 }

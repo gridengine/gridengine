@@ -1603,7 +1603,7 @@ tQCEntry *data
 ) {
    DENTER(GUI_LAYER, "qmonInitQCEntry");
 
-   memset((void*)data, sizeof(tQCEntry), 0);
+   memset((void*)data, 0, sizeof(tQCEntry));
 
    DEXIT;
 

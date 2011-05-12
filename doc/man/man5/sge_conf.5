@@ -140,10 +140,7 @@ may be overwritten by the execution host local configuration.
 is the absolute pathname to the X Window System terminal emulator,
 .M xterm 1 .
 .PP
-Each
-.M xxqs_name_sxx_execd 8
-may use a private mail agent. Changing \fBxterm\fP will take
-immediate effect.
+Changing \fBxterm\fP will take immediate effect.
 .PP
 The default for \fBxterm\fP is /usr/bin/X11/xterm.
 .PP
@@ -1429,6 +1426,7 @@ during submission time of a job. This parameter is not set per default and
 therefore all binding related information will be ignored.
 Find more information for job to core binding in the section \fI-binding\fP of
 .M qsub 1 .
+.PP
 Changing \fBexecd_params\fP will take effect after it was propagated to the
 execution daemons. The propagation is done in one load report interval.
 The default for \fBexecd_params\fP is none.

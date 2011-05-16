@@ -8,8 +8,13 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+JG-2011-05-16-0: Bugfix:      parallel jobs are not dispatched to the least
+                              loaded host
+                 Issue:       GE-3479
+                 Review:      EB
+
 DG-2011-05-11-0: Bugfix:      man page queue_conf slots entry is wrong
-                 Review_      HP
+                 Review:      HP
 
 EB-2011-05-11-1: Bugfix:      uninitialized memory due to incorrect use of memset
                  Issues:      GE-3112

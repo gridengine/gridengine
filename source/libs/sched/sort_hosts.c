@@ -102,7 +102,7 @@ int sort_host_list(lList *hl, lList *centry_list)
    lListElem *template = host_list_locate(hl, SGE_TEMPLATE_NAME);
    const char *load_formula = sconf_get_load_formula();
    double load;
-   
+
    DENTER(TOP_LAYER, "sort_host_list");
 
    for_each (hlp, hl) {

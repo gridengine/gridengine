@@ -731,7 +731,7 @@ sge_scheduler_main(void *arg)
             ));
 
             sge_rebuild_job_category(master_job_list, master_userset_list,
-                                        master_project_list, master_rqs_list);
+                                     master_project_list, master_rqs_list);
 
             PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM7);
             prof_init = prof_get_measurement_wallclock(SGE_PROF_CUSTOM7, true, NULL);

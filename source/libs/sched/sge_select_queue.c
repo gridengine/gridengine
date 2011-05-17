@@ -405,8 +405,10 @@ sge_select_parallel_environment(sge_assignment_t *best, lList *pe_list)
 
    pe_request = lGetString(best->job, JB_pe);
 
-   DPRINTF(("handling parallel job "sge_u32"."sge_u32"\n", best->job_id, best->ja_task_id)); 
+   DPRINTF(("handling parallel job "sge_u32"."sge_u32"\n", best->job_id, best->ja_task_id));
 
+   /* make sure our queue list is sorted according to host order (load formula) */
+   sequential_update_host_order(best->host_list, best->queue_list);
 
    /* initialize all taggs */
    for_each(queue, best->queue_list) {
@@ -3708,7 +3710,7 @@ static int get_soft_violations(sge_assignment_t *a, lListElem *hep, lListElem *q
 *
 *     While tagging we also set queues QU_host_seq_no based on the sort 
 *     order of each host. Assumption is the host list passed is sorted 
-*     according the load forumla. 
+*     according the load formula. 
 *
 *  INPUTS
 *     sge_assignment_t *assignment - ??? 
@@ -3829,10 +3831,12 @@ parallel_tag_queues_suitable4job(sge_assignment_t *a, category_use_t *use_catego
                lPSortList(a->queue_list, "%I- %I+ %I+ %I+", QU_tag, QU_soft_violation, QU_host_seq_no, QU_seq_no);
             } else {
                lPSortList(a->queue_list, "%I- %I+ %I+ %I+", QU_tag, QU_soft_violation, QU_seq_no, QU_host_seq_no);
-            } 
+            }
          } else {
             int last_dispatch_type = sconf_get_last_dispatch_type();
-            if (last_dispatch_type == DISPATCH_TYPE_PE_SOFT_REQ || last_dispatch_type == DISPATCH_TYPE_NONE || sconf_get_host_order_changed()) {
+            if (last_dispatch_type == DISPATCH_TYPE_PE_SOFT_REQ ||
+                last_dispatch_type == DISPATCH_TYPE_NONE ||
+                sconf_get_host_order_changed()) {
                if (sconf_get_queue_sort_method() == QSM_LOAD) {
                   lPSortList(a->queue_list, "%I+ %I+", QU_host_seq_no, QU_seq_no);
                } else {

@@ -59,7 +59,7 @@ typedef enum {
 
 /* MT-NOTE: This module is MT safe */
 
-static int sge_domkdir(const char *, int, int, int);
+static int sge_domkdir(const char *, int, bool, bool);
 
 static file_type_t sge_get_file_type(const char *name);  
 
@@ -82,7 +82,7 @@ static file_type_t sge_get_file_type(const char *name)
    return ret;
 }             
 
-static int sge_domkdir(const char *path_, int fmode, int exit_on_error, int may_not_exist) 
+static int sge_domkdir(const char *path_, int fmode, bool exit_on_error, bool may_not_exist) 
 {
    SGE_STRUCT_STAT statbuf;
  
@@ -326,7 +326,7 @@ void sge_exit(void **ref_ctx, int i)
 *     sge_mkdir() -- Create a directory (and subdirectorys)  
 *
 *  SYNOPSIS
-*     int sge_mkdir(const char *path, int fmode, int exit_on_error, int may_not_exist) 
+*     int sge_mkdir(const char *path, int fmode, bool exit_on_error, bool may_not_exist) 
 *
 *  FUNCTION
 *     Create a directory 
@@ -334,8 +334,8 @@ void sge_exit(void **ref_ctx, int i)
 *  INPUTS
 *     const char *path  - path 
 *     int fmode         - file mode 
-*     int exit_on_error - as it says 
-*     int may_not_exist - if true an error is returned if the last component
+*     bool exit_on_error - as it says 
+*     bool may_not_exist - if true an error is returned if the last component
 *                         of the path exists
 *
 *  RESULT
@@ -343,7 +343,7 @@ void sge_exit(void **ref_ctx, int i)
 *         0 - OK
 *        -1 - Error (The function may never return)
 ******************************************************************************/
-int sge_mkdir(const char *path, int fmode, int exit_on_error, int may_not_exist) 
+int sge_mkdir(const char *path, int fmode, bool exit_on_error, bool may_not_exist) 
 {
    int i = 0, res=0;
    stringT path_;
@@ -368,7 +368,7 @@ int sge_mkdir(const char *path, int fmode, int exit_on_error, int may_not_exist)
       path_[i] = path[i];
       if ((path[i] == '/') && (i != 0)) {
          path_[i] = (unsigned char) 0;
-         res = sge_domkdir(path_, fmode, exit_on_error, 0);
+         res = sge_domkdir(path_, fmode, exit_on_error, false);
          if (res) {
             DPRINTF(("retval = %d\n", res));
             DEXIT;
@@ -386,8 +386,7 @@ int sge_mkdir(const char *path, int fmode, int exit_on_error, int may_not_exist)
    return i;
 }   
 
-int sge_mkdir2(const char *base_dir, const char *name, int fmode, 
-               int exit_on_error)
+int sge_mkdir2(const char *base_dir, const char *name, int fmode, bool exit_on_error)
 {
    dstring path = DSTRING_INIT;
    int ret;
@@ -407,7 +406,7 @@ int sge_mkdir2(const char *base_dir, const char *name, int fmode,
   
    sge_dstring_sprintf(&path, "%s/%s", base_dir, name);
 
-   ret = sge_mkdir(sge_dstring_get_string(&path), fmode, exit_on_error, 0); 
+   ret = sge_mkdir(sge_dstring_get_string(&path), fmode, exit_on_error, false); 
    sge_dstring_free(&path);
 
    DRETURN(ret);

@@ -323,8 +323,8 @@ static int PE_test(void)
    lFreeElem(&ep);
    ret = diff(file1, file2);
    
-   unlink(file1);
-   unlink(file2);
+   sge_unlink(NULL, file1);
+   sge_unlink(NULL, file2);
    sge_free(&file1);
    sge_free(&file2);
 
@@ -372,8 +372,8 @@ static int CAL_test(void)
    
    ret = diff(file1, file2);
    
-   unlink(file1);
-   unlink(file2);
+   sge_unlink(NULL, file1);
+   sge_unlink(NULL, file2);
    sge_free(&file1);
    sge_free(&file2);
    
@@ -429,8 +429,8 @@ static int CK_test(void)
    
    ret = diff(file1, file2);
    
-   unlink(file1);
-   unlink(file2);
+   sge_unlink(NULL, file1);
+   sge_unlink(NULL, file2);
    sge_free(&file1);
    sge_free(&file2);
    
@@ -537,8 +537,8 @@ static int STN_test() {
    
    ret = diff(file1, file2);
    
-   unlink(file1);
-   unlink(file2);
+   sge_unlink(NULL, file1);
+   sge_unlink(NULL, file2);
    sge_free(&file1);
    sge_free(&file2);
    sge_free(&fields);
@@ -592,8 +592,8 @@ static int CE_test(void)
    
    ret = diff(file1, file2);
    
-   unlink(file1);
-   unlink(file2);
+   sge_unlink(NULL, file1);
+   sge_unlink(NULL, file2);
    sge_free(&file1);
    sge_free(&file2);
    
@@ -664,8 +664,8 @@ static int CEL_test(void)
    
    ret = diff(file1, file2);
    
-   unlink(file1);
-   unlink(file2);
+   sge_unlink(NULL, file1);
+   sge_unlink(NULL, file2);
    sge_free(&file1);
    sge_free(&file2);
    
@@ -995,8 +995,8 @@ static int UU_test(void) {
    lFreeElem(&user);
    ret = diff(file1, file2);
    
-   unlink(file1);
-   unlink(file2);
+   sge_unlink(NULL, file1);
+   sge_unlink(NULL, file2);
    sge_free(&file1);
    sge_free(&file2);
    sge_free(&fields);
@@ -1069,8 +1069,8 @@ static int PR_test(void) {
    
    ret = diff(file1, file2);
    
-   unlink(file1);
-   unlink(file2);
+   sge_unlink(NULL, file1);
+   sge_unlink(NULL, file2);
    sge_free(&file1);
    sge_free(&file2);
    sge_free(&fields);
@@ -1138,8 +1138,8 @@ static int US_test(void)
    
    ret = diff(file1, file2);
    
-   unlink(file1);
-   unlink(file2);
+   sge_unlink(NULL, file1);
+   sge_unlink(NULL, file2);
    sge_free(&file1);
    sge_free(&file2);
    
@@ -1373,8 +1373,8 @@ static int EH_test(void)
    
    ret = diff(file1, file2);
    
-   unlink(file1);
-   unlink(file2);   
+   sge_unlink(NULL, file1);
+   sge_unlink(NULL, file2);
    sge_free(&file1);
    sge_free(&file2);
    sge_free(&fields);
@@ -2188,8 +2188,8 @@ static int CQ_test(void) {
    
    ret = diff(file1, file2);
    
-   unlink(file1);
-   unlink(file2);
+   sge_unlink(NULL, file1);
+   sge_unlink(NULL, file2);
    sge_free(&file1);
    sge_free(&file2);
    
@@ -2312,8 +2312,8 @@ static int SC_test(void)
    
    ret = diff(file1, file2);
    
-   unlink(file1);
-   unlink(file2);
+   sge_unlink(NULL, file1);
+   sge_unlink(NULL, file2);
    sge_free(&file1);
    sge_free(&file2);
    
@@ -2368,8 +2368,8 @@ static int QU_test(void)
    
    ret = diff(file1, file2);
    
-   unlink(file1);
-   unlink(file2);
+   sge_unlink(NULL, file1);
+   sge_unlink(NULL, file2);
    sge_free(&file1);
    sge_free(&file2);
    sge_free(&fields);
@@ -2420,8 +2420,8 @@ static int HGRP_test(void)
    
    ret = diff(file1, file2);
    
-   unlink(file1);
-   unlink(file2);
+   sge_unlink(NULL, file1);
+   sge_unlink(NULL, file2);
    sge_free(&file1);
    sge_free(&file2);
    
@@ -2555,8 +2555,8 @@ static int CU_test(void)
    
    ret = diff(file1, file2);
    
-   unlink(file1);
-   unlink(file2);
+   sge_unlink(NULL, file1);
+   sge_unlink(NULL, file2);
    sge_free(&file1);
    sge_free(&file2);
    
@@ -2651,8 +2651,8 @@ static int CONF_test(void) {
    
    ret = diff(file1, file2);
    
-   unlink(file1);
-   unlink(file2);
+   sge_unlink(NULL, file1);
+   sge_unlink(NULL, file2);
    sge_free(&file1);
    sge_free(&file2);
    sge_free(&fields);
@@ -2795,9 +2795,8 @@ static int RQS_test(void) {
 
    ret = diff(file1, file2);
 
-   unlink(file1);
-   unlink(file2);
-
+   sge_unlink(NULL, file1);
+   sge_unlink(NULL, file2);
    sge_free(&file1);
    sge_free(&file2);
 
@@ -2896,8 +2895,8 @@ static int AR_test(void) {
 
    ret = diff(file1, file2);
   
-   unlink(file1);
-   unlink(file2);
+   sge_unlink(NULL, file1);
+   sge_unlink(NULL, file2);
    sge_free(&file1);
    sge_free(&file2);
    

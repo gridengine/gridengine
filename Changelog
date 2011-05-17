@@ -13,6 +13,10 @@ JG-2011-05-16-0: Bugfix:      parallel jobs are not dispatched to the least
                  Issue:       GE-3479
                  Review:      EB
 
+EB-2011-05-12-0: Bugfix:      Fixes in various man pages
+                 Issues:      GE-2820, GE-2379, GE-2766, GE-2765, GE-3277
+                              GE-3294, GE-3243
+
 DG-2011-05-11-0: Bugfix:      man page queue_conf slots entry is wrong
                  Review:      HP
 

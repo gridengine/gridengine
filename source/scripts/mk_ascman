@@ -103,8 +103,8 @@ endif
 # Requires sed to be installed and accessible.
 if ( $MANMODE == "ge" ) then
    set xxQS_NAMExx = "Grid Engine"
-   set xxQS_NAME_Sxx = "GE"
-   set xxqs_name_sxx = "ge"
+   set xxQS_NAME_Sxx = "SGE"
+   set xxqs_name_sxx = "sge"
    set xxRELxx = "GE 8.0.0"
 else if ( $MANMODE == "uge" ) then
    set xxQS_NAMExx = "Univa Grid Engine"

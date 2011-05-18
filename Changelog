@@ -11,6 +11,7 @@
 EB-2011-05-17-1: Bugfix:      qconf man page references non-existent ge_conf(5)
                               man page
                  Issue:       GE-3499
+                 Review:      DG
 
 EB-2011-05-17-0: Cleanup:     use sge wrapper functions for mkdir, rmdir, unlink
                  Issue:       GE-3378

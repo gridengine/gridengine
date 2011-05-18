@@ -28,6 +28,7 @@
  *  All Rights Reserved.
  *
  ************************************************************************/
+/* Portions of this software are Copyright (c) 2011 Univa Corporation. */
 /*___INFO__MARK_END__*/
 #include <stdio.h>
 #include <stdlib.h>
@@ -230,6 +231,107 @@ static int do_prolog(int timeout, int ckpt_type);
 static int do_epilog(int timeout, int ckpt_type);
 static int do_pe_start(int timeout, int ckpt_type, pid_t *pe_pid);
 static int do_pe_stop(int timeout, int ckpt_type, pid_t *pe_pid);
+
+/****** shepherd/handle_io_file() ********************************************
+*  NAME
+*     handle_io_file() -- opens the given file as the given user 
+*
+*  SYNOPSIS
+*     static int handle_io_file(const char* file, const char* owner, bool rw)
+*
+*  FUNCTION
+*
+*  Opens the given file as the given user. Therefore the euid and the egid
+*  will be change temporarily to those of the given user.
+*
+*  INPUTS
+*     const char* file      - file which should be opened
+*     const char* owner     - username which should become the owner
+*     bool rw               - if true, file will be opened/created with
+*                             write permissions.
+*
+* RESULT
+*     int -  : fd of the created file
+*          -1: file could not be created
+*
+* NOTE
+* 
+* The caller has to have SGE_SUPERUSER_UID as user-id.
+*
+*******************************************************************************/
+static int handle_io_file(const char* file, const char* owner, bool rw) {
+   int fd;
+   uid_t jobuser_id;
+   gid_t jobuser_gid;
+   int old_euid = SGE_SUPERUSER_UID;
+   int old_egid;
+
+   if (file == NULL) {
+      shepherd_trace("Invalid output-file!");
+      return -1;
+   }
+
+   /* obtain user-id and group-id of job-owner */
+   if (sge_user2uid(owner, &jobuser_id, &jobuser_gid, 1) != 0) {
+      shepherd_trace("Cannot get user-id of %s", owner);
+      return -1;
+   }
+
+   /* store current effective user-id */
+   old_euid = geteuid();
+
+   /* set effective user-id to root, because only root is allowed to change
+    * the euid to any other than current the user-id.
+    */
+   if (seteuid(SGE_SUPERUSER_UID) != 0) {
+      shepherd_trace("Cannot become root due to %s", strerror(errno));
+      return -1;
+   }
+
+   /* store current effective group-id */
+   old_egid = getegid();
+   /* set effective group-id to the group-id of job-owner */
+   if (setegid(jobuser_gid) != 0) {
+      shepherd_trace("Cannot change egid due to %s", strerror(errno));
+      return -1;
+   }
+
+   /* set effective user-id to the user-id of job-owner */
+   if (seteuid(jobuser_id) != 0) {
+      shepherd_trace("Cannot become %s due to %s", owner, strerror(errno));
+      return -1;
+   }
+
+   if (rw == true) {
+      /* create the given file with the credentials of the job-owner */
+      fd = SGE_OPEN3(file, O_WRONLY | O_CREAT | O_APPEND, 0644);
+      if (fd == -1) {
+         shepherd_trace("Cannot open %s due to %s", file, strerror(errno));
+         return -1;
+      }
+   } else {
+      /* open file as job-owner */
+      fd = SGE_OPEN2(file, O_RDONLY); 
+      if (fd == -1) {
+         shepherd_trace("Cannot open %s.", file);
+         return -1;
+      }
+   }
+
+   /* reset egid and euid to the stored values */
+   if (seteuid(old_euid) != 0) {
+      shepherd_trace("Cannot reset euid due to %s", owner, strerror(errno));
+      SGE_CLOSE(fd);
+      return -1;
+   }
+   if (setegid(old_egid) != 0) {
+      shepherd_trace("Cannot reset egid due to %s", owner, strerror(errno));
+      SGE_CLOSE(fd);
+      return -1;
+   }
+
+   return fd;
+}
 
 static int wait_until_parent_has_registered_to_server(int fd_pipe_to_child[])
 {
@@ -2348,6 +2450,7 @@ int fd_std_err             /* fd of stderr. -1 if not set */
 
    /* handle qsub -pty */
    if (fd_pty_master != -1) {
+      char* job_owner = NULL;
       /* in case auf qsub -pty, the wait call should not block until the job finishs */
       wait_options |= WNOHANG;
 
@@ -2356,24 +2459,31 @@ int fd_std_err             /* fd of stderr. -1 if not set */
       stderr_path = build_path(SGE_STDERR);
       stdin_path = get_conf_val("stdin_path");
 
+      /* get gid and uid of job_owner (stored in pw) */
+      job_owner = get_conf_val("job_owner");
+
+      if (job_owner == NULL) {
+         shepherd_trace("Cannot determine the job-owner!");
+         shepherd_signal_job(-pid, SIGTERM);
+      }
+
       /* open input file if set */
       if (strcasecmp(stdin_path, "/dev/null") != 0) {
-         fdin = SGE_OPEN2(stdin_path, O_RDONLY); 
+         fdin = handle_io_file(stdin_path, job_owner, false);
          if (fdin == -1) {
-            shepherd_trace("Cannot open %s.", stdin_path);
             shepherd_signal_job(-pid, SIGTERM);
          }
       }
 
-      fdout = SGE_OPEN3(stdout_path, O_WRONLY | O_CREAT | O_APPEND, 0644);
+      /* create the file as job_owner */
+      fdout = handle_io_file(stdout_path, job_owner, true);
       if (fdout == -1) {
-         shepherd_trace("Cannot open %s.", stdout_path);
          shepherd_signal_job(-pid, SIGTERM);
       }
 
-      fderr = SGE_OPEN3(stderr_path, O_WRONLY | O_CREAT | O_APPEND, 0644);
+      /* create the file as job_owner */
+      fderr = handle_io_file(stderr_path, job_owner, true);
       if (fderr == -1) {
-         shepherd_trace("Cannot open %s.", stderr_path);
          shepherd_signal_job(-pid, SIGTERM);
       }
 

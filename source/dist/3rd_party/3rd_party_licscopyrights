@@ -20,7 +20,7 @@ Content
    IzPack (http://izpack.org)
    NanoXML
    Berkeley DB
-   Code contributions from individual developers
+   Code contributions from individual persons or groups 
 
 
 %% The following software may be included in this product:  
@@ -1799,9 +1799,10 @@ freely, subject to the following restrictions:
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
 
-%% Individual Contributors have contributed code in mentioned code modules.
+%% Individual Contributors that have contributed code or other things
 
 Tommy Karlsson <tommy.karlsson@bolero.se>
   source/libs/uti/sge_uidgid.c 
 
-
+Alain Champenois and the Tango Desktop Project (http://tango.freedesktop.org/Tango_Desktop_Project)
+  Icons for qmon 

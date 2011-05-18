@@ -8,6 +8,60 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+EB-2011-05-18-0: Bugfix:      start time is not available in qstat -j -xml outp.
+                 Issue:       GE-3482
+                 Review:      DG
+
+EB-2011-05-17-1: Bugfix:      qconf man page references non-existent ge_conf(5)
+                              man page
+                 Issue:       GE-3499
+                 Review:      DG
+
+EB-2011-05-17-0: Cleanup:     use sge wrapper functions for mkdir, rmdir, unlink
+                 Issue:       GE-3378
+
+JG-2011-05-16-0: Bugfix:      parallel jobs are not dispatched to the least
+                              loaded host
+                 Issue:       GE-3479
+                 Review:      EB
+
+DG-2011-05-11-0: Bugfix:      man page queue_conf slots entry is wrong
+                 Review:      HP
+
+EB-2011-05-11-1: Bugfix:      uninitialized memory due to incorrect use of memset
+                 Issues:      GE-3112
+
+EB-2011-05-12-0: Bugfix:      Fixes in various man pages
+                 Issues:      GE-2820, GE-2379, GE-2766, GE-2765, GE-3277
+                              GE-3294, GE-3243
+
+EB_2011-05-11-0: Bugfix:      Fixes in various man pages
+                 Issues:      GE-3259, GE-3287, GE-3252, GE-3275, GE-3274
+                              GE-2360, GE-1577
+
+EB-2011-05-10-1: Cleanup:     commlib: replace cl_bool_t by the sge bool type 
+                 Issues:      GE-1592
+
+EB-2011-05-10-0: Bugfix:      va_end call missing after some va_start/va_copy 
+                              calls
+                 Issues:      GE-2143
+
+HP-2011-05-10-0: Bugfix:      SGE_Helper_Service.exe sometimes crashes at job
+                              start
+                 Issue:       GE-3476
+                 Bugfix:      on Windows Vista, GUI jobs can't be started on
+                              a Remote Desktop session
+                 Issue:       GE-3477
+                 Review:      SH
+
+EB-2011-05-10-0: Bugfix:      man page sge_conf.5, execd_params, section 
+                              ENABLE_BINDING is within section PDC_INTERVAL
+                              Typos in interactive installation	
+                 Issue:       GE-3471 GE-3475
+
+JG-2011-05-06-1: Bugfix:      fix for gtar detection in mk_dist
+                 Belongs to:  JG-2011-05-05-0
+
 JG-2011-05-06-0: Created final packages for Stoat
 -------------------------------------------------
 

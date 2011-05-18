@@ -93,7 +93,7 @@ extern int main(int argc, char** argv)
   }
   cl_com_setup_commlib(CL_RW_THREAD, (cl_log_t)atoi(argv[5]), NULL);
 
-  handle=cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , CL_FALSE, atoi(argv[2]) , CL_TCP_DEFAULT,"sim_client", 0, 1,0 );
+  handle=cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , false, atoi(argv[2]) , CL_TCP_DEFAULT,"sim_client", 0, 1,0 );
   if (handle == NULL) {
      printf("could not get handle\n");
      exit(1);
@@ -120,7 +120,7 @@ extern int main(int argc, char** argv)
      }
   }
   printf("do_shutdown received\n");
-  cl_commlib_shutdown_handle(handle, CL_FALSE);
+  cl_commlib_shutdown_handle(handle, false);
   cl_com_cleanup_commlib();
   printf("main done\n");
   fflush(stdout);

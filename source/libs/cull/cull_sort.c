@@ -193,9 +193,12 @@ const lSortOrder *sp
 lSortOrder *lParseSortOrderVarArg(const lDescr *dp, const char *fmt,...)
 {
    va_list ap;
+   lSortOrder *ret;
 
    va_start(ap, fmt);
-   return lParseSortOrder(dp, fmt, ap);
+   ret = lParseSortOrder(dp, fmt, ap);
+   va_end(ap);
+   return ret;
 }
 
 /****** cull/sort/lParseSortOrder() *******************************************

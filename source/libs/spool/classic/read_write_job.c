@@ -407,7 +407,7 @@ static int job_write_as_single_file(lListElem *job, u_long32 ja_task_id,
 
    sge_get_file_path(job_dir_third, JOB_SPOOL_DIR, FORMAT_THIRD_PART,
                      flags, job_id, ja_task_id, NULL);
-   sge_mkdir(job_dir_third, 0755, 0, 0);
+   sge_mkdir(job_dir_third, 0755, false, false);
    sge_get_file_path(spool_file, JOB_SPOOL_DIR_AS_FILE, FORMAT_DEFAULT,
                      flags, job_id, ja_task_id, NULL);
    sge_get_file_path(tmp_spool_file, JOB_SPOOL_DIR_AS_FILE, FORMAT_DOT_FILENAME,
@@ -475,7 +475,7 @@ int job_write_common_part(lListElem *job, u_long32 ja_task_id,
    job_id = lGetUlong(job, JB_job_number);
    sge_get_file_path(spool_dir, JOB_SPOOL_DIR, FORMAT_DEFAULT,
                      flags, job_id, ja_task_id, NULL);
-   sge_mkdir(spool_dir, 0755, 0, 0);
+   sge_mkdir(spool_dir, 0755, false, false);
    sge_get_file_path(spoolpath_common, JOB_SPOOL_FILE, FORMAT_DEFAULT,
                      flags, job_id, ja_task_id, NULL);
    sge_get_file_path(tmp_spoolpath_common, JOB_SPOOL_FILE,
@@ -526,7 +526,7 @@ static int ja_task_write_to_disk(lListElem *ja_task, u_long32 job_id,
       if ((flags & SPOOL_WITHIN_EXECD) || 
           strcmp(old_task_spool_dir, task_spool_dir)) {
          strcpy(old_task_spool_dir, task_spool_dir);
-         sge_mkdir(task_spool_dir, 0755, 0, 0);
+         sge_mkdir(task_spool_dir, 0755, false, false);
       }
 
       /* spool ja_task */
@@ -602,7 +602,7 @@ static int ja_task_write_to_disk(lListElem *ja_task, u_long32 job_id,
       if ((flags & SPOOL_WITHIN_EXECD) ||
           strcmp(old_task_spool_dir, task_spool_dir)) {
          strcpy(old_task_spool_dir, task_spool_dir);
-         sge_mkdir(task_spool_dir, 0755, 0, 0);
+         sge_mkdir(task_spool_dir, 0755, false, false);
       }
 
       /* spool ja_task to temporary file */
@@ -634,8 +634,12 @@ int job_remove_spool_file(u_long32 jobid, u_long32 ja_taskid,
                         *(object_type_get_master_list(SGE_TYPE_JOB));
    lListElem *job = job_list_locate(master_list, jobid);
    int try_to_remove_sub_dirs = 0;
+   dstring error_msg;
+   char error_msg_buffer[SGE_PATH_MAX];
 
    DENTER(TOP_LAYER, "job_remove_spool_file");
+
+   sge_dstring_init(&error_msg, error_msg_buffer, sizeof(error_msg_buffer));
 
    one_file = job_has_to_spool_one_file(job, *object_type_get_master_list(SGE_TYPE_PE), 
                                          flags);
@@ -673,33 +677,25 @@ int job_remove_spool_file(u_long32 jobid, u_long32 ja_taskid,
 
       if (remove_task_spool_file) {
          DPRINTF(("removing "SFN"\n", task_spool_file));
-         
          if (sge_is_directory(task_spool_file)) {
-            dstring task_spool_file_msg;
-            char task_spool_file_msg_buffer[SGE_PATH_MAX];
-            
-            sge_dstring_init(&task_spool_file_msg, task_spool_file_msg_buffer,
-                             sizeof(task_spool_file_msg_buffer));
-            if (sge_rmdir(task_spool_file, &task_spool_file_msg)) {
-               ERROR((SGE_EVENT, MSG_JOB_CANNOT_REMOVE_SS, 
-                      MSG_JOB_TASK_SPOOL_FILE, task_spool_file_msg_buffer));
-               DTRACE;
+            if (sge_rmdir(task_spool_file, &error_msg)) {
+               ERROR((SGE_EVENT, MSG_JOB_CANNOT_REMOVE_SS, MSG_JOB_TASK_SPOOL_FILE, error_msg_buffer));
             } 
          } else {
             if (!sge_unlink(NULL, task_spool_file)) {
-               ERROR((SGE_EVENT, MSG_JOB_CANNOT_REMOVE_SS, 
-                      MSG_JOB_TASK_SPOOL_FILE, task_spool_file));
-               DTRACE;
+               ERROR((SGE_EVENT, MSG_JOB_CANNOT_REMOVE_SS, MSG_JOB_TASK_SPOOL_FILE, task_spool_file));
             }
          }
 
          /*
-          * Following rmdir call may fail. We can ignore this error.
+          * Following sge_rmdir call may fail. We can ignore this error.
           * This is only an indicator that another task is running which has 
           * been spooled in the directory.
           */  
          DPRINTF(("try to remove "SFN"\n", task_spool_dir));
-         rmdir(task_spool_dir);
+         if (sge_rmdir(task_spool_dir, &error_msg)) {
+            ERROR((SGE_EVENT, MSG_JOB_CANNOT_REMOVE_SS, MSG_JOB_TASK_SPOOL_FILE, error_msg_buffer));
+         } 
 
          /* 
           * a task spool directory has been removed: reinit 
@@ -722,15 +718,11 @@ int job_remove_spool_file(u_long32 jobid, u_long32 ja_taskid,
       if (ja_taskid == 0) { 
          DPRINTF(("removing "SFN"\n", spoolpath_common));
          if (!sge_unlink(NULL, spoolpath_common)) {
-            ERROR((SGE_EVENT, MSG_JOB_CANNOT_REMOVE_SS, 
-                   MSG_JOB_JOB_SPOOL_FILE, spoolpath_common)); 
-            DTRACE;
+            ERROR((SGE_EVENT, MSG_JOB_CANNOT_REMOVE_SS, MSG_JOB_JOB_SPOOL_FILE, spoolpath_common)); 
          }
          DPRINTF(("removing "SFN"\n", spool_dir));
          if (sge_rmdir(spool_dir, NULL)) {
-            ERROR((SGE_EVENT, MSG_JOB_CANNOT_REMOVE_SS, 
-                   MSG_JOB_JOB_SPOOL_DIRECTORY, spool_dir));
-            DTRACE;
+            ERROR((SGE_EVENT, MSG_JOB_CANNOT_REMOVE_SS, MSG_JOB_JOB_SPOOL_DIRECTORY, spool_dir));
          }
          try_to_remove_sub_dirs = 1;
       }
@@ -739,20 +731,20 @@ int job_remove_spool_file(u_long32 jobid, u_long32 ja_taskid,
       if (!sge_unlink(NULL, spool_dir)) {
          ERROR((SGE_EVENT, MSG_JOB_CANNOT_REMOVE_SS, MSG_JOB_JOB_SPOOL_FILE,
                 spool_dir));
-         DTRACE;
       }
       try_to_remove_sub_dirs = 1;
    }
    /*
-    * Following rmdir calls may fail. We can ignore these errors.
+    * Following sge_rmdir calls may fail. We can ignore these errors.
     * This is only an indicator that another job is running which has been
     * spooled in the same directory.
     */
    if (try_to_remove_sub_dirs) {
       DPRINTF(("try to remove "SFN"\n", spool_dir_third));
-      if (!rmdir(spool_dir_third)) {
+
+      if (!sge_rmdir(spool_dir_third, NULL)) {
          DPRINTF(("try to remove "SFN"\n", spool_dir_second));
-         rmdir(spool_dir_second); 
+         sge_rmdir(spool_dir_second, NULL); 
       }
    }
 

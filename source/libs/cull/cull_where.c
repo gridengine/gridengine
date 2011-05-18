@@ -452,7 +452,6 @@ lCondition *lWhere(const char *fmt,...)
    cull_parse_state state;
 
    DENTER(CULL_LAYER, "lWhere");
-   va_start(ap, fmt);
 
    if (!fmt) {
       LERROR(LENOFORMATSTR);
@@ -466,7 +465,9 @@ lCondition *lWhere(const char *fmt,...)
    scan(fmt, &state);
 
    /* parse */
+   va_start(ap, fmt);
    cond = subscope(&state, &ap);
+   va_end(ap);
 
    if (!cond) {
       LERROR(LEPARSECOND);

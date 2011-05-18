@@ -332,7 +332,7 @@ const char *sge_make_ja_task_active_dir(const lListElem *job, const lListElem *j
                                        NULL, NULL);   
 
    /* try to create it */
-   result = mkdir(path, 0755);
+   result = sge_mkdir(path, 0755, false, false);
    if (result == -1) {
       /* if it already exists and keep_active: try to rename it */
       if (errno == EEXIST && mconf_get_keep_active() && lGetUlong(ja_task, JAT_job_restarted) > 0) {
@@ -370,7 +370,7 @@ const char *sge_make_ja_task_active_dir(const lListElem *job, const lListElem *j
 
          sge_dstring_free(&new_path);
 
-         result = mkdir(path, 0755);
+         result = sge_mkdir(path, 0755, false, false);
       }
    }   
 
@@ -441,7 +441,7 @@ const char *sge_make_pe_task_active_dir(const lListElem *job, const lListElem *j
                                        NULL);   
 
    /* try to create it */
-   if (mkdir(path, 0755) == -1) {
+   if (sge_mkdir(path, 0755, false, false) == -1) {
       /* error creating directory */
       if(err_str != NULL) {
          sge_dstring_sprintf(err_str, MSG_FILE_CREATEDIR_SS, path, strerror(errno));

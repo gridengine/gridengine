@@ -498,7 +498,7 @@ void* commlib_to_tty(void *t_conf)
       recv_mess.data = NULL;
 
       DPRINTF(("commlib_to_tty: recv_message()\n"));
-      ret = comm_recv_message(g_comm_handle, CL_TRUE, &recv_mess, &err_msg);
+      ret = comm_recv_message(g_comm_handle, true, &recv_mess, &err_msg);
       if (ret != COMM_RETVAL_OK) {
          /* check if we are still connected to anybody. */
          /* if not - exit. */
@@ -907,9 +907,9 @@ int stop_ijs_server(COMM_HANDLE **phandle, dstring *p_err_msg)
 #if 0
       cl_log_list_set_log_level(cl_com_get_log_list(), CL_LOG_OFF);
 #endif
-      cl_com_ignore_timeouts(CL_TRUE);
+      cl_com_ignore_timeouts(true);
       DPRINTF(("shut down the connection from our side\n"));
-      ret = cl_commlib_shutdown_handle(*phandle, CL_FALSE);
+      ret = cl_commlib_shutdown_handle(*phandle, false);
       if (ret != CL_RETVAL_OK) {
          sge_dstring_sprintf(p_err_msg, "error shutting down the connection: %s",
             cl_get_error_text(ret));

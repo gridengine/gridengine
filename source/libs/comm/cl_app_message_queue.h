@@ -70,7 +70,7 @@ int cl_app_message_queue_append(cl_raw_list_t*        list_p,
                                 unsigned long         snd_response_mid,
                                 unsigned long         snd_tag,
                                 int                   do_lock);
-int cl_app_message_queue_remove(cl_raw_list_t* list_p, cl_com_connection_t* connection, int do_lock, cl_bool_t remove_all_elements);
+int cl_app_message_queue_remove(cl_raw_list_t* list_p, cl_com_connection_t* connection, int do_lock, bool remove_all_elements);
 
 
 /* thread functions that will not lock the list */

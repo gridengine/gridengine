@@ -205,7 +205,7 @@ static void sge_terminate(int dummy)
    shut_me_down = 1;
     
    /* inform commlib to ignore all timeouts */
-   cl_com_ignore_timeouts(CL_TRUE);
+   cl_com_ignore_timeouts(true);
    
    /* This is not the best way to shut down a process. 
       TODO: remove the exit call, applications should check shut_me_down */

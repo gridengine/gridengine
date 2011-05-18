@@ -88,8 +88,8 @@ void setup_signal_handler(void) {
 }
 
 
-static cl_bool_t my_ssl_verify_func(cl_ssl_verify_mode_t mode, cl_bool_t service_mode, const char* value) {
-   return CL_TRUE;
+static bool my_ssl_verify_func(cl_ssl_verify_mode_t mode, bool service_mode, const char* value) {
+   return true;
 }
 
 /* 
@@ -153,11 +153,11 @@ int on_communication_log(cl_raw_list_t* list_p) {
    user_data   -     void pointer which can be used for data transfering (be aware of race conditions)
    err_val     -     states if an error occured while poll/select of the fd
 */
-int fd_in_cb(int fd, cl_bool_t read_ready, cl_bool_t write_ready, void* user_data, int err_val){
+int fd_in_cb(int fd, bool read_ready, bool write_ready, void* user_data, int err_val){
    if (err_val != 0) {
       return CL_RETVAL_UNKNOWN;
    }
-   if(read_ready == CL_TRUE){
+   if(read_ready == true){
       char buffer[1024];
       int len = read(fd, buffer, 1024);
       if(strncmp(buffer, "exit\n", 5) == 0){
@@ -180,12 +180,12 @@ int fd_in_cb(int fd, cl_bool_t read_ready, cl_bool_t write_ready, void* user_dat
 }
 
 /* this is the callback function for std_out */
-int fd_out_cb(int fd, cl_bool_t read_ready, cl_bool_t write_ready, void* user_data, int err_val){
+int fd_out_cb(int fd, bool read_ready, bool write_ready, void* user_data, int err_val){
    if (err_val != 0) {
       return CL_RETVAL_UNKNOWN;
    }
    CL_LOG(CL_LOG_WARNING, "std_out entered");
-   if (write_ready == CL_TRUE) {
+   if (write_ready == true) {
       char* buffer = NULL;
       CL_LOG(CL_LOG_WARNING, "std_out data_ready");
       buffer = user_data;
@@ -302,7 +302,7 @@ extern int main(int argc, char** argv) {
    handle=cl_com_create_handle(&error,
                                framework,
                                CL_CM_CT_MESSAGE,
-                               CL_FALSE,
+                               false,
                                handle_port,
                                CL_TCP_DEFAULT,
                                "client", 0,
@@ -341,7 +341,7 @@ extern int main(int argc, char** argv) {
                                      CL_MIH_MAT_NAK, 
                                      (cl_byte_t**)&reg, strlen(reg)+1,
                                      NULL, 0, 0,
-                                     CL_TRUE, CL_FALSE);
+                                     true, false);
                                      
    if (ret_val != CL_RETVAL_OK) {
       do_shutdown = 1;
@@ -351,7 +351,7 @@ extern int main(int argc, char** argv) {
       CL_LOG(CL_LOG_WARNING, "App: start looping");
       cl_commlib_trigger(handle, 1);
       CL_LOG(CL_LOG_WARNING, "App: trigger was done");
-      ret_val = cl_commlib_receive_message(handle,NULL, NULL, 0, CL_FALSE, 0, &message, &sender);
+      ret_val = cl_commlib_receive_message(handle,NULL, NULL, 0, false, 0, &message, &sender);
 
       if (message != NULL) {
          CL_LOG(CL_LOG_WARNING, "App: std_out received");
@@ -376,7 +376,7 @@ extern int main(int argc, char** argv) {
                               CL_MIH_MAT_NAK,
                               &bp, strlen(fd_in_data)+1,
                               NULL, 0, 0,
-                              CL_TRUE, CL_FALSE);
+                              true, false);
          ready = 0;
          fd_in_data[0] = '\0';
       }
@@ -389,9 +389,9 @@ extern int main(int argc, char** argv) {
    cl_com_external_fd_unregister(handle, fd_out);
  
    /* here the application goes down - shutdown communication lib */
-   while ( cl_commlib_shutdown_handle(handle, CL_TRUE) == CL_RETVAL_MESSAGE_IN_BUFFER) {
+   while ( cl_commlib_shutdown_handle(handle, true) == CL_RETVAL_MESSAGE_IN_BUFFER) {
       message = NULL;
-      cl_commlib_receive_message(handle,NULL, NULL, 0, CL_FALSE, 0, &message, &sender);
+      cl_commlib_receive_message(handle,NULL, NULL, 0, false, 0, &message, &sender);
  
       if (message != NULL) {
          printf("ignoring message from \"%s\"\n", sender->comp_host); 

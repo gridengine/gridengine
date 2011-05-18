@@ -117,7 +117,7 @@ static void set_crl_file(sge_csp_path_class_t *thiz, const char *crl_file);
 static void set_refresh_time(sge_csp_path_class_t *thiz, u_long32 refresh_time);
 static void set_password(sge_csp_path_class_t *thiz, const char *password);
 static void set_verify_func(sge_csp_path_class_t *thiz, cl_ssl_verify_func_t func);
-static cl_bool_t ssl_cert_verify_func(cl_ssl_verify_mode_t mode, cl_bool_t service_mode, const char* value);
+static bool ssl_cert_verify_func(cl_ssl_verify_mode_t mode, bool service_mode, const char* value);
 
 static bool is_daemon(sge_env_state_class_t *sge_env, sge_prog_state_class_t *sge_prog) {
    const char *progname = sge_prog->get_sge_formal_prog_name(sge_prog);
@@ -133,7 +133,7 @@ static bool is_daemon(sge_env_state_class_t *sge_env, sge_prog_state_class_t *sg
    return false;
 }
 
-static cl_bool_t ssl_cert_verify_func(cl_ssl_verify_mode_t mode, cl_bool_t service_mode, const char* value) {
+static bool ssl_cert_verify_func(cl_ssl_verify_mode_t mode, bool service_mode, const char* value) {
 
    /*
     *   CR:
@@ -155,17 +155,17 @@ static cl_bool_t ssl_cert_verify_func(cl_ssl_verify_mode_t mode, cl_bool_t servi
       /* This should never happen */
       CRITICAL((SGE_EVENT, SFNMAX, MSG_SEC_CERT_VERIFY_FUNC_NO_VAL));
       DEXIT;
-      return CL_FALSE;
+      return false;
    }
 
-   if (service_mode == CL_TRUE) {
+   if (service_mode == true) {
       switch(mode) {
          case CL_SSL_PEER_NAME: {
             DPRINTF(("local service got certificate from peer \"%s\"\n", value));
 #if 0
             if (strcmp(value,"SGE admin user") != 0) {
                DEXIT;
-               return CL_FALSE;
+               return false;
             }
 #endif
             break;
@@ -175,7 +175,7 @@ static cl_bool_t ssl_cert_verify_func(cl_ssl_verify_mode_t mode, cl_bool_t servi
 #if 0
             if (strcmp(value,"") != 0) {
                DEXIT;
-               return CL_FALSE;
+               return false;
             }
 #endif
             break;
@@ -188,7 +188,7 @@ static cl_bool_t ssl_cert_verify_func(cl_ssl_verify_mode_t mode, cl_bool_t servi
 #if 0
             if (strcmp(value,"SGE admin user") != 0) {
                DEXIT;
-               return CL_FALSE;
+               return false;
             }
 #endif
             break;
@@ -198,7 +198,7 @@ static cl_bool_t ssl_cert_verify_func(cl_ssl_verify_mode_t mode, cl_bool_t servi
 #if 0
             if (strcmp(value,"") != 0) {
                DEXIT;
-               return CL_FALSE;
+               return false;
             }
 #endif
             break;
@@ -206,7 +206,7 @@ static cl_bool_t ssl_cert_verify_func(cl_ssl_verify_mode_t mode, cl_bool_t servi
       }
    }
    DEXIT;
-   return CL_TRUE;
+   return true;
 }
 
 

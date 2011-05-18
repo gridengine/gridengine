@@ -27,13 +27,15 @@
  *
  *   All Rights Reserved.
  *
+ * Portions of this software are Copyright (c) 2011 Univa Corporation
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include <afxcoll.h>
 #include <winsock2.h>
 #include <stdio.h>
 #include "Job.h"
+#include "Logging.h"
 
 /****** C_Job::C_Job() *********************************************************
 *  NAME
@@ -49,6 +51,7 @@
 *******************************************************************************/
 C_Job::C_Job()
 {
+   next = NULL;
    m_JobStatus  = js_Invalid;
 
    m_job_id     = 0;
@@ -100,40 +103,42 @@ C_Job::C_Job(const C_Job& otherJob)
 {
    int i;
 
+   next         = otherJob.next;
+
    m_JobStatus  = otherJob.m_JobStatus;
 
    m_job_id     = otherJob.m_job_id;
    m_ja_task_id = otherJob.m_ja_task_id;
-   m_pe_task_id = otherJob.m_pe_task_id ? strdup(otherJob.m_pe_task_id) : NULL;
+   m_pe_task_id = otherJob.m_pe_task_id ? _strdup(otherJob.m_pe_task_id) : NULL;
    m_comm_sock  = otherJob.m_comm_sock;
    m_hProcess   = otherJob.m_hProcess;
    m_hJobObject = otherJob.m_hJobObject;
    m_ForwardedSignal = otherJob.m_ForwardedSignal;
 
    // data members to start the job
-   jobname = otherJob.jobname ? strdup(otherJob.jobname) : NULL;
+   jobname = otherJob.jobname ? _strdup(otherJob.jobname) : NULL;
 
    nargs   = otherJob.nargs;
    args = new char*[nargs];
    for(i=0; i<nargs; i++) {
-      args[i] = strdup(otherJob.args[i]);
+      args[i] = _strdup(otherJob.args[i]);
    }
 
    nconf   = otherJob.nconf;
    conf = new char*[nconf];
    for(i=0; i<nconf; i++) {
-      conf[i] = strdup(otherJob.conf[i]);
+      conf[i] = _strdup(otherJob.conf[i]);
    }
 
-   nenv    = otherJob.nenv; 
+   nenv    = otherJob.nenv;
    env = new char*[nenv];
    for(i=0; i<nenv; i++) {
-      env[i] = strdup(otherJob.env[i]);
+      env[i] = _strdup(otherJob.env[i]);
    }
 
-   user    = otherJob.user   ? strdup(otherJob.user)   : NULL;
-   pass    = otherJob.pass   ? strdup(otherJob.pass)   : NULL;
-   domain  = otherJob.domain ? strdup(otherJob.domain) : NULL;
+   user    = otherJob.user   ? _strdup(otherJob.user)   : NULL;
+   pass    = otherJob.pass   ? _strdup(otherJob.pass)   : NULL;
+   domain  = otherJob.domain ? _strdup(otherJob.domain) : NULL;
 
    // data members that hold results and usage
    mem     = otherJob.mem;
@@ -141,7 +146,7 @@ C_Job::C_Job(const C_Job& otherJob)
    vmem    = otherJob.vmem;
 
    dwExitCode  = otherJob.dwExitCode;   // Exit code of job
-   szError     = otherJob.szError ? strdup(otherJob.szError) : NULL;
+   szError     = otherJob.szError ? _strdup(otherJob.szError) : NULL;
    lUserSec    = otherJob.lUserSec;     // User part of job run time
    lUserUSec   = otherJob.lUserUSec;    // User part of job run time usec
    lKernelSec  = otherJob.lKernelSec;   // Kernel part of job run time
@@ -198,7 +203,7 @@ en_request_type C_Job::ParseCommand(char *command)
 
    switch(request_type) {
       case req_job_start:
-         jobname = strdup(command);
+         jobname = _strdup(command);
          command += strlen(command)+1;
 
          sscanf(command, "%d", &(nargs));
@@ -206,7 +211,7 @@ en_request_type C_Job::ParseCommand(char *command)
          args = new char*[nargs];
 
          for(i=0; i<nargs; i++) {
-            args[i] = strdup(command);
+            args[i] = _strdup(command);
             command += strlen(command)+1;
          }
 
@@ -215,7 +220,7 @@ en_request_type C_Job::ParseCommand(char *command)
          conf = new char*[nconf];
 
          for(i=0; i<nconf; i++) {
-            conf[i] = strdup(command);
+            conf[i] = _strdup(command);
             command += strlen(command)+1;
          }
 
@@ -224,17 +229,17 @@ en_request_type C_Job::ParseCommand(char *command)
          env = new char*[nenv];
 
          for(i=0; i<nenv; i++) {
-            env[i] = strdup(command);
+            env[i] = _strdup(command);
             command += strlen(command)+1;
          }
 
-         user = strdup(command);
+         user = _strdup(command);
          command += strlen(command)+1;
 
-         pass = strdup(command);
+         pass = _strdup(command);
          command += strlen(command)+1;
 
-         domain = strdup(command);
+         domain = _strdup(command);
 
          m_job_id     = atol(GetConfValue("job_id"));
          m_ja_task_id = atol(GetConfValue("ja_task_id"));
@@ -247,7 +252,7 @@ en_request_type C_Job::ParseCommand(char *command)
          conf = new char*[nconf];
 
          for(i=0; i<nconf; i++) {
-            conf[i] = strdup(command);
+            conf[i] = _strdup(command);
             command += strlen(command)+1;
          }
          m_job_id     = atol(GetConfValue("job_id"));
@@ -299,9 +304,9 @@ const char* C_Job::GetConfValue(const char *pszName) const
 
    for(i=0; i<nconf; i++) {
       pConf = conf[i];
-      pTmp = strdup(pConf);
+      pTmp = _strdup(pConf);
 
-      pToken = strtok(pTmp, "=");  
+      pToken = strtok(pTmp, "=");
       if(strcmp(pToken, pszName) == 0) {
          pRet = strchr(pConf, '=');
          pRet++;
@@ -426,37 +431,37 @@ int C_Job::Unserialize(HANDLE hFile)
       sscanf(pszTemp, "%ld\n", &m_job_id);      pszTemp = strtok(NULL, "\n");
       sscanf(pszTemp, "%ld\n", &m_ja_task_id);  pszTemp = strtok(NULL, "\n");
 
-      if(strcmp(pszTemp, "<null>")!=0) { m_pe_task_id = strdup(pszTemp); }
+      if(strcmp(pszTemp, "<null>")!=0) { m_pe_task_id = _strdup(pszTemp); }
                                                    pszTemp = strtok(NULL, "\n");
       sscanf(pszTemp, "%d\n", &m_comm_sock);       pszTemp = strtok(NULL, "\n");
       sscanf(pszTemp, "%p\n", &m_hProcess);        pszTemp = strtok(NULL, "\n");
       sscanf(pszTemp, "%d\n", &m_ForwardedSignal); pszTemp = strtok(NULL, "\n");
 
-      if(strcmp(pszTemp, "<null>")!=0) { jobname = strdup(pszTemp); }
+      if(strcmp(pszTemp, "<null>")!=0) { jobname = _strdup(pszTemp); }
                                                 pszTemp = strtok(NULL, "\n");
       sscanf(pszTemp, "%d\n",  &nargs);         pszTemp = strtok(NULL, "\n");
       args = new char*[nargs];
       for(i=0; i<nargs; i++) {
-         args[i] = strdup(pszTemp);             pszTemp = strtok(NULL, "\n");
+         args[i] = _strdup(pszTemp);             pszTemp = strtok(NULL, "\n");
       }
 
       sscanf(pszTemp, "%d\n",  &nconf);         pszTemp = strtok(NULL, "\n");
       conf = new char*[nconf];
       for(i=0; i<nconf; i++) {
-         conf[i] = strdup(pszTemp);             pszTemp = strtok(NULL, "\n");
+         conf[i] = _strdup(pszTemp);             pszTemp = strtok(NULL, "\n");
       }
 
       sscanf(pszTemp, "%d\n",  &nenv);          pszTemp = strtok(NULL, "\n");
       env = new char*[nenv];
       for(i=0; i<nenv; i++) {
-         env[i] = strdup(pszTemp);              pszTemp = strtok(NULL, "\n");
+         env[i] = _strdup(pszTemp);              pszTemp = strtok(NULL, "\n");
       }
 
-      if(strcmp(pszTemp, "<null>")!=0) { user = strdup(pszTemp); }
+      if(strcmp(pszTemp, "<null>")!=0) { user = _strdup(pszTemp); }
                                                 pszTemp = strtok(NULL, "\n");
-      if(strcmp(pszTemp, "<null>")!=0) { pass = strdup(pszTemp); }
+      if(strcmp(pszTemp, "<null>")!=0) { pass = _strdup(pszTemp); }
                                                 pszTemp = strtok(NULL, "\n");
-      if(strcmp(pszTemp, "<null>")!=0) { domain = strdup(pszTemp); }
+      if(strcmp(pszTemp, "<null>")!=0) { domain = _strdup(pszTemp); }
                                                 pszTemp = strtok(NULL, "\n");
 
       sscanf(pszTemp, "%ld\n", &mem);           pszTemp = strtok(NULL, "\n");
@@ -464,7 +469,7 @@ int C_Job::Unserialize(HANDLE hFile)
       sscanf(pszTemp, "%ld\n", &vmem);          pszTemp = strtok(NULL, "\n");
 
       sscanf(pszTemp, "%ld\n", &dwExitCode);    pszTemp = strtok(NULL, "\n");
-      if(strcmp(pszTemp, "<null>")!=0) { szError = strdup(pszTemp); }
+      if(strcmp(pszTemp, "<null>")!=0) { szError = _strdup(pszTemp); }
                                                 pszTemp = strtok(NULL, "\n");
       sscanf(pszTemp, "%ld\n", &lUserSec);      pszTemp = strtok(NULL, "\n");
       sscanf(pszTemp, "%ld\n", &lUserUSec);     pszTemp = strtok(NULL, "\n");
@@ -609,8 +614,8 @@ void C_Job::BuildCommandLine(char *&szCmdLine) const
 *******************************************************************************/
 void C_Job::BuildEnvironment(char *&pszEnv) const
 {
-   CMapStringToString mapSysEnv;
-   CMapStringToString mapMergedEnv;
+   C_MapStringToString mapSysEnv;
+   C_MapStringToString mapMergedEnv;
 
    // Merge pathes, let job environment win over system environment for all other variables
    BuildSysEnvTable(mapSysEnv);
@@ -624,28 +629,28 @@ void C_Job::BuildEnvironment(char *&pszEnv) const
 *                                           the job environment
 *
 *  SYNOPSIS
-*    void C_Job::BuildTableFromJobEnv(CMapStringToString &mapJobEnv) const
+*    void C_Job::BuildTableFromJobEnv(C_MapStringToString &mapJobEnv) const
 *
 *  FUNCTION
-*    Builds a CMapStringToString map object from the job environment.
+*    Builds a C_MapStringToString map object from the job environment.
 *
 *  INPUTS
-*    CMapStringToString &mapJobEnv - Reference to the map object
+*    C_MapStringToString &mapJobEnv - Reference to the map object
 *
 *  RESULT
 *    void - none
 *******************************************************************************/
-void C_Job::BuildTableFromJobEnv(CMapStringToString &mapJobEnv) const
+void C_Job::BuildTableFromJobEnv(C_MapStringToString &mapJobEnv) const
 {
    int     i;
    char    *pTmp;
-   CString strKey, strValue;
+   char    *szKey, *szValue;
 
    for(i=0; i<nenv; i++) {
-      pTmp = strdup(env[i]);
-      strKey   = strtok(pTmp, "=");
-      strValue = strtok(NULL, "");
-      mapJobEnv.SetAt(strKey.MakeUpper(), strValue);
+      pTmp    = _strdup(env[i]);
+      szKey   = _strdup(strtok(pTmp, "="));
+      szValue = _strdup(strtok(NULL, ""));
+      mapJobEnv.SetAt(_strupr(szKey), szValue);
       free(pTmp);
    }
 }
@@ -656,31 +661,24 @@ void C_Job::BuildTableFromJobEnv(CMapStringToString &mapJobEnv) const
 *                                 either PATH or LD_LIBRARY_PATH
 *
 *  SYNOPSIS
-*    BOOL C_Job::IsEnvAPath(const CString &strKey) const
+*    BOOL C_Job::IsEnvAPath(const char *szKey) const
 *
 *  FUNCTION
 *    Checks if the given environment key is either PATH or LD_LIBRARY_PATH.
 *
 *  INPUTS
-*    const CString &strKey - The environment key
+*    const char *szKey - The environment key
 *
 *  RESULT
 *    BOOL - TRUE if it is either PATH or LD_LIBRARY_PATH,
 *           FALSE if not
 *******************************************************************************/
-BOOL C_Job::IsEnvAPath(const CString &strKey) const
+BOOL C_Job::IsEnvAPath(const char *szKey) const
 {
    static char *szPathes[] = {"PATH", "LD_LIBRARY_PATH"};
-   int         i;
-   BOOL        bRet = FALSE;
 
-   for(i=0; i<sizeof(szPathes)/sizeof(char*); i++) {
-      if(strKey.Compare(szPathes[i])==0) {
-         bRet = TRUE;
-         break;
-      }
-   }
-   return bRet;
+   return strcmp(szPathes[0], szKey) == 0 ||
+          strcmp(szPathes[1], szKey) == 0;
 }
 
 /****** C_Job::PathDelimiter() const *******************************************
@@ -689,22 +687,22 @@ BOOL C_Job::IsEnvAPath(const CString &strKey) const
 *                                    given path format (Unix or Windows)
 *
 *  SYNOPSIS
-*    void C_Job::PathDelimiter(const CString &strPath) const
+*    void C_Job::PathDelimiter(const char *szPath) const
 *
 *  FUNCTION
 *    Returns the right path delimiter for the given path format (Unix or
 *    Windows). Default is Windows path format, if it can't be determined.
 *
 *  INPUTS
-*    const CString &strPath - The path defining the format and therefore
-*                             the delimiter
+*    const char *szPath - The path defining the format and therefore
+*                         the delimiter
 *
 *  RESULT
 *    char* - The path delimiter
 *******************************************************************************/
-char* C_Job::PathDelimiter(const CString &strPath) const
+char* C_Job::PathDelimiter(const char *szPath) const
 {
-   if(strPath.Find("/")>=0) {
+   if (strstr(szPath, "/") != NULL) {
       return ":";
    } else {
       return ";";
@@ -717,58 +715,62 @@ char* C_Job::PathDelimiter(const CString &strPath) const
 *                                            Merges the two environment tables
 *
 *  SYNOPSIS
-*    void C_Job::MergeSysEnvTableWithJobEnvTable(CMapStringToString &mapSysEnv,  
-*                                        CMapStringToString &mapMergedEnv) const
+*    void C_Job::MergeSysEnvTableWithJobEnvTable(C_MapStringToString &mapSysEnv,  
+*                                        C_MapStringToString &mapMergedEnv) const
 *
 *  FUNCTION
 *    Merges the two environments from the system and this job object.
 *
 *  INPUTS
-*    CMapStringToString &mapSysEnv    - Copy of the system environment
+*    C_MapStringToString &mapSysEnv    - Copy of the system environment
 * 
 *  OUTPUTS
-*    CMapStringToString &mapSysEnv    - Modified copy of the system environemnt.
+*    C_MapStringToString &mapSysEnv    - Modified copy of the system environemnt.
 *                                       All variables that were merged to the
 *                                       merged env were removed from the copy of
 *                                       the system environment.
-*    CMapStringToString &mapMergedEnv - The merged environment.
+*    C_MapStringToString &mapMergedEnv - The merged environment.
 *
 *  RESULT
 *    void - none
 *******************************************************************************/
-void C_Job::MergeSysEnvTableWithJobEnvTable(CMapStringToString &mapSysEnv,  
-                                            CMapStringToString &mapMergedEnv) const
+void C_Job::MergeSysEnvTableWithJobEnvTable(C_MapStringToString &mapSysEnv,
+                                            C_MapStringToString &mapMergedEnv) const
 {
-   CString  strKey;
-   CString  strMergedValue;
-   CString  strSysValue;
-   POSITION Pos;
-
+   char *szSysValue;
    // Copy whole job env into merged env
    BuildTableFromJobEnv(mapMergedEnv);
-
 // TODO: Take care of case of the keys (=variables)!
    // Search for all duplicates in the maps, 
    // remove duplicate ordinary variables from system env, merge pathes
-   Pos = mapMergedEnv.GetStartPosition();
-   while(Pos) {
-      mapMergedEnv.GetNextAssoc(Pos, strKey, strMergedValue);
-      if(mapSysEnv.Lookup(strKey, strSysValue)) {
-         if(IsEnvAPath(strKey)) {
-            strMergedValue.Append(PathDelimiter(strMergedValue));
-            strMergedValue.Append(strSysValue);
-            mapMergedEnv.SetAt(strKey, strMergedValue);
+
+   t_MapElem *pElem = mapMergedEnv.m_pFirst;
+
+   while (pElem != NULL) {
+      szSysValue = mapSysEnv.Lookup(pElem->szKey);
+      if (szSysValue != NULL) {
+         if (IsEnvAPath(pElem->szKey)) {
+            size_t new_length = strlen(pElem->szValue)
+                             + strlen(PathDelimiter(pElem->szValue))
+                             + strlen(szSysValue) + 1;
+            char* new_szValue = (char*)malloc(new_length);
+            char *old_szValue = pElem->szValue;
+
+            strcpy(new_szValue, old_szValue);
+            strcat(new_szValue, PathDelimiter(old_szValue));
+            strcat(new_szValue, szSysValue);
+
+            pElem->szValue = new_szValue;
+            free(old_szValue);
+            old_szValue = NULL;
          }
-         mapSysEnv.RemoveKey(strKey);
+         mapSysEnv.RemoveKey(pElem->szKey);
       }
+      pElem = pElem->next;
    }
 
    // Append remainder of system env to merged env
-   Pos = mapSysEnv.GetStartPosition();
-   while(Pos) {
-      mapSysEnv.GetNextAssoc(Pos, strKey, strSysValue);
-      mapMergedEnv.SetAt(strKey, strSysValue);
-   }
+   mapMergedEnv.Append(mapSysEnv);
 }
 
 /****** C_Job::BuildSysEnvTable() const ****************************************
@@ -777,18 +779,18 @@ void C_Job::MergeSysEnvTableWithJobEnvTable(CMapStringToString &mapSysEnv,
 *                                       StringToString map
 *
 *  SYNOPSIS
-*    void C_Job::BuildSysEnvTable(CMapStringToString &mapSysEnv) const
+*    void C_Job::BuildSysEnvTable(C_MapStringToString &mapSysEnv) const
 *
 *  FUNCTION
-*    Copies the systen environment to a CMapStringToString map object.
+*    Copies the systen environment to a C_MapStringToString map object.
 *
 *  OUTPUT
-*    CMapStringToString &mapSysEnv - Reference to the map object
+*    C_MapStringToString &mapSysEnv - Reference to the map object
 *
 *  RESULT
 *    void - none
 *******************************************************************************/
-void C_Job::BuildSysEnvTable(CMapStringToString &mapSysEnv) const
+void C_Job::BuildSysEnvTable(C_MapStringToString &mapSysEnv) const
 {
    char *pszEnv;
    char *pLine;
@@ -801,7 +803,7 @@ void C_Job::BuildSysEnvTable(CMapStringToString &mapSysEnv) const
    while(*pLine != '\0') {
       pKey = strtok(pLine, "=");
       pToken = pKey+strlen(pKey)+1;
-      mapSysEnv.SetAt(strupr(pKey), pToken);
+      mapSysEnv.SetAt(_strupr(pKey), pToken);
       pLine = pToken+strlen(pToken)+1;
    }
    FreeEnvironmentStrings(pszEnv);
@@ -813,14 +815,14 @@ void C_Job::BuildSysEnvTable(CMapStringToString &mapSysEnv) const
 *                                                    from a StringToString map.
 *
 *  SYNOPSIS
-*    void C_Job::BuildEnvironmentFromTable(const CMapStringToString &mapMergedEnv, 
+*    void C_Job::BuildEnvironmentFromTable(const C_MapStringToString &mapMergedEnv, 
 *                                          char *&pszEnv) const
 *
 *  FUNCTION
-*    Builds the job environment from a CMapStringToString map object.
+*    Builds the job environment from a C_MapStringToString map object.
 *
 *  INPUTS
-*    CMapStringToString &mapMergedEnv - Reference to the map object containing
+*    C_MapStringToString &mapMergedEnv - Reference to the map object containing
 *                                       the merged environment (merged of 
 *                                       system and job environment)
 *
@@ -832,30 +834,29 @@ void C_Job::BuildSysEnvTable(CMapStringToString &mapSysEnv) const
 *  RESULT
 *    void - none
 *******************************************************************************/
-void C_Job::BuildEnvironmentFromTable(const CMapStringToString &mapMergedEnv, 
+void C_Job::BuildEnvironmentFromTable(const C_MapStringToString &mapMergedEnv, 
                                       char *&pszEnv) const
 {
    char     *ptr;
-   POSITION Pos;
-   CString  strKey, strValue;
    size_t   nEnvSize = 0;
 
-   Pos = mapMergedEnv.GetStartPosition();
-   while(Pos) {
-      mapMergedEnv.GetNextAssoc(Pos, strKey, strValue);
-      nEnvSize += strKey.GetLength() + strlen("=") + strValue.GetLength() + 1;
+   t_MapElem *pElem = mapMergedEnv.m_pFirst;
+
+   while (pElem != NULL) {
+      nEnvSize += strlen(pElem->szKey) + strlen("=") + strlen(pElem->szValue) + 1;
+      pElem = pElem->next;
    }
    nEnvSize++;
 
    // Allocate environment buffer, copy system and job environment
    // to buffer
    pszEnv = (char*)malloc(nEnvSize);
-   ptr = pszEnv;
-   Pos = mapMergedEnv.GetStartPosition();
-   while(Pos) {
-      mapMergedEnv.GetNextAssoc(Pos, strKey, strValue);
-      sprintf(ptr, "%s=%s", strKey.GetString(), strValue.GetString());
+   ptr    = pszEnv;
+   pElem  = mapMergedEnv.m_pFirst;
+   while (pElem != NULL) {
+      sprintf(ptr, "%s=%s", pElem->szKey, pElem->szValue);
       ptr += strlen(ptr)+1;
+      pElem = pElem->next;
    }
    *ptr = '\0';
 }
@@ -932,4 +933,116 @@ int C_Job::StoreUsage()
       ret = retval;
    }
    return ret;
+}
+
+C_MapStringToString::C_MapStringToString()
+{
+   m_pFirst = NULL;
+}
+
+C_MapStringToString::~C_MapStringToString()
+{
+   t_MapElem *pElem = m_pFirst;
+   t_MapElem *pNext = NULL;
+
+   while (pElem != NULL) {
+      pNext = pElem->next;
+      free(pElem->szKey);
+      free(pElem->szValue);
+      delete pElem;
+      pElem = pNext;
+   }
+}
+
+void C_MapStringToString::DumpToLogFile()
+{
+   t_MapElem *pElem = m_pFirst;
+
+   WriteToLogFile("Map content: Elem, Key, Value, next");
+   WriteToLogFile("Start");
+
+   while (pElem != NULL) {
+      WriteToLogFile("%p, %s, %s, %p", pElem, pElem->szKey, pElem->szValue, pElem->next);
+      pElem = pElem->next;
+   }
+
+   WriteToLogFile("End");
+}
+
+void C_MapStringToString::SetAt(const char *szKey, const char *szValue)
+{
+   // Search for the key - if it already exists, replace it's value
+   t_MapElem *pElem = m_pFirst;
+   while (pElem != NULL) {
+      if (strcmp(pElem->szKey, szKey) == 0) {
+         free(pElem->szValue);
+         pElem->szValue = _strdup(szValue);
+         break;
+      }
+      pElem = pElem->next;
+   }
+
+   if (pElem == NULL) {
+      // Key does not exist -> create elem, fill and append it
+      t_MapElem *pElem = new t_MapElem;
+      pElem->szKey   = _strdup(szKey);
+      pElem->szValue = _strdup(szValue);
+      pElem->next    = m_pFirst;
+      m_pFirst = pElem;
+   }
+}
+
+void C_MapStringToString::Append(const C_MapStringToString &mapOther)
+{
+   t_MapElem *pOther = mapOther.m_pFirst;
+   t_MapElem *pOtherCopy = NULL;
+
+   while (pOther != NULL) {
+      pOtherCopy          = new t_MapElem;
+      pOtherCopy->szKey   = _strdup(pOther->szKey);
+      pOtherCopy->szValue = _strdup(pOther->szValue);
+      pOtherCopy->next    = m_pFirst;
+      m_pFirst            = pOtherCopy;
+      pOther = pOther->next;
+   }
+}
+
+void C_MapStringToString::RemoveKey(const char *szKey)
+{
+   t_MapElem *pPrev = NULL;
+   t_MapElem *pElem = m_pFirst;
+   while (pElem != NULL) {
+      if (strcmp(pElem->szKey, szKey) == 0) {
+         if (pPrev == NULL) {
+            m_pFirst = pElem->next;
+            free(pElem->szKey);
+            free(pElem->szValue);
+            delete pElem;
+            pElem = m_pFirst;
+         } else {
+            pPrev->next = pElem->next;
+            free(pElem->szKey);
+            free(pElem->szValue);
+            delete pElem;
+            pElem = pPrev;
+         }
+      }
+      pPrev = pElem;
+      pElem = pElem->next;
+   }
+}
+
+char *C_MapStringToString::Lookup(const char *szKey)
+{
+   char      *szRet = NULL;
+   t_MapElem *pElem = m_pFirst;
+
+   while (pElem != NULL) {
+      if (strcmp(pElem->szKey, szKey) == 0) {
+         szRet = pElem->szValue;
+         break;
+      }
+      pElem = pElem->next;
+   }
+   return szRet;
 }

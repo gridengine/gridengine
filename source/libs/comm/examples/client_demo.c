@@ -179,7 +179,7 @@ extern int main(int argc, char** argv) {
    handle=cl_com_create_handle(NULL,
                                CL_CT_TCP,
                                CL_CM_CT_MESSAGE,
-                               CL_FALSE,
+                               false,
                                handle_port,
                                CL_TCP_DEFAULT,
                                "client", 0,
@@ -204,12 +204,12 @@ extern int main(int argc, char** argv) {
                                         CL_MIH_MAT_NAK, 
                                         (cl_byte_t**)&hello_message, strlen(hello_message)+1,
                                         NULL, 0, 0,
-                                        CL_TRUE, CL_FALSE);
+                                        true, false);
       if (ret_val != CL_RETVAL_OK) {
          printf("cl_commlib_send_message() returned: %s\n", cl_get_error_text(ret_val));
       }
  
-      ret_val = cl_commlib_receive_message(handle,NULL, NULL, 0, CL_TRUE, 0, &message, &sender);
+      ret_val = cl_commlib_receive_message(handle,NULL, NULL, 0, true, 0, &message, &sender);
       if (ret_val != CL_RETVAL_OK) {
          printf("cl_commlib_receive_message() returned: %s\n", cl_get_error_text(ret_val));
          if (ret_val == CL_RETVAL_SYNC_RECEIVE_TIMEOUT) {
@@ -235,9 +235,9 @@ extern int main(int argc, char** argv) {
   
    printf("shutting down ...\n");
    /* here the application goes down - shutdown communication lib */
-   while ( cl_commlib_shutdown_handle(handle, CL_TRUE) == CL_RETVAL_MESSAGE_IN_BUFFER) {
+   while ( cl_commlib_shutdown_handle(handle, true) == CL_RETVAL_MESSAGE_IN_BUFFER) {
       message = NULL;
-      cl_commlib_receive_message(handle,NULL, NULL, 0, CL_FALSE, 0, &message, &sender);
+      cl_commlib_receive_message(handle,NULL, NULL, 0, false, 0, &message, &sender);
  
       if (message != NULL) {
          printf("ignoring message from \"%s\"\n", sender->comp_host); 

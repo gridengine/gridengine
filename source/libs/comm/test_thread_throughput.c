@@ -69,7 +69,7 @@ int sig
    }
 
 /* TODO: This should also work */
-/*   cl_com_ignore_timeouts(CL_TRUE); */
+/*   cl_com_ignore_timeouts(true); */
 
    do_shutdown = 1;
 }
@@ -80,7 +80,7 @@ void my_cleanup_func(cl_thread_settings_t* thread_config) {
    handle = (cl_com_handle_t*) thread_config->thread_user_data;
    if (handle != NULL) {
       printf("shutting down handle %s/%s/%ld ...\n", handle->local->comp_host, handle->local->comp_name, handle->local->comp_id);
-      cl_commlib_shutdown_handle(handle, CL_FALSE); 
+      cl_commlib_shutdown_handle(handle, false); 
    }
 }
 
@@ -156,7 +156,7 @@ extern int main(int argc, char** argv)
      port =atoi(getenv("CL_PORT"));
   }  
 
-  handle=cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , CL_TRUE, port , CL_TCP_DEFAULT,"server", 1, 1,0 );
+  handle=cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , true, port , CL_TCP_DEFAULT,"server", 1, 1,0 );
   if (handle == NULL) {
      printf("could not get handle\n");
      exit(1);
@@ -208,7 +208,7 @@ extern int main(int argc, char** argv)
      }
 
      /* synchron message receive */
-     cl_commlib_receive_message(handle,NULL, NULL, 0, CL_TRUE, 0, &message, &sender);
+     cl_commlib_receive_message(handle,NULL, NULL, 0, true, 0, &message, &sender);
 
      if (message != NULL) {
         int is_route_message = 1;
@@ -226,7 +226,7 @@ extern int main(int argc, char** argv)
            cl_commlib_send_message(handle, client->comp_host, client->comp_name, client->comp_id, 
                                       CL_MIH_MAT_NAK, &message->message, message->message_length,
                                       NULL, message->message_id, 0,
-                                      CL_TRUE, CL_FALSE);
+                                      true, false);
            is_route_message = 0;
         }
 
@@ -239,19 +239,19 @@ extern int main(int argc, char** argv)
               cl_commlib_send_message(handle, client->comp_host, client->comp_name, client->comp_id, 
                                       CL_MIH_MAT_NAK, &message->message, message->message_length,
                                       NULL, 0, 0,
-                                      CL_TRUE, CL_FALSE);
+                                      true, false);
               cl_commlib_send_message(handle, client->comp_host, client->comp_name, client->comp_id, 
                                       CL_MIH_MAT_NAK, &message->message, message->message_length,
                                       NULL, 0, 0,
-                                      CL_TRUE, CL_FALSE);
+                                      true, false);
               cl_commlib_send_message(handle, client->comp_host, client->comp_name, client->comp_id, 
                                       CL_MIH_MAT_NAK, &message->message, message->message_length,
                                       NULL, 0, 0,
-                                      CL_TRUE, CL_FALSE);
+                                      true, false);
               cl_commlib_send_message(handle, client->comp_host, client->comp_name, client->comp_id, 
                                       CL_MIH_MAT_NAK, &message->message, message->message_length,
                                       NULL, 0, 0,
-                                      CL_TRUE, CL_FALSE);
+                                      true, false);
            }
 
         }
@@ -317,7 +317,7 @@ void *my_receive_thread(void *t_conf) {
    cl_thread_func_startup(thread_config);
    CL_LOG(CL_LOG_INFO, "starting main loop ...");
 
-   handle=cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , CL_FALSE, test_server_port, CL_TCP_DEFAULT,"receiver", thread_config->thread_id, 1,0 );
+   handle=cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , false, test_server_port, CL_TCP_DEFAULT,"receiver", thread_config->thread_id, 1,0 );
    if (handle == NULL) {
       printf("receiver: could not get handle\n");
       do_exit = 1;
@@ -330,7 +330,7 @@ void *my_receive_thread(void *t_conf) {
    cl_commlib_send_message(handle, test_server_host, "server", 1, 
                            CL_MIH_MAT_NAK, (cl_byte_t**)&message, strlen(message) + 1,
                            NULL, 0, 0,
-                           CL_TRUE, CL_FALSE);
+                           true, false);
 
 
    /* ok, thread main */
@@ -365,7 +365,7 @@ void *my_receive_thread(void *t_conf) {
      
       cl_commlib_receive_message(handle,
                                  NULL, NULL, 0, 
-                                 CL_TRUE,
+                                 true,
                                  0,
                                  &message,&sender);
       if (message != NULL) {
@@ -412,7 +412,7 @@ void *my_sender_thread(void *t_conf) {
 
 
 
-   handle=cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , CL_FALSE, test_server_port, CL_TCP_DEFAULT,"sender", thread_config->thread_id, 1,0 );
+   handle=cl_com_create_handle(NULL,CL_CT_TCP,CL_CM_CT_MESSAGE , false, test_server_port, CL_TCP_DEFAULT,"sender", thread_config->thread_id, 1,0 );
    if (handle == NULL) {
       printf("sender: could not get handle\n");
       do_exit = 1;
@@ -457,7 +457,7 @@ void *my_sender_thread(void *t_conf) {
          cl_commlib_send_message(handle, test_server_host, "server", 1, 
                               CL_MIH_MAT_ACK, (cl_byte_t**)&message, 12048,
                               NULL, 0, 0,
-                              CL_TRUE, CL_TRUE);
+                              true, true);
          message_counter++;
       }
 

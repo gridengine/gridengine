@@ -117,7 +117,7 @@ int cl_application_error_list_push_error(cl_raw_list_t* list_p, cl_log_t cl_err_
    cl_application_error_list_elem_t* new_elem = NULL;
    cl_application_error_list_elem_t* al_list_elem = NULL;
    int ret_val;
-   cl_bool_t do_log = CL_TRUE;
+   bool do_log = true;
 
    if (list_p == NULL || cl_info == NULL ) {
       return CL_RETVAL_PARAMS;
@@ -164,7 +164,7 @@ int cl_application_error_list_push_error(cl_raw_list_t* list_p, cl_log_t cl_err_
       while (al_list_elem != NULL) {
          if (al_list_elem->cl_error == cl_error) {
             if (strcmp(al_list_elem->cl_info, cl_info) == 0) {
-               do_log = CL_FALSE;
+               do_log = false;
                break;
             }
          }
@@ -187,14 +187,14 @@ int cl_application_error_list_push_error(cl_raw_list_t* list_p, cl_log_t cl_err_
    new_elem->cl_info  = strdup(cl_info);
    new_elem->cl_error = cl_error;
    gettimeofday(&(new_elem->cl_log_time),NULL);
-   new_elem->cl_already_logged = CL_FALSE;
+   new_elem->cl_already_logged = false;
    new_elem->cl_err_type = cl_err_type;
 
-   if (do_log == CL_FALSE) {
+   if (do_log == false) {
       /* This error was logged the least CL_DEFINE_MESSAGE_DUP_LOG_TIMEOUT seconds (= he is in
        * already logged list, so we set the cl_already_logged flag */
       
-      new_elem->cl_already_logged = CL_TRUE;
+      new_elem->cl_already_logged = true;
       CL_LOG_STR(CL_LOG_WARNING, "ignore application error - found entry in already logged list:", cl_get_error_text(cl_error)); 
       CL_LOG_STR(CL_LOG_WARNING, "ignore application error - found entry in already logged list:", cl_info); 
    } else {

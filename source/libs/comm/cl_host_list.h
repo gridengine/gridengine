@@ -74,10 +74,10 @@ int cl_host_list_setup(cl_raw_list_t** list_p,
                        unsigned long entry_life_time,         /* max life time of an resolved host */
                        unsigned long entry_update_time,       /* max valid time of entry before reresolving */
                        unsigned long entry_reresolve_time,    /* time for reresolving if host is not resolvable */
-                       cl_bool_t create_hash);                /* flag if list should create hash table */
+                       bool create_hash);                /* flag if list should create hash table */
 int cl_host_list_cleanup(cl_raw_list_t** list_p);
 
-int cl_host_list_copy(cl_raw_list_t** destination, cl_raw_list_t* source, cl_bool_t create_hash);  /* make a copy of this list (will lock source) */
+int cl_host_list_copy(cl_raw_list_t** destination, cl_raw_list_t* source, bool create_hash);  /* make a copy of this list (will lock source) */
 
 /* thread list functions that will lock the list */
 int cl_host_list_append_host(cl_raw_list_t* list_p, cl_com_host_spec_t* newhost, int lock_list);

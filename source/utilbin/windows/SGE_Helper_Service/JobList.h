@@ -27,17 +27,26 @@
  *
  *   All Rights Reserved.
  *
+ * Portions of this software are Copyright (c) 2011 Univa Corporation
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-class C_JobList : public CList<C_Job*, C_Job*&> {
+class C_JobList {
+   private:
+      C_Job    *m_pFirst;
+
+      void AddTail(C_Job *pJob);
+
    public:
-      CMutex   m_JobListMutex;
+      HANDLE   m_hJobListMutex;
 
       C_JobList();
+      ~C_JobList();
 
-      POSITION AddJobToList(C_Job *pJob);
+      BOOL     AddJobToList(C_Job *pJob);
       C_Job*   RemoveJobFromList(C_Job &Job);
       C_Job*   GetFirstJobInReceivedState();
       C_Job*   FindJobInList(C_Job &Job);
+      BOOL     IsEmpty();
 };

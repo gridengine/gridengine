@@ -985,7 +985,7 @@ int japi_exit(int flag, dstring *diag)
     */
    DPRINTF (("Before commlib shutdown\n"));
    handle = ctx->get_com_handle(ctx);
-   cl_errno = cl_commlib_shutdown_handle(handle, CL_FALSE);
+   cl_errno = cl_commlib_shutdown_handle(handle, false);
    DPRINTF (("After commlib shutdown\n"));
    
    if (cl_errno != CL_RETVAL_OK) {

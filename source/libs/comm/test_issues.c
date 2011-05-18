@@ -77,7 +77,7 @@ extern int main(int argc, char** argv)
   int i;
   cl_log_t log_level;
   cl_framework_t framework = CL_CT_TCP;
-  cl_bool_t server_mode = CL_FALSE;
+  bool server_mode = false;
   int com_port = 0;
   char* com_host = NULL;
   int main_return = 0;
@@ -111,7 +111,7 @@ extern int main(int argc, char** argv)
 
   if (argv[3]) {
      if (strcmp(argv[3], "server") == 0) {
-        server_mode=CL_TRUE;
+        server_mode=true;
      }
   }
 
@@ -292,11 +292,11 @@ extern int main(int argc, char** argv)
   }
   cl_com_setup_commlib(CL_RW_THREAD, log_level, NULL);
 
-  if (server_mode == CL_TRUE) {
-     handle=cl_com_create_handle(NULL, framework, CL_CM_CT_MESSAGE, CL_TRUE, com_port, CL_TCP_DEFAULT, "server", 1, 1, 0 );
+  if (server_mode == true) {
+     handle=cl_com_create_handle(NULL, framework, CL_CM_CT_MESSAGE, true, com_port, CL_TCP_DEFAULT, "server", 1, 1, 0 );
      cl_com_set_max_connection_close_mode(handle,CL_ON_MAX_COUNT_DISABLE_ACCEPT);
   } else {
-     handle=cl_com_create_handle(NULL, framework, CL_CM_CT_MESSAGE, CL_FALSE, com_port, CL_TCP_DEFAULT, "client", 0, 1, 0 );
+     handle=cl_com_create_handle(NULL, framework, CL_CM_CT_MESSAGE, false, com_port, CL_TCP_DEFAULT, "client", 0, 1, 0 );
   }
 
 #define TEST_ISSUES_READ_WRITE_TIMEOUT 3
@@ -317,7 +317,7 @@ extern int main(int argc, char** argv)
          handle->local->comp_name,  
          handle->local->comp_id);
 
-  if (server_mode == CL_TRUE) {
+  if (server_mode == true) {
      int actual_issue = 0;
      int max_con_test_count = 2;
      unsigned long max_connection_count;
@@ -338,7 +338,7 @@ extern int main(int argc, char** argv)
 
         cl_commlib_trigger(handle, 1); 
    
-        ret_val = cl_commlib_receive_message(handle,NULL, NULL, 0, CL_FALSE, 0, &message, &sender);
+        ret_val = cl_commlib_receive_message(handle,NULL, NULL, 0, false, 0, &message, &sender);
         if (message != NULL) {
            int do_reply = 1;
            CL_LOG_STR(CL_LOG_INFO,"received message from",sender->comp_host);
@@ -368,7 +368,7 @@ extern int main(int argc, char** argv)
                                 &message->message, 
                                 message->message_length, 
                                 NULL, 0,0, 
-                                CL_FALSE, CL_FALSE);
+                                false, false);
               if (ret_val != CL_RETVAL_OK) {
                  CL_LOG_STR(CL_LOG_ERROR,"cl_commlib_send_message() returned:",cl_get_error_text(ret_val));
               }
@@ -415,13 +415,13 @@ extern int main(int argc, char** argv)
         cl_commlib_send_message(handle, com_host, "server", 1, 
                             CL_MIH_MAT_NAK, 
                             (cl_byte_t**)&data, data_size * sizeof(char), 
-                            NULL, 0,0, CL_FALSE, CL_FALSE);
+                            NULL, 0,0, false, false);
    
         printf("starting measurement...\n");
         gettimeofday(&start, NULL);
         while (do_shutdown == 0) {
            cl_commlib_trigger(handle, 1); 
-           ret_val = cl_commlib_receive_message(handle,NULL, NULL, 0, CL_FALSE, 0, &message, &sender);
+           ret_val = cl_commlib_receive_message(handle,NULL, NULL, 0, false, 0, &message, &sender);
            if (ret_val != CL_RETVAL_OK && ret_val != CL_RETVAL_NO_MESSAGE) {
               printf("cl_commlib_receive_message returned: %s\n", cl_get_error_text(ret_val));
               printf("issue #1389 failed\n");
@@ -457,7 +457,7 @@ extern int main(int argc, char** argv)
         cl_commlib_send_message(handle, com_host, "server", 1,
                                 CL_MIH_MAT_ACK,
                                 &iz1400_pointer, 7,
-                                NULL, 0,0, CL_TRUE, CL_TRUE);
+                                NULL, 0,0, true, true);
      }
 
 
@@ -467,26 +467,26 @@ extern int main(int argc, char** argv)
 
      printf("creating new connections ...\n");
 
-     handle1=cl_com_create_handle(NULL, framework, CL_CM_CT_MESSAGE, CL_FALSE, com_port, CL_TCP_DEFAULT, "client1", 0, 1, 0 );
-     handle2=cl_com_create_handle(NULL, framework, CL_CM_CT_MESSAGE, CL_FALSE, com_port, CL_TCP_DEFAULT, "client2", 0, 1, 0 );
+     handle1=cl_com_create_handle(NULL, framework, CL_CM_CT_MESSAGE, false, com_port, CL_TCP_DEFAULT, "client1", 0, 1, 0 );
+     handle2=cl_com_create_handle(NULL, framework, CL_CM_CT_MESSAGE, false, com_port, CL_TCP_DEFAULT, "client2", 0, 1, 0 );
  
      printf("sending via connection 1 ...\n");
      cl_commlib_send_message(handle, com_host, "server", 1,
                             CL_MIH_MAT_ACK,
                             &test_pointer, 5,
-                            NULL, 0,0, CL_TRUE, CL_TRUE);
+                            NULL, 0,0, true, true);
 
      printf("sending via connection 2 ...\n");
      cl_commlib_send_message(handle1, com_host, "server", 1,
                             CL_MIH_MAT_ACK,
                             &test_pointer, 5,
-                            NULL, 0,0, CL_TRUE, CL_TRUE);
+                            NULL, 0,0, true, true);
 
      printf("sending via connection 3 ...\n");
      ret_val = cl_commlib_send_message(handle2, com_host, "server", 1,
                             CL_MIH_MAT_ACK,
                             &test_pointer, 5,
-                            NULL, 0,0, CL_TRUE, CL_TRUE);
+                            NULL, 0,0, true, true);
 
      if (ret_val == CL_RETVAL_OK) {
         printf("issue #1400 failed\n");
@@ -501,11 +501,11 @@ extern int main(int argc, char** argv)
      cl_commlib_send_message(handle, com_host, "server", 1,
                             CL_MIH_MAT_ACK,
                             &iz1400_pointer, 7,
-                            NULL, 0,0, CL_TRUE, CL_TRUE);
+                            NULL, 0,0, true, true);
   }
 
   printf("shutting down ...\n");
-  cl_commlib_shutdown_handle(handle, CL_FALSE);
+  cl_commlib_shutdown_handle(handle, false);
 
   printf("commlib cleanup ...\n");
   cl_com_cleanup_commlib();

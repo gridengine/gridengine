@@ -1002,7 +1002,7 @@ static void ec2_mark4registration(sge_evc_class_t *thiz)
 
    handle = sge_gdi_ctx->get_com_handle(sge_gdi_ctx);
    if (handle != NULL) {
-      cl_commlib_close_connection(handle, (char*)mastername, (char*)prognames[QMASTER], 1, CL_FALSE);
+      cl_commlib_close_connection(handle, (char*)mastername, (char*)prognames[QMASTER], 1, false);
       DPRINTF(("closed old connection to qmaster\n"));
    }
    sge_evc->need_register = true;
@@ -1523,7 +1523,7 @@ static bool ec2_register(sge_evc_class_t *thiz, bool exit_on_qmaster_down, lList
       com_handle = sge_gdi_ctx->get_com_handle(sge_gdi_ctx);
       if (com_handle != NULL) {
          int ngc_error;
-         ngc_error = cl_commlib_close_connection(com_handle, (char*)mastername, (char*)prognames[QMASTER], 1, CL_FALSE);
+         ngc_error = cl_commlib_close_connection(com_handle, (char*)mastername, (char*)prognames[QMASTER], 1, false);
          if (ngc_error == CL_RETVAL_OK) {
             DPRINTF(("closed old connection to qmaster\n"));
          } else {

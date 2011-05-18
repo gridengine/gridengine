@@ -175,7 +175,7 @@ extern int main(int argc, char** argv) {
    handle=cl_com_create_handle(NULL, 
                                CL_CT_TCP, 
                                CL_CM_CT_MESSAGE,
-                               CL_TRUE,
+                               true,
                                handle_port,
                                CL_TCP_DEFAULT,
                                "server", 1,
@@ -200,7 +200,7 @@ extern int main(int argc, char** argv) {
  
       cl_commlib_trigger(handle, 1);
  
-      cl_commlib_receive_message(handle,NULL, NULL, 0, CL_FALSE, 0, &message, &sender);
+      cl_commlib_receive_message(handle,NULL, NULL, 0, false, 0, &message, &sender);
  
       if (message != NULL) {
          char response_message[1024];
@@ -214,7 +214,7 @@ extern int main(int argc, char** argv) {
                                  (cl_byte_t**)&response_message, 
                                  strlen(response_message)+1, 
                                  NULL, 0, 0, 
-                                 CL_TRUE,CL_FALSE);
+                                 true,false);
          message->message = NULL;
          cl_com_free_message(&message);
          cl_com_free_endpoint(&sender);
@@ -225,9 +225,9 @@ extern int main(int argc, char** argv) {
    printf("shutting down ...\n");
 
    /* here the application goes down - shutdown communication lib */
-   while ( cl_commlib_shutdown_handle(handle, CL_TRUE) == CL_RETVAL_MESSAGE_IN_BUFFER) {
+   while ( cl_commlib_shutdown_handle(handle, true) == CL_RETVAL_MESSAGE_IN_BUFFER) {
       message = NULL;
-      cl_commlib_receive_message(handle,NULL, NULL, 0, CL_FALSE, 0, &message, &sender);
+      cl_commlib_receive_message(handle,NULL, NULL, 0, false, 0, &message, &sender);
  
       if (message != NULL) {
          printf("ignoring message from \"%s\"\n", sender->comp_host); 

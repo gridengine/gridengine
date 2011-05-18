@@ -66,7 +66,7 @@ int sig
    }
 
    /* shutdown all sockets */
-   cl_com_ignore_timeouts(CL_TRUE);
+   cl_com_ignore_timeouts(true);
 
    do_shutdown = 1;
 }
@@ -95,7 +95,7 @@ unsigned long my_application_status(char** info_message) {
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "my_ssl_verify_func()"
-static cl_bool_t my_ssl_verify_func(cl_ssl_verify_mode_t mode, cl_bool_t service_mode, const char* value) {
+static bool my_ssl_verify_func(cl_ssl_verify_mode_t mode, bool service_mode, const char* value) {
    char* user_name = NULL;
    struct passwd *paswd = NULL;
    struct passwd pw_struct;
@@ -113,14 +113,14 @@ static cl_bool_t my_ssl_verify_func(cl_ssl_verify_mode_t mode, cl_bool_t service
    if (user_name == NULL) {
       user_name = "unexpected user name";
    }
-   if (service_mode == CL_TRUE) {
+   if (service_mode == true) {
       CL_LOG(CL_LOG_WARNING,"running in service mode");
       switch(mode) {
          case CL_SSL_PEER_NAME: {
             CL_LOG(CL_LOG_WARNING,"CL_SSL_PEER_NAME");
             if (strcmp(value,"SGE admin user") != 0) {
                CL_LOG(CL_LOG_WARNING,"CL_SSL_PEER_NAME is not \"SGE admin user\"");
-               return CL_FALSE;
+               return false;
             }
             break;
          }
@@ -128,7 +128,7 @@ static cl_bool_t my_ssl_verify_func(cl_ssl_verify_mode_t mode, cl_bool_t service
             CL_LOG(CL_LOG_WARNING,"CL_SSL_USER_NAME");
             if (strcmp(value,user_name) != 0) {
                CL_LOG_STR(CL_LOG_WARNING,"CL_SSL_USER_NAME is not", user_name);
-               return CL_FALSE;
+               return false;
             }
             break;
          }
@@ -140,7 +140,7 @@ static cl_bool_t my_ssl_verify_func(cl_ssl_verify_mode_t mode, cl_bool_t service
             CL_LOG(CL_LOG_WARNING,"CL_SSL_PEER_NAME");
             if (strcmp(value,"SGE admin user") != 0) {
                CL_LOG(CL_LOG_WARNING,"CL_SSL_PEER_NAME is not \"SGE Daemon\"");
-               return CL_FALSE;
+               return false;
             }
             break;
          }
@@ -148,13 +148,13 @@ static cl_bool_t my_ssl_verify_func(cl_ssl_verify_mode_t mode, cl_bool_t service
             CL_LOG(CL_LOG_WARNING,"CL_SSL_USER_NAME");
             if (strcmp(value,user_name) != 0) {
                CL_LOG_STR(CL_LOG_WARNING,"CL_SSL_USER_NAME is not", user_name);
-               return CL_FALSE;
+               return false;
             }
             break;
          }
       }
    }
-   return CL_TRUE;
+   return true;
 }
 
 
@@ -284,7 +284,7 @@ extern int main(int argc, char** argv)
      cl_com_specify_ssl_configuration(&ssl_config);
   }
 
-  handle=cl_com_create_handle(NULL, framework, CL_CM_CT_MESSAGE, CL_TRUE, handle_port, CL_TCP_DEFAULT, "server", 1, 1, 0 );
+  handle=cl_com_create_handle(NULL, framework, CL_CM_CT_MESSAGE, true, handle_port, CL_TCP_DEFAULT, "server", 1, 1, 0 );
   if (handle == NULL) {
      printf("could not get handle\n");
      cl_com_cleanup_commlib();
@@ -308,7 +308,7 @@ extern int main(int argc, char** argv)
   cl_com_set_max_connection_close_mode(handle,CL_ON_MAX_COUNT_CLOSE_AUTOCLOSE_CLIENTS );
 
 
-  cl_com_append_known_endpoint_from_name(handle->local->comp_host, "server", 1, 5000, CL_CM_AC_ENABLED, CL_FALSE );
+  cl_com_append_known_endpoint_from_name(handle->local->comp_host, "server", 1, 5000, CL_CM_AC_ENABLED, false );
 
   if (getenv("CL_RUNS")) { 
      runs = atoi(getenv("CL_RUNS"));
@@ -362,7 +362,7 @@ extern int main(int argc, char** argv)
         cl_raw_list_t* tmp_endpoint_list = NULL;
         cl_endpoint_list_elem_t* elem = NULL;
    
-        cl_commlib_search_endpoint(handle, NULL, NULL, 1, CL_TRUE, &tmp_endpoint_list);
+        cl_commlib_search_endpoint(handle, NULL, NULL, 1, true, &tmp_endpoint_list);
         elem = cl_endpoint_list_get_first_elem(tmp_endpoint_list);
         printf("\nconnected endpoints with id=1:\n");
         printf("==============================\n");
@@ -373,7 +373,7 @@ extern int main(int argc, char** argv)
         }
         cl_endpoint_list_cleanup(&tmp_endpoint_list);
    
-        cl_commlib_search_endpoint(handle, NULL, NULL, 1, CL_FALSE, &tmp_endpoint_list);
+        cl_commlib_search_endpoint(handle, NULL, NULL, 1, false, &tmp_endpoint_list);
         elem = cl_endpoint_list_get_first_elem(tmp_endpoint_list);
         printf("\nconnected and known endpoints with id=1:\n");
         printf("=========================================\n");
@@ -384,7 +384,7 @@ extern int main(int argc, char** argv)
         }
         cl_endpoint_list_cleanup(&tmp_endpoint_list);
    
-        cl_commlib_search_endpoint(handle, NULL, "client", 0, CL_FALSE, &tmp_endpoint_list);
+        cl_commlib_search_endpoint(handle, NULL, "client", 0, false, &tmp_endpoint_list);
         elem = cl_endpoint_list_get_first_elem(tmp_endpoint_list);
         printf("\nconnected and known endpoints with comp_name=client:\n");
         printf("=====================================================\n");
@@ -402,7 +402,7 @@ extern int main(int argc, char** argv)
      cl_commlib_send_message(handle, "down_host", "nocomp", 1, CL_MIH_MAT_ACK, (cl_byte_t*)"blub", 5, NULL, 1, 1 ); /* check wait for ack / ack_types  TODO*/
 #endif
  
-     ret_val = cl_commlib_receive_message(handle,NULL, NULL, 0, CL_FALSE, 0, &message, &sender);
+     ret_val = cl_commlib_receive_message(handle,NULL, NULL, 0, false, 0, &message, &sender);
      CL_LOG_STR(CL_LOG_INFO,"cl_commlib_receive_message() returned",cl_get_error_text(ret_val));
 
      if (message != NULL) {
@@ -415,7 +415,7 @@ extern int main(int argc, char** argv)
         if (strstr((char*)message->message,"exit") != NULL) {
            printf("received \"exit\" message from host %s, component %s, id %ld\n",
                   sender->comp_host,sender->comp_name,sender->comp_id );
-           cl_commlib_close_connection(handle, sender->comp_host,sender->comp_name,sender->comp_id, CL_FALSE );
+           cl_commlib_close_connection(handle, sender->comp_host,sender->comp_name,sender->comp_id, false );
            
         } else {
            ret_val = cl_commlib_send_message(handle, 
@@ -425,7 +425,7 @@ extern int main(int argc, char** argv)
                                 &message->message, 
                                 message->message_length, 
                                 NULL, message->message_id,0, 
-                                CL_FALSE,CL_FALSE);
+                                false,false);
            if (ret_val != CL_RETVAL_OK) {
               CL_LOG_INT(CL_LOG_ERROR,"sent message response for message id", (int)message->message_id);
               CL_LOG_STR(CL_LOG_ERROR,"cl_commlib_send_message() returned:",cl_get_error_text(ret_val));
@@ -454,9 +454,9 @@ extern int main(int argc, char** argv)
      printf("found handle\n");
   }
 
-  while ( cl_commlib_shutdown_handle(handle, CL_TRUE) == CL_RETVAL_MESSAGE_IN_BUFFER) {
+  while ( cl_commlib_shutdown_handle(handle, true) == CL_RETVAL_MESSAGE_IN_BUFFER) {
      message = NULL;
-     cl_commlib_receive_message(handle,NULL, NULL, 0, CL_FALSE, 0, &message, &sender);
+     cl_commlib_receive_message(handle,NULL, NULL, 0, false, 0, &message, &sender);
 
      if (message != NULL) {
         printf("ignoring message from \"%s\"\n", sender->comp_host); 

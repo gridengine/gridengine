@@ -103,6 +103,7 @@ static void qrsh_error(const char *fmt, ...)
    }
 
    vsnprintf(message, MAX_STRING_SIZE, fmt, ap);
+   va_end(ap);
 
    if ((tmpdir = search_conf_val("qrsh_tmpdir")) == NULL) {
       fprintf(stderr, "%s\n", message);

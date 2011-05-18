@@ -53,7 +53,7 @@ typedef struct cl_connection_list_data_type {                      /* list speci
 
 
 /* basic functions */
-int cl_connection_list_setup(cl_raw_list_t** list_p, char* list_name, int enable_locking, cl_bool_t create_hash);
+int cl_connection_list_setup(cl_raw_list_t** list_p, char* list_name, int enable_locking, bool create_hash);
 int cl_connection_list_cleanup(cl_raw_list_t** list_p);
 
 

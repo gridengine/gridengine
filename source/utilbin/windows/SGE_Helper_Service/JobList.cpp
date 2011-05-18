@@ -27,14 +27,15 @@
  *
  *   All Rights Reserved.
  *
+ * Portions of this software are Copyright (c) 2011 Univa Corporation
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
-#include <afxtempl.h>
-#include <afxmt.h>
 #include <winsock2.h>
 #include "Job.h"
 #include "JobList.h"
+#include "Logging.h"
 
 /****** C_JobList::C_JobList() ************************************************
 *  NAME
@@ -48,8 +49,23 @@
 *
 *  NOTES
 *******************************************************************************/
-C_JobList::C_JobList() : m_JobListMutex(FALSE, "ListMutex", NULL)
+C_JobList::C_JobList()
 {
+   m_hJobListMutex = CreateMutex(NULL, FALSE, "ListMutex");
+   m_pFirst = NULL;
+}
+
+C_JobList::~C_JobList()
+{
+   C_Job *pNext = NULL;
+   C_Job *pJob  = m_pFirst;
+
+   while (pJob != NULL) {
+      pNext = pJob->next;
+      delete pJob;
+      pJob = pNext; 
+   }
+   CloseHandle(m_hJobListMutex);
 }
 
 /****** C_JobList::AddJobToList() *********************************************
@@ -68,29 +84,48 @@ C_JobList::C_JobList() : m_JobListMutex(FALSE, "ListMutex", NULL)
 *     C_Job *pJob - the new job object that is to be added to the list
 *
 *  RESULT
-*     POSITION - the position of the new job object in the job list. NULL if
-*                the job already existed in the job list.
+*     BOOL - true if the new job object already existed in the list,
+*            false if it is really new.
 *
 *  NOTES
 *******************************************************************************/
-POSITION C_JobList::AddJobToList(C_Job *pJob)
+BOOL C_JobList::AddJobToList(C_Job *pJob)
 {
    C_Job    *pExistingJob = NULL;
-   POSITION Pos = NULL;
+   BOOL     bAlreadyInList = TRUE;
 
    // lock access to job list
-   CSingleLock singleLock(&m_JobListMutex);
-   singleLock.Lock();
-
+   WaitForSingleObject(m_hJobListMutex, INFINITE);
    pExistingJob = FindJobInList(*pJob);
    if(pExistingJob == NULL) {
-      Pos = AddTail(pJob);
+      bAlreadyInList = FALSE;
+      AddTail(pJob);
    }
 
    // unlock access to job list
-   singleLock.Unlock();
+   ReleaseMutex(m_hJobListMutex);
 
-   return Pos;
+   return bAlreadyInList;
+}
+
+void C_JobList::AddTail(C_Job *pJob)
+{
+   C_Job *pPrevElem = NULL;
+   C_Job *pCurElem = m_pFirst;
+
+   // search last element in list
+   while (pCurElem != NULL) {
+      pPrevElem = pCurElem;
+      pCurElem = pCurElem->next;
+   }
+
+   // in any case, we insert the last elem, so let it point to NULL.
+   pJob->next = NULL;
+   if (pPrevElem != NULL) {
+      pPrevElem->next = pJob;
+   } else {
+      m_pFirst = pJob;
+   }
 }
 
 /****** C_JobList::RemoveJobFromList() *****************************************
@@ -116,37 +151,34 @@ POSITION C_JobList::AddJobToList(C_Job *pJob)
 *******************************************************************************/
 C_Job *C_JobList::RemoveJobFromList(C_Job &Job)
 {
-   POSITION Pos;
-   POSITION PosOld;
    C_Job    *pJob = NULL;
+   C_Job    *pPrev = NULL;
 
    // lock access to job list
-   CSingleLock singleLock(&m_JobListMutex);
-   singleLock.Lock();
+   WaitForSingleObject(m_hJobListMutex, INFINITE);
 
    // get job from job list
-   Pos = GetHeadPosition();
-   while(Pos != NULL) {
-      PosOld = Pos;
-      pJob = GetNext(Pos);
-      if(pJob != NULL) {
-         if(pJob->m_job_id == Job.m_job_id
-            && pJob->m_ja_task_id == Job.m_ja_task_id
-            && ((pJob->m_pe_task_id==NULL && Job.m_pe_task_id==NULL)
-               || strcmp(pJob->m_pe_task_id, Job.m_pe_task_id)==0)
-            && (pJob->m_JobStatus == js_Finished 
-               || pJob->m_JobStatus == js_Failed
-               || pJob->m_JobStatus == js_Deleted)) {
-            RemoveAt(PosOld);
-            Pos = NULL;
+   pJob = m_pFirst;
+   while (pJob != NULL) {
+      if(pJob->m_job_id == Job.m_job_id
+         && pJob->m_ja_task_id == Job.m_ja_task_id
+         && ((pJob->m_pe_task_id==NULL && Job.m_pe_task_id==NULL)
+            || strcmp(pJob->m_pe_task_id, Job.m_pe_task_id)==0)
+         && (pJob->m_JobStatus == js_Finished 
+            || pJob->m_JobStatus == js_Failed
+            || pJob->m_JobStatus == js_Deleted)) {
+         if (pPrev != NULL) {
+            pPrev->next = pJob->next;
          } else {
-            pJob = NULL;
+            m_pFirst = pJob->next;
          }
+         break;
       }
+      pPrev = pJob;
+      pJob = pJob->next;
    }
-
    // unlock access to job list
-   singleLock.Unlock();
+   ReleaseMutex(m_hJobListMutex);
 
    return pJob;
 }
@@ -176,23 +208,17 @@ C_Job *C_JobList::RemoveJobFromList(C_Job &Job)
 *******************************************************************************/
 C_Job *C_JobList::FindJobInList(C_Job &Job)
 {
-   POSITION Pos;
-   C_Job    *pJob = NULL;
+   C_Job *pJob = m_pFirst;
 
    // get job from job list that is not already executed
-   Pos = GetHeadPosition();
-   while(Pos) {
-      pJob = GetNext(Pos);
-      if(pJob) {
-         if(pJob->m_job_id == Job.m_job_id
-            && pJob->m_ja_task_id == Job.m_ja_task_id
-            && ((pJob->m_pe_task_id==NULL && Job.m_pe_task_id==NULL)
-               || strcmp(pJob->m_pe_task_id, Job.m_pe_task_id)==0)) {
-            Pos = NULL;
-         } else {
-            pJob = NULL;
-         }
+   while (pJob != NULL) {
+      if(pJob->m_job_id == Job.m_job_id
+         && pJob->m_ja_task_id == Job.m_ja_task_id
+         && ((pJob->m_pe_task_id==NULL && Job.m_pe_task_id==NULL)
+            || strcmp(pJob->m_pe_task_id, Job.m_pe_task_id)==0)) {
+         break;
       }
+      pJob = pJob->next;
    }
    return pJob;
 }
@@ -217,19 +243,18 @@ C_Job *C_JobList::FindJobInList(C_Job &Job)
 *******************************************************************************/
 C_Job* C_JobList::GetFirstJobInReceivedState()
 {
-   POSITION Pos;
-   C_Job    *pJob = NULL;
+   C_Job    *pJob = m_pFirst;
 
-   Pos = GetHeadPosition();
-   while(Pos) {
-      pJob = GetNext(Pos);
-      if(pJob) {
-         if(pJob->m_JobStatus == js_Received) {
-            Pos = NULL;
-         } else {
-            pJob = NULL;
-         }
+   while (pJob != NULL) {
+      if (pJob->m_JobStatus == js_Received) {
+         break;
       }
+      pJob = pJob->next;
    }
    return pJob;
+}
+
+BOOL C_JobList::IsEmpty()
+{
+   return m_pFirst == NULL;
 }

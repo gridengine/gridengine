@@ -466,6 +466,7 @@ answer_list_add_sprintf(lList **answer_list, u_long32 status,
 
       va_start(ap, fmt);
       message = sge_dstring_vsprintf(&buffer, fmt, ap);
+      va_end(ap);
 
       if (message != NULL) {
          ret = answer_list_add(answer_list, message, status, quality);

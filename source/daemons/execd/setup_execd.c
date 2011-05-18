@@ -121,10 +121,10 @@ void sge_setup_sge_execd(sge_gdi_ctx_class_t *ctx, const char* tmp_err_file_name
    DPRINTF(("chdir(\"/\")----------------------------\n"));
    sge_chdir_exit("/",1);
    DPRINTF(("Making directories----------------------------\n"));
-   sge_mkdir(spool_dir, 0755, 1, 0);
+   sge_mkdir(spool_dir, 0755, true, false);
    DPRINTF(("chdir(\"%s\")----------------------------\n", spool_dir));
    sge_chdir_exit(spool_dir,1);
-   sge_mkdir(unqualified_hostname, 0755, 1, 0);
+   sge_mkdir(unqualified_hostname, 0755, true, false);
    DPRINTF(("chdir(\"%s\",me.unqualified_hostname)--------------------------\n",
             unqualified_hostname));
    sge_chdir_exit(unqualified_hostname, 1); 
@@ -147,9 +147,9 @@ void sge_setup_sge_execd(sge_gdi_ctx_class_t *ctx, const char* tmp_err_file_name
            unqualified_hostname);
    
    DPRINTF(("Making directories----------------------------\n"));
-   sge_mkdir(EXEC_DIR, 0775, 1, 0);
-   sge_mkdir(JOB_DIR, 0775, 1, 0);
-   sge_mkdir(ACTIVE_DIR,  0775, 1, 0);
+   sge_mkdir(EXEC_DIR, 0775, true, false);
+   sge_mkdir(JOB_DIR, 0775, true, false);
+   sge_mkdir(ACTIVE_DIR,  0775, true, false);
 
 #if defined(PLPA_LINUX) || defined(SOLARIS86) || defined(SOLARISAMD64)
    /* initialize processor topology */

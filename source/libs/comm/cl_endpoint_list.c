@@ -49,7 +49,7 @@ int cl_endpoint_list_setup(cl_raw_list_t** list_p,
                            char* list_name, 
                            long entry_life_time,
                            long refresh_interval,
-                           cl_bool_t create_hash) {
+                           bool create_hash) {
 
    int ret_val = CL_RETVAL_OK;
    struct timeval now;
@@ -85,7 +85,7 @@ int cl_endpoint_list_setup(cl_raw_list_t** list_p,
    }
 
    /* create hashtable */
-   if (create_hash == CL_TRUE) {
+   if (create_hash == true) {
       ldata->ht = sge_htable_create(4, dup_func_string, hash_func_string, hash_compare_string);
       if (ldata->ht == NULL) {
          cl_raw_list_cleanup(list_p);
@@ -196,7 +196,7 @@ int cl_endpoint_list_cleanup(cl_raw_list_t** list_p) {
 #undef __CL_FUNCTION__
 #endif
 #define __CL_FUNCTION__ "cl_endpoint_list_define_endpoint()"
-int cl_endpoint_list_define_endpoint(cl_raw_list_t* list_p, cl_com_endpoint_t* endpoint, int service_port, cl_xml_connection_autoclose_t autoclose, cl_bool_t is_static) {
+int cl_endpoint_list_define_endpoint(cl_raw_list_t* list_p, cl_com_endpoint_t* endpoint, int service_port, cl_xml_connection_autoclose_t autoclose, bool is_static) {
 
    int ret_val = CL_RETVAL_OK;
    struct timeval now;
@@ -220,7 +220,7 @@ int cl_endpoint_list_define_endpoint(cl_raw_list_t* list_p, cl_com_endpoint_t* e
       elem->last_used = now.tv_sec;
       elem->service_port = service_port;
       elem->autoclose = autoclose;
-      if (elem->is_static == CL_TRUE && is_static == CL_FALSE ) {
+      if (elem->is_static == true && is_static == false ) {
          CL_LOG(CL_LOG_DEBUG,"can't set static element to non static");
       } else {
          elem->is_static = is_static;
@@ -417,7 +417,7 @@ int cl_endpoint_list_undefine_endpoint(cl_raw_list_t* list_p, cl_com_endpoint_t*
    }
 
    elem = cl_endpoint_list_get_elem_endpoint(list_p, endpoint);
-   if (elem && elem->is_static == CL_FALSE) {
+   if (elem && elem->is_static == false) {
       cl_endpoint_list_data_t* ldata = NULL;
 
       cl_raw_list_remove_elem(list_p, elem->raw_elem);

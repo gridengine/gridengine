@@ -1023,7 +1023,7 @@ spool_classic_default_write_func(lList **answer_list,
          {
             dstring qi_dir = DSTRING_INIT;
             sge_dstring_sprintf(&qi_dir, "%s/%s", QINSTANCES_DIR, key);
-            sge_mkdir(sge_dstring_get_string(&qi_dir), 0755, 0, 0);
+            sge_mkdir(sge_dstring_get_string(&qi_dir), 0755, false, false);
             sge_dstring_free(&qi_dir);
 
          }

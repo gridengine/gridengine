@@ -387,8 +387,8 @@ void jgdi_log_printf(JNIEnv *env, const char* logger, log_level_t level, const c
       va_list ap;
 
       va_start(ap, fmt);
-
       sge_dstring_vsprintf(&ds, fmt, ap);
+      va_end(ap);
       jgdi_log(env, logger_obj, FINE, sge_dstring_get_string(&ds));
       sge_dstring_free(&ds);
    }

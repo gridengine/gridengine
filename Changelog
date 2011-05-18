@@ -8,6 +8,10 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+EB-2011-05-18-0: Bugfix:      start time is not available in qstat -j -xml outp.
+                 Issue:       GE-3482
+                 Review:      DG
+
 EB-2011-05-17-1: Bugfix:      qconf man page references non-existent ge_conf(5)
                               man page
                  Issue:       GE-3499

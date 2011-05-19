@@ -29,6 +29,8 @@
 #
 #  All Rights Reserved.
 #
+#  Portions of this software are Copyright (c) 2011 Univa Corporation
+#
 ##########################################################################
 #___INFO__MARK_END__
 #
@@ -42,10 +44,10 @@
 #     ibm-loadsensor
 #
 #  FUNCTION
-#     Due to copyright issues, the code to retrieve load values like 
+#     Due to copyright issues, the code to retrieve load values like
 #     memory consumption etc. (that can be found in tool like top)
 #     cannot be included in the sge_execd as for other platforms.
-#     
+# 
 #     This script can be used as external loadsensor that provides the
 #     required data to sge_execd. It uses the svmon utility to retrieve
 #     the load and memory values.
@@ -55,7 +57,7 @@
 #
 #     To integrate the loadsensor into sge_execd, either copy it to
 #     $SGE_ROOT/bin/aix51/qloadsensor (if you have another version to
-#     $SGE_ROOT/bin/<YOUR_AIX_VERSION>/qloadsensor) 
+#     $SGE_ROOT/bin/<YOUR_AIX_VERSION>/qloadsensor)
 #     or define it as loadsensor in the hosts cluster configuration, see
 #     man page sge_conf(5).
 #
@@ -65,7 +67,7 @@
 #
 #  NOTES
 #     The output format of svmon changed between AIX 4.3.2 and 4.3.3,
-#     this script tries to read the os version from 
+#     this script tries to read the os version from
 #     /usr/lpp/bos/aix_release.level, which is hopefully a stable interface.
 #
 #     Anybody from IBM volunteering to share the C-Code to retrieve load
@@ -93,7 +95,7 @@ fi
 end=false
 while [ $end = false ]; do
 
-   # ---------------------------------------- 
+   # ----------------------------------------
    # wait for an input
    #
    read input
@@ -102,38 +104,38 @@ while [ $end = false ]; do
       end=true
       break
    fi
-   
+
    if [ "$input" = "quit" ]; then
       end=true
       break
    fi
 
-   # ---------------------------------------- 
+   # ----------------------------------------
    # send mark for begin of load report
    echo "begin"
 
-   # ---------------------------------------- 
+   # ----------------------------------------
    # get load values
    #
    load=`uptime|sed 's/.*load average://'`
 
-   # ---------------------------------------- 
+   # ----------------------------------------
    # send load value load_short
    #
    echo "$HOST:load_short:`echo $load|cut -f1 -d","`"
 
-   # ---------------------------------------- 
+   # ----------------------------------------
    # send load value load_medium
    #
    echo "$HOST:load_medium:`echo $load|cut -f2 -d","`"
    echo "$HOST:load_avg:`echo $load|cut -f2 -d","`"
 
-   # ---------------------------------------- 
+   # ----------------------------------------
    # send load value load_long
    #
    echo "$HOST:load_long:`echo $load|cut -f3 -d","`"
 
-   # ---------------------------------------- 
+   # ----------------------------------------
    # get memory values
    #
    if [ x$VERSION != x ]; then
@@ -143,29 +145,17 @@ while [ $end = false ]; do
       fi
 
       $SVMON > /tmp/svmon-$$.out 2>&1
-      
+
       if [ $VERSION = "4.3.2" ]; then
          cat /tmp/svmon-$$.out | tail -1 | read mem_total mem_used mem_free f4 f5 f6 f7 f8 f9 f10 swap_total swap_used
-      fi
-
-      if [ $VERSION = "4.3.3" ]; then
+      else 
          cat /tmp/svmon-$$.out | grep memory | read f1 mem_total mem_used mem_free f5 f6
          cat /tmp/svmon-$$.out | grep "pg space" | read f1 f2 swap_total swap_used
       fi
 
-      if [ $VERSION = "5.1.0" ]; then
-         cat /tmp/svmon-$$.out | grep memory | read f1 mem_total mem_used mem_free f5 f6
-         cat /tmp/svmon-$$.out | grep "pg space" | read f1 f2 swap_total swap_used
-      fi
-
-      if [ $VERSION = "5.3.0" ]; then
-         cat /tmp/svmon-$$.out | grep memory | read f1 mem_total mem_used mem_free f5 f6
-         cat /tmp/svmon-$$.out | grep "pg space" | read f1 f2 swap_total swap_used
-      fi
-
-      # delete output file 
+      # delete output file
       rm -f /tmp/svmon-$$.out
- 
+
       swap_free=`expr $swap_total - $swap_used`
       virtual_total=`expr $mem_total + $swap_total`
       virtual_used=`expr $mem_used + $swap_used`
@@ -183,7 +173,7 @@ while [ $end = false ]; do
       virtual_used=`echo "scale = 6 ; $virtual_used / $BLOCKDIV" | bc`
       virtual_free=`echo "scale = 6 ; $virtual_free / $BLOCKDIV" | bc`
 
-      # ---------------------------------------- 
+      # ----------------------------------------
       # send memory values
       #
       echo "$HOST:mem_total:${mem_total}M"
@@ -198,7 +188,7 @@ while [ $end = false ]; do
       echo "$HOST:virtual_used:${virtual_used}M"
       echo "$HOST:virtual_free:${virtual_free}M"
    fi
-   # ---------------------------------------- 
+   # ----------------------------------------
    # send mark for end of load report
    echo "end"
 done

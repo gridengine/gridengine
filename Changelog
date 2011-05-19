@@ -8,6 +8,11 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+JG-2011-05-19-0: Enhancem.:   need better os version handling on aix for arch
+                              and ibm-loadsensor
+                 Issue:       GE-3444
+                 Review:      DG
+
 SH-2011-05-18-0: Bugfix:      output file of "qsub -pty" belongs to UGE admin
                               user instead of the job user
                  Issue:       GE-3473

@@ -88,15 +88,11 @@ AIX)
          ;;
       esac
       ;;
-   5)
-      case $osrelease in
-      1|2|3)
-         ARCH=aix51
-         ;;
-      *)
-         ARCH=UNSUPPORTED-aix-5-$osrelease
-         ;;
-      esac
+   5|6|7)
+      ARCH=aix51
+      ;;
+   *)
+      ARCH=UNSUPPORTED-aix-$osrelease
       ;;
    esac
    ;;

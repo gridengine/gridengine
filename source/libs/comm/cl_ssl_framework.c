@@ -27,6 +27,7 @@
  *
  *  All Rights Reserved.
  *
+ *  Portions of this software are Copyright (c) 2011 Univa Corporation.
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
@@ -96,6 +97,7 @@
 #include "uti/sge_unistd.h"
 #include "uti/sge_os.h"
 #include "uti/sge_string.h"
+#include "uti/sge_arch.h"
 
 #if (OPENSSL_VERSION_NUMBER < 0x0090700fL) 
 #define OPENSSL_CONST
@@ -1039,6 +1041,7 @@ static int cl_com_ssl_build_symbol_table(void) {
 #ifdef LOAD_OPENSSL
    {
       char* func_name = NULL;
+      char ssl_lib[BUFSIZ];
       int had_errors = 0;
 #if defined(FREEBSD) || defined(DARWIN)
       void* cl_com_ssl_crypto_handle_saved = NULL;
@@ -1054,33 +1057,50 @@ static int cl_com_ssl_build_symbol_table(void) {
          return CL_RETVAL_SSL_SYMBOL_TABLE_ALREADY_LOADED;
       }
 
+      /* get SGE_ROOT directory */
+      ssl_lib[0] = '\0';
+      if (sge_strlcat(ssl_lib, sge_get_root_dir (0, NULL, 0, 0), BUFSIZ-1) == 0) {
+         CL_LOG(CL_LOG_ERROR, "can't obtain SGE_ROOT!");
+         cl_commlib_push_application_error(CL_LOG_ERROR, CL_RETVAL_SSL_DLOPEN_SSL_LIB_FAILED, MSG_CL_SSL_FW_OPEN_SSL_CRYPTO_FAILED);
+         pthread_mutex_unlock(&cl_com_ssl_crypto_handle_mutex);
+         return CL_RETVAL_SSL_DLOPEN_SSL_LIB_FAILED;
+      }
+
+      /* prebuild library path */
+      sge_strlcat(ssl_lib, "/lib/", BUFSIZ-1);
+      sge_strlcat(ssl_lib, sge_get_arch(), BUFSIZ-1);
 
 #if defined(DARWIN)
+      sge_strlcat(ssl_lib, "/libssl.dylib", BUFSIZ-1);
 #ifdef RTLD_NODELETE
-      cl_com_ssl_crypto_handle = dlopen ("libssl.dylib", RTLD_NOW | RTLD_GLOBAL | RTLD_NODELETE);
+      cl_com_ssl_crypto_handle = dlopen (ssl_lib, RTLD_NOW | RTLD_GLOBAL | RTLD_NODELETE);
 #else
-      cl_com_ssl_crypto_handle = dlopen ("libssl.dylib", RTLD_NOW | RTLD_GLOBAL );
+      cl_com_ssl_crypto_handle = dlopen (ssl_lib, RTLD_NOW | RTLD_GLOBAL );
 #endif /* RTLD_NODELETE */
 
 #elif defined(FREEBSD)
+      sge_strlcat(ssl_lib, "/libssl.so", BUFSIZ-1);
 #ifdef RTLD_NODELETE
-      cl_com_ssl_crypto_handle = dlopen ("libssl.so", RTLD_LAZY | RTLD_GLOBAL | RTLD_NODELETE);
+      cl_com_ssl_crypto_handle = dlopen (ssl_lib, RTLD_LAZY | RTLD_GLOBAL | RTLD_NODELETE);
 #else
-      cl_com_ssl_crypto_handle = dlopen ("libssl.so", RTLD_LAZY | RTLD_GLOBAL);
+      cl_com_ssl_crypto_handle = dlopen (ssl_lib, RTLD_LAZY | RTLD_GLOBAL);
 #endif /* RTLD_NODELETE */
 
 #elif defined(HPUX)
+      sge_strlcat(ssl_lib, "/libssl.sl", BUFSIZ-1);
 #ifdef RTLD_NODELETE
-      cl_com_ssl_crypto_handle = dlopen ("libssl.sl", RTLD_LAZY | RTLD_NODELETE);
+      cl_com_ssl_crypto_handle = dlopen (ssl_lib, RTLD_LAZY | RTLD_NODELETE);
 #else
-      cl_com_ssl_crypto_handle = dlopen ("libssl.sl", RTLD_LAZY );
+      cl_com_ssl_crypto_handle = dlopen (ssl_lib, RTLD_LAZY );
 #endif /* RTLD_NODELETE */
 
 #else   
+      sge_strlcat(ssl_lib, "/libssl.so", BUFSIZ-1);
+
 #ifdef RTLD_NODELETE
-      cl_com_ssl_crypto_handle = dlopen ("libssl.so", RTLD_LAZY | RTLD_NODELETE);
+      cl_com_ssl_crypto_handle = dlopen (ssl_lib, RTLD_LAZY | RTLD_NODELETE);
 #else
-      cl_com_ssl_crypto_handle = dlopen ("libssl.so", RTLD_LAZY);
+      cl_com_ssl_crypto_handle = dlopen (ssl_lib, RTLD_LAZY);
 #endif /* RTLD_NODELETE */
 #endif
       

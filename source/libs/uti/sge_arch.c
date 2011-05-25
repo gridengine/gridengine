@@ -171,7 +171,7 @@ error:
 *
 *  RESULT
 *     int - Return code
-*       1 - Success
+*       0 - Success
 *      -1 - Given buffer is NULL
 *      -2 - SGE_ROOT cannot be obtained
 *      -3 - given buffer is to small
@@ -210,7 +210,7 @@ int sge_get_lib_dir(char *buffer, size_t size) {
    sge_strlcat(buffer, "/lib/", size);
    sge_strlcat(buffer, sge_arch, size);
 
-   return 1;
+   return 0;
 }
 
 /****** uti/prog/sge_get_default_cell() ***************************************

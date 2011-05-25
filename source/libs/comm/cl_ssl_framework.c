@@ -1059,7 +1059,7 @@ static int cl_com_ssl_build_symbol_table(void) {
 
       /* get library path */
       ssl_lib[0] = '\0';
-      if (sge_get_lib_dir(ssl_lib, BUFSIZ) != 1) {
+      if (sge_get_lib_dir(ssl_lib, BUFSIZ) != 0) {
          CL_LOG(CL_LOG_WARNING, "Cannot obtain the path to the SGE ssl-lib");
          pthread_mutex_unlock(&cl_com_ssl_crypto_handle_mutex);
          return CL_RETVAL_SSL_CANT_GET_LIB_PATH;

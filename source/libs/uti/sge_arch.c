@@ -153,6 +153,66 @@ error:
    return NULL;
 }
 
+/****** uti/prog/sge_get_lib_dir() ********************************************
+*  NAME
+*     sge_get_lib_dir() -- Path to SGE libraries
+*
+*  SYNOPSIS
+*     int sge_get_lib_dir(char *buffer, size_t size)
+*
+*  FUNCTION
+*     This function stores the path to the SGE libraries in the buffer
+*
+*  INPUTS
+*     char     *buffer - Buffer where to store the SGE library dir
+*     size_t   size    - Size of the given buffer
+*  NOTES:
+*     MT-NOTE: sge_get_lib_dir() is MT safe
+*
+*  RESULT
+*     int - Return code
+*       1 - Success
+*      -1 - Given buffer is NULL
+*      -2 - SGE_ROOT cannot be obtained
+*      -3 - given buffer is to small
+******************************************************************************/
+int sge_get_lib_dir(char *buffer, size_t size) {
+
+   const char *sge_root = NULL;
+   const char *sge_arch = NULL;
+
+   if (buffer == NULL) {
+      return -1;
+   }
+
+   buffer[0] = '\0';
+
+   /* obtain SGE_ROOT
+    * error-logging ist done by sge_get_root_dir()
+    */
+   sge_root = sge_get_root_dir(0, NULL, 0, 1);
+   if (sge_root == NULL) {
+      return -2;
+   }
+
+   /* obtain SGE_ARCH */
+   sge_arch = sge_get_arch();
+
+   /* check if given lib_dir-buffer is big enough
+    * sge_root + sge_arch + /lib/ + \0
+    */
+   if (sge_strlen(sge_root) + sge_strlen(sge_arch) + 6 > size) {
+      return -3;
+   }
+
+   /* Build lib-dir path */
+   sge_strlcat(buffer, sge_root, size);
+   sge_strlcat(buffer, "/lib/", size);
+   sge_strlcat(buffer, sge_arch, size);
+
+   return 1;
+}
+
 /****** uti/prog/sge_get_default_cell() ***************************************
 *  NAME
 *     sge_get_default_cell() -- get cell name and remove trailing slash 

@@ -8,6 +8,11 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+JG-2011-05-25-0: Enhancem.:   try to detect location of libc.so.6 on Linux in
+                              arch script
+                 Issue:       GE-3467
+                 Review:      SH
+
 SH-2011-05-25-0: Bugfix:      Read from stderr even if stdout is already closed
                               (IJS)
                  Issue:       GE-3190

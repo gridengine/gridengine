@@ -8,6 +8,11 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+HP-2011-05-25-0: Bugfix:      on Windows, the loadcheck.exe binary output
+                              misses a line break
+                 Issue:       GE-3503
+                 Review:      SH
+
 SH-2011-05-19-0: Bugfix:      use absolute pathnames for dynamically opening
                               openssl-libraries instead of just the lib-name
                  Issue:       GE-3464

@@ -63,7 +63,7 @@ char *sge_make_tmpdir(lListElem *qep, u_long32 jobid, u_long32 jataskid, uid_t u
    DPRINTF(("making TMPDIR=%s\n", tmpdir));
 
    sge_switch2start_user();
-   sge_mkdir(tmpdir, 0755, 0, 0);
+   sge_mkdir(tmpdir, 0755, false, false);
 
    /*
     * chown is considered to be a security flaw, as an attacker might move the 

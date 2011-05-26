@@ -27,8 +27,8 @@
  *
  *  All Rights Reserved.
  *
+ *  Portions of this code are Copyright 2011 Univa Inc.
  ************************************************************************/
-/* Portions of this code are Copyright 2011 Univa Inc. */
 /*___INFO__MARK_END__*/
 
 #include <stdlib.h>
@@ -426,7 +426,11 @@ static void* pty_to_commlib(void *t_conf)
                       ret, stdout_buf);
 #endif
          }
-         if (ret >= 0 && g_p_ijs_fds->pipe_err != -1
+         if (ret < 0) {
+            shepherd_trace("pty_to_commlib: STDOUT was closed. Our child seems to have exited -> exiting");
+            do_exit = 1;
+         }
+         if (g_p_ijs_fds->pipe_err != -1
              && FD_ISSET(g_p_ijs_fds->pipe_err, &read_fds)) {
 #ifdef EXTENSIVE_TRACING
             shepherd_trace("pty_to_commlib: reading from pipe_err");
@@ -439,7 +443,7 @@ static void* pty_to_commlib(void *t_conf)
          }
          if (ret < 0) {
             /* A fd was closed, likely our child has exited, we can exit, too. */
-            shepherd_trace("pty_to_commlib: our child seems to have exited -> exiting");
+            shepherd_trace("pty_to_commlib: STDERR was closed. Our child seems to have exited -> exiting");
             do_exit = 1;
          } else if (ret > 0) {
             if (g_p_ijs_fds->pipe_to_child != -1) {

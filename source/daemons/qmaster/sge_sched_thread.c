@@ -167,26 +167,25 @@ int scheduler_method(sge_evc_class_t *evc, lList **answer_list, scheduler_all_da
    int prof_job_count, global_mes_count, job_mes_count;
 
    int i;
-   
+
    DENTER(TOP_LAYER, "scheduler_method");
-   
+
    PROF_START_MEASUREMENT(SGE_PROF_CUSTOM0);
-   
+
    serf_new_interval(sge_get_gmt());
    orders.pendingOrderList = *order;
    *order = NULL;
-   
+
    prof_job_count = lGetNumberOfElem(lists->job_list);
-   
+
    sconf_reset_jobs();
    schedd_mes_initialize();
    schedd_order_initialize();
-   
+
    for (i = SPLIT_FIRST; i < SPLIT_LAST; i++) {
       splitted_job_lists[i] = NULL;
    }
-   splitted_job_lists[SPLIT_WAITING_DUE_TO_PREDECESSOR] =
-                                               &waiting_due_to_pedecessor_list;
+   splitted_job_lists[SPLIT_WAITING_DUE_TO_PREDECESSOR] = &waiting_due_to_pedecessor_list;
    splitted_job_lists[SPLIT_WAITING_DUE_TO_TIME] = &waiting_due_to_time_list;
    splitted_job_lists[SPLIT_PENDING_EXCLUDED] = &pending_excluded_list;
    splitted_job_lists[SPLIT_SUSPENDED] = &suspended_list;
@@ -246,12 +245,12 @@ int scheduler_method(sge_evc_class_t *evc, lList **answer_list, scheduler_all_da
    }
 
    /**
-    * the actual scheduling 
+    * the actual scheduling
     */
    dispatch_jobs(evc, lists, &orders, splitted_job_lists);
 
    /**
-    * post processing 
+    * post processing
     */
    remove_immediate_jobs(*(splitted_job_lists[SPLIT_PENDING]),
                          *(splitted_job_lists[SPLIT_RUNNING]), &orders);
@@ -434,7 +433,7 @@ static int dispatch_jobs(sge_evc_class_t *evc, scheduler_all_data_t *lists, orde
     *
     * Load sensors report load delayed. So we have to increase the load
     * of an exechost for each job started before load adjustment decay time.
-    * load_adjustment_decay_time is a configuration value. 
+    * load_adjustment_decay_time is a configuration value.
     *---------------------------------------------------------------------*/
    {
       u_long32 decay_time = sconf_get_load_adjustment_decay_time();
@@ -650,13 +649,13 @@ static int dispatch_jobs(sge_evc_class_t *evc, scheduler_all_data_t *lists, orde
    /*---------------------------------------------------------------------
     * SORT HOSTS
     *---------------------------------------------------------------------*/
-   /* 
-      there are two possibilities for SGE administrators 
+   /*
+      there are two possibilities for SGE administrators
       selecting queues:
 
       sort by seq_no
          the sequence number from configuration is used for sorting
-     
+
       sort by load (using a load formula)
          the least loaded queue gets filled first
 
@@ -667,7 +666,7 @@ static int dispatch_jobs(sge_evc_class_t *evc, scheduler_all_data_t *lists, orde
    */
    switch (queue_sort_method) {
    case QSM_LOAD:
-   case QSM_SEQNUM:  
+   case QSM_SEQNUM:
    default:
 
       DPRINTF(("sorting hosts by load\n"));

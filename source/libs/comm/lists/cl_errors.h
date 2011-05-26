@@ -160,8 +160,9 @@
 #define CL_RETVAL_SSL_CANT_SET_KEY_PEM_BYTE        (CL_RETVAL_START_ID + 123)
 #define CL_RETVAL_UNKNOWN_PARAMETER                (CL_RETVAL_START_ID + 124)
 #define CL_RETVAL_DUP_SOCKET_FD_ERROR              (CL_RETVAL_START_ID + 125)
+#define CL_RETVAL_SSL_CANT_GET_LIB_PATH            (CL_RETVAL_START_ID + 126)
 
-#define CL_RETVAL_LAST_ID                     (CL_RETVAL_START_ID + 126)  /* this must be the last number + 1 */
+#define CL_RETVAL_LAST_ID                     (CL_RETVAL_START_ID + 127)  /* this must be the last number + 1 */
 #define CL_RETVAL_UNDEFINED_STR "undefined commlib error code"
 
 int         cl_is_commlib_error(int error_id);

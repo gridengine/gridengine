@@ -8,15 +8,67 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
-EB-2011-05-14-0: Bugfix:      clone upgrade might fail if master host is 
+EB-2011-05-26-0: Bugfix:      clone upgrade might fail if master host is 
                               referenced in host_aliases file.
                  Issues:      GE-3481
+                 Review:      DG
+
+JG-2011-05-25-0: Enhancem.:   try to detect location of libc.so.6 on Linux in
+                              arch script
+                 Issue:       GE-3467
+                 Review:      SH
+
+SH-2011-05-25-0: Bugfix:      Read from stderr even if stdout is already closed
+                              (IJS)
+                 Issue:       GE-3190
+                 Review:      SH
+
+HP-2011-05-25-0: Bugfix:      on Windows, the loadcheck.exe binary output
+                              misses a line break
+                 Issue:       GE-3503
+                 Review:      SH
+
+SH-2011-05-19-0: Bugfix:      use absolute pathnames for dynamically opening
+                              openssl-libraries instead of just the lib-name
+                 Issue:       GE-3464
+                 Review:      SH
+
+JG-2011-05-19-0: Enhancem.:   need better os version handling on aix for arch
+                              and ibm-loadsensor
+                 Issue:       GE-3444
+                 Review:      DG
+
+SH-2011-05-18-0: Bugfix:      output file of "qsub -pty" belongs to UGE admin
+                              user instead of the job user
+                 Issue:       GE-3473
+                 Review:      HP
+
+EB-2011-05-18-0: Bugfix:      start time is not available in qstat -j -xml outp.
+                 Issue:       GE-3482
+                 Review:      DG
+
+EB-2011-05-17-1: Bugfix:      qconf man page references non-existent ge_conf(5)
+                              man page
+                 Issue:       GE-3499
+                 Review:      DG
+
+EB-2011-05-17-0: Cleanup:     use sge wrapper functions for mkdir, rmdir, unlink
+                 Issue:       GE-3378
+
+JG-2011-05-16-0: Bugfix:      parallel jobs are not dispatched to the least
+                              loaded host
+                 Issue:       GE-3479
+                 Review:      EB
 
 DG-2011-05-11-0: Bugfix:      man page queue_conf slots entry is wrong
-                 Review_      HP
+                 Review:      HP
 
 EB-2011-05-11-1: Bugfix:      uninitialized memory due to incorrect use of memset
                  Issues:      GE-3112
+
+EB-2011-05-12-0: Bugfix:      Fixes in various man pages
+                 Issues:      GE-2820, GE-2379, GE-2766, GE-2765, GE-3277
+                              GE-3294, GE-3243
 
 EB_2011-05-11-0: Bugfix:      Fixes in various man pages
                  Issues:      GE-3259, GE-3287, GE-3252, GE-3275, GE-3274

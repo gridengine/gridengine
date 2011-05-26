@@ -173,7 +173,7 @@ int main(int argc, char *argv[])
 
       GetSystemInfo(&system_info);
       nprocs = system_info.dwNumberOfProcessors;
-      sprintf(buf, "num_proc        %d", nprocs);
+      sprintf(buf, "num_proc        %d\n", nprocs);
       fflush(stdout);
       _write(1, (const void*)buf, (unsigned int)strlen(buf));
       _write(1, (const void*)"\0x0a", (unsigned int)1);

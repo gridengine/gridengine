@@ -88,15 +88,11 @@ AIX)
          ;;
       esac
       ;;
-   5)
-      case $osrelease in
-      1|2|3)
-         ARCH=aix51
-         ;;
-      *)
-         ARCH=UNSUPPORTED-aix-5-$osrelease
-         ;;
-      esac
+   5|6|7)
+      ARCH=aix51
+      ;;
+   *)
+      ARCH=UNSUPPORTED-aix-$osrelease
       ;;
    esac
    ;;
@@ -237,43 +233,30 @@ Linux)
       case $osrelease in
       2.4.*|2.6.*)
          # verify the GNU C lib version
-         # For an alternative means to determine GNU C lib version see
-         # http://www.gnu.org/software/libc/FAQ.html#s-4.9
-         #
          # we expect libc version to be
          # >= 2.3 - this is our supported lx-* platform
          # == 2.2 - unsupported but known to build and work: ulx-* platform
          # <= 2.2 - not accepted as build or execution platform
-         case $lxmachine in
-         amd64)
-            if [ -f /lib64/x86_64-linux-gnu/libc.so.6 ]; then
-               libc_string=`strings /lib64/x86_64-linux-gnu/libc.so.6 | grep "GNU C Library"`
-            else
-               libc_string=`strings /lib64/libc.so.6 | grep "GNU C Library"`
-            fi
-            ;;
-         ia64)
-            libc_string=`strings /lib/libc.so.6.1 | grep "GNU C Library"`
-            ;;
-         *)
-            if [ -f /lib/i386-linux-gnu/libc.so.6 ]; then
-               libc_string=`strings /lib/i386-linux-gnu/libc.so.6 | grep "GNU C Library"`
-            else
-               libc_string=`strings /lib/libc.so.6 | grep "GNU C Library"`
-            fi
-            ;;
-         esac
 
-         # retrieving libc version failed
+         # there must be a /bin/sh installed, and it certainly uses libc
+         libc_ldd=`ldd /bin/sh | grep libc.so.6`
+
+         # retrieving libc location failed
          if [ $? -ne 0 ]; then
             unsupported="UNSUPPORTED-"
          else
-            libc_version=`echo $libc_string | tr ' ,' '\n' | grep "2\." | head -1 | cut -f 2 -d "." | cut -f 1 -d "-"`
-            if [ $libc_version -lt 2 ]; then
-               unsupported="UNSUPPORTED-GLIBC-2.${libc_version}"
+            libc=`echo $libc_ldd | awk '{print $3}'`
+            libc_string=`strings $libc | grep "GNU C Library"`
+            if [ $? -ne 0 ]; then
+               unsupported="UNSUPPORTED-"
             else
-               if [ $libc_version -eq 2 ]; then
-                  unsupported="u"
+               libc_version=`echo $libc_string | tr ' ,' '\n' | grep "2\." | head -1 | cut -f 2 -d "." | cut -f 1 -d "-"`
+               if [ $libc_version -lt 2 ]; then
+                  unsupported="UNSUPPORTED-GLIBC-2.${libc_version}"
+               else
+                  if [ $libc_version -eq 2 ]; then
+                     unsupported="u"
+                  fi
                fi
             fi
          fi

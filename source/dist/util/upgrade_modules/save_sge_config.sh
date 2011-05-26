@@ -50,7 +50,7 @@ ARCH=`$SGE_ROOT/util/arch`
 MKDIR=mkdir
 QCONF=$SGE_ROOT/bin/$ARCH/qconf
 QHOST=$SGE_ROOT/bin/$ARCH/qhost
-HOST=`$SGE_ROOT/utilbin/$ARCH/gethostname -name`
+HOST=`$SGE_ROOT/utilbin/$ARCH/gethostname -aname`
 
 
 Usage()

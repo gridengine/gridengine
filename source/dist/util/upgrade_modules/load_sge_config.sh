@@ -49,7 +49,7 @@ CAT=cat
 MKDIR=mkdir
 LS=ls
 QCONF=$SGE_ROOT/bin/$ARCH/qconf
-HOST=`$SGE_ROOT/utilbin/$ARCH/gethostname -name`
+HOST=`$SGE_ROOT/utilbin/$ARCH/gethostname -aname`
 
 SUCCEEDED_LOADLOC=""
 

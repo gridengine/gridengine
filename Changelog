@@ -8,6 +8,10 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+EB-2011-05-14-0: Bugfix:      clone upgrade might fail if master host is 
+                              referenced in host_aliases file.
+                 Issues:      GE-3481
+
 DG-2011-05-11-0: Bugfix:      man page queue_conf slots entry is wrong
                  Review_      HP
 

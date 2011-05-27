@@ -361,6 +361,7 @@ execd_get_wallclock_limit(const char *qualified_hostname, lList *gdil_list, int 
 
 int do_ck_to_do(sge_gdi_ctx_class_t *ctx, bool is_qmaster_down) {
    u_long32 now;
+   u_long32 pdc_interval = U_LONG32_MAX;
    static u_long next_pdc = 0;
    static u_long next_signal = 0;
    static u_long next_old_job = 0;
@@ -394,11 +395,14 @@ int do_ck_to_do(sge_gdi_ctx_class_t *ctx, bool is_qmaster_down) {
 #ifdef COMPILE_DC
    /*
     * Collecting usage is only necessary if there are
-    * jobs/tasks on this execution host.
-    * do this according to execd_param PDC_INTERVAL
+    * jobs/tasks on this execution host and if it isn't
+    * disabled by the execd_param PDC_INTERVAL set to NEVER. 
     */
-   if (lGetNumberOfElem(*(object_type_get_master_list(SGE_TYPE_JOB))) > 0 && next_pdc <= now) {
-      next_pdc = now + mconf_get_pdc_interval();
+   pdc_interval = mconf_get_pdc_interval();
+   if (lGetNumberOfElem(*(object_type_get_master_list(SGE_TYPE_JOB))) > 0 &&
+       pdc_interval != U_LONG32_MAX &&
+       next_pdc <= now ) {
+      next_pdc = now + pdc_interval;
 
       notify_ptf();
 

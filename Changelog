@@ -8,9 +8,13 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+HP-2011-05-27-0: Bugfix:      PDC_INTERVAL=NEVER does not work
+                 Issue:       GE-3474
+                 Review:      EB
+
 EB-2011-05-26-0: Bugfix:      clone upgrade might fail if master host is 
                               referenced in host_aliases file.
-                 Issues:      GE-3481
+                 Issue:       GE-3481
                  Review:      DG
 
 JG-2011-05-25-0: Enhancem.:   try to detect location of libc.so.6 on Linux in

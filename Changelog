@@ -8,6 +8,11 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+HP-2011-05-31-0: Bugfix:      fstype binary doesn't detect NFS4 on Linux if the
+                              mountpoint is deeper than one directory
+                 Issue:       GE-3505
+                 Review:      TBD
+
 JG-2011-05-31-2: Enhancem.:   evaluate / fix / improve the spooling performance
                               tests - part 1: added csv output
                  Issue:       GE-3363

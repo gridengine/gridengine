@@ -1,32 +1,34 @@
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
- * 
+ *
  *  The Contents of this file are made available subject to the terms of
  *  the Sun Industry Standards Source License Version 1.2
- * 
+ *
  *  Sun Microsystems Inc., March, 2001
- * 
- * 
+ *
+ *
  *  Sun Industry Standards Source License Version 1.2
  *  =================================================
  *  The contents of this file are subject to the Sun Industry Standards
  *  Source License Version 1.2 (the "License"); You may not use this file
  *  except in compliance with the License. You may obtain a copy of the
  *  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
- * 
+ *
  *  Software provided under this License is provided on an "AS IS" basis,
  *  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
  *  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
  *  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
  *  See the License for the specific provisions governing your rights and
  *  obligations concerning the Software.
- * 
+ *
  *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
- * 
+ *
  *   Copyright: 2001 by Sun Microsystems, Inc.
- * 
+ *
  *   All Rights Reserved.
- * 
+ *
+ *  Portions of this software are Copyright (c) 2011 Univa Corporation
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
@@ -47,9 +49,9 @@
 
 #if defined(SOLARIS)
 #include <kstat.h>
-#include <nfs/nfs.h> 
-#include <nfs/nfs_clnt.h> 
-#endif 
+#include <nfs/nfs.h>
+#include <nfs/nfs_clnt.h>
+#endif
 
 #if defined(INTERIX)
 #  include "wingrid.h"
@@ -64,8 +66,8 @@ int main(int argc, char *argv[]) {
    if (argc < 2) {
       printf("Usage: fstype <directory>\n");
       return 1;
-   } else { 
-#if defined(LINUX) 
+   } else {
+#if defined(LINUX)
    struct statfs buf;
    FILE *fd = NULL;
    char buffer[BUF_SIZE];
@@ -77,21 +79,21 @@ int main(int argc, char *argv[]) {
    struct statvfs buf;
    ret = wl_statvfs(argv[1], &buf);
 #elif defined(SOLARIS)
-   struct statvfs buf; 
+   struct statvfs buf;
    struct mntinfo_kstat mnt_info;
    minor_t fsid;
    kstat_ctl_t    *kc = NULL;
    kstat_t        *ksp;
    kstat_named_t  *knp;
 
-   ret = statvfs(argv[1], &buf); 
+   ret = statvfs(argv[1], &buf);
    /*
       statfs returns dev_t (32bit - 14bit major + 18bit minor number)
       the kstat_instance is the minor number
    */
    fsid = (minor_t)(buf.f_fsid & 0x3ffff);
- 
-   if ( strcmp(buf.f_basetype, "nfs") == 0) {
+
+   if (strcmp(buf.f_basetype, "nfs") == 0) {
             kc = kstat_open();
             for (ksp = kc->kc_chain; ksp; ksp = ksp->ks_next) {
                if (ksp->ks_type != KSTAT_TYPE_RAW)
@@ -114,7 +116,7 @@ int main(int argc, char *argv[]) {
             }
             ret = kstat_close(kc);
    }
-#else   
+#else
    struct statvfs buf;
    ret = statvfs(argv[1], &buf);
 #endif
@@ -123,14 +125,17 @@ int main(int argc, char *argv[]) {
       printf("Error: %s\n", strerror(errno));
       return 2;
    }
-  
+
 #if defined (DARWIN) || defined(FREEBSD) || defined(NETBSD)
    printf("%s\n", buf.f_fstypename);
 #elif defined(LINUX)
+   /* 0x6969 is NFS_SUPER_MAGIC (see statfs(2) man page) */
    if (buf.f_type == 0x6969) {
-      /* Linux is not able to detect the right nfs version form the statfs struct.
-         f_type always returns nfs, even when it's a nfs4. We are looking into 
-         the /etc/mtab file until we found a better solution to do this */
+      /*
+       * Linux is not able to detect the right nfs version form the statfs struct.
+       * f_type always returns nfs, even when it's a nfs4. We are looking into
+       * the /etc/mtab file until we found a better solution to do this.
+       */
       fd = fopen("/etc/mtab", "r");
       if (fd == NULL) {
          fprintf(stderr, "file system type could not be detected\n");
@@ -140,37 +145,29 @@ int main(int argc, char *argv[]) {
          bool found_line = false;
          sge_strip_white_space_at_eol(argv[1]);
          sge_strip_slash_at_eol(argv[1]);
+
          while (fgets(buffer, sizeof(buffer), fd) != NULL) {
             char* export = NULL; /* where is the nfs exported*/
             char* mountpoint = NULL; /*where is it mounted to */
             char* fstype = NULL; /*type of exported file system */
-             
-            export = sge_strtok(buffer, " \t"); 
+
+            export = sge_strtok(buffer, " \t");
             mountpoint = sge_strtok(NULL, " \t");
             fstype = sge_strtok(NULL, " \t");
-            /*if mtab fstype = nfs4 we found a nfs4 entry*/
-            if (fstype != NULL && strcmp(fstype, "nfs4") == 0 && mountpoint != NULL) {
-               char* tmp_argv = argv[1];
-               char* tmp2_argv = tmp_argv;
 
-               while (tmp_argv != NULL) {
-                  if (strcmp(mountpoint, tmp_argv) == 0) {  /*if argument and moint point are equal*/
-                     found_line = true;                     /*the argv is type nfs4*/
-                     printf ("%s\n", fstype);
-                     break;
-                  } else {
-                     tmp2_argv = strrchr(tmp_argv, '/');
-                     if (tmp_argv != NULL && tmp2_argv != NULL) { /*if not, stripping argv from the end*/
-                        /*by setting last / to \0 and compare again with mountpoint*/
-                        tmp_argv[strlen(tmp_argv) - strlen(tmp2_argv)] = '\0'; 
-                     } else {
-                        break;
-                     }
-                  }
+            /* search only in valid lines that contain NFS4 mounts */
+            if (mountpoint != NULL && fstype != NULL && strcmp(fstype, "nfs4") == 0) {
+               /* search mountpoint in given path */
+               char *pos = strstr(argv[1], mountpoint);
+               if (pos == argv[1]) {
+                  /* we found the mountpoint at the start of the given path, this is it! */
+                  found_line = true;
+                  printf ("%s\n", fstype);
+                  break;
                }
-               break;   
             }
-         } 
+         }
+
          fclose(fd);
          if (found_line == false) { /*if type could not be detected via /etc/mtab, then we have to print out "nfs"*/
             printf("nfs\n");
@@ -179,7 +176,7 @@ int main(int argc, char *argv[]) {
    } else {
       if (buf.f_type == 0x52654973) {
          printf("reiserfs\n");
-      } else {  
+      } else {
          printf("%lx\n", (long unsigned int)buf.f_type);
       }
    }

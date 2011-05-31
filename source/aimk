@@ -44,7 +44,7 @@
 #
 set noglob
 unsetenv buildarch BUILDARCH COMPILE_ARCH COMPILE_DIR LD_LIBRARY_PATH 
-unsetenv AIMK_INSURE AIMK_TARGET_BITS aimk_buildarch
+unsetenv ANT_AIMK_OPTS AIMK_TARGET_BITS aimk_buildarch
 
 set COMPILE_ARCH = ""
 set COMPILE_DIR  = ""
@@ -100,8 +100,13 @@ while ($i <= $#argv)
       set AIMK_TARGETOPT = 1
       set TARGET_BITS = TARGET_32BIT
       if ($BUILDARCH == SOLARIS64) then
-         set BUILDARCH = SOLARIS  
-         set buildarch = sol-sparc
+         set BUILDARCH = SOLARIS
+         if ("$buildarch" == "sol-sparc64") then
+            set buildarch = sol-sparc
+         else
+            set buildarch = usol-sparc
+            set COMPILE_ARCH = USOLARIS
+         endif
       else if ($BUILDARCH == HP1164) then
          set BUILDARCH = HP11
          set buildarch = hp11
@@ -1755,7 +1760,6 @@ case SOLARISAMD64:
             set compversion = `cc -V |& head -1 | cut -f4 -d" "`
             set patchcnt = `/bin/sh -c 'ls -d /var/sadm/patch/112756-* 2> /dev/null' | wc -l`
             set haspatch = `expr $patchcnt ">=" 1`
-     #       set haspatch = 0
             if ( $compversion == 5.5 && $haspatch == 1 || $compversion != 5.5 ) then
                # set OFLAG = "-fast -xchip=pentium -xcache=generic"
                #
@@ -1775,7 +1779,12 @@ case SOLARISAMD64:
      #          set OFLAG = "-xO3 -fns -fsimple=2 -fsingle -ftrap=%none -nofstore -xbuiltin=%all -xdepend -xlibmil"
             endif
          else
-	         set OFLAG = "-fast -xchip=generic -xcache=generic"
+            # optimization is broken in the Studio 11 compiler
+            if ( $BUILDARCH == SOLARIS64 ) then
+               set OFLAG = "-xO1"
+            else
+	       set OFLAG = "-fast -xchip=generic -xcache=generic"
+            endif
          endif
       endif
    else
@@ -1821,7 +1830,9 @@ case SOLARISAMD64:
    endif
 
    set DEPEND_FLAGS = "$CFLAGS -D$BUILDARCH $XMTINCD"
-   set MEMCFLAG = "-Xa"
+   if ( "$CC" == "cc" ) then
+      set MEMCFLAG = "-Xa"
+   endif
 
    if ( $CC == cc ) then
       set LFLAGS = "-xildoff $LFLAGS"
@@ -1867,7 +1878,7 @@ case SOLARISAMD64:
       set CFLAGS = "-Xc -v $OFLAG $MEMFLAG -ftrap=division $CFLAGS $DEBUG_FLAG"
    else if ( $CC == gcc) then
       #set CFLAGS = "-Wall -Werror -Wstrict-prototypes $CFLAGS"
-      set CFLAGS = "-Wall -Wstrict-prototypes $CFLAGS"
+      set CFLAGS = "-Wall -Wstrict-prototypes $CFLAGS $OFLAG"
       set SHARED_CFLAGS = "-fPIC"
       set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -shared"
 
@@ -2662,10 +2673,13 @@ if ( "$JAVA" > 0 ) then
       setenv AIMK_TARGET_BITS $TARGET_BITS
       setenv aimk_buildarch $buildarch
    endif
+
+   setenv ANT_AIMK_OPTS ""
+   if ( "$CC" == "gcc" ) then
+      setenv ANT_AIMK_OPTS "-gcc"
+   endif
    if ( $USE_INSURE == 1 ) then
-      setenv AIMK_INSURE -insure
-   else
-      setenv AIMK_INSURE ""
+      setenv ANT_AIMK_OPTS "$ANT_AMK_OPTS -insure"
    endif
    if ( $DEBUGGED == 1 ) then
       setenv AIMK_DEBUG true
@@ -2817,8 +2831,7 @@ if ( "$QMAKE" == 1) then
    endif
 
    cd $SOURCE/3rdparty/qmake/$COMPILE_ARCH
-
-   $MAKE $MAKEOPT -f Makefile "MAKE=$MAKE" "COMPILE_ARCH=$COMPILE_ARCH" "DLLIB=$DLLIB" $argv
+   $MAKE $MAKEOPT -f Makefile "MAKE=$MAKE" "CC=$CC" "COMPILE_ARCH=$COMPILE_ARCH" "DLLIB=$DLLIB" $argv
 
    if ( $status != 0 ) then
       echo not done
@@ -2991,16 +3004,20 @@ echo done.
 # and no "-only-*" parameter specified, the shared libraries for
 # SOLARIS are also built.
 if ( $BUILDARCH == SOLARIS64 && $ONLY_PARAM_SPEC == 0 && "${SOLARIS_ONLY_64}" != 1 ) then
-      if ( "$argv" == "" ) then 
+      set ARGS32 = "-32 -only-core"
+      if ( "$CC" == "gcc" ) then
+         set ARGS32 = "$ARGS32 -gcc"
+      endif
+      if ( "$argv" == "" ) then
          echo ""
          echo "Executing aimk again to build 32 bit shared libraries."
          if ( "$JAVA" > 0 ) then
-            ./aimk -32 -only-core libdrmaa.so libjgdi.so libjuti.so
+            ./aimk $ARGS32 libdrmaa.so libjgdi.so libjuti.so
          else 
-            ./aimk -32 -only-core libdrmaa.so libjuti.so
+            ./aimk $ARGS32 libdrmaa.so libjuti.so
          endif
        else if ( "$argv" == "clean" ) then 
-            ./aimk -32 -only-core clean 
+            ./aimk $ARGS32 clean 
        endif 
       exit $status
    endif

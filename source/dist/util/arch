@@ -305,14 +305,14 @@ SunOS)
       ;;
    *)
       case $osrelease in
-      5.[7]*)
+      5.[8]*)
          if [ `isainfo -b` = 64 ]; then
             ARCH=usol-sparc64
          else
             ARCH=usol-sparc
          fi
          ;;
-      5.[891]*)
+      5.[91]*)
          if [ `isainfo -b` = 64 ]; then
             ARCH=sol-sparc64
          else

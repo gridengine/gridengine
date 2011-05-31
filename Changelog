@@ -8,6 +8,12 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+JG-2011-05-31-0: Bugfix:      o workaround optimizer bug of Sun Studio 9 on
+                                Solaris Sparc 64
+                              o fix building with gcc on Solaris
+                 Issue:       GE-3468
+                 Review:      EB
+
 HP-2011-05-27-0: Bugfix:      PDC_INTERVAL=NEVER does not work
                  Issue:       GE-3474
                  Review:      EB

@@ -40,6 +40,9 @@ switch($buildarch)
    case "win32-x86":
       set argv = ( -no-jni -no-java $* )
       breaksw
+   case "usol-sparc64"
+      set argv = ( -no-intl -no-java -no-jni $* )
+      breaksw
    default:
       set argv = ( $* )
       breaksw

@@ -1493,14 +1493,17 @@ for further information about sharelog.
 .PP
 .IP "\fIlog_consumables\fP"
 This parameter controls writing of consumable resources to the reporting file.
-When set to (\fBlog_consumables=true\fB)
+When set to \fBlog_consumables=true\fB
 information about all consumable resources (their current usage and their capacity)
 will be written
 to the reporting file, whenever a consumable resource changes either in definition,
-or in capacity, 
-or when the usage of a consumable resource changes.
-When \fBlog_consumables\fB is set to \fBfalse\fB (default), only those variables will be written to the 
-reporting file, that are configured in the \fBreport_variables\fB in the exec host configuration, see
+or in capacity,
+or when the usage of an arbitrary consumable resource changes.
+When \fBlog_consumables\fB is set to \fBfalse\fB (default), only those variables will be written to the
+reporting file, that are configured in the \fBreport_variables\fB in the exec host configuration
+and whose definition or value actually changed.
+This parameter is deprecated and will get removed in the next major release.
+See
 .M host_conf 5
 for further information about \fBreport_variables\fB.
 .PP

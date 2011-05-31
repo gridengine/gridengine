@@ -1,32 +1,34 @@
 /*___INFO__MARK_BEGIN__*/
 /*************************************************************************
- * 
+ *
  *  The Contents of this file are made available subject to the terms of
  *  the Sun Industry Standards Source License Version 1.2
- * 
+ *
  *  Sun Microsystems Inc., March, 2001
- * 
- * 
+ *
+ *
  *  Sun Industry Standards Source License Version 1.2
  *  =================================================
  *  The contents of this file are subject to the Sun Industry Standards
  *  Source License Version 1.2 (the "License"); You may not use this file
  *  except in compliance with the License. You may obtain a copy of the
  *  License at http://gridengine.sunsource.net/Gridengine_SISSL_license.html
- * 
+ *
  *  Software provided under this License is provided on an "AS IS" basis,
  *  WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING,
  *  WITHOUT LIMITATION, WARRANTIES THAT THE SOFTWARE IS FREE OF DEFECTS,
  *  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
  *  See the License for the specific provisions governing your rights and
  *  obligations concerning the Software.
- * 
+ *
  *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
- * 
+ *
  *   Copyright: 2001 by Sun Microsystems, Inc.
- * 
+ *
  *   All Rights Reserved.
- * 
+ *
+ *  Portions of this software are Copyright (c) 2011 Univa Corporation
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
@@ -168,6 +170,38 @@ static bool delete_spooled_data(void)
    return true;
 }
 
+static void write_csv_header(void)
+{
+   static const char *header = "scenario,wallclock,utime,stime,utilization,jobs_per_second";
+   FILE* csv;
+
+   csv = fopen("spooling_performance.csv", "w");
+   fprintf(csv, "%s\n", header);
+   fclose(csv);
+}
+
+static void write_csv(const char *scenario, prof_level level)
+{
+   static const char *fmt = "%s,%.2f,%.2f,%.2f,%.0f,%.0f\n";
+
+   FILE* csv;
+   double busy;
+   double utime;
+   double stime;
+   double utilization;
+   double jobs_per_second;
+
+   busy        = prof_get_total_busy(level, true, NULL);
+   utime       = prof_get_total_utime(level, true, NULL);
+   stime       = prof_get_total_stime(level, true, NULL);
+   utilization = busy > 0 ? (utime + stime) / busy * 100 : 0;
+   jobs_per_second = busy > 0 ? 30000 / busy : 0;
+
+   csv = fopen("spooling_performance.csv", "a");
+   fprintf(csv, fmt, scenario, busy, utime, stime, utilization, jobs_per_second);
+   fclose(csv);
+}
+
 int main(int argc, char *argv[])
 {
    sge_gdi_ctx_class_t *ctx = NULL;
@@ -217,11 +251,15 @@ int main(int argc, char *argv[])
       SGE_EXIT((void**)&ctx, EXIT_FAILURE);
    }
    answer_list_output(&answer_list);
-  
+
+   /* initialize csv output file */
+   write_csv_header();
+
 #ifndef TEST_READ_ONLY
    PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
    generate_jobs(30000);
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
+   write_csv("generating jobs", SGE_PROF_CUSTOM1);
    prof_output_info(SGE_PROF_CUSTOM1, true, "generating jobs:\n");
    prof_reset(SGE_PROF_CUSTOM1, NULL);
 /*
@@ -229,6 +267,7 @@ int main(int argc, char *argv[])
    copy = copy_jobs();
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
    lFreeList(&copy);
+   write_csv("copy jobs", SGE_PROF_CUSTOM1);
    prof_output_info(SGE_PROF_CUSTOM1, true, "copy jobs:\n");
    prof_reset(SGE_PROF_CUSTOM1, NULL);
 
@@ -236,14 +275,17 @@ int main(int argc, char *argv[])
    copy = select_jobs(what_job);
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
    lFreeList(&copy);
+   write_csv("select jobs", SGE_PROF_CUSTOM1);
    prof_output_info(SGE_PROF_CUSTOM1, true, "select jobs:\n");
    prof_reset(SGE_PROF_CUSTOM1, SGE_PROF_CUSTOM1, NULL);
 */
    PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
    spool_data();
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
+   write_csv("spool jobs", SGE_PROF_CUSTOM1);
    prof_output_info(SGE_PROF_CUSTOM1, true, "spool jobs:\n");
    prof_reset(SGE_PROF_CUSTOM1, NULL);
+   write_csv("spooling io", SGE_PROF_SPOOLINGIO);
    prof_output_info(SGE_PROF_SPOOLINGIO, true, "IO:\n");
    prof_reset(SGE_PROF_SPOOLINGIO, NULL);
 
@@ -252,21 +294,24 @@ int main(int argc, char *argv[])
    PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
    read_spooled_data();
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
+   write_csv("read jobs (cached)", SGE_PROF_CUSTOM1);
    prof_output_info(SGE_PROF_CUSTOM1, true, "read jobs (cached):\n");
    prof_reset(SGE_PROF_CUSTOM1, NULL);
 
    PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
    delete_spooled_data();
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
+   write_csv("delete jobs", SGE_PROF_CUSTOM1);
    prof_output_info(SGE_PROF_CUSTOM1, true, "delete jobs:\n");
    prof_reset(SGE_PROF_CUSTOM1, NULL);
-  
+
    spool_shutdown_context(&answer_list, spooling_context);
    spool_startup_context(&answer_list, spooling_context, true);
 #else
    PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
    read_spooled_data();
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
+   write_csv("read jobs (uncached)", SGE_PROF_CUSTOM1);
    prof_output_info(SGE_PROF_CUSTOM1, true, "\nread jobs (uncached):\n");
    prof_reset(SGE_PROF_CUSTOM1, NULL);
 #endif

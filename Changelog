@@ -8,6 +8,11 @@
           1         2         3         4         5         6         7
 01234567890123456789012345678901234567890123456789012345678901234567890123456789
 
+JG-2011-05-31-2: Enhancem.:   evaluate / fix / improve the spooling performance
+                              tests - part 1: added csv output
+                 Issue:       GE-3363
+                 Review:      EB
+
 JG-2011-05-31-1: Enhancem.:   mark reporting_params log_consumables as
                               deprecated in the man page sge_conf.5
                  Issue:       GE-3497

@@ -149,6 +149,7 @@ set BASEDIR = `pwd`
 set BASEDIR = `dirname $BASEDIR`
 set BASEDIR = `dirname $BASEDIR`
 if ( -d $BASEDIR/uge-extensions ) then
+   set UGE_EXT = 1
    set UGE_LIBS = $BASEDIR/uge-extensions
    set UNIVA_COPYRIGHT_DIR = $UGE_LIBS/copyright
 endif

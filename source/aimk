@@ -997,37 +997,55 @@ case AIX51:
    set MAKEWINGRIDAPP   = 0
    set COMPILE_DC = 1
 
-   set LIBS = "$LIBS -lc"
+   set XMTDEF   = ""
+   set XINCD    = "$XMTINCD $XINCD"
+   set XLIBD    = ""
+   set XLFLAGS  = "$XLIBD"
+   set XLIBS    = "-lXm  -lXt -lXext -lX11 -lm -liconv -lc"
+
+   if ( $CC == "gcc" ) then
+      if ( $OPTIMIZATION == 1 ) then
+         set OFLAG = "-O3"
+      else
+         set OFLAG    = ""
+      endif
+      set LFLAGS = "-Wl,-brtl -Wl,-bbigtoc -L."
+      set XCFLAGS  = ""
+      set SHARED_CFLAGS = "-fPIC"
+      set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -shared -Wl,-G"
+      set SHAREDLD = "gcc"
+   else
+      set CC       = xlc_r
+      set CXX      = xlC_r
+      set LIBS = "$LIBS -lc"
+      if ( $DEBUGGED == 1 ) then
+         set DEBUG_FLAG = "$DEBUG_FLAG -qinitauto=01 -qro -qroconst"
+      endif
+      if ( $OPTIMIZATION == 1 ) then
+         set OFLAG = "-O3 -qstrict -qmaxmem=8192"
+      else
+         set OFLAG    = "-qmaxmem=8192"
+      endif
+      set CFLAGS = "$CFLAGS -bnoquiet"
+      set XCFLAGS  = "-bnodelcsect"
+      set LFLAGS   = "-brtl -bmaxdata:0x80000000 $LFLAGS"
+      set SHARED_CFLAGS = ""
+      set SHARED_LFLAGS = "-brtl -bhalt:4 -bM:SRE -bE:lib.exp -H512 -T512 -bnoentry"
+      set SHAREDLD = "$SOURCE/scripts/ldAix"
+   endif
 
    if ($BUILDARCH == "AIX43") then
      set AUTHLIBS = ""
    endif
 
-   if ( $DEBUGGED == 1 ) then
-      set DEBUG_FLAG = "$DEBUG_FLAG -qinitauto=01 -qro -qroconst"
-   endif
-   if ( $OPTIMIZATION == 1 ) then
-      set OFLAG = "-O3 -qstrict -qmaxmem=8192"
-   else
-      set OFLAG    = "-qmaxmem=8192"
-   endif
-   set CC       = xlc_r
-   set CXX      = xlC_r
-   set CFLAGS   = "$OFLAG -DAIX -D$BUILDARCH -D_LARGE_FILES -DUSE_STDARG -DUSE_SGE_UNSETENV -DGETHOSTBYADDR_R5 -DGETHOSTBYNAME_R3 $DEBUG_FLAG $CFLAGS -bnoquiet"
+   set CFLAGS   = "$OFLAG -DAIX -D$BUILDARCH -D_LARGE_FILES -DUSE_STDARG -DUSE_SGE_UNSETENV -DGETHOSTBYADDR_R5 -DGETHOSTBYNAME_R3 $DEBUG_FLAG $CFLAGS"
    set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
-   set XMTDEF   = ""
-   set XINCD    = "$XMTINCD $XINCD"
-   set XCFLAGS  = "-bnodelcsect -DNeedFunctionPrototypes -DNeedVarargsPrototypes $XMTDEF $XINCD"
-   set XLIBD    = ""
-   set XLFLAGS  = "$XLIBD"
-   set XLIBS    = "-lXm  -lXt -lXext -lX11 -lm -liconv -lc"
-
-   set SHAREDLD = "$SOURCE/scripts/ldAix"
-   set SHARED_CFLAGS = ""
-   set SHARED_LFLAGS = "$LFLAGS $KLFLAGS -brtl -bhalt:4 -bM:SRE -bE:lib.exp -H512 -T512 -bnoentry"
+   set XCFLAGS  = "$XCFLAGS -DNeedFunctionPrototypes -DNeedVarargsPrototypes $XMTDEF $XINCD"
 
    # add DEBUG_FLAGS to LFLAGS after SHARED_LFLAGS - -g isn't recognized by ld
-   set LFLAGS   = "$DEBUG_FLAG -brtl -bmaxdata:0x80000000 $LFLAGS"
+   set SHARED_LFLAGS = "$LFLAGS $KLFLAGS $SHARED_LFLAGS"
+   set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
+
    set JAVA_ARCH = "aix"
    set JAVA_LFLAGS = ""
    breaksw

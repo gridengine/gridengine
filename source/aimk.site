@@ -35,6 +35,7 @@
 #
 switch($buildarch)
    case "aix43":
+   case "aix51":
    case "darwin":
    case "lx-alpha":
    case "win32-x86":

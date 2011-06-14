@@ -238,10 +238,10 @@ EXTRALIBS =  $(AFSLIB) -L../../../AIX51 $(SGE_LIBS) -lm
 # will lose the editor and job control.
 
 # This is for setting your C preprocessor value.
-CPP = cc -E # This is set by autoconf.
+CPP = $(CC) -E # This is set by autoconf.
 # The -B tells gcc to use /bin/ld. This is to avoid using the gnu ld, which
 # on the suns does not know how to make dynamically linked binaries.
-CC = cc # This is set by autoconf.
+#CC = cc # This is set by autoconf.
 #CC=	gcc -Wall -pipe -B/bin/	# -ansi -pedantic
 #CC=	gcc -m486 -pipe -Wall # Generate code for Intel 486 (linux)
 #CC=	shlicc 	# BSDI2.1 w/ shared libraries

@@ -3,6 +3,8 @@
 .\"
 .\" Copyright: 2004 by Sun Microsystems, Inc.
 .\"
+.\" Portions of this software are Copyright (c) 2011 Univa Corporation
+.\"
 .\"___INFO__MARK_END__
 .\" $RCSfile: SGE_Helper_Service.exe.8,v $     Last Update: $Date: 2008/10/08 19:52:37 $     Revision: $Revision: 1.4 $
 .\"
@@ -57,8 +59,9 @@ permissions to access the visible Desktop.
 This service runs independently of the
 .M xxqs_name_sxx_execd 8
 (i.e. it is not started and stopped together with the execution daemon) and there
-can be only one SGE_Helper_Service.exe per host.
-.br
+can be only one
+.I SGE_Helper_Service.exe per host.
+.PP
 Jobs can request to be allowed to display their GUI on the visible desktop by 
 requesting the resource "display_win_gui" (qsub -l display_win_gui=1). See
 .M submit 1
@@ -68,7 +71,18 @@ When running GUI jobs, the environment variable SGE_BACKGND_MODE can be used to
 direct where the output of the GUI will be displayed. If the environment variable
 SGE_BACKGND_MODE is set to "TRUE" or "1" and "-l display_win_gui=true" is requested,
 the job is started by the helper service, but the GUI is not opened on the execution 
-host's screen. Instead it is opened on a virtual screen. 
+host's screen. Instead it is opened on a virtual screen.
+.PP
+The Windows administrator can operate this service using the usual Windows
+Service Control Manager or the "net" command. The "start" method starts the
+service if possible, the "stop" method stops it regardless of any jobs that
+might be still running. For a graceful shutdown, first run the "pause" method.
+This will start the shutdown procedure of the service and prevent it from
+accepting any further jobs. After this, the "resume" (aka "continue") method
+will fail as long as there are jobs running in the
+.I SGE_Helper_Service.exe.
+If no job is left in the service, the "resume" method will succeed and the
+service will stop.
 .br
 .\"
 .\"

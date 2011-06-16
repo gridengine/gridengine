@@ -138,7 +138,7 @@ vpath.o version.o ar.o arscan.o remote-$(REMOTE).o signame.o getopt.o \
 getopt1.o
 make_DEPENDENCIES =   
 make_LDFLAGS = 
-CFLAGS = -O3 -no-cpp-precomp -flat_namespace -Wall -Werror -Wstrict-prototypes -DFD_SETSIZE=8192 -DDARWIN -DDARWIN8 -DGETHOSTBYNAME -DGETHOSTBYADDR_M  -DLOAD_OPENSSL -I/vol2/SW/db-4.4.20/darwin-ppc/include/ -DTARGET_32BIT -DQCONF_FLATFILE  -DSPOOLING_dynamic -DSECURE -I/vol2/tools/SW/openssl-0.9.7e/darwin-ppc/include -DCOMPILE_DC -D__SGE_NO_USERMAPPING__ -Wno-error
+CFLAGS = -O3 -no-cpp-precomp -flat_namespace -Wall -Werror -Wstrict-prototypes -DFD_SETSIZE=8192 -DDARWIN -DDARWIN8 -DGETHOSTBYNAME -DGETHOSTBYADDR_M  -DLOAD_OPENSSL -DTARGET_32BIT -DQCONF_FLATFILE  -DSPOOLING_dynamic -DSECURE -DCOMPILE_DC -D__SGE_NO_USERMAPPING__ -Wno-error
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@

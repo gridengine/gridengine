@@ -526,8 +526,8 @@ sge_gdi_packet_execute_external(sge_gdi_ctx_class_t* ctx, lList **answer_list,
                /* For the default case, just print a simple message */
                SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_UNABLE_TO_CONNECT_SUS,
                                       prognames[QMASTER], sge_u32c(sge_qmaster_port),
-                                      mastername?mastername:"<NULL>"));            
-            } else { 
+                                      mastername?mastername:"<NULL>"));
+            } else {
                /* For unusual errors, give more detail */
                SGE_ADD_MSG_ID(sprintf(SGE_EVENT, MSG_GDI_CANT_SEND_MSG_TO_PORT_ON_HOST_SUSS,
                                       prognames[QMASTER], sge_u32c(sge_qmaster_port),

@@ -33,7 +33,7 @@
 ##########################################################################
 #___INFO__MARK_END__
 SHELL  = /bin/sh
-RM     = rm -f 
+RM     = rm -f
 DEPEND = ../3rdparty/sge_depend/$(COMPILE_ARCH)/sge_depend -l -S -Y $(DEPEND_FLAGS)
 LEX    = flex
 ###############################################################################

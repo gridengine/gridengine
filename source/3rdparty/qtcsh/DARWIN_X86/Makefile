@@ -29,7 +29,7 @@ LFLAGS= $(SGE_LOPTS)
 #LFLAGS= -Zn10000		# hpux lint
 
 
-CFLAGS = -O3 -no-cpp-precomp -flat_namespace -Wall -Werror -Wstrict-prototypes -DFD_SETSIZE=8192 -DDARWIN -DDARWIN8 -DGETHOSTBYNAME -DGETHOSTBYADDR_M  -DLOAD_OPENSSL -I/vol2/SW/db-4.4.20/darwin-x86/include/ -DTARGET_32BIT -DQCONF_FLATFILE  -DSPOOLING_dynamic -DSECURE -I/vol2/tools/SW/openssl-0.9.7e/darwin-x86/include -DCOMPILE_DC -D__SGE_NO_USERMAPPING__ -Wno-error -DPROG_NAME='"qtcsh"' -DDARWIN_X86		# This is set by autoconf.
+CFLAGS = -O3 -no-cpp-precomp -flat_namespace -Wall -Werror -Wstrict-prototypes -DFD_SETSIZE=8192 -DDARWIN -DDARWIN8 -DGETHOSTBYNAME -DGETHOSTBYADDR_M  -DLOAD_OPENSSL -DTARGET_32BIT -DQCONF_FLATFILE  -DSPOOLING_dynamic -DSECURE -DCOMPILE_DC -D__SGE_NO_USERMAPPING__ -Wno-error -DPROG_NAME='"qtcsh"' -DDARWIN_X86		# This is set by autoconf.
 #CFLAGS= -g			# debug
 #CFLAGS= -O			# production
 #CFLAGS= 			# Broken optimizers....

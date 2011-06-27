@@ -79,7 +79,6 @@ enum _enum_lMultiType {
    lFloatT,
    lDoubleT,
    lUlongT,
-   lUlong64T,
    lLongT,
    lCharT,
    lBoolT,
@@ -88,7 +87,8 @@ enum _enum_lMultiType {
    lListT,
    lObjectT,
    lRefT,
-   lHostT
+   lHostT,
+   lUlong64T
 };
 
 /* flags for the field definition 

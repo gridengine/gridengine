@@ -36,7 +36,7 @@
 
 #include "gdi/version.h"
 
-const char GDI_VERSION[] = "8.0.0";
+const char GDI_VERSION[] = "8.0.0patch1";
 
 const gdi_ulong32 GRM_GDI_VERSION = 0x10003000;
 
@@ -67,7 +67,8 @@ vdict_t GRM_GDI_VERSION_ARRAY[] =
       { 0x100020F7, "6.2u5beta2" },
       { 0x100020F8, "6.2u5beta2" },
       { 0x100020F8, "6.2u5" },
-      { 0, NULL}
+      { 0x100020F9, "8.0.0patch1" },
+      { 0, NULL }
 };
 
 #ifdef ADD_UNIVA_COPYRIGHT

@@ -146,8 +146,7 @@ spool_create_dynamic_context(lList **answer_list, const char *method,
     */
    compiled_method = "dynamic";
    DPRINTF(("creating "SFQ" spooling context\n", compiled_method));
-   context = spool_dynamic_create_context(answer_list, method, shlib_name, 
-                                          args);
+   context = spool_dynamic_create_context(answer_list, method, shlib_name, args);
 #endif
 
    if (context == NULL) {

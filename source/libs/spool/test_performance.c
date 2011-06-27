@@ -73,6 +73,9 @@
 #include "msg_clients_common.h"
 
 #ifndef TEST_READ_ONLY
+
+static const int num_jobs = 30000;
+
 static const char *random_string(int length)
 {
    static char buf[1000];
@@ -117,6 +120,16 @@ static bool generate_jobs(int num)
    return true;
 }
 
+static bool update_jobs(void)
+{
+   lListElem *job;
+   for_each(job, *object_type_get_master_list(SGE_TYPE_JOB)) {
+      lSetString(job, JB_project, random_string(20));
+   }
+
+   return true;
+}
+
 static bool spool_data(void)
 {
    lList *answer_list = NULL;
@@ -129,6 +142,7 @@ static bool spool_data(void)
 
    for_each(job, *object_type_get_master_list(SGE_TYPE_JOB)) {
       sprintf(key, sge_U32CFormat".0", sge_u32c(lGetUlong(job, JB_job_number)));
+      /* TODO: spool_write_object is probably called incorrectly - we don't spool the ja_task! */
       spool_write_object(&answer_list, context, job, key, SGE_TYPE_JOB, true);
       answer_list_output(&answer_list);
    }
@@ -137,7 +151,7 @@ static bool spool_data(void)
 }
 #endif
 static bool read_spooled_data(void)
-{  
+{
    lList *answer_list = NULL;
    lListElem *context;
 
@@ -152,7 +166,7 @@ static bool read_spooled_data(void)
 }
 
 static bool delete_spooled_data(void)
-{  
+{
    lList *answer_list = NULL;
    lListElem *job;
    lListElem *context;
@@ -195,7 +209,7 @@ static void write_csv(const char *scenario, prof_level level)
    utime       = prof_get_total_utime(level, true, NULL);
    stime       = prof_get_total_stime(level, true, NULL);
    utilization = busy > 0 ? (utime + stime) / busy * 100 : 0;
-   jobs_per_second = busy > 0 ? 30000 / busy : 0;
+   jobs_per_second = busy > 0 ? num_jobs / busy : 0;
 
    csv = fopen("spooling_performance.csv", "a");
    fprintf(csv, fmt, scenario, busy, utime, stime, utilization, jobs_per_second);
@@ -238,7 +252,7 @@ int main(int argc, char *argv[])
 #define defstring(str) #str
 
    /* initialize spooling */
-   spooling_context = spool_create_dynamic_context(&answer_list, argv[1], argv[2], argv[3]); 
+   spooling_context = spool_create_dynamic_context(&answer_list, argv[1], argv[2], argv[3]);
    answer_list_output(&answer_list);
    if (spooling_context == NULL) {
       SGE_EXIT((void**)&ctx, EXIT_FAILURE);
@@ -257,7 +271,7 @@ int main(int argc, char *argv[])
 
 #ifndef TEST_READ_ONLY
    PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
-   generate_jobs(30000);
+   generate_jobs(num_jobs);
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
    write_csv("generating jobs", SGE_PROF_CUSTOM1);
    prof_output_info(SGE_PROF_CUSTOM1, true, "generating jobs:\n");
@@ -286,6 +300,18 @@ int main(int argc, char *argv[])
    prof_output_info(SGE_PROF_CUSTOM1, true, "spool jobs:\n");
    prof_reset(SGE_PROF_CUSTOM1, NULL);
    write_csv("spooling io", SGE_PROF_SPOOLINGIO);
+   prof_output_info(SGE_PROF_SPOOLINGIO, true, "IO:\n");
+   prof_reset(SGE_PROF_SPOOLINGIO, NULL);
+
+   /* modify jobs */
+   update_jobs();
+   PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
+   spool_data();
+   PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
+   write_csv("respool jobs", SGE_PROF_CUSTOM1);
+   prof_output_info(SGE_PROF_CUSTOM1, true, "respool jobs:\n");
+   prof_reset(SGE_PROF_CUSTOM1, NULL);
+   write_csv("respooling io", SGE_PROF_SPOOLINGIO);
    prof_output_info(SGE_PROF_SPOOLINGIO, true, "IO:\n");
    prof_reset(SGE_PROF_SPOOLINGIO, NULL);
 

@@ -44,7 +44,7 @@
 #
 set noglob
 unsetenv buildarch BUILDARCH COMPILE_ARCH COMPILE_DIR LD_LIBRARY_PATH 
-unsetenv AIMK_INSURE AIMK_TARGET_BITS aimk_buildarch
+unsetenv ANT_AIMK_OPTS AIMK_TARGET_BITS aimk_buildarch
 
 set COMPILE_ARCH = ""
 set COMPILE_DIR  = ""
@@ -101,7 +101,12 @@ while ($i <= $#argv)
       set TARGET_BITS = TARGET_32BIT
       if ($BUILDARCH == SOLARIS64) then
          set BUILDARCH = SOLARIS  
+         if ("$buildarch" == "sol-sparc64") then
          set buildarch = sol-sparc
+         else
+            set buildarch = usol-sparc
+            set COMPILE_ARCH = USOLARIS
+         endif
       else if ($BUILDARCH == HP1164) then
          set BUILDARCH = HP11
          set buildarch = hp11
@@ -323,7 +328,6 @@ set SHARED_LFLAGS    = ""
 
 # linker flag for -ldrmaa name and version
 set SONAME_LFLAG_DRMAA10 = ""
-set SONAME_LFLAG_DRMAA95 = ""
 
 # Flags for man page creation, copyright stuff and adoc
 set BUILDMAN          = 0
@@ -386,10 +390,6 @@ set KLIBS             = ""
 
 # CRYPT
 set AUTHLIBS          = "-lpam"
-
-# PERLGUI
-set PERLGUI           = ""
-set PERLGUI_CLEAN     = ""
 
 # SPOOLING - default method is dynamic spooling, 
 # spooling methods berkeleydb and classic
@@ -804,10 +804,6 @@ while ($#argv >= 1 && $?found)
       set argv     = ($argv[2-])
       set PARALLEL = "-j $argv[1]"
       breaksw
-   case "-perlgui":
-      set PERLGUI = "perlgui_all"
-      set PERLGUI_CLEAN = "perlgui_clean"
-      breaksw
    case  "-po"
       if ( $buildarch == lx-x86 ) then
          scripts/msgmerge.csh merge
@@ -821,9 +817,12 @@ while ($#argv >= 1 && $?found)
       exit 0
       breaksw
    case  "-pot"
-      if ( $buildarch !=  ) then
-         echo "Must be done on lx-86 architecture"
+      if ( $buildarch != "lx-x86" ) then
+         echo "Must be done on lx-x86 architecture"
          exit 1
+      endif
+      if ( $?TCLSHPATH ) then
+         setenv PATH ${PATH}:${TCLSHPATH}
       endif
       rm -f dist/locale/gridenginenotuniq.pot
       rm -f dist/locale/gridengine.pot
@@ -833,7 +832,7 @@ while ($#argv >= 1 && $?found)
       foreach f ( dist/inst_sge  dist/util/setfileperm.sh dist/util/arch_variables \
                   dist/util/qhold.sh dist/util/sgeCA/sge_ca )
          set pf = "/tmp/`basename $f`.pot"
-         $TCLSH scripts/infotext_msg_parse.tcl -F $pf $f
+         tclsh scripts/infotext_msg_parse.tcl -F $pf $f
          echo "Appending script pot file $pf" 
          cat $pf >> dist/locale/gridenginenotuniq.pot
          rm $pf
@@ -992,12 +991,27 @@ case AIX51:
    set MAKEWINGRIDAPP   = 0
    set COMPILE_DC = 1
 
-   set LIBS = "$LIBS -lc"
+   set XMTDEF   = ""
+   set XINCD    = "$XMTINCD $XINCD"
+   set XLIBD    = ""
+   set XLFLAGS  = "$XLIBD"
+   set XLIBS    = "-lXm  -lXt -lXext -lX11 -lm -liconv -lc"
 
-   if ($BUILDARCH == "AIX43") then
-     set AUTHLIBS = ""
+   if ( $CC == "gcc" ) then
+      if ( $OPTIMIZATION == 1 ) then
+         set OFLAG = "-O3"
+      else
+         set OFLAG    = ""
    endif
-
+      set LFLAGS = "-Wl,-brtl -Wl,-bbigtoc -L."
+      set XCFLAGS  = ""
+      set SHARED_CFLAGS = "-fPIC"
+      set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -shared -Wl,-G"
+      set SHAREDLD = "gcc"
+   else
+      set CC       = xlc_r
+      set CXX      = xlC_r
+      set LIBS = "$LIBS -lc"
    if ( $DEBUGGED == 1 ) then
       set DEBUG_FLAG = "$DEBUG_FLAG -qinitauto=01 -qro -qroconst"
    endif
@@ -1006,23 +1020,26 @@ case AIX51:
    else
       set OFLAG    = "-qmaxmem=8192"
    endif
-   set CC       = xlc_r
-   set CXX      = xlC_r
-   set CFLAGS   = "$OFLAG -DAIX -D$BUILDARCH -D_LARGE_FILES -DUSE_STDARG -DUSE_SGE_UNSETENV -DGETHOSTBYADDR_R5 -DGETHOSTBYNAME_R3 $DEBUG_FLAG $CFLAGS -bnoquiet"
-   set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
-   set XMTDEF   = ""
-   set XINCD    = "$XMTINCD $XINCD"
-   set XCFLAGS  = "-bnodelcsect -DNeedFunctionPrototypes -DNeedVarargsPrototypes $XMTDEF $XINCD"
-   set XLIBD    = ""
-   set XLFLAGS  = "$XLIBD"
-   set XLIBS    = "-lXm  -lXt -lXext -lX11 -lm -liconv -lc"
+      set CFLAGS = "$CFLAGS -bnoquiet"
+      set XCFLAGS  = "-bnodelcsect"
+      set LFLAGS   = "-brtl -bmaxdata:0x80000000 $LFLAGS"
+      set SHARED_CFLAGS = ""
+      set SHARED_LFLAGS = "-brtl -bhalt:4 -bM:SRE -bE:lib.exp -H512 -T512 -bnoentry"
+      set SHAREDLD = "$SOURCE/scripts/ldAix"
+   endif
 
-   set SHAREDLD = "$SOURCE/scripts/ldAix"
-   set SHARED_CFLAGS = ""
-   set SHARED_LFLAGS = "$LFLAGS $KLFLAGS -brtl -bhalt:4 -bM:SRE -bE:lib.exp -H512 -T512 -bnoentry"
+   if ($BUILDARCH == "AIX43") then
+     set AUTHLIBS = ""
+   endif
+
+   set CFLAGS   = "$OFLAG -DAIX -D$BUILDARCH -D_LARGE_FILES -DUSE_STDARG -DUSE_SGE_UNSETENV -DGETHOSTBYADDR_R5 -DGETHOSTBYNAME_R3 $DEBUG_FLAG $CFLAGS"
+   set DEPEND_FLAGS = "$CFLAGS $XMTINCD"
+   set XCFLAGS  = "$XCFLAGS -DNeedFunctionPrototypes -DNeedVarargsPrototypes $XMTDEF $XINCD"
 
    # add DEBUG_FLAGS to LFLAGS after SHARED_LFLAGS - -g isn't recognized by ld
-   set LFLAGS   = "$DEBUG_FLAG -brtl -bmaxdata:0x80000000 $LFLAGS"
+   set SHARED_LFLAGS = "$LFLAGS $KLFLAGS $SHARED_LFLAGS"
+   set LFLAGS   = "$DEBUG_FLAG $LFLAGS"
+
    set JAVA_ARCH = "aix"
    set JAVA_LFLAGS = ""
    breaksw
@@ -1283,7 +1300,6 @@ case IRIX65:
    set RANLIB   = echo
 
    # set SONAME_LFLAG_DRMAA10 = "-W l,-soname,libdrmaa.so.1.0"
-   # set SONAME_LFLAG_DRMAA95 = "-W l,-soname,libdrmaa.so.0.95"
 
    set SHAREDLD = ld
    set SHARED_CFLAGS = "-KPIC"
@@ -1477,7 +1493,6 @@ case LINUXSPARC64:
    set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -shared"
 
    set SONAME_LFLAG_DRMAA10 = "-Wl,-soname,libdrmaa.so.1.0"
-   set SONAME_LFLAG_DRMAA95 = "-Wl,-soname,libdrmaa.so.0.95"
 
    if ( $SHAREDLIBS == 1 || $SPOOLING_METHOD == dynamic ) then
       set LFLAGS = "$LFLAGS -rdynamic"
@@ -1755,7 +1770,6 @@ case SOLARISAMD64:
             set compversion = `cc -V |& head -1 | cut -f4 -d" "`
             set patchcnt = `/bin/sh -c 'ls -d /var/sadm/patch/112756-* 2> /dev/null' | wc -l`
             set haspatch = `expr $patchcnt ">=" 1`
-     #       set haspatch = 0
             if ( $compversion == 5.5 && $haspatch == 1 || $compversion != 5.5 ) then
                # set OFLAG = "-fast -xchip=pentium -xcache=generic"
                #
@@ -1775,8 +1789,13 @@ case SOLARISAMD64:
      #          set OFLAG = "-xO3 -fns -fsimple=2 -fsingle -ftrap=%none -nofstore -xbuiltin=%all -xdepend -xlibmil"
             endif
          else
+            # optimization is broken in the Studio 11 compiler
+            if ( $BUILDARCH == SOLARIS64 ) then
+               set OFLAG = "-xO1"
+            else
 	         set OFLAG = "-fast -xchip=generic -xcache=generic"
          endif
+      endif
       endif
    else
        set OFLAG = ""
@@ -1821,7 +1840,9 @@ case SOLARISAMD64:
    endif
 
    set DEPEND_FLAGS = "$CFLAGS -D$BUILDARCH $XMTINCD"
+   if ( "$CC" == "cc" ) then
    set MEMCFLAG = "-Xa"
+   endif
 
    if ( $CC == cc ) then
       set LFLAGS = "-xildoff $LFLAGS"
@@ -1867,7 +1888,7 @@ case SOLARISAMD64:
       set CFLAGS = "-Xc -v $OFLAG $MEMFLAG -ftrap=division $CFLAGS $DEBUG_FLAG"
    else if ( $CC == gcc) then
       #set CFLAGS = "-Wall -Werror -Wstrict-prototypes $CFLAGS"
-      set CFLAGS = "-Wall -Wstrict-prototypes $CFLAGS"
+      set CFLAGS = "-Wall -Wstrict-prototypes $CFLAGS $OFLAG"
       set SHARED_CFLAGS = "-fPIC"
       set SHARED_LFLAGS = "$SHARED_LFLAGS -L. -shared"
 
@@ -1908,7 +1929,6 @@ case SOLARISAMD64:
 
    if ( $CC != gcc ) then
       set SONAME_LFLAG_DRMAA10 = "-h libdrmaa.so.1.0"
-      set SONAME_LFLAG_DRMAA95 = "-h libdrmaa.so.0.95"
    endif
 
    set XMTDEF   = "-DXMT_CDE_BUG_FIX"
@@ -2015,7 +2035,7 @@ if ( $UGE_EXT == 1 ) then
    if ( -d $UGE_LIBS ) then
       set LFLAGS   = "$LFLAGS -L$UGE_LIBS/$BUILDARCH/libs"
       set LIBS_DIR = "$UGE_LIBS"
-      set CFLAGS = "$CFLAGS -DUGE"
+      set CFLAGS = "$CFLAGS -DUGE -I$UGE_LIBS/libs"
    else
       echo "error: couldn't find  UGE_LIBS"
       echo "error: please"
@@ -2634,12 +2654,10 @@ if ( "$CORE" == 1 && "$JAVA" != 2 ) then
          "DLLIB=$DLLIB" \
          "MEMCFLAG=$MEMCFLAG" \
          "CORE_INCLUDE=$CORE_INCLUDE" \
-         "PERLGUI=$PERLGUI" "PERL=$PERL" "SWIG=$SWIG" \
          "JAVA_BINDIR=$JAVA_BINDIR" "JAVA_SHAREDEXT=$JAVA_SHAREDEXT" \
          "JNI_TARGET=$JNI_TARGET" \
          "JAVA_LFLAGS=$JAVA_LFLAGS" \
          "SONAME_LFLAG_DRMAA10=$SONAME_LFLAG_DRMAA10" \
-         "SONAME_LFLAG_DRMAA95=$SONAME_LFLAG_DRMAA95" \
          "JUTI_ALL=$JUTI_ALL" "JUTI_CLEAN=$JUTI_CLEAN" "JUTI_DEPEND=$JUTI_DEPEND" \
          "LOADCHECK_ALL=$LOADCHECK_ALL" "LOADCHECK_OBJ=$LOADCHECK_OBJ" \
          "JUTI_OBJ=$JUTI_OBJ" \
@@ -2662,10 +2680,13 @@ if ( "$JAVA" > 0 ) then
       setenv AIMK_TARGET_BITS $TARGET_BITS
       setenv aimk_buildarch $buildarch
    endif
+
+   setenv ANT_AIMK_OPTS ""
+   if ( "$CC" == "gcc" ) then
+      setenv ANT_AIMK_OPTS "-gcc"
+   endif
    if ( $USE_INSURE == 1 ) then
-      setenv AIMK_INSURE -insure
-   else
-      setenv AIMK_INSURE ""
+      setenv ANT_AIMK_OPTS "$ANT_AMK_OPTS -insure"
    endif
    if ( $DEBUGGED == 1 ) then
       setenv AIMK_DEBUG true
@@ -2817,8 +2838,7 @@ if ( "$QMAKE" == 1) then
    endif
 
    cd $SOURCE/3rdparty/qmake/$COMPILE_ARCH
-
-   $MAKE $MAKEOPT -f Makefile "MAKE=$MAKE" "COMPILE_ARCH=$COMPILE_ARCH" "DLLIB=$DLLIB" $argv
+   $MAKE $MAKEOPT -f Makefile "MAKE=$MAKE" "CC=$CC" "COMPILE_ARCH=$COMPILE_ARCH" "DLLIB=$DLLIB" $argv
 
    if ( $status != 0 ) then
       echo not done
@@ -2991,16 +3011,20 @@ echo done.
 # and no "-only-*" parameter specified, the shared libraries for
 # SOLARIS are also built.
 if ( $BUILDARCH == SOLARIS64 && $ONLY_PARAM_SPEC == 0 && "${SOLARIS_ONLY_64}" != 1 ) then
+      set ARGS32 = "-32 -only-core"
+      if ( "$CC" == "gcc" ) then
+         set ARGS32 = "$ARGS32 -gcc"
+      endif
       if ( "$argv" == "" ) then 
          echo ""
          echo "Executing aimk again to build 32 bit shared libraries."
          if ( "$JAVA" > 0 ) then
-            ./aimk -32 -only-core libdrmaa.so libjgdi.so libjuti.so
+            ./aimk $ARGS32 libdrmaa.so libjgdi.so libjuti.so
          else 
-            ./aimk -32 -only-core libdrmaa.so libjuti.so
+            ./aimk $ARGS32 libdrmaa.so libjuti.so
          endif
        else if ( "$argv" == "clean" ) then 
-            ./aimk -32 -only-core clean 
+            ./aimk $ARGS32 clean 
        endif 
       exit $status
    endif

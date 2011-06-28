@@ -88,15 +88,11 @@ AIX)
          ;;
       esac
       ;;
-   5)
-      case $osrelease in
-      1|2|3)
-         ARCH=aix51
-         ;;
-      *)
-         ARCH=UNSUPPORTED-aix-5-$osrelease
-         ;;
-      esac
+   5|6|7)
+      ARCH=aix51
+      ;;
+   *)
+      ARCH=UNSUPPORTED-aix-$osrelease
       ;;
    esac
    ;;
@@ -322,14 +318,14 @@ SunOS)
       ;;
    *)
       case $osrelease in
-      5.[7]*)
+      5.[8]*)
          if [ `isainfo -b` = 64 ]; then
             ARCH=usol-sparc64
          else
             ARCH=usol-sparc
          fi
          ;;
-      5.[891]*)
+      5.[91]*)
          if [ `isainfo -b` = 64 ]; then
             ARCH=sol-sparc64
          else

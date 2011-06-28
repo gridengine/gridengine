@@ -35,35 +35,17 @@
 #
 switch($buildarch)
    case "aix43":
+   case "aix51":
    case "darwin":
    case "lx-alpha":
    case "win32-x86":
       set argv = ( -no-jni -no-java $* )
       breaksw
+   case "usol-sparc64"
+      set argv = ( -no-intl -no-java -no-jni $* )
+      breaksw
    default:
       set argv = ( $* )
-      breaksw
-endsw
-
-# JAVA settings
-setenv ARCH $buildarch
-setenv EN_QUIET 1
-
-switch($buildarch)
-   # don't support jdk1.5
-   case "irix65":
-   case "hp11":
-   case "hp11-64":
-   case "lx-ia64":
-   case "aix51":
-      if ( -f /vol2/resources/en_jdk14 ) then
-         source /vol2/resources/en_jdk14 
-      endif   
-      breaksw
-   default:
-      if ( -f /vol2/resources/en_jdk15 ) then
-         source /vol2/resources/en_jdk15 
-      endif 
       breaksw
 endsw
 
@@ -99,42 +81,31 @@ set BDB_LIB_SUFFIX =
 # http://gridengine.sunsource.net/issues/show_bug.cgi?id=2552
 set CORE_HOME = /tools/PKG/libcore/$buildarch
 
-# 
+#
 # KRB_HOME the directory where the include and lib directory of kerberos is
 # installed
 #
-set KRB_HOME = /vol2/tools/SW/krb5/$buildarch
+set KRB_HOME = ""
 
-# 
+#
 # man2html path
 #
-set MAN2HTMLPATH = /vol2/tools/SW/$buildarch/bin
-# 
+#set MAN2HTMLPATH = ""
+#
 # groff path
 #
-set GROFFPATH = /vol2/tools/SW/$buildarch/bin
+#set GROFFPATH = ""
 
 #
-# SWIG path 
+# tclsh path
 #
-set SWIG = /vol2/tools/SW/swig-1.3.22/$buildarch/bin/swig
-
-#
-# PERL path
-#
-set PERL = /vol2/tools/SW/$buildarch/bin/perl
-
-#
-# TCLSH path
-#
-set TCLSH = /vol2/tools/SW/$buildarch/bin/tclsh8.3
+#set TCLSHPATH = ""
 
 #
 # Location of a copyright.h file which containes a copyright string
 # which should be included in each binary part of Grid Engine
 #
-set COPYRIGHT_DIR = /off_home/codine/ge62u4-copyright
-
+set COPYRIGHT_DIR = ""
 
 #
 # Location of a copyright.h file which containes a copyright string
@@ -146,6 +117,7 @@ set BASEDIR = `pwd`
 set BASEDIR = `dirname $BASEDIR`
 set BASEDIR = `dirname $BASEDIR`
 if ( -d $BASEDIR/uge-extensions ) then
+   set UGE_EXT = 1
    set UGE_LIBS = $BASEDIR/uge-extensions
    set UNIVA_COPYRIGHT_DIR = $UGE_LIBS/copyright
 endif
@@ -179,9 +151,6 @@ if ( ! $?JAVA_HOME ) then
       endif
    endif
 endif
-
-# set junit jar file
-set JUNIT_JAR = '/vol2/tools/SW/java/junit3.8.1/junit.jar'
 
 # set some variables which are necessary to compile GE for win32 architecture
 #

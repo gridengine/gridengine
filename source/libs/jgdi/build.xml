@@ -73,11 +73,11 @@ ___INFO__MARK_END__-->
     
     <target name="aimk" depends="aimk.init, javah">
         <!-- echo message="aimk.targetbits = ${aimk.targetbits}"/ -->
-        <aimk_call args="${aimk.targetbits} ${aimk.insure} ${aimk.debug} -only-core -no-jemalloc jgdi_all"/>
+        <aimk_call args="${aimk.targetbits} ${aimk.options} ${aimk.debug} -only-core -no-jemalloc jgdi_all"/>
     </target>
     
     <target name="aimk.clean" depends="aimk.init">
-        <aimk_call args="${aimk.targetbits} ${aimk.insure} ${aimk.debug} -only-core -no-jemalloc jgdi_clean"/>
+        <aimk_call args="${aimk.targetbits} ${aimk.options} ${aimk.debug} -only-core -no-jemalloc jgdi_clean"/>
     </target>
     
     <target name="aimk.template.required" depends="aimk.init, init">
@@ -94,7 +94,7 @@ ___INFO__MARK_END__-->
     <target name="aimk.template" depends="aimk.init, init, aimk.template.required"
             unless="aimk.template.uptodate">
         <echo message="Rebuilding ${build.dir}/sge_all_listsL.template"/>
-        <aimk_call args="${aimk.targetbits} ${aimk.debug} -only-core jgdi_template"/>
+        <aimk_call args="${aimk.targetbits} ${aimk.debug} ${aimk.options} -only-core jgdi_template"/>
     </target>
     
     <target name="init">
@@ -900,8 +900,8 @@ ___INFO__MARK_END__-->
         
         <property name="sge.src.targetbits" value="${env.AIMK_TARGET_BITS}"/>
         
-        <condition property="aimk.insure" value="${env.AIMK_INSURE}" else="">
-            <isset property="env.AIMK_INSURE"/>
+        <condition property="aimk.options" value="${env.ANT_AIMK_OPTS}" else="">
+            <isset property="env.ANT_AIMK_OPTS"/>
         </condition>
         
         <condition property="aimk.debug" value="-debug" else="">
@@ -912,7 +912,7 @@ ___INFO__MARK_END__-->
         <echo message="sge.src.arch=${sge.src.arch}"/> 
         <echo message="sge.src.targetbits=${sge.src.targetbits}"/>
         <echo message="aimk.debug=${aimk.debug}"/>
-        <echo message="aimk.insure=${aimk.insure}"/> 
+        <echo message="aimk.options=${aimk.options}"/> 
         
         <condition property="aimk.targetbits" value="-64">
             <equals arg1="${sge.src.targetbits}" arg2="TARGET_64BIT"/>

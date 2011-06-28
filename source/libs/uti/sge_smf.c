@@ -48,7 +48,7 @@
 #include "uti/sge_uidgid.h"
 #include "uti/msg_utilib.h"
 
-#if defined(__SunOS_5_7) || defined(__SunOS_5_8) || defined(__SunOS_5_9)
+#if defined(__SunOS_5_7) || defined(__SunOS_5_8) || defined(__SunOS_5_9) || defined(__GNUC__)
    /* Redefinitions from S10+ sys/types.h */
    typedef id_t    ctid_t;
    /* Missing in SunOS < 10 */

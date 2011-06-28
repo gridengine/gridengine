@@ -30,7 +30,11 @@ LFLAGS=$(SGE_LOPTS)
 #LFLAGS= -Zn10000		# hpux lint
 
 
-CFLAGS = $(SGE_COPTS) -xarch=v9  -DSOLARIS64 -DPROG_NAME='"qtcsh"'		# This is set by autoconf.
+ifeq ($(CC),cc)
+   CFLAGS = $(SGE_COPTS) -xarch=v9  -DSOLARIS64 -DPROG_NAME='"qtcsh"'		# This is set by autoconf.
+else
+   CFLAGS = $(SGE_COPTS) -m64 -O  -DSOLARIS64 -DPROG_NAME='"qtcsh"'		# This is set by autoconf.
+endif
 #CFLAGS= -g			# debug
 #CFLAGS= -O			# production
 #CFLAGS= 			# Broken optimizers....
@@ -239,10 +243,10 @@ EXTRALIBS =  $(AFSLIB) -L../../../SOLARIS64 $(SGE_LIBS) -lm
 # will lose the editor and job control.
 
 # This is for setting your C preprocessor value.
-CPP = cc -E # This is set by autoconf.
+CPP = $(CC) -E # This is set by autoconf.
 # The -B tells gcc to use /bin/ld. This is to avoid using the gnu ld, which
 # on the suns does not know how to make dynamically linked binaries.
-CC = cc # This is set by autoconf.
+# CC = cc # This is set by autoconf.
 #CC=	gcc -Wall -pipe -B/bin/	# -ansi -pedantic
 #CC=	gcc -m486 -pipe -Wall # Generate code for Intel 486 (linux)
 #CC=	shlicc 	# BSDI2.1 w/ shared libraries

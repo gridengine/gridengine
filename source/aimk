@@ -2262,14 +2262,10 @@ if ( "$BUILDMAN" == 1 ) then
 
    if ( $?MAN2HTMLPATH ) then
       setenv PATH ${PATH}:${MAN2HTMLPATH}
-   endif   
+   endif
    if ( $?GROFFPATH ) then
       setenv PATH ${PATH}:${GROFFPATH}
-   else
-      echo "groff must exist"
-      echo not done
-      exit 1
-   endif   
+   endif
 
    $SOURCE/scripts/mk_ascman $SOURCE $SGE_PRODUCT_MODE $BUILDMAN $BUILDHTMLMAN $KVMAN
 

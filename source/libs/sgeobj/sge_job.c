@@ -2388,26 +2388,25 @@ const char *job_get_job_key(u_long32 job_id, dstring *buffer)
 
 /****** sgeobj/job/job_get_key() **********************************************
 *  NAME
-*     job_get_key() -- create a unique key 
+*     job_get_key() -- create a unique key
 *
 *  SYNOPSIS
-*     const char* job_get_key(u_long32 job_id, u_long32 ja_task_id, 
-*                             const char *pe_task_id) 
+*     const char* job_get_key(u_long32 job_id, u_long32 ja_task_id,
+*                             const char *pe_task_id, dstring *buffer)
 *
 *  FUNCTION
-*     Creates a unique key consisting of job_id, ja_task_id and 
-*     pe_task_id. This key can again be split into its components 
+*     Creates a unique key consisting of job_id, ja_task_id and
+*     pe_task_id. This key can again be split into its components
 *     by a call to job_parse_key().
 *
 *  INPUTS
 *     u_long32 job_id        - job id
 *     u_long32 ja_task_id    - ja task id
 *     const char *pe_task_id - pe task id
+*     dstring *buffer        - dstring buffer used to generate the key
 *
 *  RESULT
-*     const char* - pointer to a static buffer containing the key.
-*                   The result is only valid until the next call of the 
-*                   function.
+*     const char* - pointer to the key, stored within buffer
 *
 *  NOTES
 *     MT-NOTE: job_get_key() is MT safe
@@ -2415,7 +2414,7 @@ const char *job_get_job_key(u_long32 job_id, dstring *buffer)
 *  SEE ALSO
 *     sgeobj/job/job_parse_key()
 ******************************************************************************/
-const char *job_get_key(u_long32 job_id, u_long32 ja_task_id, 
+const char *job_get_key(u_long32 job_id, u_long32 ja_task_id,
                         const char *pe_task_id, dstring *buffer)
 {
    const char *ret = NULL;
@@ -2424,10 +2423,10 @@ const char *job_get_key(u_long32 job_id, u_long32 ja_task_id,
       if (ja_task_id == 0) {
          ret = sge_dstring_sprintf(buffer, "%d", job_id);
       } else if (pe_task_id != NULL) {
-         ret = sge_dstring_sprintf(buffer, "%d.%d %s", 
+         ret = sge_dstring_sprintf(buffer, "%d.%d %s",
                                    job_id, ja_task_id, pe_task_id);
       } else {
-         ret = sge_dstring_sprintf(buffer, "%d.%d", 
+         ret = sge_dstring_sprintf(buffer, "%d.%d",
                                    job_id, ja_task_id);
       }
    }

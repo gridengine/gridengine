@@ -298,8 +298,8 @@ int wl_getrusage_remote(const char *szjob_id, int *pstatus,
                         struct rusage *prusage, char *pszerrormsg)
 {
    int ret, comm_sock;
-   int usagelen = 0;
    char job_usage[4096];
+   int usagelen = sizeof(job_usage);
 
    memset(job_usage, 0, 4096);
 

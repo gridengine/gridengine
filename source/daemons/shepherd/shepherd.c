@@ -1286,15 +1286,16 @@ int ckpt_type
 
    if (ckpt_info.type) {
       shepherd_trace("parent: %s-pid: %d - ckpt_pid: %d - "
-                     "ckpt_interval: %d - ckpt_signal %d", childname, 
+                     "ckpt_interval: %d - ckpt_signal %d", childname,
                      pid, ckpt_info.pid, ckpt_info.interval, ckpt_signal);
    } else {
       shepherd_trace("parent: %s-pid: %d", childname, pid);
    }
 
    if (g_new_interactive_job_support == false || !is_interactive) {
-      /* Wait until child finishes ----------------------------------------*/         
-      status = wait_my_child(pid, childname, timeout, &ckpt_info, &rusage, fd_pty_master, fd_pipe_err[0]);
+      /* Wait until child finishes ----------------------------------------*/
+      status = wait_my_child(pid, childname, timeout, &ckpt_info, &rusage,
+                             fd_pty_master, fd_pipe_err[0]);
    } else { /* g_new_interactive_job_support == true && is_interactive */
       ijs_fds_t ijs_fds;
 
@@ -2553,11 +2554,17 @@ int fd_std_err             /* fd of stderr. -1 if not set */
             memset(&rusage_hp10, 0, sizeof(rusage_hp10));
 
             shepherd_trace("retrieving remote usage");
+            status = 0;
             if (wl_getrusage_remote(get_conf_val("job_id"),
                                    &status, &rusage_hp10, errormsg) != 0) {
                shepherd_trace(errormsg);
             }
-            shepherd_trace("retrieved remote usage: %d", rusage_hp10.ru_utime);
+            shepherd_trace("retrieved remote usage: %ld %ld %ld %ld %d",
+                           rusage_hp10.ru_stime.tv_sec,
+                           rusage_hp10.ru_stime.tv_usec,
+                           rusage_hp10.ru_utime.tv_sec,
+                           rusage_hp10.ru_utime.tv_usec,
+                           status);
          }
       } else 
       /* </Windows_GUI> */

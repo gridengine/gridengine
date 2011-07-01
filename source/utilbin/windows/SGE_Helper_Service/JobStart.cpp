@@ -459,15 +459,17 @@ DWORD StartJob(C_Job &Job)
       }
       // Wait blocking for end of the main process of the job
       // (or for end of SGE_Starter.exe on Vista)
-      WriteToLogFile("Waiting for job end.");
+      WriteToLogFile("Waiting for job end in JobStarter.");
       dwWait = WaitForSingleObjectEx(pi.hProcess, INFINITE, FALSE);
       if(dwWait==WAIT_OBJECT_0) {
          // Make sure all child processes are killed
          if (Job.Terminate() != 0) {
+            sprintf(szErrorPart, "Error terminating job");
             goto Cleanup;
          }
          // Read usage data from Windows job object and store it in our Job object
          if (Job.StoreUsage() != 0) {
+            sprintf(szErrorPart, "Error storing job usage");
             goto Cleanup;
          }
       }

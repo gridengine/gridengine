@@ -391,6 +391,11 @@ set KLIBS             = ""
 # CRYPT
 set AUTHLIBS          = "-lpam"
 
+# Extensions
+set UGE_CFLAGS = ""
+set UGE_LFLAGS = ""
+set UGE_SHARED_LFLAGS = ""
+
 # SPOOLING - default method is dynamic spooling, 
 # spooling methods berkeleydb and classic
 # except on Windows, where the default is classic spooling.

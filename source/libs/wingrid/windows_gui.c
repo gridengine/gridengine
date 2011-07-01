@@ -26,6 +26,8 @@
  *   Copyright: 2001 by Sun Microsystems, Inc.
  * 
  *   All Rights Reserved.
+ *
+ * Portions of this software are Copyright (c) 2011 Univa Corporation
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/

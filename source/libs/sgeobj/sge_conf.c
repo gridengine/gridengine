@@ -170,7 +170,7 @@ static bool enable_mtrace = false;
 
 static long ptf_max_priority = -999;
 static long ptf_min_priority = -999;
-static int max_dynamic_event_clients = 99;
+static int max_dynamic_event_clients = 1000;
 static bool keep_active = false;
 static bool enable_windomacc = false;
 #ifdef LINUX
@@ -678,7 +678,7 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
       prof_tevent_thrd = false;
       monitor_time = 0;
       scheduler_timeout = 0;
-      max_dynamic_event_clients = 99;
+      max_dynamic_event_clients = 1000;
       max_job_deletion_time = 3;
       enable_reschedule_kill = false;
       enable_reschedule_slave = false;

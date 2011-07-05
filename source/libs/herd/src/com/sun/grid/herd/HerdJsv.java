@@ -27,6 +27,7 @@
  *
  *   All Rights Reserved.
  *
+ *  Portions of this software are Copyright (c) 2011 Univa Corporation.
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
@@ -53,7 +54,9 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSClient;
+import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
+import org.apache.hadoop.hdfs.protocol.DirectoryListing;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.Tool;
@@ -374,8 +377,9 @@ public class HerdJsv extends Configured implements Tool, Jsv {
             blocks.addAll(dfs.namenode.getBlockLocations(path, 0,
                     Long.MAX_VALUE).getLocatedBlocks());
         } else {
-            for (FileStatus fs : dfs.listPaths(path)) {
-                blocks.addAll(getBlocks(fs.getPath().toString(), conf, dfs, blocks));
+            DirectoryListing drl = dfs.listPaths(path, HdfsFileStatus.EMPTY_NAME);
+            for (HdfsFileStatus fileStatus : drl.getPartialListing()) {
+                blocks.addAll(getBlocks(fileStatus.getFullName(path), conf, dfs, blocks));
             }
         }
         

@@ -27,6 +27,7 @@
  *
  *   All Rights Reserved.
  *
+ *  Portions of this software are Copyright (c) 2011 Univa Corporation.
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
@@ -58,7 +59,6 @@ import org.apache.hadoop.io.retry.RetryProxy;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.ipc.VersionedProtocol;
 import org.apache.hadoop.net.NetUtils;
-import org.apache.hadoop.security.UnixUserGroupInformation;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.Tool;
@@ -182,8 +182,8 @@ public class HerdLoadSensor extends Configured implements Tool, LoadSensor {
         UserGroupInformation info = null;
 
         try {
-            info = UnixUserGroupInformation.login(conf);
-        } catch (LoginException e) {
+            info = UserGroupInformation.getCurrentUser();
+        } catch (Exception e) {
             throw new IOException(StringUtils.stringifyException(e));
         }
 

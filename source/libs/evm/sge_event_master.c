@@ -21,11 +21,13 @@
  *  See the License for the specific provisions governing your rights and
  *  obligations concerning the Software.
  * 
- *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+ *  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
  * 
- *   Copyright: 2001 by Sun Microsystems, Inc.
+ *  Copyright: 2001 by Sun Microsystems, Inc.
  * 
- *   All Rights Reserved.
+ *  All Rights Reserved.
+ *
+ *  Portions of this software are Copyright (c) 2011 Univa Corporation
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
@@ -3241,16 +3243,18 @@ allocate_new_dynamic_id(lList **answer_list)
 
    DENTER(TOP_LAYER, "allocate_new_dynamic_id");
 
-   if (lGetNumberOfElem(Event_Master_Control.clients) < Event_Master_Control.max_event_clients) {
+   if (range_list_is_empty(Event_Master_Control.client_ids)) {
+      ERROR((SGE_EVENT, MSG_TO_MANY_DYNAMIC_EC_U, sge_u32c(Event_Master_Control.max_event_clients)));
+      answer_list_add(answer_list, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
+   } else {
       id = range_list_get_first_id(Event_Master_Control.client_ids, answer_list);
       if (id != 0) {
          range_list_remove_id(&Event_Master_Control.client_ids, answer_list, id);
-         /* compress the range list to reduce fragmentation */
+         /* compress the range list to reduce fragmentation
+          * JG: TODO: do we need to compress here?
+          */
          range_list_compress(Event_Master_Control.client_ids);
       }
-   } else {
-      ERROR((SGE_EVENT, MSG_TO_MANY_DYNAMIC_EC_U, sge_u32c( Event_Master_Control.max_event_clients)));
-      answer_list_add(answer_list, SGE_EVENT, STATUS_ESEMANTIC, ANSWER_QUALITY_ERROR);
    }
 
    DRETURN(id);

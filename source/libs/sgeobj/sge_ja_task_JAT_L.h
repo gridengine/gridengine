@@ -244,7 +244,9 @@ enum {
 
    JAT_wallclock_limit,
 
-   JAT_message_list
+   JAT_message_list,
+
+   JAT_granted_resources_list
 };
 
 LISTDEF(JAT_Type)
@@ -292,8 +294,11 @@ LISTDEF(JAT_Type)
    SGE_DOUBLE(JAT_ntix, CULL_DEFAULT)         
 
    SGE_ULONG(JAT_wallclock_limit, CULL_DEFAULT | CULL_SPOOL)
-
+  
    SGE_LIST(JAT_message_list, QIM_Type, CULL_DEFAULT | CULL_SPOOL)
+
+   SGE_LIST(JAT_granted_resources_list, GRU_Type, CULL_DEFAULT | CULL_SPOOL)
+
 LISTEND 
 
 NAMEDEF(JATN)
@@ -338,6 +343,8 @@ NAMEDEF(JATN)
    NAME("JAT_wallclock_limit")
 
    NAME("JAT_message_list")
+
+   NAME("JAT_granted_resources_list")
 NAMEEND
 
 /* *INDENT-ON* */

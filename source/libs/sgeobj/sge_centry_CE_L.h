@@ -30,6 +30,8 @@
  * 
  *   All Rights Reserved.
  * 
+ *  Portions of this code are Copyright 2011 Univa Corporation.
+ * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
@@ -57,7 +59,8 @@ enum {
    CE_pj_dominant,
    CE_requestable,
    CE_tagged,
-   CE_urgency_weight
+   CE_urgency_weight,
+   CE_resource_map_list
 };
 
 LISTDEF(CE_Type)
@@ -78,6 +81,7 @@ LISTDEF(CE_Type)
    SGE_ULONG(CE_requestable, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_CONF)
    SGE_ULONG(CE_tagged, CULL_DEFAULT | CULL_JGDI_HIDDEN)        /* used to tag resource request, which can be fulfilled */
    SGE_STRING(CE_urgency_weight, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_CONF) /* static weighting factor */
+   SGE_LIST(CE_resource_map_list, RESL_Type, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_CONF) /* on host level only: RSMAP id list */
 LISTEND 
 
 NAMEDEF(CEN)
@@ -96,6 +100,7 @@ NAMEDEF(CEN)
    NAME("CE_requestable")
    NAME("CE_tagged")
    NAME("CE_urgency_weight")
+   NAME("CE_resource_map_list")
 NAMEEND
 
 /* *INDENT-ON* */ 

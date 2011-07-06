@@ -30,6 +30,8 @@
 #
 #  All Rights Reserved.
 #
+#  Portions of this code are Copyright 2011 Univa Corporation.
+#
 ##########################################################################
 #___INFO__MARK_END__
 
@@ -90,8 +92,9 @@ QMASTER_SRC = sge_qmaster_threads.c \
               sge_resource_quota_qmaster.c \
               sge_task_depend.c \
               sge_advance_reservation_qmaster.c \
-              sge_job_enforce_limit.c
-             
+              sge_job_enforce_limit.c \
+              sge_sched_thread_remap.c
+
 QMASTER_ADD_SRC = usage.c sge_options.c \
               startprog.c shutdown.c \
               admin_mail.c \
@@ -133,12 +136,12 @@ QMASTER_TEST_LIB_DEPENDS = $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(CO
 # global rules: all, clean, depend, messages
 ###############################################################################
 qmaster: $(QMASTER_TARGETS) $(QMASTER_TEST_PROGS)
-	
+
 qmaster_clean:
 	$(RM) $(QMASTER_TARGETS) sge_qmaster_main.o $(QMASTER_OBJS) $(QMASTER_TEST_OBJS) $(QMASTER_TEST_PROGS)
 
 qmaster_depend:
-	$(DEPEND) -f$(QMASTER_DIR)/qmaster_dependencies $(QMASTER_DIR)/*.c
+	$(DEPEND) -f$(QMASTER_DIR)/qmaster_dependencies $(QMASTER_DIR)/*.c $(SOURCE_DIR)/daemons/qmaster/*.c
 
 qmaster_messages:
 	@echo Creating $@
@@ -230,6 +233,10 @@ sge_follow.o:   $(QMASTER_DIR)/sge_follow.c
 sge_sched_process_events.o: $(QMASTER_DIR)/sge_sched_process_events.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_sched_process_events.c
 
+# build from extensions directory if available
+sge_sched_thread_remap.o:
+		$(CC) $(CFLAGS) -c $(SOURCE_DIR)/daemons/qmaster/sge_sched_thread_remap.c
+
 sge_sched_thread.o: $(QMASTER_DIR)/sge_sched_thread.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_sched_thread.c
 
@@ -243,10 +250,10 @@ sge_sched_job_category.o: $(QMASTER_DIR)/sge_sched_job_category.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_sched_job_category.c
 
 sge_give_jobs.o: $(QMASTER_DIR)/sge_give_jobs.c
-		$(CC) -o $@ $(CFLAGS) -c $(QMASTER_DIR)/sge_give_jobs.c   
+		$(CC) -o $@ $(CFLAGS) -c $(QMASTER_DIR)/sge_give_jobs.c
 
 reschedule.o: $(QMASTER_DIR)/reschedule.c
-		$(CC) -o $@ $(CFLAGS) -c $(QMASTER_DIR)/reschedule.c   
+		$(CC) -o $@ $(CFLAGS) -c $(QMASTER_DIR)/reschedule.c
 
 sge_host_qmaster.o: $(QMASTER_DIR)/sge_host_qmaster.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_host_qmaster.c
@@ -304,9 +311,6 @@ sge_qmaster_heartbeat.o   : $(QMASTER_DIR)/sge_qmaster_heartbeat.c
 
 sge_utility_qmaster.o   : $(QMASTER_DIR)/sge_utility_qmaster.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_utility_qmaster.c
-
-qmaster.o: 	$(QMASTER_DIR)/qmaster.c
-		$(CC) -o $@ $(CFLAGS) -c $(QMASTER_DIR)/qmaster.c
 
 qmaster_to_execd.o   : $(QMASTER_DIR)/qmaster_to_execd.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/qmaster_to_execd.c

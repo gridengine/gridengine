@@ -585,10 +585,10 @@ void cull_show_job(lListElem *job, int flags, bool show_binding)
             continue;
 
          if (first_task) {
-            printf("usage %4d:                 ", (int)lGetUlong(jatep, JAT_task_number));
+            printf("usage %11d:          ", (int)lGetUlong(jatep, JAT_task_number));
             first_task = 0;
          } else
-            printf("      %4d:                 ", (int)lGetUlong(jatep, JAT_task_number));
+            printf("      %11d:          ", (int)lGetUlong(jatep, JAT_task_number));
 
          cpu = mem = io = vmem = maxvmem = 0.0;
 
@@ -654,13 +654,61 @@ void cull_show_job(lListElem *job, int flags, bool show_binding)
                break;
             }
          }
-         printf("%s %4d:               %s\n", first_task ? "binding" : "       ", 
+         printf("%s %9d:          %s\n", first_task ? "binding" : "       ",
             (int)lGetUlong(jatep, JAT_task_number), binding_inuse != NULL ? binding_inuse : "NONE");
          if (first_task) {
             first_task = 0;
          } 
       }
    }
+
+   /* OUTPUT for RSMAP resources */
+   {
+      lListElem *jatep = NULL;
+
+      for_each (jatep, lGetList(job, JB_ja_tasks)) {
+         lListElem *resu = NULL;
+         bool first_task = true;
+         bool is_first_remap = true;
+         dstring task_resources = DSTRING_INIT;
+         const char* resource_ids = NULL;
+
+         /* go through all RSMAP resources for the particular task and create a string */
+         for_each (resu, lGetList(jatep, JAT_granted_resources_list)) {
+            if (lGetUlong(resu, GRU_type) == GRU_RESOURCE_MAP_TYPE) {
+               const char* name  = lGetString(resu, GRU_name);
+               const char* value = lGetString(resu, GRU_value);
+               const char* host  = lGetString(resu, GRU_host);
+
+               if (name != NULL && value != NULL && host != NULL) {
+                  if (is_first_remap == false) {
+                     sge_dstring_append(&task_resources, ",");
+                  } else {
+                     is_first_remap = false;
+                  }
+                  sge_dstring_append(&task_resources, name);
+                  sge_dstring_append(&task_resources, "=");
+                  sge_dstring_append(&task_resources, host);
+                  sge_dstring_append(&task_resources, "=");
+                  sge_dstring_append(&task_resources, "(");
+                  sge_dstring_append(&task_resources, value);
+                  sge_dstring_append(&task_resources, ")");
+               }
+            }
+         }
+         /* print out granted resources */
+         resource_ids = sge_dstring_get_string(&task_resources);
+
+         printf("%s %4d:          %s\n", first_task ? "resource map" : "            ",
+                    (int)lGetUlong(jatep, JAT_task_number), resource_ids != NULL ? resource_ids : "NONE");
+         if (first_task == true) {
+            first_task = false;
+         }
+
+         sge_dstring_free(&task_resources);
+      }
+   }
+
    if (lGetPosViaElem(job, JB_ja_tasks, SGE_NO_ABORT) >= 0) {
       lListElem *jatep;
 

@@ -2026,6 +2026,7 @@ static int load_check_alarm(char *reason, const char *name, const char *load_val
    DENTER(TOP_LAYER, "load_check_alarm");
 
    switch (type) {
+      case TYPE_RSMAP:
       case TYPE_INT:
       case TYPE_TIM:
       case TYPE_MEM:
@@ -4605,6 +4606,7 @@ parallel_max_host_slots(sge_assignment_t *a, lListElem *host) {
 
          /* get the needed values. If the load value is not a number, ignore it */
          switch (type) {
+            case TYPE_RSMAP:
             case TYPE_INT:
             case TYPE_TIM:
             case TYPE_MEM:
@@ -4806,7 +4808,7 @@ dispatch_t sge_sequential_assignment(sge_assignment_t *a)
          const char *eh_name = lGetHost(best_queue, QU_qhostname);
 
          DPRINTF((sge_u32": 1 slot in queue %s user %s %s for "sge_u32"\n",
-            a->job_id, qname, a->user? a->user:"<unknown>", 
+            a->job_id, qname, a->user? a->user:"<unknown>",
                   !a->is_reservation?"scheduled":"reserved", job_start_time));
 
          gdil_ep = lAddElemStr(&gdil, JG_qname, qname, JG_Type);
@@ -4823,7 +4825,7 @@ dispatch_t sge_sequential_assignment(sge_assignment_t *a)
          a->slots = 1;
          if (a->start == DISPATCH_TIME_QUEUE_END) {
             a->start = job_start_time;
-         }   
+         }
       }
    }
 
@@ -5715,6 +5717,9 @@ ri_time_by_slots(const sge_assignment_t *a, lListElem *rep, lList *load_attr, lL
             *start_time = when;
          }   
          ret = DISPATCH_OK;
+
+         /* DG TODO  RSMAP host consumable: when it is ok, check if specific ID 
+          * is also available, if not then return DISPATCH_NOT_AT_TIME ... */
 
       }
       DPRINTF(("\t\t%s: time_by_slots: %d of %s=%f can be served %s\n", 

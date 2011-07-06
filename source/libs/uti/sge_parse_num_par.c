@@ -26,7 +26,9 @@
  *   Copyright: 2001 by Sun Microsystems, Inc.
  * 
  *   All Rights Reserved.
- * 
+ *
+ *  Portions of this code are Copyright 2011 Univa Corporation.
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
@@ -164,6 +166,7 @@ int extended_parse_ulong_val(double *dvalp, u_long32 *uvalp, u_long32 type,
       } 
       break;
 
+   case TYPE_RSMAP:
    case TYPE_INT:
    case TYPE_TIM:
    case TYPE_MEM:
@@ -177,6 +180,8 @@ int extended_parse_ulong_val(double *dvalp, u_long32 *uvalp, u_long32 type,
          else {
             if (type==TYPE_INT)
                sge_strlcpy(error_str, "integer value", error_len); 
+            else if (type==TYPE_RSMAP)
+               sge_strlcpy(error_str, "rsmap value", error_len);
             else if (type==TYPE_TIM)
                sge_strlcpy(error_str, "time value", error_len); 
             else if (type==TYPE_BOO)

@@ -30,8 +30,11 @@
 #
 #  All Rights Reserved.
 #
+#  Portions of this code are Copyright 2011 Univa Corporation.
+#
 ##########################################################################
 #___INFO__MARK_END__
+
 SPOOLCLIB_DIR = $(SDIR)/libs/spool/flatfile
 
 SPOOLCLIB = libspoolc$(LIBEXT)
@@ -44,8 +47,20 @@ SPOOLCLIB_SRC = \
 
 SPOOLCLIB_OBJS = $(SPOOLCLIB_SRC:.c=.o)
 
+# we need the absolute path to find the object
+UGE_SPOOLCLIB_SRC_ABS = \
+         $(SOURCE_DIR)/libs/spool/flatfile/sge_flatfile_obj_remap.c
+
+UGE_SPOOLCLIB_OBJS_ABS = $(UGE_SPOOLCLIB_SRC_ABS:.c=.o)
+
+# we need the relative path for AR and in order to delete the object
+UGE_SPOOLCLIB_SRC_REL = \
+			sge_flatfile_obj_remap.c
+
+UGE_SPOOLCLIB_OBJS_REL = $(UGE_SPOOLCLIB_SRC_REL:.c=.o)
+
 SPOOLCLIB_ADD_SRC = \
-         read_write_job.c 
+         read_write_job.c
 
 SPOOLCLIB_TEST_PROGS_OBJ = \
          test_sge_spooling_flatfile.o \
@@ -63,11 +78,11 @@ SPOOLCLIB_ADD_OBJS = $(SPOOLCLIB_ADD_SRC:.c=.o)
 spoolclib: $(SPOOLCLIB) $(SPOOLCLIB_TEST_PROGS)
 
 spoolclib_clean:
-		$(RM) $(SPOOLCLIB_OBJS) libspoolc.a libspoolc$(SHAREDEXT) $(SPOOLCLIB_TEST_PROGS) \
+		$(RM) $(SPOOLCLIB_OBJS) $(UGE_SPOOLCLIB_OBJS_REL) libspoolc.a libspoolc$(SHAREDEXT) $(SPOOLCLIB_TEST_PROGS) \
              $(SPOOLCLIB_TEST_PROGS_OBJ) 
 
 spoolclib_depend:
-		$(DEPEND) -f$(SPOOLCLIB_DIR)/spoolc_dependencies $(SPOOLCLIB_DIR)/*.c
+		$(DEPEND) -f$(SPOOLCLIB_DIR)/spoolc_dependencies $(SPOOLCLIB_DIR)/*.c $(SOURCE_DIR)/libs/spool/flatfile/*.c
 
 spoolclib_messages:
 	@echo Creating $@
@@ -78,13 +93,13 @@ spoolclib_messages:
 ###############################################################################
 # rules to build library
 ###############################################################################
-libspoolc.a:	$(SPOOLCLIB_OBJS) $(SPOOLCLIB_ADD_OBJS)
-	$(AR) $(ARFLAGS) libspoolc.a $(SPOOLCLIB_OBJS) $(SPOOLCLIB_ADD_OBJS)
+libspoolc.a: $(UGE_SPOOLCLIB_OBJS_REL) $(SPOOLCLIB_OBJS) $(SPOOLCLIB_ADD_OBJS)
+	$(AR) $(ARFLAGS) libspoolc.a $(UGE_SPOOLCLIB_OBJS_REL) $(SPOOLCLIB_OBJS) $(SPOOLCLIB_ADD_OBJS)
 	$(RANLIB) libspoolc.a \
    && ../scripts/nonreentrant.sh -a `../dist/util/arch` -w $@
 
-libspoolc$(SHAREDEXT): $(SPOOLCLIB_OBJS) $(SPOOLCLIB_ADD_OBJS) $(SPOOLLIB) $(SCHEDLIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(COMMLISTSLIB) $(CULLLIB) $(UTILIB)
-	$(SHAREDLD) $(SHARED_LFLAGS) -o libspoolc$(SHAREDEXT) $(SPOOLCLIB_OBJS) $(SPOOLCLIB_ADD_OBJS) -lspool -lsched -lsgeobj -lsgeobjd -lcomm -lcull -luti $(LIBS) -lcommlists \
+libspoolc$(SHAREDEXT): $(UGE_SPOOLCLIB_OBJS_REL) $(SPOOLCLIB_OBJS) $(SPOOLCLIB_ADD_OBJS) $(SPOOLLIB) $(SCHEDLIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(COMMLISTSLIB) $(CULLLIB) $(UTILIB)
+	$(SHAREDLD) $(SHARED_LFLAGS) -o libspoolc$(SHAREDEXT) $(UGE_SPOOLCLIB_OBJS_REL) $(SPOOLCLIB_OBJS) $(SPOOLCLIB_ADD_OBJS) -lspool -lsched -lsgeobj -lsgeobjd -lcomm -lcull -luti $(LIBS) -lcommlists \
    && ../scripts/nonreentrant.sh -a `../dist/util/arch` -w $@
 
 ###############################################################################
@@ -95,13 +110,16 @@ include $(SPOOLCLIB_DIR)/spoolc_dependencies
 ###############################################################################
 # rules to build object codes
 ###############################################################################
-sge_spooling_flatfile.o: $(SPOOLCLIB_DIR)/sge_spooling_flatfile.c 
+sge_spooling_flatfile.o: $(SPOOLCLIB_DIR)/sge_spooling_flatfile.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SPOOLCLIB_DIR)/sge_spooling_flatfile.c
 
-sge_flatfile.o: $(SPOOLCLIB_DIR)/sge_flatfile.c 
+sge_flatfile.o: $(SPOOLCLIB_DIR)/sge_flatfile.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SPOOLCLIB_DIR)/sge_flatfile.c
 
-sge_flatfile_obj.o: $(SPOOLCLIB_DIR)/sge_flatfile_obj.c 
+sge_flatfile_obj_remap.o:
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SOURCE_DIR)/libs/spool/flatfile/sge_flatfile_obj_remap.c
+
+sge_flatfile_obj.o: $(SPOOLCLIB_DIR)/sge_flatfile_obj.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SPOOLCLIB_DIR)/sge_flatfile_obj.c
 
 # do not automatically rebuild the scanner c code
@@ -118,7 +136,7 @@ sge_spooling_flatfile_scanner.o: $(SPOOLCLIB_DIR)/sge_spooling_flatfile_scanner.
 #---------------------------------------------------------------------
 # test programs
 test_sge_spooling_flatfile: test_sge_spooling_flatfile.o sge_mt_init.o $(SPOOLLIB) $(GDILIB) $(SCHEDLIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(SGEOBJLIB) $(COMMLIB) $(UTILIB) $(WINGRIDLIB_DEP)
-	$(CC) $(CFLAGS) -o test_sge_spooling_flatfile $(LFLAGS) test_sge_spooling_flatfile.o sge_mt_init.o $(SPOOLCLIB) $(SPOOLLIB) $(COMMLIB) $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(SECLIB) $(DLLIB) $(SLIBS) $(LIBS) 
+	$(CC) $(CFLAGS) -o test_sge_spooling_flatfile $(LFLAGS) test_sge_spooling_flatfile.o sge_mt_init.o $(SPOOLCLIB) $(SPOOLLIB) $(COMMLIB) $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) $(UTILIB) $(WINGRIDLIB) $(SECLIB) $(DLLIB) $(SLIBS) $(LIBS)
 
 test_sge_spooling_flatfile.o: $(SPOOLCLIB_DIR)/test_sge_spooling_flatfile.c
 	$(CC) $(CFLAGS) -c $(SPOOLCLIB_DIR)/test_sge_spooling_flatfile.c
@@ -129,7 +147,7 @@ test_flatfile_spool: test_flatfile_spool.o sig_handlers.o sge_mt_init.o $(SPOOLL
 	$(CC) $(CFLAGS) -o test_flatfile_spool $(LFLAGS) test_flatfile_spool.o sge_mt_init.o sig_handlers.o $(SPOOLCLIB) \
                          $(SPOOLLIB) $(SCHEDLIB) $(GDILIB) $(SGEOBJLIB) $(SGEOBJDLIB) \
                          $(CULLLIB) $(COMMLIB) $(COMMLISTSLIB) \
-                         $(UTILIB) $(WINGRIDLIB) $(LIBS) $(SECLIB) $(SLIBS) $(DLLIB) 
+                         $(UTILIB) $(WINGRIDLIB) $(LIBS) $(SECLIB) $(SLIBS) $(DLLIB)
 
 test_flatfile_spool.o: $(SPOOLCLIB_DIR)/test_flatfile_spool.c
 	$(CC) $(CFLAGS) -c $(SPOOLCLIB_DIR)/test_flatfile_spool.c

@@ -26,6 +26,8 @@
  *   Copyright: 2001 by Sun Microsystems, Inc.
  * 
  *   All Rights Reserved.
+ *
+ *  Portions of this software are Copyright (c) 2011 Univa Corporation
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
@@ -82,6 +84,7 @@
 #include "sgeobj/sge_object.h"
 #include "sgeobj/sge_binding.h"
 #include "sgeobj/sge_binding_BN_L.h"
+#include "sgeobj/sge_grantedres_GRU_L.h"
 #include "sgeobj/sge_mailrec.h"
 #include "sgeobj/sge_path_alias.h"
 
@@ -663,7 +666,40 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
       if (sge_binding_environment != NULL) {
          var_list_set_string(&environmentList, "SGE_BINDING", sge_binding_environment);
          sge_free(&sge_binding_environment);
-      }   
+      }
+
+      /* new RSMAP resource map consumable feature */
+      if (lGetList(jatep, JAT_granted_resources_list)) {
+         lListElem* gr = NULL;
+         dstring hard_resource_requests = DSTRING_INIT;
+
+         /* now setting the granted resources list */
+         for_each(gr, lGetList(jatep, JAT_granted_resources_list)) {
+
+            if ((lGetUlong(gr, GRU_type) == GRU_HARD_REQUEST_TYPE)
+                  || (lGetUlong(gr, GRU_type) == GRU_RESOURCE_MAP_TYPE)) {
+
+               if (lGetString(gr, GRU_name) == NULL
+                     || lGetString(gr, GRU_value) == NULL) {
+                  continue;
+               }
+
+               /* if the type is a hard resource request add it to the string */
+               sge_dstring_append(&hard_resource_requests, "SGE_HGR_");
+               sge_dstring_append(&hard_resource_requests, lGetString(gr, GRU_name));
+
+               var_list_set_string(&environmentList,
+                                   sge_dstring_get_string(&hard_resource_requests),
+                                   lGetString(gr, GRU_value));
+            }
+            sge_dstring_free(&hard_resource_requests);
+         }
+
+         /* set the environment variable for the hard resource requests */
+        /* var_list_set_string(&environmentList, "SGE_HARD_RESOURCE_REQUESTS",
+               sge_dstring_get_string(&hard_resource_requests));
+         sge_dstring_free(&hard_resource_requests); */
+      }
 
       /*
        * Handling of script_file and JOB_NAME:
@@ -677,7 +713,7 @@ int sge_exec_job(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jatep,
       {
          u_long32 jb_now;
          const char *job_name;
-         
+
          if(petep != NULL) {
             jb_now = JOB_TYPE_QRSH;
             job_name = lGetString(petep, PET_name);
@@ -2008,58 +2044,58 @@ char *shell
    login_shells = mconf_get_login_shells();
   
    if (login_shells == NULL) {
-      DEXIT; 
-      return 0;
-   }  
+   DEXIT; 
+   return 0;
+}  
 
-   cp = login_shells; 
+cp = login_shells; 
 
-   while (*cp) {
+while (*cp) {
 
-      /* skip delimiters */
-      while (*cp && ( *cp == ',' || *cp == ' ' || *cp == '\t')) {
-         cp++;
-      }
-   
-      ret = strncmp(cp, shell, strlen(shell));
-      DPRINTF(("strncmp(\"%s\", \"%s\", %d) = %d\n",
-              cp, shell, strlen(shell), ret));
-      if (!ret) {
-         sge_free(&login_shells);
-         DEXIT;  
-         return 1;
-      }
-
-      /* skip name of shell, proceed until next delimiter */
-      while (*cp && *cp != ',' && *cp != ' ' && *cp != '\t') {
-          cp++;
-      }
+   /* skip delimiters */
+   while (*cp && ( *cp == ',' || *cp == ' ' || *cp == '\t')) {
+      cp++;
    }
-  sge_free(&login_shells);
-  DEXIT;
-  return 0;
+
+   ret = strncmp(cp, shell, strlen(shell));
+   DPRINTF(("strncmp(\"%s\", \"%s\", %d) = %d\n",
+           cp, shell, strlen(shell), ret));
+   if (!ret) {
+      sge_free(&login_shells);
+      DEXIT;  
+      return 1;
+   }
+
+   /* skip name of shell, proceed until next delimiter */
+   while (*cp && *cp != ',' && *cp != ' ' && *cp != '\t') {
+       cp++;
+   }
+}
+sge_free(&login_shells);
+DEXIT;
+return 0;
 }
 
-   
+
 static int get_nhosts(
 lList *gdil_orig  /* JG_Type */
 ) {
-   int nhosts = 0;
-   lListElem *ep;
-   lList *cache = lCreateList("", STU_Type);
-   const char *hostname;
+int nhosts = 0;
+lListElem *ep;
+lList *cache = lCreateList("", STU_Type);
+const char *hostname;
 
-   DENTER(TOP_LAYER, "get_nhosts");
-   for_each(ep, gdil_orig) {
-      hostname = lGetHost(ep, JG_qhostname);
-      if (lGetElemStr(cache, STU_name, hostname) == NULL) {
-         nhosts++;
-         lAddElemStr(&cache, STU_name, hostname, STU_Type);
-      }
+DENTER(TOP_LAYER, "get_nhosts");
+for_each(ep, gdil_orig) {
+   hostname = lGetHost(ep, JG_qhostname);
+   if (lGetElemStr(cache, STU_name, hostname) == NULL) {
+      nhosts++;
+      lAddElemStr(&cache, STU_name, hostname, STU_Type);
    }
-   lFreeList(&cache);
+}
+lFreeList(&cache);
 
-   DRETURN(nhosts);
+DRETURN(nhosts);
 }
 
 /* creates binding string for config file */

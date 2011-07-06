@@ -30,6 +30,8 @@
 #
 #  All Rights Reserved.
 #
+#  Portions of this code are Copyright 2011 Univa Corporation.
+#
 ##########################################################################
 #___INFO__MARK_END__
 
@@ -46,7 +48,19 @@ include $(SDIR)/libs/spool/Makefile
 include $(SDIR)/libs/japi/Makefile
 include $(SDIR)/libs/juti/Makefile
 include $(SDIR)/libs/jgdi/Makefile
+
+# when UGE extensions are available
+ifneq ($(SDIR), $(LIBS_DIR))
 include $(LIBS_DIR)/libs/Makefile
+UGELIBS       = ugelibs
+UGELIBSCLEAN  = ugelibs_clean
+UGELIBSDEPEND = ugelibs_depend
+else
+include $(SDIR)/libs/ijs/Makefile
+STUBLIBS        = ijslib
+STUBLIBS_CLEAN  = ijslib_clean
+STUBLIBS_DEPEND = ijslib_depend
+endif
 
 ###############################################################################
 # Variable definitions for targets to build
@@ -56,14 +70,14 @@ SGELIB      = libsge$(LIBEXT)
 ###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
-libs: sgeobjlib gdilib evclib evmlib mirlib spoollib_all culllib_all schedlib_all utilib drmaa_all comm_all ugelibs $(JUTI_ALL) $(SGELIB)
+libs: sgeobjlib gdilib evclib evmlib mirlib $(UGELIBS) $(STUBLIBS) spoollib culllib_all schedlib_all utilib drmaa_all comm_all $(JUTI_ALL) $(SGELIB)
 
-libs_clean: gdilib_clean sgeobjlib_clean evclib_clean evmlib_clean mirlib_clean spoollib_clean commlib_clean commlistslib_clean culllib_clean schedlib_clean utilib_clean drmaa_clean ugelibs_clean $(JUTI_CLEAN) $(SGELIB)_clean
+libs_clean: gdilib_clean sgeobjlib_clean evclib_clean evmlib_clean mirlib_clean spoollib_clean commlib_clean commlistslib_clean culllib_clean schedlib_clean utilib_clean drmaa_clean $(UGELIBS_CLEAN) $(STUBLIBS_CLEAN) $(JUTI_CLEAN) $(SGELIB)_clean
 
 $(SGELIB)_clean:
 	$(RM) libsge.a libsge$(SHAREDEXT)
 
-libs_depend: gdilib_depend sgeobjlib_depend evclib_depend evmlib_depend mirlib_depend spoollib_depend culllib_depend schedlib_depend utilib_depend drmaa_depend commlib_depend commlistslib_depend ugelibs_depend $(JUTI_DEPEND)
+libs_depend: gdilib_depend sgeobjlib_depend evclib_depend evmlib_depend mirlib_depend spoollib_depend culllib_depend schedlib_depend utilib_depend drmaa_depend commlib_depend commlistslib_depend $(UGELIBS_DEPEND) $(STUBLIBS_DEPEND) $(JUTI_DEPEND)
 
 libs_messages: gdilib_messages sgeobjlib_messages evclib_messages evmlib_messages mirlib_messages spoollib_messages commlib_messages cull_messages schedlib_messages utilib_messages drmaa_messages $(JUTI_MESSAGES)
 

@@ -392,10 +392,10 @@ bool get_queue_resource(lListElem *queue_elem, const lListElem *queue, const cha
 
    /* read stuff from queue and set to new elements */
    switch(type) {
-   case TYPE_INT:
-      dval = (double)lGetUlong(queue, field);
-      snprintf(as_str, 100, sge_u32, lGetUlong(queue, field));
-      break;
+      case TYPE_INT:
+         dval = (double)lGetUlong(queue, field);
+         snprintf(as_str, 100, sge_u32, lGetUlong(queue, field));
+         break;
 
    case TYPE_TIM:
    case TYPE_MEM:
@@ -953,6 +953,7 @@ int compare_complexes(int slots, lListElem *req_cplx, lListElem *src_cplx, char 
 #endif
       DRETURN(match);
 
+   case TYPE_RSMAP:
    case TYPE_INT:
    case TYPE_TIM:
    case TYPE_MEM:
@@ -1362,6 +1363,7 @@ bool request_cq_rejected(const lList* hard_resource_list, const lListElem *cq,
             match = string_cmp(type, relop, request, offer);
             break;
 
+         case TYPE_RSMAP:
          case TYPE_INT:
          case TYPE_TIM:
          case TYPE_MEM:
@@ -1383,6 +1385,9 @@ bool request_cq_rejected(const lList* hard_resource_list, const lListElem *cq,
             match = true; /* well */
             break;
          }
+
+         /* DG TODO RSMAP ID scheduler match */
+
          if (match) {
             rejected = false;
             break;

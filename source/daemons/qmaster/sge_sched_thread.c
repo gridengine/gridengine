@@ -27,6 +27,8 @@
  *
  *  All Rights Reserved.
  *
+ *  Portions of this software are Copyright (c) 2011 Univa Corporation
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 #include <string.h>
@@ -62,6 +64,9 @@
 #include "sgeobj/sge_pe.h"
 #include "sgeobj/sge_range.h"
 #include "sgeobj/sge_order.h"
+#include "sgeobj/sge_ulong.h"
+
+#include "sgeobj/sge_grantedres_GRU_L.h"
 
 #include "mir/sge_mirror.h"
 #include "evc/sge_event_client.h"
@@ -85,8 +90,8 @@
 
 #include "sge_sched_prepare_data.h"
 #include "sge_sched_job_category.h"
-#include "basis_types.h" 
-#include "sge_mt_init.h" 
+#include "basis_types.h"
+#include "sge_mt_init.h"
 #include "sge.h"
 #include "setup_qmaster.h"
 #include "sge_sched_process_events.h"
@@ -97,6 +102,9 @@
 #include "sge_sched_process_events.h"
 #include "sge_sched_thread.h"
 #include "sge_sched_order.h"
+
+/* Univa Grid Engine proprietary extensions */
+#include "sge_sched_thread_remap.h"
 
 #if 0
 #define SCHEDULER_TIMEOUT_S 10
@@ -1159,6 +1167,10 @@ select_assign_debit(lList **queue_list, lList **dis_queue_list, lListElem *job, 
    }
 
    if (result == DISPATCH_OK) {
+
+      /* UNIVA Corp. RSMAP feature */
+      add_granted_resource_list(ja_task, job, a.gdil, host_list);
+
       /* in SGEEE we must account for job tickets on hosts due to parallel jobs */
       {
          double job_tickets_per_slot;

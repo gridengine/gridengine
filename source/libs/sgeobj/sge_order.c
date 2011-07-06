@@ -160,6 +160,7 @@ DPRINTF(("ja task prio pos: %d %d %d %d %d %d %d %d\n", ja_pos->JAT_status_pos, 
       order_ja_pos->JAT_share_pos = lGetPosViaElem(joker_task,JAT_share, SGE_NO_ABORT);
       order_ja_pos->JAT_prio_pos = lGetPosViaElem(joker_task,JAT_prio, SGE_NO_ABORT);
       order_ja_pos->JAT_ntix_pos = lGetPosViaElem(joker_task,JAT_ntix, SGE_NO_ABORT);  
+ /*     order_ja_pos->JAT_granted_resources_list_pos = lGetPosViaElem(jatp,JAT_granted_resources_list, SGE_NO_ABORT); */
 /*
       DPRINTF(("ja task order pos: %d %d %d %d %d %d %d %d\n", order_ja_pos->JAT_status_pos, order_ja_pos->JAT_tix_pos, order_ja_pos->JAT_oticket_pos,
                                         order_ja_pos->JAT_fticket_pos, order_ja_pos->JAT_sticket_pos, 

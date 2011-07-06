@@ -266,14 +266,14 @@ lList
      
 
       /* Create a reduced task list with only the required fields */
-      {           
-         lList *tlist = NULL;         
+      {
+         lList *tlist = NULL;
          lListElem *tempElem = NULL;
 
          if (update_execd){
             tlist = lCreateList("", tixDesc);
-            tempElem = lCreateElem(tixDesc); 
-            lSetList(tempElem, JAT_granted_destin_identifier_list, 
+            tempElem = lCreateElem(tixDesc);
+            lSetList(tempElem, JAT_granted_destin_identifier_list,
                      lCopyList("", lGetList(ja_task, JAT_granted_destin_identifier_list)));
          }
          else {
@@ -282,21 +282,21 @@ lList
          }
 
          lAppendElem(tlist, tempElem);
-         
+
          lSetPosDouble(tempElem, order_ja_pos->JAT_tix_pos,     lGetPosDouble(ja_task,ja_pos->JAT_tix_pos));
          lSetPosDouble(tempElem, order_ja_pos->JAT_oticket_pos, lGetPosDouble(ja_task,ja_pos->JAT_oticket_pos));
          lSetPosDouble(tempElem, order_ja_pos->JAT_fticket_pos, lGetPosDouble(ja_task,ja_pos->JAT_fticket_pos));
          lSetPosDouble(tempElem, order_ja_pos->JAT_sticket_pos, lGetPosDouble(ja_task,ja_pos->JAT_sticket_pos));
          lSetPosDouble(tempElem, order_ja_pos->JAT_share_pos,   lGetPosDouble(ja_task,ja_pos->JAT_share_pos));
          lSetPosDouble(tempElem, order_ja_pos->JAT_prio_pos,    lGetPosDouble(ja_task,ja_pos->JAT_prio_pos));
-         lSetPosDouble(tempElem, order_ja_pos->JAT_ntix_pos,    lGetPosDouble(ja_task,ja_pos->JAT_ntix_pos));            
-      
+         lSetPosDouble(tempElem, order_ja_pos->JAT_ntix_pos,    lGetPosDouble(ja_task,ja_pos->JAT_ntix_pos));
+
          lSetList(jep, JB_ja_tasks, tlist);
       }
 
       /* Create a reduced job list with only the required fields */
       lAppendElem(jlist, jep);
-      
+
       lSetPosDouble(jep, order_job_pos->JB_nppri_pos,   lGetPosDouble(job, job_pos->JB_nppri_pos));
       lSetPosDouble(jep, order_job_pos->JB_nurg_pos,    lGetPosDouble(job, job_pos->JB_nurg_pos));
       lSetPosDouble(jep, order_job_pos->JB_urg_pos,     lGetPosDouble(job, job_pos->JB_urg_pos));
@@ -319,13 +319,16 @@ lList
       s = lGetString(ja_task, JAT_granted_pe);
       if (s != NULL) {
          lSetString(ep, OR_pe, s);
-      }   
+      }
+
+      /* RSMAP: copy from JAT_granted_resources_list */
+      lSetList(ep, OR_granted_resources_list, lCopyList("", lGetList(ja_task, JAT_granted_resources_list)));
    }
 
    lAppendElem(or_list, ep);
 
    DEXIT;
-   return or_list; 
+   return or_list;
 }
 
 

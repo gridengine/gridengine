@@ -47,5 +47,5 @@ lListElem *lReadElemFromDisk(const char *prefix, const char *name, const lDescr 
 }
 #endif
 
-#endif /* #ifndef __CULL_PACK_H */
+#endif /* #ifndef __CULL_FILE_H */
 

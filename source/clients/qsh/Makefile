@@ -30,6 +30,8 @@
 #
 #  All Rights Reserved.
 #
+#  Portions of this code are Copyright 2011 Univa Corporation.
+#
 ##########################################################################
 #___INFO__MARK_END__
 QSH_DIR = $(SDIR)/clients/qsh

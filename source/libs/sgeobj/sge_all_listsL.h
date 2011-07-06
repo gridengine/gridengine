@@ -29,6 +29,8 @@
  *   Copyright: 2001 by Sun Microsystems, Inc.
  * 
  *   All Rights Reserved.
+ *
+ *  Portions of this software are Copyright (c) 2011 Univa Corporation
  * 
  ************************************************************************/
 /*___INFO__MARK_END__*/
@@ -86,6 +88,7 @@
 #include "sgeobj/sge_event_ET_L.h"
 #include "sgeobj/sge_event_request_EVR_L.h"
 #include "sgeobj/sge_feature_FES_L.h"
+#include "sgeobj/sge_grantedres_GRU_L.h"
 #include "sgeobj/sge_helper_QAJ_L.h"
 #include "sgeobj/sge_hgroup_HGRP_L.h"
 #include "sgeobj/sge_host_EH_L.h"
@@ -94,6 +97,7 @@
 #include "sgeobj/sge_host_SH_L.h"
 #include "sgeobj/sge_host_HL_L.h"
 #include "sgeobj/sge_host_HS_L.h"
+#include "sgeobj/sge_host_RESL_L.h"
 #include "sgeobj/sge_href_HR_L.h"
 #include "sgeobj/sge_id_ID_L.h"
 #include "sgeobj/sge_japi_JJ_L.h"
@@ -363,6 +367,8 @@ extern "C" {
 
       {BN_LOWERBOUND, BNS, BNN},                /* list of binding information */
 
+      {GRU_LOWERBOUND, GRUS, GRUN},             /* list of granted resources transferred from scheduler to execd */
+      {RESL_LOWERBOUND, RESLS, RESLN},          /* list of resource map ids on one particular host */
       {0, 0, NULL}
    };
 

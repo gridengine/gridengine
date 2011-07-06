@@ -54,6 +54,7 @@
 #include "uti/sge_spool.h"
 #include "uti/setup_path.h"
 #include "uti/config_file.h"
+#include "uti/sge_string.h"
 #include "uti/sge_time.h"
 
 #include "evm/sge_event_master.h"
@@ -132,6 +133,9 @@ static int    setup_qmaster(sge_gdi_ctx_class_t *ctx);
 
 static int    
 remove_invalid_job_references(bool job_spooling, int user, object_description *object_base);
+
+static void initialize_rsmap_usage_by_jobs(void);
+static void account_rsmap(lListElem *ja_task, u_long32 jobid, u_long32 taskid);
 
 static int    debit_all_jobs_from_qs(void);
 static void   init_categories(void);
@@ -1204,6 +1208,9 @@ static int setup_qmaster(sge_gdi_ctx_class_t *ctx)
    debit_all_jobs_from_qs(); 
    debit_all_jobs_from_pes(*object_base[SGE_TYPE_PE].list); 
 
+   /* initialize RSMAP usage for all jobs */
+   initialize_rsmap_usage_by_jobs();
+
    /*
     * Initialize cached values for each qinstance:
     *    - update suspend on subordinate state according to running jobs
@@ -1314,6 +1321,112 @@ remove_invalid_job_references(bool job_spooling, int user, object_description *o
 
    DEXIT;
    return 0;
+}
+
+/****** setup_qmaster/initialize_rsmap_usage_by_jobs() *************************
+*  NAME
+*     initialize_rsmap_usage_by_jobs() -- Mark RSMAP ids as used
+*
+*  SYNOPSIS
+*     static void initialize_rsmap_usage_by_jobs()
+*
+*  FUNCTION
+*     Go through running job list and mark rsmap IDs as used.
+*
+*  INPUTS
+*
+*  RESULT
+*     static int -  always 0
+*
+*  NOTES
+*     MT-NOTE: initialize_rsmap_usage_by_jobs() is not MT safe
+*
+*******************************************************************************/
+static void initialize_rsmap_usage_by_jobs()
+{
+   lListElem *next_jep   = NULL;
+   lListElem *next_jatep = NULL;
+   u_long32 jobid;
+   u_long32 taskid;
+
+   DENTER(TOP_LAYER, "initialize_rsmap_usage_by_jobs");
+
+   next_jep = lFirst(*(object_type_get_master_list(SGE_TYPE_JOB)));
+
+   while ((next_jep)) {
+
+      jobid = lGetUlong(next_jep, JB_job_number);
+
+      next_jatep = lFirst(lGetList(next_jep, JB_ja_tasks));
+
+      while ((next_jatep)) {
+         taskid = lGetUlong(next_jatep, JAT_task_number);
+
+         /* mark RESL_jobid and RESL_taskid of job */
+         account_rsmap(next_jatep, jobid, taskid);
+         next_jatep = lNext(next_jatep);
+      }
+
+      next_jep = lNext(next_jep);
+   }
+
+   DRETURN_VOID;
+}
+
+static void account_rsmap(lListElem *ja_task, u_long32 jobid, u_long32 taskid)
+{
+   lListElem *grl           = NULL;     /* GRU_Type */
+   lListElem *cc            = NULL;     /* consumable complex CE_Type */
+   lListElem *hep           = NULL;     /* EH_Type */
+   const char* hostname     = NULL;
+   const char* remap_name   = NULL;
+   const char* remap_value  = NULL;
+   const char* id           = NULL;
+   lList *resource_map_list = NULL;
+
+   object_description *object_base = object_type_get_object_description();
+   lList *exec_host_list  = *object_base[SGE_TYPE_EXECHOST].list;
+
+   /* go through all RSMAP complexes (which can contain multiple space separted IDs) */
+   for_each(grl, lGetList(ja_task, JAT_granted_resources_list)) {
+      /* context of remap ID list */
+      struct saved_vars_s *context  = NULL;
+
+      hostname    = lGetString(grl, GRU_host);   /* host where the RSMAP id is used */
+      remap_name  = lGetString(grl, GRU_name);   /* name of the RSMAP complex */
+      remap_value = lGetString(grl, GRU_value);  /* the ID list */
+
+      if (hostname == NULL || remap_name == NULL || remap_value == NULL) {
+         continue;
+      }
+
+      /* get from granted resource the hostname and out of that hep */
+      hep = host_list_locate(exec_host_list, hostname);
+
+      /* get the complex element with the same name as the remap */
+      cc = lGetElemStr(lGetList(hep, EH_consumable_config_list), CE_name, remap_name);
+
+      /* get host complex */
+      if ((resource_map_list = lGetList(cc, CE_resource_map_list)) == NULL) {
+         /* no resource map list defined on the specific host */
+         break;
+      }
+
+      /* account the RSMAP consumables, they are in a space separted tasks */
+      while ((id = sge_strtok_r(remap_value, " ", &context))) {
+         /* search the remap name in the consumable config resource map list */
+         lListElem* granted_remap = lGetElemStr(resource_map_list, RESL_value, id);
+         remap_value = NULL; /* for the next strtok_r calls */
+
+         if (granted_remap != NULL) {
+            /* Check if there is an ID collision (should be done by scheduler already) */
+            /* mark as used by a job */
+            lSetUlong(granted_remap, RESL_jobid, jobid);      /* mark as used */
+            lSetUlong(granted_remap, RESL_taskid, taskid);    /* mark as used */
+         }
+      }
+   }
+
 }
 
 static int debit_all_jobs_from_qs()

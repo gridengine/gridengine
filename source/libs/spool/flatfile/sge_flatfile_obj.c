@@ -27,6 +27,8 @@
  *
  *   All Rights Reserved.
  *
+ *  Portions of this software are Copyright (c) 2011 Univa Corporation
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/                                   
 
@@ -66,11 +68,15 @@
 #include "sgeobj/sge_qref.h"
 #include "sgeobj/sge_job.h"
 #include "sgeobj/sge_mailrec.h"
+#include "sgeobj/sge_host_RESL_L.h"
 
 #include "spool/flatfile/sge_flatfile.h"
 #include "spool/flatfile/msg_spoollib_flatfile.h"
 
 #include "msg_common.h"
+
+/* Univa Grid Engine proprietary extensions */
+#include "spool/flatfile/sge_flatfile_obj_remap.h"
 
 /* This file defines variables and functions that are used to create field
  * lists to pass to the flatfile spooling framework.  The reason that some
@@ -149,7 +155,14 @@ static int read_CQ_hostlist(lListElem *ep, int nm, const char *buffer,
 static int write_CQ_hostlist(const lListElem *ep, int nm,
                              dstring *buffer, lList **alp);
 static int write_CE_stringval(const lListElem *ep, int nm, dstring *buffer,
-                       lList **alp);
+                            lList **alp);
+#if 0
+static int read_CE_stringval_host(lListElem *ep, int nm, const char *buffer,
+                            lList **alp);
+static int write_CE_stringval_host(const lListElem *ep, int nm, dstring *buffer,
+                            lList **alp);
+#endif
+
 static int read_RQR_obj(lListElem *ep, int nm, const char *buffer,
                                     lList **alp);
 static int write_RQR_obj(const lListElem *ep, int nm, dstring *buffer,
@@ -243,6 +256,13 @@ static spooling_field AINTER_sub_fields[] = {
 static spooling_field CE_sub_fields[] = {
    {  CE_name,            11, "name",    NULL, NULL, NULL, NULL},
    {  CE_stringval,       11, "value",   NULL, NULL, NULL, write_CE_stringval},
+   {  NoName,             11, NULL,      NULL, NULL, NULL, NULL}
+};
+
+/* in order to distinguish between host level and queue level consumables */
+static spooling_field CE_host_sub_fields[] = {
+   {  CE_name,            11, "name",    NULL, NULL, NULL, NULL},
+   {  CE_stringval,       11, "value",   NULL, NULL, read_CE_stringval_host, write_CE_stringval_host},
    {  NoName,             11, NULL,      NULL, NULL, NULL, NULL}
 };
 
@@ -392,7 +412,7 @@ spooling_field US_fields[] = {
    {  US_entries, 7, "entries", UE_sub_fields, NULL, NULL, NULL},
    {  NoName,     7, NULL,      NULL,          NULL, NULL, NULL}
 };
-   
+
 spooling_field SC_fields[] = {
    {  SC_algorithm,                       33, "algorithm",                       NULL,          NULL, NULL,                      NULL},
    {  SC_schedule_interval,               33, "schedule_interval",               NULL,          NULL, NULL,                      NULL},
@@ -592,6 +612,10 @@ spooling_field RQS_fields[] = {
    {  NoName,             12,   NULL,                NULL, NULL, NULL}
 };
 
+#if 0
+static bool is_range(const char* value, long *start, long *end);
+#endif
+
 static void create_spooling_field (
    spooling_field *field,
    int nm, 
@@ -738,9 +762,11 @@ spooling_field *sge_build_EH_field_list(bool spool, bool to_stdout,
    create_spooling_field(&fields[count++], EH_scaling_list, 21, "load_scaling",
                           HS_sub_fields, &qconf_sub_name_value_comma_sfi, NULL,
                           NULL);
+
    create_spooling_field(&fields[count++], EH_consumable_config_list, 21,
-                          "complex_values", CE_sub_fields,
-                          &qconf_sub_name_value_comma_sfi, NULL, NULL);
+                          "complex_values", CE_host_sub_fields,
+                          &qconf_sub_name_value_comma_sfi, NULL,
+                          NULL);
    
    if (getenv("MORE_INFO")) {
       create_spooling_field(&fields[count++], EH_resource_utilization, 21,
@@ -1511,7 +1537,7 @@ static int read_RQR_obj(lListElem *ep, int nm, const char *buffer,
 
    if ((ret = rqs_parse_filter_from_string(&filter, buffer, alp)) == 1) {
       lSetObject(ep, nm, filter);
-   } 
+   }
 
    DRETURN(ret);
 }
@@ -1521,8 +1547,8 @@ static int read_RQR_obj(lListElem *ep, int nm, const char *buffer,
 *     write_RQR_obj() -- converts a element to string
 *
 *  SYNOPSIS
-*     static int write_RQR_obj(const lListElem *ep, int nm, dstring *buffer, lList 
-*     **alp) 
+*     static int write_RQR_obj(const lListElem *ep, int nm, dstring *buffer, lList
+*     **alp)
 *
 *  FUNCTION
 *     Prints out a RQR Element to a string
@@ -1538,10 +1564,74 @@ static int read_RQR_obj(lListElem *ep, int nm, const char *buffer,
 *                  0 on error
 *
 *  NOTES
-*     MT-NOTE: write_RQR_obj() is MT safe 
+*     MT-NOTE: write_RQR_obj() is MT safe
 *
 *******************************************************************************/
 static int write_RQR_obj(const lListElem *ep, int nm, dstring *buffer,
                        lList **alp) {
    return rqs_append_filter_to_dstring(lGetObject(ep, nm), buffer, alp);
 }
+
+#if 0
+/****** sge_flatfile_obj/is_range() ***************************************
+*  NAME
+*     is_range() -- Checks if string contains an ID range. 
+*
+*  SYNOPSIS
+*     static int is_range(const char *value, long *start, long *end) 
+*
+*  FUNCTION
+*     Checks if the string contains a range and if so parses the range
+*     and returns the first number and the last number of the range
+*     as out parameters and finishes with the return value true.
+*
+*  INPUTS
+*     const char *value   - The string to parse.
+*
+*  OUTPUTS 
+*     long *start         - First number of range in case result is 1. 
+*     lList **alp         - Last number of range in case result is 1. 
+*
+*  RESULT
+*     static bool - 1 on success
+*                  0 on error
+*
+*  NOTES
+*     MT-NOTE: is_range() is MT safe
+*
+*******************************************************************************/
+static bool is_range(const char *value, long *start, long *end) {
+   /* check if the string is a correct range definition (<number>-<number>) */
+   const char* minus = NULL;
+   const char* escaped_minus = NULL;
+
+   if (value == NULL) {
+      return false;
+   }
+
+   minus = strstr(value, "-");
+   escaped_minus = strstr(value, "\\-");
+
+   /* there is one "-" within a range and no escaped one */
+   if ((minus != NULL && escaped_minus == NULL)) {
+      /* looks good, we have a range delimiter */
+      /* the next character after "-" must point to a number */
+      minus++;
+      if (minus == '\0') {
+         /* there is nothing after the range delimiter */
+         return false;
+      } else {
+         *start = (long) strtod(value, NULL);
+         *end   = (long) strtod(minus, NULL);
+
+         /* check if range start is lower than range end */
+         if (*start <= *end) {
+            return true;
+         }
+      }
+   }
+
+   /* no range sign found or an escaped one found */
+   return false;
+}
+#endif

@@ -72,6 +72,7 @@
 
 #define QINSTANCE_LAYER BASIS_LAYER
 
+
 /****** sgeobj/qinstance/qinstance_list_locate() ******************************
 *  NAME
 *     qinstance_list_locate() -- find a qinstance 
@@ -1079,6 +1080,7 @@ rc_debit_consumable(lListElem *jep, lListElem *ep, lList *centry_list,
                         (config_nm==QU_consumable_config_list)?"queue":"host",
                         obj_name, debit_slots));
                lAddDouble(cr, RUE_utilized_now, debit_slots * dval);
+
             } else {
                double actual_value = cr == NULL ? 0 : lGetDouble(cr, RUE_utilized_now);
                double config_value = lGetDouble(cr_config, CE_doubleval);
@@ -1367,3 +1369,5 @@ qinstance_set_error(lListElem *qinstance, u_long32 type, const char *message, bo
       qinstance_message_trash_all_of_type_X(qinstance, type);
    }
 }
+
+

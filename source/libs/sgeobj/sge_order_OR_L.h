@@ -30,6 +30,8 @@
  * 
  *   All Rights Reserved.
  * 
+ * Portions of this code are Copyright 2011 Univa Corporation.
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
@@ -53,7 +55,8 @@ enum {
    OR_joker,
    OR_pe,
    OR_ntix,
-   OR_prio
+   OR_prio,
+   OR_granted_resources_list
 };
 
 LISTDEF(OR_Type)
@@ -78,6 +81,7 @@ LISTDEF(OR_Type)
    SGE_STRING(OR_pe, CULL_DEFAULT)          /* which pe */
    SGE_DOUBLE(OR_ntix, CULL_DEFAULT)        /* normalized ticket amount sent with job start order */
    SGE_DOUBLE(OR_prio, CULL_DEFAULT)        /* priority sent with job start order */
+   SGE_LIST(OR_granted_resources_list, GRU_Type, CULL_DEFAULT) /* list of RSMAP and resource requests */
 LISTEND 
 
 NAMEDEF(ORN)
@@ -91,6 +95,7 @@ NAMEDEF(ORN)
      NAME("OR_pe")
      NAME("OR_ntix")
      NAME("OR_prio")
+     NAME("OR_granted_resources_list")
      NAMEEND
 
 #define ORS sizeof(ORN)/sizeof(char*)

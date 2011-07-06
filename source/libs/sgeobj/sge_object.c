@@ -915,6 +915,9 @@ object_parse_field_from_string(lListElem *object, lList **answer_list,
                   type = i;
                }
             }
+            if (strcasecmp(value, map_type2str(12)) == 0) {
+               type = 12;
+            }
 
             if (type == 0) {
                answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN,

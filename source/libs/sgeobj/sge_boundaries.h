@@ -576,7 +576,7 @@ enum NameSpaceBoundaries {
 
    ARA_LOWERBOUND = AR_UPPERBOUND + 1,
    ARA_UPPERBOUND = ARA_LOWERBOUND + 1 * BASIC_UNIT - 1,
-      
+
    RQL_LOWERBOUND = ARA_UPPERBOUND + 1,
    RQL_UPPERBOUND = RQL_LOWERBOUND + 1 * BASIC_UNIT - 1,
 
@@ -598,13 +598,21 @@ enum NameSpaceBoundaries {
 
    /* list for process groups */
    GR_LOWERBOUND = PRO_UPPERBOUND + 1,
-   GR_UPPERBOUND = GR_LOWERBOUND + 1 * BASIC_UNIT - 1, 
+   GR_UPPERBOUND = GR_LOWERBOUND + 1 * BASIC_UNIT - 1,
 
-   /* list with information about processor binding */ 
-   BN_LOWERBOUND = GR_UPPERBOUND + 1, 
-   BN_UPPERBOUND = BN_LOWERBOUND + 1 * BASIC_UNIT - 1
+   /* list with information about processor binding */
+   BN_LOWERBOUND = GR_UPPERBOUND + 1,
+   BN_UPPERBOUND = BN_LOWERBOUND + 1 * BASIC_UNIT - 1,
 
-#  define LAST_UPPERBOUND BN_UPPERBOUND
+   /* list with information about host sequence complex */
+   GRU_LOWERBOUND = BN_UPPERBOUND + 1,
+   GRU_UPPERBOUND = GRU_LOWERBOUND + 1 * BASIC_UNIT - 1,
+
+   /* list for bookkeeping of RSMAP usage */
+   RESL_LOWERBOUND = GRU_UPPERBOUND + 1,
+   RESL_UPPERBOUND = RESL_LOWERBOUND + 1 * BASIC_UNIT - 1
+
+#  define LAST_UPPERBOUND RESL_UPPERBOUND
 
 };
 

@@ -47,6 +47,7 @@
 #include "uti/sge_profiling.h"
 #include "uti/sge_bootstrap.h"
 #include "uti/sge_lock.h"
+#include "uti/sge_dstring.h"
 
 #include "sgeobj/sge_ja_task.h"
 #include "sgeobj/sge_pe_task.h"
@@ -94,6 +95,8 @@
 #include "sge_conf.h"
 #include "msg_common.h"
 #include "msg_qmaster.h"
+
+#include "sgeobj/sge_grantedres_GRU_L.h"
 
 static void 
 sge_clear_granted_resources(sge_gdi_ctx_class_t *ctx,
@@ -504,7 +507,7 @@ send_slave_jobs_wc(sge_gdi_ctx_class_t *ctx, lListElem *jep,
 
    DRETURN(ret);
 }   
-
+/* jep -> JB_Type */
 static int 
 send_job(sge_gdi_ctx_class_t *ctx, 
          const char *rhost, lListElem *jep, lListElem *jatep,
@@ -537,7 +540,7 @@ send_job(sge_gdi_ctx_class_t *ctx,
          return -1;
       }
    }
-   
+
    if ((tmpjep = copyJob(jep, jatep)) == NULL) {
       DRETURN(-1);
    } else {
@@ -553,6 +556,11 @@ send_job(sge_gdi_ctx_class_t *ctx,
          lFreeElem(&tmpjep);
          DRETURN(-1);
       }
+   }
+   /* if a granted resource list is defined int must be passed through, too */
+   if (lGetList(jatep, JAT_granted_resources_list)) {
+      lList *grl = lGetList(jatep, JAT_granted_resources_list);
+      lSetList(tmpjatep, JAT_granted_resources_list, lCopyList("", grl));
    }
 
    /* insert ckpt object if required **now**. it is only
@@ -579,7 +587,7 @@ send_job(sge_gdi_ctx_class_t *ctx,
 
       if (src_qep == NULL) {
          DRETURN(-1);
-      }  
+      }
 
       /* copy all JG_processors from all queues to gdil (which will be
        * sent to the execd).
@@ -999,6 +1007,10 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
          compute_qwallclock = true;
       }
 
+
+      
+
+
       reporting_create_job_log(NULL, now, JL_SENT, MSG_QMASTER, qualified_hostname, jr, jep, jatep, NULL, MSG_LOG_SENT2EXECD);
 
       global_host_ep = host_list_locate(master_exechost_list, "global");
@@ -1021,6 +1033,14 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
             const char *limit = NULL;
             int tmp_slot = lGetUlong(ep, JG_slots);
             lListElem *host;
+
+
+            /* DG TODO insert here code for sending the sequence 
+             * number request */
+            
+         
+
+
 
             if (compute_qwallclock) {
                limit = lGetString(queue, QU_h_rt);
@@ -1092,6 +1112,9 @@ void sge_commit_job(sge_gdi_ctx_class_t *ctx,
          }
          master_task = false;
       }
+
+
+      /* DG TODO sequence set here information */
 
       lSetUlong(jatep, JAT_wallclock_limit, task_wallclock);
 

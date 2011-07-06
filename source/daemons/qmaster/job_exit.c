@@ -27,6 +27,8 @@
  *
  *  All Rights Reserved.
  *
+ *  Portions of this software are Copyright (c) 2011 Univa Corporation
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 #include <string.h>
@@ -48,6 +50,8 @@
 #include "sgeobj/sge_report.h"
 #include "sgeobj/sge_cqueue.h"
 #include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_centry_CE_L.h"
+#include "sgeobj/sge_host_RESL_L.h"
 
 #include "sge.h"
 #include "sge_job_qmaster.h"
@@ -62,7 +66,11 @@
 #include "sge_job_enforce_limit.h"
 #include "msg_common.h"
 #include "msg_qmaster.h"
+#include "sge_event_master.h"
 
+static void sge_rsmap_free_ids(u_long32 jobid,
+                        u_long32 taskid,
+                        lListElem *jatep);
 
 /************************************************************************
  Master routine for job exit
@@ -130,6 +138,9 @@ void sge_job_exit(sge_gdi_ctx_class_t *ctx, lListElem *jr, lListElem *jep, lList
    }
 
    sge_job_remove_enforce_limit_trigger(jobid, jataskid);
+
+   /* here freeing of RSMAP resources is done */
+   sge_rsmap_free_ids(jobid, jataskid, jatep);
 
    /* retrieve hostname for later use */
    if (queueep != NULL) {
@@ -365,3 +376,116 @@ void sge_job_exit(sge_gdi_ctx_class_t *ctx, lListElem *jr, lListElem *jep, lList
    lFreeList(&saved_gdil);
    DRETURN_VOID;
 }
+
+/****** job_exit/sge_rsmap_free_ids() *****************************************
+*  NAME
+*     sge_rsmap_free_ids() -- Frees by the job occupied RSMAP ids.
+*
+*  SYNOPSIS
+*     int sge_rsmap_free_ids(u_long32 jobid, u_long32 taskid, lListElem *jatep)
+*
+*  FUNCTION
+*     Frees occupied RSMAP ids. This is done by checking the host CEs if
+*     such a RSMAP ID is used by the job, and if so then it sets the
+*     jobid and taskid to 0 (which means that this ID can be used again).
+*
+*  INPUTS
+*     u_long32 jobid      - The job id
+*     u_long32 taskid     - The task id
+*     lListElem *jatep    - The task
+*
+*  NOTES
+*     MT-NOTE: sge_rsmap_free_ids() is MT safe
+*
+*******************************************************************************/
+
+static void sge_rsmap_free_ids(u_long32 jobid,
+                               u_long32 taskid,
+                               lListElem *jatep)
+{
+   lListElem *granted_el       = NULL;
+   lListElem *hep              = NULL; /* EH_Type */
+   lListElem *global           = NULL; /* EH_Type */
+   object_description *object_base = object_type_get_object_description();
+
+   DENTER(TOP_LAYER, "sge_rsmap_free_ids");
+
+   if (jobid == 0 || jatep == NULL) {
+      /* something wrong with the input values */
+      DRETURN_VOID;
+   }
+
+   /* also check if the jobs used resources from a global RSMAP */
+   global = host_list_locate(*object_base[SGE_TYPE_EXECHOST].list, "global");
+
+   /* go through all hosts on which the job ran */
+   for_each (granted_el, lGetList(jatep, JAT_granted_destin_identifier_list)) {
+      const char* hostname = lGetHost(granted_el, JG_qhostname);
+
+      if (hostname != 0) {
+         /* get the host info */
+         hep = host_list_locate(*object_base[SGE_TYPE_EXECHOST].list, hostname);
+
+         if (hep != NULL) {
+            /* find the host consumable complex entries and delete the usage */
+            /* get the host consumable entry */
+            lListElem* cc          = NULL;
+            bool send_event        = false;
+            bool send_event_global = false;
+
+            /* get the consumable config list */
+            /* TODO get just the right type (RSMAP) */
+            for_each (cc, lGetList(hep, EH_consumable_config_list)) {
+               /* get the resource map list */
+               lListElem* rm = NULL;
+               for_each (rm, lGetList(cc, CE_resource_map_list)) {
+                  /**
+                   * Go through the complete ID list and remove jobdid, when
+                   * it is equal to the job id of the job which ended.
+                   */
+                  if (lGetUlong(rm, RESL_jobid) == jobid
+                           && lGetUlong(rm, RESL_taskid) == taskid) {
+                     /* mark it as unused */
+                     lSetUlong(rm, RESL_jobid, 0);
+                     lSetUlong(rm, RESL_taskid, 0);
+
+                     send_event = true;
+                  }
+               }
+            }
+
+            /* do the same for the global host */
+            for_each (cc, lGetList(global, EH_consumable_config_list)) {
+               /* get the resource map list */
+               lListElem* rm = NULL;
+               for_each (rm, lGetList(cc, CE_resource_map_list)) {
+                  /**
+                   * Go through the complete ID list and remove jobdid, when
+                   * it is equal to the job id of the job which ended.
+                   */
+                  if (lGetUlong(rm, RESL_jobid) == jobid
+                           && lGetUlong(rm, RESL_taskid) == taskid) {
+                     /* mark it as unused */
+                     lSetUlong(rm, RESL_jobid, 0);
+                     lSetUlong(rm, RESL_taskid, 0);
+
+                     send_event_global = true;
+                  }
+               }
+            }
+
+            /* if something changed send an event */
+            if (send_event == true) {
+               sge_add_event(0, sgeE_EXECHOST_MOD, 0, 0,
+                             hostname, NULL, NULL, hep);
+            }
+            if (send_event_global == true) {
+               sge_add_event(0, sgeE_EXECHOST_MOD, 0, 0,
+                             "global", NULL, NULL, global);
+            }
+         }
+      }
+   }
+   DRETURN_VOID;
+}
+

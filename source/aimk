@@ -40,7 +40,7 @@
 # which inspired the Grid Engine aimk build scheme.
 
 # Make sure to avoid confusion between shell variables and environment
-# variables 
+# variables
 #
 set noglob
 unsetenv buildarch BUILDARCH COMPILE_ARCH COMPILE_DIR LD_LIBRARY_PATH 
@@ -2048,7 +2048,8 @@ if ( $UGE_EXT == 1 ) then
       set LFLAGS   = "$LFLAGS $UGE_LFLAGS"
       set SHARED_LFLAGS   = "$SHARED_LFLAGS $UGE_SHARED_LFLAGS"
       set LIBS_DIR = "$UGE_LIBS"
-      set CFLAGS = "$CFLAGS $UGE_CFLAGS"
+      set SOURCE_DIR = "$UGE_SOURCE"
+      set CFLAGS = "$CFLAGS $UGE_CFLAGS -DUGE -I$UGE_LIBS/libs"
    else
       echo "error: couldn't find  UGE_LIBS"
       echo "error: please"
@@ -2064,6 +2065,7 @@ if ( $UGE_EXT == 1 ) then
    endif
 else
    set LIBS_DIR = ${SDIR}
+   set SOURCE_DIR = "$SDIR"
 endif
 
 if ( $JNI == 1 ) then
@@ -2639,6 +2641,7 @@ if ( "$CORE" == 1 && "$JAVA" != 2 ) then
          "DEPEND_FLAGS=$DEPEND_FLAGS $CORE_INCLUDE" \
          "SDIR=$SDIR" "SOURCE=$SOURCE" "COMPILE_ARCH=$COMPILE_ARCH" \
          "LIBS_DIR=$LIBS_DIR" \
+         "SOURCE_DIR=$SOURCE_DIR" \
          "SECLIB=$SECLIB" \
          "SECLIBS_STATIC=$SECLIBS_STATIC" \
          "WINGRIDLIB=$WINGRIDLIB" "WINGRIDLIB_DEP=$WINGRIDLIB_DEP" \

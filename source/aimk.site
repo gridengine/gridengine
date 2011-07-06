@@ -27,6 +27,8 @@
 #
 #  All Rights Reserved.
 #
+#  Portions of this code are Copyright 2011 Univa Corporation.
+#
 ##########################################################################
 #___INFO__MARK_END__
 
@@ -67,7 +69,7 @@ set OPENSSL_HOME = /tools/PKG/openssl-0.9.8q/$buildarch
 #
 set PLPA_HOME = /tools/PKG/plpa-1.3.2/$buildarch
 
-# 
+#
 # BERKELEYDB_HOME the directory where the include and lib directory of
 # Berkeley DB is installed
 #
@@ -119,6 +121,7 @@ set BASEDIR = `dirname $BASEDIR`
 if ( -d $BASEDIR/uge-extensions ) then
    set UGE_EXT = 1
    set UGE_LIBS = $BASEDIR/uge-extensions
+   set UGE_SOURCE = $BASEDIR/uge-extensions/source
    set UNIVA_COPYRIGHT_DIR = $UGE_LIBS/copyright
 endif
 

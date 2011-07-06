@@ -650,7 +650,7 @@ centry_list_add_del_mod_via_gdi(sge_gdi_ctx_class_t *ctx, lList **this_list, lLi
          }
 
          /*
-          * Verify that the parts of the multi request are successfull
+          * Verify that the parts of the multi request are successful
           */
          if (do_del && ret) {
             sge_gdi_extract_answer(&gdi_answer_list, SGE_GDI_DEL, 

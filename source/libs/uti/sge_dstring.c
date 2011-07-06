@@ -720,6 +720,60 @@ const char *sge_dstring_ulong_to_binstring(dstring *sb, u_long32 number)
    return sge_dstring_get_string(sb);
 }
 
+bool
+sge_dstring_replace(dstring *string, dstring *pattern, dstring *replacement, 
+                    dstring *modified_string)
+{
+   /* pointer to the string */
+   const char *stringp          = NULL;
+   /* pointer to the pattern */
+   const char *patternp         = NULL;
+   /* pointer to the found pattern in the string */
+   const char *where            = NULL;
+
+   /* size of the pattern */
+   size_t pattern_size          = 0; 
+
+   if (string == NULL || pattern == NULL || replacement == NULL || modified_string == NULL) {
+      /* invalid input values */
+      return false;
+   }
+
+   /* set the pointer of the dstrings */
+   stringp  = sge_dstring_get_string(string);
+   patternp = sge_dstring_get_string(pattern);
+
+   pattern_size = strlen(patternp);
+
+   /* replaces each occurence of a pattern in a string by an replacement */
+   while ((where = strstr(stringp, patternp)) != NULL) {
+      
+      /* copy section in front of the pattern */
+      while (stringp != where) {
+         sge_dstring_append_char(modified_string, *stringp);
+         stringp += sizeof(char);
+      }
+
+      /* now add the replacement instead of the pattern */
+      sge_dstring_append_dstring(modified_string, replacement);
+
+      /* move to the end of the found pattern (jump) */
+      stringp = where + pattern_size;
+         
+      /* if we're at the end of the string, we are finished */
+      if (stringp == '\0') {
+         /* we're at the end */
+         return true;
+      }
+   }
+   
+   /* the pattern is not in remaining string, we just need to copy it */
+   sge_dstring_append(modified_string, stringp);
+
+   return true;
+}
+
+
 /****** uti/dstring/sge_dstring_split() ****************************************
 *  NAME
 *     sge_dstring_split() -- splits a string into two parts 

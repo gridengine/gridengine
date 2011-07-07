@@ -27,6 +27,8 @@
  *
  *  All Rights Reserved.
  *
+ *  Portions of this software are Copyright (c) 2011 Univa Corporation
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 #include <stdlib.h>
@@ -3351,12 +3353,12 @@ int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bool is_m
          /* we will assume this time as start time for now assignments */
          a.now = sge_get_gmt();
 
-         /* 
-          * Current scheduler code expects all queue instances in a plain list. We use 
-          * a copy of all queue instances that needs to be free'd explicitely after 
-          * deciding about assignment. This is because assignment_release() sees 
+         /*
+          * Current scheduler code expects all queue instances in a plain list. We use
+          * a copy of all queue instances that needs to be free'd explicitely after
+          * deciding about assignment. This is because assignment_release() sees
           * queue_list only as a list pointer.
-          */ 
+          */
          a.queue_list = lCreateList("", QU_Type);
 
          /* imagine qs is empty */
@@ -3368,7 +3370,6 @@ int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bool is_m
             const char *cqname = lGetString(cqueue, CQ_name);
             lList *qinstance_list = lGetList(cqueue, CQ_qinstances);
             lListElem *qinstance;
-            u_long32 qi_state;
 
             /* we sort out explicit -q -l requests on queues */
             if (cqueue_match_static(cqname, &a) != DISPATCH_OK) {
@@ -3376,21 +3377,29 @@ int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bool is_m
             }
 
             for_each(qinstance, qinstance_list) {
-
-               /* we would need to work on a reduced set of queues, filter the queues
-                * that cannot be used, i.e (ALARM/SUS/DIS/UNK/ERR) 
-                */ 
-               qi_state = lGetUlong(qinstance, QU_state);
-               if ((qi_state & QI_CAL_SUSPENDED) ||
-                     (qi_state & QI_CAL_DISABLED) || 
-                     (qi_state & QI_SUSPENDED) || 
-                     (qi_state & QI_SUSPENDED_ON_SUBORDINATE) || 
-                     (qi_state & QI_ERROR) || 
-                     (qi_state & QI_UNKNOWN) || 
-                     (qi_state & QI_DISABLED) || 
-                     (qi_state & QI_AMBIGUOUS)) {
-                  schedd_mes_add(a.monitor_alpp, a.monitor_next_run, a.job_id, SCHEDD_INFO_QUEUENOTAVAIL_, lGetString(qinstance, QU_full_name));
-                  continue;
+               /*
+                * When we are in POKE_VERIFY mode (qalter -w p) we may work on
+                * a reduced set of queues (the actual status of the cluster).
+                * Filter the queues that cannot be used, i.e (ALARM/SUS/DIS/UNK/ERR)
+                *
+                * Otherwise (qsub -w e|w|v) we assume an empty cluster with all
+                * resources available.
+                */
+               if (verify_mode == POKE_VERIFY) {
+                  u_long32 qi_state = lGetUlong(qinstance, QU_state);
+                  if ((qi_state & QI_CAL_SUSPENDED) ||
+                      (qi_state & QI_CAL_DISABLED) ||
+                      (qi_state & QI_SUSPENDED) ||
+                      (qi_state & QI_SUSPENDED_ON_SUBORDINATE) ||
+                      (qi_state & QI_ERROR) ||
+                      (qi_state & QI_UNKNOWN) ||
+                      (qi_state & QI_DISABLED) ||
+                      (qi_state & QI_AMBIGUOUS)
+                     ) {
+                     schedd_mes_add(a.monitor_alpp, a.monitor_next_run, a.job_id,
+                                    SCHEDD_INFO_QUEUENOTAVAIL_, lGetString(qinstance, QU_full_name));
+                     continue;
+                  }
                }
 
                /* we only have to consider requested queues or hosts*/
@@ -3398,13 +3407,13 @@ int verify_suitable_queues(lList **alpp, lListElem *jep, int *trigger, bool is_m
                   if (qref_list_cq_rejected(job_hard_queue_list, cqname,
                            lGetHost(qinstance, QU_qhostname), a.hgrp_list)) {
                      schedd_mes_add(a.monitor_alpp, a.monitor_next_run, a.job_id, SCHEDD_INFO_NOTINHARDQUEUELST_S, lGetString(qinstance, QU_full_name));
-                     continue; 
-                  } 
+                     continue;
+                  }
                }
 
                if (ar_granted_slots != NULL) {
                   if (lGetElemStr(ar_granted_slots, JG_qname, lGetString(qinstance, QU_full_name)) == NULL) {
-                     continue; 
+                     continue;
                   }
                }
 

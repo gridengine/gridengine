@@ -113,7 +113,6 @@ SGE_NOMSG="undef"
 
 
 CERT_COPY_HOST_LIST="undef"
-SERVICE_TAGS="enable"
 ONLY_ENABLE_JMX=false
 
 #Save changed host names during resolving

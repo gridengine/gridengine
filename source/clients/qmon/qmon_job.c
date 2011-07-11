@@ -1641,10 +1641,6 @@ lListElem *jep
    if (*buf=='\0')
       strcat(info, "\n");
 
-
-   
-/*    lWriteListTo(lGetList(jep, JB_qs_args), stdout); */
-   
    DPRINTF(("info is %d long\n", strlen(info)));
 #endif
 

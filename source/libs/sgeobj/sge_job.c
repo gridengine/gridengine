@@ -3454,7 +3454,6 @@ job_verify_submitted_job(const lListElem *job, lList **answer_list)
       ret = object_verify_ulong_null(job, answer_list, JB_override_tickets);
     }
 
-   /* TODO: JB_qs_args */
    /* JB_urg must be 0 */
    if (ret) {
       ret = object_verify_double_null(job, answer_list, JB_urg);

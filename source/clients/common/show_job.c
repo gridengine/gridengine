@@ -381,15 +381,6 @@ void cull_show_job(lListElem *job, int flags, bool show_binding)
                            delis, 0);
       }
 
-   if (lGetPosViaElem(job, JB_qs_args, SGE_NO_ABORT)>=0)
-      if (lGetList(job, JB_qs_args) || (flags & FLG_QALTER)) {
-         int fields[] = {ST_name, 0 };
-         delis[0] = "";
-         printf("qs_args:                    ");
-         uni_print_list(stdout, NULL, 0, lGetList(job, JB_qs_args), fields, 
-                           delis, 0);
-      }
-
    if (lGetPosViaElem(job, JB_master_hard_queue_list, SGE_NO_ABORT)>=0)
       if (lGetList(job, JB_master_hard_queue_list)) {
          int fields[] = {QR_name, 0 };

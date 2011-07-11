@@ -2704,16 +2704,6 @@ int *trigger
       answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
    }
 
-   /* ---- JB_qs_args */
-   if ((pos=lGetPosViaElem(jep, JB_qs_args, SGE_NO_ABORT))>=0) {
-      DPRINTF(("got new JB_qs_args\n")); 
-      lSetList(new_job, JB_qs_args, 
-               lCopyList("", lGetList(jep, JB_qs_args)));
-      sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_QSARGS, sge_u32c(jobid));
-      answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
-   }
-
-
    /* ---- JB_job_args */
    if ((pos=lGetPosViaElem(jep, JB_job_args, SGE_NO_ABORT))>=0) {
       DPRINTF(("got new JB_job_args\n")); 

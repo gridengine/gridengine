@@ -384,9 +384,9 @@ extern "C" {
 *        SGEEE - override tickets assigned by admin. 
 *        (qalter -ot tickets).
 *
-*     SGE_LIST(JB_qs_args) ---> qsi? 
-*        Arguments for foreign queuing system (ST_Type).
-*        Either delete it, or recycle it to be used with starter_method.
+*     SGE_LIST(JB_wildcard) 
+*        Wildcard field. Can be used to store additional information needed for 
+*        patch releases. 
 *
 *     SGE_LIST(JB_path_aliases)  
 *        Path aliases list (PA_Type).
@@ -512,7 +512,7 @@ enum {
    JB_soft_wallclock_gmt,
    JB_hard_wallclock_gmt,
    JB_override_tickets,
-   JB_qs_args,
+   JB_wildcard,
    JB_path_aliases,
    JB_urg,
    JB_nurg,
@@ -620,7 +620,7 @@ LISTDEF(JB_Type)
    SGE_ULONG(JB_soft_wallclock_gmt, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_HIDDEN)
    SGE_ULONG(JB_hard_wallclock_gmt, CULL_DEFAULT | CULL_SPOOL | CULL_JGDI_HIDDEN)
    SGE_ULONG(JB_override_tickets, CULL_DEFAULT | CULL_SPOOL)   
-   SGE_LIST(JB_qs_args, ST_Type, CULL_DEFAULT | CULL_JGDI_HIDDEN)   
+   SGE_LIST(JB_wildcard, CULL_ANY_SUBTYPE, CULL_DEFAULT | CULL_JGDI_HIDDEN)   
    SGE_LIST(JB_path_aliases, PA_Type, CULL_DEFAULT | CULL_SPOOL)
    SGE_DOUBLE(JB_urg, CULL_DEFAULT)         
    SGE_DOUBLE(JB_nurg, CULL_DEFAULT | CULL_JGDI_RO)         
@@ -725,7 +725,7 @@ NAMEDEF(JBN)
    NAME("JB_soft_wallclock_gmt")
    NAME("JB_hard_wallclock_gmt")
    NAME("JB_override_tickets")
-   NAME("JB_qs_args")
+   NAME("JB_wildcard")
    NAME("JB_path_aliases")
    NAME("JB_urg")
    NAME("JB_nurg")

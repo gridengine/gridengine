@@ -3871,5 +3871,38 @@ job_init_binding_elem(lListElem *jep)
    return ret;
 }
 
+/****** job_wait_for_end() ************************************************
+*  NAME
+*     job_wait_for_end() -- Returns true if client should wait for end 
+*
+*  SYNOPSISA
+*     bool 
+*     job_wait_for_end(lListElem *job);
+*
+*  FUNCTION
+*     This function returns true if the commandline client should
+*     wait for the end of the job after submission.
+*
+*  INPUT
+*     lListElem *job - job that should be submitted
+*
+*  RESULT
+*     true when client should wait.
+*/
+bool
+job_wait_for_end(lListElem *job) {
+   lListElem *ep = NULL;
+   bool ret = false;
+
+   DENTER(TOP_LAYER, "job_wait_for_end");
+
+   /* If "-sync y" is set, wait for the job to end. */
+   if ((ep = lGetElemStr(lGetList(job, JB_wildcard), VA_variable, JOB_CLIENT_SYNC)) != NULL) {
+      ret = true;
+   }
+   DRETURN(ret);
+}
+
+
 
 

@@ -159,6 +159,8 @@ enum {
 #define CONTEXT_IOR "IOR"
 #define CONTEXT_PARENT "PARENT"
 
+#define JOB_CLIENT_SYNC "CLIENT_SYNC"
+
 /****** sgeobj/job/jb_now *****************************************************
 *  NAME
 *     jb_now -- macros to handle flag JB_type 
@@ -465,5 +467,8 @@ job_is_requesting_consumable(lListElem *jep, const char *resource_name);
 
 bool
 job_init_binding_elem(lListElem *jep);
+
+bool
+job_wait_for_end(lListElem *job);
 
 #endif /* __SGE_JOB_H */    

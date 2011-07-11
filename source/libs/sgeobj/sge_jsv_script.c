@@ -2173,6 +2173,15 @@ jsv_handle_started_command(sge_gdi_ctx_class_t *ctx, lListElem *jsv, lList **ans
    /* -soft (handled as l_soft and q_soft) */
 
    /* -sync y|n (not available in JSV) */
+   {
+      bool wait_for_end = job_wait_for_end(old_job);
+
+      if (wait_for_end) {
+         sge_dstring_clear(&buffer);
+         sge_dstring_sprintf(&buffer, "%s sync %c", prefix, wait_for_end ? 'y' : 'n');
+         jsv_send_command(jsv, answer_list, sge_dstring_get_string(&buffer));
+      }
+   }
 
    /* 
     * -S shell_path_list (optional) 

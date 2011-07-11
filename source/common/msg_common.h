@@ -476,7 +476,7 @@
 #define MSG_GDI_UTEXT_de_OPT_HOST_LIST                   _MESSAGE(23335, _("delete exec host"))
 
 #define MSG_GDI_USAGE_display_OPT_DISPLAY                "[-display display]"
-#define MSG_GDI_UTEXT_display_OPT_DISPLAY                _MESSAGE(23336, _("set display to display interactive job"))
+#define MSG_GDI_UTEXT_display_OPT_DISPLAY                _MESSAGE(23336, _("set DISPLAY variable inside interactive job (not available for qrsh without command)"))
 
 #define MSG_GDI_USAGE_dh_OPT_HOST_LIST                   "[-dh host_list]"
 #define MSG_GDI_UTEXT_dh_OPT_HOST_LIST                   _MESSAGE(23337, _("delete administrative host"))

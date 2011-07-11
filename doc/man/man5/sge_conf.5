@@ -1090,7 +1090,7 @@ if the \fIreschedule_unknown\fP parameter is activated.
 .PP
 .IP "\fIMAX_DYN_EC\fP"
 Sets the max number of dynamic event clients (as used by qsub -sync y 
-and by xxQS_NAMExx DRMAA API library sessions). The default is set to 99. 
+and by xxQS_NAMExx DRMAA API library sessions). The default is set to 1000. 
 The number of dynamic event clients should not be bigger than half of 
 the number of file descriptors the system has. The number of file 
 descriptors are shared among the connections to all exec hosts, all 

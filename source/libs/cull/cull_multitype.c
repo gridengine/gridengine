@@ -66,7 +66,6 @@ const char *multitypes[] =
    "lFloatT",
    "lDoubleT",
    "lUlongT",
-   "lUlong64T",
    "lLongT",
    "lCharT",
    "lBoolT",
@@ -75,7 +74,8 @@ const char *multitypes[] =
    "lListT",
    "lObjectT",
    "lRefT",
-   "lHostT" 
+   "lHostT",
+   "lUlong64T"
 };
 
 int incompatibleType(const char *str) 

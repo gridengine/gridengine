@@ -73,6 +73,9 @@
 #include "msg_clients_common.h"
 
 #ifndef TEST_READ_ONLY
+
+static const int num_jobs = 10000;
+
 static const char *random_string(int length)
 {
    static char buf[1000];
@@ -88,14 +91,21 @@ static const char *random_string(int length)
    return buf;
 }
 
+/*
+ * generate num jobs
+ * every 10th job has array tasks
+ * the number of array tasks varies between 1 to 100
+ */
 static bool generate_jobs(int num)
 {
    int i;
+   int num_array = 0;
+   int num_total = 0;
 
    for (i = 0; i < num; i++) {
       lListElem *job;
 
-      job = lCreateElem(JB_Type);
+      job = lCreateElem(JB_Type); num_total++;
       lSetUlong(job, JB_job_number, i + 1);
       lSetString(job, JB_job_name, random_string(15));
       lSetString(job, JB_project, random_string(20));
@@ -110,9 +120,30 @@ static bool generate_jobs(int num)
       lAppendElem(*object_type_get_master_list(SGE_TYPE_JOB), job);
 
       if ((i % 10) == 0) {
-         lAddSubUlong(job, JAT_task_number, 1, JB_ja_tasks, JAT_Type);
+         int j;
+         num_array = (num_array + 1) % 100;
+         for (j = 0; j < num_array; j++) {
+            lAddSubUlong(job, JAT_task_number, j + 1, JB_ja_tasks, JAT_Type); num_total++;
+         }
       }
    }
+
+   printf("==> created %d objects in total\n", num_total);
+
+   return true;
+}
+
+static bool update_jobs(void)
+{
+   lListElem *job;
+   int num_total = 0;
+
+   for_each(job, *object_type_get_master_list(SGE_TYPE_JOB)) {
+      lSetString(job, JB_project, random_string(20));
+      num_total++;
+   }
+
+   printf("==> updated %d objects in total\n", num_total);
 
    return true;
 }
@@ -121,23 +152,40 @@ static bool spool_data(void)
 {
    lList *answer_list = NULL;
    lListElem *context, *job;
-   char key[100];
+   dstring key_ds = DSTRING_INIT;
+   const char *key;
+   int num_total = 0;
 
    context = spool_get_default_context();
 
    fprintf(stdout, "spooling %d jobs\n", lGetNumberOfElem(*object_type_get_master_list(SGE_TYPE_JOB)));
 
    for_each(job, *object_type_get_master_list(SGE_TYPE_JOB)) {
-      sprintf(key, sge_U32CFormat".0", sge_u32c(lGetUlong(job, JB_job_number)));
-      spool_write_object(&answer_list, context, job, key, SGE_TYPE_JOB, true);
+      lList *ja_tasks = lGetList(job, JB_ja_tasks);
+      if (ja_tasks == NULL || lGetNumberOfElem(ja_tasks) == 0) {
+         key = job_get_key(lGetUlong(job, JB_job_number), 0, NULL, &key_ds);
+         spool_write_object(&answer_list, context, job, key, SGE_TYPE_JOB, true);
+         num_total++;
+      } else {
+         const lListElem *ja_task;
+         for_each(ja_task, ja_tasks) {
+            key = job_get_key(lGetUlong(job, JB_job_number), lGetUlong(ja_task, JAT_task_number), NULL, &key_ds);
+            spool_write_object(&answer_list, context, ja_task, key, SGE_TYPE_JATASK, true);
+            num_total++;
+         }
+      }
       answer_list_output(&answer_list);
    }
+
+   sge_dstring_free(&key_ds);
+
+   printf("==> spooled %d objects in total\n", num_total);
 
    return true;
 }
 #endif
 static bool read_spooled_data(void)
-{  
+{
    lList *answer_list = NULL;
    lListElem *context;
 
@@ -152,11 +200,12 @@ static bool read_spooled_data(void)
 }
 
 static bool delete_spooled_data(void)
-{  
+{
    lList *answer_list = NULL;
    lListElem *job;
    lListElem *context;
    char key[100];
+   int num_total = 0;
 
    context = spool_get_default_context();
 
@@ -165,7 +214,10 @@ static bool delete_spooled_data(void)
       sprintf(key, sge_U32CFormat".0", sge_u32c(lGetUlong(job, JB_job_number)));
       spool_delete_object(&answer_list, context, SGE_TYPE_JOB, key, true);
       answer_list_output(&answer_list);
+      num_total++;
    }
+
+   printf("==> deleted %d objects in total\n", num_total);
 
    return true;
 }
@@ -195,11 +247,20 @@ static void write_csv(const char *scenario, prof_level level)
    utime       = prof_get_total_utime(level, true, NULL);
    stime       = prof_get_total_stime(level, true, NULL);
    utilization = busy > 0 ? (utime + stime) / busy * 100 : 0;
-   jobs_per_second = busy > 0 ? 30000 / busy : 0;
+   jobs_per_second = busy > 0 ? num_jobs / busy : 0;
 
    csv = fopen("spooling_performance.csv", "a");
    fprintf(csv, fmt, scenario, busy, utime, stime, utilization, jobs_per_second);
    fclose(csv);
+}
+
+void clear_caches(void)
+{
+   printf("\n===> clear the filesystem caches\n");
+   printf("on linux as user root: echo 3 >/proc/sys/vm/drop_caches\n");
+   printf("press RETURN to continue ...\n");
+   getc(stdin);
+   printf("... continuing\n");
 }
 
 int main(int argc, char *argv[])
@@ -238,7 +299,7 @@ int main(int argc, char *argv[])
 #define defstring(str) #str
 
    /* initialize spooling */
-   spooling_context = spool_create_dynamic_context(&answer_list, argv[1], argv[2], argv[3]); 
+   spooling_context = spool_create_dynamic_context(&answer_list, argv[1], argv[2], argv[3]);
    answer_list_output(&answer_list);
    if (spooling_context == NULL) {
       SGE_EXIT((void**)&ctx, EXIT_FAILURE);
@@ -255,9 +316,8 @@ int main(int argc, char *argv[])
    /* initialize csv output file */
    write_csv_header();
 
-#ifndef TEST_READ_ONLY
    PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
-   generate_jobs(30000);
+   generate_jobs(num_jobs);
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
    write_csv("generating jobs", SGE_PROF_CUSTOM1);
    prof_output_info(SGE_PROF_CUSTOM1, true, "generating jobs:\n");
@@ -289,15 +349,30 @@ int main(int argc, char *argv[])
    prof_output_info(SGE_PROF_SPOOLINGIO, true, "IO:\n");
    prof_reset(SGE_PROF_SPOOLINGIO, NULL);
 
+   /* modify jobs */
+   clear_caches();
+   update_jobs();
+   PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
+   spool_data();
+   PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
+   write_csv("respool jobs", SGE_PROF_CUSTOM1);
+   prof_output_info(SGE_PROF_CUSTOM1, true, "respool jobs:\n");
+   prof_reset(SGE_PROF_CUSTOM1, NULL);
+   write_csv("respooling io", SGE_PROF_SPOOLINGIO);
+   prof_output_info(SGE_PROF_SPOOLINGIO, true, "IO:\n");
+   prof_reset(SGE_PROF_SPOOLINGIO, NULL);
+
+   clear_caches();
    lFreeList(object_base[SGE_TYPE_JOB].list);
    *(object_base[SGE_TYPE_JOB].list) = lCreateList("job list", JB_Type);
    PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
    read_spooled_data();
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
-   write_csv("read jobs (cached)", SGE_PROF_CUSTOM1);
-   prof_output_info(SGE_PROF_CUSTOM1, true, "read jobs (cached):\n");
+   write_csv("read jobs", SGE_PROF_CUSTOM1);
+   prof_output_info(SGE_PROF_CUSTOM1, true, "read jobs:\n");
    prof_reset(SGE_PROF_CUSTOM1, NULL);
 
+   clear_caches();
    PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
    delete_spooled_data();
    PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
@@ -307,14 +382,6 @@ int main(int argc, char *argv[])
 
    spool_shutdown_context(&answer_list, spooling_context);
    spool_startup_context(&answer_list, spooling_context, true);
-#else
-   PROF_START_MEASUREMENT(SGE_PROF_CUSTOM1);
-   read_spooled_data();
-   PROF_STOP_MEASUREMENT(SGE_PROF_CUSTOM1);
-   write_csv("read jobs (uncached)", SGE_PROF_CUSTOM1);
-   prof_output_info(SGE_PROF_CUSTOM1, true, "\nread jobs (uncached):\n");
-   prof_reset(SGE_PROF_CUSTOM1, NULL);
-#endif
 
    lFreeList(object_base[SGE_TYPE_JOB].list);
 

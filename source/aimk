@@ -391,6 +391,11 @@ set KLIBS             = ""
 # CRYPT
 set AUTHLIBS          = "-lpam"
 
+# Extensions
+set UGE_CFLAGS = ""
+set UGE_LFLAGS = ""
+set UGE_SHARED_LFLAGS = ""
+
 # SPOOLING - default method is dynamic spooling, 
 # spooling methods berkeleydb and classic
 # except on Windows, where the default is classic spooling.
@@ -2033,9 +2038,17 @@ set DEPEND_FLAGS = "-D$ARCH_STRING $DEPEND_FLAGS"
 
 if ( $UGE_EXT == 1 ) then
    if ( -d $UGE_LIBS ) then
-      set LFLAGS   = "$LFLAGS -L$UGE_LIBS/$BUILDARCH/libs"
+      # Source variables for definition of site dependent paths of software here
+      # as well as private settings (sourced from aimk.site)
+      #
+      if ( -f $UGE_LIBS/aimk.site ) then
+         source $UGE_LIBS/aimk.site
+      endif
+
+      set LFLAGS   = "$LFLAGS $UGE_LFLAGS"
+      set SHARED_LFLAGS   = "$SHARED_LFLAGS $UGE_SHARED_LFLAGS"
       set LIBS_DIR = "$UGE_LIBS"
-      set CFLAGS = "$CFLAGS -DUGE -I$UGE_LIBS/libs"
+      set CFLAGS = "$CFLAGS $UGE_CFLAGS"
    else
       echo "error: couldn't find  UGE_LIBS"
       echo "error: please"
@@ -2262,14 +2275,10 @@ if ( "$BUILDMAN" == 1 ) then
 
    if ( $?MAN2HTMLPATH ) then
       setenv PATH ${PATH}:${MAN2HTMLPATH}
-   endif   
+   endif
    if ( $?GROFFPATH ) then
       setenv PATH ${PATH}:${GROFFPATH}
-   else
-      echo "groff must exist"
-      echo not done
-      exit 1
-   endif   
+   endif
 
    $SOURCE/scripts/mk_ascman $SOURCE $SGE_PRODUCT_MODE $BUILDMAN $BUILDHTMLMAN $KVMAN
 
@@ -2602,14 +2611,14 @@ if ( "$CORE" == 1 && "$JAVA" != 2 ) then
          case spooldlib:
             set new_deps = "$new_deps libspoold$LIBEXT"
             breaksw
-         case spoolblib:
-            set new_deps = "$new_deps libspoolb$SPOOLLIBEXT"
-            breaksw
-         case spoolclib:
-            set new_deps = "$new_deps libspoolc$SPOOLLIBEXT"
-            breaksw
          case spoollib:
             set new_deps = "$new_deps libspool$LIBEXT"
+            breaksw
+         default:
+            # these are the libs implementing a spooling method:
+            # spool?lib gets mapped to libspool?$SPOOLLIBEXT
+            set method = `echo $dep | cut -c 6`
+            set new_deps = "$new_deps libspool${method}$SPOOLLIBEXT"
             breaksw
       endsw
    end

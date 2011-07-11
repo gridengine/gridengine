@@ -26,6 +26,8 @@
  *   Copyright: 2001 by Sun Microsystems, Inc.
  * 
  *   All Rights Reserved.
+ *
+ *   Portions of this code are Copyright 2011 Univa Inc.
  * 
  ************************************************************************/
 /* Portions of this code are Copyright 2011 Univa Inc. */
@@ -360,7 +362,7 @@ unsigned short sge_options[][ALL_OPT + 1] =
 /* dul_OPT */
  {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
 /* display_OPT */
- {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+ {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
 /* sss_OPT -  show scheduler state */
  {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
 /* sick_OPT - show scheduler state */

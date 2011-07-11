@@ -116,8 +116,8 @@ spool_dynamic_create_context(lList **answer_list, const char *method,
    shlib_handle = dlopen(shlib_fullname, RTLD_NOW);
    # endif /* RTLD_NODELETE */
    #endif
-                        
-#if defined(HP1164)   
+
+#if defined(HP1164)
    /*
    ** switch back to admin user for HP
    */

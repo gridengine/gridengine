@@ -59,7 +59,9 @@ SPOOLLIB_TEST_PROGS = \
 ###############################################################################
 # global rules: all, clean, depend, messages
 ###############################################################################
-spoollib: $(SPOOLLIB) spoolclib $(SPOOLLIB_TEST_PROGS)
+spoollib: $(SPOOLLIB)
+
+spoollib_all: spoollib $(SPOOLLIB_TEST_PROGS)
 
 spoollib_clean: spoolloaderlib_clean spooldlib_clean spoolblib_clean spoolclib_clean spoolclib_old_clean
 		$(RM) $(SPOOLLIB_OBJS) libspool.a libspool$(SHAREDEXT) $(SPOOLLIB_TEST_PROGS) $(SPOOLLIB_TEST_PROGS_OBJ)

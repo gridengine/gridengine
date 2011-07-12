@@ -43,21 +43,10 @@ SPOOLCLIB_SRC = \
          sge_flatfile.c \
          sge_flatfile_obj.c \
          sge_spooling_flatfile.c \
-         sge_spooling_flatfile_scanner.c
-
-SPOOLCLIB_OBJS = $(SPOOLCLIB_SRC:.c=.o)
-
-# we need the absolute path to find the object
-UGE_SPOOLCLIB_SRC_ABS = \
-         $(SOURCE_DIR)/libs/spool/flatfile/sge_flatfile_obj_remap.c
-
-UGE_SPOOLCLIB_OBJS_ABS = $(UGE_SPOOLCLIB_SRC_ABS:.c=.o)
-
-# we need the relative path for AR and in order to delete the object
-UGE_SPOOLCLIB_SRC_REL = \
+         sge_spooling_flatfile_scanner.c \
 			sge_flatfile_obj_remap.c
 
-UGE_SPOOLCLIB_OBJS_REL = $(UGE_SPOOLCLIB_SRC_REL:.c=.o)
+SPOOLCLIB_OBJS = $(SPOOLCLIB_SRC:.c=.o)
 
 SPOOLCLIB_ADD_SRC = \
          read_write_job.c
@@ -78,7 +67,7 @@ SPOOLCLIB_ADD_OBJS = $(SPOOLCLIB_ADD_SRC:.c=.o)
 spoolclib: $(SPOOLCLIB) $(SPOOLCLIB_TEST_PROGS)
 
 spoolclib_clean:
-		$(RM) $(SPOOLCLIB_OBJS) $(UGE_SPOOLCLIB_OBJS_REL) libspoolc.a libspoolc$(SHAREDEXT) $(SPOOLCLIB_TEST_PROGS) \
+		$(RM) $(SPOOLCLIB_OBJS) libspoolc.a libspoolc$(SHAREDEXT) $(SPOOLCLIB_TEST_PROGS) \
              $(SPOOLCLIB_TEST_PROGS_OBJ) 
 
 spoolclib_depend:
@@ -93,13 +82,13 @@ spoolclib_messages:
 ###############################################################################
 # rules to build library
 ###############################################################################
-libspoolc.a: $(UGE_SPOOLCLIB_OBJS_REL) $(SPOOLCLIB_OBJS) $(SPOOLCLIB_ADD_OBJS)
-	$(AR) $(ARFLAGS) libspoolc.a $(UGE_SPOOLCLIB_OBJS_REL) $(SPOOLCLIB_OBJS) $(SPOOLCLIB_ADD_OBJS)
+libspoolc.a: $(SPOOLCLIB_OBJS) $(SPOOLCLIB_ADD_OBJS)
+	$(AR) $(ARFLAGS) libspoolc.a $(SPOOLCLIB_OBJS) $(SPOOLCLIB_ADD_OBJS)
 	$(RANLIB) libspoolc.a \
    && ../scripts/nonreentrant.sh -a `../dist/util/arch` -w $@
 
-libspoolc$(SHAREDEXT): $(UGE_SPOOLCLIB_OBJS_REL) $(SPOOLCLIB_OBJS) $(SPOOLCLIB_ADD_OBJS) $(SPOOLLIB) $(SCHEDLIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(COMMLISTSLIB) $(CULLLIB) $(UTILIB)
-	$(SHAREDLD) $(SHARED_LFLAGS) -o libspoolc$(SHAREDEXT) $(UGE_SPOOLCLIB_OBJS_REL) $(SPOOLCLIB_OBJS) $(SPOOLCLIB_ADD_OBJS) -lspool -lsched -lsgeobj -lsgeobjd -lcomm -lcull -luti $(LIBS) -lcommlists \
+libspoolc$(SHAREDEXT): $(SPOOLCLIB_OBJS) $(SPOOLCLIB_ADD_OBJS) $(SPOOLLIB) $(SCHEDLIB) $(SGEOBJLIB) $(SGEOBJDLIB) $(COMMLIB) $(COMMLISTSLIB) $(CULLLIB) $(UTILIB)
+	$(SHAREDLD) $(SHARED_LFLAGS) -o libspoolc$(SHAREDEXT) $(SPOOLCLIB_OBJS) $(SPOOLCLIB_ADD_OBJS) -lspool -lsched -lsgeobj -lsgeobjd -lcomm -lcull -luti $(LIBS) -lcommlists \
    && ../scripts/nonreentrant.sh -a `../dist/util/arch` -w $@
 
 ###############################################################################
@@ -116,7 +105,7 @@ sge_spooling_flatfile.o: $(SPOOLCLIB_DIR)/sge_spooling_flatfile.c
 sge_flatfile.o: $(SPOOLCLIB_DIR)/sge_flatfile.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SPOOLCLIB_DIR)/sge_flatfile.c
 
-sge_flatfile_obj_remap.o:
+sge_flatfile_obj_remap.o: $(SOURCE_DIR)/libs/spool/flatfile/sge_flatfile_obj_remap.c
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SOURCE_DIR)/libs/spool/flatfile/sge_flatfile_obj_remap.c
 
 sge_flatfile_obj.o: $(SPOOLCLIB_DIR)/sge_flatfile_obj.c

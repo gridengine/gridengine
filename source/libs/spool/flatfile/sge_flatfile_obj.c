@@ -156,13 +156,6 @@ static int write_CQ_hostlist(const lListElem *ep, int nm,
                              dstring *buffer, lList **alp);
 static int write_CE_stringval(const lListElem *ep, int nm, dstring *buffer,
                             lList **alp);
-#if 0
-static int read_CE_stringval_host(lListElem *ep, int nm, const char *buffer,
-                            lList **alp);
-static int write_CE_stringval_host(const lListElem *ep, int nm, dstring *buffer,
-                            lList **alp);
-#endif
-
 static int read_RQR_obj(lListElem *ep, int nm, const char *buffer,
                                     lList **alp);
 static int write_RQR_obj(const lListElem *ep, int nm, dstring *buffer,
@@ -611,10 +604,6 @@ spooling_field RQS_fields[] = {
    {  RQS_rule,           12,   "limit",             RQR_sub_fields, &qconf_sub_rqs_sfi, NULL},
    {  NoName,             12,   NULL,                NULL, NULL, NULL}
 };
-
-#if 0
-static bool is_range(const char* value, long *start, long *end);
-#endif
 
 static void create_spooling_field (
    spooling_field *field,

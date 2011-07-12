@@ -66,7 +66,7 @@
 #define MSG_CONFIG_CONF_GIDRANGELESSTHANNOTALLOWED_I           _MESSAGE(23025, _("minimum group id in gid_range may not be less than %d in cluster configuration"))
 #define MSG_CONFIG_CONF_ONLYSINGLEVALUEFORCONFIGATTRIB_S       _MESSAGE(23026, _("only a single value is allowed for configuration attribute "SFQ))
 #define MSG_CONFIG_CONF_RSMAPAMOUNTISNOTEQUALIDAMOUNT_S        _MESSAGE(23027, _("the RSMAP value is not equal to the amount of defined IDs "SFQ))
-#define MSG_CONFIG_CONF_RSMAP_NEEDS_IDS_S                      _MESSAGE(23028, _("the RSMAP value "SFQ" needs to defined IDs"))
+#define MSG_CONFIG_CONF_RSMAP_NEEDS_IDS_S                      _MESSAGE(23028, _("the RSMAP value "SFQ" needs to define IDs"))
 
 #define MSG_CANNOT_REDIRECT_STDINOUTERR_I     _MESSAGE(23029, _("cannot redirect stdin/stdout/stderr (%d) to /dev/null"))
 #define MSG_FILE_CANNOT_WRITE_SS                                     _MESSAGE(23030, _("unable to write to file "SFN": "SFN))

@@ -2032,70 +2032,68 @@ FCLOSE_ERROR:
 /*****************************************************
  check whether a shell should be called as login shell
  *****************************************************/
-static int ck_login_sh(
-char *shell 
-) {
+static int ck_login_sh(char *shell)
+{
    char* cp;
    char* login_shells;
-   int ret; 
+   int ret;
 
    DENTER(TOP_LAYER, "ck_login_sh");
 
    login_shells = mconf_get_login_shells();
-  
+
    if (login_shells == NULL) {
-   DEXIT; 
-   return 0;
-}  
-
-cp = login_shells; 
-
-while (*cp) {
-
-   /* skip delimiters */
-   while (*cp && ( *cp == ',' || *cp == ' ' || *cp == '\t')) {
-      cp++;
+      DRETURN(0);
    }
 
-   ret = strncmp(cp, shell, strlen(shell));
-   DPRINTF(("strncmp(\"%s\", \"%s\", %d) = %d\n",
-           cp, shell, strlen(shell), ret));
-   if (!ret) {
-      sge_free(&login_shells);
-      DEXIT;  
-      return 1;
+   cp = login_shells;
+
+   while (*cp) {
+
+      /* skip delimiters */
+      while (*cp && ( *cp == ',' || *cp == ' ' || *cp == '\t')) {
+         cp++;
+      }
+
+      ret = strncmp(cp, shell, strlen(shell));
+      DPRINTF(("strncmp(\"%s\", \"%s\", %d) = %d\n",
+               cp, shell, strlen(shell), ret));
+
+      if (!ret) {
+         sge_free(&login_shells);
+         DRETURN(1);
+      }
+
+      /* skip name of shell, proceed until next delimiter */
+      while (*cp && *cp != ',' && *cp != ' ' && *cp != '\t') {
+         cp++;
+      }
    }
 
-   /* skip name of shell, proceed until next delimiter */
-   while (*cp && *cp != ',' && *cp != ' ' && *cp != '\t') {
-       cp++;
-   }
+   sge_free(&login_shells);
+
+   DRETURN(0);
 }
-sge_free(&login_shells);
-DEXIT;
-return 0;
-}
 
 
-static int get_nhosts(
-lList *gdil_orig  /* JG_Type */
-) {
-int nhosts = 0;
-lListElem *ep;
-lList *cache = lCreateList("", STU_Type);
-const char *hostname;
+static int get_nhosts(lList *gdil_orig  /* JG_Type */)
+{
+   int nhosts = 0;
+   lListElem *ep;
+   lList *cache = lCreateList("", STU_Type);
+   const char *hostname;
 
-DENTER(TOP_LAYER, "get_nhosts");
-for_each(ep, gdil_orig) {
-   hostname = lGetHost(ep, JG_qhostname);
-   if (lGetElemStr(cache, STU_name, hostname) == NULL) {
-      nhosts++;
-      lAddElemStr(&cache, STU_name, hostname, STU_Type);
+   DENTER(TOP_LAYER, "get_nhosts");
+   for_each(ep, gdil_orig) {
+      hostname = lGetHost(ep, JG_qhostname);
+      if (lGetElemStr(cache, STU_name, hostname) == NULL) {
+         nhosts++;
+         lAddElemStr(&cache, STU_name, hostname, STU_Type);
+      }
    }
-}
-lFreeList(&cache);
+   lFreeList(&cache);
 
-DRETURN(nhosts);
+   DRETURN(nhosts);
 }
 
 /* creates binding string for config file */

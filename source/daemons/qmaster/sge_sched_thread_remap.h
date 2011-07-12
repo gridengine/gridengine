@@ -5,6 +5,8 @@
 #include "sge.h"
 #include "sge_rmon.h"
 #include "cull_list.h"
+#include "sge_object.h"
+#include "sge_event_master.h"
 
 void add_granted_resource_list(lListElem *ja_task, lListElem *job, lList *granted, lList *host_list);
 

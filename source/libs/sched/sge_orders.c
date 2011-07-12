@@ -322,7 +322,8 @@ lList
       }
 
       /* RSMAP: copy from JAT_granted_resources_list */
-      lSetList(ep, OR_granted_resources_list, lCopyList("", lGetList(ja_task, JAT_granted_resources_list)));
+      /* lSetList(ep, OR_granted_resources_list, lCopyList("", lGetList(ja_task, JAT_granted_resources_list))); */
+      lSwapList(ep, OR_granted_resources_list, ja_task, JAT_granted_resources_list);
    }
 
    lAppendElem(or_list, ep);

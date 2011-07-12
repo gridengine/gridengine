@@ -55,10 +55,12 @@ QMASTER_SRC = sge_qmaster_threads.c \
               sge_sched_thread.c \
               sge_sched_order.c \
               sge_c_gdi.c \
+              sge_follow_rsmap.c \
               sge_follow.c \
               sge_give_jobs.c \
               reschedule.c \
               job_exit.c \
+              job_exit_rsmap.c \
               sge_host_qmaster.c \
               sge_job_qmaster.c \
               sge_job_verify.c \
@@ -80,6 +82,7 @@ QMASTER_SRC = sge_qmaster_threads.c \
               job_report_qmaster.c \
               qmaster_to_execd.c \
               sched_conf_qmaster.c \
+              setup_qmaster_rsmap.c \
               setup_qmaster.c \
               sge_subordinate_qmaster.c \
               sge_qmaster_timed_event.c \
@@ -227,6 +230,9 @@ sge_qinstance_qmaster.o:	$(QMASTER_DIR)/sge_qinstance_qmaster.c
 sge_manop_qmaster.o:	$(QMASTER_DIR)/sge_manop_qmaster.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_manop_qmaster.c
 
+sge_follow_rsmap.o:   $(SOURCE_DIR)/daemons/qmaster/sge_follow_rsmap.c
+		$(CC) $(CFLAGS) -c $(SOURCE_DIR)/daemons/qmaster/sge_follow_rsmap.c
+
 sge_follow.o:   $(QMASTER_DIR)/sge_follow.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_follow.c
 
@@ -234,7 +240,7 @@ sge_sched_process_events.o: $(QMASTER_DIR)/sge_sched_process_events.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sge_sched_process_events.c
 
 # build from extensions directory if available
-sge_sched_thread_remap.o:
+sge_sched_thread_remap.o: $(SOURCE_DIR)/daemons/qmaster/sge_sched_thread_remap.c
 		$(CC) $(CFLAGS) -c $(SOURCE_DIR)/daemons/qmaster/sge_sched_thread_remap.c
 
 sge_sched_thread.o: $(QMASTER_DIR)/sge_sched_thread.c
@@ -288,6 +294,9 @@ sge_centry_qmaster.o: $(QMASTER_DIR)/sge_centry_qmaster.c
 configuration_qmaster.o:  $(QMASTER_DIR)/configuration_qmaster.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/configuration_qmaster.c
 
+job_exit_rsmap.o:  $(SOURCE_DIR)/daemons/qmaster/job_exit_rsmap.c
+		$(CC) $(CFLAGS) -c $(SOURCE_DIR)/daemons/qmaster/job_exit_rsmap.c
+
 job_exit.o   : $(QMASTER_DIR)/job_exit.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/job_exit.c
 
@@ -296,6 +305,9 @@ job_report_qmaster.o   : $(QMASTER_DIR)/job_report_qmaster.c
 
 sched_conf_qmaster.o   : $(QMASTER_DIR)/sched_conf_qmaster.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/sched_conf_qmaster.c
+
+setup_qmaster_rsmap.o  : $(SOURCE_DIR)/daemons/qmaster/setup_qmaster_rsmap.c
+		$(CC) $(CFLAGS) -c $(SOURCE_DIR)/daemons/qmaster/setup_qmaster_rsmap.c
 
 setup_qmaster.o   : $(QMASTER_DIR)/setup_qmaster.c
 		$(CC) $(CFLAGS) -c $(QMASTER_DIR)/setup_qmaster.c

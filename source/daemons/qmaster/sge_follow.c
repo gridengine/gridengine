@@ -83,6 +83,7 @@
 #include "sge_follow.h"
 #include "msg_common.h"
 #include "msg_qmaster.h"
+#include "sge_follow_rsmap.h"
 
 typedef enum {
    NOT_DEFINED = 0,
@@ -111,14 +112,6 @@ static int ticket_orders_field[] = { OR_job_number,
                                      OR_ja_task_number,
                                      OR_ticket,
                                      NoName };
-
-static void debit_rsmap_consumable_task(lListElem *jep, lListElem *hep,
-                                lList *centry_list, bool *ok, u_long32 jobid,
-                                u_long32 taskid);
-
-static void debit_rsmap_consumable(lListElem *jep, lListElem *hep,
-                                lList *centry_list, bool *ok);
-
 
 /****** sge_follow/sge_set_next_spooling_time() ********************************
 *  NAME
@@ -474,21 +467,7 @@ sge_follow_order(sge_gdi_ctx_class_t *ctx,
          lSetHost(gdil_ep, JG_qhostname, lGetHost(qep, QU_qhostname));
          lSetUlong(gdil_ep, JG_slots, q_slots);
 
-         /* we have queue name - host name 
-          * we need: host consumables from type sequence and the request */
-
-
          /* JB_hard_resource_list contains hard requests */
-         
-
-
-
-
-
-
-
-
-
 
          /* ------------------------------------------------
           *  tag each gdil entry of slave exec host
@@ -1701,101 +1680,5 @@ int distribute_ticket_orders(sge_gdi_ctx_class_t *ctx, lList *ticket_orders, mon
    }
 
    DRETURN(cl_err);
-}
-
-
-static void debit_rsmap_consumable(lListElem *jep, lListElem *hep,
-                                lList *centry_list, bool *ok)
-{
-
-   /* a single task of the job */
-   lListElem* jat = NULL;
-
-   if (jep != NULL) {
-      /* debit each task */
-      for_each (jat, lGetList(jep, JB_ja_tasks)) {
-         debit_rsmap_consumable_task(jat, hep, centry_list, ok,
-                                     lGetUlong(jep, JB_job_number),
-                                     lGetUlong(jat, JAT_task_number));
-      }
-   }
-
-}
-
-static void debit_rsmap_consumable_task(lListElem *jep, lListElem *hep,
-                                lList *centry_list, bool *ok, u_long32 jobid,
-                                u_long32 taskid)
-{
-   lListElem *cc            = NULL;
-   lListElem *grle          = NULL;
-   lList *resource_map_list = NULL;
-
-   DENTER(TOP_LAYER, "debit_rsmap_consumable");
-
-   if (jep == NULL || hep == NULL || centry_list == NULL) {
-      DRETURN_VOID;
-   }
-
-   if (lGetList(hep, EH_consumable_config_list) == NULL) {
-      /* there is no list im master yet to account */
-      DRETURN_VOID;
-   }
-
-   /* get the resource ID list of the job */
-   for_each (grle, lGetList(jep, JAT_granted_resources_list)) {
-
-      /* for each granted resource check if it is an RSMAP */
-      if (lGetUlong(grle, GRU_type) == GRU_RESOURCE_MAP_TYPE) {
-         const char* remap_name        = lGetString(grle, GRU_name);
-         const char* remap_value       = lGetString(grle, GRU_value);
-         const char* hostname          = lGetString(grle, GRU_host);
-         struct saved_vars_s *context  = NULL;
-         const char* id                = NULL;
-         bool generate_mod_event       = false;
-
-         if (remap_name == NULL || remap_value == NULL) {
-            break;
-         }
-
-         /* get the complex element with the same name as the remap */
-         cc = lGetElemStr(lGetList(hep, EH_consumable_config_list), CE_name, remap_name);
-
-         if (cc == NULL) {
-            /* there is no complex with the same name */
-            break;
-         }
-
-         if ((resource_map_list = lGetList(cc, CE_resource_map_list)) == NULL) {
-            /* no resource map list defined */
-            break;
-         }
-
-         /* the value is "id1 id2 id3" -> must be splitted */
-         while ((id = sge_strtok_r(remap_value, " ", &context))) {
-            remap_value = NULL; /* for the next strtok_r calls */
-            /* search the remap name in the consumable config resource map list */
-            lListElem* granted_remap = lGetElemStr(resource_map_list, RESL_value, id);
-
-            if (granted_remap != NULL) {
-               /* Check if there is an ID collision (should be done by scheduler already) */
-               /* mark as used by a job */
-               lSetUlong(granted_remap, RESL_jobid, jobid);      /* mark as used */
-               lSetUlong(granted_remap, RESL_taskid, taskid);    /* mark as used */
-
-               generate_mod_event = true;
-            }
-         }
-        sge_free_saved_vars(context);
-
-        if (generate_mod_event) {
-           /* hostname could be null (is it a problem?) */
-           sge_add_event(0, sgeE_EXECHOST_MOD, 0, 0,
-                          hostname, NULL, NULL, hep);
-        }
-      }
-
-   }
-
-   DRETURN_VOID;
 }
 

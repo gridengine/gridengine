@@ -64,6 +64,8 @@
 #include "basis_types.h"
 #include "msg_common.h"
 
+#include "sge_centry_rsmap.h"
+
 #define CENTRY_LAYER BASIS_LAYER
 
 /* EB: ADOC: add commets */
@@ -1181,22 +1183,9 @@ bool centry_elem_validate(lListElem *centry, lList *centry_list,
    }
 
 
-   {
-#ifndef UGE
-      if (type == TYPE_RSMAP) { /* only accept this type with UGE extensions */
-         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
-                                 MSG_SGETEXT_UNKNOWN_ATTR_TYPE_S, "RSMAP");
-         ret = false;
-      }
-#else
-      /* check when it is a RSMAP value that it also is a consumable */
-      if (type == TYPE_RSMAP && !(lGetUlong(centry, CE_consumable))) {
-         /* a RSMAP must be a consumable */
-         answer_list_add_sprintf(answer_list, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR,
-                                 MSG_INVALID_CENTRY_RSMAP_NOT_CONSUMABLE_S, attrname);
-         ret = false;
-      }
-#endif
+   if (type == TYPE_RSMAP) {
+      ret = centry_check_rsmap(answer_list, lGetUlong(centry, CE_consumable),
+                               attrname);
    }
 
    /* check if its a build in value and if the type is correct */

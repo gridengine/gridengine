@@ -53,6 +53,7 @@ SGEOBJLIB_SRC = \
          sge_attr.c \
          sge_binding.c \
          sge_calendar.c \
+         sge_centry_rsmap.c \
          sge_centry.c \
          sge_conf.c \
          sge_cqueue.c \
@@ -185,6 +186,9 @@ sge_binding.o: $(SGEOBJLIB_DIR)/sge_binding.c
 
 sge_calendar.o: $(SGEOBJLIB_DIR)/sge_calendar.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_calendar.c
+
+sge_centry_rsmap.o: $(SOURCE_DIR)/libs/sgeobj/sge_centry_rsmap.c
+		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SOURCE_DIR)/libs/sgeobj/sge_centry_rsmap.c
 
 sge_centry.o: $(SGEOBJLIB_DIR)/sge_centry.c 
 		$(CC) $(CFLAGS) $(SHARED_CFLAGS) -c $(SGEOBJLIB_DIR)/sge_centry.c

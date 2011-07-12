@@ -37,10 +37,10 @@
 #include "gdi/sge_gdi_ctx.h"
 #include "sge_qmaster_timed_event.h"
 
-int 
+int
 sge_follow_order(sge_gdi_ctx_class_t *ctx,
-                 lListElem *order, lList **alpp, char *ruser, 
-                 char *rhost, lList **topp, monitoring_t *monitor, 
+                 lListElem *order, char *ruser,
+                 char *rhost, lList **topp, monitoring_t *monitor,
                  object_description *object_base);
 
 int 

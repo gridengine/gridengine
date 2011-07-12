@@ -436,8 +436,10 @@ exit:
 ******************************************************************************/
 int sge_switch2start_user(void)
 {
+#if !defined(INTERIX)
    uid_t uid, start_uid;
    gid_t gid, start_gid;
+#endif
    int ret = 0;
 
    DENTER(UIDGID_LAYER, "sge_switch2start_user");
@@ -482,11 +484,11 @@ int sge_switch2start_user(void)
    }
 
 exit:
-#endif
    DPRINTF(("uid=%ld; gid=%ld; euid=%ld; egid=%ld auid=%ld; agid=%ld\n", 
             (long)getuid(), (long)getgid(), 
             (long)geteuid(), (long)getegid(),
             (long)uid, (long)gid));
+#endif
    DEXIT;
    return ret;
 } /* sge_switch2start_user() */ 

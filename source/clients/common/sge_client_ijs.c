@@ -448,6 +448,13 @@ void* tty_to_commlib(void *t_conf)
       }
    } /* while (do_exit == 0) */
 
+   /* Send STDIN_CLOSE_MSG to the shepherd. That causes the shepherd to close its filedescriptor, also. */
+   if (comm_write_message(g_comm_handle, g_hostname, COMM_CLIENT, 1, (unsigned char*)" ",
+                      1, STDIN_CLOSE_MSG, &err_msg) != 1) {
+      DPRINTF(("tty_to_commlib: couldn't write STDIN_CLOSE_MSG\n"));
+   } else {
+      DPRINTF(("tty_to_commlib: STDIN_CLOSE_MSG successfully written\n"));
+   }
    /* clean up */
    sge_dstring_free(&dbuf);
    sge_free(&pbuf);

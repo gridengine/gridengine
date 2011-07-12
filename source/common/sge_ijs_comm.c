@@ -27,6 +27,8 @@
  *
  *   All Rights Reserved.
  *
+ *  Portions of this software are Copyright (c) 2011 Univa Corporation.
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
@@ -1414,6 +1416,7 @@ int comm_recv_message(COMM_HANDLE *handle, bool b_synchron,
             case SETTINGS_CTRL_MSG:
             case SUSPEND_CTRL_MSG:
             case UNSUSPEND_CTRL_MSG:
+            case STDIN_CLOSE_MSG:
                DPRINTF(("length of message: %d\n", (int)message->message_length));
                /* data message */ 
                recv_mess->type = message->message[0];

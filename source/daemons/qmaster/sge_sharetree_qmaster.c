@@ -430,30 +430,26 @@ lList **found  /* tmp list that contains one entry for each found u/p */
       STN_last_actual_proportion
       STN_adjusted_current_proportion
 
+   Returns 0 on success, -1 on error.
 */
-int update_sharetree(
-lList **alpp,
-lList *dst,
-lList *src 
-) {
+int update_sharetree(lList *dst, lList *src)
+{
    static int depth = 0;
    lListElem *dnode, *snode;
 #ifdef notdef
    const char *d_name;
 #endif
    const char *s_name;
-   
+
    DENTER(TOP_LAYER, "update_sharetree");
 
    dnode = lFirst(dst);
    snode = lFirst(src);
    if ((dnode!=NULL) != (snode!=NULL)) {
-      ERROR((SGE_EVENT, MSG_STREE_QMASTERSORCETREE_SS, 
+      ERROR((SGE_EVENT, MSG_STREE_QMASTERSORCETREE_SS,
             snode?"":MSG_STREE_NOPLUSSPACE, dnode?"":MSG_STREE_NOPLUSSPACE));
-      answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
       depth = 0;
-      DEXIT;
-      return -1;
+      DRETURN(-1);
    }
 
    /* root node ? */
@@ -462,13 +458,10 @@ lList *src
 
       /* ensure STN_version of both root nodes are identically */
 
-      if (dnode && (dv=lGetUlong(dnode, STN_version)) != 
-             (sv=lGetUlong(snode, STN_version))) {
+      if (dnode && (dv=lGetUlong(dnode, STN_version)) != (sv=lGetUlong(snode, STN_version))) {
          ERROR((SGE_EVENT, MSG_STREE_VERSIONMISMATCH_II, dv, sv));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          depth = 0;
-         DEXIT;
-         return -1;
+         DRETURN(-1);
       }
    }
 
@@ -482,31 +475,26 @@ lList *src
       s_name = lGetString(snode, STN_name);
       if (!(dnode = lGetElemStr(dst, STN_name, s_name))) {
          ERROR((SGE_EVENT, MSG_STREE_MISSINGNODE_S, s_name));
-         answer_list_add(alpp, SGE_EVENT, STATUS_EUNKNOWN, ANSWER_QUALITY_ERROR);
          depth = 0;
-         DEXIT;
-         return -1;
+         DRETURN(-1);
       }
 
       /* update fields */
       lSetDouble(dnode, STN_m_share, lGetDouble(snode, STN_m_share));
-      lSetDouble(dnode, STN_last_actual_proportion, 
+      lSetDouble(dnode, STN_last_actual_proportion,
          lGetDouble(snode, STN_last_actual_proportion));
-      lSetDouble(dnode, STN_adjusted_current_proportion, 
+      lSetDouble(dnode, STN_adjusted_current_proportion,
          lGetDouble(snode, STN_adjusted_current_proportion));
       lSetUlong(dnode, STN_job_ref_count, lGetUlong(snode, STN_job_ref_count));
 
       /* enter recursion */
-      if (update_sharetree(alpp, lGetList(dnode, STN_children), 
-            lGetList(snode, STN_children))) {
-         DEXIT;
-         return -1;
+      if (update_sharetree(lGetList(dnode, STN_children), lGetList(snode, STN_children)) != 0) {
+         DRETURN(-1);
       }
    }
-   
+
    depth--;
-   DEXIT;
-   return 0;
+   DRETURN(0);
 }
 
 /* seek user/prj node (depends on node_type STT_USER|STT_PROJECT) in actual share tree */

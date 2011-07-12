@@ -222,7 +222,7 @@ sge_for_each_share_tree_node( lListElem *node,
       for_each(child_node, children) {
          if ((retcode = sge_for_each_share_tree_node(child_node, func, ptr))) {
             break;
-         }   
+         }
       }
    }
 
@@ -250,6 +250,8 @@ sge_zero_node_fields( lListElem *node,
 /*--------------------------------------------------------------------
  * sge_init_node_fields - zero out the share tree node fields that are 
  * passed to the qmaster from schedd and are displayed at qmon
+ *
+ * Always returns 0.
  *--------------------------------------------------------------------*/
 
 int

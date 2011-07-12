@@ -38,7 +38,7 @@ int sge_add_sharetree(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **lpp, lLis
 int sge_mod_sharetree(sge_gdi_ctx_class_t *ctx, lListElem *ep, lList **lpp, lList **alpp, char *ruser, char *rhost);
 int sge_del_sharetree(sge_gdi_ctx_class_t *ctx, lList **lpp, lList **alpp, char *ruser, char *rhost);
 
-int update_sharetree(lList **alpp, lList *dst, lList *src);
+int update_sharetree(lList *dst, lList *src);
 
 lListElem *getNode(lList *share_tree, const char *name, int node_type, int recurse);
 

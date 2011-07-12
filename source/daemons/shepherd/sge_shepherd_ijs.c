@@ -691,6 +691,15 @@ static void* commlib_to_pty(void *t_conf)
                b_was_connected = 1;
                break;
 
+            case STDIN_CLOSE_MSG:
+               /* If we receive a STDIN_CLOSE_MSG we have to close the filedescriptor!
+                * This is needed for GE-3580
+                */
+               shepherd_trace("commlib_to_pty: received stdin_close message");
+               SGE_CLOSE(fd_write);
+               b_was_connected = 1;
+               break;
+
             case SUSPEND_CTRL_MSG:
                shepherd_trace("commlib_to_pty: received suspend message, "
                    "suspend the process");

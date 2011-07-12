@@ -50,6 +50,7 @@
 #define SETTINGS_CTRL_MSG            7
 #define SUSPEND_CTRL_MSG             8
 #define UNSUSPEND_CTRL_MSG           9
+#define STDIN_CLOSE_MSG              10
 
 #define COMM_RETVAL_OK                    0
 #define COMM_INVALID_PARAMETER            1

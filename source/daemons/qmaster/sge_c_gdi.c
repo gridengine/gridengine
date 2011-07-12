@@ -531,7 +531,7 @@ sge_c_gdi_add(sge_gdi_ctx_class_t *ctx, sge_gdi_packet_class_t *packet, sge_gdi_
             switch (task->target) {
 
                case SGE_ORDER_LIST:
-                 switch (sge_follow_order(ctx, ep, &(task->answer_list), packet->user, packet->host,
+                 switch (sge_follow_order(ctx, ep, packet->user, packet->host,
                                           reprioritize_tickets? &ticket_orders : NULL, monitor, object_base)) {
                     case STATUS_OK :
                     case  0 : /* everything went fine */

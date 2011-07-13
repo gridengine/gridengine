@@ -20,13 +20,15 @@
  *  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
  *  See the License for the specific provisions governing your rights and
  *  obligations concerning the Software.
- * 
+ *
  *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
- * 
+ *
  *   Copyright: 2001 by Sun Microsystems, Inc.
- * 
+ *
  *   All Rights Reserved.
- * 
+ *
+ *  Portions of this software are Copyright (c) 2011 Univa Corporation
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
@@ -1387,12 +1389,9 @@ gdi2_receive_message(sge_gdi_ctx_class_t *sge_ctx, char *fromcommproc, u_short *
  *   This function was introduced to make execution hosts independent
  *   of being able to mount the local_conf directory.
  *-------------------------------------------------------------------------*/
-int gdi2_get_configuration(
-sge_gdi_ctx_class_t *ctx,
-const char *config_name,
-lListElem **gepp,
-lListElem **lepp 
-) {
+int gdi2_get_configuration(sge_gdi_ctx_class_t *ctx, const char *config_name,
+                           lListElem **gepp, lListElem **lepp)
+{
    lCondition *where;
    lEnumeration *what;
    lList *alp = NULL;
@@ -1404,20 +1403,22 @@ lListElem **lepp
    static int already_logged = 0;
    u_long32 status;
    u_long32 me = ctx->get_who(ctx);
-   
+
    DENTER(GDI_LAYER, "gdi2_get_configuration");
 
-   if (!config_name || !gepp) {
+   if (config_name == NULL || gepp == NULL) {
       DRETURN(-1);
    }
 
-   if (*gepp) {
+   /* free elements referenced in gepp and lepp - we will overwrite them */
+   if (*gepp != NULL) {
       lFreeElem(gepp);
    }
-   if (lepp && *lepp) {
+   if (lepp != NULL && *lepp) {
       lFreeElem(lepp);
    }
 
+   /* resolve hostname, unless the global config is requested */
    if (!strcasecmp(config_name, "global")) {
       is_global_requested = 1;
    } else {
@@ -1450,6 +1451,7 @@ lListElem **lepp
       DRETURN(-3);
    }
 
+   /* query configuration from sge_qmaster via gdi request */
    if (is_global_requested) {
       /*
        * they might otherwise send global twice
@@ -1467,13 +1469,14 @@ lListElem **lepp
    lFreeWhat(&what);
    lFreeWhere(&where);
 
+   /* in case the gdi request failed: error handling & return */
    success = ((status= lGetUlong(lFirst(alp), AN_status)) == STATUS_OK);
    if (!success) {
       if (!already_logged) {
          ERROR((SGE_EVENT, MSG_CONF_GETCONF_S, lGetString(lFirst(alp), AN_text)));
-         already_logged = 1;       
+         already_logged = 1;
       }
-                   
+
       lFreeList(&alp);
       lFreeList(&lp);
       lFreeElem(&hep);
@@ -1481,10 +1484,12 @@ lListElem **lepp
    }
    lFreeList(&alp);
 
+   /* we didn't get the correct number of configurations? */
    if (lGetNumberOfElem(lp) > (2 - is_global_requested)) {
       WARNING((SGE_EVENT, MSG_CONF_REQCONF_II, 2 - is_global_requested, lGetNumberOfElem(lp)));
    }
 
+   /* we did not get the global configuration? */
    if (!(*gepp = lGetElemHost(lp, CONF_name, SGE_GLOBAL_NAME))) {
       ERROR((SGE_EVENT, SFNMAX, MSG_CONF_NOGLOBAL));
       lFreeList(&lp);
@@ -1493,10 +1498,13 @@ lListElem **lepp
    }
    lDechainElem(lp, *gepp);
 
+   /* if we requested the local configuration but there is none,
+    * print a warning
+    */
    if (!is_global_requested) {
       if (!(*lepp = lGetElemHost(lp, CONF_name, lGetHost(hep, EH_name)))) {
          if (*gepp) {
-            WARNING((SGE_EVENT, MSG_CONF_NOLOCAL_S, lGetHost(hep, EH_name)));
+            INFO((SGE_EVENT, MSG_CONF_NOLOCAL_S, lGetHost(hep, EH_name)));
          }
          lFreeList(&lp);
          lFreeElem(&hep);
@@ -1505,7 +1513,7 @@ lListElem **lepp
       }
       lDechainElem(lp, *lepp);
    }
-   
+
    lFreeElem(&hep);
    lFreeList(&lp);
    already_logged = 0;
@@ -1526,7 +1534,7 @@ int gdi2_wait_for_conf(sge_gdi_ctx_class_t *ctx, lList **conf_list) {
    u_long32 progid = ctx->get_who(ctx);
    
    /* TODO: move this function to execd */
-   DENTER(GDI_LAYER, "gdi2_wait_for_confgdi2_wait_for_conf");
+   DENTER(GDI_LAYER, "gdi2_wait_for_conf");
    /*
     * for better performance retrieve 2 configurations
     * in one gdi call

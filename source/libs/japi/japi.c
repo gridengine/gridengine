@@ -26,7 +26,9 @@
  *   Copyright: 2001 by Sun Microsystems, Inc.
  * 
  *   All Rights Reserved.
- * 
+ *
+ *  Portions of this software are Copyright (c) 2011 Univa Corporation
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 #include <stdio.h>
@@ -4822,7 +4824,7 @@ static int japi_read_dynamic_attributes(dstring *diag)
 
    DENTER(TOP_LAYER, "japi_read_dynamic_attributes");   
 
-   ret=gdi2_get_configuration(ctx, "global", &config, NULL);
+   ret = gdi2_get_configuration(ctx, SGE_GLOBAL_NAME, &config, NULL);
 
    if (ret<0) {
       switch( ret ) {

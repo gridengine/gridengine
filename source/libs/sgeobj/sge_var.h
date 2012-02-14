@@ -29,6 +29,8 @@
  * 
  *   All Rights Reserved.
  * 
+ *  Portions of this software are Copyright (c) 2011-2012 Univa Corporation
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
@@ -79,5 +81,7 @@ int var_list_parse_from_string(lList **lpp, const char *variable_str,
                                int check_environment);
 
 void getenv_and_set(lListElem *ep, char *variable);
+
+void var_list_filter_env_list(lList *env_list, lList **answer_list);
 
 #endif /* __SGE_VAR_H */

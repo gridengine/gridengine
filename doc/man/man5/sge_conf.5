@@ -1200,18 +1200,33 @@ in milliseconds and has a default value of 5000.
 Beginning with version 8.0.0 of Univa Grid Engine the scheduling behavior changed
 for jobs that are rescheduled by users. Rescheduled jobs will not be put at the
 beginning of the pending job list anymore. The submit time of those jobs is set
-to the end time of the previous run. Due to that those rescheduled jobs will be 
-appended at the end of the pending job list as if a new job would have been 
+to the end time of the previous run. Due to that those rescheduled jobs will be
+appended at the end of the pending job list as if a new job would have been
 submitted. To achive the old behaviour the paramter \fIOLD_RESCHEDULE_BEHAVIOR\fP
 has to be set. Please note that this parameter is declared as deprecated.
 So it might be removed with next minor release.
 .IP "\fIOLD_RESCHEDULE_BEHAVIOR_ARRAY_JOB\fp
 Beginning with version 8.0.0 of Univa Grid Engine the scheduling behavior changed
-for array job tasks that are rescheduled by users. As soon as a array job task 
-gets scheduled all remaining pending tasks of that job will be put at the end of 
-the pending job list. To achive the old scheduling behavior the paramter 
-\fIOLD_RESCHEDULE_BEHAVIOR_ARRAY_JOB\fP has to be set. Please note that this 
+for array job tasks that are rescheduled by users. As soon as a array job task
+gets scheduled all remaining pending tasks of that job will be put at the end of
+the pending job list. To achive the old scheduling behavior the paramter
+\fIOLD_RESCHEDULE_BEHAVIOR_ARRAY_JOB\fP has to be set. Please note that this
 parameter is declared as deprecated. So it might be removed with next minor release.
+.PP
+.IP "\fIENABLE_SUBMIT_LIB_PATH\fp
+Beginning with version 8.0.1p3 of Univa Grid Engine environment variables like
+LD_PRELOAD, LD_LIBRARY_PATH and similar variables by default may no longer be
+set via submit option -v or -V.
+
+Setting these variables could be misused to execute malicious code from user jobs,
+if the execution environment contained methods (e.g. prolog) to be executed as the root user,
+or if the old interactive job support (e.g. via ssh) was configured.
+
+Should it be necessary to allow setting environment variables like LD_LIBRARY_PATH via submit option
+-v or -V, this can be enabled again by setting \fIENABLE_SUBMIT_LIB_PATH\fP to TRUE.
+
+In general the correct job environment should be set up in the job script or in a prolog, making the use of
+the -v or -V option for this purpose unnecessary.
 .PP
 Changing \fBqmaster_params\fP will take immediate effect, except gdi_timeout, gdi_retries, cl_ping, these
 will take effect only for new connections.
@@ -1222,7 +1237,7 @@ overwritten by the execution host local configuration.
 .\"
 .\"
 .SS "\fBexecd_params\fP"
-This is used for passing additional parameters 
+This is used for passing additional parameters
 to the xxQS_NAMExx execution daemon. The following values are recognized:
 .\"
 .IP "\fIACCT_RESERVED_USAGE\fP"

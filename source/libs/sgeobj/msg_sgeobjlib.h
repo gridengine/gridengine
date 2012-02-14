@@ -260,9 +260,9 @@
 #define MSG_EVENT_INVALIDUPDATEFUNCTION _MESSAGE(64348, _("invalid event client update function"))
 
 #define MSG_JOB_SCRIPTLENGTHDOESNOTMATCH _MESSAGE(64350, _("Script length does not match declared length"))
-#define MSG_INVALIDJOB_REQUEST_S _MESSAGE(64352, _("invalid "SFQ" value in job request"))
-
-#define MSG_JOB_NAMETOOLONG_I _MESSAGE(64353, _("job name too long, maximum allowed length is %d characters"))
+#define MSG_INVALIDJOB_REQUEST_S       _MESSAGE(64352, _("invalid "SFQ" value in job request"))
+#define MSG_JOB_NAMETOOLONG_I          _MESSAGE(64353, _("job name too long, maximum allowed length is %d characters"))
+#define MSG_REMOVED_ENV_VAR_S          _MESSAGE(64354, _("removed environment variable "SFN" from submit environment - it is considered a security issue"))
 
 #define MSG_INVALID_GDIL _MESSAGE(64355, _("invalid granted destination identifier list"))
 

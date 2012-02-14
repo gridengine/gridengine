@@ -21,11 +21,13 @@
  *  See the License for the specific provisions governing your rights and
  *  obligations concerning the Software.
  *
- *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+ *  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
  *
- *   Copyright: 2001 by Sun Microsystems, Inc.
+ *  Copyright: 2001 by Sun Microsystems, Inc.
  *
- *   All Rights Reserved.
+ *  All Rights Reserved.
+ *
+ *  Portions of this software are Copyright (c) 2011-2012 Univa Corporation
  *
  ************************************************************************/
 /*___INFO__MARK_END__*/                                   
@@ -71,6 +73,7 @@
 #include "sgeobj/sge_utility.h"
 #include "sgeobj/sge_binding.h"
 #include "sgeobj/sge_job.h"
+#include "sgeobj/sge_conf.h"
 #include "sgeobj/msg_sgeobjlib.h"
 
 #include "symbols.h"
@@ -3207,7 +3210,7 @@ job_verify_submitted_job(const lListElem *job, lList **answer_list)
 
    ret = job_verify(job, answer_list, true);
 
-   /* JB_job_number must me 0 */
+   /* JB_job_number must be 0 */
    if (ret) {
       ret = object_verify_ulong_null(job, answer_list, JB_job_number);
    }
@@ -3485,6 +3488,16 @@ job_verify_submitted_job(const lListElem *job, lList **answer_list)
          answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_ERROR,
                               MSG_INVALIDJOB_REQUEST_S, "task concurrency");
          ret = false;
+      }
+   }
+
+   /* JB_env_list
+    * Filter potentially dangerous environment variables, see also Issue GE-3761.
+    */
+   if (ret) {
+      lList *env_list = lGetList(job, JB_env_list);
+      if (env_list != NULL) {
+         var_list_filter_env_list(env_list, answer_list);
       }
    }
 

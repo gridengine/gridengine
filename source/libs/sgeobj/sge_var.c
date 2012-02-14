@@ -27,6 +27,8 @@
  * 
  *   All Rights Reserved.
  * 
+ *  Portions of this software are Copyright (c) 2011-2012 Univa Corporation
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
@@ -45,6 +47,7 @@
 #include "sgeobj/sge_var.h"
 #include "sgeobj/sge_centry.h"
 #include "sgeobj/sge_answer.h"
+#include "sgeobj/sge_conf.h"
 #include "sgeobj/msg_sgeobjlib.h"
 
 #include "symbols.h"
@@ -970,3 +973,54 @@ void getenv_and_set(lListElem *ep, char *variable)
 
 }
 
+/**
+* @brief remove potentially dangerous environment variables
+*
+* The function removes potentially dangerous environment variables from
+* an environment list (e.g. from job or pe task submission).
+* The following variables are removed:
+*  - LD_PRELOAD
+*  - all flavours of LD_LIBRARY_PATH, SHLIB_PATH etc.
+*    unless qmaster param ENABLE_SUBMIT_LIB_PATH is set to TRUE
+* We generate an INFO message to be output by the submit client.
+*
+* @param env_list       the environment list
+* @param answer_list    answer_list to report removal of variables
+*/
+void var_list_filter_env_list(lList *env_list, lList **answer_list)
+{
+   lListElem *ep;
+
+   /* LD_PRELOAD */
+   ep = lGetElemStr(env_list, VA_variable, "LD_PRELOAD");
+   if (ep != NULL) {
+      lRemoveElem(env_list, &ep);
+      answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_INFO,
+                              MSG_REMOVED_ENV_VAR_S, "LD_PRELOAD");
+   }
+
+   /* other potentially dangerous variables */
+   if (!mconf_get_enable_submit_lib_path()) {
+      static const char *lib_path_names[] = {
+         "LD_LIBRARY_PATH",
+         "LD_LIBRARY_PATH_32",
+         "LD_LIBRARY_PATH_64",
+         "LIBPATH",
+         "SHLIB_PATH",
+         "DYLD_LIBRARY_PATH",
+         "LD_ORIGIN_PATH",
+         "LD_CONFIG",
+         NULL
+      };
+      const char *var_name;
+      int i;
+      for (i = 0; (var_name = lib_path_names[i]) != NULL; i++) {
+         ep = lGetElemStr(env_list, VA_variable, var_name);
+         if (ep != NULL) {
+            lRemoveElem(env_list, &ep);
+            answer_list_add_sprintf(answer_list, STATUS_ESYNTAX, ANSWER_QUALITY_INFO,
+                                    MSG_REMOVED_ENV_VAR_S, var_name);
+         }
+      }
+   }
+}

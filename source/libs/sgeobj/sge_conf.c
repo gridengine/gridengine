@@ -27,6 +27,8 @@
  * 
  *   All Rights Reserved.
  * 
+ *  Portions of this software are Copyright (c) 2011-2012 Univa Corporation
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 #include <stdio.h>
@@ -249,6 +251,7 @@ static bool set_lib_path = false;
 /* This should match the default set in
  * shepherd/builtin_starter.c:inherit_env(). */
 static bool inherit_env = true;
+static bool enable_submit_lib_path = false;
 
 /*
  * notify_kill_default and notify_susp_default
@@ -686,6 +689,7 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
       old_reschedule_behavior_array_job = false;
       jsv_threshold = 5000;
       jsv_timeout= 10;
+      enable_submit_lib_path = false;
 
       for (s=sge_strtok_r(qmaster_params, ",; ", &conf_context); s; s=sge_strtok_r(NULL, ",; ", &conf_context)) {
          if (parse_bool_param(s, "FORBID_RESCHEDULE", &forbid_reschedule)) {
@@ -807,6 +811,9 @@ int merge_configuration(lList **answer_list, u_long32 progid, const char *cell_r
                                        10);
                jsv_timeout = 10;
             }
+            continue;
+         }
+         if (parse_bool_param(s, "ENABLE_SUBMIT_LIB_PATH", &enable_submit_lib_path)) {
             continue;
          }
       }
@@ -2479,6 +2486,18 @@ bool mconf_get_ignore_ngroups_max_limit(void) {
    DENTER(BASIS_LAYER, "mconf_get_ignore_ngroups_max_limit");
    SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
    ret = ignore_ngroups_max_limit;
+   SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
+   DRETURN(ret);
+}
+
+bool mconf_get_enable_submit_lib_path(void) {
+   int ret;
+
+   DENTER(BASIS_LAYER, "mconf_get_enable_submit_lib_path");
+   SGE_LOCK(LOCK_MASTER_CONF, LOCK_READ);
+
+   ret = enable_submit_lib_path;
+
    SGE_UNLOCK(LOCK_MASTER_CONF, LOCK_READ);
    DRETURN(ret);
 }

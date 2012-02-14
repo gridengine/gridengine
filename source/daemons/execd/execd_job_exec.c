@@ -26,7 +26,9 @@
  *   Copyright: 2001 by Sun Microsystems, Inc.
  * 
  *   All Rights Reserved.
- * 
+ *
+ *  Portions of this software are Copyright (c) 2011-2012 Univa Corporation
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 #include <errno.h>
@@ -702,6 +704,16 @@ static int handle_task(sge_gdi_ctx_class_t *ctx, lListElem *petrep, char *commpr
    if (lGetUlong(jatep, JAT_state) & JDELETED) {
       DPRINTF(("received task exec request while job is in deletion or exiting\n"));
       goto Error;
+   }
+
+   /* filter the environment, see issue GE-3761 */
+   {
+      lList *env_list = lGetList(petrep, PETR_environment);
+      if (env_list != NULL) {
+         lList *answer_list = NULL;
+         var_list_filter_env_list(env_list, &answer_list);
+         answer_list_output(&answer_list);
+      }
    }
 
    /* generate unique task id by combining consecutive number 1-max(u_long32) */

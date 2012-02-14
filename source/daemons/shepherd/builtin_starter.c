@@ -27,6 +27,8 @@
  *
  *  All Rights Reserved.
  *
+ *  Portions of this software are Copyright (c) 2011-2012 Univa Corporation
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
@@ -1008,14 +1010,14 @@ int sge_set_environment()
 
       line++;
 
-      if (strlen(buf) <= 1)     /* empty line or lastline */
+      if (strlen(buf) <= 1) {   /* empty line or lastline */
          continue;
+      }
 
       name = strtok(buf, "=");
-      if (!name) {
+      if (name == NULL) {
          FCLOSE(fp);
-         shepherd_error(1, "error reading environment file: line=%d, contents:%s",
-                        line, buf);
+         shepherd_error(1, "error reading environment file: line=%d, contents:%s", line, buf);
       }
 
       value = strtok(NULL, "\n");

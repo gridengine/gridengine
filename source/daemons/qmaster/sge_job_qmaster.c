@@ -2704,6 +2704,9 @@ int *trigger
       lAddList(lGetList(new_job, JB_env_list), &prefix_vars);
       sprintf(SGE_EVENT, MSG_SGETEXT_MOD_JOBS_SU, MSG_JOB_ENVLIST, sge_u32c(jobid));
       answer_list_add(alpp, SGE_EVENT, STATUS_OK, ANSWER_QUALITY_INFO);
+
+      /* remove potentially dangerous environment variables */
+      var_list_filter_env_list(lGetList(new_job, JB_env_list), alpp);
    }
 
    /* ---- JB_qs_args */

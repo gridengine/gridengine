@@ -29,6 +29,8 @@
  * 
  *   All Rights Reserved.
  * 
+ *  Portions of this software are Copyright (c) 2011-2012 Univa Corporation
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 
@@ -43,4 +45,5 @@ void remove_acked_job_exit(sge_gdi_ctx_class_t *ctx, u_long32 job_id, u_long32 j
 void reaper_sendmail(sge_gdi_ctx_class_t *ctx, lListElem *jep, lListElem *jr);
 
 void execd_slave_job_exit(u_long32 job_id, u_long32 ja_task_id);
+int count_master_tasks(const lList *lp, u_long32 job_id);
 #endif

@@ -336,19 +336,8 @@ static int handle_job(sge_gdi_ctx_class_t *ctx, lListElem *jelem, lListElem *jat
       /* interactive jobs and slave jobs do not have a script file */
       if (!slave && lGetString(jelem, JB_script_file)) {
          int nwritten;
-         int found_script = 0;
-         const void *iterator = NULL;
-         lListElem *tmp_job = NULL;
-         lListElem *next_tmp_job = NULL;
          u_long32 job_id = lGetUlong(jelem, JB_job_number);
-         lList *gdi_list = NULL;
-         lList *ja_task_list = NULL;   
-         const char *hostname = NULL;
-         const char *tmp_hostname = NULL;
 
-         gdi_list = lGetList(jatep, JAT_granted_destin_identifier_list);
-         hostname = lGetHost(lFirst(gdi_list), JG_qhostname);
-         
          if (!mconf_get_simulate_jobs()) {
             /*
              * Is another array task of the same job already here?
@@ -358,23 +347,7 @@ static int handle_job(sge_gdi_ctx_class_t *ctx, lListElem *jelem, lListElem *jat
              * check wether there is another master task of the same job running
              * on this host. This is important in case of array pe-jobs.
              */
-            next_tmp_job = lGetElemUlongFirst(*(object_type_get_master_list(SGE_TYPE_JOB)),
-                                              JB_job_number, job_id, &iterator);
-            while ((tmp_job = next_tmp_job) != NULL) {
-               next_tmp_job = lGetElemUlongNext(*(object_type_get_master_list(SGE_TYPE_JOB)),
-                                              JB_job_number, job_id, &iterator);
-              
-               ja_task_list = lGetList(tmp_job,JB_ja_tasks);
-               gdi_list = lGetList(lFirst(ja_task_list), JAT_granted_destin_identifier_list);
-               tmp_hostname = lGetHost(lFirst(gdi_list), JG_qhostname);
-              
-               if (sge_hostcmp(hostname, tmp_hostname) == 0) {
-                  found_script = 1;
-                  break;
-               }
-            }
-
-            if (!found_script) {
+             if (count_master_tasks(*(object_type_get_master_list(SGE_TYPE_JOB)), job_id) == 0) {
                int fd;
 
                /* We are root. Make the scriptfile readable for the jobs submitter,

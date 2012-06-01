@@ -20,13 +20,15 @@
  *  MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE, OR NON-INFRINGING.
  *  See the License for the specific provisions governing your rights and
  *  obligations concerning the Software.
- * 
- *   The Initial Developer of the Original Code is: Sun Microsystems, Inc.
- * 
- *   Copyright: 2001 by Sun Microsystems, Inc.
- * 
- *   All Rights Reserved.
- * 
+ *
+ *  The Initial Developer of the Original Code is: Sun Microsystems, Inc.
+ *
+ *  Copyright: 2001 by Sun Microsystems, Inc.
+ *
+ *  All Rights Reserved.
+ *
+ *  Portions of this software are Copyright (c) 2011-2012 Univa Corporation
+ *
  ************************************************************************/
 /*___INFO__MARK_END__*/
 #include <stdlib.h>
@@ -855,7 +857,6 @@ void remove_acked_job_exit(sge_gdi_ctx_class_t *ctx, u_long32 job_id, u_long32 j
    SGE_STRUCT_STAT statbuf;
    lListElem *jep = NULL, *petep = NULL, *jatep = NULL;
    const char *pe_task_id_str; 
-   const void *iterator;
    const char *sge_root = ctx->get_sge_root(ctx);
 
    DENTER(TOP_LAYER, "remove_acked_job_exit");
@@ -958,23 +959,22 @@ void remove_acked_job_exit(sge_gdi_ctx_class_t *ctx, u_long32 job_id, u_long32 j
       }
 
       if (pe_task_id_str == NULL) {
+         /*
+          * Clean-up the job container (master and slave tasks)
+          */
+
          if (!mconf_get_simulate_jobs()) {
             job_remove_spool_file(job_id, ja_task_id, NULL, SPOOL_WITHIN_EXECD);
 
             if (!JOB_TYPE_IS_BINARY(lGetUlong(jep, JB_type)) &&
-                lGetString(jep, JB_exec_file)) {
-               int task_number = 0;
-               lListElem *tmp_job = NULL;
+                lGetString(jep, JB_exec_file) &&
+                lGetUlong(jatep, JAT_status) != JSLAVE) {
 
-               /* it is possible to remove the exec_file if
-                  less than one task of a job is running */
-               tmp_job = lGetElemUlongFirst(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, job_id, &iterator);
-               while (tmp_job != NULL && task_number <= 2) {
-                  task_number++;
-                  tmp_job = lGetElemUlongNext(*(object_type_get_master_list(SGE_TYPE_JOB)), JB_job_number, job_id, &iterator);
-               }
-               
-               if (task_number <= 1) {
+               /*
+                * Unlink job_script if there are no other master tasks
+                * (e.g. task arrays) for this job present on execd
+                */
+               if (count_master_tasks(*(object_type_get_master_list(SGE_TYPE_JOB)), job_id) <= 1) {
                   DPRINTF(("unlinking script file %s\n", lGetString(jep, JB_exec_file)));
                   unlink(lGetString(jep, JB_exec_file));
                }
@@ -985,6 +985,10 @@ void remove_acked_job_exit(sge_gdi_ctx_class_t *ctx, u_long32 job_id, u_long32 j
       }
 
       if (pe_task_id_str != NULL) {
+         /*
+          * Clean-up the PE task (a second pass cleans the container)
+          */
+
          /* unchain pe task element from task list */
          lRemoveElem(lGetList(jatep, JAT_task_list), &petep);
 
@@ -2271,6 +2275,52 @@ static void clean_up_binding(char* binding)
 #endif
 
    DRETURN_VOID;
+}
+
+/****** reaper_execd/count_master_tasks() ****************************************
+*  NAME
+*     count_master_tasks() -- Counts the number of master tasks present for a job
+*
+*  SYNOPSIS
+*     int count_master_tasks(const lList *lp, u_long32 job_id)
+*
+*  FUNCTION
+*     Counts the number of master tasks for a specific job that are present
+*     on the execd.
+*
+*  INPUTS
+*     const lList *lp - Pointer to the job list
+*     u_long32 job_id - Job number to count master tasks for
+*
+*  RESULT
+*     int             - Number of master tasks found
+*
+*  NOTES
+*     MT-NOTE: count_master_tasks() is MT safe
+*******************************************************************************/
+int count_master_tasks(const lList *lp, u_long32 job_id)
+{
+   const void *iterator = NULL;
+   int master_jobs = 0;
+   const lListElem *jep;
+
+   DENTER(TOP_LAYER, "count_master_tasks");
+
+   jep = lGetElemUlongFirst(lp, JB_job_number, job_id, &iterator);
+   while (jep != NULL) {
+      lListElem *jatep = lFirst(lGetList(jep, JB_ja_tasks));
+      while (jatep != NULL) {
+         if (lGetUlong(jatep, JAT_status) != JSLAVE) {
+            master_jobs++;
+         }
+         jatep = lNext(jatep);
+      }
+      jep = lGetElemUlongNext(lp, JB_job_number, job_id, &iterator);
+   }
+
+   DPRINTF(("Found %d master jobs for "sge_u32, master_jobs, job_id));
+
+   DRETURN(master_jobs);
 }
 
 
